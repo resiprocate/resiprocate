@@ -23,7 +23,7 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_CSeq).method() = method;
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
-   request->header(h_From).uri().param(p_tag) = Helper::computeTag(Helper::tagSize);
+   request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_Contacts).push_front(contact);
    request->header(h_CallId).value() = Helper::computeCallId();
    request->header(h_ContentLength).value() = 0;
@@ -91,7 +91,7 @@ Helper::makeRegister(const NameAddr& registrar,
    request->header(h_CSeq).method() = REGISTER;
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = aor;
-   request->header(h_From).uri().param(p_tag) = Helper::computeTag(Helper::tagSize);
+   request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
    request->header(h_ContentLength).value() = 0;
 
@@ -244,7 +244,7 @@ Data
 Helper::computeCallId()
 {
    // !jf! need to include host as well (should cache it)
-   return RandomHex::get(16);
+   return RandomHex::get(8);
 }
 
 
