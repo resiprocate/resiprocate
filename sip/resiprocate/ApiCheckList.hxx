@@ -12,6 +12,7 @@
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
 #include "resiprocate/TlsConnection.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/UdpTransport.hxx"
 #include "resiprocate/os/Tuple.hxx"
