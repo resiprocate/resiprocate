@@ -95,7 +95,8 @@ resip::initNetwork()
       /* WinSock DLL.                                  */
       WSACleanup( );
       //cerr << "Bad winsock verion" << endl;
-      assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
+      // TODO !cj! - add error message logging
+      assert(0); // if this is failing, try a different version that 2.2, 1.0 or later will likely work 
       exit(1);
    }  
 	}

@@ -28,9 +28,11 @@ class Transport : public ThreadIf
             const char* name() const { return "TransportException"; }
       };
       
-      // sendHost what to put in the Via:sent-by
       // portNum is the port to receive and/or send on
-      Transport(Fifo<TransactionMessage>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
+      Transport(Fifo<TransactionMessage>& rxFifo, 
+                int portNum, 
+                const Data& interfaceObj, 
+                bool ipv4);
       virtual ~Transport();
 
       bool isFinished() const;
