@@ -26,7 +26,7 @@ class SendData
                : destination(dest) 
                {}
             
-            const sockaddr_in& destination;
+            const sockaddr_in destination;
             //TransactionId tid;
             const char* buffer;
             size_t length;
