@@ -12,10 +12,10 @@ class Random
    public:
       static void initialize();
       
-      static Data getRandom(unsigned int len);
-      static Data getRandomHex(unsigned int len);
-      static Data getCryptoRandom(unsigned int len);
-      static Data getCryptoRandomHex(unsigned int len);
+      static Data getRandom(unsigned int numBytes);
+      static Data getRandomHex(unsigned int numBytes); // actual length is 2*numBytes
+      static Data getCryptoRandom(unsigned int numBytes);
+      static Data getCryptoRandomHex(unsigned int numBytes); // actual length is 2*numBytes
 
       static int  getRandom();
       static int  getCryptoRandom();
