@@ -150,9 +150,9 @@ SipStack::process(FdSet& fdset)
 
 /// returns time in milliseconds when process next needs to be called 
 int 
-SipStack::getTimeTillNextProcess()
+SipStack::getTimeTillNextProcessMS()
 {
-	return mExecutive.getTimeTillNextProcess();
+	return mExecutive.getTimeTillNextProcessMS();
 } 
 
 

@@ -69,7 +69,7 @@ main(int argc, char* argv[])
       FdSet fdset; 
       udp->buildFdSet(fdset);
       
-      int  err = fdset.select(5000);
+      int  err = fdset.selectMiliSeconds(5000);
       assert ( err != -1 );
 
       udp->process(fdset);

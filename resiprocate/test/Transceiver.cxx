@@ -111,7 +111,7 @@ Transceiver::receive(int waitMs)
       {
          mUdp.buildFdSet(mFdset);
          
-         int  err = mFdset.select(timeLeft*1000);
+         int  err = mFdset.selectMiliSeconds(timeLeft*1000);
          int e = errno;
          if ( err == -1 )
          {

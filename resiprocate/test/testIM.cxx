@@ -302,7 +302,7 @@ main(int argc, char* argv[])
 
       fdset.setRead( fileno(stdin) );
        
-      int  err = fdset.select( sipStack.getTimeTillNextProcess());
+      int  err = fdset.selectMiliSeconds( sipStack.getTimeTillNextProcessMS());
       if ( err == -1 )
       {
          int e = errno;

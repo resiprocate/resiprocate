@@ -360,7 +360,7 @@ main(int argc, char* argv[])
          FdSet srcFdset;
          src.buildFdSet(srcFdset);
          {
-            int err = srcFdset.select(5000);
+            int err = srcFdset.selectMiliSeconds(5000);
             assert (err != -1);
          }
          src.process(srcFdset);
@@ -368,7 +368,7 @@ main(int argc, char* argv[])
          FdSet destFdset;
          dest.buildFdSet(destFdset);
          {
-            int err = destFdset.select(5000);
+            int err = destFdset.selectMiliSeconds(5000);
             assert (err != -1);
          }
          dest.process(destFdset);
@@ -403,7 +403,7 @@ main(int argc, char* argv[])
          FdSet destFdset;
          dest.buildFdSet(destFdset);
          {
-            int err = destFdset.select(5000);
+            int err = destFdset.selectMiliSeconds(5000);
             assert (err != -1);
          }
          dest.process(destFdset);
@@ -411,7 +411,7 @@ main(int argc, char* argv[])
          FdSet srcFdset;
          src.buildFdSet(srcFdset);
          {
-            int err = srcFdset.select(5000);
+            int err = srcFdset.selectMiliSeconds(5000);
             assert (err != -1);
          }
          src.process(srcFdset);
