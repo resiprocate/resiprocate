@@ -26,7 +26,6 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
    assert( origRequest.isRequest() );
 
    DialogSetId id(origRequest);
-   AttemptedAuthSet::iterator it;   
    if ( mAttemptedAuths.find(id) != mAttemptedAuths.end())
    {
       mAttemptedAuths.erase(id);
