@@ -86,9 +86,12 @@ class DnsResult
       // Given a transport and port from uri, return the default port to use
       int getDefaultPort(TransportType transport, int port);
       
-      // performs an A record lookup on target. May be asynchronous if ares is
-      // used. Otherwise, load the results into mResults
+      // performs host record lookups (A and AAAA) on target. 
+      // May be asynchronous if ares is used. 
+      // Otherwise, load the results into mResults
       void lookupARecords(const Data& target);
+
+      void lookupAAAARecords(const Data& target);
 
       // performs a NAPTR lookup on mTarget. May be asynchronous if ares is
       // used. Otherwise, load the results into mResults
@@ -105,6 +108,9 @@ class DnsResult
       // than one SRV dns request outstanding at a time
       void processSRV(int status, unsigned char* abuf, int alen);
 
+      // process the result of a AAAA query
+      void processAAAA(int status, unsigned char* abuf, int alen);
+      //
       // process an A record as per rfc3263
       void processHost(int status, struct hostent* result);
       
@@ -123,6 +129,7 @@ class DnsResult
       // them in the DnsResult. Only keep additional SRV records where
       // mNAPTRResults contains a record with replacement is that SRV
       // Store all A records for convenience in mARecords 
+      // and all AAAA records for convenience in mAAAARecords 
       const unsigned char* parseAdditional(const unsigned char* aptr, 
                                            const unsigned char* abuf,
                                            int alen);
@@ -130,6 +137,7 @@ class DnsResult
       // The callbacks associated with ares queries
       static void aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen);
       static void aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen);
+      static void aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen);
       static void aresHostCallback(void *arg, int status, struct hostent* result);
 
       // Some utilities for parsing dns results
@@ -140,6 +148,12 @@ class DnsResult
                                            const unsigned char *abuf, 
                                            int alen,
                                            SRV& srv);
+
+      static const unsigned char* parseAAAA(const unsigned char *aptr,
+                                           const unsigned char *abuf, 
+                                           int alen,
+                                           in6_addr * aaaa);
+
       static const unsigned char* parseNAPTR(const unsigned char *aptr,
                                              const unsigned char *abuf, 
                                              int alen,
@@ -153,6 +167,9 @@ class DnsResult
       TransportType mTransport; // current
       int mPort; // current
       Type mType;
+
+      //Ugly hack
+      Data mPassHostFromAAAAtoA;
       
       // This is where the current pending (ordered) results are stored. As they
       // are retrieved by calling next(), they are popped from the front of the list
@@ -169,6 +186,9 @@ class DnsResult
 
       // All cached A records associated with this query/queries
       std::map<Data,std::list<struct in_addr> > mARecords;
+
+      // All cached AAAA records associated with this query/queries
+      std::map<Data,std::list<struct in6_addr> > mAAAARecords;
       
       friend class DnsInterface;
       friend std::ostream& operator<<(std::ostream& strm, const DnsResult&);
