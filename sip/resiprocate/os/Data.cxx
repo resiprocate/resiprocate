@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.21 2002/11/04 19:46:18 derekm Exp $";
+"$Id: Data.cxx,v 1.22 2002/11/04 20:36:13 derekm Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -173,24 +173,19 @@ Data::operator==(const std::string& rhs) const
 bool
 Data::operator<(const Data& rhs) const
 {
-   switch (strncmp(mBuf, rhs.mBuf, min(mSize, rhs.mSize)))
+   int res = strncmp(mBuf, rhs.mBuf, min(mSize, rhs.mSize));
+
+   if (res < 0)
    {
-      case 1:
-      {
-         return true;
-      }
-      case -1:
-      {
-         return false;
-      }
-      case 0:
-      {
-         return (mSize < rhs.mSize);
-      }
-      default:
-         // strncmp returned a perculiar value-- use signum?
-         assert(0);
-		return false;
+      return true;
+   }
+   else if (res > 0)
+   {
+      return false;
+   }
+   else
+   {
+      return (mSize < rhs.mSize);
    }
 }
 
