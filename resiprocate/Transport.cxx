@@ -20,7 +20,7 @@ using namespace std;
 #define VOCAL_SUBSYSTEM Subsystem::SIP 
 
 Transport::Exception::Exception(const Data& msg, const Data& file, const int line) :
-   VException(msg,file,line)
+   BaseException(msg,file,line)
 {
 }
 
@@ -55,7 +55,7 @@ Transport::run()
             assert(0);
             //process();
          }
-         catch (VException& e)
+         catch (BaseException& e)
          {
             InfoLog (<< "Uncaught exception: " << e);
          }

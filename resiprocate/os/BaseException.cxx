@@ -1,8 +1,8 @@
-static const char* const VException_cxx_Version =
-    "$Id: VException.cxx,v 1.6 2002/11/07 03:07:27 jason Exp $";
+static const char* const BaseException_cxx_Version =
+    "$Id: BaseException.cxx,v 1.1 2002/11/11 21:46:02 jason Exp $";
 
 
-#include "sip2/util/VException.hxx"
+#include "sip2/util/BaseException.hxx"
 #include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
@@ -10,22 +10,22 @@ using namespace std;
 
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::NONE
 
-VException::VException( const Data& msg,
+BaseException::BaseException( const Data& msg,
                         const Data& file,
                         const int line) : 
         message( msg ),
         fileName( file ),
         lineNumber( line )
 {
-   DebugLog(<< "Exception at " << file << ":" << line << " " << message);
+   DebugLog(<< "BaseException at " << file << ":" << line << " " << message);
 }
 
-VException::~VException()
+BaseException::~BaseException()
     throw()
 {
 }
 
-ostream& Vocal2::operator<<(ostream& strm, const VException& e)
+ostream& Vocal2::operator<<(ostream& strm, const BaseException& e)
 {
    strm << e.name() << " " << e.message << " @ " << e.fileName << ":" << e.lineNumber;
    return strm;

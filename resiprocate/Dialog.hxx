@@ -61,12 +61,12 @@ namespace Vocal2
 class Dialog
 {
    public:
-      class Exception : public VException 
+      class Exception : public BaseException 
       {
          public:
             Exception( const Vocal2::Data& msg,
                        const Vocal2::Data& file,
-                       const int line): VException(msg,file,line){}
+                       const int line): BaseException(msg,file,line){}
             const char* name() const { return "Dialog::Exception"; }
       };
       
