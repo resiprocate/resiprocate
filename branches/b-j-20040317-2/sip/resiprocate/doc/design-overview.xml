@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE article PUBLIC '-//OASIS//DTD DocBook XML V4.1.2//EN'
+"/usr/share/sgml/docbook/xml-dtd-4.1.2/docbookx.dtd" [
+<!ENTITY jni '<ulink url="http://jasomi.com/">Jasomi Networks Inc.</ulink>'>
+<!ENTITY cisco '<ulink url="http://cisco.com/">Cisco Systems Inc.</ulink>'>
+<!ENTITY cathay 
+'<ulink url="http://cathaynetworks.com/">Cathay Networks Inc.</ulink>'>
+<!ENTITY vocal 'VOCAL'>
+<!ENTITY R3261 '<ulink url="http://www.ietf.org/rfc/rfc3261.txt?number=3261">RFC 3261</ulink>'>
+<!ENTITY R3262 '<ulink url="http://www.ietf.org/rfc/rfc3261.txt?number=3262">RFC 3262</ulink>'>
+<!ENTITY R3263 '<ulink url="http://www.ietf.org/rfc/rfc3261.txt?number=3263">RFC 3263</ulink>'>
+<!ENTITY R3264 '<ulink url="http://www.ietf.org/rfc/rfc3261.txt?number=3264">RFC 3264</ulink>'>
+<!ENTITY R3265 '<ulink url="http://www.ietf.org/rfc/rfc3261.txt?number=3265">RFC 3265</ulink>'>
+<!ENTITY R2543 '<ulink url="http://www.ietf.org/rfc/rfc2543.txt?number=2543">RFC 2543</ulink>'>
+<!ENTITY stack-name "VOCAL SIP2 stack">
+<!ENTITY stack-list '<email>vocal2@cathaynetworks.com</email>'>
+]>
+
+<article>
+  <articleinfo>
+    <title>SIP2 Stack Design Document</title>
+    <pubdate>2002-09-22</pubdate>
+    <author>
+      <firstname>David</firstname>
+      <othername>A.</othername>
+      <surname>Bryan</surname>
+      <affiliation>
+        <orgname>&jni;</orgname>
+        <email>dbryan@jasomi.com</email>
+      </affiliation>
+    </author>
+    <author>
+      <firstname>Alan</firstname>
+      <surname>Hawrylyshen</surname>
+      <affiliation>
+        <orgname>&jni;</orgname>
+        <email>alan@jasomi.com</email>
+      </affiliation>
+    </author>
+    <author>
+      <firstname>Rohan</firstname>
+      <surname>Mahy</surname>
+      <affiliation>
+        <orgname>&cisco;</orgname>
+        <email>rohan@cisco.com</email>
+      </affiliation>
+    </author>
+    <author>
+      <firstname>Cullen</firstname>
+      <surname>Jennings</surname>
+      <affiliation>
+        <orgname>&cisco;</orgname>
+        <email>fluffy@cisco.com</email>
+      </affiliation>
+    </author>
+    <author>
+      <firstname>Jason</firstname>
+      <surname>Fischl</surname>
+      <affiliation>
+        <orgname>&cathay;</orgname>
+        <email>jason@cathaynetworks.com</email>
+      </affiliation>
+    </author>
+    <author>
+      <firstname>David</firstname>
+      <surname>Butcher</surname>
+      <affiliation>
+        <orgname>&cathay;</orgname>
+        <email>david.butcher@cathaynetworks.com</email>
+      </affiliation>
+    </author>
+    <author>
+      <firstname>Derek</firstname>
+      <surname>MacDonald</surname>
+      <affiliation>
+        <orgname>&cathay;</orgname>
+        <email>Derek.MacDonald@cathaynetworks.com</email>
+      </affiliation>
+    </author>
+    <abstract>
+      <para> </para>
+    </abstract>
+    <revhistory>
+      <revision>
+        <revnumber>1.0</revnumber>
+        <date>2002-09-28</date>
+        <authorinitials>abh</authorinitials>
+        <revremark>Initial Porting to DocBook XML format.</revremark>
+      </revision>
+    </revhistory>
+  </articleinfo>
+  <section id="aboutthisdocument">
+    <title>About this Document</title>
+
+
+    <section id="feedback">
+      <title>Feedback</title>
+      <para>Comments on this Guide may be directed to the &stack-name; team
+          mailing list at &stack-list;.
+        </para>
+    </section>
+
+    <section id="copyrights">
+      <title>Copyrights and Trademarks</title>
+      <para>Copyright 1999-2002 David Bryan, Cullen Jennings, Alan Hawrylyshen,
+        Jason Fischl, David Butcher, Derek MacDonald, Rohan Mahy</para>
+      <para>
+        <emphasis>License for document goes here.</emphasis>
+       </para>
+    </section>
+  </section>
+  <section id="information">
+    <title>Overall Information / Guiding Principles</title>
+    <para>The new stack will attempt to be &R3261; compliant in all cases.</para>
+    <para>
+      The new stack will attempt as much as possible to delay parsing. Headers
+      will not be parsed until we need them, and as little of the message will
+        be parsed as needed to get us to that stage. Headers will simply be
+      stored as strings until a parse is requested, at which point the actual
+      contents of that header will be parsed into individual accessible
+      storage containers.
+    </para>
+  </section>
+  <section>
+    <title>Design Details</title>
+    <section>
+      <title>Preparsing</title>
+      <para>
+        The new stack utilizes a pre-parser/parser structure. A preparse pass
+        splits the message headers out, identifies the message type, and stores
+        the body, but does not parse the individual components of the
+        headers. That is left for the later header parser component. This
+        paradigm is similar to approach taken by Apache.
+      </para>
+    </section>
+    <section>
+      <title>Receive Section</title>
+      <para>
+        Not clear to me what the boundary
+        between the transport and the pre-parse is ( need to clear that up here
+        (class breakup).
+      </para>
+      <para>
+        The UDP transport (class name?)UdpTransport receives the data from the
+        socket, and passes the information to the preprocessor (class
+        name?).Preparse. This logic is responsible for several early parse
+        activities. First, this code locates the start line in the message and
+        decodes it, determining what type of message has been received. The
+        code looks at each line, and if it finds a CR-LF it assumes that that
+        line forms a new header. An order oneO(1) algorithm is used to map the
+        header field name into an enumerated header type for all known header
+        types. (describe algorithm). The constructors for these HFVs take a
+        pointer into space owned by the SipMessage class. Unknown header types
+        are stored as unknown headers, which can be accessed by the string
+        name of the header later.
+      </para>
+      <para>
+        The body of the headers is passed to the SipMessage class, which adds
+        it to a list of HeaderFieldValues (HFV). These HeaderFieldValues do
+        not parse the actual content of the header at the time the message is
+        received. Instead, they maintain a pointer and a length back into the
+        message buffers in the SipMessage class that the message was received
+        into. These HeaderFieldValues are only evaluated at the time the data
+        within them is requested.
+      </para>
+      <para>
+        When messages are received, it is possible that they will be
+        fragmented across several messages. Since a header can span a fragment
+        for the messages, we need to merge the data if the header spans the
+        boundary of two receives, but want to do minimal copies (we don't want
+        to coalesce the buffer into a single buffer after all fragments are
+        received)
+      </para>
+      <para>
+        In this case, the fraction of the message from the start of the
+        fragmented header to the end of the message is copied into a new buffer,
+        and the next chunk is read from the transport into that buffer starting
+        at that point, and when that fragment is parsed, that HFV is generated
+        with the complete header value in the new message. (see <xref
+        linkend="transport-chunk"/> below).
+      </para>
+      <para>
+      <figure id="transport-chunk">
+        <title>Transport Chunking</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="chunk-image" format="GIF" align="center"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+      </para>
+      <para>
+        The actual memory buffer(s) in which the messages live are owned by the
+        SipMessage class, and do not ownership does not pass to the HFVs. The
+        SipMessage class needs to keep a list of these headers, and ensure that
+        they are properly destructed when they are no longer needed. More
+        information is available on this in the data structures section.
+       </para>
+
+
+
+    </section>
+  </section>
+</article>
+
