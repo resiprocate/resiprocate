@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.34 2003/01/08 20:45:49 davidb Exp $
+# $Id: Makefile,v 1.35 2003/01/10 02:51:17 derekm Exp $
 
 USE_SSL = 1
 
@@ -47,7 +47,10 @@ TESTPROGRAMS =	\
 	        testSipMessage.cxx \
 	        testSipStack1.cxx \
 	        testTcpTransport.cxx \
+		testLockStep.cxx \
 		testMultipartMixedContents.cxx \
+		testClient.cxx \
+		testServer.cxx \
 #		testTlsConnection.cxx \
 
 
