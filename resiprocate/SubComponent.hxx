@@ -2,6 +2,7 @@
 #define SUBCOMPONENT_HXX
 
 #include <string>
+#include <iostream>
 
 namespace Vocal2
 {
@@ -11,27 +12,28 @@ class SubComponent
 {
    public:
 
-      enum ParamType{ Unknown, TTL, Transport, Maddr, LR, Method , User };
+      enum Type{ Unknown, TTL, Transport, Maddr, LR, Method, User };
       
-      SubComponent(ParamType type);
+      SubComponent(Type type);
       virtual ~SubComponent() {}
       
-      ParamType getType();
+      Type getType() const;
 
-      virtual const std::string& getName();
+      virtual const std::string& getName() const;
+
       virtual SubComponent* clone() const;
 
       SubComponent* next;
-      
-      
-
    private:
       static std::string  ParamString[];
-      ParamType mType;
+      Type mType;
 
 };
  
+
 }
+
+std::ostream& operator<<(std::ostream& stream, const Vocal2::SubComponent& comp);
 
 
 #endif

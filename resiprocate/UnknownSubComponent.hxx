@@ -10,8 +10,8 @@ namespace Vocal2
 class UnknownSubComponent : public StringSubComponent
 {
    public:
-      UnknownSubComponent(const char* startName, uint nameSize,
-                       const char* startData, uint dataSize);
+      UnknownSubComponent(const char* startName, unsigned int nameSize,
+                       const char* startData, unsigned int dataSize);
       
       UnknownSubComponent(const std::string& name, const std::string& data);
       
@@ -20,8 +20,9 @@ class UnknownSubComponent : public StringSubComponent
    private:
       std::string mName;
 };
- 
+
 }
 
+std::ostream& operator<<(std::ostream& stream, const UnknownSubComponent& comp);
 
 #endif
