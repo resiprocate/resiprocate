@@ -322,7 +322,10 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
 Data 
 Helper::computeUniqueBranch()
 {
-   Data result("z9hG4bK"); // magic cookie per rfc2543bis-09    
+   static const Data cookie("z9hG4bK"); // magic cookie per rfc2543bis-09    
+
+   Data result(16, true);
+   result += cookie;
    result += Random::getRandomHex(4);
    result += "C1";
    result += Random::getRandomHex(2);
@@ -702,7 +705,8 @@ Helper::addAuthorization(SipMessage& request,
 Uri
 Helper::makeUri(const Data& aor, const Data& scheme)
 {
-   Data tmp(scheme);
+   Data tmp(aor.size() + scheme.size() + 1, true);
+   tmp += scheme;
    tmp += Symbols::COLON;
    tmp += aor;
    Uri uri(tmp);
