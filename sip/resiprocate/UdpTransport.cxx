@@ -22,6 +22,9 @@
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/Preparse.hxx>
+#include <sipstack/Logger.hxx>
+
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 using namespace std;
 using namespace Vocal2;
@@ -174,7 +177,8 @@ void UdpTransport::process()
       // preparse the message
       // stuff the message in the 
       
-      mRxFifo.add(message);
+      DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message);
+      mStateMachineFifo.add(message);
    }
 }
 

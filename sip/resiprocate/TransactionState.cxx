@@ -13,6 +13,7 @@ void
 TransactionState::process(SipStack& stack)
 {
    Message* message = stack.mStateMacFifo.getNext();
+   DebugLog (<< "got message out of state machine fifo: " << message);
    
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
    TimerMessage* timer=0;
@@ -26,6 +27,8 @@ TransactionState::process(SipStack& stack)
    TransactionState* state = stack.mTransactionMap.find(tid);
    if (state) // found transaction for sip msg
    {
+      DebugLog (<< "Found transaction for msg " << *state);
+      
       switch (state->mMachine)
       {
          case ClientNonInvite:
