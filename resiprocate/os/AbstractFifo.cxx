@@ -35,13 +35,13 @@ AbstractFifo ::getNext()
 }
 
 void*
-AbstractFifo ::getNext(int ms)
+AbstractFifo::getNext(int ms)
 {
    Lock lock(mMutex); (void)lock;
 
    // Wait while there are messages available.
    //
-   while (mFifo.empty())
+   if (mFifo.empty())
    {
       bool signaled = mCondition.wait(mMutex, ms);
       if (!signaled)
