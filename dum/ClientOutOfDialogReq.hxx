@@ -17,7 +17,7 @@ class ClientOutOfDialogReq : public BaseUsage
       {
          public:
             // throws if no session 
-            ClientOutOfDialogHandler* operator->();
+            ClientOutOfDialogReq* operator->();
          private:
             friend class DialogUsageManager;
             Handle(DialogUsageManager& dum);
@@ -25,7 +25,10 @@ class ClientOutOfDialogReq : public BaseUsage
 
    private:
       friend class DialogUsageManager;
-      ClientOutOfDialog::Handle mHandle;
+      ClientOutOfDialogReq(DialogUsageManager& dum,
+                           Dialog& dialog);
+      
+      ClientOutOfDialogReq::Handle mHandle;
 };
  
 }

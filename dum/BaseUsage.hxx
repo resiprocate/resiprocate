@@ -5,12 +5,21 @@ namespace resip
 {
 
 class DialogUsageManager;
+class Dialog;
 
 class BaseUsage
 {
    public:
-      class Exception : BaseException
+      class Exception : public BaseException
       {
+         public:
+            Exception(const Data& msg,
+                      const Data& file,
+                      int line)
+               : BaseException(msg, file, line)
+            {}
+            
+            virtual const char* name() const {return "BaseUsage::Exception";}
       };
 
       class Handle
@@ -29,6 +38,7 @@ class BaseUsage
       };
 
       BaseUsage(DialogUsageManager& dum, Dialog& dialog);
+      virtual ~BaseUsage();
 
       SipMessage* makeInviteSession();
       SipMessage* makeSubscription();

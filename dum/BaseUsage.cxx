@@ -1,5 +1,8 @@
 #include "BaseUsage.hxx"
 
+BaseUsage::~BaseUsage()
+{}
+
 SipMessage* 
 BaseUsage::makeInviteSession()
 {
