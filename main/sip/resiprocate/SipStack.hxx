@@ -2,12 +2,13 @@
 #define RESIP_SIPSTACK_HXX
 
 #include <set>
+#include <iostream>
 
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/TransportType.hxx"
+#include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/Executive.hxx"
 #include "resiprocate/TransactionController.hxx"
-#include "resiprocate/os/BaseException.hxx"
 
 namespace resip 
 {
@@ -155,7 +156,7 @@ class SipStack
       friend class TestFSM;
 };
 
-std::ostream& operator<<(ostream& strm, const SipStack& stack);
+std::ostream& operator<<(std::ostream& strm, const SipStack& stack);
  
 }
 

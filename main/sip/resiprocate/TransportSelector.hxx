@@ -9,7 +9,6 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
 
@@ -69,17 +68,17 @@ class TransportSelector
       ExactTupleMap mExactTransports;
 
       // specific port, ANY interface
-      typedef map<Tuple, Transport*, Tuple::AnyInterfaceCompare> AnyInterfaceTupleMap;
+      typedef std::map<Tuple, Transport*, Tuple::AnyInterfaceCompare> AnyInterfaceTupleMap;
       AnyInterfaceTupleMap mAnyInterfaceTransports;
 
       // ANY port, specific interface
-      typedef map<Tuple, Transport*, Tuple::AnyPortCompare> AnyPortTupleMap;
+      typedef std::map<Tuple, Transport*, Tuple::AnyPortCompare> AnyPortTupleMap;
       AnyPortTupleMap mAnyPortTransports;
 
       // ANY port, ANY interface
-      typedef map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
+      typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
       AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
-
+      
       HashMap<Data, TlsTransport*> mTlsTransports;      // domain name -> Transport
       
       // fake socket for connect() and route table lookups
