@@ -16,7 +16,7 @@ using namespace resip;
 int
 main(int argc, char** argv)
 {
-   Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::INFO, argv[0]);
+   Log::initialize(Log::Cout, argc > 1 ? Log::toLevel(argv[1]) :  Log::Info, argv[0]);
 
    {
       Data foo("abcdefghi1232454435");

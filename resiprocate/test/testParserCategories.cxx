@@ -51,7 +51,7 @@ class TR
 int
 main(int arc, char** argv)
 {
-   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
    {
       TR _tr("Test iterator erase in ParserContainer");

@@ -67,10 +67,10 @@ class RegistrationServer : public ServerRegistrationHandler
 int 
 main (int argc, char** argv)
 {
-    int level=(int)Log::DEBUG;
+    int level=(int)Log::Debug;
     if (argc >1 ) level = atoi(argv[1]);
 
-    Log::initialize(Log::COUT, (resip::Log::Level)level, argv[0]);
+    Log::initialize(Log::Cout, (resip::Log::Level)level, argv[0]);
 
    SipStack clientStack;
    clientStack.addTransport(UDP, 15060);
