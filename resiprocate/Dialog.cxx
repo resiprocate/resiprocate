@@ -687,7 +687,7 @@ resip::operator<<(std::ostream& strm, const Dialog& d)
    strm << "Dialog: [" << d.dialogId() 
         << " created=" << d.mCreated 
         << ",remoteTarget=" << d.mRemoteTarget 
-      //<< "routeset=" << Inserter(d.mRouteSet) << std::endl
+        << "routeset=" << Inserter(d.mRouteSet) << std::endl
         << ",remoteSeq=" << d.mRemoteSequence 
         << ",remote=" << d.mRemoteUri 
         << ",remoteTag=" << d.mRemoteTag 
