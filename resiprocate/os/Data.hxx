@@ -1,7 +1,7 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.17 2002/10/30 23:48:39 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.18 2002/10/31 01:08:18 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -73,13 +73,13 @@ bool operator!=(const char* s, const Data& d);
 std::ostream& operator<<(std::ostream& strm, const Data& d);
  
 }
- 
-
 
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 #include <ext/hash_map>
+
 namespace __gnu_cxx
 {
+
 struct hash<Vocal2::Data>
 {
       size_t operator()(const Vocal2::Data& data) const
@@ -94,7 +94,7 @@ struct hash<Vocal2::Data>
          return size_t(__h);
       }
 };
-
+ 
 }
 
 #endif // gcc >= 3.1
