@@ -1,8 +1,8 @@
 #ifndef ParserContainer_hxx
 #define ParserContainer_hxx
 
-#include <sip2/sipstack/HeaderFieldValueList.hxx>
-#include <sip2/sipstack/ParserCategory.hxx>
+#include <sipstack/HeaderFieldValueList.hxx>
+#include <sipstack/ParserCategory.hxx>
 
 namespace Vocal2
 {

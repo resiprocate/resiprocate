@@ -3,7 +3,7 @@
 
 #define DELIM " | "
 
-#include <string>
+#include <sipstack/Data.hxx>
 #include <unistd.h>
 #include <syslog.h>
 #include <sipstack/Subsystem.hxx>
@@ -36,19 +36,19 @@ class Log
 
       /// Return the loglevel, hostname, appname, pid, tid, subsystem
       static std::ostream& tags(Log::Level level, const Subsystem& subsystem, std::ostream& strm); 
-      static std::string timestamp();
-      static void initialize(Type type, Level level, const std::string& appName);
+      static Data timestamp();
+      static void initialize(Type type, Level level, const Data& appName);
       static void setLevel(Level level);
       static Level level() { return _level; }
-      static Level toLevel(const std::string& l);
-      static std::string toString(Level l);
+      static Level toLevel(const Data& l);
+      static Data toString(Level l);
       static Mutex _mutex;
 
    protected:
       static Level _level;
       static Type _type;
-      static std::string _appName;
-      static std::string _hostname;
+      static Data _appName;
+      static Data _hostname;
       static pid_t _pid;
       static const char _descriptions[][32];
 };
