@@ -27,8 +27,8 @@ using namespace Vocal2;
 const size_t UdpTransport::MaxBufferSize = 8192;
 
 
-UdpTransport::UdpTransport(const Data& host, int portNum, Fifo<Message>& fifo) : 
-   Transport(host, portNum, fifo)
+UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& interface, Fifo<Message>& fifo) : 
+   Transport(sendhost, portNum, interface, fifo)
 {
    mFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
