@@ -1,10 +1,7 @@
 
 #include <cassert>
 
-
-#ifdef WIN32
 #include "sip2/util/Socket.hxx"
-#endif
 
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/util/Data.hxx"
@@ -17,6 +14,7 @@
 #include "sip2/sipstack/Pkcs7Contents.hxx"
 #include "sip2/sipstack/Security.hxx"
 #include "sip2/sipstack/Helper.hxx"
+#include "sip2/sipstack/Pidf.hxx"
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
@@ -53,12 +51,20 @@ TuIM::TuIM(SipStack* stack,
      mAor(aor),
      mContact(contact),
      mPassword( Data::Empty ),
+     mPidf( new Pidf ),
      mRegistrationDialog(NameAddr(contact)),
      mNextTimeToRegister(0)
 {
    assert( mStack );
    assert(mPageCallback);
    assert(mErrCallback);
+   assert(mPidf);
+   
+   mPidf->setSimpleId( Random::getRandomHex(4) );  
+   mPidf->setEntity( mAor.getAor() );  
+   mPidf->setSimpleStatus( true, Data::Empty, mContact.getAor() );
+   
+  
 }
 
 
@@ -69,6 +75,11 @@ TuIM::PresCallback::~PresCallback()
 
 void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& encryptFor)
 {
+   if ( text.empty() )
+   {
+      DebugLog( << "tried to send blank message - dropped " );
+      return;
+   }
    DebugLog( << "send to <" << dest << ">" << "\n" << text );
 
    NameAddr target;
@@ -173,10 +184,8 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    
    auto_ptr<SipMessage> response( dialog->makeResponse( *msg, 200 ));
    mStack->send( *response );
-   //delete response; response=0;
 
-   auto_ptr<SipMessage> notify( dialog->makeNotify() );
-   mStack->send( *notify );
+   sendNotify( dialog );
 }
 
 
@@ -446,15 +455,32 @@ TuIM::removeBuddy( const Uri& name)
 
 
 void 
+TuIM::sendNotify(Dialog* dialog)
+{ 
+   assert( dialog );
+   
+   auto_ptr<SipMessage> notify( dialog->makeNotify() );
+
+   Pidf* pidf = new Pidf( *mPidf );
+
+   notify->setContents( pidf );
+   
+   mStack->send( *notify );
+}
+
+
+void 
 TuIM::setMyPresense( const bool open, const Data& status )
 {
+   assert( mPidf );
+   mPidf->setSimpleStatus( open, status, mContact.getAor() );
+   
    for ( unsigned int i=0; i< mSubscribers.size(); i++)
    {
       Dialog* dialog = mSubscribers[i];
       assert( dialog );
       
-      auto_ptr<SipMessage> notify( dialog->makeNotify() );
-      mStack->send( *notify );
+      sendNotify(dialog);
    }
 }
 
