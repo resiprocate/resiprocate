@@ -519,7 +519,7 @@ Profile::validateContentLanguageEnabled() const
 bool& 
 Profile::validateAcceptEnabled()
 {
-   return mValidateContentEnabled;   
+   return mValidateAcceptEnabled;   
 }
 
 const bool 
