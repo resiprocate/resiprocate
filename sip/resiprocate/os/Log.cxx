@@ -1,4 +1,3 @@
-
 #include "sip2/util/Socket.hxx"
 
 #include <cassert>
@@ -30,10 +29,22 @@ Data Log::_hostname;
 	pid_t Log::_pid=0;
 #endif
 
+pthread_key_t Log::_levelKey;
+volatile short Log::touchCount = 0;
+
+map<pthread_t, std::pair<Log::ThreadSetting, bool> > Log::_threadToLevel;
+map<int, std::set<pthread_t> > Log::_serviceToThreads;
+map<int, Log::Level> Log::_serviceToLevel;
+
 const char
 Log::_descriptions[][32] = {"EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "DEBUG_STACK", ""}; 
 
 Mutex Log::_mutex;
+
+void freeThreadSetting(void* setting)
+{
+   delete static_cast<Log::ThreadSetting*>(setting);
+}
 
 void 
 Log::initialize(Type type, Level level, const Data& appName)
@@ -52,7 +63,7 @@ Log::initialize(Type type, Level level, const Data& appName)
 #else
    _pid = getpid();
 #endif
-
+   pthread_key_create(&Log::_levelKey, freeThreadSetting);
 }
 
 void
@@ -158,6 +169,97 @@ Log::timestamp()
 
    return Data(datebuf);
 }
+
+
+Log::Level 
+Log::getServiceLevel(int service)
+{
+   Lock lock(_mutex);
+   map<int, Level>::iterator res = Log::_serviceToLevel.find(service);
+   if(res == Log::_serviceToLevel.end())
+   {
+      //!dcm! -- should perhaps throw an exception here, instead of setting a
+      //default level of LOG_ERROR, but nobody uses this yet
+      Log::_serviceToLevel[service] = ERR;
+      return ERR;
+   }
+   return res->second;
+}
+   
+const Log::ThreadSetting*
+Log::getThreadSetting()
+{
+   ThreadSetting* setting = static_cast<ThreadSetting*>(pthread_getspecific(Log::_levelKey));
+   if (setting == 0)
+   {
+      return 0;
+   }
+   if (Log::touchCount > 0)
+   {
+      Lock lock(_mutex);
+      pthread_t thread = pthread_self();
+      map<pthread_t, pair<ThreadSetting, bool> >::iterator res = Log::_threadToLevel.find(thread);
+      assert(res != Log::_threadToLevel.end());
+      if (res->second.second)
+      {
+         setting->level = res->second.first.level;
+         res->second.second = false;
+         touchCount--;
+//         cerr << "**Log::getThreadSetting:touchCount: " << Log::touchCount << "**" << endl;
+
+         //cerr << "touchcount decremented" << endl;
+      }
+   }
+   return setting;
+}
+
+void 
+Log::setThreadSetting(int serv)
+{
+   Log::setThreadSetting(ThreadSetting(serv, getServiceLevel(serv)));
+}
+
+void 
+Log::setThreadSetting(int serv, Log::Level l)
+{
+   Log::setThreadSetting(ThreadSetting(serv, l));
+}
+
+void 
+Log::setThreadSetting(ThreadSetting info)
+{
+   //cerr << "Log::setThreadSetting: " << "service: " << info.service << " level " << toString(info.level) << " for " << pthread_self() << endl;
+   pthread_t thread = pthread_self();
+   pthread_setspecific(_levelKey, (void *) new ThreadSetting(info));
+   Lock lock(_mutex);
+
+   if (Log::_threadToLevel.find(thread) != Log::_threadToLevel.end())
+   {
+      if (Log::_threadToLevel[thread].second == true)
+      {
+         touchCount--;
+      }
+   }
+   Log::_threadToLevel[thread].first = info;
+   Log::_threadToLevel[thread].second = false;
+   Log::_serviceToThreads[info.service].insert(thread);
+}
+   
+void 
+Log::setServiceLevel(int service, Level l)
+{
+   Lock lock(_mutex);
+   Log::_serviceToLevel[service] = l;
+   set<pthread_t>& threads = Log::_serviceToThreads[service];
+   for (set<pthread_t>::iterator i = threads.begin(); i != threads.end(); i++)
+   {
+      Log::_threadToLevel[*i].first.level = l;
+      Log::_threadToLevel[*i].second = true;
+   }
+   Log::touchCount += threads.size();
+//   cerr << "**Log::setServiceLevel:touchCount: " << Log::touchCount << "**" << endl;
+}
+
    
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
