@@ -30,13 +30,6 @@ class MIME_Header
 {
 };
 
-class MIME_Transfer_Encoding_Header : public MIME_Header
-{
-   public:
-      typedef Token Type;
-};
-extern MIME_Transfer_Encoding_Header h_Transfer_Encoding;
-
 class MIME_Id_Header : public MIME_Header
 {
    public:
@@ -85,12 +78,12 @@ class Contents : public LazyParser
       void remove(const MIME_Header& headerType);
 
       // shared header types
-      Content_Type_Header::Type& header(const Content_Type_Header& headerType) const;
-      Content_Disposition_Header::Type& header(const Content_Disposition_Header& headerType) const;
-      ParserContainer<Content_Language_MultiHeader::Type>& header(const Content_Language_MultiHeader& headerType) const;
+      ContentType_Header::Type& header(const ContentType_Header& headerType) const;
+      ContentDisposition_Header::Type& header(const ContentDisposition_Header& headerType) const;
+      ContentTransferEncoding_Header::Type& header(const ContentTransferEncoding_Header& headerType) const;
+      ParserContainer<ContentLanguage_MultiHeader::Type>& header(const ContentLanguage_MultiHeader& headerType) const;
 
       // MIME specific header types
-      MIME_Transfer_Encoding_Header::Type& header(const MIME_Transfer_Encoding_Header& headerType) const;
       MIME_Id_Header::Type& header(const MIME_Id_Header& headerType) const;
       MIME_Description_Header::Type& header(const MIME_Description_Header& headerType) const;
 
@@ -104,9 +97,9 @@ class Contents : public LazyParser
 
       // MIME version? version & minorVersion as ints?
       mutable Mime mType;
-      mutable Content_Disposition_Header::Type *mDisposition;
-      mutable Token *mTransferEncoding;      
-      mutable ParserContainer<Content_Language_MultiHeader::Type> *mLanguages;
+      mutable ContentDisposition_Header::Type *mDisposition;
+      mutable StringCategory *mTransferEncoding;      
+      mutable ParserContainer<ContentLanguage_MultiHeader::Type> *mLanguages;
       mutable Token *mId;
       mutable StringCategory *mDescription;
 
