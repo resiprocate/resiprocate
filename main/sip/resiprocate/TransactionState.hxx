@@ -40,6 +40,15 @@ class TransactionState
          Bogus
       } State;
 
+      typedef enum
+      {
+         NotStarted,
+         Waiting,
+         Complete,
+         NoLookupRequired // used for sending responses
+      } DnsState;
+
+
       TransactionState(SipStack& stack, Machine m, State s);
       
       void processDns( Message* msg );
@@ -81,11 +90,11 @@ class TransactionState
       // !rk! The contract for this variable needs to be defined.
       SipMessage* mMsgToRetransmit;
 
-      DnsResolver::Id mDnsQueryId;
-      DnsResolver::State mDnsState;
-      DnsResolver::TupleIterator mDnsListBegin;
-      DnsResolver::TupleIterator mDnsListEnd;
-      DnsResolver::TupleIterator mDnsListCurrent;
+      //DnsResolver::Id mDnsQueryId;
+      DnsState mDnsState;
+      DnsResolver::TupleList mTuples;
+      DnsResolver::TupleIterator mCurrent;
+      
       Transport::Tuple mSource; // used to reply to requests
       
       bool mRFC2543ResponseUpdated;

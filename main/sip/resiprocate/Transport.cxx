@@ -12,7 +12,6 @@
 #include "sip2/sipstack/Transport.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/TransportMessage.hxx"
-#include "sip2/sipstack/DnsMessage.hxx"
 
 using namespace Vocal2;
 using namespace std;

@@ -1,4 +1,3 @@
- 
 #include "sip2/util/Socket.hxx"
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/MD5Stream.hxx"
@@ -11,7 +10,7 @@
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/TransportMessage.hxx"
 #include "sip2/sipstack/ReliabilityMessage.hxx"
-#include "sip2/sipstack/DnsMessage.hxx"
+#include "sip2/sipstack/DnsResolver.hxx"
 
 
 using namespace Vocal2;
@@ -25,13 +24,13 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
    mIsReliable(false), // !jf! 
    mCancelStateMachine(0),
    mMsgToRetransmit(0),
-   mDnsQueryId(0),
-   mDnsState(DnsResolver::NotStarted),
+   mDnsState(NotStarted),
+   mCurrent(mTuples.end()),
    mRFC2543ResponseUpdated(true)
 {
    if (m == ServerNonInvite || m == ServerInvite)
    {
-      mDnsState = DnsResolver::NoLookupRequired;
+      mDnsState = NoLookupRequired;
    }
 }
 
@@ -56,9 +55,6 @@ TransactionState::~TransactionState()
    mMsgToRetransmit = 0;
 
    mState = Bogus;
-
-   mStack.mDnsResolver.stop(mDnsQueryId);
-   mDnsQueryId = 0;
 }
 
 
@@ -237,22 +233,18 @@ TransactionState::processDns(Message* message)
    if (isTransportError(message))
    {
       DebugLog (<< "TransactionState::processDns: " << message->brief());
-      assert (mDnsState != DnsResolver::NotStarted);
-
-      DnsResolver::TupleIterator next = mDnsListCurrent;
+      assert (mDnsState != NotStarted);
+      
+      DnsResolver::TupleIterator next = mCurrent;
       next++;
-
-      if (next != mDnsListEnd) // not at end
+      
+      if (next != mTuples.end()) // not at end
       {
-         mDnsListCurrent++;
+         mCurrent = next;
          mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementCounter();
          sendToWire(mMsgToRetransmit);
       }
-      else if (mDnsState != DnsResolver::Complete)
-      {
-         mDnsState = DnsResolver::Waiting;
-      }
-      else if (mDnsState == DnsResolver::Complete)
+      else
       {
          // send 503 
          // not for response or ACK !jf!
@@ -260,7 +252,7 @@ TransactionState::processDns(Message* message)
          {
             sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));
          }
-
+         
          DebugLog (<< "Failed to send a request to any tuples");
          delete this;
       }
@@ -269,36 +261,14 @@ TransactionState::processDns(Message* message)
       return;
    }
    
-   DnsMessage* dns = dynamic_cast<DnsMessage*>(message);
+   DnsResolver::DnsMessage* dns = dynamic_cast<DnsResolver::DnsMessage*>(message);
    if (dns)
    {
-      // !rk! what if no results are returned?
-      mDnsListBegin = dns->begin();
-      mDnsListEnd = dns->end();
-
-      if (mDnsQueryId == 0)
-      {
-         mDnsQueryId = dns->id();
-         mDnsListCurrent = dns->begin();
-      }
-      assert (mDnsQueryId != 0);
-      assert (mDnsState != DnsResolver::NotStarted);
-
-      DnsResolver::State previousState = mDnsState;
-      if (dns->complete())
-      {
-         mDnsState = DnsResolver::Complete;
-      }
-      else
-      {
-         mDnsState = DnsResolver::PartiallyComplete;
-      }
-
-      if (previousState == DnsResolver::Waiting)
-      {
-         sendToWire(mMsgToRetransmit);
-      }
-
+      // If dns query failed, the DnsResolver will return an empty list of tuples
+      mDnsState = Complete;
+      mTuples = dns->mTuples;
+      mCurrent = mTuples.begin();
+      sendToWire(mMsgToRetransmit);
       delete dns;
    }
 }
@@ -1161,7 +1131,7 @@ TransactionState::isTimer(Message* msg) const
 bool
 TransactionState::isDns(Message* msg) const
 {
-   return dynamic_cast<DnsMessage*>(msg) != 0;
+   return dynamic_cast<DnsResolver::DnsMessage*>(msg) != 0;
 }
 
 bool
@@ -1212,22 +1182,22 @@ TransactionState::sendToWire(Message* msg)
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
    assert(sip);
 
-   if (mDnsState == DnsResolver::NotStarted)
+   if (mDnsState == NotStarted)
    {
       DebugLog(<< "TransactionState::sendToWire pausing for DNS lookup");
-      mDnsState = DnsResolver::Waiting;
+      mDnsState = Waiting;
       mStack.mTransportSelector.dnsResolve(sip);
    }
-   else if (mDnsState == DnsResolver::NoLookupRequired)
+   else if (mDnsState == NoLookupRequired)
    {
       assert(sip->isResponse());
       mStack.mTransportSelector.send(sip, mSource);
    }
-   else if (mDnsState != DnsResolver::Waiting)
+   else 
    {
-      assert (mDnsState != DnsResolver::Waiting); // !jf! - is this bogus?
-      assert (mDnsListCurrent != mDnsListEnd);
-      mStack.mTransportSelector.send(sip, *mDnsListCurrent);	  
+      assert (mDnsState != Waiting); // !jf! - is this bogus?
+      assert (mCurrent != mTuples.end());
+      mStack.mTransportSelector.send(sip, *mCurrent);	  
    }
 }
 
@@ -1237,17 +1207,17 @@ TransactionState::resendToWire(Message* msg) const
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
    assert(sip);
 
-   assert (mDnsState != DnsResolver::NotStarted);
-   assert (mDnsState != DnsResolver::Waiting); // !jf! - is this bogus?
-   assert (mDnsListCurrent != mDnsListEnd);
-   if (mDnsState == DnsResolver::NoLookupRequired)
+   assert (mDnsState != NotStarted); 
+   assert (mDnsState != Waiting);  // !jf! can this happen? 
+   assert (mCurrent != mTuples.end());
+   if (mDnsState == NoLookupRequired)
    {
       assert(sip->isResponse());
       mStack.mTransportSelector.send(sip, mSource);
    }
    else
    {
-      mStack.mTransportSelector.send(sip, *mDnsListCurrent, true);
+      mStack.mTransportSelector.send(sip, *mCurrent, true);
    }
 }
 
