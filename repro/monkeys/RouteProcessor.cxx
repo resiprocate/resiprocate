@@ -18,9 +18,10 @@ RouteProcessor::~RouteProcessor()
 {}
 
 /** @brief This monkey looks to see if the request has
-  *        a route header (the RequestContext has already
+  *        a Route header (the RequestContext has already
   *        done preprocessing, and has removed any topmost
-  *        route that was self). If there is, the candidate
+  *        route that was self). If there is, the previous
+  *		   hop was a strict routing proxy and the candidate
   *        set is exactly the RURI of the received request
   *        (after the above preprocessing).
   */
@@ -32,6 +33,9 @@ RouteProcessor::handleRequest(RequestContext& context)
   if (request.exists(h_Routes) &&
       !request.header(h_Routes).empty())
   {
+    // remove all the candidate targets we may have and 
+	// just use the Request URI in the message as the only
+	// candidate
     assert(context.getCandidates().empty());
     context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
     return RequestProcessor::SkipThisChain;

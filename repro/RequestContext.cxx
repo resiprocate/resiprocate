@@ -51,6 +51,8 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
    { 
       assert(sip);
       mOriginalRequest=sip;
+	  
+	  // RFC 3261 Section 16.4
       fixStrictRouterDamage();
       removeTopRouteIfSelf();
    }
@@ -151,6 +153,7 @@ RequestContext::sendResponse(const SipMessage& msg)
 //      earlier. It will do the wrong thing if some other 
 //      malbehaving implementation lobs something at us with
 //      ;lr in the RURI and it wasn't us.
+//		(from Section 16.4 of RFC 3261)
 void
 RequestContext::fixStrictRouterDamage()
 {

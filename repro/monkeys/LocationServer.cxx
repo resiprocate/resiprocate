@@ -24,6 +24,9 @@ LocationServer::handleRequest(RequestContext& context)
   RegistrationPersistenceManager::contact_list_t contacts 
                                 = mStore.getContacts(inputUri);
 
+  // [TODO] !rwm! Need to verify that we actually got some contacts
+  // Another monkey needs to run before this to return 404 responses
+
   mStore.unlockRecord(inputUri);
 
   for ( RegistrationPersistenceManager::contact_list_t::iterator  
