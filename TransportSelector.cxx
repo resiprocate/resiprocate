@@ -550,7 +550,6 @@ TransportSelector::findTransport(const Tuple& search)
    //DebugLog (<< "Any interface / Any port: " << Inserter(mAnyPortAnyInterfaceTransports));
    
    WarningLog(<< "Can't find matching transport " << search);
-   assert(0);
    
    return 0;
 }
