@@ -14,6 +14,7 @@ namespace Vocal2
 
 class SipMessage;
 class SendData;
+class Connection;
 
 class Transport
 {
@@ -43,6 +44,7 @@ class Transport
             int port;
             Transport::Type transportType;
             Transport* transport;
+            Connection* connection;
       };
       
       class Exception : public BaseException
