@@ -18,6 +18,7 @@ class ClientRegistration: public NonDialogUsage
       ClientRegistrationHandle getHandle();
 
       void addBinding(const NameAddr& contact);
+      void addBinding(const NameAddr& contact, int registrationTime);
       void removeBinding(const NameAddr& contact);
       void removeAll(bool stopRegisteringWhenDone=false);
       void removeMyBindings(bool stopRegisteringWhenDone=false);

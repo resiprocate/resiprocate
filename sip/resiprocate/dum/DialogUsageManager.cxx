@@ -420,13 +420,25 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
 SipMessage&
 DialogUsageManager::makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, AppDialogSet* appDs)
 {
-   return makeNewSession(new SubscriptionCreator(*this, target, from, eventType), appDs);
+   return makeNewSession(new SubscriptionCreator(*this, target, from, eventType, getProfile()->getDefaultSubscriptionTime()), appDs);
+}
+
+SipMessage&
+DialogUsageManager::makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, int subscriptionTime, AppDialogSet* appDs)
+{
+   return makeNewSession(new SubscriptionCreator(*this, target, from, eventType, subscriptionTime), appDs);
 }
 
 SipMessage& 
 DialogUsageManager::makeRegistration(const NameAddr& target, AppDialogSet* appDs)
 {
-   return makeNewSession(new RegistrationCreator(*this, target), appDs); 
+   return makeNewSession(new RegistrationCreator(*this, target, getProfile()->getDefaultRegistrationTime()), appDs); 
+}
+
+SipMessage& 
+DialogUsageManager::makeRegistration(const NameAddr& target, int registrationTime, AppDialogSet* appDs)
+{
+   return makeNewSession(new RegistrationCreator(*this, target, registrationTime), appDs); 
 }
 
 SipMessage& 
