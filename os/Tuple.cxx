@@ -336,7 +336,7 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
                           &(tuple.m_anonv6.sin6_addr),
                           str,
                           sizeof(str));       
-       ostrm << ":" << ntohs(tuple.m_anonv6.sin6_port);
+       ostrm << " port=" << ntohs(tuple.m_anonv6.sin6_port);
     }
     else
 #endif
