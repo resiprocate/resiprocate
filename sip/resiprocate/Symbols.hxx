@@ -7,6 +7,8 @@ namespace Vocal2
 class Symbols
 {
    public:
+      static const char * const DefaultSipVersion;
+
       static const char * const SPACE;
       static const char * const COLON;
       static const char * const EQUALS;
