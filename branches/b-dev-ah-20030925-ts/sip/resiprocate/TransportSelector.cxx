@@ -337,11 +337,15 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
    {
       if (destination.transportType == TLS)
       {
-         destination.transport = findTlsTransport(msg->getTlsDomain(),srcTuple);
+        destination.transport = findTlsTransport(msg->getTlsDomain()//,
+                                                 /*srcTuple*/
+          );
       }
       else
       {
-         destination.transport = findTransport(destination,srcTuple);
+        destination.transport = findTransport(destination//,
+                                              /*srcTuple*/
+          );
       }
    }
 
