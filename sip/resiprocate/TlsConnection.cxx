@@ -20,15 +20,16 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security, bool server ) : Connection(tuple, fd)
+TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security, bool server ) :
+    Connection(tuple, fd)
 {
    DebugLog (<< "Creating TLS connection " << tuple << " on " << fd);
 
-   ssl = NULL;
+   mSsl = NULL;
 
    if (server)
    {
-      DebugLog( << "Trying to from TLS connection - acting as server" );
+      DebugLog( << "Trying to form TLS connection - acting as server" );
    }
    else
    {
@@ -39,22 +40,26 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    SSL_CTX* ctx = security->getTlsCtx(server);
    assert(ctx);
    
-   ssl = SSL_new(ctx);
-   assert(ssl);
+   mSsl = SSL_new(ctx);
+   assert(mSsl);
    
-   bio = BIO_new_socket(fd,0/*close flag*/);
-   assert( bio );
+   mBio = BIO_new_socket(fd,0/*close flag*/);
+   assert( mBio );
    
-   SSL_set_bio( ssl, bio, bio );
+   SSL_set_bio( mSsl, mBio, mBio );
 
    mState = server ? Accepting : Connecting;
+
    if (checkState() == Broken)
        throw Transport::Exception( Data("TLS setup failed"), __FILE__, __LINE__ );
 }
 
+
 TlsConnection::State
 TlsConnection::checkState()
 {
+   DebugLog(<<"state is " << fromState(mState));
+
    if (mState == Up || mState == Broken)
      return mState;
 
@@ -64,16 +69,16 @@ TlsConnection::checkState()
    {
        if (mState == Accepting)
        {
-	   ok = SSL_accept(ssl);
+	   ok = SSL_accept(mSsl);
        }
        else
        {
-	   ok = SSL_connect(ssl);
+	   ok = SSL_connect(mSsl);
        }
 
        if ( ok <= 0 )
        {
-	   int err = SSL_get_error(ssl,ok);
+	   int err = SSL_get_error(mSsl,ok);
 	   char buf[256];
 	   ERR_error_string_n(err,buf,sizeof(buf));
 	   DebugLog( << "TLS error ok=" << ok << " err=" << err << " " << buf );
@@ -147,7 +152,7 @@ TlsConnection::checkState()
 	   }
 
 	   mState = Broken;
-	   bio = NULL;
+	   mBio = 0;
 	   ErrLog (<< "Couldn't TLS connect");
 	   return mState;
        }
@@ -158,11 +163,11 @@ TlsConnection::checkState()
 
    InfoLog( << "TLS handshake starting" ); 
 
-   ok = SSL_do_handshake(ssl);
+   ok = SSL_do_handshake(mSsl);
       
    if ( ok <= 0 )
    {
-       int err = SSL_get_error(ssl,ok);
+       int err = SSL_get_error(mSsl,ok);
        char buf[256];
        ERR_error_string_n(err,buf,sizeof(buf));
          
@@ -177,7 +182,7 @@ TlsConnection::checkState()
 	   default:
                ErrLog( << "TLS handshake failed "
                        << "ok=" << ok << " err=" << err << " " << buf );
-               bio = NULL;
+               mBio = NULL;
 	       mState = Broken;
 	       return mState;
        }
@@ -192,13 +197,22 @@ TlsConnection::checkState()
 int 
 TlsConnection::read(char* buf, int count )
 {
-   assert( ssl ); 
+   assert( mSsl ); 
    assert( buf );
 
-   if (checkState() != Up)
+   switch(checkState())
+   {
+       case Broken:
+           return -1;
+           break;
+       case Up:
+           break;
+       default:
        return 0;
+           break;
+   }
 
-   if (!bio)
+   if (!mBio)
    {
       DebugLog( << "Got TLS read bad bio  " );
       return 0;
@@ -209,10 +223,10 @@ TlsConnection::read(char* buf, int count )
       return -1;
    }
    
-   int bytesRead = SSL_read(ssl,buf,count);
+   int bytesRead = SSL_read(mSsl,buf,count);
    if (bytesRead <= 0 )
    {
-      int err = SSL_get_error(ssl,bytesRead);
+      int err = SSL_get_error(mSsl,bytesRead);
       switch (err)
       {
          case SSL_ERROR_WANT_READ:
@@ -234,7 +248,7 @@ TlsConnection::read(char* buf, int count )
       }
       assert(0);
    }
-
+   DebugLog(<<"SSL bytesRead="<<bytesRead);
    return bytesRead;
 }
 
@@ -242,23 +256,32 @@ TlsConnection::read(char* buf, int count )
 int 
 TlsConnection::write( const char* buf, int count )
 {
-   assert( ssl );
+   assert( mSsl );
    assert( buf );
    int ret;
  
-   if (checkState() != Up)
+   switch(checkState())
+   {
+       case Broken:
+           return -1;
+           break;
+       case Up:
+           break;
+       default:
        return 0;
+           break;
+   }
 
-   if (!bio)
+   if (!mBio)
    {
       DebugLog( << "Got TLS write bad bio "  );
       return 0;
    }
         
-   ret = SSL_write(ssl,(const char*)buf,count);
+   ret = SSL_write(mSsl,(const char*)buf,count);
    if (ret < 0 )
    {
-      int err = SSL_get_error(ssl,ret);
+      int err = SSL_get_error(mSsl,ret);
       switch (err)
       {
          case SSL_ERROR_WANT_READ:
@@ -306,7 +329,8 @@ TlsConnection::hasDataToRead() // has data that can be read
     if (checkState() != Up)
 	return false;
 
-   int p = SSL_pending(ssl);
+   int p = SSL_pending(mSsl);
+   DebugLog(<<"hasDataToRead(): "<<p);
    return (p>0);
 }
 
@@ -314,12 +338,12 @@ TlsConnection::hasDataToRead() // has data that can be read
 bool 
 TlsConnection::isGood() // has data that can be read 
 {
-   if ( bio == 0 )
+   if ( mBio == 0 )
    {
       return false;
    }
 
-   int mode = SSL_get_shutdown(ssl);
+   int mode = SSL_get_shutdown(mSsl);
    if ( mode != 0 ) 
    {
       return false;
@@ -332,13 +356,13 @@ TlsConnection::isGood() // has data that can be read
 Data 
 TlsConnection::peerName()
 {
-   assert(ssl);
+   assert(mSsl);
    Data ret = Data::Empty;
 
    if (checkState() != Up)
        return Data::Empty;
 
-   if (!bio)
+   if (!mBio)
    {
       DebugLog( << "bad bio" );
       return Data::Empty;
@@ -347,9 +371,9 @@ TlsConnection::peerName()
 #if 1 // print session infor       
    SSL_CIPHER *ciph;
    
-   ciph=SSL_get_current_cipher(ssl);
+   ciph=SSL_get_current_cipher(mSsl);
    InfoLog( << "TLS sessions set up with " 
-            <<  SSL_get_version(ssl) << " "
+            <<  SSL_get_version(mSsl) << " "
             <<  SSL_CIPHER_get_version(ciph) << " "
             <<  SSL_CIPHER_get_name(ciph) << " " );
 #endif
@@ -358,7 +382,7 @@ TlsConnection::peerName()
    assert(0);
 #else
    ErrLog(<< "request peer certificate" );
-   X509* cert = SSL_get_peer_certificate(ssl);
+   X509* cert = SSL_get_peer_certificate(mSsl);
    if ( !cert )
    {
       ErrLog(<< "No peer certifiace in TLS connection" );

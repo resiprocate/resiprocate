@@ -163,7 +163,9 @@ TransportSelector::addTlsTransport(const Data& domainName,
                                    const Data& privateKeyPassPhrase,
                                    int port,
                                    IpVersion version,
-                                   const Data& ipInterface)
+                                   const Data& ipInterface,
+                                   SecurityTypes::SSLType sslType
+                                   )
 {
 #if defined( USE_SSL )
    assert( port >  0 );
@@ -176,9 +178,12 @@ TransportSelector::addTlsTransport(const Data& domainName,
       // if port == 0, do an SRV lookup and use the ports from there
       transport = new TlsTransport(mStateMacFifo, 
                                    domainName, 
-                                   ipInterface, port, 
-                                   keyDir, privateKeyPassPhrase,
-                                   version == V4); 
+                                   ipInterface,
+                                   port, 
+                                   keyDir,
+                                   privateKeyPassPhrase,
+                                   version == V4,
+                                   sslType);
    }
    catch (Transport::Exception& )
    {
