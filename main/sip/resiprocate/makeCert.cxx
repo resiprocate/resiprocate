@@ -1,3 +1,4 @@
+#include <openssl/ssl.h>
 #include <openssl/pem.h>
 #include <openssl/ossl_typ.h>
 #include <openssl/x509.h>
@@ -6,21 +7,27 @@
 #include "resiprocate/Pkcs8Contents.hxx"
 #include "resiprocate/MultipartMixedContents.hxx"
 #include "resiprocate/Uri.hxx"
+#include "resiprocate/os/Random.hxx"
 
 using namespace resip;
 
-
+int makeSelfCert(X509** selfcert, EVP_PKEY* privkey);
 
 int main()
 {
    int err;
    Uri aor;
    Data passphrase;
-   RSA *rsa;
-   EVP_PKEY *privkey;
-   X509 *selfcert;
-   unsigned char *buffer;
-   BUF_MEM *bptr;
+   RSA *rsa = NULL;
+   EVP_PKEY *privkey = NULL;
+   X509 *selfcert = NULL;
+   BUF_MEM *bptr = NULL;
+
+   // initilization:  are these needed?
+//   CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
+//   bio_err=BIO_new_fp(stderr, BIO_NOCLOSE);
+ 
+   Random::initialize();
 
    rsa = RSA_generate_key(1024, RSA_F4, NULL, NULL);
    assert(rsa);    // couldn't make key pair
@@ -28,20 +35,25 @@ int main()
    EVP_PKEY_assign_RSA(privkey, rsa);
    assert(privkey);
 
-//   err = makeSelfCert(selfcert, privkey);
+   selfcert = X509_new();
+   err = makeSelfCert(&selfcert, privkey);
    assert(!err);   // couldn't make cert
    
-   i2d_X509(selfcert, &buffer);
-   assert(buffer);   
-   X509Contents *certpart = new X509Contents(Data(buffer, strlen(buffer)));
+   unsigned char* buffer = NULL;     
+   int len = i2d_X509(selfcert, &buffer);   // if buffer is NULL, openssl
+                                  // assigns memory for buffer
+   assert(buffer);
+   Data derData((char *) buffer, len);
+   X509Contents *certpart = new X509Contents( derData );
    assert(certpart);
     
    // make an in-memory BIO        [ see  BIO_s_mem(3) ]
    BIO *mbio = BIO_new(BIO_s_mem());
 
    // encrypt the the private key with the passphrase and put it in the BIO in DER format
-   i2d_PKCS8PrivateKey_bio( mbio, privkey, EVP_des_ede3_cbc, passphrase.data(), 
-      passphrase.length(), NULL, NULL);
+   i2d_PKCS8PrivateKey_bio( mbio, privkey, EVP_des_ede3_cbc(), 
+      (char *) passphrase.data(), 
+      passphrase.size(), NULL, NULL);
 
    // dump the BIO into a Contents
    BIO_get_mem_ptr(mbio, &bptr);
@@ -52,32 +64,36 @@ int main()
    MultipartMixedContents *certsbody = new MultipartMixedContents;
    certsbody->parts().push_back(certpart);
    certsbody->parts().push_back(keypart);
-}  assert(certsbody);
+   assert(certsbody);
+}
 
 
-
-int makeSelfCert(X509 *selfcert, EVP_PKEY *privkey)   // should include a Uri type at the end of the function call
+int makeSelfCert(X509 **cert, EVP_PKEY *privkey)   // should include a Uri type at the end of the function call
 {
   int serial;
   assert(sizeof(int)==4);
-  const long duration = 60*60*24*30   // make cert valid for 30 days
-  X509_NAME *subject;
+  const long duration = 60*60*24*30;   // make cert valid for 30 days
+  X509* selfcert = NULL;
+  X509_NAME *subject = NULL;
+  X509_EXTENSION *ext = NULL;
 
-  Data domain = new Data("example.org");
-  Data userAtDomain = new Data("user@example.org");
+  Data domain("example.org");
+  Data userAtDomain("user@example.org");
 
   // Setup the subjectAltName structure here with sip:, im:, and pres: URIs
   // TODO:
 
+  selfcert = *cert;
+  
   X509_set_version(selfcert, 2L);	// set version to X509v3 (starts from 0)
 
-//  RAND_bytes((char *) serial , 4);
-serial = 1;
-//  X509_set_serialNumber(selfcert, (ASN1_INTEGER) serial);
+  //  RAND_bytes((char *) serial , 4);
+  //serial = 1;
+  serial = Random::getRandom();  // get an int worth of randomness
   ASN1_INTEGER_set(X509_get_serialNumber(selfcert),serial);
 
-  X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_UTF8, domain.data(), domain.length(), -1, 0);
-  X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_UTF8, userAtDomain.data(), userAtDomain.length(), -1, 0);
+  X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_UTF8, (unsigned char *) domain.data(), domain.size(), -1, 0);
+  X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_UTF8, (unsigned char *) userAtDomain.data(), userAtDomain.size(), -1, 0);
 
   X509_set_issuer_name(selfcert, subject);
   X509_set_subject_name(selfcert, subject);
@@ -92,12 +108,14 @@ serial = 1;
   //X509_add_ext( selfcert, ext, -1);
   //X509_EXTENSION_free(ext);
 
-  ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_contraints, "CA:FALSE");
+  ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, "CA:FALSE");
   X509_add_ext( selfcert, ext, -1);
   X509_EXTENSION_free(ext);
 
   // add extensions NID_subject_key_identifier and NID_authority_key_identifier
 
-  X509_sign(selfcert, privkey, EVP_sha1()); 
+  X509_sign(selfcert, privkey, EVP_sha1());
+
+  return true; 
 }
 
