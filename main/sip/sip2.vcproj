@@ -199,6 +199,9 @@
 				RelativePath="util\Logger.cxx">
 			</File>
 			<File
+				RelativePath="util\MD5Stream.cxx">
+			</File>
+			<File
 				RelativePath="sipstack\Message.cxx">
 			</File>
 			<File
@@ -206,6 +209,9 @@
 			</File>
 			<File
 				RelativePath="sipstack\MethodTypes.cxx">
+			</File>
+			<File
+				RelativePath="sipstack\MultipartMixedContents.cxx">
 			</File>
 			<File
 				RelativePath="util\Mutex.cxx">
@@ -416,6 +422,9 @@
 				RelativePath="util\Logger.hxx">
 			</File>
 			<File
+				RelativePath="util\MD5Stream.hxx">
+			</File>
+			<File
 				RelativePath="sipstack\Message.hxx">
 			</File>
 			<File
@@ -423,6 +432,9 @@
 			</File>
 			<File
 				RelativePath="sipstack\MethodTypes.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\MultipartMixedContents.hxx">
 			</File>
 			<File
 				RelativePath="util\Mutex.hxx">
