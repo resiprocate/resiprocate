@@ -597,6 +597,32 @@ TransportSelector::retransmit(SipMessage* msg, Tuple& target)
    }
 }
 
+unsigned int
+TransportSelector::sumTransportFifoSizes() const
+{
+   unsigned int sum = 0;
+
+   for (AnyPortTupleMap::const_iterator i = mAnyPortTransports.begin();
+        i != mAnyPortTransports.end(); ++i)
+   {
+      sum += i->second->getFifoSize();
+   }
+
+   for (AnyPortAnyInterfaceTupleMap::const_iterator i = mAnyPortAnyInterfaceTransports.begin();
+        i != mAnyPortAnyInterfaceTransports.end(); ++i)
+   {
+      sum += i->second->getFifoSize();
+   }
+   
+   for (TlsTransportMap::const_iterator i = mTlsTransports.begin();
+        i != mTlsTransports.end(); ++i)
+   {
+      sum += i->second->getFifoSize();
+   }
+
+   return sum;
+}
+
 void 
 TransportSelector::buildFdSet(FdSet& fdset)
 {
