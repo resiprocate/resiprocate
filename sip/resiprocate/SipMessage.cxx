@@ -18,8 +18,6 @@ const SipMessage::FromWireType* SipMessage::NotFromWire = new SipMessage::FromWi
 
 SipMessage::SipMessage(const FromWireType* fromWire)
    : mIsExternal(fromWire == SipMessage::FromWire),
-     mHaveFixedDest(false),
-     mFixedDest(),
      mStartLine(0),
      mContentsHfv(0),
      mContents(0),
@@ -38,8 +36,6 @@ SipMessage::SipMessage(const FromWireType* fromWire)
 
 SipMessage::SipMessage(const SipMessage& from)
    : mIsExternal(from.mIsExternal),
-     mHaveFixedDest(from.mHaveFixedDest),
-     mFixedDest(from.mFixedDest),
      mSource(from.mSource),
      mDestination(from.mDestination),
      mStartLine(0),
@@ -53,12 +49,6 @@ SipMessage::SipMessage(const SipMessage& from)
 {
    if (this != &from)
    {
-      if (from.hasFixedDest())
-      {
-         mHaveFixedDest = true;
-         mFixedDest = from.getFixedDest();
-      }
-  
       for (int i = 0; i < Headers::MAX_HEADERS; i++)
       {
          if (from.mHeaders[i] != 0)
@@ -514,33 +504,6 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
                                                                   hfvs));
    }
 }
-
-bool
-SipMessage::hasFixedDest() const
-{
-   return mHaveFixedDest;
-}
-
-Data
-SipMessage::getFixedDest() const
-{
-   return mFixedDest;
-}
-
-void
-SipMessage::setFixedDest(const Data& dest)
-{
-   mFixedDest = dest;
-   mHaveFixedDest = true;
-}
-
-void
-SipMessage::clearFixedDest()
-{
-   mFixedDest = "";
-   mHaveFixedDest = false;
-}
-
 
 Data&
 SipMessage::getEncoded() 
@@ -1210,6 +1173,13 @@ SipMessage::setTarget(const Uri& uri)
    {
       mTarget = new Uri(uri);
    }
+}
+
+void
+SipMessage::clearTarget()
+{
+   delete mTarget;
+   mTarget = 0;
 }
 
 const Uri&
