@@ -6,6 +6,9 @@ static const char* const resipTimeLimitFifo_h_Version =
 
 #include "resiprocate/os/AbstractFifo.hxx"
 #include <iostream>
+#if defined( WIN32 )
+#include <time.h>
+#endif
 
 // efficiency note: use a circular buffer to avoid list node allocation
 
