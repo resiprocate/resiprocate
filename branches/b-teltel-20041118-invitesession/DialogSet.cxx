@@ -170,17 +170,6 @@ DialogSet::findDialog(const SipMessage& msg)
    {
       return dlog;
    }
-   //match off transaction ID
-   else if (msg.isResponse() && !msg.header(h_To).exists(p_tag))
-   {
-      for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
-      {
-         if (it->second->matches(msg))
-         {
-            return it->second;            
-         }
-      }
-   }
    else if (msg.exists(h_Contacts) && 
             msg.header(h_Contacts).size() == 1 
             && msg.isResponse() 
