@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.50 2003/01/04 04:59:03 fluffy Exp $";
+// "$Id: Data.cxx,v 1.51 2003/01/10 16:17:09 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -367,6 +367,7 @@ Data::operator<(const Data& rhs) const
 bool
 Data::operator<(const char* rhs) const
 {
+   assert(rhs);
    size_type l = strlen(rhs);
    int res = strncmp(mBuf, rhs, vocal2Min(mSize, l));
 
@@ -466,6 +467,7 @@ Data::operator+=(const Data& data)
 Data& 
 Data::operator+=(const char* str)
 {
+   assert(str);
    return append(str, strlen(str));
 }
 
@@ -537,6 +539,7 @@ Data::operator[](size_type p) const
 Data& 
 Data::operator=(const char* str)
 {
+   assert(str);
    size_type l = strlen(str);
 
    if (!mMine)
@@ -561,6 +564,7 @@ Data::operator=(const char* str)
 Data 
 Data::operator+(const char* str) const
 {
+   assert(str);
    unsigned int l = strlen(str);
    Data tmp(mSize + l, true);
    tmp.mSize = mSize + l;
@@ -574,6 +578,7 @@ Data::operator+(const char* str) const
 Data&
 Data::append(const char* str, size_type len)
 {
+   assert(str);
    if (mCapacity < mSize + len)
    {
       // .dlb. pad for future growth?
@@ -854,6 +859,7 @@ Data::substr(size_type first, size_type count) const
 bool
 Vocal2::operator==(const char* s, const Data& d)
 {
+   assert(s);
    return ((strncmp(s, d.data(), d.size()) == 0) &&
            strlen(s) == d.size() );
 }
@@ -867,6 +873,7 @@ Vocal2::operator!=(const char* s, const Data& d)
 bool
 Vocal2::operator<(const char* s, const Data& d)
 {
+   assert(s);
    Data::size_type l = strlen(s);
    int res = strncmp(s, d.data(), vocal2Min(d.size(), l));
 
