@@ -32,6 +32,7 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mIsReliable(true), // !jf! 
    mMsgToRetransmit(0),
    mDnsResult(0),
+   mSymResponses(false),
    mId(id)
 {
    DebugLog (<< "Creating new TransactionState: " << *this);
@@ -158,7 +159,7 @@ TransactionState::process(TransactionController& controller)
                // !rk! This might be needlessly created.  Design issue.
                TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid);
                state->mMsgToRetransmit = state->make100(sip);
-               state->mSource = state->mNetSource = sip->getSource();
+               state->mSource = state->mNetSource = sip->getSource(); // UACs source address
                // since we don't want to reply to the source port unless rport present 
                state->mSource.setPort(Helper::getPortForReply(*sip,state->mSymResponses));
                state->mState = Proceeding;
@@ -921,6 +922,8 @@ TransactionState::processServerInvite(  Message* msg )
                   DebugLog (<< *this);
                   sendToWire(msg);
                   
+                  // Keep the StaleServer transaction around, so we can keep the
+                  // source Tuple that the request was received on. 
                   terminateServerTransaction(mId);
                   mMachine = ServerStale;
                   mController.mTimers.add(Timer::TimerStaleServer, mId, Timer::TS );
