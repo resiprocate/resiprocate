@@ -9,6 +9,7 @@ namespace Vocal2
 {
 
 class Uri;
+class Via;
 
 class Resolver
 {
@@ -21,6 +22,8 @@ class Resolver
 
       // 
       Resolver(const Uri& url);
+      Resolver(const Via& via);
+
       
       struct Tuple
       {
