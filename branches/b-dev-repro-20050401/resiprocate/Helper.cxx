@@ -874,6 +874,7 @@ void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
    DebugLog(<< "nonceCount is now: [" << nonceCountString << "]");
 }
 
+
 Auth 
 Helper::makeChallengeResponseAuth(SipMessage& request,
                                   const Data& username,
@@ -941,6 +942,88 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
                                                        getMethodName(request.header(h_RequestLine).getMethod()),
                                                        digestUri, 
                                                        challenge.param(p_nonce));
+   }
+   
+   if (challenge.exists(p_algorithm))
+   {
+      auth.param(p_algorithm) = challenge.param(p_algorithm);
+   }
+   else
+   {
+      auth.param(p_algorithm) = "MD5";
+   }
+
+   if (challenge.exists(p_opaque))
+   {
+      auth.param(p_opaque) = challenge.param(p_opaque);
+   }
+   
+   return auth;
+}
+
+Auth 
+Helper::makeChallengeResponseAuthWithA1(SipMessage& request,
+                                        const Data& username,
+                                        const Data& a1,
+                                        const Auth& challenge,
+                                        const Data& cnonce,
+                                        unsigned int& nonceCount,
+                                        Data& nonceCountString)
+{
+   Auth auth;
+   auth.scheme() = "Digest";
+   auth.param(p_username) = username;
+   assert(challenge.exists(p_realm));
+   auth.param(p_realm) = challenge.param(p_realm);
+   assert(challenge.exists(p_nonce));
+   auth.param(p_nonce) = challenge.param(p_nonce);
+   Data digestUri;
+   {
+      DataStream s(digestUri);
+      //s << request.header(h_RequestLine).uri().host(); // wrong 
+      s << request.header(h_RequestLine).uri(); // right 
+   }
+   auth.param(p_uri) = digestUri;
+
+   bool useAuthQop = false;
+   if (challenge.exists(p_qopOptions) && !challenge.param(p_qopOptions).empty())
+   {
+      ParseBuffer pb(challenge.param(p_qopOptions).data(), challenge.param(p_qopOptions).size());
+      do
+      {
+         const char* anchor = pb.skipWhitespace();
+         pb.skipToChar(Symbols::COMMA[0]);
+         Data q;
+         pb.data(q, anchor);
+         if (q == Symbols::auth)
+         {
+            useAuthQop = true;
+            break;
+         }
+      }
+      while(!pb.eof());
+   }
+   if (useAuthQop)
+   {
+      updateNonceCount(nonceCount, nonceCountString);
+      auth.param(p_response) = Helper::makeResponseMD5WithA1(a1,
+                                                             getMethodName(request.header(h_RequestLine).getMethod()), 
+                                                             digestUri, 
+                                                             challenge.param(p_nonce),
+                                                             Symbols::auth,
+                                                             cnonce,
+                                                             nonceCountString);
+      auth.param(p_cnonce) = cnonce;
+      auth.param(p_nc) = nonceCountString;
+      auth.param(p_qop) = Symbols::auth;
+   }
+   else
+   {
+      assert(challenge.exists(p_realm));
+      auth.param(p_response) = Helper::makeResponseMD5WithA1(a1,
+                                                             getMethodName(request.header(h_RequestLine).getMethod()),
+                                                             digestUri, 
+                                                             challenge.param(p_nonce));
    }
    
    if (challenge.exists(p_algorithm))

@@ -20,31 +20,38 @@ class UserProfile : public Profile
       virtual void setDefaultFrom(const NameAddr& from);
       virtual NameAddr& getDefaultFrom();
 
+      // !cj! - this GRUU stuff looks very suspect
       virtual void addGruu(const Data& aor, const NameAddr& contact);
       virtual bool hasGruu(const Data& aor) const;
       virtual bool hasGruu(const Data& aor, const Data& instance) const;
       virtual NameAddr& getGruu(const Data& aor);
       virtual NameAddr& getGruu(const Data& aor, const NameAddr& contact);
       virtual void disableGruu();
+
       virtual void setInstanceId(const Data& id);
       virtual const Data& getInstanceId() const;
       
       struct DigestCredential
       {
-            DigestCredential();
-            DigestCredential(const Data& aor, const Data& realm, const Data& username, const Data& password);
-            Data aor;
+            DigestCredential(); 
+            DigestCredential(const Data& realm, 
+                             const Data& username, 
+                             const Data& password);
+            DigestCredential(const Data& realm);
+                             
             Data realm;
             Data user;
-            Data password;
+            Data passwordHashA1;
 
             bool operator<(const DigestCredential& rhs) const;
       };
       
       /// The following functions deal with clearing, setting and getting of digest credentals 
-      virtual void  clearDigestCredentials();
-      virtual void  setDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password);
-      virtual const DigestCredential& getDigestCredential( const Data& realm, const SipMessage& challenge );
+      virtual void clearDigestCredentials();
+      virtual void setDigestCredential( const Data& realm, 
+                                        const Data& user, 
+                                        const Data& password);
+      virtual const DigestCredential& getDigestCredential( const Data& realm  );
 
    private:
       NameAddr mDefaultFrom;
