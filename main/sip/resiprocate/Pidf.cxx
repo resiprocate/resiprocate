@@ -5,6 +5,7 @@
 #include "resiprocate/Pidf.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Symbols.hxx"
+#include "resiprocate/XMLCursor.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
@@ -28,41 +29,41 @@ Pidf::Pidf(const Mime& contentType)
    : Contents(getStaticType())
 {}
 
-#if 0
-Pidf::Pidf(const Data& txt)
-   : Contents(getStaticType())
-{}
-#endif
-
 Pidf::Pidf(HeaderFieldValue* hfv, const Mime& contentsType)
    : Contents(hfv, contentsType)
 {
 }
  
-#if 0
-Pidf::Pidf(const Data& txt, const Mime& contentsType)
-   : Contents(contentsType)
-{
-}
-#endif
-
-
 Pidf::Pidf(const Pidf& rhs)
    : Contents(rhs),
      mEntity(rhs.mEntity),
-     mNote(rhs.mNote)
+     mNote(rhs.mNote),
+     mTuples(rhs.mTuples)
 {
-   for( unsigned int i=0; i < rhs.mTuple.size(); i++)
-   {
-      Tuple t = rhs.mTuple[i];
-      mTuple.push_back( t ); // !ah! gratuitous temporary
-   }
-   assert(  mTuple.size() ==  rhs.mTuple.size() );
-
 }
 
 Pidf::~Pidf()
 {
+}
+
+const Data& 
+Pidf::getEntity() const
+{ 
+   checkParsed();
+   return mEntity; 
+};
+
+std::vector<Pidf::Tuple>&
+Pidf::getTuples()
+{
+   checkParsed();
+   return mTuples;
+}
+
+int
+Pidf::getNumTuples() const
+{
+   return mTuples.size();
 }
 
 Pidf&
@@ -71,15 +72,9 @@ Pidf::operator=(const Pidf& rhs)
    if (this != &rhs)
    {
       Contents::operator=(rhs);
-      clear();
-      
       mNote = rhs.mNote;
       mEntity = rhs.mEntity;
-      for( unsigned int i=0; i < rhs.mTuple.size(); i++)
-      {
-         Tuple t = rhs.mTuple[i];
-         mTuple.push_back( t );
-      }
+      mTuples = rhs.mTuples;
    }
    return *this;
 }
@@ -97,41 +92,148 @@ Pidf::getStaticType()
    return type;
 }
 
-
 std::ostream& 
 Pidf::encodeParsed(std::ostream& str) const
 {
    //DebugLog(<< "Pidf::encodeParsed " << mText);
    //str << mText;
 
-   str       << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << Symbols::CRLF;;
-   str       << "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"" << Symbols::CRLF;;
-   str       << "           entity=\"pres:"<<mEntity<<"\">" << Symbols::CRLF;;
-   for( unsigned int i=0; i<mTuple.size(); i++)
+   str << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << Symbols::CRLF;
+   str << "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"" << Symbols::CRLF;
+   str << "          entity=\"pres:" << mEntity << "\">"  <<  Symbols::CRLF;
+   for (vector<Tuple>::const_iterator i = mTuples.begin(); i != mTuples.end(); ++i)
    {
-      Data status( (char*)( (mTuple[i].status)?"open":"closed" ) );
-      str    << "  <tuple id=\""<<mTuple[i].id<<"\">" << Symbols::CRLF;;
-      str    << "     <status><basic>"<<status<<"</basic></status>" << Symbols::CRLF;;
-      if ( !mTuple[i].contact.empty() )
+      Data status( (char*)( (i->status)?"open":"closed" ) );
+      str << "  <tuple id=\"" << i->id << "\" ";
+
+      XMLCursor::encode(str, i->attributes);
+      str << ">" << Symbols::CRLF;;
+      str << "     <status><basic>" << status << "</basic></status>" << Symbols::CRLF;;
+      if ( !i->contact.empty() )
       {
-         str << "     <contact priority=\""<<mTuple[i].contactPriority<<"\">"<< "sip:" << mTuple[i].contact<<"</contact>" << Symbols::CRLF;;
+         str << "     <contact priority=\"" << i->contactPriority << "\">" << "sip:" << i->contact << "</contact>" << Symbols::CRLF;;
       }
-      if ( !mTuple[i].timeStamp.empty() )
+      if ( !i->timeStamp.empty() )
       {
-         str << "     <timestamp>"<<mTuple[i].timeStamp<<"</timestamp>" << Symbols::CRLF;;
+         str << "     <timestamp>" << i->timeStamp << "</timestamp>" << Symbols::CRLF;;
       }
-      if ( !mTuple[i].note.empty() )
+      if ( !i->note.empty() )
       {
-         str << "     <note>"<<mTuple[i].note<<"</note>" << Symbols::CRLF;;
+         str << "     <note>" << i->note << "</note>" << Symbols::CRLF;;
       }
-      str    << "  </tuple>" << Symbols::CRLF;;
+      str << "  </tuple>" << Symbols::CRLF;;
    }
-   str       << "</presence>" << Symbols::CRLF;;
+   str << "</presence>" << Symbols::CRLF;;
    
    return str;
 }
 
+void 
+Pidf::parse(ParseBuffer& pb)
+{
+   DebugLog(<< "Pidf::parse(" << Data(pb.start(), int(pb.end()-pb.start())));
 
+   XMLCursor xml(pb);
+
+   if (xml.getTag() == "presence")
+   {
+      XMLCursor::AttributeMap::const_iterator i = xml.getAttributes().find("entity");
+      if (i != xml.getAttributes().end())
+      {
+         mEntity = i->second;
+      }
+      else
+      {
+         DebugLog(<< "no entity!");
+      }
+      
+      if (xml.firstChild())
+      {
+         do
+         {
+            if (xml.getTag() == "tuple")
+            {
+               Tuple t;
+               t.attributes = xml.getAttributes();
+               XMLCursor::AttributeMap::const_iterator i = xml.getAttributes().find("id");
+               if (i != xml.getAttributes().end())
+               {
+                  t.id = i->second;
+                  t.attributes.erase("id");
+               }
+               
+               // look for status, contacts, notes -- take last of each for now
+               if (xml.firstChild())
+               {
+                  do
+                  {
+                     if (xml.getTag() == "status")
+                     {
+                        InfoLog(<< "found status");
+                        // look for basic
+                        if (xml.firstChild())
+                        {
+                           do
+                           {
+                              if (xml.getTag() == "basic")
+                              {
+                                 if (xml.firstChild())
+                                 {
+                                    InfoLog(<< "found basic: " << xml.getValue());
+                                    t.status = (xml.getValue() == "open");
+                                    xml.parent();
+                                 }
+                              }
+                           } while (xml.nextSibling());
+                           xml.parent();
+                        }
+                     }
+                     else if (xml.getTag() == "contact")
+                     {
+                        XMLCursor::AttributeMap::const_iterator i = xml.getAttributes().find("priority");
+                        if (i != xml.getAttributes().end())
+                        {
+                           t.contactPriority = i->second.convertDouble();
+                        }
+                        if (xml.firstChild())
+                        {
+                           t.contact = xml.getValue();
+                           xml.parent();
+                        }
+                     }
+                     else if (xml.getTag() == "note")
+                     {
+                        if (xml.firstChild())
+                        {
+                           t.note = xml.getValue();
+                           xml.parent();
+                        }
+                     }
+                     else if (xml.getTag() == "timestamp")
+                     {
+                        if (xml.firstChild())
+                        {
+                           t.timeStamp = xml.getValue();
+                           xml.parent();
+                        }
+                     }
+                  } while (xml.nextSibling());
+                  xml.parent();
+               }
+               
+               mTuples.push_back(t);
+            }
+         } while (xml.nextSibling());
+         xml.parent();
+      }
+   }
+   else
+   {
+      DebugLog(<< "no presence tag!");
+   }
+}
+
+#ifdef OLD
 void 
 Pidf::parse(ParseBuffer& pb)
 {
@@ -139,15 +241,15 @@ Pidf::parse(ParseBuffer& pb)
 
    Tuple t;
    
-   mTuple.push_back( t );
-   mTuple[0].status = true;
-   mTuple[0].note = Data::Empty;
+   mTuples.push_back( t );
+   mTuples[0].status = true;
+   mTuples[0].note = Data::Empty;
 
    const char* close = pb.skipToChars("closed");
    if ( close != pb.end() )
    {
       DebugLog ( << "found a closed" );
-      mTuple[0].status = false;
+      mTuples[0].status = false;
    }
 
    pb.reset(anchor);
@@ -155,7 +257,7 @@ Pidf::parse(ParseBuffer& pb)
    if ( open != pb.end() )
    {
       DebugLog ( << "found an open" );
-      mTuple[0].status = true;
+      mTuples[0].status = true;
    }
 
    pb.reset(anchor);
@@ -165,63 +267,56 @@ Pidf::parse(ParseBuffer& pb)
    {
       const char* startNote = pb.skipChar();
       pb.skipToChars("</note");
-      pb.data(mTuple[0].note, startNote);
-      DebugLog ( << "found a note of" << mTuple[0].note);
+      pb.data(mTuples[0].note, startNote);
+      DebugLog ( << "found a note of" << mTuples[0].note);
    }
 }
-
+#endif // OLD
 
 void 
-Pidf::setSimpleId( const Data& id )
+Pidf::setSimpleId(const Data& id)
 {
-   if ( mTuple.size() == 0 )
+   if (mTuples.empty())
    {
       Tuple t;
-      mTuple.push_back( t );
+      mTuples.push_back(t);
    }
-   assert(mTuple.size() > 0 );
-   mTuple[0].id = id;
+   mTuples[0].id = id;
 }
-
 
 void 
 Pidf::setSimpleStatus( bool online, const Data& note, const Data& contact )
 {
-   if ( mTuple.size() == 0 )
+   if (mTuples.empty())
    {
       Tuple t;
-      mTuple.push_back( t );
+      mTuples.push_back(t);
    }
 
-   mTuple[0].status = online;
-   mTuple[0].contact = contact;
-   mTuple[0].contactPriority = 1.0;
-   mTuple[0].note = note;
-   mTuple[0].timeStamp = Data::Empty;
+   mTuples[0].status = online;
+   mTuples[0].contact = contact;
+   mTuples[0].contactPriority = 1.0;
+   mTuples[0].note = note;
+   mTuples[0].timeStamp = Data::Empty;
 }
 
-
 bool 
-Pidf::getSimpleStatus(Data* note)
+Pidf::getSimpleStatus(Data* note) const
 {
    checkParsed();
 
-   assert(mTuple.size() > 0);
-
-   if ( note )                  // !ass! this function appears naive.
-                                // why only the 1st mTuple ?
+   if (!mTuples.empty())
    {
-      *note = mTuple[0].note;
-   }
+      if (note)
+      {
+         *note = mTuples[0].note;
+      }
    
-   return mTuple[0].status;
+      return mTuples[0].status;
+   }
+   return false;
 }
 
-void
-Pidf::clear()
-{
-   mTuple.clear();
-}   
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
