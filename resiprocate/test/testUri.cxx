@@ -467,6 +467,42 @@ main(int argc, char* argv[])
     assert(sip3 != sip2);
   }
 
+  {
+    Uri sip1("sip:carol@chicago.com");
+    Uri sip2("sip:carol@chicago.com:5060");
+    Uri sip3("sip:1.2.3.4");
+    Uri sip4("sip:1.2.3.4:5070");
+    Uri sip1a("sip:carol@chicago.com;user=phone;foo=bar");
+    Uri sip2a("sip:carol@chicago.com:5060;user=phone;foo=bar");
+    Uri sip3a("sip:1.2.3.4;user=phone;foo=bar");
+    Uri sip4a("sip:1.2.3.4:5070;user=phone;foo=bar");
+
+    DebugLog( << "sip1.getAor==" << sip1.getAor() );
+    DebugLog( << "sip1.getAorNoPort==" << sip1.getAorNoPort() );
+    DebugLog( << "sip2.getAor==" << sip2.getAor() );
+    DebugLog( << "sip2.getAorNoPort==" << sip2.getAorNoPort() );
+    
+    assert( sip1.getAor() == Data("carol@chicago.com") );
+    assert( sip2.getAor() == Data("carol@chicago.com:5060") );
+    assert( sip3.getAor() == Data("1.2.3.4") );
+    assert( sip4.getAor() == Data("1.2.3.4:5070") );
+
+    assert( sip1a.getAor() == Data("carol@chicago.com") );
+    assert( sip2a.getAor() == Data("carol@chicago.com:5060") );
+    assert( sip3a.getAor() == Data("1.2.3.4") );
+    assert( sip4a.getAor() == Data("1.2.3.4:5070") );
+
+    assert( sip1.getAorNoPort() == Data("carol@chicago.com") );
+    assert( sip2.getAorNoPort() == Data("carol@chicago.com") );
+    assert( sip3.getAorNoPort() == Data("1.2.3.4") );
+    assert( sip4.getAorNoPort() == Data("1.2.3.4") );
+
+    assert( sip1a.getAorNoPort() == Data("carol@chicago.com") );
+    assert( sip2a.getAorNoPort() == Data("carol@chicago.com") );
+    assert( sip3a.getAorNoPort() == Data("1.2.3.4") );
+    assert( sip4a.getAorNoPort() == Data("1.2.3.4") );
+  }
+
    cerr << endl << "All OK" << endl;
    return 0;
 }
