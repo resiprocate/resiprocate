@@ -138,7 +138,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
    }
    else
    {
-      // !jf! might get an expiration in the 202 but not in the NOTIFY - we're going
+      // !jf! might get an expiration in the 202 but not in the RESIP_NOTIFY - we're going
       // to ignore this case
       if (msg.header(h_StatusLine).statusCode() >= 300)
       {

@@ -984,7 +984,7 @@ void
 TuIM::processPublishResponse(SipMessage* msg, StateAgent& sa )
 {
    int number = msg->header(h_StatusLine).responseCode();
-   DebugLog( << "got PUBLISH response of type " << number );
+   DebugLog( << "got RESIP_PUBLISH response of type " << number );
 
    if ( number >= 300 )
    {
