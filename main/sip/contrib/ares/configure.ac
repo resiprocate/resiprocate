@@ -34,5 +34,7 @@ esac
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 
+AM_MAINTAINER_MODE
+
 AC_OUTPUT(Makefile)
 
