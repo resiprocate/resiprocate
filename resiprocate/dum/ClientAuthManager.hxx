@@ -13,7 +13,7 @@ class ClientAuthManager
       ClientAuthManager(Profile& profile);
 
       // return true if request is authorized
-      bool handle(const SipMessage& response);
+      bool handle(SipMessage& origRequest, const SipMessage& response);
       
    private:
       Profile& mProfile;
