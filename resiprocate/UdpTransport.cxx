@@ -77,9 +77,8 @@ UdpTransport::~UdpTransport()
 
 
 void 
-UdpTransport::process(fd_set* fdSet)
+UdpTransport::process(FdSet& fdset)
 {
-	
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
    // preparse and stuff into RxFifo
@@ -119,12 +118,10 @@ UdpTransport::process(fd_set* fdSet)
 
    struct sockaddr_in from;
 
-   // !ah! debug is just to always return a sample message
    // !jf! this may have to change - when we read a message that is too big
-   
-   if ( !FD_ISSET(mFd, fdSet ) )
+   if ( !fdset.readyToRead(mFd) )
    {
-	   return;
+      return;
    }
 
    char* buffer = new char[MaxBufferSize];

@@ -40,10 +40,10 @@ class SipStack
       
       // should call buildFdSet before calling process
       // !jf! what should this do if fdSet = 0? 
-      void process(fd_set* fdSet=NULL);
+      void process(FdSet& fdset);
 
       // build the FD set to use in a select to find out when process bust be called again
-      void buildFdSet( fd_set* fdSet, int* fdSetSize );
+      void buildFdSet(FdSet& fdset);
 	
       /// returns time in milliseconds when process next needs to be called 
       int getTimeTillNextProcess(); 
