@@ -234,7 +234,11 @@ ClientRegistration::dispatch(const SipMessage& msg)
    {
       // !jf! there may be repairable errors that we can handle here
       assert(msg.isResponse());
-      mNetworkAssociation.update(msg);
+      int keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTime();
+      if(keepAliveTime > 0)
+      {
+         mNetworkAssociation.update(msg, keepAliveTime);
+      }
       const int& code = msg.header(h_StatusLine).statusCode();
       if (code < 200)
       {
