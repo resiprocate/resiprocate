@@ -228,20 +228,15 @@ UdpTransport::process(FdSet& fdset)
          // set the received= and rport= parameters in the message if necessary !jf!
          if (message->isRequest() && !message->header(h_Vias).empty())
          {
-            char received[255];
-#if 1
-			// inet_ntop function does not exist in some OS
+#ifndef WIN32
+			 char received[255];
             inet_ntop(AF_INET, &tuple.ipv4.s_addr, received, sizeof(received));
+			 message->header(h_Vias).front().param(p_received) = received;
 #else
-			unsigned int addr = tuple.ipv4.s_addr;
-			assert(sizeof(addr)==4);
-			unsigned int a1 = (addr>>0)&0xFF;
-			unsigned int a2 = (addr>>8)&0xFF;
-			unsigned int a3 = (addr>>16)&0xFF;
-			unsigned int a4 = (addr>>24)&0xFF;
-			sprintf(received,"%d.%d.%d.%d",a4,a3,a2,a1);
+			 char * buf = inet_ntoa(tuple.ipv4);
+			message->header(h_Vias).front().param(p_received) = buf;
 #endif
-            message->header(h_Vias).front().param(p_received) = received;
+
             message->header(h_Vias).front().param(p_rport) = tuple.port;
          }
          mStateMachineFifo.add(message);
