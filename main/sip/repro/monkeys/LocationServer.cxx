@@ -2,89 +2,44 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/Auth.hxx"
-#include "repro/monkeys/DigestAuthenticator.hxx"
-
-
+#include "resiprocate/SipMessage.hxx"
+#include "repro/monkeys/LocationServer.hxx"
+#include "../RequestContext.hxx"
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-processor_action_t
-DigestAuthenticator::handleRequest(repro::RequestContext &rc)
+
+RequestProcessor::processor_action_t
+LocationServer::handleRequest(RequestContext& context)
 {
-  Message *message = getCurrentEvent();
 
-  SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
-  UserAuthInfo *userAuthInfo = dynamic_cast<UserAuthInfo*>(message);
+  resip::Uri& inputUri
+    = context.getOriginalRequest().header(h_RequestLine).uri();
 
-  if (sipMessage)
+  //!RjS! This doesn't look exception safe - need guards
+  mStore.lockRecord(inputUri);
+  
+  RegistrationPersistenceManager::contact_list_t contacts 
+                                = mStore.getContacts(inputUri);
+
+  mStore.unlockRecord(inputUri);
+
+  for ( RegistrationPersistenceManager::contact_list_t::iterator  
+            i  = contacts.begin()
+          ; i != contacts.end()
+          ; ++i)
   {
-    if (!sipMessage.exists(h_ProxyAuthorizations))
+    RegistrationPersistenceManager::contact_t contact = *i;
+    if (contact.second>=time(NULL))
     {
-      challengeRequest(rc, false);
-      return SkipAllChains;
-    }
-    else
-    {
-      requestUserAuthInfo(rc);
-      return WaitingForEvent;
-    }
-  }
-  else if (userAuthInfo)
-  {
-    // Handle response from user authentication database
-    sipMessage = rc.getOriginalMessage();
-    Helper::AuthResult result =
-      Helper::authenticateRequest(sipMessage, a1, 15);
-
-    switch (result)
-    {
-      case Failed:
-        rc.sendResponse(Helper::makeResponse(sipMessage, 403));
-        return SkipAllChains;
-
-        // !abr! Eventually, this should just append a counter to
-        // the nonce, and increment it on each challenge. 
-        // If this count is smaller than some reasonable limit,
-        // then we re-challenge; otherwise, we send a 403 instead.
-
-      case Authenticated:
-        rc.setDigestIdentity();
-        return Continue;
-
-      case Expired:
-        challengeRequest(rc, true);
-        return SkipAllChains;
-
-      case BadlyFormed:
-        rc.sendResponse(Helper::makeResponse(sipMessage, 403, 
-                        "Where on earth did you get that nonce from?"));
-        return SkipAllChains;
+      context.addTarget(NameAddr(contact.first));
     }
   }
 
-  return Continue;
-}
+  return RequestProcessor::Continue;
 
-void
-DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
-                                      bool stale)
-{
-  Data realm = sipMessage.
-  Helper::makeProxyChallenge();
-  rc.sendResponse(challenge);
-}
-
-void
-DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc)
-{
-  UserDB &database = rc.getProxy().getUserDB();
-  Auth &authorizationHeader = sipMessage.header(h_ProxyAuthorizations);
-  Data user;
-  Data realm;
-  database.requestUserAuthInfo(user, realm);
 }
 
 

@@ -1,92 +1,26 @@
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
+#if !defined(RESIP_CONSTANTMONKEY_REQUEST_PROCESSOR_HXX)
+#define RESIP_CONSTANTMONKEY_REQUEST_PROCESSOR_HXX 
+#include "repro/RequestProcessor.hxx"
+#include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+
+namespace repro
+{
+
+  class LocationServer: public RequestProcessor
+  {
+    public:
+      LocationServer(resip::RegistrationPersistenceManager& store)
+       :mStore(store){};
+
+      virtual ~LocationServer(){};
+
+      virtual processor_action_t handleRequest(RequestContext &);
+
+    private:
+      resip::RegistrationPersistenceManager& mStore;
+  };
+}
 #endif
-
-#include "resiprocate/Auth.hxx"
-#include "repro/monkeys/DigestAuthenticator.hxx"
-
-
-
-using namespace resip;
-using namespace repro;
-using namespace std;
-
-processor_action_t
-DigestAuthenticator::handleRequest(repro::RequestContext &rc)
-{
-  Message *message = getCurrentEvent();
-
-  SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
-  UserAuthInfo *userAuthInfo = dynamic_cast<UserAuthInfo*>(message);
-
-  if (sipMessage)
-  {
-    if (!sipMessage.exists(h_ProxyAuthorizations))
-    {
-      challengeRequest(rc, false);
-      return SkipAllChains;
-    }
-    else
-    {
-      requestUserAuthInfo(rc);
-      return WaitingForEvent;
-    }
-  }
-  else if (userAuthInfo)
-  {
-    // Handle response from user authentication database
-    sipMessage = rc.getOriginalMessage();
-    Helper::AuthResult result =
-      Helper::authenticateRequest(sipMessage, a1, 15);
-
-    switch (result)
-    {
-      case Failed:
-        rc.sendResponse(Helper::makeResponse(sipMessage, 403));
-        return SkipAllChains;
-
-        // !abr! Eventually, this should just append a counter to
-        // the nonce, and increment it on each challenge. 
-        // If this count is smaller than some reasonable limit,
-        // then we re-challenge; otherwise, we send a 403 instead.
-
-      case Authenticated:
-        rc.setDigestIdentity();
-        return Continue;
-
-      case Expired:
-        challengeRequest(rc, true);
-        return SkipAllChains;
-
-      case BadlyFormed:
-        rc.sendResponse(Helper::makeResponse(sipMessage, 403, 
-                        "Where on earth did you get that nonce from?"));
-        return SkipAllChains;
-    }
-  }
-
-  return Continue;
-}
-
-void
-DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
-                                      bool stale)
-{
-  Data realm = sipMessage.
-  Helper::makeProxyChallenge();
-  rc.sendResponse(challenge);
-}
-
-void
-DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc)
-{
-  UserDB &database = rc.getProxy().getUserDB();
-  Auth &authorizationHeader = sipMessage.header(h_ProxyAuthorizations);
-  Data user;
-  Data realm;
-  database.requestUserAuthInfo(user, realm);
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

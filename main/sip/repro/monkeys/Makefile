@@ -11,7 +11,9 @@ TARGET_LIBRARY = librepro
 
 
 SRC =   \
-	RouteProcessor.cxx
+	RouteProcessor.cxx \
+	LocationServer.cxx 
+
 
 
 include $(BUILD)/Makefile.post
