@@ -54,11 +54,11 @@ class Helper
       static SipMessage* makeCancel(const SipMessage& request);
       
       //creates to, from with tag, cseq method set, cseq sequence is 1
-      static SipMessage* makeRegister(const NameAddr& registrar,
-                                      const NameAddr& aor,
+      static SipMessage* makeRegister(const NameAddr& to,
+                                      const NameAddr& from,
                                       const NameAddr& contact);
 
-      static SipMessage* makeRegister(const NameAddr& aor,
+      static SipMessage* makeRegister(const NameAddr& to,
                                       const Data& transport,
                                       const NameAddr& contact);
 
