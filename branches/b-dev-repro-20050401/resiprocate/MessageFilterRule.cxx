@@ -2,88 +2,179 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "resiprocate/MessageFilterRule.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/SipMessage.hxx"
+
 using namespace resip;
 using namespace std;
 
-bool
-MessageFilterRule::matches()
+
+MessageFilterRule::MessageFilterRule(SchemeList    schemeList,
+                                     HostpartTypes hostpartType,
+                                     MethodList    methodList,
+                                     EventList     eventList)
+  : mSchemeList(schemeList),
+    mHostpartMatches(hostpartType),
+    mMethodList(methodList),
+    mEventList(eventList)
 {
-   const Data scheme = msg.header(h_StartLine).uri().scheme()
+}
+
+MessageFilterRule::MessageFilterRule(SchemeList    schemeList,
+                                     HostpartList  hostpartList,
+                                     MethodList    methodList,
+                                     EventList     eventList)
+  : mSchemeList(schemeList),
+    mHostpartMatches(List),
+    mHostpartList(hostpartList),
+    mMethodList(methodList),
+    mEventList(eventList)
+{
+}
+
+bool
+MessageFilterRule::matches(const SipMessage &msg) const
+{
+   const Data scheme = msg.header(h_RequestLine).uri().scheme();
 
    if (!schemeIsInList(scheme))
    {
       return false;
    }
    
-   if (msg.header(scheme == Symbols::Tel))
+   if (msg.header(h_RequestLine).uri().scheme() != Symbols::Tel)
    {
-      return true;
+      // !rwm! Should be hostport, not host
+      if (!hostIsInList( msg.header(h_RequestLine).uri().host()))
+      {
+         return false;
+      }
+   }
+
+   MethodTypes method = msg.header(h_RequestLine).method();
+   if (!methodIsInList(method))
+   {
+      return false;
    }
    else
    {
-      if (!hostIsInList( msg.header(h_StartLine).uri().hostpart()))
-         return false;
-
-      if (scheme == Symbols::Sip || scheme == Symbols::Sips)
-      {   
-         int method = msg.header(h_StartLine).method();
-         if (!methodIsInList(method))
-         {
-            return false;
-         }
-         else
-         {
-            switch(method)
+      switch(method)
+      {
+         case SUBSCRIBE:
+         case NOTIFY:
+         case PUBLISH:      
+            if (!eventIsInList(msg.header(h_Event).value()))
             {
-               case SUBSCRIBE:
-               case NOTIFY:
-               case PUBLISH:      
-                  if (!eventIsInList(msg.header(h_Event).value()))
-                  {
-                     return false;
-                  }
-                  break;
-               default:
-                  break;
+               return false;
             }
-         }
+            break;
+         default:
+         break;
       }
    }
+
+   return true;
 }
 
 
 //defaults for the constructor of a MessageFilterRule
+/*
 const SchemeList schemes(SIP, SIPS, TEL, IM, PRES, H323);
 const MethodList methods(INVITE, ACK, CANCEL, BYE, REGISTER, 
  PUBLISH, SUBSCRIBE, NOTIFY, INFO, OPTIONS, REFER, UPDATE, PRACK, MESSAGE);
+*/
 // legal values for hostpart comparison are ANY, HOSTISME, DOMAINISME, or a list of Datas
 // legal values for events are ANY or a list of Datas
 
 
 bool
-schemeIsInList(Data& scheme)
+MessageFilterRule::schemeIsInList(const Data& scheme) const
 {
+   // Emtpy list means "sip or sips"
+   if (mSchemeList.empty())
+   {
+     return (scheme == "sip" || scheme == "sips");
+   }
+
    // step through mSchemeList looking for supported schemes
+   for (SchemeList::const_iterator i = mSchemeList.begin();
+        i != mSchemeList.end(); i++)
+   {
+      if (scheme == *i)
+      {
+         return true;
+      }
+      
+   }
+   return false;
 }
 
 bool
-hostpartIsInList(Data& hostpart)
+MessageFilterRule::methodIsInList(MethodTypes method) const
+{
+   // empty list means "match all"
+   if (mMethodList.empty())
+   {
+      return true;
+   }
+
+   for (MethodList::const_iterator i = mMethodList.begin();
+        i != mMethodList.end(); i++)
+   {
+      if (method == *i)
+      {
+         return true;
+      }
+      
+   }
+   return false;
+}
+
+bool
+MessageFilterRule::eventIsInList(const Data& event) const
+{
+   // empty list means "match all"
+   if (mEventList.empty())
+   {
+      return true;
+   }
+
+   for (EventList::const_iterator i = mEventList.begin();
+        i != mEventList.end(); i++)
+   {
+      if (event == *i)
+      {
+         return true;
+      }
+      
+   }
+   return false;
+}
+
+bool
+MessageFilterRule::hostIsInList(const Data& hostpart) const
 {
    switch(mHostpartMatches)
    {
       case Any:
          return true;
       case HostIsMe:
-         return (Helper::hostIsMe(hostpart));  // this func does not exist yet
+           // !abr! Waiting for TU support for this method.
+           // return (tu.hostIsMe(hostpart));
+           return false;
          break;
       case DomainIsMe:
-         return (Helper::domainIsMe(hostpart));  // nor this one
+           // !abr! Waiting for TU support for this method.
+           // return (tu.domainIsMe(hostpart));
+           return false;
          break;
       case List:
          // walk the list for specific matches
-         for (HostpartList::iterator i = mHostpartList.begin() ; mHostpartList.end() ; ++i)
+         for (HostpartList::const_iterator i = mHostpartList.begin() ; 
+              i != mHostpartList.end() ; ++i)
          {
-            if (*i.value() == hostpart)
+            if (*i == hostpart)
                return true;
          }
          break;
@@ -92,54 +183,6 @@ hostpartIsInList(Data& hostpart)
    }
    return false;
 }
-
-
-};
-
-
-//defaults for the constructor of a MessageFilterRule
-const SchemeList schemes(SIP, SIPS, TEL, IM, PRES, H323);
-const MethodList methods(INVITE, ACK, CANCEL, BYE, REGISTER, 
- PUBLISH, SUBSCRIBE, NOTIFY, INFO, OPTIONS, REFER, UPDATE, PRACK, MESSAGE);
-// legal values for hostpart comparison are ANY, HOSTISME, DOMAINISME, or a list of Datas
-// legal values for events are ANY or a list of Datas
-
-
-bool
-schemeIsInList(Data& scheme)
-{
-   // step through mSchemeList looking for supported schemes
-}
-
-bool
-hostpartIsInList(Data& hostpart)
-{
-   switch(mHostpartMatches)
-   {
-      case ANY:
-         return true;
-      case HOSTISME:
-         return (Helper::hostIsMe(hostpart));  // this func does not exist yet
-         break;
-      case DOMAINISME:
-         return (Helper::domainIsMe(hostpart));  // nor this one
-         break;
-      case LIST:
-         // walk the list for specific matches
-         for (HostpartList::iterator i = mHostpartList.begin() ; mHostpartList.end() ; ++i)
-         {
-            if (*i.value() == hostpart)
-               return true;
-         }
-         break;
-      default:
-         break;
-   }
-   return false;
-}
-
-
-};
 
 
 /* ====================================================================

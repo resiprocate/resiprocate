@@ -9,21 +9,38 @@ namespace resip
 class MessageFilterRule
 {
    public:
+      typedef std::vector<Data> SchemeList;
+      typedef std::vector<Data> HostpartList;
+      enum HostpartTypes { Any, HostIsMe, DomainIsMe, List };
+      typedef std::vector<Data> EventList;
+      typedef std::vector<MethodTypes> MethodList;
+
+      MessageFilterRule(SchemeList    schemeList     = SchemeList(),
+                        HostpartTypes hostpartType   = Any,
+                        MethodList    methodList     = MethodList(),
+                        EventList eventTypeList      = EventList());
+
+      MessageFilterRule(SchemeList    schemeList,
+                        HostpartList  hostpartList,
+                        MethodList    methodList     = MethodList(),
+                        EventList     eventList      = EventList());
+
+
       bool matches(const SipMessage &) const;
 
-      enum HostpartTypes { Any, HostIsMe, DomainIsMe, List };
 
    private:
-      bool schemeIsInList(Data scheme);
-      bool hostpartIsInList(Data hostpart);
+      bool schemeIsInList(const Data &scheme) const;
+      bool hostIsInList(const Data &hostpart) const;
+      bool methodIsInList(MethodTypes method) const;
+      bool eventIsInList(const Data &event) const;
 
-      typedef std::vector<Data> SchemeList;
       SchemeList mSchemeList;
       HostpartTypes mHostpartMatches;
-      typedef std::vector<Data> HostpartList;
       HostpartList mHostpartList;
-      typedef std::vector<Data> EventTypeList;
-      EventTypeList mEventTypeList;
+      MethodList mMethodList;
+      EventList mEventList;
+
       bool mAnyEventType;
       bool mAcceptWinfoTypes; // matches *.winfo  ?? do we nned this ??
 };

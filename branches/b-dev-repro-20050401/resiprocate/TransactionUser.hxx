@@ -19,6 +19,8 @@ class TransactionUser
 
    protected:
       TransactionUser();
+      TransactionUser(MessageFilterRuleList &rules);
+
       virtual ~TransactionUser()=0;
       virtual bool isForMe(const SipMessage& msg) const;
       
