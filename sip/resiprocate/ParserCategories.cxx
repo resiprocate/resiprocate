@@ -2,15 +2,23 @@
 
 using namespace Vocal2;
 
-ParserCategory* 
-Unknown::clone(HeaderFieldValue* hfv) const
+
+void 
+StringComponent::parse()
 {
-   return new Unknown(*hfv);
+   mValue = Data(getHeaderField().mField, getHeaderField().mFieldLength);
 }
 
-void
-Unknown::parse()
+std::ostream& 
+StringComponent::encode(std::ostream& str) const
 {
-   
+   return str;
 }
 
+
+Data& 
+StringComponent::value() 
+{ 
+   checkParsed();
+   return mValue; 
+}
