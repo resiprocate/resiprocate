@@ -1,5 +1,14 @@
+%{
+#include <string.h>
+#include <ctype.h>
+#include "sip2/sipstack/ParameterTypes.hxx"
+namespace Vocal2 {
+using namespace Vocal2;
+using namespace std;
+%}
 struct params { char *name; ParameterTypes::Type type; };
 %%
+name, ParameterTypes::name
 transport, ParameterTypes::transport
 user, ParameterTypes::user
 method, ParameterTypes::method
@@ -8,12 +17,12 @@ maddr, ParameterTypes::maddr
 lr, ParameterTypes::lr
 q, ParameterTypes::q
 purpose, ParameterTypes::purpose
-expires, ParameterTypes::expires
-handling, ParameterTypes::handling
-tag, ParameterTypes::tag
 to-tag, ParameterTypes::toTag
 from-tag, ParameterTypes::fromTag
 duration, ParameterTypes::duration
+expires, ParameterTypes::expires
+handling, ParameterTypes::handling
+tag, ParameterTypes::tag
 branch, ParameterTypes::branch
 received, ParameterTypes::received
 mobility, ParameterTypes::mobility
@@ -38,7 +47,6 @@ d-alg, ParameterTypes::dAlg
 d-qop, ParameterTypes::dQop
 d-ver, ParameterTypes::dVer
 smime-type, ParameterTypes::smimeType
-name, ParameterTypes::name
 filename, ParameterTypes::filename
 protocol, ParameterTypes::protocol
 micalg, ParameterTypes::micalg
@@ -53,3 +61,5 @@ mode, ParameterTypes::mode
 server, ParameterTypes::server
 charset, ParameterTypes::charset
 access-type, ParameterTypes::accessType
+%%
+}
