@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.64 2003/12/09 00:51:53 jason Exp $
+# $Id: Makefile,v 1.65 2004/02/11 12:51:41 fluffy Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -14,14 +14,14 @@ LDLIBS += -lpopt
 TESTPROGRAMS +=
 endif
 
-TESTPROGRAMS += testRlmi.cxx \
+TESTPROGRAMS += limpc.cxx \
+		testRlmi.cxx \
 		testMultipartRelated.cxx \
 		testDns.cxx \
 		testTcp.cxx \
 		testUdp.cxx \
 		testStack.cxx \
 		testResponses.cxx \
-		limpc.cxx \
 		testApplicationSip.cxx \
 		testClient.cxx \
 		testCountStream.cxx \
