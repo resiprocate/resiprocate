@@ -188,9 +188,21 @@ Helper::makeCancel(const SipMessage& request)
 {
    assert(request.isRequest());
    assert(request.header(h_RequestLine).getMethod() == INVITE);
-   assert(0);
-   SipMessage* junk=0;
-   return junk;
+   SipMessage* cancel = new SipMessage;
+
+   RequestLine rLine(CANCEL, request.header(h_RequestLine).getSipVersion());
+   rLine.uri() = request.header(h_RequestLine).uri();
+   cancel->header(h_RequestLine) = rLine;
+   cancel->header(h_To) = request.header(h_To);
+   cancel->header(h_From) = request.header(h_From);
+   cancel->header(h_CallId) = request.header(h_CallId);
+   cancel->header(h_ProxyAuthorizations) = request.header(h_ProxyAuthorizations);
+   cancel->header(h_Routes) = request.header(h_Routes);
+   cancel->header(h_CSeq) = request.header(h_CSeq);
+   cancel->header(h_CSeq).method() = CANCEL;
+   cancel->header(h_Vias).push_back(request.header(h_Vias).front());
+
+   return cancel;
 }
 
 
