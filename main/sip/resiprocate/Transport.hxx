@@ -80,6 +80,7 @@ class Transport
       virtual int port() const { return mPort; } 
       virtual Type transport() const =0 ;
       virtual bool isReliable() const =0;
+      virtual const Data& tlsDomain() const { return Data::Empty; }
       
       static Type toTransport( const Data& );
       static const Data& toData( Type );

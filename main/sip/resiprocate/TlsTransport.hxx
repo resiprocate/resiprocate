@@ -28,9 +28,11 @@ class TlsTransport : public Transport
       void buildFdSet( FdSet& fdset);
       bool isReliable() const { return true; }
       Transport::Type transport() const { return TLS; }
-      
+      const Data& tlsDomain() const { return mDomain; }
+
       static const size_t MaxWriteSize;
       static const size_t MaxReadSize;
+
    private:
       void processAllWrites(FdSet& fdset);
       void processAllReads(FdSet& fdset);

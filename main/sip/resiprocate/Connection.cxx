@@ -95,6 +95,7 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
          mMessage = new SipMessage(mWho.transport);
          DebugLog(<< "Connection::process setting source " << mWho);
          mMessage->setSource(mWho);
+         mMessage->setTlsDomain(mWho.transport->tlsDomain());
       }
       case ReadingHeaders:
       {
