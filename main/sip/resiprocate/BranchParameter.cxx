@@ -7,6 +7,7 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/Coders.hxx"
 #include "resiprocate/ParseException.hxx"
 
 #include "resiprocate/os/Logger.hxx"
@@ -76,11 +77,13 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
 
       if ((anchorEnd - anchorStart) > 1)
       {
-	 pb.reset(anchorEnd);
-	 pb.data(mClientData, anchorStart);
-	 pb.reset(anchorStart);
+         pb.reset(anchorEnd);
+         Data encoded;
+         pb.data(encoded, anchorStart);
+         mClientData = Base64Coder::decode(encoded);
+         pb.reset(anchorStart);
       }
-
+      
       pb.skipBackChar(Symbols::DASH[0]);
       pb.skipBackToChar(Symbols::DASH[0]);
       pb.skipBackChar(Symbols::DASH[0]);
@@ -214,7 +217,7 @@ BranchParameter::encode(ostream& stream) const
              << Symbols::DASH[0]
              << mTransportSeq
              << Symbols::DASH[0]
-             << mClientData
+             << Base64Coder::encode(mClientData)
              << Symbols::resipCookie;
    }
    else
