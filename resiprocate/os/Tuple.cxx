@@ -5,11 +5,11 @@
 #include <iostream>
 #include <string.h>
 #include <sys/types.h>
-#include <netinet/in.h>
 #include <cassert>
 
 #if !defined (WIN32)
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #endif
 
 #include "resiprocate/os/Tuple.hxx"
@@ -86,11 +86,15 @@ Tuple::Tuple(const Data& printableAddr, int port, TransportType ptype) :
    }
    else
    {
-      sockaddr_in6& addr = reinterpret_cast<sockaddr_in6&>(mSockaddr);
+#ifdef USE_IPV6
+	   sockaddr_in6& addr = reinterpret_cast<sockaddr_in6&>(mSockaddr);
       memset(&addr, 0, sizeof(addr));
       DnsUtil::inet_pton( printableAddr, addr.sin6_addr);
       addr.sin6_family = AF_INET6;
       addr.sin6_port = htons(port);
+#else
+	  assert(0);
+#endif
    }
 }
 
@@ -105,8 +109,12 @@ Tuple::setPort(int port)
    }
    else
    {
+#ifdef USE_IPV6
       sockaddr_in6* addr = (sockaddr_in6*)&mSockaddr;      
       addr->sin6_port = htons(port);
+#else
+	  assert(0);
+#endif
    }
 }
 
@@ -120,9 +128,15 @@ Tuple::getPort() const
    }
    else
    {
-      sockaddr_in6* addr = (sockaddr_in6*)&mSockaddr;      
+#ifdef USE_IPV6
+	   sockaddr_in6* addr = (sockaddr_in6*)&mSockaddr;      
       return ntohs(addr->sin6_port);
+#else
+	  assert(0);
+#endif
    }
+
+	return -1;
 }
 
 
@@ -200,6 +214,7 @@ bool Tuple::operator<(const Tuple& rhs) const
          return false;
       }
    }
+#ifdef USE_IPV6
    else if (mSockaddr.sa_family == AF_INET6 && rhs.mSockaddr.sa_family == AF_INET6)
    {
       sockaddr_in6* addr1 = (sockaddr_in6*)&mSockaddr;
@@ -230,6 +245,7 @@ bool Tuple::operator<(const Tuple& rhs) const
    {
       return false;
    }
+#endif
    else
    {
       assert(0);
@@ -243,9 +259,18 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 	ostrm << "[ " ;
 
 #if defined(WIN32) 
-#error "fix this"
+	assert( tuple.mSockaddr.sa_family != AF_INET6 );
+	for ( int i=0; i<4; i++)
+	{
+		const char* p = reinterpret_cast<const char*>( &tuple.mSockaddr );
+		p += i;
+		int v = *p;
+		ostrm << v << ".";
+	}
+	// ostrm << ":" << ntohs(addr->sin_port);
 #else	
 	char str[256];
+#ifdef USE_IPV6
     if (tuple.mSockaddr.sa_family == AF_INET6)
     {
        sockaddr_in6* addr = (sockaddr_in6*)&tuple.mSockaddr;
@@ -253,6 +278,7 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
        ostrm << ":" << ntohs(addr->sin6_port);
     }
     else
+#endif
     {
        sockaddr_in* addr = (sockaddr_in*)&tuple.mSockaddr;
        ostrm << inet_ntop(AF_INET, &(addr->sin_addr), str, sizeof(str));
