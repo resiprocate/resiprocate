@@ -17,9 +17,10 @@ class ApiCheck
 {
     public:
         typedef struct { const char * name; size_t sz; const char * culprits;} ApiEntry;
-        ApiCheck(ApiEntry * list);
+        ApiCheck(ApiEntry * list, int len);
 };
 };
+
 #endif
 
 
