@@ -204,9 +204,41 @@ Uri::operator==(const Uri& other) const
 {
    checkParsed();
    other.checkParsed();
+
+   // compare hosts
+   if (DnsUtil::isIpV6Address(mHost) &&
+       DnsUtil::isIpV6Address(other.mHost))
+   {
+      // compare canonicalized IPV6 addresses
+
+      // update canonicalized if host changed
+      if (mOldHost != mHost)
+      {
+         mOldHost = mHost;
+         mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
+      }
+
+      // update canonicalized if host changed      
+      if (other.mOldHost != other.mHost)
+      {
+         other.mOldHost = other.mHost;
+         other.mCanonicalHost = DnsUtil::canonicalizeIpV6Address(other.mHost);
+      }
+
+      if (mCanonicalHost != other.mCanonicalHost)
+      {
+         return false;
+      }
+   }
+   else
+   {
+      if (!isEqualNoCase(mHost, other.mHost))
+      {
+         return false;
+      }
+   }
    
    if (isEqualNoCase(mScheme, other.mScheme) &&
-       isEqualNoCase(mHost, other.mHost) &&
        ((isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips)) ? mUser == other.mUser : isEqualNoCase(mUser, other.mUser)) &&
        isEqualNoCase(mUserParameters,other.mUserParameters) &&
        mPassword == other.mPassword &&
@@ -444,7 +476,16 @@ Uri::getAor() const
    {
       mOldHost = mHost;
       // canonicalize host
-      mOldHost.lowercase();
+      if (DnsUtil::isIpV6Address(mOldHost))
+      {
+         mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
+      }
+      else
+      {
+         mCanonicalHost = mHost;
+         mCanonicalHost.lowercase();
+      }
+
       mOldUser = mUser;
       mOldPort = mPort;
       mAor.clear();
