@@ -17,6 +17,7 @@
 namespace Vocal2
 {
 
+class DnsResolver;
 class SipMessage;
 class UdpTransport;
 class SipStack;
@@ -43,10 +44,13 @@ class TransportSelector
       void retransmit(SipMessage* msg, Transport::Tuple& destination );
       
    private:
-      Transport* findTransport(const Transport::Tuple& tuple);
+      Transport* findTransport(const Transport::Type type) const;
+      Transport* findTransport(const Transport::Tuple& tuple) const;
 
       SipStack& mStack;
       std::vector<Transport*> mTransports;
+
+      friend class DnsResolver;
 };
 
 }
