@@ -250,7 +250,13 @@ TlsTransport::processAllWrites( FdSet& fdset )
    if (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
-      Connection* conn = mConnectionMap.get(data->destination);
+      DebugLog (<< "Trying to send over TLS to: " << data->destination);
+      
+      Connection* conn = data->destination.connection;
+      if (conn == 0)
+      {
+         conn = mConnectionMap.get(data->destination);
+      }
         
       if (conn == 0)
       { 
@@ -286,7 +292,7 @@ TlsTransport::processAllWrites( FdSet& fdset )
             else
             {
                // succeeded, add the connection
-               DebugLog( << "Trying to from new client TLS connection" );
+               DebugLog( << "Trying to form new client TLS connection" );
                TlsConnection* tls=0;
                try 
                {
