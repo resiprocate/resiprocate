@@ -167,12 +167,14 @@ CSeqCategory::clone() const
 // "CSeq:1323333 InviTe" // ok - not invite
 // "CSeq:\t\t  \t15\t\t\t    \t ACK"  // ok
 // "CSeq:\t\t  \t15\t\t\t    \t"  // bad
+// "CSeq:1xihzihsihtqnognsd INVITE" // not ok, but parses (?)
 
 void
 CSeqCategory::parse(ParseBuffer& pb)
 {
    const char* anchorPtr;
-   anchorPtr = pb.skipWhitespace();
+   //      anchorPtr = 
+   pb.skipWhitespace();
    mSequence = pb.integer();
 
    pb.skipNonWhitespace();
