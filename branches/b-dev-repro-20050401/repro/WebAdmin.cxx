@@ -261,7 +261,7 @@ HttpConnection::setPage(const Data& page)
       s.flush();
    }
       
-   mTxBuffer += "HTTP/1.1 200 OK" ; mTxBuffer += Symbols::CRLF;
+   mTxBuffer += "HTTP/1.0 200 OK" ; mTxBuffer += Symbols::CRLF;
    mTxBuffer += "Server: Repro Proxy " ; mTxBuffer += Symbols::CRLF;
    //mTxBuffer += "Date: Fri, 01 Apr 2005 08:08:15 GMT" ; mTxBuffer += Symbols::CRLF;
    //mTxBuffer += "Last-Modified: Fri, 01 Apr 2005 08:07:15 GMT" ; mTxBuffer += Symbols::CRLF;
