@@ -1,3 +1,9 @@
+2003-08-08  Wensong Zhang  <wensong@purplecomm.com>
+
+	* Makefile.am (resiprocate_includedir): added so that all the
+	header files can be installed into right places, such as
+	/usr/local/include/resiprocate/* or /usr/include/resiprocate/*.
+
 2003-08-07  Wensong Zhang  <wensong@purplecomm.com>
 
 	* TcpTransport.cxx (processWrite): fixed to use send() instead of
