@@ -556,8 +556,8 @@ Security::multipartSign( Contents* bodyIn )
 
    // form the multipart
    MultipartSignedContents* multi = new MultipartSignedContents;
-   multi->header(h_ContentType).param( "micalg" ) = "sha1";
-   multi->header(h_ContentType).param( "protocol" ) = "application/pkcs7-signature";
+   multi->header(h_ContentType).param( p_micalg ) = "sha1";
+   multi->header(h_ContentType).param( p_protocol ) = "application/pkcs7-signature";
    multi->header(h_ContentType).type() = "multipart";
    multi->header(h_ContentType).subType() = "signed";
    
@@ -622,9 +622,9 @@ Security::multipartSign( Contents* bodyIn )
    sigBody->header(h_ContentType).type() = "application";
    sigBody->header(h_ContentType).subType() = "pkcs7-signature";
    //sigBody->header(h_ContentType).param( "smime-type" ) = "signed-data";
-   sigBody->header(h_ContentType).param( "name" ) = "smime.p7s";
+   sigBody->header(h_ContentType).param( p_name ) = "smime.p7s";
    sigBody->header(h_ContentDisposition).param( p_handling ) = "required";
-   sigBody->header(h_ContentDisposition).param( "filename" ) = "smime.p7s";
+   sigBody->header(h_ContentDisposition).param( p_filename ) = "smime.p7s";
    sigBody->header(h_ContentDisposition).value() =  "attachment" ;
    sigBody->header(h_ContentTransferEncoding).value() = "binary";
    
@@ -717,10 +717,10 @@ Security::pkcs7Sign( Contents* bodyIn )
    // !cj! change these from using unkonw paramters types 
    outBody->header(h_ContentType).type() = "application";
    outBody->header(h_ContentType).subType() = "pkcs7-mime";
-   outBody->header(h_ContentType).param( "smime-type" ) = "signed-data";
-   outBody->header(h_ContentType).param( "name" ) = "smime.p7s";
+   outBody->header(h_ContentType).param( p_smimeType ) = "signed-data";
+   outBody->header(h_ContentType).param( p_name ) = "smime.p7s";
    outBody->header(h_ContentDisposition).param( p_handling ) = "required";
-   outBody->header(h_ContentDisposition).param( "filename" ) = "smime.p7s";
+   outBody->header(h_ContentDisposition).param( p_filename ) = "smime.p7s";
    outBody->header(h_ContentDisposition).value() =  "attachment" ;
 
    return outBody;
@@ -850,10 +850,10 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    // !cj! change these from using unkonw paramters types 
    outBody->header(h_ContentType).type() = "application";
    outBody->header(h_ContentType).subType() = "pkcs7-mime";
-   outBody->header(h_ContentType).param( "smime-type" ) = "enveloped-data";
-   outBody->header(h_ContentType).param( "name" ) = "smime.p7m";
+   outBody->header(h_ContentType).param( p_smimeType ) = "enveloped-data";
+   outBody->header(h_ContentType).param( p_name ) = "smime.p7m";
    outBody->header(h_ContentDisposition).param( p_handling ) = "required";
-   outBody->header(h_ContentDisposition).param( "filename" ) = "smime.p7";
+   outBody->header(h_ContentDisposition).param( p_filename ) = "smime.p7";
    outBody->header(h_ContentDisposition).value() =  "attachment" ;
    
    return outBody;
@@ -880,7 +880,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    Pkcs7SignedContents* sig = dynamic_cast<Pkcs7SignedContents*>( second );
    if ( !sig )
    {
-      ErrLog( << "Don't know how to deal with signature of type" << second->getStaticType() );
+      ErrLog( << "Don't know how to deal with signature type" );
       return first;
    }
 
