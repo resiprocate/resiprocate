@@ -10,6 +10,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+
 #endif
 
 #include <util/Data.hxx>
@@ -24,7 +26,7 @@
 using namespace std;
 using namespace Vocal2;
 
-const size_t UdpTransport::MaxBufferSize = 8192;
+const int UdpTransport::MaxBufferSize = 8192;
 
 
 UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& interface, Fifo<Message>& fifo) : 
@@ -77,17 +79,12 @@ UdpTransport::~UdpTransport()
 
 
 void 
-UdpTransport::send( const sockaddr_in& dest,
+UdpTransport::send( const sockaddr_in* dest,
                     const  char* buffer,
-                    const size_t length) //, TransactionId txId)
+                    const size_t length) 
 {
-   SendData* data = new  SendData(dest);
-   data->buffer = buffer;
-   data->length = length;
-   //data->tid = txId;
-
-   DebugLog (<< "Adding message to tx buffer: " << string(buffer, length));
-   
+   SendData* data = new  SendData(dest, buffer, length);
+   DebugLog (<< "Adding message to tx buffer: " << endl << string(buffer, length));
    mTxFifo.add(data); // !jf!
 }
 
@@ -106,13 +103,22 @@ UdpTransport::process(fd_set* fdSet)
    {
       SendData* data = mTxFifo.getNext();
       DebugLog (<< "Sending message on udp");
-      int count = sendto(mFd, data->buffer, data->length, 0,
-                                    (const sockaddr*)&data->destination, 
-                                    int(sizeof(data->destination)) );
+
+      const sockaddr_in* addrin = data->destination;
+      const sockaddr* addr = (const sockaddr*) addrin;
+
+      char str[256];
+      DebugLog (<< "Sending to " <<  inet_ntop(AF_INET, &addrin->sin_addr.s_addr, str, sizeof(str)));
+      
+      int count = sendto(mFd, 
+                         data->buffer, data->length, 
+                         0, // flags
+                         addr, sizeof(sockaddr_in) );
    
       if ( count == SOCKET_ERROR )
       {
-         DebugLog (<< strerror(errno));
+         int err = errno;
+         DebugLog (<< strerror(err));
          // !jf! what to do if it fails
          assert(0);
       }
