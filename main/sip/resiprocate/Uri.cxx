@@ -1,3 +1,4 @@
+#include <set>
 
 #include "sip2/util/ParseBuffer.hxx"
 #include "sip2/util/DataStream.hxx"
@@ -53,6 +54,89 @@ Uri::Uri(const Uri& rhs)
 Uri::~Uri()
 {
    delete mEmbeddedHeaders;
+}
+
+// RFC 3261 19.1.6
+Uri
+Uri::fromTel(const Uri& tel, const Data& host)
+{
+   assert(tel.scheme() == Symbols::Tel);
+
+   Uri u;
+   u.scheme() = Symbols::Sip;
+   u.user() = tel.user();
+   u.host() = host;
+   u.param(p_user) = Symbols::Phone;
+
+   // need to sort the user parameters
+   if (!tel.userParameters().empty())
+   {
+      DebugLog(<< "Uri::fromTel: " << tel.userParameters());
+      Data isub;
+      Data postd;
+
+      int totalSize  = 0;
+      std::set<Data> userParameters;
+
+      ParseBuffer pb(tel.userParameters().data(), tel.userParameters().size());
+      while (true)
+      {
+         const char* anchor = pb.position();
+         pb.skipToChar(Symbols::SEMI_COLON[0]);
+         Data param = pb.data(anchor);
+         // !dlb! not supposed to lowercase extension parameters
+         param.lowercase();
+         totalSize += param.size() + 1;
+
+         if (param.prefix(Symbols::Isub))
+         {
+            isub = param;
+         }
+         else if (param.prefix(Symbols::Postd))
+         {
+            postd = param;
+         }
+         else
+         {
+            userParameters.insert(param);
+         }
+         if (pb.eof())
+         {
+            break;
+         }
+         else
+         {
+            pb.skipChar();
+         }
+      }
+
+      u.userParameters().reserve(totalSize);
+      if (!isub.empty())
+      {
+         u.userParameters() = isub;
+      }
+      if (!postd.empty())
+      {
+         if (!u.userParameters().empty())
+         {
+            u.userParameters() += Symbols::SEMI_COLON[0];
+         }
+         u.userParameters() += postd;
+      }
+      
+      for(std::set<Data>::const_iterator i = userParameters.begin();
+          i != userParameters.end(); i++)
+      {
+         DebugLog(<< "Adding param: " << *i);
+         if (!u.userParameters().empty())
+         {
+            u.userParameters() += Symbols::SEMI_COLON[0];
+         }
+         u.userParameters() += *i;
+      }
+   }
+
+   return u;
 }
 
 bool
