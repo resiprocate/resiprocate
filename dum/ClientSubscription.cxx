@@ -105,10 +105,10 @@ ClientSubscription::dispatch(const SipMessage& msg)
       if (msg.header(h_SubscriptionState).value() == "active")
       {
          if (expires)
-         {
+         {            
             unsigned long t = Helper::aBitSmallerThan((unsigned long)(expires));
             mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
-            DebugLog (<< "reSUBSCRIBE in " << t);
+            DebugLog (<< "[ClientSubscription] reSUBSCRIBE in " << t);
          }
          
          handler->onUpdateActive(getHandle(), msg);
@@ -119,7 +119,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          {
             unsigned long t = Helper::aBitSmallerThan((unsigned long)(expires));
             mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
-            DebugLog (<< "reSUBSCRIBE in " << t);
+            DebugLog (<< "[ClientSubscription] reSUBSCRIBE in " << t);
          }
 
          handler->onUpdatePending(getHandle(), msg);
@@ -127,6 +127,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
       else if (msg.header(h_SubscriptionState).value() == "terminated")
       {
          handler->onTerminated(getHandle(), msg);
+         DebugLog (<< "[ClientSubscription] Terminated");                   
          delete this;
          return;
       }
@@ -161,7 +162,6 @@ void
 ClientSubscription::requestRefresh()
 {
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
-   mLastRequest.header(h_CSeq).sequence()++;
    //!dcm! -- need a mechanism to retrieve this for the event package...part of
    //the map that stores the handlers, or part of the handler API
    //mLastRequest.header(h_Expires).value() = 300;   
@@ -172,7 +172,7 @@ ClientSubscription::requestRefresh()
 void  
 ClientSubscription::end()
 {
-   mLastRequest.header(h_CSeq).sequence()++;
+   mDialog.makeRequest(mLastRequest, SUBSCRIBE);
    mLastRequest.header(h_Expires).value() = 0;   
    send(mLastRequest);
 }
