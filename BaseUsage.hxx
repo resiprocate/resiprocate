@@ -55,7 +55,6 @@ class BaseUsage
       DialogUsageManager& dum();
       Dialog& dialog();
       
-      virtual void end()=0;
       virtual void dispatch(const SipMessage& msg) = 0;
       virtual void dispatch(const DumTimer& timer) = 0;
       virtual BaseUsage::Handle getBaseHandle() = 0;
