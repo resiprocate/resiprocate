@@ -71,13 +71,13 @@ TransactionState::process(SipStack& stack)
       tid += "ACK"; // to make it unique from the invite transaction
    }
 
-   DebugLog (<< "got message out of state machine fifo: " << *message << " for tid " << tid);
+   DebugLog (<< "got message out of state machine fifo: tid=" << tid << std::endl << *message);
 
    TransactionState* state = stack.mTransactionMap.find(tid);
    if (state) // found transaction for sip msg
    {
-      DebugLog (<< "Found transaction for msg " << *state);
-
+      DebugLog (<< "Found transaction for tid=" << tid << " " << *state);
+      
       switch (state->mMachine)
       {
          case ClientNonInvite:
@@ -104,80 +104,78 @@ TransactionState::process(SipStack& stack)
    }
    else if (sip)  // new transaction
    {
-       DebugLog (<< "Create new transaction for sip msg ");
-
-       if (sip->isRequest())
-       {
-           // create a new state object and insert in the TransactionMap
+      if (sip->isRequest())
+      {
+         // create a new state object and insert in the TransactionMap
                
-           if (sip->isExternal()) // new sip msg from transport
-           {
-               DebugLog (<< "Create new transaction for inbound msg ");
-               if (sip->header(h_RequestLine).getMethod() == INVITE)
-               {
-                   DebugLog(<<" adding T100 timer (INV)");
-                   TransactionState* state = new TransactionState(stack, ServerInvite, Trying);
-                   // !rk! This might be needlessly created.  Design issue.
-                   state->mMsgToRetransmit = state->make100(sip);
-                   stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
-                   stack.mTransactionMap.add(tid,state);
-               }
-               else 
-               {
-                   DebugLog(<<"Adding non-INVITE transaction state");
-                   TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
-                   stack.mTransactionMap.add(tid,state);
-               }
-               // Incoming ACK just gets passed to the TU
-               DebugLog(<< "Adding incoming message to TU fifo");
-               stack.mTUFifo.add(sip);
-           }
-           else // new sip msg from the TU
-           {
-               DebugLog (<< "Create new transaction for msg from TU ");
-               if (sip->header(h_RequestLine).getMethod() == INVITE)
-               {
-                   TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
-                   stack.mTransactionMap.add(tid,state);
-                   state->processClientInvite(sip);
-               }
-               else if (sip->header(h_RequestLine).getMethod() == ACK)
-               {
-                   TransactionState* state = new TransactionState(stack, Ack, Calling);
-                   stack.mTransactionMap.add(tid,state);
-                   state->processAck(sip);
-               }
-               else 
-               {
-                   TransactionState* state = new TransactionState(stack, ClientNonInvite, Trying);
-                   stack.mTransactionMap.add(tid,state);
-                   state->processClientNonInvite(sip);
-               }
-           }
-       }
-       else if (sip->isResponse()) // stray response
-       {
-           if (stack.mDiscardStrayResponses)
-           {
-               DebugLog (<< "discarding stray response: " << sip->brief());
-               delete message;
-           }
-           else
-           {
-               // forward this statelessly
-               DebugLog(<<"forward this statelessly -- UNIMP");
-               assert(0);
-           }
-       }
-       else // wasn't a request or a response
-       {
-           DebugLog (<< "discarding unknown message: " << sip->brief());
-       }
+         if (sip->isExternal()) // new sip msg from transport
+         {
+            DebugLog (<< "Create new transaction for inbound msg " << tid);
+            if (sip->header(h_RequestLine).getMethod() == INVITE)
+            {
+               DebugLog(<<" adding T100 timer (INV)");
+               TransactionState* state = new TransactionState(stack, ServerInvite, Trying);
+               // !rk! This might be needlessly created.  Design issue.
+               state->mMsgToRetransmit = state->make100(sip);
+               stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
+               stack.mTransactionMap.add(tid,state);
+            }
+            else 
+            {
+               DebugLog(<<"Adding non-INVITE transaction state " << tid);
+               TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
+               stack.mTransactionMap.add(tid,state);
+            }
+            // Incoming ACK just gets passed to the TU
+            DebugLog(<< "Adding incoming message to TU fifo " << tid);
+            stack.mTUFifo.add(sip);
+         }
+         else // new sip msg from the TU
+         {
+            DebugLog (<< "Create new transaction for msg from TU " << tid);
+            if (sip->header(h_RequestLine).getMethod() == INVITE)
+            {
+               TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
+               stack.mTransactionMap.add(tid,state);
+               state->processClientInvite(sip);
+            }
+            else if (sip->header(h_RequestLine).getMethod() == ACK)
+            {
+               TransactionState* state = new TransactionState(stack, Ack, Calling);
+               stack.mTransactionMap.add(tid,state);
+               state->processAck(sip);
+            }
+            else 
+            {
+               TransactionState* state = new TransactionState(stack, ClientNonInvite, Trying);
+               stack.mTransactionMap.add(tid,state);
+               state->processClientNonInvite(sip);
+            }
+         }
+      }
+      else if (sip->isResponse()) // stray response
+      {
+         if (stack.mDiscardStrayResponses)
+         {
+            DebugLog (<< "discarding stray response: " << sip->brief());
+            delete message;
+         }
+         else
+         {
+            // forward this statelessly
+            DebugLog(<<"forward this statelessly -- UNIMP");
+            assert(0);
+         }
+      }
+      else // wasn't a request or a response
+      {
+         DebugLog (<< "discarding unknown message: " << sip->brief());
+      }
    } 
    else // timer or other non-sip msg
    {
-       DebugLog (<< "discarding non-sip message: " << message->brief());
-       delete message;
+      DebugLog (<< "discarding non-sip message: " << message->brief());
+      delete message;
    }
 }
 
@@ -447,12 +445,12 @@ TransactionState::processClientInvite(  Message* msg )
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       switch (sip->header(h_RequestLine).getMethod())
       {
-	/* Received INVITE request from TU="Transaction User", Fire Timer B which controls
-	   transaction timeouts. alsoHandle CANCEL , To Handle Response to the CANCEL use
-           processClientNonInvite 
-	*/
+         /* Received INVITE request from TU="Transaction User", Fire Timer B which controls
+            transaction timeouts. alsoHandle CANCEL , To Handle Response to the CANCEL use
+            processClientNonInvite 
+         */
 
-          case INVITE:
+         case INVITE:
             mMsgToRetransmit = sip;
             mStack.mTimers.add(Timer::TimerB, msg->getTransactionId(), 64*Timer::T1 );
             sendToWire(msg); // don't delete msg
@@ -482,9 +480,9 @@ TransactionState::processClientInvite(  Message* msg )
    {
       switch (mMsgToRetransmit->header(h_RequestLine).getMethod())
       {
-	/* Unreliable transport is used start TIMER A 
-	   (Timer A controls request retransmissions) 
-	*/
+         /* Unreliable transport is used start TIMER A 
+            (Timer A controls request retransmissions) 
+         */
          case INVITE:
             if (isSentReliable(msg))
             {
@@ -510,13 +508,13 @@ TransactionState::processClientInvite(  Message* msg )
       switch (sip->header(h_CSeq).method())
       {
          case INVITE:
-	   /* If the client transaction receives a provisional response while in
-	      the "Calling" state, it transitions to the "Proceeding" state. In the
-	      "Proceeding" state, the client transaction SHOULD NOT retransmit the
-	      request any longer (this will be Handled in  "else if (isTimer(msg))")
-	      The Retransmissions will be stopped, Not by Cancelling Timers but
-              by Ignoring the fired Timers depending upon the State which stack is in.   
-	   */
+            /* If the client transaction receives a provisional response while in
+               the "Calling" state, it transitions to the "Proceeding" state. In the
+               "Proceeding" state, the client transaction SHOULD NOT retransmit the
+               request any longer (this will be Handled in  "else if (isTimer(msg))")
+               The Retransmissions will be stopped, Not by Cancelling Timers but
+               by Ignoring the fired Timers depending upon the State which stack is in.   
+            */
             if (code >= 100 && code < 200) // 1XX
             {
                if (mState == Calling || mState == Proceeding)
@@ -532,9 +530,9 @@ TransactionState::processClientInvite(  Message* msg )
 
 	    /* When in either the "Calling" or "Proceeding" states, reception of a
                2xx response MUST cause the client transaction to enter the
-              "Terminated" state, and the response MUST be passed up to the TU 
-	      State Machine is changed to Stale since, we wanted to ensure that 
-	      all 2xx gets to TU
+               "Terminated" state, and the response MUST be passed up to the TU 
+               State Machine is changed to Stale since, we wanted to ensure that 
+               all 2xx gets to TU
 	    */
               
 	    else if (code >= 200 && code < 300)
@@ -546,17 +544,17 @@ TransactionState::processClientInvite(  Message* msg )
             }
             else if (code >= 300)
             {
-	      /* When in either the "Calling" or "Proceeding" states, reception of a
-		 response with status code from 300-699 MUST cause the client
-		 transaction to transition to "Completed".
-	      */
+               /* When in either the "Calling" or "Proceeding" states, reception of a
+                  response with status code from 300-699 MUST cause the client
+                  transaction to transition to "Completed".
+               */
                  
                if (mIsReliable)
                {
-		 /*  Stack MUST pass the received response up to the TU, and the client
-		     transaction MUST generate an ACK request, even if the transport is
-		     reliable
-		 */
+                  /*  Stack MUST pass the received response up to the TU, and the client
+                      transaction MUST generate an ACK request, even if the transport is
+                      reliable
+                  */
                   SipMessage* invite = mMsgToRetransmit;
                   mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
                   delete invite;
@@ -570,11 +568,11 @@ TransactionState::processClientInvite(  Message* msg )
                {
                   if (mState == Calling || mState == Proceeding)
                   {
-		    /*  MUST pass the received response up to the TU, and the client
-		     transaction MUST generate an ACK request, even if the transport is
-		     reliable, if transport is Unreliable then Fire the Timer D which 
-		     take care of re-Transmission of ACK 
-		    */
+                     /*  MUST pass the received response up to the TU, and the client
+                         transaction MUST generate an ACK request, even if the transport is
+                         reliable, if transport is Unreliable then Fire the Timer D which 
+                         take care of re-Transmission of ACK 
+                     */
                      mState = Completed;
                      SipMessage* invite = mMsgToRetransmit;
                      mStack.mTimers.add(Timer::TimerD, msg->getTransactionId(), Timer::TD );
@@ -585,18 +583,18 @@ TransactionState::processClientInvite(  Message* msg )
                   }
                   else if (mState == Completed)
                   {
-		    /* Any retransmissions of the final response that are received while in
-		       the "Completed" state MUST cause the ACK to be re-passed to the
-		       transport layer for retransmission
+                     /* Any retransmissions of the final response that are received while in
+                        the "Completed" state MUST cause the ACK to be re-passed to the
+                        transport layer for retransmission
 		     */
                      resendToWire(mMsgToRetransmit);
                      sendToTU(msg); // don't delete msg
                   }
                   else
                   {
-		    /* This should never Happen if it happens we should have a plan
-		       what to do here?? for now assert will work
-		    */
+                     /* This should never Happen if it happens we should have a plan
+                        what to do here?? for now assert will work
+                     */
                      assert(0);
                   }
                }
@@ -604,8 +602,8 @@ TransactionState::processClientInvite(  Message* msg )
             break;
             
          case CANCEL:
-	   /*
-	     Let processClientNonInvite Handle the CANCEL
+            /*
+              Let processClientNonInvite Handle the CANCEL
 	    */
             mCancelStateMachine->processClientNonInvite(msg);
             // !jf! memory mgmt? 
@@ -618,8 +616,8 @@ TransactionState::processClientInvite(  Message* msg )
    }
    else if (isTimer(msg))
    {
-     /* Handle Transaction Timers , Retransmission Timers which were set and Handle
-        Cancellation of Timers for Re-transmissions here */
+      /* Handle Transaction Timers , Retransmission Timers which were set and Handle
+         Cancellation of Timers for Re-transmissions here */
 
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       DebugLog (<< "timer fired: " << *timer);
@@ -641,8 +639,8 @@ TransactionState::processClientInvite(  Message* msg )
          case Timer::TimerB:
 	    if (mState == Calling)
 	    {
-		sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
-		delete this;
+               sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               delete this;
 	    }
             delete msg;
             break;
@@ -788,12 +786,12 @@ TransactionState::processServerInvite(  Message* msg )
          case INVITE:
             if (mState == Proceeding || mState == Completed)
             {
-	      /*
-	        The server transaction has already been constructed so this
-		message is a retransmission.  The server transaction must
-		respond with a 100 Trying _or_ the last provisional response
-		passed from the TU for this transaction.
-	      */
+               /*
+                 The server transaction has already been constructed so this
+                 message is a retransmission.  The server transaction must
+                 respond with a 100 Trying _or_ the last provisional response
+                 passed from the TU for this transaction.
+               */
                DebugLog (<< "Received invite from wire - forwarding to TU state=" << mState);
 	       if (!mMsgToRetransmit)
 	       {
@@ -810,10 +808,10 @@ TransactionState::processServerInvite(  Message* msg )
             break;
             
          case ACK:
-	   /*
-	     If an ACK is received while the server transaction is in the
-	     "Completed" state, the server transaction MUST transition to the
-	     "Confirmed" state.
+            /*
+              If an ACK is received while the server transaction is in the
+              "Completed" state, the server transaction MUST transition to the
+              "Confirmed" state.
 	    */
             if (mState == Completed)
             {
@@ -845,7 +843,7 @@ TransactionState::processServerInvite(  Message* msg )
 	       mCancelStateMachine = new TransactionState(mStack, ServerNonInvite, Trying);
 	    }
             // Copy the message so that it will still be valid for sendToTU().
-            mCancelStateMachine->processServerNonInvite(new SipMessage(msg));
+            mCancelStateMachine->processServerNonInvite(new SipMessage(*sip));
             sendToTU(msg); // don't delete msg
             break;
 
@@ -914,14 +912,14 @@ TransactionState::processServerInvite(  Message* msg )
             }
             else if (code >= 300)
             {
-	      /*
-		While in the "Proceeding" state, if the TU passes a response with
-		status code from 300 to 699 to the server transaction, For unreliable 
-                transports,timer G is set to fire in T1 seconds, and is not set to 
-		fire for reliable transports.when the "Completed" state is entered, 
-		timer H MUST be set to fire in 64*T1 seconds for all transports.  
-		Timer H determines when the server transaction abandons retransmitting 
-		the response
+               /*
+                 While in the "Proceeding" state, if the TU passes a response with
+                 status code from 300 to 699 to the server transaction, For unreliable 
+                 transports,timer G is set to fire in T1 seconds, and is not set to 
+                 fire for reliable transports.when the "Completed" state is entered, 
+                 timer H MUST be set to fire in 64*T1 seconds for all transports.  
+                 Timer H determines when the server transaction abandons retransmitting 
+                 the response
 	       */
 
                if (mState == Trying || mState == Proceeding)
@@ -961,7 +959,7 @@ TransactionState::processServerInvite(  Message* msg )
 	       delete msg;
 	       break;
 	    }
-            mCancelStateMachine->processServerNonInvite(new SipMessage(msg));
+            mCancelStateMachine->processServerNonInvite(new SipMessage(*sip));
             sendToTU(msg); // don't delete
             break;
             
@@ -994,7 +992,7 @@ TransactionState::processServerInvite(  Message* msg )
 	      transition to the "Terminated" state, and MUST indicate to the TU
 	      that a transaction failure has occurred. WHY we need to inform TU
               for Failure cases ACK ? do we really need to do this ???       
-	     */
+            */
          case Timer::TimerH:
 	 case Timer::TimerI:
             DebugLog (<< "TimerH or TimerI fired. Delete this");
@@ -1050,7 +1048,7 @@ TransactionState::processStale(  Message* msg )
    if ( (sip &&
 	 sip->isRequest() &&
 	 sip->header(h_RequestLine).getMethod() == ACK ) ||
-	 isResponse(msg, 200, 299 ) )
+        isResponse(msg, 200, 299 ) )
    {
       if (isFromTU(msg))
       { 
@@ -1245,6 +1243,9 @@ Vocal2::operator<<(std::ostream& strm, const Vocal2::TransactionState& state)
    return strm;
 }
 
+/* Local Variables: */
+/* c-file-style: "ellemtel" */
+/* End: */
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
