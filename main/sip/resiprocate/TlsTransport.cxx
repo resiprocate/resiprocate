@@ -45,9 +45,26 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
 
 }
 
+TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo, 
+                           const Data& sipDomain, 
+                           const Data& interfaceObj, 
+                           int portNum, 
+                           Security& security,
+                           bool ipv4) : 
+   TcpBaseTransport(fifo, portNum, interfaceObj, ipv4),
+   mDomain(sipDomain),
+   mSecurity(&security)
+{
+    mTuple.setType(transport());
+
+    InfoLog( << "Listening for TLS connections for domain " << sipDomain << " interface=" << interfaceObj << " port=" << portNum);
+}
+   
+ 
 
 TlsTransport::~TlsTransport()
 {
+    // shouldn't this delete the Security object?
 }
   
 
