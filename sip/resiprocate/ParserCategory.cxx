@@ -36,7 +36,7 @@ ParserCategory::clone(HeaderFieldValue* hfv) const
 }
 
 UnknownParameter&
-ParserCategory::operator[](const Data& param) const
+ParserCategory::param(const Data& param) const
 {
    checkParsed();
    return *mHeaderField->get(param);
