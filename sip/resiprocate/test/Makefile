@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.43 2003/03/24 23:37:09 jason Exp $
+# $Id: Makefile,v 1.44 2003/04/17 04:43:25 alan Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -12,6 +12,7 @@ TESTPROGRAMS =	testParseBuffer.cxx \
 	        testDataPerformance.cxx \
 	        testRandomHex.cxx \
 	        testCoders.cxx \
+		testEmptyHeader.cxx \
 		testThreadIf.cxx \
 		testLogger.cxx \
 		testXMLCursor.cxx \
