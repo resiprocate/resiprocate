@@ -99,6 +99,75 @@ SipFrag::encodeParsed(std::ostream& str) const
    return str;
 }
 
+bool 
+SipFrag::hasStartLine(char* buffer, int size)
+{
+#if 0
+   //!dcm! -- this probably inefficient, but the SIP grammer makes this very
+   //difficult. Better here than in the MsgHeaderScanner. There's also proabably a
+   //way to make a header that matches the requestLine check which isn't a
+   //request line.
+
+   ParseBuffer pbCheck(buffer, size);
+   pbCheck.skipWhitespace(); //gratuitous?
+
+   //!dcm! -- could extend to SIP/2.0, but nobody should start a hname with SIP/
+   if ((pbCheck.end() - pbCheck.position()) > 4 &&
+      strncmp(pbCheck.position(), "SIP/", 4) == 0)
+   {
+      return true;
+   }
+   else
+   {
+      pbCheck.skipToChars(Symbols::CRLF);
+      if (pbCheck.eof()) 
+      {
+         //false positive, let MsgHeaderScanner sort the exact error out
+         return true; 
+      }
+      
+      pbCheck.skipBackToChar(Symbols::SPACE[0]);
+      if (pbCheck.position() == pbCheck.start()) 
+      {
+         return false;
+      }
+         
+      if ((pbCheck.end() - pbCheck.position()) > 4 &&
+          strncmp(pbCheck.position(), "SIP/", 4) == 0)
+      {
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
+#else   
+   //!dcm! -- better approach, remove above if this is proven to be correct
+   ParseBuffer pbCheck(buffer, size);
+   pbCheck.skipWhitespace(); //gratuitous?
+   pbCheck.skipToOneOf(" \t:\r\n");
+   while(!pbCheck.eof())
+   {
+      switch(*pbCheck.position())
+      {
+         case ':':
+            return false;
+         case ' ':
+         case '\t':
+            pbCheck.skipChar();
+            break;             
+         case '\r':
+         case '\n':
+            return false;
+         default:
+            return true;
+      }
+   }
+   return true;  //false positive, let MsgHeaderScanner sort the exact error out
+#endif
+}
+
 void 
 SipFrag::parse(ParseBuffer& pb)
 {
@@ -115,8 +184,9 @@ SipFrag::parse(ParseBuffer& pb)
    // !ah! removed size check .. process() cannot process more
    // than size bytes of the message.
 
+
    MsgHeaderScanner msgHeaderScanner;
-   msgHeaderScanner.prepareForMessage(mMessage);
+   msgHeaderScanner.prepareForFrag(mMessage, hasStartLine(buffer, size));
    enum { sentinelLength = 4 };  // Two carriage return / line feed pairs.
    char saveTermCharArray[sentinelLength];
    char *termCharArray = buffer + size;
