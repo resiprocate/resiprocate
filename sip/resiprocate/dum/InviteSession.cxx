@@ -447,6 +447,7 @@ InviteSession::send(SipMessage& msg)
       {
          mState = Terminated;
          mDum.send(msg);
+	     mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      
          guard.destroy();
       }
       else if (code >= 200 && code < 300 && msg.header(h_CSeq).method() == INVITE)
