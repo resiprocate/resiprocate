@@ -190,7 +190,8 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
             }
             else
             {
-               assert(0);
+               WarningLog (<< "Trying to lookup a dns when scheme is not specified: " << uri);
+               //assert(0);
                mStack.mStateMacFifo.add(new DnsMessage(transactionId));
                return;
             }
@@ -368,7 +369,7 @@ DnsResolver::aresCallbackHost(void *arg, int status, struct hostent* result)
 {
    std::auto_ptr<Request> request(reinterpret_cast<Request*>(arg));
 
-   DebugLog (<< "Received dns update: " << request->tid);
+   //DebugLog (<< "Received dns update: " << request->tid);
    DnsMessage* dns = new DnsMessage(request->tid);
 
    if (status != ARES_SUCCESS)
@@ -382,14 +383,14 @@ DnsResolver::aresCallbackHost(void *arg, int status, struct hostent* result)
       DebugLog (<< "DNS lookup canonical name: " << result->h_name);
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
-	 Transport::Tuple tuple;
-	 tuple.ipv4.s_addr = *((u_int32_t*)(*pptr));
-	 tuple.port = request->port;
-	 tuple.transportType = request->transport;
-	 tuple.transport = 0;
+         Transport::Tuple tuple;
+         tuple.ipv4.s_addr = *((u_int32_t*)(*pptr));
+         tuple.port = request->port;
+         tuple.transportType = request->transport;
+         tuple.transport = 0;
 	 
-	 DebugLog(<< tuple);
-	 dns->mTuples.push_back(tuple);
+         DebugLog(<< tuple);
+         dns->mTuples.push_back(tuple);
       }
    }
    if (request->isFinal)

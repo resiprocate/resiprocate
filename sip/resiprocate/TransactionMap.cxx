@@ -10,7 +10,6 @@ using namespace resip;
 TransactionMap::~TransactionMap()
 {
    DebugLog (<< "Deleting TransactionMap: " << this << " " << mMap.size() << " entries");
-   //InfoLog (<< Inserter(mMap));
    while (!mMap.empty())
    {
       DebugLog (<< mMap.begin()->first << " -> " << mMap.begin()->second << ": " << *mMap.begin()->second);
