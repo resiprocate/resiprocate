@@ -659,7 +659,6 @@ Dialog::copyCSeq(SipMessage& request)
       mLocalSequence = 1;
       mLocalEmpty = false;
    }
-   request.header(h_CSeq).method() = request.header(h_CSeq).method();
    request.header(h_CSeq).sequence() = mLocalSequence;
 }
 

@@ -26,12 +26,12 @@ class DialogSet
       void addDialog(Dialog*);
       void removeDialog(const Dialog*);
       
-      DialogIdSet getDialogs() const;
+//!dcm! -- kill      DialogIdSet getDialogs() const;
       bool empty() const;
 
-      Dialog* findDialog(const DialogId id);
-      Dialog* findDialog(const Data& otherTag);
-      Dialog* findDialog(SipMessage& msg);
+//!dcm! -- kill
+//      Dialog* findDialog(const DialogId id);
+//      Dialog* findDialog(const Data& otherTag);
       
       BaseCreator* getCreator();
 
@@ -41,6 +41,9 @@ class DialogSet
       bool mergeRequest(const SipMessage& request);
 
    private:
+      Dialog* findDialog(const SipMessage& msg);
+      Dialog* findDialog(const DialogId id);
+
       std::list<Dialog*> mDialogs;
       BaseCreator* mCreator;
       DialogSetId mId;
