@@ -44,14 +44,14 @@ TuIM::TuIM(SipStack* stack,
            const Uri& contact,
            PageCallback* msgCallback, 
            ErrCallback* errCallback,
-		   PresCallback* pressCallback)
+           PresCallback* pressCallback)
    : mPageCallback(msgCallback),
      mErrCallback(errCallback),
-	 mPressCallback(pressCallback),
+     mPressCallback(pressCallback),
      mStack(stack),
      mAor(aor),
      mContact(contact),
-	 mPassword( Data::Empty )
+     mPassword( Data::Empty )
 {
    assert( mStack );
    assert(mPageCallback);
@@ -151,19 +151,19 @@ TuIM::process()
             delete response;
             
             Contents* contents = msg->getContents();
-			if ( !contents )
-			{
-				ErrLog( "Receiveed Message message with no contents" );
-				delete msg; msg=0;
-				return;
-			}
+            if ( !contents )
+            {
+               ErrLog( "Receiveed Message message with no contents" );
+               delete msg; msg=0;
+               return;
+            }
 
             assert( contents );
             Mime mime = contents->getType();
             DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
 
             Data signedBy;
-			Security::SignatureStatus sigStat = Security::none;
+            Security::SignatureStatus sigStat = Security::none;
             bool encrypted=false;
 
 #ifdef USE_SSL
@@ -194,7 +194,7 @@ TuIM::process()
                   Uri from = msg->header(h_From).uri();
                   DebugLog ( << "got message from " << from );
                   
-				  assert( mPageCallback );
+                  assert( mPageCallback );
                   mPageCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
                }
                else
@@ -213,54 +213,54 @@ TuIM::process()
 void 
 TuIM::registerAor( const Uri& uri, const Data& password )
 {
-	ErrLog( "Need to implement TuIM::registerAor" );
+   ErrLog( "Need to implement TuIM::registerAor" );
 }
 
 
-const int 
-TuIM::getNumBudies()
+int 
+TuIM::getNumBudies() const
 {
-	return int(mBuddy.size());
+   return int(mBuddy.size());
 }
 
 const Uri 
 TuIM::getBuddyUri(const int index)
 {
-	assert( index >= 0 );
-	assert( index < getNumBudies() );
+   assert( index >= 0 );
+   assert( index < getNumBudies() );
 
-	return mBuddy[index].uri;
+   return mBuddy[index].uri;
 }
 
 const Data 
 TuIM::getBuddyGroup(const int index)
 {
-	assert( index >= 0 );
-	assert( index < getNumBudies() );
+   assert( index >= 0 );
+   assert( index < getNumBudies() );
 
-	return mBuddy[index].group;
+   return mBuddy[index].group;
 }
 
 void 
 TuIM::addBuddy( const Uri& uri, const Data& group )
 {
-	Buddy b;
-	b.uri = uri;
-	b.group = group;
+   Buddy b;
+   b.uri = uri;
+   b.group = group;
 
-	mBuddy.push_back( b );
+   mBuddy.push_back( b );
 }
 
 void 
 TuIM::removeBudy( const Uri& name)
 {
-	assert(0);
+   assert(0);
 }
 
 void 
 TuIM::setMyPresense( const bool open, const Data& status )
 {
-	assert(0);
+   assert(0);
 }
 
 

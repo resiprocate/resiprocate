@@ -40,42 +40,42 @@ class TuIM
            const Uri& contact,
            PageCallback* pageCallback, 
            ErrCallback* errCallback,
-		   PresCallback* pressCallback);
+           PresCallback* pressCallback);
       
       void sendPage(const Data& text, const Uri& dest, bool sign, const Data& encryptFor );
 
       void process();
 
-	  // Registration management 
-	  void registerAor( const Uri& uri, const Data& password = Data::Empty );
+      // Registration management 
+      void registerAor( const Uri& uri, const Data& password = Data::Empty );
 
-	  // Buddy List management
-	  const int getNumBudies();
-	  const Uri getBuddyUri(const int index);
-	  const Data getBuddyGroup(const int index);
-	  void addBuddy( const Uri& uri, const Data& group );
+      // Buddy List management
+      int getNumBudies() const;
+      const Uri getBuddyUri(const int index);
+      const Data getBuddyGroup(const int index);
+      void addBuddy( const Uri& uri, const Data& group );
       void removeBudy( const Uri& name);
 
-	  // Presense management
-	  void setMyPresense( const bool open, const Data& status = Data::Empty );
+      // Presense management
+      void setMyPresense( const bool open, const Data& status = Data::Empty );
 
    private:
       PageCallback* mPageCallback;
       ErrCallback* mErrCallback; 
-	  PresCallback* mPressCallback;
+      PresCallback* mPressCallback;
       SipStack* mStack;
       Uri mAor;
       Uri mContact;
-	  Data mPassword;
+      Data mPassword;
 
-	  class Buddy
-	  {
-	  public:
-		  Uri uri;
-		  Data group;
-	  };
+      class Buddy
+      {
+         public:
+            Uri uri;
+            Data group;
+      };
 
-	  vector<Buddy> mBuddy;
+      vector<Buddy> mBuddy;
 };
 
 }
