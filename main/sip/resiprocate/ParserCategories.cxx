@@ -1050,6 +1050,13 @@ StringCategory::encodeParsed(std::ostream& str) const
    return str;
 }
 
+Data& 
+StringCategory::value() const 
+{
+   checkParsed(); 
+   return mValue;
+}
+
 //====================
 // GenericUri
 //====================
@@ -1214,15 +1221,15 @@ Via::encodeParsed(ostream& str) const
 
 
 //====================
-// CallId:
+// CallID:
 //====================
-CallId::CallId(const CallId& rhs)
+CallID::CallID(const CallID& rhs)
    : ParserCategory(rhs),
      mValue(rhs.mValue)
 {}
 
-CallId&
-CallId::operator=(const CallId& rhs)
+CallID&
+CallID::operator=(const CallID& rhs)
 {
    if (this != &rhs)
    {
@@ -1233,19 +1240,19 @@ CallId::operator=(const CallId& rhs)
 }
 
 bool
-CallId::operator==(const CallId& rhs) const
+CallID::operator==(const CallID& rhs) const
 {
    return value() == rhs.value();
 }
 
 ParserCategory *
-CallId::clone() const
+CallID::clone() const
 {
-   return new CallId(*this);
+   return new CallID(*this);
 }
 
 void
-CallId::parse(ParseBuffer& pb)
+CallID::parse(ParseBuffer& pb)
 {
    const char* start = pb.skipWhitespace();
    pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
@@ -1255,7 +1262,7 @@ CallId::parse(ParseBuffer& pb)
 }
 
 ostream&
-CallId::encodeParsed(ostream& str) const
+CallID::encodeParsed(ostream& str) const
 {
    str << mValue;
    encodeParameters(str);
