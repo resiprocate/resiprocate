@@ -38,18 +38,23 @@ Dialog::Dialog(const NameAddr& localContact)
 #endif
 }
 
-void
-Dialog::createDialogAsUAS(const SipMessage& request, const SipMessage& response)
+SipMessage*
+Dialog::createDialogAsUAS(const SipMessage& request, int code)
 {
    if (!mCreated)
    {
+      assert (code > 100);
+      assert (code < 300);      
       assert(request.isRequest());
-      assert(response.isResponse());
       assert(request.header(h_RequestLine).getMethod() == INVITE ||
              request.header(h_RequestLine).getMethod() == SUBSCRIBE);
       
       assert (request.header(h_Contacts).size() == 1);
 
+      SipMessage* response = Helper::makeResponse(request, code);
+      assert (!response->header(h_To).uri().exists(p_tag));
+      response->header(h_To).uri().param(p_tag) = Helper::computeTag(Helper::tagSize);
+      
       mRouteSet = request.header(h_RecordRoutes);
       mRemoteTarget = request.header(h_Contacts).front();
       mRemoteSequence = request.header(h_CSeq).sequence();
@@ -57,7 +62,7 @@ Dialog::createDialogAsUAS(const SipMessage& request, const SipMessage& response)
       mLocalSequence = 0;
       mLocalEmpty = true;
       mCallId = request.header(h_CallId);
-      mLocalTag = response.header(h_To).param(p_tag); // from response
+      mLocalTag = response->header(h_To).param(p_tag); // from response
       mRemoteTag = request.header(h_From).param(p_tag); 
       mRemoteUri = request.header(h_From);
       mLocalUri = request.header(h_To);
@@ -66,8 +71,16 @@ Dialog::createDialogAsUAS(const SipMessage& request, const SipMessage& response)
       mDialogId.value() = mCallId.value();
       mDialogId.param(p_toTag) = mRemoteTag;
       mDialogId.param(p_fromTag) = mLocalTag;
+
+      return response;
+   }
+   else
+   {
+      DebugLog (<< "Trying to create same dialog twice: " << mDialogId);
+      throw Exception("Trying to create a dialog a second time", __FILE__, __LINE__);
    }
 }
+
 
 void 
 Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
@@ -141,92 +154,105 @@ Dialog::targetRefreshRequest(const SipMessage& request)
    return 0;
 }
 
-SipMessage
+SipMessage*
 Dialog::makeInvite()
 {
-   SipMessage request;
-   request.header(h_RequestLine) = RequestLine(INVITE);
-   setRequestDefaults(request);
-   incrementCSeq(request);
+   SipMessage* request = new SipMessage;
+   request->header(h_RequestLine) = RequestLine(INVITE);
+   setRequestDefaults(*request);
+   incrementCSeq(*request);
    return request;
 }
 
-SipMessage
+SipMessage*
 Dialog::makeBye()
 {
-   SipMessage request;
-   request.header(h_RequestLine) = RequestLine(BYE);
-   setRequestDefaults(request);
-   incrementCSeq(request);
+   SipMessage* request = new SipMessage;
+   request->header(h_RequestLine) = RequestLine(BYE);
+   setRequestDefaults(*request);
+   incrementCSeq(*request);
    return request;
 }
 
 
-SipMessage
+SipMessage*
 Dialog::makeRefer(const NameAddr& referTo)
 {
-   SipMessage request;
-   request.header(h_RequestLine) = RequestLine(REFER);
-   setRequestDefaults(request);
-   incrementCSeq(request);
-   request.header(h_ReferTo) = referTo;
-   request.header(h_ReferredBy) = mLocalUri;
+   SipMessage* request = new SipMessage;
+   request->header(h_RequestLine) = RequestLine(REFER);
+   setRequestDefaults(*request);
+   incrementCSeq(*request);
+   request->header(h_ReferTo) = referTo;
+   request->header(h_ReferredBy) = mLocalUri;
    return request;
 }
 
-SipMessage
+SipMessage*
 Dialog::makeNotify()
 {
-   SipMessage request;
-   request.header(h_RequestLine) = RequestLine(NOTIFY);
-   setRequestDefaults(request);
+   SipMessage* request = new SipMessage;
+   request->header(h_RequestLine) = RequestLine(NOTIFY);
+   setRequestDefaults(*request);
    return request;
 }
 
 
-SipMessage
+SipMessage*
 Dialog::makeOptions()
 {
-   SipMessage request;
-   request.header(h_RequestLine) = RequestLine(OPTIONS);
-   setRequestDefaults(request);
-   incrementCSeq(request);
+   SipMessage* request = new SipMessage;
+   request->header(h_RequestLine) = RequestLine(OPTIONS);
+   setRequestDefaults(*request);
+   incrementCSeq(*request);
    return request;
 }
 
-SipMessage
+SipMessage*
 Dialog::makeAck(const SipMessage& original)
 {
-   SipMessage request;
-   request.header(h_RequestLine) = RequestLine(ACK);
-   setRequestDefaults(request);
-   copyCSeq(request);
+   SipMessage* request = new SipMessage;
+   request->header(h_RequestLine) = RequestLine(ACK);
+   setRequestDefaults(*request);
+   copyCSeq(*request);
 
    // !jf! will this do the right thing if these headers weren't in original 
-   request.header(h_ProxyAuthorization) = original.header(h_ProxyAuthorization);
-   request.header(h_Authorization) = original.header(h_Authorization);
+   request->header(h_ProxyAuthorization) = original.header(h_ProxyAuthorization);
+   request->header(h_Authorization) = original.header(h_Authorization);
 
    return request;
 }
 
-SipMessage
+SipMessage*
 Dialog::makeCancel(const SipMessage& request)
 {
    assert (request.header(h_Vias).size() >= 1);
    assert (request.header(h_RequestLine).getMethod() == INVITE);
    
-   SipMessage cancel;
-   cancel.header(h_RequestLine) = request.header(h_RequestLine);
-   cancel.header(h_CallId) = request.header(h_CallId);
-   cancel.header(h_To) = request.header(h_To); 
-   cancel.header(h_From) = request.header(h_From);
-   cancel.header(h_CSeq) = request.header(h_CSeq);
-   cancel.header(h_CSeq).method() = CANCEL;
-   cancel.header(h_Vias).push_back(request.header(h_Vias).front());
-   cancel.header(h_Routes) = request.header(h_Routes);
+   SipMessage* cancel;
+   cancel->header(h_RequestLine) = request.header(h_RequestLine);
+   cancel->header(h_CallId) = request.header(h_CallId);
+   cancel->header(h_To) = request.header(h_To); 
+   cancel->header(h_From) = request.header(h_From);
+   cancel->header(h_CSeq) = request.header(h_CSeq);
+   cancel->header(h_CSeq).method() = CANCEL;
+   cancel->header(h_Vias).push_back(request.header(h_Vias).front());
+   cancel->header(h_Routes) = request.header(h_Routes);
    
    return cancel;
 }
+
+SipMessage* 
+Dialog::makeResponse(const SipMessage& request, int code)
+{
+   assert (mCreated);
+   
+   SipMessage* response = Helper::makeResponse(request, code);
+   assert (!response->header(h_To).uri().exists(p_tag));
+   response->header(h_To).uri().param(p_tag) = mLocalTag;
+   return response;
+}
+
+ 
 
 void
 Dialog::clear()
