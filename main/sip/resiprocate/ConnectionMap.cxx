@@ -200,6 +200,7 @@ ConnectionMap::Connection::process(int bytesRead, Fifo<Message>& fifo, Preparse&
    if (mState == NewMessage)
    {
       mMessage = new SipMessage();
+      mMessage->setSource(mWho);
       cerr << "NewMessage state." << endl;
    }
    
