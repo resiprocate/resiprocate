@@ -14,7 +14,8 @@ class HeaderFieldValueList
 {
    public:
       HeaderFieldValueList()
-         : mParserContainer(0)
+         : mHeaders(), 
+           mParserContainer(0)
       {}
 
       ~HeaderFieldValueList();

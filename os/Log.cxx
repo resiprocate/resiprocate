@@ -38,9 +38,11 @@ Mutex Log::_mutex;
 void 
 Log::initialize(Type type, Level level, const Data& appName)
 {
+   string copy(appName.c_str());
+   
    _type = type;
    _level = level;
-   _appName = appName.substr(appName.find_last_of("/")+1);
+   _appName = copy.substr(copy.find_last_of("/")+1);
    
  
 #ifdef WIN32 
@@ -73,16 +75,16 @@ Log::toString(Level l)
 Log::Level
 Log::toLevel(const Data& l)
 {
-   Data pri = l;
+   string pri = "l";
    if (pri.find("LOG_", 0) == 0)
    {
       pri.erase(0, 4);
    }
    
    int i=0;
-   while (Data(_descriptions[i]).length())
+   while (string(_descriptions[i]).size())
    {
-      if (pri == Data(_descriptions[i])) 
+      if (pri == string(_descriptions[i])) 
       {
          return Level(i);
       }
