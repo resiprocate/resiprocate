@@ -127,7 +127,8 @@ private:
       TransportSelector mTransportSelector;
 
       // stores all of the transactions that are currently active in this stack 
-      TransactionMap mTransactionMap;
+      TransactionMap mClientTransactionMap;
+      TransactionMap mServerTransactionMap;
 
       // timers associated with the transactions. When a timer fires, it is
       // placed in the mStateMacFifo

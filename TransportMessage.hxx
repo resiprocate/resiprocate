@@ -24,6 +24,7 @@ class TransportMessage : public Message
       }
 
       bool isFailed() const { return mFailure; }
+      virtual bool isClientTransaction() const { return true; }  // !jf! not strictly true
       
       virtual Data brief() const { return "TransportMessage: " + mTransactionId + " " + (mFailure ? "failed" : "succeeded"); }
       
