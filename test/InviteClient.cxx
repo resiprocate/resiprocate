@@ -11,13 +11,13 @@
 #include "InviteClient.hxx"
 #include "Transceiver.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace Loadgen;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-InviteClient::InviteClient(Transceiver& transceiver, const Vocal2::Uri& proxy, 
+InviteClient::InviteClient(Transceiver& transceiver, const resip::Uri& proxy, 
                            int firstExtension, int lastExtension, 
                            int numInvites)
    : mTransceiver(transceiver),

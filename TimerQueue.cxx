@@ -8,10 +8,10 @@
 #include "resiprocate/os/Logger.hxx"
 //#include "resiprocate/os/Inserter.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::TRANSACTION
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 TimerQueue::TimerQueue(Fifo<Message>& fifo) : mFifo(fifo)
 {
@@ -64,8 +64,8 @@ TimerQueue::process()
       // Leaked !ah! BUGBUG valgrind says leaked.
       //  206884 bytes in 2270 blocks are definitely lost (...)
       //     by 0x8178A20: operator new(unsigned)
-      //     by 0x80CDF75: Vocal2::TimerQueue::process() (TimerQueue.cxx:63)
-      //     by 0x80F6A4B: Vocal2::Executive::processTimer() (Executive.cxx:52)
+      //     by 0x80CDF75: resip::TimerQueue::process() (TimerQueue.cxx:63)
+      //     by 0x80F6A4B: resip::Executive::processTimer() (Executive.cxx:52)
 
       //DebugLog (<< Timer::toData(i->mType) << " fired (" << i->mTransactionId << ") adding to fifo");
       mFifo.add(t);
@@ -81,7 +81,7 @@ TimerQueue::run()
 }
 
 ostream& 
-Vocal2::operator<<(ostream& str, const TimerQueue& tq)
+resip::operator<<(ostream& str, const TimerQueue& tq)
 {
    str << "TimerQueue[" ;
 

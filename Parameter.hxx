@@ -6,7 +6,7 @@
 #include "resiprocate/ParameterTypeEnums.hxx"
 
 
-namespace Vocal2
+namespace resip
 {
 
 class Parameter

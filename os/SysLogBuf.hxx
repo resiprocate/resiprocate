@@ -1,5 +1,5 @@
-#ifndef Vocal2_SysLogBuf_hxx
-#define Vocal2_SysLogBuf_hxx
+#ifndef resip_SysLogBuf_hxx
+#define resip_SysLogBuf_hxx
 
 #include <iostream>
 #include <cassert>
@@ -11,7 +11,7 @@
 #endif
 
 
-namespace Vocal2
+namespace resip
 {
 
 class SysLogBuf : public std::streambuf 

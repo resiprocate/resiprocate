@@ -4,7 +4,7 @@
 #include <iostream>
 #include <list>
 
-namespace Vocal2
+namespace resip
 {
 
 class ParserContainerBase;

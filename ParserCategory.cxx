@@ -12,9 +12,9 @@
 #include <cassert>
 
 #include "resiprocate/os/Logger.hxx"
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 ParserCategory::ParserCategory(HeaderFieldValue* headerFieldValue,
@@ -199,7 +199,7 @@ ParserCategory::encodeParameters(ostream& str) const
 }
 
 ostream&
-Vocal2::operator<<(ostream& stream, const ParserCategory& category)
+resip::operator<<(ostream& stream, const ParserCategory& category)
 {
    category.checkParsed();
    return category.encode(stream);

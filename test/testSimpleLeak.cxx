@@ -6,9 +6,9 @@
 #include <sstream>
 
 #include "resiprocate/os/Logger.hxx"
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 

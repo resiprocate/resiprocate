@@ -3,8 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 #include "resiprocate/ParameterTypes.hxx"
-namespace Vocal2 {
-using namespace Vocal2;
+namespace resip {
+using namespace resip;
 using namespace std;
 struct params { char *name; ParameterTypes::Type type; };
 /* maximum key range = 151, duplicates = 1 */

@@ -3,7 +3,7 @@
 
 #include "resiprocate/SipFrag.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 // Note: Applications may need to explicitly mention this type to induce static

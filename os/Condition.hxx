@@ -1,5 +1,5 @@
-#if !defined(Vocal2_Condition_hxx)
-#define Vocal2_Condition_hxx
+#if !defined(resip_Condition_hxx)
+#define resip_Condition_hxx
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -59,7 +59,7 @@
 #endif
 
 
-namespace Vocal2
+namespace resip
 {
 
 	class Mutex;
@@ -99,7 +99,7 @@ class Condition
 #endif
 };
 
-} // namespace Vocal2
+} // namespace resip
 
 
 #endif // !defined(VOCAL_CONDITION_HXX)

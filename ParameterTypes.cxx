@@ -10,13 +10,13 @@ _enum##_Param::_enum##_Param()                                                  
    ParameterTypes::ParameterFactories[ParameterTypes::_enum] = Type::decode;    \
    ParameterTypes::ParameterNames[ParameterTypes::_enum] = _name;               \
 }                                                                               \
-_enum##_Param Vocal2::p_##_enum
+_enum##_Param resip::p_##_enum
 
 int strncasecmp(char*,char*,int);
 
 using namespace std;
 
-using namespace Vocal2;
+using namespace resip;
 
 ParameterTypes::Factory ParameterTypes::ParameterFactories[ParameterTypes::MAX_PARAMETER] = {0};
 Data ParameterTypes::ParameterNames[ParameterTypes::MAX_PARAMETER] = {"PARAMETER?"};
@@ -80,7 +80,7 @@ Qop_Options_Param::Qop_Options_Param()
 {
    ParameterTypes::ParameterNames[ParameterTypes::qopOptions] = "qop";
 }
-Qop_Options_Param Vocal2::p_qopOptions;
+Qop_Options_Param resip::p_qopOptions;
 
 ParameterTypes::Type
 qop_Param::getTypeNum() const {return ParameterTypes::qop;}
@@ -88,14 +88,14 @@ qop_Param:: qop_Param()
 {
    ParameterTypes::ParameterNames[ParameterTypes::qop] = "qop";
 }
-qop_Param Vocal2::p_qop;
+qop_Param resip::p_qop;
 
 Qop_Factory_Param::Qop_Factory_Param()
 {
    ParameterTypes::ParameterFactories[ParameterTypes::qopFactory] = Type::decode;
    ParameterTypes::ParameterNames[ParameterTypes::qopFactory] = "qop";
 }
-Qop_Factory_Param Vocal2::p_qopFactory;
+Qop_Factory_Param resip::p_qopFactory;
 
 #include "resiprocate/ParameterHash.hxx"
 

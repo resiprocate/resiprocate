@@ -1,11 +1,11 @@
-#ifndef Vocal2_CountStream_hxx
-#define Vocal2_CountStream_hxx
+#ifndef resip_CountStream_hxx
+#define resip_CountStream_hxx
 
 #include <iostream>
 #include "resiprocate/os/Data.hxx"
 
 // !dlb! Much more efficient to implement ostream::operator<<
-namespace Vocal2
+namespace resip
 {
 
 class CountBuffer : public std::streambuf 

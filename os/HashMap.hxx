@@ -1,5 +1,5 @@
-#if !defined(Vocal2_HashMap_hxx)
-#define Vocal2_HashMap_hxx
+#if !defined(resip_HashMap_hxx)
+#define resip_HashMap_hxx
 
 // !cj! if all these machine have to use map then we can just delete them and use the default 
 

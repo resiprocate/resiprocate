@@ -2,9 +2,9 @@
 #include "resiprocate/TransactionMap.hxx"
 #include "resiprocate/TransactionState.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::TRANSACTION
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 TransactionMap::~TransactionMap()
 {

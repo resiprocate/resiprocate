@@ -21,7 +21,7 @@ extern "C"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Message.hxx"
 
-namespace Vocal2
+namespace resip
 {
 class SipStack;
 class Data;

@@ -22,9 +22,9 @@
 #endif
 
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::TRANSACTION
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 
 TransportSelector::TransportSelector(SipStack& stack) :

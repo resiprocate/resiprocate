@@ -4,7 +4,7 @@
 #include "resiprocate/os/Data.hxx"
 #include <iostream>
 
-namespace Vocal2
+namespace resip
 {
 
 class Message 
@@ -17,7 +17,7 @@ class Message
 };
 
 std::ostream& 
-operator<<(std::ostream& strm, const Vocal2::Message& msg);
+operator<<(std::ostream& strm, const resip::Message& msg);
 
 
 }

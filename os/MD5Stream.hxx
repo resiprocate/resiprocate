@@ -5,7 +5,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/vmd5.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class MD5Buffer : public std::streambuf 

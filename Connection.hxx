@@ -1,5 +1,5 @@
-#if !defined(Vocal2Connection_hxx)
-#define Vocal2Connection_hxx
+#if !defined(resipConnection_hxx)
+#define resipConnection_hxx
 
 #include <list>
 
@@ -9,7 +9,7 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Preparse.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Message;
@@ -73,7 +73,7 @@ class Connection
 };
 
 std::ostream& 
-operator<<(std::ostream& strm, const Vocal2::Connection& c);
+operator<<(std::ostream& strm, const resip::Connection& c);
 
 }
 

@@ -8,7 +8,7 @@
 #include "resiprocate/DialogSet.hxx"
 
 
-namespace Vocal2
+namespace resip
 {
 
 class TuShim

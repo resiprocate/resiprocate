@@ -14,7 +14,7 @@
 #endif
 
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 
 
 Data* randomData(int size)
@@ -53,7 +53,7 @@ int compareData(const Data &a, const Data& b)
 int
 main()
 {
-   using namespace Vocal2;
+   using namespace resip;
 
    assert(sizeof(size_t) == sizeof(void*));
 

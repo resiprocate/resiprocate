@@ -9,12 +9,12 @@
 #include "Transceiver.hxx"
 
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 using namespace Loadgen;
 
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 void usage()
 {

@@ -17,7 +17,7 @@ typedef char HASHHEX[HASHHEXLEN+1];
 
 using namespace std;
 
-namespace Vocal2
+namespace resip
 {
 
 typedef MD5Context MD5_CTX;

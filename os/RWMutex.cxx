@@ -48,15 +48,15 @@
  *
  */
 
-static const char* const Vocal2RWMutex_cxx_Version =
-"$Id: RWMutex.cxx,v 1.1 2002/11/12 05:15:37 jason Exp $";
+static const char* const resipRWMutex_cxx_Version =
+"$Id: RWMutex.cxx,v 1.2 2003/03/25 06:33:48 jason Exp $";
 
 #include "RWMutex.hxx"
 #include "Lock.hxx"
 #include <cassert>
 
-using Vocal2::RWMutex;
-using Vocal2::Lock;
+using resip::RWMutex;
+using resip::Lock;
 
 RWMutex::RWMutex()
    :   Lockable(), 

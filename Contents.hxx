@@ -10,7 +10,7 @@
 
 using namespace std;
 
-namespace Vocal2
+namespace resip
 {
 
 class Contents;

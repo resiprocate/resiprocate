@@ -6,12 +6,12 @@
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::TEST
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 
 int
 main(int argc, char** argv)

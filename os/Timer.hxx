@@ -1,5 +1,5 @@
-#if !defined(Vocal2_Timer_hxx)
-#define Vocal2_Timer_hxx
+#if !defined(resip_Timer_hxx)
+#define resip_Timer_hxx
      
 #include "resiprocate/os/Data.hxx"
 #include <iostream>
@@ -11,7 +11,7 @@ typedef unsigned long long UInt64;
 #endif
 
 
-namespace Vocal2
+namespace resip
 {
 
 // Note: Timers are not thread safe; if the application needs to create timers
