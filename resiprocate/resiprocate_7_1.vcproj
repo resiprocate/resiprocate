@@ -282,9 +282,6 @@
 				RelativePath="Embedded.cxx">
 			</File>
 			<File
-				RelativePath="Executive.cxx">
-			</File>
-			<File
 				RelativePath="ExistsParameter.cxx">
 			</File>
 			<File
@@ -662,9 +659,6 @@
 			</File>
 			<File
 				RelativePath="Embedded.hxx">
-			</File>
-			<File
-				RelativePath="Executive.hxx">
 			</File>
 			<File
 				RelativePath="ExistsParameter.hxx">
