@@ -2,7 +2,7 @@
 #include <cstring>
 #include <cassert>
 
-//#define USE_CURSES
+#define USE_CURSES
 
 #ifdef USE_CURSES
 #include <ncurses.h>
@@ -119,6 +119,7 @@ class TestCallback: public TuIM::Callback
                                  bool wasEncryped  );
       virtual void sendPageFailed( const Uri& dest,int respNumber );
       virtual void registrationFailed(const Vocal2::Uri&, int respNumber); 
+      virtual void registrationWorked(const Uri& dest );
       virtual void receivePageFailed(const Uri& sender);
 };
   
@@ -248,6 +249,16 @@ TestCallback::registrationFailed(const Vocal2::Uri& target, int respNum )
    waddstr(textWin," failed (");
    waddstr(textWin,num.c_str());
    waddstr(textWin," response)\n");
+   wrefresh(textWin);
+}
+  
+                              
+void 
+TestCallback::registrationWorked(const Vocal2::Uri& target)
+{
+   waddstr(textWin,"Registration to ");
+   waddstr(textWin, cullenize(target).c_str());
+   waddstr(textWin," worked");
    wrefresh(textWin);
 }
   
@@ -431,6 +442,7 @@ main(int argc, char* argv[])
    Data aorPassword;
    Uri contact("sip:user@localhost");
    bool haveContact=false;
+   Uri outbound;
    
    int numAdd=0;
    Data addList[100];
@@ -476,6 +488,13 @@ main(int argc, char* argv[])
          aor = Uri(Data(argv[i]));
          haveAor=true;
       } 
+      else if (!strcmp(argv[i],"-outbound"))
+      {
+         i++;
+         assert( i<argc );
+         outbound = Uri(Data(argv[i]));
+         haveAor=true;
+      } 
       else if (!strcmp(argv[i],"-contact"))
       {
          i++;
@@ -516,7 +535,8 @@ main(int argc, char* argv[])
               << "\t [-aor sip:alice@example.com] [-aorPassword password]" << endl
               << "\t [-to sip:friend@example.com] [-add sip:buddy@example.com]" << endl
               << "\t [-sign] [-encrypt] [-key secret]" << endl
-              << "\t [-contact sip:me@example.com] " << endl;
+              << "\t [-contact sip:me@example.com] " << endl
+              << "\t [-outbound sip:example.com] " << endl;
          clog << endl
               << " -v is verbose" << endl
               << " -vv is very verbose" << endl
@@ -525,12 +545,25 @@ main(int argc, char* argv[])
               << " -aor sets the proxy and user name to register with" << endl
               << " -aorPasswrod sets the password to use for registration" << endl
               << " -to sets initial location to send messages to" << endl
+              << " -outbound sets the outbound proxy" << endl
               << " -add adds a budy who's presense will be monitored" << endl
-              << " -sign signs message you send and -encryp encrypt them - you need PKI certs for this to work" << endl
+              << " -sign signs message you send and -encryp encrypt them " << endl
+              << "\t(You need PKI certs for this to work)" << endl
               << " -key allows you to enter a secret used to load your private key."<< endl
               << "  If you set the secret to - the system will querry you for it."<< endl
               << " -contact overrides your SIP contact - can be used for NAT games" << endl
               << "\t there can be many -add " << endl
+              << " " << endl
+              << "Examples" << endl
+              << "An example command line for a user with account name alice at example.com is:" << endl
+              << "\t" << argv[0] << " -aor alice@example.com -aorPassword secret" << endl
+              << "to watch the presence of bob and charlie add" << endl
+              << "\t-add sip:bob@bilboxi.com -add charlie@example.com" << endl
+              << "If Alice was behind a NAT that had a public address of 1.2.3.4 and had forwarded" << endl
+              << "port 5070 on this NAT to the machine ALice was using, then the following " << endl
+              << "options would be added" << endl
+              << "\t-contact sip:alice@1.2.3.4:5070 -port 5070" << endl
+              << "" << endl
               << endl;
          exit(1);
       }
@@ -609,6 +642,11 @@ main(int argc, char* argv[])
    TestCallback callback;
    tuIM = new TuIM(&sipStack,aor,contact,&callback);
 
+   if ( !outbound.host().empty() )
+   {
+      tuIM->setOutboundProxy( outbound );
+   }
+   
    if ( haveAor )
    {
       tuIM->registerAor( aor, aorPassword );
