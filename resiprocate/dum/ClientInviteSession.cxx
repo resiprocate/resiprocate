@@ -95,13 +95,18 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             
             mState = Connected;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
+            mUserConnected = true;            
             mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
             
             if (offans.first != None)
             {
                InviteSession::incomingSdp(msg, offans.second);
             }
-//            sendAck(msg); !dcm! -- doesn't allow user to set answer, adorn message
+            if (mOfferState == Answered)
+            {
+               //no late media required, so just send the ACK
+               send(makeAck());
+            }
          }
          else if (code >= 300)
          {
@@ -143,7 +148,9 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 //            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
                ++mStaleCallTimerSeq;  //unifies timer handling logic
                mState = Connected;
-//!dcm! --kill               mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
+//!dcm! --kill
+//mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
+               mUserConnected = true;            
                mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
             
                if (offans.first != None)
@@ -222,7 +229,7 @@ ClientInviteSession::send(SipMessage& msg)
 {
    Destroyer::Guard guard(mDestroyer);
    //last ack logic lives in InviteSession(to be re-used for reinvite
-   if (mState == Connected || mState == Terminated || mState == ReInviting || mState == AcceptingReInvite)
+   if (mState == Connected || mState == Terminated || mState == ReInviting)
    {
       InviteSession::send(msg);
       return;
