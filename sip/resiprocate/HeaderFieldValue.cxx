@@ -78,26 +78,31 @@ HeaderFieldValue::clone() const
 // pass as ParseBuffer& (who makes it?)
 // extract key, induce parse generically
 void 
-HeaderFieldValue::parseParameters(const char* startPos, unsigned int length)
+HeaderFieldValue::parseParameters(ParseBuffer& pb)
 {
-   ParseBuffer pb(startPos, length);
-
    while (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0])
    {
-      
+      cerr << "HeaderFieldValue::parseParameters" << endl;
+      cerr << pb.position() << endl;
       // extract the key
       const char* keyStart = pb.skipChar();
-      const char* keyEnd = pb.skipToOneOf(";=?");
+      const char* keyEnd = pb.skipToOneOf(";=?");  //!dlb! @ here?
+      cerr.write(keyStart, keyEnd - keyStart);
+      cerr << endl;
+      
       ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
 
-      if(type == ParameterTypes::UNKNOWN)
+      if (type == ParameterTypes::UNKNOWN)
       {
+         cerr << "HeaderFieldValue::parseParameters:UNKNOWN" << endl;
          mUnknownParameterList.insert(new UnknownParameter(keyStart, (keyEnd - keyStart), pb));
       }
       else
       {
+         cerr << "HeaderFieldValue::parserParameters:invokingFactory" << endl;
          // invoke the particular factory
          mParameterList.insert(ParameterTypes::ParameterFactories[type](type, pb));
+         cerr << "HeaderFieldValue::parserParameters:insert: " << mParameterList << endl;
       }
    }
 }      
