@@ -47,9 +47,9 @@ Proxy::thread()
 {
    while (!isShutdown())
    {
-      if (mFifo.getNext(100))
+      Message* msg;
+      if ((msg = mFifo.getNext(100)) != 0)
       {
-         Message* msg = mFifo.getNext();
          
          SipMessage* sip = dynamic_cast<SipMessage*>(msg);
          ApplicationMessage* app = dynamic_cast<ApplicationMessage*>(msg);
