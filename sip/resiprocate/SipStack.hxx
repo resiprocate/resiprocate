@@ -31,8 +31,8 @@ class SipStack
       
       void process(fd_set* fdSet=NULL);
 
-	// build the FD set to use in a select to find out when process bust be called again
-	void buildFdSet( fd_set* fdSet, int* fdSetSize );
+      // build the FD set to use in a select to find out when process bust be called again
+      void buildFdSet( fd_set* fdSet, int* fdSetSize );
 	
       /// returns time in milliseconds when process next needs to be called 
       int getTimeTillNextProcess(); 

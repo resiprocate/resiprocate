@@ -155,7 +155,7 @@ TransportSelector::send( SipMessage* msg )
    Resolver::Tuple tuple = *resolver.mCurrent;
    
    // send it over the transport
-   transport->send(tuple.ipv4, strm.str().c_str(), strm.str().length());
+   transport->send(&tuple.ipv4, strm.str().c_str(), strm.str().length());
 }
 
 
