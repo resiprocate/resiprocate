@@ -50,10 +50,10 @@ class TransportSelector
       // this will result in msg->resolve() being called to either
       // kick off dns resolution or to pick the next tuple , will cause the
       // message to be encoded and via updated
-      void transmit( SipMessage* msg, Tuple& destination );
+      void transmit( SipMessage* msg, Tuple& target );
       
       // just resend to the same transport as last time
-      void retransmit(SipMessage* msg, Tuple& destination );
+      void retransmit(SipMessage* msg, Tuple& target );
       
    private:
       Transport* findTransport(const Tuple& src);
@@ -93,6 +93,7 @@ class TransportSelector
 #endif
 
       friend class TestTransportSelector;
+      friend class SipStack; // for debug only
 };
 
 }

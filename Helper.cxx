@@ -795,11 +795,11 @@ Helper::processStrictRoute(SipMessage& request)
 }
 
 int
-Helper::getPortForReply(SipMessage& request, bool sym)
+Helper::getPortForReply(SipMessage& request)
 {
    assert(request.isRequest());
    int port = -1;
-   if (sym || request.header(h_Vias).front().exists(p_rport))
+   if (request.header(h_Vias).front().exists(p_rport))
    {
        port = request.getSource().getPort();
    }
@@ -812,9 +812,6 @@ Helper::getPortForReply(SipMessage& request, bool sym)
       }
    }
    assert(port != -1);
-
-   // DebugLog(<<"getSentPort(): sym=" << (sym?'t':'f') << " returning: " << port);
-
    return port;
 }
 
