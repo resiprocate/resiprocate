@@ -4,6 +4,7 @@
 #include "sip2/sipstack/HeaderFieldValueList.hxx"
 #include "sip2/sipstack/ParserContainerBase.hxx"
 #include "sip2/sipstack/Symbols.hxx"
+#include "sip2/sipstack/Embedded.hxx"
 #include <cassert>
 #include <list>
 
@@ -171,6 +172,26 @@ class ParserContainer : public ParserContainerBase
             (*i)->encode(str);
 
             str << Symbols::CRLF;
+         }
+         return str;
+      }
+
+      virtual std::ostream& encodeEmbedded(const Data& headerName, std::ostream& str) const
+      {
+         for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
+              i != mParsers.end(); i++)
+         {
+            if (!headerName.empty())
+            {
+               str << headerName << Symbols::EQUALS;
+            }
+
+            Data buf;
+            {
+               DataStream s(buf);
+               (*i)->encode(s);
+            }
+            str << Embedded::encode(buf);
          }
          return str;
       }

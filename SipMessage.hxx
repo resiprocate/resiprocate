@@ -75,6 +75,7 @@ class SipMessage : public Message
       }
 
       virtual std::ostream& encode(std::ostream& str) const;
+      std::ostream& encodeEmbedded(std::ostream& str) const;
       
       Data brief() const;
 
