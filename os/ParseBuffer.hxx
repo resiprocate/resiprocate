@@ -1,7 +1,7 @@
 #ifndef Vocal2_ParseBuffer_hxx
 #define Vocal2_ParseBuffer_hxx
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/util/BaseException.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/BaseException.hxx"
 
 namespace Vocal2
 {

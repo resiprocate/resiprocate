@@ -3,11 +3,11 @@
 #include <stdio.h>
 
 
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/SipMessage.hxx"
 
-#include "resiprocate/sipstack/test/TestSupport.hxx"
-#include "resiprocate/sipstack/Preparse.hxx"
+#include "resiprocate/test/TestSupport.hxx"
+#include "resiprocate/Preparse.hxx"
 
 #include <ctype.h>
 

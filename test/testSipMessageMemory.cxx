@@ -1,7 +1,7 @@
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/Preparse.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/sipstack/test/TestSupport.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Preparse.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/test/TestSupport.hxx"
 
 #include <iostream>
 #include <memory>

@@ -1,7 +1,7 @@
-#include "resiprocate/sipstack/FloatParameter.hxx"
-#include "resiprocate/sipstack/ParseException.hxx"
-#include "resiprocate/sipstack/Symbols.hxx"
-#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/FloatParameter.hxx"
+#include "resiprocate/ParseException.hxx"
+#include "resiprocate/Symbols.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 using namespace Vocal2;
 using namespace std;

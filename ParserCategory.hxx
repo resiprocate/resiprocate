@@ -3,11 +3,11 @@
 
 #include <iostream>
 #include <list>
-#include "resiprocate/sipstack/HeaderTypes.hxx"
-#include "resiprocate/sipstack/LazyParser.hxx"
-#include "resiprocate/sipstack/ParameterTypes.hxx"
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/HeaderTypes.hxx"
+#include "resiprocate/LazyParser.hxx"
+#include "resiprocate/ParameterTypes.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
       _enum##_Param::DType& param(const _enum##_Param& paramType) const

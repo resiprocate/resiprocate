@@ -1,7 +1,7 @@
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/DataStream.hxx"
-#include "resiprocate/sipstack/SdpContents.hxx"
-#include "resiprocate/sipstack/HeaderFieldValue.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/HeaderFieldValue.hxx"
 
 #include <iostream>
 #include "TestSupport.hxx"

@@ -1,17 +1,17 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/util/DataStream.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/Helper.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/sipstack/Helper.hxx"
-#include "resiprocate/sipstack/SdpContents.hxx"
-#include "resiprocate/sipstack/test/TestSupport.hxx"
-#include "resiprocate/sipstack/PlainContents.hxx"
-#include "resiprocate/sipstack/UnknownHeaderType.hxx"
-#include "resiprocate/sipstack/UnknownParameterType.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/test/TestSupport.hxx"
+#include "resiprocate/PlainContents.hxx"
+#include "resiprocate/UnknownHeaderType.hxx"
+#include "resiprocate/UnknownParameterType.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;

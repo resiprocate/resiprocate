@@ -1,9 +1,9 @@
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 #include <cassert>
 #include <iostream>
 #include <stdio.h>
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 
 #ifndef WIN32
 #include <sys/time.h>
@@ -12,8 +12,8 @@
 #include <sys/types.h>
 #include <time.h>
 
-#include "resiprocate/util/Log.hxx"
-#include "resiprocate/util/Lock.hxx"
+#include "resiprocate/os/Log.hxx"
+#include "resiprocate/os/Lock.hxx"
 
 using namespace Vocal2;
 using namespace std;

@@ -52,11 +52,11 @@
  */
 
 
-static const char* const Vocal2Fifo_h_Version = "$Id: Fifo.hxx,v 1.11 2003/03/24 22:42:27 jason Exp $";
+static const char* const Vocal2Fifo_h_Version = "$Id: Fifo.hxx,v 1.12 2003/03/24 23:25:36 jason Exp $";
 
-#include "resiprocate/util/Mutex.hxx"
-#include "resiprocate/util/Condition.hxx"
-#include "resiprocate/util/Lock.hxx"
+#include "resiprocate/os/Mutex.hxx"
+#include "resiprocate/os/Condition.hxx"
+#include "resiprocate/os/Lock.hxx"
 #include <list>
 
 #include <errno.h>

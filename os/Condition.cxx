@@ -50,7 +50,7 @@
 
 #include <cassert>
 
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 #ifndef WIN32
 #include <pthread.h>
@@ -58,10 +58,10 @@
 #include <sys/time.h>
 #endif
 
-#include "resiprocate/util/compat.hxx"
-#include "resiprocate/util/Condition.hxx"
-#include "resiprocate/util/Mutex.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Condition.hxx"
+#include "resiprocate/os/Mutex.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace Vocal2;
 #define VOCAL_SUBSYSTEM Subsystem::TEST

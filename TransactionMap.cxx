@@ -1,6 +1,6 @@
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/sipstack/TransactionMap.hxx"
-#include "resiprocate/sipstack/TransactionState.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/TransactionMap.hxx"
+#include "resiprocate/TransactionState.hxx"
 
 using namespace Vocal2;
 

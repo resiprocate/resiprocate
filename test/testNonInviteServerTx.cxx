@@ -1,11 +1,11 @@
-#include "resiprocate/sipstack/SipStack.hxx"
-#include "resiprocate/sipstack/Transport.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/sipstack/Helper.hxx"
-#include "resiprocate/sipstack/UdpTransport.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/Transport.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/UdpTransport.hxx"
 
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/DataStream.hxx"
 
 #include <sys/socket.h>
 #include <netinet/in.h>

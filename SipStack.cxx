@@ -7,17 +7,17 @@
 #include <arpa/inet.h>
 #endif
 
-#include "resiprocate/util/Socket.hxx"
-#include "resiprocate/util/Fifo.hxx"
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/Random.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Random.hxx"
 
-#include "resiprocate/sipstack/SipStack.hxx"
-#include "resiprocate/sipstack/Executive.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/Message.hxx"
-#include "resiprocate/sipstack/Security.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/Executive.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Message.hxx"
+#include "resiprocate/Security.hxx"
 
 
 

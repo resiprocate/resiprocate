@@ -1,15 +1,15 @@
 #include <iostream>
 
-#include "resiprocate/sipstack/TcpTransport.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/ConnectionMap.hxx"
-#include "resiprocate/util/Fifo.hxx"
-#include "resiprocate/sipstack/Preparse.hxx"
-#include "resiprocate/sipstack/TransportMessage.hxx"
-#include "resiprocate/util/DataStream.hxx"
-#include "resiprocate/util/Log.hxx"
-#include "resiprocate/sipstack/test/TestSupport.hxx"
-#include "resiprocate/sipstack/test/Resolver.hxx"
+#include "resiprocate/TcpTransport.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/ConnectionMap.hxx"
+#include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/Preparse.hxx"
+#include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/Log.hxx"
+#include "resiprocate/test/TestSupport.hxx"
+#include "resiprocate/test/Resolver.hxx"
 
 #include <signal.h>
 

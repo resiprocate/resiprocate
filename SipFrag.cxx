@@ -1,7 +1,7 @@
-#include "resiprocate/sipstack/SipFrag.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/sipstack/Preparse.hxx"
+#include "resiprocate/SipFrag.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/Preparse.hxx"
 
 using namespace Vocal2;
 using namespace std;

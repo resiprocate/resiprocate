@@ -1,6 +1,6 @@
-#include "resiprocate/sipstack/Pkcs7Contents.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/Pkcs7Contents.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;

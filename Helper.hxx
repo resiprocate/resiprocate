@@ -2,8 +2,8 @@
 #define Helper_hxx
 
 
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Symbols.hxx"
 
 namespace Vocal2
 {
