@@ -54,12 +54,15 @@ class Dialog
       //returns an invalid handle if there is no session
       InviteSessionHandle getInviteSession();
       
-      void cancel();
+      void end();
       void dispatch(const SipMessage& msg);
       void processNotify(const SipMessage& notify);
       
       //will end this dialog(if it makes sense)
       void redirected(const SipMessage& msg);      
+
+      void forked(const SipMessage& response);      
+      void cancel();
 
    private:
       virtual ~Dialog();
