@@ -47,10 +47,10 @@ MD5Buffer::getHex()
 }
 
 MD5Stream::MD5Stream()
-   : std::ostream(0),
+   : std::ostream(&mStreambuf),
      mStreambuf()
 {
-   init(&mStreambuf);
+   //init(&mStreambuf);
 }
 
 MD5Stream::~MD5Stream()
