@@ -43,6 +43,11 @@ Pidf::Pidf(const Pidf& rhs)
 {
 }
 
+Pidf::Pidf(const Uri& entity)
+   : Contents(getStaticType()),
+     mEntity(entity)
+{}
+
 Pidf::~Pidf()
 {
 }
