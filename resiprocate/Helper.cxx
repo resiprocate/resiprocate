@@ -13,6 +13,7 @@
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/MD5Stream.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 
 using namespace resip;
 
@@ -254,6 +255,7 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr
    response->header(h_Contacts).push_front(contact);
    return response;
 }
+
 
 
 SipMessage*
