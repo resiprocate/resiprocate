@@ -18,9 +18,7 @@
 #include "resiprocate/Security.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
 
-//#ifndef WIN32
 #include "contrib/getopt/getopt.h"
-//#endif
 
 // GAG headers
 #include "GagMessage.hxx"
@@ -90,15 +88,16 @@ void init_loopback()
   // Hijack stdin and stdout  
   close (0);
   close (1);
-  status = dup2( (int)s, 0);
+  status = dup2( reinterpret_cast<int>(s), 0);
   assert(status >= 0);
-  status = dup2( (int)s, 1);
+  status = dup2( reinterpret_cast<int>(s), 1);
   assert(status >= 0);
 }
 
 int
 main (int argc, char **argv)
 {
+  char ch;
   int c;
   bool useLoopback = false;
   bool getoptError = false;
@@ -121,7 +120,6 @@ main (int argc, char **argv)
 
   // Read commandline options
 
-//#ifndef WIN32
   while	((c = getopt(argc, argv, "l")) != -1)
   {
     switch (c) {
@@ -131,7 +129,6 @@ main (int argc, char **argv)
         getoptError = true;
     }
   }
-//#endif
 
   if (useLoopback)
   {
@@ -206,28 +203,38 @@ main (int argc, char **argv)
     if (fdset.readyToRead(fileno(stdin)))
     {
       DebugLog ( << "stdin is ready to read" );
-      GagMessage *message = GagMessage::getMessage(cin);
-      if (message)
+      do
       {
-        conduit.handleMessage(message);
-        delete message;
+        DebugLog ( << "reading message from cin" );
+        GagMessage *message = GagMessage::getMessage(cin);
+        if (message)
+        {
+          conduit.handleMessage(message);
+          delete message;
+        }
+        else
+        {
+          Data error("Panic! Something is horribly wrong!");
+          DebugLog ( << "Received unexpected series of bytes from Gaim" );
+          GagErrorMessage(error).serialize(cout);
+          conduit.removeAllUsers();
+          shutdown(&sipStack);
+          exit(-1);
+        }
+        if (!conduit.isRunning())
+        {
+          shutdown(&sipStack);
+          exit (0);
+        }
+        sipStack.process(fdset);
+        conduit.process();
       }
-      else
-      {
-        Data error("Panic! Something is horribly wrong!");
-        DebugLog ( << "Received unexpected series of bytes from Gaim" );
-        GagErrorMessage(error).serialize(cout);
-        conduit.removeAllUsers();
-        shutdown(&sipStack);
-        exit(-1);
-      }
-      if (!conduit.isRunning())
-      {
-        shutdown(&sipStack);
-        exit (0);
-      }
+      while (cin.rdbuf()->in_avail());
     }
-    sipStack.process(fdset);
-    conduit.process();
+    else
+    {
+      sipStack.process(fdset);
+      conduit.process();
+    }
   }
 }
