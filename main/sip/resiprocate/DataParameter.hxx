@@ -18,7 +18,7 @@ class DataParameter : public Parameter
 
       DataParameter(ParameterTypes::Type, ParseBuffer& pb);
       DataParameter(ParameterTypes::Type);
-      
+
       Data& value();            // does not return a quoted string
       bool isQuoted() const { return mQuoted; }
       void setQuoted(bool b) { mQuoted = b; }; // this parameter will be enclosed in quotes e.g. "foo"
@@ -31,7 +31,16 @@ class DataParameter : public Parameter
       virtual Parameter* clone() const;
       virtual std::ostream& encode(std::ostream& stream) const;
       
+   protected:
+      DataParameter(const DataParameter& other) 
+         : Parameter(other), 
+           mValue(other.mValue), 
+           mQuoted(other.mQuoted)
+      {
+      }
+
    private:
+
       Data mValue;
       bool mQuoted;
 };
