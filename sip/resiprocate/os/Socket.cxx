@@ -1,6 +1,7 @@
 
 #include <cassert>
 #include <fcntl.h>
+#include <errno.h>
 
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
