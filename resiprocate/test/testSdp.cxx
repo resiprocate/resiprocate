@@ -151,7 +151,7 @@ main(int argc, char* argv[])
    {
       tassert_reset();
       SdpContents sdp;
-      unsigned long tm = 4058038202;
+      unsigned long tm = 4058038202u;
       Data address("192.168.2.220");
       int port = 5061;
    
