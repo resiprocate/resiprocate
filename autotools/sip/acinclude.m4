@@ -25,6 +25,24 @@ AC_DEFUN([RESIP_LIB_OPENSSL],
     fi
 ])
 
+AC_DEFUN([RESIP_DATA_LOCAL_SIZE_CHECK],
+[
+        AC_ARG_ENABLE([data-local-size],
+                AC_HELP_STRING([--enable-data-local-size],[Define localAlloc size @<:@default 128@:>@ ],
+        []))
+        
+
+        AC_MSG_CHECKING([for Data::localAlloc size hint])
+        if test x_$enable_data_local_size == x_; then
+                AC_MSG_RESULT([no])
+                enable_data_local_size=128
+        else   
+                AC_MSG_RESULT([ ($enable_data_local_size) yes])
+        fi
+        AC_DEFINE_UNQUOTED([RESIP_DATA_LOCAL_SIZE], $enable_data_local_size, [Data local size])
+
+])
+
 AC_DEFUN([RESIP_IPV6],
 [
         AC_MSG_CHECKING([for ipv6])
