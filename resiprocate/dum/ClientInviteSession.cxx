@@ -206,6 +206,7 @@ ClientInviteSession::dispatch(const DumTimeout& timeout)
        && timeout.seq() == mStaleCallTimerSeq)
    {
       mDum.mInviteSessionHandler->onStaleCallTimeout(getHandle());
+      guard.destroy();      
    }
    else
    {
@@ -242,6 +243,14 @@ ClientInviteSession::send(SipMessage& msg)
    if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
    {
       mDum.send(msg);
+      if (mServerSub.isValid())
+      {
+         SipFrag contents;
+         contents.message().header(h_StatusLine).statusCode() = 487;
+         contents.message().header(h_StatusLine).reason() = "Request Cancelled";
+         //will be cloned...ServerSub may not have the most efficient API possible
+         mServerSub->send(mServerSub->end(NoResource, &contents));
+      }   
       mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
       guard.destroy();
       return;
