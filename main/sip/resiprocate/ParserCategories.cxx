@@ -6,15 +6,16 @@
 #include <cassert>
 #include <iostream>
 #include <time.h>
-//#include <errno.h>
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/UnknownParameter.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
+
 #include "ParseUtil.hxx"
 #include "ParameterTypes.hxx"
 
@@ -572,7 +573,7 @@ DateCategory::DateCategory()
    time(&now);
    if (now == ((time_t)-1))
    {
-	 int e = getErrno();
+      int e = getErrno();
       DebugLog (<< "Failed to get time: " << strerror(e));
       return;
    }
