@@ -13,7 +13,7 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_process.c,v 1.4 2003/09/16 03:05:07 fluffy Exp $";
+static const char rcsid[] = "$Id: ares_process.c,v 1.5 2003/09/24 18:46:02 jason Exp $";
 
 #include <sys/types.h>
 #include <assert.h>
@@ -278,6 +278,7 @@ static void read_udp_packets(ares_channel channel, fd_set *read_fds,
       count = recv(server->udp_socket, buf, sizeof(buf), 0);
       if (count <= 0)
 	  {
+#if defined(WIN32)
 		int err;
 		err = WSAGetLastError();
 		//err = errno;
@@ -290,6 +291,7 @@ static void read_udp_packets(ares_channel channel, fd_set *read_fds,
 			case WSAECONNRESET: // got an ICMP error on a previous send 
 				break;
 		}
+#endif
 		handle_error(channel, i, now);
 	  }
 	  else
