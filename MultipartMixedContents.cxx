@@ -38,7 +38,7 @@ MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs
 void
 MultipartMixedContents::setBoundary()
 {
-   Data boundaryToken = Random::getRandomHex(50);
+   Data boundaryToken = Random::getRandomHex(50); // !cj! - is such a large number of bits (200) really neaded 
    mType.param("boundary") = boundaryToken;
 }
 
