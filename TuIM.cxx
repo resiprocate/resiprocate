@@ -24,6 +24,10 @@
 
 using namespace Vocal2;
 
+static int IMMethodList[] = { (int) REGISTER, (int) MESSAGE, 
+	                      (int) SUBSCRIBE, (int) NOTIFY };
+const int IMMethodListSize = sizeof(IMMethodList) / sizeof(*IMMethodList);
+
 
 TuIM::Callback::~Callback()
 {
@@ -173,7 +177,11 @@ TuIM::processRequest(SipMessage* msg)
       return;
    }
 
-   InfoLog(<< "Got request that was not handled" );
+   InfoLog(<< "Don't support this METHOD, send 405" );
+   
+   SipMessage * resp = Helper::make405( *msg, IMMethodList, IMMethodListSize ); 
+   mStack->send(*resp); 
+   delete resp;
 }
 
 

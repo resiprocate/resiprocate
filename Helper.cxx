@@ -465,7 +465,7 @@ Helper::authenticateRequest(const SipMessage& request,
 
 SipMessage*
 Helper::make405(const SipMessage& request,
-                const MethodTypes * allowed ,
+                const int* allowedMethods,
                 int len )
 {
     SipMessage* resp = Helper::makeResponse(request, 405);
@@ -473,6 +473,7 @@ Helper::make405(const SipMessage& request,
     if (len < 0)
     {
         int upperBound = static_cast<int>(UNKNOWN);
+	// The UNKNOWN method name marks the end of the enum
         
         for (int i = 0 ; i < upperBound; i ++)
         {
@@ -492,7 +493,7 @@ Helper::make405(const SipMessage& request,
         for ( int i = 0 ; i < len ; i++)
         {
             Token t;
-            t.value() = MethodNames[allowed[i]];
+            t.value() = MethodNames[allowedMethods[i]];
             resp->header(h_Allows).push_back(t);
         }
     }

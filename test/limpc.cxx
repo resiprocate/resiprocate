@@ -631,7 +631,7 @@ main(int argc, char* argv[])
    TestCallback callback;
    tuIM = new TuIM(&sipStack,aor,contact,&callback);
 
-   Data name("SIPimp.org (curses) ver 0.2.1");
+   Data name("SIPimp.org/0.2.1 (curses)");
    tuIM->setUAName( name );
       
    if ( !outbound.host().empty() )
