@@ -54,12 +54,31 @@ class Helper
       static Data computeCallId();
       static Data computeTag(int numBytes);
 
-      // pass in a request and md5 password
-      // return true if the request has the correct ProxyAuthorization or Authorization
-      static bool authenticateRequest(const SipMessage& request, const Data& encodedPassword);
+      enum AuthResult {Failed = 1, Authenticated, Expired};
+
+      static AuthResult authenticateRequest(const SipMessage& request, 
+                                            const Data& realm,
+                                            const Data& encodedPassword,
+                                            int expiresDelta = 0);
       
       // create a 407 response with Proxy-Authenticate header filled in
-      static SipMessage* makeProxyChallenge(const SipMessage& request, const Data& realm, const Data& encodedPassword);
+      static SipMessage* makeProxyChallenge(const SipMessage& request, const Data& realm, bool useAuth = true);
+
+      // adds authorization headers in reponse to the 401 or 407--currently
+      // only supports md5, the only qop supported is auth.
+      static SipMessage& addAuthorization(SipMessage& request,
+                                          const SipMessage& challenge,
+                                          const Data& username,
+                                          const Data& encodedPassword,
+                                          const Data& cnonce,
+                                          unsigned int& nonceCount);
+
+      static Data makeResponseMD5(const Data& username, const Data& encodedPassword, const Data& realm, 
+                                  const Data& method, const Data& digestUri, const Data& nonce,
+                                  const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
+                                  const Data& cnonceCount = Data::Empty);
+      
+      static Data makeNonce(const SipMessage& request, const Data& timestamp);
 
       static Uri makeUri(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
 };
