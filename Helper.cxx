@@ -883,6 +883,7 @@ Helper::processStrictRoute(SipMessage& request)
       request.header(h_Routes).push_back(NameAddr(request.header(h_RequestLine).uri()));
       request.header(h_RequestLine).uri() = request.header(h_Routes).front().uri();
       request.header(h_Routes).pop_front();
+      assert(!request.hasForceTarget());
       request.setForceTarget(request.header(h_RequestLine).uri());
    }
 }
