@@ -34,8 +34,6 @@ class SipMessage : public Message
 
       virtual const Data& getTransactionId() const;
          
-      virtual SipMessage* clone() const;
-
       virtual ~SipMessage();
 
       bool isExternal() const
@@ -48,9 +46,7 @@ class SipMessage : public Message
 
       void addBuffer(char* buf);
 
-      virtual std::ostream& dump(std::ostream& strm) const;
-      std::ostream& encode(std::ostream& str) const;
-
+      virtual std::ostream& encode(std::ostream& str) const;
 
       Data brief() const ;
 
@@ -86,7 +82,7 @@ class SipMessage : public Message
             }
          }
 
-         return *(typename Header<T>::Type*)mHeaders[T]->first->getParserCategory();
+         return *dynamic_cast<typename Header<T>::Type*>(mHeaders[T]->first->getParserCategory());
       }
 
       template <int T>
@@ -111,7 +107,7 @@ class SipMessage : public Message
             hfvs->setParserContainer(new ParserContainer<typename MultiHeader<T>::Type>(hfvs));
          }
 
-         return *(ParserContainer<typename MultiHeader<T>::Type>*)mHeaders[T]->getParserCategory();
+         return *dynamic_cast<ParserContainer<typename MultiHeader<T>::Type>*>(mHeaders[T]->getParserContainer());
       }
 
       RequestLine& 
@@ -136,10 +132,6 @@ class SipMessage : public Message
 
       void remove(const Data& symbol);
 
-      // note: removeFirst/removeLast through the component 
-
-      // clone method
-      
       void setStartLine(char* start, int len); 
       void setBody(char* start, int len); 
       

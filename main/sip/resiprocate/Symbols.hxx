@@ -9,11 +9,13 @@ class Symbols
    public:
       static const char * const DefaultSipVersion;
 
+      static const char * const CRLF;
       static const char * const SPACE;
       static const char * const COLON;
       static const char * const EQUALS;
       static const char * const SEMI_COLON;
-      
+      static const char * const SLASH;
+
       static const char * const Accept;
       static const char * const Accept_Encoding;
       static const char * const Accept_Language;
@@ -46,8 +48,11 @@ class Symbols
       static const char * const Record_Route;
       static const char * const Reply_To;
       static const char * const Retry_After;
+      static const char * const Require;
       static const char * const Route;
       static const char * const Server;
+      static const char * const Subject;
+      static const char * const Subscription_State;
       static const char * const Supported;
       static const char * const Timestamp;
       static const char * const To;
@@ -64,6 +69,8 @@ class Symbols
       static const char * const Notify;
       static const char * const Options;
       static const char * const Refer;
+      static const char * const Refer_To;
+      static const char * const Referred_By;
       static const char * const Register;
       static const char * const Subscribe;
 
