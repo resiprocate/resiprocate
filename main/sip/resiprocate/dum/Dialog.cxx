@@ -444,7 +444,7 @@ Dialog::dispatch(const SipMessage& msg)
             default:
                break;
          }
-         if ( lastRequest && mDum.mClientAuthManager->handle( *lastRequest, msg ) )
+		 if ( lastRequest && mDum.mClientAuthManager.get() && mDum.mClientAuthManager->handle( *lastRequest, msg ) )
          {
             InfoLog( << "about to re-send request with digest credentials" );
             InfoLog( << *lastRequest );
