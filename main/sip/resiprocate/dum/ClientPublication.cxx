@@ -21,19 +21,21 @@ ClientPublication::getHandle()
 }
 
 ClientPublication::ClientPublication(DialogUsageManager& dum,
-                                     Dialog& dialog,
+                                     DialogSet& dialogSet,
                                      SipMessage& req)
-   : BaseUsage(dum, dialog),
+   : NonDialogUsage(dum, dialogSet),
      mPublish(req),
      mEventType(req.header(h_Event).value()),
      mTimerSeq(0)
 {
+   InfoLog( << "ClientPublication::ClientPublication: " << mId);   
    mPublish.releaseContents();   
 }
 
 ClientPublication::~ClientPublication()
 {
-   mDialog.mClientPublication = 0;
+   InfoLog( << "ClientPublication::~ClientPublication: " << mId);   
+   mDialogSet.mClientPublication = 0;
 }
 
 SipMessage& 

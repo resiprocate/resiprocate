@@ -1,7 +1,7 @@
 #if !defined(RESIP_INVITESESSION_HXX)
 #define RESIP_INVITESESSION_HXX
 
-#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/dum/DialogUsage.hxx"
 #include "resiprocate/SipMessage.hxx"
 
 namespace resip
@@ -9,7 +9,7 @@ namespace resip
 
 class SdpContents;
 
-class InviteSession : public BaseUsage
+class InviteSession : public DialogUsage
 {
    public:
 
