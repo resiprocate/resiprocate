@@ -3,14 +3,42 @@
 
 using namespace resip;
 
-DialogSetId::DialogSetId(const SipMessage& msg)
-   : mId()
+DialogSetId::DialogSetId(const SipMessage& msg) : 
+   mCallId(msg.header(h_CallID).value())
 {
-   assert(false);
+   if (msg.isExternal())
+   {
+      //use remote tag
+      if(msg.isResponse())
+      {        
+         assert(msg.header(h_From).exists(p_tag));
+         mTag = msg.header(h_From).param(p_tag);
+      }
+      else
+      {
+         assert(msg.header(h_To).exists(p_tag));
+         mTag = msg.header(h_To).param(p_tag);
+      }
+   }
+   else
+   {
+      //use local tag
+      if(msg.isRequest())
+      {
+         assert(msg.header(h_From).exists(p_tag));
+         mTag = msg.header(h_From).param(p_tag);
+      }
+      else
+      {
+         assert(msg.header(h_To).exists(p_tag));
+         mTag = msg.header(h_To).param(p_tag);
+      }
+   }
 }
 
-DialogSetId::DialogSetId(const Data& callId, const Data& senderRequestFromTag)
-   : mId()
+DialogSetId::DialogSetId(const Data& callId, const Data& tag)
+   : mCallId(callId),
+     mTag(tag)
 {
    assert(false);
 }
@@ -18,32 +46,40 @@ DialogSetId::DialogSetId(const Data& callId, const Data& senderRequestFromTag)
 bool
 DialogSetId::operator==(const DialogSetId& rhs) const
 {
-   return mId == rhs.mId;
+   return mCallId == rhs.mCallId && mTag == rhs.mTag;
 }
 
 bool
 DialogSetId::operator!=(const DialogSetId& rhs) const
 {
-   return mId != rhs.mId;
+   return mCallId != rhs.mCallId || mTag != rhs.mTag;
 }
 
 bool
 DialogSetId::operator<(const DialogSetId& rhs) const
 {
-   return mId < rhs.mId;
+   if (mCallId < rhs.mCallId)
+   {
+      return true;
+   }
+   if (mCallId > rhs.mCallId)
+   {
+      return false;
+   }
+   return mTag < rhs.mTag;
 }
 
 #if defined(HASH_MAP_NAMESPACE)
 size_t HASH_MAP_NAMESPACE::hash<resip::DialogSetId>::operator()(const resip::DialogSetId& id) const
 {
-   return mId.hash();
+   return mCallId.hash() ^ mTag.hash();
 }
 #endif
 
 #if defined(__INTEL_COMPILER)
 size_t std::hash_value(const resip::DialogSetId& id)
 {
-   return mId.hash();
+   return mCallId.hash() ^ mTag.hash();
 }
 #endif
 
