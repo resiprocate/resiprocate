@@ -205,7 +205,7 @@ DnsResolver::lookupARecords(const Data& transactionId,
 #endif
 
 #if defined(__linux__)
-   int ret = gethostbyname_r (host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
+   ret = gethostbyname_r (host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
    assert (ret != ERANGE);
 
    if (ret != 0)
