@@ -1,4 +1,4 @@
-#include <sip2/Preparse.hxx>
+#include <sipstack/Preparse.hxx>
 
 #define CRLF "\r\n"
 
@@ -28,7 +28,8 @@ main()
       "c=IN IP4 135.180.130.88" CRLF
     "m=audio 49210 RTP/AVP 0 12" CRLF
     "m=video 3227 RTP/AVP 31" CRLF
-    "a=rtpmap:31 LPC/8000" CRLF;
+    "a=rtpmap:31 LPC/8000" CRLF
+    CRLF;
 
 
    Preparse p(testmsg, sizeof(testmsg)/sizeof(*testmsg));
