@@ -1,3 +1,4 @@
+#include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/Dialog.hxx"
@@ -26,21 +27,23 @@ void
 ClientSubscription::dispatch(const SipMessage& msg)
 {
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   if (!handler)
-   {
-      //!dcm! -- exception? or 4xx?
-      return;
-   }
-   
+   assert(handler);   
+
    // asserts are checks the correctness of Dialog::dispatch
    if (msg.isRequest() )
    {
       assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
-      if (!msg.exists(h_SubscriptionState))
-      {         
-         //!dcm! -- appropriate 4xx response?
-         return;         
-      }
+//
+// move check to dialog
+//       if (!msg.exists(h_SubscriptionState))
+//       {         
+//          //!dcm! -- appropriate 4xx response?
+//          return;         
+//       }
+
+      mDialog.makeResponse(mLastResponse, msg, 200);
+      send(mLastResponse);
+
       if (msg.header(h_SubscriptionState).value() == "active")
       {
          handler->onUpdateActive(getHandle(), msg);
@@ -53,38 +56,58 @@ ClientSubscription::dispatch(const SipMessage& msg)
       {
          handler->onTerminated(getHandle(), msg);
          delete this;
+         return;
       }
       else
       {
-         //do nothing for now, but extensions are legal, so...
+         handler->onUpdateExtension(getHandle(), msg);         
       }
    }
-      
- //   if (msg.header(h_CSeq).method() == CANCEL )
-//    {  
-//       //do nothing?
-//    }
+   else
+   {
+      int code = msg.header(h_StatusLine).statusCode();
+      if(code > 100 && code < 300)
+      {
+         if(msg.exists(h_Expires))
+         {
+            unsigned long t = Helper::aBitSmallerThan((unsigned long)(mLastRequest.header(h_Expires).value()));
+            mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
+         }
+      }
+      else
+      {
+         handler->onTerminated(getHandle(), msg);
+         delete this;
+         return;
+      }
+   }
 }
 
 void 
 ClientSubscription::dispatch(const DumTimeout& timer)
 {
-   // chekc this timer is the current one ...
-   requestRefresh();
+   if (timer.seq() == mTimerSeq)
+   {
+      requestRefresh();
+   }
 }
 
 void  
 ClientSubscription::requestRefresh()
 {
-   // send subscribe - set time to default time 
-
-   // set timer to new value 
+   mLastRequest.header(h_CSeq).sequence()++;
+   //!dcm! -- need a mechanism to retrieve this for the event package...part of
+   //the map that stores the handlers, or part of the handler API
+   mLastRequest.header(h_Expires).value() = 300;   
+   send(mLastRequest);
 }
 
 void  
 ClientSubscription::end()
 {
-   // send unsubscribe - set time to zero 
+   mLastRequest.header(h_CSeq).sequence()++;
+   mLastRequest.header(h_Expires).value() = 0;   
+   send(mLastRequest);
 }
 
 
