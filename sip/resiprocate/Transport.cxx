@@ -13,9 +13,10 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 {
 }
 
-Transport::Transport(const Data& host, int portNum, Fifo<Message>& rxFifo) :
-   mHost(host),
+Transport::Transport(const Data& sendhost, int portNum, const Data& interface, Fifo<Message>& rxFifo) :
+   mHost(sendhost),
    mPort(portNum), 
+   mInterface(interface),
    mStateMachineFifo(rxFifo),
    mShutdown(false)
 {
@@ -84,6 +85,62 @@ Transport::buildFdSet( fd_set* fdSet, int* fdSetSize )
       *fdSetSize = mFd+1;
    }
 }
+
+Data
+Transport::toData(TransportType type)
+{
+   switch (type)
+   {
+      case UDP:
+         return "UDP";
+      case TCP:
+         return "TCP";
+      case TLS:
+         return "TLS";
+      case SCTP:
+         return"SCTP";
+      case DCCP:
+         return "DCCP";
+      case Unknown:
+      default:
+         assert(0);
+         return "Unknown";
+   }
+}
+
+Transport::TransportType
+Transport::toTransport(const Data& type)
+{
+   if (type == "UDP")
+   {
+      return UDP;
+   }
+   else if (type == "TCP")
+   {
+      return TCP;
+   }
+   else if (type == "TLS")
+   {
+      return TLS;
+   }
+   else if (type == "SCTP")
+   {
+      return SCTP;
+   }
+   else if (type == "DCCP")
+   {
+      return DCCP;
+   }
+   else if (type == "Unknown")
+   {
+      return Unknown;
+   }
+   else
+   {
+      assert(0);
+   }
+}
+
 
 
 /* ====================================================================
