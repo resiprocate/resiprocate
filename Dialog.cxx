@@ -15,9 +15,10 @@ using namespace std;
 
 class ServerInviteSession;
 
-Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg) 
+Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds) 
    : mId(msg),
      mDum(dum),
+     mDialogSet(ds),
      mClientSubscriptions(),
      mServerSubscription(0),
      mInviteSession(0),
@@ -176,6 +177,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
          mRemoteTag = response.header(h_To).param(p_tag); 
       }
    }
+   mDialogSet.addDialog(this);
 }
 
 DialogId
