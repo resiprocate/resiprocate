@@ -59,7 +59,7 @@ class Header<Headers::Content_Disposition>
       typedef Token Type;
       Header()
       {
-         CommaTokenizing[Headers::Content_Disposition] = Header::Type::isCommaTokenizing;
+         Headers::CommaTokenizing[Headers::Content_Disposition] = Type::isCommaTokenizing;
          //HeaderStrings[Headers::Content_Disposition] = Symbols::Content_Disposition;
       }
 };
