@@ -35,6 +35,39 @@ HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
 }
 
 std::ostream&
+HeaderFieldValueList::encode(int headerEnum, std::ostream& str)
+{
+   const Data& headerName = Headers::getHeaderName(static_cast<Headers::Type>(headerEnum));
+
+   if (getParserContainer() != 0)
+   {
+      getParserContainer()->encode(headerName, str);
+   }
+   else
+   {
+      str << headerName << Symbols::COLON << Symbols::SPACE;
+      for (HeaderFieldValueList::const_iterator j = begin();
+           j != end(); j++)
+      {
+         if (j != begin())
+         {
+            if (Headers::isCommaEncoding(static_cast<Headers::Type>(headerEnum)))
+            {
+               str << Symbols::COMMA[0] << Symbols::SPACE[0];
+            }
+            else
+            {
+               str << headerName << Symbols::COLON << Symbols::SPACE;
+            }
+         }
+         (*j)->encode(str);
+      }
+      str << Symbols::CRLF;
+   }
+   return str;
+}
+
+std::ostream&
 HeaderFieldValueList::encode(const Data& headerName, std::ostream& str)
 {
    if (getParserContainer() != 0)
@@ -43,16 +76,20 @@ HeaderFieldValueList::encode(const Data& headerName, std::ostream& str)
    }
    else
    {
+      if (!headerName.empty())
+      {
+         str << headerName << Symbols::COLON << Symbols::SPACE;
+      }
       for (HeaderFieldValueList::const_iterator j = begin();
            j != end(); j++)
       {
-         if (!headerName.empty())
+         if (j != begin())
          {
-            str << headerName << Symbols::COLON << Symbols::SPACE;
+            str << Symbols::COMMA[0] << Symbols::SPACE[0];
          }
          (*j)->encode(str);
-         str << Symbols::CRLF;
       }
+      str << Symbols::CRLF;
    }
    return str;
 }
