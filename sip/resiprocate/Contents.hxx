@@ -14,14 +14,12 @@ namespace Vocal2
 
 class Contents;
 class HeaderFieldValue;
-class ParameterList;
+class ParseBuffer;
 
 class ContentsFactoryBase
 {
    public:
       virtual Contents* create(HeaderFieldValue* hfv, 
-                               const Mime& contentType) const = 0;
-      virtual Contents* create(const Data& data,
                                const Mime& contentType) const = 0;
       virtual Contents* convert(Contents* c) const = 0;
 };
@@ -41,7 +39,12 @@ class Contents : public LazyParser
       Contents* getContents(const Mime&);
 
       virtual Contents* clone() const = 0;
-      virtual const Mime& getType() const = 0;
+      virtual const Mime& getStaticType() const = 0;
+      const Mime& getType() const {return mContentsType;}
+
+      static Contents* createContents(const Mime& contentType, 
+                                      const char* anchor, 
+                                      ParseBuffer& pb);
 
       static std::map<Mime, ContentsFactoryBase*>& getFactoryMap();
 
@@ -61,19 +64,13 @@ class ContentsFactory : public ContentsFactoryBase
       {
          HeaderFieldValue hfv;
          T tmp;
-         Contents::getFactoryMap()[tmp.getType()] = this;
+         Contents::getFactoryMap()[tmp.getStaticType()] = this;
       }
       
       // pass Mime instance for parameters
       virtual Contents* create(HeaderFieldValue* hfv, const Mime& contentType) const
       {
          return new T(hfv, contentType);
-      }
-
-      // pass Mime instance for parameters
-      virtual Contents* create(const Data& data, const Mime& contentType) const
-      {
-         return new T(data, contentType);
       }
 
       virtual Contents* convert(Contents* c) const

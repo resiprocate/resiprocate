@@ -1,4 +1,5 @@
 #include "sip2/sipstack/Contents.hxx"
+#include "sip2/util/ParseBuffer.hxx"
 
 using namespace Vocal2;
 
@@ -48,4 +49,16 @@ Contents::getContents(const Mime& m)
 {
    assert(Contents::getFactoryMap().find(m) != Contents::getFactoryMap().end());
    return Contents::getFactoryMap()[m]->convert(getContents());
+}
+
+Contents*
+Contents::createContents(const Mime& contentType, 
+                         const char* anchor, 
+                         ParseBuffer& pb)
+{
+   HeaderFieldValue *hfv = new HeaderFieldValue(anchor, pb.position() - anchor);
+   assert(Contents::getFactoryMap().find(contentType) != Contents::getFactoryMap().end());
+   Contents* c = Contents::getFactoryMap()[contentType]->create(hfv, contentType);
+   c->mIsMine = true;
+   return c;
 }

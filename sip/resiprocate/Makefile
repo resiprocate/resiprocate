@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.92 2002/12/04 20:44:22 derekm Exp $
+# $Id: Makefile,v 1.93 2002/12/05 04:35:51 davidb Exp $
 
 BUILD = ../../build
 
@@ -25,6 +25,7 @@ CXXFLAGS += -mcpu=i686 -march=i686
 endif
 #CXXFLAGS += -DPP_DO_INLINES
 SRC = \
+	MultipartMixedContents.cxx \
 	LazyParser.cxx \
 	BranchParameter.cxx \
 	ConnectionMap.cxx \
