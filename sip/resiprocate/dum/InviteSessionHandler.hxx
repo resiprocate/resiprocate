@@ -27,9 +27,13 @@ class InviteSessionHandler
       /// called when dialog enters the Early state - typically after getting 100
       virtual void onProvisional(ClientInviteSessionHandle, const SipMessage&)=0;
 
-      /// called when dialog enters connected state (after getting a 200)
+      /// called when a dialog initiated as a UAC enters the connected state
+      /// (after getting a 200 , user MUST send an ACK using ackConnection()
       virtual void onConnected(ClientInviteSessionHandle, const SipMessage& msg)=0;
-      
+
+      // called when a dialog initiated as a UAS enters the connected state
+      virtual void onConnected(InviteSessionHandle, const SipMessage& msg)=0;
+
       // UAC gets no final response within the stale call timeout(currently 3 minutes)
       virtual void onStaleCallTimeout(ClientInviteSessionHandle)=0;
 

@@ -14,6 +14,7 @@
 #include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/ClientOutOfDialogReq.hxx"
 #include "resiprocate/dum/ClientRegistration.hxx"
+#include "resiprocate/dum/DumShutdownHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/PublicationCreator.hxx"
@@ -36,7 +37,8 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mClientRegistrationHandler(0),
    mServerRegistrationHandler(0),
    mAppDialogSetFactory(0),
-   mStack(stack)
+   mStack(stack),
+   mDumShutdownHandler(0)
 {
 }
 
@@ -45,6 +47,16 @@ DialogUsageManager::~DialogUsageManager()
    DebugLog ( << "~DialogUsageManager" );
    // !jf! iterate through dialogsets and dispose, this will cause them to be
    // removed from HandleManager on destruction
+   // !dcm! -- figure out what this means when coherent
+   if (mDumShutdownHandler)
+   {
+      mDumShutdownHandler->dumDestroyed();
+   }
+}
+
+void DialogUsageManager::shutdown(DumShutdownHandler* h)
+{
+   mDumShutdownHandler = h;
 }
 
 
@@ -659,8 +671,15 @@ DialogUsageManager::findCreator(const DialogId& id)
    }
 }
 
+void DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
+{
+   mDialogSetMap.erase(dsId);
 
-
+   if (mDialogSetMap.empty() && mDumShutdownHandler)
+   {
+      delete this;      
+   }
+}
 
 
 
