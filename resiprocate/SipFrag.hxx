@@ -1,48 +1,41 @@
-#ifndef LazyParser_hxx
-#define LazyParser_hxx
+#ifndef SipFrag_hxx
+#define SipFrag_hxx
 
-#include <iostream>
+#include <map>
+
+#include "sip2/sipstack/Contents.hxx"
+#include "sip2/sipstack/Uri.hxx"
+#include "sip2/util/Data.hxx"
 
 namespace Vocal2
 {
 
-class HeaderFieldValue;
-class ParseBuffer;
+class SipMessage;
 
-class LazyParser
+// Mostly works -- 
+// Preparse insists on a start line while SIP frag may not have one.
+class SipFrag : public Contents
 {
    public:
-      LazyParser(HeaderFieldValue* headerFieldValue);
-      LazyParser(const LazyParser& rhs);
-      LazyParser& operator=(const LazyParser& rhs);
-      virtual ~LazyParser();
+      SipFrag();
+      SipFrag(HeaderFieldValue* hfv);
+      SipFrag(const SipFrag& rhs);
+      ~SipFrag();
+      SipFrag& operator=(const SipFrag& rhs);
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const = 0;
-      virtual void parse(ParseBuffer& pb) = 0;
+      virtual Contents* clone() const;
 
-      std::ostream& encode(std::ostream& str) const;
-      std::ostream& encodeFromHeaderFieldValue(std::ostream& str) const;
-      bool isParsed() const {return mIsParsed;}
+      virtual const Mime& getType() const;
 
-      HeaderFieldValue& getHeaderField() { return *mHeaderField; }
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual void parse(ParseBuffer& pb);
 
-   protected:
-      LazyParser();
-      // call before every access 
-      void checkParsed() const;
+      SipMessage& message() {checkParsed(); return *mMessage;}
 
-      // called in destructor and on assignment
-      virtual void clear();
-      
    private:
-
-      HeaderFieldValue* mHeaderField;
-      bool mIsMine;
-      bool mIsParsed;
+      SipMessage* mMessage;
+      static ContentsFactory<SipFrag> Factory;
 };
-
-std::ostream&
-operator<<(std::ostream&, const LazyParser& lp);
 
 }
 

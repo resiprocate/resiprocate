@@ -26,7 +26,7 @@ class MessageWaitingContents : public Contents
 
       virtual const Mime& getType() const;
 
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
 
       class Header;

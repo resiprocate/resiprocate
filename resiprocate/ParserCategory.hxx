@@ -24,11 +24,8 @@ class ParserCategory : public LazyParser
       virtual ~ParserCategory();
 
       virtual ParserCategory* clone() const = 0;
-      virtual std::ostream& encode(std::ostream& str) const = 0;
 
       bool exists(const ParamBase& paramType) const;
-        
-      // removing non-present parameter is allowed      
       void remove(const ParamBase& paramType);
         
       Transport_Param::DType& param(const Transport_Param& paramType) const;
