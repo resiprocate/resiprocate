@@ -1,10 +1,12 @@
 %{
 #include <string.h>
 #include <ctype.h>
-#include "sip2/sipstack/MethodTypes.hxx"
-namespace Vocal2 {
+#include "resiprocate/MethodTypes.hxx"
+
+namespace resip
+{
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 %}
 struct methods { char *name; MethodTypes type; };
 %%
