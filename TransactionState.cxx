@@ -184,6 +184,11 @@ TransactionState::process(SipStack& stack)
                state->add(state->mId);
                state->processStateless(sip);
             }
+            else if (sip->header(h_RequestLine).getMethod() == CANCEL)
+            {
+               stack.mTUFifo.add(Helper::makeResponse(*sip, 481));
+               delete sip;
+            }
             else 
             {
                TransactionState* state = new TransactionState(stack, ClientNonInvite, Trying);
@@ -504,6 +509,7 @@ TransactionState::processClientInvite(  Message* msg )
          */
 
          case INVITE:
+            delete mMsgToRetransmit; 
             mMsgToRetransmit = sip;
             mStack.mTimers.add(Timer::TimerB, msg->getTransactionId(), 64*Timer::T1 );
             sendToWire(msg); // don't delete msg
