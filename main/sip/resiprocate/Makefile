@@ -48,6 +48,7 @@ SRC = \
 	IntegerCategory.cxx \
 	Mime.cxx \
 	NameAddr.cxx \
+	RAckCategory.cxx \
 	RequestLine.cxx \
 	StatusLine.cxx \
 	StringCategory.cxx \
