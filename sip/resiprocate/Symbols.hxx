@@ -119,6 +119,7 @@ class Symbols
       static const char * const comp;
       static const char * const rport;
       static const char * const MagicCookie;
+      static const char * const Vocal2Cookie;
 
       static const int DefaultSipPort;
       static const int SipTlsPort;
