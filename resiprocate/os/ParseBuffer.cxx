@@ -720,7 +720,7 @@ escapeAndAnnotate(const char* buffer,
 void
 ParseBuffer::fail(const char* file, unsigned int line) const
 {
-   InfoLog(<< "Parse failed, line:" << line
+   InfoLog(<< "Parse failed, " << file << ":" << line
            << std::endl
            << "in context: " << mErrorContext
            << std::endl
