@@ -71,11 +71,26 @@ void InviteSession::storePeerCapabilities(const SipMessage& msg)
 {
    // !slg! ToDo - add methods to get this data, App may be interested
    // Only store each capability once - do not overwrite
-   mPeerSupportedMethods = msg.header(h_Allows);
-   mPeerSupportedOptionTags = msg.header(h_Supporteds);
-   mPeerSupportedEncodings = msg.header(h_AcceptEncodings);
-   mPeerSupportedLanguages = msg.header(h_AcceptLanguages);
-   mPeerSupportedMimeTypes = msg.header(h_Accepts);
+   if (msg.exists(h_Allows))
+   {
+      mPeerSupportedMethods = msg.header(h_Allows);
+   }
+   if (msg.exists(h_Supporteds))
+   {
+      mPeerSupportedOptionTags = msg.header(h_Supporteds);
+   }
+   if (msg.exists(h_AcceptEncodings))
+   {
+      mPeerSupportedEncodings = msg.header(h_AcceptEncodings);
+   }
+   if (msg.exists(h_AcceptLanguages))
+   {
+      mPeerSupportedLanguages = msg.header(h_AcceptLanguages);
+   }
+   if (msg.exists(h_Accepts))
+   {
+      mPeerSupportedMimeTypes = msg.header(h_Accepts);
+   }
 }
 
 bool
