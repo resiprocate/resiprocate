@@ -116,8 +116,7 @@ class Helper
 
       // renamed to make more explicit that this is the port that we should reply too
       // given that we are following SIP rules WRT rport etc.
-      // NOTE: sym means to return symmetric info no matter what.
-      static int getPortForReply(SipMessage& request, bool sym);
+      static int getPortForReply(SipMessage& request);
 
       static Uri fromAor(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
 

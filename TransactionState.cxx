@@ -32,7 +32,6 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mIsReliable(true), // !jf! 
    mMsgToRetransmit(0),
    mDnsResult(0),
-   mSymResponses(false),
    mId(id)
 {
    DebugLog (<< "Creating new TransactionState: " << *this);
@@ -163,7 +162,7 @@ TransactionState::process(TransactionController& controller)
                state->mMsgToRetransmit = state->make100(sip);
                state->mSource = state->mNetSource = sip->getSource(); // UACs source address
                // since we don't want to reply to the source port unless rport present 
-               state->mSource.setPort(Helper::getPortForReply(*sip,state->mSymResponses));
+               state->mSource.setPort(Helper::getPortForReply(*sip));
                state->mState = Proceeding;
                state->mIsReliable = state->mNetSource.transport->isReliable();
                state->add(tid);
@@ -195,7 +194,7 @@ TransactionState::process(TransactionController& controller)
 
                   state->mSource = sip->getSource();
                   // since we don't want to reply to the source port unless rport present 
-                  state->mSource.setPort(Helper::getPortForReply(*sip,state->mSymResponses));
+                  state->mSource.setPort(Helper::getPortForReply(*sip));
                   state->add(tid);
                   state->processReliability(matchingInvite->mTarget.getType());
                   // !jf! don't call processServerNonInvite since it will delete
@@ -207,7 +206,7 @@ TransactionState::process(TransactionController& controller)
                TransactionState* state = new TransactionState(controller, ServerNonInvite,Trying, tid);
                state->mSource = state->mNetSource = sip->getSource();
                // since we don't want to reply to the source port unless rport present 
-               state->mSource.setPort(Helper::getPortForReply(*sip,state->mSymResponses));
+               state->mSource.setPort(Helper::getPortForReply(*sip));
                state->add(tid);
                state->mIsReliable = state->mNetSource.transport->isReliable();
             }
@@ -1281,48 +1280,6 @@ TransactionState::processReliability(TransportType type)
    }
 }
 
-// !ah! only used one place, so leaving it here instead of making a helper.
-// !ah! broken out for clarity -- only used for forceTargets.
-// Expects that host portion is IP address notation.
-
-static const Tuple
-simpleTupleForUri(const Uri& uri)
-{
-   const Data& host = uri.host();
-   int port = uri.port();
-
-   resip::TransportType transport = UNKNOWN_TRANSPORT;
- 
-  if (uri.exists(p_transport))
-   {
-      transport = Tuple::toTransport(uri.param(p_transport));
-   }
-
-   if (transport == UNKNOWN_TRANSPORT)
-   {
-      transport = UDP;
-   }
-   if (port == 0)
-   {
-      switch(transport)
-      {
-         case TLS:
-            port = 5061;
-            break;
-         case UDP:
-         case TCP:
-         default:
-            port = 5060;
-            break;
-         // !ah! SCTP?
-
-      }
-   }
-
-   return Tuple(host,port,transport);
-}
-
-
 void
 TransactionState::sendToWire(Message* msg, bool resend) 
 {
@@ -1338,95 +1295,48 @@ TransactionState::sendToWire(Message* msg, bool resend)
    // !jf! for responses, go back to source always (not RFC exactly)
    if (mMachine == ServerNonInvite || mMachine == ServerInvite || mMachine == ServerStale)
    {
-      Tuple destTuple(mSource);
-      // const Tuple &r(state->mSymResponses?mNetSource:mSource);
-      if (sip->hasForceTarget())
-      {
-         destTuple = simpleTupleForUri(sip->getForceTarget());
-      }
-
       assert(mDnsResult == 0);
+      assert(sip->exists(h_Vias));
+      assert(!sip->header(h_Vias).empty());
 
-      // to actual source, not derived source (mNetSource) IFF sym
-      DebugLog(<<"sending to : " << destTuple);
-
-      if (resend)
+      Tuple target(mSource);
+      if (sip->header(h_Vias).front().exists(p_rport) && sip->header(h_Vias).front().param(p_rport).hasValue())
       {
-         mController.mTransportSelector.retransmit(sip, destTuple);
+         target.setPort(sip->header(h_Vias).front().param(p_rport).port());
+         DebugLog(<< "rport present in response, sending to " << target);
       }
       else
       {
-         mController.mTransportSelector.transmit(sip, destTuple);
+         DebugLog(<<"sending to : " << target);
+      }
+
+      if (resend)
+      {
+         mController.mTransportSelector.retransmit(sip, target);
+      }
+      else
+      {
+         mController.mTransportSelector.transmit(sip, target);
       }
    }
-   else if (mDnsResult == 0) // no dns query yet
+   else if (mDnsResult == 0 && !mIsCancel) // no dns query yet
    {
       DebugLog (<< "sendToWire with no dns result: " << *this);
+      assert(sip->isRequest());
+      assert(!mIsCancel);
+      mDnsResult = mController.mTransportSelector.dnsResolve(sip, this);
+      assert(mDnsResult); // !ah! is this really an assertion or an error?
 
-      // !jf! This can only happen for a "stateless" transaction, so only send it
-      // once and don't worry about failures
-      if (sip->isResponse())
+      // do it now, if there is an immediate result
+      if (mDnsResult->available() == DnsResult::Available)
       {
-         assert (!sip->header(h_Vias).empty());
-
-         Via& via = sip->header(h_Vias).front();
-         if (sip->hasForceTarget())
-         {
-            //DebugLog(<<"!ah! sendToWire(response): has forceTarget -- MUST be expressable as Tuple w/o resolution:" 
-            //<< sip->getForceTarget());
-
-            Tuple t (simpleTupleForUri(sip->getForceTarget()));
-
-            mController.mTransportSelector.transmit(sip,t);
-         }
-         else if (via.exists(p_received))
-         {
-            Tuple tuple(via.param(p_received), 
-                        (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort(),
-                        Tuple::toTransport(via.transport()));
-            // DebugLog(<<"!ah! sendToWire(response): received/rport case:" << tuple << " for " << sip->brief() ); 
-            mController.mTransportSelector.transmit(sip, tuple);
-         }
-         else
-         {
-            Tuple tuple(via.sentHost(),
-                        (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort(),
-                        Tuple::toTransport(via.transport()));
-            // DebugLog(<<"!ah! sendToWire(response): sentHost case:" << tuple << " for " << sip->brief() ); 
-            mController.mTransportSelector.transmit(sip, tuple);
-         }
-      }
-      else // requests
-      {
-         if (mIsCancel)
-         {
-            assert(mTarget.getType() != UNKNOWN_TRANSPORT);
-            if (resend)
-            {
-               mController.mTransportSelector.retransmit(sip, mTarget);
-            }
-            else
-            {
-               mController.mTransportSelector.transmit(sip, mTarget);
-            }
-         }
-         else
-         {
-            mDnsResult = mController.mTransportSelector.dnsResolve(sip, this);
-            assert(mDnsResult); // !ah! is this really an assertion or an error?
-
-            // do it now, if there is an immediate result
-            if (mDnsResult->available() == DnsResult::Available)
-            {
-               handle(mDnsResult);
-            }
-         }
+         handle(mDnsResult);
       }
    }
    else // reuse the last dns tuple
    {
+      assert(sip->isRequest());
       assert(mTarget.getType() != UNKNOWN_TRANSPORT);
-      DebugLog(<<"!ah! DNS results being used for mTarget=" << mTarget);
       if (resend)
       {
          mController.mTransportSelector.retransmit(sip, mTarget);
@@ -1629,6 +1539,47 @@ resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
    strm << " target=" << state.mSource;
    strm << "]";
    return strm;
+}
+
+// !ah! only used one place, so leaving it here instead of making a helper.
+// !ah! broken out for clarity -- only used for forceTargets.
+// Expects that host portion is IP address notation.
+
+static const Tuple
+simpleTupleForUri(const Uri& uri)
+{
+   const Data& host = uri.host();
+   int port = uri.port();
+
+   resip::TransportType transport = UNKNOWN_TRANSPORT;
+ 
+  if (uri.exists(p_transport))
+   {
+      transport = Tuple::toTransport(uri.param(p_transport));
+   }
+
+   if (transport == UNKNOWN_TRANSPORT)
+   {
+      transport = UDP;
+   }
+   if (port == 0)
+   {
+      switch(transport)
+      {
+         case TLS:
+            port = 5061;
+            break;
+         case UDP:
+         case TCP:
+         default:
+            port = 5060;
+            break;
+         // !ah! SCTP?
+
+      }
+   }
+
+   return Tuple(host,port,transport);
 }
 
 /* Local Variables: */
