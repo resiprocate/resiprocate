@@ -7,6 +7,8 @@
 
 using namespace resip;
 
+const DialogSetId DialogSetId::Empty;
+
 DialogSetId::DialogSetId(const SipMessage& msg) : 
    mCallId(msg.header(h_CallID).value())
 {
@@ -49,6 +51,12 @@ DialogSetId::DialogSetId(const SipMessage& msg) :
 DialogSetId::DialogSetId(const Data& callId, const Data& tag)
    : mCallId(callId),
      mTag(tag)
+{
+}
+
+DialogSetId::DialogSetId() 
+   : mCallId(),
+     mTag()
 {
 }
 
