@@ -63,6 +63,8 @@ Pkcs7SignedContents::~Pkcs7SignedContents()
 {
 }
 
+// !jf!  needs to be assignment operator here
+
 Pkcs7Contents&
 Pkcs7Contents::operator=(const Pkcs7Contents& rhs)
 {

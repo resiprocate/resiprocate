@@ -64,7 +64,9 @@ MultipartMixedContents::clear()
 }
 
 MultipartMixedContents::~MultipartMixedContents()
-{}
+{
+   clear();
+}
 
 MultipartMixedContents&
 MultipartMixedContents::operator=(const MultipartMixedContents& rhs)
@@ -72,7 +74,8 @@ MultipartMixedContents::operator=(const MultipartMixedContents& rhs)
    if (this != &rhs)
    {
       Contents::operator=(rhs);
-
+      clear();
+      
       for (list<Contents*>::iterator i = mContents.begin(); 
            i != mContents.end(); i++)
       {
