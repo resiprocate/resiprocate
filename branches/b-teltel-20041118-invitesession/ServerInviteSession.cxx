@@ -216,6 +216,7 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
       case UAS_ReceivedUpdateWaitingAnswer:
          // send::2XXU-answer
          // send::2XXI
+         // app::onConnected !slg!?
          transition(Connected);
          break;
 
@@ -338,6 +339,7 @@ void
 ServerInviteSession::accept(int code)
 {
    InfoLog (<< toData(mState) << ": accept(" << code << ")");
+   // !slg!?InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    switch (mState)
    {
       case UAS_Offer:
@@ -349,6 +351,7 @@ ServerInviteSession::accept(int code)
       case UAS_EarlyProvidedAnswer:
          transition(Connected);
          sendAccept(code, mCurrentLocalSdp);
+         //!slg!? handler->onConnected(getSessionHandle(), mInvite200);
          break;
          
       case UAS_NoOffer:
@@ -377,6 +380,7 @@ ServerInviteSession::accept(int code)
          mDialog.makeResponse(mInvite200, mFirstRequest, code);
          mDialog.send(mInvite200);
          startRetransmitTimer(); // 2xx timer
+         //!slg!? handler->onConnected(getSessionHandle(), mInvite200);
          break;
 
       case UAS_SentUpdate:
@@ -553,6 +557,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       case OnAckAnswer:
          transition(Connected);
          handler->onAnswer(getSessionHandle(), msg, sdp);
+         //!slg!? handler->onConnected(getSessionHandle(), msg);
          break;
 
       case OnCancel:
@@ -602,6 +607,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, sdp);
+         //!slg!? handler->onConnected(getSessionHandle(), msg);
          break;
          
       case OnCancel:
