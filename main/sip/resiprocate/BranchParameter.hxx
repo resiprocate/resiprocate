@@ -37,6 +37,7 @@ class BranchParameter : public Parameter
 
       // access the client specific portion of the branch - not part of tid
       Data& clientData();
+      const Data& clientData() const;
 
       Type& value() {return *this;}
       const Type& value() const {return *this;}
