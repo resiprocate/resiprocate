@@ -370,7 +370,7 @@ Dialog::dispatch(const SipMessage& msg)
 ClientSubscription* 
 Dialog::findMatchingClientSub(const SipMessage& msg)
 {
-   for (std::vector<ClientSubscription*>::iterator i=mClientSubscriptions.begin(); 
+   for (std::list<ClientSubscription*>::iterator i=mClientSubscriptions.begin(); 
         i != mClientSubscriptions.end(); ++i)
    {
       if ((*i)->matches(msg))
@@ -384,7 +384,7 @@ Dialog::findMatchingClientSub(const SipMessage& msg)
 ClientOutOfDialogReq*
 Dialog::findMatchingClientOutOfDialogReq(const SipMessage& msg)
 {
-   for (std::vector<ClientOutOfDialogReq*>::iterator i=mClientOutOfDialogRequests.begin(); 
+   for (std::list<ClientOutOfDialogReq*>::iterator i=mClientOutOfDialogRequests.begin(); 
         i != mClientOutOfDialogRequests.end(); ++i)
    {
       if ((*i)->matches(msg))
@@ -415,7 +415,7 @@ Dialog::findClientSubscriptions()
 {
    std::vector<ClientSubscription::Handle> handles;
    
-   for (std::vector<ClientSubscription*>::const_iterator i = mClientSubscriptions.begin();
+   for (std::list<ClientSubscription*>::const_iterator i = mClientSubscriptions.begin();
         i != mClientSubscriptions.end(); ++i)
    {
       handles.push_back((*i)->getHandle());
@@ -628,4 +628,18 @@ Dialog::shouldMerge(const SipMessage& request) const
    return false;
 }
 
-
+void Dialog::possiblyDie()
+{
+   if (mClientSubscriptions.empty() &&
+       mClientOutOfDialogRequests.empty() &&
+       !(mServerSubscription ||
+         mInviteSession ||
+         mClientRegistration ||
+         mServerRegistration ||
+         mClientPublication ||
+         mServerPublication ||
+         mServerOutOfDialogRequest))
+   {
+      delete this;
+   }
+}

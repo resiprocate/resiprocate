@@ -13,6 +13,11 @@ ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum,
    assert(false);
 }
 
+ServerOutOfDialogReq::~ServerOutOfDialogReq()
+{
+   mDialog.mServerOutOfDialogRequest = 0;
+}
+
 ServerOutOfDialogReq::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
 {}
