@@ -1,7 +1,7 @@
 #include "ClientRegistration.hxx"
 
 ClientRegistration::Handle::Handle(DialogUsageManager& dum)
-   : DialogUsageManager::Handle(dum)
+   : BaseUsage::Handle(dum)
 {}
 
 ClientRegistration* 

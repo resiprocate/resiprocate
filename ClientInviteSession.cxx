@@ -37,7 +37,7 @@ ClientInviteSession::rejectOffer(int statusCode)
 }
 
 ClientInviteSession::Handle::Handle(DialogUsageManager& dum)
-   : DialogUsageManager::Handle(dum)
+   : BaseUsage::Handle(dum)
 {}
 
 ClientInviteSession* 
