@@ -44,6 +44,8 @@ class HeaderFieldValue
          mParserCategory = parser;
       }
 
+      void parseParameters(const char* start);
+      
       std::ostream& encode(std::ostream& str) const;
       
       friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
