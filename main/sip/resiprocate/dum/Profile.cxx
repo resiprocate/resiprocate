@@ -288,8 +288,8 @@ Profile::getDigestCredential( const Data& realm )
 const Profile::DigestCredential&
 Profile::getDigestCredential( const SipMessage& challenge )
 {
-   DebugLog (<< Inserter(mDigestCredentials));
-   InfoLog (<< "Using From header: " <<  challenge.header(h_From).uri().getAor() << " to find credential");   
+   StackLog (<< Inserter(mDigestCredentials));
+   DebugLog (<< "Using From header: " <<  challenge.header(h_From).uri().getAor() << " to find credential");   
    const Data& aor = challenge.header(h_From).uri().getAor();
    for (DigestCredentials::const_iterator it = mDigestCredentials.begin(); 
         it != mDigestCredentials.end(); it++)
