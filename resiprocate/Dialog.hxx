@@ -53,7 +53,10 @@ class Dialog
 
       // given a template of a request, update the relevant fields based on this
       void updateRequest(SipMessage& msg);
-      
+
+      // For UAS, make a response and create the dialog if necessary
+      void makeResponse(SipMessage& request, SipMessage& response, int code=200);
+
       bool isCreated() const { return mCreated; };
       
       static Data dialogId(const SipMessage& msg);
