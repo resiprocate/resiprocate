@@ -3,10 +3,11 @@
 
 using namespace resip;
 
-std::ostream* 
-GenericLogImpl::mLogger=0;
+std::ostream* GenericLogImpl::mLogger=0;
 
+#ifndef WIN32
 static pthread_t currentThread;
+#endif
 
 AssertOnRecursiveLock::AssertOnRecursiveLock()
 {
