@@ -1,7 +1,7 @@
 #if !defined(RESIP_TRANSACTION_CONTROLLER_HXX)
 #define RESIP_TRANSACTION_CONTROLLER_HXX
 
-#include "resiprocate/os/TimeLimitFifo.hxx"
+#include "resiprocate/TuSelector.hxx"
 #include "resiprocate/TransactionMap.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/StatelessHandler.hxx"
@@ -15,6 +15,7 @@ class TransactionMessage;
 class ApplicationMessage;
 class StatisticsManager;
 class AsyncProcessHandler;
+class SipStack;
 
 class TransactionController
 {
@@ -23,11 +24,7 @@ class TransactionController
       static unsigned int MaxTUFifoSize;
       static unsigned int MaxTUFifoTimeDepthSecs;
 
-      TransactionController(TimeLimitFifo<Message>& tufifo, 
-                            StatisticsManager& stats,
-                            Security* security,
-                            AsyncProcessHandler* asyncHandler=0,
-                            bool stateless=false);
+      TransactionController(SipStack& stack, bool stateless=false);
       ~TransactionController();
 
       void process(FdSet& fdset);
@@ -58,6 +55,7 @@ class TransactionController
    private:
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
+      SipStack& mStack;
       
       bool mMultiThreaded;
       bool mStateless;
@@ -79,7 +77,7 @@ class TransactionController
       Fifo<TransactionMessage> mStateMacFifo;
 
       // from the sipstack (for convenience)
-      TimeLimitFifo<Message>& mTUFifo;
+      TuSelector& mTuSelector;
 
       // Used to decide which transport to send a sip message on. 
       TransportSelector mTransportSelector;

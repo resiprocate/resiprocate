@@ -147,6 +147,7 @@ SRC = \
 	TransportMessage.cxx \
 	TransportSelector.cxx \
 	TuIM.cxx \
+	TuSelector.cxx \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \
