@@ -1,78 +1,46 @@
-#if !defined(RESIP_REQUEST_CONTEXT_HXX)
-#define RESIP_REQUEST_CONTEXT_HXX 
-
-#include <vector>
-#include "resiprocate/Uri.hxx"
-#include "repro/RequestProcessorChain.hxx"
-#include "resiprocate/NameAddr.hxx"
-
-namespace resip
-{
-class SipMessage;
-class TransactionTerminated;
-}
-
-namespace repro
-{
-class Proxy;
-
-class RequestContext
-{
-   public:
-      RequestContext(Proxy& proxy,
-                     std::auto_ptr<resip::SipMessage> sipMsg,
-                     RequestProcessorChain& chain);
-      virtual ~RequestContext();
-
-      void process(resip::TransactionTerminated& msg);
-      void process(std::auto_ptr<resip::Message> msg);
-      
-      /// Returns the SipMessage associated with the server transaction
-      resip::SipMessage& getOriginalRequest();
-      const resip::SipMessage& getOriginalRequest() const;
-
-      /// Returns the event that we are currently working on
-      resip::Message* getCurrentEvent();
-      const resip::Message* getCurrentEvent() const;
-      
-      void setDigestIdentity (const resip::Data&);
-      const resip::Data& getDigestIdentity() const;
-
-      void pushChainIterator(RequestProcessorChain::Chain::iterator&);
-      RequestProcessorChain::Chain::iterator popChainIterator();
-      bool chainIteratorStackIsEmpty();
-
-      Proxy& getProxy();
-
-      void addTarget(const resip::NameAddr& target);
-      std::vector<resip::NameAddr>& getCandidates();
-      
-   private:
-      std::auto_ptr<resip::SipMessage> mOriginalRequest;
-      std::auto_ptr<resip::Message> mCurrentEvent;
-      RequestProcessorChain& mRequestProcessorChain;
-      resip::Data mDigestIdentity;
-      std::vector<resip::NameAddr> mCandidateTargets;
-      int mTransactionCount;
-      Proxy& mProxy;
-
-      typedef std::vector<RequestProcessorChain::Chain::iterator>
-
-      /** Stack of iterators used to keep track of where
-          we are in the request processor chain(s) for
-          async processing */
-        ChainIteratorStack;
-      ChainIteratorStack mChainIteratorStack;
-
-      void fixStrictRouterDamage();
-      void checkTopRouteForSelf();
-
-      friend class ResponseContext;
-};
-
-}
-
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
 #endif
+
+#include "resiprocate/SipMessage.hxx"
+#include "RouteProcessor.hxx"
+#include "../RequestContext.hxx"
+
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+
+RouteProcessor::RouteProcessor()
+{}
+
+RouteProcessor::~RouteProcessor()
+{}
+
+/** @brief This monkey looks to see if the request has
+  *        a route header (the RequestContext has already
+  *        done preprocessing, and has removed any topmost
+  *        route that was self). If there is, the candidate
+  *        set is exactly the RURI of the received request
+  *        (after the above preprocessing).
+  */
+RequestProcessor::processor_action_t
+RouteProcessor::handleRequest(RequestContext& context)
+{
+  resip::SipMessage& request = context.getOriginalRequest();
+
+  if (request.exists(h_Routes) &&
+      !request.header(h_Routes).empty())
+  {
+    assert(context.getCandidates().empty());
+    context.addTarget(request.header(h_RequestLine).getAor());
+    return RequestProcessor::SkipAllChains;
+  }
+  
+  return RequestProcessor::Continue;
+ 
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
