@@ -53,6 +53,8 @@ main()
       
       Preparse parse(message, txt, strlen(txt));
       parse.process();
+      assert(message.getRawHeader(Headers::From));
+      assert(&message.header(h_From));
       assert(message.header(h_From).exists(p_tag) == false);
       assert(message.header(h_From).exists(p_mobility) == false);
       assert(message.header(h_From).uri().param(p_tag) == "456248");
