@@ -70,3 +70,13 @@ testTypedef
 testUri
 testXMLCursor
 core.*
+Debug
+Release
+*.stackdump
+testFileSystem
+testExternalLogger
+testFifo
+makeSelfCert
+testTime
+testDnsUtil
+testRSP-2

@@ -27,12 +27,9 @@ class TlsTransport : public TcpBaseTransport
       virtual  ~TlsTransport();
 
       TransportType transport() const { return TLS; }
-      const Data& tlsDomain() const { return mDomain; }
-
    protected:
       Connection* createConnection(Tuple& who, Socket fd, bool server=false);
 
-      Data mDomain;
       Security* mSecurity;
       SecurityTypes::SSLType mSslType;
 };

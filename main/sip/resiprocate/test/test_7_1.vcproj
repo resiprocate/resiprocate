@@ -26,6 +26,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				BufferSecurityCheck="TRUE"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -34,7 +35,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib Iphlpapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib Iphlpapi.lib Advapi32.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -91,7 +92,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Release\resiprocate.lib $(SolutionDir)\contrib\ares\Release\ares.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Release\resiprocate.lib $(SolutionDir)\contrib\ares\Release\ares.lib Iphlpapi.lib Advapi32.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -128,7 +129,7 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath=".\testStack.cxx">
+				RelativePath=".\testSpeed.cxx">
 			</File>
 		</Filter>
 		<Filter

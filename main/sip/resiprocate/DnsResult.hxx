@@ -184,6 +184,8 @@ class DnsResult
 
       //Ugly hack
       Data mPassHostFromAAAAtoA;
+
+      void transition(Type t);      
       
       // This is where the current pending (ordered) results are stored. As they
       // are retrieved by calling next(), they are popped from the front of the list

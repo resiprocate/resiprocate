@@ -72,7 +72,7 @@ class DialogUsageManager : public HandleManager
       void shutdownIfNoUsages(DumShutdownHandler*, unsigned long giveUpSeconds=0);
       void forceShutdown(DumShutdownHandler*);
 
-      bool addTransport( TransportType protocol,
+      void addTransport( TransportType protocol,
                          int port=0, 
                          IpVersion version=V4,
                          const Data& ipInterface = Data::Empty, 

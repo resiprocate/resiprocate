@@ -78,7 +78,6 @@ class DtlsTransport : public UdpTransport
       bool isReliable() const { return false; }
       TransportType transport() const { return DTLS; }
       virtual void buildFdSet( FdSet& fdset);
-      virtual int maxFileDescriptors() const { return 1; }
 
       static const unsigned long DtlsReceiveTimeout = 250000 ;
 
@@ -96,7 +95,6 @@ class DtlsTransport : public UdpTransport
       Fifo<DtlsMessage>   mHandshakePending ;
       DtlsTimerQueue      mTimer ;
       Security*           mSecurity ;
-      Data                mDomain ;
       DtlsConnectionMap   mDtlsConnections ;  /* IP addr/port -> transport */
       unsigned char       mDummyBuf[ 4 ] ;
       BIO*                mDummyBio ;

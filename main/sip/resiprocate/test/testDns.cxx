@@ -30,6 +30,11 @@ const char gf[] = "\033[01;32m";
 const char rf[] = "\033[01;31m";
 const char ub[] = "\033[01;00m";
 
+#ifdef WIN32
+#define usleep(x) Sleep(x/1000)
+#define sleep(x) Sleep(x)
+#endif
+
 namespace resip
 {
 
@@ -133,6 +138,7 @@ main(int argc, const char** argv)
           sleep(1);
       }
    }
+
 
    return 0;
 }
