@@ -56,7 +56,7 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data&
 
 TcpBaseTransport::~TcpBaseTransport()
 {
-   DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << mPort); 
+   DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port()); 
    
    //::shutdown(mFd, SHUT_RDWR);
    closeSocket(mFd);
@@ -171,7 +171,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       if (conn == 0)
       {
          // attempt to open
-         Socket sock = Transport::socket( TCP, mV4);
+         Socket sock = Transport::socket( TCP, isV4());
          
          if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
          {
@@ -179,7 +179,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
             InfoLog (<< "Failed to create a socket " << strerror(e));
             mConnectionManager.gc(ConnectionManager::MinLastUsed); // free one up
 
-            sock = Transport::socket( TCP, mV4);
+            sock = Transport::socket( TCP, isV4());
             if ( sock == INVALID_SOCKET )
             {
 					int e = getErrno();
