@@ -1,0 +1,345 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#include ""res\\SipIMP.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\SipIMP.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 235, 55
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "About SipIMP"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    LTEXT           "SipIMP Windows  Version 0.3.0",IDC_STATIC,40,10,119,8,
+                    SS_NOPREFIX | SS_ENDELLIPSIS
+    LTEXT           "Copyright (C) 2002",IDC_STATIC,40,25,119,8
+    DEFPUSHBUTTON   "OK",IDOK,178,7,50,16,WS_GROUP
+END
+
+IDD_SIPIMP_DIALOG DIALOGEX 0, 0, 411, 252
+STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "SipIMP"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_TREE,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_SHOWSELALWAYS | TVS_NOSCROLL | 
+                    WS_BORDER | WS_TABSTOP,277,24,127,186
+    EDITTEXT        IDC_EDIT,7,221,360,24,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_WANTRETURN
+    PUSHBUTTON      "Delete All",IDC_BUTTON_CLEAR,366,7,38,12
+    PUSHBUTTON      "Setup",IDC_BUTTON_CONFIG,27,7,29,12
+    PUSHBUTTON      "Add",IDC_BUTTON_ADD,279,7,36,12
+    CONTROL         "Offline",IDC_CHECK_ONLINE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,73,7,37,10
+    EDITTEXT        IDC_EDIT_NOTE,141,7,128,12,ES_AUTOHSCROLL
+    LTEXT           "Status:",IDC_STATIC,115,7,24,8
+    CONTROL         "Sign",IDC_CHECK_SIGN,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,67,210,30,10
+    CONTROL         "Encrypt",IDC_CHECK_ENCRYPT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,210,40,10
+    PUSHBUTTON      "Send",IDC_BUTTON_SEND,377,222,27,23
+    PUSHBUTTON      "Delete",IDC_BUTTON_DEL,328,7,29,12
+    EDITTEXT        IDC_DISPLAY,7,24,264,185,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+IDD_DIALOG_CONFIG DIALOGEX 0, 0, 445, 221
+STYLE DS_SYSMODAL | DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Configure Account"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,94,190,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,158,190,50,14
+    EDITTEXT        IDC_USER,71,127,119,14,ES_AUTOHSCROLL | WS_GROUP
+    EDITTEXT        IDC_HOST,74,26,119,14,ES_AUTOHSCROLL | WS_GROUP
+    LTEXT           "User Name",IDC_STATIC,26,131,37,19
+    LTEXT           "Server Name",IDC_STATIC,22,27,44,8
+    EDITTEXT        IDC_PORT,74,53,29,14,ES_AUTOHSCROLL | ES_NUMBER
+    GROUPBOX        "Proxy information",IDC_STATIC,15,15,196,95,WS_GROUP,
+                    WS_EX_TRANSPARENT
+    LTEXT           "Port",IDC_STATIC,53,56,14,8
+    LTEXT           "Password",IDC_STATIC,31,159,32,8
+    EDITTEXT        IDC_PASSWORD,71,156,119,14,ES_PASSWORD | ES_AUTOHSCROLL
+    GROUPBOX        "User Account Information",IDC_STATIC,14,113,196,70
+    LTEXT           "Protocol",IDC_STATIC,39,86,27,8
+    COMBOBOX        IDC_PROTOCOL,75,83,42,38,CBS_DROPDOWN | CBS_UPPERCASE | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Nat Configuration",IDC_STATIC,233,31,193,27,WS_GROUP
+    EDITTEXT        IDC_EDIT_CONTACT,291,41,123,13,ES_AUTOHSCROLL | WS_GROUP
+    LTEXT           "Contact",IDC_STATIC,253,44,26,8
+    GROUPBOX        "PKI",IDC_STATIC,233,65,193,48
+    EDITTEXT        IDC_EDIT_KEY,291,76,123,13,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    WS_GROUP
+    LTEXT           "Key Password",IDC_STATIC,237,79,46,8
+    GROUPBOX        "Advanced Stuff - Leave it all blank",IDC_STATIC,220,19,
+                    211,164
+    GROUPBOX        "Outbound Proxy",IDC_STATIC,232,119,193,25
+    EDITTEXT        IDC_EDIT_OUTBOUND,291,127,123,13,ES_AUTOHSCROLL | 
+                    WS_GROUP
+    LTEXT           "Proxy URI",IDC_STATIC,247,130,37,8
+    GROUPBOX        "Local ports",IDC_STATIC,232,149,193,28
+    EDITTEXT        IDC_UDP_TCP_PORT,293,159,29,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    LTEXT           "UDP/TCP Port",IDC_STATIC,244,163,45,8
+    EDITTEXT        IDC_TLS_PORT,385,159,29,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "TLS Port",IDC_STATIC,353,162,28,8
+    EDITTEXT        IDC_EDIT_CERT_PATH,291,95,123,13,ES_AUTOHSCROLL | 
+                    WS_GROUP
+    LTEXT           "Cert Path",IDC_STATIC,252,97,32,8
+END
+
+IDD_DIALOG_ADD DIALOGEX 0, 0, 151, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTROL | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Add Buddy"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,15,54,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,82,54,50,14
+    GROUPBOX        "User name",IDC_STATIC,7,7,137,42,WS_GROUP
+    EDITTEXT        IDC_BUDDY_NAME,18,22,115,14,ES_AUTOHSCROLL | WS_GROUP
+END
+
+IDD_DIALOG_REBOOT DIALOGEX 0, 0, 157, 72
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,54,51,50,14
+    LTEXT           "These changes will take effect next time you restart the program. (Yah this is lame but at least you don't have to reboot)",
+                    IDC_STATIC,7,7,143,43
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,3,0,0
+ PRODUCTVERSION 0,3,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "Comments", "SIMPLE IM and Presense client"
+            VALUE "CompanyName", "www.sipimp.org"
+            VALUE "FileDescription", "SIP IM & P"
+            VALUE "FileVersion", "0.3.0.0"
+            VALUE "InternalName", "SipIMP.exe"
+            VALUE "LegalCopyright", "(c) All rights reserved."
+            VALUE "OriginalFilename", "SipIMP.exe"
+            VALUE "ProductName", "SipIMP"
+            VALUE "ProductVersion", "0.3.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
+    END
+
+    IDD_SIPIMP_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 404
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 245
+    END
+
+    IDD_DIALOG_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 438
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 214
+    END
+
+    IDD_DIALOG_ADD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 144
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 68
+    END
+
+    IDD_DIALOG_REBOOT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 150
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 65
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_MANIFEST
+//
+
+IDR_MANIFEST            RT_MANIFEST             "res\\SipIMP.manifest"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_DIALOG_CONFIG DLGINIT
+BEGIN
+    IDC_PROTOCOL, 0x403, 4, 0
+0x4455, 0x0050, 
+    IDC_PROTOCOL, 0x403, 4, 0
+0x4354, 0x0050, 
+    IDC_PROTOCOL, 0x403, 4, 0
+0x4c54, 0x0053, 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_ONLINE              BITMAP                  "res\\online.bmp"
+IDB_OFFLINE             BITMAP                  "res\\offline.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_ABOUTBOX            "&About SipIMP..."
+    IDS_USERNAME_TXT        "Enter user name on proxy or registrar"
+    IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#include "res\SipIMP.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
