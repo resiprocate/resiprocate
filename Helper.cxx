@@ -242,7 +242,9 @@ Helper::makeResponse(SipMessage& response,
                      const SipMessage& request, 
                      int responseCode, 
                      const NameAddr& myContact, 
-                     const Data& reason)
+                     const Data& reason,
+                     const Data& hostname,
+                     const Data& warning)
 {
    DebugLog(<< "Helper::makeResponse(" << request.brief() << " code=" << responseCode << " reason=" << reason);
    response.header(h_StatusLine).responseCode() = responseCode;
@@ -252,6 +254,15 @@ Helper::makeResponse(SipMessage& response,
    response.header(h_CSeq) = request.header(h_CSeq);
    response.header(h_Vias) = request.header(h_Vias);
    response.header(h_Contacts).push_front(myContact);
+
+   if (!warning.empty())
+   {
+      WarningCategory warn;
+      warn.code() = 499;
+      warn.hostname() = hostname;
+      warn.text() = warning;
+      response.header(h_Warnings).push_back(warn);
+   }
    
    // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.
    // No totag for failure responses or 100s
@@ -348,25 +359,29 @@ void
 Helper::makeResponse(SipMessage& response, 
                      const SipMessage& request, 
                      int responseCode, 
-                     const Data& reason)
+                     const Data& reason,
+                     const Data& hostname,
+                     const Data& warning)
 {
    NameAddr contact;
-   Helper::makeResponse(response, request, responseCode, contact, reason);
+   Helper::makeResponse(response, request, responseCode, contact, reason, hostname, warning);
 }
 
 SipMessage*
-Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr& contact, const Data& reason)
+Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr& contact, const Data& reason, 
+                     const Data& hostname, const Data& warning)
 {
    SipMessage* response = new SipMessage;
-   makeResponse(*response, request, responseCode, contact, reason);
+   makeResponse(*response, request, responseCode, contact, reason, hostname, warning);
    return response;
 }
 
 SipMessage*
-Helper::makeResponse(const SipMessage& request, int responseCode, const Data& reason)
+Helper::makeResponse(const SipMessage& request, int responseCode, 
+                     const Data& reason, const Data& hostname, const Data& warning)
 {
    NameAddr contact;
-   SipMessage* response = Helper::makeResponse(request, responseCode, contact, reason);
+   SipMessage* response = Helper::makeResponse(request, responseCode, contact, reason, hostname, warning);
    return response;
 }
 
