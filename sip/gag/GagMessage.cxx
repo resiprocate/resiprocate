@@ -165,12 +165,16 @@ GagImMessage::parse(istream &is)
   if (!GagMessage::parse(is, to)) return;
   if (!GagMessage::parse(is, from)) return;
   if (!GagMessage::parse(is, im)) return;
+  DebugLog ( << "Got IM from Gaim [from = '" << from 
+             << "' to = '" << to << "' im = '" << im << "']");
   valid = true;
 }
 
 ostream &
 GagImMessage::serialize(ostream &os) const
 {
+  DebugLog ( << "Sending IM to Gaim [from = '" << from 
+             << "' to = '" << to << "' im = '" << im << "']");
   GagMessage::serialize(os);
   GagMessage::serialize(os, to);
   GagMessage::serialize(os, from);
@@ -187,12 +191,18 @@ GagPresenceMessage::parse(istream &is)
   if (!GagMessage::parse(is, aor)) return;
   if (!GagMessage::parse(is, available)) return;
   if (!GagMessage::parse(is, status)) return;
+  DebugLog ( << "Got presence from Gaim [aor = '" << aor 
+             << "' available = '" << (available ? "true" : "false")
+             << "' status = '" << status << "']");
   valid = true;
 }
 
 ostream &
 GagPresenceMessage::serialize(ostream &os) const
 {
+  DebugLog ( << "Sending presence to Gaim [aor = '" << aor 
+             << "' available = '" << (available ? "true" : "false")
+             << "' status = '" << status << "']");
   GagMessage::serialize(os);
   GagMessage::serialize(os, aor);
   GagMessage::serialize(os, available);
@@ -207,12 +217,15 @@ GagHelloMessage::parse(istream &is)
 {
   valid = false;
   if (!GagMessage::parse(is, ok)) return;
+  DebugLog ( << "Got hello from Gaim [ ok = '" << (ok?"true":"false") << "']");
   valid = true;
 }
 
 ostream &
 GagHelloMessage::serialize(ostream &os) const
 {
+  DebugLog ( << "Sending hello to Gaim [ ok = '"
+             << (ok?"true":"false") << "']");
   GagMessage::serialize(os);
   GagMessage::serialize(os, ok);
   os.flush();
@@ -227,12 +240,18 @@ GagLoginMessage::parse(istream &is)
   if (!GagMessage::parse(is, aor)) return;
   if (!GagMessage::parse(is, userid)) return;
   if (!GagMessage::parse(is, password)) return;
+  DebugLog ( << "Got login from Gaim [aor = '" << aor 
+             << "' userid = '" << userid 
+             << "' password = '" << password << "']");
   valid = true;
 }
 
 ostream &
 GagLoginMessage::serialize(ostream &os) const
 {
+  DebugLog ( << "Sending login to Gaim [aor = '" << aor 
+             << "' userid = '" << userid 
+             << "' password = '" << password << "']");
   GagMessage::serialize(os);
   GagMessage::serialize(os, aor);
   GagMessage::serialize(os, userid);
@@ -246,6 +265,7 @@ void
 GagLogoutMessage::parse(istream &is)
 {
   valid = false;
+  DebugLog ( << "Got logout from Gaim [aor = '" << aor << "']");
   if (!GagMessage::parse(is, aor)) return;
   valid = true;
 }
@@ -255,6 +275,7 @@ GagLogoutMessage::serialize(ostream &os) const
 {
   GagMessage::serialize(os);
   GagMessage::serialize(os, aor);
+  DebugLog ( << "Sending logout to Gaim [aor = '" << aor << "']");
   os.flush();
   return os;
 }
@@ -265,12 +286,16 @@ GagAddBuddyMessage::parse(istream &is)
   valid = false;
   if (!GagMessage::parse(is, us)) return;
   if (!GagMessage::parse(is, them)) return;
+  DebugLog ( << "Got addbuddy from Gaim [them = '" << them 
+             << "' us = '" << us << "']");
   valid = true;
 }
 
 ostream &
 GagAddBuddyMessage::serialize(ostream &os) const
 {
+  DebugLog ( << "Sendinng addbuddy to Gaim [them = '" << them 
+             << "' us = '" << us << "']");
   GagMessage::serialize(os);
   GagMessage::serialize(os, us);
   GagMessage::serialize(os, them);
@@ -285,12 +310,16 @@ GagRemoveBuddyMessage::parse(istream &is)
   valid = false;
   if (!GagMessage::parse(is, us)) return;
   if (!GagMessage::parse(is, them)) return;
+  DebugLog ( << "Got removebuddy from Gaim [them = '" << them 
+             << "' us = '" << us << "']");
   valid = true;
 }
 
 ostream &
 GagRemoveBuddyMessage::serialize(ostream &os) const
 {
+  DebugLog ( << "Sending removebuddy to Gaim [them = '" << them 
+             << "' us = '" << us << "']");
   GagMessage::serialize(os);
   GagMessage::serialize(os, us);
   GagMessage::serialize(os, them);
@@ -303,12 +332,14 @@ GagErrorMessage::parse(istream &is)
 {
   valid = false;
   if (!GagMessage::parse(is, message)) return;
+  DebugLog ( << "Got error from Gaim [message = '" << message << "']");
   valid = true;
 }
 
 ostream &
 GagErrorMessage::serialize(ostream &os) const
 {
+  DebugLog ( << "Sending error to Gaim [message = '" << message << "']");
   GagMessage::serialize(os);
   GagMessage::serialize(os, message);
   os.flush();
@@ -322,12 +353,20 @@ GagLoginStatusMessage::parse(istream &is)
   if (!GagMessage::parse(is, success)) return;
   if (!GagMessage::parse(is, sipCode)) return;
   if (!GagMessage::parse(is, message)) return;
+  DebugLog ( << "Got loginstatus from Gaim [success = '" 
+             << (success ? "true":"false")
+             << "' sipcode = '" << sipCode
+             << "' message = '" << message << "']");
   valid = true;
 }
 
 ostream &
 GagLoginStatusMessage::serialize(ostream &os) const
 {
+  DebugLog ( << "Sending loginstatus to Gaim [success = '" 
+             << (success ? "true":"false")
+             << "' sipcode = '" << sipCode
+             << "' message = '" << message << "']");
   GagMessage::serialize(os);
   GagMessage::serialize(os, success);
   GagMessage::serialize(os, sipCode);
