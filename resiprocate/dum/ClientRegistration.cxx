@@ -13,7 +13,8 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
                                        SipMessage& request)
    : BaseUsage(dum, dialog),
      mHandle(dum),
-     mLastRequest(request)
+     mLastRequest(request),
+     mTimerSeq(0)
 {
    if (mLastRequest.exists(h_Contacts))
    {
@@ -61,7 +62,7 @@ ClientRegistration::removeBinding(const NameAddr& contact)
 void 
 ClientRegistration::removeAll()
 {
-   mOtherContacts.clear();
+   mAllContacts.clear();
    mMyContacts.clear();
    
    NameAddr all;
@@ -108,7 +109,7 @@ ClientRegistration::allContacts()
 {
     // !ah! need to combine mMyContacts
     assert(0);
-   return mOtherContacts;
+   return mAllContacts;
 }
 
 void
@@ -153,7 +154,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
       // !jf! consider what to do if no contacts
        // !ah! take list of ctcs and push into mMy or mOther as required.
 
-      mOtherContacts = msg.header(h_Contacts);
+      mAllContacts = msg.header(h_Contacts);
       // goes away -- updateMyContacts(mOtherContacts);
       if (!mMyContacts.empty())
       {
@@ -161,7 +162,8 @@ ClientRegistration::dispatch(const SipMessage& msg)
          mDum.addTimer(DumTimeout::Registration, 
                        Helper::aBitSmallerThan(mLastRequest.header(h_Expires).value()), 
                        getHandle(),
-                       mLastRequest.header(h_CSeq).sequence());
+                       ++mTimerSeq);
+         
       }
 
       mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
