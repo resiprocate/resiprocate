@@ -14,6 +14,13 @@ using namespace std;
 const Data Data::Empty("", 0);
 const int Data::npos = INT_MAX;
 
+bool
+Data::init()
+{
+   // !dlb! how do I init?
+   return true;
+}
+
 Data::Data() 
    : mSize(0),
      mBuf(mPreBuffer),
@@ -584,18 +591,11 @@ Data::operator=(const Data& data)
 size_t
 Data::truncate(size_type len)
 {
-    // size_type SHOULD be unsigned, but you never know...
-    if (len < 0)
-        len += mSize;
+   (*this)[len] = 0;
+   mSize = len;
 
-    if (len >= 0 && len < mSize)
-    {
-        mSize = len;
-        mBuf[mSize] = 0;
-    }
-    return mSize;
+   return mSize;
 }
-
 
 Data 
 Data::operator+(const Data& data) const

@@ -2,7 +2,7 @@
 #define RESIP_DATA_HXX 
 
 static const char* const resipDataHeaderVersion =
-   "$Id: Data.hxx,v 1.70 2003/10/18 01:08:11 alan Exp $";
+   "$Id: Data.hxx,v 1.71 2003/10/20 20:30:35 davidb Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -127,6 +127,8 @@ class Data
       static const Data Empty;
       static const int npos;
 
+      static bool init();
+
    private:
       Data(const char* buffer, int length, bool); // deprecated: use // Data(ShareEnum ...)
 
@@ -157,6 +159,9 @@ class Data
       friend class MD5Buffer;
       friend class Contents;
 };
+
+static bool invokeDataInit = Data::init();
+
 
 inline bool isEqualNoCase(const Data& left, const Data& right)
 {
@@ -195,7 +200,6 @@ operator+(const char* c, const Data& d)
    return Data(c) + d;
 }
 
- 
 }
 
 #if  defined(__INTEL_COMPILER )
