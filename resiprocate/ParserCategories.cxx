@@ -69,6 +69,12 @@ Token::operator=(const Token& rhs)
 }
 
 bool
+Token::operator==(const Token& rhs) const
+{
+   return (value() == rhs.value());
+}
+
+bool
 Token::operator<(const Token& rhs) const
 {
    return (value() < rhs.value());

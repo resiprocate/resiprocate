@@ -54,7 +54,7 @@ main(int arc, char** argv)
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
    {
-      TR _tr("Test iterator errase in ParserCategories");
+      TR _tr("Test iterator erase in ParserContainer");
 
       NameAddrs nameAddrs;
 
@@ -79,8 +79,26 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Test find in ParserContainer");
+
+      Tokens tokens;
+
+      tokens.push_back(Token("Foo"));
+      tokens.push_back(Token("Bar"));
+      tokens.push_back(Token("Baz"));
+      tokens.push_back(Token("Quux"));
+
+      assert(tokens.find(Token("Foo")));
+      assert(tokens.find(Token("Bar")));
+      assert(tokens.find(Token("Baz")));
+      assert(tokens.find(Token("Quux")));
+
+      assert(!tokens.find(Token("Zab")));
+   }
+
+   {
       TR _tr("Test remove parameters that appear multiple times");
-      Uri uri1("sip:a@b;type=1;maddr=local;type=2;maddr=remote;type=3;maddr=other");
+      Uri uri1("sip:a@b;xtype=1;maddr=local;xtype=2;maddr=remote;xtype=3;maddr=other");
       Uri uri2(uri1);
 
       uri1.remove(p_maddr);
@@ -89,10 +107,10 @@ main(int arc, char** argv)
          DataStream str(res1);
          str << uri1;
       }
-      assert(res1 == "sip:a@b;type=1;type=2;type=3");
+      assert(res1 == "sip:a@b;xtype=1;xtype=2;xtype=3");
 
-      UnknownParameterType p_type("type");
-      uri2.remove(p_type);
+      UnknownParameterType p_xtype("xtype");
+      uri2.remove(p_xtype);
       Data res2;
       {
          DataStream str(res2);
@@ -103,7 +121,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Test remove parameters that appear multiple times; mixed predefined and extensions");
-      Uri uri1("sip:a@b;type=1;maddr=local;foo=bar;ttl=17;type=2;maddr=remote;foo=baz;ttl=42;type=3;maddr=other;foo=foo;ttl=111");
+      Uri uri1("sip:a@b;xtype=1;maddr=local;foo=bar;ttl=17;xtype=2;maddr=remote;foo=baz;ttl=42;xtype=3;maddr=other;foo=foo;ttl=111");
       Uri uri2(uri1);
 
       uri1.remove(p_maddr);
@@ -112,10 +130,10 @@ main(int arc, char** argv)
          DataStream str(res1);
          str << uri1;
       }
-      assert(res1 == "sip:a@b;ttl=17;ttl=42;ttl=111;type=1;foo=bar;type=2;foo=baz;type=3;foo=foo");
+      assert(res1 == "sip:a@b;ttl=17;ttl=42;ttl=111;xtype=1;foo=bar;xtype=2;foo=baz;xtype=3;foo=foo");
 
-      UnknownParameterType p_type("type");
-      uri2.remove(p_type);
+      UnknownParameterType p_xtype("xtype");
+      uri2.remove(p_xtype);
       Data res2;
       {
          DataStream str(res2);
@@ -127,19 +145,19 @@ main(int arc, char** argv)
    {
       TR _tr("Test exists unknown parameter");
 
-      Uri uri1("sip:a@b;audio");
-      assert(uri1.exists(UnknownParameterType("audio")));
-      assert(uri1.param(UnknownParameterType("audio")) == Data::Empty);
+      Uri uri1("sip:a@b;xaudio");
+      assert(uri1.exists(UnknownParameterType("xaudio")));
+      assert(uri1.param(UnknownParameterType("xaudio")) == Data::Empty);
       
-      Uri uri2("sip:a@b;a=b;audio");
+      Uri uri2("sip:a@b;a=b;xaudio");
       cerr << uri2.param(UnknownParameterType("a")) << endl;
       
-      assert(uri2.exists(UnknownParameterType("audio")));
-      assert(uri2.param(UnknownParameterType("audio")) == Data::Empty);
+      assert(uri2.exists(UnknownParameterType("xaudio")));
+      assert(uri2.param(UnknownParameterType("xaudio")) == Data::Empty);
 
-      Uri uri3("sip:a@b;audio;a=b");
-      assert(uri3.exists(UnknownParameterType("audio")));
-      assert(uri3.param(UnknownParameterType("audio")) == Data::Empty);
+      Uri uri3("sip:a@b;xaudio;a=b");
+      assert(uri3.exists(UnknownParameterType("xaudio")));
+      assert(uri3.param(UnknownParameterType("xaudio")) == Data::Empty);
    }
 
    {
@@ -422,6 +440,25 @@ main(int arc, char** argv)
 
 #define checkParameterName(_name) cerr << ParameterTypes::_name << " " << ParameterTypes::ParameterNames[ParameterTypes::_name] << " = " << #_name << endl/*;assert(isEqualNoCase(ParameterTypes::ParameterNames[ParameterTypes::_name], #_name))*/
    {
+      checkParameterName(data);
+      checkParameterName(control);
+      checkParameterName(mobility);
+      checkParameterName(description);
+      checkParameterName(events);
+      checkParameterName(priority);
+      checkParameterName(methods);
+      checkParameterName(schemes);
+      checkParameterName(application);
+      checkParameterName(video);
+      checkParameterName(language);
+      checkParameterName(type);
+      checkParameterName(isFocus);
+      checkParameterName(actor);
+      checkParameterName(text);
+      checkParameterName(extensions);
+      checkParameterName(Instance);
+      checkParameterName(gruu);
+
       checkParameterName(transport);
       checkParameterName(user);
       checkParameterName(method);
@@ -438,7 +475,6 @@ main(int arc, char** argv)
       checkParameterName(duration);
       checkParameterName(branch);
       checkParameterName(received);
-      checkParameterName(mobility);
       checkParameterName(comp);
       checkParameterName(rport);
       checkParameterName(algorithm);
@@ -836,7 +872,7 @@ main(int arc, char** argv)
    }
    {
       TR _tr( "NameAddr parse, unquoted displayname, paramterMove");
-      Data nameAddrString("Bob<sips:bob@foo.com>;tag=456248;mobility=hobble");
+      Data nameAddrString("Bob<sips:bob@foo.com>;tag=456248;mobility=\"hobble\"");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv, Headers::UNKNOWN);
@@ -858,7 +894,7 @@ main(int arc, char** argv)
    }
    {
       TR _tr( "NameAddr parse, quoted displayname, parameterMove");
-      Data nameAddrString("\"Bob\"<sips:bob@foo.com>;tag=456248;mobility=hobble");
+      Data nameAddrString("\"Bob\"<sips:bob@foo.com>;tag=456248;mobility=\"hobble\"");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv, Headers::UNKNOWN);
@@ -881,7 +917,7 @@ main(int arc, char** argv)
    }
    {
       TR _tr( "NameAddr parse, unquoted displayname, paramterMove");
-      Data nameAddrString("Bob<sips:bob@foo.com;tag=456248;mobility=hobble>");
+      Data nameAddrString("Bob<sips:bob@foo.com;tag=456248;mobility=\"hobble\">");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv, Headers::UNKNOWN);
