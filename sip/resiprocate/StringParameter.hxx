@@ -18,7 +18,7 @@ class StringParameter : public Parameter
       StringParameter(ParamType type, const std::string& data);
       
       std::string& getData();
-
+      virtual Parameter* clone() const;
    private:
 
       std::string mData;
