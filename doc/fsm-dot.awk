@@ -1,3 +1,4 @@
+# For making the Preparse FSM diagram
 BEGIN {
   printf "digraph pp_fsm {\nsize=\"10,8\"\nratio=0.8\nrotate=90\n";
   printf "compound=true\nfontsize=18\nfontname=\"Helvetica\"\n";
@@ -11,6 +12,7 @@ BEGIN {
   line = gensub("\/\/.*$","",g);
   line = gensub("^[ ]*AE\\(","","g",line);
   line = gensub("[\);]","","g",line);
+  line = gensub("act","","g",line);
 
   split(line,f,",");
 
