@@ -1,11 +1,11 @@
-# $Id: Makefile,v 1.10 2002/09/21 19:25:37 jason Exp $
+# $Id: Makefile,v 1.11 2002/09/21 19:54:38 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
 
 PROG = sipstack
 
-SRC = Condition.cxx Lock.cxx Mutex.cxx Transport.cxx UdpTransport.cxx Log.cxx  Subsystem.cxx Data.cxx 
+SRC = Condition.cxx Lock.cxx Mutex.cxx Transport.cxx UdpTransport.cxx Log.cxx  Subsystem.cxx Data.cxx Preparse.cxx
 
 
 OSRC =   *.hxx Makefile
@@ -38,7 +38,7 @@ OBJS = $(patsubst %.cxx,$(OBJ)/%.o,$(SRC))
 
 all: $(OBJ) $(BIN) $(BIN)/libSipStack.a
 
-doc: html html/HIER.html html/sipStack.html
+doc: html html/HIER.html html/sipStack.html fsm.pdf
 
 clean:
 	-rm -f *.rpo core *~ \#* .make* *.a *.d
@@ -63,6 +63,15 @@ html/HIER.html: *hxx
 html/sipStack.html: *.cxx *.hxx 
 	cvs2html -a -k -o html
 
+fsm.dot: Preparse.cxx dot.awk
+	awk -f dot.awk Preparse.cxx > fsm.dot
+
+%.pdf: %.ps
+	ps2pdf13 $<
+
+%.ps: %.dot
+	dot -Tps -o$@ $<
+
 $(OBJ)/%.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -82,6 +91,9 @@ testSubComponentList:  $(OBJS) $(OBJ)/testSubComponentList.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 testUdp:  $(OBJS) $(OBJ)/testUdp.o
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+testPreparse: $(OBJ)/Preparse.o $(OBJ)/testPreparse.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 
