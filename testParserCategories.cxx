@@ -30,7 +30,7 @@ main(int arc, char** argv)
    }
    
    {
-      // simple Token parse test
+      cerr << "simple Token parse test" << endl;
       char *org = "WuggaWuggaFoo";
       
       HeaderFieldValue hfv(org, strlen(org));
@@ -39,32 +39,28 @@ main(int arc, char** argv)
    }
 
    {
-      // Token + parameters parse test
+      cerr << "Token + parameters parse test" << endl;
       char *org = "WuggaWuggaFoo;ttl=2";
       
       HeaderFieldValue hfv(org, strlen(org));
       Token tok(&hfv);
-      cerr << tok.value() << endl;
       assert(tok.value() == "WuggaWuggaFoo");
-      cerr << tok.param(p_ttl) << endl;
       assert(tok.param(p_ttl) == 2);
-      cerr << tok;
    }
 
    {
-      // full on via parse
+      cerr << "full on via parse" << endl;
       char *viaString = /* Via: */ " SIP/2.0/UDP a.b.c.com:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv);
-      cerr << via << endl;
       assert(via.sentPort() == 5000);
       assert(via.sentHost() == "a.b.c.com");
       assert(via.param(p_maddr) == "1.2.3.4");
    }
 
    {
-      // URI parse
+      cerr << "URI parse" << endl;
       char *uriString = "sip:bob@foo.com";
       ParseBuffer pb(uriString);
       Uri uri;
@@ -76,7 +72,7 @@ main(int arc, char** argv)
    }
 
    {
-      // URI parse
+      cerr << "URI parse, no displayName" << endl;
       char *uriString = "sips:foo.com";
       ParseBuffer pb(uriString);
       Uri uri;
@@ -88,19 +84,7 @@ main(int arc, char** argv)
    }
 
    {
-      // URI parse
-      char *uriString = "sips:foo.com";
-      ParseBuffer pb(uriString);
-      Uri uri;
-      uri.parse(pb);
-      assert(uri.scheme() == "sips");
-      assert(uri.user() == "");
-      assert(uri.host() == "foo.com");
-      assert(uri.port() == 5060);
-   }
-
-   {
-      // URI parse
+      cerr << "URI parse, parameters" << endl;
       char *uriString = "sips:bob;param=gargle:password@foo.com";
       ParseBuffer pb(uriString);
       Uri uri;
@@ -113,7 +97,7 @@ main(int arc, char** argv)
    }
 
    {
-      // URI parse
+      cerr << "URI parse, parameters, port" << endl;
       char *uriString = "sips:bob;param=gargle:password@foo.com:6000";
       ParseBuffer pb(uriString);
       Uri uri;
@@ -126,7 +110,7 @@ main(int arc, char** argv)
    }
 
    {
-      // URI parse
+      cerr << "URI parse, parameters, correct termination check" << endl;
       char *uriString = "sips:bob;param=gargle:password@foo.com notHost";
       ParseBuffer pb(uriString);
       Uri uri;
@@ -139,7 +123,7 @@ main(int arc, char** argv)
    }
 
    {
-      // Request Line parse
+      cerr << "Request Line parse" << endl;
       char *requestLineString = "INVITE sips:bob@foo.com SIP/2.0";
       HeaderFieldValue hfv(requestLineString, strlen(requestLineString));
 
@@ -153,7 +137,7 @@ main(int arc, char** argv)
       assert(requestLine.getSipVersion() == "SIP/2.0");
    }
    {
-      // Request Line parse
+      cerr << "Request Line parse, parameters" << endl;
       char *requestLineString = "INVITE sips:bob@foo.com;maddr=1.2.3.4 SIP/2.0";
       HeaderFieldValue hfv(requestLineString, strlen(requestLineString));
 
@@ -169,7 +153,7 @@ main(int arc, char** argv)
       assert(requestLine.getSipVersion() == "SIP/2.0");
    }
    {
-      // NameAddr parse
+      cerr << "NameAddr parse" << endl;
       char *nameAddrString = "sips:bob@foo.com";
       HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
 
@@ -180,7 +164,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().port() == 5060);
    }
    {
-      // NameAddr parse
+      cerr << "NameAddr parse, displayName" << endl;
       char *nameAddrString = "Bob<sips:bob@foo.com>";
       HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
 
@@ -192,7 +176,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().port() == 5060);
    }
    {
-      // NameAddr parse
+      cerr << "NameAddr parse, quoted displayname" << endl;
       char *nameAddrString = "\"Bob\"<sips:bob@foo.com>";
       HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
 
@@ -204,7 +188,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().port() == 5060);
    }
    {
-      // NameAddr parse
+      cerr << "NameAddr parse, quoted displayname, embedded quotes" << endl;
       char *nameAddrString = "\"Bob   \\\" asd   \"<sips:bob@foo.com>";
       HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
 

@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <iostream>
 #include <cassert>
 
 #include <util/Data.hxx>
@@ -7,7 +6,7 @@
 #include <util/ParseBuffer.hxx>
 #include <sipstack/ParserCategories.hxx>
 #include <sipstack/Uri.hxx>
-
+#include <iostream>
 
 using namespace Vocal2;
 using namespace std;
@@ -23,14 +22,13 @@ Token::Token(const Token& rhs)
 {}
 
 void
-Token::parse()
+Token::parse(ParseBuffer& pb)
 {
-   ParseBuffer buff(mHeaderField->mField, mHeaderField->mFieldLength);
-   const char* startMark = buff.skipWhitespace();
-   buff.skipToOneOf(ParseBuffer::WhitespaceOrSemiColon);
-   mValue = Data(startMark, buff.position() - startMark);
-   buff.skipToChar(Symbols::SEMI_COLON[0]);
-   parseParameters(buff);
+   const char* startMark = pb.skipWhitespace();
+   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+   mValue = pb.data(startMark);
+   pb.skipToChar(Symbols::SEMI_COLON[0]);
+   parseParameters(pb);
 }
 
 ParserCategory* 
@@ -57,7 +55,7 @@ Mime::Mime(const Mime& rhs)
 }
 
 void
-Mime::parse()
+Mime::parse(ParseBuffer& pb)
 {
    assert(0);
 }
@@ -83,7 +81,7 @@ Auth::Auth(const Auth& rhs)
 {}
 
 void
-Auth::parse()
+Auth::parse(ParseBuffer& pb)
 {
    assert(0);
 }
@@ -128,27 +126,16 @@ CSeqCategory::clone() const
 // "CSeq:\t\t  \t15\t\t\t    \t"  // bad
 
 void
-CSeqCategory::parse()
+CSeqCategory::parse(ParseBuffer& pb)
 {
-   // !jf! this does not need to copy the memory until after parsing - see Token
-   Data number;
-   Data method = Data(mHeaderField->mField, mHeaderField->mFieldLength);
-   int ret = method.match(" ", &number, true);
-   if (ret == FOUND)
-   {
-      mSequence = number.convertInt();
-      mMethod = getMethodType(method);
-   }
-   else if (ret == NOT_FOUND)
-   {
-      DebugLog(<< "Failed to parse CSeq: " << Data(mHeaderField->mField, mHeaderField->mFieldLength));
-      throw ParseException("failed parse of CSeq", __FILE__,__LINE__);
-   }
-   else if (ret == FIRST)
-   {
-      DebugLog(<< "Failed to parse CSeq: " << Data(mHeaderField->mField, mHeaderField->mFieldLength));
-      throw ParseException("failed parse of CSeq", __FILE__,__LINE__);
-   }
+   const char* start;
+   start = pb.skipWhitespace();
+   mSequence = atoi(start);
+
+   pb.skipNonWhitespace();
+   start = pb.skipWhitespace();
+   pb.skipNonWhitespace(); // .dcm. maybe pass an arg that says throw if you don't move
+   mMethod = getMethodType(pb.data(start));
 }
 
 std::ostream& 
@@ -167,7 +154,7 @@ DateCategory::DateCategory(const DateCategory& rhs)
 {}
 
 void
-DateCategory::parse()
+DateCategory::parse(ParseBuffer& pb)
 {
    mValue = Data(getHeaderField().mField, getHeaderField().mFieldLength);
 }
@@ -194,7 +181,7 @@ WarningCategory::WarningCategory(const WarningCategory& rhs)
 }
 
 void
-WarningCategory::parse()
+WarningCategory::parse(ParseBuffer& pb)
 {
    assert(0);
 }
@@ -225,77 +212,25 @@ ParserCategory* IntegerCategory::clone() const
 }
 
 void
-IntegerCategory::parse()
+IntegerCategory::parse(ParseBuffer& pb)
 {
-
-  Data rawdata = Data(mHeaderField->mField, mHeaderField->mFieldLength);
-
-  // look for a comment
-  Data comment;
-  int retn = rawdata.match("(", &comment, true);
-  Data params;
-
-  // Starts with a comment, bad
-  if (retn == FIRST)
-  {
-     DebugLog(<< "Failed to parse Integer: " << Data(mHeaderField->mField, mHeaderField->mFieldLength));
-     throw ParseException("failed parse of Integer", __FILE__,__LINE__);
-  }
-
-  // we have a comment, handle it
-  else if (retn == FOUND)
-  {
-     // right now only look to verify that they close
-     // we really need to also look for escaped \) parens (or anything
-     // else for that matter) and also replace cr lf with two spaces
-      
-     Data remainder;
-     retn = comment.match(")", &remainder, true);
-      
-     // if it is not found, they never close, if it is first, the comment
-     // is empty. Either is illegal
-     if (retn != FOUND)
-     {
-        DebugLog(<< "Failed to parse Integer: " << Data(mHeaderField->mField, mHeaderField->mFieldLength));
-        throw ParseException("failed parse of Integer", __FILE__,__LINE__);
-     }
-
-     mComment = comment;
-
-     // we should immediately see a ; or nothing, so see if there 
-     // is anything after the )
-      
-     if (remainder.size() != 0)
-     {
-        retn = remainder.match(";", &params, true);
-        if (retn != FIRST)
-        {
-           // something between the comment and the ;, or something
-           // after the ) and no ;. Both are bad.
-           DebugLog(<< "Failed to parse Integer: " << Data(mHeaderField->mField, mHeaderField->mFieldLength));
-           throw ParseException("failed parse of Integer", __FILE__,__LINE__);
-        }
-        else
-        {
-           // walk params and populate list
-        }
-     }
-      
-     mValue = rawdata.convertInt();
-  }
-  
-  // no comment
-  else if (retn == NOT_FOUND)
-  {
-      
-     int ret = rawdata.match(";", &params, true);
-     if (ret == FOUND)
-     {
-        // walk params and populate list
-     }
-     
-     mValue = rawdata.convertInt();
-  }
+   const char* start = pb.skipWhitespace();
+   mValue = atoi(start);
+   pb.skipToChar('(');
+   if (!pb.eof())
+   {
+      start = pb.skipChar();
+      pb.skipToEndQuote(')');
+      mComment = pb.data(start);
+      pb.skipChar();
+   }
+   else
+   {
+      pb.reset(start);
+      start = pb.skipNonWhitespace();
+   }
+   
+   parseParameters(pb);
 }
 
 std::ostream& 
@@ -303,9 +238,11 @@ IntegerCategory::encode(std::ostream& str) const
 {
   str << mValue;
   if (!mComment.empty())
-    {
-      str << "(" << mComment << ")";
-    }
+  {
+     str << "(" << mComment << ")";
+  }
+  
+  encodeParameters(str);
   
   // call encode on the list to get params
   return str;
@@ -325,7 +262,7 @@ StringCategory::clone() const
 }
 
 void 
-StringCategory::parse()
+StringCategory::parse(ParseBuffer& pb)
 {
    mValue = Data(getHeaderField().mField, getHeaderField().mFieldLength);
 }
@@ -345,7 +282,7 @@ GenericURI::GenericURI(const GenericURI& rhs)
 {}
 
 void
-GenericURI::parse()
+GenericURI::parse(ParseBuffer& pb)
 {
    assert(0);
 }
@@ -378,52 +315,47 @@ Via::clone() const
 }
 
 void
-Via::parse()
+Via::parse(ParseBuffer& pb)
 {
-   ParseBuffer buff(mHeaderField->mField, mHeaderField->mFieldLength);
    const char* startMark;
-   const char* endMark;
-   startMark = buff.skipWhitespace();
-   endMark = buff.skipToOneOf(ParseBuffer::WhitespaceOrSlash);
-   mProtocolName = Data(startMark, endMark - startMark);
-   buff.skipToChar('/');
-   buff.skipChar();
-   startMark = buff.skipWhitespace();
-   endMark = buff.skipToOneOf(ParseBuffer::WhitespaceOrSlash);
-   mProtocolVersion = Data(startMark, endMark - startMark);
+   startMark = pb.skipWhitespace();
+   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SLASH);
+   mProtocolName = pb.data(startMark);
+   pb.skipToChar('/');
+   pb.skipChar();
+   startMark = pb.skipWhitespace();
+   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SLASH);
+   mProtocolVersion = pb.data(startMark);
 
-   buff.skipToChar('/');
-   buff.skipChar();
-   startMark = buff.skipWhitespace();
-   endMark = buff.skipNonWhitespace();
-   mTransport = Data(startMark, endMark - startMark);
+   pb.skipToChar('/');
+   pb.skipChar();
+   startMark = pb.skipWhitespace();
+   pb.skipNonWhitespace();
+   mTransport = pb.data(startMark);
 
-   startMark = buff.skipWhitespace();
+   startMark = pb.skipWhitespace();
    if (*startMark == '[')
    {
-      buff.skipToChar(']');
-      endMark = buff.skipChar();
+      pb.skipToChar(']');
+      pb.skipChar();
    }
    else
    {
-      endMark = buff.skipToOneOf(ParseBuffer::SemiColonOrColon);
+      pb.skipToOneOf(";:");
    }
-   mSentHost = Data(startMark, endMark - startMark);
-   endMark = buff.skipToOneOf(";:");
-   if (*endMark == ':')
+   mSentHost = pb.data(startMark);
+   pb.skipToOneOf(";:");
+   if (*pb.position() == ':')
    {
-      startMark = buff.skipChar();
-      endMark = buff.skipToOneOf(ParseBuffer::WhitespaceOrSemiColon);
+      startMark = pb.skipChar();
+      pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
       mSentPort = atoi(startMark);
    }
    else
    {
       mSentPort = Symbols::DefaultSipPort;
    }
-   if (*endMark == Symbols::SEMI_COLON[0])
-   {
-      parseParameters(buff);
-   }
+   parseParameters(pb);
 }
 
 ostream&
@@ -450,15 +382,20 @@ CallId::clone() const
 }
 
 void
-CallId::parse()
+CallId::parse(ParseBuffer& pb)
 {
-   assert(0);
+   const char* start = pb.skipWhitespace();
+   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+   mValue = pb.data(start);
+   
+   parseParameters(pb);
 }
 
 ostream&
 CallId::encode(ostream& str) const
 {
    str << mValue;
+   encodeParameters(str);
    return str;
 }
 
@@ -481,9 +418,8 @@ NameAddr::clone() const
 }
 
 void
-NameAddr::parse()
+NameAddr::parse(ParseBuffer& pb)
 {
-   ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength);
    const char* start;
    start = pb.skipWhitespace();
    bool laQuote = false;
@@ -492,7 +428,7 @@ NameAddr::parse()
       pb.skipChar();
       pb.skipToEndQuote();
       pb.skipChar();
-      mDisplayName = Data(start, pb.position() - start);
+      mDisplayName = pb.data(start);
       laQuote = true;
       pb.skipToChar(Symbols::LA_QUOTE[0]);
       if (pb.eof())
@@ -519,7 +455,7 @@ NameAddr::parse()
       }
       else
       {
-         mDisplayName = Data(start, pb.position() - start);
+         mDisplayName = pb.data(start);
          pb.skipChar();
       }
    }
@@ -537,7 +473,20 @@ NameAddr::parse()
 ostream&
 NameAddr::encode(ostream& str) const
 {
-   assert(0);
+   if (!mDisplayName.empty())
+   {
+      str << mDisplayName << Symbols::LA_QUOTE;
+   }
+
+   assert(mUri != 0);
+   mUri->encode(str);
+   
+   if (!mDisplayName.empty())
+   {
+      str << Symbols::RA_QUOTE;
+   }
+   
+   encodeParameters(str);
    return str;
 }
 
@@ -562,9 +511,8 @@ RequestLine::clone() const
 }
 
 void 
-RequestLine::parse()
+RequestLine::parse(ParseBuffer& pb)
 {
-   ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength);
    const char* start;
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
@@ -575,7 +523,7 @@ RequestLine::parse()
    parseParameters(pb);
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
-   mSipVersion = Data(start, pb.position() - start);
+   mSipVersion = pb.data(start);
 }
 
 ostream&
@@ -604,9 +552,19 @@ StatusLine::clone() const
 }
 
 void
-StatusLine::parse()
+StatusLine::parse(ParseBuffer& pb)
 {
-   assert(0);
+   const char* start = pb.skipWhitespace();
+   pb.skipNonWhitespace();
+   mSipVersion = pb.data(start);
+
+   start = pb.skipWhitespace();
+   mResponseCode = atoi(start);
+   start = pb.skipNonWhitespace();
+
+   start = pb.skipChar(' ');
+   pb.reset(pb.end());
+   mReason = pb.data(start);
 }
 
 ostream&

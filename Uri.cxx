@@ -38,7 +38,7 @@ Uri::parse(ParseBuffer& pb)
       {
          pb.reset(start);
          start = pb.position();
-         pb.skipToOneOf(ParseBuffer::ColonOrAtSign);
+         pb.skipToOneOf(":@");
          mUser = Data(start, pb.position() - start);
          if (*pb.position() == Symbols::COLON[0])
          {
@@ -59,14 +59,14 @@ Uri::parse(ParseBuffer& pb)
       }
       else
       {
-         pb.skipToOneOf(ParseBuffer::WhitespaceOrColonOrSemiColonOrRAQuote);
+         pb.skipToOneOf(ParseBuffer::Whitespace, ":;>");
       }
       mHost = Data(start, pb.position() - start);
-      pb.skipToOneOf(ParseBuffer::WhitespaceOrColonOrSemiColonOrRAQuote);
+      pb.skipToOneOf(ParseBuffer::Whitespace, ":;>");
       if (*pb.position() == ':')
       {
          start = pb.skipChar();
-         pb.skipToOneOf(ParseBuffer::WhitespaceOrSemiColonOrRAQuote);
+         pb.skipToOneOf(ParseBuffer::Whitespace, ";>");
          mPort = atoi(start);
       }
       else

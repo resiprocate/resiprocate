@@ -25,12 +25,8 @@ class Parameter
 
       virtual bool isQuoted() const { return false; } // only on DataParameter
       virtual void setQuoted(bool b) { }; // only on DataParameter
-     
-      Parameter* next;
    private:
-
       ParameterTypes::Type mType;
-
 };
 
 }

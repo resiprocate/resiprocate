@@ -51,16 +51,17 @@
 
 
 static const char* const VException_cxx_Version =
-    "$Id: VException.cxx,v 1.2 2002/09/29 23:41:01 fluffy Exp $";
+    "$Id: VException.cxx,v 1.3 2002/10/02 23:08:16 jason Exp $";
 
 
 //#include "global.h"
-#include "cpLog.h"
-#include "VException.hxx"
+#include <util/VException.hxx>
+#include <util/Logger.hxx>
 
 using namespace Vocal2;
 using namespace std;
 
+#define VOCAL_SUBSYSTEM Vocal2::Subsystem::NONE
 
 VException::VException( const Data& msg,
                         const Data& file,
@@ -71,9 +72,8 @@ VException::VException( const Data& msg,
         lineNumber( line ),
         errorCode( error )
 {
-   cpLog(LOG_DEBUG, "Exception at %s:%d %s", file.c_str(), line, message.c_str());
+   DebugLog(<< "Exception at " << file << ":" << line << " " << message);
 }
-
 
 VException::~VException()
     throw()
@@ -97,20 +97,12 @@ VException::log( void ) const
 {
     if ( errorCode )
     {
-        cpLog( LOG_DEBUG,
-               "%s: %d at %s:%d\n",
-               getDescription().c_str(),
-               errorCode,
-               fileName.c_str(),
-               lineNumber );
+       DebugLog(<< getDescription() << ": " << errorCode
+                << " at " << fileName << ":" << lineNumber);
     }
     else
     {
-        cpLog( LOG_DEBUG,
-               "%s at %s:%d\n",
-               getDescription().c_str(),
-               fileName.c_str(),
-               lineNumber );
+       DebugLog(<< getDescription() << " at " << fileName << ":" << lineNumber);
     }
 }
 
