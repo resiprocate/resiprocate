@@ -118,14 +118,15 @@ class DialogUsageManager
       void addTimer(DumTimer::Type type, unsigned long duration, int cseq, int rseq=-1);
 
       ClientInviteSession* makeClientInviteSession(Dialog& dialog,const SipMessage& msg);
-      ServerInviteSession* makeServerInviteSession(Dialog& dialog,const SipMessage& msg);
       ClientSubscription* makeClientSubscription(Dialog& dialog,const SipMessage& msg);
-      ServerSubscription* makeServerSubscription(Dialog& dialog,const SipMessage& msg);
       ClientRegistration* makeClientRegistration(Dialog& dialog,const SipMessage& msg);
-      ServerRegistration* makeServerRegistration(Dialog& dialog,const SipMessage& msg);
       ClientPublication* makeClientPublication(Dialog& dialog, const SipMessage& msg);
-      ServerPublication* makeServerPublication(Dialog& dialog,const SipMessage& msg);
       ClientOutOfDialogReq* makeClientOutOfDialog(Dialog& dialog,const SipMessage& msg);
+
+      ServerInviteSession* makeServerInviteSession(Dialog& dialog,const SipMessage& msg);
+      ServerSubscription* makeServerSubscription(Dialog& dialog,const SipMessage& msg);
+      ServerRegistration* makeServerRegistration(Dialog& dialog,const SipMessage& msg);
+      ServerPublication* makeServerPublication(Dialog& dialog,const SipMessage& msg);
       ServerOutOfDialogReq* makeServerOutOfDialog(Dialog& dialog,const SipMessage& msg);
 
       // delete the usage, remove from usage handle map
