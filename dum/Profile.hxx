@@ -98,6 +98,10 @@ class Profile
       bool& looseToTagMatching();      
       const bool looseToTagMatching() const;      
 
+      //enable/disable rport for requests. rport is enabled by feault
+      bool& rportEnabled();      
+      const bool rportEnabled() const;      
+
    private:
       NameAddr mDefaultFrom;
       int mDefaultRegistrationExpires;
@@ -116,6 +120,8 @@ class Profile
       DigestCredentialHandler* mDigestCredentialHandler;
 
       bool mLooseToTagMatching;
+      bool mRportEnabled;
+      
       
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
