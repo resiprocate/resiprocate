@@ -43,7 +43,7 @@ using namespace resip;
 
 SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) : 
 #ifdef USE_SSL
-   mSecurity( pSecurity ? pSecurity : new Security(true,true)),
+   mSecurity( pSecurity ? pSecurity : new Security("~/")),
 #else
    mSecurity(0),
 #endif
