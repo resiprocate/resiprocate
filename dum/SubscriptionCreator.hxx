@@ -14,6 +14,8 @@ class SubscriptionCreator : public BaseCreator
       SubscriptionCreator(const Data& event);
       
       void makeNewSubscription(const SipMessage& notify);
+
+      virtual void dispatch(SipMessage& msg);
       
   private:
     Data mEvent; 
