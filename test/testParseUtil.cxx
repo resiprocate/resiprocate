@@ -50,17 +50,42 @@ main(int argc, char* argv[])
       cerr << "!! "<< addr << endl;
       assert(ParseUtil::isIpV6Address(addr));
    }
-   
+
    {
       Data addr("192.168.2.233");
       cerr << "!! "<< addr << endl;
-      assert(!ParseUtil::isIpV6Address(addr));      
+      assert(!ParseUtil::isIpV6Address(addr));
    }
 
    {
       Data addr("u@a.tv:1290");
       cerr << "!! "<< addr << endl;
-      assert(!ParseUtil::isIpV6Address(addr));      
+      assert(!ParseUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("::1");
+      cerr << "!! "<< addr << endl;
+      assert(ParseUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("::");
+      cerr << "!! "<< addr << endl;
+      assert(ParseUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data addr("FF01::43");
+      cerr << "!! "<< addr << endl;
+      assert(ParseUtil::isIpV6Address(addr));
+   }
+
+   {
+      Data c("apple:5060");
+      Data addr(Data::Share, c.c_str(), 5);
+      cerr << "!! " << addr << endl;
+      assert(!ParseUtil::isIpV6Address(addr));
    }
 
    cerr << "All OK" << endl;
