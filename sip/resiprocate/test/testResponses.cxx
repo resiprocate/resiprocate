@@ -1,4 +1,6 @@
+#if defined(HAVE_CONFIG_H)
 #include "resiprocate/config.hxx"
+#endif
 
 #if defined (HAVE_POPT_H) 
 #include <popt.h>
