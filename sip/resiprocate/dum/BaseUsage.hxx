@@ -36,7 +36,7 @@ class BaseUsage
          protected:
             Handle(DialogUsageManager& dum);
 
-	    bool isValid() const;
+            bool isValid() const;
             // throws if not found
             BaseUsage* get();
          private:
