@@ -733,17 +733,17 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
 void
 InviteSession::dispatchTerminated(const SipMessage& msg)
 {
-   Destroyer::Guard guard(mDestroyer);
    if (msg.isRequest())
    {
       SipMessage response;
       mDialog.makeResponse(response, msg, 481);
       mDialog.send(response);
-      guard.destroy();
+      
+      mDum.destroy(this);
    }
    else 
    {
-      guard.destroy();
+      mDum.destroy(this);
    }
 }
 
@@ -858,7 +858,6 @@ InviteSession::dispatchCancel(const SipMessage& msg)
 void
 InviteSession::dispatchBye(const SipMessage& msg)
 {
-   Destroyer::Guard guard(mDestroyer);
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
    if (msg.isRequest())
@@ -872,7 +871,7 @@ InviteSession::dispatchBye(const SipMessage& msg)
 
       // !jf! should we make some other callback here
       handler->onTerminated(getSessionHandle(), msg);
-      guard.destroy();
+      mDum.destroy(this);
    }
    else
    {
