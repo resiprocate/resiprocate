@@ -58,13 +58,15 @@ class Dialog
       //returns an invalid handle if there is no session
       InviteSessionHandle getInviteSession();
       
-      void cancel();
       void end();
       void dispatch(const SipMessage& msg);
       void processNotify(const SipMessage& notify);
       
       //will end this dialog(if it makes sense)
       void redirected(const SipMessage& msg);      
+
+      void onForkAccepted();      
+      void cancel();
 
    private:
       virtual ~Dialog();
@@ -97,6 +99,10 @@ class Dialog
       
       ServerInviteSession*  makeServerInviteSession(const SipMessage& msg);
       ServerSubscription* makeServerSubscription(const SipMessage& msg);
+
+      //matches using tid of response
+      bool matches(const SipMessage& msg);      
+      void handleTargetRefresh(const SipMessage& msg);
 
       DialogUsageManager& mDum;
       DialogSet& mDialogSet;

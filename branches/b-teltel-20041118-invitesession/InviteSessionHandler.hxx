@@ -49,6 +49,10 @@ class InviteSessionHandler
       } TerminatedReason;
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;
 
+      // called when a fork that was created through a 1xx never receives a 2xx
+      // because another fork answered and this fork was canceled by a proxy. 
+      virtual void onForkDestroyed(ClientInviteSessionHandle)=0;
+
       /// called when a 3xx with valid targets is encountered in an early dialog     
       /// This is different then getting a 3xx in onTerminated, as another
       /// request will be attempted, so the DialogSet will not be destroyed.

@@ -131,6 +131,9 @@ DumTimeout::encode(std::ostream& strm) const
       case Cancelled:
          strm <<"Cancelled";
          break;
+      case WaitingForForked2xx:
+         strm <<"WaitingForForked2xx";
+         break;
    }
 
    strm << ": duration=" << mDuration << " seq=" << mSeq;

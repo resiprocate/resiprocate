@@ -369,28 +369,30 @@ ClientRegistration::dispatch(const DumTimeout& timer)
 {
    switch(timer.type())
    {
-   case DumTimeout::Registration:
-      // If you happen to be Adding/Updating when the timer goes off, you should just ignore
-      // it since a new timer will get added when the 2xx is received.
-      if (timer.seq() == mTimerSeq && mState == Registered)
-      {
-         if (!mMyContacts.empty())
+      case DumTimeout::Registration:
+         // If you happen to be Adding/Updating when the timer goes off, you should just ignore
+         // it since a new timer will get added when the 2xx is received.
+         if (timer.seq() == mTimerSeq && mState == Registered)
          {
-            requestRefresh();
+            if (!mMyContacts.empty())
+            {
+               requestRefresh();
+            }
          }
-      }
-      break;
+         break;
 
-   case DumTimeout::RegistrationRetry:
-      if(timer.seq() == mTimerSeq)
-      {
-         assert(mState == Adding || mState == Refreshing);
+      case DumTimeout::RegistrationRetry:
+         if(timer.seq() == mTimerSeq)
+         {
+            assert(mState == Adding || mState == Refreshing);
 
-         // Resend last request
-         mLastRequest.header(h_CSeq).sequence()++;
-         mDum.send(mLastRequest);
-      }
-      break;
+            // Resend last request
+            mLastRequest.header(h_CSeq).sequence()++;
+            mDum.send(mLastRequest);
+         }
+         break;
+      default:
+         break;
    }
 }
 
