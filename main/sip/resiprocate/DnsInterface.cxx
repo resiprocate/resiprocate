@@ -25,29 +25,7 @@ using namespace resip;
 #error Must have ARES
 #endif
 
-const Data DnsInterface::UdpOnly[] =
-{
-   Data("SIP+D2U"),
-   Data::Empty
-};
-
-const Data DnsInterface::TcpAndUdp[] =
-{
-   Data("SIP+D2T"),
-   Data("SIP+D2U"),
-   Data::Empty
-};
-
-const Data DnsInterface::AllTransports[] =
-{
-   Data("SIPS+D2T"),
-   Data("SIP+D2T"),
-   Data("SIP+D2U"),
-   Data::Empty
-};
-
 DnsInterface::DnsInterface(bool sync)
-   : mSupportedTransports(&TcpAndUdp)
 {
    assert(sync == false);
    int status=0;
@@ -59,6 +37,10 @@ DnsInterface::DnsInterface(bool sync)
       ares_free_errmem(errmem);
       throw Exception("failed to initialize ares", __FILE__,__LINE__);
    }
+   
+   addTransportType(UDP);
+   addTransportType(TCP);
+   addTransportType(TLS);   
 }
 
 DnsInterface::~DnsInterface()
@@ -67,42 +49,49 @@ DnsInterface::~DnsInterface()
 }
 
 void 
-DnsInterface::setSupportedTransports(TransportArray& transports)
+DnsInterface::addTransportType(TransportType type)
 {
-   mSupportedTransports = &transports;
+   static Data udp("SIP+D2U");
+   static Data tcp("SIP+D2T");
+   static Data tls("SIPS+D2T");
+   
+   switch (type)
+   {
+      case UDP:
+         mSupportedTransports.insert(udp);
+         break;
+      case TCP:
+         mSupportedTransports.insert(tcp);
+         break;
+      case TLS:
+         mSupportedTransports.insert(tls);
+         break;
+      default:
+         assert(0);
+         break;
+   }
 }
 
 bool
 DnsInterface::isSupported(const Data& service)
 {
-   for (int i=0; !mSupportedTransports[i]->empty(); i++)
-   {
-      if (service == (*mSupportedTransports)[i]) 
-      {
-         return true;
-      }
-   }
-   return false;
+   return mSupportedTransports.count(service) != 0;
 }
 
 void 
 DnsInterface::buildFdSet(FdSet& fdset)
 {
-#if defined(USE_ARES)
    int size = ares_fds(mChannel, &fdset.read, &fdset.write);
    if ( size > fdset.size )
    {
       fdset.size = size;
    }
-#endif
 }
 
 void 
 DnsInterface::process(FdSet& fdset)
 {
-#if defined(USE_ARES)
    ares_process(mChannel, &fdset.read, &fdset.write);
-#endif
 }
 
 

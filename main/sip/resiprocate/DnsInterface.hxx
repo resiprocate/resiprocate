@@ -14,8 +14,9 @@ struct ares_channeldata;
 
 #include <set>
 
-#include "resiprocate/Transport.hxx"
+#include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/BaseException.hxx"
 
 namespace resip
@@ -30,14 +31,6 @@ class Via;
 class DnsInterface
 {
    public:
-      typedef const Data (TransportArray)[MAX_TRANSPORT];
-
-      // These are sets of transports that can be passed to the DnsInterface on
-      // construction to indicate which transports a client supports
-      static TransportArray UdpOnly;       // UDP
-      static TransportArray TcpAndUdp;     // TCP, UDP (DEFAULT)
-      static TransportArray AllTransports; // TCP, UDP, TLS
-
       class Exception : public BaseException
       {
          public:
@@ -54,7 +47,7 @@ class DnsInterface
       virtual ~DnsInterface();
       
       // set the supported set of types that a UAC wishes to use
-      void setSupportedTransports(const TransportArray& transports);
+      void addTransportType(TransportType type);
       
       // return if the client supports the specified service (e.g. SIP+D2T)
       bool isSupported(const Data& service);
@@ -87,11 +80,8 @@ class DnsInterface
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
       DnsHandler* mHandler;
-      TransportArray* mSupportedTransports;
-      
-#if defined(USE_ARES)
+      std::set<Data> mSupportedTransports;
 	  struct ares_channeldata* mChannel;
-#endif
 
       friend class DnsResult;
 };
@@ -149,4 +139,5 @@ class DnsInterface
  * <http://www.vovida.org/>.
  *
  */
+
 
