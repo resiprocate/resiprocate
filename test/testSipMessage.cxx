@@ -22,6 +22,34 @@ int
 main(int argc, char** argv)
 {
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   
+   {
+      char* txt = ("SIP/2.0 407 Proxy Authentication Required\r\n"
+                   "To: <sip:902@kelowna.gloo.net>\r\n"
+                   "From: <sip:902@kelowna.gloo.net>\r\n"
+                   "Via: SIP/2.0/UDP 192.168.2.231:5060;received=192.168.2.231\r\n"
+                   "Call-ID: 0003e362-fc960037-582db4a2-79d8d7b6@192.168.2.231\r\n"
+                   "CSeq: 101 REGISTER\r\n"
+                   "Proxy-Authenticate: Digest nonce=\"1048037597:07345f4a3aa2ec622218a201fe85672f\",algorithm=MD5,realm=\"kelowna.gloo.net\"\r\n"
+                   "Content-Length: 0\r\n"
+                   "\r\n");
+      auto_ptr<SipMessage> challenge(TestSupport::makeMessage(txt));
+      cerr << *challenge << endl;
+      
+      SipMessage request;
+      request.header(h_RequestLine).uri() = Uri("sip:kelowna.gloo.net");
+      //Proxy-Authorization: Digest username="david@kelowna.gloo.net",realm="kelowna.gloo.net",uri="sip:kelowna.gloo.net",response="b3e5738382b5ca8898863f42ec3d136c",nonce="1048037597:07345f4a3aa2ec622218a201fe85672f",algorithm=MD5
+
+      
+      unsigned int c=0;
+      Data david("david@kelowna.gloo.net");
+      Data passwd("david");
+      Helper::addAuthorization(request, *challenge, david, passwd, Data::Empty, c);
+      
+      cerr << request << endl;
+      return 0;
+   }
+   
 
    {
       // Proxy-Authorization does not allow comma joied headers
