@@ -1,8 +1,5 @@
 
 #include <cassert>
-//#include <cstdlib>
-//#include <stdio.h>
-//#include <cstdlib>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -67,7 +64,7 @@ Random::initialize()
       }
       else
       {
-         char buf[1024/8]; // size is number byes used for TLS init 
+         char buf[1024/8]; // size is number byes used for OpenSSL init 
 
          int s = read( fd,&buf,sizeof(buf) );
 
@@ -76,7 +73,7 @@ Random::initialize()
             ErrLog( << "System is short of randomness" );
          }
          
-         DebugLog( << "Initializing OpenSSL with " << s*8 << " bits"  );
+         DebugLog( << "Initializing OpenSSL with " << s*8 << " bits of randomness"  );
          RAND_add(buf,sizeof(buf),double(s*8));
       }
 #endif
