@@ -10,9 +10,10 @@ using namespace resip;
 
 
 Profile::Profile() : 
-   mDefaultRegistrationExpires(3600),
-   mDefaultSubscriptionExpires(3600),
-   mDefaultSessionExpires(1800),
+   mDefaultRegistrationExpires(3600),  // 1 hour
+   mDefaultSubscriptionExpires(3600),  // 1 hour
+   mDefaultSessionExpires(1800),       // 30 minutes
+   mDefaultStaleCallTime(3600),        // 1 hour
    mHasOutboundProxy(false),
    mLooseToTagMatching(false),
    mRportEnabled(true),
@@ -81,6 +82,18 @@ int
 Profile::getDefaultSessionTime() const
 {
    return mDefaultSessionExpires;
+}
+
+void
+Profile::setDefaultStaleCallTime(int secs)
+{
+   mDefaultStaleCallTime = secs;
+}
+
+int 
+Profile::getDefaultStaleCallTime() const
+{
+   return mDefaultStaleCallTime;
 }
 
 void 
