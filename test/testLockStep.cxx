@@ -56,7 +56,7 @@ class Client : public ThreadIf
          }
          
          bool done = false;
-         bool inviteState = true;
+         //bool inviteState = true;
          
          
          while(true)
