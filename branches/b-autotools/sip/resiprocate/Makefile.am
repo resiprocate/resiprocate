@@ -165,7 +165,6 @@ resiprocate_include_HEADERS = \
 	RportParameter.hxx \
 	SdpContents.hxx \
 	Security.hxx \
-	SendingMessage.hxx \
 	ShutdownMessage.hxx \
 	SipFrag.hxx \
 	SipMessage.hxx \
