@@ -60,21 +60,37 @@ class DialogUsageManager
       void setProfile(Profile* profile);
       Profile* getProfile();
       
-      void setManager(RedirectManager* redirect);
-      void setManager(ClientAuthManager* client);
-      void setManager(ServerAuthManager* client);
-      
-      void setClientRegistrationHandler(ClientRegistrationHandler*);
-      void setServerRegistrationHandler(ServerRegistrationHandler*);
+      /// There should probably be a default redirect manager
+      void setRedirectManager(RedirectManager* redirect);
+
+      /// If there is no ClientAuthManager, when the client receives a 401/407,
+      /// pass it up through the normal BaseUsageHandler
+      void setClientAuthManager(ClientAuthManager* client);
+
+      /// If there is no ServerAuthManager, the server does not authenticate requests
+      void setServerAuthManager(ServerAuthManager* client);
+
+      /// If there is no such handler, calling makeInviteSession will throw and
+      /// receiving an INVITE as a UAS will respond with 405 Method Not Allowed
       void setInviteSessionHandler(InviteSessionHandler*);
+      
+      /// If there is no such handler, calling makeRegistration will throw
+      void setClientRegistrationHandler(ClientRegistrationHandler*);
+
+      /// If no such handler, UAS will respond to REGISTER with 405 Method Not Allowed
+      void setServerRegistrationHandler(ServerRegistrationHandler*);
+
+      /// If there is no such handler, calling makeSubscription will throw
+      void addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler*);
+
+      /// If there is no such handler, calling makePublication will throw
+      void addClientPublicationHandler(const Data& eventType, ClientPublicationHandler*);
+
+      
+      void addServerSubscriptionHandler(const Data& eventType, ServerSubscriptionHandler*);
+      void addServerPublicationHandler(const Data& eventType, ServerPublicationHandler*);
   
-      void addHandler(const Data& eventType, ClientSubscriptionHandler*);
-      void addHandler(const Data& eventType, ServerSubscriptionHandler*);
-  
-      void addHandler(const Data& eventType, ClientPublicationHandler*);
-      void addHandler(const Data& eventType, ServerPublicationHandler*);
-  
-      void addHandler(MethodTypes&, OutOfDialogHandler*);
+      void addOutOfDialogHandler(MethodTypes&, OutOfDialogHandler*);
       
       // The message is owned by the underlying datastructure and may go away in
       // the future. If the caller wants to keep it, it should make a copy. The
@@ -87,7 +103,7 @@ class DialogUsageManager
       SipMessage& makeRegistration(const NameAddr& aor);
       SipMessage& makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
 
-      // all can be done inside of INVITE or SUBSCRIBE
+      // all can be done inside of INVITE or SUBSCRIBE only
       SipMessage& makeSubscribe(DialogId, const Uri& aor, const Data& eventType);
       SipMessage& makeRefer(DialogId, const Uri& aor, const H_ReferTo::Type& referTo);
       SipMessage& makePublish(DialogId, const Uri& aor, const Data& eventType); 
@@ -102,7 +118,11 @@ class DialogUsageManager
       UsageSet    findAllUsages();
       
       InviteSession::Handle findInviteSession(DialogId id);
-      std::list<ClientSubscription::Handle>& findClientSubscriptions(DialogId id);
+      std::list<ClientSubscription::Handle> findClientSubscriptions(DialogId id);
+      std::list<ClientSubscription::Handle> findClientSubscriptions(DialogSetId id);
+      std::list<ClientSubscription::Handle> findClientSubscriptions(DialogSetId id, 
+                                                                    const Data& eventType,
+                                                                    const Data& subId);
       ServerSubscription::Handle findServerSubscription(DialogId id);
       ClientRegistration::Handle findClientRegistration(DialogId id);
       ServerRegistration::Handle findServerRegistration(DialogId id);
