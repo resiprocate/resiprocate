@@ -12,6 +12,7 @@
 
 using namespace Vocal2;
 
+
 bool cseqIsValid( int msgSeq, int currentSeq)
 {
    if ((msgSeq > currentSeq) && (msgSeq < currentSeq+10))
@@ -24,6 +25,7 @@ bool cseqIsValid( int msgSeq, int currentSeq)
    }
 }
 
+#if 0 
 SipSession getSession( void )
 {
    return mSipSession;
@@ -45,6 +47,7 @@ Data getRemoteTag( void )
    return mRemoteTag;
 }
 
+#endif
 
 
 /* ====================================================================
