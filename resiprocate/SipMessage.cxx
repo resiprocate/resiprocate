@@ -1,4 +1,5 @@
 #include "resiprocate/Contents.hxx"
+#include "resiprocate/OctetContents.hxx"
 #include "resiprocate/HeaderFieldValueList.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/UnknownHeaderType.hxx"
@@ -541,12 +542,15 @@ SipMessage::getContents() const
       if ( Contents::getFactoryMap().find(header(h_ContentType)) == Contents::getFactoryMap().end() )
       {
          InfoLog(<< "SipMessage::getContents: got content type ("
-                 <<  header(h_ContentType) << ") that is not known");
-         return 0;
+                 <<  header(h_ContentType) << ") that is not known, "
+                 << "returning as opague application/octet-stream);
+         mContents = Contents::getFactoryMap()[OctetContents::getStaticType()]->create(mContentsHfv, OctetContents::getStaticType());
+      }
+      else
+      {
+         mContents = Contents::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv, header(h_ContentType));
       }
       
-      assert(Contents::getFactoryMap().find(header(h_ContentType)) != Contents::getFactoryMap().end());
-      mContents = Contents::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv, header(h_ContentType));
       // copy contents headers into the contents
       if (exists(h_ContentDisposition))
       {
