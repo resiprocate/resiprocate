@@ -119,6 +119,11 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
    response->header(h_CSeq) = request.header(h_CSeq);
    response->header(h_Vias) = request.header(h_Vias);
    response->header(h_ContentLength).value() = 0;
+   
+   if (request.exists(h_RecordRoutes))
+   {
+      response->header(h_RecordRoutes) = request.header(h_RecordRoutes);
+   }
 
    if (request.isExternal())
    {
