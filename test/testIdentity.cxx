@@ -22,7 +22,7 @@ main(int argc, char* argv[])
    Security* security=0;
    try
    {
-      security = new Security(false,true);
+      security = new Security;
    }
    catch( ... )
    {
@@ -33,11 +33,7 @@ main(int argc, char* argv[])
    try
    {
       assert(security != 0);
-      bool ok = security->loadAllCerts( "password" , Data::Empty );
-      if ( !ok )
-      {
-         ErrLog( << "Could not load the certificates" );
-      } 
+      security->preload();
    }
    catch( ... )
    {
