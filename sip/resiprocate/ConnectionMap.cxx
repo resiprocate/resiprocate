@@ -3,6 +3,8 @@
 #include "sip2/util/Socket.hxx"
 #include "sip2/sipstack/Preparse.hxx"
 
+#define VOCAL_SUBSYSTEM Subsystem::SIP
+
 #ifndef WIN32
 #include <errno.h>
 #include <fcntl.h>
@@ -15,7 +17,14 @@
 #include <arpa/inet.h>
 #endif
 
+
+#include <iostream>
+using namespace std;
+
 using namespace Vocal2;
+
+
+
 
 const UInt64 ConnectionMap::MinLastUsed = 10*1000;
 const UInt64 ConnectionMap::MaxLastUsed = 10*60*60*1000;
@@ -191,8 +200,14 @@ ConnectionMap::Connection::process(int bytesRead, Fifo<Message>& fifo, Preparse&
    if (mState == NewMessage)
    {
       mMessage = new SipMessage();
+      cerr << "NewMessage state." << endl;
    }
    
+   if (mState == PartialHeaderRead)
+   {
+      cerr << "Partial Header state." << endl;
+   }
+
    if (mState == NewMessage || mState == PartialHeaderRead)
    { 
       int bytesUsed;
@@ -267,6 +282,7 @@ ConnectionMap::Connection::prepNextMessage(int bytesUsed, int bytesRead, Fifo<Me
    else
    {
       mState = NewMessage;
+      fifo.add(mMessage);
       return true;
    }
 }
@@ -275,6 +291,7 @@ ConnectionMap::Connection::prepNextMessage(int bytesUsed, int bytesRead, Fifo<Me
 bool
 ConnectionMap::Connection::readAnyBody(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize)
 {
+   cerr << "ReadAnyBody" << endl;
    if (mMessage->exists(h_ContentLength))
    {
       int contentLength = mMessage->header(h_ContentLength).value();
@@ -283,6 +300,7 @@ ConnectionMap::Connection::readAnyBody(int bytesUsed, int bytesRead, Fifo<Messag
          if (contentLength <= (bytesRead - bytesUsed))
          {
             // complete body read
+            cerr << "complete body read" << endl;
             char* completeBody = new char[contentLength];
             memcpy(completeBody, mBuffer + bytesUsed, bytesRead - bytesUsed);
             mMessage->setBody(completeBody, contentLength);
@@ -292,6 +310,7 @@ ConnectionMap::Connection::readAnyBody(int bytesUsed, int bytesRead, Fifo<Messag
          else
          {
             // partial body
+            cerr << "partial body read" << endl;
             char* partialBody = new char[contentLength];
             memcpy(partialBody, mBuffer + bytesUsed, bytesRead - bytesUsed);
             mBuffer = partialBody;
