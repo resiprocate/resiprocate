@@ -1,0 +1,56 @@
+#include <sipstack/Symbols.hxx>
+
+using namespace Vocal2;
+
+const char * const Symbols::Accept = "Accept";
+const char * const Symbols::Accept_Encoding = "Accept-Encoding";
+const char * const Symbols::Accept_Language = "Accept-Language";
+const char * const Symbols::Alert_Info = "Alert-Info";
+const char * const Symbols::Allow = "Allow";
+const char * const Symbols::Authentication_Info = "Authentication-Info";
+const char * const Symbols::Authorization = "Authorization";
+const char * const Symbols::CSeq = "CSeq";
+const char * const Symbols::Call_ID = "Call-ID";
+const char * const Symbols::Call_Info = "Call-Info";
+const char * const Symbols::Contact = "Contact";
+const char * const Symbols::Content_Disposition = "Content-Disposition";
+const char * const Symbols::Content_Encoding = "Content-Encoding";
+const char * const Symbols::Content_Language = "Content-Language";
+const char * const Symbols::Content_Length = "Content-Length";
+const char * const Symbols::Content_Type = "Content-Type";
+const char * const Symbols::Date = "Date";
+const char * const Symbols::Error_Info = "Error-Info";
+const char * const Symbols::Expires = "Expires";
+const char * const Symbols::From = "From";
+const char * const Symbols::In_Reply_To = "In-Reply-To";
+const char * const Symbols::MIME_Version = "MIME-Version";
+const char * const Symbols::Max_Forwards = "Max-Forwards";
+const char * const Symbols::Min_Expires = "Min-Expires";
+const char * const Symbols::Organization = "Organization";
+const char * const Symbols::Priority = "Priority";
+const char * const Symbols::Proxy_Authenticate = "Proxy-Authenticate";
+const char * const Symbols::Proxy_Authorization = "Proxy-Authorization";
+const char * const Symbols::Proxy_Require = "Proxy-Require";
+const char * const Symbols::Record_Route = "Record-Route";
+const char * const Symbols::Reply_To = "Reply-To";
+const char * const Symbols::Retry_After = "Retry-After";
+const char * const Symbols::Route = "Route";
+const char * const Symbols::Server = "Server";
+const char * const Symbols::Supported = "Supported";
+const char * const Symbols::Timestamp = "Timestamp";
+const char * const Symbols::To = "To";
+const char * const Symbols::Unsupported = "Unsupported";
+const char * const Symbols::User_Agent = "User-Agent";
+const char * const Symbols::Via = "Via";
+const char * const Symbols::WWW_Authenticate = "WWW-Authenticate";
+const char * const Symbols::Warning = "Warning";
+
+const char * const Symbols::Ack = "Ack";
+const char * const Symbols::Bye = "Bye";
+const char * const Symbols::Cancel = "Cancel";
+const char * const Symbols::Invite = "Invite";
+const char * const Symbols::Notify = "Notify";
+const char * const Symbols::Options = "Options";
+const char * const Symbols::Refer = "Refer";
+const char * const Symbols::Register = "Register";
+const char * const Symbols::Subscribe = "Subscribe";
