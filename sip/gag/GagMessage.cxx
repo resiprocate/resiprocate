@@ -94,8 +94,8 @@ void
 GagMessage::serialize(ostream &os, const int& value)
 {
   int size = sizeof(int);
-  os.write((char *)&size, sizeof(int));
-  os.write((char *)&value, sizeof(int));
+  os.write(reinterpret_cast<char *>(&size), sizeof(int));
+  os.write(reinterpret_cast<const char *>(&value), sizeof(int));
 }
 
 bool
@@ -153,7 +153,7 @@ GagMessage::parse(istream &is, int &value)
   temp=(char *)malloc(size);
   if (!temp) return (false);
   is.read(temp, size);
-  value = *((int *)temp);
+  value = *(reinterpret_cast<int *>(temp));
   free(temp);
   return true;
 }
