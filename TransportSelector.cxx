@@ -12,7 +12,7 @@ TransportSelector::TransportSelector(int portNum)
 }
 
 void 
-TransportSelector::process
+TransportSelector::process()
 {
   
   mUdp->process();
