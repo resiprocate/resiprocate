@@ -10,12 +10,15 @@ namespace resip
 class TransactionTerminated : public Message
 {
    public:
-      TransactionTerminated(const Data& tid) : mTransactionId(tid) {}
+      TransactionTerminated(const Data& tid, bool isClient) : mTransactionId(tid), mIsClient(isClient) {}
       virtual const Data& getTransactionId() const { return mTransactionId; }
-      virtual Data brief() const { return Data("TransactionTerminated ") + mTransactionId; }
+      virtual bool isClientTransaction() const { return mIsClient; }
+
+      virtual Data brief() const { return (mIsClient ? Data("ClientTransactionTerminated ") : Data("ServerTransactionTerminated ")) + mTransactionId; }
       virtual std::ostream& encode(std::ostream& strm) const { return strm << brief(); }
       
       Data mTransactionId;
+      bool mIsClient;
 };
  
 }

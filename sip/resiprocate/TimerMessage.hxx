@@ -33,7 +33,8 @@ class TimerMessage : public Message
          return mDuration;
       }
       
-
+      bool isClientTransaction() const;
+      
       virtual Data brief() const;
       virtual std::ostream& encode(std::ostream& strm) const;
       

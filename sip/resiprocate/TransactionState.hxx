@@ -11,6 +11,7 @@ class Message;
 class SipMessage;
 class DnsMessage;
 class SipStack;
+class TransactionMap;
 
 class TransactionState
 {
@@ -58,6 +59,9 @@ class TransactionState
       void processServerInvite(  Message* msg );
       void processStale(  Message* msg );
 
+      void add(const Data& tid);
+      void erase(const Data& tid);
+      
    private:
       bool isRequest(Message* msg) const;
       bool isInvite(Message* msg) const;
@@ -82,6 +86,7 @@ class TransactionState
       static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine);
       
       SipStack& mStack;
+      
       Machine mMachine;
       State mState;
 
@@ -102,7 +107,7 @@ class TransactionState
       Transport::Tuple mSource; // used to reply to requests
       Data mId;
       Data mToTag; // for failure responses on ServerInviteTransaction 
-      
+
       // this shouldn't be static since there can be more than one SipStack in
       // an app. Should be stored in the SipStack
       static unsigned long StatelessIdCounter;
