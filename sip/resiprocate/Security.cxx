@@ -1908,7 +1908,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
       throw Exception("Invalid contents passed to checkSignature", __FILE__, __LINE__);
    }
 
-   list<Contents*>::const_iterator i = multi->parts().begin();
+   vector<Contents*>::const_iterator i = multi->parts().begin();
    Contents* first = *i;
    ++i;
    assert( i != multi->parts().end() );
