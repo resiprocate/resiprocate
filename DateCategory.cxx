@@ -76,7 +76,7 @@ DateCategory::DateCategory()
    {
 	    int e = getErrno();
         DebugLog (<< "Failed to convert to gmt: " << strerror(e));
-        error(e);
+        Transport::error(e);
         return;
    }
    memcpy(&gmt,gmtp,sizeof(gmt));
