@@ -2,6 +2,7 @@
 #define HeaderTypes_hxx
 
 #include <sipstack/supported.hxx>
+#include <util/Data.hxx>
 
 namespace Vocal2
 {
