@@ -100,10 +100,4 @@ class ParserContainer : public ParserContainerBase
  
 }
 
-
-
-
-
-
-
 #endif
