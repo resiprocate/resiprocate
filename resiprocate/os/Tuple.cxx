@@ -203,11 +203,11 @@ Tuple::length() const
 {
    if (mSockaddr.sa_family == AF_INET) // v4
    {
-      return sizeof(sockaddr_in6);
+      return sizeof(sockaddr_in);
    }
    else
    {
-      return sizeof(sockaddr_in);
+      return sizeof(sockaddr_in6);
    }
 }
 
@@ -337,6 +337,7 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 #ifdef USE_IPV6
     if (tuple.mSockaddr.sa_family == AF_INET6)
     {
+       ostrm << "V6 ";
        ostrm << inet_ntop(AF_INET6, 
                           &(tuple.m_anonv6.sin6_addr),
                           str,
@@ -346,6 +347,7 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
     else
 #endif
     {
+       ostrm << "V4 ";
        ostrm << inet_ntop(AF_INET,
                           &(tuple.m_anonv4.sin_addr),
                           str, sizeof(str));
