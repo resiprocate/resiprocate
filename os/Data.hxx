@@ -1,7 +1,7 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.20 2002/10/31 06:15:53 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.21 2002/11/01 22:01:07 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -61,6 +61,8 @@ class Data
       char* mBuf;
       unsigned int mCapacity;
       bool mMine;
+
+      static const Data Empty;
       
       friend bool operator==(const char* s, const Data& d);
       friend bool operator!=(const char* s, const Data& d);
