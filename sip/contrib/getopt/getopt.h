@@ -1,3 +1,6 @@
+#ifndef __GETOPT_H
+#define __GETOPT_H
+
 /*
  * getopt.h --
  *
@@ -31,8 +34,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern char *optarg;
 extern int optind;
 extern int opterr;
 
 int getopt(int nargc, char * const *nargv, const char *ostr);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
