@@ -229,7 +229,7 @@ DialogSet::dispatch(const SipMessage& msg)
                //!dcm! -- really, really horrible.  Should make a don't die
                //scoped guard
                mDestroying = true;               
-               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end();)
+               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
                {
                   //cancel could invalidate it
                   Dialog* d = it->second;
@@ -255,6 +255,7 @@ DialogSet::dispatch(const SipMessage& msg)
       }
    }
 
+   Dialog* dialog = findDialog(msg);
    if (msg.isRequest())
    {
       const SipMessage& request = msg;
@@ -279,6 +280,7 @@ DialogSet::dispatch(const SipMessage& msg)
                assert(mServerOutOfDialogRequest == 0);
                mServerOutOfDialogRequest = makeServerOutOfDialog(request);
                mServerOutOfDialogRequest->dispatch(request);
+               return;
             }
             break;                              
          case PUBLISH:
@@ -287,7 +289,16 @@ DialogSet::dispatch(const SipMessage& msg)
                mServerPublication = makeServerPublication(request);
             }
             mServerPublication->dispatch(request);
-            return;         
+            return; 
+         case INFO:   
+            if (dialog)
+            {
+               break;
+            }
+            else
+            {
+               return;
+            }            
          case REGISTER:
             if (mServerRegistration == 0)
             {
@@ -305,7 +316,7 @@ DialogSet::dispatch(const SipMessage& msg)
             assert(mServerOutOfDialogRequest == 0);
             mServerOutOfDialogRequest = makeServerOutOfDialog(request);
             mServerOutOfDialogRequest->dispatch(request);
-			return;
+   			return;
             break;
       }
    }
@@ -351,8 +362,6 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             mClientRegistration->dispatch(response);
             return;
-         case NOTIFY: 
-            break;            
          case MESSAGE:
             if (mClientPagerMessage)
             {
@@ -360,6 +369,19 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             return;            
          case INFO:   
+            if (dialog)
+            {
+               break;
+            }
+            else
+            {
+               return;
+            }            
+         case NOTIFY:
+            if (dialog)
+            {
+               break;
+            }
          default:
          {
             ClientOutOfDialogReq* req = findMatchingClientOutOfDialogReq(response);
@@ -376,14 +398,15 @@ DialogSet::dispatch(const SipMessage& msg)
 
    //!dcm! -- even if this matches, if a final reponses matches the inital request all
    //usages should be cancelled?
-   Dialog* dialog = findDialog(msg);
    if (dialog == 0)
    {
       if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
       {
-         for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+         for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
          {
-            it->second->dispatch(msg);
+            Dialog* d = it->second;
+            it++;
+            d->dispatch(msg);
          }
          return;         
       }
@@ -435,6 +458,7 @@ DialogSet::dispatch(const SipMessage& msg)
          if(mDialogs.empty() && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 200))
          {
             delete this;
+            return;            
          }
       }
 
@@ -511,9 +535,7 @@ DialogSet::cancel()
    {
       //need to lag and do last element ouside of look as this DialogSet will be
       //deleted if all dialogs are destroyed
-      DialogMap::iterator last = mDialogs.end();
-      last--;   
-      for (DialogMap::iterator it = mDialogs.begin(); it != last;)
+      for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
       {
          //not quite right, should re-structure CANCEL so it does the right
          //thing for all things.
@@ -528,7 +550,6 @@ DialogSet::cancel()
          {
          }
       }
-      last->second->cancel();      
    }
 }
 
