@@ -372,8 +372,18 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case CANCEL:
          {
             // find the appropropriate ServerInvSession
-            DialogSet& dialogs = findDialogSet(DialogSetId(request));
-            dialogs.cancel(request);
+            DialogSet* ds = findDialogSet(DialogSetId(request));
+            if (ds == 0)
+            {
+               InfoLog (<< "Received a CANCEL on a non-existent transaction ");
+               SipMessage failure;
+               makeResponse(failure, request, 481);
+               sendResponse(failure);
+            }
+            else
+            {
+               ds->cancel(request);
+            }
             break;
          }
 
@@ -430,8 +440,8 @@ DialogUsageManager::processRequest(const SipMessage& request)
 
          default:
          {
-            DialogSet& dialogs = findDialogSet(DialogSetId(request));
-            if (dialogs.empty())
+            DialogSet* ds = findDialogSet(DialogSetId(request));
+            if (ds == 0)
             {
                SipMessage failure;
                makeResponse(failure, request, 481);
@@ -440,7 +450,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             }
             else
             {
-               dialogs.dispatch(request);
+               ds->dispatch(request);
             }
          }
       }
@@ -450,42 +460,50 @@ DialogUsageManager::processRequest(const SipMessage& request)
 void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
-   DialogSet& dialogs = findDialogSet(DialogSetId(response));
+   DialogSet* ds = findDialogSet(DialogSetId(response));
 
    InfoLog( << "Dum processing response for dailog set " 
             << DialogSetId(response) 
             << " with map " 
             << Inserter(mDialogSetMap));
 
-   if (!dialogs.empty())
+   if (ds)
    {
-      dialogs.dispatch(response);
+      ds->dispatch(response);
    }
    else
    {
-      DebugLog (<< "Throwing away stray response: " << response);
+      InfoLog (<< "Throwing away stray response: " << response.brief());
    }
 }
  
-DialogSet&
+DialogSet*
 DialogUsageManager::findDialogSet(const DialogSetId& id)
 {
    DialogSetMap::const_iterator it = mDialogSetMap.find(id);
-
+   
     if (it == mDialogSetMap.end())
     {
-        /**  @todo: return empty object (?) **/
+       return 0;
     }
-    return *it->second;
+    else
+    {
+       return it->second;
+    }
 }
 
 BaseCreator*
 DialogUsageManager::findCreator(const DialogId& id)
 {
-   const DialogSetId& setId = id.getDialogSetId();
-   DialogSet& dialogSet = findDialogSet(setId);
-   BaseCreator* creator = dialogSet.getCreator();
-   return creator;
+   DialogSet* ds = findDialogSet(id.getDialogSetId());
+   if (ds)
+   {
+      return ds->getCreator();
+   }
+   else 
+   {
+      return 0;
+   }
 }
 
 bool
