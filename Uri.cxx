@@ -254,7 +254,6 @@ Uri::parse(ParseBuffer& pb)
    const char* start = pb.position();
    pb.skipToChar(Symbols::COLON[0]);
    pb.data(mScheme, start);
-//   mScheme = pb.data(start);
    pb.skipChar();   
    if (isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips))
    {
