@@ -211,7 +211,7 @@ ConnectionMap::Connection::process(int bytesRead, Fifo<Message>& fifo, Preparse&
 
    if (mState == NewMessage || mState == PartialHeaderRead)
    { 
-      int bytesUsed;
+//      int bytesUsed;
    
       mMessage->addBuffer(mBuffer);
 #if 0

@@ -13,39 +13,36 @@ class Transport;
 
 class SipMessage;            // fwd decl
 
-namespace PreparseState
-{
-
 typedef short BufferAction;
-const short NONE=0;
-const short headersComplete = (1 << 0);
-const short preparseError   = (1 << 1);
-const short dataAssigned    = (1 << 2);
-const short fragmented      = (1 << 3);
+const BufferAction NONE=0;
+const BufferAction headersComplete = (1 << 0);
+const BufferAction preparseError   = (1 << 1);
+const BufferAction dataAssigned    = (1 << 2);
+const BufferAction fragmented      = (1 << 3);
  
 
-typedef enum {
-    NewMsg = 0,
-    NewMsgCrLf,
-    StartLine,
-    StartLineCrLf,
-    BuildHdr,
-    EWSPostHdr,
-    EWSPostColon,
-    EmptyHdrCrLf,
-    EmptyHdrCont,
-    BuildData,
-    BuildDataCrLf,
-    CheckCont,
-    CheckEndHdr,
-    InQ,
-    InQEsc,
-    InAng,
-    InAngQ,
-    InAngQEsc,
-    EndMsg,
-    lastStateMarker
-} State;
+// typedef enum {
+//     NewMsg = 0,
+//     NewMsgCrLf,
+//     StartLine,
+//     StartLineCrLf,
+//     BuildHdr,
+//     EWSPostHdr,
+//     EWSPostColon,
+//     EmptyHdrCrLf,
+//     EmptyHdrCont,
+//     BuildData,
+//     BuildDataCrLf,
+//     CheckCont,
+//     CheckEndHdr,
+//     InQ,
+//     InQEsc,
+//     InAng,
+//     InAngQ,
+//     InAngQEsc,
+//     EndMsg,
+//     lastStateMarker
+// } State;
 
 // Our actions
 
@@ -67,20 +64,13 @@ typedef enum {
     lastDispositionMarker
 } Disposition;
 
-const int nStates = lastStateMarker;
 const int nDisp   = 2;
 const int nOct    = UCHAR_MAX+1;
     
 /// Our sizes
-    
-typedef struct 
-{
-        State nextState;
-        int workMask;
-} Edge;
   
  
-}
+//}
 
 
  
@@ -88,7 +78,40 @@ typedef struct
 class Preparse
 {
     public:
+
+        
         Preparse();
+        
+        typedef enum PreparseStateEnum 
+        {
+                NewMsg = 0,
+                NewMsgCrLf,
+                StartLine,
+                StartLineCrLf,
+                BuildHdr,
+                EWSPostHdr,
+                EWSPostColon,
+                EmptyHdrCrLf,
+                EmptyHdrCont,
+                BuildData,
+                BuildDataCrLf,
+                CheckCont,
+                CheckEndHdr,
+                InQ,
+                InQEsc,
+                InAng,
+                InAngQ,
+                InAngQEsc,
+                EndMsg,
+                nPreparseStates
+        }
+        PreparseState;
+
+        typedef struct 
+        {
+                PreparseState nextState;
+                int workMask;
+        } Edge;
         
         void process(SipMessage& msg,
                      const char * buffer,
@@ -96,7 +119,7 @@ class Preparse
                      size_t start,
                      size_t& used,
                      size_t& discard,
-                     PreparseState::BufferAction& status);
+                     BufferAction& status);
 
         // msg -- A SipMessage for use with this data buffer.
         //        Will have HFV's installed by the pre-parser.
@@ -141,23 +164,23 @@ class Preparse
 
     private:
 
-        static PreparseState::Edge ***mTransitionTable;
+        static Edge ***mTransitionTable;
         void InitStatePreparseStateTable();
 
-        void AE( PreparseState::State start, int disposition, int ch,
-                 PreparseState::State next, int workMask);
+        void AE( PreparseState start, int disposition, int ch,
+                 PreparseState next, int workMask);
 
-        void AE( PreparseState::State start, int disposition, const char* charset,
-                 PreparseState::State next, int workMask);
+        void AE( PreparseState start, int disposition, const char* charset,
+                 PreparseState next, int workMask);
         
         void ResetMachine();
         // Reset all offsets and state vars to known initial state.
 
-        PreparseState::Disposition mDisposition;
+        Disposition mDisposition;
         // the disposition of this machine, a function
         // of the mHeader enum
       
-        PreparseState::State mState;
+        PreparseState mState;
         
         // State of machine.  This is manipulated
         // oddly for fragmentation; see the code.
@@ -180,6 +203,7 @@ class Preparse
 };
  
 }
+
 
 #endif
 
