@@ -42,9 +42,13 @@ class SipMessage : public Message
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
 
       explicit SipMessage(const Transport* fromWire = 0);
+      // .dlb. public, allows pass by value to compile.
       SipMessage(const SipMessage& message);
 
+      // .dlb. sure would be nice to have overloaded return value here..
       virtual Message* clone() const;
+
+      SipMessage& operator=(const SipMessage& rhs);
       
       // returns the transaction id from the branch or if 2543, the computed hash
       virtual const Data& getTransactionId() const;
@@ -262,7 +266,10 @@ class SipMessage : public Message
 
       const Data& getTlsDomain() const { return mTlsDomain; }
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
-      
+
+   protected:
+      void cleanUp();
+   
    private:
       void compute2543TransactionHash() const;
       
@@ -270,9 +277,6 @@ class SipMessage : public Message
 
       HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single);
       HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single) const; // throws if not present
-
-      // not available
-      SipMessage& operator=(const SipMessage&);
 
       // indicates this message came from the wire, set by the Transport
       bool mIsExternal;
