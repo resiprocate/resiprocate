@@ -130,22 +130,12 @@ UdpTransport::process(FdSet& fdset)
    // !jf! how do we tell if it discarded bytes 
    // !ah! we use the len-1 trick :-(
 
-#if (! defined (__QNX__) )
    int len = recvfrom( mFd,
                        buffer,
                        MaxBufferSize,
                        0 /*flags */,
                        (struct sockaddr*)&from,
                        (socklen_t*)&fromLen);
-#else
-   int len = recvfrom( mFd,
-                       buffer,
-                       MaxBufferSize,
-                       0 /*flags */,
-                       (struct sockaddr*)&from,
-                       (size_t*)&fromLen);
-#endif
-
 
    if ( len == SOCKET_ERROR )
    {
