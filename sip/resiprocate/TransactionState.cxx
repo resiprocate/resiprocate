@@ -24,7 +24,8 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
    mIsReliable(false), // !jf! 
    mCancelStateMachine(0),
    mMsgToRetransmit(0),
-   mDnsQueryId(0)
+   mDnsQueryId(0),
+   mDnsState(DnsResolver::NotStarted)
 {
 }
 
