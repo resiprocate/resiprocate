@@ -32,9 +32,9 @@ class Data
 
       Data();
       Data(int capacity, bool);
-      Data(const char* str);
-      Data(const char* buffer, int length);
-      Data(const unsigned char* buffer, int length);
+      Data(const char* str);// Uses share mode
+      Data(const char* buffer, int length); // Uses share mode
+      Data(const unsigned char* buffer, int length);// Uses share mode
       Data(const Data& data);
       explicit Data(const std::string& str);
       explicit Data(int value);
@@ -47,6 +47,16 @@ class Data
       // construct a Data that shares memory; the passed characters MUST be
       // immutable and in a longer lasting scope -- or take the buffer
       // as thine own.
+      /** 
+          'Borrow' means that the Data instance MAY write to the buffer and MUST
+          NOT delete the buffer.
+           
+          'Share' means that the Data instance MUST NOT write to the buffer and
+          MUST NOT delete the buffer.
+          
+          'Take' means that the Data instance MAY write to the buffer and MUST
+          delete the buffer.
+    */
       enum  ShareEnum {Share, Borrow, Take};
 
       Data(ShareEnum, const char* buffer, int length);
