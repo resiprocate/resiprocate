@@ -167,7 +167,7 @@ class SipMessage : public Message
       defineHeader(Timestamp);
       defineHeader(To);
       defineHeader(UserAgent);
-      defineHeader(Warning);
+      defineMultiHeader(Warning);
 
       defineMultiHeader(SecurityClient);
       defineMultiHeader(SecurityServer);
