@@ -11,7 +11,8 @@ using namespace resip;
 Profile::Profile() : 
    mDefaultRegistrationExpires(3600),
    mHasOutboundProxy(false),
-   mLooseToTagMatching(false)   
+   mLooseToTagMatching(false),
+   mRportEnabled(true)
 {
 }
 
@@ -335,4 +336,16 @@ const bool
 Profile::looseToTagMatching() const
 {
    return mLooseToTagMatching;
+}
+
+bool& 
+Profile::rportEnabled()
+{
+   return mRportEnabled;   
+}
+
+const bool 
+Profile::rportEnabled() const
+{
+   return mRportEnabled;   
 }
