@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <util/RandomHex.hxx>
 
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(__QNX__)
 #include <openssl/rand.h>
 #endif
 
@@ -13,10 +13,10 @@ using namespace Vocal2;
 void
 RandomHex::initialize()
 {
-#if defined(WIN32)
+#if defined(WIN32) || defined(__QNX__)
    // TODO FIX 
    unsigned int seed = 1;
-   srand(seed);
+   srandom(seed);
 #else
     assert(RAND_status() == 1);
 #endif
@@ -25,12 +25,10 @@ RandomHex::initialize()
 Data
 RandomHex::get(unsigned int len)
 {
-#if defined(WIN32)
+#if defined(WIN32) || defined(__QNX__)
    assert( len <= 16 );
    unsigned char buffer[16];
-   int ret = rand();
-   assert (ret == 1);
-   
+   int ret = random();
    return convertToHex(buffer, len);
 #else
    unsigned char buffer[len];
