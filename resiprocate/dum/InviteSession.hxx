@@ -55,7 +55,7 @@ class InviteSession : public BaseUsage
 
    public:
       virtual void dispatch(const SipMessage& msg) = 0;
-      virtual void dispatch(const DumTimer& timer) = 0;
+      virtual void dispatch(const DumTimeout& timer) = 0;
 
       virtual InviteSession::Handle getSessionHandle() = 0;
 
