@@ -72,7 +72,7 @@ bool oneOf(char c, const char* cs)
 {
    while (*cs)
    {
-      if (c == *++cs)
+      if (c == *(cs++))
       {
          return true;
       }
@@ -98,7 +98,7 @@ ParseBuffer::skipToOneOf(const char* cs)
 }
 
 const char* 
-ParseBuffer::skipToEndQuote(const char* cs)
+ParseBuffer::skipToEndQuote()
 {
    // !dlb! quote escape issues
    return skipToChar('"');

@@ -25,7 +25,7 @@ class ParseBuffer
       const char* skipWhiteSpace();
       const char* skipToChar(char c);
       const char* skipToOneOf(const char* cs);
-      const char* skipToEndQuote(const char* cs);
+      const char* skipToEndQuote();
 
    private:
       const char* mBuff;
