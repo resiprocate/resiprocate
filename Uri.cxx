@@ -537,6 +537,7 @@ Uri::clone() const
    return new Uri(*this);
 }
  
+// should not encode user parameters unless its a tel?
 std::ostream& 
 Uri::encodeParsed(std::ostream& str) const
 {
