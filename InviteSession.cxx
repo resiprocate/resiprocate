@@ -1026,16 +1026,14 @@ InviteSession::dispatchInfo(const SipMessage& msg)
    if (msg.isRequest())
    {
       InfoLog (<< "Received " << msg.brief());
-      SipMessage response;
-      mDialog.makeResponse(response, msg, 200);
-      mDialog.send(response);
+      mDialog.makeResponse(mLastNitResponse, msg, 200);
       handler->onInfo(getSessionHandle(), msg);
    }
    else
    {
       assert(mNitState == NitProceeding);
       mNitState = NitComplete;
-
+      //!dcm! -- toss away 1xx to an info?
       if (msg.header(h_StatusLine).statusCode() >= 300)
       {
          handler->onInfoFailure(getSessionHandle(), msg);
@@ -1045,6 +1043,29 @@ InviteSession::dispatchInfo(const SipMessage& msg)
          handler->onInfoSuccess(getSessionHandle(), msg);
       }
    }
+}
+
+void
+InviteSession::acceptInfo(int statusCode)
+{
+   if (statusCode / 100  != 2)
+   {
+      throw UsageUseException("Must accept with a 2xx", __FILE__, __LINE__);
+   }
+
+   mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;   
+   send(mLastNitResponse);   
+} 
+
+void
+InviteSession::rejectInfo(int statusCode)
+{
+   if (statusCode < 400)
+   {
+      throw UsageUseException("Must reject with a >= 4xx", __FILE__, __LINE__);
+   }
+   mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;   
+   send(mLastNitResponse);
 }
 
 void
