@@ -179,7 +179,7 @@ Timer::getSystemTicks()
 #    if defined (__SUNPRO_CC)	
    tick = gethrtime();//This is Not expensive Under solaris 8 & above but systemcall in solaris7
 #    else
-#      if defined (__MACH__)
+#      if defined (__MACH__) || defined (__PPC__)
    struct timeval now;
    gettimeofday( &now , NULL );
    //assert( now );
@@ -269,7 +269,7 @@ Timer::setupTimeOffsets()
       }
       i++;
    }
-#if __MACH__
+#if defined(__MACH__) || defined(__PPC__)
    cpuSpeed = 1;
 #else
    assert( index != 0 );
