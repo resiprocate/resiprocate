@@ -42,7 +42,7 @@ class ClientInviteSession : public InviteSession
       void dispatchReceivedUpdateEarly (const SipMessage& msg);
       void dispatchSentAnswer (const SipMessage& msg);
       void dispatchQueuedUpdate (const SipMessage& msg);
-      void dispatchCanceled (const SipMessage& msg);
+      void dispatchCancelled (const SipMessage& msg);
 
       void handleRedirect (const SipMessage& msg);
       void handleProvisional (const SipMessage& msg);
@@ -62,6 +62,7 @@ class ClientInviteSession : public InviteSession
       SipMessage mInvite; // the original INVITE sent
       int mLastReceivedRSeq;
       int mStaleCallTimerSeq;
+      int mCancelledTimerSeq;      
       ServerSubscriptionHandle mServerSub;
 
       // disabled
