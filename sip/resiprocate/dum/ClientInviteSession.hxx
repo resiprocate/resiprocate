@@ -2,6 +2,7 @@
 #define RESIP_CLIENTINVITESESSION_HXX
 
 #include "InviteSession.hxx"
+#include "Usagehandle.hxx"
 
 namespace resip
 {
@@ -10,7 +11,7 @@ class SdpContents;
 class ClientInviteSession : public InviteSession
 {
    public:
-      class Handle : public InviteSession::Handle
+      class Handle : public BaseUsage::Handle
       {
          public:
             // throws if no session 
