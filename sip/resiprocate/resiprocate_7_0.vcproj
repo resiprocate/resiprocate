@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding = "UTF-8"?>
+<?xml version="1.0" encoding = "UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.00"
@@ -219,6 +219,9 @@
 				RelativePath="Connection.cxx">
 			</File>
 			<File
+				RelativePath=".\ConnectionBase.cxx">
+			</File>
+			<File
 				RelativePath="ConnectionManager.cxx">
 			</File>
 			<File
@@ -243,7 +246,7 @@
 				RelativePath=".\DateCategory.cxx">
 			</File>
 			<File
-				RelativePath="Dialog.cxx">
+				RelativePath=".\DeprecatedDialog.cxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.cxx">
@@ -255,13 +258,25 @@
 				RelativePath="os\DnsUtil.cxx">
 			</File>
 			<File
+				RelativePath=".\DtlsMessage.cxx">
+			</File>
+			<File
+				RelativePath=".\DtlsTransport.cxx">
+			</File>
+			<File
 				RelativePath="Embedded.cxx">
 			</File>
 			<File
 				RelativePath="ExistsParameter.cxx">
 			</File>
 			<File
-				RelativePath=".\ExpiresCategory.cxx">
+				RelativePath="ExpiresCategory.cxx">
+			</File>
+			<File
+				RelativePath=".\ExtensionHeader.cxx">
+			</File>
+			<File
+				RelativePath=".\ExtensionParameter.cxx">
 			</File>
 			<File
 				RelativePath=".\ExternalBodyContents.cxx">
@@ -291,6 +306,9 @@
 				RelativePath="HeaderHash.cxx">
 			</File>
 			<File
+				RelativePath=".\os\HeapInstanceCounter.cxx">
+			</File>
+			<File
 				RelativePath="HeaderTypes.cxx">
 			</File>
 			<File
@@ -300,10 +318,13 @@
 				RelativePath="Helper.cxx">
 			</File>
 			<File
-				RelativePath=".\IntegerCategory.cxx">
+				RelativePath="IntegerCategory.cxx">
 			</File>
 			<File
 				RelativePath="IntegerParameter.cxx">
+			</File>
+			<File
+				RelativePath=".\InternalTransport.cxx">
 			</File>
 			<File
 				RelativePath="LazyParser.cxx">
@@ -528,13 +549,7 @@
 				RelativePath="UdpTransport.cxx">
 			</File>
 			<File
-				RelativePath="UnknownHeaderType.cxx">
-			</File>
-			<File
 				RelativePath="UnknownParameter.cxx">
-			</File>
-			<File
-				RelativePath="UnknownParameterType.cxx">
 			</File>
 			<File
 				RelativePath="Uri.cxx">
@@ -559,6 +574,12 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
 			<File
+				RelativePath=".\os\AbstractFifo.hxx">
+			</File>
+			<File
+				RelativePath=".\Aor.hxx">
+			</File>
+			<File
 				RelativePath=".\ApiCheck.hxx">
 			</File>
 			<File
@@ -572,6 +593,9 @@
 			</File>
 			<File
 				RelativePath=".\AresDns.hxx">
+			</File>
+			<File
+				RelativePath=".\external\AsyncID.hxx">
 			</File>
 			<File
 				RelativePath=".\Auth.hxx">
@@ -595,6 +619,9 @@
 				RelativePath="os\Coders.hxx">
 			</File>
 			<File
+				RelativePath="os\compat.hxx">
+			</File>
+			<File
 				RelativePath="os\Condition.hxx">
 			</File>
 			<File
@@ -602,9 +629,6 @@
 			</File>
 			<File
 				RelativePath="ConnectionManager.hxx">
-			</File>
-			<File
-				RelativePath="ConnectionMap.hxx">
 			</File>
 			<File
 				RelativePath="Contents.hxx">
@@ -628,7 +652,7 @@
 				RelativePath=".\DateCategory.hxx">
 			</File>
 			<File
-				RelativePath=".\Dialog.hxx">
+				RelativePath=".\DeprecatedDialog.hxx">
 			</File>
 			<File
 				RelativePath=".\DnsHandler.hxx">
@@ -643,22 +667,40 @@
 				RelativePath="os\DnsUtil.hxx">
 			</File>
 			<File
+				RelativePath=".\DtlsMessage.hxx">
+			</File>
+			<File
+				RelativePath=".\DtlsTransport.hxx">
+			</File>
+			<File
 				RelativePath="Embedded.hxx">
 			</File>
 			<File
 				RelativePath="ExistsParameter.hxx">
 			</File>
 			<File
-				RelativePath=".\ExpiresCategory.hxx">
+				RelativePath="ExpiresCategory.hxx">
+			</File>
+			<File
+				RelativePath=".\ExtensionHeader.hxx">
+			</File>
+			<File
+				RelativePath=".\ExtensionParameter.hxx">
 			</File>
 			<File
 				RelativePath=".\ExternalBodyContents.hxx">
+			</File>
+			<File
+				RelativePath=".\external\ExternalDns.hxx">
 			</File>
 			<File
 				RelativePath=".\ExternalDnsFactory.hxx">
 			</File>
 			<File
 				RelativePath="os\Fifo.hxx">
+			</File>
+			<File
+				RelativePath=".\os\FileSystem.hxx">
 			</File>
 			<File
 				RelativePath="FloatParameter.hxx">
@@ -680,6 +722,9 @@
 			</File>
 			<File
 				RelativePath="HeaderHash.hxx">
+			</File>
+			<File
+				RelativePath=".\os\HeapInstanceCounter.hxx">
 			</File>
 			<File
 				RelativePath="HeaderTypes.hxx">
@@ -736,7 +781,7 @@
 				RelativePath=".\Mime.hxx">
 			</File>
 			<File
-				RelativePath=".\MsgHeaderScanner.hxx">
+				RelativePath=".\MultipartAlternativeContents.hxx">
 			</File>
 			<File
 				RelativePath="MultipartMixedContents.hxx">
@@ -811,16 +856,10 @@
 				RelativePath="os\Random.hxx">
 			</File>
 			<File
-				RelativePath="os\RandomHex.hxx">
-			</File>
-			<File
 				RelativePath="os\RecursiveMutex.hxx">
 			</File>
 			<File
 				RelativePath="Registration.hxx">
-			</File>
-			<File
-				RelativePath="ReliabilityMessage.hxx">
 			</File>
 			<File
 				RelativePath=".\RequestLine.hxx">
@@ -835,7 +874,10 @@
 				RelativePath="SdpContents.hxx">
 			</File>
 			<File
-				RelativePath="Security.hxx">
+				RelativePath=".\Security.hxx">
+			</File>
+			<File
+				RelativePath=".\SecurityAttributes.hxx">
 			</File>
 			<File
 				RelativePath=".\SecurityTypes.hxx">
@@ -851,9 +893,6 @@
 			</File>
 			<File
 				RelativePath="SipMessageExplicit.hxx">
-			</File>
-			<File
-				RelativePath="SipSession.hxx">
 			</File>
 			<File
 				RelativePath="SipStack.hxx">
@@ -910,6 +949,9 @@
 				RelativePath=".\TimeAccumulate.hxx">
 			</File>
 			<File
+				RelativePath=".\os\TimeLimitFifo.hxx">
+			</File>
+			<File
 				RelativePath="os\Timer.hxx">
 			</File>
 			<File
@@ -917,6 +959,9 @@
 			</File>
 			<File
 				RelativePath="TimerQueue.hxx">
+			</File>
+			<File
+				RelativePath=".\TlsConnection.hxx">
 			</File>
 			<File
 				RelativePath="TlsTransport.hxx">
@@ -961,13 +1006,7 @@
 				RelativePath="UdpTransport.hxx">
 			</File>
 			<File
-				RelativePath="UnknownHeaderType.hxx">
-			</File>
-			<File
 				RelativePath="UnknownParameter.hxx">
-			</File>
-			<File
-				RelativePath="UnknownParameterType.hxx">
 			</File>
 			<File
 				RelativePath="Uri.hxx">
@@ -980,6 +1019,9 @@
 			</File>
 			<File
 				RelativePath=".\os\WinCompat.hxx">
+			</File>
+			<File
+				RelativePath=".\os\WinLeakCheck.hxx">
 			</File>
 			<File
 				RelativePath="XMLCursor.hxx">
