@@ -41,6 +41,10 @@ class ExternalDns
       virtual char* errorMessage(long errorCode) = 0;
       
       virtual ~ExternalDns()  {}
+
+      // new version
+      virtual void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData) = 0;
+      
 };
  
 class ExternalDnsResult : public AsyncResult
@@ -89,6 +93,9 @@ class ExternalDnsHandler
       virtual void handle_SRV(ExternalDnsRawResult res) = 0;
       virtual void handle_AAAA(ExternalDnsRawResult res) = 0;
       virtual void handle_host(ExternalDnsHostResult res) = 0;
+
+      // new version
+      virtual void handleDnsRaw(ExternalDnsRawResult res) = 0;
 };
 
 }
