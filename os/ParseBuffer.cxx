@@ -672,7 +672,7 @@ escapeAndAnnotate(const char* buffer,
             if (!doneAt && p >= position)
             {
                ret += '\n';
-               ret += spaces((unsigned int)(position-lastReturn-lineCount+1));
+               ret += spaces((unsigned int)(position - lastReturn));
                ret += "^\n";
                doneAt = true;
             }
@@ -697,7 +697,7 @@ escapeAndAnnotate(const char* buffer,
    if (!doneAt && p >= position)
    {
       ret += "\n";
-      ret += spaces((unsigned int)(position-lastReturn-lineCount+1));
+      ret += spaces((unsigned int)(position - lastReturn));
       ret += "^\n";
    }
 
