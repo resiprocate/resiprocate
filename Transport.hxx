@@ -54,7 +54,8 @@ class Transport : public ThreadIf
       
       const Data& tlsDomain() const { return Data::Empty; }
       const sockaddr& boundInterface() const { return mTuple.getSockaddr(); }
-      
+      const Tuple& getTuple() const { return mTuple; }
+
       virtual TransportType transport() const =0 ;
       virtual bool isReliable() const =0;
       
