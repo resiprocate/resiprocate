@@ -275,7 +275,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
 
    sendNotify( dialog );
 
-#if 1 // do symetric subscriptions 
+#if 0 // do symetric subscriptions 
    // See if this person is our buddy list and if we are not subscribed to them
 
     UInt64 now = Timer::getTimeMs();
