@@ -8,6 +8,68 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
+Repro::Repro(SipStack& stack) : mStack(stack)
+{
+}
+
+Repro::~Repro()
+{
+   shutdown();
+   join();
+}
+
+void
+Repro::thread()
+{
+   while (!isShutdown())
+   {
+      if (mFifo.getNext(100))
+      {
+         Message* msg = mFifo.getNext();
+         
+         SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+         if (sip)
+         {
+            if (sip->isRequest())
+            {
+               assert (mRequestContexts.count(sip->getTransactionId()) == 0);
+               RequestContext* context = new RequestContext(mRequestProcessorChain);
+               mRequestContexts[sip->getTransactionId()] = context;
+               context->process(sip);
+            }
+            else if (sip->isResponse())
+            {
+               // is there a problem with a stray 200
+               HashMap<Data,RequestContext*>::iterator i = mRequestContexts.find(sip->getTransactionId());
+               assert (i != mRequestContexts.end());
+               i->second->process(sip);
+            }
+         }
+
+         TransactionTerminated* term = dynamic_cast<TransactionTerminated*>(msg);
+         if (term)
+         {
+            HashMap<Data,RequestContext*>::iterator i=mRequestContexts.find(term->getTransactionId());
+            if (i != mRequestContexts.end())
+            {
+               i->process(term);
+               mRequestContexts.erase(i);
+            }
+         }
+         
+         ApplicationMessage* app = dynamic_cast<ApplicationMessage*>(msg);
+         if (app)
+         {
+            HashMap<Data,RequestContext*>::iterator i=mRequestContexts.find(term->getTransactionId());
+            // the underlying RequestContext may not exist
+            if (i != mRequestContexts.end())
+            {
+               i->process(app);
+            }
+         }
+      }
+   }
+}
 
 
 /* ====================================================================

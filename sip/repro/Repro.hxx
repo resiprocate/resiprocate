@@ -2,17 +2,34 @@
 #define RESIP_REPRO_HXX 
 
 #include "resiprocate/SipMessage.hxx"
-#include "RequestContext.hxx"
+#include "resiprocate/TransactionUser.hxx"
+#include "resiprocate/os/HashMap.hxx"
+#include "repro/RequestContext.hxx"
 
 namespace repro
 {
-  class RequestProcessorChain;
-  class Repro /* : public Tu */
-  {
-    public:
-    private:
-      RequestProcessorChain &mRequestProcessorChain;
-  };
+class RequestProcessorChain;
+class Repro : public TransactionUser, public ThreadIf
+{
+   public:
+      Repro(SipStack& stack);
+      virtual void thread();
+      
+   private:
+      static RequestProcessorChain mRequestProcessorChain;
+      SipStack& mStack;
+      
+      /// the sip stack will hand events up to the proxy through this fifo
+      Fifo<Message> mFifo; 
+      
+      /** a map from transaction id to RequestContext. Store the server
+          transaction and client transactions in this map. The
+          TransactionTerminated events from the stack will be passed to the
+          RequestContext
+      */
+      HashMap<Data, RequestContext*> mRequestContexts;
+      
+};
 }
 #endif
 
