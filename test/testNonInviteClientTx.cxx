@@ -2,7 +2,7 @@
 #include "sip2/sipstack/Transport.hxx"
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/Helper.hxx"
-
+#include "sip2/sipstack/test/TestSupport.hxx"
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/DataStream.hxx"
 
@@ -83,7 +83,7 @@ doit(int serverResponse, int expectedRetrans, int expectedClientResponse)
 
    InfoLog(<< "Received from wire " << fromStack);
 
-   SipMessage* message = Helper::makeMessage(fromStack);
+   SipMessage* message = TestSupport::makeMessage(fromStack);
       
    // send the response message
 
