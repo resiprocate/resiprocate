@@ -108,6 +108,7 @@ defineHeader(SubscriptionState, "Subscription-State", Token, "RFC 3265");
 
 defineHeader(SIPETag, "SIP-ETag", Token, "PUBLISH draft");
 defineHeader(SIPIfMatch, "SIP-If-Match", Token, "PUBLISH draft");
+defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
 
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 

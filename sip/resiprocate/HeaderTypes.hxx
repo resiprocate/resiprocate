@@ -55,6 +55,7 @@ class Headers
          defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC ????"),
          defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ????"),
          defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ????"),
+         defineHeader(ContentId, "Content-ID", Token, "RFC 2045"),
          defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC ????"),
          defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", Token, "RFC ????"), // !dlb! defineMultiHeader
          defineHeader(ContentType, "Content-Type", Mime, "RFC ????"),
