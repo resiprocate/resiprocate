@@ -9,7 +9,7 @@ namespace resip
 class ServerInviteSession: public InviteSession
 {
    public:
-      class Handle : public InviteSession::Handle
+      class Handle : public BaseUsage::Handle
       {
          public:
             // throws if no session 
