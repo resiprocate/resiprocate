@@ -109,7 +109,7 @@ TransportSelector::addTransport(TransportType protocol,
    assert(mExactTransports.find(key) == mExactTransports.end() &&
           mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
 
-   DebugLog (<< "Adding transport: " << key);
+   InfoLog (<< "Adding transport: " << key);
 
    // Store the transport in the ANY interface maps if the tuple specifies ANY
    // interface. Store the transport in the specific interface maps if the tuple
@@ -258,6 +258,7 @@ TransportSelector::dnsResolve(SipMessage* msg,
       // If this is an ACK we need to fix the tid to reflect that
       if (msg->hasTarget())
       {
+         DebugLog (<< "Looking up dns entries (with target) for " << msg->getTarget());
          result = mDns.lookup(msg->getTarget(), handler);
       }
       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
@@ -265,10 +266,12 @@ TransportSelector::dnsResolve(SipMessage* msg,
          // put this into the target, in case the send later fails, so we don't
          // lose the target
          msg->setTarget(msg->header(h_Routes).front().uri());
+         DebugLog (<< "Looking up dns entries (from route) for " << msg->getTarget());
          result = mDns.lookup(msg->getTarget(), handler);
       }
       else
       {
+         DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri());
          result = mDns.lookup(msg->header(h_RequestLine).uri(), handler);
       }
    }
@@ -540,8 +543,15 @@ TransportSelector::findTransport(const Tuple& search)
          }
       }
    }
+
+   //DebugLog (<< "Exact interface / Specific port: " << Inserter(mExactTransports));
+   //DebugLog (<< "Any interface / Specific port: " << Inserter(mAnyInterfaceTransports));
+   //DebugLog (<< "Exact interface / Any port: " << Inserter(mAnyPortTransports));
+   //DebugLog (<< "Any interface / Any port: " << Inserter(mAnyPortAnyInterfaceTransports));
    
-   ErrLog(<< "Can't find matching transport " << DnsUtil::inet_ntop(search));
+   WarningLog(<< "Can't find matching transport " << search);
+   assert(0);
+   
    return 0;
 }
 
