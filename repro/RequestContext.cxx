@@ -69,6 +69,18 @@ RequestContext::getDigestIdentity() const
    return mDigestIdentity;
 }
 
+void
+RequestContext::addTarget(const NameAddr& target)
+{
+   mCandidateTargets.push_back(target);
+}
+
+std::vector<resip::NameAddr>& 
+RequestContext::getCandidates()
+{
+   return mCandidateTargets;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

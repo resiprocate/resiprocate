@@ -3,12 +3,62 @@
 #endif
 
 #include "resiprocate/SipMessage.hxx"
-#include "ResponseContext.hxx"
+#include "repro/ResponseContext.hxx"
+#include "repro/RequestContext.hxx"
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
+ResponseContext::ResponseContext(RequestContext& context) : 
+   mRequestContext(context)
+{
+}
+
+void
+ResponseContext::processCandidates()
+{
+   while (!mRequestContext.getCandidates().empty())
+   {
+      // purpose of this code is to copy the Uri from the candidate and to only
+      // take the q value parameter from the candidate. 
+      
+      NameAddr& candidate = mRequestContext.getCandidates().back();
+      NameAddr uri(candidate.uri());
+      uri.param(p_q) = candidate.param(p_q);
+      mPendingTargetSet.insert(uri);
+      mRequestContext.getCandidates().pop_back();
+   }
+
+   processPendingTargets();
+}
+
+void
+ResponseContext::processPendingTargets()
+{
+   
+}
+
+void
+ResponseContext::processResponse(const SipMessage& response)
+{
+   // for provisional responses, 
+}
+
+bool 
+ResponseContext::CompareQ::operator()(const resip::NameAddr& lhs, const resip::NameAddr& rhs) const
+{
+   return lhs.param(p_q) < rhs.param(p_q);
+}
+
+bool 
+ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const
+{
+   assert(lhs.isResponse());
+   assert(rhs.isResponse());
+   // !rwm! replace with correct thingy here
+   return lhs.header(h_StatusLine).statusCode() < rhs.header(h_StatusLine).statusCode();
+}
 
 
 /* ====================================================================
