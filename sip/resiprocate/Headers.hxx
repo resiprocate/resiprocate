@@ -63,7 +63,7 @@ class HeaderBase
 };
 
 #define defineHeader(_enum, _name, _type, _rfc)                 \
-class _enum##_Header : public HeaderBase                        \
+class H_##_enum : public HeaderBase                             \
 {                                                               \
    public:                                                      \
       enum {Single = true};                                     \
@@ -71,22 +71,22 @@ class _enum##_Header : public HeaderBase                        \
       UnusedChecking(_enum);                                    \
       static Type& knownReturn(ParserContainerBase* container); \
       virtual Headers::Type getTypeNum() const;                 \
-      _enum##_Header();                                         \
+      H_##_enum();                                              \
 };                                                              \
-extern _enum##_Header h_##_enum
+extern H_##_enum h_##_enum
 
-#define defineMultiHeader(_enum, _name, _type, _rfc)                                    \
-class _enum##_MultiHeader : public HeaderBase                                           \
-{                                                                                       \
-   public:                                                                              \
-      enum {Single = false};                                                            \
-      typedef _type Type;                                                               \
-      MultiUnusedChecking(_enum);                                                       \
-      static ParserContainer<Type>& knownReturn(ParserContainerBase* container);        \
-      virtual Headers::Type getTypeNum() const;                                         \
-      _enum##_MultiHeader();                                                            \
-};                                                                                      \
-extern _enum##_MultiHeader h_##_enum##s
+#define defineMultiHeader(_enum, _name, _type, _rfc)            \
+class H_##_enum##s : public HeaderBase                          \
+{                                                               \
+   public:                                                      \
+      enum {Single = false};                                    \
+      typedef ParserContainer<_type> Type;                      \
+      MultiUnusedChecking(_enum);                               \
+      static Type& knownReturn(ParserContainerBase* container); \
+      virtual Headers::Type getTypeNum() const;                 \
+      H_##_enum##s();                                           \
+};                                                              \
+extern H_##_enum##s h_##_enum##s
 
 //====================
 // Token:
@@ -100,7 +100,7 @@ defineHeader(Priority, "Priority", Token, "RFC ????");
 defineHeader(Event, "Event", Token, "RFC 3265");
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 // explicitly declare to avoid h_AllowEventss, ugh
-extern AllowEvents_MultiHeader h_AllowEvents;
+extern H_AllowEventss h_AllowEvents;
 
 defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC ????");
 defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC ????");
@@ -115,7 +115,7 @@ defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC ????");
 defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC ????");
 defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC ????");
 // explicitly declare to avoid h_SecurityVerifys, ugh
-extern SecurityVerify_MultiHeader h_SecurityVerifies;
+extern H_SecurityVerifys h_SecurityVerifies;
 
 //====================
 // Mime
@@ -176,9 +176,12 @@ defineHeader(Expires, "Expires", ExpiresCategory, "RFC ????");
 //====================
 // CallId:
 //====================
-defineHeader(CallId, "Call-ID", CallId, "RFC ????");
-defineHeader(Replaces, "Replaces", CallId, "RFC ????");
-defineHeader(InReplyTo, "In-Reply-To", CallId, "RFC ????");
+defineHeader(CallID, "Call-ID", CallID, "RFC ????");
+defineHeader(Replaces, "Replaces", CallID, "RFC ????");
+defineHeader(InReplyTo, "In-Reply-To", CallID, "RFC ????");
+
+typedef H_CallID H_CallId; // code convention compatible
+extern H_CallId h_CallId; // code convention compatible
 
 //====================
 // Auth:
