@@ -17,6 +17,24 @@ main(int argc, char* argv[])
 {
    Log::Level l = Log::DEBUG;
    Log::initialize(Log::COUT, l, argv[0]);
+
+   {
+      // test q comparison
+      Uri w1("sip:wombat@192.168.2.221:5062;transport=Udp;q=1.0");
+      Uri w2("sip:wombat@192.168.2.221:5063;transport=Udp;q=0.5");
+      Uri w3("sip:wombat@192.168.2.221:5063;transport=Udp;q=0.5");
+      Uri w4("sip:wombat@192.168.2.221:5063;transport=Udp");
+
+      Uri::GreaterQ gtQ;
+
+      assert(gtQ(w1, w2));
+      assert(!gtQ(w2, w1));
+      assert(!gtQ(w2, w3));
+      assert(!gtQ(w3, w2));
+      assert(!gtQ(w1, w4));
+      assert(!gtQ(w4, w1));
+      assert(gtQ(w4, w3));
+   }
    
    {
       Uri w1("sip:wombat@192.168.2.221:5062;transport=Udp");
