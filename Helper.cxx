@@ -464,6 +464,43 @@ Helper::authenticateRequest(const SipMessage& request,
 }
 
 SipMessage*
+Helper::make405(const SipMessage& request,
+                const MethodTypes * allowed ,
+                int len )
+{
+    SipMessage* resp = Helper::makeResponse(request, 405);
+
+    if (len < 0)
+    {
+        int upperBound = static_cast<int>(UNKNOWN);
+        
+        for (int i = 0 ; i < upperBound; i ++)
+        {
+            int last = 0;
+            // ENUMS must be contiguous in order for this to work.
+            assert( i - last <= 1);
+            //MethodTypes type = static_cast<MethodTypes>(i);
+            Token t;
+            t.value() = MethodNames[i];
+            resp->header(h_Allows).push_back(t);
+            last = i;
+        }
+    }
+    else
+    {
+        // use user's list
+        for ( int i = 0 ; i < len ; i++)
+        {
+            Token t;
+            t.value() = MethodNames[allowed[i]];
+            resp->header(h_Allows).push_back(t);
+        }
+    }
+    return resp;
+}
+
+
+SipMessage*
 Helper::makeProxyChallenge(const SipMessage& request, const Data& realm, bool useAuth)
 {
    Auth auth;
