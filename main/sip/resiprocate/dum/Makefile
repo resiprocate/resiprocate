@@ -24,6 +24,7 @@ SRC =   \
 	ClientRegistration.cxx \
 	ClientSubscription.cxx \
 	DefaultServerReferHandler.cxx \
+	DestroyUsage.cxx \
 	Dialog.cxx \
 	DialogId.cxx \
 	DialogSet.cxx \
@@ -43,6 +44,8 @@ SRC =   \
 	NonDialogUsage.cxx \
 	OutOfDialogReqCreator.cxx \
 	PagerMessageCreator.cxx \
+	MasterProfile.cxx \
+	UserProfile.cxx \
 	Profile.cxx \
 	PublicationCreator.cxx \
 	RedirectManager.cxx \

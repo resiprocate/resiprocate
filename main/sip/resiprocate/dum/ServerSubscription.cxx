@@ -26,14 +26,13 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
      mExpires(60),
      mAbsoluteExpiry(0)
 {
-   mLastRequest = req;
    Data key = getEventType() + getDocumentKey();
    mDum.mServerSubscriptions.insert(std::make_pair(key, this));
 }
 
 ServerSubscription::~ServerSubscription()
 {
-   DebugLog(<< "ServerSubscription::ServerSubscription");
+   DebugLog(<< "ServerSubscription::~ServerSubscription");
    
    Data key = getEventType() + getDocumentKey();
 
@@ -178,6 +177,9 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
                return true;
          }
       }
+      default: // !jf!
+         break;
+         
    }
    return false;   
 }
@@ -231,7 +233,10 @@ ServerSubscription::dispatch(const SipMessage& msg)
       {
          //!dcm! -- should initial state be pending?
          mSubscriptionState = Init;
-         handler->onNewSubscription(getHandle(), msg);            
+         if (mEventType != "refer")
+         {
+            handler->onNewSubscription(getHandle(), msg);
+         }
       }
       else
       {
