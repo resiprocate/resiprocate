@@ -1,19 +1,24 @@
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/SdpContents.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
+#include "resiprocate/dum/InviteSessionHandler.hxx"
+
 
 using namespace resip;
 
 InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
    : BaseUsage(dum, dialog),
-     mOfferState(None),
+     mOfferState(Nothing),
      mCurrentLocalSdp(0),
      mCurrentRemoteSdp(0),
      mProposedLocalSdp(0),
      mProposedRemoteSdp(0)
 {
+   assert(mDum.mInviteSessionHandler);
 }
+
 
 const SdpContents* 
 InviteSession::getLocalSdp()
@@ -43,66 +48,72 @@ InviteSession::end()
 }
 
 // If sdp==0, it means the last offer failed
-void 
-InviteSession::incomingSdp(SdpContents* sdp)
+void
+InviteSession::incomingSdp(const SipMessage& msg, const SdpContents* sdp)
 {
    switch (mOfferState)
    {
-      case None:
+      case Nothing:
          assert(mCurrentLocalSdp == 0);
          assert(mCurrentRemoteSdp == 0);
-         mProposedRemoteSdp = sdp;
+         mProposedRemoteSdp = static_cast<SdpContents*>(sdp->clone());
          mOfferState = Offerred;
+         mDum.mInviteSessionHandler->onOffer(getSessionHandle(), msg, sdp);
          break;
          
       case Offerred:
          mCurrentLocalSdp = mProposedLocalSdp;
-         mCurrentRemoteSdp = sdp;
+         mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
          mProposedLocalSdp = 0;
          mProposedRemoteSdp = 0;
          mOfferState = Answered;
+         mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, sdp);
          break;
 
       case Answered:
          assert(mProposedLocalSdp == 0);
          assert(mProposedRemoteSdp == 0);
-         mProposedRemoteSdp = sdp;
+         mProposedRemoteSdp = static_cast<SdpContents*>(sdp->clone());
          mOfferState = CounterOfferred;
+         mDum.mInviteSessionHandler->onOffer(getSessionHandle(), msg, sdp);
          break;
          
          
       case CounterOfferred:
          assert(mCurrentLocalSdp);
          assert(mCurrentRemoteSdp);
+         mOfferState = Answered;
          if (sdp)
          {
             mCurrentLocalSdp = mProposedLocalSdp;
-            mCurrentRemoteSdp = sdp;
+            mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
+            mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, sdp);
          }
          else
          {
             mProposedLocalSdp = 0;
             mProposedRemoteSdp = 0;
+            // !jf! is this right? 
+            mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
          }
-         mOfferState = Answered;
          break;
    }
 }
 
 void
-InviteSession::sendSdp(SdpContents* sdp)
+InviteSession::sendSdp(const SdpContents* sdp)
 {
    switch (mOfferState)
    {
-      case None:
+      case Nothing:
          assert(mCurrentLocalSdp == 0);
          assert(mCurrentRemoteSdp == 0);
-         mProposedLocalSdp = sdp;
+         mProposedLocalSdp = static_cast<SdpContents*>(sdp->clone());
          mOfferState = Offerred;
          break;
          
       case Offerred:
-         mCurrentLocalSdp = sdp;
+         mCurrentLocalSdp = static_cast<SdpContents*>(sdp->clone());
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mProposedLocalSdp = 0;
          mProposedRemoteSdp = 0;
@@ -112,7 +123,7 @@ InviteSession::sendSdp(SdpContents* sdp)
       case Answered:
          assert(mProposedLocalSdp == 0);
          assert(mProposedRemoteSdp == 0);
-         mProposedLocalSdp = sdp;
+         mProposedLocalSdp = static_cast<SdpContents*>(sdp->clone());
          mOfferState = CounterOfferred;
          break;
         
@@ -122,7 +133,7 @@ InviteSession::sendSdp(SdpContents* sdp)
          assert(mCurrentRemoteSdp);
          if (sdp)
          {
-            mCurrentLocalSdp = sdp;
+            mCurrentLocalSdp = static_cast<SdpContents*>(sdp->clone());
             mCurrentRemoteSdp = mProposedRemoteSdp;
          }
          else
@@ -134,6 +145,47 @@ InviteSession::sendSdp(SdpContents* sdp)
          break;
    }
 }
+
+std::pair<InviteSession::OfferAnswerType, const SdpContents*>
+InviteSession::getOfferOrAnswer(const SipMessage& msg) const
+{
+   std::pair<InviteSession::OfferAnswerType, const SdpContents*> ret;
+   ret.first = None;
+   
+   const SdpContents* contents = dynamic_cast<const SdpContents*>(msg.getContents());
+   if (contents)
+   {
+      static Token c100rel(Symbols::C100rel);
+      if (msg.isRequest() || 
+          msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(c100rel))
+      {
+         switch (mOfferState)
+         {
+            case None: 
+               ret.first = Offer;
+               ret.second = contents;
+               break;
+               
+            case Offerred:
+               ret.first = Answer;
+               ret.second = contents;
+               break;
+
+            case Answered:
+               ret.first = Offer;
+               ret.second = contents;
+               break;
+               
+            case CounterOfferred:
+               ret.first = Answer;
+               ret.second = contents;
+               break;
+         }
+      }
+   }
+   return ret;
+}
+
 
 void
 InviteSession::copyAuthorizations(SipMessage& request)

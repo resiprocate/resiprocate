@@ -23,10 +23,11 @@ class ClientInviteSession : public InviteSession
 
       virtual void setOffer(const SdpContents* offer);
       virtual void setAnswer(const SdpContents* answer);
-      virtual SipMessage& getOfferOrAnswer();
+
       virtual SipMessage& end();
       virtual SipMessage& rejectOffer(int statusCode);
 
+   public:
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       virtual InviteSession::Handle getSessionHandle();
       ClientInviteSession::Handle getHandle() {return mHandle;}
@@ -59,7 +60,7 @@ class ClientInviteSession : public InviteSession
       
       int lastReceivedRSeq;
       int lastExpectedRSeq;
-            
+      int mStaleCallTimerSeq;
       
       // disabled
       ClientInviteSession(const ClientInviteSession&);
