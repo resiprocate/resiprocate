@@ -18,6 +18,9 @@ class HeaderFieldValue
       ParameterList& getParameters();
       ParameterList& getUnknownParameters();
       bool isParsed() const;
+  
+  HeaderFieldValue* next;
+
    private:
       const char* mField;
       const uint mFieldLength;
