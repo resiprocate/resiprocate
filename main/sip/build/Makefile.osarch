@@ -50,7 +50,7 @@ ifeq ($(OSTYPE),QNX)
     CXXFLAGS += -D_REENTRANT
     CFLAGS   += -D_REENTRANT
     LDLIBS_LAST   += -lsocket -lstdc++ 
-    USE_SSL = 0
+    USE_SSL = false
 endif
 
 
@@ -172,8 +172,8 @@ CFLAGS   += $(DEBUG_FLAG)
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),opt)
-CXXFLAGS += $(OPTFLAGS) -DNDEBUG
-CFLAGS += $(OPTFLAGS) -DNDEBUG
+CXXFLAGS += $(OPTFLAGS) #-DNDEBUG
+CFLAGS += $(OPTFLAGS) #-DNDEBUG
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),gopt)
@@ -190,7 +190,7 @@ CXXFLAGS += -pg $(OPTFLAGS) -DNDEBUG
 CFLAGS   += -pg $(OPTFLAGS) -DNDEBUG
 endif
 
-ifeq ($(USE_SSL),1)
+ifeq ($(USE_SSL),true)
 DEFINES += USE_SSL
 endif
 
