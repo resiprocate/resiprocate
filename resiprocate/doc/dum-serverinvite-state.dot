@@ -25,18 +25,16 @@ digraph UAC {
 
         SentUpdateAccepted -> Connected [ label = "on2xxU/app::onAnswer" ];
         SentUpdateAccepted -> Connected [ label = "on488U/app::onOfferRejected" ];
-        SentUpdate -> EarlyRel [ label = "on2xxU" ];
 
         RecvedUpdate -> RecvedUpdateWaitingAnswer [ label = "dum::accept" ];
 
         RecvedUpdateWaitingAnswer -> Connected [ label = "dum::provideAnswer/2xxU,2xxI" ];
 
         Connected -> Connected [ label = "onTimer/resend" ];
-        Connected -> Terminated [ label = "onTimer/resend" ];
+        Connected -> Terminated [ label = "dum::end/BYE" ];
 
         NoOfferRel -> FirstSentOfferRel [ label = "dum::provideOffer/1xxWithOffer,makeTimer" ];
 
         FirstSentOfferRel -> FirstSentOfferRel [ label = "onTimer/resend1xx" ];
         FirstSentOfferRel -> EarlyRel [ label = "onPrackWithSdp/200P,app::onAnswer(SDP)" ];
-        FirstSentOfferRel -> FirstSentOfferRel [ label = "onTimer/resend" ];
 }
