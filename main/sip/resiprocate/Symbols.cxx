@@ -2,43 +2,43 @@
 
 using namespace Vocal2;
 
-const char * const Symbols::DefaultSipVersion = "SIP/2.0";
-const char * const Symbols::DefaultSipScheme = "sip";
+const Data Symbols::DefaultSipVersion = "SIP/2.0";
+const Data Symbols::DefaultSipScheme = "sip";
 
-const char * const Symbols::CRLF = "\r\n";
-const char * const Symbols::CRLFCRLF = "\r\n\r\n";
-const char * const Symbols::CR = "\r";
-const char * const Symbols::LF = "\n";
-const char * const Symbols::TAB = "\t";
+const Data Symbols::CRLF = "\r\n";
+const Data Symbols::CRLFCRLF = "\r\n\r\n";
+const Data Symbols::CR = "\r";
+const Data Symbols::LF = "\n";
+const Data Symbols::TAB = "\t";
 
-const char * const Symbols::AT_SIGN = "@";
-const char * const Symbols::SPACE = " ";
-const char * const Symbols::DASH = "-";
-const char * const Symbols::DASHDASH = "--";
-const char * const Symbols::COLON = ":";
-const char * const Symbols::EQUALS = "=";
-const char * const Symbols::SEMI_OR_EQUAL = ";=";
-const char * const Symbols::COMMA_OR_EQUAL = ",=";
-const char * const Symbols::SEMI_COLON = ";";
-const char * const Symbols::SLASH = "/";
-const char * const Symbols::B_SLASH = "\\";
-const char * const Symbols::DOUBLE_QUOTE = "\"";
-const char * const Symbols::LA_QUOTE = "<";
-const char * const Symbols::RA_QUOTE = ">";
-const char * const Symbols::COMMA = ",";
-const char * const Symbols::ZERO = "0";
-const char * const Symbols::LPAREN = "(";
-const char * const Symbols::RPAREN = ")";
+const Data Symbols::AT_SIGN = "@";
+const Data Symbols::SPACE = " ";
+const Data Symbols::DASH = "-";
+const Data Symbols::DASHDASH = "--";
+const Data Symbols::COLON = ":";
+const Data Symbols::EQUALS = "=";
+const Data Symbols::SEMI_OR_EQUAL = ";=";
+const Data Symbols::COMMA_OR_EQUAL = ",=";
+const Data Symbols::SEMI_COLON = ";";
+const Data Symbols::SLASH = "/";
+const Data Symbols::B_SLASH = "\\";
+const Data Symbols::DOUBLE_QUOTE = "\"";
+const Data Symbols::LA_QUOTE = "<";
+const Data Symbols::RA_QUOTE = ">";
+const Data Symbols::COMMA = ",";
+const Data Symbols::ZERO = "0";
+const Data Symbols::LPAREN = "(";
+const Data Symbols::RPAREN = ")";
 
-const char * const Symbols::ProtocolName = "SIP";
-const char * const Symbols::ProtocolVersion = "2.0";
-const char * const Symbols::UDP = "UDP";
-const char * const Symbols::TCP = "TCP";
-const char * const Symbols::TLS = "TLS";
-const char * const Symbols::SCTP = "SCTP";
+const Data Symbols::ProtocolName = "SIP";
+const Data Symbols::ProtocolVersion = "2.0";
+const Data Symbols::UDP = "UDP";
+const Data Symbols::TCP = "TCP";
+const Data Symbols::TLS = "TLS";
+const Data Symbols::SCTP = "SCTP";
 
-const char * const Symbols::Sip = "sip";
-const char * const Symbols::Sips = "sips";
+const Data Symbols::Sip = "sip";
+const Data Symbols::Sips = "sips";
 
 const char * const Symbols::Accept = "Accept";
 const char * const Symbols::Accept_Encoding = "Accept-Encoding";
