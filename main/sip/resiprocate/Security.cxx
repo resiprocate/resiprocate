@@ -2,18 +2,17 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/os/Socket.hxx"
-
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/Security.hxx"
 #include "resiprocate/Contents.hxx"
+#include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/PlainContents.hxx"
-#include "resiprocate/MultipartSignedContents.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "resiprocate/Security.hxx"
+#include "resiprocate/Transport.hxx"
+#include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 #if defined(USE_SSL)
 

@@ -36,7 +36,8 @@ class Timer
          TimerK,
          TimerTrying,
          TimerStaleClient,
-         TimerStaleServer
+         TimerStaleServer,
+         TimerCleanUp
       } Type;
       
       static Data toData(Type timer);

@@ -2,21 +2,22 @@
 #define RESIP_TRANSACTIONSTATE_HXX
 
 #include <iostream>
-#include "resiprocate/DnsResolver.hxx"
+#include "resiprocate/DnsHandler.hxx"
+#include "resiprocate/Transport.hxx"
 
 namespace resip
 {
 
+class DnsResult;
 class Message;
 class SipMessage;
-class DnsMessage;
-class SipStack;
 class TransactionMap;
+class TransactionController;
 
-class TransactionState
+class TransactionState : public DnsHandler
 {
    public:
-      static void process(SipStack& stack); 
+      static void process(TransactionController& controller); 
       ~TransactionState();
      
    private:
@@ -40,25 +41,20 @@ class TransactionState
          Bogus
       } State;
 
-      typedef enum
-      {
-         NotStarted,
-         Waiting,
-         Complete,
-         NoLookupRequired // used for sending responses
-      } DnsState;
+      TransactionState(TransactionController& controller, Machine m, State s, const Data& tid);
+      
+      void handle(DnsResult*);
 
-      
-      TransactionState(SipStack& stack, Machine m, State s, const Data& tid);
-      
-      void processDns( Message* msg );
       void processStateless( Message* msg);
       void processClientNonInvite(  Message* msg );
       void processClientInvite(  Message* msg );
       void processServerNonInvite(  Message* msg );
       void processServerInvite(  Message* msg );
       void processStale(  Message* msg );
-
+      void processTransportFailure();
+      void processNoDnsResults();
+      void processReliability(Transport::Type type);
+      
       void add(const Data& tid);
       void erase(const Data& tid);
       
@@ -66,7 +62,6 @@ class TransactionState
       bool isRequest(Message* msg) const;
       bool isInvite(Message* msg) const;
       bool isTimer(Message* msg) const;
-      bool isDns(Message* msg) const;
       bool isResponse(Message* msg, int lower=0, int upper=699) const;
       bool isFromTU(Message* msg) const;
       bool isFromWire(Message* msg) const;
@@ -76,8 +71,7 @@ class TransactionState
       bool isReliabilityIndication(Message* msg) const;
       bool isSentIndication(Message* msg) const;
       void sendToTU(Message* msg) const;
-      void sendToWire(Message* msg);
-      void resendToWire(Message* msg);
+      void sendToWire(Message* msg, bool retransmit=false);
       SipMessage* make100(SipMessage* request) const;
       void terminateClientTransaction(const Data& tid); 
       void terminateServerTransaction(const Data& tid); 
@@ -85,7 +79,7 @@ class TransactionState
       
       static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine);
       
-      SipStack& mStack;
+      TransactionController& mController;
       
       Machine mMachine;
       State mState;
@@ -100,20 +94,19 @@ class TransactionState
       // !rk! The contract for this variable needs to be defined.
       SipMessage* mMsgToRetransmit;
 
-      DnsState mDnsState;
-      DnsResolver::TupleList mTuples;
-      DnsResolver::TupleIterator mCurrent;
-      int mDnsOutstandingQueries;
-      
+      // Handle to the dns results queried by the TransportSelector
+      DnsResult* mDnsResult;
+
+      // current selection from the DnsResult. e.g. it is important to send the
+      // CANCEL to exactly the same tuple as the original INVITE went to. 
+      Transport::Tuple mTarget; 
+
       Transport::Tuple mSource; // used to reply to requests
       Data mId;
       Data mToTag; // for failure responses on ServerInviteTransaction 
-
-      // this shouldn't be static since there can be more than one SipStack in
-      // an app. Should be stored in the SipStack
-      static unsigned long StatelessIdCounter;
       
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
+      friend class TransactionController;
 };
 
 
