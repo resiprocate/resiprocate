@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.93 2002/12/05 04:35:51 davidb Exp $
+# $Id: Makefile,v 1.94 2002/12/14 17:02:45 fluffy Exp $
 
 BUILD = ../../build
 
@@ -43,6 +43,7 @@ SRC = \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
 	Headers.cxx \
+	HeaderTypes.cxx \
 	Helper.cxx \
 	IntegerParameter.cxx \
 	Message.cxx \
