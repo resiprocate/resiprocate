@@ -30,9 +30,12 @@ class Helper
       const static int tagSize;  //bytes in to-tag& from-tag, should prob. live
       //somewhere else
 
-      // used to make sure 
-      static unsigned long aBitSmallerThan(unsigned long secs); 
-      static time_t aBitSmallerThan(time_t secs); 
+      // Sorry if this doesn't build in Win32, let me know  (jf)
+      template<typename T>
+      static T aBitSmallerThan(T secs)
+      {
+         return resipMax(T(32), resipMin(secs - T(32), 9*secs/10));
+      }
       
       //in general content length handled automatically by SipMessage?
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from);
