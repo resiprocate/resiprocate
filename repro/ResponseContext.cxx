@@ -88,7 +88,7 @@ ResponseContext::processPendingTargets()
 
       if (request.exists(h_MaxForwards))
       {
-         if (request.header(h_MaxForwards).value() < 20)
+         if (request.header(h_MaxForwards).value() <= 20)
          {
             request.header(h_MaxForwards).value()--;
          }

@@ -18,8 +18,7 @@ using namespace std;
 RequestProcessor::processor_action_t
 LocationServer::handleRequest(RequestContext& context)
 {
-   DebugLog(<< "Monkey handling request: " << *this 
-            << "; reqcontext = " << context);
+   DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
 
   resip::Uri& inputUri
     = context.getOriginalRequest().header(h_RequestLine).uri();
@@ -39,6 +38,7 @@ LocationServer::handleRequest(RequestContext& context)
 	    RegistrationPersistenceManager::ContactPair contact = *i;
         if (contact.second>=time(NULL))
         {
+           InfoLog (<< *this << " adding target " << contact.first);
            context.addTarget(NameAddr(contact.first));
         }
      }
@@ -47,13 +47,14 @@ LocationServer::handleRequest(RequestContext& context)
 	 {
 	    // make 480, send, dispose of memory
 		resip::SipMessage response;
-        InfoLog (<< "No registered target for " << inputUri << " send 480");
+        InfoLog (<< *this << ": no registered target for " << inputUri << " send 480");
 		Helper::makeResponse(response, context.getOriginalRequest(), 480); 
 		context.sendResponse(response);
 	    return RequestProcessor::SkipThisChain;
 	 }
 	 else
 	 {
+        InfoLog (<< *this << " there are " << context.getCandidates().size() << " candidates -> continue");
 	    return RequestProcessor::Continue;
 	 }
    }
