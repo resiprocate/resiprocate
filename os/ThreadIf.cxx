@@ -52,6 +52,8 @@ ThreadIf::~ThreadIf()
 void
 ThreadIf::run()
 {
+   assert(mId == 0);
+
 #if defined(WIN32)
    mThread = CreateThread(
       NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
@@ -76,6 +78,11 @@ ThreadIf::run()
 void
 ThreadIf::join()
 {
+   // !kh!
+   // perhaps assert instead of returning when join()ed already?
+   // programming error?
+   //assert(mId == 0);
+
    if (mId == 0)
    {
       return;
