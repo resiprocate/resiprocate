@@ -441,7 +441,9 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
                {
-                  it->second->dispatch(msg);
+                  Dialog* d = it->second;
+                  it++;
+                  d->dispatch(msg);         
                }
                return;
             }
