@@ -8,27 +8,25 @@ digraph UAC {
         rankdir=LR;
         node [shape = box];
 
+        // create a timer in the DialogSet when 1xx is received including 100
         Start -> UAC_Early                              [ label = "on1xx/app::onNewSession,app::onProvisional" ];
         Start -> UAC_EarlyWithOffer                     [ label = "on1xx-offer/app::onOffer" ];
         Start -> UAC_EarlyWithAnswer                    [ label = "on1xx-answer/app::onNewSession,app::onAnswer,PRACK" ];
         Start -> UAC_WaitingForAnswerFromApp            [ label = "on2xx-offer/app::onOffer" ];
         Start -> Connected                              [ label = "on2xx-answer/send::ACK" ];
-        //Start -> Terminated                           [ label = "on2xx/send::ACK,send::BYE,app::onFailure" ];
-        // Done
+        Start -> Terminated                             [ label = "on2xx/send::ACK,send::BYE,app::onFailure" ];
 
         UAC_Early -> UAC_Early                          [ label = "on1xx/app::onProvisional" ];
         UAC_Early -> UAC_EarlyWithAnswer                [ label = "on1xx-answer/app::onAnswer" ];
         UAC_Early -> UAC_EarlyWithOffer                 [ label = "on1xx-offer/app::onOffer" ];
         UAC_Early -> UAC_WaitingForAnswerFromApp        [ label = "on2xx-offer/app::onOffer" ];
         UAC_Early -> Connected                          [ label = "on2xx-answer/send::ACK" ];
-        //UAC_Early -> Finish                           [ label = "onGeneralFailure" ];
-        //UAC_Early -> UAC_Canceled                     [ label = "dum::cancel/timer" ];
-        //UAC_Early -> Terminated                       [ label = "on2xx/send::ACK,send::BYE" ];
-        // Done
+        UAC_Early -> Finish                             [ label = "onGeneralFailure" ];
+        UAC_Early -> UAC_Canceled                       [ label = "dum::cancel/timer" ];
+        UAC_Early -> Terminated                         [ label = "on2xx/send::ACK,send::BYE" ];
 
         UAC_EarlyWithOffer -> Connected                 [ label = "on2xx-answer/send::ACK" ];
         UAC_EarlyWithOffer -> UAC_PrackAnswerWait       [ label = "dum::provideAnswer/send::PRACK" ];
-        // Done
 
         UAC_EarlyWithAnswer -> Connected                [ label = "on2xx/send::ACK" ];
         UAC_EarlyWithAnswer -> UAC_EarlyWithAnswer      [ label = "on1xx/send::PRACK" ];
@@ -36,48 +34,39 @@ digraph UAC {
         // Can I send the UPDATE before I get 200/PRACK
         UAC_EarlyWithAnswer -> UAC_SentUpdateEarly      [ label = "dum::povideOffer/send::UPDATE" ];
         UAC_EarlyWithAnswer -> UAC_ReceivedUpdateEarly  [ label = "onUPDATE/app::onOffer" ];
-        //UAC_EarlyWithAnswer -> Terminated             [ label = "on2XX-answer/send::ACK,send::BYE" ];
-        //UAC_EarlyWithAnswer -> Finished               [ label = "onGeneralFailure" ];
-        //UAC_EarlyWithAnswer -> UAC_Canceled           [ label = "dum::cancel/timer" ];
-        // Done
+        UAC_EarlyWithAnswer -> Terminated               [ label = "on2XX-answer/send::ACK,send::BYE" ];
+        UAC_EarlyWithAnswer -> Finished                 [ label = "onGeneralFailure" ];
+        UAC_EarlyWithAnswer -> UAC_Canceled             [ label = "dum::cancel/timer" ];
 
         UAC_SentUpdateEarly -> UAC_EarlyWithAnswer      [ label = "on200U/app::onAnswer" ];
         UAC_SentUpdateEarly -> UAC_EarlyWithAnswer      [ label = "onUPDATE/489glare" ];
         UAC_SentUpdateEarly -> UAC_EarlyWithAnswer      [ label = "on489/glare" ];
         UAC_SentUpdateEarly -> UAC_SentUpdateConnected  [ label ="on2xxI/send::ACK" ];
-        //UAC_SentUpdateEarly -> Finish                 [ label = "onGeneralFailure" ];
-        //UAC_SentUpdateEarly -> UAC_Canceled           [ label = "dum::cancel/timer" ];
-        // Done
+        UAC_SentUpdateEarly -> Finish                   [ label = "onGeneralFailure" ];
+        UAC_SentUpdateEarly -> UAC_Canceled             [ label = "dum::cancel/timer" ];
 
         UAC_SentUpdateConnected -> Connected            [ label = "on2xxU/app::onAnswer" ];
         UAC_SentUpdateConnected -> Connected            [ label = "on488U/app::onRejected" ];
         UAC_SentUpdateConnected -> Connected            [ label = "on489U/glare" ];
-        // Done
 
         UAC_ReceivedUpdateEarly -> UAC_EarlyWithAnswer  [ label = "dum::provideAnswer/send::200U-answer" ];
         UAC_ReceivedUpdateEarly -> UAC_EarlyWithAnswer  [ label = "dum::reject/send::488U" ];
-        //UAC_ReceivedUpdateEarly -> UAC_Canceled       [ label = "dum::cancel/timer" ];// Only UAC can CANCEL
-        // Done
+        UAC_ReceivedUpdateEarly -> UAC_Canceled         [ label = "dum::cancel/timer" ];// Only UAC can CANCEL
 
         UAC_WaitingForAnswerFromApp -> Connected        [ label = "dum::provideAnswer/send::ACK-answer" ];
-        // Done
 
         UAC_PrackAnswerWait -> UAC_EarlyWithAnswer      [ label = "dum::provideOffer/queueOffer" ];
         UAC_PrackAnswerWait -> UAC_SentUpdateEarly      [ label = "on200P-queued/UPDATE-queued" ];
         UAC_PrackAnswerWait -> UAC_EarlyWithAnswer      [ label = "on200P-notQueued" ];
         UAC_PrackAnswerWait -> Connected                [ label = "on2xxI/send::ACK" ];
-        // Done
 
         UAC_Canceled -> Finished                        [ label = "onTimer" ];
         UAC_Canceled -> Finished                        [ label = "onGeneralFailure" ];
         UAC_Canceled -> Finished                        [ label = "on4xxC" ];
         UAC_Canceled -> Terminated                      [ label = "on200I/send::BYE" ];
-        // Done
 
         Connected -> Terminated                         [ label = "dum::end/send::BYE" ];
         Connected -> Finish                             [ label = "on2xxB" ];
-        // Done
 
         Terminated -> Finish                            [ label = "2XX BYE" ];
-        // Done
 }

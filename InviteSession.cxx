@@ -898,6 +898,12 @@ InviteSession::transition(State target)
    mState = target;
 }
 
+bool
+InviteSession::isReliable(const SipMessage& msg)
+{
+   return msg.header(h_Supporteds).find(Token(Symbols::C100rel));
+}
+
 const SdpContents*
 InviteSession::getSdp(const SipMessage& msg) 
 {

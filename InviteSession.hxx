@@ -140,6 +140,7 @@ class InviteSession : public DialogUsage
       void transition(State target);
       InviteSessionHandle getSessionHandle();
 
+      static bool isReliable(const SipMessage& msg);
       static const SdpContents* getSdp(const SipMessage& msg);
       static std::auto_ptr<SdpContents> makeSdp(const SdpContents& sdp);
       static void setSdp(SipMessage& msg, const SdpContents& sdp);
