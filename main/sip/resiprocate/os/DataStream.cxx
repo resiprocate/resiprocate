@@ -20,13 +20,13 @@ int
 DataBuffer::sync()
 {
    size_t len = pptr() - pbase();
-   if (len > 0) 
+   if (len > 0)
    {
       size_t pos = gptr() - eback();  // remember the get position
       mStr.mSize += len;
       char* gbuf = const_cast<char*>(mStr.data());
       // reset the get buffer
-      setg(gbuf, gbuf+pos, gbuf+mStr.size()); 
+      setg(gbuf, gbuf+pos, gbuf+mStr.size());
       // reset the put buffer
       setp(gbuf + mStr.mSize, gbuf + mStr.mCapacity);
    }
@@ -38,7 +38,7 @@ DataBuffer::overflow(int c)
 {
    // sync, but reallocate
    size_t len = pptr() - pbase();
-   if (len > 0) 
+   if (len > 0)
    {
       size_t pos = gptr() - eback();  // remember the get position
 
@@ -50,11 +50,11 @@ DataBuffer::overflow(int c)
 
       char* gbuf = const_cast<char*>(mStr.mBuf);
       // reset the get buffer
-      setg(gbuf, gbuf+pos, gbuf+mStr.mSize); 
+      setg(gbuf, gbuf+pos, gbuf+mStr.mSize);
       // reset the put buffer
       setp(gbuf + mStr.mSize, gbuf + mStr.mCapacity);
    }
-   if (c != -1) 
+   if (c != -1)
    {
       mStr.mBuf[mStr.mSize] = c;
       pbump(1);
@@ -65,7 +65,6 @@ DataBuffer::overflow(int c)
 
 iDataStream::iDataStream(Data& str)
    : DataBuffer(str), std::istream(this)
-//     mStreambuf(str)
 {
 //   init(&mStreambuf);
 }
@@ -76,7 +75,6 @@ iDataStream::~iDataStream()
 
 oDataStream::oDataStream(Data& str)
    : DataBuffer(str), std::ostream(this)
-//     mStreambuf(str)
 {
 //   init(&mStreambuf);
 }
@@ -87,10 +85,7 @@ oDataStream::~oDataStream()
 }
 
 DataStream::DataStream(Data& str)
-//   : std::iostream((new (reinterpret_cast<DataBuffer*>(m_tmp)) DataBuffer(str), reinterpret_cast<DataBuffer*>(m_tmp)))
    : DataBuffer(str), std::iostream(this)
-//   : std::iostream(&mStreambuf),
-//     mStreambuf(str)
 {
    //init(&mStreambuf);
 }
@@ -98,26 +93,24 @@ DataStream::DataStream(Data& str)
 DataStream::~DataStream()
 {
    flush();
-   //DataBuffer* p = reinterpret_cast<DataBuffer*>(m_tmp);
-   //p->~DataBuffer();
 }
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
