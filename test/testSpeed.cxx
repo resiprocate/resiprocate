@@ -29,6 +29,10 @@ main(int argc, char* argv[])
 {
    Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::ERR, argv[0]);
    
+   Log::toLevel( Data("DEBUG") );
+
+	const Data& ret = ParameterTypes::ParameterNames[ParameterTypes::transport];
+
    SipStack stack1;
    SipStack stack2;
    stack1.addTransport(Transport::UDP, 5070);
