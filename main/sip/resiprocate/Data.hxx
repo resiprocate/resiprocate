@@ -2,7 +2,7 @@
 #define STRINGDATA_H_
 
 static const char* const DataHeaderVersion =
-"$Id: Data.hxx,v 1.2 2002/09/21 19:25:25 jason Exp $";
+"$Id: Data.hxx,v 1.3 2002/09/21 19:51:19 dabryan Exp $";
 
 //Authors: Sunitha Kumar, Cullen Jennings
 
@@ -17,7 +17,7 @@ namespace Vocal2
 #define FOUND 0
 static const char SPACE[] = " ";
 
-class Data : public string
+class Data : public std::string
 {
       
    public:
@@ -25,7 +25,7 @@ class Data : public string
       Data( const char* str );
       Data( const char* buffer, int length );
       Data( const Data& data );
-      Data( const string& str);
+      Data( const std::string& str);
       Data( const int value);
 
       //Data& operator=(const Data& data);
@@ -134,7 +134,7 @@ class Data : public string
 }
 
 
-
+#if JASON_SAYS
 
 #if ( (__GNUC__ == 3))
 #if ( (__GNUC_MINOR__ >= 1) )
@@ -165,6 +165,8 @@ struct hash<Data>
 #endif
 
 #endif
+
+#endif // JASON_SAYS
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

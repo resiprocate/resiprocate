@@ -1,5 +1,5 @@
-#ifndef MessageApi_hxx
-#define MessageApi_hxx
+#ifndef SipMessage_hxx
+#define SipMessage_hxx
 
 #include <list>
 #include <utility>
@@ -15,9 +15,11 @@ class SipMessage
 {
    public:
 
-      SipMessage(char buff[]);
+      SipMessage(char* buff);
       SipMessage()
          : nIsExternal(false)
+      {}
+      
       SipMessage(const SipMessage& message);
 
       SipMessage* clone() const;
@@ -29,37 +31,54 @@ class SipMessage
          return nIsExternal;
       }
 
-      string encode();
+      std::string encode();
 
       // known header interface
       template <int T>
-      typename Header<T>::Type& operator[](const Header<T>& headerType)
+      typename Header<T>::Type& 
+      operator[](const Header<T>& headerType)
       {
          HeaderTypeHolder<T> parserFactory;
 
-         HeaderFieldValueList* hfvs = mHeaders[parserFactory.getValue()]
+         HeaderFieldValueList* hfvs = mHeaders[parserFactory.getValue()];
          // empty?
          if (mHeaders[parserFactory.getValue()] == 0)
          {
             // create the list with a new component
-            hfvs = new HeaderFieldValueList();
-            newList.push_back(new HeaderFieldValue(parserFactory.createParserCategory()));
-            mHeaders[parserFactory.getValue()] = newList;
+            hfvs = new HeaderFieldValueList;
+            HeaderFieldValue* hfv = new HeaderFieldValue;
+            hfv->mParserCategory = parserFactory.createParserCategory(hvf);
+            hfvs->push_back(hfv);
+            if (parserFactory.isMulti())
+            {
+               hfvs->setParserCategory(parserFactory.createParserCategory(newList));
+            }
+            mHeaders[parserFactory.getValue()] = hfvs;
          }
                   
          // already parsed?
          if (!hfvs->front().isParsed())
          {
-            // create the appropriate component -- component parses lazy
-            // VIA, e.g., iterates through the HeaderFieldValues and return a
-            // collection component
-            hfvs->setParserCategory(parserFactory.createParserCategory(*hfvs));
+            if (parserFactory.isMulti())
+            {
+               hfvs->setParserCategory(parserFactory.createParserCategory(*hfvs));
+               HeaderFieldValue* it = hfvs->first;
+               while (it != 0)
+               {
+                  it->setParserCategory(parserFactory.createParserCategory(*it));
+                  it = it->next;
+               }
+            }
+            else
+            {
+               hfvs->front().setParserCategory(parserFactory.createParserCategory(hfvs->front()));               
+            }
          }
 
-         return *(HeaderType<T>::Type*)mHeaders[parserFactory.getValue()]->getParserCategory();
+         return *(typename HeaderTypeHolder<T>::Type*)mHeaders[parserFactory.getValue()]->getParserCategory();
       }
 
-      template <typename T>
+      template <int T>
       void remove(const Header<T>& headerType)
       {
          HeaderTypeHolder<T> parserFactory;
@@ -71,9 +90,9 @@ class SipMessage
       // note: removeFirst/removeLast through the component 
 
       // unknown header interface
-      StringComponent& operator[](const string& symbol);
+      Unknowns& operator[](const std::string& symbol);
 
-      void remove(const string& symbol);
+      void remove(const std::string& symbol);
 
       // note: removeFirst/removeLast through the component 
 
@@ -90,9 +109,10 @@ class SipMessage
       // not available
       SipMessage& operator=(const SipMessage&);
 
+      char* mBuff;
       const bool nIsExternal;
       HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
-      typedef list< pair<string, HeaderFieldValueList*> > UnknownHeaders;
+      typedef std::list< std::pair<std::string, HeaderFieldValueList*> > UnknownHeaders;
       UnknownHeaders mUnknownHeaders;
 };
 
