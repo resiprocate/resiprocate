@@ -122,6 +122,8 @@ ParseBuffer::skipWhitespace()
 
 // "SIP header field values can be folded onto multiple lines if the
 //  continuation line begins with a space or horizontal tab"
+
+// CR can be quote with \ within "" and comments -- treat \CR as whitespace
 const char* 
 ParseBuffer::skipLWS()
 {
@@ -129,6 +131,16 @@ ParseBuffer::skipLWS()
    State state = WS;
    while (mTraversalPtr < mEnd)
    {
+      char c = *mTraversalPtr++;
+      if (c == '\\')
+      {
+         // treat escaped CR and LF as space
+         c = *mTraversalPtr++;
+         if (c == '\r' || c == '\n')
+         {
+            c = ' ';
+         }
+      }
       switch (*mTraversalPtr++)
       {
          case ' ' :
@@ -180,8 +192,13 @@ ParseBuffer::skipToTermCRLF()
       static Data CRLF("\r\n");
       skipToChars(CRLF);
       mTraversalPtr += 2;
-      if (*mTraversalPtr != ' ' &&
-          *mTraversalPtr != '\t')
+      if (eof() || 
+          (*mTraversalPtr != ' ' &&
+           *mTraversalPtr != '\t' &&
+           // check for \CRLF -- not terminating
+           //           \\CRLF -- terminating
+           ((mTraversalPtr-3 < mBuff || *(mTraversalPtr-3) != '\\') ||
+            (mTraversalPtr-4 > mBuff && *(mTraversalPtr-4) == '\\'))))
       {
          mTraversalPtr -= 2;
          break;
@@ -211,26 +228,24 @@ const char*
 ParseBuffer::skipToChars(const char* cs)
 {
    assert(cs);
-   if (*cs == 0)
-   {
-      return mTraversalPtr;
-   }
+   unsigned int l = strlen(cs);
 
-   const char* pos;
    const char* rpos;
-
+   const char* cpos;
    while (mTraversalPtr < mEnd)
    {
       rpos = mTraversalPtr;
-      pos = cs;
-      while (*pos++ == *mTraversalPtr++)
+      cpos = cs;
+      for (unsigned int i = 0; i < l; i++)
       {
-         if (*pos == 0)
+         if (*cpos++ != *rpos++)
          {
-            reset(rpos);
-            return rpos;
+            mTraversalPtr++;
+            goto skip;
          }
       }
+      return mTraversalPtr;
+     skip: ;
    }
    return mTraversalPtr;
 }
@@ -238,24 +253,23 @@ ParseBuffer::skipToChars(const char* cs)
 const char*
 ParseBuffer::skipToChars(const Data& cs)
 {
-   if (cs.empty())
-   {
-      return mTraversalPtr;
-   }
+   const unsigned int l = static_cast<unsigned int>(cs.size());
 
    const char* rpos;
+   const char* cpos;
    while (mTraversalPtr < mEnd)
    {
+      cpos = cs.data();
       rpos = mTraversalPtr;
-      for (size_t i = 0; i < cs.size(); i++)
+      for (size_t i = 0; i < l; i++)
       {
-         if (cs[i] != *mTraversalPtr++)
+         if (*cpos++ != *rpos++)
          {
+            mTraversalPtr++;
             goto skip;
          }
       }
-      reset(rpos);
-      return rpos;
+      return mTraversalPtr;
      skip: ;
    }
    return mTraversalPtr;
