@@ -143,12 +143,13 @@ void
 ClientPublication::update(const Contents* body)
 {
    assert(body);
+
    if (mDocument != body)
    {
       delete mDocument;
-      mDocument = body;
+      mDocument = body->clone();
    }
-   
+
    mPublish.header(h_CSeq).sequence()++;
    mPublish.setContents(mDocument);
    refresh();
