@@ -16,7 +16,6 @@ class HeaderFieldValueList;
 class Token : public ParserCategory
 {
    public:
-      Token(HeaderFieldValueList& hvfs) {}
       Token(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       UnknownSubComponent& operator[](const Data& param)
@@ -77,7 +76,6 @@ class IntegerComponent : public ParserCategory
 class StringComponent : public ParserCategory
 {
    public:
-      StringComponent(HeaderFieldValueList& hvfs) {}
       StringComponent(HeaderFieldValue& hvf) {}
       virtual ParserCategory* clone(HeaderFieldValue*) const;
       virtual void parse();
