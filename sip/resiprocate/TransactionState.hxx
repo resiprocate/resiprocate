@@ -1,9 +1,15 @@
+#if !defined(TRANSACTIONSTATE_HXX)
+#define TRANSACTIONSTATE_HXX
+
+namespace Vocal2
+{
 
 class TransactionState
 {
-public:
-  static void process(); // 
-
-private:
-
+   public:
+      void process(); 
 };
+ 
+}
+
+#endif
