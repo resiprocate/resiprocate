@@ -117,7 +117,7 @@ UdpTransport::process(FdSet& fdset)
    //should this buffer be allocated on the stack and then copied out, as it
    //needs to be deleted every time EWOULDBLOCK is encountered
    char* buffer = new char[MaxBufferSize];
-   int fromLen = sizeof(from);
+   socklen_t fromLen = sizeof(from);
 
    // !jf! how do we tell if it discarded bytes 
    // !ah! we use the len-1 trick :-(
