@@ -14,7 +14,6 @@
 namespace Vocal2
 {
 
-class Codec;
 class SdpContents;
 
 class AttributeHelper
@@ -46,6 +45,44 @@ class SdpContents : public Contents
       {
          public:
             class Medium;
+
+            class Codec
+            {
+               public:
+                  Codec() : mName(), mRate(0), mPayloadType(-1) {}
+                  Codec(const Data& name, unsigned long rate, const Data& parameters = Data::Empty);
+                  Codec(const Codec& rhs);
+                  Codec& operator=(const Codec& codec);
+
+                  void parse(ParseBuffer& pb, 
+                             const SdpContents::Session::Medium& medium, 
+                             int payLoadType);
+
+                  const Data& getName() const;
+                  int getRate() const;
+
+                  int payloadType() const {return mPayloadType;}
+                  int& payloadType() {return mPayloadType;}
+
+                  const Data& parameters() const {return mParameters;}
+                  Data& parameters() {return mParameters;}
+
+                  static const Codec ULaw_8000;
+                  static const Codec ALaw_8000;
+                  static const Codec G729_8000;
+                  static const Codec TelephoneEvent;
+                  static const Codec FrfDialedDigit;
+
+               private:
+                  Data mName;
+                  unsigned long mRate;
+                  int mPayloadType;
+                  Data mParameters;
+
+                  friend bool operator==(const Codec&, const Codec&);
+                  friend std::ostream& operator<<(std::ostream&, const Codec&);
+            };
+
             class Origin
             {
                public:
@@ -437,46 +474,12 @@ class SdpContents : public Contents
       static ContentsFactory<SdpContents> Factory;
 };
 
-class Codec
-{
-   public:
-      Codec() : mName(), mRate(0), mPayloadType(-1) {}
-      Codec(const Data& name, unsigned long rate, const Data& parameters = Data::Empty);
-      Codec(const Codec& rhs);
-      Codec& operator=(const Codec& codec);
+typedef SdpContents::Session::Codec Codec;
 
-      void parse(ParseBuffer& pb, 
-                 const SdpContents::Session::Medium& medium, 
-                 int payLoadType);
+bool operator==(const SdpContents::Session::Codec& lhs, 
+                const SdpContents::Session::Codec& rhs);
 
-      const Data& getName() const;
-      int getRate() const;
-
-      int payloadType() const {return mPayloadType;}
-      int& payloadType() {return mPayloadType;}
-
-      const Data& parameters() const {return mParameters;}
-      Data& parameters() {return mParameters;}
-
-      static const Codec ULaw_8000;
-      static const Codec ALaw_8000;
-      static const Codec G729_8000;
-      static const Codec TelephoneEvent;
-      static const Codec FrfDialedDigit;
-
-   private:
-      Data mName;
-      unsigned long mRate;
-      int mPayloadType;
-      Data mParameters;
-
-      friend bool operator==(const Codec&, const Codec&);
-      friend std::ostream& operator<<(std::ostream&, const Codec&);
-};
-
-bool operator==(const Codec& lhs, const Codec& rhs);
-
-std::ostream& operator<<(std::ostream& str, const Codec& codec);
+std::ostream& operator<<(std::ostream& str, const SdpContents::Session::Codec& codec);
 
 }
 
