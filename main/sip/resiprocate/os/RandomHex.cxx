@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 //#include <openssl/rand.h>
+#include <stdio.h>
 #include <util/RandomHex.hxx>
 
 #include <stdlib.h>
