@@ -191,7 +191,7 @@
 <g id="EmptyHdrCont-&gt;BuildHdr" class="edge">
 <g style="fill:none;stroke:black"><path d="M495 181C407 185 21 182 21 233 21 233 21 233 21 342 21 363 25 373 37 387"/></g>
 <polygon style="fill:black;stroke:black" points="493,182 499,181 493,179 493,182"/>
-<text text-anchor="middle" x="50" y="289" style="font-family:Helvetica;font-size:4.43">*, Reset|Back|Discard|Data</text>
+<text text-anchor="middle" x="45" y="289" style="font-family:Helvetica;font-size:4.43">*, Reset|Back|Discard</text>
 </g>
 <g id="EmptyHdrCont-&gt;EWSPostColon" class="edge">
 <g style="fill:none;stroke:black"><path d="M281 289C224 294 85 293 51 332 39 347 41 373 44 387"/></g>
