@@ -439,7 +439,7 @@ DialogSet::dispatch(const SipMessage& msg)
             //usages, return, if no usage allow one to be created.
             if (!mDialogs.empty())
             {
-               for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+               for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
                {
                   Dialog* d = it->second;
                   it++;
