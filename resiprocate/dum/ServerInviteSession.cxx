@@ -52,6 +52,7 @@ ServerInviteSession::send(SipMessage& msg)
       if (code < 200)
       {
          mDum.send(msg);
+         msg.releaseContents();  //!dcm! -- maybe?         
       }
       else if (code < 300)
       {
@@ -73,8 +74,8 @@ ServerInviteSession::send(SipMessage& msg)
    else
    {
       //!dcm!-- accepting logic is in InviteSession(merge w/ reinvite),
-      //so no requests should be legal, which makes this user error
-      assert(0);
+      //so no requests should be legal, which makes this user error? UPDATE eventually?
+      throw UsageUseException("No request legal in this context.", __FILE__, __LINE__);
    }
 }
 
@@ -82,13 +83,24 @@ SipMessage&
 ServerInviteSession::provisional(int statusCode)
 {
    mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
+   return mLastResponse;
 }
 
 SipMessage& 
 ServerInviteSession::reject(int statusCode)
 {
    mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
+   return mLastResponse;
 }
+
+SipMessage& 
+ServerInviteSession::accept()
+{
+   mDialog.makeResponse(mFinalResponse, mLastRequest, 200);
+   return mFinalResponse;
+}
+
+
 
 void 
 ServerInviteSession::dispatch(const SipMessage& msg)
