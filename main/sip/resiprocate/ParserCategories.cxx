@@ -37,7 +37,7 @@ Token::parse(ParseBuffer& pb)
 {
    const char* startMark = pb.skipWhitespace();
    pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
-   mValue = pb.data(startMark);
+   pb.data(mValue, startMark);
    pb.skipToChar(Symbols::SEMI_COLON[0]);
    parseParameters(pb);
 }
@@ -180,13 +180,17 @@ CSeqCategory::parse(ParseBuffer& pb)
    start = pb.skipWhitespace();
    pb.skipNonWhitespace(); // .dcm. maybe pass an arg that says throw if you
                            // don't move
-   mMethod = getMethodType(pb.data(start));
+   mMethod = getMethodType(start, pb.position() - start);
+   if (mMethod == UNKNOWN)
+   {
+      pb.data(mUnknownMethodName, start);
+   }
 }
 
 std::ostream& 
 CSeqCategory::encode(std::ostream& str) const
 {
-   str << mSequence << Symbols::SPACE << MethodNames[mMethod];
+   str << mSequence << Symbols::SPACE << (mMethod != UNKNOWN ? MethodNames[mMethod] : mUnknownMethodName);
    return str;
 }
 
@@ -296,7 +300,7 @@ IntegerCategory::parse(ParseBuffer& pb)
    {
       start = pb.skipChar();
       pb.skipToEndQuote(')');
-      mComment = pb.data(start);
+      pb.data(mComment, start);
       pb.skipChar();
    }
    else
@@ -429,18 +433,18 @@ Via::parse(ParseBuffer& pb)
    const char* startMark;
    startMark = pb.skipWhitespace();
    pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SLASH);
-   mProtocolName = pb.data(startMark);
+   pb.data(mProtocolName, startMark);
    pb.skipToChar('/');
    pb.skipChar();
    startMark = pb.skipWhitespace();
    pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SLASH);
-   mProtocolVersion = pb.data(startMark);
+   pb.data(mProtocolVersion, startMark);
 
    pb.skipToChar('/');
    pb.skipChar();
    startMark = pb.skipWhitespace();
    pb.skipNonWhitespace();
-   mTransport = pb.data(startMark);
+   pb.data(mTransport, startMark);
 
    startMark = pb.skipWhitespace();
    if (*startMark == '[')
@@ -452,7 +456,7 @@ Via::parse(ParseBuffer& pb)
    {
       pb.skipToOneOf(";:");
    }
-   mSentHost = pb.data(startMark);
+   pb.data(mSentHost, startMark);
    pb.skipToOneOf(";:");
    if (*pb.position() == ':')
    {
@@ -506,7 +510,7 @@ CallId::parse(ParseBuffer& pb)
 {
    const char* start = pb.skipWhitespace();
    pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
-   mValue = pb.data(start);
+   pb.data(mValue, start);
    
    parseParameters(pb);
 }
@@ -584,7 +588,7 @@ NameAddr::parse(ParseBuffer& pb)
       pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
       pb.skipToEndQuote();
       pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
-      mDisplayName = pb.data(start);
+      pb.data(mDisplayName, start);
       laQuote = true;
       pb.skipToChar(Symbols::LA_QUOTE[0]);
       if (pb.eof())
@@ -612,7 +616,7 @@ NameAddr::parse(ParseBuffer& pb)
       else
       {
          laQuote = true;
-         mDisplayName = pb.data(start);
+         pb.data(mDisplayName, start);
          pb.skipChar(Symbols::LA_QUOTE[0]);
       }
    }
@@ -674,6 +678,7 @@ RequestLine::RequestLine(const RequestLine& rhs)
    : ParserCategory(rhs),
      mUri(rhs.mUri ? new Uri(*rhs.mUri) : 0),
      mMethod(rhs.mMethod),
+     mUnknownMethodName(rhs.mUnknownMethodName),
      mSipVersion(rhs.mSipVersion)
 {}
 
@@ -693,6 +698,7 @@ RequestLine::operator=(const RequestLine& rhs)
          mUri = 0;
       }
       mMethod = rhs.mMethod;
+      mUnknownMethodName = rhs.mUnknownMethodName;
       mSipVersion = rhs.mSipVersion;
    }
    return *this;
@@ -727,19 +733,23 @@ RequestLine::parse(ParseBuffer& pb)
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
    mMethod = getMethodType(start, pb.position() - start);
+   if (mMethod == UNKNOWN)
+   {
+      pb.data(mUnknownMethodName, start);
+   }
    pb.skipWhitespace();
    mUri = new Uri();
    mUri->parse(pb);
    mUri->parseParameters(pb);
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
-   mSipVersion = pb.data(start);
+   pb.data(mSipVersion, start);
 }
 
 ostream&
 RequestLine::encode(ostream& str) const
 {
-   str << MethodNames[mMethod] << Symbols::SPACE;
+   str << (mMethod != UNKNOWN ? MethodNames[mMethod] : mUnknownMethodName) << Symbols::SPACE;
    mUri->encode(str);
    str << Symbols::SPACE << mSipVersion;
    return str;
@@ -779,7 +789,7 @@ StatusLine::parse(ParseBuffer& pb)
 {
    const char* start = pb.skipWhitespace();
    pb.skipNonWhitespace();
-   mSipVersion = pb.data(start);
+   pb.data(mSipVersion, start);
 
    start = pb.skipWhitespace();
    mResponseCode = pb.integer();
@@ -787,7 +797,7 @@ StatusLine::parse(ParseBuffer& pb)
 
    start = pb.skipChar(' ');
    pb.reset(pb.end());
-   mReason = pb.data(start);
+   pb.data(mReason, start);
 }
 
 ostream&

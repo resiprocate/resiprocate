@@ -1,6 +1,9 @@
 #include <util/ParseBuffer.hxx>
 #include <string.h>
 #include <assert.h>
+
+using namespace Vocal2;
+
 int
 main(int arc, char** argv)
 {
@@ -8,7 +11,7 @@ main(int arc, char** argv)
       
       char *buf = "Here is a \t buffer with some stuff.";
 
-      Vocal2::ParseBuffer pb(buf, strlen(buf));
+      ParseBuffer pb(buf, strlen(buf));
    
       assert(!pb.eof());
       assert(pb.position() == buf);
@@ -22,7 +25,7 @@ main(int arc, char** argv)
    
    {
       char *buf = "    \t buffer with some stuff.";
-      Vocal2::ParseBuffer pb(buf, strlen(buf));   
+      ParseBuffer pb(buf, strlen(buf));   
 
       pb.skipWhitespace();
       assert(*pb.position() == 'b');
@@ -37,14 +40,14 @@ main(int arc, char** argv)
 
    {
       char *buf = "jhsjfhskd;|.";
-      Vocal2::ParseBuffer pb(buf, strlen(buf));   
+      ParseBuffer pb(buf, strlen(buf));   
 
       pb.skipToOneOf(".|;");
       assert(*pb.position() == ';');
    }
    {
       char *buf = "\"  \\\"Q \t buffer with some stuff.\"Z";
-      Vocal2::ParseBuffer pb(buf, strlen(buf));   
+      ParseBuffer pb(buf, strlen(buf));   
       pb.skipWhitespace();
       pb.skipToChar('"');
       pb.skipChar();
@@ -56,21 +59,46 @@ main(int arc, char** argv)
    
    {
       char *buf = "17 ";
-      Vocal2::ParseBuffer pb(buf, strlen(buf));   
+      ParseBuffer pb(buf, strlen(buf));   
       assert(pb.integer() == 17);
    }
    
    {
       char *buf = "17";
-      Vocal2::ParseBuffer pb(buf, strlen(buf));   
+      ParseBuffer pb(buf, strlen(buf));   
       assert(pb.integer() == 17);
    }
 
    {
       char *buf = "17.71";
-      Vocal2::ParseBuffer pb(buf, strlen(buf));   
+      ParseBuffer pb(buf, strlen(buf));   
       float val = pb.floatVal();
       assert(val > 17.70 && val < 17.72);
+   }
+
+   {
+      char *buf = "token another token";
+      ParseBuffer pb(buf, strlen(buf));   
+      const char *start = pb.position();
+      pb.skipToChar(' ');
+      pb.skipChar(' ');
+      Data t;
+      // make t share memry with buf
+      pb.data(t, start);
+      assert(t.data() == buf);
+      // assign copies
+      Data t1 = t;
+      assert(t1.data() != buf);
+      // assign copies
+      t = t1;
+      assert(t.data() != buf);
+
+      start = pb.position();
+      pb.skipToChar(' ');
+      pb.skipChar(' ');
+      Data t2;
+      pb.data(t2, start);
+      // should survive scope exit
    }
 }
 

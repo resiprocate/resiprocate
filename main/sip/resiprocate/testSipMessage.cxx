@@ -12,6 +12,16 @@ int
 main()
 {
    {
+      assert(ParameterTypes::getType("tag", 3) == ParameterTypes::tag);
+   }
+
+   {
+      char* b = "shared buffer";
+      HeaderFieldValue h1(b, strlen(b));
+      HeaderFieldValue h2(h1);
+   }
+
+   {
       cerr << "test header copying between unparsed messages" << endl;
       char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
@@ -29,7 +39,7 @@ main()
                     "Expires: 7200\r\n"
                     "Content-Length: 0\r\n\r\n");
       SipMessage message1;
-      
+
       Preparse parse1(message1, txt1, strlen(txt1));
       parse1.process();
 
@@ -63,7 +73,7 @@ main()
       message1.header(h_Contacts) = message2.header(h_Contacts);
       message1.header(h_Expires) = message2.header(h_Expires);
       message1.header(h_ContentLength) = message2.header(h_ContentLength);
-
+      
       assert(message1.header(h_To).uri().user() == "speedy");
       assert(message1.header(h_From).uri().user() == "speedy");
       assert(message1.header(h_MaxForwards).value() == 7);
@@ -80,7 +90,7 @@ main()
 
    {
       cerr << "test header copying between parsed messages" << endl;
-      // should not copy any HeaderFieldValues
+      cerr << " should NOT COPY any HeaderFieldValues" << endl;
       char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
@@ -108,6 +118,7 @@ main()
       {
          i->uri();
       }
+
       for (Vias::iterator i = message1.header(h_Vias).begin();
            i != message1.header(h_Vias).end(); i++)
       {
@@ -127,16 +138,16 @@ main()
       message1.header(h_ContentLength).value();
 
       char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
-                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfirst\r\n"
-                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=ssecond\r\n"
-                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sthird\r\n"
-                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfourth\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5061;branch=sfirst\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5061;branch=ssecond\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5061;branch=sthird\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5061;branch=sfourth\r\n"
                     "Max-Forwards: 7\r\n"
                     "To: Speedy <sip:speedy@biloxi.com>\r\n"
-                    "From: Speedy <sip:speedy@biloxi.com>;tag=88888\r\n"
+                    "From: Belle <sip:belle@biloxi.com>;tag=88888\r\n"
                     "Call-ID: 88888@8888\r\n"
                     "CSeq: 6281 REGISTER\r\n"
-                    "Contact: <sip:speedy@192.0.2.4>\r\n"
+                    "Contact: <sip:belle@192.0.2.4>\r\n"
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 2700\r\n"
                     "Content-Length: 0\r\n\r\n");
@@ -145,10 +156,10 @@ main()
       Preparse parse2(message2, txt2, strlen(txt2));
       parse2.process();
 
-      message2.header(h_RequestLine).getMethod();
-      message2.header(h_To).uri().user();
-      message2.header(h_From).uri().user();
-      message2.header(h_MaxForwards).value();
+      assert(message2.header(h_RequestLine).getMethod() == REGISTER);
+      assert(message2.header(h_To).uri().user() == "speedy");
+      assert(message2.header(h_From).uri().user() == "belle");
+      assert(message2.header(h_MaxForwards).value() == 7);
       for (NameAddrs::iterator i = message2.header(h_Contacts).begin();
            i != message2.header(h_Contacts).end(); i++)
       {
@@ -158,15 +169,15 @@ main()
       for (Vias::iterator i = message2.header(h_Vias).begin();
            i != message2.header(h_Vias).end(); i++)
       {
-         i->sentPort();
+         assert(i->sentPort() == 5061);
       }
-      message2.header(h_CallId).value();
-      message2.header(h_CSeq).sequence();
-      message2.header(h_CSeq).method();
-      message2.header(h_Vias).empty();
-      message2.header(h_Vias).size();
-      message2.header(h_Expires).value();
-      message2.header(h_ContentLength).value();
+      assert(message2.header(h_CallId).value() == "88888@8888");
+      assert(message2.header(h_CSeq).sequence() == 6281);
+      assert(message2.header(h_CSeq).method() == REGISTER);
+      assert(message2.header(h_Vias).empty() == false);
+      assert(message2.header(h_Vias).size() == 4);
+      assert(message2.header(h_Expires).value() == 2700);
+      assert(message2.header(h_ContentLength).value() == 0);
 
       // copy over everything
       message1.header(h_RequestLine) = message2.header(h_RequestLine);
@@ -181,7 +192,7 @@ main()
       message1.header(h_ContentLength) = message2.header(h_ContentLength);
 
       assert(message1.header(h_To).uri().user() == "speedy");
-      assert(message1.header(h_From).uri().user() == "speedy");
+      assert(message1.header(h_From).uri().user() == "belle");
       assert(message1.header(h_MaxForwards).value() == 7);
       assert(message1.header(h_Contacts).empty() == false);
       assert(message1.header(h_CallId).value() == "88888@8888");
@@ -303,7 +314,6 @@ main()
       copy.encode(cerr);
    }
    
-   return 0;
    {
       cerr << "test callId access" << endl;
 
@@ -324,8 +334,8 @@ main()
       
       message.encode(cerr);
       
-      Data v = message.header(h_CallId).value();
-      assert(v == "843817637684230@998sdasdh09");
+      //Data v = message.header(h_CallId).value();
+      assert(message.header(h_CallId).value() == "843817637684230@998sdasdh09");
       //StatusLine& foo = message.header(h_StatusLine);
       //RequestLine& bar = message.header(h_RequestLine);
       //cerr << bar.getMethod() << endl;
