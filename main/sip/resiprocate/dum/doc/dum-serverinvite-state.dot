@@ -1,3 +1,9 @@
+//  names start with cap are states
+//  names start with app:: are appliction handlers
+//  names start with dum:: are dum interface to application
+//  names start with lower case are actions
+//  names start with on are events
+
 digraph UAC {
         rankdir=LR;
         node [shape = box];
@@ -13,16 +19,16 @@ digraph UAC {
 
         FirstSentOfferReliable -> FirstSentOfferReliable [ label = "onTimer/resend::1xx" ];
         FirstSentOfferReliable -> EarlyReliable [ label = "onPRACK/200P,app::onAnswer" ];
-        FirstSentOfferReliable -> WaitingToTerminate [ label = "dum::end" ]; 
+        FirstSentOfferReliable -> WaitingToTerminate [ label = "dum::end" ];
 
         FirstEarlyReliable -> FirstEarlyReliable [ label = "onTimer/resend::1xx,timer::1xx" ];
         FirstEarlyReliable -> Accepted [ label = "dum::accept/queue::2xx" ];
         FirstEarlyReliable -> EarlyReliable [ label = "onPRACK/200P" ];
-        FirstEarlyReliable -> WaitingToTerminate [ label = "dum::end" ]; 
+        FirstEarlyReliable -> WaitingToTerminate [ label = "dum::end" ];
 
         Accepted -> Connected [ label = "onPRACK/send::2XXP,send::2XXI" ];
         Accepted -> Terminated [ label = "dum::end/send::4XXI" ];
-        Accepted -> WaitingToHangup [ label = "dum::end" ]; 
+        Accepted -> WaitingToHangup [ label = "dum::end" ];
 
         EarlyReliable -> EarlyReliable [ label = "onPRACK/send::200P" ];
         EarlyReliable -> EarlyReliable [ label = "dum::provisional/send::1xx,timer::1xx" ];
@@ -38,14 +44,14 @@ digraph UAC {
 
         SentUpdateAccepted -> Connected [ label = "on2xxU/app::onAnswer" ];
         SentUpdateAccepted -> Connected [ label = "on4XXU/app::onOfferRejected" ];
-        SentUpdateAccepted -> WaitingToHangup [ label = "dum::end" ]; 
+        SentUpdateAccepted -> WaitingToHangup [ label = "dum::end" ];
 
         ReceivedUpdate -> ReceivedUpdateWaitingAnswer [ label = "dum::accept" ];
         ReceivedUpdate -> EarlyReliable [ label = "dum::provideAnswer/send::200U" ];
         //ReceivedUpdate -> Terminated [ label = "dum::end/send::4XXU,send::4XXI" ];
 
         ReceivedUpdateWaitingAnswer -> Connected [ label = "dum::provideAnswer/send::2XXU,send::2XXI" ];
-        ReceivedUpdateWaitingAnswer -> WaitingToHangup [ label = "dum::end" ]; 
+        ReceivedUpdateWaitingAnswer -> WaitingToHangup [ label = "dum::end" ];
 
         Connected -> Connected [ label = "onTimer/resend::2xx" ];
         Connected -> Terminated [ label = "dum::end/send::BYE" ];
