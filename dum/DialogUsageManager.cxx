@@ -85,6 +85,12 @@ DialogUsageManager::addTransport( TransportType protocol,
    return mStack.addTransport(protocol, port, version, ipInterface);
 }
 
+Data 
+DialogUsageManager::getHostAddress()
+{
+    return mStack.getHostAddress();
+}
+
 void 
 DialogUsageManager::shutdown()
 {
