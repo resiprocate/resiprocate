@@ -13,7 +13,7 @@ MergedRequestKey::MergedRequestKey()
 MergedRequestKey::MergedRequestKey(const SipMessage& req) : 
    mRequestUri(Data::from(req.header(h_RequestLine).uri())),
    mCseq(Data::from(req.header(h_CSeq))),
-   mTag(req.header(h_From).param(p_tag)),
+   mTag(req.header(h_From).exists(p_tag) ? req.header(h_From).param(p_tag) : Data::Empty),
    mCallId(req.header(h_CallID).value())
 {
 }
