@@ -21,13 +21,13 @@ typedef void EVP_PKEY;
 
 namespace resip
 {
- 
+
 class Contents;
 class Pkcs7Contents;
 class Security;
 class MultipartSignedContents;
 
-     
+
 class BaseSecurity
 {
    public:
@@ -37,14 +37,13 @@ class BaseSecurity
             Exception(const Data& msg, const Data& file, const int line);
             const char* name() const { return "SecurityException"; }
       };
-      
-      /// Backwards compatible ctor.
-      BaseSecurity(SecurityTypes::SSLType);
+
+      BaseSecurity();
       virtual ~BaseSecurity();
-      
+
       // used to initialize the openssl library
       static void initialize();
-      
+
       typedef enum
       {
          RootCert,
@@ -53,14 +52,14 @@ class BaseSecurity
          UserCert,
          UserPrivateKey
       } PEMType;
-         
+
       virtual void preload();
       // name refers to the domainname or username which could be converted to a
       // filename by convention
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer)=0;
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer)=0;
-      
-      struct CertificateInfo 
+
+      struct CertificateInfo
       {
             Data name;
             Data fingerprint;
@@ -73,71 +72,77 @@ class BaseSecurity
 
       void addRootCertPEM(const Data& x509PEMEncodedRootCerts);
 
-      void addDomainCertPEM(const Data& domainName, const Data& cert);
-      bool hasDomainCert(const Data& domainName);
-      
+      void addDomainCertPEM(const Data& domainName, const Data& certPEM);
+      void addDomainCertDER(const Data& domainName, const Data& certDER);
+      bool hasDomainCert(const Data& domainName) const;
+      Data getDomainCert(const Data& domainName) const;
+
       void addDomainPrivateKeyPEM(const Data& domainName, const Data& cert);
       bool hasDomainPrivateKey(const Data& domainName);
 
       void addUserCertPEM(const Data& aor, const Data& cert);
       void addUserCertDER(const Data& aor, const Data& cert);
-      bool hasDomainCert(const Data& aor);
+      bool hasUserCert(const Data& aor);
+      bool removeUserCert(const Data& aor);
       Data getUserCertDER(const Data& aor);
-      
+
       void addUserPrivateKeyPEM(const Data& aor, const Data& cert);
       void addUserPrivateKeyDER(const Data& aor, const Data& cert);
       bool hasUserPrivateKey(const Data& aor);
+      bool removeUserPrivateKey(const Data& aor);
       Data getUserPrivateKeyDER(const Data& aor);
 
       bool hasPassPhrase(const Data& aor);
       void setPassPhrase(const Data& aor, const Data& passphrase);
-      
+
       // produces a detached signature
       MultipartSignedContents* sign(const Data& senderAor, Contents* );
       Pkcs7Contents* encrypt(Contents* , const Data& recipCertName );
       Pkcs7Contents* signAndEncrypt( const Data& senderAor, Contents* , const Data& recipCertName );
-      
+
       Data computeIdentity( const Data& signerDomain, const Data& in );
       bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig );
-      
+
       // returns NULL if it fails
-      Contents* decrypt( Pkcs7Contents* );
-      
-      enum SignatureStatus 
+      Contents* decrypt( const Data& decryptorAor, Pkcs7Contents* );
+
+      enum SignatureStatus
       {
-         none, // there is no signature 
+         none, // there is no signature
          isBad,
-         trusted, // It is signed with trusted signature 
-         caTrusted, // signature is new and is signed by a root we trust 
+         trusted, // It is signed with trusted signature
+         caTrusted, // signature is new and is signed by a root we trust
          notTrusted // signature is new and is not signed by a CA we
       };
 
       // returns NULL if fails. returns the data that was originally signed
-      Contents* checkSignature( MultipartSignedContents*, Data& signedBy, SignatureStatus& sigStat );
-      
+      Contents* checkSignature( const Data& signerAor, MultipartSignedContents*, Data& signedBy, SignatureStatus sigStat );
+
    private:
-      SSL_CTX* getTlsCtx(bool isServer);
-      
-      // bit mask of SSLType enum
-      unsigned int mSSLMode;
+      friend class SecuredTransportCtx;
 
       // map of name to certificates
-      typedef std::map<Data,X509*> X509Map;
+      typedef std::map<Data,X509*>     X509Map;
       typedef std::map<Data,EVP_PKEY*> PrivateKeyMap;
-      typedef std::map<Data,Data> PassPhraseMap;
+      typedef std::map<Data,Data>      PassPhraseMap;
 
-      // root cert list 
-      X509_STORE* mCertAuthorities;
+      // root cert list
+      X509_STORE*    mRootCerts;
 
-      X509Map mDomainCerts;
-      X509Map mUserCerts;
-      PassPhraseMap mUserPassPhrases;
-      PrivateKeyMap mUserPrivateKeys;
-      PrivateKeyMap mDomainPrivateKeys;
+      X509Map        mDomainCerts;
+      PrivateKeyMap  mDomainPrivateKeys;
 
-      SSL_CTX* ctxTls;
+      X509Map        mUserCerts;
+      PrivateKeyMap  mUserPrivateKeys;
+      PassPhraseMap  mUserPassPhrases;
+
+      SSL_CTX*       getTlsCtx ();
+      SSL_CTX*       getSslCtx ();
+
+      SSL_CTX*       mTlsCtx;
+      SSL_CTX*       mSslCtx;
 };
- 
+
 
 class Security : public BaseSecurity
 {
@@ -149,29 +154,27 @@ class Security : public BaseSecurity
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer)=0;
 };
 
-
 }
-
 
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -181,7 +184,7 @@ class Security : public BaseSecurity
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -195,9 +198,9 @@ class Security : public BaseSecurity
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
