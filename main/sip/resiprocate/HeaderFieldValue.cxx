@@ -46,6 +46,43 @@ bool HeaderFieldValue::isParsed() const
 }
 
 
+bool HeaderFieldValue::exists(const std::string& subcomponent)
+  throw (ParseException&)
+{
+  
+  int exists = mUnknownSubComponentList.find(subcomponent);
+  if (!exists)
+    {
+      exists = mSubComponentList.find(subcomponent);
+      if (exists)
+	{
+	  ParseException except("Asked for a known subcomponent by string",
+				__FILE__, __LINE__);
+	  throw except;
+	}
+    }
+  return exists;
+  
+}
+
+
+bool HeaderFieldValue::exists(const SubComponent::Type type)
+{
+  
+  return mSubComponentList.find(type);
+
+}
+
+
+
+SubComponent* HeaderFieldValue::get(const std::string& type) const
+{
+
+  return mUnknownSubComponentList.get(type);
+
+}
+
+
 ostream& operator<<(ostream& stream, HeaderFieldValueList& hList)
 {
   if (!isParsed())
@@ -57,4 +94,6 @@ ostream& operator<<(ostream& stream, HeaderFieldValueList& hList)
       stream << string(mField, mFieldLength);
     }
 }
+
+
 
