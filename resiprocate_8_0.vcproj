@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
@@ -296,1096 +296,865 @@
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
-			>
+			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath=".\os\AbstractFifo.cxx"
-				>
+				RelativePath=".\os\AbstractFifo.cxx">
 			</File>
 			<File
-				RelativePath=".\ApiCheck.cxx"
-				>
+				RelativePath=".\Aor.cxx">
 			</File>
 			<File
-				RelativePath=".\ApplicationSip.cxx"
-				>
+				RelativePath=".\ApiCheck.cxx">
 			</File>
 			<File
-				RelativePath=".\AresDns.cxx"
-				>
+				RelativePath=".\ApplicationSip.cxx">
 			</File>
 			<File
-				RelativePath=".\Auth.cxx"
-				>
+				RelativePath=".\AresDns.cxx">
 			</File>
 			<File
-				RelativePath="os\BaseException.cxx"
-				>
+				RelativePath=".\Auth.cxx">
 			</File>
 			<File
-				RelativePath="BranchParameter.cxx"
-				>
+				RelativePath="os\BaseException.cxx">
 			</File>
 			<File
-				RelativePath=".\CallId.cxx"
-				>
+				RelativePath="BranchParameter.cxx">
 			</File>
 			<File
-				RelativePath="os\Coders.cxx"
-				>
+				RelativePath=".\CallId.cxx">
 			</File>
 			<File
-				RelativePath="os\Condition.cxx"
-				>
+				RelativePath="os\Coders.cxx">
 			</File>
 			<File
-				RelativePath="Connection.cxx"
-				>
+				RelativePath="os\Condition.cxx">
 			</File>
 			<File
-				RelativePath="ConnectionManager.cxx"
-				>
+				RelativePath="Connection.cxx">
 			</File>
 			<File
-				RelativePath="Contents.cxx"
-				>
+				RelativePath=".\ConnectionBase.cxx">
 			</File>
 			<File
-				RelativePath="os\CountStream.cxx"
-				>
+				RelativePath="ConnectionManager.cxx">
 			</File>
 			<File
-				RelativePath="CpimContents.cxx"
-				>
+				RelativePath="Contents.cxx">
 			</File>
 			<File
-				RelativePath=".\CSeqCategory.cxx"
-				>
+				RelativePath="os\CountStream.cxx">
 			</File>
 			<File
-				RelativePath="os\Data.cxx"
-				>
+				RelativePath="CpimContents.cxx">
 			</File>
 			<File
-				RelativePath="DataParameter.cxx"
-				>
+				RelativePath=".\CSeqCategory.cxx">
 			</File>
 			<File
-				RelativePath="os\DataStream.cxx"
-				>
+				RelativePath="os\Data.cxx">
 			</File>
 			<File
-				RelativePath=".\DateCategory.cxx"
-				>
+				RelativePath="DataParameter.cxx">
 			</File>
 			<File
-				RelativePath="DnsInterface.cxx"
-				>
+				RelativePath="os\DataStream.cxx">
 			</File>
 			<File
-				RelativePath="DnsResult.cxx"
-				>
+				RelativePath=".\DateCategory.cxx">
 			</File>
 			<File
-				RelativePath="os\DnsUtil.cxx"
-				>
+				RelativePath=".\DeprecatedDialog.cxx">
 			</File>
 			<File
-				RelativePath="Embedded.cxx"
-				>
+				RelativePath="DnsInterface.cxx">
 			</File>
 			<File
-				RelativePath="ExistsParameter.cxx"
-				>
+				RelativePath="DnsResult.cxx">
 			</File>
 			<File
-				RelativePath=".\ExpiresCategory.cxx"
-				>
+				RelativePath="os\DnsUtil.cxx">
 			</File>
 			<File
-				RelativePath=".\ExternalBodyContents.cxx"
-				>
+				RelativePath=".\DtlsMessage.cxx">
 			</File>
 			<File
-				RelativePath=".\ExternalDnsFactory.cxx"
-				>
+				RelativePath=".\DtlsTransport.cxx">
 			</File>
 			<File
-				RelativePath=".\os\FileSystem.cxx"
-				>
+				RelativePath="Embedded.cxx">
 			</File>
 			<File
-				RelativePath="FloatParameter.cxx"
-				>
+				RelativePath="ExistsParameter.cxx">
 			</File>
 			<File
-				RelativePath="GenericContents.cxx"
-				>
+				RelativePath="ExpiresCategory.cxx">
 			</File>
 			<File
-				RelativePath=".\GenericUri.cxx"
-				>
+				RelativePath=".\ExtensionHeader.cxx">
 			</File>
 			<File
-				RelativePath="HeaderFieldValue.cxx"
-				>
+				RelativePath=".\ExtensionParameter.cxx">
 			</File>
 			<File
-				RelativePath="HeaderFieldValueList.cxx"
-				>
+				RelativePath=".\ExternalBodyContents.cxx">
 			</File>
 			<File
-				RelativePath="HeaderHash.cxx"
-				>
+				RelativePath=".\ExternalDnsFactory.cxx">
 			</File>
 			<File
-				RelativePath="Headers.cxx"
-				>
+				RelativePath=".\os\FileSystem.cxx">
 			</File>
 			<File
-				RelativePath="HeaderTypes.cxx"
-				>
+				RelativePath="FloatParameter.cxx">
 			</File>
 			<File
-				RelativePath="Helper.cxx"
-				>
+				RelativePath="GenericContents.cxx">
 			</File>
 			<File
-				RelativePath=".\IntegerCategory.cxx"
-				>
+				RelativePath=".\GenericUri.cxx">
 			</File>
 			<File
-				RelativePath="IntegerParameter.cxx"
-				>
+				RelativePath="HeaderFieldValue.cxx">
 			</File>
 			<File
-				RelativePath="LazyParser.cxx"
-				>
+				RelativePath="HeaderFieldValueList.cxx">
 			</File>
 			<File
-				RelativePath="os\Lock.cxx"
-				>
+				RelativePath="HeaderHash.cxx">
 			</File>
 			<File
-				RelativePath="os\Log.cxx"
-				>
+				RelativePath="Headers.cxx">
 			</File>
 			<File
-				RelativePath="os\Logger.cxx"
-				>
+				RelativePath="HeaderTypes.cxx">
 			</File>
 			<File
-				RelativePath="os\MD5Stream.cxx"
-				>
+				RelativePath=".\os\HeapInstanceCounter.cxx">
 			</File>
 			<File
-				RelativePath="Message.cxx"
-				>
+				RelativePath="Helper.cxx">
 			</File>
 			<File
-				RelativePath="MessageWaitingContents.cxx"
-				>
+				RelativePath=".\IntegerCategory.cxx">
 			</File>
 			<File
-				RelativePath="MethodHash.cxx"
-				>
+				RelativePath="IntegerParameter.cxx">
 			</File>
 			<File
-				RelativePath="MethodTypes.cxx"
-				>
+				RelativePath=".\InternalTransport.cxx">
 			</File>
 			<File
-				RelativePath=".\Mime.cxx"
-				>
+				RelativePath="LazyParser.cxx">
 			</File>
 			<File
-				RelativePath=".\MsgHeaderScanner.cxx"
-				>
+				RelativePath="os\Lock.cxx">
 			</File>
 			<File
-				RelativePath=".\MultipartAlternativeContents.cxx"
-				>
+				RelativePath="os\Log.cxx">
 			</File>
 			<File
-				RelativePath="MultipartMixedContents.cxx"
-				>
+				RelativePath="os\Logger.cxx">
 			</File>
 			<File
-				RelativePath="MultipartSignedContents.cxx"
-				>
+				RelativePath="os\MD5Stream.cxx">
 			</File>
 			<File
-				RelativePath="os\Mutex.cxx"
-				>
+				RelativePath="Message.cxx">
 			</File>
 			<File
-				RelativePath=".\NameAddr.cxx"
-				>
+				RelativePath="MessageWaitingContents.cxx">
 			</File>
 			<File
-				RelativePath="OctetContents.cxx"
-				>
+				RelativePath="MethodHash.cxx">
 			</File>
 			<File
-				RelativePath="Parameter.cxx"
-				>
+				RelativePath="MethodTypes.cxx">
 			</File>
 			<File
-				RelativePath="ParameterHash.cxx"
-				>
+				RelativePath=".\Mime.cxx">
 			</File>
 			<File
-				RelativePath="ParameterTypes.cxx"
-				>
+				RelativePath=".\MsgHeaderScanner.cxx">
 			</File>
 			<File
-				RelativePath="os\ParseBuffer.cxx"
-				>
+				RelativePath=".\MultipartAlternativeContents.cxx">
 			</File>
 			<File
-				RelativePath="ParserCategories.cxx"
-				>
+				RelativePath="MultipartMixedContents.cxx">
 			</File>
 			<File
-				RelativePath="ParserCategory.cxx"
-				>
+				RelativePath="MultipartSignedContents.cxx">
 			</File>
 			<File
-				RelativePath="ParseUtil.cxx"
-				>
+				RelativePath="os\Mutex.cxx">
 			</File>
 			<File
-				RelativePath="Pidf.cxx"
-				>
+				RelativePath=".\NameAddr.cxx">
 			</File>
 			<File
-				RelativePath="Pkcs7Contents.cxx"
-				>
+				RelativePath="OctetContents.cxx">
 			</File>
 			<File
-				RelativePath="PlainContents.cxx"
-				>
+				RelativePath="Parameter.cxx">
 			</File>
 			<File
-				RelativePath="QopParameter.cxx"
-				>
+				RelativePath="ParameterHash.cxx">
 			</File>
 			<File
-				RelativePath="QuotedDataParameter.cxx"
-				>
+				RelativePath="ParameterTypes.cxx">
 			</File>
 			<File
-				RelativePath=".\RAckCategory.cxx"
-				>
+				RelativePath="os\ParseBuffer.cxx">
 			</File>
 			<File
-				RelativePath="os\Random.cxx"
-				>
+				RelativePath="ParserCategories.cxx">
 			</File>
 			<File
-				RelativePath="os\RecursiveMutex.cxx"
-				>
+				RelativePath="ParserCategory.cxx">
 			</File>
 			<File
-				RelativePath="Registration.cxx"
-				>
+				RelativePath="ParseUtil.cxx">
 			</File>
 			<File
-				RelativePath=".\RequestLine.cxx"
-				>
+				RelativePath="Pidf.cxx">
 			</File>
 			<File
-				RelativePath=".\Rlmi.cxx"
-				>
+				RelativePath="Pkcs7Contents.cxx">
 			</File>
 			<File
-				RelativePath="RportParameter.cxx"
-				>
+				RelativePath="PlainContents.cxx">
 			</File>
 			<File
-				RelativePath="os\RWMutex.cxx"
-				>
+				RelativePath="QopParameter.cxx">
 			</File>
 			<File
-				RelativePath="SdpContents.cxx"
-				>
+				RelativePath="QuotedDataParameter.cxx">
 			</File>
 			<File
-				RelativePath="Security.cxx"
-				>
+				RelativePath=".\RAckCategory.cxx">
 			</File>
 			<File
-				RelativePath=".\SecurityAttributes.cxx"
-				>
+				RelativePath="os\Random.cxx">
 			</File>
 			<File
-				RelativePath="SipFrag.cxx"
-				>
+				RelativePath="os\RecursiveMutex.cxx">
 			</File>
 			<File
-				RelativePath="SipMessage.cxx"
-				>
+				RelativePath="Registration.cxx">
 			</File>
 			<File
-				RelativePath="SipStack.cxx"
-				>
+				RelativePath=".\RequestLine.cxx">
 			</File>
 			<File
-				RelativePath="os\Socket.cxx"
-				>
+				RelativePath=".\Rlmi.cxx">
 			</File>
 			<File
-				RelativePath=".\StackThread.cxx"
-				>
+				RelativePath="RportParameter.cxx">
 			</File>
 			<File
-				RelativePath="StatelessHandler.cxx"
-				>
+				RelativePath="os\RWMutex.cxx">
 			</File>
 			<File
-				RelativePath=".\StatisticsManager.cxx"
-				>
+				RelativePath="SdpContents.cxx">
 			</File>
 			<File
-				RelativePath=".\StatisticsMessage.cxx"
-				>
+				RelativePath="Security.cxx">
 			</File>
 			<File
-				RelativePath=".\StatusLine.cxx"
-				>
+				RelativePath=".\SecurityAttributes.cxx">
 			</File>
 			<File
-				RelativePath=".\StringCategory.cxx"
-				>
+				RelativePath="SipFrag.cxx">
 			</File>
 			<File
-				RelativePath=".\Subscription.cxx"
-				>
+				RelativePath="SipMessage.cxx">
 			</File>
 			<File
-				RelativePath="os\Subsystem.cxx"
-				>
+				RelativePath="SipStack.cxx">
 			</File>
 			<File
-				RelativePath="Symbols.cxx"
-				>
+				RelativePath="os\Socket.cxx">
 			</File>
 			<File
-				RelativePath=".\os\SysLogBuf.cxx"
-				>
+				RelativePath=".\StackThread.cxx">
 			</File>
 			<File
-				RelativePath=".\os\SysLogStream.cxx"
-				>
+				RelativePath="StatelessHandler.cxx">
 			</File>
 			<File
-				RelativePath="TcpBaseTransport.cxx"
-				>
+				RelativePath=".\StatisticsManager.cxx">
 			</File>
 			<File
-				RelativePath="TcpConnection.cxx"
-				>
+				RelativePath=".\StatisticsMessage.cxx">
 			</File>
 			<File
-				RelativePath="TcpTransport.cxx"
-				>
+				RelativePath=".\StatusLine.cxx">
 			</File>
 			<File
-				RelativePath="os\ThreadIf.cxx"
-				>
+				RelativePath=".\StringCategory.cxx">
 			</File>
 			<File
-				RelativePath=".\TimeAccumulate.cxx"
-				>
+				RelativePath=".\Subscription.cxx">
 			</File>
 			<File
-				RelativePath="os\Timer.cxx"
-				>
+				RelativePath="os\Subsystem.cxx">
 			</File>
 			<File
-				RelativePath="TimerMessage.cxx"
-				>
+				RelativePath="Symbols.cxx">
 			</File>
 			<File
-				RelativePath="TimerQueue.cxx"
-				>
+				RelativePath=".\os\SysLogBuf.cxx">
 			</File>
 			<File
-				RelativePath="TlsTransport.cxx"
-				>
+				RelativePath=".\os\SysLogStream.cxx">
 			</File>
 			<File
-				RelativePath=".\Token.cxx"
-				>
+				RelativePath="TcpBaseTransport.cxx">
 			</File>
 			<File
-				RelativePath="TransactionController.cxx"
-				>
+				RelativePath="TcpConnection.cxx">
 			</File>
 			<File
-				RelativePath="TransactionMap.cxx"
-				>
+				RelativePath="TcpTransport.cxx">
 			</File>
 			<File
-				RelativePath="TransactionState.cxx"
-				>
+				RelativePath="os\ThreadIf.cxx">
 			</File>
 			<File
-				RelativePath="Transport.cxx"
-				>
+				RelativePath=".\TimeAccumulate.cxx">
 			</File>
 			<File
-				RelativePath=".\TransportMessage.cxx"
-				>
+				RelativePath="os\Timer.cxx">
 			</File>
 			<File
-				RelativePath="TransportSelector.cxx"
-				>
+				RelativePath="TimerMessage.cxx">
 			</File>
 			<File
-				RelativePath="TuIM.cxx"
-				>
+				RelativePath="TimerQueue.cxx">
 			</File>
 			<File
-				RelativePath="os\Tuple.cxx"
-				>
+				RelativePath="TlsTransport.cxx">
 			</File>
 			<File
-				RelativePath="UdpTransport.cxx"
-				>
+				RelativePath=".\Token.cxx">
 			</File>
 			<File
-				RelativePath="UnknownHeaderType.cxx"
-				>
+				RelativePath="TransactionController.cxx">
 			</File>
 			<File
-				RelativePath="UnknownParameter.cxx"
-				>
+				RelativePath="TransactionMap.cxx">
 			</File>
 			<File
-				RelativePath="UnknownParameterType.cxx"
-				>
+				RelativePath="TransactionState.cxx">
 			</File>
 			<File
-				RelativePath="Uri.cxx"
-				>
+				RelativePath="Transport.cxx">
 			</File>
 			<File
-				RelativePath=".\Via.cxx"
-				>
+				RelativePath=".\TransportMessage.cxx">
 			</File>
 			<File
-				RelativePath="os\vmd5.cxx"
-				>
+				RelativePath="TransportSelector.cxx">
 			</File>
 			<File
-				RelativePath=".\WarningCategory.cxx"
-				>
+				RelativePath="TuIM.cxx">
 			</File>
 			<File
-				RelativePath=".\os\WinCompat.cxx"
-				>
+				RelativePath="os\Tuple.cxx">
 			</File>
 			<File
-				RelativePath="XMLCursor.cxx"
-				>
+				RelativePath="UdpTransport.cxx">
+			</File>
+			<File
+				RelativePath="UnknownParameter.cxx">
+			</File>
+			<File
+				RelativePath="Uri.cxx">
+			</File>
+			<File
+				RelativePath=".\Via.cxx">
+			</File>
+			<File
+				RelativePath="os\vmd5.cxx">
+			</File>
+			<File
+				RelativePath=".\WarningCategory.cxx">
+			</File>
+			<File
+				RelativePath=".\os\WinCompat.cxx">
+			</File>
+			<File
+				RelativePath="XMLCursor.cxx">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc"
-			>
+			Filter="h;hpp;hxx;hm;inl;inc">
 			<File
-				RelativePath=".\ApiCheck.hxx"
-				>
+				RelativePath=".\os\AbstractFifo.hxx">
 			</File>
 			<File
-				RelativePath=".\ApiCheckList.hxx"
-				>
+				RelativePath=".\Aor.hxx">
 			</File>
 			<File
-				RelativePath=".\ApplicationMessage.hxx"
-				>
+				RelativePath=".\ApiCheck.hxx">
 			</File>
 			<File
-				RelativePath=".\ApplicationSip.hxx"
-				>
+				RelativePath=".\ApiCheckList.hxx">
 			</File>
 			<File
-				RelativePath=".\AresDns.hxx"
-				>
+				RelativePath=".\ApplicationMessage.hxx">
 			</File>
 			<File
-				RelativePath=".\Auth.hxx"
-				>
+				RelativePath=".\ApplicationSip.hxx">
 			</File>
 			<File
-				RelativePath="os\BaseException.hxx"
-				>
+				RelativePath=".\AresDns.hxx">
 			</File>
 			<File
-				RelativePath="BranchParameter.hxx"
-				>
+				RelativePath=".\external\AsyncID.hxx">
 			</File>
 			<File
-				RelativePath=".\CallId.hxx"
-				>
+				RelativePath=".\Auth.hxx">
 			</File>
 			<File
-				RelativePath="os\CircularBuffer.hxx"
-				>
+				RelativePath="os\BaseException.hxx">
 			</File>
 			<File
-				RelativePath="os\Coders.hxx"
-				>
+				RelativePath="BranchParameter.hxx">
 			</File>
 			<File
-				RelativePath="os\compat.hxx"
-				>
+				RelativePath=".\CallId.hxx">
 			</File>
 			<File
-				RelativePath="os\Condition.hxx"
-				>
+				RelativePath="os\CircularBuffer.hxx">
 			</File>
 			<File
-				RelativePath="Connection.hxx"
-				>
+				RelativePath="os\Coders.hxx">
 			</File>
 			<File
-				RelativePath="ConnectionManager.hxx"
-				>
+				RelativePath="os\compat.hxx">
 			</File>
 			<File
-				RelativePath="ConnectionMap.hxx"
-				>
+				RelativePath="os\Condition.hxx">
 			</File>
 			<File
-				RelativePath="Contents.hxx"
-				>
+				RelativePath="Connection.hxx">
 			</File>
 			<File
-				RelativePath="os\CountStream.hxx"
-				>
+				RelativePath="ConnectionManager.hxx">
 			</File>
 			<File
-				RelativePath="CpimContents.hxx"
-				>
+				RelativePath="Contents.hxx">
 			</File>
 			<File
-				RelativePath=".\CSeqCategory.hxx"
-				>
+				RelativePath="os\CountStream.hxx">
 			</File>
 			<File
-				RelativePath="os\Data.hxx"
-				>
+				RelativePath="CpimContents.hxx">
 			</File>
 			<File
-				RelativePath="DataParameter.hxx"
-				>
+				RelativePath=".\CSeqCategory.hxx">
 			</File>
 			<File
-				RelativePath="os\DataStream.hxx"
-				>
+				RelativePath="os\Data.hxx">
 			</File>
 			<File
-				RelativePath=".\DateCategory.hxx"
-				>
+				RelativePath="DataParameter.hxx">
 			</File>
 			<File
-				RelativePath=".\Dialog.hxx"
-				>
+				RelativePath="os\DataStream.hxx">
 			</File>
 			<File
-				RelativePath=".\DnsHandler.hxx"
-				>
+				RelativePath=".\DateCategory.hxx">
 			</File>
 			<File
-				RelativePath="DnsInterface.hxx"
-				>
+				RelativePath=".\DeprecatedDialog.hxx">
 			</File>
 			<File
-				RelativePath="DnsResult.hxx"
-				>
+				RelativePath=".\DnsHandler.hxx">
 			</File>
 			<File
-				RelativePath="os\DnsUtil.hxx"
-				>
+				RelativePath="DnsInterface.hxx">
 			</File>
 			<File
-				RelativePath="Embedded.hxx"
-				>
+				RelativePath="DnsResult.hxx">
 			</File>
 			<File
-				RelativePath="ExistsParameter.hxx"
-				>
+				RelativePath="os\DnsUtil.hxx">
 			</File>
 			<File
-				RelativePath=".\ExpiresCategory.hxx"
-				>
+				RelativePath=".\DtlsMessage.hxx">
 			</File>
 			<File
-				RelativePath=".\ExternalBodyContents.hxx"
-				>
+				RelativePath=".\DtlsTransport.hxx">
 			</File>
 			<File
-				RelativePath=".\ExternalDnsFactory.hxx"
-				>
+				RelativePath="Embedded.hxx">
 			</File>
 			<File
-				RelativePath="os\Fifo.hxx"
-				>
+				RelativePath="ExistsParameter.hxx">
 			</File>
 			<File
-				RelativePath="FloatParameter.hxx"
-				>
+				RelativePath="ExpiresCategory.hxx">
 			</File>
 			<File
-				RelativePath="GenericContents.hxx"
-				>
+				RelativePath=".\ExtensionHeader.hxx">
 			</File>
 			<File
-				RelativePath=".\GenericUri.hxx"
-				>
+				RelativePath=".\ExtensionParameter.hxx">
 			</File>
 			<File
-				RelativePath="os\HashMap.hxx"
-				>
+				RelativePath=".\ExternalBodyContents.hxx">
 			</File>
 			<File
-				RelativePath="HeaderFieldValue.hxx"
-				>
+				RelativePath=".\external\ExternalDns.hxx">
 			</File>
 			<File
-				RelativePath="HeaderFieldValueList.hxx"
-				>
+				RelativePath=".\ExternalDnsFactory.hxx">
 			</File>
 			<File
-				RelativePath="HeaderHash.hxx"
-				>
+				RelativePath="os\Fifo.hxx">
 			</File>
 			<File
-				RelativePath="Headers.hxx"
-				>
+				RelativePath=".\os\FileSystem.hxx">
 			</File>
 			<File
-				RelativePath="HeaderTypes.hxx"
-				>
+				RelativePath="FloatParameter.hxx">
 			</File>
 			<File
-				RelativePath="Helper.hxx"
-				>
+				RelativePath="GenericContents.hxx">
 			</File>
 			<File
-				RelativePath="os\Inserter.hxx"
-				>
+				RelativePath=".\GenericUri.hxx">
 			</File>
 			<File
-				RelativePath=".\IntegerCategory.hxx"
-				>
+				RelativePath="os\HashMap.hxx">
 			</File>
 			<File
-				RelativePath="IntegerParameter.hxx"
-				>
+				RelativePath="HeaderFieldValue.hxx">
 			</File>
 			<File
-				RelativePath="os\IntrusiveListElement.hxx"
-				>
+				RelativePath="HeaderFieldValueList.hxx">
 			</File>
 			<File
-				RelativePath="LazyParser.hxx"
-				>
+				RelativePath="HeaderHash.hxx">
 			</File>
 			<File
-				RelativePath="os\Lock.hxx"
-				>
+				RelativePath="Headers.hxx">
 			</File>
 			<File
-				RelativePath="os\Lockable.hxx"
-				>
+				RelativePath="HeaderTypes.hxx">
 			</File>
 			<File
-				RelativePath="os\Log.hxx"
-				>
+				RelativePath=".\os\HeapInstanceCounter.hxx">
 			</File>
 			<File
-				RelativePath="os\Logger.hxx"
-				>
+				RelativePath="Helper.hxx">
 			</File>
 			<File
-				RelativePath="os\MD5Stream.hxx"
-				>
+				RelativePath="os\Inserter.hxx">
 			</File>
 			<File
-				RelativePath="Message.hxx"
-				>
+				RelativePath=".\IntegerCategory.hxx">
 			</File>
 			<File
-				RelativePath="MessageWaitingContents.hxx"
-				>
+				RelativePath="IntegerParameter.hxx">
 			</File>
 			<File
-				RelativePath="MethodHash.hxx"
-				>
+				RelativePath="os\IntrusiveListElement.hxx">
 			</File>
 			<File
-				RelativePath="MethodTypes.hxx"
-				>
+				RelativePath="LazyParser.hxx">
 			</File>
 			<File
-				RelativePath=".\Mime.hxx"
-				>
+				RelativePath="os\Lock.hxx">
 			</File>
 			<File
-				RelativePath=".\MsgHeaderScanner.hxx"
-				>
+				RelativePath="os\Lockable.hxx">
 			</File>
 			<File
-				RelativePath="MultipartMixedContents.hxx"
-				>
+				RelativePath="os\Log.hxx">
 			</File>
 			<File
-				RelativePath="MultipartSignedContents.hxx"
-				>
+				RelativePath="os\Logger.hxx">
 			</File>
 			<File
-				RelativePath="os\Mutex.hxx"
-				>
+				RelativePath="os\MD5Stream.hxx">
 			</File>
 			<File
-				RelativePath=".\NameAddr.hxx"
-				>
+				RelativePath="Message.hxx">
 			</File>
 			<File
-				RelativePath=".\OctetContents.hxx"
-				>
+				RelativePath="MessageWaitingContents.hxx">
 			</File>
 			<File
-				RelativePath="Parameter.hxx"
-				>
+				RelativePath="MethodHash.hxx">
 			</File>
 			<File
-				RelativePath="ParameterHash.hxx"
-				>
+				RelativePath="MethodTypes.hxx">
 			</File>
 			<File
-				RelativePath="ParameterTypeEnums.hxx"
-				>
+				RelativePath=".\Mime.hxx">
 			</File>
 			<File
-				RelativePath="ParameterTypes.hxx"
-				>
+				RelativePath=".\MsgHeaderScanner.hxx">
 			</File>
 			<File
-				RelativePath="os\ParseBuffer.hxx"
-				>
+				RelativePath=".\MultipartAlternativeContents.hxx">
 			</File>
 			<File
-				RelativePath="ParseException.hxx"
-				>
+				RelativePath="MultipartMixedContents.hxx">
 			</File>
 			<File
-				RelativePath="ParserCategories.hxx"
-				>
+				RelativePath="MultipartSignedContents.hxx">
 			</File>
 			<File
-				RelativePath="ParserCategory.hxx"
-				>
+				RelativePath="os\Mutex.hxx">
 			</File>
 			<File
-				RelativePath="ParserContainer.hxx"
-				>
+				RelativePath=".\NameAddr.hxx">
 			</File>
 			<File
-				RelativePath="ParserContainerBase.hxx"
-				>
+				RelativePath=".\OctetContents.hxx">
 			</File>
 			<File
-				RelativePath="ParseUtil.hxx"
-				>
+				RelativePath="Parameter.hxx">
 			</File>
 			<File
-				RelativePath="Pidf.hxx"
-				>
+				RelativePath="ParameterHash.hxx">
 			</File>
 			<File
-				RelativePath="Pkcs7Contents.hxx"
-				>
+				RelativePath="ParameterTypeEnums.hxx">
 			</File>
 			<File
-				RelativePath="PlainContents.hxx"
-				>
+				RelativePath="ParameterTypes.hxx">
 			</File>
 			<File
-				RelativePath="QopParameter.hxx"
-				>
+				RelativePath="os\ParseBuffer.hxx">
 			</File>
 			<File
-				RelativePath="QuotedDataParameter.hxx"
-				>
+				RelativePath="ParseException.hxx">
 			</File>
 			<File
-				RelativePath=".\RAckCategory.hxx"
-				>
+				RelativePath="ParserCategories.hxx">
 			</File>
 			<File
-				RelativePath="os\Random.hxx"
-				>
+				RelativePath="ParserCategory.hxx">
 			</File>
 			<File
-				RelativePath="os\RandomHex.hxx"
-				>
+				RelativePath="ParserContainer.hxx">
 			</File>
 			<File
-				RelativePath="os\RecursiveMutex.hxx"
-				>
+				RelativePath="ParserContainerBase.hxx">
 			</File>
 			<File
-				RelativePath="Registration.hxx"
-				>
+				RelativePath="ParseUtil.hxx">
 			</File>
 			<File
-				RelativePath="ReliabilityMessage.hxx"
-				>
+				RelativePath="Pidf.hxx">
 			</File>
 			<File
-				RelativePath=".\RequestLine.hxx"
-				>
+				RelativePath="Pkcs7Contents.hxx">
 			</File>
 			<File
-				RelativePath="resource.h"
-				>
+				RelativePath="PlainContents.hxx">
 			</File>
 			<File
-				RelativePath=".\Rlmi.hxx"
-				>
+				RelativePath="QopParameter.hxx">
 			</File>
 			<File
-				RelativePath="RportParameter.hxx"
-				>
+				RelativePath="QuotedDataParameter.hxx">
 			</File>
 			<File
-				RelativePath="os\RWMutex.hxx"
-				>
+				RelativePath=".\RAckCategory.hxx">
 			</File>
 			<File
-				RelativePath="SdpContents.hxx"
-				>
+				RelativePath="os\Random.hxx">
 			</File>
 			<File
-				RelativePath="Security.hxx"
-				>
+				RelativePath="os\RecursiveMutex.hxx">
 			</File>
 			<File
-				RelativePath=".\SecurityTypes.hxx"
-				>
+				RelativePath="Registration.hxx">
 			</File>
 			<File
-				RelativePath=".\ShutdownMessage.hxx"
-				>
+				RelativePath="RequestLine.hxx">
 			</File>
 			<File
-				RelativePath="SipFrag.hxx"
-				>
+				RelativePath="resource.h">
 			</File>
 			<File
-				RelativePath="SipMessage.hxx"
-				>
+				RelativePath=".\Rlmi.hxx">
 			</File>
 			<File
-				RelativePath="SipMessageExplicit.hxx"
-				>
+				RelativePath="RportParameter.hxx">
 			</File>
 			<File
-				RelativePath="SipSession.hxx"
-				>
+				RelativePath="os\RWMutex.hxx">
 			</File>
 			<File
-				RelativePath="SipStack.hxx"
-				>
+				RelativePath="SdpContents.hxx">
 			</File>
 			<File
-				RelativePath="os\Socket.hxx"
-				>
+				RelativePath=".\Security.hxx">
 			</File>
 			<File
-				RelativePath=".\StackThread.hxx"
-				>
+				RelativePath=".\SecurityAttributes.hxx">
 			</File>
 			<File
-				RelativePath="StatelessHandler.hxx"
-				>
+				RelativePath=".\SecurityTypes.hxx">
 			</File>
 			<File
-				RelativePath=".\StatisticsManager.hxx"
-				>
+				RelativePath=".\ShutdownMessage.hxx">
 			</File>
 			<File
-				RelativePath=".\StatisticsMessage.hxx"
-				>
+				RelativePath="SipFrag.hxx">
 			</File>
 			<File
-				RelativePath=".\StatusLine.hxx"
-				>
+				RelativePath="SipMessage.hxx">
 			</File>
 			<File
-				RelativePath=".\StringCategory.hxx"
-				>
+				RelativePath="SipMessageExplicit.hxx">
 			</File>
 			<File
-				RelativePath="Subscription.hxx"
-				>
+				RelativePath="SipStack.hxx">
 			</File>
 			<File
-				RelativePath="os\Subsystem.hxx"
-				>
+				RelativePath="os\Socket.hxx">
 			</File>
 			<File
-				RelativePath="supported.hxx"
-				>
+				RelativePath=".\StackThread.hxx">
 			</File>
 			<File
-				RelativePath="Symbols.hxx"
-				>
+				RelativePath="StatelessHandler.hxx">
 			</File>
 			<File
-				RelativePath="os\SysLogBuf.hxx"
-				>
+				RelativePath=".\StatisticsManager.hxx">
 			</File>
 			<File
-				RelativePath="os\SysLogStream.hxx"
-				>
+				RelativePath=".\StatisticsMessage.hxx">
 			</File>
 			<File
-				RelativePath="TcpBaseTransport.hxx"
-				>
+				RelativePath=".\StatusLine.hxx">
 			</File>
 			<File
-				RelativePath="TcpConnection.hxx"
-				>
+				RelativePath=".\StringCategory.hxx">
 			</File>
 			<File
-				RelativePath="TcpTransport.hxx"
-				>
+				RelativePath="Subscription.hxx">
 			</File>
 			<File
-				RelativePath="os\ThreadIf.hxx"
-				>
+				RelativePath="os\Subsystem.hxx">
 			</File>
 			<File
-				RelativePath=".\TimeAccumulate.hxx"
-				>
+				RelativePath="Symbols.hxx">
 			</File>
 			<File
-				RelativePath="os\Timer.hxx"
-				>
+				RelativePath="os\SysLogBuf.hxx">
 			</File>
 			<File
-				RelativePath="TimerMessage.hxx"
-				>
+				RelativePath="os\SysLogStream.hxx">
 			</File>
 			<File
-				RelativePath="TimerQueue.hxx"
-				>
+				RelativePath="TcpBaseTransport.hxx">
 			</File>
 			<File
-				RelativePath="TlsTransport.hxx"
-				>
+				RelativePath="TcpConnection.hxx">
 			</File>
 			<File
-				RelativePath=".\Token.hxx"
-				>
+				RelativePath="TcpTransport.hxx">
 			</File>
 			<File
-				RelativePath="TransactionController.hxx"
-				>
+				RelativePath="os\ThreadIf.hxx">
 			</File>
 			<File
-				RelativePath="TransactionMap.hxx"
-				>
+				RelativePath=".\TimeAccumulate.hxx">
 			</File>
 			<File
-				RelativePath=".\TransactionMessage.hxx"
-				>
+				RelativePath=".\os\TimeLimitFifo.hxx">
 			</File>
 			<File
-				RelativePath="TransactionState.hxx"
-				>
+				RelativePath="os\Timer.hxx">
 			</File>
 			<File
-				RelativePath="TransactionTerminated.hxx"
-				>
+				RelativePath="TimerMessage.hxx">
 			</File>
 			<File
-				RelativePath="Transport.hxx"
-				>
+				RelativePath="TimerQueue.hxx">
 			</File>
 			<File
-				RelativePath="TransportMessage.hxx"
-				>
+				RelativePath=".\TlsConnection.hxx">
 			</File>
 			<File
-				RelativePath="TransportSelector.hxx"
-				>
+				RelativePath="TlsTransport.hxx">
 			</File>
 			<File
-				RelativePath="TuIM.hxx"
-				>
+				RelativePath=".\Token.hxx">
 			</File>
 			<File
-				RelativePath="os\Tuple.hxx"
-				>
+				RelativePath="TransactionController.hxx">
 			</File>
 			<File
-				RelativePath="TuUa.hxx"
-				>
+				RelativePath="TransactionMap.hxx">
 			</File>
 			<File
-				RelativePath="UdpTransport.hxx"
-				>
+				RelativePath=".\TransactionMessage.hxx">
 			</File>
 			<File
-				RelativePath="UnknownHeaderType.hxx"
-				>
+				RelativePath="TransactionState.hxx">
 			</File>
 			<File
-				RelativePath="UnknownParameter.hxx"
-				>
+				RelativePath="TransactionTerminated.hxx">
 			</File>
 			<File
-				RelativePath="UnknownParameterType.hxx"
-				>
+				RelativePath="Transport.hxx">
 			</File>
 			<File
-				RelativePath="Uri.hxx"
-				>
+				RelativePath="TransportMessage.hxx">
 			</File>
 			<File
-				RelativePath=".\Via.hxx"
-				>
+				RelativePath="TransportSelector.hxx">
 			</File>
 			<File
-				RelativePath="os\vmd5.hxx"
-				>
+				RelativePath="TuIM.hxx">
 			</File>
 			<File
-				RelativePath="os\vthread.hxx"
-				>
+				RelativePath="os\Tuple.hxx">
 			</File>
 			<File
-				RelativePath=".\WarningCategory.hxx"
-				>
+				RelativePath=".\os\TransportType.hxx">
 			</File>
 			<File
-				RelativePath=".\os\WinCompat.hxx"
-				>
+				RelativePath="UdpTransport.hxx">
 			</File>
 			<File
-				RelativePath=".\X_msMsgsInvite.hxx"
-				>
+				RelativePath="UnknownParameter.hxx">
 			</File>
 			<File
-				RelativePath="XMLCursor.hxx"
-				>
+				RelativePath="Uri.hxx">
+			</File>
+			<File
+				RelativePath=".\Via.hxx">
+			</File>
+			<File
+				RelativePath="os\vmd5.hxx">
+			</File>
+			<File
+				RelativePath="os\vthread.hxx">
+			</File>
+			<File
+				RelativePath=".\WarningCategory.hxx">
+			</File>
+			<File
+				RelativePath=".\os\WinCompat.hxx">
+			</File>
+			<File
+				RelativePath=".\os\WinLeakCheck.hxx">
+			</File>
+			<File
+				RelativePath="XMLCursor.hxx">
 			</File>
 		</Filter>
 	</Files>
