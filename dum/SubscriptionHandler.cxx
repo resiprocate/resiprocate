@@ -1,5 +1,6 @@
-#include "SubscriptionHandler.hxx"
-#include "ServerSubscription.hxx"
+#include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
+#include "resiprocate/SecurityAttributes.hxx"
 
 using namespace resip;
 
@@ -37,3 +38,13 @@ ServerSubscriptionHandler::onRefresh(ServerSubscriptionHandle handle, const SipM
    handle->send(handle->accept(200));
    handle->send(handle->neutralNotify());
 }
+
+void 
+ServerSubscriptionHandler::onPublished(ServerSubscriptionHandle associated, 
+                                       ServerPublicationHandle publication, 
+                                       const Contents* contents,
+                                       const SecurityAttributes* attrs)
+{
+   // do nothing by default
+}
+

@@ -1420,7 +1420,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
          break;
    }
 
-   STACK_OF(X509)* certs;
+   STACK_OF(X509)* certs = 0;
    certs = sk_X509_new_null();
    assert( certs );
 #if 1
@@ -1449,7 +1449,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
          InfoLog(<< "Got a signer <" << i << ">" );
 
 #if 1
-         GENERAL_NAMES* gens;
+         GENERAL_NAMES* gens=0;
          gens = (GENERAL_NAMES*)X509_get_ext_d2i(x, NID_subject_alt_name, NULL, NULL);
 
          for(i = 0; i < sk_GENERAL_NAME_num(gens); i++)
