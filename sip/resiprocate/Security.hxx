@@ -45,6 +45,13 @@ class Security
       friend class TlsConnection;
       
    public:
+	  class Exception : public BaseException
+      {
+         public:
+            Exception(const Data& msg, const Data& file, const int line);
+            const char* name() const { return "SecurityException"; }
+      };
+
       Security( );
       ~Security();
       
