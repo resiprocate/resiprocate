@@ -292,8 +292,10 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
          mProfile.addSupportedMethod(SUBSCRIBE);
          mProfile.validateAcceptEnabled() = true;
          mProfile.validateContentEnabled() = true;
-         mProfile.addSupportedMimeType(Pkcs8Contents::getStaticType());
-         mProfile.addSupportedMimeType(X509Contents::getStaticType());
+         mProfile.addSupportedMimeType(PUBLISH, Pkcs8Contents::getStaticType());
+         mProfile.addSupportedMimeType(SUBSCRIBE, Pkcs8Contents::getStaticType());
+         mProfile.addSupportedMimeType(PUBLISH, X509Contents::getStaticType());
+         mProfile.addSupportedMimeType(SUBSCRIBE, X509Contents::getStaticType());
          
          mProfile.setDefaultFrom(me);
          setMasterProfile(&mProfile);
