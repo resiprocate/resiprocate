@@ -1,19 +1,59 @@
 
-#include "resiprocate/SipStack.hxx"
+#include <cassert>
+
+#include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Security.hxx"
-#include "resiprocate/os/Log.hxx"
-#include "assert.h"
+
 
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 
 int
 main(int argc, char* argv[])
 {
    Log::initialize(Log::Cout, Log::Debug, Data::Empty);
+
+#ifdef USE_SSL
+   Security* security=0;
+   try
+   {
+      security = new Security(false,true);
+   }
+   catch( ... )
+   {
+      security = 0;
+      ErrLog( << "Got a exception setting up Security" );
+   }
+
+   try
+   {
+      assert(security != 0);
+      bool ok = security->loadAllCerts( "password" , Data::Empty );
+      if ( !ok )
+      {
+         ErrLog( << "Could not load the certificates" );
+      } 
+   }
+   catch( ... )
+   {
+      ErrLog( << "Got a exception loading certificates" );
+   }
+
+   assert( security );
+   Data in("123");
+   Data res = security->computeIdentity( in );
+
+   ErrLog( << "input is " << in  );
+   ErrLog( << "identity is " << res  );
+
+   bool c  = security->checkIdentity( in , res );
+   assert( c == true );
+   
+#endif // use_ssl 
+
    return 0;
 }
 
