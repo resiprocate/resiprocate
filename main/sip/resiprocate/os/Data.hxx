@@ -47,7 +47,7 @@ class Data
       // construct a Data that shares memory; the passed characters MUST be
       // immutable and in a longer lasting scope -- or take the buffer
       // as thine own.
-      enum  ShareEnum {Share,Take};
+      enum  ShareEnum {Share, Borrow, Take};
 
       Data(ShareEnum, const char* buffer, int length);
       Data(ShareEnum, const char* buffer);
@@ -179,7 +179,7 @@ class Data
       size_type mSize;
       char* mBuf;
       size_type mCapacity;
-      bool mMine;
+      ShareEnum mMine;
       // The invariant for a Data with !mMine is mSize == mCapacity
 
 
