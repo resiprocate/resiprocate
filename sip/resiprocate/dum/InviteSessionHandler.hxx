@@ -55,7 +55,7 @@ class InviteSessionHandler
       /// useful 
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg)=0;
       
-      /// callebranch/sip/resiprocate/dum/d when some state in the Dialog changes - typically remoteURI
+      /// called when some state in the Dialog changes - typically remoteURI
       virtual void onDialogModified(InviteSessionHandle, const SipMessage& msg)=0;
 
       /// called when INFO message is received 
@@ -66,8 +66,6 @@ class InviteSessionHandler
 
       /// called when an REFER message receives a failure response 
       virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg)=0;
-
-      virtual void onReInvite(InviteSessionHandle, const SipMessage& msg)=0;
 
 };
 
