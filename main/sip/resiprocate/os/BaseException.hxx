@@ -26,7 +26,7 @@ class BaseException : public std::exception
                     int line);
       // not pure virtual -- don't want to require every derived class to have
       // to define
-      ~BaseException() throw();
+      virtual ~BaseException() throw();
       
       resip::Data message;
       resip::Data fileName;
