@@ -13,8 +13,8 @@ class TcpConnection : public Connection
    public:
       TcpConnection( const Tuple& who, Socket fd );
       
-      int read( char* buf, int count );
-      int write( const char* buf, int count );
+      int read( char* buf, const int count );
+      int write( const char* buf, const int count );
       bool hasDataToRead(); // has data that can be read 
       bool isGood(); // has valid connection
       Data peerName();      
