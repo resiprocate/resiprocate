@@ -5,6 +5,8 @@
 #include <utility>
 #include <map>
 #include <set>
+#include <list>
+#include <vector>
 #include "HashMap.hxx"
 
 /**
@@ -14,9 +16,6 @@
    This is particularly useful within a Log call.
    e.g., assuming vector<Vocal::SipContact> contacts;
    DebugLog(<< "Contacts: " << Inserter(contacts));
-
-   To Do:
-   Maybe write insert for a map/hash_map?
  */
 
 namespace resip
@@ -32,13 +31,11 @@ insert(std::ostream& s, const T& t)
    s << t;
    return s;
 }
-
 #endif
 
+// sadly, not generally supported
+#if 0
 #if !defined(WIN32) && !defined(__SUNPRO_CC)
-// !cj! help - can someone look at this - do we really need it 
-// it does not compile under windows 
-
 /// Container generic insert function
 template <class T, template <class> class C>
 std::ostream&
@@ -58,7 +55,47 @@ insert(std::ostream& s, const C<T>& c)
    s << "]";
    return s;
 }
-#endif // WIN32
+#endif
+#endif
+
+// specific collections, sigh
+template <class T>
+std::ostream&
+insert(std::ostream& s, const std::vector <T>& c)
+{
+   s << "[";
+   for (typename std::vector <T>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << ", ";
+      }
+      // recurse
+      insert(s, *i);
+   }
+   s << "]";
+   return s;
+}
+
+template <class T>
+std::ostream&
+insert(std::ostream& s, const std::list <T>& c)
+{
+   s << "[";
+   for (typename std::list <T>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << ", ";
+      }
+      // recurse
+      insert(s, *i);
+   }
+   s << "]";
+   return s;
+}
 
 #if !defined(__INTEL_COMPILER)
 template <class K, class C>
@@ -127,7 +164,6 @@ insert(std::ostream& s, const std::map <K, V, H>& c)
    return s;
 }
 
-
 // special case for basic_string container
 template <class T>
 std::ostream&
@@ -160,8 +196,6 @@ class InserterClass
       const T& _t;
 };
 
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
-
 /// Function to allow an Inserter to be used directly with a stream
 template <class T>
 std::ostream&
@@ -169,8 +203,6 @@ operator<<(std::ostream& s, const InserterClass<T>& inserter)
 {
    return insert(s, inserter._t);
 }
-
-#endif
 
 /// Templatized function to construct an instance of InserterClass for a
 /// container to be inserted. The function induces the template type, saving the
