@@ -6,7 +6,6 @@
 namespace resip
 {
 using namespace std;
-using namespace resip;
 %}
 struct headers { char *name; Headers::Type type; };
 %%
@@ -41,6 +40,7 @@ allow, Headers::Allow
 authentication-info, Headers::AuthenticationInfo
 call-info, Headers::CallInfo
 content-disposition, Headers::ContentDisposition
+content-id, Headers::ContentId
 content-encoding, Headers::ContentEncoding
 content-language, Headers::ContentLanguage
 content-type, Headers::ContentType
@@ -95,5 +95,6 @@ RSeq, Headers::RSeq
 RAck, Headers::RAck
 session-expires, Headers::SessionExpires
 min-se, Headers::MinSE
+content, Headers::ContentId
 %%
 }

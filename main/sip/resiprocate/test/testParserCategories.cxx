@@ -448,6 +448,8 @@ main(int arc, char** argv)
       checkHeaderName(SecurityServer);
       checkHeaderName(SecurityVerify);
       checkHeaderName(ContentLength);
+      checkHeaderName(ContentId);
+
    }
 
 #define checkParameterName(_name) cerr << ParameterTypes::_name << " " << ParameterTypes::ParameterNames[ParameterTypes::_name] << " = " << #_name << endl/*;assert(isEqualNoCase(ParameterTypes::ParameterNames[ParameterTypes::_name], #_name))*/
@@ -530,6 +532,9 @@ main(int arc, char** argv)
       checkParameterName(document);
       checkParameterName(appId);
       checkParameterName(networkUser);
+      
+      checkParameterName(url);
+      
 
 
       // test parameter hash
