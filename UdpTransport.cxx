@@ -238,6 +238,14 @@ UdpTransport::process(FdSet& fdset)
           
          DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
          // set the received= and rport= parameters in the message if necessary !jf!
+         if (message->isRequest() && !message->header(h_Vias).empty())
+         {
+            char received[255];
+            inet_ntop(AF_INET, &tuple.ipv4.s_addr, received, sizeof(received));
+            
+            message->header(h_Vias).front().param(p_received) = received;
+            message->header(h_Vias).front().param(p_rport) = tuple.port;
+         }
          mStateMachineFifo.add(message);
       }
    }
