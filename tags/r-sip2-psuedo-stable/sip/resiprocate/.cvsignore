@@ -1,0 +1,15 @@
+*.d
+ExpandedSipMessage
+MarshalOpInvite.cxx
+MassagedSipMessage
+a.out
+backup
+bin.*
+headers-hash.c
+html
+memprof.sh
+obj.*
+testSipStack1
+testSipStack1
+testUdp
+tmp
