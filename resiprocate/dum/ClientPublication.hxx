@@ -28,6 +28,7 @@ class ClientPublication : public BaseUsage
       void end();
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
+      ClientPublication::Handle getHandle() {return mHandle;}
 
    private:
       friend class DialogUsageManager;
