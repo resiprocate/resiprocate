@@ -19,8 +19,8 @@ class ClientRegistration: public NonDialogUsage
 
       void addBinding(const NameAddr& contact);
       void removeBinding(const NameAddr& contact);
-      void removeAll();
-      void removeMyBindings();
+      void removeAll(bool stopRegisteringWhenDone=false);
+      void removeMyBindings(bool stopRegisteringWhenDone=false);
       void requestRefresh();
       
       //kills the usgage, call removeMyBindings to deregister
@@ -37,14 +37,21 @@ class ClientRegistration: public NonDialogUsage
    private:
       friend class DialogSet;
 
-      void updateMyContacts(const NameAddrs& allContacts);
-      
       SipMessage& mLastRequest;
       NameAddrs mMyContacts; // Contacts that this UA is requesting 
-      NameAddrs mAllContacts; // All the contacts Register knows about 
-//      UInt64    mExpirationTime;
+      NameAddrs mAllContacts; // All the contacts Registrar knows about 
       int mTimerSeq; // expected timer seq (all < are stale)
 
+      typedef enum
+      {
+         Querying,
+         Adding,
+         Registered,
+         Removing,
+      } State;
+      State mState;
+      bool mEndWhenDone;
+      
       // disabled
       ClientRegistration(const ClientRegistration&);
       ClientRegistration& operator=(const ClientRegistration&);
