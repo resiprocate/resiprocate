@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.107 2003/02/04 03:34:29 fluffy Exp $
+# $Id: Makefile,v 1.108 2003/02/20 20:33:52 fluffy Exp $
 
 BUILD = ../../build
 
@@ -16,6 +16,7 @@ ifeq ($(USE_SSL),1)
 PACKAGES += OPENSSL
 CFLAGS += -DUSE_SSL
 CXXFLAGS += -DUSE_SSL
+LDFLAGS += -lssl -lcrypto
 endif
 
 #CXXFLAGS += -DVOCAL2_AOR_HAS_SCHEME
