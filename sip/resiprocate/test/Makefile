@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.69 2004/05/04 22:25:53 davidb Exp $
+# $Id: Makefile,v 1.70 2004/05/12 01:14:30 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -44,6 +44,7 @@ TESTPROGRAMS += testPidf.cxx \
 		testMultipartMixedContents.cxx \
 		testParseBuffer.cxx \
 		testParseUtil.cxx \
+		testPidf.cxx \
 		testPlainContents.cxx \
 		testSdp.cxx \
 		testSelect.cxx \

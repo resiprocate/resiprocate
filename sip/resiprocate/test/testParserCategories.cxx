@@ -1340,6 +1340,7 @@ main(int arc, char** argv)
       cerr << "!! " << o << endl;
       assert(o == "branch=z9hG4bK-c87542-jason.10-1--c87542-");
    }
+
       
    {
       TR _tr("Branch parameter 2");
@@ -1476,6 +1477,19 @@ main(int arc, char** argv)
       }
    }
    
+   {
+      TR _tr("Branch parameter 9");
+
+      Data txt("=z9hG4bK-c87542-5b42cb698e8c6827790212ac5bdade1a-1-PA32768-c87542-;rport;received=64.124.66.32");
+      ParseBuffer pb(txt.data(), txt.size());
+      BranchParameter bp(ParameterTypes::branch, pb, ";");
+      assert(bp.hasMagicCookie());
+      assert(bp.getTransactionId() == "5b42cb698e8c6827790212ac5bdade1a");
+      assert(bp.clientData() == "PA32768");
+      
+      bp.encode(cerr); cerr << endl;
+   }
+
    {
       TR _tr("Branch testing 1");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
