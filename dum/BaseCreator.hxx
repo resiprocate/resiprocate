@@ -7,11 +7,11 @@ namespace resip
 class BaseCreator
 {
    public:
-      BaseCreator(SAManager& sam);
+      BaseCreator(DialogUsageManager& dum);
       
    private:
       SipMessage mInitialRequest;
-      SAManager& mSAM;
+      DialogUsageManager& mDUM;
 };
 
 }
