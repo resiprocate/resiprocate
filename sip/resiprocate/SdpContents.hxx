@@ -11,10 +11,15 @@
 namespace Vocal2
 {
 
+class SdpContents;
+
 class SdpContents : public Contents
 {
    public:
       typedef enum {IP4=1, IP6} AddrType;
+
+		class Session;
+
       class Session 
       {
          public:
@@ -213,15 +218,18 @@ class SdpContents : public Contents
                   std::ostream& encode(std::ostream&) const;
 
                   const KeyType& getMethod() const {return mMethod;}
+				  void setMethod( const KeyType& k) { mMethod=k; }
                   const Data& getKey() const {return mKey;}
 
+			
+				  Encryption();
                private:
-                  Encryption();
+             
                   KeyType mMethod;
                   Data mKey;
 
-                  friend class Session;
-                  friend class Session::Medium;
+				  //friend class Vocal2::SdpContents::Session;
+				  //friend class Vocal2::SdpContents::Session::Medium;
             };
 
             class Medium
