@@ -8,7 +8,9 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 
-Profile::Profile() : mDefaultRegistrationExpires(3600)
+Profile::Profile() : 
+   mDefaultRegistrationExpires(3600),
+   mHasOutboundProxy(false)   
 {
 }
 
