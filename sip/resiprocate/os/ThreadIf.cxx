@@ -4,19 +4,17 @@
 #include <util/Lock.hxx>
 
 
-static const char* const ThreadIf_cxx_Version = "$Id: ThreadIf.cxx,v 1.2 2002/09/28 16:41:18 fluffy Exp $";
-
 using namespace Vocal2;
 
 static void*
 threadWrapper( void* threadParm )
 {
-   assert( threadParm );
-   ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
+	assert( threadParm );
+	ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
    
-   assert( t );
-   t->thread();
-   return 0;
+	assert( t );
+	t->thread();
+	return 0;
 }
 
 ThreadIf::ThreadIf() : mId(0), mShutdown(false)
@@ -31,48 +29,86 @@ ThreadIf::~ThreadIf()
 void
 ThreadIf::run()
 {
-   // spawn the thread
-   pthread_attr_t attributes;
-   pthread_create( &mId, &attributes, threadWrapper, this);
+#if defined(WIN32)
+	thread = CreateThread(
+		NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
+		0, // DWORD dwStackSize,                         // initial thread stack size
+		threadWrapper, // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
+		this, //LPVOID lpParameter,                        // argument for new thread
+		0, //DWORD dwCreationFlags,                     // creation flags
+		&mId// LPDWORD lpThreadId                         // pointer to receive thread ID
+		);
+	assert( thread != NULL );
+#else
+	// spawn the thread
+	pthread_attr_t attributes;
+	if ( pthread_create( &mId, &attributes, threadWrapper, this) )
+	{
+		assert(0);
+		// TODO - ADD LOGING HERE 
+	}
+#endif  
 }
 
 void
 ThreadIf::join()
 {
-   assert (mId != 0);
-   pthread_join(mId, 0);
-   mId = 0;
+	assert (mId != 0);
+
+#if defined(WIN32)
+	DWORD exitCode;
+	while ( !GetExitCodeThread(mId,&exitCode) )
+	{
+		WaitForSingleObject(mId,INFINITE);
+	}
+#else
+	void* stat;
+	int r = pthread_join( mId , &stat );
+	if ( r!= 0 )
+	{
+		assert(0);
+		// TODO 
+	}
+#endif
+
+	mId = 0;
 }
 
 void
 ThreadIf::exit()
 {
-   assert(mId != 0);
-   pthread_cancel(mId);
-   mId = 0;
+	assert(mId != 0);
+
+#if defined(WIN32)
+	ExitThread( 0 );	 
+#else
+	pthread_exit(0);
+#endif
+
+	mId = 0;
 }
 
 pthread_t
 ThreadIf::selfId() const
 {
-   return pthread_self();
+	return pthread_self();
 }
 
 void
 ThreadIf::shutdown()
 {
-   Lock lock(mShutdownMutex);
-   (void)lock;
-   mShutdown = true;
+	Lock lock(mShutdownMutex);
+	(void)lock;
+	mShutdown = true;
 }
 
 
 bool
 ThreadIf::isShutdown() const
 {
-   Lock lock(mShutdownMutex);
-   (void)lock;
-   return ( mShutdown );
+	Lock lock(mShutdownMutex);
+	(void)lock;
+	return ( mShutdown );
 }
 
 
@@ -127,4 +163,3 @@ ThreadIf::isShutdown() const
  * <http://www.vovida.org/>.
  *
  */
-
