@@ -26,7 +26,7 @@ class TransactionState
          ServerNonInvite,
          ServerInvite,
          Stale,
-         Ack,  // may not be needed
+         Ack  // may not be needed
       } Machine;
       
       typedef enum 
