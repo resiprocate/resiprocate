@@ -46,6 +46,7 @@ SRC = \
 	os/WinCompat.cxx \
 	\
 	\
+	AresDns.cxx \
 	Auth.cxx \
 	CSeqCategory.cxx \
 	CallId.cxx \
@@ -82,6 +83,7 @@ SRC = \
 	DtlsTransport.cxx \
 	ExistsParameter.cxx \
 	ExternalBodyContents.cxx \
+	ExternalDnsFactory.cxx \
 	FloatParameter.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \

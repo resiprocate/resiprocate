@@ -1,4 +1,5 @@
 #include "resiprocate/AresDns.hxx"
+#include <arpa/nameser.h>
 
 extern "C"
 {
