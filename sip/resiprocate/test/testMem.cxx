@@ -31,8 +31,8 @@ main(int argc, char* argv[])
    
    size = (1 << atoi( argv[1] )) - 1;
    num  = atoi( argv[2] );
-   clog << "Doing " << num << " interations on " << size << " bytes " << endl;
-   clog << "Doing " << num/1000000 << " M interations on " << size/1000000 << " M bytes " << endl;
+   clog << "Doing " << num << " interations on " << size*4 << " bytes " << endl;
+   clog << "Doing " << num/1000000 << " M interations on " << size*4/1000000 << " M bytes " << endl;
    assert( num > 1 );
    assert( size > 1 );
 
