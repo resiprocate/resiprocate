@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding = "Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="7.10"
 	Name="gag"
 	ProjectGUID="{53862038-09E5-4FE1-9BDF-D482D8C735ED}"
 	Keyword="Win32Proj">
@@ -20,7 +20,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="c:\sip;C:\sip\contrib\ares"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -34,7 +34,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib C:\sip\resiprocate\Debug\sipstack.lib C:\sip\contrib\ares\Debug\ares.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib "
 				OutputFile="$(OutDir)/gag.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -54,7 +54,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -99,13 +105,30 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+			Name="ares"/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
+			Name="resiprocate"/>
+	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
+			<File
+				RelativePath="gag.cxx">
+			</File>
 			<File
 				RelativePath="GagConduit.cxx">
 			</File>
@@ -113,7 +136,7 @@
 				RelativePath="GagMessage.cxx">
 			</File>
 			<File
-				RelativePath="gag.cxx">
+				RelativePath="..\contrib\getopt\getopt.c">
 			</File>
 		</Filter>
 		<Filter

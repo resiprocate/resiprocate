@@ -35,7 +35,8 @@
 # include <errno.h>
 # include <winsock2.h>
 # include <io.h>
-typedef unsigned int u_int32_t;
+typedef unsigned long int u_int32_t;
+typedef unsigned long int ssize_t; 
 #endif
 
 #if defined(__SUNPRO_CC)
