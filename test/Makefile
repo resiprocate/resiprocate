@@ -21,7 +21,6 @@ TESTPROGRAMS += limpc.cxx \
 		testIdentity.cxx \
 		SipTortureTests.cxx \
 		testRSP-2.cxx \
-		testSrv \
 		testPidf.cxx \
 		testPksc7.cxx \
 		testCorruption.cxx \
