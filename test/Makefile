@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.66 2004/02/12 08:36:42 fluffy Exp $
+# $Id: Makefile,v 1.67 2004/04/13 04:39:35 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -60,7 +60,6 @@ TESTPROGRAMS += limpc.cxx \
 	        testDataPerformance.cxx \
 	        testDataStream.cxx \
 	        testParserCategories.cxx \
-	        testPreparse.cxx \
 	        testRandomHex.cxx \
 	        testSipMessage.cxx \
 	        testSipStack1.cxx \

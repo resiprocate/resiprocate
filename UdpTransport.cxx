@@ -148,39 +148,6 @@ UdpTransport::process(FdSet& fdset)
    // Tell the SipMessage about this datagram buffer.
    message->addBuffer(buffer);
 
-#ifndef NEW_MSG_HEADER_SCANNER // {
-
-   // This is UDP, so, initialise the preparser with this
-   // buffer.
-
-   int err = mPreparse.process(*message,buffer, len);
-	
-   if (err)
-   {
-      DebugLog(<<"Scanner rejecting datagram as unparsable / fragmented.");
-      DebugLog(<< Data(buffer, len));
-      delete message; 
-      message=0; 
-      // Reset the preparse machine if we're not saving the fragment
-      mPreparse.reset();
-      return;
-   }
-
-   if ( !mPreparse.isHeadersComplete() )
-   {
-      DebugLog(<<"Preparser rejecting datagram as unparsable / fragmented from " << tuple);
-      DebugLog(<< Data(buffer, len));
-      delete message; 
-      message=0;
-      // Reset the preparse machine if we're not saving the fragment
-      mPreparse.reset();
-      return;
-   }
-
-   // no pp error
-   int used = mPreparse.nBytesUsed();
-
-#else //defined (NEW_MSG_HEADER_SCANNER) } {
 
    mMsgHeaderScanner.prepareForMessage(message);
 
@@ -199,8 +166,6 @@ UdpTransport::process(FdSet& fdset)
 
    // no pp error
    int used = unprocessedCharPtr - buffer;
-
-#endif //defined (NEW_MSG_HEADER_SCANNER) }
 
    if (used < len)
    {
