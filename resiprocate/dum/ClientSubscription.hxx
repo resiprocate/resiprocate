@@ -20,7 +20,7 @@ class ClientSubscription: public BaseUsage
 
          private:
             Handle(DialogUsageManager& dum);
-            friend class DialogUsageManager;
+            friend class ClientSubscription;
       };
       
       void end();
@@ -28,6 +28,9 @@ class ClientSubscription: public BaseUsage
 
       bool matches(const SipMessage& subOrNotify);
       void process(const SipMessage& subOrNotify);
+
+      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
+      ClientSubscription::Handle getHandle() {return mHandle;}
       
    private:
       friend class DialogUsageManager;
@@ -40,6 +43,10 @@ class ClientSubscription: public BaseUsage
       const Contents* mCurrentEventDocument;
       UInt64 mExpirationTime;
       ClientSubscription::Handle mHandle;
+
+      // disabled
+      ClientSubscription(const ClientSubscription&);
+      ClientSubscription& operator=(const ClientSubscription&);
 };
  
 }

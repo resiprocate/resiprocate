@@ -9,13 +9,13 @@ namespace resip
 class ServerInviteSession: public InviteSession
 {
    public:
-      class Handle : public BaseUsage::Handle
+      class Handle : public InviteSession::Handle
       {
          public:
             // throws if no session 
-            ClientInviteSession* operator->();
+            ServerInviteSession* operator->();
          private:
-            friend class DialogUsageManager;
+            friend class ServerInviteSession;
             Handle(DialogUsageManager& dum);
       };
 
@@ -56,17 +56,23 @@ class ServerInviteSession: public InviteSession
       
       void handle(const SipMessage& msg);
 
+      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       virtual InviteSession::Handle getSessionHandle();
       ServerInviteSession::Handle getHandle() {return mHandle;}
 
-      virtual void resip::BaseUsage::dispatch(const 
-                                              resip::SipMessage&)
+      virtual void dispatch(const SipMessage& msg);
 
    private:
       friend class DialogUsageManager;
       ServerInviteSession::Handle mHandle;
       
-      ServerInviteSession(DialogUsageManager& dum, const SipMessage& msg);
+      ServerInviteSession(DialogUsageManager& dum, 
+                          Dialog& dialog,
+                          const SipMessage& msg);
+
+      // disabled
+      ServerInviteSession(const ServerInviteSession&);
+      ServerInviteSession& operator=(const ServerInviteSession&);
 };
 
 }

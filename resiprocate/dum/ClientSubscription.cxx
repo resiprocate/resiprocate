@@ -1,10 +1,13 @@
 #include "ClientSubscription.hxx"
 #include "DialogUsageManager.hxx"
 #include "Dialog.hxx"
+#include "resiprocate/SipMessage.hxx"
+
+using namespace resip;
 
 ClientSubscription::ClientSubscription(DialogUsageManager& dum,
                                        Dialog& dialog)
-   : BaseUsage(dum, dialog)
+   : BaseUsage(dum, dialog),
      mHandle(dum)
 {
 }
@@ -12,10 +15,10 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum,
 bool
 ClientSubscription::matches(const SipMessage& subOrNotify)
 {
-   return  (subOrNotify.exists(h_Event) && 
-            subOrNotify.header(h_Event).value() == mEventType && 
-            ( !subOrNotify.header(h_Event).exists(p_id) || 
-              subOrNotify.header(h_Event).param(p_id) == mSubscriptionId));
+   return (subOrNotify.exists(h_Event) && 
+           subOrNotify.header(h_Event).value() == mEventType && 
+           ( !subOrNotify.header(h_Event).exists(p_id) || 
+             subOrNotify.header(h_Event).param(p_id) == mSubscriptionId));
 }
 
 ClientSubscription::Handle::Handle(DialogUsageManager& dum)
@@ -25,7 +28,7 @@ ClientSubscription::Handle::Handle(DialogUsageManager& dum)
 ClientSubscription*
 ClientSubscription::Handle::operator->()
 {
-   return static_cast<ClientSubscription*>get();
+   return static_cast<ClientSubscription*>(get());
 }
 
 /* ====================================================================
