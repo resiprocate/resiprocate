@@ -4,6 +4,9 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
 
+#include "resiprocate/os/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
+
 using namespace resip;
 
 TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
@@ -45,20 +48,26 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
 bool
 TuSelector::wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const
 {
+   InfoLog(<< "TuSelector::wouldAccept " << mTuSelectorMode);   
+
    if (mTuSelectorMode)
    {
       for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
       {
          if (!it->shuttingDown && it->tu->wouldAccept(usage))
          {
+            InfoLog(<< "TuSelector::wouldAccept returning true");   
             return true;
          }
       }
+      InfoLog(<< "TuSelector::wouldAccept returning false");   
       return false;
    }
    else
    {
-      return mFallBackFifo.wouldAccept(usage);
+      bool ret =  mFallBackFifo.wouldAccept(usage);
+      InfoLog(<< "TuSelector::wouldAccept returning " << ret);
+      return ret;
    }
 }
       
