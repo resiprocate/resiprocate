@@ -1,3 +1,6 @@
+
+#include <util/Socket.hxx>
+
 #include <sipstack/TimerQueue.hxx>
 #include <sipstack/TimerMessage.hxx>
 #include <util/Logger.hxx>
