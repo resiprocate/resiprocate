@@ -21,7 +21,8 @@ class DialogSetId
       bool operator!=(const DialogSetId& rhs) const;
       bool operator<(const DialogSetId& rhs) const;
    private:
-      Data mId;
+      Data mCallId;
+      Data mTag;
 };
 
 }
