@@ -1,5 +1,5 @@
 #include <sipstack/HeaderFieldValueList.hxx>
-#include <sipstack/ParserCategory.hxx>
+#include <sipstack/ParserContainerBase.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -24,6 +24,11 @@ HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& other)
 	p = p->next;
       }
    }
+
+   if (mParserContainer != 0)
+   {
+      mParserContainer = mParserContainer->clone(*this);
+   }
 }
 
 HeaderFieldValueList::~HeaderFieldValueList()
@@ -38,15 +43,21 @@ HeaderFieldValueList::~HeaderFieldValueList()
          current = next;
       } while (current != 0);
    }
-   delete mParserCategory;
+   delete mParserContainer;
+}
+
+HeaderFieldValueList* 
+HeaderFieldValueList::clone() const
+{
+   return new HeaderFieldValueList(*this);
 }
 
 ParserCategory&
 HeaderFieldValueList::getParserCategory()
 {
-   if (mParserCategory)
+   if (mParserContainer)
    {
-      return *mParserCategory;
+      return *mParserContainer;
    }
    else
    {

@@ -105,7 +105,7 @@ SipMessage::operator[](const Data& headerName)
                it->mParserCategory = new Unknown(*it);
             }
             
-            hfvs->setParserCategory(new Unknowns(*hfvs));
+            hfvs->setParserContainer(new Unknowns(*hfvs));
          }
          return (Unknowns&)hfvs->getParserCategory();
       }
@@ -116,7 +116,7 @@ SipMessage::operator[](const Data& headerName)
    HeaderFieldValue* hfv = new HeaderFieldValue;
    hfv->mParserCategory = new Unknown(*hfv);
    hfvs->push_back(hfv);
-   hfvs->setParserCategory(new Unknowns(*hfvs));
+   hfvs->setParserContainer(new Unknowns(*hfvs));
    mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(headerName, hfvs));
    return (Unknowns&)hfvs->getParserCategory();
 }
