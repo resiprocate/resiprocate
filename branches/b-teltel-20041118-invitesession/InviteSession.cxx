@@ -5,7 +5,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -475,7 +475,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case OnInviteReliable:
          mLastSessionModification = msg;
          transition(ReceivedReinviteNoOffer);
-         handler->onDialogModified(getSessionHandle(), Offer, msg);
+         handler->onDialogModified(getSessionHandle(), None, msg);
          handler->onOfferRequired(getSessionHandle(), msg);
          break;
          
@@ -483,6 +483,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case OnInviteReliableOffer:
          mLastSessionModification = msg;
          transition(ReceivedReinvite);
+         handler->onDialogModified(getSessionHandle(), Offer, msg);
          handler->onOffer(getSessionHandle(), msg, sdp);
          break;
          

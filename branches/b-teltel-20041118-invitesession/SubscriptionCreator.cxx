@@ -1,24 +1,23 @@
 #include "SubscriptionCreator.hxx"
 #include "DialogUsageManager.hxx"
-#include "Profile.hxx"
 
 using namespace resip;
 
-SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, const NameAddr& from, const Data& event, int subscriptionTime)
-   : BaseCreator(dum),
+SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, UserProfile &userProfile, const Data& event, int subscriptionTime)
+   : BaseCreator(dum, userProfile),
      mRefreshInterval(-1)
 {
-   makeInitialRequest(target, from, SUBSCRIBE);
+   makeInitialRequest(target, SUBSCRIBE);
 
    mLastRequest.header(h_Event).value() = event; 
    mLastRequest.header(h_Expires).value() = subscriptionTime;
 }
 
-SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, const NameAddr& from, const Data& event, int subscriptionTime, int refreshInterval)
-   : BaseCreator(dum),
+SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, UserProfile &userProfile, const Data& event, int subscriptionTime, int refreshInterval)
+   : BaseCreator(dum, userProfile),
      mRefreshInterval(refreshInterval)
 {
-   makeInitialRequest(target, from, SUBSCRIBE);
+   makeInitialRequest(target, SUBSCRIBE);
 
    mLastRequest.header(h_Event).value() = event; 
    mLastRequest.header(h_Expires).value() = subscriptionTime;
