@@ -44,7 +44,7 @@ class InviteSession : public BaseUsage
       virtual SipMessage& targetRefresh(const NameAddr& localUri);
 
       // confusing wrong signature, should maybe just same NameAddr
-      virtual SipMessage& makeRefer(const H_ReferTo::Type& referTo);
+      virtual SipMessage& makeRefer(const NameAddr& referTo);
 
       const SdpContents* getLocalSdp();
       const SdpContents* getRemoteSdp();
