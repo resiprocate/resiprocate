@@ -54,6 +54,32 @@ main(int arc, char** argv)
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
    {
+      TR _tr("Test non-quoted tokens displayname in NameAddr (torture test: 2.39)");
+      Data data("A. Bell <sip:a.g.bell@bell-tel.com>;tag=459843");
+
+      NameAddr legal(data);
+
+      assert(legal.uri().host() == "bell-tel.com");
+
+      cerr << "!!" << legal << endl;
+
+      assert(legal.displayName() == "A. Bell ");
+   }
+
+   {
+      TR _tr("Test quoted displayname in NameAddr (torture test: 2.39)");
+      Data data("\"A. Bell\" <sip:a.g.bell@bell-tel.com>;tag=459843");
+
+      NameAddr legal(data);
+
+      assert(legal.uri().host() == "bell-tel.com");
+
+      cerr << "!!" << legal.displayName() << endl;
+
+      assert(legal.displayName() == "\"A. Bell\"");
+   }
+
+   {
       TR _tr("Test NameAddr parameter handling");
       Data data("sip:foo@bar.com;user=phone");
       
