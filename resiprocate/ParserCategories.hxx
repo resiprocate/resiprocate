@@ -79,7 +79,7 @@ class StringComponent : public ParserCategory
    public:
       StringComponent(HeaderFieldValueList& hvfs) {}
       StringComponent(HeaderFieldValue& hvf) {}
-      ParserCategory* clone(HeaderFieldValue*) const;
+      virtual ParserCategory* clone(HeaderFieldValue*) const;
       virtual void parse();
       virtual std::ostream& encode(std::ostream& str) const;
       Data& value();
