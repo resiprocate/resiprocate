@@ -202,7 +202,7 @@ main(int arc, char** argv)
       TR _tr("Test parameter with spaces");
       Data txt("Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n");
       HeaderFieldValue hfv(txt.data(), txt.size());
-      Auth auth(&hfv, Headers::AuthenticationInfo);
+      Auth auth(&hfv, Headers::Authorization);
       
       assert(auth.scheme() == "Digest");
       assert(auth.exists(p_realm));
@@ -940,7 +940,7 @@ main(int arc, char** argv)
    }
    {
       TR _tr("Auth Schemes");
-     char* authorizationString = "Digest realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
+      char* authorizationString = "Digest realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
       
       Auth auth(&hfv, Headers::UNKNOWN);
@@ -965,14 +965,14 @@ main(int arc, char** argv)
 
    {
       TR _tr("More Auth");
-     char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
+      char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
       
       Auth auth(&hfv, Headers::UNKNOWN);
 
-      //      cerr << "Auth scheme: " <<  auth.scheme() << endl;
+      cerr << "Auth scheme: " <<  auth.scheme() << endl;
       assert(auth.scheme() == "");
-      //      cerr << "   realm: " <<  auth.param(p_realm) << endl;
+      cerr << "   realm: " <<  auth.param(p_realm) << endl;
       assert(auth.param(p_realm) == "66.100.107.120"); 
       assert(auth.param(p_username) == "1234"); 
       assert(auth.param(p_nonce) == "1011235448"); 
