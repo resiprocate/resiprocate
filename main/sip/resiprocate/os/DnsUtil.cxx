@@ -17,7 +17,7 @@
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::UTIL
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 using namespace resip;
 using namespace std;

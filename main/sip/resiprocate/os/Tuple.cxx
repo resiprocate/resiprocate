@@ -22,7 +22,7 @@
 
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::UTIL
+#define RESIPROCATE_SUBSYSTEM Subsystem::DNS
 
 Tuple::Tuple() : 
    transport(0),
