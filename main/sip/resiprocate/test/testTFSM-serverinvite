@@ -2,7 +2,7 @@
 inject_wire
 {
 INVITE sip:B@127.0.0.1 SIP/2.0
-Via: SIP/2.0/TestUnreliable 127.0.0.1:1234;branch=z9hG4bK0000
+Via: SIP/2.0/UDP 127.0.0.1:1234;branch=z9hG4bK0000
 Max-Forwards: 70
 From: sip:A@inside.com;tag=12345
 To: sip:B@inside.com
@@ -37,7 +37,7 @@ timeout=2000
 inject_wire
 {
 INVITE sip:B@127.0.0.1 SIP/2.0
-Via: SIP/2.0/TestUnreliable 127.0.0.1:1234;branch=z9hG4bK0000
+Via: SIP/2.0/UDP 127.0.0.1:1234;branch=z9hG4bK0000
 Max-Forwards: 70
 From: sip:A@inside.com;tag=12345
 To: sip:B@inside.com
