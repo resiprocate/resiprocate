@@ -17,12 +17,62 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+#define CRLF "\r\n"
 
 int
 main(int argc, char** argv)
 {
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
+   {
+     char * txt =(              
+        "SIP/2.0 489 Bad Event" CRLF
+       "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
+       "CSeq: 1 SUBSCRIBE" CRLF
+       "Allow-Events: " CRLF
+       "Call-ID:  f354ce714fb8a95c" CRLF
+       "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
+       "To:  <sip:RjS@127.0.0.1:5060>" CRLF
+       CRLF
+       );
+     auto_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
+     assert(response->exists(h_AllowEvents));
+     assert(response->header(h_AllowEvents).size() == 1);
+     assert(response->header(h_AllowEvents).front().value().empty());
+     
+     char * txt2 =(              
+       "SIP/2.0 489 Bad Event" CRLF
+       "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
+       "CSeq: 1 SUBSCRIBE" CRLF
+       "Call-ID:  f354ce714fb8a95c" CRLF
+       "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
+       "To:  <sip:RjS@127.0.0.1:5060>" CRLF
+       "Allow-Events: " CRLF
+       CRLF
+       );
+     SipMessage * r2 = TestSupport::makeMessage(txt2,true);
+     assert(r2->exists(h_AllowEvents) );
+     assert(r2->header(h_AllowEvents).size() == 1);
+     assert(r2->header(h_AllowEvents).front().value().empty());
+
+
+     char * txt3 =(              
+       "SIP/2.0 489 Bad Event" CRLF
+       "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
+       "CSeq: 1 SUBSCRIBE" CRLF
+       "Call-ID:  f354ce714fb8a95c" CRLF
+       "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
+       "To:  <sip:RjS@127.0.0.1:5060>" CRLF
+       "Allow-Events: foo" CRLF
+       "Allow-Events: bar" CRLF
+       "Allow-Events: " CRLF
+       CRLF
+       );
+     SipMessage * r3 = TestSupport::makeMessage(txt3,true);
+     assert(r3->exists(h_AllowEvents) );
+     assert(r3->header(h_AllowEvents).size() == 3);
+     assert(r3->header(h_AllowEvents).front().value() == "foo");
+   }
    {
       // Test just in time parsing with comparison: NameAddr;
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
@@ -1062,6 +1112,10 @@ main(int argc, char** argv)
       assert(message->header(h_SecurityVerifies).front().value() == "tls");
       assert(message->header(h_SecurityVerifies).front().param(p_dVer) == "0000000000000000000000000000abcd");
       assert(message->header(h_SecurityVerifies).front().param(p_q) == 0.2f);
+
+      assert(message->exists(h_AllowEvents) == false);
+      assert(message->header(h_AllowEvents).size() == 1);
+      assert(message->header(h_AllowEvents).front().value().empty());
    }
 
    {
