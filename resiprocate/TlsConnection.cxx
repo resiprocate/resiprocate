@@ -5,6 +5,7 @@
 #include "resiprocate/TlsConnection.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/Uri.hxx"
 #include "resiprocate/os/Socket.hxx"
 
 #include <openssl/e_os2.h>
@@ -204,6 +205,9 @@ TlsConnection::checkState()
    
    InfoLog( << "TLS handshake done" ); 
    mState = Up;
+   
+   peerName(); // force peer name to get checked and perhaps cert loaded
+   
    return mState;
 }
 
@@ -404,9 +408,60 @@ TlsConnection::peerName()
    }
    ErrLog(<< "Got peer certificate" );
 
+   // TODO - check that this certificate is valid 
+
+   // TODO - add the certificate to the Security store
+   
    X509_NAME* subject = X509_get_subject_name(cert);
    assert(subject);
    
+   // TODO - need to fix up log levels 
+#if 1
+   GENERAL_NAMES* gens;
+   gens = (GENERAL_NAMES*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+   
+   for(int i = 0; i < sk_GENERAL_NAME_num(gens); i++)
+   {  
+      GENERAL_NAME* gen = sk_GENERAL_NAME_value(gens, i);
+
+      ErrLog(<< "subjectAltName of signing cert contains type <" << gen->type << ">" );
+
+      if (gen->type == GEN_DNS)
+      {
+            ErrLog(<< "subjectAltName of signing cert has DNS type" );
+      }
+          
+      if (gen->type == GEN_EMAIL)
+      {
+            ErrLog(<< "subjectAltName of signing cert has EMAIL type" );
+      }
+          
+      if(gen->type == GEN_URI) 
+      {
+         ASN1_IA5STRING* uri = gen->d.uniformResourceIdentifier;
+         int l = uri->length;
+         unsigned char* dat = uri->data;
+         Data name(dat,l);
+         ErrLog(<< "subjectAltName of signing cert contains <" << name << ">" );
+         
+         try
+         {
+            Uri n(name);
+            if ( n.scheme() == "sip" )
+            {
+               ErrLog(<< "Subject AltName has " << name  );
+            }
+         }
+         catch (...)
+         {
+         }
+      }
+   }
+   
+   sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+#endif
+  
+#if 0
    int i =-1;
    while( true )
    {
@@ -456,10 +511,17 @@ TlsConnection::peerName()
       
       const char* str = OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
       assert(str);
-      
       ErrLog(<< "Got certificate extention" << str );
+
+      if  ( OBJ_obj2nid(X509_EXTENSION_get_object(ext)) == NID_subject_alt_name )
+      {   
+         ErrLog(<< "Got subjectAltName extention" );
+         
+      }
    }
-   
+#endif 
+
+
    X509_free(cert); cert=NULL;
 #endif
    return ret;
