@@ -35,6 +35,8 @@ class StatisticsManager : public StatisticsMessage::Payload
                         unsigned long intervalSecs=60);
 
       void process();
+      // not stricly thread-safe; needs to be called through the fifo somehow
+      void setInterval(unsigned long intvSecs);
 
    private:
       friend class TransactionState;
@@ -42,7 +44,6 @@ class StatisticsManager : public StatisticsMessage::Payload
       bool received(SipMessage* msg);
 
       void poll(); // force an update
-      void setInterval(unsigned long intvSecs); // needs to be called through the fifo somehow
 
       TransactionController& mTransactionController;
       UInt64 mInterval;
