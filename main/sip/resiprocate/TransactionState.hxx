@@ -17,7 +17,6 @@ class TransactionState
    public:
       static void process(SipStack& stack); 
       ~TransactionState();
-      void registerDnsLookup();
      
    private:
       typedef enum 
