@@ -13,6 +13,7 @@ void
 TransactionState::process(SipStack& stack)
 {
    Message* message = stack.mStateMacFifo.getNext();
+   assert(message);
    DebugLog (<< "got message out of state machine fifo: " << *message);
    
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
@@ -52,7 +53,7 @@ TransactionState::process(SipStack& stack)
    }
    else // new transaction
    {
-      DebugLog (<< "Create new transaction for msg " << *state);
+      DebugLog (<< "Create new transaction for msg ");
       if (sip)
       {
          if (sip->isRequest())
@@ -72,6 +73,7 @@ TransactionState::process(SipStack& stack)
                   TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
                   stack.mTransactionMap.add(tid,state);
                }
+               DebugLog(<< "Adding incoming message to TU fifo");
                stack.mTUFifo.add(sip);
             }
             else // new sip msg from the TU
@@ -88,6 +90,7 @@ TransactionState::process(SipStack& stack)
                   stack.mTimers.add(Timer::TimerF, tid, 64*Timer::T1 );
                   stack.mTransactionMap.add(tid,state);
                }
+               DebugLog(<< "Sending sip message to transport selector");
                stack.mTransportSelector.send(sip);
             }
          }
