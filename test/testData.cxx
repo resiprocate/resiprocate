@@ -15,6 +15,47 @@ class TestData
       {
 
          Log::initialize(Log::COUT, Log::DEBUG, Data::Empty);
+
+         {
+            // test resizing
+            Data header(10, true);
+            assert(header.empty());
+
+            header += 'c';
+            header += " char";
+            header += "acters";
+
+            assert(header.size() > 10);
+            cerr << header << endl;
+            assert(header == "c characters");
+         }
+
+         {
+            // test resizing
+            Data header(10, true);
+            assert(header.empty());
+
+            header += 'c';
+            header += " char";
+            header += Data("acters");
+
+            assert(header.size() > 10);
+            cerr << header << endl;
+            assert(header == "c characters");
+         }
+
+         {
+            // test resizing
+            Data header(120, true);
+            assert(header.empty());
+
+            header += 'c';
+            header += " char";
+            header += "acters";
+
+            assert(header == "c characters");
+         }
+
          {
             char *txt = "here is some text";
             Data notOwner(txt, strlen(txt), true);
