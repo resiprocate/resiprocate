@@ -26,7 +26,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				BufferSecurityCheck="TRUE"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
@@ -537,6 +537,9 @@
 				RelativePath=".\WarningCategory.cxx">
 			</File>
 			<File
+				RelativePath=".\os\WinCompat.cxx">
+			</File>
+			<File
 				RelativePath="XMLCursor.cxx">
 			</File>
 		</Filter>
@@ -926,6 +929,9 @@
 			</File>
 			<File
 				RelativePath=".\WarningCategory.hxx">
+			</File>
+			<File
+				RelativePath=".\os\WinCompat.hxx">
 			</File>
 			<File
 				RelativePath="XMLCursor.hxx">
