@@ -1,6 +1,7 @@
 #if !defined(TRANSPORTSELECTOR_HXX)
 #define TRANSPORTSELECTOR_HXX
 
+#include <sys/select.h>
 #include <sipstack/SipMessage.hxx>
 #include <util/Data.hxx>
 #include <util/Fifo.hxx>
