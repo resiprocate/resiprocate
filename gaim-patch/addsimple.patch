@@ -91,3 +91,51 @@ diff -u -r1.16 Makefile.am
 +DIST_SUBDIRS = gg irc jabber msn napster novell oscar rendezvous silc toc trepia yahoo zephyr simple
  
  SUBDIRS = $(DYNAMIC_PRPLS) $(STATIC_PRPLS)
+
+Index: Makefile.mingw
+===================================================================
+RCS file: /cvsroot/gaim/gaim/Makefile.mingw,v
+retrieving revision 1.37
+diff -u -r1.37 Makefile.mingw
+--- Makefile.mingw	17 Apr 2004 13:55:26 -0000	1.37
++++ Makefile.mingw	24 Jun 2004 01:11:11 -0000
+@@ -24,6 +24,7 @@
+ TREPIA = $(GAIM_PROTOS)/trepia
+ GG = $(GAIM_PROTOS)/gg
+ NOVELL = $(GAIM_PROTOS)/novell
++SIMPLE = $(GAIM_PROTOS)/simple
+ PO = ./po
+ 
+ VERSION := $(shell cat ./VERSION)
+@@ -53,6 +54,7 @@
+ GG_TYPE = PLUGIN
+ NOVELL_TYPE = PLUGIN
+ TREPIA_TYPE = PLUGIN
++SIMPLE_TYPE = PLUGIN
+ 
+ all:
+ 	cp config.h.mingw config.h
+@@ -63,6 +65,7 @@
+ 	$(MAKE) TYPE='$(JABBER_TYPE)' -C $(JABBER) -f Makefile.mingw
+ 	$(MAKE) TYPE='$(GG_TYPE)' -C $(GG) -f Makefile.mingw
+ 	$(MAKE) TYPE='$(NOVELL_TYPE)' -C $(NOVELL) -f Makefile.mingw
++	$(MAKE) TYPE='$(SIMPLE_TYPE)' -C $(SIMPLE) -f Makefile.mingw
+ 	$(MAKE) -C $(GAIM_SRC) -f Makefile.mingw
+ 	$(MAKE) -C $(GAIM_PLUGINS) -f Makefile.mingw
+ 
+@@ -81,6 +84,7 @@
+ 	$(MAKE) TYPE='$(JABBER_TYPE)' -C $(JABBER) -f Makefile.mingw install
+ 	$(MAKE) TYPE='$(GG_TYPE)' -C $(GG) -f Makefile.mingw install
+ 	$(MAKE) TYPE='$(NOVELL_TYPE)' -C $(NOVELL) -f Makefile.mingw install
++	$(MAKE) TYPE='$(SIMPLE_TYPE)' -C $(SIMPLE) -f Makefile.mingw install
+ 	cp $(NEEDED_DLLS) $(GAIM_INSTALL_DIR)
+ 	cp $(SOUNDS) $(GAIM_INSTALL_DIR)/sounds/gaim
+ 
+@@ -105,6 +109,7 @@
+ 	$(MAKE) -C $(JABBER) -f Makefile.mingw clean
+ 	$(MAKE) -C $(GG) -f Makefile.mingw clean
+ 	$(MAKE) -C $(NOVELL) -f Makefile.mingw clean
++	$(MAKE) -C $(SIMPLE) -f Makefile.mingw clean
+ 	$(MAKE) -C $(GAIM_SRC) -f Makefile.mingw clean
+ 	$(MAKE) -C $(GAIM_PLUGINS) -f Makefile.mingw clean
+ 	rm -rf config.h $(GAIM_INSTALL_DIR)
