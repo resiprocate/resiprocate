@@ -1,9 +1,10 @@
 #ifndef STRINGDATA_H_
 #define STRINGDATA_H_
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.12 2002/10/13 06:02:36 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.13 2002/10/15 15:53:53 jason Exp $";
 
 #include <iostream>
+#include <string>
 
 namespace Vocal2
 {
@@ -26,6 +27,7 @@ class Data
       bool operator!=(const Data& rhs) const { return !(*this == rhs); }
       bool operator==(const char* rhs) const;
       bool operator==(const std::string& rhs) const;
+      bool operator<(const Data& rhs) const;
 
       Data& operator=(const Data& data);
       Data& operator+=(const Data& rhs);

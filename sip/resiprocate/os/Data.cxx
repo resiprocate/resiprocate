@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.6 2002/10/13 06:02:36 jason Exp $";
+"$Id: Data.cxx,v 1.7 2002/10/15 15:53:53 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -165,6 +165,13 @@ Data::operator==(const std::string& rhs) const
    }
    return strncmp(mBuf, rhs.c_str(), mSize) == 0;
 }
+
+bool
+Data::operator<(const std::Data& rhs) const
+{
+   return strncmp(mBuf, rhs.mBuf, mSize) < 0;
+}
+
 
 Data& 
 Data::operator=(const Data& data)
