@@ -37,6 +37,7 @@ class Handle
       {
          if (!mHam)
          {
+            //assert(0);
             throw HandleException("Reference to unitialized handle.", __FILE__, __LINE__);
          }
          return static_cast<T*>(mHam->getHandled(mId));
@@ -56,6 +57,11 @@ class Handle
       {
          static Handle<T> notValid;
          return notValid;
+      }
+      
+      bool operator==(const Handle<T>& other)
+      {
+         return mId == other.mId;
       }
       
 
