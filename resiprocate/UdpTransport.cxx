@@ -143,16 +143,16 @@ void UdpTransport::process()
 #else
 
 #define CRLF "\r\n"
-
    
    char buffer[] = 
-         "INVITE foo@bar.com SIP/2.0" CRLF
-         "Via: SIP/2.0/UDP pc33.atlanta.com;branch=foo" CRLF
-         "To: <sip:alan@ieee.org>" CRLF
-         "From: <sip:cj@whistler.com>"CRLF
-         "Subject: Good Morning!"CRLF
-         "Call-Id: 123" CRLF
-         CRLF
+      "INVITE foo@bar.com SIP/2.0" CRLF
+      "Via: SIP/2.0/UDP pc33.atlanta.com;branch=foo" CRLF
+      "To: <sip:alan@ieee.org>" CRLF
+      "From: <sip:cj@whistler.com>"CRLF
+      "Route: <sip:1023@1.2.3.4>, <sip:1023@3.4.5.6>, <sip:1023@10.1.1.1>" CRLF
+      "Subject: Good Morning!"CRLF
+      "Call-Id: 123" CRLF
+      CRLF
    ;
    int len = sizeof(buffer)/sizeof(*buffer);
 #endif
