@@ -85,9 +85,13 @@ bool
 DialogUsageManager::addTransport( TransportType protocol,
                                   int port, 
                                   IpVersion version,
-                                  const Data& ipInterface)
+                                  const Data& ipInterface, 
+                                  const Data& sipDomainname, // only used
+                                  const Data& privateKeyPassPhrase,
+                                  SecurityTypes::SSLType sslType)
 {
-   return mStack->addTransport(protocol, port, version, ipInterface);
+   return mStack->addTransport(protocol, port, version, ipInterface, 
+                               sipDomainname, privateKeyPassPhrase, sslType);
 }
 
 Security&
