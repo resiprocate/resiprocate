@@ -54,6 +54,23 @@ main(int arc, char** argv)
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
    {
+      TR _tr("Test exists unknown parameter");
+      Uri uri1("sip:a@b;audio");
+      assert(uri1.exists(UnknownParameterType("audio")));
+      assert(uri1.param(UnknownParameterType("audio")) == Data::Empty);
+      
+      Uri uri2("sip:a@b;a=b;audio");
+      cerr << uri2.param(UnknownParameterType("a")) << endl;
+      
+      assert(uri2.exists(UnknownParameterType("audio")));
+      assert(uri2.param(UnknownParameterType("audio")) == Data::Empty);
+
+      Uri uri3("sip:a@b;audio;a=b");
+      assert(uri3.exists(UnknownParameterType("audio")));
+      assert(uri3.param(UnknownParameterType("audio")) == Data::Empty);
+   }
+
+   {
       TR _tr("Test non-quoted tokens displayname in NameAddr (torture test: 2.39)");
       Data data("A. Bell <sip:a.g.bell@bell-tel.com>;tag=459843");
 
