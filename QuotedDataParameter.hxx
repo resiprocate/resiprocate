@@ -14,10 +14,8 @@ class ParseBuffer;
 class QuotedDataParameter : public DataParameter
 {
    public:
-      QuotedDataParameter(ParameterTypes::Type, ParseBuffer& pb, 
-                          const char* terminators);
-
-      QuotedDataParameter(ParameterTypes::Type);
+      QuotedDataParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
+      explicit QuotedDataParameter(ParameterTypes::Type);
 
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
