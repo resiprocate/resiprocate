@@ -8,6 +8,7 @@
 
 namespace resip
 {
+class Subsystem;
 
 class StatisticsMessage : public ApplicationMessage
 {
@@ -56,6 +57,8 @@ class StatisticsMessage : public ApplicationMessage
       };
 
       void loadOut(Payload& payload) const;
+      static void logStats(const Subsystem& subsystem, const Payload& stats);
+
 
       virtual Data brief() const;
       virtual std::ostream& encode(std::ostream& strm) const;
