@@ -195,7 +195,14 @@ ClientInviteSession::send(SipMessage& msg)
       InviteSession::send(msg);
       return;
    }
-   
+
+   if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
+   {
+      mDum.send(msg);
+      delete this;
+      return;
+   }   
+
    //!dcm! -- strawman, no knowledge of prack, so just ack(handled in
    //InviteSession) and Invite(already done) for now complain bitterly
    if (mNextOfferOrAnswerSdp)
