@@ -6,6 +6,7 @@
 namespace resip
 {
 class SipMessage;
+class SecurityAttributes;
 
 class ClientSubscriptionHandler
 {
@@ -27,6 +28,10 @@ class ServerSubscriptionHandler
   public:   
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;
       virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub);
+      virtual void onPublished(ServerSubscriptionHandle associated, 
+                               ServerPublicationHandle publication, 
+                               const Contents* contents,
+                               const SecurityAttributes* attrs);
 
       //called when this usage is destroyed for any reason. One of the following
       //three methods will always be called before this, but this is the only
