@@ -13,11 +13,13 @@ unsigned char Base64Coder::codeChar[] =
 
 
 
-
 Data Base64Coder::encode(const Data& data)
 {
+
    int srcLength = data.size();
-   Data rv(srcLength*4/3,false);
+   unsigned int dstLimitLength = srcLength*4/3 + 1;
+   unsigned char * dstData = new unsigned char[dstLimitLength];
+   unsigned int dstIndex = 0;
 
    const char * p = static_cast<const char *>( data.data() );
 
@@ -26,8 +28,9 @@ Data Base64Coder::encode(const Data& data)
       unsigned char codeBits = (p[index] & 0xfc)>>2;
         
         assert(codeBits < 64);
-        rv += codeChar[codeBits]; // c0 output
-        
+        dstData[dstIndex++] = codeChar[codeBits]; // c0 output
+        assert(dstIndex <= dstLimitLength);
+
         // do second codeBits
         codeBits = ((p[index]&0x3)<<4);
         if (index+1 < srcLength)
@@ -35,8 +38,9 @@ Data Base64Coder::encode(const Data& data)
             codeBits |= ((p[index+1]&0xf0)>>4);
         }
         assert(codeBits < 64);
-        rv += codeChar[codeBits]; // c1 output
-        
+        dstData[dstIndex++] = codeChar[codeBits]; // c1 output
+        assert(dstIndex <= dstLimitLength);
+
         if (index+1 >= srcLength) break; // encoded d0 only
         
 
@@ -47,18 +51,19 @@ Data Base64Coder::encode(const Data& data)
             codeBits |= ((p[index+2]&0xc0)>>6);
         }
         assert(codeBits < 64);
-        rv += codeChar[codeBits]; // c2 output
-        
+        dstData[dstIndex++] = codeChar[codeBits]; // c2 output
+        assert(dstIndex <= dstLimitLength);
+
         if (index+2 >= srcLength) break; // encoded d0 d1 only
         
         // do fourth codeBits
         codeBits = ((p[index+2]&0x3f));
         assert(codeBits < 64);
-        rv += codeChar[codeBits]; // c3 output
-        
+        dstData[dstIndex++] = codeChar[codeBits]; // c3 output
+        assert(dstIndex <= dstLimitLength);
         // outputed all d0,d1, and d2
     }
-    return rv;
+    return Data(dstData,dstIndex);
 }
 
 unsigned char Base64Coder::toBits(unsigned char c)
