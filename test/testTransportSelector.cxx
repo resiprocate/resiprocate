@@ -46,12 +46,57 @@ class TestTransportSelector
          
          Fifo<Message> fif;
          TransportSelector ts(false, fif);
-         ts.addTransport(UDP, 5060, V4);
+         ts.addTransport(UDP, 5060, V4, "127.0.0.1");
 
          Tuple tuple("127.0.0.1", 5060, true, UDP);
          Transport* trans = ts.findTransport(tuple);
          assert(trans);
+         assert(trans->port() == 5060);
       }
+
+      static void testExact2()
+      {
+         InfoLog (<< "testExact" );
+         
+         Fifo<Message> fif;
+         TransportSelector ts(false, fif);
+         ts.addTransport(UDP, 5060, V4, "127.0.0.1");
+         ts.addTransport(UDP, 5100, V4, "127.0.0.1");
+
+         Tuple tuple("127.0.0.1", 5060, true, UDP);
+         Transport* trans = ts.findTransport(tuple);
+         assert(trans);
+         assert(trans->port() == 5060);
+
+         Tuple tuple2("127.0.0.1", 5100, true, UDP);
+         trans = ts.findTransport(tuple2);
+         assert(trans);
+         assert(trans->port() == 5100);
+
+         Tuple tuple3("127.0.0.2", 5100, true, UDP);
+         trans = ts.findTransport(tuple3);
+         assert(!trans);
+
+         Tuple tuple4("127.0.0.2", 5200, true, UDP);
+         trans = ts.findTransport(tuple4);
+         assert(!trans);
+      }
+
+
+      static void testExactAnyPort()
+      {
+         InfoLog (<< "testExactAnyPort" );
+         
+         Fifo<Message> fif;
+         TransportSelector ts(false, fif);
+         ts.addTransport(UDP, 5060, V4, "127.0.0.1");
+
+         Tuple tuple("127.0.0.1", 0, true, UDP);
+         Transport* trans = ts.findTransport(tuple);
+         assert(trans);
+         assert(trans->port() == 5060);
+      }
+
 
       static void testAnyInterface()
       { 
@@ -123,12 +168,14 @@ class TestTransportSelector
 int
 main(int argc, char** argv)
 {
-   Log::initialize(Log::COUT, Log::INFO, argv[0]);
+   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
 #if 1
    TestTransportSelector::testEmptyFail();
    TestTransportSelector::testExactFail();
    TestTransportSelector::testExact();
+   TestTransportSelector::testExact2();
+   TestTransportSelector::testExactAnyPort();
    TestTransportSelector::testAnyInterface();
    TestTransportSelector::testAnyInterfaceAnyPort();
    TestTransportSelector::testAnyInterfaceAnyPortFail();
