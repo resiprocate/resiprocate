@@ -27,7 +27,7 @@ LocationServer::handleRequest(RequestContext& context)
   //!RjS! This doesn't look exception safe - need guards
   mStore.lockRecord(inputUri);
   
-  if (mStore.aorExists(inputUri))
+  if (true) // TODO fix mStore.aorExists(inputUri))
   {  
 	 RegistrationPersistenceManager::ContactPairList contacts = mStore.getContacts(inputUri);
 
