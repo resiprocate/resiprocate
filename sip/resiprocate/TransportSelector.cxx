@@ -4,6 +4,7 @@
 #include <sipstack/TransportSelector.hxx>
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/Uri.hxx>
+#include <util/DataStream.hxx>
 #include <util/Logger.hxx>
 
 using namespace Vocal2;
@@ -147,13 +148,15 @@ TransportSelector::send( SipMessage* msg )
       msg->header(h_Vias).front().sentPort() = transport->port();
    }
    
-   Data encoded = msg->encode();
+   Data encoded(2048, true);
+   DataStream encodeStream(encoded);
+   msg->encode(encodeStream);
 
    // get next destination !jf!
    Resolver::Tuple tuple = *resolver.mCurrent;
    
    // send it over the transport
-   transport->send(&tuple.ipv4, encoded.c_str(), encoded.size());
+   transport->send(&tuple.ipv4, encoded.data(), encoded.size());
 }
 
 

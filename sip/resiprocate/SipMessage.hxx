@@ -59,7 +59,6 @@ class SipMessage : public Message
       bool isResponse() const;
 
       virtual std::ostream& encode(std::ostream& str) const;
-      virtual const Data& encode();
       
       Data brief() const;
 
