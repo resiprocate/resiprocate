@@ -41,6 +41,7 @@ ResourceMgr::addResource(const Data& aor)
 bool
 ResourceMgr::setPresenceDocument(const Data& aor, Contents* contents)
 {
+  // ?dlb? assert(contents);
   ResourceMap_iter resIter = mResources.find(aor);
   if (resIter!=mResources.end())
   {

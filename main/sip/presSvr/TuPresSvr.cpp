@@ -39,9 +39,7 @@ TuPresSvr::process()
           mStack->send(*resp);
 	  done = 1;
 	}
-	else if (   (msg->header(h_RequestLine).getMethod() == UNKNOWN) 
-		 && (msg->header(h_RequestLine).unknownMethodName()=="PUBLISH")
-		)
+	else if (msg->header(h_RequestLine).getMethod() == PUBLISH)
 	{
            processPublish(msg);
 	}
@@ -72,20 +70,24 @@ TuPresSvr::processSubscribe(SipMessage* msg)
 {
   // See if this subscribe matches a dialog we have in progress
   if (mDialogMgr.dialogExists(msg))
-       { mDialogMgr.dispatchSubscribe(msg); }
-  else { processNewSubscribe(msg); }
+  { 
+     mDialogMgr.dispatchSubscribe(msg); 
+  }
+  else
+  { 
+     processNewSubscribe(msg); 
+  }
 }
 
 void TuPresSvr::processNewSubscribe(SipMessage* msg)
 {
+  static Token presence("presence");
   if (   !msg->exists(h_Event)
-       || msg->header(h_Event).value()!=Data("presence")
+       || msg->header(h_Event).value()!=presence.value()
      )
   {
     auto_ptr<SipMessage> resp(Helper::makeResponse(*msg,489,"")); 
-    Token presToken;
-    presToken.value()=Data("presence");
-    resp->header(h_AllowEvents).push_back(presToken); 
+    resp->header(h_AllowEvents).push_back(presence); 
     mStack->send(*resp);
     return;
   }

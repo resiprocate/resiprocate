@@ -12,6 +12,7 @@ SubDialogMgr::dispatchSubscribe(SipMessage* msg)
   {
     auto_ptr<SipMessage> resp(Helper::makeResponse(*msg,481,""));
     mStack->send(*resp);
+    // !dlb! return here?
   }
   SubDialogCondition cond= dialog->processSubscribe(msg);
   if (cond==TERMINATED)
@@ -72,7 +73,9 @@ SubDialog *
 SubDialogMgr::createDialog(SipMessage* msg)
 {
   if (!msg->header(h_To).exists(p_tag))
-      msg->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
+  {
+     msg->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
+  }
   Data dialogKey = getDialogKey(msg);
   assert(mDialogMap.find(dialogKey)==mDialogMap.end());
 
@@ -108,6 +111,7 @@ SubDialogMgr::getDialogKey(SipMessage * msg)
     dlgKeyStr << ":";
     MD5Stream eventHashStr;
     assert(msg->exists(h_Event));
+    // ?dlb? empty event Ok?
     eventHashStr << msg->header(h_Event);
     if (msg->header(h_Event).exists(p_id))
       eventHashStr << ":" << msg->header(h_Event).param(p_id);
@@ -135,6 +139,9 @@ SubDialogMgr::getDialogKey(SipMessage * msg)
 // block this thread too long. An alternative  would be to return 
 // after processing the first (few?) subscriptions.
 
+// .dlb. manage clumping with a random jigger to expiration at time of
+//       subscription?
+
 void
 SubDialogMgr::processExpirations()
 {
@@ -149,6 +156,7 @@ SubDialogMgr::processExpirations()
       destroyDialog(dlgIter->second);
     }
     mExpirationMap.erase(iter);
+    // !dlbl! looks suspicious -- iter could be invalid?
     ++iter;
   }
 }

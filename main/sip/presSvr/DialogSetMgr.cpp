@@ -7,7 +7,7 @@ DialogSetMgr::~DialogSetMgr() {
   while (iter!=mDialogSetMap.end())
   {
     delete iter->second.second;
-    mDialogSetMap.erase(iter);
+    mDialogSetMap.erase(iter); // !dlb! does this increment iter?
   }
 }
 
@@ -102,7 +102,7 @@ DialogSetMgr::getDialogSetKey(SipMessage * msg)
 
   MD5Stream strm;
   strm << msg->header(h_CallId).value();
-  strm << ":" << leftTag << rightTag;
+  strm << ":" << leftTag << rightTag; // !dlb! another punctuation between left and right?
   return strm.getHex();
 }
 
