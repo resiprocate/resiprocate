@@ -2,7 +2,7 @@
 #define RESIP_DATA_HXX 
 
 static const char* const resipDataHeaderVersion =
-   "$Id: Data.hxx,v 1.74 2004/02/10 17:16:48 fluffy Exp $";
+   "$Id: Data.hxx,v 1.75 2004/04/11 20:43:21 davidb Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -133,6 +133,9 @@ class Data
       static bool init();
 
       Data base64decode() const;
+
+      static size_t rawHash(const char* c, size_t size);
+      size_t hash() const;
       
    private:
       Data(const char* buffer, int length, bool); // deprecated: use // Data(ShareEnum ...)
@@ -220,8 +223,8 @@ struct hash<resip::Data>
 {
       size_t operator()(const resip::Data& data) const;
 };
-}
 
+}
 #endif // HASHMAP
 
 #endif
