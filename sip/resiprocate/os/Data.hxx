@@ -1,7 +1,7 @@
-#ifndef Vocal2_Data_hxx
+#if !defined(Vocal2_Data_hxx)
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.55 2003/01/31 20:58:18 bko Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.56 2003/01/31 23:41:29 jason Exp $";
 
 #include "sip2/util/compat.hxx"
 #include "sip2/util/DataStream.hxx"
@@ -172,23 +172,22 @@ operator+(const char* c, const Data& d)
  
 }
 
-#if defined(HAS_HASH_MAP)
-
-#  if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
-namespace __gnu_cxx
+#if  defined(__INTEL_COMPILER )
+namespace std
 {
-#  endif
+size_t hash_value(const Vocal2::Data& data);
+}
 
+#elif defined(HASH_MAP_NAMESPACE)  //#elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+namespace HASH_MAP_NAMESPACE
+{
 struct hash<Vocal2::Data>
 {
       size_t operator()(const Vocal2::Data& data) const;
 };
-
-#  if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 }
-#  endif
 
-#endif // we have hash map
+#endif // HASHMAP
 
 #endif
 
