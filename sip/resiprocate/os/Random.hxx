@@ -10,19 +10,29 @@ namespace Vocal2
 class Random
 {
    public:
-	static void initialize();
+      static void initialize();
       
-	static Data getRandom(unsigned int len);
-	static Data getRandomHex(unsigned int len);
-	static Data getCryptoRandom(unsigned int len);
-	static Data getCryptoRandomHex(unsigned int len);
+      static Data getRandom(unsigned int len);
+      static Data getRandomHex(unsigned int len);
+      static Data getCryptoRandom(unsigned int len);
+      static Data getCryptoRandomHex(unsigned int len);
 
-	static int  getRandom();
-	static int  getCryptoRandom();
+      static int  getRandom();
+      static int  getCryptoRandom();
 	
    private:
-	static bool  mIsInitialized;
-	static Mutex mMutex;
+      static bool  mIsInitialized;
+      
+      class Init
+      {
+         public:
+            Init()
+            {
+               Random::initialize();
+            }
+      };
+
+      static Init initer;
 };
  
 }
