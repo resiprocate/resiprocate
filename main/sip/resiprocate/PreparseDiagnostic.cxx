@@ -112,7 +112,7 @@
         DebugLog(<< "mStatus: " << ppStatusName(mStatus));      \
         DebugLog(<< "mStart: " << mStart);                      \
      }
-#define PP_DIAG_ACTION(x) { DebugLog(<<ppWorkString(x)); }
+#define PP_DIAG_ACTION(x) { if (ppDebugFlags & ppDebugActions)  DebugLog(<<ppWorkString(x)); }
 #else
 #define PP_DIAG_1 ;
 #define PP_DIAG_2 ;

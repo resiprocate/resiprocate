@@ -247,7 +247,7 @@ Preparse::InitStatePreparseStateTable()
 }
 
 
-Preparse::Preparse():
+Preparse::Preparse(bool sipFrag):
     mDisposition(dContinuous),
     mState(NewMsg),
     mHeaderOff(0),
@@ -258,7 +258,8 @@ Preparse::Preparse():
     mStatus(0),
     mStart(0),
     mDiscard(0),
-    mUsed(UINT_MAX)
+    mUsed(UINT_MAX),
+    mSipFrag(sipFrag)
 {
     InitStatePreparseStateTable();
     ResetMachine();
@@ -324,8 +325,12 @@ Preparse::process(SipMessage& msg,
      mDiscard = 0;
      
      // Invariants -- failure is error in caller.
-     assert(traversalOff < length);
-     assert(buffer);
+     if (traversalOff >= length || !buffer)
+     {
+       assert(traversalOff < length);
+       assert(buffer);
+       return 1;
+     }
 
      PP_DIAG_1;
 
@@ -450,6 +455,57 @@ Preparse::process(SipMessage& msg,
            PP_DIAG_ACTION(edge.workMask & actReset);
            mAnchorBegOff = mAnchorEndOff = traversalOff;
          }     
+     }
+
+
+
+     // SipFrags MUST be passed into the Preparse as a SINGLE fragment.
+     // since this code makes the internal preparse state inconsistent.
+     if (mSipFrag) // specialised sipFrag case (ugly stuff)
+     {
+       // determine if we would call startline or addheader if we
+       // saw a CRLF right now.
+//       DebugLog(<<"mSipFrag: state="<<ppStateName(mState));
+
+       // 'X' forces the 'continuation' of line to fail so we don't have
+       // to special case the continued header case
+       static char fakeEol[] = { Symbols::CR[0], Symbols::LF[0], 'X' }; 
+
+       StateEnum fragState = mState;
+       int mask = 0;
+
+       for(int i = 0 ; i < sizeof(fakeEol)/sizeof(*fakeEol); i++)
+       {
+         Edge& e(mTransitionTable[fragState][mDisposition][fakeEol[i]]);
+         fragState = e.nextState;
+//         DebugLog(<<"mSipFrag fakeiter fragState="<<ppStateName(fragState));
+         if (e.workMask & (actFline|actData)) 
+         {
+           mask = e.workMask;
+           break;
+         }
+       }
+       if (mask & actFline)
+       {
+//         DebugLog(<<"adding request line");
+         // add startline
+
+         msg.setStartLine(&buffer[mAnchorBegOff], 
+                          mAnchorEndOff - mAnchorBegOff + 1);
+       }
+       else if ( mask & actData )
+       {
+         
+//         DebugLog(<<"adding data as header of type " << mHeaderType );
+//         DebugLog(<<"adding data '"<<Data(&buffer[mAnchorBegOff],mAnchorEndOff - mAnchorBegOff + 1)<<"'");
+         // add header
+         msg.addHeader(mHeaderType,
+                       &buffer[mHeaderOff],
+                       mHeaderLength,
+                       &buffer[mAnchorBegOff],
+                       mAnchorEndOff - mAnchorBegOff + 1
+           );
+       }
      }
 
 	 // Compute Discard -- always the same, unless fragmented, then

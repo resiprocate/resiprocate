@@ -216,8 +216,8 @@ SipMessage::getTransactionId() const
 {
    // !jf! this should be caught early on just after preparsing and the message
    // should be rejected. 
-   assert (!header(h_Vias).empty());
-   if( header(h_Vias).front().exists(p_branch) 
+   assert(!header(h_Vias).empty());
+   if( exists(h_Vias) && header(h_Vias).front().exists(p_branch) 
        && header(h_Vias).front().param(p_branch).hasMagicCookie() )
    {
       assert (!header(h_Vias).front().param(p_branch).getTransactionId().empty());
@@ -919,7 +919,8 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
    if (hfvs == 0)
    {
       // header missing
-      assert(false);
+      // assert(false);
+      throw Exception("Missing header", __FILE__, __LINE__);
    }
    // !dlb! not thrilled about checking this every access
    else if (single)
@@ -927,7 +928,8 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
       if (hfvs->parsedEmpty())
       {
          // !dlb! when will this happen?
-         assert(false);
+         // assert(false);
+         throw Exception("Empty header", __FILE__, __LINE__);
       }
    }
 

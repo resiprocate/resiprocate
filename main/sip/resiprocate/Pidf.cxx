@@ -45,9 +45,8 @@ Pidf::Pidf(const Pidf& rhs)
    for( unsigned int i=0; i < rhs.mTuple.size(); i++)
    {
       Tuple t = rhs.mTuple[i];
-      mTuple.push_back( t );
+      mTuple.push_back( t ); // !ah! gratuitous temporary
    }
-   assert(  mTuple.size() ==  rhs.mTuple.size() );
 }
 
 Pidf::~Pidf()
@@ -167,7 +166,6 @@ Pidf::setSimpleId( const Data& id )
       Tuple t;
       mTuple.push_back( t );
    }
-   assert( mTuple.size() > 0 );
 
    mTuple[0].id = id;
 }
@@ -181,7 +179,6 @@ Pidf::setSimpleStatus( bool online, const Data& note, const Data& contact )
       Tuple t;
       mTuple.push_back( t );
    }
-   assert( mTuple.size() > 0 );
 
    mTuple[0].status = online;
    mTuple[0].contact = contact;
@@ -196,9 +193,13 @@ Pidf::getSimpleStatus( Data* note )
 {
    checkParsed();
 
-   assert( mTuple.size() > 0 );
+   if ( mTuple.empty() )
+   {
+     return false;
+   }
 
-   if ( note )
+   if ( note )                  // !ass! this function appears naive.
+                                // why only the 1st mTuple ?
    {
       *note = mTuple[0].note;
    }
