@@ -12,7 +12,6 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/external/ExternalDns.hxx"
-#include "resiprocate/AresDns.hxx"
 
 class TestTransportSelector;
 
@@ -29,7 +28,7 @@ class ExternalAsyncCLessTransport;
 class ExternalSelector
 {
    public:
-      virtual Transport* selectExternalTransport(SipMessage* msg, const Tuple& dest) = 0;
+      virtual Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const = 0;
       virtual void externalTransportAdded(Transport* externalTransport) = 0;
       virtual ~ExternalSelector() {};      
 };
@@ -38,7 +37,7 @@ class TransportSelector
 {
    public:
       TransportSelector(bool multithreaded, Fifo<Message>& fifo, 
-                        ExternalDns* dnsProvider = new AresDns(),
+                        ExternalDns* dnsProvider,
                         ExternalSelector* ets = 0);
       
       virtual ~TransportSelector();
@@ -81,12 +80,12 @@ class TransportSelector
       // of a given type is added.  You have been warned.  
       class DefaultExternalSelector : public ExternalSelector
       {
-	 public:
-	    virtual Transport* selectExternalTransport(SipMessage* msg, const Tuple& dest);
-	    virtual void externalTransportAdded(Transport* externalTransport);
-	 private:
-	    typedef std::map<TransportType, Transport*> ExternalTransportMap;
-	    ExternalTransportMap mExternalTransports;
+         public:
+            Tuple TransportSelector::DefaultExternalSelector::determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
+            virtual void externalTransportAdded(Transport* externalTransport);
+         private:
+            typedef std::map<TransportType, Transport*> ExternalTransportMap;
+            ExternalTransportMap mExternalTransports;
       };
       
       Transport* findTransport(const Tuple& src);

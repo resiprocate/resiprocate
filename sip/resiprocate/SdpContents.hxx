@@ -86,7 +86,7 @@ class SdpContents : public Contents
             {
                public:
                   Origin(const Data& user,
-                         const unsigned long& sessionId,
+                         const unsigned long long& sessionId,
                          const unsigned long long& version,
                          AddrType addr,
                          const Data& address);
@@ -96,8 +96,8 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
-                  const unsigned long& getSessionId() const {return mSessionId;}
-                  unsigned long& getSessionId() { return mSessionId; }
+                  const unsigned long long& getSessionId() const {return mSessionId;}
+                  unsigned long long& getSessionId() { return mSessionId; }
 
                   const unsigned long long& getVersion() const {return mVersion;}
                   unsigned long long& getVersion() { return mVersion; }
@@ -111,7 +111,7 @@ class SdpContents : public Contents
                   Origin();
 
                   Data mUser;
-                  unsigned long mSessionId;
+                  unsigned long long mSessionId;
                   unsigned long long mVersion;
                   AddrType mAddrType;
                   Data mAddress;

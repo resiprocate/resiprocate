@@ -47,10 +47,10 @@ SipStack::selectHander(bool async, ProcessNotifier::Handler* asyncHandler)
 }
 
 SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless, bool async, 
-                   ProcessNotifier::Handler* asyncHandler) : 
+                   ProcessNotifier::Handler* asyncHandler, ExternalDns* dns) :
    security( pSecurity ),
    mTUTimerQueue(mTUFifo),
-   mTransactionController(multiThreaded, mTUFifo, stateless, selectHander(async, asyncHandler)),
+   mTransactionController(multiThreaded, mTUFifo, stateless, selectHander(async, asyncHandler), dns),
    mStrictRouting(false),
    mShuttingDown(false),
    mCurrentlyProcessing(false)
@@ -69,10 +69,10 @@ SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless, bool
 }
 
 SipStack::SipStack(ExternalSelector* tSelector, bool multiThreaded,  Security* pSecurity, 
-                   bool async, bool stateless, ProcessNotifier::Handler* asyncHandler) : 
+                   bool async, bool stateless, ProcessNotifier::Handler* asyncHandler, ExternalDns* dns) :
    security( pSecurity ),
    mTUTimerQueue(mTUFifo),
-   mTransactionController(multiThreaded, mTUFifo, tSelector, stateless, selectHander(async, asyncHandler)),
+   mTransactionController(multiThreaded, mTUFifo, tSelector, stateless, selectHander(async, asyncHandler), dns),
    mStrictRouting(false),
    mShuttingDown(false),
    mCurrentlyProcessing(false)
@@ -356,13 +356,6 @@ SipStack::receiveAny()
 }
 
 void 
-SipStack::process()
-{
-   FdSet fdset;
-   mTransactionController.process(fdset);
-}
-
-void 
 SipStack::process(FdSet& fdset)
 {
    //   mExecutive.process(fdset);
@@ -377,7 +370,8 @@ void SipStack::handleProcessNotification()
    if (!mCurrentlyProcessing)
    {
       mCurrentlyProcessing = true;
-      process();
+      FdSet fds;      
+      process(fds);
    }
    mCurrentlyProcessing = false;
 }

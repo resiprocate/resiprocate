@@ -227,7 +227,7 @@ SdpContents::Session::Origin::operator=(const Origin& rhs)
 
 
 SdpContents::Session::Origin::Origin(const Data& user,
-                                     const unsigned long& sessionId,
+                                     const unsigned long long& sessionId,
                                      const unsigned long long& version,
                                      AddrType addr,
                                      const Data& address)
