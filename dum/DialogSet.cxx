@@ -28,14 +28,14 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mDum(dum),
    mAppDialogSet(0),
    mCancelled(false),
+   mReceivedProvisional(false),
    mDestroying(false),
    mClientRegistration(0),
    mServerRegistration(0),
    mClientPublication(0),
    mServerPublication(0),
    mClientOutOfDialogRequests(),
-   mServerOutOfDialogRequest(0),
-   mReceivedProvisional(false)
+   mServerOutOfDialogRequest(0)
 {
    assert(!creator->getLastRequest().isExternal());
    InfoLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
@@ -49,14 +49,14 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mDum(dum),
    mAppDialogSet(0),
    mCancelled(false),
+   mReceivedProvisional(false),
    mDestroying(false),
    mClientRegistration(0),
    mServerRegistration(0),
    mClientPublication(0),
    mServerPublication(0),
    mClientOutOfDialogRequests(),
-   mServerOutOfDialogRequest(0),
-   mReceivedProvisional(false)
+   mServerOutOfDialogRequest(0)
 {
    assert(request.isRequest());
    assert(request.isExternal());
