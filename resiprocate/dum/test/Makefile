@@ -8,7 +8,7 @@ PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD
 TARGET_LIBRARY = 
 
 #TESTPROGRAMS = BasicCall.cxx testDumTimer.cxx
-TESTPROGRAMS = testDumTimer.cxx
+TESTPROGRAMS = basicRegister.cxx testDumTimer.cxx
 
 SRC =   
 
