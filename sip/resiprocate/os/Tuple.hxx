@@ -7,10 +7,7 @@
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/TransportType.hxx"
 
-
-#ifdef WIN32
-
-#else
+#if !defined(WIN32)
 #include <netinet/in.h>
 #endif
 
