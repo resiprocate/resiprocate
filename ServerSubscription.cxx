@@ -22,6 +22,20 @@ ServerSubscription::~ServerSubscription()
    mDialog.mServerSubscriptions.remove(this);
 }
 
+SipMessage& 
+ServerSubscription::acceptPending()
+{
+   mDialog.makeResponse(mLastResponse, mLastRequest, 202);
+   return mLastResponse;
+}
+
+SipMessage& 
+ServerSubscription::acceptActive()
+{
+   mDialog.makeResponse(mLastResponse, mLastRequest, 200);
+   return mLastResponse;
+}
+
 void 
 ServerSubscription::end()
 {
@@ -36,6 +50,18 @@ void
 ServerSubscription::dispatch(const DumTimeout& msg)
 {
 }
+
+SipMessage& 
+ServerSubscription::update(const Contents* document)
+{
+   mDialog.makeRequest(mLastRequest, NOTIFY);   
+   mLastRequest.header(h_Event).value() = mEventType;   
+   if (mSubscriptionId.empty())
+   {
+      mLastRequest.header(h_Event).param(p_id) = mSubscriptionId;
+   }
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
