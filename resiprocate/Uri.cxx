@@ -1,7 +1,14 @@
 #include <sipstack/Uri.hxx>
 #include <util/ParseBuffer.hxx>
+#include <sipstack/Symbols.hxx>
 
 using namespace Vocal2;
+
+Uri::Uri() 
+   : ParserCategory(),
+     mScheme(Symbols::DefaultSipScheme),
+     mPort(Symbols::DefaultSipPort)
+{}
 
 Uri::Uri(const Uri& rhs)
    : ParserCategory(rhs),
