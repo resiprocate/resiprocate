@@ -333,7 +333,9 @@ struct DirGuard
 
 
 void
-setPassPhrase(BaseSecurity::PassPhraseMap& passPhrases, const Data& key, const Data& passPhrase)
+setPassPhrase(BaseSecurity::PassPhraseMap& passPhrases, 
+              const Data& key, 
+              const Data& passPhrase)
 {
    BaseSecurity::PassPhraseMap::iterator iter = passPhrases.find(key);
    if (iter == passPhrases.end())
@@ -356,16 +358,20 @@ hasPassPhrase(const BaseSecurity::PassPhraseMap& passPhrases, const Data& key)
 
 
 void
-BaseSecurity::addCertDER (PEMType type, const Data& key, const Data& certDER, bool write)
+BaseSecurity::addCertDER (PEMType type, 
+                          const Data& key, 
+                          const Data& certDER, 
+                          bool write)
 {
    assert( !certDER.empty() );
 
    X509* cert;
-   unsigned char* in = reinterpret_cast<unsigned char*>(const_cast<char*>(certDER.data()));
+   unsigned char* in = (unsigned char*)certDER.data();
    if (d2i_X509(&cert,&in,certDER.size()) == 0)
    {
       ErrLog(<< "Could not read DER certificate from " << certDER );
-      throw BaseSecurity::Exception("Could not read DER certificate ", __FILE__,__LINE__);
+      throw BaseSecurity::Exception("Could not read DER certificate ", 
+                                    __FILE__,__LINE__);
    }
    
    addCertX509(type,key,cert,write);
@@ -425,7 +431,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
          size_t len = BIO_get_mem_data(out,&p);
          assert(p);
          assert(len);
-         Data  buf(Data::Take, p, len);
+         Data  buf(Data::Borrow, p, len);
          
          this->onWritePEM(key, type, buf);
       }
@@ -516,6 +522,8 @@ BaseSecurity::getCertDER (PEMType type, const Data& key, bool read) const
       assert(0);
    }
 
+   assert(0); // the code following this has no hope of working 
+   
    X509* x = where->second;
    int len = i2d_X509(x, NULL);
 
@@ -584,7 +592,7 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, 
          size_t len = BIO_get_mem_data(bio,&p);
          assert(p);
          assert(len);
-         Data  pem(Data::Take, p, len);
+         Data  pem(Data::Borrow, p, len);
          onWritePEM(name, type, pem );
       }
       catch(...)
@@ -778,7 +786,11 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
    BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
-   return   Data(Data::Take, buf, len);
+   Data retVal(Data::Borrow, buf, len);
+
+   BIO_free(out);
+
+   return retVal;
 }
 
 
@@ -824,7 +836,11 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
    BIO_flush(out);
    char* buf = 0;
    int len = BIO_get_mem_data(out, &buf);
-   return   Data(Data::Take, buf, len);
+   Data retVal(Data::Borrow, buf, len);
+
+   BIO_free(out);
+   
+   return retVal;
 }
 
 
