@@ -12,7 +12,7 @@ class SipMessage;
 class OutOfDialogReqCreator: public BaseCreator
 {
    public:
-      OutOfDialogReqCreator(DialogUsageManager& dum, MethodTypes method, const NameAddr& target, const NameAddr& from);
+      OutOfDialogReqCreator(DialogUsageManager& dum, MethodTypes method, const NameAddr& target, Identity& identity);
       virtual void dispatch(SipMessage& msg);
 };
  

@@ -13,7 +13,7 @@
 #include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/DialogSetHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/RedirectManager.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
@@ -47,8 +47,10 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
    mServerPagerMessage(0),
+   mIdentity(0),
    mDestroyer(this)
 {
+   setIdentity(&creator->getIdentity());
    assert(!creator->getLastRequest().isExternal());
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
 }
@@ -70,8 +72,8 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
    mServerPagerMessage(0),
+   mIdentity(0),
    mDestroyer(this)
-
 {
    assert(request.isRequest());
    assert(request.isExternal());
@@ -155,6 +157,27 @@ DialogSet::getCreator()
    return mCreator;
 }
 
+Identity* 
+DialogSet::getIdentity()
+{
+   if(mIdentity)
+   {
+      return mIdentity;
+   }
+   else
+   {
+      // If no Identity set then use Identity of the MasterProfile
+      return mDum.getMasterProfile();
+   }
+}
+ 
+void 
+DialogSet::setIdentity(Identity *identity)
+{
+   assert(!mIdentity);
+   mIdentity = identity;
+}
+
 Dialog* 
 DialogSet::findDialog(const SipMessage& msg)
 {
@@ -178,7 +201,7 @@ DialogSet::findDialog(const SipMessage& msg)
    }
    else if (msg.exists(h_Contacts) && !msg.header(h_Contacts).empty()
             && msg.isResponse() 
-            && mDum.getProfile()->looseToTagMatching()
+            && getIdentity()->getLooseToTagMatching()
             && msg.header(h_To).exists(p_tag))     
    {
       const Uri& contact = msg.header(h_Contacts).front().uri();
@@ -227,7 +250,7 @@ DialogSet::dispatch(const SipMessage& msg)
       {
          if (mDum.mClientAuthManager.get())
          {
-            if (mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg))
+            if (mDum.mClientAuthManager->handle( *getIdentity(), getCreator()->getLastRequest(), msg))
             {
                DebugLog( << "about to re-send request with digest credentials" );
                StackLog( << getCreator()->getLastRequest() );

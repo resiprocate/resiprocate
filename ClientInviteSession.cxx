@@ -4,7 +4,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/DumTimeout.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 #define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
-#endif // defined(WIN32) && defined(_DEBUG)
+#endif 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -67,13 +67,13 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          int code = msg.header(h_StatusLine).statusCode();         
          if (code == 100)
          {
-            mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
+            mDum.addTimer(DumTimeout::StaleCall, mDialog.mDialogSet.getIdentity()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
             mState = Proceeding;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), None, msg);
          }
          else if (code < 200)
          {
-            mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
+            mDum.addTimer(DumTimeout::StaleCall, mDialog.mDialogSet.getIdentity()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
             mState = Early;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
             mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
@@ -130,7 +130,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             }
             else if (code < 200)
             {
-               mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(), ++mStaleCallTimerSeq);
+               mDum.addTimer(DumTimeout::StaleCall, mDialog.mDialogSet.getIdentity()->getDefaultStaleCallTime(), getBaseHandle(), ++mStaleCallTimerSeq);
                mState = Early;
                mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
             
