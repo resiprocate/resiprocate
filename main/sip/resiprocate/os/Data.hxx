@@ -40,7 +40,7 @@ class Data
       explicit Data(bool value);
       explicit Data(char c);
 
-      // contruct a Data that shares memory; the passed characters MUST be
+      // construct a Data that shares memory; the passed characters MUST be
       // immutable and in a longer lasting scope -- or take the buffer
       // as thine own.
       enum  ShareEnum {Share,Take};
@@ -99,7 +99,7 @@ class Data
 
       void reserve(size_type capacity);
       Data& append(const char* str, size_type len);
-      size_type truncate(size_type len);
+      size_type truncate(size_t len);
 
       bool empty() const { return mSize == 0; }
       size_type size() const { return mSize; }
@@ -127,10 +127,12 @@ class Data
       /// encodes with %hex for special characters
       Data charEncoded() const;
       Data charUnencoded() const;
+      Data trunc(size_type trunc) const;
 	
       // resize to zero without changing capacity
       void clear();
       int convertInt() const;
+      size_t convertSize() const;
       double convertDouble() const;
 
       bool prefix(const Data& pre) const;
