@@ -977,7 +977,7 @@ Helper::gruuUserPart(const Data& instanceId,
                   ivec, 
                   BF_ENCRYPT);
 
-   return GRUU + Base64Coder::encode(Data(out.get(), token.size()));
+   return GRUU + Data(out.get(),token.size()).base64encode(true/*safe URL*/);
 }
 
 std::pair<Data,Data> 
@@ -1007,7 +1007,7 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
    BF_KEY fish;
    BF_set_key(&fish, key.size(), (const unsigned char*)key.data());
 
-   const Data decoded = Base64Coder::decode(gruu);
+   const Data decoded = gruu.base64decode();
 
    auto_ptr <unsigned char> out(new unsigned char[gruuUserPart.size()+1]);
    BF_cbc_encrypt((const unsigned char*)decoded.data(),
