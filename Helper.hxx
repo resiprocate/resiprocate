@@ -96,6 +96,8 @@ class Helper
       static Uri makeUri(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
 
       static void processStrictRoute(SipMessage& request);
+
+      static int getSentPort(SipMessage& request);
 };
  
 }
