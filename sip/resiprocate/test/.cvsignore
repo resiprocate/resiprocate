@@ -6,6 +6,7 @@ bin.debug.Linux.i686
 foo.i
 obj.debug.Linux.i686
 obj.debug.Linux.i686
+obj.debug.QNX.x86pc
 spam.ps
 tassert.h
 testPP.cxx
