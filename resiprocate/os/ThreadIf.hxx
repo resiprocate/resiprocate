@@ -1,10 +1,13 @@
 #ifndef THREADIF_HXX
 #define THREADIF_HXX
 
-#include <pthread.h>
-#include <util/Mutex.hxx>
+#ifdef WIN32
+#  include <winbase.h>
+#else
+#  include <pthread.h>
+#endif
 
-static const char* const ThreadIf_hxx_version = "$Id: ThreadIf.hxx,v 1.2 2002/09/28 16:41:18 fluffy Exp $";
+#include <util/Mutex.hxx>
 
 namespace Vocal2
 {
@@ -57,14 +60,20 @@ class ThreadIf
       */
       virtual void thread() = 0;
 
-   protected:
-      // protected so that thread() can retrieve its threadId 
-      pthread_t mId;
-      
+  private:
+ // TODO is this really needed ?
+	pthread_t selfId() const;
+
    private:
 
-       pthread_t selfId() const;
-
+#ifdef WIN32
+    HANDLE thread;
+    DWORD mId;
+#else
+    pthread_t mId;
+#endif
+      
+   private:
 
       bool mShutdown;
 
