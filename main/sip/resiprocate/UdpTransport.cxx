@@ -6,14 +6,14 @@
 
 #else
 
-#include <iostream>
-#include <stdlib.h>
 #include <errno.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <iostream>
 #include <netinet/in.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include <sipstack/Data.hxx>
 
@@ -29,7 +29,7 @@ using namespace Vocal2;
 const unsigned long
 UdpTransport::MaxBufferSize = 64000;
 
-UdpTransport::UdpTransport(in_port_t portNum, Fifo<SipMessage>& fifo) : 
+UdpTransport::UdpTransport(int portNum, Fifo<SipMessage>& fifo) : 
    Transport(portNum, fifo)
 {
    mFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
