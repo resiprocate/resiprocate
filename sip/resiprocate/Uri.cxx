@@ -898,6 +898,18 @@ Uri::encodeEmbeddedHeaders(std::ostream& str) const
    return str;
 }
 
+#if defined(HASH_MAP_NAMESPACE)
+size_t HASH_MAP_NAMESPACE::hash<resip::Uri>::operator()(const resip::Uri& v) const
+{
+   return resip::Data::from(v).hash();
+}
+#elif defined(__INTEL_COMPILER)
+size_t std::hash_value(const resip::Uri& v)
+{
+   return resip::Data::from(v).hash();
+}
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
