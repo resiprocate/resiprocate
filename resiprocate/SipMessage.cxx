@@ -351,6 +351,69 @@ SipMessage::getRFC2543TransactionId() const
    return mRFC2543TransactionId;
 }
 
+
+Data
+SipMessage::getCanonicalIdentityString() const
+{
+   Data result;
+   DataStream strm(result);
+   
+   // digest-string = addr-spec ":" addr-spec ":" callid ":" 1*DIGIT SP method ":"
+   //             SIP-Date ":" [ addr-spec ] ":" message-body
+  
+   strm << header(h_From).uri();
+   strm << Symbols::COLON;
+   
+   strm << header(h_To).uri();
+   strm << Symbols::COLON;
+   
+   strm << header(h_CallId).value();
+   strm << Symbols::COLON;
+   
+   strm << header(h_CSeq).sequence(); // force parsed
+   header(h_CSeq).encodeParsed( strm );
+   strm << Symbols::COLON;
+   
+   // if there is no date, it will throw 
+   if ( !exists(h_Date) )
+   {
+      WarningLog( << "Computing Identity on message with no Date header" );
+   }
+   header(h_Date).dayOfMonth(); // force it to be parsed 
+   header(h_Date).encodeParsed( strm );
+   strm << Symbols::COLON;
+   
+   if ( exists(h_Contacts) )
+   { 
+      if ( header(h_Contacts).front().isAllContacts() )
+      {
+         strm << Symbols::STAR;
+      }
+      else
+      {
+         strm << header(h_Contacts).front().uri();
+      }
+   }
+   strm << Symbols::COLON;
+   
+   // bodies 
+   if (mContents != 0)
+   {
+      mContents->encode(strm);
+   }
+   else if (mContentsHfv != 0)
+   {
+      mContentsHfv->encode(strm);
+   }
+
+   strm.flush();
+
+   DebugLog( << "Indentity Canonical String is: " << result );
+   
+   return result;
+}
+
+
 void
 SipMessage::setRFC2543TransactionId(const Data& tid)
 {
