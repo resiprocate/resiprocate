@@ -29,6 +29,7 @@ class Headers
          Proxy_Authorization, Proxy_Require, Record_Route, Reply_To, 
          Require, Retry_After, Server, Supported, Timestamp, 
          Unsupported, User_Agent, Warning, WWW_Authenticate,
+         Subscription_State,
 
          UNKNOWN,
          MAX_HEADERS
@@ -140,6 +141,13 @@ class MultiHeader<Headers::Supported>
       typedef Token Type;
 };
 extern MultiHeader<Headers::Supported> h_Supporteds;
+
+class MultiHeader<Headers::Subscription_State>
+{
+   public:
+      typedef Token Type;
+};
+extern MultiHeader<Headers::Subscription_State> h_Subscription_States;
 
 class MultiHeader<Headers::Unsupported>
 {
@@ -406,6 +414,8 @@ extern RequestLineType h_Request_Line;
 
 class StatusLineType {};
 extern StatusLineType h_Status_Line;
-
+ 
 }
+
+
 #endif
