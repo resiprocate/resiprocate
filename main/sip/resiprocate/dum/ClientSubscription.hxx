@@ -23,7 +23,7 @@ class ClientSubscription: public BaseSubscription
       void acceptUpdate(int statusCode = 200);
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       
-      void requestRefresh();
+      void requestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call end() instead)
       virtual void end();
       virtual std::ostream& dump(std::ostream& strm) const;
 
