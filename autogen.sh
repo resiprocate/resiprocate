@@ -16,18 +16,18 @@ if [ $irep -lt 10705 ]; then
     aclocal --version
     exit 1
 fi
-echo +++ Running aclocal
-aclocal
-echo +++ Running autoheader
-autoheader
-echo +++ Running automake
-automake
-echo +++ Running autoconf
-autoconf
-echo +++ Configuring and building ares.
-(cd contrib/ares ; ./configure && make) 
-echo +++ There will be errors from this autoreconf
-autoreconf
+echo +++ Running aclocal && \
+aclocal && \
+echo +++ Running autoheader && \
+autoheader && \
+echo +++ Running automake  && \
+automake  && \
+echo +++ Running autoconf  && \
+autoconf  && \
+echo +++ Configuring and building ares.  && \
+(cd contrib/ares ; ./configure && make)   && \
+echo +++ Running autoreconf again...  && \
+autoreconf  
 export PATH=/usr/local/bin:$PATH
 mkdir build
 echo +++ Manually run : ../configure -C --enable-scanner --enable-ipv6
