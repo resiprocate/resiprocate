@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.33 2003/01/07 06:27:23 davidb Exp $
+# $Id: Makefile,v 1.34 2003/01/08 20:45:49 davidb Exp $
 
 USE_SSL = 1
 
@@ -24,7 +24,6 @@ endif
 
 TESTPROGRAMS =	\
 		testEmbedded.cxx \
-		limpc.cxx\
 		testIM.cxx \
 		testUri.cxx \
 		SipTortureTests.cxx \
