@@ -465,19 +465,6 @@ class Content_Length_Header : public HeaderBase
 };
 extern Content_Length_Header h_ContentLength;
 
-class Expires_Header : public HeaderBase
-{
-   public:
-      typedef IntegerCategory Type;
-      virtual Headers::Type getTypeNum() const {return Headers::Expires;}
-      Expires_Header()
-      {
-         Headers::CommaTokenizing[Headers::Expires] = Type::isCommaTokenizing;
-         Headers::HeaderNames[Headers::Expires] = Symbols::Expires;
-      }
-};
-extern Expires_Header h_Expires;
-
 class Max_Forwards_Header : public HeaderBase
 {
    public:
@@ -517,6 +504,19 @@ class Retry_After_Header : public HeaderBase
       }
 };
 extern Retry_After_Header h_RetryAfter;
+
+class Expires_Header : public HeaderBase
+{
+   public:
+      typedef ExpiresCategory Type;
+      virtual Headers::Type getTypeNum() const {return Headers::Expires;}
+      Expires_Header()
+      {
+         Headers::CommaTokenizing[Headers::Expires] = Type::isCommaTokenizing;
+         Headers::HeaderNames[Headers::Expires] = Symbols::Expires;
+      }
+};
+extern Expires_Header h_Expires;
 
 //====================
 // CallId:
