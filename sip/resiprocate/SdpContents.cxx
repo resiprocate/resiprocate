@@ -1585,8 +1585,8 @@ Codec::Codec(const Codec& rhs)
 
 Codec::Codec(const Data& name, int payloadType, int rate) 
    : mName(name),
-     mPayloadType(payloadType),
      mRate(rate),
+     mPayloadType(payloadType),
      mParameters()
 {
 }
