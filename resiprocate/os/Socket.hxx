@@ -14,6 +14,8 @@
 #include <netinet/in.h>
 #endif
 
+#include <algorithm>
+
 namespace Vocal2
 {
 
@@ -74,6 +76,65 @@ int closesocket( Socket fd );
 /// set up network - does nothing in unix but needed for windows
 void
 initNetwork();
+
+
+class FdSet
+{
+   public:
+      FdSet() : size(0)
+      {
+         FD_ZERO(&read);
+         FD_ZERO(&write);
+      }
+      
+      int select(struct timeval& tv)
+      {
+         return ::select(size, &read, &write, NULL, &tv);
+      }
+
+      int select(unsigned long usec)
+      {
+         struct timeval tv;
+         tv.tv_sec = 0;
+         tv.tv_usec = usec;
+         return ::select(size, &read, &write, NULL, &tv);
+      }
+      
+      bool readyToRead(Socket fd)
+      {
+         return FD_ISSET(fd, &read);
+      }
+      
+      bool readyToWrite(Socket fd)
+      {
+         return FD_ISSET(fd, &write);
+      }
+
+      void setRead(Socket fd)
+      {
+         FD_SET(fd, &read);
+         size = std::max(fd+1, size);
+      }
+
+      void setWrite(Socket fd)
+      {
+         FD_SET(fd, &read);
+         size = std::max(fd+1, size);
+      }
+      
+      void reset()
+      {
+         size = 0;
+         FD_ZERO(&read);
+         FD_ZERO(&write);
+      }
+
+   private:
+      fd_set read;
+      fd_set write;
+      int size;
+};
+
 	
 } // end of namespace
 
