@@ -249,6 +249,14 @@ main (int argc, char **argv)
         sipStack.process(fdset);
         conduit.process();
       }
+
+      if (len == -1)
+      {
+        DebugLog ( << "It would appear that our parent is gone");
+        shutdown(&sipStack);
+        exit (0);
+      }
+
     }
     else
     {
