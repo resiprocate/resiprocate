@@ -114,7 +114,7 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
   // Figure out what out contact is
   Uri contact;
   contact.port() = udpPort;
-  contact.host() = sipStack->getHostname();
+  contact.host() = sipStack->getHostAddress();
   contact.user() = aor->user();
 
   newTu = new TuIM(sipStack, *aor, contact, this);
