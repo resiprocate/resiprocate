@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.19 2002/09/22 01:07:46 jason Exp $
+# $Id: Makefile,v 1.20 2002/09/22 02:31:13 dabryan Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -124,6 +124,9 @@ testPreparse: $(OBJ)/Preparse.o $(OBJ)/testPreparse.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 testSipStack1:  $(OBJS) $(OBJ)/testSipStack1.o
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+testSipMessage:  $(OBJS) $(OBJ)/testSipMessage.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 

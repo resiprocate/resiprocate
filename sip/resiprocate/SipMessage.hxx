@@ -53,22 +53,22 @@ class SipMessage : public Message
             // create the list with a new component
             hfvs = new HeaderFieldValueList;
             HeaderFieldValue* hfv = new HeaderFieldValue;
-            hfv->mParserCategory = parserFactory.createParserCategory(hvf);
+            hfv->mParserCategory = parserFactory.createParserCategory(*hfv);
             hfvs->push_back(hfv);
-            if (parserFactory.isMulti())
+            if (headerType.isMulti())
             {
-               hfvs->setParserContainer(parserFactory.createParserCategory(newList));
+               hfvs->setParserContainer((ParserContainerBase*)parserFactory.createParserContainer(*hfvs));
             }
             mHeaders[parserFactory.getValue()] = hfvs;
          }
                   
          // already parsed?
-         if (!hfvs->front().isParsed())
+         if (!hfvs->front()->isParsed())
          {
-            if (parserFactory.isMulti())
+            if (headerType.isMulti())
             {
-               hfvs->setParserContainer(parserFactory.createParserCategory(*hfvs));
-               HeaderFieldValue* it = hfvs->first;
+               hfvs->setParserContainer((ParserContainerBase*)parserFactory.createParserContainer(*hfvs));
+               HeaderFieldValue* it = hfvs->front();
                while (it != 0)
                {
                   it->setParserCategory(parserFactory.createParserCategory(*it));
@@ -77,11 +77,11 @@ class SipMessage : public Message
             }
             else
             {
-               hfvs->front().setParserCategory(parserFactory.createParserCategory(hfvs->front()));               
+               hfvs->front()->setParserCategory(parserFactory.createParserCategory(*hfvs->front()));
             }
          }
 
-         return *(typename HeaderTypeHolder<T>::Type*)mHeaders[parserFactory.getValue()]->getParserCategory();
+         return *(typename Header<T>::Type*)mHeaders[parserFactory.getValue()]->getParserCategory();
       }
 
       template <int T>

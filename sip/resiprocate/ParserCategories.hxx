@@ -157,6 +157,7 @@ class NameAddrOrAddrSpec : public ParserCategory
          checkParsed();
          return *mHeaderField->get(param);
       }
+      virtual void parse() {assert(0);}
 };
 
 //====================
