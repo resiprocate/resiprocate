@@ -56,13 +56,13 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 
       switch (request.header(h_CSeq).method())
       {
-         case RESIP_INVITE:
+         case INVITE:
             mType = Invitation;
             break;
             
-         case RESIP_SUBSCRIBE:
-         case RESIP_REFER:
-         case RESIP_NOTIFY:
+         case SUBSCRIBE:
+         case REFER:
+         case NOTIFY:
             //!dcm! -- event header check
             mType = Subscription;
             break;
@@ -77,10 +77,10 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 
       switch (request.header(h_CSeq).method())
       {
-         case RESIP_INVITE:
-         case RESIP_SUBSCRIBE:
-         case RESIP_REFER:
-         case RESIP_NOTIFY:
+         case INVITE:
+         case SUBSCRIBE:
+         case REFER:
+         case NOTIFY:
             DebugLog ( << "UAS dialog ID creation, DS: " << ds.getId());            
             mId = DialogId(ds.getId(), request.header(h_From).param(p_tag));
             mRemoteNameAddr = request.header(h_From);
@@ -97,14 +97,14 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                }
                else
                {
-                  InfoLog(<< "Got an RESIP_INVITE or RESIP_SUBSCRIBE with invalid scheme");
+                  InfoLog(<< "Got an INVITE or SUBSCRIBE with invalid scheme");
                   DebugLog(<< request);
                   throw Exception("Invalid scheme in request", __FILE__, __LINE__);
                }
             }
             else
             {
-               InfoLog (<< "Got an RESIP_INVITE or RESIP_SUBSCRIBE that doesn't have exactly one contact");
+               InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
                DebugLog (<< request);
                throw Exception("Too many (or no contact) contacts in request", __FILE__, __LINE__);
             }
@@ -131,12 +131,12 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 
       switch (msg.header(h_CSeq).method())
       {
-         case RESIP_INVITE:
+         case INVITE:
             mType = Invitation;
             break;
             
-         case RESIP_SUBSCRIBE:
-         case RESIP_REFER:
+         case SUBSCRIBE:
+         case REFER:
             mType = Subscription;
             break;
 
@@ -151,9 +151,9 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 
       switch (response.header(h_CSeq).method())
       {
-         case RESIP_INVITE:
-         case RESIP_SUBSCRIBE:
-         case RESIP_REFER:
+         case INVITE:
+         case SUBSCRIBE:
+         case REFER:
             if (response.header(h_StatusLine).statusCode() > 100 &&
                 response.header(h_StatusLine).statusCode() < 300)
             {
@@ -172,14 +172,14 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                   }
                   else
                   {
-                     InfoLog (<< "Got an RESIP_INVITE or RESIP_SUBSCRIBE with invalid scheme");
+                     InfoLog (<< "Got an INVITE or SUBSCRIBE with invalid scheme");
                      DebugLog (<< response);
                      throw Exception("Bad scheme in contact in response", __FILE__, __LINE__);
                   }
                }
                else
                {
-                  InfoLog (<< "Got an RESIP_INVITE or RESIP_SUBSCRIBE that doesn't have exactly one contact");
+                  InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
                   DebugLog (<< response);
                   throw Exception("Too many contacts (or no contact) in response", __FILE__, __LINE__);
                }
@@ -244,7 +244,7 @@ Dialog::cancel()
       if (mDialogSet.getCreator())
       {
          SipMessage& request = mDialogSet.getCreator()->getLastRequest();
-         if (request.header(h_RequestLine).method() == RESIP_INVITE)
+         if (request.header(h_RequestLine).method() == INVITE)
          {
             makeCancel(request);
             mDum.send(request);
@@ -252,7 +252,7 @@ Dialog::cancel()
          }
          else
          {
-            throw UsageUseException("Can only CANCEL an RESIP_INVITE", __FILE__, __LINE__);
+            throw UsageUseException("Can only CANCEL an INVITE", __FILE__, __LINE__);
          }
       }
       else
@@ -271,7 +271,7 @@ Dialog::dispatch(const SipMessage& msg)
       const SipMessage& request = msg;
       switch (request.header(h_CSeq).method())
      {
-         case RESIP_INVITE:  // new RESIP_INVITE
+         case INVITE:  // new INVITE
             if (mInviteSession == 0)
             {
                DebugLog ( << "Dialog::dispatch  --  Created new server invite session" << msg.brief());
@@ -279,11 +279,11 @@ Dialog::dispatch(const SipMessage& msg)
             }
             mInviteSession->dispatch(request);
             break;
-            //refactor, send bad request for RESIP_BYE, INFO, CANCEL?
-         case RESIP_BYE:
+            //refactor, send bad request for BYE, INFO, CANCEL?
+         case BYE:
             if (mInviteSession == 0)
             {
-               InfoLog ( << "Spurious RESIP_BYE" );
+               InfoLog ( << "Spurious BYE" );
                return;               
             }
             else
@@ -291,7 +291,7 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession->dispatch(request);
             }
             break;
-         case RESIP_INFO:
+         case INFO:
             if (mInviteSession == 0)
             {
                InfoLog ( << "Spurious INFO" );
@@ -302,11 +302,11 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession->dispatch(request);
             }
             break;
-         case RESIP_ACK:
-         case RESIP_CANCEL:
+         case ACK:
+         case CANCEL:
             if (mInviteSession == 0)
             {
-               InfoLog (<< "Drop stray RESIP_ACK or CANCEL in dialog on the floor");
+               InfoLog (<< "Drop stray ACK or CANCEL in dialog on the floor");
                DebugLog (<< request);
             }
             else
@@ -314,7 +314,7 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession->dispatch(request);
             }
             break;
-         case RESIP_SUBSCRIBE:
+         case SUBSCRIBE:
          {
             ServerSubscription* server = findMatchingServerSub(request);
             if (server)
@@ -341,7 +341,7 @@ Dialog::dispatch(const SipMessage& msg)
 //            mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), server->getHandle(), msg);
          }
          break;
-         case RESIP_REFER:
+         case REFER:
          {
             if (mInviteSession == 0)
             {
@@ -376,7 +376,7 @@ Dialog::dispatch(const SipMessage& msg)
             }
          }
          break;
-         case RESIP_NOTIFY:
+         case NOTIFY:
          {
             ClientSubscription* client = findMatchingClientSub(request);
             if (client)
@@ -386,15 +386,15 @@ Dialog::dispatch(const SipMessage& msg)
             else
             {
                BaseCreator* creator = mDialogSet.getCreator();
-               if (creator && (creator->getLastRequest().header(h_RequestLine).method() == RESIP_SUBSCRIBE ||
-                               creator->getLastRequest().header(h_RequestLine).method() == RESIP_REFER))
+               if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
+                               creator->getLastRequest().header(h_RequestLine).method() == REFER))
                {
                   DebugLog (<< "Making subscription (from creator) request: " << creator->getLastRequest());
                   ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
                   mClientSubscriptions.push_back(sub);
                   sub->dispatch(request);
                }
-               else if (mInviteSession->mLastRequest.header(h_RequestLine).method() == RESIP_REFER)
+               else if (mInviteSession->mLastRequest.header(h_RequestLine).method() == REFER)
                {
                   DebugLog (<< "Making subscription from refer: " << mInviteSession->mLastRequest);
                   ClientSubscription* sub = makeClientSubscription(mInviteSession->mLastRequest);
@@ -426,10 +426,10 @@ Dialog::dispatch(const SipMessage& msg)
          SipMessage* lastRequest = 0;            
          switch (msg.header(h_CSeq).method())
          {
-            case RESIP_INVITE:
-            case RESIP_CANCEL:
-            case RESIP_REFER:
-            case RESIP_BYE:
+            case INVITE:
+            case CANCEL:
+            case REFER: 
+            case BYE:
                if (mInviteSession == 0)
                {
                   //spurious
@@ -440,7 +440,7 @@ Dialog::dispatch(const SipMessage& msg)
                   lastRequest = &mInviteSession->mLastRequest;
                }
                break;               
-            case RESIP_INFO:
+            case INFO:
             {
                if (mInviteSession == 0)
                {
@@ -480,7 +480,7 @@ Dialog::dispatch(const SipMessage& msg)
       // answer !dcm! what is he on?
       switch (response.header(h_CSeq).method())
       {
-         case RESIP_INVITE:
+         case INVITE:
             if (mInviteSession == 0)
             {
                // #if!jf! don't think creator needs a dispatch
@@ -498,17 +498,17 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession->dispatch(response);
             }
             break;
-         case RESIP_BYE:
-         case RESIP_ACK:
-         case RESIP_CANCEL:
-         case RESIP_INFO:
+         case BYE:
+         case ACK:
+         case CANCEL:
+         case INFO:
             if (mInviteSession != 0)
             {
                mInviteSession->dispatch(response);
             }
             // else drop on the floor
             break;               
-         case RESIP_REFER: 
+         case REFER: 
          {
             int code = response.header(h_StatusLine).statusCode();
             if (code < 300)
@@ -525,7 +525,7 @@ Dialog::dispatch(const SipMessage& msg)
             }         
          }
          break;         
-         case RESIP_SUBSCRIBE:
+         case SUBSCRIBE:
          {
             int code = response.header(h_StatusLine).statusCode();
             if (code < 300)
@@ -564,7 +564,7 @@ Dialog::dispatch(const SipMessage& msg)
             }
          }
          break;
-         case RESIP_NOTIFY:
+         case NOTIFY:
          {
             //2xx responses are treated as retransmission quenchers(handled by
             //the stack). Failures are dispatched to all ServerSubsscriptions,
@@ -774,7 +774,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    request.header(h_MaxForwards).value() = 70;
 
    //must keep old via for cancel
-   if (method != RESIP_CANCEL)
+   if (method != CANCEL)
    {
       request.header(h_Routes) = mRouteSet;
       request.remove(h_Vias);      
@@ -787,14 +787,14 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       assert(request.exists(h_Vias));
    }
 
-   //don't increment CSeq for RESIP_ACK or CANCEL
-   if (method != RESIP_ACK && method != RESIP_CANCEL)
+   //don't increment CSeq for ACK or CANCEL
+   if (method != ACK && method != CANCEL)
    {
       request.header(h_CSeq).sequence() = ++mLocalCSeq;
    }
    else
    {
-      // RESIP_ACK and cancel have a minimal header set
+      // ACK and cancel have a minimal header set
       request.remove(h_Accepts);
       request.remove(h_AcceptEncodings);
       request.remove(h_AcceptLanguages);
@@ -804,8 +804,8 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       request.remove(h_Supporteds);
    }
 
-   // If method is RESIP_INVITE then advertise required headers
-   if(method == RESIP_INVITE)
+   // If method is INVITE then advertise required headers
+   if(method == INVITE)
    {
       if(mDum.getProfile()->isAdvertisedCapability(Headers::Allow)) request.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
       if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) request.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
@@ -813,8 +813,8 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       if(mDum.getProfile()->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
    }
 
-   // Remove Session Timer headers for all requests except RESIP_INVITE and UPDATE
-   if(method != RESIP_INVITE && method != RESIP_UPDATE)
+   // Remove Session Timer headers for all requests except INVITE and UPDATE
+   if(method != INVITE && method != UPDATE)
    {
       request.remove(h_SessionExpires);
       request.remove(h_MinSE);
@@ -826,8 +826,8 @@ void
 Dialog::makeCancel(SipMessage& request)
 {
    //minimal for cancel
-   request.header(h_RequestLine).method() = RESIP_CANCEL;
-   request.header(h_CSeq).method() = RESIP_CANCEL;
+   request.header(h_RequestLine).method() = CANCEL;   
+   request.header(h_CSeq).method() = CANCEL;
    request.remove(h_Accepts);
    request.remove(h_AcceptEncodings);
    request.remove(h_AcceptLanguages);
@@ -853,19 +853,19 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
    if (code < 300 && code > 100)
    {
       assert(request.isRequest());
-      assert(request.header(h_RequestLine).getMethod() == RESIP_INVITE ||
-             request.header(h_RequestLine).getMethod() == RESIP_SUBSCRIBE ||
-             request.header(h_RequestLine).getMethod() == RESIP_BYE ||
-             request.header(h_RequestLine).getMethod() == RESIP_CANCEL ||
-             request.header(h_RequestLine).getMethod() == RESIP_REFER ||
-             request.header(h_RequestLine).getMethod() == RESIP_MESSAGE ||
-             request.header(h_RequestLine).getMethod() == RESIP_NOTIFY ||
-             request.header(h_RequestLine).getMethod() == RESIP_INFO ||
-             request.header(h_RequestLine).getMethod() == RESIP_OPTIONS
+      assert(request.header(h_RequestLine).getMethod() == INVITE ||
+             request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
+             request.header(h_RequestLine).getMethod() == BYE ||
+             request.header(h_RequestLine).getMethod() == CANCEL ||
+             request.header(h_RequestLine).getMethod() == REFER ||
+             request.header(h_RequestLine).getMethod() == MESSAGE ||
+             request.header(h_RequestLine).getMethod() == NOTIFY ||
+             request.header(h_RequestLine).getMethod() == INFO ||
+             request.header(h_RequestLine).getMethod() == OPTIONS 
              );
       
 //      assert (request.header(h_RequestLine).getMethod() == CANCEL ||  // Contact header is not required for Requests that do not form a dialog
-//		      request.header(h_RequestLine).getMethod() == RESIP_BYE ||
+//		      request.header(h_RequestLine).getMethod() == BYE ||
 //		      request.header(h_Contacts).size() == 1);
       Helper::makeResponse(response, request, code, mLocalContact);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
@@ -959,10 +959,10 @@ Dialog::matches(const SipMessage& msg)
 
    switch (msg.header(h_CSeq).method())
    {
-      case RESIP_INVITE:
-      case RESIP_CANCEL:
-      case RESIP_REFER:
-      case RESIP_BYE:
+      case INVITE:
+      case CANCEL:
+      case REFER: 
+      case BYE:
          if (mInviteSession == 0)
          {
             return false;
@@ -972,7 +972,7 @@ Dialog::matches(const SipMessage& msg)
             return msg.getTransactionId() == mInviteSession->mLastRequest.getTransactionId();
          }
          break;               
-      case RESIP_INFO:
+      case INFO:
          if (mInviteSession == 0)
          {
             return false;
@@ -982,7 +982,7 @@ Dialog::matches(const SipMessage& msg)
             return msg.getTransactionId() == mInviteSession->mLastNit.getTransactionId();
          }
          break;
-      case RESIP_SUBSCRIBE:
+      case SUBSCRIBE:
          if (mClientSubscriptions.empty())
          {
             return false;
@@ -996,7 +996,7 @@ Dialog::matches(const SipMessage& msg)
             }
          }
          break;
-      case RESIP_NOTIFY:
+      case NOTIFY:
          if (mServerSubscriptions.empty())
          {
             return false;

@@ -20,9 +20,9 @@ using namespace std;
 void 
 test1()
 {
-  CritLog(<< "2.1 RESIP_INVITE Parser Torture Test Message" );
+  CritLog(<< "2.1 INVITE Parser Torture Test Message" );
       
-      char *txt = ("RESIP_INVITE sip:called@called-company.com SIP/2.0\r\n"
+      char *txt = ("INVITE sip:called@called-company.com SIP/2.0\r\n"
                    "TO :\r\n"
                    " sip:called@called-company.com ;       tag      = 1918181833n\r\n"
                    "From     : \"Caller Name \\\\\\\"\" <sip:caller@caller-company.com>\r\n"
@@ -32,7 +32,7 @@ test1()
                    "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
                    "Date: Mon, 02 Jun 1982 08:21:11 GMT\r\n"
                    "CSeq: 8\r\n"
-                   "   RESIP_INVITE\r\n"
+                   "   INVITE\r\n"
                    "Via  : SIP  /   2.0\r\n" 
                    " /UDP\r\n" 
                    "    135.180.130.133;branch=z9hG4bKkdjuw\r\n" 
@@ -115,7 +115,7 @@ test1()
 
       tassert(message->exists(h_CSeq));
       tassert(message->header(h_CSeq).sequence() == 8);
-      tassert(message->header(h_CSeq).method() == RESIP_INVITE);
+      tassert(message->header(h_CSeq).method() == INVITE);
 
       tassert(message->exists(h_Vias));
       tassert(message->header(h_Vias).empty() == false);
@@ -141,16 +141,16 @@ test1()
    void 
 	   test2()
    {
-      CritLog( << "2.2 RESIP_INVITE with Proxy-Require and Require");
+      CritLog( << "2.2 INVITE with Proxy-Require and Require");
        
-      char *txt = ("RESIP_INVITE sip:called@called-company.com SIP/2.0\r\n"
+      char *txt = ("INVITE sip:called@called-company.com SIP/2.0\r\n"
                    "To: sip:called@called-company.com\r\n"
                    "From: sip:caller@caller-company.com;tag=242etr\r\n"
                    "Max-Forwards: 6\r\n"
                    "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
                    "Require: newfeature1, newfeature2\r\n"
                    "Proxy-Require: newfeature3, newfeature4\r\n" 
-                   "CSeq: 8 RESIP_INVITE\r\n"
+                   "CSeq: 8 INVITE\r\n"
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n\r\n");
 
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
@@ -190,7 +190,7 @@ test1()
 
       tassert(message->exists(h_CSeq));
       tassert(message->header(h_CSeq).sequence() == 8);
-      tassert(message->header(h_CSeq).method() == RESIP_INVITE);
+      tassert(message->header(h_CSeq).method() == INVITE);
 
       tassert(message->exists(h_Vias));
       tassert(message->header(h_Vias).empty() == false);
@@ -212,14 +212,14 @@ test1()
 void 
 test3()
 {
-       CritLog( << "2.3 RESIP_INVITE with Unknown Schemes in URIs");
+       CritLog( << "2.3 INVITE with Unknown Schemes in URIs");
        
       
-      char *txt = ("RESIP_INVITE name:John_Smith SIP/2.0\r\n"
+      char *txt = ("INVITE name:John_Smith SIP/2.0\r\n"
                    "To: isbn:2983792873\r\n"
                    "From: <sip:www.cs.columbia.edu>;tag=3234233\r\n" // was http//
                    "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
-                   "CSeq: 8 RESIP_INVITE\r\n"
+                   "CSeq: 8 INVITE\r\n"
                    "Max-Forwards: 7\r\n"
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Content-Type: application/sdp\r\n" 
@@ -260,7 +260,7 @@ test3()
 
       tassert(message->exists(h_CSeq));
       tassert(message->header(h_CSeq).sequence() == 8);
-      tassert(message->header(h_CSeq).method() == RESIP_INVITE);
+      tassert(message->header(h_CSeq).method() == INVITE);
 
       tassert(message->exists(h_MaxForwards));
       tassert(message->header(h_MaxForwards).value() == 7);
@@ -288,15 +288,15 @@ test3()
 void 
 test4()
 {
-      CritLog( << "2.4 RESIP_REGISTER with Y2038 Test (This tests for Absolute Time in Expires)");
+      CritLog( << "2.4 REGISTER with Y2038 Test (This tests for Absolute Time in Expires)");
        
-      char *txt = ("RESIP_REGISTER sip:company.com SIP/2.0\r\n"
+      char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                    "To: sip:user@company.com\r\n"
                    "From: sip:user@company.com;tag=3411345\r\n"
                    "Max-Forwards: 8\r\n"
                    "Contact: sip:user@host.company.com\r\n"
                    "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
-                   "CSeq: 8 RESIP_REGISTER\r\n"
+                   "CSeq: 8 REGISTER\r\n"
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: Sat, 01 Dec 2040 16:00:00 GMT\r\n\r\n");
 
@@ -335,7 +335,7 @@ test4()
 
       tassert(message->exists(h_CSeq));
       tassert(message->header(h_CSeq).sequence() == 8);
-      tassert(message->header(h_CSeq).method() == RESIP_REGISTER);
+      tassert(message->header(h_CSeq).method() == REGISTER);
 
       tassert(message->exists(h_Vias));
       tassert(message->header(h_Vias).empty() == false);
@@ -373,15 +373,15 @@ test4()
 void 
 test5()
    {
-      CritLog( << "2.5    RESIP_INVITE with inconsistent Accept and message body");
+      CritLog( << "2.5    INVITE with inconsistent Accept and message body");
       
-      char *txt = ("RESIP_INVITE sip:user@company.com SIP/2.0 \r\n"
+      char *txt = ("INVITE sip:user@company.com SIP/2.0 \r\n"
                    "To: sip:j_user@company.com \r\n"
                    "From: sip:caller@university.edu;tag=234 \r\n"
                    "Max-Forwards: 5 \r\n"
                    "Call-ID: 0ha0isndaksdj@10.0.0.1 \r\n"
                    "Accept: text/newformat \r\n"
-                   "CSeq: 8 RESIP_INVITE \r\n"
+                   "CSeq: 8 INVITE \r\n"
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw \r\n"
                    "Content-Type: application/sdp \r\n"
                    "\r\n"
@@ -399,7 +399,7 @@ test5()
       tassert(message->isRequest());
       tassert(!message->isResponse());
 
-      tassert(message->header(h_RequestLine).getMethod() == RESIP_INVITE);
+      tassert(message->header(h_RequestLine).getMethod() == INVITE);
       tassert(message->header(h_RequestLine).getSipVersion() == "SIP/2.0");
 
       tassert(message->header(h_RequestLine).uri().host() == "company.com");
@@ -431,7 +431,7 @@ test5()
       tassert(message->header(h_Accepts).front().subType() == "newformat");
 
       tassert(message->header(h_CSeq).sequence() == 8);
-      tassert(message->header(h_CSeq).method() == RESIP_INVITE);
+      tassert(message->header(h_CSeq).method() == INVITE);
 
       tassert(message->header(h_Vias).size() == 1);
       tassert(message->header(h_Vias).front().protocolName() == "SIP");
@@ -452,14 +452,14 @@ test5()
 
 void test6()
 {
-      CritLog( << "2.6    RESIP_INVITE with non-SDP message body ");
+      CritLog( << "2.6    INVITE with non-SDP message body ");
       
-      char *txt = ("RESIP_INVITE sip:user@company.com SIP/2.0\r\n"
+      char *txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
                    "To: sip:j.user@company.com\r\n"
                    "From: sip:caller@university.edu;tag=8\r\n"
                    "Max-Forwards: 70 \r\n"
                    "Call-ID: 0ha0isndaksdj@10.0.0.1 \r\n"
-                   "CSeq: 8 RESIP_INVITE \r\n"
+                   "CSeq: 8 INVITE \r\n"
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw \r\n"
                    "Content-Type: application/newformat \r\n"
                    "\r\n"
@@ -473,7 +473,7 @@ void test6()
       tassert(message->isRequest());
       tassert(!message->isResponse());
 
-      tassert(message->header(h_RequestLine).getMethod() == RESIP_INVITE);
+      tassert(message->header(h_RequestLine).getMethod() == INVITE);
       tassert(message->header(h_RequestLine).getSipVersion() == "SIP/2.0");
 
       tassert(message->header(h_RequestLine).uri().host() == "company.com");
@@ -531,7 +531,7 @@ void test7()
       tassert(message->isRequest());
       tassert(!message->isResponse());
 
-      tassert(message->header(h_RequestLine).getMethod() == RESIP_UNKNOWN);
+      tassert(message->header(h_RequestLine).getMethod() == UNKNOWN);
       tassert(message->header(h_RequestLine).unknownMethodName() == "NEWMETHOD");
       tassert(message->header(h_RequestLine).getSipVersion() == "SIP/2.0");
 
@@ -574,7 +574,7 @@ void test7()
       DebugLog( << "got contents of type" << c->getType() );
       
       // A proxy should forward this using the same retransmission rules as 
-      // RESIP_BYE. A UAS should reject it with an error, and list the available 
+      // BYE. A UAS should reject it with an error, and list the available 
       // methods in the response. 
 
       tassert_verify(7);
@@ -590,7 +590,7 @@ void test8()
                 "From: sip:caller@university.edu;tag=23411413\r\n"
                 "Max-Forwards: 3\r\n"
                 "Call-ID: 0ha0isndaksdj@10.0.1.1\r\n"
-                "CSeq: 8 RESIP_INVITE\r\n"
+                "CSeq: 8 INVITE\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                 "Content-Type: application/sdp\r\n"
                 "\r\n"
@@ -608,23 +608,23 @@ void test8()
    tassert(message->isRequest());
    tassert(!message->isResponse());
 
-   tassert(message->header(h_RequestLine).getMethod() == RESIP_UNKNOWN);
+   tassert(message->header(h_RequestLine).getMethod() == UNKNOWN);
    tassert(message->header(h_RequestLine).unknownMethodName() == "NEWMETHOD");
-   tassert(message->header(h_CSeq).method() == RESIP_INVITE);
+   tassert(message->header(h_CSeq).method() == INVITE);
    tassert(message->header(h_CSeq).method() != message->header(h_RequestLine).getMethod());
    tassert_verify(8);
 }
 
 void test9()
 {
-   CritLog( << "2.9    RESIP_REGISTER with Unknown Authorization Scheme" );
+   CritLog( << "2.9    REGISTER with Unknown Authorization Scheme" );
    
-   char* txt = ("RESIP_REGISTER sip:company.com SIP/2.0\r\n"
+   char* txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                 "To: sip:j.user@company.com\r\n"
                 "From: sip:j.user@company.com;tag=87321hj23128\r\n"
                 "Max-Forwards: 8\r\n"
                 "Call-ID: 0ha0isndaksdj@10.0.1.1\r\n"
-                "CSeq: 8 RESIP_REGISTER\r\n"
+                "CSeq: 8 REGISTER\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                 "Authorization: Super-PGP foo=ajsohdaosdh0asyhdaind08yasdknasd09asidhas0d8\r\n\r\n");
    auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
@@ -632,7 +632,7 @@ void test9()
    tassert(message->isRequest());
    tassert(!message->isResponse());
    
-   tassert(message->header(h_RequestLine).getMethod() == RESIP_REGISTER);
+   tassert(message->header(h_RequestLine).getMethod() == REGISTER);
    tassert(message->header(h_Authorizations).front().scheme() == "Super-PGP");
    tassert_verify(9);
 }
@@ -642,21 +642,21 @@ void test10()
 {
    CritLog( << "2.10 Multiple SIP Request in a Single Message");
    
-   char* txt = ("RESIP_REGISTER sip:company.com SIP/2.0\r\n"
+   char* txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                 "To: sip:j.user@company.com\r\n"
                 "From: sip:j.user@company.com;tag=43251j3j324\r\n"
                 "Max-Forwards: 8\r\n"
                 "Call-ID: 0ha0isndaksdj@10.0.2.2\r\n"
                 "Contact: sip:j.user@host.company.com\r\n"
-                "CSeq: 8 RESIP_REGISTER\r\n"
+                "CSeq: 8 REGISTER\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                 "Content-Length: 0\r\n\r\n"
-                "RESIP_INVITE sip:joe@company.com SIP/2.0\r\n"
+                "INVITE sip:joe@company.com SIP/2.0\r\n"
                 "To: sip:joe@company.com\r\n"
                 "From: sip:caller@university.edu;tag=141334\r\n"
                 "Max-Forwards: 8\r\n"
                 "Call-ID: 0ha0isnda977644900765@10.0.0.1\r\n"
-                "CSeq: 8 RESIP_INVITE\r\n"
+                "CSeq: 8 INVITE\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                 "Content-Type: application/sdp\r\n"
                 "\r\n"
@@ -684,10 +684,10 @@ void test10()
 
 void test11()
 {
-   CritLog( << "2.11 RESIP_INVITE missing Required Headers");
+   CritLog( << "2.11 INVITE missing Required Headers");
 
-   char* txt = ("RESIP_INVITE sip:user@company.com SIP/2.0\r\n"
-                "CSeq: 0 RESIP_INVITE\r\n"
+   char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
+                "CSeq: 0 INVITE\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                 "Content-Type: application/sdp\r\n"
                 "\r\n"
@@ -713,13 +713,13 @@ void test11()
 
 void test12()
 {
-   CritLog( << "2.12 RESIP_INVITE with Duplicate Required Headers");
+   CritLog( << "2.12 INVITE with Duplicate Required Headers");
    //with duplicate headers that are not multi, the first header is kept
    
-   char* txt = ("RESIP_INVITE sip:user@company.com SIP/2.0\r\n"
+   char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                 "Max-Forwards: 70\r\n"
-                "CSeq: 0 RESIP_INVITE\r\n"
+                "CSeq: 0 INVITE\r\n"
                 "Call-ID: 98asdh@10.1.1.1\r\n"
                 "Call-ID: 98asdh@10.1.1.2\r\n"
                 "From: sip:caller@university.edu;tag=3413415\r\n"
@@ -752,14 +752,14 @@ void test12()
 
 void test13()
 {
-   CritLog( << "2.13 RESIP_INVITE with lots of header types");
+   CritLog( << "2.13 INVITE with lots of header types");
    //with duplicate headers that are not multi, the first header is kept
    
-   char* txt = ("RESIP_INVITE sip:user@company.com SIP/2.0\r\n"
+   char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
                 "User-Agent: Lame Agent\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                 "Max-Forwards: 70\r\n"
-                "CSeq: 0 RESIP_INVITE\r\n"
+                "CSeq: 0 INVITE\r\n"
                 "Call-ID: 98asdh@10.1.1.2\r\n"
                 "From: sip:caller@university.edu;tag=3413415\r\n"
                 "From: sip:caller@organization.org\r\n"
@@ -802,7 +802,7 @@ void test14()
                 "From: <sip:fluffy@example.org>;tag=a1fd\r\n"
                 "Via: SIP/2.0/UDP cj14:5002;branch=z9hG4bK-c87542-472987176-1;received=1.2.3.4\r\n"
                 "Call-ID: 048cec32\r\n"
-                "CSeq: 2 RESIP_REGISTER\r\n"
+                "CSeq: 2 REGISTER\r\n"
                 "Contact: <sip:fluffy@1.2.3.4:5002>;q=1.00;expires=1951\r\n"
                 "Contact: <sip:fluffy@example.com:5002>;q=0.50;expires=10\r\n"
                 "Contact: <sip:floppy@example.com:5002>;q=0.00;expires=100\r\n"
@@ -837,12 +837,12 @@ void test15()
    CritLog( << "2.15 Interesting bodies");
    
    char* txt = (
-    "RESIP_NOTIFY sip:fluffy@212.157.205.40 SIP/2.0\r\n"
+    "NOTIFY sip:fluffy@212.157.205.40 SIP/2.0\r\n"
     "Via: SIP/2.0/TCP 212.157.205.198:5060;branch=z9hG4bK2367411811584019109\r\n"
     "To: sip:fluffy@212.157.205.40\r\n"
     "From: sip:ntt2@h1.ntt2.sipit.net;tag=727823805122397238\r\n"
     "Max-Forwards: 70\r\n"
-    "CSeq: 1 RESIP_NOTIFY\r\n"
+    "CSeq: 1 NOTIFY\r\n"
     "Call-ID: 28067261571992032320\r\n"
     "Contact: sip:ntt2@212.157.205.198:5060\r\n"
     "Content-Length: 1929\r\n"
@@ -861,7 +861,7 @@ void test15()
     "\r\n"
     "To: sip:fluffy@212.157.205.40\r\n"
     "From: sip:ntt2@h1.ntt2.sipit.net;tag=727823805122397238\r\n"
-    "CSeq: 1 RESIP_NOTIFY\r\n"
+    "CSeq: 1 NOTIFY\r\n"
     "Call-ID: 28067261571992032320\r\n"
     "Contact: sip:ntt2@212.157.205.198:5060\r\n"
     "Event: presence\r\n"

@@ -20,23 +20,23 @@ namespace resip{
 
 Data MethodNames[] = 
 {
-   defineMethod(RESIP_UNKNOWN, "RESIP_UNKNOWN", "NA"),
-   defineMethod(RESIP_ACK, "RESIP_ACK", "RFC ????"),
-   defineMethod(RESIP_BYE, "RESIP_BYE", "RFC ????"),
-   defineMethod(RESIP_CANCEL, "CANCEL", "RFC ????"),
-   defineMethod(RESIP_INVITE, "RESIP_INVITE", "RFC ????"),
-   defineMethod(RESIP_NOTIFY, "RESIP_NOTIFY", "RFC ????"),
-   defineMethod(RESIP_OPTIONS, "RESIP_OPTIONS", "RFC ????"),
-   defineMethod(RESIP_REFER, "REFER", "RFC ????"),
-   defineMethod(RESIP_REGISTER, "RESIP_REGISTER", "RFC ????"),
-   defineMethod(RESIP_SUBSCRIBE, "RESIP_SUBSCRIBE", "RFC ????"),
-   defineMethod(RESIP_RESPONSE, "RESPONSE", "RFC ????"),
-   defineMethod(RESIP_MESSAGE, "MESSAGE", "RFC ????"),
-   defineMethod(RESIP_INFO, "INFO", "RFC ????"),
-   defineMethod(RESIP_PRACK, "PRACK", "RFC ????"),
-   defineMethod(RESIP_PUBLISH, "RESIP_PUBLISH", "RFC ????"),
-   defineMethod(RESIP_SERVICE, "SERVICE", "!RFC"),
-   defineMethod(RESIP_UPDATE,"UPDATE", "RFC ????")
+   defineMethod(UNKNOWN, "UNKNOWN", "NA"),
+   defineMethod(ACK, "ACK", "RFC ????"),
+   defineMethod(BYE, "BYE", "RFC ????"),
+   defineMethod(CANCEL, "CANCEL", "RFC ????"),
+   defineMethod(INVITE, "INVITE", "RFC ????"),
+   defineMethod(NOTIFY, "NOTIFY", "RFC ????"),
+   defineMethod(OPTIONS, "OPTIONS", "RFC ????"),
+   defineMethod(REFER, "REFER", "RFC ????"),
+   defineMethod(REGISTER, "REGISTER", "RFC ????"),
+   defineMethod(SUBSCRIBE, "SUBSCRIBE", "RFC ????"),
+   defineMethod(RESPONSE, "RESPONSE", "RFC ????"),
+   defineMethod(MESSAGE, "MESSAGE", "RFC ????"),
+   defineMethod(INFO, "INFO", "RFC ????"),
+   defineMethod(PRACK, "PRACK", "RFC ????"),
+   defineMethod(PUBLISH, "PUBLISH", "RFC ????"),
+   defineMethod(SERVICE, "SERVICE", "!RFC"),
+   defineMethod(UPDATE,"UPDATE", "RFC ????")
 };
 }
 #include "MethodHash.hxx"
@@ -44,8 +44,8 @@ Data MethodNames[] =
 const Data&
 resip::getMethodName(MethodTypes t) 
 {
-    if (t < RESIP_UNKNOWN ||  t >= MAX_METHODS)
-        t=RESIP_UNKNOWN;
+    if (t < UNKNOWN ||  t >= MAX_METHODS) 
+        t=UNKNOWN;
     return MethodNames[t];
 }
 
@@ -60,7 +60,7 @@ MethodTypes
 resip::getMethodType(const char* name, int len)
 {
    struct methods* m = MethodHash::in_word_set(name, len);
-   return m ? m->type : RESIP_UNKNOWN;
+   return m ? m->type : UNKNOWN;
 }
 
 // ?dlb? why aren't we using the lib strncasecmp?

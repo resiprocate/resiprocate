@@ -82,13 +82,13 @@ SubDialog::sendNotify(const Contents* document)
 
   SipMessage *notify = new SipMessage;;
   {
-    RequestLine rLine(RESIP_NOTIFY);
+    RequestLine rLine(NOTIFY);
     rLine.uri() = mDlgState->remoteTarget().uri();
     notify->header(h_RequestLine) = rLine; 
     notify->header(h_To) = mDlgState->remoteTFHeader();
     notify->header(h_From) = mDlgState->localTFHeader();
     notify->header(h_CallId).value() = mDlgState->callId();
-    notify->header(h_CSeq).method() = RESIP_NOTIFY;
+    notify->header(h_CSeq).method() = NOTIFY;
     notify->header(h_CSeq).sequence() = (++(mDlgState->localCSeq()));
     notify->header(h_Event).value() = mSubState->event();
     if (!mSubState->eventId().empty())
@@ -143,7 +143,7 @@ SubDialog::processNotifyResponse(SipMessage *msg)
   // if 481 just return condition TERMINATED
   //
   // think about other non2xx's - for now 
-  //   become TERMINATED, send a new RESIP_NOTIFY and
+  //   become TERMINATED, send a new NOTIFY and
   //   return condition TERMINATED
   //
   //   Major hackage for simplet 1

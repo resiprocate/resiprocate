@@ -75,7 +75,7 @@ main(int argc, char** argv)
       Uri foo;
       foo.user() = "speedy";
       foo.host() = "cathaynetworks.com";
-      foo.embedded().header(h_CSeq).method() = RESIP_ACK;
+      foo.embedded().header(h_CSeq).method() = ACK;
       foo.embedded().header(h_CSeq).sequence() = 4178;
 
       Data buf;
@@ -92,7 +92,7 @@ main(int argc, char** argv)
       Uri foo;
       foo.user() = "speedy";
       foo.host() = "cathaynetworks.com";
-      foo.embedded().header(h_CSeq).method() = RESIP_ACK;
+      foo.embedded().header(h_CSeq).method() = ACK;
       foo.embedded().header(h_CSeq).sequence() = 4178;
 
       Via via;
@@ -129,7 +129,7 @@ main(int argc, char** argv)
 
       assert(na.uri().hasEmbedded());
       assert(na.uri().embedded().exists(h_CSeq));
-      assert(na.uri().embedded().header(h_CSeq).method() == RESIP_ACK);
+      assert(na.uri().embedded().header(h_CSeq).method() == ACK);
       assert(na.uri().embedded().header(h_CSeq).sequence() == 314159);
    }
 
@@ -141,7 +141,7 @@ main(int argc, char** argv)
 
       assert(na.uri().hasEmbedded());
       assert(na.uri().embedded().exists(h_CSeq));
-      assert(na.uri().embedded().header(h_CSeq).method() == RESIP_ACK);
+      assert(na.uri().embedded().header(h_CSeq).method() == ACK);
       assert(na.uri().embedded().header(h_CSeq).sequence() == 314159);
       assert(na.uri().param(p_ttl) == 134);
    }
@@ -154,7 +154,7 @@ main(int argc, char** argv)
 
       assert(na.uri().hasEmbedded());
       assert(na.uri().embedded().exists(h_CSeq));
-      assert(na.uri().embedded().header(h_CSeq).method() == RESIP_ACK);
+      assert(na.uri().embedded().header(h_CSeq).method() == ACK);
       assert(na.uri().embedded().header(h_CSeq).sequence() == 314159);
       assert(na.uri().param(p_ttl) == 134);
       assert(na.param(p_tag) == "17");
@@ -173,7 +173,7 @@ main(int argc, char** argv)
       assert(na.uri().embedded().header(h_Vias).size() == 2);
       assert(na.uri().embedded().header(h_Vias).front().transport() == "TLS");
       assert((++(na.uri().embedded().header(h_Vias).begin()))->transport() == "TCP");
-      assert(na.uri().embedded().header(h_CSeq).method() == RESIP_ACK);
+      assert(na.uri().embedded().header(h_CSeq).method() == ACK);
       assert(na.uri().embedded().header(h_CSeq).sequence() == 4178);
    }
 

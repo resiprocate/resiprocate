@@ -24,22 +24,22 @@ TuPresSvr::process()
     {
       if (msg->isRequest())
       {
-	if (msg->header(h_RequestLine).getMethod() == RESIP_SUBSCRIBE )
+	if (msg->header(h_RequestLine).getMethod() == SUBSCRIBE )
 	{
           processSubscribe(msg);
 	}
-	else if (msg->header(h_RequestLine).getMethod() == RESIP_REGISTER )
+	else if (msg->header(h_RequestLine).getMethod() == REGISTER )
 	{
 	  processPublish(msg);
 	}
-	else if (msg->header(h_RequestLine).getMethod() == RESIP_OPTIONS )
+	else if (msg->header(h_RequestLine).getMethod() == OPTIONS )
 	{
           auto_ptr<SipMessage> resp(
                Helper::makeResponse(*msg,500,"You Shot Me!")); 
           mStack->send(*resp);
 	  done = 1;
 	}
-	else if (msg->header(h_RequestLine).getMethod() == RESIP_PUBLISH)
+	else if (msg->header(h_RequestLine).getMethod() == PUBLISH)
 	{
            processPublish(msg);
 	}
@@ -54,7 +54,7 @@ TuPresSvr::process()
 	/*
 	 Nope - dialog key is currently overscoped to requests - bad.
 	assert(msg->isResponse());
-	if (msg->header(h_CSeq).method()==RESIP_NOTIFY)
+	if (msg->header(h_CSeq).method()==NOTIFY)
 	  mDialogMgr.dispatchNotifyResponse(msg);
          */
       }
@@ -107,11 +107,11 @@ void TuPresSvr::processNewSubscribe(SipMessage* msg)
 
 void TuPresSvr::processPublish(SipMessage* msg)
 {
-  //ignore any RESIP_PUBLISH related headers and any contacts
-  //provided in a RESIP_REGISTER
+  //ignore any PUBLISH related headers and any contacts
+  //provided in a REGISTER
   //This is a rather vile hack for SIMPLEt 1
   Data aor;
-  if ( msg->header(h_RequestLine).getMethod() == RESIP_REGISTER )
+  if ( msg->header(h_RequestLine).getMethod() == REGISTER )
   {
     aor = msg->header(h_To).uri().getAorNoPort();
   }

@@ -193,7 +193,7 @@ DialogSet::findDialog(const SipMessage& msg)
          if (it->second->mRemoteTarget.uri() == msg.header(h_Contacts).front().uri())
          {
             //!dcm! in the vonage case, the to tag should be updated to match the fake
-            //vonage tag introduced in the 200 which is also used for the RESIP_BYE.
+            //vonage tag introduced in the 200 which is also used for the BYE.
             //find out how deep this rabbit hole goes, may just have a pugabble
             //filter api that can be added for dialog matching if things get any
             //more specific--this is the VonageKludgeFilter
@@ -262,7 +262,7 @@ DialogSet::dispatch(const SipMessage& msg)
                
                if (!mDialogs.empty())
                {
-                  //a dialog is refusing this 3xx(only implemented for RESIP_INVITE,
+                  //a dialog is refusing this 3xx(only implemented for INVITE,
                   //Subscribe dialogs always refuse as they don't have an early state)
                   return; //(toss 3xx)                  
                }
@@ -283,14 +283,14 @@ DialogSet::dispatch(const SipMessage& msg)
       const SipMessage& request = msg;
       switch (request.header(h_CSeq).method())
       {
-         case RESIP_INVITE:
-         case RESIP_BYE:
-         case RESIP_ACK:
-         case RESIP_CANCEL:  //cancel needs work
-         case RESIP_SUBSCRIBE:
-         case RESIP_REFER: //need to add out-of-dialog refer logic
+         case INVITE:
+         case BYE:
+         case ACK:
+         case CANCEL:  //cancel needs work
+         case SUBSCRIBE:
+         case REFER: //need to add out-of-dialog refer logic
             break; //dialog creating/handled by dialog
-         case RESIP_NOTIFY:
+         case NOTIFY:
             if (request.header(h_To).exists(p_tag))
             {
                break; //dialog creating/handled by dialog
@@ -305,14 +305,14 @@ DialogSet::dispatch(const SipMessage& msg)
                return;
             }
             break;                              
-         case RESIP_PUBLISH:
+         case PUBLISH:
             if (mServerPublication == 0)
             {
                mServerPublication = makeServerPublication(request);
             }
             mServerPublication->dispatch(request);
             return; 
-         case RESIP_INFO:
+         case INFO:   
             if (dialog)
             {
                break;
@@ -321,18 +321,18 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                return;
             }            
-         case RESIP_REGISTER:
+         case REGISTER:
             if (mServerRegistration == 0)
             {
                mServerRegistration = makeServerRegistration(request);
             }
             mServerRegistration->dispatch(request);
             return;
-         case RESIP_MESSAGE:
+         case MESSAGE:
             mServerPagerMessage = makeServerPagerMessage(request);
             mServerPagerMessage->dispatch(request);
             return; 
-         case RESIP_UPDATE:
+         case UPDATE:
             //not implemented
             return;            
          default: 
@@ -363,10 +363,10 @@ DialogSet::dispatch(const SipMessage& msg)
          
       switch (response.header(h_CSeq).method())
       {
-         case RESIP_INVITE:
-         case RESIP_SUBSCRIBE:
-         case RESIP_BYE:
-         case RESIP_ACK:
+         case INVITE:
+         case SUBSCRIBE:
+         case BYE:
+         case ACK:
             break; //dialog creating/handled by dialog(2543 & illegal 3261 responses)
 //             if(response.header(h_To).exists(p_tag))
 //             {
@@ -377,30 +377,30 @@ DialogSet::dispatch(const SipMessage& msg)
 //                //throw away, informational status message eventually
 //                return;               
 //             }
-         case RESIP_CANCEL:
-         case RESIP_REFER:  //need to add out-of-dialog refer logic
+         case CANCEL:
+         case REFER:  //need to add out-of-dialog refer logic
             break; //dialog creating/handled by dialog
-         case RESIP_PUBLISH:
+         case PUBLISH:
             if (mClientPublication == 0)
             {
                mClientPublication = makeClientPublication(response);
             }
             mClientPublication->dispatch(response);
             return;
-         case RESIP_REGISTER:
+         case REGISTER:
             if (mClientRegistration == 0)
             {
                mClientRegistration = makeClientRegistration(response);
             }
             mClientRegistration->dispatch(response);
             return;
-         case RESIP_MESSAGE:
+         case MESSAGE:
             if (mClientPagerMessage)
             {
                mClientPagerMessage->dispatch(response);
             }
             return;            
-         case RESIP_INFO:
+         case INFO:   
             if (dialog)
             {
                break;
@@ -409,7 +409,7 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                return;
             }            
-         case RESIP_NOTIFY:
+         case NOTIFY:
             if (dialog)
             {
                break;
@@ -432,7 +432,7 @@ DialogSet::dispatch(const SipMessage& msg)
    //usages should be cancelled?
    if (dialog == 0)
    {
-      if (msg.isRequest() && msg.header(h_RequestLine).method() == RESIP_CANCEL)
+      if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
       {
          for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
          {

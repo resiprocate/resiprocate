@@ -20,7 +20,7 @@ class DumTimeout : public ApplicationMessage
          Provisional2,
          Publication,
          Retransmit200,
-         WaitForAck, // UAS gets no RESIP_ACK
+         WaitForAck, // UAS gets no ACK
          CanDiscardAck,
          StaleCall, // UAC gets no final response
          Subscription,

@@ -24,13 +24,13 @@ class ServerInviteSession: public InviteSession
       /// before this.
       SipMessage& provisional(int statusCode);
       
-      /// Rejects an RESIP_INVITE with a response like 3xx,4xx,5xx, or 6xx. 
+      /// Rejects an INVITE with a response like 3xx,4xx,5xx, or 6xx. 
       virtual SipMessage& reject(int statusCode);
 
       virtual void send(SipMessage& msg);
 
       /// Makes the dialog end. Depending on the current state, this might
-      /// results in RESIP_BYE or CANCEL being sent.
+      /// results in BYE or CANCEL being sent.
       virtual void end();
       
       void dispatch(const SipMessage& msg);
