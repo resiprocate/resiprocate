@@ -1,6 +1,8 @@
 #include "sip2/sipstack/MultipartMixedContents.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/util/Logger.hxx"
+#include "sip2/sipstack/EncodingContext.hxx"
+#include "sip2/util/Random.hxx"
 
 using namespace Vocal2;
 using namespace std;
@@ -78,46 +80,82 @@ MultipartMixedContents::encodeParsed(std::ostream& str) const
 {
    DebugLog(<< "MultipartMixedContents::encodeParsed ");
 
-   // !dlb! needs to come from context
-   const Data boundary = "--boundary";
+   Data boundaryToken = Random::getRandomHex(50);
+   Data boundary(boundaryToken.size() + 4, true);
+   boundary = Symbols::CRLF;
+   boundary += Symbols::DASHDASH;
+   boundary += boundaryToken;
 
-   mContentsType.param("boundary") = boundary;
-   
+   mContentsType.param("boundary") = boundaryToken;
+
+   // !dlb! output headers
+   str << Symbols::CRLF;
+
    for (list<Contents*>::const_iterator i = mContents.begin(); 
         i != mContents.end(); i++)
    {
-      str << Symbols::CRLFCRLF;
       str << boundary << Symbols::CRLF;
       (*i)->encode(str);
-      str << boundary << Symbols::CRLF;
    }
-
+   str << boundary << Symbols::DASHDASH;
    return str;
 }
 
 void 
 MultipartMixedContents::parse(ParseBuffer& pb)
 {
-   DebugLog(<< "MultipartMixedContents::parse: " << pb.position());
-   
    // determine the boundary
-   const Data& boundary = mContentsType.param("boundary");
+   const Data& boundaryToken = mContentsType.param("boundary");
+   Data boundary(boundaryToken.size() + 2, true);
+   boundary = Symbols::DASHDASH;
+   boundary += boundaryToken;
 
    pb.skipToChars(boundary);
    do
    {
-      // !dlb! case sensitive?
+      // skip over boudary
+      pb.skipN(boundary.size());
+
+      if (*pb.position() == Symbols::DASH[0])
+      {
+         pb.skipChar();
+         if (*pb.position() != Symbols::DASH[0])
+         {
+            // not really a boundary
+            continue;
+         }
+         // terminating boundary
+         pb.skipToEnd();
+         return;
+      }
+      else if (*pb.position() == Symbols::CR[0])
+      {
+         pb.skipChar();
+         if (*pb.position() != Symbols::LF[0])
+         {
+            // not really a boundary
+            continue;
+         }
+      }
+
+      // parse as MimeWrapper to hold mime headers, dispatches to actual
+      // contents parser
+      // !dlb! general header parsing
       pb.skipToChars("Content-Type");
       pb.skipToOneOf(Symbols::COLON, ParseBuffer::Whitespace);
-      
+      pb.skipChar();
+
       Mime contentType;
       contentType.parse(pb);
 
+      // !dlb! skipped other headers
       pb.skipToChars(Symbols::CRLFCRLF);
       const char* anchor = pb.skipN(4);
       pb.skipToChars(boundary);
-
-      mContents.push_back(createContents(contentType, anchor, pb));
+      
+      Data tmp;
+      pb.data(tmp, anchor);
+      mContents.push_back(createContents(contentType, tmp));
    }
    while (!pb.eof());
 }
