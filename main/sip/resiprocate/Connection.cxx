@@ -342,16 +342,18 @@ Connection::performWrite()
    assert(!mOutstandingSends.empty());
    const Data& data = mOutstandingSends.front()->data;
    DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
-   Data::size_type bytesWritten = write(data.data() + mSendPos,data.size() - mSendPos);
+   int nBytes = write(data.data() + mSendPos,data.size() - mSendPos);
 
-   if (bytesWritten == -1)
+   if (nBytes < 0)
    {
       //fail(data.transactionId);
       delete this;
    }
    else
    {
-      mSendPos += bytesWritten;
+     // Safe because of the conditional above ( < 0 ).
+     Data::size_type bytesWritten = static_cast<Data::size_type>(nBytes);
+     mSendPos += bytesWritten;
       if (mSendPos == data.size())
       {
          mSendPos = 0;
