@@ -226,10 +226,11 @@ Profile::disableGruu()
 }
 
 void 
-Profile::addDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password)
+Profile::setDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password)
 {
    DigestCredential cred(aor, realm, user, password);
    DebugLog (<< "Adding credential: " << cred);
+   mDigestCredentials.erase(cred);
    mDigestCredentials.insert(cred);
 }
      
