@@ -294,6 +294,7 @@ DialogSet::dispatch(const SipMessage& msg)
          case CANCEL:  //cancel needs work
          case SUBSCRIBE:
          case REFER: //need to add out-of-dialog refer logic
+         case UPDATE:
             break; //dialog creating/handled by dialog
          case NOTIFY:
             if (request.header(h_To).exists(p_tag))
@@ -333,9 +334,6 @@ DialogSet::dispatch(const SipMessage& msg)
             mServerPagerMessage = makeServerPagerMessage(request);
             mServerPagerMessage->dispatch(request);
             return; 
-         case UPDATE:
-            //not implemented
-            return;            
          default: 
             DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );            
             // only can be one ServerOutOfDialogReq at a time
@@ -368,6 +366,7 @@ DialogSet::dispatch(const SipMessage& msg)
          case SUBSCRIBE:
          case BYE:
          case ACK:
+         case UPDATE:
             break; //dialog creating/handled by dialog(2543 & illegal 3261 responses)
 //             if(response.header(h_To).exists(p_tag))
 //             {

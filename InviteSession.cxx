@@ -218,7 +218,6 @@ InviteSession::provideOffer(const SdpContents& offer)
          else
          {
             mLastSessionModification.remove(h_SessionExpires);
-
             mLastSessionModification.remove(h_MinSE);
          }
 
@@ -583,6 +582,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       {
          if(isConnected())  // !slg! this check isn't 100% safe - ie. provideOffer will throw if in some states - ie. SentReInvite, etc.
          {
+            // Note:  If UPDATE is supported then UPDATE request should probably not contain an SDP, since it is not changing - changes are required for this (and to the QueuedUpdate state)
             provideOffer(*mCurrentLocalSdp);
          }
       }

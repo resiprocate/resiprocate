@@ -268,6 +268,17 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession->dispatch(request);
             }
             break;
+         case UPDATE:
+            if (mInviteSession == 0)
+            {
+               InfoLog ( << "Spurious UPDATE" );
+               return;               
+            }
+            else
+            {
+               mInviteSession->dispatch(request);
+            }
+            break;
          case INFO:
             if (mInviteSession == 0)
             {
@@ -451,18 +462,14 @@ Dialog::dispatch(const SipMessage& msg)
          case ACK:
          case CANCEL:
          case INFO:
-            if (mInviteSession != 0)
+         case REFER: 
+         case UPDATE:
+            if (mInviteSession)
             {
                mInviteSession->dispatch(response);
             }
             // else drop on the floor
             break;               
-         case REFER: 
-            if (mInviteSession)
-            {
-               mInviteSession->dispatch(response);
-            }
-         break;         
          case SUBSCRIBE:
          {
             int code = response.header(h_StatusLine).statusCode();
@@ -744,7 +751,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    }
 
    // If method is INVITE then advertise required headers
-   if(method == INVITE)
+   if(method == INVITE || method == UPDATE)
    {
       if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Allow)) request.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
       if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) request.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
@@ -794,7 +801,8 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
              request.header(h_RequestLine).getMethod() == MESSAGE ||
              request.header(h_RequestLine).getMethod() == NOTIFY ||
              request.header(h_RequestLine).getMethod() == INFO ||
-             request.header(h_RequestLine).getMethod() == OPTIONS 
+             request.header(h_RequestLine).getMethod() == OPTIONS ||
+             request.header(h_RequestLine).getMethod() == UPDATE 
              );
       
 //      assert (request.header(h_RequestLine).getMethod() == CANCEL ||  // Contact header is not required for Requests that do not form a dialog
@@ -803,7 +811,9 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
       Helper::makeResponse(response, request, code, mLocalContact);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
 
-      if(request.header(h_RequestLine).getMethod() == INVITE && code >= 200 && code < 300)
+      if((request.header(h_RequestLine).getMethod() == INVITE ||
+          request.header(h_RequestLine).getMethod() == UPDATE)
+         && code >= 200 && code < 300)
       {
          // Check if we should add our capabilites to the invite success response 
          if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Allow)) response.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
