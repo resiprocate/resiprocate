@@ -1,0 +1,74 @@
+#!/bin/sh 
+#set -x
+
+if [  $# == 1  ]; then
+  DAYS=1095
+elif [ $# == 2 ]; then
+  DAYS=$2
+else
+  echo "Usage: makeCert test.example.org [days]" 
+  echo "       makeCert alice@example.org [days]"
+  echo "days is how long the certifiace is valid"
+  echo "days set to 0 generates an invalid certificate"
+  exit 0
+fi
+
+ADDR=$1
+
+echo "making cert for ${ADDR}"
+
+rm -f ${ADDR}_*.pem
+rm -f ${ADDR}.p12
+
+case ${ADDR} in
+*:*) TYPE="URI" ;;
+*@*) TYPE="email" ;;
+*)   TYPE="DNS" ;;
+esac
+
+rm -f demoCA/index.txt
+touch demoCA/index.txt
+rm -f demoCA/newcerts/*
+
+#setenv ALTNAME "URI:${ADDR}"
+#setenv ALTNAME "email:${ADDR}"
+#setenv ALTNAME "DNS:${ADDR}"
+ALTNAME="$TYPE:${ADDR}"
+export ALTNAME
+
+
+openssl genrsa  -out ${ADDR}_key.pem 1024 
+openssl req -new -sha1 -key ${ADDR}_key.pem \
+        -out ${ADDR}_req.pem -days ${DAYS} <<EOF
+US
+California
+San Jose
+sipit
+
+${ADDR}
+
+
+
+EOF
+
+if [ $DAYS == 0 ]; then
+openssl ca -extensions cj_cert -config openssl.cnf \
+    -passin pass:password -policy policy_anything \
+    -md sha1 -batch -notext -out ${ADDR}_cert.pem \
+    -startdate 990101000000Z \
+    -enddate 000101000000Z \
+     -infiles ${ADDR}_req.pem
+else
+openssl ca -extensions cj_cert -config openssl.cnf \
+    -passin pass:password -policy policy_anything \
+    -md sha1 -days ${DAYS} -batch -notext -out ${ADDR}_cert.pem \
+     -infiles ${ADDR}_req.pem
+fi
+
+
+openssl pkcs12 -passin pass:password \
+    -passout pass:password -export \
+    -out ${ADDR}.p12 -in ${ADDR}_cert.pem \
+    -inkey ${ADDR}_key.pem -name TheName -certfile demoCA/cacert.pem
+
+openssl x509 -in ${ADDR}_cert.pem -noout -text

@@ -1,0 +1,28 @@
+%{
+#include <string.h>
+#include <ctype.h>
+#include "resiprocate/MethodTypes.hxx"
+
+namespace resip
+{
+using namespace std;
+using namespace resip;
+%}
+struct methods { char *name; MethodTypes type; };
+%%
+ACK, ACK
+BYE, BYE
+CANCEL, CANCEL
+INVITE, INVITE
+NOTIFY, NOTIFY
+OPTIONS, OPTIONS
+PRACK, PRACK
+PUBLISH, PUBLISH
+REFER, REFER
+REGISTER, REGISTER
+SUBSCRIBE, SUBSCRIBE
+RESPONSE, RESPONSE
+MESSAGE, MESSAGE
+INFO, INFO
+%%
+}
