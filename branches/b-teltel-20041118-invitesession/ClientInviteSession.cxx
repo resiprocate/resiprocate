@@ -393,7 +393,8 @@ ClientInviteSession::handleRedirect (const SipMessage& msg)
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    transition(Terminated);
    handler->onRedirected(getHandle(), msg);
-   mDum.destroy(this);
+   // !slg! temp hack to get being redirected to work
+   //mDum.destroy(this);
 }
 
 void
