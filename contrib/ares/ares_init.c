@@ -61,6 +61,11 @@ static const char *try_option(const char *p, const char *q, const char *opt);
 static int ip_addr(const char *s, int len, struct in_addr *addr);
 static void natural_mask(struct apattern *pat);
 
+static int	inet_pton4(const char *src, u_char *dst);
+#ifdef HAS_IPV6
+static int	inet_pton6(const char *src, u_char *dst);
+#endif 
+
 #ifdef WIN32
 char w32hostspath[256];
 #endif
@@ -202,8 +207,22 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
       if (!channel->servers && options->nservers != 0)
 	return ARES_ENOMEM;
       for (i = 0; i < options->nservers; i++)
-	channel->servers[i].addr = options->servers[i];
-      channel->nservers = options->nservers;
+	  {
+#ifdef HAS_IPV6
+		channel->servers[i].family = options->servers[i].family;
+		if (options->servers[i].family == AF_INET6)
+		{
+		  channel->servers[i].addr6 = options->servers[i].addr6;
+		}
+		else
+		{
+		  channel->servers[i].addr = options->servers[i].addr;
+		}
+#else	  
+		channel->servers[i].addr = options->servers[i];
+#endif
+        channel->nservers = options->nservers;
+	  }
     }
 
   /* Copy the domains, if given.  Keep channel->ndomains consistent so
@@ -432,7 +451,13 @@ static int init_by_defaults(ares_channel channel)
 		channel->servers = malloc(sizeof(struct server_state));
 		if (!channel->servers)
 			return ARES_ENOMEM;
+			
+		// need a way to test here if v4 or v6 is running
+		// if v4 is running...
 		channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+		// if v6 is running...
+        //	channel->servers[0].addr6.s_addr = htonl6(IN6ADDR_LOOPBACK_INIT);
+		// hard to decide if there is one server or two here
 		channel->nservers = 1;
 #endif
     
@@ -520,15 +545,40 @@ static int config_nameserver(struct server_state **servers, int *nservers,
 {
   struct in_addr addr;
   struct server_state *newserv;
+#ifdef HAS_IPV6
+  u_int8_t family;
+  struct in6_addr addr6;
 
   /* Add a nameserver entry, if this is a valid address. */
-  addr.s_addr = inet_addr(str);
-  if (addr.s_addr == INADDR_NONE)
-    return ARES_SUCCESS;
+
+  if (inet_pton4(str, (u_char *) & addr))   /* is it an IPv4 address? */
+	family = AF_INET;
+  else
+  { 
+	if (inet_pton6(str, (u_char *) & addr6))  /* how about an IPv6 address? */
+	  family = AF_INET6;
+	else	
+	  return ARES_SUCCESS;	/* nope, it was garbage, return early */
+  }
+#else
+  /* Add a nameserver entry, if this is a valid address. */
+
+  if (!inet_pton4(str, (u_char *) & addr))   /* is it an IPv4 address? */
+	  return ARES_SUCCESS;	/* nope, it was garbage, return early */
+#endif
+
   newserv = realloc(*servers, (*nservers + 1) * sizeof(struct server_state));
   if (!newserv)
     return ARES_ENOMEM;
-  newserv[*nservers].addr = addr;
+
+#ifdef HAS_IPV6
+  newserv[*nservers].family = family;
+  if (family == AF_INET6)
+    newserv[*nservers].addr6 = addr6;  
+  else  
+#endif
+	newserv[*nservers].addr = addr;
+
   *servers = newserv;
   (*nservers)++;
   return ARES_SUCCESS;
@@ -708,4 +758,156 @@ static void natural_mask(struct apattern *pat)
     pat->mask.s_addr = htonl(IN_CLASSB_NET);
   else
     pat->mask.s_addr = htonl(IN_CLASSC_NET);
+}
+
+#define  NS_INT16SZ   2
+#define  NS_INADDRSZ  4
+#define  NS_IN6ADDRSZ 16
+
+#ifdef HAS_IPV6
+/* int
+ * inet_pton6(src, dst)
+ *	convert presentation level address to network order binary form.
+ * return:
+ *	1 if `src' is a valid [RFC1884 2.2] address, else 0.
+ * notice:
+ *	(1) does not touch `dst' unless it's returning 1.
+ *	(2) :: in a full address is silently ignored.
+ * credit:
+ *	inspired by Mark Andrews.
+ * author:
+ *	Paul Vixie, 1996.
+ */
+static int
+inet_pton6(const char *src, u_char *dst)
+{
+   static const char xdigits_l[] = "0123456789abcdef",
+      xdigits_u[] = "0123456789ABCDEF";
+   u_char tmp[NS_IN6ADDRSZ], *tp, *endp, *colonp;
+   const char *xdigits, *curtok;
+   int ch, saw_xdigit;
+   u_int val;
+
+   memset((tp = tmp), '\0', NS_IN6ADDRSZ);
+   endp = tp + NS_IN6ADDRSZ;
+   colonp = NULL;
+   /* Leading :: requires some special handling. */
+   if (*src == ':')
+      if (*++src != ':')
+         return (0);
+   curtok = src;
+   saw_xdigit = 0;
+   val = 0;
+   while ((ch = *src++) != '\0') {
+      const char *pch;
+
+      if ((pch = strchr((xdigits = xdigits_l), ch)) == NULL)
+         pch = strchr((xdigits = xdigits_u), ch);
+      if (pch != NULL) {
+         val <<= 4;
+         val |= (pch - xdigits);
+         if (val > 0xffff)
+            return (0);
+         saw_xdigit = 1;
+         continue;
+      }
+      if (ch == ':') {
+         curtok = src;
+         if (!saw_xdigit) {
+            if (colonp)
+               return (0);
+            colonp = tp;
+            continue;
+         }
+         if (tp + NS_INT16SZ > endp)
+            return (0);
+         *tp++ = (u_char) (val >> 8) & 0xff;
+         *tp++ = (u_char) val & 0xff;
+         saw_xdigit = 0;
+         val = 0;
+         continue;
+      }
+      if (ch == '.' && ((tp + NS_INADDRSZ) <= endp) &&
+          inet_pton4(curtok, tp) > 0) {
+         tp += NS_INADDRSZ;
+         saw_xdigit = 0;
+         break;	/* '\0' was seen by inet_pton4(). */
+      }
+      return (0);
+   }
+   if (saw_xdigit) {
+      if (tp + NS_INT16SZ > endp)
+         return (0);
+      *tp++ = (u_char) (val >> 8) & 0xff;
+      *tp++ = (u_char) val & 0xff;
+   }
+   if (colonp != NULL) {
+      /*
+       * Since some memmove()'s erroneously fail to handle
+       * overlapping regions, we'll do the shift by hand.
+       */
+      const int n = tp - colonp;
+      int i;
+
+      for (i = 1; i <= n; i++) {
+         endp[- i] = colonp[n - i];
+         colonp[n - i] = 0;
+      }
+      tp = endp;
+   }
+   if (tp != endp)
+      return (0);
+   memcpy(dst, tmp, NS_IN6ADDRSZ);
+   return (1);
+}
+
+#endif
+
+/* int
+ * inet_pton4(src, dst)
+ *	like inet_aton() but without all the hexadecimal and shorthand.
+ * return:
+ *	1 if `src' is a valid dotted quad, else 0.
+ * notice:
+ *	does not touch `dst' unless it's returning 1.
+ * author:
+ *	Paul Vixie, 1996.
+ */
+static int
+inet_pton4(const char *src, u_char *dst)
+{
+   static const char digits[] = "0123456789";
+   int saw_digit, octets, ch;
+   u_char tmp[NS_INADDRSZ], *tp;
+
+   saw_digit = 0;
+   octets = 0;
+   *(tp = tmp) = 0;
+   while ((ch = *src++) != '\0') {
+      const char *pch;
+
+      if ((pch = strchr(digits, ch)) != NULL) {
+         u_int newVal = *tp * 10 + (pch - digits);
+
+         if (newVal > 255)
+            return (0);
+         *tp = newVal;
+         if (! saw_digit) {
+            if (++octets > 4)
+               return (0);
+            saw_digit = 1;
+         }
+      } else if (ch == '.' && saw_digit) {
+         if (octets == 4)
+            return (0);
+         *++tp = 0;
+         saw_digit = 0;
+      } else
+         return (0);
+   }
+   if (octets < 4)
+      return (0);
+
+   memcpy(dst, tmp, NS_INADDRSZ);
+   return (1);
 }

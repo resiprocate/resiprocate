@@ -30,7 +30,8 @@
 #endif
 
 #include <sys/types.h>
-//#include <netinet/in.h>
+#include <netinet/in.h>  
+/* why was this commented out?! */
 
 
 #define ARES_SUCCESS		0
@@ -76,6 +77,14 @@
 #define ARES_OPT_DOMAINS	(1 << 7)
 #define ARES_OPT_LOOKUPS	(1 << 8)
 
+#ifdef HAS_IPV6
+struct multiFamilyAddr {
+  u_int8_t family;
+  struct in6_addr addr6;
+  struct in_addr addr;
+};
+#endif
+
 struct ares_options {
   int flags;
   int timeout;
@@ -83,7 +92,11 @@ struct ares_options {
   int ndots;
   unsigned short udp_port;
   unsigned short tcp_port;
+#ifdef HAS_IPV6
+  struct multiFamilyAddr *servers;
+#else
   struct in_addr *servers;
+#endif
   int nservers;
   char **domains;
   int ndomains;
