@@ -21,7 +21,7 @@ class Dialog
       
       // pass in a contact for this location e.g. "sip:local@domain:5060"
       Dialog(const NameAddr& localContact);
-      
+
       // If a dialog is not yet created, make a dialog or early dialog as
       // follows. Otherwise, just make response from the dialog state
       // Used by the UAS to create a dialog or early dialog, will return a 1xx(code)
