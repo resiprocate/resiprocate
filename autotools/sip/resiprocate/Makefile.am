@@ -40,7 +40,6 @@ libresiprocate_la_SOURCES = \
 	ConnectionManager.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
-	DialogSet.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
 	Embedded.cxx \
@@ -91,7 +90,6 @@ libresiprocate_la_SOURCES = \
 	RportParameter.cxx \
 	Security.cxx \
 	SipMessage.cxx \
-	SipSession.cxx \
 	SipStack.cxx \
 	StackThread.cxx \
 	StatisticsMessage.cxx \
@@ -155,8 +153,6 @@ resiprocate_include_HEADERS = \
 	DataParameter.hxx \
 	DateCategory.hxx \
 	Dialog.hxx \
-	Dialog2.hxx \
-	DialogSet.hxx \
 	DnsInterface.hxx \
 	DnsResult.hxx \
 	DnsHandler.hxx \
@@ -213,7 +209,6 @@ resiprocate_include_HEADERS = \
 	SipFrag.hxx \
 	SipMessage.hxx \
 	SipMessageExplicit.hxx \
-	SipSession.hxx \
 	SipStack.hxx \
 	StackThread.hxx \
 	StatelessHandler.hxx \
@@ -241,8 +236,6 @@ resiprocate_include_HEADERS = \
 	TransportMessage.hxx \
 	TransportSelector.hxx \
 	TuIM.hxx \
-	TuShim.hxx \
-	TuUa.hxx \
 	UdpTransport.hxx \
 	UnknownHeaderType.hxx \
 	UnknownParameter.hxx \
