@@ -15,3 +15,4 @@ AppDialog::getHandle()
 {
    return AppDialogHandle(mHam, mId);
 }
+
