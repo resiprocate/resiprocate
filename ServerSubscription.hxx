@@ -26,9 +26,11 @@ class ServerSubscription : public BaseUsage
          Giveup
       } TerminateReason;
 
-      void acceptPending(SipMessage* notify);
-      void acceptActive(SipMessage* notify);
-      void update(const Contents* document);
+      // 202
+      SipMessage& acceptPending();
+      // 200
+      SipMessage& acceptActive();
+      SipMessage& update(const Contents* document);
       void end(TerminateReason reason);
       void reject(int responseCode);
       
