@@ -16,7 +16,7 @@ using namespace resip;
 
 Uri::Uri() 
    : ParserCategory(),
-     mScheme(Symbols::DefaultSipScheme),
+     mScheme(Data::Share, Symbols::DefaultSipScheme),
      mPort(0),
      mOldPort(0),
      mEmbeddedHeaders(0)
@@ -406,8 +406,17 @@ Uri::getAorNoPort() const
 {
    checkParsed();
        
-   Data aor( (mUser.empty()) ? (mHost) : (mUser + Symbols::AT_SIGN + mHost) );
-   
+   Data aor(mUser.size() + mHost.size() + 1);
+   if (mUser.empty())
+   {
+      aor = mHost;
+   }
+   else
+   {
+      aor += mUser;
+      aor += Symbols::AT_SIGN;
+      aor += mHost;
+   }   
    return aor;
 }
 
