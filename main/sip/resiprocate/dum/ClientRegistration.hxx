@@ -7,6 +7,8 @@
 namespace resip
 {
 
+class BaseCreator;
+
 class ClientRegistration: public BaseUsage
 {
    public:
@@ -19,13 +21,11 @@ class ClientRegistration: public BaseUsage
             friend class ClientRegistration;
             Handle(DialogUsageManager& dum);
       };
+
+      ClientRegistration(DialogUsageManager& dum, BaseCreator* creator, Dialog& dialog, const SipMessage& req);
       
-      const NameAddrs& getMyContacts();
-      const NameAddrs& getAllContacts();
       void addBinding(const NameAddr& contact);
-      void addBinding(const NameAddr& to, const NameAddr& contact);
       void removeBinding(const NameAddr& contact);
-      void removeBinding(const NameAddr& to, const NameAddr& contact);
       void removeAll();
       void removeMyBindings();
       void requestRefresh();
@@ -36,6 +36,9 @@ class ClientRegistration: public BaseUsage
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ClientRegistration::Handle getHandle() {return mHandle;}
       
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimer& timer);
+
    private:
       friend class DialogUsageManager;
       ClientRegistration(DialogUsageManager& dum,
@@ -43,6 +46,7 @@ class ClientRegistration: public BaseUsage
                          const SipMessage& req);
       
       ClientRegistration::Handle mHandle;
+      SipMessage& mLastRequest;
       NameAddrs mMyContacts;
       NameAddrs mAllContacts;
       UInt64    mExpirationTime;
