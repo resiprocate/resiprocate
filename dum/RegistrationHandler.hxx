@@ -1,10 +1,6 @@
 #if !defined(RESIP_REGISTRATIONHANDLER_HXX)
 #define RESIP_REGISTRATIONHANDLER_HXX
 
-/** @file RegistrationHandler.hxx
- *  
- */
-
 namespace resip
 {
 

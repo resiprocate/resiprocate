@@ -10,6 +10,10 @@ namespace resip
 
 class ClientSubscription: public BaseUsage
 {
+  public:
+    class Handle
+    {
+    };
 };
  
 }
