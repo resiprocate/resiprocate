@@ -4,11 +4,8 @@
 #include <ctype.h>
 #include "sip2/sipstack/MethodTypes.hxx"
 
-//using namespace std;
-
-namespace Vocal2 {
-
 using namespace Vocal2;
+
 struct methods { char *name; MethodTypes type; };
 /* maximum key range = 16, duplicates = 0 */
 
@@ -132,5 +129,4 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
         }
     }
   return 0;
-}
 }
