@@ -8,6 +8,7 @@
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Timer.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 #if defined(WIN32) && defined(_DEBUG) &&defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
 #define _CRTDBG_MAP_ALLOC
@@ -355,15 +356,18 @@ InviteSession::dispatch(const SipMessage& msg)
                      }
                      if (offans.first != None)
                      {
-                        incomingSdp(msg, offans.second);
                         if (offans.first == Answer)
                         {
                            //no late media required, so just send the ACK
                            send(makeAck());
                         }
+                        incomingSdp(msg, offans.second);
                      }
                      else
                      {
+                        //no offer or answer in 200, this will eventually be
+                        //legal with PRACK/UPDATE
+                        send(makeAck());
                         if (mOfferState != Answered)
                         {
                            //reset the sdp state machine
@@ -759,7 +763,8 @@ InviteSession::targetRefresh(const NameAddr& localUri)
 void
 InviteSession::send()
 {
-   if (mOfferState == Answered)
+   InfoLog ( << "InviteSession::send(void)");   
+   if (mOfferState == Answered || mState != Connected)
    {
       throw new UsageUseException("Cannot call send when there it no Offer/Answer negotiation to do", __FILE__, __LINE__);
    }
@@ -772,6 +777,11 @@ InviteSession::makeAck()
    InfoLog ( << "InviteSession::makeAck" );
 
    int cseq = mLastRequest.header(h_CSeq).sequence();
+   if (mAckMap.find(cseq) != mAckMap.end())
+   {
+      InfoLog ( << "CSeq collision in ack map: " << Inserter(mAckMap) );
+   }
+      
    assert(mAckMap.find(cseq) == mAckMap.end());
    SipMessage& ack = mAckMap[cseq];
    ack = mLastRequest;
