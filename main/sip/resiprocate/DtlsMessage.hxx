@@ -35,6 +35,6 @@ class DtlsMessage : public Message
 
 }
 
-#endif / * USE_DTLS */
+#endif /* USE_DTLS */
 
 #endif /* ! RESIP_DTLSMESSAGE_HXX */
