@@ -1,8 +1,52 @@
+
 #include <cstring>
 #include <cassert>
 #include <iostream>
 
+//#define USE_CURSES
+
+#ifdef USE_CURSES
 #include <ncurses.h>
+#else
+#include <cstdio>
+#include <unistd.h>
+typedef void WINDOW;
+bool TRUE=true;
+bool FALSE=false;
+char ACS_HLINE=1;
+char ACS_VLINE=2;
+WINDOW* stdscr=0;
+WINDOW* newwin(...) { return NULL; };
+void waddstr(WINDOW*, const char* text) { std::clog << text; };
+char getch()
+{
+   char buf[1];
+   int r = read(fileno(stdin),&buf,1);
+   if ( r ==1 )
+   {
+      return buf[0];
+   }
+   return 0;
+};
+void werase(WINDOW*) {};
+void wrefresh(...) {};
+void mvhline(...) {};
+void refresh(...) {};
+void getmaxyx(...) {};
+void clearok(...) {};
+void waddch(...) {};
+void initscr(...) {};
+void cbreak(...) {};
+void noecho(...) {};
+void nonl(...) {};
+void intrflush(...) {};
+void keypad(...) {};
+void scrollok(...) {};
+void wmove(...) {};
+void mvvline(...) {};
+#endif
+
+
 
 #ifndef WIN32
 #include <sys/time.h>
@@ -111,7 +155,11 @@ TestCallback::receivedPage( const Data& msg, const Uri& from,
    if ( !wasEncryped )
    {
       //cout << " -NOT SECURE- ";
-      waddstr(textWin," -NOT SECURE- ");
+      waddstr(textWin," -NOT SECURE-");
+   }
+   else
+   {
+      waddstr(textWin," -secure-");
    }
    switch ( sigStatus )
    {
@@ -151,14 +199,14 @@ TestCallback::receivedPage( const Data& msg, const Uri& from,
 
 
 void 
-TestCallback::sendPageFailed( const Uri& dest, int respNum )
+TestCallback::sendPageFailed( const Uri& target, int respNum )
 {
    //InfoLog(<< "In TestErrCallback");  
    // cerr << "Message to " << dest << " failed" << endl;  
    Data num(respNum);
    
    waddstr(textWin,"Message to ");
-   waddstr(textWin,dest.value().c_str());
+   waddstr(textWin,target.value().c_str());
    waddstr(textWin," failed (");
    waddstr(textWin,num.c_str());
    waddstr(textWin," response)\n");
@@ -167,12 +215,12 @@ TestCallback::sendPageFailed( const Uri& dest, int respNum )
 
 
 void 
-TestCallback::registrationFailed(const Vocal2::Uri&, int respNum )
+TestCallback::registrationFailed(const Vocal2::Uri& target, int respNum )
 {
    Data num(respNum);
    
    waddstr(textWin,"Registration to ");
-   waddstr(textWin,dest.value().c_str());
+   waddstr(textWin, target.value().c_str());
    waddstr(textWin," failed (");
    waddstr(textWin,num.c_str());
    waddstr(textWin," response)\n");
@@ -181,13 +229,18 @@ TestCallback::registrationFailed(const Vocal2::Uri&, int respNum )
   
                               
 bool
-processStdin( Uri* dest )
+processStdin( Uri* dest, bool sign, bool encryp )
 {
    static unsigned int num=0;
    static char buf[1024];
 
    char c = getch();	
       
+   if ( c == 0 )
+   {
+      return true;
+   }
+   
    if ( c == '\f' )
    {
       clearok(textWin,TRUE);
@@ -232,7 +285,7 @@ processStdin( Uri* dest )
       return true;
    }
        
-   if ( (c == '\r') || (num+2>=sizeof(buf)) )
+   if ( (c == '\r') || (c == '\n') || (num+2>=sizeof(buf)) )
    {
       buf[num] =0;
 
@@ -286,24 +339,32 @@ processStdin( Uri* dest )
             assert( num < sizeof(buf) );
             buf[num] = 0;
             Data text(buf);
-         
-            //DebugLog( << "Read <" << text << ">" );
             
             Data destValue  = dest->getAor();
-            
-            //cout << "Send to <" << *dest << ">";
-            waddstr(textWin,"To: ");
-            waddstr(textWin,destValue.c_str());
-            waddstr(textWin," ");
-            waddstr(textWin,text.c_str());
-            waddstr(textWin,"\n");
-            wrefresh(textWin);
+            Data encFor = Data::Empty;
+            if (encryp)
+            { 
+               encFor = dest->getAorNoPort();
+            }
 
-            tuIM->sendPage( text , *dest, false /*sign*/, Data::Empty /*encryptFor*/ );
-            //tuIM.sendPage( text , *dest, false /*sign*/, dest->getAorNoPort() /*encryptFor*/ );
-            //tuIM.sendPage( text , *dest, true /*sign*/,  Data::Empty /*encryptFor*/ );
-            //tuIM.sendPage( text , *dest, true /*sign*/, dest->getAorNoPort()
-            ///*encryptFor*/ );
+            if ( tuIM->haveCerts(sign,encFor) )
+            {
+               waddstr(textWin,"To: ");
+               waddstr(textWin,destValue.c_str());
+               waddstr(textWin," ");
+               waddstr(textWin,text.c_str());
+               waddstr(textWin,"\n");
+               wrefresh(textWin);
+               
+               tuIM->sendPage( text , *dest, sign , encFor );
+            }
+            else
+            {
+               waddstr(textWin,"Don't have aproperate certificates to sign and encrypt a message to ");
+               waddstr(textWin,destValue.c_str());
+               waddstr(textWin,"\n");
+               wrefresh(textWin);
+            }
          }
       }
 
@@ -344,9 +405,14 @@ main(int argc, char* argv[])
    bool haveAor=false;
    dest = Uri("sip:nobody@example.com");
    Data aorPassword;
+   Uri contact("sip:user@localhost");
+   bool haveContact=false;
    
    int numAdd=0;
    Data addList[100];
+   bool encryp=false;
+   bool sign=false;
+   Data key("password");
    
    for ( int i=1; i<argc; i++)
    {
@@ -357,6 +423,15 @@ main(int argc, char* argv[])
       else if (!strcmp(argv[i],"-v"))
       {
          Log::setLevel(Log::INFO);
+      }
+      else if (!strcmp(argv[i],"-encrypt"))
+      {
+         encryp = true;
+      }
+      else if (!strcmp(argv[i],"-sign"))
+      {
+         sign = true;
+         
       }
       else if (!strcmp(argv[i],"-port"))
       {
@@ -377,6 +452,13 @@ main(int argc, char* argv[])
          aor = Uri(Data(argv[i]));
          haveAor=true;
       } 
+      else if (!strcmp(argv[i],"-contact"))
+      {
+         i++;
+         assert( i<argc );
+         contact = Uri(Data(argv[i]));
+         haveContact=true;
+      } 
       else if (!strcmp(argv[i],"-add"))
       {
          i++;
@@ -396,14 +478,22 @@ main(int argc, char* argv[])
          assert( i<argc );
          dest = Uri(Data(argv[i]));
       } 
+     else if (!strcmp(argv[i],"-key"))
+      {
+         i++;
+         assert( i<argc );
+         key = Data(argv[i]);
+      } 
       else
       { 
-         cerr <<"Bad command line opion: " << argv[i] << endl;
-         cerr <<"options are: " << endl
+         clog <<"Bad command line opion: " << argv[i] << endl;
+         clog <<"options are: " << endl
               << "\t [-v] [-vv] [-port 5060] [-tlsport 5061]" << endl
               << "\t [-aor sip:alice@example.com] [-aorPassword password]" << endl
-              << "\t [-to sip:friend@example.com] [-add sip:buddy@example.com]" << endl;
-         cerr << endl
+              << "\t [-to sip:friend@example.com] [-add sip:buddy@example.com]" << endl
+              << "\t [-sign] [-encrypt] [-key secret]" << endl
+              << "\t [-contact sip:me@example.com] " << endl;
+         clog << endl
               << " -v is verbose" << endl
               << " -vv is very verbose" << endl
               << " -port sets the UDP and TCP port to listen on" << endl
@@ -412,6 +502,10 @@ main(int argc, char* argv[])
               << " -aorPasswrod sets the password to use for registration" << endl
               << " -to sets initial location to send messages to" << endl
               << " -add adds a budy who's presense will be monitored" << endl
+              << " -sign signs message you send and -encryp encrypt them - you need PKI certs for this to work" << endl
+              << " -key allows you to enter a secret used to load your private key."<< endl
+              << "  If you set the secret to - the system will querry you for it."<< endl
+              << " -contact overrides your SIP contact - can be used for NAT games" << endl
               << "\t there can be many -add " << endl
               << endl;
          exit(1);
@@ -422,13 +516,21 @@ main(int argc, char* argv[])
    
    SipStack sipStack;  
 
+   if ( key == Data("-") )
+   {
+      clog << "Please enter password to use to load your private key: ";
+      char buf[1024];
+      cin.get(buf,1024);
+      key = Data(buf);
+      InfoLog( << "Certificate key set to <" << key << ">" );
+   }
+   
 #ifdef USE_SSL
    assert( sipStack.security );
-   bool ok = sipStack.security->loadAllCerts( Data("password") );
+   bool ok = sipStack.security->loadAllCerts( key );
    if ( !ok )
    {
-      //ErrLog( << "Could not load the certificates" );
-      assert( ok );
+      ErrLog( << "Could not load the certificates" );
    }
 #endif
    
@@ -452,28 +554,35 @@ main(int argc, char* argv[])
    }
 #endif
 
-   TestCallback callback;
-
-   Uri contact("sip:user@localhost");
-   contact.port() = port;
-   contact.host() = sipStack.getHostname();
-
+ 
+   if (!haveContact)
+   {
+      contact.port() = port;
+      contact.host() = sipStack.getHostname();
+   }
+   
    if ( haveAor )
    {
-      contact.user() = aor.user();
-#if USE_SSL
-      if ( aor.scheme() == "sips" )
+      if (!haveContact)
       {
-         contact.scheme() = aor.scheme();
-         contact.port() = tlsPort;
-      }
+         contact.user() = aor.user();
+#if USE_SSL
+         if ( aor.scheme() == "sips" )
+         {
+            contact.scheme() = aor.scheme();
+            contact.port() = tlsPort;
+         }
 #endif
+      }
    }
    else
    {
       aor = contact;
    }
-   
+
+   InfoLog( << "aor is " << aor );
+   InfoLog( << "contact is " << contact );
+   TestCallback callback;
    tuIM = new TuIM(&sipStack,aor,contact,&callback);
 
    if ( haveAor )
@@ -564,7 +673,7 @@ main(int argc, char* argv[])
        
       if ( fdset.readyToRead( fileno(stdin) ) )
       {
-         bool keepGoing = processStdin(&dest);
+         bool keepGoing = processStdin(&dest,sign,encryp);
          if (!keepGoing) 
          {
             break;
