@@ -53,6 +53,8 @@ class Timer
       static UInt64 getTimeMicroSec(); // get a 64 bit time
       static UInt64 getTimeMs(); // in ms
 
+      static int getCpuSpeedMhz() { return mCpuSpeedMHz; }
+            
       static const unsigned long T1;
       static const unsigned long T2;
       static const unsigned long T4;
