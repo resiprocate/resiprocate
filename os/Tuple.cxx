@@ -53,21 +53,6 @@ Tuple::Tuple(const in6_addr& pipv6,
 }
 #endif
 
-struct sockaddr* 
-Tuple::sockaddr() const
-{
-#if USE_IPV6
-   if (v6)
-   {
-      return (struct sockaddr*)&ipv6;
-   }
-   else
-#endif
-   {
-      return (struct sockaddr*)&ipv4;
-   }
-}
-
 
 bool Tuple::operator==(const Tuple& rhs) const
 {
