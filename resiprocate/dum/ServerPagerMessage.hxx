@@ -15,11 +15,11 @@ class ServerPagerMessage : public NonDialogUsage
       SipMessage& accept(int statusCode = 200);
       SipMessage& reject(int statusCode);
 
+      virtual void end();
 	  virtual void send(SipMessage& msg);
-
-
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
+
    protected:
       virtual ~ServerPagerMessage();
 

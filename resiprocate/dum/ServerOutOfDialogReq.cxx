@@ -31,6 +31,12 @@ ServerOutOfDialogReq::~ServerOutOfDialogReq()
    mDialogSet.mServerOutOfDialogRequest = 0;
 }
 
+void
+ServerOutOfDialogReq::end()
+{
+   delete this;
+}
+
 void 
 ServerOutOfDialogReq::dispatch(const SipMessage& msg)
 {
