@@ -270,7 +270,7 @@ PreparseStateTable::InitStatePreparseStateTable()
    AE( CheckCont,X,LWS,BuildData,actAdd );
    
    // Check if double CRLF (end of hdrs)
-   AE( CheckCont,X,CR,CheckEndHdr,actNil);
+   AE( CheckCont,X,CR,CheckEndHdr,actData|actReset|actBack);
    AE( CheckEndHdr,X,XC,Done,actBad);
    AE( CheckEndHdr,X,LF,Done,actEndHdrs);
 
