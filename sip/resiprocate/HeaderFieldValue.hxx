@@ -4,7 +4,7 @@
 #include "resiprocate/ParseException.hxx"
 #include "resiprocate/ParameterTypes.hxx"
 
-#include <iostream>
+#include <iosfwd>
 
 namespace resip
 {

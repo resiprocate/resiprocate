@@ -2,7 +2,7 @@
 #define RESIP_MESSAGE_HXX 
 
 #include "resiprocate/os/Data.hxx"
-#include <iostream>
+#include <iosfwd>
 
 namespace resip
 {

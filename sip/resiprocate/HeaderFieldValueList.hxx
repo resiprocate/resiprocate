@@ -1,7 +1,7 @@
 #if !defined(RESIP_HEADERFIELDVALUELIST_HXX)
 #define RESIP_HEADERFIELDVALUELIST_HXX 
 
-#include <iostream>
+#include <iosfwd>
 #include <list>
 
 namespace resip

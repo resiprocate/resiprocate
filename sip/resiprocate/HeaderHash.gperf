@@ -21,7 +21,7 @@ k, Headers::Supported
 t, Headers::To
 v, Headers::Via
 cseq, Headers::CSeq
-call-id, Headers::CallId
+call-id, Headers::CallID
 contact, Headers::Contact
 content-length, Headers::ContentLength
 expires, Headers::Expires
@@ -59,7 +59,7 @@ require, Headers::Require
 retry-after, Headers::RetryAfter
 server, Headers::Server
 sip-etag, Headers::SIPETag
-sip-if-match, Headers::SIPIFMatch
+sip-if-match, Headers::SIPIfMatch
 supported, Headers::Supported
 timestamp, Headers::Timestamp
 unsupported, Headers::Unsupported
@@ -77,15 +77,17 @@ p-media-authorization, Headers::UNKNOWN
 p-preferred-identity, Headers::UNKNOWN
 path, Headers::UNKNOWN
 privacy, Headers::UNKNOWN
-rack, Headers::UNKNOWN
+rack, Headers::RAck
 reason, Headers::UNKNOWN
 refer-to,Headers::ReferTo
 referred-by,Headers::ReferredBy
 replaces,Headers::Replaces
 response-key, Headers::UNKNOWN
-rseq, Headers::UNKNOWN
+rseq, Headers::RSeq
 security-client, Headers::SecurityClient
 security-server, Headers::SecurityServer
 security-verify, Headers::SecurityVerify
+RSeq, Headers::RSeq
+RAck, Headers::RAck
 %%
 }

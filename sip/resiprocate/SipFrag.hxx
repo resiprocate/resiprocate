@@ -28,10 +28,11 @@ class SipFrag : public Contents
 
       static const Mime& getStaticType() ;
 
+      SipMessage& message();
+      const SipMessage& message() const;
+
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
-
-      SipMessage& message() {checkParsed(); return *mMessage;}
 
       static bool init();
 
