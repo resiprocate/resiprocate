@@ -1,6 +1,8 @@
-#include "ClientInviteSession.hxx"
-#include "DialogUsageManager.hxx"
-#include "Dialog.hxx"
+#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/dum/ClientInviteSession.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/InviteSessionHandler.hxx"
 
 using namespace resip;
 
@@ -13,7 +15,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
      mLastRequest(request),
      mReceived2xx(false)
 {
-   mProposedLocalSdp = initialOffer->clone();
+   mProposedLocalSdp = static_cast<SdpContents*>(initialOffer->clone());
 }
 
 void 
@@ -54,10 +56,14 @@ ClientInviteSession::end()
       case Connected:
          InviteSession::end();
          break;
-      }
          
       case Terminated:
          // do nothing
+         break;
+
+      case Cancelled:
+         // !jf! 
+         assert(0);
          break;
    }
 }
@@ -117,14 +123,14 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          handler->onEarly(getHandle(), msg);
             
          SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-         bool reliable = msg.header(h_Supporteds).contains(Symbols::C100rel);
+         bool reliable = msg.header(h_Supporteds).find(Token(Symbols::C100rel));
          if (sdp)
          {
             if (reliable)
             {
                if (mProposedLocalSdp)
                {
-                  mCurrentRemoteSdp = sdp->clone();
+                  mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
                   mCurrentLocalSdp = mProposedLocalSdp;
                   mProposedLocalSdp = 0;
 
@@ -132,8 +138,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
                }
                else
                {
-                  mProposedRemoteSdp = sdp->clone();
-                  handler->onOffer(getHandle(), msg);
+                  mProposedRemoteSdp = static_cast<SdpContents*>(sdp->clone());
+                  handler->onOffer(getSessionHandle(), msg);
 
                   // handler must provide an answer
                   assert(mProposedLocalSdp);
@@ -158,7 +164,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
    {
       if (mState == Cancelled)
       {
-         sendAck();
+         //sendAck(the200);  
          end();
          return;
       }
@@ -179,7 +185,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          {
             if (mProposedLocalSdp) // got an answer
             {
-               mCurrentRemoteSdp = sdp->clone();
+               mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
                mCurrentLocalSdp = mProposedLocalSdp;
                mProposedLocalSdp = 0;
                   
@@ -187,8 +193,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             }
             else  // got an offer
             {
-               mProposedRemoteSdp = sdp->clone();
-               handler->onOffer(getHandle(), msg);
+               mProposedRemoteSdp = static_cast<SdpContents*>(sdp->clone());
+               handler->onOffer(getSessionHandle(), msg);
             }
          }
          else
@@ -221,7 +227,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
       if (mState != Terminated)
       {
          mState = Terminated;
-         handler->onTerminated(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), msg);
       }
    }
    else // 3xx
@@ -277,7 +283,8 @@ ClientInviteSession::sendAck(const SipMessage& ok)
    mDialog.makeAck(mAck);
    if (mProposedLocalSdp)
    {
-      mDialog.setContents(mProposedLocalSdp);
+      // !jf! ?
+      //mDialog.setContents(mProposedLocalSdp);
    }
    mDum.send(mAck);
 }

@@ -28,19 +28,19 @@ void DialogUsageManager::setProfile(Profile* profile)
 }
 
 
-void DialogUsageManager::setManager(RedirectManager* manager)
+void DialogUsageManager::setRedirectManager(RedirectManager* manager)
 {
    mRedirectManager = manager;
 }
 
 void 
-DialogUsageManager::setManager(ClientAuthManager* manager)
+DialogUsageManager::setClientAuthManager(ClientAuthManager* manager)
 {
    mClientAuthManager = manager;
 }
 
 void 
-DialogUsageManager::setManager(ServerAuthManager* manager)
+DialogUsageManager::setServerAuthManager(ServerAuthManager* manager)
 {
    mServerAuthManager = manager;
 }
@@ -64,27 +64,27 @@ DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
 }
 
 void 
-DialogUsageManager::addHandler(const Data& eventType, ClientSubscriptionHandler*)
+DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler*)
 {
 }
 
 void 
-DialogUsageManager::addHandler(const Data& eventType, ServerSubscriptionHandler*)
+DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSubscriptionHandler*)
 {
 }
 
 void 
-DialogUsageManager::addHandler(const Data& eventType, ClientPublicationHandler*)
+DialogUsageManager::addClientPublicationHandler(const Data& eventType, ClientPublicationHandler*)
 {
 }
 
 void 
-DialogUsageManager::addHandler(const Data& eventType, ServerPublicationHandler*)
+DialogUsageManager::addServerPublicationHandler(const Data& eventType, ServerPublicationHandler*)
 {
 }
 
 void 
-DialogUsageManager::addHandler(MethodTypes&, OutOfDialogHandler*)
+DialogUsageManager::addOutOfDialogHandler(MethodTypes&, OutOfDialogHandler*)
 {
 }
 
