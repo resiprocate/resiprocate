@@ -35,6 +35,8 @@ class Profile
       void addSupportedLanguage(const Token& lang);
 
       void setDefaultAor(const NameAddr& from);
+      const NameAddr& getDefaultAor() const;
+
       void setOutboundProxy( const Data& uri );
       void disableGruu();
 

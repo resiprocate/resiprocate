@@ -56,6 +56,7 @@ class DialogUsageManager
       ~DialogUsageManager();
       
       void setProfile(Profile* profile);
+      Profile* getProfile();
       
       void setManager(RedirectManager* redirect);
       void setManager(ClientAuthManager* client);
@@ -77,7 +78,7 @@ class DialogUsageManager
       // the future. If the caller wants to keep it, it should make a copy. The
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
-      SipMessage& makeInviteSession(const Uri& target);
+      SipMessage& makeInviteSession(const Uri& target, const SdpContents* initialOffer);
       SipMessage& makeSubscription(const Uri& aor, const Data& eventType);
       SipMessage& makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
       SipMessage& makePublication(const Uri& aor, const Data& eventType);
