@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.98 2002/12/21 00:36:36 alan Exp $
+# $Id: Makefile,v 1.99 2002/12/22 03:15:51 fluffy Exp $
 
 BUILD = ../../build
 
@@ -23,6 +23,7 @@ parsetest: bin.debug.Linux.i686/testParserCategories
 -include ../Makefile.opt
 
 SRC = \
+	Pidf.cxx \
 	MultipartMixedContents.cxx \
 	LazyParser.cxx \
 	BranchParameter.cxx \
