@@ -619,8 +619,8 @@ main(int argc, char* argv[])
    
    if (port!=0)
    {
-      sipStack.addTransport(Transport::UDP, port);
-      sipStack.addTransport(Transport::TCP, port);
+      sipStack.addTransport(UDP, port);
+      sipStack.addTransport(TCP, port);
    }
    
 #if USE_SSL
@@ -670,11 +670,11 @@ main(int argc, char* argv[])
    
    if ( tcp )
    {
-      tuIM->setDefaultProtocol( Transport::TCP );
+      tuIM->setDefaultProtocol( TCP );
    }
    if ( tls )
    {
-      tuIM->setDefaultProtocol( Transport::TLS );
+      tuIM->setDefaultProtocol( TLS );
    }
    
    if ( haveAor )
