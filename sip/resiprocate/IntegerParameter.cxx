@@ -17,13 +17,15 @@ IntegerParameter::IntegerParameter(ParameterTypes::Type type,
    // hack to allow expires to have an 2543 style quoted Date
    if (type == ParameterTypes::expires)
    {
-      if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
+      try
       {
-         pb.skipChar();
-         pb.skipToEndQuote();
-         pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
+         mValue = pb.integer();
       }
-      mValue = 3600;
+      catch (ParseBuffer::Exception& e)
+      {
+         mValue = 3600;
+         pb.skipToOneOf(ParseBuffer::ParamTerm);
+      }
    }
    else
    {
