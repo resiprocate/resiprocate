@@ -18,6 +18,8 @@
 #include "resiprocate/Security.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
 
+#include "contrib/getopt/getopt.h"
+
 // GAG headers
 #include "GagMessage.hxx"
 #include "GagConduit.hxx"
@@ -56,11 +58,13 @@ void shutdown (SipStack *stack)
   
 }
 
-int init_loopback()
+void init_loopback()
 {
   int s;
   int status;
   struct sockaddr_in them;
+
+  DebugLog (<<"Using loopback (127.0.0.1:48879) for communications");
 
   memset((void *)&them, 0, sizeof(them));
   them.sin_family = AF_INET;
@@ -71,7 +75,11 @@ int init_loopback()
   assert(s > 0);
 
   status = connect(s, (struct sockaddr *)&them, sizeof(them));
-  assert(status >= 0);
+  if (status < 0)
+  {
+    ErrLog( << "Could not connect to loopback interface. Exiting.");
+    exit (-1);
+  }
 
   // Hijack stdin and stdout  
   close (0);
@@ -85,6 +93,10 @@ int init_loopback()
 int
 main (int argc, char **argv)
 {
+  int c;
+  bool useLoopback = false;
+  bool getoptError = false;
+
   // Defaults (override with commandline options)
 #ifdef WIN32
   int tcpPort = 6000;
@@ -100,6 +112,28 @@ main (int argc, char **argv)
   bool tlsServer = false;
 
   Log::initialize(Log::FILE, Log::DEBUG, argv[0]);
+
+  // Read commandline options
+
+  while	((c = getopt(argc, argv, "l")) != -1)
+  {
+    switch (c) {
+      case 'l':
+        useLoopback = true;
+      case '?':
+        getoptError = true;
+    }
+  }
+
+  if (useLoopback)
+  {
+    init_loopback();
+  }
+
+  if (getoptError)
+  {
+    InfoLog ( << "Invalid command line option provided");
+  }
 
 #ifdef USE_SSL
   // Get the SIP stack up and running
