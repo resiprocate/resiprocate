@@ -1,5 +1,5 @@
-#ifndef Symbols_hxx
-#define Symbols_hxx
+#if !defined(RESIP_SYMBOLS_HXX)
+#define RESIP_SYMBOLS_HXX 
 
 
 namespace resip
@@ -81,7 +81,6 @@ class Symbols
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

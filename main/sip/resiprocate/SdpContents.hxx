@@ -1,5 +1,5 @@
-#ifndef SdpContents_hxx
-#define SdpContents_hxx
+#if !defined(RESIP_SDPCONTENTS_HXX)
+#define RESIP_SDPCONTENTS_HXX 
 
 #include <list>
 #include <map>
@@ -480,7 +480,6 @@ bool operator==(const SdpContents::Session::Codec& lhs,
 std::ostream& operator<<(std::ostream& str, const SdpContents::Session::Codec& codec);
 
 }
-
 
 #endif
 

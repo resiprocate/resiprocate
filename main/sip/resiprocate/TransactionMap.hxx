@@ -1,5 +1,5 @@
-#if !defined(TRANSACTIONMAP_HXX)
-#define TRANSACTIONMAP_HXX
+#if !defined(RESIP_TRANSACTIONMAP_HXX)
+#define RESIP_TRANSACTIONMAP_HXX
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HashMap.hxx"
@@ -26,10 +26,7 @@ namespace resip
   };
 }
 
-
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

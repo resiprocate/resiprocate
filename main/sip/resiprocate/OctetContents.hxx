@@ -1,5 +1,5 @@
-#ifndef OctetContents_hxx
-#define OctetContents_hxx
+#if !defined(RESIP_OCTETCONTENTS_HXX)
+#define RESIP_OCTETCONTENTS_HXX 
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Data.hxx"
