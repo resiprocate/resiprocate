@@ -156,6 +156,23 @@ ParseBuffer::skipToEndQuote(char quote)
    throw Exception("Missing quote", __FILE__,__LINE__);
 }
 
+const char* 
+ParseBuffer::skipN(int count)
+{
+   mTraversalPtr += count;
+   mTraversalPtr = std::max(mEnd, mTraversalPtr);
+   return mTraversalPtr;
+}
+
+const char* 
+ParseBuffer::skipToEnd()
+{
+   mTraversalPtr = mEnd;
+   return mTraversalPtr;
+}
+
+
+
 void
 ParseBuffer::data(Data& data, const char* start) const
 {
