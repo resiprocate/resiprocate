@@ -3,12 +3,14 @@
 #include <db4/db_185.h>
 #include <cassert>
 
-#include "repro/UserDb.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/MD5Stream.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Logger.hxx"
+
+#include "repro/UserDb.hxx"
+#include "repro/UserAuthInfo.hxx"
 
 using namespace resip;
 using namespace repro;
@@ -40,6 +42,21 @@ UserDb::~UserDb()
 { 
    int ret = mDb->close(mDb);
    assert( ret == 0 );
+}
+
+
+void 
+UserAbstractDb::requestUserAuthInfo( const resip::Data& user, 
+                                     const resip::Data& realm,
+                                     MessageFifo* fifo ) const
+{
+   Data key = buildKey(user,realm);
+   Data a1 = getUserAuthInfo(key);
+    
+   UserAuthInfo* msg = new UserAuthInfo(user,realm,a1);
+   
+   assert(fifo);
+   fifo->add( msg );
 }
 
 

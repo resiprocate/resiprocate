@@ -19,7 +19,12 @@ UserAuthInfo::UserAuthInfo(const Data& a1, const Data& realm, const Data& user )
 {
 }
 
-      
+
+UserAuthInfo::~UserAuthInfo()
+{
+}
+
+
 const Data 
 UserAuthInfo::getA1() const
 {
@@ -38,6 +43,37 @@ const Data
 UserAuthInfo::getUser() const
 {
    return mUser;
+}
+
+
+Data 
+UserAuthInfo::brief() const
+{  
+   return Data("UserAuthInto: ") 
+      + mUser + Data(" ")  
+      + mRealm + Data(" ")  
+      + mA1;
+}
+
+resip::Message* 
+UserAuthInfo::clone() const
+{
+   assert(false); return NULL;
+}
+
+
+std::ostream& 
+UserAuthInfo::encode(std::ostream& strm) const
+{
+   strm << brief();
+   return strm;
+}
+
+
+std::ostream& 
+operator<<(std::ostream& strm, const UserAuthInfo& msg)
+{
+   return msg.encode(strm);
 }
 
 
