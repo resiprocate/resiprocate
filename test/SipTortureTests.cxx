@@ -515,11 +515,12 @@ void test7()
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw \r\n"
                    "Content-Type: application/sdp \r\n"
                    "\r\n"
-                   "v=0 \r\n"
+                   "v=0\r\n"
                    "o=mhandley 29739 7272939 IN IP4 126.5.4.3 \r\n"
-                   "c=IN IP4 135.180.130.88 \r\n"
-                   "m=audio 492170 RTP/AVP 0 12 \r\n"
-                   "m=video 3227 RTP/AVP 31 \r\n"
+                   "s=-\r\n"
+                   "c=IN IP4 135.180.130.88\r\n"
+                   "m=audio 492170 RTP/AVP 0 12\r\n"
+                   "m=video 3227 RTP/AVP 31\r\n"
                    "a=rtpmap:31 LPC \r\n"
                    "\r\n");
 
@@ -713,6 +714,7 @@ void test11()
 void test12()
 {
    CritLog( << "2.12 INVITE with Duplicate Required Headers");
+   //with duplicate headers that are not multi, the first header is kept
    
    char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
@@ -739,10 +741,10 @@ void test12()
    try
    {
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
-      tassert(0);
    }
    catch (ParseException& e)
    {
+      tassert(0);
    }
    tassert_verify(12);
 }
@@ -751,6 +753,7 @@ void test12()
 void test13()
 {
    CritLog( << "2.13 INVITE with lots of header types");
+   //with duplicate headers that are not multi, the first header is kept
    
    char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
                 "User-Agent: Lame Agent\r\n"
@@ -779,11 +782,12 @@ void test13()
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
        tassert(message->header(h_UserAgent).value() == "Lame Agent"); 
-       message->header(h_UserAgent).value() == "Foo";
+       message->header(h_UserAgent).value() = "Foo";
        tassert(message->header(h_UserAgent).value() == "Foo"); 
    }
    catch (ParseException& e)
    {
+      tassert(0);
    }
    tassert_verify(13);
 }
@@ -857,15 +861,15 @@ main(int argc, char*argv[])
     test4();
     test5();
     test6();
+    test7();
     test8();
     test9();
-    test10();
+    test10();//this should fail as written
     test11();
     test12();
     test13();
     test14();
 
-    test7(); // moved this becuase it is fialing 
 
     tassert_report();
 
