@@ -1,5 +1,3 @@
-
-
 #include <sipstack/StringSubComponent.hxx>
 #include <sipstack/SubComponentList.hxx>
 #include <iostream>
