@@ -110,19 +110,19 @@ Proxy::thread()
                   else
                   {
                      // This is a new request, so create a Request Context for it
-                     InfoLog (<< "New RequestContext " << sip->getTransactionId());
+                     InfoLog (<< "New RequestContext tid=" << sip->getTransactionId() << " : " << sip->brief());
                      InfoLog (<< Inserter(mServerRequestContexts));
                      
                      assert(mServerRequestContexts.count(sip->getTransactionId()) == 0);                  
                      RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
-                     InfoLog (<< "Inserting new RequestContext " << sip->getTransactionId() << " -> " << *context);
+                     InfoLog (<< "Inserting new RequestContext tid=" << sip->getTransactionId() << " -> " << *context);
                      mServerRequestContexts[sip->getTransactionId()] = context;
                      context->process(std::auto_ptr<resip::Message>(msg));
                   }
                }
                else if (sip->isResponse())
                {
-                  InfoLog (<< "Looking up RequestContext " << sip->getTransactionId());
+                  InfoLog (<< "Looking up RequestContext tid=" << sip->getTransactionId());
                
                   // is there a problem with a stray 200
                   HashMap<Data,RequestContext*>::iterator i = mClientRequestContexts.find(sip->getTransactionId());
@@ -190,7 +190,7 @@ void
 Proxy::addClientTransaction(const Data& transactionId, RequestContext* rc)
 {
    assert(mClientRequestContexts.count(transactionId) == 0);
-   InfoLog (<< "add client transaction " << transactionId << " " << rc);
+   InfoLog (<< "add client transaction tid=" << transactionId << " " << rc);
    mClientRequestContexts[transactionId] = rc;
 }
 
