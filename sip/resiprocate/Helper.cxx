@@ -120,6 +120,15 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
    response->header(h_Vias) = request.header(h_Vias);
    response->header(h_ContentLength).value() = 0;
 
+   if (request.isExternal())
+   {
+       response->setFromTU();
+   }
+   else
+   {
+       response->setFromExternal();
+   }
+
    if (reason.size())
    {
       response->header(h_StatusLine).reason() = reason;
