@@ -671,6 +671,7 @@ TransportSelector::retransmit(SipMessage* msg, Tuple& target)
    // sendto()s made during this time period overflows the buffer, it blocks.
    // But I somewhat doubt this would be noticed, because block would be brief,
    // once the timer fires, the blocked call would return error.
+   // Note that the block applies to both UDP and TCP sockets.
    // Quote from Linux man page:
    // When the message does not fit into the send buffer of the socket,  send
    // normally  blocks, unless the socket has been placed in non-blocking I/O
