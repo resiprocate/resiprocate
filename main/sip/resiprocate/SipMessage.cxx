@@ -16,7 +16,8 @@ int strncasecmp(const char*, const char*, int len);
 SipMessage::SipMessage()
    : mIsExternal(true),
      mFixedDest(false),
-     mStartLine(0)
+     mStartLine(0),
+     mBody(0)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -62,6 +63,10 @@ SipMessage::SipMessage(const SipMessage& from)
       if (from.mStartLine != 0)
       {
          mStartLine = from.mStartLine->clone();
+      }
+      if (from.mBody != 0)
+      {
+         mStartLine = from.mBody->clone();
       }
    }
 }
@@ -120,6 +125,7 @@ SipMessage::brief() const
 std::ostream& 
 SipMessage::encode(std::ostream& str) const
 {
+   // !dlb! calculate content-length -- ask body
    if (mStartLine != 0)
    {
       mStartLine->encode(str);
@@ -129,14 +135,13 @@ SipMessage::encode(std::ostream& str) const
    {
       if (mHeaders[i] !=0)
       {
-         ParserContainerBase* parser = mHeaders[i]->getParserContainer();
-         if (parser != 0)
+         HeaderFieldValue* f = mHeaders[i]->first;
+         while (f != 0)
          {
-            parser->encode(str);
-         }
-         else
-         {
+            str << Headers::HeaderNames[i] << Symbols::COLON << Symbols::SPACE;
             mHeaders[i]->encode(str);
+            str << Symbols::CRLF;
+            f = f->next;
          }
       }
    }
@@ -174,6 +179,7 @@ SipMessage::setBody(char* start, int len)
 }
 
 // unknown header interface
+// !dlb! need to convert existing header by enum to StringCategory for backward compatibility
 StringCategories& 
 SipMessage::header(const Data& headerName) const
 {
