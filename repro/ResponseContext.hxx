@@ -1,7 +1,7 @@
 #if !defined(RESIP_RESPONSE_CONTEXT_HXX)
 #define RESIP_RESPONSE_CONTEXT_HXX 
 
-namespace resip
+namespace repro
 {
   class ResponseContext
   {

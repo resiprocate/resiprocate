@@ -1,7 +1,7 @@
 #if !defined(RESIP_REQUEST_CONTEXT_HXX)
 #define RESIP_REQUEST_CONTEXT_HXX 
 
-namespace resip
+namespace repro
 {
   class RequestContext
   {
