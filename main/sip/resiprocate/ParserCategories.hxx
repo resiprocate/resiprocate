@@ -12,6 +12,7 @@
 #include "resiprocate/IntegerCategory.hxx"
 #include "resiprocate/Mime.hxx"
 #include "resiprocate/NameAddr.hxx"
+#include "resiprocate/RAckCategory.hxx"
 #include "resiprocate/RequestLine.hxx"
 #include "resiprocate/StatusLine.hxx"
 #include "resiprocate/StringCategory.hxx"
