@@ -9,21 +9,18 @@ static const char* const resipCodersHeaderVersion =
 namespace resip
 {
 
-
 class Base64Coder
 {
-        
    public:
       // encoded data is 4/3 rds length of input
       static Data encode(const Data&);
       
       // decoded data is 3/4s length of coded
       static Data decode(const Data&);
-
-    private:
-        static unsigned char toBits(unsigned char c);
-        static unsigned char codeChar[];
-        
+      
+   private:
+      static unsigned char toBits(unsigned char c);
+      static unsigned char codeChar[];
 };
 
 }
