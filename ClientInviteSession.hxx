@@ -30,7 +30,7 @@ class ClientInviteSession : public InviteSession
       ClientInviteSession::Handle getHandle() {return mHandle;}
          
    private:
-      friend class DialogUsageManager;
+      friend class Dialog;
       ClientInviteSession(DialogUsageManager& dum,
                           Dialog& dialog,
                           const SipMessage& request,
