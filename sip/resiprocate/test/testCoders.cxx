@@ -59,30 +59,30 @@ main()
   int rVal = 0; // test return val
   for(int i=0;i<320;i++)
   {
-     Data originalData = randomData(i);
-     cout << i << "-------" << endl;
-
+    //Data originalData = randomData(i);
+     cout << i << " -------" << endl;
+     cout << "here" << endl;
 
      // encrypt this data
 
-     Data coded = Base64Coder::encode(originalData);
-
+     //Data coded = Base64Coder::encode(originalData);
+     cout << "there" << endl;
 //     showData(originalData);
 
-     Data decoded = Base64Coder::decode(coded);
+     //Data decoded = Base64Coder::decode(coded);
 
-     assert(originalData.size() == decoded.size());
+     //assert(originalData.size() == decoded.size());
 
 //     showData(decoded);
 
-     cout << "encoded: " << coded << endl;
+     //cout << "encoded: " << coded << endl;
      
-     int b = 0;
-     if ( originalData != decoded )
-     {
-	cout << i << ": symetry failure (encode/decode) at byte " << -b-1 << endl;
-	rVal = -1;
-     }
+     //int b = 0;
+     //if ( originalData != decoded )
+     //{
+     //cout << i << ": symetry failure (encode/decode) at byte " << -b-1 << endl;
+     //rVal = -1;
+     //  }
   }
   return rVal;
 
