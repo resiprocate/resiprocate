@@ -12,15 +12,16 @@ class Subsystem
    public:
       // Add new systems below
       static const Subsystem APP;
-      static const Subsystem CONTENTS;
-      static const Subsystem TEST;   
-      static const Subsystem NONE; // default subsystem
-      static const Subsystem UTIL;
       static const Subsystem BASE;
-      static const Subsystem SIP;    // SIP Stack / Parser
+      static const Subsystem CONTENTS;
+      static const Subsystem DNS;
+      static const Subsystem NONE; // default subsystem
       static const Subsystem SDP;
+      static const Subsystem SIP;    // SIP Stack / Parser
+      static const Subsystem TEST;   
       static const Subsystem TRANSACTION;
       static const Subsystem TRANSPORT;
+      static const Subsystem UTIL;
       
    protected:
       Subsystem(const char* rhs) : mSubsystem(rhs) {};
