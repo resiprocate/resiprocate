@@ -34,7 +34,6 @@ DataParameter::DataParameter(ParameterTypes::Type type,
       pb.skipToOneOf(WhitespaceOrParamTerm);
       mValue = Data(pos, pb.position() - pos);
    }
-   pb.skipToOneOf(";?");
 }
 
 DataParameter::DataParameter(ParameterTypes::Type type)
