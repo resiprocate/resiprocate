@@ -6,8 +6,6 @@
 using namespace Vocal2;
 using namespace std;
 
-Data DefaultSipVersion("SIP/2.0");
-
 //====================
 // CSeqComponent:
 //====================
