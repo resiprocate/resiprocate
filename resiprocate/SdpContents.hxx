@@ -358,10 +358,10 @@ class SdpContents : public Contents
                   std::list<Bandwidth>& bandwidths() {return mBandwidths;}
 
                   // from session if empty
-                  const std::list<Connection>& getConnections() const;
+                  const std::list<Connection> getConnections() const;
 		  // does not include session connections
-	          std::list<Connection>& getMediumConnections();
-                  const Encryption& getEncryption() const;
+	          std::list<Connection>& getMediumConnections() {return mConnections;}
+                  const Encryption& getEncryption() const {return mEncryption;}
                   bool exists(const Data& key) const;
                   const list<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
