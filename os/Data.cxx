@@ -966,6 +966,7 @@ Data::convertInt() const
    while (l--)
    {
       char c = *p++;
+      if (!isdigit(c)) break;
       if ((c >= '0') && (c <= '9'))
       {
          val *= 10;
