@@ -100,11 +100,11 @@ digraph UAS {
   // reject is not allowed once accepted
 
   ReceivedUpdate -> ReceivedUpdateWaitingAnswer         [ label = "dum::accept/queue::2xx" ];
-  ReceivedUpdate -> EarlyReliable                       [ label = "dum::provideAnswer/send::200U" ];
+  ReceivedUpdate -> EarlyReliable                       [ label = "dum::provideAnswer/send::200U-answer" ];
   ReceivedUpdate -> Terminated                          [ label = "dum::end/send::488U,send::4XXI" ];
   ReceivedUpdate -> Terminated                          [ label = "dum::reject/send::488U,send::4XXI" ]; 
 
-  ReceivedUpdateWaitingAnswer -> Connected              [ label = "dum::provideAnswer/send::2XXU,send::2XXI" ];
+  ReceivedUpdateWaitingAnswer -> Connected              [ label = "dum::provideAnswer/send::2XXU-answer,send::2XXI" ];
   ReceivedUpdateWaitingAnswer -> WaitingToHangup        [ label = "dum::end" ];
   // reject is not allowed once accepted
 

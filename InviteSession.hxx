@@ -86,11 +86,18 @@ class InviteSession : public DialogUsage
          UAC_Canceled,
 
          UAS_Start,
+
+         UAS_Offer, // 
+         UAS_Early, //
+         UAS_Accepted, //
+         UAS_NoOffer, //
+         UAS_EarlyNoOffer, //
+         UAS_AcceptedWaitingAnswer, //
+
          UAS_OfferReliable,
          UAS_NoOfferReliable,
          UAS_FirstSentOfferReliable,
          UAS_FirstEarlyReliable,
-         UAS_Accepted,
          UAS_EarlyReliable,
          UAS_SentUpdate,
          UAS_SentUpdateAccepted,
@@ -126,20 +133,24 @@ class InviteSession : public DialogUsage
       void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchTerminated(const SipMessage& msg);
 
+      void startRetransmitTimer();
+      void start491Timer();
+
       static Data toData(State state);
       void transition(State target);
       InviteSessionHandle getSessionHandle();
 
       static const SdpContents* getSdp(const SipMessage& msg);
+      static std::auto_ptr<SdpContents> makeSdp(const SdpContents& sdp);
       static void setSdp(SipMessage& msg, const SdpContents& sdp);
 
       State mState;
       NitState mNitState;
 
-      SdpContents mCurrentLocalSdp;
-      SdpContents mCurrentRemoteSdp;
-      SdpContents mProposedLocalSdp;
-      SdpContents mProposedRemoteSdp;
+      std::auto_ptr<SdpContents> mCurrentLocalSdp;
+      std::auto_ptr<SdpContents> mCurrentRemoteSdp;
+      std::auto_ptr<SdpContents> mProposedLocalSdp;
+      std::auto_ptr<SdpContents> mProposedRemoteSdp;
 
       SipMessage mLastSessionModification; // UPDATE or reINVITE
       SipMessage mInvite200; // 200 OK for reINVITE for retransmissions
@@ -206,9 +217,6 @@ class InviteSession : public DialogUsage
       void dispatchCancel(const SipMessage& msg);
       void dispatchBye(const SipMessage& msg);
       void dispatchInfo(const SipMessage& msg);
-
-      void startRetransmitTimer();
-      void start491Timer();
 };
 
 }

@@ -51,13 +51,13 @@ InviteSession::~InviteSession()
 const SdpContents&
 InviteSession::getLocalSdp() const
 {
-   return mCurrentLocalSdp;
+   return *mCurrentLocalSdp;
 }
 
 const SdpContents&
 InviteSession::getRemoteSdp() const
 {
-   return mCurrentRemoteSdp;
+   return *mCurrentRemoteSdp;
 }
 
 InviteSessionHandle
@@ -96,14 +96,14 @@ InviteSession::provideOffer(const SdpContents& offer)
          mLastSessionModification.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
          
          InfoLog (<< "Sending " << mLastSessionModification.brief());
-         mProposedLocalSdp = offer;
-         InviteSession::setSdp(mLastSessionModification, mProposedLocalSdp);
+         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         InviteSession::setSdp(mLastSessionModification, offer);
          mDum.send(mLastSessionModification);
          break;
 
       case Answered:
          // queue the offer to be sent after the ACK is received
-         mProposedLocalSdp = offer;
+         mProposedLocalSdp = InviteSession::makeSdp(offer);
          transition(WaitingToOffer);
          break;
          
@@ -120,8 +120,8 @@ InviteSession::provideAnswer(const SdpContents& answer)
    {
       case ReceivedReinvite:
          mDialog.makeResponse(mInvite200, mLastSessionModification, 200);
-         mCurrentLocalSdp = answer;
-         mCurrentRemoteSdp = mProposedLocalSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         mCurrentRemoteSdp = mProposedRemoteSdp;
          InviteSession::setSdp(mInvite200, answer);
          transition(Connected);
          InfoLog (<< "Sending " << mInvite200.brief());
@@ -133,8 +133,8 @@ InviteSession::provideAnswer(const SdpContents& answer)
       {
          SipMessage response;
          mDialog.makeResponse(response, mLastSessionModification, 200);
-         mCurrentLocalSdp = answer;
-         mCurrentRemoteSdp = mProposedLocalSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         mCurrentRemoteSdp = mProposedRemoteSdp;
          InviteSession::setSdp(response, answer);
          transition(Connected);
          InfoLog (<< "Sending " << response.brief());
@@ -241,7 +241,7 @@ InviteSession::targetRefresh(const NameAddr& localUri)
 {
    // !jf! add interface to Dialog
    //mDialog.setLocalContact(localUri);
-   provideOffer(mCurrentLocalSdp);
+   provideOffer(*mCurrentLocalSdp);
 }
 
 void
@@ -389,7 +389,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       {
          if(mState == Connected)
          {
-            provideOffer(mCurrentLocalSdp);
+            provideOffer(*mCurrentLocalSdp);
          }
       }
    }
@@ -476,7 +476,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg, const SdpContents* sdp)
       if(code / 200 == 1)
       {
          mCurrentLocalSdp = mProposedLocalSdp;
-         mCurrentRemoteSdp = *sdp;
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, sdp);
          transition(Connected);
       }
@@ -518,7 +518,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg, const SdpContents* sd
       if(code / 200 == 1)
       {
          mCurrentLocalSdp = mProposedLocalSdp;
-         mCurrentRemoteSdp = *sdp;
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, sdp);
 
          // !jf! I need to potentially include an answer in the ACK here
@@ -828,6 +828,18 @@ InviteSession::toData(State state)
 
       case UAC_Start:
          return "UAC_Start";
+      case UAS_Offer:
+         return "UAS_Offer";
+      case UAS_Early:
+         return "UAS_Early";
+      case UAS_Accepted:
+         return "UAS_Accepted";
+      case UAS_NoOffer:
+         return "UAS_NoOffer";
+      case UAS_EarlyNoOffer:
+         return "UAS_EarlyNoOffer";
+      case UAS_AcceptedWaitingAnswer:
+         return "UAS_AcceptedWaitingAnswer";
       case UAC_Early:
          return "UAC_Early";
       case UAC_EarlyWithOffer:
@@ -857,8 +869,6 @@ InviteSession::toData(State state)
          return "UAS_FirstSentOfferReliable";
       case UAS_FirstEarlyReliable:
          return "UAS_FirstEarlyReliable";
-      case UAS_Accepted:
-         return "UAS_Accepted";
       case UAS_EarlyReliable:
          return "UAS_EarlyReliable";
       case UAS_SentUpdate:
@@ -915,10 +925,22 @@ InviteSession::getSdp(const SipMessage& msg)
    return sdp;
 }
 
+std::auto_ptr<SdpContents>
+InviteSession::makeSdp(const SdpContents& sdp)
+{
+   // This unfortunate utility is required to do the conversion from
+   // auto_ptr<Contents> to auto_ptr<SdpContents> - uses a static_cast so don't
+   // call it on something you don't know is an SdpContents!!!
+   return std::auto_ptr<SdpContents>(static_cast<SdpContents*>(sdp.clone()));
+}
+
 void
 InviteSession::setSdp(SipMessage& msg, const SdpContents& sdp)
 {
    // !jf! should deal with multipart here
+
+   // This will clone the sdp since the InviteSession also wants to keep its own
+   // copy of the sdp around for the application to access
    msg.setContents(&sdp);
 }
 
