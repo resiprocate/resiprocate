@@ -1,5 +1,7 @@
 #include <iostream>
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
 #include <sipstack/SipStack.hxx>
 #include <sipstack/Logger.hxx>

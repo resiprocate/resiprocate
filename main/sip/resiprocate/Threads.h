@@ -1,6 +1,10 @@
 #ifndef THREADS_H_
 #define THREADS_H_
 
+#ifdef WIN32
+#error this should not be used in win32 
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // macro DEFAULT_THREADING
 // Selects the default threading model for certain components of Loki

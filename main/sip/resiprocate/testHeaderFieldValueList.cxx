@@ -234,6 +234,7 @@ int main(int argc, char** argv)
    delete p2;
    */
 
+    return 0;
 }
 
    

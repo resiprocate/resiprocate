@@ -1,9 +1,11 @@
 #ifndef STRINGSUBCOMPONENT_HXX
 #define STRINGSUBCOMPONENT_HXX
 
+#include <iostream>
+
 #include <sipstack/SubComponent.hxx>
 #include <sipstack/Data.hxx>
-#include <iostream>
+
 
 namespace Vocal2
 {
@@ -22,7 +24,10 @@ class StringSubComponent : public SubComponent
       Data mData;
 };
 
-std::ostream& Vocal2::operator<<(std::ostream& stream, StringSubComponent& comp);
+#ifndef WIN32
+// CJ TODO FIX 
+std::ostream& Vocal2::operator<<(std::ostream& stream, Vocal2::StringSubComponent& comp);
+#endif
  
 }
 
