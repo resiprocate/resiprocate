@@ -22,10 +22,11 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security, 
-                              bool server, SecurityTypes::SSLType sslType ) :
+                              bool server, Data domain,  SecurityTypes::SSLType sslType ) :
    Connection(tuple, fd),
    mServer(server),
    mSecurity(security),
+   mDomain(domain),
    mSslType( sslType )
 {
    DebugLog (<< "Creating TLS connection " << tuple << " on " << fd);
@@ -47,15 +48,11 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    SSL_CTX* ctx=NULL;
    if ( mSslType ==  SecurityTypes::SSLv23 )
    {
-       // TODO uncoment next line 
-      //      ctx = mSecurity->getSslCtx();
-      ctx = mSecurity->getTlsCtx(mServer);
+      ctx = mSecurity->getSslCtx();
    }
    else
    {
-      ctx = mSecurity->getTlsCtx(mServer);
-       // TODO switch to next line from previos 
-      //      ctx = mSecurity->getTlsCtx();
+      ctx = mSecurity->getTlsCtx();
    }   
    assert(ctx);
    
@@ -66,7 +63,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    {
       assert( mSecurity );
 
-#if 1 // switch over for Security2
+#if 0 // switch over for Security2
       if(!SSL_use_certificate(mSsl, mSecurity->publicCert))
       {
          throw Security::Exception("SSL_use_certificate failed",
@@ -79,10 +76,8 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
                                    __FILE__,__LINE__);
       }
 #else
-      assert(0); 
-      
-      X509* cert = mSecurity->mDomainCerts[domain];
-      EVP_PKEY* pKey = mSecurity->mDomainPrivateKeys[domain];
+      X509* cert = mSecurity->mDomainCerts[mDomain];
+      EVP_PKEY* pKey = mSecurity->mDomainPrivateKeys[mDomain];
 
       if( !SSL_use_certificate(mSsl, cert) )
       {

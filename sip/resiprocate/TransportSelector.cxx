@@ -577,7 +577,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             try
             {
-               msg->header(h_Identity).value() = mSecurity->computeIdentity(msg->getCanonicalIdentityString());
+               Data domain = msg->header(h_From).uri().host();
+               msg->header(h_Identity).value() = mSecurity->computeIdentity( domain, 
+                                                                             msg->getCanonicalIdentityString());
             }
             catch (Security::Exception& e)
             {
