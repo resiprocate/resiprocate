@@ -31,6 +31,10 @@ class ServerRegistration: public BaseUsage
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ServerRegistration::Handle getHandle() {return mHandle;}
 
+      virtual void end();
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimer& timer);
+      
    private:
       friend class DialogUsageManager;
       ServerRegistration(DialogUsageManager& dum,

@@ -356,7 +356,7 @@ Dialog::dispatch(const SipMessage& msg)
             ClientOutOfDialogReq* req = findMatchingClientOutOfDialogReq(response);
             if (req == 0)
             {
-               req = mDum.makeClientOutOfDialog(*this, response);
+               req = mDum.makeClientOutOfDialogReq(*this, response);
                mClientOutOfDialogRequests.push_back(req);
             }
             req->dispatch(response);

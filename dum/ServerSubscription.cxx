@@ -4,9 +4,10 @@ using namespace resip;
 
 ServerSubscription::ServerSubscription(DialogUsageManager& dum,
                                        Dialog& dialog,
-                                       const SipMessage& req)
+                                       SipMessage& req)
    : BaseUsage(dum, dialog),
-     mHandle(dum)
+     mHandle(dum),
+     mLastRequest(req)
 {}
 
 ServerSubscription::Handle::Handle(DialogUsageManager& dum)
