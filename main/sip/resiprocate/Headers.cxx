@@ -2,6 +2,9 @@
 #include "sip2/sipstack/Headers.hxx"
 #include "sip2/sipstack/Symbols.hxx"
 
+// GPERF generated external routines
+#include "sip2/sipstack/HeaderHash.hxx"
+
 #include <iostream>
 using namespace std;
 
@@ -168,9 +171,6 @@ defineMultiHeader(Via, "Via", Via);
 
 RequestLineType Vocal2::h_RequestLine;
 StatusLineType Vocal2::h_StatusLine;
-
-// GPERF generated external routines
-#include "sip2/sipstack/HeaderHash.hxx"
 
 Headers::Type
 Headers::getType(const char* name, int len)
