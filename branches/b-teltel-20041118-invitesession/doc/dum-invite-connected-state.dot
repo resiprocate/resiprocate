@@ -34,8 +34,8 @@ digraph UAC {
   SentReinvite -> Connected               [ label = "on4XXI/app::onOfferRejected" ];
   SentReinvite -> SentReinvite            [ label = "onINVITE|onUPDATE/send::491" ];
   SentReinvite -> SentReinviteGlare       [ label = "on491I/timer::491" ]; 
-  SentReinvite -> WaitingToTerminate      [ label = "onGeneralFailure/app::onTerminated,send::BYE" ];
   SentReinvite -> WaitingToTerminate      [ label = "dum::end" ];
+  SentReinvite -> Terminated              [ label = "onGeneralFailure/app::onTerminated,send::BYE" ];
 
   SentReinviteGlare -> SentReinvite       [ label = "onTimer491/resend::INVITE" ]; 
   SentReinviteGlare -> ReceivedUpdate     [ label = "onUPDATE/app::onOfferRejected,app::onOffer" ];
