@@ -40,6 +40,11 @@ BaseUsage::Handle::getNext()
 
    return ++id;
 }
+void
+BaseUsage::send(const SipMessage& msg)
+{
+    mDum.send(msg);
+}
 
 BaseUsage* 
 BaseUsage::Handle::operator->()
