@@ -78,13 +78,22 @@ DialogUsageManager::addHandler(MethodTypes&, OutOfDialogHandler*)
 {
 }
 
-SipMessage* 
+SipMessage&
 DialogUsageManager::makeInviteSession(const Uri& target)
 {
-   SipMessage* invite = Helper::makeInvite(NameAddr(target), mProfile->getDefaultAor());
-   prepareInitialRequest(*invite);
-   return invite;
+   InviteSessionCreator* creator = new InviteSessionCreator(target, 0);
+   prepareInitialRequest(creator->getLastRequest());
+   DialogSet inv = new DialogSet(creator);
+   mDialogSetMap[inv.getId()] = inv;
+   return creator->getLastRequest();
 }
+
+SipMessage* 
+DialogUsageManager::makeSubscription(const Uri& aor, const Data& eventType)
+{
+}
+
+
 
 // !jf! add rest of make??? methods here
 
@@ -307,48 +316,9 @@ DialogUsageManager::processRequest(const SipMessage& request)
          {
             DialogSetId id(request);
             assert(mDialogSetMap.count(id) == 0);
-            mDialogSetMap[id] = DialogSet(request);
-            Dialog* dialog = new Dialog(*this, request);
-            mDialogSetMap[id].addDialog(dialog);
-            dialog->dispatch(request);
-            break;
-
-/*
-         case INVITE:  // new INVITE
-         {
-            ServerInvSession* session = new ServerInvSession(*this, request);
+            mDialogSetMap[id] = new DialogSet(request);
             break;
          }
-         case SUBSCRIBE:
-         case REFER: // out-of-dialog REFER
-         {
-            ServerSubscription* sub = new ServerSubscription(*this, request);
-            break;
-         }
-         case REGISTER:
-         {
-            ServerRegistration* reg = new ServerRegistration(*this, request);
-            break;
-         }
-         case PUBLISH:
-         {
-            ServerPublication* pub = new ServerPublication(*this, request);
-            break;                       
-         }
-         case MESSAGE :
-         case OPTIONS :
-         case INFO :   // handle non-dialog (illegal) INFOs
-         case NOTIFY : // handle unsolicited (illegal) NOTIFYs
-         {
-            // make a non-dialog BaseUsage
-            ServerOutOfDialogReq* req = new ServerOutOfDialogReq(*this, request);
-            break;
-         }
-         default:
-            assert(0);
-            break;
-*/
-
       }
    }
    else // in a specific dialog
