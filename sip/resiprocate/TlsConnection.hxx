@@ -3,6 +3,7 @@
 
 #include "resiprocate/Connection.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/SecurityTypes.hxx"
 
 #ifdef USE_SSL
 #include <openssl/ssl.h>
@@ -21,7 +22,10 @@ class TlsConnection : public Connection
 {
    public:
       RESIP_HeapCount(TlsConnection);
-      TlsConnection( const Tuple& who, Socket fd, Security* security, bool server=false );
+
+      TlsConnection( const Tuple& who, Socket fd, 
+                     Security* security, bool server, 
+                     SecurityTypes::SSLType sslType );
       
       int read( char* buf, const int count );
       int write( const char* buf, const int count );
@@ -32,17 +36,20 @@ class TlsConnection : public Connection
       
       typedef enum State { Broken, Accepting, Connecting, Handshaking, Up } State;
       static const char * fromState(State);
+   
    private:
-       State mState;
-
       void computePeerName();
-      
-    State checkState();
+      State checkState();
 
-      Data mPeerName;
+      bool mServer;
+      Security* mSecurity;
+      SecurityTypes::SSLType mSslType;
       
-     SSL* mSsl;
-     BIO* mBio;
+      State mState;
+
+      SSL* mSsl;
+      BIO* mBio;
+      Data mPeerName;
 };
  
 }
