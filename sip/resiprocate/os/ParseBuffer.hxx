@@ -39,8 +39,9 @@ class ParseBuffer
       const char* skipToChar(char c);
       const char* skipToOneOf(const char* cs);
       const char* skipToOneOf(const char* cs1, const char* cs2);
-
       const char* skipToEndQuote(char quote = '"');
+      const char* skipN(int count);
+      const char* skipToEnd();
       void assertEof();
 
       // make the passed in data share memory with the buffer
