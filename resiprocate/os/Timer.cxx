@@ -249,8 +249,11 @@ resip::operator<(const Timer& t1, const Timer& t2)
 std::ostream& 
 resip::operator<<(std::ostream& str, const Timer& t)
 {
-    str << "Timer[id=" << t.mId << " when=" << t.mWhen << "]";
-    return str;
+   str << "Timer[id=" << t.mId << " when=" << t.mWhen << " rel=";
+   if (t.mWhen < Timer::getTimeMs()) str << "past";
+   else str << (t.mWhen - Timer::getTimeMs());
+   str << "]";
+   return str;
 }
 
 
