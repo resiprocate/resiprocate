@@ -36,55 +36,45 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
      mHasMagicCookie(false),
      mIsMyBranch(false),
      mTransactionId(getNextTransactionCount()),
-     mClientSeq(0),
-     mTransportSeq(1),
-     mClientData()
+     mTransportSeq(1)
 {
    pb.skipChar(Symbols::EQUALS[0]);
-   if (strncasecmp(pb.position(), Data(Symbols::MagicCookie).data(), 7) == 0)
+   if (strncasecmp(pb.position(), Symbols::MagicCookie, 7) == 0)
    {
       mHasMagicCookie = true;
       pb.skipN(7);
    }
 
-   if (mHasMagicCookie && (strncasecmp(pb.position(), Data(Symbols::Vocal2Cookie).data(), 7) == 0))
+   const char* anchor = pb.position();
+   const char* end = pb.skipToOneOf(ParseBuffer::Whitespace, ";=?>"); // !dlb! add to ParseBuffer as terminator set
+
+   if (mHasMagicCookie &&
+       (end - anchor > 2*8) &&
+       // look for prefix cookie
+       (strncasecmp(anchor, Symbols::Vocal2Cookie, 8) == 0) &&
+       // look for postfix cookie
+       (strncasecmp(end - 8, Symbols::Vocal2Cookie, 8) == 0))
    {
       mIsMyBranch = true;
-      pb.skipN(8);
+      anchor += 8;
+      // rfc3261cookie-sip2cookie-tid-transportseq-sip2cookie
+      //                          ^
 
-      const char* anchor = pb.position();
-      // rfc3261cookie-sip2cookie-tid.clientseq1.clientseq2-transportseq-clientdata
-      //                          ^                        ^
-      // !dlb! skip at least one dot to avoid dashes in external tid
-      pb.skipToChar(Symbols::DOT[0]);
-      pb.skipToChar(Symbols::DASH[0]);
-      pb.skipBackToChar(Symbols::DOT[0]);
-      pb.skipBackChar();
-      // rfc3261cookie-sip2cookie-tid.clientseq1.clientseq2-transportseq-clientdata
-      //                          ^             ^
-      
+      pb.skipBackN(8);
+      pb.skipBackToChar(Symbols::DASH[0]);
+      pb.skipBackChar(Symbols::DASH[0]);
+      // rfc3261cookie-sip2cookie-tid-transportseq-sip2cookie
+      //                          ^  $
       pb.data(mTransactionId, anchor);
-
-      pb.skipChar();
-      mClientSeq = pb.integer();
-      pb.skipChar(Symbols::DASH[0]);
          
+      pb.skipChar();
       mTransportSeq = pb.integer();
-
-      if (!pb.eof() && *pb.position() == Symbols::DASH[0])
-      {
-         anchor = pb.skipChar();
-         pb.skipToOneOf(ParseBuffer::Whitespace, ";=?>"); // !dlb! add to ParseBuffer as terminator set
-         pb.data(mClientData, anchor);
-      }
+      pb.reset(end);
    }
    else
    {
-      const char* anchor = pb.position();
-      pb.skipToOneOf(ParseBuffer::Whitespace, ";=?>"); // !dlb! ibid
       pb.data(mTransactionId, anchor);
    }
-   setServerTransactionId();
 }
 
 BranchParameter::BranchParameter(ParameterTypes::Type type)
@@ -92,11 +82,8 @@ BranchParameter::BranchParameter(ParameterTypes::Type type)
      mHasMagicCookie(true),
      mIsMyBranch(true),
      mTransactionId(getNextTransactionCount()),
-     mClientSeq(0),
-     mTransportSeq(1),
-     mClientData()
+     mTransportSeq(1)
 {
-   setServerTransactionId();
 }
 
 BranchParameter::BranchParameter(const BranchParameter& other)
@@ -104,19 +91,8 @@ BranchParameter::BranchParameter(const BranchParameter& other)
      mHasMagicCookie(other.mHasMagicCookie),
      mIsMyBranch(other.mIsMyBranch),
      mTransactionId(other.mTransactionId),
-     mClientSeq(other.mClientSeq),
-     mTransportSeq(other.mTransportSeq),
-     mClientData(other.mClientData),
-     mServerTransactionId(other.mServerTransactionId)
+     mTransportSeq(other.mTransportSeq)
 {
-}
-
-void
-BranchParameter::setServerTransactionId()
-{
-   mServerTransactionId = mTransactionId;
-   mServerTransactionId += Symbols::DOT[0];
-   mServerTransactionId += Data(mClientSeq);
 }
 
 BranchParameter& 
@@ -127,10 +103,7 @@ BranchParameter::operator=(const BranchParameter& other)
       mHasMagicCookie = other.mHasMagicCookie;
       mIsMyBranch = other.mIsMyBranch;
       mTransactionId = other.mTransactionId;
-      mServerTransactionId = other.mServerTransactionId;
-      mClientSeq = other.mClientSeq;
       mTransportSeq = other.mTransportSeq;
-      mClientData = other.mClientData;
    }
    return *this;
 }
@@ -144,19 +117,6 @@ BranchParameter::hasMagicCookie()
 const Data& 
 BranchParameter::getTransactionId()
 {
-   if (mIsMyBranch)
-   {
-      return mServerTransactionId;
-   }
-   else
-   {
-      return mTransactionId;
-   }
-}
-
-const Data&
-BranchParameter::getServerTransactionId()
-{
    return mTransactionId;
 }
 
@@ -168,39 +128,20 @@ BranchParameter::incrementTransportSequence()
 }
 
 void
-BranchParameter::setClientSequence(unsigned int long seq)
-{
-   assert(mIsMyBranch);   
-   mClientSeq = seq;
-   setServerTransactionId();
-}
-
-void
-BranchParameter::reset(const Data& serverTransactionId)
+BranchParameter::reset(const Data& transactionId)
 {
    mHasMagicCookie = true;
    mIsMyBranch = true;
 
-   mClientSeq = 0;
    mTransportSeq = 1;
-   if (!serverTransactionId.empty())
+   if (!transactionId.empty())
    {
-      //assert(serverTransactionId.find(Symbols::DOT[0]) == Data::npos);
-      //assert(serverTransactionId.find(Symbols::DASH[0]) == Data::npos);
-      mTransactionId = serverTransactionId;
+      mTransactionId = transactionId;
    }
    else
    {
       mTransactionId = Data(getNextTransactionCount());
    }
-
-   setServerTransactionId();
-}
-
-Data& 
-BranchParameter::clientData()
-{
-   return mClientData;
 }
 
 Parameter* 
@@ -220,15 +161,10 @@ BranchParameter::encode(ostream& stream) const
    if (mIsMyBranch)
    {
       stream << Symbols::Vocal2Cookie 
-             << mServerTransactionId 
+             << mTransactionId 
              << Symbols::DASH[0]
-             << mTransportSeq;
-
-      if (! mClientData.empty())
-      {
-         stream << Symbols::DASH[0]
-                << mClientData;
-      }
+             << mTransportSeq
+             << Symbols::Vocal2Cookie;
    }
    else
    {
