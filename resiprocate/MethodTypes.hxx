@@ -6,7 +6,7 @@ namespace Vocal2
 
 class Data;
 
-enum MethodTypes
+typedef enum
 {
    ACK,
    BYE,
@@ -18,7 +18,7 @@ enum MethodTypes
    REGISTER,
    SUBSCRIBE,
    UNKNOWN
-};
+} MethodTypes;
 
 MethodTypes
 getMethodType(const Data& name);
