@@ -4,6 +4,8 @@
 #include <iosfwd>
 #include <vector>
 #include <list>
+#include <map>
+
 #include "resiprocate/dum/DialogId.hxx"
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/MethodTypes.hxx"
@@ -33,17 +35,19 @@ class Dialog
       // different behavior from request vs. response
       // (request creates to tag)
       Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds);
-      
+
       DialogId getId() const;
+      
+      // pass dialog sip messages through dialog so we can cache the requests on
+      // the way out to be able to respond to digest authenticate requests
+      void send(SipMessage& msg);
       
       void makeRequest(SipMessage& request, MethodTypes method);
       void makeResponse(SipMessage& response, const SipMessage& request, int responseCode);
       void makeCancel(SipMessage& request);
 
-      void update(const SipMessage& msg);
       //void setLocalContact(const NameAddr& localContact);
       //void setRemoteTarget(const NameAddr& remoteTarget);
-      
       
       std::vector<ClientSubscriptionHandle> getClientSubscriptions();
       std::vector<ClientSubscriptionHandle> findClientSubscriptions(const Data& event);
@@ -61,7 +65,7 @@ class Dialog
       //will end this dialog(if it makes sense)
       void redirected(const SipMessage& msg);      
 
-      void forked(const SipMessage& response);      
+      void onForkAccepted();      
       void cancel();
 
    private:
@@ -69,10 +73,12 @@ class Dialog
       friend class DialogUsage;
       friend class DialogSet;
       friend class DialogUsageManager;
+      friend class DestroyUsage;
       
       friend class ClientSubscription;
       friend class InviteSession;
       friend class ClientInviteSession;      
+      friend class ServerInviteSession;      
       friend class ServerSubscription;
       friend class ClientRegistration;
       friend class ServerRegistration;
@@ -81,6 +87,7 @@ class Dialog
       friend class ClientOutOfDialogReq;
       friend class ServerOutOfDialogReq;
 
+      friend class AppDialog;
       void possiblyDie();
 
       ClientSubscription* findMatchingClientSub(const SipMessage& msg);
@@ -122,10 +129,16 @@ class Dialog
       NameAddr mLocalContact;
       unsigned long mLocalCSeq;
       unsigned long mRemoteCSeq;
+      unsigned long mAckId;
       NameAddr mRemoteTarget;
       NameAddr mLocalNameAddr;
       NameAddr mRemoteNameAddr;
       CallID mCallId;
+      
+      // store until we get a response (non-401/407)
+      // !jf! this shouldn't be necessary
+      typedef std::map<int,SipMessage> RequestMap;
+      RequestMap mRequests;
 
       AppDialog* mAppDialog;
       
@@ -189,4 +202,3 @@ std::ostream& operator<<(std::ostream& strm, const Dialog& dialog);
  * <http://www.vovida.org/>.
  *
  */
-
