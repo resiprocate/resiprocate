@@ -58,6 +58,7 @@ class Dialog
       ClientOutOfDialogReq::Handle findClientOutOfDialog();
       ServerOutOfDialogReq::Handle findServerOutOfDialog();
       
+      void cancel();
       void dispatch(const SipMessage& msg);
       void processNotify(const SipMessage& notify);
       
