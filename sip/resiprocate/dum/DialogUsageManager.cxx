@@ -1,0 +1,316 @@
+#include "resiprocate/SipStack.hxx"
+#include "DialogUsageManager.hxx"
+
+DialogUsageManager::DialogUsageManager(SipStack& stack) 
+   : mStack(stack)
+{
+   
+}
+
+void DialogUsageManager::setProfile(Profile* profile)
+{
+   mProfile = profile;
+}
+
+
+void DialogUsageManager::setManager(RedirectManager* manager)
+{
+   mRedirectManager = manager;
+}
+
+void 
+DialogUsageManager::setManager(ClientAuthManager* manager)
+{
+   mClientAuthManager = manager;
+}
+
+void 
+DialogUsageManager::setManager(ServerAuthManager* manager)
+{
+   mServerAuthManager = manager;
+}
+
+void 
+DialogUsageManager::setHandler(ClientRegistrationHandler* handler)
+{
+   mClientRegistrationHandler = handler;
+}
+
+void 
+DialogUsageManager::setHandler(ServerRegistrationHandler* handler)
+{
+   mServerRegistrationHandler = handler;
+}
+
+void 
+DialogUsageManager::setHandler(ClientInvSessionHandler* handler)
+{
+   mClientInviteSessionHandler = handler;
+}
+
+void 
+DialogUsageManager::setHandler(ServerInvSessionHandler* handler)
+{
+   mServerInviteSessionHandler = handler;
+}
+
+void 
+DialogUsageManager::addHandler(const Data& eventType, ClientSubscriptionHandler*)
+{
+}
+
+void 
+DialogUsageManager::addHandler(const Data& eventType, ServerSubscriptionHandler*)
+{
+}
+
+void 
+DialogUsageManager::addHandler(const Data& eventType, ClientPublicationHandler*)
+{
+}
+
+void 
+DialogUsageManager::addHandler(const Data& eventType, ServerPublicationHandler*)
+{
+}
+
+void 
+DialogUsageManager::addHandler(MethodTypes&, OutOfDialogHandler*)
+{
+}
+
+void
+DialogUsageManager::process()
+{
+   while (1)
+   {
+      int seltime = 10;
+      
+      FdSet fdset; 
+      mStack.buildFdSet(fdset);
+      fdset.selectMilliSeconds(seltime); 
+      mStack.process(fdset);
+      
+      SipMessage* msg = mStack.receive();
+      if (msg)
+      {
+         if (msg->isRequest())
+         {
+            if (validateRequest(*msg) && 
+                validateTo(*msg) && 
+                !mergeRequest(*msg) &&
+                mServerAuthManager && mServerAuthManager->handle(*msg))
+            {
+               // not in a dialog yet
+               if ( !msg->header(h_To).param(p_tag).exists() )
+               {
+                  switch (msg->header(h_RequestLine).getMethod())
+                  {
+                     case ACK:
+                        DebugLog (<< "Discarding request: " << msg->brief());
+                        break;
+                        
+                     case PRACK:
+                     case BYE:
+                     case UPDATE:
+                        //case INFO: // !rm! in an ideal world
+                        //case NOTIFY: // !rm! in an ideal world
+                     {
+                        std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 481));
+                        mStack.send(*failure);
+                        break;
+                     }
+
+                     case INVITE:  // new INVITE
+                     {
+                        ServerInvSession* session = new ServerInvSession(*this, );
+                        
+                        break;
+                     }
+                     case CANCEL:
+                        // find the appropropriate ServerInvSession
+                        break;
+                     case SUBSCRIBE:
+                     case REFER: // out-of-dialog REFER
+                        ServerSubscription* sub = new ServerSubscription(*this);
+                        break;
+                     case REGISTER:
+                        ServerRegistration* etc;
+                        break;
+                     case PUBLISH:
+                        ServerPublication*  etc;
+                        break;                       
+                     case MESSAGE :
+                     case OPTIONS :
+                     case INFO :   // handle non-dialog (illegal) INFOs
+                     case NOTIFY : // handle unsolicited (illegal) NOTIFYs
+                        // make a non-dialog BaseUsage
+                        break;
+                        
+                                                                    
+
+
+                    
+
+                  case INFO:
+                  case UPDATE :
+                  case PRACK :
+                  case ACK :
+                  case BYE :
+                  case CANCEL : 
+                  case REGISTER :
+                  case REFER :
+                  case SUBSCRIBE :
+                  case NOTIFY :
+                     
+                     {
+                        
+                     }
+                  }
+               }
+               
+
+               DialogSet& dialogs = findDialogSet(DialogSetId(*msg));
+               if (dialogs.empty())
+               {
+               }
+               
+
+               switch (msg->header(h_RequestLine).getMethod())
+               {
+                  case INVITE :   // reINVITE
+                  case INFO:
+                  case UPDATE :
+                  case PRACK :
+                  case ACK :
+                  case BYE :
+                  case CANCEL : 
+                     dialog.getSession().processSession(msg);
+                     break;
+                  case REGISTER :
+                     dialog.getRegistration().processRegistration(msg);
+                     break;
+                  case REFER :
+                  case SUBSCRIBE :
+                  case NOTIFY :
+                     break;
+
+                  case UNKNOWN:
+                  {
+                     InfoLog (<< "Received an unknown method: " << msg->brief());
+                     std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 405));
+                     mStack.send(*failure);
+                     break;
+                  }
+               }
+            }
+         }
+         else if (msg->isResponse())
+         {
+            switch (msg->header(h_StatusLine).statusCode())
+            {
+               
+            }
+         }
+         
+      }
+
+      delete msg;
+   }
+}
+
+bool
+DialogUsageManager::validateRequest(const SipMessage& request)
+{
+   if (!mProfile.isSchemeSupported(request.header(h_RequestLine).uri().scheme()))
+   {
+      InfoLog (<< "Received an unsupported scheme: " << request.brief());
+      std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 416));
+      mStack.send(*failure);
+      return false;
+   }
+   else if (!mProfile.isMethodSupported(request.header(h_RequestLine).getMethod()))
+   {
+      InfoLog (<< "Received an unsupported method: " << request.brief());
+      std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 405));
+      failure->header(h_Allows) = mProfile.getAllowedMethods();
+      mStack.send(*failure);
+      return false;
+   }
+   else
+   {
+      Tokens unsupported = mProfile.isSupported(msg.header(h_Requires));
+      if (!unsupported.empty())
+      {
+         InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
+         std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 420));
+         failure->header(h_Unsupporteds) = unsupported;
+         mStack.send(*failure);
+         return false;
+      }
+      else if (msg.exists(h_ContentDisposition))
+      {
+         if (msg.header(h_ContentDisposition).exists(p_handling) && 
+             isEqualNoCase(msg.header(h_ContentDisposition).param(p_handling), Symbols::Required))
+         {
+            if (!mProfile.isMimeTypeSupported(msg.header(h_ContentType)))
+            {
+               InfoLog (<< "Received an unsupported mime type: " << request.brief());
+               std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 415));
+               failure->header(h_Accepts) = mProfile.getSupportedMimeTypes();
+               mStack.send(*failure);
+
+               return false;
+            }
+            else if (!mProfile.isContentEncodingSupported(msg.header(h_ContentEncoding)))
+            {
+               InfoLog (<< "Received an unsupported mime type: " << request.brief());
+               std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 415));
+               failure->header(h_AcceptEncoding) = mProfile.getSupportedEncodings();
+               mStack.send(*failure);
+            }
+            else if (!mProfile.isLanguageSupported(msg.header(h_ContentLanguages)))
+            {
+               InfoLog (<< "Received an unsupported language: " << request.brief());
+               std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 415));
+               failure->header(h_AcceptLanguages) = mProfile.getSupportedLanguages();
+               mStack.send(*failure);
+            }
+         }
+      }
+   }
+         
+   return true;
+
+}
+
+bool
+DialogUsageManager::validateTo(const SipMessage& request)
+{
+   // !jf! check that the request is targeted at me!
+   // will require support in profile
+   return true;
+}
+
+bool
+DialogUsageManager::mergeRequest(const SipMessage& request)
+{
+   // merge requrests here
+   if ( !msg->header(h_To).param(p_tag).exists() )
+   {
+      DialogSet& dialogs = findDialogSet(DialogSetId(*msg));
+      for (DialogSet::const_iterator i=dialogs.begin(); i!=dialogs.end(); i++)
+      {
+         if (i->shouldMerge(request))
+         {
+            InfoLog (<< "Merging request for: " << request.brief());
+            
+            std::auto_ptr<SipMessage> failure(Helper::makeResponse(msg, 482));
+            mStack.send(*failure);
+            
+            return true;
+         }
+      }
+   }
+   return false;
+}
