@@ -7,6 +7,8 @@ const Subsystem Subsystem::NONE("NONE");
 const Subsystem Subsystem::BASE("BASE");
 const Subsystem Subsystem::UTIL("UTIL");
 const Subsystem Subsystem::SIP("SIP");    // SIP Stack / Parser
+const Subsystem Subsystem::TRANSACTION("TRANSACTION");    // SIP Stack / Parser
+const Subsystem Subsystem::TRANSPORT("TRANSPORT");    // SIP Stack / Parser
 const Subsystem Subsystem::APP("APP");    // application
 
 std::ostream& 
