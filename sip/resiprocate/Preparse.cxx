@@ -381,10 +381,11 @@ Preparse::process()
 
       if (e.workMask & actFline) // first line complete.
       {
+#if defined(DEBUG)
          DebugLog(<<"FLINE \'"
                   << showN(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1)
                   << "\'");
-
+#endif
          mSipMessage.setStartLine(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1);
       }
 
