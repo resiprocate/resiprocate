@@ -114,17 +114,15 @@ Condition::signal ()
 }
 
 
-#if 0 
 void
 Condition::broadcast()
 {
 #ifdef WIN32
-	assert(0);
+   assert(0);
 #else
-    return ( pthread_cond_broadcast(&mId) );
+   return ( (void)pthread_cond_broadcast(&mId) );
 #endif
 }
-#endif
 
 
 #if 0
@@ -134,4 +132,3 @@ Condition::getId () const
     return ( &myId );
 }
 #endif
-
