@@ -56,7 +56,7 @@ Executive::processStateMachine()
       return false;
     }
 
-  TransactionState::process();
+  TransactionState::process(mStack);
 
   return true;
 }

@@ -2,8 +2,6 @@
 #define TRANSACTIONSTATE_HXX
 
 
-#include <sipstack/Message.hxx>
-
 
 namespace Vocal2
 {
