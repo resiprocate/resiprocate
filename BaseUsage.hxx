@@ -39,6 +39,7 @@ class BaseUsage
             bool isValid() const;
             // throws if not found
             BaseUsage* get();
+            BaseUsage* operator->();
          private:
             DialogUsageManager* mDum;
             Id mId;

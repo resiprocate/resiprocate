@@ -3,12 +3,14 @@
 
 using namespace resip;
 
-DumTimer::DumTimer(Type type, unsigned long duration, int cseq, int rseq) : 
-   mType(type),
-   mDuration(duration),
-   mCseq(cseq),
-   mRseq(rseq)
-{
+
+DumTimer::DumTimer(Type type, unsigned long duration, BaseUsage::Handle & targetBu, int seq, int altSeq)
+    : mType(type),
+      mDuration(duration),
+      mUsageHandle(targetBu),
+      mSeq(seq),
+      mSecondarySeq(altSeq)
+ {
 }
 
 DumTimer::~DumTimer()
@@ -22,15 +24,15 @@ DumTimer::type() const
 }
 
 int 
-DumTimer::cseq() const
+DumTimer::seq() const
 {
-   return mCseq;
+   return mSeq;
 }
 
 int 
-DumTimer::rseq() const
+DumTimer::secondarySeq() const
 {
-   return mRseq;
+   return mSecondarySeq;
 }
       
 const Data& 
@@ -52,7 +54,7 @@ DumTimer::brief() const
 {
    Data data;
    DataStream strm(data);
-   strm << "DumTimer: " << mType << " : " << mDuration << "," << mCseq << "," << mRseq;
+   strm << "DumTimer: " << mType << " : " << mDuration << "," << mSeq << "," << mSecondarySeq ;
    return data;
 }
 
