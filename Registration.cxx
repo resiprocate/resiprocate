@@ -83,6 +83,7 @@ Registration::unregister()
    NameAddr wildcard;
    wildcard.setAllContacts();
    mRegister->header(h_Contacts).push_front(wildcard);
+   mRegister->header(h_Expires).value() = 0;
    mState = Terminating;
    return *mRegister;
 }
