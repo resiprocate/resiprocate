@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #ifndef __CYGWIN__
+#  include <netinet/in.h>
 #  include <arpa/nameser.h>
 #  include <resolv.h>
 #endif

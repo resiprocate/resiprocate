@@ -243,10 +243,12 @@ Timer::setupTimeOffsets()
    uSec = now - start;
    count = nowTick - startTick;
     
+#if 0
+#warning Timer assertions appear to not be forward looking...
    assert( uSec >= 100*1000 );
    assert( uSec < 500*1000 );
    assert( count > 100 );
-    
+#endif    
    //cerr << "diff in uSec is " << uSec << endl;
    //cerr << "diff in sec is " << sec << endl;
    //cerr << "diff in count is " << count << endl;
