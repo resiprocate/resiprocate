@@ -293,6 +293,43 @@ main(int argc, char* argv[])
       }
    }
 
+   {
+      Data txt("v=0\r\n"
+               "o=anonymous 1076575175 1076575175 IN IP4 192.168.1.100\r\n"
+               "s=eConf 4.0\r\n"
+               "i=eConf 4.0\r\n"
+               "b=AS:256\r\n"
+               "t=0 0\r\n"
+               "m=audio 6000 RTP/AVP 102 104 9 4 0 8 98\r\n"
+               "a=fmtp:98 0-15\r\n"
+               "a=rtpmap:102 X-G72x1/16000\r\n"
+               "a=rtpmap:104 X-G72x24/16000\r\n"
+               "a=rtpmap:9 G722/8000\r\n"
+               "a=rtpmap:4 G723/8000\r\n"
+               "a=rtpmap:0 PCMU/8000\r\n"
+               "a=rtpmap:8 PCMA/8000\r\n"
+               "a=rtpmap:98 telephone-event/8000\r\n"
+               "a=sendrecv\r\n"
+               "m=video 6002 RTP/AVP 97 98 34 31\r\n"
+               "b=AS:192\r\n"
+               "a=fmtp:97 QCIF=1/MaxBR=1920/\r\n"
+               "a=framerate:25.0\r\n"
+               "a=fmtp:34 QCIF=1/MaxBR=1920\r\n"
+               "a=fmtp:31 QCIF=1/MaxBR=1920\r\n"
+               "a=rtpmap:97 H263-1998/90000\r\n"
+               "a=rtpmap:98 MP4V-ES/90000\r\n"
+               "a=rtpmap:34 H263/90000\r\n"
+               "a=rtpmap:31 H261/90000\r\n"
+               "a=sendrecv\r\n");
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "sdp");
+      SdpContents sdp(&hfv, type);
+
+      assert(sdp.session().information() == "eConf 4.0");
+      assert(sdp.session().media().size() == 2);
+   }
+
    return 0;   
 }
 
