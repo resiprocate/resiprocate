@@ -38,6 +38,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mDialogs(),
    mCreator(creator),
    mId(creator->getLastRequest()),
+   mCreatingTransactionId(creator->getLastRequest().getTransactionId()),
    mDum(dum),
    mAppDialogSet(0),
    mEnded(false),
@@ -63,6 +64,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mDialogs(),
    mCreator(0),
    mId(request),
+   mCreatingTransactionId(request.getTransactionId()),
    mDum(dum),
    mAppDialogSet(0),
    mEnded(false),
@@ -157,6 +159,12 @@ BaseCreator*
 DialogSet::getCreator()
 {
    return mCreator;
+}
+
+Data&
+DialogSet::getCreatingTransactionId()
+{
+   return mCreatingTransactionId;
 }
 
 UserProfile*
