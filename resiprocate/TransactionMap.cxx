@@ -45,7 +45,8 @@ TransactionMap::remove(const Data& tid )
    MapIterator i = _map.find(tid);
    if (i != _map.end())
    {
-      delete i->second;
+      // don't delete it here, the TransactionState deletes itself and removes
+      // itself from the map
       _map.erase(i);
    }
    else
