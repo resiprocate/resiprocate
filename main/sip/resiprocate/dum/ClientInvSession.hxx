@@ -11,13 +11,13 @@ class ClientInvSession : public BaseUsage
       {
       };
 
-      void rejectOffer(int statusCode);
       void setOffer(SdpContents* offer);
       void sendOfferInAnyMessage();
       void setAnswer(SdpContents* answer);
       void sendAnswerInAnyMessage();
       void start();
       void end();
+      void rejectOffer(int statusCode);
       
       const SdpContents* getLocalSdp();
       const SdpContents* getRemoteSdp();
