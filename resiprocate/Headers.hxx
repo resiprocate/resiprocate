@@ -74,6 +74,8 @@ extern Priority_Header h_Priority;
 //====================
 // Tokens:
 //====================
+typedef ParserContainer<Token> Tokens;
+
 class Accept_Encoding_MultiHeader : public HeaderBase
 {
    public:
@@ -194,6 +196,8 @@ extern Unsupported_MultiHeader h_Unsupporteds;
 //====================
 // Mime
 //====================
+typedef ParserContainer<Mime> Mimes;
+
 class Accept_MultiHeader : public HeaderBase
 {
    public:
@@ -223,6 +227,8 @@ extern Content_Type_Header h_ContentType;
 //====================
 // GenericURIs:
 //====================
+typedef ParserContainer<GenericURI> GenericURIs;
+
 class Call_Info_MultiHeader : public HeaderBase
 {
    public:
@@ -265,6 +271,8 @@ extern Error_Info_MultiHeader h_ErrorInfos;
 //====================
 // NameAddr:
 //====================
+typedef ParserContainer<NameAddr> NameAddrs;
+
 class Record_Route_MultiHeader : public HeaderBase
 {
    public:
@@ -372,6 +380,8 @@ extern Referred_By_Header h_ReferredBy;
 //====================
 //String:
 //====================
+typedef ParserContainer<StringCategory> StringCategories;
+
 class Organization_Header : public HeaderBase
 {
    public:
@@ -440,6 +450,8 @@ extern Timestamp_Header h_Timestamp;
 //====================
 // Integer:
 //====================
+typedef ParserContainer<IntegerCategory> IntegerCategories;
+
 class Content_Length_Header : public HeaderBase
 {
    public:
@@ -535,10 +547,6 @@ class Replaces_Header : public HeaderBase
 };
 extern Replaces_Header h_Replaces;
 
-//====================
-// CallIds:
-//====================
-// !dlb! Multi?
 class In_Reply_To_Header : public HeaderBase
 {
    public:
@@ -671,6 +679,8 @@ extern Warning_Header h_Warning;
 //====================
 // Via
 //====================
+typedef ParserContainer<Via> Vias;
+
 class Via_MultiHeader : public HeaderBase
 {
    public:
