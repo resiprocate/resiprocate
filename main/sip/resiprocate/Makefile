@@ -1,10 +1,13 @@
-# $Id: Makefile,v 1.80 2002/11/14 18:48:40 jason Exp $
+# $Id: Makefile,v 1.81 2002/11/23 22:06:26 fluffy Exp $
 
 BUILD = ../../build
+
+USE_SSL = 1
 
 include $(BUILD)/Makefile.pre
 
 USE_REPO=false
+
 PACKAGES += SIP2 UTIL2 PTHREAD
 
 ifeq ($(USE_SSL),1)
