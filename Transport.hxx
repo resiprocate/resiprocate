@@ -64,7 +64,7 @@ class Transport
       
       virtual void send( const Tuple& tuple, const Data& data, const Data& tid);
       virtual void process(FdSet& fdset) = 0;
-      virtual void buildFdSet( FdSet& fdset);
+      virtual void buildFdSet( FdSet& fdset) =0;
       
       void run(); // will not return.
       void shutdown();
