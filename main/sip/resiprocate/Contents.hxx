@@ -125,6 +125,12 @@ class ContentsFactory : public ContentsFactoryBase
          Contents::getFactoryMap()[T::getStaticType()] = this;
       }
 
+      explicit ContentsFactory(const Mime& nonStandardType)
+      {
+         HeaderFieldValue hfv;
+         Contents::getFactoryMap()[nonStandardType] = this;
+      }
+
       virtual ~ContentsFactory()
       {
          HashMap<Mime, ContentsFactoryBase*>::iterator i;
