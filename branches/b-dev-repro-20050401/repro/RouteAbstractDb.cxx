@@ -1,49 +1,121 @@
-#if !defined(REPRO_ROUTEDBMEMORY_HXX)
-#define REPRO_ROUTEDBMEMORY_HXX
 
-#include <db4/db_185.h>
-
-#include <vector>
+#include "resiprocate/os/Logger.hxx"
 
 #include "repro/RouteAbstractDb.hxx"
 
-namespace repro
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+RouteAbstractDb::RouteAbstractDb() 
 {
-
-class RouteDbMemory : public RouteAbstractDb
-{
-   public:
-      RouteDbMemory( char* dbName="route_database");
-      ~RouteDbMemory();
-
-      virtual void add(const resip::Data& method,
-                       const resip::Data& event,
-                       const resip::Data& matchingPattern,
-                       const resip::Data& rewriteExpression,
-                       const int order);
-      
-      virtual RouteList getRoutes() const;
-
-      virtual void erase(const resip::Data& method,
-                         const resip::Data& event,
-                         const resip::Data& matchingPattern );
-      
-      virtual resip::Uri process(const resip::Uri& ruri, const resip::Data& method, const resip::Data& event );
-   private:
-      DB* mDb;
-      
-      class RouteOperator : public Route 
-      {
-         public:
-            bool matches(const resip::Uri& ruri, const resip::Data& method, const resip::Data& event);
-            resip::Uri transform(const resip::Uri& ruri);
-      };
-      typedef std::vector<RouteOperator> RouteOperatorList;
-      RouteOperatorList mRouteOperators;
-};
-
 }
-#endif  
+
+
+RouteAbstractDb::~RouteAbstractDb()
+{
+}
+
+
+Data 
+RouteAbstractDb::serialize( const Route& rec )
+{  
+   Data data;
+   oDataStream s(data);
+   short len;
+   assert( sizeof(len) == 2 );
+   
+   assert( rec.mVersion == 1 );
+   assert( sizeof( rec.mVersion) == 2 );
+   s.write( (char*)(&rec.mVersion) , sizeof( rec.mVersion ) );
+   
+   len = rec.mMethod.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( rec.mMethod.data(), len );
+    
+   len = rec.mEvent.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( rec.mEvent.data(), len );
+   
+   len = rec.mMatchingPattern.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( rec.mMatchingPattern.data(), len );
+   
+   len = rec.mRewriteExpression.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( rec.mRewriteExpression.data(), len );
+   
+   s.write( (char*)(&rec.mOrder) , sizeof( rec.mOrder ) );
+   
+   return data;
+}
+
+
+RouteAbstractDb::Route
+RouteAbstractDb::deSerialize( const Data& pData )
+{  
+   RouteAbstractDb::Route rec;
+   
+   Data data = pData;
+   
+   iDataStream s(data);
+   short len;
+   assert( sizeof(len) == 2 );
+
+   s.read( (char*)(&len), sizeof(len) );
+   rec.mVersion = len;
+   
+   if (  rec.mVersion == 1 )
+   {
+      {
+         s.read( (char*)(&len), sizeof(len) ); 
+         char buf[len+1];
+         s.read( buf, len );
+         Data data( buf, len );
+         rec.mMethod = data;
+      }
+      
+      {
+         s.read( (char*)(&len), sizeof(len) ); 
+         char buf[len+1];
+         s.read( buf, len );
+         Data data( buf, len );
+         rec.mEvent = data;
+      }
+      
+      {
+         s.read( (char*)(&len), sizeof(len) ); 
+         char buf[len+1];
+         s.read( buf, len );
+         Data data( buf, len );
+         rec.mMatchingPattern = data;
+      }
+      
+      {
+         s.read( (char*)(&len), sizeof(len) ); 
+         char buf[len+1];
+         s.read( buf, len );
+         Data data( buf, len );
+         rec.mRewriteExpression = data;
+      }
+
+      {
+         s.read( (char*)(&rec.mOrder), sizeof(rec.mOrder) ); 
+      }
+   }
+   else
+   {
+      // unkonwn version 
+      ErrLog( <<"Data in route database with unknown version " << rec.mVersion );
+      assert(0);
+   }
+      
+   return rec;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

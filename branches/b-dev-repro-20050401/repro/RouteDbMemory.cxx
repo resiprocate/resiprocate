@@ -1,4 +1,8 @@
 
+#include <fcntl.h>
+#include <db4/db_185.h>
+#include <cassert>
+
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Uri.hxx"
 
@@ -12,13 +16,45 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-RouteDbMemory::RouteDbMemory()
-{
+RouteDbMemory::RouteDbMemory(char* dbName)
+{  
+   InfoLog( << "Loading route database" );
+   
+   mDb = dbopen(dbName,O_CREAT|O_RDWR,0000600,DB_BTREE,0);
+   if ( !mDb )
+   {
+      ErrLog( <<"Could not open user database at " << dbName );
+   }
+   assert(mDb);
+
+   DBT key,data;
+   int ret;
+   
+   assert( mDb );
+   ret = mDb->seq(mDb,&key,&data, R_FIRST);
+   assert( ret != -1 );
+   assert( ret != 2 );
+
+   while( ret == 0 ) // while key is being found 
+   {
+      Data d(reinterpret_cast<const char*>(data.data), data.size );
+      DebugLog( << "loaded route " << d);
+
+      Route r = deSerialize( d );
+      add( r.mMethod, r.mEvent, r.mMethod, r.mRewriteExpression, r.mOrder );
+      
+      // get the next key 
+      ret = mDb->seq(mDb,&key,&data, R_NEXT);
+      assert( ret != -1 );
+      assert( ret != 2 );
+   }
 }
 
 
 RouteDbMemory::~RouteDbMemory()
-{
+{ 
+   int ret = mDb->close(mDb);
+   assert( ret == 0 );
 }
 
 
@@ -26,8 +62,37 @@ void
 RouteDbMemory::add(const resip::Data& method,
                    const resip::Data& event,
                    const resip::Data& matchingPattern,
-                   const resip::Data& rewriteExpression)
+                   const resip::Data& rewriteExpression,
+                   const int order )
 {
+   InfoLog( << "Add route" );
+   
+   RouteOperator route;
+   route.mVersion = 1;
+   route.mMethod = method;
+   route.mEvent = event;
+   route.mMatchingPattern = matchingPattern;
+   route.mRewriteExpression =  rewriteExpression;
+   route.mOrder = order;
+   
+   mRouteOperators.push_back( route );  
+   
+   Data pKey = method+" "+event+" "+matchingPattern; 
+   Data pData = serialize(route);
+      
+   DBT key,data;
+   int ret;
+   key.data = const_cast<char*>( pKey.data() );
+   key.size = pKey.size();
+   data.data = const_cast<char*>( pData.data() );
+   data.size = pData.size();
+   assert( mDb );
+   ret = mDb->put(mDb,&key,&data,0);
+   assert( ret == 0 );
+
+   // need sync for if program gets ^C without shutdown
+   ret = mDb->sync(mDb,0);
+   assert( ret == 0 );
 }
 
 
@@ -47,8 +112,11 @@ RouteDbMemory::getRoutes() const
 
 
 void 
-RouteDbMemory::erase(const Route& )
+RouteDbMemory::erase(const resip::Data& method,
+                       const resip::Data& event,
+                       const resip::Data& matchingPattern )
 {
+   // TODO 
    assert(0);
 }
 

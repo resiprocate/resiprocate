@@ -31,6 +31,7 @@ class UserAbstractDb
       resip::Data getUserAuthInfo( const resip::Data& key ) const;
       
       void addUser( const resip::Data& user, 
+                    const resip::Data& domain, 
                     const resip::Data& realm, 
                     const resip::Data& password, 
                     const resip::Data& fullName,
@@ -56,6 +57,9 @@ class UserAbstractDb
       {
          public:
             short version;
+            resip::Data user;
+            resip::Data domain;
+            resip::Data realm;
             resip::Data passwordHash;
             resip::Data name;
             resip::Data email;
