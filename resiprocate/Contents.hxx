@@ -12,32 +12,37 @@ using namespace std;
 namespace Vocal2
 {
 
-
 class Contents;
 class HeaderFieldValue;
+class Mime;
 
 class ContentsFactoryBase
 {
    public:
       virtual Contents* create(HeaderFieldValue* hfv) const = 0;
+      virtual Contents* convert(Contents* c) const = 0;
 };
       
-         
-// Common type for all Bodies
+// Common type for all body contents
 class Contents : public LazyParser
 {
    public:
-      Contents(HeaderFieldValue* headerFieldValue) : LazyParser(headerFieldValue) {}
-      Contents(const Contents& rhs) : LazyParser(rhs) {}
-      Contents& operator=(const Contents& rhs) {LazyParser::operator=(rhs); return *this;}
-      virtual ~Contents() {}
+      Contents(HeaderFieldValue* headerFieldValue);
+      Contents(const Contents& rhs);
+      virtual ~Contents();
+      Contents& operator=(const Contents& rhs);
+
+      virtual Contents* getContents() {return this;}
+      Contents* getContents(const Mime&);
+
       virtual Contents* clone() const = 0;
+      virtual const Mime& getType() const = 0;
 
       static std::map<Mime, ContentsFactoryBase*>& getFactoryMap();
 
-      virtual const Mime& getType() const = 0;
    protected:
-      Contents() : LazyParser() {}
+      Contents();
+
    private:
       static std::map<Mime, ContentsFactoryBase*>* FactoryMap;
 };
@@ -57,6 +62,11 @@ class ContentsFactory : public ContentsFactoryBase
       virtual Contents* create(HeaderFieldValue* hfv) const
       {
          return new T(hfv);
+      }
+
+      virtual Contents* convert(Contents* c) const
+      {
+         return dynamic_cast<T*>(c);
       }
 };
 
