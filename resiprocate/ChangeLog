@@ -1,5 +1,7 @@
 2002-10-04  Alan Hawrylyshen  <alan@jasomi.com>
 
+	* Preparse.cxx (process): Added setStartLine  call.
+
 	* SipMessage.hxx (class SipMessage): Const fixups.
 
 	*  SipMessage.cxx (setBody): Const fixups.
