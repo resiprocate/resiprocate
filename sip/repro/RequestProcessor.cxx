@@ -9,6 +9,18 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
+RequestProcessor::RequestProcessor()
+{
+}
+
+RequestProcessor::~RequestProcessor()
+{
+}
+
+RequestProcessor::processor_action_t 
+RequestProcessor::handleRequest(RequestContext &)
+{
+}
 
 
 /* ====================================================================
