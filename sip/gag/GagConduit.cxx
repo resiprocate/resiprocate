@@ -40,7 +40,7 @@ GagConduit::handleMessage(GagMessage *message)
     case GagMessage::SHUTDOWN:
       gaimShutdown(reinterpret_cast<GagShutdownMessage *>(message));
       break;
-    case GagMessage::ERROR:
+    case GagMessage::GAG_ERROR:
       gaimError(reinterpret_cast<GagErrorMessage *>(message));
       break;
     case GagMessage::LOGIN_STATUS:
