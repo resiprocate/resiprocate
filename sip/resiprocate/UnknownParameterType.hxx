@@ -1,5 +1,5 @@
-#ifndef UnknownParameterType_hxx
-#define UnknownParameterType_hxx
+#if !defined(RESIP_UNKNOWNPARAMETERTYPE_HXX)
+#define RESIP_UNKNOWNPARAMETERTYPE_HXX 
 
 #include "resiprocate/os/Data.hxx"
 
@@ -18,6 +18,8 @@ class UnknownParameterType
 };
 
 }
+
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -68,5 +70,3 @@ class UnknownParameterType
  * <http://www.vovida.org/>.
  *
  */
-
-#endif

@@ -1,5 +1,5 @@
-#if !defined(TUIM_HXX)
-#define TUIM_HXX
+#if !defined(RESIP_TUIM_HXX)
+#define RESIP_TUIM_HXX
 
 #include <vector>
 
@@ -119,7 +119,6 @@ public:
 
 #endif
 
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -169,5 +168,3 @@ public:
  * <http://www.vovida.org/>.
  *
  */
-
-

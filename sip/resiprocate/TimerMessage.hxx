@@ -1,5 +1,5 @@
-#ifndef TimerMessage_hxx
-#define TimerMessage_hxx
+#if !defined(RESIP_TIMERMESSAGE_HXX)
+#define RESIP_TIMERMESSAGE_HXX 
 
 #include <iostream>
 #include "resiprocate/Message.hxx"
@@ -46,9 +46,7 @@ class TimerMessage : public Message
 
 }
 
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

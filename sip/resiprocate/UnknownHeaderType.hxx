@@ -1,5 +1,5 @@
-#ifndef UnknownHeaderType_hxx
-#define UnknownHeaderType_hxx
+#if !defined(RESIP_UNKNOWNHEADERTYPE_HXX)
+#define RESIP_UNKNOWNHEADERTYPE_HXX 
 
 #include "resiprocate/os/Data.hxx"
 
@@ -18,6 +18,8 @@ class UnknownHeaderType
 };
 
 }
+
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -68,5 +70,3 @@ class UnknownHeaderType
  * <http://www.vovida.org/>.
  *
  */
-
-#endif
