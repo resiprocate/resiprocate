@@ -16,7 +16,8 @@ class DataParameter : public Parameter
    public:
       typedef Data Type;
 
-      DataParameter(ParameterTypes::Type, ParseBuffer& pb);
+      DataParameter(ParameterTypes::Type, ParseBuffer& pb, 
+		    const char* terminators=" \t\r\n;?>");
       DataParameter(ParameterTypes::Type);
 
       Data& value();            // does not return a quoted string
