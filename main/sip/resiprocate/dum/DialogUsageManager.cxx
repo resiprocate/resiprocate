@@ -78,25 +78,50 @@ DialogUsageManager::addHandler(MethodTypes&, OutOfDialogHandler*)
 {
 }
 
-SipMessage&
-DialogUsageManager::makeInviteSession(const Uri& target)
+SipMessage& 
+DialogUsageManager::makeNewSession(BaseCreator* creator)
 {
-   InviteSessionCreator* creator = new InviteSessionCreator(target, 0);
    prepareInitialRequest(creator->getLastRequest());
    DialogSet inv = new DialogSet(creator);
    mDialogSetMap[inv.getId()] = inv;
    return creator->getLastRequest();
 }
 
-SipMessage* 
-DialogUsageManager::makeSubscription(const Uri& aor, const Data& eventType)
+SipMessage&
+DialogUsageManager::makeInviteSession(const Uri& target)
 {
+   return makeNewSession(new InviteSessionCreator(target, 0));
 }
 
+SipMessage&
+DialogUsageManager::makeSubscription(const Uri& aor, const Data& eventType)
+{
+   return makeNewSession(new SubscriptionCreator(eventType));
+}
 
+SipMessage&
+DialogUsageManager::makeRefer(const Uri& aor, const H_ReferTo::Type& referTo)
+{
+   //return makeNewSession(new SubscriptionCreator(???));
+}
 
-// !jf! add rest of make??? methods here
+SipMessage& 
+DialogUsageManager::makePublication(const Uri& aor, const Data& eventType)
+{
+   return makeNewSession(new PublicationCreator()); // !jf!
+}
 
+SipMessage& 
+DialogUsageManager::makeRegistration(const Uri& aor)
+{
+   //return makeNewSession(new RegistrationCreator(???)); // !jf!
+}
+
+SipMessage& 
+DialogUsageManager::makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth)
+{
+   //return makeNewSession(new OutOfDialogReqCreator(???)); // !jf!
+}
 
 SipMessage* 
 DialogUsageManager::makeInviteSession(DialogId id, const Uri& target)
