@@ -22,7 +22,7 @@ class SipStack
 
       // Used by the application to add in a new transport
       // by default, you will get UDP and TCP on 5060 (for now)
-      void addTransport( Transport::Type, int port, const Data& hostName="", const Data& interface="");
+      void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
   
       void send(const SipMessage& msg);
 
