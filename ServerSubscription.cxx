@@ -3,10 +3,14 @@
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #include <time.h>
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 ServerSubscriptionHandle 
 ServerSubscription::getHandle()
@@ -29,6 +33,8 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
 
 ServerSubscription::~ServerSubscription()
 {
+   DebugLog(<< "ServerSubscription::~ServerSubscription");
+   
    Data key = getEventType() + getDocumentKey();
 
    std::pair<DialogUsageManager::ServerSubscriptions::iterator,DialogUsageManager::ServerSubscriptions::iterator> subs;
@@ -88,7 +94,7 @@ ServerSubscription::send(SipMessage& msg)
    if (msg.isResponse())
    {
       int code = msg.header(h_StatusLine).statusCode();
-      if (code < 100)
+      if (code < 200)
       {
          mDum.send(msg);
       }
@@ -98,18 +104,34 @@ ServerSubscription::send(SipMessage& msg)
          {
             mDum.addTimer(DumTimeout::Subscription, msg.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
             mDum.send(msg);
+            mAbsoluteExpiry = time(0) + msg.header(h_Expires).value();            
+            mState = Established;            
          }
          else
          {
             throw UsageUseException("2xx to a Subscribe MUST contain an Expires header", __FILE__, __LINE__);
          }
       }
-      else
+      else if (code < 400)
       {
          mDum.send(msg);
          handler->onTerminated(getHandle());
          delete this;
          return;
+      }
+      else
+      {
+         if (shouldDestroyAfterSendingFailure(msg))
+         {
+            mDum.send(msg);
+            handler->onTerminated(getHandle());
+            delete this;
+            return;
+         }
+         else
+         {
+            mDum.send(msg);
+         }
       }
    }
    else
@@ -124,6 +146,42 @@ ServerSubscription::send(SipMessage& msg)
    }
 }
 
+bool 
+ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
+{
+   int code = msg.header(h_StatusLine).statusCode();
+   switch(mState)
+   {
+      case Initial:
+         return true;
+      case Terminated: //terminated state not using in ServerSubscription
+         assert(0);
+         return true;
+      case Established:
+      {
+         if (code == 405)
+         {
+            return true;
+         }
+         switch (Helper::determineFailureMessageEffect(mLastResponse))
+         {
+            case Helper::TransactionTermination:
+            case Helper::RetryAfter:
+               break;
+            case Helper::OptionalRetryAfter:
+            case Helper::ApplicationDependant: 
+               throw UsageUseException("Not a reasonable code to reject a SUBSCIRBE(refresh) inside a dialog.", 
+                                       __FILE__, __LINE__);
+               break;            
+            case Helper::DialogTermination: //?dcm? -- throw or destroy this?
+            case Helper::UsageTermination:
+               return true;
+         }
+      }
+   }
+   return false;   
+}
+
 void 
 ServerSubscription::setSubscriptionState(SubscriptionState state)
 {
@@ -133,6 +191,8 @@ ServerSubscription::setSubscriptionState(SubscriptionState state)
 void 
 ServerSubscription::dispatch(const SipMessage& msg)
 {
+   DebugLog( << "ServerSubscriptionHandler::dispatch: " << msg.brief());
+
    ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
    assert(handler);
 
@@ -184,11 +244,36 @@ ServerSubscription::dispatch(const SipMessage& msg)
    else
    {
       int code = msg.header(h_StatusLine).statusCode();
-      if (code >= 300)
+      if (code < 300)
+      { 
+         return;
+      }
+      else if (code < 400)
       {
+         //in dialog NOTIFY got redirected? Bizarre...
          handler->onError(getHandle(), msg);
          handler->onTerminated(getHandle());
          delete this;         
+      }
+      else
+      {
+         switch(Helper::determineFailureMessageEffect(msg))
+         {
+            case Helper::TransactionTermination:
+               DebugLog( << "ServerSubscriptionHandler::TransactionTermination: " << msg.brief());
+               handler->onNotifyRejected(getHandle(), msg);
+               break;
+            case Helper::UsageTermination:
+            case Helper::RetryAfter:
+            case Helper::OptionalRetryAfter:
+            case Helper::ApplicationDependant: 
+            case Helper::DialogTermination:
+               DebugLog( << "ServerSubscriptionHandler::UsageTermination: " << msg.brief());
+               handler->onError(getHandle(), msg);
+               handler->onTerminated(getHandle());
+               delete this;
+               break;
+         }
       }
    }
 }
@@ -272,7 +357,15 @@ ServerSubscription::neutralNotify()
    return mLastNotify;
 }
 
-
+void 
+ServerSubscription::dialogDestroyed(const SipMessage& msg)
+{
+   ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
+   assert(handler);   
+   handler->onError(getHandle(), msg);
+   handler->onTerminated(getHandle());
+   delete this;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
