@@ -294,8 +294,8 @@ main(int argc, char* argv[])
       Fifo<Message> destFifo;
 
       Data localHost = Resolver::getHostName();
-      Resolver srcIp(localHost, 5070, Transport::TCP);
-      Resolver destIp(localHost, 5080, Transport::TCP);
+      Resolver srcIp(localHost, 5070, TCP);
+      Resolver destIp(localHost, 5080, TCP);
       
       TcpTransport src(localHost, 5070, "eth0", srcFifo);
       TcpTransport dest(localHost, 5080, "eth0", destFifo);
@@ -358,8 +358,8 @@ main(int argc, char* argv[])
       int dstPort = 5080;
 
       Data localHost = Resolver::getHostName();
-      Resolver srcIp(localHost, srcPort, Transport::TCP);
-      Resolver destIp(localHost, dstPort, Transport::TCP);
+      Resolver srcIp(localHost, srcPort, TCP);
+      Resolver destIp(localHost, dstPort, TCP);
       
       TcpTransport src(localHost, srcPort, "eth0", srcFifo);
       TcpTransport dest(localHost, dstPort, "eth0", destFifo);
