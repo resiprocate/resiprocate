@@ -1256,7 +1256,7 @@ NameAddr::NameAddr(const Data& unparsed)
       tmp.parse(pb);
       *this = tmp;
    }
-   catch(ParseBuffer::Exception& e)
+   catch(ParseBuffer::Exception&)
    {
       DebugLog (<< "Failed trying to construct a NameAddr from " << unparsed);
       throw;
