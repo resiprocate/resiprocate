@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.72 2003/08/13 20:34:39 davidb Exp $";
+// "$Id: Data.cxx,v 1.73 2003/09/14 23:40:44 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -995,31 +995,54 @@ resip::operator<<(ostream& strm, const Data& d)
    return strm.write(d.mBuf, d.mSize);
 }
 
-#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+// random permutation of 0..255
+static const unsigned char randomPermutation[256] = 
+{
+   44, 9, 46, 184, 21, 30, 92, 231, 79, 7, 166, 237, 173, 72, 91, 123, 
+   212, 183, 16, 99, 85, 45, 190, 130, 118, 107, 169, 119, 100, 179, 251, 177,
+   23, 125, 12, 101, 121, 246, 61, 38, 156, 114, 159, 57, 181, 145, 198, 182,
+   58, 215, 174, 225, 82, 178, 150, 161, 63, 103, 32, 203, 68, 151, 139, 55, 
+   143, 2, 36, 110, 209, 154, 204, 89, 62, 17, 187, 226, 31, 105, 195, 208,
+   49, 56, 238, 172, 37, 3, 234, 206, 134, 233, 19, 148, 64, 4, 10, 224,
+   144, 88, 93, 191, 20, 131, 138, 199, 243, 244, 39, 50, 214, 87, 6, 84,
+   185, 112, 171, 75, 192, 193, 239, 69, 106, 43, 194, 1, 78, 67, 116, 200,
+   83, 70, 213, 25, 59, 137, 52, 13, 153, 42, 232, 0, 133, 210, 76, 33,
+   255, 236, 124, 104, 65, 201, 53, 155, 140, 254, 54, 196, 120, 146, 216, 29,
+   28, 86, 245, 90, 98, 26, 81, 115, 180, 66, 102, 136, 167, 51, 109, 132,
+   77, 175, 14, 202, 222, 48, 223, 188, 40, 242, 157, 5, 128, 229, 71, 127,
+   164, 207, 247, 8, 80, 149, 94, 160, 47, 117, 135, 176, 129, 142, 189, 97,
+   11, 250, 221, 218, 96, 220, 35, 197, 152, 126, 219, 74, 170, 252, 163, 41,
+   95, 27, 34, 22, 205, 230, 241, 186, 168, 228, 253, 249, 113, 108, 111, 211,
+   235, 217, 165, 122, 15, 141, 158, 147, 240, 24, 162, 18, 60, 73, 227, 248
+};
+
+#if ( ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) ) || defined(__INTEL_COMPILER ) )
 size_t 
 __gnu_cxx::hash<resip::Data>::operator()(const resip::Data& data) const
 {
-   unsigned long __h = 0; 
-   const char* start = data.data(); // non-copying
-   const char* end = start + data.size();
-   for ( ; start != end; ++start)
+   // 4 byte Pearson's hash
+   // essentially random hashing
+
+   // .dlb. better if layed out in host byte order
+
+   // network order is big endian:
+   unsigned char byte0(randomPermutation[0]);
+   unsigned char byte1(randomPermutation[1]);
+   unsigned char byte2(randomPermutation[2]);
+   unsigned char byte3(randomPermutation[3]);
+
+   const char* c = data.data();
+   const char* end = c + data.size();
+   for ( ; c != end; ++c)
    {
-      __h = 5*__h + *start; // .dlb. weird hash
+      byte0 = randomPermutation[*c ^ byte0];
+      byte1 = randomPermutation[*c ^ byte1];
+      byte2 = randomPermutation[*c ^ byte2];
+      byte3 = randomPermutation[*c ^ byte3];
    }
-   return size_t(__h);
-}
-#  elif  defined(__INTEL_COMPILER )
-size_t 
-std::hash_value(const resip::Data& data) 
-{
-   unsigned long __h = 0; 
-   const char* start = data.data(); // non-copying
-   const char* end = start + data.size();
-   for ( ; start != end; ++start)
-   {
-      __h = 5*__h + *start; // .dlb. weird hash
-   }
-   return size_t(__h);
+
+   // convert from network to host byte order
+   return ntohl((size_t)(byte3));
 }
 #endif
 
