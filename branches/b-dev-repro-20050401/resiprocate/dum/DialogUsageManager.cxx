@@ -826,6 +826,8 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          }
       }
       
+      InfoLog(<< "Test if sip message" );
+
       SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
       if (sipMsg)
       {
@@ -890,6 +892,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
       if (destroyUsage)
       {
+         InfoLog(<< "Destroying usage" );
          destroyUsage->destroy();
          return true;
       }
@@ -897,6 +900,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
       if (dumMsg)
       {
+         InfoLog(<< "Timeout Message" );
          if (!dumMsg->getBaseUsage().isValid())
          {
             return true;
@@ -909,7 +913,8 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
       if (keepAliveMsg)
       {
-         if (mKeepAliveManager.get())
+          InfoLog(<< "Keep Alive Message" );
+        if (mKeepAliveManager.get())
          {
             mKeepAliveManager->process(*keepAliveMsg);
          }
@@ -919,6 +924,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       StatisticsMessage* stats = dynamic_cast<StatisticsMessage*>(msg.get());
       if (stats)
       {
+         InfoLog(<< "Stats message " );
          stats->loadOut(mStatsPayload);
          stats->logStats(RESIPROCATE_SUBSYSTEM, mStatsPayload);
       }
