@@ -135,6 +135,7 @@ class InviteSession : public DialogUsage
       CSeqToMessageMap mFinalResponseMap;
       
       bool mUserConnected;
+      SipMessage* mQueuedBye;      
 
       virtual ~InviteSession();
       
