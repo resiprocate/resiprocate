@@ -12,6 +12,12 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, 
 {
 }
 
+ClientSubscription::~ClientSubscription()
+{
+   
+   mDialog.mClientSubscriptions.remove(this);
+}
+
 bool
 ClientSubscription::matches(const SipMessage& subOrNotify)
 {

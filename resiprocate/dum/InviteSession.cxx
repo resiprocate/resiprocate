@@ -21,6 +21,10 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
    assert(mDum.mInviteSessionHandler);
 }
 
+InviteSession::~InviteSession()
+{
+   mDialog.mInviteSession = 0;
+}
 
 const SdpContents* 
 InviteSession::getLocalSdp()
@@ -261,6 +265,8 @@ InviteSession::Handle::operator->()
 {
    return static_cast<InviteSession*>(get());
 }
+
+
 
 void InviteSession::makeAck(const SipMessage& response2xx)
 {
