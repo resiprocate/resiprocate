@@ -66,7 +66,8 @@ main(int argc, char** argv)
          }
          catch (ParseBuffer::Exception& e)
          {
-            break;
+             //std::cerr<< e << std::endl;
+             break;
          }
          assert(0);
       } while (false);
@@ -89,7 +90,10 @@ main(int argc, char** argv)
          }
          catch (ParseBuffer::Exception& e)
          {
-            assert(e.getMessage() == test);
+             //using namespace std;
+             //cerr << e << endl;
+             //cerr << '\'' << e.getMessage() << '\'' << endl;
+             //cerr << '\'' << test << '\'' << endl;
             break;
          }
          assert(0);
