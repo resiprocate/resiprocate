@@ -67,6 +67,9 @@ class TransportSelector
       
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
+
+      // An AF_UNSPEC addr_in for rapid unconnect
+      struct sockaddr_in mUnspecified;
 };
 
 }
