@@ -1564,8 +1564,6 @@ Codec::operator=(const Codec& rhs)
    return *this;
 }
 
-
-
 void
 Codec::parse(ParseBuffer& pb, 
              const SdpContents::Session::Medium& medium,
