@@ -71,20 +71,18 @@ DialogUsageManager::~DialogUsageManager()
    mShutdownState = Destroying;
    //InfoLog ( << "~DialogUsageManager" );
 
+   #if(0)
    // !kh!
    DialogSetMap::iterator dialogSet = mDialogSetMap.begin();
    for (; dialogSet != mDialogSetMap.end(); ++dialogSet)
    {
       delete dialogSet->second;
    }
-   // !kh!
-   // if mDialogSetMap is not empty... it just keeps on deleting the same instance...
-   /*
+   #endif
    while(!mDialogSetMap.empty())
    {
       delete mDialogSetMap.begin()->second;
    }
-   */
    //InfoLog ( << "~DialogUsageManager done" );
 }
 
