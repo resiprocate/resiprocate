@@ -46,8 +46,8 @@ MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs
    : Contents(rhs),
      mContents()
 {
-   list<Contents*>::const_iterator j;
-   const list<Contents*>& list = rhs.parts();
+   vector<Contents*>::const_iterator j;
+   const vector<Contents*>& list = rhs.parts();
    
    for ( j = list.begin(); 
          j != list.end(); ++j)
@@ -68,7 +68,7 @@ void
 MultipartMixedContents::clear()
 {
    Contents::clear();
-   for (list<Contents*>::iterator i = mContents.begin(); 
+   for (vector<Contents*>::iterator i = mContents.begin(); 
         i != mContents.end(); ++i)
    {
       delete *i;
@@ -88,7 +88,7 @@ MultipartMixedContents::operator=(const MultipartMixedContents& rhs)
       Contents::operator=(rhs);
       clear();
       
-      for (list<Contents*>::iterator i = mContents.begin(); 
+      for (vector<Contents*>::iterator i = mContents.begin(); 
            i != mContents.end(); ++i)
       {
          mContents.push_back( (*i)->clone() );
@@ -121,7 +121,7 @@ MultipartMixedContents::encodeParsed(std::ostream& str) const
    assert( mContents.size() > 0 );
    
    bool first = true;
-   for (list<Contents*>::const_iterator i = mContents.begin(); 
+   for (vector<Contents*>::const_iterator i = mContents.begin(); 
         i != mContents.end(); ++i)
    {
       if (!first)

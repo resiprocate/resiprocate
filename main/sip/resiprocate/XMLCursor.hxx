@@ -1,9 +1,10 @@
 #if !defined(RESIP_XMLCURSOR_HXX)
 #define RESIP_XMLCURSOR_HXX 
 
-#include "resiprocate/os/ParseBuffer.hxx"
 #include <iosfwd>
-#include <list>
+#include <vector>
+
+#include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/HashMap.hxx"
 
 namespace resip
@@ -158,8 +159,8 @@ public:
 
             ParseBuffer mPb;
             Node* mParent;
-            std::list<Node*> mChildren;
-            std::list<Node*>::const_iterator mNext;
+            std::vector<Node*> mChildren;
+            std::vector<Node*>::const_iterator mNext;
 
             bool mIsLeaf;
             Data mTag;
