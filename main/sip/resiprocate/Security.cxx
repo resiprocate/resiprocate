@@ -885,13 +885,13 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    
    assert( second );
    assert( first );
-      
+   
    Data bodyData;
    DataStream strm( bodyData );
    first->encodeHeaders( strm );
    first->encode( strm );
    strm.flush();
-
+   
    // Data textData = first->getBodyData();
    Data textData = bodyData;
    Data sigData = sig->getBodyData();
@@ -982,6 +982,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    MapConstIterator index = publicKeys.begin();
    while ( index != publicKeys.end())
    {
+      InfoLog( << "Added a public cert for " << index->first  );
       X509* cert = index->second;  
       sk_X509_push(certs, cert);
       index++;
@@ -993,25 +994,31 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    //flags |= PKCS7_NOSIGS;
 
    STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7,certs, flags );
-   assert( signers );
-   for (int i=0; i<sk_X509_num(signers); i++)
+   if ( signers )
    {
-      X509* x = sk_X509_value(signers,i);
-      InfoLog(<< "Got a signer <" << i << ">" );
-
-      STACK* emails = X509_get1_email(x);
-
-      for ( int j=0; j<sk_num(emails); j++)
+      for (int i=0; i<sk_X509_num(signers); i++)
       {
-         char* e = sk_value(emails,j);
-         InfoLog(<< "email field of signing cert is <" << e << ">" );
-         if ( signedBy)
+         X509* x = sk_X509_value(signers,i);
+         InfoLog(<< "Got a signer <" << i << ">" );
+         
+         STACK* emails = X509_get1_email(x);
+         
+         for ( int j=0; j<sk_num(emails); j++)
          {
-            *signedBy = Data(e);
+            char* e = sk_value(emails,j);
+            InfoLog(<< "email field of signing cert is <" << e << ">" );
+            if ( signedBy)
+            {
+               *signedBy = Data(e);
+            }
          }
       }
    }
-
+   else
+   { 
+      InfoLog(<< "No signers of this messages" );
+   }
+   
 #if 0 
    STACK_OF(PKCS7_SIGNER_INFO) *sinfos;
    PKCS7_SIGNER_INFO *si;
