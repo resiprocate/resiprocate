@@ -26,6 +26,7 @@ SRC =   \
 	DialogId.cxx \
 	DialogSet.cxx \
 	DialogSetId.cxx \
+	DialogUsage.cxx \
 	DialogUsageManager.cxx \
 	DumTimeout.cxx \
 	HandleException.cxx \
@@ -35,6 +36,7 @@ SRC =   \
 	InviteSessionCreator.cxx \
 	InviteSessionHandler.cxx \
 	MergedRequestKey.cxx \
+	NonDialogUsage.cxx \
 	OutOfDialogReqCreator.cxx \
 	Profile.cxx \
 	PublicationCreator.cxx \

@@ -1,12 +1,12 @@
 #if !defined(RESIP_SERVEROUTOFDIALOGREQ_HXX)
 #define RESIP_SERVEROUTOFDIALOGREQ_HXX
 
-#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/dum/NonDialogUsage.hxx"
 
 namespace resip
 {
 
-class ServerOutOfDialogReq : public BaseUsage
+class ServerOutOfDialogReq : public NonDialogUsage
 {
    public:
       typedef Handle<ServerOutOfDialogReq> ServerOutOfDialogReqHandle;
@@ -24,8 +24,8 @@ class ServerOutOfDialogReq : public BaseUsage
       virtual ~ServerOutOfDialogReq();
 
    private:
-      friend class Dialog;
-      ServerOutOfDialogReq(DialogUsageManager& dum,  Dialog& dialog, const SipMessage& req);
+      friend class DialogSet;
+      ServerOutOfDialogReq(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& req);
       
 
       // disabled

@@ -163,12 +163,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          }
          break;
       }
-      case Connected:
-      case Terminated:
-         InviteSession::dispatch(msg);
-         break;
       default:
-         assert(0); //states should be exhausted
+         InviteSession::dispatch(msg);
    }
 }
 
@@ -190,7 +186,7 @@ void
 ClientInviteSession::send(SipMessage& msg)
 {
    //last ack logic lives in InviteSession(to be re-used for reinvite
-   if (mState == Connected || mState == Terminated)
+   if (mState == Connected || mState == Terminated || mState == ReInviting || mState == AcceptingReInvite)
    {
       InviteSession::send(msg);
       return;

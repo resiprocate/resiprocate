@@ -18,23 +18,23 @@ ClientRegistration::getHandle()
 }
 
 ClientRegistration::ClientRegistration(DialogUsageManager& dum,
-                                       Dialog& dialog,
+                                       DialogSet& dialogSet,
                                        SipMessage& request)
-   : BaseUsage(dum, dialog),
+   : NonDialogUsage(dum, dialogSet),
      mLastRequest(request),
      mTimerSeq(0)
 {
    if (mLastRequest.exists(h_Contacts))
    {
       mMyContacts = mLastRequest.header(h_Contacts);
-      mLastRequest.header(h_To).param(p_tag) = mDialog.getId().getRemoteTag();
+//      mLastRequest.header(h_To).param(p_tag) = mDialog.getId().getRemoteTag();
    }
 }
 
 ClientRegistration::~ClientRegistration()
 {
    DebugLog ( << "ClientRegistration::~ClientRegistration" );
-   mDialog.mClientRegistration = 0;
+   mDialogSet.mClientRegistration = 0;
 }
 
 void 
