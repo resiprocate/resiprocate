@@ -14,7 +14,6 @@
 #include "repro/Registrar.hxx"
 
 
-
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 using namespace repro;

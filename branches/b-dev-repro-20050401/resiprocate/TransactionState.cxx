@@ -15,6 +15,7 @@
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/TransactionTerminated.hxx"
 #include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -83,25 +84,28 @@ TransactionState::~TransactionState()
 void
 TransactionState::process(TransactionController& controller)
 {
-#if(0)
-   Message* msg = controller.mStateMacFifo.getNext();
-   assert(msg);
-   
-   TransactionMessage* message = dynamic_cast<TransactionMessage*>(msg);
-#else
-   // !kh! don't need the above cast (the type is right).
-   // !kh! don't need the above assert (It would've failed in AbstractFifo).
    TransactionMessage* message = controller.mStateMacFifo.getNext();
-#endif
-   KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
-   if (keepAlive)
    {
-      InfoLog ( << "Sending keep alive to: " << keepAlive->getDestination());      
-      controller.mTransportSelector.transmit(keepAlive, keepAlive->getDestination());
-      delete keepAlive;
-      return;      
+      TransactionUserMessage* tuser = dynamic_cast<TransactionUserMessage*>(message);
+      if (tuser)
+      {
+         controller.mTuSelector.process(tuser);
+         delete tuser;
+         return;
+      }
    }
-
+   
+   {
+      KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
+      if (keepAlive)
+      {
+         InfoLog ( << "Sending keep alive to: " << keepAlive->getDestination());      
+         controller.mTransportSelector.transmit(keepAlive, keepAlive->getDestination());
+         delete keepAlive;
+         return;      
+      }
+   }
+   
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
 
    RESIP_STATISTICS(sip && sip->isExternal() && controller.mStatsManager.received(sip));
