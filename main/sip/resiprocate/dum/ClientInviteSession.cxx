@@ -227,7 +227,7 @@ ClientInviteSession::end()
       case Cancelled: //user error
          throw new UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
       default:
-         assert(0); //states should be exhausted
+         throw new UsageUseException("Progammer error", __FILE__, __LINE__);
    }
 }
 

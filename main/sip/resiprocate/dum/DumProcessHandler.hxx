@@ -1,5 +1,5 @@
-#if !defined(RESIP_ASYNC_PROCESS_NOTIFIER_DNS_HXX)
-#define RESIP_ASYNC_PROCESS_NOTIFIER_DNS_HXX
+#if !defined(RESIP_DUM_PROCESS_HANDLER_HXX)
+#define RESIP_DUM_PROCESS_HANDLER_HXX
 
 #include "resiprocate/ProcessNotifier.hxx"
 #include "resiprocate/external/ExternalTimer.hxx"
@@ -26,6 +26,9 @@ class DumProcessHandler : public ProcessNotifier::Handler, public ExternalTimerH
       DialogUsageManager* mDum;      
       ExternalTimer* mExternalTimer;      
       bool mStopped;      
+      bool mCurrentlyProcessing;
 };
 
-#endif
+} // namespace resip
+
+#endif // !RESIP_DUM_PROCESS_HANDLER_HXX
