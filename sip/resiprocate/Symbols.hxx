@@ -13,6 +13,7 @@ class Symbols
       static const char * const AT_SIGN;
       static const char * const COLON;
       static const char * const DASH;
+      static const char * const DASHDASH;
       static const char * const COMMA_OR_EQUAL;
       static const char * const CRLF;
       static const char * const CRLFCRLF;

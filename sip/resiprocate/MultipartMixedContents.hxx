@@ -27,8 +27,8 @@ class MultipartMixedContents : public Contents
       virtual void parse(ParseBuffer& pb);
 
       // !dlb! full on container interface
-      list<Contents*>& contents() {return mContents;}
-      const list<Contents*>& contents() const {return mContents;}
+      list<Contents*>& parts() {checkParsed(); return mContents;}
+      const list<Contents*>& parts() const {checkParsed(); return mContents;}
 
    protected:
       virtual void clear();

@@ -50,10 +50,10 @@ Contents::getContents(const Mime& m)
 
 Contents*
 Contents::createContents(const Mime& contentType, 
-                         const char* anchor, 
-                         ParseBuffer& pb)
+                         const Data& contents)
 {
-   HeaderFieldValue *hfv = new HeaderFieldValue(anchor, pb.position() - anchor);
+   assert(!contents.mMine);
+   HeaderFieldValue *hfv = new HeaderFieldValue(contents.data(), contents.size());
    assert(Contents::getFactoryMap().find(contentType) != Contents::getFactoryMap().end());
    Contents* c = Contents::getFactoryMap()[contentType]->create(hfv, contentType);
    c->mIsMine = true;
