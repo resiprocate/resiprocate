@@ -567,13 +567,13 @@ main(int argc, char** argv)
                    "Via: SIP/2.0/UDP 192.168.2.15:10276;received=192.168.2.15\r\n"
                    "Call-ID: cb15283c-6efb-452e-aef2-5e44e02e2440@192.168.2.15\r\n"
                    "CSeq: 2 REGISTER\r\n"
-                   "Contact: <sip:192.168.2.15:10276>;methods=\"INVITE, MESSAGE, INFO, SUBSCRIBE, OPTIONS, BYE, CANCEL, NOTIFY, ACK\"\r\n"
+                   "Contact: <sip:192.168.2.15:10276>;xmethods=\"INVITE, MESSAGE, INFO, SUBSCRIBE, OPTIONS, BYE, CANCEL, NOTIFY, ACK\"\r\n"
                    "Expires: 0\r\n"
                    "User-Agent: Windows RTC/1.0\r\n"
                    "Content-Length: 0\r\n"
                    "\r\n");
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
-      cerr << message->header(h_Contacts).front().param(UnknownParameterType("methods")) << endl;
+      cerr << message->header(h_Contacts).front().param(UnknownParameterType("xmethods")) << endl;
       cerr << *message << endl;
    }
 
@@ -1349,7 +1349,7 @@ main(int argc, char** argv)
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=z9hG4bKnashds7\r\n"
                    "Max-Forwards: 70\r\n"
                    "To: Bob <sip:bob@biloxi.com>\r\n"
-                   "From: Bob <sip:bob@biloxi.com>;tag=456248;mobility=hobble\r\n"
+                   "From: Bob <sip:bob@biloxi.com>;tag=456248;xmobility=hobble\r\n"
                    "Call-ID: 843817637684230@998sdasdh09\r\n"
                    "CSeq: 1826 REGISTER\r\n"
                    "Contact: <sip:bob@192.0.2.4>\r\n"
@@ -1373,7 +1373,7 @@ main(int argc, char** argv)
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=z9hG4bKnashds7\r\n"
                    "Max-Forwards: 70\r\n"
                    "To: Bob <sip:bob@biloxi.com>\r\n"
-                   "From: Bob <sip:bob@biloxi.com>;tag=456248;mobility=hobble\r\n"
+                   "From: Bob <sip:bob@biloxi.com>;tag=456248;mobility=\"hobble\"\r\n"
                    "Call-ID: 843817637684230@998sdasdh09\r\n"
                    "CSeq: 1826 REGISTER\r\n"
                    "Contact: <sip:bob@192.0.2.4>\r\n"
