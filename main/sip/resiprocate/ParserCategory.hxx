@@ -8,6 +8,9 @@
 #include "sip2/sipstack/ParameterTypes.hxx"
 #include "sip2/sipstack/LazyParser.hxx"
 
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType) const
+
 namespace Vocal2
 {
 class UnknownParameter;
@@ -30,7 +33,8 @@ class ParserCategory : public LazyParser
       bool exists(const ParamBase& paramType) const;
       void remove(const ParamBase& paramType);
 
-	  Data& param(const UnknownParameterType& param) const;
+      // !dlb! causes compiler error in windows -- change template to const T*
+      Data& param(const UnknownParameterType& param) const;
       void remove(const UnknownParameterType& param); 
       bool exists(const UnknownParameterType& param) const;
 
@@ -50,31 +54,60 @@ class ParserCategory : public LazyParser
       }
 
 #else
-      Transport_Param::DType& param(const Transport_Param& paramType) const;
-      User_Param::DType& param(const User_Param& paramType) const;
-      Method_Param::DType& param(const Method_Param& paramType) const;
-      Ttl_Param::DType& param(const Ttl_Param& paramType) const;
-      Maddr_Param::DType& param(const Maddr_Param& paramType) const;
-      Lr_Param::DType& param(const Lr_Param& paramType) const;
-      Q_Param::DType& param(const Q_Param& paramType) const;
-      Purpose_Param::DType& param(const Purpose_Param& paramType) const;
-      Expires_Param::DType& param(const Expires_Param& paramType) const;
-      Handling_Param::DType& param(const Handling_Param& paramType) const;
-      Tag_Param::DType& param(const Tag_Param& paramType) const;
-      ToTag_Param::DType& param(const ToTag_Param& paramType) const;
-      FromTag_Param::DType& param(const FromTag_Param& paramType) const;
-      Duration_Param::DType& param(const Duration_Param& paramType) const;
-      Branch_Param::DType& param(const Branch_Param& paramType) const;
-      Received_Param::DType& param(const Received_Param& paramType) const;
-      Mobility_Param::DType& param(const Mobility_Param& paramType) const;
-      Comp_Param::DType& param(const Comp_Param& paramType) const;
-      Rport_Param::DType& param(const Rport_Param& paramType) const;
-   
-	  Boundary_Param::DType& param(const Boundary_Param& paramType) const;
+      defineParam(accessType, "access-type", DataParameter, "RFC 2046");
+      defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
+      defineParam(boundary, "boundary", DataParameter, "RFC 2046");
+      defineParam(branch, "branch", BranchParameter, "RFC ????");
+      defineParam(charset, "charset", DataParameter, "RFC 2045");
+      defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
+      defineParam(comp, "comp", DataParameter, "RFC ????");
+      defineParam(dAlg, "d-alg", DataParameter, "RFC 3329");
+      defineParam(dQop, "d-qop", DataParameter, "RFC ????");
+      defineParam(dVer, "d-ver", QuotedDataParameter, "RFC ????");
+      defineParam(directory, "directory", DataParameter, "RFC 2046");
+      defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
+      defineParam(duration, "duration", IntegerParameter, "RFC ????");
+      defineParam(expiration, "expiration", IntegerParameter, "RFC 2046");
+      defineParam(expires, "expires", IntegerParameter, "RFC ????");
+      defineParam(filename, "filename", DataParameter, "RFC ????");
+      defineParam(fromTag, "from-tag", DataParameter, "RFC ????");
+      defineParam(handling, "handling", DataParameter, "RFC ????");
+      defineParam(id, "id", DataParameter, "RFC ????");
+      defineParam(lr, "lr", ExistsParameter, "RFC ????");
+      defineParam(maddr, "maddr", DataParameter, "RFC ????");
+      defineParam(method, "method", DataParameter, "RFC ????");
+      defineParam(micalg, "micalg", DataParameter, "RFC 1847");
+      defineParam(mobility, "mobility", DataParameter, "RFC ????");
+      defineParam(mode, "mode", DataParameter, "RFC 2046");
+      defineParam(name, "name", DataParameter, "RFC 2046");
+      defineParam(nc, "nc", DataParameter, "RFC ????");
+      defineParam(nonce, "nonce", QuotedDataParameter, "RFC ????");
+      defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
+      defineParam(permission, "permission", DataParameter, "RFC 2046");
+      defineParam(protocol, "protocol", DataParameter, "RFC 1847");
+      defineParam(purpose, "purpose", DataParameter, "RFC ????");
+      defineParam(q, "q", FloatParameter, "RFC ????");
+      defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
+      defineParam(reason, "reason", DataParameter, "RFC ????");
+      defineParam(received, "received", DataParameter, "RFC ????");
+      defineParam(response, "response", QuotedDataParameter, "RFC ????");
+      defineParam(retryAfter, "retry-after", IntegerParameter, "RFC ????");
+      defineParam(rport, "rport", RportParameter, "RFC ????");
+      defineParam(server, "server", DataParameter, "RFC 2046");
+      defineParam(site, "site", DataParameter, "RFC 2046");
+      defineParam(size, "size", DataParameter, "RFC 2046");
+      defineParam(smimeType, "smime-type", DataParameter, "RFC 2633");
+      defineParam(stale, "stale", DataParameter, "RFC ????");
+      defineParam(tag, "tag", DataParameter, "RFC ????");
+      defineParam(toTag, "to-tag", DataParameter, "RFC ????");
+      defineParam(transport, "transport", DataParameter, "RFC ????");
+      defineParam(ttl, "ttl", IntegerParameter, "RFC ????");
+      defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
+      defineParam(user, "user", DataParameter, "RFC ????");
+      defineParam(username, "username", DataParameter, "RFC ????");
 
-      Digest_Algorithm_Param::DType& param(const Digest_Algorithm_Param& paramType) const;
-      Digest_Qop_Param::DType& param(const Digest_Qop_Param& paramType) const;
-      Digest_Verify_Param::DType& param(const Digest_Verify_Param& paramType) const;
+      defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
+
 #endif
       
       void parseParameters(ParseBuffer& pb);
@@ -109,8 +142,7 @@ operator<<(std::ostream&, const ParserCategory& category);
 
 }
 
-#endif
-
+#undef defineParam
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -161,3 +193,5 @@ operator<<(std::ostream&, const ParserCategory& category);
  * <http://www.vovida.org/>.
  *
  */
+
+#endif
