@@ -17,6 +17,7 @@
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
 #include "repro/WebAdmin.hxx"
+#include "repro/RouteAbstractDb.hxx"
 
 
 using namespace resip;
@@ -28,13 +29,15 @@ using namespace std;
 
 WebAdmin::WebAdmin(  UserAbstractDb& userDb,  
                      RegistrationPersistenceManager& regDb,
+                     RouteAbstractDb& routeDb,
                      Security& security,
                      int port, 
                      IpVersion version):
    HttpBase( port, version ),
    mUserDb(userDb),
-   mSecurity(security),
-   mRegDb(regDb)
+   mRegDb(regDb),
+   mRouteDb( routeDb ),
+   mSecurity(security)
 {
 }
 
@@ -60,11 +63,19 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
    {
       pb.skipChar('?');
       
+      // keys to add user
       Data user;
       Data realm;
       Data password;
       Data name;
       Data email;
+
+      // keys to add route 
+      Data routeUri; // TODO !cj! name suck - this should be route match pattern 
+      Data routeMethod;
+      Data routeEvent;
+      Data routeDestination; // name suck - this should be route rewrite
+                             // expression 
       
       while ( !pb.eof() )
       {
@@ -109,12 +120,34 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
          {
             domain = value;
          }
+
+           if ( key == Data("routeUri") )
+           {
+              routeUri = value;
+           }
+           if ( key == Data("routeMethod") )
+           {
+              routeMethod = value;
+           }
+          if ( key == Data("routeEvent") )
+           {
+              routeEvent = value;
+           }
+           if ( key == Data("routeDestination") )
+           {
+               routeDestination = value;
+           }
            
       }
 
       if ( !user.empty() )
       {
          mUserDb.addUser(user,realm,password,name,email);
+      }
+
+      if ( !routeDestination.empty() )
+      {
+         mRouteDb.add(routeMethod ,routeEvent ,routeUri, routeDestination );
       }
    }
    

@@ -1,59 +1,57 @@
-#if !defined(RESIP_WEBADMIN_HXX)
-#define RESIP_WEBADMIN_HXX 
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
 
-#include "resiprocate/Security.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "repro/monkeys/RouteMonkey.hxx"
+#include "repro/RequestContext.hxx"
 
-#include "repro/UserAbstractDb.hxx"
+#include "resiprocate/os/Logger.hxx"
 #include "repro/RouteAbstractDb.hxx"
-#include "repro/HttpBase.hxx"
 
-namespace resip
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
+
+
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+
+RouteMonkey::RouteMonkey(RouteAbstractDb& db) :
+   mDb(db)
+{}
+
+RouteMonkey::~RouteMonkey()
+{}
+
+RequestProcessor::processor_action_t
+RouteMonkey::handleRequest(RequestContext& context)
 {
-class RegistrationPersistenceManager;
+  DebugLog(<< "Monkey handling request: " << *this 
+           << "; reqcontext = " << context);
+
+
+  SipMessage& msg = context.getOriginalRequest();
+
+  NameAddr name(mDb.process( msg.header(h_RequestLine).uri(), 
+                             getMethodName(msg.header(h_RequestLine).method()),
+                             msg.exists(h_Event) ? 
+                             msg.header(h_Event).value() : 
+                             Data::Empty));
+  
+  context.addTarget(name);
+     
+
+    return RequestProcessor::Continue;
 }
 
-
-namespace repro
+void
+RouteMonkey::dump(std::ostream &os) const
 {
-
-class WebAdmin: public HttpBase
-{
-   public:
-      WebAdmin( UserAbstractDb& userDb,
-                resip::RegistrationPersistenceManager& regDb,
-                RouteAbstractDb& routeDb,
-                resip::Security& security,
-                int port=5080, 
-                resip::IpVersion version=resip::V4);
-      
-   protected:
-      virtual void buildPage( const resip::Data& uri, int pageNumber );
-
-   private: 
-      resip::Data buildDefaultPage();
-
-      resip::Data buildAddRoutePage();
-      resip::Data buildAddUserPage();
-      resip::Data buildShowRegsPage();
-      resip::Data buildShowRoutesPage();
-      resip::Data buildShowUsersPage();
-      resip::Data buildCertPage(const resip::Data& domain);
-      
-      UserAbstractDb& mUserDb;
-      resip::RegistrationPersistenceManager& mRegDb;
-      RouteAbstractDb& mRouteDb;
-      resip::Security& mSecurity;
-};
-
-
-
+  os << "Route Monkey" << std::endl;
 }
 
-#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

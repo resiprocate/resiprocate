@@ -1,59 +1,26 @@
-#if !defined(RESIP_WEBADMIN_HXX)
-#define RESIP_WEBADMIN_HXX 
+#if !defined(RESIP_ROUTEMONKEY_HXX)
+#define RESIP_ROUTEMONKEY_HXX 
 
-#include "resiprocate/Security.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Tuple.hxx"
-
-#include "repro/UserAbstractDb.hxx"
-#include "repro/RouteAbstractDb.hxx"
-#include "repro/HttpBase.hxx"
-
-namespace resip
-{
-class RegistrationPersistenceManager;
-}
-
+#include "repro/RequestProcessor.hxx"
 
 namespace repro
 {
+class RouteAbstractDb;
 
-class WebAdmin: public HttpBase
-{
-   public:
-      WebAdmin( UserAbstractDb& userDb,
-                resip::RegistrationPersistenceManager& regDb,
-                RouteAbstractDb& routeDb,
-                resip::Security& security,
-                int port=5080, 
-                resip::IpVersion version=resip::V4);
-      
-   protected:
-      virtual void buildPage( const resip::Data& uri, int pageNumber );
+  class RouteMonkey: public RequestProcessor
+  {
+    public:
+      RouteMonkey(RouteAbstractDb& db);
+      virtual ~RouteMonkey();
 
-   private: 
-      resip::Data buildDefaultPage();
+      virtual processor_action_t handleRequest(RequestContext &);
+      virtual void dump(std::ostream &os) const;
 
-      resip::Data buildAddRoutePage();
-      resip::Data buildAddUserPage();
-      resip::Data buildShowRegsPage();
-      resip::Data buildShowRoutesPage();
-      resip::Data buildShowUsersPage();
-      resip::Data buildCertPage(const resip::Data& domain);
-      
-      UserAbstractDb& mUserDb;
-      resip::RegistrationPersistenceManager& mRegDb;
-      RouteAbstractDb& mRouteDb;
-      resip::Security& mSecurity;
-};
-
-
-
+     private:
+        RouteAbstractDb& mDb;
+  };
 }
-
-#endif  
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
