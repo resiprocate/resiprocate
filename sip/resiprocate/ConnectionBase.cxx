@@ -57,7 +57,7 @@ ConnectionBase::getId() const
 }
 
 void
-ConnectionBase::preparseNewBytes(int bytesRead, Fifo<Message>& fifo)
+ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 {
    assert(mWho.transport);
 

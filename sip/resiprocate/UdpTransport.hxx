@@ -2,13 +2,10 @@
 #define RESIP_UDPTRANSPORT_HXX
 
 #include "resiprocate/InternalTransport.hxx"
-#include "resiprocate/Message.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
 
 namespace resip
 {
-
-class SipMessage;
 
 class UdpTransport : public InternalTransport
 {
@@ -16,7 +13,7 @@ class UdpTransport : public InternalTransport
       // Specify which udp port to use for send and receive
       // interface can be an ip address or dns name. If it is an ip address,
       // only bind to that interface.
-      UdpTransport(Fifo<Message>& fifo,
+      UdpTransport(Fifo<TransactionMessage>& fifo,
                    int portNum,
                    const Data& interfaceObj=Data::Empty, 
                    bool ipv4=true);

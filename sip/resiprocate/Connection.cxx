@@ -102,7 +102,7 @@ resip::operator<<(std::ostream& strm, const resip::Connection& c)
 }
 
 int
-Connection::read(Fifo< Message >& fifo)
+Connection::read(Fifo<TransactionMessage>& fifo)
 {
   std::pair<char*, size_t> writePair = getWriteBuffer();
   size_t bytesToRead = resipMin(writePair.second, 

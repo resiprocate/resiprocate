@@ -14,7 +14,7 @@ class TcpBaseTransport : public InternalTransport
    public:
 //      enum {MaxFileDescriptors = 100000};
 
-      TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data& sendhost, bool ipv4);
+      TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum, const Data& sendhost, bool ipv4);
       virtual  ~TcpBaseTransport();
       
       void process(FdSet& fdset);

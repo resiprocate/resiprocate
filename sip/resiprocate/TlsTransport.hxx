@@ -2,7 +2,7 @@
 #define RESIP_TLSTRANSPORT_HXX
 
 #include "resiprocate/TcpBaseTransport.hxx"
-
+#include "resiprocate/SecurityTypes.hxx"
 namespace resip
 {
 
@@ -14,13 +14,15 @@ class Security;
 class TlsTransport : public TcpBaseTransport
 {
    public:
-      TlsTransport(Fifo<Message>& fifo, 
+      TlsTransport(Fifo<TransactionMessage>& fifo, 
                    const Data& sipDomain, 
                    const Data& interfaceObj, 
                    int portNum, 
                    const Data& keyDir, 
                    const Data& privateKeyPassPhrase, 
-                   bool ipv4);
+                   bool ipv4,
+                   SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
+                   );
       virtual  ~TlsTransport();
 
       TransportType transport() const { return TLS; }

@@ -11,7 +11,7 @@ class SipMessage;
 class TcpTransport : public TcpBaseTransport
 {
    public:
-      TcpTransport(Fifo<Message>& fifo, int portNum, const Data& interfaceObj=Data::Empty, bool ipv4=true);
+      TcpTransport(Fifo<TransactionMessage>& fifo, int portNum, const Data& interfaceObj=Data::Empty, bool ipv4=true);
       virtual  ~TcpTransport();
       
       TransportType transport() const { return TCP; }

@@ -4,7 +4,6 @@
 //#include <exception>
 
 #include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/Message.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Tuple.hxx"
@@ -12,6 +11,7 @@
 namespace resip
 {
 
+class TransactionMessage;
 class SipMessage;
 class SendData;
 class Connection;
@@ -28,8 +28,8 @@ class Transport
       
       // sendHost what to put in the Via:sent-by
       // portNum is the port to receive and/or send on
-      Transport(Fifo<Message>& rxFifo, const GenericIPAddress& address);
-      Transport(Fifo<Message>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
+      Transport(Fifo<TransactionMessage>& rxFifo, const GenericIPAddress& address);
+      Transport(Fifo<TransactionMessage>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
       virtual ~Transport();
 
       virtual bool isFinished() const=0;
@@ -89,7 +89,7 @@ class Transport
       Data mInterface;
       Tuple mTuple;
 
-      Fifo<Message>& mStateMachineFifo; // passed in
+      Fifo<TransactionMessage>& mStateMachineFifo; // passed in
       bool mShuttingDown;
 
       //not a great name, just adds the message to the fifo in the synchronous(default) case,

@@ -23,7 +23,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-InternalTransport::InternalTransport(Fifo<Message>& rxFifo,
+InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
                      int portNum,
                      const Data& intfc,
                      bool ipv4) :
