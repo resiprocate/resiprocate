@@ -46,8 +46,9 @@
 #include <string>
 
 #include "util/Data.hxx"
-#include "util/Logger.hxx"
 #include "util/DataStream.hxx"
+#include "util/Logger.hxx"
+#include "util/Socket.hxx"
 
 #include "sipstack/Helper.hxx"
 #include "sipstack/MethodTypes.hxx"
@@ -66,12 +67,11 @@ using namespace std;
 // --------------------------------------------------
 
 typedef struct {
-	bool isMethod;
-	bool fromWire;
-	char *methodName;
-	int statusCode;
-	time_t expiry;
-	MethodTypes method;
+    time_t mExpiry;
+    bool mIsRequest;
+    bool mIsTransport;
+    int mResponseCode;
+    MethodTypes mMethod;
 } WaitNode;
 
 // --------------------------------------------------
@@ -85,8 +85,8 @@ SipStack* client = 0;
 void
 exitusage()
 {
-	cerr << "Usage: " << ProgramName << " <testfileofsipmessagesandstuff>"
-	     << endl;
+	cerr << "Usage: " << ProgramName << " ";
+	cerr << "<testfileofsipmessagesandstuff>" << endl;
 	exit(1);
 }
 
@@ -107,19 +107,15 @@ processTimeouts(int arg)
     //    If yes, warn, else just continue.
 
     // First go through the "wire" data
-    while (1)
+    TestBufType& cbuf = TestOutBuffer::instance().getBuf();
+    while (!cbuf.empty())
     {
-	TestBufType& cbuf = TestOutBuffer::instance().getBuf();
 	int len = cbuf.size();
-	if (len < 1)
-	{
-	    break;
-	}
 	char *newbuf = new char[len+1];
-	TestBufType::const_iterator iter = cbuf.begin();
-	for (int i = 0; iter != cbuf.end(); iter++, i++)
+	for (int i = 0; i < len; i++)
 	{
-	    newbuf[i] = *iter;
+	    newbuf[i] = cbuf.front();
+	    cbuf.pop_front();
 	}
 	newbuf[len] = 0;
 	message = Helper::makeMessage(newbuf);
@@ -127,10 +123,9 @@ processTimeouts(int arg)
 	     i != WaitQueue.end();
 	     i++)
 	{
-	    if ((*i)->isMethod && message->isRequest())
+	    if ((*i)->mIsRequest && message->isRequest())
 	    {
-		if (getMethodType((*i)->methodName) ==
-		    message->header(h_RequestLine).getMethod())
+		if ((*i)->mMethod == message->header(h_RequestLine).getMethod())
 		{
 		    // We matched something we expected.
 		    delete newbuf;
@@ -140,9 +135,9 @@ processTimeouts(int arg)
 		    break;
 		}
 	    }
-	    else if (!(*i)->isMethod && message->isResponse())
+	    else if (!(*i)->mIsRequest && message->isResponse())
 	    {
-		if ((*i)->statusCode ==
+		if ((*i)->mResponseCode ==
 		    message->header(h_StatusLine).responseCode())
 		{
 		    // We matched something we expected.
@@ -158,7 +153,6 @@ processTimeouts(int arg)
 	{
 	    cerr << "Warning: unexpected message seen on the wire." << endl;
 	    delete newbuf;
-	    delete message;
 	}
     }
 
@@ -169,9 +163,9 @@ processTimeouts(int arg)
 	     i != WaitQueue.end();
 	     i++)
 	{
-	    if ((*i)->isMethod && message->isRequest())
+	    if ((*i)->mIsRequest && message->isRequest())
 	    {
-		if (getMethodType((*i)->methodName) ==
+		if ((*i)->mMethod ==
 		    message->header(h_RequestLine).getMethod())
 		{
 		    // We matched something we expected.
@@ -181,9 +175,9 @@ processTimeouts(int arg)
 		    break;
 		}
 	    }
-	    else if (!(*i)->isMethod && message->isResponse())
+	    else if (!(*i)->mIsRequest && message->isResponse())
 	    {
-		if ((*i)->statusCode ==
+		if ((*i)->mResponseCode ==
 		    message->header(h_StatusLine).responseCode())
 		{
 		    // We matched something we expected.
@@ -206,16 +200,16 @@ processTimeouts(int arg)
 	 i != WaitQueue.end();
 	 i++)
     {
-	if ((*i)->expiry < time(NULL))
+	if ((*i)->mExpiry < time(NULL))
 	{
 	    cerr << "Error: timeout waiting for ";
-	    if ((*i)->isMethod)
+	    if ((*i)->mIsRequest)
 	    {
-		cerr << "method " << (*i)->methodName << endl;
+		cerr << "mMethod " << (*i)->mMethod << endl;
 	    }
 	    else
 	    {
-		cerr << "status " << (*i)->statusCode << endl;
+		cerr << "mResponseCode " << (*i)->mResponseCode << endl;
 	    }
 	    WaitQueue.erase(i);
 	}
@@ -232,11 +226,11 @@ processInject()
     const char* now;
     bool isWireInject = false;
 
-    if (!strcasecmp(start, "inject_wire"))
+    if (!strncasecmp(start, "inject_wire", strlen("inject_wire")))
     {
 	isWireInject = true;
     }
-    else if (!strcasecmp(start, "inject_tu"))
+    else if (!strncasecmp(start, "inject_tu", strlen("inject_tu")))
     {
 	isWireInject = false;
     }
@@ -268,16 +262,15 @@ processExpect()
     const char* now;
     WaitNode* thisWait = new WaitNode;
     assert(thisWait);
-    thisWait->statusCode = 0;
-    thisWait->methodName = 0;
+    thisWait->mResponseCode = 0;
 
     if (!strncasecmp(start, "expect_wire", strlen("expect_wire")))
     {
-	thisWait->fromWire = true;
+	thisWait->mIsTransport = true;
     }
     else if (!strncasecmp(start, "expect_tu", strlen("expect_tu")))
     {
-	thisWait->fromWire = false;
+	thisWait->mIsTransport = false;
     }
 
     TestSpecParseBuf->skipToOneOf("{");
@@ -295,36 +288,36 @@ processExpect()
 	{
 	    start = TestSpecParseBuf->position();
 	    now = TestSpecParseBuf->skipToOneOf(ParseBuffer::Whitespace);
-	    thisWait->isMethod = true;
-	    thisWait->method = getMethodType(start, now-start);
+	    thisWait->mIsRequest = true;
+	    thisWait->mMethod = getMethodType(start, now-start);
 	}
 	else if (!strncasecmp(start, "status", strlen("status")))
 	{
 	    TestSpecParseBuf->skipToOneOf("0123456789");
-	    thisWait->isMethod = false;
-	    thisWait->statusCode = TestSpecParseBuf->integer();
+	    thisWait->mIsRequest = false;
+	    thisWait->mResponseCode = TestSpecParseBuf->integer();
 	}
 	else if (!strncasecmp(start, "timeout", strlen("timeout")))
 	{
 	    TestSpecParseBuf->skipToOneOf("0123456789");
-	    thisWait->expiry = TestSpecParseBuf->integer() + time(NULL);
+	    thisWait->mExpiry = TestSpecParseBuf->integer() + time(NULL);
 	}
 	TestSpecParseBuf->skipWhitespace();
 	start = TestSpecParseBuf->position();
     }
 
     WaitQueue.push_front(thisWait);
-    // alarm(thisWait->expiry <= 0 ? 1 : thisWait->expiry);
+    // alarm(thisWait->mExpiry <= 0 ? 1 : thisWait->mExpiry);
 
     TestSpecParseBuf->skipToOneOf("}");
     TestSpecParseBuf->skipChar();
 
     // For debugging purposes...
     cerr << "-> Expecting " << endl;
-    cerr << "   fromWire = " << (thisWait->fromWire == true) << endl;
-    cerr << "   isMethod = " << (thisWait->isMethod == true) << endl;
-    cerr << "   statusCode = " << (thisWait->statusCode) << endl;
-    cerr << "   expiry = " << (thisWait->expiry) << endl;
+    cerr << "   mIsTransport = " << (thisWait->mIsTransport == true) << endl;
+    cerr << "   mIsRequest = " << (thisWait->mIsRequest == true) << endl;
+    cerr << "   mResponseCode = " << (thisWait->mResponseCode) << endl;
+    cerr << "   mExpiry = " << (thisWait->mExpiry) << endl;
 }
 
 void
@@ -412,14 +405,13 @@ main(int argc, char *argv[])
     client = new SipStack();
     assert(client);
     client->addTransport(Transport::TestReliable, 5060);
-    fd_set fdReadSet;
-    FD_ZERO(&fdReadSet);
+    FdSet clientFdSet;
 
     signal(SIGALRM, processTimeouts);
 
     while (processClause())
     {
-	client->process(&fdReadSet);
+	client->process(clientFdSet);
     }
 
     if (!WaitQueue.empty())
