@@ -64,7 +64,7 @@ class Headers
          Content_Length, 
          UNKNOWN,
          MAX_HEADERS = UNKNOWN,
-         NONE,
+         NONE
       };
 
       static bool CommaTokenizing[MAX_HEADERS];
