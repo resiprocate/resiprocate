@@ -20,53 +20,27 @@ using namespace std;
 void 
 Vocal2::sendToWire(const Data& data)  // put data on wire to go to stack
 {
-   // write message into input buffer singleton
-   for (int i=0; i<data.size(); i++)
-   {
-      TestInBuffer::instance().getBuf().push_back(data.c_str()[i]);
-   }
-
+   TestInBuffer::instance().getBuf().add(new Data(data));
 }
 
 
 void 
 Vocal2::getFromWire(Data& data)       // get data off wire that has come from stack
 {
-   TestBufType& cbuf = TestOutBuffer::instance().getBuf();
-   int len = cbuf.size();
-
-   for (int i=0; i<len; i++ )
-   {
-      data += cbuf.front();
-      cbuf.pop_front();
-   }
-  
+   data = *TestOutBuffer::instance().getBuf().getNext();
 }
 
 void 
 Vocal2::stackSendToWire(const Data& data)  // put data from stack onto wire
 {
-   // write message into input buffer singleton
-   for (int i=0; i<data.size(); i++)
-   {
-      TestOutBuffer::instance().getBuf().push_back(data.c_str()[i]);
-   }
-
+   TestOutBuffer::instance().getBuf().add(new Data(data));
 }
 
 
 void 
 Vocal2::stackGetFromWire(Data& data)       // get data from wire to go to stack
 {
-   TestBufType& cbuf = TestInBuffer::instance().getBuf();
-   int len = cbuf.size();
-
-   for (int i=0; i<len; i++ )
-   {
-      data += cbuf.front();
-      cbuf.pop_front();
-   }
-  
+   data = *TestInBuffer::instance().getBuf().getNext();
 }
 
 
@@ -98,7 +72,7 @@ TestReliableTransport::process(FdSet& fdSet)
    }
 
 
-   if ( !  TestInBuffer::instance().getBuf().empty() )
+   if ( TestInBuffer::instance().getBuf().messageAvailable() )
    {
       Data data;
 
@@ -158,7 +132,7 @@ TestUnreliableTransport::process(FdSet& fdset)
    }
 
 
-   if ( !  TestInBuffer::instance().getBuf().empty() )
+   if ( TestInBuffer::instance().getBuf().messageAvailable() )
    {
       Data data;
 
@@ -195,8 +169,7 @@ TestUnreliableTransport::transport() const
 TestInBuffer* TestInBuffer::mInstance = 0;
 TestOutBuffer* TestOutBuffer::mInstance = 0;
 
-TestInBuffer::TestInBuffer() :
-   mCbuf(100000)
+TestInBuffer::TestInBuffer()
 {
 }
 
@@ -211,8 +184,7 @@ TestInBuffer::instance()
 }
 
 
-TestOutBuffer::TestOutBuffer() :
-   mCbuf(100000)
+TestOutBuffer::TestOutBuffer()
 {
 }
 
