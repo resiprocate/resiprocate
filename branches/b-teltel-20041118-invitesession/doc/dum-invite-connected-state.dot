@@ -63,7 +63,7 @@ digraph UAC {
   Answered -> Connected                   [ label = "onACK" ];
   Answered -> Terminated                  [ label = "timer::NoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
 
-  WaitingToOffer -> Answered              [ label = "timer::2xx/resend::2xx" ];
+  WaitingToOffer -> WaitingToOffer        [ label = "timer::2xx/resend::2xx" ];
   WaitingToOffer -> SentUpdate            [ label = "onACK/send::UPDATE-offer" ]; 
   WaitingToOffer -> SentReinvite          [ label = "onACK/send::INVITE-offer" ]; 
   WaitingToOffer -> Terminated            [ label = "timer::NoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
