@@ -19,7 +19,7 @@ SRC =   \
 	ClientSubscription.cxx \
 	Dialog.cxx \
 	DialogUsageManager.cxx \
-	DumTimer.cxx \
+	DumTimeout.cxx \
 	InviteSessionCreator.cxx \
 	InviteSession.cxx \
 	OutOfDialogReqCreator.cxx \
