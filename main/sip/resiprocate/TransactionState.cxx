@@ -366,7 +366,7 @@ TransactionState::processClientNonInvite(  Message* msg )
       //StackLog (<< "received new non-invite request");
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       mMsgToRetransmit = sip;
-      mController.mTimers.add(Timer::TimerF, mId, 64*Timer::T1 );
+      mController.mTimers.add(Timer::TimerF, mId, Timer::TF);
       sendToWire(sip);  // don't delete
    }
    else if (isResponse(msg) && isFromWire(msg)) // from the wire
@@ -494,7 +494,7 @@ TransactionState::processClientInvite(  Message* msg )
          case INVITE:
             delete mMsgToRetransmit; 
             mMsgToRetransmit = sip;
-            mController.mTimers.add(Timer::TimerB, mId, 64*Timer::T1 );
+            mController.mTimers.add(Timer::TimerB, mId, Timer::TB );
             sendToWire(msg); // don't delete msg
             break;
             
