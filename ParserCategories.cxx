@@ -992,6 +992,11 @@ ExpiresCategory::encodeParsed(std::ostream& str) const
 //====================
 // StringCategory
 //====================
+StringCategory::StringCategory(const Data& value)
+   : ParserCategory(),
+     mValue(value)
+{}
+
 StringCategory::StringCategory(const StringCategory& rhs)
    : ParserCategory(rhs),
      mValue(rhs.mValue)
