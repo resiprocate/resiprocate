@@ -129,7 +129,11 @@ void
 GagConduit::gaimLogout(GagLogoutMessage *msg)
 {
   Uri *aor = msg->getAorPtr();
-  // XXX
+  map<Uri,TuIM *>::iterator tu = getTu(*aor);
+  if (tu == tuIM.end()) return;
+  
+  delete(tu->second);
+  tuIM.erase(tu);
 }
 
 void
