@@ -1184,6 +1184,7 @@ Helper::determineFailureMessageEffect(const SipMessage& response)
       case 401:
       case 402:
       case 406:
+      case 408:  //again, maybe not. This seems best.
       case 412:
       case 413:
       case 414:
@@ -1191,6 +1192,7 @@ Helper::determineFailureMessageEffect(const SipMessage& response)
       case 420:
       case 421:
       case 423:
+
       case 429: // but if this the refer creating the Subscription, no sub will be created.
       case 486:
       case 487:
@@ -1210,6 +1212,7 @@ Helper::determineFailureMessageEffect(const SipMessage& response)
          if (code < 600)
          {
             if (response.exists(h_RetryAfter))
+
             {
                return RetryAfter;
             }
