@@ -140,6 +140,19 @@ TransportSelector::process(FdSet& fdset)
          InfoLog (<< "Uncaught exception: " << e);
       }
    }
+
+   for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
+        i != mTlsTransports.end(); i++)
+   {
+      try
+      {
+         (i->second)->process(fdset);
+      }
+      catch (BaseException& e)
+      {
+         InfoLog (<< "Uncaught exception: " << e);
+      }
+   }
 }
 
 
@@ -153,6 +166,15 @@ TransportSelector::hasDataToSend() const
          return true;
       }
    }
+   for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
+        i != mTlsTransports.end(); i++)
+   {
+      if ( (i->second)->hasDataToSend() )
+      {
+         return true;
+      }
+   }
+
    return false;
 }
 
@@ -286,6 +308,13 @@ TransportSelector::buildFdSet( FdSet& fdset )
    for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
    {
       (*i)->buildFdSet( fdset );
+   }
+
+   
+   for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
+        i != mTlsTransports.end(); i++)
+   {
+      (i->second)->buildFdSet( fdset );
    }
 }
 
