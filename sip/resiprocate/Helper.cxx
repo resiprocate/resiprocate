@@ -16,6 +16,7 @@
 #include "resiprocate/os/MD5Stream.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/SipMessage.hxx"
 
 using namespace resip;
@@ -466,7 +467,7 @@ Helper::computeTag(int numBytes)
 
 // !jf! this should be settable by the application in case a group of apps
 // (e.g. proxies) want to share the same secret
-static Data privateKey(Random::getRandomHex(1));
+static Data privateKey("asdfklsadflkj"); // Random::getRandomHex(1));
 
 Data
 Helper::makeNonce(const SipMessage& request, const Data& timestamp)
