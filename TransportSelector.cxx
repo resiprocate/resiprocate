@@ -502,7 +502,7 @@ TransportSelector::findTransport(const Tuple& search)
          ExactTupleMap::const_iterator i = mExactTransports.find(search);
          if (i != mExactTransports.end())
          {
-            DebugLog(<< "findTransport (exact) => " << i->first);
+            DebugLog(<< "findTransport (exact) => " << *(i->second));
             return i->second;
          }
       }
@@ -512,7 +512,7 @@ TransportSelector::findTransport(const Tuple& search)
          AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.find(search);
          if (i != mAnyInterfaceTransports.end())
          {
-            DebugLog(<< "findTransport (any interface) => " << i->first);
+            DebugLog(<< "findTransport (any interface) => " << *(i->second));
             return i->second;
          }
       }
@@ -524,7 +524,7 @@ TransportSelector::findTransport(const Tuple& search)
          AnyPortTupleMap::const_iterator i = mAnyPortTransports.find(search);
          if (i != mAnyPortTransports.end())
          {
-            DebugLog(<< "findTransport (any port, specific interface) => " << i->first);
+            DebugLog(<< "findTransport (any port, specific interface) => " << *(i->second));
             return i->second;
          }
       }
@@ -535,7 +535,7 @@ TransportSelector::findTransport(const Tuple& search)
          AnyPortAnyInterfaceTupleMap::const_iterator i = mAnyPortAnyInterfaceTransports.find(search);
          if (i != mAnyPortAnyInterfaceTransports.end())
          {
-            DebugLog(<< "findTransport (any port, any interface) => " << i->first);
+            DebugLog(<< "findTransport (any port, any interface) => " << *(i->second));
             return i->second;
          }
       }

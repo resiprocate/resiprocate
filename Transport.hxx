@@ -80,7 +80,7 @@ class Transport : public ThreadIf
       // also used by the TransportSelector. 
       // requires that the two transports be 
       bool operator==(const Transport& rhs) const;
-      
+
    protected:
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Data mInterface;
@@ -90,9 +90,13 @@ class Transport : public ThreadIf
       Fifo<Message>& mStateMachineFifo; // passed in
 
    private:
-    static const Data transportNames[MAX_TRANSPORT];
-    
+      static const Data transportNames[MAX_TRANSPORT];
+      friend std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
+      
 };
+
+std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
+      
 
 class SendData
 {
