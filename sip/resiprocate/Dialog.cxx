@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "resiprocate/Dialog.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -139,47 +140,6 @@ Dialog::createDialogAsUAC(const SipMessage& response)
    }
 }
 
-
-
-void 
-Dialog::createRegistrationAsUAC(const SipMessage& response)
-{
-   if (!mCreated)
-   {
-      assert(response.isResponse());
-
-      // reverse order from response
-      if (response.exists(h_RecordRoutes))
-      {
-         mRouteSet = response.header(h_RecordRoutes).reverse();
-      }
-	
-      mRemoteSequence = 0;
-      mRemoteEmpty = true;
-      mLocalSequence = response.header(h_CSeq).sequence();
-      mLocalEmpty = false;
-      mCallId = response.header(h_CallId);
-      if ( response.header(h_From).exists(p_tag) ) // 2543 compat
-      {
-          mLocalTag = response.header(h_From).param(p_tag);  
-      }
-      if ( response.header(h_To).exists(p_tag) )  // 2543 compat
-      {
-          mRemoteTag = response.header(h_To).param(p_tag); 
-      }
-      mRemoteUri = response.header(h_To);
-      mLocalUri = response.header(h_From);
-
-      mDialogId = mCallId;
-      mDialogId.param(p_toTag) = mLocalTag;
-      mDialogId.param(p_fromTag) = mRemoteTag;
-
-      mCreated = true;
-   }
-}
-
-
-
 void 
 Dialog::targetRefreshResponse(const SipMessage& response)
 {
@@ -235,8 +195,7 @@ Dialog::targetRefreshRequest(const SipMessage& request)
 
 
 SipMessage* 
-Dialog::makeInitialRegister(const NameAddr& registrar,
-                            const NameAddr& aor)
+Dialog::makeInitialRegister(const NameAddr& registrar, const NameAddr& aor)
 {
    SipMessage* msg = Helper::makeRegister( registrar, aor, mContact );
    assert( msg );
@@ -256,8 +215,7 @@ Dialog::makeInitialRegister(const NameAddr& registrar,
 
 
 SipMessage* 
-Dialog::makeInitialSubscribe(const NameAddr& target, 
-                             const NameAddr& from)
+Dialog::makeInitialSubscribe(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makeSubscribe( target, from, mContact );
    assert( msg );
@@ -275,8 +233,7 @@ Dialog::makeInitialSubscribe(const NameAddr& target,
 
 
 SipMessage* 
-Dialog::makeInitialPublish(const NameAddr& target, 
-                             const NameAddr& from)
+Dialog::makeInitialPublish(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makePublish( target, from, mContact );
    assert( msg );
@@ -294,8 +251,7 @@ Dialog::makeInitialPublish(const NameAddr& target,
 
 
 SipMessage* 
-Dialog::makeInitialMessage(const NameAddr& target, 
-                           const NameAddr& from)
+Dialog::makeInitialMessage(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makeMessage( target, from, mContact );
    assert( msg );
@@ -313,8 +269,7 @@ Dialog::makeInitialMessage(const NameAddr& target,
 
 
 SipMessage* 
-Dialog::makeInitialInvite(const NameAddr& target,
-                          const NameAddr& from)
+Dialog::makeInitialInvite(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makeInvite( target, from, mContact );
    assert( msg );
@@ -466,7 +421,6 @@ Dialog::makeReplaces()
 void
 Dialog::clear()
 {
-//   mContact.clear(); // !cj! - likely need this 
    mCreated = false;
    mRouteSet.clear();
    mRemoteTarget = NameAddr();
@@ -520,7 +474,6 @@ Dialog::makeRequestInternal(MethodTypes method)
    via.param(p_branch); // will create the branch
    request->header(h_Vias).push_front(via);
 
-   //DebugLog(<<"Created a request within dialog: " << this << "  " << mContact);
    //DebugLog(<<"contact after copy: " <<     request->header(h_Contacts).front());
    return request;
 }
