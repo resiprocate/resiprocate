@@ -64,16 +64,16 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/Transport.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::APP
+#define RESIPROCATE_SUBSYSTEM Subsystem::APP
 #define PORT 5060
 
 
 // --------------------------------------------------
 
-namespace Vocal2 
+namespace resip 
 {
 	class TestFSM  // this class is a friend of the SipStack and can directly access private stuff
 	{

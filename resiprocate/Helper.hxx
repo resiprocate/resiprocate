@@ -5,7 +5,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Symbols.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Helper

@@ -7,10 +7,10 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Preparse.hxx"
 
-#define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 
 const size_t TcpTransport::MaxWriteSize = 4096;
 const size_t TcpTransport::MaxReadSize = 4096;

@@ -1,10 +1,10 @@
-#if !defined(Vocal2_Socket_hxx)
-#define Vocal2_Socket_hxx
+#if !defined(resip_Socket_hxx)
+#define resip_Socket_hxx
 
 #include "compat.hxx"
 
 
-namespace Vocal2
+namespace resip
 {
 
 #ifdef WIN32

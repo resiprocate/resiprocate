@@ -11,7 +11,7 @@
 #define INLINE
 #endif
 
-namespace Vocal2
+namespace resip
 {
 
 class Transport;

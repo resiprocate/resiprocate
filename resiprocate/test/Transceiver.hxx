@@ -14,22 +14,22 @@ class Transceiver  // currently a Udp transceiver
       Transceiver(int port);
       
       //sends the message right away, fully populates the front via of the message
-      void send(const Vocal2::Resolver& target,  
-                Vocal2::SipMessage& msg);
+      void send(const resip::Resolver& target,  
+                resip::SipMessage& msg);
 
-      void send(Vocal2::SipMessage& message);
+      void send(resip::SipMessage& message);
       
       //blocks for up to waitMs, returns null if no message was received.
       //caller of receive owns the memory.
-      Vocal2::SipMessage* receive(int waitMs);
+      resip::SipMessage* receive(int waitMs);
 
-      const Vocal2::Uri& contactUri() { return mContactUri; }
+      const resip::Uri& contactUri() { return mContactUri; }
       
    private:
-      Vocal2::Fifo<Vocal2::Message> mReceived;
-      Vocal2::UdpTransport mUdp;
-      Vocal2::Uri mContactUri;
-      Vocal2::FdSet mFdset;
+      resip::Fifo<resip::Message> mReceived;
+      resip::UdpTransport mUdp;
+      resip::Uri mContactUri;
+      resip::FdSet mFdset;
 };
 
  

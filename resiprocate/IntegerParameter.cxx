@@ -2,7 +2,7 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 IntegerParameter::IntegerParameter(ParameterTypes::Type type,

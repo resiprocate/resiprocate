@@ -69,7 +69,7 @@ typedef unsigned int u_int32_t;
 #endif
 
 
-namespace Vocal2
+namespace resip
 {
 
 template<typename _Tp>

@@ -1,10 +1,10 @@
-#ifndef Vocal2_SysLogStream_hxx
-#define Vocal2_SysLogStream_hxx
+#ifndef resip_SysLogStream_hxx
+#define resip_SysLogStream_hxx
 
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/SysLogBuf.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class SysLogStream : public std::ostream

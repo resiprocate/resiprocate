@@ -6,9 +6,9 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/DnsResolver.hxx"
 
-#define VOCAL_SUBSYSTEM Vocal2::Subsystem::TEST
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
-namespace Vocal2
+namespace resip
 {
 	
 class TestDnsResolver
@@ -21,7 +21,7 @@ public:
 
 #include "resiprocate/SipStack.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 
 

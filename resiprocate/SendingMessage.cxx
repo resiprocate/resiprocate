@@ -3,7 +3,7 @@
 
 #include "resiprocate/SendingMessage.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 Data 
 SendingMessage::brief() const

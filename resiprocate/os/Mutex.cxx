@@ -11,11 +11,11 @@
 #endif
 
 
-using Vocal2::Mutex;
+using resip::Mutex;
 
 #ifdef WIN32 
 // !cj! need to write windows mutec stuff 
-	namespace Vocal2
+	namespace resip
 {
 
 Mutex::Mutex()
@@ -46,7 +46,7 @@ Mutex::unlock()
 
 #else
 
-namespace Vocal2
+namespace resip
 {
 
 Mutex::Mutex()

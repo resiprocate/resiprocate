@@ -4,9 +4,9 @@
 #include "resiprocate/os/Logger.hxx"
 
 
-#define VOCAL_SUBSYSTEM Vocal2::Subsystem::SDP
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::SDP
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 ContentsFactory<SdpContents> SdpContents::Factory;
@@ -1607,14 +1607,14 @@ Codec::getRate() const
 };
 
 bool
-Vocal2::operator==(const Codec& lhs, const Codec& rhs)
+resip::operator==(const Codec& lhs, const Codec& rhs)
 {
    return (lhs.mName == rhs.mName &&
            lhs.mRate == rhs.mRate);
 }
 
 ostream&
-Vocal2::operator<<(ostream& str, const Codec& codec)
+resip::operator<<(ostream& str, const Codec& codec)
 {
    str << codec.mName;
    str << Symbols::SLASH[0];

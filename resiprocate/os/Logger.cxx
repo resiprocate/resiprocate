@@ -1,7 +1,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 std::ostream* 
 GenericLogImpl::mLogger=0;

@@ -7,7 +7,7 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/Data.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 const char* skipSipLWS(ParseBuffer& pb);

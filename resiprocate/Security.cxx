@@ -28,9 +28,9 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/BaseException.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 
 Security::Exception::Exception(const Data& msg, const Data& file, const int line) :

@@ -5,7 +5,7 @@
 
 #include "resiprocate/ParserCategory.hxx"
 
-namespace Vocal2
+namespace resip
 {
 class SipMessage;
 

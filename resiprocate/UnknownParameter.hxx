@@ -3,7 +3,7 @@
 
 #include "resiprocate/DataParameter.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class ParseBuffer;
@@ -29,7 +29,7 @@ class UnknownParameter : public DataParameter
 
 }
 
-std::ostream& operator<<(std::ostream& stream, Vocal2::UnknownParameter& comp);
+std::ostream& operator<<(std::ostream& stream, resip::UnknownParameter& comp);
 
 #endif
 
