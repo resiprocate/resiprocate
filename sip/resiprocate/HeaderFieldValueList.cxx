@@ -1,6 +1,7 @@
 #include "sip2/sipstack/HeaderFieldValue.hxx"
 #include "sip2/sipstack/HeaderFieldValueList.hxx"
 #include "sip2/sipstack/ParserContainerBase.hxx"
+#include "sip2/sipstack/Embedded.hxx"
 
 using namespace Vocal2;
 
@@ -48,6 +49,33 @@ HeaderFieldValueList::encode(const Data& headerName, std::ostream& str)
          }
          (*j)->encode(str);
          str << Symbols::CRLF;
+      }
+   }
+   return str;
+}
+
+std::ostream&
+HeaderFieldValueList::encodeEmbedded(const Data& headerName, std::ostream& str)
+{
+   if (getParserContainer() != 0)
+   {
+      getParserContainer()->encodeEmbedded(headerName, str);
+   }
+   else
+   {
+      for (HeaderFieldValueList::const_iterator j = begin();
+           j != end(); j++)
+      {
+         if (!headerName.empty())
+         {
+            str << headerName << Symbols::EQUALS;
+         }
+         Data buf;
+         {
+            DataStream s(buf);
+            (*j)->encode(s);
+         }
+         str << Embedded::encode(buf);
       }
    }
    return str;

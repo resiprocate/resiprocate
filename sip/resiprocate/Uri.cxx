@@ -5,35 +5,42 @@
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/UnknownParameter.hxx"
 #include "sip2/sipstack/ParserCategories.hxx" // !dlb! just NameAddr
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/Embedded.hxx"
+#include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
+
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 Uri::Uri() 
    : ParserCategory(),
      mScheme(Symbols::DefaultSipScheme),
-     mPort(0)
+     mPort(0),
+     mEmbeddedHeaders(0)
 {}
 
 Uri::Uri(const Data& data)
    : ParserCategory(), 
      mScheme(Symbols::DefaultSipScheme),
-     mPort(0)
+     mPort(0),
+     mEmbeddedHeaders(0)
 {
    ParseBuffer pb(data.data(), data.size());
    Uri tmp;
 
    try
    {
-		tmp.parse(pb);
+      tmp.parse(pb);
    }
    catch ( std::exception* e )
    {
-	   mScheme = Symbols::DefaultSipScheme;
-	   mHost = Data::Empty;
-	   mUser = Data::Empty;
-	   mPort = -1;
+      mScheme = Symbols::DefaultSipScheme;
+      mHost = Data::Empty;
+      mUser = Data::Empty;
+      mPort = -1;
 
-	   throw e;
+      throw e;
    }
 
    *this = tmp;
@@ -45,8 +52,22 @@ Uri::Uri(const Uri& rhs)
      mHost(rhs.mHost),
      mUser(rhs.mUser),
      mPort(rhs.mPort),
-     mPassword(rhs.mPassword)
+     mPassword(rhs.mPassword),
+     mEmbeddedHeadersText(rhs.mEmbeddedHeadersText),
+     mEmbeddedHeaders(rhs.mEmbeddedHeaders ? new SipMessage(*rhs.mEmbeddedHeaders) : 0)
 {}
+
+Uri::~Uri()
+{
+   delete mEmbeddedHeaders;
+}
+
+bool
+Uri::hasEmbedded() const
+{
+   checkParsed(); 
+   return !mEmbeddedHeadersText.empty() || mEmbeddedHeaders != 0;
+}
 
 Uri&
 Uri::operator=(const Uri& rhs)
@@ -59,6 +80,15 @@ Uri::operator=(const Uri& rhs)
       mUser = rhs.mUser;
       mPort = rhs.mPort;
       mPassword = rhs.mPassword;
+      if (rhs.mEmbeddedHeaders != 0)
+      {
+         delete mEmbeddedHeaders;
+         mEmbeddedHeaders = new SipMessage(*rhs.mEmbeddedHeaders);
+      }
+      else
+      {
+         mEmbeddedHeadersText = rhs.mEmbeddedHeadersText;
+      }
    }
    return *this;
 }
@@ -66,8 +96,8 @@ Uri::operator=(const Uri& rhs)
 class OrderUnknownParameters
 {
    public:
-	  OrderUnknownParameters() { notUsed=false; };
-	  ~OrderUnknownParameters() {};
+      OrderUnknownParameters() { notUsed=false; };
+      ~OrderUnknownParameters() {};
 
       bool operator()(const Parameter* p1, const Parameter* p2) const
       {
@@ -93,9 +123,9 @@ Uri::operator==(const Uri& other) const
          {
             case ParameterTypes::user:
             {
-               if(!(otherParam &&
-                    isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                  dynamic_cast<DataParameter*>(otherParam)->value())))
+               if (!(otherParam &&
+                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                   dynamic_cast<DataParameter*>(otherParam)->value())))
                {
                   return false;
                }
@@ -103,20 +133,20 @@ Uri::operator==(const Uri& other) const
             break;
             case ParameterTypes::ttl:
             {
-               if(!(otherParam &&
-                    dynamic_cast<IntegerParameter*>(*it)->value(),
-                    dynamic_cast<IntegerParameter*>(otherParam)->value()))
+               if (!(otherParam &&
+                     dynamic_cast<IntegerParameter*>(*it)->value(),
+                     dynamic_cast<IntegerParameter*>(otherParam)->value()))
                {
                   return false;
                }
             }
             case ParameterTypes::method:
             {
-               //this should possilby be case sensitive, but is allowed to be
-               //case insensitive for robustness.  
-               if(!(otherParam &&
-                    isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                  dynamic_cast<DataParameter*>(otherParam)->value())))
+               // this should possilby be case sensitive, but is allowed to be
+               // case insensitive for robustness.  
+               if (!(otherParam &&
+                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                   dynamic_cast<DataParameter*>(otherParam)->value())))
                {
                   return false;
                }
@@ -124,9 +154,9 @@ Uri::operator==(const Uri& other) const
             break;
             case ParameterTypes::maddr:
             {               
-               if(!(otherParam &&
-                    isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                  dynamic_cast<DataParameter*>(otherParam)->value())))
+               if (!(otherParam &&
+                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                   dynamic_cast<DataParameter*>(otherParam)->value())))
                {
                   return false;
                }
@@ -134,16 +164,16 @@ Uri::operator==(const Uri& other) const
             break;
             case ParameterTypes::transport:
             {
-               if(!(otherParam &&
-                    isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
-                                  dynamic_cast<DataParameter*>(otherParam)->value())))
+               if (!(otherParam &&
+                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                   dynamic_cast<DataParameter*>(otherParam)->value())))
                {
                   return false;
                }
             }
             break;
-            //the parameters that follow don't affect comparison if only present
-            //in one of the URI's
+            // the parameters that follow don't affect comparison if only present
+            // in one of the URI's
             case ParameterTypes::lr:
                break;
             default:
@@ -233,7 +263,6 @@ Uri::getAorNoPort() const
    return aor;
 }
 
-
 const Data&
 Uri::getAor() const
 {
@@ -273,12 +302,12 @@ Uri::parse(ParseBuffer& pb)
 
    if ( !pb.eof() )
    {
-		pb.data(mScheme, start);
-		pb.skipChar();   
+      pb.data(mScheme, start);
+      pb.skipChar();   
    }
    else
    {
-	   pb.reset(start);
+      pb.reset(start);
    }
 
    if (!(isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips)))
@@ -318,15 +347,15 @@ Uri::parse(ParseBuffer& pb)
    }
    else
    {
-      pb.skipToOneOf(ParseBuffer::Whitespace, ":;>");
+      pb.skipToOneOf(ParseBuffer::Whitespace, ":;?>");
    }
    pb.data(mHost, start);
-   pb.skipToOneOf(ParseBuffer::Whitespace, ":;>");
+   pb.skipToOneOf(ParseBuffer::Whitespace, ":;?>");
    if (!pb.eof() && *pb.position() == ':')
    {
       start = pb.skipChar();
       mPort = pb.integer();
-      pb.skipToOneOf(ParseBuffer::Whitespace, ";>");
+      pb.skipToOneOf(ParseBuffer::Whitespace, ";?>");
    }
    else
    {
@@ -334,6 +363,13 @@ Uri::parse(ParseBuffer& pb)
    }
    
    parseParameters(pb);
+
+   if (*pb.position() == Symbols::QUESTION[0])
+   {
+      const char* anchor = pb.position();
+      pb.skipToChar(Symbols::RA_QUOTE[0]);
+      pb.data(mEmbeddedHeadersText, anchor);
+   }
 }
 
 ParserCategory*
@@ -361,15 +397,86 @@ Uri::encodeParsed(std::ostream& str) const
       str << Symbols::COLON << mPort;
    }
    encodeParameters(str);
+   encodeEmbeddedHeaders(str);
+
    return str;
 }
 
-void
-Uri::parseEmbeddedHeaders()
+SipMessage&
+Uri::embedded() const
 {
-   assert(0);
+   checkParsed();
+   if (mEmbeddedHeaders == 0)
+   {
+      Uri* ncthis = const_cast<Uri*>(this);
+      ncthis->mEmbeddedHeaders = new SipMessage();
+      if (!mEmbeddedHeadersText.empty())
+      {
+         ParseBuffer pb(mEmbeddedHeadersText.data(), mEmbeddedHeadersText.size());
+         ncthis->parseEmbeddedHeaders(pb);
+      }
+   }
+
+   return *mEmbeddedHeaders;
 }
 
+void
+Uri::parseEmbeddedHeaders(ParseBuffer& pb)
+{
+   DebugLog(<< "Uri::parseEmbeddedHeaders");
+   if (*pb.position() == Symbols::QUESTION[0])
+   {
+      pb.skipChar();
+   }
+
+   const char* anchor;
+   Data headerName;
+   Data headerContents;
+
+   while (!pb.eof())
+   {
+      anchor = pb.position();
+      pb.skipToChar(Symbols::EQUALS[0]);
+      pb.data(headerName, anchor);
+      // .dlb. in theory, need to decode header name
+
+      anchor = pb.skipChar(Symbols::EQUALS[0]);
+      pb.skipToChar(Symbols::AMPERSAND[0]);
+      pb.data(headerContents, anchor);
+
+      unsigned int len;
+      char* decodedContents = Embedded::decode(headerContents, len);
+      mEmbeddedHeaders->addBuffer(decodedContents);
+
+      static const Data body("Body");
+      if (isEqualNoCase(body, headerName))
+      {
+         mEmbeddedHeaders->setBody(decodedContents, len); 
+      }
+      else
+      {
+         DebugLog(<< "Uri::parseEmbeddedHeaders(" << headerName << ", " << Data(decodedContents, len) << ")");
+         mEmbeddedHeaders->addHeader(Headers::getType(headerName.data(), headerName.size()),
+                                     headerName.data(), headerName.size(),
+                                     decodedContents, len);
+      }
+   }
+}
+
+std::ostream& 
+Uri::encodeEmbeddedHeaders(std::ostream& str) const
+{
+   if (mEmbeddedHeaders)
+   {
+      mEmbeddedHeaders->encodeEmbedded(str);
+   }
+   else
+   {
+      // never decoded
+      str << mEmbeddedHeadersText;
+   }
+   return str;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
