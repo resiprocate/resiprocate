@@ -6,6 +6,9 @@
 #include "RouteProcessor.hxx"
 #include "../RequestContext.hxx"
 
+#include "resiprocate/os/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
+
 using namespace resip;
 using namespace repro;
 using namespace std;
@@ -28,6 +31,9 @@ RouteProcessor::~RouteProcessor()
 RequestProcessor::processor_action_t
 RouteProcessor::handleRequest(RequestContext& context)
 {
+  DebugLog(<< "Monkey handling request: " << this 
+           << "; reqcontext = " << context);
+
   resip::SipMessage& request = context.getOriginalRequest();
 
   if (request.exists(h_Routes) &&
