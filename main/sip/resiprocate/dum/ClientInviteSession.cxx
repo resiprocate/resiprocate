@@ -99,47 +99,49 @@ ClientInviteSession::dispatch(const SipMessage& msg)
       case Proceeding:
       case Early:
       {
-         assert(msg.isResponse());
-         int code = msg.header(h_StatusLine).statusCode();
-         if (code == 100)
+         if (msg.isResponse())
          {
-         }
-         else if (code < 200)
-         {
-            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), ++mStaleCallTimerSeq);
-            mState = Early;
-            mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
+            int code = msg.header(h_StatusLine).statusCode();
+            if (code == 100)
+            {
+            }
+            else if (code < 200)
+            {
+               mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), ++mStaleCallTimerSeq);
+               mState = Early;
+               mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
             
-            if (offans.first != None)
-            {
-               InviteSession::incomingSdp(msg, offans.second);
+               if (offans.first != None)
+               {
+                  InviteSession::incomingSdp(msg, offans.second);
+               }
+               else if (offans.second)
+               {
+                  mDum.mInviteSessionHandler->onEarlyMedia(getHandle(), msg, offans.second);
+               }
             }
-            else if (offans.second)
+            else if (code < 300)
             {
-               mDum.mInviteSessionHandler->onEarlyMedia(getHandle(), msg, offans.second);
-            }
-         }
-         else if (code < 300)
-         {
-            //!dcm! -- pretty sure the following timer was bogus
+               //!dcm! -- pretty sure the following timer was bogus
 //            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
-            ++mStaleCallTimerSeq;  //unifies timer handling logic
-            mState = Connected;
-            mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
-            mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
+               ++mStaleCallTimerSeq;  //unifies timer handling logic
+               mState = Connected;
+//!dcm! --kill               mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
+               mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
             
-            if (offans.first != None)
-            {
-               InviteSession::incomingSdp(msg, offans.second);
-            }
+               if (offans.first != None)
+               {
+                  InviteSession::incomingSdp(msg, offans.second);
+               }
 //            sendAck(msg); !dcm! -- doesn't allow user to set answer, adorn message
+            }
+            else if (code >= 300)
+            {
+               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
+               delete this;
+            }
+            break;
          }
-         else if (code >= 300)
-         {
-            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
-            delete this;
-         }
-         break;
       }
       
       case Cancelled:

@@ -101,7 +101,6 @@ ServerInviteSession::dispatch(const SipMessage& msg)
 {
    std::pair<OfferAnswerType, const SdpContents*> offans;
    offans = InviteSession::getOfferOrAnswer(msg);
-   mDum.mInviteSessionHandler->onNewSession(getHandle(), msg);
    if (msg.isRequest())
    {
       switch(mState)
@@ -109,6 +108,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
          case Initial:
             assert(msg.header(h_RequestLine).method() == INVITE);
             mState = Proceeding;
+            mDum.mInviteSessionHandler->onNewSession(getHandle(), msg);
             
             if (offans.first == Offer)
             {
