@@ -1,4 +1,4 @@
-# $Id: Makefile.osarch,v 1.4 2003/03/25 04:48:48 jason Exp $
+# $Id: Makefile.osarch,v 1.5 2003/10/03 02:35:17 jason Exp $
 
 ######################################################################
 
@@ -26,13 +26,13 @@ endif
 ifeq ($(OSTYPE),Linux)
 
 ifeq ($(ARCH),i686)
-	CXXFLAGS += -mcpu=i686 -march=i686 
+	CXXFLAGS += -march=pentium4
 endif
 ifeq ($(ARCH),i486)
-	CXXFLAGS += -mcpu=i486 -march=i486
+	CXXFLAGS += -march=i486
 endif
 ifeq ($(ARCH),i386)
-	CXXFLAGS += -mcpu=i386 -march=i386
+	CXXFLAGS += -march=i386
 endif
 
 	CXXFLAGS += -D_REENTRANT
@@ -175,36 +175,23 @@ CXXFLAGS += $(DEBUG_FLAG)
 CFLAGS   += $(DEBUG_FLAG)
 endif
 
-
 ifeq ($(VOCAL_COMPILE_TYPE),opt)
-ifneq ($(CODE_OPTIMIZE), 1)
-CXXFLAGS += -O$(CODE_OPTIMIZE) -DCODE_OPTIMIZE -DNDEBUG
-CFLAGS += -O$(CODE_OPTIMIZE) -DCODE_OPTIMIZE -DNDEBUG
-else
-CXXFLAGS += -O -DCODE_OPTIMIZE
-CFLAGS += -O -DCODE_OPTIMIZE
-endif
+CXXFLAGS += $(OPTFLAGS) -DNDEBUG
+CFLAGS += $(OPTFLAGS) -DNDEBUG
 endif
 
 ifeq ($(VOCAL_COMPILE_TYPE),gopt)
-CXXFLAGS += $(DEBUG_FLAG)
-CFLAGS   += $(DEBUG_FLAG)
-ifneq ($(CODE_GOPTIMIZE), 1)
-CXXFLAGS += -O$(CODE_GOPTIMIZE) -DCODE_OPTIMIZE
-CFLAGS += -O$(CODE_GOPTIMIZE) -DCODE_OPTIMIZE
-else
-CXXFLAGS += -O -DCODE_OPTIMIZE
-CFLAGS += -O -DCODE_OPTIMIZE
-endif
+CXXFLAGS += $(DEBUG_FLAG) $(OPTFLAGS) 
+CFLAGS   += $(DEBUG_FLAG) $(OPTFLAGS) 
 endif
 
 
 # profiling
 
 ifeq ($(VOCAL_COMPILE_TYPE),prof)
-LDFLAGS  += -pg 
-CXXFLAGS += -pg
-CFLAGS   += -pg
+LDFLAGS  += -pg $(OPTFLAGS) -DNDEBUG
+CXXFLAGS += -pg $(OPTFLAGS) -DNDEBUG
+CFLAGS   += -pg $(OPTFLAGS) -DNDEBUG
 endif
 
 ifeq ($(USE_SSL),1)
