@@ -654,7 +654,7 @@ Auth makeChallengeResponseAuth(SipMessage& request,
 {
    Auth auth;
    auth.scheme() = "Digest";
-   auth.param(p_username) = Data("\"") + username + Data("\"");
+   auth.param(p_username) = username;
    assert(challenge.exists(p_realm));
    auth.param(p_realm) = challenge.param(p_realm);
    assert(challenge.exists(p_nonce));
