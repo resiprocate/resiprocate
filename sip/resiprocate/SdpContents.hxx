@@ -253,7 +253,7 @@ class SdpContents : public Contents
                   const Data& getProtocol() const {return mProtocol;}
                   const std::list<Data>& getFormats() const {return mFormats;}
                   const Data& getInformation() const {return mInformation;}
-                  const std::list<Bandwidth>& getBandwiths() const {return mBandwidths;}
+                  const std::list<Bandwidth>& getBandwidths() const {return mBandwidths;}
 
                   // from session if empty
                   const std::list<Connection>& getConnections() const;
@@ -298,7 +298,7 @@ class SdpContents : public Contents
             const std::list<Email>& getEmails() const {return mEmails;}
             const std::list<Phone>& getPhones() const {return mPhones;}
             const Connection getConnection() const {return mConnection;}
-            const std::list<Bandwidth>& getBandwiths() const {return mBandwidths;}
+            const std::list<Bandwidth>& getBandwidths() const {return mBandwidths;}
             const std::list<Time>& getTimes() const {return mTimes;}
             const Timezones& getTimezones() const {return mTimezones;}
             const Encryption& getEncryption() const {return mEncryption;}
@@ -341,7 +341,7 @@ class SdpContents : public Contents
       SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes);
       virtual Contents* clone() const;
 
-      const Session& getSession() {checkParsed(); return mSession;}
+      const Session& getSession() const {checkParsed(); return mSession;}
 
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
