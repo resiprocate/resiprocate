@@ -281,7 +281,7 @@ TcpTransport::sendFromRoundRobin(FdSet& fdset)
          {
             mSendPos = mSendRoundRobin.begin();
          }
-         if (fdset.readyToWrite((*mSendPos)->getSocket()))
+         if (true) // !cj! - need add to fd set if (fdset.readyToWrite((*mSendPos)->getSocket()))
          {
             if (processWrite(*mSendPos))
             {
