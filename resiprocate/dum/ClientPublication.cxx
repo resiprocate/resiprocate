@@ -2,6 +2,12 @@
 #include "ClientPublication.hxx"
 #include "Dialog.hxx"
 #include <cassert>
+#include "DumTimeout.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -11,10 +17,7 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
    : BaseUsage(dum, dialog),
      mHandle(dum),
      mPublish(req)
-{
-   assert(false);
-}
-
+{}
 
 ClientPublication::~ClientPublication()
 {
@@ -24,7 +27,7 @@ ClientPublication::~ClientPublication()
 SipMessage& 
 ClientPublication::unpublish()
 {
-   assert(0);
+   mPublish.header(h_Expires).value() = 0;
    return mPublish;
 }
 
@@ -41,14 +44,67 @@ ClientPublication::Handle::operator->()
 void 
 ClientPublication::dispatch(const SipMessage& msg)
 {
+   assert(msg.isResponse());
+   const int& code = msg.header(h_StatusLine).statusCode();
+   if (code < 200)
+   {
+      // throw it away
+      return;
+   }
+   else if (code < 300) // success
+   {
+      mPublish.header(h_SIPIfMatch) = msg.header(h_SIPETag);
+      
+      mDum.addTimer(DumTimeout::Publication, 
+                    Helper::aBitSmallerThan(mPublish.header(h_Expires).value()), 
+                    getHandle(),
+                    ++mTimerSeq);
+   }
+   else
+   {
+      if (code == 412)
+      {
+         InfoLog(<< "SIPIfMatch failed -- republish");
+         mPublish.remove(h_SIPIfMatch);
+         refresh();
+         return;
+      }
+      
+      if (code == 423) // interval too short
+      {
+         delete this;
+         return;
+      }
+   }
 }
 
 void 
 ClientPublication::dispatch(const DumTimeout& timer)
 {
+    if (timer.seq() == mTimerSeq)
+    {
+       refresh();
+    }
 }
 
+void
+ClientPublication::refresh(unsigned int expiration)
+{
+   if (expiration == 0)
+   {
+      expiration = mPublish.header(h_Expires).value();
+   }
+   ++mPublish.header(h_CSeq).sequence();
+   mDum.send(mPublish);
+}
 
+void
+ClientPublication::update(const Contents* body)
+{
+   assert(body);
+   mPublish.setContents(body);
+   refresh();
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
