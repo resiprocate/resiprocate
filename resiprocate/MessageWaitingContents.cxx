@@ -115,6 +115,8 @@ MessageWaitingContents::clone() const
 ostream& 
 MessageWaitingContents::encodeParsed(ostream& s) const
 {
+   encodeHeaders(s);
+
    s << "Messages-Waiting" << Symbols::COLON[0] << Symbols::SPACE[0]
      << (mHasMessages ? "yes" : "no") << Symbols::CRLF;
 
@@ -250,6 +252,8 @@ Vocal2::skipSipLWS(ParseBuffer& pb)
 void
 MessageWaitingContents::parse(ParseBuffer& pb)
 {
+   parseHeaders(pb);
+
    pb.skipChars("Messages-Waiting");
    pb.skipWhitespace();
    pb.skipChar(Symbols::COLON[0]);

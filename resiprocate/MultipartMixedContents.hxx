@@ -35,6 +35,7 @@ class MultipartMixedContents : public Contents
       
    private:
       static ContentsFactory<MultipartMixedContents> Factory;
+      void setBoundary();
 
       std::list<Contents*> mContents;
 };

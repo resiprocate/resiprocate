@@ -69,6 +69,8 @@ std::ostream&
 PlainContents::encodeParsed(std::ostream& str) const
 {
    //DebugLog(<< "PlainContents::encodeParsed " << mText);
+   encodeHeaders(str);
+
    str << mText;
    return str;
 }
@@ -77,6 +79,8 @@ void
 PlainContents::parse(ParseBuffer& pb)
 {
    //DebugLog(<< "PlainContents::parse: " << pb.position());
+
+   parseHeaders(pb);
 
    const char* anchor = pb.position();
    pb.skipToEnd();
