@@ -169,8 +169,6 @@ BranchParameter::setClientSequence(unsigned int long seq)
 void
 BranchParameter::reset(const Data& serverTransactionId)
 {
-   InfoLog(<< "BranchParameter::reset -- replacing branch parameter");
-
    mHasMagicCookie = true;
    mIsMyBranch = true;
 
