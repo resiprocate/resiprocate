@@ -16,7 +16,7 @@ class TestTransportSelector
    public:
       static void testEmptyFail()
       {
-         cerr << "testEmptyFail" << endl;
+         InfoLog (<< "testEmptyFail" );
 
          Fifo<Message> fif;
          TransportSelector ts(false, fif);
@@ -29,132 +29,92 @@ class TestTransportSelector
 
       static void testExactFail()
       {
-         cerr << "testExactFail" << endl;
-         
-         Tuple tuple("127.0.0.2", 5060, true, UDP);
+         InfoLog (<< "testExactFail" );
          
          Fifo<Message> fif;
          TransportSelector ts(false, fif);
-         
-         ts.addTransport(UDP,
-                         5061,
-                         V4,
-                         "127.0.0.1");
+         ts.addTransport(UDP, 5061, V4, "127.0.0.1");
 
+         Tuple tuple("127.0.0.2", 5060, true, UDP);
          Transport* t = ts.findTransport(tuple);
          assert(!t);
       }
 
       static void testExact()
       {
-         cerr << "testExact" << endl;
-         
-         Tuple tuple("127.0.0.1", 5060, true, UDP);
+         InfoLog (<< "testExact" );
          
          Fifo<Message> fif;
          TransportSelector ts(false, fif);
-         
-         ts.addTransport(UDP,
-                         5060,
-                         V4,
-                         "127.0.0.1");
+         ts.addTransport(UDP, 5060, V4);
 
+         Tuple tuple("127.0.0.1", 5060, true, UDP);
          Transport* trans = ts.findTransport(tuple);
          assert(trans);
       }
 
       static void testAnyInterface()
       { 
-         cerr << "testAnyInterface" << endl;
-         
-         Tuple tuple("127.0.0.1", 5060, true, UDP);
+         InfoLog (<< "testAnyInterface" );
          
          Fifo<Message> fif;
          TransportSelector ts(false, fif);
-         
-         ts.addTransport(UDP,
-                         5060,
-                         V4,
-                         "");
+         ts.addTransport(UDP,5060,V4);
 
+         Tuple tuple("127.0.0.1", 5060, true, UDP);
          Transport* trans = ts.findTransport(tuple);
          assert(trans);      
       }
 
       static void testAnyInterfaceAnyPort()
       { 
-         cerr << "testAnyInterfaceAnyPort" << endl;
-
-         Tuple tuple("127.0.0.1", 5061, true, UDP);
+         InfoLog (<< "testAnyInterfaceAnyPort" );
 
          Fifo<Message> fif;
          TransportSelector ts(false, fif);
+         ts.addTransport(UDP, 5060, V4, Data::Empty);
          
-         ts.addTransport(UDP,
-                         5060,
-                         V4,
-                         "");
-
+         Tuple tuple("127.0.0.1", 0, true, UDP);
          Transport* trans = ts.findTransport(tuple);
          assert(trans);      
       }
 
       static void testAnyInterfaceAnyPortV6()
       { 
-         ErrLog(<< "testAnyInterfaceAnyPortV6");
-
-         ErrLog(<< "before tuple");
-         Tuple tuple("::1", 5061, false, TCP);
-         ErrLog(<< "after tuple");
+         InfoLog (<< "testAnyInterfaceAnyPortV6" );
 
          Fifo<Message> fif;
-         ErrLog(<< "before TransportSelector");
          TransportSelector ts(false, fif);
-         ErrLog(<< "after TransportSelector");
+         ts.addTransport(TCP,  5060,   V6);
 
-         ErrLog(<< "before addTransport");
-         ts.addTransport(TCP,
-                         5060,
-                         V6,
-                         "");
-         ErrLog(<< "after addTransport");
-
+         Tuple tuple("::1", 0, false, TCP);
          Transport* trans = ts.findTransport(tuple);
          assert(trans);      
       }
 
       static void testAnyInterfaceAnyPortV6Fail()
       { 
-         cerr << "testAnyInterfaceAnyPortV6" << endl;
-
-         Tuple tuple("::1", 5061, false, TCP);
+         InfoLog (<< "testAnyInterfaceAnyPortV6" );
 
          Fifo<Message> fif;
          TransportSelector ts(false, fif);
          
-         ts.addTransport(TCP,
-                         5060,
-                         V4,
-                         "");
+         ts.addTransport(TCP,  5060,  V4);
 
+         Tuple tuple("::1", 0, false, TCP);
          Transport* trans = ts.findTransport(tuple);
          assert(!trans);
       }
 
       static void testAnyInterfaceAnyPortFail()
       { 
-         cerr << "testAnyInterfaceAnyPortFail" << endl;
-
-         Tuple tuple("127.0.0.1", 5061, true, TCP);
+         InfoLog (<< "testAnyInterfaceAnyPortFail" );
 
          Fifo<Message> fif;
          TransportSelector ts(false, fif);
-         
-         ts.addTransport(UDP,
-                         5060,
-                         V4,
-                         "");
+         ts.addTransport(UDP,5060,V4);
 
+         Tuple tuple("127.0.0.1", 0, true, TCP);
          Transport* trans = ts.findTransport(tuple);
          assert(!trans);
       }
@@ -163,7 +123,7 @@ class TestTransportSelector
 int
 main(int argc, char** argv)
 {
-   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   Log::initialize(Log::COUT, Log::INFO, argv[0]);
 
 #if 1
    TestTransportSelector::testEmptyFail();
@@ -178,7 +138,7 @@ main(int argc, char** argv)
    TestTransportSelector::testAnyInterfaceAnyPortV6();
 #endif
 
-   cerr << "\nTEST OK" << endl;
+   InfoLog (<< "TEST OK" );
    return 0;
 }
 
