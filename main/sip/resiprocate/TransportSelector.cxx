@@ -1,6 +1,4 @@
-
 #include "sip2/util/Socket.hxx"
-//#include "sip2/sipstack/Resolver.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/sipstack/TransportSelector.hxx"
@@ -15,7 +13,6 @@
 #include "sip2/util/DataStream.hxx"
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/Socket.hxx"
-
 
 #include <sys/types.h>
 
