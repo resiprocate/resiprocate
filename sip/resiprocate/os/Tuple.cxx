@@ -35,10 +35,15 @@ Tuple::Tuple() :
    mSockaddr.sa_family = AF_INET;
 }
 
-Tuple::Tuple(const Data& printableAddr, int port, bool ipv4, TransportType type) :
+Tuple::Tuple(const Data& printableAddr, 
+             int port,
+             bool ipv4, 
+             TransportType type,
+             const Data& targetDomain) :
    transport(0),
    connectionId(0),
-   mTransportType(type)
+   mTransportType(type),
+   mTargetDomain(targetDomain)
 {
    if (ipv4)
    {
@@ -75,10 +80,14 @@ Tuple::Tuple(const Data& printableAddr, int port, bool ipv4, TransportType type)
    }
 }
 
-Tuple::Tuple(const Data& printableAddr, int port, TransportType ptype) : 
+Tuple::Tuple(const Data& printableAddr, 
+             int port,
+             TransportType ptype,
+             const Data& targetDomain) : 
    transport(0),
    connectionId(0),
-   mTransportType(ptype)
+   mTransportType(ptype),
+   mTargetDomain(targetDomain)
 {
    if (DnsUtil::isIpV4Address(printableAddr))
    {
@@ -101,13 +110,14 @@ Tuple::Tuple(const Data& printableAddr, int port, TransportType ptype) :
    }
 }
 
-
 Tuple::Tuple(const in_addr& ipv4,
              int port,
-             TransportType ptype)
+             TransportType ptype,
+             const Data& targetDomain)
    : transport(0),
      connectionId(0),
-     mTransportType(ptype)
+     mTransportType(ptype),
+     mTargetDomain(targetDomain)
 {
    memset(&m_anonv4, 0, sizeof(sockaddr_in));
    m_anonv4.sin_addr = ipv4;
@@ -118,10 +128,12 @@ Tuple::Tuple(const in_addr& ipv4,
 #ifdef USE_IPV6
 Tuple::Tuple(const in6_addr& ipv6,
              int port,
-             TransportType ptype)
+             TransportType ptype,
+             const Data& targetDomaina)
    : transport(0),
      connectionId(0),
-     mTransportType(ptype)
+     mTransportType(ptype),
+     mTargetDomain(targetDomaina)
 {
    memset(&m_anonv6, 0, sizeof(sockaddr_in6));
    m_anonv6.sin6_addr = ipv6;
@@ -130,14 +142,16 @@ Tuple::Tuple(const in6_addr& ipv6,
 }
 #endif
 
-Tuple::Tuple(const struct sockaddr& addr, TransportType ptype) : 
+Tuple::Tuple(const struct sockaddr& addr, 
+             TransportType ptype,
+             const Data& targetDomain) : 
    transport(0),
    connectionId(0),
    mSockaddr(addr),
-   mTransportType(ptype)
+   mTransportType(ptype),
+   mTargetDomain(targetDomain)
 {
 }
-
    
 void
 Tuple::setPort(int port)
