@@ -55,6 +55,8 @@ class Registration
          Invalid=0,
          Initialized,
          Active,
+         Refreshing,
+         Terminating,
          Terminated
       } State;
       

@@ -70,18 +70,20 @@ Registration::refreshRegistration()
    //assert(mState == Active);
    mRegister->header(h_CSeq).sequence()++;
    mRegister->header(h_Vias).front().param(p_branch).reset();
+   mState = Refreshing;
    return *mRegister;
 }
 
 SipMessage&
 Registration::unregister() 
 {
-   assert(mState == Active);
+   //assert(mState == Active);
    mRegister->header(h_CSeq).sequence()++;
    mRegister->header(h_Contacts).clear();
    NameAddr wildcard;
    wildcard.setAllContacts();
    mRegister->header(h_Contacts).push_front(wildcard);
+   mState = Terminating;
    return *mRegister;
 }
 
@@ -91,9 +93,17 @@ Registration::handleResponse(const SipMessage& response)
    assert(response.isResponse());
    if (response.header(h_StatusLine).statusCode() == 200)
    {
-      mState = Active;
-      mContacts = response.header(h_Contacts);
-      mTimeTillExpiration = response.header(h_Expires).value() * 1000;
+      if (mState == Terminating)
+      {
+         mState = Terminated;
+         mContacts.clear();
+      }
+      else
+      {
+         mState = Active;
+         mContacts = response.header(h_Contacts);
+         mTimeTillExpiration = response.header(h_Expires).value() * 1000;
+      }
    }
    else
    {
