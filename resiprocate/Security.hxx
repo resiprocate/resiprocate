@@ -115,7 +115,6 @@ class BaseSecurity
 
       void checkAndSetIdentity( const SipMessage& msg ) const;
 
-
       // returns NULL if it fails
       Contents* decrypt( const Data& decryptorAor, Pkcs7Contents* );
 
@@ -129,7 +128,7 @@ class BaseSecurity
       };
 
       // returns NULL if fails. returns the data that was originally signed
-      Contents* checkSignature( const Data& signerAor, MultipartSignedContents*, Data& signedBy, SignatureStatus& sigStat );
+      Contents* checkSignature( MultipartSignedContents*, Data* signedBy, SignatureStatus* sigStat );
 
       // map of name to certificates
       typedef std::map<Data,X509*>     X509Map;
