@@ -56,6 +56,32 @@ void shutdown (SipStack *stack)
   
 }
 
+int init_loopback()
+{
+  int s;
+  int status;
+  struct sockaddr_in them;
+
+  memset((void *)&them, 0, sizeof(them));
+  them.sin_family = AF_INET;
+  them.sin_port = 0xBEEF;
+  inet_aton("127.0.0.1", &(them.sin_addr));
+
+  s = socket(PF_INET, SOCK_STREAM, 0);
+  assert(s > 0);
+
+  status = connect(s, (struct sockaddr *)&them, sizeof(them));
+  assert(status >= 0);
+
+  // Hijack stdin and stdout  
+  close (0);
+  close (1);
+  status = dup2(s, 0);
+  assert(status >= 0);
+  status = dup2(s, 1);
+  assert(status >= 0);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -70,7 +96,6 @@ main (int argc, char **argv)
   int tlsTcpPort = 6001 + getuid() * 2;
   pid_t parent = getppid();
 #endif
-
 
   bool tlsServer = false;
 
