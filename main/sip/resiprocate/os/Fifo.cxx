@@ -48,61 +48,8 @@
  *
  */
 
-#include <cassert>
-#include <cerrno>
 
-#include <util/Mutex.hxx>
+//#include <errno.h>
 
-#if defined(WIN32) 
-#  include <windows.h>
-#  include <winbase.h>
-#else
-#  include <pthread.h>
-#endif
-
-
-using Vocal2::Mutex;
-
-#ifndef WIN32 // TODO FIX
-
-Mutex::Mutex()
-{
-    int  rc = pthread_mutex_init(&mId,0);
-    assert( rc == 0 );
-}
-
-
-Mutex::~Mutex ()
-{
-    int  rc = pthread_mutex_destroy(&mId);
-    assert( rc != EBUSY );  // currently locked 
-    assert( rc == 0 );
-}
-
-
-void
-Mutex::lock()
-{
-    int  rc = pthread_mutex_lock(&mId);
-    assert( rc != EINVAL );
-    assert( rc != EDEADLK );
-    assert( rc == 0 );
-}
-
-void
-Mutex::unlock()
-{
-    int  rc = pthread_mutex_unlock(&mId);
-    assert( rc != EINVAL );
-    assert( rc != EPERM );
-    assert( rc == 0 );
-}
-
-pthread_mutex_t*
-Mutex::getId() const
-{
-    return ( &mId );
-}
-
-#endif
+#include <Fifo.hxx>
 
