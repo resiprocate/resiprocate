@@ -1,3 +1,4 @@
+// !!! SELF CONSISTENT BUT NOT STANDARD !!!
 
 #include <assert.h>
 
