@@ -42,7 +42,11 @@ class DnsResultSink
 {
    public:
       virtual void onDnsResult(const DNSResult<DnsHostRecord>&) = 0;
+
+#ifdef USE_IPV6
       virtual void onDnsResult(const DNSResult<DnsAAAARecord>&) = 0;
+#endif
+
       virtual void onDnsResult(const DNSResult<DnsSrvRecord>&) = 0;
       virtual void onDnsResult(const DNSResult<DnsNaptrRecord>&) = 0;
       virtual void onDnsResult(const DNSResult<DnsCnameRecord>&) = 0;
@@ -54,7 +58,6 @@ class DnsRawSink
       virtual void onDnsRaw(int statuts, const unsigned char* abuf, int len) = 0;
 };
 
-class RRCache;
 class DnsStub
 {
    public:
@@ -88,7 +91,7 @@ class DnsStub
       class QueryBase
       {
       public:
-         virtual ~QueryBase() = 0 {}
+         virtual ~QueryBase() {}
       };
 
       template<class QueryType, class Sink> 
@@ -100,6 +103,7 @@ class DnsStub
                  mStub(stub), 
                  mTarget(target),
                  mReQuery(0),
+                 mCache(0),
                  mSink(s),
                  mDns(0)
             {
@@ -122,7 +126,7 @@ class DnsStub
                }
                else
                {
-                  Cache* cache = new RRCache<QueryType::Type>;
+                  Cache* cache = new RRCache<typename QueryType::Type>;
                   mStub.mCacheMap.insert(CacheMap::value_type(QueryType::getRRType(), cache));
                   return cache;
                }
@@ -196,7 +200,7 @@ class DnsStub
                   {
                      mStub.cache(mTarget, abuf, alen);
                      mReQuery = 0;
-                     std::vector<QueryType::Type> records;
+                     std::vector<typename QueryType::Type> records;
                      records = mCache->lookup(mTarget);
                      notifyUser(0, records);
                   }
@@ -249,7 +253,7 @@ class DnsStub
 
             void notifyUser(int status, std::vector<typename QueryType::Type>& records)
             {
-               DNSResult<QueryType::Type>  result;
+               DNSResult<typename QueryType::Type>  result;
                result.domain = mTarget;
                result.status = status;
                result.records = records;
@@ -260,13 +264,11 @@ class DnsStub
          private:
             DnsStub& mStub;
             Data mTarget;
+            int mReQuery;
             Cache* mCache;
             Sink* mSink;
-            int mReQuery;
             DnsInterface* mDns;
       };
-
-      friend class Query;
 
    private:
       DnsStub(const DnsStub&);   // disable copy ctor.

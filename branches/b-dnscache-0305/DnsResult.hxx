@@ -25,7 +25,7 @@ class DnsResult : public DnsResultSink
    public:
       RESIP_HeapCount(DnsResult);
       DnsResult(DnsInterface& interfaceObj, DnsStub& dns, DnsHandler* handler);
-      ~DnsResult();
+      virtual ~DnsResult();
 
       typedef enum
       {
@@ -222,7 +222,11 @@ class DnsResult : public DnsResultSink
 
       // DnsResultSink
       void onDnsResult(const DNSResult<DnsHostRecord>&);
+
+#ifdef USE_IPV6
       void onDnsResult(const DNSResult<DnsAAAARecord>&);
+#endif
+
       void onDnsResult(const DNSResult<DnsSrvRecord>&);
       void onDnsResult(const DNSResult<DnsNaptrRecord>&);
       void onDnsResult(const DNSResult<DnsCnameRecord>&);
