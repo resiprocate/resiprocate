@@ -30,7 +30,11 @@ main(int argc, char* argv[])
       assert (sip1 == sip2);
       assert (sip2 == sip1);
    }
-   
+
+   {
+      assert(DnsUtil::isIpV6Address("::1"));
+   }
+
    {
       cerr << "!! " << DnsUtil::canonicalizeIpV6Address("FEDC:BA98:7654:3210:FEDC:BA98:7654:3210") << endl;
       assert(DnsUtil::canonicalizeIpV6Address("FEDC:BA98:7654:3210:FEDC:BA98:7654:3210") ==

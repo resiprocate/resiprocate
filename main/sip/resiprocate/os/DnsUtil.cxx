@@ -212,8 +212,9 @@ DnsUtil::isIpV6Address(const Data& ipAddress)
       return false;
    }
 
-   // first character must be a hex digit
-   if (!isxdigit(*ipAddress.data()))
+   // first character must be a hex digit or colon
+   if (!isxdigit(*ipAddress.data()) &&
+       *ipAddress.data() != ':')
    {
       return false;
    }
