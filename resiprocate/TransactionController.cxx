@@ -14,9 +14,13 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
+static unsigned int MaxTUFifoSize = 1000;
+
 #if defined(WIN32)
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
 #endif
+
+
 TransactionController::TransactionController(bool multi, 
                                              Fifo<Message>& tufifo, 
                                              bool stateless) : 
@@ -41,6 +45,13 @@ TransactionController::TransactionController(bool multi,
 TransactionController::~TransactionController()
 {
    delete mStatsManager;
+}
+
+
+bool 
+TransactionController::isTUOverloaded() const
+{
+   return (MaxTUFifoSize && mTUFifo.size() > MaxTUFifoSize);
 }
 
 void
@@ -94,14 +105,7 @@ TransactionController::getTimeTillNextProcessMS()
    
    int ret = mTimers.msTillNextTimer();
 
-#if 1 // !cj! just keep a max of 500ms for good luck - should not be needed   
-   if ( ret > 1 )
-   {
-      ret = 1;
-   }
-#endif
-
-   return ret;
+   return resipMin(25, ret);
 } 
    
 void 
