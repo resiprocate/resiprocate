@@ -1,4 +1,5 @@
 #include <iostream>
+#include <popt.h>
 
 #include "resiprocate/TcpTransport.hxx"
 #include "resiprocate/Helper.hxx"
@@ -17,16 +18,26 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, Log::INFO, argv[0]);
-   int runs = 50000;
-   int window = 50;
+   char* logType = 0;
+   char* logLevel = 0;
+   int runs = 100;
+   int window = 10;
    int seltime = 100;
-   
-   if (argc == 2)
-   {
-      runs = atoi(argv[1]);
-   }
 
+   struct poptOption table[] = {
+      {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
+      {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
+      {"num-runs",    'r', POPT_ARG_INT,    &runs,      0, "number of calls in test", 0},
+      {"window-size", 'w', POPT_ARG_INT,    &window,    0, "number of registrations in test", 0},
+      {"select-time", 's', POPT_ARG_INT,    &seltime,   0, "number of runs in test", 0},
+      POPT_AUTOHELP
+      { NULL, 0, 0, NULL, 0 }
+   };
+   
+   poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
+   poptGetNextOpt(context);
+   Log::initialize(logType, logLevel, argv[0]);
+   
    cout << "Performing " << runs << " runs." << endl;
    
    Fifo<Message> txFifo;
@@ -79,10 +90,9 @@ main(int argc, char* argv[])
 
    int tid=1;
    int outstanding=0;
-   int count=0;
+
    while (!messages.empty())
    {
-      if (count > 500) exit(0);
       // load up the send window
       while (outstanding < window)
       {
@@ -93,17 +103,18 @@ main(int argc, char* argv[])
             messages.pop_front();
             next->encode(strm);
             outstanding++;
+            delete next;
          }
          sender->send(dest, encoded, Data(tid++));
       }
 
       FdSet fdset; 
-      receiver->buildFdSet(fdset);
+      if (receiver) receiver->buildFdSet(fdset);
       sender->buildFdSet(fdset);
 
-      int err = fdset.selectMilliSeconds(seltime); err;
+      fdset.selectMilliSeconds(seltime); 
       
-      receiver->process(fdset);
+      if (receiver) receiver->process(fdset);
       sender->process(fdset);
       
       Message* msg;
@@ -122,8 +133,8 @@ main(int argc, char* argv[])
             assert (!received->header(h_Vias).begin()->sentHost().empty());
             assert (received->header(h_Contacts).begin()->uri().host() == "localhost");
             assert (!received->header(h_CallId).value().empty());
-            delete received;
          }
+         delete msg;
       }
    }
 
@@ -133,5 +144,6 @@ main(int argc, char* argv[])
         << runs << " calls peformed in " << elapsed << " ms, a rate of " 
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
 
+   poptFreeContext(context);
    return 0;
 }
