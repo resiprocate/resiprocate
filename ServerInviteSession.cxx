@@ -10,9 +10,11 @@
 
 using namespace resip;
 
-ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg)
+ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
    : InviteSession(dum, dialog, Initial)
 {
+   assert(request.isRequest());
+   mLastRequest = request;
 }
 
 ServerInviteSessionHandle 
