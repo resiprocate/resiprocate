@@ -16,14 +16,16 @@ class ParseBuffer;
 class HeaderFieldValue
 {
    public:
-      HeaderFieldValue();
+      HeaderFieldValue()
+         : mParserCategory(0),
+           mField(0),
+           mFieldLength(0),
+           mMine(false)
+      {}
       HeaderFieldValue(const char* field, unsigned int fieldLength);
-      HeaderFieldValue(const HeaderFieldValue& hfv);
-      HeaderFieldValue(ParserCategory* parserCategory);
+      HeaderFieldValue(const HeaderFieldValue& hfv, ParserCategory* assignParser);
 
       ~HeaderFieldValue();
-
-      HeaderFieldValue* clone() const;
 
       bool isParsed() const;
 
@@ -39,7 +41,6 @@ class HeaderFieldValue
 
       std::ostream& encode(std::ostream& str) const;
       
-      HeaderFieldValue* next;
       ParserCategory* mParserCategory;
       const char* mField;
       const unsigned int mFieldLength;

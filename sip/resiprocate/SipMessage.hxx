@@ -125,6 +125,7 @@ class SipMessage : public Message
 
       // typeless header interface
       const HeaderFieldValueList* getRawHeader(Headers::Type headerType) const;
+      void setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerType);
       const UnknownHeaders& getRawUnknownHeaders() const {return mUnknownHeaders;}
 
       // transport interface
@@ -147,6 +148,7 @@ class SipMessage : public Message
    private:
       void copyFrom(const SipMessage& message);
       HeaderFieldValueList* ensureHeader(Headers::Type type) const;
+      HeaderFieldValueList* ensureHeaders(Headers::Type type) const;
 
       // not available
       SipMessage& operator=(const SipMessage&);
