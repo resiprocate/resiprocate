@@ -81,8 +81,7 @@ UdpTransport::send( const sockaddr_in& dest,
                     const  char* buffer,
                     const size_t length) //, TransactionId txId)
 {
-   SendData* data = new  SendData;
-   data->destination = dest;
+   SendData* data = new  SendData(dest);
    data->buffer = buffer;
    data->length = length;
    //data->tid = txId;
