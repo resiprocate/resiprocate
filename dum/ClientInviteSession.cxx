@@ -2,6 +2,8 @@
 #include "DialogUsageManager.hxx"
 #include "Dialog.hxx"
 
+using namespace resip;
+
 ClientInviteSession::ClientInviteSession(DialogUsageManager& dum, 
                                          Dialog& dialog,
                                          const SipMessage& msg) 
@@ -47,14 +49,14 @@ ClientInviteSession::Handle::Handle(DialogUsageManager& dum)
 ClientInviteSession* 
 ClientInviteSession::Handle::operator->()
 {
-   return static_cast<ClientInviteSession*>get();
+   return static_cast<ClientInviteSession*>(get());
 }
 
 InviteSession::Handle 
 ClientInviteSession::getSessionHandle()
 {
    // don't ask, don't tell
-   return (InviteSession::Handle)mHandle;
+   return (InviteSession::Handle&)mHandle;
 }
 
 /* ====================================================================
