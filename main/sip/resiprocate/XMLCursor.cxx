@@ -438,7 +438,7 @@ XMLCursor::Node::Node(const ParseBuffer& pb)
 XMLCursor::Node::~Node()
 {
    for (list<Node*>::iterator i = mChildren.begin();
-        i != mChildren.end(); i++)
+        i != mChildren.end(); ++i)
    {
       delete *i;
    }
