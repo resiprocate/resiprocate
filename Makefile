@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.128 2003/09/14 03:31:07 fluffy Exp $
+# $Id: Makefile,v 1.129 2003/09/14 03:40:30 davidb Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -112,5 +112,23 @@ SRC = \
 	HeaderHash.cxx \
 	ParameterHash.cxx \
 	MethodHash.cxx
+
+GPERFOPTS=-D --enum -E -L C++ -t -k '*' --compare-strncmp
+GPERFVER="GNU gperf 2.7.2"
+
+%-raw.cxx: %.gperf
+	@[ "$$(gperf -v )" == $(GPERFVER) ] || \
+		(echo Bogus gperf need:;\
+		 echo $(GPERFVER), have: ; gperf -v ; false)
+	gperf $(GPERFOPTS) -Z $(*:%-raw=%) $< > $@
+
+# Exceptions (case sensitive)
+MethodHash.cxx: MethodHash-raw.cxx
+	os/fixupGperf $< -o $@
+	\rm MethodHash-raw.cxx
+
+# The rest of the hashes.
+%.cxx: %-raw.cxx
+	os/fixupGperf $< -o $@ --ignorecase
 
 include $(BUILD)/Makefile.post
