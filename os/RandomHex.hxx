@@ -1,5 +1,5 @@
-#ifndef RandomHex_HXX_
-#define RandomHex_HXX_
+#ifndef Vocal2_RandomHex_hxx
+#define Vocal2_RandomHex_hxx
 
 #include "sip2/util/Mutex.hxx"
 #include "sip2/util/Data.hxx"

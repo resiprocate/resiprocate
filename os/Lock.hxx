@@ -1,9 +1,8 @@
-#if !defined(VOCAL_LOCK_HXX)
-#define VOCAL_LOCK_HXX
-
+#if !defined(Vocal2_Lock_hxx)
+#define Vocal2_Lock_hxx
 
 static const char* const Lock_hxx_Version =
-"$Id: Lock.hxx,v 1.4 2002/11/07 03:07:27 jason Exp $";
+"$Id: Lock.hxx,v 1.5 2002/11/11 22:05:06 jason Exp $";
 
 
 #include "sip2/util/Lockable.hxx"
