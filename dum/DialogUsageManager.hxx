@@ -19,6 +19,7 @@
 namespace resip 
 {
 
+class Security;
 class SipStack;
 class FdSet;
 class Profile;
@@ -74,6 +75,8 @@ class DialogUsageManager : public HandleManager
                          int port, 
                          IpVersion version=V4,
                          const Data& ipInterface = Data::Empty);
+      Security& getSecurity();
+      
       Data getHostAddress();
 
       void setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory>);
@@ -308,9 +311,14 @@ class DialogUsageManager : public HandleManager
       } ShutdownState;
       ShutdownState mShutdownState;
 
+      // from ETag -> ServerPublication
       typedef std::map<Data, ServerPublication*> ServerPublications;
       ServerPublications mServerPublications;
 
+      // from Event-Type+document-aor -> ServerSubscription
+      // Managed by ServerSubscription
+      typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
+      ServerSubscriptions mServerSubscriptions;
 };
 
 }

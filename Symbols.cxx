@@ -97,6 +97,9 @@ const char* Symbols::Pending = "pending";
 const char* Symbols::Active = "active";
 const char* Symbols::Terminated = "terminated";
 
+const char* Symbols::Certificate = "certificate";
+const char* Symbols::Credential = "credential";
+
 #if defined(WIN32)
 const char *Symbols::pathSep = "\\";
 #else
