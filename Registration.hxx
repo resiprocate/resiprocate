@@ -1,7 +1,7 @@
 #if !defined(RESIP_REGISTRATION_HXX)
 #define RESIP_REGISTRATION_HXX
 
-
+#include <time.h>
 #include <memory>
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/Uri.hxx"
@@ -48,7 +48,7 @@ class Registration
       NameAddr mContact;
       NameAddr mFrom;
       
-      UInt64 mTimeTillExpiration;
+      time_t mTimeTillExpiration;
       
       typedef enum 
       {
