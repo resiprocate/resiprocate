@@ -1209,6 +1209,16 @@ TransactionState::resendToWire(Message* msg) const
 
    assert (mDnsState != NotStarted); 
    assert (mDnsState != Waiting);  // !jf! can this happen? 
+   
+#if 1
+   // !cj! the following code should be removed and is just stuck in as a hack 
+   if (mCurrent == mTuples.end())
+   {
+      ErrLog( << "TransactionState::resendToWire This code should never run - is should likely assert " );
+      return;
+   }
+#endif
+
    assert (mCurrent != mTuples.end());
    if (mDnsState == NoLookupRequired)
    {
