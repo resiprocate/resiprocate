@@ -61,6 +61,12 @@ TimerQueue::process()
         i != mTimers.upper_bound(now);)
    {
       TimerMessage* t = new TimerMessage(i->mTransactionId, i->mType, i->mDuration);
+      // Leaked !ah! BUGBUG valgrind says leaked.
+      //  206884 bytes in 2270 blocks are definitely lost (...)
+      //     by 0x8178A20: operator new(unsigned)
+      //     by 0x80CDF75: Vocal2::TimerQueue::process() (TimerQueue.cxx:63)
+      //     by 0x80F6A4B: Vocal2::Executive::processTimer() (Executive.cxx:52)
+
       DebugLog (<< Timer::toData(i->mType) << " fired (" << i->mTransactionId << ") adding to fifo");
       mFifo.add(t);
       mTimers.erase(i++);
