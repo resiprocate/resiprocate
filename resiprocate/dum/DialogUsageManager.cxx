@@ -425,7 +425,7 @@ BaseCreator&
 DialogUsageManager::findCreator(const DialogId& id)
 {
    const DialogSetId& setId = id.getDialogSetId();
-   const DialogSet& dialogSet = findDialogSet(setId);
+   DialogSet& dialogSet = findDialogSet(setId);
    BaseCreator* creator = dialogSet.getCreator();
    if (creator == NULL)
    {

@@ -1,18 +1,21 @@
+#include "BaseCreator.hxx"
 #include "DialogSet.hxx"
+#include "Dialog.hxx"
 
 using namespace resip;
 using namespace std;
 
-DialogSet::DialogSet(const BaseCreator *creator) : 
-    mDialogs(),
-    mCreator(creator)
+DialogSet::DialogSet(BaseCreator *creator) : 
+   mDialogs(),
+   mCreator(creator),
+   mId(creator->getLastRequest())
 {
-   Dialog* dialog = new Dialog(*this, request);
-   addDialog(dialog);
-   dialog->dispatch(request);
+   //Dialog* dialog = new Dialog(*this, request);
+   //addDialog(dialog);
+   //dialog->dispatch(request);
 }
 
-DialogSet::DialogSet(const SipMessage& request)
+DialogSet::DialogSet(const SipMessage& request) : 
    mDialogs(),
    mCreator(NULL),
    mId(request)
@@ -25,7 +28,7 @@ DialogSet::~DialogSet()
 }
 
 DialogSetId
-Dialogset::getId()
+DialogSet::getId()
 {
    return mId;
 }
@@ -39,71 +42,56 @@ DialogSet::addDialog(Dialog *dialog)
 void 
 DialogSet::removeDialog(const Dialog *dialog)
 {
-    mDialogs.remove(dialog);
+   //mDialogs.remove(dialog);
 }
 
-DialogIdSet 
+#if 0
+DialogIdSet
 DialogSet::getDialogs() const
 {
-    /** @todo Implment this method */
+   return mId;
 }
+#endif
 
 Dialog* 
 DialogSet::findDialog(const DialogId id)
 {
-    std::list<Dialog*>::iterator it = mDialogs.start();
-    Dialog *dialog;
-    while (it != mDialogs.end())
-    {
-        dialog  = it->next();
-        if (dialog->getId() == id)
-        {
-            return dialog;
-        }
-    }
-    return NULL;
+   assert(0);
+   for (std::list<Dialog*>::iterator i = mDialogs.begin(); i != mDialogs.end() ; i++)
+   {
+      //if (i->getId() == id)
+      {
+         return *i;
+      }
+   }
+   return 0;
 }
 
 Dialog*
-Dialogset::findDialog( const Data& otherTag )
+DialogSet::findDialog( const Data& otherTag )
 {
-    std::list<Dialog*>::iterator it = mDialogs.start();
-    Dialog *dialog;
-    while (it != mDialogs.end())
-    {
-        dialog  = it->next();
-        if (dialog->getId() == otherTag)
-        {
-            return dialog;
-        }
-    }
-    return NULL;
+   assert(0);
+   //DialogId id(otherTag);
+   //return findDialog(id);
 }
 
-Dialog* findDialog(SipMessage& msg)
+Dialog* 
+DialogSet::findDialog(SipMessage& msg)
 {
-    std::list<Dialog*>::iterator it = mDialogs.start();
-    Dialog *dialog;
-    while (it != mDialogs.end())
-    {
-        dialog = it->next();
-        if (dialog->getId() == msg)
-        {
-            return dialog;
-        }
-    }
-    return NULL;
+   DialogId id(msg);
+   return findDialog(id);
 }
 
 BaseCreator* 
-DialogSet::getCreator()
+DialogSet::getCreator() 
 {
-    return mCreator;
+   return mCreator;
 }
     
 void
 DialogSet::dispatch(const SipMessage& msg)
 {
+#if 0
    assert(msg.isRequest() || msg.isResponse());
    Dialog* dialog = findDialog(msg);
    if (dialog == 0)
@@ -112,12 +100,13 @@ DialogSet::dispatch(const SipMessage& msg)
       this->addDialog(dialog);
    }
    dialog->dispatch(msg);
+#endif
 }
 
 bool
 DialogSet::mergeRequest(const SipMessage& request)
 {
-   for (DialogSet::const_iterator i = dialogs.begin(); i != dialogs.end(); ++i)
+   for (std::list<Dialog*>::iterator i = mDialogs.begin(); i != mDialogs.end(); ++i)
    {
       if (i->shouldMerge(request))
       {
