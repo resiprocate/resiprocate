@@ -18,6 +18,7 @@ ifeq ($(USE_SSL),true)
 TESTPROGRAMS += certServer.cxx
 endif
 
-SRC =   
+#TESTPROGRAMS += limpc.cxx
+#SRC = CommandLineParser.cxx UserAgent.cxx 
 
 include $(BUILD)/Makefile.post
