@@ -44,3 +44,13 @@ const char * const Symbols::User_Agent = "User-Agent";
 const char * const Symbols::Via = "Via";
 const char * const Symbols::WWW_Authenticate = "WWW-Authenticate";
 const char * const Symbols::Warning = "Warning";
+
+const char * const Symbols::Ack = "Ack";
+const char * const Symbols::Bye = "Bye";
+const char * const Symbols::Cancel = "Cancel";
+const char * const Symbols::Invite = "Invite";
+const char * const Symbols::Notify = "Notify";
+const char * const Symbols::Options = "Options";
+const char * const Symbols::Refer = "Refer";
+const char * const Symbols::Register = "Register";
+const char * const Symbols::Subscribe = "Subscribe";

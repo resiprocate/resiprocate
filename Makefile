@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.25 2002/09/22 05:30:36 fluffy Exp $
+# $Id: Makefile,v 1.26 2002/09/22 05:37:02 dabryan Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -15,6 +15,7 @@ SRC =	Condition.cxx \
 	Lock.cxx \
 	Log.cxx \
 	Logger.cxx \
+	MethodTypes.cxx \
 	Mutex.cxx \
 	ParserCategories.cxx \
 	SipMessage.cxx \
@@ -23,9 +24,9 @@ SRC =	Condition.cxx \
 	SubComponentList.cxx \
 	Subsystem.cxx \
 	Symbols.cxx \
+	UnknownSubComponent.cxx \
 	Preparse.cxx \
 	UdpTransport.cxx \
-	UnknownSubComponent.cxx \
 	Timer.cxx \
 	TimerQueue.cxx \
 
@@ -125,6 +126,9 @@ testSipStack1:  $(OBJS) $(OBJ)/testSipStack1.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 testSipMessage:  $(OBJS) $(OBJ)/testSipMessage.o
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+convertStringToInt:  $(OBJS) $(OBJ)/convertStringToInt.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 
