@@ -4,7 +4,6 @@
 
 #include <ncurses.h>
 
-
 #ifndef WIN32
 #include <sys/time.h>
 #include <sys/types.h>
