@@ -111,7 +111,8 @@ Vocal2::TransactionState::process(SipStack& stack)
 
 void
 TransactionState::processClientNonInvite(  Message* msg )
-{
+{ 
+
 }
 
 
@@ -124,7 +125,48 @@ TransactionState::processClientInvite(  Message* msg )
 void
 TransactionState::processServerNonInvite(  Message* msg )
 {
+   SipMessage* sip = dynamic_cast<SipMessage*>(message);
+   TimerMessage* timer=0;
+   if (sip == 0)
+   {
+      timer = dynamic_cast<TimerMessage*>(message);
+   }
    
+   if (timer)
+   {
+      switch ( timer.getType() )
+      {
+         case TimerJ:
+         {
+            mState = Terminated;
+         }
+         break;
+      }
+   }
+
+   if (sip)
+   {
+      assert(0);
+      
+      if (0)
+      {
+         // its a response 
+         responseCode = 0; assert(0); // TODO 
+
+         if (responseCode<200)
+         {
+            mState = Proceeding;
+         }
+         else
+         { 
+            mState = Completed;
+         }
+      }
+      else
+      {
+         // it is a request
+       }
+   }
 }
 
 

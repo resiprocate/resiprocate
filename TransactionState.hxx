@@ -13,7 +13,7 @@ class SipStack;
 class TransactionState
 {
    public:
-      TransactionState();
+      TransactionState(SipStack& stack);
       
       static void process(SipStack& stack); 
      
@@ -58,6 +58,7 @@ class TransactionState
 
       SipMessage* msgToRetransmit;
       
+      const SipStack& mStack;
 };
 
 }
