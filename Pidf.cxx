@@ -300,7 +300,7 @@ Pidf::getSimpleStatus(Data* note) const
    return false;
 }
 
-// !dlb! deal with non-unique tuples?
+// !dlb! set<Tuple> ?
 void 
 Pidf::merge(const Pidf& other)
 {
@@ -312,7 +312,21 @@ Pidf::merge(const Pidf& other)
    for (vector<Tuple>::const_iterator i = other.getTuples().begin();
         i != other.getTuples().end(); ++i)
    {
-      tuples.push_back(*i);
+      bool found = false;
+      for (vector<Tuple>::iterator j = getTuples().begin();
+           j != getTuples().end(); ++j)
+      {
+         if (i->id == j->id)
+         {
+            found = true;
+            *j = *i;
+            break;
+         }
+      }
+      if (!found)
+      {
+         tuples.push_back(*i);
+      }
    }
 }
 
