@@ -21,6 +21,7 @@ namespace resip
 
 class DnsHandler;
 class Message;
+class TransactionMessage;
 class SipMessage;
 class TlsTransport;
 class TransactionController;
@@ -28,7 +29,7 @@ class TransactionController;
 class TransportSelector 
 {
    public:
-      TransportSelector(bool multithreaded, Fifo<Message>& fifo);
+      TransportSelector(bool multithreaded, Fifo<TransactionMessage>& fifo);
       virtual ~TransportSelector();
       bool hasDataToSend() const;
       
@@ -69,7 +70,7 @@ class TransportSelector
 
       bool mMultiThreaded;
       DnsInterface mDns;
-      Fifo<Message>& mStateMacFifo;
+      Fifo<TransactionMessage>& mStateMacFifo;
 
       // specific port and interface
       typedef HashMap<Tuple, Transport*> ExactTupleMap;

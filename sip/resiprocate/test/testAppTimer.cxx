@@ -1,5 +1,5 @@
 #include <iostream>
-#include "resiprocate/Message.hxx"
+#include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -24,15 +24,19 @@ class AppMessage : public Message
          : mText(text)
       {}
 
-      virtual const Data& getTransactionId() const {return mText;}
       virtual Data brief() const {return mText;}
-      virtual bool isClientTransaction() const {return false;}
       virtual ostream& encode(ostream& s) const {s << mText; return s;}
 
       const Data& getText() const
       {
          return mText;
       }
+      
+      Message* clone() const
+      {
+         return new AppMessage(mText);
+      }
+
    private:
       const Data mText;
 };
@@ -43,7 +47,8 @@ main(int argc, char** argv)
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
    Fifo<Message> f;
-   TimerQueue timer(f);
+   Fifo<TransactionMessage> r;
+   TimerQueue timer(r, f);
 
    cerr << "Before Fifo size: " << f.size() << endl;
    assert(f.size() == 0);

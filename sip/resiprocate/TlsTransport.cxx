@@ -17,7 +17,7 @@
 using namespace std;
 using namespace resip;
 
-TlsTransport::TlsTransport(Fifo<Message>& fifo, 
+TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo, 
                            const Data& sipDomain, 
                            const Data& interfaceObj, 
                            int portNum, 

@@ -16,7 +16,7 @@
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/Headers.hxx"
-#include "resiprocate/Message.hxx"
+#include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/ParserContainer.hxx"
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/Transport.hxx"
@@ -33,7 +33,7 @@ namespace resip
 class Contents;
 class UnknownHeaderType;
 
-class SipMessage : public Message
+class SipMessage : public TransactionMessage
 {
    public:
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;

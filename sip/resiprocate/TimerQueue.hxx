@@ -7,15 +7,21 @@
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Fifo.hxx"
 
+// .dlb. 
+// to do: timer wheel for transaction-bound timers and a heap for
+// everything longer.
+
 namespace resip
 {
 
 class Message;
+class TransactionMessage;
 
 class TimerQueue
 {
    public:
-      TimerQueue(Fifo<Message>& fifo);
+      TimerQueue(Fifo<TransactionMessage>& stateMachineFifo,
+                 Fifo<Message>& tuFifo);
 
       Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
       Timer::Id add(const Timer& timer);
@@ -31,7 +37,9 @@ class TimerQueue
 
    private:
       friend std::ostream& operator<<(std::ostream&, const TimerQueue&);
-      Fifo<Message>& mFifo;
+      Fifo<TransactionMessage>& mStateMachineFifo;
+      Fifo<Message>& mTuFifo;
+
       std::multiset<Timer> mTimers;
 };
 
@@ -44,7 +52,7 @@ std::ostream& operator<<(std::ostream&, const TimerQueue&);
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

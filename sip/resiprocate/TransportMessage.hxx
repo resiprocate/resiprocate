@@ -1,8 +1,8 @@
-#if !defined(RESIP_TRANSPORTMESSAGE_HXX)
-#define RESIP_TRANSPORTMESSAGE_HXX 
+#ifndef RESIP_TransportMessage_hxx
+#define RESIP_TransportMessage_hxx
 
 #include <iosfwd>
-#include "resiprocate/Message.hxx"
+#include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/os/Data.hxx"
 
 namespace resip
@@ -10,31 +10,17 @@ namespace resip
 
 // This message is used to indicate that the TransportSelector has sent a sip
 // message using either reliable or unreliable transport
-class TransportMessage : public Message
+class TransportMessage : public TransactionMessage
 {
    public:
-      TransportMessage(Data transactionId, bool isFailure) : 
-         mTransactionId(transactionId), 
-         mFailure(isFailure) 
-      {
-      }
+      TransportMessage(Data transactionId, bool isFailure);
 
-      virtual const Data& getTransactionId() const
-      {
-         return mTransactionId;
-      }
-
-      bool isFailed() const { return mFailure; }
-      virtual bool isClientTransaction() const { return true; }  // !jf! not strictly true
+      virtual const Data& getTransactionId() const;
+      bool isFailed() const;
+      virtual bool isClientTransaction() const;
       
-      virtual Data brief() const { return "TransportMessage: " + mTransactionId + " " + (mFailure ? "failed" : "succeeded"); }
-      
-      virtual std::ostream& encode(std::ostream& strm) const
-      {
-         strm << "Transport Failure: " << mTransactionId;
-         return strm;
-      }
-      
+      virtual Data brief() const;
+      virtual std::ostream& encode(std::ostream& strm) const;      
       
    private:
       Data mTransactionId;

@@ -72,7 +72,7 @@ Connection::getId() const
 }
 
 void
-Connection::performRead(int bytesRead, Fifo<Message>& fifo)
+Connection::performRead(int bytesRead, Fifo<TransactionMessage>& fifo)
 {
    assert(mWho.transport);
 
