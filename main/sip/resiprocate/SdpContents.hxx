@@ -83,11 +83,6 @@ class SdpContents : public Contents
 
                   friend bool operator==(const Codec&, const Codec&);
 
-                  bool operator==(const Codec& rhs)
-                  {
-                     return (mName == rhs.mName && mRate == rhs.mRate);
-                  }
-
                private:
                   Data mName;
                   unsigned long mRate;
