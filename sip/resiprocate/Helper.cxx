@@ -33,7 +33,6 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    
    return request;
 }
-
 // MOVEME !ah! this goes in a test_support package
 SipMessage*
 Helper::makeMessage(const Data& data, bool isExternal )
@@ -42,6 +41,7 @@ Helper::makeMessage(const Data& data, bool isExternal )
    int size = data.size();
    char *buffer = new char[size];
 
+#if 0 // !ah!
    memcpy(buffer,data.data(),size);
    
    PreparseState::TransportAction status = PreparseState::NONE;
@@ -60,7 +60,7 @@ Helper::makeMessage(const Data& data, bool isExternal )
    else
    {
       // no pp error
-      if (status == PreparseState::headersComplete &&
+      if (status  PreparseState::headersComplete &&
           used < size)
       {
          // body is present .. add it up.
@@ -73,6 +73,7 @@ Helper::makeMessage(const Data& data, bool isExternal )
          msg->setBody(buffer+used,size-used);
       }
    }
+#endif
    return msg;
 }
 
