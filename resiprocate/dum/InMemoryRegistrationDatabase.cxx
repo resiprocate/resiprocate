@@ -40,6 +40,18 @@ InMemoryRegistrationDatabase::aorIsRegistered(Uri &aor)
   return true;
 }
 
+void
+InMemoryRegistrationDatabase::lockRecord(Uri &aor)
+{
+  // Currently doesn't do any locking.
+}
+
+void
+InMemoryRegistrationDatabase::unlockRecord(Uri &aor)
+{
+  // Currently doesn't do any locking.
+}
+
 RegistrationPersistenceManager::update_status_t 
 InMemoryRegistrationDatabase::updateContact(Uri &aor, Uri &contact, time_t expires)
 {
