@@ -64,15 +64,15 @@ workString(int m)
 {
    Data s("[");
 
-   if ( m &  actNil) s += " actNil ";
-   if ( m &  actAdd) s += " actAdd ";
-   if ( m &  actBack) s += " actBack ";
-   if ( m &  actFline) s += " actFline ";
-   if ( m &  actReset) s += " actReset ";
-   if ( m &  actHdr) s += " actHdr ";
-   if ( m &  actData) s += " actData ";
-   if ( m &  actBad) s += " actBad ";
-   if ( m & actEndHdrs) s += " actEndHdrs ";
+   if ( m &  actNil) s += " Nil ";
+   if ( m &  actAdd) s += " Add ";
+   if ( m &  actBack) s += " Back ";
+   if ( m &  actFline) s += " Fline ";
+   if ( m &  actReset) s += " Reset ";
+   if ( m &  actHdr) s += " Hdr ";
+   if ( m &  actData) s += " Data ";
+   if ( m &  actBad) s += " Bad ";
+   if ( m & actEndHdrs) s += " EndHdrs ";
    s += ']';
    return s;
 }
@@ -332,8 +332,7 @@ Preparse::process()
          DebugLog(<<"Hdr \'"
                   << showN(mHeader, mHeaderLength)
                   << "\' Type: " << int(mHeaderType) );
-         
- 
+       
       }
 
       if (e.workMask & actData)
