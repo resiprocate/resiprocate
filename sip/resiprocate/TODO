@@ -1,4 +1,4 @@
-$Id: TODO,v 1.8 2002/12/11 20:15:26 jason Exp $
+$Id: TODO,v 1.9 2003/01/07 06:28:00 davidb Exp $
 
 Change the names of all the parser "components" to "integerparser" or
 something like that
@@ -50,3 +50,6 @@ If we proper const parameter retrieval we should probably throw if the user trie
 make case sensitive/case insensitive datas
 
 handle the case where a request gets sent over the wire to the stack with no via. currently will assert when getTransactionId() is called
+
+- change StatusLine::responseCode() to StatusLine::statusCode()
+- change CSeqCategory to CSeq
