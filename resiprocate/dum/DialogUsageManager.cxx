@@ -957,12 +957,6 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
    return false;
 }
 
-bool 
-DialogUsageManager::mSoftCheck(const SipMessage& request)
-{
-   return request.header(h_RequestLine).method() == MESSAGE && !findDialogSet(DialogSetId(request));   
-}
-
 void
 DialogUsageManager::processRequest(const SipMessage& request)
 {
