@@ -78,6 +78,15 @@ class Dialog
       std::vector<ClientOutOfDialogReq*> mClientOutOfDialogRequests;
       ServerOutOfDialogReq* mServerOutOfDialogRequest;
 
+      //invariants
+      typedef enum // need to add
+      {
+         Invitation,   // INVITE dialog
+         Subscription, // Created by a SUBSCRIBE / NOTIFY / REFER
+         Fake          // Not really a dialog (e.g. created by a REGISTER)
+      } DialogType;
+      
+      DialogType mType; // !jf! is this necessary?
       Data mLocalTag;
       Data mRemoteTag;
       CallID mCallId;
