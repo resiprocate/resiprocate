@@ -98,6 +98,9 @@ class Symbols
       static const char* Active;
       static const char* Terminated;
 
+      static const char* Certificate; // from draft-ietf-certs
+      static const char* Credential; // from draft-ietf-certs
+
       static const char* pathSep;
 };
 

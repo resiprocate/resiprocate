@@ -22,10 +22,26 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
      mAbsoluteExpiry(0)
 {
    mLastRequest = req;
+   Data key = getEventType() + getDocumentKey();
+   mDum.mServerSubscriptions.insert(std::make_pair(key, this));
 }
 
 ServerSubscription::~ServerSubscription()
 {
+   Data key = getEventType() + getDocumentKey();
+
+   std::pair<DialogUsageManager::ServerSubscriptions::iterator,DialogUsageManager::ServerSubscriptions::iterator> subs;
+   subs = mDum.mServerSubscriptions.equal_range(key);
+   for (DialogUsageManager::ServerSubscriptions::iterator i=subs.first; i!=subs.second; ++i)
+   {
+      if (i->second == this)
+      {
+         mDum.mServerSubscriptions.erase(i);
+         break;
+      }
+   }
+   
+   mDum.mServerSubscriptions.erase(key);
    mDialog.mServerSubscriptions.remove(this);
 }
 
