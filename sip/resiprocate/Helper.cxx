@@ -50,6 +50,11 @@ Helper::makeRegister(const NameAddr& registrar,
 
    rLine.uri().scheme() = registrar.uri().scheme();
    rLine.uri().host() = registrar.uri().host();
+   rLine.uri().port() = registrar.uri().port();
+   if (registrar.uri().exists(p_transport))
+   {
+      rLine.uri().param(p_transport) = registrar.uri().param(p_transport);
+   }
 
    request->header(h_To) = aor;
    request->header(h_RequestLine) = rLine;
