@@ -25,7 +25,7 @@ class Log
       {
          COUT=0,
          SYSLOG, 
-         FILE,
+         FILE
       }Type;
       
       
@@ -37,7 +37,7 @@ class Log
          WARNING = 3,
          INFO = 4,
          DEBUG = 5,
-         DEBUG_STACK = 8,
+         DEBUG_STACK = 8
       }Level;
 #else
       typedef enum 
@@ -47,7 +47,7 @@ class Log
          WARNING = LOG_WARNING,
          INFO = LOG_INFO,
          DEBUG = LOG_DEBUG,
-         DEBUG_STACK = 8,
+         DEBUG_STACK = 8
       }Level;
 #endif
 
