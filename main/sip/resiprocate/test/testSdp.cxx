@@ -18,7 +18,8 @@ main()
                "a=rtpmap:0 PCMU/8000\r\n");
 
       HeaderFieldValue hfv(txt.data(), txt.size());
-      SdpContents sdp(&hfv);
+      Mime type("application", "sdp");
+      SdpContents sdp(&hfv, type);
 
       assert(sdp.getSession().getVersion() == 0);
       assert(sdp.getSession().getOrigin().getUser() == "alice");
@@ -36,11 +37,11 @@ main()
           "t=5 17\r\n"
           "m=audio 49172 RTP/AVP 0\r\n"
           "a=rtpmap:0 PCMU/8000\r\n"
-          "\r\n"
-            );
+          "\r\n");
 
       HeaderFieldValue hfv(txt, strlen(txt));
-      SdpContents sdp(&hfv);
+      Mime type("application", "sdp");
+      SdpContents sdp(&hfv, type);
       
       assert(sdp.getSession().getVersion() == 0);
       assert(sdp.getSession().getOrigin().getUser() == "UserA");
@@ -80,7 +81,8 @@ main()
                          "a=rtpmap:18 G729/8000\r\n");
 
       HeaderFieldValue hfv(txt, strlen(txt));
-      SdpContents sdp(&hfv);
+      Mime type("application", "sdp");
+      SdpContents sdp(&hfv, type);
       
       assert(sdp.getSession().getVersion() == 0);
       assert(sdp.getSession().getOrigin().getUser() == "CiscoSystemsSIP-GW-UserAgent");
@@ -123,7 +125,8 @@ main()
                "a=rtpmap:0 PCMU/8000\r\n");
 
       HeaderFieldValue hfv(txt.data(), txt.size());
-      SdpContents sdp(&hfv);
+      Mime type("application", "sdp");
+      SdpContents sdp(&hfv, type);
 
       assert(sdp.getSession().getVersion() == 0);
       assert(sdp.getSession().getOrigin().getUser() == "alice");

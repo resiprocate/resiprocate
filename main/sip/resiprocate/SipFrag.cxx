@@ -13,8 +13,8 @@ SipFrag::SipFrag()
    : mMessage(new SipMessage())
 {}
 
-SipFrag::SipFrag(HeaderFieldValue* hfv)
-   : Contents(hfv),
+SipFrag::SipFrag(HeaderFieldValue* hfv, const Mime& contentsType)
+   : Contents(hfv, contentsType),
      mMessage(0)
 {
 }
