@@ -114,7 +114,7 @@ void
 DnsResult::destroy()
 {
    assert(this);
-   DebugLog (<< "DnsResult::destroy() " << this);
+   DebugLog (<< "DnsResult::destroy() " << *this);
    
    if (mType == Pending)
    {
@@ -129,7 +129,7 @@ DnsResult::destroy()
 void
 DnsResult::lookup(const Uri& uri)
 {
-   InfoLog (<< "DnsResult::lookup " << uri);
+   DebugLog (<< "DnsResult::lookup " << uri);
    
    assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
    mTarget = uri.exists(p_maddr) ? uri.param(p_maddr) : uri.host();
@@ -228,7 +228,7 @@ DnsResult::getDefaultPort(TransportType transport, int port)
 void
 DnsResult::lookupAAAARecords(const Data& target)
 {
-   InfoLog(<< "Doing host (AAAA) lookup: " << target);
+   DebugLog(<< "Doing host (AAAA) lookup: " << target);
    mPassHostFromAAAAtoA = target; // hackage
 #if defined(USE_ARES)
    ares_query(mInterface.mChannel, target.c_str(), C_IN, T_AAAA, DnsResult::aresAAAACallback, this); 
@@ -242,7 +242,7 @@ DnsResult::lookupAAAARecords(const Data& target)
 void
 DnsResult::lookupARecords(const Data& target)
 {
-   InfoLog (<< "Doing Host (A) lookup: " << target);
+   DebugLog (<< "Doing Host (A) lookup: " << target);
 
 #if defined(USE_ARES)
    ares_gethostbyname(mInterface.mChannel, target.c_str(), AF_INET, DnsResult::aresHostCallback, this);
@@ -302,7 +302,7 @@ DnsResult::lookupARecords(const Data& target)
 void
 DnsResult::lookupNAPTR()
 {
-   InfoLog (<< "Doing NAPTR lookup: " << mTarget);
+   DebugLog (<< "Doing NAPTR lookup: " << mTarget);
 
 #if defined(USE_ARES)
    ares_query(mInterface.mChannel, mTarget.c_str(), C_IN, T_NAPTR, DnsResult::aresNAPTRCallback, this); 
@@ -316,7 +316,7 @@ DnsResult::lookupNAPTR()
 void
 DnsResult::lookupSRV(const Data& target)
 {
-   InfoLog (<< "Doing SRV lookup: " << target);
+   DebugLog (<< "Doing SRV lookup: " << target);
    
 #if defined(USE_ARES)
    ares_query(mInterface.mChannel, target.c_str(), C_IN, T_SRV, DnsResult::aresSRVCallback, this); 
@@ -414,7 +414,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       // This means that dns / NAPTR is misconfigured for this client 
       if (mPreferredNAPTR.key.empty())
       {
-         InfoLog (<< "No NAPTR records that are supported by this client");
+         DebugLog (<< "No NAPTR records that are supported by this client");
          mType = Finished;
          mHandler->handle(this);
          return;
@@ -439,7 +439,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
 
       if (ancount == 0) // didn't find any NAPTR records
       {
-         InfoLog (<< "There are no NAPTR records so do an SRV lookup instead");
+         DebugLog (<< "There are no NAPTR records so do an SRV lookup instead");
          goto NAPTRFail; // same as if no NAPTR records
       }
       else if (mSRVResults.empty())
@@ -465,7 +465,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       {
 #ifdef USE_ARES
          char* errmem=0;
-         InfoLog (<< "NAPTR lookup failed: " << ares_strerror(status, &errmem));
+         DebugLog (<< "NAPTR lookup failed: " << ares_strerror(status, &errmem));
          ares_free_errmem(errmem);
 #endif
       }
@@ -529,7 +529,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
             }
             else
             {
-               InfoLog (<< "Skipping SRV " << srv.key);
+               DebugLog (<< "Skipping SRV " << srv.key);
                continue;
             }
 
@@ -558,7 +558,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
    {
 #ifdef USE_ARES
       char* errmem=0;
-      InfoLog (<< "SRV lookup failed: " << ares_strerror(status, &errmem));
+      DebugLog (<< "SRV lookup failed: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
 #endif
    }
@@ -579,7 +579,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
             mPort = 5060;
          }
          
-         InfoLog (<< "No SRV records for " << mTarget << ". Trying A records");
+         DebugLog (<< "No SRV records for " << mTarget << ". Trying A records");
          lookupARecords(mTarget);
       }
       else
@@ -630,7 +630,7 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
    {
 #ifdef USE_ARES
       char* errmem=0;
-      InfoLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
+      DebugLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
 #endif
    }
@@ -668,7 +668,7 @@ DnsResult::processHost(int status, struct hostent* result)
    {
 #ifdef USE_ARES
       char* errmem=0;
-      InfoLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
+      DebugLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
 #endif
    }
@@ -825,7 +825,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -835,7 +835,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
     */
    if (aptr + RRFIXEDSZ > abuf + alen)
    {
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       free(name);
       return NULL;
    }
@@ -847,7 +847,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
    aptr += RRFIXEDSZ;
    if (aptr + dlen > abuf + alen)
    {
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       free(name);
       return NULL;
    }
@@ -893,7 +893,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
          }
          else
          {
-            InfoLog (<< "Skipping SRV " << srv.key);
+            DebugLog (<< "Skipping SRV " << srv.key);
             return aptr + dlen;
          }
          
@@ -909,7 +909,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       // The RR data is a four-byte Internet address. 
       if (dlen != 4)
       {
-         InfoLog (<< "Failed parse of RR");
+         DebugLog (<< "Failed parse of RR");
          return NULL;
       }
 
@@ -923,7 +923,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
    {
       if (dlen != 16) // The RR is 128 bits of ipv6 address
       {
-         InfoLog (<< "Failed parse of RR");
+         DebugLog (<< "Failed parse of RR");
          return NULL;
       }
       struct in6_addr addr;
@@ -953,7 +953,7 @@ DnsResult::skipDNSQuestion(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -963,7 +963,7 @@ DnsResult::skipDNSQuestion(const unsigned char *aptr,
    if (aptr + QFIXEDSZ > abuf + alen)
    {
       free(name);
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
 
@@ -991,7 +991,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -1002,7 +1002,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
    if (aptr + RRFIXEDSZ > abuf + alen)
    {
       free(name);
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
   
@@ -1014,7 +1014,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
    if (aptr + dlen > abuf + alen)
    {
       free(name);
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
    Data key = name;
@@ -1032,7 +1032,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
       status = ares_expand_name(aptr + 6, abuf, alen, &name, &len);
       if (status != ARES_SUCCESS)
       {
-         InfoLog (<< "Failed parse of RR");
+         DebugLog (<< "Failed parse of RR");
          return NULL;
       }
       srv.target = name;
@@ -1043,7 +1043,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
    }
    else
    {
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
 }
@@ -1064,7 +1064,7 @@ DnsResult::parseAAAA(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -1075,7 +1075,7 @@ DnsResult::parseAAAA(const unsigned char *aptr,
    if (aptr + RRFIXEDSZ > abuf + alen)
    {
       free(name);
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
   
@@ -1087,7 +1087,7 @@ DnsResult::parseAAAA(const unsigned char *aptr,
    if (aptr + dlen > abuf + alen)
    {
       free(name);
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
    Data key = name;
@@ -1103,7 +1103,7 @@ DnsResult::parseAAAA(const unsigned char *aptr,
    }
    else
    {
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
 }
@@ -1124,7 +1124,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -1134,7 +1134,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
    if (aptr + RRFIXEDSZ > abuf + alen)
    {
       free(name);
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
   
@@ -1146,7 +1146,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
    if (aptr + dlen > abuf + alen)
    {
       free(name);
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
 
@@ -1167,7 +1167,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       len = *p;
       if (p + len + 1 > aptr + dlen)
       {
-         InfoLog (<< "Failed parse of RR");
+         DebugLog (<< "Failed parse of RR");
          return NULL;
       }
       naptr.flags = Data(p+1, len);
@@ -1176,7 +1176,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       len = *p;
       if (p + len + 1 > aptr + dlen)
       {
-         InfoLog (<< "Failed parse of RR");
+         DebugLog (<< "Failed parse of RR");
          return NULL;
       }
       naptr.service = Data(p+1, len);
@@ -1185,7 +1185,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       len = *p;
       if (p + len + 1 > aptr + dlen)
       {
-         InfoLog (<< "Failed parse of RR");
+         DebugLog (<< "Failed parse of RR");
          return NULL;
       }
       naptr.regex = Data(p+1, len);
@@ -1194,7 +1194,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       status = ares_expand_name(p, abuf, alen, &name, &len);
       if (status != ARES_SUCCESS)
       {
-         InfoLog (<< "Failed parse of RR");
+         DebugLog (<< "Failed parse of RR");
          return NULL;
       }
       naptr.replacement = name;
@@ -1204,7 +1204,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
    }
    else
    {
-      InfoLog (<< "Failed parse of RR");
+      DebugLog (<< "Failed parse of RR");
       return NULL;
    }
 }
