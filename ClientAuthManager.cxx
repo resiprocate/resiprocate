@@ -45,7 +45,41 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
    //one try per credential, one credential per user per realm
    if (it != mAttemptedAuths.end())
    {
-      if (it->second.state == Current || it->second.state == Failed)
+      if (it->second.state == Current)
+      {
+         bool stale = false;         
+         if (response.exists(h_WWWAuthenticates))
+         {      
+            for (Auths::const_iterator i = response.header(h_WWWAuthenticates).begin();  
+                 i != response.header(h_WWWAuthenticates).end(); ++i)                    
+            {    
+               if (i->exists(p_stale) && isEqualNoCase(i->param(p_stale), "true"))
+               {
+                  stale = true;
+                  break;
+               }
+            }
+         }
+         if (response.exists(h_ProxyAuthenticates))
+         {      
+            for (Auths::const_iterator i = response.header(h_ProxyAuthenticates).begin();  
+                 i != response.header(h_ProxyAuthenticates).end(); ++i)                    
+            {    
+               if (i->exists(p_stale) && isEqualNoCase(i->param(p_stale), "true"))
+               {
+                  stale = true;
+                  break;
+               }
+            }
+         }
+         if (!stale)
+         {
+            it->second.state = Failed;         
+//         mAttemptedAuths.erase(it);
+            return false;
+         }
+      }
+      else if (it->second.state == Failed)
       {
          it->second.state = Failed;         
 //         mAttemptedAuths.erase(it);
