@@ -23,8 +23,7 @@ Dialog::Dialog(const NameAddr& localContact)
      mLocalTag(),
      mRemoteTag(),
      mRemoteUri(),
-     mLocalUri(),
-     mDialogId()
+     mLocalUri()
 {
    //DebugLog (<< "Creating a dialog: " << localContact << " " << this);
    mVia.sentHost() = mContact.uri().host();
@@ -69,9 +68,9 @@ Dialog::makeResponse(const SipMessage& request, int code)
 
       mCreated = true;
 
-      mDialogId = mCallId.value();
-      mDialogId += mRemoteTag;
-      mDialogId += mLocalTag;
+      // mDialogId = mCallId.value();
+      //mDialogId += mRemoteTag;
+      //mDialogId += mLocalTag;
 
       DebugLog(<< "Created dialog establishing response: " << *response);
       DebugLog(<< "CallId: " << mCallId);
@@ -120,9 +119,9 @@ Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
       mLocalUri = request.header(h_From);
       mCreated = true;
       
-      mDialogId = mCallId.value();
-      mDialogId += mRemoteTag;
-      mDialogId += mLocalTag;
+      //mDialogId = mCallId.value();
+      //mDialogId += mRemoteTag;
+      //mDialogId += mLocalTag;
    }
 }
 
@@ -149,9 +148,9 @@ Dialog::createDialogAsUAC(const SipMessage& response)
       mLocalUri = response.header(h_From);
       mCreated = true;
       
-      mDialogId = mCallId.value();
-      mDialogId += mRemoteTag;
-      mDialogId += mLocalTag;
+      // mDialogId = mCallId.value();
+      //mDialogId += mRemoteTag;
+      //mDialogId += mLocalTag;
    }
 }
 
@@ -197,12 +196,60 @@ Dialog::targetRefreshRequest(const SipMessage& request)
    return 0;
 }
 
+
+SipMessage* 
+Dialog::makeInitialRegister(const NameAddr& registrar,
+                                        const NameAddr& aor)
+{
+   assert(0);
+   return NULL;
+}
+
+
+SipMessage* 
+Dialog::makeInitialSubscribe(const NameAddr& target, 
+                             const NameAddr& from)
+{
+   assert(0);
+   return NULL;
+}
+
+
+SipMessage* 
+Dialog::makeInitialInvite(const NameAddr& target,
+                          const NameAddr& from)
+{
+   assert(0);
+   return NULL;
+}
+
+
 SipMessage*
 Dialog::makeInvite()
 {
    SipMessage* request = makeRequest(INVITE);
    incrementCSeq(*request);
    DebugLog(<< "Dialog::makeInvite: " << *request);
+   return request;
+}
+
+
+SipMessage*
+Dialog::makeRegister()
+{
+   SipMessage* request = makeRequest(REGISTER);
+   incrementCSeq(*request);
+   DebugLog(<< "Dialog::makeRegister: " << *request);
+   return request;
+}
+
+
+SipMessage*
+Dialog::makeSubscribe()
+{
+   SipMessage* request = makeRequest(SUBSCRIBE);
+   incrementCSeq(*request);
+   DebugLog(<< "Dialog::makeSubscribe: " << *request);
    return request;
 }
 
@@ -307,12 +354,12 @@ Dialog::clear()
    mRouteSet.clear();
    mRemoteEmpty = true;
    mLocalEmpty = true;
-   mLocalTag = "";
-   mRemoteTag = "";
+   mLocalTag = Data::Empty;
+   mRemoteTag = Data::Empty;
    //mRemoteUri = 0;
    //mLocalUri = 0;
    //mRemoteTarget = 0;
-   mDialogId = "";
+   // mDialogId = "";
 }
 
 SipMessage*
@@ -334,8 +381,6 @@ Dialog::makeRequest(MethodTypes method)
    request->header(h_CSeq).method() = method;
    copyCSeq(*request);
    request->header(h_MaxForwards).value() = 70;
-   //request->header(h_ContentLength).value() = 0;
-
 
    Via via;
    via.param(p_branch); // will create the branch
@@ -373,7 +418,7 @@ std::ostream&
 Vocal2::operator<<(std::ostream& strm, Dialog& d)
 {
    strm << std::endl
-        << "Dialog: [" << d.mDialogId << " " 
+        << "Dialog: [" << d.dialogId() << " " 
         << "created=" << d.mCreated 
         << " remoteTarget=" << d.mRemoteTarget << std::endl
       //<< "routeset=" << Inserter(d.mRouteSet) << std::endl
@@ -386,7 +431,16 @@ Vocal2::operator<<(std::ostream& strm, Dialog& d)
         << "]";
    return strm;
 }
-
+  
+ 
+const Data 
+Dialog::dialogId() const
+{
+   Data dialog = mCallId.value();
+   dialog += mRemoteTag; 
+   dialog += mLocalTag;
+   return dialog;
+}
 
 
 /* ====================================================================

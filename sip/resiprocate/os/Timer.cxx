@@ -305,6 +305,13 @@ Timer::getTimeMs()
 }
 
 
+UInt64 
+Timer::getRandomFutureTimeMs( UInt64 futureMs )
+{
+   assert(0);
+   return 0;
+}
+
 bool Vocal2::operator<(const Timer& t1, const Timer& t2)
 {
    //std::cerr << "operator(<" << t1.mWhen << ", " << t2.mWhen << ") = " << (t1.mWhen < t2.mWhen) << std::endl;

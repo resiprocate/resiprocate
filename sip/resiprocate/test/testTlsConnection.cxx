@@ -129,7 +129,11 @@ main(int argc, char* argv[])
       }
       struct sockaddr_in peer;
 		
+#ifdef __MACH__
       int peerLen=sizeof(peer);
+#else
+      socklen_t peerLen=sizeof(peer);
+#endif
       Socket s = accept( mFd, (struct sockaddr*)&peer,&peerLen);
       if ( s == -1 )
       {
