@@ -1,3 +1,8 @@
+2003-08-01  Wensong Zhang  <wensong@purplecomm.com>
+
+	* Makefile.am (libresiprocate_la_SOURCES): added the new
+	GenericContents.cxx.
+
 2003-07-28  Wensong Zhang  <wensong@purplecomm.com>
 
 	* Security.cxx: re-ordered the header files.
