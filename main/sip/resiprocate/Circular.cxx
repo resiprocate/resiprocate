@@ -1,4 +1,4 @@
-#include "sipstack/Circular.hxx"
+#include "sip2/sipstack/Circular.hxx"
 
 using namespace Vocal2;
 

@@ -1,9 +1,9 @@
 
-#include "util/Socket.hxx"
-#include "sipstack/UdpTransport.hxx"
-#include "sipstack/Message.hxx"
-#include "util/Fifo.hxx"
-#include "util/Logger.hxx"
+#include "sip2/util/Socket.hxx"
+#include "sip2/sipstack/UdpTransport.hxx"
+#include "sip2/sipstack/Message.hxx"
+#include "sip2/util/Fifo.hxx"
+#include "sip2/util/Logger.hxx"
 
 
 using namespace Vocal2;

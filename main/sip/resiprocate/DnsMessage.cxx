@@ -1,7 +1,7 @@
-#include "util/DataStream.hxx"
-#include "util/Socket.hxx"
-#include "util/Data.hxx"
-#include "sipstack/DnsMessage.hxx"
+#include "sip2/util/DataStream.hxx"
+#include "sip2/util/Socket.hxx"
+#include "sip2/util/Data.hxx"
+#include "sip2/sipstack/DnsMessage.hxx"
 
 using namespace Vocal2;
 
