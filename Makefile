@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.26 2002/09/22 05:37:02 dabryan Exp $
+# $Id: Makefile,v 1.27 2002/09/22 06:26:46 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -98,11 +98,12 @@ fsm.dot: Preparse.cxx dot.awk
 %.ps: %.dot
 	dot -Tps -o$@ $<
 
-$(OBJ)/%.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
 $(OBJ)/%.o: %.cxx
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	- cat $(@F:.o=.d) $(@:.o=.d) >  $(@:.o=_tmp.d)
+	sed -e "s/^$(@F)/$(@D)\/$(@F)/" < $(@:.o=_tmp.d) > $(@:.o=.d)
+	- rm  $(@F:.o=.d)  $(@:.o=_tmp.d)
+
 
 %.S: %.cxx
 	$(CXX) $(CXXFLAGS)  -fverbose-asm -g -Wa,-ahln -c \
