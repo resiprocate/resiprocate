@@ -20,10 +20,12 @@ class Profile
       
       // return the list of unsupported tokens from set of requires tokens
       Tokens isSupported(Token& requires);
+      Tokens getSupportedOptionTags();
       Tokens getAllowedMethods();
       Mimes getSupportedMimeTypes();
       Tokens getSupportedEncodings();
       Tokens getSupportedLanguages();
+      NameAddr& getDefaultAor();
       
       void addSupportedScheme(const Data& scheme);
       void addSupportedMethod(const MethodTypes& method);
@@ -31,7 +33,8 @@ class Profile
       void addSupportedMimeType(const Mime& mimeType);
       void addSupportedEncoding(const Token& encoding);
       void addSupportedLanguage(const Token& lang);
-      
+
+      void setDefaultAor(const NameAddr& from);
       void setOutboundProxy( const Data& uri );
 
 
