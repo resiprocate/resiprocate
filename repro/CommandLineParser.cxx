@@ -92,23 +92,25 @@ CommandLineParser::toUri(const char* input, const char* description)
 std::vector<resip::Uri> 
 CommandLineParser::toUriVector(const char* input, const char* description)
 {
-   char buffer[2048];
-   strcpy(buffer, input);
-   
    std::vector<Uri> uris; 
+
    if (input)
    {
-      for (char* token = strtok(buffer, ","); token != 0; token = strtok(0, ","))
+      Data buffer = input;
+      if (input)
       {
-         try
+         for (char* token = strtok(const_cast<char*>(buffer.c_str()), ","); token != 0; token = strtok(0, ","))
          {
-            uris.push_back(Uri(token));
-         } 
-         catch (ParseException& e)
-         {
-            InfoLog (<< "Caught: " << e);
-            WarningLog (<< "Can't parse " << description << " : " << token);
-            exit(-1);
+            try
+            {
+               uris.push_back(Uri(token));
+            } 
+            catch (ParseException& e)
+            {
+               InfoLog (<< "Caught: " << e);
+               WarningLog (<< "Can't parse " << description << " : " << token);
+               exit(-1);
+            }
          }
       }
    }
