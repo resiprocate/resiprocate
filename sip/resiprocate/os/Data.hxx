@@ -1,7 +1,7 @@
 #ifndef STRINGDATA_H_
 #define STRINGDATA_H_
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.14 2002/10/15 18:03:21 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.15 2002/10/21 22:50:17 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -43,6 +43,9 @@ class Data
       // not necessarily NULL terminated
       const char* data() const;
 
+      // compute an md5 hash (return in asciihex)
+      Data md5() const;
+      
    private:
       friend class TestData;
       Data(const char* buffer, int length, bool);
