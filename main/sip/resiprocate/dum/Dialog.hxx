@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include <vector>
+#include <list>
 #include "resiprocate/dum/DialogId.hxx"
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/MethodTypes.hxx"
