@@ -78,5 +78,6 @@ main()
    }      
 
    cerr << "All OK" << endl;
+   return 0;
 }
 
