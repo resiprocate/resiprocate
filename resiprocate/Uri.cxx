@@ -15,8 +15,8 @@ Uri::Uri(const Uri& rhs)
      mScheme(rhs.mScheme),
      mHost(rhs.mHost),
      mUser(rhs.mUser),
-     mAor(rhs.mAor),
      mPort(rhs.mPort),
+     mAor(rhs.mAor),
      mPassword(rhs.mPassword)
 {
 }
@@ -24,9 +24,32 @@ Uri::Uri(const Uri& rhs)
 const Data&
 Uri::getAor() const
 {
-   // could keep last mUser, mHost, mPort around and compare
-   // rather than always reallocate...
-   mAor = mUser + Symbols::AT_SIGN + mHost + Symbols::COLON + Data(mPort);
+   // did anything change?
+   if (mOldScheme != mScheme ||
+       mOldHost != mHost ||
+       mOldUser != mUser ||
+       mOldPort != mPort)
+   {
+      mOldScheme = mScheme;
+      mOldHost = mHost;
+      mOldUser = mUser;
+      mOldPort = mPort;
+       
+      if (mUser.empty())
+      {
+         mAor = mHost;
+      }
+      else
+      {
+         mAor = mUser + Symbols::AT_SIGN + mHost;
+      }
+
+      if (mPort != Symbols::DefaultSipPort)
+      {
+         mAor += Data(Symbols::COLON) + Data(mPort);
+      }
+   }
+   
    return mAor;
 }
 

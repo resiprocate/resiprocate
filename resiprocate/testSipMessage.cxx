@@ -11,6 +11,220 @@ using namespace std;
 int
 main()
 {
+   if (0)
+   {
+      cerr << "test header copying between unparsed messages" << endl;
+      char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=third\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=fourth\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=fifth\r\n"
+                    "Max-Forwards: 70\r\n"
+                    "To: Bob <sip:bob@biloxi.com>\r\n"
+                    "From: Bob <sip:bob@biloxi.com>;tag=456248\r\n"
+                    "Call-ID: 843817637684230@998sdasdh09\r\n"
+                    "CSeq: 1826 REGISTER\r\n"
+                    "Contact: <sip:bob@192.0.2.4>\r\n"
+                    "Contact: <sip:qoq@192.0.2.4>\r\n"
+                    "Expires: 7200\r\n"
+                    "Content-Length: 0\r\n\r\n");
+      SipMessage message1;
+      
+      Preparse parse1(message1, txt1, strlen(txt1));
+      parse1.process();
+
+      char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfirst\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=ssecond\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sthird\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfourth\r\n"
+                    "Max-Forwards: 7\r\n"
+                    "To: Speedy <sip:speedy@biloxi.com>\r\n"
+                    "From: Speedy <sip:speedy@biloxi.com>;tag=88888\r\n"
+                    "Call-ID: 88888@8888\r\n"
+                    "CSeq: 6281 REGISTER\r\n"
+                    "Contact: <sip:speedy@192.0.2.4>\r\n"
+                    "Contact: <sip:qoq@192.0.2.4>\r\n"
+                    "Expires: 2700\r\n"
+                    "Content-Length: 0\r\n\r\n");
+      SipMessage message2;
+      
+      Preparse parse2(message2, txt2, strlen(txt2));
+      parse2.process();
+
+      // copy over everything
+      message1.header(h_RequestLine) = message2.header(h_RequestLine);
+      message1.header(h_Vias) = message2.header(h_Vias);
+      message1.header(h_MaxForwards) = message2.header(h_MaxForwards);
+      message1.header(h_To) = message2.header(h_To);
+      message1.header(h_From) = message2.header(h_From);
+      message1.header(h_CallId) = message2.header(h_CallId);
+      message1.header(h_CSeq) = message2.header(h_CSeq);
+      message1.header(h_Contacts) = message2.header(h_Contacts);
+      message1.header(h_Expires) = message2.header(h_Expires);
+      message1.header(h_ContentLength) = message2.header(h_ContentLength);
+
+      assert(message1.header(h_To).uri().user() == "speedy");
+      assert(message1.header(h_From).uri().user() == "speedy");
+      assert(message1.header(h_MaxForwards).value() == 7);
+      assert(message1.header(h_Contacts).empty() == false);
+      assert(message1.header(h_CallId).value() == "88888@8888");
+      assert(message1.header(h_CSeq).sequence() == 6281);
+      assert(message1.header(h_CSeq).method() == REGISTER);
+      assert(message1.header(h_Vias).empty() == false);
+      assert(message1.header(h_Vias).size() == 4);
+      assert(message1.header(h_Expires).value() == 2700);
+      assert(message1.header(h_ContentLength).value() == 0);
+      assert(message1.header(h_RequestLine).uri().getAor() == "registrar.ixolib.com");
+   }
+
+   {
+      cerr << "test header copying between parsed messages" << endl;
+      // should not copy any HeaderFieldValues
+      char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=third\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=fourth\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=fifth\r\n"
+                    "Max-Forwards: 70\r\n"
+                    "To: Bob <sip:bob@biloxi.com>\r\n"
+                    "From: Bob <sip:bob@biloxi.com>;tag=456248\r\n"
+                    "Call-ID: 843817637684230@998sdasdh09\r\n"
+                    "CSeq: 1826 REGISTER\r\n"
+                    "Contact: <sip:bob@192.0.2.4>\r\n"
+                    "Contact: <sip:qoq@192.0.2.4>\r\n"
+                    "Expires: 7200\r\n"
+                    "Content-Length: 0\r\n\r\n");
+      SipMessage message1;
+      
+      Preparse parse1(message1, txt1, strlen(txt1));
+      parse1.process();
+
+      // parse it
+      message1.header(h_RequestLine).getMethod();
+      for (NameAddrs::iterator i = message1.header(h_Contacts).begin();
+           i != message1.header(h_Contacts).end(); i++)
+      {
+         i->uri();
+      }
+      for (Vias::iterator i = message1.header(h_Vias).begin();
+           i != message1.header(h_Vias).end(); i++)
+      {
+         i->sentPort();
+      }
+
+      message1.header(h_To).uri().user();
+      message1.header(h_From).uri().user();
+      message1.header(h_MaxForwards).value();
+      message1.header(h_Contacts).empty();
+      message1.header(h_CallId).value();
+      message1.header(h_CSeq).sequence();
+      message1.header(h_CSeq).method();
+      message1.header(h_Vias).empty();
+      message1.header(h_Vias).size();
+      message1.header(h_Expires).value();
+      message1.header(h_ContentLength).value();
+
+      char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfirst\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=ssecond\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sthird\r\n"
+                    "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfourth\r\n"
+                    "Max-Forwards: 7\r\n"
+                    "To: Speedy <sip:speedy@biloxi.com>\r\n"
+                    "From: Speedy <sip:speedy@biloxi.com>;tag=88888\r\n"
+                    "Call-ID: 88888@8888\r\n"
+                    "CSeq: 6281 REGISTER\r\n"
+                    "Contact: <sip:speedy@192.0.2.4>\r\n"
+                    "Contact: <sip:qoq@192.0.2.4>\r\n"
+                    "Expires: 2700\r\n"
+                    "Content-Length: 0\r\n\r\n");
+      SipMessage message2;
+      
+      Preparse parse2(message2, txt2, strlen(txt2));
+      parse2.process();
+
+      message2.header(h_RequestLine).getMethod();
+      message2.header(h_To).uri().user();
+      message2.header(h_From).uri().user();
+      message2.header(h_MaxForwards).value();
+      for (NameAddrs::iterator i = message2.header(h_Contacts).begin();
+           i != message2.header(h_Contacts).end(); i++)
+      {
+         i->uri();
+      }
+
+      for (Vias::iterator i = message2.header(h_Vias).begin();
+           i != message2.header(h_Vias).end(); i++)
+      {
+         i->sentPort();
+      }
+      message2.header(h_CallId).value();
+      message2.header(h_CSeq).sequence();
+      message2.header(h_CSeq).method();
+      message2.header(h_Vias).empty();
+      message2.header(h_Vias).size();
+      message2.header(h_Expires).value();
+      message2.header(h_ContentLength).value();
+
+      // copy over everything
+      message1.header(h_RequestLine) = message2.header(h_RequestLine);
+      message1.header(h_Vias) = message2.header(h_Vias);
+      message1.header(h_MaxForwards) = message2.header(h_MaxForwards);
+      message1.header(h_To) = message2.header(h_To);
+      message1.header(h_From) = message2.header(h_From);
+      message1.header(h_CallId) = message2.header(h_CallId);
+      message1.header(h_CSeq) = message2.header(h_CSeq);
+      message1.header(h_Contacts) = message2.header(h_Contacts);
+      message1.header(h_Expires) = message2.header(h_Expires);
+      message1.header(h_ContentLength) = message2.header(h_ContentLength);
+
+      assert(message1.header(h_To).uri().user() == "speedy");
+      assert(message1.header(h_From).uri().user() == "speedy");
+      assert(message1.header(h_MaxForwards).value() == 7);
+      assert(message1.header(h_Contacts).empty() == false);
+      assert(message1.header(h_CallId).value() == "88888@8888");
+      assert(message1.header(h_CSeq).sequence() == 6281);
+      assert(message1.header(h_CSeq).method() == REGISTER);
+      assert(message1.header(h_Vias).empty() == false);
+      assert(message1.header(h_Vias).size() == 4);
+      assert(message1.header(h_Expires).value() == 2700);
+      assert(message1.header(h_ContentLength).value() == 0);
+      assert(message1.header(h_RequestLine).uri().getAor() == "registrar.ixolib.com");
+   }
+
+   return 0;
+
+   {
+      cerr << "test unparsed message copy" << endl;
+      char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+                   "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
+                   "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
+                   "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=third\r\n"
+                   "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=fourth\r\n"
+                   "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=fifth\r\n"
+                   "Max-Forwards: 70\r\n"
+                   "To: Bob <sip:bob@biloxi.com>\r\n"
+                   "From: Bob <sip:bob@biloxi.com>;tag=456248\r\n"
+                   "Call-ID: 843817637684230@998sdasdh09\r\n"
+                   "CSeq: 1826 REGISTER\r\n"
+                   "Contact: <sip:bob@192.0.2.4>\r\n"
+                   "Contact: <sip:qoq@192.0.2.4>\r\n"
+                   "Expires: 7200\r\n"
+                   "Content-Length: 0\r\n\r\n");
+      SipMessage message;
+      
+      Preparse parse(message, txt, strlen(txt));
+      parse.process();
+      
+      SipMessage copy(message);
+      stringstream str;
+      copy.encode(str);
+      cerr << str.str();
+   }
+   
    {
       cerr << "test header creation" << endl;
       SipMessage message;
@@ -62,7 +276,7 @@ main()
       assert(message.header(h_Vias).size() == 5);
       assert(message.header(h_Expires).value() == 7200);
       assert(message.header(h_ContentLength).value() == 0);
-      //assert(message.header(h_RequestLine).uri().getAor() == "registrar.biloxi.com");
+      assert(message.header(h_RequestLine).uri().getAor() == "registrar.biloxi.com");
       
       cerr << "Encode from parsed: " << endl;
       message.encode(cerr);
@@ -84,7 +298,8 @@ main()
       assert(copy.header(h_Vias).size() == 5);
       assert(copy.header(h_Expires).value() == 7200);
       assert(copy.header(h_ContentLength).value() == 0);
-      //assert(copy.header(h_RequestLine).uri().getAor() == "registrar.biloxi.com");
+      cerr << "RequestLine Uri AOR = " << copy.header(h_RequestLine).uri().getAor() << endl;
+      assert(copy.header(h_RequestLine).uri().getAor() == "registrar.biloxi.com");
 
 
       cerr << "Encode after copying: " << endl;
@@ -263,8 +478,6 @@ main()
       message.getRawHeader(Headers::Max_Forwards)->getParserContainer()->encode(cerr) << endl;
    }
 }
-
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
