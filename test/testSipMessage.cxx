@@ -666,6 +666,61 @@ main(int argc, char** argv)
                    "\r\n"
                    "here is some plain ol' contents"));
    }
+
+   {
+      SipMessage inv;
+
+      UnknownHeaderType h_Foo("foo");
+      UnknownHeaderType h_Bar("bar");
+
+      inv.header(h_Foo);
+      inv.header(h_Bar).push_back(StringCategory("bar1"));
+      inv.header(h_Bar).push_back(StringCategory("bar2"));
+
+      //inv.header(h_Vias);
+      inv.header(h_To);
+      
+      inv.header(h_RequestLine) = RequestLine(INVITE);
+      inv.header(h_RequestLine).uri() = Uri("sip:bob@biloxi.com");
+      inv.header(h_To) = NameAddr("sip:bob@biloxi.com");
+      inv.header(h_From) = NameAddr("Alice <sip:alice@atlanta.com>;tag=1928301774");
+      inv.header(h_CallId).value() = "314159";
+      inv.header(h_CSeq).sequence() = 14;
+      inv.header(h_CSeq).method() = INVITE;
+
+      auto_ptr<Contents> pc(new PlainContents("here is some plain ol' contents"));
+      inv.setContents(pc);
+
+      cerr << inv.header(h_ContentType).type() << endl;
+      assert(inv.header(h_ContentType).type() == "text");
+      assert(inv.header(h_ContentType).subType() == "plain");
+
+      assert(!inv.exists(h_ContentLength));
+
+      assert(inv.getContents());
+      assert(dynamic_cast<PlainContents*>(inv.getContents()));
+      assert(dynamic_cast<PlainContents*>(inv.getContents())->text() == "here is some plain ol' contents");
+
+      Data d;
+      {
+         DataStream s(d);
+         inv.encode(s);
+      }
+      
+      cerr << "!! " << d;
+      assert(d == ("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+                   "To: <sip:bob@biloxi.com>\r\n"
+                   "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                   "Call-ID: 314159\r\n"
+                   "CSeq: 14 INVITE\r\n"
+                   "Content-Type: text/plain\r\n"
+                   "Content-Length: 31\r\n"
+//                   "foo: \r\n"
+                   "bar: bar1\r\n"
+                   "bar: bar2\r\n"
+                   "\r\n"
+                   "here is some plain ol' contents"));
+   }
    
    {
       Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
@@ -702,6 +757,46 @@ main(int argc, char** argv)
       assert(sdp->session().media().front().getValues("rtpmap").front() == "0 PCMU/8000");
 
       msg->encode(cerr);
+   }
+
+   {
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+               "To: Bob <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: a84b4c76e66710\r\n"
+               "CSeq: 314159 INVITE\r\n"
+               "Max-Forwards: 70\r\n"
+               "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+               "Content-Type: application/sdp\r\n"
+               "Content-Length: 150\r\n"
+               "\r\n"
+               "v=0\r\n"
+               "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
+               "s=-\r\n"
+               "c=IN IP4 pc33.atlanta.com\r\n"
+               "t=0 0\r\n"
+               "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
+               "a=rtpmap:0 PCMU/8000\r\n");
+
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      
+      assert(msg->exists(h_ContentType));
+      auto_ptr<Contents> abody = msg->releaseContents();
+      Contents* body = abody.release();
+
+      assert(body != 0);
+      SdpContents* sdp = dynamic_cast<SdpContents*>(body);
+      assert(sdp != 0);
+
+      assert(sdp->session().version() == 0);
+      assert(sdp->session().origin().user() == "alice");
+      assert(!sdp->session().media().empty());
+      assert(sdp->session().media().front().getValues("rtpmap").front() == "0 PCMU/8000");
+
+      delete sdp;
+
+      assert(msg->getContents() == 0);
    }
 
    {
