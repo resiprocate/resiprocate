@@ -1,7 +1,12 @@
 #include "resiprocate/SipFrag.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
+
+#ifndef NEW_MSG_HEADER_SCANNER
 #include "resiprocate/Preparse.hxx"
+#else
+#include <resiprocate/MsgHeaderScanner.hxx>
+#endif
 
 using namespace resip;
 using namespace std;
@@ -73,6 +78,8 @@ SipFrag::encodeParsed(std::ostream& str) const
    return str;
 }
 
+#ifndef NEW_MSG_HEADER_SCANNER // {
+
 void 
 SipFrag::parse(ParseBuffer& pb)
 {
@@ -92,18 +99,22 @@ SipFrag::parse(ParseBuffer& pb)
    // need another interface to preparse?
    // !ah! removed size check .. process() cannot process more
    // than size bytes of the message.
-   if ( pre.process(*mMessage, buffer, size))
+   if (pre.process(*mMessage, buffer, size))
    {
      pb.fail(__FILE__, __LINE__);
    }
    else 
    {
-     size_t used = pre.nBytesUsed();
+     
+     size_t used =
+         pre.nBytesUsed();
 
      // !ah! I think this is broken .. if we are UDP then the 
      // remainder is the SigFrag, not the Content-Length... ??
-     if (pre.isHeadersComplete() && 
-          mMessage->exists(h_ContentLength))
+     if (
+         pre.isHeadersComplete()
+         && 
+         mMessage->exists(h_ContentLength))
       {
          assert(used == pre.nDiscardOffset());
          mMessage->setBody( buffer+used, int(size-used) );
@@ -111,6 +122,7 @@ SipFrag::parse(ParseBuffer& pb)
       else
       {
         // !ah! So the headers weren't complete. Why are we here?
+        // !dlb! 
          if (mMessage->exists(h_ContentLength))
          {
             pb.reset(buffer + used);
@@ -121,3 +133,72 @@ SipFrag::parse(ParseBuffer& pb)
       pb.reset(pb.end());
    }
 }
+
+#else // defined(NEW_MSG_HEADER_SCANNER) } {
+
+void 
+SipFrag::parse(ParseBuffer& pb)
+{
+   DebugLog(<< "SipFrag::parse: " << pb.position());
+
+   mMessage = new SipMessage();
+
+   pb.assertNotEof();
+   const char *constBuffer = pb.position();
+   char *buffer = const_cast<char *>(constBuffer);
+
+   size_t size = pb.end() - pb.position();
+
+   // !ah! removed size check .. process() cannot process more
+   // than size bytes of the message.
+
+   MsgHeaderScanner msgHeaderScanner;
+   msgHeaderScanner.prepareForMessage(mMessage);
+   enum { sentinelLength = 4 };  // Two carriage return / line feed pairs.
+   char saveTermCharArray[sentinelLength];
+   char *termCharArray = buffer + size;
+   saveTermCharArray[0] = termCharArray[0];
+   saveTermCharArray[1] = termCharArray[1];
+   saveTermCharArray[2] = termCharArray[2];
+   saveTermCharArray[3] = termCharArray[3];
+   termCharArray[0] = '\r';
+   termCharArray[1] = '\n';
+   termCharArray[2] = '\r';
+   termCharArray[3] = '\n';
+   char *scanTermCharPtr;
+   MsgHeaderScanner::ScanChunkResult scanChunkResult =
+       msgHeaderScanner.scanChunk(buffer,
+                                  size + sentinelLength,
+                                  &scanTermCharPtr);
+   termCharArray[0] = saveTermCharArray[0];
+   termCharArray[1] = saveTermCharArray[1];
+   termCharArray[2] = saveTermCharArray[2];
+   termCharArray[3] = saveTermCharArray[3];
+   if (scanChunkResult != MsgHeaderScanner::scrEnd) {
+     pb.fail(__FILE__, __LINE__);
+   } else {
+     size_t used = scanTermCharPtr - buffer;
+
+     // !ah! I think this is broken .. if we are UDP then the 
+     // remainder is the SigFrag, not the Content-Length... ??
+     if (mMessage->exists(h_ContentLength))
+      {
+         mMessage->setBody(scanTermCharPtr,
+                           static_cast<int>(size - used));
+      }
+      else
+      {
+        // !ah! So the headers weren't complete. Why are we here?
+        // !dlb! 
+         if (mMessage->exists(h_ContentLength))
+         {
+            pb.reset(buffer + used);
+            pb.skipChars(Symbols::CRLF);
+            mMessage->setBody(pb.position(),int(pb.end()-pb.position()) );
+         }
+      }
+      pb.reset(pb.end());
+   }
+}
+
+#endif // defined(NEW_MSG_HEADER_SCANNER) }

@@ -33,7 +33,7 @@ test1()
                    "CSeq: 8\r\n"
                    "   INVITE\r\n"
                    "Via  : SIP  /   2.0\r\n" 
-                   " /UDP\n" 
+                   " /UDP\r\n" 
                    "    135.180.130.133;branch=z9hG4bKkdjuw\r\n" 
                    "Subject : \r\n"
                    "NewFangledHeader:   newfangled value\r\n" 
@@ -796,7 +796,7 @@ void test14()
 {
    CritLog( << "2.14 Response with lots of headers");
    
-   char* txt = ("SIP/2.0 200 OK\n\n"
+   char* txt = ("SIP/2.0 200 OK\r\n"
                 "To: <sip:fluffy@example.org>;tag=fb86ad2694115d75c77dce61523c9f07.ca6e\r\n"
                 "From: <sip:fluffy@example.org>;tag=a1fd\r\n"
                 "Via: SIP/2.0/UDP cj14:5002;branch=z9hG4bK-c87542-472987176-1;received=1.2.3.4\r\n"
