@@ -49,7 +49,10 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 {
    assert(msg.isExternal());
 
-   
+   assert(msg.header(h_CSeq).method() != MESSAGE);   
+   assert(msg.header(h_CSeq).method() != REGISTER);
+   assert(msg.header(h_CSeq).method() != PUBLISH);
+
    if (msg.isRequest()) // UAS
    {
       const SipMessage& request = msg;
@@ -407,37 +410,6 @@ Dialog::dispatch(const SipMessage& msg)
    }
    else if (msg.isResponse())
    {
-      if (msg.header(h_StatusLine).statusCode() >= 400 
-          && Helper::determineFailureMessageEffect(msg) == Helper::DialogTermination)
-      {
-         //kill all usages
-         mDestroying = true;               
-         
-         for (list<ServerSubscription*>::iterator it = mServerSubscriptions.begin();
-              it != mServerSubscriptions.end(); )
-         {
-            ServerSubscription* s = *it;
-            it++;
-            s->dialogDestroyed(msg);
-         } 
-
-         for (list<ClientSubscription*>::iterator it = mClientSubscriptions.begin();
-              it != mClientSubscriptions.end(); )
-         {
-            ClientSubscription* s = *it;
-            it++;
-            s->dialogDestroyed(msg);
-         }
-         if (mInviteSession)
-         {
-            mInviteSession->dialogDestroyed(msg);
-         }
-         mDestroying = false;
-         possiblyDie(); //should aways result in destruction of this
-         return;         
-      }      
-
-
       if (!mDialogSet.getCreator() ||
           !(msg.header(h_CSeq) == mDialogSet.getCreator()->getLastRequest().header(h_CSeq)))
       {
@@ -614,6 +586,37 @@ Dialog::dispatch(const SipMessage& msg)
             assert(0);
             return;
       }
+#if 0    
+      if (msg.header(h_StatusLine).statusCode() >= 400 
+          && Helper::determineFailureMessageEffect(msg) == Helper::DialogTermination)
+      {
+         //kill all usages
+         mDestroying = true;               
+         
+         for (list<ServerSubscription*>::iterator it = mServerSubscriptions.begin();
+              it != mServerSubscriptions.end(); )
+         {
+            ServerSubscription* s = *it;
+            it++;
+            s->dialogDestroyed(msg);
+         } 
+
+         for (list<ClientSubscription*>::iterator it = mClientSubscriptions.begin();
+              it != mClientSubscriptions.end(); )
+         {
+            ClientSubscription* s = *it;
+            it++;
+            s->dialogDestroyed(msg);
+         }
+         if (mInviteSession)
+         {
+            mInviteSession->dialogDestroyed(msg);
+         }
+         mDestroying = false;
+         possiblyDie(); //should aways result in destruction of this
+         return;         
+      }      
+#endif
    }
 }
 
