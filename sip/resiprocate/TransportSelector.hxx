@@ -2,11 +2,13 @@
 #define TRANSPORTSELECTOR_HXX
 
 #include <sipstack/Data.hxx>
+#include <sipstack/SipMessage.hxx>
+#include <sipstack/Fifo.hxx>
 
 namespace Vocal2
 {
 
-  class SipMessage;
+  class Message;
   class UdpTransport;
   
   class TransportSelector
