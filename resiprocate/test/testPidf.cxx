@@ -13,6 +13,22 @@ main(int argc, char** argv)
    //Log::initialize(Log::Cout, Log::Debug, argv[0]);
    
    {
+      Data txt ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
+                "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"" CRLF
+                "          entity=\"sip:jason_AT_example.com@london.gloo.net\">" CRLF
+                "  <tuple id=\"jason@example.com\" >" CRLF // SPACE before > causes error
+                "     <status><basic>open</basic></status>" CRLF
+                "     <contact priority=\"0\">sip:jason_AT_example.com@london.gloo.net</contact>" CRLF
+                "     <note>test</note>" CRLF
+                "  </tuple>" CRLF
+                "</presence>");
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "pidf+xml");
+      Pidf pc(&hfv, type);
+      assert(pc.getNumTuples() == 1);
+   }
+   {
       // http://www.imppwg.org/ml-archive/IMPP-WG/200204/msg00094.html
 
       const Data txt("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
