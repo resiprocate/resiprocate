@@ -103,7 +103,7 @@ UserProfile::setDigestCredential( const Data& realm, const Data& user, const Dat
 const UserProfile::DigestCredential&
 UserProfile::getDigestCredential( const Data& realm  )
 {
-   if(mDigestCredentials.size() == 0)
+   if(mDigestCredentials.empty())
    {
       // !jf! why not just throw here? 
       static const DigestCredential empty;
@@ -113,10 +113,12 @@ UserProfile::getDigestCredential( const Data& realm  )
    DigestCredentials::const_iterator it = mDigestCredentials.find(DigestCredential(realm));
    if (it == mDigestCredentials.end())
    {
-      return *mDigestCredentials.end();
+      DebugLog(<< "Didn't find credential for realm: " << realm << " " << *mDigestCredentials.begin());
+      return *mDigestCredentials.begin();
    }
-   else
+   else      
    {
+      DebugLog(<< "Found credential for realm: " << *it << realm);      
       return *it;
    }
 }
@@ -155,9 +157,17 @@ UserProfile::DigestCredential::operator<(const DigestCredential& rhs) const
 }
 
 std::ostream&
+resip::operator<<(std::ostream& strm, const UserProfile& profile)
+{
+   strm << "UserProfile: " << profile.mDefaultFrom << Inserter(profile.mDigestCredentials);
+   return strm;
+}
+
+std::ostream&
 resip::operator<<(std::ostream& strm, const UserProfile::DigestCredential& cred)
 {
-   strm << "realm=" << cred.realm 
+   strm << "credential: "
+        << " realm=" << cred.realm 
         << " user=" << cred.user ;
    return strm;
 }

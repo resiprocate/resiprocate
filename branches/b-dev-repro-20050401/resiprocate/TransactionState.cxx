@@ -1723,6 +1723,7 @@ resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
    strm << (state.mIsReliable ? " reliable" : " unreliable");
    strm << " target=" << state.mResponseTarget;
    if (state.mTransactionUser) strm << " tu=" << *state.mTransactionUser;
+   else strm << "default TU";
    strm << "]";
    return strm;
 }

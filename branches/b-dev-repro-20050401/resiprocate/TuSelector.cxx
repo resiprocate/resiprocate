@@ -48,7 +48,7 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
 bool
 TuSelector::wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const
 {
-   InfoLog(<< "TuSelector::wouldAccept " << mTuSelectorMode);   
+   //InfoLog(<< "TuSelector::wouldAccept " << mTuSelectorMode);   
 
    if (mTuSelectorMode)
    {
@@ -56,17 +56,17 @@ TuSelector::wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const
       {
          if (!it->shuttingDown && it->tu->wouldAccept(usage))
          {
-            InfoLog(<< "TuSelector::wouldAccept returning true");   
+            //InfoLog(<< "TuSelector::wouldAccept returning true");   
             return true;
          }
       }
-      InfoLog(<< "TuSelector::wouldAccept returning false");   
+      //InfoLog(<< "TuSelector::wouldAccept returning false");   
       return false;
    }
    else
    {
       bool ret =  mFallBackFifo.wouldAccept(usage);
-      InfoLog(<< "TuSelector::wouldAccept returning " << ret);
+      //InfoLog(<< "TuSelector::wouldAccept returning " << ret);
       return ret;
    }
 }
