@@ -119,10 +119,10 @@ TransportSelector::process(FdSet& fdset)
 void
 TransportSelector::dnsResolve( SipMessage* msg)
 {
-   // pick the target destination 
-   //   - for request route then request URI -  unless if firs entry in route is
-   //     strict router in which case use the URI
-   //   - for response look at via  
+   // Picking the target destination:
+   //   - for request, use forced target if set
+   //     otherwise use loose routing behaviour (route or, if none, request-uri)
+   //   - for response, use forced target if set, otherwise look at via  
 
    if (msg->isRequest())
    {
@@ -132,7 +132,11 @@ TransportSelector::dnsResolve( SipMessage* msg)
       {
 	 tid += "ACK";
       }
-      if (msg->header(h_Routes).size() && !msg->header(h_Routes).front().exists(p_lr))
+      if (msg->hasTarget())
+      {
+         mStack.mDnsResolver.lookup(tid, msg->getTarget());
+      }
+      else if (msg->header(h_Routes).size())
       {
          mStack.mDnsResolver.lookup(tid, msg->header(h_Routes).front().uri());
       }
@@ -144,7 +148,14 @@ TransportSelector::dnsResolve( SipMessage* msg)
    else if (msg->isResponse())
    {
       assert (!msg->header(h_Vias).empty());
-      mStack.mDnsResolver.lookup(msg->getTransactionId(), msg->header(h_Vias).front());
+      if (msg->hasTarget())
+      {
+         mStack.mDnsResolver.lookup(msg->getTransactionId(), msg->getTarget());
+      }
+      else
+      {
+         mStack.mDnsResolver.lookup(msg->getTransactionId(), msg->header(h_Vias).front());
+      }
    }
    else
    {
