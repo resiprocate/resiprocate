@@ -2,14 +2,6 @@
 #define RESIP_SYSLOGBUF_HXX 
 
 #include <iostream>
-#include <cassert>
-
-
-
-#ifndef WIN32
-#include <syslog.h>
-#endif
-
 
 namespace resip
 {
@@ -17,21 +9,11 @@ namespace resip
 class SysLogBuf : public std::streambuf 
 {
    public:
-      SysLogBuf ()
-      {
-#ifndef WIN32
-         setp(buffer,buffer+Size);
-         openlog (0, LOG_NDELAY, LOG_LOCAL6);
-#endif
-      }
+      SysLogBuf();
+      ~SysLogBuf();
       
-      ~SysLogBuf()
-      {
-         //closelog();
-      }
-      
-      inline int sync ();
-      inline int overflow (int ch);
+      int sync ();
+      int overflow (int ch);
 
       // Defining xsputn is an optional optimization.
       // (streamsize was recently added to ANSI C++, not portable yet.)
@@ -41,28 +23,6 @@ class SysLogBuf : public std::streambuf
       enum { Size=4095 }; 
       char buffer[Size+1];
 };
-
-     
-inline int SysLogBuf::sync ()
-{
-#ifndef WIN32
-   *(pptr()) = 0;
-   syslog (LOG_LOCAL6 | LOG_DEBUG, pbase());
-   setp(buffer, buffer+Size);
-#endif
-   return 0;
-}
-     
-inline int SysLogBuf::overflow (int c)
-{
-   sync();
-   if (c != EOF) 
-   {
-      *pptr() = static_cast<unsigned char>(c);
-      pbump(1);
-   }
-   return c;
-}
  
 }
 
