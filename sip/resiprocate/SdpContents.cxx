@@ -1537,7 +1537,7 @@ SdpContents::Session::Medium::codecs() const
 vector<Codec>&
 SdpContents::Session::Medium::codecs()
 {
-#ifdef WIN32 // CJ ODO fix 
+#if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)  // CJ TODO fix 
 	assert(0);
 #else 
    if (!mRtpMapDone)
@@ -1712,8 +1712,8 @@ Codec::CodecMap& Codec::getStaticCodecs()
         //
         // Build map of static codecs as defined in RFC 3551
         //
-		sStaticCodecs = new CodecMap;
-		assert(sStaticCodecs);
+        sStaticCodecs = new CodecMap;
+        assert(sStaticCodecs);
 
         // Audio codecs
         sStaticCodecs->insert(make_pair(0,Codec("PCMU",0,8000)));
