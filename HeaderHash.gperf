@@ -20,6 +20,7 @@ s, Headers::Subject
 k, Headers::Supported
 t, Headers::To
 v, Headers::Via
+x, Headers::SessionExpires
 cseq, Headers::CSeq
 call-id, Headers::CallID
 contact, Headers::Contact
@@ -89,5 +90,7 @@ security-server, Headers::SecurityServer
 security-verify, Headers::SecurityVerify
 RSeq, Headers::RSeq
 RAck, Headers::RAck
+Session-Expires, Headers::SessionExpires
+Min-SE, Headers::MinSE
 %%
 }

@@ -56,6 +56,8 @@ realm, ParameterTypes::realm
 response, ParameterTypes::response
 stale, ParameterTypes::stale
 username, ParameterTypes::username
+earlyOnly, ParameterTypes::earlyOnly
+refresher, ParameterTypes::refresher
 qop, ParameterTypes::qopFactory
 uri, ParameterTypes::uri
 retry-after, ParameterTypes::retryAfter
