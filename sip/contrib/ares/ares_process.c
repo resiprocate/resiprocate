@@ -13,16 +13,16 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_process.c,v 1.1 2003/06/05 00:30:36 ryker Exp $";
+static const char rcsid[] = "$Id: ares_process.c,v 1.2 2003/09/14 00:27:24 fluffy Exp $";
 
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
-#include <netinet/in.h>
-#include <arpa/nameser.h>
+//#include <sys/socket.h>
+//#include <sys/uio.h>
+//#include <netinet/in.h>
+//#include <arpa/nameser.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
 #include <errno.h>
@@ -68,7 +68,11 @@ static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
 {
   struct server_state *server;
   struct send_request *sendreq;
+#ifdef WIN32
+  WSABUF *vec;
+#else
   struct iovec *vec;
+#endif
   int i, n, count;
 
   for (i = 0; i < channel->nservers; i++)
@@ -84,10 +88,32 @@ static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
       for (sendreq = server->qhead; sendreq; sendreq = sendreq->next)
 	n++;
 
+#ifdef WIN32
       /* Allocate iovecs so we can send all our data at once. */
+      vec = malloc(n * sizeof(WSABUF));
+      if (vec)
+	{
+		int err;
+	  /* Fill in the iovecs and send. */
+	  n = 0;
+	  for (sendreq = server->qhead; sendreq; sendreq = sendreq->next)
+	    {
+	      vec[n].buf = (char *) sendreq->data;
+	      vec[n].len = sendreq->len;
+	      n++;
+	    }
+	  err = WSASend(server->tcp_socket, vec, n, &count,0,0,0 );
+	  if ( err == SOCKET_ERROR )
+	  {
+		  count =-1;
+	  }
+	  free(vec);
+#else
+	     /* Allocate iovecs so we can send all our data at once. */
       vec = malloc(n * sizeof(struct iovec));
       if (vec)
 	{
+			int err;
 	  /* Fill in the iovecs and send. */
 	  n = 0;
 	  for (sendreq = server->qhead; sendreq; sendreq = sendreq->next)
@@ -98,6 +124,8 @@ static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
 	    }
 	  count = writev(server->tcp_socket, vec, n);
 	  free(vec);
+#endif
+
 	  if (count < 0)
 	    {
 	      handle_error(channel, i, now);
@@ -433,7 +461,7 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 
 static int open_tcp_socket(ares_channel channel, struct server_state *server)
 {
-  int s, flags;
+  int s;
   struct sockaddr_in sin;
 
   /* Acquire a socket. */
@@ -442,25 +470,44 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
     return -1;
 
   /* Set the socket non-blocking. */
+#if WIN32
+  {
+	unsigned long noBlock = 1;
+	int errNoBlock = ioctlsocket( s, FIONBIO , &noBlock );
+	if ( errNoBlock != 0 )
+	{
+		return -1;
+	}
+  }
+#else
+  {
+	  int flags;
   if (fcntl(s, F_GETFL, &flags) == -1)
     {
       close(s);
       return -1;
     }
-  flags &= O_NONBLOCK;
+  flags |= O_NONBLOCK; // Fixed evil but here - used to be &=
   if (fcntl(s, F_SETFL, flags) == -1)
     {
       close(s);
       return -1;
     }
-
+}
+#endif
   /* Connect to the server. */
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
   sin.sin_addr = server->addr;
   sin.sin_port = channel->tcp_port;
   if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1
-      && errno != EINPROGRESS)
+      && errno != 
+#ifdef WIN32
+	  WSAEINPROGRESS
+#else
+	  EINPROGRESS
+#endif
+	  )
     {
       close(s);
       return -1;
