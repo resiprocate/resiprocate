@@ -10,6 +10,10 @@ namespace resip
 
 class ServerPublication : public BaseUsage 
 {
+  public:
+    class Handle
+    {
+    };
 };
  
 }
