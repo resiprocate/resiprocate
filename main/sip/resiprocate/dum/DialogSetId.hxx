@@ -2,6 +2,8 @@
 #define RESIP_DIALOGSETID_HXX
 
 #include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/os/Data.hxx"
+
 
 namespace resip
 {
@@ -16,8 +18,10 @@ class DialogSetId
       DialogSetId(const Data& callId, const Data& senderRequestFromTag);
 
       bool operator==(const DialogSetId& rhs) const;
+      bool operator!=(const DialogSetId& rhs) const;
+      bool operator<(const DialogSetId& rhs) const;
    private:
-      Data& mId;
+      Data mId;
 };
 
 }
