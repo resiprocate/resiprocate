@@ -1,7 +1,11 @@
 .dependlibs
 .dependlibs
+8
 bin.debug.Linux.i686
 bin.debug.Linux.i686
+foo.i
 obj.debug.Linux.i686
 obj.debug.Linux.i686
+spam.ps
+tassert.h
 testPP.cxx
