@@ -157,6 +157,8 @@ class SipMessage : public TransactionMessage
       defineHeader(Date);
       defineHeader(Event);
       defineHeader(Expires);
+      defineHeader(SessionExpires);
+      defineHeader(MinSE);
       defineHeader(From);
       defineHeader(InReplyTo);
       defineHeader(MIMEVersion);

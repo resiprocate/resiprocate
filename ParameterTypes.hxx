@@ -101,6 +101,9 @@ namespace resip
    defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
    defineParam(user, "user", DataParameter, "RFC ????");
    defineParam(username, "username", QuotedDataParameter, "RFC 3261");
+   defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891");
+   defineParam(refresher, "refresher", DataParameter, "Session Timer Draft");
+
 
    // SPECIAL-CASE
    class Qop_Options_Param : public ParamBase
