@@ -36,7 +36,7 @@ main(int argc, char** argv)
    CommandLineParser args(argc, argv);
    Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
 
-   Security security;
+   Security security(args.mCertPath);
    SipStack stack(&security);
    if (args.mUdpPort)
    {
@@ -44,15 +44,15 @@ main(int argc, char** argv)
    }
    if (args.mTcpPort)
    {
-      stack.addTransport(TCP,args.mTcpPort);
+      stack.addTransport(TCP, args.mTcpPort);
    }
    if (args.mTlsPort)
    {
-      stack.addTransport(TLS,args.mTlsPort);
+      stack.addTransport(TLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
    }
    if (args.mDtlsPort)
    {
-      stack.addTransport(DTLS, args.mDtlsPort);
+      stack.addTransport(DTLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
    }
 
    StackThread stackThread(stack);
@@ -88,8 +88,8 @@ main(int argc, char** argv)
      
 #if 1
      // TODO - remove next forwards all to 
-     ConstantLocationMonkey* cls = new ConstantLocationMonkey;
-     locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
+     //ConstantLocationMonkey* cls = new ConstantLocationMonkey;
+     //locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
 #endif
 
      // [TODO] !jf! put static route monkey here
