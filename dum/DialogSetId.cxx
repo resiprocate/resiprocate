@@ -1,6 +1,8 @@
 #include "DialogSetId.hxx"
 #include "resiprocate/SipMessage.hxx"
 
+using namespace resip;
+
 DialogSetId::DialogSetId(const SipMessage& msg)
    : mId()
 {
@@ -17,6 +19,18 @@ bool
 DialogSetId::operator==(const DialogSetId& rhs) const
 {
    return mId == rhs.mId;
+}
+
+bool
+DialogSetId::operator!=(const DialogSetId& rhs) const
+{
+   return mId != rhs.mId;
+}
+
+bool
+DialogSetId::operator<(const DialogSetId& rhs) const
+{
+   return mId < rhs.mId;
 }
 
 #if defined(HASH_MAP_NAMESPACE)

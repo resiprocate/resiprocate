@@ -4,6 +4,12 @@
 
 using namespace resip;
 
+BaseUsage::BaseUsage(DialogUsageManager& dum, Dialog& dialog) :
+   mDum(dum),
+   mDialog(dialog)
+{
+}
+
 BaseUsage::~BaseUsage()
 {}
 
