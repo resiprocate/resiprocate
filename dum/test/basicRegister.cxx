@@ -8,10 +8,22 @@
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Subsystem.hxx"
+#include "resiprocate/dum/AppDialogSet.hxx"
+#include "resiprocate/dum/AppDialog.hxx"
+
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 using namespace resip;
+
+class RegisterAppDialogSet : public AppDialogSet
+{
+   public:
+      RegisterAppDialogSet(DialogUsageManager& dum) : AppDialogSet(dum) 
+      {}      
+};
+
+   
 
 class Client : public ClientRegistrationHandler
 {
@@ -90,7 +102,7 @@ main (int argc, char** argv)
 
    profile.addDigestCredential( "sip.jasomi.com", "502", "resiprocate" );
 
-   SipMessage & regMessage = clientDum.makeRegistration(aor);
+   SipMessage & regMessage = clientDum.makeRegistration(new RegisterAppDialogSet(clientDum), aor);
 
    InfoLog( << regMessage << "Generated register: " << endl << regMessage );
    clientDum.send( regMessage );

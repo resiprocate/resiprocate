@@ -20,9 +20,10 @@ class AppDialogSet : public Handled
       virtual void cancel();
       virtual AppDialog* createAppDialog(const SipMessage&);
       AppDialogSetHandle getHandle();
-   private:
+   protected:
+      DialogUsageManager& mDum;      
+  private:
       friend class DialogUsageManager;
-      DialogUsageManager* mDum;      
       DialogSetId mDialogSetId;
 };
 

@@ -18,8 +18,8 @@ class AppDialog : public Handled
       AppDialogHandle getHandle();
       
       //for ease of dealing with refer
-      ServerSubscriptionHandle getServerSubsription();
-      InviteSessionHandle getInviteSession();
+//      ServerSubscriptionHandle getServerSubsription();
+//      InviteSessionHandle getInviteSession();
 };
 
 }

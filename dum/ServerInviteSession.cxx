@@ -19,7 +19,7 @@ ServerInviteSession::setOffer(const SdpContents* offer)
 {
 }
 
-void 
+SipMessage& 
 ServerInviteSession::sendOfferInAnyMessage()
 {
 }
@@ -29,7 +29,7 @@ ServerInviteSession::setAnswer(const SdpContents* answer)
 {
 }
 
-void 
+SipMessage& 
 ServerInviteSession::sendAnswerInAnyMessage()
 {
 }
@@ -48,25 +48,20 @@ ServerInviteSession::rejectOffer(int statusCode)
    return mLastRequest; // bogus
 }
 
-void 
+SipMessage&  
 ServerInviteSession::accept()
 {
 }
 
-void 
+SipMessage& 
 ServerInviteSession::provisional(int statusCode)
 {
 }
 
-void
+SipMessage& 
 ServerInviteSession::reject(int statusCode)
 {
    assert(0);
-}
-
-void 
-ServerInviteSession::handle(const SipMessage& msg)
-{
 }
 
 void 
