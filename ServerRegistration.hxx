@@ -13,7 +13,7 @@ class ServerRegistration: public NonDialogUsage
       ServerRegistrationHandle getHandle();
 
       /// helper function to creat the 
-      SipMessage* makeRegistrationResponse(SipMessage& msg);
+      SipMessage* makeRegistrationResponse(const SipMessage& msg);
       
       /// accept a SIP registration 
       void accept(const SipMessage& ok);
