@@ -23,11 +23,7 @@ class AsyncCLessTransport : public Transport, public ExternalAsyncCLessTransport
       virtual bool isReliable() const { return false; }
 
       virtual TransportType transport() const { return mTransportType; }
-      virtual bool isAsynchronous() const { return true; }
 
-      virtual bool requiresProcess() { return true; }
-
-      //may go away w/ transportSelector rewrite
       virtual void process(FdSet&) {}
       virtual void buildFdSet( FdSet&){}
 //      virtual int maxFileDescriptors() const { return 1;}
