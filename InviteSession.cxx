@@ -674,6 +674,9 @@ InviteSession::dispatchOthers(const SipMessage& msg)
 {
    switch (msg.header(h_CSeq).method())
    {
+      case PRACK:
+         dispatchPrack(msg);
+         break;
       case CANCEL:
          dispatchCancel(msg);
          break;
@@ -711,6 +714,33 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
    mDialog.makeRequest(bye, BYE);
    InfoLog (<< "Sending " << bye.brief());
    mDum.send(bye);
+}
+
+void
+InviteSession::dispatchPrack(const SipMessage& msg)
+{
+   assert(msg.header(h_CSeq).method() == PRACK);
+   if(msg.isRequest())
+   {
+      transition(Terminated);
+
+      // !jf! should we make some other callback here
+      mDum.mInviteSessionHandler->onTerminated(getSessionHandle());
+
+      SipMessage rsp;
+      mDialog.makeResponse(rsp, msg, 481);
+      mDum.send(rsp);
+
+      SipMessage bye;
+      mDialog.makeRequest(bye, BYE);
+      InfoLog (<< "Sending " << bye.brief());
+      mDum.send(bye);
+
+   }
+   else
+   {
+      // ignore. could be PRACK/200
+   }
 }
 
 void
@@ -880,8 +910,10 @@ InviteSession::toData(State state)
          return "UAC_SentUpdateConnected";
       case UAC_ReceivedUpdateEarly:
          return "UAC_ReceivedUpdateEarly";
-      case UAC_PrackAnswerWait:
-         return "UAC_PrackAnswerWait";
+      case UAC_SentAnswer:
+         return "UAC_SentAnswer";
+      case UAC_QueuedUpdate:
+         return "UAC_QueuedUpdate";
       case UAC_Canceled:
          return "UAC_Canceled";
 
