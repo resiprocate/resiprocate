@@ -77,130 +77,134 @@ ResponseContext::getPriority(const resip::SipMessage& msg)
 	{
 		switch(responseCode)
 		{
-			case 501:
-			case 503:
-			case 580:
+			case 501:	// these three have different priorities
+			case 503:   // which are addressed in the case statement
+			case 580:	// below (with the 4xx responses)
 				break;
 			default:
 				return (42); // response priority of other 5xx is 42
 		}
 	}
 
-switch(responseCode)
-{
-	// Easy to Repair Responses: 412, 484, 422, 423, 407, 401, 300..399, 402
-	
-	case 412:		// Publish ETag was stale
-		p = 1;
-		break;
-	case 484:		// overlap dialing
-		p = 2;
-		break;
-	case 422:		// Session-Timer duration too long
-	case 423:		// Expires too short
-		p = 3;
-		break;
-	case 407:		// Proxy-Auth
-	case 401:		// UA Digest challenge
-		p = 4;
-		break;
+	switch(responseCode)
+	{
+		// Easy to Repair Responses: 412, 484, 422, 423, 407, 401, 300..399, 402
 		
-	// 3xx responses have p = 5
-	
-	case 402:		// Payment required
-		p = 6;
-		break;
-	
-	// Responses used for negotiation: 493, 429, 420, 406, 415, 488
-
-	case 493:		// Undecipherable, try again unencrypted
-		p = 10;
-		break;
-	case 429:		// Provide Referrer Identity 
-		p = 11;
-		break;
-	case 420:		// Required Extension not supported
-		p = 12;
-		break;
-	case 406:		// Not Acceptable
-	case 415:		// Unsupported Media Type
-	case 488:		// Not Acceptable Here
-		p = 13;
-		break;
+		case 412:		// Publish ETag was stale
+			p = 1;
+			break;
+		case 484:		// overlap dialing
+			p = 2;
+			break;
+		case 422:		// Session-Timer duration too long
+		case 423:		// Expires too short
+			p = 3;
+			break;
+		case 407:		// Proxy-Auth
+		case 401:		// UA Digest challenge
+			p = 4;
+			break;
+			
+		// 3xx responses have p = 5
 		
-	// Possibly useful for negotiation, but less likely: 421, 416, 494, 580, 485, 405, 501, 413, 414
-	
-	case 416:		// Unsupported scheme
-		p = 20;
-		break;
-	case 494:		// Use the sec-agree mechanism
-		p = 21;
-		break;
-	case 405:		// Method not allowed (both used for negotiating REFER, PUBLISH, etc..
-	case 501:		// Usually used when the method is not OK
-		p = 22;
-		break;
-	case 580:		// Preconditions failure
-		p = 23;
-		break;
-	case 485:		// Ambiguous userpart.  A bit better than 404?
-		p = 24;
-		break;
-	case 413:		// Request too big
-	case 414:		// URI too big
-		p = 25;
-		break;
-	case 421:		// An extension required by the server was not in the Supported header
-		p = 26;
-		break;
-	
-	// The request isn't repairable, but at least we can try to provide some 
-	// useful information: 486, 480, 410, 404, 403, 487
-	
-	case 486:		// Busy Here
-		p = 30;
-		break;
-	case 480:		// Temporarily unavailable
-		p = 31;
-		break;
-	case 410:		// Gone
-		p = 32;
-		break;
-	case 403:		// Forbidden
-		p = 33;
-		break;
-	case 404:		// Not Found
-		p = 34;
-		break;
-	case 487:		// Some branches were cancelled, if the UAC sent a CANCEL this is good news
-		p = 35;
-		break;
-
-	// We are hosed: 503, 483, 482, 481, other 5xx, 400, 491, 408  // totally useless
-
-	case 503:	// bad news, but maybe we got a 
-		p = 40;
-		break;
-	case 483:	// loops, encountered
-	case 482:
-		p = 41;
-		break;
+		case 402:		// Payment required
+			p = 6;
+			break;
 		
-	// other 5xx   p = 42
+		// Responses used for negotiation: 493, 429, 420, 406, 415, 488
 
-	// UAS is seriously confused: p = 43
-	// case 481:	
-	// case 400:
-	// case 491:
-	// default:
-	
-	case 408:	// very, very bad  (even worse than the remaining 4xx responses)
-		p = 49;
-		break;
-	
-	default:
-		p = 43;
+		case 493:		// Undecipherable, try again unencrypted 
+			p = 10;
+			break;
+		case 420:		// Required Extension not supported, try again without
+			p = 12;
+			break;
+		case 406:		// Not Acceptable
+		case 415:		// Unsupported Media Type
+		case 488:		// Not Acceptable Here
+			p = 13;
+			break;
+			
+		// Possibly useful for negotiation, but less likely: 421, 416, 417, 494, 580, 485, 405, 501, 413, 414
+		
+		case 416:		// Unsupported scheme
+		case 417:		// Unknown Resource-Priority
+			p = 20;
+			break;
+		case 405:		// Method not allowed (both used for negotiating REFER, PUBLISH, etc..
+		case 501:		// Usually used when the method is not OK
+			p = 21;
+			break;
+		case 580:		// Preconditions failure
+			p = 22;
+			break;
+		case 485:		// Ambiguous userpart.  A bit better than 404?
+			p = 23;
+			break;
+		case 428:		// Use Identity header
+		case 429:		// Provide Referrer Identity 
+		case 494:		// Use the sec-agree mechanism
+			p = 24;
+			break;
+		case 413:		// Request too big
+		case 414:		// URI too big
+			p = 25;
+			break;
+		case 421:		// An extension required by the server was not in the Supported header
+			p = 26;
+			break;
+		
+		// The request isn't repairable, but at least we can try to provide some 
+		// useful information: 486, 480, 410, 404, 403, 487
+		
+		case 486:		// Busy Here
+			p = 30;
+			break;
+		case 480:		// Temporarily unavailable
+			p = 31;
+			break;
+		case 410:		// Gone
+			p = 32;
+			break;
+		case 436:		// Bad Identity-Info 
+		case 437:		// Unsupported Certificate
+			p = 33;
+			break;
+		case 403:		// Forbidden
+			p = 34;
+			break;
+		case 404:		// Not Found
+			p = 35;
+			break;
+		case 487:		// Some branches were cancelled, if the UAC sent a CANCEL this is good news
+			p = 36;
+			break;
 
+		// We are hosed: 503, 483, 482, 481, other 5xx, 400, 491, 408  // totally useless
+
+		case 503:	// bad news, but maybe we got a 
+			p = 40;
+			break;
+		case 483:	// loops, encountered
+		case 482:
+			p = 41;
+			break;
+			
+		// other 5xx   p = 42
+
+		// UAS is seriously confused: p = 43
+		// case 481:	
+		// case 400:
+		// case 491:
+		// default:
+		
+		case 408:	// very, very bad  (even worse than the remaining 4xx responses)
+			p = 49;
+			break;
+		
+		default:
+			p = 43;
+	}
    return (p);
 }
 
