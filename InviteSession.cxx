@@ -549,6 +549,17 @@ InviteSession::dispatch(const DumTimeout& timeout)
          // this is so the app can decided to ignore this. default implementation
          // will call end next
          mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
+
+         // If we are waiting for an Ack and it times out, then end with a BYE
+         if(mState == UAS_WaitingToHangup)
+         {
+             transition(Terminated);
+
+             SipMessage bye;
+             mDialog.makeRequest(bye, BYE);
+             InfoLog (<< "Sending " << bye.brief());
+             mDialog.send(bye);
+         }
       }
    }
    else if (timeout.type() == DumTimeout::Glare)
