@@ -64,8 +64,10 @@ class ThreadIf
       bool isShutdown() const;
 
 #ifdef WIN32
+      typedef DWORD Id;
 #else
-      static pthread_t selfId();
+      typedef pthread_t Id;
+      static Id selfId();
 #endif
 
       /* thread is a virtual method.  Users should derive and define
@@ -76,10 +78,8 @@ class ThreadIf
    protected:
 #ifdef WIN32
       HANDLE mThread;
-      DWORD mId;
-#else
-      pthread_t mId;
 #endif
+      Id mId;
       
       bool mShutdown;
       mutable Mutex mShutdownMutex;
