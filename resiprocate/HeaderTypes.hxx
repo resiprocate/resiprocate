@@ -33,6 +33,7 @@ class Headers
 
          Refer_To,
          Referred_By,
+         Replaces,
 
          UNKNOWN,
          MAX_HEADERS
@@ -501,6 +502,18 @@ class Header<Headers::Call_ID>
       }
 };
 extern Header<Headers::Call_ID> h_CallId;
+
+class Header<Headers::Replaces>
+{
+   public:
+      typedef CallId Type;
+      Header()
+      {
+         Headers::CommaTokenizing[Headers::Replaces] = Type::isCommaTokenizing;
+         Headers::HeaderNames[Headers::Replaces] = Symbols::Replaces;
+      }
+};
+extern Header<Headers::Call_ID> h_Replaces;
 
 //====================
 // CallIds:

@@ -177,7 +177,7 @@ class Url : public ParserCategory
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
-      bool operator<(Url& other);
+      bool operator<(const Url& other) const;
       
    protected:
       bool mAllContacts;

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.44 2002/09/26 00:34:43 jason Exp $
+# $Id: Makefile,v 1.45 2002/09/26 19:46:55 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -128,6 +128,9 @@ testSipMessage:  $(OBJS) $(OBJ)/testSipMessage.o
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 convertStringToInt:  $(OBJS) $(OBJ)/convertStringToInt.o
+	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
+
+testMutable:  $(OBJS) $(OBJ)/testMutable.o
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 -include $(OBJ)/*.d
