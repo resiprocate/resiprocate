@@ -1,17 +1,15 @@
 /* C++ code produced by gperf version 2.7.2 */
-/* Command-line: gperf -D --enum -E -L C++ -t -k '*' --compare-strncmp -Z MethodHash MethodHash.gperf  */
+/* Command-line: gperf -Z MethodHash -D --enum -E -L C++ -t -k '*' --compare-strncmp MethodHash.gperf  */
 #include <string.h>
 #include <ctype.h>
 #include "resiprocate/MethodTypes.hxx"
 
-//using namespace std;
-
 namespace resip
 {
-
+using namespace std;
 using namespace resip;
 struct methods { char *name; MethodTypes type; };
-/* maximum key range = 18, duplicates = 0 */
+/* maximum key range = 20, duplicates = 0 */
 
 class MethodHash
 {
@@ -26,32 +24,32 @@ MethodHash::hash (register const char *str, register unsigned int len)
 {
   static unsigned char asso_values[] =
     {
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21,  0,  0,  0, 21,  0,
-       0,  5,  0,  0, 21, 15, 10,  0,  0,  0,
-       0, 21,  0,  0,  0,  0,  5, 21, 21,  0,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-      21, 21, 21, 21, 21, 21
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23,  0,  0,  0, 23,  0,
+       0,  5, 10,  0, 23, 15,  5,  0,  0,  0,
+       0, 23,  0,  0,  0,  0, 10, 23, 23,  0,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+      23, 23, 23, 23, 23, 23
     };
   register int hval = len;
 
@@ -86,11 +84,11 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 14,
+      TOTAL_KEYWORDS = 15,
       MIN_WORD_LENGTH = 3,
       MAX_WORD_LENGTH = 9,
       MIN_HASH_VALUE = 3,
-      MAX_HASH_VALUE = 20
+      MAX_HASH_VALUE = 22
     };
 
   static struct methods wordlist[] =
@@ -102,19 +100,20 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
       {"OPTIONS", OPTIONS},
       {"RESPONSE", RESPONSE},
       {"SUBSCRIBE", SUBSCRIBE},
-      {"INVITE", INVITE},
+      {"CANCEL", CANCEL},
       {"MESSAGE", MESSAGE},
       {"REGISTER", REGISTER},
-      {"CANCEL", CANCEL},
-      {"PUBLISH", PUBLISH},
+      {"INVITE", INVITE},
+      {"SERVICE", SERVICE},
       {"ACK", ACK},
-      {"PRACK", PRACK}
+      {"PRACK", PRACK},
+      {"PUBLISH", PUBLISH}
     };
 
   static signed char lookup[] =
     {
       -1, -1, -1,  0,  1,  2,  3,  4,  5,  6, -1,  7,  8,  9,
-      -1, -1, 10, 11, 12, -1, 13
+      -1, -1, 10, 11, 12, -1, 13, -1, 14
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
