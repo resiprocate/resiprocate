@@ -21,12 +21,13 @@ class Transport
    public:
       typedef enum 
       {
-         Unknown,
+         Unknown = 0,
          UDP,
          TCP,
          TLS,
          SCTP,
-         DCCP
+         DCCP,
+         MAX_TRANSPORT
       } Type;
 
       class Tuple
@@ -80,7 +81,7 @@ class Transport
       virtual bool isReliable() const =0;
       
       static Type toTransport( const Data& );
-      static Data toData( Type );
+      static const Data& toData( Type );
 
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
@@ -96,6 +97,7 @@ class Transport
       Fifo<Message>& mStateMachineFifo; // passed in
 
    private:
+      static const Data transportNames[MAX_TRANSPORT];
       bool mShutdown ;
 };
 
