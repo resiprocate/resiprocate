@@ -503,6 +503,26 @@ main()
       assert(message.header(h_MaxForwards).value() == 8);
       message.getRawHeader(Headers::Max_Forwards)->getParserContainer()->encode(cerr) << endl;
    }
+
+   {
+      cerr << "response to REGISTER" << endl;
+      
+      char *txt = ("SIP/2.0 100 Trying\r\n"
+                   "To: sip:localhost:5070\r\n"
+                   "From: sip:localhost:5070;tag=73483366\r\n"
+                   "Call-ID: 51dcb07418a21008e0ba100800000000\r\n"
+                   "CSeq: 1 REGISTER\r\n"
+                   "Via: SIP/2.0/UDP squamish.gloo.net:5060;branch=z9hG4bKff5c491951e40f08\r\n"
+                   "Content-Length: 0\r\n\r\n");
+
+      SipMessage message;
+      
+      Preparse parse(message, txt, strlen(txt));
+      while (parse.process()) ;
+
+      assert(message.header(h_To).uri().host() == "localhost");
+   }
+
 }
 
 /* ====================================================================
