@@ -12,7 +12,6 @@
 
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/TuIM.hxx"
 
 #include "testIM.hxx"
