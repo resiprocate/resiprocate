@@ -76,6 +76,7 @@ class Transport
       // These methods are used by the TransportSelector
       virtual const Data& hostName() const { return mHost; } 
       virtual const Data& interfaceName() const { return mInterface; } 
+      virtual const Data& ipAddress() const { return mIpAddress; } 
       virtual int port() const { return mPort; } 
       virtual Type transport() const =0 ;
       virtual bool isReliable() const =0;
@@ -93,6 +94,7 @@ class Transport
       Data mHost;
       int mPort;
       Data mInterface;
+      Data mIpAddress;
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
 
