@@ -20,6 +20,12 @@ SdpContents::SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes)
    : Contents(hfv, contentTypes)
 {}
 
+SdpContents::SdpContents(const Data& data, const Mime& contentTypes)
+   : Contents(contentTypes)
+{
+   assert(0);
+}
+
 Contents*
 SdpContents::clone() const
 {

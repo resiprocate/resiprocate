@@ -15,6 +15,7 @@ class Symbols
       static const char * const DASH;
       static const char * const COMMA_OR_EQUAL;
       static const char * const CRLF;
+      static const char * const CRLFCRLF;
       static const char * const CR;
       static const char * const LF;
       static const char * const TAB;

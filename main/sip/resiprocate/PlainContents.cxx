@@ -23,6 +23,12 @@ PlainContents::PlainContents(HeaderFieldValue* hfv, const Mime& contentsType)
 {
 }
  
+PlainContents::PlainContents(const Data& txt, const Mime& contentsType)
+   : Contents(contentsType),
+     mText(txt)
+{
+}
+
 PlainContents::PlainContents(const PlainContents& rhs)
    : Contents(rhs),
      mText(rhs.mText)
@@ -60,7 +66,7 @@ PlainContents::getType() const
 std::ostream& 
 PlainContents::encodeParsed(std::ostream& str) const
 {
-   DebugLog(<< "PlainContents::encodeParsed " << mText);
+   //DebugLog(<< "PlainContents::encodeParsed " << mText);
    str << mText;
    return str;
 }
@@ -68,12 +74,12 @@ PlainContents::encodeParsed(std::ostream& str) const
 void 
 PlainContents::parse(ParseBuffer& pb)
 {
-   DebugLog(<< "PlainContents::parse: " << pb.position());
+   //DebugLog(<< "PlainContents::parse: " << pb.position());
 
    const char* anchor = pb.position();
    pb.skipToEnd();
    pb.reset(pb.position());
    pb.data(mText, anchor);
 
-   DebugLog("PlainContents::parsed <" << mText << ">" );
+   //DebugLog("PlainContents::parsed <" << mText << ">" );
 }
