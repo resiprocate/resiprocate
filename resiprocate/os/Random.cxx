@@ -55,19 +55,20 @@ Random::initialize()
       Socket fd = -1;
       // !cj! need to find a better way - use pentium random commands?
 #else
-      int fd = open("/dev/random",O_RDONLY);
+      int fd = open("/dev/urandom", O_RDONLY);
+      // !ah! blocks on embedded devices -- not enough entropy.
       if ( fd != -1 )
       {
-         int s = read( fd,&seed,sizeof(seed) );
+        int s = read( fd,&seed,sizeof(seed) ); //!ah! blocks if /dev/random on embedded sys
 
          if ( s != sizeof(seed) )
          {
-//            ErrLog( << "System is short of randomness" );
+//            ErrLog( << "System is short of randomness" ); // !ah! never prints
          }
       }
       else
       {
-//         ErrLog( << "Could not open /dev/random" );
+//         ErrLog( << "Could not open /dev/urandom" );
       }
 #endif
 
@@ -141,7 +142,7 @@ Random::getCryptoRandom()
 #if USE_OPENSSL
    int ret;
    int e = RAND_bytes( (unsigned char*)&ret , sizeof(ret) );
-   if ( e != 1 )
+   if ( e < 0 )
    {
       // error of some type - likely not enough rendomness to dod this 
       long err = ERR_get_error();

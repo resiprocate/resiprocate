@@ -20,7 +20,7 @@ class SipMessage;            // fwd decl
 class Preparse
 {
     public:        
-        Preparse();
+        Preparse(bool sipFrag = false);
         
         typedef enum StateEnum 
         {
@@ -152,7 +152,8 @@ class Preparse
         size_t mStart;
         size_t mDiscard;
         size_t mUsed;
-        
+
+        bool mSipFrag;
 };
 
 namespace PreparseConst

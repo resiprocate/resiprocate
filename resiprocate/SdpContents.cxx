@@ -60,7 +60,15 @@ AttributeHelper::exists(const Data& key) const
 const list<Data>& 
 AttributeHelper::getValues(const Data& key) const
 {
-   assert(exists(key));
+
+   static  list<Data>* errorList;
+
+   if (!exists(key))
+   {
+      if (!errorList) errorList = new list<Data>; // !ass! might need to be static non-ptr
+      assert(false);
+      return *errorList;
+   }
    return mAttributes.find(key)->second;
 }
 
@@ -130,11 +138,13 @@ SdpContents::SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes)
    : Contents(hfv, contentTypes)
 {}
 
+#if 0
 SdpContents::SdpContents(const Data& data, const Mime& contentTypes)
    : Contents(contentTypes)
 {
    assert(0);
 }
+#endif
 
 SdpContents::SdpContents(const SdpContents& rhs) 
    : Contents(rhs),
@@ -214,8 +224,8 @@ SdpContents::Session::Origin::operator=(const Origin& rhs)
 
 
 SdpContents::Session::Origin::Origin(const Data& user,
-                                     int sessionId,
-                                     int version,
+                                     const int& sessionId,
+                                     const int& version,
                                      AddrType addr,
                                      const Data& address)
    : mUser(user),
@@ -1453,7 +1463,13 @@ SdpContents::Session::Medium::getValues(const Data& key) const
    {
       return mAttributeHelper.getValues(key);
    }
-   assert (mSession);
+   if (!mSession)
+   {
+      assert(false);
+      static list<Data>* errorList = 0;
+      if (!errorList) errorList = new list<Data>;
+      return *errorList;
+   }
    return mSession->getValues(key);
 }
 
@@ -1511,7 +1527,7 @@ SdpContents::Session::Medium::codecs()
             {
                mRtpMap[format].parse(pb, *this, format);
             }
-            catch (ParseBuffer::Exception &)
+            catch (ParseBuffer::Exception &e)
             {
                mRtpMap.erase(format);
             }
