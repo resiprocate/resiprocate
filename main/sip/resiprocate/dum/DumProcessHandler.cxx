@@ -11,8 +11,8 @@ DumProcessHandler::DumProcessHandler(ExternalTimer* et) :
    mHaveActiveTimer(false),
    mDum(0),
    mExternalTimer(et),
-   mCurrentlyProcessing(false),
-   mStopped(false)
+   mStopped(false),
+   mCurrentlyProcessing(false)
 {
 }
 

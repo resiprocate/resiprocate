@@ -24,12 +24,18 @@ class ClientPublication : public NonDialogUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
+      virtual std::ostream& dump(std::ostream& strm) const;
+
    protected:
       virtual ~ClientPublication();
-
+      virtual void send(SipMessage& request);
+      
    private:
       friend class DialogSet;
 
+      bool mWaitingForResponse;
+      bool mPendingPublish;
+      
       SipMessage& mPublish;
       Data mEventType;
       int mTimerSeq; // expected timer seq (all < are stale)
