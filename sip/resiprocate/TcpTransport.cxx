@@ -40,7 +40,7 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
       throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
 #endif
-
+   
    //makeSocketNonBlocking(mFd);
 
    sockaddr_in addr;
@@ -73,13 +73,14 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
 
 TcpTransport::~TcpTransport()
 {
+   DebugLog (<< "Shutting down TCP Transport " << mFd << " " << this);   //!rm!
+   
    //::shutdown(mFd, SHUT_RDWR);
    closesocket(mFd);
    // !jf! this is not right. should drain the sends before 
    while (mTxFifo.messageAvailable()) mTxFifo.getNext();
    
    mSendRoundRobin.clear(); // clear before we delete the connections
-   //DebugLog (<< "Shutting down TCP Transport " << mFd << " " << this);   //!rm!
 }
 
 
@@ -225,19 +226,29 @@ TcpTransport::processAllWrites( FdSet& fdset )
             servaddr.sin_port = htons( data->destination.port);
             servaddr.sin_addr =  data->destination.ipv4;
 
-            makeSocketNonBlocking(sock);
+            //makeSocketNonBlocking(sock);
 
             DebugLog (<<"Trying to open new connection");
 
             int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
-
-            if ((e == -1) && (errno != EINPROGRESS))
+            if (e < 0)
             {
                int err = errno;
                InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
+               close(sock);
             }
             else
             {
+#if 1
+               // succeeded, add the connection
+               data->destination.transport = this;
+               mConnectionMap.add( data->destination, sock);
+               conn = mConnectionMap.get(data->destination);
+               assert( conn );
+               DebugLog (<< "Opened new connection to "
+                         << inet_ntoa(data->destination.ipv4)
+                         << ":" << data->destination.port ); // !rm!
+#else
                // !rk! Since we made the connect(2) non-blocking we
                // need to hang out until it succeeds or "times out".  This
                // is still crap because it blocks the stack so we should
@@ -284,10 +295,11 @@ TcpTransport::processAllWrites( FdSet& fdset )
                            << inet_ntoa(data->destination.ipv4)
                            << ":" << data->destination.port ); // !rm!
                }
+#endif
             }
          }
       }
-
+      
       if (conn == 0)
       {
          DebugLog (<< "Failed to create/get connection: " << data->destination);
@@ -296,6 +308,7 @@ TcpTransport::processAllWrites( FdSet& fdset )
          return;
       }
 
+      assert(conn);
       if (conn->mOutstandingSends.empty())
       {
          DebugLog (<< "Adding " << *conn << " to send roundrobin");
@@ -401,6 +414,7 @@ TcpTransport::process(FdSet& fdSet)
    if (mTxFifo.messageAvailable())
    {
       DebugLog(<<"mTxFifo:size: " << mTxFifo.size());
+      assert(mTxFifo.size() < 1000); // !jf!
    }
    processAllWrites(fdSet);
    processListen(fdSet);
