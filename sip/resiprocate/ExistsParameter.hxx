@@ -2,7 +2,7 @@
 #define RESIP_EXISTSPARAMETER_HXX 
 
 #include "resiprocate/Parameter.hxx"
-#include <iostream>
+#include <iosfwd>
 
 namespace resip
 {

@@ -113,9 +113,22 @@ typedef unsigned __int64 UInt64;
 typedef unsigned long long UInt64;
 #endif
 
+
+//template "levels; ie REASONABLE and COMPLETE
+//reasonable allows most things such as partial template specialization,
+//etc...like most compilers and VC++2003+.
+//COMPLETE would allow template metaprogramming, template< template< > > tricks,
+//etc...REASONABLE should always be defined when COMPLETE is defined.
+
+
+#if defined(_MSC_VER) && (MSC_VER >= 1200)
+#define REASONABLE_TEMPLATES
+#endif
+#if !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
+#define REASONABLE_TEMPLATES
 #endif
 
-
+#endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

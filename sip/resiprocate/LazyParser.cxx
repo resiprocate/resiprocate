@@ -5,10 +5,10 @@
 
 #include <cassert>
 
+#include "resiprocate/Headers.hxx"
+#include "resiprocate/HeaderFieldValue.hxx"
 #include "resiprocate/LazyParser.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/ParserCategories.hxx"
-#include "resiprocate/Headers.hxx"
 
 using namespace resip;
 
@@ -73,6 +73,7 @@ LazyParser::checkParsed() const
    {
       LazyParser* ncThis = const_cast<LazyParser*>(this);
       ncThis->mIsParsed = true;
+      assert(mHeaderField);
       ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength, errorContext());
       ncThis->parse(pb);
    }

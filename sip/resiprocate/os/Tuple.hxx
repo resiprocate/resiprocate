@@ -48,6 +48,7 @@ class Tuple
       void setPort(int port);
       int getPort() const;
       bool isV4() const;
+      bool isAnyInterface() const;
       socklen_t length() const; // of sockaddr
       
       bool operator<(const Tuple& rhs) const;

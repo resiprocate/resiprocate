@@ -23,21 +23,6 @@ using namespace resip;
 
 const int Helper::tagSize = 4;
 
-static unsigned long minSecs = 32;
-
-unsigned long
-Helper::aBitSmallerThan(unsigned long secs)
-{
-   return resipMax(minSecs, resipMin(secs - 32, 9*secs/10));
-}
-
-time_t
-Helper::aBitSmallerThan(time_t secs)
-{
-   return resipMax(time_t(minSecs), resipMin(secs - 32, 9*secs/10));
-}
-
-
 SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
 {
@@ -268,7 +253,7 @@ Helper::makeResponse(SipMessage& response,
    
    // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.
    // No totag for failure responses or 100s
-   if (!response.header(h_To).exists(p_tag) && responseCode < 300 && responseCode > 100)
+   if (!response.header(h_To).exists(p_tag) && responseCode > 100)
    {
       response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
    }
@@ -838,6 +823,9 @@ Helper::addAuthorization(SipMessage& request,
 Uri
 Helper::makeUri(const Data& aor, const Data& scheme)
 {
+   assert(!aor.prefix("sip:"));
+   assert(!aor.prefix("sips:"));
+   
    Data tmp(aor.size() + scheme.size() + 1, true);
    tmp += scheme;
    tmp += Symbols::COLON;
@@ -887,7 +875,7 @@ Helper::getPortForReply(SipMessage& request)
 Uri 
 Helper::fromAor(const Data& aor, const Data& scheme)
 {
-   return Uri(scheme + Symbols::COLON + aor);
+   return makeUri(aor, scheme);
 }
 
 bool

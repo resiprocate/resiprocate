@@ -19,6 +19,7 @@
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/Transport.hxx"
 #include "resiprocate/GenericIPAddress.hxx"
 
 using namespace resip;
@@ -219,6 +220,22 @@ Tuple::getPort() const
    return -1;
 }
 
+bool
+Tuple::isAnyInterface() const
+{
+   if (isV4())
+   {
+      return m_anonv4.sin_addr.s_addr == htonl(INADDR_ANY); 
+   }
+#if defined (USE_IPV6)
+   else
+   {
+      return memcmp(&m_anonv6.sin6_addr, &in6addr_any, sizeof(in6_addr)) == 0;
+   }
+#else
+   return false;
+#endif
+}
 
 bool 
 Tuple::isV4() const
