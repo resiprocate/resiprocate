@@ -39,6 +39,54 @@ StatisticsMessage::encode(std::ostream& strm) const
    return strm;
 }
 
+unsigned int
+StatisticsMessage::Payload::sum2xxIn(MethodTypes method) const
+{
+   unsigned int ret = 0;
+   for (int code = 200; code < 300; ++code)
+   {
+      ret += responsesReceivedByMethodByCode[method][code];
+   }
+
+   return ret;
+}
+
+unsigned int
+StatisticsMessage::Payload::sum2xxOut(MethodTypes method) const
+{
+   unsigned int ret = 0;
+   for (int code = 200; code < 300; ++code)
+   {
+      ret += responsesSentByMethodByCode[method][code];
+   }
+
+   return ret;
+}
+
+unsigned int
+StatisticsMessage::Payload::sumErrIn(MethodTypes method) const
+{
+   unsigned int ret = 0;
+   for (int code = 300; code < MaxCode; ++code)
+   {
+      ret += responsesReceivedByMethodByCode[method][code];
+   }
+
+   return ret;
+}
+
+unsigned int
+StatisticsMessage::Payload::sumErrOut(MethodTypes method) const
+{
+   unsigned int ret = 0;
+   for (int code = 300; code < MaxCode; ++code)
+   {
+      ret += responsesSentByMethodByCode[method][code];
+   }
+
+   return ret;
+}
+
 void 
 StatisticsMessage::logStats(const resip::Subsystem& subsystem, 
                             const StatisticsMessage::Payload& stats)
@@ -67,24 +115,24 @@ StatisticsMessage::logStats(const resip::Subsystem& subsystem,
               << " reqo " << stats.requestsSent
               << " rspi " << stats.responsesReceived
               << " rspo " << stats.responsesSent
-              << " INVi " << stats.requestsReceivedByMethod[INVITE]
-              << " INVo " << stats.requestsSentByMethod[INVITE]-stats.requestsRetransmittedByMethod[INVITE]
+              << " INVi " << stats.requestsReceivedByMethod[INVITE] << "/" << stats.sum2xxOut(INVITE) << "/" << stats.sumErrOut(INVITE)
+              << " INVo " << stats.requestsSentByMethod[INVITE]-stats.requestsRetransmittedByMethod[INVITE] << "/" << stats.sum2xxIn(INVITE) << "/" << stats.sumErrIn(INVITE)
               << " ACKi " << stats.requestsReceivedByMethod[ACK]
               << " ACKo " << stats.requestsSentByMethod[ACK]-stats.requestsRetransmittedByMethod[ACK]
-              << " BYEi " << stats.requestsReceivedByMethod[BYE]
-              << " BYEo " << stats.requestsSentByMethod[BYE]-stats.requestsRetransmittedByMethod[BYE]
-              << " CANi " << stats.requestsReceivedByMethod[CANCEL]
-              << " CANo " << stats.requestsSentByMethod[CANCEL]-stats.requestsRetransmittedByMethod[CANCEL]
-              << " OPTi " << stats.requestsReceivedByMethod[OPTIONS]
-              << " OPTo " << stats.requestsSentByMethod[OPTIONS]-stats.requestsRetransmittedByMethod[OPTIONS]
-              << " REGi " << stats.requestsReceivedByMethod[REGISTER]
-              << " REGo " << stats.requestsSentByMethod[REGISTER]-stats.requestsRetransmittedByMethod[REGISTER]
-              << " PUBi " << stats.requestsReceivedByMethod[PUBLISH]
-              << " PUBo " << stats.requestsSentByMethod[PUBLISH]
-              << " SUBi " << stats.requestsReceivedByMethod[SUBSCRIBE]
-              << " SUBo " << stats.requestsSentByMethod[SUBSCRIBE]
-              << " NOTi " << stats.requestsReceivedByMethod[NOTIFY]
-              << " NOTo " << stats.requestsSentByMethod[NOTIFY]
+              << " BYEi " << stats.requestsReceivedByMethod[BYE] << "/" << stats.sum2xxOut(BYE) << "/" << stats.sumErrOut(BYE)
+              << " BYEo " << stats.requestsSentByMethod[BYE]-stats.requestsRetransmittedByMethod[BYE] << "/" << stats.sum2xxIn(BYE) << "/" << stats.sumErrIn(BYE)
+              << " CANi " << stats.requestsReceivedByMethod[CANCEL] << "/" << stats.sum2xxOut(BYE) << "/" << stats.sumErrOut(BYE)
+              << " CANo " << stats.requestsSentByMethod[CANCEL]-stats.requestsRetransmittedByMethod[CANCEL] << "/" << stats.sum2xxIn(CANCEL) << "/" << stats.sumErrIn(CANCEL)
+              << " OPTi " << stats.requestsReceivedByMethod[OPTIONS] << "/" << stats.sum2xxOut(OPTIONS) << "/" << stats.sumErrOut(OPTIONS)
+              << " OPTo " << stats.requestsSentByMethod[OPTIONS]-stats.requestsRetransmittedByMethod[OPTIONS] << "/" << stats.sum2xxIn(OPTIONS) << "/" << stats.sumErrIn(OPTIONS)
+              << " REGi " << stats.requestsReceivedByMethod[REGISTER] << "/" << stats.sum2xxOut(REGISTER) << "/" << stats.sumErrOut(REGISTER)
+              << " REGo " << stats.requestsSentByMethod[REGISTER]-stats.requestsRetransmittedByMethod[REGISTER] << "/" << stats.sum2xxIn(REGISTER) << "/" << stats.sumErrIn(REGISTER)
+              << " PUBi " << stats.requestsReceivedByMethod[PUBLISH] << "/" << stats.sum2xxOut(PUBLISH) << "/" << stats.sumErrOut(PUBLISH)
+              << " PUBo " << stats.requestsSentByMethod[PUBLISH] << "/" << stats.sum2xxIn(PUBLISH) << "/" << stats.sumErrIn(PUBLISH)
+              << " SUBi " << stats.requestsReceivedByMethod[SUBSCRIBE] << "/" << stats.sum2xxOut(SUBSCRIBE) << "/" << stats.sumErrOut(SUBSCRIBE)
+              << " SUBo " << stats.requestsSentByMethod[SUBSCRIBE] << "/" << stats.sum2xxIn(SUBSCRIBE) << "/" << stats.sumErrIn(SUBSCRIBE)
+              << " NOTi " << stats.requestsReceivedByMethod[NOTIFY] << "/" << stats.sum2xxOut(NOTIFY) << "/" << stats.sumErrOut(NOTIFY)
+              << " NOTo " << stats.requestsSentByMethod[NOTIFY] << "/" << stats.sum2xxIn(NOTIFY) << "/" << stats.sumErrIn(NOTIFY)
               << " INVx " << stats.requestsRetransmittedByMethod[INVITE]
               << " BYEx " << stats.requestsRetransmittedByMethod[BYE]
               << " CANx " << stats.requestsRetransmittedByMethod[CANCEL]

@@ -13,7 +13,6 @@ class ApplicationMessage : public Message
 
       virtual Data brief() const=0;
       virtual Message* clone() const=0;
-      virtual std::ostream& encode(std::ostream& strm) const=0;
 };
  
 }
