@@ -1,9 +1,10 @@
 #if !defined(ConnectionMap_hxx)
 #define ConnectionMap_hxx
 
-#include <map>
+
 #include <list>
 
+#include "sip2/util/HashMap.hxx"
 #include "sip2/util/Socket.hxx"
 #include "sip2/util/Timer.hxx"
 #include "sip2/sipstack/Transport.hxx"
@@ -34,7 +35,7 @@ class ConnectionMap
       void gc(UInt64 threshhold = ConnectionMap::MaxLastUsed);
 
       // !jf! should be a hash_map
-      typedef std::map<Transport::Tuple, Connection*> Map;
+      typedef HashMap<Transport::Tuple, Connection*> Map;
       Map mConnections;
       
       // move to youngest

@@ -16,7 +16,7 @@ namespace Vocal2
         void remove( const Data& transactionId );
         
      private:
-        typedef hash_map<Data, TransactionState*> Map;
+        typedef HashMap<Data, TransactionState*> Map;
         Map mMap;
 
         typedef Map::iterator MapIterator;
