@@ -24,7 +24,6 @@ Dialog::Dialog(const NameAddr& localContact)
      mRemoteUri(),
      mLocalUri()
 {
-   //DebugLog (<< "Creating a dialog: " << localContact << " " << this);
 }
 
 SipMessage*
@@ -55,9 +54,13 @@ Dialog::makeResponse(const SipMessage& request, int code)
       mRemoteUri = request.header(h_From);
       mLocalUri = request.header(h_To);
 
+      mDialogId = mCallId;
+      mDialogId.param(p_toTag) = mLocalTag;
+      mDialogId.param(p_fromTag) = mRemoteTag;
+
       mCreated = true;
 
-      DebugLog(<< "Created dialog establishing response: " << *response);
+      //DebugLog(<< "Created dialog establishing response: " << *response);
       DebugLog(<< "CallId: " << mCallId);
       return response;
    }
@@ -68,7 +71,7 @@ Dialog::makeResponse(const SipMessage& request, int code)
       {
          response->header(h_To).param(p_tag) = mLocalTag;
       }
-      DebugLog(<< "Created response within dialog: " << *response);
+      //DebugLog(<< "Created response within dialog: " << *response);
       return response;
    }
 }
@@ -98,6 +101,11 @@ Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
       mRemoteTag = response.header(h_To).param(p_tag); 
       mRemoteUri = request.header(h_To);
       mLocalUri = request.header(h_From);
+
+      mDialogId = mCallId;
+      mDialogId.param(p_toTag) = mLocalTag;
+      mDialogId.param(p_fromTag) = mRemoteTag;
+
       mCreated = true;
    }
 }
@@ -132,6 +140,11 @@ Dialog::createDialogAsUAC(const SipMessage& response)
       }
       mRemoteUri = response.header(h_To);
       mLocalUri = response.header(h_From);
+
+      mDialogId = mCallId;
+      mDialogId.param(p_toTag) = mRemoteTag;
+      mDialogId.param(p_fromTag) = mLocalTag;
+
       mCreated = true;
    }
 }
@@ -349,12 +362,8 @@ Dialog::makeCancel(const SipMessage& request)
 CallId 
 Dialog::makeReplaces()
 {
-   CallId callid = mCallId;
-   callid.param(p_toTag) = mRemoteTag; // !jf!
-   callid.param(p_fromTag) = mLocalTag;
-   return callid;
+   return mDialogId;
 }
-
 
 void
 Dialog::clear()
@@ -413,8 +422,8 @@ Dialog::makeRequest(MethodTypes method)
    via.param(p_branch); // will create the branch
    request->header(h_Vias).push_front(via);
 
-   DebugLog(<<"Created a request within dialog: " << this << "  " << mContact);
-   DebugLog(<<"contact after copy: " <<     request->header(h_Contacts).front());
+   //DebugLog(<<"Created a request within dialog: " << this << "  " << mContact);
+   //DebugLog(<<"contact after copy: " <<     request->header(h_Contacts).front());
    return request;
 }
 
@@ -437,24 +446,23 @@ Dialog::incrementCSeq(SipMessage& request)
       mLocalSequence = 1;
       mLocalEmpty = false;
    }
-   DebugLog ( << "mLocalSequence: " << mLocalSequence);
+   //DebugLog ( << "mLocalSequence: " << mLocalSequence);
    request.header(h_CSeq).sequence() = ++mLocalSequence;
 }
 
 std::ostream&
 resip::operator<<(std::ostream& strm, Dialog& d)
 {
-   strm << std::endl
-        << "Dialog: [" << d.dialogId() << " " 
-        << "created=" << d.mCreated 
-        << " remoteTarget=" << d.mRemoteTarget << std::endl
+   strm << "Dialog: [" << d.dialogId() 
+        << " created=" << d.mCreated 
+        << ",remoteTarget=" << d.mRemoteTarget 
       //<< "routeset=" << Inserter(d.mRouteSet) << std::endl
-        << "remoteSeq=" << d.mRemoteSequence << ","
-        << "remote=" << d.mRemoteUri << ","
-        << "remoteTag=" << d.mRemoteTag << std::endl
-        << "localSeq=" << d.mLocalSequence << ","
-        << "local=" << d.mLocalUri << ","
-        << "localTag=" << d.mLocalTag 
+        << ",remoteSeq=" << d.mRemoteSequence 
+        << ",remote=" << d.mRemoteUri 
+        << ",remoteTag=" << d.mRemoteTag 
+        << ",localSeq=" << d.mLocalSequence
+        << ",local=" << d.mLocalUri 
+        << ",localTag=" << d.mLocalTag 
         << "]";
    return strm;
 }
@@ -463,10 +471,7 @@ resip::operator<<(std::ostream& strm, Dialog& d)
 const Data 
 Dialog::dialogId() const
 {
-   Data dialog = mCallId.value();
-   dialog += mRemoteTag; 
-   dialog += mLocalTag;
-   return dialog;
+   return Data::from(mDialogId);
 }
 
 
