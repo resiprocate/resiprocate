@@ -223,7 +223,7 @@ ConnectionMap::Connection::process(size_t bytesRead, Fifo<Message>& fifo)
       case NewMessage:
       {
          mPreparse.reset();
-         mMessage = new SipMessage(true);
+         mMessage = new SipMessage(SipMessage::FromWire);
          mMessage->setSource(mWho);
       }
       case ReadingHeaders:
