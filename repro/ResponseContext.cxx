@@ -50,6 +50,7 @@ ResponseContext::processCandidates()
       // take the q value parameter from the candidate. 
       
       NameAddr& candidate = mRequestContext.getCandidates().back();
+      InfoLog (<< "Considering " << candidate);
       Uri target(candidate.uri());
       // make sure each target is only inserted once
       if (mSecure && target.scheme() == Symbols::Sips || !mSecure)
@@ -61,6 +62,7 @@ ResponseContext::processCandidates()
             pending.param(p_q) = candidate.param(p_q);
          
             mPendingTargetSet.insert(pending);
+            InfoLog (<< "Added " << pending);
          }
       }
       mRequestContext.getCandidates().pop_back();
@@ -68,6 +70,7 @@ ResponseContext::processCandidates()
 
    if (added)
    {
+      //InfoLog (<< *this);
       processPendingTargets();
    }
 }
@@ -212,7 +215,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 2:
-         removeClientTransaction(transactionId);
+         //removeClientTransaction(transactionId);
          if (response.header(h_CSeq).method() == INVITE)
          {
             cancelProceedingClientTransactions();
@@ -229,7 +232,7 @@ ResponseContext::processResponse(SipMessage& response)
       case 3:
       case 4:
       case 5:
-         removeClientTransaction(transactionId);
+         //removeClientTransaction(transactionId);
          DebugLog (<< "forwardedFinal=" << mForwardedFinalResponse 
                    << " outstanding client transactions: " << Inserter(mClientTransactions));
          if (!mForwardedFinalResponse)
@@ -293,7 +296,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 6:
-         removeClientTransaction(transactionId);
+         //removeClientTransaction(transactionId);
          if (!mForwardedFinalResponse)
          {
             if (mBestResponse.header(h_StatusLine).statusCode() / 100 != 6)
@@ -351,13 +354,18 @@ ResponseContext::cancelProceedingClientTransactions()
    }
 }
 
-void
+bool
 ResponseContext::removeClientTransaction(const Data& transactionId)
 {
    TransactionMap::iterator i = mClientTransactions.find(transactionId);
    if (i != mClientTransactions.end())
    {
       mClientTransactions.erase(i);
+      return true;
+   }
+   else
+   {
+      return false;
    }
 }
 
@@ -527,8 +535,8 @@ repro::operator<<(std::ostream& strm, const ResponseContext& rc)
         << " best=" << rc.mBestPriority << " " << rc.mBestResponse.brief()
         << " forwarded=" << rc.mForwardedFinalResponse
         << " pending=" << Inserter(rc.mPendingTargetSet);
-   //<< " targets=" << Inserter(rc.mTargetSet);
-   //<< " clients=" << Inserter(rc.mClientTransactions);
+      //<< " targets=" << Inserter(rc.mTargetSet)
+      //<< " clients=" << Inserter(rc.mClientTransactions);
 
    return strm;
 }
