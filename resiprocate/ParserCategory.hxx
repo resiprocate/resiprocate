@@ -34,7 +34,7 @@ class ParserCategory
 
       template <int T>
       typename ParameterType<T>::Type::Type& 
-      operator[](const ParameterType<T>& parameterType)
+      operator[](const ParameterType<T>& parameterType) const
       {
          checkParsed();
          return ((typename ParameterType<T>::Type&)mHeaderField->getParameter((typename ParameterTypes::Type)T)).value();
@@ -49,20 +49,21 @@ class ParserCategory
       
       virtual void parse() = 0;
 
-      UnknownParameter& operator[](const Data& param);
+      UnknownParameter& operator[](const Data& param) const;
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
    protected:
       ParserCategory();
 
       // call before every access 
-      void checkParsed()
+      void checkParsed() const
       {
          // !dlb! thread safety?
          if (!mIsParsed)
          {
-            mIsParsed = true;
-            parse();
+            ParserCategory* ncThis = const_cast<ParserCategory*>(this);
+            ncThis->mIsParsed = true;
+            ncThis->parse();
          }
       }
 
