@@ -35,7 +35,7 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) : 
-   security( pSecurity ),
+   mSecurity( pSecurity ),
    mTUTimerQueue(mTUFifo),
    mExecutive(*this),
    mTransactionController(multiThreaded, mTUFifo, stateless),
@@ -49,7 +49,7 @@ SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) :
 #ifdef USE_SSL
    if ( !pSecurity )
    {
-      security = new Security( true, true );
+       mSecurity = new Security( true, true );
    }
 #endif
    assert(!mShuttingDown);
@@ -58,7 +58,7 @@ SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) :
 SipStack::~SipStack()
 {
 #ifdef USE_SSL
-   delete security;
+   delete mSecurity;
 #endif
 }
 
@@ -100,11 +100,13 @@ SipStack::addTlsTransport( int port,
                            const Data& privateKeyPassPhrase,
                            const Data& domainname,
                            IpVersion version,
-                           const Data& ipInterface)
+                           const Data& ipInterface,
+                           SecurityTypes::SSLType sslType)
 {
    assert(!mShuttingDown);
    
-   bool ret = mTransactionController.addTlsTransport(port,keyDir,privateKeyPassPhrase, domainname, version, ipInterface);
+   bool ret = mTransactionController.addTlsTransport(port,keyDir,privateKeyPassPhrase,
+                                                     domainname, version, ipInterface, sslType);
    if (ret && !ipInterface.empty()) 
    {
       addAlias(ipInterface, port);
@@ -337,6 +339,12 @@ void
 SipStack::buildFdSet(FdSet& fdset)
 {
    mExecutive.buildFdSet( fdset );
+}
+
+Security*
+SipStack::getSecurity() const 
+{
+    return mSecurity;
 }
 
 std::ostream& 
