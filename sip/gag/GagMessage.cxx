@@ -131,6 +131,7 @@ GagMessage::parse(istream &is, Uri &uri)
   temp=(char *)malloc(size);
   if (!temp) return (false);
   is.read(temp, size);
+  DebugLog ( << "Parsing URI from GAIM: " << Data(temp,size));
   uri = Uri(Data(temp,size));
   free(temp);
   return true;
