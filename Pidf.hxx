@@ -6,6 +6,7 @@
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/Uri.hxx"
 
 namespace resip
 {
@@ -25,10 +26,11 @@ class Pidf : public Contents
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
 
-      void setSimpleId( const Data& id );
-      void setEntity( const Data& d) { mEntity=d; };
-      const Data& getEntity() const;
-      void setSimpleStatus(bool online, const Data& note=Data::Empty, const Data& contact=Data::Empty);
+      void setSimpleId(const Data& id);
+      void setEntity(const Uri& entity);
+      const Uri& getEntity() const;
+      void setSimpleStatus(bool online, const Data& note = Data::Empty, 
+                           const Data& contact = Data::Empty);
       bool getSimpleStatus(Data* note=NULL) const;
       
       class Tuple
@@ -45,16 +47,15 @@ class Pidf : public Contents
 
       std::vector<Tuple>& getTuples();
       const std::vector<Tuple>& getTuples() const;
-      // ?dlb? consider returning an XML cursor as well?
-
       int getNumTuples() const;
 
+      // combine tuples
       void merge(const Pidf& other);
 
       static bool init();   
    
    private:
-      Data mEntity;
+      Uri mEntity;
       Data mNote;
       std::vector<Tuple> mTuples;
 };
