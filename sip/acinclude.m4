@@ -41,7 +41,6 @@ AC_DEFUN([RESIP_IPV6],
 
 AC_DEFUN([RESIP_SCANNER],
 [
-
         AC_DEFINE([NEW_MSG_HEADER_SCANNER],
                   [1],
                   [Use NewHeaderScanner instead of Preparser])
@@ -182,6 +181,7 @@ else
   AC_MSG_RESULT(no)
 fi
 ])
+
 dnl Available from the GNU Autoconf Macro Archive at:
 dnl http://www.gnu.org/software/ac-archive/htmldoc/ac_caolan_func_which_gethostbyname_r.html
 dnl

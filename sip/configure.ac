@@ -2,14 +2,14 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
 
-AC_INIT([resiprocate/SipStack.hxx],, [resiprocate-devel@lists.sourceforge.net])
+AC_INIT([resiprocate/SipStack.hxx],, [resiprocate-devel@list.sipfoundry.org])
 
 dnl
 dnl Release Version
 dnl
 RESIP_MAJOR_VERSION=0
-RESIP_MINOR_VERSION=4
-RESIP_MICRO_VERSION=1
+RESIP_MINOR_VERSION=5
+RESIP_MICRO_VERSION=0
 
 RESIP_VERSION=$RESIP_MAJOR_VERSION.$RESIP_MINOR_VERSION.$RESIP_MICRO_VERSION
 LIBRESIP_SO_VERSION=`expr $RESIP_MINOR_VERSION + $RESIP_MAJOR_VERSION`:$RESIP_MICRO_VERSION:$RESIP_MINOR_VERSION
@@ -25,7 +25,6 @@ AC_SUBST(LIBRESIP_SO_VERSION, $LIBRESIP_SO_VERSION)
 
 AC_MSG_RESULT([Configuring ${PACKAGE} ${VERSION}])
 
-dnl [resiprocate], $RESIP_VERSION, )
 
 AC_CONFIG_SRCDIR([resiprocate/config.hxx.in])
 AC_CONFIG_HEADER([resiprocate/config.hxx])
@@ -33,8 +32,7 @@ AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 dnl AC_DISABLE_STATIC
 
-AC_REVISION($Id: configure.ac,v 1.18.8.1 2004/03/16 23:23:08 alan Exp $)
-
+AC_REVISION($Revision:$)
 
 AM_MAINTAINER_MODE
 
@@ -52,15 +50,15 @@ else
         AC_MSG_RESULT([no])
 fi
 
-
-
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
-AC_PROG_LIBTOOL
+
+dnl AC_PROG_LIBTOOL
 
 AC_CHECK_HEADERS([sys/sockio.h sys/int_types.h netinet/in.h sys/socket.h ])
 AC_CHECK_HEADER([popt.h],[AC_DEFINE([HAVE_POPT_H],[1],[ Has popt.h ]) LIBS="$LIBS -lpopt"])
+
 AC_CHECK_STRUCT_FOR([
 #include <sys/stat.h>
         ],
@@ -113,17 +111,28 @@ RESIP_SCANNER
 RESIP_SCANNER_DEBUG
 RESIP_EXCEPTION_DEBUG_LOGS
 
-AC_DEFINE_UNQUOTED([RESIP_VERSION], ["$RESIP_VERSION"], [The version number of resip])
-AC_DEFINE_UNQUOTED([RESIP_MAJOR_VERSION], [$RESIP_MAJOR_VERSION], [The major version number of resip])
-AC_DEFINE_UNQUOTED([RESIP_MINOR_VERSION], [$RESIP_MINOR_VERSION], [The minor version number of resip])
-AC_DEFINE_UNQUOTED([RESIP_MICRO_VERSION], [$RESIP_MICRO_VERSION], [The micro version number of resip])
+AC_DEFINE_UNQUOTED([RESIP_VERSION], 
+        ["$RESIP_VERSION"],
+         [The version number of resip])
+
+AC_DEFINE_UNQUOTED([RESIP_MAJOR_VERSION],
+         [$RESIP_MAJOR_VERSION],
+         [The major version number of resip])
+
+AC_DEFINE_UNQUOTED([RESIP_MINOR_VERSION],
+         [$RESIP_MINOR_VERSION], 
+        [The minor version number of resip])
+
+AC_DEFINE_UNQUOTED([RESIP_MICRO_VERSION],
+         [$RESIP_MICRO_VERSION], 
+        [The micro version number of resip])
 
 
 dnl Test for pthreads.
 
 ACX_PTHREAD
 
-dnl AC_MSG_RESULT([Pthreads flags are : $PTHREAD_LIBS])
+AC_MSG_RESULT([Pthreads flags are : $PTHREAD_LIBS])
 
 dnl LIBS="$PTHREAD_LIBS $LIBS"
 dnl CFLAGS="-Wall -Wnodeprecated $CFLAGS $PTHREAD_CFLAGS"
@@ -133,6 +142,6 @@ dnl CC="$PTHREAD_CC"
 dnl Temporary hack until proper, portable pthreads detection is added.
 LIBS="$LIBS -lpthread"
 
-AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile])
+AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile resiprocate/dum/Makefile])
 
 AC_OUTPUT
