@@ -11,6 +11,8 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, 
    : BaseSubscription(dum, dialog, request),
      mOnNewSubscriptionCalled(false)
 {
+   mLastRequest = request;
+   mDialog.makeRequest(mLastRequest, SUBSCRIBE);   
 }
 
 ClientSubscription::~ClientSubscription()
