@@ -498,7 +498,7 @@ main (int argc, char** argv)
      {
         FdSet fdset;
         dumUac->buildFdSet(fdset);
-        int err = fdset.selectMilliSeconds(dumUac->getTimeTillNextProcessMS());
+        int err = fdset.selectMilliSeconds(resipMin(dumUac->getTimeTillNextProcessMS(), 50));
         assert ( err != -1 );
         dumUac->process(fdset);
      }
@@ -506,7 +506,7 @@ main (int argc, char** argv)
      {
         FdSet fdset;
         dumUas->buildFdSet(fdset);
-        int err = fdset.selectMilliSeconds(dumUas->getTimeTillNextProcessMS());
+        int err = fdset.selectMilliSeconds(resipMin(dumUas->getTimeTillNextProcessMS(), 50));
         assert ( err != -1 );
         dumUas->process(fdset);
      }
