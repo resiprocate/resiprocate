@@ -335,6 +335,25 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
 }
 
 void
+ClientInviteSession::handleRedirect (const SipMessage& msg)
+{
+    Destroyer::Guard    guard(mDestroyer);
+    guard.destroy();
+    transition(Terminated);
+    handler->onRedirected(getHandle(), msg);
+}
+
+void
+ClientInviteSession::handleOffer (const SipMessage& msg, const SdpContents* sdp)
+{
+    transition(UAC_EarlyWithOffer);
+    handler->onNewSession(getHandle(), Offer, msg);
+    handler->onProvisional(getHandle(), msg);
+    mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+    handler->onOffer(getSessionHandle(), msg, sdp);
+}
+
+void
 ClientInviteSession::dispatchStart (const SipMessage& msg)
 {
    assert(msg.isResponse());
@@ -347,15 +366,15 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
    switch (toEvent(msg, sdp))
    {
       case OnRedirect:
-         handler->onRedirected(getHandle(), msg);
+         handleRedirect(msg);
          break;
-         
+
       case On1xx:
          handler->onNewSession(getHandle(), None, msg);
          handler->onProvisional(getHandle(), msg);
          transition(UAC_Early);
          break;
-         
+
       case On1xxEarly:
          handler->onNewSession(getHandle(), None, msg);
          handler->onProvisional(getHandle(), msg);
@@ -363,15 +382,11 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          handler->onEarlyMedia(getHandle(), msg, sdp);
          transition(UAC_Early);
          break;
-         
+
       case On1xxOffer:
-         handler->onNewSession(getHandle(), Offer, msg);
-         handler->onProvisional(getHandle(), msg);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onOffer(getSessionHandle(), msg, sdp);
-         transition(UAC_EarlyWithOffer);
+         handleOffer(msg, sdp);
          break;
-         
+
       case On1xxAnswer:
          handler->onNewSession(getHandle(), Answer, msg);
          handler->onProvisional(getHandle(), msg);
@@ -388,7 +403,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
          transition(UAC_EarlyWithAnswer);
          break;
-         
+
       case On2xxOffer:
          handler->onNewSession(getHandle(), Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
@@ -397,14 +412,14 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          handler->onConnected(getHandle(), msg);
          transition(UAC_WaitingForAnswerFromApp);
          break;
-         
+
       case On2xxAnswer:
          handler->onNewSession(getHandle(), Answer, msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, sdp);
          handler->onConnected(getHandle(), msg);
-         
+
          {
             SipMessage ack;
             mDialog.makeRequest(ack, ACK);
@@ -413,7 +428,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
          transition(Connected);
          break;
-         
+
       case On2xx:
       {
          SipMessage ack;
@@ -433,7 +448,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
          break;
-         
+
       default:
          assert(0);
          break;
@@ -442,6 +457,104 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 void
 ClientInviteSession::dispatchEarly (const SipMessage& msg)
 {
+   assert(msg.isResponse());
+   assert(msg.header(h_StatusLine).statusCode() > 100);
+   assert(msg.header(h_CSeq).method() == INVITE);
+
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   const SdpContents* sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp))
+   {
+      case OnRedirect:
+         handleRedirect(msg);
+         break;
+
+      case On1xx:
+         transition(UAC_Early);
+         handler->onProvisional(getHandle(), msg);
+         break;
+
+      case On1xxEarly:
+         transition(UAC_Early);
+         handler->onProvisional(getHandle(), msg);
+         mEarlyMedia = InviteSession::makeSdp(*sdp);
+         handler->onEarlyMedia(getHandle(), msg, sdp);
+         break;
+
+      case On1xxOffer:
+         handleOffer(msg, sdp);
+         break;
+
+      case On1xxAnswer:
+        // !kh! here
+         transition(UAC_EarlyWithAnswer);
+
+         handler->onNewSession(getHandle(), Answer, msg);
+         handler->onProvisional(getHandle(), msg);
+         mCurrentLocalSdp = mProposedLocalSdp;
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onAnswer(getSessionHandle(), msg, sdp);
+
+         // send PRACK
+         {
+            SipMessage prack;
+            mDialog.makeRequest(prack, PRACK);
+            mDum.send(prack);
+         }
+         break;
+
+      case On2xxOffer:
+         transition(UAC_WaitingForAnswerFromApp);
+
+         handler->onNewSession(getHandle(), Offer, msg);
+         assert(mProposedLocalSdp.get() == 0);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onOffer(getSessionHandle(), msg, sdp);
+         handler->onConnected(getHandle(), msg);
+         break;
+
+      case On2xxAnswer:
+         transition(Connected);
+
+         handler->onNewSession(getHandle(), Answer, msg);
+         mCurrentLocalSdp = mProposedLocalSdp;
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onAnswer(getSessionHandle(), msg, sdp);
+         handler->onConnected(getHandle(), msg);
+
+         {
+            SipMessage ack;
+            mDialog.makeRequest(ack, ACK);
+            mDum.send(ack);
+         }
+         break;
+
+      case On2xx:
+      {
+         transition(Terminated);
+
+         SipMessage ack;
+         mDialog.makeRequest(ack, ACK);
+         mDum.send(ack);
+
+         SipMessage bye;
+         mDialog.makeRequest(bye, BYE);
+         mDum.send(bye);
+
+         handler->onFailure(getHandle(), msg);
+         break;
+      }
+
+      case OnInviteFailure:
+      case OnGeneralFailure:
+         handler->onFailure(getHandle(), msg);
+         break;
+
+      default:
+         assert(0);
+         break;
+   }
 }
 
 void
