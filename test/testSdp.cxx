@@ -35,8 +35,35 @@ main(int argc, char* argv[])
     
     Log::initialize(Log::COUT, l, argv[0]);
     CritLog(<<"Test Driver Starting");
+
+    {
+      Data txt("v=0\r\n"
+               "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
+               "s=-\r\n"
+               "c=IN IP4 pc33.atlanta.com\r\n"
+               "t=0 0\r\n"
+               "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
+               "a=rtpmap:0 PCMU/8000\r\n");
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "sdp");
+      SdpContents sdp(&hfv, type);
+
+      HeaderFieldValue hfv2(txt.data(), txt.size());
+      SdpContents sdp2(&hfv2, type);
+
+      sdp.session();
+      sdp2.session();
+
+      Data sdpO = Data::from(sdp);
+      sdp = sdp2;
+      Data sdpO2 = Data::from(sdp);
+
+      cerr << "!! " << sdp << endl;
+      assert(sdpO == sdpO2);
+    }
+    
     tassert_init(5);
-   {
+    {
       Data txt("v=0\r\n"
                "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
                "s=-\r\n"
@@ -78,8 +105,8 @@ main(int argc, char* argv[])
       tassert_reset();
       tassert(sdp.session().version() == 0);
       tassert(sdp.session().origin().user() == "UserA");
-      tassert(sdp.session().origin().getSessionId() == 2890844526);
-      tassert(sdp.session().origin().getVersion() == 2890844527);
+      tassert(sdp.session().origin().getSessionId() == 2890844526UL);
+      tassert(sdp.session().origin().getVersion() == 2890844527UL);
       tassert(sdp.session().origin().getAddressType() == SdpContents::IP4);
       tassert(sdp.session().origin().getAddress() == "here.com");
 
@@ -180,7 +207,7 @@ main(int argc, char* argv[])
       Data shouldBeLike("v=0\r\n"
                         "o=- 4058038202 4058038202 IN IP4 192.168.2.220\r\n"
                         "s=VOVIDA Session\r\n"
-                        "c=IN IP4 192.168.2.220 /0\r\n"
+                        "c=IN IP4 192.168.2.220\r\n"
                         "t=4058038202 0\r\n"
                         "m=audio 5061 RTP/AVP 0 101\r\n"
                         "a=fmtp:101 0-11\r\n"
@@ -188,13 +215,10 @@ main(int argc, char* argv[])
                         "a=rtpmap:0 PCMU/8000\r\n"
                         "a=rtpmap:101 telephone-event/8000\r\n");
 
-      Data encoded;
-      {
-         DataStream s(encoded);
-         s << sdp;
-      }
+      Data encoded(Data::from(sdp));
 
-      tassert(encoded == shouldBeLike);
+      std::cerr << "!! " << encoded;
+      /**/assert(encoded == shouldBeLike);
       tassert_verify(4);
    }
    
