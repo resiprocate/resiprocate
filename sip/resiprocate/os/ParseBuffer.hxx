@@ -53,17 +53,7 @@ class ParseBuffer
                return mPosition;
             }
 
-            const char& operator*() const
-            {
-               if (mIsValid)
-               {
-                  return *mPosition;
-               }
-               else
-               {
-                  throw ParseBuffer::Exception(msg, __FILE__, __LINE__);
-               }
-            }
+            const char& operator*() const;
          private:
             const char* mPosition;
             const bool mIsValid;
