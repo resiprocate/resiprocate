@@ -2,12 +2,18 @@
 #include "ParameterTypeEnums.hxx"
 
 #include <cassert>
+#include <string.h>
+#include "sip2/util/ParseBuffer.hxx"
 
 using namespace Vocal2;
 
 UnknownParameterType::UnknownParameterType(const char* name)
 {
    assert(name);
-   mName = name;
+   ParseBuffer pb(name, strlen(name));
+   const char* anchor = pb.skipWhitespace();
+   pb.skipNonWhitespace();
+   mName = pb.data(anchor);
+   assert(!mName.empty());
    assert(ParameterTypes::getType(mName.data(), mName.size()) == ParameterTypes::UNKNOWN);
 }
