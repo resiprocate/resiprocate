@@ -31,6 +31,26 @@ typedef uint16_t u_int16_t;
 typedef uint32_t u_int32_t;
 #endif
 
+#ifdef WIN32
+
+#undef min
+#undef max
+
+template<typename _Tp>
+inline const _Tp&
+min(const _Tp& __a, const _Tp& __b)
+{
+   if (__b < __a) return __b; return __a;
+}
+
+template<typename _Tp>
+inline const _Tp&
+max(const _Tp& __a, const _Tp& __b) 
+{
+   if (__a < __b) return __b; return __a;
+}
+
+#endif
 
 #endif
 /* ====================================================================
