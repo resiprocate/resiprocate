@@ -174,6 +174,11 @@ ClientInviteSession::end()
          WarningLog (<< "Try to end when in state=" << toData(mState));
          assert(0);
          break;
+         
+      case Terminated:
+         assert(0);
+         break;
+         
       default:
          InviteSession::end();
          break;
@@ -222,7 +227,6 @@ ClientInviteSession::reject (int statusCode)
 void
 ClientInviteSession::cancel()
 {
-   InfoLog (<< toData(mState) << ": cancel(");
    switch(mState)
    {
       case UAC_Early:
@@ -231,10 +235,16 @@ ClientInviteSession::cancel()
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
+         InfoLog (<< toData(mState) << ": cancel");
          startCancelTimer();
          transition(UAC_Canceled);
          break;
-
+         
+      case UAC_Canceled:
+         // !jf!
+         // assert(0);
+         break;
+         
       default:
          assert(0);
          break;

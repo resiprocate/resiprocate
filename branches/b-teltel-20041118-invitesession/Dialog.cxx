@@ -235,31 +235,10 @@ Dialog::getId() const
 void
 Dialog::cancel()
 {
-   if (mInviteSession)
-   {
-      mInviteSession->end();
-   }
-   else
-   {
-      if (mDialogSet.getCreator())
-      {
-         SipMessage& request = mDialogSet.getCreator()->getLastRequest();
-         if (request.header(h_RequestLine).method() == INVITE)
-         {
-            makeCancel(request);
-            mDum.send(request);
-            delete this;
-         }
-         else
-         {
-            throw UsageUseException("Can only CANCEL an INVITE", __FILE__, __LINE__);
-         }
-      }
-      else
-      {
-         throw UsageUseException("Attempting to cancel UAS dialogSet", __FILE__, __LINE__);
-      }
-   }
+   assert(mType == Invitation);
+   ClientInviteSession* uac = dynamic_cast<ClientInviteSession*>(mInviteSession);
+   assert (uac);
+   uac->cancel();
 }
 
 void
