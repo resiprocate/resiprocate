@@ -375,10 +375,10 @@ main(int arc, char** argv)
       for (int i = Headers::CSeq; i < Headers::MAX_HEADERS; i++)
       {
          Data hdr = Headers::getHeaderName(i);
-	 if (!hdr.size()) continue;
-	 Data msg("Checking hash of: ");
-	 msg += hdr;
-	 TR _tr(msg);
+         if (!hdr.size()) continue;
+         Data msg("Checking hash of: ");
+         msg += hdr;
+         TR _tr(msg);
          assert(Headers::getType(Headers::getHeaderName(i).c_str(), Headers::getHeaderName(i).size()) == i);
       }
       checkHeaderName(To);
