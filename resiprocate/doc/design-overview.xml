@@ -168,10 +168,37 @@
         When messages are received, it is possible that they will be
         fragmented across several messages. Since a header can span a fragment
         for the messages, we need to merge the data if the header spans the
-        boundary of two receives, but want to do minimal copies (we don’t want
+        boundary of two receives, but want to do minimal copies (we don't want
         to coalesce the buffer into a single buffer after all fragments are
-        received) 
+        received)
       </para>
+      <para>
+        In this case, the fraction of the message from the start of the
+        fragmented header to the end of the message is copied into a new buffer,
+        and the next chunk is read from the transport into that buffer starting
+        at that point, and when that fragment is parsed, that HFV is generated
+        with the complete header value in the new message. (see <xref
+        linkend="transport-chunk"/> below).
+      </para>
+      <para>
+      <figure id="transport-chunk">
+        <title>Transport Chunking</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="chunk-image" format="GIF" align="center"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+      </para>
+      <para>
+        The actual memory buffer(s) in which the messages live are owned by the
+        SipMessage class, and do not ownership does not pass to the HFVs. The
+        SipMessage class needs to keep a list of these headers, and ensure that
+        they are properly destructed when they are no longer needed. More
+        information is available on this in the data structures section.
+       </para>
+
+
 
     </section>
   </section>
