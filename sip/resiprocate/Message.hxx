@@ -1,5 +1,5 @@
-#ifndef Message_hxx
-#define Message_hxx
+#if !defined(RESIP_MESSAGE_HXX)
+#define RESIP_MESSAGE_HXX 
 
 #include "resiprocate/os/Data.hxx"
 #include <iostream>
@@ -24,11 +24,9 @@ class Message
 std::ostream& 
 operator<<(std::ostream& strm, const resip::Message& msg);
 
-
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
