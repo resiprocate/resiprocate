@@ -149,9 +149,6 @@ dnl CC="$PTHREAD_CC"
 dnl Temporary hack until proper, portable pthreads detection is added.
 LIBS="$LIBS -lpthread"
 
-dnl Derive the contents object list
-#CONTENTS_OBJS="SdpContents.o GenericContents.o PlainContents.o"
-#AC_SUBST([CONTENTS_OBJS])
 
 
 AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile resiprocate/dum/Makefile])  
