@@ -9,29 +9,29 @@
 #if defined (__SUNPRO_CC)
 
 // variadic to handle comma in template arguments
-#define DebugLog(arg__, args__)                                                 \
+#define DebugLog(args__)                                                 \
                                          /* eat the comma if no extra arguments */ \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, arg__, args__)
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, args__)
 
-#define CritLog(arg__, args__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, arg__, args__)
+#define CritLog(args__) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, args__)
 
-#define ErrLog(arg__, args__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, arg__, args__)
+#define ErrLog(args__) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, args__)
 
-#define WarningLog(arg__, args__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, arg__, args__)
+#define WarningLog(args__) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, args__)
 
-#define InfoLog(arg__, args__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, arg__, args__)
+#define InfoLog(args__) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, args__)
 
 #ifdef NO_DEBUG
 // Suppress debug loging at compile time
-#define DebugLog(arg__, args__)
+#define DebugLog(args__)
 #endif
 
 // do/while allows a {} block in an expression
-#define GenericLog(system__, level__, arg__, args__)         \
+#define GenericLog(system__, level__, args__)         \
 do                                                              \
 {                                                               \
   if (Vocal2::GenericLogImpl::isLogging(level__))               \
@@ -43,7 +43,7 @@ do                                                              \
                           Vocal2::GenericLogImpl::Instance())   \
           << __FILE__ << ':' << __LINE__ << DELIM               \
                   /* eat the comma if no extra arguments */     \
-          arg__ , args__ << std::endl;                        \
+          args__ << std::endl;                        \
      }                                                          \
   }                                                             \
 } while (0)
