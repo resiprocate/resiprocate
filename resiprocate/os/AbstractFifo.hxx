@@ -20,7 +20,7 @@ class AbstractFifo
 {
    public:
       AbstractFifo(unsigned int maxSize);
-      virtual ~AbstractFifo() = 0;
+      virtual ~AbstractFifo();
 
       bool empty() const;
             
