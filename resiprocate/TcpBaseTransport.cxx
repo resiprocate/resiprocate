@@ -34,7 +34,7 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data&
    }
 #endif
 
-   Transport::bind(mFd, portNum, pinterface, ipv4);
+   bind();
    makeSocketNonBlocking(mFd);
    
    // do the listen, seting the maximum queue size for compeletly established

@@ -28,7 +28,7 @@ UdpTransport::UdpTransport(Fifo<Message>& fifo,
    InfoLog (<< "Creating udp transport host=" << pinterface << " port=" << portNum);
    
    mFd = Transport::socket(transport(), ipv4);
-   Transport::bind(mFd, portNum, pinterface, ipv4);
+   bind();
 }
 
 UdpTransport::~UdpTransport()
