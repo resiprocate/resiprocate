@@ -60,7 +60,7 @@ SipStack::receive()
 
 
 void 
-SipStack::process()
+SipStack::process(fd_set* fdSet)
 {
   
    mExecutive.process();
@@ -75,7 +75,7 @@ SipStack::getTimeTillNextProcess()
 
    // FIX there needs to be some code here once the executive can tell
    // us this
-   return 0;
+   return 50;
 
 } 
 
@@ -85,3 +85,11 @@ SipStack::runThread( enum ThreadFunction funcType )
   
 }
 
+
+void 
+SipStack::buildFdSet( fd_set* fdSet, int* fdSetSize )
+{
+	assert( fdSet );
+	assert( fdSetSize );
+	
+}

@@ -6,6 +6,7 @@
 #include <sipstack/TransactionMap.hxx>
 #include <sipstack/TimerQueue.hxx>
 #include <util/Fifo.hxx>
+#include <util/Socket.hxx>
 
 namespace Vocal2
 {
@@ -28,12 +29,15 @@ class SipStack
       // caller now owns the memory
       SipMessage* receive(); 
       
-      void process();
+      void process(fd_set* fdSet);
 
+	// build the FD set to use in a select to find out when process bust be called again
+	void buildFdSet( fd_set* fdSet, int* fdSetSize );
+	
       /// returns time in milliseconds when process next needs to be called 
       int getTimeTillNextProcess(); 
 
-      enum ThreadFunction { Timer, UDP, StateMachine, TCP, };
+      enum ThreadFunction { T_Timer, T_UDP, T_StateMachine, T_TCP, };
 
       void runThread( enum ThreadFunction funcType);
 
