@@ -1,6 +1,8 @@
-#include "sip2/sipstack/Uri.hxx"
+
 #include "sip2/util/ParseBuffer.hxx"
+#include "sip2/util/DataStream.hxx"
 #include "sip2/sipstack/Symbols.hxx"
+#include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/UnknownParameter.hxx"
 #include "sip2/sipstack/ParserCategories.hxx" // !dlb! just NameAddr
 
@@ -337,6 +339,18 @@ Uri::encodeParsed(std::ostream& str) const
    encodeParameters(str);
    return str;
 }
+
+
+const Data 
+Uri::value() const
+{
+	Data ret;
+	DataStream str(ret);
+	encodeParsed(str);
+	str.flush();
+	return ret;
+}
+
 
 void
 Uri::parseEmbeddedHeaders()
