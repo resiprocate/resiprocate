@@ -140,39 +140,6 @@ SipMessage::getTransactionId() const
    }
 }
 
-const Data& 
-SipMessage::getServerTransactionId() const
-{
-   assert (!header(h_Vias).empty());
-   if( header(h_Vias).front().exists(p_branch) 
-       && header(h_Vias).front().param(p_branch).hasMagicCookie() )
-   {
-      assert (!header(h_Vias).front().param(p_branch).getServerTransactionId().empty());
-      return header(h_Vias).front().param(p_branch).getServerTransactionId();
-   }
-   else
-   {
-      if (mRFC2543TransactionId.empty())
-      {
-         compute2543TransactionHash();
-      }
-      return mRFC2543TransactionId;
-   }
-}
-
-// foo.N => foo 
-// in place, no copying
-Data& 
-SipMessage::serverIdFromClientTransactionId(Data& serverTransIdOut, const Data& clientTransId)
-{
-   // !dlb! faster if backwards
-   ParseBuffer pb(clientTransId.data(), clientTransId.size());
-   const char* anchor = pb.position();
-   pb.skipToChar(Symbols::DOT[0]);
-   pb.data(serverTransIdOut, anchor);
-   return serverTransIdOut;
-}
-
 void
 SipMessage::compute2543TransactionHash() const
 {
@@ -261,29 +228,24 @@ SipMessage::compute2543TransactionHash() const
       }
            
       mRFC2543TransactionId = strm.getHex();
-      DebugLog (<< "Computed tid=" << mRFC2543TransactionId);
    }
+}
+
+const Data&
+SipMessage::getRFC2543TransactionId() const
+{
+   if (mRFC2543TransactionId.empty())
+   {
+      compute2543TransactionHash();
+   }
+   return mRFC2543TransactionId;
 }
 
 void
-SipMessage::copyRFC2543TransactionId(const SipMessage& msg)
+SipMessage::setRFC2543TransactionId(const Data& tid)
 {
-   if (msg.isResponse())
-   {
-      DebugLog (<< "Copy server tid=" << msg.getServerTransactionId() << " into " << brief());
-      mRFC2543TransactionId = msg.getServerTransactionId();      
-   }
-   else if (msg.isRequest())
-   {
-      DebugLog (<< "Copy tid=" << msg.mRFC2543TransactionId << " into " << brief());
-      mRFC2543TransactionId = msg.mRFC2543TransactionId;
-   }
-   else
-   {
-      assert(0);
-   }
+   mRFC2543TransactionId = tid;
 }
-
 
 bool
 SipMessage::isRequest() const
