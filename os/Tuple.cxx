@@ -32,6 +32,73 @@ Tuple::Tuple() :
    mSockaddr.sa_family = AF_INET;
 }
 
+Tuple::Tuple(const Data& printableAddr, int port, bool ipv4, TransportType type) :
+   transport(0),
+   connectionId(0),
+   mTransportType(type)
+{
+   if (ipv4)
+   {
+      memset(&m_anonv4, 0, sizeof(m_anonv4));
+      m_anonv4.sin_family = AF_INET;
+      m_anonv4.sin_port = htons(port);
+
+      if (printableAddr.empty())
+      {
+         m_anonv4.sin_addr.s_addr = htonl(INADDR_ANY); 
+      }
+      else
+      {
+         DnsUtil::inet_pton( printableAddr, m_anonv4.sin_addr);
+      }
+   }
+   else
+   {
+#ifdef USE_IPV6
+      memset(&m_anonv6, 0, sizeof(m_anonv6));
+      m_anonv6.sin6_family = AF_INET6;
+      m_anonv6.sin6_port = htons(port);
+      if (printableAddr.empty())
+      {
+         DnsUtil::inet_pton( printableAddr, m_anonv6.sin6_addr);
+      }
+      else
+      {
+         m_anonv6.sin6_addr = in6addr_any;
+      }
+#else
+	  assert(0);
+#endif
+   }
+}
+
+Tuple::Tuple(const Data& printableAddr, int port, TransportType ptype) : 
+   transport(0),
+   connectionId(0),
+   mTransportType(ptype)
+{
+   if (DnsUtil::isIpV4Address(printableAddr))
+   {
+      memset(&m_anonv4, 0, sizeof(m_anonv4));
+      
+      DnsUtil::inet_pton( printableAddr, m_anonv4.sin_addr);
+      m_anonv4.sin_family = AF_INET;
+      m_anonv4.sin_port = htons(port);
+   }
+   else
+   {
+#ifdef USE_IPV6
+      memset(&m_anonv6, 0, sizeof(m_anonv6));
+      DnsUtil::inet_pton( printableAddr, m_anonv6.sin6_addr);
+      m_anonv6.sin6_family = AF_INET6;
+      m_anonv6.sin6_port = htons(port);
+#else
+	  assert(0);
+#endif
+   }
+}
+
+
 Tuple::Tuple(const in_addr& ipv4,
              int port,
              TransportType ptype)
@@ -39,11 +106,10 @@ Tuple::Tuple(const in_addr& ipv4,
      connectionId(0),
      mTransportType(ptype)
 {
-   sockaddr_in* addr4 = (sockaddr_in*)&mSockaddr;
-   memset(addr4, 0, sizeof(sockaddr_in));
-   addr4->sin_addr = ipv4;
-   addr4->sin_port = htons(port);
-   addr4->sin_family = AF_INET;
+   memset(&m_anonv4, 0, sizeof(sockaddr_in));
+   m_anonv4.sin_addr = ipv4;
+   m_anonv4.sin_port = htons(port);
+   m_anonv4.sin_family = AF_INET;
 }
 
 #ifdef USE_IPV6
@@ -54,11 +120,10 @@ Tuple::Tuple(const in6_addr& ipv6,
      connectionId(0),
      mTransportType(ptype)
 {
-   sockaddr_in6* addr6 = (sockaddr_in6*)&mSockaddr;
-   memset(addr6, 0, sizeof(sockaddr_in6));
-   addr6->sin6_addr = ipv6;
-   addr6->sin6_port = htons(port);
-   addr6->sin6_family = AF_INET6;
+   memset(&m_anonv6, 0, sizeof(sockaddr_in6));
+   m_anonv6.sin6_addr = ipv6;
+   m_anonv6.sin6_port = htons(port);
+   m_anonv6.sin6_family = AF_INET6;
 }
 #endif
 
@@ -70,48 +135,35 @@ Tuple::Tuple(const struct sockaddr& addr, TransportType ptype) :
 {
 }
 
-Tuple::Tuple(const Data& printableAddr, int port, TransportType ptype) : 
-   transport(0),
-   connectionId(0),
-   mTransportType(ptype)
+void
+Tuple::setAny()
 {
-   if (DnsUtil::isIpV4Address(printableAddr))
+   if (mSockaddr.sa_family == AF_INET) // v4   
    {
-      sockaddr_in& addr = reinterpret_cast<sockaddr_in&>(mSockaddr);
-      memset(&addr, 0, sizeof(addr));
-      
-      DnsUtil::inet_pton( printableAddr, addr.sin_addr);
-      addr.sin_family = AF_INET;
-      addr.sin_port = htons(port);
+      m_anonv4.sin_addr.s_addr = htonl(INADDR_ANY); 
    }
    else
    {
 #ifdef USE_IPV6
-	   sockaddr_in6& addr = reinterpret_cast<sockaddr_in6&>(mSockaddr);
-      memset(&addr, 0, sizeof(addr));
-      DnsUtil::inet_pton( printableAddr, addr.sin6_addr);
-      addr.sin6_family = AF_INET6;
-      addr.sin6_port = htons(port);
+      m_anonv6.sin6_addr = in6addr_any;
 #else
 	  assert(0);
 #endif
    }
 }
 
-
+   
 void
 Tuple::setPort(int port)
 {
    if (mSockaddr.sa_family == AF_INET) // v4   
    {
-      sockaddr_in* addr = (sockaddr_in*)&mSockaddr;      
-      addr->sin_port = htons(port);
+      m_anonv4.sin_port = htons(port);
    }
    else
    {
 #ifdef USE_IPV6
-      sockaddr_in6* addr = (sockaddr_in6*)&mSockaddr;      
-      addr->sin6_port = htons(port);
+      m_anonv6.sin6_port = htons(port);
 #else
 	  assert(0);
 #endif
@@ -123,20 +175,18 @@ Tuple::getPort() const
 {
    if (mSockaddr.sa_family == AF_INET) // v4   
    {
-      sockaddr_in* addr = (sockaddr_in*)&mSockaddr;      
-      return ntohs(addr->sin_port);
+      return ntohs(m_anonv4.sin_port);
    }
    else
    {
 #ifdef USE_IPV6
-	   sockaddr_in6* addr = (sockaddr_in6*)&mSockaddr;      
-      return ntohs(addr->sin6_port);
+      return ntohs(m_anonv6.sin6_port);
 #else
 	  assert(0);
 #endif
    }
-
-	return -1;
+   
+   return -1;
 }
 
 
@@ -166,20 +216,16 @@ bool Tuple::operator==(const Tuple& rhs) const
    {
       if (mSockaddr.sa_family == AF_INET) // v4
       {
-         const sockaddr_in& addr1 = reinterpret_cast<const sockaddr_in&>(mSockaddr);
-         const sockaddr_in& addr2 = reinterpret_cast<const sockaddr_in&>(rhs.mSockaddr);
-         return (addr1.sin_port == addr2.sin_port &&
+         return (m_anonv4.sin_port == rhs.m_anonv4.sin_port &&
                  mTransportType == rhs.mTransportType &&
-                 memcmp(&addr1.sin_addr, &addr2.sin_addr, sizeof(in_addr)) == 0);
+                 memcmp(&m_anonv4.sin_addr, &rhs.m_anonv4.sin_addr, sizeof(in_addr)) == 0);
       }
       else // v6
       {
 #if USE_IPV6
-         const sockaddr_in6& addr1 = reinterpret_cast<const sockaddr_in6&>(mSockaddr);
-         const sockaddr_in6& addr2 = reinterpret_cast<const sockaddr_in6&>(rhs.mSockaddr);
-         return (addr1.sin6_port == addr2.sin6_port &&
+         return (m_anonv6.sin6_port == rhs.m_anonv6.sin6_port &&
                  mTransportType == rhs.mTransportType &&
-                 memcmp(&addr1.sin6_addr, &addr2.sin6_addr, sizeof(in6_addr)) == 0);
+                 memcmp(&m_anonv6.sin6_addr, &rhs.m_anonv6.sin6_addr, sizeof(in6_addr)) == 0);
 #else
          assert(0);
 		return false;

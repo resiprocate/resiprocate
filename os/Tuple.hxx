@@ -44,17 +44,20 @@ class Tuple
 {
    public:
       Tuple();
+      Tuple(const Data& printableAddress, int port, bool ipv4, TransportType type=UNKNOWN_TRANSPORT);
+      Tuple(const Data& printableAddress, int port, TransportType type);
       Tuple(const in_addr& pipv4, int pport, TransportType ptype);
       Tuple(const sockaddr& addr, TransportType ptype);
-      Tuple(const Data& printableAddress, int port, TransportType type);
 #ifdef USE_IPV6
       Tuple(const in6_addr& pipv6,  int pport, TransportType ptype);
 #endif
       
       // convert from a tuple to a sockaddr structure
       const sockaddr& getSockaddr() const { return mSockaddr; }
+      sockaddr& getMutableSockaddr() { return mSockaddr; }
 
       TransportType getType() const { return mTransportType; }
+      void setAny(); // set to INADDR_ANY
       void setPort(int port);
       int getPort() const;
       bool isV4() const;
