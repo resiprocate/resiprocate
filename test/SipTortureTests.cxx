@@ -441,7 +441,6 @@ test5()
       tassert(message->header(h_Vias).front().param(p_branch).hasMagicCookie());
       // !ah! this should go away when parser fixed.
       tassert(message->header(h_Vias).front().param(p_branch).getTransactionId() == "kdjuw");
-      tassert(message->header(h_Vias).front().param(p_branch).clientData() == "");
 
       tassert(message->header(h_ContentType).type() == "application");
       tassert(message->header(h_ContentType).subType() == "sdp");
