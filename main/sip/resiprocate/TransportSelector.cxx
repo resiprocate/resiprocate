@@ -147,7 +147,7 @@ TransportSelector::dnsResolve( SipMessage* msg, const Data& tid)
       {
          mStack.mDnsResolver.lookup(tid, msg->getTarget());
       }
-      else if (!msg->header(h_Routes).empty())
+      else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
       {
          // put this into the target, in case the send later fails, so we don't
          // lose the target
