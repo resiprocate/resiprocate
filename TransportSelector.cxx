@@ -575,6 +575,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                DateCategory now;
                msg->header(h_Date) = now;
             }
+#if defined(USE_SSL)
             try
             {
                Data domain = msg->header(h_From).uri().host();
@@ -586,6 +587,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                ErrLog (<< "Couldn't add identity header: " << e);
                msg->remove(h_Identity);
             }
+#endif
          }
          
 
