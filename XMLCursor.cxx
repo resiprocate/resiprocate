@@ -72,7 +72,7 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
 
    if (mRoot->extractTag())
    {
-      InfoLog("XML: empty element no a legal root");
+      InfoLog(<< "XML: empty element no a legal root");
       mRoot->mPb.fail(__FILE__, __LINE__);
    }
 
@@ -158,7 +158,7 @@ XMLCursor::parseNextRootChild()
          pb.skipChar();
          if (mTag.size() + pb.position() > pb.end())
          {
-            InfoLog("XML: unexpected end");
+            InfoLog(<< "XML: unexpected end");
             pb.fail(__FILE__, __LINE__);
          }
          
@@ -325,7 +325,7 @@ XMLCursor::getAttributes() const
 	    if (quote != Symbols::DOUBLE_QUOTE[0] &&
 		quote != '\'')
 	    {
-	       InfoLog("XML: badly quoted attribute value");
+	       InfoLog(<< "XML: badly quoted attribute value");
 	       pb.fail(__FILE__, __LINE__);
 	    }
 	    anchor = pb.skipChar();
@@ -463,7 +463,7 @@ XMLCursor::Node::skipToEndTag()
          mPb.skipChar();
          if (mTag.size() + mPb.position() > mPb.end())
          {
-            InfoLog("XML: unexpected end");
+            InfoLog(<< "XML: unexpected end");
             mPb.fail(__FILE__, __LINE__);
          }
 
@@ -476,7 +476,7 @@ XMLCursor::Node::skipToEndTag()
          }
          else
          {
-            InfoLog("Badly formed XML: unexpected endtag");
+            InfoLog(<< "Badly formed XML: unexpected endtag");
             mPb.fail(__FILE__, __LINE__);
          }
       }
@@ -485,7 +485,7 @@ XMLCursor::Node::skipToEndTag()
       // ^
       if (mPb.position() == mPb.start())
       {
-         InfoLog("XML: badly formed element");
+         InfoLog(<< "XML: badly formed element");
          mPb.fail(__FILE__, __LINE__);
       }
 

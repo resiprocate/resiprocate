@@ -92,7 +92,7 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
       {
          mPreparse.reset();
          mMessage = new SipMessage(SipMessage::FromWire);
-         DebugLog("Connection::process setting source " << mWho);
+         DebugLog(<< "Connection::process setting source " << mWho);
          mMessage->setSource(mWho);
       }
       case ReadingHeaders:
