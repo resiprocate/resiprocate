@@ -31,6 +31,7 @@ main()
       PlainContents pc("here is some plain ol' contents");
       inv.setContents(&pc);
 
+      cerr << inv.header(h_ContentType).type() << endl;
       assert(inv.header(h_ContentType).type() == "text");
       assert(inv.header(h_ContentType).subType() == "plain");
 
