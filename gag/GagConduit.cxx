@@ -141,7 +141,23 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
   // Figure out what out contact is
   Uri contact;
   contact.port() = udpPort;
+
+#ifdef WIN32
   contact.host() = sipStack->getHostAddress();
+#else
+  {
+    char *contactHostOverride = getenv("GAGHOSTNAME");
+    if (contactHostOverride)
+    {
+      contact.host() = Data(contactHostOverride);
+    }
+    else
+    {
+      contact.host() = sipStack->getHostAddress();
+    }
+  }
+#endif
+
   contact.user() = aor->user();
 
   newTu = new TuIM(sipStack, *aor, contact, this);
@@ -231,6 +247,7 @@ void
 GagConduit::presenceUpdate(const Uri& dest, bool open,
                            const Data& status )
 {
+  InfoLog ( << " Gag got a presenceUpdate Callback");
   GagPresenceMessage(dest, open, status).serialize(cout);
 }
 
