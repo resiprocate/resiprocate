@@ -9,8 +9,8 @@
 #include "sip2/sipstack/TransactionMap.hxx"
 #include "sip2/sipstack/TimerQueue.hxx"
 #include "sip2/sipstack/DnsResolver.hxx"
-
-
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/Helper.hxx"
 
 namespace Vocal2
 {
