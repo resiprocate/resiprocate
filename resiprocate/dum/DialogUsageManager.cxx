@@ -227,38 +227,59 @@ void
 DialogUsageManager::process(FdSet& fdset)
 {
    mStack.process(fdset);
-   Message* msg = mStack.receiveAny();
-   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
+   std::auto_ptr<Message> msg( mStack.receiveAny() );
+   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
 
    if (sipMsg)
    {
       if (sipMsg->isRequest())
       {
-         if (validateRequest(*sipMsg) && 
-             validateTo(*sipMsg) && 
-             !mergeRequest(*sipMsg) &&
-             mServerAuthManager && mServerAuthManager->handle(*sipMsg))
+         if( !validateRequest(*sipMsg) )
          {
-            processRequest(*sipMsg);
+            return;
          }
+         if ( !validateTo(*sipMsg) )
+         {
+            return;
+         }
+         if (mergeRequest(*sipMsg) )
+         {
+            return;
+         }
+         if ( mServerAuthManager )
+         { 
+            if ( mServerAuthManager->handle(*sipMsg) )
+            {
+               return;
+            }
+         }
+         processRequest(*sipMsg);
       }
       else if (sipMsg->isResponse())
       {
-         if (mClientAuthManager && mClientAuthManager->handle(*sipMsg))
+         if (mClientAuthManager)
          {
-            processResponse(*sipMsg);
+            if (mClientAuthManager->handle(*sipMsg) )
+            {
+               return;
+            }
          }
+         
+         processResponse(*sipMsg);
       }
-      delete sipMsg;
       return;
    }
 
-   DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg);
-   if (dumMsg && dumMsg->getBaseUsage().isValid())
+   DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
+   if (dumMsg )
    {
-       dumMsg->getBaseUsage()->dispatch(*dumMsg);
-       delete dumMsg;
-       return;
+      if ( !dumMsg->getBaseUsage().isValid())
+      {
+         return;
+      }
+      
+      dumMsg->getBaseUsage()->dispatch(*dumMsg);
+      return;
    }
 
    ErrLog(<<"Unknown message received.");
