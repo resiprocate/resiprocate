@@ -96,7 +96,10 @@ class SdpContents : public Contents
                   std::ostream& encode(std::ostream&) const;
 
                   const unsigned long& getSessionId() const {return mSessionId;}
+                  unsigned long& getSessionId() { return mSessionId; }
+
                   const unsigned long& getVersion() const {return mVersion;}
+                  unsigned long& getVersion() { return mVersion; }
                   const Data& user() const {return mUser;}
                   Data& user() {return mUser;}
                   AddrType getAddressType() const {return mAddrType;}
