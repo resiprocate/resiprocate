@@ -1,7 +1,9 @@
+*-raw.cxx
 *.d
 .dependlibs
 ExpandedSipMessage
 ParserCategories.cxx.save
+UserAgentCore.hxx
 a.out
 backup
 bak
@@ -15,8 +17,8 @@ obj.*
 pp-safe.tgz
 pp-todo
 save
+save2
 testSipStack1
 testSipStack1
 testUdp
 tmp
-*-raw.cxx

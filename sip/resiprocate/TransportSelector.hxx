@@ -32,12 +32,12 @@ class TransportSelector
       void buildFdSet(FdSet& fdset);
      
       void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
-      void dnsResolve(SipMessage* msg);
+      void dnsResolve(SipMessage* msg, const Data& tid);
 
       // this will result in msg->resolve() being called to either
       // kick off dns resolution or to pick the next tuple , will cause the
       // message to be encoded and via updated
-      void send( SipMessage* msg, Transport::Tuple destination, bool isResend=false );
+      void send( SipMessage* msg, Transport::Tuple destination, const Data& tid, bool isResend=false );
 
       // just resend to the same transport as last time
       void retransmit(SipMessage* msg, Transport::Tuple& destination );
