@@ -169,8 +169,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
                guard.destroy();
             }
-            break;
          }
+         break;
       }
       //!dcm! -- cancel handling needs work
       case Cancelled:
