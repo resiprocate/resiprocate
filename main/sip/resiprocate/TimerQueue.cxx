@@ -67,6 +67,12 @@ TimerQueue::size() const
    return mTimers.size();
 }
 
+bool
+TimerQueue::empty() const
+{
+   return mTimers.empty();
+}
+
 void
 TimerQueue::process()
 {
