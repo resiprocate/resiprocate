@@ -21,6 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="C:\sip\contrib\ares"
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
