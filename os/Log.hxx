@@ -1,5 +1,5 @@
-#ifndef Log_hxx
-#define Log_hxx
+#ifndef Vocal2_Log_hxx
+#define Vocal2_Log_hxx
 
 #define DELIM " | "
 

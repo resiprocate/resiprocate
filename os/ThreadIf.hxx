@@ -1,5 +1,5 @@
-#ifndef THREADIF_HXX
-#define THREADIF_HXX
+#ifndef Vocal2_ThreadIf_hxx
+#define Vocal2_ThreadIf_hxx
 
 #include "sip2/util/Socket.hxx"
 

@@ -1,5 +1,5 @@
-#if !defined(TIMER_HXX)
-#define TIMER_HXX
+#if !defined(Vocal2_Timer_hxx)
+#define Vocal2_Timer_hxx
      
 #include "sip2/util/Data.hxx"
 #include <iostream>

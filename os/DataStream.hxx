@@ -1,5 +1,5 @@
-#ifndef DataStream_hxx
-#define DataStream_hxx
+#ifndef Vocal2_DataStream_hxx
+#define Vocal2_DataStream_hxx
 
 #include <iostream>
 #include "sip2/util/Data.hxx"
