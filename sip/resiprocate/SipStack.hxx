@@ -11,7 +11,6 @@
 #include "sip2/sipstack/TransportSelector.hxx"
 #include "sip2/sipstack/TransactionMap.hxx"
 #include "sip2/sipstack/TimerQueue.hxx"
-#include "sip2/sipstack/Dialog.hxx"
 #include "sip2/sipstack/DnsResolver.hxx"
 #include "sip2/sipstack/SdpContents.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
