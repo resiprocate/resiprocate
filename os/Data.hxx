@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.30 2002/11/11 22:05:06 jason Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.31 2002/11/11 23:09:55 jason Exp $";
 
 #include <iostream>
 #include <string>
