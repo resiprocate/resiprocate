@@ -91,7 +91,7 @@ class ParserContainer : public ParserContainerBase
       void push_back(const T & t) { mParsers.push_back(new T(t)); }
       
       void pop_front() { delete mParsers.front(); mParsers.pop_front(); }
-      void pop_back() { delete mParsers.back(); mParsers.pop_back(); }
+      void pop_back() { delete mParsers.back(); mParsers.pop_back(); }                
       
       ParserContainer reverse() const
       {
@@ -173,6 +173,16 @@ class ParserContainer : public ParserContainerBase
 
       const_iterator begin() const { return const_iterator(mParsers.begin()); }
       const_iterator end() const { return const_iterator(mParsers.end()); }
+
+      //non-stl, would be accomlished through insert in stl
+      void append(const ParserContainer& source) 
+      {
+         for (typename std::list<T*>::const_iterator i = source.mParsers.begin(); 
+              i != source.mParsers.end(); ++i)
+         {
+            mParsers.push_back(new T(**i));
+         }
+      }
 
       virtual ParserContainerBase* clone() const
       {
