@@ -5,6 +5,9 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -30,6 +33,7 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
 
 ClientRegistration::~ClientRegistration()
 {
+   DebugLog ( << "ClientRegistration::~ClientRegistration" );
    mDialog.mClientRegistration = 0;
 }
 
