@@ -1,24 +1,15 @@
 #if !defined(RESIP_SYSLOGSTREAM_HXX)
 #define RESIP_SYSLOGSTREAM_HXX 
 
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/SysLogBuf.hxx"
-
 namespace resip
 {
+class SysLogBuf;
 
 class SysLogStream : public std::ostream
 {
    public:
-      SysLogStream() : std::ostream (_buf = new SysLogBuf) 
-      {
-      }
-
-      virtual ~SysLogStream()
-      {
-         // need to clean up the buf
-         delete _buf;
-      }
+      SysLogStream();
+      virtual ~SysLogStream();
 
    private:
       SysLogBuf* _buf;
