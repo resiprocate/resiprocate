@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.134 2003/12/15 20:02:42 alan Exp $
+# $Id: Makefile,v 1.135 2004/01/03 03:10:48 fluffy Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -119,22 +119,31 @@ SRC = \
 	ApiCheck.cxx \
 	MethodHash.cxx
 
-GPERFOPTS=-D --enum -E -L C++ -t -k '*' --compare-strncmp
-GPERFVER="GNU gperf 2.7.2"
+SUFFIXES += .gperf .cxx
+GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
+#GPERFVER="GNU gperf 2.7.2"
 
-%-raw.cxx: %.gperf
-	@[ "$$(gperf -v )" == $(GPERFVER) ] || \
-		(echo Bogus gperf need:;\
-		 echo $(GPERFVER), have: ; gperf -v ; false)
-	gperf $(GPERFOPTS) -Z $(*:%-raw=%) $< > $@
+
+%.cxx: %.gperf
+	gperf $(GPERFOPTS) -Z `echo $* | sed -e 's/.*\///'` $< | \
+	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
+	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' | \
+	sed -e 's/\*str ==/tolower(*str) ==/' | \
+	sed -e 's/\!strncmp/\!strncasecmp/'  > $@
+
+#%-raw.cxx: %.gperf
+#	@[ "$$(gperf -v )" == $(GPERFVER) ] || \
+#		(echo Bogus gperf need:;\
+#		 echo $(GPERFVER), have: ; gperf -v ; false)
+#	gperf $(GPERFOPTS) -Z $(*:%-raw=%) $< > $@
 
 # Exceptions (case sensitive)
-MethodHash.cxx: MethodHash-raw.cxx
-	os/fixupGperf $< -o $@
-	\rm MethodHash-raw.cxx
+#MethodHash.cxx: MethodHash-raw.cxx
+#	os/fixupGperf $< -o $@
+#	\rm MethodHash-raw.cxx
 
 # The rest of the hashes.
-%.cxx: %-raw.cxx
-	os/fixupGperf $< -o $@ --ignorecase
+#%.cxx: %-raw.cxx
+#	os/fixupGperf $< -o $@ --ignorecase
 
 include $(BUILD)/Makefile.post
