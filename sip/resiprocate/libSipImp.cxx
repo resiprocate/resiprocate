@@ -3,7 +3,6 @@
 
 #include "libSipImp.h"
 
-
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -11,16 +10,13 @@
 #include "resiprocate/TuIM.hxx"
 #include "resiprocate/Security.hxx"
 
-
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-static   SipStack* sipStack;
+static  SipStack* sipStack;
 static  TuIM* tuIM;
-
-
 
 
 class TestCallback: public TuIM::Callback
@@ -40,9 +36,6 @@ class TestCallback: public TuIM::Callback
 void 
 TestCallback::presenseUpdate(const Uri& from, bool open, const Data& status )
 {
-   //const char* stat = (open)?"online":"offline";
-   //cout << from << " set presence to " << stat << " " << status.c_str() << endl;
-
 }
 
 void 
@@ -50,23 +43,18 @@ TestCallback::receivedPage( const Data& msg, const Uri& from,
                             const Data& signedBy,  Security::SignatureStatus sigStatus,
                             bool wasEncryped  )
 {  
-    // waddstr(textWin, msg.escaped().c_str() );
-   }
+}
 
 
 void 
 TestCallback::sendPageFailed( const Uri& target, int respNum )
 {
-   //InfoLog(<< "In TestErrCallback");  
-   // cerr << "Message to " << dest << " failed" << endl;  
- }
+}
 
 
 void 
 TestCallback::receivePageFailed( const Uri& target )
 {
-   //InfoLog(<< "In TestErrCallback");  
-   // cerr << "Message to " << dest << " failed" << endl;  
 }
 
 
@@ -74,8 +62,7 @@ void
 TestCallback::registrationFailed(const resip::Uri& target, int respNum )
 {
    Data num(respNum);
-   
-   }
+}
   
                               
 void 
@@ -85,9 +72,9 @@ TestCallback::registrationWorked(const resip::Uri& target)
   
       
 
-void libSipImp_Init()
+void 
+libSipImp_Init()
 {  
-
    Log::initialize(Log::COUT, Log::ERR, "libSimpImp");
    Log::setLevel(Log::ERR);
 
@@ -96,11 +83,9 @@ void libSipImp_Init()
    int port = 5060;
 
 #ifdef USE_SSL
-   
    int tlsPort = 0;
    bool tlsServer=false;
    bool useTls = true;
-   
 #endif
    
    Uri aor;
@@ -124,14 +109,14 @@ void libSipImp_Init()
    Security*  security = new Security( tlsServer, useTls ); // !cj! mem leak 
    SipStack* sipStack = new SipStack( false /*multihtread*/, security );  
 
-  assert( sipStack->security );
+   assert( sipStack->security );
    bool ok = sipStack->security->loadAllCerts( key , Data::Empty );
    if ( !ok )
    {
       InfoLog( << "Could not load the certificates" );
    }
-   #else 
-    SipStack sipStack( false /*multihtread*/ );  
+#else 
+   SipStack sipStack( false /*multihtread*/ );  
 #endif
    
    if (port!=0)
@@ -206,60 +191,61 @@ void libSipImp_Init()
       Uri uri(addList[i]);
       tuIM->addBuddy( uri, Data::Empty );
    }
+}
 
- }
 
-
-void libSipImp_Process()
+void 
+libSipImp_Process()
 {  
-     assert( sipStack );
-     assert( tuIM );
-
-     FdSet fdset; 
-      sipStack->buildFdSet(fdset);
-      int time = sipStack->getTimeTillNextProcessMS();
-      
-      time = 0;
-        int  err = fdset.selectMilliSeconds( time );
-        
-      if ( err == -1 )
+   assert( sipStack );
+   assert( tuIM );
+   
+   FdSet fdset; 
+   sipStack->buildFdSet(fdset);
+   int time = sipStack->getTimeTillNextProcessMS();
+   
+   time = 0;
+   int  err = fdset.selectMilliSeconds( time );
+   
+   if ( err == -1 )
+   {
+      int e = errno;
+      switch (e)
       {
-         int e = errno;
-         switch (e)
-         {
-            case 0:
-               break;
-            default:
-               //InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
-               break;
-         }
+         case 0:
+            break;
+         default:
+            //InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
+            break;
       }
-      if ( err == 0 )
-      {
-         //cerr << "select timed out" << endl;
-      }
-      if ( err > 0 )
-      {
-         //cerr << "select has " << err << " fd ready" << endl;
-      }
-      
-      sipStack->process(fdset);
-       
-      tuIM->process();       
+   }
+   if ( err == 0 )
+   {
+      //cerr << "select timed out" << endl;
+   }
+   if ( err > 0 )
+   {
+      //cerr << "select has " << err << " fd ready" << endl;
+   }
+   
+   sipStack->process(fdset);
+   
+   tuIM->process();       
 }
 
 
 
-void libSipImp_SendMessage( char* destStr , char* msgStr )
+void 
+libSipImp_SendMessage( char* destStr , char* msgStr )
 {
-    assert( tuIM );
- 
-    Uri uri;
-    uri = Uri(Data(destStr));
-       
-    Data msg(msgStr);
-    Data encFor = Data::Empty;
-    
-    tuIM->sendPage(msg,uri,false/*sign*/,encFor/*encrypt for*/);
+   assert( tuIM );
+   
+   Uri uri;
+   uri = Uri(Data(destStr));
+   
+   Data msg(msgStr);
+   Data encFor = Data::Empty;
+   
+   tuIM->sendPage(msg,uri,false/*sign*/,encFor/*encrypt for*/);
 }
 
