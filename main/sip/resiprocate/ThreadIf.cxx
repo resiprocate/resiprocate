@@ -1,9 +1,83 @@
-#if !defined(VOCAL_POSIX_VTHREAD_H)
-#define VOCAL_POSIX_VTHREAD_H
+#include <cassert>
 
-#ifdef WIN32
-#error this should not be used in win32 
-#endif
+#include <sipstack/vthread.hxx>
+#include <sipstack/ThreadIf.hxx>
+#include <sipstack/Lock.hxx>
+
+
+static const char* const ThreadIf_cxx_Version = "$Id: ThreadIf.cxx,v 1.1 2002/09/25 19:42:09 jason Exp $";
+
+using namespace Vocal2;
+
+static void*
+threadWrapper( void* threadParm )
+{
+   assert( threadParm );
+   ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
+   
+   assert( t );
+   t->thread();
+   return 0;
+}
+
+ThreadIf::ThreadIf() : mId(0), mShutdown(false)
+{
+}
+
+
+ThreadIf::~ThreadIf()
+{
+}
+
+void
+ThreadIf::run()
+{
+   // spawn the thread
+   vthread_attr_t attributes;
+   pthread_create( &mId, &attributes, threadWrapper, this);
+}
+
+void
+ThreadIf::join()
+{
+   assert (mId != 0);
+   pthread_join(mId, 0);
+   mId = 0;
+}
+
+void
+ThreadIf::exit()
+{
+   assert(mId != 0);
+   pthread_cancel(mId);
+   mId = 0;
+}
+
+vthread_t
+ThreadIf::selfId() const
+{
+   return pthread_self();
+}
+
+void
+ThreadIf::shutdown()
+{
+   Lock lock(mShutdownMutex);
+   (void)lock;
+   mShutdown = true;
+}
+
+
+bool
+ThreadIf::isShutdown() const
+{
+   Lock lock(mShutdownMutex);
+   (void)lock;
+   return ( mShutdown );
+}
+
+
+// End of File
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -55,60 +129,3 @@
  *
  */
 
-
-static const char* const posix_vthread_h_Version =
-    "$Id: vthread.hxx,v 1.3 2002/09/25 19:42:09 jason Exp $";
-
-
-#include <pthread.h>
-
-
-typedef pthread_t vthread_t;
-typedef pthread_mutex_t vmutex_t;
-typedef pthread_cond_t vcondition_t;
-typedef pthread_attr_t vthread_attr_t;    
-
-
-#define     vmutex_init(mutex) \
-                pthread_mutex_init((mutex),0)
-                
-
-#define     vmutex_destroy(mutex) \
-                pthread_mutex_destroy((mutex))
-                
-
-#define     vmutex_lock(mutex) \
-                pthread_mutex_lock((mutex))
-
-
-#define     vmutex_unlock(mutex) \
-                pthread_mutex_unlock((mutex))
-                
-
-#define     vcond_init(cond) \
-                pthread_cond_init((cond),0)
-                
-
-#define     vcond_destroy(cond) \
-                pthread_cond_destroy((cond))
-                
-
-#define     vcond_wait(cond, mutex) \
-                pthread_cond_wait((cond),(mutex))
-
-
-#define     vcond_timedwait(cond, mutex, timeout) \
-                pthread_cond_timedwait((cond),(mutex),(timeout))
-
-
-#define     vcond_signal(cond) \
-                pthread_cond_signal((cond))
-
-
-#define     vcond_broadcast(cond) \
-                pthread_cond_broadcast((cond))
-                
-
-
-
-#endif // !defined(VOCAL_POSIX_VTHREAD_H)

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.39 2002/09/25 04:49:26 jason Exp $
+# $Id: Makefile,v 1.40 2002/09/25 19:42:23 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -9,6 +9,7 @@ SRC =	\
 	Condition.cxx \
 	Data.cxx \
 	DataParameter.cxx \
+	Dialog.cxx \
 	Executive.cxx \
 	ExistsParameter.cxx \
 	FloatParameter.cxx \
@@ -31,6 +32,7 @@ SRC =	\
 	SipStack.cxx \
 	Subsystem.cxx \
 	Symbols.cxx \
+	ThreadIf.cxx \
 	Timer.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
