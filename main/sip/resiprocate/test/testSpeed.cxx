@@ -31,7 +31,7 @@ main(int argc, char* argv[])
    
    Log::toLevel( Data("DEBUG") );
 
-	const Data& ret = ParameterTypes::ParameterNames[ParameterTypes::transport];
+   //const Data& ret = ParameterTypes::ParameterNames[ParameterTypes::transport];
 
    SipStack stack1;
    SipStack stack2;

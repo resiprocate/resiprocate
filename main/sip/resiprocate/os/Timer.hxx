@@ -53,6 +53,10 @@ class Timer
       static UInt64 getTimeMicroSec(); // get a 64 bit time
       static UInt64 getTimeMs(); // in ms
 
+      /// returns an absolut time in ms that is between 50% and 90% of
+      /// passed in ms from now 
+      static UInt64 getRandomFutureTimeMs( UInt64 futureMs ); // in ms
+
       static int getCpuSpeedMhz() { return mCpuSpeedMHz; }
             
       static const unsigned long T1;

@@ -16,6 +16,7 @@
 #include "sip2/sipstack/PlainContents.hxx"
 #include "sip2/sipstack/Pkcs7Contents.hxx"
 #include "sip2/sipstack/Security.hxx"
+#include "sip2/sipstack/Helper.hxx"
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
@@ -51,7 +52,9 @@ TuIM::TuIM(SipStack* stack,
      mStack(stack),
      mAor(aor),
      mContact(contact),
-     mPassword( Data::Empty )
+     mPassword( Data::Empty ),
+     mRegistrationDialog(NameAddr(contact)),
+     mNextTimeToRegister(0)
 {
    assert( mStack );
    assert(mPageCallback);
@@ -119,6 +122,36 @@ void
 TuIM::process()
 {
    assert( mStack );
+
+   UInt64 now = Timer::getTimeMs();
+   
+   // check if register needs refresh
+   if ( now > mNextTimeToRegister )
+   {
+      if ( mRegistrationDialog.isCreated() )
+      {
+         auto_ptr<SipMessage> msg( mRegistrationDialog.makeRegister() );
+         mStack->send( *msg );
+      }
+      mNextTimeToRegister = Timer::getRandomFutureTimeMs( 10*60*1000 /*10 minutes*/ );
+   }
+   
+   // check if any subscribes need refresh
+   for ( int i=0; i<getNumBudies(); i++)
+   {
+      if (  now > mBuddy[i].mNextTimeToSubscribe )
+      {
+         Buddy& b = mBuddy[i];
+         
+         assert(  b.presDialog );
+         if ( b.presDialog->isCreated() )
+         {
+            auto_ptr<SipMessage> msg( b.presDialog->makeSubscribe() );
+            mStack->send( *msg );
+         }
+         mBuddy[i].mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 5*60*1000 /*5 minutes*/ );
+      }
+   }
    
    SipMessage* msg = mStack->receive();
    if ( msg )
@@ -210,10 +243,23 @@ TuIM::process()
    }
 }
 
+
 void 
 TuIM::registerAor( const Uri& uri, const Data& password )
-{
-   ErrLog( "Need to implement TuIM::registerAor" );
+{  
+   mRegistrationPassword = password;
+   
+   //const NameAddr aorName;
+   //const NameAddr contactName;
+   //aorName.uri() = uri;
+   //contactName.uri() = mContact;
+   //SipMessage* msg = Helper::makeRegister(aorName,aorName,contactName);
+
+   auto_ptr<SipMessage> msg( mRegistrationDialog.makeInitialRegister(NameAddr(uri),NameAddr(uri)) );
+   
+   mNextTimeToRegister = Timer::getRandomFutureTimeMs( 10*60*1000 /*10 minutes*/ );
+   
+   mStack->send( *msg );
 }
 
 
@@ -247,8 +293,16 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
    Buddy b;
    b.uri = uri;
    b.group = group;
-
+   b.presDialog = new Dialog( NameAddr(mContact) );
+   assert( b.presDialog );
+   
    mBuddy.push_back( b );
+
+   // subscribe to this budy 
+   auto_ptr<SipMessage> msg( mRegistrationDialog.makeInitialRegister(NameAddr(b.uri),NameAddr(b.uri)) );
+   b.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 10*60*1000 /*5 minutes*/ );
+   
+   mStack->send( *msg );
 }
 
 void 
