@@ -26,6 +26,19 @@ InviteSession::~InviteSession()
    mDialog.mInviteSession = 0;
 }
 
+void
+InviteSession::setOffer(const SdpContents* sdp)
+{
+   //mProposedLocalSdp = sdp;
+}
+
+void
+InviteSession::setAnswer(const SdpContents* sdp)
+{
+   //mProposedLocalSdp = 0;
+   //mCurrentLocalSdp = sdp;
+}
+
 const SdpContents* 
 InviteSession::getLocalSdp()
 {
@@ -237,7 +250,6 @@ InviteSession::getOfferOrAnswer(const SipMessage& msg) const
    }
    return ret;
 }
-
 
 void
 InviteSession::copyAuthorizations(SipMessage& request)
