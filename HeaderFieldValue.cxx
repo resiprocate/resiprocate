@@ -69,7 +69,7 @@ HeaderFieldValue::getParameter(ParameterTypes::Type type)
 }
       
 void 
-HeaderFieldValue::parseParameters(const char* start)
+HeaderFieldValue::parseParameters(unsigned int start)
 {
    assert(0);
 }
@@ -100,14 +100,13 @@ HeaderFieldValue::exists(const Data& subcomponent)
   
   Parameter* exists = mUnknownParameterList.find(subcomponent);
   if (!exists)
-    {
-      exists = mParameterList.find(subcomponent);
-      if (exists)
-	{
-	  ParseException except;
-	  throw except;
-	}
-    }
+  {
+     exists = mParameterList.find(subcomponent);
+     if (exists)
+     {
+        throw ParseException("???", __FILE__, __LINE__); // !jf!
+     }
+  }
   return exists;
 }
 
