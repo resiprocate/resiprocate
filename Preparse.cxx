@@ -24,7 +24,7 @@ const int ppDebugEdgeVerbose = 0x04; // ALL edge taken
 const int ppDebugActions     = 0x08; // Actions ( not Add )
 const int ppDebugPrettyPrint = 0x10; // pp the buffers.
 
-static int ppDebugFlags = 0xFF;
+static int ppDebugFlags = 0;
 
 #endif
 
@@ -429,6 +429,9 @@ Preparse::process(SipMessage& msg,
      {
         DebugLog(<<"[->] PP::process(...)");
         // !ah! Log all the anchors etc here.
+        DebugLog(<<"ppDebugFlags: " << reinterpret_cast<void*>(ppDebugFlags));
+        
+
         DebugLog(<<"mAnchorEndOff:"<<(void*)mAnchorEndOff);
         DebugLog(<<"mAnchorBegOff:"<<(void*)mAnchorBegOff);
         DebugLog(<<"mHeaderType:"<<(void*)mHeaderType);
