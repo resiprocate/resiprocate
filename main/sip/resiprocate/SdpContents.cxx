@@ -35,8 +35,7 @@ void skipEol(ParseBuffer& pb)
 
 AttributeHelper::AttributeHelper(const AttributeHelper& rhs) 
    : mAttributes(rhs.mAttributes)
-{
-}
+{}
 
 AttributeHelper&
 AttributeHelper::operator=(const AttributeHelper& rhs) 
@@ -47,7 +46,6 @@ AttributeHelper::operator=(const AttributeHelper& rhs)
    }
    return *this;
 }
-
 
 bool 
 AttributeHelper::exists(const Data& key) const
@@ -295,9 +293,7 @@ SdpContents::Session::Email::Email(const Data& address,
 SdpContents::Session::Email::Email(const Email& rhs)
    : mAddress(rhs.mAddress),
      mFreeText(rhs.mFreeText)
-{
-}
-
+{}
 
 SdpContents::Session::Email&
 SdpContents::Session::Email::operator=(const Email& rhs)
@@ -309,8 +305,6 @@ SdpContents::Session::Email::operator=(const Email& rhs)
    }
    return *this;
 }
-
-
 
 ostream& 
 SdpContents::Session::Email::encode(ostream& s) const
@@ -406,7 +400,6 @@ SdpContents::Session::Phone::operator=(const Phone& rhs)
    return *this;
 }
 
-
 ostream&
 SdpContents::Session::Phone::encode(ostream& s) const
 {
@@ -475,7 +468,6 @@ SdpContents::Session::Connection::encode(ostream& s) const
    return s;
 }
 
-
 void
 SdpContents::Session::Connection::setAddress(const Data& host, AddrType addr)
 {
@@ -532,12 +524,10 @@ SdpContents::Session::Bandwidth::Bandwidth(const Data& modifier,
      mKbPerSecond(kbPerSecond)
 {}
 
-  
 SdpContents::Session::Bandwidth::Bandwidth(const Bandwidth& rhs)
    : mModifier(rhs.mModifier),
      mKbPerSecond(rhs.mKbPerSecond)
-{
-}
+{}
 
 SdpContents::Session::Bandwidth&
 SdpContents::Session::Bandwidth::operator=(const Bandwidth& rhs)
@@ -549,10 +539,6 @@ SdpContents::Session::Bandwidth::operator=(const Bandwidth& rhs)
    }
    return *this;
 }
-
-
-
-
 
 ostream& 
 SdpContents::Session::Bandwidth::encode(ostream& s) const
@@ -569,14 +555,21 @@ SdpContents::Session::Bandwidth::parse(ParseBuffer& pb)
 {
    pb.skipChar('b');
    const char* anchor = pb.skipChar(Symbols::EQUALS[0]);
-   
-   pb.skipToChar(Symbols::COLON[0]);
-   pb.data(mModifier, anchor);
 
-   anchor = pb.skipChar(Symbols::COLON[0]);
-   mKbPerSecond = pb.integer();
+   pb.skipToOneOf(Symbols::COLON, Symbols::CRLF);
+   if (*pb.position() == Symbols::COLON[0])
+   {
+      pb.data(mModifier, anchor);
 
-   skipEol(pb);
+      anchor = pb.skipChar(Symbols::COLON[0]);
+      mKbPerSecond = pb.integer();
+
+      skipEol(pb);
+   }
+   else
+   {
+      pb.fail(__FILE__, __LINE__);
+   }
 }
 
 SdpContents::Session::Time::Time(unsigned long start,
@@ -588,8 +581,7 @@ SdpContents::Session::Time::Time(unsigned long start,
 SdpContents::Session::Time::Time(const Time& rhs)
    : mStart(rhs.mStart),
      mStop(rhs.mStop)
-{
-}
+{}
 
 SdpContents::Session::Time&
 SdpContents::Session::Time::operator=(const Time& rhs)
@@ -717,15 +709,12 @@ SdpContents::Session::Timezones::Adjustment::Adjustment(unsigned long _time,
                                                         int _offset)
    : time(_time),
      offset(_offset)
-{
-}
+{}
 
 SdpContents::Session::Timezones::Adjustment::Adjustment(const Adjustment& rhs)
    : time(rhs.time),
      offset(rhs.offset)
-{
-}
-
+{}
 
 SdpContents::Session::Timezones::Adjustment&
 SdpContents::Session::Timezones::Adjustment::operator=(const Adjustment& rhs)
@@ -738,16 +727,13 @@ SdpContents::Session::Timezones::Adjustment::operator=(const Adjustment& rhs)
    return *this;
 }
 
-
 SdpContents::Session::Timezones::Timezones()
    : mAdjustments()
-{
-}
+{}
 
 SdpContents::Session::Timezones::Timezones(const Timezones& rhs)
    : mAdjustments(rhs.mAdjustments)
-{
-}
+{}
 
 SdpContents::Session::Timezones&
 SdpContents::Session::Timezones::operator=(const Timezones& rhs)
@@ -828,7 +814,6 @@ SdpContents::Session::Encryption::Encryption(const Encryption& rhs)
      mKey(rhs.mKey)
 {}
   
-
 SdpContents::Session::Encryption&
 SdpContents::Session::Encryption::operator=(const Encryption& rhs)
 {
@@ -940,7 +925,6 @@ SdpContents::Session::operator=(const Session& rhs)
    }
    return *this;
 }
-
 
 void
 SdpContents::Session::parse(ParseBuffer& pb)
