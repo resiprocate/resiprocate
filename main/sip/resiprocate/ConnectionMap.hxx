@@ -12,84 +12,84 @@
 namespace Vocal2
 {
 
-class Preparse;
+  class Preparse;
 
-class ConnectionMap
-{
-   public:
-      // smallest time to reuse
-      static const UInt64 MinLastUsed;
-      // largest unused time to reclaim
-      static const UInt64 MaxLastUsed;
-      enum {MaxAttempts = 7};
+  class ConnectionMap
+  {
+  public:
+    // smallest time to reuse
+    static const UInt64 MinLastUsed;
+    // largest unused time to reclaim
+    static const UInt64 MaxLastUsed;
+    enum {MaxAttempts = 7};
 
-
-      ConnectionMap();
+    ConnectionMap();
       
-      class Connection
-      {
-         public:
-            enum State
-            {
-               NewMessage,
-               PartialHeaderRead,
-               PartialBodyRead
-            };
+    class Connection
+    {
+    public:
+      enum State
+	{
+	  NewMessage,
+	  PartialHeaderRead,
+	  PartialBodyRead
+	};
             
          
-            Connection(Transport::Tuple who, Socket socket);
-            Socket getSocket() {return mSocket;}
+      Connection(Transport::Tuple who, Socket socket);
+      Socket getSocket() {return mSocket;}
             
-            void allocateBuffer(int maxBufferSize);
-            bool process(int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
-            bool prepNextMessage(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
-            bool readAnyBody(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
+      void allocateBuffer(int maxBufferSize);
+      bool process(int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
+      bool prepNextMessage(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
+      bool readAnyBody(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
             
             
-            Data::size_type mSendPos;     //position in current message being sent
-            std::list<SendData*> mOutstandingSends;
-            SendData* mCurrent;
+      Data::size_type mSendPos;     //position in current message being sent
+      std::list<SendData*> mOutstandingSends;
+      SendData* mCurrent;
             
-            SipMessage* mMessage;
-            char* mBuffer;
-            int mBytesRead;
-            int mBufferSize;
+      SipMessage* mMessage;
+      char* mBuffer;
+      int mBytesRead;
+      int mBufferSize;
             
-            Connection();
-            Connection* remove(); // return next youngest
-            ~Connection();
 
-            Connection* mYounger;
-            Connection* mOlder;
+      Connection();
+      Connection* remove(); // return next youngest
+      ~Connection();
 
-            Transport::Tuple mWho;
+      Connection* mYounger;
+      Connection* mOlder;
+
+      Transport::Tuple mWho;
 
 
-         private:
-            Socket mSocket;
-            UInt64 mLastUsed;
+    private:
+      Socket mSocket;
+      UInt64 mLastUsed;
             
-            State mState;
+      State mState;
 
-            friend class ConnectionMap;
-      };
+      friend class ConnectionMap;
+    };
 
-      Connection* add(Transport::Tuple who, Socket s);
-      Connection* get(Transport::Tuple who, int attempt = 1);
-      void close(Transport::Tuple who);
+    Connection* add(Transport::Tuple who, Socket s);
+    Connection* get(Transport::Tuple who, int attempt = 1);
+    void close(Transport::Tuple who);
 
-      // release excessively old connections
-      void gc(UInt64 threshhold = ConnectionMap::MaxLastUsed);
+    // release excessively old connections
+    void gc(UInt64 threshhold = ConnectionMap::MaxLastUsed);
 
-      typedef std::map<Transport::Tuple, Connection*> Map;
-      Map mConnections;
+    typedef std::map<Transport::Tuple, Connection*> Map;
+    Map mConnections;
       
-      // move to youngest
-      void touch(Connection* connection);
+    // move to youngest
+    void touch(Connection* connection);
       
-      Connection mPreYoungest;
-      Connection mPostOldest;
-};
+    Connection mPreYoungest;
+    Connection mPostOldest;
+  };
 
 }
 
