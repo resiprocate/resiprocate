@@ -10,7 +10,10 @@ std::ostream* GenericLogImpl::mLogger=0;
 unsigned int GenericLogImpl::mLineCount=0;
 unsigned int GenericLogImpl::MaxLineCount = 0; // no limit by default
 
-
+#ifdef WIN32
+Data* GenericLogImpl::mWin32DebugData = 0;
+DataStream* GenericLogImpl::mWin32DebugStream = 0;
+#endif
 
 #ifndef WIN32
 static pthread_t currentThread;
@@ -64,6 +67,16 @@ GenericLogImpl::Instance()
                
       case Log::Cout:
          return std::cout;
+
+#ifdef WIN32
+      case Log::VSDebugWindow:
+         if (mWin32DebugStream == 0)
+		 {
+			 mWin32DebugData = new Data();
+	     	 mWin32DebugStream = new DataStream(*mWin32DebugData);
+		 }
+		 return *mWin32DebugStream;
+#endif
                
       case Log::File:
          if (mLogger == 0 || (MaxLineCount && mLineCount > MaxLineCount))
@@ -93,6 +106,22 @@ GenericLogImpl::isLogging(Log::Level level)
 {
    return (level <= Log::_level);
 }
+
+// xkd-2004-11-8
+void
+GenericLogImpl::OutputToWin32DebugWindow()
+{
+#ifdef WIN32
+	mWin32DebugStream->flush();
+	const char *text = mWin32DebugData->c_str();
+    OutputDebugStringA(text);
+	delete mWin32DebugData;
+	delete mWin32DebugStream;
+	mWin32DebugData = 0;
+	mWin32DebugStream = 0;
+#endif
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
