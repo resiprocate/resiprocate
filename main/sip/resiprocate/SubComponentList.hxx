@@ -19,8 +19,8 @@ class SubComponentList
       
       void insert(SubComponent* param);
       
-      SubComponent* find(SubComponent::ParamType type) const;
-      void erase(SubComponent::ParamType type);
+      SubComponent* find(SubComponent::Type type) const;
+      void erase(SubComponent::Type type);
 
       SubComponent* find(const std::string& type) const;
       void erase(const std::string& type);
