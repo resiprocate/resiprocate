@@ -2,6 +2,7 @@
 #define RESIP_INVITESESSION_HXX
 
 #include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
@@ -25,52 +26,67 @@ class InviteSession : public BaseUsage
       /// sends and offer. Does not send an offer 
       virtual void setOffer(const SdpContents* offer)=0;
       
-      /// Sends an offer in whatever messages is approperate to send one at
-      /// this point in the dialog. Must call setOffer before this.
-      virtual void sendOfferInAnyMessage()=0;
-      
       /// Called to set the answer that will be used in the next messages that
       /// sends and offer. Does not send an answer
       virtual void setAnswer(const SdpContents* answer)=0;
 
-      /// Sends an offer in whatever messages is approperate to send one at
-      /// this point in the dialog. Must call setAnswer before this. 
-      virtual void sendAnswerInAnyMessage()=0;
-
-      /// Makes the dialog end. Depending ont eh current state, this might
+      /// Makes the dialog end. Depending on the current state, this might
       /// results in BYE or CANCEL being sent.
-      virtual void end()=0;
+      virtual SipMessage& end()=0;
 
       /// Rejects an offer at the SIP level. So this can send a 487 to a
       /// reINVITE or and UPDATE
       virtual void rejectOffer(int statusCode)=0;
       
+      // If the app has called setOffer prior to targetRefresh, the reINVITE
+      // will contain the proposed offer. If the peer supports UPDATE, always
+      // prefer UPDATE over reINVITE (no 3-way handshake required)
+      // !jf! there are more things you could update in the targetRefresh 
+      SipMessage& targetRefresh(const NameAddr& localUri);
+
+      /// Returns the appropriate offer or answer for this session based on the
+      /// Offer/Answer state and the InviteSession state. Call BaseUsage::send
+      /// to send it over the wire. If the App hasn't called setOffer or
+      /// setAnswer prior to this, it will assert
+      SipMessage& getOfferOrAnswer();
+
       const SdpContents* getLocalSdp();
       const SdpContents* getRemoteSdp();
 
-      void process(const SipMessage& msg);
+   public:
+      virtual void dispatch(const SipMessage& msg) = 0;
+      virtual void dispatch(const DumTimer& timer) = 0;
 
       virtual InviteSession::Handle getSessionHandle() = 0;
 
    protected:
+      // If sdp==0, the offer was rejected
+      void incomingSdp(SdpContents* sdp);
+
+      // If sdp==0, the offer is being rejected
+      void sendSdp(SdpContents* sdp);
+      
       InviteSession(DialogUsageManager& dum, Dialog& dialog);
       void copyAuthorizations(SipMessage& request);
+      void makeAck(const SipMessage& response2xx);
+      
+      typedef enum
+      {
+         None, 
+         Offerred,
+         Answered, // agreed
+         CounterOfferred,
+      } OfferState;
 
+      OfferState mOfferState;
       SdpContents* mCurrentLocalSdp;
       SdpContents* mCurrentRemoteSdp;
       SdpContents* mProposedLocalSdp;
       SdpContents* mProposedRemoteSdp;
 
-      typedef enum
-      {
-         Unknown,
-         Early,
-         Cancelled,
-         Connected,
-         Terminated
-      } State;
-      State mState;
-         
+      SipMessage mLastRequest; 
+      SipMessage mAck;
+      
    private:
       friend class DialogUsageManager;
       
