@@ -17,17 +17,22 @@ extern "C"
 
 namespace resip
 {
+class DnsHandler;
 class DnsResult;
+class TransactionState;
 class Uri;
 class Via;
-
+   
 // 
 class DnsInterface
 {
    public:
       typedef const Data (TransportArray)[Transport::MAX_TRANSPORT];
-      static TransportArray UdpOnly;
-      static TransportArray TcpAndUdp;
+
+      // These are sets of transports that can be passed to the DnsInterface on
+      // construction to indicate which transports a client supports
+      static TransportArray UdpOnly;       // UDP
+      static TransportArray TcpAndUdp;     // TCP, UDP (DEFAULT)
       static TransportArray AllTransports; // TCP, UDP, TLS
 
       class Exception : public BaseException
@@ -37,25 +42,13 @@ class DnsInterface
             const char* name() const { return "DnsInterface::Exception"; }
       };
 
-
-      class Handler
-      {
-         public:
-            // call when dns entries are available (or nothing found)
-            // this may be called synchronously with the call to lookup
-            virtual void handle(DnsResult* result)=0;
-      };
-
-      // Used to create a synchronous Dns Interface. Any lookup requests passed
-      // to this DnsInterface will be completely processed and returned to the caller
-      DnsInterface();
-
       // Used to create an asynchronous Dns Interface. Any lookup requests will
       // be queued for later processing. It is critical that the consumer of the
       // DnsResult be in the same thread that is processing the async results
       // since there is no locking on the DnsResult
-      DnsInterface(DnsInterface::Handler* handler);
-      virtual ~DnsInterface()=0;
+      // Will throw DnsInterface::Exception if ares fails to initialize
+      DnsInterface(bool synchronous=false);
+      virtual ~DnsInterface();
       
       // set the supported set of types that a UAC wishes to use
       void setSupportedTransports(const TransportArray& transports);
@@ -84,13 +77,13 @@ class DnsInterface
       // continue to ask the DnsResult to return more tuples. If the tuples for
       // the current transport are exhausted, move on to the next preferred
       // transport (if there is one)
-      DnsResult* lookup(const Uri& url, const Data& transactionId=Data::Empty);
-      DnsResult* lookup(const Via& via, const Data& transactionId=Data::Empty);
+      DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
+      DnsResult* lookup(const Via& via, DnsHandler* handler=0);
       
    protected: 
-      // When complete or partial results are ready, call Handler::process()
+      // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
-      Handler* mHandler;
+      DnsHandler* mHandler;
       TransportArray* mSupportedTransports;
       
 #if defined(USE_ARES)
