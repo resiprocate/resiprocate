@@ -880,7 +880,10 @@ main(int arc, char** argv)
       stringstream s2;
       DateCategory otherDate(date);
       otherDate.encode(s2);
-      cerr << "!! new date : " <<  s2.str() << endl;
+      cerr << "!! original date     : " << date << endl;
+      cerr << "!! original string   : " << dateString << endl;
+      cerr << "!! otherDate         : " << otherDate << endl;
+      cerr << "!! encoded otherDate : " <<  s2.str() << endl;
       assert (s2.str() == dateString);
 
    }
