@@ -1041,7 +1041,7 @@ InviteSession::transition(State target)
 bool
 InviteSession::isReliable(const SipMessage& msg)
 {
-   return msg.header(h_Supporteds).find(Token(Symbols::C100rel));
+   return msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel));
 }
 
 const SdpContents*

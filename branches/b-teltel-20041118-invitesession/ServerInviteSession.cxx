@@ -12,10 +12,10 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
-   : InviteSession(dum, dialog)
+   : InviteSession(dum, dialog),
+     mFirstRequest(request)
 {
    assert(request.isRequest());
-   mFirstRequest = request;   
    mState = UAS_Start;
 }
 
@@ -56,7 +56,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          transition(Terminated);
 
          SipMessage response;
-         mDialog.makeResponse(mFirstRequest, response, code);
+         mDialog.makeResponse(response, mFirstRequest, code);
          response.header(h_Contacts) = contacts;
          mDialog.send(response);
 
@@ -312,7 +312,7 @@ ServerInviteSession::reject(int code)
          transition(Terminated);
 
          SipMessage response;
-         mDialog.makeResponse(mFirstRequest, response, code);
+         mDialog.makeResponse(response, mFirstRequest, code);
          mDialog.send(response);
          guard.destroy();
          break;
@@ -774,7 +774,7 @@ ServerInviteSession::info(const Contents& contents)
 void
 ServerInviteSession::sendProvisional(int code)
 {
-   mDialog.makeResponse(mFirstRequest, m1xx, code);
+   mDialog.makeResponse(m1xx, mFirstRequest, code);
    if (mProposedLocalSdp.get()) // early media
    {
       setSdp(m1xx, *mProposedLocalSdp);
@@ -786,7 +786,7 @@ ServerInviteSession::sendProvisional(int code)
 void
 ServerInviteSession::sendAccept(int code, std::auto_ptr<SdpContents> sdp)
 {
-   mDialog.makeResponse(mFirstRequest, mInvite200, code);
+   mDialog.makeResponse(mInvite200, mFirstRequest, code);
    if (sdp.get())
    {
       setSdp(mInvite200, *sdp);

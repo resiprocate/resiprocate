@@ -89,7 +89,7 @@ class ServerInviteSession: public InviteSession
       ServerInviteSession& operator=(const ServerInviteSession&);
 
       // stores the original request
-      SipMessage mFirstRequest;
+      const SipMessage mFirstRequest;
       SipMessage m1xx; // for 1xx retransmissions
       unsigned long mCurrentRetransmit1xx;
       
