@@ -16,6 +16,8 @@ class PublicationCreator: public BaseCreator
 {
    public:
       PublicationCreator(Uri& aor);
+
+      virtual void dispatch(SipMessage& msg);
 };
  
 }
