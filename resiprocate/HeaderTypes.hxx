@@ -82,11 +82,21 @@ Headers::Type& Vocal2::operator++(Headers::Type&t);
 template <int T>
 class Header
 {
+   public:
+      Header()
+      {
+         int arr[0];
+      }
 };
 
 template <int T>
 class MultiHeader
 {
+   public:
+      MultiHeader()
+      {
+         int arr[0];
+      }
 };
 
 //====================
@@ -167,11 +177,11 @@ class MultiHeader<Headers::Accept_Language>
 };
 extern MultiHeader<Headers::Accept_Language> h_AcceptLanguages;
 
-class Header<Headers::Allow>
+class MultiHeader<Headers::Allow>
 {
    public:
       typedef Token Type;
-      Header()
+      MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Allow] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Allow] = Symbols::Allow;
@@ -281,6 +291,18 @@ extern Header<Headers::Content_Type> h_ContentType;
 //====================
 // GenericURIs:
 //====================
+class MultiHeader<Headers::Call_Info>
+{
+   public:
+      typedef GenericURI Type;
+      MultiHeader()
+      {
+         Headers::CommaTokenizing[Headers::Call_Info] = Type::isCommaTokenizing;
+         Headers::HeaderNames[Headers::Call_Info] = Symbols::Alert_Info;
+      }
+};
+extern MultiHeader<Headers::Call_Info> h_CallInfos;
+
 class MultiHeader<Headers::Alert_Info>
 {
    public:
@@ -455,6 +477,18 @@ class Header<Headers::User_Agent>
 };
 extern Header<Headers::User_Agent> h_UserAgent;
 
+class Header<Headers::Timestamp>
+{
+   public:
+      typedef StringComponent Type;
+      Header()
+      {
+         Headers::CommaTokenizing[Headers::Timestamp] = Type::isCommaTokenizing;
+         Headers::HeaderNames[Headers::Timestamp] = Symbols::Content_Type;
+      }
+};
+extern Header<Headers::Timestamp> h_Timestamp;
+
 //====================
 // Integer:
 //====================
@@ -544,7 +578,7 @@ class Header<Headers::Replaces>
          Headers::HeaderNames[Headers::Replaces] = Symbols::Replaces;
       }
 };
-extern Header<Headers::Call_ID> h_Replaces;
+extern Header<Headers::Replaces> h_Replaces;
 
 //====================
 // CallIds:
@@ -691,6 +725,5 @@ class StatusLineType {};
 extern StatusLineType h_StatusLine;
  
 }
-
 
 #endif
