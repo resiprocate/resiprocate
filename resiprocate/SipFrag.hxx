@@ -33,10 +33,13 @@ class SipFrag : public Contents
 
       SipMessage& message() {checkParsed(); return *mMessage;}
 
+      static bool init();
+
    private:
       SipMessage* mMessage;
-      static ContentsFactory<SipFrag> Factory;
 };
+
+static bool invokeSipFragInit = SipFrag::init();
 
 }
 

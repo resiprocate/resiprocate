@@ -11,8 +11,14 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+bool
+PlainContents::init()
+{
+   static ContentsFactory<PlainContents> factory;
+   (void)factory;
+   return true;
+}
 
-ContentsFactory<PlainContents> PlainContents::Factory;
 const PlainContents PlainContents::Empty;
 
 PlainContents::PlainContents()
