@@ -122,7 +122,14 @@ class GenericLogImpl :  public Log
                if (mLogger == 0)
                {
                   std::cerr << "Creating a file logger" << std::endl;
+				  if (Log::_logFileName != "")
+				  {
+					mLogger = new std::ofstream(_logFileName.c_str(), std::ios_base::out|std::ios_base::app);
+				  }
+				  else
+				  {
                   mLogger = new std::ofstream("resiprocate.log", std::ios_base::out|std::ios_base::app);
+				  }
                }
                return *mLogger;
             default:
