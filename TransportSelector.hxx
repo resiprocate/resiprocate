@@ -1,7 +1,10 @@
 #if !defined(TRANSPORTSELECTOR_HXX)
 #define TRANSPORTSELECTOR_HXX
 
+#ifndef WIN32
 #include <sys/select.h>
+#endif
+
 #include <sipstack/SipMessage.hxx>
 #include <util/Data.hxx>
 #include <util/Fifo.hxx>

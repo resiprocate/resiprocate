@@ -3,7 +3,10 @@
 
 #include <util/Socket.hxx>
 #include <sys/types.h>
+
+#ifndef WIN32
 #include <sys/select.h> // posix
+#endif
 
 namespace Vocal2
 {
