@@ -27,7 +27,7 @@ class SipMessage : public Message
       
       SipMessage(const SipMessage& message);
 
-      virtual Data& getTransactionId() const { return "foo";}
+      virtual Data& getTransactionId() const { assert(0);}
          
       virtual SipMessage* clone() const;
 
