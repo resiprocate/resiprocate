@@ -25,6 +25,46 @@ main(int argc, char** argv)
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
    {
+      // demonstrate comma encoding
+      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+                   "Allow-Events: foo\r\n"
+                   "Allow-Events: bar\r\n"
+                   "Allow-Events: baz\r\n"
+                   "Allow-Events: quux\r\n"
+                   "Unsupported: \r\n"
+                   "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
+                   "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-107338443-1--c87542-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1--c87542-;received=192.168.2.220\r\n"
+                   "Call-ID: 643f2f06\r\n"
+                   "CSeq: 1 INVITE\r\n"
+                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Proxy-Authorization: Digest username=\"Betty\", realm = \"fresno.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+                   "Contact: <sip:ext103@192.168.2.220:5068;transport=UDP>\r\n"
+                   "Max-Forwards: 69\r\n"
+                   "Content-Length: 0\r\n"
+                   "\r\n");
+
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      assert(message->exists(h_Unsupporteds));
+      cerr << message->header(h_AllowEvents).size() << endl;
+      cerr << message->header(h_Vias).size() << endl;
+      cerr << message->header(h_ProxyAuthorizations).size() << endl;
+      cerr << *message << endl;
+   }
+
+   {
+      SipMessage msg;
+      msg.header(h_CallId).value() = "8d057730fba2cd5e";
+
+      cerr << msg.header(h_CallId) << endl;
+
+      const SipMessage msg1(msg);
+      cerr << msg1.header(h_CallId) << endl;
+   }
+
+   {
      char * txt = ("SIP/2.0 489 Bad Event" CRLF
                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1--c87542-" CRLF
                    "CSeq: " CRLF
@@ -137,7 +177,7 @@ main(int argc, char** argv)
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1--c87542-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-11111-1-client_data-c87542-;stid=489573115\r\n"
                    "Call-ID: 643f2f06\r\n"
                    "CSeq: 1 INVITE\r\n"
                    "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
@@ -157,7 +197,7 @@ main(int argc, char** argv)
       assert(message->header(h_To) < message->header(h_From));
 
       cerr << message->brief() << endl;
-      assert(message->brief() == "SipRequest: INVITE ext101@192.168.2.220:5064 tid=ec1e.0 cseq=INVITE / 1 from(tu)");
+      assert(message->brief() == "SipRequest: INVITE ext101@192.168.2.220:5064 tid=11111 cseq=INVITE / 1 from(tu)");
    }
    
    {
@@ -165,11 +205,11 @@ main(int argc, char** argv)
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1--c87542-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-12344-1--c87542-;stid=489573115\r\n"
                    "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1--c87542-;received=192.168.2.220\r\n"
                    "Call-ID: 643f2f06\r\n"
                    "CSeq: 1 INVITE\r\n"
-                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\", Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\", Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
                    "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
                    "Contact: <sip:ext103@192.168.2.220:5068;transport=UDP>\r\n"
                    "Max-Forwards: 69\r\n"
@@ -197,12 +237,12 @@ main(int argc, char** argv)
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1--c87542-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-563465-1--c87542-;stid=489573115\r\n"
                    "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1--c87542-;received=192.168.2.220\r\n"
                    "Call-ID: 643f2f06\r\n"
                    "CSeq: 1 INVITE\r\n"
-                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
-                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
                    "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
                    "Contact: <sip:ext103@192.168.2.220:5068;transport=UDP>\r\n"
                    "Max-Forwards: 69\r\n"
@@ -219,7 +259,7 @@ main(int argc, char** argv)
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1--c87542-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-21312-1--c87542-;stid=489573115\r\n"
                    "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1--c87542-;received=192.168.2.220\r\n"
                    "Call-ID: 643f2f06\r\n"
                    "CSeq: 1 INVITE\r\n"
@@ -483,6 +523,13 @@ main(int argc, char** argv)
    {
       SipMessage inv;
 
+      UnknownHeaderType h_Foo("foo");
+      UnknownHeaderType h_Bar("bar");
+
+      inv.header(h_Foo);
+      inv.header(h_Bar).push_back(StringCategory("bar1"));
+      inv.header(h_Bar).push_back(StringCategory("bar2"));
+
       inv.header(h_Vias);
       inv.header(h_To);
       
@@ -517,10 +564,14 @@ main(int argc, char** argv)
       assert(d == ("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                    "To: <sip:bob@biloxi.com>\r\n"
                    "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                   "Via: \r\n"
                    "Call-ID: 314159\r\n"
                    "CSeq: 14 INVITE\r\n"
                    "Content-Type: text/plain\r\n"
                    "Content-Length: 31\r\n"
+                   "foo: \r\n"
+                   "bar: bar1\r\n"
+                   "bar: bar2\r\n"
                    "\r\n"
                    "here is some plain ol' contents"));
    }
