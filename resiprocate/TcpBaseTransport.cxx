@@ -143,13 +143,18 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
          assert(bytesToRead > 0);
          int bytesRead = currConnection->read(writePair.first, bytesToRead);
          DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
-         if (bytesRead == INVALID_SOCKET)
+         if (bytesRead <= 0)
          {
+            InfoLog (<< "Closing connection bytesRead=" << bytesRead);
             delete currConnection;
          }
-         else if (bytesRead >= 0)
+         else if (bytesRead > 0)
          {
             currConnection->performRead(bytesRead, mStateMachineFifo);
+         }
+         else
+         {
+            assert(0);
          }
       }
    } 
