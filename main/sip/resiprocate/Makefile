@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.94 2002/12/14 17:02:45 fluffy Exp $
+# $Id: Makefile,v 1.95 2002/12/15 22:26:31 fluffy Exp $
 
 BUILD = ../../build
 
@@ -60,6 +60,7 @@ SRC = \
 	SipStack.cxx \
 	Symbols.cxx \
 	TcpTransport.cxx \
+	TlsTransport.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
 	TransactionMap.cxx \
