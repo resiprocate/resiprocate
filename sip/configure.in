@@ -77,11 +77,12 @@ AC_MSG_RESULT([$USE_POPT])
 
 AC_ARG_WITH(data-local-size, [
   --with-data-local-size      use local stack frame size of arg for Data class],
-        [RESIP_LOCAL_DATA_SIZE=$with_data_local_size],
-	[RESIP_LOCAL_DATA_SIZE=128])
-AC_SUBST(RESIP_LOCAL_DATA_SIZE)dnl
+        [RESIP_DATA_LOCAL_SIZE=$with_data_local_size],
+	[RESIP_DATA_LOCAL_SIZE=128])
+AC_SUBST(RESIP_DATA_LOCAL_SIZE)dnl
+
 AC_MSG_CHECKING([local data size])
-AC_MSG_RESULT([$RESIP_LOCAL_DATA_SIZE])
+AC_MSG_RESULT([$RESIP_DATA_LOCAL_SIZE])
 
 # vocalconfig.h is NOT to be generated via AC_CONFIG_HEADER(S) but by
 # AC_OUTPUT.
