@@ -414,7 +414,7 @@ TransactionState::processClientNonInvite(  Message* msg )
    }
    else
    {
-      DebugLog (<< "TransactionState::processClientInvite: message unhandled");
+      DebugLog (<< "TransactionState::processClientNonInvite: message unhandled");
       delete msg;
    }
 }
