@@ -74,6 +74,38 @@ Helper::makeRegister(const NameAddr& registrar,
    return request;
 }
 
+SipMessage*
+Helper::makeRegister(const NameAddr& aor,
+                     const Data& transport,
+                     const NameAddr& contact)
+{
+   SipMessage* request = new SipMessage;
+   RequestLine rLine(REGISTER);
+
+   rLine.uri().scheme() = aor.uri().scheme();
+   rLine.uri().host() = aor.uri().host();
+   rLine.uri().port() = aor.uri().port();
+   if (!transport.empty())
+   {
+      rLine.uri().param(p_transport) = transport;
+   }
+
+   request->header(h_To) = aor;
+   request->header(h_RequestLine) = rLine;
+   request->header(h_MaxForwards).value() = 70;
+   request->header(h_CSeq).method() = REGISTER;
+   request->header(h_CSeq).sequence() = 1;
+   request->header(h_From) = aor;
+   request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   request->header(h_CallId).value() = Helper::computeCallId();
+   assert( request->header(h_Contacts).empty() );
+   request->header(h_Contacts).push_front( contact );
+   
+   Via via;
+   request->header(h_Vias).push_front(via);
+   
+   return request;
+}
 
 SipMessage*
 Helper::makeSubscribe(const NameAddr& target, 
@@ -377,20 +409,24 @@ Helper::authenticateRequest(const SipMessage& request,
                             const Data& password,
                             int expiresDelta)
 {
-   //DebugLog (<< "Authenticating: realm=" << realm << " password=" << password << " expires=" << expiresDelta);
+   DebugLog(<< "Authenticating: realm=" << realm << " password=" << password << " expires=" << expiresDelta);
+   DebugLog(<< request);
    
    if (request.exists(h_ProxyAuthorizations))
    {
       const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
       for (ParserContainer<Auth>::const_iterator i = auths.begin(); i != auths.end(); i++)
       {
-         if (i->param(p_realm) == realm)
+         if (i->exists(p_realm) && 
+             i->exists(p_nonce) &&
+             i->exists(p_response) &&
+             i->param(p_realm) == realm)
          {
             ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
                DebugLog(<< "Invalid nonce; expected timestamp.");
-               return Failed;
+               return BadlyFormed;
             }
             const char* anchor = pb.position();
             pb.skipToChar(Symbols::COLON[0]);
@@ -398,7 +434,7 @@ Helper::authenticateRequest(const SipMessage& request,
             if (pb.eof())
             {
                DebugLog(<< "Invalid nonce; expected timestamp terminator.");
-               return Failed;
+               return BadlyFormed;
             }
 
             Data then;
@@ -459,7 +495,12 @@ Helper::authenticateRequest(const SipMessage& request,
                return Failed;
             }
          }
+         else
+         {
+            return BadlyFormed;
+         }
       }
+      return BadlyFormed;
    }
    DebugLog (<< "No authentication headers. Failing request.");
    return Failed;
@@ -514,7 +555,7 @@ Helper::makeProxyChallenge(const SipMessage& request, const Data& realm, bool us
    auth.param(p_realm) = realm;
    if (useAuth)
    {
-      auth.param(p_qopOptions) = "auth";
+      auth.param(p_qopOptions) = "auth,auth-int";
    }
    SipMessage *response = Helper::makeResponse(request, 407);
    response->header(h_ProxyAuthenticates).push_back(auth);

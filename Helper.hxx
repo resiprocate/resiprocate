@@ -58,6 +58,10 @@ class Helper
                                       const NameAddr& aor,
                                       const NameAddr& contact);
 
+      static SipMessage* makeRegister(const NameAddr& aor,
+                                      const Data& transport,
+                                      const NameAddr& contact);
+
       static SipMessage* makeSubscribe(const NameAddr& target, 
                                        const NameAddr& from,
                                        const NameAddr& contact);
@@ -70,7 +74,7 @@ class Helper
       static Data computeCallId();
       static Data computeTag(int numBytes);
 
-      enum AuthResult {Failed = 1, Authenticated, Expired};
+      enum AuthResult {Failed = 1, Authenticated, Expired, BadlyFormed};
 
       static AuthResult authenticateRequest(const SipMessage& request, 
                                             const Data& realm,
