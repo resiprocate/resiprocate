@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.76 2002/11/07 03:07:22 jason Exp $
+# $Id: Makefile,v 1.77 2002/11/07 23:42:09 ryker Exp $
 
 BUILD = ../../build
 
@@ -24,7 +24,6 @@ endif
 
 SRC = \
 	BranchParameter.cxx \
-	Circular.cxx \
 	ConnectionMap.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
