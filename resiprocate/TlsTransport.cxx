@@ -146,7 +146,7 @@ TlsTransport::processListen(FdSet& fdset)
       assert( con );
       con->mTlsConnection = tls;
 
-      ErrLog( << "Added server connection " << int(con) );
+      DebugLog( << "Added server connection " << int(con) );
    }
 }
 
@@ -161,7 +161,7 @@ TlsTransport::processRead(Connection* c)
       bytesToRead = TlsTransport::MaxReadSize;
    }
    
-   ErrLog( << "Read from connection " << int(c) );
+   DebugLog( << "Read from connection " << int(c) );
 
    assert( c->mTlsConnection );
    int bytesRead = c->mTlsConnection->read( writePair.first, bytesToRead);
@@ -266,7 +266,7 @@ TlsTransport::processAllWrites( FdSet& fdset )
 
                makeSocketNonBlocking(sock);
 
-               ErrLog( << "Added TLS client connection " << int(conn) );
+               DebugLog( << "Added TLS client connection " << int(conn) );
             }
          }
       }
@@ -352,7 +352,7 @@ TlsTransport::processWrite(Connection* c)
       bytesToWrite = TlsTransport::MaxWriteSize;
    }
 
-   ErrLog( << "Write to connection " << int(c) );
+   DebugLog( << "Write to connection " << int(c) );
 
    assert( c->mTlsConnection );
    int bytesWritten = c->mTlsConnection->write( data->data.data() + c->mSendPos, bytesToWrite);
