@@ -4,10 +4,14 @@
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/Handled.hxx"
 
+#include <vector>
+
 namespace resip
 {
 
 class HandleManager;
+class Dialog;
+class Data;
 
 class AppDialog : public Handled
 {
@@ -17,9 +21,20 @@ class AppDialog : public Handled
 
       AppDialogHandle getHandle();
       
-      //for ease of dealing with refer
-//      ServerSubscriptionHandle getServerSubsription();
-//      InviteSessionHandle getInviteSession();
+
+      //?dcm? -- further evidence that this should possbily be a dialog
+      //subclass(cancel gets tricky). List vs vector?(here and in Dialog)
+      std::vector<ClientSubscriptionHandle> getClientSubscriptions();
+      std::vector<ClientSubscriptionHandle> findClientSubscriptions(const Data& event);
+
+      std::vector<ServerSubscriptionHandle> getServerSubscriptions();
+      std::vector<ServerSubscriptionHandle> findServerSubscriptions(const Data& event);
+
+      //returns an invalid handle if there is no session
+      InviteSessionHandle getInviteSession();
+   private:
+      friend class DialogSet;      
+      Dialog* mDialog;      
 };
 
 }

@@ -1,3 +1,4 @@
+#include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/BaseCreator.hxx"
 #include "resiprocate/dum/ClientAuthManager.hxx"
@@ -108,7 +109,7 @@ DialogSet::dispatch(const SipMessage& msg)
 {
    assert(msg.isRequest() || msg.isResponse());
 
-   if (mDum.mClientAuthManager && !mCancelled)
+   if (msg.isResponse() && mDum.mClientAuthManager && !mCancelled)
    {
       if (getCreator())
       {
@@ -130,7 +131,6 @@ DialogSet::dispatch(const SipMessage& msg)
       // !jf! This could throw due to bad header in msg, should we catch and rethrow
       // !jf! if this threw, should we check to delete the DialogSet? 
       dialog = new Dialog(mDum, msg, *this);
-      InfoLog ( << "### Calling CreateAppDialog ### " << msg);
 
       if (mCancelled)
       {
@@ -139,8 +139,10 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       else
       {
+         InfoLog ( << "### Calling CreateAppDialog ### " << msg);
          AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
          dialog->mAppDialog = appDialog;
+         appDialog->mDialog = dialog;         
       }
    }     
    if (dialog)
