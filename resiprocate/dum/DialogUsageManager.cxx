@@ -709,10 +709,12 @@ DialogUsageManager::process()
                      return true;
                   }
                }
+#if defined(USE_SSL)
                if (!queueForIdentityCheck(msg))
                {
                   processRequest(*sipMsg);
                }
+#endif
             }
             else if (sipMsg->isResponse())
             {
