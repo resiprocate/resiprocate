@@ -22,7 +22,7 @@ class InviteSessionHandler
       virtual void onFailure(ClientInviteSessionHandle, const SipMessage& msg)=0;
       
       /// called when dialog enters the Early state - typically after getting 100
-      virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage&, const SdpContents*)=0;
+      virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage&, const SdpContents&)=0;
 
       /// called when dialog enters the Early state - typically after getting 18x
       virtual void onProvisional(ClientInviteSessionHandle, const SipMessage&)=0;
@@ -61,10 +61,10 @@ class InviteSessionHandler
 
       /** called when an SDP answer is received - has nothing to do with user
           answering the call */ 
-      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)=0;
+      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)=0;
 
       /// called when an SDP offer is received - must send an answer soon after this
-      virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)=0;      
+      virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)=0;      
 
       //called when an Invite w/out SDP is sent, or any other context which
       //requires an SDP offer from the user

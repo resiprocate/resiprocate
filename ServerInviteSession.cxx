@@ -495,15 +495,15 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    assert(msg.header(h_CSeq).method() == INVITE);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case OnInviteOffer:
          transition(UAS_Offer);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
-         handler->onOffer(getSessionHandle(), msg, sdp);
+         handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
       case OnInvite:
          transition(UAS_NoOffer);
@@ -513,7 +513,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          transition(UAS_OfferReliable);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
-         handler->onOffer(getSessionHandle(), msg, sdp);
+         handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
       case OnInviteReliable:
          transition(UAS_NoOfferReliable);
@@ -529,8 +529,8 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
 void
 ServerInviteSession::dispatchOfferOrEarly(const SipMessage& msg)
 {
-   const SdpContents* sdp = InviteSession::getSdp(msg);
-   switch (toEvent(msg, sdp))
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   switch (toEvent(msg, sdp.get()))
    {
       case OnCancel:
          dispatchCancel(msg);
@@ -549,14 +549,14 @@ void
 ServerInviteSession::dispatchAccepted(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case OnAckAnswer:
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
-         handler->onAnswer(getSessionHandle(), msg, sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
          handler->onConnected(getSessionHandle(), msg);
          break;
 
@@ -600,16 +600,16 @@ void
 ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case OnAckAnswer:
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
          handler->onConnected(getSessionHandle(), msg);
          break;
          
