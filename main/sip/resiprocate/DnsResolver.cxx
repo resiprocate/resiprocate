@@ -377,19 +377,22 @@ DnsResolver::aresCallbackHost(void *arg, int status, struct hostent* result)
       InfoLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
    }
-
-   DebugLog (<< "DNS lookup canonical name: " << result->h_name);
-   for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
+   else
    {
-      Transport::Tuple tuple;
-      tuple.ipv4.s_addr = *((u_int32_t*)(*pptr));
-      tuple.port = request->port;
-      tuple.transportType = request->transport;
-      tuple.transport = 0;
-      
-      DebugLog(<< tuple);
-      dns->mTuples.push_back(tuple);
+      DebugLog (<< "DNS lookup canonical name: " << result->h_name);
+      for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
+      {
+	 Transport::Tuple tuple;
+	 tuple.ipv4.s_addr = *((u_int32_t*)(*pptr));
+	 tuple.port = request->port;
+	 tuple.transportType = request->transport;
+	 tuple.transport = 0;
+	 
+	 DebugLog(<< tuple);
+	 dns->mTuples.push_back(tuple);
+      }
    }
+
    request->stack.mStateMacFifo.add(dns);
 #endif
 }
