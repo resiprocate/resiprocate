@@ -86,6 +86,7 @@ std::ostream&
 Token::encodeParsed(std::ostream& str) const
 {
    str << mValue;
+   encodeParameters(str);
    return str;
 }
 
@@ -1074,8 +1075,8 @@ std::ostream&
 ExpiresCategory::encodeParsed(std::ostream& str) const
 {
    str << mValue;
-  encodeParameters(str);
-  return str;
+   encodeParameters(str);
+   return str;
 }
 
 //====================
@@ -1111,6 +1112,7 @@ std::ostream&
 StringCategory::encodeParsed(std::ostream& str) const
 {
    str << mValue;
+   str << encodeParameters(str);
    return str;
 }
 
