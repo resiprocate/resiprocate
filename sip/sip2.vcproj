@@ -226,6 +226,9 @@
 				RelativePath="sipstack\ParserCategory.cxx">
 			</File>
 			<File
+				RelativePath="sipstack\Pkcs7Contents.cxx">
+			</File>
+			<File
 				RelativePath="sipstack\PlainContents.cxx">
 			</File>
 			<File
@@ -310,7 +313,7 @@
 				RelativePath="sipstack\Uri.cxx">
 			</File>
 			<File
-				RelativePath="sipstack\test\testSpeed.cxx">
+				RelativePath="sipstack\test\testIM.cxx">
 			</File>
 			<File
 				RelativePath="util\vmd5.cxx">
