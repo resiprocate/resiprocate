@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.42 2002/12/09 19:28:26 derekm Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.43 2002/12/11 07:15:49 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -56,6 +56,8 @@ class Data
       Data& operator+=(const char* str);
       Data& operator+=(const Data& rhs);
       Data& operator+=(char c);
+
+      Data& operator^=(const Data& rhs);
 
       char& operator[](size_type p);
       char operator[](size_type p) const;
