@@ -30,6 +30,7 @@ class ClientRegistration: public NonDialogUsage
       const NameAddrs& myContacts();
       const NameAddrs& allContacts();
 
+      virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
    

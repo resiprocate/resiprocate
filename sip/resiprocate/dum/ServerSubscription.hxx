@@ -23,8 +23,9 @@ class ServerSubscription : public BaseSubscription
       void setSubscriptionState(SubscriptionState state);
 
       SipMessage& update(const Contents* document);
-      SipMessage& end(TerminateReason reason, const Contents* document = 0);
+      void end(TerminateReason reason, const Contents* document = 0);
 
+      virtual void end();
       virtual void send(SipMessage& msg);
 
 //      void setTerminationState(TerminateReason reason);

@@ -12,7 +12,9 @@
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/SipStack.hxx"
 #include "resiprocate/StackThread.hxx"
+#include "resiprocate/StatisticsMessage.hxx"
 
 namespace resip 
 {
@@ -60,27 +62,19 @@ class DialogUsageManager : public HandleManager
             virtual const char* name() const {return "DialogUsageManager::Exception";}
       };
       
-      DialogUsageManager(SipStack& stack);
+      DialogUsageManager();
       virtual ~DialogUsageManager();
       
-      void shutdown(DumShutdownHandler*);
+      void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
+      void shutdownIfNoUsages(DumShutdownHandler*, unsigned long giveUpSeconds=0);
+      void forceShutdown(DumShutdownHandler*);
+      
+      bool addTransport( TransportType protocol,
+                         int port, 
+                         IpVersion version=V4,
+                         const Data& ipInterface = Data::Empty);
 
       void setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory>);
-
-//should be in AppDialog and AppDialogSet
-#if 0
-      virtual ClientRegistration* createAppClientRegistration(Dialog& dialog, BaseCreator& creator);
-      virtual ClientInviteSession* createAppClientInviteSession(Dialog& dialog, const InviteSessionCreator& creator);
-      virtual ClientSubscription* createAppClientSubscription(Dialog& dialog, BaseCreator& creator);
-      virtual ClientPublication* createAppClientPublication(Dialog& dialog, BaseCreator& creator);
-      virtual ClientOutOfDialogReq* createAppClientOutOfDialogRequest(Dialog& dialog, BaseCreator& creator);
-
-      virtual ServerOutOfDialogReq* createAppServerOutOfDialogRequest();
-      virtual ServerSubscription* createAppServerSubscription();
-      virtual ServerInviteSession* createAppServerInviteSession();
-      virtual ServerRegistration* createAppServerRegistration();
-      virtual ServerPublication* createAppServerPublication();
-#endif
 
       void setProfile(Profile* profile);
       Profile* getProfile();
@@ -160,9 +154,18 @@ class DialogUsageManager : public HandleManager
       void send(SipMessage& request); 
       
       void buildFdSet(FdSet& fdset);
-      bool process(bool useSeparateThread=true);
-      void process(FdSet& fdset);
 
+      // Runs the SipStack in its own StackThread. call process() from the application
+      void run(); 
+
+      // Call this version of process if you are running the sipstack in its own
+      // thread. you must call run() before calling process()
+      bool process();
+
+      // Call this version of process if you want to run the stack in the
+      // application's thread
+      void process(FdSet& fdset);
+      
       /// returns time in milliseconds when process next needs to be called 
       int getTimeTillNextProcessMS(); 
 
@@ -184,8 +187,10 @@ class DialogUsageManager : public HandleManager
 
       ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
       ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
+
    protected:
       virtual void shutdown();      
+
    private:
       friend class Dialog;
       friend class DialogSet;
@@ -207,7 +212,7 @@ class DialogUsageManager : public HandleManager
 
       DialogSet* makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs);
       SipMessage& makeNewSession(BaseCreator* creator, AppDialogSet* appDs);
-      
+
       // makes a proto response to a request
       void makeResponse(SipMessage& response, 
                         const SipMessage& request, 
@@ -270,7 +275,6 @@ class DialogUsageManager : public HandleManager
 
 	  OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
 
-
       std::map<Data, ClientSubscriptionHandler*> mClientSubscriptionHandlers;
       std::map<Data, ServerSubscriptionHandler*> mServerSubscriptionHandlers;
       std::map<Data, ClientPublicationHandler*> mClientPublicationHandlers;
@@ -282,7 +286,9 @@ class DialogUsageManager : public HandleManager
 
       std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
 
-      SipStack& mStack;
+      StatisticsMessage::Payload mStatsPayload;
+
+      SipStack mStack;
       StackThread mStackThread;
       DumShutdownHandler* mDumShutdownHandler;       
       bool mDestroying;

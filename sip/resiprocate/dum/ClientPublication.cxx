@@ -39,12 +39,12 @@ ClientPublication::~ClientPublication()
    delete mDocument;
 }
 
-SipMessage& 
+void
 ClientPublication::end()
 {
    mPublish.header(h_CSeq).sequence()++;
    mPublish.header(h_Expires).value() = 0;
-   return mPublish;
+   send(mPublish);
 }
 
 void 

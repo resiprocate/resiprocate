@@ -34,7 +34,7 @@ ServerInviteSession::getHandle()
    return ServerInviteSessionHandle(mDum, getBaseHandle().getId());
 }
 
-SipMessage&
+void
 ServerInviteSession::end()
 {
    InfoLog ( << "ServerInviteSession::end" );  
@@ -43,10 +43,10 @@ ServerInviteSession::end()
       case Terminated: 
       case Connected:
       case ReInviting:
-         return InviteSession::end();
+         InviteSession::end();
          break;
       default:
-         return reject(410);
+         send(reject(410));
    }
 }
 

@@ -20,11 +20,10 @@ class ClientPagerMessage : public NonDialogUsage
       
       //send a MESSAGE
       virtual void page(std::auto_ptr<Contents> contents);
-
-      void end();      
-
+      virtual void end();      
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
+
    protected:
       virtual ~ClientPagerMessage();
 
