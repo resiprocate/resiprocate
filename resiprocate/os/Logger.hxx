@@ -7,10 +7,15 @@
 #include "resiprocate/os/Lock.hxx"
 
 #ifdef WIN32
+
 #include "resiprocate/os/DataStream.hxx"
+
 #include "resiprocate/os/Data.hxx"
+
 #include <windows.h>
+
 #endif 
+
 
 
 /**
@@ -23,10 +28,15 @@
    DebugLog(<< "hi there " << mix << 4 << types);  // note leading << and no endl
 */
 
+
+#define DELIM 
+
+
+
 // unconditionally output to cerr -- easily change back and forth
-#define CerrLog(args_)                                          \
-  resip::Log::tags(resip::Log::StdErr, RESIPROCATE_SUBSYSTEM,   \
-                   __FILE__, __LINE__, std::cerr) << DELIM      \
+#define CerrLog(args_)                                                  \
+  resip::Log::tags(resip::Log::StdErr, RESIPROCATE_SUBSYSTEM,           \
+                   __FILE__, __LINE__, std::cerr) << ' ' << '|' << ' '  \
           args_ << std::endl;
 
 #define StackLog(args_)                                                         \
@@ -73,7 +83,7 @@ do                                                                              
          resip::Lock lock(resip::Log::_mutex);                                  \
          check.set();                                                           \
          resip::Log::tags(level_, system_, __FILE__, __LINE__,                  \
-                          resip::GenericLogImpl::Instance()) << DELIM           \
+                          resip::GenericLogImpl::Instance()) << " | "           \
                           args_ << std::endl;                                   \
          if (resip::Log::_type == resip::Log::VSDebugWindow)                    \
          {                                                                      \
@@ -91,7 +101,7 @@ do                                                                              
          if (resip::GenericLogImpl::isLogging(level_))                          \
          {                                                                      \
             resip::Log::tags(level_, system_, __FILE__, __LINE__,               \
-                             resip::GenericLogImpl::Instance()) << DELIM        \
+                             resip::GenericLogImpl::Instance()) << " | "        \
                              args_ << std::endl;                                \
             if (resip::Log::_type == resip::Log::VSDebugWindow)                 \
             {                                                                   \
@@ -120,6 +130,7 @@ class GenericLogImpl :  public Log
       static bool isLogging(Log::Level level) ;
       static unsigned int MaxLineCount;
       static void OutputToWin32DebugWindow(); //xkd-2004-11-8
+
 
    private:
       static std::ostream* mLogger;
