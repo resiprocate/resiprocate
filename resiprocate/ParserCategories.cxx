@@ -251,6 +251,12 @@ RequestLineComponent::~RequestLineComponent()
 {
 }
 
+ParserCategory *
+RequestLineComponent::clone(HeaderFieldValue*) const
+{
+  assert(0);
+}
+
 //====================
 // StatusLine:
 //====================
@@ -266,4 +272,9 @@ StatusLineComponent::~StatusLineComponent()
 {
 }
 
+ParserCategory *
+StatusLineComponent::clone(HeaderFieldValue*) const
+{
+  assert(0);
+}
 
