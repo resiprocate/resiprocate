@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #endif
 
+#include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -35,10 +36,11 @@ using namespace resip;
 
 SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) : 
    security( pSecurity ),
+   mTUTimerQueue(mTUFifo),
    mExecutive(*this),
    mTransactionController(multiThreaded, mTUFifo, stateless),
    mStrictRouting(false),
-   mShuttingDown(false)
+   mShuttingDown(false)   
 {
    Timer::getTimeMs(); // initalize time offsets
    Random::initialize();
@@ -242,9 +244,10 @@ SipStack::post(const Message& message,
    assert(!mShuttingDown);
 
    Message* toPost = message.clone();
-   mTransactionController.post(toPost, 1000*secondsLater);
+   mTUTimerQueue.add(Timer(1000*secondsLater, toPost));
 }
 
+// !dlb! could get arbitrary messages via post!
 SipMessage* 
 SipStack::receive()
 {
@@ -297,19 +300,19 @@ SipStack::receiveAny()
    }
 }
 
-
 void 
 SipStack::process(FdSet& fdset)
 {
    mExecutive.process(fdset);
+   mTUTimerQueue.process();
 }
-
 
 /// returns time in milliseconds when process next needs to be called 
 int 
 SipStack::getTimeTillNextProcessMS()
 {
-   return mExecutive.getTimeTillNextProcessMS();
+   return resipMin(mExecutive.getTimeTillNextProcessMS(),
+                   mTUTimerQueue.msTillNextTimer());
 } 
 
 void
