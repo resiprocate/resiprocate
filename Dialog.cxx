@@ -136,9 +136,6 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       {
          case INVITE:
             mType = Invitation;
-
-            // store the original CSeq for ACK
-            mAckId = msg.header(h_CSeq).sequence(); 
             break;
             
          case SUBSCRIBE:
@@ -454,6 +451,8 @@ Dialog::dispatch(const SipMessage& msg)
       switch (response.header(h_CSeq).method())
       {
          case INVITE:
+            // store the CSeq for ACK
+            mAckId = msg.header(h_CSeq).sequence(); 
             if (mInviteSession == 0)
             {
                // #if!jf! don't think creator needs a dispatch
@@ -788,11 +787,12 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    }
 
    // Remove Session Timer headers for all requests except INVITE and UPDATE
-   if(method != INVITE && method != UPDATE)
-   {
-      request.remove(h_SessionExpires);
-      request.remove(h_MinSE);
-   }
+   // Probably not required now...?????????
+   //if(method != INVITE && method != UPDATE)
+   //{
+   //   request.remove(h_SessionExpires);
+   //   request.remove(h_MinSE);
+   //}
    DebugLog ( << "Dialog::makeRequest: " << request );
 }
 

@@ -74,7 +74,8 @@ class ServerInviteSession: public InviteSession
       void dispatchUnknown(const SipMessage& msg);
 
       // utilities
-      void sendAccept(int code, std::auto_ptr<SdpContents> sdp); // sends 2xxI
+      void startRetransmit1xxTimer();
+      void sendAccept(int code, SdpContents* sdp); // sends 2xxI
       void sendProvisional(int code);
       void sendUpdate(const SdpContents& sdp);
 

@@ -13,7 +13,8 @@ using namespace resip;
 
 ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
    : InviteSession(dum, dialog),
-     mFirstRequest(request)
+     mFirstRequest(request),
+     mCurrentRetransmit1xx(0)
 {
    assert(request.isRequest());
    mState = UAS_Start;
@@ -351,7 +352,7 @@ ServerInviteSession::accept(int code)
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyProvidedAnswer:
          transition(Connected);
-         sendAccept(code, mCurrentLocalSdp);
+         sendAccept(code, mCurrentLocalSdp.get());
          handler->onConnected(getSessionHandle(), mInvite200);
          break;
          
@@ -362,7 +363,7 @@ ServerInviteSession::accept(int code)
       case UAS_ProvidedOffer:
       case UAS_EarlyProvidedOffer:
          transition(UAS_Accepted);
-         sendAccept(code, mProposedLocalSdp);
+         sendAccept(code, mProposedLocalSdp.get());
          break;
          
       case UAS_Accepted:
@@ -379,19 +380,13 @@ ServerInviteSession::accept(int code)
          
       case UAS_EarlyReliable:
          transition(Connected);
-         mDialog.makeResponse(mInvite200, mFirstRequest, code);
-         handleSessionTimerRequest(mInvite200, mFirstRequest);
-         mDialog.send(mInvite200);
-         startRetransmitTimer(); // 2xx timer
+         sendAccept(code, 0);
          handler->onConnected(getSessionHandle(), mInvite200);
          break;
 
       case UAS_SentUpdate:
          transition(UAS_SentUpdateAccepted);
-         mDialog.makeResponse(mInvite200, mFirstRequest, code);
-         handleSessionTimerRequest(mInvite200, mFirstRequest);
-         mDialog.send(mInvite200);
-         startRetransmitTimer(); // 2xx timer
+         sendAccept(code, 0);
          break;
 
       case UAS_ReceivedUpdate:
@@ -481,11 +476,10 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
 {
    if (timeout.type() == DumTimeout::Retransmit1xx)
    {
-      mDialog.send(m1xx);
-      if (mCurrentRetransmit1xx)
+      if (mCurrentRetransmit1xx && m1xx.header(h_CSeq).sequence() == timeout.seq())  // If timer isn't stopped and this timer is for last 1xx sent, then resend
       {
-         mCurrentRetransmit1xx *= 2;
-         mDum.addTimerMs(DumTimeout::Retransmit1xx, resipMin(Timer::T2, mCurrentRetransmit1xx), getBaseHandle(), timeout.seq());
+         mDialog.send(m1xx);
+         mDum.addTimerMs(DumTimeout::Retransmit1xx, mCurrentRetransmit1xx, getBaseHandle(), timeout.seq());
       }
    }
    else
@@ -560,6 +554,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
    switch (toEvent(msg, sdp))
    {
       case OnAckAnswer:
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
          handler->onAnswer(getSessionHandle(), msg, sdp);
          handler->onConnected(getSessionHandle(), msg);
@@ -583,6 +578,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          
       case OnAck:
       {
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Terminated);
          SipMessage bye;
          mDialog.makeRequest(bye, BYE);
@@ -609,6 +605,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
    switch (toEvent(msg, sdp))
    {
       case OnAckAnswer:
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -634,10 +631,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          mDialog.makeResponse(p200, msg, 200);
          mDialog.send(p200);
          
-         mDum.makeResponse(mInvite200, mFirstRequest, 200);
-         startRetransmitTimer(); // make 2xx timer
-         mDialog.send(mInvite200);  
-         
+         sendAccept(200, 0);         
          break;
       }
 
@@ -759,6 +753,14 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
    mDum.destroy(this);
 }
 
+void 
+ServerInviteSession::startRetransmit1xxTimer()
+{
+   mCurrentRetransmit1xx = 60*1000;  // !slg! RFC3261 13.3.1 says the UAS must send a non-100 provisional response every minute, to handle the possiblity of lost provisional responses
+   int seq = m1xx.header(h_CSeq).sequence();
+   mDum.addTimerMs(DumTimeout::Retransmit1xx, mCurrentRetransmit1xx, getBaseHandle(), seq);
+}
+
 void
 ServerInviteSession::targetRefresh (const NameAddr& localUri)
 {
@@ -820,22 +822,21 @@ ServerInviteSession::sendProvisional(int code)
    {
       setSdp(m1xx, *mProposedLocalSdp);
    }
-   // !jf! start 1xx timer
+   startRetransmit1xxTimer();
    mDialog.send(m1xx);
 }
 
 void
-ServerInviteSession::sendAccept(int code, std::auto_ptr<SdpContents> sdp)
+ServerInviteSession::sendAccept(int code, SdpContents* sdp)
 {
    mDialog.makeResponse(mInvite200, mFirstRequest, code);
    handleSessionTimerRequest(mInvite200, mFirstRequest);
-   if (sdp.get())
+   if (sdp)
    {
       setSdp(mInvite200, *sdp);
    }
-
-   // make timer::2xx
-   // make timer::NoAck
+   mCurrentRetransmit1xx = 0; // Stop the 1xx timer
+   startRetransmit200Timer(); // 2xx timer
    mDialog.send(mInvite200);
 }
 
