@@ -110,6 +110,8 @@ defineHeader(SIPETag, "SIP-ETag", Token, "PUBLISH draft");
 defineHeader(SIPIfMatch, "SIP-If-Match", Token, "PUBLISH draft");
 
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
+
+defineHeader(Identity, "Identity", Token, "draft-sip-identity-03");
 // explicitly declare to avoid h_AllowEventss, ugh
 extern H_AllowEventss h_AllowEvents;
 
@@ -142,6 +144,7 @@ typedef ParserContainer<GenericURI> GenericURIs;
 defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC ????");
 defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC ????");
 defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC ????");
+defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03");
 
 //====================
 // NameAddr:
