@@ -54,7 +54,7 @@ UdpTransport::UdpTransport(int portNum, Fifo<Message>& fifo) :
          InfoLog (<< "Could not bind to port: " << portNum);
       }
       
-      throw TransportException("Address already in use", __FILE__,__LINE__);
+      throw Exception("Address already in use", __FILE__,__LINE__);
    }
 
    // make non blocking 
