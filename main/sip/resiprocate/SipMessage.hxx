@@ -84,10 +84,10 @@ class SipMessage : public Message
       }
 
       RequestLineComponent& 
-      operator[](const RequestLine& l);
+      operator[](const RequestLineType& l);
 
       StatusLineComponent& 
-      operator[](const StatusLine& l);
+      operator[](const StatusLineType& l);
       
       template <int T>
       void remove(const Header<T>& headerType)
