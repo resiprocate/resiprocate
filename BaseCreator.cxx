@@ -46,6 +46,8 @@ BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
    mLastRequest.header(h_Vias).push_front(via);
 
    mLastRequest.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
+
+   mLastRequest.header(h_Accepts) = mDum.getProfile()->getSupportedMimeTypes();
 }
 
 void

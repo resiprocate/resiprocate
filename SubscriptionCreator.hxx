@@ -11,9 +11,11 @@ class SubscriptionCreator : public BaseCreator
   public:
    
       //probably want to have things like the Accept list here too
-      SubscriptionCreator(DialogUsageManager& dum, const Data& event);
-      
-      void makeNewSubscription(const SipMessage& notify);
+      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, const Data& event);
+
+      void end();
+
+      void makeNewNotify(const SipMessage& notify);
 
       virtual void dispatch(SipMessage& msg);
       
