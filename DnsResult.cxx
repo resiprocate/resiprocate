@@ -374,6 +374,18 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
          InfoLog (<< "There are no NAPTR records so do an SRV lookup instead");
          goto NAPTRFail; // same as if no NAPTR records
       }
+      else if (mSRVResults.empty())
+      {
+         // didn't find any SRV records in Additional, so do another query
+
+         assert(mSRVCount == 0);
+         assert(!mPreferredNAPTR.replacement.empty());
+
+         DebugLog (<< "No SRV record for " << mPreferredNAPTR.replacement << " in additional section");
+         mType = Pending;
+         mSRVCount++;
+         lookupSRV(mPreferredNAPTR.replacement);
+      }
       else
       {
          // This will fill in mResults based on the DNS result
@@ -560,8 +572,10 @@ DnsResult::primeResults()
          // Records of the DNS result
          // we will need to store the SRV record that is being looked up so we
          // can populate the resulting Tuples 
-         assert(0); 
          mType = Pending;
+         mPort = next.port;
+         mTransport = next.transport;
+         
          lookupARecords(next.target);
       }
 
