@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2002/11/07 02:49:16 derekm Exp $
+# $Id: Makefile,v 1.3 2002/11/07 23:30:32 ryker Exp $
 
 BUILD = ../../../build
 
@@ -11,7 +11,7 @@ ifeq ($(USE_SSL),1)
 PACKAGES += OPENSSL
 endif
 
-TESTPROGRAMS =  SipTortureTests.cxx test2.cxx testSipStack1.cxx testSipMessage.cxx testParserCategories.cxx testNonInviteClientTx.cxx testDnsResolver.cxx testPreparse.cxx testTcpTransport.cxx
+TESTPROGRAMS =  SipTortureTests.cxx test2.cxx testSipStack1.cxx testSipMessage.cxx testParserCategories.cxx testNonInviteClientTx.cxx testDnsResolver.cxx testPreparse.cxx testTcpTransport.cxx testTransactionFSM.cxx
 
 ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
