@@ -49,17 +49,7 @@ TestPageCallback::receivedPage( const Data& msg, const Uri& from,
 
    if ( mDest && ( *mDest != from) )
    {
-#if 0
-      // ?dlb? would this work: *mDest = from; mDest->scheme() = SIP;
-      Data f("sip:");
-      f += from.getAor();
-      f += Data(":");
-      f += Data( from.port() );
-      
-      *mDest = Uri(f);
-#else
       *mDest = from;
-#endif
       cerr << "Set destination to <" << *mDest << ">" << endl;
    }
    
@@ -132,8 +122,9 @@ processStdin(  TuIM& tuIM, Uri* dest )
          InfoLog( << "Send to <" << *dest << ">" );
          
          //tuIM.sendPage( text , *dest, false /*sign*/, Data::Empty /*encryptFor*/ );
-         //tuIM.sendPage( text , *dest, false /*sign*/, dest->getAor() /*encryptFor*/ );
-         tuIM.sendPage( text , *dest, true /*sign*/, dest->getAor() /*encryptFor*/ );
+         tuIM.sendPage( text , *dest, false /*sign*/, dest->getAorNoPort() /*encryptFor*/ );
+         //tuIM.sendPage( text , *dest, true /*sign*/,  Data::Empty /*encryptFor*/ );
+         //tuIM.sendPage( text , *dest, true /*sign*/, dest->getAorNoPort() /*encryptFor*/ );
       }
    }
 
