@@ -1,3 +1,5 @@
+#include <util/DataStream.hxx>
+
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/Helper.hxx>
 #include <sipstack/Uri.hxx>
@@ -224,15 +226,15 @@ main()
    
    {
       cerr << "test header creation" << endl;
-      auto_ptr<SipMessage> message;
+      SipMessage message;
 
-      message->header(h_CSeq).sequence() = 123456;
-      assert(message->header(h_CSeq).sequence() == 123456);
+      message.header(h_CSeq).sequence() = 123456;
+      assert(message.header(h_CSeq).sequence() == 123456);
 
-      message->header(h_To).uri().user() = "speedy";
-      assert(message->header(h_To).uri().user() == "speedy");
+      message.header(h_To).uri().user() = "speedy";
+      assert(message.header(h_To).uri().user() == "speedy");
       
-      message->encode(cerr);
+      message.encode(cerr);
 
    }
    
@@ -363,10 +365,10 @@ main()
       
       assert(message->getRawHeader(Headers::From));
       assert(&message->header(h_From));
-      assert(message->header(h_From).exists(p_tag) == false);
-      assert(message->header(h_From).exists(p_mobility) == false);
-      assert(message->header(h_From).uri().param(p_tag) == "456248");
-      assert(message->header(h_From).uri().param(p_mobility) == "hobble");
+      assert(message->header(h_From).exists(p_tag) == true);
+      assert(message->header(h_From).exists(p_mobility) == true);
+      assert(message->header(h_From).param(p_tag) == "456248");
+      assert(message->header(h_From).param(p_mobility) == "hobble");
 
       message->encode(cerr);
   
@@ -401,7 +403,7 @@ main()
       assert(message->exists(h_From));
       assert(message->header(h_From).uri().user() == "user");
       assert(message->header(h_From).uri().host() == "company.com");
-      assert(message->header(h_From).uri().param(p_tag) == "3411345");
+      assert(message->header(h_From).param(p_tag) == "3411345");
 
       assert(message->exists(h_MaxForwards));
       assert(message->header(h_MaxForwards).value() == 8);
@@ -470,7 +472,14 @@ main()
 
       assert(message->header(h_To).uri().host() == "localhost");
    }
-
+   {
+      NameAddr me;
+      me.uri().host() = "localhost";
+      me.uri().port() = 5070;
+      //auto_ptr<SipMessage> msg(Helper::makeRegister(me, me));
+      SipMessage* msg = Helper::makeRegister(me, me);
+      cerr << "encoded=" << *msg << endl;
+   }
 }
 
 /* ====================================================================
