@@ -175,6 +175,7 @@ resiprocate_include_HEADERS = \
 	Uri.hxx \
 	XMLCursor.hxx \
 	XPidf.hxx \
+	config.hxx \
 	supported.hxx
 
 resiprocate_os_includedir=$(includedir)/resiprocate/os
