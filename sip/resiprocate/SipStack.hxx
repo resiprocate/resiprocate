@@ -8,8 +8,8 @@
 #include <set>
 
 #include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/Executive.hxx"
-#include "resiprocate/Transport.hxx"
 #include "resiprocate/TransactionController.hxx"
 
 namespace resip
@@ -20,6 +20,7 @@ class Message;
 class SipMessage;
 class Executive;
 class Security;
+class Tuple;
 class Uri;
 	
 class SipStack
@@ -43,7 +44,7 @@ class SipStack
       // bind to. If set to Data::Empty, bind to all interfaces 
       void addTransport( TransportType protocol,
                          int port, 
-                         bool ipv6 = false,
+                         IpVersion version=V4,
                          const Data& ipInterface = Data::Empty);
 
       // If port = 0, use DNS to lookup the port number for the specified
@@ -55,7 +56,7 @@ class SipStack
                              const Data& keyDir = Data::Empty, 
                              const Data& privateKeyPassPhrase = Data::Empty,
                              const Data& sipDomainname = Data::Empty, 
-                             bool ipv6 = false,
+                             IpVersion version = V4,
                              const Data& ipInterface = Data::Empty);
 
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
