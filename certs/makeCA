@@ -14,9 +14,14 @@ touch demoCA/index.txt
 	    
 # You may need to modify this for where your default file is
 # you can find where yours in by typing "openssl ca"
-CONF=${OPENSSLDIR:=/usr/local/ssl}/openssl.cnf
+for D in /etc/ssl /usr/local/ssl /sw/etc/ssl /sw/share/ssl; do
+	CONF=${OPENSSLDIR:=$D}/openssl.cnf
+	[ -f ${CONF} ] && break
+done
+
 if [ ! -f $CONF  ]; then
     echo "Can not find file $CONF - set your OPENSSLDIR variable"
+    exit 
 fi 
 cp $CONF openssl.cnf
 
