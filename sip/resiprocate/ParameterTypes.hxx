@@ -1,5 +1,5 @@
-#ifndef ParameterTypes_hxx
-#define ParameterTypes_hxx
+#if !defined(RESIP_PARAMETERTYPES_HXX)
+#define RESIP_PARAMETERTYPES_HXX 
 
 #include "resiprocate/BranchParameter.hxx"
 #include "resiprocate/DataParameter.hxx"
@@ -117,7 +117,6 @@ namespace resip
 #undef defineParam
 #endif
 
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -167,7 +166,3 @@ namespace resip
  * <http://www.vovida.org/>.
  *
  */
-
-/* Local Variables: */
-/* c-file-style: "ellemtel" */
-/* End: */

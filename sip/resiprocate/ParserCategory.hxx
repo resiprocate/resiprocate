@@ -1,5 +1,5 @@
-#ifndef ParserCategory_hxx
-#define ParserCategory_hxx
+#if !defined(RESIP_PARSERCATEGORY_HXX)
+#define RESIP_PARSERCATEGORY_HXX 
 
 #include <iostream>
 #include <list>
@@ -150,6 +150,8 @@ operator<<(std::ostream&, const ParserCategory& category);
 
 #undef defineParam
 
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -199,5 +201,3 @@ operator<<(std::ostream&, const ParserCategory& category);
  * <http://www.vovida.org/>.
  *
  */
-
-#endif
