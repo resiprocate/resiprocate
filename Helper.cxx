@@ -5,6 +5,7 @@
 #include <string.h>
 #include <iomanip>
 #include <algorithm>
+#include <memory>
 
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Coders.hxx"
@@ -26,6 +27,7 @@
 #include "resiprocate/MultipartAlternativeContents.hxx"
 
 using namespace resip;
+using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
