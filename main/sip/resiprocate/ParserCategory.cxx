@@ -475,7 +475,7 @@ ParserCategory::param(const Branch_Param& paramType) const
       p = new Branch_Param::Type(paramType.getTypeNum());
       mParameters.push_back(p);
    }
-   return p->value();
+   return *p;
 }
 
 Received_Param::DType& 

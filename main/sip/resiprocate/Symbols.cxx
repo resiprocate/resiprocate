@@ -12,6 +12,7 @@ const char * const Symbols::TAB = "\t";
 
 const char * const Symbols::AT_SIGN = "@";
 const char * const Symbols::SPACE = " ";
+const char * const Symbols::DASH = "-";
 const char * const Symbols::COLON = ":";
 const char * const Symbols::EQUALS = "=";
 const char * const Symbols::SEMI_COLON = ";";
@@ -113,6 +114,8 @@ const char * const Symbols::received = "received";
 const char * const Symbols::mobility = "mobility";
 const char * const Symbols::comp = "comp";
 const char * const Symbols::rport = "rport";
+const char * const Symbols::MagicCookie = "z9hG4bK";
+
 
 const int Symbols::DefaultSipPort = 5060;
 const int Symbols::SipTlsPort = 5061;

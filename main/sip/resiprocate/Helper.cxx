@@ -29,7 +29,7 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_ContentLength).value() = 0;
    
    Via via;
-   via.param(p_branch) = computeUniqueBranch();
+   via.param(p_branch);
    request->header(h_Vias).push_front(via);
    
    return request;
@@ -97,7 +97,7 @@ Helper::makeRegister(const NameAddr& registrar,
    request->header(h_ContentLength).value() = 0;
 
    Via via;
-   via.param(p_branch) = computeUniqueBranch();
+   via.param(p_branch);
    request->header(h_Vias).push_front(via);
    
    return request;
