@@ -30,6 +30,9 @@ class InviteSessionHandler
       /// called when dialog enters connected state (after getting a 200)
       virtual void onConnected(ClientInviteSessionHandle, const SipMessage& msg)=0;
       
+      // UAC gets no final response within the stale call timeout(currently 3 minutes)
+      virtual void onStaleCallTimeout(ClientInviteSessionHandle)=0;
+
       /// called when an dialog enters the terminated state - this can happen
       /// after getting a BYE, Cancel, or 4xx,5xx,6xx response
       virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)=0;
@@ -49,8 +52,9 @@ class InviteSessionHandler
       /// useful 
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg)=0;
 
+      //!dcm! -- timer B handling?--timer B for re-invite?
       
-      /// called when some state in the Dialog changes - typically remoteURI
+      /// callebranch/sip/resiprocate/dum/d when some state in the Dialog changes - typically remoteURI
       virtual void onDialogModified(InviteSessionHandle, const SipMessage& msg)=0;
 
       /// called when INFO message is received 
