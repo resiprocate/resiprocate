@@ -448,11 +448,14 @@ TransactionState::processClientNonInvite(  Message* msg )
             break;
 
          case Timer::TimerF:
-            // !jf! is this correct
-            sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
-            terminateClientTransaction(mId);
+            if (mState == Calling)
+            {
+               // !jf! is this correct
+               sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               terminateClientTransaction(mId);
+               delete this;
+            }
             delete msg;
-            delete this;
             break;
 
          case Timer::TimerK:
