@@ -65,7 +65,8 @@ class SipStack
       void addTransport( Transport::Type, int port, const Data& hostName = Data::Empty, const Data& nic = Data::Empty);
 
       // If port = 0, use DNS to lookup the port number for the specified
-      // domain. Only allow messages to be sent as the specified domain
+      // domain. Only allow messages to be sent as the specified domain. 
+      // For default case, you can pass in domainname = DnsUtil::getLocalDomainName()
       void addTlsTransport( const Data& domainname, 
                             const Data& keyDir, const Data& privateKeyPassPhrase,
                             int port = 5061,
