@@ -9,6 +9,7 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum, const Uri& a
      mInitialOffer(static_cast<SdpContents*>(initial->clone()))
 {
    makeInitialRequest(NameAddr(aor), INVITE);
+   getLastRequest().setContents(mInitialOffer);
 }
 
 void
