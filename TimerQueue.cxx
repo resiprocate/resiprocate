@@ -61,7 +61,7 @@ TimerQueue::process()
         i != mTimers.upper_bound(now);)
    {
       TimerMessage* t = new TimerMessage(i->mTransactionId, i->mType, i->mDuration);
-      DebugLog (<< "Adding timer to fifo: " << " tid=" << i->mTransactionId << " type=" << Timer::toData(i->mType));
+      DebugLog (<< Timer::toData(i->mType) << " fired (" << i->mTransactionId << ") adding to fifo");
       mFifo.add(t);
       mTimers.erase(i++);
    }
