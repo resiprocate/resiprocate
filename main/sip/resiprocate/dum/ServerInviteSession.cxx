@@ -11,7 +11,7 @@ ServerInviteSession::ServerInviteSession(DialogUsageManager& dum,
 }
 
 void 
-ServerInviteSession::setOffer(SdpContents* offer)
+ServerInviteSession::setOffer(const SdpContents* offer)
 {
 }
 
@@ -21,7 +21,7 @@ ServerInviteSession::sendOfferInAnyMessage()
 }
 
 void 
-ServerInviteSession::setAnswer(SdpContents* answer)
+ServerInviteSession::setAnswer(const SdpContents* answer)
 {
 }
 
