@@ -75,6 +75,16 @@ static WINDOW* statusWin=0;
 static TuIM* tuIM;
 static Uri   dest;
 
+template<class T>
+Data cullenize(const T& x)
+{
+   Data d;
+   {
+      DataStream s(d);
+      s << x;
+   }
+   return d;
+}
 
 void 
 displayPres()
@@ -144,7 +154,7 @@ TestCallback::receivedPage( const Data& msg, const Uri& from,
       dest = from;
       //cerr << "Set destination to <" << *mDest << ">" << endl;
       waddstr(textWin,"Set destination to ");
-      waddstr(textWin, dest.value().c_str());
+      waddstr(textWin, cullenize(dest).c_str());
       waddstr(textWin,"\n");
    }
    
@@ -207,7 +217,7 @@ TestCallback::sendPageFailed( const Uri& target, int respNum )
    Data num(respNum);
    
    waddstr(textWin,"Message to ");
-   waddstr(textWin,target.value().c_str());
+   waddstr(textWin, cullenize(target).c_str());
    waddstr(textWin," failed (");
    waddstr(textWin,num.c_str());
    waddstr(textWin," response)\n");
@@ -222,7 +232,7 @@ TestCallback::receivePageFailed( const Uri& target )
    // cerr << "Message to " << dest << " failed" << endl;  
 
    waddstr(textWin,"Can not understand messager from ");
-   waddstr(textWin,target.value().c_str());
+   waddstr(textWin, cullenize(target).c_str());
    waddstr(textWin,"\n");
    wrefresh(textWin);
 }
@@ -234,7 +244,7 @@ TestCallback::registrationFailed(const Vocal2::Uri& target, int respNum )
    Data num(respNum);
    
    waddstr(textWin,"Registration to ");
-   waddstr(textWin, target.value().c_str());
+   waddstr(textWin, cullenize(target).c_str());
    waddstr(textWin," failed (");
    waddstr(textWin,num.c_str());
    waddstr(textWin," response)\n");
@@ -310,7 +320,7 @@ processStdin( Uri* dest, bool sign, bool encryp )
        
          //cerr << "Set destination to <" << *dest << ">";
          waddstr(textWin,"Set destination to ");
-         waddstr(textWin,dest->value().c_str());
+         waddstr(textWin, cullenize(*dest).c_str());
          waddstr(textWin,"\n");
          wrefresh(textWin);
       }
@@ -321,7 +331,7 @@ processStdin( Uri* dest, bool sign, bool encryp )
 
          //cerr << "Subscribing to buddy <" << uri << ">";
          waddstr(textWin,"Subscribing to ");
-         waddstr(textWin,uri.value().c_str());
+         waddstr(textWin,cullenize(uri).c_str());
          waddstr(textWin,"\n");
          wrefresh(textWin);
          
@@ -661,7 +671,7 @@ main(int argc, char* argv[])
       
       //cerr << time << endl;
 
-      int  err = fdset.selectMiliSeconds( time );
+      int  err = fdset.selectMilliSeconds( time );
       if ( err == -1 )
       {
          int e = errno;
