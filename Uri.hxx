@@ -1,7 +1,6 @@
 #ifndef Uri_hxx
 #define Uri_hxx
 
-#include <sipstack/SipMessage.hxx>
 #include <sipstack/ParserCategory.hxx>
 
 namespace Vocal2
@@ -19,7 +18,7 @@ class Uri : public ParserCategory
       Data& scheme() const {checkParsed(); return mScheme;}
       int& port() const {checkParsed(); return mPort;}
       Data& password() const {checkParsed(); return mPassword;}
-
+      
       void parse(ParseBuffer& pb);
       virtual void parse() { assert(0); }
       virtual ParserCategory* clone() const;
@@ -28,6 +27,8 @@ class Uri : public ParserCategory
       // parse the headers into this as SipMessage -- called from parse
       void parseEmbeddedHeaders();
 
+      Uri& operator=(const Uri& rhs);
+      bool operator==(const Uri& other) const;
       bool operator<(const Uri& other) const;
       
    protected:
@@ -35,6 +36,7 @@ class Uri : public ParserCategory
       mutable Data mHost;
       mutable Data mUser;
       mutable int mPort;
+      mutable bool mPortSpecified;
       mutable Data mAor;
       mutable Data mPassword;
 
