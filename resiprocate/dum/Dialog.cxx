@@ -255,7 +255,17 @@ Dialog::dispatch(const SipMessage& msg)
             }
             mInviteSession->dispatch(request);
             break;
-               
+         case BYE:
+            if (mInviteSession == 0)
+            {
+               InfoLog ( << "Spurious BYE" );
+               return;               
+            }
+            else
+            {
+               mInviteSession->dispatch(request);
+            }
+            break;
          case ACK:
          case CANCEL:
             if (mInviteSession == 0)
@@ -330,6 +340,7 @@ Dialog::dispatch(const SipMessage& msg)
             break;
                
          default: 
+            InfoLog ( << "In Dialog::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );            
             // only can be one ServerOutOfDialogReq at a time
             assert(mServerOutOfDialogRequest == 0);
             mServerOutOfDialogRequest = makeServerOutOfDialog(request);
@@ -417,7 +428,7 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession->dispatch(response);
             }
             break;
-               
+         case BYE:
          case ACK:
          case CANCEL:
             if (mInviteSession != 0)
@@ -673,7 +684,10 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
 //   request.header(h_From).param(p_tag) = mId.getLocalTag(); 
 
    request.header(h_CallId) = mCallId;
+
    request.header(h_Routes) = mRouteSet;
+   request.remove(h_RecordRoutes);  //!dcm! -- all of this is rather messy
+
    request.remove(h_Contacts);   
    request.header(h_Contacts).push_front(mLocalContact);   
    request.header(h_CSeq).method() = method;
@@ -717,7 +731,8 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
    {
       assert(request.isRequest());
       assert(request.header(h_RequestLine).getMethod() == INVITE ||
-             request.header(h_RequestLine).getMethod() == SUBSCRIBE);
+             request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
+             request.header(h_RequestLine).getMethod() == BYE);
       
       assert (request.header(h_Contacts).size() == 1);
       Helper::makeResponse(response, request, code, mLocalContact);
