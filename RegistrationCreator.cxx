@@ -9,7 +9,7 @@ using namespace resip;
 RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, const NameAddr& target, UserProfile& userProfile, int RegistrationTime)
    : BaseCreator(dum, userProfile)
 {
-   makeInitialRequest(target, REGISTER);
+   makeInitialRequest(target, target, REGISTER);
    mLastRequest.header(h_RequestLine).uri().user() = Data::Empty;
    mLastRequest.header(h_Expires).value() = RegistrationTime;
 
