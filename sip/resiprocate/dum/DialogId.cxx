@@ -4,34 +4,44 @@
 using namespace resip;
 
 DialogId::DialogId(const SipMessage& msg) : 
-   mDialogSetId(msg)
+   mDialogSetId(msg),
+   mRemoteTag(Data::Empty)
 {
+   //find remote tag, which may not exist
    if (msg.isExternal())
    {
-      //use remote tag
       if(msg.isResponse())
       {        
-         assert(msg.header(h_To).exists(p_tag));
-         mRemoteTag = msg.header(h_To).param(p_tag);
+         if (msg.header(h_To).exists(p_tag))
+         {
+            mRemoteTag = msg.header(h_To).param(p_tag);
+         }
       }
       else
       {
-         assert(msg.header(h_From).exists(p_tag));
-         mRemoteTag = msg.header(h_From).param(p_tag);
+         if (msg.header(h_From).exists(p_tag))
+         {
+            mRemoteTag = msg.header(h_From).param(p_tag);
+         }
       }
    }
    else
    {
-      //use local tag
       if(msg.isRequest())
       {
-         assert(msg.header(h_To).exists(p_tag));
-         mRemoteTag = msg.header(h_To).param(p_tag);
+         //?dcm? -- is this just for 2543?  At this point, we will have to have
+         //established a dialog(or else we would just have a dialogset)
+         if (msg.header(h_To).exists(p_tag))
+         {
+            mRemoteTag = msg.header(h_To).param(p_tag);
+         }
       }
       else
       {
-         assert(msg.header(h_From).exists(p_tag));
-         mRemoteTag = msg.header(h_From).param(p_tag);
+         if (msg.header(h_From).exists(p_tag))
+         {
+            mRemoteTag = msg.header(h_From).param(p_tag);
+         }
       }
    }
 }

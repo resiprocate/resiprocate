@@ -27,8 +27,6 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mClientOutOfDialogRequests(),
      mServerOutOfDialogRequest(0),
      mType(Fake),
-     mLocalTag(),
-     mRemoteTag(),
      mCallId(msg.header(h_CallID)),
      mRouteSet(),
      mLocalContact(),
@@ -38,6 +36,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 {
    assert(msg.isExternal());
 
+   
    if (msg.isRequest()) // UAS
    {
       const SipMessage& request = msg;
@@ -95,14 +94,6 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       mRemoteCSeq = request.header(h_CSeq).sequence();
       mLocalCSeq = 1;
       
-      if (request.header(h_From).exists(p_tag) ) // 2543 compat
-      {
-         mRemoteTag = request.header(h_From).param(p_tag);  
-      }
-      if ( request.header(h_To).exists(p_tag) )  // 2543 compat
-      {
-         mLocalTag = request.header(h_To).param(p_tag); 
-      }
    }
    else if (msg.isResponse())
    {
@@ -166,14 +157,6 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       mLocalCSeq = response.header(h_CSeq).sequence();
       mRemoteCSeq = 0;
       
-      if ( response.header(h_From).exists(p_tag) ) // 2543 compat
-      {
-         mLocalTag = response.header(h_From).param(p_tag);  
-      }
-      if ( response.header(h_To).exists(p_tag) )  // 2543 compat
-      {
-         mRemoteTag = response.header(h_To).param(p_tag); 
-      }
    }
    mDialogSet.addDialog(this);
 }
@@ -565,9 +548,9 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    
    request.header(h_RequestLine) = rLine;
    request.header(h_To) = mRemoteTarget;
-   request.header(h_To).param(p_tag) = mRemoteTag;
+   request.header(h_To).param(p_tag) = mId.getRemoteTag();
    request.header(h_From) = mLocalContact;
-   request.header(h_From).param(p_tag) = mLocalTag; 
+   request.header(h_From).param(p_tag) = mId.getLocalTag(); 
 
    request.header(h_CallId) = mCallId;
    request.header(h_Routes) = mRouteSet;
@@ -587,7 +570,7 @@ void
 Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
 {
    assert( code >= 100 );
-   response.header(h_To).param(p_tag) = mLocalTag;
+   response.header(h_To).param(p_tag) = mId.getLocalTag();
    if ( (code < 300) && (code > 100) )
    {
       assert(request.isRequest());
@@ -595,7 +578,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
              request.header(h_RequestLine).getMethod() == SUBSCRIBE);
       
       assert (request.header(h_Contacts).size() == 1);
-      response.header(h_To).param(p_tag) = mLocalTag;
+      response.header(h_To).param(p_tag) = mId.getLocalTag();
 
       Helper::makeResponse(response, request, code);
 

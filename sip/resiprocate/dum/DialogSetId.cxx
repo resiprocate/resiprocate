@@ -6,15 +6,15 @@ using namespace resip;
 DialogSetId::DialogSetId(const SipMessage& msg) : 
    mCallId(msg.header(h_CallID).value())
 {
+   //find local tag, generate one as necessary
    if (msg.isExternal())
    {
-      //use remote tag
       if(msg.isResponse())
       {        
          assert(msg.header(h_From).exists(p_tag));
          mTag = msg.header(h_From).param(p_tag);
       }
-      else
+      else //external request; generate to tag if not present
       {
          assert(msg.header(h_To).exists(p_tag));
          mTag = msg.header(h_To).param(p_tag);
@@ -22,7 +22,6 @@ DialogSetId::DialogSetId(const SipMessage& msg) :
    }
    else
    {
-      //use local tag
       if(msg.isRequest())
       {
          assert(msg.header(h_From).exists(p_tag));
