@@ -20,8 +20,12 @@ int
 main(int, char *[])
 {
     cerr << "Time in ms " << Timer::getTimeMs() << endl;
+    cerr << "aBitSmallerThan(0) = " << Helper::aBitSmallerThan(time_t(0)) << endl;
+    cerr << "aBitSmallerThan(1) = " << Helper::aBitSmallerThan(time_t(1)) << endl;
+    cerr << "aBitSmallerThan(5) = " << Helper::aBitSmallerThan(time_t(5)) << endl;
     cerr << "aBitSmallerThan(32) = " << Helper::aBitSmallerThan(time_t(32)) << endl;
     cerr << "aBitSmallerThan(64) = " << Helper::aBitSmallerThan(time_t(64)) << endl;
+    cerr << "aBitSmallerThan(60) = " << Helper::aBitSmallerThan(time_t(60)) << endl;
     cerr << "aBitSmallerThan(1000) = " << Helper::aBitSmallerThan(time_t(1000)) << endl;    
 
     return 0;
