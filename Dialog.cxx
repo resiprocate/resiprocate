@@ -222,7 +222,7 @@ Dialog::makeAck(const SipMessage& original)
    {    
       request->header(h_Authorization) = original.header(h_Authorization);
    }
-   request->header(h_CSeq) = original.header(h_CSeq);
+   request->header(h_CSeq).sequence() = original.header(h_CSeq).sequence();
    return request;
 }
 
@@ -287,7 +287,9 @@ Dialog::makeRequest(MethodTypes method)
    request->header(h_Routes) = mRouteSet;
    request->header(h_Contacts).push_front(mContact);
    request->header(h_CSeq).method() = method;
+   request->header(h_MaxForwards).value() = 70;
    request->header(h_ContentLength).value() = 0;
+
 
    Via via;
    via.param(p_branch); // will create the branch
