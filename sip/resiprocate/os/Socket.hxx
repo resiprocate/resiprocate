@@ -119,7 +119,7 @@ class FdSet
 
       void setWrite(Socket fd)
       {
-         FD_SET(fd, &read);
+         FD_SET(fd, &write);
          size = ( int(fd+1) > size) ? fd+1 : size;
       }
       

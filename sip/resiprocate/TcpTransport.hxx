@@ -20,14 +20,15 @@ class TcpTransport : public Transport
       void buildFdSet( FdSet& fdset);
       bool isReliable() const { return true; }
       Transport::Type transport() const { return TCP; }
-
-
+      
+      static const size_t MaxWriteSize;
+      static const size_t MaxReadSize;
    private:
       void processAllWrites(FdSet& fdset);
       void processAllReads(FdSet& fdset);
 
       bool processWrite(ConnectionMap::Connection* c);
-      bool sendFromRoundRobin(FdSet& fdset);
+      void sendFromRoundRobin(FdSet& fdset);
 
       bool processRead(ConnectionMap::Connection* c);
 

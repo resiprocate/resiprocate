@@ -5,9 +5,13 @@
 #include "sip2/sipstack/ConnectionMap.hxx"
 #include "sip2/util/Fifo.hxx"
 #include "sip2/sipstack/Preparse.hxx"
+#include "sip2/sipstack/TransportMessage.hxx"
 #include "sip2/util/DataStream.hxx"
 #include "sip2/util/Log.hxx"
 #include "sip2/sipstack/test/TestSupport.hxx"
+#include "sip2/sipstack/test/Resolver.hxx"
+
+#include <signal.h>
 
 using namespace Vocal2;
 using namespace std;
@@ -55,7 +59,7 @@ char *smallMessageWithBody = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
                               "\r\n"
                               "afffffefffffffffg");
 
-char *smallMessageWithLargeBody = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
+char *smallMessageWithLargeBody = ("INVITE sip:registrar.ixolib.com SIP/2.0\r\n"
                                    "Content-Type: text/plain\r\n"
                                    "Content-Length: 128\r\n"
                                    "\r\n"
@@ -65,26 +69,11 @@ int
 main(int argc, char* argv[])
 {
    Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::DEBUG, argv[0]);
-/*
-   {
-      Data msgData(onemsg);
-      
-      Preparse preparse;
-      SipMessage msg;
-      int k;
-
-      PreparseState::TransportAction status;
-      preparse.process(msg, msgData.data(), msgData.size(), k, status);
-      
-      assert(status == PreparseState::headersComplete);
-      cerr << "bytes used: " << k << ", message size: " << msgData.size() << endl;
-      assert(k == msgData.size());
-      cerr << msg << endl;
-   }
-   return 0;
-*/
+   
+   cerr << "*!Connection::Connection & preparser tests!*" << endl;
    
    cerr << "Message in two chunks" << endl;   
+#if 0
    {
       int chunk = strlen(onemsg) * 2 / 3;
          
@@ -275,5 +264,179 @@ main(int argc, char* argv[])
       }
 
       assert(buf == otherBuf);
+   }
+
+   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
+   {
+      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
+      exit(-1);
+   }
+
+   cerr << "*!TcpConnection tests!*" << endl;
+   {
+
+      Data tryToSendThis(onemsg);
+      Data transactionId = "2347sy8";
+
+      Fifo<Message> srcFifo;
+      Fifo<Message> destFifo;
+
+      Data localHost = Resolver::getHostName();
+      Resolver srcIp(localHost, 5070, Transport::TCP);
+      Resolver destIp(localHost, 5080, Transport::TCP);
+      
+      TcpTransport src(localHost, 5070, "eth0", srcFifo);
+      TcpTransport dest(localHost, 5080, "eth0", destFifo);
+
+      src.send(destIp.mNextHops.front(), tryToSendThis, transactionId);
+
+      int count = 0;
+      while (!destFifo.messageAvailable() && count < 50)
+      {
+         FdSet srcFdset;
+         src.buildFdSet(srcFdset);
+         {
+            int err = srcFdset.select(5000);
+            assert (err != -1);
+         }
+         src.process(srcFdset);
+
+         FdSet destFdset;
+         dest.buildFdSet(destFdset);
+         {
+            int err = destFdset.select(5000);
+            assert (err != -1);
+         }
+         dest.process(destFdset);
+         count++;
+      }
+      if (count == 50)
+      {
+         cerr << "test failed" << endl;
+         exit(-1);
+      }
+      
+      cerr << "recieved message" << endl;
+
+      Message* msg = destFifo.getNext();
+      SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
+      assert(sipMsg);
+      cerr << *sipMsg << endl;
+
+      cerr << "getting ok" << endl;
+      assert(srcFifo.messageAvailable());
+      msg = srcFifo.getNext();
+      assert(msg);
+      TransportMessage* okMsg = dynamic_cast<TransportMessage*>(msg);
+      cerr << *okMsg << endl;
+
+      delete sipMsg;
+      delete okMsg;
+   }
+#endif
+   {
+      cerr << "second" << endl;
+      Data tryToSendThis(longWithBody);
+      Data transactionId = "2347sy8";
+
+      Fifo<Message> srcFifo;
+      Fifo<Message> destFifo;
+
+      int srcPort = 5070;
+      int dstPort = 5080;
+
+      Data localHost = Resolver::getHostName();
+      Resolver srcIp(localHost, srcPort, Transport::TCP);
+      Resolver destIp(localHost, dstPort, Transport::TCP);
+      
+      TcpTransport src(localHost, srcPort, "eth0", srcFifo);
+      TcpTransport dest(localHost, dstPort, "eth0", destFifo);
+
+      src.send(destIp.mNextHops.front(), tryToSendThis, transactionId);
+
+      int count = 0;
+      while (!destFifo.messageAvailable() && count < 50)
+      {
+         FdSet srcFdset;
+         src.buildFdSet(srcFdset);
+         {
+            int err = srcFdset.select(5000);
+            assert (err != -1);
+         }
+         src.process(srcFdset);
+
+         FdSet destFdset;
+         dest.buildFdSet(destFdset);
+         {
+            int err = destFdset.select(5000);
+            assert (err != -1);
+         }
+         dest.process(destFdset);
+         count++;
+      }
+
+      {
+         Message* msg = destFifo.getNext();
+         SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
+         assert(sipMsg);
+         cerr << *sipMsg << endl;
+         
+         cerr << "getting ok" << endl;
+         assert(srcFifo.messageAvailable());
+         msg = srcFifo.getNext();
+         assert(msg);
+         TransportMessage* okMsg = dynamic_cast<TransportMessage*>(msg);
+         cerr << *okMsg << endl;
+         
+         delete sipMsg;
+         delete okMsg;
+      }
+
+      Data reply(smallMessageWithLargeBody);
+      dest.send(srcIp.mNextHops.front(), reply, transactionId);
+
+      while (!srcFifo.messageAvailable() && count < 50)
+      {
+
+         FdSet destFdset;
+         dest.buildFdSet(destFdset);
+         {
+            int err = destFdset.select(5000);
+            assert (err != -1);
+         }
+         dest.process(destFdset);
+
+         FdSet srcFdset;
+         src.buildFdSet(srcFdset);
+         {
+            int err = srcFdset.select(5000);
+            assert (err != -1);
+         }
+         src.process(srcFdset);
+
+         count++;
+      }
+      
+      if (count == 50)
+      {
+         cerr << "test failed" << endl;
+         exit(-1);
+      }
+      
+      cerr << "recieved message" << endl;
+      {
+         Message* msg = srcFifo.getNext();
+         SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
+         assert(sipMsg);
+         cerr << *sipMsg << endl;
+         
+         cerr << "getting ok" << endl;
+         assert(destFifo.messageAvailable());
+         msg = destFifo.getNext();
+         assert(msg);
+         TransportMessage* okMsg = dynamic_cast<TransportMessage*>(msg);
+         cerr << *okMsg << endl;
+      }
+
    }
 }

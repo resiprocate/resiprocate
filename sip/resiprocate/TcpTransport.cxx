@@ -25,12 +25,13 @@
 using namespace std;
 using namespace Vocal2;
 
-const int TcpTransport::MaxBufferSize = 1024;
-
+const size_t TcpTransport::MaxWriteSize = 4096;
+const size_t TcpTransport::MaxReadSize = 4096;
 
 TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo) : 
    Transport(sendhost, portNum, nic , fifo)
 {
+   mSendPos = mSendRoundRobin.end();
    mFd = socket(PF_INET, SOCK_STREAM, 0);
 
    if ( mFd == INVALID_SOCKET )
@@ -38,11 +39,23 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
       InfoLog (<< "Failed to open socket: " << portNum);
    }
    
+#ifndef WIN32
+   int on = 1;
+   if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, // | SO_REUSEPORT,
+                       (void*)(&on), sizeof ( on )) )
+   {
+      int err = errno;
+      InfoLog (<< "Couldn't set sockoptions SO_REUSEPORT | SO_REUSEADDR: " 
+               << strerror(err));
+      throw Exception("Failed setsockopt", __FILE__,__LINE__);
+   }
+#endif
+
    sockaddr_in addr;
    addr.sin_family = AF_INET;
-   addr.sin_addr.s_addr = htonl(INADDR_ANY); // !jf! 
+   addr.sin_addr.s_addr = htonl(INADDR_ANY); // !jf!--change when nic specfied
    addr.sin_port = htons(portNum);
-   
+  
    if ( bind( mFd, (struct sockaddr*) &addr, sizeof(addr)) == SOCKET_ERROR )
    {
       int err = errno;
@@ -71,8 +84,10 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
    assert( errNoBlock == 0 );
 #endif
 
-   // do the listen
-   int e = listen( mFd , /* qued requests */ 64 );
+   // do the listen, seting the maximum queue size for compeletly established
+   // sockets -- on linux, tcp_max_syn_backlog should be used for the incomplete
+   // queue size(see man listen)
+   int e = listen(mFd,64 );
    if (e != 0 )
    {
       //int err = errno;
@@ -81,11 +96,11 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
    }
 }
 
-
 TcpTransport::~TcpTransport()
 {
+//   ::shutdown(mFd, SHUT_RDWR);
+   ::close(mFd);
 }
-
 
 void 
 TcpTransport::buildFdSet( FdSet& fdset)
@@ -96,13 +111,13 @@ TcpTransport::buildFdSet( FdSet& fdset)
       fdset.setRead(it->second->getSocket());
       fdset.setWrite(it->second->getSocket());
    }
+   fdset.setRead(mFd);
+      
 }
 
 void 
 TcpTransport::processListen(FdSet& fdset)
 {
-   assert( mFd );
-	
    if (fdset.readyToRead(mFd))
    {
       struct sockaddr_in peer;
@@ -111,9 +126,9 @@ TcpTransport::processListen(FdSet& fdset)
       Socket s = accept( mFd, (struct sockaddr*)&peer,&peerLen);
       if ( s == -1 )
       {
-         //int err = errno;
-         // !cj!
-         assert(0);
+         int err = errno;
+         DebugLog( << "Error on accept: " << strerror(err));
+         return;
       }
 
       Transport::Tuple who;
@@ -125,53 +140,51 @@ TcpTransport::processListen(FdSet& fdset)
    }
 }
 
-
 bool
 TcpTransport::processRead(ConnectionMap::Connection* c)
 {
-/*
-   c->allocateBuffer(MaxBufferSize);
-   int bytesRead = read(c->getSocket(), c->mBuffer + c->mBytesRead, c->mBufferSize - c->mBytesRead);
-   if (bytesRead < 0)
+   std::pair<char* const, size_t> writePair = c->getWriteBuffer();
+   size_t bytesToRead = min(writePair.second, TcpTransport::MaxReadSize);
+
+   int bytesRead = read(c->getSocket(), writePair.first, bytesToRead);
+   if (bytesRead <= 0)
    {
-      //socket cleanup code
+      int err = errno;
+      DebugLog (<< "TcpTransport::processRead failed for " << *c 
+                << " " << strerror(err));
       return false;
    }   
-
-   if(c->process(bytesRead, mStateMachineFifo, mPreparse, MaxBufferSize))
+   if(c->process(bytesRead, mStateMachineFifo))
    {
-      // socket cleanup code
-      return false;
-      
+      mConnectionMap.touch(c);
+      return true;
    }
-*/// !dcm!
-   mConnectionMap.touch(c);
-   return true;
+   else
+   {
+      DebugLog (<< "TcpTransport::processRead failed due to bad message " << *c );
+      return false;
+   }
 }
-
-
 
 void
 TcpTransport::processAllReads(FdSet& fdset)
 {
-   if (mConnectionMap.mConnections.empty())
+   if (!mConnectionMap.mConnections.empty())
    {
-      return;
-   }
-
-   for (ConnectionMap::Connection * c = mConnectionMap.mPostOldest.mYounger;
-        c != &mConnectionMap.mPreYoungest; c = c->mYounger)
-   {
-      if (fdset.readyToRead(c->getSocket()))
+      for (ConnectionMap::Connection* c = mConnectionMap.mPostOldest.mYounger;
+           c != &mConnectionMap.mPreYoungest; c = c->mYounger)
       {
-         if (processRead(c))
+         if (fdset.readyToRead(c->getSocket()))
          {
-            return;
-         }
-         else
-         {
-            mConnectionMap.close(c->mWho);
-            return;
+            if (processRead(c))
+            {
+               return;
+            }
+            else
+            {
+               mConnectionMap.close(c->mWho);
+               return;
+            }
          }
       }
    }
@@ -180,80 +193,69 @@ TcpTransport::processAllReads(FdSet& fdset)
 void
 TcpTransport::processAllWrites( FdSet& fdset )
 {
-   // how do we know that buffer won't get deleted on us !jf!
-
-   //!dcm! have completely punted on backpressure tracking
-   while(true)
+   if (mTxFifo.messageAvailable())
    {
-      if (mTxFifo.messageAvailable())
-      {
-         SendData* data = mTxFifo.getNext();
-         ConnectionMap::Connection* conn = mConnectionMap.get(data->destination);
-         
-         if (conn == 0)
-         {
-            //notify ppl that transaction is dead
-            delete data;
-            return;
-         }
-         if (conn->mOutstandingSends.empty())
-         {
-            mSendRoundRobin.push_back(conn);
-            conn->mSendPos = 0;
-         }
-         conn->mOutstandingSends.push_back(data);
-      }
+      SendData* data = mTxFifo.getNext();
+      ConnectionMap::Connection* conn = mConnectionMap.get(data->destination);
       
-      if (sendFromRoundRobin(fdset))
+      if (conn == 0)
       {
+         fail(data->transactionId);
+         delete data;
          return;
       }
+      if (conn->mOutstandingSends.empty())
+      {
+         mSendRoundRobin.push_back(conn);
+         conn->mSendPos = 0;
+      }
+      conn->mOutstandingSends.push_back(data);
    }
+   
+   sendFromRoundRobin(fdset);
 }         
 
-bool 
+void
 TcpTransport::sendFromRoundRobin(FdSet& fdset)
 {
-   if (mSendRoundRobin.empty())
+   if (!mSendRoundRobin.empty())
    {
-      return true;
-   }
-
-   ConnectionList::iterator rrPos = mSendPos;
-   do
-   {
-      if (mSendPos == mSendRoundRobin.end())
+      ConnectionList::iterator rrPos = mSendPos;
+      do
       {
-         mSendPos = mSendRoundRobin.begin();
-      }
-      if (fdset.readyToWrite((*mSendPos)->getSocket()))
-      {
-         if (processWrite(*mSendPos))
+         if (mSendPos == mSendRoundRobin.end())
          {
-            if ((*mSendPos)->mOutstandingSends.empty())
+            mSendPos = mSendRoundRobin.begin();
+         }
+         if (fdset.readyToWrite((*mSendPos)->getSocket()))
+         {
+            if (processWrite(*mSendPos))
             {
-               mConnectionMap.close((*mSendPos)->mWho);
-               mSendPos = mSendRoundRobin.erase(mSendPos);
+               if ((*mSendPos)->mOutstandingSends.empty())
+               {
+                  DebugLog (<< "Finished send, removing " << **mSendPos << " from roundrobin");
+                  mSendPos = mSendRoundRobin.erase(mSendPos);
+               }
+               else
+               {
+                  mSendPos++;
+               }
+               return;
             }
             else
             {
-               mSendPos++;
+               DebugLog (<< "Failed send, removing " << **mSendPos << " from roundrobin");
+               mConnectionMap.close((*mSendPos)->mWho);
+               mSendPos = mSendRoundRobin.erase(mSendPos);
+               return;
             }
-            return true;
          }
          else
          {
-            mConnectionMap.close((*mSendPos)->mWho);
-            mSendPos = mSendRoundRobin.erase(mSendPos);
-            return true;
+            mSendPos++;
          }
-      }
-      else
-      {
-         mSendPos++;
-      }
-   } while(mSendPos != rrPos);
-   return false;
+      } while(mSendPos != rrPos && !mSendRoundRobin.empty());
+   }
 }
 
 bool
@@ -262,26 +264,25 @@ TcpTransport::processWrite(ConnectionMap::Connection* c)
    assert(!c->mOutstandingSends.empty());
    SendData* data = c->mOutstandingSends.front();
    
-   int bytesToWrite = data->data.size() - c->mSendPos;
+   size_t bytesToWrite = min(data->data.size() - c->mSendPos, TcpTransport::MaxWriteSize);
    int bytesWritten = write(c->getSocket(), data->data.data() + c->mSendPos, bytesToWrite);
-
-   if (bytesWritten < 0)
+   int err = errno;
+   if (bytesWritten <= 0)
    {
-      //send error(senddata will have transactionid), or if at start of new
-      //message, try to open again !dcm!
-      mConnectionMap.close(data->destination);
-      //touch if things work on retry
-      return false; //or true if you are not dead(retry connection if applicable)
+      DebugLog (<< "Failed write to " << *c << " :" << strerror(err));
+      fail(data->transactionId);
+      return false; 
    }
-   else if (bytesWritten < bytesToWrite)
+   else if ((size_t)bytesWritten < data->data.size() - c->mSendPos)
    {
       c->mSendPos += bytesWritten;
    }
    else
    {
-      delete data;
       c->mOutstandingSends.pop_front();
       c->mSendPos = 0;
+      ok(data->transactionId);
+      delete data;
    }
    mConnectionMap.touch(c);
    return true;

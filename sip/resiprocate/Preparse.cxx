@@ -685,7 +685,6 @@ Preparse::process(SipMessage& msg,
 void
 Preparse::reset()
 {
-  CritLog(<<"Preparse::reset called. Are you sure this is what you want?");
   ResetMachine();
 }
 
