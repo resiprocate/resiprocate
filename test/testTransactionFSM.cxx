@@ -8,7 +8,7 @@
 //
 // inject_wire (or inject_tu)
 // {
-// ...put a SIP message here...
+// ...put a SIP message here that has a CRLF after each line...
 // }
 //
 // expect_wire (or expect_tu)
@@ -29,6 +29,8 @@
 // name).  The expect_* clauses don't block but will queue the
 // expectation for the duration of the timeout specified.  When you
 // really want to sit and wait for a message, insert a delay clause.
+// This is used as a "barrier" at which you want all the above timeouts
+// to happen.  You'll want one at the end of your test, for example.
 
 #include <sys/time.h>
 #include <sys/types.h>
@@ -82,6 +84,7 @@ char* TestSpecBuf = 0;
 ParseBuffer* TestSpecParseBuf = 0;
 list<WaitNode*> WaitQueue;
 SipStack* client = 0;
+FdSet clientFdSet;
 
 void
 exitusage()
@@ -99,6 +102,8 @@ processTimeouts(int arg)
 	return;
     }
     SipMessage* message = 0;
+
+    client->process(clientFdSet);
 
 #if defined(UGLY) || 1
     // This should:
@@ -389,11 +394,11 @@ processExpect()
     }
 
     assert(thisWait);
-    WaitQueue.push_front(thisWait);
-    gettimeofday(&thisWait->mExpiry, NULL);
-    thisWait->mExpiry.tv_sec += expireTime;
-    alarm(expireTime);
 
+    gettimeofday(&thisWait->mExpiry, NULL);
+    thisWait->mExpiry.tv_sec += expireTime / 1000;
+    thisWait->mExpiry.tv_usec += (expireTime % 1000) * 1000;
+    WaitQueue.push_front(thisWait);
 
     TestSpecParseBuf->skipToOneOf("}");
     TestSpecParseBuf->skipChar();
@@ -417,12 +422,12 @@ processDelays()
     TestSpecParseBuf->skipToOneOf("0123456789");
     int sleepLength = TestSpecParseBuf->integer();
 
-    DebugLog( << "Pausing for " << sleepLength << " seconds");
+    DebugLog( << "Pausing for " << sleepLength << " ms");
 
     // We sleep this way to avoid conflict with SIGALRM from alarm().
     struct timespec ts, remainder;
-    ts.tv_sec = sleepLength;
-    ts.tv_nsec = 0;
+    ts.tv_sec = sleepLength / 1000;
+    ts.tv_nsec = (sleepLength % 1000) * 1000000;
     while (nanosleep(&ts, &remainder) < 0)
     {
 	ts = remainder;
@@ -497,13 +502,18 @@ main(int argc, char *argv[])
     client = new SipStack();
     assert(client);
     client->addTransport(Transport::TestUnreliable, 1234);
-    FdSet clientFdSet;
 
     signal(SIGALRM, processTimeouts);
 
+    // Cause a signal to be generated with setitimer for its resolution
+    struct itimerval timer, resetTimer;
+    timer.it_value.tv_sec = 0;
+    timer.it_value.tv_usec = 100000; // 100 ms resolution
+    resetTimer = timer;
+    setitimer(ITIMER_REAL, &timer, &resetTimer);
+
     while (processClause())
     {
-	client->process(clientFdSet);
     }
 
     // Catch any remaining events.
