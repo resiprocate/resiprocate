@@ -93,7 +93,7 @@ defineParam(transport, "transport", DataParameter, "RFC ????");
 defineParam(ttl, "ttl", IntegerParameter, "RFC ????");
 defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
 defineParam(user, "user", DataParameter, "RFC ????");
-defineParam(username, "username", DataParameter, "RFC ????");
+defineParam(username, "username", QuotedDataParameter, "RFC 3261");
 
 // SPECIAL-CASE
 ParameterTypes::Type
