@@ -66,7 +66,7 @@ TransportSelector::addTransport( Transport::Type protocol,
            switch (err)
            {
                case WSANOTINITIALISED:
-                   CritLog( << "could not find local hostname because netwrok not initialized:" << strerror(err) );
+                   CritLog( << "could not find local hostname because network not initialized:" << strerror(err) );
                    break;
                default:
                    CritLog( << "could not find local hostname:" << strerror(err) );
@@ -220,7 +220,7 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, const Da
       }
 
       Data& encoded = msg->getEncoded();
-      encoded = "";
+      encoded.clear();
       DataStream encodeStream(encoded);
       msg->encode(encodeStream);
       encodeStream.flush();
