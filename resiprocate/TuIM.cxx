@@ -39,6 +39,8 @@
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/Socket.hxx"
 
+#include "resiprocate/UnknownHeaderType.hxx"
+
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
@@ -194,9 +196,47 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
 #endif
    msg->setContents(body);
 
+#if 1
+   {
+      DateCategory now;
+      msg->header(h_Date) = now;
+      
+      // Compute the identity header.
+      Data token;
+      {
+         DataStream strm(token);
+
+         strm << msg->header(h_From).uri();
+         strm << Symbols::COLON;
+
+         msg->header(h_CallId).value();
+         strm << Symbols::COLON;
+         
+         msg->header(h_Date).encodeParsed( strm );
+         strm << Symbols::COLON;
+         
+         msg->header(h_Contacts).front().uri();
+         strm << Symbols::COLON;
+
+         strm << *body;
+      }
+      CerrLog( << "token is " << token );
+      
+      Security* sec = mStack->getSecurity();
+      assert(sec);
+      
+      Data res = sec->computeIdentityHash( token );
+
+      //Data enc = res.charEncoded();
+      Data enc = res.hex();
+      
+      msg->header(UnknownHeaderType("Identity")).push_front( StringCategory( enc ) );
+   }
+#endif
+   
    setOutbound( *msg );
    //ErrLog( "About to send " << *msg );
-
+   
    mStack->send( *msg );
 
    delete body;
