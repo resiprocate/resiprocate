@@ -20,13 +20,13 @@ class BranchParameter : public Parameter
       typedef BranchParameter Type;
       
       BranchParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
-      BranchParameter(ParameterTypes::Type);
+      explicit BranchParameter(ParameterTypes::Type);
 
       // contains z9hG4bK
-      bool hasMagicCookie();
+      bool hasMagicCookie() const;
 
       // returns tid
-      const Data& getTransactionId();
+      const Data& getTransactionId() const;
 
       // increments the transport sequence component - not part of tid
       void incrementTransportSequence();
@@ -35,6 +35,7 @@ class BranchParameter : public Parameter
       void reset(const Data& transactionId = Data::Empty);
 
       Type& value() {return *this;}
+      const Type& value() const {return *this;}
 
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
