@@ -30,12 +30,6 @@ Dialog::Dialog(const NameAddr& localContact)
    mVia.sentHost() = localContact.uri().host();
    mVia.sentPort() = localContact.uri().port();
    mVia.transport() = localContact.uri().param(p_transport);
-#if 0
-   if (mVia.transport().size() == 0)
-   {
-      mVia.transport() = Vocal::DEFAULT_TRANSPORT); // !jf!
-   }
-#endif
 }
 
 SipMessage*
@@ -62,15 +56,16 @@ Dialog::createDialogAsUAS(const SipMessage& request, int code)
       mLocalSequence = 0;
       mLocalEmpty = true;
       mCallId = request.header(h_CallId);
-      mLocalTag = response->header(h_To).param(p_tag); // from response
-      mRemoteTag = request.header(h_From).param(p_tag); 
+      mLocalTag = response->header(h_To).uri().param(p_tag); // from response
+      mRemoteTag = request.header(h_From).uri().param(p_tag); 
       mRemoteUri = request.header(h_From);
       mLocalUri = request.header(h_To);
       mCreated = true;
 
-      mDialogId.value() = mCallId.value();
-      mDialogId.param(p_toTag) = mRemoteTag;
-      mDialogId.param(p_fromTag) = mLocalTag;
+      mDialogId = mCallId.value();
+      mDialogId += mRemoteTag;
+      mDialogId += mLocalTag;
+      
 
       return response;
    }
@@ -102,15 +97,15 @@ Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
       mLocalSequence = request.header(h_CSeq).sequence();
       mLocalEmpty = false;
       mCallId = request.header(h_CallId);
-      mLocalTag = response.header(h_From).param(p_tag);  
-      mRemoteTag = response.header(h_To).param(p_tag); 
+      mLocalTag = response.header(h_From).uri().param(p_tag);  
+      mRemoteTag = response.header(h_To).uri().param(p_tag); 
       mRemoteUri = request.header(h_To);
       mLocalUri = request.header(h_From);
       mCreated = true;
       
-      mDialogId.value() = mCallId.value();
-      mDialogId.param(p_toTag) = mRemoteTag;
-      mDialogId.param(p_fromTag) = mLocalTag;
+      mDialogId = mCallId.value();
+      mDialogId += mRemoteTag;
+      mDialogId += mLocalTag;
    }
 }
 
@@ -138,7 +133,8 @@ Dialog::targetRefreshRequest(const SipMessage& request)
       }
       else if (cseq < mRemoteSequence)
       {
-         return 500; // !jf! should be exception
+         InfoLog (<< "Got a cseq out of sequence: " << cseq << " < " << mRemoteSequence);
+         throw Exception("out of order", __FILE__,__LINE__);
       }
       else
       {
@@ -157,9 +153,7 @@ Dialog::targetRefreshRequest(const SipMessage& request)
 SipMessage*
 Dialog::makeInvite()
 {
-   SipMessage* request = new SipMessage;
-   request->header(h_RequestLine) = RequestLine(INVITE);
-   setRequestDefaults(*request);
+   SipMessage* request=makeRequest(INVITE);
    incrementCSeq(*request);
    return request;
 }
@@ -167,9 +161,7 @@ Dialog::makeInvite()
 SipMessage*
 Dialog::makeBye()
 {
-   SipMessage* request = new SipMessage;
-   request->header(h_RequestLine) = RequestLine(BYE);
-   setRequestDefaults(*request);
+   SipMessage* request=makeRequest(BYE);
    incrementCSeq(*request);
    return request;
 }
@@ -178,21 +170,18 @@ Dialog::makeBye()
 SipMessage*
 Dialog::makeRefer(const NameAddr& referTo)
 {
-   SipMessage* request = new SipMessage;
-   request->header(h_RequestLine) = RequestLine(REFER);
-   setRequestDefaults(*request);
-   incrementCSeq(*request);
+   SipMessage* request=makeRequest(REFER);
    request->header(h_ReferTo) = referTo;
    request->header(h_ReferredBy) = mLocalUri;
+   incrementCSeq(*request);
    return request;
 }
 
 SipMessage*
 Dialog::makeNotify()
 {
-   SipMessage* request = new SipMessage;
-   request->header(h_RequestLine) = RequestLine(NOTIFY);
-   setRequestDefaults(*request);
+   SipMessage* request=makeRequest(NOTIFY);
+   incrementCSeq(*request);
    return request;
 }
 
@@ -200,9 +189,7 @@ Dialog::makeNotify()
 SipMessage*
 Dialog::makeOptions()
 {
-   SipMessage* request = new SipMessage;
-   request->header(h_RequestLine) = RequestLine(OPTIONS);
-   setRequestDefaults(*request);
+   SipMessage* request=makeRequest(OPTIONS);
    incrementCSeq(*request);
    return request;
 }
@@ -210,12 +197,12 @@ Dialog::makeOptions()
 SipMessage*
 Dialog::makeAck(const SipMessage& original)
 {
-   SipMessage* request = new SipMessage;
-   request->header(h_RequestLine) = RequestLine(ACK);
-   setRequestDefaults(*request);
+   SipMessage* request=makeRequest(ACK);
    copyCSeq(*request);
-
+   
    // !jf! will this do the right thing if these headers weren't in original 
+   // we should be able to store this stuff in the Dialog and not need to pass
+   // in the original
    request->header(h_ProxyAuthorization) = original.header(h_ProxyAuthorization);
    request->header(h_Authorization) = original.header(h_Authorization);
 
@@ -228,7 +215,7 @@ Dialog::makeCancel(const SipMessage& request)
    assert (request.header(h_Vias).size() >= 1);
    assert (request.header(h_RequestLine).getMethod() == INVITE);
    
-   SipMessage* cancel;
+   SipMessage* cancel = new SipMessage;
    cancel->header(h_RequestLine) = request.header(h_RequestLine);
    cancel->header(h_CallId) = request.header(h_CallId);
    cancel->header(h_To) = request.header(h_To); 
@@ -252,8 +239,6 @@ Dialog::makeResponse(const SipMessage& request, int code)
    return response;
 }
 
- 
-
 void
 Dialog::clear()
 {
@@ -266,24 +251,31 @@ Dialog::clear()
    mRemoteUri = 0;
    mLocalUri = 0;
    mRemoteTarget = 0;
+   mDialogId = "";
 }
 
-
-void 
-Dialog::setRequestDefaults(SipMessage& request)
+SipMessage*
+Dialog::makeRequest(MethodTypes method)
 {
    assert(mCreated);
-   request.header(h_To) = mRemoteUri;
-   request.header(h_To).param(p_tag) = mRemoteTag;
-   request.header(h_From) = mLocalUri;
-   request.header(h_From).param(p_tag) = mLocalTag;
-   request.header(h_CallId) = mCallId;
-   request.header(h_RequestLine).uri() = mRemoteTarget.uri();
-   request.header(h_Routes) = mRouteSet;
-   request.header(h_Contacts).front() = mContact;
-   request.header(h_Vias).clear();
-   request.header(h_Vias).front() = mVia;
-   request.header(h_Vias).front().param(p_branch) = Helper::computeUniqueBranch();
+   SipMessage* request = new SipMessage;
+   RequestLine rLine(method);
+   rLine.uri() = mRemoteTarget.uri();
+   
+   request->header(h_RequestLine) = rLine;
+   request->header(h_To) = mRemoteUri;
+   request->header(h_To).param(p_tag) = mRemoteTag;
+   request->header(h_From) = mLocalUri;
+   request->header(h_From).param(p_tag) = mLocalTag; // !jf! may not be necessary
+   request->header(h_CallId) = mCallId;
+   request->header(h_Routes) = mRouteSet;
+   request->header(h_Contacts).push_front(mContact);
+
+   Via via;
+   via.param(p_branch) = Helper::computeUniqueBranch();
+   request->header(h_Vias).push_front(via);
+
+   return request;
 }
 
 void
