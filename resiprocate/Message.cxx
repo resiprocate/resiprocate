@@ -4,6 +4,7 @@
 
 #include "resiprocate/Message.hxx"
 #include "resiprocate/os/DataStream.hxx"
+#include <cassert>
 
 using namespace resip;
 
