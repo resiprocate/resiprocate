@@ -37,6 +37,7 @@ class ClientPagerMessageHandler;
 class ServerPagerMessageHandler;
 class OutOfDialogHandler;
 class RedirectHandler;
+class DialogSetHandler;
 
 class Dialog;
 class InviteSessionCreator;
@@ -84,6 +85,9 @@ class DialogUsageManager : public HandleManager
       void setProfile(Profile* profile);
       Profile* getProfile();
       
+      //optional handler to track the progress of DialogSets
+      void setDialogSetHandler(DialogSetHandler* handler);
+
       //There is a default RedirectManager.  Setting one will cause the old one
       //to be delete. The RedirectManager is deleted when the DUM is destroyed,
       void setRedirectManager(RedirectManager* redirect);
@@ -258,7 +262,8 @@ class DialogUsageManager : public HandleManager
       InviteSessionHandler* mInviteSessionHandler;
       ClientRegistrationHandler* mClientRegistrationHandler;
       ServerRegistrationHandler* mServerRegistrationHandler;      
-      RedirectHandler* mRedirectHandler;      
+      RedirectHandler* mRedirectHandler;
+      DialogSetHandler* mDialogSetHandler;      
 
 	  OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
 
