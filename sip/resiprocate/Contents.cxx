@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/Logger.hxx"

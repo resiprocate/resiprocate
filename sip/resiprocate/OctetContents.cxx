@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #include "resiprocate/OctetContents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/Logger.hxx"

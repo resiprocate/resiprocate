@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #include "resiprocate/Executive.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/TransactionState.hxx"

@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #include "resiprocate/Pidf.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Symbols.hxx"
