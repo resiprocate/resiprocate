@@ -154,7 +154,7 @@ Resolver::lookupARecords()
    {
 #else
 
-#if defined( WIN32 ) || defined( __MACH__ ) || defined (__SUNPRO_CC) || defined(__FreeBSD__)
+#if defined( WIN32 ) || defined( __APPLE__ ) || defined (__SUNPRO_CC) || defined(__FreeBSD__)
 	assert(0); // !cj! 
 	int ret = -1;
 #else
