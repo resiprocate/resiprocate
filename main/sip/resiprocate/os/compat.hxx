@@ -1,6 +1,28 @@
 #if !defined(compat_hxx)
 #define compat_hxx
 
+#ifdef WIN32
+#include <errno.h>
+#include <winsock2.h>
+#include <io.h>
+#endif
+ 
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <netinet/in.h>
+#endif
+
+#ifdef WIN32
+# include <windows.h>
+# include <winbase.h>
+# include <errno.h>
+# include <winsock2.h>
+# include <io.h>
+typedef unsigned int u_int32_t;
+#endif
+
 #if defined(__sparc)
 #include <inttypes.h>
 /* typedef unsigned char u_int8_t; */
@@ -25,15 +47,7 @@ typedef uint32_t u_int32_t;
 #define strncasecmp(a,b,c) strnicmp(a,b,c)
 #endif
 
-// perhaps not the best thing to do here
-#ifdef WIN32
-# include <windows.h>
-# include <winbase.h>
-# include <errno.h>
-# include <winsock2.h>
-# include <io.h>
-typedef unsigned int u_int32_t;
-#else
+#ifndef WIN32
 # include <sys/types.h>
 # include <sys/socket.h> // for u_int32_t
 # include <sys/select.h>
@@ -43,10 +57,8 @@ typedef unsigned int u_int32_t;
 #endif
 
 #if defined (__QNX__)
-
 typedef unsigned int u_int32_t;
 //typedef size_t socklen_t;
-
 #endif
 
 
