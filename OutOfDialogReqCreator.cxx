@@ -2,10 +2,10 @@
 
 using namespace resip;
 
-OutOfDialogReqCreator::OutOfDialogReqCreator(DialogUsageManager& dum, MethodTypes method, const NameAddr& target, Identity& identity)
-   : BaseCreator(dum, identity)
+OutOfDialogReqCreator::OutOfDialogReqCreator(DialogUsageManager& dum, MethodTypes method, const NameAddr& target, const NameAddr& from)
+   : BaseCreator(dum)
 {
-   makeInitialRequest(target, method);
+   makeInitialRequest(target, from, method);
 }
 
 void
