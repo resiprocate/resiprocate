@@ -1,9 +1,6 @@
 *.d
 a.out
 bin.*
-fsm.dot
-fsm.pdf
-fsm.ps
 obj.*
 testSipStack1
 testUdp
