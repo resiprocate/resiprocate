@@ -55,11 +55,11 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
     assert(handler);
     int code = msg.header(h_StatusLine).statusCode();    
 
-    if (msg.header(h_StatusLine).statusCode() < 200)
+    if (code < 200)
     {
        DebugLog ( << "ClientPagerMessageReq::dispatch - encountered provisional response" << msg.brief() );
     }
-    else if (msg.header(h_StatusLine).statusCode() < 300)
+    else if (code < 300)
     {
        handler->onSuccess(getHandle(), msg);  
        mInTransaction = false;
