@@ -70,7 +70,7 @@ UdpTransport::process(FdSet& fdset)
       if ( count == SOCKET_ERROR )
       {
          int e = getErrno();
-         InfoLog (<< strerror(e));
+         error(e);
          InfoLog (<< "Failed sending to " << sendData->destination);
          fail(sendData->transactionId);
       }

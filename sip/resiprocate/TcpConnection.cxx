@@ -57,6 +57,7 @@ TcpConnection::read( char* buf, int count )
       }
 
       InfoLog (<< "Failed read on " << mSocket << " " << strerror(e));
+      Transport::error(e);
       
       return -1;
    }
@@ -88,6 +89,7 @@ TcpConnection::write( const char* buf, const int count )
    {
       int e = getErrno();
       InfoLog (<< "Failed write on " << mSocket << " " << strerror(e));
+      Transport::error(e);
       return -1;
    }
    

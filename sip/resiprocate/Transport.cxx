@@ -93,7 +93,7 @@ Transport::socket(TransportType type, bool ipv4)
    if ( fd == INVALID_SOCKET )
    {
       int e = getErrno();
-      InfoLog (<< "Failed to create socket: " << strerror(e));
+      error(e);
       throw Exception("Can't create TcpBaseTransport", __FILE__,__LINE__);
    }
 
@@ -158,57 +158,57 @@ Transport::error(int e)
 
 #if defined(WIN32)
       case WSAENETDOWN: 
-         DebugLog (<<" The network subsystem has failed.  ");
+         InfoLog (<<" The network subsystem has failed.  ");
          break;
       case WSAEFAULT:
-         DebugLog (<<" The buf or from parameters are not part of the user address space, "
+         InfoLog (<<" The buf or from parameters are not part of the user address space, "
                    "or the fromlen parameter is too small to accommodate the peer address.  ");
          break;
       case WSAEINTR: 
-         DebugLog (<<" The (blocking) call was canceled through WSACancelBlockingCall.  ");
+         InfoLog (<<" The (blocking) call was canceled through WSACancelBlockingCall.  ");
          break;
       case WSAEINPROGRESS: 
-         DebugLog (<<" A blocking Windows Sockets 1.1 call is in progress, or the "
+         InfoLog (<<" A blocking Windows Sockets 1.1 call is in progress, or the "
                    "service provider is still processing a callback function.  ");
          break;
       case WSAEINVAL: 
-         DebugLog (<<" The socket has not been bound with bind, or an unknown flag was specified, "
+         InfoLog (<<" The socket has not been bound with bind, or an unknown flag was specified, "
                    "or MSG_OOB was specified for a socket with SO_OOBINLINE enabled, "
                    "or (for byte stream-style sockets only) len was zero or negative.  ");
          break;
       case WSAEISCONN : 
-         DebugLog (<<"The socket is connected. This function is not permitted with a connected socket, "
-                   "whether the socket is connection-oriented or connectionless.  ");
+         InfoLog (<<"The socket is connected. This function is not permitted with a connected socket, "
+                  "whether the socket is connection-oriented or connectionless.  ");
          break;
       case WSAENETRESET:
-         DebugLog (<<" The connection has been broken due to the keep-alive activity "
-                   "detecting a failure while the operation was in progress.  ");
+         InfoLog (<<" The connection has been broken due to the keep-alive activity "
+                  "detecting a failure while the operation was in progress.  ");
          break;
       case WSAENOTSOCK :
-         DebugLog (<<"The descriptor is not a socket.  ");
+         InfoLog (<<"The descriptor is not a socket.  ");
          break;
       case WSAEOPNOTSUPP:
-         DebugLog (<<" MSG_OOB was specified, but the socket is not stream-style such as type "
+         InfoLog (<<" MSG_OOB was specified, but the socket is not stream-style such as type "
                    "SOCK_STREAM, OOB data is not supported in the communication domain associated with this socket, "
                    "or the socket is unidirectional and supports only send operations.  ");
          break;
       case WSAESHUTDOWN:
-         DebugLog (<<"The socket has been shut down; it is not possible to recvfrom on a socket after "
-                   "shutdown has been invoked with how set to SD_RECEIVE or SD_BOTH.  ");
+         InfoLog (<<"The socket has been shut down; it is not possible to recvfrom on a socket after "
+                  "shutdown has been invoked with how set to SD_RECEIVE or SD_BOTH.  ");
          break;
       case WSAEMSGSIZE:
-         DebugLog (<<" The message was too large to fit into the specified buffer and was truncated.  ");
+         InfoLog (<<" The message was too large to fit into the specified buffer and was truncated.  ");
          break;
       case WSAETIMEDOUT: 
-         DebugLog (<<" The connection has been dropped, because of a network failure or because the "
-                   "system on the other end went down without notice.  ");
+         InfoLog (<<" The connection has been dropped, because of a network failure or because the "
+                  "system on the other end went down without notice.  ");
          break;
       case WSAECONNRESET : 
-         DebugLog (<<"Reset ");
+         InfoLog (<<"Connection reset ");
          break;
 
 	  case WSAEWOULDBLOCK:
-			 DebugLog (<<"Would Block ");
+         DebugLog (<<"Would Block ");
          break;
 #endif
 
