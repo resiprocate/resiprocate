@@ -285,3 +285,36 @@ TuShim::processResponse(SipMessage* msg)
    }
    delete msg;
 }
+
+Dialog2 TuShim::createDialog( const Data callId, const Data localTag, 
+                              const Data remoteTag, 
+                              bool wilcardRemoteTag = false)
+{
+   DialogSet set;
+
+   set = findDialogSet( callId );
+
+   return createDialog( set, callId, localTag, remoteTag, wildcardRemoteTag );
+}
+
+Dialog2 TuShim::createDialog( const DialogSet set, const Data callId,
+                      const Data localTag, constData remoteTag, 
+                      bool wildcardRemoteTag = false );
+{
+   Dialog2 dialog;
+   dialog = 0;
+
+   if (set == 0)
+   {
+      set = createDialogSet( callId, localTag );
+   }
+
+   if (set != 0)
+   {
+      dialog = set.createDialog (callId, localTag, remoteTag, 
+                                   wildcardRemoteTag );
+   }
+   return dialog;
+}
+
+
