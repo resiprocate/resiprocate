@@ -33,6 +33,7 @@ class DialogSet
    private:
       friend class Dialog;
       friend class BaseUsage;
+      friend class DialogUsageManager;      
       
       Dialog* findDialog(const SipMessage& msg);
       Dialog* findDialog(const DialogId id);
@@ -43,8 +44,8 @@ class DialogSet
       BaseCreator* mCreator;
       DialogSetId mId;
       DialogUsageManager& mDum;
-      bool mCancelled;
       AppDialogSet* mAppDialogSet;
+      bool mCancelled;
 };
  
 }
