@@ -2,6 +2,7 @@
 #define RESIP_SERVERPAGERMESSAGE_HXX
 
 #include "resiprocate/dum/NonDialogUsage.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
