@@ -1,5 +1,6 @@
 #include "sip2/util/Data.hxx"
 #include "sip2/util/DataStream.hxx"
+#include "sip2/util/Log.hxx"
 #include "assert.h"
 #include <iostream>
 
@@ -12,6 +13,9 @@ class TestData
    public:
       void main()
       {
+
+         Log::initialize(Log::COUT, Log::DEBUG, Data::Empty);
+
          {
             Data v("some text");
             assert(v.prefix("some"));

@@ -52,6 +52,16 @@ main(int arc, char** argv)
 {
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
    {
+      TR _tr("Test uri with no user");
+      Data data("sip:kelowna.gloo.net");
+      
+      Uri original(data);
+      cerr << original << endl;
+      
+      assert(Data::from(original) == data);
+   }
+
+   {
       TR _tr("Test assignment for NameAddr");
       NameAddr original(Data("\"Original\"<sip:orig@example.com>;tag=original"));
       (void)original.exists(p_tag);
@@ -1049,7 +1059,51 @@ main(int arc, char** argv)
       assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-c87542-jason.0-1");
       assert(via.param(p_branch).getServerTransactionId() == "jason");
    }
+   
+   {
+      TR _tr("Branch parameter 1");
+      
+      Data txt("=z9hG4bK-c87542-jason.0-1-clientData");
+      ParseBuffer pb(txt.data(), txt.size());
+      BranchParameter bp(ParameterTypes::branch, pb, ";");
+      assert(bp.hasMagicCookie());
+      cerr << "!! " << bp.clientData() << endl;
+      assert(bp.clientData() == "clientData");
+      assert(bp.getTransactionId() == "jason.0");
+      assert(bp.getServerTransactionId() == "jason");
 
+      bp.reset(bp.getTransactionId());
+      bp.setClientSequence(10);
+      bp.encode(cerr); cerr << endl;
+      assert(bp.getTransactionId() == "jason.0.10");
+      assert(bp.getServerTransactionId() == "jason.0");
+   }
+      
+   {
+      TR _tr("Branch parameter 2");
+      Data txt("=z9hG4bK-c87542-jason.1.2.3.14-1-clientData");
+      ParseBuffer pb(txt.data(), txt.size());
+
+      BranchParameter bpc(ParameterTypes::branch, pb, ";");
+      assert(bpc.hasMagicCookie());
+      assert(bpc.clientData() == "clientData");
+      assert(bpc.getTransactionId() == "jason.1.2.3.14");
+      assert(bpc.getServerTransactionId() == "jason.1.2.3");
+   }
+      
+   {
+      TR _tr("Branch parameter 3");
+      Data txt("=z9hG4bK-c87542-jason.1.2.3.14-1-clientData-dash.dot-dash.dot");
+      ParseBuffer pb(txt.data(), txt.size());
+
+      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      assert(bpcc.hasMagicCookie());
+      assert(bpcc.clientData() == "clientData-dash.dot-dash.dot");
+      assert(bpcc.getTransactionId() == "jason.1.2.3.14");
+      assert(bpcc.getServerTransactionId() == "jason.1.2.3");
+   }
+   
+      
    {
       TR _tr("Branch testing 1");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
