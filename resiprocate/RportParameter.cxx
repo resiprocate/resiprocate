@@ -16,7 +16,7 @@ RportParameter::RportParameter(ParameterTypes::Type type,
      mHasValue(false)
 {
    pb.skipWhitespace();
-   if (*pb.position() == Symbols::EQUALS[0])
+   if (!pb.eof() && *pb.position() == Symbols::EQUALS[0])
    {
       mHasValue = true;
       
