@@ -1,10 +1,13 @@
-# $Id: Makefile,v 1.65 2004/02/11 12:51:41 fluffy Exp $
+# $Id: Makefile,v 1.66 2004/02/12 08:36:42 fluffy Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
 LDLIBS += -lncurses 
+
+CXXFLAGS += -I/sw/include
+LDFLAGS  += -L/sw/lib
 
 # this is so that popt only works where there is popt
 # To enable popt, add USE_POPT=true to sip/build/Makefile.conf
