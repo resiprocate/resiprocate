@@ -1,12 +1,13 @@
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 
 #include <util/Data.hxx>
 #include <util/Logger.hxx>
 #include <util/ParseBuffer.hxx>
 #include <sipstack/ParserCategories.hxx>
 #include <sipstack/Uri.hxx>
-#include <iostream>
+#include <sipstack/UnknownParameter.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -112,10 +113,30 @@ Auth::operator=(const Auth& rhs)
    }
    return *this;
 }
+
+
 void
 Auth::parse(ParseBuffer& pb)
 {
-   assert(0);
+   const char* start;
+   start = pb.skipWhitespace();
+   pb.skipToOneOf(ParseBuffer::Whitespace, ",=");
+
+   if (*pb.position() == Symbols::EQUALS[0])
+   {
+      // Authoentication-Info only
+      // back up, and then parse
+      pb.reset(start);
+      parseAuthParameters(pb);
+   }
+   else
+   {
+      // everything else
+      pb.data(mScheme, start);
+
+      pb.skipWhitespace();
+      parseAuthParameters(pb);
+   }
 }
 
 std::ostream& 
@@ -130,6 +151,45 @@ Auth::clone() const
 {
    return new Auth(*this);
 }
+
+
+Data&
+Auth::scheme()
+{
+   checkParsed();
+   return mScheme;
+}
+
+void
+Auth::parseAuthParameters(ParseBuffer& pb)
+{
+   while (!pb.eof())
+   {
+      const char* keyStart = pb.position();
+      const char* keyEnd = pb.skipToOneOf(" \t\r\n=");
+      mUnknownParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb, " \t\r\n,"));
+      pb.skipWhitespace();
+      if (*pb.position() != Symbols::COMMA[0])
+      {
+	 break;
+      }
+      pb.skipChar();
+      pb.skipWhitespace();
+   }
+}      
+
+ostream&
+Auth::encodeAuthParameters(ostream& str) const
+{
+   for (ParameterList::iterator it = mUnknownParameters.begin();
+        it != mUnknownParameters.end(); it++)
+   {
+      str << Symbols::COMMA;
+      (*it)->encode(str);
+   }
+   return str;
+}
+
 
 //====================
 // CSeqCategory:

@@ -4,9 +4,11 @@
 using namespace Vocal2;
 using namespace std;
 
-UnknownParameter::UnknownParameter(const char* startName, unsigned int nameSize,
-                                   ParseBuffer& pb)
-   : DataParameter(ParameterTypes::UNKNOWN, pb),
+UnknownParameter::UnknownParameter(const char* startName, 
+				   unsigned int nameSize,
+                                   ParseBuffer& pb, 
+				   const char* terminators)
+   : DataParameter(ParameterTypes::UNKNOWN, pb, terminators),
      mName(startName, nameSize)
 {}
 
@@ -17,10 +19,11 @@ UnknownParameter::UnknownParameter(const Data& name)
 }
 
 const Data& 
-UnknownParameter::getName()
+UnknownParameter::getName() const
 {
    return mName;
 }
+
 
 Parameter* 
 UnknownParameter::clone() const
