@@ -348,9 +348,6 @@
 				RelativePath="PlainContents.cxx">
 			</File>
 			<File
-				RelativePath="Preparse.cxx">
-			</File>
-			<File
 				RelativePath="QopParameter.cxx">
 			</File>
 			<File
@@ -376,9 +373,6 @@
 			</File>
 			<File
 				RelativePath="Security.cxx">
-			</File>
-			<File
-				RelativePath="SendingMessage.cxx">
 			</File>
 			<File
 				RelativePath="SipFrag.cxx">
@@ -679,9 +673,6 @@
 				RelativePath="PlainContents.hxx">
 			</File>
 			<File
-				RelativePath="Preparse.hxx">
-			</File>
-			<File
 				RelativePath="QopParameter.hxx">
 			</File>
 			<File
@@ -713,9 +704,6 @@
 			</File>
 			<File
 				RelativePath="Security.hxx">
-			</File>
-			<File
-				RelativePath="SendingMessage.hxx">
 			</File>
 			<File
 				RelativePath="SipFrag.hxx">
