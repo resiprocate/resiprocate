@@ -18,7 +18,7 @@ extern int pthread_mutexattr_settype (pthread_mutexattr_t *__attr, int __kind)
 
 using resip::RecursiveMutex;
 
-#if defined( WIN32 ) || defined( __APPLE__ ) 
+#if defined( WIN32 ) || defined( __APPLE__ )  || defined (__INTEL_COMPILER)
 // !cj! need to write windows mutex stuff 
 namespace resip
 {
