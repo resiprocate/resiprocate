@@ -29,10 +29,14 @@ class TransportSelector
       
       void process(fd_set* fdSet);
 
+      // this will result in msg->resolve() being called to either
+      // kick off dns resolution or to pick the next tuple , will cause the
+      // message to be encoded and via updated
       void send( SipMessage* msg );
-      // I don't think we really need this at this level, handled one level up.
-      //   void send(SipMessage* msg, const Data& dest="default" );
 
+      // just resend to the same transport as last time
+      void retransmit(SipMessage* msg);
+      
       void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
 	
       void buildFdSet( fd_set* fdSet, int* fdSetSize );
