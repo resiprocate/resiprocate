@@ -1,6 +1,9 @@
 #if !defined(RESIP_TU_HXX)
 #define RESIP_TU_HXX 
 
+#include "resiprocate/os/TimeLimitFifo.hxx"
+#include "resiprocate/Message.hxx"
+
 namespace resip
 {
 class SipMessage;
@@ -8,8 +11,12 @@ class SipMessage;
 class TransactionUser
 {
    public:
-      virtual bool isForMe(const SipMessage& msg)=0;
-      virtual void postToTransactionUser(const Message& msg)=0;
+      virtual bool isForMe(const SipMessage& msg) const=0;
+      virtual void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)=0;      
+      virtual bool isShutDown() const=0;      
+//      virtual bool messageAvailable() const=0;
+      virtual unsigned int size() const=0;    
+      virtual bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
 };
 }
 
