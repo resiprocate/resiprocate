@@ -16,29 +16,28 @@ class BaseCreator;
 class DialogSet
 {
    public:
-      DialogSet( const BaseCreator* );
-      DialogSet( const SipMessage& request );
+      DialogSet(const BaseCreator*);
+      DialogSet(const SipMessage& request);
       virtual ~DialogSet();
       
       DialogSetId getId();
       
-      void addDialog( Dialog* );
-      void removeDialog(const Dialog* );
+      void addDialog(Dialog*);
+      void removeDialog(const Dialog*);
       
       DialogIdSet getDialogs() const;
+      bool empty() const;
 
-      Dialog* findDialog( const DialogId id );
-      Dialog* findDialog( const Data& otherTag );
-      Dialog* findDialog( SipMessage& msg );
+      Dialog* findDialog(const DialogId id);
+      Dialog* findDialog(const Data& otherTag);
+      Dialog* findDialog(SipMessage& msg);
       
-      BaseCreator* getCreator();
+      BaseCreator* getCreator() const;
 
       void cancel(const SipMessage& cancelMsg);
       void dispatch(const SipMessage& msg);
 
       bool mergeRequest(const SipMessage& request);
-      
-      static const DialogSet Empty;
 
    private:
       std::list<Dialog*> mDialogs;

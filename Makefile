@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2004/04/11 18:30:11 davidb Exp $
+# $Id: Makefile,v 1.5 2004/04/11 20:44:34 davidb Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -9,7 +9,8 @@ TARGET_LIBRARY = libdum
 
 TESTPROGRAMS = 
 
-SRC =   DialogUsageManager.cxx \
+SRC =   UInt64Hash.cxx \
+	DialogUsageManager.cxx \
 	BaseUsage.cxx \
 	InviteSession.cxx \
 	ClientInviteSession.cxx \
