@@ -25,6 +25,10 @@
 using namespace Vocal2;
 using namespace std;
 
+#if defined(USE_ARES)
+ares_channel DnsResolver::mChannel;
+#endif
+
 DnsResolver::DnsResolver(SipStack& stack) : mStack(stack)
 {
 #if defined(USE_ARES)
@@ -69,7 +73,6 @@ DnsResolver::process(FdSet& fdset)
 #endif
 }
 
-
 static int 
 determinePort(const Data& scheme, Transport::Type transport)
 {
@@ -82,6 +85,7 @@ determinePort(const Data& scheme, Transport::Type transport)
 }
 
 
+#if defined(USE_ARES)
 static Data
 determineSrvPrefix(const Data& scheme, Transport::Type transport)
 {
@@ -107,6 +111,7 @@ determineSrvPrefix(const Data& scheme, Transport::Type transport)
 
    return prefix;
 }
+#endif
 
 void
 DnsResolver::lookup(const Data& transactionId, const Via& via)
@@ -190,49 +195,48 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
          }
          else
          {
-#if 0
-            /*
-            !rk! Perform NAPTR and SRV lookups per RFC 3263 sections
-            4.1 & 4.2.	We could get a list of targets here.  You also have
-            to filter out results that are not usable (e.g. SCTP entries if
-            you don't support that, SIPS entries if you don't do TLS).
-
-            1. Foreach NAPTR result in the sorted/ordered list of compatible
-               NAPTR records => "R" (Replacement) and "T" (transport) {
-        	 Foreach SRV result in the sorted list of SRV records
-        	 found for R => "H" (Host) and "P" (Port) {
-        	   Foreach A/AAAA result found for H => "A" {
-        	     lookupARecords(transactionId, A, P, T);
-        	   }
-        	 }
-               }
-
-            2. If more results are needed, choose TCP for SIPS and UDP
-            for SIP.  Do an SRV lookup on the target using _sips or
-            _sip as appropriate along with _tcp or _udp as determined
-            in the last sentence.  If the SRV query returns no results,
-            resolve the target into a list of A/AAAA records to try
-            in sequence with the determined protocol and transport and
-            default port, 5060 for SIP or 5061 for SIPS.
-            */
-
-            return;
-#else
             DebugLog(<<"Should be doing NAPTR+SRV per RFC 3263 s4.1, 4.2");
             transport = Transport::UDP;
 
 #if defined(USE_ARES)
-            DebugLog(<<"For now assuming UDP and just doing SRV");
-            port = determinePort(uri.scheme(), transport);
+            DebugLog(<<"For now doing TCP _and_ UDP SRV queries");
+
             Request* request = new Request(mStack, transactionId,
-               target, port, transport);
-            Data srvTarget =
-               determineSrvPrefix(uri.scheme(), transport)
-               + "." + target;
-            ares_query(mChannel, srvTarget.c_str(), C_IN, T_SRV,
-               DnsResolver::aresCallbackSrv, request);
+               target, 0, Transport::TCP, uri.scheme());
+
+	    // Priority: SRV TCP, SRV UDP, A/AAAA
+	    if (mStack.mTransportSelector.findTransport(Transport::TCP))
+	    {
+		request->otherTransports.push_back(Transport::TCP);
+	    }
+	    if (mStack.mTransportSelector.findTransport(Transport::UDP))
+	    {
+		request->otherTransports.push_back(Transport::UDP);
+	    }
+	    request->otherTransports.push_back(Transport::Unknown);
+
+	    // Assume TCP and UDP as the only possibilities now.
+	    assert(request->otherTransports.size() > 0);
+	    if (request->otherTransports.front() == Transport::TCP)
+	    {
+		request->otherTransports.pop_front();
+		Data srvTarget =
+		   determineSrvPrefix(uri.scheme(), Transport::TCP)
+		   + "." + target;
+		ares_query(mChannel, srvTarget.c_str(), C_IN, T_SRV,
+		   DnsResolver::aresCallbackSrvTcp, request);
+	    }
+	    else
+	    {
+		request->otherTransports.pop_front();
+		Data srvTarget =
+		   determineSrvPrefix(uri.scheme(), Transport::UDP)
+		   + "." + target;
+		ares_query(mChannel, srvTarget.c_str(), C_IN, T_SRV,
+		   DnsResolver::aresCallbackSrvUdp, request);
+	    }
+
             return;
-#endif
 #endif
          }
       }
@@ -261,10 +265,9 @@ DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int por
       DebugLog(<< "DNS lookup for non-existent transaction");
       return;
    }
-   txn->registerDnsLookup();
 
 #if defined(USE_ARES)
-   Request* request = new Request(mStack, transactionId, host, port, transport);
+   Request* request = new Request(mStack, transactionId, host, port, transport, Data::Empty);
    ares_gethostbyname(mChannel, host.c_str(), AF_INET, DnsResolver::aresCallbackHost, request);
 #else   
    struct hostent* result=0;
@@ -356,10 +359,10 @@ DnsResolver::isIpAddress(const Data& data)
    }
 } 
 
+#if defined(USE_ARES)
 void 
 DnsResolver::aresCallbackHost(void *arg, int status, struct hostent* result)
 {
-#if defined(USE_ARES)
    std::auto_ptr<Request> request(reinterpret_cast<Request*>(arg));
 
    DebugLog (<< "Received dns update: " << request->tid);
@@ -386,32 +389,133 @@ DnsResolver::aresCallbackHost(void *arg, int status, struct hostent* result)
 	 dns->mTuples.push_back(tuple);
       }
    }
-
+   if (request->isFinal)
+   {
+      dns->isFinal = true;
+   }
    request->stack.mStateMacFifo.add(dns);
-#endif
 }
+#endif
 
-
+#if defined(USE_ARES)
 void
-DnsResolver::aresCallbackSrv(void *arg, int pstatus,
+DnsResolver::aresCallbackNaptr(void *arg, int pstatus,
    unsigned char *abuf, int alen)
 {
+   int status, len;
+   Request *request = reinterpret_cast<Request*>(arg);
+   char *name, *errmem;
+   unsigned char *rrindex;
+   unsigned char *aptr = abuf + HFIXEDSZ;
+   DnsResolver::NaptrSet *naptrset = new DnsResolver::NaptrSet;
+
+   DebugLog (<< "Received NAPTR result for: " << request->tid << " for "
+             << request->host);
+
+   if (pstatus != ARES_SUCCESS)
+   {
+      errmem = 0;
+      InfoLog (<< "NAPTR lookup failed: " << ares_strerror(pstatus, &errmem));
+      ares_free_errmem(errmem);
+      assert(0); // Do the right thing!
+   }
+
+   for (int i = 0; i < DNS_HEADER_ANCOUNT(abuf); i++)
+   {
+      DnsResolver::Naptr *naptr = new DnsResolver::Naptr;
+
+      status = ares_expand_name(aptr, abuf, alen, &name, &len);
+      if (status != ARES_SUCCESS)
+      {
+         errmem = 0;
+         InfoLog (<< "Bad DNS RR: " << ares_strerror(status, &errmem));
+         ares_free_errmem(errmem);
+         goto NaptrParseDone;
+      }
+
+      aptr += len;
+      int dlen = DNS_RR_LEN(aptr);
+      aptr += RRFIXEDSZ;
+
+      naptr->order = DNS__16BIT(aptr);
+      naptr->pref = DNS__16BIT(aptr+2);
+
+      rrindex = aptr+4;
+      status = ares_expand_name(rrindex, abuf, alen, &name, &len);
+      if (status != ARES_SUCCESS)
+      {
+         errmem = 0;
+         InfoLog (<< "Bad DNS answer: " << ares_strerror(status, &errmem));
+         ares_free_errmem(errmem);
+         goto NaptrParseDone;
+      }
+      naptr->flags = name;
+
+      rrindex += len + 1;
+      status = ares_expand_name(rrindex, abuf, alen, &name, &len);
+      if (status != ARES_SUCCESS)
+      {
+         errmem = 0;
+         InfoLog (<< "Bad DNS answer: " << ares_strerror(status, &errmem));
+         ares_free_errmem(errmem);
+         goto NaptrParseDone;
+      }
+      naptr->service = name;
+
+      rrindex += len + 1;
+      status = ares_expand_name(rrindex, abuf, alen, &name, &len);
+      if (status != ARES_SUCCESS)
+      {
+         errmem = 0;
+         InfoLog (<< "Bad DNS answer: " << ares_strerror(status, &errmem));
+         ares_free_errmem(errmem);
+         goto NaptrParseDone;
+      }
+      naptr->regex = name;
+
+      rrindex += len + 1;
+      status = ares_expand_name(rrindex, abuf, alen, &name, &len);
+      if (status != ARES_SUCCESS)
+      {
+         errmem = 0;
+         InfoLog (<< "Bad DNS answer: " << ares_strerror(status, &errmem));
+         ares_free_errmem(errmem);
+         goto NaptrParseDone;
+      }
+      naptr->replacement = name;
+
+      naptrset->insert(*naptr);
+   }
+
+NaptrParseDone:
+   for (DnsResolver::NaptrIterator n = naptrset->begin();
+	n != naptrset->end();
+	n++)
+   {
+      DebugLog(<< "NAPTR entry [" << n->order << ", " << n->pref << ", " 
+	       << n->flags << ", " << n->service << ", " << n->regex
+	       << ", " << n->replacement);
+   }
+   delete request;
+}
+#endif
+
 #if defined(USE_ARES)
-   std::auto_ptr<Request> request(reinterpret_cast<Request*>(arg));
+static DnsResolver::SrvSet&
+aresParseSrv(int pstatus, unsigned char *abuf, int alen,
+    Transport::Type transport)
+{
    int status, len;
    char *name, *errmem;
    const unsigned char *aptr = abuf + HFIXEDSZ;
-   DnsMessage *dns = new DnsMessage(request->tid);
-
-   DebugLog (<< "Received SRV result for: " << request->tid << " for "
-             << request->host);
+   DnsResolver::SrvSet *srvset = new DnsResolver::SrvSet;
 
    if (pstatus != ARES_SUCCESS)
    {
       errmem = 0;
       InfoLog (<< "SRV lookup failed: " << ares_strerror(pstatus, &errmem));
       ares_free_errmem(errmem);
-      goto SrvParseDone;
+      return *srvset;
    }
 
    // !rk!  Throw away all of the "questions" in the DNS packet.  Is there
@@ -432,7 +536,7 @@ DnsResolver::aresCallbackSrv(void *arg, int pstatus,
 
    for (int i = 0; i < DNS_HEADER_ANCOUNT(abuf); i++)
    {
-      Srv srv;
+      DnsResolver::Srv *srv = new DnsResolver::Srv;
 
       status = ares_expand_name(aptr, abuf, alen, &name, &len);
       if (status != ARES_SUCCESS)
@@ -447,9 +551,9 @@ DnsResolver::aresCallbackSrv(void *arg, int pstatus,
       int dlen = DNS_RR_LEN(aptr);
       aptr += RRFIXEDSZ;
 
-      srv.priority = DNS__16BIT(aptr);
-      srv.weight = DNS__16BIT(aptr+2);
-      srv.port = DNS__16BIT(aptr+4);
+      srv->priority = DNS__16BIT(aptr);
+      srv->weight = DNS__16BIT(aptr+2);
+      srv->port = DNS__16BIT(aptr+4);
 
       status = ares_expand_name(aptr+6, abuf, alen, &name, &len);
       if (status != ARES_SUCCESS)
@@ -459,37 +563,145 @@ DnsResolver::aresCallbackSrv(void *arg, int pstatus,
          ares_free_errmem(errmem);
          goto SrvParseDone;
       }
-      srv.host = name;
-      srv.transport = request->transport;
-      dns->mSrvs.insert(srv);
+      srv->host = name;
+      srv->transport = transport;
+      srvset->insert(*srv);
 
       free(name);
       aptr += dlen;
    }
 
 SrvParseDone:
-   if (!dns->mSrvs.size())
-   {
-      // Add the request target as the only result
-      InfoLog (<< "Adding fallback SRV to queue A/AAAA lookup");
-      Srv srv;
-      srv.priority = 65535;
-      srv.weight = 0;
-      srv.port = request->port;
-      srv.host = request->host;
-      srv.transport = request->transport;
-      dns->mSrvs.insert(srv);
-   }
-
-   for (SrvIterator s = dns->mSrvs.begin(); s != dns->mSrvs.end(); s++)
+   for (DnsResolver::SrvIterator s = srvset->begin(); s != srvset->end(); s++)
    {
       DebugLog(<< "SRV entry " << s->host << " with priority " << s->priority);
    }
 
-   request->stack.mStateMacFifo.add(dns);
-#endif
+   return *srvset;
 }
+#endif
 
+#if defined(USE_ARES)
+void
+DnsResolver::aresCallbackSrvTcp(void *arg, int pstatus,
+   unsigned char *abuf, int alen)
+{
+   Request *request = reinterpret_cast<Request*>(arg);
+
+   DebugLog (<< "Received SRV/TCP result for: " << request->tid << " for "
+             << request->host);
+
+   SrvSet& srvset = aresParseSrv(pstatus, abuf, alen, Transport::TCP);
+
+   if (request->otherTransports.size())
+   {
+      Transport::Type next = request->otherTransports.front();
+      request->otherTransports.pop_front();
+      if (next == Transport::UDP)
+      {
+	 Data srvTarget =
+	    determineSrvPrefix(request->scheme, Transport::UDP)
+	    + "." + request->host;
+	 ares_query(mChannel, srvTarget.c_str(), C_IN, T_SRV,
+	    DnsResolver::aresCallbackSrvUdp, new Request(*request));
+      }
+      else if (next == Transport::Unknown)
+      {
+	 // Add the request target as the only result
+	 InfoLog (<< "Adding fallback SRV to queue A/AAAA lookup");
+	 Srv srv;
+	 srv.priority = 65535;
+	 srv.weight = 0;
+	 srv.port = determinePort(request->scheme, Transport::Unknown);
+	 srv.host = request->host;
+	 srv.transport = Transport::TCP;
+	 srvset.insert(srv);
+      }
+      else
+      {
+	 assert(0);
+      }
+   }
+
+   for (DnsResolver::SrvIterator s = srvset.begin(); s != srvset.end(); s++)
+   {
+       Request* resolve = new Request(request->stack,
+				      request->tid,
+				      s->host,
+				      s->port,
+				      s->transport,
+				      Data::Empty);
+       if (!request->otherTransports.size())
+       {
+           resolve->isFinal = true;
+       }
+       ares_gethostbyname(mChannel, resolve->host.c_str(), AF_INET, DnsResolver::aresCallbackHost, resolve);
+   }
+
+   delete request;
+}
+#endif
+
+#if defined(USE_ARES)
+void
+DnsResolver::aresCallbackSrvUdp(void *arg, int pstatus,
+   unsigned char *abuf, int alen)
+{
+   Request *request = reinterpret_cast<Request*>(arg);
+
+   DebugLog (<< "Received SRV/UDP result for: " << request->tid << " for "
+             << request->host);
+
+   SrvSet& srvset = aresParseSrv(pstatus, abuf, alen, Transport::UDP);
+
+   if (request->otherTransports.size())
+   {
+      Transport::Type next = request->otherTransports.front();
+      request->otherTransports.pop_front();
+      if (next == Transport::TCP)
+      {
+	 Data srvTarget =
+	    determineSrvPrefix(request->scheme, Transport::TCP)
+	    + "." + request->host;
+	 ares_query(mChannel, srvTarget.c_str(), C_IN, T_SRV,
+	    DnsResolver::aresCallbackSrvTcp, new Request(*request));
+      }
+      else if (next == Transport::Unknown)
+      {
+	 // Add the request target as the only result
+	 InfoLog (<< "Adding fallback SRV to queue A/AAAA lookup");
+	 Srv srv;
+	 srv.priority = 65535;
+	 srv.weight = 0;
+	 srv.port = determinePort(request->scheme, Transport::Unknown);
+	 srv.host = request->host;
+	 srv.transport = Transport::UDP;
+	 srvset.insert(srv);
+      }
+      else
+      {
+	 assert(0);
+      }
+   }
+
+   for (DnsResolver::SrvIterator s = srvset.begin(); s != srvset.end(); s++)
+   {
+       Request* resolve = new Request(request->stack,
+				      request->tid,
+				      s->host,
+				      s->port,
+				      s->transport,
+				      Data::Empty);
+       if (!request->otherTransports.size())
+       {
+           resolve->isFinal = true;
+       }
+       ares_gethostbyname(mChannel, resolve->host.c_str(), AF_INET, DnsResolver::aresCallbackHost, resolve);
+   }
+
+   delete request;
+}
+#endif
 
 Data 
 DnsResolver::DnsMessage::brief() const 

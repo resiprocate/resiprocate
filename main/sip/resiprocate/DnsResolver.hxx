@@ -1,16 +1,18 @@
 #ifndef DnsResolver_hxx
 #define DnsResolver_hxx
 
-#if defined(__linux__)
-# define USE_ARES
+#if defined(__linux__) && !defined(USE_ARES)
+#error Not configured with ARES
 #endif
 
 #include <list>
+#include <set>
+
 #if defined(USE_ARES)
 extern "C"
 {
-#include <ares.h>
-#include <ares_dns.h>
+#include "sip2/contrib/ares-1.1.1/ares.h"
+#include "sip2/contrib/ares-1.1.1/ares_dns.h"
 }
 #endif
 
@@ -41,15 +43,58 @@ class DnsResolver
             Transport::Type transport;
 
             bool operator<(const Srv& rhs) const
-               { return priority < rhs.priority; }
+            {
+	       return priority < rhs.priority;
+	    }
       };
       typedef std::set<DnsResolver::Srv> SrvSet;
       typedef std::set<DnsResolver::Srv>::const_iterator SrvIterator;
 
+      struct Naptr
+      {
+	    int order;
+	    int pref;
+	    Data flags;
+	    Data service;
+	    Data regex;
+	    Data replacement;
+
+            bool operator<(const Naptr& rhs) const
+            {
+	       if (order != rhs.order)
+	       {
+		  return pref < rhs.pref;
+	       }
+	       else
+	       {
+	          return order < rhs.order;
+	       }
+	    }
+      };
+      typedef std::set<DnsResolver::Naptr> NaptrSet;
+      typedef std::set<DnsResolver::Naptr>::const_iterator NaptrIterator;
+
+      struct Request
+      {
+            Request(SipStack& pstack, const Data& ptid, const Data& phost, int pport, Transport::Type ptransport, Data pscheme)
+               : stack(pstack),tid(ptid),host(phost),port(pport),transport(ptransport),scheme(pscheme),isFinal(false)
+            {
+            }
+            
+            SipStack& stack;
+            Data tid;
+            Data host;
+            int port;
+            Transport::Type transport;
+	    Data scheme;
+	    std::list<Transport::Type> otherTransports;
+	    bool isFinal;
+      };
+     
       class DnsMessage : public Message
       {
          public:
-            DnsMessage(const Data& tid) : mTransactionId(tid) {}
+            DnsMessage(const Data& tid) : mTransactionId(tid), isFinal(false) {}
             virtual const Data& getTransactionId() const { return mTransactionId; }
             virtual Data brief() const;
             virtual std::ostream& encode(std::ostream& strm) const;
@@ -57,6 +102,7 @@ class DnsResolver
             Data mTransactionId;
             TupleList mTuples;
             SrvSet mSrvs;
+	    bool isFinal;
       };
       
       class Exception : public BaseException
@@ -66,21 +112,7 @@ class DnsResolver
             const char* name() const { return "DnsResolver::Exception"; }
       };
 
-      struct Request
-      {
-            Request(SipStack& pstack, const Data& ptid, const Data& phost, int pport, Transport::Type ptransport) 
-               : stack(pstack), tid(ptid),host(phost),port(pport),transport(ptransport)
-            {
-            }
-            
-            SipStack& stack;
-            Data tid;
-            Data host;
-            int port;
-            Transport::Type transport;
-      };
-      
-      
+ 
       DnsResolver(SipStack& stack);
       ~DnsResolver();
 
@@ -101,13 +133,15 @@ class DnsResolver
       //void stop(const Data& tid);
 
    private:
+#if defined(USE_ARES)
+      static ares_channel mChannel;
       static void aresCallbackHost(void *arg, int status, struct hostent* host);
-      static void aresCallbackSrv(void *arg, int status, unsigned char *abuf, int alen);
+      static void aresCallbackSrvTcp(void *arg, int status, unsigned char *abuf, int alen);
+      static void aresCallbackSrvUdp(void *arg, int status, unsigned char *abuf, int alen);
+      static void aresCallbackNaptr(void *arg, int status, unsigned char *abuf, int alen);
+#endif
 
       SipStack& mStack;
-#if defined(USE_ARES)
-      ares_channel mChannel;
-#endif
 };
       
 
