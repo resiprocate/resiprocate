@@ -74,6 +74,8 @@ class Dialog
       SipMessage* makeRefer(const NameAddr& referTo);
       SipMessage* makeNotify();
       SipMessage* makeOptions();
+      SipMessage* makePublish();
+      SipMessage* makeAck();
       SipMessage* makeAck(const SipMessage& request);
       SipMessage* makeCancel(const SipMessage& request);
       SipMessage* makeRequest(MethodTypes method);
@@ -98,6 +100,8 @@ class Dialog
       // Dialog State
       bool mCreated;
 
+      Uri mRequestUri;
+      
       NameAddrs mRouteSet;
       NameAddr mRemoteTarget;
 
@@ -113,7 +117,7 @@ class Dialog
       
       NameAddr mRemoteUri;
       NameAddr mLocalUri;
-
+      
       bool secure; // indicates the messages in this Dialog must use TLS
 
       UInt64 expireyTimeAbsoluteMs;
