@@ -270,9 +270,6 @@
 				RelativePath=".\DateCategory.cxx">
 			</File>
 			<File
-				RelativePath=".\Dialog.cxx">
-			</File>
-			<File
 				RelativePath="DnsInterface.cxx">
 			</File>
 			<File
@@ -286,6 +283,12 @@
 			</File>
 			<File
 				RelativePath=".\ExpiresCategory.cxx">
+			</File>
+			<File
+				RelativePath=".\ExternalBodyContents.cxx">
+			</File>
+			<File
+				RelativePath=".\os\FileSystem.cxx">
 			</File>
 			<File
 				RelativePath="FloatParameter.cxx">
@@ -352,6 +355,9 @@
 			</File>
 			<File
 				RelativePath=".\MsgHeaderScanner.cxx">
+			</File>
+			<File
+				RelativePath=".\MultipartAlternativeContents.cxx">
 			</File>
 			<File
 				RelativePath="MultipartMixedContents.cxx">
@@ -665,6 +671,9 @@
 			</File>
 			<File
 				RelativePath=".\ExpiresCategory.hxx">
+			</File>
+			<File
+				RelativePath=".\ExternalBodyContents.hxx">
 			</File>
 			<File
 				RelativePath="os\Fifo.hxx">
