@@ -395,6 +395,12 @@ Contents::preParseHeaders(ParseBuffer& pb)
                mId = new Token();
                mId->parse(subPb);
             }
+            // Some people put this in ...
+            else if (isEqualNoCase(headerName, "Content-Length"))
+            {
+               mLength = new StringCategory();
+               mLength->parse(subPb);
+            }
             else if (isEqualNoCase(headerName, "MIME-Version"))
             {
                subPb.skipWhitespace();
@@ -466,16 +472,6 @@ Contents::encodeHeaders(ostream& str) const
          str << Symbols::CRLF;
       }
    }
-
-#if 0 // !cj! this look redudneatn with next thing but I don't know 
-   if (exists(h_ContentTransferEncoding))
-   {
-      str <<  "Content-Transfer-Encoding" << Symbols::COLON[0] << Symbols::SPACE[0];
-
-      header(h_ContentTransferEncoding).encode(str);
-      str << Symbols::CRLF;
-   }
-#endif 
 
    if (mTransferEncoding)
    {
