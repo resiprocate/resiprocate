@@ -7,6 +7,7 @@
 //
 // !dlb! until automated, must ensure that this set is consistent with
 //
+// HeaderTypes.hxx
 // Headers.hxx
 // HeaderHash.gperf
 // Headers.cxx
