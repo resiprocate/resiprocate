@@ -275,6 +275,9 @@ class DialogUsageManager : public HandleManager
       bool queueForIdentityCheck(SipMessage* msg);
       bool processIdentityCheckResponse(const SipMessage& msg);
 
+      // For delayed delete of a Usage
+      void destroy(const BaseUsage* usage);
+      
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
             
