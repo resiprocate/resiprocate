@@ -2,8 +2,12 @@
 #include <sipstack/SipStack.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/TimerMessage.hxx>
+#include <sipstack/Logger.hxx>
+#include <sipstack/MethodTypes.hxx>
 
 using namespace Vocal2;
+
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 void
 TransactionState::process(SipStack& stack)
@@ -53,11 +57,11 @@ TransactionState::process(SipStack& stack)
                
             if (sip->isExternal()) // new sip msg from transport
             {
-               if (sip[RequestLine].getMethod() == INVITE)
+               if ((*sip)[RequestLine].getMethod() == INVITE)
                {
                   TransactionState* state = new TransactionState(stack, ServerInvite, Proceeding);
-                  stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100)
-                     stack.mTransactionMap.add(tid,state);
+                  stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
+                  stack.mTransactionMap.add(tid,state);
                }
                else 
                {
@@ -68,7 +72,7 @@ TransactionState::process(SipStack& stack)
             }
             else // new sip msg from the TU
             {
-               if (sip[RequestLine].getMethod() == INVITE)
+               if ((*sip)[RequestLine].getMethod() == INVITE)
                {
                   TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
                   stack.mTimers.add(Timer::TimerB, tid, 64*Timer::T1 );
@@ -143,7 +147,7 @@ TransactionState::processServerNonInvite(  Message* msg )
          else if (isProvisionalResponse(msg) && isFromTU(msg))
          {
             mState = Proceeding;
-            mStack.mTransportSelector.send(msg);
+            mStack.mTransportSelector.send(dynamic_cast<SipMessage*>(msg));
          }
          else
          {
@@ -167,7 +171,7 @@ TransactionState::processServerNonInvite(  Message* msg )
          else if (isProvisionalResponse(msg) && isFromTU(msg))
          {
             // retransmit
-            mStack.mTransportSelector.send(msg);
+            mStack.mTransportSelector.send(dynamic_cast<SipMessage*>(msg));
          }
          else if (isRequest(msg))
          {
@@ -184,9 +188,8 @@ TransactionState::processServerNonInvite(  Message* msg )
          break;
          
       case Completed:
-         if (isTimer(msg))
+         if (TimerMessage* timer = dynamic_cast<TimerMessage*>(msg))
          {
-            timer = dynamic_cast<TimerMessage*>(msg);
             if (timer->getType() == Timer::TimerJ)
             {
                delete timer;
@@ -220,34 +223,41 @@ TransactionState::processStale(  Message* msg )
 {
 }
 
+bool
+TransactionState::isRequest(Message* msg) const
+{
+   SipMessage* sip = dynamic_cast<SipMessage*>(msg);   
+   return sip && sip->isRequest();
+}
+
 bool 
 TransactionState::isFinalResponse(Message* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-   return sip && sip->isResponse() && sip[ResponseLine].getResponseCode() >= 200;
+   return sip && sip->isResponse() && (*sip)[StatusLine].getResponseCode() >= 200;
 }
 
 bool 
-TransactionState::isProvisionalResponse(Message* msg)
+TransactionState::isProvisionalResponse(Message* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-   return sip && sip->isResponse() && sip[ResponseLine].getResponseCode() < 200;
+   return sip && sip->isResponse() && (*sip)[StatusLine].getResponseCode() < 200;
 }
 
 bool 
-TransactionState::isFailureResponse(Message* msg)
+TransactionState::isFailureResponse(Message* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-   return sip && sip->isResponse() && sip[ResponseLine].getResponseCode() >= 300;
+   return sip && sip->isResponse() && (*sip)[StatusLine].getResponseCode() >= 300;
 }
 
 bool 
-TransactionState::isSuccessResponse(Message* msg)
+TransactionState::isSuccessResponse(Message* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (sip && sip->isResponse())
    {
-      int c = sip[ResponseLine].getResponseCode() == 200; // !jf!
+      int c = (*sip)[StatusLine].getResponseCode() == 200; // !jf!
       return c >= 200 || c < 300;
    }
    else 
@@ -257,9 +267,16 @@ TransactionState::isSuccessResponse(Message* msg)
 }
 
 bool
-TransactionState::isFromTU(Message* msg)
+TransactionState::isFromTU(Message* msg) const
 {
-   return !msg->isExternal();
+   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+   return sip && !sip->isExternal();
+}
+
+bool
+TransactionState::isTranportError(Message* msg) const
+{
+   return false; // !jf!
 }
 
 
