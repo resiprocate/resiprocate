@@ -70,7 +70,7 @@ TlsConnection::read( const void* buf, const int count )
    assert( buf );
    int ret;
    
-   ret = SSL_read(ssl,(void*)buf,count);
+   ret = SSL_read(ssl,(char*)buf,count);
    if (ret < 0 )
    {
       int err = SSL_get_error(ssl,ret);
@@ -106,7 +106,7 @@ TlsConnection::write( const void* buf, const int count )
    assert( buf );
    int ret;
    
-   ret = SSL_write(ssl,buf,count);
+   ret = SSL_write(ssl,(const char*)buf,count);
    if (ret < 0 )
    {
       int err = SSL_get_error(ssl,ret);
