@@ -94,7 +94,7 @@ main(int argc, char** argv)
    for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
         i != args.mDomains.end(); ++i)
    {
-      proxy.addDomain(*i);
+      proxy.addDomain(i->host(), i->port());
    }
 
    Registrar registrar;
