@@ -94,7 +94,6 @@ main (int argc, char** argv)
 
    SipStack clientStack;
    clientStack.addTransport(UDP, 15060);
-   NameAddr aor("sip:13015604286@sphone.vopr.vonage.net");
 
    Client client;
    Profile profile;   
@@ -106,15 +105,18 @@ main (int argc, char** argv)
    clientDum.setClientRegistrationHandler(&client);
    clientDum.setClientAuthManager(&clientAuth);
    clientDum.getProfile()->setDefaultRegistrationTime(70);
+
+   NameAddr aor("sip:101@proxy.internal.xten.net");
    clientDum.getProfile()->setDefaultAor(aor);
 
-   profile.addDigestCredential( "sip.jasomi.com", "502", "resiprocate" );
+
+//   profile.addDigestCredential( "xten.gloo.net", "derek@xten.gloo.net", "123456" );
 //   profile.addDigestCredential( "sphone.vopr.vonage.net", "13015604286", "" );
 
    SipMessage & regMessage = clientDum.makeRegistration(aor, new RegisterAppDialogSet(clientDum));
    NameAddr contact;
-   contact.uri().user() = "13015604286";   
-   regMessage.header(h_Contacts).push_back(contact);   
+//   contact.uri().user() = "13015604286";   
+//   regMessage.header(h_Contacts).push_back(contact);   
 
    InfoLog( << regMessage << "Generated register: " << endl << regMessage );
    clientDum.send( regMessage );
