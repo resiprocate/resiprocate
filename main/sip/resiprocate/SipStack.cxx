@@ -9,7 +9,7 @@ using namespace Vocal2;
 
 SipStack::SipStack()
   : mExecutive(*this),
-    mTransportSelector(5060),
+    mTransportSelector(*this),
     mTimers(mStateMacFifo)
 {
 
