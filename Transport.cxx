@@ -46,7 +46,7 @@ Transport::run()
       fdset.reset();
       fdset.setRead(mFd);
       fdset.setWrite(mFd);
-      int  err = fdset.select(0);
+      int  err = fdset.selectMiliSeconds(0);
       if (err == 0)
       {
          try

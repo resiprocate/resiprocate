@@ -18,10 +18,6 @@
 #include "sip2/util/Mutex.hxx"
 #include <iostream>
 
-#ifdef ERR
-#undef ERR
-#endif
-
 namespace Vocal2
 {
 
@@ -39,8 +35,12 @@ class Log
       typedef enum 
       {
          CRIT = LOG_CRIT,
+#ifdef ERR // ncurses defines a macro called ERR 
+         SIP2_ERR = LOG_ERR,
+#else
          ERR = LOG_ERR,
-         WARNING = LOG_WARNING,
+#endif
+     WARNING = LOG_WARNING,
          INFO = LOG_INFO,
          DEBUG = LOG_DEBUG,
          DEBUG_STACK = 8,
@@ -52,7 +52,11 @@ class Log
          public:
             ThreadSetting()
                : service(-1),
-                 level(ERR)
+#ifdef ERR
+                 level(SIP2_ERR)
+#else
+               level(ERR)
+#endif
             {}
             ThreadSetting(int serv, Level l)
                : service(serv),
