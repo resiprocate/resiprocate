@@ -366,7 +366,12 @@ Transport::stampReceived(SipMessage* message)
    if (message->isRequest() && message->exists(h_Vias) && !message->header(h_Vias).empty())
    {
       const Tuple& tuple = message->getSource();
-      message->header(h_Vias).front().param(p_received) = DnsUtil::inet_ntop(tuple);
+	  Data received = DnsUtil::inet_ntop(tuple);
+	  if(message->header(h_Vias).front().sentHost() != received)  // !slg! only add if received address is different from sent-by in Via
+	  {
+         message->header(h_Vias).front().param(p_received) = received;
+	  }
+      //message->header(h_Vias).front().param(p_received) = DnsUtil::inet_ntop(tuple);
       if (message->header(h_Vias).front().exists(p_rport))
       {
          message->header(h_Vias).front().param(p_rport).port() = tuple.getPort();
