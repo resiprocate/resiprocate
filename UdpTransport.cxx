@@ -205,7 +205,6 @@ UdpTransport::process(fd_set* fdSet)
       PreparseState::TransportAction status = PreparseState::NONE;
       
       mPreparse.process(*message,buffer, len, used, status);
-
       
       // this won't work if UDPs are fragd !ah!
 
