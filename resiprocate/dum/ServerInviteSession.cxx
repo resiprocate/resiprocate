@@ -41,10 +41,11 @@ ServerInviteSession::end()
    return mLastRequest;
 }
 
-SipMessage&
+SipMessage& 
 ServerInviteSession::rejectOffer(int statusCode)
 {
-   return mLastRequest;
+   assert(0);
+   return mLastRequest; // bogus
 }
 
 void 
@@ -57,9 +58,10 @@ ServerInviteSession::provisional(int statusCode)
 {
 }
 
-void 
+void
 ServerInviteSession::reject(int statusCode)
 {
+   assert(0);
 }
 
 void 

@@ -37,6 +37,8 @@ class OutOfDialogHandler;
 class Dialog;
 class InviteSessionCreator;
 
+class AppDialogSetFactory;
+
 class DialogUsageManager : public HandleManager
 {
    public:
@@ -56,10 +58,12 @@ class DialogUsageManager : public HandleManager
       virtual ~DialogUsageManager();
       
 
-#if 0
-      virtual AppDialogSet* createAppDialogSet();
-      virtual AppDialog* createAppDialog();
+      void setAppDialogSetFactory(AppDialogSetFactory*);
 
+      // !dcm! -- factory not inhereitance.  virtual AppDialogSet* createAppDialogSet(const SipMessage&);
+      // no real reson other than this is the only method that would be overloaded
+#if 0
+      virtual AppDialog* createAppDialog();
       virtual ClientRegistration* createAppClientRegistration(Dialog& dialog, BaseCreator& creator);
       virtual ClientInviteSession* createAppClientInviteSession(Dialog& dialog, const InviteSessionCreator& creator);
       virtual ClientSubscription* createAppClientSubscription(Dialog& dialog, BaseCreator& creator);
@@ -111,18 +115,20 @@ class DialogUsageManager : public HandleManager
       // the future. If the caller wants to keep it, it should make a copy. The
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
-      SipMessage& makeInviteSession(const Uri& target, const SdpContents* initialOffer);
-      SipMessage& makeSubscription(const Uri& aor, const NameAddr& target, const Data& eventType);
-      SipMessage& makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
-      SipMessage& makePublication(const Uri& targetDocument, const Contents& body, const Data& eventType, unsigned expiresSeconds );
-      SipMessage& makeRegistration(const NameAddr& aor);
-      SipMessage& makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
+      SipMessage& makeInviteSession(AppDialogSet*, const Uri& target, const SdpContents* initialOffer);
+      SipMessage& makeSubscription(AppDialogSet*, const Uri& aor, const NameAddr& target, const Data& eventType);
+      //unsolicited refer
+      SipMessage& makeRefer(AppDialogSet*, const Uri& aor, const H_ReferTo::Type& referTo);
+      SipMessage& makePublication(AppDialogSet*, const Uri& targetDocument, const Contents& body, const Data& eventType, unsigned expiresSeconds );
+      SipMessage& makeRegistration(AppDialogSet*, const NameAddr& aor);
+      SipMessage& makeOutOfDialogRequest(AppDialogSet*, const Uri& aor, const MethodTypes& meth);
 
-      // all can be done inside of INVITE or SUBSCRIBE only
-      SipMessage& makeSubscribe(DialogId, const Uri& aor, const Data& eventType);
-      SipMessage& makeRefer(DialogId, const Uri& aor, const H_ReferTo::Type& referTo);
-      SipMessage& makePublish(DialogId, const Uri& targetDocument, const Data& eventType, unsigned expireSeconds); 
-      SipMessage& makeOutOfDialogRequest(DialogId, const Uri& aor, const MethodTypes& meth);
+      // all can be done inside of INVITE or SUBSCRIBE only; !dcm! -- now live
+      // in INVITE or SUBSCRIBE only
+//       SipMessage& makeSubscribe(DialogId, const Uri& aor, const Data& eventType);
+//       SipMessage& makeRefer(DialogId, const Uri& aor, const H_ReferTo::Type& referTo);
+//       SipMessage& makePublish(DialogId, const Uri& targetDocument, const Data& eventType, unsigned expireSeconds); 
+//       SipMessage& makeOutOfDialogRequest(DialogId, const Uri& aor, const MethodTypes& meth);
       
       void cancel(DialogSetId invSessionId);
       void send(const SipMessage& request); 
@@ -159,7 +165,7 @@ class DialogUsageManager : public HandleManager
       friend class BaseUsage;
 
       
-      SipMessage& makeNewSession(BaseCreator* creator);
+      SipMessage& makeNewSession(AppDialogSet* appDs, BaseCreator* creator);
       
       // makes a proto response to a request
       void makeResponse(SipMessage& response, 
@@ -209,6 +215,8 @@ class DialogUsageManager : public HandleManager
       std::map<Data, ClientPublicationHandler*> mClientPublicationHandler;
       std::map<Data, ServerPublicationHandler*> mServerPublicationHandler;
       std::map<MethodTypes, OutOfDialogHandler*> mOutOfDialogHandler;
+
+      AppDialogSetFactory* mAppDialogSetFactory;
 
       SipStack& mStack;
 };

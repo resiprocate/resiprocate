@@ -32,7 +32,10 @@ class InviteSession : public BaseUsage
       // will contain the proposed offer. If the peer supports UPDATE, always
       // prefer UPDATE over reINVITE (no 3-way handshake required)
       // !jf! there are more things you could update in the targetRefresh 
-      SipMessage& targetRefresh(const NameAddr& localUri);
+      virtual SipMessage& targetRefresh(const NameAddr& localUri);
+
+      // confusing wrong signature, should maybe just same NameAddr
+      virtual SipMessage& makeRefer(const H_ReferTo::Type& referTo);
 
       const SdpContents* getLocalSdp();
       const SdpContents* getRemoteSdp();
