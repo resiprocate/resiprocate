@@ -25,8 +25,8 @@ class AttributeHelper
       AttributeHelper& operator=(const AttributeHelper& rhs);
       
       bool exists(const Data& key) const;
-      const vector<Data>& getValues(const Data& key) const;
-      ostream& encode(ostream& s) const;
+      const std::vector<Data>& getValues(const Data& key) const;
+      std::ostream& encode(std::ostream& s) const;
       void parse(ParseBuffer& pb);
       void addAttribute(const Data& key, const Data& value = Data::Empty);
       void clearAttribute(const Data& key);
@@ -384,7 +384,7 @@ class SdpContents : public Contents
                   const Encryption& encryption() const {return mEncryption;}
                   Encryption& encryption() {return mEncryption;}
                   bool exists(const Data& key) const;
-                  const vector<Data>& getValues(const Data& key) const;
+                  const std::vector<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
 
                private:
@@ -396,7 +396,7 @@ class SdpContents : public Contents
                   unsigned long mMulticast;
                   Data mProtocol;
                   mutable std::vector<Data> mFormats;
-                  mutable vector<Codec> mCodecs;
+                  mutable std::vector<Codec> mCodecs;
                   Data mTransport;
                   Data mInformation;
                   std::vector<Connection> mConnections;
@@ -455,7 +455,7 @@ class SdpContents : public Contents
             void clearAttribute(const Data& key);
             void addAttribute(const Data& key, const Data& value = Data::Empty);
             bool exists(const Data& key) const;
-            const vector<Data>& getValues(const Data& key) const;
+            const std::vector<Data>& getValues(const Data& key) const;
 
          private:            
             int mVersion;
