@@ -49,7 +49,12 @@ class DnsInterface : public ExternalDnsHandler
       
       // return if the client supports the specified service (e.g. SIP+D2T)
       bool isSupported(const Data& service);
+
+      bool isSupported(TransportType t);
       
+      //only call buildFdSet and process if requiresProcess is true.  
+      bool requiresProcess();
+
       // adds the appropriate file descriptors to the fdset to allow a
       // select/poll call to be made 
       void buildFdSet(FdSet& fdset);
@@ -87,10 +92,13 @@ class DnsInterface : public ExternalDnsHandler
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
+      friend class DnsResult;
       DnsHandler* mHandler;
       std::set<Data> mSupportedTransports;
+      std::set<TransportType> mSupportedTransportTypes;
+
       ExternalDns* mDnsProvider;
-      friend class DnsResult;
+      int mActiveQueryCount;      
 };
 
 }

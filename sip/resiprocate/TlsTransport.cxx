@@ -26,10 +26,10 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
                            const Data& sipDomain, 
                            SecurityTypes::SSLType sslType):
    TcpBaseTransport(fifo, portNum, version, interfaceObj ),
-   mDomain(sipDomain),
    mSecurity(&security),
    mSslType(sslType)
 {
+   setTlsDomain(sipDomain);   
    mTuple.setType(transport());
 
    InfoLog (<< "Creating TLS transport for domain " 
@@ -50,7 +50,7 @@ TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
    who.transport = this;
    assert(  who.transport );
 
-   Connection* conn = new TlsConnection(who, fd, mSecurity, server, mDomain, mSslType );
+   Connection* conn = new TlsConnection(who, fd, mSecurity, server, tlsDomain(), mSslType );
    assert( conn->transport() );
    return conn;
 }

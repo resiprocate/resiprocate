@@ -1,13 +1,20 @@
 #include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/os/Timer.hxx"
 
+#ifndef WIN32
 #include <unistd.h>
+#endif
 #include <iostream>
 #include <vector>
 #include <cassert>
 
 using namespace resip;
 using namespace std;
+
+#ifdef WIN32
+#define usleep(x) Sleep(x/1000)
+#define sleep(x) Sleep(x)
+#endif
 
 class Every4 : public ThreadIf
 {

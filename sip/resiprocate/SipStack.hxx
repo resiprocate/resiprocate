@@ -27,12 +27,11 @@ class Uri;
 class SipStack
 {
    public:
-      // If multithreaded=true, run each transports in separate threads. The
-      // main stack thread still runs the dns, timers, transaction and
-      // transportSelector in it. 
       // Set stateless=true, if you want to use the stack for a stateless proxy
       // (no transactions)
-      SipStack(bool multiThreaded=false, Security* security=0, bool stateless=false);
+      SipStack(Security* security=0, AsyncProcessHandler* handler = 0, 
+               bool stateless=false);
+
       virtual ~SipStack();
 
       // inform the transaction state machine processor that it should not
@@ -55,10 +54,17 @@ class SipStack
       // If port = 0, use DNS to lookup the port number for the specified
       // domain. Only allow messages to be sent as the specified domain. 
       // For default case, you can pass in domainname =
-      // DnsUtil::getLocalDomainName()
-      // Returns true, if the addTransport succeeded. false usually indicates
-      // the port is already in use. 
-      bool addTransport( TransportType protocol,
+      // DnsUtil::getLocalDomainName().
+
+      enum TransportProcessApproach
+      {
+         SharesStackProcessAndSelect,
+         RunsInOwnThread
+      };
+
+      //!dcm! why bool instead of throw, what is privateKeyPassPhrase used for?
+      //factory method to construct built-in transports. 
+      void addTransport( TransportType protocol,
                          int port=0, 
                          IpVersion version=V4,
                          const Data& ipInterface = Data::Empty, 
@@ -66,7 +72,14 @@ class SipStack
                                                                   // for TLS
                                                                   // based stuff 
                          const Data& privateKeyPassPhrase = Data::Empty,
-                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1 );
+                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1,
+                         TransportProcessApproach threadApproach = SharesStackProcessAndSelect);
+      
+      void addTransport( std::auto_ptr<Transport> transport);
+      
+      //this is the fifo subclasses of Transport should use for the rxFifo
+      //cons. param
+      Fifo<TransactionMessage>& stateMacFifo();      
 
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
@@ -124,7 +137,7 @@ class SipStack
       virtual void process(FdSet& fdset);
 
       /// returns time in milliseconds when process next needs to be called 
-      virtual int getTimeTillNextProcessMS(); 
+      virtual unsigned int getTimeTillNextProcessMS(); 
 
       // Inform the TU that whenever a transaction has been terminated. 
       void registerForTransactionTermination();
@@ -168,6 +181,8 @@ class SipStack
       bool mStrictRouting;
       bool mShuttingDown;
 
+      AsyncProcessHandler* mAsyncProcessHandler;
+      
       friend class Executive;
       friend class StatelessHandler;
       friend class StatisticsManager;

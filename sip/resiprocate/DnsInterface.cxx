@@ -25,7 +25,9 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
-DnsInterface::DnsInterface() : mDnsProvider(ExternalDnsFactory::createExternalDns())
+DnsInterface::DnsInterface() : 
+   mDnsProvider(ExternalDnsFactory::createExternalDns()),
+   	  mActiveQueryCount(0)
 {
    int retCode = mDnsProvider->init();
    if (retCode != 0)
@@ -36,9 +38,8 @@ DnsInterface::DnsInterface() : mDnsProvider(ExternalDnsFactory::createExternalDn
       delete errmem;
       throw Exception("failed to initialize async dns library", __FILE__,__LINE__);
    }
-   
-   addTransportType(UDP);
-   addTransportType(TCP);
+//   addTransportType(UDP);
+//   addTransportType(TCP);
 #if defined(USE_SSL)
    //addTransportType(TLS);   
 #endif
@@ -86,6 +87,8 @@ DnsInterface::addTransportType(TransportType type)
    static Data tcp("SIP+D2T");
    static Data tls("SIPS+D2T");
    static Data dtls("SIPS+D2U");
+
+   mSupportedTransportTypes.insert(type);
    
    switch (type)
    {
@@ -113,6 +116,18 @@ DnsInterface::isSupported(const Data& service)
    return mSupportedTransports.count(service) != 0;
 }
 
+bool
+DnsInterface::isSupported(TransportType t)
+{
+   return mSupportedTransportTypes.count(t) != 0;
+}
+
+bool 
+DnsInterface::requiresProcess()
+{
+   return mDnsProvider->requiresProcess() && mActiveQueryCount;   
+}
+
 void 
 DnsInterface::buildFdSet(FdSet& fdset)
 {
@@ -130,6 +145,7 @@ DnsResult*
 DnsInterface::createDnsResult(DnsHandler* handler)
 {
    DnsResult* result = new DnsResult(*this, handler);
+   mActiveQueryCount++;  
    return result;
 }
 
