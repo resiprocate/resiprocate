@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.136 2004/01/03 03:35:11 fluffy Exp $
+# $Id: Makefile,v 1.137 2004/02/07 21:28:12 jason Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -134,5 +134,19 @@ MethodHash.cxx: MethodHash.gperf
 	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' | \
 	sed -e 's/\*str ==/tolower(*str) ==/' | \
 	sed -e 's/\!strncmp/\!strncasecmp/'  > $@
+
+INSTALL_ROOT=/usr/local
+
+install: all
+	install -d --mode=755 $(INSTALL_ROOT)
+	install -d --mode=755 $(INSTALL_ROOT)/lib
+	-install --mode=755 lib.$(TARGET_NAME)/libresiprocate.so $(INSTALL_ROOT)/lib
+	-install --mode=755 lib.$(TARGET_NAME)/libresiprocate.a $(INSTALL_ROOT)/lib
+	install -d --mode=755 $(INSTALL_ROOT)/include
+	-install --mode=755 resiprocate/*.h $(INSTALL_ROOT)/include
+	install --mode=755 resiprocate/*.hxx $(INSTALL_ROOT)/include
+	install -d --mode=755 $(INSTALL_ROOT)/include/os
+	-install --mode=755 resiprocate/os/*.h $(INSTALL_ROOT)/include/os
+	install --mode=755 resiprocate/os/*.hxx $(INSTALL_ROOT)/include/os
 
 include $(BUILD)/Makefile.post
