@@ -100,7 +100,8 @@ main(int argc, char* argv[])
       FdSet fdset; 
       receiver->buildFdSet(fdset);
       sender->buildFdSet(fdset);
-      int err = fdset.selectMilliSeconds(seltime);
+
+      int err = fdset.selectMilliSeconds(seltime); err;
       
       receiver->process(fdset);
       sender->process(fdset);
