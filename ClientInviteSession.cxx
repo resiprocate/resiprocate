@@ -180,13 +180,13 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          if (msg.isResponse())
          {
             int code = msg.header(h_StatusLine).statusCode();
-            if (code / 100 == 2 && msg.header(h_CSeq).method() == INVITE)
+            if (code / 100 == 2 && msg.header(h_CSeq).method() == RESIP_INVITE)
             {
                //!dcm! -- ack the crossover 200?
                mState = Connected;               
                end();
             }
-            else if (code >= 300 && msg.header(h_CSeq).method() == INVITE)
+            else if (code >= 300 && msg.header(h_CSeq).method() == RESIP_INVITE)
             {
                sendSipFrag(msg);            
 	           mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
@@ -247,7 +247,7 @@ ClientInviteSession::send(SipMessage& msg)
       return;
    }
 
-   if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
+   if (msg.isRequest() && msg.header(h_RequestLine).method() == RESIP_CANCEL)
    {
       mDum.send(msg);
       if (mServerSub.isValid())
@@ -284,7 +284,7 @@ ClientInviteSession::end()
          if (mDialog.mDialogSet.mDialogs.size() > 1)
          {
             InfoLog ( << "ClientInviteSession::end, Early(forking)" );        
-            mDialog.makeRequest(mLastRequest, BYE);
+            mDialog.makeRequest(mLastRequest, RESIP_BYE);
             assert(mLastRequest.header(h_Vias).size() == 1);
             mLastRequest.header(h_Vias).front().param(p_branch).reset();
             mState = Terminated;
@@ -335,7 +335,7 @@ ClientInviteSession::sendPrack(const SipMessage& response)
           response.header(h_StatusLine).statusCode() < 200);
    
    SipMessage prack;
-   mDialog.makeRequest(prack, PRACK);
+   mDialog.makeRequest(prack, RESIP_PRACK);
    
    if (mProposedRemoteSdp)
    {

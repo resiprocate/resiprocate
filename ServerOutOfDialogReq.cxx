@@ -52,7 +52,7 @@ ServerOutOfDialogReq::dispatch(const SipMessage& msg)
 	}
 	else
 	{
-		if(msg.header(h_CSeq).method() == OPTIONS)
+		if(msg.header(h_CSeq).method() == RESIP_OPTIONS)
 		{
            DebugLog ( << "ServerOutOfDialogReq::dispatch - handler not found for OPTIONS - sending autoresponse.");   
 			// If no handler exists for OPTIONS then handle internally

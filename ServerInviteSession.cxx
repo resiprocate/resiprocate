@@ -72,7 +72,7 @@ ServerInviteSession::send(SipMessage& msg)
       else if (code < 300)
       {
          mState = Connected;         
-         if (msg.header(h_CSeq).method() == INVITE)
+         if (msg.header(h_CSeq).method() == RESIP_INVITE)
          {
             InviteSession::send(msg);
             if (mOfferState == Answered)
@@ -133,7 +133,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       {
          case Initial:
             mLastIncomingRequest.releaseContents();  //!dcm! -- not sure, but seems right
-            assert(msg.header(h_RequestLine).method() == INVITE);
+            assert(msg.header(h_RequestLine).method() == RESIP_INVITE);
             mState = Proceeding;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
             if (guard.destroyed())
@@ -152,7 +152,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
             break;            
          case Proceeding:
             // !jf! consider UPDATE method
-            if (msg.header(h_RequestLine).method() == CANCEL)
+            if (msg.header(h_RequestLine).method() == RESIP_CANCEL)
             {
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);               
                mDialog.makeResponse(mLastResponse, msg, 200);
@@ -162,7 +162,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
                guard.destroy();
             }
             // RFC3261 - section 15 indicates callers UA can send a BYE on early dialogs
-            else if (msg.header(h_RequestLine).method() == BYE)  
+            else if (msg.header(h_RequestLine).method() == RESIP_BYE)  
             {
                mState = Terminated;
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);

@@ -28,11 +28,11 @@ Profile::Profile() :
    addAdvertisedCapability(Headers::Supported);  
    addSupportedMimeType(Mime("application", "sdp"));
    addSupportedLanguage(Token("en"));
-   addSupportedMethod(INVITE);
-   addSupportedMethod(ACK);
-   addSupportedMethod(CANCEL);
-   addSupportedMethod(OPTIONS);
-   addSupportedMethod(BYE);
+   addSupportedMethod(RESIP_INVITE);
+   addSupportedMethod(RESIP_ACK);
+   addSupportedMethod(RESIP_CANCEL);
+   addSupportedMethod(RESIP_OPTIONS);
+   addSupportedMethod(RESIP_BYE);
    addSupportedScheme(Symbols::Sip);  
 }
 
