@@ -1,5 +1,5 @@
-#ifndef Inserter_hxx
-#define Inserter_hxx
+#ifndef Vocal2_Inserter_hxx
+#define Vocal2_Inserter_hxx
 
 #include <iostream>
 #include <utility>

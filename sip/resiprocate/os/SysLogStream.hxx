@@ -1,5 +1,5 @@
-#ifndef SysLogStream_hxx
-#define SysLogStream_hxx
+#ifndef Vocal2_SysLogStream_hxx
+#define Vocal2_SysLogStream_hxx
 
 #include "sip2/util/Log.hxx"
 #include "sip2/util/SysLogBuf.hxx"
