@@ -249,6 +249,30 @@ class Via : public ParserCategory
 };
 typedef ParserContainer<Via> Vias;
  
+//====================
+// RequestLine:
+//====================
+class RequestLine : public ParserCategory
+{
+   public:
+      RequestLine() {};
+      RequestLine(HeaderFieldValueList& hvfs) {}
+      RequestLine(HeaderFieldValue& hvf) {}
+      ParserCategory* clone(HeaderFieldValue*) const;
+};
+
+//====================
+// StatusLine:
+//====================
+class StatusLine : public ParserCategory
+{
+   public:
+      StatusLine() {};
+      StatusLine(HeaderFieldValueList& hvfs) {}
+      StatusLine(HeaderFieldValue& hvf) {}
+      ParserCategory* clone(HeaderFieldValue*) const;
+};
+
 }
 
 #endif

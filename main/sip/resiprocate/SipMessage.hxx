@@ -103,6 +103,8 @@ class SipMessage : public Message
 
       // clone method
       
+      void setStartLine(char* start, int len); 
+      
       // add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,
                      const char* headerName, int headerLen, 
@@ -131,6 +133,7 @@ class SipMessage : public Message
       Data mFixedDest;
       
       std::vector<char*> mBufferList;
+      HeaderFieldValue* mStartLine;
 };
 
 }
