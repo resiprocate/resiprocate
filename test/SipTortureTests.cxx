@@ -212,7 +212,7 @@ main(int argc, char*argv[])
       
       char *txt = ("INVITE name:John_Smith SIP/2.0\r\n"
                    "To: isbn:2983792873\r\n"
-                   "From: <http://www.cs.columbia.edu>;tag=3234233\r\n"
+                   "From: <sip:www.cs.columbia.edu>;tag=3234233\r\n" // was http//
                    "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
                    "CSeq: 8 INVITE\r\n"
                    "Max-Forwards: 7\r\n"
@@ -289,9 +289,8 @@ main(int argc, char*argv[])
    }
 
    {
-       InfoLog( << "2.4 REGISTER with Y2038 Test (This tests for Absolute Time in Expires)");
+      InfoLog( << "2.4 REGISTER with Y2038 Test (This tests for Absolute Time in Expires)");
        
-      
       char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                    "To: sip:user@company.com\r\n"
                    "From: sip:user@company.com;tag=3411345\r\n"
@@ -373,8 +372,83 @@ main(int argc, char*argv[])
       message->header(h_ContentLength).value();
 
       tassert_verify();
-      
+   }
 
+   {
+      InfoLog( << "2.5    INVITE with inconsistent Accept and message body");
+      
+      char *txt = ("INVITE sip:user@company.com SIP/2.0 \r\n"
+                   "To: sip:j_user@company.com \r\n"
+                   "From: sip:caller@university.edu;tag=234 \r\n"
+                   "Max-Forwards: 5 \r\n"
+                   "Call-ID: 0ha0isndaksdj@10.0.0.1 \r\n"
+                   "Accept: text/newformat \r\n"
+                   "CSeq: 8 INVITE \r\n"
+                   "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw \r\n"
+                   "Content-Type: application/sdp \r\n"
+                   " \r\n"
+                   "v=0 \r\n"
+                   "c=IN IP4 135.180.130.88 \r\n"
+                   "m=audio 492170 RTP/AVP 0 12 \r\n"
+                   "m=video 3227 RTP/AVP 31 \r\n"
+                   "a=rtpmap:31 LPC "
+                   "\r\n"
+                   "\r\n");
+
+      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+
+      tassert_reset();
+
+      tassert(message->isRequest());
+      tassert(!message->isResponse());
+
+      tassert(message->header(h_RequestLine).getMethod() == INVITE);
+      tassert(message->header(h_RequestLine).getSipVersion() == "SIP/2.0");
+
+      tassert(message->header(h_RequestLine).uri().host() == "company.com");
+      tassert(message->header(h_RequestLine).uri().user() == "user");
+      tassert(message->header(h_RequestLine).uri().scheme() == "sip");
+      tassert(message->header(h_RequestLine).uri().port() == 0);
+      tassert(message->header(h_RequestLine).uri().password() == "");
+
+      tassert(message->header(h_To).uri().host() == "company.com");
+      tassert(message->header(h_To).uri().user() == "j_user");
+      tassert(message->header(h_To).uri().scheme() == "sip");
+      tassert(message->header(h_To).uri().port() == 0);
+      tassert(message->header(h_To).uri().password() == "");
+
+      tassert(message->header(h_From).uri().host() == "university.edu");
+      tassert(message->header(h_From).uri().user() == "caller");
+      tassert(message->header(h_From).uri().scheme() == "sip");
+      tassert(message->header(h_From).uri().port() == 0);
+      tassert(message->header(h_From).uri().password() == "");
+      tassert(message->header(h_From).uri().param(p_tag) == "234");
+
+      tassert(message->header(h_MaxForwards).value() == 5);
+
+      tassert(message->header(h_CallId).value() == "0ha0isndaksdj@10.0.0.1");
+
+      tassert(message->header(h_Accepts).size() == 1);
+      tassert(message->header(h_Accepts).front().type() == "text");
+      tassert(message->header(h_Accepts).front().subType() == "newformat");
+
+      tassert(message->header(h_CSeq).sequence() == 8);
+      tassert(message->header(h_CSeq).method() == INVITE);
+
+      tassert(message->header(h_Vias).size() == 1);
+      tassert(message->header(h_Vias).front().protocolName() == "SIP");
+      tassert(message->header(h_Vias).front().protocolVersion() == "2.0");
+      tassert(message->header(h_Vias).front().transport() == "UDP");
+      tassert(message->header(h_Vias).front().sentHost() == "135.180.130.133");
+      tassert(message->header(h_Vias).front().sentPort() == 0);
+      tassert(message->header(h_Vias).front().param(p_branch).hasMagicCookie());
+      tassert(message->header(h_Vias).front().param(p_branch).transactionId() == "kdjuw");
+      tassert(message->header(h_Vias).front().param(p_branch).clientData() == "");
+
+      tassert(message->header(h_ContentType).type() == "application");
+      tassert(message->header(h_ContentType).type() == "sdp");
+
+      // .dlb. someday the body will gack on parse
    }
 
 }
