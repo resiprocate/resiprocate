@@ -295,7 +295,7 @@ Timer::setupTimeOffsets()
         }
         else
         {
-            cpuSpeed = speeds[index];
+            cpuSpeed = (unsigned long)speeds[index];
         }
 #endif
     
