@@ -1,4 +1,4 @@
-# $Id: Makefile.tools,v 1.11 2003/11/13 06:41:17 jason Exp $
+# $Id: Makefile.tools,v 1.12 2004/02/07 20:52:29 jason Exp $
 
 ######################################################################
 #                     Default tool names/locations
@@ -57,12 +57,10 @@ ARFLAGS		= rv
 DFLAGS		= -MM
 DMANGLE		=
 INSTALL		= install
-HAS_REPO        = true
 LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
 CFLAGS		+= -Wall -fPIC
 CXXFLAGS	+= -Wall -fPIC -Wno-deprecated
 DFLAG_INTEGRATED = -MMD
-REPO_FLAG       = -frepo -fPIC
 DEBUG_FLAG	= -g -O2
 COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
 OPTFLAGS 	= -O3 -ffast-math -funroll-all-loops -fomit-frame-pointer 
@@ -115,11 +113,9 @@ ARFLAGS		= rv
 DFLAGS		= -MM
 DMANGLE		=
 INSTALL		= install
-HAS_REPO        = true
 LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
 CFLAGS		+= -Wall -fPIC
 CXXFLAGS	+= -Wall -fPIC
-REPO_FLAG       = -frepo -fPIC
 DEBUG_FLAG	= -g
 COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
 LD_STATIC       = -Wl,-Bstatic
