@@ -10,14 +10,23 @@ class SipMessage;
 
 class TransactionUser
 {
-   public:
+   protected:
+      TransactionUser();
+      virtual ~TransactionUser()=0;
+
       virtual bool isForMe(const SipMessage& msg) const=0;
-      virtual void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)=0;      
-      virtual bool isShutDown() const=0;      
-//      virtual bool messageAvailable() const=0;
-      virtual unsigned int size() const=0;    
-      virtual bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
+      virtual bool isShutDown() const=0;
+      
+      TimeLimitFifo<Message> mFifo;
+
+   private:
+      void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
+      unsigned int size() const;
+      bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
+
+      friend class TuSelector;      
 };
+
 }
 
 #endif
