@@ -22,7 +22,7 @@
 				AdditionalOptions="/Zm300"
 				Optimization="0"
 				AdditionalIncludeDirectories="C:\sip"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
