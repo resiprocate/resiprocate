@@ -33,9 +33,9 @@ class Pidf : public Contents
       void setSimpleStatus( bool online, const Data& note=Data::Empty, const Data& contact=Data::Empty );
       bool getSimpleStatus( Data* note=NULL );
       
-      int  getNumTuples() const { return mTupple.size(); };
+      int  getNumTuples() const { return mTuple.size(); };
       
-      class Tupple
+      class Tuple
       {
          public:
             bool status;
@@ -51,7 +51,7 @@ class Pidf : public Contents
 
       Data mEntity;
       Data mNote;
-      vector<Tupple> mTupple;
+      vector<Tuple> mTuple;
 };
 
 }

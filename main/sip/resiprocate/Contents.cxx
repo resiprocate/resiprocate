@@ -22,8 +22,7 @@ Contents::Contents(HeaderFieldValue* headerFieldValue,
      mId(0),
      mDescription(0),
      mVersion(1),
-     mMinorVersion(0),
-     mHeadersFromMessage(false)
+     mMinorVersion(0)
 {}
 
 Contents::Contents(const Mime& contentType) 
@@ -34,8 +33,7 @@ Contents::Contents(const Mime& contentType)
      mId(0),
      mDescription(0),
      mVersion(1),
-     mMinorVersion(0),
-     mHeadersFromMessage(false)
+     mMinorVersion(0)
 {}
 
 Contents::Contents(const Contents& rhs) 
@@ -47,8 +45,7 @@ Contents::Contents(const Contents& rhs)
       mId(0),
       mDescription(0),
       mVersion(1),
-      mMinorVersion(0),
-      mHeadersFromMessage(rhs.mHeadersFromMessage)
+      mMinorVersion(0)
 {
    *this = rhs;
 }
@@ -103,7 +100,6 @@ Contents::operator=(const Contents& rhs)
 
       mVersion = rhs.mVersion;
       mMinorVersion = rhs.mMinorVersion;
-      mHeadersFromMessage = rhs.mHeadersFromMessage;
    }
 
    return *this;
@@ -294,31 +290,15 @@ Contents::header(const MIME_Id_Header& headerType) const
 
 // !dlb! headers except Content-Disposition may contain (comments)
 void
-Contents::parseHeaders(ParseBuffer& pb)
+Contents::preParseHeaders(ParseBuffer& pb)
 {
-   if (mHeadersFromMessage)
-   {
-      return;
-   }
-
-#if 1
    const char* start = pb.position();
    Data all( start, pb.end()-start);
-   DebugLog(<< "Contents::parseHeaders" << all.escaped() );
-#endif
 
    Data headerName;
 
-   while ( !pb.eof() )
+   while (!pb.eof())
    {
-      if ( *pb.position() == Symbols::CR[0] )
-      {
-         if ( *(pb.position()+1) == Symbols::LF[0] )
-         {
-            break;
-         }
-      }
-            
       const char* anchor = pb.skipWhitespace();
       pb.skipToOneOf(Symbols::COLON, ParseBuffer::Whitespace);
       pb.data(headerName, anchor);
@@ -327,8 +307,6 @@ Contents::parseHeaders(ParseBuffer& pb)
       pb.skipChar(Symbols::COLON[0]);
       anchor = pb.skipWhitespace();
       pb.skipToTermCRLF();
-
-      DebugLog(<< "Next header: <" << Data(anchor, pb.position() - anchor) << ">");
 
       Headers::Type type = Headers::getType(headerName.data(), headerName.size());
       ParseBuffer subPb(anchor, pb.position() - anchor);
@@ -414,21 +392,12 @@ Contents::parseHeaders(ParseBuffer& pb)
             }
          }
       }
-      pb.skipChars(Symbols::CRLF);
    }
-   // !dlb! skipLWS first?
-   pb.skipChars(Symbols::CRLF);
-   DebugLog(<< "Content::parseHeaders post-headers <" << pb.position() << ">");
 }
 
 ostream&
 Contents::encodeHeaders(ostream& str) const
 {
-   if (mHeadersFromMessage)
-   {
-      return str;
-   }
-
    if (mVersion != 1 || mMinorVersion != 0)
    {
       str << "MIME-Version" << Symbols::COLON[0] << Symbols::SPACE[0]
