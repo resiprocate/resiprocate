@@ -24,65 +24,6 @@ using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
-
-void*
-operator new(size_t size)
-{
-   static size_t poolSize = 16*1024*1024;
-   static void *pool = 0;
-
-   size += sizeof(void*) - size % sizeof(void*);
-   if (size > poolSize || !pool)
-   {
-      poolSize=16*1024*1024;
-      pool = malloc(poolSize);
-      unsigned char a[4]; a[0] = 'P';
-#if defined(DEBUGOUTPUTMEMORY)
-      write(2,a,sizeof(a));
-      write(2,&pool,sizeof(void*));
-      write(2,&poolSize,sizeof(size_t));
-#endif
-      
-   }
-   void * p = pool;
-   pool = static_cast<void*>(static_cast<unsigned char*>(pool) + size);
-   poolSize -= size;
-
-   unsigned char a[4]; a[0] = 'N';
-#if defined(DEBUGOUTPUTMEMORY)
-   write(2,a,sizeof(a));
-   write(2,&p,sizeof(void*));
-   write(2,&size,sizeof(size_t));
-#endif
-   return p;
-   
-}
-
-void operator delete(void* p)
-{
-   unsigned char a[4]; a[0] = 'D';
-#if defined(DEBUGOUTPUTMEMORY)
-   void *z = 0;
-   write(2,a,sizeof(a));
-   write(2,&p,sizeof(void*));
-   write(2,&z,sizeof(void*));
-#endif
-   return;
-}
-
-void operator delete[](void* p)
-{
-   unsigned char a[4]; a[0] = 'X';
-#if defined(DEBUGOUTPUTMEMORY)
-   void *z = 0;
-   write(2,a,sizeof(a));
-   write(2,&p,sizeof(void*));
-   write(2,&z,sizeof(void*));
-#endif
-   return;
-}
-
-
 int
 main(int argc, char* argv[])
 {
