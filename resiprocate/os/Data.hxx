@@ -1,7 +1,7 @@
 #if !defined(resip_Data_hxx)
 #define resip_Data_hxx
 
-static const char* const resipDataHeaderVersion = "$Id: Data.hxx,v 1.62 2003/03/25 06:33:48 jason Exp $";
+static const char* const resipDataHeaderVersion = "$Id: Data.hxx,v 1.63 2003/04/16 21:50:04 davidb Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -107,7 +107,7 @@ class Data
       int convertInt() const;
       double convertDouble() const;
 
-      bool prefix(const Data& pre);
+      bool prefix(const Data& pre) const;
       Data substr(size_type first, size_type count = Data::npos) const;
       int find(const Data& match, size_type start = 0) const;
       int find(const char* match, size_type start = 0) const;
