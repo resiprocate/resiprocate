@@ -104,16 +104,16 @@ TlsTransport::~TlsTransport()
 void 
 TlsTransport::buildFdSet( FdSet& fdset)
 {
+   fdset.setRead(mFd);
+
    for (ConnectionMap::Map::iterator it = mConnectionMap.mConnections.begin();
         it != mConnectionMap.mConnections.end(); it++)
    {
       fdset.setRead(it->second->getSocket());
 
-      // !cj! TODO only should add this if ther is data to write
-      // fdset.setWrite(it->second->getSocket());
+      // !xx! TODO only should add this if there is data to write
+      //fdset.setWrite(it->second->getSocket());
    }
-   fdset.setRead(mFd);
-      
 }
 
 
@@ -169,10 +169,8 @@ TlsTransport::processRead(Connection* c)
    int bytesRead = c->mTlsConnection->read( writePair.first, bytesToRead);
    if (bytesRead <= 0)
    {
-      int err = errno;
       DebugLog(<< "bytesRead: " << bytesRead);
-      DebugLog(<< "TlsTransport::processRead failed for " << *c 
-               << " " << strerror(err));
+      DebugLog(<< "TlsTransport::processRead failed for " << int(c) );
       return false;
    }   
    if (c->process(bytesRead, mStateMachineFifo))
@@ -182,7 +180,7 @@ TlsTransport::processRead(Connection* c)
    }
    else
    {
-      DebugLog (<< "TlsTransport::processRead failed due to bad message " << *c );
+      InfoLog (<< "TlsTransport::processRead failed due to bad message " << *c );
       return false;
    }
 }
@@ -196,8 +194,11 @@ TlsTransport::processAllReads(FdSet& fdset)
       for (Connection* c = mConnectionMap.mPostOldest.mYounger;
            c != &mConnectionMap.mPreYoungest; c = c->mYounger)
       {
-         // !jf! - TODO - likely need to call the tlsConnection-.isReady stuff 
-         if (fdset.readyToRead(c->getSocket()))
+         assert(c);
+         assert(c->mTlsConnection);
+         
+         if ( fdset.readyToRead(c->getSocket()) ||
+              c->mTlsConnection->hasDataToRead() )
          {
             if (processRead(c))
             {
@@ -307,7 +308,7 @@ TlsTransport::sendFromRoundRobin(FdSet& fdset)
          {
             mSendPos = mSendRoundRobin.begin();
          }
-         if (fdset.readyToWrite((*mSendPos)->getSocket()))
+         if (true) // !cj! need to add to fd set - if (fdset.readyToWrite((*mSendPos)->getSocket()))
          {
             if (processWrite(*mSendPos))
             {

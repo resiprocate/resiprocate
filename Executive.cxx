@@ -68,6 +68,11 @@ Executive::getTimeTillNextProcessMS()
    {
       return 0;
    }
+
+   if ( mStack.mTransportSelector.hasDataToSend() )
+   {
+      return 0;
+   }
    
    int ret = mStack.mTimers.msTillNextTimer();
 
