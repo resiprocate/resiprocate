@@ -63,7 +63,7 @@ class TransactionState
       bool isReliabilityIndication(Message* msg) const;
       bool isSentIndication(Message* msg) const;
       void sendToTU(Message* msg) const;
-      void sendToWire(Message* msg) const;
+      void sendToWire(Message* msg);
       void resendToWire(Message* msg) const;
       SipMessage* make100(SipMessage* request) const;
       
