@@ -170,10 +170,11 @@ DnsResult::lookup(const Uri& uri)
 
          if (isNumeric) // IP address specified
          {
-            Tuple tuple(mTarget, mPort, mTransport);
             mPort = getDefaultPort(mTransport, uri.port());
+            Tuple tuple(mTarget, mPort, mTransport);
             mResults.push_back(tuple);
             mType = Available;
+            DebugLog (<< "Numeric result so return immediately: " << tuple);
          }
          else // port specified so we know the transport
          {
@@ -1262,7 +1263,7 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::DnsResult& result)
 {
-   strm << "target=" << result.mTarget;
+   strm << "target=" << result.mTarget << ":" << result.mPort << " (" << Tuple::toData(result.mTransport) << ")";
    return strm;
 }
 
