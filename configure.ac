@@ -33,7 +33,7 @@ AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 AC_DISABLE_STATIC
 
-AC_REVISION($Id: configure.ac,v 1.12 2003/09/14 21:05:15 alan Exp $)
+AC_REVISION($Id: configure.ac,v 1.13 2003/09/14 23:25:15 alan Exp $)
 
 
 AM_MAINTAINER_MODE
@@ -47,8 +47,12 @@ AC_PROG_LIBTOOL
 
 AC_CHECK_HEADERS([sys/sockio.h sys/int_types.h netinet/in.h])
 
-
 AC_CHECK_STRUCT_FOR([#include <sys/stat.h>], stat, st_atime, HAVE_ST_ATIME, )
+AC_CHECK_TYPE(socklen_t,
+         AC_DEFINE([HAVE_SOCKLEN_T],[1],[ Has socklen_t ]), 
+        [],
+        [ #include <sys/socket.h> ]
+        )
 
 
 RESIP_LIB_OPENSSL
@@ -68,13 +72,15 @@ dnl Test for pthreads.
 
 ACX_PTHREAD
 
-LIBS="$PTHREAD_LIBS $LIBS"
-CFLAGS="-Wall -Wnodeprecated $CFLAGS $PTHREAD_CFLAGS"
-CXXFLAGS="-Wall -Wno-deprecated $CXXFLAGS"
-CC="$PTHREAD_CC"
+dnl AC_MSG_RESULT([Pthreads flags are : $PTHREAD_LIBS])
 
-#dnl Temporary hack until proper, portable pthreads detection is added.
-#LIBS="$LIBS -lpthread"
+dnl LIBS="$PTHREAD_LIBS $LIBS"
+dnl CFLAGS="-Wall -Wnodeprecated $CFLAGS $PTHREAD_CFLAGS"
+dnl CXXFLAGS="-Wall -Wno-deprecated $CXXFLAGS"
+dnl CC="$PTHREAD_CC"
+
+dnl Temporary hack until proper, portable pthreads detection is added.
+LIBS="$LIBS -lpthread"
 
 AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile])
 
