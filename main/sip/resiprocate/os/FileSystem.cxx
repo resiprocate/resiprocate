@@ -22,18 +22,23 @@ FileSystem::Directory::iterator::iterator(const Directory& dir)
 {
    assert(!dir.getPath().empty());   
    InfoLog(<< "FileSystem::Directory::iterator::iterator: " << dir.getPath());   
-   mNixDir = opendir( dir.getPath().c_str() );
-   mDirent = readdir(mNixDir);
-   if (mDirent)
+   if ((mNixDir = opendir( dir.getPath().c_str() )))
    {
-      InfoLog(<< "FileSystem::Directory::iterator::iterator, first file " << mFile);   
-      mFile = mDirent->d_name;
+      mDirent = readdir(mNixDir);
+      if (mDirent)
+      {
+         InfoLog(<< "FileSystem::Directory::iterator::iterator, first file " << mFile);   
+         mFile = mDirent->d_name;
+      }
    }
+   else
+      mDirent = 0;
 }
 
 FileSystem::Directory::iterator::~iterator()
 {
-   closedir(mNixDir);
+   if (mNixDir)
+      closedir(mNixDir);
 }
 
 FileSystem::Directory::iterator& 
