@@ -52,6 +52,22 @@ int
 main(int arc, char** argv)
 {
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   
+   {
+      NameAddr n1;
+      NameAddr n2;
+      assert (!(n1 < n2));
+      assert (!(n2 < n1));
+      assert (n1.uri().getAor() == n2.uri().getAor());
+   }
+   
+   {
+
+      NameAddr w1("<sip:wombat@192.168.2.221:5062;transport=Udp>;expires=63");
+      NameAddr w2("<sip:wombat@192.168.2.221:5063;transport=Udp>;expires=66");
+      assert(w1 < w2);
+      assert (!(w2 < w1));
+   }
 
    {
       TR _tr("Test parameter with spaces");
