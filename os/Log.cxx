@@ -123,6 +123,23 @@ Log::toLevel(const Data& l)
    return Log::DEBUG;
 }
 
+Log::Type
+Log::toType(const Data& arg)
+{
+   if (arg == "cout" || arg == "COUT")
+   {
+      return Log::COUT;
+   }
+   else if (arg == "cerr" || arg == "CERR")
+   {
+      return Log::CERR;
+   }
+   else
+   {
+      return Log::SYSLOG;
+   }
+}
+
 
 ostream&
 Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm) 
