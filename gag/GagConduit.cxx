@@ -1,6 +1,9 @@
 #include "resiprocate/TuIM.hxx"
 #include "GagMessage.hxx"
 #include "GagConduit.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::APP
 
 GagConduit::GagConduit(SipStack &stack, int _udpPort)
   : sipStack(&stack), udpPort(_udpPort), running(true)
@@ -44,7 +47,8 @@ GagConduit::handleMessage(GagMessage *message)
       gaimLoginStatus(reinterpret_cast<GagLoginStatusMessage *>(message));
       break;
     default:
-      // XXX Yikes! What is this?
+      InfoLog ( << "Ignoring unexpected message of type " 
+                << message->getMessageType());
       break;
   }
 }
@@ -141,7 +145,14 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
   contact.user() = aor->user();
 
   newTu = new TuIM(sipStack, *aor, contact, this);
-  // XXX Check for null here
+  if (!newTu)
+  {
+    Data error;
+    error = "Ran out of memory when logging in as ";
+    error += Data::from(aor);
+    GagErrorMessage(error).serialize(cout);
+    return;
+  }
   newTu->setUAName(Data("gag/0.0.1 (gaim)"));
   newTu->registerAor(*aor, *password);
 
@@ -193,13 +204,15 @@ GagConduit::gaimShutdown(GagShutdownMessage *msg)
 void
 GagConduit::gaimError(GagErrorMessage *msg)
 {
-  // XXX This should *never* be called..
+  // This should *never* be called..
+  InfoLog ( << "GAIM should not send me errors.");
 }
 
 void
 GagConduit::gaimLoginStatus(GagLoginStatusMessage *msg)
 {
-  // XXX This should *never* be called..
+  // This should *never* be called..
+  InfoLog ( << "GAIM should not send me login status messages.");
 }
 
 void
