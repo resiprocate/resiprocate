@@ -23,7 +23,7 @@ class UdpTransport : public Transport
       // only bind to that interface.
       UdpTransport(Fifo<Message>& fifo,
                    int portNum,
-                   const Data& interface=Data::Empty, 
+                   const Data& interfaceObj=Data::Empty, 
                    bool ipv4=true);
       virtual  ~UdpTransport();
 

@@ -4,6 +4,7 @@
 
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsResult.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/SipMessage.hxx"
@@ -1288,11 +1289,13 @@ TransactionState::sendToWire(Message* msg, bool resend)
          Tuple tuple;
          if (via.exists(p_received))
          {
-            inet_pton(AF_INET, via.param(p_received).c_str(), &tuple.ipv4);
+			 // !jf! sholudl check return TODO
+			 DnsUtil::inet_pton(via.param(p_received), tuple.ipv4);
          }
          else
          {
-            inet_pton(AF_INET, via.sentHost().c_str(), &tuple.ipv4);
+			 // !jf! should check return
+			 DnsUtil::inet_pton(via.sentHost(), tuple.ipv4);
          }
          tuple.port = (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort();
          if (via.transport() == Symbols::TLS)
