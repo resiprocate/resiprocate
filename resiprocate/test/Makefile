@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.50 2003/09/14 01:41:13 davidb Exp $
+# $Id: Makefile,v 1.51 2003/09/14 08:27:16 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
+PACKAGES += RESIPROCATE OPENSSL USE_ARES PTHREAD
 LDLIBS += -lncurses
 
 #CXXFLAGS += -I/usr/local/ssl/include
@@ -27,9 +27,6 @@ TESTPROGRAMS =	limpc.cxx \
 		testIM.cxx \
 		testUri.cxx \
 		SipTortureTests.cxx \
-		lg.cxx \
-		test1.cxx \
-		test2.cxx \
 		testDigestAuthentication.cxx \
 		testIM.cxx \
 		testLockStep.cxx \
@@ -52,15 +49,19 @@ TESTPROGRAMS =	limpc.cxx \
 		testServer.cxx \
 
 #	        testTcpTransport.cxx \
+#		lg.cxx \
+#		test1.cxx \
+#		test2.cxx \
 
-SRC = \
-		Register.cxx \
-		Transceiver.cxx \
-		Registrar.cxx \
-		InviteClient.cxx \
-		InviteServer.cxx \
-		TestSupport.cxx \
-		Resolver.cxx	
+SRC = 		TestSupport.cxx
+
+#		Register.cxx \
+#		Transceiver.cxx \
+#		Registrar.cxx \
+#		InviteClient.cxx \
+#		InviteServer.cxx \
+
+#		Resolver.cxx	
 
 #	        testNonInviteClientTx.cxx \
 #		testNameAddrParamExclusions.cxx \
