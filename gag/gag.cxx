@@ -4,6 +4,8 @@
 
 #include <list>
 #include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -46,9 +48,9 @@ int
 main (int argc, char **argv)
 {
   // Defaults (override with commandline options)
-  int tcpPort = 8060;
-  int udpPort = 8060;
-  int tlsTcpPort = 8061;
+  int tcpPort = 6000 + getuid() * 2;
+  int udpPort = 6000 + getuid() * 2;
+  int tlsTcpPort = 6001 + getuid() * 2;
   bool tlsServer = false;
 
   Log::initialize(Log::FILE, Log::DEBUG, argv[0]);
