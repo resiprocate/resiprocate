@@ -297,7 +297,12 @@ TransactionState::processClientInvite(  Message* msg )
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       switch (sip->header(h_RequestLine).getMethod())
       {
-         case INVITE:
+	/* Received INVITE request from TU="Transaction User", Fire Timer B which controls
+	   transaction timeouts. alsoHandle CANCEL , To Handle Response to the CANCEL use
+           processClientNonInvite 
+	*/
+
+          case INVITE:
             mMsgToRetransmit = sip;
             mStack.mTimers.add(Timer::TimerB, msg->getTransactionId(), 64*Timer::T1 );
             sendToWire(msg); // don't delete msg
@@ -319,6 +324,9 @@ TransactionState::processClientInvite(  Message* msg )
    {
       switch (mMsgToRetransmit->header(h_RequestLine).getMethod())
       {
+	/* Unreliable transport is used start TIMER A 
+	   (Timer A controls request retransmissions) 
+	*/
          case INVITE:
             if (isSentReliable(msg))
             {
@@ -344,6 +352,13 @@ TransactionState::processClientInvite(  Message* msg )
       switch (sip->header(h_CSeq).method())
       {
          case INVITE:
+	   /* If the client transaction receives a provisional response while in
+	      the "Calling" state, it transitions to the "Proceeding" state. In the
+	      "Proceeding" state, the client transaction SHOULD NOT retransmit the
+	      request any longer (this will be Handled in  "else if (isTimer(msg))")
+	      The Retransmissions will be stopped, Not by Cancelling Timers but
+              by Ignoring the fired Timers depending upon the State which stack is in.   
+	   */
             if (code >= 100 && code < 200) // 1XX
             {
                if (mState == Calling || mState == Proceeding)
@@ -356,7 +371,15 @@ TransactionState::processClientInvite(  Message* msg )
                   delete msg;
                }
             }
-            else if (code >= 200 && code < 300)
+
+	    /* When in either the "Calling" or "Proceeding" states, reception of a
+               2xx response MUST cause the client transaction to enter the
+              "Terminated" state, and the response MUST be passed up to the TU 
+	      State Machine is changed to Stale since, we wanted to ensure that 
+	      all 2xx gets to TU
+	    */
+              
+	    else if (code >= 200 && code < 300)
             {
                mMachine = Stale;
                mState = Terminated;
@@ -365,8 +388,17 @@ TransactionState::processClientInvite(  Message* msg )
             }
             else if (code >= 300)
             {
+	      /* When in either the "Calling" or "Proceeding" states, reception of a
+		 response with status code from 300-699 MUST cause the client
+		 transaction to transition to "Completed".
+	      */
+                 
                if (mIsReliable)
                {
+		 /*  Stack MUST pass the received response up to the TU, and the client
+		     transaction MUST generate an ACK request, even if the transport is
+		     reliable
+		 */
                   SipMessage* invite = mMsgToRetransmit;
                   mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
                   delete invite;
@@ -380,6 +412,11 @@ TransactionState::processClientInvite(  Message* msg )
                {
                   if (mState == Calling || mState == Proceeding)
                   {
+		    /*  MUST pass the received response up to the TU, and the client
+		     transaction MUST generate an ACK request, even if the transport is
+		     reliable, if transport is Unreliable then Fire the Timer D which 
+		     take care of re-Transmission of ACK 
+		    */
                      mState = Completed;
                      SipMessage* invite = mMsgToRetransmit;
                      mStack.mTimers.add(Timer::TimerD, msg->getTransactionId(), Timer::TD );
@@ -390,6 +427,10 @@ TransactionState::processClientInvite(  Message* msg )
                   }
                   else if (mState == Completed)
                   {
+		    /* Any retransmissions of the final response that are received while in
+		       the "Completed" state MUST cause the ACK to be re-passed to the
+		       transport layer for retransmission
+		     */
                      mStack.mTransportSelector.retransmit(mMsgToRetransmit);  
                      sendToTU(msg); // don't delete msg
                   }
@@ -402,6 +443,9 @@ TransactionState::processClientInvite(  Message* msg )
             break;
             
          case CANCEL:
+	   /*
+	     Let processClientNonInvite Handle the CANCEL
+	    */
             mCancelStateMachine->processClientNonInvite(msg);
             // !jf! memory mgmt? 
             break;
@@ -413,6 +457,9 @@ TransactionState::processClientInvite(  Message* msg )
    }
    else if (isTimer(msg))
    {
+     /* Handle Transaction Timers , Retransmission Timers which were set and Handle
+        Cancellation of Timers for Re-transmissions here */
+
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       DebugLog (<< "timer fired: " << *timer);
       
@@ -450,7 +497,9 @@ TransactionState::processClientInvite(  Message* msg )
    }
    else if (isTranportError(msg))
    {
-      // inform TU 
+     /*
+       inform TU with 503 response
+     */
       delete msg;
       delete this;
       assert(0);
