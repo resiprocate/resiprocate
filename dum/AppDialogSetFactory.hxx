@@ -13,6 +13,7 @@ class AppDialogSetFactory
 {
    public:
       virtual AppDialogSet* createAppDialogSet(DialogUsageManager&, const SipMessage&);      
+      virtual ~AppDialogSetFactory() {}
 };
 
 }
