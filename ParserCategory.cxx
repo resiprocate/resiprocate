@@ -493,7 +493,7 @@ ParserCategory::param(const Rport_Param& paramType) const
       p = new Rport_Param::Type(paramType.getTypeNum());
       mParameters.push_back(p);
    }
-   return p->value();
+   return *p; // since this is special
 }
 
 Data
