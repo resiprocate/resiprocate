@@ -1,5 +1,12 @@
 To build reSIProcate on the Windows platform:
 
+This will only work with the Visual C++ .net version of the compiler
+
+There are various project tiles such as ./resiiprocate/resiprocate.vcproj
+
+Few hints 
+
+
 Form a new project that creates a console application.  Add in all the
 .cxx and .hxx fields in resiprocate/ and resiprocate/os and one of the
 test programs from resiprocate/test.
@@ -17,6 +24,7 @@ Add the path where resiprocate lives to the include path - generally (../..)
 
 Add Ws2_32.lib to link libraries
 
-Have fun 
+Need to add ares library and define USE_ARES
 
-Good luck
+If you want openssl, need to definte USE_SSL and add library and includes
+
