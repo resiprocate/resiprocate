@@ -10,10 +10,7 @@ namespace Vocal2
 class Uri : public ParserCategory
 {
    public:
-      Uri() : 
-         ParserCategory()
-      {}
-
+      Uri();
       Uri(const Uri&);
       
       Data& host() const {checkParsed(); return mHost;}

@@ -15,11 +15,16 @@ main()
       cerr << "test header creation" << endl;
       SipMessage message;
 
-      assert(message.header(h_CSeq).isParsed() == false);
       message.header(h_CSeq).sequence() = 123456;
       assert(message.header(h_CSeq).sequence() == 123456);
 
+      message.header(h_To).uri().user() = "speedy";
+      assert(message.header(h_To).uri().user() == "speedy");
+      
+      message.encode(cerr);
+
    }
+   return 0;
    
    {
       cerr << "test multiheaders access" << endl;
