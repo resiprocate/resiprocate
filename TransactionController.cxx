@@ -23,13 +23,14 @@ unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 TransactionController::TransactionController(bool multi, 
                                              TimeLimitFifo<Message>& tuFifo, 
                                              StatisticsManager& stats,
+                                             Security* security,
                                              bool stateless) : 
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(true),
    mStateMacFifo(),
    mTUFifo(tuFifo),
-   mTransportSelector(multi, mStateMacFifo),
+   mTransportSelector(multi, mStateMacFifo, security),
    mStatelessHandler(*this),
    mTimers(mStateMacFifo),
    StatelessIdCounter(1),
@@ -139,13 +140,11 @@ TransactionController::addTlsTransport( int port,
 bool
 TransactionController::addTlsTransport( int port, 
                                         const Data& domainname,
-					Security& security,
                                         IpVersion version,
                                         const Data& ipInterface
                                         )
 {
-    return mTransportSelector.addTlsTransport(domainname, security, port,
-					      version, ipInterface);
+   return mTransportSelector.addTlsTransport(domainname, port, version, ipInterface);
 }
 
 void
