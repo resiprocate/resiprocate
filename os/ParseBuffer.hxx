@@ -44,6 +44,8 @@ class ParseBuffer
       const char* skipToEndQuote(char quote = '"');
       // make the passed in data share memory with the buffer
       void data(Data& data, const char* start) const;
+      Data data(const char* start) const;
+      
       int integer();
       float floatVal();
       static const char* Whitespace;
