@@ -25,7 +25,7 @@ class GagConduit: public TuIM::Callback
     void gaimError(GagErrorMessage *);
 
     // Callback Methods
-    virtual void presenseUpdate(const Uri& dest, bool open, 
+    virtual void presenceUpdate(const Uri& dest, bool open, 
                                 const Data& status );
     virtual void receivedPage( const Data& msg, const Uri& from ,
                                const Data& signedBy,
