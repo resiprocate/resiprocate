@@ -488,7 +488,7 @@ Security::loadPublicCert(  const Data& filePath )
 
       publicKeys[name] = cert;
 
-      DebugLog( << "Loaded public key from " << name );         
+      InfoLog( << "Loaded public key for " << name );         
    }
 
    closedir( dir );
@@ -599,11 +599,17 @@ Security::multipartSign( Contents* bodyIn )
    flags |= PKCS7_NOCERTS; // should remove 
 #endif
 
-   Data bodyData = bodyIn->getBodyData();
+   Data bodyData;
+   DataStream strm( bodyData );
+   body->encodeHeaders( strm );
+   body->encode( strm );
+   strm.flush();
+
+   DebugLog( << "sign the data <" << bodyData << ">" );
+
    const char* p = bodyData.data();
    int s = bodyData.size();
    BIO* in;
-   DebugLog( << "sign <" << bodyData.data() << ">" );
    in = BIO_new_mem_buf( (void*)p,s);
    assert(in);
    DebugLog( << "ceated in BIO");
@@ -672,9 +678,7 @@ Security::pkcs7Sign( Contents* bodyIn )
    
    Data bodyData;
    oDataStream strm(bodyData);
-
    bodyIn->encodeHeaders(strm);
-
    bodyIn->encode( strm );
    strm.flush();
    
@@ -728,7 +732,6 @@ Security::pkcs7Sign( Contents* bodyIn )
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
    assert( outBody );
 
-   // !cj! change these from using unkonw paramters types 
    outBody->header(h_ContentType).type() = "application";
    outBody->header(h_ContentType).subType() = "pkcs7-mime";
    outBody->header(h_ContentType).param( p_smimeType ) = "signed-data";
@@ -754,6 +757,8 @@ Security::haveCert()
 bool 
 Security::havePublicKey( const Data& recipCertName )
 {
+   DebugLog( <<"looking for public key for " << recipCertName );
+   
    MapConstIterator i = publicKeys.find(recipCertName);
    if (i != publicKeys.end())
    {
@@ -774,9 +779,7 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    
    Data bodyData;
    oDataStream strm(bodyData);
-
    bodyIn->encodeHeaders(strm);
-
    bodyIn->encode( strm );
    strm.flush();
    
@@ -816,11 +819,8 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    assert(certs);
    assert( cert );
    sk_X509_push(certs, cert);
-   
-   EVP_CIPHER* cipher =   (EVP_CIPHER*) EVP_des_ede3_cbc();
-//   const EVP_CIPHER* cipher = EVP_des_ede3_cbc(); // !jf! - should really use
-//   this one
-
+  
+   const EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
    //const EVP_CIPHER* cipher = EVP_aes_128_cbc();
    //const EVP_CIPHER* cipher = EVP_enc_null();
    assert( cipher );
@@ -842,15 +842,14 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    assert( size > 0 );
    
    Data outData(outBuf,size);
-  
+   assert( (long)outData.size() == size );
+     
    InfoLog( << Data("Encrypted body size is ") << outData.size() );
    InfoLog( << Data("Encrypted body is <") << outData.escaped() << ">" );
-   InfoLog( << Data("Encrypted body is <") << outData.size() << ">" );
 
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
    assert( outBody );
 
-   // !cj! change these from using unkonw paramters types 
    outBody->header(h_ContentType).type() = "application";
    outBody->header(h_ContentType).subType() = "pkcs7-mime";
    outBody->header(h_ContentType).param( p_smimeType ) = "enveloped-data";
@@ -906,8 +905,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
 
    DebugLog( << "verify <"    << textData.escaped() << ">" );
    DebugLog( << "signature <" << sigData.escaped() << ">" );
-   //DebugLog( << "signature text <" << sig->text().escaped() << ">" );
-      
+       
    BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.c_str(),textData.size());
    assert(pkcs7Bio);
    InfoLog( << "ceated pkcs BIO");
@@ -987,10 +985,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    certs = sk_X509_new_null();
    assert( certs );
    
-   //      if ( !verifySig )
-   {
-      flags |= PKCS7_NOVERIFY;
-   }
+   //   flags |= PKCS7_NOVERIFY;
    
    assert( certAuthorities );
    
@@ -1030,16 +1025,19 @@ Security::uncodeSigned( MultipartSignedContents* multi,
          {
             if ( flags & PKCS7_NOVERIFY )
             {
+               DebugLog( << "Signature is notTrusted" );
                *sigStatus = notTrusted;
             }
             else
             {
                if (false) // !jf! TODO look for this cert in store
                {
+                  DebugLog( << "Signature is trusted" );
                   *sigStatus = trusted;
                }
                else
                {
+                  DebugLog( << "Signature is caTrusted" );
                   *sigStatus = caTrusted;
                }
             }
@@ -1059,7 +1057,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
       
    Data outData(outBuf,size);
       
-   DebugLog( << "uncodec body is <" << outData << ">" );
+   DebugLog( << "uncoded body is <" << outData << ">" );
       
    return first;
 }
@@ -1075,8 +1073,9 @@ Security::decrypt( Pkcs7Contents* sBody )
    assert( sBody );
    
    Data text = sBody->getBodyData();
-   //DebugLog( << "uncode body = <" << text.escaped() << ">" );
-   //DebugLog( << "uncode body size = " << text.size() );
+   DebugLog( << "uncode body = <" << text.escaped() << ">" );
+   DebugLog( << "uncode body size = " << text.size() );
+
    BIO* in = BIO_new_mem_buf( (void*)text.c_str(),text.size());
    assert(in);
    InfoLog( << "ceated in BIO");
@@ -1142,10 +1141,7 @@ Security::decrypt( Pkcs7Contents* sBody )
    certs = sk_X509_new_null();
    assert( certs );
    
-   //if ( !verifySig )
-   {
-      flags |= PKCS7_NOVERIFY;
-   }
+   //   flags |= PKCS7_NOVERIFY;
    
    assert( certAuthorities );
    
@@ -1249,6 +1245,8 @@ Security::decrypt( Pkcs7Contents* sBody )
    ParseBuffer headersPb(headerStart, bodyStart-4-headerStart);
    ret->preParseHeaders(headersPb);
 
+   DebugLog( << "Got body data of " << ret->getBodyData() );
+   
    return ret;
 }
 
