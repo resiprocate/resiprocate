@@ -29,7 +29,7 @@
 
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 
 TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo) :
@@ -83,6 +83,11 @@ TransportSelector::addTransport( TransportType protocol,
    assert(mTransports.count(key) == 0);
    DebugLog (<< "Adding transport: " << key);
    mTransports[key] = transport;
+
+   if (mDefaultTransports.count(protocol) == 0)
+   {
+      mDefaultTransports[protocol] = transport;
+   }
 }
 
 void 
@@ -357,11 +362,20 @@ TransportSelector::findTransport(const Tuple& search)
    {
       Tuple tuple(search);
       tuple.setAny();
-
+      
       std::map<Tuple, Transport*>::iterator i = mTransports.find(tuple);
       if (i != mTransports.end())
       {
          return i->second;
+      }
+      else 
+      {
+         // now just find a matching transport type
+         HashMap<int, Transport*>::iterator i = mDefaultTransports.find(int(tuple.getType()));
+         if (i != mDefaultTransports.end())
+         {
+            return i->second;
+         }
       }
    }
 
