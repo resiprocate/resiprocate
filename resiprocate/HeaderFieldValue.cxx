@@ -1,15 +1,15 @@
 HeaderFieldValue::HeaderFieldValue(const char* field, uint fieldLength)
   : mField(field),
     mFieldLength(fieldLength),
-    mComponent(0)
+    mParserCategory(0)
 {}
 
 HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
   : mField(0),
     mFieldLength(0),
-    mParamList(hfv.mParamList),
-    mUnkownParamList(hfv.UnknownParamList),
-    mComponent(hfv.mComponent->clone(this))
+    mSubComponentList(hfv.mSubComponentList),
+    mUnkownSubComponentList(hfv.UnknownSubComponentList),
+    mParserCategory(hfv.mParserCategory->clone(this))
 {
 
   // if this isn't parsed, chunk and copy the block of memory
@@ -30,18 +30,31 @@ HeaderFieldValue* HeaderFieldValue::clone() const
   return new HeaderFieldValue(*this);
 }
 
-ParameterList& HeaderFieldValue::getParameters()
+SubComponentList& HeaderFieldValue::getSubComponents()
 {
-  return mParamList;
+  return mSubComponentList;
 }
 
-ParameterList& HeaderFieldValue::getUnknownParameters()
+SubComponentList& HeaderFieldValue::getUnknownSubComponents()
 {
-  return mParamList;
+  return mSubComponentList;
 }
 
 bool HeaderFieldValue::isParsed() const
 {
   return mComponent != 0;
+}
+
+
+ostream& operator<<(ostream& stream, HeaderFieldValueList& hList)
+{
+  if (!isParsed())
+    {
+      stream << mSubComponentList << " : " << mUnknownSubComponentList;
+    }
+  else
+    {
+      stream << string(mField, mFieldLength);
+    }
 }
 

@@ -146,11 +146,10 @@ ostream& operator<<(ostream& stream, SubComponentList& pList)
       
       do
       {
-         stream << p->getName() << "@" << p << " ";
+         stream << *p << " : ";
       }
       while((p = p->next) != 0);
    }
    return stream;
 }
-
 
