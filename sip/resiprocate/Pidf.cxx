@@ -127,13 +127,41 @@ Pidf::encodeParsed(std::ostream& str) const
 void 
 Pidf::parse(ParseBuffer& pb)
 {
-   //DebugLog(<< "Pidf::parse: " << pb.position());
-
    const char* anchor = pb.position();
-   pb.skipToEnd();
-   //pb.data(mText, anchor);
 
-   //DebugLog("Pidf::parsed <" << mText << ">" );
+   Tupple t;
+   
+   mTupple.push_back( t );
+   mTupple[0].status = true;
+   mTupple[0].note = Data::Empty;
+
+   pb.reset(anchor);
+   const char* close = pb.skipToChars("close");
+   if ( close != pb.end() )
+   {
+      DebugLog ( << "found an close" );
+      mTupple[0].status = false;
+   }
+
+   pb.reset(anchor);
+   const char* open = pb.skipToChars("open");
+   if ( open != pb.end() )
+   {
+      DebugLog ( << "found an open" );
+      mTupple[0].status = true;
+   }
+
+   pb.reset(anchor);
+   pb.skipToChars("<note");
+   const char* startNote = pb.skipToChars(">");
+   startNote++;
+   if ( startNote < pb.end() )
+   {
+      const char* endNote = pb.skipToChars("</note>");
+      Data blueNote( startNote, endNote-startNote );
+      DebugLog ( << "found a note of" << blueNote );
+      mTupple[0].note = blueNote;
+   }
 }
 
 

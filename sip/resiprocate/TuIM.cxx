@@ -158,6 +158,17 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    assert( msg->header(h_RequestLine).getMethod() == SUBSCRIBE );
    CallId id = msg->header(h_CallId);
    
+   const int maxExpires = 3600;
+   int expires=maxExpires;
+   if ( msg->exists(h_Expires) )
+   {
+      expires = msg->header(h_Expires).value();
+   }
+   if (expires > maxExpires )
+   {
+      expires = maxExpires;
+   }
+   
    Dialog* dialog = NULL;
 
    // see if we already have this subscription
@@ -177,12 +188,18 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    if ( !dialog )
    {
       // create a new subscriber 
+      DebugLog ( << "Creating new subscrition dialog ");
+      
       dialog = new Dialog( NameAddr(mContact) );
 
       mSubscribers.push_back( dialog );
    }
    
    auto_ptr<SipMessage> response( dialog->makeResponse( *msg, 200 ));
+ 
+   response->header(h_Expires).value() = expires;
+   response->header(h_Event).value() = Data("presence");
+   
    mStack->send( *response );
 
    sendNotify( dialog );
@@ -192,6 +209,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
 void 
 TuIM::processNotifyRequest(SipMessage* msg)
 {
+   assert( mPressCallback );
    assert( msg->header(h_RequestLine).getMethod() == NOTIFY ); 
 
    auto_ptr<SipMessage> response( Helper::makeResponse( *msg, 200 ));
@@ -199,9 +217,29 @@ TuIM::processNotifyRequest(SipMessage* msg)
 
    Uri from = msg->header(h_From).uri();
    DebugLog ( << "got notify from " << from );
-                  
-   assert( mPressCallback );
-   mPressCallback->presenseUpdate( from, true, Data::Empty );
+
+   Contents* contents = msg->getContents();
+   if ( !contents )
+   {
+      ErrLog( "Received NOTIFY message event with no contents" );
+      mPressCallback->presenseUpdate( from, true, Data::Empty );
+      return;
+   }
+
+   Mime mime = contents->getType();
+   DebugLog ( << "got  NOTIFY event with body of type  " << mime.type() << "/" << mime.subType() );
+  
+   Pidf* body = dynamic_cast<Pidf*>(contents);
+   if ( !body )
+   {
+      ErrLog( "Received NOTIFY message event with no PIDF contents" );
+      mPressCallback->presenseUpdate( from, true, Data::Empty );
+      return;
+   }
+ 
+   Data note;
+   bool open = body->getSimpleStatus( &note );;
+   mPressCallback->presenseUpdate( from, open, note );
 }
 
 
@@ -281,6 +319,7 @@ TuIM::processResponse(SipMessage* msg)
    // see if it is a registraition response 
    if ( id == mRegistrationDialog.getCallId() )
    {
+      DebugLog ( << "matched the reg dialog" <<  mRegistrationDialog.getCallId() << " = " << id  );
       processRegisterResponse( msg );
       return;
    }
@@ -292,6 +331,7 @@ TuIM::processResponse(SipMessage* msg)
       assert(  b.presDialog );
       if ( b.presDialog->getCallId() == id  )
       {
+         DebugLog ( << "matched the sub dialog" );
          processSubscribeResponse( msg, b );
          return;
       }
@@ -314,8 +354,21 @@ TuIM::processRegisterResponse(SipMessage* msg)
 {
    int number = msg->header(h_StatusLine).responseCode();
    Uri to = msg->header(h_To).uri();
-
    ErrLog ( << "register of " << to << " got response " << number );   
+
+   int expires = 3600;
+   if ( msg->exists(h_Expires) )
+   {
+      expires = msg->header(h_Expires).value();
+   }
+   if ( expires < 5 )
+   {
+      ErrLog( << "Got very small expiers of " << expires );
+      expires = 5;
+   }
+    
+   mRegistrationDialog.createDialogAsUAC( *msg );
+   mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
 }
 
 
@@ -324,8 +377,44 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
 {
    int number = msg->header(h_StatusLine).responseCode();
    Uri to = msg->header(h_To).uri();
-
    ErrLog ( << "subscribe got response " << number << " from " << to );   
+
+   if ( (number>=200) && (number<300) )
+   {
+      int expires = 3600;
+      if ( msg->exists(h_Expires) )
+      {
+         expires = msg->header(h_Expires).value();
+      }
+      if ( expires < 5 )
+      {
+         ErrLog( << "Got very small expiers of " << expires );
+         expires = 5;
+      } 
+      
+      assert( buddy.presDialog );
+      buddy.presDialog->createDialogAsUAC( *msg );
+      
+      buddy.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( expires*1000 );
+   }
+
+   if (  (number>=300) && (number<400) )
+   {
+      ErrLog( << "Still need to implement 3xx handing" ); // !cj!
+   }
+   
+   if (  (number>=400) )
+   {
+      InfoLog( << "Got an error to so9me subscription" );     
+
+      // take this buddy off line 
+      Uri to = msg->header(h_To).uri();
+      assert( mPressCallback );
+      mPressCallback->presenseUpdate( to, false, Data::Empty );
+      
+      // try to contact this buddy agian in 10 minutes 
+      buddy.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 10*60*1000 );
+   }
 }
 
 
@@ -342,6 +431,8 @@ TuIM::process()
       if ( mRegistrationDialog.isCreated() )
       {
          auto_ptr<SipMessage> msg( mRegistrationDialog.makeRegister() );
+         int expires = 11*60; // time in seconds 
+         msg->header(h_Expires).value() = expires;
          mStack->send( *msg );
       }
       mNextTimeToRegister = Timer::getRandomFutureTimeMs( 10*60*1000 /*10 minutes*/ );
@@ -353,14 +444,20 @@ TuIM::process()
       if (  now > mBuddy[i].mNextTimeToSubscribe )
       {
          Buddy& b = mBuddy[i];
+         mBuddy[i].mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 5*60*1000 /*5 minutes*/ );
          
          assert(  b.presDialog );
          if ( b.presDialog->isCreated() )
          {
             auto_ptr<SipMessage> msg( b.presDialog->makeSubscribe() );
+            int expires = 7*60; // time in seconds 
+            
+            msg->header(h_Event).value() = Data("presence");;
+            msg->header(h_Accepts).push_back( Mime( "application","cpim-pidf+xml") );
+            msg->header(h_Expires).value() = expires;
+
             mStack->send( *msg );
          }
-         mBuddy[i].mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 5*60*1000 /*5 minutes*/ );
       }
    }
 
@@ -397,8 +494,11 @@ TuIM::registerAor( const Uri& uri, const Data& password )
    //SipMessage* msg = Helper::makeRegister(aorName,aorName,contactName);
 
    auto_ptr<SipMessage> msg( mRegistrationDialog.makeInitialRegister(NameAddr(uri),NameAddr(uri)) );
+
+   int expires = 11*60; // time in seconds 
+   msg->header(h_Expires).value() = expires;
    
-   mNextTimeToRegister = Timer::getRandomFutureTimeMs( 10*60*1000 /*10 minutes*/ );
+   mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
    
    mStack->send( *msg );
 }
@@ -440,8 +540,15 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
    mBuddy.push_back( b );
 
    // subscribe to this budy 
-   auto_ptr<SipMessage> msg( mRegistrationDialog.makeInitialSubscribe(NameAddr(b.uri),NameAddr(b.uri)) );
-   b.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 10*60*1000 /*5 minutes*/ );
+   auto_ptr<SipMessage> msg( b.presDialog->makeInitialSubscribe(NameAddr(b.uri),NameAddr(b.uri)) );
+
+   int expires = 7*60; // time in seconds 
+   
+   msg->header(h_Event).value() = Data("presence");;
+   msg->header(h_Accepts).push_back( Mime( "application","cpim-pidf+xml") );
+   msg->header(h_Expires).value() = expires;
+   
+   b.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( expires*1000 /*5 minutes*/ );
    
    mStack->send( *msg );
 }
@@ -462,6 +569,13 @@ TuIM::sendNotify(Dialog* dialog)
    auto_ptr<SipMessage> notify( dialog->makeNotify() );
 
    Pidf* pidf = new Pidf( *mPidf );
+
+   notify->header(h_Event).value() = "presence";
+
+   Token state;
+   state.value() = Data("active");
+   state.param(p_expires) = 666; // !cj! - weird this is not showing up in the message
+   notify->header(h_SubscriptionStates).push_front(state);
 
    notify->setContents( pidf );
    

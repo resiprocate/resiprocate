@@ -37,7 +37,9 @@ Dialog::Dialog(const NameAddr& localContact)
 SipMessage*
 Dialog::makeResponse(const SipMessage& request, int code)
 {
-   if (!mCreated && code < 300 && code > 100)
+   assert( code >= 100 );
+   
+   if ( (!mCreated) && (code < 300) && (code > 100) )
    {
       assert (code > 100);
       assert (code < 300);      
@@ -48,6 +50,7 @@ Dialog::makeResponse(const SipMessage& request, int code)
       assert (request.header(h_Contacts).size() == 1);
 
       SipMessage* response = Helper::makeResponse(request, code, mContact);
+
       // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.
       if (!response->header(h_To).exists(p_tag))
       {
@@ -377,16 +380,20 @@ Dialog::makeReplaces()
 void
 Dialog::clear()
 {
+   Via v; mVia = v;
+//   mContact.clear(); // !cj! - likely need this 
    mCreated = false;
    mRouteSet.clear();
+   mRemoteTarget = NameAddr( Uri(Data::Empty) );
+   mRemoteSequence = 0;
    mRemoteEmpty = true;
+   mLocalSequence = 0;
    mLocalEmpty = true;
+   mCallId.value() = Data::Empty;
    mLocalTag = Data::Empty;
    mRemoteTag = Data::Empty;
-   //mRemoteUri = 0;
-   //mLocalUri = 0;
-   //mRemoteTarget = 0;
-   // mDialogId = "";
+   mRemoteUri = NameAddr(Uri(Data::Empty));
+   mLocalUri = NameAddr(Uri(Data::Empty));
 }
 
 SipMessage*
