@@ -106,9 +106,9 @@ class BaseSecurity
       Data getUserPrivateKeyPEM(const Data& aor) const;
       Data getUserPrivateKeyDER(const Data& aor) const;
 
-      void generateUserCert (const Data& aor, const Data& passPhrase);
+      void generateUserCert(const Data& aor, int keyLen=1024);
 
-      // produces a detached signature
+      // Produces a detached signature
       MultipartSignedContents* sign(const Data& senderAor, Contents* );
       Pkcs7Contents* encrypt(Contents* , const Data& recipCertName );
       Pkcs7Contents* signAndEncrypt( const Data& senderAor, Contents* , const Data& recipCertName );
