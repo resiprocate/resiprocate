@@ -1,9 +1,12 @@
 #include "resiprocate/test/TestSupport.hxx"
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/Preparse.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 #include <iostream>
 #include <iomanip>
+
 
 using namespace std;
 
@@ -139,48 +142,9 @@ int TestSupportPriv::chPerRow = 0;
 SipMessage*
 TestSupport::makeMessage(const Data& data, bool isExternal )
 {
-   using namespace PreparseConst;
-   Transport* external = (Transport*)(0xFFFF);
-   SipMessage* msg = new SipMessage(isExternal ? external : 0);
-
-   size_t size = data.size();
-   char *buffer = new char[size];
-
-   msg->addBuffer(buffer);
-
-   memcpy(buffer,data.data(),size);
-   
-   Preparse pre;
-
-   if (pre.process(*msg, buffer, size) || pre.isFragmented())
-   {
-      cerr << "Preparser failed: isfrag=" << pre.isFragmented() << " buff=" << buffer;
-      
-      delete msg;
-      msg = 0;
-   }
-   else
-   {
-       size_t used = pre.nBytesUsed();
-       assert(pre.nBytesUsed() == pre.nDiscardOffset());
-       
-       // no pp error
-       if (pre.isHeadersComplete() &&
-           used < size)
-      {
-         // body is present .. add it up.
-         // NB. The Sip Message uses an overlay (again)
-         // for the body. It ALSO expects that the body
-         // will be contiguous (of course).
-         // it doesn't need a new buffer in UDP b/c there
-         // will only be one datagram per buffer. (1:1 strict)
-         msg->setBody(buffer+used,size-used);
-      }
-   }
-   return msg;
+   return SipMessage::make(data, isExternal);
 }
 
-
-
 };
+
 

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #include "resiprocate/TcpTransport.hxx"
 #include "resiprocate/SipMessage.hxx"
