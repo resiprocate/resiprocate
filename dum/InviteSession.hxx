@@ -61,7 +61,7 @@ class InviteSession : public DialogUsage
       const SdpContents* getLocalSdp() const;
       const SdpContents* getRemoteSdp() const;
 
-      virtual SipMessage& makeInfo(auto_ptr<Contents> contents);
+      virtual SipMessage& makeInfo(std::auto_ptr<Contents> contents);
 
    public:
       virtual void dispatch(const SipMessage& msg);
@@ -134,7 +134,7 @@ class InviteSession : public DialogUsage
       SipMessage mLastResponse;
       SipMessage mLastNit;      
 
-      typedef map<int, SipMessage> CSeqToMessageMap;
+      typedef std::map<int, SipMessage> CSeqToMessageMap;
       CSeqToMessageMap mAckMap;
       CSeqToMessageMap mFinalResponseMap;
       

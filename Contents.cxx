@@ -448,7 +448,7 @@ Contents::preParseHeaders(ParseBuffer& pb)
             else
             {
                // add to application headers someday
-               cerr << "Unknown MIME Content- header: " << headerName << endl;
+               std::cerr << "Unknown MIME Content- header: " << headerName << std::endl;
                ErrLog(<< "Unknown MIME Content- header: " << headerName);
                assert(false);
             }
@@ -465,8 +465,8 @@ Contents::preParseHeaders(ParseBuffer& pb)
    }
 }
 
-ostream&
-Contents::encodeHeaders(ostream& str) const
+std::ostream&
+Contents::encodeHeaders(std::ostream& str) const
 {
    if (mVersion != 1 || mMinorVersion != 0)
    {
