@@ -337,17 +337,18 @@ WebAdmin::buildShowRegsPage()
          s << "<tr>"
            << "<td>" << uri << "</td>"
            << "<td>";
-
-         for ( RegistrationPersistenceManager::ContactPairList::const_iterator 
-                  cPair = contacts.begin();
-               cPair != contacts.end(); ++cPair );
+      
+#if 0   // TODO - we should fix this
+         RegistrationPersistenceManager::ContactPairList::const_iterator i;
+         for (  i = contacts.begin();
+                i != contacts.end(); ++i );
          {
-            //   const RegistrationPersistenceManager::ContactPair& p = *cPair;
-            //  Uri contact = p.first(); 
-            // Uri contact = cPair->first;
-            // s << contact << " ";
+            const RegistrationPersistenceManager::ContactPair& p = *i;
+            const Uri& contact = p.first; 
+            s << contact << " ";
          }
-         
+#endif
+
          s <<"</td>"
            << "<td><input type=\"checkbox\" name=\"removeUser\" value=\""
            << uri
