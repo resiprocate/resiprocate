@@ -484,7 +484,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
       }
 
-      if (mCancelled)
+      if (mCancelled && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 300))
       {
          dialog->cancel();
          return;         
