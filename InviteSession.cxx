@@ -21,7 +21,7 @@ unsigned long
 InviteSession::TimerH = 64 * T1;
 
 InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState)
-   : BaseUsage(dum, dialog),
+   : DialogUsage(dum, dialog),
      mState(initialState),
      mOfferState(Nothing),
      mCurrentLocalSdp(0),
@@ -70,8 +70,8 @@ InviteSession::acceptOffer(int statusCode)
                                   __FILE__, __LINE__);
    }
    mState = AcceptingReInvite;
-   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
-   return mLastResponse;
+   mDialog.makeResponse(mFinalResponse, mLastRequest, statusCode);
+   return mFinalResponse;
 } 
 
 void
@@ -158,7 +158,7 @@ InviteSession::dispatch(const SipMessage& msg)
             switch(msg.header(h_RequestLine).method())
             {
                case INVITE:
-                  mState = AcceptingReInvite;
+                  mState = ReInviting;
                   mDialog.update(msg);
 				  mLastRequest = msg; // !slg!
                   mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
@@ -204,10 +204,15 @@ InviteSession::dispatch(const SipMessage& msg)
          }
          break;
       case ReInviting:
-         if (msg.isResponse() && msg.header(h_StatusLine).statusCode() == 200)
+         if (msg.isResponse() && msg.header(h_CSeq).method() == INVITE 
+             && msg.header(h_StatusLine).statusCode() == 200)
          {
-            mState = AcceptingReInvite;
+            mState = Connected;
             send(ackConnection());
+            if (offans.first != None)
+            {
+               incomingSdp(msg, offans.second);
+            }
          }
          else
          {
@@ -357,6 +362,21 @@ InviteSession::send(SipMessage& msg)
    {
       //unless the message is an ACK(in which case it is mAck)
       //strip out the SDP after sending
+      switch(msg.header(h_RequestLine).getMethod())
+      {
+         case INVITE:
+         case UPDATE:
+            if (mNextOfferOrAnswerSdp)
+            {
+               msg.setContents(static_cast<SdpContents*>(mNextOfferOrAnswerSdp->clone()));
+               sendSdp(mNextOfferOrAnswerSdp);
+               mNextOfferOrAnswerSdp = 0;            
+            }
+            break;            
+         default:
+            break;            
+      }
+      
       if (msg.header(h_RequestLine).getMethod() == ACK)
       {
          mDum.send(msg);
