@@ -44,7 +44,10 @@ class ParserContainer : public ParserContainerBase
       void pop_front() { mList->pop_front(); }
       void pop_back() { mList->pop_back(); }
       
-      ParserContainer reverse();
+      ParserContainer reverse()
+      {
+         assert(0);
+      }
       
       int size() const { assert(0); return 0; }
       
