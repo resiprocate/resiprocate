@@ -233,6 +233,10 @@ SipMessage::setBody(const char* start, int len)
 const HeaderFieldValue*
 SipMessage::getBody() const
 {
+   if (!mBody)
+   {
+	return 0;
+   }
    return mBody->front();
 }
 
