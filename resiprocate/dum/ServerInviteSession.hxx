@@ -36,7 +36,6 @@ class ServerInviteSession: public InviteSession
 
    private:
       friend class Dialog;
-
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 
       // disabled
