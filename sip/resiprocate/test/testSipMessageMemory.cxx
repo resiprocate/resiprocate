@@ -69,6 +69,8 @@ main()
       // should have a parsed header
       assert(message1->getRawHeader(Headers::CSeq)->getParserContainer());
    }
+
+   cout << "All OK" << endl;
 }
 
 

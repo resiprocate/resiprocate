@@ -65,7 +65,6 @@ class Contents : public LazyParser
       virtual Data getBodyData() const;
       
       virtual Contents* clone() const = 0;
-      //virtual const Mime& getStaticType() const = 0;
       const Mime& getType() const {return mType;}
 
       static Contents* createContents(const Mime& contentType, 

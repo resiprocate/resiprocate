@@ -12,6 +12,14 @@ static char* HYPHEN = "-";
 static const Data COMMENT_START("<!--");
 static const Data COMMENT_END("-->");
 
+// An alternative to stripping comments out in preparse
+// is to deal with them in the parse; ignore when after non-leaf element
+// put a leaf after a comment after a leaf in the first leaf's children
+// getValue() needs to copy first leaf and all 'child' leaves to mValue
+//
+// has the advantage of allowing
+// 1. lazier parsing
+// 2. embedded wierdnesses like <! > and <? >
 XMLCursor::XMLCursor(const ParseBuffer& pb)
    : mRoot(0),
      mCursor(0)

@@ -7,6 +7,8 @@
 #include "sip2/sipstack/SdpContents.hxx"
 #include "sip2/sipstack/test/TestSupport.hxx"
 #include "sip2/sipstack/PlainContents.hxx"
+#include "sip2/sipstack/UnknownHeaderType.hxx"
+#include "sip2/sipstack/UnknownParameterType.hxx"
 
 #include <iostream>
 #include <memory>
@@ -19,6 +21,9 @@ main()
 {
    {
       SipMessage inv;
+
+      inv.header(h_Vias);
+      inv.header(h_To);
       
       inv.header(h_RequestLine) = RequestLine(INVITE);
       inv.header(h_RequestLine).uri() = Uri("sip:bob@biloxi.com");
@@ -119,8 +124,8 @@ main()
 
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
-      assert(!msg->header("Foobie-Blech").empty());
-      assert(msg->header("Foobie-Blech").front().value() == "it is not a glass paperweight");
+      assert(!msg->header(UnknownHeaderType("Foobie-Blech")).empty());
+      assert(msg->header(UnknownHeaderType("Foobie-Blech")).front().value() == "it is not a glass paperweight");
       
       Contents* body = msg->getContents();
 
@@ -178,7 +183,7 @@ main()
       auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
       cerr << message1->header(h_Contacts).front().param(p_expires) << endl;
       assert(message1->header(h_Contacts).front().param(p_expires) == 3600);
-      assert(message1->header(h_Contacts).front().param("foo") == "bar");
+      assert(message1->header(h_Contacts).front().param(UnknownParameterType("foo")) == "bar");
    }
 
    {
