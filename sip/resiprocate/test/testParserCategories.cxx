@@ -51,6 +51,14 @@ main(int arc, char** argv)
    }
 
    {
+      cerr << "Test NameAddr(Data) constructor" << endl;
+      
+      Data nad("bob<sips:bob@foo.com>;tag=wd834f");
+      NameAddr na(nad); 
+      assert(na.uri().user() == "bob");
+   }
+
+   {
       cerr << "full on via parse" << endl;
       char *viaString = /* Via: */ " SIP/2.0/UDP a.b.c.com:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
       

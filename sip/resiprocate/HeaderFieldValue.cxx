@@ -20,16 +20,6 @@ HeaderFieldValue::HeaderFieldValue(const char* field, unsigned int fieldLength)
      mMine(false)
 {}
 
-HeaderFieldValue::HeaderFieldValue(const Data& data)
-   : mField(0),
-     mFieldLength(data.size()),
-     mMine(true)
-{
-   //InfoLog (<< "Making a copy of a HFV" << hex << this);
-   mField = new char[mFieldLength];
-   memcpy(const_cast<char*>(mField), data.data(), data.size());
-}
-
 HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
    : mField(0),
      mFieldLength(hfv.mFieldLength),
@@ -39,7 +29,6 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
    mField = new char[mFieldLength];
    memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
 }
-
 
 HeaderFieldValue::~HeaderFieldValue()
 {

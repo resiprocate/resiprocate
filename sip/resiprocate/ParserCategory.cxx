@@ -13,21 +13,12 @@
 using namespace Vocal2;
 using namespace std;
 
-ParserCategory::ParserCategory(const Data& unparsed) 
-   : mHeaderField(new HeaderFieldValue(unparsed)),
-     mParameters(),
-     mUnknownParameters(),
-     mMine(true),
-     mIsParsed(false)
-{
-}
-
 ParserCategory::ParserCategory(HeaderFieldValue* headerFieldValue)
     : mHeaderField(headerFieldValue),
       mParameters(),
       mUnknownParameters(),
       mMine(false),
-      mIsParsed(headerFieldValue->mField == 0)
+      mIsParsed(false)
 {
 }
 
