@@ -17,6 +17,226 @@ class TestData
          Log::initialize(Log::COUT, Log::DEBUG, Data::Empty);
 
          {
+            Data d;
+            assert(d.empty());
+            assert(d.c_str()[0] == 0);
+         }
+
+         {
+            const int maxs = 1024;
+            Data a;
+            for (int i = 0; i < maxs; i++)
+            {
+               Data b(a.c_str());
+               Data c(b);
+
+               a += "a";
+            }
+            cerr << "test data size 0.." << maxs << endl;
+         }
+
+         // test comparison
+         {
+            {
+               Data c = "sadfsdf";
+               Data d;
+               d = c;
+               assert(c == d);
+            }
+
+            {
+               const char* f = "asdasd";
+               Data d = Data(f);
+               assert(d == f);
+            }
+
+            {
+               Data d;
+               const char* f = "asdasd";
+               d = f;
+               assert(d == f);
+            }
+
+            {
+               Data d("asdfasfdsadf");
+               const char* f = "asdasd";
+               d = f;
+               assert(d == f);
+            }
+
+            {
+               const char* f = "asdasd";
+               Data d = Data(f);
+               assert(!(d < f));
+            }
+
+            {
+               Data d;
+               const char* f = "asdasd";
+               d = f;
+               assert(!(d < f));
+            }
+
+            {
+               Data d("asdfasfdsadf");
+               const char* f = "asdasd";
+               d = f;
+               assert(!(d < f));
+            }
+
+            {
+               Data a("qwerty");
+               Data b("qwerty");
+               assert(!(a < b));
+            }
+
+            {
+               Data a("qwert");
+               Data b("qwerty");
+               assert(a < b);
+            }
+
+            {
+               Data a("qwert");
+               Data b("qwerty");
+               assert(a < b);
+               assert(!(b < a));
+            }
+
+            {
+               const char* f = "asdasda";
+               Data d("asdasd");
+               assert(d < f);
+            }
+
+            {
+               const char * c("asdfasfdsadf");
+               Data d(Data::Share, c, 4);
+               assert(d < c);
+            }
+
+            {
+               const char * c("asdfasfdsadf");
+               Data d(Data::Share, c, strlen(c));
+               assert(!(d < c));
+            }
+
+            {
+               const char * c("asdfasfdsadf");
+               Data d(Data::Share, c, strlen(c));
+               assert(!(d < c));
+               Data c1(d); // copy, null terminate
+               assert(!(d < c1));
+               assert(!(c1 < d));
+            }
+
+            {
+               const char* f = "asdasd";
+               Data d("fsadf");
+
+               assert(!(d <= f));
+            }
+
+            {
+               const Data f = "asdasd";
+               Data d("fsadf");
+
+               assert(!(d <= f));
+            }
+
+            {
+               const char* f = "asdasd";
+               Data d = Data(f);
+               assert(d <= f);
+            }
+
+            {
+               Data d;
+               const char* f = "asdasd";
+               d = f;
+               assert(d <= f);
+            }
+
+            {
+               Data d("asdfasfdsadf");
+               const char* f = "asdasd";
+               d = f;
+               assert(d <= f);
+            }
+         
+            {
+               Data a("qwerty");
+               Data b("qwerty");
+               assert(a <= b);
+            }
+            {
+               Data a("qwert");
+               Data b("qwerty");
+               assert(a <= b);
+            }
+            {
+               Data a("qwert");
+               Data b("qwerty");
+               assert(a <= b);
+               assert(!(b <= a));
+            }
+
+            {
+               const char* f = "asdasda";
+               Data d("asdasd");
+               assert(d <= f);
+            }
+
+            {
+               const char * c("asdfasfdsadf");
+               Data d(Data::Share, c, 4);
+               assert(d <= c);
+            }
+
+            {
+               const char * c("asdfasfdsadf");
+               Data d(Data::Share, c, strlen(c));
+               assert(d <= c);
+            }
+
+            {
+               const char * c("asdfasfdsadf");
+               Data d(Data::Share, c, strlen(c));
+               assert(d <= c);
+               Data c1(d); // copy, null terminate
+               assert(d <= c1);
+               assert(c1 <= d);
+            }
+         }
+
+         // test assignment
+         {
+            {
+               Data d("sadfsa");
+               d = "gasdfg";
+
+               assert(d == "gasdfg");
+            }
+
+            {
+               Data d;
+               d = "gasdfg";
+
+               assert(d == "gasdfg");
+            }
+
+            {
+               Data d("sdfsdf");
+               Data e(d);
+               Data f("fsdgsdafg");
+               Data g(f);
+
+               e = g;
+               assert(e == g);
+            }
+         }
+
+         {
             // test resizing
             Data header(10, true);
             assert(header.empty());
@@ -295,176 +515,6 @@ class TestData
          }
 
          {
-            Data c = "sadfsdf";
-            Data d;
-            d = c;
-            assert(c == d);
-         }
-
-         {
-            const char* f = "asdasd";
-            Data d = Data(f);
-            assert(d == f);
-         }
-
-         {
-            Data d;
-            const char* f = "asdasd";
-            d = f;
-            assert(d == f);
-         }
-
-         {
-            Data d("asdfasfdsadf");
-            const char* f = "asdasd";
-            d = f;
-            assert(d == f);
-         }
-
-         {
-            const char* f = "asdasd";
-            Data d = Data(f);
-            assert(!(d < f));
-         }
-
-         {
-            Data d;
-            const char* f = "asdasd";
-            d = f;
-            assert(!(d < f));
-         }
-
-         {
-            Data d("asdfasfdsadf");
-            const char* f = "asdasd";
-            d = f;
-            assert(!(d < f));
-         }
-
-         
-         {
-            Data a("qwerty");
-            Data b("qwerty");
-            assert(!(a < b));
-         }
-         {
-            Data a("qwert");
-            Data b("qwerty");
-            assert(a < b);
-         }
-         {
-            Data a("qwert");
-            Data b("qwerty");
-            assert(a < b);
-            assert(!(b < a));
-         }
-
-         {
-            const char* f = "asdasda";
-            Data d("asdasd");
-            assert(d < f);
-         }
-
-         {
-            const char * c("asdfasfdsadf");
-            Data d(Data::Share, c, 4);
-            assert(d < c);
-         }
-
-         {
-            const char * c("asdfasfdsadf");
-            Data d(Data::Share, c, strlen(c));
-            assert(!(d < c));
-         }
-
-         {
-            const char * c("asdfasfdsadf");
-            Data d(Data::Share, c, strlen(c));
-            assert(!(d < c));
-            Data c1(d); // copy, null terminate
-            assert(!(d < c1));
-            assert(!(c1 < d));
-         }
-
-         {
-            const char* f = "asdasd";
-            Data d("fsadf");
-
-            assert(!(d <= f));
-         }
-
-         {
-            const Data f = "asdasd";
-            Data d("fsadf");
-
-            assert(!(d <= f));
-         }
-
-         {
-            const char* f = "asdasd";
-            Data d = Data(f);
-            assert(d <= f);
-         }
-
-         {
-            Data d;
-            const char* f = "asdasd";
-            d = f;
-            assert(d <= f);
-         }
-
-         {
-            Data d("asdfasfdsadf");
-            const char* f = "asdasd";
-            d = f;
-            assert(d <= f);
-         }
-         
-         {
-            Data a("qwerty");
-            Data b("qwerty");
-            assert(a <= b);
-         }
-         {
-            Data a("qwert");
-            Data b("qwerty");
-            assert(a <= b);
-         }
-         {
-            Data a("qwert");
-            Data b("qwerty");
-            assert(a <= b);
-            assert(!(b <= a));
-         }
-
-         {
-            const char* f = "asdasda";
-            Data d("asdasd");
-            assert(d <= f);
-         }
-
-         {
-            const char * c("asdfasfdsadf");
-            Data d(Data::Share, c, 4);
-            assert(d <= c);
-         }
-
-         {
-            const char * c("asdfasfdsadf");
-            Data d(Data::Share, c, strlen(c));
-            assert(d <= c);
-         }
-
-         {
-            const char * c("asdfasfdsadf");
-            Data d(Data::Share, c, strlen(c));
-            assert(d <= c);
-            Data c1(d); // copy, null terminate
-            assert(d <= c1);
-            assert(c1 <= d);
-         }
-
-         {
             Data d("123");
             assert(d.size() == 3);
          }
@@ -523,6 +573,16 @@ class TestData
             cerr << "one + two = " << (d + "two") << endl;
             assert((d + "two") == "onetwo");
          }
+
+         {
+            cerr << "test MD5" << endl;
+            Data d;
+            assert(d.md5() == "d41d8cd98f00b204e9800998ecf8427e");
+
+            Data d1("qwertyuiop");
+            assert(d1.md5() == "6eea9b7ef19179a06954edd0f6c05ceb");
+         }
+
          {
             Data mixed("MiXed");
             mixed.lowercase();
