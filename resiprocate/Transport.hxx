@@ -3,11 +3,6 @@
 
 #include <exception>
 
-#ifndef WIN32
-#include <sys/select.h>
-#include <netinet/in.h>
-#endif
-
 #include <util/Data.hxx>
 #include <util/Fifo.hxx>
 #include <util/Socket.hxx>
@@ -18,14 +13,7 @@ namespace Vocal2
 {
 
 class SipMessage;
-
-class SendData
-{
-   public:
-      SendData(const sockaddr_in dest, const Data& pdata): destination(dest),data(pdata)  { }
-      const sockaddr_in destination;
-      const Data& data;
-};
+class SendData;
 
 class Transport
 {
@@ -46,16 +34,17 @@ class Transport
       {
          public:
             Tuple();
-            Tuple(sockaddr_in _ipv4,
-                  int _port,
-                  Transport::Type _transport);
+            Tuple(struct in_addr pipv4,
+                  int pport,
+                  Transport::Type ptype);
             
             bool operator<(const Tuple& rhs) const;
             bool operator==(const Tuple& rhs) const;
             
-            struct sockaddr_in ipv4;
+            struct in_addr ipv4;
             int port;
-            Transport::Type transport;
+            Transport::Type transportType;
+            Transport* transport;
       };
       
       class Exception : public VException
@@ -73,13 +62,16 @@ class Transport
       
       virtual ~Transport();
       
-      virtual void send( const sockaddr_in address, const Data& data);
+      virtual void send( const Tuple& tuple, const Data& data, const Data& tid);
       virtual void process(fd_set* fdSet=NULL) = 0 ;
       virtual void buildFdSet( fd_set* fdSet, int* fdSetSize );
-
+      
       void run(); // will not return.
       void shutdown();
 
+      void fail(const Data& tid); // called when transport failed
+      void ok(const Data& tid); // called when the transport succeeds
+      
       // These methods are used by the TransportSelector
       virtual const Data& hostname() const { return mHost; } 
       virtual int port() const { return mPort; } 
@@ -102,6 +94,19 @@ class Transport
    private:
 
       bool mShutdown ;
+};
+
+class SendData
+{
+   public:
+      SendData(const Transport::Tuple& dest, const Data& pdata, const Data& tid): 
+         destination(dest),
+         data(pdata),
+         transactionId(tid) 
+      {}
+      const Transport::Tuple destination;
+      const Data data;
+      const Data transactionId;
 };
 
 }

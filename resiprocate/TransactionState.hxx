@@ -2,12 +2,14 @@
 #define TRANSACTIONSTATE_HXX
 
 #include <iostream>
+#include <sipstack/DnsResolver.hxx>
 
 namespace Vocal2
 {
 
 class Message;
 class SipMessage;
+class DnsMessage;
 class SipStack;
 
 class TransactionState
@@ -23,7 +25,8 @@ class TransactionState
          ClientInvite,
          ServerNonInvite,
          ServerInvite,
-         Stale
+         Stale,
+         Ack,  // may not be needed
       } Machine;
       
       typedef enum 
@@ -39,6 +42,8 @@ class TransactionState
 
       TransactionState(SipStack& stack, Machine m, State s);
       
+      void processDns( Message* msg );
+      void processAck( Message* msg);
       void processClientNonInvite(  Message* msg );
       void processClientInvite(  Message* msg );
       void processServerNonInvite(  Message* msg );
@@ -52,23 +57,34 @@ class TransactionState
       bool isResponse(Message* msg, int lower=0, int upper=699) const;
       bool isFromTU(Message* msg) const;
       bool isFromWire(Message* msg) const;
-      bool isTranportError(Message* msg) const;
+      bool isTransportError(Message* msg) const;
       bool isSentReliable(Message* msg) const;
       bool isSentUnreliable(Message* msg) const;
+      bool isReliabilityIndication(Message* msg) const;
       bool isSentIndication(Message* msg) const;
       void sendToTU(Message* msg) const;
       void sendToWire(Message* msg) const;
+      void resendToWire(Message* msg) const;
       SipMessage* make100(SipMessage* request) const;
       
       SipStack& mStack;
       Machine mMachine;
       State mState;
+
+      // Indicates that the message has been sent with a reliable protocol. Set
+      // by the TransportSelector
       bool mIsReliable;
-      
+
       TransactionState* mCancelStateMachine;
 
       // !rk! The contract for this variable needs to be defined.
       SipMessage* mMsgToRetransmit;
+
+      DnsResolver::Id mDnsQueryId;
+      DnsResolver::State mDnsState;
+      DnsResolver::TupleIterator mDnsListBegin;
+      DnsResolver::TupleIterator mDnsListEnd;
+      DnsResolver::TupleIterator mDnsListCurrent;
       
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
 };
