@@ -8,6 +8,8 @@
 #include <sys/fcntl.h>
 #include "sip2/util/Logger.hxx"
 #include "sip2/sipstack/HeaderTypes.hxx"
+#include "sip2/sipstack/ParameterTypeEnums.hxx"
+#include "sip2/sipstack/ParameterTypes.hxx"
 
 using namespace Vocal2;
 using namespace std;
@@ -27,19 +29,22 @@ struct {
       char * keyword;
       Headers::Type type;
       int len;
-} headerInfo[(int)(Headers::MAX_HEADERS-Headers::CSeq+1)];
+} headerInfo[(int)(Headers::MAX_HEADERS)];
 
 unsigned int  InitHeaderInfo()
 {
-   int i = 0;
+   int i = static_cast<int>(Headers::UNKNOWN)+1;
+   int max  = static_cast<int>(Headers::MAX_HEADERS);
    
-   for(Headers::Type t = Headers::CSeq;
-       t < Headers::UNKNOWN;
-       ++t,++i)
+   for( ;
+       i < max;
+       ++i)
    {
+       Headers::Type t = static_cast<Headers::Type>(i);
+       
       char* p = strdup(Headers::HeaderNames[t].c_str());
       
-      headerInfo[i].len = Headers::HeaderNames[t].length();
+      headerInfo[i].len = Headers::HeaderNames[t].size();
       headerInfo[i].keyword = p;
       headerInfo[i].type = t;
       
@@ -51,6 +56,23 @@ unsigned int  InitHeaderInfo()
    
 }
 
+bool
+checkParameters()
+{
+    int i = static_cast<int>(ParameterTypes::UNKNOWN)+1;
+    int max = static_cast<int>(ParameterTypes::MAX_PARAMETER);
+    bool failure = false;
+    
+    for( ; i < max ; ++i)
+    {
+        ParameterTypes::Type t = static_cast<ParameterTypes::Type>(i);
+        Data& d = ParameterTypes::ParameterNames[t];
+        bool ok = ParameterTypes::getType(d.data(),d.size()) == t;
+        DebugLog(<<ParameterTypes::ParameterNames[t]<<" : " << (ok?"OK":"FAIL"));
+        failure |= !ok;
+    }
+    return !failure;
+}
 
 unsigned short randomUShort()
 {
@@ -84,7 +106,8 @@ int
 main()
 {
    int randomList[100*1024];
-
+   bool failure = false;
+   
 
    unsigned int nRandom = sizeof(randomList)/sizeof(*randomList);
    
@@ -99,17 +122,10 @@ main()
    
    for(i=0;i<nKeywords;i++)
    {
-#if defined(GPERF)
-      siphdrhash_s* hash = 
-         Perfect_Hash::in_word_set(headerInfo[i].keyword,
-                                   headerInfo[i].len);
-      bool ok = headerInfo[i].type == hash->type;
-#else
-      Headers::Type t = Headers::getHeaderType(headerInfo[i].keyword,
-                                               headerInfo[i].len);
+      Headers::Type t = Headers::getType(headerInfo[i].keyword,
+                                         headerInfo[i].len);
       bool ok = headerInfo[i].type == t;
       
-#endif
       InfoLog(<< headerInfo[i].keyword << " " << (ok?"OK":"FAIL"));
       if (!ok)
       {
@@ -120,8 +136,13 @@ main()
       }
       
    }
-
    
+
+   bool p = checkParameters();
+   InfoLog(<<" parameters: " << (p?"OK":"FAIL"));
+   
+
+#if defined (TIME_HASH_TEST)   
    // Make a large random list so we don't take a hit with 
    // random() calcs during the hash.
 
@@ -151,15 +172,11 @@ main()
       alarm(interval);
       while (!signalled)
       {
-#if defined(GPERF_HASH)
-         volatile register siphdrhash_s* hash = 
-            Perfect_Hash::in_word_set(headerInfo[randomList[i]].keyword,
-                                      headerInfo[randomList[i]].len);
-#else
+
          volatile register Headers::Type hdr = 
-            Headers::getHeaderType(headerInfo[randomList[i]].keyword,
-                                   headerInfo[randomList[i]].len);
-#endif         
+            Headers::getType(headerInfo[randomList[i]].keyword,
+                             headerInfo[randomList[i]].len);
+
          counter++;
          i++;
          if (i >= nRandom) i = 0;
@@ -172,14 +189,11 @@ main()
       signalled=false;
       
    }
+#endif
+   if (failure) CritLog(<<"Problems in hashes. See above");
+   return failure?1:0;
+   
 }
-/*
-
-         volatile register Headers::Type hdr = 
-            Headers::getHeaderType(randomList[i].word,
-                                   randomList[i].len);
-
-*/
 
 
 /* ====================================================================
