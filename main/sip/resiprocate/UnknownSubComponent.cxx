@@ -30,7 +30,7 @@ UnknownSubComponent::clone() const
    return new UnknownSubComponent(*this);
 }
 
-ostream& operator<<(ostream& stream, const UnknownSubComponent& comp)
+ostream& operator<<(ostream& stream, UnknownSubComponent& comp)
 {
-   return ostream << comp.getName() << "=" << comp.getString();
+   return stream << comp.getName() << "=" << comp.value();
 }
