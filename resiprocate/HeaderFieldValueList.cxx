@@ -1,3 +1,6 @@
+
+#include <cassert>
+
 #include "sip2/sipstack/HeaderFieldValue.hxx"
 #include "sip2/sipstack/HeaderFieldValueList.hxx"
 #include "sip2/sipstack/ParserContainerBase.hxx"
