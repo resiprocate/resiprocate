@@ -1052,7 +1052,7 @@ TransactionState::isTransportError(Message* msg) const
 bool
 TransactionState::isReliabilityIndication(Message* msg) const
 {
-   return dynamic_cast<ReliabilityMessage*>(msg);
+   return ( dynamic_cast<ReliabilityMessage*>(msg) != 0);
 }
 
 bool
