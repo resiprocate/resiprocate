@@ -60,6 +60,7 @@ public:
       int getNumBuddies() const;
       const Uri getBuddyUri(const int index);
       const Data getBuddyGroup(const int index);
+      bool getBuddyStatus(const int index, Data* status=NULL);
       void addBuddy( const Uri& uri, const Data& group );
       void removeBuddy( const Uri& name);
 
@@ -94,6 +95,8 @@ public:
             Data group;
             Dialog* presDialog; 
             UInt64 mNextTimeToSubscribe;
+            bool online;
+            Data status;
       };
       vector<Buddy> mBuddy;
 

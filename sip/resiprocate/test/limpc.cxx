@@ -2,6 +2,9 @@
 #include <cassert>
 #include <iostream>
 
+#include <ncurses.h>
+
+
 #ifndef WIN32
 #include <sys/time.h>
 #include <sys/types.h>
@@ -15,13 +18,11 @@
 #include "sip2/sipstack/TuIM.hxx"
 #include "sip2/sipstack/Security.hxx"
 
-#include <ncurses.h>
-
 
 using namespace Vocal2;
 using namespace std;
 
-//#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 
 static WINDOW* commandWin=0;
@@ -30,17 +31,27 @@ static WINDOW* statusWin=0;
 
 
 class TestPresCallback: public TuIM::PresCallback
-      {
-         public:
-            virtual void presenseUpdate(const Uri& dest, bool open, const Data& status );
-      };
+{
+   public:
+      virtual void presenseUpdate(const Uri& dest, bool open, const Data& status );
+};
   
 
 void 
 TestPresCallback::presenseUpdate(const Uri& from, bool open, const Data& status )
 {
    const char* stat = (open)?"online":"offline";
-   cout << from << " set presence to " << stat << " " << status.c_str() << endl;
+   //cout << from << " set presence to " << stat << " " << status.c_str() << endl;
+
+   waddstr(textWin,"Status: ");
+   waddstr(textWin, from.getAor().c_str());
+   waddstr(textWin," is ");
+   waddstr(textWin,stat);
+   waddstr(textWin," ");
+   waddstr(textWin,status.c_str());
+   waddstr(textWin,"\n");
+
+   wrefresh(textWin);
 }
 
 
@@ -71,35 +82,56 @@ TestPageCallback::receivedPage( const Data& msg, const Uri& from,
    if ( mDest && ( *mDest != from) )
    {
       *mDest = from;
-      cerr << "Set destination to <" << *mDest << ">" << endl;
+      //cerr << "Set destination to <" << *mDest << ">" << endl;
+      waddstr(textWin,"Set destination to ");
+      waddstr(textWin, mDest->value().c_str());
+      waddstr(textWin,"\n");
    }
    
-   cout << from;
+   //cout << from;  
+
+   waddstr(textWin,"From: ");
+   waddstr(textWin,from.getAor().c_str());
+
    if ( !wasEncryped )
    {
-      cout << " -NOT SECURE- ";
+      //cout << " -NOT SECURE- ";
+      waddstr(textWin," -NOT SECURE- ");
    }
    switch ( sigStatus )
    {
       case  Security::isBad:
-         cout << " -bad signature- ";
-         break;
+         //cout << " -bad signature- ";
+         waddstr(textWin,"bad signature");
+      break;
       case  Security::none:
-         cout << " -no signature- ";
+         //cout << " -no signature- ";
+         waddstr(textWin,"no signature");
          break;
       case  Security::trusted:
-         cout << " <signed  " << signedBy << " > ";
+         //cout << " <signed  " << signedBy << " > ";
+         waddstr(textWin,"signed ");
+         waddstr(textWin,signedBy.c_str());
          break;
       case  Security::caTrusted:
-         cout << " <ca signed  " << signedBy << " > ";
+         //cout << " <ca signed  " << signedBy << " > ";
+         waddstr(textWin,"ca signed " );
+         waddstr(textWin,signedBy.c_str());
          break;
       case  Security::notTrusted:
-         cout << " <signed  " << signedBy << " NOT TRUSTED > ";
+         //cout << " <signed  " << signedBy << " NOT TRUSTED > ";
+         waddstr(textWin,"untrusted signature ");
+         waddstr(textWin,signedBy.c_str());
          break;
    }
    
-   cout << " says:" << endl;
-   cout << msg.escaped() << endl;
+   //cout << " says:" << endl;
+   //cout << msg.escaped() << endl;  
+   waddstr(textWin, " says: ");
+   waddstr(textWin, msg.escaped().c_str() );
+   waddstr(textWin, "\n");
+   
+   wrefresh(textWin);
 }
 
 
@@ -107,68 +139,152 @@ void
 TestErrCallback::sendPageFailed( const Uri& dest )
 {
    //InfoLog(<< "In TestErrCallback");  
-   cerr << "Message to " << dest << " failed" << endl;
+   // cerr << "Message to " << dest << " failed" << endl;   
+   waddstr(textWin,"Message to ");
+   waddstr(textWin,dest.value().c_str());
+   waddstr(textWin," failed\n");
+   wrefresh(textWin);
 }
 
 
 bool
 processStdin(  TuIM& tuIM, Uri* dest )
 {
-   char buf[1024];
+   static unsigned int num=0;
+   static char buf[1024];
+
+   char c = getch();	
+      
+   if ( c == '\f' )
+   {
+      clearok(textWin,TRUE);
+      clearok(statusWin,TRUE);
+      clearok(commandWin,TRUE);
+
+      assert( num < sizeof(buf) );
+      buf[num] = 0;
+      werase(commandWin);
+      waddstr(commandWin,buf);
+
+     wrefresh(textWin);
+      wrefresh(statusWin);
+      wrefresh(commandWin);
+
+      return true;
+   }
 
 #if 0
-   //DebugLog( << "eof = " << eof(fileno(stdin)) );
-	if ( eof(fileno(stdin)) )
-	{
-		return true;
-	}
+   char junk[6];
+   junk[0]=' ';
+   junk[1]='0'+(c/100);
+   junk[2]='0'+((c/10)%10);
+   junk[3]='0'+(c%10);
+   junk[4]=' ';
+   junk[5]=0;
+   waddstr(commandWin,junk);
 #endif
 
-   //DebugLog( << "start read " << sizeof(buf) << " charaters from stdin" );
-   int num = read(fileno(stdin),buf,sizeof(buf));
-   //DebugLog( << "Read " << num << " charaters from stdin" );
-   
-   if ( (num>3) && (!strncmp("to:",buf,3)) )
+   if (  (c == '\a') || (c == '\b') || (c == 4 ) || (c == 0x7F) )
    {
-      buf[num-1] = 0;
-      *dest = Uri(Data(buf+3));
-      cerr << "Set destination to <" << *dest << ">";
+      if ( num > 0 )
+      {
+         num--;
+      }
+      buf[num]=0;
+
+      werase(commandWin);
+      waddstr(commandWin,buf);
+      wrefresh(commandWin);
+      
+      return true;
    }
-   else if ( (num>4) && (!strncmp("add:",buf,4)) )
+       
+   if ( (c == '\r') || (num+2>=sizeof(buf)) )
    {
-      buf[num-1] = 0;
-      Uri uri(Data(buf+4));
-      cerr << "Subscribing to buddy <" << uri << ">";
-      tuIM.addBuddy( uri, Data::Empty );
-   }
-   else if ( (num>3) && (!strncmp("go:",buf,3)) )
-   {
-      buf[num-1] = 0;
-      Data stat(buf+3);
-      cerr << "setting presence status to  <" << stat << ">";
-      tuIM.setMyPresense( !stat.empty(), stat );
-   }
-   else if ( (num==2) && (!strncmp(".",buf,1)) )
-   {
-      //DebugLog( << "Got a period - end program" );
-      return false;
+      buf[num] =0;
+
+      if ( (num>3) && (!strncmp("to:",buf,3)) )
+      {
+         buf[num] = 0;
+         *dest = Uri(Data(buf+3));
+       
+         //cerr << "Set destination to <" << *dest << ">";
+         waddstr(textWin,"Set destination to ");
+         waddstr(textWin,dest->value().c_str());
+         waddstr(textWin,"\n");
+         wrefresh(textWin);
+      }
+      else if ( (num>4) && (!strncmp("add:",buf,4)) )
+      {
+         buf[num] = 0;
+         Uri uri(Data(buf+4));
+
+         //cerr << "Subscribing to buddy <" << uri << ">";
+         waddstr(textWin,"Subscribing to ");
+         waddstr(textWin,uri.value().c_str());
+         waddstr(textWin,"\n");
+         wrefresh(textWin);
+         
+         tuIM.addBuddy( uri, Data::Empty );
+      }
+      else if ( (num>7) && (!strncmp("status:",buf,7)) )
+      {
+         buf[num] = 0;
+         Data stat(buf+3);
+
+         //cerr << "setting presence status to  <" << stat << ">";
+         waddstr(textWin,"Set presece status to <");
+         waddstr(textWin,stat.c_str());
+         waddstr(textWin,">\n");
+         wrefresh(textWin);
+
+         tuIM.setMyPresense( !stat.empty(), stat );
+      }
+      else if ( (num==1) && (!strncmp(".",buf,1)) )
+      {
+         //DebugLog( << "Got a period - end program" );
+         return false;
+      }
+      else
+      { 
+         if ( num >= 1 )
+         {
+            assert( num < sizeof(buf) );
+            buf[num] = 0;
+            Data text(buf);
+         
+            //DebugLog( << "Read <" << text << ">" );
+            
+            Data destValue  = dest->getAor();
+            
+            //cout << "Send to <" << *dest << ">";
+            waddstr(textWin,"To: ");
+            waddstr(textWin,destValue.c_str());
+            waddstr(textWin," ");
+            waddstr(textWin,text.c_str());
+            waddstr(textWin,"\n");
+            wrefresh(textWin);
+
+            tuIM.sendPage( text , *dest, false /*sign*/, Data::Empty /*encryptFor*/ );
+            //tuIM.sendPage( text , *dest, false /*sign*/, dest->getAorNoPort() /*encryptFor*/ );
+            //tuIM.sendPage( text , *dest, true /*sign*/,  Data::Empty /*encryptFor*/ );
+            //tuIM.sendPage( text , *dest, true /*sign*/, dest->getAorNoPort()
+            ///*encryptFor*/ );
+         }
+      }
+
+      num = 0;  
+
+      werase(commandWin);
+      wrefresh(commandWin);
    }
    else
-   { 
-      if ( num >= 1 )
-      {
-         buf[num-1] = 0;
-         Data text(buf);
-         
-         //DebugLog( << "Read <" << text << ">" );
-         
-         cout << "Send to <" << *dest << ">";
-         
-         tuIM.sendPage( text , *dest, false /*sign*/, Data::Empty /*encryptFor*/ );
-         //tuIM.sendPage( text , *dest, false /*sign*/, dest->getAorNoPort() /*encryptFor*/ );
-         //tuIM.sendPage( text , *dest, true /*sign*/,  Data::Empty /*encryptFor*/ );
-         //tuIM.sendPage( text , *dest, true /*sign*/, dest->getAorNoPort() /*encryptFor*/ );
-      }
+   {
+      buf[num++] = c;
+      assert( num < sizeof(buf) );
+      
+      waddch(commandWin,c);
+      wrefresh(commandWin);
    }
 
    return true;
@@ -178,31 +294,31 @@ processStdin(  TuIM& tuIM, Uri* dest )
 int
 main(int argc, char* argv[])
 {  
-   //Log::initialize(Log::COUT, Log::ERR, argv[0]);
-   
-   //Log::setLevel(Log::DEBUG_STACK);
+#ifdef ERR // ncurses defines a macro called ERR 
+   Log::initialize(Log::COUT, Log::SIP2_ERR, argv[0]);
+   Log::setLevel(Log::SIP2_ERR);
+#else
+   Log::initialize(Log::COUT, Log::ERR, argv[0]);
+   Log::setLevel(Log::ERR);
+#endif  
 
-   //InfoLog(<<"Test Driver for IM Starting");
+   InfoLog(<<"Test Driver for IM Starting");
     
-   //InfoLog( << "\nType a line like\nto:sip:fluffy@localhost:5060\n"
-   //          "to control the destination of your messages. "
-   ///         "A line with a singe period on it ends the program\n" );
-   
    int port = 5060;
    int tlsPort = 0;
    Uri aor("sip:aor@localhost:5060" );
    Uri dest("sip:you@localhost:5070");
    Data aorPassword;
-         
+   
    for ( int i=1; i<argc; i++)
    {
       if (!strcmp(argv[i],"-vv"))
       {
-//         Log::setLevel(Log::DEBUG_STACK);
+         Log::setLevel(Log::DEBUG_STACK);
       }
       else if (!strcmp(argv[i],"-v"))
       {
-//         Log::setLevel(Log::INFO);
+         Log::setLevel(Log::INFO);
       }
       else if (!strcmp(argv[i],"-port"))
       {
@@ -234,7 +350,7 @@ main(int argc, char* argv[])
          assert( i<argc );
          dest = Uri(Data(argv[i]));
 
-         cout << "Destination is " << dest << endl;
+         //cout << "Destination is " << dest << endl;
       } 
       else
       { 
@@ -254,26 +370,26 @@ main(int argc, char* argv[])
    if ( !ok )
    {
       //ErrLog( << "Could not load the certificates" );
-	  assert( ok );
+      assert( ok );
    }
 #endif
    
-    Vocal2::Transport::Type transport = Transport::UDP;
+   Vocal2::Transport::Type transport = Transport::UDP;
 
    sipStack.addTransport(Transport::UDP, port);
    sipStack.addTransport(Transport::TCP, port);
 #if USE_SSL
    if ( port == 5060 )
    {
-       if ( tlsPort == 0 )
-       {
-           tlsPort = 5061;
+      if ( tlsPort == 0 )
+      {
+         tlsPort = 5061;
            
-       }
+      }
    }
    if ( tlsPort != 0 )
    {
-       sipStack.addTransport(Transport::TLS, tlsPort);
+      sipStack.addTransport(Transport::TLS, tlsPort);
    }
 #endif
 
@@ -297,9 +413,6 @@ main(int argc, char* argv[])
 #if 0
    tuIM.registerAor( aor, aorPassword );
 #endif
-
-   //Vocal2::makeSocketNonBlocking( fileno(stdin) );
-
 
    initscr(); 
    cbreak(); 
@@ -333,8 +446,11 @@ main(int argc, char* argv[])
       sipStack.buildFdSet(fdset);
 
       fdset.setRead( fileno(stdin) );
-       
-      int  err = fdset.select( sipStack.getTimeTillNextProcess());
+      
+      int time = sipStack.getTimeTillNextProcessMS();
+      cerr << time << endl;
+      
+      int  err = fdset.selectMiliSeconds( time );
       if ( err == -1 )
       {
          int e = errno;
@@ -350,10 +466,12 @@ main(int argc, char* argv[])
       ////InfoLog(<< "Select returned");
        
       if ( fdset.readyToRead( fileno(stdin) ) )
-	  //if ( !eof( fileno(stdin) ) )
       {
          bool keepGoing = processStdin(tuIM,&dest);
-         if (!keepGoing) break;
+         if (!keepGoing) 
+         {
+            break;
+         } 
       }
        
       // //DebugLog ( << "Try TO PROCESS " );

@@ -74,7 +74,7 @@ main(int argc, char* argv[])
       {
          FdSet fdset; 
          sipStack.buildFdSet(fdset);
-         int  err = fdset.select(1000 * sipStack.getTimeTillNextProcess());
+         int  err = fdset.selecttMiliSeconds( sipStack.getTimeTillNextProcessMS());
          int e = errno;
          if ( err == -1 )
          {
