@@ -711,7 +711,7 @@ Data
 Data::operator+(const char* str) const
 {
    assert(str);
-   unsigned int l = strlen(str);
+   size_t l = strlen(str);
    Data tmp(mSize + l, true);
    tmp.mSize = mSize + l;
    tmp.mCapacity = tmp.mSize;
