@@ -19,6 +19,9 @@ class HandleManager
       Handled* getHandled(Handled::Id) const;
 
       virtual void shutdownWhenEmpty();
+      //subclasses(for now DUM) overload this method to handle shutdown
+   protected:
+      virtual void shutdown();      
    private:
       friend class Handled;
       
