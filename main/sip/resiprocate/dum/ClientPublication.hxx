@@ -9,6 +9,11 @@ namespace resip
  */
 
 class ClientPublication: public BaseUsage {
+
+   public:
+      class Handle
+      {
+      };
 };
  
 }

@@ -1,10 +1,6 @@
 #if !defined(RESIP_SERVERREGISTRATION_HXX)
 #define RESIP_SERVERREGISTRATION_HXX
 
-/** @file ServerRegistration.hxx
- *   
- */
-
 namespace resip
 {
 
