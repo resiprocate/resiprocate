@@ -23,7 +23,7 @@ static  TuIM* tuIM;
 class TestCallback: public TuIM::Callback
 {
    public:
-      virtual void presenseUpdate(const Uri& dest, bool open, const Data& status );
+      virtual void presenceUpdate(const Uri& dest, bool open, const Data& status );
       virtual void receivedPage( const Data& msg, const Uri& from ,
                                  const Data& signedBy,  Security::SignatureStatus sigStatus,
                                  bool wasEncryped  );
@@ -35,7 +35,7 @@ class TestCallback: public TuIM::Callback
   
 
 void 
-TestCallback::presenseUpdate(const Uri& from, bool open, const Data& status )
+TestCallback::presenceUpdate(const Uri& from, bool open, const Data& status )
 {
 }
 
