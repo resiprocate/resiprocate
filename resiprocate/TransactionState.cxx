@@ -452,13 +452,13 @@ TransactionState::processClientNonInvite(  Message* msg )
             break;
 
          case Timer::TimerF:
-            if (mState == Calling)
+            if (mState == Trying || mState == Proceeding)
             {
-               // !jf! is this correct
                sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
                terminateClientTransaction(mId);
                delete this;
             }
+            
             delete msg;
             break;
 
