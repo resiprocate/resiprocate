@@ -23,7 +23,6 @@ main (int argc, char** argv)
 //   stackA.addTransport(UDP, 5060);
 
     DialogUsageManager dum(stack);
-    Dialog d(dum,msg);
     
     cout << "Created DUM, schduling timer for testDum Object" << endl;
 
