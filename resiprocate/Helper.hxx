@@ -109,6 +109,10 @@ class Helper
       static int getSentPort(SipMessage& request);
 
       static Uri fromAor(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
+
+      // Do basic checks to validate a received message off the wire
+      static bool validateMessage(const SipMessage& message);
+      
 };
  
 }
