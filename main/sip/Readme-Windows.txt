@@ -17,3 +17,5 @@ add Ws2_32.lib to link libraries
 
 
 Have fun 
+
+Good luck
