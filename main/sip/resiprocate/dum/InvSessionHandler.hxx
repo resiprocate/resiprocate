@@ -12,7 +12,7 @@ class InvSessionHandler
 {
    public:
       /// called when an initial INVITE arrives 
-      virtual void onNewInvSession(ClientInvSession&, const SipMessage& msg)=0;
+      virtual void onNewInvSession(ServerInvSession&, const SipMessage& msg)=0;
 
       /// called when some state in the Dialog changes - typically remoteURI
       virtual void onDialogModified(ClientInvSession&, const SipMessage& msg)=0;
