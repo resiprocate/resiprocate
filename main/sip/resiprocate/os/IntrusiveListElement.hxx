@@ -4,48 +4,48 @@
 /*
   Heritable intrusive doubly linked list element template.
 
-  For a class that is an element in a single list, use like this:
+  // For a class that is an element in a single list, use like this:
   class Foo : public IntrusiveListElement<Foo*>
   {
      ...
   };
 
-  Foo* fooHead = new Foo(-1);
-  // initialize header to cycle -- represent an empty list
-  fooHead->init();
+  Foo* fooHead = new Foo();
+  // initialize head to cycle -- represent an empty list
+  Foo::makeList(fooHead);
 
-  For a class that is an element of multiple lists, use like this:
-  // has two independent intrusive lists, named reader and writer
+  // For a class that is an element of multiple lists, use like this:
+  // has two independent intrusive lists aspects, named read and write
   class FooFoo : public IntrusiveListElement<Foo*, 1>, public IntrusiveListElement<Foo*, 2>
   {
      public:
-        typedef IntrusiveListElement<FooFoo*, 1> reader;
-        typedef IntrusiveListElement<FooFoo*, 2> writer;
+        typedef IntrusiveListElement<FooFoo*, 1> read;
+        typedef IntrusiveListElement<FooFoo*, 2> write;
 
      ...
   };
 
-  FooFoo* fooFooHead = new FooFoo(-1);
-  // initialize header to cycle -- represent two empty lists
-  fooFooHead->reader::push_front(fooFooHead);
-  fooFooHead->writer::push_front(fooFooHead);
-  for (FooFoo::reader::iterator f = fooFooHead->reader::begin(); f != fooFooHead->reader::end(); f++)
+  FooFoo* fooFooHead = new FooFoo();
+  // initialize head to cycle -- represent two empty lists
+  FooFoo::read::makeList(fooFooHead);
+  FooFoo::write::makeList(fooFooHead);
+  for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); f++)
   {
      ...
   };
 
   // elsewhere:
-  FooFoo::reader* mReadHead;
-  FooFoo::writer* mWriteHead;
-
-  mReadHead->init(); // use methods directly
-  mWriteHead->init(); // use methods directly
+  FooFoo head;
+  FooFoo::read* mReadHead = FooFoo::read::makeList(&head);
+  FooFoo::write* mWriteHead = FooFoo::write::makeList(&head);
 
   FooFoo element* = new FooFoo();
+  // don't need to disambiguate methods
   mReadHead->push_back(element);
   mWriteHead->push_back(element);
 
-  element->writer::remove();  // use named methods
+  // element could be in either list, so use aspect
+  element->write::remove();  
 
 */
 
