@@ -7,7 +7,7 @@ PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD
 
 TARGET_LIBRARY = 
 
-TESTPROGRAMS = basicRegister.cxx #BasicCall.cxx #testDumTimer.cxx
+TESTPROGRAMS = basicRegister.cxx BasicCall.cxx #testDumTimer.cxx
 SRC =   
 
 include $(BUILD)/Makefile.post

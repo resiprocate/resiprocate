@@ -19,11 +19,11 @@ class ClientInviteSession : public InviteSession
       ClientInviteSessionHandle getHandle();
 
       virtual SipMessage& end();
+      virtual void send(SipMessage& msg);
       
    private:
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-      virtual void send(SipMessage& msg);
 
       void handlePrackResponse(const SipMessage& response);
       void sendPrack(const SipMessage& response);
