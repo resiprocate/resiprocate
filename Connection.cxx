@@ -49,7 +49,7 @@ Connection::~Connection()
 {
    if (mSocket != INVALID_SOCKET) // bogus Connections
    {
-      DebugLog (<< "Deleting " << this << " " << mSocket << " with " << mOutstandingSends.size() << " to write");
+      //DebugLog (<< "Deleting " << this << " " << mSocket << " with " << mOutstandingSends.size() << " to write");
       while (!mOutstandingSends.empty())
       {
          SendData* sendData = mOutstandingSends.front();
@@ -58,7 +58,7 @@ Connection::~Connection()
          mOutstandingSends.pop_front();
       }
    
-      DebugLog (<< "Shutting down connection " << mSocket);
+      //DebugLog (<< "Shutting down connection " << mSocket);
       closeSocket(mSocket);
 
       getConnectionManager().removeConnection(this);
