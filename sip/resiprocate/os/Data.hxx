@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.50 2003/01/22 00:55:42 davidb Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.51 2003/01/24 02:48:28 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -107,8 +107,8 @@ class Data
       double convertDouble() const;
 
       Data substr(size_type first, size_type count = Data::npos) const;
-      //int find(const Data& match, int start = 0) const;
-      //int find(const char* match, int start = 0) const;
+      int find(const Data& match, int start = 0) const;
+      int find(const char* match, int start = 0) const;
 
       static const Data Empty;
       static const int npos;
