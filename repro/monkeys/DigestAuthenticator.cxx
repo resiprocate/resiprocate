@@ -132,7 +132,7 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc)
 
   if (!user.empty())
   {
-    database.requestUserAuthInfo(user, realm);
+    database.requestUserAuthInfo(user, realm, rc.getProxy());
     return WaitingForEvent;
   }
   else
