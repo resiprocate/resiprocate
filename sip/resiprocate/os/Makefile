@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.23 2002/12/06 01:33:40 derekm Exp $
+# $Id: Makefile,v 1.24 2002/12/07 03:24:45 derekm Exp $
 
 BUILD = ../../build
 
@@ -23,7 +23,8 @@ TESTPROGRAMS =	testParseBuffer.cxx \
 	        testDataPerformance.cxx \
 	        testRandomHex.cxx \
 	        testCoders.cxx \
-		testThreadIf.cxx
+		testThreadIf.cxx \
+		testLogger.cxx
 
 ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
