@@ -450,33 +450,118 @@ test5()
 
 void test6()
 {
+      CritLog( << "2.6    INVITE with non-SDP message body ");
+      
+      char *txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
+                   "To: sip:j.user@company.com\r\n"
+                   "From: sip:caller@university.edu;tag=8\r\n"
+                   "Max-Forwards: 70 \r\n"
+                   "Call-ID: 0ha0isndaksdj@10.0.0.1 \r\n"
+                   "CSeq: 8 INVITE \r\n"
+                   "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw \r\n"
+                   "Content-Type: application/newformat \r\n"
+                   "\r\n"
+                   "<audio> <pcmu port=\"443\"/> </audio> \r\n"
+                   "\r\n");
 
-	
-	char msgData[] = "00aa";
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
-	assert( sizeof(msgData)%2 ==  1 );
-	
-	Data txt;
+      tassert_reset();
 
-	for( int i=0; i<(sizeof(msgData)-1); i+=2 )
-	{
-		char num[] = "0x00";
+      tassert(message->isRequest());
+      tassert(!message->isResponse());
 
-		num[2] = msgData[i];
-		num[3] = msgData[i+1];
+      tassert(message->header(h_RequestLine).getMethod() == INVITE);
+      tassert(message->header(h_RequestLine).getSipVersion() == "SIP/2.0");
 
-		int n=0;
-		sscanf(num,"%x",&n);
-		unsigned char c(n);
+      tassert(message->header(h_RequestLine).uri().host() == "company.com");
+      tassert(message->header(h_RequestLine).uri().user() == "user");
+      tassert(message->header(h_RequestLine).uri().scheme() == "sip");
+      tassert(message->header(h_RequestLine).uri().port() == 0);
+      tassert(message->header(h_RequestLine).uri().password() == "");
 
-		txt += c;
-	}
+      tassert(message->header(h_To).uri().host() == "company.com");
+      tassert(message->header(h_To).uri().user() == "j.user");
+      tassert(message->header(h_To).uri().scheme() == "sip");
+      tassert(message->header(h_To).uri().port() == 0);
 
-	//DebugLog( << "test is:" << txt );
+      tassert(message->header(h_From).uri().host() == "university.edu");
+      tassert(message->header(h_From).uri().user() == "caller");
+      tassert(message->header(h_From).uri().scheme() == "sip");
+      tassert(message->header(h_From).uri().port() == 0);
 
-   //auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
-      //tassert_reset();
+      tassert(message->header(h_ContentType).type() == "application");
+      tassert(message->header(h_ContentType).subType() == "newformat");
+
+      // !jf! should send this to a UAS and it should be rejected (don't
+      // understand why) - says because it is not SDP
+
+      tassert_verify(6);
 }
+
+
+void test7()
+{
+      CritLog( << "2.7    Unknown Method Message");
+      
+      char *txt = ("NEWMETHOD sip:user@company.com SIP/2.0 \r\n"
+                   "To: sip:j.user@company.com \r\n"
+                   "From: sip:caller@university.edu;tag=34525 \r\n"
+                   "Max-Forwards: 6 \r\n"
+                   "Call-ID: 0ha0isndaksdj@10.0.0.1 \r\n"
+                   "CSeq: 8 NEWMETHOD \r\n"
+                   "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw \r\n"
+                   "Content-Type: application/sdp \r\n"
+                   "\r\n"
+                   "v=0 \r\n"
+                   "o=mhandley 29739 7272939 IN IP4 126.5.4.3 \r\n"
+                   "c=IN IP4 135.180.130.88 \r\n"
+                   "m=audio 492170 RTP/AVP 0 12 \r\n"
+                   "m=video 3227 RTP/AVP 31 \r\n"
+                   "a=rtpmap:31 LPC \r\n"
+                   "\r\n");
+
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+
+      tassert_reset();
+
+      tassert(message->isRequest());
+      tassert(!message->isResponse());
+
+      tassert(message->header(h_RequestLine).getMethod() == UNKNOWN);
+      tassert(message->header(h_RequestLine).unknownMethodName() == "NEWMETHOD");
+      tassert(message->header(h_RequestLine).getSipVersion() == "SIP/2.0");
+
+      tassert(message->header(h_RequestLine).uri().host() == "company.com");
+      tassert(message->header(h_RequestLine).uri().user() == "user");
+      tassert(message->header(h_RequestLine).uri().scheme() == "sip");
+      tassert(message->header(h_RequestLine).uri().port() == 0);
+      tassert(message->header(h_RequestLine).uri().password() == "");
+
+      tassert(message->header(h_To).uri().host() == "company.com");
+      tassert(message->header(h_To).uri().user() == "j.user");
+      tassert(message->header(h_To).uri().scheme() == "sip");
+      tassert(message->header(h_To).uri().port() == 0);
+
+      tassert(message->header(h_From).uri().host() == "university.edu");
+      tassert(message->header(h_From).uri().user() == "caller");
+      tassert(message->header(h_From).uri().scheme() == "sip");
+      tassert(message->header(h_From).uri().port() == 0);
+
+      tassert(message->header(h_ContentType).type() == "application");
+      tassert(message->header(h_ContentType).subType() == "sdp");
+      
+      Contents* c = message->getContents();
+      
+      // A proxy should forward this using the same retransmission rules as 
+      // BYE. A UAS should reject it with an error, and list the available 
+      // methods in the response. 
+
+      tassert_verify(7);
+}
+
+
+
 
 int
 main(int argc, char*argv[])
@@ -500,13 +585,14 @@ main(int argc, char*argv[])
     
     Log::initialize(Log::COUT, l, argv[0]);
     CritLog(<<"Test Driver Starting");
-    tassert_init(5);
+    tassert_init(7);
     test1();
     test2();
     test3();
     test4();
     test5();
-	//test6();
+    test6();
+    test7();
     tassert_report();
 
  CritLog(<<"Test Driver Done");
