@@ -6,6 +6,7 @@
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/ResponseContext.hxx"
 #include "resiprocate/NameAddr.hxx"
+#include "repro/ResponseContext.hxx"
 
 namespace resip
 {
