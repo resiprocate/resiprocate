@@ -13,5 +13,5 @@ lg
 limpc
 obj.*
 root.pem
-test[0-9A-Z]*
+test[^.0-9A-Z]*
 tests.out
