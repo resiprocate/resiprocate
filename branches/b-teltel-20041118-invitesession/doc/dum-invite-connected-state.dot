@@ -11,7 +11,8 @@ digraph UAC {
   // Should we use UPDATE to send offer or reINVITE? How does the app know which to use? UPDATE needs to get a response right away
   Connected -> SentUpdate                 [ label = "dum::provideOffer/send::UPDATE" ];
   Connected -> SentReinvite               [ label = "dum::provideOffer/send::INVITE" ]; // UPDATE not supported
-  Connected -> ReceivedUpdate             [ label = "onUPDATE|INVITE-offer/app::onOffer" ];
+  Connected -> ReceivedUpdate             [ label = "onUPDATE-offer/app::onOffer" ];
+  Connected -> ReceivedReinvite           [ label = "onINVITE-offer/app::onOffer" ];
   Connected -> ReceivedReinviteNoOffer    [ label = "onINVITE/app::onDialogModified" ];
   Connected -> Connected                  [ label = "on200P" ]; 
   Connected -> Connected                  [ label = "on200I/resend::ACK" ]; 
