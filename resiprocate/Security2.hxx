@@ -157,7 +157,7 @@ class BaseSecurity
       Data getPrivateKeyPEM (PEMType type, const Data& key, bool read) const;
 
       //===========================
-      friend class SecuredTransportCtx;
+      friend class TlsConnection;
       SSL_CTX*       getTlsCtx ();
       SSL_CTX*       getSslCtx ();
 };
