@@ -35,11 +35,11 @@ class Log
 #ifdef WIN32 
       typedef enum 
       {
-         CRIT = 1,
-         ERR = 2,
-         WARNING = 3,
-         INFO = 4,
-         DEBUG = 5,
+         CRIT = 2,
+         ERR = 3,
+         WARNING = 4,
+         INFO = 6,
+         DEBUG = 7,
          DEBUG_STACK = 8,
          BOGUS = 666
       } Level;

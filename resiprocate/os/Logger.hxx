@@ -1,6 +1,8 @@
 #if !defined(RESIP_LOGGER_HXX)
 #define RESIP_LOGGER_HXX 
 
+#include <fstream>
+
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/SysLogStream.hxx"
@@ -117,6 +119,12 @@ class GenericLogImpl :  public Log
                return std::cout;
                
             case Log::FILE:
+               if (mLogger == 0)
+               {
+                  std::cerr << "Creating a file logger" << std::endl;
+                  mLogger = new std::ofstream("resiprocate.log", std::ios_base::out|std::ios_base::app);
+               }
+               return *mLogger;
             default:
                assert(0);
                return std::cout;
