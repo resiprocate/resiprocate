@@ -34,8 +34,15 @@ TimerQueue::msTillNextTimer()
       else
       {
          UInt64 ret64 = next - now;
-         int ret = int(ret64);
-         return ret;
+        if ( ret64 > UInt64(INT_MAX) )
+        {
+                return INT_MAX;
+        }
+        else
+        { 
+                int ret = int(ret64);
+                return ret;
+        }
       }
    }
    else
