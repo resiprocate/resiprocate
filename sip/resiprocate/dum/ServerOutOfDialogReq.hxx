@@ -28,14 +28,15 @@ class ServerOutOfDialogReq : public BaseUsage
       void reject(int statusCode);
       void reject(const SipMessage& response);
 
-      virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ServerOutOfDialogReq::Handle getHandle() {return mHandle;}
+
    protected:
       virtual ~ServerOutOfDialogReq();
+
    private:
       friend class DialogUsageManager;
       ServerOutOfDialogReq(DialogUsageManager& dum,

@@ -8,3 +8,7 @@ PublicationCreator::PublicationCreator(DialogUsageManager& dum, const Uri& aor)
    makeInitialRequest(NameAddr(aor), PUBLISH);
 }
 
+void
+PublicationCreator::dispatch(SipMessage& msg)
+{
+}
