@@ -16,6 +16,10 @@
 #include <io.h>
 #endif
 
+#if defined(__sun)
+#include <sys/sockio.h>
+#endif
+
 #include <iostream>
 
 #include "resiprocate/os/compat.hxx"
