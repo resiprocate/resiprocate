@@ -42,9 +42,6 @@ class ServerRegistrationHandler
 
       /// Called when a client queries for the list of current registrations
       virtual void onQuery(ServerRegistrationHandle, const SipMessage& reg)=0;
-
-      /// Called when a registration expires 
-      virtual void onExpired(ServerRegistrationHandle, const NameAddr& contact)=0;
 };
 
 }
