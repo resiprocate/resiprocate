@@ -1,54 +1,3 @@
-#ifndef RESIP_IntrusiveListElement
-#define RESIP_IntrusiveListElement
-
-/*
-  Heritable intrusive doubly linked list element template.
-
-  // For a class that is an element in a single list, use like this:
-  class Foo : public IntrusiveListElement<Foo*>
-  {
-     ...
-  };
-
-  Foo* fooHead = new Foo();
-  // initialize head to cycle -- represent an empty list
-  Foo::makeList(fooHead);
-
-  // For a class that is an element of multiple lists, use like this:
-  // has two independent intrusive lists, named read and write
-  class FooFoo : public IntrusiveListElement<FooFoo*>, public IntrusiveListElement1<FooFoo*>
-  {
-     public:
-        typedef IntrusiveListElement<FooFoo*> read;
-        typedef IntrusiveListElement1<FooFoo*> write;
-
-     ...
-  };
-
-  FooFoo* fooFooHead = new FooFoo();
-  // initialize head to cycle -- represent two empty lists
-  FooFoo::read::makeList(fooFooHead);
-  FooFoo::write::makeList(fooFooHead);
-  for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); f++)
-  {
-     ...
-  };
-
-  // elsewhere:
-  FooFoo head;
-  FooFoo::read* mReadHead = FooFoo::read::makeList(&head);
-  FooFoo::write* mWriteHead = FooFoo::write::makeList(&head);
-
-  FooFoo element* = new FooFoo();
-  // don't need to disambiguate methods
-  mReadHead->push_back(element);
-  mWriteHead->push_back(element);
-
-  // element could be in either list, so use aspect
-  element->write::remove();  
-
-*/
-
 namespace resip
 {
 
@@ -463,57 +412,258 @@ class IntrusiveListElement2
       mutable P mPrev;
 };
  
+} // end namespace resip
+
+using namespace resip;
+
+class Foo : public IntrusiveListElement<Foo*>
+{
+   public:
+      Foo(int v) : va1(v) {}
+      int va1;
+      int va2;
+};
+
+class FooFoo : public IntrusiveListElement<FooFoo*>, public IntrusiveListElement1<FooFoo*>
+{
+   public:
+      typedef IntrusiveListElement<FooFoo*> read;
+      typedef IntrusiveListElement1<FooFoo*> write;
+
+      FooFoo(int v) : va1(v) {}
+
+      int va1;
+      int va2;
+};
+
+int
+main(int argc, char* argv[])
+{
+   {
+      Foo* fooHead = new Foo(-1);
+      Foo* foo1 = new Foo(1);
+      Foo* foo2 = new Foo(2);
+      Foo* foo3 = new Foo(3);
+      Foo* foo4 = new Foo(4);
+
+      Foo::makeList(fooHead);
+      assert(fooHead->empty());
+      for (Foo::iterator f = fooHead->begin(); f != fooHead->end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      fooHead->push_front(foo1);
+      assert(!fooHead->empty());
+      cerr << endl << "first" << endl;
+      assert((*fooHead->begin())->va1 == 1);
+      assert((*fooHead->end())->va1 == -1);
+
+      Foo::iterator j = fooHead->begin();
+      ++j;
+      cerr << (*j)->va1 << endl;
+      assert((*j)->va1 == -1);      
+      assert(*j == *fooHead->end());
+
+      for (Foo::iterator f = fooHead->begin(); f != fooHead->end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      fooHead->push_front(foo2);
+      cerr << endl << "second" << endl;
+      for (Foo::iterator f = fooHead->begin(); f != fooHead->end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      fooHead->push_front(foo3);   
+      cerr << endl << "third" << endl;
+      for (Foo::iterator f = fooHead->begin(); f != fooHead->end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      cerr << endl << "deleted second" << endl;
+      delete foo2;
+      for (Foo::iterator f = fooHead->begin(); f != fooHead->end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      cerr << endl << "fourth" << endl;
+      fooHead->push_front(foo4);
+      for (Foo::iterator f = fooHead->begin(); f != fooHead->end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      cerr << endl << "deleted fourth, first" << endl;
+      delete foo1;
+      delete foo4;
+      for (Foo::iterator f = fooHead->begin(); f != fooHead->end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+   
+      cerr << endl << "deleted third (empty)" << endl;
+      delete foo3;
+      for (Foo::iterator f = fooHead->begin(); f != fooHead->end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+   }
+
+//#if defined(__SUNPRO_CC)
+//   typedef IntrusiveListElement<FooFoo*> read;
+//   typedef IntrusiveListElement1<FooFoo*> write;
+//#endif
+
+   //=============================================================================
+   // Read version
+   //=============================================================================
+   cerr << endl << "READ VERSION" << endl;
+   {
+      FooFoo* fooFooHead = new FooFoo(-1);
+      FooFoo* fooFoo1 = new FooFoo(1);
+      FooFoo* fooFoo2 = new FooFoo(2);
+      FooFoo* fooFoo3 = new FooFoo(3);
+      FooFoo* fooFoo4 = new FooFoo(4);
+
+      FooFoo::read::makeList(fooFooHead);
+      FooFoo::write::makeList(fooFooHead);
+      assert(fooFooHead->read::empty());
+      assert(fooFooHead->write::empty());
+      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      fooFooHead->read::push_front(fooFoo1);
+      assert(!fooFooHead->read::empty());
+      assert(fooFooHead->write::empty());
+      cerr << endl << "first" << endl;
+      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      fooFooHead->read::push_front(fooFoo2);
+      cerr << endl << "second" << endl;
+      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      fooFooHead->read::push_front(fooFoo3);   
+      cerr << endl << "third" << endl;
+      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      cerr << endl << "deleted second" << endl;
+      delete fooFoo2;
+      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      cerr << endl << "fourth" << endl;
+      fooFooHead->read::push_front(fooFoo4);
+      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      cerr << endl << "deleted fourth, first" << endl;
+      delete fooFoo1;
+      delete fooFoo4;
+      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+   
+      cerr << endl << "deleted third (empty)" << endl;
+      delete fooFoo3;
+      for (FooFoo::read::iterator f = fooFooHead->read::begin(); f != fooFooHead->read::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+   }
+
+   //=============================================================================
+   // Write version
+   //=============================================================================
+   cerr << endl << "WRITE VERSION" << endl;
+   {      
+      FooFoo* fooFooHead = new FooFoo(-1);
+      FooFoo* fooFoo1 = new FooFoo(1);
+      FooFoo* fooFoo2 = new FooFoo(2);
+      FooFoo* fooFoo3 = new FooFoo(3);
+      FooFoo* fooFoo4 = new FooFoo(4);
+
+      FooFoo::write::makeList(fooFooHead);
+      FooFoo::read::makeList(fooFooHead);
+      assert(fooFooHead->write::empty());
+      assert(fooFooHead->read::empty());
+      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      fooFooHead->write::push_front(fooFoo1);
+      assert(!fooFooHead->write::empty());
+      assert(fooFooHead->read::empty());
+      cerr << endl << "first" << endl;
+      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      fooFooHead->write::push_front(fooFoo2);
+      cerr << endl << "second" << endl;
+      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      fooFooHead->write::push_front(fooFoo3);   
+      cerr << endl << "third" << endl;
+      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      cerr << endl << "deleted second" << endl;
+      delete fooFoo2;
+      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      cerr << endl << "fourth" << endl;
+      fooFooHead->write::push_front(fooFoo4);
+      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+
+      cerr << endl << "deleted fourth, first" << endl;
+      delete fooFoo1;
+      delete fooFoo4;
+      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+   
+      cerr << endl << "deleted third (empty)" << endl;
+      delete fooFoo3;
+      for (FooFoo::write::iterator f = fooFooHead->write::begin(); f != fooFooHead->write::end(); ++f)
+      {
+         cerr << (*f)->va1 << endl;
+      }
+   }
+
+   return 0;
 }
-
-#endif
-
-
-/* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- * 
- * 3. The names "VOCAL", "Vovida Open Communication Application Library",
- *    and "Vovida Open Communication Application Library (VOCAL)" must
- *    not be used to endorse or promote products derived from this
- *    software without prior written permission. For written
- *    permission, please contact vocal@vovida.org.
- *
- * 4. Products derived from this software may not be called "VOCAL", nor
- *    may "VOCAL" appear in their name, without prior written
- *    permission of Vovida Networks, Inc.
- * 
- * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
- * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
- * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
- * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
- * DAMAGE.
- * 
- * ====================================================================
- * 
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
- */
