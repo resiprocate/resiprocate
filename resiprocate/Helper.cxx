@@ -507,7 +507,9 @@ Auth makeChallengeResponseAuth(SipMessage& request,
    Auth auth;
    auth.scheme() = "Digest";
    auth.param(p_username) = username;
+   assert(challenge.exists(p_realm));
    auth.param(p_realm) = challenge.param(p_realm);
+   assert(challenge.exists(p_nonce));
    auth.param(p_nonce) = challenge.param(p_nonce);
    Data digestUri;
    {
@@ -552,6 +554,7 @@ Auth makeChallengeResponseAuth(SipMessage& request,
    }
    else
    {
+      assert(challenge.exists(p_realm));
       auth.param(p_response) = Helper::makeResponseMD5(username, 
                                                        password,
                                                        challenge.param(p_realm), 
@@ -560,7 +563,15 @@ Auth makeChallengeResponseAuth(SipMessage& request,
                                                        challenge.param(p_nonce));
    }
    
-   auth.param(p_algorithm) = challenge.param(p_algorithm);
+   if (challenge.exists(p_algorithm))
+   {
+      auth.param(p_algorithm) = challenge.param(p_algorithm);
+   }
+   else
+   {
+      auth.param(p_algorithm) = "MD5";
+   }
+
    if (challenge.exists(p_opaque))
    {
       auth.param(p_opaque) = challenge.param(p_opaque);
