@@ -8,7 +8,7 @@
 namespace resip
 {
 
-class MD5Buffer : public std::streambuf 
+class MD5Buffer : public std::streambuf
 {
    public:
       MD5Buffer();
@@ -22,14 +22,14 @@ class MD5Buffer : public std::streambuf
       MD5Context mContext;
 };
 
-class MD5Stream : public std::ostream 
+class MD5Stream : private MD5Buffer, public std::ostream
 {
    public:
       MD5Stream();
       ~MD5Stream();
       Data getHex();
    private:
-      MD5Buffer mStreambuf;
+      //MD5Buffer mStreambuf;
 };
 
 }
