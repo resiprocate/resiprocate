@@ -32,8 +32,12 @@ ResponseContext::sendRequest(const resip::SipMessage& request)
 {
    assert (request.isRequest());
    mRequestContext.mProxy.send(request);
-   mRequestContext.getProxy().addClientTransaction(request.getTransactionId(), &mRequestContext);
-   mRequestContext.mTransactionCount++;
+   if (request.header(h_RequestLine).method() != CANCEL && 
+       request.header(h_RequestLine).method() != ACK)
+   {
+      mRequestContext.getProxy().addClientTransaction(request.getTransactionId(), &mRequestContext);
+      mRequestContext.mTransactionCount++;
+   }
 }
 
 void
@@ -125,6 +129,7 @@ ResponseContext::processPendingTargets()
       // - adding a content-length if needed
       // - sending the request
       mClientTransactions[request.getTransactionId()] = branch;
+      InfoLog (<< "Creating new client transaction " << request.getTransactionId() << " -> " << branch.uri);
       sendRequest(request); 
    }
 }
@@ -147,6 +152,11 @@ ResponseContext::processCancel(const SipMessage& request)
 void
 ResponseContext::processResponse(SipMessage& response)
 {
+   InfoLog (<< "processResponse: " << response);
+   
+   // store this before we pop the via and lose the branch tag
+   const Data transactionId = response.getTransactionId();
+   
    // for provisional responses, 
    assert(response.isResponse());
    assert (response.exists(h_Vias) && !response.header(h_Vias).empty());
@@ -170,7 +180,10 @@ ResponseContext::processResponse(SipMessage& response)
          }
          
          {
-            TransactionMap::iterator i = mClientTransactions.find(response.getTransactionId());
+            InfoLog (<< "Search for " << transactionId << " in " << Inserter(mClientTransactions));
+            
+            TransactionMap::iterator i = mClientTransactions.find(transactionId);
+            assert (i != mClientTransactions.end());
             if (i->second.status == WaitingToCancel)
             {
                cancelClientTransaction(i->second);
@@ -184,7 +197,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 2:
-         removeClientTransaction(response);
+         removeClientTransaction(transactionId);
          if (response.header(h_CSeq).method() == INVITE)
          {
             cancelProceedingClientTransactions();
@@ -201,7 +214,9 @@ ResponseContext::processResponse(SipMessage& response)
       case 3:
       case 4:
       case 5:
-         removeClientTransaction(response);
+         removeClientTransaction(transactionId);
+         DebugLog (<< "forwardedFinal=" << mForwardedFinalResponse 
+                   << " outstanding client transactions: " << Inserter(mClientTransactions));
          if (!mForwardedFinalResponse)
          {
             int priority = getPriority(response);
@@ -246,8 +261,11 @@ ResponseContext::processResponse(SipMessage& response)
                mBestPriority = priority;
                mBestResponse = response;
             }
-            else if (mClientTransactions.empty())
+            
+            if (mClientTransactions.empty())
             {
+               InfoLog (<< "Forwarding best response: " << response.brief());
+               
                mForwardedFinalResponse = true;
                // don't forward 408 to NIT
                if (mBestResponse.header(h_StatusLine).statusCode() != 408 ||
@@ -260,7 +278,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 6:
-         removeClientTransaction(response);
+         removeClientTransaction(transactionId);
          if (!mForwardedFinalResponse)
          {
             if (mBestResponse.header(h_StatusLine).statusCode() / 100 != 6)
@@ -302,7 +320,7 @@ ResponseContext::cancelProceedingClientTransactions()
 {
    // CANCEL INVITE branches
    for (TransactionMap::iterator i = mClientTransactions.begin(); 
-        i != mClientTransactions.end(); ++i)
+        i != mClientTransactions.end(); )
    {
       if (i->second.status == Proceeding)
       {
@@ -313,15 +331,15 @@ ResponseContext::cancelProceedingClientTransactions()
       else if (i->second.status == Trying)
       {
          i->second.status = WaitingToCancel;
+         i++;
       }
    }
 }
 
 void
-ResponseContext::removeClientTransaction(const SipMessage& response)
+ResponseContext::removeClientTransaction(const Data& transactionId)
 {
-   assert(response.isResponse());
-   TransactionMap::iterator i = mClientTransactions.find(response.getTransactionId());
+   TransactionMap::iterator i = mClientTransactions.find(transactionId);
    if (i != mClientTransactions.end())
    {
       mClientTransactions.erase(i);
@@ -478,6 +496,13 @@ ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const r
    return lhs.header(h_StatusLine).statusCode() < rhs.header(h_StatusLine).statusCode();
 }
 
+
+std::ostream& 
+repro::operator<<(std::ostream& strm, const ResponseContext::Branch& b)
+{
+   strm << "Branch: " << b.uri << " " << b.via <<" status=" << b.status;
+   return strm;
+}
 
 std::ostream&
 repro::operator<<(std::ostream& strm, const ResponseContext& rc)
