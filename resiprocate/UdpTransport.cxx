@@ -113,10 +113,16 @@ void UdpTransport::process()
 
       assert (count == data->length || count < 0);
    }
-   
+#define UDP_SHORT   
+
+   struct sockaddr_in from;
+
+#if !defined(UDP_SHORT)
+
+   // !ah! debug is just to always return a sample message
+
    // !jf! this may have to change - when we read a message that is too big
    char* buffer = new char[MaxBufferSize];
-   struct sockaddr_in from;
    int fromLen = sizeof(from);
    
    // !jf! how do we tell if it discarded bytes 
@@ -128,6 +134,23 @@ void UdpTransport::process()
                        0 /*flags */,
                        (struct sockaddr*)&from,
                        (socklen_t*)&fromLen);
+#else
+
+#define CRLF "\r\n"
+
+   
+   char buffer[] = 
+         "INVITE foo@bar.com SIP/2.0" CRLF
+         "Via: SIP/2.0/UDP pc33.atlanta.com;branch=foo" CRLF
+         "To: <sip:alan@ieee.org>" CRLF
+         "From: <sip:cj@whistler.com>"CRLF
+         "Subject: Good Morning!"CRLF
+         "Call-Id: 123" CRLF
+         CRLF
+   ;
+   int len = sizeof(buffer)/sizeof(*buffer);
+#endif
+
    if ( len <= 0 )
    {
       //int err = errno;
