@@ -170,6 +170,8 @@ ParserCategory::parseParameters(ParseBuffer& pb)
    }
 }      
 
+static Data up_Msgr("msgr");
+
 ostream&
 ParserCategory::encodeParameters(ostream& str) const
 {
@@ -179,7 +181,6 @@ ParserCategory::encodeParameters(ostream& str) const
       str << Symbols::SEMI_COLON;
       // !ah! this is a TOTAL hack to work around an MSN bug that
       // !ah! requires a SPACE after the SEMI following the MIME type.
-      Data up_Msgr("msgr");
       if (it == mParameters.begin() && getParameterByData(up_Msgr))
       {
          str << Symbols::SPACE;
