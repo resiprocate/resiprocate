@@ -129,6 +129,7 @@ class XMLCursor
       // no value semantics
       XMLCursor(const XMLCursor&);
       XMLCursor& operator=(const XMLCursor&);
+      friend class Node;
 };
 
 }

@@ -2,12 +2,7 @@
 #define TRANSACTIONMAP_HXX
 
 #include "sip2/util/Data.hxx"
-
-#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
-#include <ext/hash_map>
-#else
-#include <map>
-#endif
+#include "sip2/util/HashMap.hxx"
 
 namespace Vocal2
 {
@@ -21,13 +16,9 @@ namespace Vocal2
         void remove( const Data& transactionId );
         
      private:
-#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
-        typedef __gnu_cxx::hash_map<Data, TransactionState*> Map;
+        typedef hash_map<Data, TransactionState*> Map;
         Map mMap;
-#else
-        typedef std::map<Data, TransactionState*> Map;
-        Map mMap;
-#endif        
+
         typedef Map::iterator MapIterator;
         typedef Map::const_iterator MapConstIterator;
   };

@@ -8,7 +8,7 @@ int
 main(int arc, char** argv)
 {
    {
-      char *buf = "Content-Languages: English, \r\n French  , \r\n\t LISP   \r \n \n\r \r\n\r\n";
+      char buf[] = "Content-Languages: English, \r\n French  , \r\n\t LISP   \r \n \n\r \r\n\r\n";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToTermCRLF();
       pb.skipChars("\r\n");
@@ -17,7 +17,7 @@ main(int arc, char** argv)
    }
 
    {
-      char *buf = "Content-Languages: English, \r\n French  , \r\n\t LISP   \r \n \n\r \r\n\r\n";
+      char buf[] = "Content-Languages: English, \r\n French  , \r\n\t LISP   \r \n \n\r \r\n\r\n";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars("French");
       pb.skipN(strlen("French"));
@@ -29,7 +29,7 @@ main(int arc, char** argv)
    }
 
    {
-      char *buf = "Here is a \t buffer with some stuff.";
+      char buf[] = "Here is a \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars("some");
       std::cerr << pb.position() << std::endl;
@@ -37,49 +37,49 @@ main(int arc, char** argv)
    }
 
    {
-      char *buf = "Here is asom \t buffer with some stuff.";
+      char buf[] = "Here is asom \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars("some");
       pb.skipChars("some stuf");
    }
 
    {
-      char *buf = "Here is asom \t buffer with som stuff.";
+      char buf[] = "Here is asom \t buffer with som stuff.";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars("some");
       pb.assertEof();
    }
 
    {
-      char *buf = "Here is a \t buffer with some stuff.";
+      char buf[] = "Here is a \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars(Data("some"));
       pb.skipChars("some stuf");
    }
 
    {
-      char *buf = "Here is asom \t buffer with some stuff.";
+      char buf[] = "Here is asom \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars(Data("some"));
       pb.skipChars("some stuf");
    }
 
    {
-      char *buf = "Here is asom \t buffer with som stuff.";
+      char buf[] = "Here is asom \t buffer with som stuff.";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars(Data("some"));
       pb.assertEof();
    }
 
    {
-      char *buf = "Here is a \t buffer with some stuff.";
+      char buf[] = "Here is a \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
 
       pb.skipChars("Here is a");
    }
 
    {
-      char *buf = "Here is a \t buffer with some stuff.";
+      char buf[] = "Here is a \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
 
       while (0)
@@ -97,7 +97,7 @@ main(int arc, char** argv)
    }
 
    {
-      char *buf = "Here is a buf.";
+      char buf[] = "Here is a buf.";
       ParseBuffer pb(buf, strlen(buf));
 
       while (0)
@@ -116,7 +116,7 @@ main(int arc, char** argv)
    }
    
    {
-      char *buf = "Here is a \t buffer with some stuff.";
+      char buf[] = "Here is a \t buffer with some stuff.";
 
       ParseBuffer pb(buf, strlen(buf));
    
@@ -131,7 +131,7 @@ main(int arc, char** argv)
    }
    
    {
-      char *buf = "    \t buffer with some stuff.";
+      char buf[] = "    \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));   
 
       pb.skipWhitespace();
@@ -146,14 +146,14 @@ main(int arc, char** argv)
    }
 
    {
-      char *buf = "jhsjfhskd;|.";
+      char buf[] = "jhsjfhskd;|.";
       ParseBuffer pb(buf, strlen(buf));   
 
       pb.skipToOneOf(".|;");
       assert(*pb.position() == ';');
    }
    {
-      char *buf = "\"  \\\"Q \t buffer with some stuff.\"Z";
+      char buf[] = "\"  \\\"Q \t buffer with some stuff.\"Z";
       ParseBuffer pb(buf, strlen(buf));   
       pb.skipWhitespace();
       pb.skipToChar('"');
@@ -165,26 +165,26 @@ main(int arc, char** argv)
    }
    
    {
-      char *buf = "17 ";
+      char buf[] = "17 ";
       ParseBuffer pb(buf, strlen(buf));   
       assert(pb.integer() == 17);
    }
    
    {
-      char *buf = "17";
+      char buf[] = "17";
       ParseBuffer pb(buf, strlen(buf));   
       assert(pb.integer() == 17);
    }
 
    {
-      char *buf = "17.71";
+      char buf[] = "17.71";
       ParseBuffer pb(buf, strlen(buf));   
       float val = pb.floatVal();
       assert(val > 17.70 && val < 17.72);
    }
 
    {
-      char *buf = "token another token";
+      char buf[] = "token another token";
       ParseBuffer pb(buf, strlen(buf));   
       const char *start = pb.position();
       pb.skipToChar(' ');
