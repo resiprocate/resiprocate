@@ -27,8 +27,8 @@ BaseCreator::getLastRequest() const
    return mLastRequest;
 }
 
-void
-BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
+void 
+BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodTypes method)
 {
    RequestLine rLine(method);
    rLine.uri() = target.uri();   
@@ -38,7 +38,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
    mLastRequest.header(h_MaxForwards).value() = 70;
    mLastRequest.header(h_CSeq).method() = method;
    mLastRequest.header(h_CSeq).sequence() = 1;
-   mLastRequest.header(h_From) = mDum.getProfile()->getDefaultAor();
+   mLastRequest.header(h_From) = from;
    mLastRequest.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    mLastRequest.header(h_CallId).value() = Helper::computeCallId();
 
@@ -50,7 +50,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
    }
    else
    {
-      contact.uri().user() = mDum.getProfile()->getDefaultAor().uri().user();      
+      contact.uri().user() = from.uri().user();      
       mLastRequest.header(h_Contacts).push_front(contact);
    }
       
