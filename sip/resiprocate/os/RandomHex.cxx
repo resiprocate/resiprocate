@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <util/RandomHex.hxx>
 #include <cstdlib>
+#include <util/Timer.hxx>
+#include <util/Mutex.hxx>
+#include <util/Lock.hxx>
 
 
 #ifndef USE_OPENSSL
@@ -20,42 +23,16 @@
 
 #if ( USE_OPENSSL == 1 )
 #  include <openssl/rand.h>
-#endif
 
 using namespace Vocal2;
 
 void
 RandomHex::initialize()
-{
-#if ( USE_OPENSSL == 0 )
-   // TODO FIX 
-   unsigned int seed = 1;
-#ifdef WIN32
-   srand(seed);
-#else
-   srandom(seed);
-#endif
-
-#else
-    assert(RAND_status() == 1);
-#endif
-}
+{}
 
 Data
 RandomHex::get(unsigned int len)
 {
-#if ( USE_OPENSSL == 0 )
-   assert( len <= 16 );
-   unsigned char buffer[16];
-#ifdef WIN32
-   int ret = rand();
-#else
-   int ret = random();
-#endif
-   assert( sizeof(buffer) >= sizeof(ret) );
-   memcpy(buffer,&ret,sizeof(ret) );
-   return convertToHex(buffer, len);
-#else
    unsigned char buffer[len];
    int ret = RAND_bytes(buffer, len);
    assert (ret == 1);
@@ -64,14 +41,74 @@ RandomHex::get(unsigned int len)
    result = convertToHex(buffer, len);
    
    return result;
+}
+
+#else
+
+
+#ifdef WIN32
+#define RAND_CALL rand
+#else
+#define RAND_CALL random
 #endif
+
+using namespace Vocal2;
+
+static bool sRandomCalled = false;
+static Mutex mutex;
+
+void
+RandomHex::initialize()
+{
+   Lock lock(mutex);
+   //throwing away first 32 bits
+   unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
+#ifdef WIN32
+   srand(seed);
+#else
+   srandom(seed);
+#endif
+}
+
+
+Data
+RandomHex::get(unsigned int len)
+{
+   Lock lock(mutex);
+   if (!sRandomCalled)
+   {
+      unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
+#ifdef WIN32
+      srand(seed);
+#else
+      srandom(seed);
+#endif
+      sRandomCalled = true;
+   }
+   unsigned char buf[len];  
+   unsigned int count=0;  //has to be signed
+
+   for (count=0; count < len/4; count++)
+   {
+      //generate a random number;
+      int rand = RAND_CALL();
+      memcpy(buf + (count*4), &rand, 4);  //copy 4 bytes from rand to buf.
+   }
+   
+   // now copy the remainder
+   int remainder = len % 4;
+   if (remainder)
+   {
+      int rand = RAND_CALL();
+      memcpy(buf + (count*4), &rand, remainder);  //copy 4 bytes from rand to buf.
+   }
+   return convertToHex(buf, len);   
 }
 
 Data 
 RandomHex::convertToHex(const unsigned char* src, int len)
 {
-	// !cj! this is really a poor way to build - don't use sprintf, don't reallooc the data buffer size 
-
+   // !cj! this is really a poor way to build - don't use sprintf, don't reallooc the data buffer size 
     Data data;
 
     unsigned char temp;
@@ -146,3 +183,5 @@ RandomHex::convertToHex(const unsigned char* src, int len)
  * <http://www.vovida.org/>.
  *
  */
+
+#endif
