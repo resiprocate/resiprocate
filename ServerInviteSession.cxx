@@ -44,6 +44,7 @@ ServerInviteSession::end()
 void 
 ServerInviteSession::send(SipMessage& msg)
 {
+   Destroyer::Guard guard(mDestroyer);
    if (mState == Accepting || mState == Connected || mState == Terminated 
        || mState == ReInviting || mState == AcceptingReInvite)
    {
@@ -75,7 +76,7 @@ ServerInviteSession::send(SipMessage& msg)
       else 
       {
          mDum.send(msg);
-         delete this;
+         guard.destroy();
       }
    }
    else
@@ -110,6 +111,7 @@ ServerInviteSession::accept()
 void 
 ServerInviteSession::dispatch(const SipMessage& msg)
 {
+   Destroyer::Guard guard(mDestroyer);
    std::pair<OfferAnswerType, const SdpContents*> offans;
    offans = InviteSession::getOfferOrAnswer(msg);
    if (msg.isRequest())
@@ -120,7 +122,11 @@ ServerInviteSession::dispatch(const SipMessage& msg)
             assert(msg.header(h_RequestLine).method() == INVITE);
             mState = Proceeding;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
-            
+            if (guard.destroyed())
+            {
+               return;
+            }
+
             if (offans.first == Offer)
             {
                InviteSession::incomingSdp(msg, offans.second);
