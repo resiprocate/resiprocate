@@ -18,7 +18,10 @@ class InviteHandler
       virtual void onAnswer(ClientInvSession&, const SipMessage& msg)=0;
       virtual void onOffer(ClientInvSession&, const SipMessage& msg)=0;
       virtual void onConnected(ClientInvSession&, const SipMessage& msg)=0;
+      virtual void onOfferRejected(ClientInvSession&, const SipMessage& msg)=0;
       virtual void onTerminated(ClientInvSession&, const SipMessage& msg)=0;
+
+
 };
 
 }
