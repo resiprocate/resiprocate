@@ -5,11 +5,19 @@ using namespace resip;
 
 ClientPublication::ClientPublication(DialogUsageManager& dum,
                                      Dialog& dialog,
-                                     const SipMessage& req)
+                                     SipMessage& req)
    : BaseUsage(dum, dialog),
-     mHandle(dum)
+     mHandle(dum),
+     mPublish(req)
 {
    assert(false);
+}
+
+SipMessage& 
+ClientPublication::unpublish()
+{
+   assert(0);
+   return mPublish;
 }
 
 ClientPublication::Handle::Handle(DialogUsageManager& dum)
