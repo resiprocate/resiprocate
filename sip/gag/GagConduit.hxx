@@ -28,6 +28,7 @@ class GagConduit: public TuIM::Callback
     void gaimRemoveBuddy(GagRemoveBuddyMessage *);
     void gaimShutdown(GagShutdownMessage *);
     void gaimError(GagErrorMessage *);
+    void gaimLoginStatus(GagLoginStatusMessage *);
 
     // Callback Methods
     virtual void presenceUpdate(const Uri& dest, bool open, 
