@@ -126,17 +126,23 @@ SipMessage::encode(std::ostream& str) const
    {
       if (mHeaders[i] !=0)
       {
-         HeaderFieldValue* f = mHeaders[i]->first;
-         while (f != 0)
+         if (mHeaders[i]->getParserContainer() != 0)
          {
-            str << Headers::HeaderNames[i] << Symbols::COLON << Symbols::SPACE;
-            mHeaders[i]->encode(str);
-            str << Symbols::CRLF;
-            f = f->next;
+            mHeaders[i]->getParserContainer()->encode(str);
+         }
+         else
+         {
+            for (HeaderFieldValueList::const_iterator j = mHeaders[i]->begin();
+                 j != mHeaders[i]->end(); j++)
+            {
+               str << Headers::HeaderNames[i] << Symbols::COLON << Symbols::SPACE;
+               (*j)->encode(str);
+               str << Symbols::CRLF;
+            }
          }
       }
    }
-
+   
    if (mBody != 0)
    {
       mBody->encode(str);
@@ -204,25 +210,25 @@ SipMessage::header(const Data& headerName) const
       if (i->first == headerName)
       {
          HeaderFieldValueList* hfvs = i->second;
-         if (i->second->first != 0 && !i->second->first->isParsed())
+         if (!hfvs->empty() && !hfvs->front()->isParsed())
          {
-            HeaderFieldValue* it = hfvs->first;
-            while (it != 0)
+            for (HeaderFieldValueList::iterator j = hfvs->begin(); 
+                 j != hfvs->end(); i++)
             {
-               it->mParserCategory = new StringCategory(it);
+               (*j)->mParserCategory = new StringCategory(*j);
             }
             
-            hfvs->setParserContainer(new StringCategories(hfvs));
+            hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs));
          }
-         return *dynamic_cast<StringCategories*>(hfvs->getParserContainer());
+         return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
       }
    }
    
    // create the list empty
    HeaderFieldValueList* hfvs = new HeaderFieldValueList;
-   hfvs->setParserContainer(new StringCategories(hfvs));
-   mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(headerName, hfvs));
-   return *dynamic_cast<StringCategories*>(hfvs->getParserContainer());
+   hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs));
+   mUnknownHeaders.push_back(make_pair(headerName, hfvs));
+   return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
 }
 
 void
@@ -377,7 +383,7 @@ SipMessage::header(const CSeq_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new CSeq_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<CSeq_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<CSeq_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Call_ID_Header::Type&
@@ -388,7 +394,7 @@ SipMessage::header(const Call_ID_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Call_ID_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Call_ID_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Call_ID_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Authentication_Info_Header::Type&
@@ -399,7 +405,7 @@ SipMessage::header(const Authentication_Info_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Authentication_Info_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Authentication_Info_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Authentication_Info_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Authorization_Header::Type&
@@ -410,7 +416,7 @@ SipMessage::header(const Authorization_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Authorization_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Authorization_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Authorization_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Content_Disposition_Header::Type&
@@ -421,7 +427,7 @@ SipMessage::header(const Content_Disposition_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Content_Disposition_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Content_Disposition_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Content_Disposition_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Content_Encoding_Header::Type&
@@ -432,7 +438,7 @@ SipMessage::header(const Content_Encoding_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Content_Encoding_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Content_Encoding_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Content_Encoding_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Content_Length_Header::Type&
@@ -443,7 +449,7 @@ SipMessage::header(const Content_Length_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Content_Length_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Content_Length_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Content_Length_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Content_Type_Header::Type&
@@ -454,7 +460,7 @@ SipMessage::header(const Content_Type_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Content_Type_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Content_Type_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Content_Type_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Date_Header::Type&
@@ -465,7 +471,7 @@ SipMessage::header(const Date_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Date_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Date_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Date_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Expires_Header::Type&
@@ -476,7 +482,7 @@ SipMessage::header(const Expires_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Expires_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Expires_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Expires_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 From_Header::Type&
@@ -487,7 +493,7 @@ SipMessage::header(const From_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new From_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<From_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<From_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 In_Reply_To_Header::Type&
@@ -498,7 +504,7 @@ SipMessage::header(const In_Reply_To_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new In_Reply_To_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<In_Reply_To_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<In_Reply_To_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 MIME_Version_Header::Type&
@@ -509,7 +515,7 @@ SipMessage::header(const MIME_Version_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new MIME_Version_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<MIME_Version_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<MIME_Version_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Max_Forwards_Header::Type&
@@ -520,7 +526,7 @@ SipMessage::header(const Max_Forwards_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Max_Forwards_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Max_Forwards_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Max_Forwards_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Min_Expires_Header::Type&
@@ -531,7 +537,7 @@ SipMessage::header(const Min_Expires_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Min_Expires_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Min_Expires_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Min_Expires_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Organization_Header::Type&
@@ -542,7 +548,7 @@ SipMessage::header(const Organization_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Organization_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Organization_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Organization_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Priority_Header::Type&
@@ -553,7 +559,7 @@ SipMessage::header(const Priority_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Priority_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Priority_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Priority_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Proxy_Authenticate_Header::Type&
@@ -564,7 +570,7 @@ SipMessage::header(const Proxy_Authenticate_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Proxy_Authenticate_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Proxy_Authenticate_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Proxy_Authenticate_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Proxy_Authorization_Header::Type&
@@ -575,7 +581,7 @@ SipMessage::header(const Proxy_Authorization_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Proxy_Authorization_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Proxy_Authorization_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Proxy_Authorization_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Refer_To_Header::Type&
@@ -586,7 +592,7 @@ SipMessage::header(const Refer_To_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Refer_To_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Refer_To_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Refer_To_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Referred_By_Header::Type&
@@ -597,7 +603,7 @@ SipMessage::header(const Referred_By_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Referred_By_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Referred_By_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Referred_By_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Replaces_Header::Type&
@@ -608,7 +614,7 @@ SipMessage::header(const Replaces_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Replaces_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Replaces_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Replaces_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Reply_To_Header::Type&
@@ -619,7 +625,7 @@ SipMessage::header(const Reply_To_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Reply_To_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Reply_To_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Reply_To_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Retry_After_Header::Type&
@@ -630,7 +636,7 @@ SipMessage::header(const Retry_After_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Retry_After_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Retry_After_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Retry_After_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Server_Header::Type&
@@ -641,7 +647,7 @@ SipMessage::header(const Server_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Server_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Server_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Server_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Subject_Header::Type&
@@ -652,7 +658,7 @@ SipMessage::header(const Subject_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Subject_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Subject_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Subject_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Timestamp_Header::Type&
@@ -663,7 +669,7 @@ SipMessage::header(const Timestamp_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Timestamp_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Timestamp_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Timestamp_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 To_Header::Type&
@@ -674,7 +680,7 @@ SipMessage::header(const To_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new To_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<To_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<To_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 User_Agent_Header::Type&
@@ -685,7 +691,7 @@ SipMessage::header(const User_Agent_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new User_Agent_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<User_Agent_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<User_Agent_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 WWW_Authenticate_Header::Type&
@@ -696,7 +702,7 @@ SipMessage::header(const WWW_Authenticate_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new WWW_Authenticate_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<WWW_Authenticate_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<WWW_Authenticate_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 Warning_Header::Type&
@@ -707,7 +713,7 @@ SipMessage::header(const Warning_Header& headerType) const
    {
       hfvs->front()->setParserCategory(new Warning_Header::Type(hfvs->front()));
    }
-   return *dynamic_cast<Warning_Header::Type*>(hfvs->first->getParserCategory());
+   return *dynamic_cast<Warning_Header::Type*>(hfvs->front()->getParserCategory());
 };
 
 ParserContainer<Accept_MultiHeader::Type>&
