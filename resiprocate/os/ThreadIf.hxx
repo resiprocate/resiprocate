@@ -63,6 +63,11 @@ class ThreadIf
       // returns true if the thread has been asked to shutdown or not running
       bool isShutdown() const;
 
+#ifdef WIN32
+#else
+      static pthread_t selfId();
+#endif
+
       /* thread is a virtual method.  Users should derive and define
         thread() such that it returns when isShutdown() is true.
       */
