@@ -30,8 +30,8 @@ class StatisticsMessage : public ApplicationMessage
             unsigned int transactionFifoSize;
             unsigned int activeTimers;
             unsigned int openTcpConnections; // .dlb. not implemented
-            unsigned int activeInviteTransactions; // .dlb. not implemented
-            unsigned int activeNonInviteTransactions; // .dlb. not implemented
+            unsigned int activeClientTransactions; // .dlb. not implemented
+            unsigned int activeServerTransactions; // .dlb. not implemented
             unsigned int pendingDnsQueries; // .dlb. not implemented
 
             unsigned int requestsSent; // includes retransmissions

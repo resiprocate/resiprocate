@@ -34,6 +34,8 @@ StatisticsManager::poll()
    transportFifoSizeSum = mTransactionController.sumTransportFifoSizes();
    transactionFifoSize = mTransactionController.getTransactionFifoSize();
    activeTimers = mTransactionController.getTimerQueueSize();
+   activeClientTransactions = mTransactionController.getNumClientTransactions();
+   activeServerTransactions = mTransactionController.getNumServerTransactions();   
 
    static StatisticsMessage::AtomicPayload appStats;
    appStats.loadIn(*this);
