@@ -778,6 +778,8 @@ const char*
 Data::c_str() const
 {
    own();
+   // mostly is zero terminated, but not by DataStream
+   mBuf[mSize] = 0;
    return mBuf;
 }
 
