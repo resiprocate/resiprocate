@@ -7,9 +7,41 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 #define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
-#endif 
+
+namespace resip
+{
+/*
+ *  FindMemoryLeaks
+ *
+ *  Creating a single instance of this class at start up will cause
+ *  memory leak information to be dumped to the debug window when
+ *  the program terminates.  
+ */
+class FindMemoryLeaks
+{
+    _CrtMemState m_checkpoint;
+public:
+    FindMemoryLeaks()
+    {
+        _CrtMemCheckpoint(&m_checkpoint);
+    };
+    ~FindMemoryLeaks()
+    {
+        _CrtMemState checkpoint;
+        _CrtMemCheckpoint(&checkpoint);
+        _CrtMemState diff;
+        _CrtMemDifference(&diff, &m_checkpoint, &checkpoint);
+        _CrtMemDumpStatistics(&diff);
+        _CrtMemDumpAllObjectsSince(&diff);
+    };
+};
+
+} // end namespace
 
 #endif
+
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
