@@ -11,7 +11,13 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-ContentsFactory<X_msMsgsInvite> X_msMsgsInvite::Factory;
+bool
+X_msMsgsInvite::init()
+{
+   static ContentsFactory<X_msMsgsInvite> factory;
+   (void)factory;
+   return true;
+}
 
 X_msMsgsInvite::X_msMsgsInvite()
    : Contents(getStaticType()),

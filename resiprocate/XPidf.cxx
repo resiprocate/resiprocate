@@ -12,7 +12,13 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-ContentsFactory<XPidf> XPidf::Factory;
+bool
+XPidf::init()
+{
+   static ContentsFactory<XPidf> factory;
+   (void)factory;
+   return true;
+}
 
 /*
 <?xml version="1.0"?>
