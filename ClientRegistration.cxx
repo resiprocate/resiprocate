@@ -1,3 +1,5 @@
+#include <iterator>
+
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/dum/BaseCreator.hxx"
 #include "resiprocate/dum/ClientRegistration.hxx"
@@ -7,6 +9,7 @@
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -186,6 +189,8 @@ void ClientRegistration::stopRegistering()
 void
 ClientRegistration::requestRefresh()
 {
+   InfoLog (<< "requesting refresh of " << *this);
+   
    assert (mState == Registered);
    mState = Refreshing;
    mLastRequest.header(h_CSeq).sequence()++;
@@ -210,6 +215,13 @@ ClientRegistration::end()
    removeMyBindings(true);
 }
 
+std::ostream& 
+ClientRegistration::dump(std::ostream& strm) const
+{
+   //std::copy(mMyContacts.begin(), mMyContacts.end(), std::ostream_iterator<NameAddr>(strm, ","));
+   strm << "ClientRegistration contacts="; // << resip::Inserter(mMyContacts);
+   return strm;
+}
 
 void
 ClientRegistration::dispatch(const SipMessage& msg)
