@@ -14,10 +14,12 @@
 #endif
 
 #include <cassert>
-#include <iostream>
+//#include <iostream>
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 using namespace resip;
 
@@ -243,12 +245,17 @@ Timer::setupTimeOffsets()
    uSec = now - start;
    count = nowTick - startTick;
     
-#if 0
-#warning Timer assertions appear to not be forward looking...
    assert( uSec >= 100*1000 );
-   assert( uSec < 500*1000 );
+   if (  uSec >= 500*1000 )
+   {
+       InfoLog( << "now is " << now  );
+       InfoLog( << "start is " << start  );
+       InfoLog( << "diff in uSec is " << uSec );
+       InfoLog( << "diff in count is " << count ); 
+   }
+   assert( uSec < 2*1000*1000 );
    assert( count > 100 );
-#endif    
+
    //cerr << "diff in uSec is " << uSec << endl;
    //cerr << "diff in sec is " << sec << endl;
    //cerr << "diff in count is " << count << endl;
