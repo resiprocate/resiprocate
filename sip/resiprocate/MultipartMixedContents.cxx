@@ -239,46 +239,6 @@ MultipartMixedContents::parse(ParseBuffer& pb)
    setBoundary();
 }
 
-// ---------------------------------------------------
-bool 
-MultipartRelatedContents::init()
-{
-   static ContentsFactory<MultipartRelatedContents> factory;
-   (void)factory;
-   return true;
-}
-
-MultipartRelatedContents::MultipartRelatedContents()
-   : MultipartMixedContents(getStaticType())
-{}
-
-MultipartRelatedContents::MultipartRelatedContents(HeaderFieldValue* hfv, const Mime& contentsType)
-   : MultipartMixedContents(hfv, contentsType)
-{}
-
-MultipartRelatedContents::MultipartRelatedContents(const MultipartRelatedContents& rhs)
-   : MultipartMixedContents(rhs)
-{}
-
-MultipartRelatedContents&
-MultipartRelatedContents::operator=(const MultipartRelatedContents& rhs)
-{
-   MultipartMixedContents::operator=(rhs);
-   return *this;
-}
-
-Contents* 
-MultipartRelatedContents::clone() const
-{
-   return new MultipartRelatedContents(*this);
-}
-
-const Mime& 
-MultipartRelatedContents::getStaticType() 
-{
-   static Mime type("multipart","related");
-   return type;
-}
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
