@@ -5,7 +5,7 @@
 #include <sys/select.h>
 #endif
 
-#include <vector>
+#include <map>
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
@@ -55,16 +55,15 @@ class TransportSelector
       void retransmit(SipMessage* msg, Tuple& destination );
       
    private:
-      Transport* findTransport(const Tuple& dest,
-                               const Tuple& src) const;
+      Transport* findTransport(const Tuple& src);
       Transport* findTlsTransport(const Data& domain);
+      void srcAddrForDest(const Tuple& dest, Tuple& source) const;
 
-      Tuple srcAddrForDest(const Tuple& dest, bool& ok) const;
       bool mMultiThreaded;
       DnsInterface mDns;
       Fifo<Message>& mStateMacFifo;
-      std::vector<Transport*> mTransports;
-
+      std::map<Tuple, Transport*> mTransports;
+      
       // map from domain name to transport
       HashMap<Data, TlsTransport*> mTlsTransports;
 
