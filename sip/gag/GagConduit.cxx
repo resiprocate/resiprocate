@@ -142,7 +142,7 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
 
   newTu = new TuIM(sipStack, *aor, contact, this);
   // XXX Check for null here
-  newTu->setUAName(Data("gag/0.0.0 (gaim)"));
+  newTu->setUAName(Data("gag/0.0.1 (gaim)"));
   newTu->registerAor(*aor, *password);
 
   tuIM[*aor] = newTu;
