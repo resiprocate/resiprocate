@@ -647,15 +647,28 @@ Data::operator^=(const Data& rhs)
 Data&
 Data::operator+=(char c)
 {
-   return append(&c, 1);
+    return append(&c, 1);
 }
 
 char& 
 Data::operator[](size_type p)
 {
-   assert(p < mCapacity);
-   own();
-   return mBuf[p];
+    assert(p < mCapacity);
+    own();
+    return mBuf[p];
+}
+
+
+char& 
+Data::at(size_type p)
+{
+    if (p >= mCapacity)
+	resize(p+1, true);
+    else
+	own();
+    if (p > mSize)
+	mSize = p + 1;
+    return mBuf[p];
 }
 
 char 
@@ -746,6 +759,7 @@ Data::append(const char* str, size_type len)
    return *this;
 }
 
+
 Data
 Data::operator+(char c) const
 {
@@ -763,6 +777,7 @@ const char*
 Data::c_str() const
 {
    own();
+   mBuf[mSize] = 0;
    return mBuf;
 }
 
@@ -786,6 +801,7 @@ void
 Data::resize(size_type newCapacity, bool copy)
 {
    char *oldBuf = mBuf;
+   newCapacity += 32; // Pad this a bit to avoid too many resizings
    mBuf = new char[newCapacity+1];
    if (copy)
    {

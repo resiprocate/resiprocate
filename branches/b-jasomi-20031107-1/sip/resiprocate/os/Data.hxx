@@ -2,7 +2,7 @@
 #define RESIP_DATA_HXX 
 
 static const char* const resipDataHeaderVersion =
-   "$Id: Data.hxx,v 1.71 2003/10/20 20:30:35 davidb Exp $";
+   "$Id: Data.hxx,v 1.71.2.1 2003/11/08 01:25:46 alan Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -86,6 +86,7 @@ class Data
 
       char& operator[](size_type p);
       char operator[](size_type p) const;
+      char& at(size_type p);
 
       void reserve(size_type capacity);
       Data& append(const char* str, size_type len);
