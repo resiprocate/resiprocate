@@ -238,7 +238,7 @@ GagConduit::sendPageFailed( const Uri& dest,int respNumber )
   error = "Could not send IM to ";
   error += Data::from(dest);
   error += " (";
-  error += respNumber;
+  error += Data::from(respNumber);
   error += ")";
 
   GagErrorMessage (error).serialize(cout);
@@ -247,12 +247,11 @@ GagConduit::sendPageFailed( const Uri& dest,int respNumber )
 void 
 GagConduit::registrationFailed(const resip::Uri& uri, int respNumber)
 {
-  // XXX Should be something other than a generic error
   Data error;
   error = "Could not register as ";
   error += Data::from(uri);
   error += " (";
-  error += respNumber;
+  error += Data::from(respNumber);
   error += ")";
 
   GagLoginStatusMessage (false, respNumber, error).serialize(cout);
