@@ -490,6 +490,8 @@ myMain(int argc, char* argv[])
    bool noUdp = false;
    bool noV6 = false;
    bool noV4 = false;
+   bool genUserCert = false;
+   
    
    for ( int i=1; i<argc; i++)
    {
@@ -504,6 +506,10 @@ myMain(int argc, char* argv[])
       else if (!strcmp(argv[i],"-encrypt"))
       {
          encryp = true;
+      }
+      else if (!strcmp(argv[i],"-genUserCert"))
+      {
+         genUserCert = true;
       }
       else if (!strcmp(argv[i],"-noRegister"))
       {
@@ -709,6 +715,7 @@ myMain(int argc, char* argv[])
               << "  If you set the secret to - the system will querry you for it."<< endl
               << " -contact overrides your SIP contact - can be used for NAT games" << endl
               << "\t there can be many -add " << endl
+              << " -genUserCert - generate a new user cert" << endl
               << " " << endl
               << "Examples" << endl
               << "An example command line for a user with account name alice at example.com is:" << endl
@@ -757,11 +764,28 @@ myMain(int argc, char* argv[])
    {
       Security* security = sipStack.getSecurity();
       assert(security != 0);
+   }
+   catch( ... )
+   {
+      ErrLog( << "Got an exception creating security object " );
+   }
+
+#if 0 // TODO fix this 
+   try
+   {
+      assert(security != 0);
       security->preload();
    }
    catch( ... )
    {
-      ErrLog( << "Got a exception loading certificates" );
+      ErrLog( << "Got a exception pre loading certificates" );
+   }
+#endif 
+
+    if (genUserCert)
+   {
+      assert( security );
+      security->generateUserCert(aor.getAor());
    }
 #endif
 

@@ -66,21 +66,8 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    {
       assert( mSecurity );
 
-#if 0 // switch over for Security2
-      if(!SSL_use_certificate(mSsl, mSecurity->publicCert))
-      {
-         throw Security::Exception("SSL_use_certificate failed",
-                                   __FILE__,__LINE__);
-      }
-      
-      if (!SSL_use_PrivateKey(mSsl, mSecurity->privateKey))
-      {
-         throw Security::Exception("SSL_use_PrivateKey failed.",
-                                   __FILE__,__LINE__);
-      }
-#else
-      X509* cert = mSecurity->mDomainCerts[mDomain];
-      EVP_PKEY* pKey = mSecurity->mDomainPrivateKeys[mDomain];
+      X509* cert = mSecurity->getDomainCert(mDomain); //mDomainCerts[mDomain];
+      EVP_PKEY* pKey = mSecurity->getDomainKey(mDomain); //mDomainPrivateKeys[mDomain];
 
       if( !SSL_use_certificate(mSsl, cert) )
       {
@@ -93,7 +80,6 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
          throw Security::Exception("SSL_use_PrivateKey failed.",
                                    __FILE__,__LINE__);
       }
-#endif
    }
    
    mBio = BIO_new_socket(fd,0/*close flag*/);
