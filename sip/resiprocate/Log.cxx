@@ -1,0 +1,133 @@
+// Copyright 2002 Cathay Networks, Inc. 
+
+#include <cassert>
+#include <iostream>
+#include <string.h>
+#include <stdio.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <time.h>
+
+#include <sip2/Log.hxx>
+#include <sip2/Lock.hxx>
+
+using namespace Vocal2;
+
+Log::Level Log::_level = Log::DEBUG;
+Log::Type Log::_type = COUT;
+string Log::_appName;
+string Log::_hostname;
+pid_t Log::_pid=0;
+
+const char
+Log::_descriptions[][32] = {"EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "DEBUG_STACK", ""}; 
+
+Vocal::Threads::Mutex Log::_mutex;
+
+void 
+Log::initialize(Type type, Level level, const string& appName)
+{
+   _type = type;
+   _level = level;
+   _appName = appName.substr(appName.find_last_of("/")+1);
+   
+   char buffer[1024];
+   gethostname(buffer, sizeof(buffer));
+   _hostname = buffer;
+   _pid = getpid();
+}
+
+void
+Log::setLevel(Level level)
+{
+   Vocal::Threads::Lock lock(_mutex);
+   _level = level; 
+}
+
+string
+Log::toString(Level l)
+{
+   return string("LOG_") + _descriptions[l];
+}
+
+Log::Level
+Log::toLevel(const string& l)
+{
+   string pri = l;
+   if (pri.find("LOG_", 0) == 0)
+   {
+      pri.erase(0, 4);
+   }
+   
+   int i=0;
+   while (string(_descriptions[i]).length())
+   {
+      if (pri == string(_descriptions[i])) 
+      {
+         return Level(i);
+      }
+      i++;
+   }
+
+   cerr << "Choosing Debug level since string was not understood: " << l << endl;
+   return Log::DEBUG;
+}
+
+
+ostream&
+Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm) 
+{
+   strm << _descriptions[level] << DELIM
+        << timestamp() << DELIM  
+        << _hostname << DELIM  
+        << _appName << DELIM
+        << subsystem << DELIM 
+        << _pid << DELIM
+        << pthread_self() << DELIM;
+   return strm;
+}
+
+string
+Log::timestamp() 
+{
+   const unsigned int DATEBUF_SIZE=256;
+   char datebuf[DATEBUF_SIZE];
+   
+   struct timeval tv;
+   int result = gettimeofday (&tv, NULL);
+   
+   if (result == -1)
+   {
+      /* If we can't get the time of day, don't print a timestamp.
+         (Under Unix, this will never happen:  gettimeofday can fail only
+        if the timezone is invalid [which it can't be, since it is
+        uninitialized] or if &tv or &tz are invalid pointers.) */
+
+        datebuf [0] = '\0';
+    }
+    else
+    {
+       /* The tv_sec field represents the number of seconds passed since
+          the Epoch, which is exactly the argument gettimeofday needs. */
+       const time_t timeInSeconds = (time_t) tv.tv_sec;
+       strftime (datebuf,
+                 DATEBUF_SIZE,
+                 "%Y%m%d-%H%M%S", /* guaranteed to fit in 256 chars,
+                                     hence don't check return code */
+                 localtime (&timeInSeconds));
+    }
+   
+   char msbuf[5];
+   /* Dividing (without remainder) by 1000 rounds the microseconds
+      measure to the nearest millisecond. */
+   sprintf(msbuf, ".%3.3ld", (tv.tv_usec / 1000));
+   
+   int datebufCharsRemaining = DATEBUF_SIZE - strlen (datebuf);
+   strncat (datebuf, msbuf, datebufCharsRemaining - 1);
+   datebuf[DATEBUF_SIZE - 1] = '\0'; /* Just in case strncat truncated msbuf,
+                                        thereby leaving its last character at
+                                        the end, instead of a null terminator */
+
+   return datebuf;
+}
+   
