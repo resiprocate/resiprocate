@@ -249,7 +249,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
          //!dcm! -- need to protect against 3xx highjacking a dialogset which
          //has a fully established dialog. also could case strange behaviour
          //by sending 401/407 at the wrong time.
-         if (mDum.mRedirectManager.get())
+         if (mDum.mRedirectManager.get() && mState != Established)  // !slg! for now don't handle redirect in established dialogs - alternatively we could treat as a target referesh (using 1st Contact) and reissue request
          {
             if (mDum.mRedirectManager->handle(*this, getCreator()->getLastRequest(), msg))
             {
@@ -257,7 +257,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                //response--?dcm?--merge w/ forking logic somehow?                              
                //!dcm! -- really, really horrible.  Should make a don't die
                //scoped guard
-               mState = Initial;               
+               //mState = Initial;               
                for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
                {
                   it->second->redirected(msg);         
