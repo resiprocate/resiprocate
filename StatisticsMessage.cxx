@@ -126,6 +126,8 @@ StatisticsMessage::logStats(const resip::Subsystem& subsystem,
               << " BYEo " << stats.requestsSentByMethod[BYE]-stats.requestsRetransmittedByMethod[BYE] << "/S" << stats.sum2xxIn(BYE) << "/F" << stats.sumErrIn(BYE)
               << " CANi " << stats.requestsReceivedByMethod[CANCEL] << "/S" << stats.sum2xxOut(BYE) << "/F" << stats.sumErrOut(BYE)
               << " CANo " << stats.requestsSentByMethod[CANCEL]-stats.requestsRetransmittedByMethod[CANCEL] << "/S" << stats.sum2xxIn(CANCEL) << "/F" << stats.sumErrIn(CANCEL)
+              << " MSGi " << stats.requestsReceivedByMethod[MESSAGE] << "/S" << stats.sum2xxOut(MESSAGE) << "/F" << stats.sumErrOut(MESSAGE)
+              << " MSGo " << stats.requestsSentByMethod[MESSAGE]-stats.requestsRetransmittedByMethod[MESSAGE] << "/S" << stats.sum2xxIn(MESSAGE) << "/F" << stats.sumErrIn(MESSAGE)
               << " OPTi " << stats.requestsReceivedByMethod[OPTIONS] << "/S" << stats.sum2xxOut(OPTIONS) << "/F" << stats.sumErrOut(OPTIONS)
               << " OPTo " << stats.requestsSentByMethod[OPTIONS]-stats.requestsRetransmittedByMethod[OPTIONS] << "/S" << stats.sum2xxIn(OPTIONS) << "/F" << stats.sumErrIn(OPTIONS)
               << " REGi " << stats.requestsReceivedByMethod[REGISTER] << "/S" << stats.sum2xxOut(REGISTER) << "/F" << stats.sumErrOut(REGISTER)
@@ -140,6 +142,7 @@ StatisticsMessage::logStats(const resip::Subsystem& subsystem,
               << "Retransmissions: INVx " << stats.requestsRetransmittedByMethod[INVITE]
               << " BYEx " << stats.requestsRetransmittedByMethod[BYE]
               << " CANx " << stats.requestsRetransmittedByMethod[CANCEL]
+              << " MSGx " << stats.requestsRetransmittedByMethod[MESSAGE]
               << " OPTx " << stats.requestsRetransmittedByMethod[OPTIONS]
               << " REGx " << stats.requestsRetransmittedByMethod[REGISTER]
               << " finx " << retriesFinal
