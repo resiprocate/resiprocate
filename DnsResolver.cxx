@@ -504,7 +504,7 @@ NaptrParseDone:
 #endif
 
 #if defined(USE_ARES)
-static DnsResolver::SrvSet&
+static DnsResolver::SrvSet*
 aresParseSrv(int pstatus, unsigned char *abuf, int alen,
     Transport::Type transport)
 {
@@ -518,7 +518,7 @@ aresParseSrv(int pstatus, unsigned char *abuf, int alen,
       errmem = 0;
       InfoLog (<< "SRV lookup failed: " << ares_strerror(pstatus, &errmem));
       ares_free_errmem(errmem);
-      return *srvset;
+      return srvset;
    }
 
    // !rk!  Throw away all of the "questions" in the DNS packet.  Is there
@@ -580,7 +580,7 @@ SrvParseDone:
       DebugLog(<< "SRV entry " << s->host << " with priority " << s->priority);
    }
 
-   return *srvset;
+   return srvset;
 }
 #endif
 
@@ -599,7 +599,7 @@ DnsResolver::aresCallbackSrvTcp(void *arg, int pstatus,
       return;
    }
 
-   SrvSet& srvset = aresParseSrv(pstatus, abuf, alen, Transport::TCP);
+   auto_ptr<SrvSet> srvset(aresParseSrv(pstatus, abuf, alen, Transport::TCP));
 
    if (request->otherTransports.size())
    {
@@ -617,14 +617,14 @@ DnsResolver::aresCallbackSrvTcp(void *arg, int pstatus,
       else if (next == Transport::Unknown)
       {
 	 // Add the request target as the only result
-	 InfoLog (<< "Adding fallback SRV to queue A/AAAA lookup");
+	 DebugLog (<< "Adding fallback SRV to queue A/AAAA lookup");
 	 Srv srv;
 	 srv.priority = 65535;
 	 srv.weight = 0;
 	 srv.port = determinePort(request->scheme, Transport::Unknown);
 	 srv.host = request->host;
 	 srv.transport = Transport::TCP;
-	 srvset.insert(srv);
+	 srvset->insert(srv);
       }
       else
       {
@@ -632,7 +632,7 @@ DnsResolver::aresCallbackSrvTcp(void *arg, int pstatus,
       }
    }
 
-   for (DnsResolver::SrvIterator s = srvset.begin(); s != srvset.end(); s++)
+   for (DnsResolver::SrvIterator s = srvset->begin(); s != srvset->end(); s++)
    {
        Request* resolve = new Request(request->stack,
 				      request->tid,
@@ -666,7 +666,7 @@ DnsResolver::aresCallbackSrvUdp(void *arg, int pstatus,
       return;
    }
 
-   SrvSet& srvset = aresParseSrv(pstatus, abuf, alen, Transport::UDP);
+   auto_ptr<SrvSet> srvset(aresParseSrv(pstatus, abuf, alen, Transport::UDP));
 
    if (request->otherTransports.size())
    {
@@ -684,14 +684,14 @@ DnsResolver::aresCallbackSrvUdp(void *arg, int pstatus,
       else if (next == Transport::Unknown)
       {
 	 // Add the request target as the only result
-	 InfoLog (<< "Adding fallback SRV to queue A/AAAA lookup");
+	 DebugLog (<< "Adding fallback SRV to queue A/AAAA lookup");
 	 Srv srv;
 	 srv.priority = 65535;
 	 srv.weight = 0;
 	 srv.port = determinePort(request->scheme, Transport::Unknown);
 	 srv.host = request->host;
 	 srv.transport = Transport::UDP;
-	 srvset.insert(srv);
+	 srvset->insert(srv);
       }
       else
       {
@@ -699,7 +699,7 @@ DnsResolver::aresCallbackSrvUdp(void *arg, int pstatus,
       }
    }
 
-   for (DnsResolver::SrvIterator s = srvset.begin(); s != srvset.end(); s++)
+   for (DnsResolver::SrvIterator s = srvset->begin(); s != srvset->end(); s++)
    {
        Request* resolve = new Request(request->stack,
 				      request->tid,
