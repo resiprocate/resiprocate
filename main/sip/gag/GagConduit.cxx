@@ -237,9 +237,9 @@ GagConduit::sendPageFailed( const Uri& dest,int respNumber )
   Data error;
   error = "Could not send IM to ";
   error += dest.getAor();
-  error = " (";
+  error += " (";
   error += respNumber;
-  error = ")";
+  error += ")";
 
   GagErrorMessage (error).serialize(cout);
 }
@@ -251,9 +251,9 @@ GagConduit::registrationFailed(const resip::Uri& uri, int respNumber)
   Data error;
   error = "Could not register as ";
   error += uri.getAor();
-  error = " (";
+  error += " (";
   error += respNumber;
-  error = ")";
+  error += ")";
 
   GagLoginStatusMessage (false, respNumber, error).serialize(cout);
 }
