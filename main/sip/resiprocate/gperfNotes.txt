@@ -1,0 +1,19 @@
+// -k '*' forces gperf to choose a hash for each size category instead of giving up.
+//        required if characters appear in the same position in several keywords
+// -D forces gperf to cough up a non-perfect hash when it can't produce a perfect hash
+//        required if several keywords are anagrams
+//
+//      gnu
+//      |  class name
+//      |  |            constants
+//      |  |            |  language
+//      |  |            |  |      custom struct
+//      |  |            |  |      |  all characters
+//      |  |            |  |      |  |      deal with anagrams
+//      |  |            |  |      |  |      |
+% gperf -g -Z ParamHash -E -L C++ -t -k '*' -D parametersA.gperf
+
+// replace
+str[\([0-9]+\)] => tolower(str[\1])
+*str == *s => tolower(*str) == *s
+!strcmp => !strcasecmp

@@ -13,9 +13,8 @@ class ParameterTypes
 {
   
    public:
-      // When you add something to this enum Type, you must add an entry to
-      // Parameter::make
-      
+      // !dlb! until automated, must ensure that this set is consistent with
+      // gperf in ParameterTypes.cxx and ParameterTypes.hxx
       enum Type
       {
          transport,
