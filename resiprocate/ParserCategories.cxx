@@ -861,7 +861,7 @@ ExpiresCategory::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
    const char *p = pb.position();
-   if (p && isdigit(*p))
+   if (!pb.eof() && isdigit(*p))
    {
      mValue = pb.integer();
    }
