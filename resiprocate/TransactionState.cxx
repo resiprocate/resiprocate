@@ -1120,8 +1120,8 @@ TransactionState::processServerStale(  Message* msg )
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       if (timer->getType() == Timer::TimerStaleServer)
       {
-         delete this;
          delete msg;
+         delete this;
       }
       else
       {
@@ -1154,12 +1154,15 @@ TransactionState::processServerStale(  Message* msg )
    else if (isResponse(msg) && isFromTU(msg))
    {
       sendToWire(msg); 
+      delete msg;
    }
    else
    {
       ErrLog(<<"ServerStale unexpected condition, dropping message.");
       if (sip)
+      {
          ErrLog(<<sip->brief());
+      }
       delete msg;
    }
 }
