@@ -134,7 +134,7 @@ defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841");
 defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
 defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
 // explicitly declare to avoid h_Privacys
-extern H_Privacys resip::h_Privacies;
+extern H_Privacys h_Privacies;
 
 defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
 
@@ -174,11 +174,11 @@ defineMultiHeader(AcceptContact, "Accept-Contact", NameAddr, "RFC 3841");
 defineMultiHeader(RejectContact, "Reject-Contact", NameAddr, "RFC 3841");
 defineMultiHeader(PPreferredIdentity, "P-Preferred-Identity", NameAddr, "RFC 3325");
 // explicitly declare to avoid h_PAssertedIdentitys
-extern H_PPreferredIdentitys resip::h_PPreferredIdentities;
+extern H_PPreferredIdentitys h_PPreferredIdentities;
 
 defineMultiHeader(PAssertedIdentity, "P-Asserted-Identity", NameAddr, "RFC 3325");
 // explicitly declare to avoid h_PAssertedIdentitys
-extern H_PAssertedIdentitys resip::h_PAssertedIdentities;
+extern H_PAssertedIdentitys h_PAssertedIdentities;
 
 defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455");
 defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
