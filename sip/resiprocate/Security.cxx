@@ -963,6 +963,7 @@ BaseSecurity::BaseSecurity () :
    assert(mRootCerts);
 
    static char* cipher="RSA+SHA+AES+3DES";
+   // static char* cipher="TLS_RSA_WITH_AES_128_CBC_SHA:TLS_RSA_WITH_3DES_EDE_CBC_SHA";
 
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
