@@ -106,7 +106,7 @@ ThreadIf::exit()
 }
 
 #if !defined(WIN32)
-pthread_t
+ThreadIf::Id
 ThreadIf::selfId()
 {
    return pthread_self();
