@@ -39,7 +39,8 @@ class ParserCategory
       bool exists(const ParamBase& paramType) const
       {
          checkParsed();
-         return getParameterByEnum(paramType.getTypeNum());
+		 bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+         return ret;
       }
 
       // removing non-present parameter is allowed      
@@ -49,8 +50,30 @@ class ParserCategory
          removeParameterByEnum(paramType.getTypeNum());
       }
 
+#if 1
+	  Transport_Param::DType& param(const Transport_Param& paramType) const;
+	  User_Param::DType& param(const User_Param& paramType) const;
+      Method_Param::DType& param(const Method_Param& paramType) const;
+      Ttl_Param::DType& param(const Ttl_Param& paramType) const;
+      Maddr_Param::DType& param(const Maddr_Param& paramType) const;
+      Lr_Param::DType& param(const Lr_Param& paramType) const;
+      Q_Param::DType& param(const Q_Param& paramType) const;
+      Purpose_Param::DType& param(const Purpose_Param& paramType) const;
+      Expires_Param::DType& param(const Expires_Param& paramType) const;
+      Handling_Param::DType& param(const Handling_Param& paramType) const;
+      Tag_Param::DType& param(const Tag_Param& paramType) const;
+      ToTag_Param::DType& param(const ToTag_Param& paramType) const;
+      FromTag_Param::DType& param(const FromTag_Param& paramType) const;
+      Duration_Param::DType& param(const Duration_Param& paramType) const;
+      Branch_Param::DType& param(const Branch_Param& paramType) const;
+      Received_Param::DType& param(const Received_Param& paramType) const;
+      Mobility_Param::DType& param(const Mobility_Param& paramType) const;
+      Comp_Param::DType& param(const Comp_Param& paramType) const;
+      Rport_Param::DType& param(const Rport_Param& paramType) const;
+#else
+		// old code delete this 
       Transport_Param::Type::Type& param(const Transport_Param& paramType) const;
-      User_Param::Type::Type& param(const User_Param& paramType) const;
+	  User_Param::Type::Type& param(const User_Param& paramType) const;
       Method_Param::Type::Type& param(const Method_Param& paramType) const;
       Ttl_Param::Type::Type& param(const Ttl_Param& paramType) const;
       Maddr_Param::Type::Type& param(const Maddr_Param& paramType) const;
@@ -68,7 +91,8 @@ class ParserCategory
       Mobility_Param::Type::Type& param(const Mobility_Param& paramType) const;
       Comp_Param::Type::Type& param(const Comp_Param& paramType) const;
       Rport_Param::Type::Type& param(const Rport_Param& paramType) const;
-      
+#endif
+
       UnknownParameter& param(const Data& param) const;
       void remove(const Data& param); 
       bool exists(const Data& param) const;

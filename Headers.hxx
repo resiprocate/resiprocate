@@ -5,7 +5,7 @@
 #include <sipstack/ParserCategories.hxx>
 #include <sipstack/Symbols.hxx>
 #include <util/Data.hxx>
-#include <HeaderTypes.hxx>
+#include <sipstack/HeaderTypes.hxx>
 
 namespace Vocal2
 {
@@ -690,7 +690,7 @@ extern RequestLineType h_RequestLine;
 class StatusLineType {};
 extern StatusLineType h_StatusLine;
  
-}7
+}
 
 #endif
 
