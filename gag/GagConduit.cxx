@@ -77,7 +77,7 @@ GagConduit::getTu(Uri &aor)
   {
     Data error;
     error = "You are not logged in as ";
-    error += aor.getAor();
+    error += Data::from(aor);
     GagErrorMessage(error).serialize(cout);
   }
   return tu;
@@ -130,7 +130,7 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
   {
     Data error;
     error = "You are already logged in as ";
-    error += aor->getAor();
+    error += Data::from(aor);
     GagErrorMessage(error).serialize(cout);
   }
 
@@ -236,7 +236,7 @@ GagConduit::sendPageFailed( const Uri& dest,int respNumber )
 {
   Data error;
   error = "Could not send IM to ";
-  error += dest.getAor();
+  error += Data::from(dest);
   error += " (";
   error += respNumber;
   error += ")";
@@ -250,7 +250,7 @@ GagConduit::registrationFailed(const resip::Uri& uri, int respNumber)
   // XXX Should be something other than a generic error
   Data error;
   error = "Could not register as ";
-  error += uri.getAor();
+  error += Data::from(uri);
   error += " (";
   error += respNumber;
   error += ")";
@@ -270,7 +270,7 @@ GagConduit::receivePageFailed(const Uri& sender)
 {
   Data error;
   error = "Could not get IM from ";
-  error += sender.getAor();
+  error += Data::from(sender);
 
   GagErrorMessage (error).serialize(cout);
 }
