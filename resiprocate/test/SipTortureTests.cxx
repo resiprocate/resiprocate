@@ -1,6 +1,7 @@
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/Contents.hxx"
+#include "sip2/sipstack/SdpContents.hxx"
 #include "sip2/util/Logger.hxx"
 #include "TestSupport.hxx"
 #include "tassert.h"
@@ -565,6 +566,10 @@ void test7()
 
       Contents* c = message->getContents();
         
+      SdpContents* sdp = dynamic_cast<SdpContents*>(c);
+      
+      sdp->session();
+      
       DebugLog( << "got contents of type" << c->getType() );
       
       // A proxy should forward this using the same retransmission rules as 
