@@ -149,6 +149,7 @@ RequestContext::getDigestIdentity() const
 void
 RequestContext::addTarget(const NameAddr& target)
 {
+   InfoLog (<< "Adding candidate " << target);
    mCandidateTargets.push_back(target);
 }
 
