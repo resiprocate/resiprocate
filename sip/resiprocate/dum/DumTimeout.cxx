@@ -3,8 +3,9 @@
 
 using namespace resip;
 
+const unsigned long DumTimeout::StaleCallTimeout = 3*60;
 
-DumTimeout::DumTimeout(Type type, unsigned long duration, BaseUsage::Handle & targetBu, int seq, int altSeq)
+DumTimeout::DumTimeout(Type type, unsigned long duration, BaseUsage::Handle targetBu, int seq, int altSeq)
     : mType(type),
       mDuration(duration),
       mUsageHandle(targetBu),
