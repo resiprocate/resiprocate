@@ -50,6 +50,7 @@ ClientInviteSession::getHandle()
 void
 ClientInviteSession::dispatch(const SipMessage& msg)
 {
+   Destroyer::Guard guard(mDestroyer);
    std::pair<OfferAnswerType, const SdpContents*> offans;
    offans = InviteSession::getOfferOrAnswer(msg);
    
@@ -106,7 +107,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          {
             sendSipFrag(msg);            
             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
-            delete this;
+            guard.destroy();
          }
          break;
       }
@@ -153,7 +154,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             else if (code >= 300)
             {
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
-               delete this;
+               guard.destroy();
             }
             break;
          }
@@ -173,7 +174,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             else if (code >= 300 && msg.header(h_CSeq).method() == INVITE)
             {
 	           mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
-               delete this;
+               guard.destroy();
             }
          }
          break;
@@ -186,6 +187,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 void
 ClientInviteSession::dispatch(const DumTimeout& timeout)
 {
+   Destroyer::Guard guard(mDestroyer);
    if (timeout.type() == DumTimeout::StaleCall 
        && timeout.seq() == mStaleCallTimerSeq)
    {
@@ -205,7 +207,8 @@ ClientInviteSession::sendSipFrag(const SipMessage& response)
       SipFrag contents;
       contents.message().header(h_StatusLine) = response.header(h_StatusLine);
       //will be cloned...ServerSub may not have the most efficient API possible
-      SipMessage& notify = mServerSub->update(&contents);
+      int code = response.header(h_StatusLine).statusCode();
+      SipMessage& notify = (code > 200) ? mServerSub->end(NoResource, &contents) : mServerSub->update(&contents);
       mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), notify);
       mServerSub->send(notify);
    }   
@@ -214,6 +217,7 @@ ClientInviteSession::sendSipFrag(const SipMessage& response)
 void
 ClientInviteSession::send(SipMessage& msg)
 {
+   Destroyer::Guard guard(mDestroyer);
    //last ack logic lives in InviteSession(to be re-used for reinvite
    if (mState == Connected || mState == Terminated || mState == ReInviting || mState == AcceptingReInvite)
    {
@@ -225,7 +229,7 @@ ClientInviteSession::send(SipMessage& msg)
    {
       mDum.send(msg);
       mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
-      delete this;
+      guard.destroy();
       return;
    }   
 
@@ -478,7 +482,7 @@ ClientInviteSession::handlePrackResponse(const SipMessage& response)
 //       {
 //          mState = Terminated;
 //          handler->onTerminated(getSessionHandle(), msg);
-//          delete this;
+//                   guard.destroy();
 //       }
 //    }
 //    else // 3xx

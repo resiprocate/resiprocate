@@ -140,9 +140,32 @@ void
 ServerSubscription::makeNotifyExpires()
 {
    mSubscriptionState = Terminated;
+   makeNotify();
+   mLastNotify.header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(Timeout);   
+}
+
+void
+ServerSubscription::makeNotify()
+{
    mDialog.makeRequest(mLastNotify, NOTIFY);
    mLastNotify.header(h_SubscriptionState).value() = getSubscriptionStateString(mSubscriptionState);
-   mLastNotify.header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(Timeout);   
+   if (!mSubscriptionId.empty())
+   {
+      mLastRequest.header(h_Event).param(p_id) = mSubscriptionId;
+   }
+}
+
+
+SipMessage& 
+ServerSubscription::end(TerminateReason reason, const Contents* document)
+{
+   makeNotify();
+   mLastNotify.header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(reason);   
+   if (document)
+   {
+      mLastRequest.setContents(document);
+   }
+   return mLastRequest;
 }
 
 void
@@ -162,12 +185,7 @@ ServerSubscription::dispatch(const DumTimeout& timeout)
 SipMessage& 
 ServerSubscription::update(const Contents* document)
 {
-   mDialog.makeRequest(mLastNotify, NOTIFY);   
-   mLastRequest.header(h_Event).value() = mEventType;   
-   if (mSubscriptionId.empty())
-   {
-      mLastRequest.header(h_Event).param(p_id) = mSubscriptionId;
-   }
+   makeNotify();
    mLastRequest.setContents(document);
    return mLastRequest;
 }

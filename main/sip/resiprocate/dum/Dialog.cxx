@@ -713,12 +713,19 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
 void 
 Dialog::makeCancel(SipMessage& request)
 {
-   makeRequest(request, CANCEL);   
-
-   //not allowed in a CANCEL
+   //minimal for cancel
+   request.header(h_RequestLine).method() = CANCEL;   
+   request.header(h_CSeq).method() = CANCEL;
    request.remove(h_Requires);
    request.remove(h_ProxyRequires);
+   assert(request.exists(h_Vias));
+
+   //not sure of these
    request.header(h_To).remove(p_tag);   
+   request.remove(h_RecordRoutes);
+   request.remove(h_Contacts);   
+   request.header(h_Contacts).push_front(mLocalContact);   
+   request.header(h_MaxForwards).value() = 70;
 }
 
 void 
