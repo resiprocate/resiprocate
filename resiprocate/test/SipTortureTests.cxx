@@ -1,5 +1,6 @@
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/Uri.hxx"
+#include "sip2/sipstack/Contents.hxx"
 #include "sip2/util/Logger.hxx"
 #include "TestSupport.hxx"
 #include "tassert.h"
@@ -551,7 +552,20 @@ void test7()
       tassert(message->header(h_ContentType).type() == "application");
       tassert(message->header(h_ContentType).subType() == "sdp");
       
+      DebugLog( << "start map dump" );
+      std::map<Mime, ContentsFactoryBase*>& m = Contents::getFactoryMap();
+      std::map<Mime, ContentsFactoryBase*>::iterator i;
+      i = m.begin();
+      while ( i != m.end() )
+      {
+         DebugLog( << "first=" << i->first );
+         i++;
+      }
+      DebugLog( << "done map dump" );
+
       Contents* c = message->getContents();
+        
+      DebugLog( << "got contents of type" << c->getType() );
       
       // A proxy should forward this using the same retransmission rules as 
       // BYE. A UAS should reject it with an error, and list the available 
