@@ -169,9 +169,17 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
             {
                // The message body is complete.
                mMessage->setBody(unprocessedCharPtr, contentLength);
-               Transport::stampReceived(mMessage);
-               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-               fifo.add(mMessage);
+               if (!transport()->basicCheck(*mMessage))
+               {
+                 delete mMessage;
+                 mMessage = 0;
+               }
+               else
+               {
+                 Transport::stampReceived(mMessage);
+                 DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+                 fifo.add(mMessage);
+               }
 
                int overHang = numUnprocessedChars - contentLength;
 
@@ -250,10 +258,17 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
             if (mBufferPos + bytesRead - mPreparse.nDiscardOffset() >= contentLength)
             {
                mMessage->setBody(mBuffer + mPreparse.nDiscardOffset(), contentLength);
-               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-               
-               Transport::stampReceived(mMessage);
-               fifo.add(mMessage);
+               if (!transport()->basicCheck(*mMessage))
+               {
+                 delete mMessage;
+                 mMessage = 0;
+               }
+               else
+               {
+                 DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+                 Transport::stampReceived(mMessage);
+                 fifo.add(mMessage);
+               }
 
                int overHang = (mBufferPos + bytesRead) - (mPreparse.nDiscardOffset() + contentLength);
 
@@ -309,11 +324,18 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
          if (mBufferPos == contentLength)
          {
             mMessage->setBody(mBuffer, contentLength);
-            DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+            if (!transport()->basicCheck(*mMessage))
+            {
+              delete mMessage;
+              mMessage = 0;
+            }
+            else
+            {
+              DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
 
-            Transport::stampReceived(mMessage);
-            fifo.add(mMessage);
-         
+              Transport::stampReceived(mMessage);
+              fifo.add(mMessage);
+            }
             mState = NewMessage;
          }
          break;

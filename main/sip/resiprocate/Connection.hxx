@@ -52,7 +52,7 @@ class Connection : public ConnectionLruList, public ConnectionReadList, public C
    protected:
       Connection();
       virtual ~Connection();
-
+      Transport* transport() { return mWho.transport; };
       Socket mSocket;
 
    private:
