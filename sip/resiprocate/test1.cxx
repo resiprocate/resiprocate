@@ -25,7 +25,7 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   Log::initialize(Log::COUT, Log::INFO, argv[0]);
 
    Fifo<Message> received;
    
@@ -34,12 +34,12 @@ main(int argc, char* argv[])
    NameAddr dest;
    dest.uri().scheme() = "sip";
    dest.uri().user() = "fluffy";
-   dest.uri().host() = "kelowna.gloo.net";
+   dest.uri().host() = "localhost";
    dest.uri().port() = 5070;
    dest.uri().param(p_transport) == "udp";
    
    NameAddr from = dest;
-   from.uri().port() = 5061;
+   from.uri().port() = 5070;
    
    SipMessage message = Helper::makeInvite( dest, from, from);
    Resolver resolver(dest.uri());
@@ -52,25 +52,45 @@ main(int argc, char* argv[])
 
    udp->send(&resolver.mCurrent->ipv4, encoded.c_str(), encoded.size()); 
    
+   
    struct timeval tv;
-   fd_set fdSet; int fdSetSize;
-   FD_ZERO(&fdSet); fdSetSize=0;
-   tv.tv_sec=0;
-   tv.tv_usec= 1000;
+   
+   for (int i=0; i<1000; i++)
+   {
+      udp->send(&resolver.mCurrent->ipv4, encoded.c_str(), encoded.size()); 
+      
+      fd_set fdSet; 
+      int fdSetSize=0;
+      FD_ZERO(&fdSet); 
+      udp->buildFdSet(&fdSet, &fdSetSize);
+      
+      tv.tv_sec=0;
+      tv.tv_usec= 5000;
+      
+      int  err = select(fdSetSize, &fdSet, NULL, NULL, &tv);
+      int e = errno;
+      if ( err == -1 )
+      {
+         InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
+      }
 
-   int  err = select(fdSetSize, &fdSet, NULL, NULL, &tv);
-   int e = errno;
-   if ( err == -1 )
-   {
-      InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
+      udp->process(&fdSet);
+
+      if (received.messageAvailable())
+      {
+         SipMessage* next = dynamic_cast<SipMessage*>(received.getNext());
+         DebugLog (<< "got: " << next->brief());
+         assert (next->header(h_RequestLine).uri().host() == "localhost");
+         assert (next->header(h_To).uri().host() == "localhost");
+         assert (next->header(h_From).uri().host() == "localhost");
+         assert (!next->header(h_Vias).begin()->sentHost().empty());
+         assert (next->header(h_Contacts).begin()->uri().host() == "localhost");
+         assert (!next->header(h_CallId).value().empty());
+         
+         delete next;
+      }
    }
-   
-   udp->process(&fdSet);
-   if (received.messageAvailable())
-   {
-      Message* next = received.getNext();
-      DebugLog (<< "got: " << *next);
-   }
-   
+   delete udp;
+
    return 0;
 }
