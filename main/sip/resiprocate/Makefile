@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.89 2002/11/28 16:51:46 alan Exp $
+# $Id: Makefile,v 1.90 2002/11/28 21:01:03 ryker Exp $
 
 BUILD = ../../build
 
@@ -50,6 +50,7 @@ SRC = \
 	ParserCategory.cxx \
 	Preparse.cxx \
 	QopParameter.cxx \
+	QuotedDataParameter.cxx \
 	Security.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
