@@ -13,7 +13,6 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_process.c,v 1.6 2003/10/28 21:43:42 adamr Exp $";
 
 #include <sys/types.h>
 #include <assert.h>
@@ -120,7 +119,7 @@ static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
       vec = malloc(n * sizeof(struct iovec));
       if (vec)
 	{
-			int err;
+			// int err;
 	  /* Fill in the iovecs and send. */
 	  n = 0;
 	  for (sendreq = server->qhead; sendreq; sendreq = sendreq->next)
