@@ -79,10 +79,17 @@ TransactionState::~TransactionState()
 void
 TransactionState::process(TransactionController& controller)
 {
+#if(0)
    Message* msg = controller.mStateMacFifo.getNext();
    assert(msg);
-
+   
    TransactionMessage* message = dynamic_cast<TransactionMessage*>(msg);
+#else
+   // !kh! don't need the above cast (the type is right).
+   // !kh! don't need the above assert (It would've failed in AbstractFifo).
+   TransactionMessage* message = controller.mStateMacFifo.getNext();
+#endif
+
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
 
    RESIP_STATISTICS(sip && sip->isExternal() && controller.mStatsManager.received(sip));
