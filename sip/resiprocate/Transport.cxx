@@ -28,12 +28,16 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 {
 }
 
-Transport::Transport(Fifo<Message>& rxFifo, int portNum, const Data& intfc, bool ipv4) : 
+Transport::Transport(Fifo<Message>& rxFifo,
+                     int portNum,
+                     const Data& intfc,
+                     bool ipv4) :
    mFd(-1),
    mInterface(intfc),
    mTuple(intfc, portNum, ipv4),
    mStateMachineFifo(rxFifo)
 {
+   //mTuple.type = transport();
 }
 
 Transport::~Transport()
@@ -237,11 +241,10 @@ Transport::send( const Tuple& dest, const Data& d, const Data& tid)
    mTxFifo.add(data); // !jf!
 }
 
-static SendData*
-makeFailedBasicCheckResponse(
-  const SipMessage& msg,
-  int responseCode = 400,
-  const char * warning = 0)
+SendData*
+Transport::makeFailedBasicCheckResponse(const SipMessage& msg,
+                                        int responseCode,
+                                        const char * warning)
 {
 
   if (msg.isRequest()) return 0;
@@ -308,9 +311,8 @@ Transport::basicCheck(const SipMessage& msg)
       {
         // this is VERY low-level b/c we don't have a transaction...
         // here we make a response to warn the offending party.
-        mTxFifo.add(makeFailedBasicCheckResponseSendData(msg));
+         mTxFifo.add(makeFailedBasicCheckResponse(msg));
      }
-
       return false;
     }
   }
