@@ -708,6 +708,7 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
    mDialog.send(i487);
 
    handler->onTerminated(getSessionHandle(), msg);
+   mDum.destroy(this);
 }
 
 void
@@ -725,6 +726,7 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
    mDialog.send(i487);
 
    handler->onTerminated(getSessionHandle(), msg);
+   mDum.destroy(this);
 }
 
 void
@@ -742,6 +744,7 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
    mDialog.send(i400);
 
    handler->onTerminated(getSessionHandle(), msg);
+   mDum.destroy(this);
 }
 
 void

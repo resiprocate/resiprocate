@@ -1179,6 +1179,10 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
          return On2xx;
       }
    }
+   else if (method == INVITE && code == 487)
+   {
+      return On487Invite;
+   }
    else if (method == INVITE && code == 489)
    {
       return On489Invite;
