@@ -1,5 +1,5 @@
 static const char* const BaseException_cxx_Version =
-    "$Id: BaseException.cxx,v 1.7 2004/03/16 23:23:08 alan Exp $";
+    "$Id: BaseException.cxx,v 1.8 2004/04/21 21:20:15 jason Exp $";
 
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -7,7 +7,7 @@ static const char* const BaseException_cxx_Version =
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::NONE
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
 BaseException::BaseException( const Data& msg,
                         const Data& file,
