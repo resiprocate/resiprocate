@@ -4,6 +4,9 @@
 
 #include "repro/Registrar.hxx"
 #include "resiprocate/dum/ServerRegistration.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;
@@ -21,6 +24,7 @@ void
 Registrar::onRefresh(resip::ServerRegistrationHandle sr,
                      const resip::SipMessage& reg)
 {
+   DebugLog (<< "Registrar::onRefresh " << reg.brief());
    sr->accept();
 }
 
@@ -28,21 +32,24 @@ void
 Registrar::onRemove(resip::ServerRegistrationHandle sr,
                     const resip::SipMessage& reg)
 {
-  sr->accept();
+   DebugLog (<< "Registrar::onRemove " << reg.brief());
+   sr->accept();
 }
       
 void 
 Registrar::onRemoveAll(resip::ServerRegistrationHandle sr,
                        const resip::SipMessage& reg)
 {
-  sr->accept();
+   DebugLog (<< "Registrar::onRemoveAll " << reg.brief());
+   sr->accept();
 }
       
 void 
 Registrar::onAdd(resip::ServerRegistrationHandle sr,
                  const resip::SipMessage& reg)
 {
-  sr->accept();
+   DebugLog (<< "Registrar::onAdd " << reg.brief());
+   sr->accept();
 }
       
 void 

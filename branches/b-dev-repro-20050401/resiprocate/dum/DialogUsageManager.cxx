@@ -813,15 +813,11 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    try
    {
       InfoLog (<< "Got: " << msg->brief());
-
-      std::auto_ptr<Message> msg(mFifo.messageAvailable() ? mFifo.getNext() : 0);
-      
       if (mServerAuthManager.get())
       {
          if ( !mServerAuthManager->handle(msg) )
          {
-            InfoLog(<< "ServerAuth ate message" );
-            
+            InfoLog(<< "ServerAuth ate message " << msg->brief() );
             return true;
          }
       }

@@ -17,8 +17,8 @@ using namespace std;
 RequestProcessor::processor_action_t
 LocationServer::handleRequest(RequestContext& context)
 {
-  DebugLog(<< "Monkey handling request: " << this 
-           << "; reqcontext = " << context);
+   DebugLog(<< "Monkey handling request: " << *this 
+            << "; reqcontext = " << context);
 
 
   resip::Uri& inputUri
