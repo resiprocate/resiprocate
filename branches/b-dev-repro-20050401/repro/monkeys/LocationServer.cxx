@@ -4,7 +4,10 @@
 
 #include "resiprocate/SipMessage.hxx"
 #include "repro/monkeys/LocationServer.hxx"
-#include "../RequestContext.hxx"
+#include "repro/RequestContext.hxx"
+
+#include "resiprocate/os/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;
@@ -14,6 +17,9 @@ using namespace std;
 RequestProcessor::processor_action_t
 LocationServer::handleRequest(RequestContext& context)
 {
+  DebugLog(<< "Monkey handling request: " << this 
+           << "; reqcontext = " << context);
+
 
   resip::Uri& inputUri
     = context.getOriginalRequest().header(h_RequestLine).uri();

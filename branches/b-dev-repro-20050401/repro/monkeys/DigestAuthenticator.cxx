@@ -12,6 +12,9 @@
 #include "resiprocate/dum/UserAuthInfo.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
 
+#include "resiprocate/os/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
+
 using namespace resip;
 using namespace repro;
 using namespace std;
@@ -27,6 +30,9 @@ DigestAuthenticator::~DigestAuthenticator()
 repro::RequestProcessor::processor_action_t
 DigestAuthenticator::handleRequest(repro::RequestContext &rc)
 {
+  DebugLog(<< "Monkey handling request: " << this 
+           << "; reqcontext = " << rc);
+
   Message *message = rc.getCurrentEvent();
 
   SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
