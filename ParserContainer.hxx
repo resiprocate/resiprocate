@@ -46,7 +46,7 @@ class ParserContainer : public ParserContainerBase
       {
          if (this != &other)
          {
-            mParsers.clear();
+            clear();
             for (typename std::list<T*>::const_iterator i = other.mParsers.begin(); 
                  i != other.mParsers.end(); i++)
             {
@@ -84,9 +84,27 @@ class ParserContainer : public ParserContainerBase
          return tmp;
       }
       
-      typedef typename std::list<T*>::iterator iterator;
-      iterator begin() { return mParsers.begin(); }
-      iterator end() { return mParser.end(); }
+      class iterator
+      {
+         public:
+            iterator(typename std::list<T*>::iterator i)
+               : mIt(i)
+            {}
+
+            iterator operator++() {iterator it(++mIt); return it;}
+            iterator operator++(int) {iterator it(mIt++); return it;}
+            iterator operator--() {iterator it(--mIt); return it;}
+            iterator operator--(int) {iterator it(mIt--); return it;}
+            bool operator!=(const iterator& rhs) { return mIt != rhs.mIt; }
+            iterator& operator=(const iterator& rhs) { mIt = rhs.mIt; return *this;}
+            T& operator*() {return **mIt;}
+            T* operator->() {return *mIt;}
+         private:
+            typename std::list<T*>::iterator mIt;
+      };
+    
+      iterator begin() { return iterator(mParsers.begin()); }
+      iterator end() { return iterator(mParsers.end()); }
 
       virtual ParserContainerBase* clone() const
       {
