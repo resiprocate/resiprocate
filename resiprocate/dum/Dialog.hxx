@@ -42,7 +42,7 @@ class Dialog
       DialogId getId() const;
       
       void makeRequest(SipMessage& request, MethodTypes method);
-      void makeResponse(const SipMessage& request, SipMessage& response, int responseCode);
+      void makeResponse(SipMessage& response, const SipMessage& request, int responseCode);
 
       void update(const SipMessage& msg);
       //void setLocalContact(const NameAddr& localContact);
