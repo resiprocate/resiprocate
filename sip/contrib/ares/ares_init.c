@@ -13,7 +13,7 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_init.c,v 1.4 2003/09/16 03:05:07 fluffy Exp $";
+static const char rcsid[] = "$Id: ares_init.c,v 1.5 2003/09/24 18:46:02 jason Exp $";
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -313,13 +313,13 @@ static int init_by_defaults(ares_channel channel)
 
   if (channel->nservers == -1)
     {
+#ifdef WIN32
 		int buf[1024];
 		DWORD size;
 		PWSTR adapter;
 		int i;
 		int num;
-    
-#ifdef WIN32
+
 		size = sizeof(buf);
 		adapter = 0;
 
