@@ -35,7 +35,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) : 
+SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) :
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security("~/")),
 #else
@@ -47,7 +47,7 @@ SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) :
    mStatsManager(*this),
    mTransactionController(multiThreaded, mTUFifo, mStatsManager, mSecurity, stateless),
    mStrictRouting(false),
-   mShuttingDown(false)   
+   mShuttingDown(false)
 {
    Timer::getTimeMs(); // initalize time offsets
    Random::initialize();
@@ -80,18 +80,18 @@ SipStack::shutdown()
 
 bool
 SipStack::addTransport( TransportType protocol,
-                        int port, 
+                        int port,
                         IpVersion version,
-                        const Data& ipInterface, 
+                        const Data& ipInterface,
                         const Data& sipDomainname,
                         const Data& privateKeyPassPhrase,
                         SecurityTypes::SSLType sslType)
 {
    assert(!mShuttingDown);
-   
-   bool ret = mTransactionController.addTransport( protocol, port, version, ipInterface, 
+
+   bool ret = mTransactionController.addTransport( protocol, port, version, ipInterface,
                                                    sipDomainname, privateKeyPassPhrase, sslType);
-   if (ret && !ipInterface.empty()) 
+   if (ret && !ipInterface.empty())
    {
       addAlias(ipInterface, port);
    }
@@ -107,65 +107,65 @@ SipStack::addAlias(const Data& domain, int port)
    mDomains.insert(domain + ":" + Data(port));
 }
 
-Data 
+Data
 SipStack::getHostname()
 {
-   // if you change this, please #def old version for windows 
+   // if you change this, please #def old version for windows
    char hostName[1024];
    int err =  gethostname( hostName, sizeof(hostName) );
    assert( err == 0 );
-   
+
    struct hostent* hostEnt = gethostbyname( hostName );
    if ( !hostEnt )
    {
-      // this can fail when there is no name server 
-      // !cj! - need to decided what error to return 
+      // this can fail when there is no name server
+      // !cj! - need to decided what error to return
       ErrLog( << "gethostbyname failed - name server is probably down" );
       return "localhost";
    }
    assert( hostEnt );
-   
+
    struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
    assert( addr );
-   
-   // if you change this, please #def old version for windows 
+
+   // if you change this, please #def old version for windows
    char* addrA = inet_ntoa( *addr );
    Data ret(addrA);
 
    Data retHost( hostEnt->h_name );
-      
+
    return retHost;
 }
 
 
-Data 
+Data
 SipStack::getHostAddress()
 {
-   // if you change this, please #def old version for windows 
+   // if you change this, please #def old version for windows
    char hostName[1024];
    int err =  gethostname( hostName, sizeof(hostName) );
    assert( err == 0 );
-   
+
    struct hostent* hostEnt = gethostbyname( hostName );
    assert( hostEnt );
-   
+
    struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
    assert( addr );
-   
-   // if you change this, please #def old version for windows 
+
+   // if you change this, please #def old version for windows
    char* addrA = inet_ntoa( *addr );
    Data ret(addrA);
 
    //Data retHost( hostEnt->h_name );
-      
+
    return ret;
 }
 
 
-bool 
+bool
 SipStack::isMyDomain(const Data& domain, int port) const
 {
-   return (mDomains.count(domain + ":" + 
+   return (mDomains.count(domain + ":" +
                           Data(port == 0 ? Symbols::DefaultSipPort : port)) != 0);
 }
 
@@ -183,13 +183,13 @@ SipStack::getUri() const
    return myUri;
 }
 
-void 
+void
 SipStack::send(const SipMessage& msg)
 {
    DebugLog (<< "SEND: " << msg.brief());
    //DebugLog (<< msg);
    //assert(!mShuttingDown);
-   
+
    SipMessage* toSend = new SipMessage(msg);
    toSend->setFromTU();
 
@@ -198,8 +198,8 @@ SipStack::send(const SipMessage& msg)
 
 
 // this is only if you want to send to a destination not in the route. You
-// probably don't want to use it. 
-void 
+// probably don't want to use it.
+void
 SipStack::sendTo(const SipMessage& msg, const Uri& uri)
 {
    //assert(!mShuttingDown);
@@ -212,13 +212,13 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri)
 }
 
 // this is only if you want to send to a destination not in the route. You
-// probably don't want to use it. 
-void 
+// probably don't want to use it.
+void
 SipStack::sendTo(const SipMessage& msg, const Tuple& destination)
 {
    assert(!mShuttingDown);
    assert(destination.transport);
-   
+
    SipMessage* toSend = new SipMessage(msg);
    toSend->setDestination(destination);
    toSend->setFromTU();
@@ -256,15 +256,15 @@ SipStack::hasMessage() const
    return mTUFifo.messageAvailable();
 }
 
-SipMessage* 
+SipMessage*
 SipStack::receive()
 {
-   // Check to see if a message is available and if it is return the 
+   // Check to see if a message is available and if it is return the
    // waiting message. Otherwise, return 0
    if (mTUFifo.messageAvailable())
    {
       // we should only ever have SIP messages on the TU Fifo
-      // unless we've registered for termination messages. 
+      // unless we've registered for termination messages.
       Message* msg = mTUFifo.getNext();
       SipMessage* sip=0;
       if ((sip=dynamic_cast<SipMessage*>(msg)))
@@ -289,7 +289,7 @@ SipStack::receive()
 Message*
 SipStack::receiveAny()
 {
-   // Check to see if a message is available and if it is return the 
+   // Check to see if a message is available and if it is return the
    // waiting message. Otherwise, return 0
    if (mTUFifo.messageAvailable())
    {
@@ -308,7 +308,7 @@ SipStack::receiveAny()
    }
 }
 
-void 
+void
 SipStack::process(FdSet& fdset)
 {
    if(!mShuttingDown)
@@ -321,14 +321,14 @@ SipStack::process(FdSet& fdset)
    mAppTimers.process();
 }
 
-/// returns time in milliseconds when process next needs to be called 
-int 
+/// returns time in milliseconds when process next needs to be called
+int
 SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
    return resipMin(mTransactionController.getTimeTillNextProcessMS(),
                    mAppTimers.msTillNextTimer());
-} 
+}
 
 void
 SipStack::registerForTransactionTermination()
@@ -336,14 +336,14 @@ SipStack::registerForTransactionTermination()
    mTransactionController.registerForTransactionTermination();
 }
 
-void 
+void
 SipStack::buildFdSet(FdSet& fdset)
 {
    mTransactionController.buildFdSet(fdset);
 }
 
 Security*
-SipStack::getSecurity() const 
+SipStack::getSecurity() const
 {
     return mSecurity;
 }
@@ -355,7 +355,7 @@ SipStack::setStatisticsInterval(unsigned long seconds)
    mStatsManager.setInterval(seconds);
 }
 
-std::ostream& 
+std::ostream&
 SipStack::dump(std::ostream& strm)  const
 {
    Lock lock(mAppTimerMutex);
@@ -373,31 +373,31 @@ SipStack::dump(std::ostream& strm)  const
    return strm;
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, 
-const SipStack& stack) 
+std::ostream&
+resip::operator<<(std::ostream& strm,
+const SipStack& stack)
 {
    return stack.dump(strm);
 }
 
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -407,7 +407,7 @@ const SipStack& stack)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -421,9 +421,9 @@ const SipStack& stack)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
