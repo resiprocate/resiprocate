@@ -37,10 +37,12 @@ class HandlerA : public InvSessionHandler, public RegistrationHandler
 
       void onSuccess(ClientRegistration::Handle, const SipMessage& response)
       {
+         cout << "Registration worked" << endl;
       }
       
       void onFailure(ClientRegistration::Handle, const SipMessage& response)
       {
+         cout << "Registration Failed" << endl;
       }
 
 
