@@ -49,10 +49,11 @@ class Connection : public ConnectionLruList, public ConnectionReadList, public C
       virtual int read(char* buffer, const int count) { return 0; }
       virtual int write(const char* buffer, const int count) { return 0; }
       
+      Transport* transport();
+
    protected:
       Connection();
       virtual ~Connection();
-      Transport* transport() { return mWho.transport; };
       Socket mSocket;
 
    private:
