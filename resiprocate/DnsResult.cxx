@@ -138,6 +138,11 @@ DnsResult::lookup(const Uri& uri)
          mPort = uri.port();
          lookupAAAARecords(mTarget); // for current target and port         
       }
+      else 
+      { 
+         mPort = getDefaultPort(mTransport, uri.port());
+         lookupAAAARecords(mTarget); // for current target and port                   
+      } 
    }
    else 
    {
