@@ -63,14 +63,22 @@ main(int argc, char* argv[])
    Uri uri;
    uri.scheme() = "sip";
    uri.host() = "cathaynetworks.com";
+
+   std::list<DnsResult*> results;
    for (int i=1; i<argc; i++)
    {
       uri.host() = argv[i];
-      dns.lookup(uri, &handler);
+      results.push_back(dns.lookup(uri, &handler));
    }
 
-   sleep(2);
-   
+   sleep(argc);
+   InfoLog (<< "Deleting results");
+   while (!results.empty())
+   {
+      delete results.front();
+      results.pop_front();
+   }
+
    return 0;
 }
 
