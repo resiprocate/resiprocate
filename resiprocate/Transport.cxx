@@ -1,6 +1,7 @@
 #include <errno.h>
 
-#include <sip2/sipstack/Transport.hxx>
+#include <sipstack/Transport.hxx>
+#include <sipstack/SipMessage.hxx>
 
 using namespace Vocal2;
 
@@ -16,7 +17,7 @@ Transport::TransportException::what() const throw()
 }
 
 
-Transport::Transport(in_port_t portNum, Fifo<Message>& rxFifo) :
+Transport::Transport(in_port_t portNum, Fifo<SipMessage>& rxFifo) :
    mPort(portNum), 
    mRxFifo(rxFifo),
    mShutdown(false)
