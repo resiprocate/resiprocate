@@ -602,12 +602,12 @@ DialogUsageManager::findInviteSession(CallId replaces)
       // 1.  If the Replaces header field matches more than one dialog, the UA must act as 
       //     if no match was found
       // 2.  Verify that the initiator of the new Invite is authorized
-      if(is->mState == InviteSession::Terminated || is->mState == InviteSession::Cancelled)
+      if(is->isTerminated())
       {
          ErrorStatusCode = 603; // Declined
          is = InviteSessionHandle::NotValid();
       }
-      else if(is->mState == InviteSession::Connected || is->mState == InviteSession::ReInviting) // Confirmed dialog
+      else if(is->isConnected())
       {
          // Check if early-only flag is present in replaces header
          if(replaces.exists(p_earlyOnly))
@@ -616,7 +616,7 @@ DialogUsageManager::findInviteSession(CallId replaces)
             is = InviteSessionHandle::NotValid();
          }
       } 
-      else if(is->mState != InviteSession::Early)  
+      else if(!is->isEarly())
       {
          // replaces can't be used on early dialogs that were not initiated by this UA - ie. InviteSession::Proceeding state
          ErrorStatusCode = 481; // Call/Transaction Does Not Exist
