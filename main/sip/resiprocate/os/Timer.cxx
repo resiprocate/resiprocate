@@ -173,7 +173,7 @@ Timer::getSystemTime()
     ULARGE_INTEGER li;
     li.LowPart = ft.dwLowDateTime;
     li.HighPart = ft.dwHighDateTime;
-    time = li.QuadPart;
+    time = li.QuadPart/10;
 #else
     struct timeval now;
     gettimeofday( &now , NULL );
