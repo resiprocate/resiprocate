@@ -14,6 +14,10 @@ class RedirectManager;
 class DialogUsageManager
 {
    public:
+      class Exception
+      {
+      };
+      
       DialogUsageManager(SipStack& stack);
       ~DialogUsageManager();
       
@@ -36,19 +40,21 @@ class DialogUsageManager
 
       void addHandler(MethodTypes&, OutOfDialogHandler*);
       
-      SipMessage* makeInvSession(const Uri& aor, SdpContents* initial);
+      SipMessage* makeInviteSession(const Uri& target);
       SipMessage* makeSubscription(const Uri& aor, const Data& eventType);
       SipMessage* makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
       SipMessage* makePublication(const Uri& aor, const Data& eventType);
       SipMessage* makeRegistration(const Uri& aor);
       SipMessage* makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
 
-      SipMessage* makeInvSession(BaseUsage&, const Uri& aor);
-      SipMessage* makeSubscription(BaseUsage&, const Uri& aor, const Data& eventType);
-      SipMessage* makeRefer(BaseUsage&, const Uri& aor);
-      SipMessage* makePublication(BaseUsage&, const Uri& aor, const Data& eventType);
-      SipMessage* makeRegistration(BaseUsage&, const Uri& aor);
+      SipMessage* makeInviteSession(DialogId, const Uri& target);
+      SipMessage* makeSubscription(DialogId, const Uri& aor, const Data& eventType);
+      SipMessage* makeRefer(DialogId, const Uri& aor, const H_ReferTo::Type& referTo);
+      SipMessage* makePublication(DialogId, const Uri& aor, const Data& eventType);
+      SipMessage* makeRegistration(DialogId, const Uri& aor);
+      SipMessage* makeOutOfDialogRequest(DialogId, const Uri& aor, const MethodTypes& meth);
       
+      void cancel(DialogIdSet invSessionId);
       DialogSetId send(SipMessage* newClientRequest);
 
       void process();
