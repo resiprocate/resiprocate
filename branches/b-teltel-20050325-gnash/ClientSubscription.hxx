@@ -12,35 +12,35 @@ class DialogUsageManager;
 
 class ClientSubscription: public BaseSubscription
 {
-   public:      
+   public:
       ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
 
       typedef Handle<ClientSubscription> ClientSubscriptionHandle;
       ClientSubscriptionHandle getHandle();
-      
+
       //.dcm. no adornment for ease of use, can add if there is a use case
-      
+
       void acceptUpdate(int statusCode = 200);
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
-      
-      void requestRefresh();
+
+      void requestRefresh(int expires = -1);
       virtual void end();
 
       virtual std::ostream& dump(std::ostream& strm) const;
 
    protected:
       virtual ~ClientSubscription();
-      virtual void dialogDestroyed(const SipMessage& msg);      
+      virtual void dialogDestroyed(const SipMessage& msg);
    private:
       friend class Dialog;
-      friend class InviteSession;      
+      friend class InviteSession;
 
-      bool mOnNewSubscriptionCalled;      
+      bool mOnNewSubscriptionCalled;
       bool mEnded;
       SipMessage mLastNotify;
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-      
+
 //       const Contents* mCurrentEventDocument;//!dcm! -- unused?
 //       UInt64 mExpirationTime;
 
@@ -48,28 +48,28 @@ class ClientSubscription: public BaseSubscription
       ClientSubscription(const ClientSubscription&);
       ClientSubscription& operator=(const ClientSubscription&);
 };
- 
+
 }
 
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -79,7 +79,7 @@ class ClientSubscription: public BaseSubscription
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -93,9 +93,9 @@ class ClientSubscription: public BaseSubscription
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
