@@ -1,4 +1,4 @@
-# $Id: Makefile.osarch,v 1.2 2003/03/24 22:41:38 jason Exp $
+# $Id: Makefile.osarch,v 1.3 2003/03/25 03:18:22 jason Exp $
 
 ######################################################################
 
@@ -20,7 +20,6 @@ ifeq ($(OSTYPE),FreeBSD)
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
 endif
-
 
 ############################## Linux ##############################
 
@@ -298,7 +297,5 @@ OSCLASS = VXWORKS
 USE_LEAKTRACE=
 endif
 
-
 OS_ARCH  := $(OSTYPE).$(ARCH)
-
 TARGET_NAME := $(TARGET_TYPE).$(OS_ARCH)
