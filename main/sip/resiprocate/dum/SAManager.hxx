@@ -61,6 +61,8 @@ class SAManager
       HashMap<CreatorId, BaseCreatorImpl*> mBaseCreatorMap; 
       HashMap<CreatorId, std::list<BaseSessionImpl*> > mBaseCreatorMap;
       HashMap<DialogId, std::list<BaseSessionImpl*> > mBaseCreatorMap;
+
+      SipStack& mStack;
 };
 
 
