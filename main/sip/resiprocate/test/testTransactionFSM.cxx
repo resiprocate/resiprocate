@@ -283,7 +283,7 @@ processTimeouts(int arg)
 	    if ((*i)->mIsRequest)
 	    {
 		DebugLog(<< "Error: timeout waiting for "
-		         << MethodNames[(*i)->mMethod] << " method");
+		         << getMethodName((*i)->mMethod) << " method");
 		++errorCount;
 	    }
 	    else
