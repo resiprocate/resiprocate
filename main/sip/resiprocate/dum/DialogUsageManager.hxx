@@ -73,19 +73,23 @@ class DialogUsageManager
   
       void addHandler(MethodTypes&, OutOfDialogHandler*);
       
-      SipMessage* makeInviteSession(const Uri& target);
-      SipMessage* makeSubscription(const Uri& aor, const Data& eventType);
-      SipMessage* makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
-      SipMessage* makePublication(const Uri& aor, const Data& eventType);
-      SipMessage* makeRegistration(const Uri& aor);
-      SipMessage* makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
+      // The message is owned by the underlying datastructure and may go away in
+      // the future. If the caller wants to keep it, it should make a copy. The
+      // memory will exist at least up until the point where the application
+      // calls DialogUsageManager::send(msg);
+      SipMessage& makeInviteSession(const Uri& target);
+      SipMessage& makeSubscription(const Uri& aor, const Data& eventType);
+      SipMessage& makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
+      SipMessage& makePublication(const Uri& aor, const Data& eventType);
+      SipMessage& makeRegistration(const Uri& aor);
+      SipMessage& makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
 
-      SipMessage* makeInviteSession(DialogId, const Uri& target);
-      SipMessage* makeSubscription(DialogId, const Uri& aor, const Data& eventType);
-      SipMessage* makeRefer(DialogId, const Uri& aor, const H_ReferTo::Type& referTo);
-      SipMessage* makePublication(DialogId, const Uri& aor, const Data& eventType);
-      SipMessage* makeRegistration(DialogId, const Uri& aor);
-      SipMessage* makeOutOfDialogRequest(DialogId, const Uri& aor, const MethodTypes& meth);
+      SipMessage& makeInviteSession(DialogId, const Uri& target);
+      SipMessage& makeSubscription(DialogId, const Uri& aor, const Data& eventType);
+      SipMessage& makeRefer(DialogId, const Uri& aor, const H_ReferTo::Type& referTo);
+      SipMessage& makePublication(DialogId, const Uri& aor, const Data& eventType);
+      SipMessage& makeRegistration(DialogId, const Uri& aor);
+      SipMessage& makeOutOfDialogRequest(DialogId, const Uri& aor, const MethodTypes& meth);
       
       void cancel(DialogIdSet invSessionId);
       DialogSetId send(SipMessage* newClientRequest);
@@ -100,7 +104,7 @@ class DialogUsageManager
       ServerSubscription::Handle findServerSubscription(DialogId id);
       ClientRegistration::Handle findClientRegistration(DialogId id);
       ServerRegistration::Handle findServerRegistration(DialogId id);
-      std::list<ClientPublication::Handle>& findClientPublications(DialogId id);
+      ClientPublication::Handle findClientPublication(DialogId id);
       ServerPublication::Handle findServerPublication(DialogId id);
       ClientOutOfDialogReq::Handle findClientOutOfDialog(DialogId id);
       ServerOutOfDialogReq::Handle findServerOutOfDialog(DialogId id);
@@ -139,7 +143,7 @@ class DialogUsageManager
 
       void prepareInitialRequest(SipMessage& request);
       
-      HashMap<DialogSetId, DialogSet > mDialogSetMap;
+      HashMap<DialogSetId, DialogSet* > mDialogSetMap;
 
       Profile* mProfile;
       RedirectManager* mRedirectManager;
