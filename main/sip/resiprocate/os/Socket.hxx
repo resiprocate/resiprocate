@@ -76,12 +76,12 @@ initNetwork();
 typedef int Socket;
 static const Socket INVALID_SOCKET = -1;
 static const int SOCKET_ERROR = -1;
+int closesocket( Socket fd );
 #endif
 
 bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
 
-// int closesocket( Socket fd );
 
 
 
