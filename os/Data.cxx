@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.76 2003/10/03 02:35:50 davidb Exp $";
+// "$Id: Data.cxx,v 1.77 2003/10/09 19:58:15 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -178,11 +178,18 @@ Data::Data(const Data& data)
    mBuf[mSize] = 0;
 }
 
+// -2147483646
+static const int IntMaxSize = 12;
+
 Data::Data(int val)
    : mSize(0),
-     mBuf(mPreBuffer),
-     mCapacity(LocalAlloc),
-     mMine(false)
+     mBuf(IntMaxSize > LocalAlloc 
+          ? new char[IntMaxSize + 1]
+          : mPreBuffer),
+     mCapacity(IntMaxSize > LocalAlloc
+               ? IntMaxSize
+               : LocalAlloc),
+     mMine(IntMaxSize > LocalAlloc)
 {
    assert(memset(mPreBuffer, 0, LocalAlloc+1));
 
@@ -231,14 +238,61 @@ Data::Data(int val)
    }
 }
 
+static const int MaxLongSize = (sizeof(unsigned long)/sizeof(int))*IntMaxSize;
+Data::Data(unsigned long value)
+   : mSize(0),
+     mBuf(MaxLongSize > LocalAlloc 
+          ? new char[MaxLongSize + 1]
+          : mPreBuffer),
+     mCapacity(MaxLongSize > LocalAlloc
+               ? MaxLongSize
+               : LocalAlloc),
+     mMine(MaxLongSize > LocalAlloc)
+{
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   if (value == 0)
+   {
+      mBuf[0] = '0';
+      mBuf[1] = 0;
+      mSize = 1;
+      return;
+   }
+
+   int c = 0;
+   unsigned long v = value;
+   while (v /= 10)
+   {
+      ++c;
+   }
+
+   mSize = c+1;
+   mBuf[c+1] = 0;
+   
+   v = value;
+   while (v)
+   {
+      unsigned int digit = v%10;
+      unsigned char d = (char)digit;
+      mBuf[c--] = '0' + d;
+      v /= 10;
+   }
+}
+
+static const int DoubleMaxPrecision = 10;
+static const int DoubleMaxSize = MaxLongSize + DoubleMaxPrecision;
 Data::Data(double value, int precision)
-   : mSize(0), 
-     mBuf(mPreBuffer),
-     mCapacity(LocalAlloc), 
-     mMine(false)
+   : mSize(0),
+     mBuf(DoubleMaxSize + precision > LocalAlloc 
+          ? new char[DoubleMaxSize + precision + 1]
+          : mPreBuffer),
+     mCapacity(DoubleMaxSize + precision > LocalAlloc
+               ? DoubleMaxSize + precision
+               : LocalAlloc),
+     mMine(DoubleMaxSize + precision > LocalAlloc)
 {
    assert(memset(mPreBuffer, 0, LocalAlloc+1));   
-   assert(precision < 10);
+   assert(precision >= 0);
+   assert(precision < DoubleMaxPrecision);
 
    double v = value;
    bool neg = (value < 0.0);
@@ -261,7 +315,7 @@ Data::Data(double value, int precision)
 
    int dec = (int)floor(v+0.5);
 
-   Data d;
+   Data d(precision, true);
 
    if (dec == 0)
    {
@@ -306,48 +360,19 @@ Data::Data(double value, int precision)
       memcpy(mBuf+m.size()+1, d.mBuf, d.size()+1);
       mSize = m.size() + d.size() + 1;
    }
-}
 
-Data::Data(unsigned long value)
-   : mSize(0), 
-     mBuf(mPreBuffer),
-     mCapacity(LocalAlloc),
-     mMine(false)
-{
-   assert(memset(mPreBuffer, 0, LocalAlloc+1));
-   if (value == 0)
-   {
-      mBuf[0] = '0';
-      mBuf[1] = 0;
-      mSize = 1;
-      return;
-   }
-
-   int c = 0;
-   unsigned long v = value;
-   while (v /= 10)
-   {
-      ++c;
-   }
-
-   mSize = c+1;
-   mBuf[c+1] = 0;
-   
-   v = value;
-   while (v)
-   {
-      unsigned int digit = v%10;
-      unsigned char d = (char)digit;
-      mBuf[c--] = '0' + d;
-      v /= 10;
-   }
+   assert(mBuf[mSize] == 0);
 }
 
 Data::Data(unsigned int value)
-   : mSize(0), 
-     mBuf(mPreBuffer),
-     mCapacity(LocalAlloc),
-     mMine(false)
+   : mSize(0),
+     mBuf(IntMaxSize > LocalAlloc 
+          ? new char[IntMaxSize + 1]
+          : mPreBuffer),
+     mCapacity(IntMaxSize > LocalAlloc
+               ? IntMaxSize
+               : LocalAlloc),
+     mMine(IntMaxSize > LocalAlloc)
 {
    assert(memset(mPreBuffer, 0, LocalAlloc+1));
    if (value == 0)
@@ -378,11 +403,16 @@ Data::Data(unsigned int value)
    }
 }
 
+static const int CharMaxSize = 1;
 Data::Data(char c)
-   : mSize(1), 
-     mBuf(mPreBuffer),
-     mCapacity(LocalAlloc),
-     mMine(false)
+   : mSize(1),
+     mBuf(CharMaxSize > LocalAlloc 
+          ? new char[CharMaxSize + 1]
+          : mPreBuffer),
+     mCapacity(CharMaxSize > LocalAlloc
+               ? CharMaxSize
+               : LocalAlloc),
+     mMine(CharMaxSize > LocalAlloc)
 {
    assert(memset(mPreBuffer, 0, LocalAlloc+1));   
    mBuf[0] = c;
