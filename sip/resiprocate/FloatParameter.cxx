@@ -13,7 +13,7 @@ FloatParameter::FloatParameter(ParameterTypes::Type type,
      mValue(0)
 {
    pb.skipWhitespace();
-   if (*pb.position() != '=')
+   if (!pb.eof() && *pb.position() != '=')
    {
       throw ParseException("parameter constructor expected '='", __FILE__, __LINE__);
    }
