@@ -235,7 +235,15 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination)
    mTransactionController.send(toSend);
 }
 
+void
+SipStack::post(const Message& message,
+               unsigned int secondsLater)
+{
+   assert(!mShuttingDown);
 
+   Message* toPost = message.clone();
+   mTransactionController.post(toPost, 1000*secondsLater);
+}
 
 SipMessage* 
 SipStack::receive()
