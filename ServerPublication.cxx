@@ -1,7 +1,9 @@
 #include "ServerPublication.hxx"
 
-ServerPublication::Handle::Handle(DialogUsageManager& dum)
-   : DialogUsageManager::Handle(dum)
+ServerPublication::Handle::Handle(DialogUsageManager& dum,
+                                  Dialog& dialog)
+   : BaseUsage(dum, dialog),
+     mHandle(dum)
 {}
 
 ServerPublication* 

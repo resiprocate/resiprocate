@@ -2,6 +2,7 @@
 #define RESIP_CLIENTREGISTRATION_HXX
 
 #include "BaseUsage.hxx"
+#include "resiprocate/ParserCategories.hxx"
 
 namespace resip
 {
@@ -34,6 +35,8 @@ class ClientRegistration: public BaseUsage
       
    private:
       friend class DialogUsageManager;
+      ClientRegistration(DialogUsageManager& dum,
+                         Dialog& dialog);
       
       ClientRegistration::Handle mHandle;
       NameAddrs mMyContacts;

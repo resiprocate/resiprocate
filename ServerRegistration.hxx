@@ -30,6 +30,9 @@ class ServerRegistration: public BaseUsage
 
    private:
       friend class DialogUsageManager;
+      ServerRegistration(DialogUsageManager& dum,
+                         Dialog& dialog);
+
       ServerRegistration::Handle mHandle;
 };
  

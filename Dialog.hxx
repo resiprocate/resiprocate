@@ -18,7 +18,7 @@ namespace resip
 class BaseUsage;
 class UsageSet;
 class SipMessage;
-class DialogUsageManager.hxx;
+class DialogUsageManager;
 
 typedef std::list<DialogId> DialogIdSet;
 
@@ -38,7 +38,7 @@ class Dialog
 
       DialogId getId() const;
       
-      SipMessage* makeInviteSession();
+      SipMessage* makeInviteSession(const Uri& target);
       SipMessage* makeSubscription();
       SipMessage* makeRefer();
       SipMessage* makePublication();

@@ -30,6 +30,9 @@ class ServerOutOfDialogReq : public BaseUsage
 
    private:
       friend class DialogUsageManager;
+      ServerOutOfDialogReq(DialogUsageManager& dum,
+                           Dialog& dialog);
+      
       ServerOutOfDialogReq::Handle mHandle;
 };
  

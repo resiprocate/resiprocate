@@ -1,7 +1,11 @@
-#include <ClientSubscription.hxx>
+#include "ClientSubscription.hxx"
+#include "DialogUsageManager.hxx"
+#include "Dialog.hxx"
 
-ClientSubscription::ClientSubscription(DialogUsageManager& dum)
-   : mHandle(dum)
+ClientSubscription::ClientSubscription(DialogUsageManager& dum,
+                                       Dialog& dialog)
+   : BaseUsage(dum, dialog)
+     mHandle(dum)
 {
 }
 
