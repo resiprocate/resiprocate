@@ -18,22 +18,6 @@
 using namespace Vocal2;
 
 
-HostSpecification::HostSpecification() :
-   mHost("localhost"),
-   mPort(Symbols::DefaultSipPort),
-   mTransport(Symbols::UDP)
-{
-   char buffer[256];
-   if (gethostname(buffer, sizeof(buffer) < 0))
-   {
-      InfoLog (<< "Failed gethostname() " << strerror(errno));
-   }
-   else
-   {
-      mHost = buffer;
-   }
-}
-
 HostSpecification::HostSpecification(const Data& hostport) 
 {
    ParseBuffer buf(hostport.data(), hostport.size());
@@ -100,6 +84,7 @@ HostSpecification::HostSpecification(const Uri& uri) :
    {
       if (1) // !jf! uri.portSpecified())
       {
+         lookupARecords();
          // do an A or AAAA DNS lookup
          
       }
@@ -181,5 +166,21 @@ HostSpecification::isIpAddress(const Data& data)
    else
    {
       return false;
+   }
+}
+
+
+Data
+HostSpecification::getHostName()
+{
+   char buffer[256];
+   if (gethostname(buffer, sizeof(buffer) < 0))
+   {
+      InfoLog (<< "Failed gethostname() " << strerror(errno));
+      return "localhost";
+   }
+   else
+   {
+      return Data(buffer);
    }
 }
