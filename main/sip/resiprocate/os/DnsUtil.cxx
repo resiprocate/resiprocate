@@ -1,3 +1,8 @@
+#if !defined(WIN32) && !defined (__sun__)
+#include <sys/ioctl.h>
+#include <net/if.h>
+#endif
+
 #include <stdio.h>
 
 #include "resiprocate/os/compat.hxx"
