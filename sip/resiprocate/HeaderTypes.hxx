@@ -39,33 +39,10 @@ class Headers
       static bool isCommaTokenizing(Type type);
 };
 
-// map enum to content type via 
+// map enum to parser category via specialized templates
 template <int T>
 class Header
 {
-};
-
-// generate types from header enums
-template <int T>
-class HeaderTypeHolder
-{
-   public:
-      HeaderTypeHolder() {}
-      int getValue() {return T;}
-
-      static typename Header<T>::Type* createParserCategory(HeaderFieldValue& hfv)
-      {
-         return new typename Header<T>::Type(hfv);
-      }
-
-      static typename Header<T>::Type* createParserContainer(HeaderFieldValueList& hfvs)
-      {
-         return new typename Header<T>::Type(hfvs);
-      }
-
-   private:
-      HeaderTypeHolder(const HeaderTypeHolder&);
-      HeaderTypeHolder& operator=(const HeaderTypeHolder&);
 };
 
 //====================
@@ -75,7 +52,7 @@ class Header<Headers::Content_Disposition>
 {
    public:
       typedef Token Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Content_Disposition> Content_Disposition;
 
@@ -83,7 +60,7 @@ class Header<Headers::Content_Encoding>
 {
    public:
       typedef Token Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Content_Encoding> Content_Encoding;
 
@@ -91,7 +68,7 @@ class Header<Headers::MIME_Version>
 {
    public:
       typedef Token Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::MIME_Version> MIME_Version;
 
@@ -99,7 +76,7 @@ class Header<Headers::Priority>
 {
    public:
       typedef Token Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Priority> Priority;
 
@@ -109,64 +86,64 @@ extern Header<Headers::Priority> Priority;
 class Header<Headers::Accept_Encoding>
 {
    public:
-      typedef Tokens Type;
-      bool isMulti() const {return true;}
+      typedef Token Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Accept_Encoding> Accept_Encoding;
 
 class Header<Headers::Accept_Language>
 {
    public:
-      typedef Tokens Type;
-      bool isMulti() const {return true;}
+      typedef Token Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Accept_Language> Accept_Language;
 
 class Header<Headers::Allow>
 {
    public:
-      typedef Tokens Type;
-      bool isMulti() const {return true;}
+      typedef Token Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Allow> Allow;
 
 class Header<Headers::Content_Language>
 {
    public:
-      typedef Tokens Type;
-      bool isMulti() const {return true;}
+      typedef Token Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Content_Language> Content_Language;
 
 class Header<Headers::Proxy_Require>
 {
    public:
-      typedef Tokens Type;
-      bool isMulti() const {return true;}
+      typedef Token Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Proxy_Require> Proxy_Require;
 
 class Header<Headers::Require>
 {
    public:
-      typedef Tokens Type;
-      bool isMulti() const {return true;}
+      typedef Token Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Require> Require;
 
 class Header<Headers::Supported>
 {
    public:
-      typedef Tokens Type;
-      bool isMulti() const {return true;}
+      typedef Token Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Supported> Supported;
 
 class Header<Headers::Unsupported>
 {
    public:
-      typedef Tokens Type;
-      bool isMulti() const {return true;}
+      typedef Token Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Unsupported> Unsupported;
 
@@ -176,8 +153,8 @@ extern Header<Headers::Unsupported> Unsupported;
 class Header<Headers::Accept>
 {
    public:
-      typedef Mimes Type;
-      bool isMulti() const {return true;}
+      typedef Mime Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Accept> Accept;
 
@@ -185,7 +162,7 @@ class Header<Headers::Content_Type>
 {
    public:
       typedef Mime Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Content_Type> Content_Type;
 
@@ -195,16 +172,16 @@ extern Header<Headers::Content_Type> Content_Type;
 class Header<Headers::Alert_Info>
 {
    public:
-      typedef GenericURIs Type;
-      bool isMulti() const {return true;}
+      typedef GenericURI Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Alert_Info> Alert_Info;
 
 class Header<Headers::Error_Info>
 {
    public:
-      typedef GenericURIs Type;
-      bool isMulti() const {return true;}
+      typedef GenericURI Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Error_Info> Error_Info;
 
@@ -215,7 +192,7 @@ class Header<Headers::Record_Route>
 {
    public:
       typedef NameAddr Type;
-      bool isMulti() const {return true;}
+      enum {isMulti = true};
 };
 extern Header<Headers::Record_Route> Record_Route;
 
@@ -223,7 +200,7 @@ class Header<Headers::Route>
 {
    public:
       typedef NameAddr Type;
-      bool isMulti() const {return true;}
+      enum {isMulti = true};
 };
 extern Header<Headers::Route> Route;
 
@@ -233,8 +210,8 @@ extern Header<Headers::Route> Route;
 class Header<Headers::Contact>
 {
    public:
-      typedef Contacts Type;
-      bool isMulti() const {return true;}
+      typedef Contact Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Contact> Contact;
 
@@ -245,7 +222,7 @@ class Header<Headers::From>
 {
    public:
       typedef NameAddrOrAddrSpec Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::From> From;
 
@@ -253,7 +230,7 @@ class Header<Headers::Reply_To>
 {
    public:
       typedef NameAddrOrAddrSpec Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Reply_To> Reply_To;
 
@@ -261,7 +238,7 @@ class Header<Headers::To>
 {
    public:
       typedef NameAddrOrAddrSpec Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::To> To;
 
@@ -272,7 +249,7 @@ class Header<Headers::Organization>
 {
    public:
       typedef StringComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Organization> Organization;
 
@@ -280,7 +257,7 @@ class Header<Headers::Server>
 {
    public:
       typedef StringComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Server> Server;
 
@@ -288,7 +265,7 @@ class Header<Headers::Subject>
 {
    public:
       typedef StringComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Subject> Subject;
 
@@ -296,7 +273,7 @@ class Header<Headers::User_Agent>
 {
    public:
       typedef StringComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::User_Agent> User_Agent;
 
@@ -307,7 +284,7 @@ class Header<Headers::Content_Length>
 {
    public:
       typedef IntegerComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Content_Length> Content_Length;
 
@@ -315,7 +292,7 @@ class Header<Headers::Expires>
 {
    public:
       typedef IntegerComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Expires> Expires;
 
@@ -323,7 +300,7 @@ class Header<Headers::Max_Forwards>
 {
    public:
       typedef IntegerComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Max_Forwards> Max_Forwards;
 
@@ -331,7 +308,7 @@ class Header<Headers::Min_Expires>
 {
    public:
       typedef IntegerComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Min_Expires> Min_Expires;
 
@@ -340,7 +317,7 @@ class Header<Headers::Retry_After>
 {
    public:
       typedef IntegerComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Retry_After> Retry_After;
 
@@ -351,7 +328,7 @@ class Header<Headers::Call_ID>
 {
    public:
       typedef CallId Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Call_ID> Call_ID;
 
@@ -362,7 +339,7 @@ class Header<Headers::In_Reply_To>
 {
    public:
       typedef CallIds Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::In_Reply_To> In_Reply_To;
 
@@ -373,7 +350,7 @@ class Header<Headers::Authentication_Info>
 {
    public:
       typedef Auth Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Authentication_Info> Authentication_Info;
 
@@ -381,7 +358,7 @@ class Header<Headers::Authorization>
 {
    public:
       typedef Auth Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Authorization> Authorization;
 
@@ -389,7 +366,7 @@ class Header<Headers::Proxy_Authenticate>
 {
    public:
       typedef Auth Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Proxy_Authenticate> Proxy_Authenticate;
 
@@ -397,7 +374,7 @@ class Header<Headers::Proxy_Authorization>
 {
    public:
       typedef Auth Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Proxy_Authorization> Proxy_Authorization;
 
@@ -405,7 +382,7 @@ class Header<Headers::WWW_Authenticate>
 {
    public:
       typedef Auth Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::WWW_Authenticate> WWW_Authenticate;
 
@@ -416,7 +393,7 @@ class Header<Headers::CSeq>
 {
    public:
       typedef CSeqComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::CSeq> CSeq;
 
@@ -427,7 +404,7 @@ class Header<Headers::Date>
 {
    public:
       typedef DateComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Date> Date;
 
@@ -438,7 +415,7 @@ class Header<Headers::Warning>
 {
    public:
       typedef WarningComponent Type;
-      bool isMulti() const {return false;}
+      enum {isMulti = false};
 };
 extern Header<Headers::Warning> Warning;
 
@@ -448,8 +425,8 @@ extern Header<Headers::Warning> Warning;
 class Header<Headers::Via>
 {
    public:
-      typedef Vias Type;
-      bool isMulti() const {return true;}
+      typedef Via Type;
+      enum {isMulti = true};
 };
 extern Header<Headers::Via> Via;
 
