@@ -16,7 +16,7 @@ Connection::Connection()
    : mYounger(0),
      mOlder(0),
      mTlsConnection(0),
-     mSocket(0),
+     mSocket(-1),
      mLastUsed(0),
      mState(NewMessage)
 {
@@ -37,16 +37,21 @@ Connection::Connection(const Transport::Tuple& who,
 
 Connection::~Connection()
 {
-   remove();
-
-   //shutdown(mSocket, SD_BOTH );
-
-   if ( mTlsConnection )
+   if (mSocket != -1) // bogus Connections
    {
-      delete mTlsConnection; mTlsConnection=0;
-   }
+      remove();
+      //DebugLog (<< "Shutting down connection " << mSocket);
    
-   closesocket(mSocket);
+      //shutdown(mSocket, SD_BOTH );
+
+      if ( mTlsConnection )
+      {
+         delete mTlsConnection; 
+         mTlsConnection=0;
+      }
+   
+      closesocket(mSocket);
+   }
 }
 
 Connection* 

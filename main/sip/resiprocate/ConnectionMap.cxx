@@ -50,8 +50,10 @@ ConnectionMap::add(Transport::Tuple& who, Socket socket)
    assert(mConnections.count(who) == 0);
    
    Connection* connection = new Connection(who, socket);
+   assert(socket > 2);
+   
    who.connection = connection;
-   mConnections[who] = connection;
+   mConnections.insert(std::make_pair(who,connection));
    touch(connection);
 
    DebugLog(<< "ConnectionMap::add: " << who << " fd: " << int(socket) );
