@@ -2,6 +2,9 @@
 #include "sip2/sipstack/Symbols.hxx"
 #include "sip2/util/Logger.hxx"
 
+#ifndef WIN32 // !cj! TODO FIX 
+
+
 using namespace Vocal2;
 using namespace std;
 
@@ -514,3 +517,5 @@ XMLCursor::Node::skipComments(ParseBuffer& pb)
       pb.assertNotEof();
    }
 }
+
+#endif // WIN32

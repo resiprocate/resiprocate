@@ -1,4 +1,4 @@
-
+#ifndef WIN32
 
 void 
 TuShim::processRequest(SipMessage* msg)
@@ -318,3 +318,4 @@ Dialog2 TuShim::createDialog( const DialogSet set, const Data callId,
 }
 
 
+#endif
