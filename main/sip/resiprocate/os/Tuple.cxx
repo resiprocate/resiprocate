@@ -1,8 +1,12 @@
 #include <iostream>
 #include <string.h>
 #include <sys/types.h>
+#include <cassert>
+
+#ifndef WIN32
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#endif
 
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/Data.hxx"
@@ -18,7 +22,9 @@ Tuple::Tuple() :
    connection(0)
 {
    memset(&ipv4, 0, sizeof(ipv4));
+#ifdef USE_IPV6
    memset(&ipv6, 0, sizeof(ipv6));
+#endif
 }
 
 Tuple::Tuple(const in_addr& pipv4,
@@ -33,6 +39,7 @@ Tuple::Tuple(const in_addr& pipv4,
 {
 }
 
+#ifdef USE_IPV6
 Tuple::Tuple(const in6_addr& pipv6,
              int pport,
              TransportType ptype)
@@ -44,15 +51,18 @@ Tuple::Tuple(const in6_addr& pipv6,
      connection(0)
 {
 }
+#endif
 
 struct sockaddr* 
 Tuple::sockaddr() const
 {
+#if USE_IPV6
    if (v6)
    {
       return (struct sockaddr*)&ipv6;
    }
    else
+#endif
    {
       return (struct sockaddr*)&ipv4;
    }
@@ -63,9 +73,14 @@ bool Tuple::operator==(const Tuple& rhs) const
 {
    if (v6 && rhs.v6)
    {
-      return ( (memcmp(&ipv6, &ipv6, sizeof(ipv6)) == 0) &&
+#if USE_IPV6
+	   return ( (memcmp(&ipv6, &ipv6, sizeof(ipv6)) == 0) &&
                (port == rhs.port) &&
                (transportType == rhs.transportType));
+#else
+		assert(0);
+		return false;
+#endif	
    }
    else if (!v6 && !rhs.v6)
    {
