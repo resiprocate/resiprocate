@@ -1,22 +1,39 @@
 #if !defined(RESIP_SERVERAUTHMANAGER_HXX)
 #define RESIP_SERVERAUTHMANAGER_HXX
 
+#include <map>
+
 #include "resiprocate/dum/UserProfile.hxx"
+#include "resiprocate/Message.hxx"
 
 namespace resip
 {
-class SipMessage;
 class Profile;
+class UserAuthInfo;
+class DialogUsageManager;
+
 
 class ServerAuthManager
 {
    public:
-      ServerAuthManager();
-
+      ServerAuthManager(DialogUsageManager& dum);
+      virtual ~ServerAuthManager();
+      
       // return true if request is authorized
-      bool handle(UserProfile& userProfile, const SipMessage& request);
+      bool handle(std::auto_ptr<Message>& msg);
+
+   protected:
+      // this call back should async cause a post of UserAuthInfo
+      virtual void requestCredential(const Data& user, 
+                                     const Data& realm, 
+                                     const int transactionToken ) = 0;
       
    private:
+      int nextTransactionToken;
+      
+      typedef std::map<int,SipMessage*> MessageMap;
+      MessageMap mMessages;
+      
 };
 
  
