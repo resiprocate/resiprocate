@@ -12,10 +12,9 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-RequestProcessorChain Proxy::mRequestProcessorChain;
-
-Proxy::Proxy(SipStack& stack, RequestProcessorChain& requestProcessors) 
-            : mStack(stack) : mRequestProcessorChain(requestProcessors)
+Proxy::Proxy(SipStack& stack, RequestProcessorChain& requestProcessors,
+             UserDB &userDb) 
+   : mStack(stack), mRequestProcessorChain(requestProcessors), mUserDb(userDb)
 {
 }
 
@@ -23,6 +22,12 @@ Proxy::~Proxy()
 {
    shutdown();
    join();
+}
+
+UserDB &
+Proxy::getUserDb()
+{
+   return mUserDb;
 }
 
 void

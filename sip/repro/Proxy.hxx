@@ -15,21 +15,25 @@ class SipStack;
 namespace repro
 {
 
+class UserDB;
 class RequestProcessorChain;
 
 class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
-      Proxy(resip::SipStack&, RequestProcessorChain&);
+      Proxy(resip::SipStack&, RequestProcessorChain&, UserDB &);
       virtual ~Proxy();
       
       virtual void thread();
       
       virtual bool isMyDomain(resip::Uri& uri);
+
+       UserDB &getUserDb();
       
    private:
-      static RequestProcessorChain mRequestProcessorChain;
       resip::SipStack& mStack;
+
+      RequestProcessorChain mRequestProcessorChain;
       
       /// the sip stack will hand events up to the proxy through this fifo
       resip::Fifo<resip::Message> mFifo; 
@@ -40,7 +44,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
           RequestContext
       */
       HashMap<resip::Data, RequestContext*> mRequestContexts;
-      
+
+      UserDB &mUserDb;
 };
 }
 #endif
