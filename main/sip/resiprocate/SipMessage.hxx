@@ -27,7 +27,7 @@ class SipMessage : public Message
       
       SipMessage(const SipMessage& message);
 
-      virtual Data& getTransactionId() const { assert(0);}
+      virtual const Data& getTransactionId() const;
          
       virtual SipMessage* clone() const;
 
@@ -147,6 +147,8 @@ class SipMessage : public Message
       std::vector<char*> mBufferList;
       HeaderFieldValue* mStartLine;
       HeaderFieldValue* mBody;
+
+      Data mTransactionId;  // !jf!
 };
 
 }

@@ -16,9 +16,15 @@ class TimerMessage : public Message
            mType(type)
       {}
 
-      virtual Data& getTransactionId() const;
+      virtual const Data& getTransactionId() const
+      {
+         return mTransactionId;
+      }
 
-      Timer::Type getType();
+      Timer::Type getType()
+      {
+         return mType;
+      }
       
    private:
       Data mTransactionId;

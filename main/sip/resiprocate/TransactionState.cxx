@@ -55,13 +55,13 @@ Vocal2::TransactionState::process(SipStack& stack)
             {
                if (sip[RequestLine].getMethod() == INVITE)
                {
-                  TransactionState* state = new TransactionState(ServerInvite, Proceeding);
+                  TransactionState* state = new TransactionState(stack, ServerInvite, Proceeding);
                   stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100)
                      stack.mTransactionMap.add(tid,state);
                }
                else 
                {
-                  TransactionState* state = new TransactionState(ServerNonInvite,Trying);
+                  TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
                   stack.mTransactionMap.add(tid,state);
                }
                stack.mTUFifo.add(sip);
@@ -70,13 +70,13 @@ Vocal2::TransactionState::process(SipStack& stack)
             {
                if (sip[RequestLine].getMethod() == INVITE)
                {
-                  TransactionState* state = new TransactionState(ClientInvite, Calling);
+                  TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
                   stack.mTimers.add(Timer::TimerB, tid, 64*Timer::T1 );
                   stack.mTransactionMap.add(tid,state);
                }
                else 
                {
-                  TransactionState* state = new TransactionState(ClientNonInvite, Trying);
+                  TransactionState* state = new TransactionState(stack, ClientNonInvite, Trying);
                   stack.mTimers.add(Timer::TimerF, tid, 64*Timer::T1 );
                   stack.mTransactionMap.add(tid,state);
                }
@@ -125,47 +125,86 @@ TransactionState::processClientInvite(  Message* msg )
 void
 TransactionState::processServerNonInvite(  Message* msg )
 {
-   SipMessage* sip = dynamic_cast<SipMessage*>(message);
-   TimerMessage* timer=0;
-   if (sip == 0)
+   switch (mState)
    {
-      timer = dynamic_cast<TimerMessage*>(message);
-   }
-   
-   if (timer)
-   {
-      switch ( timer.getType() )
-      {
-         case TimerJ:
+      case Trying:
+         if (isFinalResponse(msg) && isFromTU(msg))
          {
-            mState = Terminated;
+            if (mIsReliable)
+            {
+               delete this;
+            }
+            else
+            {
+               mState = Completed;
+               mStack.mTimers.add(Timer::TimerJ, msg->getTransactionId(), 64*Timer::T1 );
+            }
          }
-         break;
-      }
-   }
-
-   if (sip)
-   {
-      assert(0);
-      
-      if (0)
-      {
-         // its a response 
-         responseCode = 0; assert(0); // TODO 
-
-         if (responseCode<200)
+         else if (isProvisionalResponse(msg) && isFromTU(msg))
          {
             mState = Proceeding;
+            mStack.mTransportSelector.send(msg);
          }
          else
-         { 
-            mState = Completed;
+         {
+            assert(0);
          }
-      }
-      else
-      {
-         // it is a request
-       }
+         break;
+
+      case Proceeding:
+         if (isFinalResponse(msg) && isFromTU(msg))
+         {
+            if (mIsReliable)
+            {
+               delete this;
+            }
+            else
+            {
+               mState = Completed;
+               mStack.mTimers.add(Timer::TimerJ, msg->getTransactionId(), 64*Timer::T1 );
+            }
+         }
+         else if (isProvisionalResponse(msg) && isFromTU(msg))
+         {
+            // retransmit
+            mStack.mTransportSelector.send(msg);
+         }
+         else if (isRequest(msg))
+         {
+            mStack.mTransportSelector.send(mMsgToRetransmit);
+         }
+         else if (isTranportError(msg))
+         {
+            delete this;
+         }
+         else 
+         {
+            assert(0);
+         }
+         break;
+         
+      case Completed:
+         if (isTimer(msg))
+         {
+            timer = dynamic_cast<TimerMessage*>(msg);
+            if (timer->getType() == Timer::TimerJ)
+            {
+               delete timer;
+            }
+         }
+         else if (isRequest(msg))
+         {
+            mStack.mTransportSelector.send(mMsgToRetransmit);
+         }
+         else if (isTranportError(msg))
+         {
+            delete this;
+         }
+         else 
+         {
+            assert(0);
+         }
+         break;
    }
 }
 
@@ -180,4 +219,47 @@ void
 TransactionState::processStale(  Message* msg )
 {
 }
+
+bool 
+TransactionState::isFinalResponse(Message* msg) const
+{
+   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+   return sip && sip->isResponse() && sip[ResponseLine].getResponseCode() >= 200;
+}
+
+bool 
+TransactionState::isProvisionalResponse(Message* msg)
+{
+   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+   return sip && sip->isResponse() && sip[ResponseLine].getResponseCode() < 200;
+}
+
+bool 
+TransactionState::isFailureResponse(Message* msg)
+{
+   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+   return sip && sip->isResponse() && sip[ResponseLine].getResponseCode() >= 300;
+}
+
+bool 
+TransactionState::isSuccessResponse(Message* msg)
+{
+   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+   if (sip && sip->isResponse())
+   {
+      int c = sip[ResponseLine].getResponseCode() == 200; // !jf!
+      return c >= 200 || c < 300;
+   }
+   else 
+   {
+      return false;
+   }
+}
+
+bool
+TransactionState::isFromTU(Message* msg)
+{
+   return !msg->isExternal();
+}
+
 
