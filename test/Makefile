@@ -5,15 +5,9 @@ CONTRIB = ../../contrib
 
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
+PACKAGES += RESIPROCATE ARES OPENSSL PTHREAD
 
-ifeq ($(USE_DTLS),true)
-DTLS_DIR = $(CONTRIB)/dtls
-DTLS_LIBS = $(DTLS_DIR)/libssl.a $(DTLS_DIR)/libcrypto.a
-endif
-
-LDLIBS += -lncurses $(DTLS_LIBS)
-
+LDLIBS += -lncurses 
 CXXFLAGS += -I/sw/include
 LDFLAGS  += -L/sw/lib
 
