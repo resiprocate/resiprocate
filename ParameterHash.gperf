@@ -24,7 +24,7 @@ isfocus, ParameterTypes::isFocus
 actor, ParameterTypes::actor
 text, ParameterTypes::text
 extensions, ParameterTypes::extensions
-+instance, ParameterTypes::Instance
++sip.instance, ParameterTypes::Instance
 gruu, ParameterTypes::gruu
 name, ParameterTypes::name
 transport, ParameterTypes::transport
@@ -56,7 +56,7 @@ realm, ParameterTypes::realm
 response, ParameterTypes::response
 stale, ParameterTypes::stale
 username, ParameterTypes::username
-earlyOnly, ParameterTypes::earlyOnly
+early-only, ParameterTypes::earlyOnly
 refresher, ParameterTypes::refresher
 qop, ParameterTypes::qopFactory
 uri, ParameterTypes::uri
