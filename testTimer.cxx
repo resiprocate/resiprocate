@@ -1,88 +1,72 @@
-#if !defined(TIMER_HXX)
-#define TIMER_HXX
-     
-#include <util/Data.hxx>
 #include <iostream>
+#include <Message.hxx>
+#include <sipstack/TimerQueue.hxx>
+#include <util/Fifo.hxx>
+#include <unistd.h>
 
-#if defined( WIN32 )
-typedef unsigned __int64 UInt64;
-#else
-typedef unsigned long long UInt64;
-#endif
+using namespace Vocal2;
+using namespace std;
 
-
-namespace Vocal2
+int
+main()
 {
+   Fifo<Message> f;
+   TimerQueue timer(f);
 
-// Note: Timers are not thread safe; if the application needs to create timers
-// do something else
-class Timer
-{
-   public:
-      typedef unsigned long Id;
-      typedef enum 
-      {
-         TimerA, // doubling
-         TimerB,
-         TimerC,
-         TimerD,
-         TimerE1,// doubling
-         TimerE2,// doubling
-         TimerF,
-         TimerG, // doubling
-         TimerH,
-         TimerI,
-         TimerJ,
-         TimerK,
-         TimerTrying,
-         TimerStale
-      } Type;
-      
-      Timer(unsigned long ms, Type type, const Data& transactionId);
-      Timer(unsigned long ms); // for TimerQueue only - don't use
-      Timer(const Timer& t);
-      Timer& operator=(const Timer& t);
-      
-      // returns the unique identifier
-      Id getId() const { return mId; }
-      Type getType() const { return mType; }
+   cerr << "Before Fifo size: " << f.size() << endl;
+   assert(f.size() == 0);
 
-      static void setupTimeOffsets(); // initialize
-      static UInt64 getTimeMicroSec(); // get a 64 bit time
-      static UInt64 getTimeMs(); // in ms
+   // throw a few events in the queue
+   timer.add(Timer::TimerA, "first", 1000);
+   timer.add(Timer::TimerA, "second", 2000);
+   timer.add(Timer::TimerA, "third", 4000);
+   timer.add(Timer::TimerA, "fourth", 8000);
+   timer.add(Timer::TimerA, "fifth", 16000);
 
-      static const unsigned long T1;
-      static const unsigned long T2;
-      static const unsigned long T4;
-      static const unsigned long T100;
-      static const unsigned long TC;
-      static const unsigned long TD;
-      static const unsigned long TS;
-      
-   private:
-      static UInt64 getSystemTime();
-      static UInt64 getSystemTicks();
+   cerr << timer;
 
-      UInt64 mWhen;
-      Id mId;
-      Type mType;
-      Data mTransactionId;
-      unsigned long mDuration;
+   assert(f.size() == 0);
+   timer.process();
+   cerr << "Immediately after Fifo size: " << f.size() << endl;
+   assert(f.size() == 0);
 
-      static unsigned long mCpuSpeedMHz;
-      static UInt64 mBootTime;
-      static unsigned long mTimerCount;
+   sleep(1);
+   timer.process();
+   assert(f.size() == 1);
+   timer.process();   
+   assert(f.size() == 1);
 
-      friend bool operator<(const Timer& t1, const Timer& t2);
-      friend std::ostream& operator<<(std::ostream&, const Timer&);
-      friend class TimerQueue;
-};
- 
-std::ostream& operator<<(std::ostream&, const Timer&);
+   sleep(1);
+   timer.process();
+   assert(f.size() == 2);
+   timer.process();   
+   assert(f.size() == 2);
 
+   sleep(2);
+   timer.process();
+   assert(f.size() == 3);
+   timer.process();   
+   assert(f.size() == 3);
+
+   sleep(4);
+   timer.process();
+   assert(f.size() == 4);
+   timer.process();   
+   assert(f.size() == 4);
+
+   sleep(8);
+   timer.process();
+   assert(f.size() == 5);
+   timer.process();   
+   assert(f.size() == 5);
+
+   sleep(1);
+   timer.process();
+   assert(f.size() == 5);
+   timer.process();   
+   assert(f.size() == 5);
 }
 
-#endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
