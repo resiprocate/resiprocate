@@ -23,7 +23,6 @@ class HeaderFieldValue
       {}
       HeaderFieldValue(const char* field, unsigned int fieldLength);
       HeaderFieldValue(const HeaderFieldValue& hfv);
-      HeaderFieldValue(const Data& hfv); 
 
       ~HeaderFieldValue();
 
