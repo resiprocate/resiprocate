@@ -22,6 +22,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::APP
 
+void shutdown (SipStack *stack)
+{
+  // XXX Wait for transactions to complete and stuff
+}
+
 int
 main (int argc, char **argv)
 {
@@ -86,7 +91,14 @@ main (int argc, char **argv)
       {
         Data error("Panic! Something is horribly wrong!");
         GagErrorMessage(error).serialize(cout);
+        conduit.removeAllUsers();
+        shutdown(&sipStack);
         exit(-1);
+      }
+      if (!conduit.isRunning())
+      {
+        shutdown(&sipStack);
+        exit (0);
       }
     }
     else
