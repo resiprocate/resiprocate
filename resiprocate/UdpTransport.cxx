@@ -174,6 +174,7 @@ UdpTransport::process(FdSet& fdset)
    if (len == MaxBufferSize)
    {
       InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
+      InfoLog(<< Data(buffer, len).escaped().c_str());
       delete [] buffer; buffer=0;
       return;
    }
