@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <iostream>
+#include <sstream>
 #include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/HeaderTypes.hxx>
 #include <sipstack/ParserCategories.hxx>
@@ -325,7 +326,7 @@ main(int arc, char** argv)
    }
 
    {
-     char* authorizationString = "Digest realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\", uri=\"sip:66.100.107.120\", algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
+     char* authorizationString = "Digest realm=\"66.100.107.120\", username=\"1234\", nonce=1011235448   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
       
       Auth auth(&hfv);
@@ -334,6 +335,47 @@ main(int arc, char** argv)
       assert(auth.scheme() == "Digest");
       cerr << "   realm: " <<  auth.param("realm") << endl;
       assert(auth.param("realm") == "66.100.107.120"); 
+      assert(auth.param("username") == "1234"); 
+      assert(auth.param("nonce") == "1011235448"); 
+      assert(auth.param("uri") == "sip:66.100.107.120"); 
+      assert(auth.param("algorithm") == "MD5"); 
+      assert(auth.param("response") == "8a5165b024fda362ed9c1e29a7af0ef2"); 
+
+      stringstream s;
+      auth.encode(s);
+
+      cerr << s.str() << endl;
+      
+      assert(s.str() == "Digest realm=\"66.100.107.120\",username=\"1234\",nonce=1011235448,uri=\"sip:66.100.107.120\",algorithm=MD5,response=\"8a5165b024fda362ed9c1e29a7af0ef2\"");
+   }
+
+   {
+     char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=1011235448   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
+      HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
+      
+      Auth auth(&hfv);
+
+      //      cerr << "Auth scheme: " <<  auth.scheme() << endl;
+      assert(auth.scheme() == "");
+      //      cerr << "   realm: " <<  auth.param("realm") << endl;
+      assert(auth.param("realm") == "66.100.107.120"); 
+      assert(auth.param("username") == "1234"); 
+      assert(auth.param("nonce") == "1011235448"); 
+      assert(auth.param("uri") == "sip:66.100.107.120"); 
+      assert(auth.param("algorithm") == "MD5"); 
+      assert(auth.param("response") == "8a5165b024fda362ed9c1e29a7af0ef2"); 
+
+      stringstream s;
+      auth.encode(s);
+
+      cerr << s.str() << endl;
+      
+      assert(s.str() == "realm=\"66.100.107.120\",username=\"1234\",nonce=1011235448,uri=\"sip:66.100.107.120\",algorithm=MD5,response=\"8a5165b024fda362ed9c1e29a7af0ef2\"");
+   }
+
+   {
+
+
    }
 
    cerr << "\nTEST OK" << endl;
