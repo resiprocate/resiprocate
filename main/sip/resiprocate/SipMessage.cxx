@@ -483,6 +483,7 @@ void
 SipMessage::setContents(const Contents* contents)
 {
    delete mContents;
+   mContents = 0;
    delete mContentsHfv;
    mContentsHfv = 0;
 
