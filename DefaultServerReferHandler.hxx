@@ -14,6 +14,9 @@ class DefaultServerReferHandler : public ServerSubscriptionHandler
       virtual void onTerminated(ServerSubscriptionHandle);
 
       static DefaultServerReferHandler* Instance();
+
+      virtual bool hasDefaultExpires() const;
+      virtual int getDefaultExpires() const;
    protected:
       DefaultServerReferHandler() {}
       virtual ~DefaultServerReferHandler() {}

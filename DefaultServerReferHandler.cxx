@@ -26,3 +26,14 @@ DefaultServerReferHandler* DefaultServerReferHandler::Instance()
 }
 
 
+bool 
+DefaultServerReferHandler::hasDefaultExpires() const
+{
+   return true;
+}
+
+int 
+DefaultServerReferHandler::getDefaultExpires() const
+{
+   return 60;
+}
