@@ -68,7 +68,7 @@ main(int arc, char** argv)
       assert(uri.scheme() == "sip");
       assert(uri.user() == "bob");
       assert(uri.host() == "foo.com");
-      assert(uri.port() == 5060);
+      assert(uri.port() == 0);
    }
 
    {
@@ -80,7 +80,7 @@ main(int arc, char** argv)
       assert(uri.scheme() == "sips");
       assert(uri.user() == "");
       assert(uri.host() == "foo.com");
-      assert(uri.port() == 5060);
+      assert(uri.port() == 0);
    }
 
    {
@@ -93,7 +93,6 @@ main(int arc, char** argv)
       assert(uri.user() == "bob;param=gargle");
       assert(uri.password() == "password");
       assert(uri.host() == "foo.com");
-      assert(uri.port() == 5060);
    }
 
    {
@@ -132,7 +131,6 @@ main(int arc, char** argv)
       assert(requestLine.uri().user() == "bob");
       cerr << requestLine.uri().host() << endl;
       assert(requestLine.uri().host() == "foo.com");
-      assert(requestLine.uri().port() == 5060);
       assert(requestLine.getMethod() == INVITE);
       assert(requestLine.getSipVersion() == "SIP/2.0");
    }
@@ -146,7 +144,6 @@ main(int arc, char** argv)
       assert(requestLine.uri().user() == "bob");
       cerr << requestLine.uri().host() << endl;
       assert(requestLine.uri().host() == "foo.com");
-      assert(requestLine.uri().port() == 5060);
       assert(requestLine.getMethod() == INVITE);
       assert(requestLine.uri().param(p_maddr) == "1.2.3.4");
       cerr << requestLine.getSipVersion() << endl;
@@ -161,7 +158,6 @@ main(int arc, char** argv)
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
-      assert(nameAddr.uri().port() == 5060);
    }
    {
       cerr << "NameAddr parse, displayName" << endl;
@@ -173,7 +169,6 @@ main(int arc, char** argv)
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
-      assert(nameAddr.uri().port() == 5060);
    }
    {
       cerr << "NameAddr parse, quoted displayname" << endl;
@@ -185,7 +180,6 @@ main(int arc, char** argv)
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
-      assert(nameAddr.uri().port() == 5060);
    }
    {
       cerr << "NameAddr parse, quoted displayname, embedded quotes" << endl;
@@ -197,7 +191,6 @@ main(int arc, char** argv)
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
-      assert(nameAddr.uri().port() == 5060);
    }
    {
       cerr << "NameAddr parse, unquoted displayname, paramterMove" << endl;
@@ -210,7 +203,6 @@ main(int arc, char** argv)
       assert(nameAddr.uri().user() == "bob");
 
       assert(nameAddr.uri().host() == "foo.com");
-      assert(nameAddr.uri().port() == 5060);
       
       cerr << "Uri params: ";
       nameAddr.uri().encodeParameters(cerr) << endl;
@@ -234,7 +226,6 @@ main(int arc, char** argv)
       assert(nameAddr.uri().user() == "bob");
 
       assert(nameAddr.uri().host() == "foo.com");
-      assert(nameAddr.uri().port() == 5060);
       
       cerr << "Uri params: ";
       nameAddr.uri().encodeParameters(cerr) << endl;
