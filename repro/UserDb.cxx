@@ -49,14 +49,13 @@ UserDb::~UserDb()
 void 
 UserAbstractDb::requestUserAuthInfo( const resip::Data& user, 
                                      const resip::Data& realm,
-                                     resip::TransactionUser& transactionUser )
-                                   const
+                                     const resip::Data& transactionId,
+                                     resip::TransactionUser& transactionUser ) const
 {
    Data key = buildKey(user,realm);
    Data a1 = getUserAuthInfo(key);
     
-   UserAuthInfo* msg = new UserAuthInfo(user,realm,a1);
-   
+   UserAuthInfo* msg = new UserAuthInfo(user,realm,transactionId, a1);
    transactionUser.post( msg );
 }
 
