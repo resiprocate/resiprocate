@@ -18,6 +18,7 @@ class DialogSetId
       bool operator==(const DialogSetId& rhs) const;
       bool operator!=(const DialogSetId& rhs) const;
       bool operator<(const DialogSetId& rhs) const;
+      bool operator>(const DialogSetId& rhs) const;
    private:
       Data mCallId;
       Data mTag;
