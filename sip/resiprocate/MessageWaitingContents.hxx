@@ -19,6 +19,7 @@ class MessageWaitingContents : public Contents
    public:
       MessageWaitingContents();
       MessageWaitingContents(HeaderFieldValue* hfv, const Mime& contentType);
+      MessageWaitingContents(const Data& data, const Mime& contentType);
       MessageWaitingContents(const MessageWaitingContents& rhs);
       ~MessageWaitingContents();
       MessageWaitingContents& operator=(const MessageWaitingContents& rhs);
