@@ -14,6 +14,8 @@ typedef unsigned long long UInt64;
 namespace resip
 {
 
+class Message;
+
 // Note: Timers are not thread safe; if the application needs to create timers
 // do something else
 class Timer
@@ -38,24 +40,30 @@ class Timer
          TimerStaleClient,
          TimerStaleServer,
          TimerStateless,
-         TimerCleanUp
+         TimerCleanUp,
+         ApplicationTimer // .dlb. Fifo, so no thread issues
       } Type;
       
       static Data toData(Type timer);
 
       Timer(unsigned long ms, Type type, const Data& transactionId);
+      Timer(unsigned long ms, Message* message);
       Timer(const Timer& t);
       Timer& operator=(const Timer& t);
-      
+
+      ~Timer();
+
       // returns the unique identifier
       Id getId() const { return mId; }
       Type getType() const { return mType; }
+      // return the message to queue, possibly null
+      Message* getMessage() const { return mMessage;}
 
       static void setupTimeOffsets(); // initialize
       static UInt64 getTimeMicroSec(); // get a 64 bit time
       static UInt64 getTimeMs(); // in ms
 
-      /// returns an absolut time in ms that is between 50% and 90% of
+      /// returns an absolute time in ms that is between 50% and 90% of
       /// passed in ms from now 
       static UInt64 getRandomFutureTimeMs( UInt64 futureMs ); // in ms
       static UInt64 getForever(); //infinit time in future
@@ -80,6 +88,7 @@ class Timer
       Type mType;
       Data mTransactionId;
       unsigned long mDuration; // duration of time in ms 
+      Message* mMessage; // message to queue on timeout
 
       static unsigned long mTimerCount; // counter to genreate unique timers ids 
 
