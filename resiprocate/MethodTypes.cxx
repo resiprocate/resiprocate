@@ -20,15 +20,15 @@ namespace resip{
 
 Data MethodNames[] = 
 {
-   defineMethod(RESIP_UNKNOWN, "UNKNOWN", "NA"),
-   defineMethod(RESIP_ACK, "ACK", "RFC ????"),
-   defineMethod(RESIP_BYE, "BYE", "RFC ????"),
+   defineMethod(RESIP_UNKNOWN, "RESIP_UNKNOWN", "NA"),
+   defineMethod(RESIP_ACK, "RESIP_ACK", "RFC ????"),
+   defineMethod(RESIP_BYE, "RESIP_BYE", "RFC ????"),
    defineMethod(RESIP_CANCEL, "CANCEL", "RFC ????"),
-   defineMethod(RESIP_INVITE, "INVITE", "RFC ????"),
+   defineMethod(RESIP_INVITE, "RESIP_INVITE", "RFC ????"),
    defineMethod(RESIP_NOTIFY, "NOTIFY", "RFC ????"),
    defineMethod(RESIP_OPTIONS, "OPTIONS", "RFC ????"),
    defineMethod(RESIP_REFER, "REFER", "RFC ????"),
-   defineMethod(RESIP_REGISTER, "REGISTER", "RFC ????"),
+   defineMethod(RESIP_REGISTER, "RESIP_REGISTER", "RFC ????"),
    defineMethod(RESIP_SUBSCRIBE, "SUBSCRIBE", "RFC ????"),
    defineMethod(RESIP_RESPONSE, "RESPONSE", "RFC ????"),
    defineMethod(RESIP_MESSAGE, "MESSAGE", "RFC ????"),

@@ -64,11 +64,11 @@ main()
    }
 
    {
-      const Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+      const Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                      "To: <sip:bob@biloxi.com>\r\n"
                      "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                      "Call-ID: 314159\r\n"
-                     "CSeq: 14 INVITE\r\n"
+                     "CSeq: 14 RESIP_INVITE\r\n"
                      "Content-Type: Multipart/Related; boundary=example-1;"
                      "start=\"<950120.aaCC@XIson.com>\";"
                      "type=\"Application/X-FixedRecord\";start-info=\"-o ps\"\r\n"

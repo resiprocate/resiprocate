@@ -98,13 +98,13 @@ class DialogUsageManager : public HandleManager
       void setServerAuthManager(std::auto_ptr<ServerAuthManager> server);
 
       /// If there is no such handler, calling makeInviteSession will throw and
-      /// receiving an INVITE as a UAS will respond with 405 Method Not Allowed
+      /// receiving an RESIP_INVITE as a UAS will respond with 405 Method Not Allowed
       void setInviteSessionHandler(InviteSessionHandler*);
       
       /// If there is no such handler, calling makeRegistration will throw
       void setClientRegistrationHandler(ClientRegistrationHandler*);
 
-      /// If no such handler, UAS will respond to REGISTER with 405 Method Not Allowed
+      /// If no such handler, UAS will respond to RESIP_REGISTER with 405 Method Not Allowed
       void setServerRegistrationHandler(ServerRegistrationHandler*);
 
       /// If there is no such handler, calling makeSubscription will throw
