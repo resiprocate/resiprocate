@@ -50,9 +50,14 @@ class Client : public ClientRegistrationHandler
           }          
       }
 
+      virtual void onRemoved(ClientRegistrationHandle)
+      {
+          InfoLog ( << "Client::onRemoved ");
+      }
+
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)
       {
-          InfoLog ( << "Client::Failure: " << response );
+          InfoLog ( << "Client::onFailure: " << response );
           done = true;
       }
 
@@ -87,23 +92,21 @@ class RegistrationServer : public ServerRegistrationHandler
 int 
 main (int argc, char** argv)
 {
-    int level=(int)Log::Info;
-    if (argc >1 ) level = atoi(argv[1]);
+   int level=(int)Log::Info;
+   if (argc >1 ) level = atoi(argv[1]);
 
-    Log::initialize(Log::Cout, (resip::Log::Level)level, argv[0]);
-
-   SipStack clientStack;
-   clientStack.addTransport(UDP, 15060);
+   Log::initialize(Log::Cout, (resip::Log::Level)level, argv[0]);
 
    Client client;
    Profile profile;   
-   ClientAuthManager clientAuth(profile);   
+   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager(profile));   
 
-   DialogUsageManager clientDum(clientStack);
+   DialogUsageManager clientDum;
+   clientDum.addTransport(UDP, 15060);
    clientDum.setProfile(&profile);
 
    clientDum.setClientRegistrationHandler(&client);
-   clientDum.setClientAuthManager(&clientAuth);
+   clientDum.setClientAuthManager(clientAuth);
    clientDum.getProfile()->setDefaultRegistrationTime(70);
 
    NameAddr from("sip:101@proxy.internal.xten.net");
