@@ -3,21 +3,12 @@
 #include <string.h>
 #include <ctype.h>
 #include "sip2/sipstack/HeaderTypes.hxx"
+#include "sip2/sipstack/HeaderHash.hxx"
 
 using namespace std;
 using namespace Vocal2;
-struct headers { char *name; Headers::Type type; };
-/* maximum key range = 494, duplicates = 0 */
-
-class HeaderHash
-{
-private:
-  static inline unsigned int hash (const char *str, unsigned int len);
-public:
-  static struct headers *in_word_set (const char *str, unsigned int len);
-};
-
 inline unsigned int
+
 HeaderHash::hash (register const char *str, register unsigned int len)
 {
   static unsigned short asso_values[] =
