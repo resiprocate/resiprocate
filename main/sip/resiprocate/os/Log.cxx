@@ -42,7 +42,7 @@ Log::initialize(Type type, Level level, const Data& appName)
    
    _type = type;
    _level = level;
-   _appName = copy.substr(copy.find_last_of("/")+1);
+   _appName = Data(copy.substr(copy.find_last_of("/")+1));
  
   char buffer[1024];  
   gethostname(buffer, sizeof(buffer));
@@ -156,7 +156,7 @@ Log::timestamp()
                                         thereby leaving its last character at
                                         the end, instead of a null terminator */
 
-   return datebuf;
+   return Data(datebuf);
 }
    
 /* ====================================================================
