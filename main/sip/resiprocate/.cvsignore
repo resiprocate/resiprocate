@@ -24,6 +24,7 @@ bar
 bin.*
 build
 config.hxx
+dumpasn1
 enc64
 foo
 foo2
