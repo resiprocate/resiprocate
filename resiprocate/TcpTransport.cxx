@@ -19,6 +19,8 @@ const size_t TcpTransport::MaxReadSize = 4096;
 TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo) : 
    Transport(sendhost, portNum, nic , fifo)
 {
+   InfoLog (<< "Creating TCP transport on " << sendhost << ":" << portNum << " " << nic);
+   
    mSendPos = mSendRoundRobin.end();
    mFd = socket(PF_INET, SOCK_STREAM, 0);
 
@@ -49,16 +51,8 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
    if ( bind( mFd, (struct sockaddr*) &addr, sizeof(addr)) == SOCKET_ERROR )
    {
       int err = errno;
-      if ( err == EADDRINUSE )
-      {
-         ErrLog (<< "Address already in use");
-      }
-      else
-      {
-         ErrLog (<< "Could not bind to port: " << portNum);
-      }
-      
-      throw Exception("Address already in use", __FILE__,__LINE__);
+      ErrLog (<< strerror(err) << " for TCP transport port " << portNum);
+      throw Exception(strerror(err), __FILE__,__LINE__);
    }
 
    makeSocketNonBlocking(mFd);
