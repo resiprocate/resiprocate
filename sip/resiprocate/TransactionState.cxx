@@ -954,6 +954,10 @@ TransactionState::processServerInvite(  Message* msg )
             break;
       }
    }
+   else if (isDns(msg))
+   {
+      processDns(msg);
+   }
 }
 
 
