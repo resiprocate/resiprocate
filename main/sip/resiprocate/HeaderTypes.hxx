@@ -1,7 +1,6 @@
 #if !defined(RESIP_HEADERTYPES_HXX)
 #define RESIP_HEADERTYPES_HXX 
 
-#include "resiprocate/supported.hxx"
 #include "resiprocate/os/Data.hxx"
 
 // eventually use these macros to automate Headers.hxx, Headers.cxx+gperf

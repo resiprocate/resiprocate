@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.140 2004/04/13 04:33:09 jason Exp $
+# $Id: Makefile,v 1.141 2004/04/13 04:47:45 jason Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -11,8 +11,6 @@ TESTPROGRAMS =
 
 CXXFLAGS += -I/sw/include
 LDFLAGS  += -L/sw/lib
-
-#	XPidf.cxx \
 
 SRC = \
 	os/BaseException.cxx \
