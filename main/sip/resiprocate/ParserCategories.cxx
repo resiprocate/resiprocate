@@ -139,6 +139,13 @@ Mime::operator<(const Mime& rhs) const
    return isLessThanNoCase(subType(), rhs.subType());
 }
 
+bool
+Mime::operator==(const Mime& rhs) const
+{
+   return (isEqualNoCase(type(), rhs.type()) &&
+           isEqualNoCase(subType(), rhs.subType()));
+}
+
 void
 Mime::parse(ParseBuffer& pb)
 {
