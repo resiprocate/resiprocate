@@ -311,6 +311,89 @@ Security::uncode( Pkcs7Contents* sBody )
    BIO_flush(in);
 #endif
    
+   int type=OBJ_obj2nid(pkcs7->type);
+   switch (type)
+   {
+      case NID_pkcs7_signed:
+         InfoLog( << "data is pkcs7 signed" );
+         break;
+      case NID_pkcs7_signedAndEnveloped:
+         InfoLog( << "data is pkcs7 signed and enveloped" );
+         break;
+      case NID_pkcs7_enveloped:
+         InfoLog( << "data is pkcs7 enveloped" );
+         break;
+      case NID_pkcs7_data:
+         InfoLog( << "data i pkcs7 data" );
+         break;
+      case NID_pkcs7_encrypted:
+         InfoLog( << "data is pkcs7 encrypted " );
+         break;
+      case NID_pkcs7_digest:
+         InfoLog( << "data is pkcs7 digest" );
+         break;
+      default:
+         InfoLog( << "Unkown pkcs7 type" );
+         break;
+   }
+ 
+#if 0
+   STACK_OF(PKCS7_SIGNER_INFO)* sk=PKCS7_get_signer_info(pkcs7);
+   if (sk == NULL)
+   {
+      ErrLog( << "No signer info" );
+   }  
+   for (int i=0; i<sk_PKCS7_SIGNER_INFO_num(sk); i++)
+   {
+      PKCS7_SIGNER_INFO* si=sk_PKCS7_SIGNER_INFO_value(sk,i);
+      
+      STACK_OF(X509_ATTRIBUTE)* aa = PKCS7_get_signed_attributes(si);
+      for ( int j=0; j<sk_X509_ATTRIBUTE_num(aa); j++)
+      {
+         X509_ATTRIBUTE* a = sk_X509_ATTRIBUTE_value(aa,j);
+
+         InfoLog( << "set = " << a->set );
+         if ( a->set == 0 )
+         {
+            ASN1_TYPE* t = a->value.single;
+            int ti = ASN1_TYPE_get(t);
+            InfoLog( << "type = " << ti );
+         }
+         if ( a->set == 1 )
+         {
+            STACK_OF(ASN1_TYPE)* sa = a->value.set;
+            
+            for (int k=0; k<sk_ASN1_TYPE_num(sa); k++)
+            {
+               ASN1_TYPE* at = sk_ASN1_TYPE_value(sa,k);
+               
+               int ti = ASN1_TYPE_get(at);
+               InfoLog( << "type = " << ti ); 
+            }
+            
+         }
+      }
+   }
+#endif
+    
+/*  
+ 	STACK_OF(GENERAL_NAME) *gens;
+	STACK *ret;
+	gens = X509_get_ext_d2i(x, NID_subject_alt_name, NULL, NULL);
+	ret = get_email(X509_get_subject_name(x), gens);
+	sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+
+     X509_NAME* name = 	X509_get_subject_name(X509 *a);
+     	
+      STACK *emlst;
+      emlst = X509_get1_email(x);
+      for (j = 0; j < sk_num(emlst); j++)
+         BIO_printf(STDout, "%s\n", sk_value(emlst, j));
+      X509_email_free(emlst);
+
+      InfoLog( << name->bytes );
+*/
+   
    STACK_OF(X509)* certs;
    certs = sk_X509_new_null();
    assert( certs );
