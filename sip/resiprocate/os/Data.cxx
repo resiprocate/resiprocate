@@ -8,6 +8,12 @@
 #include "resiprocate/os/vmd5.hxx"
 #include "resiprocate/os/Coders.hxx"
 
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif 
 
 using namespace resip;
 using namespace std;
@@ -1484,7 +1490,7 @@ buzHash(const char* c, size_t size)
    {
       // circular shift one bit
       //std::cerr << bits(h) << " => " << bits((h >> 1) ^ (h%2 << (8*sizeof(size_t))-1)) << std::endl;
-      h = (h >> 1) ^ (h%2 << (8*sizeof(size_t))-1);
+      h = (h >> 1) ^ (h%2 << ((8*sizeof(size_t))-1));
       h = h ^ buzArray[*c];
    }
  
