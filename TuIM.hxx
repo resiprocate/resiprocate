@@ -3,7 +3,7 @@
 
 #include <list>
 
-#include "resiprocate/Dialog.hxx"
+#include "resiprocate/DeprecatedDialog.hxx"
 #include "resiprocate/SecurityTypes.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -13,7 +13,6 @@ namespace resip
 {
 
 class Pidf;
-class Dialog;
 
 class TuIM
 {
@@ -92,11 +91,11 @@ public:
       void processResponse(SipMessage* msg);
       void processRegisterResponse(SipMessage* msg);
       void processSubscribeResponse(SipMessage* msg, Buddy& buddy );
-      void processNotifyResponse(SipMessage* msg, Dialog& d );
+      void processNotifyResponse(SipMessage* msg, DeprecatedDialog& d );
       void processPublishResponse(SipMessage* msg, StateAgent& sa );
       void processPageResponse(SipMessage* msg, Page& page );
 
-      void sendNotify(Dialog* dialog);
+      void sendNotify(DeprecatedDialog* dialog);
       void sendPublish(StateAgent& dialog);
       
       void setOutbound( SipMessage& msg );
@@ -113,7 +112,7 @@ public:
          public:
             Uri uri;
             Data group;
-            Dialog* presDialog; 
+            DeprecatedDialog* presDialog; 
             UInt64 mNextTimeToSubscribe;
             bool online;
             Data status;
@@ -127,7 +126,7 @@ public:
       {
          public:
             Uri uri;
-            Dialog* dialog;
+            DeprecatedDialog* dialog;
       };
       // people I publish to
       std::list<StateAgent> mStateAgents;
@@ -139,7 +138,7 @@ public:
          public:
             Data aor;
             bool authorized;
-            Dialog* dialog;
+            DeprecatedDialog* dialog;
       };
       std::list<Subscriber> mSubscribers;
       typedef std::list<Subscriber>::iterator SubscriberIterator;
@@ -151,7 +150,7 @@ public:
             Uri uri;
             bool sign;
             Data encryptFor;
-            Dialog* dialog;
+            DeprecatedDialog* dialog;
       };
       // outstanding messages
       std::list<Page> mPages;
@@ -161,7 +160,7 @@ public:
       Pidf* mPidf;
 
       // registration information
-      Dialog mRegistrationDialog;
+      DeprecatedDialog mRegistrationDialog;
       UInt64 mNextTimeToRegister;
       Data   mRegistrationPassword;
       int    mLastAuthCSeq; // This is the CSeq of the last registration message

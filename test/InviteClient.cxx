@@ -2,11 +2,11 @@
 
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Timer.hxx"
-
+#include "resiprocate/DeprecatedDialog.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
 #include "Resolver.hxx"
-#include "resiprocate/Dialog.hxx"
+
 
 #include "InviteClient.hxx"
 #include "Transceiver.hxx"
