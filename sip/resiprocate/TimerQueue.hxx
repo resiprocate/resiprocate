@@ -23,8 +23,9 @@ class TimerQueue
       void process();
       void run();
 
-	///	 This function returns how many ms it is before the next timer will fire 
-	  int msTillNextTimer();
+      // returns ms until the next timer will fire, returns 0 if no timers, or
+      // if timers occur in the past
+      unsigned int msTillNextTimer();
 
    private:
       friend std::ostream& operator<<(std::ostream&, const TimerQueue&);
