@@ -14,7 +14,7 @@ class SipMessage;
 class InviteSessionHandler
 {
    public:
-      /// called when an initial INVITE arrives 
+      /// called when an initial INVITE or the intial response to an outoing invite  
       virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
       virtual void onNewSession(ServerInviteSessionHandle, const SipMessage& msg)=0;
 
@@ -64,7 +64,7 @@ class InviteSessionHandler
       /// called when an REFER messages is received 
       virtual void onRefer(InviteSessionHandle, const SipMessage& msg)=0;
 
-      virtual void onReInvite(InviteSessionHandle, const SipMessage& msg);
+      virtual void onReInvite(InviteSessionHandle, const SipMessage& msg)=0;
 
 };
 
