@@ -1,5 +1,5 @@
-#if !defined(TRANSPORTSELECTOR_HXX)
-#define TRANSPORTSELECTOR_HXX
+#if !defined(RESIP_TRANSPORTSELECTOR_HXX)
+#define RESIP_TRANSPORTSELECTOR_HXX
 
 #ifndef WIN32
 #include <sys/select.h>
@@ -56,7 +56,6 @@ class TransportSelector
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

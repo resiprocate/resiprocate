@@ -1,5 +1,5 @@
-#if !defined(SUBSCRIPTION_HXX)
-#define SUBSCRIPTION_HXX
+#if !defined(RESIP_SUBSCRIPTION_HXX)
+#define RESIP_SUBSCRIPTION_HXX
 
 
 #include "resiprocate/os/Data.hxx"
@@ -37,7 +37,6 @@ class Subscription
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -88,7 +87,3 @@ class Subscription
  * <http://www.vovida.org/>.
  *
  */
-
-
-
-

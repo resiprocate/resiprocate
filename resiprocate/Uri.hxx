@@ -1,5 +1,5 @@
-#ifndef Uri_hxx
-#define Uri_hxx
+#if !defined(RESIP_URI_HXX)
+#define RESIP_URI_HXX 
 
 #include <cassert>
 
@@ -70,7 +70,6 @@ class Uri : public ParserCategory
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
