@@ -83,7 +83,7 @@ libSipImp_Init()
     
    int port = 5060;
 
-#ifdef USE_SSL
+#if defined( USE_SSL )
    int tlsPort = 0;
    bool tlsServer=false;
    bool useTls = true;
@@ -104,7 +104,7 @@ libSipImp_Init()
    Data key("password");
    //InfoLog( << "Using port " << port );
 
-#ifdef USE_SSL
+#if defined( USE_SSL )
    Security*  security = new Security( tlsServer, useTls ); // !cj! mem leak 
    SipStack* sipStack = new SipStack( false /*multihtread*/, security );  
 
@@ -124,7 +124,7 @@ libSipImp_Init()
       sipStack->addTransport(Transport::TCP, port);
    }
    
-#if USE_SSL
+#if defined( USE_SSL )
    if ( port == 5060 )
    {
       if ( tlsPort == 0 )
@@ -149,7 +149,7 @@ libSipImp_Init()
       if (!haveContact)
       {
          contact.user() = aor.user();
-#if USE_SSL
+#if defined( USE_SSL )
          if ( aor.scheme() == "sips" )
          {
             contact.scheme() = aor.scheme();

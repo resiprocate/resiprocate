@@ -98,7 +98,7 @@ TlsTransport::~TlsTransport()
 void 
 TlsTransport::buildFdSet( FdSet& fdset)
 {
-#ifdef USE_SSL
+#if defined( USE_SSL )
    fdset.setRead(mFd);
 
    for (ConnectionMap::Map::iterator it = mConnectionMap.mConnections.begin();
@@ -109,6 +109,8 @@ TlsTransport::buildFdSet( FdSet& fdset)
       // !xx! TODO only should add this if there is data to write
       //fdset.setWrite(it->second->getSocket());
    }
+#else 
+   fdset.reset();
 #endif
 }
 
@@ -116,7 +118,7 @@ TlsTransport::buildFdSet( FdSet& fdset)
 void 
 TlsTransport::processListen(FdSet& fdset)
 {
-#ifdef USE_SSL
+#if defined( USE_SSL )
    if (fdset.readyToRead(mFd))
    {
       struct sockaddr_in peer;
@@ -171,7 +173,7 @@ TlsTransport::processListen(FdSet& fdset)
 bool
 TlsTransport::processRead(Connection* c)
 {
-#ifdef USE_SSL
+#if defined( USE_SSL )
    std::pair<char*, size_t> writePair = c->getWriteBuffer();
    size_t bytesToRead = resipMin(writePair.second, TlsTransport::MaxReadSize);
    
