@@ -50,6 +50,10 @@ typedef SOCKET Socket;
 
 #else
 
+#ifdef __APPLE__
+typedef int socklen_t;
+#endif
+
 typedef int Socket;
 static const Socket INVALID_SOCKET = -1;
 static const int SOCKET_ERROR = -1;
