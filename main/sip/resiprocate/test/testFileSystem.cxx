@@ -9,7 +9,7 @@ using namespace std;
 int
 main()
 {
-   FileSystem::Directory dir("/usr/bin");
+   FileSystem::Directory dir("/usr/bin/");
    for (FileSystem::Directory::iterator it = dir.begin(); it != dir.end(); ++it)
    {
       cerr << *it << endl;
