@@ -15,16 +15,18 @@
 
 static const char rcsid[] = "$Id: ahost.c,v 1.1 2003/06/05 00:30:32 ryker Exp $";
 
+#ifndef WIN32
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
+#include <netdb.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <netdb.h>
 #include "ares.h"
 #include "ares_dns.h"
 
