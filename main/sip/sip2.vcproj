@@ -18,6 +18,9 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zm300
+
+"
 				Optimization="0"
 				OptimizeForProcessor="2"
 				AdditionalIncludeDirectories="C:\vocal"
@@ -65,14 +68,18 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zm300
+"
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
+				AdditionalIncludeDirectories="c:/vocal"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="4"
 				EnableFunctionLevelLinking="TRUE"
-				UsePrecompiledHeader="3"
+				RuntimeTypeInfo="TRUE"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="3"/>
@@ -109,6 +116,9 @@
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
+			<File
+				RelativePath="sip2.rc">
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"
@@ -219,6 +229,9 @@
 				RelativePath="sipstack\SipStack.cxx">
 			</File>
 			<File
+				RelativePath="sipstack\test\SipTortureTests.cxx">
+			</File>
+			<File
 				RelativePath="util\Socket.cxx">
 			</File>
 			<File
@@ -259,9 +272,6 @@
 			</File>
 			<File
 				RelativePath="sipstack\Uri.cxx">
-			</File>
-			<File
-				RelativePath="sipstack\test\test2.cxx">
 			</File>
 			<File
 				RelativePath="util\vmd5.cxx">
@@ -478,7 +488,13 @@
 				RelativePath="util\compat.hxx">
 			</File>
 			<File
+				RelativePath="resource.h">
+			</File>
+			<File
 				RelativePath="sipstack\supported.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\test\tassert.h">
 			</File>
 			<File
 				RelativePath="util\vmd5.hxx">
