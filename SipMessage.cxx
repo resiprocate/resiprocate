@@ -2,6 +2,7 @@
 #include "sip2/sipstack/HeaderFieldValueList.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/util/CountStream.hxx"
+#include "sip2/util/MD5Stream.hxx"
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/compat.hxx"
 #include "sip2/util/vmd5.hxx"
@@ -34,6 +35,7 @@ SipMessage::SipMessage(const SipMessage& from)
      mStartLine(0),
      mContentsHfv(0),
      mContents(0),
+     mRFC2543TransactionId(from.mRFC2543TransactionId),
      mRequest(from.mRequest),
      mResponse(from.mResponse)
 {
@@ -112,42 +114,36 @@ SipMessage::~SipMessage()
 const Data& 
 SipMessage::getTransactionId() const
 {
-    assert (!header(h_Vias).empty());
+   assert (!header(h_Vias).empty());
    if( header(h_Vias).front().exists(p_branch) 
        && header(h_Vias).front().param(p_branch).hasMagicCookie() )
    {
-       assert (!header(h_Vias).front().param(p_branch).transactionId().empty());
-       return header(h_Vias).front().param(p_branch).transactionId();
+      assert (!header(h_Vias).front().param(p_branch).transactionId().empty());
+      return header(h_Vias).front().param(p_branch).transactionId();
    }
    else
    {
-       if( mRFC2543TransactionId.empty() )
-       {
-           Data key = header(h_CallId).value().lowercase() +
-                      Data( header(h_CSeq).sequence() );
-	   if (header(h_From).exists(p_tag)) 
-           {
-                      key += header(h_From).param(p_tag).lowercase();
-	   }
-	   if (header(h_Vias).front().exists(p_branch)) 
-           {
-                      key += header(h_Vias).front().param(p_branch).transactionId().lowercase();
-	   }
-
-           // !cj! - this is a really slow hash to use - why not use a faster one
-           MD5Context context;
-           MD5Init( &context );
-           MD5Update( &context,
-                      reinterpret_cast<unsigned const char*>(key.data()),
-                      key.size() );
-           md5byte digest[16];
-           MD5Final( digest, &context );
-           // !ah! needs to be rethought -- perhaps a const char * interface to
-           // encode is warranted after all .. This creates a temp object.
-           mRFC2543TransactionId = Base64Coder::encode( Data( reinterpret_cast<const char*>(digest), 16 ) ) ;
-       }
-       return mRFC2543TransactionId;
+      if( mRFC2543TransactionId.empty() )
+      {
+         MD5Stream strm;
+         // See section 17.2.3 Matching Requests to Server Transactions in rfc 3261
+         strm << header(h_RequestLine).uri();
+         if (header(h_From).exists(p_tag)) strm << header(h_From).param(p_tag).lowercase();
+         if (header(h_To).exists(p_tag))strm << header(h_To).param(p_tag).lowercase();
+         strm << header(h_CallId).value().lowercase();
+         strm << header(h_CSeq);
+         if (!header(h_Vias).empty()) strm << header(h_Vias).front();
+         strm.flush();
+         mRFC2543TransactionId = strm.getHex();
+      }
+      return mRFC2543TransactionId;
    }
+}
+
+void
+SipMessage::copyRFC2543TransactionId(const SipMessage& request)
+{
+   mRFC2543TransactionId = request.mRFC2543TransactionId;
 }
 
 bool
@@ -171,7 +167,7 @@ SipMessage::brief() const
    {
       result += "SipRequest: ";
       MethodTypes meth = header(h_RequestLine).getMethod();
-      result += (meth != UNKNOWN) ? MethodNames[meth] : Data( "UNKONW" );
+      result += (meth != UNKNOWN) ? MethodNames[meth] : Data( "UNKNOWN" );
       result += Data( " " );
       result += header(h_RequestLine).uri().getAor();
    }
@@ -1126,9 +1122,9 @@ void operator delete[](void* p)
    DebugLog(<<"operator delete [] | " << hex << p << dec);
    return std::operator delete[] ( p );
 }
-
  
 }
+
 #endif
 
 /* ====================================================================
