@@ -13,6 +13,7 @@ libresiprocate_la_SOURCES = \
 	os/Data.cxx \
 	os/DataStream.cxx \
 	os/DnsUtil.cxx \
+	os/Id.cxx \
 	os/Lock.cxx \
 	os/Log.cxx \
 	os/Logger.cxx \
@@ -217,6 +218,7 @@ resiprocate_os_include_HEADERS = \
 	os/DnsUtil.hxx \
 	os/Fifo.hxx \
 	os/HashMap.hxx \
+	os/Id.hxx \
 	os/Inserter.hxx \
 	os/Lock.hxx \
 	os/Lockable.hxx \
