@@ -15,12 +15,7 @@
 #include "resiprocate/os/vmd5.hxx"
 #include "resiprocate/os/Coders.hxx"
 #include "resiprocate/os/Random.hxx"
-
-#ifndef NEW_MSG_HEADER_SCANNER
-#include "resiprocate/Preparse.hxx"
-#else
 #include "resiprocate/MsgHeaderScanner.hxx"
-#endif
 
 using namespace resip;
 using namespace std;
@@ -140,42 +135,8 @@ SipMessage::make(const Data& data,  bool isExternal)
    char *buffer = new char[len + 5];
 
    msg->addBuffer(buffer);
-
    memcpy(buffer,data.data(), len);
-
-#ifndef NEW_MSG_HEADER_SCANNER 
-
-   using namespace PreparseConst;
-   Preparse pre;
-
-   if (pre.process(*msg, buffer, len) || pre.isFragmented())
-   {
-      InfoLog(<< "Preparser failed: isfrag=" << pre.isFragmented() << " buff=" << buffer);
-      
-      delete msg;
-      msg = 0;
-   }
-   else
-   {
-      size_t used = pre.nBytesUsed();
-      assert(pre.nBytesUsed() == pre.nDiscardOffset());
-       
-      // no pp error
-      if (pre.isHeadersComplete() &&
-          used < len)
-      {
-         // body is present .. add it up.
-         // NB. The Sip Message uses an overlay (again)
-         // for the body. It ALSO expects that the body
-         // will be contiguous (of course).
-         msg->setBody(buffer+used, len-used);
-      }
-   }
-   return msg;
-
-#else //defined (NEW_MSG_HEADER_SCANNER) 
    MsgHeaderScanner msgHeaderScanner;
-   
    msgHeaderScanner.prepareForMessage(msg);
    
    char *unprocessedCharPtr;
@@ -205,7 +166,6 @@ SipMessage::make(const Data& data,  bool isExternal)
    }
 
    return msg;
-#endif //defined (NEW_MSG_HEADER_SCANNER) 
 }
 
 

@@ -1,7 +1,7 @@
-#ifndef RESIP_MSG_HEADER_SCANNER_HXX
+#if !defined(RESIP_MSG_HEADER_SCANNER_HXX)
 #define RESIP_MSG_HEADER_SCANNER_HXX
-#if defined(NEW_MSG_HEADER_SCANNER)
-namespace resip {
+namespace resip 
+{
 
 class SipMessage;
 
@@ -143,7 +143,6 @@ static bool invoke_MsgHeaderScanner_init = MsgHeaderScanner::init();
 
 } // namespace resip
 
-#endif // !defined(RESIP_MSG_HEADER_SCANNER_HXX)
 #endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

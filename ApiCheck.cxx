@@ -1,9 +1,8 @@
 #include <stdlib.h>
 #include <iostream>
 #include <iomanip>
+
 #include "resiprocate/ApiCheck.hxx"
-
-
 #include "resiprocate/ApiCheckList.hxx"
 
 namespace resip
@@ -27,8 +26,6 @@ ApiCheck::ApiCheck( ApiEntry * list, int len)
         std::cerr << "reSIProcate Type verification list lengths are different."
                   << std::endl
                   << "\tEither the library and application are radically out of date" 
-                  <<std::endl
-                  << "\tor NEW_MSG_HEADER_SCANNER is not defined in one of the components."
                   << std::endl
                   << "application length: " << len << std::endl
                   << "reSIProcate length: " << resipListLen << std::endl;
