@@ -1,6 +1,16 @@
+
+
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#include <stdio.h>
+#include <tchar.h>
+
+
 #include <cassert>
 
+
 #include <util/ThreadIf.hxx>
+#include <util/Mutex.hxx>
+
 #include <util/Lock.hxx>
 
 

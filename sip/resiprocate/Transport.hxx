@@ -17,16 +17,21 @@ namespace Vocal2
 
 class SipMessage;
 
-class Transport
-{
-   public:
-      struct SendData
+class SendData
       {
+	  public:
+		  SendData();
+
             sockaddr_in& destination;
             //TransactionId tid;
             const char* buffer;
             size_t length;
       };
+
+class Transport
+{
+   public:
+      
 
       class TransportException : public std::exception
       {

@@ -16,8 +16,10 @@ class SysLogBuf : public std::streambuf
    public:
       SysLogBuf ()
       {
+#ifndef WIN32
          setp(buffer,buffer+Size);
          openlog (0, LOG_NDELAY, LOG_LOCAL6);
+#endif
       }
       
       ~SysLogBuf()
@@ -40,9 +42,11 @@ class SysLogBuf : public std::streambuf
      
 inline int SysLogBuf::sync ()
 {
+#ifndef WIN32
    *(pptr()) = 0;
    syslog (LOG_LOCAL6 | LOG_DEBUG, pbase());
    setp(buffer, buffer+Size);
+#endif
    return 0;
 }
      

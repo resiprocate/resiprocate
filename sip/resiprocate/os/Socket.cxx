@@ -1,4 +1,7 @@
 
+#include <iostream>
+#include <cassert>
+
 #include <util/Socket.hxx>
 
 using namespace Vocal2;
