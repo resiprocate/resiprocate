@@ -432,7 +432,13 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
    else
    {
       pb.skipChar('?');
-
+      
+      Data user;
+      Data realm;
+      Data password;
+      Data name;
+      Data email;
+      
       while ( !pb.eof() )
       {
            const char* anchor1 = pb.position();
@@ -451,6 +457,34 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
            }
            
            DebugLog (<< "  key=" << key << " value=" << value );
+
+           if ( key == Data("user") )
+           {
+              user = value;
+           }
+           if ( key == Data("password") )
+           {
+              password = value;
+           }
+          if ( key == Data("realm") )
+           {
+              realm = value;
+           }
+           if ( key == Data("name") )
+           {
+               name = value;
+           }
+           if ( key == Data("email") )
+           {
+               email = value;
+           }
+           
+      }
+
+      if ( !user.empty() )
+      {
+         // 
+         mDb.addUser(user,realm,password,name,email);
       }
    }
    
