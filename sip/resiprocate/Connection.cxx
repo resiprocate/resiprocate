@@ -74,6 +74,8 @@ Connection::getId() const
 void
 Connection::performRead(int bytesRead, Fifo<Message>& fifo)
 {
+   assert(mWho.transport);
+
    DebugLog(<< "In State: " << connectionStates[mState]);
    getConnectionManager().touch(this);
    
@@ -348,7 +350,9 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
 void
 Connection::requestWrite(SendData* sendData)
 {
-   if (mOutstandingSends.empty())
+    assert(mWho.transport);
+
+    if (mOutstandingSends.empty())
    {
       getConnectionManager().addToWritable(this);
    }
@@ -420,6 +424,14 @@ resip::operator<<(std::ostream& strm, const resip::Connection& c)
    strm << "CONN: " << &c << " " << int(c.getSocket()) << " " << c.mWho;
    return strm;
 }
+
+Transport* 
+Connection::transport()
+{
+   assert(this);
+   return mWho.transport;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
