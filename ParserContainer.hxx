@@ -2,13 +2,13 @@
 #define ParserContainer_hxx
 
 #include <sipstack/HeaderFieldValueList.hxx>
-#include <sipstack/ParserCategory.hxx>
+#include <sipstack/ParserContainerBase.hxx>
 
 namespace Vocal2
 {
 
 template<class T>
-class ParserContainer : public ParserCategory
+class ParserContainer : public ParserContainerBase
 {
    public:
       ParserContainer(HeaderFieldValueList& list)
@@ -67,19 +67,11 @@ class ParserContainer : public ParserCategory
       Iterator end() { return Iterator(0); }
       typedef Iterator iterator;
 
-      virtual ParserCategory* clone(HeaderFieldValue*) const 
-      {
-         assert(0);
-         return 0;
-      }
-      
-      ParserCategory* clone(HeaderFieldValueList& hfvs)
+      virtual ParserContainerBase* clone(HeaderFieldValueList& hfvs) const
       {
          return new ParserContainer(hfvs);
       }
       
-      virtual void parse() {}
-
    protected:
       virtual void parser() {}
    private:
