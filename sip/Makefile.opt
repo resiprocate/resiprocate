@@ -12,3 +12,12 @@ endif
 ifeq ($(ARCH),i386)
 CXXFLAGS += -mcpu=i386 -march=i386
 endif
+
+
+# Specify contrib packages here
+
+ARES_INCLUDEDIRS := $(ROOT)/sip2/contrib/ares-1.1.1
+ARES_LIBDIRS := $(ROOT)/sip2/contrib/ares-1.1.1
+ARES_LIBNAME := ares
+
+
