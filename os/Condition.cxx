@@ -91,7 +91,8 @@ Condition::Condition() : mId()
 Condition::~Condition ()
 {
 #ifdef WIN32
-	assert(0);
+	BOOL ok = CloseHandle(mId);
+	assert( ok );
 #else
     int  rc = pthread_cond_destroy(&mId);
     assert( rc == 0 );
