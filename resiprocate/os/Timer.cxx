@@ -103,29 +103,29 @@ Timer::toData(Type timer)
 
 
 Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
-   mWhen(tms + getTimeMs()),
-   mId(++mTimerCount),
-   mType(type),
-   mTransactionId(transactionId),
-   mDuration(tms)
+    mWhen(tms + getTimeMs()),
+    mId(++mTimerCount),
+    mType(type),
+    mTransactionId(transactionId),
+    mDuration(tms)
 {
 }
 
 
 Timer::Timer(unsigned long tms) :
-   mWhen(tms + getTimeMs()),
-   mId(0),
-   mDuration(tms)
+    mWhen(tms + getTimeMs()),
+    mId(0),
+    mDuration(tms)
 {
 }
 
 
 Timer::Timer(const Timer& other) : 
-   mWhen(other.mWhen),
-   mId(other.mTimerCount),
-   mType(other.mType),
-   mTransactionId(other.mTransactionId),
-   mDuration(other.mDuration)
+    mWhen(other.mWhen),
+    mId(other.mTimerCount),
+    mType(other.mType),
+    mTransactionId(other.mTransactionId),
+    mDuration(other.mDuration)
 {
 }
 
@@ -133,44 +133,44 @@ Timer::Timer(const Timer& other) :
 Timer&
 Timer::operator=(const Timer& other)
 {
-   if (this != &other)
-   {
-      mWhen = other.mWhen;
-      mId = other.mTimerCount;
-      mType = other.mType;
-      mTransactionId = other.mTransactionId;
-      mDuration = other.mDuration;
-   }
-   return *this;
+    if (this != &other)
+    {
+        mWhen = other.mWhen;
+        mId = other.mTimerCount;
+        mType = other.mType;
+        mTransactionId = other.mTransactionId;
+        mDuration = other.mDuration;
+    }
+    return *this;
 }
 
 
 UInt64
 Timer::getSystemTime()
 {
-   UInt64 time=0;
+    UInt64 time=0;
 #if defined(WIN32)  
-   SYSTEMTIME t;
-   GetSystemTime( &t );
-   time = (t.wHour*60+t.wMinute)*60+t.wSecond; 
-   time = time*1000000;
-   time += t.wMilliseconds*1000;
+    SYSTEMTIME t;
+    GetSystemTime( &t );
+    time = (t.wHour*60+t.wMinute)*60+t.wSecond; 
+    time = time*1000000;
+    time += t.wMilliseconds*1000;
 #else
-   struct timeval now;
-   gettimeofday( &now , NULL );
-   //assert( now );
-   time = now.tv_sec;
-   time = time*1000000;
-   time += now.tv_usec;
+    struct timeval now;
+    gettimeofday( &now , NULL );
+    //assert( now );
+    time = now.tv_sec;
+    time = time*1000000;
+    time += now.tv_usec;
 #endif
-   return time;
+    return time;
 }
 
 
 UInt64
 Timer::getSystemTicks()
 {
-   UInt64 tick;
+    UInt64 tick;
 
 /* block ADFE9093
  * RjS - This code fails for systems with variable speed
@@ -178,41 +178,43 @@ Timer::getSystemTicks()
  *       This block (and its associated endifs) is
  *       commented out for now while the impact of this
  *       change is being tested. 
-#if defined(WIN32) 
-   volatile unsigned int lowtick=0,hightick=0;
-   __asm
-      {
-         rdtsc 
-            mov lowtick, eax
-            mov hightick, edx
-            }
-   tick = hightick;
-   tick <<= 32;
-   tick |= lowtick;
-#else  
-#  if defined(__GNUC__) && ( defined(__i686__) || defined(__i386__) )
-   asm("rdtsc" : "=A" (tick)); // this should actually work anywhere GNUC does
-#  else
+ #if defined(WIN32) 
+ volatile unsigned int lowtick=0,hightick=0;
+ __asm
+ {
+ rdtsc 
+ mov lowtick, eax
+ mov hightick, edx
+ }
+ tick = hightick;
+ tick <<= 32;
+ tick |= lowtick;
+ #else  
+ #  if defined(__GNUC__) && ( defined(__i686__) || defined(__i386__) )
+ asm("rdtsc" : "=A" (tick)); // this should actually work anywhere GNUC does
+ #  else
 */
-   tick = getSystemTime();
+    tick = getSystemTime();
 
 /* RjS - endifs matching block ADFE9093
-#  endif
-#endif
+   #  endif
+   #endif
 */
-   return tick;
+    return tick;
 }
 
+static bool timerCpuSpeedCheck = true;
 
 void 
 Timer::setupTimeOffsets()
 {
-   unsigned long cpuSpeed = 1;
+    unsigned long cpuSpeed = 1;
     
-   UInt64 now;
-   UInt64 nowTick=0;
+    UInt64 now;
+    UInt64 nowTick=0;
 
-#if 0
+   if (timerCpuSpeedCheck)
+   {
    /* timing loop to calculate - cpu speed */ 
    UInt64 start;
    UInt64 startTick=0;
@@ -258,95 +260,105 @@ Timer::setupTimeOffsets()
    UInt64 cpuSpeed64 = count / uSec;
    cpuSpeed = (unsigned long)cpuSpeed64;
     
-   static int speeds[] = { 0,1,16,25,33,60,90,100,133,150,166,200,
-                           266,300,400,450,
-                           500,533,550,600,633,650,667,
-                           700,733,750,800,850,866,900,933,950,1000,
-                           1100,1200,1266,1400,1500,1600,1700,1800,1900,
-                           2000,2100,2200,2266,2400,2500,2533,2600,2666,2800,
-                           3000,3200,3600,3733,4000,4266,-1 };
-   int diff=cpuSpeed;
-   int index = 0;
-   int i=1;
-   while (speeds[i]!=-1)
+   static UInt64 speeds[] = { 1,16,25,33,60,90,100,133,150,166,200,
+                              266,300,400,450, 500,533,550,600,633,650,667,
+                              700,733,750,800,850,866,900,933,950,1000,
+                              1100,1200,1266,1400,1500,1600,1700,1800,1900,
+                              2000,2100,2200,2266,2400,2500,2533,2600,2666,
+                              2800, 3000,3200,3600,3733,4000,4266};
+   UInt64 diff=cpuSpeed;
+   unsigned int index = 0;
+   unsigned int i=0;
+   while (i++ < sizeof(speeds)/sizeof(*speeds))
    {
-      int d =  speeds[i] - cpuSpeed ;
-      d = (d>=0) ? d : -d ;
-      if ( d<diff )
+      UInt64 d =  speeds[i]  >  cpuSpeed ? speeds[i] - cpuSpeed : cpuSpeed - speeds[i];
+      if ( d <= diff )
       {
          diff = d;
          index = i;
       }
-      i++;
    }
 #ifdef __APPLE__
-   cpuSpeed = 1;
-   long s=1;
-   // link with -framework AppKit 
-   //Gestalt (gestaltProcClkSpeed, &s );
-   cpuSpeed = s;
+        cpuSpeed = 1;
+        long s=1;
+        // link with -framework AppKit 
+        //Gestalt (gestaltProcClkSpeed, &s );
+        cpuSpeed = s;
 #else
-   assert( index != 0 );
-   cpuSpeed = 0;
+        assert( index != 0 );
+        cpuSpeed = 0;
 
-   // if it is faster than know processors ....
-   if ( (index == i-1) && (diff>50) )
-   {
-      // just keep the estimated speed
-   }
-   else
-   {
-      cpuSpeed = speeds[index];
-   }
+        // if it is faster than know processors ....
+        if ( (index == i-1) && (diff>50) )
+        {
+            // just keep the estimated speed
+        }
+        else
+        {
+            cpuSpeed = speeds[index];
+        }
 #endif
     
-#endif 
+   }
 
    now = getSystemTime();
    nowTick = getSystemTicks();
-    
+
+   if (cpuSpeed == 0) cpuSpeed = 1;
+ 
    mBootTime = now - nowTick/cpuSpeed;
    mCpuSpeedMHz = cpuSpeed;
 
-//   InfoLog( << "CPU Speed is " << mCpuSpeedMHz << " MHz " );
-   InfoLog( << "CPU Speed not calculated - mCpuSpeedMHz forced to 1" );
+   if (timerCpuSpeedCheck)
+   {
+       InfoLog( << "CPU Speed is " << mCpuSpeedMHz << " MHz " );
+   }
+   else
+   {
+       InfoLog( << "CPU Speed not calculated - mCpuSpeedMHz forced to 1" );
+   }
+   if (mCpuSpeedMHz == 1)
+   {
+       InfoLog( << "Timer CPU Speed check code likely not working as expected -- safe to ignore.");
+   }
+
 }
 
 
 UInt64 
 Timer::getTimeMicroSec()
 {
-   assert( sizeof(UInt64) == 64/8 );
+    assert( sizeof(UInt64) == 64/8 );
     
-   UInt64 time=0; /* 64 bit */ 
+    UInt64 time=0; /* 64 bit */ 
     
-   if ( mCpuSpeedMHz == 0 ) 
-   {
-      setupTimeOffsets();   
-   }
-   assert( mCpuSpeedMHz != 0 );
+    if ( mCpuSpeedMHz == 0 ) 
+    {
+        setupTimeOffsets();   
+    }
+    assert( mCpuSpeedMHz != 0 );
 
-   time = getSystemTicks()/mCpuSpeedMHz + mBootTime;
+    time = getSystemTicks()/mCpuSpeedMHz + mBootTime;
     
-   assert( time != 0 );
-   return time;
+    assert( time != 0 );
+    return time;
 }
 
 UInt64 
 Timer::getTimeMs()
 {
-   return getTimeMicroSec() / 1000;
+    return getTimeMicroSec() / 1000;
 }
 
 
 UInt64 
 Timer::getForever()
 {
-   assert( sizeof(UInt64) == 8 );
+    assert( sizeof(UInt64) == 8 );
 #ifdef WIN32
-   return 18446744073709551615ui64;
+    return 18446744073709551615ui64;
 #else
-   return 18446744073709551615ULL;
+    return 18446744073709551615ULL;
 #endif
 }
 
@@ -354,36 +366,36 @@ Timer::getForever()
 UInt64 
 Timer::getRandomFutureTimeMs( UInt64 futureMs )
 {
-   UInt64 now = getTimeMs();
+    UInt64 now = getTimeMs();
    
-   // make r a random number between 5000 and 9000 
-   int r = Random::getRandom()%4000;
-   r += 5000;
+    // make r a random number between 5000 and 9000 
+    int r = Random::getRandom()%4000;
+    r += 5000;
    
-   UInt64 ret = now;
-   ret += (futureMs*r)/10000;
+    UInt64 ret = now;
+    ret += (futureMs*r)/10000;
 
-   assert( ret >= now );
-   assert( ret >= now+(futureMs/2) );
-   assert( ret <= now+futureMs );
+    assert( ret >= now );
+    assert( ret >= now+(futureMs/2) );
+    assert( ret <= now+futureMs );
 
-   return ret;
+    return ret;
 }
 
 
 bool 
 resip::operator<(const Timer& t1, const Timer& t2)
 {
-   //std::cerr << "operator(<" << t1.mWhen << ", " << t2.mWhen << ") = " << (t1.mWhen < t2.mWhen) << std::endl;
-   return t1.mWhen < t2.mWhen;
+    //std::cerr << "operator(<" << t1.mWhen << ", " << t2.mWhen << ") = " << (t1.mWhen < t2.mWhen) << std::endl;
+    return t1.mWhen < t2.mWhen;
 }
 
 
 std::ostream& 
 resip::operator<<(std::ostream& str, const Timer& t)
 {
-   str << "Timer[id=" << t.mId << " when=" << t.mWhen << "]";
-   return str;
+    str << "Timer[id=" << t.mId << " when=" << t.mWhen << "]";
+    return str;
 }
 
 /* ====================================================================

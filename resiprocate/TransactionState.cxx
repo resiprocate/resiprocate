@@ -158,11 +158,11 @@ TransactionState::process(TransactionController& controller)
                // !rk! This might be needlessly created.  Design issue.
                TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid);
                state->mMsgToRetransmit = state->make100(sip);
-               state->mSource = sip->getSource();
+               state->mSource = state->mNetSource = sip->getSource();
                // since we don't want to reply to the source port unless rport present 
-               state->mSource.setPort(Helper::getSentPort(*sip));
+               state->mSource.setPort(Helper::getPortForReply(*sip,state->mSymResponses));
                state->mState = Proceeding;
-               state->mIsReliable = state->mSource.transport->isReliable();
+               state->mIsReliable = state->mNetSource.transport->isReliable();
                state->add(tid);
                
                if (Timer::T100 == 0)
@@ -192,7 +192,7 @@ TransactionState::process(TransactionController& controller)
 
                   state->mSource = sip->getSource();
                   // since we don't want to reply to the source port unless rport present 
-                  state->mSource.setPort(Helper::getSentPort(*sip));
+                  state->mSource.setPort(Helper::getPortForReply(*sip,state->mSymResponses));
                   state->add(tid);
                   state->processReliability(matchingInvite->mTarget.getType());
                   // !jf! don't call processServerNonInvite since it will delete
@@ -202,11 +202,11 @@ TransactionState::process(TransactionController& controller)
             else if (sip->header(h_RequestLine).getMethod() != ACK)
             {
                TransactionState* state = new TransactionState(controller, ServerNonInvite,Trying, tid);
-               state->mSource = sip->getSource();
+               state->mSource = state->mNetSource = sip->getSource();
                // since we don't want to reply to the source port unless rport present 
-               state->mSource.setPort(Helper::getSentPort(*sip));
+               state->mSource.setPort(Helper::getPortForReply(*sip,state->mSymResponses));
                state->add(tid);
-               state->mIsReliable = state->mSource.transport->isReliable();
+               state->mIsReliable = state->mNetSource.transport->isReliable();
             }
             
 
@@ -1258,6 +1258,46 @@ TransactionState::processReliability(TransportType type)
    }
 }
 
+// !ah! only used one place, so leaving it here instead of making a helper.
+// !ah! broken out for clarity -- only used for forceTargets.
+// Expects that host portion is IP address notation.
+
+static const Tuple
+simpleTupleForUri(const Uri& uri)
+{
+   const Data& host = uri.host();
+   int port = uri.port();
+
+   resip::TransportType transport = UNKNOWN_TRANSPORT;
+ 
+  if (uri.exists(p_transport))
+   {
+      transport = Tuple::toTransport(uri.param(p_transport));
+   }
+
+   if (transport == UNKNOWN_TRANSPORT)
+   {
+      transport = UDP;
+   }
+   if (port == 0)
+   {
+      switch(transport)
+      {
+         case TLS:
+            port = 5061;
+            break;
+         case UDP:
+         case TCP:
+         default:
+            port = 5060;
+            break;
+         // !ah! SCTP?
+
+      }
+   }
+
+   return Tuple(host,port,transport);
+}
 
 
 void
@@ -1275,7 +1315,12 @@ TransactionState::sendToWire(Message* msg, bool resend)
    // !jf! for responses, go back to source always (not RFC exactly)
    if (mMachine == ServerNonInvite || mMachine == ServerInvite || mMachine == ServerStale)
    {
+      // const Tuple &r(state->mSymResponses?mNetSource:mSource);
+
       assert(mDnsResult == 0);
+
+      // to actual source, not derived source (mNetSource) IFF sym
+      DebugLog(<<"sending to : " << mSource);
 
       if (resend)
       {
@@ -1297,12 +1342,21 @@ TransactionState::sendToWire(Message* msg, bool resend)
          assert (!sip->header(h_Vias).empty());
 
          Via& via = sip->header(h_Vias).front();
+         if (sip->hasForceTarget())
+         {
+            //DebugLog(<<"!ah! sendToWire(response): has forceTarget -- MUST be expressable as Tuple w/o resolution:" 
+            //<< sip->getForceTarget());
 
-         if (via.exists(p_received))
+            Tuple t (simpleTupleForUri(sip->getForceTarget()));
+
+            mController.mTransportSelector.transmit(sip,t);
+         }
+         else if (via.exists(p_received))
          {
             Tuple tuple(via.param(p_received), 
                         (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort(),
                         Tuple::toTransport(via.transport()));
+            // DebugLog(<<"!ah! sendToWire(response): received/rport case:" << tuple << " for " << sip->brief() ); 
             mController.mTransportSelector.transmit(sip, tuple);
          }
          else
@@ -1310,10 +1364,11 @@ TransactionState::sendToWire(Message* msg, bool resend)
             Tuple tuple(via.sentHost(),
                         (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort(),
                         Tuple::toTransport(via.transport()));
+            // DebugLog(<<"!ah! sendToWire(response): sentHost case:" << tuple << " for " << sip->brief() ); 
             mController.mTransportSelector.transmit(sip, tuple);
          }
       }
-      else
+      else // requests
       {
          if (mIsCancel)
          {
@@ -1343,7 +1398,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
    else // reuse the last dns tuple
    {
       assert(mTarget.getType() != UNKNOWN_TRANSPORT);
-
+      DebugLog(<<"!ah! DNS results being used for mTarget=" << mTarget);
       if (resend)
       {
          mController.mTransportSelector.retransmit(sip, mTarget);
@@ -1359,7 +1414,7 @@ void
 TransactionState::sendToTU(Message* msg) const
 {
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
-   //DebugLog(<< "Send to TU: " << *msg);
+   DebugLog(<< "Send to TU: " << *msg);
    assert(sip);
    mController.mTUFifo.add(sip);
 }
@@ -1486,7 +1541,6 @@ TransactionState::terminateServerTransaction(const Data& tid)
       mController.mTUFifo.add(new TransactionTerminated(tid, false));
    }
 }
-
 
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
