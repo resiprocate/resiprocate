@@ -21,9 +21,9 @@ using namespace Vocal2::PreparseState;
 
 Edge *** mTransitionTable = 0;
 
-// #define PP_DEBUG
-// #define SUPER_DEBUG
-// #define DEBUG_HELPERS
+//#define PP_DEBUG
+//#define SUPER_DEBUG
+//#define DEBUG_HELPERS
 
 #if !defined(NDEBUG) && defined(PP_DEBUG)
 #if !defined(DEBUG_HELPERS)
@@ -433,6 +433,9 @@ Preparse::process(SipMessage& msg,
             done = true;
         }
 
+        mState = e.nextState;
+        traversalPtr++;
+
         if (e.workMask & actEndHdrs)
         {
 #if defined(PP_DEBUG)
@@ -443,8 +446,6 @@ Preparse::process(SipMessage& msg,
             used = traversalPtr - buffer;
         }
       
-        mState = e.nextState;
-        traversalPtr++;
 
         if (e.workMask & actReset) // Leave this AFTER the tp++ (above)
         {
@@ -465,7 +466,6 @@ Preparse::process(SipMessage& msg,
     if (!done)
     {
         status = fragment;
-        used = headerPtr - buffer + 1; // !ah! wrong ... fixme see hxx
     }
     
     assert(used > 0);
