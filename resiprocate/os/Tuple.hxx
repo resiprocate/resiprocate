@@ -34,7 +34,7 @@ class Tuple
       Tuple();
       explicit Tuple(const GenericIPAddress& genericAddress, TransportType type=UNKNOWN_TRANSPORT, 
                      const Data& targetDomain = Data::Empty);
-      Tuple(const Data& printableAddress, int port, bool ipv4, TransportType type=UNKNOWN_TRANSPORT, const Data& targetDomain = Data::Empty);
+      Tuple(const Data& printableAddress, int port, IpVersion ipVer, TransportType type=UNKNOWN_TRANSPORT, const Data& targetDomain = Data::Empty);
       Tuple(const Data& printableAddress, int port, TransportType type, const Data& targetDomain = Data::Empty);
       Tuple(const in_addr& pipv4, int pport, TransportType ptype, const Data& targetDomain = Data::Empty);
       Tuple(const sockaddr& addr, TransportType ptype, const Data& targetDomain = Data::Empty);
@@ -50,7 +50,8 @@ class Tuple
       void setType(TransportType type) { mTransportType = type ;}
       void setPort(int port);
       int getPort() const;
-      bool isV4() const;
+      bool isV4() const; //!dcm! -- should deprecate asap
+      IpVersion ipVersion() const;     
       bool isAnyInterface() const;
       socklen_t length() const; // of sockaddr
       

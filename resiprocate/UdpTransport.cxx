@@ -12,6 +12,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/SendData.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
@@ -22,14 +23,14 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            int portNum,  
                            IpVersion version,
                            const Data& pinterface) 
-   : Transport(fifo, portNum, version, pinterface)
+   : InternalTransport(fifo, portNum, version, pinterface)
 {
    InfoLog (<< "Creating udp transport host=" << pinterface 
             << " port=" << portNum
             << " ipv4=" << bool(version==V4) );
 
    mTuple.setType(transport());
-   mFd = Transport::socket(transport(), version==V4);
+   mFd = InternalTransport::socket(transport(), version);
    bind();
 }
 

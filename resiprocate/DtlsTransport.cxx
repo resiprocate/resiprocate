@@ -69,9 +69,9 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              const Data& sipDomain)
    : UdpTransport( fifo, portNum, version, interfaceObj ),
      mTimer( mHandshakePending ),
-     mSecurity( &security ),
-     mDomain( sipDomain )
+     mSecurity( &security )
 {
+   setTlsDomain(sipDomain);   
    InfoLog ( << "Creating DTLS transport host=" << interfaceObj 
              << " port=" << portNum
              << " ipv4=" << version ) ;
