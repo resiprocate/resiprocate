@@ -12,42 +12,92 @@ namespace resip
 {
 
 /**
-   Accumulates time by distinct string.
+   Accumulates time and count by distinct string.
    The data is available statically.
    Use class::method as the key when possible to avoid collision.
 */
 class TimeAccumulate
 {
-   public:
-      TimeAccumulate(const resip::Data& name)
-         : _name(name)
+   private:
+      struct Accumulator
       {
-         _start = resip::Timer::getTimeMs();
-      }
+            UInt64 totalTime;
+            size_t count;
+      };
+
+   public:
+#if 1
+      TimeAccumulate(const Data& name)
+         : mName(name),
+           mStart(Timer::getTimeMs())
+      {}
 
       ~TimeAccumulate()
       {
-         UInt64 end = resip::Timer::getTimeMs();
-         end -= _start;
-         resip::Lock lock(TimeAccumulate::mutex);
-         TimeAccumulate::times[_name] = TimeAccumulate::times[_name] + end;
+         UInt64 end = Timer::getTimeMs();
+         end -= mStart;
+         Lock lock(TimeAccumulate::mMutex);
+
+         Accumulator& acc = TimeAccumulate::mTimes[mName];
+         acc.count += 1;
+         acc.totalTime += end;
       }
-      
-      static UInt64 get(const resip::Data& name)
+#else
+      TimeAccumulate(const char* chars)
+         : mName(Data::Empty),
+           mStart(0)
+      {}
+
+      TimeAccumulate(const Data& name)
+         : mName(Data::Empty),
+           mStart(0)
+      {}
+
+      ~TimeAccumulate()
       {
-         return TimeAccumulate::times[name];
+      }
+#endif
+      
+      static UInt64 getTime(const Data& name)
+      {
+         Lock lock(TimeAccumulate::mMutex);
+         return TimeAccumulate::mTimes[name].totalTime;
       }
       
+      static size_t getCount(const Data& name)
+      {
+         Lock lock(TimeAccumulate::mMutex);
+         return TimeAccumulate::mTimes[name].count;
+      }
+
       static void dump();
+      static void clear();
+
+      class Guard
+      {
+         public:
+            explicit Guard(UInt64& accumulator)
+               : mAccumulator(accumulator)
+            {
+               mAccumulator -= Timer::getTimeMs();
+            }
+            ~Guard()
+            {
+               mAccumulator += Timer::getTimeMs();
+            }
+
+         private:
+            UInt64& mAccumulator;
+      };
 
    private:
-      typedef std::map<resip::Data, UInt64> TimeMap;
+      typedef std::map<Data, Accumulator> TimeMap;
 
-      const resip::Data _name;
-      UInt64 _start;
+      const Data mName;
+      const UInt64 mStart;
 
-      static resip::Mutex mutex;
-      static TimeMap times;
+      static Mutex mMutex;
+      static TimeMap mTimes;
 };
 
 }
