@@ -409,15 +409,17 @@ DialogUsageManager::getTimeTillNextProcessMS()
 void
 DialogUsageManager::process(FdSet& fdset)
 {
-   mStack.process(fdset);
-   std::auto_ptr<Message> msg( mStack.receiveAny() );
-   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
-   if (!msg.get())  return;
-   if (sipMsg)
+   try 
    {
-      InfoLog ( << "DialogUsageManager::process: " << sipMsg->brief());      
-      if (sipMsg->isRequest())
+      mStack.process(fdset);
+      std::auto_ptr<Message> msg( mStack.receiveAny() );
+      SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
+      if (!msg.get())  return;
+      if (sipMsg)
       {
+         InfoLog ( << "DialogUsageManager::process: " << sipMsg->brief());      
+         if (sipMsg->isRequest())
+         {
 
 //          if( !validateRequest(*sipMsg) )
 //          {
@@ -429,45 +431,51 @@ DialogUsageManager::process(FdSet& fdset)
 //             InfoLog (<< "Failed to validation " << *sipMsg);
 //             return;
 //          }
-         if (sipMsg->header(h_From).exists(p_tag))
-         {
-            if (mergeRequest(*sipMsg) )
+            if (sipMsg->header(h_From).exists(p_tag))
             {
-               InfoLog (<< "Merged request: " << *sipMsg);
-               return;
+               if (mergeRequest(*sipMsg) )
+               {
+                  InfoLog (<< "Merged request: " << *sipMsg);
+                  return;
+               }
             }
-         }
          
-         if ( mServerAuthManager )
-         { 
-            if ( mServerAuthManager->handle(*sipMsg) )
-            {
-               return;
+            if ( mServerAuthManager )
+            { 
+               if ( mServerAuthManager->handle(*sipMsg) )
+               {
+                  return;
+               }
             }
+            processRequest(*sipMsg);
          }
-         processRequest(*sipMsg);
-      }
-      else if (sipMsg->isResponse())
-      {
-         processResponse(*sipMsg);
-      }
-      return;
-   }
-
-   DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
-   if (dumMsg )
-   {
-      if ( !dumMsg->getBaseUsage().isValid())
-      {
+         else if (sipMsg->isResponse())
+         {
+            processResponse(*sipMsg);
+         }
          return;
       }
-      
-      dumMsg->getBaseUsage()->dispatch(*dumMsg);
-      return;
-   }
 
-   ErrLog(<<"Unknown message received." << msg->brief());
-   assert(0);
+      DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
+      if (dumMsg )
+      {
+         if ( !dumMsg->getBaseUsage().isValid())
+         {
+            return;
+         }
+      
+         dumMsg->getBaseUsage()->dispatch(*dumMsg);
+         return;
+      }
+
+      ErrLog(<<"Unknown message received." << msg->brief());
+      assert(0);
+   }
+   catch(BaseException& e)
+   {
+      //unparseable, bad 403 w/ 2543 trans it from FWD, etc
+      ErrLog(<<"Illegal message rejected." );
+   }
 }
 
 bool
