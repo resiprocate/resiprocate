@@ -3,6 +3,7 @@
 
 #include "sip2/sipstack/Transport.hxx"
 #include "sip2/sipstack/Message.hxx"
+#include "sip2/sipstack/Preparse.hxx"
 
 namespace Vocal2
 {
@@ -24,6 +25,7 @@ class UdpTransport : public Transport
       Transport::Type transport() const { return UDP; }
 
    private:
+      Preparse mPreparse;
       static const int MaxBufferSize;
 };
 

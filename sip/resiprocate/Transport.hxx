@@ -8,7 +8,7 @@
 #include "sip2/util/Socket.hxx"
 #include "sip2/util/BaseException.hxx"
 #include "sip2/sipstack/Message.hxx"
-#include "sip2/sipstack/Preparse.hxx"
+
 namespace Vocal2
 {
 
@@ -87,8 +87,6 @@ class Transport
       Data mInterface;
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
-      Preparse mPreparse;
-        
    private:
 
       bool mShutdown ;

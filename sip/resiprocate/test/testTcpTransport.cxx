@@ -5,7 +5,9 @@
 #include "sip2/sipstack/ConnectionMap.hxx"
 #include "sip2/util/Fifo.hxx"
 #include "sip2/sipstack/Preparse.hxx"
-
+#include "sip2/util/DataStream.hxx"
+#include "sip2/util/Log.hxx"
+#include "sip2/sipstack/test/TestSupport.hxx"
 
 using namespace Vocal2;
 using namespace std;
@@ -26,8 +28,43 @@ char *onemsg = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
                 "Expires: 2700\r\n"
                 "Content-Length: 0\r\n\r\n");
 
-int main()
+char *longWithBody = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
+                      "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfirst\r\n"
+                      "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=ssecond\r\n"
+                      "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sthird\r\n"
+                      "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfourth\r\n"
+                      "Max-Forwards: 7\r\n"
+                      "To: Speedy <sip:speedy@biloxi.com>\r\n"
+                      "From: Speedy <sip:speedy@biloxi.com>;tag=88888\r\n"
+                      "Call-ID: 88888@8888\r\n"
+                      "CSeq: 6281 REGISTER\r\n"
+                      "Contact: <sip:speedy@192.0.2.4>\r\n"
+                      "Contact: <sip:qoq@192.0.2.4>\r\n"
+                      "Expires: 2700\r\n"
+                      "Content-Type: text/plain\r\n"
+                      "Content-Length: 500\r\n"
+                      "\r\n"
+                      "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkl");
+
+char *smallMessage = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
+                      "Content-Length: 0\r\n\r\n");
+
+char *smallMessageWithBody = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
+                              "Content-Type: text/plain\r\n"
+                              "Content-Length: 17\r\n"
+                              "\r\n"
+                              "afffffefffffffffg");
+
+char *smallMessageWithLargeBody = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
+                                   "Content-Type: text/plain\r\n"
+                                   "Content-Length: 128\r\n"
+                                   "\r\n"
+                                   "sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssf");
+
+int 
+main(int argc, char* argv[])
 {
+   Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::DEBUG, argv[0]);
 /*
    {
       Data msgData(onemsg);
@@ -46,79 +83,197 @@ int main()
    }
    return 0;
 */
-   cerr << "Whole message in one chunk" << endl;
-   {
-      Data msgData(onemsg);
-      Preparse preparse;
-      Fifo<Message> fifo;
-      ConnectionMap::Connection conn;
-      conn.allocateBuffer(1024);
-      
-      assert(conn.mBytesRead == 0);
-      assert(conn.mBufferSize == 1024);
-      memcpy(conn.mBuffer + conn.mBytesRead, msgData.data(), msgData.size());
-      
-      conn.process(msgData.size(), fifo, preparse, 1024);
-      
-      if (fifo.messageAvailable())
-      {
-         SipMessage* msg = dynamic_cast<SipMessage*>(fifo.getNext());
-         assert(msg);
-         cerr << *msg << endl;
-      }
-      else
-      {
-         cerr << "Message was not inserted into fifo" << endl;
-      }
-   }
-
+   
    cerr << "Message in two chunks" << endl;   
    {
-      {
-         int chunk = strlen(onemsg) / 2;
+      int chunk = strlen(onemsg) * 2 / 3;
          
-         char* buffer = new char[chunk];
+      char* buffer = new char[chunk];
+      memcpy(buffer, onemsg, chunk);
          
-         Preparse preparse;
-         SipMessage msg;
-
-         size_t used = 0;
-         size_t discard = 0;
-         Preparse::Action status = PreparseConst::stNone;
-         preparse.process(msg, buffer, chunk, 0, used, discard, status);
-         
-         //assert(status == PreparseState::fragment);
-         //cerr << "bytes used: " << k << ", message size: " << msgData.size() << endl;
-         //assert(k == msgData.size());
-         cerr << msg << endl;
-      }
-      return 0;
-      Data msgData(onemsg);
       Preparse preparse;
+      SipMessage msg;
+      cerr << "Preparsing:[";
+      cerr.write(buffer, chunk);
+      cerr << "]" << endl;
+      if (preparse.process(msg, buffer, chunk) != 0)
+      {
+         assert(0);
+      }
+         
+      assert(preparse.isFragmented());
+      assert(!preparse.isHeadersComplete());
+      assert(preparse.isDataAssigned());
+
+      msg.addBuffer(buffer);
+         
+      char* partialHeader = new char[(chunk - preparse.nDiscardOffset()) + chunk];
+      memcpy(partialHeader, buffer + preparse.nDiscardOffset(), chunk - preparse.nDiscardOffset());
+      
+      cerr.write(partialHeader, chunk - preparse.nDiscardOffset());
+      cerr << endl << endl;
+
+      memcpy(partialHeader + chunk - preparse.nDiscardOffset(), onemsg + preparse.nBytesUsed(),
+             strlen(onemsg) - preparse.nDiscardOffset());
+         
+      cerr << "Preparsing:[";
+      cerr.write(partialHeader, strlen(onemsg) - preparse.nDiscardOffset());
+      cerr << "]" << endl;
+      
+      if (preparse.process(msg, partialHeader, chunk - preparse.nDiscardOffset() + strlen(onemsg) - preparse.nDiscardOffset()) != 0)
+      {
+         assert(0);
+      }
+         
+      assert(!preparse.isFragmented());
+      assert(preparse.isHeadersComplete());
+      assert(preparse.isDataAssigned());
+
+      msg.addBuffer(partialHeader);
+
+      cerr << msg << endl;
+   }
+   {
+      Data msgData(smallMessage);
       Fifo<Message> fifo;
       ConnectionMap::Connection conn;
+      
+      std::pair<char* const, size_t> writePair = conn.getWriteBuffer();
 
-      conn.allocateBuffer(500);
-      assert(conn.mBytesRead == 0);
-      assert(conn.mBufferSize == 500);
-      memcpy(conn.mBuffer + conn.mBytesRead, msgData.data(), 500);
+      memcpy(writePair.first, msgData.data(), msgData.size());
       
-      conn.process(500, fifo, preparse, 500);
+      conn.process(msgData.size(), fifo);
+      
+      assert(fifo.messageAvailable());
+      SipMessage* msg = dynamic_cast<SipMessage*>(fifo.getNext());
+      assert(msg);
+      Data buf;
+      {
+         DataStream s(buf);
+         s << *msg;
+      }
+      assert(buf == msgData);
+   }
+   {
+      Data msgData(smallMessageWithBody);
+      Fifo<Message> fifo;
+      ConnectionMap::Connection conn;
+      
+      std::pair<char* const, size_t> writePair = conn.getWriteBuffer();
 
-      conn.allocateBuffer(500);
-      memcpy(conn.mBuffer + conn.mBytesRead + 500, msgData.data() + 500, msgData.size() - 500);
+      memcpy(writePair.first, msgData.data(), msgData.size());
       
-      conn.process(msgData.size() - 500, fifo, preparse, 500);
+      conn.process(msgData.size(), fifo);
       
-      if (fifo.messageAvailable())
+      assert(fifo.messageAvailable());
+      SipMessage* msg = dynamic_cast<SipMessage*>(fifo.getNext());
+      cerr << *msg << endl;
+      assert(msg);
+      Data buf;
       {
-         SipMessage* msg = dynamic_cast<SipMessage*>(fifo.getNext());
-         assert(msg);
-         cerr << *msg << endl;
+         DataStream s(buf);
+         s << *msg;
       }
-      else
+      assert(buf == msgData);
+   }
+   {
+      Data msgData(smallMessageWithLargeBody);
+      Fifo<Message> fifo;
+      ConnectionMap::Connection conn;
+      
+      size_t pos = 0;
+      while (pos < msgData.size())
       {
-         cerr << "Message was not inserted into fifo" << endl;
+         std::pair<char* const, size_t> writePair = conn.getWriteBuffer();
+
+         size_t writeSize = min(msgData.size() - pos, 
+                                min((size_t)100, writePair.second));
+         
+         memcpy(writePair.first, msgData.data() + pos, writeSize);
+         pos += writeSize;
+         conn.process(writeSize, fifo);
       }
+      assert(fifo.messageAvailable());
+      SipMessage* msg = dynamic_cast<SipMessage*>(fifo.getNext());
+      cerr << *msg << endl;
+      assert(msg);
+      Data buf;
+      {
+         DataStream s(buf);
+         s << *msg;
+      }
+      assert(buf == msgData);
+   }
+   {
+      Data msgData(onemsg);
+      Fifo<Message> fifo;
+      ConnectionMap::Connection conn;
+      
+      size_t pos = 0;
+      while (pos < msgData.size())
+      {
+         std::pair<char* const, size_t> writePair = conn.getWriteBuffer();
+
+         size_t writeSize = min(msgData.size() - pos, 
+                                min((size_t)100, writePair.second));
+         
+         memcpy(writePair.first, msgData.data() + pos, writeSize);
+         pos += writeSize;
+         conn.process(writeSize, fifo);
+      }
+      assert(fifo.messageAvailable());
+      SipMessage* msg = dynamic_cast<SipMessage*>(fifo.getNext());
+      cerr << *msg << endl;
+      assert(msg);
+
+      auto_ptr<SipMessage> shouldMatch(TestSupport::makeMessage(msgData));
+      Data buf;
+      {
+         DataStream s(buf);
+         s << *msg;
+      }
+      Data otherBuf;
+      {
+         DataStream s(otherBuf);
+         s << *shouldMatch;
+      }
+
+      assert(buf == otherBuf);
+   }
+   {
+      Data msgData(longWithBody);
+      Fifo<Message> fifo;
+      ConnectionMap::Connection conn;
+      
+      size_t pos = 0;
+      while (pos < msgData.size())
+      {
+         std::pair<char* const, size_t> writePair = conn.getWriteBuffer();
+
+         size_t writeSize = min(msgData.size() - pos, 
+                                min((size_t)100, writePair.second));
+         
+         memcpy(writePair.first, msgData.data() + pos, writeSize);
+         pos += writeSize;
+         conn.process(writeSize, fifo);
+      }
+      assert(fifo.messageAvailable());
+      SipMessage* msg = dynamic_cast<SipMessage*>(fifo.getNext());
+      cerr << *msg << endl;
+      assert(msg);
+
+      auto_ptr<SipMessage> shouldMatch(TestSupport::makeMessage(msgData));
+      Data buf;
+      {
+         DataStream s(buf);
+         s << *msg;
+      }
+      Data otherBuf;
+      {
+         DataStream s(otherBuf);
+         s << *shouldMatch;
+      }
+
+      assert(buf == otherBuf);
    }
 }
