@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.70 2002/11/06 02:31:35 derekm Exp $
+# $Id: Makefile,v 1.71 2002/11/06 03:50:48 jason Exp $
 
 BUILD = ../../build
 
@@ -12,7 +12,7 @@ PACKAGES += OPENSSL
 endif
 
 TARGET_LIBRARY = libsip2
-TESTPROGRAMS =  SipTortureTests.cxx test2.cxx testSipStack1.cxx testSipMessage.cxx testParserCategories.cxx testNonInviteServerTx.cxx testNonInviteClientTx.cxx testDnsResolver.cxx testPreparse.cxx
+TESTPROGRAMS =  SipTortureTests.cxx test2.cxx testSipStack1.cxx testSipMessage.cxx testParserCategories.cxx testNonInviteClientTx.cxx testDnsResolver.cxx testPreparse.cxx
 
 
 
