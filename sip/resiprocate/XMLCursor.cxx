@@ -55,7 +55,8 @@ static const Data COMMENT_END("-->");
 // 2. embedded wierdnesses like <! > and <? >
 XMLCursor::XMLCursor(const ParseBuffer& pb)
    : mRoot(0),
-     mCursor(0)
+     mCursor(0),
+     mAttributesSet(false)
 {
    ParseBuffer lPb(pb);
 
