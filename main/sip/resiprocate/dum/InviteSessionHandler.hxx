@@ -1,7 +1,7 @@
 #if !defined(RESIP_INVITESESSIONHANDLER_HXX)
 #define RESIP_INVITESESSIONHANDLER_HXX
 
-/** @file InvSessionHandler.hxx
+/** @file InviteSessionHandler.hxx
  *  
  */
 
@@ -12,8 +12,8 @@ class InviteSessionHandler
 {
    public:
       /// called when an initial INVITE arrives 
-      virtual void onNewInvSession(ServerInviteSession::Handle&, const SipMessage& msg)=0;
-      virtual void onNewInvSession(ClientInviteSession::Handle&, const SipMessage& msg)=0;
+      virtual void onNewSession(ServerInviteSession::Handle&, const SipMessage& msg)=0;
+      virtual void onNewSession(ClientInviteSession::Handle&, const SipMessage& msg)=0;
       
       /// called when some state in the Dialog changes - typically remoteURI
       virtual void onDialogModified(InviteSession::Handle&, const SipMessage& msg)=0;
