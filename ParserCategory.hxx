@@ -35,7 +35,7 @@ class ParserCategory
 #ifndef WIN32
       template <int T>
       typename ParameterType<T>::Type::Type& 
-      operator[](const ParameterType<T>& parameterType) const
+      param(const ParameterType<T>& parameterType) const
       {
          checkParsed();
          return mHeaderField->getParameter(parameterType).value();
@@ -68,7 +68,7 @@ class ParserCategory
       
       virtual void parse() = 0;
 
-      UnknownParameter& operator[](const Data& param) const;
+      UnknownParameter& param(const Data& param) const;
 
       void remove(const Data& param); 
       bool exists(const Data& param) const;
