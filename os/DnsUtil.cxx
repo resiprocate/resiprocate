@@ -1,6 +1,12 @@
+
 #if !defined(WIN32) && !defined (__sun__)
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include <errno.h>
 #endif
 
 #include <stdio.h>
@@ -44,7 +50,7 @@ DnsUtil::getLocalHostName()
 Data 
 DnsUtil::getLocalDomainName()
 {
-#if defined( __MACH__ ) || defined( WIN32 ) || defined(__SUNPRO_CC) || defined(__sun__)
+#if defined( __APPLE__ ) || defined( WIN32 ) || defined(__SUNPRO_CC) || defined(__sun__)
    assert(0);
  // !cj! TODO 
    return NULL;
