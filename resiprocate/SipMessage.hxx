@@ -102,10 +102,14 @@ class SipMessage : public Message
       void addHeader(int header, char* headerName, int headerLen, 
                      char* start, int len);
 
+
+      void addSource(const sockaddr_in& addr);
+      
       bool hasFixedDest() const;
       Data getFixedDest() const;
       void setFixedDest(const Data& dest);
       void clearFixedDest();
+
 
    private:
       void copyFrom(const SipMessage& message);
