@@ -92,7 +92,8 @@ TransportSelector::addTransport( TransportType protocol,
 
 void 
 TransportSelector::addTlsTransport(const Data& domainName, 
-                                   const Data& keyDir, const Data& privateKeyPassPhrase,
+                                   const Data& keyDir,
+				   const Data& privateKeyPassPhrase,
                                    int port,
                                    IpVersion version,
                                    const Data& ipInterface)
