@@ -12,7 +12,7 @@
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
-// #define PP_DEBUG
+//#define PP_DEBUG
 
 // Include required facilities for DEBUG only.
 
@@ -24,7 +24,7 @@ const int ppDebugEdgeVerbose = 0x04; // ALL edge taken
 const int ppDebugActions     = 0x08; // Actions ( not Add )
 const int ppDebugPrettyPrint = 0x10; // pp the buffers.
 
-static int ppDebugFlags = 0;
+static int ppDebugFlags = 0xFF;
 
 #endif
 
@@ -127,6 +127,8 @@ const char *  ppStateName(Preparse::State s)
         PP_STATE_NAME(EndMsg);
         default: assert(0);
     }
+	assert(0);
+	return 0;
 }
 
 #endif
@@ -419,7 +421,6 @@ Preparse::process(SipMessage& msg,
      mUsed = UINT_MAX;
      mDiscard = 0;
      
-
      // Invariants -- failure is error in caller.
      assert(traversalOff < length);
      assert(buffer);
@@ -580,7 +581,6 @@ Preparse::process(SipMessage& msg,
              traversalOff--;
          }
 
-
          if (edge.workMask & actBad)
          {
 #if defined (PP_DEBUG)             
@@ -644,13 +644,10 @@ Preparse::process(SipMessage& msg,
                DebugLog(<<"RESET");
             }
 #endif
-         }
-      
+         }     
      }
 
-
-     
-     // Compute Discard -- always the same, unless fragmented, then
+	 // Compute Discard -- always the same, unless fragmented, then
      // discard is zero.
 
      // update all members for next (stateful) call
@@ -666,7 +663,6 @@ Preparse::process(SipMessage& msg,
 #if defined(PP_DEBUG)
      if (ppDebugFlags && ppDebugActions)
      {
-
         DebugLog(<<"[<-] PP::process(...)");
         // !ah! Log all the anchors etc here.
         DebugLog(<<"mAnchorEndOff:"<<mAnchorEndOff);
@@ -682,9 +678,7 @@ Preparse::process(SipMessage& msg,
         DebugLog(<< "mStart: " << mStart);
      }
 #endif
-    
      return mStatus & stPreparseError;
-
 }
 
 
