@@ -280,6 +280,9 @@ class SipMessage : public TransactionMessage
       
       SipMessage& mergeUri(const Uri& source);      
 
+      void setSecurityAttributes(auto_ptr<SecurityAttributes>) const;
+      const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
+
    protected:
       void cleanUp();
    
@@ -343,7 +346,7 @@ class SipMessage : public TransactionMessage
       // domain associated with this message for tls cert
       Data mTlsDomain;
 
-      SecurityAttributes* mSecurityAttributes;
+      mutable auto_ptr<SecurityAttributes> mSecurityAttributes;
 
       friend class TransportSelector;
 };
