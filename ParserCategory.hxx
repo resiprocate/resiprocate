@@ -23,8 +23,15 @@ class ParserCategory : public LazyParser
 {
     public:
       enum {UnknownParserCategory = -1};
-      enum {None = 0, In = 1, InOut = 3};
 
+      // NoCommaTokenizing:        commas do not indicate a new header value
+      // CommasAllowedOutputMulti: multi headers can be received with commas but
+      //                           output them on separate lines.
+      // CommasAllowedOutputCommas: multi headers can be received with commas
+      //                            and will always output with commas when
+      //                            parsed.  
+      enum {NoCommaTokenizing = 0, CommasAllowedOutputMulti = 1, CommasAllowedOutputCommas = 3};
+      
       ParserCategory(HeaderFieldValue* headerFieldValue, Headers::Type type);
       ParserCategory(const ParserCategory& rhs);
       ParserCategory& operator=(const ParserCategory& rhs);
