@@ -792,8 +792,11 @@ myMain(int argc, char* argv[])
    {
       if ( noTls != true )
       {
-          if (!noV4) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V4);
-          //if (!noV6) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V6);
+         if (!noV4) 
+         {
+            sipStack.addTransport(TLS, tlsPort, V4, Data::Empty);
+         }
+   //if (!noV6) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V6);
       }
    }
 #endif
