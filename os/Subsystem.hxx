@@ -25,7 +25,7 @@ class Subsystem
       
    protected:
       Subsystem(const char* rhs) : mSubsystem(rhs) {};
-      Subsystem(const Data& rhs);
+      Subsystem(const Data& rhs) : mSubsystem(rhs) {};
       Subsystem& operator=(const Data& rhs);
 
       Data mSubsystem;
