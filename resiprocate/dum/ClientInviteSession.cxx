@@ -11,60 +11,49 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          const SipMessage& request, 
                                          const SdpContents* initialOffer)
    : InviteSession(dum, dialog),
-     mHandle(dum),
-     mLastRequest(request),
-     mReceived2xx(false)
+     mHandle(dum)
 {
    mProposedLocalSdp = static_cast<SdpContents*>(initialOffer->clone());
+   mLastRequest = request;
 }
 
-void 
-ClientInviteSession::setOffer(const SdpContents* offer)
+SipMessage&
+ClientInviteSession::getOfferOrAnswer()
 {
-   
+   return mLastRequest;
 }
 
-void 
-ClientInviteSession::sendOfferInAnyMessage()
-{
-}
-
-void 
-ClientInviteSession::setAnswer(const SdpContents* answer)
-{
-}
-
-void 
-ClientInviteSession::sendAnswerInAnyMessage()
-{
-}
-
-void 
+SipMessage&
 ClientInviteSession::end()
 {
    switch (mState)
    {
       case Unknown:
          assert(0);
-         break;
+         return mLastRequest;
          
       case Early:
          // is it legal to cancel a specific fork/dialog. 
          // if so, this is the place to do it
-         break;
+         assert(0);
+         return mLastRequest;
          
       case Connected:
-         InviteSession::end();
+         return InviteSession::end();
          break;
          
       case Terminated:
          // do nothing
-         break;
+         assert(0);
+         return mLastRequest;         
 
       case Cancelled:
          // !jf! 
          assert(0);
-         break;
+         return mLastRequest;         
+         
+      default:
+         return mLastRequest;
    }
 }
 
@@ -110,14 +99,14 @@ ClientInviteSession::dispatch(const SipMessage& msg)
    }
    
    int code = msg.header(h_StatusLine).statusCode();
-   if (code < 300 && mState == Unknown)
+   if (code < 300 && mState == Initial)
    {
-      handler->onNewSession(getHandle(), msg);
+      //handler->onNewSession(getHandle(), msg);
    }
          
    if (code < 200) // 1XX
    {
-      if (mState == Unknown || mState == Early)
+      if (mState == Initial || mState == Early)
       {
          mState = Early;
          handler->onEarly(getHandle(), msg);
@@ -171,13 +160,14 @@ ClientInviteSession::dispatch(const SipMessage& msg)
       else if (mState != Terminated)
       {
          mState = Connected;
-         if (mReceived2xx) // retransmit ACK
+         // !jf!
+         //if (mReceived2xx) // retransmit ACK
          {
             mDum.send(mAck);
             return;
          }
          
-         mReceived2xx = true;
+         //mReceived2xx = true;
          handler->onConnected(getHandle(), msg);
             
          SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
