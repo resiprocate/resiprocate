@@ -1,5 +1,6 @@
 #include <cassert>
 #include "ClientPublication.hxx"
+#include <cassert>
 
 using namespace resip;
 

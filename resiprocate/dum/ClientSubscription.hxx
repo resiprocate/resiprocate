@@ -9,6 +9,8 @@ namespace resip
 
 class DialogUsageManager;
 
+//!dcm! -- update contact in dialog if required
+
 class ClientSubscription: public BaseUsage
 {
    public:      
