@@ -110,10 +110,17 @@ class Helper
                                             const Data& password,
                                             int expiresDelta = 0);
       
+      static std::pair<AuthResult,Data> 
+                advancedAuthenticateRequest(const SipMessage& request, 
+                                            const Data& realm,
+                                            const Data& a1,
+                                            int expiresDelta = 0);
+      
       // create a 407 response with Proxy-Authenticate header filled in
       static SipMessage* makeProxyChallenge(const SipMessage& request, 
                                             const Data& realm,
-                                            bool useAuth = true);
+                                            bool useAuth = true,
+                                            bool stale = false);
 
       // adds authorization headers in reponse to the 401 or 407--currently
       // only supports md5, the only qop supported is auth.
@@ -132,10 +139,16 @@ class Helper
                                             unsigned int& nonceCount,
                                             Data& nonceCountString);      
 
+      static Data makeResponseMD5WithA1(const Data& a1,
+                                        const Data& method, const Data& digestUri, const Data& nonce,
+                                        const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
+                                        const Data& cnonceCount = Data::Empty);
+
       static Data makeResponseMD5(const Data& username, const Data& password, const Data& realm, 
                                   const Data& method, const Data& digestUri, const Data& nonce,
                                   const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
                                   const Data& cnonceCount = Data::Empty);
+      
       
       static Data makeNonce(const SipMessage& request, const Data& timestamp);
 
