@@ -17,6 +17,10 @@
 #include "server.h"
 #include "util.h"
 
+#ifdef NO_FORK
+#include <shlwapi.h>
+#endif
+
 #include "simple.h"
 
 static GaimPlugin *my_protocol = NULL;
@@ -387,6 +391,10 @@ init_gag(GaimConnection *gc)
 {
   char sanity_check_buffer[8];
   int sane;
+#ifdef NO_FORK
+  char gag_path[256];
+  DWORD gag_path_size = 240;
+#endif
 
   gaim_debug(GAIM_DEBUG_INFO,"sippy","Initializing Gag\n");  
 
@@ -446,8 +454,26 @@ init_gag(GaimConnection *gc)
     }
 
     /* Start SIP engine */
+
+    /* First, check in the directory into which Gaim is installed */
+    SHRegGetUSValue ("SOFTWARE\\gaim", NULL, NULL, 
+                     (LPVOID)gag_path, 
+                     &gag_path_size, 
+                     TRUE,
+                     NULL, 0);
+    strcat(gag_path, "\\gag.exe");
+
     shell_exec_status = 
-      (int)ShellExecute(NULL, "open", "gag.exe", "-l", NULL, 0);
+      (int)ShellExecute(NULL, "open", gag_path, "-l", NULL, 0);
+
+    /* If that fails, see if it's in the path somewhere. */
+    if (shell_exec_status <= 32)
+    {
+      shell_exec_status = 
+        (int)ShellExecute(NULL, "open", "gag.exe", "-l", NULL, 0);
+    }
+
+    /* Well, if we can't find the gag.exe binary, we can't continue. */
     if (shell_exec_status <= 32)
     {
       gaim_connection_error(gc,
