@@ -1,6 +1,7 @@
 #if !defined(RESIP_HANDLE_HXX)
 #define RESIP_HANDLE_HXX
 
+#include <iosfwd>
 #include "resiprocate/dum/Handled.hxx"
 #include "resiprocate/dum/HandleManager.hxx"
 #include "resiprocate/dum/HandleException.hxx"
@@ -62,6 +63,17 @@ class Handle
       {
          return get();
       }
+
+      T& operator*()
+      {
+         return *get();
+      }
+
+      const T& operator*() const
+      {
+         return *get();
+      }
+      
 
       Handled::Id getId() const
       {
