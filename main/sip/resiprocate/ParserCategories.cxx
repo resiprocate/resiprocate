@@ -21,6 +21,17 @@ Token::Token(const Token& rhs)
      mValue(rhs.mValue)
 {}
 
+Token&
+Token::operator=(const Token& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      mValue = rhs.mValue;
+   }
+   return *this;
+}
+
 void
 Token::parse(ParseBuffer& pb)
 {
@@ -54,6 +65,18 @@ Mime::Mime(const Mime& rhs)
 {
 }
 
+Mime&
+Mime::operator=(const Mime& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      mType = rhs.mType;
+      mSubType = rhs.mSubType;
+   }
+   return *this;
+}
+
 void
 Mime::parse(ParseBuffer& pb)
 {
@@ -80,6 +103,16 @@ Auth::Auth(const Auth& rhs)
    : ParserCategory(rhs)
 {}
 
+Auth&
+Auth::operator=(const Auth& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      assert(0);
+   }
+   return *this;
+}
 void
 Auth::parse(ParseBuffer& pb)
 {
@@ -108,6 +141,17 @@ CSeqCategory::CSeqCategory(const CSeqCategory& rhs)
      mSequence(rhs.mSequence)
 {}
 
+CSeqCategory&
+CSeqCategory::operator=(const CSeqCategory& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      mMethod = rhs.mMethod;
+      mSequence = rhs.mSequence;
+   }
+   return *this;
+}
 ParserCategory* 
 CSeqCategory::clone() const
 {
@@ -154,6 +198,16 @@ DateCategory::DateCategory(const DateCategory& rhs)
      mValue(rhs.mValue)
 {}
 
+DateCategory&
+DateCategory::operator=(const DateCategory& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      mValue = rhs.mValue;
+   }
+   return *this;
+}
 void
 DateCategory::parse(ParseBuffer& pb)
 {
@@ -181,6 +235,16 @@ WarningCategory::WarningCategory(const WarningCategory& rhs)
 {
 }
 
+WarningCategory&
+WarningCategory::operator=(const WarningCategory& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      assert(0);
+   }
+   return *this;
+}
 void
 WarningCategory::parse(ParseBuffer& pb)
 {
@@ -207,6 +271,16 @@ IntegerCategory::IntegerCategory(const IntegerCategory& rhs)
      mValue(0)
 {}
 
+IntegerCategory&
+IntegerCategory::operator=(const IntegerCategory& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      mValue = rhs.mValue;
+   }
+   return *this;
+}
 ParserCategory* IntegerCategory::clone() const
 {
    return new IntegerCategory(*this);
@@ -256,6 +330,16 @@ StringCategory::StringCategory(const StringCategory& rhs)
    : ParserCategory(rhs)
 {}
 
+StringCategory&
+StringCategory::operator=(const StringCategory& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      mValue = rhs.mValue;
+   }
+   return *this;
+}
 ParserCategory* 
 StringCategory::clone() const
 {
@@ -282,6 +366,16 @@ GenericURI::GenericURI(const GenericURI& rhs)
    : ParserCategory(rhs)
 {}
 
+GenericURI&
+GenericURI::operator=(const GenericURI& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      assert(0);
+   }
+   return *this;
+}
 void
 GenericURI::parse(ParseBuffer& pb)
 {
@@ -309,6 +403,20 @@ Via::Via(const Via& rhs)
 {
 }
 
+Via&
+Via::operator=(const Via& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      mProtocolName = rhs.mProtocolName;
+      mProtocolVersion = rhs.mProtocolVersion;
+      mTransport = rhs.mTransport;
+      mSentHost = rhs.mSentHost;
+      mSentPort = rhs.mSentPort;
+   }
+   return *this;
+}
 ParserCategory *
 Via::clone() const
 {
@@ -376,6 +484,16 @@ CallId::CallId(const CallId& rhs)
    : ParserCategory(rhs)
 {}
 
+CallId&
+CallId::operator=(const CallId& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      mValue = rhs.mValue;
+   }
+   return *this;
+}
 ParserCategory *
 CallId::clone() const
 {
@@ -406,6 +524,27 @@ CallId::encode(ostream& str) const
 NameAddr::NameAddr(const NameAddr& rhs)
    : ParserCategory(rhs)
 {}
+
+NameAddr&
+NameAddr::operator=(const NameAddr& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      delete mUri;
+      if (rhs.mUri != 0)
+      {
+         mUri = new Uri(*rhs.mUri);
+      }
+      else
+      {
+         mUri = 0;
+      }
+      mAllContacts = rhs.mAllContacts;
+      mDisplayName = rhs.mDisplayName;
+   }
+   return *this;
+}
 
 NameAddr::~NameAddr()
 {
@@ -521,6 +660,27 @@ RequestLine::RequestLine(const RequestLine& rhs)
      mSipVersion(rhs.mSipVersion)
 {}
 
+RequestLine&
+RequestLine::operator=(const RequestLine& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      delete mUri;
+      if (rhs.mUri != 0)
+      {
+         mUri = new Uri(*rhs.mUri);
+      }
+      else
+      {
+         mUri = 0;
+      }
+      mMethod = rhs.mMethod;
+      mSipVersion = rhs.mSipVersion;
+   }
+   return *this;
+}
+
 RequestLine::~RequestLine()
 {
    delete mUri;
@@ -567,6 +727,19 @@ StatusLine::StatusLine(const StatusLine& rhs)
      mReason(rhs.mReason)
 {}
      
+StatusLine&
+StatusLine::operator=(const StatusLine& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      mResponseCode = rhs.mResponseCode;
+      mSipVersion = rhs.mSipVersion;
+      mReason = rhs.mReason;
+   }
+   return *this;
+}
+
 ParserCategory *
 StatusLine::clone() const
 {

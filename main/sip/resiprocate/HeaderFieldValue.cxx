@@ -31,6 +31,9 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv,
    // if this isn't parsed, chunk and copy the block of memory
    if (!isParsed())
    {
+      // !dlb! remove this when comfortable that reallocation occurs
+      // only when necessary
+      assert(0);
       const_cast<char*&>(mField) = new char[mFieldLength];
       memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
    }
@@ -74,11 +77,6 @@ ostream& Vocal2::operator<<(ostream& stream, HeaderFieldValue& hfv)
    }
    return stream;
 }
-
-
-
-
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
