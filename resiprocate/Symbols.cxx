@@ -66,6 +66,7 @@ const char * const Symbols::Options = "Options";
 const char * const Symbols::Refer = "Refer";
 const char * const Symbols::Refer_To = "Refer_To";
 const char * const Symbols::Referred_By = "Referred_By";
+const char * const Symbols::Replaces = "Replaces";
 const char * const Symbols::Register = "Register";
 const char * const Symbols::Subscribe = "Subscribe";
 
