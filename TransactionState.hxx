@@ -63,6 +63,9 @@ class TransactionState
       SipMessage* mMsgToRetransmit;
 };
 
+ostream& 
+operator<<(ostream& strm, const TransactionState& state);
+
 }
 
 #endif
