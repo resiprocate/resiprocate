@@ -47,6 +47,7 @@ check_PROGRAMS = \
 	testMsgHeaderDiagram \
 	testParseBuffer \
 	testParserCategories \
+	testParseNameAddr \
 	testPlainContents \
 	testPreparse \
 	testRandomHex \
@@ -99,6 +100,7 @@ testMultipartMixedContents_SOURCES = testMultipartMixedContents.cxx
 testMultipartRelated_SOURCES = testMultipartRelated.cxx
 testHack_SOURCES = testHack.cxx
 testParseBuffer_SOURCES = testParseBuffer.cxx
+testParseNameAddr_SOURCES = testParseNameAddr.cxx
 testParserCategories_SOURCES = testParserCategories.cxx
 testPlainContents_SOURCES = testPlainContents.cxx
 testPreparse_SOURCES = testPreparse.cxx
