@@ -148,7 +148,7 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
             InfoLog (<< "Closing connection bytesRead=" << bytesRead);
             delete currConnection;
          }
-         else if (bytesRead > 0)
+         else if (bytesRead > 0) 
          {
             currConnection->performRead(bytesRead, mStateMachineFifo);
          }
