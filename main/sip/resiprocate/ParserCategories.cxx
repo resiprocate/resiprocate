@@ -219,8 +219,6 @@ Auth::encodeParsed(std::ostream& str) const
 {
    if (!mScheme.empty())
    {
-      cerr << "Auth::encodeParsed, in if, scheme: " << mScheme << endl;
-      
       str << mScheme << Symbols::SPACE;
    }
 
@@ -1572,13 +1570,9 @@ StatusLine::parse(ParseBuffer& pb)
 
    start = pb.skipWhitespace();
    mResponseCode = pb.integer();
-   start = pb.skipNonWhitespace();
-   if (*pb.position() != Symbols::SPACE[0] && pb.position() != pb.end())
-   {
-      start = pb.skipChar(Symbols::SPACE[0]);
-      pb.reset(pb.end());
-      pb.data(mReason, start);
-   }
+   start = pb.skipWhitespace();
+   pb.reset(pb.end());
+   pb.data(mReason, start);
 }
 
 ostream&
