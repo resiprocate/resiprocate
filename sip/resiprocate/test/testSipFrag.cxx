@@ -28,6 +28,202 @@ main(int argc, char* argv[])
   Log::initialize(Log::COUT, Log::INFO, argv[0]);
 
   {
+     // test from RFC3420
+     {
+        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+                 "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+                 "To: Bob <sip:bob@biloxi.com>\r\n"
+                 "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                 "Call-ID: a84b4c76e66710\r\n"
+                 "CSeq: 314159 INVITE\r\n"
+                 "Max-Forwards: 70\r\n"
+                 "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                 "Content-Type: message/sipfrag\r\n"
+                 "Content-Length: 38\r\n"
+                 "\r\n"
+                 "INVITE sip:alice@atlanta.com SIP/2.0\r\n");
+        
+        try
+        {
+           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+        }
+        catch (BaseException& e)
+        {
+           assert(false);
+        }
+     }
+
+     {
+        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+                 "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+                 "To: Bob <sip:bob@biloxi.com>\r\n"
+                 "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                 "Call-ID: a84b4c76e66710\r\n"
+                 "CSeq: 314159 INVITE\r\n"
+                 "Max-Forwards: 70\r\n"
+                 "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                 "Content-Type: message/sipfrag\r\n"
+                 "Content-Length: 22\r\n"
+                 "\r\n"
+                 "SIP/2.0 603 Declined\r\n");
+
+        try
+        {
+           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+        }
+        catch (BaseException& e)
+        {
+           assert(false);
+        }
+     }
+
+     {
+        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+                 "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+                 "To: Bob <sip:bob@biloxi.com>\r\n"
+                 "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                 "Call-ID: a84b4c76e66710\r\n"
+                 "CSeq: 314159 INVITE\r\n"
+                 "Max-Forwards: 70\r\n"
+                 "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                 "Content-Type: message/sipfrag\r\n"
+                 "Content-Length: 150\r\n"
+                 "\r\n"
+                 "REGISTER sip:atlanta.com SIP/2.0\r\n"
+                 "To: sip:alice@atlanta.com\r\n"
+                 "Contact: <sip:alicepc@atlanta.com>;q=0.9,\r\n"
+                 "         <sip:alicemobile@atlanta.com>;q=0.1\r\n");
+
+        try
+        {
+           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+        }
+        catch (BaseException& e)
+        {
+           assert(false);
+        }
+     }
+
+     {
+        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+                 "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+                 "To: Bob <sip:bob@biloxi.com>\r\n"
+                 "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                 "Call-ID: a84b4c76e66710\r\n"
+                 "CSeq: 314159 INVITE\r\n"
+                 "Max-Forwards: 70\r\n"
+                 "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                 "Content-Type: message/sipfrag\r\n"
+                 "Content-Length: 89\r\n"
+                 "\r\n"
+                 "SIP/2.0 400 Bad Request\r\n"
+                 "Warning: 399 atlanta.com Your Event header field was malformed\r\n");
+        
+        try
+        {
+           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+        }
+        catch (BaseException& e)
+        {
+           assert(false);
+        }
+     }
+
+     {
+        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+                 "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+                 "To: Bob <sip:bob@biloxi.com>\r\n"
+                 "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                 "Call-ID: a84b4c76e66710\r\n"
+                 "CSeq: 314159 INVITE\r\n"
+                 "Max-Forwards: 70\r\n"
+                 "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                 "Content-Type: message/sipfrag\r\n"
+                 "Content-Length: 259\r\n"
+                 "\r\n"
+                 "From: Alice <sip:alice@atlanta.com>\r\n"
+                 "To: Bob <sip:bob@biloxi.com>\r\n"
+                 "Contact: <sip:alice@pc33.atlanta.com>>href=mailto:<sip:alice@pc33.atlanta.com>><sip:alice@pc33.atlanta.com>\r\n"
+                 "Date: Thu, 21 Feb 2002 13:02:03 GMT\r\n"
+                 "Call-ID: a84b4c76e66710\r\n"
+                 "Cseq: 314159 INVITE\r\n");
+
+        try
+        {
+           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+        }
+        catch (BaseException& e)
+        {
+           assert(false);
+        }
+     }
+
+     {
+        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+                 "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+                 "To: Bob <sip:bob@biloxi.com>\r\n"
+                 "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                 "Call-ID: a84b4c76e66710\r\n"
+                 "CSeq: 314159 INVITE\r\n"
+                 "Max-Forwards: 70\r\n"
+                 "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                 "Content-Type: message/sipfrag\r\n"
+                 "Content-Length: 150\r\n"
+                 "\r\n"
+                 "SIP/2.0 200 OK\r\n"
+                 "Content-Type: application/sdp\r\n"
+                 "Content-Length: 314\r\n"
+                 "\r\n"
+                 "v=0\r\n"
+                 "o=alice 2890844526 2890844526 IN IP4 host.anywhere.com\r\n"
+                 "s=\r\n"
+                 "c=IN IP4 host.anywhere.com\r\n"
+                 "t=0 0\r\n"
+                 "m=audio 49170 RTP/AVP 0\r\n"
+                 "a=rtpmap:0 PCMU/8000\r\n"
+                 "m=video 51372 RTP/AVP 31\r\n"
+                 "a=rtpmap:31 H261/90000\r\n"
+                 "m=video 53000 RTP/AVP 32\r\n"
+                 "a=rtpmap:32 MPV/90000");
+        try
+        {
+           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+        }
+        catch (BaseException& e)
+        {
+           assert(false);
+        }
+     }
+
+     {
+        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+                 "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+                 "To: Bob <sip:bob@biloxi.com>\r\n"
+                 "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                 "Call-ID: a84b4c76e66710\r\n"
+                 "CSeq: 314159 INVITE\r\n"
+                 "Max-Forwards: 70\r\n"
+                 "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                 "Content-Type: message/sipfrag\r\n"
+                 "Content-Length: 57\r\n"
+                 "\r\n"
+                 "Content-Type: text/plain\r\n"
+                 "Content-Length: 11\r\n"
+                 "\r\n"
+                 "Hi There!");
+
+        try
+        {
+           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
+        }
+        catch (BaseException& e)
+        {
+           assert(false);
+        }
+     }
+  }
+
+  {
      // !ah! This test doesn't work with the MsgHeaderScanner -- works w/ preparser.
 
       Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
@@ -78,7 +274,11 @@ main(int argc, char* argv[])
                "Content-Length: 35" CRLF
                "Content-Type: message/sipfrag" CRLF
                CRLF
-               "SIP/2.0 503 Service Unavailable" CRLF " " // space causes MsgHeaderScanner to claim not at end of message
+               "SIP/2.0 503 Service Unavailable" CRLF " " 
+
+               // space causes MsgHeaderScanner to claim not at end of message
+               // .dlb. this is correct: message-header is terminated with CRLF.
+
                CRLF);
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
@@ -170,6 +370,10 @@ main(int argc, char* argv[])
       tassert(f2);
 
       // There should NOT be a content length header in the sipfrag !!
+
+      // .dlb. this is an example of a more general issue. SipFrag should be
+      // parsed only by the consumer and after checking signatures.
+
       {
         Data d;
         DataStream ds(d);
