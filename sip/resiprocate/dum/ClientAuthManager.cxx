@@ -14,6 +14,7 @@ using namespace resip;
 bool 
 ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
 {
+
    assert( response.isResponse() );
    assert( origRequest.isRequest() );
    
