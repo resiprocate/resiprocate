@@ -59,6 +59,7 @@ class Mime : public ParserCategory
       Mime(const Mime&);
       Mime& operator=(const Mime&);
       bool operator<(const Mime& rhs) const;
+      bool operator==(const Mime& rhs) const;
       
       Data& type() const {checkParsed(); return mType;}
       Data& subType() const {checkParsed(); return mSubType;}
