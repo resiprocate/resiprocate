@@ -1,11 +1,10 @@
 #include <cassert>
 
-#include <util/vthread.hxx>
 #include <util/ThreadIf.hxx>
 #include <util/Lock.hxx>
 
 
-static const char* const ThreadIf_cxx_Version = "$Id: ThreadIf.cxx,v 1.1 2002/09/25 22:24:41 jason Exp $";
+static const char* const ThreadIf_cxx_Version = "$Id: ThreadIf.cxx,v 1.2 2002/09/28 16:41:18 fluffy Exp $";
 
 using namespace Vocal2;
 
@@ -33,7 +32,7 @@ void
 ThreadIf::run()
 {
    // spawn the thread
-   vthread_attr_t attributes;
+   pthread_attr_t attributes;
    pthread_create( &mId, &attributes, threadWrapper, this);
 }
 
@@ -53,7 +52,7 @@ ThreadIf::exit()
    mId = 0;
 }
 
-vthread_t
+pthread_t
 ThreadIf::selfId() const
 {
    return pthread_self();

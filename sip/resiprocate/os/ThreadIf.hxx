@@ -1,9 +1,10 @@
 #ifndef THREADIF_HXX
 #define THREADIF_HXX
 
-#include "Mutex.hxx"
+#include <pthread.h>
+#include <util/Mutex.hxx>
 
-static const char* const ThreadIf_hxx_version = "$Id: ThreadIf.hxx,v 1.1 2002/09/25 22:24:41 jason Exp $";
+static const char* const ThreadIf_hxx_version = "$Id: ThreadIf.hxx,v 1.2 2002/09/28 16:41:18 fluffy Exp $";
 
 namespace Vocal2
 {
@@ -51,8 +52,6 @@ class ThreadIf
       // returns true if the thread has been asked to shutdown or not running
       bool isShutdown() const;
 
-      vthread_t selfId() const;
-
       /* thread is a virtual method.  Users should derive and define
         thread() such that it returns when isShutdown() is true.
       */
@@ -60,11 +59,15 @@ class ThreadIf
 
    protected:
       // protected so that thread() can retrieve its threadId 
-      vthread_t mId;
+      pthread_t mId;
       
    private:
 
+       pthread_t selfId() const;
+
+
       bool mShutdown;
+
       mutable Mutex mShutdownMutex;
 
       // Suppress copying
