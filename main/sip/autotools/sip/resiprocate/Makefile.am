@@ -93,6 +93,9 @@ libresiprocate_la_SOURCES = \
 	SipMessage.cxx \
 	SipSession.cxx \
 	SipStack.cxx \
+	StackThread.cxx \
+	StatisticsMessage.cxx \
+	StatisticsManager.cxx \
 	StatelessHandler.cxx \
 	Subscription.cxx \
 	Symbols.cxx \
@@ -107,15 +110,14 @@ libresiprocate_la_SOURCES = \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
+	TransportMessage.cxx \
 	TransportSelector.cxx \
 	UdpTransport.cxx \
 	UnknownHeaderType.cxx \
 	UnknownParameter.cxx \
 	UnknownParameterType.cxx \
 	Uri.cxx \
-	XMLCursor.cxx \
-	X_msMsgsInvite.cxx
-
+	XMLCursor.cxx 
 
 # These are sources that we might conditionally include
 EXTRA_libresiprocate_la_SOURCES = \
@@ -206,13 +208,17 @@ resiprocate_include_HEADERS = \
 	RportParameter.hxx \
 	SdpContents.hxx \
 	Security.hxx \
+	SecurityTypes.hxx \
 	ShutdownMessage.hxx \
 	SipFrag.hxx \
 	SipMessage.hxx \
 	SipMessageExplicit.hxx \
 	SipSession.hxx \
 	SipStack.hxx \
+	StackThread.hxx \
 	StatelessHandler.hxx \
+	StatisticsManager.hxx \
+	StatisticsMessage.hxx \
 	StatusLine.hxx \
 	StringCategory.hxx \
 	Subscription.hxx \
@@ -227,6 +233,8 @@ resiprocate_include_HEADERS = \
 	Token.hxx \
 	TransactionController.hxx \
 	TransactionMap.hxx \
+	TransportMessage.hxx \
+	TransactionMessage.hxx \
 	TransactionState.hxx \
 	TransactionTerminated.hxx \
 	Transport.hxx \
