@@ -67,7 +67,7 @@ bin_PROGRAMS = limpc testTcp
 
 TESTS = $(check_PROGRAMS)
 SipTortureTests_SOURCES = SipTortureTests.cxx
-lg_SOURCES = lg.cxx
+#lg_SOURCES = lg.cxx
 #testDnsResolver_SOURCES = testDnsResolver.cxx
 #testLockStep_SOURCES = testLockStep.cxx
 #testSipStack1_SOURCES = testSipStack1.cxx
