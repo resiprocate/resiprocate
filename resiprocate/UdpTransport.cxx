@@ -64,7 +64,7 @@ UdpTransport::process(FdSet& fdset)
       int count = sendto(mFd, 
                          sendData->data.data(), sendData->data.size(),  
                          0, // flags
-                         &addr, sizeof(sockaddr) );
+                         &addr, sendData->destination.length());
       
       if ( count == SOCKET_ERROR )
       {
@@ -92,23 +92,19 @@ UdpTransport::process(FdSet& fdset)
    //should this buffer be allocated on the stack and then copied out, as it
    //needs to be deleted every time EWOULDBLOCK is encountered
    char* buffer = new char[MaxBufferSize];
-   struct sockaddr from;
-   socklen_t fromLen = sizeof(from);
 
    // !jf! how do we tell if it discarded bytes 
    // !ah! we use the len-1 trick :-(
-
-   //DebugLog( << "starting recvfrom" );
+   socklen_t slen = mTuple.length();
    int len = recvfrom( mFd,
                        buffer,
                        MaxBufferSize,
                        0 /*flags */,
-                       &from, &fromLen);
-
+                       &mTuple.getMutableSockaddr(), 
+                       &slen);
    if ( len == SOCKET_ERROR )
    {
       int err = getErrno();
-      
       if ( err != EWOULDBLOCK  )
       {
          error( err );
@@ -128,7 +124,6 @@ UdpTransport::process(FdSet& fdset)
       delete [] buffer; buffer=0;
       return;
    }
-
    buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
 
    //DebugLog ( << "UDP Rcv : " << len << " b" );
@@ -144,9 +139,8 @@ UdpTransport::process(FdSet& fdset)
 
 
    // Save all the info where this message came from
-   Tuple tuple(from, transport());
-   tuple.transport = this;
-   message->setSource(tuple);   
+   mTuple.transport = this;
+   message->setSource(mTuple);   
    
    // Tell the SipMessage about this datagram buffer.
    message->addBuffer(buffer);
