@@ -21,7 +21,6 @@ ClientAuthManager::ClientAuthManager(Profile& profile) :
 bool 
 ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
 {
-   
    assert( response.isResponse() );
    assert( origRequest.isRequest() );
 
@@ -30,7 +29,11 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
 
    // is this a 401 or 407  
    const int& code = response.header(h_StatusLine).statusCode();
-   if (! (  code == 401 || code == 407 ))
+   if (code < 180)
+   {
+      return false;
+   }
+   else if (! (  code == 401 || code == 407 ))
    {
       if (it != mAttemptedAuths.end())
       {
@@ -65,6 +68,12 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
 
    DebugLog (<< "Doing client auth");
    // !ah! TODO : check ALL appropriate auth headers.
+   if (!(response.exists(h_WWWAuthenticates) || response.exists(h_ProxyAuthenticates)))
+   {
+      it->second.state = Failed;
+      return false;
+   }
+
    if (response.exists(h_WWWAuthenticates))
    {      
       for (Auths::const_iterator i = response.header(h_WWWAuthenticates).begin();  
