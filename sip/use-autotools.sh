@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: use-autotools.sh,v 1.6 2004/02/24 01:35:35 alan Exp $
+# $Id: use-autotools.sh,v 1.7 2004/02/24 15:16:17 alan Exp $
 
 AUTOTOOLS_BRANCH=b-autotools
 # We 'remove' these files in CVS.
@@ -37,7 +37,7 @@ AUTOTOOLS_ARTIFACTS="
 # These files are source files.
 # There will still be a bootstrap required -- I think.
 
-AUTOTOOLS_REAL="Makefile.am 
+AUTOTOOLS_USED="Makefile.am 
           Makefile.am  
          resiprocate/Makefile.am 
             resiprocate/test/Makefile.am 
@@ -67,13 +67,13 @@ EOF
     read DUMMY
     [ "${DUMMY}x" == "yesx" ] || exit -1
 
-    cvs up -r ${AUTOTOOLS_BRANCH} ${AUTOTOOLS_REAL} ${AUTOTOOLS_ARTIFACTS}
+    cvs up -r ${AUTOTOOLS_BRANCH} ${AUTOTOOLS_USED} ${AUTOTOOLS_ARTIFACTS}
     # Remove the 'old' build directory -- only if it's got a CVS dir in it.
     [ -d build/CVS ] && rm -rf build
 else
     case "${1}" in
-    --show-a*|-a) echo "${AUTOTOOLS_ARTIFACTS}" ;;
-    --show-r*|-r) echo "${AUTOTOOLS_REAL}" ;;
+    --show-d*|-d) echo "${AUTOTOOLS_ARTIFACTS}" ;;
+    --show-a*|-u) echo "${AUTOTOOLS_USED}" ;;
     *) ;;
     esac
 fi
