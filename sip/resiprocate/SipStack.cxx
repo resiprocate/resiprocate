@@ -50,12 +50,16 @@ SipStack::addTransport( Transport::Type protocol,
                         const Data& nic) 
 {
    mTransportSelector.addTransport(protocol, port, hostName, nic);
-   addAlias(hostName);
+   if (!hostName.empty()) 
+   {
+      addAlias(hostName);
+   }
 }
 
 void
 SipStack::addAlias(const Data& domain)
 {
+   InfoLog (<< "Adding domain alias: " << domain);
    mDomains.insert(domain);
 }
 
@@ -69,6 +73,8 @@ SipStack::isMyDomain(const Data& domain) const
 void 
 SipStack::send(const SipMessage& msg)
 {
+   DebugLog (<< "SipStack::Send: " << msg.brief());
+   
    SipMessage* toSend = new SipMessage(msg);
    toSend->setFromTU();
    mStateMacFifo.add(toSend);
@@ -93,8 +99,6 @@ SipStack::receive()
    // waiting message. Otherwise, return 0
    if (mTUFifo.messageAvailable())
    {
-      DebugLog (<< "message available");
-      
       // we should only ever have SIP messages on the TU Fifo
       Message *tmpMsg = mTUFifo.getNext();
       SipMessage *sipMsg = dynamic_cast<SipMessage*>(tmpMsg);
@@ -103,7 +107,6 @@ SipStack::receive()
    }
    else
    {
-	   //DebugLog (<< "no message available");
       return 0;
    }
 }
