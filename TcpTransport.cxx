@@ -90,28 +90,29 @@ TcpTransport::~TcpTransport()
 void 
 TcpTransport::processListen(fd_set* fdSet)
 {
-	assert( mFd );
+   assert( mFd );
 	
-	if ( FD_ISSET( mFd, fdSet ) )
-	{
-		struct sockaddr_in peer;
+   if ( FD_ISSET( mFd, fdSet ) )
+   {
+      struct sockaddr_in peer;
 		
-		Socket s = accept( s, (struct addr*)peer,sozeof(peer));
-		if ( s == -1 )
-		{
-			int err = errno;
-			// !cj!
-			assert(0);
-		}
+      Socket s = accept( s, (struct addr*)peer,sozeof(peer));
+      if ( s == -1 )
+      {
+         int err = errno;
+         // !cj!
+         assert(0);
+      }
 		
-		int peerPort = peer.sin_port;
-		struct in_addr addr = peer.sin_port;
-		
-		// !cj! need to add this connection(port,addr,TCP) socket s
-		assert(0);
-		
-	}
-	
+      int peerPort = peer.sin_port;
+      struct in_addr addr = peer.sin_port;
+
+      Transport::Tuple who;
+      who.ipv4 = peer;
+      who.port = peerPort;
+      who.transport =, Transport::TCP);
+      mConnectionMap.add(who, s);
+   }
 }
 
 void 
