@@ -5,7 +5,6 @@
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/sipstack/TransportSelector.hxx"
 #include "sip2/sipstack/UdpTransport.hxx"
-#include "sip2/sipstack/TestTransport.hxx"
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/TransportMessage.hxx"
 #include "sip2/sipstack/ReliabilityMessage.hxx"
@@ -74,12 +73,6 @@ TransportSelector::addTransport( Transport::Type protocol,
       case Transport::UDP:
          transport = new UdpTransport(hostname, port, nic, mStack.mStateMacFifo);
          break;
-      case Transport::TestReliable:
-         transport = new TestReliableTransport(hostname, port, nic, mStack.mStateMacFifo);
-         break;
-      case Transport::TestUnreliable:
-         transport = new TestUnreliableTransport(hostname, port, nic, mStack.mStateMacFifo);
-         break;
       default:
          assert(0);
          break;
@@ -136,7 +129,7 @@ TransportSelector::dnsResolve( SipMessage* msg)
 }
  
 void 
-TransportSelector::send( SipMessage* msg, Transport::Tuple& destination )
+TransportSelector::send( SipMessage* msg, Transport::Tuple& destination, bool isResend )
 {
    if (destination.transport == 0)
    {
@@ -157,19 +150,23 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple& destination )
       }
 
       Data& encoded = msg->getEncoded();
+      encoded = "";
       DataStream encodeStream(encoded);
       msg->encode(encodeStream);
       encodeStream.flush();
 
-      DebugLog (<< "encoded=" << encoded.c_str());
+      DebugLog (<< "encoded=" << std::endl << encoded.c_str() << "EOM");
    
       // send it over the transport
       destination.transport->send(destination, encoded, msg->getTransactionId());
-      mStack.mStateMacFifo.add(new ReliabilityMessage(msg->getTransactionId(), destination.transport->isReliable()));
+      if (! isResend)
+      {
+          mStack.mStateMacFifo.add(new ReliabilityMessage(msg->getTransactionId(), destination.transport->isReliable()));
+      }
    }
    else
    {
-      mStack.mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
+       mStack.mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
    }
 }
 

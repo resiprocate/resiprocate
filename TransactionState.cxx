@@ -93,19 +93,16 @@ TransactionState::process(SipStack& stack)
             assert(0);
       }
    }
-   else // new transaction
+   else if (sip)  // new transaction
    {
-      assert (!timer);
-      if (sip)
-      {
-         DebugLog (<< "Create new transaction for sip msg ");
+       DebugLog (<< "Create new transaction for sip msg ");
 
-         if (sip->isRequest())
-         {
-            // create a new state object and insert in the TransactionMap
+       if (sip->isRequest())
+       {
+           // create a new state object and insert in the TransactionMap
                
-            if (sip->isExternal()) // new sip msg from transport
-            {
+           if (sip->isExternal()) // new sip msg from transport
+           {
                DebugLog (<< "Create new transaction for inbound msg ");
                if (sip->header(h_RequestLine).getMethod() == INVITE)
                {
@@ -127,54 +124,53 @@ TransactionState::process(SipStack& stack)
                }
                else 
                {
-                  DebugLog(<<"Adding non-INVITE transaction state");
-                  TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
-                  stack.mTransactionMap.add(tid,state);
+                   DebugLog(<<"Adding non-INVITE transaction state");
+                   TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
+                   stack.mTransactionMap.add(tid,state);
                }
                DebugLog(<< "Adding incoming message to TU fifo");
                stack.mTUFifo.add(sip);
-            }
-            else // new sip msg from the TU
-            {
+           }
+           else // new sip msg from the TU
+           {
                DebugLog (<< "Create new transaction for msg from TU ");
                if (sip->header(h_RequestLine).getMethod() == INVITE)
                {
-                  TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
-                  stack.mTransactionMap.add(tid,state);
-                  state->processClientInvite(sip);
+                   TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
+                   stack.mTransactionMap.add(tid,state);
+                   state->processClientInvite(sip);
                }
                else 
                {
-                  TransactionState* state = new TransactionState(stack, ClientNonInvite, Trying);
-                  stack.mTransactionMap.add(tid,state);
-                  state->processClientNonInvite(sip);
+                   TransactionState* state = new TransactionState(stack, ClientNonInvite, Trying);
+                   stack.mTransactionMap.add(tid,state);
+                   state->processClientNonInvite(sip);
                }
-            }
-         }
-         else if (sip->isResponse()) // stray response
-         {
-            if (stack.mDiscardStrayResponses)
-            {
+           }
+       }
+       else if (sip->isResponse()) // stray response
+       {
+           if (stack.mDiscardStrayResponses)
+           {
                DebugLog (<< "discarding stray response: " << sip->brief());
                delete message;
-            }
-            else
-            {
+           }
+           else
+           {
                // forward this statelessly
-                DebugLog(<<"forward this statelessly -- UNIMP");
+               DebugLog(<<"forward this statelessly -- UNIMP");
                assert(0);
-            }
-         }
-         else // wasn't a request or a response
-         {
-            DebugLog (<< "discarding unknown message: " << sip->brief());
-	 }
-      } 
-      else // timer or other non-sip msg
-      {
-         DebugLog (<< "discarding non-sip message: " << message->brief());
-         delete message;
-      }
+           }
+       }
+       else // wasn't a request or a response
+       {
+           DebugLog (<< "discarding unknown message: " << sip->brief());
+       }
+   } 
+   else // timer or other non-sip msg
+   {
+       DebugLog (<< "discarding non-sip message: " << message->brief());
+       delete message;
    }
 }
 
@@ -1096,40 +1092,14 @@ TransactionState::sendToWire(Message* msg)
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
    assert(sip);
 
-   if (mDnsState == DnsResolver::NotStarted
-#if defined(USETESTTRANSPORT)
-       // Don't do DNS with the test transports.  The resolver doesn't
-       // have any concept of transports other than UDP, TCP, and TLS.
-       && !((sip->header(h_Vias).front().transport() ==
-          Transport::toData(Transport::TestReliable)) ||
-          (sip->header(h_Vias).front().transport() ==
-          Transport::toData(Transport::TestUnreliable)))
-#endif
-      )
+   if (mDnsState == DnsResolver::NotStarted)
    {
       mDnsState = DnsResolver::Waiting;
       mStack.mTransportSelector.dnsResolve(sip);
    }
    else
    {
-#if defined(USETESTTRANSPORT)
-      if ((sip->header(h_Vias).front().transport() ==
-	   Transport::toData(Transport::TestReliable)) ||
-	  (sip->header(h_Vias).front().transport() ==
-           Transport::toData(Transport::TestUnreliable)))
-      {
-	 Transport::Tuple fakeTuple;
-	 fakeTuple.transportType =
-	    Transport::toTransport(sip->header(h_Vias).front().transport());
-	 mStack.mTransportSelector.send(sip, fakeTuple);
-      }
-      else
-      {
-	 mStack.mTransportSelector.send(sip, *mDnsListCurrent);
-      }
-#else
       mStack.mTransportSelector.send(sip, *mDnsListCurrent);
-#endif
    }
 }
 
@@ -1142,21 +1112,7 @@ TransactionState::resendToWire(Message* msg) const
    assert (mDnsState != DnsResolver::NotStarted);
    assert (mDnsState != DnsResolver::Waiting); // !jf! - is this bogus?
 
-#if defined(USETESTTRANSPORT)
-   if ((sip->header(h_Vias).front().transport() ==
-	Transport::toData(Transport::TestReliable)) ||
-       (sip->header(h_Vias).front().transport() ==
-	Transport::toData(Transport::TestUnreliable)))
-   {
-      Transport::Tuple fakeTuple;
-      fakeTuple.transportType =
-	 Transport::toTransport(sip->header(h_Vias).front().transport());
-      mStack.mTransportSelector.send(sip, fakeTuple);
-      return;
-   }
-#endif
-
-   mStack.mTransportSelector.send(sip, *mDnsListCurrent);
+   mStack.mTransportSelector.send(sip, *mDnsListCurrent, true);
 }
 
 void
