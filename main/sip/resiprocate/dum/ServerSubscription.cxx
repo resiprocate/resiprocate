@@ -30,6 +30,7 @@ SipMessage&
 ServerSubscription::accept(int statusCode)
 {
    mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
+   mLastResponse.header(h_Expires).value() = mExpires;   
    return mLastResponse;
 }
 

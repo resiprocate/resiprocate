@@ -209,7 +209,7 @@ ClientInviteSession::sendSipFrag(const SipMessage& response)
       //will be cloned...ServerSub may not have the most efficient API possible
       int code = response.header(h_StatusLine).statusCode();
       SipMessage& notify = (code > 200) ? mServerSub->end(NoResource, &contents) : mServerSub->update(&contents);
-      mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), notify);
+//      mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), notify);
       mServerSub->send(notify);
    }   
 }
