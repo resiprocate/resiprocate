@@ -54,6 +54,16 @@ main(int arc, char** argv)
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
    {
+      TR _tr("Test NameAddr parameter handling");
+      Data data("sip:foo@bar.com;user=phone");
+      
+      NameAddr original(data);
+      assert(original.uri().exists(p_user));
+      
+      cerr << "!!" << original << endl;
+   }
+
+   {
       TR _tr("Test tel aor canonicalization");
       Data data("tel:+14156268178;pOstd=pP2;isUb=1411");
       
