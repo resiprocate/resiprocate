@@ -409,11 +409,13 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
       {
          if (mState == Trying || mState == Proceeding)
          {
-            mState = Proceeding;
-            if (!mIsReliable)
+            //!slg! if we set the timer in Proceeding, then every 1xx response will cause another TimerE2 to be set and many retransmissions will occur - which is not correct
+            // Should we restart the E2 timer though?  If so, we need to use somekind of timer sequence number so that previous E2 timers get discarded.
+            if (!mIsReliable && mState == Trying)
             {
                mController.mTimers.add(Timer::TimerE2, mId, Timer::T2 );
             }
+            mState = Proceeding;
             sendToTU(msg); // don't delete            
          }
          else
