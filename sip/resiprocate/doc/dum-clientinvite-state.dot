@@ -1,18 +1,77 @@
 digraph UAC {
         rankdir=LR;
         node [shape = box]; 
-        Initial -> Early [ label = "1xx / PRACK" ];
-        Initial -> Connected [ label = "2xx / ACK" ];
-        Initial -> Terminated [ label = "4xx" ];
-        Early -> Canceled [ label = "end" ];
-        Early -> Connected [ label = "2xx / ACK" ];
-        Early -> Terminated [ label = "4xx" ];
-        Connected -> Connected [label = "2xx / ACK" ];
-        Connected -> Reinviting [label = "invite"];
-        Connected -> Terminated [label = "end" ];
-        Connected -> Terminated [label = "bye / 200" ];
-        Canceled -> Terminated [label = "2xx / ACK,BYE" ];
-        Reinviting -> Connected [label = "2xx / ACK" ];
-        Reinviting -> Terminated [label = "end" ];
-        Terminated -> Terminated [label = "2xx / ACK" ];
+
+        Start -> Early [ label = "on1xx/onNewSession,onProvisional" ];
+        Start -> EarlyWithOffer [ label = "on1xx-offer/onOffer" ];
+        Start -> EarlyWithAnswer [ label = "on1xx-answer/onNewSession,onAnswer,PRACK" ];
+        Start -> WaitingForAnswerFromApp [ label = "on2xx-offer/onOffer" ];
+        Start -> Connected [ label = "on2xx-answer/ACK" ];
+        Start -> Terminated [ label = "on2xx/ACK,BYE,onFailure" ];
+        # Done
+
+        Early -> Early [ label = "on1xx/onProvisional" ];
+        Early -> EarlyWithAnswer [ label = "on1xx-answer/onAnswer" ];
+        Early -> EarlyWithOffer [ label = "on1xx-offer/onOffer" ];
+        Early -> WaitingForAnswerFromApp [ label = "on2xx-offer/onOffer" ];
+        Early -> Connected [ label = "on2xx-answer/ACK" ];
+        Early -> Finish [ label = "onGeneralFailure" ];
+        Early -> Canceled  [ label = "appCancel/makeTimer" ];
+        Early -> Terminated [ label = "on2xx/ACK,BYE" ];
+        # Done
+
+        EarlyWithOffer -> Connected [ label = "on2xx-answer/ACK" ];
+        EarlyWithOffer -> PrackAnswerWait [ label = "appProvideAnswer/PRACK" ];
+        # Done
+
+        EarlyWithAnswer -> Connected [ label = "on2xx/ACK" ];
+        EarlyWithAnswer -> EarlyWithAnswer [ label = "on1xx/PRACK" ];
+        EarlyWithAnswer -> EarlyWithAnswer [ label = "on1xx-answer-retran/ignore" ];
+        # Can I send the UPDATE before I get 200P
+        EarlyWithAnswer -> SentUpdateEarly [ label = "appProvideOffer/UPDATE" ];
+        EarlyWithAnswer -> RecvUpdateEarly [ label = "onUPDATE/onOffer" ];
+        EarlyWithAnswer -> Terminated [ label = "on2XX-answer/ACK,BYE" ];
+        EarlyWithAnswer -> Finished [ label = "onGeneralFailure" ];
+        EarlyWithAnswer -> Canceled  [ label = "appCancel/makeTimer" ];
+        # Done
+
+        SentUpdateEarly -> EarlyWithAnswer [ label = "on200U/onAnswer" ];
+        SentUpdateEarly -> EarlyWithAnswer [ label = "onUPDATE/489glare" ];
+        SentUpdateEarly -> EarlyWithAnswer [ label = "on489/glare" ];
+        SentUpdateEarly -> SentUpdateConnected [ label = "on2xxI/ACK" ];
+        SentUpdateEarly -> Finish [ label = "onGeneralFailure" ];
+        SentUpdateEarly -> Canceled  [ label = "appCancel/makeTimer" ];
+        # Done
+
+        SentUpdateConnected -> Connected [ label = "on2xxU/onAnswer" ];
+        SentUpdateConnected -> Connected [ label = "on488U/onRejected" ];
+        SentUpdateConnected -> Connected [ label = "on489U/glare" ];
+        # Done
+
+        RecvUpdateEarly -> EarlyWithAnswer [ label = "provideAnswer/200U-answer" ];
+        RecvUpdateEarly -> EarlyWithAnswer [ label = "reject/488U" ]; 
+        RecvUpdateEarly -> Canceled  [ label = "appCancel/makeTimer" ];# Only UAC can CANCEL
+        # Done
+
+        WaitingForAnswerFromApp -> Connected [ label = "appProvideAnswer/ACK-answer" ];
+        # Done
+
+        PrackAnswerWait -> EarlyWithAnswer [ label = "appProvideOffer/queueOffer" ];
+        PrackAnswerWait -> SentUpdateEarly [ label = "on200P-queued/UPDATE-queued" ];
+        PrackAnswerWait -> EarlyWithAnswer [ label = "on200P-notQueued" ];
+        PrackAnswerWait -> Connected [ label = "on2xxI/ACK" ];
+        # Done
+
+        Canceled -> Finished [ label = "onTimer" ];
+        Canceled -> Finished [ label = "onGeneralFailure" ];
+        Canceled -> Finished [ label = "on4xxC" ];
+        Canceled -> Terminated [ label = "on200I/BYE" ];
+        # Done
+
+        Connected -> Terminated [ label = "end/BYE" ];
+        Connected -> Finish [ label = "on2xxB" ];
+        # Done
+
+        Terminated -> Finish [ label = "2XX BYE" ];
+        # Done
 }
