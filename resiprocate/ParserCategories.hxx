@@ -1,9 +1,9 @@
 #ifndef ParserCategories_hxx
 #define ParserCategories_hxx
 
-#include <sip2/sipstack/ParserCategory.hxx>
-#include <sip2/sipstack/ParserContainer.hxx>
-#include <sip2/sipstack/HeaderFieldValue.hxx>
+#include <sipstack/ParserCategory.hxx>
+#include <sipstack/ParserContainer.hxx>
+#include <sipstack/HeaderFieldValue.hxx>
 
 namespace Vocal2
 {
@@ -20,7 +20,7 @@ class Unknown : public ParserCategory
       Unknown(HeaderFieldValueList& hvfs) {}
       Unknown(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const std::string& param)
+      UnknownSubComponent& operator[](const Data& param)
       {
          checkParsed();
          return *mHeaderField->get(param);
@@ -39,7 +39,7 @@ class Token : public ParserCategory
       Token(HeaderFieldValueList& hvfs) {}
       Token(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const std::string& param)
+      UnknownSubComponent& operator[](const Data& param)
       {
          checkParsed();
          return *mHeaderField->get(param);
@@ -57,7 +57,7 @@ class Mime : public ParserCategory
       Mime(HeaderFieldValueList& hvfs) {}
       Mime(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const std::string& param)
+      UnknownSubComponent& operator[](const Data& param)
       {
          checkParsed();
          return *mHeaderField->get(param);
@@ -87,7 +87,7 @@ class IntegerComponent : public ParserCategory
       IntegerComponent(HeaderFieldValueList& hvfs) {}
       IntegerComponent(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const std::string& param)
+      UnknownSubComponent& operator[](const Data& param)
       {
          checkParsed();
          return *mHeaderField->get(param);
@@ -116,7 +116,7 @@ class GenericURI : public ParserCategory
       GenericURI(HeaderFieldValueList& hvfs) {}
       GenericURI(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const std::string& param)
+      UnknownSubComponent& operator[](const Data& param)
       {
          checkParsed();
          return *mHeaderField->get(param);
@@ -134,7 +134,7 @@ class NameAddr : public ParserCategory
       NameAddr(HeaderFieldValueList& hvfs) {}
       NameAddr(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const std::string& param)
+      UnknownSubComponent& operator[](const Data& param)
       {
          checkParsed();
          return *mHeaderField->get(param);
@@ -152,7 +152,7 @@ class NameAddrOrAddrSpec : public ParserCategory
       NameAddrOrAddrSpec(HeaderFieldValueList& hvfs) {}
       NameAddrOrAddrSpec(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const std::string& param)
+      UnknownSubComponent& operator[](const Data& param)
       {
          checkParsed();
          return *mHeaderField->get(param);
@@ -169,7 +169,7 @@ class Contact : public ParserCategory
       Contact(HeaderFieldValueList& hvfs) {}
       Contact(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const std::string& param)
+      UnknownSubComponent& operator[](const Data& param)
       {
          checkParsed();
          return *mHeaderField->get(param);
@@ -187,7 +187,7 @@ class CallId : public ParserCategory
       CallId(HeaderFieldValueList& hvfs) {}
       CallId(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const std::string& param)
+      UnknownSubComponent& operator[](const Data& param)
       {
          checkParsed();
          return *mHeaderField->get(param);
@@ -241,7 +241,7 @@ class Via : public ParserCategory
       Via(HeaderFieldValueList& hvfs) {}
       Via(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const std::string& param)
+      UnknownSubComponent& operator[](const Data& param)
       {
          checkParsed();
          return *mHeaderField->get(param);

@@ -16,7 +16,7 @@ class FloatSubComponent : public SubComponent
       virtual SubComponent* clone() const;
    private:
       float mValue;
-      std::string mData;
+      Data mData;
 };
  
 std::ostream& operator<<(std::ostream& stream, FloatSubComponent& comp);
