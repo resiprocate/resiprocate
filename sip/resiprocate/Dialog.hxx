@@ -2,10 +2,17 @@
 #define RESIP_DIALOG_HXX
 
 #include <iostream>
-#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/MethodTypes.hxx"
+#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/os/Timer.hxx"
 
 namespace resip
 {
+
+class SipMessage;
+class NameAddr;
+class CallID;
 
 class Dialog
 {
@@ -35,10 +42,6 @@ class Dialog
       // a UAC receives a response that creates a dialog
       void createDialogAsUAC(const SipMessage& response);
 
-	  // This happens when a dialog gets created on a UAC when 
-      // a UAC receives a response that creates a dialog
-      void createRegistrationAsUAC(const SipMessage& response);
-
       // Called when a 2xx response is received in an existing dialog
       // Replace the _remoteTarget with uri from Contact header in response
       void targetRefreshResponse(const SipMessage& response);
@@ -50,23 +53,18 @@ class Dialog
       bool isCreated() const { return mCreated; };
       
       const Data dialogId() const;
-      const CallId& getCallId() const { return mCallId; }
+      const CallID& getCallId() const { return mCallId; }
       const NameAddr& getRemoteTarget() const { return mRemoteTarget; }
       //const Data& getLocalTag() const { return mLocalTag; }
       //const Data& getRemoteTag() const { return mRemoteTag; }
       
       // For creating request which do not form a dialog but whose response
       // might create a dialog 
-      SipMessage* makeInitialRegister(const NameAddr& registrar,
-                                      const NameAddr& aor);
-      SipMessage* makeInitialSubscribe(const NameAddr& target, 
-                                       const NameAddr& from);
-      SipMessage* makeInitialPublish(const NameAddr& target, 
-                                       const NameAddr& from);
-      SipMessage* makeInitialInvite(const NameAddr& target,
-                                    const NameAddr& from);
-      SipMessage* makeInitialMessage(const NameAddr& target,
-                                    const NameAddr& from);
+      SipMessage* makeInitialRegister(const NameAddr& registrar, const NameAddr& from);
+      SipMessage* makeInitialSubscribe(const NameAddr& target, const NameAddr& from);
+      SipMessage* makeInitialPublish(const NameAddr& target, const NameAddr& from);
+      SipMessage* makeInitialInvite(const NameAddr& target, const NameAddr& from);
+      SipMessage* makeInitialMessage(const NameAddr& target, const NameAddr& from);
       
       // For creating requests within a dialog
       SipMessage* makeInvite();
@@ -79,7 +77,7 @@ class Dialog
       SipMessage* makeAck(const SipMessage& request);
       SipMessage* makeCancel(const SipMessage& request);
       SipMessage* makeRequest(MethodTypes method);
-      CallId makeReplaces();
+      CallID makeReplaces();
       
       // resets to an empty dialog with no state
       void clear();
@@ -108,10 +106,10 @@ class Dialog
       unsigned long mLocalSequence;
       bool mLocalEmpty;
 
-      CallId mCallId;
+      CallID mCallId;
       Data mLocalTag;
       Data mRemoteTag;
-      CallId mDialogId;
+      CallID mDialogId;
       
       NameAddr mRemoteUri;
       NameAddr mLocalUri;
