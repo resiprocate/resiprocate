@@ -77,6 +77,12 @@ UserProfile::disableGruu()
 }
 
 void 
+UserProfile::clearDigestCredentials()
+{
+   mDigestCredentials.clear();
+}
+
+void 
 UserProfile::setDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password)
 {
    DigestCredential cred(aor, realm, user, password);
