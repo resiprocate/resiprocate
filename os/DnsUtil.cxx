@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "DnsUtil.hxx"
 #include "Logger.hxx"
@@ -166,9 +167,14 @@ DnsUtil::getLocalHostName()
    return buffer;
 }
 
+
 Data 
 DnsUtil::getLocalDomainName()
 {
+#ifdef __MACH__
+   assert(0);
+   return NULL;
+#else
    char buffer[1024];
    if (int e = getdomainname(buffer,sizeof(buffer)) == -1)
    {
@@ -180,6 +186,7 @@ DnsUtil::getLocalDomainName()
        }
    }
    return buffer;
+#endif
 }
 
 
