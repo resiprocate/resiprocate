@@ -17,7 +17,8 @@ typedef enum {mw_voice=0, mw_fax, mw_pager, mw_multimedia, mw_text, mw_none, MW_
 class MessageWaitingContents : public Contents
 {
    public:
-      MessageWaitingContents(HeaderFieldValue* hfv);
+      MessageWaitingContents();
+      MessageWaitingContents(HeaderFieldValue* hfv, const Mime& contentType);
       MessageWaitingContents(const MessageWaitingContents& rhs);
       ~MessageWaitingContents();
       MessageWaitingContents& operator=(const MessageWaitingContents& rhs);
