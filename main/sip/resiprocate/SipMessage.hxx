@@ -2,24 +2,21 @@
 #define SipMessage_hxx
 
 #include <list>
+#include <vector>
 #include <utility>
 
 #include <sipstack/HeaderTypes.hxx>
+#include <sipstack/Message.hxx>
 
 namespace Vocal2
 {
 
 class HeaderFieldValue;
 
-class SipMessage
+class SipMessage : public Message
 {
    public:
-
-      SipMessage(char* buff);
-      SipMessage()
-	: nIsExternal(false),
-	  mFixedDest(false)
-      {}
+      SipMessage();
       
       SipMessage(const SipMessage& message);
 
@@ -31,6 +28,8 @@ class SipMessage
       {
          return nIsExternal;
       }
+
+      void addBuffer(char* buf);
 
       Data encode();
 
@@ -103,10 +102,10 @@ class SipMessage
       void addHeader(int header, char* headerName, int headerLen, 
                      char* start, int len);
 
-  bool hasFixedDest() const;
-  Data getFixedDest() const;
-  void setFixedDest(const Data& dest);
-  void clearFixedDest();
+      bool hasFixedDest() const;
+      Data getFixedDest() const;
+      void setFixedDest(const Data& dest);
+      void clearFixedDest();
 
    private:
       void copyFrom(const SipMessage& message);
@@ -115,16 +114,15 @@ class SipMessage
       // not available
       SipMessage& operator=(const SipMessage&);
 
-      char* mBuff;
       const bool nIsExternal;
       HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
       UnknownHeaders mUnknownHeaders;
   
-  bool mHaveFixedDest;
-  Data mFixedDest;
-
-
+      bool mHaveFixedDest;
+      Data mFixedDest;
+      
+      std::vector<char*> mBufferList;
 };
 
 }
