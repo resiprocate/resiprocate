@@ -14,10 +14,16 @@ typedef std::list<DialogId> DialogIdSet;
 class Dialog 
 {
    public:
+      class Exception : BaseException
+      {
+         public:
+            Exception(const Data& msg, const Data& file, int line);
+            const char* name() const = 0;
+      };
+         
       // different behavior from request vs. response
       // (request creates to tag)
-      Dialog(DialogUsageManager& dum,
-             SipMessage* msg);
+      Dialog(DialogUsageManager& dum, const SipMessage& msg);
 
       DialogId getId() const;
       
@@ -38,6 +44,7 @@ class Dialog
       ClientOutOfDialogReq::Handle& findClientOutOfDialog();
       ServerOutOfDialogReq::Handle& findServerOutOfDialog();
       
+      void dispatch(const SipMessage& msg);
       bool shouldMerge(const SipMessage& request);
       void processNotify(const SipMessage& notify);
       
@@ -45,6 +52,18 @@ class Dialog
       std::list<BaseUsage*> mUsages;
       DialogId mId;  
       DialogUsageManager& mDum;
+
+      //invariants
+      Data mLocalTag;
+      Data mRemoteTag;
+      Data mCallId;
+      NameAddrs mRouteSet;
+      NameAddr mMe;
+
+      //variants
+      unsigned long mLocalCSeq;
+      unsigned long mRemoteCSeq;
+      NameAddr mRemoteTarget;
 };
  
 }
