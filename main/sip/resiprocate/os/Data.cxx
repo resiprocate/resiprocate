@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.18 2002/11/02 19:31:48 jason Exp $";
+"$Id: Data.cxx,v 1.19 2002/11/04 06:34:33 derekm Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -219,7 +219,7 @@ Data::operator=(const Data& data)
 }
 
 Data 
-Data::operator+(const Data& data)
+Data::operator+(const Data& data) const
 {
    Data tmp(mSize + data.mSize, true);
    tmp.mSize = mSize + data.mSize;
@@ -314,7 +314,7 @@ Data::operator=(const char* str)
 }
 
 Data 
-Data::operator+(const char* str)
+Data::operator+(const char* str) const
 {
    unsigned int l = strlen(str);
    Data tmp(mSize + l, true);
@@ -354,7 +354,7 @@ Data::append(const char* str, unsigned int len)
 }
 
 Data
-Data::operator+(char c)
+Data::operator+(char c) const
 {
    Data tmp(mSize + 1, true);
    tmp.mSize = mSize + 1;
