@@ -16,13 +16,12 @@ class SipMessage;            // fwd decl
 namespace PreparseState
 {
 
-typedef enum 
-{
-    headersComplete=0,
-    preparseError,
-    fragment,
-    NONE
-} TransportAction;
+typedef short BufferAction;
+const short NONE=0;
+const short headersComplete = (1 << 0);
+const short preparseError   = (1 << 1);
+const short dataAssigned    = (1 << 2);
+const short fragmented      = (1 << 3);
  
 
 typedef enum {
@@ -48,17 +47,17 @@ typedef enum {
 
 // Our actions
 
-const int actNil   = 0;
-const int actAdd   = (1 << 0);
-const int actBack  = (1 << 1);
-const int actFline = (1 << 2);
-const int actReset = (1 << 3);
-const int actHdr   = (1 << 4);
-const int actData  = (1 << 5);
-const int actBad   = (1 << 6);
+const int actNil     = 0;
+const int actAdd     = (1 << 0);
+const int actBack    = (1 << 1);
+const int actFline   = (1 << 2);
+const int actReset   = (1 << 3);
+const int actHdr     = (1 << 4);
+const int actData    = (1 << 5);
+const int actBad     = (1 << 6);
 const int actEndHdrs = (1 << 7);
-const int actFrag = (1<<8);
-
+const int actDiscard = (1<<8);
+const int actDiscardKnown = (1<<9);
   
 typedef enum {
     dCommaSep,
@@ -78,8 +77,6 @@ typedef struct
         int workMask;
 } Edge;
   
-void InitStatePreparseStateTable();
- 
  
 }
 
@@ -94,23 +91,65 @@ class Preparse
         void process(SipMessage& msg,
                      const char * buffer,
                      size_t length,
-                     int& used,
-                     PreparseState::TransportAction& status);
+                     size_t start,
+                     size_t& used,
+                     size_t& discard,
+                     PreparseState::BufferAction& status);
 
-        // used returns:
-        //  -1 -- needs more data (ran off end)
-        //        call setBuffer() before calling process again
-        //   n -- Number of bytes used from the current buffer.
-        //        
-        // messageComplete is true if we processed the end of the mesage.
-        // housekeep the buffer overlap and recall:
-        // until -1 OR status == headersComplete and used == length.
+        // msg -- A SipMessage for use with this data buffer.
+        //        Will have HFV's installed by the pre-parser.
+        //
+        // buffer -- The character data to work on.
         // 
-        // err -- set to true if there is an error in this buffer, discard.
-        // !ah! do we want to chew data until CRLFCRLF??
+        // length -- The number of chars in buffer.
+        //
+        // start -- begin the Preparse at this char offset.
+        //          Used to restart on fragments.
+        //
+        // discard -- the preparse process has used this many
+        //            chars and they are no longer required for
+        //            subsequent preparse processing.
+        // 
+        // status -- returns a bitset. If the following bits are set,
+        // the listed action / situation applies.
+        //
+        //   preparseError -- There was an error processing this chunk
+        //   of data. You may discard up to 'discard' bytes of this
+        //   packet and take appropriate action for the transport
+        //   invovled (UDP - discard packet, TCP - close connection).
+        //
+        //   dataAssigned -- Pointers into this chunk were passed into
+        //   the SipMessage (msg).  This data is now REQUIRED to be associated
+        //   with th SipMessage msg.  Can be used (with caution) for avoiding
+        //   needless copies while dealing with the preparser.
+        //
+        //   headersComplete -- the preparser has detected the end of the
+        //   SipMessage headers for this message.  discard is set such that
+        //   the body of the SipMessage starts after 'discard' characters.
+        //  
+        //   fragmented -- more data is needed; call process() again
+        //   with the same buffer, concatenated with more data from
+        //   the wire; set 'start' to the appropriate value for the
+        //   new buffer.  IF dataAssigned is also set on return from
+        //   ::process, you MUST assign this buffer to the SipMessage
+        //   and the new buffer call for fragment processing has to include
+        //   all the data from the current buffer.
+        //
 
 
     private:
+
+        static PreparseState::Edge ***mTransitionTable;
+        void InitStatePreparseStateTable();
+
+        void AE( PreparseState::State start, int disposition, int ch,
+                 PreparseState::State next, int workMask);
+
+        void AE( PreparseState::State start, int disposition, const char* charset,
+                 PreparseState::State next, int workMask);
+        
+        void ResetMachine();
+        // Reset all offsets and state vars to known initial state.
 
         PreparseState::Disposition mDisposition;
         // the disposition of this machine, a function
@@ -120,6 +159,21 @@ class Preparse
         
         // State of machine.  This is manipulated
         // oddly for fragmentation; see the code.
+        // !ah! or not.  See code.
+
+        // Collection of stateful offsets needed to cope with restarting
+        // PP::process(...) for fragmented messages.
+
+        size_t mHeaderOff;
+        size_t mHeaderLength;
+        Headers::Type mHeaderType;
+        // NOTE: Header information IF known header means the mHeaderOff and
+        // mHeaderLength might be bogus if there was a fragmented packet
+        // boundary since the characters that made up the header name.
+        // Unknow headers will NOT be fragmented.
+        
+        size_t mAnchorBegOff;
+        size_t mAnchorEndOff;
         
 };
  

@@ -7,8 +7,9 @@
 #include "sip2/util/Mutex.hxx"
 #include "sip2/util/Socket.hxx"
 
-// #define PP_DEBUG
-// #define DEBUG_HELPERS
+#define PP_DEBUG
+#define DEBUG_HELPERS
+// #define SUPER_DEBUG
 
 #if defined(PP_DEBUG) || defined(SUPER_DEBUG) || defined(DEBUG_HELPERS)
 #include <iostream> // debug only !ah!
@@ -25,7 +26,7 @@ using namespace std;
 
 using namespace Vocal2::PreparseState;
 
-Edge *** mTransitionTable = 0;
+Edge *** Preparse::mTransitionTable = 0;
 
 
 #if !defined(NDEBUG) && defined(PP_DEBUG)
@@ -48,16 +49,29 @@ showN(const char * p, size_t l)
 
 #if defined (DEBUG_HELPERS)
 
-const char * statusName(PreparseState::TransportAction s)
+Data statusName(PreparseState::BufferAction s)
 {
-    switch (s)
+    Data d;
+
+    d += '[';
+#define DO_SPC(b) {s&= ~b;if(s)d+=' ';}
+#define DO_BIT(b) {if(s&b){d+=#b;DO_SPC(b);}}
+
+    if (!s)
+        d+="NONE";
+    else
     {
-        case headersComplete: return "headersComplete"; break;
-        case preparseError: return "preparseError"; break;
-        case fragment: return "fragment"; break;
-        case NONE: return "NONE"; break;
+        DO_BIT(fragmented);
+        DO_BIT(dataAssigned);
+        DO_BIT(preparseError);
+        DO_BIT(headersComplete);
     }
-    assert(0);
+
+    d += ']';
+
+    return d;
+
+
 }
 
 const char *  stateName(PreparseState::State s)
@@ -101,7 +115,8 @@ workString(int m)
     if ( m &  actData) s += " Data ";
     if ( m &  actBad) s += " Bad ";
     if ( m & actEndHdrs) s += " EndHdrs ";
-    if ( m & actFrag ) s += " Frag ";
+    if ( m & actDiscard ) s += " Discard ";
+    if ( m & actDiscardKnown ) s += " DiscardKnown ";
     s += ']';
     return s;
 }
@@ -111,7 +126,7 @@ const int X = -1;
 const char XC = -1;
 
 void
-AE ( PreparseState::State start,
+Preparse::AE ( PreparseState::State start,
      int disposition,
      int c,
      PreparseState::State next,
@@ -133,14 +148,14 @@ AE ( PreparseState::State start,
         for(int di = dispStart ; di < dispEnd ; di++)
             for(int ch = charStart ; ch < charEnd ; ch++)
             {
-                Edge& e( mTransitionTable[st][di][ch] );
-                e.nextState = next;
-                e.workMask = workMask;
+                Edge& edge( mTransitionTable[st][di][ch] );
+                edge.nextState = next;
+                edge.workMask = workMask;
             }
 }
 
-static void
-AE (PreparseState::State start,
+void
+Preparse::AE (PreparseState::State start,
     int disposition,
     const char * p,
     PreparseState::State next,
@@ -152,7 +167,7 @@ AE (PreparseState::State start,
 }
 
 void
-PreparseState::InitStatePreparseStateTable()
+Preparse::InitStatePreparseStateTable()
 {
     static Mutex m;
     
@@ -173,9 +188,9 @@ PreparseState::InitStatePreparseStateTable()
             mTransitionTable[i][j] = new Edge[nOct];
             for(int k = 0 ; k < nOct ; k ++)
             {
-                Edge& e(mTransitionTable[i][j][k]);
-                e.nextState = NewMsg;
-                e.workMask = 0;
+                Edge& edge(mTransitionTable[i][j][k]);
+                edge.nextState = NewMsg;
+                edge.workMask = 0;
             }
         }
     }
@@ -221,28 +236,28 @@ PreparseState::InitStatePreparseStateTable()
     // AE ( state, disp, char, newstate, work)
 
     // MUST be AE( format ) so fsm generation will work.
-    AE( NewMsg,X,XC,StartLine,actAdd | actFrag); // all chars
+    AE( NewMsg,X,XC,StartLine,actAdd); // all chars
     AE( NewMsg,X,CR,NewMsgCrLf,actNil); // eat CR
 
-    AE( NewMsgCrLf,X,XC,EndMsg,actBad|actFrag);
-    AE( NewMsgCrLf,X,LF,NewMsg,actNil); 
+    AE( NewMsgCrLf,X,XC,EndMsg,actBad|actDiscard );
+    AE( NewMsgCrLf,X,LF,NewMsg,actDiscard); 
 
     AE( StartLine,X,XC,StartLine,actAdd);
     AE( StartLine,X,CR,StartLineCrLf,actNil);
 
-    AE( StartLineCrLf,X,XC,EndMsg,actBad|actFrag);
-    AE( StartLineCrLf,X,LF,BuildHdr,actReset | actFline | actFrag);
+    AE( StartLineCrLf,X,XC,EndMsg,actBad |actDiscard);
+    AE( StartLineCrLf,X,LF,BuildHdr,actReset | actFline |actDiscard);
 
     AE( BuildHdr,X,XC, BuildHdr,actAdd);
     AE( BuildHdr,X,LWS,EWSPostHdr,actNil);
-    AE( BuildHdr,X,COLON,EWSPostColon,actHdr | actReset | actFrag);
+    AE( BuildHdr,X,COLON,EWSPostColon,actHdr|actReset|actDiscardKnown);
   
-    AE( EWSPostHdr,X,XC,EndMsg,actBad|actFrag);
+    AE( EWSPostHdr,X,XC,EndMsg,actBad |actDiscard);
     AE( EWSPostHdr,X,LWS,EWSPostHdr,actNil);
-    AE( EWSPostHdr,X,COLON,EWSPostColon,actHdr | actReset | actFrag);
+    AE( EWSPostHdr,X,COLON,EWSPostColon,actHdr|actReset|actDiscardKnown);
 
     AE( EWSPostColon,X,XC,BuildData,actAdd);
-    AE( EWSPostColon,X,LWS,EWSPostColon,actReset | actFrag);
+    AE( EWSPostColon,X,LWS,EWSPostColon,actReset|actDiscardKnown);
 
     // Add edges that will ''skip'' data building and
     // go straight to quoted states
@@ -252,17 +267,17 @@ PreparseState::InitStatePreparseStateTable()
     AE( BuildData,X,XC,BuildData,actAdd);
     AE( BuildData,X,CR,BuildDataCrLf,actNil);
 
-    AE( BuildDataCrLf,X,XC,EndMsg,actBad|actFrag);
+    AE( BuildDataCrLf,X,XC,EndMsg,actBad |actDiscard);
     AE( BuildDataCrLf,X,LF,CheckCont,actNil);
 
     // (push 1st then b/u)
-    AE( CheckCont,X,XC, BuildHdr,actData|actReset|actBack|actFrag);
+    AE( CheckCont,X,XC, BuildHdr,actData|actReset|actBack |actDiscard);
     AE( CheckCont,X,LWS,BuildData,actAdd );
    
     // Check if double CRLF (end of hdrs)
-    AE( CheckCont,X,CR,CheckEndHdr,actData|actReset|actFrag);
-    AE( CheckEndHdr,X,XC,EndMsg,actBad|actFrag);
-    AE( CheckEndHdr,X,LF,EndMsg,actEndHdrs|actFrag);
+    AE( CheckCont,X,CR,CheckEndHdr,actData|actReset |actDiscard);
+    AE( CheckEndHdr,X,XC,EndMsg,actBad |actDiscard);
+    AE( CheckEndHdr,X,LF,EndMsg,actEndHdrs |actDiscard);
 
     // Disposition sensitive edges
 
@@ -287,7 +302,7 @@ PreparseState::InitStatePreparseStateTable()
     AE(InQEsc,X,XC,InQ,actAdd);
    
     // add comma transition
-    AE(BuildData,dCommaSep,COMMA,EWSPostColon, actData|actReset|actFrag);
+    AE(BuildData,dCommaSep,COMMA,EWSPostColon, actData|actReset|actDiscardKnown);
    
     initialised = true;
   
@@ -296,9 +311,27 @@ PreparseState::InitStatePreparseStateTable()
 
 Preparse::Preparse():
     mDisposition(dContinuous),
-    mState(NewMsg)
+    mState(NewMsg),
+    mHeaderOff(0),
+    mHeaderLength(0),
+    mHeaderType(Headers::UNKNOWN),
+    mAnchorBegOff(0),
+    mAnchorEndOff(0)
 {
     InitStatePreparseStateTable();
+    ResetMachine();
+}
+
+void
+Preparse::ResetMachine()
+{
+    mDisposition = dContinuous;
+    mState = NewMsg;
+    mHeaderOff = 0;
+    mHeaderLength = 0;
+    mHeaderType = Headers::UNKNOWN;
+    mAnchorBegOff = 0;
+    mAnchorEndOff = 0;
 }
 
 
@@ -324,7 +357,7 @@ ostream& showchar(ostream& os, char c)
 // next buffer. A pointer into the middle of the buffer
 // to the new data is required.  (And the PP will assume
 // that it is generating a data ''back'' into the buffer OR,
-// We can assume that the PP machine restarts at the frag
+// We can assume that the PP machine restarts at the discard
 // boundary.
 //
 // Option 1:
@@ -353,67 +386,73 @@ void
 Preparse::process(SipMessage& msg,
                   const char * buffer,
                   size_t length,
-                  int& used,
-                  PreparseState::TransportAction& status)
- {
-     Headers::Type headerType = Headers::NONE;
-     int headerLength = 0 ; // size of the header string (To,From, etc)
-
-     State fragState = NewMsg;
-     const char * fragPtr = buffer;
+                  size_t start,
+                  size_t& used,
+                  size_t& discard,
+                  PreparseState::BufferAction& status)
+{
+     status = NONE;
      
-     bool done = false;
-     
-     const char * traversalPtr = 0;
-     const char * headerPtr = 0;
-     const char * anchorBeg = 0;
-     const char * anchorEnd = 0;
-
-     // initialise the pointers
-     traversalPtr = anchorEnd = anchorBeg = buffer;
-     headerPtr = 0;
+     size_t traversalOff = start;
      
      // set return values so they are sensible
-     used = -1;
-     status = fragment;
+     used = UINT_MAX;
+     discard = 0;
      
-    
-     while ( (static_cast<size_t>(traversalPtr - buffer)) < length 
-             && mState != EndMsg )
+
+     // Invariants -- failure is error in caller.
+     assert(traversalOff < length);
+     assert(buffer);
+     assert(start < length);
+
+
+     DebugLog(<<"[->] PP::process(...)");
+     // !ah! Log all the anchors etc here.
+     DebugLog(<<"mAnchorEndOff:"<<mAnchorEndOff);
+     DebugLog(<<"mAnchorBegOff:"<<mAnchorBegOff);
+     DebugLog(<<"mHeaderType:"<<mHeaderType);
+     DebugLog(<<"mHeaderOff:"<<mHeaderOff);
+     DebugLog(<<"mState:"<<stateName(mState));
+
+     if (mState == EndMsg) // restart machine if required.
      {
-         //using namespace PreparseStateTable;
-         Edge& e(mTransitionTable[mState][mDisposition][*traversalPtr]);
+         DebugLog(<<"PP Restarting");
+         ResetMachine();
+     }
+     
+     while ( traversalOff < length && mState != EndMsg )
+     {
+         Edge& edge(mTransitionTable[mState][mDisposition][buffer[traversalOff]]);
 
 #if defined(PP_DEBUG) && defined(SUPER_DEBUG)
          DebugLog( << "EDGE " << ::stateName(mState)
-                   << " (" << (int) *traversalPtr << ')'
-                   << " -> " << ::stateName(e.nextState)
-                   << ::workString(e.workMask) );
+                   << " (" << (int) buffer[traversalOff] << ')'
+                   << " -> " << ::stateName(edge.nextState)
+                   << ::workString(edge.workMask) );
 #endif      
       
-         if (e.workMask & actAdd)
+         if (edge.workMask & actAdd)
          {
-             anchorEnd = traversalPtr;
+             mAnchorEndOff = traversalOff;
 
 #if defined(PP_DEBUG) && defined(SUPER_DEBUG)
-
              DebugLog( << "+++Adding char '"
-                       << showN( anchorBeg, anchorEnd-anchorBeg+1)
+                       << showN( &buffer[mAnchorBegOff], mAnchorEndOff-mAnchorBegOff+1)
                        << '\'' );
 #endif
 
          }
 
-         if (e.workMask & actHdr) // this edge indicates a header was seen
+         if (edge.workMask & actHdr) // this edge indicates a header was seen
          {
-             headerPtr = anchorBeg;
-             headerLength = anchorEnd-anchorBeg+1;
+             mHeaderOff = mAnchorBegOff;
+             mHeaderLength = mAnchorEndOff-mAnchorBegOff+1;
 
-             headerType = Headers::getType(headerPtr, headerLength);
+             mHeaderType = Headers::getType(&buffer[mHeaderOff], mHeaderLength);
             
 
              // ask header class if this is a header that needs to be split on commas?
-             if ( Headers::isCommaTokenizing( headerType ))
+             if ( Headers::isCommaTokenizing( mHeaderType ))
              {
                  mDisposition = dCommaSep;
              }
@@ -421,76 +460,95 @@ Preparse::process(SipMessage& msg,
              {
                  mDisposition = dContinuous;
              }
+
 #if defined(PP_DEBUG)
              DebugLog(<<"Hdr \'"
-                      << showN(headerPtr, headerLength)
-                      << "\' Type: " << int(headerType) );
+                      << showN(&buffer[mHeaderOff], mHeaderLength)
+                      << "\' Type: " << int(mHeaderType) );
 #endif
          }
 
-         if (e.workMask & actData) // there is some header data to pass up
+         if (edge.workMask & actData) // there is some header data to pass up
          {
-             msg.addHeader(headerType,
-                           headerPtr,
-                           headerLength,
-                           anchorBeg,
-                           anchorEnd - anchorBeg + 1
+             msg.addHeader(mHeaderType,
+                           &buffer[mHeaderOff],
+                           mHeaderLength,
+                           &buffer[mAnchorBegOff],
+                           mAnchorEndOff - mAnchorBegOff + 1
                  );
+
+             status = status | dataAssigned;
+             
 #if defined(PP_DEBUG)
              DebugLog(<<"DATA : \'"
-                      << showN(anchorBeg, anchorEnd - anchorBeg + 1)
+                      << showN(&buffer[mAnchorBegOff], mAnchorEndOff - mAnchorBegOff + 1)
                       << "\'");
 #endif
          }
 
-         if (e.workMask & actFline) // first line complete.
+         if (edge.workMask & actFline) // first line complete.
          {
+             msg.setStartLine(&buffer[mAnchorBegOff], mAnchorEndOff - mAnchorBegOff + 1);
+             status |= dataAssigned;
 #if defined(PP_DEBUG)
              DebugLog(<<"FLINE \'"
-                      << showN(anchorBeg, anchorEnd - anchorBeg + 1)
+                      << showN(&buffer[mAnchorBegOff], mAnchorEndOff - mAnchorBegOff + 1)
                       << "\'");
 #endif
-             msg.setStartLine(anchorBeg, anchorEnd - anchorBeg + 1);
+
          }
 
-         if (e.workMask & actBack)
+         if (edge.workMask & actBack)
          {
-             traversalPtr--;
+             traversalOff--;
          }
 
-         if (e.workMask & actFrag)
-         {
-             fragPtr = traversalPtr;
-             fragState = mState;
-#if defined (PP_DEBUG)
-             DebugLog(<<"FRAG " << fragPtr - buffer << " " << stateName(fragState));
-            
-#endif            
-         }
-        
-         if (e.workMask & actBad)
+
+
+         if (edge.workMask & actBad)
          {
              DebugLog(<<"BAD");
-             status = PreparseState::preparseError;
+             status |= PreparseState::preparseError;
          }
          else
          {
-             traversalPtr++;
+             traversalOff++;
          }
-         mState = e.nextState;
-        
 
-         if (e.workMask & actEndHdrs)
+         if ((edge.workMask & actDiscard) ||
+             ((edge.workMask & actDiscardKnown) && 
+              (mHeaderType != Headers::UNKNOWN)))
+         {
+             // move discard along to our current offset
+             discard = traversalOff;
+
+             // do I clear frag state here? !ah!
+             status &= ~ fragmented;
+#if defined (PP_DEBUG)
+             DebugLog(<<"DISCARD: discard=" << discard << " cur_state=" << stateName(mState) << workString(edge.workMask & (actDiscardKnown|actDiscard)));
+#endif            
+         }
+         else
+         {
+             status = status | fragmented;
+             DebugLog(<<"set fragmentation");
+         }
+         
+
+         mState = edge.nextState;
+         // Advance state from machine edge.
+
+         if (edge.workMask & actEndHdrs)
          {
 #if defined(PP_DEBUG)
              DebugLog(<<"END_HDR");
 #endif
-             status = headersComplete;
+             status |= PreparseState::headersComplete;
          }
       
-         if (e.workMask & actReset) // Leave this AFTER the tp++ (above)
+         if (edge.workMask & actReset) // Leave this AFTER the tp++ (above)
          {
-             anchorBeg = anchorEnd = traversalPtr;
+             mAnchorBegOff = mAnchorEndOff = traversalOff;
 #if defined(PP_DEBUG)
              DebugLog(<<"RESET");
 #endif
@@ -499,13 +557,28 @@ Preparse::process(SipMessage& msg,
      }
 
 
-     // Check our status here ... 
+     
+     // Compute Discard -- always the same, unless fragmented, then
+     // discard is zero.
 
-     used = traversalPtr - buffer; // !ah! temporarily disable FRAG support
+
+     // update all members for next (stateful) call
+     mAnchorEndOff -= discard;
+     mAnchorBegOff -= discard;
+     mHeaderOff -= discard;
+     used = traversalOff;
 
 #if defined(PP_DEBUG)
-     DebugLog(<<"nBytes examined " << traversalPtr - buffer  );
+     DebugLog(<<"[<-] PP::process(...)");
+     // !ah! Log all the anchors etc here.
+     DebugLog(<<"mAnchorEndOff:"<<mAnchorEndOff);
+     DebugLog(<<"mAnchorBegOff:"<<mAnchorBegOff);
+     DebugLog(<<"mHeaderType:"<<mHeaderType);
+     DebugLog(<<"mHeaderOff:"<<mHeaderOff);
+     DebugLog(<<"mState:"<<stateName(mState));
+     DebugLog(<<"nBytes examined " << traversalOff  );
      DebugLog(<< "used:" << used );
+     DebugLog(<< "disc:" << discard);
      DebugLog(<< "state: " << stateName(mState));
      DebugLog(<< "status: " << statusName(status));
 #endif
