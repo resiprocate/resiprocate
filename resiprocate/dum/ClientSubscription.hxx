@@ -25,20 +25,22 @@ class ClientSubscription: public BaseSubscription
       
       void requestRefresh();
       virtual void end();
+      virtual std::ostream& dump(std::ostream& strm) const;
+
    protected:
       virtual ~ClientSubscription();
       virtual void dialogDestroyed(const SipMessage& msg);      
    private:
       friend class Dialog;
+      friend class InviteSession;      
 
       bool mOnNewSubscriptionCalled;
       SipMessage mLastNotify;      
+      bool mEnded;
+
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
       
-//       const Contents* mCurrentEventDocument;//!dcm! -- unused?
-//       UInt64 mExpirationTime;
-
       // disabled
       ClientSubscription(const ClientSubscription&);
       ClientSubscription& operator=(const ClientSubscription&);
