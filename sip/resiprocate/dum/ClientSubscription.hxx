@@ -27,6 +27,7 @@ class ClientSubscription: public BaseSubscription
    private:
       friend class Dialog;
 
+      bool mOnNewSubscriptionCalled;      
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
       
