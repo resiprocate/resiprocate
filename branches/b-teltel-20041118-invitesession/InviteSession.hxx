@@ -53,7 +53,7 @@ class InviteSession : public DialogUsage
       bool isConnected() const;
       bool isTerminated() const;
       bool isEarly() const;
-
+      
       virtual std::ostream& dump(std::ostream& strm) const;
 
       
@@ -164,8 +164,6 @@ class InviteSession : public DialogUsage
          NitProceeding
       } NitState;
 
-      //typedef std::pair<OfferAnswerType, const SdpContents*> OfferAnswer;
-
       InviteSession(DialogUsageManager& dum, Dialog& dialog);
       virtual ~InviteSession();
 
@@ -192,8 +190,8 @@ class InviteSession : public DialogUsage
       static Data toData(State state);
       void transition(State target);
 
+      std::auto_ptr<SdpContents> getSdp(const SipMessage& msg);
       static bool isReliable(const SipMessage& msg);
-      static const SdpContents* getSdp(const SipMessage& msg);
       static std::auto_ptr<SdpContents> makeSdp(const SdpContents& sdp);
       static void setSdp(SipMessage& msg, const SdpContents& sdp);
 
@@ -209,7 +207,6 @@ class InviteSession : public DialogUsage
 
       SipMessage mLastSessionModification; // UPDATE or reINVITE
       SipMessage mInvite200; // 200 OK for reINVITE for retransmissions
-      SipMessage mRefer;
       
       unsigned long mCurrentRetransmit200;
 
@@ -217,7 +214,8 @@ class InviteSession : public DialogUsage
       int  mSessionInterval;
       bool mSessionRefresherUAS;
       int  mSessionTimerSeq;
-
+      bool mSentRefer;
+      
    private:
       friend class Dialog;
       friend class DialogUsageManager;
