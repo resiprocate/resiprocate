@@ -54,6 +54,8 @@ class InviteSession : public BaseUsage
 
    protected:
       InviteSession(DialogUsageManager& dum, Dialog& dialog);
+      void copyAuthorizations(SipMessage& request);
+
       SdpContents* mCurrentLocalSdp;
       SdpContents* mCurrentRemoteSdp;
       SdpContents* mProposedLocalSdp;

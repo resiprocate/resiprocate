@@ -41,7 +41,7 @@ class ClientRegistration: public BaseUsage
       friend class DialogUsageManager;
       ClientRegistration(DialogUsageManager& dum,
                          Dialog& dialog,
-                         const SipMessage& req);
+                         SipMessage& req);
 
       void updateMyContacts(const NameAddrs& allContacts);
       
