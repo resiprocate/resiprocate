@@ -5,6 +5,7 @@
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resiprocate/dum/BaseCreator.hxx"
 
 using namespace resip;
 
@@ -15,8 +16,10 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, 
    : BaseSubscription(dum, dialog, request),
      mOnNewSubscriptionCalled(false)
 {
-   mLastRequest = request;
-   mDialog.makeRequest(mLastRequest, SUBSCRIBE);   
+   BaseCreator* creator = mDialog.mDialogSet.getCreator();
+   assert(creator);
+   mLastRequest = creator->getLastRequest();
+   mDialog.makeRequest(mLastRequest, SUBSCRIBE);
 }
 
 ClientSubscription::~ClientSubscription()
@@ -61,9 +64,9 @@ ClientSubscription::dispatch(const SipMessage& msg)
          {
             unsigned long t = Helper::aBitSmallerThan((unsigned long)(expires));
             mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
+            InfoLog (<< "reSUBSCRIBE in " << t);
          }
          
-         InfoLog (<< "reSUBSCRIBE in " << expires);
          handler->onUpdateActive(getHandle(), msg);
       }
       else if (msg.header(h_SubscriptionState).value() == "pending")
@@ -72,9 +75,9 @@ ClientSubscription::dispatch(const SipMessage& msg)
          {
             unsigned long t = Helper::aBitSmallerThan((unsigned long)(expires));
             mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
+            InfoLog (<< "reSUBSCRIBE in " << t);
          }
 
-         InfoLog (<< "reSUBSCRIBE in " << expires);
          handler->onUpdatePending(getHandle(), msg);
       }
       else if (msg.header(h_SubscriptionState).value() == "terminated")
@@ -114,10 +117,11 @@ void
 ClientSubscription::requestRefresh()
 {
    mLastRequest.header(h_CSeq).sequence()++;
+   
    //!dcm! -- need a mechanism to retrieve this for the event package...part of
    //the map that stores the handlers, or part of the handler API
    //mLastRequest.header(h_Expires).value() = 300;   
-   InfoLog (<< "Request ClientSubscription refresh: " << mLastResponse.brief());
+   InfoLog (<< "Request ClientSubscription refresh: " << endl << mLastRequest);
    send(mLastRequest);
 }
 
