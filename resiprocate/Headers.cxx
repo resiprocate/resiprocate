@@ -93,7 +93,7 @@ inline
 #endif
 #endif
 static unsigned int
-hash (register const char *str, register unsigned int len)
+h_hash (register const char *str, register unsigned int len)
 {
    static unsigned char asso_values[] =
       {
@@ -266,7 +266,7 @@ h_in_word_set (register const char *str, register unsigned int len)
 
    if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
    {
-      register int key = hash (str, len);
+      register int key = h_hash (str, len);
 
       if (key <= MAX_HASH_VALUE && key >= 0)
       {

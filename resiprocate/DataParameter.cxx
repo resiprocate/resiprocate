@@ -25,7 +25,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
       pb.skipChar();
       const char* pos = pb.position();
       pb.skipToEndQuote();
-      mValue = Data(pos, pb.position() - pos);
+      pb.data(mValue, pos);
       pb.skipChar();
    }
    else
@@ -33,7 +33,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
       const char* pos = pb.position();
       static const char* WhitespaceOrParamTerm = " \t\r\n;?";
       pb.skipToOneOf(WhitespaceOrParamTerm);
-      mValue = Data(pos, pb.position() - pos);
+      pb.data(mValue, pos);
    }
 }
 
