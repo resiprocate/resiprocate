@@ -295,7 +295,7 @@ class DialogUsageManager : public HandleManager
       void destroy(DialogSet*);
       void destroy(Dialog*);
       
-      typedef std::set<MergedRequestKey> MergedRequests;
+      typedef std::map<MergedRequestKey, DialogSet*> MergedRequests;
       MergedRequests mMergedRequests;
             
       typedef HashMap<DialogSetId, DialogSet*> DialogSetMap;
