@@ -580,7 +580,11 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    {
       assert(request.exists(h_Vias));
    }
-   request.header(h_CSeq).sequence() = ++mLocalCSeq;
+   //don'y increment CSeq for ACK
+   if (method != ACK)
+   {
+      request.header(h_CSeq).sequence() = ++mLocalCSeq;
+   }
 }
 
 void 
