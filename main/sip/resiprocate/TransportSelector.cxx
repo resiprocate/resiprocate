@@ -223,7 +223,7 @@ Tuple
 TransportSelector::srcAddrForDest(const Tuple& dest, bool& ok) const
 {
   ok = true;
-  int addrlen;
+  socklen_t addrlen;
   union {
         sockaddr generic;
         sockaddr_in v4;
