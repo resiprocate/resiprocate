@@ -34,7 +34,8 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State init
      mNextOfferOrAnswerSdp(0),
      mUserConnected(false),
      mDestroyer(this),
-     mCurrentRetransmit200(Timer::T1)
+     mCurrentRetransmit200(Timer::T1),
+     mQueuedBye(0)
 {
    DebugLog ( << "^^^ InviteSession::InviteSession " << this);   
    assert(mDum.mInviteSessionHandler);
@@ -48,6 +49,7 @@ InviteSession::~InviteSession()
    delete mProposedLocalSdp;
    delete mProposedRemoteSdp;
    delete mNextOfferOrAnswerSdp;
+   delete mQueuedBye;   
    mDialog.mInviteSession = 0;
 }
 
@@ -327,7 +329,7 @@ InviteSession::dispatch(const SipMessage& msg)
                int code = msg.header(h_StatusLine).statusCode();
                if (code < 200)
                {
-                  //ignore
+                  return;                  
                }                   
                else if (code < 300)
                {
@@ -335,6 +337,16 @@ InviteSession::dispatch(const SipMessage& msg)
                   {
                      mState = Connected;
                      send(makeAck());
+                     //user has called end, so no more callbacks relating to
+                     //this usage other than onTerminated
+                     if (mQueuedBye)
+                     {
+                        mLastRequest = *mQueuedBye;
+                        delete mQueuedBye;
+                        mQueuedBye = 0;                        
+                        send(mLastRequest);
+                        return;
+                     }
                      if (offans.first != None)
                      {
                         incomingSdp(msg, offans.second);
@@ -360,7 +372,17 @@ InviteSession::dispatch(const SipMessage& msg)
                }
                else
                {
-                  mState = Connected;               
+                  mState = Connected;
+                  //user has called end, so no more callbacks relating to
+                  //this usage other than onTerminated
+                  if (mQueuedBye)
+                  {
+                     mLastRequest = *mQueuedBye;
+                     delete mQueuedBye;
+                     mQueuedBye = 0;                        
+                     send(mLastRequest);
+                     return;
+                  }
                   mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
                }
             }
@@ -447,6 +469,11 @@ InviteSession::end()
          mState = Terminated;
          return mLastRequest;
          break;
+      case ReInviting:
+         mQueuedBye = new SipMessage(mLastRequest);
+         mDialog.makeRequest(*mQueuedBye, BYE);
+         return *mQueuedBye;
+         break;
       default:
          assert(0); // out of states
    }
@@ -524,6 +551,12 @@ void
 InviteSession::send(SipMessage& msg)
 {
    Destroyer::Guard guard(mDestroyer);
+   if (mQueuedBye && (mQueuedBye == &msg))
+   {
+      //queued
+      return;
+   }
+      
    if (msg.isRequest())
    {
       //unless the message is an ACK(in which case it is mAck)
