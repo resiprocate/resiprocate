@@ -90,10 +90,9 @@ endif
 # the 
 
 ifeq ($(OSTYPE),Darwin)
-    CXXFLAGS += -D_REENTRANT -I/opt/sfw/include
-    CFLAGS   += -D_REENTRANT -I/opt/sfw/include
-    LDFLAGS  += -L/opt/sfw/lib
-    LDLIBS_LAST   += -lpopt
+    CXXFLAGS += -D_REENTRANT -I/sw/include
+    CFLAGS   += -D_REENTRANT -I/sw/include
+    LDFLAGS  += -L/sw/lib
 
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
