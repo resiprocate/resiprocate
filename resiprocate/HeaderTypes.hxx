@@ -48,7 +48,7 @@ class Headers
          defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", Token, "RFC ????"), // !dlb! defineMultiHeader
          defineHeader(ContentType, "Content-Type", Mime, "RFC ????"),
          defineHeader(Date, "Date", DateCategory, "RFC ????"),
-         UNUSED_defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC ????"),
+         defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC ????"),
          defineHeader(InReplyTo, "In-Reply-To", CallId, "RFC ????"),
          defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC ????"),
          defineHeader(MIMEVersion, "MIME-Version", Token, "RFC ????"),
