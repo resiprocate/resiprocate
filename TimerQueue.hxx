@@ -18,7 +18,7 @@ class TimerQueue
       TimerQueue(Fifo<Message>& fifo);
 
       Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
-      //void cancel(Timer::Id tid);
+      Timer::Id add(const Timer& timer);
       
       void process();
       void run();
