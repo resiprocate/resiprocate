@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.73 2002/11/06 18:23:46 kdc Exp $
+# $Id: Makefile,v 1.74 2002/11/07 00:01:12 bko Exp $
 
 BUILD = ../../build
 
@@ -15,6 +15,8 @@ TARGET_LIBRARY = libsip2
 TESTPROGRAMS =  SipTortureTests.cxx test2.cxx testSipStack1.cxx testSipMessage.cxx testParserCategories.cxx testNonInviteClientTx.cxx testDnsResolver.cxx testPreparse.cxx
 
 
+parsetest: bin.debug.Linux.i686/testParserCategories
+	./bin.debug.Linux.i686/testParserCategories
 
 ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686

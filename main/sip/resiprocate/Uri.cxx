@@ -127,16 +127,17 @@ Uri::operator==(const Uri& other) const
    ParameterList unB = other.mUnknownParameters;
 
 #ifdef WIN32
-     OrderUnknownParameters orderUnknown;
+   OrderUnknownParameters orderUnknown;
 
-    unA.sort();
+   unA.sort();
    unB.sort();
    
    ParameterList::iterator a = unA.begin();
    ParameterList::iterator b = unB.begin();
 #else
    OrderUnknownParameters orderUnknown;
-   assert(0); // !cj! You need to initialize the orderUnkonwn valuriabe above this line
+
+   assert(0); // !cj! You need to initialize the orderUnkonwn variable above this line
 #if defined (__SUNPRO_CC)
    unA.sort(); ///!Veer! Not Sure Please verify this...
    unB.sort();
