@@ -18,7 +18,7 @@ class RportParameter : public Parameter
 
       RportParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
       RportParameter(ParameterTypes::Type type, int value);
-      RportParameter(ParameterTypes::Type type);
+      explicit RportParameter(ParameterTypes::Type type);
       
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
@@ -28,6 +28,8 @@ class RportParameter : public Parameter
       Type& value() { return *this; }
 
       int& port() {return mValue;}
+      int port() const {return mValue;}
+
       bool hasValue() const { return mHasValue; } 
 
       virtual std::ostream& encode(std::ostream& stream) const;

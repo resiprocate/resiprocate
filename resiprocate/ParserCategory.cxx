@@ -1,6 +1,6 @@
 #include "resiprocate/HeaderFieldValue.hxx"
 #include "resiprocate/ParserCategory.hxx"
-
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/compat.hxx"
@@ -181,7 +181,7 @@ ParserCategory::encodeParameters(ostream& str) const
    for (ParameterList::iterator it = mParameters.begin();
         it != mParameters.end(); it++)
    {
-#if 1
+#if 0
       // !cj! - may be wrong just hacking 
       // The goal of all this is not to add a tag if the tag is empty 
       ParameterTypes::Type type = (*it)->getType();
@@ -326,19 +326,34 @@ ParserCategory::removeParameterByData(const Data& data)
 
 #ifndef TEMPLATE_METHODS
 
-#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                              \
-_enum##_Param::DType&                                                                   \
-ParserCategory::param(const _enum##_Param& paramType) const                             \
-{                                                                                       \
-   checkParsed();                                                                       \
-   _enum##_Param::Type* p =                                                             \
-      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));    \
-   if (!p)                                                                              \
-   {                                                                                    \
-      p = new _enum##_Param::Type(paramType.getTypeNum());                              \
-      mParameters.push_back(p);                                                         \
-   }                                                                                    \
-   return p->value();                                                                   \
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                              \
+_enum##_Param::DType&                                                                                   \
+ParserCategory::param(const _enum##_Param& paramType)                                                   \
+{                                                                                                       \
+   checkParsed();                                                                                       \
+   _enum##_Param::Type* p =                                                                             \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                    \
+   if (!p)                                                                                              \
+   {                                                                                                    \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                              \
+      mParameters.push_back(p);                                                                         \
+   }                                                                                                    \
+   return p->value();                                                                                   \
+}                                                                                                       \
+                                                                                                        \
+const _enum##_Param::DType&                                                                             \
+ParserCategory::param(const _enum##_Param& paramType) const                                             \
+{                                                                                                       \
+   checkParsed();                                                                                       \
+   _enum##_Param::Type* p =                                                                             \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                    \
+   if (!p)                                                                                              \
+   {                                                                                                    \
+      throw SipMessage::Exception(ParameterTypes::ParameterNames[paramType.getTypeNum()] + " missing",  \
+                                  __FILE__,                                                             \
+                                  __LINE__);                                                            \
+   }                                                                                                    \
+   return p->value();                                                                                   \
 }
 
 defineParam(accessType, "access-type", DataParameter, "RFC 2046");

@@ -87,11 +87,17 @@ class SipMessage : public Message
       bool isRequest() const;
       bool isResponse() const;
 
-      RequestLine& 
+      const RequestLine& 
       header(const RequestLineType& l) const;
 
-      StatusLine& 
+      RequestLine& 
+      header(const RequestLineType& l);
+
+      const StatusLine& 
       header(const StatusLineType& l) const;
+
+      StatusLine& 
+      header(const StatusLineType& l);
 
       bool exists(const HeaderBase& headerType) const;
       void remove(const HeaderBase& headerType);
@@ -100,6 +106,19 @@ class SipMessage : public Message
 
       template <class T>
       typename T::UnknownReturn&
+      SipMessage::header(const T& headerType)
+      {
+         HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), T::Single);
+         if (hfvs->getParserContainer() == 0)
+         {
+            hfvs->setParserContainer(new ParserContainer<typename T::Type>(hfvs, headerType.getTypeNum()));
+         }
+         return T::knownReturn(hfvs->getParserContainer());
+      };
+
+      // looks identical, but it isn't -- ensureHeaders CONST called -- may throw
+      template <class T>
+      const typename T::UnknownReturn&
       SipMessage::header(const T& headerType) const
       {
          HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), T::Single);
@@ -112,68 +131,77 @@ class SipMessage : public Message
 
 #else
 
-      CSeq_Header::Type& header(const CSeq_Header& headerType) const;
-      CallId_Header::Type& header(const CallId_Header& headerType) const;
-      AuthenticationInfo_Header::Type& header(const AuthenticationInfo_Header& headerType) const;
-      ContentDisposition_Header::Type& header(const ContentDisposition_Header& headerType) const;
-      ContentTransferEncoding_Header::Type& header(const ContentTransferEncoding_Header& headerType) const;
-      ContentEncoding_Header::Type& header(const ContentEncoding_Header& headerType) const;
-      ContentLength_Header::Type& header(const ContentLength_Header& headerType) const;
-      ContentType_Header::Type& header(const ContentType_Header& headerType) const;
-      Date_Header::Type& header(const Date_Header& headerType) const;
-      Event_Header::Type& header(const Event_Header& headerType) const;
-      Expires_Header::Type& header(const Expires_Header& headerType) const;
-      From_Header::Type& header(const From_Header& headerType) const;
-      InReplyTo_Header::Type& header(const InReplyTo_Header& headerType) const;
-      MIMEVersion_Header::Type& header(const MIMEVersion_Header& headerType) const;
-      MaxForwards_Header::Type& header(const MaxForwards_Header& headerType) const;
-      MinExpires_Header::Type& header(const MinExpires_Header& headerType) const;
-      Organization_Header::Type& header(const Organization_Header& headerType) const;
-      Priority_Header::Type& header(const Priority_Header& headerType) const;
-      ReferTo_Header::Type& header(const ReferTo_Header& headerType) const;
-      ReferredBy_Header::Type& header(const ReferredBy_Header& headerType) const;
-      Replaces_Header::Type& header(const Replaces_Header& headerType) const;
-      ReplyTo_Header::Type& header(const ReplyTo_Header& headerType) const;
-      RetryAfter_Header::Type& header(const RetryAfter_Header& headerType) const;
-      Server_Header::Type& header(const Server_Header& headerType) const;
-      Subject_Header::Type& header(const Subject_Header& headerType) const;
-      Timestamp_Header::Type& header(const Timestamp_Header& headerType) const;
-      To_Header::Type& header(const To_Header& headerType) const;
-      UserAgent_Header::Type& header(const UserAgent_Header& headerType) const;
-      Warning_Header::Type& header(const Warning_Header& headerType) const;
+#define defineHeader(_header)                                                           \
+      const _header##_Header::Type& header(const _header##_Header& headerType) const;   \
+      _header##_Header::Type& header(const _header##_Header& headerType)
 
-      ParserContainer<SecurityClient_MultiHeader::Type>& header(const SecurityClient_MultiHeader& headerType) const;
-      ParserContainer<SecurityServer_MultiHeader::Type>& header(const SecurityServer_MultiHeader& headerType) const;
-      ParserContainer<SecurityVerify_MultiHeader::Type>& header(const SecurityVerify_MultiHeader& headerType) const;
+#define defineMultiHeader(_header)                                                                                      \
+      const ParserContainer<_header##_MultiHeader::Type>& header(const _header##_MultiHeader& headerType) const;        \
+      ParserContainer<_header##_MultiHeader::Type>& header(const _header##_MultiHeader& headerType)
 
-      ParserContainer<Authorization_MultiHeader::Type>& header(const Authorization_MultiHeader& headerType) const;
-      ParserContainer<ProxyAuthenticate_MultiHeader::Type>& header(const ProxyAuthenticate_MultiHeader& headerType) const;
-      ParserContainer<WWWAuthenticate_MultiHeader::Type>& header(const WWWAuthenticate_MultiHeader& headerType) const;
-      ParserContainer<ProxyAuthorization_MultiHeader::Type>& header(const ProxyAuthorization_MultiHeader& headerType) const;
+      defineHeader(CSeq);
+      defineHeader(CallId);
+      defineHeader(AuthenticationInfo);
+      defineHeader(ContentDisposition);
+      defineHeader(ContentTransferEncoding);
+      defineHeader(ContentEncoding);
+      defineHeader(ContentLength);
+      defineHeader(ContentType);
+      defineHeader(Date);
+      defineHeader(Event);
+      defineHeader(Expires);
+      defineHeader(From);
+      defineHeader(InReplyTo);
+      defineHeader(MIMEVersion);
+      defineHeader(MaxForwards);
+      defineHeader(MinExpires);
+      defineHeader(Organization);
+      defineHeader(Priority);
+      defineHeader(ReferTo);
+      defineHeader(ReferredBy);
+      defineHeader(Replaces);
+      defineHeader(ReplyTo);
+      defineHeader(RetryAfter);
+      defineHeader(Server);
+      defineHeader(Subject);
+      defineHeader(Timestamp);
+      defineHeader(To);
+      defineHeader(UserAgent);
+      defineHeader(Warning);
 
-      ParserContainer<Accept_MultiHeader::Type>& header(const Accept_MultiHeader& headerType) const;
-      ParserContainer<AcceptEncoding_MultiHeader::Type>& header(const AcceptEncoding_MultiHeader& headerType) const;
-      ParserContainer<AcceptLanguage_MultiHeader::Type>& header(const AcceptLanguage_MultiHeader& headerType) const;
-      ParserContainer<AlertInfo_MultiHeader::Type>& header(const AlertInfo_MultiHeader& headerType) const;
-      ParserContainer<Allow_MultiHeader::Type>& header(const Allow_MultiHeader& headerType) const;
-      ParserContainer<AllowEvents_MultiHeader::Type>& header(const AllowEvents_MultiHeader& headerType) const;
-      ParserContainer<CallInfo_MultiHeader::Type>& header(const CallInfo_MultiHeader& headerType) const;
-      ParserContainer<Contact_MultiHeader::Type>& header(const Contact_MultiHeader& headerType) const;
-      ParserContainer<ContentLanguage_MultiHeader::Type>& header(const ContentLanguage_MultiHeader& headerType) const;
-      ParserContainer<ErrorInfo_MultiHeader::Type>& header(const ErrorInfo_MultiHeader& headerType) const;
-      ParserContainer<ProxyRequire_MultiHeader::Type>& header(const ProxyRequire_MultiHeader& headerType) const;
-      ParserContainer<RecordRoute_MultiHeader::Type>& header(const RecordRoute_MultiHeader& headerType) const;
-      ParserContainer<Require_MultiHeader::Type>& header(const Require_MultiHeader& headerType) const;
-      ParserContainer<Route_MultiHeader::Type>& header(const Route_MultiHeader& headerType) const;
-      ParserContainer<SubscriptionState_MultiHeader::Type>& header(const SubscriptionState_MultiHeader& headerType) const;
-      ParserContainer<Supported_MultiHeader::Type>& header(const Supported_MultiHeader& headerType) const;
-      ParserContainer<Unsupported_MultiHeader::Type>& header(const Unsupported_MultiHeader& headerType) const;
-      ParserContainer<Via_MultiHeader::Type>& header(const Via_MultiHeader& headerType) const;
+      defineMultiHeader(SecurityClient);
+      defineMultiHeader(SecurityServer);
+      defineMultiHeader(SecurityVerify);
+
+      defineMultiHeader(Authorization);
+      defineMultiHeader(ProxyAuthenticate);
+      defineMultiHeader(WWWAuthenticate);
+      defineMultiHeader(ProxyAuthorization);
+
+      defineMultiHeader(Accept);
+      defineMultiHeader(AcceptEncoding);
+      defineMultiHeader(AcceptLanguage);
+      defineMultiHeader(AlertInfo);
+      defineMultiHeader(Allow);
+      defineMultiHeader(AllowEvents);
+      defineMultiHeader(CallInfo);
+      defineMultiHeader(Contact);
+      defineMultiHeader(ContentLanguage);
+      defineMultiHeader(ErrorInfo);
+      defineMultiHeader(ProxyRequire);
+      defineMultiHeader(RecordRoute);
+      defineMultiHeader(Require);
+      defineMultiHeader(Route);
+      defineMultiHeader(SubscriptionState);
+      defineMultiHeader(Supported);
+      defineMultiHeader(Unsupported);
+      defineMultiHeader(Via);
 
 #endif // METHOD_TEMPLATES
 
       // unknown header interface
-      StringCategories& header(const UnknownHeaderType& symbol) const;
+      const StringCategories& header(const UnknownHeaderType& symbol) const;
+      StringCategories& header(const UnknownHeaderType& symbol);
       bool exists(const UnknownHeaderType& symbol) const;
       void remove(const UnknownHeaderType& symbol);
 
@@ -218,7 +246,9 @@ class SipMessage : public Message
       void compute2543TransactionHash() const;
       
       void copyFrom(const SipMessage& message);
-      HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single) const;
+
+      HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single);
+      HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single) const; // throws if not present
 
       // not available
       SipMessage& operator=(const SipMessage&);
