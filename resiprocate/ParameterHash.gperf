@@ -1,10 +1,10 @@
 %{
 #include <string.h>
 #include <ctype.h>
-#include "sip2/sipstack/ParameterTypes.hxx"
-namespace Vocal2 {
-using namespace Vocal2;
+#include "resiprocate/ParameterTypes.hxx"
+namespace resip {
 using namespace std;
+using namespace resip;
 %}
 struct params { char *name; ParameterTypes::Type type; };
 %%
