@@ -20,7 +20,6 @@ class ExistsParameter : public Parameter
       virtual std::ostream& encode(std::ostream& stream) const;
 
    private:
-      friend std::ostream& operator<<(std::ostream&, ExistsParameter&);
       bool mValue;
 };
 
