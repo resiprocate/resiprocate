@@ -47,6 +47,10 @@ const Data Symbols::Sip = "sip";
 const Data Symbols::Sips = "sips";
 const Data Symbols::Tel = "tel";
 
+const Data Symbols::Phone = "phone";
+const Data Symbols::Isub = "isub";
+const Data Symbols::Postd = "postd";
+
 const Data Symbols::auth = "auth";
 
 const char * const Symbols::MagicCookie = "z9hG4bK";
