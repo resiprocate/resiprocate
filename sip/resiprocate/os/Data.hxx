@@ -1,7 +1,7 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.28 2002/11/07 03:07:27 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.29 2002/11/08 17:53:49 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -15,7 +15,7 @@ class Data
 {
       
    public:
-      typedef int size_type;
+      typedef unsigned long size_type;
       Data();
       Data(int capacity, bool);
       Data(const char* str);
@@ -47,10 +47,10 @@ class Data
       char& operator[](size_type p);
       char operator[](size_type p) const;
       
-      Data& append(const char* str, unsigned int len);
+      Data& append(const char* str, size_type len);
 
       bool empty() const { return mSize == 0; }
-      int size() const { return mSize; }
+      size_type size() const { return mSize; }
       const char* c_str() const;
       // not necessarily NULL terminated
       const char* data() const;
@@ -65,10 +65,10 @@ class Data
    private:
       friend class TestData;
       Data(const char* buffer, int length, bool);
-      void resize(unsigned int newSize, bool copy);
-      unsigned int mSize;
+      void resize(size_type newSize, bool copy);
+      size_type mSize;
       char* mBuf;
-      unsigned int mCapacity;
+      size_type mCapacity;
       bool mMine;
 
       static const Data Empty;

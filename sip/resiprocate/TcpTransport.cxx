@@ -90,7 +90,6 @@ TcpTransport::~TcpTransport()
 void 
 TcpTransport::buildFdSet( FdSet& fdset)
 {
-   int maxFd = -1;
    for (ConnectionMap::Map::iterator it = mConnectionMap.mConnections.begin();
         it != mConnectionMap.mConnections.end(); it++)
    {
@@ -112,7 +111,7 @@ TcpTransport::processListen(FdSet& fdset)
       Socket s = accept( mFd, (struct sockaddr*)&peer,&peerLen);
       if ( s == -1 )
       {
-         int err = errno;
+         //int err = errno;
          // !cj!
          assert(0);
       }
