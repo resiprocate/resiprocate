@@ -46,10 +46,15 @@ class Mime : public ParserCategory
 
       Mime() : ParserCategory() {}
       Mime(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
-
+      Data& type() { return mType; }
+      Data& subType() { return mSubType; }
+         
       virtual void parse();
       virtual ParserCategory* clone(HeaderFieldValue*) const;
       virtual std::ostream& encode(std::ostream& str) const;
+   private:
+      Data mtype;
+      Data mSubType;
 };
 typedef ParserContainer<Mime> Mimes;
 
