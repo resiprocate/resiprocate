@@ -45,6 +45,11 @@ class Header
 {
 };
 
+template <int T>
+class MultiHeader
+{
+};
+
 #if 0
 // .dlb. something like this....
 template <class T>
@@ -80,7 +85,6 @@ class Header<Headers::Content_Disposition>
 {
    public:
       typedef Token Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Content_Disposition> Content_Disposition;
 
@@ -88,7 +92,6 @@ class Header<Headers::Content_Encoding>
 {
    public:
       typedef Token Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Content_Encoding> Content_Encoding;
 
@@ -96,7 +99,6 @@ class Header<Headers::MIME_Version>
 {
    public:
       typedef Token Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::MIME_Version> MIME_Version;
 
@@ -104,144 +106,128 @@ class Header<Headers::Priority>
 {
    public:
       typedef Token Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Priority> Priority;
 
 //====================
 // Tokens:
 //====================
-class Header<Headers::Accept_Encoding>
+class MultiHeader<Headers::Accept_Encoding>
 {
    public:
       typedef Token Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Accept_Encoding> Accept_Encoding;
+extern MultiHeader<Headers::Accept_Encoding> Accept_Encoding;
 
-class Header<Headers::Accept_Language>
+class MultiHeader<Headers::Accept_Language>
 {
    public:
       typedef Token Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Accept_Language> Accept_Language;
+extern MultiHeader<Headers::Accept_Language> Accept_Language;
 
 class Header<Headers::Allow>
 {
    public:
       typedef Token Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Allow> Allow;
+extern MultiHeader<Headers::Allow> Allow;
 
-class Header<Headers::Content_Language>
+class MultiHeader<Headers::Content_Language>
 {
    public:
       typedef Token Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Content_Language> Content_Language;
+extern MultiHeader<Headers::Content_Language> Content_Language;
 
-class Header<Headers::Proxy_Require>
+class MultiHeader<Headers::Proxy_Require>
 {
    public:
       typedef Token Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Proxy_Require> Proxy_Require;
+extern MultiHeader<Headers::Proxy_Require> Proxy_Require;
 
-class Header<Headers::Require>
+class MultiHeader<Headers::Require>
 {
    public:
       typedef Token Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Require> Require;
+extern MultiHeader<Headers::Require> Require;
 
-class Header<Headers::Supported>
+class MultiHeader<Headers::Supported>
 {
    public:
       typedef Token Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Supported> Supported;
+extern MultiHeader<Headers::Supported> Supported;
 
-class Header<Headers::Unsupported>
+class MultiHeader<Headers::Unsupported>
 {
    public:
       typedef Token Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Unsupported> Unsupported;
+extern MultiHeader<Headers::Unsupported> Unsupported;
 
 //====================
 // Mime
 //====================
-class Header<Headers::Accept>
+class MultiHeader<Headers::Accept>
 {
    public:
       typedef Mime Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Accept> Accept;
+extern MultiHeader<Headers::Accept> Accept;
 
 class Header<Headers::Content_Type>
 {
    public:
       typedef Mime Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Content_Type> Content_Type;
 
 //====================
 // GenericURIs:
 //====================
-class Header<Headers::Alert_Info>
+class MultiHeader<Headers::Alert_Info>
 {
    public:
       typedef GenericURI Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Alert_Info> Alert_Info;
+extern MultiHeader<Headers::Alert_Info> Alert_Info;
 
-class Header<Headers::Error_Info>
+class MultiHeader<Headers::Error_Info>
 {
    public:
       typedef GenericURI Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Error_Info> Error_Info;
+extern MultiHeader<Headers::Error_Info> Error_Info;
 
 //====================
 // NameAddrs:
 //====================
-class Header<Headers::Record_Route>
+class MultiHeader<Headers::Record_Route>
 {
    public:
       typedef NameAddr Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Record_Route> Record_Route;
+extern MultiHeader<Headers::Record_Route> Record_Route;
 
-class Header<Headers::Route>
+class MultiHeader<Headers::Route>
 {
    public:
       typedef NameAddr Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Route> Route;
+extern MultiHeader<Headers::Route> Route;
 
 //====================
 // Contact:
 //====================
-class Header<Headers::Contact>
+class MultiHeader<Headers::Contact>
 {
    public:
       typedef Contact Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Contact> Contact;
+extern MultiHeader<Headers::Contact> Contact;
 
 //====================
 // NameAddrOrAddrSpec:
@@ -250,7 +236,6 @@ class Header<Headers::From>
 {
    public:
       typedef NameAddrOrAddrSpec Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::From> From;
 
@@ -258,7 +243,6 @@ class Header<Headers::Reply_To>
 {
    public:
       typedef NameAddrOrAddrSpec Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Reply_To> Reply_To;
 
@@ -266,7 +250,6 @@ class Header<Headers::To>
 {
    public:
       typedef NameAddrOrAddrSpec Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::To> To;
 
@@ -277,7 +260,6 @@ class Header<Headers::Organization>
 {
    public:
       typedef StringComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Organization> Organization;
 
@@ -285,7 +267,6 @@ class Header<Headers::Server>
 {
    public:
       typedef StringComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Server> Server;
 
@@ -293,7 +274,6 @@ class Header<Headers::Subject>
 {
    public:
       typedef StringComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Subject> Subject;
 
@@ -301,7 +281,6 @@ class Header<Headers::User_Agent>
 {
    public:
       typedef StringComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::User_Agent> User_Agent;
 
@@ -312,7 +291,6 @@ class Header<Headers::Content_Length>
 {
    public:
       typedef IntegerComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Content_Length> Content_Length;
 
@@ -320,7 +298,6 @@ class Header<Headers::Expires>
 {
    public:
       typedef IntegerComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Expires> Expires;
 
@@ -328,7 +305,6 @@ class Header<Headers::Max_Forwards>
 {
    public:
       typedef IntegerComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Max_Forwards> Max_Forwards;
 
@@ -336,7 +312,6 @@ class Header<Headers::Min_Expires>
 {
    public:
       typedef IntegerComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Min_Expires> Min_Expires;
 
@@ -345,7 +320,6 @@ class Header<Headers::Retry_After>
 {
    public:
       typedef IntegerComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Retry_After> Retry_After;
 
@@ -356,7 +330,6 @@ class Header<Headers::Call_ID>
 {
    public:
       typedef CallId Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Call_ID> Call_ID;
 
@@ -367,7 +340,6 @@ class Header<Headers::In_Reply_To>
 {
    public:
       typedef CallIds Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::In_Reply_To> In_Reply_To;
 
@@ -378,7 +350,6 @@ class Header<Headers::Authentication_Info>
 {
    public:
       typedef Auth Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Authentication_Info> Authentication_Info;
 
@@ -386,7 +357,6 @@ class Header<Headers::Authorization>
 {
    public:
       typedef Auth Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Authorization> Authorization;
 
@@ -394,7 +364,6 @@ class Header<Headers::Proxy_Authenticate>
 {
    public:
       typedef Auth Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Proxy_Authenticate> Proxy_Authenticate;
 
@@ -402,7 +371,6 @@ class Header<Headers::Proxy_Authorization>
 {
    public:
       typedef Auth Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Proxy_Authorization> Proxy_Authorization;
 
@@ -410,7 +378,6 @@ class Header<Headers::WWW_Authenticate>
 {
    public:
       typedef Auth Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::WWW_Authenticate> WWW_Authenticate;
 
@@ -421,7 +388,6 @@ class Header<Headers::CSeq>
 {
    public:
       typedef CSeqComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::CSeq> CSeq;
 
@@ -432,7 +398,6 @@ class Header<Headers::Date>
 {
    public:
       typedef DateComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Date> Date;
 
@@ -443,20 +408,18 @@ class Header<Headers::Warning>
 {
    public:
       typedef WarningComponent Type;
-      enum {isMulti = false};
 };
 extern Header<Headers::Warning> Warning;
 
 //====================
 // Via
 //====================
-class Header<Headers::Via>
+class MultiHeader<Headers::Via>
 {
    public:
       typedef Via Type;
-      enum {isMulti = true};
 };
-extern Header<Headers::Via> Via;
+extern MultiHeader<Headers::Via> Via;
 
 class RequestLineType {};
 extern RequestLineType RequestLine;
