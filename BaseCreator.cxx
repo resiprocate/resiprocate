@@ -84,6 +84,9 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    if(mUserProfile.isAdvertisedCapability(Headers::AcceptLanguage)) mLastRequest.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
    if(mUserProfile.isAdvertisedCapability(Headers::Supported)) mLastRequest.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
 
+   // Merge Embedded parameters
+   mLastRequest.mergeUri(target.uri());
+
    DebugLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
 }
 

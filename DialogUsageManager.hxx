@@ -180,7 +180,7 @@ class DialogUsageManager : public HandleManager
       ClientPagerMessageHandle makePagerMessage(const NameAddr& target, UserProfile& userProfile, AppDialogSet* = 0);
       ClientPagerMessageHandle makePagerMessage(const NameAddr& target, AppDialogSet* = 0);
       
-      void cancel(DialogSetId invSessionId);
+      void end(DialogSetId invSessionId);
       void send(SipMessage& request); 
       
       void buildFdSet(FdSet& fdset);

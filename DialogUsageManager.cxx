@@ -608,7 +608,7 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, Sip
 
 
 void
-DialogUsageManager::cancel(DialogSetId setid)
+DialogUsageManager::end(DialogSetId setid)
 {
    DialogSet* ds = findDialogSet(setid);
    if (ds == 0)
@@ -617,7 +617,7 @@ DialogUsageManager::cancel(DialogSetId setid)
    }
    else
    {
-      ds->cancel();
+      ds->end();
    }
 }
 
