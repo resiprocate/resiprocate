@@ -178,14 +178,22 @@ class ParserContainer : public ParserContainerBase
 
       virtual std::ostream& encodeEmbedded(const Data& headerName, std::ostream& str) const
       {
+         assert(!headerName.empty());
+
+         bool first = true;
          for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
               i != mParsers.end(); i++)
          {
-            if (!headerName.empty())
+            if (first)
             {
-               str << headerName << Symbols::EQUALS;
+               first = false;
+            }
+            else
+            {
+               str << Symbols::AMPERSAND;
             }
 
+            str << headerName << Symbols::EQUALS;
             Data buf;
             {
                DataStream s(buf);

@@ -367,7 +367,7 @@ Uri::parse(ParseBuffer& pb)
    if (*pb.position() == Symbols::QUESTION[0])
    {
       const char* anchor = pb.position();
-      pb.skipToChar(Symbols::RA_QUOTE[0]);
+      pb.skipToOneOf(Symbols::RA_QUOTE, Symbols::SEMI_COLON);
       pb.data(mEmbeddedHeadersText, anchor);
    }
 }
@@ -433,8 +433,18 @@ Uri::parseEmbeddedHeaders(ParseBuffer& pb)
    Data headerName;
    Data headerContents;
 
+   bool first = true;
    while (!pb.eof())
    {
+      if (first)
+      {
+         first = false;
+      }
+      else
+      {
+         pb.skipChar(Symbols::AMPERSAND[0]);
+      }
+
       anchor = pb.position();
       pb.skipToChar(Symbols::EQUALS[0]);
       pb.data(headerName, anchor);
