@@ -26,8 +26,7 @@ class DialogUsageManager
       void setHandler(ClientRegistrationHandler*);
       void setHandler(ServerRegistrationHandler*);
       
-      void setHandler(ClientInvSessionHandler*);
-      void setHandler(ServerInvSessionHandler*);
+      void setHandler(InvSessionHandler*);
       
       void addHandler(const Data& eventType, ClientSubscriptionHandler*);
       void addHandler(const Data& eventType, ServerSubscriptionHandler*);
@@ -80,8 +79,7 @@ class DialogUsageManager
       ClientAuthManager* mClientAuthManager;
       ServerAuthManager* mServerAuthManager;  
     
-      ClientInviteSessionHandler* mClientInviteSessionHandler;
-      ServerInviteSessionHandler* mServerInviteSessionHandler;      
+      InviteSessionHandler* mInviteSessionHandler;
       ClientRegistrationHandler* mClientRegistrationHandler;
       ServerRegistrationHandler* mServerRegistrationHandler;      
 
