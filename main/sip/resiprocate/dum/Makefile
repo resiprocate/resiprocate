@@ -22,6 +22,7 @@ SRC =   \
 	ClientPublication.cxx \
 	ClientRegistration.cxx \
 	ClientSubscription.cxx \
+	DefaultServerReferHandler.cxx \
 	Dialog.cxx \
 	DialogId.cxx \
 	DialogSet.cxx \
@@ -47,6 +48,7 @@ SRC =   \
 	ServerPublication.cxx \
 	ServerRegistration.cxx \
 	ServerSubscription.cxx \
+	SubscriptionHandler.cxx \
 	SubscriptionCreator.cxx \
 	SubscriptionState.cxx \
 	UInt64Hash.cxx \

@@ -33,6 +33,18 @@ ServerSubscription::accept(int statusCode)
    return mLastResponse;
 }
 
+SipMessage& 
+ServerSubscription::reject(int statusCode)
+{
+   if (statusCode < 400)
+   {
+      throw new UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
+   }
+   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
+   return mLastResponse;
+}
+
+
 void 
 ServerSubscription::send(SipMessage& msg)
 {
@@ -113,11 +125,13 @@ ServerSubscription::dispatch(const SipMessage& msg)
       if (code == 200 && mSubscriptionState == Terminated)
       {
          handler->onTerminated(getHandle());
+         delete this;         
       }
       else if (code > 399)
       {
          handler->onError(getHandle(), msg);
          handler->onTerminated(getHandle());
+         delete this;         
       }
    }
 }
