@@ -1,5 +1,6 @@
+
 *.d
 a.out
 bin.*
+headers-hash.c
 obj.*
-

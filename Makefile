@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.46 2002/09/26 22:00:27 alan Exp $
+# $Id: Makefile,v 1.47 2002/09/27 02:49:32 alan Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -130,6 +130,9 @@ testSipMessage:  $(OBJS) $(OBJ)/testSipMessage.o
 
 test%: $(OBJ)/test%.o $(OBJS)
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
+
+headers-hash.c: headers.gperf Makefile
+	gperf -L ANSI-C -t -k '3,$$' $< > $@
 
 convertStringToInt:  $(OBJS) $(OBJ)/convertStringToInt.o
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
