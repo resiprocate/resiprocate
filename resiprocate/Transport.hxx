@@ -43,6 +43,13 @@ class Transport
          SCTP,
          DCCP
       } Type;
+
+      struct Tuple
+      {
+            struct sockaddr_in ipv4;
+            int port;
+            Transport::Type transport;
+      };
       
       class Exception : public VException
       {
