@@ -83,7 +83,7 @@ Pidf::clone() const
 const Mime& 
 Pidf::getStaticType() 
 {
-   static Mime type("application","cpim-pidf+xml");
+   static Mime type("application","pidf+xml");
    return type;
 }
 
@@ -94,9 +94,9 @@ Pidf::encodeParsed(std::ostream& str) const
    //DebugLog(<< "Pidf::encodeParsed " << mText);
    //str << mText;
 
-   str       << "<?xml version\"1.0\" encoding=\"UTF-8\"?>" << Symbols::CRLF;;
-   str       << "<presence xmlns=\"urn:ietf:params:xml:ns:cpim-pidf\"" << Symbols::CRLF;;
-   str       << "           entity=\""<<mEntity<<"\">" << Symbols::CRLF;;
+   str       << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << Symbols::CRLF;;
+   str       << "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"" << Symbols::CRLF;;
+   str       << "           entity=\"pres:"<<mEntity<<"\">" << Symbols::CRLF;;
    for( unsigned int i=0; i<mTuple.size(); i++)
    {
       Data status( (char*)( (mTuple[i].status)?"open":"close" ) );
