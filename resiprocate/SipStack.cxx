@@ -201,7 +201,7 @@ SipStack::send(const SipMessage& msg)
 {
    DebugLog (<< "SEND: " << msg.brief());
    //DebugLog (<< msg);
-   assert(!mShuttingDown);
+   //assert(!mShuttingDown);
    
    SipMessage* toSend = new SipMessage(msg);
    toSend->setFromTU();
