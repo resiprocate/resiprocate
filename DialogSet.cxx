@@ -331,11 +331,14 @@ DialogSet::dispatch(const SipMessage& msg)
    else
    {
       const SipMessage& response = msg;
-      if (response.header(h_StatusLine).statusCode() == 100)
+      if (response.header(h_StatusLine).statusCode() < 200)
       {
          mReceivedProvisional = true;
-         //!dcm! -- SessionProgress callback
-         return;         
+         if (response.header(h_StatusLine).statusCode() == 100)
+         {
+            //!dcm! -- SessionProgress callback
+            return;
+         }
       }      
          
       switch (response.header(h_CSeq).method())
