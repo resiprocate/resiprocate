@@ -8,7 +8,7 @@
 namespace Vocal2
 {
 
-class SysLogBuf : public streambuf 
+class SysLogBuf : public std::streambuf 
 {
    public:
       SysLogBuf ()
