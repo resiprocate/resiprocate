@@ -211,15 +211,14 @@ ConnectionMap::Connection::process(int bytesRead, Fifo<Message>& fifo, Preparse&
 
    if (mState == NewMessage || mState == PartialHeaderRead)
    { 
-      int bytesUsed;
+//      int bytesUsed;
    
       mMessage->addBuffer(mBuffer);
 
-      Preparse::Status status;
 #if 0 // !ah! needs porting
-
+      Preparse::Status status;
       preparse.process(*mMessage, mBuffer, mBytesRead + bytesRead, bytesUsed, status);
-#endif
+
       if (status & PreparseConst::stPreparseError)
       {
          delete mMessage;
@@ -242,7 +241,7 @@ ConnectionMap::Connection::process(int bytesRead, Fifo<Message>& fifo, Preparse&
          return readAnyBody(bytesUsed, bytesRead, fifo, preparse, maxBufferSize);
       }
       assert(0);  // we should never get here
-
+#endif
       return false;
       
    }
