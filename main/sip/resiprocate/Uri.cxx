@@ -137,10 +137,13 @@ Uri::operator==(const Uri& other) const
 #else
    OrderUnknownParameters orderUnknown;
    assert(0); // !cj! You need to initialize the orderUnkonwn valuriabe above this line
-
+#if defined (__SUNPRO_CC)
+   unA.sort(); ///!Veer! Not Sure Please verify this...
+   unB.sort();
+#else
    unA.sort(orderUnknown); // !cj! this line crashes the microsfot compiler. 
    unB.sort(orderUnknown);
-   
+#endif   
    ParameterList::iterator a = unA.begin();
    ParameterList::iterator b = unB.begin();
 #endif
