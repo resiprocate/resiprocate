@@ -13,11 +13,6 @@ FileSystem::Directory::Directory(const Data& path)
 
 #ifndef WIN32
 
-FileSystem::Directory::iterator::iterator() :
-   mNixDir(0),
-   mDirent(0)
-{}
-
 FileSystem::Directory::iterator::iterator(const Directory& dir)
 {
    assert(!dir.getPath().empty());   
@@ -113,7 +108,7 @@ FileSystem::Directory::iterator::iterator(const Directory& dir)
    }
    else
    {
-      mFile = filedata.cFileName;
+      mFile = fileData.cFileName;
    }
 }
 
@@ -125,7 +120,7 @@ FileSystem::Directory::iterator::~iterator()
    }
 }
 
-FileSystem::Directory::iterator 
+FileSystem::Directory::iterator&
 FileSystem::Directory::iterator::operator++()
 {
    WIN32_FIND_DATA fileData;
@@ -140,18 +135,19 @@ FileSystem::Directory::iterator::operator++()
    }
    else
    {
-      mFile = filedata.cFileName;
+      mFile = fileData.cFileName;
    }  
+   return *this;
 }
 
 bool 
-FileSystem::Directory::iterator::operator!=(const iterator& rhs)
+FileSystem::Directory::iterator::operator!=(const iterator& rhs) const
 {
    return !(*this == rhs);
 }
 
 bool 
-FileSystem::Directory::iterator::operator==(const iterator& rhs)
+FileSystem::Directory::iterator::operator==(const iterator& rhs) const
 {
    if (mWinSearch && rhs.mWinSearch)
    {
@@ -164,13 +160,13 @@ FileSystem::Directory::iterator::operator==(const iterator& rhs)
 }
 
 const Data& 
-FileSystem::Directory::iterator::operator*()
+FileSystem::Directory::iterator::operator*() const
 {
    return mFile;
 }
 
 const Data* 
-FileSystem::Directory::iterator::operator->()
+FileSystem::Directory::iterator::operator->() const
 {
    return &mFile;
 }
