@@ -39,7 +39,7 @@ Uri::Uri(const Data& data)
       tmp.parse(pb);
       *this = tmp;
    }
-   catch(ParseBuffer::Exception& e)
+   catch(ParseBuffer::Exception& /*e*/ )
    {
       DebugLog (<< "Failed trying to construct a Uri from " << data);
       throw;

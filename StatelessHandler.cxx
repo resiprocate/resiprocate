@@ -67,8 +67,12 @@ StatelessHandler::process()
             DebugLog (<< "Processing response from TU: " << msg->brief());
             const Via& via = sip->header(h_Vias).front();
             Transport::Tuple destination;
-            inet_pton(AF_INET, via.param(p_received).c_str(), &destination.ipv4);
-            if (via.exists(p_rport) && via.param(p_rport).hasValue())
+#ifdef WIN32
+			assert(0); // !CJ! TODO 
+#else
+			inet_pton(AF_INET, via.param(p_received).c_str(), &destination.ipv4);
+#endif
+			if (via.exists(p_rport) && via.param(p_rport).hasValue())
             {
                destination.port = via.param(p_rport).port();
             }
