@@ -328,7 +328,7 @@ WebAdmin::buildShowRegsPage()
       
       RegistrationPersistenceManager::UriList aors = mRegDb.getAors();
       for ( RegistrationPersistenceManager::UriList::const_iterator 
-               aor = aors.begin(); aor != aors.end(); aor++)
+               aor = aors.begin(); aor != aors.end(); ++aor )
       {
          Uri uri = *aor;
          RegistrationPersistenceManager::ContactPairList 
@@ -340,11 +340,11 @@ WebAdmin::buildShowRegsPage()
 
          for ( RegistrationPersistenceManager::ContactPairList::const_iterator 
                   cPair = contacts.begin();
-               cPair != contacts.end(); cPair++ );
+               cPair != contacts.end(); ++cPair );
          {
             //   const RegistrationPersistenceManager::ContactPair& p = *cPair;
             //  Uri contact = p.first(); 
-            Uri contact = cPair->first;
+            // Uri contact = cPair->first;
             // s << contact << " ";
          }
          
