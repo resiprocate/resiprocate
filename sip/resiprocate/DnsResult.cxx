@@ -234,6 +234,13 @@ DnsResult::lookupNAPTR()
 }
 
 void
+DnsResult::lookupNAPTR(const Data& target)
+{
+   DebugLog (<< "Doing NAPTR lookup: " << target);
+   ares_query(mInterface.mChannel, target.c_str(), C_IN, T_NAPTR, DnsResult::aresNAPTRCallback, this); 
+}
+
+void
 DnsResult::lookupSRV(const Data& target)
 {
    DebugLog (<< "Doing SRV lookup: " << target);
@@ -300,9 +307,10 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       for (int i = 0; i < ancount && aptr; i++)
       {
          NAPTR naptr;
-         aptr = parseNAPTR(aptr, abuf, alen, naptr);
+         const unsigned char *aptr2;
+         aptr2 = parseNAPTR(aptr, abuf, alen, naptr);
          
-         if (aptr)
+         if (aptr2)
          {
             StackLog (<< "Adding NAPTR record: " << naptr);
             if ( mSips && naptr.service.find("SIPS") == 0)
@@ -318,6 +326,21 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
                mPreferredNAPTR = naptr;
                StackLog (<< "Picked preferred: " << mPreferredNAPTR);
             }
+            aptr = aptr2; // Move to next answer record.
+         }
+         else
+         {
+             // Response may actually have been a CNAME record. If so,
+             // re-run the NAPTR query on the name it points to.
+             Data trueName;
+             aptr2 = parseCNAME(aptr,abuf,alen,trueName);
+             if (aptr2)
+             {
+                 // Re-try the NAPTR query on what the CNAME resolved to.
+                 StackLog (<< "NAPTR query got CNAME, re-running on true name: " << trueName);
+                 lookupNAPTR(trueName);
+                 return;
+             }
          }
       }
 
@@ -1053,6 +1076,67 @@ DnsResult::parseAAAA(const unsigned char *aptr,
 }
 #endif
 
+
+const unsigned char *
+DnsResult::parseCNAME(const unsigned char *aptr,
+                   const unsigned char *abuf, 
+                   int alen,
+                   Data& trueName)
+
+{
+   char* name=0;
+   int len=0;
+   int status=0;
+
+   // Parse the RR name. 
+   status = ares_expand_name(aptr, abuf, alen, &name, &len);
+   if (status != ARES_SUCCESS)
+   {
+      StackLog (<< "Failed parse of RR");
+      return NULL;
+   }
+   aptr += len;
+
+   // Make sure there is enough data after the RR name for the fixed
+   // part of the RR.
+   if (aptr + RRFIXEDSZ > abuf + alen)
+   {
+      free(name);
+      StackLog (<< "Failed parse of RR");
+      return NULL;
+   }
+   free(name);
+
+   int type = DNS_RR_TYPE(aptr);
+   int dlen = DNS_RR_LEN(aptr);
+   aptr += RRFIXEDSZ;
+   if (aptr + dlen > abuf + alen)
+   {
+      StackLog (<< "Failed parse of RR");
+      return NULL;
+   }
+
+   if (type == T_CNAME)
+   {
+       status = ares_expand_name(aptr,abuf,alen,&name,&len);
+       if (status != ARES_SUCCESS)
+       {
+           StackLog (<< "Failed parse of RR");
+           return NULL;
+       }
+       else
+       {
+           trueName = name;
+           free(name);
+           return aptr + dlen;
+       }
+   }
+   else
+   {
+       StackLog (<< "Failed parse of RR");
+       return NULL;
+   }
+}
 
 // adapted from the adig.c example in ares
 const unsigned char* 
