@@ -1,12 +1,12 @@
 #if !defined(RESIP_SERVERPUBLICATION_HXX)
 #define RESIP_SERVERPUBLICATION_HXX
 
-#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/dum/NonDialogUsage.hxx"
 
 namespace resip
 {
 
-class ServerPublication : public BaseUsage 
+class ServerPublication : public NonDialogUsage 
 {
    public:
       typedef Handle<ServerPublication> ServerPublicationHandle;
@@ -23,8 +23,8 @@ class ServerPublication : public BaseUsage
    protected:
       virtual ~ServerPublication();
    private:
-      friend class Dialog;
-      ServerPublication(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
+      friend class DialogSet;
+      ServerPublication(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
       
 };
 

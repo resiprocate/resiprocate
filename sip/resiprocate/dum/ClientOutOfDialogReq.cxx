@@ -11,16 +11,16 @@ ClientOutOfDialogReq::getHandle()
 }
 
 ClientOutOfDialogReq::ClientOutOfDialogReq(DialogUsageManager& dum,
-                                       Dialog& dialog,
+                                       DialogSet& dialogSet,
                                        const SipMessage& req)
-   : BaseUsage(dum, dialog)
+   : NonDialogUsage(dum, dialogSet)
 {
    assert(false);
 }
 
 ClientOutOfDialogReq::~ClientOutOfDialogReq()
 {
-   mDialog.mClientOutOfDialogRequests.remove(this);
+   mDialogSet.mClientOutOfDialogRequests.remove(this);
 }
 
 void 

@@ -1,7 +1,6 @@
 #if !defined(RESIP_CLIENTSUBSCRIPTION_HXX)
 #define RESIP_CLIENTSUBSCRIPTION_HXX
 
-#include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/dum/BaseSubscription.hxx"
 
 namespace resip
