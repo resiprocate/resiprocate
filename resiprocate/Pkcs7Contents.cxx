@@ -53,7 +53,7 @@ Pkcs7Contents::clone() const
 const Mime& 
 Pkcs7Contents::getType() const
 {
-   static Mime type("application","pkcs7-mime");
+   static Mime type("application","pkcs7");
    return type;
 }
 
