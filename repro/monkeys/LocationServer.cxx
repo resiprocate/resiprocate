@@ -48,7 +48,6 @@ LocationServer::handleRequest(RequestContext& context)
   }
 
   return RequestProcessor::Continue;
-
 }
 
 void
