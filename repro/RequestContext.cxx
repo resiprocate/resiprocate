@@ -56,6 +56,12 @@ RequestContext::getOriginalRequest() const
    return *mOriginalRequest;
 }
 
+const resip::Data&
+RequestContext::getTransactionId() const
+{
+   return mOriginalRequest->getTransactionId();
+}
+
 resip::Message* 
 RequestContext::getCurrentEvent()
 {

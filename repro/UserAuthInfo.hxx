@@ -3,27 +3,31 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/Message.hxx"
+#include "resiprocate/ApplicationMessage.hxx"
 
 namespace repro
 {
 
-class UserAuthInfo : public resip::Message
+class UserAuthInfo : public resip::ApplicationMessage
 {
    public:
       UserAuthInfo( const resip::Data& user,
                     const resip::Data& realm,
-                    const resip::Data& a1 );
+                    const resip::Data& a1,
+                    const resip::Data& transactionId);
       ~UserAuthInfo();
       
-      const resip::Data getA1() const;
-      const resip::Data getRealm() const;
-      const resip::Data getUser() const;
+      const resip::Data& getTransactionId() const;
+      const resip::Data& getA1() const;
+      const resip::Data& getRealm() const;
+      const resip::Data& getUser() const;
 
       virtual resip::Data brief() const;
       virtual resip::Message* clone() const;
       virtual std::ostream& encode(std::ostream& strm) const;
 
    private:
+      resip::Data mTransactionId;
       resip::Data mA1;
       resip::Data mRealm;
       resip::Data mUser;

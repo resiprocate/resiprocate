@@ -30,7 +30,8 @@ class RequestContext
       /// Returns the SipMessage associated with the server transaction
       resip::SipMessage& getOriginalRequest();
       const resip::SipMessage& getOriginalRequest() const;
-
+      const resip::Data& getTransactionId() const;
+      
       /// Returns the event that we are currently working on
       resip::Message* getCurrentEvent();
       const resip::Message* getCurrentEvent() const;
@@ -62,7 +63,7 @@ class RequestContext
       /** Stack of iterators used to keep track of where
           we are in the request processor chain(s) for
           async processing */
-        ChainIteratorStack;
+      ChainIteratorStack;
       ChainIteratorStack mChainIteratorStack;
 
       void fixStrictRouterDamage();
