@@ -274,14 +274,16 @@ SipMessage::compute2543TransactionHash() const
    {
       MD5Stream strm;
       // See section 17.2.3 Matching Requests to Server Transactions in rfc 3261
-         
+
+//#define VONAGE_FIX
+#ifndef VONAGE_FIX         
       strm << header(h_RequestLine).uri().scheme();
       strm << header(h_RequestLine).uri().user();
       strm << header(h_RequestLine).uri().host();
       strm << header(h_RequestLine).uri().port();
       strm << header(h_RequestLine).uri().password();
       strm << header(h_RequestLine).uri().commutativeParameterHash();
-
+#endif
       if (exists(h_Vias) && !header(h_Vias).empty())
       {
          strm << header(h_Vias).front().protocolName();
@@ -438,11 +440,22 @@ SipMessage::isClientTransaction() const
    return ((mIsExternal && mResponse) || (!mIsExternal && mRequest));
 }
 
+std::ostream& 
+SipMessage::encode(std::ostream& str) const
+{
+   return encode(str, false);
+}
+
+std::ostream& 
+SipMessage::encodeSipFrag(std::ostream& str) const
+{
+   return encode(str, true);
+}
 
 // dynamic_cast &str to DataStream* to avoid CountStream?
 
 std::ostream& 
-SipMessage::encode(std::ostream& str) const
+SipMessage::encode(std::ostream& str, bool isSipFrag) const
 {
    if (mStartLine != 0)
    {
@@ -471,7 +484,7 @@ SipMessage::encode(std::ostream& str) const
          {
             str << "Content-Length: " << mContentsHfv->mFieldLength << "\r\n";
          }
-         else
+         else if (!isSipFrag)
          {
             str << "Content-Length: 0\r\n";
          }
@@ -961,7 +974,7 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
    {
       // header missing
       // assert(false);
-      InfoLog( << "Missing Header " << Headers::getHeaderName(type) );
+      InfoLog( << "Missing Header [" << Headers::getHeaderName(type) << "]");      
       DebugLog (<< *this);
       throw Exception("Missing header", __FILE__, __LINE__);
    }
@@ -1156,6 +1169,76 @@ SipMessage::hasForceTarget() const
 {
    return (mForceTarget != 0);
 }
+
+SipMessage& 
+SipMessage::mergeUri(const Uri& source)
+{
+   header(h_RequestLine).uri() = source;
+   header(h_RequestLine).uri().removeEmbedded();
+
+   if (source.exists(p_method))
+   {
+      header(h_RequestLine).method() = getMethodType(source.param(p_method));
+      header(h_RequestLine).uri().remove(p_method);      
+   }           
+   
+   //19.1.5
+   //dangerous headers not included in merge:
+   // From, Call-ID, Cseq, Via, Record Route, Route, Accept, Accept-Encoding,
+   // Accept-Langauge, Allow, Contact, Organization, Supported, User-Agent
+
+   //from the should-verify section, remove for now, some never seem to make
+   //sense:  
+   // Content-Encoding, Content-Language, Content-Length, Content-Type, Date,
+   // Mime-Version, and TimeStamp
+
+   if (source.hasEmbedded())
+   {
+      h_AuthenticationInfo.merge(*this, source.embedded());
+      h_ContentTransferEncoding.merge(*this, source.embedded());
+      h_Event.merge(*this, source.embedded());
+      h_Expires.merge(*this, source.embedded());
+      h_InReplyTo.merge(*this, source.embedded());
+      h_MaxForwards.merge(*this, source.embedded());
+      h_MinExpires.merge(*this, source.embedded());
+      h_Priority.merge(*this, source.embedded());
+      h_ReferTo.merge(*this, source.embedded());
+      h_ReferredBy.merge(*this, source.embedded());
+      h_Replaces.merge(*this, source.embedded());
+      h_ReplyTo.merge(*this, source.embedded());
+      h_RetryAfter.merge(*this, source.embedded());
+      h_Server.merge(*this, source.embedded());
+      h_SIPETag.merge(*this, source.embedded());
+      h_SIPIfMatch.merge(*this, source.embedded());
+      h_Subject.merge(*this, source.embedded());
+      h_SubscriptionState.merge(*this, source.embedded());
+      h_To.merge(*this, source.embedded());
+      h_Warnings.merge(*this, source.embedded());
+
+      h_SecurityClients.merge(*this, source.embedded());
+      h_SecurityServers.merge(*this, source.embedded());
+      h_SecurityVerifys.merge(*this, source.embedded());
+
+      h_Authorizations.merge(*this, source.embedded());
+      h_ProxyAuthenticates.merge(*this, source.embedded());
+      h_WWWAuthenticates.merge(*this, source.embedded());
+      h_ProxyAuthorizations.merge(*this, source.embedded());
+
+      h_AlertInfos.merge(*this, source.embedded());
+      h_AllowEvents.merge(*this, source.embedded());
+      h_CallInfos.merge(*this, source.embedded());
+      h_ErrorInfos.merge(*this, source.embedded());
+      h_ProxyRequires.merge(*this, source.embedded());
+      h_Requires.merge(*this, source.embedded());
+      h_Unsupporteds.merge(*this, source.embedded());
+
+      h_RSeq.merge(*this, source.embedded());
+      h_RAck.merge(*this, source.embedded());
+   }   
+   //unknown header merge
+   return *this;   
+}
+
 
 #if defined(DEBUG) && defined(DEBUG_MEMORY)
 namespace resip

@@ -243,6 +243,15 @@ Uri::hasEmbedded() const
    return !mEmbeddedHeadersText.empty() || mEmbeddedHeaders != 0;
 }
 
+void 
+Uri::removeEmbedded()
+{
+   delete mEmbeddedHeaders;
+   mEmbeddedHeadersText = Data::Empty;   
+}
+
+
+
 Uri&
 Uri::operator=(const Uri& rhs)
 {
