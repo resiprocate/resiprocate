@@ -8,7 +8,8 @@ InviteSession::InviteSession(DialogUsageManager& dum,
      mLocalSdp(0),
      mRemoteSdp(0),
      mMyNextOffer(0),
-     mPendingReceivedOffer(0)
+     mPendingReceivedOffer(0),
+     mState(Unknown)
 {
 }
 
@@ -22,6 +23,33 @@ const SdpContents*
 InviteSession::getRemoteSdp()
 {
    return mRemoteSdp;
+}
+
+void
+InviteSession::end()
+{
+   assert(mState == Connected);
+
+   // no way for the application to modify the BYE yet
+   SipMessage bye;
+   mDialog.makeBye(bye);
+   copyAuthorizations(bye);
+   mDum.send(bye);
+}
+
+void
+InviteSession::copyAuthorizations(SipMessage& request)
+{
+   if (mLastRequest.exists(h_ProxyAuthorizations))
+   {
+      // should make the next auth (change nextNonce)
+      request.header(h_ProxyAuthorizations) = mLastRequest.header(h_ProxyAuthorizations);
+   }
+   if (mLastRequest.exists(h_ProxyAuthorizations))
+   {
+      // should make the next auth (change nextNonce)
+      request.header(h_ProxyAuthorizations) = mLastRequest.header(h_ProxyAuthorizations);
+   }
 }
 
 InviteSession::Handle::Handle(DialogUsageManager& dum)
