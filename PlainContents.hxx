@@ -1,10 +1,7 @@
 #ifndef PlainContents_hxx
 #define PlainContents_hxx
 
-#include <map>
-
 #include "sip2/sipstack/Contents.hxx"
-#include "sip2/sipstack/Uri.hxx"
 #include "sip2/util/Data.hxx"
 
 namespace Vocal2
@@ -17,7 +14,7 @@ class PlainContents : public Contents
       PlainContents(const Data& text);
       PlainContents(HeaderFieldValue* hfv);
       PlainContents(const PlainContents& rhs);
-      ~PlainContents();
+      virtual ~PlainContents();
       PlainContents& operator=(const PlainContents& rhs);
 
       virtual Contents* clone() const;
@@ -27,8 +24,7 @@ class PlainContents : public Contents
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
 
-      void setText( const Data& text ) { mText = text; };
-      Data getText() { return mText; };
+      Data& text() {checkParsed(); return mText;}
       
    private:
       static ContentsFactory<PlainContents> Factory;

@@ -13,6 +13,10 @@ PlainContents::PlainContents()
    : mText()
 {}
 
+PlainContents::PlainContents(const Data& txt)
+   : mText(txt)
+{}
+
 PlainContents::PlainContents(HeaderFieldValue* hfv)
    : Contents(hfv),
      mText()
@@ -56,7 +60,7 @@ PlainContents::getType() const
 std::ostream& 
 PlainContents::encodeParsed(std::ostream& str) const
 {
-   DebugLog(<< "PlainContents::encode " << mText);
+   DebugLog(<< "PlainContents::encodeParsed " << mText);
    str << mText;
    str << Symbols::CRLF;
    return str;
@@ -67,13 +71,10 @@ PlainContents::parse(ParseBuffer& pb)
 {
    DebugLog(<< "PlainContents::parse: " << pb.position());
 
-   char* buffer = const_cast<char*>(pb.position());
-   size_t size = pb.end() - pb.position();
+   const char* anchor = pb.position();
+   pb.skipToEnd();
+   pb.reset(pb.position() - 2); // hack to discard terminating CRLF
+   pb.data(mText, anchor);
 
-   Data text(buffer,size);
-   DebugLog("PlainContents::parsed <" << text << ">" );
-
-   mText = text;
-   
-   pb.reset(pb.end());
+   DebugLog("PlainContents::parsed <" << mText << ">" );
 }
