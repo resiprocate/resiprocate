@@ -98,14 +98,14 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                else
                {
                   InfoLog(<< "Got an INVITE or SUBSCRIBE with invalid scheme");
-                  DebugLog(<< request);
+                  InfoLog(<< request);
                   throw Exception("Invalid scheme in request", __FILE__, __LINE__);
                }
             }
             else
             {
                InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
-               DebugLog (<< request);
+               InfoLog (<< request);
                throw Exception("Too many (or no contact) contacts in request", __FILE__, __LINE__);
             }
             break;
@@ -166,7 +166,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                   {
                      BaseCreator* creator = mDialogSet.getCreator();
                      assert(creator);// !jf! throw or something here
-                  
+                     assert(creator->getLastRequest().exists(h_Contacts));
+                     assert(!creator->getLastRequest().header(h_Contacts).empty());
                      mLocalContact = creator->getLastRequest().header(h_Contacts).front();
                      mRemoteTarget = contact;
                   }
@@ -771,7 +772,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
 
    request.remove(h_RecordRoutes);  //!dcm! -- all of this is rather messy
 
-   request.remove(h_Contacts);   
+   request.header(h_Contacts).clear();   
    request.header(h_Contacts).push_front(mLocalContact);   
    request.header(h_CSeq).method() = method;
    request.header(h_MaxForwards).value() = 70;
@@ -843,7 +844,7 @@ Dialog::makeCancel(SipMessage& request)
    //not sure of these
    request.header(h_To).remove(p_tag);   
    request.remove(h_RecordRoutes);
-   request.remove(h_Contacts);   
+   request.header(h_Contacts).clear();   
    request.header(h_Contacts).push_front(mLocalContact);   
    request.header(h_MaxForwards).value() = 70;
 }
