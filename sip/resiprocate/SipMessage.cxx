@@ -183,7 +183,7 @@ SipMessage::encode(std::ostream& str) const
 {
    if (mStartLine != 0)
    {
-      mStartLine->encode(Headers::NONE, str);
+      mStartLine->encode(Data::Empty, str);
    }
 
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
@@ -192,7 +192,7 @@ SipMessage::encode(std::ostream& str) const
       {
          if (i != Headers::Content_Length) // !dlb! hack...
          {
-            mHeaders[i]->encode(static_cast<Headers::Type>(i), str);
+            mHeaders[i]->encode(Headers::HeaderNames[static_cast<Headers::Type>(i)], str);
          }
          else
          {
@@ -211,7 +211,11 @@ SipMessage::encode(std::ostream& str) const
       }
    }
 
-   // extension headers !dlb!
+   for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin(); 
+        i != mUnknownHeaders.end(); i++)
+   {
+      i->second->encode(i->first, str);
+   }
 
    str << Symbols::CRLF;
    
@@ -261,9 +265,6 @@ SipMessage::setStartLine(const char* st, int len)
 void 
 SipMessage::setBody(const char* start, int len)
 {
-   cerr << "PP is setting body, of length:" << len << "[";
-   cerr.write(start, len);
-   cerr << "]" << endl;
    mContentsHfv = new HeaderFieldValue(start, len);
 }
 
@@ -287,22 +288,10 @@ SipMessage::getContents() const
       {
          return 0;
       }
-      DebugLog(<< "Looking up factory for: " << header(h_ContentType));
       assert(Contents::getFactoryMap().find(header(h_ContentType)) != Contents::getFactoryMap().end());
       mContents = Contents::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv);
    }
    return mContents;
-}
-
-// !rk! temporary hack until richer body support is added
-const HeaderFieldValue*
-SipMessage::getBody() const
-{
-   if (!mBody)
-   {
-	return 0;
-   }
-   return mBody->front();
 }
 
 // unknown header interface
