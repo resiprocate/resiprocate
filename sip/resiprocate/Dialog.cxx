@@ -189,7 +189,7 @@ Dialog::targetRefreshResponse(const SipMessage& response)
    }
    else
    {
-      InfoLog (<< "Response doesn't have a contact header or more than one contact, so can't create dialog");
+      InfoLog (<< "Response must have 1 contact when it has: " << response.header(h_Contacts).size());
       DebugLog (<< response);
       throw Exception("Invalid or missing contact header in message", __FILE__,__LINE__);
    }
