@@ -46,7 +46,7 @@ main(int argc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
-   Fifo<Message> f;
+   TimeLimitFifo<Message> f(0, 0);
    Fifo<TransactionMessage> r;
    TimerQueue timer(r, f);
 

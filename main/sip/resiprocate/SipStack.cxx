@@ -37,6 +37,8 @@ using namespace resip;
 
 SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) : 
    mSecurity( pSecurity ),
+   mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
+           TransactionController::MaxTUFifoSize),
    mExecutive(*this),
    mTransactionController(multiThreaded, mTUFifo, stateless),
    mStrictRouting(false),
