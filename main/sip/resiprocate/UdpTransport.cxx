@@ -1,4 +1,3 @@
-
 #ifndef WIN32
 #include <errno.h>
 #include <fcntl.h>
@@ -231,20 +230,8 @@ UdpTransport::process(FdSet& fdset)
       //DebugLog(<<"added " << len-used << " byte body");
    }
 
-   //DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
-   // set the received= and rport= parameters in the message if necessary !jf!
-   if (message->isRequest() && !message->header(h_Vias).empty())
-   {
-#ifndef WIN32
-      char received[255];
-      inet_ntop(AF_INET, &tuple.ipv4.s_addr, received, sizeof(received));
-      message->header(h_Vias).front().param(p_received) = received;
-#else
-      char * buf = inet_ntoa(tuple.ipv4); // !jf! not threadsafe
-      message->header(h_Vias).front().param(p_received) = buf;
-#endif
-      message->header(h_Vias).front().param(p_rport).value() = tuple.port;
-   }
+   stampReceived(message);
+ 
 
    mStateMachineFifo.add(message);
 }

@@ -130,21 +130,8 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
             {
                mMessage->setBody(mBuffer + mPreparse.nDiscardOffset(), contentLength);
                DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-
-               if (mMessage->isRequest() && !mMessage->header(h_Vias).empty())
-               {
-                  const Transport::Tuple& tuple = mMessage->getSource();
-#ifndef WIN32
-                  char received[255];
-                  inet_ntop(AF_INET, &tuple.ipv4.s_addr, received, sizeof(received));
-                  mMessage->header(h_Vias).front().param(p_received) = received;
-#else
-                  char * buf = inet_ntoa(&tuple.ipv4); // !jf! not threadsafe
-                  mMessage->header(h_Vias).front().param(p_received) = buf;
-#endif
-                  mMessage->header(h_Vias).front().param(p_rport).value() = tuple.port;
-               }
-
+               
+               Transport::stampReceived(mMessage);
                fifo.add(mMessage);
 
                int overHang = (mBufferPos + bytesRead) - (mPreparse.nDiscardOffset() + contentLength);
