@@ -157,7 +157,20 @@ ClientSubscription::dispatch(const SipMessage& msg)
    {
       // !jf! might get an expiration in the 202 but not in the NOTIFY - we're going
       // to ignore this case
-      if (msg.header(h_StatusLine).statusCode() >= 300)
+      if (msg.header(h_StatusLine).statusCode() == 481)
+      {
+         mLastRequest.header(h_CallId).value() = Helper::computeCallId();
+         mLastRequest.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+         Via via;
+         mLastRequest.header(h_Vias).clear();
+         mLastRequest.header(h_Vias).push_front(via);
+         InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) " << mLastRequest.header(h_To).uri().getAor());
+         mDum.send(mLastRequest);
+         
+         delete this;
+         return;
+      }
+      else if (msg.header(h_StatusLine).statusCode() >= 300)
       {
          handler->onTerminated(getHandle(), msg);
          delete this;
