@@ -79,7 +79,7 @@ Helper::makeSubscribe(const NameAddr& target,
    request->header(h_To) = target;
    request->header(h_RequestLine) = rLine;
    request->header(h_MaxForwards).value() = 70;
-   request->header(h_CSeq).method() = REGISTER;
+   request->header(h_CSeq).method() = SUBSCRIBE;
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);

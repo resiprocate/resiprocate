@@ -118,6 +118,208 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
 }
 
 
+void
+TuIM::processRequest(SipMessage* msg)
+{
+   if ( msg->header(h_RequestLine).getMethod() == MESSAGE )
+   {
+      processMessageRequest(msg);
+      return;
+   }
+   if ( msg->header(h_RequestLine).getMethod() == SUBSCRIBE )
+   {
+      processSubscribeRequest(msg);
+      return;
+   }
+   if ( msg->header(h_RequestLine).getMethod() == NOTIFY )
+   {
+      processNotifyRequest(msg);
+      return;
+   }
+
+   InfoLog( "Got request that was not handled" );
+}
+
+
+void 
+TuIM::processSubscribeRequest(SipMessage* msg)
+{
+   assert( msg->header(h_RequestLine).getMethod() == SUBSCRIBE );
+   CallId id = msg->header(h_CallId);
+   
+   Dialog* dialog = NULL;
+
+   // see if we already have this subscription
+   for ( unsigned int i=0; i< mSubscribers.size(); i++)
+   {
+      Dialog* d = mSubscribers[i];
+      assert( d );
+      
+      if ( d->getCallId() == id );
+      {
+         // found the subscrition in list of current subscrbtions 
+         dialog = d;
+         break;
+      }
+   }
+   
+   if ( !dialog )
+   {
+      // create a new subscriber 
+      dialog = new Dialog( NameAddr(mContact) );
+
+      mSubscribers.push_back( dialog );
+   }
+   
+   auto_ptr<SipMessage> response( dialog->makeResponse( *msg, 200 ));
+   mStack->send( *response );
+   //delete response; response=0;
+
+   auto_ptr<SipMessage> notify( dialog->makeNotify() );
+   mStack->send( *notify );
+}
+
+
+void 
+TuIM::processNotifyRequest(SipMessage* msg)
+{
+   assert( msg->header(h_RequestLine).getMethod() == NOTIFY ); 
+
+   auto_ptr<SipMessage> response( Helper::makeResponse( *msg, 200 ));
+   mStack->send( *response );
+
+   Uri from = msg->header(h_From).uri();
+   DebugLog ( << "got notify from " << from );
+                  
+   assert( mPressCallback );
+   mPressCallback->presenseUpdate( from, true, Data::Empty );
+}
+
+
+void 
+TuIM::processMessageRequest(SipMessage* msg)
+{
+   assert( msg->header(h_RequestLine).getMethod() == MESSAGE );
+   
+   NameAddr contact; 
+   contact.uri() = mContact;
+            
+   SipMessage* response = Helper::makeResponse(*msg, 200, contact, "OK");
+   mStack->send( *response );
+   delete response; response=0;
+               
+   Contents* contents = msg->getContents();
+   if ( !contents )
+   {
+      ErrLog( "Receiveed Message message with no contents" );
+      delete msg; msg=0;
+      return;
+   }
+
+   assert( contents );
+   Mime mime = contents->getType();
+   DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
+
+   Data signedBy;
+   Security::SignatureStatus sigStat = Security::none;
+   bool encrypted=false;
+
+#ifdef USE_SSL
+   Pkcs7Contents* sBody = dynamic_cast<Pkcs7Contents*>(contents);
+   if ( sBody )
+   {
+      assert( sBody );
+      Security* sec = mStack->security;
+      assert(sec);
+
+      contents = sec->uncode( sBody, &signedBy, &sigStat, &encrypted );
+      if ( !contents )
+      {
+         ErrLog( << "Some problem decoding SMIME message");
+      }
+   }
+#endif
+
+   if ( contents )
+   {
+      PlainContents* body = dynamic_cast<PlainContents*>(contents);
+      if ( body )
+      {
+         assert( body );
+         const Data& text = body->text();
+         DebugLog ( << "got message from with text of <" << text << ">" );
+                 
+         Uri from = msg->header(h_From).uri();
+         DebugLog ( << "got message from " << from );
+                  
+         assert( mPageCallback );
+         mPageCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
+      }
+      else
+      {
+         ErrLog ( << "Can not handle type " << contents->getType() );
+         assert(0);
+      }
+   }
+}
+
+
+void
+TuIM::processResponse(SipMessage* msg)
+{  
+   CallId id = msg->header(h_CallId);
+   
+   // see if it is a registraition response 
+   if ( id == mRegistrationDialog.getCallId() )
+   {
+      processRegisterResponse( msg );
+      return;
+   }
+   
+   // see if it is a subscribe response 
+   for ( int i=0; i<getNumBuddies(); i++)
+   {
+      Buddy& b = mBuddy[i];
+      assert(  b.presDialog );
+      if ( b.presDialog->getCallId() == id  )
+      {
+         processSubscribeResponse( msg, b );
+         return;
+      }
+   }
+   
+   // likely is a response for some IM thing 
+   int number = msg->header(h_StatusLine).responseCode();
+   DebugLog ( << "got response of type " << number );
+   
+   if ( number >= 300 )
+   {
+      Uri dest = msg->header(h_To).uri();
+      mErrCallback->sendPageFailed( dest );
+   }
+}
+
+
+void 
+TuIM::processRegisterResponse(SipMessage* msg)
+{
+   int number = msg->header(h_StatusLine).responseCode();
+   Uri to = msg->header(h_To).uri();
+
+   ErrLog ( << "register of " << to << " got response " << number );   
+}
+
+
+void 
+TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
+{
+   int number = msg->header(h_StatusLine).responseCode();
+   Uri to = msg->header(h_To).uri();
+
+   ErrLog ( << "subscribe got response " << number << " from " << to );   
+}
+
+
 void 
 TuIM::process()
 {
@@ -137,7 +339,7 @@ TuIM::process()
    }
    
    // check if any subscribes need refresh
-   for ( int i=0; i<getNumBudies(); i++)
+   for ( int i=0; i<getNumBuddies(); i++)
    {
       if (  now > mBuddy[i].mNextTimeToSubscribe )
       {
@@ -152,94 +354,24 @@ TuIM::process()
          mBuddy[i].mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 5*60*1000 /*5 minutes*/ );
       }
    }
-   
-   SipMessage* msg = mStack->receive();
+
+   // check for any messages from the sip stack 
+   SipMessage* msg( mStack->receive() );
    if ( msg )
    {
       DebugLog ( << "got message: " << *msg);
    
       if ( msg->isResponse() )
       { 
-         int number = msg->header(h_StatusLine).responseCode();
-         DebugLog ( << "got response of type " << number );
-
-         if ( number >= 300 )
-         {
-            Uri dest = msg->header(h_To).uri();
-            mErrCallback->sendPageFailed( dest );
-         }
+         processResponse( msg );
       }
       
       if ( msg->isRequest() )
-      { 
-         if ( msg->header(h_RequestLine).getMethod() == MESSAGE )
-         {  
-            NameAddr contact; 
-            contact.uri() = mContact;
-            
-            SipMessage* response = Helper::makeResponse(*msg, 200, contact, "OK");
-
-            mStack->send( *response );
-
-            delete response;
-            
-            Contents* contents = msg->getContents();
-            if ( !contents )
-            {
-               ErrLog( "Receiveed Message message with no contents" );
-               delete msg; msg=0;
-               return;
-            }
-
-            assert( contents );
-            Mime mime = contents->getType();
-            DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
-
-            Data signedBy;
-            Security::SignatureStatus sigStat = Security::none;
-            bool encrypted=false;
-
-#ifdef USE_SSL
-            Pkcs7Contents* sBody = dynamic_cast<Pkcs7Contents*>(contents);
-            if ( sBody )
-            {
-               assert( sBody );
-               Security* sec = mStack->security;
-               assert(sec);
-
-               contents = sec->uncode( sBody, &signedBy, &sigStat, &encrypted );
-               if ( !contents )
-               {
-                  ErrLog( << "Some problem decoding SMIME message");
-               }
-            }
-#endif
-
-            if ( contents )
-            {
-               PlainContents* body = dynamic_cast<PlainContents*>(contents);
-               if ( body )
-               {
-                  assert( body );
-                  const Data& text = body->text();
-                  DebugLog ( << "got message from with text of <" << text << ">" );
-                 
-                  Uri from = msg->header(h_From).uri();
-                  DebugLog ( << "got message from " << from );
-                  
-                  assert( mPageCallback );
-                  mPageCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
-               }
-               else
-               {
-                  ErrLog ( << "Can not handle type " << contents->getType() );
-                  assert(0);
-               }
-            }
-         }
+      {
+         processRequest( msg );
       }
 
-      delete msg;
+      delete msg; msg=0;
    }
 }
 
@@ -264,7 +396,7 @@ TuIM::registerAor( const Uri& uri, const Data& password )
 
 
 int 
-TuIM::getNumBudies() const
+TuIM::getNumBuddies() const
 {
    return int(mBuddy.size());
 }
@@ -273,7 +405,7 @@ const Uri
 TuIM::getBuddyUri(const int index)
 {
    assert( index >= 0 );
-   assert( index < getNumBudies() );
+   assert( index < getNumBuddies() );
 
    return mBuddy[index].uri;
 }
@@ -282,7 +414,7 @@ const Data
 TuIM::getBuddyGroup(const int index)
 {
    assert( index >= 0 );
-   assert( index < getNumBudies() );
+   assert( index < getNumBuddies() );
 
    return mBuddy[index].group;
 }
@@ -299,22 +431,31 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
    mBuddy.push_back( b );
 
    // subscribe to this budy 
-   auto_ptr<SipMessage> msg( mRegistrationDialog.makeInitialRegister(NameAddr(b.uri),NameAddr(b.uri)) );
+   auto_ptr<SipMessage> msg( mRegistrationDialog.makeInitialSubscribe(NameAddr(b.uri),NameAddr(b.uri)) );
    b.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 10*60*1000 /*5 minutes*/ );
    
    mStack->send( *msg );
 }
 
+
 void 
-TuIM::removeBudy( const Uri& name)
+TuIM::removeBuddy( const Uri& name)
 {
    assert(0);
 }
 
+
 void 
 TuIM::setMyPresense( const bool open, const Data& status )
 {
-   assert(0);
+   for ( unsigned int i=0; i< mSubscribers.size(); i++)
+   {
+      Dialog* dialog = mSubscribers[i];
+      assert( dialog );
+      
+      auto_ptr<SipMessage> notify( dialog->makeNotify() );
+      mStack->send( *notify );
+   }
 }
 
 
