@@ -1,4 +1,11 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+#if defined (HAVE_POPT_H)
 #include <popt.h>
+#else
+#warning "will not work very well without libpopt"
+#endif
 #include <sys/types.h>
 #include <iostream>
 #include <memory>
@@ -24,7 +31,7 @@ main(int argc, char* argv[])
    int runs = 100;
    int window = 10;
    int seltime = 100;
-
+#if defined(HAVE_POPT_H)
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
@@ -37,6 +44,7 @@ main(int argc, char* argv[])
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
    poptGetNextOpt(context);
+#endif
    Log::initialize(logType, logLevel, argv[0]);
    
    cout << "Performing " << runs << " runs." << endl;
@@ -113,8 +121,9 @@ main(int argc, char* argv[])
         << " half calls/s/GHz  ["
         << runs << " calls peformed in " << elapsed << " ms, a rate of " 
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
+#if defined(HAVE_POPT_H)
    poptFreeContext(context);
-
+#endif
    return 0;
 }
 /* ====================================================================
