@@ -44,11 +44,7 @@ TransactionState::~TransactionState()
    DebugLog (<< "Deleting TransactionState " << tid);
    mStack.mTransactionMap.remove(tid);
 
-   // !rk! Design: you can't delete mCancelStateMachine because it's off
-   //      handling the CANCEL transaction!  If you do want to delete
-   //      it, then you'll have to set it free somehow, but earlier.
-   // delete mCancelStateMachine;
-   // mCancelStateMachine = 0;
+   // mCancelStateMachine will take care of deleting itself
    
    delete mMsgToRetransmit;
    mMsgToRetransmit = 0;
@@ -65,7 +61,6 @@ TransactionState::process(SipStack& stack)
 {
    Message* message = stack.mStateMacFifo.getNext();
    assert(message);
-   DebugLog (<< "got message out of state machine fifo: " << *message);
    
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
    //TimerMessage* timer=dynamic_cast<TimerMessage*>(message);;
@@ -76,6 +71,7 @@ TransactionState::process(SipStack& stack)
       tid += "ACK"; // to make it unique from the invite transaction
    }
 
+   DebugLog (<< "got message out of state machine fifo: " << *message << " for tid " << tid);
 
    TransactionState* state = stack.mTransactionMap.find(tid);
    if (state) // found transaction for sip msg
@@ -416,6 +412,11 @@ TransactionState::processClientNonInvite(  Message* msg )
    {
       processDns(msg);
    }
+   else
+   {
+      DebugLog (<< "TransactionState::processClientInvite: message unhandled");
+      delete msg;
+   }
 }
 
 
@@ -424,7 +425,7 @@ TransactionState::processClientInvite(  Message* msg )
 {
    DebugLog(<< "TransactionState::processClientInvite: " << *msg);
    
-   if (isInvite(msg) && isFromTU(msg))
+   if (isRequest(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       switch (sip->header(h_RequestLine).getMethod())
@@ -441,10 +442,12 @@ TransactionState::processClientInvite(  Message* msg )
             break;
             
          case CANCEL:
-            mCancelStateMachine = new TransactionState(mStack, ClientNonInvite, Trying);
-            mStack.mTransactionMap.add(msg->getTransactionId(), mCancelStateMachine);
+	    if (!mCancelStateMachine)
+	    {
+	       mCancelStateMachine = new TransactionState(mStack, ClientNonInvite, Trying);
+	    }
+	    // processClientNonInvite() sends msg to the TU
             mCancelStateMachine->processClientNonInvite(msg);
-            sendToWire(msg); // don't delete msg
             break;
             
          default:
@@ -634,7 +637,23 @@ TransactionState::processClientInvite(  Message* msg )
    }
    else if (isDns(msg))
    {
-      processDns(msg);
+      if (mCancelStateMachine &&
+	  mCancelStateMachine->mMsgToRetransmit &&
+	  mCancelStateMachine->mMsgToRetransmit->getTransactionId() ==
+	  msg->getTransactionId())
+      {
+	 DebugLog (<< "TransactionState::processClientInvite: passing DNS to CANCEL transaction");
+	 mCancelStateMachine->processDns(msg);
+      }
+      else
+      {
+	 processDns(msg);
+      }
+   }
+   else
+   {
+      DebugLog (<< "TransactionState::processClientInvite: message unhandled");
+      delete msg;
    }
 }
 
@@ -725,6 +744,11 @@ TransactionState::processServerNonInvite(  Message* msg )
    {
       processDns(msg);
    }
+   else
+   {
+      DebugLog (<< "TransactionState::processServerNonInvite: message unhandled");
+      delete msg;
+   }
 }
 
 
@@ -793,9 +817,11 @@ TransactionState::processServerInvite(  Message* msg )
 
          case CANCEL:
             DebugLog (<< "Received Cancel, create Cancel transaction and process as server non-invite and send to TU");
-            mCancelStateMachine = new TransactionState(mStack, ServerNonInvite, Trying);
-            mStack.mTransactionMap.add(msg->getTransactionId(), mCancelStateMachine);
-            // !rk! Copy msg so that it will still be valid for sendToTU.
+	    if (!mCancelStateMachine)
+	    {
+	       mCancelStateMachine = new TransactionState(mStack, ServerNonInvite, Trying);
+	    }
+            // Copy the message so that it will still be valid for sendToTU().
             mCancelStateMachine->processServerNonInvite(new SipMessage(msg));
             sendToTU(msg); // don't delete msg
             break;
@@ -903,11 +929,16 @@ TransactionState::processServerInvite(  Message* msg )
             break;
             
          case CANCEL:
-            DebugLog (<< "Received Cancel, create Cancel transaction and process as server non-invite and send to TU");
+            DebugLog (<< "Received response to Cancel, process as server non-invite if we are expecting this");
             
-            mCancelStateMachine = new TransactionState(mStack, ServerNonInvite, Trying);
-            mStack.mTransactionMap.add(msg->getTransactionId(), mCancelStateMachine);
-            mCancelStateMachine->processServerNonInvite(msg);
+	    if (!mCancelStateMachine)
+	    {
+	       // mCancelStateMachine should already exist by this point but
+	       // we shouldn't assert or this creates a DoS.
+	       delete msg;
+	       break;
+	    }
+            mCancelStateMachine->processServerNonInvite(new SipMessage(msg));
             sendToTU(msg); // don't delete
             break;
             
@@ -979,6 +1010,11 @@ TransactionState::processServerInvite(  Message* msg )
    {
       processDns(msg);
    }
+   else
+   {
+      DebugLog (<< "TransactionState::processServerInvite: message unhandled");
+      delete msg;
+   }
 }
 
 
@@ -1004,12 +1040,13 @@ TransactionState::processStale(  Message* msg )
       }
       else 
       {
+	 // !rk! what about 3xx - 6xx from processServerInvite?
 	 delete msg;
       }
    }
    else if (isTimer(msg))
    {
-      DebugLog (<< "received timer in client stale transaction");
+      DebugLog (<< "received timer in stale transaction");
       
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       switch (timer->getType())
@@ -1024,6 +1061,16 @@ TransactionState::processStale(  Message* msg )
 	    delete msg;
 	    break;
       }
+   }
+   else if (isDns(msg) || isTransportError(msg))
+   {
+      // resend with a different tuple or delete this if no more tuples
+      processDns(msg);
+   }
+   else
+   {
+      DebugLog (<< "TransactionState::processStale: message unhandled");
+      delete msg;
    }
 }
 
@@ -1119,6 +1166,7 @@ TransactionState::sendToWire(Message* msg)
 
    if (mDnsState == DnsResolver::NotStarted)
    {
+      DebugLog(<< "TransactionState::sendToWire pausing for DNS lookup");
       mDnsState = DnsResolver::Waiting;
       mStack.mTransportSelector.dnsResolve(sip);
    }
