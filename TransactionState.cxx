@@ -436,6 +436,9 @@ TransactionState::processClientInvite(  Message* msg )
                   }
                   else
                   {
+		    /* This should never Happen if it happens we should have a plan
+		       what to do here?? for now assert will work
+		    */
                      assert(0);
                   }
                }
@@ -605,9 +608,15 @@ TransactionState::processServerInvite(  Message* msg )
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       switch (sip->header(h_RequestLine).getMethod())
       {
+	
          case INVITE:
             if (mState == Proceeding || mState == Completed)
             {
+	      /*
+		server transaction is constructed for a request, it enters the
+		"Proceeding" state.  The server transaction MUST generate a 100
+		(Trying) response. The request MUST be passed to the TU
+	      */
                DebugLog (<< "Received invite from wire - forwarding to TU state=" << mState);
 	       if (!mMsgToRetransmit)
 	       {
@@ -623,6 +632,11 @@ TransactionState::processServerInvite(  Message* msg )
             break;
             
          case ACK:
+	   /*
+	     If an ACK is received while the server transaction is in the
+	     "Completed" state, the server transaction MUST transition to the
+	     "Confirmed" state.
+	    */
             if (mState == Completed)
             {
                if (mIsReliable)
@@ -719,6 +733,16 @@ TransactionState::processServerInvite(  Message* msg )
             }
             else if (code >= 300)
             {
+	      /*
+		While in the "Proceeding" state, if the TU passes a response with
+		status code from 300 to 699 to the server transaction, For unreliable 
+                transports,timer G is set to fire in T1 seconds, and is not set to 
+		fire for reliable transports.when the "Completed" state is entered, 
+		timer H MUST be set to fire in 64*T1 seconds for all transports.  
+		Timer H determines when the server transaction abandons retransmitting 
+		the response
+	       */
+
                if (mState == Trying || mState == Proceeding)
                {
                   DebugLog (<< "Received failed response in Trying or Proceeding. Start Timer H, move to completed.");
@@ -778,9 +802,15 @@ TransactionState::processServerInvite(  Message* msg )
                delete msg;
             }
             break;
-            
+	    /*
+	      If timer H fires while in the "Completed" state, it implies that the
+	      ACK was never received.  In this case, the server transaction MUST
+	      transition to the "Terminated" state, and MUST indicate to the TU
+	      that a transaction failure has occurred. WHY we need to inform TU
+              for Failure cases ACK ? do we really need to do this ???       
+	     */
          case Timer::TimerH:
-         case Timer::TimerI:
+	 case Timer::TimerI:
             DebugLog (<< "TimerH or TimerI fired. Delete this");
             delete this;
             delete msg;
@@ -814,9 +844,12 @@ TransactionState::processServerInvite(  Message* msg )
    }
    else if (isTranportError(msg))
    {
-      DebugLog (<< "Transport error received. Delete this");
-      delete this;
-      delete msg;
+     /*
+       TU need to be informed.
+      */
+     DebugLog (<< "Transport error received. Delete this");
+     delete this;
+     delete msg;
    }
    else
    {
