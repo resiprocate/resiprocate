@@ -18,12 +18,12 @@ class Dialog
 
       DialogId getId() const;
       
-      SipMessage* makeInviteSession(const Uri& target);
-      SipMessage* makeSubscription(const Uri& aor, const Data& eventType);
-      SipMessage* makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
-      SipMessage* makePublication(const Uri& aor, const Data& eventType);
-      SipMessage* makeRegistration(const Uri& aor);
-      SipMessage* makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
+      SipMessage* makeInviteSession();
+      SipMessage* makeSubscription();
+      SipMessage* makeRefer();
+      SipMessage* makePublication();
+      SipMessage* makeRegistration();
+      SipMessage* makeOutOfDialogRequest();
 
       BaseUsage& findInvSession();
       UsageSet   findSubscriptions();
