@@ -856,7 +856,7 @@ TuIM::process()
             auto_ptr<SipMessage> msg( buddy.presDialog->makeSubscribe() );
                         
             msg->header(h_Event).value() = Data("presence");;
-            msg->header(h_Accepts).push_back( Mime( "application","cpim-pidf+xml") );
+            msg->header(h_Accepts).push_back( Mime( "application","pidf+xml") );
             msg->header(h_Expires).value() = mRegistrationTimeSeconds;
             
             setOutbound( *msg );
@@ -973,7 +973,7 @@ TuIM::subscribeBuddy( Buddy& buddy )
    auto_ptr<SipMessage> msg( buddy.presDialog->makeInitialSubscribe(NameAddr(buddy.uri),NameAddr(mAor)) );
 
    msg->header(h_Event).value() = Data("presence");;
-   msg->header(h_Accepts).push_back( Mime( "application","cpim-pidf+xml") );
+   msg->header(h_Accepts).push_back( Mime( "application","pidf+xml") );
    msg->header(h_Expires).value() = mSubscriptionTimeSeconds;
    
    buddy.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( mSubscriptionTimeSeconds*1000 );
