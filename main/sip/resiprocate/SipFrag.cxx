@@ -5,12 +5,7 @@
 #include "resiprocate/SipFrag.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
-
-#ifndef NEW_MSG_HEADER_SCANNER
-#include "resiprocate/Preparse.hxx"
-#else
 #include "resiprocate/MsgHeaderScanner.hxx"
-#endif
 
 using namespace resip;
 using namespace std;
@@ -89,66 +84,6 @@ SipFrag::encodeParsed(std::ostream& str) const
    return str;
 }
 
-#ifndef NEW_MSG_HEADER_SCANNER // {
-
-void 
-SipFrag::parse(ParseBuffer& pb)
-{
-   DebugLog(<< "SipFrag::parse: " << pb.position());
-
-   mMessage = new SipMessage();
-
-   Preparse pre(true); // sipfrag mode
-
-   pb.assertNotEof();
-   const char* const_buffer = pb.position();
-   char* buffer = const_cast<char*>(const_buffer);
-
-   size_t size = pb.end() - pb.position();
-
-   // !dlb! fragment not required to CRLF terminate
-   // need another interface to preparse?
-   // !ah! removed size check .. process() cannot process more
-   // than size bytes of the message.
-   int ppstat = 0;
-   if ((ppstat = pre.process(*mMessage, buffer, size)))
-   {
-     ErrLog(<<"SipFrag Preparse error status: " << ppstat);
-     pb.fail(__FILE__, __LINE__);
-   }
-   else 
-   {
-     
-     size_t used =
-         pre.nBytesUsed();
-
-     // !ah! I think this is broken .. if we are UDP then the 
-     // remainder is the SigFrag, not the Content-Length... ??
-     if (
-         pre.isHeadersComplete()
-         && 
-         mMessage->exists(h_ContentLength))
-      {
-         assert(used == pre.nDiscardOffset());
-         mMessage->setBody( buffer+used, int(size-used) );
-      }
-      else
-      {
-        // !ah! So the headers weren't complete. Why are we here?
-        // !dlb! 
-         if (mMessage->exists(h_ContentLength))
-         {
-            pb.reset(buffer + used);
-            pb.skipChars(Symbols::CRLF);
-            mMessage->setBody(pb.position(),int(pb.end()-pb.position()) );
-         }
-      }
-      pb.reset(pb.end());
-   }
-}
-
-#else // defined(NEW_MSG_HEADER_SCANNER) } {
-
 void 
 SipFrag::parse(ParseBuffer& pb)
 {
@@ -221,7 +156,6 @@ SipFrag::parse(ParseBuffer& pb)
    }
 }
 
-#endif // defined(NEW_MSG_HEADER_SCANNER) }
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
