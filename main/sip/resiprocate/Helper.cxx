@@ -1,11 +1,14 @@
 #include <string.h>
 
-
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/Preparse.hxx"
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/Random.hxx"
+#include "sip2/util/Timer.hxx"
+#include "sip2/util/DataStream.hxx"
+#include "sip2/util/MD5Stream.hxx"
+#include <iomanip>
 
 using namespace Vocal2;
 
@@ -235,6 +238,293 @@ Helper::computeTag(int numBytes)
    return Random::getRandomHex(4);
 }
 
+//this should not be in source, it should be configurable !dcm!
+static Data privateKey("lw4j5owG9A");
+
+Data
+Helper::makeNonce(const SipMessage& request, const Data& timestamp)
+{
+   Data nonce(100, true);
+   nonce += timestamp;
+   nonce += Symbols::COLON;
+   Data noncePrivate(100, true);
+   noncePrivate += timestamp;
+   noncePrivate += Symbols::COLON;
+   noncePrivate += request.header(h_CallId).value();
+   noncePrivate += request.header(h_From).uri().user();
+   noncePrivate += privateKey;
+   nonce += noncePrivate.md5();
+   return nonce;
+}
+
+//RFC 2617 3.2.2.1
+Data 
+Helper::makeResponseMD5(const Data& username, const Data& encodedPassword, const Data& realm, 
+                        const Data& method, const Data& digestUri, const Data& nonce,
+                        const Data& qop, const Data& cnonce, const Data& cnonceCount)
+{
+   MD5Stream a1;
+   a1 << username
+      << Symbols::COLON
+      << realm
+      << Symbols::COLON
+      << encodedPassword;
+
+   MD5Stream a2;
+   a2 << method
+      << Symbols::COLON
+      << digestUri;
+   
+   MD5Stream r;
+   r << a1.getHex()
+     << Symbols::COLON
+     << nonce
+     << Symbols::COLON;
+
+   if (!qop.empty()) 
+   {
+      r << cnonceCount
+        << Symbols::COLON
+        << cnonce
+        << Symbols::COLON
+        << qop
+        << Symbols::COLON;
+   }
+   r << a2.getHex();
+
+   return r.getHex();
+}
+
+Helper::AuthResult
+Helper::authenticateRequest(const SipMessage& request, 
+                            const Data& realm,
+                            const Data& encodedPassword,
+                            int expiresDelta)
+{
+   const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
+   for (ParserContainer<Auth>::const_iterator i = auths.begin();
+        i != auths.end(); i++)
+   {
+      if (i->param(p_realm) == realm)
+      {
+         ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
+         if (!isdigit(*pb.position()))
+         {
+            DebugLog(<< "Invalid nonce; expected timestamp.");
+            return Failed;
+         }
+         const char* anchor = pb.position();
+         pb.skipToChar(Symbols::COLON[0]);
+
+         if (pb.eof())
+         {
+            DebugLog(<< "Invalid nonce; expected timestamp terminator.");
+            return Failed;
+         }
+
+         Data then;
+         pb.data(then, anchor);
+         if (expiresDelta > 0)
+         {
+            int now = (int)(Timer::getTimeMs()/1000);
+            if (then.convertInt() + expiresDelta < now)
+            {
+               DebugLog(<< "Nonce has expired.");
+               return Expired;
+            }
+         }
+         if (i->param(p_nonce) != makeNonce(request, then))
+         {
+            InfoLog(<< "Not my nonce.");
+            return Failed;
+         }
+         
+         if (i->exists(p_qop))
+         {
+            if (i->param(p_qop) == Symbols::auth)
+            {
+               if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
+                                                           encodedPassword,
+                                                           realm, 
+                                                           MethodNames[request.header(h_RequestLine).getMethod()],
+                                                           i->param(p_uri),
+                                                           i->param(p_nonce),
+                                                           i->param(p_qop),
+                                                           i->param(p_cnonce),
+                                                           i->param(p_nc)))
+               {
+                  return Authenticated;
+               }
+               else
+               {
+                  return Failed;
+               }
+            }
+            else
+            {
+               return Failed;
+            }
+         }
+         else if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
+                                                          encodedPassword,
+                                                          realm, 
+                                                          MethodNames[request.header(h_RequestLine).getMethod()],
+                                                          i->param(p_uri),
+                                                          i->param(p_nonce)))
+         {
+            return Authenticated;
+         }
+         else
+         {
+            return Failed;
+         }
+      }
+   }
+   return Failed;
+}
+
+SipMessage*
+Helper::makeProxyChallenge(const SipMessage& request, const Data& realm, bool useAuth)
+{
+   Auth auth;
+   auth.scheme() = "Digest";
+   Data timestamp((int)(Timer::getTimeMs()/1000));
+   auth.param(p_nonce) = makeNonce(request, timestamp);
+   auth.param(p_algorithm) = "MD5";
+   auth.param(p_realm) = realm;
+   if (useAuth)
+   {
+      auth.param(p_qopOptions) = "auth";
+   }
+   SipMessage *response = Helper::makeResponse(request, 407);
+   response->header(h_ProxyAuthenticates).push_back(auth);
+   return response;
+}
+
+void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
+{
+   if (!nonceCountString.empty())
+   {
+      return;
+   }
+   nonceCount++;
+   {
+      DataStream s(nonceCountString);
+      
+      s << std::setw(8) << std::setfill('0') << std::hex << nonceCount;
+   }
+   DebugLog(<< "nonceCount is now: [" << nonceCountString << "]");
+}
+
+Auth makeChallengeResponseAuth(SipMessage& request,
+                               const Data& username,
+                               const Data& encodedPassword,
+                               const Auth& challenge,
+                               const Data& cnonce,
+                               unsigned int& nonceCount,
+                               Data& nonceCountString)
+{
+   Auth auth;
+   auth.scheme() = "Digest";
+   auth.param(p_username) = username;
+   auth.param(p_realm) = challenge.param(p_realm);
+   auth.param(p_nonce) = challenge.param(p_nonce);
+   Data digestUri;
+   {
+      DataStream s(digestUri);
+      s << request.header(h_RequestLine).uri();
+   }
+   auth.param(p_uri) = digestUri;
+
+   bool useAuthQop = false;
+   if (challenge.exists(p_qopOptions) && !challenge.param(p_qopOptions).empty())
+   {
+      ParseBuffer pb(challenge.param(p_qopOptions).data(), challenge.param(p_qopOptions).size());
+      do
+      {
+         const char* anchor = pb.skipWhitespace();
+         pb.skipToChar(Symbols::COMMA[0]);
+         Data q;
+         pb.data(q, anchor);
+         if (q == Symbols::auth)
+         {
+            useAuthQop = true;
+            break;
+         }
+      }
+      while(!pb.eof());
+   }
+   if (useAuthQop)
+   {
+      updateNonceCount(nonceCount, nonceCountString);
+      auth.param(p_response) = Helper::makeResponseMD5(username, 
+                                                       encodedPassword,
+                                                       challenge.param(p_realm), 
+                                                       MethodNames[request.header(h_RequestLine).getMethod()], 
+                                                       digestUri, 
+                                                       challenge.param(p_nonce),
+                                                       Symbols::auth,
+                                                       cnonce,
+                                                       nonceCountString);
+      auth.param(p_cnonce) = cnonce;
+      auth.param(p_nc) = nonceCountString;
+      auth.param(p_qop) = Symbols::auth;
+   }
+   else
+   {
+      auth.param(p_response) = Helper::makeResponseMD5(username, 
+                                                       encodedPassword,
+                                                       challenge.param(p_realm), 
+                                                       MethodNames[request.header(h_RequestLine).getMethod()], 
+                                                       digestUri, 
+                                                       challenge.param(p_nonce));
+   }
+   
+   auth.param(p_algorithm) = challenge.param(p_algorithm);
+   if (challenge.exists(p_opaque))
+   {
+      auth.param(p_opaque) = challenge.param(p_opaque);
+   }
+   
+   return auth;
+}
+   
+
+SipMessage& 
+Helper::addAuthorization(SipMessage& request,
+                         const SipMessage& challenge,
+                         const Data& username,
+                         const Data& encodedPassword,
+                         const Data& cnonce,
+                         unsigned int& nonceCount)
+{
+   Data nonceCountString;
+   
+   assert(challenge.isResponse());
+   assert(challenge.header(h_StatusLine).responseCode() == 401 ||
+          challenge.header(h_StatusLine).responseCode() == 407);
+
+   {
+      const ParserContainer<Auth>& auths = challenge.header(h_ProxyAuthenticates);
+      for (ParserContainer<Auth>::const_iterator i = auths.begin();
+           i != auths.end(); i++)
+      {
+         request.header(h_ProxyAuthorizations).push_back(makeChallengeResponseAuth(request, username, encodedPassword, *i, 
+                                                                                   cnonce, nonceCount, nonceCountString));
+      }
+   }
+   {
+      const ParserContainer<Auth>& auths = challenge.header(h_WWWAuthenticates);
+      for (ParserContainer<Auth>::const_iterator i = auths.begin();
+           i != auths.end(); i++)
+      {
+         request.header(h_Authorizations).push_back(makeChallengeResponseAuth(request, username, encodedPassword, *i,
+                                                                              cnonce, nonceCount, nonceCountString));
+      }
+   }
+   return request;
+}
+      
 Uri
 Helper::makeUri(const Data& aor, const Data& scheme)
 {

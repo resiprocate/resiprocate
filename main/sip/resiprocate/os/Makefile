@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21 2002/11/25 19:30:20 davidb Exp $
+# $Id: Makefile,v 1.22 2002/12/04 20:44:22 derekm Exp $
 
 BUILD = ../../build
 
@@ -48,6 +48,7 @@ SRC = \
 	vmd5.cxx \
 	DataStream.cxx \
 	CountStream.cxx \
+	MD5Stream.cxx 
 
 include $(BUILD)/Makefile.post
 

@@ -83,6 +83,8 @@ class ParserContainer : public ParserContainerBase
       
       T& front() { return *mParsers.front();}
       T& back() { return *mParsers.back();}
+      const T& front() const { return *mParsers.front();}
+      const T& back() const { return *mParsers.back();}
       
       void push_front(const T & t) { mParsers.push_front(new T(t)); }
       void push_back(const T & t) { mParsers.push_back(new T(t)); }
@@ -97,6 +99,8 @@ class ParserContainer : public ParserContainerBase
          return tmp;
       }
       
+      class const_iterator;
+      
       class iterator
       {
          public:
@@ -109,15 +113,45 @@ class ParserContainer : public ParserContainerBase
             iterator operator--() {iterator it(--mIt); return it;}
             iterator operator--(int) {iterator it(mIt--); return it;}
             bool operator!=(const iterator& rhs) { return mIt != rhs.mIt; }
+            bool operator==(const iterator& rhs) { return mIt == rhs.mIt; }
+            bool operator!=(const const_iterator& rhs) { return mIt != rhs.mIt; }
+            bool operator==(const const_iterator& rhs) { return mIt == rhs.mIt; }
             iterator& operator=(const iterator& rhs) { mIt = rhs.mIt; return *this;}
             T& operator*() {return **mIt;}
             T* operator->() {return *mIt;}
          private:
             typename std::list<T*>::iterator mIt;
+            friend class const_iterator;
+      };
+
+      class const_iterator
+      {
+         public:
+            const_iterator(typename std::list<T*>::const_iterator i)
+               : mIt(i)
+            {}
+
+            const_iterator operator++() {const_iterator it(++mIt); return it;}
+            const_iterator operator++(int) {const_iterator it(mIt++); return it;}
+            const_iterator operator--() {const_iterator it(--mIt); return it;}
+            const_iterator operator--(int) {const_iterator it(mIt--); return it;}
+            bool operator!=(const const_iterator& rhs) { return mIt != rhs.mIt; }
+            bool operator==(const const_iterator& rhs) { return mIt == rhs.mIt; }
+            bool operator!=(const iterator& rhs) { return mIt != rhs.mIt; }
+            bool operator==(const iterator& rhs) { return mIt == rhs.mIt; }
+            const_iterator& operator=(const const_iterator& rhs) { mIt = rhs.mIt; return *this;}
+            const T& operator*() {return **mIt;}
+            const T* operator->() {return *mIt;}
+         private:
+            friend class iterator;
+            typename std::list<T*>::const_iterator mIt;
       };
       
       iterator begin() { return iterator(mParsers.begin()); }
       iterator end() { return iterator(mParsers.end()); }
+
+      const_iterator begin() const { return const_iterator(mParsers.begin()); }
+      const_iterator end() const { return const_iterator(mParsers.end()); }
 
       virtual ParserContainerBase* clone() const
       {

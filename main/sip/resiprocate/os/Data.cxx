@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.43 2002/12/02 23:41:18 derekm Exp $";
+// "$Id: Data.cxx,v 1.44 2002/12/04 20:44:22 derekm Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -639,7 +639,7 @@ Data::md5() const
    return ret;
 }
 
-static char map[] = "0123456789ABCDEF";
+static char map[] = "0123456789abcdef";
 
 Data 
 Data::escaped() const
@@ -683,9 +683,10 @@ Data::escaped() const
 Data
 Data::hex() const
 {
-   Data ret( 2*size(), true );
+   Data ret( 2*mSize, true );
 
    char* p = mBuf;
+   char* r = ret.mBuf;
    for (size_type i=0; i < mSize; i++)
    {
       unsigned char temp = *p++;
@@ -693,10 +694,11 @@ Data::hex() const
       int hi = (temp & 0xf0)>>4;
       int low = (temp & 0xf);
       
-      ret += map[hi];
-      ret += map[low];
+      *r++ = map[hi];
+      *r++ = map[low];
    }
-   
+   *r = 0;
+   ret.mSize = 2*mSize;
    return ret;
 }
 

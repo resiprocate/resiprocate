@@ -143,6 +143,8 @@ class Symbols
       static const char * const retryAfter;
       static const char * const reason;
 
+      static const char * const auth;
+
       static const int DefaultSipPort;
       static const int SipTlsPort;
       static const int DefaultSipsPort;
