@@ -118,7 +118,7 @@ main(int argc, char** argv)
          foo.encode(str);
       }
       cerr << buf << endl;
-      assert(buf == "sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK-c87542-fobbieBletch-1--c87542-&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK-c87542-bletchieFoo-1--c87542-&CSeq=4178%20ACK");
+      assert(buf == "sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK-c87542-fobbieBletch-1--c87542-%3Brport&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK-c87542-bletchieFoo-1--c87542-%3Brport&CSeq=4178%20ACK");
    }
 
    {
