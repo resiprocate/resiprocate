@@ -10,6 +10,8 @@
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
+#include "resiprocate/dum/ServerOutOfDialogReq.hxx"
+#include "resiprocate/dum/OutOfDialogHandler.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -353,8 +355,29 @@ class TestShutdownHandler : public DumShutdownHandler
       }
 };
 
+class TestOutOfDialogHandler : public OutOfDialogHandler
+{
+   public:      
+	// Out-of-Dialog Callbacks
+    virtual void onSuccess(ClientOutOfDialogReqHandle, const SipMessage& successResponse)
+	{
+		InfoLog ( << "TestOutOfDialogHandler::onSuccess-ClientOutOfDialogReq: " << successResponse.brief());
+	}
+	virtual void onFailure(ClientOutOfDialogReqHandle, const SipMessage& errorResponse)
+	{
+		InfoLog ( << "TestOutOfDialogHandler::onFailure-ClientOutOfDialogReq: " << errorResponse.brief());
+	}
+    virtual void onReceivedRequest(ServerOutOfDialogReqHandle ood, const SipMessage& request)
+	{
+		InfoLog ( << "TestOutOfDialogHandler::onReceivedRequest-ServerOutOfDialogReq: " << request.brief());
+		// Add SDP to response here if required
+		ood->send(ood->answerOptions());
+		//ood->send(ood->answerOptions(false));  // fIncludeAllows = false for proxy servers
+	}
+};
 
-#define REMOTE 1
+
+#define NO_REGISTRATION 1
 int 
 main (int argc, char** argv)
 {
@@ -371,7 +394,7 @@ main (int argc, char** argv)
    stackUac.addTransport(UDP, 12005);
    DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
 
-   Profile uacProfile;   
+   Profile uacProfile;      
    ClientAuthManager uacAuth(uacProfile);
    dumUac->setProfile(&uacProfile);
    dumUac->setClientAuthManager(&uacAuth);
@@ -379,14 +402,31 @@ main (int argc, char** argv)
    TestUac uac;
    dumUac->setInviteSessionHandler(&uac);
    dumUac->setClientRegistrationHandler(&uac);
-   
+
+   TestOutOfDialogHandler uac_ood;
+   dumUac->addOutOfDialogHandler(OPTIONS, &uac_ood);
+
+#if !defined(NO_REGISTRATION)
    //your aor, credentials, etc here
    NameAddr uacAor("sip:101@foo.net");
    dumUac->getProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
 //   dumUac->getProfile()->setOutboundProxy(Uri("sip:64.125.66.33:9090"));    
    dumUac->getProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
+#else
+   NameAddr uacAor("sip:UAC@127.0.0.1:12005");
+#endif
+
    dumUac->getProfile()->setDefaultAor(uacAor);
    dumUac->getProfile()->setDefaultRegistrationTime(70);
+   dumUac->getProfile()->addSupportedLanguage(Token("en"));
+   dumUac->getProfile()->addSupportedMimeType(Mime("application", "sdp"));
+   dumUac->getProfile()->addSupportedMethod(INVITE);
+   dumUac->getProfile()->addSupportedMethod(ACK);
+   dumUac->getProfile()->addSupportedMethod(CANCEL);
+   dumUac->getProfile()->addSupportedMethod(OPTIONS);
+   dumUac->getProfile()->addSupportedMethod(BYE);
+   dumUac->getProfile()->addSupportedMethod(REGISTER);
+   //dumUac->getProfile()->addSupportedOptionTags();  
 
    //set up UAS
    SipStack stackUas;
@@ -398,22 +438,37 @@ main (int argc, char** argv)
    dumUas->setProfile(&uasProfile);
    dumUas->setClientAuthManager(&uasAuth);
 
+#if !defined(NO_REGISTRATION)
    //your aor, credentials, etc here
    NameAddr uasAor("sip:105@foo.net");
    dumUas->getProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
-
 //   dumUas->getProfile()->setOutboundProxy(Uri("sip:64.125.66.33:9090"));    
    dumUas->getProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
+#else
+   NameAddr uasAor("sip:UAS@127.0.0.1:12010");
+#endif
 
    dumUas->getProfile()->setDefaultRegistrationTime(70);
    dumUas->getProfile()->setDefaultAor(uasAor);
-
+   dumUas->getProfile()->addSupportedLanguage(Token("en"));
+   dumUas->getProfile()->addSupportedMimeType(Mime("application", "sdp"));
+   dumUas->getProfile()->addSupportedMethod(INVITE);
+   dumUas->getProfile()->addSupportedMethod(ACK);
+   dumUas->getProfile()->addSupportedMethod(CANCEL);
+   dumUas->getProfile()->addSupportedMethod(OPTIONS);
+   dumUas->getProfile()->addSupportedMethod(BYE);
+   dumUas->getProfile()->addSupportedMethod(REGISTER);
+   //dumUas->getProfile()->addSupportedOptionTags();  
 
    time_t bHangupAt = 0;
    TestUas uas(&bHangupAt);
    dumUas->setClientRegistrationHandler(&uas);
    dumUas->setInviteSessionHandler(&uas);
 
+   TestOutOfDialogHandler uas_ood;
+   dumUas->addOutOfDialogHandler(OPTIONS, &uas_ood);
+
+#if !defined(NO_REGISTRATION)
 //   NameAddr contact;
 //   contact.uri().user() = "13015604286";   
 //   regMessage.header(h_Contacts).push_back(contact);   
@@ -427,11 +482,15 @@ main (int argc, char** argv)
       InfoLog( << regMessage << "Generated register for Uac: " << endl << regMessage );
       dumUac->send(regMessage);
    }
-   bool finishedTest = false;
+#else
+   uac.registered = true;
+   uas.registered = true;
+#endif
 
+   bool finishedTest = false;
+   bool stoppedRegistering = false;
    bool startedCallFlow = false;
    bool hungup = false;   
-   bool stoppedRegistering = false;
    TestShutdownHandler uasShutdownHandler;   
    TestShutdownHandler uacShutdownHandler;   
 
@@ -460,7 +519,13 @@ main (int argc, char** argv)
            if (!startedCallFlow)
            {
               startedCallFlow = true;
+#if !defined(NO_REGISTRATION)
               InfoLog( << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " );        
+#endif
+
+              InfoLog( << "#### Sending Options Request ####");
+			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor.uri(), OPTIONS));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
+
               InfoLog( << "#### Sending Invite ####");
               dumUac->send(dumUac->makeInviteSession(uasAor.uri(), uac.sdp));
            }
@@ -482,8 +547,10 @@ main (int argc, char** argv)
            stoppedRegistering = true;
            dumUas->shutdown(&uasShutdownHandler);
            dumUac->shutdown(&uacShutdownHandler);
+#if !defined(NO_REGISTRATION)
            uas.registerHandle->stopRegistering();
            uac.registerHandle->stopRegistering();
+#endif
         }
      }
    }
