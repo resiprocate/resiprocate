@@ -258,7 +258,7 @@ main(int argc, char* argv[])
    {
      tassert_reset();
       // tests end of message problem (MsgHeaderScanner?)
-      Data txt("NOTIFY sip:proxy@66.7.238.210:5060 SIP/2.0" CRLF
+      Data txt("RESIP_NOTIFY sip:proxy@66.7.238.210:5060 SIP/2.0" CRLF
                "Via: SIP/2.0/UDP  66.7.238.211:5060" CRLF
                "From: <sip:4155540578@66.7.238.211>;tag=525CEC-12FE" CRLF
                "To: <sip:4082401918@larry.gloo.net>;tag=1fd9ba58" CRLF
@@ -268,7 +268,7 @@ main(int argc, char* argv[])
                "Max-Forwards: 6" CRLF
                "Route: <sip:AUTO@larry.gloo.net:5200>" CRLF
                "Timestamp: 1064294301" CRLF
-               "CSeq: 102 NOTIFY" CRLF
+               "CSeq: 102 RESIP_NOTIFY" CRLF
                "Event: refer" CRLF
                "Contact: <sip:4155540578@66.7.238.211:5060>" CRLF
                "Content-Length: 35" CRLF

@@ -63,7 +63,7 @@ class Profile
       bool isSchemeSupported(const Data& scheme) const;
       void clearSupportedSchemes(void);
 
-      void addSupportedMethod(const MethodTypes& method);   // Defaults are: RESIP_INVITE, RESIP_ACK, CANCEL, OPTIONS, RESIP_BYE
+      void addSupportedMethod(const MethodTypes& method);   // Defaults are: RESIP_INVITE, RESIP_ACK, CANCEL, RESIP_OPTIONS, RESIP_BYE
       bool isMethodSupported(MethodTypes method) const;
       Tokens getAllowedMethods() const;
       void clearSupportedMethods(void);
