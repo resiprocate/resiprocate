@@ -38,9 +38,10 @@ repro::RequestProcessorChain::handleRequest(RequestContext &rc)
   {
     action = (**i).handleRequest(rc);
 
-    if (action == SkipAllChains)
+    if (   action == SkipAllChains 
+        || action == WaitingForEvent )
     {
-      return SkipAllChains;
+      return action;
     }
 
     if (action == SkipThisChain)
