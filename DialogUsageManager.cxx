@@ -47,7 +47,7 @@
 using namespace resip;
 using namespace std;
 
-DialogUsageManager::DialogUsageManager() :
+DialogUsageManager::DialogUsageManager(std::auto_ptr<SipStack> stack) :
    mProfile(0),
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),
@@ -58,8 +58,8 @@ DialogUsageManager::DialogUsageManager() :
    mClientPagerMessageHandler(0),
    mServerPagerMessageHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
-   mStack(false),
-   mStackThread(mStack),
+   mStack(stack),
+   mStackThread(*mStack),
    mDumShutdownHandler(0),
    mShutdownState(Running)
 {
@@ -83,13 +83,13 @@ DialogUsageManager::addTransport( TransportType protocol,
                                   IpVersion version,
                                   const Data& ipInterface)
 {
-   return mStack.addTransport(protocol, port, version, ipInterface);
+   return mStack->addTransport(protocol, port, version, ipInterface);
 }
 
 Data 
 DialogUsageManager::getHostAddress()
 {
-    return mStack.getHostAddress();
+    return mStack->getHostAddress();
 }
 
 void 
@@ -102,7 +102,7 @@ DialogUsageManager::shutdown()
          case ShutdownRequested:
             mShutdownState = ShuttingDownStack;
             InfoLog (<< "shutdown SipStack");
-            mStack.shutdown();
+            mStack->shutdown();
             break;
          case ShuttingDownStack:
             InfoLog (<< "Finished dum shutdown");
@@ -216,7 +216,7 @@ DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
                              BaseUsageHandle target, int cseq, int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
-   mStack.post(t, duration);
+   mStack->post(t, duration);
 }
 
 void 
@@ -224,7 +224,7 @@ DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration,
                                BaseUsageHandle target, int cseq, int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
-   mStack.postMS(t, duration);
+   mStack->postMS(t, duration);
 }
 
 void 
@@ -333,7 +333,7 @@ void
 DialogUsageManager::sendResponse(SipMessage& response)
 {
    assert(response.isResponse());
-   mStack.send(response);
+   mStack->send(response);
 }
    
 
@@ -509,11 +509,11 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(SipMessage& msg)
    if (getProfile()->hasOutboundProxy() && !findDialog(id))
    {
       DebugLog ( << "Using outbound proxy");
-      mStack.sendTo(msg, getProfile()->getOutboundProxy().uri());         
+      mStack->sendTo(msg, getProfile()->getOutboundProxy().uri());         
    }
    else
    {
-      mStack.send(msg);
+      mStack->send(msg);
    }
 }
 
@@ -546,13 +546,13 @@ DialogUsageManager::prepareInitialRequest(SipMessage& request)
 void 
 DialogUsageManager::buildFdSet(FdSet& fdset)
 {
-   mStack.buildFdSet(fdset);   
+   mStack->buildFdSet(fdset);   
 }
 
 int 
 DialogUsageManager::getTimeTillNextProcessMS()
 {
-   return mStack.getTimeTillNextProcessMS();   
+   return mStack->getTimeTillNextProcessMS();   
 }
 
 Dialog* 
@@ -661,7 +661,7 @@ DialogUsageManager::process()
    
    try 
    {
-      std::auto_ptr<Message> msg( mStack.receiveAny() );
+      std::auto_ptr<Message> msg( mStack->receiveAny() );
       if (msg.get()) 
       {
          InfoLog (<< "Got: " << msg->brief());
@@ -771,7 +771,7 @@ DialogUsageManager::process(FdSet& fdset)
 {
    try 
    {
-      mStack.process(fdset);
+      mStack->process(fdset);
       process();
    }
    catch(BaseException& e)
