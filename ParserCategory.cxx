@@ -1,10 +1,12 @@
 #include "sip2/sipstack/HeaderFieldValue.hxx"
 #include "sip2/sipstack/ParserCategory.hxx"
-#include "sip2/sipstack/UnknownParameter.hxx"
-#include "sip2/sipstack/UnknownParameterType.hxx"
+
 #include "sip2/util/DataStream.hxx"
 #include "sip2/util/ParseBuffer.hxx"
 #include "sip2/util/compat.hxx"
+
+#include "sip2/sipstack/UnknownParameter.hxx"
+#include "sip2/sipstack/UnknownParameterType.hxx"
 
 #include <iostream>
 #include <cassert>
@@ -91,6 +93,7 @@ ParserCategory::~ParserCategory()
 {
 }
 
+#if 0
 Data&
 ParserCategory::param(const UnknownParameterType& param) const
 {
@@ -103,6 +106,7 @@ ParserCategory::param(const UnknownParameterType& param) const
    }
    return dynamic_cast<UnknownParameter*>(p)->value();
 }
+#endif 
 
 bool
 ParserCategory::exists(const ParamBase& paramType) const
