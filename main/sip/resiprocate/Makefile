@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.119 2003/05/01 21:18:11 rohan Exp $
+# $Id: Makefile,v 1.120 2003/05/01 21:19:52 fluffy Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -8,6 +8,11 @@ PACKAGES += RESIPROCATE  ARES OPENSSL PTHREAD
 CODE_SUBDIRS = os
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =  
+
+CXXFLAGS += -I/usr/local/ssl/include
+LDFLAGS  += -L/usr/local/ssl/lib
+
+#	XPidf.cxx \
 
 SRC = \
 	os/BaseException.cxx \
@@ -21,6 +26,7 @@ SRC = \
 	os/Logger.cxx \
 	os/MD5Stream.cxx \
 	os/Mutex.cxx \
+	os/RecursiveMutex.cxx \
 	os/ParseBuffer.cxx \
 	os/RWMutex.cxx \
 	os/Random.cxx \
