@@ -3,6 +3,10 @@
 
 #include "sip2/util/Data.hxx"
 
+#undef UNUSED
+#define UNUSED(_enum, _type) _enum = UNKNOWN
+#define used(_enum, _type) _enum
+
 namespace Vocal2
 {
 
@@ -17,6 +21,7 @@ class ParameterTypes
       // gperf in ParameterTypes.cxx and ParameterTypes.hxx
       enum Type
       {
+         UNKNOWN = -1,
          transport,
          user,
          method,
@@ -50,17 +55,32 @@ class ParameterTypes
          stale,
          username,
          qop,
+         qopOptions,
+         qopFactory,
          uri,
          retryAfter,
          reason,
-         qopOptions,
-         qopFactory,
 
          dAlg,
          dQop,
          dVer,
 
-         UNKNOWN,
+         smimeType,
+         name,
+         filename,
+         protocol,
+         micalg,
+         boundary,
+         expiration,
+         size,
+         permission,
+         site,
+         directory,
+         mode,
+         server,
+         charset,
+         accessType,
+
          MAX_PARAMETER
       };
 

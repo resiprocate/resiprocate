@@ -25,7 +25,9 @@ class RportParameter : public Parameter
          return new RportParameter(type, pb, terminators);
       }
 
-      int& value() { return mValue; }
+      Type& value() { return *this; }
+
+      int& port() {return mValue;}
       bool hasValue() const { return mHasValue; } 
 
       virtual std::ostream& encode(std::ostream& stream) const;

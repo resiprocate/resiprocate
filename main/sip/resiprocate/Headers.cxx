@@ -2,6 +2,9 @@
 #include "sip2/sipstack/Headers.hxx"
 #include "sip2/sipstack/Symbols.hxx"
 
+#include <iostream>
+using namespace std;
+
 //int strcasecmp(const char*, const char*);
 //int strncasecmp(const char*, const char*, int len);
 
@@ -16,122 +19,204 @@ Headers::isCommaTokenizing(Type type)
    return CommaTokenizing[type];
 }
 
+/// outline constructor!
+#undef defineHeader
+#undef defineMultiHeader
+
+#define defineHeader(_enum, _name, _type)                               \
+Headers::Type                                                           \
+_enum##_Header::getTypeNum() const {return Headers::_enum;}             \
+_enum##_Header::_enum##_Header()                                        \
+{                                                                       \
+   Headers::CommaTokenizing[Headers::_enum] = Type::isCommaTokenizing;  \
+   Headers::HeaderNames[Headers::_enum] = _name;                        \
+}                                                                       \
+_enum##_Header Vocal2::h_##_enum
+
+#define defineMultiHeader(_enum, _name, _type)                          \
+Headers::Type                                                           \
+_enum##_MultiHeader::getTypeNum() const {return Headers::_enum;}        \
+_enum##_MultiHeader::_enum##_MultiHeader()                              \
+{                                                                       \
+   Headers::CommaTokenizing[Headers::_enum] = Type::isCommaTokenizing;  \
+   Headers::HeaderNames[Headers::_enum] = _name;                        \
+}                                                                       \
+_enum##_MultiHeader Vocal2::h_##_enum##s
+
+defineHeader(ContentDisposition, "Content-Disposition", Token);
+defineHeader(ContentEncoding, "Content-Encoding", Token);
+defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory);
+defineHeader(MIMEVersion, "Mime-Version", Token);
+defineHeader(Priority, "Priority", Token);
+defineHeader(Event, "Event", Token);
+defineMultiHeader(AllowEvents, "Allow-Events", Token);
+// explicitly declare to avoid h_AllowEventss, ugh
+AllowEvents_MultiHeader Vocal2::h_AllowEvents;
+
+defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token);
+defineMultiHeader(AcceptLanguage, "Accept-Language", Token);
+defineMultiHeader(Allow, "Allow", Token);
+defineMultiHeader(ContentLanguage, "Content-Language", Token);
+defineMultiHeader(ProxyRequire, "Proxy-Require", Token);
+defineMultiHeader(Require, "Require", Token);
+defineMultiHeader(Supported, "Supported", Token);
+defineMultiHeader(SubscriptionState, "Subscription-State", Token);
+defineMultiHeader(Unsupported, "Unsupported", Token);
+defineMultiHeader(SecurityClient, "Security-Client", Token);
+defineMultiHeader(SecurityServer, "Security-Server", Token);
+defineMultiHeader(SecurityVerify, "Security-Verify", Token);
+// explicitly declare to avoid h_SecurityVerifys, ugh
+SecurityVerify_MultiHeader Vocal2::h_SecurityVerifies;
+
+//====================
+// Mime
+//====================
+typedef ParserContainer<Mime> Mimes;
+
+defineMultiHeader(Accept, "Accept", Mime);
+defineHeader(ContentType, "Content-Type", Mime);
+
+//====================
+// GenericURIs:
+//====================
+typedef ParserContainer<GenericURI> GenericURIs;
+defineMultiHeader(CallInfo, "Call-Info", GenericURI);
+defineMultiHeader(AlertInfo, "Alert-Info", GenericURI);
+defineMultiHeader(ErrorInfo, "Error-Info", GenericURI);
+
+//====================
+// NameAddr:
+//====================
+typedef ParserContainer<NameAddr> NameAddrs;
+
+defineMultiHeader(RecordRoute, "Record-Route", NameAddr);
+defineMultiHeader(Route, "Route", NameAddr);
+defineMultiHeader(Contact, "Contact", NameAddr);
+defineHeader(From, "From", NameAddr);
+defineHeader(To, "To", NameAddr);
+defineHeader(ReplyTo, "Reply-To", NameAddr);
+defineHeader(ReferTo, "Refer-To", NameAddr);
+defineHeader(ReferredBy, "Referred-By", NameAddr);
+
+//====================
+// String:
+//====================
+typedef ParserContainer<StringCategory> StringCategories;
+
+defineHeader(Organization, "Organization", StringCategory);
+defineHeader(Server, "Server", StringCategory);
+defineHeader(Subject, "Subject", StringCategory);
+defineHeader(UserAgent, "User-Agent", StringCategory);
+defineHeader(Timestamp, "Timestamp", StringCategory);
+
+//====================
+// Integer:
+//====================
+typedef ParserContainer<IntegerCategory> IntegerCategories;
+
+// !dlb! not clear this needs to be exposed
+defineHeader(ContentLength, "Content-Length", IntegerCategory);
+defineHeader(MaxForwards, "Max-Forwards", IntegerCategory);
+defineHeader(MinExpires, "Min-Expires", IntegerCategory);
+
+// !dlb! this one is not quite right -- can have (comment) after field value
+defineHeader(RetryAfter, "Retry-After", IntegerCategory);
+defineHeader(Expires, "Expires", IntegerCategory);
+
+//====================
+// CallId:
+//====================
+defineHeader(CallId, "Call-ID", CallId);
+defineHeader(Replaces, "Replaces", CallId);
+defineHeader(InReplyTo, "In-Reply-To", CallId);
+
+//====================
+// Auth:
+//====================
+defineHeader(AuthenticationInfo, "Authentication-Info", Auth);
+defineMultiHeader(Authorization, "Authorization", Auth);
+defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth);
+defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth);
+defineMultiHeader(WWWAuthenticate, "Www-Authenticate", Auth);
+
+//====================
+// CSeqCategory:
+//====================
+defineHeader(CSeq, "CSeq", CSeqCategory);
+
+//====================
+// DateCategory:
+//====================
+defineHeader(Date, "Date", DateCategory);
+
+//====================
+// WarningCategory:
+//====================
+defineHeader(Warning, "Warning", WarningCategory);
+
+defineMultiHeader(Via, "Via", Via);
+
 RequestLineType Vocal2::h_RequestLine;
 StatusLineType Vocal2::h_StatusLine;
 
-Content_Disposition_Header Vocal2::h_ContentDisposition;
-Content_Encoding_Header Vocal2::h_ContentEncoding;
-MIME_Version_Header Vocal2::h_MimeVersion;
-Priority_Header Vocal2::h_Priority;
-Allow_Events_MultiHeader Vocal2::h_AllowEvents;
-Accept_Encoding_MultiHeader Vocal2::h_AcceptEncodings;
-Accept_Language_MultiHeader Vocal2::h_AcceptLanguages;
-Allow_MultiHeader Vocal2::h_Allows;
-Content_Language_MultiHeader Vocal2::h_ContentLanguages;
-Proxy_Require_MultiHeader Vocal2::h_ProxyRequires;
-Require_MultiHeader Vocal2::h_Requires;
-Supported_MultiHeader Vocal2::h_Supporteds;
-Timestamp_Header Vocal2::h_Timestamp;
-Unsupported_MultiHeader Vocal2::h_Unsupporteds;
-Accept_MultiHeader Vocal2::h_Accepts;
-Content_Type_Header Vocal2::h_ContentType;
-Alert_Info_MultiHeader Vocal2::h_AlertInfos;
-Call_Info_MultiHeader Vocal2::h_CallInfos;
-Error_Info_MultiHeader Vocal2::h_ErrorInfos;
-Record_Route_MultiHeader Vocal2::h_RecordRoutes;
-Route_MultiHeader Vocal2::h_Routes;
-Contact_MultiHeader Vocal2::h_Contacts;
-From_Header Vocal2::h_From;
-Reply_To_Header Vocal2::h_ReplyTo;
-Refer_To_Header Vocal2::h_ReferTo;
-Referred_By_Header Vocal2::h_ReferredBy;
-To_Header Vocal2::h_To;
-Organization_Header Vocal2::h_Organization;
-Server_Header Vocal2::h_Server;
-Subject_Header Vocal2::h_Subject;
-User_Agent_Header Vocal2::h_UserAgent;
-Content_Length_Header Vocal2::h_ContentLength;
-Expires_Header Vocal2::h_Expires;
-Max_Forwards_Header Vocal2::h_MaxForwards;
-Min_Expires_Header Vocal2::h_MinExpires;
-Retry_After_Header Vocal2::h_RetryAfter;
-Call_ID_Header Vocal2::h_CallId;
-In_Reply_To_Header Vocal2::h_InReplyTo;
-Authentication_Info_Header Vocal2::h_AuthenticationInfo;
-Authorization_MultiHeader Vocal2::h_Authorizations;
-Proxy_Authenticate_MultiHeader Vocal2::h_ProxyAuthenticates;
-Proxy_Authorization_MultiHeader Vocal2::h_ProxyAuthorizations;
-WWW_Authenticate_MultiHeader Vocal2::h_WWWAuthenticates;
-CSeq_Header Vocal2::h_CSeq;
-Date_Header Vocal2::h_Date;
-Warning_Header Vocal2::h_Warning;
-Via_MultiHeader Vocal2::h_Vias;
-Subscription_State_MultiHeader Vocal2::h_SubscriptionStates;
-Replaces_Header Vocal2::h_Replaces;
-Event_Header Vocal2::h_Event;
-Security_Client_MultiHeader Vocal2::h_SecurityClients;
-Security_Server_MultiHeader Vocal2::h_SecurityServers;
-Security_Verify_MultiHeader Vocal2::h_SecurityVerifies;
-// to generate the perfect hash:
-// gperf -L ANSI-C -t -k '*' headers.gperf > bar
-// call tolower() on instances of the source string
-// change strcmp to strncasecmp and pass len-1
-// will NOT work for non alphanum chars 
-/* ANSI-C code produced by gperf version 2.7.2 */
-/* Command-line: gperf -L ANSI-C -t -k '*' headers.gperf  */
+/* C++ code produced by gperf version 2.7.2 */
+/* Command-line: gperf -g -Z HeaderHash -E -L C++ -t -k '*' -D headers.gperf  */
 struct headers { char *name; Headers::Type type; };
+/* maximum key range = 494, duplicates = 0 */
 
-#define TOTAL_KEYWORDS 64
-#define MIN_WORD_LENGTH 2
-#define MAX_WORD_LENGTH 21
-#define MIN_HASH_VALUE 2
-#define MAX_HASH_VALUE 232
-/* maximum key range = 231, duplicates = 0 */
-
-#ifdef __GNUC__
-__inline
-#else
-#ifdef __cplusplus
-inline
-#endif
-#endif
-static unsigned int
-hash (register const char *str, register unsigned int len)
+class HeaderHash
 {
-  static unsigned char asso_values[] =
+private:
+  static inline unsigned int hash (const char *str, unsigned int len);
+public:
+  static struct headers *in_word_set (const char *str, unsigned int len);
+};
+
+inline unsigned int
+HeaderHash::hash (register const char *str, register unsigned int len)
+{
+  static unsigned short asso_values[] =
     {
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233,   0, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233,   0,   0,  54,
-       20,   0,  15,  35,  10,   0,  15,   0,  30,  55,
-        0,   0,   0,  45,   0,   0,   0,   0,  10,  20,
-       30,   0,  50, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233, 233, 233, 233, 233,
-      233, 233, 233, 233, 233, 233
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495,   0, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495,   0,   0, 102,
+        0,   0,  60,  20,  15,  10,   0,   0,  15,  50,
+        0,  20,   0,  10,   0,  30,  35,   0,  45,   0,
+       60,   0,   0, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495, 495, 495, 495, 495,
+      495, 495, 495, 495, 495, 495
     };
   register int hval = len;
 
   switch (hval)
     {
       default:
+      case 25:
+        hval += asso_values[(unsigned char)tolower(str[24])];
+      case 24:
+        hval += asso_values[(unsigned char)tolower(str[23])];
+      case 23:
+        hval += asso_values[(unsigned char)tolower(str[22])];
+      case 22:
+        hval += asso_values[(unsigned char)tolower(str[21])];
       case 21:
         hval += asso_values[(unsigned char)tolower(str[20])];
       case 20:
@@ -179,124 +264,134 @@ hash (register const char *str, register unsigned int len)
   return hval;
 }
 
-#ifdef __GNUC__
-__inline
-#endif
-
-static struct headers *
-in_word_set (register const char *str, register unsigned int len)
+struct headers *
+HeaderHash::in_word_set (register const char *str, register unsigned int len)
 {
+  enum
+    {
+      TOTAL_KEYWORDS = 74,
+      MIN_WORD_LENGTH = 1,
+      MAX_WORD_LENGTH = 25,
+      MIN_HASH_VALUE = 1,
+      MAX_HASH_VALUE = 494
+    };
+
   static struct headers wordlist[] =
     {
-      {""}, {""},
-      {"to", Headers::To},
-      {""}, {""},
-      {"route", Headers::Route},
-      {"reason", Headers::UNKNOWN},
-      {""},
-      {"priority", Headers::Priority},
-      {""}, {""}, {""},
-      {"response-key", Headers::UNKNOWN},
-      {"via", Headers::Via},
-      {"path", Headers::UNKNOWN},
-      {"event", Headers::Event},
-      {"server", Headers::Server},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"refer-to",Headers::Refer_To},
-      {"date", Headers::Date},
-      {"error-info", Headers::Error_Info},
-      {"retry-after", Headers::Retry_After},
-      {""}, {""},
-      {"supported", Headers::Supported},
-      {""},
-      {"unsupported", Headers::Unsupported},
-      {""}, {""},
-      {"hide", Headers::UNKNOWN},
-      {""}, {""},
-      {"expires", Headers::Expires},
-      {"reply-to", Headers::Reply_To},
-      {""}, {""},
-      {"in-reply-to", Headers::In_Reply_To},
-      {""}, {""}, {""},
-      {"user-agent", Headers::User_Agent},
-      {"referred-by",Headers::Referred_By},
-      {""}, {""},
-      {"rseq", Headers::UNKNOWN},
-      {""}, {""},
+      {"e", Headers::ContentEncoding},
+      {"i", Headers::Headers::CallId},
+      {"l", Headers::ContentLength},
+      {"o", Headers::ContentType},
       {"require", Headers::Require},
-      {""}, {""},
-      {"alert-info",Headers::Alert_Info},
-      {""}, {""},
-      {"rack", Headers::UNKNOWN},
-      {"p-asserted-identity", Headers::UNKNOWN},
-      {""}, {""},
+      {"hide", Headers::UNKNOWN},
+      {"s", Headers::Subject},
+      {"t", Headers::To},
       {"warning", Headers::Warning},
-      {""},
-      {"encryption", Headers::UNKNOWN},
-      {""},
-      {"content-type", Headers::Content_Type},
-      {""}, {""}, {""}, {""},
-      {"privacy", Headers::UNKNOWN},
-      {"subscription-state",Headers::Subscription_State},
-      {"authorization", Headers::Authorization},
-      {"from", Headers::From},
-      {"p-preferred-identity", Headers::UNKNOWN},
-      {"subject", Headers::Subject},
-      {""}, {""},
-      {"security-server", Headers::Security_Server},
-      {""}, {""}, {""}, {""}, {""},
+      {"date", Headers::Date},
+      {"rseq", Headers::UNKNOWN},
+      {"v", Headers::Via},
+      {"m", Headers::Contact},
+      {"path", Headers::UNKNOWN},
       {"allow", Headers::Allow},
-      {"record-route", Headers::Record_Route},
-      {""},
-      {"proxy-require", Headers::Proxy_Require},
-      {""}, {""}, {""},
-      {"replaces",Headers::Replaces},
-      {"content-disposition", Headers::Content_Disposition},
-      {"security-verify", Headers::Security_Verify},
-      {""},
-      {"min-expires", Headers::Min_Expires},
+      {"reason", Headers::UNKNOWN},
+      {"to", Headers::To},
+      {"via", Headers::Via},
+      {"route", Headers::Route},
+      {"f", Headers::From},
+      {"referred-by",Headers::ReferredBy},
+      {"reply-to", Headers::ReplyTo},
+      {"server", Headers::Server},
+      {"priority", Headers::Priority},
+      {"event", Headers::Event},
+      {"in-reply-to", Headers::InReplyTo},
+      {"response-key", Headers::UNKNOWN},
+      {"supported", Headers::Supported},
+      {"user-agent", Headers::UserAgent},
+      {"unsupported", Headers::Unsupported},
+      {"rack", Headers::UNKNOWN},
+      {"expires", Headers::Expires},
+      {"proxy-require", Headers::ProxyRequire},
+      {"error-info", Headers::ErrorInfo},
+      {"refer-to",Headers::ReferTo},
       {"organization", Headers::Organization},
-      {"authentication-info", Headers::Authentication_Info},
-      {""}, {""}, {""},
-      {"allow-events", Headers::Allow_Events},
+      {"from", Headers::From},
+      {"retry-after", Headers::RetryAfter},
       {"cseq", Headers::CSeq},
-      {""}, {""}, {""}, {""}, {""},
-      {"proxy-authorization", Headers::Proxy_Authorization},
-      {""}, {""},
-      {"proxy-authenticate", Headers::Proxy_Authenticate},
-      {""},
-      {"accept", Headers::Accept},
-      {"contact", Headers::Contact},
-      {""}, {""}, {""},
+      {"call-id", Headers::CallId},
+      {"alert-info",Headers::AlertInfo},
+      {"replaces",Headers::Replaces},
+      {"authorization", Headers::Authorization},
+      {"privacy", Headers::UNKNOWN},
+      {"p-preferred-identity", Headers::UNKNOWN},
+      {"min-expires", Headers::MinExpires},
+      {"allow-events", Headers::AllowEvents},
+      {"subject", Headers::Subject},
+      {"encryption", Headers::UNKNOWN},
+      {"record-route", Headers::RecordRoute},
+      {"p-asserted-identity", Headers::UNKNOWN},
       {"timestamp", Headers::Timestamp},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""},
-      {"mime-version", Headers::MIME_Version},
-      {""}, {""}, {""}, {""}, {""},
-      {"call-info", Headers::Call_Info},
-      {""},
-      {"www-authenticate",Headers::WWW_Authenticate},
-      {"call-id", Headers::Call_ID},
-      {""},
-      {"content-length", Headers::Content_Length},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"max-forwards", Headers::Max_Forwards},
-      {"security-client", Headers::Security_Client},
-      {""}, {""},
       {"p-media-authorization", Headers::UNKNOWN},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""},
-      {"content-language", Headers::Content_Language},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"content-encoding", Headers::Content_Encoding},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"accept-language", Headers::Accept_Language},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"accept-encoding", Headers::Accept_Encoding}
+      {"mime-version", Headers::MIMEVersion},
+      {"call-info", Headers::CallInfo},
+      {"max-forwards", Headers::MaxForwards},
+      {"content-type", Headers::ContentType},
+      {"proxy-authorization", Headers::ProxyAuthorization},
+      {"accept", Headers::Accept},
+      {"www-authenticate",Headers::WWWAuthenticate},
+      {"content-language", Headers::ContentLanguage},
+      {"security-server", Headers::SecurityServer},
+      {"content-length", Headers::ContentLength},
+      {"contact", Headers::Contact},
+      {"security-verify", Headers::SecurityVerify},
+      {"accept-language", Headers::AcceptLanguage},
+      {"proxy-authenticate", Headers::ProxyAuthenticate},
+      {"security-client", Headers::SecurityClient},
+      {"subscription-state",Headers::SubscriptionState},
+      {"content-encoding", Headers::ContentEncoding},
+      {"authentication-info", Headers::AuthenticationInfo},
+      {"content-disposition", Headers::ContentDisposition},
+      {"accept-encoding", Headers::AcceptEncoding},
+      {"content-transfer-encoding", Headers::ContentTransferEncoding}
+    };
+
+  static signed char lookup[] =
+    {
+      -1,  0, -1, -1, -1, -1, -1, -1, -1, -1, -1,  1, -1, -1,
+      -1, -1,  2, -1, -1, -1, -1,  3, -1, -1, -1, -1, -1,  4,
+      -1,  5, -1,  6, -1, -1, -1, -1,  7,  8, -1,  9, -1, -1,
+      -1, -1, 10, -1, 11, -1, -1, -1, -1, 12, -1, -1, 13, 14,
+      15, 16, 17, -1, 18, 19, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, 20, -1, -1, -1, -1, -1, -1, 21, -1, -1, 22, -1, 23,
+      -1, 24, -1, -1, -1, -1, -1, 25, 26, -1, 27, 28, 29, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, 30, 31, -1, -1, -1, -1,
+      -1, 32, -1, -1, -1, -1, -1, -1, 33, -1, -1, 34, -1, -1,
+      -1, 35, -1, -1, -1, -1, -1, -1, 36, -1, -1, -1, -1, -1,
+      -1, 37, -1, -1, -1, -1, 38, -1, -1, 39, 40, -1, -1, -1,
+      -1, 41, -1, -1, 42, -1, -1, -1, -1, -1, 43, -1, -1, -1,
+      -1, -1, 44, 45, 46, -1, 47, -1, -1, 48, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, 49, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, 50, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, 51, -1, -1, -1, -1,
+      -1, -1, 52, 53, -1, -1, -1, 54, 55, -1, -1, -1, -1, -1,
+      -1, 56, -1, -1, -1, -1, 57, 58, -1, -1, 59, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 60, -1, -1,
+      -1, 61, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, 63, -1, -1, -1, -1, -1, 64,
+      -1, 65, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, 66, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, 67, 68, -1, -1, -1, -1, 69, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, 70, -1, -1, -1, -1, 71, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      72, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, 73
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -305,10 +400,14 @@ in_word_set (register const char *str, register unsigned int len)
 
       if (key <= MAX_HASH_VALUE && key >= 0)
         {
-          register const char *s = wordlist[key].name;
+          register int index = lookup[key];
 
-          if (tolower(*str) == *s && !strncasecmp (str + 1, s + 1, len-1))
-            return &wordlist[key];
+          if (index >= 0)
+            {
+              register const char *s = wordlist[index].name;
+              if (tolower(*str) == *s && !strncasecmp (str + 1, s + 1, len-1))
+                return &wordlist[index];
+            }
         }
     }
   return 0;
@@ -318,7 +417,7 @@ Headers::Type
 Headers::getType(const char* name, int len)
 {
    struct headers* p;
-   p = in_word_set(name, len);
+   p = HeaderHash::in_word_set(name, len);
    return p ? Headers::Type(p->type) : Headers::UNKNOWN;
 }
 
