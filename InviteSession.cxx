@@ -89,6 +89,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
 {
    if (timeout.type() == DumTimeout::Retransmit200 && mState == Accepting)
    {
+      mDum.send(mFinalResponse);      
       mDum.addTimer(DumTimeout::Retransmit200, resipMin(T2, mCurrentRetransmit200*2), getBaseHandle(),  0);
    }
    else if (timeout.type() == DumTimeout::WaitForAck && mState != Connected)
@@ -164,7 +165,6 @@ InviteSession::dispatch(const SipMessage& msg)
       case Accepting:
          if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
          {
-            //cancel 200 retransmission timer
             mState = Connected;
             mDum.mInviteSessionHandler->onConnected(getSessionHandle(), msg);
             if (offans.first != None)
@@ -174,6 +174,11 @@ InviteSession::dispatch(const SipMessage& msg)
          }
          else
          {
+            if ( msg.header(h_StatusLine).statusCode() == 200)
+            {
+               //retransmist ack
+               mDum.send(mAck);
+            }
             ErrLog ( << "Spurious message sent to UAS " << msg );            
             return;            
          }
@@ -471,13 +476,6 @@ InviteSession::makeAck()
    }
 
    InfoLog ( << "InviteSession::makeAck:after: " << mAck );   
-}
-
-SipMessage& 
-InviteSession::reInvite(const SdpContents* offer)
-{
-   assert(0);
-   return mLastRequest;
 }
 
 /* ====================================================================
