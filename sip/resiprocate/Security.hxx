@@ -34,18 +34,18 @@ class Security
       friend class TlsConnection;
       
    public:
-	  class Exception : public BaseException
+      class Exception : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, const int line);
             const char* name() const { return "SecurityException"; }
       };
-
-            /// Backwards compatible ctor.
-            Security( bool tlsServer, bool useTls);
-            Security( bool tlsServer, resip::SecurityTypes::SSLType type);
+      
+      /// Backwards compatible ctor.
+      Security( bool tlsServer, bool useTls);
+      Security( bool tlsServer, resip::SecurityTypes::SSLType type);
       ~Security();
-  
+      
       // used to initialize the openssl library
       static void initialize();
       
@@ -70,6 +70,9 @@ class Security
       bool loadRootCerts(  const Data& filePath );
       bool loadMyPublicCert(  const Data& filePath );
       bool loadMyPrivateKey(  const Data& password,  const Data& filePath );
+
+      bool loadMyPublicIdentityCert(  const Data& filePath );
+      bool loadMyPrivateIdentityKey(  const Data& password,  const Data& filePath );
 
       bool setRootCerts(const Data& certPem);
       bool setMyPublicCert(const Data& certPem);
@@ -109,7 +112,8 @@ class Security
       Pkcs7Contents* encrypt( Contents* , const Data& recipCertName );
       Pkcs7Contents* signAndEncrypt( Contents* , const Data& recipCertName );
       
-      Data computeIdentityHash( const Data& in );
+      Data computeIdentity( const Data& in );
+      bool checkIdentity( const Data& in, const Data& sig );
       
       /* stuff to receive messages */
       enum SignatureStatus 
@@ -146,10 +150,9 @@ class Security
 
    private:
 
-            // do the ctor work
-            void initialize(bool, SecurityTypes::SSLType);
-
-
+      // do the ctor work
+      void initialize(bool, SecurityTypes::SSLType);
+      
       SSL_CTX* getTlsCtx(bool isServer);
       
       // map of name to certificates
@@ -163,9 +166,13 @@ class Security
 
       // my public cert
       X509* publicCert;
-      
       // my private key 
       EVP_PKEY* privateKey;
+
+      // my public cert
+      X509* publicIdentityCert;
+      // my private key 
+      EVP_PKEY* privateIdentityKey;
 
       // SSL Context 
       SSL_CTX* ctxTls;
