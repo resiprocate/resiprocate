@@ -6,6 +6,7 @@
 #include "resiprocate/Dialog.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/Transport.hxx"
+#include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/Timer.hxx"
 
 namespace resip
