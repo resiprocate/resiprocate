@@ -35,7 +35,7 @@ class HeaderFieldValue
       
       HeaderFieldValue* next;
 
-      void parseParameters(const char* start);
+      void parseParameters(unsigned int start);
 
       ParserCategory* getParserCategory()
       {
