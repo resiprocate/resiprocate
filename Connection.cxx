@@ -70,7 +70,7 @@ Connection::remove()
    return next;
 }
    
-std::pair<char* const, size_t> 
+std::pair<char*, size_t> 
 Connection::getWriteBuffer()
 {
    if (mState == NewMessage)
