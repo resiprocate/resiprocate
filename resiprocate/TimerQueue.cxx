@@ -61,6 +61,15 @@ TimerQueue::add(Timer::Type type, const Data& transactionId, unsigned long msOff
    return t.getId();
 }
 
+Timer::Id
+TimerQueue::add(const Timer& t)
+{
+   mTimers.insert(t);
+   DebugLog(<< "Adding application timer: " << t.getMessage()->brief());
+   
+   return t.getId();
+}
+
 int
 TimerQueue::size() const
 {
@@ -82,15 +91,24 @@ TimerQueue::process()
    for (std::multiset<Timer>::iterator i = mTimers.begin(); 
         i != mTimers.upper_bound(now);)
    {
-      TimerMessage* t = new TimerMessage(i->mTransactionId, i->mType, i->mDuration);
-      // Leaked !ah! BUGBUG valgrind says leaked.
-      //  206884 bytes in 2270 blocks are definitely lost (...)
-      //     by 0x8178A20: operator new(unsigned)
-      //     by 0x80CDF75: resip::TimerQueue::process() (TimerQueue.cxx:63)
-      //     by 0x80F6A4B: resip::Executive::processTimer() (Executive.cxx:52)
-
-      //DebugLog (<< Timer::toData(i->mType) << " fired (" << i->mTransactionId << ") adding to fifo");
-      mFifo.add(t);
+      if (i->mType != Timer::ApplicationTimer)
+      {
+         TimerMessage* t = new TimerMessage(i->mTransactionId, i->mType, i->mDuration);
+         // Leaked !ah! BUGBUG valgrind says leaked.
+         //  206884 bytes in 2270 blocks are definitely lost (...)
+         //     by 0x8178A20: operator new(unsigned)
+         //     by 0x80CDF75: resip::TimerQueue::process() (TimerQueue.cxx:63)
+         //     by 0x80F6A4B: resip::Executive::processTimer() (Executive.cxx:52)
+         
+         //DebugLog (<< Timer::toData(i->mType) << " fired (" << i->mTransactionId << ") adding to fifo");
+         mFifo.add(t);
+      }
+      else 
+      {
+         // application timer -- queue the payload message
+         assert(i->getMessage());
+         mFifo.add(i->getMessage());
+      }
       mTimers.erase(i++);
    }
 }
