@@ -33,38 +33,9 @@ extern "C"
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/Uri.hxx"
 
-
-// This is here so we can use the same macros to parse a dns result using the
-// standard synchronous unix dns_query call
 #if !defined(USE_ARES)
-// borrowed from ares - will also work in win32
-
-#define ARES_SUCCESS 0
-
-#define DNS__16BIT(p)			(((p)[0] << 8) | (p)[1])
-/* Macros for parsing a DNS header */
-#define DNS_HEADER_QID(h)		DNS__16BIT(h)
-#define DNS_HEADER_QR(h)		(((h)[2] >> 7) & 0x1)
-#define DNS_HEADER_OPCODE(h)		(((h)[2] >> 3) & 0xf)
-#define DNS_HEADER_AA(h)		(((h)[2] >> 2) & 0x1)
-#define DNS_HEADER_TC(h)		(((h)[2] >> 1) & 0x1)
-#define DNS_HEADER_RD(h)		((h)[2] & 0x1)
-#define DNS_HEADER_RA(h)		(((h)[3] >> 7) & 0x1)
-#define DNS_HEADER_Z(h)			(((h)[3] >> 4) & 0x7)
-#define DNS_HEADER_RCODE(h)		((h)[3] & 0xf)
-#define DNS_HEADER_QDCOUNT(h)		DNS__16BIT((h) + 4)
-#define DNS_HEADER_ANCOUNT(h)		DNS__16BIT((h) + 6)
-#define DNS_HEADER_NSCOUNT(h)		DNS__16BIT((h) + 8)
-#define DNS_HEADER_ARCOUNT(h)		DNS__16BIT((h) + 10)
-
-/* Macros for parsing the fixed part of a DNS resource record */
-#define DNS_RR_TYPE(r)			DNS__16BIT(r)
-#define DNS_RR_CLASS(r)			DNS__16BIT((r) + 2)
-#define DNS_RR_TTL(r)			DNS__32BIT((r) + 4)
-#define DNS_RR_LEN(r)			DNS__16BIT((r) + 8)
-
+#warning "ARES is required"
 #endif
-
 
 using namespace resip;
 
@@ -160,7 +131,7 @@ DnsResult::lookup(const Uri& uri)
       else if (uri.port() != 0)
       {
          mPort = uri.port();
-         lookupARecords(mTarget); // for current target and port         
+         lookupAAAARecords(mTarget); // for current target and port         
       }
    }
    else 
@@ -187,7 +158,7 @@ DnsResult::lookup(const Uri& uri)
          else // port specified so we know the transport
          {
             mPort = uri.port();
-            lookupARecords(mTarget); // for current target and port
+            lookupAAAARecords(mTarget); // for current target and port         
          }
       }
       else // do NAPTR
@@ -225,13 +196,11 @@ DnsResult::getDefaultPort(TransportType transport, int port)
 void
 DnsResult::lookupAAAARecords(const Data& target)
 {
+#if defined(USE_IPV6)
    DebugLog(<< "Doing host (AAAA) lookup: " << target);
    mPassHostFromAAAAtoA = target; // hackage
-#if defined(USE_ARES)
    ares_query(mInterface.mChannel, target.c_str(), C_IN, T_AAAA, DnsResult::aresAAAACallback, this); 
-#else
-   /*TODO - deal with looking for AAAAs directly */
-   /* For now, shortcut straight to looking for A records */
+#else // !USE_IPV6
    lookupARecords(target);
 #endif
 }
@@ -240,91 +209,23 @@ void
 DnsResult::lookupARecords(const Data& target)
 {
    DebugLog (<< "Doing Host (A) lookup: " << target);
-
-#if defined(USE_ARES)
    ares_gethostbyname(mInterface.mChannel, target.c_str(), AF_INET, DnsResult::aresHostCallback, this);
-#else   
-   struct hostent* result=0;
-   int ret=0;
-   int herrno=0;
-
-#if defined(__linux__)
-   struct hostent hostbuf; 
-   char buffer[8192];
-   ret = gethostbyname_r( target.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
-   assert (ret != ERANGE);
-#elif defined(WIN32) 
-   result = gethostbyname( target.c_str() );
-   herrno = WSAGetLastError();
-#elif defined( __MACH__ ) || defined (__FreeBSD__)
-   result = gethostbyname( target.c_str() );
-   herrno = h_errno;
-#elif defined(__QNX__) || defined(__sun)
-   struct hostent hostbuf; 
-   char buffer[8192];
-   result = gethostbyname_r( target.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
-#else
-#   error "need to define some version of gethostbyname for your arch"
-#endif
-
-   if ( (ret!=0) || (result==0) )
-   {
-      switch (herrno)
-      {
-         case HOST_NOT_FOUND:
-            InfoLog ( << "host not found: " << target);
-            break;
-         case NO_DATA:
-            InfoLog ( << "no data found for: " << target);
-            break;
-         case NO_RECOVERY:
-            InfoLog ( << "no recovery lookup up: " << target);
-            break;
-         case TRY_AGAIN:
-            InfoLog ( << "try again: " << target);
-            break;
-		 default:
-            ErrLog( << "DNS Resolver got error" << herrno << " looking up " << target );
-            assert(0);
-            break;
-      }
-   }
-   else
-   {
-      processHost(ARES_SUCCESS, result);
-   }
-#endif
 }
 
 void
 DnsResult::lookupNAPTR()
 {
    DebugLog (<< "Doing NAPTR lookup: " << mTarget);
-
-#if defined(USE_ARES)
    ares_query(mInterface.mChannel, mTarget.c_str(), C_IN, T_NAPTR, DnsResult::aresNAPTRCallback, this); 
-#else
-   unsigned char result[4096];
-   int len = res_query(mTarget.c_str(), C_IN, T_NAPTR, result, sizeof(result));
-   processNAPTR(ARES_SUCCESS, result, len);
-#endif
 }
 
 void
 DnsResult::lookupSRV(const Data& target)
 {
    DebugLog (<< "Doing SRV lookup: " << target);
-   
-#if defined(USE_ARES)
    ares_query(mInterface.mChannel, target.c_str(), C_IN, T_SRV, DnsResult::aresSRVCallback, this); 
-#else
-   unsigned char result[4096];
-   int len = res_query(mTarget.c_str(), C_IN, T_SRV, result, sizeof(result));
-   processSRV(ARES_SUCCESS, result, len);
-#endif
 }
 
-#if defined (USE_ARES)
 void
 DnsResult::aresHostCallback(void *arg, int status, struct hostent* result)
 {
@@ -357,8 +258,6 @@ DnsResult::aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen
    DebugLog (<< "Received AAAA result for: " << thisp->mHandler << " for " << thisp->mTarget);
    thisp->processAAAA(status, abuf, alen);
 }
-#endif
-
 
 void
 DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
@@ -460,11 +359,9 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
    else
    {
       {
-#ifdef USE_ARES
          char* errmem=0;
          DebugLog (<< "NAPTR lookup failed: " << ares_strerror(status, &errmem));
          ares_free_errmem(errmem);
-#endif
       }
       
       // This will result in no NAPTR results. In this case, send out SRV
@@ -553,11 +450,9 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
    }
    else
    {
-#ifdef USE_ARES
       char* errmem=0;
       DebugLog (<< "SRV lookup failed: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
-#endif
    }
 
    // no outstanding queries 
@@ -626,11 +521,9 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
    }
    else
    {
-#ifdef USE_ARES
       char* errmem=0;
       DebugLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
-#endif
    }
    lookupARecords(mPassHostFromAAAAtoA);
 #else
@@ -665,11 +558,9 @@ DnsResult::processHost(int status, struct hostent* result)
    }
    else
    {
-#ifdef USE_ARES
       char* errmem=0;
       DebugLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
-#endif
    }
 
    if (mSRVCount == 0)
@@ -817,10 +708,6 @@ DnsResult::parseAdditional(const unsigned char *aptr,
    char *name=0;
    int len=0;
    int status=0;
-
-#if !defined (USE_ARES)
-#error foo
-#endif
 
    // Parse the RR name. 
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
