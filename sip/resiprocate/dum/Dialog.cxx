@@ -389,14 +389,14 @@ Dialog::dispatch(const SipMessage& msg)
                if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
                                creator->getLastRequest().header(h_RequestLine).method() == REFER))
                {
-                  InfoLog (<< "Making subscription from creator: " << creator->getLastRequest());
+                  DebugLog (<< "Making subscription (from creator) request: " << creator->getLastRequest());
                   ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
                   mClientSubscriptions.push_back(sub);
                   sub->dispatch(request);
                }
                else if (mInviteSession->mLastRequest.header(h_RequestLine).method() == REFER)
                {
-                  InfoLog (<< "Making subscription from refer: " << mInviteSession->mLastRequest);
+                  DebugLog (<< "Making subscription from refer: " << mInviteSession->mLastRequest);
                   ClientSubscription* sub = makeClientSubscription(mInviteSession->mLastRequest);
                   mClientSubscriptions.push_back(sub);
                   sub->dispatch(request);
