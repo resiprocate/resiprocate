@@ -1,25 +1,25 @@
 #if !defined(RESIP_DIALOGUSAGEMANAGER_HXX)
 #define RESIP_DIALOGUSAGEMANAGER_HXX
 
-#include <list>
+#include <vector>
 
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/Headers.hxx"
-#include "BaseUsage.hxx"
-#include "ClientInviteSession.hxx"
-#include "ClientOutOfDialogReq.hxx"
-#include "ClientPublication.hxx"
-#include "ClientRegistration.hxx"
-#include "ClientSubscription.hxx"
-#include "DialogSet.hxx"
-#include "DumTimer.hxx"
-#include "InviteSession.hxx"
-#include "ServerInviteSession.hxx"
-#include "ServerOutOfDialogReq.hxx"
-#include "ServerPublication.hxx"
-#include "ServerRegistration.hxx"
-#include "ServerSubscription.hxx"
-#include "UInt64Hash.hxx"
+#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/dum/ClientInviteSession.hxx"
+#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
+#include "resiprocate/dum/ClientPublication.hxx"
+#include "resiprocate/dum/ClientRegistration.hxx"
+#include "resiprocate/dum/ClientSubscription.hxx"
+#include "resiprocate/dum/DialogSet.hxx"
+#include "resiprocate/dum/DumTimer.hxx"
+#include "resiprocate/dum/InviteSession.hxx"
+#include "resiprocate/dum/ServerInviteSession.hxx"
+#include "resiprocate/dum/ServerOutOfDialogReq.hxx"
+#include "resiprocate/dum/ServerPublication.hxx"
+#include "resiprocate/dum/ServerRegistration.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
+#include "resiprocate/dum/UInt64Hash.hxx"
 
 namespace resip 
 {
@@ -85,11 +85,10 @@ class DialogUsageManager
 
       /// If there is no such handler, calling makePublication will throw
       void addClientPublicationHandler(const Data& eventType, ClientPublicationHandler*);
-
       
       void addServerSubscriptionHandler(const Data& eventType, ServerSubscriptionHandler*);
       void addServerPublicationHandler(const Data& eventType, ServerPublicationHandler*);
-  
+      
       void addOutOfDialogHandler(MethodTypes&, OutOfDialogHandler*);
       
       // The message is owned by the underlying datastructure and may go away in
@@ -118,21 +117,22 @@ class DialogUsageManager
       UsageSet    findAllUsages();
       
       InviteSession::Handle findInviteSession(DialogId id);
-      std::list<ClientSubscription::Handle> findClientSubscriptions(DialogId id);
-      std::list<ClientSubscription::Handle> findClientSubscriptions(DialogSetId id);
-      std::list<ClientSubscription::Handle> findClientSubscriptions(DialogSetId id, 
-                                                                    const Data& eventType,
-                                                                    const Data& subId);
+      std::vector<ClientSubscription::Handle> findClientSubscriptions(DialogId id);
+      std::vector<ClientSubscription::Handle> findClientSubscriptions(DialogSetId id);
+      std::vector<ClientSubscription::Handle> findClientSubscriptions(DialogSetId id, const Data& eventType, const Data& subId);
       ServerSubscription::Handle findServerSubscription(DialogId id);
       ClientRegistration::Handle findClientRegistration(DialogId id);
       ServerRegistration::Handle findServerRegistration(DialogId id);
       ClientPublication::Handle findClientPublication(DialogId id);
       ServerPublication::Handle findServerPublication(DialogId id);
-      ClientOutOfDialogReq::Handle findClientOutOfDialog(DialogId id);
+      std::vector<ClientOutOfDialogReq::Handle> findClientOutOfDialog(DialogId id);
       ServerOutOfDialogReq::Handle findServerOutOfDialog(DialogId id);
       
    private:
       friend class Dialog;
+      friend class ClientRegistration;
+      friend class ClientInviteSession;
+      friend class ServerInviteSession;
       
       SipMessage& makeNewSession(BaseCreator* creator);
       void addTimer(DumTimer::Type type, unsigned long duration, int cseq, int rseq=-1);
@@ -179,23 +179,18 @@ class DialogUsageManager
       RedirectManager* mRedirectManager;
       ClientAuthManager* mClientAuthManager;
       ServerAuthManager* mServerAuthManager;  
-
     
       InviteSessionHandler* mInviteSessionHandler;
       ClientRegistrationHandler* mClientRegistrationHandler;
       ServerRegistrationHandler* mServerRegistrationHandler;      
 
-      std::list<ClientSubscriptionHandler*> mClientSubscriptionHandler;
-      std::list<ServerSubscriptionHandler*> mServerSubscriptionHandler;      
-      std::list<ClientPublicationHandler*> mClientPublicationHandler;
-      std::list<ServerPublicationHandler*> mServerPublicationHandler;      
+      std::vector<ClientSubscriptionHandler*> mClientSubscriptionHandler;
+      std::vector<ServerSubscriptionHandler*> mServerSubscriptionHandler;
+      std::vector<ClientPublicationHandler*> mClientPublicationHandler;
+      std::vector<ServerPublicationHandler*> mServerPublicationHandler;
       OutOfDialogHandler* mOutOfDialogHandler;
 
       SipStack& mStack;
-
-      friend class ClientRegistration;
-      friend class ClientInviteSession;
-      friend class ServerInviteSession;
 };
 
 }

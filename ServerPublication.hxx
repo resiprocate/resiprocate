@@ -1,7 +1,7 @@
 #if !defined(RESIP_SERVERPUBLICATION_HXX)
 #define RESIP_SERVERPUBLICATION_HXX
 
-#include "BaseUsage.hxx"
+#include "resiprocate/dum/BaseUsage.hxx"
 
 namespace resip
 {

@@ -1,7 +1,7 @@
 #if !defined(RESIP_INVITESESSION_HXX)
 #define RESIP_INVITESESSION_HXX
 
-#include "BaseUsage.hxx"
+#include "resiprocate/dum/BaseUsage.hxx"
 
 namespace resip
 {
