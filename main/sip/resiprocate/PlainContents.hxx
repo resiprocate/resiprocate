@@ -24,8 +24,7 @@ class PlainContents : public Contents
 
       virtual Data getBodyData() const;
 
-      //virtual 
-		  static const Mime& getStaticType() ;
+      static const Mime& getStaticType() ;
 
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
