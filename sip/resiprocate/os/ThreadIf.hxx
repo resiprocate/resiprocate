@@ -1,6 +1,8 @@
 #ifndef THREADIF_HXX
 #define THREADIF_HXX
 
+#include <util/Socket.hxx>
+
 #ifdef WIN32
 #  include <BaseTsd.h>
 #  include <winbase.h>

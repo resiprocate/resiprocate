@@ -1,7 +1,16 @@
+
+
+#include <util/Socket.hxx>
+
 #include <sys/types.h>
+
+#ifndef WIN32
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif
+
+
 #include <stdio.h>
 #include <errno.h>
 
@@ -114,7 +123,13 @@ Resolver::lookupARecords()
    if (result == 0)
    {
 #else
+
+#ifdef WIN32
+	assert(0); // !cj! 
+	int ret = -1;
+#else
    int ret = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
+#endif
    assert (ret != ERANGE);
 
    if (ret != 0)
@@ -155,7 +170,10 @@ Resolver::lookupARecords()
          mNextHops.push_back(tuple);
 
          assert(mNextHops.back().ipv4.sin_addr.s_addr == tuple.ipv4.sin_addr.s_addr);
-         DebugLog (<< inet_ntop(result->h_addrtype, &tuple.ipv4.sin_addr.s_addr, str, sizeof(str)));
+#ifndef WIN32
+		 DebugLog (<< inet_ntop(result->h_addrtype, &tuple.ipv4.sin_addr.s_addr, str, sizeof(str)));
+#endif
+
       }
       mCurrent = mNextHops.begin();
    }
