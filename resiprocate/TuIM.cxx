@@ -347,7 +347,6 @@ TuIM::processNotifyRequest(SipMessage* msg)
 
    bool changed = true;
 
-   Uri fromUri;
 
    // update if found in budy list 
    for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
@@ -356,7 +355,6 @@ TuIM::processNotifyRequest(SipMessage* msg)
       
       if ( u.getAor() == from.getAor() )
       {
-         fromUri = u;
 
          if ( (i->status == note) &&
               (i->online == open) )
@@ -369,11 +367,12 @@ TuIM::processNotifyRequest(SipMessage* msg)
       }
    }
    
+   InfoLog(<< "Processed NOTIFY message : Presence changed: " << changed );
    // notify callback 
    if (changed)
    {
       assert(mCallback);
-      mCallback->presenceUpdate( fromUri, open, note );
+      mCallback->presenceUpdate( from, open, note );
    }
 }
 
