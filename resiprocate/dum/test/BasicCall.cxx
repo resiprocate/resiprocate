@@ -355,7 +355,7 @@ class TestUas : public TestInviteSessionHandler
          if (mSis.isValid())
          {
             cout << name << ": Sending BYE." << endl;
-            mSis->send(mSis->end());
+            mSis->end();
          }
       }
    private:
@@ -384,9 +384,8 @@ main (int argc, char** argv)
    //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
 
    //set up UAC
-   SipStack stackUac;
-   stackUac.addTransport(UDP, 12005);
-   DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
+   DialogUsageManager* dumUac = new DialogUsageManager();
+   dumUac->addTransport(UDP, 12005);
 
    Profile uacProfile;      
    auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager(uacProfile));
@@ -414,9 +413,8 @@ main (int argc, char** argv)
    dumUac->getProfile()->setDefaultRegistrationTime(70);
 
    //set up UAS
-   SipStack stackUas;
-   stackUas.addTransport(UDP, 12010);
-   DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
+   DialogUsageManager* dumUas = new DialogUsageManager();
+   dumUas->addTransport(UDP, 12010);
    
    Profile uasProfile;   
    std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager(uasProfile));
@@ -535,45 +533,6 @@ main (int argc, char** argv)
    // OK to delete DUM objects now
    delete dumUac; 
    delete dumUas;
-
-   // Gracefully shutdown UAC and UAS stack
-   stackUac.shutdown();
-   stackUas.shutdown();
-   bool fUACStackShutdown = false;
-   bool fUASStackShutdown = false;
-   while(!fUACStackShutdown || !fUASStackShutdown)
-   {
-      if(!fUACStackShutdown)
-      {
-         FdSet fdset; 
-	     stackUac.buildFdSet(fdset);
-	     fdset.selectMilliSeconds(50); 
-	     stackUac.process(fdset);      
-	     Message *msg = stackUac.receiveAny();
- 	     ShutdownMessage *shutdown = NULL;
-         if((shutdown=dynamic_cast<ShutdownMessage*>(msg)))
-	     {
-            fUACStackShutdown = true;
-            cout << "UAC: stack shutdown." << endl;
-	     }
-	     delete msg;
-      }
-      if(!fUASStackShutdown)
-      {
-         FdSet fdset; 
-	     stackUas.buildFdSet(fdset);
-	     fdset.selectMilliSeconds(50); 
-	     stackUas.process(fdset);      
-	     Message *msg = stackUas.receiveAny();
- 	     ShutdownMessage *shutdown = NULL;
-         if((shutdown=dynamic_cast<ShutdownMessage*>(msg)))
-	     {
-            fUASStackShutdown = true;
-            cout << "UAS: stack shutdown." << endl;
-	     }
-	     delete msg;
-      }
-   }
 
    cout << "!!!!!!!!!!!!!!!!!! Successful !!!!!!!!!! " << endl;
 }
