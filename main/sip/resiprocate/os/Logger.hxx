@@ -100,24 +100,27 @@ class GenericLogImpl :  public Log
    public:
       static std::ostream& Instance()
       {
-         if (Log::_type == Log::SYSLOG)
+         switch (Log::_type)
          {
-            if (mLogger == 0)
-            {
-               std::cerr << "Creating a syslog stream" << std::endl;
-               mLogger = new SysLogStream;
-            }
-            return *mLogger;
-         }
-         else 
-         {
-            if (Log::_type == Log::FILE)
-            {
+            case Log::SYSLOG:
+               if (mLogger == 0)
+               {
+                  std::cerr << "Creating a syslog stream" << std::endl;
+                  mLogger = new SysLogStream;
+               }
+               return *mLogger;
+               
+            case Log::CERR:
+               return std::cerr;
+               
+            case Log::COUT:
+               return std::cout;
+               
+            case Log::FILE:
+            default:
                assert(0);
-            }
+               return std::cout;
          }
-
-         return std::cout;
       }
       
       static bool isLogging(Log::Level level) 
