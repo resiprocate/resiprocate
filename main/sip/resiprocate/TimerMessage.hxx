@@ -1,32 +1,26 @@
 #ifndef TimerMessage_hxx
 #define TimerMessage_hxx
 
-#include <sip2/Message.hxx>
-#include <sip2/Data.hxx>
+#include <sipstack/Message.hxx>
+#include <sipstack/Data.hxx>
+#include <sipstack/Timer.hxx>
 
 namespace Vocal2
 {
 class TimerMessage : public Message
 {
    public:
-      TimerMessage(Data transactionId,
-                   Name name)
+      TimerMessage(Data transactionId, Timer::Type type)
          : mTransactionId(transactionId),
-           mName(name)
+           mType(type)
       {}
       
-      enum Name 
-      {
-         Timer_A,
-         Timer_B,
-         Timer_C,
-         Timer_D,
-         Timer_E,
-         Timer_F,
-         Timer_G,
-         Timer_H
-      };
+   private:
+      Data mTransactionId;
+      Timer::Type mType;
 };
+
+}
 
 
 #endif
