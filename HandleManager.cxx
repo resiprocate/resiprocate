@@ -8,7 +8,8 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 HandleManager::HandleManager() : 
-   mLastId(0)
+   mLastId(0),
+   mShuttingDown(false)
 {
 }
 
@@ -34,15 +35,25 @@ HandleManager::create(Handled* handled)
    return mLastId;
 }
 
+void HandleManager::shutdownWhenEmpty()
+{
+   mShuttingDown = true;
+   if (mHandleMap.empty())
+   {
+      delete this;
+   }
+}
+
 void
 HandleManager::remove(Handled::Id id)
 {
-   StackLog ( << "&&&&&& HandleManager::remove" << id << " " << this );
-   StackLog ( << "&&& Before: " << Inserter(mHandleMap));   
    HandleMap::iterator i = mHandleMap.find(id);
    assert (i != mHandleMap.end());
    mHandleMap.erase(i);
-   StackLog ( << "&&& After: " << Inserter(mHandleMap));   
+   if (mShuttingDown && mHandleMap.empty())
+   {
+      delete this;
+   }
 }
 
 bool

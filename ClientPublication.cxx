@@ -27,7 +27,9 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
      mPublish(req),
      mEventType(req.header(h_Event).value()),
      mTimerSeq(0)
-{}
+{
+   mPublish.releaseContents();   
+}
 
 ClientPublication::~ClientPublication()
 {
@@ -37,6 +39,7 @@ ClientPublication::~ClientPublication()
 SipMessage& 
 ClientPublication::end()
 {
+   mPublish.header(h_CSeq).sequence()++;
    mPublish.header(h_Expires).value() = 0;
    return mPublish;
 }
@@ -128,7 +131,7 @@ ClientPublication::refresh(unsigned int expiration)
    {
       expiration = mPublish.header(h_Expires).value();
    }
-   ++mPublish.header(h_CSeq).sequence();
+   mPublish.header(h_CSeq).sequence()++;
    mDum.send(mPublish);
    mPublish.releaseContents();   
 }
@@ -137,6 +140,7 @@ void
 ClientPublication::update(const Contents* body)
 {
    assert(body);
+   mPublish.header(h_CSeq).sequence()++;
    mPublish.setContents(body);
    refresh();
 }
