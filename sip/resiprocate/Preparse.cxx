@@ -220,6 +220,7 @@ PreparseStateTable::InitStatePreparseStateTable()
   const int RAQUOT = (int)'>';
   const int QUOT = (int)'\"';
   const int COLON = (int)':';
+  const int LSLASH = (int)'\\';
 
   const char LWS[] = " \t";
   // MUST be AE( format ) so fsm generation will work.
