@@ -28,6 +28,11 @@ using namespace Vocal2;
 const int UdpTransport::MaxBufferSize = 8192;
 
 
+TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo) : 
+   UdpTransport(sendhost, portNum, nic , fifo)
+{
+}
+
 UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo) : 
    Transport(sendhost, portNum, nic , fifo)
 {
@@ -96,7 +101,7 @@ UdpTransport::process(fd_set* fdSet)
       const sockaddr* addr = (const sockaddr*) addrin;
 
       int count = sendto(mFd, 
-                         data->data->data(), data->data->size(),  // !jf! ugghhh
+                         data->data.data(), data->data.size(),  // !jf! ugghhh
                          0, // flags
                          addr, sizeof(sockaddr_in) );
    
@@ -108,7 +113,7 @@ UdpTransport::process(fd_set* fdSet)
          assert(0);
       }
 
-      assert ( (count == int(data->data->size()) ) || (count == SOCKET_ERROR ) );
+      assert ( (count == int(data->data.size()) ) || (count == SOCKET_ERROR ) );
    }
 
    struct sockaddr_in from;
@@ -173,7 +178,8 @@ UdpTransport::process(fd_set* fdSet)
          InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
          InfoLog(<<"Possibly truncated");
       }
-      DebugLog( << "UDP Rcv : " << len << " b" );
+      DebugLog ( << "UDP Rcv : " << len << " b" );
+      DebugLog ( << Data(buffer, len).c_str());
       
       SipMessage* message = new SipMessage(true);
       
