@@ -11,15 +11,18 @@ class ParseBuffer;
 class UnknownParameter : public DataParameter
 {
    public:
-      UnknownParameter(const char* startName, unsigned int nameSize,
-                       ParseBuffer& pb);
+      UnknownParameter(const char* startName, 
+		       unsigned int nameSize,
+                       ParseBuffer& pb, 
+		       const char* terminators=" \t\r\n;?>");
       
       // for making a new unknown parameter 
       // msg->header(foo)["mynewparam"] = "bar";
       UnknownParameter(const Data& name);
 
-      virtual const Data& getName();
+      virtual const Data& getName() const;
       virtual Parameter* clone() const;
+
    private:
       Data mName;
 };
