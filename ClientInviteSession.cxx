@@ -1019,12 +1019,18 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
       case On2xx:
       case On2xxOffer:
       case On2xxAnswer:
+      {
          // this is the 2xx crossing the CANCEL case
+         SipMessage ack;
+         mDialog.makeRequest(ack, ACK);
+         mDialog.send(ack);
+         
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled, &msg);         
          mCancelledTimerSeq++;
          end();
          break;
-
+      }
+      
       default:
          break;
    }
