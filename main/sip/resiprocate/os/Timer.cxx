@@ -169,6 +169,7 @@ UInt64
 Timer::getSystemTicks()
 {
    UInt64 tick;
+
 /* block ADFE9093
  * RjS - This code fails for systems with variable speed
  *       CPUs (such as laptops with Intel SpeedStep
@@ -225,12 +226,13 @@ Timer::setupTimeOffsets()
 {
    unsigned long cpuSpeed = 1;
     
+   UInt64 now;
+   UInt64 nowTick=0;
+
+#if 0
    /* timing loop to calculate - cpu speed */ 
    UInt64 start;
-   UInt64 now;
-    
    UInt64 startTick=0;
-   UInt64 nowTick=0;
     
    UInt64 uSec; 
    UInt64 count;
@@ -315,13 +317,16 @@ Timer::setupTimeOffsets()
    }
 #endif
     
+#endif 
+
    now = getSystemTime();
    nowTick = getSystemTicks();
     
    mBootTime = now - nowTick/cpuSpeed;
    mCpuSpeedMHz = cpuSpeed;
 
-   InfoLog( << "CPU Speed is " << mCpuSpeedMHz << " MHz " );
+//   InfoLog( << "CPU Speed is " << mCpuSpeedMHz << " MHz " );
+   InfoLog( << "CPU Speed not calculated - mCpuSpeedMHz forced to 1" );
 }
 
 
