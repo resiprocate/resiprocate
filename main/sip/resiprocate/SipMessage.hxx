@@ -18,6 +18,7 @@
 #include <sipstack/Message.hxx>
 #include <sipstack/ParserCategories.hxx>
 #include <sipstack/ParserContainer.hxx>
+#include <util/VException.hxx>
 
 namespace Vocal2
 {
@@ -34,6 +35,15 @@ class SipMessage : public Message
       virtual const Data& getTransactionId() const;
          
       virtual ~SipMessage();
+
+      class Exception : public VException
+      {
+         public:
+            Exception(const Data& msg, const Data& file, const int line)
+               : VException(msg, file, line) {}
+
+            Data getName() const { return "SipMessage::Exception"; }
+      };
 
       bool isExternal() const
       {
@@ -155,6 +165,8 @@ class SipMessage : public Message
       mutable HeaderFieldValue* mBody;
 
       Data mTransactionId;  // !jf!
+      mutable bool mRequest;
+      mutable bool mResponse;
 };
 
 
