@@ -198,7 +198,7 @@ Auth::parse(ParseBuffer& pb)
    start = pb.skipWhitespace();
    pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::EQUALS);
 
-   if (*pb.position() == Symbols::EQUALS[0])
+   if (!pb.eof() && *pb.position() == Symbols::EQUALS[0])
    {
       // Authentication-Info only
       // back up, and then parse
@@ -252,7 +252,7 @@ Auth::parseAuthParameters(ParseBuffer& pb)
          mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n,"));
       }
       pb.skipWhitespace();
-      if (*pb.position() != Symbols::COMMA[0])
+      if (!pb.eof() && *pb.position() != Symbols::COMMA[0])
       {
 	 break;
       }
@@ -1149,7 +1149,7 @@ Via::parse(ParseBuffer& pb)
    }
    pb.data(mSentHost, startMark);
    pb.skipToOneOf(";:");
-   if (*pb.position() == ':')
+   if (!pb.eof()&& *pb.position() == ':')
    {
       startMark = pb.skipChar(':');
       mSentPort = pb.integer();
@@ -1297,13 +1297,13 @@ NameAddr::parse(ParseBuffer& pb)
    start = pb.skipWhitespace();
    bool laQuote = false;
 
-   if (*pb.position() == Symbols::STAR[0])
+   if (!pb.eof() && *pb.position() == Symbols::STAR[0])
    {
       mAllContacts = true;
    }
    else
    {
-      if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
+      if (!pb.eof() && *pb.position() == Symbols::DOUBLE_QUOTE[0])
       {
          pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          pb.skipToEndQuote();
@@ -1320,7 +1320,7 @@ NameAddr::parse(ParseBuffer& pb)
             pb.skipChar(Symbols::LA_QUOTE[0]);
          }
       }
-      else if (*pb.position() == Symbols::LA_QUOTE[0])
+      else if (!pb.eof() && *pb.position() == Symbols::LA_QUOTE[0])
       {
          pb.skipChar(Symbols::LA_QUOTE[0]);
          laQuote = true;
