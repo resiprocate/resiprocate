@@ -104,7 +104,7 @@ class SipMessage : public Message
       // clone method
       
       // add HeaderFieldValue given enum, header name, pointer start, content length
-      void addHeader(int header,
+      void addHeader(Headers::Type header,
                      const char* headerName, int headerLen, 
                      const char* start, int len);
 
