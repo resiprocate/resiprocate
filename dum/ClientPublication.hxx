@@ -20,13 +20,13 @@ class ClientPublication : public NonDialogUsage
       void update(const Contents* body);
       const Contents* getContents() const { return mDocument; }
 
-      virtual SipMessage& end();
-
+      virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
    protected:
       virtual ~ClientPublication();
+
    private:
       friend class DialogSet;
 

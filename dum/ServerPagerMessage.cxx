@@ -31,6 +31,12 @@ ServerPagerMessage::~ServerPagerMessage()
    mDialogSet.mServerPagerMessage = 0;
 }
 
+void
+ServerPagerMessage::end()
+{
+   delete this;
+}
+
 void 
 ServerPagerMessage::dispatch(const SipMessage& msg)
 {

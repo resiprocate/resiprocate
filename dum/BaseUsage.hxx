@@ -24,8 +24,9 @@ class BaseUsage : public Handled
             virtual const char* name() const;
       };
 
+      virtual void end()=0;
       virtual void send(SipMessage& request);
-
+      
    protected:
       BaseUsage(DialogUsageManager& dum);      
       virtual ~BaseUsage();

@@ -16,7 +16,7 @@ InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle, const SipMess
 {
    InfoLog(<< "InviteSessionHandler::onAckNotReceived: " << msg.brief());
    DebugLog(<< "onAckNotReceived(full): " << msg);
-   handle->send(handle->end());
+   handle->end();
 }
 
 void 
@@ -24,5 +24,5 @@ InviteSessionHandler::onIllegalNegotiation(InviteSessionHandle handle, const Sip
 {
    InfoLog(<< "InviteSessionHandler::onIllegalNegotiation: " << msg.brief());
    DebugLog(<< "onIllegalNegotiation(full): " << msg);
-   handle->send(handle->end());
+   handle->end();
 }

@@ -29,6 +29,12 @@ ClientOutOfDialogReq::~ClientOutOfDialogReq()
    mDialogSet.mClientOutOfDialogRequests.remove(this);
 }
 
+void
+ClientOutOfDialogReq::end()
+{
+   delete this;
+}
+
 void 
 ClientOutOfDialogReq::dispatch(const SipMessage& msg)
 {
