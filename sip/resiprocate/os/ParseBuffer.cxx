@@ -120,6 +120,60 @@ ParseBuffer::skipToChar(char c)
    return position();
 }
 
+const char*
+ParseBuffer::skipToChars(const char* cs)
+{
+   assert(cs);
+   if (*cs == 0)
+   {
+      return mTraversalPtr;
+   }
+
+   const char* pos;
+   const char* rpos;
+
+   while (mTraversalPtr < mEnd)
+   {
+      rpos = mTraversalPtr;
+      pos = cs;
+      while (*pos++ == *mTraversalPtr++)
+      {
+         if (*pos == 0)
+         {
+            reset(rpos);
+            return rpos;
+         }
+      }
+   }
+   return mTraversalPtr;
+}
+
+const char*
+ParseBuffer::skipToChars(const Data& cs)
+{
+   if (cs.empty())
+   {
+      return mTraversalPtr;
+   }
+
+   const char* rpos;
+   while (mTraversalPtr < mEnd)
+   {
+      rpos = mTraversalPtr;
+      for (size_t i = 0; i < cs.size(); i++)
+      {
+         if (cs[i] != *mTraversalPtr++)
+         {
+            goto skip;
+         }
+      }
+      reset(rpos);
+      return rpos;
+     skip: ;
+   }
+   return mTraversalPtr;
+}
+
 bool oneOf(char c, const char* cs)
 {
    while (*cs)
