@@ -13,8 +13,13 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
 
-ContentsFactory<MultipartSignedContents> MultipartSignedContents::Factory;
-
+bool
+MultipartSignedContents::init()
+{
+   static ContentsFactory<MultipartSignedContents> factory;
+   (void)factory;
+   return true;
+}
 
 MultipartSignedContents::MultipartSignedContents()
    : MultipartMixedContents()
