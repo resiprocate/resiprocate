@@ -60,6 +60,8 @@ class InviteSession : public DialogUsage
          Answer
       } OfferAnswerType;
 
+      InviteSessionHandle getSessionHandle();
+
    protected:
 
       typedef enum
@@ -136,6 +138,7 @@ class InviteSession : public DialogUsage
          On2xxOffer,
          On2xxAnswer,
          On489Invite,
+         On491Invite,
          OnInviteFailure,
          OnAck,
          OnAckAnswer,
@@ -143,6 +146,7 @@ class InviteSession : public DialogUsage
          OnCancelFailure, // UAC
          OnUpdate,
          OnUpdateRejected,
+         On491Update,
          On489Update,
          On200Update,
          OnPrack, // UAS
@@ -165,13 +169,13 @@ class InviteSession : public DialogUsage
       virtual void dispatch(const DumTimeout& timer);
 
       // Utility methods (one for each State)
-      void dispatchConnected(const SipMessage& msg, const SdpContents* sdp);
-      void dispatchSentUpdate(const SipMessage& msg, const SdpContents* sdp);
-      void dispatchSentReinvite(const SipMessage& msg, const SdpContents* sdp);
+      void dispatchConnected(const SipMessage& msg);
+      void dispatchSentUpdate(const SipMessage& msg);
+      void dispatchSentReinvite(const SipMessage& msg);
       void dispatchGlare(const SipMessage& msg);
       void dispatchReceivedUpdateOrReinvite(const SipMessage& msg);
       void dispatchAnswered(const SipMessage& msg);
-      void dispatchWaitingToOffer(const SipMessage& msg, const SdpContents* sdp);
+      void dispatchWaitingToOffer(const SipMessage& msg);
       void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchTerminated(const SipMessage& msg);
 
@@ -180,7 +184,6 @@ class InviteSession : public DialogUsage
 
       static Data toData(State state);
       void transition(State target);
-      InviteSessionHandle getSessionHandle();
 
       static bool isReliable(const SipMessage& msg);
       static const SdpContents* getSdp(const SipMessage& msg);
@@ -211,44 +214,6 @@ class InviteSession : public DialogUsage
       typedef RefCountedDestroyer<InviteSession> Destroyer;
       Destroyer mDestroyer;
       friend class Destroyer::Guard;
-
-#if 0
-      typedef std::map<int, SipMessage> CSeqToMessageMap;
-      CSeqToMessageMap mAckMap;
-
-      void handleSessionTimerResponse(const SipMessage& msg);
-      void handleSessionTimerRequest(const SipMessage& request, SipMessage &response);
-
-
-      // If sdp==0, the offer was rejected
-      void incomingSdp(const SipMessage& msg, const SdpContents* sdp);
-
-      // If sdp==0, the offer is being rejected
-      void sendSdp(SdpContents* sdp);
-
-      std::pair<OfferAnswerType, const SdpContents*> getOfferOrAnswer(const SipMessage& msg) const;
-
-
-      InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState);
-      SipMessage& makeAck();
-      SipMessage& makeFinalResponse(int code);
-
-      SipMessage mLastRequest;
-      SipMessage mLastIncomingRequest;
-      SipMessage mLastResponse;
-
-      typedef map<int, SipMessage> CSeqToMessageMap;
-      CSeqToMessageMap mAckMap;
-      CSeqToMessageMap mFinalResponseMap;
-
-      bool mUserConnected;
-      SipMessage* mQueuedBye;
-
-      // Session Timer settings
-      int  mSessionInterval;
-      bool mSessionRefresherUAS;
-      int  mSessionTimerSeq;
-#endif
 
    private:
       friend class Dialog;
