@@ -9,10 +9,6 @@
 #  include <unistd.h>
 #endif
 
-#ifdef __APPLE__
-#include "/Developer/Headers/FlatCarbon/Gestalt.h"
-#endif
-
 #include <cassert>
 
 #include "resiprocate/os/Timer.hxx"
@@ -22,15 +18,10 @@
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 using namespace resip;
-
-unsigned long 
-resip::Timer::mCpuSpeedMHz = 0L;
-
-UInt64 
-resip::Timer::mBootTime=0L;
-
+ 
 unsigned long
-resip::Timer::mTimerCount = 0L;
+resip::Timer::mTimerCount = 1L;
+
 
 unsigned long
 resip::Timer::T1 = 500;
@@ -55,6 +46,7 @@ resip::Timer::TS = 32000;
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+
 
 Data
 Timer::toData(Type timer)
@@ -148,6 +140,7 @@ Timer::operator=(const Timer& other)
 UInt64
 Timer::getSystemTime()
 {
+    assert( sizeof(UInt64) == 64/8 );
     UInt64 time=0;
 #if defined(WIN32)  
     SYSTEMTIME t;
@@ -167,187 +160,23 @@ Timer::getSystemTime()
 }
 
 
-UInt64
-Timer::getSystemTicks()
-{
-    UInt64 tick;
-
-/* block ADFE9093
- * RjS - This code fails for systems with variable speed
- *       CPUs (such as laptops with Intel SpeedStep
- *       This block (and its associated endifs) is
- *       commented out for now while the impact of this
- *       change is being tested. 
- #if defined(WIN32) 
- volatile unsigned int lowtick=0,hightick=0;
- __asm
- {
- rdtsc 
- mov lowtick, eax
- mov hightick, edx
- }
- tick = hightick;
- tick <<= 32;
- tick |= lowtick;
- #else  
- #  if defined(__GNUC__) && ( defined(__i686__) || defined(__i386__) )
- asm("rdtsc" : "=A" (tick)); // this should actually work anywhere GNUC does
- #  else
-*/
-    tick = getSystemTime();
-
-/* RjS - endifs matching block ADFE9093
-   #  endif
-   #endif
-*/
-    return tick;
-}
-
-static bool timerCpuSpeedCheck = true;
-
 void 
 Timer::setupTimeOffsets()
 {
-    unsigned long cpuSpeed = 1;
-    
-    UInt64 now;
-    UInt64 nowTick=0;
-
-   if (timerCpuSpeedCheck)
-   {
-   /* timing loop to calculate - cpu speed */ 
-   UInt64 start;
-   UInt64 startTick=0;
-    
-   UInt64 uSec; 
-   UInt64 count;
-    
-   // wait for a time tick
-   now = getSystemTime();
-   start = now;
-   while ( (start == now) )
-   {
-      start = getSystemTime(); 
-      startTick = getSystemTicks();
-   }
-
-   // wait for next time tick
-   do     
-   {
-      now = getSystemTime(); 
-      nowTick = getSystemTicks();
-   }
-   while ( (now-start) < 200*1000 );
-    
-   uSec = now - start;
-   count = nowTick - startTick;
-    
-   assert( uSec >= 100*1000 );
-   if (  uSec >= 500*1000 )
-   {
-       ErrLog( << "now is " << now  );
-       ErrLog( << "start is " << start  );
-       ErrLog( << "diff in uSec is " << uSec );
-       ErrLog( << "diff in count is " << count ); 
-   }
-   assert( uSec < 2*1000*1000 );
-   assert( count > 100 );
-
-   //cerr << "diff in uSec is " << uSec << endl;
-   //cerr << "diff in sec is " << sec << endl;
-   //cerr << "diff in count is " << count << endl;
-    
-   UInt64 cpuSpeed64 = count / uSec;
-   cpuSpeed = (unsigned long)cpuSpeed64;
-    
-   static UInt64 speeds[] = { 1,16,25,33,60,90,100,133,150,166,200,
-                              266,300,400,450, 500,533,550,600,633,650,667,
-                              700,733,750,800,850,866,900,933,950,1000,
-                              1100,1200,1266,1400,1500,1600,1700,1800,1900,
-                              2000,2100,2200,2266,2400,2500,2533,2600,2666,
-                              2800, 3000,3200,3600,3733,4000,4266};
-   UInt64 diff=cpuSpeed;
-   unsigned int index = 0;
-   unsigned int i=0;
-   while (i++ < sizeof(speeds)/sizeof(*speeds))
-   {
-      UInt64 d =  speeds[i]  >  cpuSpeed ? speeds[i] - cpuSpeed : cpuSpeed - speeds[i];
-      if ( d <= diff )
-      {
-         diff = d;
-         index = i;
-      }
-   }
-#ifdef __APPLE__
-        cpuSpeed = 1;
-        long s=1;
-        // link with -framework AppKit 
-        //Gestalt (gestaltProcClkSpeed, &s );
-        cpuSpeed = s;
-#else
-        assert( index != 0 );
-        cpuSpeed = 0;
-
-        // if it is faster than know processors ....
-        if ( (index == i-1) && (diff>50) )
-        {
-            // just keep the estimated speed
-        }
-        else
-        {
-            cpuSpeed = (unsigned long)speeds[index];
-        }
-#endif
-    
-   }
-
-   now = getSystemTime();
-   nowTick = getSystemTicks();
-
-   if (cpuSpeed == 0) cpuSpeed = 1;
- 
-   mBootTime = now - nowTick/cpuSpeed;
-   mCpuSpeedMHz = cpuSpeed;
-
-   if (timerCpuSpeedCheck)
-   {
-       InfoLog( << "CPU Speed is " << mCpuSpeedMHz << " MHz " );
-   }
-   else
-   {
-       InfoLog( << "CPU Speed not calculated - mCpuSpeedMHz forced to 1" );
-   }
-   if (mCpuSpeedMHz == 1)
-   {
-       InfoLog( << "Timer CPU Speed check code likely not working as expected -- safe to ignore.");
-   }
-
 }
 
 
 UInt64 
 Timer::getTimeMicroSec()
 {
-    assert( sizeof(UInt64) == 64/8 );
-    
-    UInt64 time=0; /* 64 bit */ 
-    
-    if ( mCpuSpeedMHz == 0 ) 
-    {
-        setupTimeOffsets();   
-    }
-    assert( mCpuSpeedMHz != 0 );
-
-    time = getSystemTicks()/mCpuSpeedMHz + mBootTime;
-    
-    assert( time != 0 );
-    return time;
+    return getSystemTime();
 }
+
 
 UInt64 
 Timer::getTimeMs()
 {
-    return getTimeMicroSec() / 1000;
+    return getSystemTime()/1000;
 }
 
 
@@ -397,6 +226,7 @@ resip::operator<<(std::ostream& str, const Timer& t)
     str << "Timer[id=" << t.mId << " when=" << t.mWhen << "]";
     return str;
 }
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
