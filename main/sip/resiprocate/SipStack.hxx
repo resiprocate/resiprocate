@@ -50,7 +50,7 @@ class SipStack
       // Set stateless=true, if you want to use the stack for a stateless proxy
       // (no transactions)
       SipStack(bool multiThreaded=false, Security* security=0, bool stateless=false);
-      ~SipStack();
+      virtual ~SipStack();
 
       // inform the transaction state machine processor that it should not
       // create any new transactions and to perform an orderly shutdown. When
@@ -99,14 +99,14 @@ class SipStack
       
       // build the FD set to use in a select to find out when process bust be
       // called again. This must be called prior to calling process. 
-      void buildFdSet(FdSet& fdset);
+      virtual void buildFdSet(FdSet& fdset);
 	
       // should call buildFdSet before calling process. This allows the
       // executive to give processing time to stack components. 
-      void process(FdSet& fdset);
+      virtual void process(FdSet& fdset);
 
       /// returns time in milliseconds when process next needs to be called 
-      int getTimeTillNextProcessMS(); 
+      virtual int getTimeTillNextProcessMS(); 
 
       // Inform the TU that whenever a transaction has been terminated. 
       void registerForTransactionTermination();
