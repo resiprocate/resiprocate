@@ -6,14 +6,28 @@
 #include <iostream>
 #include <cassert>
 
+// !ah! just for debugging
+#include <util/Logger.hxx>
+#define VOCAL_SUBSYSTEM Subsystem::SIP
+
 using namespace Vocal2;
 using namespace std;
+
+ParserCategory::ParserCategory(HeaderFieldValue* headerFieldValue)
+    : mHeaderField(headerFieldValue),
+      mParameters(),
+      mUnknownParameters(),
+      mMine(false),
+      mIsParsed(headerFieldValue->mField == 0)
+{
+}
 
 ParserCategory::ParserCategory()
    : mHeaderField(0),
      mMine(true),
      mIsParsed(true)
-{}
+{
+}
 
 ParserCategory::ParserCategory(const ParserCategory& rhs)
    : mHeaderField(0),
@@ -99,6 +113,22 @@ ParserCategory::param(const Data& param) const
       mUnknownParameters.push_back(p);
    }
    return *dynamic_cast<UnknownParameter*>(p);
+}
+
+bool
+ParserCategory::exists(const ParamBase& paramType) const
+{
+    checkParsed();
+    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
+    return ret;
+}
+
+// removing non-present parameter is allowed      
+void
+ParserCategory::remove(const ParamBase& paramType)
+{
+    checkParsed();
+    removeParameterByEnum(paramType.getTypeNum());
 }
 
 void 
