@@ -69,10 +69,10 @@ class Profile
       Tokens getSupportedLanguages();
 
 	  //enable/disable sending of Allow/Supported/Accept/Accept-Language/Accept-Encoding headers 
-	  //on initial outbound requests (ie. Initial INVITE, REGSISTER, etc.) and Invite 200 responses
-	  //Note:  Default is to advertise Headers::Type::Accept and Headers::Type::Supported, use clearAdvertisedCapabilities to remove these
-	  //       Currently implemented header values are: Headers::Type::Accept, Headers::Type::Allow, 
-	  //       Headers::Type::AcceptEncoding, Headers::Type::AcceptLanguage, Headers::Type::Supported
+	  //on initial outbound requests (ie. Initial INVITE, REGISTER, etc.) and Invite 200 responses
+	  //Note:  Default is to advertise Headers::Accept and Headers::Supported, use clearAdvertisedCapabilities to remove these
+	  //       Currently implemented header values are: Headers::Accept, Headers::Allow, 
+	  //       Headers::AcceptEncoding, Headers::AcceptLanguage, Headers::Supported
 	  void addAdvertisedCapability(const Headers::Type header);
       bool isAdvertisedCapability(const Headers::Type header);
 	  void clearAdvertisedCapabilities();
