@@ -174,11 +174,16 @@ TlsTransport::processRead(Connection* c)
 
    assert( c->mTlsConnection );
    int bytesRead = c->mTlsConnection->read( writePair.first, bytesToRead);
-   if (bytesRead <= 0)
+   if (bytesRead < 0)
    {
       DebugLog(<< "bytesRead: " << bytesRead);
       DebugLog(<< "TlsTransport::processRead failed for " << int(c) );
       return false;
+   }   
+   if (bytesRead == 0)
+   {
+      DebugLog(<< "bytesRead: " << bytesRead);
+      return true;
    }   
    if (c->process(bytesRead, mStateMachineFifo))
    {
@@ -191,7 +196,7 @@ TlsTransport::processRead(Connection* c)
       return false;
    }
 #else
-	return false;
+   return false;
 #endif
 }
 
@@ -331,7 +336,7 @@ TlsTransport::processAllWrites( FdSet& fdset )
 void
 TlsTransport::sendFromRoundRobin(FdSet& fdset)
 {
-	#ifdef USE_SSL
+#ifdef USE_SSL
    if (!mSendRoundRobin.empty())
    {
       ConnectionList::iterator rrPos = mSendPos;
@@ -341,7 +346,9 @@ TlsTransport::sendFromRoundRobin(FdSet& fdset)
          {
             mSendPos = mSendRoundRobin.begin();
          }
-         if (true) // !cj! need to add to fd set - if (fdset.readyToWrite((*mSendPos)->getSocket()))
+         if (true) 
+// !cj! need to add to fd set - 
+//if (fdset.readyToWrite((*mSendPos)->getSocket()))
          {
             if (processWrite(*mSendPos))
             {
