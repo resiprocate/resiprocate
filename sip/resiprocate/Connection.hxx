@@ -37,6 +37,9 @@ class Connection : public ConnectionLruList, public ConnectionReadList, public C
       ConnectionId getId() const;
       Socket getSocket() const {return mSocket;}
 
+      virtual bool hasDataToRead(); // has data that can be read 
+      virtual bool isGood(); // has valid connection
+
       //bool hasDataToWrite() const;
       void requestWrite(SendData* sendData);
 

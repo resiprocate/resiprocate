@@ -433,6 +433,20 @@ Connection::transport()
 }
 
 
+bool 
+Connection::hasDataToRead()
+{
+   return true;
+}
+
+
+bool 
+Connection::isGood()
+{
+   return true;
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
