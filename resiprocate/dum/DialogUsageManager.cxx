@@ -98,13 +98,13 @@ DialogUsageManager::makeNewSession(BaseCreator* creator)
 SipMessage&
 DialogUsageManager::makeInviteSession(const Uri& target, const SdpContents* initialOffer)
 {
-   return makeNewSession(new InviteSessionCreator(target, initialOffer));
+   return makeNewSession(new InviteSessionCreator(*this, target, initialOffer));
 }
 
 SipMessage&
 DialogUsageManager::makeSubscription(const Uri& aor, const Data& eventType)
 {
-   return makeNewSession(new SubscriptionCreator(eventType));
+   return makeNewSession(new SubscriptionCreator(*this, eventType));
 }
 
 #if 0
