@@ -41,6 +41,12 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    if (mServer)
    {
       DebugLog( << "Trying to form TLS connection - acting as server" );
+      if ( mDomain.empty() )
+      {
+         ErrLog("Tranport was not created with a server domain so can not act as server" ); 
+         throw Security::Exception("Trying to act as server but no domain specified",
+                                   __FILE__,__LINE__);
+      }
    }
    else
    {
@@ -67,14 +73,22 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
       assert( mSecurity );
 
       X509* cert = mSecurity->getDomainCert(mDomain); //mDomainCerts[mDomain];
-      EVP_PKEY* pKey = mSecurity->getDomainKey(mDomain); //mDomainPrivateKeys[mDomain];
-
+      if (!cert)
+      {
+         ErrLog("Don't have certificate for damain " << mDomain );
+      }
+      
       if( !SSL_use_certificate(mSsl, cert) )
       {
          throw Security::Exception("SSL_use_certificate failed",
                                    __FILE__,__LINE__);
       }
       
+      EVP_PKEY* pKey = mSecurity->getDomainKey(mDomain); //mDomainPrivateKeys[mDomain];
+      if (!pKey)
+      {
+         ErrLog("Don't have private key for damin " << mDomain );
+      }
       if ( !SSL_use_PrivateKey(mSsl, pKey) )
       {
          throw Security::Exception("SSL_use_PrivateKey failed.",
