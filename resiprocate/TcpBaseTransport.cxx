@@ -56,7 +56,7 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data&
 
 TcpBaseTransport::~TcpBaseTransport()
 {
-   InfoLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port()); 
+   DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port()); 
    
    // !jf! this is not right. should drain the sends before 
    while (mTxFifo.messageAvailable()) 
@@ -70,7 +70,6 @@ TcpBaseTransport::~TcpBaseTransport()
    
    //mSendRoundRobin.clear(); // clear before we delete the connections
 
-   InfoLog (<< "Shutting down " << mTuple);
    shutdown();
    join();
 }
@@ -93,19 +92,19 @@ TcpBaseTransport::processListen(FdSet& fdset)
       Socket sock = accept( mFd, &peer, &peerLen);
       if ( sock == SOCKET_ERROR )
       {
-		  int e = getErrno();
-		  switch (e)
-		  {
-		  case EWOULDBLOCK:
-	         // !jf! this can not be ready in some cases 
-			  return;
-		  default:
-	         Transport::error(e);
-		  }
+         int e = getErrno();
+         switch (e)
+         {
+            case EWOULDBLOCK:
+               // !jf! this can not be ready in some cases 
+               return;
+            default:
+               Transport::error(e);
+         }
          return;
       }
       makeSocketNonBlocking(sock);
-
+      
       Tuple who(peer, transport());
       who.transport = this;
 
