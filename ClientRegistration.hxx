@@ -23,6 +23,9 @@ class ClientRegistration: public BaseUsage
       void removeMyBindings();
       void requestRefresh();
       
+      //kills the usgage, call removeMyBindings to deregister
+      void stopRegistering(); 
+      
       const NameAddrs& myContacts();
       const NameAddrs& allContacts();
 
