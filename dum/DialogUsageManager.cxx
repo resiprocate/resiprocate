@@ -278,7 +278,7 @@ DialogUsageManager::makeResponse(SipMessage& response,
 }
 
 void
-DialogUsageManager::sendResponse(const SipMessage& response)
+DialogUsageManager::sendResponse(SipMessage& response)
 {
    assert(response.isResponse());
    mStack.send(response);
@@ -317,10 +317,24 @@ DialogUsageManager::makePublication(const Uri& targetDocument,
 
 
 void
-DialogUsageManager::send(const SipMessage& request)
+DialogUsageManager::send(SipMessage& request)
 {
    InfoLog (<< "SEND: " << request);
-   mStack.send(request);
+   if (request.isRequest()) //!dcm! -- invariant?
+   {
+      //will have no affect unless a strict route is sent
+      Helper::processStrictRoute(request);
+
+      if (getProfile()->hasOutboundProxy())
+      {
+         DebugLog ( << "Using outbound proxy");
+         mStack.sendTo(request, getProfile()->getOutboundProxy().uri());         
+      }
+      else
+      {
+         mStack.send(request);
+      }
+   }   
 }
 
 void
@@ -352,6 +366,12 @@ void
 DialogUsageManager::buildFdSet(FdSet& fdset)
 {
    mStack.buildFdSet(fdset);   
+}
+
+int 
+DialogUsageManager::getTimeTillNextProcessMS()
+{
+   return mStack.getTimeTillNextProcessMS();   
 }
 
 void

@@ -19,6 +19,7 @@ class DumTimeout : public Message
          Provisional2,
          Publication,
          Retransmit200,
+         WaitForAck, // UAS gets no ACK
          StaleCall, // UAC gets no final response
       } Type;
       static const unsigned long StaleCallTimeout;
