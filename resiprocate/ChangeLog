@@ -1,3 +1,13 @@
+2002-10-04  Alan Hawrylyshen  <alan@jasomi.com>
+
+	* SipMessage.hxx (class SipMessage): Const fixups.
+
+	*  SipMessage.cxx (setBody): Const fixups.
+
+	* Preparse.cxx (InitStatePreparseStateTable): Migrated to Symbols
+	constants and added asserts for unexpected char* cases.
+	
+
 2002-09-26  Alan Hawrylyshen  <alan@jasomi.com>
 
 	* headers.gperf (Repository): 

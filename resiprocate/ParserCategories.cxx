@@ -134,7 +134,8 @@ CSeqCategory::parse(ParseBuffer& pb)
 
    pb.skipNonWhitespace();
    start = pb.skipWhitespace();
-   pb.skipNonWhitespace(); // .dcm. maybe pass an arg that says throw if you don't move
+   pb.skipNonWhitespace(); // .dcm. maybe pass an arg that says throw if you
+                           // don't move
    mMethod = getMethodType(pb.data(start));
 }
 

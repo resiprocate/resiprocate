@@ -15,9 +15,11 @@ const char * const Symbols::COLON = ":";
 const char * const Symbols::EQUALS = "=";
 const char * const Symbols::SEMI_COLON = ";";
 const char * const Symbols::SLASH = "/";
+const char * const Symbols::B_SLASH = "\\";
 const char * const Symbols::DOUBLE_QUOTE = "\"";
 const char * const Symbols::LA_QUOTE = "<";
 const char * const Symbols::RA_QUOTE = ">";
+const char * const Symbols::COMMA = ",";
 const char * const Symbols::SEMI_OR_EQUAL = ";=";
 const char * const Symbols::COMMA_OR_EQUAL = ",=";
 
