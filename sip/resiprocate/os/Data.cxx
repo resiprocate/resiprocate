@@ -1188,6 +1188,87 @@ size_t std::hash_value(const resip::Data& data)
 }
 #endif
 
+
+Data 
+Data::base64decode() const
+{
+   static char base64Lookup[128] = 
+   {
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
+      -1,-1,-1,62,-1,-1,-1,63,52,53, 
+      54,55,56,57,58,59,60,61,-1,-1, 
+      -1,-2,-1,-1,-1,0, 1, 2, 3, 4,
+      5, 6, 7, 8, 9, 10,11,12,13,14, 
+      15,16,17,18,19,20,21,22,23,24, 
+      25,-1,-1,-1,-1,-1,-1,26,27,28, 
+      29,30,31,32,33,34,35,36,37,38, 
+      39,40,41,42,43,44,45,46,47,48, 
+      49,50,51,-1,-1,-1,-1,-1            
+   };
+
+   int wc=0;
+   int val=0;
+   Data bin;
+   bin.reserve( size()*3/4 );
+   
+   for( unsigned int i=0; i<size(); i++ )
+   {
+      unsigned int x = mBuf[i] &0x7F;
+      char c1,c2,c3;
+      
+      int v =  base64Lookup[x];
+
+      if ( v >= 0 )
+      {
+         val = val << 6;
+         val |= v;
+         wc++;
+         
+         if ( wc == 4 )
+         {
+            c3 = char( val & 0xFF ); val = val >> 8;
+            c2 = char( val & 0xFF ); val = val >> 8;
+            c1 = char( val & 0xFF ); val = val >> 8;
+
+            bin += c1;
+            bin += c2;
+            bin += c3;
+            
+            wc=0;
+            val=0;
+         }
+      }
+      if ( mBuf[i] == '=' )
+      {
+         if (wc==2) val = val<<12;
+         if (wc==3) val = val<<6;
+         
+         c3 = char( val & 0xFF ); val = val >> 8;
+         c2 = char( val & 0xFF ); val = val >> 8;
+         c1 = char( val & 0xFF ); val = val >> 8;
+         
+         if ( (i+1<size() ) && ( mBuf[i+1] == '=' ))
+         {
+            bin += c1;
+            i++;
+         }
+         else
+         {
+            bin += c1;
+            bin += c2;
+         }
+
+         break;
+      }
+   }
+
+   return bin;
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
