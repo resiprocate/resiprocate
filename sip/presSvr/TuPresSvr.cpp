@@ -24,7 +24,7 @@ TuPresSvr::process()
     {
       if (msg->isRequest())
       {
-	if (msg->header(h_RequestLine).getMethod() == SUBSCRIBE )
+	if (msg->header(h_RequestLine).getMethod() == RESIP_SUBSCRIBE )
 	{
           processSubscribe(msg);
 	}
@@ -32,14 +32,14 @@ TuPresSvr::process()
 	{
 	  processPublish(msg);
 	}
-	else if (msg->header(h_RequestLine).getMethod() == OPTIONS )
+	else if (msg->header(h_RequestLine).getMethod() == RESIP_OPTIONS )
 	{
           auto_ptr<SipMessage> resp(
                Helper::makeResponse(*msg,500,"You Shot Me!")); 
           mStack->send(*resp);
 	  done = 1;
 	}
-	else if (msg->header(h_RequestLine).getMethod() == PUBLISH)
+	else if (msg->header(h_RequestLine).getMethod() == RESIP_PUBLISH)
 	{
            processPublish(msg);
 	}
@@ -54,7 +54,7 @@ TuPresSvr::process()
 	/*
 	 Nope - dialog key is currently overscoped to requests - bad.
 	assert(msg->isResponse());
-	if (msg->header(h_CSeq).method()==NOTIFY)
+	if (msg->header(h_CSeq).method()==RESIP_NOTIFY)
 	  mDialogMgr.dispatchNotifyResponse(msg);
          */
       }
@@ -107,7 +107,7 @@ void TuPresSvr::processNewSubscribe(SipMessage* msg)
 
 void TuPresSvr::processPublish(SipMessage* msg)
 {
-  //ignore any PUBLISH related headers and any contacts
+  //ignore any RESIP_PUBLISH related headers and any contacts
   //provided in a RESIP_REGISTER
   //This is a rather vile hack for SIMPLEt 1
   Data aor;
