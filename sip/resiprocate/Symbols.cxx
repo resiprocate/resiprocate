@@ -96,6 +96,8 @@ const char * const Symbols::Referred_By = "Referred-By";
 const char * const Symbols::Replaces = "Replaces";
 const char * const Symbols::Register = "Register";
 const char * const Symbols::Subscribe = "Subscribe";
+const char * const Symbols::Event = "Event";
+const char * const Symbols::Allow_Events = "Allow-Events";
 
 const char * const Symbols::transport = "transport";
 const char * const Symbols::user = "user";
