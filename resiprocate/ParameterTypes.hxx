@@ -523,14 +523,48 @@ namespace Vocal2
    };
    extern Qop_Factory_Param p_qopFactory;
 
+   //rfc 3329
+   class Digest_Algorithm_Param : public ParamBase
+   {
+      public:
+         typedef DataParameter Type;
+         typedef DataParameter::Type DType;
+         virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::dAlg;}
+         Digest_Algorithm_Param()
+         {
+            ParameterTypes::ParameterFactories[ParameterTypes::dAlg] = Type::decode;
+            ParameterTypes::ParameterNames[ParameterTypes::dAlg] = Symbols::dAlg;
+         }
+   };
+   extern Digest_Algorithm_Param p_dAlg;
 
+   class Digest_Qop_Param : public ParamBase
+   {
+      public:
+         typedef DataParameter Type;
+         typedef DataParameter::Type DType;
+         virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::dQop;}
+         Digest_Qop_Param()
+         {
+            ParameterTypes::ParameterFactories[ParameterTypes::dQop] = Type::decode;
+            ParameterTypes::ParameterNames[ParameterTypes::dQop] = Symbols::dQop;
+         }
+   };
+   extern Digest_Qop_Param p_dQop;
 
-
-
-
-
-
-
+   class Digest_Verify_Param : public ParamBase
+   {
+      public:
+         typedef QuotedDataParameter Type;
+         typedef QuotedDataParameter::Type DType;
+         virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::dVer;}
+         Digest_Verify_Param()
+         {
+            ParameterTypes::ParameterFactories[ParameterTypes::dVer] = Type::decode;
+            ParameterTypes::ParameterNames[ParameterTypes::dVer] = Symbols::dVer;
+         }
+   };
+   extern Digest_Verify_Param p_dVer;
 
 }
 
