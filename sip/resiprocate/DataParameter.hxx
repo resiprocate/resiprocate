@@ -4,7 +4,7 @@
 #include "resiprocate/Parameter.hxx"
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/os/Data.hxx"
-#include <iostream>
+#include <iosfwd>
 
 namespace resip
 {

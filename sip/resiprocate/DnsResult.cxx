@@ -35,7 +35,6 @@ extern "C"
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsResult.hxx"
-#include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/Uri.hxx"
 
 #if !defined(USE_ARES)

@@ -1,7 +1,7 @@
 #if !defined(RESIP_PARSERCATEGORY_HXX)
 #define RESIP_PARSERCATEGORY_HXX 
 
-#include <iostream>
+#include <iosfwd>
 #include <vector>
 #include "resiprocate/HeaderTypes.hxx"
 #include "resiprocate/LazyParser.hxx"

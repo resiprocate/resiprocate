@@ -1,7 +1,7 @@
 #if !defined(RESIP_DNSRESULT_HXX)
 #define RESIP_DNSRESULT_HXX
 
-#include <iostream>
+#include <iosfwd>
 #include <set>
 #include <list>
 #include <vector>
