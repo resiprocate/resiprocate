@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.30 2002/12/31 02:50:07 fluffy Exp $
+# $Id: Makefile,v 1.31 2002/12/31 06:04:03 fluffy Exp $
 
 USE_SSL = 1
 
@@ -16,6 +16,8 @@ endif
 
 ifeq ($(USE_SSL),1)
 PACKAGES += OPENSSL
+CFLAGS += -DUSE_SSL
+CXXFLAGS += -DUSE_SSL
 endif
 
 TESTPROGRAMS =	\

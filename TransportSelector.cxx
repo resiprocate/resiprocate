@@ -238,12 +238,13 @@ TransportSelector::findTransport(const Transport::Tuple& tuple)
    // !jf! not done yet
    for (std::vector<Transport*>::iterator i=mTransports.begin(); i != mTransports.end(); i++)
    {
+      //ErrLog( << "have transport type" <<  (*i)->transport() );
       if ( (*i)->transport() == tuple.transportType )
       {
          return *i;
       }
    }
-   ErrLog (<< "Couldn't find a transport for " << tuple);
+   ErrLog( << "Couldn't find a transport for " << tuple << " type=" <<  tuple.transportType );
    return 0;
 }
 
