@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.63 2002/11/04 19:07:27 derekm Exp $
+# $Id: Makefile,v 1.64 2002/11/04 19:34:52 bko Exp $
 
 BUILD = ../../build
 
@@ -25,6 +25,8 @@ SRC = \
 	ConnectionMap.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
+	DnsMessage.cxx \
+	DnsResolver.cxx \
 	Executive.cxx \
 	ExistsParameter.cxx \
 	FloatParameter.cxx \
