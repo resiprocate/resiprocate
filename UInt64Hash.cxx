@@ -4,8 +4,7 @@
 #if defined(HASH_MAP_NAMESPACE)
 size_t HASH_MAP_NAMESPACE::hash<UInt64>::operator()(const UInt64& v) const
 {
-   return resip::Data::rawHash((const char*)v,
-                               sizeof(v));
+   return resip::Data::rawHash((const char*)v, sizeof(v));
 }
 #endif
 
