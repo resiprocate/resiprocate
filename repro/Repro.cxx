@@ -4,13 +4,14 @@
 
 #include "resiprocate/TransactionTerminated.hxx"
 #include "resiprocate/ApplicationMessage.hxx"
-#include "Repro.hxx"
+#include "repro/RequestProcessorChain.hxx"
+#include "repro/Repro.hxx"
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-static Repro::RequestProcessorChain mRequestProcessorChain;
+RequestProcessorChain Repro::mRequestProcessorChain;
 
 Repro::Repro(SipStack& stack) : mStack(stack)
 {
@@ -40,7 +41,7 @@ Repro::thread()
             if (sip->isRequest())
             {
                assert (mRequestContexts.count(sip->getTransactionId()) == 0);
-               RequestContext* context = new RequestContext(*sip, mRequestProcessorChain);
+               RequestContext* context = new RequestContext(std::auto_ptr<SipMessage>(sip), mRequestProcessorChain);
                mRequestContexts[sip->getTransactionId()] = context;
                context->process(*msg);
             }
