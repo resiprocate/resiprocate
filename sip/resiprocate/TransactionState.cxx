@@ -1256,6 +1256,46 @@ TransactionState::processReliability(TransportType type)
    }
 }
 
+// !ah! only used one place, so leaving it here instead of making a helper.
+// !ah! broken out for clarity -- only used for forceTargets.
+// Expects that host portion is IP address notation.
+
+static const Tuple
+simpleTupleForUri(const Uri& uri)
+{
+   const Data& host = uri.host();
+   int port = uri.port();
+
+   resip::TransportType transport = UNKNOWN_TRANSPORT;
+ 
+  if (uri.exists(p_transport))
+   {
+      transport = Tuple::toTransport(uri.param(p_transport));
+   }
+
+   if (transport == UNKNOWN_TRANSPORT)
+   {
+      transport = UDP;
+   }
+   if (port == 0)
+   {
+      switch(transport)
+      {
+         case TLS:
+            port = 5061;
+            break;
+         case UDP:
+         case TCP:
+         default:
+            port = 5060;
+            break;
+         // !ah! SCTP?
+
+      }
+   }
+
+   return Tuple(host,port,transport);
+}
 
 
 void
@@ -1302,15 +1342,19 @@ TransactionState::sendToWire(Message* msg, bool resend)
          Via& via = sip->header(h_Vias).front();
          if (sip->hasForceTarget())
          {
-            DebugLog(<<"!ah! sendToWire(response): has forceTarget -- will be ignored ? : " << sip->getForceTarget() );
-         }
+            //DebugLog(<<"!ah! sendToWire(response): has forceTarget -- MUST be expressable as Tuple w/o resolution:" 
+            //<< sip->getForceTarget());
 
-         if (via.exists(p_received))
+            Tuple t (simpleTupleForUri(sip->getForceTarget()));
+
+            mController.mTransportSelector.transmit(sip,t);
+         }
+         else if (via.exists(p_received))
          {
             Tuple tuple(via.param(p_received), 
                         (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort(),
                         Tuple::toTransport(via.transport()));
-            DebugLog(<<"!ah! sendToWire(response): received/rport case:" << tuple << " for " << sip->brief() ); 
+            // DebugLog(<<"!ah! sendToWire(response): received/rport case:" << tuple << " for " << sip->brief() ); 
             mController.mTransportSelector.transmit(sip, tuple);
          }
          else
@@ -1318,11 +1362,11 @@ TransactionState::sendToWire(Message* msg, bool resend)
             Tuple tuple(via.sentHost(),
                         (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort(),
                         Tuple::toTransport(via.transport()));
-            DebugLog(<<"!ah! sendToWire(response): sentHost case:" << tuple << " for " << sip->brief() ); 
+            // DebugLog(<<"!ah! sendToWire(response): sentHost case:" << tuple << " for " << sip->brief() ); 
             mController.mTransportSelector.transmit(sip, tuple);
          }
       }
-      else
+      else // requests
       {
          if (mIsCancel)
          {
