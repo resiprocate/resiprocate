@@ -105,12 +105,12 @@ UdpTransport::process(FdSet& fdset)
 
    if ( len == SOCKET_ERROR )
    {
-	  int err = getErrno();
-
-	  if ( err != EWOULDBLOCK  )
-	  {
-		error( err );
-	  }
+      int err = getErrno();
+      
+      if ( err != EWOULDBLOCK  )
+      {
+         error( err );
+      }
    }
 
    if (len == 0 || len == SOCKET_ERROR)
