@@ -17,9 +17,10 @@ ClientOutOfDialogReq::getHandle()
 }
 
 ClientOutOfDialogReq::ClientOutOfDialogReq(DialogUsageManager& dum,
-                                       DialogSet& dialogSet,
-                                       const SipMessage& req)
-   : NonDialogUsage(dum, dialogSet), mRequest(req)
+                                           DialogSet& dialogSet,
+                                           const SipMessage& req)
+   : NonDialogUsage(dum, dialogSet), 
+     mRequest(req)
 {
 }
 
@@ -32,35 +33,42 @@ void
 ClientOutOfDialogReq::dispatch(const SipMessage& msg)
 {
 	assert(msg.isResponse());
-
-	OutOfDialogHandler *pHandler = mDum.getOutOfDialogHandler(msg.header(h_CSeq).method());
-	if(pHandler != NULL)
-	{
-		assert(msg.header(h_StatusLine).statusCode() >= 200);  // Provional responses are only for Invite Sessions
-
-		if(msg.header(h_StatusLine).statusCode() >= 200 && msg.header(h_StatusLine).statusCode() < 300)
-		{
-           // Pass Response to Handler
-           DebugLog ( << "ClientOutOfDialogReq::dispatch - handler found for " 
+    
+    if (msg.header(h_StatusLine).statusCode() < 200)
+    {
+       OutOfDialogHandler *handler = mDum.getOutOfDialogHandler(msg.header(h_CSeq).method());
+       if(handler != NULL)
+       {
+          
+          if(msg.header(h_StatusLine).statusCode() >= 200 && msg.header(h_StatusLine).statusCode() < 300)
+          {
+             // Pass Response to Handler
+             DebugLog ( << "ClientOutOfDialogReq::dispatch - handler found for " 
+                        << getMethodName(msg.header(h_CSeq).method()) 
+                        << " method success response.");   
+             handler->onSuccess(getHandle(), msg);  
+          }
+          else
+          {
+             // Pass Response to Handler
+             DebugLog ( << "ClientOutOfDialogReq::dispatch - handler found for " 
                       << getMethodName(msg.header(h_CSeq).method()) 
-                      << " method success response.");   
-           pHandler->onSuccess(getHandle(), msg);  
-		}
-		else
-		{
-			// Pass Response to Handler
-           DebugLog ( << "ClientOutOfDialogReq::dispatch - handler found for " 
-                      << getMethodName(msg.header(h_CSeq).method()) 
-                      << " method failure response.");   
-			pHandler->onFailure(getHandle(), msg);  
-		}
-	}
-	else
-	{
-       DebugLog ( << "ClientOutOfDialogReq::dispatch - handler not found for " 
-                  << getMethodName(msg.header(h_CSeq).method()) 
-                  << " method response.");   
-	}
+                        << " method failure response.");   
+             handler->onFailure(getHandle(), msg);  
+          }
+       }
+       else
+       {
+          DebugLog ( << "ClientOutOfDialogReq::dispatch - handler not found for " 
+                     << getMethodName(msg.header(h_CSeq).method()) 
+                     << " method response.");   
+       }
+    }
+    else
+    {
+       DebugLog ( << "ClientOutOfDialogReq::dispatch - encountered provisional response" << msg.brief() );
+    }
+    
 	delete this;
 }
 
@@ -69,11 +77,10 @@ ClientOutOfDialogReq::dispatch(const DumTimeout& timer)
 {
 }
 
-
 bool 
 ClientOutOfDialogReq::matches(const SipMessage& msg) const
 {
-   return (DialogId(mRequest) == DialogId(msg));
+   return (DialogSetId(mRequest) == DialogSetId(msg));
 }
 
 

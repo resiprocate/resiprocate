@@ -1,47 +1,87 @@
-#if !defined(RESIP_SERVEROUTOFDIALOGREQ_HXX)
-#define RESIP_SERVEROUTOFDIALOGREQ_HXX
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/MethodTypes.hxx"
+#include "resiprocate/dum/PagerMessageCreator.hxx"
+#include "resiprocate/dum/ClientPagerMessage.hxx"
+#include "resiprocate/dum/PagerMessageHandler.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
+using namespace resip;
 
-namespace resip
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+ClientPagerMessageHandle 
+ClientPagerMessage::getHandle()
 {
-
-class ServerOutOfDialogReq : public NonDialogUsage
-{
-   public:
-      typedef Handle<ServerOutOfDialogReq> ServerOutOfDialogReqHandle;
-      ServerOutOfDialogReqHandle getHandle();
-
-      SipMessage& accept(int statusCode = 200);
-      SipMessage& reject(int statusCode);
-
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-
-	  // Return Options response based on current Profile settings - application may need to add SDP Contents before
-	  // sending and/or change the status code.
-	  // Set fIncludeAllows to false if this is a proxy server (RFC3261 section 11.2)
-      virtual SipMessage& answerOptions(bool fIncludeAllows=true);
-	  virtual void send(SipMessage& msg);
-
-   protected:
-      virtual ~ServerOutOfDialogReq();
-
-   private:
-      friend class DialogSet;
-      ServerOutOfDialogReq(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& req);
-      
-      SipMessage mRequest;
-	  SipMessage mResponse;
-
-      // disabled
-      ServerOutOfDialogReq(const ServerOutOfDialogReq&);
-      ServerOutOfDialogReq& operator=(const ServerOutOfDialogReq&);
-};
- 
+   return ClientPagerMessageHandle(mDum, getBaseHandle().getId());
 }
 
-#endif
+ClientPagerMessage::ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet)
+   : NonDialogUsage(dum, dialogSet),
+     mRequest(dialogSet.getCreator()->getLastRequest()),
+     mInTransaction(false)
+{
+}
+
+ClientPagerMessage::~ClientPagerMessage()
+{
+   mDialogSet.mClientPagerMessage = 0;   
+}
+
+void 
+ClientPagerMessage::page(std::auto_ptr<Contents> contents)
+{
+   if (mInTransaction)
+   {
+      throw new UsageUseException("Cannot send a MESSAGE until the previous MESSAGE transaction has completed", 
+                                  __FILE__, __LINE__);
+   }
+   mRequest.header(h_CSeq).sequence()++;
+   mInTransaction = true;
+   mRequest.setContents(contents);
+   DebugLog(<< "ClientPagerMessage::page: " << mRequest);
+   mDum.send(mRequest);
+   mRequest.releaseContents();
+}
+
+
+void 
+ClientPagerMessage::dispatch(const SipMessage& msg)
+{
+	assert(msg.isResponse());
+    ClientPagerMessageHandler* handler = mDum.mClientPagerMessageHandler;
+    assert(handler);
+    int code = msg.header(h_StatusLine).statusCode();    
+
+    if (msg.header(h_StatusLine).statusCode() < 200)
+    {
+       DebugLog ( << "ClientPagerMessageReq::dispatch - encountered provisional response" << msg.brief() );
+    }
+    else if (msg.header(h_StatusLine).statusCode() < 300)
+    {
+       handler->onSuccess(getHandle(), msg);  
+       mInTransaction = false;
+    }
+    else
+    {
+       handler->onFailure(getHandle(), msg);
+       mInTransaction = false;
+    }
+}
+
+void 
+ClientPagerMessage::dispatch(const DumTimeout& timer)
+{
+}
+
+void
+ClientPagerMessage::end()
+{
+   delete this;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

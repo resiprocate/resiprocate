@@ -7,6 +7,8 @@
 #include "resiprocate/dum/ClientOutOfDialogReq.hxx"
 #include "resiprocate/dum/ClientPublication.hxx"
 #include "resiprocate/dum/ClientRegistration.hxx"
+#include "resiprocate/dum/ClientPagerMessage.hxx"
+#include "resiprocate/dum/ServerPagerMessage.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
@@ -37,7 +39,9 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mClientPublication(0),
    mServerPublication(0),
    mClientOutOfDialogRequests(),
-   mServerOutOfDialogRequest(0)
+   mServerOutOfDialogRequest(0),
+   mClientPagerMessage(0),
+   mServerPagerMessage(0)
 {
    assert(!creator->getLastRequest().isExternal());
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
@@ -58,7 +62,9 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mClientPublication(0),
    mServerPublication(0),
    mClientOutOfDialogRequests(),
-   mServerOutOfDialogRequest(0)
+   mServerOutOfDialogRequest(0),
+   mClientPagerMessage(0),
+   mServerPagerMessage(0)
 {
    assert(request.isRequest());
    assert(request.isExternal());
@@ -91,6 +97,8 @@ DialogSet::~DialogSet()
    delete mClientPublication;
    delete mServerPublication;
    delete mServerOutOfDialogRequest;
+   delete mClientPagerMessage;
+   delete mServerPagerMessage;   
 
    while (!mClientOutOfDialogRequests.empty())
    {
@@ -113,6 +121,8 @@ void DialogSet::possiblyDie()
          !(mClientPublication ||
            mServerPublication ||
            mServerOutOfDialogRequest ||
+           mClientPagerMessage ||
+           mServerPagerMessage ||
            mClientRegistration ||
            mServerRegistration))
       {
@@ -284,6 +294,10 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             mServerRegistration->dispatch(request);
             return;
+         case MESSAGE:
+            mServerPagerMessage = makeServerPagerMessage(request);
+            mServerPagerMessage->dispatch(request);
+            return;            
          default: 
             DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );            
             // only can be one ServerOutOfDialogReq at a time
@@ -338,6 +352,12 @@ DialogSet::dispatch(const SipMessage& msg)
             return;
          case NOTIFY: 
             break;            
+         case MESSAGE:
+            if (mClientPagerMessage)
+            {
+               mClientPagerMessage->dispatch(response);
+            }
+            return;            
          case INFO:   
          default:
          {
@@ -599,6 +619,11 @@ DialogSet::makeServerOutOfDialog(const SipMessage& request)
    return new ServerOutOfDialogReq(mDum, *this, request);
 }
 
+ServerPagerMessage*
+DialogSet::makeServerPagerMessage(const SipMessage& request)
+{
+   return new ServerPagerMessage(mDum, *this, request);
+}
 
 #if 0
 ClientOutOfDialogReqHandle 

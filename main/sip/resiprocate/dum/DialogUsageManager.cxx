@@ -1,37 +1,39 @@
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/SipFrag.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
+#include "resiprocate/StatisticsMessage.hxx"
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/AppDialogSetFactory.hxx"
 #include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/dum/ClientAuthManager.hxx"
+#include "resiprocate/dum/ClientInviteSession.hxx"
+#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
+#include "resiprocate/dum/ClientPagerMessage.hxx"
+#include "resiprocate/dum/ClientPublication.hxx"
+#include "resiprocate/dum/ClientRegistration.hxx"
+#include "resiprocate/dum/ClientSubscription.hxx"
+#include "resiprocate/dum/DefaultServerReferHandler.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/DumException.hxx"
+#include "resiprocate/dum/DumShutdownHandler.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
-#include "resiprocate/dum/ClientInviteSession.hxx"
-#include "resiprocate/dum/ClientPublication.hxx"
-#include "resiprocate/dum/ClientSubscription.hxx"
-#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
-#include "resiprocate/dum/ClientRegistration.hxx"
-#include "resiprocate/dum/DefaultServerReferHandler.hxx"
-#include "resiprocate/dum/DumShutdownHandler.hxx"
-#include "resiprocate/dum/ServerInviteSession.hxx"
-#include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resiprocate/dum/OutOfDialogReqCreator.hxx"
+#include "resiprocate/dum/PagerMessageCreator.hxx"
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/PublicationCreator.hxx"
 #include "resiprocate/dum/RedirectManager.hxx"
 #include "resiprocate/dum/RegistrationCreator.hxx"
 #include "resiprocate/dum/ServerAuthManager.hxx"
+#include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/SubscriptionCreator.hxx"
-#include "resiprocate/dum/OutOfDialogReqCreator.hxx"
+#include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/SipFrag.hxx"
-#include "resiprocate/StatisticsMessage.hxx"
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
 #define _CRTDBG_MAP_ALLOC
@@ -52,6 +54,8 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mClientRegistrationHandler(0),
    mServerRegistrationHandler(0),
    mRedirectHandler(0),
+   mClientPagerMessageHandler(0),
+   mServerPagerMessageHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
    mStackThread(stack),
@@ -293,15 +297,26 @@ DialogUsageManager::addOutOfDialogHandler(MethodTypes type, OutOfDialogHandler* 
    mOutOfDialogHandlers[type] = handler;
 }
 
-SipMessage& 
-DialogUsageManager::makeNewSession(BaseCreator* creator, AppDialogSet* appDs)
+void 
+DialogUsageManager::setClientPagerMessageHandler(ClientPagerMessageHandler* handler)
+{
+   mClientPagerMessageHandler = handler;
+}
+    
+void 
+DialogUsageManager::setServerPagerMessageHandler(ServerPagerMessageHandler* handler)
+{
+   mServerPagerMessageHandler = handler;
+}
+
+DialogSet* 
+DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
 {
    if (mDumShutdownHandler)
    {
       throw new DumException("Cannot create new sessions when DUM is shutting down.", __FILE__, __LINE__);
    }
       
-   DebugLog (<< "DialogUsageManager::makeNewSession" );   
    if (appDs == 0)
    {
       appDs = new AppDialogSet(*this);
@@ -316,9 +331,13 @@ DialogUsageManager::makeNewSession(BaseCreator* creator, AppDialogSet* appDs)
    DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap[ds->getId()] = ds;
    DebugLog ( << "After: " << Inserter(mDialogSetMap) );
-   
-   
-   DebugLog (<< "Creator: " << creator->getLastRequest());
+   return ds;   
+}
+
+SipMessage& 
+DialogUsageManager::makeNewSession(BaseCreator* creator, AppDialogSet* appDs)
+{
+   makeUacDialogSet(creator, appDs);   
    return creator->getLastRequest();
 }
 
@@ -422,6 +441,19 @@ DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, const NameAdd
 	return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, from), appDs);
 }
 
+ClientPagerMessageHandle 
+DialogUsageManager::makePagerMessage(const NameAddr& target, const NameAddr& from, AppDialogSet* appDs)
+{
+   if (!mClientPagerMessageHandler)
+   {
+      throw new DumException("Cannot send MESSAGE messages without a ClientPagerMessageHandler", __FILE__, __LINE__);
+   }
+   DialogSet* ds = makeUacDialogSet(new PagerMessageCreator(*this, target, from), appDs);
+   ClientPagerMessage* cpm = new ClientPagerMessage(*this, *ds);
+   ds->mClientPagerMessage = cpm;
+   return cpm->getHandle();
+}
+
 void
 DialogUsageManager::send(SipMessage& msg)
 {
@@ -434,6 +466,11 @@ DialogUsageManager::send(SipMessage& msg)
           msg.exists(h_Vias))
       {
          msg.header(h_Vias).front().param(p_branch).reset();
+      }
+
+      if (msg.exists(h_Vias) && !mProfile->rportEnabled())
+      {
+         msg.header(h_Vias).front().remove(p_rport);
       }
       
       if (mClientAuthManager.get() && msg.header(h_RequestLine).method() != ACK)
@@ -829,6 +866,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case REFER:    // out-of-dialog REFER
          case INFO :    // handle non-dialog (illegal) INFOs
          case OPTIONS : // handle non-dialog OPTIONS
+         case MESSAGE :
          {
             {
                DialogSetId id(request);
@@ -870,7 +908,6 @@ DialogUsageManager::processRequest(const SipMessage& request)
             break;
          }
          case REGISTER:
-         case MESSAGE :
          {
                SipMessage failure;
                makeResponse(failure, request, 405);
