@@ -105,9 +105,8 @@ class ParserContainer : public ParserContainerBase
       class iterator
       {
          public:
-            iterator(typename std::list<T*>::iterator i)
-               : mIt(i)
-            {}
+            iterator(typename std::list<T*>::iterator i) : mIt(i){}
+            iterator() {}
 
             iterator operator++() {iterator it(++mIt); return it;}
             iterator operator++(int) {iterator it(mIt++); return it;}
@@ -128,9 +127,8 @@ class ParserContainer : public ParserContainerBase
       class const_iterator
       {
          public:
-            const_iterator(typename std::list<T*>::const_iterator i)
-               : mIt(i)
-            {}
+            const_iterator(typename std::list<T*>::const_iterator i) : mIt(i) {}
+            const_iterator() {}
 
             const_iterator operator++() {const_iterator it(++mIt); return it;}
             const_iterator operator++(int) {const_iterator it(mIt++); return it;}
@@ -141,6 +139,7 @@ class ParserContainer : public ParserContainerBase
             bool operator!=(const iterator& rhs) { return mIt != rhs.mIt; }
             bool operator==(const iterator& rhs) { return mIt == rhs.mIt; }
             const_iterator& operator=(const const_iterator& rhs) { mIt = rhs.mIt; return *this;}
+            const_iterator& operator=(const iterator& rhs) { mIt = rhs.mIt; return *this;}
             const T& operator*() {return **mIt;}
             const T* operator->() {return *mIt;}
          private:
