@@ -761,7 +761,7 @@ DialogUsageManager::process()
                }
 
                // Continue validation on all requests, except ACK and CANCEL
-               if(sipMsg->header(h_RequestLine).method() != ACK || 
+               if(sipMsg->header(h_RequestLine).method() != ACK && 
                   sipMsg->header(h_RequestLine).method() != CANCEL)
                {
                   if( !validateRequiredOptions(*sipMsg) )
@@ -1065,16 +1065,9 @@ DialogUsageManager::validateAccept(const SipMessage& request)
       for (Mimes::const_iterator i = request.header(h_Accepts).begin();
            i != request.header(h_Accepts).end(); i++)
       {
-	     if (!getMasterProfile()->isMimeTypeSupported(method, *i))
+	     if (getMasterProfile()->isMimeTypeSupported(method, *i))
          {
-            InfoLog (<< "Received an unsupported mime type in accept header: " << request.brief());
-
-            SipMessage failure;
-            makeResponse(failure, request, 406);
-            failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(method);
-            sendResponse(failure);
-
-            return false;
+            return true;  // Accept header passes validation if we support as least one of the mime types
          }
       }
    }
@@ -1084,20 +1077,23 @@ DialogUsageManager::validateAccept(const SipMessage& request)
            method == PRACK ||
            method == UPDATE)
    {
-	  if (!getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), Mime("application", "sdp")))
+	  if (getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), Mime("application", "sdp")))
       {
-         InfoLog (<< "Received an unsupported default mime type application/sdp for accept header: " << request.brief());
-
-         SipMessage failure;
-         makeResponse(failure, request, 406);
-         failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(request.header(h_RequestLine).method());
-         sendResponse(failure);
-
-         return false;
+          return true;
       }
    }
-         
-   return true;
+   else
+   {
+       // Other method without an Accept Header
+       return true;
+   }
+
+   InfoLog (<< "Received unsupported mime types in accept header: " << request.brief());
+   SipMessage failure;
+   makeResponse(failure, request, 406);
+   failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(method);
+   sendResponse(failure);
+   return false;
 }
 
 bool
