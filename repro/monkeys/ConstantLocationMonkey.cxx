@@ -26,7 +26,7 @@ ConstantLocationMonkey::handleRequest(RequestContext& context)
   DebugLog(<< "Monkey handling request: " << *this 
            << "; reqcontext = " << context);
 
-  context.addTarget(NameAddr("<sip:monkey1@192.168.1.108:5080>"));
+  context.addTarget(NameAddr("<sip:inner@72.29.230.124>"));
 
   return RequestProcessor::Continue;
 }

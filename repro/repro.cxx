@@ -79,13 +79,19 @@ main(int argc, char** argv)
      RouteProcessor* rp = new RouteProcessor;
      locators->addProcessor(std::auto_ptr<RequestProcessor>(rp));
 	 
-	 AmIResponsible* isme = new AmIResponsible;
-	 locators->addProcessor(std::auto_ptr<RequestProcessor>(isme));
-	 
-	 // [TODO] !rwm! put Gruu monkey here
-	 
-	 // [TODO] !rwm! put Tel URI monkey here 
-  
+     AmIResponsible* isme = new AmIResponsible;
+     locators->addProcessor(std::auto_ptr<RequestProcessor>(isme));
+     
+     // [TODO] !rwm! put Gruu monkey here
+     
+     // [TODO] !rwm! put Tel URI monkey here 
+     
+#if 1
+     // TODO - remove next forwards all to 
+     ConstantLocationMonkey* cls = new ConstantLocationMonkey;
+     locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
+#endif
+
      // [TODO] !jf! put static route monkey here
 
      LocationServer* ls = new LocationServer(regData);
@@ -104,10 +110,13 @@ main(int argc, char** argv)
 
    Proxy proxy(stack, requestProcessors, userDb);
    proxy.addDomain(DnsUtil::getLocalHostName());
-   proxy.addDomain(DnsUtil::getLocalHostName(), 5060);
-   proxy.addDomain(DnsUtil::getLocalIpAddress());
-   proxy.addDomain(DnsUtil::getLocalIpAddress(), 5060);
-   for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
+
+//   proxy.addDomain(DnsUtil::getLocalHostName(), 5060);
+//   proxy.addDomain(DnsUtil::getLocalIpAddress());
+
+//   proxy.addDomain(DnsUtil::getLocalIpAddress(), 5060);
+  
+ for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
         i != args.mDomains.end(); ++i)
    {
       //InfoLog (<< "Adding domain " << i->host() << " " << i->port());
