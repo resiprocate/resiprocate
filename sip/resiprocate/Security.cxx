@@ -1,5 +1,8 @@
 #if defined(USE_SSL)
 
+#include <sys/types.h>
+#include <dirent.h>
+
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/pem.h>
@@ -101,6 +104,7 @@ Security::loadAllCerts( const Data& password, const Data&  dirPath )
    ok = loadRootCerts( getPath( dirPath, Data("root.pem")) ) ? ok : false;
    ok = loadMyPublicCert( getPath( dirPath, Data("id.pem")) ) ? ok : false;
    ok = loadMyPrivateKey( password, getPath(dirPath,Data("id_key.pem") )) ? ok : false;
+   ok = loadPublicCert( getPath( dirPath, Data("public_keys/")) ) ? ok : false;
 
    return ok;
 }
@@ -148,6 +152,70 @@ Security::loadRootCerts(  const Data& filePath )
    InfoLog( << "Loaded public CAs from " << filePath );
 
    return true;
+}
+
+
+bool 
+Security::loadPublicCert(  const Data& filePath )
+{ 
+   assert( !filePath.empty() );
+
+   DIR* dir = opendir( filePath.c_str() );
+  
+   if (!dir )
+   {
+      ErrLog( << "Error reading public key directory  " << filePath );
+      return false;
+   }
+   
+   struct dirent * d = NULL;
+   while (1)
+   {
+      d = readdir(dir);
+      if ( !d )
+      {
+         break;
+      }
+      
+      Data name( d->d_name );
+      Data path = filePath;
+      path += name;
+
+      if ( !strchr( name.c_str(), '@' ))
+      {
+         DebugLog( << "skipping file " << path );
+         continue;
+      }
+      
+         FILE* fp = fopen(path.c_str(),"r");
+         if ( !fp )
+         {
+            ErrLog( << "Could not read public key from " << path );
+            continue;
+         }
+   
+         X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
+         if (!cert)
+         {
+            ErrLog( << "Error reading contents of public key file " << path );
+            continue;
+         }
+   
+         publicKeys[name] = cert;
+         
+         DebugLog( << "Loaded public key from " << name );         
+    }
+   
+   closedir( dir );
+   
+   return true;
+}
+
+
+bool 
+Security::savePublicCert( const Data& certName,  const Data& filePath )
+{
+   assert(0);
 }
 
 
@@ -293,7 +361,7 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    bodyIn->encode( strm );
    strm.flush();
    
-   DebugLog( << "body data to encrypt is <" << bodyData << ">" );
+   InfoLog( << "body data to encrypt is <" << bodyData.escaped() << ">" );
       
    const char* p = bodyData.data();
    int s = bodyData.size();
@@ -309,8 +377,21 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    DebugLog( << "created out BIO" );
 
    InfoLog( << "target cert name is " << recipCertName );
-   X509* cert = publicCert; // !cj! this is the wrong one - need to load right one
-   
+   X509* cert = NULL;
+ 
+   // cert = publicKeys[recipCertName]; 
+   MapConstIterator i = publicKeys.find(recipCertName);
+   if (i != publicKeys.end())
+   {
+      cert = i->second;
+   }
+   else
+   {
+      ErrLog( << "Do not have a public key for " << recipCertName );      
+      return NULL;
+   }
+   assert(cert);
+      
    STACK_OF(X509) *certs;
    certs = sk_X509_new_null();
    assert(certs);
@@ -318,6 +399,7 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    sk_X509_push(certs, cert);
    
    EVP_CIPHER* cipher = EVP_des_ede3_cbc();
+   //EVP_CIPHER* cipher = EVP_enc_null();
    assert( cipher );
    
    PKCS7* pkcs7 = PKCS7_encrypt( certs, in, cipher, flags);
@@ -346,8 +428,9 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    
    Data outData(outBuf,size);
   
-   InfoLog( << "Encrypted body size is <" << outData.size() << ">" );
-   //InfoLog( << "Encrypted body is <" << outData.escaped() << ">" );
+   InfoLog( << Data("Encrypted body size is ") << outData.size() );
+   InfoLog( << Data("Encrypted body is <") << outData.escaped() << ">" );
+   InfoLog( << Data("Encrypted body is <") << outData.size() << ">" );
 
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
    assert( outBody );
@@ -623,25 +706,48 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
    
    Data outData(outBuf,size);
    
-   //InfoLog( << "uncodec body is <" << outData << ">" );
+   DebugLog( << "uncodec body is <" << outData << ">" );
 
    // parse out the header information and form new body.
    // !cj! this is a really crappy parser - shoudl do proper mime stuff
    ParseBuffer pb( outData.data(), outData.size() );
+
+   //const char* start = pb.position();
+   
    pb.skipToChar(Symbols::COLON[0]);
    pb.skipChar();
    
    Mime mime;
    mime.parse(pb);
 
+   //InfoLog( << "location after mime parese  <" << Data(start,pb.position()-start) << ">" );
+
    const char* anchor = pb.skipToChars(Symbols::CRLFCRLF);
+   if ( anchor )
+   {
+      anchor += 4;
+   }
+      
+   //InfoLog( << "location after CRLF parese  <" << Data(start,pb.position()-start) << ">" );
+
    if ( Contents::getFactoryMap().find(mime) == Contents::getFactoryMap().end())
    {
       ErrLog( << "Don't know how to deal with MIME type " << mime );
       return NULL;
    }
+   pb.skipToEnd();
+
+   // InfoLog( << "uncodec body is <" << outData << ">" );
+   //InfoLog( << "uncodec data is <" << Data(anchor,pb.position()-anchor) << ">" );
+   //InfoLog( << "uncodec data szie is <" << pb.position()-anchor << ">" );
+  
+  Contents* ret = Contents::createContents(mime, anchor, pb);
+  assert( ret );
    
-   return Contents::createContents(mime, anchor, pb);
+  //InfoLog( << "uncode return type is " << ret->getType() );
+ 
+ 
+   return ret;
 }
 
 #endif
