@@ -85,6 +85,13 @@ Transport::ok(const Data& tid)
 }
 
 
+bool 
+Transport::hasDataToSend() const
+{
+   return mTxFifo.messageAvailable();
+}
+
+
 void 
 Transport::send( const Tuple& dest, const Data& d, const Data& tid)
 {

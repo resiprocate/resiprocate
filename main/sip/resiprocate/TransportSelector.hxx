@@ -26,6 +26,7 @@ class TransportSelector
    public:
       TransportSelector(SipStack& stack);
       ~TransportSelector();
+      bool hasDataToSend() const;
       
       void process(FdSet& fdset);
       void buildFdSet(FdSet& fdset);
