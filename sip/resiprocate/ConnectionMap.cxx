@@ -215,7 +215,7 @@ ConnectionMap::Connection::process(int bytesRead, Fifo<Message>& fifo, Preparse&
    
       mMessage->addBuffer(mBuffer);
 #if 0
-      PreparseState::TransportAction status;
+      Preparse::Status status;
       preparse.process(*mMessage, mBuffer, mBytesRead + bytesRead, bytesUsed, status);
       if (status == PreparseState::preparseError)
       {
