@@ -41,7 +41,7 @@ AsyncCLessTransport::~AsyncCLessTransport()
 void 
 AsyncCLessTransport::transmit(const Tuple& dest, const Data& pdata, const Data& tid)
 {
-   char* bytes = new char[pdata.size()];
+   unsigned char* bytes = new unsigned char[pdata.size()];
    memcpy(bytes, pdata.data(), pdata.size());
 
    mExternalTransport->send(dest.toGenericIPAddress(), bytes, pdata.size());
@@ -75,20 +75,13 @@ AsyncCLessTransport::handleReceive(AsyncCLessReceiveResult res)
    //DebugLog ( << "UDP Rcv : " << len << " b" );
    //DebugLog ( << Data(buffer, len).escaped().c_str());
    
-   Tuple tuple(mTuple);
+   Tuple tuple(res.remoteAddress(), transport());
    SipMessage* message = new SipMessage(this);
-
-   // set the received from information into the received= parameter in the
-   // via
-
-   // It is presumed that UDP Datagrams are arriving atomically and that
-   // each one is a unique SIP message
-
 
    // Save all the info where this message came from
    tuple.transport = this;
    message->setSource(tuple);   
-   //DebugLog (<< "Received from: " << tuple);
+//   DebugLog (<< "Received from: " << tuple);
    
    // Tell the SipMessage about this datagram buffer.
    message->addBuffer(buffer);
