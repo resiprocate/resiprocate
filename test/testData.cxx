@@ -18,6 +18,8 @@ class TestData
             __gnu_cxx::hash<Data> h;
             __gnu_cxx::hash<char*> c;
             assert(h(stuff) == c(cstuff));
+            
+            cerr << stuff.md5() << endl;
          }
 
          {
