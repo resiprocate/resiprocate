@@ -28,6 +28,9 @@ class QuotedDataParameter : public DataParameter
       QuotedDataParameter(const QuotedDataParameter& other) 
          : DataParameter(other)
       {}
+
+      friend class ParserCategory;
+      friend class Auth;
 };
  
 }
