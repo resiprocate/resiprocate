@@ -20,7 +20,8 @@ class TuIM
    private:
       class Buddy;
       class StateAgent;
-            
+      class Page;
+      
 public:
       class Callback
       {
@@ -51,7 +52,8 @@ public:
       void setUAName( const Data& name );
       
       bool haveCerts( bool sign, const Data& encryptFor );
-      void sendPage(const Data& text, const Uri& dest, bool sign=false, const Data& encryptFor = Data::Empty );
+      void sendPage(const Data& text, const Uri& dest, 
+                    const bool sign=false, const Data& encryptFor = Data::Empty );
 
       void process();
 
@@ -81,6 +83,9 @@ public:
       void processResponse(SipMessage* msg);
       void processRegisterResponse(SipMessage* msg);
       void processSubscribeResponse(SipMessage* msg, Buddy& buddy );
+      void processNotifyResponse(SipMessage* msg, Dialog& d );
+      void processPublishResponse(SipMessage* msg, StateAgent& sa );
+      void processPageResponse(SipMessage* msg, Page& page );
 
       void sendNotify(Dialog* dialog);
       void sendPublish(StateAgent& dialog);
@@ -94,7 +99,6 @@ public:
       Uri mAor;
       Uri mContact;
 
-      // people I subscibe too 
       class Buddy
       {
          public:
@@ -123,8 +127,23 @@ public:
       // people who subscribe to me 
       std::list<Dialog*> mSubscribers;
       typedef std::list<Dialog*>::iterator SubscriberIterator;
+
+      class Page
+      {
+         public:
+            Data text;
+            Uri uri;
+            bool sign;
+            Data encryptFor;
+            Dialog* dialog;
+      };
+      // outstanding messages
+      std::list<Page> mPages;
+      typedef std::list<Page>::iterator PageIterator;
+
+      // Current pres info
       Pidf* mPidf;
-      
+
       // registration information
       Dialog mRegistrationDialog;
       UInt64 mNextTimeToRegister;
