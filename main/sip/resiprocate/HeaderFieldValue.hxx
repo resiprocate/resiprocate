@@ -17,7 +17,7 @@ class HeaderFieldValue
 {
    public:
       HeaderFieldValue()
-         : mField(0),
+         : mField(0), //this must be initialized to 0 or ParserCategory will parse
            mFieldLength(0),
            mMine(false)
       {}
