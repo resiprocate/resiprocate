@@ -38,7 +38,6 @@ libresiprocate_la_SOURCES = \
 	BranchParameter.cxx \
 	Connection.cxx \
 	ConnectionManager.cxx \
-	Contents.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
 	DialogSet.cxx \
