@@ -18,7 +18,7 @@ class BaseCreator
       virtual void dispatch(const SipMessage& msg);
       
    protected:
-      void makeInitialRequest(const NameAddr& target, MethodTypes method);
+      void makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodTypes method);
       
       // this will get updated when an initial request is challenged. where we
       // store the credentials and last cseq
