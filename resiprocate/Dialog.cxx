@@ -106,7 +106,10 @@ Dialog::createDialogAsUAC(const SipMessage& response)
       }
 
       // reverse order from response
-      mRouteSet = response.header(h_RecordRoutes).reverse();
+      if (response.exists(h_RecordRoutes))
+      {
+         mRouteSet = response.header(h_RecordRoutes).reverse();
+      }
       mRemoteTarget = response.header(h_Contacts).front();
       mRemoteSequence = 0;
       mRemoteEmpty = true;
