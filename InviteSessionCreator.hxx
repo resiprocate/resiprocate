@@ -37,8 +37,8 @@ class InviteSessionCreator : public BaseCreator
       } State;
       
       State mState;
-      SdpContents* mInitialOffer;
       ServerSubscriptionHandle mServerSub;
+      SdpContents* mInitialOffer;
 };
 
 }
