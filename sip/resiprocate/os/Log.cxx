@@ -35,11 +35,11 @@ volatile short Log::touchCount = 0;
 
 #ifndef WIN32
 pthread_key_t Log::_levelKey;
-map<pthread_t, std::pair<Log::ThreadSetting, bool> > Log::_threadToLevel;
-map<int, std::set<pthread_t> > Log::_serviceToThreads;
+HashMap<pthread_t, std::pair<Log::ThreadSetting, bool> > Log::_threadToLevel;
+HashMap<int, std::set<pthread_t> > Log::_serviceToThreads;
 #endif
 
-map<int, Log::Level> Log::_serviceToLevel;
+HashMap<int, Log::Level> Log::_serviceToLevel;
 
 const char
 Log::_descriptions[][32] = {"NONE", "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "STACK", "CERR", ""}; 
@@ -276,7 +276,7 @@ Log::getServiceLevel(int service)
 	assert(0);
 	return Bogus;
 #else
-   map<int, Level>::iterator res = Log::_serviceToLevel.find(service);
+   HashMap<int, Level>::iterator res = Log::_serviceToLevel.find(service);
    if(res == Log::_serviceToLevel.end())
    {
       //!dcm! -- should perhaps throw an exception here, instead of setting a
@@ -303,7 +303,7 @@ Log::getThreadSetting()
    {
       Lock lock(_mutex);
       pthread_t thread = pthread_self();
-      map<pthread_t, pair<ThreadSetting, bool> >::iterator res = Log::_threadToLevel.find(thread);
+      HashMap<pthread_t, pair<ThreadSetting, bool> >::iterator res = Log::_threadToLevel.find(thread);
       assert(res != Log::_threadToLevel.end());
       if (res->second.second)
       {
