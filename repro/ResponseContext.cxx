@@ -2,12 +2,18 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include <iostream>
+
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/os/Logger.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;
@@ -469,6 +475,21 @@ ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const r
    
    // !rwm! replace with correct thingy here
    return lhs.header(h_StatusLine).statusCode() < rhs.header(h_StatusLine).statusCode();
+}
+
+
+std::ostream&
+repro::operator<<(std::ostream& strm, const ResponseContext& rc)
+{
+   strm << "ResponseContext: "
+        << " identity=" << rc.mRequestContext.getDigestIdentity()
+        << " best=" << rc.mBestPriority << " " << rc.mBestResponse.brief()
+        << " forwarded=" << rc.mForwardedFinalResponse
+        << " pending=" << Inserter(rc.mPendingTargetSet);
+      //<< " targets=" << Inserter(rc.mTargetSet);
+   //<< " clients=" << Inserter(rc.mClientTransactions);
+
+   return strm;
 }
 
 

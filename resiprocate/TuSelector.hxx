@@ -21,7 +21,7 @@ class TuSelector
       bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
   
       TransactionUser* selectTransactionUser(const SipMessage& msg);
-      bool haveTransactionUsers() const { return !mTuList.empty(); }
+      bool haveTransactionUsers() const { return mTuSelectorMode; }
       void registerTransactionUser(TransactionUser&);
       void process(TransactionUserMessage* msg);
       
