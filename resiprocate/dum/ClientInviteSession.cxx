@@ -29,16 +29,6 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
 }
 
 void
-ClientInviteSession::setOffer(const SdpContents* sdp)
-{
-}
-
-void
-ClientInviteSession::setAnswer(const SdpContents* sdp)
-{
-}
-
-void
 ClientInviteSession::dispatch(const SipMessage& msg)
 {
    std::pair<OfferAnswerType, const SdpContents*> offans;
