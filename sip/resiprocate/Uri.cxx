@@ -138,7 +138,7 @@ Uri::getAor() const
          mAor = mUser + Symbols::AT_SIGN + mHost;
       }
 
-      if (mPort != Symbols::DefaultSipPort)
+      if (mPort != 0)
       {
          mAor += Data(Symbols::COLON) + Data(mPort);
       }
@@ -223,7 +223,11 @@ Uri::encode(std::ostream& str) const
       }
       str << Symbols::AT_SIGN;
    }
-   str << mHost << Symbols::COLON << mPort;
+   str << mHost;
+   if (mPort != 0)
+   {
+      str << Symbols::COLON << mPort;
+   }
    encodeParameters(str);
    return str;
 }
