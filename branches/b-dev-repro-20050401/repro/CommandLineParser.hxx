@@ -28,6 +28,7 @@ class CommandLineParser
       Data mCertPath;
       bool mNoChallenge;
       bool mNoRegistrar;
+      bool mCertServer;
       Data mRequestProcessorChainName;
 };
  

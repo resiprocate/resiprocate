@@ -2,6 +2,7 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/Message.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Auth.hxx"
@@ -59,7 +60,7 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
       InfoLog (<< "Received user auth info for " << user << " at realm " << realm);
 
       pair<Helper::AuthResult,Data> result =
-         Helper::advancedAuthenticateRequest(*sipMessage, realm, a1, 15);
+         Helper::advancedAuthenticateRequest(*sipMessage, realm, a1, 3000); // was 15
 
       switch (result.first)
       {
@@ -80,10 +81,12 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
             if (sipMessage->header(h_From).uri().user() == user &&
                 sipMessage->header(h_From).uri().host() == realm)
             {
-               sipMessage->header(h_Identity);
+               sipMessage->header(h_Identity).value() = Data::Empty;
                static Data http("http://");
                static Data post(":5080/cert?domain=");
-               sipMessage->header(h_IdentityInfo).uri() = http + realm + post + realm;
+               sipMessage->header(h_IdentityInfo).uri() = http + DnsUtil::getLocalIpAddress() + post + realm;
+               InfoLog (<< "Identity-Info=" << sipMessage->header(h_IdentityInfo).uri());
+               InfoLog (<< *sipMessage);
             }
             
             return Continue;
