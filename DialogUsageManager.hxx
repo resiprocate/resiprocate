@@ -135,6 +135,9 @@ class DialogUsageManager : public HandleManager
       
       SipMessage& makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, AppDialogSet* = 0);
       SipMessage& makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, int subscriptionTime, AppDialogSet* = 0);
+      SipMessage& makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, 
+                                   int subscriptionTime, int refreshInterval, AppDialogSet* = 0);
+
       //unsolicited refer
       SipMessage& makeRefer(const NameAddr& target, const NameAddr& from, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
 
@@ -256,6 +259,8 @@ class DialogUsageManager : public HandleManager
       void removeDialogSet(const DialogSetId& );      
 
       bool checkEventPackage(const SipMessage& request);
+
+      bool mSoftCheck(const SipMessage& request);      
 
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
