@@ -1,7 +1,7 @@
 #if !defined(RESIP_UNKNOWNPARAMETER_HXX)
 #define RESIP_UNKNOWNPARAMETER_HXX 
 
-#include <iostream>
+#include <iosfwd>
 #include "resiprocate/Parameter.hxx"
 
 namespace resip

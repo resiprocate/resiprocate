@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.143 2004/05/16 18:47:35 jason Exp $
+# $Id: Makefile,v 1.144 2004/05/18 01:40:48 jason Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -37,8 +37,25 @@ SRC = \
 	os/Timer.cxx \
 	os/Tuple.cxx \
 	os/vmd5.cxx \
+	\
+	\
+	Auth.cxx \
+	CSeqCategory.cxx \
+	CallId.cxx \
+	DateCategory.cxx \
+	ExpiresCategory.cxx \
+	GenericUri.cxx \
+	IntegerCategory.cxx \
+	Mime.cxx \
+	NameAddr.cxx \
+	RequestLine.cxx \
+	StatusLine.cxx \
+	StringCategory.cxx \
+	Token.cxx \
+	Via.cxx \
+	WarningCategory.cxx \
+	\
 	Rlmi.cxx \
-	X_msMsgsInvite.cxx \
 	GenericContents.cxx \
 	SipSession.cxx	\
 	XMLCursor.cxx \
@@ -72,7 +89,6 @@ SRC = \
 	OctetContents.cxx \
 	Parameter.cxx \
 	ParameterTypes.cxx \
-	ParserCategories.cxx \
 	ParserCategory.cxx \
 	Pkcs7Contents.cxx \
 	PlainContents.cxx \
@@ -115,12 +131,6 @@ SRC = \
 	ParameterHash.cxx \
 	ApiCheck.cxx \
 	MethodHash.cxx
-
-#	Preparse.cxx \
-#	Subscription.cxx \
-#	DialogSet.cxx \
-#	Dialog2.cxx \
-
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp

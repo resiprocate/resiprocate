@@ -2,7 +2,7 @@
 #define RESIP_SIPSTACK_HXX
 
 #include <set>
-#include <iostream>
+#include <iosfwd>
 
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/TransportType.hxx"

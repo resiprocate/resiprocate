@@ -1,12 +1,16 @@
 #if !defined(RESIP_CONTENTS_HXX)
 #define RESIP_CONTENTS_HXX 
 
-#include "resiprocate/LazyParser.hxx"
-#include "resiprocate/ParserCategories.hxx" // .dlb. Mime, Token, StringCategory
-#include "resiprocate/Headers.hxx"
-#include "resiprocate/os/Data.hxx"
 #include <map>
-#include <iostream>
+#include <iosfwd>
+
+#include "resiprocate/LazyParser.hxx"
+#include "resiprocate/Mime.hxx"
+#include "resiprocate/Token.hxx"
+#include "resiprocate/StringCategory.hxx"
+#include "resiprocate/Headers.hxx"
+#include "resiprocate/HeaderFieldValue.hxx"
+#include "resiprocate/os/Data.hxx"
 
 using namespace std;
 
@@ -118,8 +122,8 @@ class ContentsFactory : public ContentsFactoryBase
    public:
       ContentsFactory()
       {
-	 HeaderFieldValue hfv;
-	 Contents::getFactoryMap()[T::getStaticType()] = this;
+         HeaderFieldValue hfv;
+         Contents::getFactoryMap()[T::getStaticType()] = this;
       }
       
       // pass Mime instance for parameters
