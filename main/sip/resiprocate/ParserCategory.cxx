@@ -126,33 +126,39 @@ ParserCategory::param(const UnknownParameterType& param)
 }
 
 bool
-ParserCategory::exists(const ParamBase& paramType) const
+ParserCategory::exists(const ParamBase& paramType,
+                       unsigned int inst) const
 {
-    checkParsed();
-    bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
-    return ret;
+   assert(inst);
+   checkParsed();
+   bool ret = getParameterByEnum(paramType.getTypeNum(), inst) != NULL;
+   return ret;
 }
 
 // removing non-present parameter is allowed      
 void
-ParserCategory::remove(const ParamBase& paramType)
+ParserCategory::remove(const ParamBase& paramType,
+                       unsigned int inst)
 {
     checkParsed();
-    removeParameterByEnum(paramType.getTypeNum());
+    removeParameterByEnum(paramType.getTypeNum(), inst);
 }
 
 void 
-ParserCategory::remove(const UnknownParameterType& param)
+ParserCategory::remove(const UnknownParameterType& param,
+                       unsigned int inst)
 {
    checkParsed();
-   removeParameterByData(param.getName());
+   removeParameterByData(param.getName(), inst);
 }
 
 bool 
-ParserCategory::exists(const UnknownParameterType& param) const
+ParserCategory::exists(const UnknownParameterType& param,
+                       unsigned int inst) const
 {
+   assert(inst);
    checkParsed();
-   return getParameterByData(param.getName()) != NULL;
+   return getParameterByData(param.getName(), inst) != NULL;
 }
 
 void
@@ -265,97 +271,175 @@ resip::operator<<(ostream& stream, const ParserCategory& category)
 }
 
 Parameter* 
-ParserCategory::getParameterByEnum(ParameterTypes::Type type) const
+ParserCategory::getParameterByEnum(ParameterTypes::Type type,
+                                   unsigned int inst) const
 {
    for (ParameterList::iterator it = mParameters.begin();
-        it != mParameters.end(); it++)
+        it != mParameters.end() && inst; it++)
    {
       if ((*it)->getType() == type)
       {
-         return *it;
+         if (inst == 1)
+         {
+            return *it;
+         }
+         else
+         {
+            --inst;
+         }
       }
    }
    return 0;
 }
 
 void
-ParserCategory::setParameter(const Parameter* parameter)
+ParserCategory::setParameter(const Parameter* parameter,
+                             unsigned int inst)
 {
-   if (parameter != 0)
+   assert(parameter);
+
+   for (ParameterList::iterator it = mParameters.begin();
+        it != mParameters.end() && inst; it++)
    {
-      for (ParameterList::iterator it = mParameters.begin();
-           it != mParameters.end(); it++)
+      if ((*it)->getType() == parameter->getType())
       {
-         if ((*it)->getType() == parameter->getType())
+         if (inst == 1)
          {
-            delete *it;
-            mParameters.erase(it);
-            break;
+            Parameter* param = parameter->clone();
+            swap(*it, param);
+            delete param;
+            return;
+         }
+         else
+         {
+            --inst;
          }
       }
-      mParameters.push_back(parameter->clone());
    }
+   // !dlb! kinda hacky -- what is the correct semantics here?
+   // should be quietly add, quietly do nothing, throw?
+   mParameters.push_back(parameter->clone());
 }
 
 void 
-ParserCategory::removeParameterByEnum(ParameterTypes::Type type)
+ParserCategory::removeParameterByEnum(ParameterTypes::Type type,
+                                      unsigned int inst)
 {
-   for (ParameterList::iterator it = mParameters.begin();
-        it != mParameters.end();)
+   if (inst == 0)
    {
-      if ((*it)->getType() == type)
+      // remove all instances
+      for (ParameterList::iterator it = mParameters.begin();
+           it != mParameters.end();)
       {
-         delete *it;
-         it = mParameters.erase(it);
+         if ((*it)->getType() == type)
+         {
+            delete *it;
+            it = mParameters.erase(it);
+         }
+         else
+         {
+            ++it;
+         }
       }
-      else
+   }
+   else
+   {
+      // remove specified instance
+      for (ParameterList::iterator it = mParameters.begin();
+           it != mParameters.end() && inst; ++it)
       {
-         ++it;
+         if ((*it)->getType() == type)
+         {
+            if (inst == 1)
+            {
+               delete *it;
+               it = mParameters.erase(it);
+               return;
+            }
+            else
+            {
+               --inst;
+            }
+         }
       }
+      
    }
 }
 
 Parameter* 
-ParserCategory::getParameterByData(const Data& data) const
+ParserCategory::getParameterByData(const Data& data,
+                                   unsigned int inst) const
 {
    for (ParameterList::iterator it = mUnknownParameters.begin();
-        it != mUnknownParameters.end(); it++)
+        it != mUnknownParameters.end() && inst; it++)
    {
       if (isEqualNoCase((*it)->getName(), data))
       {
-         return *it;
+         if (inst == 1)
+         {
+            return *it;
+         }
+         else
+         {
+            inst--;
+         }
       }
    }
    return 0;
 }
 
 void 
-ParserCategory::removeParameterByData(const Data& data)
+ParserCategory::removeParameterByData(const Data& data,
+                                      unsigned int inst)
 {
-   for (ParameterList::iterator it = mUnknownParameters.begin();
-        it != mUnknownParameters.end();)
+   if (inst == 0)
    {
-      if ((*it)->getName() == data)
+      // remove all instances
+      for (ParameterList::iterator it = mUnknownParameters.begin();
+           it != mUnknownParameters.end();)
       {
-         delete *it;
-         it = mUnknownParameters.erase(it);
+         if ((*it)->getName() == data)
+         {
+            delete *it;
+            it = mUnknownParameters.erase(it);
+         }
+         else
+         {
+            ++it;
+         }
       }
-      else
+   }
+   else
+   {
+      // remove specified instance
+      for (ParameterList::iterator it = mUnknownParameters.begin();
+           it != mUnknownParameters.end() && inst; ++it)
       {
-         ++it;
+         if ((*it)->getName() == data)
+         {
+            if (inst == 1)
+            {
+               delete *it;
+               it = mUnknownParameters.erase(it);
+               return;
+            }
+            else
+            {
+               --inst;
+            }
+         }
       }
    }
 }
 
-#ifndef TEMPLATE_METHODS
-
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                              \
 _enum##_Param::DType&                                                                                   \
-ParserCategory::param(const _enum##_Param& paramType)                                                   \
+ParserCategory::param(const _enum##_Param& paramType,                                                   \
+                      unsigned int inst)                                                                \
 {                                                                                                       \
    checkParsed();                                                                                       \
    _enum##_Param::Type* p =                                                                             \
-      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                    \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum(), inst));              \
    if (!p)                                                                                              \
    {                                                                                                    \
       p = new _enum##_Param::Type(paramType.getTypeNum());                                              \
@@ -365,11 +449,12 @@ ParserCategory::param(const _enum##_Param& paramType)                           
 }                                                                                                       \
                                                                                                         \
 const _enum##_Param::DType&                                                                             \
-ParserCategory::param(const _enum##_Param& paramType) const                                             \
+ParserCategory::param(const _enum##_Param& paramType,                                                   \
+                      unsigned int inst) const                                                          \
 {                                                                                                       \
    checkParsed();                                                                                       \
    _enum##_Param::Type* p =                                                                             \
-      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                    \
+      static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum(), inst));              \
    assert(p);                                                                                           \
    return p->value();                                                                                   \
 }
@@ -427,8 +512,6 @@ defineParam(user, "user", DataParameter, "RFC ????");
 defineParam(username, "username", DataParameter, "RFC ????");
 
 defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
-
-#endif
 
 Data
 ParserCategory::commutativeParameterHash() const
