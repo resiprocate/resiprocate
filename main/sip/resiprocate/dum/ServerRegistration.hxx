@@ -2,5 +2,6 @@
  *   @todo This file is empty
  */
 
-class ServerRegistration: public BaseSession {
+class ServerRegistration: public BaseUsage 
+{
 };
