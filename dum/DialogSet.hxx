@@ -35,6 +35,8 @@ class DialogSet
 
       void cancel(const SipMessage& cancelMsg);
       void dispatch(const SipMessage& msg);
+
+      bool mergeRequest(const SipMessage& request);
       
       static const DialogSet Empty;
 
