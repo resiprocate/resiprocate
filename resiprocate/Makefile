@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.45 2002/09/26 19:46:55 jason Exp $
+# $Id: Makefile,v 1.46 2002/09/26 22:00:27 alan Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -35,6 +35,8 @@ SRC =	\
 	TransportSelector.cxx \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
+
+# Make sure there is a blank line above this comment.
 
 OSRC =   *.hxx Makefile
 
@@ -111,7 +113,6 @@ $(BIN)/libSipStack.a: $(OBJS)
 	ar $(ARFLAGS) $@ $^
 	-@ ln -s $(shell pwd)/$@ $(LIB)
 
-
 testParameterList:  $(OBJS) $(OBJ)/testParameter.o 
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
@@ -125,6 +126,9 @@ testSipStack1:  $(OBJS) $(OBJ)/testSipStack1.o
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testSipMessage:  $(OBJS) $(OBJ)/testSipMessage.o
+	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
+
+test%: $(OBJ)/test%.o $(OBJS)
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 convertStringToInt:  $(OBJS) $(OBJ)/convertStringToInt.o
