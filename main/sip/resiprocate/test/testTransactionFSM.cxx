@@ -62,6 +62,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/Transport.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 using namespace resip;
 using namespace std;

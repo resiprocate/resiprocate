@@ -11,8 +11,15 @@ int
 main(int argc, char** argv)
 {
    //Log::initialize(Log::Cout, Log::Debug, argv[0]);
-   
    {
+      //resip::Pidf::Tuple tuple;
+      //tuple.status = true;
+      //tuple.id = account;
+      //tuple.contact = Data::from(from);
+      //tuple.contactPriority = 0.0;
+      //tuple.note = "test";
+      //pidf.getTuples().push_back(tuple);
+
       Data txt ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
                 "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"" CRLF
                 "          entity=\"sip:jason_AT_example.com@london.gloo.net\">" CRLF

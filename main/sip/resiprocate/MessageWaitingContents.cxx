@@ -3,6 +3,8 @@
 #endif
 
 #include "resiprocate/MessageWaitingContents.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
+
 
 using namespace resip;
 using namespace std;

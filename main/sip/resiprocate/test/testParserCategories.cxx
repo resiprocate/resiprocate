@@ -52,7 +52,19 @@ int
 main(int arc, char** argv)
 {
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
+   
+   {
+      TR _tr("Test copy transport param");
 
+      NameAddr test("<sip:jason_AT_example.com@10.0.0.1:5060;transport=TCP>");
+      cerr << test << endl;
+      NameAddr copy = test;
+      cerr << copy << endl;
+      assert(test.uri().exists(p_transport));
+      assert(copy.uri().exists(p_transport));
+      
+      assert(test.uri().param(p_transport) == copy.uri().param(p_transport));
+   }
    {
       TR _tr("Test iterator erase in ParserContainer");
 
