@@ -12,16 +12,6 @@ class SdpContents;
 class InviteSession : public BaseUsage
 {
    public:
-      class Handle : public BaseUsage::Handle
-      {
-         public:
-            // throws if no session 
-            InviteSession* operator->();
-
-         protected:
-            Handle(DialogUsageManager& dum);
-      };
-
       /// Called to set the offer that will be used in the next messages that
       /// sends and offer. Does not send an offer 
       virtual void setOffer(const SdpContents* offer);
@@ -51,7 +41,8 @@ class InviteSession : public BaseUsage
       virtual void dispatch(const SipMessage& msg) = 0;
       virtual void dispatch(const DumTimeout& timer) = 0;
 
-      virtual InviteSession::Handle getSessionHandle() = 0;
+      typedef Handle<InviteSession> InviteSessionHandle;
+      InviteSessionHandle getSessionHandle();
 
       typedef enum
       {

@@ -9,15 +9,8 @@ namespace resip
 class ServerRegistration: public BaseUsage 
 {
    public:
-      class Handle : public BaseUsage::Handle
-      {
-         public:
-            // throws if no session 
-            ServerRegistration* operator->();
-         private:
-            friend class ServerRegistration;
-            Handle(DialogUsageManager& dum);
-      };
+      typedef Handle<ServerRegistration> ServerRegistrationHandle;
+      ServerRegistrationHandle getHandle();
 
       /// helper function to creat the 
       SipMessage* makeRegistrationResponse(SipMessage& msg);
@@ -27,8 +20,6 @@ class ServerRegistration: public BaseUsage
 
       /// reject a SIP registration 
       void reject(int statusCode);
-
-      ServerRegistration::Handle& getHandle() { return reinterpret_cast<ServerRegistration::Handle&>(mHandle); }
 
       virtual void end();
       virtual void dispatch(const SipMessage& msg);

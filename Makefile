@@ -10,6 +10,8 @@ TARGET_LIBRARY = libdum
 TESTPROGRAMS = 
 
 SRC =   \
+	AppDialog.cxx \
+	AppDialogSet.cxx \
 	BaseCreator.cxx \
 	BaseUsage.cxx \
 	ClientAuthManager.cxx \
@@ -24,6 +26,9 @@ SRC =   \
 	DialogSetId.cxx \
 	DialogUsageManager.cxx \
 	DumTimeout.cxx \
+	HandleException.cxx \
+	HandleManager.cxx \
+	Handled.cxx \
 	InviteSession.cxx \
 	InviteSessionCreator.cxx \
 	InviteSessionHandler.cxx \

@@ -7,6 +7,7 @@ namespace resip
 {
 
 class DialogUsageManager;
+class NameAddr;
 
 class RegistrationCreator : public BaseCreator 
 {

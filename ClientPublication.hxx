@@ -6,22 +6,13 @@
 namespace resip
 {
 
-/** @file ClientPublication.hxx
- *   @todo This file is empty
- */
-
 class ClientPublication : public BaseUsage 
 {
    public:
-      class Handle : public BaseUsage::Handle
-      {
-         public:
-            // throws if no session 
-            ClientPublication* operator->();
-         private:
-            friend class ClientPublication;
-            Handle(DialogUsageManager& dum);
-      };
+      ClientPublication(DialogUsageManager& dum, Dialog& dialog, SipMessage& pub);
+
+      typedef Handle<ClientPublication> ClientPublicationHandle;
+      ClientPublicationHandle getHandle();
       
       void refresh(unsigned int expiration=0);
       void update(const Contents* body);
@@ -30,14 +21,11 @@ class ClientPublication : public BaseUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      ClientPublication::Handle& getHandle() { return reinterpret_cast<ClientPublication::Handle&>(mHandle); }
    protected:
       virtual ~ClientPublication();
+
    private:
       friend class Dialog;
-      ClientPublication(DialogUsageManager& dum, 
-                        Dialog& dialog,
-                        SipMessage& pub);
       
       SipMessage& mPublish;
       int mTimerSeq; // expected timer seq (all < are stale)
