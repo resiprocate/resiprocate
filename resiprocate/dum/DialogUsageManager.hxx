@@ -229,6 +229,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       //TransactionUser virtuals
       virtual bool isForMe(const SipMessage& msg) const;
       bool internalProcess(std::auto_ptr<Message> msg);
+      friend class DumThread;
+      
    private:
       friend class Dialog;
       friend class DialogSet;
