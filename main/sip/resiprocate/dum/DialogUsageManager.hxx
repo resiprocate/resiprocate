@@ -158,7 +158,7 @@ class DialogUsageManager : public HandleManager
       void send(SipMessage& request); 
       
       void buildFdSet(FdSet& fdset);
-      void process(bool useSeparateThread=true);
+      bool process(bool useSeparateThread=true);
       void process(FdSet& fdset);
 
       /// returns time in milliseconds when process next needs to be called 
