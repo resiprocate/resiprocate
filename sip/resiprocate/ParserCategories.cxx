@@ -5,123 +5,55 @@
 using namespace Vocal2;
 using namespace std;
 
-ParserCategory* 
-StringComponent::clone(HeaderFieldValue*) const
-{
-   assert(0);
-   return 0;
-}
-
-//====================
-// String:
-//====================
-void 
-StringComponent::parse()
-{
-   mValue = Data(getHeaderField().mField, getHeaderField().mFieldLength);
-}
-
-std::ostream& 
-StringComponent::encode(std::ostream& str) const
-{
-   str << mValue;
-   return str;
-}
-
-Data& 
-StringComponent::value() 
-{ 
-   checkParsed();
-   return mValue; 
-}
-
-MethodTypes
-RequestLineComponent::getMethod() const
-{
-   //assert(0); // !jf!
-   return INVITE;
-}
+Data DefaultSipVersion("SIP/2.0");
 
 //====================
 // CSeqComponent:
 //====================
-CSeqComponent::CSeqComponent(HeaderFieldValue& hfv) 
-  :ParserCategory(&hfv)
-{
-  // need to call base constructor when it exists?
-}
-
-
 ParserCategory* CSeqComponent::clone(HeaderFieldValue*) const
 {
   
   cerr << "No body for CSeqComponent::clone()" << endl;
   assert(0);
-  
 }
-
 
 void
 CSeqComponent::parse()
 {
 
-  Data number;
-  Data method = Data(mHeaderField->mField, mHeaderField->mFieldLength);
-  int ret = method.match(" ", &number, true);
-  if (ret == FOUND)
-    {
-      mCSeq = number.convertInt();
+   Data number;
+   Data method = Data(mHeaderField->mField, mHeaderField->mFieldLength);
+   int ret = method.match(" ", &number, true);
+   if (ret == FOUND)
+   {
+      mSequence = number.convertInt();
       mMethod = getMethodType(method);
-    }
-  else if (ret == NOT_FOUND)
-    {
+   }
+   else if (ret == NOT_FOUND)
+   {
       ParseException except;
       throw except;
-    }
-  else if (ret == FIRST)
-    {
-       ParseException except;
+   }
+   else if (ret == FIRST)
+   {
+      ParseException except;
       throw except;
-    }
+   }
 
 }
 
 std::ostream& 
 CSeqComponent::encode(std::ostream& str) const
 {
-  // NEED TO FIX THIS!!!
-  // method needs to print out a string, not the enum type
-  str << int(mMethod) << " " << mCSeq;
-  return str;
+   // NEED TO FIX THIS!!!
+   // method needs to print out a string, not the enum type
+   str << int(mMethod) << " " << mSequence;
+   return str;
 }
-
-
-enum MethodTypes
-CSeqComponent::getMethod()
-{
-  checkParsed();
-  return mMethod;
-}
-
-
-int&
-CSeqComponent::cSeq()
-{
-  checkParsed();
-  return mCSeq;
-}
-
 
 //====================
 // Integer:
 //====================
-IntegerComponent::IntegerComponent(HeaderFieldValue& hfv) 
-  :ParserCategory(&hfv), mHasComment(false)
-{
-  // need to call base constructor when it exists?
-}
-
-
 ParserCategory* IntegerComponent::clone(HeaderFieldValue*) const
 {
   
@@ -129,7 +61,6 @@ ParserCategory* IntegerComponent::clone(HeaderFieldValue*) const
   assert(0);
   
 }
-
 
 void
 IntegerComponent::parse()
@@ -152,9 +83,6 @@ IntegerComponent::parse()
   // we have a comment, handle it
   else if (retn == FOUND)
     {
-
-      mHasComment = true;
-
       // right now only look to verify that they close
       // we really need to also look for escaped \) parens (or anything
       // else for that matter) and also replace cr lf with two spaces
@@ -211,13 +139,12 @@ IntegerComponent::parse()
     }
 } 
 
-
 std::ostream& 
 IntegerComponent::encode(std::ostream& str) const
 {
   
   str << mValue;
-  if (mHasComment)
+  if (!mComment.empty())
     {
       str << "(" << mComment << ")";
     }
@@ -226,51 +153,87 @@ IntegerComponent::encode(std::ostream& str) const
   return str;
 }
 
-
-Data&
-IntegerComponent::comment()
+//====================
+// String:
+//====================
+ParserCategory* 
+StringComponent::clone(HeaderFieldValue*) const
 {
-  checkParsed();
-  return mComment;
+   assert(0);
+   return 0;
 }
 
-
-int&
-IntegerComponent::value()
+void 
+StringComponent::parse()
 {
-  checkParsed();
-  return mValue;
+   mValue = Data(getHeaderField().mField, getHeaderField().mFieldLength);
 }
 
+std::ostream& 
+StringComponent::encode(std::ostream& str) const
+{
+   str << mValue;
+   return str;
+}
+
+//====================
+// NameAddr:
+//====================
+ParserCategory *
+URI::clone(HeaderFieldValue*) const
+{
+  assert(0);
+}
+
+void
+NameAddrBase::parse()
+{
+   assert(0);
+}
+
+ostream&
+NameAddrBase::encode(ostream& str) const
+{
+   assert(0);
+}
+
+void
+NameAddr::parse()
+{
+   assert(0);
+}
+
+ostream&
+NameAddr::encode(ostream& str) const
+{
+   assert(0);
+}
 
 //====================
 // RequestLine:
 //====================
-
-RequestLineComponent::~RequestLineComponent()
-{
-}
-
 ParserCategory *
 RequestLineComponent::clone(HeaderFieldValue*) const
 {
   assert(0);
 }
 
+void 
+RequestLineComponent::parse()
+{
+   assert(0);
+}
+
+ostream&
+RequestLineComponent::encode(ostream& str) const
+{
+   assert(0);
+}
+
+
 //====================
 // StatusLine:
 //====================
-
-int
-StatusLineComponent::getResponseCode() const
-{
-   assert(0);
-   return 200;
-}
-
-StatusLineComponent::~StatusLineComponent()
-{
-}
 
 ParserCategory *
 StatusLineComponent::clone(HeaderFieldValue*) const
@@ -278,3 +241,14 @@ StatusLineComponent::clone(HeaderFieldValue*) const
   assert(0);
 }
 
+void
+StatusLineComponent::parse()
+{
+   assert(0);
+}
+
+ostream&
+StatusLineComponent::encode(ostream& str) const
+{
+   assert(0);
+}

@@ -27,7 +27,7 @@ HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& other)
 
    if (mParserContainer != 0)
    {
-      mParserContainer = mParserContainer->clone(*this);
+      mParserContainer = mParserContainer->clone(this);
    }
 }
 
