@@ -48,12 +48,6 @@ DialogSet::addDialog(Dialog *dialog)
    mDialogs.push_back(dialog);
 }
 
-void 
-DialogSet::removeDialog(const Dialog *dialog)
-{
-   //mDialogs.remove(dialog);
-}
-
 //!dcm! -- kill
 #if 0
 DialogIdSet
