@@ -1,3 +1,9 @@
+#if !defined(RESIP_INVSESSIONCREATOR_HXX)
+#define RESIP_INVSESSIONCREATOR_HXX
+
+namespace resip
+{
+
 class InvSessionCreator : public BaseCreator
 {
    public:
@@ -15,4 +21,6 @@ class InvSessionCreator : public BaseCreator
       
 };
 
-   
+}
+
+#endif
