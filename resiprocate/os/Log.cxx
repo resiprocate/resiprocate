@@ -222,9 +222,12 @@ Log::timestamp()
    const unsigned int datebufSize = sizeof(datebuf)/sizeof(*datebuf);
    
 #ifdef WIN32 
- int result = 1; 
+  int result = 1; 
+  SYSTEMTIME systemTime;
   struct { int tv_sec; int tv_usec; } tv = {0,0};
   time((time_t *)(&tv.tv_sec));
+  GetLocalTime(&systemTime);
+  tv.tv_usec = systemTime.wMilliseconds * 1000; 
 #else 
   struct timeval tv; 
   int result = gettimeofday (&tv, NULL);
@@ -251,13 +254,9 @@ Log::timestamp()
     }
    
    char msbuf[5];
-#if defined( WIN32 )
-   msbuf[0] = '\0';
-#else
    /* Dividing (without remainder) by 1000 rounds the microseconds
       measure to the nearest millisecond. */
    sprintf(msbuf, ".%3.3ld", long(tv.tv_usec / 1000));
-#endif
 
    int datebufCharsRemaining = datebufSize - strlen (datebuf);
    strncat (datebuf, msbuf, datebufCharsRemaining - 1);
