@@ -3,14 +3,16 @@
 
 #include "compat.hxx"
 
-
-namespace resip
-{
+#include <cassert>
 
 #ifdef WIN32
 #include <winsock2.h>
 #include <stdlib.h>
 #include <io.h>
+#endif
+
+
+#ifdef WIN32
 
 typedef int socklen_t;
 //#define errno WSAGetLastError()
@@ -58,23 +60,28 @@ typedef SOCKET Socket;
 typedef int socklen_t;
 #endif
 
-typedef int Socket;
-static const Socket INVALID_SOCKET = -1;
-static const int SOCKET_ERROR = -1;
-
 #define WSANOTINITIALISED  EPROTONOSUPPORT
-
-int closesocket( Socket fd );
 
 #endif
 
+
+namespace resip
+{
 
 /// set up network - does nothing in unix but needed for windows
 void
 initNetwork();
 
+typedef int Socket;
+static const Socket INVALID_SOCKET = -1;
+static const int SOCKET_ERROR = -1;
+
+
 bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
+
+int closesocket( Socket fd );
+
 
 
 class FdSet
@@ -111,12 +118,14 @@ class FdSet
 
       void setRead(Socket fd)
       {
+         assert( fd < FD_SETSIZE ); // redefineing FD_SETSIZE will not work 
          FD_SET(fd, &read);
          size = ( int(fd+1) > size) ? int(fd+1) : size;
       }
 
       void setWrite(Socket fd)
       {
+         assert( fd < FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
          FD_SET(fd, &write);
          size = ( int(fd+1) > size) ? int(fd+1) : size;
       }
