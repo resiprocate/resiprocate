@@ -17,7 +17,7 @@
 #include <sys/poll.h>
 #endif
 #ifdef RESIP_POLL_IMPL_SELECT
-#define WIN32
+#ifdef WIN32
 # include <winsock2.h>
 #else
 # include <sys/time.h>
