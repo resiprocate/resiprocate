@@ -2,7 +2,7 @@
 #define STRINGDATA_H_
 
 static const char* const DataHeaderVersion =
-"$Id: Data.hxx,v 1.4 2002/09/29 23:41:01 fluffy Exp $";
+"$Id: Data.hxx,v 1.5 2002/10/01 21:19:32 jason Exp $";
 
 //Authors: Sunitha Kumar, Cullen Jennings
 
@@ -26,7 +26,7 @@ class Data : public std::string
       Data( const char* buffer, int length );
       Data( const Data& data );
       Data( const std::string& str);
-      Data( const int value);
+      explicit Data( const int value);
       Data( const unsigned int count, char c);
 
       //Data& operator=(const Data& data);

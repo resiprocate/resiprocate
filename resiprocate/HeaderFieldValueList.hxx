@@ -1,5 +1,5 @@
-#ifndef HFVLIST_HXX
-#define HFVLIST_HXX
+#ifndef HeaderFieldValueList_hxx
+#define HeaderFieldValueList_hxx
 
 #include <iostream>
 #include <sipstack/HeaderFieldValue.hxx>

@@ -320,7 +320,7 @@ Preparse::process()
       {
          mHeader = mAnchorBeg;
          mHeaderLength = mAnchorEnd-mAnchorBeg+1;
-         mHeaderType = Headers::getHeaderType(mHeader, mHeaderLength);
+         mHeaderType = Headers::getType(mHeader, mHeaderLength);
          if ( Headers::isCommaTokenizing( mHeaderType ))
          {
             mDisposition = dCommaSep;

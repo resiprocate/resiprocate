@@ -72,7 +72,7 @@ class Headers
       static Data HeaderNames[MAX_HEADERS];
 
       // get enum from header name
-      static Type getHeaderType(const char* name, int len);
+      static Type getType(const char* name, int len);
       static bool isCommaTokenizing(Type type);
 };
 
@@ -81,7 +81,7 @@ Headers::Type& Vocal2::operator++(Headers::Type&t);
 #endif
 
 // map enum to parser category via specialized templates
-template <int T>
+template <typename Headers::Type T>
 class Header
 {
       // don't let this template instantiate implicitly
@@ -89,7 +89,7 @@ class Header
       Header() {}
 };
 
-template <int T>
+template <typename Headers::Type T>
 class MultiHeader
 {
       // don't let this template instantiate implicitly
