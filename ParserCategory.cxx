@@ -480,21 +480,21 @@ ParserCategory::commutativeParameterHash() const
    Data buffer;
    Data working;
 
-   for (ParameterList::const_iterator i=mParameters.begin(); i!=mParameters.end(); i++)
+   for (ParameterList::const_iterator i = mParameters.begin(); i != mParameters.end(); ++i)
    {
       if ((*i)->getType() != ParameterTypes::lr)
       {
          buffer.clear();
-         DataStream strm(buffer);
-
-         (*i)->encode(strm);
-         strm.flush();
+         {
+            DataStream strm(buffer);
+            (*i)->encode(strm);
+         }
          working ^= buffer;
       }
    }
 
    buffer.clear();
-   for (ParameterList::iterator i=mUnknownParameters.begin(); i!=mUnknownParameters.end(); i++)
+   for (ParameterList::iterator i = mUnknownParameters.begin(); i != mUnknownParameters.end(); ++i)
    {
       UnknownParameter* p = static_cast<UnknownParameter*>(*i);
       buffer = p->getName();
