@@ -103,7 +103,7 @@ ThreadIf::join()
       }
    }
 
-   // !kh!
+   //  !kh!
    CloseHandle(mThread);
 #else
    void* stat;
