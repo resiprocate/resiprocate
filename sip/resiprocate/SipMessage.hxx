@@ -19,6 +19,7 @@
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/ParserContainer.hxx"
 #include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/SecurityAttributes.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/BaseException.hxx"
