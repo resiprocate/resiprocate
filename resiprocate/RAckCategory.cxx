@@ -27,7 +27,7 @@ RAckCategory::RAckCategory(HeaderFieldValue* hfv, Headers::Type type)
 RAckCategory::RAckCategory() 
    : ParserCategory(), 
      mMethod(UNKNOWN), 
-     mUnknownMethodName(MethodNames[UNKNOWN]),
+     mUnknownMethodName(getMethodName(UNKNOWN)),
      mRSequence(-1),
      mCSequence(-1) 
 {}
@@ -147,7 +147,7 @@ RAckCategory::encodeParsed(std::ostream& str) const
 {
    str << mRSequence << Symbols::SPACE 
        << mCSequence << Symbols::SPACE 
-       << (mMethod != UNKNOWN ? MethodNames[mMethod] : mUnknownMethodName);
+       << (mMethod != UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName);
    return str;
 }
 
