@@ -149,7 +149,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib "
+				AdditionalDependencies="Ws2_32.lib libeay32.lib ssleay32.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;C:\openssl-0.9.7\out32dll&quot;"
 				GenerateDebugInformation="TRUE"
@@ -209,7 +209,7 @@ copy C:\openssl-0.9.7\out32dll.dbg\ssleay32.dll  $(TargetDir)
 				Outputs="libeay.dll ssleay.dll;"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib "
+				AdditionalDependencies="Ws2_32.lib libeay32.lib ssleay32.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;C:\openssl-0.9.7\out32dll.dbg&quot;"
 				GenerateDebugInformation="TRUE"
