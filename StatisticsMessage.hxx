@@ -56,6 +56,11 @@ class StatisticsMessage : public ApplicationMessage
             unsigned int responsesRetransmittedByMethodByCode[MAX_METHODS][MaxCode];
             unsigned int responsesReceivedByMethodByCode[MAX_METHODS][MaxCode];
 
+            unsigned int sum2xxIn(MethodTypes method) const;
+            unsigned int sumErrIn(MethodTypes method) const;
+            unsigned int sum2xxOut(MethodTypes method) const;
+            unsigned int sumErrOut(MethodTypes method) const;
+
             Payload& operator=(const Payload& payload);
       };
 
