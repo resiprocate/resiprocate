@@ -29,7 +29,8 @@ BaseUsage::BaseUsage(DialogUsageManager& dum) :
 }
 
 BaseUsage::~BaseUsage()
-{}
+{
+}
 
 void
 BaseUsage::send(SipMessage& msg)

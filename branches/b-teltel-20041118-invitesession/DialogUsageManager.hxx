@@ -276,6 +276,8 @@ class DialogUsageManager : public HandleManager
 
       // For delayed delete of a Usage
       void destroy(const BaseUsage* usage);
+      void destroy(DialogSet*);
+      void destroy(Dialog*);
       
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
