@@ -15,6 +15,37 @@ int
 main(int arc, char** argv)
 {
    {
+      Via via;
+      via.encode(cerr);
+      cerr << endl;
+
+      assert (via.param(p_branch).hasMagicCookie());
+      assert (via.param(p_branch).transactionId() == "1");
+      assert (via.param(p_branch).clientData().empty());
+
+      stringstream s;
+      via.encode(s);
+      assert(s.str() == "SIP/2.0/UDP ;branch=z9hG4bK-kcD23X-1-1");
+
+      via.param(p_branch).clientData() = "jason";
+      assert (via.param(p_branch).clientData() == "jason");
+      
+
+      via.param(p_branch).incrementCounter();
+      via.param(p_branch).incrementCounter();
+
+
+      stringstream s2;
+      via.encode(s2);
+      via.encode(cerr);
+      cerr << endl;
+
+      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-kcD23X-1-3-jason");
+   }
+
+   return 0;
+   
+   {
       // test header hash
       for (int i = Headers::CSeq; i < Headers::UNKNOWN; i++)
       {
