@@ -40,7 +40,6 @@ class TestDnsResolver;
 class TestFSM;
 class Security;
 class Uri;
-
 	
 class SipStack
 {
@@ -58,7 +57,7 @@ class SipStack
       // hostname parameter is used to specify the host portion of the uri that
       // describes this sip element (proxy or ua)
       // nic is used to specify an ethernet interface by name. e.g. eth0
-      void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
+      void addTransport( Transport::Type, int port, const Data& hostName = Data::Empty, const Data& nic = Data::Empty);
 
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
