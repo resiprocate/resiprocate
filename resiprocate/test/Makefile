@@ -24,7 +24,7 @@ ifeq ($(USE_SSL), true)
 TESTPROGRAMS += makeSelfCert.cxx 
 endif
 
-TESTPROGRAMS += limpc.cxx \
+TESTPROGRAMS += test503Generator.cxx \#limpc.cxx \
 		SipTortureTests.cxx \
 		testRSP-2.cxx \
 		testPidf.cxx \
