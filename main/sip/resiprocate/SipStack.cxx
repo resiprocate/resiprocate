@@ -47,6 +47,19 @@ SipStack::addTransport( Transport::Type protocol,
                         const Data& nic) 
 {
    mTransportSelector.addTransport(protocol, port, hostName, nic);
+   addAlias(hostName);
+}
+
+void
+SipStack::addAlias(const Data& domain)
+{
+   mDomains.insert(domain);
+}
+
+bool 
+SipStack::isMyDomain(const Data& domain) const
+{
+   return (mDomains.count(domain) != 0);
 }
 
 
