@@ -7,7 +7,7 @@
 #include "resiprocate/LazyParser.hxx"
 #include "resiprocate/ParameterTypes.hxx"
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/BaseException.hxx"
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
@@ -18,6 +18,7 @@ namespace resip
 class UnknownParameter;
 class UnknownParameterType;
 class Parameter;
+class ParseBuffer;
 
 class ParserCategory : public LazyParser
 {
