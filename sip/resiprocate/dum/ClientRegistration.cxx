@@ -42,7 +42,7 @@ ClientRegistration::removeBinding(const NameAddr& contact)
          mMyContacts.erase(i);
 
          mLastRequest.header(h_Contacts) = mMyContacts;
-         mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
+         mLastRequest.header(h_Expires).value() = 0;
          mLastRequest.header(h_CSeq).sequence()++;
          mDum.send(mLastRequest);
 
