@@ -15,7 +15,6 @@ class ServerInvSession: public BaseUsage
       {
       };
       
-      void rejectOffer(int statusCode);
       void setOffer(SdpContents* offer);
       void sendOfferInAnyMessage();
       void setAnswer(SdpContents* answer);
@@ -23,6 +22,7 @@ class ServerInvSession: public BaseUsage
       void accept();
       void provisional(int statusCode);
       void reject(int statusCode);
+      void rejectOffer(int statusCode);
       void end();
       
       const SdpContents* getLocalSdp();
