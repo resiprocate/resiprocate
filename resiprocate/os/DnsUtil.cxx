@@ -291,11 +291,11 @@ DnsUtil::getInterfaces(const Data& matching)
          results.push_back(std::make_pair(name, ip));
       }
    }
+
+   close(s);
 #else // !WIN32
    assert(0);
 #endif
-
-   close(s);
 
    return results;
 }
