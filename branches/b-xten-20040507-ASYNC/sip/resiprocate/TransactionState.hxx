@@ -1,7 +1,7 @@
 #if !defined(RESIP_TRANSACTIONSTATE_HXX)
 #define RESIP_TRANSACTIONSTATE_HXX
 
-#include <iostream>
+#include <iosfwd>
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/Transport.hxx"
 

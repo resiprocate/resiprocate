@@ -711,7 +711,7 @@ Data
 Data::operator+(const char* str) const
 {
    assert(str);
-   unsigned int l = strlen(str);
+   size_t l = strlen(str);
    Data tmp(mSize + l, true);
    tmp.mSize = mSize + l;
    tmp.mCapacity = tmp.mSize;
@@ -847,7 +847,7 @@ static char hexmap[] = "0123456789abcdef";
 Data 
 Data::escaped() const
 { 
-   Data ret(3*size(), true );  
+   Data ret((int)floor(1.1*size()), true );  
 
    const char* p = data();
    for (size_type i=0; i < size(); ++i)
@@ -885,6 +885,93 @@ Data::escaped() const
       }
    }
 
+   return ret;
+}
+
+Data 
+Data::charEncoded() const
+{ 
+   Data ret((int)floor(1.1*size()), true );  
+
+   const char* p = data();
+   for (size_type i=0; i < size(); ++i)
+   {
+      unsigned char c = *p++;
+
+      if ( c == 0x0d )
+      {
+         if ( i+1 < size() )
+         {
+            if ( *p == 0x0a )
+            {
+               // found a CRLF sequence
+               ret += c;
+               c = *p++; i++;
+               ret += c;
+               continue;
+            }
+         }
+      }
+      
+      if ( !isprint(c) ||
+           // rfc 3261 reserved + mark + space + tab
+           strchr(" \";/?:@&=+%$,/t-_.!~*'()", c))
+      {
+         ret +='%';
+         
+         int hi = (c & 0xF0)>>4;
+         int low = (c & 0x0F);
+	   
+         ret += hexmap[hi];
+         ret += hexmap[low];
+      }
+      else
+      {
+         ret += c;
+      }
+   }
+
+   return ret;
+}
+
+Data
+Data::charUnencoded() const
+{
+   Data ret(size(), true);
+
+   const char* p = data();
+   for (size_type i = 0; i < size(); ++i)
+   {
+      unsigned char c = *p++;
+      if (c == '%')
+      {
+         if ( i+2 < size())
+         {
+            char* high = strchr(hexmap, *p++);
+            char* low = strchr(hexmap, *p++);
+
+            if (high == 0 || low == 0)
+            {
+               assert(0);
+               // ugh
+               return ret;
+            }
+            
+            int highInt = high - hexmap;
+            int lowInt = low - hexmap;
+            ret += char(highInt<<4 | lowInt);
+            i += 2;
+         }
+         else
+         {
+            break;
+         }
+      }
+      else
+      {
+         ret += c;
+      }
+   }
    return ret;
 }
 
@@ -966,6 +1053,7 @@ Data::convertInt() const
    while (l--)
    {
       char c = *p++;
+      if (!isdigit(c)) break;
       if ((c >= '0') && (c <= '9'))
       {
          val *= 10;

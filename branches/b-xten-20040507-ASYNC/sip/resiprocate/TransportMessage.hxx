@@ -1,7 +1,7 @@
 #if !defined(RESIP_TRANSPORTMESSAGE_HXX)
 #define RESIP_TRANSPORTMESSAGE_HXX 
 
-#include <iostream>
+#include <iosfwd>
 #include "resiprocate/Message.hxx"
 #include "resiprocate/os/Data.hxx"
 

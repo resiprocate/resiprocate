@@ -4,8 +4,6 @@
 #include <list>
 
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategories.hxx"
-
 
 namespace resip
 {

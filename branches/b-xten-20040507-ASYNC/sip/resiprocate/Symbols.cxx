@@ -83,6 +83,8 @@ const char* Symbols::Presence = "presence";
 const char* Symbols::Required = "required";
 const char* Symbols::C100rel = "100rel";
 
+const char* Symbols::Undefined = "UNDEFINED";
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

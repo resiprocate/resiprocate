@@ -108,7 +108,11 @@ ParserCategory::param(const UnknownParameterType& param) const
 {
    checkParsed();
    Parameter* p = getParameterByData(param.getName());
-   assert(p);
+   if (!p)
+   {
+      InfoLog(<< "Referenced an unknown parameter " << param.getName());
+      throw Exception("Missing unknown parameter", __FILE__, __LINE__);
+   }
    return static_cast<UnknownParameter*>(p)->value();
 }
 
@@ -373,9 +377,33 @@ ParserCategory::param(const _enum##_Param& paramType) const                     
    checkParsed();                                                                                       \
    _enum##_Param::Type* p =                                                                             \
       static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                    \
-   assert(p);                                                                                           \
+   if (!p)                                                                                              \
+   {                                                                                                    \
+      InfoLog(<< "Missing parameter " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);       \
+      DebugLog(<< *this);                                                                               \
+      throw Exception("Missing parameter", __FILE__, __LINE__);                                         \
+   }                                                                                                    \
    return p->value();                                                                                   \
 }
+
+defineParam(data, "data", ExistsParameter, "callee-caps");
+defineParam(control, "control", ExistsParameter, "callee-caps");
+defineParam(mobility, "mobility", QuotedDataParameter, "callee-caps"); // mobile|fixed
+defineParam(description, "description", QuotedDataParameter, "callee-caps"); // <> quoted
+defineParam(events, "events", QuotedDataParameter, "callee-caps"); // list
+defineParam(priority, "priority", QuotedDataParameter, "callee-caps"); // non-urgent|normal|urgent|emergency
+defineParam(methods, "methods", QuotedDataParameter, "callee-caps"); // list
+defineParam(schemes, "schemes", QuotedDataParameter, "callee-caps"); // list
+defineParam(application, "application", ExistsParameter, "callee-caps");
+defineParam(video, "video", ExistsParameter, "callee-caps");
+defineParam(language, "language", QuotedDataParameter, "callee-caps"); // list
+defineParam(type, "type", QuotedDataParameter, "callee-caps"); // list
+defineParam(isFocus, "isfocus", ExistsParameter, "callee-caps");
+defineParam(actor, "actor", QuotedDataParameter, "callee-caps"); // principal|msg-taker|attendant|information
+defineParam(text, "text", ExistsParameter, "callee-caps");
+defineParam(extensions, "extensions", QuotedDataParameter, "callee-caps"); //list
+defineParam(Instance, "+instance", QuotedDataParameter, "gruu");  // <> quoted
+defineParam(gruu, "gruu", QuotedDataParameter, "gruu");
 
 defineParam(accessType, "access-type", DataParameter, "RFC 2046");
 defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
@@ -400,7 +428,6 @@ defineParam(lr, "lr", ExistsParameter, "RFC ????");
 defineParam(maddr, "maddr", DataParameter, "RFC ????");
 defineParam(method, "method", DataParameter, "RFC ????");
 defineParam(micalg, "micalg", DataParameter, "RFC 1847");
-defineParam(mobility, "mobility", DataParameter, "RFC ????");
 defineParam(mode, "mode", DataParameter, "RFC 2046");
 defineParam(name, "name", DataParameter, "RFC 2046");
 defineParam(nc, "nc", DataParameter, "RFC ????");
@@ -409,7 +436,8 @@ defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
 defineParam(permission, "permission", DataParameter, "RFC 2046");
 defineParam(protocol, "protocol", DataParameter, "RFC 1847");
 defineParam(purpose, "purpose", DataParameter, "RFC ????");
-defineParam(q, "q", FloatParameter, "RFC ????");
+defineParam(q, "q", FloatParameter, "RFC 3261");
+
 defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
 defineParam(reason, "reason", DataParameter, "RFC ????");
 defineParam(received, "received", DataParameter, "RFC ????");

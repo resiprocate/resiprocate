@@ -3,7 +3,7 @@
 
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/Parameter.hxx"
-#include <iostream>
+#include <iosfwd>
 
 namespace resip
 {
