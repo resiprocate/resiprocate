@@ -108,7 +108,7 @@ class Dialog
 
       // For creating requests within a dialog
       SipMessage* makeInvite();
-      SipMessage* makeBye();
+      SipMessage* makeBye(bool isOriginator = true);
       SipMessage* makeRefer(const NameAddr& referTo);
       SipMessage* makeNotify();
       SipMessage* makeOptions();
