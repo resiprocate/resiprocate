@@ -10,6 +10,9 @@ namespace resip
 
 class OutOfDialogReqCreator: public BaseCreator
 {
+   public:
+      OutOfDialogReqCreator(const Uri&);
+      virtual void dispatch(SipMessage& msg);
 };
  
 }
