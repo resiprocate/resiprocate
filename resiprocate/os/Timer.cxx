@@ -47,6 +47,9 @@ unsigned long
 resip::Timer::TF = 64*T1;
 
 unsigned long
+resip::Timer::TH = 64*T1;
+
+unsigned long
 resip::Timer::TS = 32000;
 
 
