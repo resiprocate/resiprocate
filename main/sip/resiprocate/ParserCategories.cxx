@@ -29,4 +29,16 @@ StringComponent::value()
    return mValue; 
 }
 
+MethodTypes
+RequestLineComponent::getMethod() const
+{
+   assert(0);
+   return INVITE;
+}
 
+int
+StatusLineComponent::getResponseCode() const
+{
+   assert(0);
+   return 200;
+}
