@@ -16,6 +16,7 @@ extern "C"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsResult.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 
