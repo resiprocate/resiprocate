@@ -106,7 +106,6 @@ testParseBuffer_SOURCES = testParseBuffer.cxx
 testParseNameAddr_SOURCES = testParseNameAddr.cxx
 testParserCategories_SOURCES = testParserCategories.cxx
 testPlainContents_SOURCES = testPlainContents.cxx
-testPreparse_SOURCES = testPreparse.cxx
 testRandomHex_SOURCES = testRandomHex.cxx
 testResponses_SOURCES = testResponses.cxx
 testSdp_SOURCES = testSdp.cxx

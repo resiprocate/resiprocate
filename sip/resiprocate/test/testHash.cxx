@@ -66,16 +66,16 @@ bool checkMethods()
     for( ; i < max ; ++i)
     {
         MethodTypes t = static_cast<MethodTypes>(i);
-        Data& d(resip::MethodNames[t]);
+        const Data& d(resip::getMethodName(t));
         MethodTypes nt = resip::getMethodType(d.data(),d.size());
         bool ok = nt == t;
         // DebugLog(<<resip::MethodNames[t]<<" : " << (ok ? "OK":"FAIL"));
         DebugLog(<< (ok ? "   " : "***" ) << ' '
-                 << t << ' ' << resip::MethodNames[t] 
+                 << t << ' ' << resip::getMethodName(t) 
                  << '(' << d << ')'
                  << " -> " 
-                 << nt << ' ' << resip::MethodNames[nt]);
-        // if (!ok) ErrLog(<<resip::MethodNames[t] << " : HASH FAILURE");
+                 << nt << ' ' << resip::getMethodName(nt));
+        // if (!ok) ErrLog(<<resip::getMethodName(t) << " : HASH FAILURE");
         failure |= !ok;
     }
     return !failure;

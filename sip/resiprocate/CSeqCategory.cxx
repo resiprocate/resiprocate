@@ -25,7 +25,7 @@ CSeqCategory::CSeqCategory(HeaderFieldValue* hfv, Headers::Type type)
 CSeqCategory::CSeqCategory() 
    : ParserCategory(), 
      mMethod(UNKNOWN), 
-     mUnknownMethodName(MethodNames[UNKNOWN]),
+     mUnknownMethodName(getMethodName(UNKNOWN)),
      mSequence(-1) 
 {}
 
@@ -149,7 +149,7 @@ CSeqCategory::parse(ParseBuffer& pb)
 std::ostream& 
 CSeqCategory::encodeParsed(std::ostream& str) const
 {
-   str << mSequence << Symbols::SPACE << (mMethod != UNKNOWN ? MethodNames[mMethod] : mUnknownMethodName);
+   str << mSequence << Symbols::SPACE << (mMethod != UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName);
    return str;
 }
 
