@@ -275,6 +275,8 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
       throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
    }
 
+   DebugLog (<< "Looked up source for " << dest << " -> " << source);
+
    // Unconnect
    if (dest.isV4())
    {
@@ -302,11 +304,12 @@ void
 TransportSelector::transmit( SipMessage* msg, Tuple& destination)
 {
    assert( &destination != 0 );
-   DebugLog (<< "Transmitting " << *msg << " to " << destination);
    try
    {
       Tuple source(destination);
       srcAddrForDest(destination,source);
+      DebugLog (<< "Transmitting " << *msg << " to " << destination << " via " << source);
+
       if (destination.transport == 0)
       {
          if (destination.getType() == TLS)
@@ -348,7 +351,10 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
                {
                   contact.uri().host() = DnsUtil::inet_ntop(source);
                   contact.uri().port() = destination.transport->port();
-                  contact.uri().param(p_transport) = Tuple::toData(destination.transport->transport());
+                  if (destination.transport->transport() != UDP)
+                  {
+                     contact.uri().param(p_transport) = Tuple::toData(destination.transport->transport());
+                  }
                }
             }
          }
@@ -414,6 +420,9 @@ Transport*
 TransportSelector::findTransport(const Tuple& search) 
 {
    // first search for a s specific transport, then look for transport with any interface
+   DebugLog (<< "Searching for " << search << " in:");
+   DebugLog (<< Inserter(mTransports));
+   
    std::map<Tuple, Transport*>::iterator i = mTransports.find(search);
    if (i != mTransports.end())
    {
