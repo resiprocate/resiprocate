@@ -61,9 +61,10 @@ class SipStack
          SharesStackProcessAndSelect,
          RunsInOwnThread
       };
-
-      //!dcm! why bool instead of throw, what is privateKeyPassPhrase used for?
-      //factory method to construct built-in transports. 
+      
+      //factory method to construct built-in transports.  A Transport::Exception
+      //will be thrown if the transport couldn't be added, usually because the
+      //port was already bound. 
       void addTransport( TransportType protocol,
                          int port=0, 
                          IpVersion version=V4,
