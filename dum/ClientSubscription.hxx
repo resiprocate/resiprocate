@@ -11,9 +11,9 @@ class ClientSubscription: public BaseUsage
       {
       };
       
-      
+      void end();
+      void requestRefresh();
 
-      void refreshNow();
       bool matches(const SipMessage& subOrNotify);
       void process(const SipMessage& subOrNotify);
       
