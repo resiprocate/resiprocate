@@ -86,14 +86,12 @@ class InviteSession : public DialogUsage
          UAC_Canceled,
 
          UAS_Start,
-
          UAS_Offer, // 
          UAS_Early, //
          UAS_Accepted, //
          UAS_NoOffer, //
          UAS_EarlyNoOffer, //
          UAS_AcceptedWaitingAnswer, //
-
          UAS_OfferReliable,
          UAS_NoOfferReliable,
          UAS_FirstSentOfferReliable,
@@ -112,26 +110,32 @@ class InviteSession : public DialogUsage
       {
          OnRedirect, // 3xx
          OnGeneralFailure, // 481 or 408
-         On1xx,
-         On1xxEarly,
-         On1xxOffer,
-         On1xxAnswer,
-         On2xx,
+         OnInvite, // UAS
+         OnInviteOffer,// UAS
+         OnInviteReliableOffer, // UAS
+         OnInviteReliable, // UAS
+         OnCancel, // UAS
+         OnBye, 
+         On200Bye, 
+         On1xx, // UAC
+         On1xxEarly, // UAC
+         On1xxOffer, // UAC
+         On1xxAnswer, // UAC
+         On2xx, 
          On2xxOffer,
          On2xxAnswer,
          On489Invite,
          OnInviteFailure,
          OnAck,
          OnAckAnswer,
-         OnCancel,
-         On200Cancel,
-         OnCancelFailure, 
+         On200Cancel, // UAC
+         OnCancelFailure, // UAC
          OnUpdate,
          OnUpdateRejected,
          On489Update,
          On200Update,
-         OnPrack,
-         On200Prack,
+         OnPrack, // UAS
+         On200Prack, // UAC
          Unknown
       } Event;
 
