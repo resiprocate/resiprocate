@@ -111,6 +111,7 @@ Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr&
 SipMessage*
 Helper::makeResponse(const SipMessage& request, int responseCode, const Data& reason)
 {
+   DebugLog(<< "Helper::makeResponse(" << request);
    SipMessage* response = new SipMessage;
    response->header(h_StatusLine).responseCode() = responseCode;
    response->header(h_From) = request.header(h_From);
@@ -126,7 +127,8 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
       response->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
    }
 
-   response->copyRFC2543TransactionId(request); // !jf! not right?
+   response->setRFC2543TransactionId(request.getRFC2543TransactionId());
+
    //response->header(h_ContentLength).value() = 0;
    
    if (request.exists(h_RecordRoutes))
