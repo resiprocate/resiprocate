@@ -366,8 +366,8 @@ class SdpContents : public Contents
 
                   // from session if empty
                   const std::list<Connection> getConnections() const;
-		  // does not include session connections
-	          std::list<Connection>& getMediumConnections() {return mConnections;}
+                  // does not include session connections
+                  std::list<Connection>& getMediumConnections() {return mConnections;}
                   const Encryption& getEncryption() const {return mEncryption;}
                   const Encryption& encryption() const {return mEncryption;}
                   Encryption& encryption() {return mEncryption;}
