@@ -1,6 +1,5 @@
 /* C++ code produced by gperf version 2.7.2 */
 /* Command-line: gperf -D --enum -E -L C++ -t -k '*' --compare-strncmp -Z MethodHash MethodHash.gperf  */
-
 #include <string.h>
 #include <ctype.h>
 #include "resiprocate/MethodTypes.hxx"
