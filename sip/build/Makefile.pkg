@@ -20,30 +20,27 @@ PTHREAD_LDFLAGS := -pthread
 PTHREAD_LIBNAME := c_r
 endif
 
-ifeq ($(OSTYPE),IRIX64)
-PTHREAD_LDFLAGS := 
-elif ($(OSCLASS),VXWORKS)
-PTHREAD_LDFLAGS :=
-PTHREAD_LIBNAME :=
-elif ($(OSTYPE),Linux)
-PTHREAD_LDFLAGS := #--thread
-elif ($(OSTYPE),Solaris)
+ifeq ($(OSTYPE),Solaris)
 PTHREAD_LDFLAGS := --thread
-elif ($(OSTYPE),QNX)
-PTHREAD_DEFINES := 
-PTHREAD_LDFLAGS := 
-PTHREAD_LIBNAME :=
 endif
 
-ifneq ($(USE_DTLS),true)
+ifeq ($(USE_SSL),true)
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
 OPENSSL_INCLUDEDIRS := /usr/local/ssl/include /usr/kerberos/include/
 OPENSSL_LIBDIRS := /usr/local/ssl/lib
-else
+endif
+
+# note there is no elif and no && for gnu make
+ifeq ($(USE_DTLS),true)
+OPENSSL_LIBNAME := 
+OPENSSL_LDFLAGS :=
+OPENSSL_INCLUDEDIRS := 
+OPENSSL_LIBDIRS :=
 OPENSSL_LDLIBS_LAST := $(ROOT)/contrib/dtls/libssl.a $(ROOT)/contrib/dtls/libcrypto.a
 OPENSSL_INCLUDEDIRS := $(ROOT)/contrib/dtls/include
 endif
+
 
 ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
 ARES_LIBDIRS := $(ROOT)/contrib/ares
