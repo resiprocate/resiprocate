@@ -1064,7 +1064,10 @@ Johnston et al         Expires - February 2002               [Page 6]
    Call-ID: k345asrl3fdbv@10.0.0.1 
    CSeq: 1 REGISTER 
    Via: SIP/2.0/UDP 135.180.130.133:5060;branch=z9hG4bKkdjuw 
-   Contact: <sip:user@example.com?Route=%3Csip:sip.example.com%3E> 2.33     REGISTER with a Escaped Header in a Illegal SIP URI of a Contact 
+   Contact: <sip:user@example.com?Route=%3Csip:sip.example.com%3E>
+
+
+ 2.33     REGISTER with a Escaped Header in a Illegal SIP URI of a Contact 
     
    This is an illegal message as the REGISTER request contains a SIP 
  
