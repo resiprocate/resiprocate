@@ -17,6 +17,7 @@ Uri::Uri()
    : ParserCategory(),
      mScheme(Symbols::DefaultSipScheme),
      mPort(0),
+     mOldPort(0),
      mEmbeddedHeaders(0)
 {}
 
@@ -24,6 +25,7 @@ Uri::Uri(const Data& data)
    : ParserCategory(), 
      mScheme(Symbols::DefaultSipScheme),
      mPort(0),
+     mOldPort(0),
      mEmbeddedHeaders(0)
 {
    ParseBuffer pb(data.data(), data.size());
@@ -53,6 +55,7 @@ Uri::Uri(const Uri& rhs)
      mUser(rhs.mUser),
      mPort(rhs.mPort),
      mPassword(rhs.mPassword),
+     mOldPort(0),
      mEmbeddedHeadersText(rhs.mEmbeddedHeadersText),
      mEmbeddedHeaders(rhs.mEmbeddedHeaders ? new SipMessage(*rhs.mEmbeddedHeaders) : 0)
 {}
@@ -103,8 +106,8 @@ class OrderUnknownParameters
       {
          return dynamic_cast<const UnknownParameter*>(p1)->getName() < dynamic_cast<const UnknownParameter*>(p2)->getName();
       }
-private:
-	bool notUsed;
+   private:
+      bool notUsed;
 };
 
 bool 
@@ -276,10 +279,16 @@ Uri::getAor() const
       mOldUser = mUser;
       mOldPort = mPort;
 
+#if defined(VOCAL2_AOR_HAS_SCHEME) // !jf! lame
+      mAor = mScheme + Symbols::COLON;
+#else
+      mAor.clear();
+#endif
+      
       // mAor.reserve(mUser.size() + mHost.size() + 10); !dlb!
       if (mUser.empty())
       {
-         mAor = mHost;
+         mAor += mHost;
       }
       else
       {
@@ -293,6 +302,12 @@ Uri::getAor() const
          mAor += Symbols::COLON;
          mAor += Data(mPort);
       }
+#if defined(VOCAL2_AOR_HAS_SCHEME)
+      else
+      {
+         mAor += Data(Symbols::COLON) + Data(5060);
+      }
+#endif
    }
    return mAor;
 }
