@@ -70,65 +70,64 @@ Transport::socket(TransportType type, bool ipv4)
 }
 
 void 
-Transport::bind(Socket fd, int portNum, const Data& netInterface, bool ipv4)
+Transport::bind()
 {
-   sockaddr saddr;
-   if (ipv4)
+   if (mV4)
    {
-      sockaddr_in* addr4 = reinterpret_cast<sockaddr_in*>(&saddr);
+      sockaddr_in* addr4 = reinterpret_cast<sockaddr_in*>(&mBoundInterface);
       memset(addr4, 0, sizeof(*addr4));
       
       addr4->sin_family = AF_INET;
-      addr4->sin_port = htons(portNum);
-      if (netInterface == Data::Empty)
+      addr4->sin_port = htons(mPort);
+      if (mInterface == Data::Empty)
       {
          addr4->sin_addr.s_addr = htonl(INADDR_ANY); 
       }
       else
       {
-         DnsUtil::inet_pton(netInterface, addr4->sin_addr);
+         DnsUtil::inet_pton(mInterface, addr4->sin_addr);
       }
    }
    else
    {
 #if defined(USE_IPV6)
-      sockaddr_in6* addr6 = reinterpret_cast<sockaddr_in6*>(&saddr);;
+      sockaddr_in6* addr6 = reinterpret_cast<sockaddr_in6*>(&mBoundInterface);;
       memset(addr6, 0, sizeof(*addr6));
       
       addr6->sin6_family = AF_INET6;
-      addr6->sin6_port = htons(portNum);
-      if (netInterface == Data::Empty)
+      addr6->sin6_port = htons(mPort);
+      if (mInterface == Data::Empty)
       {
          addr6->sin6_addr = in6addr_any;
       }
       else
       {
-         DnsUtil::inet_pton(netInterface, addr6->sin6_addr);
+         DnsUtil::inet_pton(mInterface, addr6->sin6_addr);
       }
 #else
       assert(0);
 #endif
    }
-   DebugLog (<< "Binding to " << DnsUtil::inet_ntop(saddr));
+   DebugLog (<< "Binding to " << DnsUtil::inet_ntop(mBoundInterface));
    
-   if ( ::bind( fd, &saddr, sizeof(saddr)) == SOCKET_ERROR )
+   if ( ::bind( mFd, &mBoundInterface, sizeof(mBoundInterface)) == SOCKET_ERROR )
    {
       if ( errno == EADDRINUSE )
       {
-         ErrLog (<< "port " << portNum << " already in use");
+         ErrLog (<< "port " << mPort << " already in use");
          throw Exception("port already in use", __FILE__,__LINE__);
       }
       else
       {
-         ErrLog (<< "Could not bind to port: " << portNum);
+         ErrLog (<< "Could not bind to port: " << mPort);
          throw Exception("Could not use port", __FILE__,__LINE__);
       }
    }
    
-   bool ok = makeSocketNonBlocking(fd);
+   bool ok = makeSocketNonBlocking(mFd);
    if ( !ok )
    {
-      ErrLog (<< "Could not make socket non-blocking " << portNum);
+      ErrLog (<< "Could not make socket non-blocking " << mPort);
       throw Exception("Failed making socket non-blocking", __FILE__,__LINE__);
    }
 }
