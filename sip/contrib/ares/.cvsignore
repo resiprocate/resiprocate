@@ -2,6 +2,5 @@ Makefile
 adig
 ahost
 config.cache
-config.guess
 config.log
 config.status
