@@ -409,3 +409,49 @@ Headers::getHeaderType(const char* name, int len)
       }
    }
 }
+
+Header<Headers::Content_Disposition> Content_Disposition;
+Header<Headers::Content_Encoding> Content_Encoding;
+Header<Headers::MIME_Version> MIME_Version;
+Header<Headers::Priority> Priority;
+Header<Headers::Accept_Encoding> Accept_Encoding;
+Header<Headers::Accept_Language> Accept_Language;
+Header<Headers::Allow> Allow;
+Header<Headers::Content_Language> Content_Language;
+Header<Headers::Proxy_Require> Proxy_Require;
+Header<Headers::Require> Require;
+Header<Headers::Supported> Supported;
+Header<Headers::Unsupported> Unsupported;
+Header<Headers::Accept> Accept;
+Header<Headers::Content_Type> Content_Type;
+Header<Headers::Alert_Info> Alert_Info;
+Header<Headers::Error_Info> Error_Info;
+Header<Headers::Record_Route> Record_Route;
+Header<Headers::Route> Route;
+Header<Headers::Contact> Contact;
+Header<Headers::From> From;
+Header<Headers::Reply_To> Reply_To;
+Header<Headers::To> To;
+Header<Headers::Organization> Organization;
+Header<Headers::Server> Server;
+Header<Headers::Subject> Subject;
+Header<Headers::User_Agent> User_Agent;
+Header<Headers::Content_Length> Content_Length;
+Header<Headers::Expires> Expires;
+Header<Headers::Max_Forwards> Max_Forwards;
+Header<Headers::Min_Expires> Min_Expires;
+Header<Headers::Retry_After> Retry_After;
+Header<Headers::Call_ID> Call_ID;
+Header<Headers::In_Reply_To> In_Reply_To;
+Header<Headers::Authentication_Info> Authentication_Info;
+Header<Headers::Authorization> Authorization;
+Header<Headers::Proxy_Authenticate> Proxy_Authenticate;
+Header<Headers::Proxy_Authorization> Proxy_Authorization;
+Header<Headers::WWW_Authenticate> WWW_Authenticate;
+Header<Headers::CSeq> CSeq;
+Header<Headers::Date> Date;
+Header<Headers::Warning> Warning;
+Header<Headers::Via> Via;
+
+RequestLineType RequestLine;
+StatusLineType StatusLine;
