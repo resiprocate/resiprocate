@@ -55,14 +55,7 @@ HeaderFieldValueList::clone() const
 ParserCategory*
 HeaderFieldValueList::getParserCategory()
 {
-   if (mParserContainer != 0)
-   {
-      return mParserContainer;
-   }
-   else
-   {
-      return first->getParserCategory();
-   }
+   return mParserContainer;
 }
 
 void HeaderFieldValueList::push_front(HeaderFieldValue* header)

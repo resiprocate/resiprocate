@@ -31,6 +31,8 @@ class Headers
          Unsupported, User_Agent, Warning, WWW_Authenticate,
          Subscription_State,
 
+         Refer_To,
+
          UNKNOWN,
          MAX_HEADERS
       };
@@ -227,6 +229,13 @@ class Header<Headers::From>
 };
 extern Header<Headers::From> h_From;
 
+class Header<Headers::To>
+{
+   public:
+      typedef NameAddrOrAddrSpec Type;
+};
+extern Header<Headers::To> h_To;
+
 class Header<Headers::Reply_To>
 {
    public:
@@ -234,12 +243,12 @@ class Header<Headers::Reply_To>
 };
 extern Header<Headers::Reply_To> h_Reply_To;
 
-class Header<Headers::To>
+class Header<Headers::Refer_To>
 {
    public:
       typedef NameAddrOrAddrSpec Type;
 };
-extern Header<Headers::To> h_To;
+extern Header<Headers::Refer_To> h_Refer_To;
 
 //====================
 //String:
