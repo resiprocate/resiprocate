@@ -841,6 +841,19 @@ TransportSelector::findDtlsTransport(const Data& domainname)
 #endif
 
 
+unsigned int 
+TransportSelector::getTimeTillNextProcessMS()
+{
+   if (mDns.requiresProcess())
+   {
+      return 50;      
+   }
+   else
+   {
+      return INT_MAX;
+   }
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *

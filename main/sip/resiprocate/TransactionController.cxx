@@ -105,7 +105,7 @@ TransactionController::getTimeTillNextProcessMS()
       return 0;
    }
 
-   return mTimers.msTillNextTimer();
+   return resipMin(mTimers.msTillNextTimer(), mTransportSelector.getTimeTillNextProcessMS());   
 } 
    
 void 
