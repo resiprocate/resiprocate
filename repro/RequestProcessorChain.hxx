@@ -13,10 +13,12 @@ namespace repro
       RequestProcessorChain();
       virtual ~RequestProcessorChain();
 
+      void addProcessor(std::auto_ptr<RequestProcessor>);
+
       virtual processor_action_t handleRequest(RequestContext &);
 
     private:
-      typedef std::vector<std::auto_ptr<RequestProcessor> > chain_t;
+      typedef std::vector<RequestProcessor*> chain_t;
       chain_t chain;
   };
 }
