@@ -751,6 +751,12 @@ InviteSession::end()
    }
 }
 
+void InviteSession::dialogDestroyed(const SipMessage& msg)
+{
+   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);   
+   delete this;   
+}
+
 // If sdp==0, it means the last offer failed
 // !dcm! -- eventually handle confused UA's that send offers/answers at
 // inappropriate times, probably with a different callback
