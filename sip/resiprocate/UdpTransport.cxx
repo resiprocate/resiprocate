@@ -29,7 +29,7 @@
 using namespace std;
 using namespace Vocal2;
 
-const unsigned long UdpTransport::MaxBufferSize = 8192;
+const size_t UdpTransport::MaxBufferSize = 8192;
 
 UdpTransport::UdpTransport(int portNum, Fifo<Message>& fifo) : 
    Transport(portNum, fifo)
@@ -175,9 +175,12 @@ void UdpTransport::process()
    if ( len <= 0 )
    {
       int err = errno;
+      ErrLog(<<"Error receiving, errno="<<err);
    }
    else if (len > 0)
    {
+      unsigned long len = static_cast<unsigned long>(len);
+      
       if (len == MaxBufferSize)
       {
          InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
