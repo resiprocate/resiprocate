@@ -16,6 +16,10 @@ This documentation will be updated shortly.
 After running use-autotools.sh, you need to run 'autogen.sh' in the sip
 directory to 'bootstrap' the autotools files.
 
+You should run autogen.sh in it's own sub-shell:
+
+% bash autotools.sh
+
 
 Any questions, please mail the devel list
 
