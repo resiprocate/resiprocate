@@ -12,6 +12,8 @@ class SipMessage;
 class DialogSetId
 {
    public:
+      static const DialogSetId Empty;
+      
       DialogSetId(const SipMessage& msg);
       DialogSetId(const Data& callId, const Data& senderRequestFromTag);
 
@@ -25,6 +27,8 @@ class DialogSetId
       const Data& getCallId() const { return mCallId; }
       const Data& getLocalTag() const { return mTag; }
    private:
+      DialogSetId();
+      
       Data mCallId;
       Data mTag;
 
