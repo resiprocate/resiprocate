@@ -155,7 +155,20 @@ InviteSession::dispatch(const DumTimeout& timeout)
       CSeqToMessageMap::iterator it = mFinalResponseMap.find(timeout.seq());
       if (it != mFinalResponseMap.end())
       {
-         mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle(), it->second);
+         // BYE could be queued if end() is called when we are still waiting for far end ACK to be received
+         if (mQueuedBye)
+         {
+            mState = Terminated;
+            mLastRequest = *mQueuedBye;
+            delete mQueuedBye;
+            mQueuedBye = 0;                        
+            send(mLastRequest);
+         }
+         else
+         {
+            mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle(), it->second);
+         }
+
          mFinalResponseMap.erase(it);
       }
    }
@@ -218,6 +231,17 @@ InviteSession::dispatch(const SipMessage& msg)
       mFinalResponseMap.erase(msg.header(h_CSeq).sequence());
       if (msg.header(h_CSeq).sequence() == mLastIncomingRequest.header(h_CSeq).sequence())
       {
+         // BYE could be queued if end() is called when we are still waiting for far end ACK to be received
+         if (mQueuedBye)
+         {
+            mState = Terminated;
+            mLastRequest = *mQueuedBye;
+            delete mQueuedBye;
+            mQueuedBye = 0;                        
+            send(mLastRequest);
+            return;
+         }
+
          if (offans.first != None)
          {                     
             if (mOfferState == Answered)
@@ -365,6 +389,8 @@ InviteSession::dispatch(const SipMessage& msg)
                      //this usage other than onTerminated
                      if (mQueuedBye)
                      {
+                        send(makeAck());   // ACK the 200 first then send BYE
+                        mState = Terminated;
                         mLastRequest = *mQueuedBye;
                         delete mQueuedBye;
                         mQueuedBye = 0;                        
@@ -409,6 +435,8 @@ InviteSession::dispatch(const SipMessage& msg)
                   //this usage other than onTerminated
                   if (mQueuedBye)
                   {
+                     send(makeAck());   // ACK the 200 first then send BYE
+                     mState = Terminated;
                      mLastRequest = *mQueuedBye;
                      delete mQueuedBye;
                      mQueuedBye = 0;                        
@@ -428,6 +456,15 @@ InviteSession::dispatch(const SipMessage& msg)
                mDum.sendResponse(failure);
                return;
             }
+         }
+         else if(msg.header(h_CSeq).method() == BYE && msg.isRequest())
+         {
+	        // Inbound BYE crosses with outbound REINVITE
+	        mState = Terminated;
+	 
+            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(),msg);
+	        mDialog.makeResponse(mLastResponse, msg, 200);
+            send(mLastResponse);
          }
          else
          {
@@ -497,18 +534,43 @@ InviteSession::end()
          throw UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
          break;
       case Connected:
-         InfoLog ( << "InviteSession::end, Connected" );  
-         mDialog.makeRequest(mLastRequest, BYE);
-         //new transaction
-         assert(mLastRequest.header(h_Vias).size() == 1);
-//         mLastRequest.header(h_Vias).front().param(p_branch).reset();
-         mState = Terminated;
-         return mLastRequest;
+         // Check state of 200 retrans map to see if we have recieved an ACK or not yet
+         if (mFinalResponseMap.find(mLastIncomingRequest.header(h_CSeq).sequence()) != mFinalResponseMap.end())
+         {
+            if(!mQueuedBye)
+            {
+               // No ACK yet - send BYE after ACK is received
+               mQueuedBye = new SipMessage(mLastRequest);
+               mDialog.makeRequest(*mQueuedBye, BYE);
+               return *mQueuedBye;
+            }
+            else
+            {
+               throw UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
+            }
+         }
+         else
+         {
+            InfoLog ( << "InviteSession::end, Connected" );  
+            mDialog.makeRequest(mLastRequest, BYE);
+            //new transaction
+            assert(mLastRequest.header(h_Vias).size() == 1);
+//          mLastRequest.header(h_Vias).front().param(p_branch).reset();
+            mState = Terminated;
+            return mLastRequest;
+         }
          break;
       case ReInviting:
-         mQueuedBye = new SipMessage(mLastRequest);
-         mDialog.makeRequest(*mQueuedBye, BYE);
-         return *mQueuedBye;
+         if(!mQueuedBye)
+         {
+            mQueuedBye = new SipMessage(mLastRequest);
+            mDialog.makeRequest(*mQueuedBye, BYE);
+            return *mQueuedBye;
+         }
+         else
+         {
+            throw UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
+         }
          break;
       default:
          assert(0); // out of states
