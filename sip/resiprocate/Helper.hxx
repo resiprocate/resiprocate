@@ -1,6 +1,8 @@
 #if !defined(RESIP_HELPER_HXX)
 #define RESIP_HELPER_HXX 
 
+#include <time.h>
+
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/MethodTypes.hxx"
@@ -29,7 +31,8 @@ class Helper
       //somewhere else
 
       // used to make sure 
-      static int aBitSmallerThan(unsigned long value); 
+      static unsigned long aBitSmallerThan(unsigned long secs); 
+      static time_t aBitSmallerThan(time_t secs); 
       
       //in general content length handled automatically by SipMessage?
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from);

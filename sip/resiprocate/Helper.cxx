@@ -23,10 +23,16 @@ using namespace resip;
 
 const int Helper::tagSize = 4;
 
-int 
-Helper::aBitSmallerThan(unsigned long value)
+unsigned long
+Helper::aBitSmallerThan(unsigned long secs)
 {
-   return resipMax(Timer::TS, resipMin(value - Timer::TS, 9*value/10));
+   return resipMax(32, resipMin(value - 32, 9*value/10));
+}
+
+time_t
+Helper::aBitSmallerThan(time_t secs)
+{
+   return resipMax(32, resipMin(value - 32, 9*value/10));
 }
 
 
