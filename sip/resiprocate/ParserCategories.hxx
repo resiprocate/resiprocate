@@ -24,6 +24,7 @@ class Token : public ParserCategory
       enum {commaHandling = CommasAllowedOutputCommas};
 
       Token() : ParserCategory(), mValue() {}
+      explicit Token(const Data& d) : mValue(d) {}
       Token(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type), mValue() {}
       Token(const Token&);
       Token& operator=(const Token&);
