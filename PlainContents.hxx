@@ -13,6 +13,7 @@ class PlainContents : public Contents
       PlainContents();
       PlainContents(const Data& text);
       PlainContents(HeaderFieldValue* hfv, const Mime& contentType);
+      PlainContents(const Data& data, const Mime& contentType);
       PlainContents(const PlainContents& rhs);
       virtual ~PlainContents();
       PlainContents& operator=(const PlainContents& rhs);

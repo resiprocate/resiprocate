@@ -13,6 +13,7 @@ class Pkcs7Contents : public Contents
       Pkcs7Contents();
       Pkcs7Contents(const Data& text);
       Pkcs7Contents(HeaderFieldValue* hfv, const Mime& contentType);
+      Pkcs7Contents(const Data& data, const Mime& contentType);
       Pkcs7Contents(const Pkcs7Contents& rhs);
       virtual ~Pkcs7Contents();
       Pkcs7Contents& operator=(const Pkcs7Contents& rhs);
