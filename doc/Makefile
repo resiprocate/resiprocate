@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.1 2002/09/22 21:32:47 fluffy Exp $
+# $Id: Makefile,v 1.2 2002/09/22 21:34:23 fluffy Exp $
 #
 FSMS=srv-inv-fsm
 OUTDIR=out
@@ -22,7 +22,7 @@ $(OUTDIR):
 	-mkdir $@
 
 $(OUTDIR)/%.pdf: $(OUTDIR)/%.ps Makefile $(OUTDIR)
-	ps2pdf13 $<
+	ps2pdf13 $< $@
 
 $(OUTDIR)/%.ps: %.dot Makefile $(OUTDIR)
 	$(DOT) -Tps -o$@ $<
