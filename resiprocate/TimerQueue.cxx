@@ -39,6 +39,15 @@ TimeLimitTimerQueue::TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo)
 
 BaseTimerQueue::~BaseTimerQueue()
 {
+   //xkd-2004-11-4
+   // delete the message associated with the timer
+   for (std::multiset<Timer>::iterator i = mTimers.begin(); i !=  mTimers.end(); ++i)
+   {
+      if (i->getMessage())
+      {
+         delete i->getMessage();
+      }
+   }
 }
 
 unsigned int
