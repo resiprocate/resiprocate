@@ -1,6 +1,8 @@
-#include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
+#include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resiprocate/dum/UsageUseException.hxx"
 
 using namespace resip;
 
@@ -14,8 +16,11 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
                                        Dialog& dialog,
                                        const SipMessage& req)
    : BaseSubscription(dum, dialog, req),
-     mLastRequest(req)
-{}
+     mSubscriptionState(Invalid),
+     mLastRequest(req),
+     mExpires(60)
+{
+}
 
 ServerSubscription::~ServerSubscription()
 {
@@ -23,43 +28,115 @@ ServerSubscription::~ServerSubscription()
 }
 
 SipMessage& 
-ServerSubscription::acceptPending()
+ServerSubscription::accept(int statusCode)
 {
-   mDialog.makeResponse(mLastResponse, mLastRequest, 202);
-   return mLastResponse;
-}
-
-SipMessage& 
-ServerSubscription::acceptActive()
-{
-   mDialog.makeResponse(mLastResponse, mLastRequest, 200);
+   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
    return mLastResponse;
 }
 
 void 
-ServerSubscription::end()
+ServerSubscription::send(SipMessage& msg)
 {
+   if (msg.isResponse())
+   {
+      int code = msg.header(h_StatusLine).statusCode();
+      if (code < 100)
+      {
+         mDum.send(msg);
+      }
+      else if (code < 300)
+      {
+         if(msg.exists(h_Expires))
+         {
+            mDum.addTimer(DumTimeout::Subscription, msg.header(h_Expires).value(), getBaseHandle(),  0);
+            mDum.send(msg);
+         }
+         else
+         {
+            throw new UsageUseException("2xx to a Subscribe MUST contain an Expires header", __FILE__, __LINE__);
+         }
+      }
+      else
+      {
+         mDum.send(msg);
+         delete this;
+         return;
+      }
+   }
+   else
+   {
+      mDum.send(msg);
+      msg.releaseContents();
+   }
+}
+
+SubscriptionState 
+ServerSubscription::getSubscriptionState()
+{
+   return mSubscriptionState;
+}
+
+void 
+ServerSubscription::setSubscriptionState(SubscriptionState state)
+{
+   mSubscriptionState = state;
 }
 
 void 
 ServerSubscription::dispatch(const SipMessage& msg)
 {
+   ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
+   assert(handler);
+
+   if (msg.isRequest())
+   {
+      //!dcm! -- need to have a mechansim to retrieve default & acceptable
+      //expiration times for an event package--part of handler API?
+      if (msg.exists(h_Expires))
+      {         
+         mExpires = msg.header(h_Expires).value();
+         if (mExpires == 0)
+         {
+            makeNotifyExpires();
+            handler->onExpiredByClient(getHandle(), msg, mLastNotify);
+            send(mLastNotify);
+            return;
+         }
+      }
+   }
 }
 
 void
-ServerSubscription::dispatch(const DumTimeout& msg)
+ServerSubscription::makeNotifyExpires()
 {
+   mSubscriptionState = Terminated;
+   mDialog.makeRequest(mLastNotify, NOTIFY);
+   mLastNotify.header(h_SubscriptionState).value() = getSubscriptionStateString(mSubscriptionState);
+   mLastNotify.header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(Timeout);   
+}
+
+void
+ServerSubscription::dispatch(const DumTimeout& timeout)
+{
+   assert(timeout.type() == DumTimeout::Subscription);
+   ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
+   assert(handler);
+   makeNotifyExpires();
+   handler->onExpired(getHandle(), mLastNotify);
+   send(mLastNotify);
 }
 
 SipMessage& 
 ServerSubscription::update(const Contents* document)
 {
-   mDialog.makeRequest(mLastRequest, NOTIFY);   
+   mDialog.makeRequest(mLastNotify, NOTIFY);   
    mLastRequest.header(h_Event).value() = mEventType;   
    if (mSubscriptionId.empty())
    {
       mLastRequest.header(h_Event).param(p_id) = mSubscriptionId;
    }
+   mLastRequest.setContents(document);
+   return mLastRequest;
 }
 
 
