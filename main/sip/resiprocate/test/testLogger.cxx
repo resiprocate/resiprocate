@@ -124,14 +124,7 @@ main(int argc, char* argv[])
    InfoLog(<< "Recursive debug: " << debugLogsInCall());
    DebugLog(<< "Recursive non-debug OK: " << logsInCall());
 
-#ifdef NO_DEBUG
-   cerr << "All OK -- will deadlock next" << endl;
-#else
-   cerr << "All OK -- will assert next (linux)" << endl;
-#endif
-
-   // this will assert except on WIN32 where it will deadlock
-   InfoLog(<< "Recursive non-debug NOT OK: " << logsInCall());
+   InfoLog(<< "Recursive non-debug OK!: " << logsInCall());
    return 0;
 }
 
