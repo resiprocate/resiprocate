@@ -187,6 +187,9 @@ class OrderUnknownParameters
 bool 
 Uri::operator==(const Uri& other) const
 {
+   checkParsed();
+   other.checkParsed();
+   
    if (isEqualNoCase(mScheme, other.mScheme) &&
        isEqualNoCase(mHost, other.mHost) &&
        mUser == other.mUser &&
@@ -308,6 +311,8 @@ Uri::operator!=(const Uri& other) const
 bool
 Uri::operator<(const Uri& other) const
 {
+   other.checkParsed();
+   checkParsed();
    if (mUser < other.mUser)
    {
       return true;
