@@ -8,12 +8,12 @@
 namespace repro
 {
 
-class UserAbstractDB
+class UserAbstractDb
 {
    public:
-      UserAbstractDB();
+      UserAbstractDb();
       
-      virtual ~UserAbstractDB();
+      virtual ~UserAbstractDb();
       
       void requestUserAuthInfo( const resip::Data& user, 
                                 const resip::Data& realm ) const;
@@ -55,7 +55,7 @@ class UserAbstractDB
       resip::Data encodeUserRecord( const UserRecord& userRec ) const;
       UserRecord decodeUserRecord( const resip::Data& data ) const;
 
-      // DB manipulation routines
+      // Db manipulation routines
       virtual void dbWriteRecord( const resip::Data& key, const resip::Data& data ) =0;
       virtual bool dbReadRecord( const resip::Data& key, resip::Data& data ) const =0 ; // return false if not found
       virtual void dbRemoveRecord( const resip::Data& key ) = 0 ;
@@ -65,17 +65,17 @@ class UserAbstractDB
 };
 
 
-class UserDB: public UserAbstractDB
+class UserDb: public UserAbstractDb
 {
    public:
-      UserDB( char* dbName="user_database" );
+      UserDb( char* dbName="user_database" );
       
-      virtual ~UserDB();
+      virtual ~UserDb();
       
    private:
       DB* mDb;
       
-      // DB manipulation routines
+      // Db manipulation routines
       virtual void dbWriteRecord( const resip::Data& key, 
                                   const resip::Data& data );
       virtual bool dbReadRecord(  const resip::Data& key, 

@@ -8,31 +8,35 @@
 #include "resiprocate/os/MD5Stream.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/Symbols.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-UserAbstractDB::UserAbstractDB( )
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+UserAbstractDb::UserAbstractDb( )
 { 
 }
 
-UserDB::UserDB( char* fileName )
+UserDb::UserDb( char* fileName )
 { 
    mDb = dbopen(fileName,O_CREAT|O_RDWR,0000600,DB_BTREE,0);
    if ( !mDb )
    {
+      ErrLog( <<"Could not open user database at " << fileName );
    }
    assert(mDb);
 }
 
 
-UserAbstractDB::~UserAbstractDB()
+UserAbstractDb::~UserAbstractDb()
 { 
 }
 
 
-UserDB::~UserDB()
+UserDb::~UserDb()
 { 
    int ret = mDb->close(mDb);
    assert( ret == 0 );
@@ -40,7 +44,7 @@ UserDB::~UserDB()
 
 
 Data 
-UserAbstractDB::getUserAuthInfo( const Data& key ) const
+UserAbstractDb::getUserAuthInfo( const Data& key ) const
 {
    Data record;
    bool ok = dbReadRecord( key, record );
@@ -56,7 +60,7 @@ UserAbstractDB::getUserAuthInfo( const Data& key ) const
 
 
 void 
-UserAbstractDB::addUser( const Data& username,
+UserAbstractDb::addUser( const Data& username,
                          const Data& realm,
                          const Data& password, 
                          const Data& fullName, 
@@ -71,7 +75,7 @@ UserAbstractDB::addUser( const Data& username,
       << Symbols::COLON
       << password;
 
-   UserAbstractDB::UserRecord rec;
+   UserAbstractDb::UserRecord rec;
    rec.version = 1;
    rec.passwordHash = a1.getHex();
    rec.name = fullName;
@@ -85,7 +89,7 @@ UserAbstractDB::addUser( const Data& username,
 
 
 void 
-UserAbstractDB::removeUser( const Data& aor )
+UserAbstractDb::removeUser( const Data& aor )
 { 
    Data key = aor;
    dbRemoveRecord(key);
@@ -93,7 +97,7 @@ UserAbstractDB::removeUser( const Data& aor )
 
 
 Data 
-UserAbstractDB::encodeUserRecord( const UserRecord& rec ) const
+UserAbstractDb::encodeUserRecord( const UserRecord& rec ) const
 {
    Data data;
    oDataStream s(data);
@@ -125,10 +129,10 @@ UserAbstractDB::encodeUserRecord( const UserRecord& rec ) const
 }
 
 
-UserAbstractDB::UserRecord 
-UserAbstractDB::decodeUserRecord( const Data& pData ) const 
+UserAbstractDb::UserRecord 
+UserAbstractDb::decodeUserRecord( const Data& pData ) const 
 {
-   UserAbstractDB::UserRecord rec;
+   UserAbstractDb::UserRecord rec;
 
    Data data = pData;
    
@@ -176,6 +180,7 @@ UserAbstractDB::decodeUserRecord( const Data& pData ) const
    else
    {
       // unkonwn version 
+      ErrLog( <<"Data in user database with unknown version " << rec.version );
       assert(0);
    }
       
@@ -184,7 +189,7 @@ UserAbstractDB::decodeUserRecord( const Data& pData ) const
 
 
 resip::Data 
-UserAbstractDB::buildKey( const resip::Data& user, 
+UserAbstractDb::buildKey( const resip::Data& user, 
                           const resip::Data& realm) const
 {
    Data ret = user + Data("@") + realm;
@@ -193,7 +198,7 @@ UserAbstractDB::buildKey( const resip::Data& user,
 
 
 void 
-UserDB::dbWriteRecord( const Data& pKey, const Data& pData )
+UserDb::dbWriteRecord( const Data& pKey, const Data& pData )
 { 
    DBT key,data;
    int ret;
@@ -207,8 +212,6 @@ UserDB::dbWriteRecord( const Data& pKey, const Data& pData )
    ret = mDb->put(mDb,&key,&data,0);
    assert( ret == 0 );
 
-   //clog << "Wrote " << pKey << "->" << pData << endl;
-   
    // TODO - not sure if next sync is useful 
    ret = mDb->sync(mDb,0);
    assert( ret == 0 );
@@ -216,7 +219,7 @@ UserDB::dbWriteRecord( const Data& pKey, const Data& pData )
 
 
 bool 
-UserDB::dbReadRecord( const Data& pKey, Data& pData ) const
+UserDb::dbReadRecord( const Data& pKey, Data& pData ) const
 { 
    DBT key,data;
    int ret;
@@ -252,7 +255,7 @@ UserDB::dbReadRecord( const Data& pKey, Data& pData ) const
 
 
 void 
-UserDB::dbRemoveRecord( const Data& pKey )
+UserDb::dbRemoveRecord( const Data& pKey )
 { 
    DBT key;
 
@@ -265,21 +268,21 @@ UserDB::dbRemoveRecord( const Data& pKey )
 
 
 resip::Data 
-UserAbstractDB::getFirstKey()
+UserAbstractDb::getFirstKey()
 {
    return dbFirstKey();
 }
 
 
 resip::Data 
-UserAbstractDB::getNextKey()
+UserAbstractDb::getNextKey()
 {
    return dbNextKey();
 }
 
 
 resip::Data 
-UserDB::dbFirstKey()
+UserDb::dbFirstKey()
 { 
    DBT key,data;
    int ret;
@@ -305,7 +308,7 @@ UserDB::dbFirstKey()
 
 
 resip::Data 
-UserDB::dbNextKey()
+UserDb::dbNextKey()
 { 
    DBT key,data;
    int ret;
