@@ -2,10 +2,12 @@
 #define RESIP_SUBSCRIPTIONHANDLER_HXX
 
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/Mime.hxx"
 
 namespace resip
 {
 class SipMessage;
+class SecurityAttributes;
 
 class ClientSubscriptionHandler
 {
@@ -19,7 +21,7 @@ class ClientSubscriptionHandler
       //subscription can be ended through a notify or a failure response.
       virtual void onTerminated(ClientSubscriptionHandle, const SipMessage& msg)=0;   
       //not sure if this has any value.
-      virtual void onNewSubscription(ClientSubscriptionHandle, const SipMessage& notify)=0; 
+      virtual void onNewSubscription(ClientSubscriptionHandle, const SipMessage& notify)=0;
 };
 
 class ServerSubscriptionHandler
@@ -27,6 +29,10 @@ class ServerSubscriptionHandler
   public:   
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;
       virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub);
+      virtual void onPublished(ServerSubscriptionHandle associated, 
+                               ServerPublicationHandle publication, 
+                               const Contents* contents,
+                               const SecurityAttributes* attrs);
 
       //called when this usage is destroyed for any reason. One of the following
       //three methods will always be called before this, but this is the only
@@ -44,7 +50,8 @@ class ServerSubscriptionHandler
 
       virtual bool hasDefaultExpires() const;
       virtual int getDefaultExpires() const;
-      
+
+      const Mimes& getSupportedMimeTypes() const;
 };
  
 }

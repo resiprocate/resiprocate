@@ -14,6 +14,8 @@ class ServerSubscription : public BaseSubscription
    public:
       typedef Handle<ServerSubscription> ServerSubscriptionHandle;
       ServerSubscriptionHandle getHandle();
+
+      const Data& getSubscriber() const { return mSubscriber; }
      
       //only 200 and 202 are permissable.  SubscriptionState is not affected.
       //currently must be called for a refresh as well as initial creation.
@@ -50,6 +52,8 @@ class ServerSubscription : public BaseSubscription
       void makeNotify();    
       
       int getTimeLeft();
+
+      Data mSubscriber;
 
 //      const Contents* mCurrentEventDocument;
       SipMessage mLastNotify;

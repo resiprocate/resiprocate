@@ -323,7 +323,7 @@ Dialog::dispatch(const SipMessage& msg)
             }
             else
             {
-               if (request.header(h_Event).value() == "refer")
+               if (request.exists(h_Event) && request.header(h_Event).value() == "refer")
                {
                   InfoLog (<< "Received a subscribe to a non-existent refer subscription: " << request.brief());
                   SipMessage failure;
