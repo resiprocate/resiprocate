@@ -103,8 +103,8 @@ class Dialog
       } DialogType;
       
       DialogType mType; // !jf! is this necessary?
-      Data mLocalTag;
-      Data mRemoteTag;
+//      Data mLocalTag;
+//      Data mRemoteTag;
       NameAddrs mRouteSet;
       
       //variants
