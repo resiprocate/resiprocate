@@ -40,7 +40,9 @@ public:
       TuIM(SipStack* stack, 
            const Uri& aor, 
            const Uri& contact,
-           Callback* callback);
+           Callback* callback,
+           const int registrationTimeSeconds = 1*60*60,
+           const int subscriptionTimeSeconds =   10*60 );
 
       ///
       void setOutboundProxy( const Uri& uri );
@@ -54,8 +56,7 @@ public:
 
       // Registration management 
       void registerAor( const Uri& uri, 
-                        const Data& password = Data::Empty, 
-                        int registrationTimeSeconds = 1800 );
+                        const Data& password = Data::Empty );
       
       // Buddy List management
       int getNumBuddies() const;
@@ -82,6 +83,8 @@ public:
       void sendNotify(Dialog* dialog);
       
       void setOutbound( SipMessage& msg );
+      
+      void subscribeBuddy( Buddy& buddy );
       
       Callback* mCallback;
       SipStack* mStack;
@@ -113,8 +116,12 @@ public:
       Data   mRegistrationPassword;
       int    mLastAuthCSeq; // This is the CSeq of the last registration message
                             // sent that included digest authorization information 
-      int    mRegistrationTimeSeconds; // this is the default time to request in
-                                       // a registration
+
+      const int    mRegistrationTimeSeconds; // this is the default time to request in
+                                             // a registration
+            
+      const int    mSubscriptionTimeSeconds; // this is the default time to request in
+                                             // a subscription
             
       Uri mOutboundProxy;
       Data mUAName;
