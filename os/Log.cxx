@@ -7,7 +7,8 @@
 #include <util/Data.hxx>
 
 #ifndef WIN32
-#include <sys/time.h>#endif
+#include <sys/time.h>
+#endif
 
 #include <sys/types.h>
 #include <time.h>
@@ -22,7 +23,12 @@ Log::Level Log::_level = Log::DEBUG;
 Log::Type Log::_type = COUT;
 Data Log::_appName;
 Data Log::_hostname;
-#ifndef WIN32pid_t Log::_pid=0;#elseint Log::_pid=0;#endif
+
+#ifndef WIN32
+pid_t Log::_pid=0;
+#else
+int Log::_pid=0;
+#endif
 
 const char
 Log::_descriptions[][32] = {"EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "DEBUG_STACK", ""}; 
@@ -37,9 +43,17 @@ Log::initialize(Type type, Level level, const Data& appName)
    _appName = appName.substr(appName.find_last_of("/")+1);
    
  
-#ifdef WIN32    // TODO FIX    assert(0);   _hostname = "Unkown";   _pid = 0;#else    char buffer[1024];    gethostname(buffer, sizeof(buffer));
+#ifdef WIN32 
+   // TODO FIX  
+  assert(0); 
+  _hostname = "Unkown"; 
+  _pid = 0;
+#else  
+  char buffer[1024];  
+  gethostname(buffer, sizeof(buffer));
    _hostname = buffer;
-   _pid = getpid();#endif
+   _pid = getpid();
+#endif
 
 }
 
@@ -87,12 +101,16 @@ Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm)
 	strm << _descriptions[level] << DELIM
         << timestamp() << DELIM
         << subsystem DELIM ;
-#else        strm << _descriptions[level] << DELIM
+#else   
+     strm << _descriptions[level] << DELIM
         << timestamp() << DELIM  
         << _hostname << DELIM  
         << _appName << DELIM
         << subsystem << DELIM 
-        << _pid << DELIM		<< pthread_self() << DELIM;#endif   return strm;
+        << _pid << DELIM
+		<< pthread_self() << DELIM;
+#endif 
+  return strm;
 }
 
 Data
@@ -101,7 +119,14 @@ Log::timestamp()
    const unsigned int DATEBUF_SIZE=256;
    char datebuf[DATEBUF_SIZE];
    
-#ifdef WIN32  int result = 1;   struct { int tv_sec; int tv_usec; } tv = {0,0};#else   struct timeval tv;   int result = gettimeofday (&tv, NULL);#endif   
+#ifdef WIN32 
+ int result = 1; 
+  struct { int tv_sec; int tv_usec; } tv = {0,0};
+#else 
+  struct timeval tv; 
+  int result = gettimeofday (&tv, NULL);
+#endif   
+
    if (result == -1)
    {
       /* If we can't get the time of day, don't print a timestamp.
