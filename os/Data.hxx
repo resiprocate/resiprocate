@@ -1,7 +1,7 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.26 2002/11/06 02:59:29 davidb Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.27 2002/11/07 02:44:49 derekm Exp $";
 
 #include <iostream>
 #include <string>
@@ -31,6 +31,7 @@ class Data
       bool operator==(const char* rhs) const;
       bool operator==(const std::string& rhs) const;
       bool operator<(const Data& rhs) const;
+      bool operator>(const Data& rhs) const;
 
       Data& operator=(const Data& data);
       Data& operator=(const char* str);
