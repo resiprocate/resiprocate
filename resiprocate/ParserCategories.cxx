@@ -770,7 +770,8 @@ WarningCategory::encode(std::ostream& str) const
 //====================
 IntegerCategory::IntegerCategory(const IntegerCategory& rhs)
    : ParserCategory(rhs),
-     mValue(rhs.mValue)
+     mValue(rhs.mValue),
+     mComment(rhs.mComment)
 {}
 
 IntegerCategory&
@@ -780,9 +781,11 @@ IntegerCategory::operator=(const IntegerCategory& rhs)
    {
       ParserCategory::operator=(rhs);
       mValue = rhs.mValue;
+      mComment = rhs.mComment;
    }
    return *this;
 }
+
 ParserCategory* IntegerCategory::clone() const
 {
    return new IntegerCategory(*this);
@@ -814,14 +817,62 @@ std::ostream&
 IntegerCategory::encode(std::ostream& str) const
 {
   str << mValue;
+
   if (!mComment.empty())
   {
      str << "(" << mComment << ")";
   }
   
   encodeParameters(str);
-  
-  // call encode on the list to get params
+  return str;
+}
+
+//====================
+// Expires:
+//====================
+ExpiresCategory::ExpiresCategory(const ExpiresCategory& rhs)
+   : ParserCategory(rhs),
+     mValue(rhs.mValue)
+{}
+
+ExpiresCategory&
+ExpiresCategory::operator=(const ExpiresCategory& rhs)
+{
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      mValue = rhs.mValue;
+   }
+   return *this;
+}
+
+ParserCategory* ExpiresCategory::clone() const
+{
+   return new ExpiresCategory(*this);
+}
+
+void
+ExpiresCategory::parse(ParseBuffer& pb)
+{
+   const char* start = pb.skipWhitespace();
+   try
+   {
+      mValue = pb.integer();
+   }
+   catch (ParseBuffer::Exception& e)
+   {
+      mValue = 3600;
+      pb.skipToChar(Symbols::SEMI_COLON[0]);
+   }
+   
+   parseParameters(pb);
+}
+
+std::ostream& 
+ExpiresCategory::encode(std::ostream& str) const
+{
+   str << mValue;
+  encodeParameters(str);
   return str;
 }
 
