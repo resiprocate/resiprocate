@@ -21,17 +21,17 @@ using namespace resip;
 const int UdpTransport::MaxBufferSize = 8192;
 
 UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
-                           int portNum,
-                           const Data& pinterface, 
-                           bool ipv4) 
-   : Transport(fifo, portNum, pinterface, ipv4)
+                           int portNum,  
+                           IpVersion version,
+                           const Data& pinterface) 
+   : Transport(fifo, portNum, version, pinterface)
 {
    InfoLog (<< "Creating udp transport host=" << pinterface 
             << " port=" << portNum
-            << " ipv4=" << ipv4);
+            << " ipv4=" << bool(version==V4) );
 
    mTuple.setType(transport());
-   mFd = Transport::socket(transport(), ipv4);
+   mFd = Transport::socket(transport(), version==V4);
    bind();
 }
 
