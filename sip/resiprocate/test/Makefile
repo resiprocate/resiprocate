@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.19 2002/11/29 08:56:23 fluffy Exp $
+# $Id: Makefile,v 1.20 2002/12/02 23:43:43 derekm Exp $
 
 USE_SSL = 1
 
@@ -29,10 +29,9 @@ TESTPROGRAMS =	\
 	        testDnsResolver.cxx \
 	        testPreparse.cxx \
 		testSipMessageMemory.cxx \
-	        testTcpTransport.cxx \
 		testTransactionFSM.cxx \
 		lg.cxx \
-
+#	        testTcpTransport.cxx \
 
 SRC = \
 		Register.cxx \
