@@ -171,6 +171,9 @@ InviteSession::dispatch(const SipMessage& msg)
    {
       if (msg.isRequest())
       {
+         SipMessage response;         
+         mDialog.makeResponse(response, msg, 200);
+         send(response);
          mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
       }
       else
@@ -394,7 +397,7 @@ InviteSession::makeInfo(auto_ptr<Contents> contents)
    }
    mNitState = NitProceeding;
    mDialog.makeRequest(mLastNit, INFO);
-   mLastRequest.setContents(contents);
+   mLastNit.setContents(contents);
    return mLastNit;   
 }
 
