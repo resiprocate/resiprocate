@@ -49,7 +49,7 @@ class BaseSecurity
 
       typedef enum
       {
-         RootCert,
+         RootCert=1,
          DomainCert,
          DomainPrivateKey,
          UserCert,
