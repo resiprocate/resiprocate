@@ -26,7 +26,7 @@ class ClientPublication : public BaseUsage
       void refresh(int expiration=0);
       void update(const Contents* body);
 
-      virtual void end();
+      virtual SipMessage& unpublish();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimer& timer);
 
@@ -37,9 +37,10 @@ class ClientPublication : public BaseUsage
       friend class DialogUsageManager;
       ClientPublication(DialogUsageManager& dum, 
                         Dialog& dialog,
-                        const SipMessage& pub);
+                        SipMessage& pub);
       
       ClientPublication::Handle mHandle;
+      SipMessage& mPublish;
 
       // disabled
       ClientPublication(const ClientPublication&);
