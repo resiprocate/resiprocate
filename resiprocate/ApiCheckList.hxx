@@ -24,6 +24,7 @@ static ::resip::ApiCheck::ApiEntry anonymous_resipApiSizeList[] =
 {
     // KEEP SORTED ALPHABETICALLY
     TENT(Connection,"NEW_MSG_HEADER_SCANNER"),
+    TENT(Data,"RESIP_DATA_LOCAL_SIZE (configure)"),
     TENT(DnsResult,"USE_IPV6"),
     TENT(Headers,"PARTIAL_TEMPLATE_SPECIALIZATION"),
     TENT(MsgHeaderScanner,"NEW_MSG_HEADER_SCANNER"),
