@@ -964,7 +964,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
    
    assert(mAppDialogSetFactory.get());
    //!dcm! -- fix to use findDialog
-   if (!request.header(h_To).exists(p_tag) || mSoftCheck(request))
+   if (!request.header(h_To).exists(p_tag))
    {
       switch (request.header(h_RequestLine).getMethod())
       {
