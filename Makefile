@@ -1,12 +1,14 @@
-# $Id: Makefile,v 1.30 2002/09/22 06:47:59 jason Exp $
+# $Id: Makefile,v 1.31 2002/09/22 07:03:11 jason Exp $
 
 # must have ARCH set
 ARCH = i686
 
 PROG = sipstack
 
-SRC =	Condition.cxx \
+SRC =	\
+	Condition.cxx \
 	Data.cxx \
+	Executive.cxx \
 	FloatSubComponent.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
@@ -18,21 +20,23 @@ SRC =	Condition.cxx \
 	MethodTypes.cxx \
 	Mutex.cxx \
 	ParserCategories.cxx \
+	Preparse.cxx \
 	SipMessage.cxx \
+	SipStack.cxx \
 	StringSubComponent.cxx \
 	SubComponent.cxx \
 	SubComponentList.cxx \
 	Subsystem.cxx \
 	Symbols.cxx \
-	UnknownSubComponent.cxx \
-	Preparse.cxx \
-	UdpTransport.cxx \
 	Timer.cxx \
+	TimerMessage.cxx \
 	TimerQueue.cxx \
-	SipStack.cxx \
-	Executive.cxx \
+	TransactionState.cxx \
 	Transport.cxx \
-	TransportSelector.cxx 
+	TransportSelector.cxx \
+	UdpTransport.cxx \
+	UnknownSubComponent.cxx \
+
 
 
 OSRC =   *.hxx Makefile
