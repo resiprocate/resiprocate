@@ -1,19 +1,36 @@
 #include <stdio.h>
-#include <openssl/rand.h>
+//#include <openssl/rand.h>
 #include <util/RandomHex.hxx>
 #include <util/Lock.hxx>
+#include <stdlib.h>
 
 using namespace Vocal2;
 
 void
 RandomHex::initialize()
 {
-   assert(RAND_status() == 1);
+#if 1
+   // TODO FIX 
+   unsigned int seed = 1;
+   srandom(seed);
+#else
+    assert(RAND_status() == 1);
+#endif
 }
 
 Data
 RandomHex::get(unsigned int len)
 {
+#if 1
+   unsigned char buffer[len];
+   int ret = random();
+   assert (ret == 1);
+   
+   Data result;
+   result = convertToHex(buffer, len);
+   
+   return result;
+#else
    unsigned char buffer[len];
    int ret = RAND_bytes(buffer, len);
    assert (ret == 1);
@@ -22,6 +39,7 @@ RandomHex::get(unsigned int len)
    result = convertToHex(buffer, len);
    
    return result;
+#endif
 }
 
 Data 
