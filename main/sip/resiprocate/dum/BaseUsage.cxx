@@ -13,7 +13,6 @@ BaseUsage::makeInviteSession()
 {
    return mDialog.makeInviteSession();
 }
-#endif
 
 SipMessage* 
 BaseUsage::makeSubscription()
@@ -39,11 +38,17 @@ BaseUsage::makeRegistration()
    return mDialog.makeRegistration();
 }
 
+
 SipMessage* 
 BaseUsage::makeOutOfDialogRequest()
 {
    return mDialog.makeOutOfDialogRequest();
 }
+
+#endif
+
+
+
 
 BaseUsage::Handle::Handle(DialogUsageManager& dum)
    : mDum(&dum),
