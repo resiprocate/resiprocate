@@ -190,55 +190,58 @@ Vocal2::skipSipLWS(ParseBuffer& pb)
          }
          return pb.position();
       }
-      switch (state)
+      if (!pb.eof())
       {
-         case WS:
-            if (*pb.position() == Symbols::CR[0])
-            {
-               state = CR;
-            }
-            break;
-         case CR:
-            if (*pb.position() == Symbols::CR[0])
-            {
-               state = CR;
-            }
-            else if (*pb.position() == Symbols::LF[0])
-            {
-               state = LF;
-            }
-            else
-            {
-               state = WS;
-            }
-            break;
-         case LF:
-            if (*pb.position() == Symbols::CR[0])
-            {
-               state = CR1;
-            }
-            else if (*pb.position() == Symbols::LF[0])
-            {
-               state = WS;
-            }
-            break;
-         case CR1:
-            if (*pb.position() == Symbols::CR[0])
-            {
-               state = CR;
-            }
-            else if (*pb.position() == Symbols::LF[0])
-            {
-               pb.reset(pb.position() - 3);
-               return pb.position();
-            }
-            else
-            {
-               state = WS;
-            }
-            break;
-         default:
-            assert(false);
+	 switch (state)
+	 {
+	    case WS:
+	       if (*pb.position() == Symbols::CR[0])
+	       {
+		  state = CR;
+	       }
+	       break;
+	    case CR:
+	       if (*pb.position() == Symbols::CR[0])
+	       {
+		  state = CR;
+	       }
+	       else if (*pb.position() == Symbols::LF[0])
+	       {
+		  state = LF;
+	       }
+	       else
+	       {
+		  state = WS;
+	       }
+	       break;
+	    case LF:
+	       if (*pb.position() == Symbols::CR[0])
+	       {
+		  state = CR1;
+	       }
+	       else if (!pb.eof() && *pb.position() == Symbols::LF[0])
+	       {
+		  state = WS;
+	       }
+	       break;
+	    case CR1:
+	       if (*pb.position() == Symbols::CR[0])
+	       {
+		  state = CR;
+	       }
+	       else if (*pb.position() == Symbols::LF[0])
+	       {
+		  pb.reset(pb.position() - 3);
+		  return pb.position();
+	       }
+	       else
+	       {
+		  state = WS;
+	       }
+	       break;
+	    default:
+	       assert(false);
+	 }
       }
       pb.skipChar();
    }
@@ -340,7 +343,7 @@ MessageWaitingContents::parse(ParseBuffer& pb)
       unsigned int numOld = pb.integer();
       skipSipLWS(pb);
 
-      if (*pb.position() != Symbols::LPAREN[0])
+      if (!pb.eof() && *pb.position() != Symbols::LPAREN[0])
       {
          if (mHeaders[ht] != 0)
          {
@@ -374,7 +377,7 @@ MessageWaitingContents::parse(ParseBuffer& pb)
       pb.skipChars(Symbols::CRLF);
    }
 
-   if (*pb.position() == Symbols::CR[0])
+   if (!pb.eof() && *pb.position() == Symbols::CR[0])
    {
       pb.skipChars(Symbols::CRLF);
       
