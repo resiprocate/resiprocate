@@ -19,6 +19,7 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, 
      mOnNewSubscriptionCalled(mEventType == "refer"),  // don't call onNewSubscription for Refer subscriptions
      mEnded(false)
 {
+   WarningLog(<< "ClientSubscription::ClientSubscription " << request);
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
 }
 
@@ -127,6 +128,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          }
       }
 
+      WarningLog(<< "got here" << refreshInterval << " : " << mEnded);
       if (!mEnded && msg.header(h_SubscriptionState).value() == "active")
       {
          if (refreshInterval)
@@ -136,6 +138,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
             DebugLog (<< "[ClientSubscription] reSUBSCRIBE in " << t);
          }
 
+         WarningLog(<< "onUpdateActive");
          handler->onUpdateActive(getHandle(), msg);
       }
       else if (!mEnded && msg.header(h_SubscriptionState).value() == "pending")
@@ -227,9 +230,19 @@ ClientSubscription::dispatch(const DumTimeout& timer)
    {
       if (timer.type() == DumTimeout::SubscriptionRetry)
       {
-         SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-         delete this;
-         mDum.send(sub);
+         // this indicates that the ClientSubscription was created by a 408
+         if (mOnNewSubscriptionCalled)
+         {
+            InfoLog(<< "ClientSubscription: application retry refresh");
+            requestRefresh();
+         }
+         else
+         {
+            InfoLog(<< "ClientSubscription: application retry new request");
+            SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
+            delete this;
+            mDum.send(sub);
+         }
       }
       else
       {
@@ -317,7 +330,9 @@ void ClientSubscription::dialogDestroyed(const SipMessage& msg)
 std::ostream&
 ClientSubscription::dump(std::ostream& strm) const
 {
-   strm << "ClientSubscription " << mLastRequest.header(h_From).uri();
+   // !dlb!
+   // strm << "ClientSubscription " << mLastRequest.header(h_From).uri();
+   strm << "ClientSubscription " << mLastRequest;
    return strm;
 }
 
