@@ -3,4 +3,5 @@
 a.out
 bin.*
 headers-hash.c
+html
 obj.*
