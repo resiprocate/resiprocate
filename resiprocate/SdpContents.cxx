@@ -1,6 +1,3 @@
-
-
-
 #include "sip2/sipstack/SdpContents.hxx"
 #include "sip2/util/ParseBuffer.hxx"
 #include "sip2/sipstack/Symbols.hxx"
@@ -11,6 +8,71 @@ using namespace std;
 ContentsFactory<SdpContents> SdpContents::Factory;
 
 const char* NetworkType[] = {"???", "IP4", "IP6"};
+
+bool 
+AttributeHelper::exists(const Data& key) const
+{
+   return mAttributes.find(key) != mAttributes.end();
+}
+
+const list<Data>& 
+AttributeHelper::getValue(const Data& key) const
+{
+   return mAttributes.find(key)->second;
+}
+
+ostream& 
+AttributeHelper::encode(ostream& s) const
+{
+   for (std::map< Data, std::list<Data> >::const_iterator i = mAttributes.begin();
+        i != mAttributes.end(); i++)
+   {
+      for (list<Data>::const_iterator j = i->second.begin();
+           j != i->second.end(); j++)
+      {
+         s << "a="
+           << i->first;
+         if (!j->empty())
+         {
+            s << Symbols::COLON[0] << *j;
+         }
+         s << Symbols::CRLF;
+      }
+   }
+   return s;
+}
+      
+void 
+AttributeHelper::parse(ParseBuffer& pb)
+{
+   while (!pb.eof() && *pb.position() == 'a')
+   {
+      Data key;
+      Data value;
+      
+      pb.skipChar('a');
+      const char* anchor = pb.skipChar(Symbols::EQUALS[0]);
+      pb.skipToOneOf(Symbols::COLON, Symbols::CR);
+      pb.data(key, anchor);
+      if (*pb.position() == Symbols::COLON[0])
+      {
+         anchor = pb.skipChar(Symbols::COLON[0]);
+         pb.skipToChar(Symbols::CR[0]);
+         pb.data(value, anchor);
+      }
+            
+      pb.skipChar(Symbols::CR[0]);
+      pb.skipChar(Symbols::LF[0]);
+            
+      mAttributes[key].push_back(value);
+   }
+}
+
+void 
+AttributeHelper::addAttribute(const Data& key, const Data& value)
+{
+   mAttributes[key].push_back(value);
+}
 
 SdpContents::SdpContents()
    : Contents(getStaticType())
@@ -523,7 +585,7 @@ SdpContents::Session::Timezones::addAdjustment(const Adjustment& adjust)
 }
 
 SdpContents::Session::Encryption::Encryption()
-   : mMethod(Prompt),
+   : mMethod(NoEncryption),
      mKey(Data::Empty)
 {}
 
@@ -665,28 +727,8 @@ SdpContents::Session::parse(ParseBuffer& pb)
    {
       mEncryption.parse(pb);
    }
-   
-   while (!pb.eof() && *pb.position() == 'a')
-   {
-      Data key;
-      Data value;
 
-      pb.skipChar('a');
-      anchor = pb.skipChar(Symbols::EQUALS[0]);
-      pb.skipToOneOf(Symbols::COLON, Symbols::CR);
-      pb.data(key, anchor);
-      if (*pb.position() == Symbols::COLON[0])
-      {
-         anchor = pb.skipChar(Symbols::COLON[0]);
-         pb.skipToChar(Symbols::CR[0]);
-         pb.data(value, anchor);
-      }
-
-      pb.skipChar(Symbols::CR[0]);
-      pb.skipChar(Symbols::LF[0]);
-      
-      mAttributes[key] = value;
-   }
+   mAttributeHelper.parse(pb);
 
    while (!pb.eof() && *pb.position() == 'm')
    {
@@ -744,21 +786,12 @@ SdpContents::Session::encode(ostream& s) const
 
    mTimezones.encode(s);
 
-   if (mEncryption.getMethod())
+   if (mEncryption.getMethod() != Encryption::NoEncryption)
    {
       mEncryption.encode(s);
    }
 
-   for (map<Data, Data>::const_iterator i = mAttributes.begin();
-        i != mAttributes.end(); i++)
-   {
-      s << "a="
-        << i->first;
-      if (!i->second.empty())
-      {
-         s << Symbols::COLON[0] << i->second << Symbols::CRLF;
-      }
-   }
+   mAttributeHelper.encode(s);
 
    for (list<Medium>::const_iterator i = mMedia.begin();
         i != mMedia.end(); i++)
@@ -803,19 +836,19 @@ SdpContents::Session::addMedium(const Medium& medium)
 void
 SdpContents::Session::addAttribute(const Data& key, const Data& value)
 {
-   mAttributes[key] = value;
+   mAttributeHelper.addAttribute(key, value);
 }
 
 bool
 SdpContents::Session::exists(const Data& key) const
 {
-   return mAttributes.find(key) != mAttributes.end();
+   return mAttributeHelper.exists(key);
 }
 
-const Data&
+const list<Data>&
 SdpContents::Session::getValue(const Data& key) const
 {
-   return mAttributes.find(key)->second;
+   return mAttributeHelper.getValue(key);
 }
 
 SdpContents::Session::Medium::Medium(const Data& name,
@@ -932,27 +965,7 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
       mEncryption.parse(pb);
    }
    
-   while (!pb.eof() && *pb.position() == 'a')
-   {
-      Data key;
-      Data value;
-
-      pb.skipChar('a');
-      anchor = pb.skipChar(Symbols::EQUALS[0]);
-      pb.skipToOneOf(Symbols::COLON, Symbols::CR);
-      pb.data(key, anchor);
-      if (*pb.position() == Symbols::COLON[0])
-      {
-         anchor = pb.skipChar(Symbols::COLON[0]);
-         pb.skipToChar(Symbols::CR[0]);
-         pb.data(value, anchor);
-      }
-
-      pb.skipChar(Symbols::CR[0]);
-      pb.skipChar(Symbols::LF[0]);
-      
-      mAttributes[key] = value;
-   }
+   mAttributeHelper.parse(pb);
 }
 
 ostream& 
@@ -992,21 +1005,12 @@ SdpContents::Session::Medium::encode(ostream& s) const
       i->encode(s);
    }
 
-   if (mEncryption.getMethod())
+   if (mEncryption.getMethod() != Encryption::NoEncryption)
    {
       mEncryption.encode(s);
    }
 
-   for (map<Data, Data>::const_iterator i = mAttributes.begin();
-        i != mAttributes.end(); i++)
-   {
-      s << "a="
-        << i->first;
-      if (!i->second.empty())
-      {
-         s << Symbols::COLON[0] << i->second << Symbols::CRLF;
-      }
-   }
+   mAttributeHelper.encode(s);
    
    return s;
 }
@@ -1032,26 +1036,25 @@ SdpContents::Session::Medium::addBandwidth(const Bandwidth& bandwidth)
 void
 SdpContents::Session::Medium::addAttribute(const Data& key, const Data& value)
 {
-   mAttributes[key] = value;
+   mAttributeHelper.addAttribute(key, value);
 }
 
 bool
 SdpContents::Session::Medium::exists(const Data& key) const
 {
-   if (mAttributes.find(key) != mAttributes.end())
+   if (mAttributeHelper.exists(key))
    {
       return true;
    }
    return mSession->exists(key);
 }
 
-const Data&
+const list<Data>&
 SdpContents::Session::Medium::getValue(const Data& key) const
 {
-   map<Data, Data>::const_iterator res = mAttributes.find(key);
-   if (res != mAttributes.end())
+   if (exists(key))
    {
-      return res->second;
+      return mAttributeHelper.getValue(key);
    }
    return mSession->getValue(key);
 }
