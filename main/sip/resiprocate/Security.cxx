@@ -178,6 +178,7 @@ Security::getTlsCtx(bool isServer)
       DebugLog( << "Setting up as TLS client" );
    }
 
+#if 0
    if ( mTlsServer )
    {
       if ( publicCert )
@@ -193,6 +194,7 @@ Security::getTlsCtx(bool isServer)
          __FILE__,__LINE__);
       }
    }
+#endif
 
    assert( certAuthorities );
    SSL_CTX_set_cert_store(ctxTls, certAuthorities);
