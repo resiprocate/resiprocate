@@ -117,6 +117,7 @@ TransactionController::registerForTransactionTermination()
 
 #warning Need force target support to work properly.
 
+#if 0
 void
 TransactionController::symetricResponses(const Data& tid, bool onoff)
 {
@@ -133,6 +134,7 @@ TransactionController::symetricResponses(const Data& tid, bool onoff)
     ts->mSymResponses = onoff;
     DebugLog(<<"Set sym responses " << (onoff ? "on" : "off") << " for " << tid );
 }
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
