@@ -9,7 +9,11 @@
 #endif
 
 // perhaps not the best thing to do here
+#ifdef WIN32
+typedef unsigned int u_int32_t;
+#else
 #include <sys/socket.h> // for u_int32_t
+#endif
 
 #endif
 /* ====================================================================

@@ -126,6 +126,9 @@
 					RelativePath="util\Data.cxx">
 				</File>
 				<File
+					RelativePath="util\DataStream.cxx">
+				</File>
+				<File
 					RelativePath="util\Fifo.cxx">
 				</File>
 				<File
@@ -160,6 +163,9 @@
 				</File>
 				<File
 					RelativePath="util\VException.cxx">
+				</File>
+				<File
+					RelativePath="util\vmd5.cxx">
 				</File>
 			</Filter>
 			<Filter
@@ -217,6 +223,9 @@
 					RelativePath="sipstack\Preparse.cxx">
 				</File>
 				<File
+					RelativePath="sipstack\Resolver.cxx">
+				</File>
+				<File
 					RelativePath="sipstack\SipMessage.cxx">
 				</File>
 				<File
@@ -270,6 +279,9 @@
 					RelativePath="util\Data.hxx">
 				</File>
 				<File
+					RelativePath="util\DataStream.hxx">
+				</File>
+				<File
 					RelativePath="util\Fifo.hxx">
 				</File>
 				<File
@@ -319,6 +331,9 @@
 				</File>
 				<File
 					RelativePath="util\compat.hxx">
+				</File>
+				<File
+					RelativePath="util\vmd5.hxx">
 				</File>
 				<File
 					RelativePath="util\vthread.hxx">
@@ -395,6 +410,9 @@
 				</File>
 				<File
 					RelativePath="sipstack\Preparse.hxx">
+				</File>
+				<File
+					RelativePath="sipstack\Resolver.hxx">
 				</File>
 				<File
 					RelativePath="sipstack\SipMessage.hxx">
