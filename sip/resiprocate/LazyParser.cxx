@@ -79,11 +79,17 @@ LazyParser::clear()
 }
 
 std::ostream&
-LazyParser::encodeFromHeaderFieldValue(std::ostream& str) const
+LazyParser::encode(std::ostream& str) const
 {
-   assert(mHeaderField);
-   mHeaderField->encode(str);
-   return str;
+   if (isParsed())
+   {
+      return encodeParsed(str);
+   }
+   else
+   {
+      assert(mHeaderField);
+      return mHeaderField->encode(str);
+   }
 }
 
 std::ostream&

@@ -77,7 +77,7 @@ Token::clone() const
 }
 
 std::ostream& 
-Token::encode(std::ostream& str) const
+Token::encodeParsed(std::ostream& str) const
 {
    str << mValue;
    return str;
@@ -165,7 +165,7 @@ Mime::clone() const
 }
 
 std::ostream&
-Mime::encode(std::ostream& str) const
+Mime::encodeParsed(std::ostream& str) const
 {
    str << mType << Symbols::SLASH << mSubType ;
    encodeParameters(str);
@@ -216,7 +216,7 @@ Auth::parse(ParseBuffer& pb)
 }
 
 std::ostream& 
-Auth::encode(std::ostream& str) const
+Auth::encodeParsed(std::ostream& str) const
 {
    if (!mScheme.empty())
    {
@@ -341,7 +341,7 @@ CSeqCategory::parse(ParseBuffer& pb)
 }
 
 std::ostream& 
-CSeqCategory::encode(std::ostream& str) const
+CSeqCategory::encodeParsed(std::ostream& str) const
 {
    str << mSequence << Symbols::SPACE << (mMethod != UNKNOWN ? MethodNames[mMethod] : mUnknownMethodName);
    return str;
@@ -689,7 +689,7 @@ static void pad2(const int x, std::ostream& str)
 }
 
 std::ostream& 
-DateCategory::encode(std::ostream& str) const
+DateCategory::encodeParsed(std::ostream& str) const
 {
    str << DayOfWeekData[mDayOfWeek] // Mon
        << Symbols::COMMA[0] << Symbols::SPACE[0];
@@ -776,7 +776,7 @@ WarningCategory::text()
 }
 
 std::ostream& 
-WarningCategory::encode(std::ostream& str) const
+WarningCategory::encodeParsed(std::ostream& str) const
 {
    str << mCode << Symbols::SPACE[0];
    str << mHostname << Symbols::SPACE[0];
@@ -834,7 +834,7 @@ IntegerCategory::parse(ParseBuffer& pb)
 }
 
 std::ostream& 
-IntegerCategory::encode(std::ostream& str) const
+IntegerCategory::encodeParsed(std::ostream& str) const
 {
   str << mValue;
 
@@ -889,7 +889,7 @@ ExpiresCategory::parse(ParseBuffer& pb)
 }
 
 std::ostream& 
-ExpiresCategory::encode(std::ostream& str) const
+ExpiresCategory::encodeParsed(std::ostream& str) const
 {
    str << mValue;
   encodeParameters(str);
@@ -926,7 +926,7 @@ StringCategory::parse(ParseBuffer& pb)
 }
 
 std::ostream& 
-StringCategory::encode(std::ostream& str) const
+StringCategory::encodeParsed(std::ostream& str) const
 {
    str << mValue;
    return str;
@@ -980,7 +980,7 @@ GenericURI::clone() const
 }
 
 std::ostream& 
-GenericURI::encode(std::ostream& str) const
+GenericURI::encodeParsed(std::ostream& str) const
 {
    str << Symbols::LA_QUOTE[0]
        << mUri
@@ -1068,7 +1068,7 @@ Via::parse(ParseBuffer& pb)
 }
 
 ostream&
-Via::encode(ostream& str) const
+Via::encodeParsed(ostream& str) const
 {
    str << mProtocolName << Symbols::SLASH << mProtocolVersion << Symbols::SLASH << mTransport 
        << Symbols::SPACE << mSentHost;
@@ -1123,7 +1123,7 @@ CallId::parse(ParseBuffer& pb)
 }
 
 ostream&
-CallId::encode(ostream& str) const
+CallId::encodeParsed(ostream& str) const
 {
    str << mValue;
    encodeParameters(str);
@@ -1263,11 +1263,11 @@ NameAddr::parse(ParseBuffer& pb)
 }
 
 ostream&
-NameAddr::encode(ostream& str) const
+NameAddr::encodeParsed(ostream& str) const
 {
    //bool displayName = !mDisplayName.empty();
    str << mDisplayName << Symbols::LA_QUOTE;
-   mUri.encode(str);
+   mUri.encodeParsed(str);
    str << Symbols::RA_QUOTE;
    
    encodeParameters(str);
@@ -1335,10 +1335,10 @@ RequestLine::parse(ParseBuffer& pb)
 }
 
 ostream&
-RequestLine::encode(ostream& str) const
+RequestLine::encodeParsed(ostream& str) const
 {
    str << (mMethod != UNKNOWN ? MethodNames[mMethod] : mUnknownMethodName) << Symbols::SPACE;
-   mUri.encode(str);
+   mUri.encodeParsed(str);
    str << Symbols::SPACE << mSipVersion;
    return str;
 }
@@ -1391,7 +1391,7 @@ StatusLine::parse(ParseBuffer& pb)
 }
 
 ostream&
-StatusLine::encode(ostream& str) const
+StatusLine::encodeParsed(ostream& str) const
 {
    str << mSipVersion << Symbols::SPACE 
        << mResponseCode << Symbols::SPACE
