@@ -24,7 +24,7 @@ class InviteSessionHandler
       /// called when dialog enters the Early state - typically after getting 100
       virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage&, const SdpContents*)=0;
 
-      /// called when dialog enters the Early state - typically after getting 100
+      /// called when dialog enters the Early state - typically after getting 18x
       virtual void onProvisional(ClientInviteSessionHandle, const SipMessage&)=0;
 
       /// called when a dialog initiated as a UAC enters the connected state
