@@ -1,5 +1,5 @@
-#if !defined(RESIP_DIALOGSID_HXX)
-#define RESIP_DIALOGID_HXX
+#if !defined(RESIP_DIALOG_ID_HXX)
+#define RESIP_DIALOG_ID_HXX
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/dum/DialogSetId.hxx"
@@ -27,7 +27,7 @@ class DialogId
       friend size_t hash_value(const resip::DialogId& id);
 #endif
    private:
-      DialogSetId mDialogSetIDd;
+      DialogSetId mDialogSetId;
       Data mRemoteTag;
 };
 
