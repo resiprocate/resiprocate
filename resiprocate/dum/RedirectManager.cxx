@@ -25,18 +25,13 @@ RedirectManager::handle(DialogSet& dSet, SipMessage& origRequest, const SipMessa
    //380, 305 fall through to the application
    if (code < 300 || code == 380 || code == 305)
    {
-      //done hunting
-      if (it != mRedirectedRequestMap.end())
-      {
-         delete it->second;         
-         mRedirectedRequestMap.erase(it);
-         return false;
-      }
+      return false;
    }
    else if (code >= 300 && code < 400)
    {
       if (it == mRedirectedRequestMap.end())
       {
+         DebugLog( << "RedirectManager::handle: new TargetSet: " << id);         
          mRedirectedRequestMap[id] = new TargetSet(origRequest, mOrdering);
          it = mRedirectedRequestMap.find(id);         
       }
@@ -84,6 +79,7 @@ RedirectManager::TargetSet::addTargets(const SipMessage& msg)
       {         
          if (mTargetSet.find(*it) == mTargetSet.end())
          {
+            DebugLog( << "RedirectManager::TargetSet::addTargets:target: " << *it);
             mTargetSet.insert(*it);
             mTargetQueue.push(*it);
          }                     
@@ -138,6 +134,17 @@ bool RedirectManager::Ordering::operator()(const NameAddr& lhs, const NameAddr& 
    else
    {
       return true;
+   }
+}
+
+void RedirectManager::removeDialogSet(DialogSetId id)
+{
+   RedirectedRequestMap::iterator it = mRedirectedRequestMap.find(id);
+   
+   if (it != mRedirectedRequestMap.end())
+   {
+      delete it->second;         
+      mRedirectedRequestMap.erase(it);
    }
 }
 

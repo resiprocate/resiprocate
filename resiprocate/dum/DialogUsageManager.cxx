@@ -1060,6 +1060,10 @@ DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
    DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap.erase(dsId);
    DebugLog ( << "After: " << Inserter(mDialogSetMap) );
+   if (mRedirectManager)
+   {
+      mRedirectManager->removeDialogSet(dsId);
+   }   
 }
 
 ClientSubscriptionHandler* 
