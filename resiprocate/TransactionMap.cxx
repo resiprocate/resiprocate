@@ -27,11 +27,12 @@ TransactionMap::add(const Data& tid, TransactionState* state  )
    if (i != mMap.end())
    {
       DebugLog (<< "Trying to replace an existing transaction id with a new state: " << tid);
-      
-      delete i->second;
-      mMap.erase(i);
-
-      mMap[tid] = state;
+      if (i->second != state)
+      {
+         delete i->second;
+         mMap.erase(i);
+         mMap[tid] = state;
+      }
    }
    else
    {
