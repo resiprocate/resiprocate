@@ -173,6 +173,12 @@ class Helper
       };
 
       static ContentsSecAttrs extractFromPkcs7(const SipMessage& message, Security& security);
+
+      
+      enum FailureMessageEffect{ DialogTermination, TransactionTermination, UsageTermination, 
+                                 RetryAfter, OptionalRetryAfter, ApplicationDependant };
+      
+      FailureMessageEffect determineFailureMessageEffect(const SipMessage& response);      
 };
  
 }
