@@ -76,10 +76,10 @@ Transport::~Transport()
 }
 
 void 
-Transport::send( const sockaddr_in dest, const Data* d)
+Transport::send( const sockaddr_in dest, const Data& d)
 {
    SendData* data = new  SendData(dest, d);
-   DebugLog (<< "Adding message to tx buffer: " << endl << d->c_str());
+   DebugLog (<< "Adding message to tx buffer: " << endl << d.c_str());
    mTxFifo.add(data); // !jf!
 }
 
