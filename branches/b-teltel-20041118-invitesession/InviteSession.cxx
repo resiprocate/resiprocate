@@ -34,8 +34,7 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mCurrentRetransmit200(Timer::T1),
      mSessionInterval(0),
      mSessionRefresherUAS(false),
-     mSessionTimerSeq(0),
-     mDestroyer(this)
+     mSessionTimerSeq(0)
 {
    DebugLog ( << "^^^ InviteSession::InviteSession " << this);
    assert(mDum.mInviteSessionHandler);
