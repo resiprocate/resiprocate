@@ -70,32 +70,18 @@ class Security
       Pkcs7Contents* encrypt( Contents* , const Data& recipCertName );
       Pkcs7Contents* signAndEncrypt( Contents* , const Data& recipCertName );
       
-      /* stuff to receive messages 
-      *    This is a bit more complex - first operationNeeded is called to find
-      *    out the state of the body. If it is a newGoodSignatuer, either
-      *    addCertifiace or addAndSaveCertificate should be called. If it is a
-      *    badSignature, then then  getCertifiaceInfo should be called and the
-      *    user should be asked if they want to trust this certificate. If they
-      *    do then then addANdSaveCertificate is called. At this point, uncode
-      *    should be called. This will decrypt the message if needed and will
-      *    also unwrap any signatures. It will fail if the signatures are not
-      *    trusted. */ 
-      enum OperationNeeded {
-         isUnknown,
+      /* stuff to receive messages */
+      enum SignatureStatus {
+         none, // there is no signature 
          isBad,
-         isPlain, // Body is not signed or encrypted
-         isEncrypted, // It is a valid encryped 
-         badEncryption, // decrytpion failed - may have been for someone else 
-         isSigned, // It is signed with trusted signature 
-         newGoodSignature, // signature is new and is signed by a root we trust 
-         untrustedSignature, // signature is new and is not signed by a CA we
-                             // trust 
-         badSignature // signature is not valid
+         trusted, // It is signed with trusted signature 
+         caTrusted, // signature is new and is signed by a root we trust 
+         notTrusted, // signature is new and is not signed by a CA we
       };
-      OperationNeeded operationNeeded( Contents* );
+
       struct CertificateInfo 
       {
-            char name[1024];
+            char email[1024];
             char fingerprint[1024];
             char validFrom[128];
             char validTo[128];
@@ -107,12 +93,14 @@ class Security
                                      // to use this but should use addAndAve
       void addAndSaveCertificate( Pkcs7Contents*, const Data& filePath=Data::Empty ); // add cert and
                                                                 // saves on disk
-      Contents* uncode( Pkcs7Contents*, Data* signedBy=NULL ); // returns NULL if fails 
 
-      Contents* uncodeSingle( Pkcs7Contents*, Data* signedBy=NULL ); // returns NULL if fails 
-               
+      Contents* uncode( Pkcs7Contents*,       
+                        Data* signedBy, SignatureStatus* sigStat, bool* encryped ); // returns NULL if fails 
 
    private:
+      Contents* uncodeSingle( Pkcs7Contents*, bool verifySig,
+                              Data* signedBy, SignatureStatus* sigStat, bool* encryped ); // returns NULL if fails 
+               
       Data getPath( const Data& dir, const Data& file );
       
       // need a map of certName to certificates
