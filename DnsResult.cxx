@@ -15,6 +15,9 @@
 #endif
 #include <netdb.h>
 #include <netinet/in.h>
+#else
+#include <Winsock2.h>
+#include <svcguid.h>
 #endif
 
 #if defined(USE_ARES)
@@ -618,7 +621,53 @@ DnsResult::processHost(int status, struct hostent* result)
       bool changed = (mType == Pending);
       if (mResults.empty())
       {
-         mType = Finished;
+#ifdef WIN32_SYNCRONOUS_RESOLUTION_ON_ARES_FAILURE
+         // Try Windows Name Resolution (not asyncronous)
+         WSAQUERYSET QuerySet = { 0 };
+	     GUID guidServiceTypeUDP = SVCID_UDP(mPort);
+	     GUID guidServiceTypeTCP = SVCID_TCP(mPort);
+         HANDLE hQuery;
+         QuerySet.dwSize = sizeof(WSAQUERYSET);
+         QuerySet.lpServiceClassId = mTransport == UDP ? &guidServiceTypeUDP : &guidServiceTypeTCP;
+         QuerySet.dwNameSpace = NS_ALL;
+         QuerySet.lpszServiceInstanceName = (char *)mTarget.c_str();
+         if(WSALookupServiceBegin(&QuerySet, LUP_RETURN_ADDR, &hQuery) == 0)
+         {
+             DWORD dwQuerySize = 256;   // Starting size
+             int iRet = 0;
+             bool fDone = false;
+             LPWSAQUERYSET pQueryResult = (LPWSAQUERYSET) new char[dwQuerySize];
+             while(iRet == 0 && pQueryResult)
+             {
+                iRet = WSALookupServiceNext(hQuery, 0, &dwQuerySize, pQueryResult);
+                if(pQueryResult && iRet == -1 && GetLastError() == WSAEFAULT)
+                {
+                   delete [] pQueryResult;
+                   pQueryResult = (LPWSAQUERYSET) new char[dwQuerySize]; // Re-allocate new size
+                   iRet = WSALookupServiceNext(hQuery, 0, &dwQuerySize, pQueryResult);
+                }
+                if(pQueryResult && iRet == 0)
+                {
+                   for(DWORD i = 0; i < pQueryResult->dwNumberOfCsAddrs; i++)
+                   {
+     	              SOCKADDR_IN *pSockAddrIn = (SOCKADDR_IN *)pQueryResult->lpcsaBuffer[i].RemoteAddr.lpSockaddr;
+                      Tuple tuple(pSockAddrIn->sin_addr, mPort, mTransport);
+                      StackLog (<< "Adding (WIN) " << tuple << " to result set");
+                      mResults.push_back(tuple);
+                      mType = Available;
+                   }
+                }
+             }
+             delete [] pQueryResult;
+             WSALookupServiceEnd(hQuery);
+         }
+         if(mResults.empty())
+         {
+            mType = Finished; 
+         }
+#else
+         mType = Finished; 
+#endif
       }
       else 
       {
