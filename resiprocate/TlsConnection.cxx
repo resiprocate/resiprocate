@@ -174,7 +174,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
                again = true;
                break;
             case SSL_ERROR_WANT_WRITE:
-               DebugLog( << "TLS handshake want read" );
+               DebugLog( << "TLS handshake want write" );
                again = true;
                break;
             default:
