@@ -394,6 +394,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
    {
       //StackLog (<< "received new non-invite request");
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      delete mMsgToRetransmit;
       mMsgToRetransmit = sip;
       mController.mTimers.add(Timer::TimerF, mId, Timer::TF);
       sendToWire(sip);  // don't delete
@@ -599,6 +600,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                   // transaction MUST generate an ACK request, even if the transport is
                   // reliable
                   SipMessage* invite = mMsgToRetransmit;
+                  delete mMsgToRetransmit;
                   mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
                   delete invite;
                   
@@ -635,6 +637,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      // layer for retransmission.
                      assert (mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK);
                      sendToWire(mMsgToRetransmit, true);
+                     delete msg;
                   }
                   else
                   {
@@ -778,6 +781,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
       {
          if (mIsReliable)
          {
+            delete mMsgToRetransmit;
             mMsgToRetransmit = sip;
             sendToWire(sip); // don't delete msg
             terminateServerTransaction(mId);
@@ -789,6 +793,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
             {
                mState = Completed;
                mController.mTimers.add(Timer::TimerJ, mId, 64*Timer::T1 );
+               delete mMsgToRetransmit;
                mMsgToRetransmit = sip;
                sendToWire(sip); // don't delete msg
             }
