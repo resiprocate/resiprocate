@@ -473,7 +473,7 @@ myMain(int argc, char* argv[])
    bool haveAor=false;
    dest = Uri("sip:nobody@example.com");
    Data aorPassword;
-   Uri contact("sip:user@localhost");
+   Uri contact("sip:user@");
    bool haveContact=false;
    Uri outbound;
    bool noRegister = false;
@@ -686,8 +686,8 @@ myMain(int argc, char* argv[])
 
    if (!haveContact)
    {
-      contact.port() = port;
-      contact.host() = sipStack.getHostname();
+      // contact.port() = port;
+      // contact.host() = sipStack.getHostname();
    }
    
    if ( haveAor )
@@ -699,14 +699,16 @@ myMain(int argc, char* argv[])
          if ( aor.scheme() == "sips" )
          {
             contact.scheme() = aor.scheme();
-            contact.port() = tlsPort;
+            //contact.port() = tlsPort;
          }
 #endif
       }
    }
    else
    {
-      aor = contact;
+      aor.port() = port;
+      aor.host() = sipStack.getHostname();
+      aor.user() = Data("user");
    }
 
    InfoLog( << "aor is " << aor );

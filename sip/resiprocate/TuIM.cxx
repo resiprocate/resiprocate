@@ -983,6 +983,7 @@ TuIM::subscribeBuddy( Buddy& buddy )
    mStack->send( *msg );
 }
 
+
 void 
 TuIM::addBuddy( const Uri& uri, const Data& group )
 {
