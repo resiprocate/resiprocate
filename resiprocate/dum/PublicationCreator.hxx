@@ -1,7 +1,7 @@
 #if !defined(RESIP_PUBLICATIONCREATOR_HXX)
 #define RESIP_PUBLICATIONCREATOR_HXX
 
-#include "BaseCreator.hxx"
+#include "resiprocate/dum/BaseCreator.hxx"
 
 namespace resip
 {

@@ -2,7 +2,7 @@
 #define RESIP_CLIENTINVITESESSION_HXX
 
 #include "resiprocate/SipMessage.hxx"
-#include "InviteSession.hxx"
+#include "resiprocate/dum/InviteSession.hxx"
 
 namespace resip
 {

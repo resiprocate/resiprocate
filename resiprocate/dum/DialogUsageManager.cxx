@@ -64,7 +64,7 @@ DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
 }
 
 void 
-DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler*)
+DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler* handler)
 {
 }
 
