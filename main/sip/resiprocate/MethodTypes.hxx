@@ -7,6 +7,10 @@ namespace resip
 
 class Data;
 
+#ifdef  __BORLANDC__
+   #undef MESSAGE
+#endif
+
 typedef enum
 {
    defineMethod(UNKNOWN, "UNKNOWN", "NA"),
@@ -21,6 +25,7 @@ typedef enum
    defineMethod(SUBSCRIBE, "SUBSCRIBE", "RFC 3265"),
    defineMethod(RESPONSE, "RESPONSE", "RFC ????"),
    defineMethod(MESSAGE, "MESSAGE", "RFC ????"),
+   //_MESSAGE,
    defineMethod(INFO, "INFO", "RFC 2976"),
    defineMethod(PRACK, "PRACK", "RFC 3262"),
    defineMethod(PUBLISH, "PUBLISH", "RFC draft"),
