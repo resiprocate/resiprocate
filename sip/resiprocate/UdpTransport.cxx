@@ -85,6 +85,9 @@ UdpTransport::process(FdSet& fdset)
       std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
       //DebugLog (<< "Sending message on udp.");
 
+      assert( &(*sendData) );
+      assert( sendData->destination.port != 0 );
+   
       sockaddr_in addrin;
       addrin.sin_addr = sendData->destination.ipv4;
       addrin.sin_port = htons(sendData->destination.port);
