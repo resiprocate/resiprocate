@@ -50,14 +50,16 @@ leakCheck(bool verbose)
           PlainContents alternateContents(&ahfv, type);
           setContentsHeaders(alternateContents);
 
-#if 0          
-          originalContents.encodeHeaders(os);
-          originalContents.encode(os);
-          os << endl;
-          alternateContents.encodeHeaders(os);
-          alternateContents.encode(os);
-          os << endl;
-#endif
+          if (verbose && i == 0)
+          {
+              originalContents.encodeHeaders(os);
+              originalContents.encode(os);
+              os << endl;
+              alternateContents.encodeHeaders(os);
+              alternateContents.encode(os);
+              os << endl;
+          }
+
           // clobber the content-disposition mDisposition variable
           alternateContents = originalContents;
 
