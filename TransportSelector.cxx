@@ -205,7 +205,11 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, bool isR
          msg->header(h_Vias).front().remove(p_maddr);
          //msg->header(h_Vias).front().param(p_ttl) = 1;
          msg->header(h_Vias).front().transport() = Transport::toData(destination.transport->transport());  //cache !jf! 
-         msg->header(h_Vias).front().sentHost() = destination.transport->hostname();
+#if 1 // select if we use an IP address of FQDN in via 
+         msg->header(h_Vias).front().sentHost() = destination.transport->hostName(); // use hostname 
+#else
+		 msg->header(h_Vias).front().sentHost() = destination.transport->interfaceName(); // use IP address 
+#endif
          msg->header(h_Vias).front().sentPort() = destination.transport->port();
       }
 
