@@ -42,6 +42,20 @@ ParserCategory::operator[](const Data& param) const
    return *mHeaderField->get(param);
 }
 
+void 
+ParserCategory::remove(const Data& param)
+{
+   checkParsed();
+   mHeaderField->remove(param);   
+}
+
+bool 
+ParserCategory::exists(const Data& param) const
+{
+   checkParsed();
+   mHeaderField->exists(param);
+}
+
 void
 ParserCategory::parseParameters(const char* pos)
 {

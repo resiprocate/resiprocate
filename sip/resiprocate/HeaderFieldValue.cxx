@@ -125,6 +125,17 @@ HeaderFieldValue::exists(const ParameterTypes::Type type)
   return mParameterList.find(type);
   
 }
+void 
+HeaderFieldValue::remove(const ParameterTypes::Type type)
+{
+   mParameterList.erase(type);
+}
+
+void 
+HeaderFieldValue::remove(const Data& parameter)
+{
+   mUnknownParameterList.erase(parameter);
+}
 
 UnknownParameter* 
 HeaderFieldValue::get(const Data& type)
