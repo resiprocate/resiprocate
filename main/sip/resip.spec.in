@@ -2,6 +2,7 @@
 %define version		RESIP_VERSION
 %define release		RESIP_RELEASE
 %define prefix		%{_prefix}
+%define mandir		%{_mandir}
 %define sysconfdir	%{_sysconfdir}
 
 Name:		%{name}
