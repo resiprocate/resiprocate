@@ -32,7 +32,8 @@ class ClientPublication : public BaseUsage
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ClientPublication::Handle getHandle() {return mHandle;}
-
+   protected:
+      virtual ~ClientPublication();
    private:
       friend class DialogUsageManager;
       ClientPublication(DialogUsageManager& dum, 

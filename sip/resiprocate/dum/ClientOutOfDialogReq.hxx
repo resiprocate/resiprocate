@@ -30,7 +30,8 @@ class ClientOutOfDialogReq : public BaseUsage
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-      
+   protected:
+      virtual ~ClientOutOfDialogReq();
    private:
       friend class DialogUsageManager;
       ClientOutOfDialogReq(DialogUsageManager& dum,

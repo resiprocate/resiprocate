@@ -34,7 +34,8 @@ class ServerOutOfDialogReq : public BaseUsage
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ServerOutOfDialogReq::Handle getHandle() {return mHandle;}
-
+   protected:
+      virtual ~ServerOutOfDialogReq();
    private:
       friend class DialogUsageManager;
       ServerOutOfDialogReq(DialogUsageManager& dum,
