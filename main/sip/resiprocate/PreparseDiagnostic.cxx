@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #if !defined(RESIPROCATE_PP_DIAGNOSTIC)
 #define RESIPROCATE_PP_DIAGNOSTIC
 

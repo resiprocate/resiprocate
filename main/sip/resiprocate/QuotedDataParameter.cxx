@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #include <cassert>
 #include "resiprocate/QuotedDataParameter.hxx"
 #include "resiprocate/Symbols.hxx"

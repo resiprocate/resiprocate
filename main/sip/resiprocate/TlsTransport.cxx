@@ -32,9 +32,9 @@ TlsTransport::TlsTransport(const Data& domain,
             << " port=" << portNum << " nic=" << nic);
    
    bool ok = true;
-   ok = mSecurity->loadRootCerts( keyDir + "root.pem") ? ok : false;
-   ok = mSecurity->loadMyPublicCert( keyDir + domain + "_cert.pem") ? ok : false;
-   ok = mSecurity->loadMyPrivateKey( privateKeyPassPhrase, keyDir + domain + "_key.pem") ? ok : false;
+   ok = mSecurity->loadRootCerts(  mSecurity->getPath( keyDir, "root.pem")) ? ok : false;
+   ok = mSecurity->loadMyPublicCert( mSecurity->getPath( keyDir , domain + "_cert.pem")) ? ok : false;
+   ok = mSecurity->loadMyPrivateKey( privateKeyPassPhrase, mSecurity->getPath( keyDir , domain + "_key.pem")) ? ok : false;
    
    mSendPos = mSendRoundRobin.end();
    mFd = socket(PF_INET, SOCK_STREAM, 0);
