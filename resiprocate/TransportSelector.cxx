@@ -239,8 +239,8 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
    int ret = connect(mSocket,&dest.getSockaddr(), dest.length());
    if (ret < 0)
    {
-      int err = getErrno();
-      ErrLog(<< "Unable to route to " << DnsUtil::inet_ntop(dest) << strerror(err));
+      Transport::error(getErrno());
+      ErrLog(<< "Unable to route to " << dest << " : " << strerror(getErrno()));
       throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
    }
    
@@ -248,8 +248,8 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
    ret = getsockname(mSocket,&source.getMutableSockaddr(), &len);
    if (ret < 0)
    {
-      int err = getErrno();
-      ErrLog(<< "Can't determine name of socket " << DnsUtil::inet_ntop(dest) << strerror(err));
+      Transport::error(getErrno());
+      ErrLog(<< "Can't determine name of socket " << dest << " : " << strerror(getErrno()));
       throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
    }
 }
@@ -306,14 +306,14 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
       }
       else
       {
-         InfoLog (<< "Failed to find a transport for " << msg->getTransactionId() << " to " << destination);
+         InfoLog (<< "tid=" << msg->getTransactionId() << " failed to find a transport to " << destination);
          mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
       }
 
    }
    catch (Transport::Exception& e)
    {
-      InfoLog (<< "No route to destination " << msg->getTransactionId() << " to " << destination);
+      InfoLog (<< "tid=" << msg->getTransactionId() << " no route to destination: " << destination);
       mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
       return;
    }
