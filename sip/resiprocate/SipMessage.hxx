@@ -77,6 +77,8 @@ class SipMessage : public Message
          return mIsExternal;
       }
 
+      virtual bool isClientTransaction() const;
+      
       virtual std::ostream& encode(std::ostream& str) const;
       std::ostream& encodeEmbedded(std::ostream& str) const;
       
