@@ -89,6 +89,8 @@ UdpTransport::send( const sockaddr_in& dest,
    data->buffer = buffer;
    data->length = length;
    //data->tid = txId;
+
+   DebugLog (<< "Adding message to tx buffer: " << string(buffer, length));
    
    mTxFifo.add(data); // !jf!
 }
@@ -105,6 +107,7 @@ void UdpTransport::process()
    if (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
+      DebugLog (<< "Sending message on udp");
       unsigned int count = ::sendto(mFd, data->buffer, data->length, 0, (const sockaddr*)&data->destination, sizeof(data->destination));
    
       if ( count < 0 )
