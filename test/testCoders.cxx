@@ -24,7 +24,7 @@ Data randomData(int size)
 void showData(const Data& data)
 {
    cout << "Data (n=" << data.size() << "): ";
-   for(int i = 0 ; i < data.size() ; i++)
+   for(Data::size_type i = 0 ; i < data.size() ; i++)
    {
       cout << hex << (unsigned int)data.data()[i] << ' ';
    }
