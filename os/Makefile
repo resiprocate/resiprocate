@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2002/09/25 22:24:41 jason Exp $
+# $Id: Makefile,v 1.2 2002/09/25 22:51:03 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -12,6 +12,7 @@ SRC =	\
 	Log.cxx \
 	Logger.cxx \
 	Mutex.cxx \
+	RandomHex.cxx \
 	Subsystem.cxx \
 	ThreadIf.cxx \
 	Timer.cxx \
@@ -19,10 +20,10 @@ SRC =	\
 OSRC =   *.hxx Makefile
 
 
-CXXFLAGS += -O -g
+CXXFLAGS += -O -g 
 LDFLAGS  += 
 CXXFLAGS += -I. -I../. -MD -Wall $(CXXDEBUG)
-LDLIBS   += -lpthread
+LDLIBS   += -lssl -lpthread
 
 ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
