@@ -16,7 +16,8 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mDialogs(),
    mCreator(creator),
    mId(creator->getLastRequest()),
-   mDum(dum)
+   mDum(dum),
+   mCancelled(false)
 {
    assert(!creator->getLastRequest().isExternal());
 }
@@ -26,7 +27,8 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mDialogs(),
    mCreator(NULL),
    mId(request),
-   mDum(dum)
+   mDum(dum),
+   mCancelled(false)
 {
    assert(request.isRequest());
    assert(request.isExternal());
@@ -59,26 +61,6 @@ DialogSet::addDialog(Dialog *dialog)
    mDialogs[dialog->getId()] = dialog;
 }
 
-//!dcm! -- kill
-#if 0
-DialogIdSet
-DialogSet::getDialogs() const
-{
-   return mId;
-}
-
-Dialog*
-DialogSet::findDialog( const Data& otherTag )
-{
-   assert(0);
-   //DialogId id(otherTag);
-   //return findDialog(id);
-   return 0;
-}
-
-
-#endif
-
 BaseCreator* 
 DialogSet::getCreator() 
 {
@@ -108,10 +90,14 @@ DialogSet::dispatch(const SipMessage& msg)
       // !jf! This could throw due to bad header in msg, should we catch and rethrow
       // !jf! if this threw, should we check to delete the DialogSet? 
       dialog = new Dialog(mDum, msg, *this);
+      if (mCancelled)
+      {
+         dialog->cancel();
+      }
       InfoLog (<< "Created a new dialog: " << *dialog);
    }     
 
-   if (mDum.mClientAuthManager)
+   if (mDum.mClientAuthManager && !mCancelled)
    {
       if (getCreator())
       {
@@ -148,9 +134,14 @@ DialogSet::findDialog(const DialogId id)
    }
 }
 
-void 
-DialogSet::cancel(const SipMessage& cancelMsg)
+void
+DialogSet::cancel()
 {
+   mCancelled = true;
+   for (DialogMap::iterator i = mDialogs.begin(); i != mDialogs.end(); ++i)
+   {
+      i->second->cancel();
+   }
 }
 
 /* ====================================================================
