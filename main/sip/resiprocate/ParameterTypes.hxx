@@ -8,249 +8,248 @@
 #include <sipstack/ParameterTypeEnums.hxx>
 #include <sipstack/Symbols.hxx>
 
-#include <util/Data.hxx>
-
 namespace Vocal2
 {
 
-template <typename ParameterTypes::Type T>
-class ParameterType
+class ParamBase
 {
+   public:
+      virtual ParameterTypes::Type getTypeNum() const = 0;
 };
 
-class ParameterType<ParameterTypes::transport>
+class Transport_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::transport;}
+      Transport_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::transport] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::transport] = Symbols::transport;
       }
 };
-extern ParameterType<ParameterTypes::transport> p_transport;
+extern Transport_Param p_transport;
 
-class ParameterType<ParameterTypes::user>
+class User_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::user;}
+      User_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::user] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::user] = Symbols::user;
       }
 };
-extern ParameterType<ParameterTypes::user> p_user;
+extern User_Param p_user;
 
-class ParameterType<ParameterTypes::method>
+class Method_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::method;}
+      Method_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::method] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::method] = Symbols::method;
       }
 };
-extern ParameterType<ParameterTypes::method> p_method;
+extern Method_Param p_method;
 
-class ParameterType<ParameterTypes::ttl>
+class Ttl_Param : public ParamBase
 {
    public:
       typedef IntegerParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::ttl;}
+      Ttl_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::ttl] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::ttl] = Symbols::ttl;
       }
 };
-extern ParameterType<ParameterTypes::ttl> p_ttl;
+extern Ttl_Param p_ttl;
 
-class ParameterType<ParameterTypes::maddr>
+class Maddr_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::maddr;}
+      Maddr_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::maddr] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::maddr] = Symbols::maddr;
       }
 };
-extern ParameterType<ParameterTypes::maddr> p_maddr;
+extern Maddr_Param p_maddr;
 
-class ParameterType<ParameterTypes::lr>
+class Lr_Param : public ParamBase
 {
    public:
       typedef ExistsParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::lr;}
+      Lr_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::lr] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::lr] = Symbols::lr;
       }
 };
-extern ParameterType<ParameterTypes::lr> p_lr;
+extern Lr_Param p_lr;
 
-class ParameterType<ParameterTypes::q>
+class Q_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::q;}
+      Q_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::q] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::q] = Symbols::q;
       }
 };
-extern ParameterType<ParameterTypes::q> p_q;
+extern Q_Param p_q;
 
-class ParameterType<ParameterTypes::purpose>
+class Purpose_Param : public ParamBase
 {
    public:
       typedef FloatParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::purpose;}
+      Purpose_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::purpose] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::purpose] = Symbols::purpose;
       }
 };
-extern ParameterType<ParameterTypes::purpose> p_purpose;
+extern Purpose_Param p_purpose;
 
-class ParameterType<ParameterTypes::expires>
+class Expires_Param : public ParamBase
 {
    public:
       typedef IntegerParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::expires;}
+      Expires_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::expires] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::expires] = Symbols::expires;
       }
 };
-extern ParameterType<ParameterTypes::expires> p_expires;
+extern Expires_Param p_expires;
 
-class ParameterType<ParameterTypes::handling>
+class Handling_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::handling;}
+      Handling_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::handling] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::handling] = Symbols::handling;
       }
 };
-extern ParameterType<ParameterTypes::handling> p_handling;
+extern Handling_Param p_handling;
 
-class ParameterType<ParameterTypes::tag>
+class Tag_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::tag;}
+      Tag_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::tag] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::tag] = Symbols::tag;
       }
 };
-extern ParameterType<ParameterTypes::tag> p_tag;
+extern Tag_Param p_tag;
 
-class ParameterType<ParameterTypes::toTag>
+class ToTag_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::toTag;}
+      ToTag_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::toTag] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::toTag] = Symbols::toTag;
       }
 };
-extern ParameterType<ParameterTypes::toTag> p_toTag;
+extern ToTag_Param p_toTag;
 
-class ParameterType<ParameterTypes::fromTag>
+class FromTag_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::fromTag;}
+      FromTag_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::fromTag] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::fromTag] = Symbols::fromTag;
       }
 };
-extern ParameterType<ParameterTypes::fromTag> p_fromTag;
+extern FromTag_Param p_fromTag;
 
-class ParameterType<ParameterTypes::duration>
+class Duration_Param : public ParamBase
 {
    public:
       typedef IntegerParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::duration;}
+      Duration_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::duration] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::duration] = Symbols::duration;
       }
 };
-extern ParameterType<ParameterTypes::duration> p_duration;
+extern Duration_Param p_duration;
 
-class ParameterType<ParameterTypes::branch>
+class Branch_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::branch;}
+      Branch_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::branch] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::branch] = Symbols::branch;
       }
 };
-extern ParameterType<ParameterTypes::branch> p_branch;
+extern Branch_Param p_branch;
 
-class ParameterType<ParameterTypes::received>
+class Received_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::received;}
+      Received_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::received] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::received] = Symbols::received;
       }
 };
-extern ParameterType<ParameterTypes::received> p_received;
+extern Received_Param p_received;
 
-class ParameterType<ParameterTypes::comp>
+class Comp_Param : public ParamBase
 {
    public:
       typedef DataParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::comp;}
+      Comp_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::comp] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::comp] = Symbols::comp;
       }
 };
-extern ParameterType<ParameterTypes::comp> p_com;
+extern Comp_Param p_com;
 
-class ParameterType<ParameterTypes::rport>
+class Rport_Param : public ParamBase
 {
    public:
       typedef IntegerParameter Type;
-
-      ParameterType()
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::rport;}
+      Rport_Param()
       {
          ParameterTypes::ParameterFactories[ParameterTypes::rport] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::rport] = Symbols::rport;
       }
 };
-extern ParameterType<ParameterTypes::rport> p_rport;
+extern Rport_Param p_rport;
  
 }
 

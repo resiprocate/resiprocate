@@ -76,645 +76,679 @@ class Headers
       static bool isCommaTokenizing(Type type);
 };
 
-#ifndef WIN32
-Headers::Type& Vocal2::operator++(Headers::Type&t);
-#endif
-
-// map enum to parser category via specialized templates
-template <typename Headers::Type T>
-class Header
+class HeaderBase
 {
-      // don't let this template instantiate implicitly
-   private:
-      Header() {}
-};
-
-template <typename Headers::Type T>
-class MultiHeader
-{
-      // don't let this template instantiate implicitly
-   private:
-      MultiHeader() {}
+   public:
+      virtual Headers::Type getTypeNum() const = 0;
 };
 
 //====================
 // Token:
 //====================
-class Header<Headers::Content_Disposition>
+class Content_Disposition_Header : public HeaderBase
 {
    public:
       typedef Token Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Content_Disposition;}
+      Content_Disposition_Header()
       {
          Headers::CommaTokenizing[Headers::Content_Disposition] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Content_Disposition] = Symbols::Content_Disposition;
       }
 };
-extern Header<Headers::Content_Disposition> h_ContentDisposition;
+extern Content_Disposition_Header h_ContentDisposition;
 
-class Header<Headers::Content_Encoding>
+class Content_Encoding_Header : public HeaderBase
 {
    public:
       typedef Token Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Content_Encoding;}
+      Content_Encoding_Header()
       {
          Headers::CommaTokenizing[Headers::Content_Encoding] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Content_Encoding] = Symbols::Content_Encoding;
       }
 };
-extern Header<Headers::Content_Encoding> h_ContentEncoding;
+extern Content_Encoding_Header h_ContentEncoding;
 
-class Header<Headers::MIME_Version>
+class MIME_Version_Header : public HeaderBase
 {
    public:
       typedef Token Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::MIME_Version;}
+      MIME_Version_Header()
       {
          Headers::CommaTokenizing[Headers::MIME_Version] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::MIME_Version] = Symbols::MIME_Version;
       }
 };
-extern Header<Headers::MIME_Version> h_MimeVersion;
+extern MIME_Version_Header h_MimeVersion;
 
-class Header<Headers::Priority>
+class Priority_Header : public HeaderBase
 {
    public:
       typedef Token Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Priority;}
+      Priority_Header()
       {
          Headers::CommaTokenizing[Headers::Priority] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Priority] = Symbols::Priority;
       }
 };
-extern Header<Headers::Priority> h_Priority;
+extern Priority_Header h_Priority;
 
 //====================
 // Tokens:
 //====================
-class MultiHeader<Headers::Accept_Encoding>
+class Accept_Encoding_MultiHeader : public HeaderBase
 {
    public:
       typedef Token Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Accept_Encoding;}
+      Accept_Encoding_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Accept_Encoding] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Accept_Encoding] = Symbols::Accept_Encoding;
       }
 };
-extern MultiHeader<Headers::Accept_Encoding> h_AcceptEncodings;
+extern Accept_Encoding_MultiHeader h_AcceptEncodings;
 
-class MultiHeader<Headers::Accept_Language>
+class Accept_Language_MultiHeader : public HeaderBase
 {
    public:
       typedef Token Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Accept_Language;}
+      Accept_Language_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Accept_Language] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Accept_Language] = Symbols::Accept_Language;
       }
 };
-extern MultiHeader<Headers::Accept_Language> h_AcceptLanguages;
+extern Accept_Language_MultiHeader h_AcceptLanguages;
 
-class MultiHeader<Headers::Allow>
+class Allow_MultiHeader : public HeaderBase
 {
    public:
       typedef Token Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Allow;}
+      Allow_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Allow] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Allow] = Symbols::Allow;
       }
 };
-extern MultiHeader<Headers::Allow> h_Allows;
+extern Allow_MultiHeader h_Allows;
 
-class MultiHeader<Headers::Content_Language>
+class Content_Language_MultiHeader : public HeaderBase
 {
    public:
       typedef Token Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Content_Language;}
+      Content_Language_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Content_Language] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Content_Language] = Symbols::Content_Language;
       }
 };
-extern MultiHeader<Headers::Content_Language> h_ContentLanguages;
+extern Content_Language_MultiHeader h_ContentLanguages;
 
-class MultiHeader<Headers::Proxy_Require>
+class Proxy_Require_MultiHeader : public HeaderBase
 {
    public:
       typedef Token Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Proxy_Require;}
+      Proxy_Require_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Proxy_Require] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Proxy_Require] = Symbols::Proxy_Require;
       }
 };
-extern MultiHeader<Headers::Proxy_Require> h_ProxyRequires;
+extern Proxy_Require_MultiHeader h_ProxyRequires;
 
-class MultiHeader<Headers::Require>
+class Require_MultiHeader : public HeaderBase
 {
    public:
       typedef Token Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Require;}
+      Require_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Require] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Require] = Symbols::Require;
       }
 };
-extern MultiHeader<Headers::Require> h_Requires;
+extern Require_MultiHeader h_Requires;
 
-class MultiHeader<Headers::Supported>
+class Supported_MultiHeader : public HeaderBase
 {
    public:
       typedef Token Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Supported;}
+      Supported_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Supported] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Supported] = Symbols::Supported;
       }
 };
-extern MultiHeader<Headers::Supported> h_Supporteds;
+extern Supported_MultiHeader h_Supporteds;
 
-class MultiHeader<Headers::Subscription_State>
+class Subscription_State_MultiHeader : public HeaderBase
 {
    public:
       typedef Token Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Subscription_State;}
+      Subscription_State_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Subscription_State] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Subscription_State] = Symbols::Subscription_State;
       }
 };
-extern MultiHeader<Headers::Subscription_State> h_SubscriptionStates;
+extern Subscription_State_MultiHeader h_SubscriptionStates;
 
-class MultiHeader<Headers::Unsupported>
+class Unsupported_MultiHeader : public HeaderBase
 {
    public:
       typedef Token Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Unsupported;}
+      Unsupported_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Unsupported] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Unsupported] = Symbols::Unsupported;
       }
 };
-extern MultiHeader<Headers::Unsupported> h_Unsupporteds;
+extern Unsupported_MultiHeader h_Unsupporteds;
 
 //====================
 // Mime
 //====================
-class MultiHeader<Headers::Accept>
+class Accept_MultiHeader : public HeaderBase
 {
    public:
       typedef Mime Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Accept;}
+      Accept_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Accept] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Accept] = Symbols::Accept;
       }
 };
-extern MultiHeader<Headers::Accept> h_Accepts;
+extern Accept_MultiHeader h_Accepts;
 
-class Header<Headers::Content_Type>
+class Content_Type_Header : public HeaderBase
 {
    public:
       typedef Mime Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Content_Type;}
+      Content_Type_Header()
       {
          Headers::CommaTokenizing[Headers::Content_Type] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Content_Type] = Symbols::Content_Type;
       }
 };
-extern Header<Headers::Content_Type> h_ContentType;
+extern Content_Type_Header h_ContentType;
 
 //====================
 // GenericURIs:
 //====================
-class MultiHeader<Headers::Call_Info>
+class Call_Info_MultiHeader : public HeaderBase
 {
    public:
       typedef GenericURI Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Call_Info;}
+      Call_Info_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Call_Info] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Call_Info] = Symbols::Call_Info;
       }
 };
-extern MultiHeader<Headers::Call_Info> h_CallInfos;
+extern Call_Info_MultiHeader h_CallInfos;
 
-class MultiHeader<Headers::Alert_Info>
+class Alert_Info_MultiHeader : public HeaderBase
 {
    public:
       typedef GenericURI Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Alert_Info;}
+      Alert_Info_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Alert_Info] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Alert_Info] = Symbols::Alert_Info;
       }
 };
-extern MultiHeader<Headers::Alert_Info> h_AlertInfos;
+extern Alert_Info_MultiHeader h_AlertInfos;
 
-class MultiHeader<Headers::Error_Info>
+class Error_Info_MultiHeader : public HeaderBase
 {
    public:
       typedef GenericURI Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Error_Info;}
+      Error_Info_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Error_Info] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Error_Info] = Symbols::Error_Info;
       }
 };
-extern MultiHeader<Headers::Error_Info> h_ErrorInfos;
+extern Error_Info_MultiHeader h_ErrorInfos;
 
 //====================
 // NameAddr:
 //====================
-class MultiHeader<Headers::Record_Route>
+class Record_Route_MultiHeader : public HeaderBase
 {
    public:
       typedef NameAddr Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Record_Route;}
+      Record_Route_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Record_Route] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Record_Route] = Symbols::Record_Route;
       }
 };
-extern MultiHeader<Headers::Record_Route> h_RecordRoutes;
+extern Record_Route_MultiHeader h_RecordRoutes;
 
-class MultiHeader<Headers::Route>
+class Route_MultiHeader : public HeaderBase
 {
    public:
       typedef NameAddr Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Route;}
+      Route_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Route] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Route] = Symbols::Route;
       }
 };
-extern MultiHeader<Headers::Route> h_Routes;
+extern Route_MultiHeader h_Routes;
 
-class MultiHeader<Headers::Contact>
+class Contact_MultiHeader : public HeaderBase
 {
    public:
       typedef NameAddr Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Contact;}
+      Contact_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Contact] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Contact] = Symbols::Contact;
       }
 };
-extern MultiHeader<Headers::Contact> h_Contacts;
+extern Contact_MultiHeader h_Contacts;
 
-class Header<Headers::From>
+class From_Header : public HeaderBase
 {
    public:
       typedef NameAddr Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::From;}
+      From_Header()
       {
          Headers::CommaTokenizing[Headers::From] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::From] = Symbols::From;
       }
 };
-extern Header<Headers::From> h_From;
+extern From_Header h_From;
 
-class Header<Headers::To>
+class To_Header : public HeaderBase
 {
    public:
       typedef NameAddr Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::To;}
+      To_Header()
       {
          Headers::CommaTokenizing[Headers::To] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::To] = Symbols::To;
       }
 };
-extern Header<Headers::To> h_To;
+extern To_Header h_To;
 
-class Header<Headers::Reply_To>
+class Reply_To_Header : public HeaderBase
 {
    public:
       typedef NameAddr Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Reply_To;}
+      Reply_To_Header()
       {
          Headers::CommaTokenizing[Headers::Reply_To] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Reply_To] = Symbols::Reply_To;
       }
 };
-extern Header<Headers::Reply_To> h_ReplyTo;
+extern Reply_To_Header h_ReplyTo;
 
-class Header<Headers::Refer_To>
+class Refer_To_Header : public HeaderBase
 {
    public:
       typedef NameAddr Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Refer_To;}
+      Refer_To_Header()
       {
          Headers::CommaTokenizing[Headers::Refer_To] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Refer_To] = Symbols::Refer_To;
       }
 };
-extern Header<Headers::Refer_To> h_ReferTo;
+extern Refer_To_Header h_ReferTo;
 
-class Header<Headers::Referred_By>
+class Referred_By_Header : public HeaderBase
 {
    public:
       typedef NameAddr Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Referred_By;}
+      Referred_By_Header()
       {
          Headers::CommaTokenizing[Headers::Referred_By] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Referred_By] = Symbols::Referred_By;
       }
 };
-extern Header<Headers::Referred_By> h_ReferredBy;
+extern Referred_By_Header h_ReferredBy;
 
 //====================
 //String:
 //====================
-class Header<Headers::Organization>
+class Organization_Header : public HeaderBase
 {
    public:
       typedef StringCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Organization;}
+      Organization_Header()
       {
          Headers::CommaTokenizing[Headers::Organization] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Organization] = Symbols::Organization;
       }
 };
-extern Header<Headers::Organization> h_Organization;
+extern Organization_Header h_Organization;
 
-class Header<Headers::Server>
+class Server_Header : public HeaderBase
 {
    public:
       typedef StringCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Server;}
+      Server_Header()
       {
          Headers::CommaTokenizing[Headers::Server] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Server] = Symbols::Server;
       }
 };
-extern Header<Headers::Server> h_Server;
+extern Server_Header h_Server;
 
-class Header<Headers::Subject>
+class Subject_Header : public HeaderBase
 {
    public:
       typedef StringCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Subject;}
+      Subject_Header()
       {
          Headers::CommaTokenizing[Headers::Subject] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Subject] = Symbols::Subject;
       }
 };
-extern Header<Headers::Subject> h_Subject;
+extern Subject_Header h_Subject;
 
-class Header<Headers::User_Agent>
+class User_Agent_Header : public HeaderBase
 {
    public:
       typedef StringCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::User_Agent;}
+      User_Agent_Header()
       {
          Headers::CommaTokenizing[Headers::User_Agent] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::User_Agent] = Symbols::User_Agent;
       }
 };
-extern Header<Headers::User_Agent> h_UserAgent;
+extern User_Agent_Header h_UserAgent;
 
-class Header<Headers::Timestamp>
+class Timestamp_Header : public HeaderBase
 {
    public:
       typedef StringCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Timestamp;}
+      Timestamp_Header()
       {
          Headers::CommaTokenizing[Headers::Timestamp] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Timestamp] = Symbols::Timestamp;
       }
 };
-extern Header<Headers::Timestamp> h_Timestamp;
+extern Timestamp_Header h_Timestamp;
 
 //====================
 // Integer:
 //====================
-class Header<Headers::Content_Length>
+class Content_Length_Header : public HeaderBase
 {
    public:
       typedef IntegerCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Content_Length;}
+      Content_Length_Header()
       {
          Headers::CommaTokenizing[Headers::Content_Length] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Content_Length] = Symbols::Content_Length;
       }
 };
-extern Header<Headers::Content_Length> h_ContentLength;
+extern Content_Length_Header h_ContentLength;
 
-class Header<Headers::Expires>
+class Expires_Header : public HeaderBase
 {
    public:
       typedef IntegerCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Expires;}
+      Expires_Header()
       {
          Headers::CommaTokenizing[Headers::Expires] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Expires] = Symbols::Expires;
       }
 };
-extern Header<Headers::Expires> h_Expires;
+extern Expires_Header h_Expires;
 
-class Header<Headers::Max_Forwards>
+class Max_Forwards_Header : public HeaderBase
 {
    public:
       typedef IntegerCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Max_Forwards;}
+      Max_Forwards_Header()
       {
          Headers::CommaTokenizing[Headers::Max_Forwards] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Max_Forwards] = Symbols::Max_Forwards;
       }
 };
-extern Header<Headers::Max_Forwards> h_MaxForwards;
+extern Max_Forwards_Header h_MaxForwards;
 
-class Header<Headers::Min_Expires>
+class Min_Expires_Header : public HeaderBase
 {
    public:
       typedef IntegerCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Min_Expires;}
+      Min_Expires_Header()
       {
          Headers::CommaTokenizing[Headers::Min_Expires] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Min_Expires] = Symbols::Min_Expires;
       }
 };
-extern Header<Headers::Min_Expires> h_MinExpires;
+extern Min_Expires_Header h_MinExpires;
 
 // !dlb! this one is not quite right -- can have (comment) after field value
-class Header<Headers::Retry_After>
+class Retry_After_Header : public HeaderBase
 {
    public:
       typedef IntegerCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Retry_After;}
+      Retry_After_Header()
       {
          Headers::CommaTokenizing[Headers::Retry_After] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Retry_After] = Symbols::Retry_After;
       }
 };
-extern Header<Headers::Retry_After> h_RetryAfter;
+extern Retry_After_Header h_RetryAfter;
 
 //====================
 // CallId:
 //====================
-class Header<Headers::Call_ID>
+class Call_ID_Header : public HeaderBase
 {
    public:
       typedef CallId Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Call_ID;}
+      Call_ID_Header()
       {
          Headers::CommaTokenizing[Headers::Call_ID] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Call_ID] = Symbols::Call_ID;
       }
 };
-extern Header<Headers::Call_ID> h_CallId;
+extern Call_ID_Header h_CallId;
 
-class Header<Headers::Replaces>
+class Replaces_Header : public HeaderBase
 {
    public:
       typedef CallId Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Replaces;}
+      Replaces_Header()
       {
          Headers::CommaTokenizing[Headers::Replaces] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Replaces] = Symbols::Replaces;
       }
 };
-extern Header<Headers::Replaces> h_Replaces;
+extern Replaces_Header h_Replaces;
 
 //====================
 // CallIds:
 //====================
-class Header<Headers::In_Reply_To>
+// !dlb! Multi?
+class In_Reply_To_Header : public HeaderBase
 {
    public:
       typedef CallId Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::In_Reply_To;}
+      In_Reply_To_Header()
       {
          Headers::CommaTokenizing[Headers::In_Reply_To] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::In_Reply_To] = Symbols::In_Reply_To;
       }
 };
-extern Header<Headers::In_Reply_To> h_InReplyTo;
+extern In_Reply_To_Header h_InReplyTo;
 
 //====================
 // Auth:
 //====================
-class Header<Headers::Authentication_Info>
+class Authentication_Info_Header : public HeaderBase
 {
    public:
       typedef Auth Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Authentication_Info;}
+      Authentication_Info_Header()
       {
          Headers::CommaTokenizing[Headers::Authentication_Info] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Authentication_Info] = Symbols::Authentication_Info;
       }
 };
-extern Header<Headers::Authentication_Info> h_AuthenticationInfo;
+extern Authentication_Info_Header h_AuthenticationInfo;
 
-class Header<Headers::Authorization>
+class Authorization_Header : public HeaderBase
 {
    public:
       typedef Auth Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Authorization;}
+      Authorization_Header()
       {
          Headers::CommaTokenizing[Headers::Authorization] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Authorization] = Symbols::Authorization;
       }
 };
-extern Header<Headers::Authorization> h_Authorization;
+extern Authorization_Header h_Authorization;
 
-class Header<Headers::Proxy_Authenticate>
+class Proxy_Authenticate_Header : public HeaderBase
 {
    public:
       typedef Auth Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Proxy_Authenticate;}
+      Proxy_Authenticate_Header()
       {
          Headers::CommaTokenizing[Headers::Proxy_Authenticate] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Proxy_Authenticate] = Symbols::Proxy_Authenticate;
       }
 };
-extern Header<Headers::Proxy_Authenticate> h_ProxyAuthenticate;
+extern Proxy_Authenticate_Header h_ProxyAuthenticate;
 
-class Header<Headers::Proxy_Authorization>
+class Proxy_Authorization_Header : public HeaderBase
 {
    public:
       typedef Auth Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Proxy_Authorization;}
+      Proxy_Authorization_Header()
       {
          Headers::CommaTokenizing[Headers::Proxy_Authorization] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Proxy_Authorization] = Symbols::Proxy_Authorization;
       }
 };
-extern Header<Headers::Proxy_Authorization> h_ProxyAuthorization;
+extern Proxy_Authorization_Header h_ProxyAuthorization;
 
-class Header<Headers::WWW_Authenticate>
+class WWW_Authenticate_Header : public HeaderBase
 {
    public:
       typedef Auth Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::WWW_Authenticate;}
+      WWW_Authenticate_Header()
       {
          Headers::CommaTokenizing[Headers::WWW_Authenticate] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::WWW_Authenticate] = Symbols::WWW_Authenticate;
       }
 };
-extern Header<Headers::WWW_Authenticate> h_WWWAuthenticate;
+extern WWW_Authenticate_Header h_WWWAuthenticate;
 
 //====================
 // CSeqCategory:
 //====================
-class Header<Headers::CSeq>
+class CSeq_Header : public HeaderBase
 {
    public:
       typedef CSeqCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::CSeq;}
+      CSeq_Header()
       {
          Headers::CommaTokenizing[Headers::CSeq] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::CSeq] = Symbols::CSeq;
       }
 };
-extern Header<Headers::CSeq> h_CSeq;
+extern CSeq_Header h_CSeq;
 
 //====================
 // DateCategory:
 //====================
-class Header<Headers::Date>
+class Date_Header : public HeaderBase
 {
    public:
       typedef DateCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Date;}
+      Date_Header()
       {
          Headers::CommaTokenizing[Headers::Date] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Date] = Symbols::Date;
       }
 };
-extern Header<Headers::Date> h_Date;
+extern Date_Header h_Date;
 
 //====================
 // WarningCategory:
 //====================
-class Header<Headers::Warning>
+class Warning_Header : public HeaderBase
 {
    public:
       typedef WarningCategory Type;
-      Header()
+      virtual Headers::Type getTypeNum() const {return Headers::Warning;}
+      Warning_Header()
       {
          Headers::CommaTokenizing[Headers::Warning] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Warning] = Symbols::Warning;
       }
 };
-extern Header<Headers::Warning> h_Warning;
+extern Warning_Header h_Warning;
 
 //====================
 // Via
 //====================
-class MultiHeader<Headers::Via>
+class Via_MultiHeader : public HeaderBase
 {
    public:
       typedef Via Type;
-      MultiHeader()
+      virtual Headers::Type getTypeNum() const {return Headers::Via;}
+      Via_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Via] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Via] = Symbols::Via;
       }
 };
-extern MultiHeader<Headers::Via> h_Vias;
+extern Via_MultiHeader h_Vias;
 
 class RequestLineType {};
 extern RequestLineType h_RequestLine;
