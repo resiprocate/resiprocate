@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.64 2002/11/04 19:34:52 bko Exp $
+# $Id: Makefile,v 1.65 2002/11/05 01:07:09 davidb Exp $
 
 BUILD = ../../build
 
@@ -13,7 +13,8 @@ endif
 
 TARGET_LIBRARY = libsip2
 
-TESTPROGRAMS =  test2.cxx testSipStack1.cxx testSipMessage.cxx testParserCategories.cxx testNonInviteServerTx.cxx testNonInviteClientTx.cxx testDnsResolver.cxx
+TESTPROGRAMS =  SipTortureTests.cxx test2.cxx testSipStack1.cxx testSipMessage.cxx testParserCategories.cxx testNonInviteServerTx.cxx testNonInviteClientTx.cxx testDnsResolver.cxx
+
 #testPreparse.cxx
 
 ifeq ($(ARCH),i686)
