@@ -661,9 +661,16 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
       case On200Update:
          transition(Connected);
          handleSessionTimerResponse(msg);
-         mCurrentLocalSdp = mProposedLocalSdp;
-         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         if (sdp.get())
+         {
+            mCurrentLocalSdp = mProposedLocalSdp;
+            mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
+         }
+         else
+         {
+            handler->onIllegalNegotiation(getSessionHandle(), msg);
+         }
          break;
          
       case On491Update:
@@ -714,7 +721,6 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
       case On2xxAnswer:
       case On2xxOffer:
-      case On2xx:
       {
          transition(Connected);
          handleSessionTimerResponse(msg);
@@ -732,7 +738,18 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          // ACK messages for 64*T1
          break;
       }
+      case On2xx:
+      {
+         transition(Connected);
+         handleSessionTimerResponse(msg);
+         handler->onIllegalNegotiation(getSessionHandle(), msg);
 
+         SipMessage ack;
+         mDialog.makeRequest(ack, ACK);
+         mDialog.send(ack);
+         break;
+      }
+         
       case On491Invite:
          transition(SentUpdateGlare);
          start491Timer();
