@@ -1,4 +1,3 @@
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -79,6 +78,14 @@ DnsUtil::lookupARecords(const Data& host)
    }
 }
       
+std::list<DnsUtil::Srv> 
+DnsUtil::lookupSRVRecords(const Data& host)
+{
+   list<DnsUtil::Srv> records;
+   assert(0);
+   return records;
+}
+
 Data 
 DnsUtil::getHostByAddr(const Data& ipAddress)
 {
@@ -138,9 +145,22 @@ Data
 DnsUtil::getLocalHostName()
 {
    char buffer[256];
-   if (gethostname(buffer,256) == -1)
+   if (int e = gethostname(buffer,256) == -1)
    {
-      throw Exception("Could not get local host name.", __FILE__,__LINE__);
+       if ( e != 0 )
+       {
+           int err = errno;
+           switch (err)
+           {
+               case WSANOTINITIALISED:
+                   CritLog( << "could not find local hostname because netwrok not initialized:" << strerror(err) );
+                   break;
+               default:
+                   CritLog( << "could not find local hostname:" << strerror(err) );
+                   break;
+           }
+           throw Exception("could not find local hostname",__FILE__,__LINE__);
+       }
    }
    return buffer;
 }
