@@ -1,4 +1,5 @@
-//#include <cassert>
+
+#include <cassert>
 #include <fcntl.h>
 
 #include "sip2/util/Socket.hxx"
