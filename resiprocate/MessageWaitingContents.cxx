@@ -14,7 +14,9 @@ const char* MessageHeaders[MW_MAX] = {"voice-message",
                                       "none"};
 
 MessageWaitingContents::MessageWaitingContents()
-   : Contents(getStaticType())
+   : Contents(getStaticType()),
+     mHasMessages(false),
+     mAccountUri(0)
 {
    for(int i = 0; i < (int)MW_MAX; i++)
    {
@@ -23,7 +25,9 @@ MessageWaitingContents::MessageWaitingContents()
 }
 
 MessageWaitingContents::MessageWaitingContents(HeaderFieldValue* hfv, const Mime& contentType)
-   : Contents(hfv, contentType)
+   : Contents(hfv, contentType),
+     mHasMessages(false),
+     mAccountUri(0)
 {
    for(int i = 0; i < (int)MW_MAX; i++)
    {
@@ -32,7 +36,9 @@ MessageWaitingContents::MessageWaitingContents(HeaderFieldValue* hfv, const Mime
 }
 
 MessageWaitingContents::MessageWaitingContents(const Data& data, const Mime& contentType)
-   : Contents(contentType)
+   : Contents(contentType),
+     mHasMessages(false),
+     mAccountUri(0)
 {
    for(int i = 0; i < (int)MW_MAX; i++)
    {
@@ -68,7 +74,11 @@ MessageWaitingContents::~MessageWaitingContents()
 void
 MessageWaitingContents::clear()
 {
+   mHasMessages = false;
+
    delete mAccountUri;
+   mAccountUri = 0;
+   
    for (int i = 0; i < (int)MW_MAX; i++)
    {
       delete mHeaders[i];
@@ -105,7 +115,8 @@ MessageWaitingContents::operator=(const MessageWaitingContents& rhs)
 const Mime& 
 MessageWaitingContents::getStaticType() 
 {
-   static Mime type("application", "simple-message-summary");
+   //static Mime type("application", "simple-message-summary");
+   static Mime type("text", "data");
    return type;
 }
 
