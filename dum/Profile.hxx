@@ -33,7 +33,12 @@ class Profile
       
       void setDefaultFrom(const NameAddr& from);
       void setDefaultRegistrationTime(int secs);
-      
+      void setDefaultSubscriptionTime(int secs);
+
+      NameAddr& getDefaultFrom();
+      int getDefaultRegistrationTime();
+      int getDefaultSubscriptionTime();
+
       //overrides the value used to populate the contact
       //?dcm? -- also change via entries? Also, dum currently uses(as a uas)
       //the request uri of the dialog constructing request for the local contact
@@ -42,10 +47,6 @@ class Profile
       void setOverrideHostAndPort(const Uri& hostPort);
       bool hasOverrideHostAndPort() const;
       const Uri& getOverideHostAndPort() const;      
-
-      NameAddr& getDefaultFrom();
-      int getDefaultRegistrationTime();
-      int getDefaultSubscriptionTime();
 
       void addSupportedScheme(const Data& scheme);          // Default is "sip"
       bool isSchemeSupported(const Data& scheme);
@@ -147,6 +148,7 @@ class Profile
    private:
       NameAddr mDefaultFrom;
       int mDefaultRegistrationExpires;
+      int mDefaultSubscriptionExpires;
 
       bool mHasOutboundProxy;
       NameAddr mOutboundProxy;
