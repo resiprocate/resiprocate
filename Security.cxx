@@ -60,10 +60,6 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
       DebugLog( << "Trying to form TLS connection - acting as client" );
    }
 
-   // cj TODO FIX - evil hack
-//   makeSocketBlocking(fd);   
-   
-   
    assert( security );
    SSL_CTX* ctx = security->getTlsCtx(server);
    assert(ctx);
@@ -614,6 +610,11 @@ Security::loadMyPublicCert( const Data&  filePath )
 {
    assert( !filePath.empty() );
    
+   if (publicCert)
+   {
+      return true;
+   }
+   
    FILE* fp = fopen(filePath.c_str(),"rb");
    if ( !fp )
    {
@@ -663,6 +664,11 @@ bool
 Security::loadRootCerts(  const Data& filePath )
 { 
    assert( !filePath.empty() );
+   
+   if (certAuthorities)
+   {
+      return true;
+   }
    
    certAuthorities = X509_STORE_new();
    assert( certAuthorities );
@@ -874,6 +880,11 @@ bool
 Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
 {
    assert( !filePath.empty() );
+   
+   if ( privateKey )
+   {
+      return true;
+   }
    
    FILE* fp = fopen(filePath.c_str(),"rb");
    if ( !fp )
