@@ -28,6 +28,8 @@ ServerInviteSession::getHandle()
 void 
 ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 {
+   Destroyer::Guard guard(mDestroyer);
+
    switch (mState)
    {
       case UAS_EarlyNoOffer:
@@ -51,12 +53,12 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          // an offer/answer exchange with PRACK. 
          // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
          // we should send 200PRACK
-         Destroyer::Guard guard(mDestroyer);
+         transition(Terminated);
+
          SipMessage response;
          mDialog.makeResponse(mFirstRequest, response, code);
          response.header(h_Contacts) = contacts;
          mDum.send(response);
-         transition(Terminated);
 
          guard.destroy();
          break;
@@ -137,13 +139,13 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
    switch (mState)
    {
       case UAS_NoOffer:
-         mProposedLocalSdp = InviteSession::makeSdp(offer);
          transition(UAS_ProvidedOffer);
+         mProposedLocalSdp = InviteSession::makeSdp(offer);
          break;
 
       case UAS_EarlyNoOffer:
-         mProposedLocalSdp = InviteSession::makeSdp(offer);
          transition(UAS_EarlyProvidedOffer);
+         mProposedLocalSdp = InviteSession::makeSdp(offer);
          break;
          
       case UAS_NoOfferReliable:
@@ -153,9 +155,9 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
 
       case UAS_EarlyReliable:
          // queue offer
+         transition(UAS_SentUpdate);
          mProposedLocalSdp = InviteSession::makeSdp(offer);
          sendUpdate(offer);
-         transition(UAS_SentUpdate);
          break;
          
       case UAS_Accepted:
@@ -187,15 +189,15 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
    switch (mState)
    {
       case UAS_Offer:
+         transition(UAS_OfferProvidedAnswer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
-         transition(UAS_OfferProvidedAnswer);
          break;
          
       case UAS_EarlyOffer:
+         transition(UAS_EarlyProvidedAnswer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
-         transition(UAS_EarlyProvidedAnswer);
          break;
          
       case UAS_OfferReliable: 
@@ -282,6 +284,8 @@ ServerInviteSession::end()
 void 
 ServerInviteSession::reject(int code)
 {
+   Destroyer::Guard guard(mDestroyer);
+
    switch (mState)
    {
       case UAS_EarlyNoOffer:
@@ -301,16 +305,15 @@ ServerInviteSession::reject(int code)
       case UAS_ReceivedUpdate:
       case UAS_SentUpdate:
       {
-         Destroyer::Guard guard(mDestroyer);
-         
          // !jf! the cleanup for 3xx may be a bit strange if we are in the middle of
          // an offer/answer exchange with PRACK. 
          // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
          // we should send 200PRACK
+         transition(Terminated);
+
          SipMessage response;
          mDialog.makeResponse(mFirstRequest, response, code);
          mDum.send(response);
-         transition(Terminated);
          guard.destroy();
          break;
       }
@@ -360,27 +363,27 @@ ServerInviteSession::accept(int code)
       case UAS_FirstEarlyReliable:
          // queue 2xx
          // waiting for PRACK
-         mDialog.makeResponse(mInvite200, mFirstRequest, code);
          transition(UAS_Accepted);
+         mDialog.makeResponse(mInvite200, mFirstRequest, code);
          break;
          
       case UAS_EarlyReliable:
+         transition(Connected);
          mDialog.makeResponse(mInvite200, mFirstRequest, code);
          mDum.send(mInvite200);
          startRetransmitTimer(); // 2xx timer
-         transition(Connected);
          break;
 
       case UAS_SentUpdate:
+         transition(UAS_SentUpdateAccepted);
          mDialog.makeResponse(mInvite200, mFirstRequest, code);
          mDum.send(mInvite200);
          startRetransmitTimer(); // 2xx timer
-         transition(UAS_SentUpdateAccepted);
          break;
 
       case UAS_ReceivedUpdate:
-         mDialog.makeResponse(mInvite200, mFirstRequest, code);// queue 2xx
          transition(UAS_ReceivedUpdateWaitingAnswer);
+         mDialog.makeResponse(mInvite200, mFirstRequest, code);// queue 2xx
          break;
          
       case UAS_FirstSentOfferReliable:
@@ -460,7 +463,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
 }
 
 void 
-ServerInviteSession::dispatch(const DumTimeout& msg)
+ServerInviteSession::dispatch(const DumTimeout& timeout)
 {
    if (timeout.type() == DumTimeout::Retransmit1xx)
    {
@@ -473,7 +476,7 @@ ServerInviteSession::dispatch(const DumTimeout& msg)
    }
    else
    {
-      InviteSession::dispatch(msg);
+      InviteSession::dispatch(timeout);
    }
 }
 
@@ -489,24 +492,24 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    switch (toEvent(msg, sdp))
    {
       case OnInviteOffer:
+         transition(UAS_Offer);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          handler->onOffer(getSessionHandle(), msg, sdp);
-         transition(UAS_Offer);
          break;
       case OnInvite:
-         handler->onNewSession(getHandle(), None, msg);
          transition(UAS_NoOffer);
+         handler->onNewSession(getHandle(), None, msg);
          break;
       case OnInviteReliableOffer:
+         transition(UAS_OfferReliable);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          handler->onOffer(getSessionHandle(), msg, sdp);
-         transition(UAS_OfferReliable);
          break;
       case OnInviteReliable:
-         handler->onNewSession(getHandle(), None, msg);
          transition(UAS_NoOfferReliable);
+         handler->onNewSession(getHandle(), None, msg);
          break;
       default:
          assert(0);
@@ -543,8 +546,8 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
    switch (toEvent(msg, sdp))
    {
       case OnAckAnswer:
-         handler->onAnswer(getSessionHandle(), msg, sdp);
          transition(Connected);
+         handler->onAnswer(getSessionHandle(), msg, sdp);
          break;
 
       case OnCancel:
@@ -565,9 +568,9 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          
       case OnAck:
       {
+         transition(Terminated);
          SipMessage bye;
          mDialog.makeRequest(bye, BYE);
-         transition(Terminated);
          mDum.send(bye);
          break;
       }
@@ -590,23 +593,26 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
    switch (toEvent(msg, sdp))
    {
       case OnAckAnswer:
+         transition(Connected);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, sdp);
-         transition(Connected);
          break;
          
       case OnCancel:
       {
+         // no transition
+
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
          mDum.send(c200);
-         // no transition
          break;
       }
 
       case OnPrack: // broken
       {
+         // no transition
+
          SipMessage p200;
          mDialog.makeResponse(p200, msg, 200);
          mDum.send(p200);
@@ -615,7 +621,6 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          startRetransmitTimer(); // make 2xx timer
          mDum.send(mInvite200);  
          
-         // no transition
          break;
       }
 
@@ -686,6 +691,7 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 void
 ServerInviteSession::dispatchCancel(const SipMessage& msg)
 {
+   transition(Terminated);
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
    SipMessage c200;
@@ -697,12 +703,12 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
    mDum.send(i487);
 
    handler->onTerminated(getSessionHandle());
-   transition(Terminated);
 }
 
 void
 ServerInviteSession::dispatchBye(const SipMessage& msg)
 {
+   transition(Terminated);
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
    SipMessage b200;
@@ -714,12 +720,12 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
    mDum.send(i487);
 
    handler->onTerminated(getSessionHandle());
-   transition(Terminated);
 }
 
 void
 ServerInviteSession::dispatchUnknown(const SipMessage& msg)
 {
+   transition(Terminated);
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 
    SipMessage r481; // !jf! what should we send here? 
@@ -731,7 +737,6 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
    mDum.send(i400);
 
    handler->onTerminated(getSessionHandle());
-   transition(Terminated);
 }
 
 void
