@@ -73,6 +73,11 @@ TransactionMap::erase(const Data& tid )
    }
 }
  
+int
+TransactionMap::size() const
+{
+   return mMap.size();
+}
 
 
 
