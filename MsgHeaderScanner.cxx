@@ -656,7 +656,6 @@ enum { chunkTermSentinelChar = '\0' };
 #endif
 /// START OF MEMBER METHODS
 
-    bool MsgHeaderScanner::mInitialized = false;
 
 
     int
@@ -867,6 +866,8 @@ enum { chunkTermSentinelChar = '\0' };
     }
 
 #endif //!defined(RESIP_MSG_HEADER_SCANNER_DEBUG) }
+
+    bool MsgHeaderScanner::mInitialized = false;
 
     MsgHeaderScanner::MsgHeaderScanner()
     {
