@@ -107,6 +107,8 @@ main()
    assert(r.size() == 5);
    timer.process();   
    assert(r.size() == 5);
+
+   cerr << "All OK" << endl;
    return 0;
 }
 
