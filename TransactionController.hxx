@@ -27,15 +27,14 @@ class TransactionController
 
       void addTransport( TransportType protocol, 
                          int port,
-                         const Data& hostName,
-                         const Data& nic);
-
+                         bool ipv6,
+                         const Data& ipInterface);
       void addTlsTransport( int port, 
                             const Data& keyDir,
                             const Data& privateKeyPassPhrase,
                             const Data& domainname,
-                            const Data& hostName,
-                            const Data& nic);
+                            bool ipv6,
+                            const Data& ipInterface);
       
       void send(SipMessage* msg);
 

@@ -5,8 +5,10 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Connection.hxx"
+#include "resiprocate/ConnectionManager.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Security.hxx"
+#include "resiprocate/TcpBaseTransport.hxx"
 
 using namespace resip;
 
@@ -17,90 +19,82 @@ Connection::connectionStates[Connection::MAX][32] = { "NewMessage", "ReadingHead
 
 
 Connection::Connection()
-   : mYounger(0),
+   : mSocket(-1), // bogus
+     mWho(),
+     mSendPos(0),
+     mYounger(0),
      mOlder(0),
-     mTlsConnection(0),
-     mSocket(-1),
+     mMessage(0),
+     mBuffer(0),
+     mBufferPos(0),
+     mBufferSize(0),
      mLastUsed(0),
      mState(NewMessage)
 {
 }
 
-Connection::Connection(const Tuple& who,
-                       Socket socket)
-   : mYounger(0),
-     mOlder(0),
+Connection::Connection(const Tuple& who, Socket socket)
+   : mSocket(socket), 
      mWho(who),
-     mTlsConnection(0),
-     mSocket(socket),
+     mSendPos(0),
+     mYounger(0),
+     mOlder(0),
+     mMessage(0),
+     mBuffer(0),
+     mBufferPos(0),
+     mBufferSize(Connection::ChunkSize),
      mLastUsed(Timer::getTimeMs()),
      mState(NewMessage)
 {
-   mWho.connection = this;
+   getConnectionManager().addConnection(this);
 }
 
 Connection::~Connection()
 {
    if (mSocket != -1) // bogus Connections
    {
-      remove();
       //DebugLog (<< "Shutting down connection " << mSocket);
    
       //shutdown(mSocket, SD_BOTH );
 
-      if ( mTlsConnection )
+      while (!mOutstandingSends.empty())
       {
-         delete mTlsConnection; 
-         mTlsConnection=0;
+         SendData* sendData = mOutstandingSends.front();
+         mWho.transport->fail(sendData->transactionId);
+         delete sendData;
+         mOutstandingSends.pop_front();
       }
    
       closesocket(mSocket);
-   }
-}
 
-Connection* 
-Connection::remove()
-{
-   Connection* next = mYounger;
+      getConnectionManager().removeConnection(this);
 
-   if (mYounger != 0 && mOlder != 0)
-   {
-      assert(mYounger != 0);
-      assert(mOlder != 0);
-
-      mYounger->mOlder = mOlder;
-      mOlder->mYounger = mYounger;
-      
       mYounger = 0;
       mOlder = 0;
    }
-   
-   return next;
-}
-   
-std::pair<char*, size_t> 
-Connection::getWriteBuffer()
-{
-   if (mState == NewMessage)
-   {
-      mBuffer = new char [Connection::ChunkSize];
-      mBufferSize = Connection::ChunkSize;
-      mBufferPos = 0;
-   }
-   return std::make_pair(mBuffer + mBufferPos, mBufferSize - mBufferPos);
 }
 
-bool
-Connection::process(size_t bytesRead, Fifo<Message>& fifo)
+ConnectionId
+Connection::getId() const
+{
+   return mWho.connectionId;
+}
+
+void
+Connection::performRead(int bytesRead, Fifo<Message>& fifo)
 {
    DebugLog(<< "In State: " << connectionStates[mState]);
+   getConnectionManager().touch(this);
+   
+  start:   // If there is an overhang come back here, effectively recursing
+   
    switch(mState)
    {
       case NewMessage:
       {
          assert(mWho.transport);
          mMessage = new SipMessage(mWho.transport);
-
+         
          DebugLog(<< "Connection::process setting source " << mWho);
          mMessage->setSource(mWho);
          mMessage->setTlsDomain(mWho.transport->tlsDomain());
@@ -121,7 +115,8 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
             mBuffer = 0;
             delete mMessage;
             mMessage = 0;
-            return false;
+            delete this;
+            return;
          }
          else if (!mPreparse.isDataAssigned())
          {
@@ -186,7 +181,8 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
                   DebugLog (<< "Extra bytes after message: " << overHang);
                   DebugLog (<< Data(mBuffer, overHang));
                   
-                  process(overHang, fifo);
+                  bytesRead = overHang;
+                  goto start;
                }
             }
             else
@@ -226,7 +222,8 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
             delete mMessage;
             mMessage = 0;
             //.jacob. Shouldn't the state also be set here?
-            return false;
+            delete this;
+            return;
          }
          mMessage->addBuffer(mBuffer);
          unsigned int numUnprocessedChars =
@@ -279,9 +276,8 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
             {
                // The message body is complete.
                mMessage->setBody(unprocessedCharPtr, contentLength);
-               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-               
                Transport::stampReceived(mMessage);
+               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
                fifo.add(mMessage);
 
                int overHang = numUnprocessedChars - contentLength;
@@ -306,9 +302,8 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
                   DebugLog (<< "Extra bytes after message: " << overHang);
                   DebugLog (<< Data(mBuffer, overHang));
                   
-                  //!jacob! This recursion may cause stack overflow.
-                  // Better to goto the beginning of the function.
-                  process(overHang, fifo);
+                  bytesRead = overHang;
+                  goto start;
                }
             }
          }
@@ -334,9 +329,70 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
       default:
          assert(0);
    }
-   return true;
+}
+
+void
+Connection::requestWrite(SendData* sendData)
+{
+   if (mOutstandingSends.empty())
+   {
+      getConnectionManager().addToWritable(this);
+   }
+
+   mOutstandingSends.push_back(sendData);
+   
+}
+
+void
+Connection::performWrite()
+{
+   //assert(hasDataToWrite());
+
+   const Data& data = mOutstandingSends.front()->data;
+   DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
+   Data::size_type bytesWritten = write(data.data() + mSendPos,data.size() - mSendPos);
+
+   if (bytesWritten < 0)
+   {
+      delete this;
+   }
+   else
+   {
+      mSendPos += bytesWritten;
+      if (mSendPos == data.size())
+      {
+         mSendPos = 0;
+         delete mOutstandingSends.front();
+         mOutstandingSends.pop_front();
+
+         if (mOutstandingSends.empty())
+         {
+            getConnectionManager().removeFromWritable();
+         }
+      }
+   }
 }
             
+ConnectionManager&
+Connection::getConnectionManager() const
+{
+   assert(mWho.transport);
+   TcpBaseTransport* transport = static_cast<TcpBaseTransport*>(mWho.transport);
+   
+   return transport->getConnectionManager();
+}
+
+std::pair<char*, size_t> 
+Connection::getWriteBuffer()
+{
+   if (mState == NewMessage)
+   {
+      mBuffer = new char [Connection::ChunkSize];
+      mBufferSize = Connection::ChunkSize;
+      mBufferPos = 0;
+   }
+   return std::make_pair(mBuffer + mBufferPos, mBufferSize - mBufferPos);
+}
             
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::Connection& c)
@@ -394,3 +450,4 @@ resip::operator<<(std::ostream& strm, const resip::Connection& c)
  * <http://www.vovida.org/>.
  *
  */
+

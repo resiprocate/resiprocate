@@ -27,89 +27,9 @@ UdpTransport::UdpTransport(Fifo<Message>& fifo,
 {
    InfoLog (<< "Creating udp transport host=" << pinterface << " port=" << portNum);
    
-   mFd = socket(ipv4 ? PF_INET : PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-   
-   if ( mFd == INVALID_SOCKET )
-   {
-      InfoLog (<< "Failed to open socket: " << portNum);
-	  throw Exception("Failed to open UDP port", __FILE__,__LINE__);
-   }
-   
-   sockaddr_in addr4;
-#ifdef USE_IPV6
-   sockaddr_in6 addr6;
-#endif
-   sockaddr* saddr=0;
-   int saddrLen = 0;
-   
-   if (ipv4)
-   {
-      memset(&addr4, 0, sizeof(addr4));
-      
-      addr4.sin_family = AF_INET;
-      addr4.sin_port = htons(portNum);
-      if (pinterface == Data::Empty)
-      {
-         addr4.sin_addr.s_addr = htonl(INADDR_ANY); 
-      }
-      else
-      {
-         DnsUtil::inet_pton(pinterface, addr4.sin_addr);
-      }
-
-
-      saddr = reinterpret_cast<sockaddr*>(&addr4);
-      saddrLen = sizeof(addr4);
-   }
-   else
-   {
-#ifdef USE_IPV6
-	   memset(&addr6, 0, sizeof(addr6));
-
-      addr6.sin6_family = AF_INET6;
-      addr6.sin6_port = htons(portNum);
-      if (pinterface == Data::Empty)
-      {
-         addr6.sin6_addr = in6addr_any;
-      }
-      else
-      {
-         DnsUtil::inet_pton(pinterface, addr6.sin6_addr);
-      }
-
-      saddr = reinterpret_cast<sockaddr*>(&addr6);
-      saddrLen = sizeof(addr6);
-#else
-	   assert(0);
-#endif
-   }
-   assert(saddr);
-   assert(saddrLen);
-   
-   
-   if ( bind( mFd, saddr, saddrLen) == SOCKET_ERROR )
-   {
-      int err = errno;
-      if ( err == EADDRINUSE )
-      {
-         ErrLog (<< "UDP port " << portNum << " already in use");
-         throw Exception("UDP port already in use", __FILE__,__LINE__);
-      }
-      else
-      {
-         ErrLog (<< "Could not bind to port: " << portNum);
-         throw Exception("Could not use UDP port", __FILE__,__LINE__);
-      }
-   }
-
-   bool ok = makeSocketNonBlocking(mFd);
-   if ( !ok )
-   {
-      ErrLog (<< "Could not make UDP port non blocking " << portNum);
-      throw Exception("Could not use UDP port", __FILE__,__LINE__);
-   }
+   mFd = Transport::socket(transport(), ipv4);
+   Transport::bind(mFd, portNum, pinterface, ipv4);
 }
-
 
 UdpTransport::~UdpTransport()
 {
@@ -136,20 +56,16 @@ UdpTransport::process(FdSet& fdset)
       assert( &(*sendData) );
       assert( sendData->destination.port != 0 );
       
-      sockaddr_in addrin;
-      addrin.sin_addr = sendData->destination.ipv4;
-      addrin.sin_port = htons(sendData->destination.port);
-      addrin.sin_family = AF_INET;
-
+      sockaddr addr;
+      sendData->destination.toSockaddr(addr);
       int count = sendto(mFd, 
                          sendData->data.data(), sendData->data.size(),  
                          0, // flags
-                         (const sockaddr*)&addrin, sizeof(sockaddr_in) );
-
+                         &addr, sizeof(sockaddr) );
+      
       if ( count == SOCKET_ERROR )
       {
-         int err = errno;
-         InfoLog (<< strerror(err));
+         InfoLog (<< strerror(errno));
          InfoLog (<< "Failed sending to " << sendData->destination);
          fail(sendData->transactionId);
       }
@@ -163,8 +79,6 @@ UdpTransport::process(FdSet& fdset)
       }
    }
    
-   struct sockaddr from;
-
    // !jf! this may have to change - when we read a message that is too big
    if ( !fdset.readyToRead(mFd) )
    {
@@ -174,6 +88,7 @@ UdpTransport::process(FdSet& fdset)
    //should this buffer be allocated on the stack and then copied out, as it
    //needs to be deleted every time EWOULDBLOCK is encountered
    char* buffer = new char[MaxBufferSize];
+   struct sockaddr from;
    socklen_t fromLen = sizeof(from);
 
    // !jf! how do we tell if it discarded bytes 
@@ -184,8 +99,7 @@ UdpTransport::process(FdSet& fdset)
                        buffer,
                        MaxBufferSize,
                        0 /*flags */,
-                       (struct sockaddr*)&from,
-                       &fromLen);
+                       &from, &fromLen);
    if ( len == SOCKET_ERROR )
    {
       int err = errno;
@@ -243,28 +157,10 @@ UdpTransport::process(FdSet& fdset)
 
 
    // Save all the info where this message came from
-   if (from.sa_family == AF_INET)
-   {
-      sockaddr_in* addr4 = reinterpret_cast<sockaddr_in*>(&from);
-      Tuple tuple(addr4->sin_addr, ntohs(addr4->sin_port), transport());
-      tuple.transport = this;      
-      message->setSource(tuple);
-   }
-#ifdef USE_IPV6
-   else if (from.sa_family == AF_INET6)
-   {
-      sockaddr_in6* addr6 = reinterpret_cast<sockaddr_in6*>(&from);
-      Tuple tuple(addr6->sin6_addr, ntohs(addr6->sin6_port), transport());
-      tuple.transport = this;      
-      message->setSource(tuple);
-   }
-#endif
-   else
-   {
-      assert(0);
-   }
+   Tuple tuple(from, transport());
+   tuple.transport = this;
+   message->setSource(tuple);   
    
-
    // Tell the SipMessage about this datagram buffer.
    message->addBuffer(buffer);
 
