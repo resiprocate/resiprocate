@@ -727,7 +727,7 @@ ParseBuffer::unsignedInteger()
    return num;
 }
 
-unsigned long long
+UInt64
 ParseBuffer::unsignedLongLong()
 {
    if (this->eof())
