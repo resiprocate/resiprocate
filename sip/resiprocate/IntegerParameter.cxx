@@ -6,7 +6,8 @@ using namespace Vocal2;
 using namespace std;
 
 IntegerParameter::IntegerParameter(ParameterTypes::Type type,
-                                   ParseBuffer& pb)
+                                   ParseBuffer& pb, 
+                                   const char* terminators)
    : Parameter(type),
      mValue(0)
 {

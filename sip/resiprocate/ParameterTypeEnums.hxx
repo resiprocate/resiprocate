@@ -64,7 +64,7 @@ class ParameterTypes
       // convert to enum from two pointers into the HFV raw buffer
       static Type getType(const char* start, unsigned int length);
 
-      typedef Parameter* (*Factory)(ParameterTypes::Type, ParseBuffer&);
+      typedef Parameter* (*Factory)(ParameterTypes::Type, ParseBuffer&, const char*);
 
       static Factory ParameterFactories[MAX_PARAMETER];
       static Data ParameterNames[MAX_PARAMETER];

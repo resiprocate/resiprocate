@@ -23,7 +23,7 @@ getNextTransactionCount()
 
 
 BranchParameter::BranchParameter(ParameterTypes::Type type,
-                                 ParseBuffer& pb)
+                                 ParseBuffer& pb, const char* terminators)
    : Parameter(type), 
      mHasMagicCookie(false),
      mIsMyBranch(false),

@@ -8,7 +8,7 @@
 #include "sip2/sipstack/MethodTypes.hxx"
 #include "sip2/sipstack/Symbols.hxx"
 #include "sip2/sipstack/Uri.hxx"
-
+#include "sip2/sipstack/ParameterTypes.hxx"
 
 namespace Vocal2
 {
@@ -89,6 +89,20 @@ class Auth : public ParserCategory
       std::ostream& encodeAuthParameters(std::ostream& str) const;
 
       Data& scheme();
+
+      Algorithm_Param::DType& param(const Algorithm_Param& paramType) const;
+      Cnonce_Param::DType& param(const Cnonce_Param& paramType) const;
+      Nonce_Param::DType& param(const Nonce_Param& paramType) const;
+      Domain_Param::DType& param(const Domain_Param& paramType) const;
+      Nc_Param::DType& param(const Nc_Param& paramType) const;
+      Opaque_Param::DType& param(const Opaque_Param& paramType) const;
+      Realm_Param::DType& param(const Realm_Param& paramType) const;
+      Response_Param::DType& param(const Response_Param& paramType) const;
+      Stale_Param::DType& param(const Stale_Param& paramType) const;
+      Username_Param::DType& param(const Username_Param& paramType) const;
+      Uri_Param::DType& param(const Uri_Param& paramType) const;
+      Qop_Options_Param::DType& param(const Qop_Options_Param& paramType) const;
+      Qop_Param::DType& param(const Qop_Param& paramType) const;
    private:
       mutable Data mScheme;
 };
