@@ -18,7 +18,7 @@ class ClientPublication : public NonDialogUsage
       //0 means the last value of Expires will be used.
       void refresh(unsigned int expiration=0);
       void update(const Contents* body);
-      const Contents* getContents() const { return mContents; }
+      const Contents* getContents() const { return mDocument; }
 
       virtual SipMessage& end();
 
