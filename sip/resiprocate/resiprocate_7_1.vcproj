@@ -219,6 +219,9 @@
 				RelativePath=".\ApiCheck.cxx">
 			</File>
 			<File
+				RelativePath=".\ApplicationSip.cxx">
+			</File>
+			<File
 				RelativePath=".\Auth.cxx">
 			</File>
 			<File
@@ -265,6 +268,9 @@
 			</File>
 			<File
 				RelativePath=".\DateCategory.cxx">
+			</File>
+			<File
+				RelativePath=".\Dialog.cxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.cxx">
@@ -417,6 +423,9 @@
 				RelativePath=".\RequestLine.cxx">
 			</File>
 			<File
+				RelativePath=".\Rlmi.cxx">
+			</File>
+			<File
 				RelativePath="RportParameter.cxx">
 			</File>
 			<File
@@ -435,22 +444,31 @@
 				RelativePath="SipMessage.cxx">
 			</File>
 			<File
-				RelativePath="SipSession.cxx">
-			</File>
-			<File
 				RelativePath="SipStack.cxx">
 			</File>
 			<File
 				RelativePath="os\Socket.cxx">
 			</File>
 			<File
+				RelativePath=".\StackThread.cxx">
+			</File>
+			<File
 				RelativePath="StatelessHandler.cxx">
+			</File>
+			<File
+				RelativePath=".\StatisticsManager.cxx">
+			</File>
+			<File
+				RelativePath=".\StatisticsMessage.cxx">
 			</File>
 			<File
 				RelativePath=".\StatusLine.cxx">
 			</File>
 			<File
 				RelativePath=".\StringCategory.cxx">
+			</File>
+			<File
+				RelativePath=".\Subscription.cxx">
 			</File>
 			<File
 				RelativePath="os\Subsystem.cxx">
@@ -475,6 +493,9 @@
 			</File>
 			<File
 				RelativePath="os\ThreadIf.cxx">
+			</File>
+			<File
+				RelativePath=".\TimeAccumulate.cxx">
 			</File>
 			<File
 				RelativePath="os\Timer.cxx">
@@ -502,6 +523,9 @@
 			</File>
 			<File
 				RelativePath="Transport.cxx">
+			</File>
+			<File
+				RelativePath=".\TransportMessage.cxx">
 			</File>
 			<File
 				RelativePath="TransportSelector.cxx">
@@ -540,12 +564,27 @@
 				RelativePath=".\os\WinCompat.cxx">
 			</File>
 			<File
+				RelativePath=".\X_msMsgsInvite.cxx">
+			</File>
+			<File
 				RelativePath="XMLCursor.cxx">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
+			<File
+				RelativePath=".\ApiCheck.hxx">
+			</File>
+			<File
+				RelativePath=".\ApiCheckList.hxx">
+			</File>
+			<File
+				RelativePath=".\ApplicationMessage.hxx">
+			</File>
+			<File
+				RelativePath=".\ApplicationSip.hxx">
+			</File>
 			<File
 				RelativePath=".\Auth.hxx">
 			</File>
@@ -602,6 +641,12 @@
 			</File>
 			<File
 				RelativePath=".\DateCategory.hxx">
+			</File>
+			<File
+				RelativePath=".\Dialog.hxx">
+			</File>
+			<File
+				RelativePath=".\DnsHandler.hxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.hxx">
@@ -706,6 +751,9 @@
 				RelativePath=".\Mime.hxx">
 			</File>
 			<File
+				RelativePath=".\MsgHeaderScanner.hxx">
+			</File>
+			<File
 				RelativePath="MultipartMixedContents.hxx">
 			</File>
 			<File
@@ -716,6 +764,9 @@
 			</File>
 			<File
 				RelativePath=".\NameAddr.hxx">
+			</File>
+			<File
+				RelativePath=".\OctetContents.hxx">
 			</File>
 			<File
 				RelativePath="Parameter.hxx">
@@ -790,6 +841,9 @@
 				RelativePath="resource.h">
 			</File>
 			<File
+				RelativePath=".\Rlmi.hxx">
+			</File>
+			<File
 				RelativePath="RportParameter.hxx">
 			</File>
 			<File
@@ -800,6 +854,12 @@
 			</File>
 			<File
 				RelativePath="Security.hxx">
+			</File>
+			<File
+				RelativePath=".\SecurityTypes.hxx">
+			</File>
+			<File
+				RelativePath=".\ShutdownMessage.hxx">
 			</File>
 			<File
 				RelativePath="SipFrag.hxx">
@@ -820,7 +880,16 @@
 				RelativePath="os\Socket.hxx">
 			</File>
 			<File
+				RelativePath=".\StackThread.hxx">
+			</File>
+			<File
 				RelativePath="StatelessHandler.hxx">
+			</File>
+			<File
+				RelativePath=".\StatisticsManager.hxx">
+			</File>
+			<File
+				RelativePath=".\StatisticsMessage.hxx">
 			</File>
 			<File
 				RelativePath=".\StatusLine.hxx">
@@ -859,6 +928,9 @@
 				RelativePath="os\ThreadIf.hxx">
 			</File>
 			<File
+				RelativePath=".\TimeAccumulate.hxx">
+			</File>
+			<File
 				RelativePath="os\Timer.hxx">
 			</File>
 			<File
@@ -878,6 +950,9 @@
 			</File>
 			<File
 				RelativePath="TransactionMap.hxx">
+			</File>
+			<File
+				RelativePath=".\TransactionMessage.hxx">
 			</File>
 			<File
 				RelativePath="TransactionState.hxx">
@@ -932,6 +1007,9 @@
 			</File>
 			<File
 				RelativePath=".\os\WinCompat.hxx">
+			</File>
+			<File
+				RelativePath=".\X_msMsgsInvite.hxx">
 			</File>
 			<File
 				RelativePath="XMLCursor.hxx">
