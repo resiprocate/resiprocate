@@ -1,4 +1,6 @@
-#include "resiprocate/AresDns.hxx"
+#include <fstream>
+
+#include "resiprocate/LocalDns.hxx"
 
 #include "resiprocate/os/WinLeakCheck.hxx"
 
@@ -17,9 +19,13 @@ extern "C"
 #endif
 
 using namespace resip;
+using namespace std;
+
+std::map<Data, Data> LocalDns::files;
+Data LocalDns::mTarget;
 
 int 
-AresDns::init()
+LocalDns::init()
 {
    int status;
    if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
@@ -32,37 +38,21 @@ AresDns::init()
    }
 }
 
-AresDns::~AresDns()
+LocalDns::LocalDns()
 {
-   ares_destroy(mChannel);
+   files["yahoo.com"] = "yahoo.dns";
+   files["_ldap._tcp.openldap.org"] = "openldap.srv";
+   files["quartz"] = "quartz.aaaa";
+   files["crystal"] = "crystal.aaaa";
+   files["www.google.com"] = "google.cname";
 }
 
-void 
-AresDns::lookupARecords(const char* target, ExternalDnsHandler* handler, void* userData)
+LocalDns::~LocalDns()
 {
-   ares_gethostbyname(mChannel, target, AF_INET, AresDns::aresHostCallback, new Payload(handler, userData));
-}
-
-void 
-AresDns::lookupAAAARecords(const char* target, ExternalDnsHandler* handler, void* userData)
-{
-   ares_query(mChannel, target, C_IN, T_AAAA, AresDns::aresAAAACallback, new Payload(handler, userData)); 
-}
-
-void 
-AresDns::lookupNAPTR(const char* target, ExternalDnsHandler* handler, void* userData)
-{
-   ares_query(mChannel, target, C_IN, T_NAPTR, AresDns::aresNAPTRCallback, new Payload(handler, userData)); 
-}
-
-void 
-AresDns::lookupSRV(const char* target, ExternalDnsHandler* handler, void* userData)    
-{
-   ares_query(mChannel, target, C_IN, T_SRV, AresDns::aresSRVCallback, new Payload(handler, userData)); 
 }
 
 ExternalDnsHandler* 
-AresDns::getHandler(void* arg)
+LocalDns::getHandler(void* arg)
 {
    Payload* p = reinterpret_cast<Payload*>(arg);
    ExternalDnsHandler *thisp = reinterpret_cast<ExternalDnsHandler*>(p->first);
@@ -70,7 +60,7 @@ AresDns::getHandler(void* arg)
 }
 
 ExternalDnsRawResult 
-AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
+LocalDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
 {
    Payload* p = reinterpret_cast<Payload*>(arg);
    void* userArg = reinterpret_cast<void*>(p->second);
@@ -84,94 +74,61 @@ AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
       return ExternalDnsRawResult(abuf, alen, userArg);
    }
 }
-
-void
-AresDns::aresHostCallback(void *arg, int status, struct hostent* result)
-{
-   Payload* p = reinterpret_cast<Payload*>(arg);
-   ExternalDnsHandler *thisp = reinterpret_cast<ExternalDnsHandler*>(p->first);
-   void* userArg = reinterpret_cast<void*>(p->second);
-
-   if (status != ARES_SUCCESS)
-   {
-      thisp->handle_host(ExternalDnsHostResult(status, userArg));
-   }
-   else
-   {
-      thisp->handle_host(ExternalDnsHostResult(result, userArg));
-   }
-   delete p;   
-}
-
-void
-AresDns::aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen)
-{
-   getHandler(arg)->handle_NAPTR(makeRawResult(arg, status, abuf, alen));
-   Payload* p = reinterpret_cast<Payload*>(arg);
-   delete p;
-}
-
-void
-AresDns::aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen)
-{
-   getHandler(arg)->handle_SRV(makeRawResult(arg, status, abuf, alen));
-   Payload* p = reinterpret_cast<Payload*>(arg);
-   delete p;
-}
-
-void
-AresDns::aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen)
-{
-   getHandler(arg)->handle_AAAA(makeRawResult(arg, status, abuf, alen));
-   Payload* p = reinterpret_cast<Payload*>(arg);
-   delete p;
-}                             
       
 bool 
-AresDns::requiresProcess()
+LocalDns::requiresProcess()
 {
    return true; 
 }
 
 void 
-AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
+LocalDns::buildFdSet(fd_set& read, fd_set& write, int& size)
 {
-   int newsize = ares_fds(mChannel, &read, &write);
-   if ( newsize > size )
-   {
-      size = newsize;
-   }
 }
 
 void 
-AresDns::process(fd_set& read, fd_set& write)
+LocalDns::process(fd_set& read, fd_set& write)
 {
-   ares_process(mChannel, &read, &write);
-}
-
-char* 
-AresDns::errorMessage(long errorCode)
-{
-   const char* aresMsg = ares_strerror(errorCode);
-
-   int len = strlen(aresMsg);
-   char* errorString = new char[len+1];
-
-   strncpy(errorString, aresMsg, len);
-   errorString[len] = '\0';
-   return errorString;
 }
 
 void
-AresDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData)
+LocalDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData)
 {
-   ares_query(mChannel, target, C_IN, type, AresDns::aresCallback, new Payload(handler, userData));
+   mTarget = target;
+   ares_query(mChannel, target, C_IN, type, LocalDns::localCallback, new Payload(handler, userData));
+}
+
+void LocalDns::message(const char* file, unsigned char* buf, int& len)
+{
+   len = 0;
+   ifstream fs;
+   fs.open(file, ios_base::binary | ios_base::in);
+   
+   unsigned char* p = buf;
+   
+   while (!fs.eof())
+   {
+      unsigned char c = fs.get();
+      if (c != char_traits<char>::eof())
+      {
+         *p++ = c;
+         len++;
+      }
+   }
+   
+   fs.close();
 }
 
 void
-AresDns::aresCallback(void *arg, int status, unsigned char *abuf, int alen)
+LocalDns::localCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
-   getHandler(arg)->handleDnsRaw(makeRawResult(arg, status, abuf, alen));
+   unsigned char msg[1024];
+   int len = 0;
+   map<Data, Data>::iterator it = files.find(mTarget);
+   assert(it != files.end());
+   message(it->second.c_str(), msg, len);   
+   assert(0 != len);
+   getHandler(arg)->handleDnsRaw(makeRawResult(arg, 0, msg, len));
    Payload* p = reinterpret_cast<Payload*>(arg);
    delete p;
 }
