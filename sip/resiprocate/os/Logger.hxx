@@ -18,7 +18,7 @@
 
 // unconditionally output to cerr -- easily change back and forth
 #define CerrLog(args_)                                                          \
-  resip::Log::tags(resip::Log::DEBUG_STACK, RESIPROCATE_SUBSYSTEM, std::cerr)       \
+  resip::Log::tags(resip::Log::DEBUG_STACK, RESIPROCATE_SUBSYSTEM, std::cerr)   \
           << __FILE__ << ':' << __LINE__ << DELIM                               \
           args_ << std::endl;
 
@@ -54,31 +54,31 @@ class AssertOnRecursiveLock
 #define GenericLog(system_, level_, args_)                                      \
 do                                                                              \
 {                                                                               \
-   const resip::Log::ThreadSetting* setting = resip::Log::getThreadSetting(); \
+   const resip::Log::ThreadSetting* setting = resip::Log::getThreadSetting();   \
    if (setting)                                                                 \
    {                                                                            \
       if (level_ <= setting->level)                                             \
       {                                                                         \
          AssertOnRecursiveLock check;                                           \
-         resip::Lock lock(resip::Log::_mutex);                                \
+         resip::Lock lock(resip::Log::_mutex);                                  \
          check.set();                                                           \
-         resip::Log::tags(level_, system_,                                     \
-                           resip::GenericLogImpl::Instance())                  \
+         resip::Log::tags(level_, system_,                                      \
+                           resip::GenericLogImpl::Instance())                   \
                               << __FILE__ << ':' << __LINE__ << DELIM           \
             args_ << std::endl;                                                 \
       }                                                                         \
    }                                                                            \
    else                                                                         \
    {                                                                            \
-      if (resip::GenericLogImpl::isLogging(level_))                            \
+      if (resip::GenericLogImpl::isLogging(level_))                             \
       {                                                                         \
          AssertOnRecursiveLock check;                                           \
-         resip::Lock lock(resip::Log::_mutex);                                \
+         resip::Lock lock(resip::Log::_mutex);                                  \
          check.set();                                                           \
-         if (resip::GenericLogImpl::isLogging(level_))                         \
+         if (resip::GenericLogImpl::isLogging(level_))                          \
          {                                                                      \
-            resip::Log::tags(level_, system_,                                  \
-                              resip::GenericLogImpl::Instance())               \
+            resip::Log::tags(level_, system_,                                   \
+                              resip::GenericLogImpl::Instance())                \
                                  << __FILE__ << ':' << __LINE__ << DELIM        \
                args_ << std::endl;                                              \
          }                                                                      \
