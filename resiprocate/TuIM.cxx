@@ -148,7 +148,11 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
    mPages.push_back(page);
    
    Contents* body = ( new PlainContents(text) );
-   
+#if 1
+   // need for interop ???
+   msg->header(h_ContentTransferEncoding) = StringCategory(Data("8bit"));
+#endif
+
 #if defined( USE_SSL )
    if ( !encryptFor.empty() )
    {
@@ -156,6 +160,7 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
       assert(sec);
       
       Contents* old = body;
+      body->header(h_ContentTransferEncoding) = msg->header(h_ContentTransferEncoding);
       body = sec->encrypt( body, encryptFor );
       delete old;
 
@@ -164,6 +169,8 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
          mCallback->sendPageFailed( dest, -2 );
          return;
       }
+      
+      msg->header(h_ContentTransferEncoding) = StringCategory(Data("binary"));
    }
 
    if ( sign )
@@ -172,6 +179,7 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
       assert(sec);
     
       Contents* old = body;
+      body->header(h_ContentTransferEncoding) = msg->header(h_ContentTransferEncoding);
       body = sec->sign( body );
       delete old;
 
@@ -180,12 +188,12 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
          mCallback->sendPageFailed( dest, -1 );
          return;
       }
+
+      msg->header(h_ContentTransferEncoding) = StringCategory(Data("binary"));
    }
 #endif
    msg->setContents(body);
 
-   msg->header(h_ContentTransferEncoding) = StringCategory(Data("binary"));
-   
    setOutbound( *msg );
    //ErrLog( "About to send " << *msg );
 
@@ -255,14 +263,13 @@ TuIM::processSipFrag(SipMessage* msg)
       
       contents = sec->uncodeSigned( mBody, &signedBy, &sigStat );
       
-      InfoLog( << "Signed by " << signedBy << " stat = " << sigStat );
-      
       if ( !contents )
       { 
          InfoLog( << "Some problem decoding multipart/signed message");
-         
          return;
       } 
+
+      InfoLog( << "Signed by " << signedBy << " stat = " << sigStat );
    }
 #endif
 
