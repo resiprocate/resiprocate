@@ -1,11 +1,25 @@
-# this is our autoconf generator.  in reality, autoconf does much less
-# work than in a "traditional" make system.  This is a feature, not a bug.
+dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(build/Makefile.pre)dnl
+AC_PREREQ(2.57)
 
-AC_PREFIX_DEFAULT(default)
+AC_INIT([resiprocate], [0.3], [resiprocate-devel@lists.sourceforge.net])
+AM_INIT_AUTOMAKE([1.7.5 nostdinc foreign])
 
-AC_PATH_PROG(GNU_MAKE, make, '', $PATH:/usr/bin:/usr/local/bin)dnl
+AC_REVISION($Id: configure.in,v 1.2 2003/08/08 05:53:26 wensong Exp $)
+
+AM_MAINTAINER_MODE
+
+AC_LANG(C++)
+
+AC_CONFIG_SRCDIR([resiprocate/config.hxx.in])
+AC_CONFIG_HEADER([resiprocate/config.hxx])  
+
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+AC_PROG_LIBTOOL
+
+AC_CHECK_HEADERS([sys/sockio.h sys/int_types.h])
 
 # allow alternate toolchains
 
@@ -62,6 +76,13 @@ AC_ARG_WITH(distcc, [
 	[USE_DISTCC=false])
 AC_SUBST(USE_DISTCC)dnl
 
-# vocalconfig.h is NOT to be generated via AC_CONFIG_HEADER(S) but by
-# AC_OUTPUT.
-AC_OUTPUT(build/Makefile.conf)dnl
+RESIP_LIB_OPENSSL
+RESIP_LIB_ARES
+RESIP_PROG_DISTCC
+
+dnl Temporary hack until proper, portable pthreads detection is added.
+LIBS="$LIBS -lpthread"
+
+AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile])
+AC_OUTPUT
+

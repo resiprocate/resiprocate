@@ -1,0 +1,9 @@
+2003-08-08  Wensong Zhang  <wensong@purplecomm.com>
+
+	* configure.in: most stuff of configure.ac is merged in the
+	configure.in. configure.ac should be of no use now.
+
+	* acinclude.m4: fixed to look up contrib/ares automatically when
+	the --with-ares is specified.
+
+	* Makefile.am (EXTRA_DIST): fixed to use the right directory.
