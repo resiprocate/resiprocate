@@ -25,10 +25,11 @@ SipMessage::SipMessage(bool fromWire)
    {
       mHeaders[i] = 0;
    }
+
 }
 
 SipMessage::SipMessage(const SipMessage& from)
-   : mIsExternal(from.mRequest),
+   : mIsExternal(from.mIsExternal),
      mStartLine(0),
      mBody(0),
      mRequest(from.mRequest),
@@ -245,7 +246,7 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
                       const char* start, int len)
 {
    HeaderFieldValue* newHeader = new HeaderFieldValue(start, len);
-
+   
    if (header != Headers::UNKNOWN)
    {
       if (mHeaders[header] == 0)
