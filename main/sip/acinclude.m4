@@ -30,7 +30,7 @@ AC_DEFUN([RESIP_LIB_ARES],
     AC_ARG_WITH([ares],
         AC_HELP_STRING([--with-ares=DIR], [use the ares resolver library]),
         [
-	    for dir in $with_ares /usr/local /usr; do
+	    for dir in $with_ares `pwd`/contrib/ares /usr/local /usr; do
 		if test -f "$dir/include/ares.h"; then
 		    found_ares=yes;
 		    CPPFLAGS="$CPPFLAGS -I$dir/include"
