@@ -36,6 +36,7 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
    {
       mMyContacts = mLastRequest.header(h_Contacts);
    }
+   mNetworkAssociation.setDum(&dum);
 }
 
 ClientRegistration::~ClientRegistration()
@@ -229,6 +230,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
    {
       // !jf! there may be repairable errors that we can handle here
       assert(msg.isResponse());
+      mNetworkAssociation.update(msg);
       const int& code = msg.header(h_StatusLine).statusCode();
       if (code < 200)
       {

@@ -313,6 +313,12 @@
 				RelativePath=".\ExpiresCategory.cxx">
 			</File>
 			<File
+				RelativePath=".\ExtensionHeader.cxx">
+			</File>
+			<File
+				RelativePath=".\ExtensionParameter.cxx">
+			</File>
+			<File
 				RelativePath=".\ExternalBodyContents.cxx">
 			</File>
 			<File
@@ -356,6 +362,9 @@
 			</File>
 			<File
 				RelativePath=".\InternalTransport.cxx">
+			</File>
+			<File
+				RelativePath=".\KeepAliveMessage.cxx">
 			</File>
 			<File
 				RelativePath="LazyParser.cxx">
@@ -589,13 +598,7 @@
 				RelativePath="UdpTransport.cxx">
 			</File>
 			<File
-				RelativePath="UnknownHeaderType.cxx">
-			</File>
-			<File
 				RelativePath="UnknownParameter.cxx">
-			</File>
-			<File
-				RelativePath="UnknownParameterType.cxx">
 			</File>
 			<File
 				RelativePath="Uri.cxx">
@@ -692,9 +695,6 @@
 				RelativePath=".\DateCategory.hxx">
 			</File>
 			<File
-				RelativePath=".\Dialog.hxx">
-			</File>
-			<File
 				RelativePath=".\DnsAAAARecord.hxx">
 			</File>
 			<File
@@ -735,6 +735,12 @@
 			</File>
 			<File
 				RelativePath=".\ExpiresCategory.hxx">
+			</File>
+			<File
+				RelativePath=".\ExtensionHeader.hxx">
+			</File>
+			<File
+				RelativePath=".\ExtensionParameter.hxx">
 			</File>
 			<File
 				RelativePath=".\ExternalBodyContents.hxx">
@@ -786,6 +792,9 @@
 			</File>
 			<File
 				RelativePath="os\IntrusiveListElement.hxx">
+			</File>
+			<File
+				RelativePath=".\KeepAliveMessage.hxx">
 			</File>
 			<File
 				RelativePath="LazyParser.hxx">
@@ -1067,13 +1076,7 @@
 				RelativePath="UdpTransport.hxx">
 			</File>
 			<File
-				RelativePath="UnknownHeaderType.hxx">
-			</File>
-			<File
 				RelativePath="UnknownParameter.hxx">
-			</File>
-			<File
-				RelativePath="UnknownParameterType.hxx">
 			</File>
 			<File
 				RelativePath="Uri.hxx">

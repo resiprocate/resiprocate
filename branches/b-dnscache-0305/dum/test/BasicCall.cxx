@@ -19,6 +19,7 @@
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
+#include "resiprocate/dum/KeepAliveManager.hxx"
 
 #include <sstream>
 #include <time.h>
@@ -419,6 +420,9 @@ main (int argc, char** argv)
    dumUac->setMasterProfile(&uacMasterProfile);
    dumUac->setClientAuthManager(uacAuth);
 
+   auto_ptr<KeepAliveManager> keepAliveClient(new KeepAliveManager);
+   dumUac->setKeepAliveManager(keepAliveClient);
+
    TestUac uac;
    dumUac->setInviteSessionHandler(&uac);
    dumUac->setClientRegistrationHandler(&uac);
@@ -447,6 +451,9 @@ main (int argc, char** argv)
    std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
    dumUas->setMasterProfile(&uasMasterProfile);
    dumUas->setClientAuthManager(uasAuth);
+
+   auto_ptr<KeepAliveManager> keepAliveServer(new KeepAliveManager);
+   dumUas->setKeepAliveManager(keepAliveServer);
 
 #if !defined(NO_REGISTRATION)
    //your aor, credentials, etc here
