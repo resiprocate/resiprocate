@@ -31,8 +31,8 @@ class ClientRegistration: public BaseUsage
       const NameAddrs& myContacts();
       const NameAddrs& allContacts();
 
-      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
-      ClientRegistration::Handle getHandle() {return mHandle;}
+      virtual BaseUsage::Handle getBaseHandle() { return mHandle; }
+      ClientRegistration::Handle getHandle() { return mHandle; }
       
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
@@ -49,9 +49,10 @@ class ClientRegistration: public BaseUsage
       ClientRegistration::Handle mHandle;
       SipMessage& mLastRequest;
       NameAddrs mMyContacts;
-      NameAddrs mAllContacts;
+      NameAddrs mOtherContacts;
       UInt64    mExpirationTime;
 
+      int mTimerSeq; // expected timer seq (all < are stale)
       // disabled
       ClientRegistration(const ClientRegistration&);
       ClientRegistration& operator=(const ClientRegistration&);
