@@ -17,21 +17,6 @@ class RequestContext;
 class ResponseContext
 {
    public:
-      ResponseContext(RequestContext& parent);
-
-      /// Called by RequestContext after every event other than a response
-      void processEvent();
-      void processCandidates();
-      void processPendingTargets();
-      
-      /// Called by RequestContext after every response is received
-      void processResponse(const resip::SipMessage& response);
-      
-   private:
-      int getPriority(const resip::SipMessage& msg);
-
-      RequestContext& mRequestContext;
-      
       class CompareStatus  : public std::binary_function<const resip::SipMessage&, const resip::SipMessage&, bool>  
       {
          public:
@@ -43,15 +28,8 @@ class ResponseContext
          public:
             bool operator()(const resip::NameAddr& lhs, const resip::NameAddr& rhs) const;
       };      
-      
-      typedef std::set<resip::NameAddr, CompareQ> PendingTargetSet;
-      PendingTargetSet mPendingTargetSet;
-
-      HashSet<resip::NameAddr> mTargetSet;
-      
       typedef enum
       {
-         PendingTarget,
          Trying,
          Proceeding,
          WaitingToCancel
@@ -61,9 +39,40 @@ class ResponseContext
       {
             Status status;
             resip::Uri uri;
+            resip::Via via; // top via
       };
+
+
+      ResponseContext(RequestContext& parent);
+
+      /// Called by RequestContext after every event other than a response
+      void processEvent();
+      void processCandidates();
+      void processPendingTargets();
+      
+   private:
+      void sendRequest(const resip::SipMessage& request);
+      void processCancel(const resip::SipMessage& request);
+      void processResponse(resip::SipMessage& response);
+      void cancelClientTransaction(const Branch& branch);
+      void cancelProceedingClientTransactions();
+      void removeClientTransaction(const resip::SipMessage& response);
+      int getPriority(const resip::SipMessage& msg);
+
+      RequestContext& mRequestContext;
+      
+      typedef std::set<resip::NameAddr, CompareQ> PendingTargetSet;
+      PendingTargetSet mPendingTargetSet;
+
+      HashSet<resip::Uri> mTargetSet;
+      
       typedef HashMap<resip::Data, Branch> TransactionMap;
       TransactionMap mClientTransactions;
+
+      resip::SipMessage mBestResponse;
+      bool mForwardedFinalResponse;
+      int mBestPriority;
+      bool mSecure;
 };
 
 }
