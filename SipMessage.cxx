@@ -120,6 +120,7 @@ SipMessage::encode(std::ostream& str) const
    if (mStartLine != 0)
    {
       mStartLine->encode(str);
+      str << Symbols::CRLF;
    }
    
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
@@ -164,7 +165,7 @@ SipMessage::setSource(const sockaddr_in& addr)
 }
 
 void 
-SipMessage::setStartLine(char* st, int len)
+SipMessage::setStartLine(const char* st, int len)
 {
    mStartLine = new HeaderFieldValue(st, len);
    ParseBuffer pb(mStartLine->mField, mStartLine->mFieldLength);
@@ -194,7 +195,7 @@ SipMessage::setStartLine(char* st, int len)
 }
 
 void 
-SipMessage::setBody(char* start, int len)
+SipMessage::setBody(const char* start, int len)
 {
    mBody = new HeaderFieldValue(start, len);
 }
