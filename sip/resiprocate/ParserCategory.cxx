@@ -187,7 +187,30 @@ ParserCategory::encodeParameters(ostream& str) const
       {
          str << Symbols::SPACE;
       }
+#if 1
+      // !cj! - may be wrong just hacking 
+      ParameterTypes::Type type = (*it)->getType();
+      
+      if ( type ==  ParameterTypes::tag )
+      {
+         Parameter* p = (*it);
+         DataParameter* d = dynamic_cast<DataParameter*>(p);
+         
+         Data& data = d->value();
+         
+         if ( !data.empty() )
+         {
+            (*it)->encode(str);
+         }
+      }
+      else
+      {
+         (*it)->encode(str);
+      }
+      
+#else
       (*it)->encode(str);
+#endif
    }
    for (ParameterList::iterator it = mUnknownParameters.begin();
         it != mUnknownParameters.end(); it++)
