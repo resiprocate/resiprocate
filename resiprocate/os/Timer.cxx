@@ -168,9 +168,12 @@ Timer::getSystemTime()
 #if defined(WIN32)  
     SYSTEMTIME t;
     GetSystemTime( &t );
-    time = (t.wHour*60+t.wMinute)*60+t.wSecond; 
-    time = time*1000000;
-    time += t.wMilliseconds*1000;
+    FILETIME ft;
+    SystemTimeToFileTime( &t, &ft);
+    ULARGE_INTEGER li;
+    li.LowPart = ft.dwLowDateTime;
+    li.HighPart = ft.dwHighDateTime;
+    time = li.QuadPart;
 #else
     struct timeval now;
     gettimeofday( &now , NULL );
