@@ -1,48 +1,50 @@
 #ifndef Symbols_hxx
 #define Symbols_hxx
 
+#include "sip2/util/Data.hxx"
+
 namespace Vocal2
 {
 
 class Symbols
 {
    public:
-      static const char * const DefaultSipVersion;
-      static const char * const DefaultSipScheme;
+      static const Data DefaultSipVersion;
+      static const Data DefaultSipScheme;
 
-      static const char * const AT_SIGN;
-      static const char * const COLON;
-      static const char * const DASH;
-      static const char * const DASHDASH;
-      static const char * const COMMA_OR_EQUAL;
-      static const char * const CRLF;
-      static const char * const CRLFCRLF;
-      static const char * const CR;
-      static const char * const LF;
-      static const char * const TAB;
-      static const char * const DOUBLE_QUOTE;
-      static const char * const LA_QUOTE;
-      static const char * const RA_QUOTE;
-      static const char * const EQUALS;
-      static const char * const SEMI_COLON;
-      static const char * const SEMI_OR_EQUAL;
-      static const char * const SLASH;
-      static const char * const B_SLASH;
-      static const char * const SPACE;
-      static const char * const COMMA;
-      static const char * const ZERO;
-      static const char * const LPAREN;
-      static const char * const RPAREN;
+      static const Data AT_SIGN;
+      static const Data COLON;
+      static const Data DASH;
+      static const Data DASHDASH;
+      static const Data COMMA_OR_EQUAL;
+      static const Data CRLF;
+      static const Data CRLFCRLF;
+      static const Data CR;
+      static const Data LF;
+      static const Data TAB;
+      static const Data DOUBLE_QUOTE;
+      static const Data LA_QUOTE;
+      static const Data RA_QUOTE;
+      static const Data EQUALS;
+      static const Data SEMI_COLON;
+      static const Data SEMI_OR_EQUAL;
+      static const Data SLASH;
+      static const Data B_SLASH;
+      static const Data SPACE;
+      static const Data COMMA;
+      static const Data ZERO;
+      static const Data LPAREN;
+      static const Data RPAREN;
       
-      static const char * const ProtocolName;
-      static const char * const ProtocolVersion;
-      static const char * const UDP;
-      static const char * const TCP;
-      static const char * const TLS;
-      static const char * const SCTP;
+      static const Data ProtocolName;
+      static const Data ProtocolVersion;
+      static const Data UDP;
+      static const Data TCP;
+      static const Data TLS;
+      static const Data SCTP;
       
-      static const char * const Sip;
-      static const char * const Sips;
+      static const Data Sip;
+      static const Data Sips;
 
       static const char * const Accept;
       static const char * const Accept_Encoding;
