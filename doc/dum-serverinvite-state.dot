@@ -20,7 +20,7 @@ digraph UAS {
   Offer -> Terminated                                   [ label = "onCancel/app::onTerminated,send::200C,send::487I" ]; 
   Offer -> Terminated                                   [ label = "onBye/app::onTerminated,send::200B,send::487I" ]; 
 
-  OfferProvidedAnswer -> Connected                      [ label = "dum::accept/send::2xx-answer,timer::2xx, timer::NoAck" ];
+  OfferProvidedAnswer -> AcceptedWaitingAnswer          [ label = "dum::accept/send::2xx-answer,timer::2xx, timer::NoAck" ];
   OfferProvidedAnswer -> EarlyProvidedAnswer            [ label = "dum::provisional/send::1xx,timer::1xx" ]; // include early-media
   OfferProvidedAnswer -> Terminated                     [ label = "dum::end/send::4XXI" ];
   OfferProvidedAnswer -> Terminated                     [ label = "dum::reject/send::4XXI" ];
@@ -36,7 +36,7 @@ digraph UAS {
   EarlyOffer -> Terminated                              [ label = "onCancel/send::200C,send::487I" ];
   EarlyOffer -> Terminated                              [ label = "onBye/app::onTerminated,send::200B,send::487I" ];
 
-  EarlyProvidedAnswer -> Connected                      [ label = "dum::accept/send::2xx-answer,timer::2xx, timer::NoAck" ];
+  EarlyProvidedAnswer -> Accepted                       [ label = "dum::accept/send::2xx-answer,timer::2xx, timer::NoAck" ];
   EarlyProvidedAnswer -> Terminated                     [ label = "dum::end/send::4XXI" ];
   EarlyProvidedAnswer -> Terminated                     [ label = "dum::reject/send::4XXI" ];
   EarlyProvidedAnswer -> Terminated                     [ label = "onCancel/app::onTerminated,send::200C,send::487I" ]; 
@@ -73,7 +73,7 @@ digraph UAS {
   EarlyNoOffer -> Terminated                            [ label = "onBye/app::onTerminated,send::200B,send::487I,dum::destroy" ];
 
   EarlyProvidedOffer -> EarlyProvidedOffer              [ label = "dum::provisional/send::1xx-early,timer::1xx" ]; 
-  EarlyProvidedOffer -> Accepted                        [ label = "dum::accept/send::2XXI-offer,timer::2xx,timer::NoAck" ];
+  EarlyProvidedOffer -> AcceptedWaitingAnswer           [ label = "dum::accept/send::2XXI-offer,timer::2xx,timer::NoAck" ];
   EarlyProvidedOffer -> Terminated                      [ label = "dum::end/send::4XXI,dum::destroy" ];
   EarlyProvidedOffer -> Terminated                      [ label = "dum::reject/send::4XXI,dum::destroy" ];
   EarlyProvidedOffer -> Terminated                      [ label = "onCancel/app::onTerminated,send::200C,send::487I,dum::destroy" ]; 
