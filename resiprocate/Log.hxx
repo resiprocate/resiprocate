@@ -4,11 +4,16 @@
 #define DELIM " | "
 
 #include <sipstack/Data.hxx>
-#include <unistd.h>
+
+#ifndef WIN32
 #include <syslog.h>
+#include <unistd.h>
+#endif
+
 #include <sipstack/Subsystem.hxx>
 #include <sipstack/Mutex.hxx>
 #include <iostream>
+
 
 namespace Vocal2
 {
@@ -24,6 +29,17 @@ class Log
       }Type;
       
       
+#if WIN32
+  typedef enum 
+      {
+         CRIT = 1,
+         ERR = 2,
+         WARNING = 3,
+         INFO = 4,
+         DEBUG = 5,
+         DEBUG_STACK = 8,
+      }Level;
+#else
       typedef enum 
       {
          CRIT = LOG_CRIT,
@@ -33,6 +49,7 @@ class Log
          DEBUG = LOG_DEBUG,
          DEBUG_STACK = 8,
       }Level;
+#endif
 
       /// Return the loglevel, hostname, appname, pid, tid, subsystem
       static std::ostream& tags(Log::Level level, const Subsystem& subsystem, std::ostream& strm); 
@@ -49,7 +66,11 @@ class Log
       static Type _type;
       static Data _appName;
       static Data _hostname;
+#ifndef WIN32
       static pid_t _pid;
+#else   
+      static int _pid;
+#endif
       static const char _descriptions[][32];
 };
 

@@ -52,10 +52,11 @@
  */
 
 static const char* const Mutex_hxx_Version =
-    "$Id: Mutex.hxx,v 1.2 2002/09/21 20:15:50 dabryan Exp $";
+    "$Id: Mutex.hxx,v 1.3 2002/09/25 04:30:17 fluffy Exp $";
 
-
+#ifndef WIN32
 #include <sipstack/vthread.hxx>
+#endif
 #include <sipstack/Lockable.hxx>
 
 namespace Vocal2
@@ -71,7 +72,9 @@ class Mutex : public Lockable
         vmutex_t    *   getId() const;
 
     private:
+#ifndef WIN32
       mutable vmutex_t    myId;
+#endif
 };
 
 } // namespace Vocal2

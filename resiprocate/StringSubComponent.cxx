@@ -28,7 +28,7 @@ StringSubComponent::clone() const
    return new StringSubComponent(*this);
 }
 
-ostream& Vocal2::operator<<(ostream& stream, StringSubComponent& comp)
+std::ostream& Vocal2::operator<<(std::ostream& stream, Vocal2::StringSubComponent& comp)
 {
    return stream << comp.getName() << "=" << comp.value();
 }
