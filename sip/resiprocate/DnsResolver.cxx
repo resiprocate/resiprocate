@@ -55,7 +55,8 @@ DnsResolver::lookup(const Data& transactionId,
                     const Via& via)
 {
    //duplicate entry has not been eliminated
-   DnsResolver::Id id;
+   DnsResolver::Id id = 0;
+   bool removeDuplicates = false;
    Transport::Type transport = Transport::toTransport(via.transport());
    Data& target = via.exists(p_maddr) ? via.param(p_maddr) : via.sentHost();
    if (via.exists(p_received))
@@ -77,6 +78,7 @@ DnsResolver::lookup(const Data& transactionId,
                                 transport, false);
          }
       }
+      removeDuplicates = true;
    }
    else if (via.exists(p_rport))
    {
@@ -84,6 +86,7 @@ DnsResolver::lookup(const Data& transactionId,
                           target, 
                           via.param(p_rport), 
                           transport, false);
+      removeDuplicates = true;
    }
    
    if (via.sentPort())
@@ -91,14 +94,19 @@ DnsResolver::lookup(const Data& transactionId,
       id = lookupARecords(transactionId,
                           target, 
                           via.sentPort(), 
-                          transport, true);
+                          transport, true, id);
    }
    else
    {
       id = lookupARecords(transactionId,
                           target, 
                           determinePort(via.protocolName(), transport), 
-                          transport, true);
+                          transport, true, id);
+   }
+   if (removeDuplicates)
+   {
+      id->tupleList.sort();
+      id->tupleList.unique();
    }
    return id;
 }
@@ -163,7 +171,7 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
 
 DnsResolver::Id
 DnsResolver::lookupARecords(const Data& transactionId, 
-                            const Data& host, int port, Transport::Type transport, bool complete)
+                            const Data& host, int port, Transport::Type transport, bool complete, Id id)
 {
    struct hostent hostbuf; 
    struct hostent* result=0;
@@ -208,8 +216,17 @@ DnsResolver::lookupARecords(const Data& transactionId,
       assert(result);
       assert(result->h_length == 4);
       
-      Entry* entry = new Entry(transactionId);
-
+      
+      Entry* entry;
+      if (id)
+      {
+         entry = id;
+      }
+      else
+      {
+         entry = new Entry(transactionId);
+      }
+      
       DebugLog (<< "DNS lookup of " << host << ": canonical name: " << result->h_name);
       char str[256];
       bool first = true;
