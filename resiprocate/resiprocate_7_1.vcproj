@@ -360,6 +360,9 @@
 				RelativePath=".\InternalTransport.cxx">
 			</File>
 			<File
+				RelativePath=".\KeepAliveMessage.cxx">
+			</File>
+			<File
 				RelativePath="LazyParser.cxx">
 			</File>
 			<File
@@ -779,6 +782,9 @@
 			</File>
 			<File
 				RelativePath="os\IntrusiveListElement.hxx">
+			</File>
+			<File
+				RelativePath=".\KeepAliveMessage.hxx">
 			</File>
 			<File
 				RelativePath="LazyParser.hxx">

@@ -22,6 +22,7 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/KeepAliveMessage.hxx"
 
 using namespace resip;
 
@@ -89,6 +90,14 @@ TransactionState::process(TransactionController& controller)
    // !kh! don't need the above assert (It would've failed in AbstractFifo).
    TransactionMessage* message = controller.mStateMacFifo.getNext();
 #endif
+   KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
+   if (keepAlive)
+   {
+      InfoLog ( << "Sending keep alive to: " << keepAlive->getDestination());      
+      controller.mTransportSelector.transmit(keepAlive, keepAlive->getDestination());
+      delete keepAlive;
+      return;      
+   }
 
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
 

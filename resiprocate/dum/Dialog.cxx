@@ -50,6 +50,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
    assert(msg.header(h_CSeq).method() != REGISTER);
    assert(msg.header(h_CSeq).method() != PUBLISH);
 
+   mNetworkAssociation.setDum(&dum);
+
    if (msg.isRequest()) // UAS
    {
       const SipMessage& request = msg;
@@ -285,6 +287,7 @@ Dialog::dispatch(const SipMessage& msg)
    // !jf! Should be checking for messages with out of order CSeq and rejecting
 
    DebugLog ( << "Dialog::dispatch: " << msg.brief());
+   mNetworkAssociation.update(msg);
    handleTargetRefresh(msg);
    if (msg.isRequest())
    {

@@ -4,6 +4,7 @@
 #include "resiprocate/dum/NonDialogUsage.hxx"
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/NetworkAssociation.hxx"
 
 namespace resip
 {
@@ -64,6 +65,8 @@ class ClientRegistration: public NonDialogUsage
       bool mEndWhenDone;
       State mQueuedState;
       SipMessage mQueuedRequest;
+
+      NetworkAssociation mNetworkAssociation;
       
       // disabled
       ClientRegistration(const ClientRegistration&);
