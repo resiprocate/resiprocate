@@ -25,6 +25,7 @@ class TransactionMessage;
 class SipMessage;
 class TlsTransport;
 class TransactionController;
+class Security;
 
 class TransportSelector 
 {
@@ -51,6 +52,12 @@ class TransportSelector
                            IpVersion version,
                            const Data& ipInterface=Data::Empty,
                            SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
+                           );
+      bool addTlsTransport(const Data& domainName, 
+			   Security& security,
+                           int port, 
+                           IpVersion version,
+                           const Data& ipInterface=Data::Empty
                            );
 
       DnsResult* dnsResolve(SipMessage* msg, DnsHandler* handler);

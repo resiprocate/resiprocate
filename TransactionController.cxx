@@ -137,6 +137,18 @@ TransactionController::addTlsTransport( int port,
                                              port, version, ipInterface, sslType);
 }
 
+bool
+TransactionController::addTlsTransport( int port, 
+                                        const Data& domainname,
+					Security& security,
+                                        IpVersion version,
+                                        const Data& ipInterface
+                                        )
+{
+    return mTransportSelector.addTlsTransport(domainname, security, port,
+					      version, ipInterface);
+}
+
 void
 TransactionController::send(SipMessage* msg)
 {
