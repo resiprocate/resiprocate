@@ -330,6 +330,7 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 #ifdef USE_IPV6
     if (tuple.mSockaddr.sa_family == AF_INET6)
     {
+       char str[256];
        ostrm << "V6 ";
        ostrm << inet_ntop(AF_INET6, 
                           &(tuple.m_anonv6.sin6_addr),
