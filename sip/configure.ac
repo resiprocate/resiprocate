@@ -1,9 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([resiprocate], [0.3], [resiprocate-devel@lists.sourceforge.net])
-AM_INIT_AUTOMAKE([nostdinc])
+AC_PREREQ(2.57)
 
-AC_REVISION($Id: configure.ac,v 1.3 2003/06/02 21:13:42 ryker Exp $)
+AC_INIT([resiprocate], [0.3], [resiprocate-devel@lists.sourceforge.net])
+AM_INIT_AUTOMAKE([1.7.5 nostdinc foreign])
+
+AC_REVISION($Id: configure.ac,v 1.4 2003/06/17 04:16:10 rjsparks Exp $)
 
 AM_MAINTAINER_MODE
 
