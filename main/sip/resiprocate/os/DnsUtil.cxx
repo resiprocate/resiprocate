@@ -239,7 +239,46 @@ DnsUtil::isIpV4Address(const Data& ipAddress)
 bool 
 DnsUtil::isIpV6Address(const Data& ipAddress)
 {
-   return false;
+   if (ipAddress.empty())
+   {
+      return false;
+   }
+
+   // first character must be a hex digit
+   if (!isxdigit(*ipAddress.data()))
+   {
+      return false;
+   }
+
+   switch (ipAddress.size())
+   {
+      case 1:
+         return false;
+      case 2:
+         return (*(ipAddress.data()+2) == ':' ||
+                 *(ipAddress.data()+1) == ':');
+      case 3:
+         return (*(ipAddress.data()+3) == ':' ||
+                 *(ipAddress.data()+2) == ':' ||
+                 *(ipAddress.data()+1) == ':');
+      case 4:
+         return (*(ipAddress.data()+4) == ':' ||
+                 *(ipAddress.data()+3) == ':' ||
+                 *(ipAddress.data()+2) == ':' ||
+                 *(ipAddress.data()+1) == ':');
+      default:
+         return (*(ipAddress.data()+5) == ':' ||
+                 *(ipAddress.data()+4) == ':' ||
+                 *(ipAddress.data()+3) == ':' ||
+                 *(ipAddress.data()+2) == ':' ||
+                 *(ipAddress.data()+1) == ':');
+   }
+}
+
+void
+DnsUtil::canonicalizeIpV6Address(Data& ipV6Address)
+{
+   // !dlb! implement me
 }
 
 bool 
