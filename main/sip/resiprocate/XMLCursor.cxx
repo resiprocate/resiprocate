@@ -14,6 +14,31 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
 
+/**
+Whitespace handling:
+Are the following XML fragments equivalent?
+
+Strictly interpreted, the root of the first XML document has one 
+child while the root of the second XML doucment has three children.
+The line breaks and spaces after the <root> and before </root> are 
+tagless children.
+
+--->
+  <root><child>child content</child></root>
+<--
+  vs.
+--->
+  <root>
+     <child>child content</child>
+  </root>
+<--
+
+Treating whitespace as children is consistent with the spec but not usually
+convenient. <!ATTLIST poem   xml:space (default|preserve) 'preserve'> is used to
+control whitespace handling. Supporting this switch is painful. For now, treat
+whitespace as non-significant.
+*/
+
 static char BANG[] = "!";
 static char HYPHEN[] = "-";
 //http://www.w3.org/TR/1998/REC-xml-19980210
@@ -41,6 +66,7 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
    lPb.skipToChars(COMMENT_START);
    needsPreparse = !lPb.eof();
    lPb.reset(lPb.start());
+   // !dlb! CR are supposed to be changed to LF
    lPb.skipToChars(Symbols::CRLF);
    needsPreparse |= !lPb.eof();
 
@@ -92,6 +118,10 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
    lPb.reset(lPb.start());
    lPb.skipToChar(Symbols::RA_QUOTE[0]);
    lPb.skipChar();
+   if (!WhitespaceSignificant)
+   {
+      lPb.skipWhitespace();
+   }
    if (*lPb.position() == Symbols::LA_QUOTE[0] &&
        *(lPb.position()+1) == Symbols::SLASH[0])
    {
@@ -153,6 +183,11 @@ XMLCursor::parseNextRootChild()
    {
       mRoot->mPb.skipToChar(Symbols::RA_QUOTE[0]);
       mRoot->mPb.skipChar();
+   }
+
+   if (!WhitespaceSignificant)
+   {
+      mRoot->mPb.skipWhitespace();
    }
 
    // root end tag?
@@ -447,6 +482,11 @@ XMLCursor::Node::skipToEndTag()
    //     ^
    while (true)
    {
+      if (!WhitespaceSignificant)
+      {
+         mPb.skipWhitespace();
+      }
+
       // Some text contents ...<
       // ^                     ^
       if (*mPb.position() != Symbols::LA_QUOTE[0])
