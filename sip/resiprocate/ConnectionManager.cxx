@@ -144,16 +144,16 @@ ConnectionManager::removeFromWritable()
 void
 ConnectionManager::addConnection(Connection* connection)
 {
-   connection->mWho.connectionId = ++mConnectionIdGenerator;
+   connection->who().connectionId = ++mConnectionIdGenerator;
    //DebugLog (<< "ConnectionManager::addConnection() " << connection->mWho.connectionId  << ":" << connection->mSocket);
    
-   mAddrMap[connection->mWho] = connection;
-   mIdMap[connection->mWho.connectionId] = connection;
+   mAddrMap[connection->who()] = connection;
+   mIdMap[connection->who().connectionId] = connection;
 
    mReadHead->push_back(connection);
    mLRUHead->push_back(connection);
 
-   assert(mAddrMap.count(connection->mWho) == 1);
+   assert(mAddrMap.count(connection->who()) == 1);
 }
 
 void
@@ -185,7 +185,7 @@ ConnectionManager::gc(UInt64 relThreshhold)
    for (ConnectionLruList::iterator i = mLRUHead->begin();
         i != mLRUHead->end();)
    {
-      if ((*i)->mLastUsed < threshhold)
+      if ((*i)->whenLastUsed() < threshhold)
       {
          Connection* discard = *i;
          InfoLog(<< "recycling connection: " << discard << " " << discard->getSocket());

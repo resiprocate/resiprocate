@@ -14,33 +14,14 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-char 
-Connection::connectionStates[Connection::MAX][32] = { "NewMessage", "ReadingHeaders", "PartialBody" };
-
-
 Connection::Connection()
-   : mSocket(INVALID_SOCKET), // bogus
-     mWho(),
-     mSendPos(0),
-     mMessage(0),
-     mBuffer(0),
-     mBufferPos(0),
-     mBufferSize(0),
-     mLastUsed(0),
-     mState(NewMessage)
+   : mSocket(INVALID_SOCKET)
 {
 }
 
 Connection::Connection(const Tuple& who, Socket socket)
-   : mSocket(socket), 
-     mWho(who),
-     mSendPos(0),
-     mMessage(0),
-     mBuffer(0),
-     mBufferPos(0),
-     mBufferSize(Connection::ChunkSize),
-     mLastUsed(Timer::getTimeMs()),
-     mState(NewMessage)
+  : ConnectionBase(who),
+    mSocket(socket)
 {
    getConnectionManager().addConnection(this);
 }
@@ -50,187 +31,11 @@ Connection::~Connection()
    if (mSocket != INVALID_SOCKET) // bogus Connections
    {
       //DebugLog (<< "Deleting " << this << " " << mSocket << " with " << mOutstandingSends.size() << " to write");
-      while (!mOutstandingSends.empty())
-      {
-         SendData* sendData = mOutstandingSends.front();
-         mWho.transport->fail(sendData->transactionId);
-         delete sendData;
-         mOutstandingSends.pop_front();
-      }
    
       //DebugLog (<< "Shutting down connection " << mSocket);
       closeSocket(mSocket);
 
       getConnectionManager().removeConnection(this);
-   }
-}
-
-ConnectionId
-Connection::getId() const
-{
-   return mWho.connectionId;
-}
-
-void
-Connection::performRead(int bytesRead, Fifo<Message>& fifo)
-{
-   assert(mWho.transport);
-
-   DebugLog(<< "In State: " << connectionStates[mState]);
-   getConnectionManager().touch(this);
-   
-  start:   // If there is an overhang come back here, effectively recursing
-   
-   switch(mState)
-   {
-      case NewMessage:
-      {
-         assert(mWho.transport);
-         mMessage = new SipMessage(mWho.transport);
-         
-         DebugLog(<< "Connection::process setting source " << mWho);
-         mMessage->setSource(mWho);
-         mMessage->setTlsDomain(mWho.transport->tlsDomain());
-         mMsgHeaderScanner.prepareForMessage(mMessage);
-         // Fall through to the next case.
-      }
-      case ReadingHeaders:
-      {
-         unsigned int chunkLength = mBufferPos + bytesRead;
-         char *unprocessedCharPtr;
-         MsgHeaderScanner::ScanChunkResult scanChunkResult =
-             mMsgHeaderScanner.scanChunk(mBuffer,
-                                         chunkLength,
-                                         &unprocessedCharPtr);
-         if (scanChunkResult == MsgHeaderScanner::scrError)
-         {
-            //.jacob. Not a terribly informative warning.
-            WarningLog(<< "Discarding preparse!");
-            delete mBuffer;
-            mBuffer = 0;
-            delete mMessage;
-            mMessage = 0;
-            //.jacob. Shouldn't the state also be set here?
-            delete this;
-            return;
-         }
-         mMessage->addBuffer(mBuffer);
-         unsigned int numUnprocessedChars =
-             (mBuffer + chunkLength) - unprocessedCharPtr;
-         if (scanChunkResult == MsgHeaderScanner::scrNextChunk)
-         {
-            // Message header is incomplete...
-            if (numUnprocessedChars == 0)
-            {
-               // ...but the chunk is completely processed.
-               //.jacob. I've discarded the "assigned" concept.
-               //DebugLog(<< "Data assigned, not fragmented, not complete");
-               mBuffer = new char[ChunkSize];
-               mBufferPos = 0;
-               mBufferSize = ChunkSize;
-            }
-            else
-            {
-               // ...but some of the chunk must be shifted into the next one.
-               size_t size = numUnprocessedChars*3/2;
-               if ( size < Connection::ChunkSize )
-               {
-                  size = Connection::ChunkSize;
-               }
-               char* newBuffer = new char[size];
-               memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
-               mBuffer = newBuffer;
-               mBufferPos = numUnprocessedChars;
-               mBufferSize = size;
-            }
-            mState = ReadingHeaders;
-         }
-         else
-         {         
-             // The message header is complete.
-            size_t contentLength = mMessage->header(h_ContentLength).value();
-            
-            if (numUnprocessedChars < contentLength)
-            {
-               // The message body is incomplete.
-               char* newBuffer = new char[contentLength];
-               memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
-               mBufferPos = numUnprocessedChars;
-               mBufferSize = contentLength;
-               mBuffer = newBuffer;
-            
-               mState = PartialBody;
-            }
-            else
-            {
-               // The message body is complete.
-               mMessage->setBody(unprocessedCharPtr, contentLength);
-               if (!transport()->basicCheck(*mMessage))
-               {
-                 delete mMessage;
-                 mMessage = 0;
-               }
-               else
-               {
-                 Transport::stampReceived(mMessage);
-                 DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-                 fifo.add(mMessage);
-               }
-
-               int overHang = numUnprocessedChars - contentLength;
-
-               mState = NewMessage;
-               if (overHang > 0) 
-               {
-                  // The next message has been partially read.
-                  size_t size = overHang*3/2;
-                  if ( size < Connection::ChunkSize )
-                  {
-                     size = Connection::ChunkSize;
-                  }
-                  char* newBuffer = new char[size];
-                  memcpy(newBuffer,
-                         unprocessedCharPtr + contentLength,
-                         overHang);
-                  mBuffer = newBuffer;
-                  mBufferPos = 0;
-                  mBufferSize = size;
-                  
-                  DebugLog (<< "Extra bytes after message: " << overHang);
-                  DebugLog (<< Data(mBuffer, overHang));
-                  
-                  bytesRead = overHang;
-                  goto start;
-               }
-            }
-         }
-         break;
-      }
-      case PartialBody:
-      {
-         size_t contentLength = mMessage->header(h_ContentLength).value();
-         mBufferPos += bytesRead;
-         if (mBufferPos == contentLength)
-         {
-            mMessage->setBody(mBuffer, contentLength);
-            if (!transport()->basicCheck(*mMessage))
-            {
-              delete mMessage;
-              mMessage = 0;
-            }
-            else
-            {
-              DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-
-              Transport::stampReceived(mMessage);
-              fifo.add(mMessage);
-            }
-            mState = NewMessage;
-         }
-         break;
-      }
-      default:
-         assert(0);
    }
 }
 
@@ -240,12 +45,10 @@ Connection::requestWrite(SendData* sendData)
     assert(mWho.transport);
 
     if (mOutstandingSends.empty())
-   {
-      getConnectionManager().addToWritable(this);
-   }
-
-   mOutstandingSends.push_back(sendData);
-   
+    {
+       getConnectionManager().addToWritable(this);
+    }
+    mOutstandingSends.push_back(sendData);
 }
 
 void
@@ -290,20 +93,6 @@ Connection::getConnectionManager() const
    
    return transport->getConnectionManager();
 }
-
-std::pair<char*, size_t> 
-Connection::getWriteBuffer()
-{
-   if (mState == NewMessage)
-   {
-      DebugLog (<< "Creating buffer for " << *this);
-
-      mBuffer = new char [Connection::ChunkSize];
-      mBufferSize = Connection::ChunkSize;
-      mBufferPos = 0;
-   }
-   return std::make_pair(mBuffer + mBufferPos, mBufferSize - mBufferPos);
-}
             
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::Connection& c)
@@ -312,13 +101,18 @@ resip::operator<<(std::ostream& strm, const resip::Connection& c)
    return strm;
 }
 
-Transport* 
-Connection::transport()
+int
+Connection::read(Fifo< Message >& fifo)
 {
-   assert(this);
-   return mWho.transport;
+  std::pair<char*, size_t> writePair = getWriteBuffer();
+  size_t bytesToRead = resipMin(writePair.second, 
+				static_cast<size_t>(Connection::ChunkSize));
+         
+  assert(bytesToRead > 0);
+  int bytesRead = read(writePair.first, bytesToRead);
+  preparseNewBytes(bytesRead, fifo);
+  return bytesRead;
 }
-
 
 bool 
 Connection::hasDataToRead()

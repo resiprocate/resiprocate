@@ -17,7 +17,6 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Timer.hxx"
 
-#include "resiprocate/Executive.hxx"
 #include "resiprocate/Message.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
@@ -34,13 +33,27 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) : 
+ProcessNotifier::Handler* 
+SipStack::selectHander(bool async, ProcessNotifier::Handler* asyncHandler)
+{
+   if (async)
+   {
+      return asyncHandler ? asyncHandler : this;
+   }
+   else
+   {
+      return 0;
+   }
+}
+
+SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless, bool async, 
+                   ProcessNotifier::Handler* asyncHandler) : 
    security( pSecurity ),
    mTUTimerQueue(mTUFifo),
-   mExecutive(*this),
-   mTransactionController(multiThreaded, mTUFifo, stateless),
+   mTransactionController(multiThreaded, mTUFifo, stateless, selectHander(async, asyncHandler)),
    mStrictRouting(false),
-   mShuttingDown(false)   
+   mShuttingDown(false),
+   mCurrentlyProcessing(false)
 {
    Timer::getTimeMs(); // initalize time offsets
    Random::initialize();
@@ -54,6 +67,29 @@ SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) :
 #endif
    assert(!mShuttingDown);
 }
+
+SipStack::SipStack(ExternalSelector* tSelector, bool multiThreaded,  Security* pSecurity, 
+                   bool async, bool stateless, ProcessNotifier::Handler* asyncHandler) : 
+   security( pSecurity ),
+   mTUTimerQueue(mTUFifo),
+   mTransactionController(multiThreaded, mTUFifo, tSelector, stateless, selectHander(async, asyncHandler)),
+   mStrictRouting(false),
+   mShuttingDown(false),
+   mCurrentlyProcessing(false)
+{
+   Timer::getTimeMs(); // initalize time offsets
+   Random::initialize();
+   initNetwork();
+
+#ifdef USE_SSL
+   if ( !pSecurity )
+   {
+      security = new Security( true, true );
+   }
+#endif
+   assert(!mShuttingDown);
+}
+
 
 SipStack::~SipStack()
 {
@@ -86,7 +122,7 @@ SipStack::addTransport( TransportType protocol,
    assert(!mShuttingDown);
    assert(protocol != TLS);
 
-   mTransactionController.addTransport(protocol, port, version, ipInterface);
+   mTransactionController.transportSelector().addTransport(protocol, port, version, ipInterface);
    if (!ipInterface.empty()) 
    {
       addAlias(ipInterface, port);
@@ -105,7 +141,8 @@ SipStack::addTlsTransport( int port,
    
    try
    {
-      mTransactionController.addTlsTransport(port,keyDir,privateKeyPassPhrase, domainname, version, ipInterface);
+      mTransactionController.transportSelector().addTlsTransport(domainname, keyDir, privateKeyPassPhrase, 
+								 port, version, ipInterface);
       if (!ipInterface.empty()) 
       {
          addAlias(ipInterface, port);
@@ -114,6 +151,17 @@ SipStack::addTlsTransport( int port,
    catch(BaseException& e)
    {
       InfoLog (<< "Caught: " << e);
+   }
+}
+
+void 
+SipStack::addExternalTransport(ExternalAsyncCLessTransport* externalTransport, bool ownedByMe)
+{
+   Transport* transport = mTransactionController.transportSelector().addExternalTransport(externalTransport, 
+												    ownedByMe);
+   if (!transport->interfaceName().empty())
+   {
+      addAlias(transport->interfaceName(), transport->port());
    }
 }
 
@@ -308,17 +356,37 @@ SipStack::receiveAny()
 }
 
 void 
+SipStack::process()
+{
+   FdSet fdset;
+   mTransactionController.process(fdset);
+}
+
+void 
 SipStack::process(FdSet& fdset)
 {
-   mExecutive.process(fdset);
+   //   mExecutive.process(fdset);
+   mTransactionController.process(fdset); // same as above
    mTUTimerQueue.process();
+}
+
+void SipStack::handleProcessNotification()
+{
+   //only works when there is exactly one thread causing notifications; could be
+   //made thread safe
+   if (!mCurrentlyProcessing)
+   {
+      mCurrentlyProcessing = true;
+      process();
+   }
+   mCurrentlyProcessing = false;
 }
 
 /// returns time in milliseconds when process next needs to be called 
 int 
 SipStack::getTimeTillNextProcessMS()
 {
-   return resipMin(mExecutive.getTimeTillNextProcessMS(),
+   return resipMin(mTransactionController.getTimeTillNextProcessMS(), // mExecutive.getTimeTillNextProcessMS(),
                    mTUTimerQueue.msTillNextTimer());
 } 
 
@@ -331,7 +399,8 @@ SipStack::registerForTransactionTermination()
 void 
 SipStack::buildFdSet(FdSet& fdset)
 {
-   mExecutive.buildFdSet( fdset );
+   //  mExecutive.buildFdSet( fdset );
+   mTransactionController.buildFdSet( fdset );
 }
 
 std::ostream& 
@@ -345,8 +414,8 @@ SipStack::dump(std::ostream& strm)  const
         << " Timers size=" << this->mTransactionController.mTimers.size() << endl
         << " ServerTransactionMap size=" << this->mTransactionController.mServerTransactionMap.size() << endl
         << " ClientTransactionMap size=" << this->mTransactionController.mClientTransactionMap.size() << endl
-        << " Exact Transports=" << Inserter(this->mTransactionController.mTransportSelector.mExactTransports) << endl
-        << " Any Transports=" << Inserter(this->mTransactionController.mTransportSelector.mAnyInterfaceTransports) << endl;
+        << " Exact Transports=" << Inserter(this->mTransactionController.transportSelector().mExactTransports) << endl
+        << " Any Transports=" << Inserter(this->mTransactionController.transportSelector().mAnyInterfaceTransports) << endl;
    return strm;
 }
 

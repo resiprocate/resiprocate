@@ -1,66 +1,73 @@
-#if !defined(RESIP_DNSUTIL_HXX)
-#define RESIP_DNSUTIL_HXX
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
 
-#include <list>
-#include "BaseException.hxx"
-#include "Data.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/AsyncConnection.hxx"
+#include "resiprocate/ConnectionManager.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Security.hxx"
+#include "resiprocate/TcpBaseTransport.hxx"
+
+using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 
-struct in_addr;
-
-namespace resip
+AsyncConnection::AsyncConnection(const Tuple& who, AsyncStreamID streamID, AsyncConnectionManager& connectionManager, 
+				 bool fromAccept)
+   : mWho(who),
+     mStreamID(streamID), 
+     mAsyncConnectionManager(connectionManager),
+     mState(Connected)
 {
-
-class Tuple;
-
-class DnsUtil
-{
-   public:
-      class Exception : public BaseException
-      {
-         public:
-            Exception(const Data& msg,
-                      const Data& file,
-                      const int line)
-               : BaseException(msg, file, line) {}            
-         protected:
-            virtual const char* name() const { return "DnsUtil::Exception"; }
-      };
-
-      static Data getLocalHostName();
-      static Data getLocalDomainName();
-      static Data getLocalIpAddress(const Data& defaultInterface="eth0");
-
-      // wrappers for the not so ubiquitous inet_pton, inet_ntop (e.g. WIN32)
-      static Data inet_ntop(const struct in_addr& addr);
-      static Data inet_ntop(const struct in6_addr& addr);
-      static Data inet_ntop(const struct sockaddr& addr);
-      static Data inet_ntop(const Tuple& tuple);
-
-      static int inet_pton(const Data& printableIp, struct in_addr& dst);
-      static int inet_pton(const Data& printableIp, struct in6_addr& dst);
-      
-      static bool isIpAddress(const Data& ipAddress);
-      static bool isIpV4Address(const Data& ipAddress);
-      static bool isIpV6Address(const Data& ipAddress);
-
-      //pass-throughs when supported, actual implemenation in the WIN32 case
-      static const char * DnsUtil::inet_ntop(int af, const void* src, char* dst, size_t size);      
-      static int inet_pton(int af, const char * src, void * dst);
-
-      // returns pair of interface name, ip address
-      static std::list<std::pair<Data,Data> > getInterfaces(const Data& matchingInterface=Data::Empty);
-
-      // XXXX:0:0:0:YYYY:192.168.2.233 => XXXX::::YYYY:192.168.2.233
-      // so string (case) comparison will work
-      // or something
-      static Data canonicalizeIpV6Address(const Data& ipV6Address);
-};
-
 }
 
+AsyncConnection::AsyncConnection(const Tuple& who, AsyncStreamID streamID, AsyncConnectionManager& connectionManager);
+   : mWho(who),
+     mStreamID(streamID), 
+     mAsyncConnectionManager(connectionManager),
+     mState(New)
+{
+}
 
-#endif
+AsyncConnection::~AsyncConnection()
+{
+}
+
+void
+AsyncConnection::requestWrite(SendData* sendData)
+{
+}
+
+//!dcm! -- why is the fifo passed through each time in these interfaces instead of being set at construction time?
+void 
+AsyncConnection::handleRead(char* bytes, int count, Fifo< Message >& fifo)
+{
+   //uses the passed in buffer if the state is NewMessage(avoids allocation) otherwise
+   //writes bytes into the write buffer.  Definitely room for optimization here.
+   if(getCurrentState() == NewMessage)
+   {
+      setBuffer(bytes, count);
+      preparseNewBytes(count, fifo);
+   }
+   else
+   {
+      int currentInputPos = 0;  
+      while(currentInputPos < count)
+      {
+	 std::pair<char*, size_t> res = getWriteBuffer();
+	 int bytesToCopy = resipMin(res.second, count);
+	 preparseNewBytes(bytesToCopy, fifo);
+	 memcpy(res.first, bytes + currentInputPos, bytesToCopy);
+	 currentInputPos + count;
+      }
+      delete [] bytes;
+   }
+} 
+            
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -110,3 +117,4 @@ class DnsUtil
  * <http://www.vovida.org/>.
  *
  */
+

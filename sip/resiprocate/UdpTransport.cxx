@@ -24,22 +24,20 @@ UdpTransport::UdpTransport(Fifo<Message>& fifo,
                            int portNum,
                            const Data& pinterface, 
                            bool ipv4) 
-   : Transport(fifo, portNum, pinterface, ipv4)
+   : InternalTransport(fifo, portNum, pinterface, ipv4)
 {
    InfoLog (<< "Creating udp transport host=" << pinterface 
             << " port=" << portNum
             << " ipv4=" << ipv4);
 
    mTuple.setType(transport());
-   mFd = Transport::socket(transport(), ipv4);
+   mFd = InternalTransport::socket(transport(), ipv4);
    bind();
 }
 
 UdpTransport::~UdpTransport()
 {
    DebugLog (<< "Shutting down " << mTuple);
-   shutdown();
-   join();
 }
 
 

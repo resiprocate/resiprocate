@@ -25,7 +25,7 @@ StatelessHandler::StatelessHandler(TransactionController& c) : mController(c)
 void 
 StatelessHandler::process()
 {
-   Message* msg = mController.mStateMacFifo.getNext();
+   Message* msg = mController.mStateMacFifo->getNext();
    assert(msg);
 
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
@@ -54,13 +54,13 @@ StatelessHandler::process()
             if (sip->getDestination().transport)
             {
                DebugLog (<< "Processing request from TU : " << msg->brief());
-               mController.mTransportSelector.transmit(sip, sip->getDestination()); // results not used
+               mController.transportSelector().transmit(sip, sip->getDestination()); // results not used
             }
             else
             {
                DebugLog (<< "Processing request from TU : " << msg->brief());
-               StatelessMessage* stateless = new StatelessMessage(mController.mTransportSelector, sip);
-               mController.mTransportSelector.dnsResolve(sip, stateless);
+               StatelessMessage* stateless = new StatelessMessage(mController.transportSelector(), sip);
+               mController.transportSelector().dnsResolve(sip, stateless);
             }
          }
          else // no dns for sip responses
@@ -80,7 +80,7 @@ StatelessHandler::process()
                     port = via.param(p_rport).port();
                 }
                 Tuple destination(via.param(p_received), port, Tuple::toTransport(via.transport()));
-                mController.mTransportSelector.transmit(sip, destination); // results not used
+                mController.transportSelector().transmit(sip, destination); // results not used
             }
          }
       }
