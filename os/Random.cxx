@@ -106,6 +106,7 @@ Random::initialize()
 int
 Random::getRandom()
 {
+   // !dlb! Lock
    assert( mIsInitialized == true );
 #ifdef WIN32
    assert( RAND_MAX == 0x7fff );
@@ -149,6 +150,7 @@ Random::getRandom(unsigned int len)
 {
    assert( mIsInitialized == true );
 
+   // !dlb! unnecessary copy
    char buf[512];
    assert( len <= sizeof(buf) );
 
@@ -206,6 +208,8 @@ Data
 Random::getRandomHex(unsigned int len)
 {
    assert( mIsInitialized == true );
+   // !dlb! is this a reasonable assert
+   // how about getRandom((len+1)/2)?
    assert( len%2 == 0 );
 	
    Data rand = Random::getRandom(len/2);

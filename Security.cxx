@@ -960,8 +960,10 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
    // InfoLog( << "uncodec body is <" << outData << ">" );
    //InfoLog( << "uncodec data is <" << Data(anchor,pb.position()-anchor) << ">" );
    //InfoLog( << "uncodec data szie is <" << pb.position()-anchor << ">" );
-  
-   Contents* ret = Contents::createContents(mime, anchor, pb);
+
+   Data tmp;
+   pb.data(tmp, anchor);
+   Contents* ret = Contents::createContents(mime, tmp);
    assert( ret );
    
    //InfoLog( << "uncode return type is " << ret->getType() );
