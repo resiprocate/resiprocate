@@ -27,7 +27,8 @@ class GagMessage
       SHUTDOWN           = 0x44,
 
       // GAG --> GAIM
-      ERROR              = 0x80
+      ERROR              = 0x80,
+      LOGIN_STATUS       = 0x81
 
     } command_t;
 
@@ -197,6 +198,26 @@ class GagErrorMessage : public GagMessage
     virtual ostream &serialize(ostream &os) const;
     virtual void parse(istream &is);
   private:
+    Data message;
+};
+
+class GagLoginStatusMessage : public GagMessage
+{
+  public:
+    GagLoginStatusMessage(bool _success, int _sipCode, const Data &_message) 
+      : success (_success), sipCode (_sipCode), message(_message) 
+      {messageType=LOGIN_STATUS;}
+    GagLoginStatusMessage(istream &is) {messageType=LOGIN_STATUS; parse(is);}
+
+    virtual ostream &serialize(ostream &os) const;
+    virtual void parse(istream &is);
+
+    bool succeeded() {return success;}
+    int getSipCode() {return success;}
+    Data *getMessagePtr() {return &message;}
+  private:
+    bool success;
+    int sipCode;
     Data message;
 };
 
