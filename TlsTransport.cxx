@@ -161,7 +161,7 @@ bool
 TlsTransport::processRead(Connection* c)
 {
 #ifdef USE_SSL
-   std::pair<char* const, size_t> writePair = c->getWriteBuffer();
+   std::pair<char*, size_t> writePair = c->getWriteBuffer();
    size_t bytesToRead = vocal2Min(writePair.second, TlsTransport::MaxReadSize);
    
    DebugLog( << "Read from connection " << int(c) );

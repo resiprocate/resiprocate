@@ -489,6 +489,7 @@ ParseBuffer::floatVal()
    {
       DebugLog(<< "Expected a floating point value, got: " << Data(s, position() - s));
       fail(__FILE__, __LINE__);
+      return 0.0; // for warning
    }
 }
 

@@ -28,7 +28,7 @@ class Connection
             
       bool process(size_t bytesRead, Fifo<Message>& fifo);
 
-      std::pair<char* const, size_t> getWriteBuffer();
+      std::pair<char*, size_t> getWriteBuffer();
             
       Connection* remove(); // return next youngest
       Connection* mYounger;
