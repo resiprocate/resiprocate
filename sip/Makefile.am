@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = resiprocate
+SUBDIRS = resiprocate .
 EXTRA_DIST = contrib/ares certs README.windows ReSIProcate.sln	\
 		SipIMP SipIMP-Qt SipIMPSetup resip.spec.in
 
