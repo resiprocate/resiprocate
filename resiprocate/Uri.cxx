@@ -58,13 +58,14 @@ Uri::~Uri()
 
 // RFC 3261 19.1.6
 Uri
-Uri::fromTel(const Uri& tel)
+Uri::fromTel(const Uri& tel, const Data& host)
 {
    assert(tel.scheme() == Symbols::Tel);
 
    Uri u;
    u.scheme() = Symbols::Sip;
    u.user() = tel.user();
+   u.host() = host;
    u.param(p_user) = Symbols::Phone;
 
    // need to sort the user parameters
@@ -192,8 +193,8 @@ Uri::operator==(const Uri& other) const
    
    if (isEqualNoCase(mScheme, other.mScheme) &&
        isEqualNoCase(mHost, other.mHost) &&
-       mUser == other.mUser &&
-       mUserParameters == other.mUserParameters &&
+       ((isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips)) ? mUser == other.mUser : isEqualNoCase(mUser, other.mUser)) &&
+       isEqualNoCase(mUserParameters,other.mUserParameters) &&
        mPassword == other.mPassword &&
        mPort == other.mPort)
    {
@@ -428,25 +429,6 @@ Uri::parse(ParseBuffer& pb)
       }
       return;
    }
-
-   if (!(isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips)))
-   {
-      start = pb.position();
-      pb.skipToChar(Symbols::SEMI_COLON[0]);
-      if (!pb.eof())
-      {
-         pb.data(mHost, start);
-         // extract user parameters as opaque data
-         start = pb.skipChar();
-         pb.skipToEnd();
-         pb.data(mUserParameters, start);
-      }
-      else
-      {
-         pb.data(mUser, start);
-         return;
-      }
-   }
    
    start = pb.position();
    pb.skipToChar(Symbols::AT_SIGN[0]);
@@ -456,16 +438,6 @@ Uri::parse(ParseBuffer& pb)
       start = pb.position();
       pb.skipToOneOf(":@");
       pb.data(mUser, start);
-      {
-         ParseBuffer sub(mUser.data(), mUser.size());
-         const char* anchor = sub.skipToChar(Symbols::SEMI_COLON[0]);
-         if (!sub.eof())
-         {
-            sub.data(mUser, sub.start());
-            sub.skipToEnd();
-            sub.data(mUserParameters, anchor+1);
-         }
-      }
       if (!pb.eof() && *pb.position() == Symbols::COLON[0])
       {
          start = pb.skipChar();
