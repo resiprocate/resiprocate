@@ -2,6 +2,7 @@
 #include "sip2/sipstack/ConnectionMap.hxx"
 #include "sip2/util/Socket.hxx"
 #include "sip2/sipstack/Preparse.hxx"
+#include "sip2/util/Logger.hxx"
 
 #define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
 
@@ -143,7 +144,7 @@ ConnectionMap::Connection::Connection()
 {
 }
 
-ConnectionMap::Connection::Connection(Transport::Tuple who,
+ConnectionMap::Connection::Connection(const Transport::Tuple& who,
                                       Socket socket)
    : mYounger(0),
      mOlder(0),
@@ -151,8 +152,7 @@ ConnectionMap::Connection::Connection(Transport::Tuple who,
      mSocket(socket),
      mLastUsed(Timer::getTimeMs()),
      mState(NewMessage)
-{
-}
+{}
 
 ConnectionMap::Connection::~Connection()
 {
@@ -180,164 +180,125 @@ ConnectionMap::Connection::remove()
    return next;
 }
    
-
-void
-ConnectionMap::Connection::allocateBuffer(int maxBufferSize)
+std::pair<char* const, size_t> 
+ConnectionMap::Connection::getWriteBuffer()
 {
-   if(mState == NewMessage)
-   {
-      mBuffer = new char [maxBufferSize];
-      mBufferSize = maxBufferSize;
-      mBytesRead = 0;
-   }
-}
-
-
-bool
-ConnectionMap::Connection::process(int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize)
-{
-
    if (mState == NewMessage)
    {
-      mMessage = new SipMessage();
-      mMessage->setSource(mWho);
-      cerr << "NewMessage state." << endl;
+      mBuffer = new char [Connection::ChunkSize];
+      mBufferSize = Connection::ChunkSize;
+      mBufferPos = 0;
    }
-   
-   if (mState == PartialHeaderRead)
-   {
-      cerr << "Partial Header state." << endl;
-   }
-
-   if (mState == NewMessage || mState == PartialHeaderRead)
-   { 
-//      int bytesUsed;
-   
-      mMessage->addBuffer(mBuffer);
-
-#if 0 // !ah! needs porting
-      Preparse::Status status;
-      preparse.process(*mMessage, mBuffer, mBytesRead + bytesRead, bytesUsed, status);
-
-      if (status & PreparseConst::stPreparseError)
-      {
-         delete mMessage;
-         //socket cleanup code
-         return false;
-      }
-      if (status & PreparseConst::stFragmented)
-      {
-         char* partialHeader = new char[(bytesRead - bytesUsed) + maxBufferSize];
-         memcpy(partialHeader, mBuffer + bytesUsed, (bytesRead - bytesUsed));
-         mBuffer = partialHeader;
-         mBufferSize = bytesRead - bytesUsed + maxBufferSize;
-         mBytesRead = bytesRead - bytesUsed;
-
-         mState = PartialHeaderRead;
-         return true;
-      }
-      if (status == PreparseConst::stHeadersComplete)
-      {
-         return readAnyBody(bytesUsed, bytesRead, fifo, preparse, maxBufferSize);
-      }
-      assert(0);  // we should never get here
-#endif
-      return false;
-      
-   }
-   else if (mState == PartialBodyRead)
-   {
-      assert(bytesRead + mBytesRead <= mBufferSize);
-
-      if (bytesRead + mBytesRead == mBufferSize)
-      {
-         mMessage->setBody(mBuffer, mBufferSize);
-         fifo.add(mMessage);
-         mState = NewMessage;
-      }
-      else
-      {
-         mBytesRead += bytesRead;
-      }
-     
-      return true;
-   }
-   assert(0);
-   
-   return false;
-   
+   return make_pair(mBuffer + mBufferPos, mBufferSize - mBufferPos);
 }
 
+char* 
+ConnectionMap::Connection::connectionStates[ConnectionMap::Connection::MAX] = { "NewMessage", "ReadingHeaders", "PartialBody" };
 
 bool
-ConnectionMap::Connection::prepNextMessage(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize)
+ConnectionMap::Connection::process(size_t bytesRead, Fifo<Message>& fifo)
 {
-   if(bytesUsed < bytesRead)
+//   DebugLog(<< "In State: " << connectionStates[mState]);
+   switch(mState)
    {
-      char* newMsg = new char[maxBufferSize];
-      memcpy(newMsg, mBuffer + bytesUsed, bytesRead - bytesUsed);
-   
-      fifo.add(mMessage);
-      
-      mBuffer = newMsg;
-      mState = NewMessage;
-      return process(bytesRead - bytesUsed, fifo, preparse, maxBufferSize);
-   } 
-   else
-   {
-      mState = NewMessage;
-      fifo.add(mMessage);
-      return true;
-   }
-}
-
-
-bool
-ConnectionMap::Connection::readAnyBody(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize)
-{
-   cerr << "ReadAnyBody" << endl;
-   if (mMessage->exists(h_ContentLength))
-   {
-      int contentLength = mMessage->header(h_ContentLength).value();
-      if (contentLength > 0)
+      case NewMessage:
       {
-         if (contentLength <= (bytesRead - bytesUsed))
+         mPreparse.reset();
+         mMessage = new SipMessage();
+         mMessage->setSource(mWho);
+      }
+      case ReadingHeaders:
+      {
+         if (mPreparse.process(*mMessage, mBuffer, mBufferPos + bytesRead) != 0)
          {
-            // complete body read
-            cerr << "complete body read" << endl;
-            char* completeBody = new char[contentLength];
-            memcpy(completeBody, mBuffer + bytesUsed, bytesRead - bytesUsed);
-            mMessage->setBody(completeBody, contentLength);
+            delete mBuffer;
+            mBuffer = 0;
+            delete mMessage;
+            mMessage = 0;
+            return false;
+         }
+         if (!mPreparse.isDataAssigned())
+         {
+            mBufferPos += bytesRead;
+            if (mBufferPos == mBufferSize)
+            {
+               size_t newBufferSize = size_t(mBufferSize*1.5);
+               char* largerBuffer = new char[newBufferSize];
+               memcpy(largerBuffer, mBuffer, mBufferSize);
+               delete[] mBuffer;
+               mBuffer = largerBuffer;
+               mBufferSize = newBufferSize;
+            }
+            mState = ReadingHeaders;
+         }
+         else if (mPreparse.isFragmented())
+         {
+            mMessage->addBuffer(mBuffer);
+            int overHang = mBufferPos + bytesRead - mPreparse.nDiscardOffset();
+            size_t size = max((size_t)(overHang*1.5), (size_t)Connection::ChunkSize);
+            char* newBuffer = new char[size];
+         
+            memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset(), overHang);
+            mBuffer = newBuffer;
+            mBufferPos = overHang;
+            mBufferSize = size;
+            mState = ReadingHeaders;
+         }
+         else if (mPreparse.isHeadersComplete())
+         {         
+            mMessage->addBuffer(mBuffer);
+            size_t contentLength = mMessage->header(h_ContentLength).value();
             
-            return prepNextMessage(contentLength + bytesUsed, bytesRead, fifo, preparse, maxBufferSize);
+            if (mBufferPos + bytesRead - mPreparse.nDiscardOffset() >= contentLength)
+            {
+               mMessage->setBody(mBuffer + mPreparse.nDiscardOffset(), contentLength);
+               fifo.add(mMessage);
+
+               int overHang = (mBufferPos + bytesRead) - (mPreparse.nDiscardOffset() + contentLength);
+               size_t size = max((size_t)(overHang*1.5), (size_t)Connection::ChunkSize);
+               char* newBuffer = new char[size];
+               memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset() + contentLength, overHang);
+               mBuffer = newBuffer;
+               mBufferPos = overHang;
+               mBufferSize = size;
+
+               mState = NewMessage;
+            }
+            else
+            {
+               mBufferPos += bytesRead;
+               char* newBuffer = new char[contentLength];
+               memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset(), mBufferPos - mPreparse.nDiscardOffset());
+               mBufferPos = mBufferPos - mPreparse.nDiscardOffset();
+               mBufferSize = contentLength;
+               mBuffer = newBuffer;
+            
+               mState = PartialBody;
+            }
          }
          else
          {
-            // partial body
-            cerr << "partial body read" << endl;
-            char* partialBody = new char[contentLength];
-            memcpy(partialBody, mBuffer + bytesUsed, bytesRead - bytesUsed);
-            mBuffer = partialBody;
-            mBytesRead = bytesRead - bytesUsed;
-            
-            mState = PartialBodyRead;
-            mBufferSize = contentLength;
-            
-            return true;
+            assert(0);
          }
+         break;
       }
-      else
+      case PartialBody:
       {
-         return prepNextMessage(bytesUsed, bytesRead, fifo, preparse, maxBufferSize);
+         size_t contentLength = mMessage->header(h_ContentLength).value();
+         mBufferPos += bytesRead;
+         if (mBufferPos == contentLength)
+         {
+            mMessage->setBody(mBuffer, contentLength);
+            fifo.add(mMessage);
+            
+            mState = NewMessage;
+         }
+         break;
       }
-      
+      default:
+         assert(0);
    }
-   else
-   {
-      delete mMessage;
-      mMessage = 0;
-      
-      return false;
-      
-   }
+   return true;
 }
+            
+            

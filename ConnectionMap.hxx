@@ -8,88 +8,95 @@
 #include "sip2/util/Timer.hxx"
 #include "sip2/sipstack/Transport.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/Preparse.hxx"
 
 namespace Vocal2
 {
 
-  class Preparse;
+class Preparse;
 
-  class ConnectionMap
-  {
-  public:
-    // smallest time to reuse
-    static const UInt64 MinLastUsed;
-    // largest unused time to reclaim
-    static const UInt64 MaxLastUsed;
-    enum {MaxAttempts = 7};
+class ConnectionMap
+{
+   public:
+      // smallest time to reuse
+      static const UInt64 MinLastUsed;
+      // largest unused time to reclaim
+      static const UInt64 MaxLastUsed;
+      enum {MaxAttempts = 7};
 
-    ConnectionMap();
+      ConnectionMap();
       
-    class Connection
-    {
-    public:
-      enum State
-	{
-	  NewMessage,
-	  PartialHeaderRead,
-	  PartialBodyRead
-	};
+      class Connection
+      {
+         public:
+            Connection(const Transport::Tuple& who, 
+                       Socket socket);
+            Connection();
+
+            ~Connection();
             
-         
-      Connection(Transport::Tuple who, Socket socket);
-      Socket getSocket() {return mSocket;}
+            Socket getSocket() {return mSocket;}
             
-      void allocateBuffer(int maxBufferSize);
-      bool process(int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
-      bool prepNextMessage(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
-      bool readAnyBody(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
+            bool process(size_t bytesRead, Fifo<Message>& fifo);
+
+            std::pair<char* const, size_t> getWriteBuffer();
             
+            Connection* remove(); // return next youngest
+            Connection* mYounger;
+            Connection* mOlder;
+
+            Transport::Tuple mWho;
+
+            Data::size_type mSendPos;     //position in current message being sent
+            std::list<SendData*> mOutstandingSends;
+            SendData* mCurrent;
+
+            enum { ChunkSize = 128 }; //!dcm! -- bad size, perhaps 2048-4096?
+         private:
             
-      Data::size_type mSendPos;     //position in current message being sent
-      std::list<SendData*> mOutstandingSends;
-      SendData* mCurrent;
+            bool prepNextMessage(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
+            bool readAnyBody(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
+
+            SipMessage* mMessage;
+            char* mBuffer;
+            size_t mBufferPos;
+            size_t mBufferSize;
+
+            enum State
+            {
+               NewMessage = 0,
+               ReadingHeaders,
+               PartialBody,
+               MAX
+            };
+
+            static char* connectionStates[MAX];
+
+            Socket mSocket;
+            UInt64 mLastUsed;
             
-      SipMessage* mMessage;
-      char* mBuffer;
-      int mBytesRead;
-      int mBufferSize;
-            
+            State mState;
+            Preparse mPreparse;
 
-      Connection();
-      Connection* remove(); // return next youngest
-      ~Connection();
+            friend class ConnectionMap;
+      };
 
-      Connection* mYounger;
-      Connection* mOlder;
+      Connection* add(Transport::Tuple who, Socket s);
+      Connection* get(Transport::Tuple who, int attempt = 1);
+      void close(Transport::Tuple who);
 
-      Transport::Tuple mWho;
+      // release excessively old connections
+      void gc(UInt64 threshhold = ConnectionMap::MaxLastUsed);
 
-
-    private:
-      Socket mSocket;
-      UInt64 mLastUsed;
-            
-      State mState;
-
-      friend class ConnectionMap;
-    };
-
-    Connection* add(Transport::Tuple who, Socket s);
-    Connection* get(Transport::Tuple who, int attempt = 1);
-    void close(Transport::Tuple who);
-
-    // release excessively old connections
-    void gc(UInt64 threshhold = ConnectionMap::MaxLastUsed);
-
-    typedef std::map<Transport::Tuple, Connection*> Map;
-    Map mConnections;
+      typedef std::map<Transport::Tuple, Connection*> Map;
+      Map mConnections;
       
-    // move to youngest
-    void touch(Connection* connection);
+      // move to youngest
+      void touch(Connection* connection);
       
-    Connection mPreYoungest;
-    Connection mPostOldest;
-  };
+      Connection mPreYoungest;
+      Connection mPostOldest;
+};
 
 }
 
