@@ -41,9 +41,9 @@ DialogSet::~DialogSet()
    }
 
    delete mCreator;
-   for(list<Dialog*>::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+   for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
    {
-      delete (*it);
+      delete it->second;
    }   
 }
 
@@ -56,7 +56,7 @@ DialogSet::getId()
 void
 DialogSet::addDialog(Dialog *dialog)
 {
-   mDialogs.push_back(dialog);
+   mDialogs[dialog->getId()] = dialog;
 }
 
 //!dcm! -- kill
@@ -105,7 +105,10 @@ DialogSet::dispatch(const SipMessage& msg)
    Dialog* dialog = findDialog(msg);
    if (dialog == 0)
    {
+      // !jf! This could throw due to bad header in msg, should we catch and rethrow
+      // !jf! if this threw, should we check to delete the DialogSet? 
       dialog = new Dialog(mDum, msg, *this);
+      InfoLog (<< "Created a new dialog: " << *dialog);
    }     
 
    if (mDum.mClientAuthManager)
@@ -134,15 +137,15 @@ DialogSet::dispatch(const SipMessage& msg)
 Dialog* 
 DialogSet::findDialog(const DialogId id)
 {
-   assert(0);
-   for (std::list<Dialog*>::iterator i = mDialogs.begin(); i != mDialogs.end() ; i++)
+   DialogMap::iterator i = mDialogs.find(id);
+   if (i == mDialogs.end())
    {
-      if ((*i)->getId() == id)
-      {
-         return *i;
-      }
+      return 0;
    }
-   return 0;
+   else
+   {
+      return i->second;
+   }
 }
 
 void 
