@@ -43,37 +43,50 @@ main()
    assert(isNear(timer.msTillNextTimer(), 1000));
 
    cerr << timer;
-
-   assert(f.size() == 0);
+   assert(r.size() == 0);
+   assert(timer.size() == 5);
+   
    timer.process();
-   cerr << "Immediately after Fifo size: " << f.size() << endl;
-   assert(f.size() == 0);
 
+   assert(r.size() == 0);
+   assert(timer.size() == 5);
+
+   cerr << timer;
    sleep(1);
+   cerr << timer;
+   timer.process();
+   
+   cerr << timer;
+   assert(r.size() == 1);
+   assert(timer.size() == 4);
+
+
    cerr << "next timer will fire in " << timer.msTillNextTimer() << "ms" << endl;
    timer.process();
    cerr << "next timer will fire in " << timer.msTillNextTimer() << "ms" << endl;
-   assert(f.size() == 1);
+   cerr << "timer queue size=" << timer.size() << endl;
+   cerr << "fired event queue size=" << r.size() << endl;
+   assert(r.size() == 1);
    timer.process();   
-   assert(f.size() == 1);
+   assert(r.size() == 1);
 
    sleep(1);
    timer.process();
-   assert(f.size() == 2);
+   assert(r.size() == 2);
    timer.process();   
-   assert(f.size() == 2);
+   assert(r.size() == 2);
 
    sleep(2);
    timer.process();
-   assert(f.size() == 3);
+   assert(r.size() == 3);
    timer.process();   
-   assert(f.size() == 3);
+   assert(r.size() == 3);
 
    sleep(4);
    timer.process();
-   assert(f.size() == 4);
+   assert(r.size() == 4);
    timer.process();   
-   assert(f.size() == 4);
+   assert(r.size() == 4);
 
 
    cerr << "next timer will fire in " << timer.msTillNextTimer() << "ms" << endl;
@@ -83,15 +96,15 @@ main()
    timer.process();
    cerr << timer;
    
-   assert(f.size() == 5);
+   assert(r.size() == 5);
    timer.process();   
-   assert(f.size() == 5);
+   assert(r.size() == 5);
 
    sleep(1);
    timer.process();
-   assert(f.size() == 5);
+   assert(r.size() == 5);
    timer.process();   
-   assert(f.size() == 5);
+   assert(r.size() == 5);
    return 0;
 }
 
