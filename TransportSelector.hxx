@@ -33,11 +33,17 @@ class TransportSelector
       void process(FdSet& fdset);
       void buildFdSet(FdSet& fdset);
      
-      void addTransport( TransportType, int port, const Data& hostName="", const Data& nic="");
+      void addTransport( TransportType,
+                         int port,
+                         const Data& hostName="",
+                         const Data& nic="");
+
       void addTlsTransport(const Data& domainName, 
-                           const Data& keyDir, const Data& privateKeyPassPhrase,
+                           const Data& keyDir,
+                           const Data& privateKeyPassPhrase,
                            int port, 
                            const Data& hostName="", const Data& nic="");
+
       DnsResult* dnsResolve(SipMessage* msg, DnsHandler* handler);
 
       // this will result in msg->resolve() being called to either
@@ -59,7 +65,10 @@ class TransportSelector
 
       // map from domain name to transport
       HashMap<Data, TlsTransport*> mTlsTransports;
-      
+
+      // fake socket for connect() and route table lookups
+      int mSocket;
+
       friend class DnsResolver;
 };
 

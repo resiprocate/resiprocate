@@ -470,7 +470,9 @@ TransactionState::processClientInvite(  Message* msg )
             // for the INVITE in case we never get a 487
             //mController.mTimers.add(Timer::TimerCleanUp, sip->getTransactionId(), 96*Timer::T1);
 
+
             sendToWire(sip);
+
             break;
             
          default:

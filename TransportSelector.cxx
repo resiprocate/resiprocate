@@ -32,8 +32,10 @@ using namespace resip;
 
 
 TransportSelector::TransportSelector(Fifo<Message>& fifo) :
-   mStateMacFifo(fifo)
+   mStateMacFifo(fifo),
+   mSocket()
 {
+   mSocket = socket(AF_INET, SOCK_DGRAM, 0);
 }
 
 TransportSelector::~TransportSelector()
@@ -245,10 +247,40 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
          //msg->header(h_Vias).front().param(p_ttl) = 1;
          msg->header(h_Vias).front().transport() = Tuple::toData(destination.transport->transport());  //cache !jf! 
 
-         if (msg->header(h_Vias).front().sentHost().empty())
-         {
-            msg->header(h_Vias).front().sentHost() = destination.transport->hostName(); // use hostname 
-         }
+//         if (msg->header(h_Vias).front().sentHost().empty())
+//         {
+            // wing in the transport address based on where this is going.
+            Data interfaceHost;
+
+            if (!destination.v6)
+            {
+               
+               sockaddr_in servaddr,cliaddr;
+               memset(&servaddr,0,sizeof(servaddr));
+               servaddr.sin_addr = destination.ipv4;
+               servaddr.sin_port = htons(destination.port);
+               servaddr.sin_family = AF_INET;
+               
+               connect(mSocket, 
+                       (const sockaddr *)&servaddr,
+                       sizeof(servaddr));
+               int len = sizeof(cliaddr);
+               getsockname(mSocket,(sockaddr*)&cliaddr, &len);
+               
+                     
+               interfaceHost = DnsUtil::inet_ntop(cliaddr.sin_addr);
+
+            }
+            else
+            {
+               ErrLog(<<"IPv6 Route Table search unimplemented.");
+            }
+
+            msg->header(h_Vias).front().sentHost() = 
+               interfaceHost;
+            
+            DebugLog(<<"Route table selection chooses: " << interfaceHost);
+//         }
 
          const Via &v(msg->header(h_Vias).front());
 
