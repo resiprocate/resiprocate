@@ -19,7 +19,7 @@ class TestDnsHandler : public DnsHandler
       {
          while (result->available() == DnsResult::Available)
          {
-            std::cout << result->next() << std::endl;
+            std::cout << result->target() << " -> " << result->next() << std::endl;
          }
       }
 };
@@ -80,8 +80,6 @@ main(int argc, char* argv[])
       results.push_back(dns.lookup(uri, &handler));
    }
 
-   sleep(argc);
-   InfoLog (<< "Deleting results");
    while (!results.empty())
    {
       if (results.front()->available() == DnsResult::Finished)
@@ -91,6 +89,7 @@ main(int argc, char* argv[])
       }
       else
       {
+         std::cout << "Waiting for " << *(results.front()) << std::endl;
          sleep(1);
       }
    }
