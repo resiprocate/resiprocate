@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.68 2003/06/17 23:17:45 davidb Exp $";
+// "$Id: Data.cxx,v 1.69 2003/07/03 16:25:31 ryker Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -524,7 +524,8 @@ Data::operator+=(const Data& data)
       if (!mMine)
       {
          char *oldBuf = mBuf;
-         mBuf = new char[mSize + data.mSize];
+         mCapacity = mSize + data.mSize;
+         mBuf = new char[mCapacity];
          memcpy(mBuf, oldBuf, mSize);
          mMine = true;
       }
@@ -567,7 +568,7 @@ Data::operator^=(const Data& rhs)
 Data&
 Data::operator+=(char c)
 {
-   if (mCapacity < mSize + c)
+   if (mCapacity < mSize + 1)
    {
       // .dlb. pad for future growth?
       resize(mSize + 1, true);
