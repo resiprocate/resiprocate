@@ -307,6 +307,7 @@ void DtlsTransport::_write( FdSet& fdset )
 {
    SSL *ssl ;
    BIO *wBio ;
+   int retry = 0 ;
 
    std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
    //DebugLog (<< "Sent: " <<  sendData->data);
@@ -324,6 +325,8 @@ void DtlsTransport::_write( FdSet& fdset )
    {
       ssl = SSL_new( mClientCtx ) ;
       assert( ssl ) ;
+
+      SSL_set_connect_state( ssl ) ;
 
       wBio = BIO_new_dgram( mFd, BIO_NOCLOSE ) ;
       assert( wBio ) ;
@@ -346,7 +349,7 @@ void DtlsTransport::_write( FdSet& fdset )
     * will be SSL_ERROR_WANT_READ 
     */
 
-   if ( count < 0 )
+   if ( count <= 0 )
    {
       int err = SSL_get_error( ssl, count ) ;
       switch( err )
@@ -356,8 +359,10 @@ void DtlsTransport::_write( FdSet& fdset )
          case SSL_ERROR_SSL:
             break;
          case SSL_ERROR_WANT_READ:
+            retry = 1 ;
             break;
          case SSL_ERROR_WANT_WRITE:         
+             retry = 1 ;
              fdset.setWrite(mFd);
             break;
          case SSL_ERROR_SYSCALL:
@@ -381,7 +386,7 @@ void DtlsTransport::_write( FdSet& fdset )
       }
    }
    
-   if (count != int(sendData->data.size()) )
+   if ( ! retry && count != int(sendData->data.size()) )
    {
       ErrLog (<< "UDPTransport - send buffer full" );
       fail(sendData->transactionId);
