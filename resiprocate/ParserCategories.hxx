@@ -260,6 +260,7 @@ class RequestLineComponent : public ParserCategory
       RequestLineComponent(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       MethodTypes getMethod() const;
+virtual void parse() { assert(0); }
 };
 
 //====================
@@ -272,6 +273,7 @@ class StatusLineComponent : public ParserCategory
       StatusLineComponent(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       int getResponseCode() const;
+virtual void parse() { assert(0); }
 };
 
 }
