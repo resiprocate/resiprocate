@@ -1,7 +1,7 @@
 #if !defined(RESIP_DIALOGSETHANDLER_HXX)
 #define RESIP_DIALOGSETHANDLER_HXX
 
-#include "resiprocate/dum/Dialogset.hxx"
+#include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/Handles.hxx"
 
 namespace resip
