@@ -29,6 +29,10 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
+#ifdef WIN32
+   initNetwork();
+#endif
+
    char* logType = 0;
    char* logLevel = 0;
    int runs = 100;
@@ -51,7 +55,11 @@ main(int argc, char* argv[])
    poptFreeContext(context);
 #endif
 
+#ifdef WIN32
+   Log::initialize(Log::Cout, Log::VSDebugWindow, "testTcp");   
+#else
    Log::initialize(logType, logLevel, argv[0]);
+#endif
    
    cout << "Performing " << runs << " runs." << endl;
    

@@ -63,7 +63,7 @@ main(int argc, char* argv[])
    NameAddr target;
    target.uri().scheme() = "sip";
    target.uri().user() = "fluffy";
-   target.uri().host() = "localhost";
+   target.uri().host() = "bremen.internal.xten.net";
    target.uri().port() = 5080;
    target.uri().param(p_transport) = "udp";
    

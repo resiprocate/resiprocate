@@ -42,8 +42,8 @@ main(int argc, char* argv[])
    int v6 = 0;
 
 #ifdef WIN32
-  runs = 500;
-  window = 25;
+  runs = 100;
+  window = 5;
   logType = "cout";
   logLevel = "ALERT";
   logLevel = "INFO";
@@ -73,8 +73,8 @@ main(int argc, char* argv[])
    IpVersion version = (v6 ? V6 : V4);
    SipStack receiver;
    SipStack sender;
-   sender.addTransport(UDP, 5060, version); // !ah! just for debugging TransportSelector
-   sender.addTransport(TCP, 5060, version);
+//   sender.addTransport(UDP, 5060, version); // !ah! just for debugging TransportSelector
+//   sender.addTransport(TCP, 5060, version);
    if (bindAddr)
    {
       InfoLog(<<"Binding to address: " << bindAddr);
@@ -103,8 +103,9 @@ main(int argc, char* argv[])
    contact.uri().user() = "fluffy";
 
 #ifdef WIN32
-     target.uri().host() = Data("192.168.0.156");
-     //target.uri().host() = Data("cj30.libvoip.com");
+     target.uri().host() = Data("192.168.0.129");
+
+   //target.uri().host() = Data("cj30.libvoip.com");
 #endif
 
    NameAddr from = target;
