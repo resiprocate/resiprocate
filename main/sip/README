@@ -11,6 +11,8 @@ For shared libraries and use of distcc (for compiling across a cluster)
 The default is to build static libs with no use of distcc
 
 
+The default is to build with full debugging turned on. 
+To build optimized, with optimization level 2, -O2: 
 
-
+% make CODE_OPTIMIZE=2
 
