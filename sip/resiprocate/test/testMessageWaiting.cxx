@@ -30,7 +30,8 @@ main()
                      "Voice-Message: 4/8 (1/2)\r\n");
 
       HeaderFieldValue hfv(txt.data(), txt.size());
-      MessageWaitingContents mwb(&hfv);
+      Mime type("application", "simple-message-summary");
+      MessageWaitingContents mwb(&hfv, type);
 
       assert(mwb.header(mw_account).scheme() == "sip");
       assert(mwb.header(mw_account).user() == "alice");
@@ -54,7 +55,8 @@ main()
                      "Something: fine choice\r\n");
 
       HeaderFieldValue hfv(txt.data(), txt.size());
-      MessageWaitingContents mwb(&hfv);
+      Mime type("application", "simple-message-summary");
+      MessageWaitingContents mwb(&hfv, type);
 
       assert(mwb.header(mw_account).scheme() == "sip");
       assert(mwb.header(mw_account).user() == "alice");
