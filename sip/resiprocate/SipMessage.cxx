@@ -203,29 +203,30 @@ SipMessage::encode(std::ostream& str) const
             mHeaders[i]->encode(Headers::HeaderNames[static_cast<Headers::Type>(i)], str);
          }
       }
+      else
+      {
+         if (mContents != 0)
+         {
+            CountStream cs;
+            mContents->encode(cs);
+            cs.flush();
+            str << "Content-Length: " << cs.size() << "\r\n";
+         }
+         else if (mContentsHfv != 0)
+         {
+            str << "Content-Length: " << mContentsHfv->mFieldLength << "\r\n";
+         }
+         else
+         {
+            str << "Content-Length: 0\r\n";
+         }
+      }
    }
 
    for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin(); 
         i != mUnknownHeaders.end(); i++)
    {
       i->second->encode(i->first, str);
-   }
-
-   // Always print a Content-Length header at the end of the headers
-   if (mContents != 0)
-   {
-      CountStream cs;
-      mContents->encode(cs);
-      cs.flush();
-      str << "Content-Length: " << cs.size() << "\r\n";
-   }
-   else if (mContentsHfv != 0)
-   {
-      str << "Content-Length: " << mContentsHfv->mFieldLength << "\r\n";
-   }
-   else
-   {
-      str << "Content-Length: 0\r\n";
    }
 
    str << Symbols::CRLF;
