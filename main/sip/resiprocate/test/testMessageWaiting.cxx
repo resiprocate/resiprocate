@@ -25,9 +25,7 @@ main()
    }
 
    {
-      const Data txt("Content-Type: application/simple-message-summary\r\n"
-                     "\r\n"
-                     "Messages-Waiting: yes\r\n"
+      const Data txt("Messages-Waiting: yes\r\n"
                      "Message-Account: sip:alice@vmail.example.com\r\n"
                      "Voice-Message: 4/8 (1/2)\r\n");
 
@@ -49,9 +47,7 @@ main()
    }
 
    {
-      const Data txt("Content-Type: application/simple-message-summary\r\n"
-                     "\r\n"
-                     "Messages-Waiting: yes\r\n"
+      const Data txt("Messages-Waiting: yes\r\n"
                      "Message-Account: sip:alice@vmail.example.com\r\n"
                      "Voice-Message: 4/8 (1/2)\r\n"
                      "Fax-Message: 2/1\r\n"
