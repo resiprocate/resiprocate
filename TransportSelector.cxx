@@ -8,7 +8,7 @@ using namespace Vocal2;
 TransportSelector::TransportSelector(int portNum)
   :mPortNum(portNum)
 {
-  mUdp = new UdpTransport(mPortNum, mRxFifo);
+   mUdp = new UdpTransport(mPortNum, stack.mStateMacFifo);
 }
 
 void 

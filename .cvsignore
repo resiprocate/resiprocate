@@ -1,4 +1,5 @@
 *.d
+a.out
 bin.*
 fsm.dot
 fsm.pdf
