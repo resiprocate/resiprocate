@@ -1,4 +1,3 @@
-
 #include "resiprocate/os/Socket.hxx"
 
 #if defined( WIN32 )
@@ -99,28 +98,40 @@ Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
     mId(++mTimerCount),
     mType(type),
     mTransactionId(transactionId),
-    mDuration(tms)
+    mDuration(tms),
+    mMessage(0)
 {
 }
 
+Timer::Timer(unsigned long tms, 
+             Message* message) 
+   : mWhen(tms + getTimeMs()),
+     mId(++mTimerCount),
+     mType(Timer::ApplicationTimer),
+     mTransactionId(),
+     mDuration(tms),
+     mMessage(message)
+{
+   assert(mMessage);
+}
 
 Timer::Timer(unsigned long tms) :
     mWhen(tms + getTimeMs()),
     mId(0),
-    mDuration(tms)
+    mDuration(tms),
+    mMessage(0)
 {
 }
-
 
 Timer::Timer(const Timer& other) : 
     mWhen(other.mWhen),
     mId(other.mTimerCount),
     mType(other.mType),
     mTransactionId(other.mTransactionId),
-    mDuration(other.mDuration)
+    mDuration(other.mDuration),
+    mMessage(other.mMessage)
 {
 }
-
 
 Timer&
 Timer::operator=(const Timer& other)
@@ -132,10 +143,13 @@ Timer::operator=(const Timer& other)
         mType = other.mType;
         mTransactionId = other.mTransactionId;
         mDuration = other.mDuration;
+        mMessage = other.mMessage;
     }
     return *this;
 }
 
+Timer::~Timer() 
+{}
 
 UInt64
 Timer::getSystemTime()
