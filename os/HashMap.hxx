@@ -1,7 +1,7 @@
 #ifndef HashMap_hxx
 #define HashMap_hxx
 
-
+#if !defined(__SUNPRO_CC)
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 #include <ext/hash_map>
 #else 
@@ -17,6 +17,8 @@ using __gnu_cxx::hash_map;
      using std::hash_map;
 #  endif
 #endif
-
+#else
+#include <map>
+#endif
 
 #endif
