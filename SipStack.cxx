@@ -17,7 +17,7 @@ SipStack::SipStack(bool multiThreaded)
     mTransportSelector(*this),
     mTimers(mStateMacFifo)
 {
-   addTransport(Transport::UDP, 5060);
+   //addTransport(Transport::UDP, 5060);
    //addTransport(Transport::TCP, 5060); // !jf!
 }
 
