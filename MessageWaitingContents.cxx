@@ -268,7 +268,7 @@ MessageWaitingContents::parse(ParseBuffer& pb)
    }
    else
    {
-      pb.fail();
+      pb.fail(__FILE__, __LINE__);
    }
 
    anchor = pb.skipWhitespace();
@@ -320,7 +320,7 @@ MessageWaitingContents::parse(ParseBuffer& pb)
             ht = mw_none;
             break;
          default :
-            pb.fail("Unknown message context class");
+            pb.fail(__FILE__, __LINE__);
       }
       assert(ht != -1);
 
@@ -341,7 +341,7 @@ MessageWaitingContents::parse(ParseBuffer& pb)
       {
          if (mHeaders[ht] != 0)
          {
-            pb.fail("Repeated message context class");
+            pb.fail(__FILE__, __LINE__);
          }
          mHeaders[ht] = new Header(numNew, numOld);
       }
@@ -363,7 +363,7 @@ MessageWaitingContents::parse(ParseBuffer& pb)
 
          if (mHeaders[ht] != 0)
          {
-            pb.fail("Repeated message context class");
+            pb.fail(__FILE__, __LINE__);
          }
          mHeaders[ht] = new Header(numNew, numOld, numUrgentNew, numUrgentOld);
       }
