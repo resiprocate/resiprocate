@@ -26,8 +26,8 @@ RequestLine::RequestLine(MethodTypes method,
 
 RequestLine::RequestLine(HeaderFieldValue* hfv, Headers::Type type) 
    : ParserCategory(hfv, type),
-     mMethod(RESIP_UNKNOWN),
-     mUnknownMethodName(getMethodName(RESIP_UNKNOWN)),
+     mMethod(UNKNOWN),
+     mUnknownMethodName(getMethodName(UNKNOWN)),
      mSipVersion(Symbols::DefaultSipVersion)
 {}
       
@@ -137,7 +137,7 @@ RequestLine::parse(ParseBuffer& pb)
 ostream&
 RequestLine::encodeParsed(ostream& str) const
 {
-   str << (mMethod != RESIP_UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName) << Symbols::SPACE;
+   str << (mMethod != UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName) << Symbols::SPACE;
    mUri.encodeParsed(str);
    str << Symbols::SPACE << mSipVersion;
    return str;

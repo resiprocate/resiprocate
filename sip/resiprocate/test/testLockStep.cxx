@@ -142,7 +142,7 @@ class Server : public ThreadIf
                auto_ptr<SipMessage> forDel(received);
                InfoLog ( << "Server recieved: " << received->brief());
                MethodTypes meth = received->header(h_RequestLine).getMethod();
-               if ( meth == RESIP_INVITE )
+               if ( meth == INVITE )
                {
                   Data localTag = Helper::computeTag(4);
                   auto_ptr<SipMessage> msg180(Helper::makeResponse(*received, 180, dest));
@@ -153,7 +153,7 @@ class Server : public ThreadIf
                   msg200->header(h_To).param(p_tag) = localTag;
                   mStack.send(*msg200);
                }
-               if ( meth == RESIP_BYE)
+               if ( meth == BYE)
                {
                   auto_ptr<SipMessage> msg200(Helper::makeResponse(*received, 200, dest));
                   InfoLog (<< "stack2 got bye - send 200 : " << *msg200 );   

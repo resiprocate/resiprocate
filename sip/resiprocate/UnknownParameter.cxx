@@ -13,7 +13,7 @@ UnknownParameter::UnknownParameter(const char* startName,
                                    unsigned int nameSize,
                                    ParseBuffer& pb, 
                                    const char* terminators)
-   : Parameter(ParameterTypes::RESIP_UNKNOWN),
+   : Parameter(ParameterTypes::UNKNOWN),
      mName(startName, nameSize),
      mValue(),
      mIsQuoted(false)
@@ -47,7 +47,7 @@ UnknownParameter::UnknownParameter(const char* startName,
 }
 
 UnknownParameter::UnknownParameter(const Data& name)
-   : Parameter(ParameterTypes::RESIP_UNKNOWN),
+   : Parameter(ParameterTypes::UNKNOWN),
      mName(name),
      mIsQuoted(false)
 {

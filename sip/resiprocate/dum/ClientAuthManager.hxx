@@ -24,7 +24,7 @@ class ClientAuthManager
       
    private:
       friend class DialogSet;
-      void dialogSetDestroyed(const DialogSetId& dsId);
+      void dialogSetDestroyed(const DialogSetId& dsId);      
 
       class CompareAuth  : public std::binary_function<const Auth&, const Auth&, bool>
       {
@@ -60,7 +60,6 @@ class ClientAuthManager
             Data cnonce;
             Data cnonceCountString;            
       };      
-      friend class AuthState;
          
 
       typedef std::map<DialogSetId, AuthState> AttemptedAuthMap;
