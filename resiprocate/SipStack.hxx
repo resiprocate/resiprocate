@@ -81,9 +81,6 @@ class SipStack
       /// returns time in milliseconds when process next needs to be called 
       int getTimeTillNextProcessMS(); 
 
-	  ///
-	  void setOutboundProxy( const Uri& uri );
-
 #ifdef USE_SSL
       /// if this object exists, it manages advanced security featues
       Security* security;
