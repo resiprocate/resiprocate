@@ -139,6 +139,7 @@ class DialogUsageManager : public HandleManager
                                              const SdpContents* initialOffer, AppDialogSet* = 0);
       
       SipMessage& makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, AppDialogSet* = 0);
+      SipMessage& makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, int subscriptionTime, AppDialogSet* = 0);
       //unsolicited refer
       SipMessage& makeRefer(const NameAddr& target, const NameAddr& from, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
 
@@ -150,6 +151,7 @@ class DialogUsageManager : public HandleManager
                                   AppDialogSet* = 0);
 
       SipMessage& makeRegistration(const NameAddr& target, AppDialogSet* = 0);
+      SipMessage& makeRegistration(const NameAddr& target, int registrationTime, AppDialogSet* = 0);
       SipMessage& makeOutOfDialogRequest(const NameAddr& target, const NameAddr& from, const MethodTypes meth, AppDialogSet* = 0);
 
       ClientPagerMessageHandle makePagerMessage(const NameAddr& target, const NameAddr& from, AppDialogSet* = 0);
