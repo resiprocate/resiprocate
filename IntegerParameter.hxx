@@ -16,7 +16,7 @@ class IntegerParameter : public Parameter
       typedef int Type;
 
       IntegerParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
-      IntegerParameter(ParameterTypes::Type type, int value = -666999666);
+      explicit IntegerParameter(ParameterTypes::Type type, int value = -666999666);
       
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {

@@ -16,7 +16,7 @@ class FloatParameter : public Parameter
       typedef float Type;
       
       FloatParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
-      FloatParameter(ParameterTypes::Type type);
+      explicit FloatParameter(ParameterTypes::Type type);
 
       float& value();
 
