@@ -7,16 +7,25 @@ using namespace resip;
 
 BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request) :
    DialogUsage(dum, dialog),
-   mEventType(request.header(h_Event).value()),
    mSubscriptionId(Data::Empty),
    mTimerSeq(0),
    mSubscriptionState(Invalid)
    
 {
-   if (request.header(h_Event).exists(p_id))
+   if (request.header(h_RequestLine).method() == REFER)
+   {
+      mEventType = "refer";
+   }
+   else
+   {
+      mEventType = request.header(h_Event).value();
+   }
+   
+   if (request.exists(h_Event) && request.header(h_Event).exists(p_id))
    {
       mSubscriptionId = request.header(h_Event).param(p_id);
    }
+
 }
 
 bool

@@ -12,6 +12,8 @@
 #include "resiprocate/dum/ServerRegistration.hxx"
 #include "resiprocate/dum/ClientPublication.hxx"
 #include "resiprocate/dum/ServerPublication.hxx"
+#include "resiprocate/Helper.hxx"
+
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -32,7 +34,8 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mClientPublication(0),
    mServerPublication(0),
    mClientOutOfDialogRequests(),
-   mServerOutOfDialogRequest(0)
+   mServerOutOfDialogRequest(0),
+   mReceivedProvisional(false)
 {
    assert(!creator->getLastRequest().isExternal());
    InfoLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
@@ -52,7 +55,8 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mClientPublication(0),
    mServerPublication(0),
    mClientOutOfDialogRequests(),
-   mServerOutOfDialogRequest(0)
+   mServerOutOfDialogRequest(0),
+   mReceivedProvisional(false)
 {
    assert(request.isRequest());
    assert(request.isExternal());
@@ -213,6 +217,13 @@ DialogSet::dispatch(const SipMessage& msg)
    else
    {
       const SipMessage& response = msg;
+      if (response.header(h_StatusLine).statusCode() == 100)
+      {
+         mReceivedProvisional = true;
+         //!dcm! -- SessionProgress callback
+         return;         
+      }      
+         
       switch (response.header(h_CSeq).method())
       {
          case INVITE:
@@ -276,10 +287,36 @@ DialogSet::dispatch(const SipMessage& msg)
          return;         
       }
 
+      if (msg.isResponse() 
+          && msg.header(h_To).exists(p_tag) 
+          && !msg.exists(h_Contacts) 
+          && msg.header(h_StatusLine).statusCode() < 200)
+      {
+         InfoLog ( << "Cannot create a dialog, no Contact in 180." );
+         //call OnProgress in proposed DialogSetHandler here
+         return;         
+      }
+
       InfoLog ( << "Creating a new Dialog from msg: " << msg);
-      // !jf! This could throw due to bad header in msg, should we catch and rethrow
-      // !jf! if this threw, should we check to delete the DialogSet? 
-      dialog = new Dialog(mDum, msg, *this);
+
+      try
+      {
+         // !jf! This could throw due to bad header in msg, should we catch and rethrow
+         // !jf! if this threw, should we check to delete the DialogSet? 
+         // !dcm! -- check to delete for now, but we will need to keep the
+         // Dialoset around in case something forked.
+         dialog = new Dialog(mDum, msg, *this);
+      }
+      catch(BaseException& e)
+      {
+         InfoLog( << "Unable to create dialog: " << e.getMessage());
+         //don't delete on provisional responses, as FWD will eventually send a
+         //valid 200
+         if(mDialogs.empty() && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 200))
+         {
+            delete this;
+         }
+      }
 
       if (mCancelled)
       {
@@ -336,9 +373,21 @@ DialogSet::findDialog(const DialogId id)
 
 void
 DialogSet::cancel()
-{
+{   
    mCancelled = true;
-   if (!mDialogs.empty())
+   if (mDialogs.empty())
+   {
+      if (mReceivedProvisional && getCreator())
+      {
+         //unify makeCancel w/ Dialog makeCancel, verify both
+         //exception to cancel UAS DialogSet?
+         auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));         
+         mDum.send(*cancel);
+         delete this;
+         return;         
+      }
+   }
+   else
    {
       //need to lag and do last element ouside of look as this DialogSet will be
       //deleted if all dialogs are destroyed
