@@ -217,8 +217,8 @@ class NameAddr : public ParserCategory
            mDisplayName()
       {}
 
-      explicit NameAddr(const Data& unparsed);
       explicit NameAddr(const Uri&);
+      explicit NameAddr(const Data& unparsed);
 
       NameAddr(const NameAddr&);
       NameAddr& operator=(const NameAddr&);
