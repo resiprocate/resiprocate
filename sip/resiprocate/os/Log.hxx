@@ -35,6 +35,7 @@ class Log
 #ifdef WIN32 
       typedef enum 
       {
+		 NONE = -1,
          CRIT = 2,
          ERR = 3,
          WARNING = 4,
@@ -46,6 +47,7 @@ class Log
 #else
       typedef enum 
       {
+	     NONE = -1,
          CRIT = LOG_CRIT,
 #ifdef ERR // ncurses defines a macro called ERR 
          SIP2_ERR = LOG_ERR,
@@ -89,9 +91,14 @@ class Log
       /// Return the loglevel, hostname, appname, pid, tid, subsystem
       static std::ostream& tags(Log::Level level, const Subsystem& subsystem, std::ostream& strm); 
       static Data timestamp();
-      static void initialize(Type type, Level level, const Data& appName);
-      static void initialize(const char* type, const char* level, const Data& appName);
-      
+      static void initialize(Type type,
+                             Level level,
+                             const Data& appName,
+                             const char * logFileName = 0);
+      static void initialize(const char* type,
+                             const char* level,
+                             const Data& appName,
+                             const char * logFileName = 0);
       static void setLevel(Level level);
       static Level level() { return _level; }
       static Level toLevel(const Data& l);
@@ -112,6 +119,7 @@ class Log
       static Type _type;
       static Data _appName;
       static Data _hostname;
+      static Data _logFileName;
 #ifndef WIN32
       static pid_t _pid;
 #else   
