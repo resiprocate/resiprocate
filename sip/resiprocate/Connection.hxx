@@ -95,7 +95,6 @@ class Connection : public IntrusiveListElement<Connection*, 1>,
 #endif
 
       friend class TcpBaseTransport;
-      friend class ConnectionMap;
 };
 
 std::ostream& 
