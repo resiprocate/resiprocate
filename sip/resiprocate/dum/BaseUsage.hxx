@@ -63,9 +63,9 @@ class BaseUsage
       BaseUsage(DialogUsageManager& dum, Dialog& dialog);
       virtual ~BaseUsage();
 
-      BaseUsage::Handle mHandle;
       DialogUsageManager& mDum;
       Dialog& mDialog;
+      BaseUsage::Handle mHandle;
 };
  
 }
