@@ -150,8 +150,6 @@ SdpContents::operator=(const SdpContents& rhs)
    return *this;
 }
 
-
-
 Contents*
 SdpContents::clone() const
 {
@@ -247,10 +245,10 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
    pb.data(mUser, anchor);
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
-   mSessionId = pb.integer();
+   mSessionId = pb.unsignedInteger();
    
    anchor = pb.skipChar(Symbols::SPACE[0]);
-   mVersion = pb.integer();
+   mVersion = pb.unsignedInteger();
 
    pb.skipChar(Symbols::SPACE[0]);
    pb.skipChar('I');
@@ -424,7 +422,7 @@ SdpContents::Session::Phone::parse(ParseBuffer& pb)
 
 SdpContents::Session::Connection::Connection(AddrType addType,
                                              const Data& address,
-                                             unsigned int ttl)
+                                             unsigned long ttl)
    : mAddrType(addType),
      mAddress(address),
      mTTL(ttl)
@@ -514,7 +512,7 @@ SdpContents::Session::Connection::parse(ParseBuffer& pb)
 }
 
 SdpContents::Session::Bandwidth::Bandwidth(const Data& modifier,
-                                           unsigned int kbPerSecond)
+                                           unsigned long kbPerSecond)
    : mModifier(modifier),
      mKbPerSecond(kbPerSecond)
 {}
@@ -566,8 +564,8 @@ SdpContents::Session::Bandwidth::parse(ParseBuffer& pb)
    skipEol(pb);
 }
 
-SdpContents::Session::Time::Time(unsigned int start,
-                                 unsigned int stop)
+SdpContents::Session::Time::Time(unsigned long start,
+                                 unsigned long stop)
    : mStart(start),
      mStop(stop)
 {}
@@ -629,8 +627,8 @@ SdpContents::Session::Time::addRepeat(const Repeat& repeat)
    mRepeats.push_back(repeat);
 }
 
-SdpContents::Session::Time::Repeat::Repeat(unsigned int interval,
-                                           unsigned int duration,
+SdpContents::Session::Time::Repeat::Repeat(unsigned long interval,
+                                           unsigned long duration,
                                            list<int> offsets)
    : mInterval(interval),
      mDuration(duration),
@@ -700,7 +698,7 @@ SdpContents::Session::Time::Repeat::parse(ParseBuffer& pb)
    skipEol(pb);
 }
 
-SdpContents::Session::Timezones::Adjustment::Adjustment(unsigned int _time,
+SdpContents::Session::Timezones::Adjustment::Adjustment(unsigned long _time,
                                                         int _offset)
    : time(_time),
      offset(_offset)
@@ -1145,8 +1143,8 @@ SdpContents::Session::getValues(const Data& key) const
 }
 
 SdpContents::Session::Medium::Medium(const Data& name,
-                                     unsigned int port,
-                                     unsigned int multicast,
+                                     unsigned long port,
+                                     unsigned long multicast,
                                      const Data& protocol)
    : mSession(0),
      mName(name),
@@ -1521,7 +1519,7 @@ SdpContents::Session::Medium::codecs()
 }
 
 Codec::Codec(const Data& name,
-             unsigned int rate,
+             unsigned long rate,
              const Data& parameters)
    : mName(name),
      mRate(rate),
