@@ -984,6 +984,39 @@ SipMessage::header(const Warning_Header& headerType) const
    return dynamic_cast<ParserContainer<Warning_Header::Type>*>(hfvs->getParserContainer())->front();
 };
 
+ParserContainer<Security_Client_MultiHeader::Type>&
+SipMessage::header(const Security_Client_MultiHeader& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   if (hfvs->getParserContainer() == 0)
+   {
+      hfvs->setParserContainer(new ParserContainer<Security_Client_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
+   }
+   return *dynamic_cast<ParserContainer<Security_Client_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Security_Server_MultiHeader::Type>&
+SipMessage::header(const Security_Server_MultiHeader& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   if (hfvs->getParserContainer() == 0)
+   {
+      hfvs->setParserContainer(new ParserContainer<Security_Server_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
+   }
+   return *dynamic_cast<ParserContainer<Security_Server_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Security_Verify_MultiHeader::Type>&
+SipMessage::header(const Security_Verify_MultiHeader& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   if (hfvs->getParserContainer() == 0)
+   {
+      hfvs->setParserContainer(new ParserContainer<Security_Verify_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
+   }
+   return *dynamic_cast<ParserContainer<Security_Verify_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
 ParserContainer<Authorization_MultiHeader::Type>&
 SipMessage::header(const Authorization_MultiHeader& headerType) const
 {
