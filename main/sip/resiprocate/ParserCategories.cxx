@@ -1458,6 +1458,8 @@ NameAddr::parse(ParseBuffer& pb)
             }
          }
       }
+      // parse parameters following Uri's embedded headers
+      parseParameters(pb);
    }
 }
 
