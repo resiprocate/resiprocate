@@ -565,20 +565,16 @@ Tuple::AnyPortCompare::operator()(const Tuple& lhs,
       return false;
    }
 #endif
-   else
-   {
-      return false;
-   }
+
+   return false;
 }
 
 bool
 Tuple::AnyPortAnyInterfaceCompare::operator()(const Tuple& lhs,
                                               const Tuple& rhs) const
 {
-   CerrLog(<< "AnyPortAnyInterfaceCompare");
    if (lhs.mTransportType < rhs.mTransportType)
    {
-      CerrLog(<< "return 1");
       return true;
    }
    else if (lhs.mTransportType > rhs.mTransportType)
@@ -587,15 +583,8 @@ Tuple::AnyPortAnyInterfaceCompare::operator()(const Tuple& lhs,
    }
 #ifdef USE_IPV6
    else if (lhs.mSockaddr.sa_family == AF_INET6 &&
-            rhs.mSockaddr.sa_family == AF_INET6)
-   {
-      CerrLog(<< "return 3");
-      return true;
-   }
-   else if (lhs.mSockaddr.sa_family == AF_INET6 &&
             rhs.mSockaddr.sa_family == AF_INET)
    {
-      CerrLog(<< "return 4");
       return true;
    }
    else if (lhs.mSockaddr.sa_family == AF_INET &&
@@ -608,8 +597,6 @@ Tuple::AnyPortAnyInterfaceCompare::operator()(const Tuple& lhs,
    {
       return false;
    }
-
-   return false;
 };
 
 /* ====================================================================
