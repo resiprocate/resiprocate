@@ -74,8 +74,11 @@ public:
       void removeBuddy( const Uri& name);
 
       // Presence management
-      void setMyPresence( const bool open, const Data& status = Data::Empty );
+      void setMyPresence( const bool open, 
+                          const Data& status = Data::Empty,
+                          const Data& user = Data::Empty );
       void addStateAgent( const Uri& uri );
+      void authorizeSubscription( const Data& user );
       
    private:
       void processRequest(SipMessage* msg);
