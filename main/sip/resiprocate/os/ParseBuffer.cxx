@@ -10,9 +10,9 @@ const char* ParseBuffer::ParamTerm = ";?";
 const char* ParseBuffer::Whitespace = " \t\r\n";
 
 void
-ParseBuffer::reset(const char* pos)
+ParseBuffer::reset(const char* pos) //should be renamed to set
 {
-   assert(pos >= mBuff && pos <= mTraversalPtr);
+   assert(pos >= mBuff && pos <= mEnd);
    mTraversalPtr = pos;
 }
 
