@@ -1315,20 +1315,25 @@ TransactionState::sendToWire(Message* msg, bool resend)
    // !jf! for responses, go back to source always (not RFC exactly)
    if (mMachine == ServerNonInvite || mMachine == ServerInvite || mMachine == ServerStale)
    {
+      Tuple destTuple(mSource);
       // const Tuple &r(state->mSymResponses?mNetSource:mSource);
+      if (sip->hasForceTarget())
+      {
+         destTuple = simpleTupleForUri(sip->getForceTarget());
+      }
 
       assert(mDnsResult == 0);
 
       // to actual source, not derived source (mNetSource) IFF sym
-      DebugLog(<<"sending to : " << mSource);
+      DebugLog(<<"sending to : " << destTuple);
 
       if (resend)
       {
-         mController.mTransportSelector.retransmit(sip, mSource);
+         mController.mTransportSelector.retransmit(sip, destTuple);
       }
       else
       {
-         mController.mTransportSelector.transmit(sip, mSource);
+         mController.mTransportSelector.transmit(sip, destTuple);
       }
    }
    else if (mDnsResult == 0) // no dns query yet
