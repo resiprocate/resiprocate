@@ -6,6 +6,7 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 
 using namespace resip;
 using namespace std;
@@ -19,21 +20,39 @@ main(int argc, char* argv[])
    Log::initialize(Log::COUT, l, argv[0]);
    
    {
-      Uri uri("sip:[5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12]");
-
-      cerr << "!! " << uri.host() << endl;
-      assert(uri.host() == "5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12");
-      cerr << "!! " << Data::from(uri) << endl;
-      assert(Data::from(uri) == "sip:[5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12]");
+      cerr << "!! " << DnsUtil::canonicalizeIpV6Address("FEDC:BA98:7654:3210:FEDC:BA98:7654:3210") << endl;
+      assert(DnsUtil::canonicalizeIpV6Address("FEDC:BA98:7654:3210:FEDC:BA98:7654:3210") ==
+             "fedc:ba98:7654:3210:fedc:ba98:7654:3210");
    }
 
    {
-      Uri uri("sip:user@[5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12]");
+      cerr << "!! " << DnsUtil::canonicalizeIpV6Address("5f1b:df00:ce3e:e200:20:800:121.12.131.12") << endl;
+      assert(DnsUtil::canonicalizeIpV6Address("5f1b:df00:ce3e:e200:20:800:121.12.131.12") ==
+             "5f1b:df00:ce3e:e200:20:800:790c:830c");
+   }
+
+   {
+      cerr << "!! " << DnsUtil::canonicalizeIpV6Address("5f1B::20:800:121.12.131.12") << endl;
+      assert(DnsUtil::canonicalizeIpV6Address("5f1B::20:800:121.12.131.12") ==
+             "5f1b::20:800:790c:830c");
+   }
+   
+   {
+      Uri uri("sip:[5f1b:df00:ce3e:e200:20:800:121.12.131.12]");
 
       cerr << "!! " << uri.host() << endl;
-      assert(uri.host() == "5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12");
+      assert(uri.host() == "5f1b:df00:ce3e:e200:20:800:121.12.131.12");
       cerr << "!! " << Data::from(uri) << endl;
-      assert(Data::from(uri) == "sip:user@[5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12]");
+      assert(Data::from(uri) == "sip:[5f1b:df00:ce3e:e200:20:800:121.12.131.12]");
+   }
+
+   {
+      Uri uri("sip:user@[5f1b:df00:ce3e:e200:20:800:121.12.131.12]");
+
+      cerr << "!! " << uri.host() << endl;
+      assert(uri.host() == "5f1b:df00:ce3e:e200:20:800:121.12.131.12");
+      cerr << "!! " << Data::from(uri) << endl;
+      assert(Data::from(uri) == "sip:user@[5f1b:df00:ce3e:e200:20:800:121.12.131.12]");
    }
    
    {
