@@ -1,6 +1,10 @@
 #if !defined(compat_hxx)
 #define compat_hxx
 
+#if defined(__INTEL_COMPILER ) && defined( __OPTIMIZE__ )
+#undef __OPTIMIZE__ // wierd intel bug with ntohs and htons macros
+#endif
+
 #ifdef WIN32
 #include <errno.h>
 #include <winsock2.h>
@@ -13,6 +17,7 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #endif
 
@@ -50,11 +55,11 @@ typedef uint32_t u_int32_t;
 #endif
 
 #ifndef WIN32
-# include <sys/types.h>
-# include <sys/socket.h> // for u_int32_t
-# include <sys/select.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
+//# include <sys/types.h>
+//# include <sys/socket.h> // for u_int32_t
+//# include <sys/select.h>
+//# include <netinet/in.h>
+//# include <arpa/inet.h>
 # include <pthread.h>
 #endif
 
