@@ -56,11 +56,14 @@ class Client : public ThreadIf
          }
          
          bool done = false;
+         bool inviteState = true;
+         
+         
          while(true)
          {
             FdSet fdset;
             mStack.buildFdSet(fdset);
-            int err = fdset.selectMiliSeconds(5000);
+            int err = fdset.selectMilliSeconds(5);
             assert (err != -1);
             mStack.process(fdset);
             
@@ -129,7 +132,7 @@ class Server : public ThreadIf
          {
             FdSet fdset;
             mStack.buildFdSet(fdset);
-            int err = fdset.selectMiliSeconds(5000);
+            int err = fdset.selectMilliSeconds(5);
             assert (err != -1);
             mStack.process(fdset);
             
