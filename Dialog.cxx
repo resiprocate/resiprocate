@@ -525,7 +525,6 @@ Dialog::dispatch(const SipMessage& msg)
          case BYE:
          case ACK:
          case CANCEL:
-		 case REFER:
          case INFO:
          case UPDATE:
             if (mInviteSession)
@@ -534,6 +533,15 @@ Dialog::dispatch(const SipMessage& msg)
             }
             // else drop on the floor
             break;       
+
+		 case REFER:
+            if (code >= 300)
+            {
+   		       InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+               handler->onReferRejected(mInviteSession->getSessionHandle(), msg);
+            }
+            // else no need for action - first Notify will cause onReferAccepted to be called
+            break;
 
          case SUBSCRIBE:
          {

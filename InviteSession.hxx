@@ -155,9 +155,6 @@ class InviteSession : public DialogUsage
          On200Update,
          OnPrack, // UAS
          On200Prack, // UAC
-         OnRefer,
-         On200Refer,
-         OnReferRejected,
          Unknown
       } Event;
 
@@ -184,7 +181,6 @@ class InviteSession : public DialogUsage
       void dispatchWaitingToOffer(const SipMessage& msg);
       void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchTerminated(const SipMessage& msg);
-      void dispatchRefer(const SipMessage& msg);      
 
       void startRetransmit200Timer();
       void start491Timer();
