@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.1 2002/09/21 19:19:00 jason Exp $";
+"$Id: Data.cxx,v 1.2 2002/09/22 01:16:35 fluffy Exp $";
 
 #include <cstdio>
 #include <ctype.h>
@@ -52,7 +52,11 @@ Data::Data( const string& str) :
 
 Data::Data( const int value) 
 {
-   assert(0);
+   // !ah! sprintf needs a punt
+   char buffer[32];
+   
+   sprintf(buffer,"%d",value);
+   *this = buffer; // !ah! ie
 }
 
 Data::Data( const Data& data ) : string(data)

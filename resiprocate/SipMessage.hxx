@@ -134,6 +134,8 @@ class SipMessage : public Message
       bool mHaveFixedDest;
       Data mFixedDest;
       
+      sockaddr_in mSource;
+      
       std::vector<char*> mBufferList;
       HeaderFieldValue* mStartLine;
       HeaderFieldValue* mBody;
