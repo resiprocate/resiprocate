@@ -1,6 +1,7 @@
-#include "BaseCreator.hxx"
-#include "DialogSet.hxx"
-#include "Dialog.hxx"
+#include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/DialogSet.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 #include "DialogUsageManager.hxx"
 #include "ClientAuthManager.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -11,6 +12,7 @@ using namespace resip;
 using namespace std;
 
 DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
+   mMergeKey(),
    mDialogs(),
    mCreator(creator),
    mId(creator->getLastRequest()),
@@ -20,6 +22,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
 }
 
 DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) : 
+   mMergeKey(request),
    mDialogs(),
    mCreator(NULL),
    mId(request),
@@ -27,10 +30,16 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
 {
    assert(request.isRequest());
    assert(request.isExternal());
+   mDum.mMergedRequests.insert(mMergeKey);
 }
 
 DialogSet::~DialogSet()
 {
+   if (mMergeKey != MergedRequestKey::Empty)
+   {
+      mDum.mMergedRequests.erase(mMergeKey);
+   }
+
    delete mCreator;
    for(list<Dialog*>::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
    {
@@ -74,22 +83,6 @@ BaseCreator*
 DialogSet::getCreator() 
 {
    return mCreator;
-}
-    
-bool
-DialogSet::mergeRequest(const SipMessage& request)
-{
-   for (std::list<Dialog*>::iterator i = mDialogs.begin(); 
-        i != mDialogs.end(); ++i)
-   {
-      if ((*i)->shouldMerge(request))
-      {
-         InfoLog (<< "Merging request for: " << request.brief());
-         return true;
-      }
-   }
-
-   return false;
 }
 
 Dialog* 
