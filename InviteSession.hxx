@@ -12,6 +12,9 @@ class SdpContents;
 class InviteSession : public BaseUsage
 {
    public:
+
+      virtual void send(SipMessage& msg);
+
       /// Called to set the offer that will be used in the next messages that
       /// sends and offer. Does not send an offer 
       virtual void setOffer(const SdpContents* offer);
@@ -22,11 +25,13 @@ class InviteSession : public BaseUsage
 
       /// Makes the dialog end. Depending on the current state, this might
       /// results in BYE or CANCEL being sent.
-      virtual SipMessage& end()=0;
+      virtual SipMessage& end();
 
-      /// Rejects an offer at the SIP level. So this can send a 487 to a
-      /// reINVITE or and UPDATE
-      virtual SipMessage& rejectOffer(int statusCode)=0;
+      virtual SipMessage& reInvite(const SdpContents* offer);
+
+      /// Rejects an offer at the SIP level. So this can send a 487 !dcm! --
+      /// should be 488? to a reinvite INVITE or an UPDATE
+      virtual SipMessage& rejectOffer(int statusCode);
       
       // If the app has called setOffer prior to targetRefresh, the reINVITE
       // will contain the proposed offer. If the peer supports UPDATE, always
@@ -41,7 +46,7 @@ class InviteSession : public BaseUsage
       const SdpContents* getRemoteSdp();
 
    public:
-      virtual void dispatch(const SipMessage& msg) = 0;
+      virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer) = 0;
 
       typedef Handle<InviteSession> InviteSessionHandle;
@@ -67,22 +72,25 @@ class InviteSession : public BaseUsage
       void incomingSdp(const SipMessage& msg, const SdpContents* sdp);
 
       // If sdp==0, the offer is being rejected
-      void sendSdp(const SdpContents* sdp);
+      void sendSdp(SdpContents* sdp);
 
       std::pair<OfferAnswerType, const SdpContents*> getOfferOrAnswer(const SipMessage& msg) const;
       
       InviteSession(DialogUsageManager& dum, Dialog& dialog);
       void copyAuthorizations(SipMessage& request);
-      void makeAck(const SipMessage& response2xx);
+      void makeAck();
 
       OfferState mOfferState;
       SdpContents* mCurrentLocalSdp;
       SdpContents* mCurrentRemoteSdp;
       SdpContents* mProposedLocalSdp;
       SdpContents* mProposedRemoteSdp;
+      SdpContents* mNextOfferOrAnswerSdp;
 
       SipMessage mLastRequest; 
+      //potentiall could be heap
       SipMessage mAck;
+      SipMessage mFinalResponse;      
    protected:
       ~InviteSession();
       friend class DialogUsageManager;
