@@ -132,10 +132,14 @@ TlsConnection::checkState()
    //DebugLog(<<"state is " << fromState(mState));
 
    if (mState == Up || mState == Broken)
+   {
       return mState;
-
+   }
+   
    int ok=0;
-
+   
+   ERR_clear_error();
+   
    if (mState != Handshaking)
    {
       if (mState == Accepting)
@@ -152,7 +156,9 @@ TlsConnection::checkState()
          int err = SSL_get_error(mSsl,ok);
          char buf[256];
          ERR_error_string_n(err,buf,sizeof(buf));
-         DebugLog( << "TLS error ok=" << ok << " err=" << err << " " << buf );
+         DebugLog( << "TLS error in " 
+                   << (char*)( (mState == Accepting) ? (char*)"accept" : (char*)"connect" )
+                   << " ok=" << ok << " err=" << err << " " << buf );
           
          switch (err)
          {
