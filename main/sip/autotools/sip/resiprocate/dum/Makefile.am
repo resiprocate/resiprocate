@@ -31,6 +31,7 @@ libresipdum_la_SOURCES = \
 	Handled.cxx \
 	HandleException.cxx \
 	HandleManager.cxx \
+	InMemoryRegistrationDatabase.cxx \
 	InviteSessionCreator.cxx \
 	InviteSession.cxx \
 	InviteSessionHandler.cxx \
