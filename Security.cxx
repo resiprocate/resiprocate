@@ -1,6 +1,8 @@
 #if defined(USE_SSL)
 
+#ifndef WIN32
 #include <unistd.h>
+#endif 
 #include <sys/types.h>
 
 #include <openssl/e_os2.h>
