@@ -80,6 +80,7 @@ libresiprocate_la_SOURCES = \
         IntegerCategory.cxx \
         Mime.cxx \
         NameAddr.cxx \
+	RAckCategory.cxx \
         RequestLine.cxx \
         StatusLine.cxx \
         StringCategory.cxx \
@@ -127,7 +128,7 @@ libresiprocate_la_SOURCES = \
 	XMLCursor.cxx \
 	X_msMsgsInvite.cxx
 
-dnl libresiprocate_a_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
+libresiprocate_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 
 resiprocate_includedir=$(includedir)/resiprocate
 resiprocate_include_HEADERS = \
