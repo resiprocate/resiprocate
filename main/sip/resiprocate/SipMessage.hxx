@@ -18,6 +18,7 @@
 #include <sipstack/Message.hxx>
 #include <sipstack/ParserCategories.hxx>
 #include <sipstack/ParserContainer.hxx>
+#include <sipstack/Resolver.hxx>
 #include <util/VException.hxx>
 
 namespace Vocal2
@@ -149,6 +150,16 @@ class SipMessage : public Message
       void setFixedDest(const Data& dest);
       void clearFixedDest();
 
+      // create a resolver, if necessary and return the first tuple
+      Resolver::Tuple resolve(); 
+
+      // the current tuple 
+      Resolver::Tuple tuple(); 
+
+      // returns the encoded buffer which was encoded by resolve()
+      // should only be called by the TransportSelector
+      Data& getEncoded();
+      
    private:
       void copyFrom(const SipMessage& message);
       HeaderFieldValueList* ensureHeader(Headers::Type type) const;
@@ -174,6 +185,9 @@ class SipMessage : public Message
       Data mTransactionId;  // !jf!
       mutable bool mRequest;
       mutable bool mResponse;
+
+      Resolver* mResolver; // created by TransportSelector
+      Data mEncoded; // to be retransmitted
 };
 
 
