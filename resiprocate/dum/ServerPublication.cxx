@@ -3,8 +3,7 @@
 using namespace resip;
 
 ServerPublication::ServerPublication(DialogUsageManager& dum,  Dialog& dialog, const SipMessage&)
-   : BaseUsage(dum, dialog),
-     mHandle(dum)
+   : BaseUsage(dum, dialog)
 {}
 
 ServerPublication::~ServerPublication()

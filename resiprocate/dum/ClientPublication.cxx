@@ -15,7 +15,6 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
                                      Dialog& dialog,
                                      SipMessage& req)
    : BaseUsage(dum, dialog),
-     mHandle(dum),
      mPublish(req)
 {}
 

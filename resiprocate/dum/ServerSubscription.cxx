@@ -7,7 +7,6 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
                                        Dialog& dialog,
                                        const SipMessage& req)
    : BaseUsage(dum, dialog),
-     mHandle(dum),
      mLastRequest(req)
 {}
 
