@@ -61,31 +61,66 @@ class InviteSession : public DialogUsage
          Undefined,  // Not used
          Connected,
          SentUpdate, // Sent an UPDATE
+         SentUpdateGlare, // got a 491
          SentReinvite, // Sent a reINVITE
+         SentReinviteGlare, // Got a 491
          ReceivedUpdate, // Received an UPDATE
          ReceivedReinvite, // Received a reINVITE
          ReceivedReinviteNoOffer, // Received a reINVITE with no offer
+         Answered,
+         WaitingToOffer,
          Terminated // Ended. waiting to delete
       } State;
 
+      typedef enum
+      {
+         NitComplete,
+         NitProceeding
+      } NitState;
+
       typedef std::pair<OfferAnswerType, const SdpContents*> OfferAnswer;
 
+      virtual ~InviteSession();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
+      // Utility methods (one for each State)
+      void dispatchConnected(const SipMessage& msg, OfferAnswer offans);
+      void dispatchSentUpdate(const SipMessage& msg, OfferAnswer offans);
+      void dispatchSentUpdateGlare(const SipMessage& msg, OfferAnswer offans);
+      void dispatchSentReinvite(const SipMessage& msg, OfferAnswer offans);
+      void dispatchSentReinviteGlare(const SipMessage& msg, OfferAnswer offans);
+      void dispatchReceivedUpdate(const SipMessage& msg, OfferAnswer offans);
+      void dispatchReceivedReinvite(const SipMessage& msg, OfferAnswer offans);
+      void dispatchReceivedReinviteNoOffer(const SipMessage& msg, OfferAnswer offans);
+      void dispatchAnswered(const SipMessage& msg, OfferAnswer offans);
+      void dispatchWaitingToOffer(const SipMessage& msg, OfferAnswer offans);
+      void dispatchTerminated(const SipMessage& msg, OfferAnswer offans);
+
       InviteSessionHandle getSessionHandle();
 
-      OfferState mOfferState;
+      State mState;
+      NitState mNitState;
+
       SdpContents mCurrentLocalSdp;
       SdpContents mCurrentRemoteSdp;
       SdpContents mProposedLocalSdp;
       SdpContents mProposedRemoteSdp;
-      SdpContents mNextOfferOrAnswerSdp;
+
+      SipMessage mLastSessionModification; // UPDATE or reINVITE
+      SipMessage mInvite200; // 200 OK for reINVITE for retransmissions
+      unsigned long mCurrentRetransmit200;
+
+      typedef std::map<int, SipMessage> CSeqToMessageMap;
+      CSeqToMessageMap mAckMap;
+      
+      typedef RefCountedDestroyer<InviteSession> Destroyer;
+      Destroyer mDestroyer;
+      friend class Destroyer::Guard;
 
 #if 0
       void handleSessionTimerResponse(const SipMessage& msg);
       void handleSessionTimerRequest(const SipMessage& request, SipMessage &response);
-
 
 
       // If sdp==0, the offer was rejected
@@ -97,21 +132,9 @@ class InviteSession : public DialogUsage
       std::pair<OfferAnswerType, const SdpContents*> getOfferOrAnswer(const SipMessage& msg) const;
 
 
-      State mState;
-
-      typedef enum
-      {
-         NitComplete,
-         NitProceeding
-      } NitState;
-
-      NitState mNitState;
-
       InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState);
       SipMessage& makeAck();
       SipMessage& makeFinalResponse(int code);
-#endif
-
 
       SipMessage mLastRequest;
       SipMessage mLastIncomingRequest;
@@ -128,24 +151,26 @@ class InviteSession : public DialogUsage
       int  mSessionInterval;
       bool mSessionRefresherUAS;
       int  mSessionTimerSeq;
-
-      virtual ~InviteSession();
-
-      typedef RefCountedDestroyer<InviteSession> Destroyer;
-      Destroyer mDestroyer;
-      friend class Destroyer::Guard;
+#endif
 
    private:
       friend class Dialog;
       friend class DialogUsageManager;
 
-      unsigned long mCurrentRetransmit200;
-
       // disabled
       InviteSession(const InviteSession&);
       InviteSession& operator=(const InviteSession&);
 
-      // Called by the DialogSet when the app has CANCELed the request
+      // Utility methods for handling particular methods
+      void dispatchOthers(const SipMessage& msg);
+      void dispatchUnhandledInvite(const SipMessage& msg);
+      void dispatchCancel(const SipMessage& msg);
+      void dispatchBye(const SipMessage& msg);
+      void dispatchInfo(const SipMessage& msg);
+
+      void startRetransmitTimer();
+
+      // Called by the DialogSet (friend) when the app has CANCELed the request 
       virtual void cancel();
 };
 
