@@ -65,7 +65,98 @@ int main(int argc, char** argv)
   cout << "Back of i " << *(i->last) << endl;
   cout << endl;
 
+  i->pop_front();
 
+  cout << "List h with six elements: " << endl;
+  cout << *h;
+  cout << "Front of h " << *(h->first) << endl;
+  cout << "Back of h " << *(h->last) << endl;
+  cout << endl;
+
+  cout << "List i with five elements: " << endl;
+  cout << *i;
+  cout << "Front of i " << *(i->first) << endl;
+  cout << "Back of i " << *(i->last) << endl;
+  cout << endl;
+
+  i->pop_front();
+
+  cout << "List h with six elements: " << endl;
+  cout << *h;
+  cout << "Front of h " << *(h->first) << endl;
+  cout << "Back of h " << *(h->last) << endl;
+  cout << endl;
+
+  cout << "List i with four elements: " << endl;
+  cout << *i;
+  cout << "Front of i " << *(i->first) << endl;
+  cout << "Back of i " << *(i->last) << endl;
+  cout << endl;
+
+  i->pop_front();
+  i->pop_front();
+  i->pop_front();
+
+  cout << "List h with six elements: " << endl;
+  cout << *h;
+  cout << "Front of h " << *(h->first) << endl;
+  cout << "Back of h " << *(h->last) << endl;
+  cout << endl;
+
+  cout << "List i with one element: " << endl;
+  cout << *i;
+  cout << "Front of i " << *(i->first) << endl;
+  cout << "Back of i " << *(i->last) << endl;
+  cout << endl;
+
+  i->pop_front();
+
+  cout << "List h with six elements: " << endl;
+  cout << *h;
+  cout << "Front of h " << *(h->first) << endl;
+  cout << "Back of h " << *(h->last) << endl;
+  cout << endl;
+
+  cout << "List i with zero element: " << endl;
+  cout << *i;
+  cout << "Front of i " << (i->first) << endl;
+  cout << "Back of i " << (i->last) << endl;
+  cout << endl;
+
+  myHeader1 = new HeaderFieldValue("jgjgjg", 6);
+  myHeader2 = new HeaderFieldValue("asasasa", 7);
+
+  i->push_front(myHeader1);
+
+  cout << "List h with six elements: " << endl;
+  cout << *h;
+  cout << "Front of h " << *(h->first) << endl;
+  cout << "Back of h " << *(h->last) << endl;
+  cout << endl;
+
+  cout << "List i with one element: " << endl;
+  cout << *i;
+  cout << "Front of i " << *(i->first) << endl;
+  cout << "Back of i " << *(i->last) << endl;
+  cout << endl;
+
+
+
+  i->push_front(myHeader2);
+
+  cout << "List h with six elements: " << endl;
+  cout << *h;
+  cout << "Front of h " << *(h->first) << endl;
+  cout << "Back of h " << *(h->last) << endl;
+  cout << endl;
+
+  cout << "List i with two elements: " << endl;
+  cout << *i;
+  cout << "Front of i " << *(i->first) << endl;
+  cout << "Back of i " << *(i->last) << endl;
+  cout << endl;
+
+  
 
 
 
