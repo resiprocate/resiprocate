@@ -9,12 +9,12 @@
 #include <arpa/inet.h>
 
 
-#include "sip2/sipstack/UdpTransport.hxx"
-#include "sip2/sipstack/Helper.hxx"
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/util/Logger.hxx"
-#include "sip2/util/DataStream.hxx"
+#include "resiprocate/sipstack/UdpTransport.hxx"
+#include "resiprocate/sipstack/Helper.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/util/DataStream.hxx"
 
 #include "Resolver.hxx"
 

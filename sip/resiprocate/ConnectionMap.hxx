@@ -4,12 +4,12 @@
 
 #include <list>
 
-#include "sip2/util/HashMap.hxx"
-#include "sip2/util/Socket.hxx"
-#include "sip2/util/Timer.hxx"
-#include "sip2/sipstack/Transport.hxx"
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/Connection.hxx"
+#include "resiprocate/util/HashMap.hxx"
+#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/util/Timer.hxx"
+#include "resiprocate/sipstack/Transport.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/Connection.hxx"
 
 namespace Vocal2
 {

@@ -1,6 +1,6 @@
-#include "sip2/util/CountStream.hxx"
+#include "resiprocate/util/CountStream.hxx"
 
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Data.hxx"
 #include "assert.h"
 
 using namespace Vocal2;

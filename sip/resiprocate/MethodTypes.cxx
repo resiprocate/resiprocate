@@ -2,9 +2,9 @@
 #include <cstdio>
 #include <cassert>
 
-#include "sip2/sipstack/MethodTypes.hxx"
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/util/Data.hxx"
+#include "resiprocate/sipstack/MethodTypes.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/util/Data.hxx"
 
 using namespace Vocal2;
 

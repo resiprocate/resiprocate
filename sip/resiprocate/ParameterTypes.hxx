@@ -1,16 +1,16 @@
 #ifndef ParameterTypes_hxx
 #define ParameterTypes_hxx
 
-#include "sip2/sipstack/BranchParameter.hxx"
-#include "sip2/sipstack/DataParameter.hxx"
-#include "sip2/sipstack/QuotedDataParameter.hxx"
-#include "sip2/sipstack/QopParameter.hxx"
-#include "sip2/sipstack/IntegerParameter.hxx"
-#include "sip2/sipstack/FloatParameter.hxx"
-#include "sip2/sipstack/ExistsParameter.hxx"
-#include "sip2/sipstack/ParameterTypeEnums.hxx"
-#include "sip2/sipstack/RportParameter.hxx"
-#include "sip2/sipstack/Symbols.hxx"
+#include "resiprocate/sipstack/BranchParameter.hxx"
+#include "resiprocate/sipstack/DataParameter.hxx"
+#include "resiprocate/sipstack/QuotedDataParameter.hxx"
+#include "resiprocate/sipstack/QopParameter.hxx"
+#include "resiprocate/sipstack/IntegerParameter.hxx"
+#include "resiprocate/sipstack/FloatParameter.hxx"
+#include "resiprocate/sipstack/ExistsParameter.hxx"
+#include "resiprocate/sipstack/ParameterTypeEnums.hxx"
+#include "resiprocate/sipstack/RportParameter.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)      \
    class _enum##_Param : public ParamBase                       \

@@ -1,11 +1,11 @@
 #include <cassert>
-#include "sip2/sipstack/BranchParameter.hxx"
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/util/ParseBuffer.hxx"
-#include "sip2/util/Random.hxx"
-#include "sip2/sipstack/ParseException.hxx"
+#include "resiprocate/sipstack/BranchParameter.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/util/Random.hxx"
+#include "resiprocate/sipstack/ParseException.hxx"
 
-#include "sip2/util/Logger.hxx"
+#include "resiprocate/util/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;

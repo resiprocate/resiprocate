@@ -1,7 +1,7 @@
 #ifndef ApplicationSip_hxx
 #define ApplicationSip_hxx
 
-#include "sip2/sipstack/SipFrag.hxx"
+#include "resiprocate/sipstack/SipFrag.hxx"
 
 namespace Vocal2
 {

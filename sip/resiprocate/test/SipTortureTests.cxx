@@ -2,12 +2,12 @@
 #include <memory>
 
 #include "TestSupport.hxx"
-#include "sip2/sipstack/Contents.hxx"
-#include "sip2/sipstack/SdpContents.hxx"
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/UnknownHeaderType.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/util/Logger.hxx"
+#include "resiprocate/sipstack/Contents.hxx"
+#include "resiprocate/sipstack/SdpContents.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/UnknownHeaderType.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
+#include "resiprocate/util/Logger.hxx"
 #include "tassert.h"
 
 using namespace Vocal2;

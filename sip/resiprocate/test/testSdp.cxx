@@ -1,7 +1,7 @@
-#include "sip2/util/Logger.hxx"
-#include "sip2/util/DataStream.hxx"
-#include "sip2/sipstack/SdpContents.hxx"
-#include "sip2/sipstack/HeaderFieldValue.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/sipstack/SdpContents.hxx"
+#include "resiprocate/sipstack/HeaderFieldValue.hxx"
 
 #include <iostream>
 #include "TestSupport.hxx"

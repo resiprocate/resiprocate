@@ -1,6 +1,6 @@
-#include "sip2/sipstack/XMLCursor.hxx"
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/util/Logger.hxx"
+#include "resiprocate/sipstack/XMLCursor.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/util/Logger.hxx"
 
 #ifndef WIN32 // !cj! TODO FIX 
 

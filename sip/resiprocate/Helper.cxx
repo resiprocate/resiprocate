@@ -1,14 +1,14 @@
 #include <string.h>
 #include <iomanip>
 
-#include "sip2/sipstack/Helper.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/Preparse.hxx"
-#include "sip2/util/Logger.hxx"
-#include "sip2/util/Random.hxx"
-#include "sip2/util/Timer.hxx"
-#include "sip2/util/DataStream.hxx"
-#include "sip2/util/MD5Stream.hxx"
+#include "resiprocate/sipstack/Helper.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
+#include "resiprocate/sipstack/Preparse.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/util/Random.hxx"
+#include "resiprocate/util/Timer.hxx"
+#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/util/MD5Stream.hxx"
 
 using namespace Vocal2;
 
