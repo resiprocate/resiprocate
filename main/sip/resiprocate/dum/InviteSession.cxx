@@ -166,6 +166,9 @@ InviteSession::end()
          break;
       case Connected:
          mDialog.makeRequest(mLastRequest, BYE);
+         //new transaction
+         assert(mLastRequest.header(h_Vias).size() == 1);
+         mLastRequest.header(h_Vias).front().param(p_branch).reset();
          mState = Terminated;
          return mLastRequest;
          break;
@@ -404,6 +407,9 @@ InviteSession::ackConnection()
 {
    //if not a reinvite, and a pending offer exists, throw
    makeAck();
+   //new transaction
+   assert(mAck.header(h_Vias).size() == 1);
+   mAck.header(h_Vias).front().param(p_branch).reset();
    return mAck;
 }
 
