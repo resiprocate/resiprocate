@@ -2,7 +2,12 @@
 #define STRINGDATA_H_
 
 static const char* const DataHeaderVersion =
-"$Id: Data.hxx,v 1.6 2002/10/02 23:08:16 jason Exp $";
+"$Id: Data.hxx,v 1.7 2002/10/03 03:56:15 fluffy Exp $";
+
+#ifdef WIN32
+#define strcasecmp(a,b) strcmp(a,b)
+#endif
+
 
 //Authors: Sunitha Kumar, Cullen Jennings
 
@@ -133,7 +138,7 @@ class Data : public std::string
 // do a case-insensitive match
 inline bool isEqualNoCase(const Data& left, const Data& right)
 {
-   return strcasecmp(left.c_str(), right.c_str());
+   return (strcasecmp(left.c_str(), right.c_str()) == 0);
 }
  
 }
