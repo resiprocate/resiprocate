@@ -38,7 +38,6 @@ class SipStack
 
       TransportDirectory mTransportDirector;
 
-      Fifo<SipMessage> mRxFifo;
       
       Fifo<SipMessage> mTUFifo;
 
