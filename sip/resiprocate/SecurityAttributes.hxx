@@ -1,10 +1,17 @@
 #ifndef RESIP_SecurityAttributes_hxx
 #define RESIP_SecurityAttributes_hxx
 
-#include "resiprocate/Security.hxx"
-
 namespace resip
 {
+
+enum SignatureStatus
+{
+   SignatureNone, // there is no signature
+   SignatureIsBad,
+   SignatureTrusted, // It is signed with trusted signature
+   SignatureCATrusted, // signature is new and is signed by a root we trust
+   SignatureNotTrusted // signature is new and is not signed by a CA we
+};
 
 class SecurityAttributes
 {
@@ -14,7 +21,7 @@ class SecurityAttributes
 
       typedef enum {From, FailedIdentity, Identity} IdentityStrength;
 
-      Security::SignatureStatus getSignatureStatus() const
+      SignatureStatus getSignatureStatus() const
       {
          return mSigStatus;
       }
@@ -28,7 +35,7 @@ class SecurityAttributes
          mIsEncrypted = true;
       }
       
-      void setSignatureStatus(Security::SignatureStatus status)
+      void setSignatureStatus(SignatureStatus status)
       {
          mSigStatus = status;
       }
@@ -50,7 +57,7 @@ class SecurityAttributes
 
    private:
       bool mIsEncrypted;
-      Security::SignatureStatus mSigStatus;
+      SignatureStatus mSigStatus;
       Data mSigner;
       Data mIdentity;
       IdentityStrength mStrength;
