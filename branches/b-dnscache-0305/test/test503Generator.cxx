@@ -2,19 +2,51 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "UnknownParameterType.hxx"
-#include "ParameterTypeEnums.hxx"
+#include <sys/types.h>
+#include <iostream>
+#include <memory>
 
-#include <cassert>
-#include <string.h>
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Inserter.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/Uri.hxx"
 
 using namespace resip;
+using namespace std;
 
-UnknownParameterType::UnknownParameterType(const Data& name)
-   : mName(name)
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+
+
+int
+main(int argc, char* argv[])
 {
-   assert(!mName.empty());
-   assert(ParameterTypes::getType(mName.data(), mName.size()) == ParameterTypes::UNKNOWN);
+   SipStack stack;
+
+   Log::initialize(Log::Cout, Log::Info ,"test503Generator");   
+   
+   stack.addTransport(UDP, 5060);
+   stack.addTransport(TCP, 5060);
+
+   while(true)
+   {
+      FdSet fdset; 
+      stack.buildFdSet(fdset);
+      fdset.selectMilliSeconds(1000); 
+      stack.process(fdset);
+      SipMessage* msg = stack.receive();
+      if (msg && msg->isRequest())
+      {
+         SipMessage* resp = Helper::makeResponse(*msg, 503);
+         stack.send(*resp);
+         InfoLog( << "Generated 503 to: " << msg->brief());
+         delete resp;
+      }
+      delete msg;
+   }
+
 }
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
