@@ -1215,14 +1215,7 @@ TransactionState::sendToWire(Message* msg)
    }
    else
    {
-	   if ( mDnsListCurrent != mDnsListEnd )
-	   {
-			ErrLog("Weird error - don't have any DNS information");
-	   }
-	   else
-	   {
-		   mStack.mTransportSelector.send(sip, *mDnsListCurrent);
-	   }
+		   mStack.mTransportSelector.send(sip, *mDnsListCurrent);	  
    }
 }
 
