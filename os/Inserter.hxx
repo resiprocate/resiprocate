@@ -1,5 +1,3 @@
-// Copyright 2002 Cathay Networks, Inc. 
-
 #ifndef Inserter_hxx
 #define Inserter_hxx
 
