@@ -26,13 +26,13 @@ const int Helper::tagSize = 4;
 unsigned long
 Helper::aBitSmallerThan(unsigned long secs)
 {
-   return resipMax(32, resipMin(value - 32, 9*value/10));
+   return resipMax(32, resipMin(secs - 32, 9*secs/10));
 }
 
 time_t
 Helper::aBitSmallerThan(time_t secs)
 {
-   return resipMax(32, resipMin(value - 32, 9*value/10));
+   return resipMax(32, resipMin(secs - 32, 9*secs/10));
 }
 
 
