@@ -53,7 +53,10 @@ class Profile
       
       const NameAddr& getDefaultAor() const;
 
-      void setOutboundProxy( const Data& uri );
+      void setOutboundProxy( const Uri& uri );
+      const NameAddr& getOutboundProxy() const;
+      bool hasOutboundProxy() const;
+      
       void disableGruu();
 
       /// The following functions deal with getting digest credentals 
@@ -81,6 +84,9 @@ class Profile
    private:
       NameAddr mAor;
       int mDefaultRegistrationExpires;
+
+      bool mHasOutboundProxy;
+      NameAddr mOutboundProxy;
       
       std::set<Data> mSupportedSchemes;
       std::set<MethodTypes> mSupportedMethodTypes;
