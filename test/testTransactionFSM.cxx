@@ -155,6 +155,10 @@ processTimeouts(int arg)
 		    ++i;
 		}
 	    }
+	    else
+	    {
+		++i;
+	    }
 	}
 	if (newMessage)
 	{
