@@ -2,7 +2,7 @@
 #define RESIP_DATA_HXX 
 
 static const char* const resipDataHeaderVersion =
-   "$Id: Data.hxx,v 1.68 2003/08/13 20:34:39 davidb Exp $";
+   "$Id: Data.hxx,v 1.69 2003/10/03 02:35:50 davidb Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -127,24 +127,25 @@ class Data
       static const int npos;
 
    private:
-      char* initializeHack();
-      
       Data(const char* buffer, int length, bool); // deprecated: use // Data(ShareEnum ...)
 
       // copy if not mine
-      void own() const
-      {
-         if (!mMine) 
-         {
-            const_cast<Data*>(this)->resize(mSize, true);
-         }
-      }
+      void own() const;
       void resize(size_type newSize, bool copy);
+
+      // Trade off between in-object and heap allocation
+      // Larger LocalAlloc makes for larger objects that have Data members but
+      // bulk allocation/deallocation of Data  members.
+
+      enum {LocalAlloc = 128};
+      char mPreBuffer[LocalAlloc+1];
+
       size_type mSize;
       char* mBuf;
       size_type mCapacity;
       bool mMine;
       // The invariant for a Data with !mMine is mSize == mCapacity
+
 
       friend bool operator==(const char* s, const Data& d);
       friend bool operator!=(const char* s, const Data& d);
