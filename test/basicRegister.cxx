@@ -55,9 +55,8 @@ class RegistrationServer : public ServerRegistrationHandler
 int 
 main (int argc, char** argv)
 {
-
-    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
-
+   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   
    SipStack clientStack;
    clientStack.addTransport(UDP, 5060);
 
@@ -71,27 +70,15 @@ main (int argc, char** argv)
    clientDum.getProfile()->setDefaultRegistrationTime(70);
    SipMessage & regMessage = clientDum.makeRegistration(NameAddr("sip:502@jasomi.com"));
    cerr << regMessage << "Generated register: " << endl << regMessage << endl;
-
-#if 0
-   while ( (!client.done)
+   clientDum.send( regMessage );
+   
+   while ( 1 )
    {
      FdSet fdset;
-     // Should these be buildFdSet on the DUM?
-     stackA.buildFdSet(fdset);
-     stackB.buildFdSet(fdset);
+
+     clientStack.buildFdSet(fdset);
      int err = fdset.selectMilliSeconds(100);
      assert ( err != -1 );
-     stackA.process(fdset);
-     stackB.process(fdset);
-
-     if (bHangupAt!=0)
-     {
-       if (time(NULL)>bHangUpAt)
-       {
-         handlerB.hangup();
-       }
-     }
+     clientStack.process(fdset);
    }   
-#endif
-
 }
