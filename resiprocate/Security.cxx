@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+#include <openssl/evp.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/pem.h>
@@ -36,7 +37,10 @@ Security::Security()
    {
       initDone = true;
       
-      OpenSSL_add_all_algorithms();
+      //OpenSSL_add_all_algorithms();
+      OpenSSL_add_all_ciphers();
+      OpenSSL_add_all_digests();
+
       ERR_load_crypto_strings();
 
       Random::initialize();
@@ -398,8 +402,9 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    assert( cert );
    sk_X509_push(certs, cert);
    
-   EVP_CIPHER* cipher = EVP_des_ede3_cbc();
-   //EVP_CIPHER* cipher = EVP_enc_null();
+   const EVP_CIPHER* cipher = EVP_des_ede3_cbc();
+   //const EVP_CIPHER* cipher = EVP_aes_128_cbc();
+   //const EVP_CIPHER* cipher = EVP_enc_null();
    assert( cipher );
    
    PKCS7* pkcs7 = PKCS7_encrypt( certs, in, cipher, flags);
