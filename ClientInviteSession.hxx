@@ -25,10 +25,6 @@ class ClientInviteSession : public InviteSession
       virtual void provideAnswer (const SdpContents& answer);
       virtual void end ();
       virtual void reject (int statusCode);
-      virtual void targetRefresh (const NameAddr& localUri);
-      virtual void refer (const NameAddr& referTo);
-      virtual void refer (const NameAddr& referTo, InviteSessionHandle sessionToReplace);
-      virtual void info (const Contents& contents);
 
       const SdpContents& getEarlyMedia() const;
       

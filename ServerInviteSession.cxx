@@ -496,6 +496,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   storePeerCapabilities(msg);
 
    switch (toEvent(msg, sdp.get()))
    {
@@ -762,59 +763,6 @@ ServerInviteSession::startRetransmit1xxTimer()
 }
 
 void
-ServerInviteSession::targetRefresh (const NameAddr& localUri)
-{
-   WarningLog (<< "Can't refresh before Connected");
-   assert(0);
-   throw UsageUseException("Can't refresh before Connected", __FILE__, __LINE__);
-}
-
-void 
-ServerInviteSession::refer(const NameAddr& referTo)
-{
-   if (isConnected())
-   {
-      InviteSession::refer(referTo);
-   }
-   else
-   {
-      WarningLog (<< "Can't refer before Connected");
-      assert(0);
-      throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
-   }
-}
-
-void 
-ServerInviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace)
-{
-   if (isConnected())
-   {
-      InviteSession::refer(referTo, sessionToReplace);
-   }
-   else
-   {
-      WarningLog (<< "Can't refer before Connected");
-      assert(0);
-      throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
-   }
-}
-
-void 
-ServerInviteSession::info(const Contents& contents)
-{
-   if (isConnected())
-   {
-      InviteSession::info(contents);
-   }
-   else
-   {
-      WarningLog (<< "Can't send INFO before Connected");
-      assert(0);
-      throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
-   }
-}
-
-void
 ServerInviteSession::sendProvisional(int code)
 {
    mDialog.makeResponse(m1xx, mFirstRequest, code);
@@ -843,7 +791,7 @@ ServerInviteSession::sendAccept(int code, SdpContents* sdp)
 void
 ServerInviteSession::sendUpdate(const SdpContents& sdp)
 {
-   if (peerSupportsUpdateMethod())
+   if (updateMethodSupported())
    {
       SipMessage update;
       mDialog.makeRequest(update, UPDATE);

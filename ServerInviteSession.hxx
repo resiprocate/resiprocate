@@ -39,14 +39,7 @@ class ServerInviteSession: public InviteSession
       //accept a re-invite, etc.  Always 200?
       //this is only applicable to the UAS
       virtual void accept(int statusCode=200);
-      
-      virtual void targetRefresh(const NameAddr& localUri);
-
-      // Following methods are for sending requests within a dialog
-      virtual void refer(const NameAddr& referTo);
-      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace); 
-      virtual void info(const Contents& contents);
-      
+            
    private:
       friend class Dialog;
 
