@@ -11,6 +11,15 @@
 
 using namespace resip;
 
+unsigned long
+InviteSession::T1 = 500;
+
+unsigned long
+InviteSession::T2 = 8 * T1;
+
+unsigned long
+InviteSession::TimerH = 64 * T1;
+
 InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState)
    : BaseUsage(dum, dialog),
      mState(initialState),
@@ -19,7 +28,9 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State init
      mCurrentRemoteSdp(0),
      mProposedLocalSdp(0),
      mProposedRemoteSdp(0),
-     mNextOfferOrAnswerSdp(0)
+     mNextOfferOrAnswerSdp(0),
+     mCurrentRetransmit200(0)      
+
 {
    assert(mDum.mInviteSessionHandler);
 }
@@ -70,6 +81,22 @@ InviteSessionHandle
 InviteSession::getSessionHandle()
 {
    return InviteSessionHandle(mDum, getBaseHandle().getId());
+}
+
+
+void
+InviteSession::dispatch(const DumTimeout& timeout)
+{
+   if (timeout.type() == DumTimeout::Retransmit200 && mState == Accepting)
+   {
+      mDum.addTimer(DumTimeout::Retransmit200, resipMin(T2, mCurrentRetransmit200*2), getBaseHandle(),  0);
+   }
+   else if (timeout.type() == DumTimeout::WaitForAck && mState != Connected)
+   {
+      mDialog.makeResponse(mLastResponse, mLastRequest, 408);
+      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), mLastResponse);      
+      delete this;      
+   }
 }
 
 void
@@ -269,7 +296,11 @@ InviteSession::send(SipMessage& msg)
       else if (code >= 200 && code < 300 && msg.header(h_CSeq).method() == INVITE)
       {
          assert(&msg == &mFinalResponse);
-         //!dcm! -- start timer...this should be mFinalResponse...maybe assign here in
+         mCurrentRetransmit200 = T1;         
+         mDum.addTimer(DumTimeout::Retransmit200, mCurrentRetransmit200, getBaseHandle(),  0);
+         mDum.addTimer(DumTimeout::WaitForAck, TimerH, getBaseHandle(),  0);
+            
+         //!dcm! -- this should be mFinalResponse...maybe assign here in
          //case the user wants to be very strange
          if (mNextOfferOrAnswerSdp)
          {
