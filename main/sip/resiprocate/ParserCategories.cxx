@@ -16,6 +16,7 @@
 #include "resiprocate/UnknownParameter.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "ParseUtil.hxx"
+#include "ParameterTypes.hxx"
 
 using namespace resip;
 using namespace std;
@@ -52,6 +53,21 @@ Data resip::MonthData[] =
 //====================
 // Token
 //===================
+Token::Token() 
+   : ParserCategory(), 
+     mValue() 
+{}
+  
+Token::Token(const Data& d) 
+   : ParserCategory(),
+     mValue(d) 
+{}
+
+Token::Token(HeaderFieldValue* hfv, Headers::Type type) 
+   : ParserCategory(hfv, type), 
+     mValue() 
+{}
+
 Token::Token(const Token& rhs)
    : ParserCategory(rhs),
      mValue(rhs.mValue)
@@ -78,6 +94,13 @@ bool
 Token::operator<(const Token& rhs) const
 {
    return (value() < rhs.value());
+}
+
+Data& 
+Token::value() const 
+{
+   checkParsed(); 
+   return mValue;
 }
 
 void
@@ -107,10 +130,22 @@ Token::encodeParsed(std::ostream& str) const
 //====================
 // MIME
 //====================
+Mime::Mime()
+   : ParserCategory(), 
+     mType(),
+     mSubType() 
+{}
+  
 Mime::Mime(const Data& type, const Data& subType) 
    : ParserCategory(), 
      mType(type), 
      mSubType(subType) 
+{}
+
+Mime::Mime(HeaderFieldValue* hfv, Headers::Type type)
+   : ParserCategory(hfv, type),
+     mType(), 
+     mSubType()
 {}
 
 Mime::Mime(const Mime& rhs)
@@ -152,6 +187,19 @@ Mime::operator==(const Mime& rhs) const
            isEqualNoCase(subType(), rhs.subType()));
 }
 
+Data& 
+Mime::type() const 
+{
+   checkParsed(); 
+   return mType;
+}
+
+Data& Mime::subType() const 
+{
+   checkParsed(); 
+   return mSubType;
+}
+
 void
 Mime::parse(ParseBuffer& pb)
 {
@@ -188,6 +236,14 @@ Mime::encodeParsed(std::ostream& str) const
 //====================
 // Auth:
 //====================
+Auth::Auth() : 
+   ParserCategory() 
+{}
+
+Auth::Auth(HeaderFieldValue* hfv, Headers::Type type) 
+   : ParserCategory(hfv, type) 
+{}
+
 Auth::Auth(const Auth& rhs)
    : ParserCategory(rhs)
 {
@@ -206,6 +262,20 @@ Auth::operator=(const Auth& rhs)
       scheme() = rhs.scheme();
    }
    return *this;
+}
+
+Data& 
+Auth::scheme()
+{
+   checkParsed(); 
+   return mScheme;
+}
+
+const Data& 
+Auth::scheme() const 
+{
+   checkParsed(); 
+   return mScheme;
 }
 
 void
@@ -310,7 +380,7 @@ Auth::encodeAuthParameters(ostream& str) const
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
 _enum##_Param::DType&                                                                                           \
-Auth::param(const _enum##_Param& paramType) const                                                               \
+Auth::param(const _enum##_Param& paramType)                                                                     \
 {                                                                                                               \
    checkParsed();                                                                                               \
    _enum##_Param::Type* p = static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));      \
@@ -318,6 +388,19 @@ Auth::param(const _enum##_Param& paramType) const                               
    {                                                                                                            \
       p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
       mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
+}                                                                                                               \
+const _enum##_Param::DType&                                                                                     \
+Auth::param(const _enum##_Param& paramType) const                                                               \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p = static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));      \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      InfoLog(<< "Missing parameter " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);               \
+      DebugLog(<< *this);                                                                                       \
+      throw Exception("Missing parameter", __FILE__, __LINE__);                                                 \
    }                                                                                                            \
    return p->value();                                                                                           \
 }
@@ -351,11 +434,8 @@ Auth::param(const Qop_Options_Param& paramType) const
 //====================
 // CSeqCategory:
 //====================
-CSeqCategory::CSeqCategory(const CSeqCategory& rhs)
-   : ParserCategory(rhs),
-     mMethod(rhs.mMethod),
-     mUnknownMethodName(rhs.mUnknownMethodName),
-     mSequence(rhs.mSequence)
+CSeqCategory::CSeqCategory(HeaderFieldValue* hfv, Headers::Type type)
+   : ParserCategory(hfv, type), mMethod(UNKNOWN), mSequence(-1) 
 {}
 
 CSeqCategory::CSeqCategory() 
@@ -363,6 +443,13 @@ CSeqCategory::CSeqCategory()
      mMethod(UNKNOWN), 
      mUnknownMethodName(MethodNames[UNKNOWN]),
      mSequence(-1) 
+{}
+
+CSeqCategory::CSeqCategory(const CSeqCategory& rhs)
+   : ParserCategory(rhs),
+     mMethod(rhs.mMethod),
+     mUnknownMethodName(rhs.mUnknownMethodName),
+     mSequence(rhs.mSequence)
 {}
 
 CSeqCategory&
@@ -390,6 +477,47 @@ ParserCategory*
 CSeqCategory::clone() const
 {
    return new CSeqCategory(*this);
+}
+
+MethodTypes& 
+CSeqCategory::method()
+{
+   checkParsed(); 
+   return mMethod;
+}
+
+MethodTypes 
+CSeqCategory::method() const 
+{
+   checkParsed(); return mMethod;
+}
+
+Data&
+CSeqCategory::unknownMethodName()
+{
+   checkParsed(); 
+   return mUnknownMethodName;
+}
+
+const Data& 
+CSeqCategory::unknownMethodName() const 
+{
+   checkParsed(); 
+   return mUnknownMethodName;
+}
+
+int& 
+CSeqCategory::sequence()
+{
+   checkParsed(); 
+   return mSequence;
+}
+
+int 
+CSeqCategory::sequence() const
+{
+   checkParsed(); 
+   return mSequence;
 }
 
 // examples to test: 
@@ -480,6 +608,17 @@ DateCategory::DateCategory()
              << " year=" << mYear
              << " " << mHour << ":" << mMin << ":" << mSec);
 }
+
+DateCategory::DateCategory(HeaderFieldValue* hfv, Headers::Type type)
+   : ParserCategory(hfv, type),
+     mDayOfWeek(Sun),
+     mDayOfMonth(),
+     mMonth(Jan),
+     mYear(0),
+     mHour(0),
+     mMin(0),
+     mSec(0)
+{}
 
 DateCategory::DateCategory(const DateCategory& rhs)
 {
@@ -753,6 +892,97 @@ DateCategory::MonthFromData(const Data& mon)
    return Jan;
 }
 
+const DayOfWeek& 
+DateCategory::dayOfWeek() const 
+{
+   checkParsed();
+   return mDayOfWeek;
+}
+
+int&
+DateCategory::dayOfMonth() 
+{
+   checkParsed();
+   return mDayOfMonth;
+}
+
+int 
+DateCategory::dayOfMonth() const 
+{
+   checkParsed();
+   return mDayOfMonth;
+}
+
+Month& 
+DateCategory::month() 
+{
+   checkParsed();
+   return mMonth;
+}
+
+Month
+DateCategory::month() const
+{
+   checkParsed();
+   return mMonth;
+}
+
+int& 
+DateCategory::year() 
+{
+   checkParsed();
+   return mYear;
+}
+
+int
+DateCategory::year() const 
+{
+   checkParsed();
+   return mYear;
+}
+
+int&
+DateCategory::hour() 
+{
+   checkParsed();
+   return mHour;
+}
+
+int
+DateCategory::hour() const 
+{
+   checkParsed();
+   return mHour;
+}
+
+int&
+DateCategory::minute() 
+{
+   checkParsed();
+   return mMin;
+}
+
+int
+DateCategory::minute() const 
+{
+   checkParsed();
+   return mMin;
+}
+
+int&
+DateCategory::second() 
+{
+   checkParsed();
+   return mSec;
+}
+
+int
+DateCategory::second() const 
+{
+   checkParsed();
+   return mSec;
+}
+
 void
 DateCategory::parse(ParseBuffer& pb)
 {
@@ -838,6 +1068,14 @@ DateCategory::encodeParsed(std::ostream& str) const
 //====================
 // WarningCategory
 //====================
+WarningCategory::WarningCategory()
+   : ParserCategory() 
+{}
+
+WarningCategory::WarningCategory(HeaderFieldValue* hfv, Headers::Type type)
+   : ParserCategory(hfv, type) 
+{}
+
 WarningCategory::WarningCategory(const WarningCategory& rhs)
    : ParserCategory(rhs),
      mCode(rhs.mCode),
@@ -889,6 +1127,13 @@ WarningCategory::code()
    return mCode;
 }
 
+int
+WarningCategory::code() const
+{
+   checkParsed();
+   return mCode;
+}
+
 Data&
 WarningCategory::hostname()
 {
@@ -896,8 +1141,22 @@ WarningCategory::hostname()
    return mHostname;
 }
 
+const Data&
+WarningCategory::hostname() const
+{
+   checkParsed();
+   return mHostname;
+}
+
 Data&
 WarningCategory::text()
+{
+   checkParsed();
+   return mText;
+}
+
+const Data&
+WarningCategory::text() const
 {
    checkParsed();
    return mText;
@@ -916,6 +1175,18 @@ WarningCategory::encodeParsed(std::ostream& str) const
 //====================
 // Integer:
 //====================
+IntegerCategory::IntegerCategory()
+   : ParserCategory(), 
+     mValue(0), 
+     mComment() 
+{}
+
+IntegerCategory::IntegerCategory(HeaderFieldValue* hfv, Headers::Type type)
+   : ParserCategory(hfv, type), 
+     mValue(0), 
+     mComment() 
+{}
+
 IntegerCategory::IntegerCategory(const IntegerCategory& rhs)
    : ParserCategory(rhs),
      mValue(rhs.mValue),
@@ -937,6 +1208,19 @@ IntegerCategory::operator=(const IntegerCategory& rhs)
 ParserCategory* IntegerCategory::clone() const
 {
    return new IntegerCategory(*this);
+}
+
+int& IntegerCategory::value() const 
+{
+   checkParsed(); 
+   return mValue;
+}
+
+Data& 
+IntegerCategory::comment() const 
+{
+   checkParsed(); 
+   return mComment;
 }
 
 void
@@ -978,6 +1262,15 @@ IntegerCategory::encodeParsed(std::ostream& str) const
 //====================
 // Expires:
 //====================
+ExpiresCategory:: ExpiresCategory()
+   : ParserCategory(), 
+     mValue(0) 
+{}
+
+ExpiresCategory::ExpiresCategory(HeaderFieldValue* hfv, Headers::Type type)
+   : ParserCategory(hfv, type), mValue(0)
+{}
+
 ExpiresCategory::ExpiresCategory(const ExpiresCategory& rhs)
    : ParserCategory(rhs),
      mValue(rhs.mValue)
@@ -997,6 +1290,21 @@ ExpiresCategory::operator=(const ExpiresCategory& rhs)
 ParserCategory* ExpiresCategory::clone() const
 {
    return new ExpiresCategory(*this);
+}
+
+
+int& 
+ExpiresCategory::value() 
+{
+   checkParsed(); 
+   return mValue;
+}
+
+int
+ExpiresCategory::value() const 
+{
+   checkParsed(); 
+   return mValue;
 }
 
 void
@@ -1027,9 +1335,19 @@ ExpiresCategory::encodeParsed(std::ostream& str) const
 //====================
 // StringCategory
 //====================
+StringCategory::StringCategory() : 
+   ParserCategory(), 
+   mValue() 
+{}
+
 StringCategory::StringCategory(const Data& value)
    : ParserCategory(),
      mValue(value)
+{}
+
+StringCategory::StringCategory(HeaderFieldValue* hfv, Headers::Type type)
+   : ParserCategory(hfv, type),
+     mValue()
 {}
 
 StringCategory::StringCategory(const StringCategory& rhs)
@@ -1082,6 +1400,10 @@ GenericURI::GenericURI(const GenericURI& rhs)
    : ParserCategory(rhs)
 {}
 
+GenericURI::GenericURI(HeaderFieldValue* hfv, Headers::Type type) 
+   : ParserCategory(hfv, type) 
+{}
+
 GenericURI&
 GenericURI::operator=(const GenericURI& rhs)
 {
@@ -1093,6 +1415,19 @@ GenericURI::operator=(const GenericURI& rhs)
    return *this;
 }
 
+Data& 
+GenericURI::uri()
+{
+   checkParsed();
+   return mUri;
+}
+
+const Data& 
+GenericURI::uri() const
+{
+   checkParsed();
+   return mUri;
+}
 
 void
 GenericURI::parse(ParseBuffer& pb)
@@ -1107,13 +1442,6 @@ GenericURI::parse(ParseBuffer& pb)
    pb.skipWhitespace();
 
    parseParameters(pb);
-}
-
-
-Data& GenericURI::uri()
-{
-   checkParsed();
-   return mUri;
 }
 
 ParserCategory* 
@@ -1137,12 +1465,11 @@ GenericURI::encodeParsed(std::ostream& str) const
 //====================
 // Via:
 //====================
-
-Via::Via()  
+Via::Via() 
    : ParserCategory(), 
      mProtocolName(Symbols::ProtocolName),
      mProtocolVersion(Symbols::ProtocolVersion),
-     mTransport(Symbols::Undefined),
+     mTransport(),
      mSentHost(),
      mSentPort(0) 
 {
@@ -1150,6 +1477,15 @@ Via::Via()
    this->param(p_branch);
    this->param(p_rport); // add the rport parameter by default as per rfc 3581
 }
+
+Via::Via(HeaderFieldValue* hfv, Headers::Type type) 
+   : ParserCategory(hfv, type),
+     mProtocolName(Symbols::ProtocolName),
+     mProtocolVersion(Symbols::ProtocolVersion),
+     mTransport(Symbols::UDP), // !jf! 
+     mSentHost(),
+     mSentPort(-1) 
+{}
 
 Via::Via(const Via& rhs)
    : ParserCategory(rhs),
@@ -1185,10 +1521,81 @@ Via::operator=(const Via& rhs)
    }
    return *this;
 }
+
 ParserCategory *
 Via::clone() const
 {
    return new Via(*this);
+}
+
+Data& 
+Via::protocolName()
+{
+   checkParsed(); 
+   return mProtocolName;
+}
+
+const Data& 
+Via::protocolName() const 
+{
+   checkParsed(); 
+   return mProtocolName;
+}
+
+Data& 
+Via::protocolVersion()
+{
+   checkParsed(); 
+   return mProtocolVersion;
+}
+
+const Data& 
+Via::protocolVersion() const 
+{
+   checkParsed(); 
+   return mProtocolVersion;
+}
+
+Data& Via::
+transport()
+{
+   checkParsed(); 
+   return mTransport;
+}
+
+const Data& Via::
+transport() const 
+{
+   checkParsed(); 
+   return mTransport;
+}
+
+Data& 
+Via::sentHost()
+{
+   checkParsed(); 
+   return mSentHost;
+}
+
+const Data&
+ Via::sentHost() const
+{
+   checkParsed(); 
+   return mSentHost;
+}
+
+int& 
+Via::sentPort()
+{
+   checkParsed(); 
+   return mSentPort;
+}
+
+int
+Via::sentPort() const 
+{
+   checkParsed(); 
+   return mSentPort;
 }
 
 void
@@ -1214,6 +1621,7 @@ Via::parse(ParseBuffer& pb)
    pb.data(mTransport, startMark);
    
    startMark = pb.skipWhitespace();
+   pb.assertNotEof();
    if (*startMark == '[')
    {
       startMark = pb.skipChar();
@@ -1269,6 +1677,16 @@ Via::encodeParsed(ostream& str) const
 //====================
 // CallID:
 //====================
+CallID::CallID()
+   : ParserCategory(), 
+     mValue() 
+{}
+
+CallID::CallID(HeaderFieldValue* hfv, 
+               Headers::Type type) 
+   : ParserCategory(hfv, type), mValue()
+{}
+
 CallID::CallID(const CallID& rhs)
    : ParserCategory(rhs),
      mValue(rhs.mValue)
@@ -1297,6 +1715,20 @@ CallID::clone() const
    return new CallID(*this);
 }
 
+Data& 
+CallID::value() 
+{
+   checkParsed(); 
+   return mValue;
+}
+
+const Data& 
+CallID::value() const 
+{
+   checkParsed(); 
+   return mValue;
+}
+
 void
 CallID::parse(ParseBuffer& pb)
 {
@@ -1318,6 +1750,19 @@ CallID::encodeParsed(ostream& str) const
 //====================
 // NameAddr:
 //====================
+NameAddr::NameAddr() : 
+   ParserCategory(),
+   mAllContacts(false),
+   mDisplayName()
+{}
+
+NameAddr::NameAddr(HeaderFieldValue* hfv,
+                   Headers::Type type)
+   : ParserCategory(hfv, type), 
+     mAllContacts(false),
+     mDisplayName()
+{}
+
 NameAddr::NameAddr(const NameAddr& rhs)
    : ParserCategory(rhs),
      mAllContacts(rhs.mAllContacts),
@@ -1393,6 +1838,33 @@ NameAddr::uri()
 {
    checkParsed(); 
    return mUri;
+}
+
+Data& 
+NameAddr::displayName()
+{
+   checkParsed(); 
+   return mDisplayName;
+}
+
+const Data& 
+NameAddr::displayName() const 
+{
+   checkParsed(); 
+   return mDisplayName;
+}
+
+bool 
+NameAddr::isAllContacts() const 
+{
+   checkParsed(); 
+   return mAllContacts;
+}
+
+void 
+NameAddr::setAllContacts()
+{
+   mAllContacts = true;
 }
 
 void
@@ -1510,6 +1982,20 @@ NameAddr::encodeParsed(ostream& str) const
 //====================
 // RequestLine:
 //====================
+RequestLine::RequestLine(MethodTypes method, 
+                         const Data& sipVersion)
+   : mMethod(method),
+     mUnknownMethodName(),
+     mSipVersion(sipVersion)
+{}
+
+RequestLine::RequestLine(HeaderFieldValue* hfv, Headers::Type type) 
+   : ParserCategory(hfv, type),
+     mMethod(UNKNOWN),
+     mUnknownMethodName(MethodNames[UNKNOWN]),
+     mSipVersion(Symbols::DefaultSipVersion)
+{}
+      
 RequestLine::RequestLine(const RequestLine& rhs)
    : ParserCategory(rhs),
      mUri(rhs.mUri),
@@ -1555,6 +2041,48 @@ RequestLine::uri()
    return mUri;
 }
 
+MethodTypes
+RequestLine::getMethod() const 
+{
+   checkParsed(); 
+   return mMethod;
+}
+
+MethodTypes& 
+RequestLine::method() 
+{
+   checkParsed(); 
+   return mMethod;
+}
+
+MethodTypes 
+RequestLine::method() const 
+{
+   checkParsed(); 
+   return mMethod;
+}
+
+Data& 
+RequestLine::unknownMethodName()
+{
+   checkParsed(); 
+   return mUnknownMethodName;
+}
+
+const Data& 
+RequestLine::unknownMethodName() const 
+{
+   checkParsed(); 
+   return mUnknownMethodName;
+}
+
+const Data& 
+RequestLine::getSipVersion() const 
+{
+   checkParsed(); 
+   return mSipVersion;
+}
+
 void 
 RequestLine::parse(ParseBuffer& pb)
 {
@@ -1583,6 +2111,20 @@ RequestLine::encodeParsed(ostream& str) const
 //====================
 // StatusLine:
 //====================
+StatusLine::StatusLine() 
+   : ParserCategory(), 
+     mResponseCode(-1),
+     mSipVersion(Symbols::DefaultSipVersion), 
+     mReason()
+{}
+
+StatusLine::StatusLine(HeaderFieldValue* hfv, Headers::Type type)
+   : ParserCategory(hfv, type), 
+     mResponseCode(-1), 
+     mSipVersion(Symbols::DefaultSipVersion), 
+     mReason() 
+{}
+
 StatusLine::StatusLine(const StatusLine& rhs)
    : ParserCategory(rhs),
      mResponseCode(rhs.mResponseCode),
@@ -1607,6 +2149,55 @@ ParserCategory *
 StatusLine::clone() const
 {
    return new StatusLine(*this);
+}
+
+int&
+StatusLine::responseCode()
+{
+   checkParsed();
+   return mResponseCode;
+}
+
+int 
+StatusLine::responseCode() const
+{
+   checkParsed();
+   return mResponseCode;
+}
+
+int& 
+StatusLine::statusCode()
+{
+   checkParsed();
+   return mResponseCode;
+}
+
+int 
+StatusLine::statusCode() const
+{
+   checkParsed();
+   return mResponseCode;
+}
+
+const Data& 
+StatusLine::getSipVersion() const
+{
+   checkParsed();
+   return mSipVersion;
+}
+
+Data& 
+StatusLine::reason()
+{
+   checkParsed();
+   return mReason;
+}
+
+const Data& 
+StatusLine::reason() const
+{
+   checkParsed();
+   return mReason;
 }
 
 void
