@@ -47,9 +47,9 @@ RandomHex::get(unsigned int len)
 
 
 #ifdef WIN32
-#define RAND_CALL rand
+inline int randomCall() { return rand(); }
 #else
-#define RAND_CALL random
+inline int randomCall() { return random(); }
 #endif
 
 using namespace Vocal2;
@@ -85,13 +85,14 @@ RandomHex::get(unsigned int len)
 #endif
       sRandomCalled = true;
    }
-   unsigned char buf[len];  
+   unsigned char buf[1024]; 
+   assert( len < 1024 );
    unsigned int count=0;  //has to be signed
 
    for (count=0; count < len/4; count++)
    {
       //generate a random number;
-      int rand = RAND_CALL();
+      int rand = randomCall();
       memcpy(buf + (count*4), &rand, 4);  //copy 4 bytes from rand to buf.
    }
    
@@ -99,7 +100,7 @@ RandomHex::get(unsigned int len)
    int remainder = len % 4;
    if (remainder)
    {
-      int rand = RAND_CALL();
+      int rand = randomCall();
       memcpy(buf + (count*4), &rand, remainder);  //copy 4 bytes from rand to buf.
    }
    return convertToHex(buf, len);   
@@ -127,7 +128,7 @@ RandomHex::convertToHex(const unsigned char* src, int len)
         char buf[4];
         buf[0] = '\0';
 
-        sprintf(buf, "%x%x", hi, low);
+        sprintf(buf, "%x%x", hi, low); // !cj! - this is likely a slow way to do this
         data += buf;
     }
 
