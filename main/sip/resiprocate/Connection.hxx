@@ -1,6 +1,17 @@
 #if !defined(RESIP_CONNECTION_HXX)
 #define RESIP_CONNECTION_HXX 
 
+/**
+!dlb!
+Relationship between buffer allocation and parsing is broken.
+
+If the read returns with a few bytes, a new buffer is allocated in performRead.
+
+performRead should handle allocation, read, and parsing. it should be the only
+public read accessor in Connection. read should be protected.
+
+*/
+
 #include <list>
 
 #include "resiprocate/os/Fifo.hxx"
