@@ -110,8 +110,11 @@ SipMessage::getTransactionId() const
        {
            Data key = header(h_CallId).value().lowercase() +
                       header(h_From).uri().param(p_tag).lowercase() +
-                      Data( header(h_CSeq).sequence() ) +
-                      header(h_Vias).front().param(p_branch).transactionId().lowercase();
+                      Data( header(h_CSeq).sequence() );
+	   if (header(h_Vias).front().exists(p_branch)) {
+                      key += header(h_Vias).front().param(p_branch).transactionId().lowercase();
+	   }
+
            MD5Context context;
            MD5Init( &context );
            MD5Update( &context,
