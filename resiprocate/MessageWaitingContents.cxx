@@ -127,8 +127,8 @@ MessageWaitingContents::operator=(const MessageWaitingContents& rhs)
 const Mime& 
 MessageWaitingContents::getStaticType() 
 {
-   //static Mime type("application", "simple-message-summary");
-   static Mime type("text", "data");
+   static Mime type("application", "simple-message-summary");
+   //static Mime type("text", "data");
    return type;
 }
 
@@ -287,11 +287,11 @@ MessageWaitingContents::parse(ParseBuffer& pb)
    
    Data has;
    pb.data(has, anchor);
-   if (has == "yes")
+   if (isEqualNoCase(has, "yes"))
    {
       mHasMessages = true;
    }
-   else if (has == "no")
+   else if (isEqualNoCase(has, "no"))
    {
       mHasMessages = false;
    }
