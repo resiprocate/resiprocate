@@ -37,6 +37,7 @@ class Timer
          TimerTrying,
          TimerStaleClient,
          TimerStaleServer,
+         TimerStateless,
          TimerCleanUp
       } Type;
       
