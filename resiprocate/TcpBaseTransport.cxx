@@ -87,8 +87,9 @@ TcpBaseTransport::processListen(FdSet& fdset)
 {
    if (fdset.readyToRead(mFd))
    {
-      struct sockaddr& peer = mTuple.getMutableSockaddr();
-      socklen_t peerLen = mTuple.length();
+      Tuple tuple(mTuple);
+      struct sockaddr& peer = tuple.getMutableSockaddr();
+      socklen_t peerLen = tuple.length();
       Socket sock = accept( mFd, &peer, &peerLen);
       if ( sock == SOCKET_ERROR )
       {
@@ -105,9 +106,9 @@ TcpBaseTransport::processListen(FdSet& fdset)
       }
       makeSocketNonBlocking(sock);
       
-      mTuple.transport = this;
-      DebugLog (<< "Received TCP connection from: " << mTuple << " as fd=" << sock);
-      createConnection(mTuple, sock, true);
+      tuple.transport = this;
+      DebugLog (<< "Received TCP connection from: " << tuple << " as fd=" << sock);
+      createConnection(tuple, sock, true);
    }
 }
 
