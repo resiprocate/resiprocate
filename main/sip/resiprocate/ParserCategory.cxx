@@ -270,6 +270,7 @@ ParserCategory::removeParameterByData(const Data& data)
    }
 }
 
+#ifdef NO_TEMPLATE_METHODS
 Transport_Param::DType& 
 ParserCategory::param(const Transport_Param& paramType) const
 {
@@ -556,6 +557,7 @@ ParserCategory::param(const Digest_Verify_Param& paramType) const
    }
    return p->value();
 }
+#endif 
 
 Data
 ParserCategory::commutativeParameterHash() const

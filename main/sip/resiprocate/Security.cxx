@@ -563,7 +563,7 @@ Security::multipartSign( Contents* bodyIn )
    
    // add the main body to it 
    Contents* body =  bodyIn->clone();
-   body->header(h_Transfer_Encoding).value() = "binary";
+   body->header(h_ContentTransferEncoding).value() = "binary";
    multi->parts().push_back( body );
 
    // compute the signature 
@@ -626,7 +626,7 @@ Security::multipartSign( Contents* bodyIn )
    sigBody->header(h_ContentDisposition).param( p_handling ) = "required";
    sigBody->header(h_ContentDisposition).param( "filename" ) = "smime.p7s";
    sigBody->header(h_ContentDisposition).value() =  "attachment" ;
-   sigBody->header(h_Transfer_Encoding).value() = "binary";
+   sigBody->header(h_ContentTransferEncoding).value() = "binary";
    
    // add the signature to it 
    multi->parts().push_back( sigBody );

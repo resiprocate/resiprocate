@@ -88,7 +88,7 @@ DnsResolver::lookup(const Data& transactionId, const Via& via)
    {
       if (via.exists(p_rport))
       {
-         lookupARecords(transactionId, via.param(p_received), via.param(p_rport).value(), transport);
+         lookupARecords(transactionId, via.param(p_received), via.param(p_rport).port(), transport);
          // try with via.sentPort() too, even if via.exists(p_rport)?
       }
       else
@@ -106,7 +106,7 @@ DnsResolver::lookup(const Data& transactionId, const Via& via)
    }
    else if (via.exists(p_rport))
    {
-      lookupARecords(transactionId, target,  via.param(p_rport).value(), transport);
+      lookupARecords(transactionId, target,  via.param(p_rport).port(), transport);
    }
    
    if (via.sentPort())

@@ -378,7 +378,8 @@ Dialog::makeReplaces()
 void
 Dialog::clear()
 {
-   Via v; mVia = v;
+   Via v; 
+   mVia = v;
 //   mContact.clear(); // !cj! - likely need this 
    mCreated = false;
    mRouteSet.clear();

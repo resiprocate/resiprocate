@@ -115,26 +115,133 @@ main(int arc, char** argv)
       assert(foo.getAor().empty());
    }
 
+#define checkHeaderName(_name) cerr << Headers::_name << " " << Headers::HeaderNames[Headers::_name] << " = " << #_name << endl /*;assert(isEqualNoCase(Headers::HeaderNames[Headers::_name], #_name))*/
    {
       // test header hash
-      for (int i = Headers::CSeq; i < Headers::UNKNOWN; i++)
+      for (int i = Headers::CSeq; i < Headers::MAX_HEADERS; i++)
       {
-		  Data hdr = Headers::HeaderNames[i];
-
+         Data hdr = Headers::HeaderNames[i];
+         cerr << "Checking hash of: " << hdr << endl;
          assert(Headers::getType(Headers::HeaderNames[i].c_str(), Headers::HeaderNames[i].size()) == i);
       }
+      checkHeaderName(To);
+      checkHeaderName(From);
+      checkHeaderName(Via);
+      checkHeaderName(CallId);
+      checkHeaderName(CSeq);
+      checkHeaderName(Route);
+      checkHeaderName(RecordRoute);
+      checkHeaderName(Contact);
+      checkHeaderName(Subject);
+      checkHeaderName(Expires);
+      checkHeaderName(MaxForwards);
+      checkHeaderName(Accept);
+      checkHeaderName(AcceptEncoding);
+      checkHeaderName(AcceptLanguage);
+      checkHeaderName(AlertInfo);
+      checkHeaderName(Allow);
+      checkHeaderName(AuthenticationInfo);
+      checkHeaderName(CallInfo);
+      checkHeaderName(ContentDisposition);
+      checkHeaderName(ContentEncoding);
+      checkHeaderName(ContentLanguage);
+      checkHeaderName(ContentTransferEncoding);
+      checkHeaderName(ContentType);
+      checkHeaderName(Date);
+      checkHeaderName(InReplyTo);
+      checkHeaderName(MinExpires);
+      checkHeaderName(MIMEVersion);
+      checkHeaderName(Organization);
+      checkHeaderName(Priority);
+      checkHeaderName(ProxyAuthenticate);
+      checkHeaderName(ProxyAuthorization);
+      checkHeaderName(ProxyRequire);
+      checkHeaderName(ReplyTo);
+      checkHeaderName(Require);
+      checkHeaderName(RetryAfter);
+      checkHeaderName(Server);
+      checkHeaderName(Supported);
+      checkHeaderName(Timestamp);
+      checkHeaderName(Unsupported);
+      checkHeaderName(UserAgent);
+      checkHeaderName(Warning);
+      checkHeaderName(WWWAuthenticate);
+      checkHeaderName(SubscriptionState);
+      checkHeaderName(ReferTo);
+      checkHeaderName(ReferredBy);
+      checkHeaderName(Authorization);
+      checkHeaderName(Replaces);
+      checkHeaderName(Event);
+      checkHeaderName(AllowEvents);
+      checkHeaderName(SecurityClient);
+      checkHeaderName(SecurityServer);
+      checkHeaderName(SecurityVerify);
+      checkHeaderName(ContentLength);
    }
 
+#define checkParameterName(_name) cerr << ParameterTypes::_name << " " << ParameterTypes::ParameterNames[ParameterTypes::_name] << " = " << #_name << endl/*;assert(isEqualNoCase(ParameterTypes::ParameterNames[ParameterTypes::_name], #_name))*/
    {
+      checkParameterName(transport);
+      checkParameterName(user);
+      checkParameterName(method);
+      checkParameterName(ttl);
+      checkParameterName(maddr);
+      checkParameterName(lr);
+      checkParameterName(q);
+      checkParameterName(purpose);
+      checkParameterName(expires);
+      checkParameterName(handling);
+      checkParameterName(tag);
+      checkParameterName(toTag);
+      checkParameterName(fromTag);
+      checkParameterName(duration);
+      checkParameterName(branch);
+      checkParameterName(received);
+      checkParameterName(mobility);
+      checkParameterName(comp);
+      checkParameterName(rport);
+      checkParameterName(algorithm);
+      checkParameterName(cnonce);
+      checkParameterName(domain);
+      checkParameterName(id);
+      checkParameterName(nonce);
+      checkParameterName(nc);
+      checkParameterName(opaque);
+      checkParameterName(realm);
+      checkParameterName(response);
+      checkParameterName(stale);
+      checkParameterName(username);
+      checkParameterName(qop);
+      checkParameterName(uri);
+      checkParameterName(retryAfter);
+      checkParameterName(reason);
+      checkParameterName(dAlg);
+      checkParameterName(dQop);
+      checkParameterName(dVer);
+      checkParameterName(smimeType);
+      checkParameterName(name);
+      checkParameterName(filename);
+      checkParameterName(protocol);
+      checkParameterName(micalg);
+      checkParameterName(boundary);
+      checkParameterName(expiration);
+      checkParameterName(size);
+      checkParameterName(permission);
+      checkParameterName(site);
+      checkParameterName(directory);
+      checkParameterName(mode);
+      checkParameterName(server);
+      checkParameterName(charset);
+      checkParameterName(accessType);
 
       // test parameter hash
-      for (int i = ParameterTypes::transport; i < ParameterTypes::UNKNOWN; i++)
+      for (int i = 0; i < ParameterTypes::MAX_PARAMETER; i++)
       {
          if (i != ParameterTypes::qopOptions &&
              i != ParameterTypes::qop &&
              i != ParameterTypes::qopFactory)
          {
-            cerr << "Checking hash for: " << ParameterTypes::ParameterNames[i] <<  endl;
+            cerr << "Checking hash of: " << ParameterTypes::ParameterNames[i] <<  endl;
             assert(ParameterTypes::getType(ParameterTypes::ParameterNames[i].c_str(), 
                                            ParameterTypes::ParameterNames[i].size()) == i);
          }
@@ -753,7 +860,7 @@ main(int arc, char** argv)
 
       assert(mime.type() == "text");
       assert(mime.subType() == "html");
-      assert(mime.param("charset") == "ISO-8859-4");
+      assert(mime.param(p_charset) == "ISO-8859-4");
 
       stringstream s;
       mime.encode(s);
@@ -768,7 +875,7 @@ main(int arc, char** argv)
 
       assert(mime.type() == "text");
       assert(mime.subType() == "html");
-      assert(mime.param("charset") == "ISO-8859-4");
+      assert(mime.param(p_charset) == "ISO-8859-4");
 
       stringstream s;
       mime.encode(s);
@@ -904,7 +1011,7 @@ main(int arc, char** argv)
       assert (via.param(p_ttl) == 70);
       assert (via.exists(p_rport));
       assert (via.param(p_rport).hasValue());
-      assert (via.param(p_rport).value() == 100);
+      assert (via.param(p_rport).port() == 100);
    }
 
    //3329 tests
