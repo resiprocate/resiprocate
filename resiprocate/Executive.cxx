@@ -16,31 +16,31 @@ Executive::Executive( SipStack& stack)
 void
 Executive::process(fd_set* fdSet)
 {
-  bool workToDo = true;
-
-  //DebugLog (<< "start Executive::process()");
-  
-  while( workToDo )
-    {
+   bool workToDo = true;
+   
+   //DebugLog (<< "start Executive::process()");
+   
+   while( workToDo )
+   {
       workToDo = false;
-
+     
       if ( processTransports(fdSet) )
-	{
-	  workToDo=true;
-	}
-      
+      {
+         workToDo=true;
+      }
+     
       if ( processTimer()) 
-	{
-	  workToDo=true;
-	}
-
+      {
+         workToDo=true;
+      }
+     
       if ( processStateMachine()) 
-	{
-	  workToDo=true;
-	}
-    }
+      {
+         workToDo=true;
+      }
+   }
 
-  //DebugLog (<< "finish Executive::process()");
+   //DebugLog (<< "finish Executive::process()");
 }
 
  
@@ -69,9 +69,9 @@ Executive::processStateMachine()
 bool 
 Executive::processTimer()
 {
-  mStack.mTimers.process();
+   mStack.mTimers.process();
 
-  return false;
+   return false;
 }
 
 
@@ -90,10 +90,10 @@ Executive::getTimeTillNextProcess()
 void 
 Executive::buildFdSet( fd_set* fdSet, int* fdSetSize )
 {
-	assert( fdSet );
-	assert( fdSetSize );
+   assert( fdSet );
+   assert( fdSetSize );
 	
-	mStack.mTransportSelector.buildFdSet( fdSet, fdSetSize );
+   mStack.mTransportSelector.buildFdSet( fdSet, fdSetSize );
 }
 
 
