@@ -10,6 +10,7 @@
 
 // perhaps not the best thing to do here
 #include <util/Data.hxx>
+#include <sys/socket.h> // for u_int32_t
 
 namespace Vocal2
 {
