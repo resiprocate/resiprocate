@@ -1,5 +1,5 @@
-#ifndef ParserContainerBase_hxx
-#define ParserContainerBase_hxx
+#if !defined(RESIP_PARSERCONTAINERBASE_HXX)
+#define RESIP_PARSERCONTAINERBASE_HXX 
 
 #include "resiprocate/ParserCategory.hxx"
 #include <iostream>
@@ -33,7 +33,6 @@ class ParserContainerBase
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
