@@ -94,7 +94,7 @@ class TestData
 
          {
             const char* f = "asdasd";
-            Data d = f;
+            Data d = Data(f);
             assert(d == f);
          }
 
@@ -114,18 +114,19 @@ class TestData
 
          {
             string f("asdasd");
-            Data d = f;
-            assert(d == f);
+            Data d = Data(f);
+            assert(d == "asdasd");
          }
+
          {
             string f("asdasd");
-            Data d = f;
+            Data d = Data(f);
             assert(d.c_str() == f);
          }
    
          {
             const char* f = "asdasd";
-            Data d = f;
+            Data d = Data(f);
             assert(!(d < f));
          }
 
@@ -145,12 +146,7 @@ class TestData
 
          {
             string f("asdasd");
-            Data d = f;
-            assert(!(d < f));
-         }
-         {
-            string f("asdasd");
-            Data d = f;
+            Data d = Data(f);
             assert(!(d.c_str() < f));
          }
          
@@ -196,12 +192,6 @@ class TestData
             Data c1(d); // copy, null terminate
             assert(!(d < c1));
             assert(!(c1 < d));
-         }
-
-         {
-            string f("asdasd");
-            Data d = f + "!";
-            assert(!(d < f));
          }
 
          {
@@ -279,6 +269,7 @@ class TestData
          {
             Data d;
             Data c;
+            assert(!(d != c));
             d = c;
             assert(d.empty());
          }
