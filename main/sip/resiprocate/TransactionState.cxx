@@ -260,6 +260,7 @@ TransactionState::processDns(Message* message)
    DnsMessage* dns = dynamic_cast<DnsMessage*>(message);
    if (dns)
    {
+      // !rk! what if no results are returned?
       mDnsListBegin = dns->begin();
       mDnsListEnd = dns->end();
 
@@ -412,6 +413,22 @@ TransactionState::processClientNonInvite(  Message* msg )
    {
       processDns(msg);
    }
+   else if (isTransportError(msg))
+   {
+      if (mMsgToRetransmit->isRequest() && mMsgToRetransmit->header(h_RequestLine).getMethod() == CANCEL)
+      {
+	 // In the case of a client-initiated CANCEL, we don't want to
+	 // try other transports in the case of transport error as the
+	 // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
+	 sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));
+	 delete msg;
+      }
+      else
+      {
+	 // Try more potential delivery tuples.
+	 processDns(msg);
+      }
+   }
    else
    {
       DebugLog (<< "TransactionState::processClientNonInvite: message unhandled");
@@ -446,8 +463,14 @@ TransactionState::processClientInvite(  Message* msg )
 	    {
 	       mCancelStateMachine = new TransactionState(mStack, ClientNonInvite, Trying);
 	    }
-	    // processClientNonInvite() sends msg to the TU
-            mCancelStateMachine->processClientNonInvite(msg);
+	    // It would seem more logical to pass sip to processClientNonInvite
+	    // directly but this would be wrong as it would redo the DNS
+	    // query and might end up different.  The CANCEL MUST be sent to
+	    // the same coordinates as the INVITE it cancels.
+	    delete mCancelStateMachine->mMsgToRetransmit;
+	    mCancelStateMachine->mMsgToRetransmit = sip;
+	    mStack.mTimers.add(Timer::TimerF, sip->getTransactionId(), 64*Timer::T1);
+            resendToWire(sip);
             break;
             
          default:
