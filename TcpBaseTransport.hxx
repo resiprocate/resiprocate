@@ -1,7 +1,7 @@
 #if !defined(RESIP_TCPBASETRANSPORT_HXX)
 #define RESIP_TCPBASETRANSPORT_HXX
 
-#include "resiprocate/Transport.hxx"
+#include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/ConnectionManager.hxx"
 
 namespace resip
@@ -9,7 +9,7 @@ namespace resip
 
 class TransactionMessage;
 
-class TcpBaseTransport : public Transport
+class TcpBaseTransport : public InternalTransport
 {
    public:
       enum  {MaxFileDescriptors = 100000};

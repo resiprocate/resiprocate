@@ -6,12 +6,14 @@
 #endif
 
 #include <map>
+#include <vector>
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/WinCompat.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
+
 
 #include "resiprocate/SecurityTypes.hxx"
 class TestTransportSelector;
@@ -23,15 +25,13 @@ class DnsHandler;
 class Message;
 class TransactionMessage;
 class SipMessage;
-class TlsTransport;
-class DtlsTransport;
 class TransactionController;
 class Security;
 
 class TransportSelector 
 {
    public:
-      TransportSelector(bool multithreaded, Fifo<TransactionMessage>& fifo, Security* security);
+      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security);
       virtual ~TransportSelector();
       bool hasDataToSend() const;
       
@@ -41,15 +41,7 @@ class TransportSelector
       void process(FdSet& fdset);
       void buildFdSet(FdSet& fdset);
      
-      // returns true, if the transport was added successfully. 
-      bool addTransport( TransportType protocol,
-                         int port, 
-                         IpVersion version,
-                         const Data& ipInterface, 
-                         const Data& sipDomainname,
-                         const Data& privateKeyPassPhrase,
-                         SecurityTypes::SSLType sslType );
-
+      void addTransport( std::auto_ptr<Transport> transport);
 
       DnsResult* createDnsResult(DnsHandler* handler);
 
@@ -65,13 +57,13 @@ class TransportSelector
       
       unsigned int sumTransportFifoSizes() const;
 
+      Fifo<TransactionMessage>& stateMacFifo() { return mStateMacFifo; }
    private:
       Transport* findTransport(const Tuple& src);
       Transport* findTlsTransport(const Data& domain);
       Transport* findDtlsTransport(const Data& domain);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
 
-      bool mMultiThreaded;
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
       Security* mSecurity;// for computing identity header
@@ -92,11 +84,14 @@ class TransportSelector
       typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
       AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
 
-      typedef std::map<Data, TlsTransport*> TlsTransportMap ;
-      TlsTransportMap mTlsTransports;      // domain name -> Transport
+      // domain name -> Transport
+      typedef std::map<Data, Transport*> TlsTransportMap ;
+      TlsTransportMap mTlsTransports;     
+      TlsTransportMap mDtlsTransports;
 
-      typedef std::map<Data, DtlsTransport*> DtlsTransportMap ;
-      DtlsTransportMap mDtlsTransports;    // domain name -> Transport
+      typedef std::vector<Transport*> TransportList;
+      TransportList mSharedProcessTransports;
+      TransportList mHasOwnProcessTransports;
 
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;

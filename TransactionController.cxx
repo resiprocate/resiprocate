@@ -2,11 +2,12 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransactionState.hxx"
+#include "resiprocate/os/AsyncProcessHandler.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
@@ -21,17 +22,17 @@ using namespace resip;
 unsigned int TransactionController::MaxTUFifoSize = 0;
 unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 
-TransactionController::TransactionController(bool multi, 
-                                             TimeLimitFifo<Message>& tuFifo, 
+TransactionController::TransactionController(TimeLimitFifo<Message>& tuFifo, 
                                              StatisticsManager& stats,
                                              Security* security,
+                                             AsyncProcessHandler* asyncHandler,
                                              bool stateless) : 
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(true),
-   mStateMacFifo(),
+   mStateMacFifo(asyncHandler),
    mTUFifo(tuFifo),
-   mTransportSelector(multi, mStateMacFifo, security),
+   mTransportSelector(mStateMacFifo, security),
    mStatelessHandler(*this),
    mTimers(mStateMacFifo),
    StatelessIdCounter(1),
@@ -103,10 +104,8 @@ TransactionController::getTimeTillNextProcessMS()
    {
       return 0;
    }
-   
-   int ret = mTimers.msTillNextTimer();
 
-   return resipMin(25, ret);
+   return mTimers.msTillNextTimer();
 } 
    
 void 
@@ -114,21 +113,6 @@ TransactionController::buildFdSet( FdSet& fdset)
 {
    mTransportSelector.buildFdSet( fdset );
 }
-
-
-bool
-TransactionController::addTransport( TransportType protocol,
-                                     int port, 
-                                     IpVersion version,
-                                     const Data& ipInterface, 
-                                     const Data& sipDomainname,
-                                     const Data& privateKeyPassPhrase,
-                                     SecurityTypes::SSLType sslType)
-{
-   return mTransportSelector.addTransport( protocol, port, version, ipInterface, 
-                                           sipDomainname, privateKeyPassPhrase, sslType);
-}
-
 
 void
 TransactionController::send(SipMessage* msg)
@@ -159,8 +143,6 @@ TransactionController::getTransactionFifoSize() const
 {
    return mStateMacFifo.size();
 }
-
-
 
 unsigned int 
 TransactionController::getNumClientTransactions() const

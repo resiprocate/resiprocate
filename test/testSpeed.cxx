@@ -35,7 +35,7 @@ main(int argc, char* argv[])
    NameAddr dest;
    dest.uri().scheme() = "sip";
    dest.uri().user() = "fluffy";
-   dest.uri().host() = "localhost";
+   dest.uri().host() = "127.0.0.1";
    dest.uri().port() = 5080;
    dest.uri().param(p_transport) = "udp";
    

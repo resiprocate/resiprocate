@@ -1,12 +1,14 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/DumProcessHandler.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 namespace resip {
 
 DumProcessHandler::DumProcessHandler(ExternalTimer* et) :
+   mHaveActiveTimer(false),
    mDum(0),
    mExternalTimer(et),
    mCurrentlyProcessing(false),
@@ -18,11 +20,8 @@ void
 DumProcessHandler::start(DialogUsageManager* dum)
 {
    mDum = dum;
-   //!dcm! -- temporary
-
    mExternalTimer->setHandler(this);
    mTimerID = mExternalTimer->generateAsyncID();
-   mExternalTimer->createRecurringTimer(mTimerID, 30);   
 }
 
 void
@@ -41,22 +40,46 @@ DumProcessHandler::handleProcessNotification()
       {         
          fds.selectMilliSeconds((long)0);
       }
-      mDum->process(fds);      
+      
+      int timeTillProcess = 0;      
+      do
+      {
+         mDum->process(fds);
+         timeTillProcess = mDum->getTimeTillNextProcessMS();
+      }
+      while (timeTillProcess == 0);
+      if (timeTillProcess != INT_MAX)
+      {
+         if (mHaveActiveTimer)
+         {
+            mExternalTimer->deleteTimer(mTimerID);
+         }         
+         assert(timeTillProcess < 60*4*60*1000); //4hr sanity check
+         mTimerID = mExternalTimer->generateAsyncID();
+         DebugLog ( << "Setting dum process timer: " << timeTillProcess);
+         mExternalTimer->createTimer(mTimerID, timeTillProcess);
+         mHaveActiveTimer = true;         
+      }
       mCurrentlyProcessing = false;
    }   
 }
 
 void 
-DumProcessHandler::handleTimeout(AsyncID /*timerID*/)
+DumProcessHandler::handleTimeout(AsyncID timerID)
 {
-   handleProcessNotification();   
+   assert(timerID == mTimerID);   
+   mHaveActiveTimer = false;   
+   handleProcessNotification();
 }
 
 void 
 DumProcessHandler::stop()
 {
    mStopped = true;
-   mExternalTimer->deleteTimer(mTimerID);   
+   if (mHaveActiveTimer)
+   {
+      mExternalTimer->deleteTimer(mTimerID);
+   }         
 }
 
 } // namespace resip

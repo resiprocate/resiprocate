@@ -1,24 +1,19 @@
 #if !defined(RESIP_TRANSPORT_HXX)
 #define RESIP_TRANSPORT_HXX
 
-#include <exception>
-
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
 
 namespace resip
 {
 
 class TransactionMessage;
 class SipMessage;
-class SendData;
 class Connection;
 
-class Transport : public ThreadIf
+class Transport
 {
    public:
       class Exception : public BaseException
@@ -30,34 +25,34 @@ class Transport : public ThreadIf
       
       // portNum is the port to receive and/or send on
       Transport(Fifo<TransactionMessage>& rxFifo, 
-                int portNum,  
-                IpVersion version,
-                const Data& interfaceObj);
+                const GenericIPAddress& address,
+                const Data& tlsDomain = Data::Empty);
+
+      Transport(Fifo<TransactionMessage>& rxFifo, 
+                int portNum, 
+                IpVersion version, 
+                const Data& interfaceObj,
+                const Data& tlsDomain = Data::Empty);
+
       virtual ~Transport();
 
-      bool isFinished() const;
-      void shutdown();
-      
-      // shared by UDP, TCP, and TLS
-      static Socket socket(TransportType type, bool ipv4);
-      static void error( int err );
-      void bind();
+      virtual bool isFinished() const=0;
       
       virtual void send( const Tuple& tuple, const Data& data, const Data& tid);
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
-      virtual int maxFileDescriptors() const = 0;
-      
-      void thread(); // from ThreadIf
-      
+
       void fail(const Data& tid); // called when transport failed
+      static void error(int e);
       
       // These methods are used by the TransportSelector
-      const Data& interfaceName() const { return mInterface; } 
+      const Data& interfaceName() const { return mInterface; }       
+
       int port() const { return mTuple.getPort(); } 
-      bool isV4() const { return mTuple.isV4(); }
+      bool isV4() const { return mTuple.isV4(); } //!dcm! -- deprecate ASAP
+      IpVersion ipVersion() const { return mTuple.ipVersion(); }
       
-      const Data& tlsDomain() const { return Data::Empty; }
+      const Data& tlsDomain() const { return mTlsDomain; }
       const sockaddr& boundInterface() const { return mTuple.getSockaddr(); }
       const Tuple& getTuple() const { return mTuple; }
 
@@ -71,52 +66,63 @@ class Transport : public ThreadIf
 
       bool basicCheck(const SipMessage& msg);
 
-      SendData* makeFailedResponse(const SipMessage& msg,
-                                   int responseCode = 400,
-                                   const char * warning = 0);
+      void makeFailedResponse(const SipMessage& msg,
+                              int responseCode = 400,
+                              const char * warning = 0);
 
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
 
-      bool hasDataToSend() const;
+      //true: will run in the SipStack's processing context
+      //false: provides own cycles, just puts messages in rxFifo
+      virtual bool shareStackProcessAndSelect() const=0;
+      
+      //transports that returned false to shareStackProcessAndSelect() shouldn't
+      //put messages into the fifo until this is called
+      //?dcm? avoid the received a message but haven't added a transport to the
+      //TransportSelector race, but this might not be necessary.
+      virtual void startOwnProcessing()=0;
+
+      //only applies to transports that shareStackProcessAndSelect 
+      virtual bool hasDataToSend() const = 0;
+      
+      //overriding implementations should chain through to this
+      //?dcm? pure virtual protected method to enforce this?
+      virtual void shutdown()
+      {
+         // !jf! should use the fifo to pass this in
+         mShuttingDown = true;
+      }
 
       // also used by the TransportSelector. 
       // requires that the two transports be 
       bool operator==(const Transport& rhs) const;
 
-      unsigned int getFifoSize() const;
+      //# queued messages on this transport
+      virtual unsigned int getFifoSize() const=0;
 
    protected:
-      Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Data mInterface;
       Tuple mTuple;
-      
-      Fifo<SendData> mTxFifo; // owned by the transport
+
       Fifo<TransactionMessage>& mStateMachineFifo; // passed in
       bool mShuttingDown;
-      
+
+      //not a great name, just adds the message to the fifo in the synchronous(default) case,
+      //actually transmits in the asyncronous case.  Don't make a SendData because asynchronous
+      //transports would require another copy.
+      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid) = 0;
+
+      void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
    private:
       static const Data transportNames[MAX_TRANSPORT];
       friend std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
-      
+
+      Data mTlsDomain;      
 };
 
 std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
       
-
-class SendData
-{
-   public:
-      SendData(const Tuple& dest, const Data& pdata, const Data& tid): 
-         destination(dest),
-         data(pdata),
-         transactionId(tid) 
-      {}
-      Tuple destination;
-      const Data data;
-      const Data transactionId;
-};
-
 }
 
 #endif

@@ -62,8 +62,13 @@ sipit14_radvision1
 sipit_ntt7
 stamp-h1
 testSipStack1
-testSipStack1
 testUdp
 tmp
 un64
 doxygen
+*.stackdump
+*.diff
+*.tar
+*.gz
+TAGS
+*.tmp
