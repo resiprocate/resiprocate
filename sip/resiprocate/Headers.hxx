@@ -111,7 +111,7 @@ defineHeader(SIPIfMatch, "SIP-If-Match", Token, "PUBLISH draft");
 
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 
-defineHeader(Identity, "Identity", Token, "draft-sip-identity-03");
+defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03");
 // explicitly declare to avoid h_AllowEventss, ugh
 extern H_AllowEventss h_AllowEvents;
 
