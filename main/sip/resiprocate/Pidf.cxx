@@ -41,12 +41,12 @@ Pidf::Pidf(const Pidf& rhs)
      mEntity(rhs.mEntity),
      mNote(rhs.mNote)
 {
-   for( unsigned int i=0; i < rhs.mTupple.size(); i++)
+   for( unsigned int i=0; i < rhs.mTuple.size(); i++)
    {
-      Tupple t = rhs.mTupple[i];
-      mTupple.push_back( t );
+      Tuple t = rhs.mTuple[i];
+      mTuple.push_back( t );
    }
-   assert(  mTupple.size() ==  rhs.mTupple.size() );
+   assert(  mTuple.size() ==  rhs.mTuple.size() );
 }
 
 
@@ -64,11 +64,11 @@ Pidf::operator=(const Pidf& rhs)
       
       mNote = rhs.mNote;
       mEntity = rhs.mEntity;
-      mTupple.clear();
-      for( unsigned int i=0; i < rhs.mTupple.size(); i++)
+      mTuple.clear();
+      for( unsigned int i=0; i < rhs.mTuple.size(); i++)
       {
-         Tupple t = rhs.mTupple[i];
-         mTupple.push_back( t );
+         Tuple t = rhs.mTuple[i];
+         mTuple.push_back( t );
       }
    }
    return *this;
@@ -93,30 +93,28 @@ Pidf::getStaticType() const
 std::ostream& 
 Pidf::encodeParsed(std::ostream& str) const
 {
-   encodeHeaders(str);
-
    //DebugLog(<< "Pidf::encodeParsed " << mText);
    //str << mText;
 
    str       << "<?xml version\"1.0\" encoding=\"UTF-8\"?>" << Symbols::CRLF;;
    str       << "<presence xmlns=\"urn:ietf:params:xml:ns:cpim-pidf\"" << Symbols::CRLF;;
    str       << "           entity=\""<<mEntity<<"\">" << Symbols::CRLF;;
-   for( unsigned int i=0; i<mTupple.size(); i++)
+   for( unsigned int i=0; i<mTuple.size(); i++)
    {
-      Data status( (char*)( (mTupple[i].status)?"open":"close" ) );
-      str    << "  <tuple id=\""<<mTupple[i].id<<"\">" << Symbols::CRLF;;
+      Data status( (char*)( (mTuple[i].status)?"open":"close" ) );
+      str    << "  <tuple id=\""<<mTuple[i].id<<"\">" << Symbols::CRLF;;
       str    << "     <status><basic>"<<status<<"</basic></status>" << Symbols::CRLF;;
-      if ( !mTupple[i].contact.empty() )
+      if ( !mTuple[i].contact.empty() )
       {
-         str << "     <contact priority=\""<<mTupple[i].contactPriority<<"\">"<<mTupple[i].contact<<"</contact>" << Symbols::CRLF;;
+         str << "     <contact priority=\""<<mTuple[i].contactPriority<<"\">"<<mTuple[i].contact<<"</contact>" << Symbols::CRLF;;
       }
-      if ( !mTupple[i].timeStamp.empty() )
+      if ( !mTuple[i].timeStamp.empty() )
       {
-         str << "     <timestamp>"<<mTupple[i].timeStamp<<"</timestamp>" << Symbols::CRLF;;
+         str << "     <timestamp>"<<mTuple[i].timeStamp<<"</timestamp>" << Symbols::CRLF;;
       }
-      if ( !mTupple[i].note.empty() )
+      if ( !mTuple[i].note.empty() )
       {
-         str << "     <note>"<<mTupple[i].note<<"</note>" << Symbols::CRLF;;
+         str << "     <note>"<<mTuple[i].note<<"</note>" << Symbols::CRLF;;
       }
       str    << "  </tuple>" << Symbols::CRLF;;
    }
@@ -129,22 +127,19 @@ Pidf::encodeParsed(std::ostream& str) const
 void 
 Pidf::parse(ParseBuffer& pb)
 {
-   parseHeaders(pb);
-
    const char* anchor = pb.position();
 
-   Tupple t;
+   Tuple t;
    
-   mTupple.push_back( t );
-   mTupple[0].status = true;
-   mTupple[0].note = Data::Empty;
+   mTuple.push_back( t );
+   mTuple[0].status = true;
+   mTuple[0].note = Data::Empty;
 
-   pb.reset(anchor);
    const char* close = pb.skipToChars("close");
    if ( close != pb.end() )
    {
-      DebugLog ( << "found an close" );
-      mTupple[0].status = false;
+      DebugLog ( << "found a close" );
+      mTuple[0].status = false;
    }
 
    pb.reset(anchor);
@@ -152,19 +147,17 @@ Pidf::parse(ParseBuffer& pb)
    if ( open != pb.end() )
    {
       DebugLog ( << "found an open" );
-      mTupple[0].status = true;
+      mTuple[0].status = true;
    }
 
    pb.reset(anchor);
    pb.skipToChars("<note");
-   const char* startNote = pb.skipToChars(">");
-   startNote++;
-   if ( startNote < pb.end() )
+   pb.skipToChars(">");
+   if (!pb.eof() )
    {
-      const char* endNote = pb.skipToChars("</note>");
-      Data blueNote( startNote, endNote-startNote );
-      DebugLog ( << "found a note of" << blueNote );
-      mTupple[0].note = blueNote;
+      const char* startNote = pb.skipChar();
+      pb.data(mTuple[0].note, startNote);
+      DebugLog ( << "found a note of" << mTuple[0].note);
    }
 }
 
@@ -172,32 +165,32 @@ Pidf::parse(ParseBuffer& pb)
 void 
 Pidf::setSimpleId( const Data& id )
 {
-   if ( mTupple.size() == 0 )
+   if ( mTuple.size() == 0 )
    {
-      Tupple t;
-      mTupple.push_back( t );
+      Tuple t;
+      mTuple.push_back( t );
    }
-   assert( mTupple.size() > 0 );
+   assert( mTuple.size() > 0 );
 
-   mTupple[0].id = id;
+   mTuple[0].id = id;
 }
 
 
 void 
 Pidf::setSimpleStatus( bool online, const Data& note, const Data& contact )
 {
-   if ( mTupple.size() == 0 )
+   if ( mTuple.size() == 0 )
    {
-      Tupple t;
-      mTupple.push_back( t );
+      Tuple t;
+      mTuple.push_back( t );
    }
-   assert( mTupple.size() > 0 );
+   assert( mTuple.size() > 0 );
 
-   mTupple[0].status = online;
-   mTupple[0].contact = contact;
-   mTupple[0].contactPriority = 1.0;
-   mTupple[0].note = note;
-   mTupple[0].timeStamp = Data::Empty;
+   mTuple[0].status = online;
+   mTuple[0].contact = contact;
+   mTuple[0].contactPriority = 1.0;
+   mTuple[0].note = note;
+   mTuple[0].timeStamp = Data::Empty;
 }
 
 
@@ -206,14 +199,14 @@ Pidf::getSimpleStatus( Data* note )
 {
    checkParsed();
 
-   assert( mTupple.size() > 0 );
+   assert( mTuple.size() > 0 );
 
    if ( note )
    {
-      *note = mTupple[0].note;
+      *note = mTuple[0].note;
    }
    
-   return mTupple[0].status;
+   return mTuple[0].status;
 }
 
    

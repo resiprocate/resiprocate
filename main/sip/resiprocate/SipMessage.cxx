@@ -299,8 +299,6 @@ SipMessage::encode(std::ostream& str) const
       {
          if (mContents != 0)
          {
-            mContents->mHeadersFromMessage = true;
-            
             CountStream cs;
             mContents->encode(cs);
             cs.flush();
@@ -524,8 +522,7 @@ SipMessage::getContents() const
       {
          mContents->header(h_ContentType) = header(h_ContentType);
       }
-      // contents' headers from message
-      mContents->mHeadersFromMessage = true;
+      // !dlb! Content-Transfer-Encoding?
    }
    return mContents;
 }
