@@ -1,8 +1,8 @@
 #ifndef FloatParameter_hxx
 #define FloatParameter_hxx
 
-#include "sip2/sipstack/Parameter.hxx"
-#include "sip2/sipstack/ParameterTypeEnums.hxx"
+#include "resiprocate/sipstack/Parameter.hxx"
+#include "resiprocate/sipstack/ParameterTypeEnums.hxx"
 #include <iostream>
 
 namespace Vocal2

@@ -1,7 +1,7 @@
 #ifndef Message_hxx
 #define Message_hxx
 
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Data.hxx"
 #include <iostream>
 
 namespace Vocal2

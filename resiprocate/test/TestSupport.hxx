@@ -1,8 +1,8 @@
 #if !defined(TESTSUPPORT_HXX)
 #define TESTSUPPORT_HXX
 #include <sys/types.h>
-#include "sip2/util/Data.hxx"
-#include "sip2/sipstack/SipMessage.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
 
 namespace Vocal2 {
 

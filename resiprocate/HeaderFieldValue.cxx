@@ -1,12 +1,12 @@
 #include <iostream>
 
-#include "sip2/sipstack/UnknownParameter.hxx"
-#include "sip2/sipstack/ExistsParameter.hxx"
-#include "sip2/sipstack/HeaderFieldValue.hxx"
-#include "sip2/sipstack/ParserCategory.hxx"
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/util/ParseBuffer.hxx"
-#include "sip2/util/Logger.hxx"
+#include "resiprocate/sipstack/UnknownParameter.hxx"
+#include "resiprocate/sipstack/ExistsParameter.hxx"
+#include "resiprocate/sipstack/HeaderFieldValue.hxx"
+#include "resiprocate/sipstack/ParserCategory.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/util/Logger.hxx"
 
 using namespace std;
 using namespace Vocal2;

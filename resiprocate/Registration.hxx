@@ -2,7 +2,7 @@
 #define REGISTRATION_HXX
 
 
-#include "sip2/util/Timer.hxx"
+#include "resiprocate/util/Timer.hxx"
 namespace Vocal2
 {
 

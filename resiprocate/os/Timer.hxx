@@ -1,7 +1,7 @@
 #if !defined(Vocal2_Timer_hxx)
 #define Vocal2_Timer_hxx
      
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Data.hxx"
 #include <iostream>
 
 #if defined( WIN32 )

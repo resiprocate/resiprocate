@@ -1,9 +1,9 @@
-#include "sip2/util/DataStream.hxx"
+#include "resiprocate/util/DataStream.hxx"
 
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/Helper.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/SipFrag.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/Helper.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
+#include "resiprocate/sipstack/SipFrag.hxx"
 #include "TestSupport.hxx"
 
 #include <iostream>

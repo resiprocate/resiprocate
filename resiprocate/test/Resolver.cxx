@@ -10,15 +10,15 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "sip2/util/Socket.hxx"
+#include "resiprocate/util/Socket.hxx"
 
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/sipstack/Uri.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
 
-#include "sip2/util/Socket.hxx"
-#include "sip2/util/Data.hxx"
-#include "sip2/util/Logger.hxx"
-#include "sip2/util/ParseBuffer.hxx"
+#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
 
 #include "Resolver.hxx"
 

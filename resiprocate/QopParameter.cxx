@@ -1,10 +1,10 @@
 #include <cassert>
-#include "sip2/sipstack/QopParameter.hxx"
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/util/ParseBuffer.hxx"
-#include "sip2/sipstack/ParseException.hxx"
-#include "sip2/sipstack/DataParameter.hxx"
-#include "sip2/sipstack/QuotedDataParameter.hxx"
+#include "resiprocate/sipstack/QopParameter.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/sipstack/ParseException.hxx"
+#include "resiprocate/sipstack/DataParameter.hxx"
+#include "resiprocate/sipstack/QuotedDataParameter.hxx"
 
 
 using namespace Vocal2;

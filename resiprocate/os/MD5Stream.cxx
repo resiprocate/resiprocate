@@ -1,4 +1,4 @@
-#include "sip2/util/MD5Stream.hxx"
+#include "resiprocate/util/MD5Stream.hxx"
 
 using namespace Vocal2;
 

@@ -2,8 +2,8 @@
 /* Command-line: gperf --enum -E -L C++ -t -k '*' -D -Z MethodHash MethodHash.gperf  */
 #include <string.h>
 #include <ctype.h>
-#include "sip2/sipstack/MethodTypes.hxx"
-#include "sip2/sipstack/MethodHash.hxx"
+#include "resiprocate/sipstack/MethodTypes.hxx"
+#include "resiprocate/sipstack/MethodHash.hxx"
 
 using namespace Vocal2;
 

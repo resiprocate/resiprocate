@@ -2,8 +2,8 @@
 #define MD5Stream_hxx
 
 #include <iostream>
-#include "sip2/util/Data.hxx"
-#include "sip2/util/vmd5.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/util/vmd5.hxx"
 
 namespace Vocal2
 {

@@ -1,8 +1,8 @@
 #ifndef PlainContents_hxx
 #define PlainContents_hxx
 
-#include "sip2/sipstack/Contents.hxx"
-#include "sip2/util/Data.hxx"
+#include "resiprocate/sipstack/Contents.hxx"
+#include "resiprocate/util/Data.hxx"
 
 namespace Vocal2
 {

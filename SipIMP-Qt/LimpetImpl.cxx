@@ -2,13 +2,13 @@
 #include "LimpetImpl.hxx"
 #include "SetupDlgImpl.hxx"
 
-#include "sip2/util/Socket.hxx"
-#include "sip2/sipstack/SipStack.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/TuIM.hxx"
-#include "sip2/sipstack/Security.hxx"
-#include "sip2/util/DataStream.hxx"
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/sipstack/SipStack.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
+#include "resiprocate/sipstack/TuIM.hxx"
+#include "resiprocate/sipstack/Security.hxx"
+#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/util/Data.hxx"
 #include <qmultilineedit.h>
 #include <qtimer.h>
 #include <qcheckbox.h>
