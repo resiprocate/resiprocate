@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.60 2003/02/07 02:49:17 jason Exp $";
+// "$Id: Data.cxx,v 1.61 2003/02/11 00:09:54 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -572,10 +572,7 @@ char&
 Data::operator[](size_type p)
 {
    assert(p < mCapacity);
-   if (!mMine)
-   {
-      resize(mCapacity, true);
-   }
+   own();
    return mBuf[p];
 }
 
@@ -678,10 +675,7 @@ Data::operator+(char c) const
 const char* 
 Data::c_str() const
 {
-   if (!mMine)
-   {
-      const_cast<Data*>(this)->resize(mSize, true);
-   }
+   own();
    mBuf[mSize] = 0;
    return mBuf;
 }
@@ -793,6 +787,7 @@ Data::hex() const
 Data&
 Data::lowercase()
 {
+   own();
    char* p = mBuf;
    for (size_type i=0; i < mSize; i++)
    {
@@ -805,6 +800,7 @@ Data::lowercase()
 Data&
 Data::uppercase()
 {
+   own();
    char* p = mBuf;
    for (size_type i=0; i < mSize; i++)
    {
