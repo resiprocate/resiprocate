@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.70 2003/07/07 22:22:09 davidb Exp $";
+// "$Id: Data.cxx,v 1.71 2003/07/16 20:59:32 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -118,7 +118,7 @@ Data::~Data()
 {
    if (mMine)
    {
-      delete[] mBuf; mBuf=0;
+      delete[] mBuf;
    }
 }
 
@@ -687,7 +687,7 @@ Data::resize(size_type newCapacity, bool copy)
    }
    if (mMine)
    {
-      delete[] oldBuf; oldBuf=0;
+      delete[] oldBuf;
    }
    mMine = true;
    mCapacity = newCapacity;
