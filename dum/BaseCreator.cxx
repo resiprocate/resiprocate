@@ -2,6 +2,9 @@
 #include "Profile.hxx"
 #include "BaseCreator.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -39,8 +42,8 @@ BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
    if (mDum.getProfile()->hasGruu(target.uri().getAor()))
    {
       contact = mDum.getProfile()->getGruu(target.uri().getAor());
+      mLastRequest.header(h_Contacts).push_front(contact);
    }
-   mLastRequest.header(h_Contacts).push_front(contact);
    
    Via via;
    mLastRequest.header(h_Vias).push_front(via);
@@ -50,9 +53,12 @@ BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
 
    if (mDum.getProfile()->hasOutboundProxy())
    {
+      DebugLog ( << "Assigning route");
       assert(mLastRequest.header(h_Routes).empty());
       mLastRequest.header(h_Routes).push_back(mDum.getProfile()->getOutboundProxy());
    }
+   
+   DebugLog ( << "BaseCreator::makeInitialRequest" << mLastRequest );
 }
 
 void
