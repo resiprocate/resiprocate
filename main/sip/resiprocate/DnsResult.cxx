@@ -696,8 +696,8 @@ DnsResult::primeResults()
          )
       {
 #ifdef USE_IPV6 
-         std::list<struct in6_addr>& aaaarecs = mAAAARecords[next.target];
-         for (std::list<struct in6_addr>::const_iterator i=aaaarecs.begin();
+         std::vector<struct in6_addr>& aaaarecs = mAAAARecords[next.target];
+         for (std::vector<struct in6_addr>::const_iterator i=aaaarecs.begin();
 	         i!=aaaarecs.end(); i++)
          {
             Tuple tuple(*i, next.port,next.transport, mTarget);
@@ -705,8 +705,8 @@ DnsResult::primeResults()
             mResults.push_back(tuple);
          }
 #endif
-         std::list<struct in_addr>& arecs = mARecords[next.target];
-         for (std::list<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
+         std::vector<struct in_addr>& arecs = mARecords[next.target];
+         for (std::vector<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
             Tuple tuple(*i, next.port, next.transport, mTarget);
             StackLog (<< "Adding " << tuple << " to result set");

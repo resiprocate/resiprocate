@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include <vector>
+#include <list>
 #include <map>
 
 #include "resiprocate/dum/DialogId.hxx"
