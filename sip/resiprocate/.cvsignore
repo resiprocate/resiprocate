@@ -1,8 +1,12 @@
 *-raw.cxx
 *.d
+*~
 .dependlibs
+Debug
+DnsResolver.cxx.save
 ExpandedSipMessage
 ParserCategories.cxx.save
+Release
 UserAgentCore.hxx
 a.out
 backup
@@ -22,6 +26,3 @@ testSipStack1
 testSipStack1
 testUdp
 tmp
-Debug
-Release
-*~
