@@ -13,7 +13,7 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_init.c,v 1.3 2003/09/14 01:08:27 fluffy Exp $";
+static const char rcsid[] = "$Id: ares_init.c,v 1.4 2003/09/16 03:05:07 fluffy Exp $";
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -21,6 +21,7 @@ static const char rcsid[] = "$Id: ares_init.c,v 1.3 2003/09/14 01:08:27 fluffy E
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+#include <assert.h>
 
 #ifndef WIN32
 #include <sys/time.h>
@@ -31,6 +32,10 @@ static const char rcsid[] = "$Id: ares_init.c,v 1.3 2003/09/14 01:08:27 fluffy E
 #include <unistd.h>
 #include <errno.h>
 #include <netdb.h>
+#else
+#include <Winsock2.h>
+#include <io.h>
+#include <Windns.h>
 #endif
 
 #include "ares.h"
@@ -137,7 +142,7 @@ int ares_init_options(ares_channel *channelptr, struct ares_options *options,
 //  gettimeofday(&tv, NULL);
 //  channel->next_id = (tv.tv_sec ^ tv.tv_usec ^ getpid()) & 0xffff;
   {
-	int cjNextID=1;
+	static int cjNextID=1;
 	  channel->next_id = cjNextID++;
   }
 
@@ -308,12 +313,49 @@ static int init_by_defaults(ares_channel channel)
 
   if (channel->nservers == -1)
     {
-      /* If nobody specified servers, try a local named. */
-      channel->servers = malloc(sizeof(struct server_state));
-      if (!channel->servers)
-	return ARES_ENOMEM;
-      channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
-      channel->nservers = 1;
+		int buf[1024];
+		DWORD size;
+		PWSTR adapter;
+		int i;
+		int num;
+    
+#ifdef WIN32
+		size = sizeof(buf);
+		adapter = 0;
+
+		DnsQueryConfig(DnsConfigDnsServerList,FALSE,adapter,NULL,buf,&size);
+
+		// assume only IPv4 address 
+		assert( size%4 == 0 );
+		num = size/4;
+		assert( num > 0 );
+
+		channel->servers = malloc( num * sizeof(struct server_state));
+		if (!channel->servers)
+		{
+			return ARES_ENOMEM;
+		}
+
+		channel->nservers = 0;
+		for ( i=0; i< num ; i++ )
+		{
+			if ( buf[i] != 1 /* loopback */  )
+			{
+				channel->servers[ channel->nservers++ ].addr.s_addr = ( buf[i] ); 
+			}
+		}
+
+		// channel->servers[0].addr.s_addr =  inet_addr("10.0.1.1");
+#else
+
+		/* If nobody specified servers, try a local named. */
+		channel->servers = malloc(sizeof(struct server_state));
+		if (!channel->servers)
+			return ARES_ENOMEM;
+		channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+		channel->nservers = 1;
+#endif
+    
     }
 
   if (channel->ndomains == -1)
@@ -324,7 +366,7 @@ static int init_by_defaults(ares_channel channel)
       if (gethostname(hostname, sizeof(hostname)) == -1
 	  || !strchr(hostname, '.'))
 	{
-	  channel->domains = malloc(0);
+	  channel->domains = 0; // malloc(0);
 	  channel->ndomains = 0;
 	}
       else

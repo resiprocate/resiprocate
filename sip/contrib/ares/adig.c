@@ -13,24 +13,41 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: adig.c,v 1.5 2003/09/14 01:08:27 fluffy Exp $";
+static const char rcsid[] = "$Id: adig.c,v 1.6 2003/09/16 03:05:07 fluffy Exp $";
 
 #include <sys/types.h>
+
+#ifdef WIN32
+#include <winsock2.h>
+#include <stdlib.h>
+#include <io.h>
+#else
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
+#include <unistd.h>
+#include <netdb.h>
+#endif
+
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <unistd.h>
+
 #include <errno.h>
-#include <netdb.h>
+
 #include "ares.h"
 #include "ares_dns.h"
 #include "ares_compat.h"
+
+#if defined(WIN32) || defined(__QNX__)
+#define strcasecmp(a,b) stricmp(a,b)
+#define strncasecmp(a,b,c) strnicmp(a,b,c)
+#endif
+
 
 #ifndef INADDR_NONE
 #define	INADDR_NONE 0xffffffff
@@ -124,6 +141,73 @@ static const char *type_name(int type);
 static const char *class_name(int dnsclass);
 static void usage(void);
 
+#ifdef WIN32
+struct option
+{
+      const char *name;
+      int has_arg;
+      int *flag;
+      int val;
+};
+
+char *optarg = 0;
+int optind = 0;
+
+/**
+ * This is a very hacked version for WIN32 that will support only what
+ * we need.  This is NOT a generic getopt_long()
+ */
+int getopt(int argc,	
+                      char *  argv[],
+                       char *optstring )
+{
+   static int carg = 0;
+   //static int nextchar = 0;
+     char * p;
+
+   carg++;
+   if ( carg >= argc ) return -1;
+
+ p = argv[carg];
+   //register int al = strlen(argv[carg]);
+
+   if (*p  == '-' && isalnum(*(p+1)))
+   {
+      char o = *(p+1);
+	 int i,l;
+
+       l =  (int)strlen(optstring);
+
+      for( i = 0 ; i < l; i++)
+      {
+
+         if (optstring[i] == ':') continue;
+
+         if ( optstring[i] == o )	// match option char
+         {
+	
+            if ( optstring[i+1] == ':' ) // arg option
+            {
+               optind = ++carg;
+               optarg = argv[optind];
+
+            }
+            else
+            {
+               optind = 0;
+               optarg = 0;
+            }
+            return (int)o;
+         }
+
+      }
+
+      return (int)'?';
+   }
+   return (int)'?';
+}
+#endif
+
 int main(int argc, char **argv)
 {
   ares_channel channel;
@@ -135,9 +219,42 @@ int main(int argc, char **argv)
   struct timeval *tvp, tv;
   char *errmem;
 
-  options.flags = ARES_FLAG_NOCHECKRESP;
+#ifdef WIN32 
+   WORD wVersionRequested = MAKEWORD( 2, 2 );
+   WSADATA wsaData;
+   int err;
+
+   err = WSAStartup( wVersionRequested, &wsaData );
+   if ( err != 0 ) 
+   {
+      // could not find a usable WinSock DLL
+      //cerr << "Could not load winsock" << endl;
+      assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
+      exit(1);
+   }
+    
+   /* Confirm that the WinSock DLL supports 2.2.*/
+   /* Note that if the DLL supports versions greater    */
+   /* than 2.2 in addition to 2.2, it will still return */
+   /* 2.2 in wVersion since that is the version we      */
+   /* requested.                                        */
+    
+   if ( LOBYTE( wsaData.wVersion ) != 2 ||
+        HIBYTE( wsaData.wVersion ) != 2 ) 
+   {
+      /* Tell the user that we could not find a usable */
+      /* WinSock DLL.                                  */
+      WSACleanup( );
+      //cerr << "Bad winsock verion" << endl;
+      assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
+      exit(1);
+   }  
+#endif
+
+    options.flags = ARES_FLAG_NOCHECKRESP;
   options.servers = NULL;
   options.nservers = 0;
+
   while ((c = getopt(argc, argv, "f:s:c:t:T:U:")) != -1)
     {
       switch (c)
@@ -203,7 +320,7 @@ int main(int argc, char **argv)
 	  /* Set the TCP port number. */
 	  if (!isdigit((unsigned char)*optarg))
 	    usage();
-	  options.tcp_port = strtol(optarg, NULL, 0);
+	  options.tcp_port = (unsigned short)strtol(optarg, NULL, 0);
 	  optmask |= ARES_OPT_TCP_PORT;
 	  break;
 
@@ -211,7 +328,7 @@ int main(int argc, char **argv)
 	  /* Set the UDP port number. */
 	  if (!isdigit((unsigned char)*optarg))
 	    usage();
-	  options.udp_port = strtol(optarg, NULL, 0);
+	  options.udp_port = (unsigned short)strtol(optarg, NULL, 0);
 	  optmask |= ARES_OPT_UDP_PORT;
 	  break;
 	}
@@ -319,7 +436,7 @@ static void callback(void *arg, int status, unsigned char *abuf, int alen)
   /* Display the questions. */
   printf("Questions:\n");
   aptr = abuf + HFIXEDSZ;
-  for (i = 0; i < qdcount; i++)
+  for (i = 0; i < (int)qdcount; i++)
     {
       aptr = display_question(aptr, abuf, alen);
       if (aptr == NULL)
@@ -328,7 +445,7 @@ static void callback(void *arg, int status, unsigned char *abuf, int alen)
 
   /* Display the answers. */
   printf("Answers:\n");
-  for (i = 0; i < ancount; i++)
+  for (i = 0; i < (int)ancount; i++)
     {
       aptr = display_rr(aptr, abuf, alen);
       if (aptr == NULL)
@@ -337,7 +454,7 @@ static void callback(void *arg, int status, unsigned char *abuf, int alen)
 
   /* Display the NS records. */
   printf("NS records:\n");
-  for (i = 0; i < nscount; i++)
+  for (i = 0; i < (int)nscount; i++)
     {
       aptr = display_rr(aptr, abuf, alen);
       if (aptr == NULL)
@@ -346,7 +463,7 @@ static void callback(void *arg, int status, unsigned char *abuf, int alen)
 
   /* Display the additional records. */
   printf("Additional records:\n");
-  for (i = 0; i < arcount; i++)
+  for (i = 0; i < (int)arcount; i++)
     {
       aptr = display_rr(aptr, abuf, alen);
       if (aptr == NULL)

@@ -13,9 +13,10 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_process.c,v 1.3 2003/09/14 01:08:27 fluffy Exp $";
+static const char rcsid[] = "$Id: ares_process.c,v 1.4 2003/09/16 03:05:07 fluffy Exp $";
 
 #include <sys/types.h>
+#include <assert.h>
 
 #ifndef WIN32
 #include <sys/socket.h>
@@ -268,14 +269,33 @@ static void read_udp_packets(ares_channel channel, fd_set *read_fds,
     {
       /* Make sure the server has a socket and is selected in read_fds. */
       server = &channel->servers[i];
-      if (server->udp_socket == -1 || !FD_ISSET(server->udp_socket, read_fds))
-	continue;
+      if ( (server->udp_socket == -1) || (!FD_ISSET(server->udp_socket, read_fds) ))
+	  {
+	     continue;
+	  }
 
+	  assert( server->udp_socket != -1 );
       count = recv(server->udp_socket, buf, sizeof(buf), 0);
       if (count <= 0)
-	handle_error(channel, i, now);
-
-      process_answer(channel, buf, count, i, 0, now);
+	  {
+		int err;
+		err = WSAGetLastError();
+		//err = errno;
+		switch (err)
+		{
+			case WSAEWOULDBLOCK: 
+				continue;
+			case WSAECONNABORTED:
+				break;
+			case WSAECONNRESET: // got an ICMP error on a previous send 
+				break;
+		}
+		handle_error(channel, i, now);
+	  }
+	  else
+	  {
+		process_answer(channel, buf, count, i, 0, now);
+	  }
     }
 }
 
@@ -374,12 +394,17 @@ static void handle_error(ares_channel channel, int whichserver, time_t now)
   /* Tell all queries talking to this server to move on and not try
    * this server again.
    */
-  for (query = channel->queries; query; query = query->next)
+  for (query = channel->queries; query != 0; query = query->next)
     {
+		assert( query != 0 );
+		assert( channel->queries != 0 );
+
       if (query->server == whichserver)
 	{
 	  query->skip_server[whichserver] = 1;
+#if 0 // !cj! - this seem to corrput memory when it is called 
 	  next_server(channel, query, now);
+#endif
 	}
     }
 }
