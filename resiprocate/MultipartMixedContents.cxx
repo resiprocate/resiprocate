@@ -160,14 +160,12 @@ MultipartMixedContents::parse(ParseBuffer& pb)
  
       if( pb.eof() || *pb.position() != Symbols::CR[0] )
       {
-         DebugLog( << "bad" );
          throw Exception("Invalid line ending, missing CR",__FILE__,__LINE__);
       }
       pb.skipChar();
       if( pb.eof() || *pb.position() != Symbols::LF[0] )
       {
-         DebugLog( << "bad" );
-        throw Exception("Invalid line ending, missing LF",__FILE__,__LINE__);
+         throw Exception("Invalid line ending, missing LF",__FILE__,__LINE__);
       }
       pb.skipChar();
       
