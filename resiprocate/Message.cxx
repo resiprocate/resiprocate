@@ -1,9 +1,17 @@
 #include "sip2/sipstack/Message.hxx"
+#include "sip2/util/DataStream.hxx"
 
 std::ostream& 
 Vocal2::operator<<(std::ostream& strm, const Vocal2::Message& msg)
 {
-    msg.encode(strm);
+   Data encoded;
+
+   DataStream encodeStream(encoded);
+   msg.encode(encodeStream);
+   encodeStream.flush();
+
+   strm << encoded.escaped();
+   
    return strm;
 }
 
