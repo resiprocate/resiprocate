@@ -13,3 +13,7 @@ lib.opt.Linux.i686
 lib.prof.Linux.i686
 libtool
 resiprocate-old-junk
+depcomp
+install-sh
+compile
+proj
