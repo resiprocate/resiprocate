@@ -56,7 +56,7 @@ void ares_query(ares_channel channel, const char *name, int dnsclass,
   qquery = malloc(sizeof(struct qquery));
   if (!qquery)
     {
-      ares_free_string(qbuf);
+      ares_free_string((char*)qbuf);
       callback(arg, ARES_ENOMEM, NULL, 0);
       return;
     }
@@ -65,7 +65,7 @@ void ares_query(ares_channel channel, const char *name, int dnsclass,
 
   /* Send it off.  qcallback will be called when we get an answer. */
   ares_send(channel, qbuf, qlen, qcallback, qquery);
-  ares_free_string(qbuf);
+  ares_free_string((char*)qbuf);
 }
 
 static void qcallback(void *arg, int status, unsigned char *abuf, int alen)
