@@ -109,7 +109,7 @@ DialogSet::~DialogSet()
    DebugLog ( << " ********** DialogSet::~DialogSet: " << mId << "*************" );
    //!dcm! -- very delicate code, change the order things go horribly wrong
 
-   delete mAppDialogSet;
+   mAppDialogSet->destroy();
    mDum.removeDialogSet(this->getId());
 }
 
