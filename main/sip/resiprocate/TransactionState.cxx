@@ -493,7 +493,7 @@ TransactionState::processClientInvite(  Message* msg )
    
    if (isRequest(msg) && isFromTU(msg))
    {
-     SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       switch (sip->header(h_RequestLine).getMethod())
       {
          /* Received INVITE request from TU="Transaction User", Start Timer B which controls
@@ -508,27 +508,27 @@ TransactionState::processClientInvite(  Message* msg )
             break;
             
          case CANCEL:
-	    if (!mCancelStateMachine)
-	    {
-	       if (mCurrent == mTuples.end())
-	       {
-		  // The CANCEL was received before the INVITE was sent!
-		  SipMessage* response200 = Helper::makeResponse(*sip, 200);
-		  sendToTU(response200);
-		  SipMessage* response487 = Helper::makeResponse(*mMsgToRetransmit, 487);
-		  sendToTU(response487);
-		  delete this;
-		  break;
-	       }
+            if (!mCancelStateMachine)
+            {
+               if (mCurrent == mTuples.end())
+               {
+                  // The CANCEL was received before the INVITE was sent!
+                  SipMessage* response200 = Helper::makeResponse(*sip, 200);
+                  sendToTU(response200);
+                  SipMessage* response487 = Helper::makeResponse(*mMsgToRetransmit, 487);
+                  sendToTU(response487);
+                  delete this;
+                  break;
+               }
                mCancelStateMachine = TransactionState::makeCancelTransaction(this, ClientNonInvite);
-	    }
-	    // It would seem more logical to pass sip to processClientNonInvite
-	    // directly but this would be wrong as it would redo the DNS
-	    // query and might end up different.  The CANCEL MUST be sent to
-	    // the same coordinates as the INVITE it cancels.
-	    delete mCancelStateMachine->mMsgToRetransmit;
-	    mCancelStateMachine->mMsgToRetransmit = sip;
-	    mStack.mTimers.add(Timer::TimerF, sip->getTransactionId(), 64*Timer::T1);
+            }
+            // It would seem more logical to pass sip to processClientNonInvite
+            // directly but this would be wrong as it would redo the DNS
+            // query and might end up different.  The CANCEL MUST be sent to
+            // the same coordinates as the INVITE it cancels.
+            delete mCancelStateMachine->mMsgToRetransmit;
+            mCancelStateMachine->mMsgToRetransmit = sip;
+            mStack.mTimers.add(Timer::TimerF, sip->getTransactionId(), 64*Timer::T1);
             resendToWire(sip);
             break;
             
@@ -586,14 +586,14 @@ TransactionState::processClientInvite(  Message* msg )
                }
             }
 
-	    /* When in either the "Calling" or "Proceeding" states, reception of a
+            /* When in either the "Calling" or "Proceeding" states, reception of a
                2xx response MUST cause the client transaction to enter the
                "Terminated" state, and the response MUST be passed up to the TU 
                State Machine is changed to Stale since, we wanted to ensure that 
                all 2xx gets to TU
-	    */
+            */
               
-	    else if (code >= 200 && code < 300)
+            else if (code >= 200 && code < 300)
             {
                sendToTU(sip); // don't delete msg               
                terminateClientTransaction(msg->getTransactionId());
@@ -643,7 +643,7 @@ TransactionState::processClientInvite(  Message* msg )
                      /* Any retransmissions of the final response that are received while in
                         the "Completed" state MUST cause the ACK to be re-passed to the
                         transport layer for retransmission
-		     */
+                     */
                      SipMessage* ack;
                      ack = Helper::makeFailureAck(*mMsgToRetransmit, *sip);
                      resendToWire(ack);
@@ -663,7 +663,7 @@ TransactionState::processClientInvite(  Message* msg )
          case CANCEL:
             /*
               Let processClientNonInvite Handle the CANCEL
-	    */
+            */
             mCancelStateMachine->processClientNonInvite(msg);
             // !jf! memory mgmt? 
             break;
@@ -690,19 +690,19 @@ TransactionState::processClientInvite(  Message* msg )
                if (d < Timer::T2) d *= 2;
 
                mStack.mTimers.add(Timer::TimerA, msg->getTransactionId(), d);
-               DebugLog (<< "Retransmitting: " << mMsgToRetransmit->brief());
+               InfoLog (<< "Retransmitting INVITE: " << mMsgToRetransmit->brief());
                resendToWire(mMsgToRetransmit);
             }
             delete msg;
             break;
 
          case Timer::TimerB:
-	    if (mState == Calling)
-	    {
+            if (mState == Calling)
+            {
                sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
                terminateClientTransaction(msg->getTransactionId());
                delete this;
-	    }
+            }
             delete msg;
             break;
 
@@ -721,16 +721,16 @@ TransactionState::processClientInvite(  Message* msg )
    else if (isDns(msg) || isTransportError(msg))
    {
       if (mCancelStateMachine &&
-	  mCancelStateMachine->mMsgToRetransmit &&
-	  mCancelStateMachine->mMsgToRetransmit->getTransactionId() ==
-	  msg->getTransactionId())
+          mCancelStateMachine->mMsgToRetransmit &&
+          mCancelStateMachine->mMsgToRetransmit->getTransactionId() ==
+          msg->getTransactionId())
       {
-	 DebugLog (<< "TransactionState::processClientInvite: passing DNS to CANCEL transaction");
-	 mCancelStateMachine->processDns(msg);
+         DebugLog (<< "TransactionState::processClientInvite: passing DNS to CANCEL transaction");
+         mCancelStateMachine->processDns(msg);
       }
       else
       {
-	 processDns(msg);
+         processDns(msg);
       }
    }
    else
@@ -862,12 +862,12 @@ TransactionState::processServerInvite(  Message* msg )
                  passed from the TU for this transaction.
                */
                DebugLog (<< "Received invite from wire - forwarding to TU state=" << mState);
-	       if (!mMsgToRetransmit)
-	       {
-	          mMsgToRetransmit = make100(sip); // for when TimerTrying fires
+               if (!mMsgToRetransmit)
+               {
+                  mMsgToRetransmit = make100(sip); // for when TimerTrying fires
                }
                delete msg;
-	       sendToWire(mMsgToRetransmit);
+               sendToWire(mMsgToRetransmit);
             }
             else
             {
@@ -881,7 +881,7 @@ TransactionState::processServerInvite(  Message* msg )
               If an ACK is received while the server transaction is in the
               "Completed" state, the server transaction MUST transition to the
               "Confirmed" state.
-	    */
+            */
             if (mState == Completed)
             {
                if (mIsReliable)
@@ -908,11 +908,11 @@ TransactionState::processServerInvite(  Message* msg )
 
          case CANCEL:
             DebugLog (<< "Received Cancel, create Cancel transaction and process as server non-invite and send to TU");
-	    if (!mCancelStateMachine)
-	    {
+            if (!mCancelStateMachine)
+            {
                // new TransactionState(mStack, ServerNonInvite, Trying);
-	       mCancelStateMachine = TransactionState::makeCancelTransaction(this, ServerNonInvite);
-	    }
+               mCancelStateMachine = TransactionState::makeCancelTransaction(this, ServerNonInvite);
+            }
             // Copy the message so that it will still be valid for sendToTU().
             mCancelStateMachine->processServerNonInvite(new SipMessage(*sip));
             sendToTU(msg); // don't delete msg
@@ -989,7 +989,7 @@ TransactionState::processServerInvite(  Message* msg )
                  timer H MUST be set to fire in 64*T1 seconds for all transports.  
                  Timer H determines when the server transaction abandons retransmitting 
                  the response
-	       */
+               */
 
                if (mState == Trying || mState == Proceeding)
                {
@@ -1024,13 +1024,13 @@ TransactionState::processServerInvite(  Message* msg )
          case CANCEL:
             DebugLog (<< "Received response to Cancel, process as server non-invite if we are expecting this");
             
-	    if (!mCancelStateMachine)
-	    {
-	       // mCancelStateMachine should already exist by this point but
-	       // we shouldn't assert or this creates a DoS.
-	       delete msg;
-	       break;
-	    }
+            if (!mCancelStateMachine)
+            {
+               // mCancelStateMachine should already exist by this point but
+               // we shouldn't assert or this creates a DoS.
+               delete msg;
+               break;
+            }
             mCancelStateMachine->processServerNonInvite(new SipMessage(*sip));
             //WarningLog(<<"former sendToTU(msg)(skipped) : " << msg->brief() );
             //sendToTU(msg); // don't delete -- beacuse it is still being used...
@@ -1059,15 +1059,15 @@ TransactionState::processServerInvite(  Message* msg )
                delete msg;
             }
             break;
-	    /*
-	      If timer H fires while in the "Completed" state, it implies that the
-	      ACK was never received.  In this case, the server transaction MUST
-	      transition to the "Terminated" state, and MUST indicate to the TU
-	      that a transaction failure has occurred. WHY we need to inform TU
+            /*
+              If timer H fires while in the "Completed" state, it implies that the
+              ACK was never received.  In this case, the server transaction MUST
+              transition to the "Terminated" state, and MUST indicate to the TU
+              that a transaction failure has occurred. WHY we need to inform TU
               for Failure cases ACK ? do we really need to do this ???       
             */
          case Timer::TimerH:
-	 case Timer::TimerI:
+         case Timer::TimerI:
             DebugLog (<< "TimerH or TimerI fired. Delete this");
             terminateServerTransaction(msg->getTransactionId());
             delete this;
@@ -1086,7 +1086,7 @@ TransactionState::processServerInvite(  Message* msg )
             {
                DebugLog (<< "TimerTrying fired. Send a 100");
                sendToWire(mMsgToRetransmit); // will get deleted when this is deleted
-	       mState = Proceeding;
+               mState = Proceeding;
                delete msg;
             }
             else
@@ -1120,23 +1120,23 @@ TransactionState::processStale(  Message* msg )
 
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if ( (sip &&
-	 sip->isRequest() &&
-	 sip->header(h_RequestLine).getMethod() == ACK ) ||
+         sip->isRequest() &&
+         sip->header(h_RequestLine).getMethod() == ACK ) ||
         isResponse(msg, 200, 299 ) )
    {
       if (isFromTU(msg))
       { 
-	 mMsgToRetransmit = sip;
-	 sendToWire(sip);
+         mMsgToRetransmit = sip;
+         sendToWire(sip);
       }
       else if (isFromWire(msg))
       {
-	 sendToTU(msg);
+         sendToTU(msg);
       }
       else 
       {
-	 // !rk! what about 3xx - 6xx from processServerInvite?
-	 delete msg;
+         // !rk! what about 3xx - 6xx from processServerInvite?
+         delete msg;
       }
    }
    else if (isTimer(msg))
@@ -1146,24 +1146,24 @@ TransactionState::processStale(  Message* msg )
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       switch (timer->getType())
       {
-	 case Timer::TimerStaleServer:
+         case Timer::TimerStaleServer:
             assert(0);
             terminateServerTransaction(msg->getTransactionId());
-	    delete this;
-	    delete msg;
-	    break;
+            delete this;
+            delete msg;
+            break;
 	    
-	 case Timer::TimerStaleClient:
+         case Timer::TimerStaleClient:
             assert(0);
             terminateClientTransaction(msg->getTransactionId());
-	    delete this;
-	    delete msg;
-	    break;
+            delete this;
+            delete msg;
+            break;
 
-	 default:
-	    DebugLog (<< "ignoring timer " << timer->brief());
-	    delete msg;
-	    break;
+         default:
+            DebugLog (<< "ignoring timer " << timer->brief());
+            delete msg;
+            break;
       }
    }
    else if (isDns(msg) || isTransportError(msg))
