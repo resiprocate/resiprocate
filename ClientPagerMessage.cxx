@@ -134,19 +134,16 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
         }
         else if (code < 300)
         {
-           if(mMsgQueue.size() != 1)
-           {
-              // kenho
-              int breakPoint = 0;
-           }
            if(mMsgQueue.empty() == false)
            {
-               delete mMsgQueue.front();
-               mMsgQueue.pop_front();
-               if(mMsgQueue.empty() == false)
-                  this->pageFirstMsgQueued();
-
-               handler->onSuccess(getHandle(), msg);
+              delete mMsgQueue.front();
+              mMsgQueue.pop_front();
+              if(mMsgQueue.empty() == false)
+              {
+                 this->pageFirstMsgQueued();
+              }
+              
+              handler->onSuccess(getHandle(), msg);
            }
         }
         else
