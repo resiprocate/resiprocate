@@ -2,6 +2,8 @@
 #  define usleep(t) Sleep(t)
 #endif
 
+#define HAVE_POPT_H
+
 #if defined (HAVE_POPT_H)
 #include <popt.h>
 #endif
