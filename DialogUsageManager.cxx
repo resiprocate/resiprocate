@@ -426,26 +426,43 @@ DialogUsageManager::findCreator(DialogId id)
     return (*creator);
 }
 
-DialogUsageManager::Handle::Handle(DialogUsageManager& dum)
-   : mId(getNext()
-{}
-
 BaseUsage* 
-DialogUsageManager::Handle::get()
+DialogUsageManager::getUsage(const BaseUsage::Handle& handle)
 {
-   return mDum.getUsage(*this);
+   UsageHandleMap::iterator i = mUsageMap.find(handle.mId);
+   if (i == mUsageMap.end())
+   {
+      throw Exception("Stale BaseUsage handle",
+                      __FILE__, __LINE__);
+   }
+   else
+   {
+      return i->second;
+   }
 }
 
-UInt64
-DialogUsageManager::Handle::getNext()
+ServerInviteSession::Handle 
+DialogUsageManager::createServerInviteSession()
 {
-  static UInt64 idGenerator = 1;
-  return ++idGenerator;
+   ServerInviteSession::Handle handle(*this);
+   BaseUsage* usage = new ServerInviteSession();
+
+   assert(mUsage.find(handle.mId) == mUsage.end());
+   mUsage[handle.mId] = usage;
+
+   return handle;
 }
 
-BaseUsage* 
-DialogUsageManager::getUsage(const DialogUsageManager::Handle& handle)
-{}
+void
+DialogUsageManager::destroyUsage(BaseUsage::Handle handle)
+{
+   UsageHandleMap::iterator i = mUsageMap.find(handle.mId);
+   if (i =! mUsageMap.end())
+   {
+      delete i->second;
+      mUsageMap.erase(i);
+   }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
