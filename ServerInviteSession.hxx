@@ -31,7 +31,7 @@ class ServerInviteSession: public InviteSession
 
       /// Makes the dialog end. Depending on the current state, this might
       /// results in BYE or CANCEL being sent.
-      virtual SipMessage& end();
+      virtual void end();
       
       void dispatch(const SipMessage& msg);
 
