@@ -35,7 +35,8 @@ class Timer
          TimerJ,
          TimerK,
          TimerTrying,
-         TimerStale
+         TimerStaleClient,
+         TimerStaleServer
       } Type;
       
       static Data toData(Type timer);
@@ -59,13 +60,15 @@ class Timer
 
       static int getCpuSpeedMhz() { return mCpuSpeedMHz; }
             
-      static const unsigned long T1;
-      static const unsigned long T2;
-      static const unsigned long T4;
-      static const unsigned long T100;
-      static const unsigned long TC;
-      static const unsigned long TD;
-      static const unsigned long TS;
+      // These values can be changed but it is not recommended to do so after a
+      // stack is up and running since they are not mutexed
+      static unsigned long T1;
+      static unsigned long T2;
+      static unsigned long T4;
+      static unsigned long T100;
+      static unsigned long TC;
+      static unsigned long TD;
+      static unsigned long TS;
       
    private:
       static UInt64 getSystemTime();

@@ -2,7 +2,8 @@
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/MD5Stream.hxx"
 #include "sip2/sipstack/TransactionState.hxx"
-#include "sip2/sipstack/TransportSelector.hxx"      
+#include "sip2/sipstack/TransportSelector.hxx"
+#include "sip2/sipstack/TransactionTerminated.hxx"
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/TimerMessage.hxx"
@@ -17,6 +18,8 @@ using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::TRANSACTION
 
+unsigned long TransactionState::StatelessIdCounter = 1;
+
 TransactionState::TransactionState(SipStack& stack, Machine m, State s) : 
    mStack(stack),
    mMachine(m), 
@@ -26,7 +29,7 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
    mMsgToRetransmit(0),
    mDnsState(NotStarted),
    mCurrent(mTuples.end()),
-   mRFC2543ResponseUpdated(true)
+   mId()
 {
    if (m == ServerNonInvite || m == ServerInvite)
    {
@@ -34,20 +37,21 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
    }
 }
 
+TransactionState* 
+TransactionState::makeCancelTransaction(TransactionState* tr, Machine machine)
+{
+   TransactionState* cancel = new TransactionState(tr->mStack, machine, Trying);
+   cancel->mIsReliable = tr->mIsReliable;
+   cancel->mSource = tr->mSource;
+   return cancel;
+}
+
 TransactionState::~TransactionState()
 {
+   const Data& id = tid(mMsgToRetransmit);
    
-   Data tid = mMsgToRetransmit->getTransactionId();
-   if (mMsgToRetransmit->isRequest() &&
-       mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK)
-   {
-      // make ACK tid different from INVITE for cleanup too.
-      // this design is pretty gross
-      tid += "ACK";
-   }
-
-   DebugLog (<< "Deleting TransactionState " << tid);
-   mStack.mTransactionMap.remove(tid);
+   DebugLog (<< "Deleting TransactionState " << id);
+   mStack.mTransactionMap.remove(id);
 
    // mCancelStateMachine will take care of deleting itself
    
@@ -63,19 +67,29 @@ TransactionState::process(SipStack& stack)
 {
    Message* message = stack.mStateMacFifo.getNext();
    assert(message);
+
+   DebugLog (<< "TransactionState::process: " << *message);
    
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
-   //TimerMessage* timer=dynamic_cast<TimerMessage*>(message);;
-   
    Data tid = message->getTransactionId();
-   if (sip && !sip->isExternal() &&  sip->isRequest() && sip->header(h_RequestLine).getMethod() == ACK) 
-   {
-      tid += "ACK"; // to make it unique from the invite transaction
-   }
 
-   DebugLog (<< "got message out of state machine fifo: tid=" << tid << " " << message->brief());
+   DebugLog (<< "got message out of state machine fifo: tid='" << tid << "' " << message->brief());
    
    TransactionState* state = stack.mTransactionMap.find(tid);
+
+   // this code makes sure that an ACK to a 200 is going to create a new
+   // stateless transaction. In an ACK to a failure response, the mToTag will
+   // have been set in the ServerTransaction as the 4xx passes through so it
+   // will match. 
+   if (state && sip && sip->isRequest() && sip->header(h_RequestLine).getMethod() == ACK)
+   {
+      if (sip->header(h_To).exists(p_tag) && sip->header(h_To).param(p_tag) != state->mToTag)
+      {
+         DebugLog (<< "Must have received an ACK to a 200");
+         state = 0; // will be sent statelessly
+      }
+   }
+
    if (state) // found transaction for sip msg
    {
       DebugLog (<< "Found transaction for tid=" << tid << " " << *state);
@@ -86,6 +100,8 @@ TransactionState::process(SipStack& stack)
             state->processClientNonInvite(message);
             break;
          case ClientInvite:
+            // ACK from TU will be Stateless
+            assert (!(state->isFromTU(sip) &&  sip->isRequest() && sip->header(h_RequestLine).getMethod() == ACK));
             state->processClientInvite(message);
             break;
          case ServerNonInvite:
@@ -94,11 +110,8 @@ TransactionState::process(SipStack& stack)
          case ServerInvite:
             state->processServerInvite(message);
             break;
-         case Stale:
-            state->processStale(message);
-            break;
-         case Ack:
-            state->processAck(message);
+         case Stateless:
+            state->processStateless(message);
             break;
          default:
             assert(0);
@@ -115,22 +128,24 @@ TransactionState::process(SipStack& stack)
             DebugLog (<< "Create new transaction for inbound msg " << tid);
             if (sip->header(h_RequestLine).getMethod() == INVITE)
             {
-               DebugLog(<<" adding T100 timer (INV)");
-               TransactionState* state = new TransactionState(stack, ServerInvite, Trying);
                // !rk! This might be needlessly created.  Design issue.
+               TransactionState* state = new TransactionState(stack, ServerInvite, Trying);
                state->mMsgToRetransmit = state->make100(sip);
                state->mSource = sip->getSource();
                // since we don't want to reply to the source port unless rport present 
                state->mSource.port = Helper::getSentPort(*sip);
-
-               if( sip->header(h_Vias).front().exists(p_branch) && 
-                   sip->header(h_Vias).front().param(p_branch).hasMagicCookie() )
-               {
-                  state->mRFC2543ResponseUpdated = false;
-               }
-               
-               stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
+               state->mState = Proceeding;
                stack.mTransactionMap.add(tid,state);
+               
+               if (Timer::T100 == 0)
+               {
+                  state->sendToWire(state->mMsgToRetransmit); // will get deleted when this is deleted
+               }
+               else
+               {
+                  DebugLog(<<" adding T100 timer (INV)");
+                  stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
+               }
             }
             else 
             {
@@ -156,9 +171,11 @@ TransactionState::process(SipStack& stack)
             }
             else if (sip->header(h_RequestLine).getMethod() == ACK)
             {
-               TransactionState* state = new TransactionState(stack, Ack, Calling);
-               stack.mTransactionMap.add(tid,state);
-               state->processAck(sip);
+               TransactionState* state = new TransactionState(stack, Stateless, Calling);
+               state->mId = Data(TransactionState::StatelessIdCounter++);
+               stack.mTransactionMap.add(state->mId,state);
+               DebugLog (<< "Creating stateless transaction: " << state->mId);
+               state->processStateless(sip);
             }
             else 
             {
@@ -177,9 +194,12 @@ TransactionState::process(SipStack& stack)
          }
          else
          {
-            // forward this statelessly
-            DebugLog(<<"forward this statelessly -- UNIMP");
-            assert(0);
+            DebugLog (<< "forwarding stateless response: " << sip->brief());
+            TransactionState* state = new TransactionState(stack, Stateless, Calling);
+            state->mId = Data(TransactionState::StatelessIdCounter++);
+            DebugLog (<< "Creating stateless transaction: " << state->mId);
+            stack.mTransactionMap.add(state->mId,state);
+            state->processStateless(sip);
          }
       }
       else // wasn't a request or a response
@@ -195,20 +215,28 @@ TransactionState::process(SipStack& stack)
 }
 
 void
-TransactionState::processAck(Message* message)
+TransactionState::processStateless(Message* message)
 {
    // for ACK messages from the TU, there is no transaction, send it directly
    // to the wire // rfc3261 17.1 Client Transaction
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
    TransportMessage* result = dynamic_cast<TransportMessage*>(message);
-   DebugLog (<< "TransactionState::processAck: " << message->brief());
-
-
+   DebugLog (<< "TransactionState::processStateless: " << message->brief());
+   
    if (sip)
    {
-      assert(sip->header(h_RequestLine).getMethod() == ACK);
-      mMsgToRetransmit = sip;
-      sendToWire(sip);
+      if (isFromTU(message))
+      {
+         //assert(sip->header(h_RequestLine).getMethod() == ACK);
+         DebugLog (<< "Sending to wire statelessly: " << *sip);
+         mMsgToRetransmit = sip;
+         sendToWire(sip);
+      }
+      else
+      {
+         DebugLog (<< "Sending to TU statelessly: " << *sip);
+         sendToTU(sip);
+      }
    }
    else if (isDns(message) || isTransportError(message))
    {
@@ -245,7 +273,7 @@ TransactionState::processDns(Message* message)
       if (next != mTuples.end()) // not at end
       {
          mCurrent = next;
-         mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementCounter();
+         mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
          sendToWire(mMsgToRetransmit);
       }
       else
@@ -332,6 +360,7 @@ TransactionState::processClientNonInvite(  Message* msg )
          if (mIsReliable)
          {
             sendToTU(msg); // don't delete
+            terminateClientTransaction(msg->getTransactionId());
             delete this;
          }
          else
@@ -382,10 +411,12 @@ TransactionState::processClientNonInvite(  Message* msg )
          case Timer::TimerF:
             // !jf! is this correct
             sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+            terminateClientTransaction(msg->getTransactionId());
             delete this;
             break;
 
          case Timer::TimerK:
+            terminateClientTransaction(msg->getTransactionId());
             delete this;
             break;
 
@@ -447,7 +478,8 @@ TransactionState::processClientInvite(  Message* msg )
          case CANCEL:
 	    if (!mCancelStateMachine)
 	    {
-	       mCancelStateMachine = new TransactionState(mStack, ClientNonInvite, Trying);
+	       //mCancelStateMachine = new TransactionState(mStack, ClientNonInvite, Trying);
+               mCancelStateMachine = TransactionState::makeCancelTransaction(this, ClientNonInvite);
 	    }
 	    // It would seem more logical to pass sip to processClientNonInvite
 	    // directly but this would be wrong as it would redo the DNS
@@ -525,10 +557,9 @@ TransactionState::processClientInvite(  Message* msg )
               
 	    else if (code >= 200 && code < 300)
             {
-               mMachine = Stale;
-               mState = Terminated;
-               mStack.mTimers.add(Timer::TimerStale, msg->getTransactionId(), Timer::TS );               
                sendToTU(sip); // don't delete msg               
+               terminateClientTransaction(msg->getTransactionId());
+               delete this;
             }
             else if (code >= 300)
             {
@@ -550,6 +581,7 @@ TransactionState::processClientInvite(  Message* msg )
                   // want to use the same transport as was selected for Invite
                   resendToWire(mMsgToRetransmit);
                   sendToTU(msg); // don't delete msg
+                  terminateClientTransaction(msg->getTransactionId());
                   delete this;
                }
                else
@@ -629,12 +661,14 @@ TransactionState::processClientInvite(  Message* msg )
 	    if (mState == Calling)
 	    {
                sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               terminateClientTransaction(msg->getTransactionId());
                delete this;
 	    }
             delete msg;
             break;
 
          case Timer::TimerD:
+            terminateClientTransaction(msg->getTransactionId());
             delete msg;
             delete this;
             break;
@@ -716,6 +750,7 @@ TransactionState::processServerNonInvite(  Message* msg )
             mMsgToRetransmit = sip;
             sendToWire(sip); // don't delete msg
             delete this;
+            terminateServerTransaction(msg->getTransactionId());
          }
          else
          {
@@ -747,6 +782,7 @@ TransactionState::processServerNonInvite(  Message* msg )
    {
       assert (mState == Completed);
       assert(dynamic_cast<TimerMessage*>(msg)->getType() == Timer::TimerJ);
+      terminateServerTransaction(msg->getTransactionId());
       delete msg;
       delete this;
    }
@@ -806,6 +842,7 @@ TransactionState::processServerInvite(  Message* msg )
                if (mIsReliable)
                {
                   DebugLog (<< "Received ACK in Completed (reliable) - delete transaction");
+                  terminateServerTransaction(msg->getTransactionId());
                   delete this; 
                   delete msg;
                }
@@ -828,7 +865,8 @@ TransactionState::processServerInvite(  Message* msg )
             DebugLog (<< "Received Cancel, create Cancel transaction and process as server non-invite and send to TU");
 	    if (!mCancelStateMachine)
 	    {
-	       mCancelStateMachine = new TransactionState(mStack, ServerNonInvite, Trying);
+               // new TransactionState(mStack, ServerNonInvite, Trying);
+	       mCancelStateMachine = TransactionState::makeCancelTransaction(this, ServerNonInvite);
 	    }
             // Copy the message so that it will still be valid for sendToTU().
             mCancelStateMachine->processServerNonInvite(new SipMessage(*sip));
@@ -848,22 +886,6 @@ TransactionState::processServerInvite(  Message* msg )
       switch (sip->header(h_CSeq).method())
       {
          case INVITE:
-            // When the response comes back from the server, the Transaction
-            // needs to add a new entry to the TransactionMap that includes the
-            // totag 
-            // DO NOT REMOVE THIS!
-            if (code > 100)
-            {
-               if (!mRFC2543ResponseUpdated && 
-                   !(sip->header(h_Vias).front().exists(p_branch) &&
-                     sip->header(h_Vias).front().param(p_branch).hasMagicCookie()))
-               {
-                  // !jf! need to have a way to clean up the old one (back pointer)
-                  mStack.mTransactionMap.add(sip->updateRFC2543TransactionId(), this);
-                  mRFC2543ResponseUpdated = true;
-               }
-            }
-            
             if (code == 100)
             {
                if (mState == Trying || mState == Proceeding)
@@ -901,12 +923,10 @@ TransactionState::processServerInvite(  Message* msg )
                if (mState == Trying || mState == Proceeding)
                {
                   DebugLog (<< "Received 2xx when in Trying or Proceeding State. Start Stale Timer, move to terminated.");
-                  delete mMsgToRetransmit; 
-                  mMsgToRetransmit = sip; // save it, even though it won't be transmitted
-                  mMachine = Stale;
-                  mState = Terminated;
-                  mStack.mTimers.add(Timer::TimerStale, msg->getTransactionId(), Timer::TS );
+                  
+                  terminateServerTransaction(msg->getTransactionId());
                   sendToWire(msg); // don't delete
+                  delete this; // !jf! don't delete since still need confirmation
                }
                else
                {
@@ -930,9 +950,12 @@ TransactionState::processServerInvite(  Message* msg )
                {
                   DebugLog (<< "Received failed response in Trying or Proceeding. Start Timer H, move to completed.");
                   delete mMsgToRetransmit; 
-                  mMsgToRetransmit = sip; // save it, even though it won't be transmitted
-                  mMachine = Stale;
+                  mMsgToRetransmit = sip; 
                   mState = Completed;
+                  if (sip->header(h_To).exists(p_tag))
+                  {
+                     mToTag = sip->header(h_To).param(p_tag);
+                  }
                   mStack.mTimers.add(Timer::TimerH, msg->getTransactionId(), 64*Timer::T1 );
                   if (!mIsReliable)
                   {
@@ -1000,6 +1023,7 @@ TransactionState::processServerInvite(  Message* msg )
          case Timer::TimerH:
 	 case Timer::TimerI:
             DebugLog (<< "TimerH or TimerI fired. Delete this");
+            terminateServerTransaction(msg->getTransactionId());
             delete this;
             delete msg;
             break;
@@ -1076,11 +1100,20 @@ TransactionState::processStale(  Message* msg )
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       switch (timer->getType())
       {
-	 case Timer::TimerStale:
+	 case Timer::TimerStaleServer:
+            assert(0);
+            terminateServerTransaction(msg->getTransactionId());
 	    delete this;
 	    delete msg;
 	    break;
 	    
+	 case Timer::TimerStaleClient:
+            assert(0);
+            terminateClientTransaction(msg->getTransactionId());
+	    delete this;
+	    delete msg;
+	    break;
+
 	 default:
 	    DebugLog (<< "ignoring timer " << timer->brief());
 	    delete msg;
@@ -1182,6 +1215,11 @@ TransactionState::isSentUnreliable(Message* msg) const
    return (r && !r->isReliable());
 }
 
+const Data&
+TransactionState::tid(SipMessage* sip) const
+{
+   return mId.empty() ? sip->getTransactionId() : mId;
+}
 
 void
 TransactionState::sendToWire(Message* msg) 
@@ -1193,18 +1231,17 @@ TransactionState::sendToWire(Message* msg)
    {
       DebugLog(<< "TransactionState::sendToWire pausing for DNS lookup");
       mDnsState = Waiting;
-      mStack.mTransportSelector.dnsResolve(sip);
+      mStack.mTransportSelector.dnsResolve(sip, tid(sip));
    }
    else if (mDnsState == NoLookupRequired)
    {
       assert(sip->isResponse());
-      mStack.mTransportSelector.send(sip, mSource);
+      mStack.mTransportSelector.send(sip, mSource, tid(sip));
    }
-   else 
+   else if (mDnsState == Complete)
    {
-      assert (mDnsState != Waiting); // !jf! - is this bogus?
       assert (mCurrent != mTuples.end());
-      mStack.mTransportSelector.send(sip, *mCurrent);	  
+      mStack.mTransportSelector.send(sip, *mCurrent, tid(sip));	  
    }
 }
 
@@ -1220,12 +1257,12 @@ TransactionState::resendToWire(Message* msg) const
    if (mDnsState == NoLookupRequired)
    {
       assert(sip->isResponse());
-      mStack.mTransportSelector.send(sip, mSource);
+      mStack.mTransportSelector.send(sip, mSource, tid(sip));
    }
    else
    {
       assert (mCurrent != mTuples.end());
-      mStack.mTransportSelector.send(sip, *mCurrent, true);
+      mStack.mTransportSelector.send(sip, *mCurrent, tid(sip), true);
    }
 }
 
@@ -1233,6 +1270,7 @@ void
 TransactionState::sendToTU(Message* msg) const
 {
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
+   DebugLog(<< "Send to TU: " << *msg);
    assert(sip);
    mStack.mTUFifo.add(sip);
 }
@@ -1244,13 +1282,79 @@ TransactionState::make100(SipMessage* request) const
    return sip;
 }
 
+void
+TransactionState::terminateClientTransaction(const Data& tid)
+{
+   mState = Terminated;
+   if (mStack.mRegisteredForTransactionTermination)
+   {
+      DebugLog (<< "Terminate transaction " << tid);
+      mStack.mTUFifo.add(new TransactionTerminated(tid));
+   }
+}
+
+void
+TransactionState::terminateServerTransaction(const Data& tid)
+{
+   mState = Terminated;
+   if (mStack.mRegisteredForTransactionTermination)
+   {
+      DebugLog (<< "Terminate transaction " << tid);
+      mStack.mTUFifo.add(new TransactionTerminated(tid));
+   }
+}
+
 
 std::ostream& 
 Vocal2::operator<<(std::ostream& strm, const Vocal2::TransactionState& state)
 {
-   strm << "Tstate[ mMach=" << state.mMachine 
-        <<  " mState="  << state.mState 
-        << " mIsRel=" << state.mIsReliable;
+   strm << "Tstate[ mMach=";
+   switch (state.mMachine)
+   {
+      case TransactionState::ClientNonInvite:
+         strm << "ClientNonInvite";
+         break;
+      case TransactionState::ClientInvite:
+         strm << "ClientInvite";
+         break;
+      case TransactionState::ServerNonInvite:
+         strm << "ServerNonInvite";
+         break;
+      case TransactionState::ServerInvite:
+         strm << "ServerInvite";
+         break;
+      case TransactionState::Stateless:
+         strm << "Stateless";
+         break;
+   }
+   
+   strm << " state=";
+   switch (state.mState)
+   {
+      case TransactionState::Calling:
+         strm << "Calling";
+         break;
+      case TransactionState::Trying:
+         strm << "Trying";
+         break;
+      case TransactionState::Proceeding:
+         strm << "Proceeding";
+         break;
+      case TransactionState::Completed:
+         strm << "Completed";
+         break;
+      case TransactionState::Confirmed:
+         strm << "Confirmed";
+         break;
+      case TransactionState::Terminated:
+         strm << "Terminated";
+         break;
+      case TransactionState::Bogus:
+         strm << "Bogus";
+         break;
+   }
+
+   strm << (state.mIsReliable ? " reliable" : " unreliable");
    return strm;
 }
 
