@@ -432,6 +432,7 @@ InviteSession::makeInfo(auto_ptr<Contents> contents)
    }
    mNitState = NitProceeding;
    mDialog.makeRequest(mLastNit, INFO);
+   mLastNit.releaseContents();   
    mLastNit.setContents(contents);
    return mLastNit;   
 }
@@ -565,6 +566,13 @@ void
 InviteSession::send(SipMessage& msg)
 {
    Destroyer::Guard guard(mDestroyer);
+   //handle NITs separately
+   if (msg.header(h_CSeq).method() == INFO)
+   {
+      mDum.send(msg);
+      return;      
+   }
+
    msg.releaseContents();
    if (mQueuedBye && (mQueuedBye == &msg))
    {
