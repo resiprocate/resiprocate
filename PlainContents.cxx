@@ -10,11 +10,13 @@ using namespace std;
 ContentsFactory<PlainContents> PlainContents::Factory;
 
 PlainContents::PlainContents()
-   : mText()
+   : Contents(getStaticType()),
+     mText()
 {}
 
 PlainContents::PlainContents(const Data& txt)
-   : mText(txt)
+   : Contents(getStaticType()),
+     mText(txt)
 {}
 
 PlainContents::PlainContents(HeaderFieldValue* hfv, const Mime& contentsType)
@@ -78,7 +80,7 @@ PlainContents::parse(ParseBuffer& pb)
 
    const char* anchor = pb.position();
    pb.skipToEnd();
-   pb.reset(pb.position());
+   pb.reset(pb.position() - 2); // neglect terminating CRLF
    pb.data(mText, anchor);
 
    //DebugLog("PlainContents::parsed <" << mText << ">" );

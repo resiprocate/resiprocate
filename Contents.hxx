@@ -49,7 +49,6 @@ class Contents : public LazyParser
       static std::map<Mime, ContentsFactoryBase*>& getFactoryMap();
 
    protected:
-      Contents();
       Mime mContentsType;
 
    private:
