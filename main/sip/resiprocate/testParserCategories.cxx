@@ -330,7 +330,10 @@ main(int arc, char** argv)
       
       Auth auth(&hfv);
 
-
+      cerr << "Auth scheme: " <<  auth.scheme() << endl;
+      assert(auth.scheme() == "Digest");
+      cerr << "   realm: " <<  auth.param("realm") << endl;
+      assert(auth.param("realm") == "66.100.107.120"); 
    }
 
    cerr << "\nTEST OK" << endl;

@@ -132,7 +132,7 @@ ParserCategory::encodeFromHeaderFieldValue(ostream& str) const
 }
 
 // !dlb! need to convert existing parameter by enum to UnknownParameter for backward compatibility
-UnknownParameter&
+Data&
 ParserCategory::param(const Data& param) const
 {
    checkParsed();
@@ -142,7 +142,7 @@ ParserCategory::param(const Data& param) const
       p = new UnknownParameter(param);
       mUnknownParameters.push_back(p);
    }
-   return *dynamic_cast<UnknownParameter*>(p);
+   return dynamic_cast<UnknownParameter*>(p)->value();
 }
 
 bool

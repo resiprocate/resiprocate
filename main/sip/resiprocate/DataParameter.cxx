@@ -8,7 +8,8 @@ using namespace Vocal2;
 using namespace std;
 
 DataParameter::DataParameter(ParameterTypes::Type type,
-                             ParseBuffer& pb)
+                             ParseBuffer& pb,
+			     const char* terminators)
    : Parameter(type), 
      mValue(),
      mQuoted(false)
@@ -31,8 +32,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
    else
    {
       const char* pos = pb.position();
-      static const char* WhitespaceOrParamTerm = " \t\r\n;?>";
-      pb.skipToOneOf(WhitespaceOrParamTerm);
+      pb.skipToOneOf(terminators);
       pb.data(mValue, pos);
    }
 }
