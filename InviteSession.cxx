@@ -900,8 +900,8 @@ InviteSession::toData(State state)
          return "UAC_EarlyWithOffer";
       case UAC_EarlyWithAnswer:
          return "UAC_EarlyWithAnswer";
-      case UAC_WaitingForAnswerFromApp:
-         return "UAC_WaitingForAnswerFromApp";
+      case UAC_Answered:
+         return "UAC_Answered";
       case UAC_Terminated:
          return "UAC_Terminated";
       case UAC_SentUpdateEarly:

@@ -79,7 +79,7 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
       case UAC_Start:
       case UAC_Early:
       case UAC_EarlyWithOffer:
-      case UAC_WaitingForAnswerFromApp:
+      case UAC_Answered:
       case UAC_Terminated:
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
@@ -103,18 +103,34 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
          transition(UAC_SentAnswer);
 
          //  Remember proposed local SDP.
-         mProposedLocalSdp = InviteSession::makeSdp(answer);
-
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         
          //  Creates an PRACK request with application supplied offer.
          sendPrack(answer);
          break;
       }
 
+      case UAC_Answered:
+      {
+         transition(Connected);
+         
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+
+         SipMessage ack;
+         mDialog.makeRequest(ack, ACK);
+         InviteSession::setSdp(ack, answer);
+
+         mLastSessionModification = ack;
+         mDum.send(ack);
+         break;
+      }
+      
+
       case UAC_Start:
       case UAC_Early:
-         //case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
-      case UAC_WaitingForAnswerFromApp:
       case UAC_Terminated:
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
@@ -137,7 +153,7 @@ ClientInviteSession::end()
       case UAC_Early:
       case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
-      case UAC_WaitingForAnswerFromApp:
+      case UAC_Answered:
       case UAC_Terminated:
       case UAC_SentUpdateEarly:
       case UAC_ReceivedUpdateEarly:
@@ -182,7 +198,7 @@ ClientInviteSession::reject (int statusCode)
       case UAC_Early:
       case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
-      case UAC_WaitingForAnswerFromApp:
+      case UAC_Answered:
       case UAC_Terminated:
       case UAC_SentUpdateEarly:
          //case UAC_ReceivedUpdateEarly:
@@ -268,8 +284,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
       case UAC_EarlyWithAnswer:
          dispatchEarlyWithAnswer(msg);
          break;
-      case UAC_WaitingForAnswerFromApp:
-         dispatchWaitingForAnswerFromApp(msg);
+      case UAC_Answered:
+         dispatchAnswered(msg);
          break;
       case UAC_Terminated:
          dispatchTerminated(msg);
@@ -480,7 +496,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          break;
 
       case On2xxOffer:
-         transition(UAC_WaitingForAnswerFromApp);
+         transition(UAC_Answered);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
@@ -563,7 +579,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          break;
 
       case On2xxOffer:
-         transition(UAC_WaitingForAnswerFromApp);
+         transition(UAC_Answered);
 
          assert(mProposedLocalSdp.get() == 0);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -615,6 +631,49 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          assert(0);
          break;
    }
+}
+
+void
+ClientInviteSession::dispatchAnswered (const SipMessage& msg)
+{
+   Destroyer::Guard    guard(mDestroyer);
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   const SdpContents* sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp))
+   {
+      case On1xx:
+      case On1xxEarly:
+      case On1xxOffer:
+         // late, so ignore
+         break;
+
+      case On2xxOffer:
+      case On2xx:
+      case On2xxAnswer:
+         // retransmission
+         break;
+         
+      case OnRedirect:
+         // too late
+         break;
+
+      case OnGeneralFailure:
+      {
+         SipMessage bye;
+         mDialog.makeRequest(bye, BYE);
+         mDum.send(bye);
+
+         handler->onFailure(getHandle(), msg);
+         guard.destroy();
+         break;
+      }
+
+      default:
+         assert(0);
+         break;
+   }
+   
 }
 
 void
@@ -873,11 +932,6 @@ ClientInviteSession::dispatchSentUpdateConnected (const SipMessage& msg)
 
 void
 ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
-{
-}
-
-void
-ClientInviteSession::dispatchWaitingForAnswerFromApp (const SipMessage& msg)
 {
 }
 
