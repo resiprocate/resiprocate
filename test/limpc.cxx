@@ -1,3 +1,6 @@
+#if defined(HAVE_CONFIG_HXX)
+#include "resiprocate/config.hxx"
+#endif
 
 #include <cstring>
 #include <cassert>
