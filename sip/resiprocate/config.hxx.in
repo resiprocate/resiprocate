@@ -88,6 +88,9 @@
 /* set when debugging requested in MsgHeaderScanner */
 #undef RESIP_MSG_HEADER_SCANNER_DEBUG
 
+/* Local Data Prebuffer Size */
+#undef RESIP_OBJ_LOCAL_DATA_SIZE
+
 /* The version number of resip */
 #undef RESIP_VERSION
 
