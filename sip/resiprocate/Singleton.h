@@ -383,7 +383,7 @@ namespace Loki
     {
         if (!pInstance_)
         {
-            MakeInstance();
+           MakeInstance();
         }
         return *pInstance_;
     }
