@@ -38,6 +38,8 @@ class Timer
          TimerStale
       } Type;
       
+      static Data toData(Type timer);
+
       Timer(unsigned long ms, Type type, const Data& transactionId);
       Timer(unsigned long ms); // for TimerQueue only - don't use
       Timer(const Timer& t);
