@@ -2,6 +2,7 @@
 #include <sipstack/HeaderFieldValueList.hxx>
 #include <util/Logger.hxx>
 #include <util/compat.hxx>
+#include <util/vmd5.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -98,7 +99,29 @@ SipMessage::getTransactionId() const
    assert (!header(h_Vias).empty());
    assert (header(h_Vias).front().exists(p_branch));
    assert (!header(h_Vias).front().param(p_branch).transactionId().empty());
-   return header(h_Vias).front().param(p_branch).transactionId();
+   if( header(h_Vias).front().param(p_branch).hasMagicCookie() )
+   {
+       return header(h_Vias).front().param(p_branch).transactionId();
+   }
+   else
+   {
+       if( mRFC2543TransactionId.empty() )
+       {
+           Data key = header(h_CallId).value().lowercase() +
+                      header(h_From).uri().param(p_tag).lowercase() +
+                      Data( header(h_CSeq).sequence() ) +
+                      header(h_Vias).front().param(p_branch).transactionId().lowercase();
+           MD5Context context;
+           MD5Init( &context );
+           MD5Update( &context,
+                      reinterpret_cast<unsigned const char*>(key.data()),
+                      key.size() );
+           md5byte digest[16];
+           MD5Final( digest, &context );
+           mRFC2543TransactionId = Data( reinterpret_cast<const char*>(digest), 16 );
+       }
+       return mRFC2543TransactionId;
+   }
 }
 
 bool
