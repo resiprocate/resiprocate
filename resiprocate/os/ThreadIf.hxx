@@ -62,13 +62,15 @@ class ThreadIf
       virtual void thread() = 0;
 
   private:
- // TODO is this really needed ?
+#if 0
+	  // TODO is this really needed ?
 	pthread_t selfId() const;
+#endif
 
    private:
 
 #ifdef WIN32
-    HANDLE thread;
+    HANDLE mThread;
     DWORD mId;
 #else
     pthread_t mId;
