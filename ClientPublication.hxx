@@ -8,12 +8,15 @@ namespace resip
  *   @todo This file is empty
  */
 
-class ClientPublication: public BaseUsage {
+class ClientPublication: public BaseUsage 
+{
 
    public:
       class Handle
       {
       };
+
+      
 };
  
 }
