@@ -40,8 +40,8 @@ Headers::Type                                                                   
 _enum##_Header::getTypeNum() const {return Headers::_enum;}                                     \
 _enum##_Header::_enum##_Header()                                                                \
 {                                                                                               \
-   Headers::CommaTokenizing[Headers::_enum+1] = (Type::commaHandling & ParserCategory::In);     \
-   Headers::CommaEncoding[Headers::_enum+1] = (Type::commaHandling & ParserCategory::InOut);    \
+   Headers::CommaTokenizing[Headers::_enum+1] = (Type::commaHandling & ParserCategory::CommasAllowedOutputMulti);     \
+   Headers::CommaEncoding[Headers::_enum+1] = (Type::commaHandling & 2);                        \
    Headers::HeaderNames[Headers::_enum+1] = _name;                                              \
 }                                                                                               \
                                                                                                 \
@@ -58,8 +58,8 @@ Headers::Type                                                                   
 _enum##_MultiHeader::getTypeNum() const {return Headers::_enum;}                                \
 _enum##_MultiHeader::_enum##_MultiHeader()                                                      \
 {                                                                                               \
-   Headers::CommaTokenizing[Headers::_enum+1] = (Type::commaHandling & ParserCategory::In);     \
-   Headers::CommaEncoding[Headers::_enum+1] = (Type::commaHandling & ParserCategory::InOut);    \
+   Headers::CommaTokenizing[Headers::_enum+1] = (Type::commaHandling & ParserCategory::CommasAllowedOutputMulti);     \
+   Headers::CommaEncoding[Headers::_enum+1] = (Type::commaHandling & 2);                        \
    Headers::HeaderNames[Headers::_enum+1] = _name;                                              \
 }                                                                                               \
                                                                                                 \
