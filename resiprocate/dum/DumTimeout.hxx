@@ -13,7 +13,8 @@ class DumTimeout : public ApplicationMessage
    public:
       typedef enum
       {
-         Session,
+         SessionExpiration,
+         SessionRefresh,
          Registration,
          Provisional1,
          Provisional2,
