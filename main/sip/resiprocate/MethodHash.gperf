@@ -5,8 +5,6 @@
 
 namespace resip
 {
-using namespace std;
-using namespace resip;
 %}
 struct methods { char *name; MethodTypes type; };
 %%
