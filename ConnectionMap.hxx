@@ -25,6 +25,7 @@ class ConnectionMap
       enum {MaxAttempts = 7};
 
       ConnectionMap();
+      ~ConnectionMap();
       
       class Connection
       {
@@ -35,7 +36,7 @@ class ConnectionMap
 
             ~Connection();
             
-            Socket getSocket() {return mSocket;}
+            Socket getSocket() const {return mSocket;}
             
             bool process(size_t bytesRead, Fifo<Message>& fifo);
 
@@ -51,7 +52,7 @@ class ConnectionMap
             std::list<SendData*> mOutstandingSends;
             SendData* mCurrent;
 
-            enum { ChunkSize = 128 }; //!dcm! -- bad size, perhaps 2048-4096?
+            enum { ChunkSize = 2048 }; //!dcm! -- bad size, perhaps 2048-4096?
          private:
             
             bool prepNextMessage(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
@@ -81,13 +82,14 @@ class ConnectionMap
             friend class ConnectionMap;
       };
 
-      Connection* add(Transport::Tuple who, Socket s);
-      Connection* get(Transport::Tuple who, int attempt = 1);
-      void close(Transport::Tuple who);
+      Connection* add(const Transport::Tuple& who, Socket s);
+      Connection* get(const Transport::Tuple& who, int attempt = 1);
+      void close(const Transport::Tuple& who);
 
       // release excessively old connections
       void gc(UInt64 threshhold = ConnectionMap::MaxLastUsed);
 
+      // !jf! should be a hash_map
       typedef std::map<Transport::Tuple, Connection*> Map;
       Map mConnections;
       
@@ -97,6 +99,9 @@ class ConnectionMap
       Connection mPreYoungest;
       Connection mPostOldest;
 };
+
+std::ostream& 
+operator<<(std::ostream& strm, const Vocal2::ConnectionMap::Connection& c);
 
 }
 
