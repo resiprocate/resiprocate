@@ -71,9 +71,14 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
    assert( errNoBlock == 0 );
 #endif
 
-   // do the lsiten 
-   
-
+   // do the listen
+   int e = listen( mFd , /* qued requests */ 64 );
+   if (e != 0 )
+   {
+	   int err = errno;
+	   // !cj! deal with errors
+	   assert(0);
+   }
 }
 
 
@@ -83,9 +88,37 @@ TcpTransport::~TcpTransport()
 
 
 void 
+TcpTransport::processListen(fd_set* fdSet)
+{
+	assert( mFd );
+	
+	if ( FD_ISSET( mFd, fdSet ) )
+	{
+		struct sockaddr_in peer;
+		
+		Socket s = accept( s, (struct addr*)peer,sozeof(peer));
+		if ( s == -1 )
+		{
+			int err = errno;
+			// !cj!
+			assert(0);
+		}
+		
+		int peerPort = peer.sin_port;
+		struct in_addr addr = peer.sin_port;
+		
+		// !cj! need to add this connection(port,addr,TCP) socket s
+		assert(0);
+		
+	}
+	
+}
+
+void 
 TcpTransport::process(fd_set* fdSet)
 {
 	
+   // pull buffers to send out of TxFifo
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
    // preparse and stuff into RxFifo
