@@ -108,6 +108,7 @@ class ParseBuffer
       Data data(const char* start) const;
       
       int integer();
+      unsigned long unsignedInteger();
       float floatVal();
       static const char* Whitespace;
       static const char* ParamTerm;
