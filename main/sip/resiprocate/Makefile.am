@@ -94,36 +94,6 @@ libresiprocate_la_SOURCES = \
 
 resiprocate_includedir=$(includedir)/resiprocate
 resiprocate_include_HEADERS = \
-	os/BaseException.hxx \
-	os/CircularBuffer.hxx \
-	os/Coders.hxx \
-	os/Condition.hxx \
-	os/CountStream.hxx \
-	os/Data.hxx \
-	os/DataStream.hxx \
-	os/Fifo.hxx \
-	os/HashMap.hxx \
-	os/Inserter.hxx \
-	os/Lock.hxx \
-	os/Lockable.hxx \
-	os/Log.hxx \
-	os/Logger.hxx \
-	os/MD5Stream.hxx \
-	os/Mutex.hxx \
-	os/ParseBuffer.hxx \
-	os/RWMutex.hxx \
-	os/Random.hxx \
-	os/RandomHex.hxx \
-	os/RecursiveMutex.hxx \
-	os/Socket.hxx \
-	os/Subsystem.hxx \
-	os/SysLogBuf.hxx \
-	os/SysLogStream.hxx \
-	os/ThreadIf.hxx \
-	os/Timer.hxx \
-	os/compat.hxx \
-	os/vmd5.hxx \
-	os/vthread.hxx \
 	ApplicationSip.hxx \
 	BranchParameter.hxx \
 	Connection.hxx \
@@ -138,6 +108,7 @@ resiprocate_include_HEADERS = \
 	Executive.hxx \
 	ExistsParameter.hxx \
 	FloatParameter.hxx \
+	GenericContents.hxx \
 	HeaderFieldValue.hxx \
 	HeaderFieldValueList.hxx \
 	HeaderHash.hxx \
@@ -202,6 +173,40 @@ resiprocate_include_HEADERS = \
 	XMLCursor.hxx \
 	XPidf.hxx \
 	supported.hxx
+
+resiprocate_os_includedir=$(includedir)/resiprocate/os
+resiprocate_os_include_HEADERS = \
+	os/BaseException.hxx \
+	os/CircularBuffer.hxx \
+	os/Coders.hxx \
+	os/Condition.hxx \
+	os/CountStream.hxx \
+	os/Data.hxx \
+	os/DataStream.hxx \
+	os/Fifo.hxx \
+	os/HashMap.hxx \
+	os/Inserter.hxx \
+	os/Lock.hxx \
+	os/Lockable.hxx \
+	os/Log.hxx \
+	os/Logger.hxx \
+	os/MD5Stream.hxx \
+	os/Mutex.hxx \
+	os/ParseBuffer.hxx \
+	os/RWMutex.hxx \
+	os/Random.hxx \
+	os/RandomHex.hxx \
+	os/RecursiveMutex.hxx \
+	os/Socket.hxx \
+	os/Subsystem.hxx \
+	os/SysLogBuf.hxx \
+	os/SysLogStream.hxx \
+	os/ThreadIf.hxx \
+	os/Timer.hxx \
+	os/compat.hxx \
+	os/vmd5.hxx \
+	os/vthread.hxx
+
 SUFFIXES = .gperf .cxx
 GPERFFLAGS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
 .gperf.cxx:
