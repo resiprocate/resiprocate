@@ -1,5 +1,5 @@
-#if !defined(RESIP_IDENTITY_HXX)
-#define RESIP_IDENTITY_HXX
+#if !defined(RESIP_USERPROFILE_HXX)
+#define RESIP_USERPROFILE_HXX
 
 #include <iosfwd>
 #include <set>
