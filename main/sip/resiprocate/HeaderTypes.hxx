@@ -194,67 +194,61 @@ class MultiHeader<Headers::Error_Info>
 extern MultiHeader<Headers::Error_Info> h_ErrorInfos;
 
 //====================
-// NameAddrs:
+// Url:
 //====================
 class MultiHeader<Headers::Record_Route>
 {
    public:
-      typedef NameAddr Type;
+      typedef Url Type;
 };
 extern MultiHeader<Headers::Record_Route> h_RecordRoutes;
 
 class MultiHeader<Headers::Route>
 {
    public:
-      typedef NameAddr Type;
+      typedef Url Type;
 };
 extern MultiHeader<Headers::Route> h_Routes;
 
-//====================
-// Contact:
-//====================
 class MultiHeader<Headers::Contact>
 {
    public:
-      typedef Contact Type;
+      typedef Url Type;
 };
 extern MultiHeader<Headers::Contact> h_Contacts;
 
-//====================
-// NameAddrOrAddrSpec:
-//====================
 class Header<Headers::From>
 {
    public:
-      typedef NameAddrOrAddrSpec Type;
+      typedef Url Type;
 };
 extern Header<Headers::From> h_From;
 
 class Header<Headers::To>
 {
    public:
-      typedef NameAddrOrAddrSpec Type;
+      typedef Url Type;
 };
 extern Header<Headers::To> h_To;
 
 class Header<Headers::Reply_To>
 {
    public:
-      typedef NameAddrOrAddrSpec Type;
+      typedef Url Type;
 };
 extern Header<Headers::Reply_To> h_ReplyTo;
 
 class Header<Headers::Refer_To>
 {
    public:
-      typedef NameAddrOrAddrSpec Type;
+      typedef Url Type;
 };
 extern Header<Headers::Refer_To> h_ReferTo;
 
 class Header<Headers::Referred_By>
 {
    public:
-      typedef NameAddrOrAddrSpec Type;
+      typedef Url Type;
 };
 extern Header<Headers::Referred_By> h_ReferredBy;
 
