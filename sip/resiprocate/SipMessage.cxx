@@ -37,7 +37,7 @@ SipMessage::SipMessage(const Transport* fromWire)
      mRequest(false),
      mResponse(false),
      mCreatedTime(Timer::getTimeMicroSec()),
-     mTarget(0),
+     mForceTarget(0),
      mTlsDomain(Data::Empty)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
@@ -58,7 +58,7 @@ SipMessage::SipMessage(const SipMessage& from)
      mRequest(from.mRequest),
      mResponse(from.mResponse),
      mCreatedTime(Timer::getTimeMicroSec()),
-     mTarget(0),
+     mForceTarget(0),
      mTlsDomain(from.mTlsDomain)
 {
    if (this != &from)
@@ -98,17 +98,15 @@ SipMessage::SipMessage(const SipMessage& from)
       {
          // no body to copy
       }
-      if (from.mTarget != 0)
+      if (from.mForceTarget != 0)
       {
-	 mTarget = new Uri(*from.mTarget);
+	 mForceTarget = new Uri(*from.mForceTarget);
       }
    }
 }
 
 SipMessage::~SipMessage()
 {
-   //DebugLog (<< "Deleting SipMessage: " << brief());
-   
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
       delete mHeaders[i];
@@ -125,11 +123,11 @@ SipMessage::~SipMessage()
    {
       delete [] *i;
    }
-   
+
    delete mStartLine;
    delete mContents;
    delete mContentsHfv;
-   delete mTarget;
+   delete mForceTarget;
 }
 
 SipMessage*
@@ -1109,37 +1107,36 @@ SipMessage::setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerT
 }
 
 void
-SipMessage::setTarget(const Uri& uri)
+SipMessage::setForceTarget(const Uri& uri)
 {
-   if (mTarget)
+   if (mForceTarget)
    {
-      DebugLog(<< "SipMessage::setTarget: replacing forced target");
-      *mTarget = uri;
+      *mForceTarget = uri;
    }
    else
    {
-      mTarget = new Uri(uri);
+      mForceTarget = new Uri(uri);
    }
 }
 
 void
-SipMessage::clearTarget()
+SipMessage::clearForceTarget()
 {
-   delete mTarget;
-   mTarget = 0;
+   delete mForceTarget;
+   mForceTarget = 0;
 }
 
 const Uri&
-SipMessage::getTarget() const
+SipMessage::getForceTarget() const
 {
-   assert(mTarget);
-   return *mTarget;
+   assert(mForceTarget);
+   return *mForceTarget;
 }
 
 bool
-SipMessage::hasTarget() const
+SipMessage::hasForceTarget() const
 {
-   return (mTarget != 0);
+   return (mForceTarget != 0);
 }
 
 #if defined(DEBUG) && defined(DEBUG_MEMORY)
