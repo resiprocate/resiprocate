@@ -107,33 +107,33 @@ Timer    Value            Section               Meaning
 ----------------------------------------------------------------------
 T1       500ms default    Section 17.1.1.1     RTT Estimate
 T2       4s               Section 17.1.2.2     The maximum retransmit
-                                               interval for non-RESIP_INVITE
-                                               requests and RESIP_INVITE
+                                               interval for non-INVITE
+                                               requests and INVITE
                                                responses
 T4       5s               Section 17.1.2.2     Maximum duration a
                                                message will
                                                remain in the network
-Timer A  initially T1     Section 17.1.1.2     RESIP_INVITE request retransmit
+Timer A  initially T1     Section 17.1.1.2     INVITE request retransmit
                                                interval, for UDP only
-Timer B  64*T1            Section 17.1.1.2     RESIP_INVITE transaction
+Timer B  64*T1            Section 17.1.1.2     INVITE transaction
                                                timeout timer
-Timer C  > 3min           Section 16.6         proxy RESIP_INVITE transaction
+Timer C  > 3min           Section 16.6         proxy INVITE transaction
                            bullet 11            timeout
 Timer D  > 32s for UDP    Section 17.1.1.2     Wait time for response
          0s for TCP/SCTP                       retransmits
-Timer E  initially T1     Section 17.1.2.2     non-RESIP_INVITE request
+Timer E  initially T1     Section 17.1.2.2     non-INVITE request
                                                retransmit interval,
                                                UDP only
-Timer F  64*T1            Section 17.1.2.2     non-RESIP_INVITE transaction
+Timer F  64*T1            Section 17.1.2.2     non-INVITE transaction
                                                timeout timer
-Timer G  initially T1     Section 17.2.1       RESIP_INVITE response
+Timer G  initially T1     Section 17.2.1       INVITE response
                                                retransmit interval
 Timer H  64*T1            Section 17.2.1       Wait time for
-                                               RESIP_ACK receipt
+                                               ACK receipt
 Timer I  T4 for UDP       Section 17.2.1       Wait time for
-         0s for TCP/SCTP                       RESIP_ACK retransmits
+         0s for TCP/SCTP                       ACK retransmits
 Timer J  64*T1 for UDP    Section 17.2.2       Wait time for
-         0s for TCP/SCTP                       non-RESIP_INVITE request
+         0s for TCP/SCTP                       non-INVITE request
                                                retransmits
 Timer K  T4 for UDP       Section 17.1.2.2     Wait time for
          0s for TCP/SCTP                       response retransmits

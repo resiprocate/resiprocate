@@ -16,7 +16,6 @@ class DefaultServerReferHandler : public ServerSubscriptionHandler
       static DefaultServerReferHandler* Instance();
    protected:
       DefaultServerReferHandler() {}
-   public:
       virtual ~DefaultServerReferHandler() {}
 };
 
