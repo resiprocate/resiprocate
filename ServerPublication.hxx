@@ -15,6 +15,7 @@ class ServerPublication : public BaseUsage
       ServerPublicationHandle getHandle();
 
       const Data& getEtag() const;
+      const Data& getDocumentKey() const;
       
       SipMessage& accept(int statusCode = 200);
       SipMessage& reject(int responseCode);
@@ -40,6 +41,7 @@ class ServerPublication : public BaseUsage
       SipMessage mLastResponse;
       const Data mEtag;
       const Data mEventType;
+      const Data mDocumentKey;
       Helper::ContentsSecAttrs mLastBody;
       int mTimerSeq;
       int mExpires;
