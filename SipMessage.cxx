@@ -215,8 +215,9 @@ SipMessage::getTransactionId() const
    if (!this->exists(h_Vias) || this->header(h_Vias).empty())
    {
       InfoLog (<< "Bad message with no Vias: " << *this);
+      throw Exception("No Via in message", __FILE__,__LINE__);
    }
-
+   
    assert(exists(h_Vias) && !header(h_Vias).empty());
    if( exists(h_Vias) && header(h_Vias).front().exists(p_branch) 
        && header(h_Vias).front().param(p_branch).hasMagicCookie() )
