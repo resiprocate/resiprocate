@@ -817,9 +817,9 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
              request.header(h_RequestLine).getMethod() == OPTIONS 
              );
       
-      assert (request.header(h_RequestLine).getMethod() == CANCEL ||  // Contact header is not required for Requests that do not form a dialog
-		      request.header(h_RequestLine).getMethod() == BYE ||
-		      request.header(h_Contacts).size() == 1);
+//      assert (request.header(h_RequestLine).getMethod() == CANCEL ||  // Contact header is not required for Requests that do not form a dialog
+//		      request.header(h_RequestLine).getMethod() == BYE ||
+//		      request.header(h_Contacts).size() == 1);
       Helper::makeResponse(response, request, code, mLocalContact);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
    }
