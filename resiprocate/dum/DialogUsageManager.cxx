@@ -44,36 +44,42 @@ void DialogUsageManager::setProfile(Profile* profile)
 
 void DialogUsageManager::setRedirectManager(RedirectManager* manager)
 {
+   assert(!mRedirectManager);
    mRedirectManager = manager;
 }
 
 void 
 DialogUsageManager::setClientAuthManager(ClientAuthManager* manager)
 {
+   assert(!mClientAuthManager);
    mClientAuthManager = manager;
 }
 
 void 
 DialogUsageManager::setServerAuthManager(ServerAuthManager* manager)
 {
+   assert(!mServerAuthManager);
    mServerAuthManager = manager;
 }
 
 void 
 DialogUsageManager::setClientRegistrationHandler(ClientRegistrationHandler* handler)
 {
+   assert(!mClientRegistrationHandler);
    mClientRegistrationHandler = handler;
 }
 
 void 
 DialogUsageManager::setServerRegistrationHandler(ServerRegistrationHandler* handler)
 {
+   assert(!mServerRegistrationHandler);
    mServerRegistrationHandler = handler;
 }
 
 void 
 DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
 {
+   assert(!mInviteSessionHandler);
    mInviteSessionHandler = handler;
 }
 
@@ -88,26 +94,41 @@ DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
 void 
 DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler* handler)
 {
+   assert(handler);
+   assert(mClientSubscriptionHandler.count(eventType) == 0);
+   mClientSubscriptionHandler[eventType] = handler;
 }
 
 void 
-DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSubscriptionHandler*)
+DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSubscriptionHandler* handler)
 {
+   assert(handler);
+   assert(mServerSubscriptionHandler.count(eventType) == 0);
+   mServerSubscriptionHandler[eventType] = handler;
 }
 
 void 
-DialogUsageManager::addClientPublicationHandler(const Data& eventType, ClientPublicationHandler*)
+DialogUsageManager::addClientPublicationHandler(const Data& eventType, ClientPublicationHandler* handler)
 {
+   assert(handler);
+   assert(mClientPublicationHandler.count(eventType) == 0);
+   mClientPublicationHandler[eventType] = handler;
 }
 
 void 
-DialogUsageManager::addServerPublicationHandler(const Data& eventType, ServerPublicationHandler*)
+DialogUsageManager::addServerPublicationHandler(const Data& eventType, ServerPublicationHandler* handler)
 {
+   assert(handler);
+   assert(mServerPublicationHandler.count(eventType) == 0);
+   mServerPublicationHandler[eventType] = handler;
 }
 
 void 
-DialogUsageManager::addOutOfDialogHandler(MethodTypes&, OutOfDialogHandler*)
+DialogUsageManager::addOutOfDialogHandler(MethodTypes& type, OutOfDialogHandler* handler)
 {
+   assert(handler);
+   assert(mOutOfDialogHandler.count(type) == 0);
+   mOutOfDialogHandler[type] = handler;
 }
 
 SipMessage& 
@@ -178,7 +199,15 @@ DialogUsageManager::send(const SipMessage& request)
 void
 DialogUsageManager::cancel(DialogSetId setid)
 {
-   // !jf!
+   DialogSet* ds = findDialogSet(setid);
+   if (ds == 0)
+   {
+      throw Exception("Request no longer exists", __FILE__, __LINE__);
+   }
+   else
+   {
+      ds->cancel();
+   }
 }
 
 
@@ -392,7 +421,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             }
             else
             {
-               ds->cancel(request);
+               ds->cancel();
             }
             break;
          }
