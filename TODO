@@ -1,4 +1,4 @@
-$Id: TODO,v 1.3 2002/11/04 20:53:14 bko Exp $
+$Id: TODO,v 1.4 2002/11/05 01:23:49 bko Exp $
 
 Change the names of all the parser "components" to "integerparser" or
 something like that
@@ -15,7 +15,8 @@ a parameter should return DataParameter& rather than Data .  the
 application is responsible for passing in a quoted string if they want
 quotes.
 
-the application will never get back a quoted one.
+the application will never get back a quoted one when it asks for a
+DataParameter.
 
 there should be a UserData which is used for anything the user might
 input.  it has the property that the stack will examine the contents
@@ -33,4 +34,10 @@ or
 
 depending on what's right.
 
+
+Missing classes of headers:
+
+	Date
+	Warning
+	(someone should check these after done)
 
