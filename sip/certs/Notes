@@ -1,0 +1,13 @@
+
+
+
+Some useful commands
+
+hexdump -e '"%07.7_ad  " 10/1 "%_p" "\n"'
+
+openssl asn1parse -inform DER -in j1 -i -offset 895 
+
+openssl pkcs7 -inform DER -in j2 -print_certs -text -noout
+
+openssl pkcs7 -inform DER -in j2 -outform PEM -out j3
+
