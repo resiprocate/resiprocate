@@ -307,6 +307,7 @@ Uri::parse(ParseBuffer& pb)
          mUser = "UNKNOWN_SCHEME";
          mHost = "UNKNOWN_SCHEME";
    }
+   parseParameters(pb);
 }
 
 ParserCategory*
