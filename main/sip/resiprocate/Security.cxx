@@ -26,10 +26,17 @@
 #include "sip2/util/Random.hxx"
 #include "sip2/util/DataStream.hxx"
 #include "sip2/util/Logger.hxx"
+#include "sip2/util/BaseException.hxx"
 
 using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
+
+
+Security::Exception::Exception(const Data& msg, const Data& file, const int line) :
+   BaseException(msg,file,line)
+{
+}
 
 
 TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
@@ -180,7 +187,7 @@ TlsConnection::peerName()
    }
       
 #ifdef WIN32
-   assert(0);
+	assert(0);
 #else
    ErrLog("request peer certificate" );
    X509* cert = SSL_get_peer_certificate(ssl);
@@ -316,36 +323,34 @@ Data
 Security::getPath( const Data& dirPath, const Data& file )
 {
    Data path = dirPath;
-   
+
    if ( path.empty() )
    {
+	   char* v = getenv("SIP");
+	   if (v)
+	   {
+		   path = Data(v);
+	   }
+	   else
+	   {  
+		   v = getenv("HOME");
+		   if ( v )
+		   {
+			   path = Data(v);
+			   path += Data("/.sip");
+		   }
+		   else
+		   {
 #ifdef WIN32
-  //      assert(0); 
-	   // !cj! TODO need to fix
-	   path = "C:\\.";
+			   path = "C:\\certs";
 #else
-      char* v = getenv("SIP");
-      if (v)
-      {
-         path = Data(v);
-      }
-      else
-      {  
-         v = getenv("HOME");
-         if ( v )
-         {
-            path = Data(v);
-            path += Data("/.sip");
-         }
-         else
-         {
-            ErrLog( << "Environment variobal HOME is not set" );
-            path = "/etc/sip";
-         }
-      }
+			   ErrLog( << "Environment variobal HOME is not set" );
+			   path = "/etc/sip";
 #endif
+		   }
+	   }
    }
-   
+
 #ifdef WIN32
    path += Data("\\");
 #else
@@ -353,9 +358,7 @@ Security::getPath( const Data& dirPath, const Data& file )
 #endif
 
    assert( !file.empty() );
-   
    path += file;
-
    DebugLog( << "Using file path " << path );
    
    return path;
@@ -375,7 +378,13 @@ Security::loadAllCerts( const Data& password, const Data&  dirPath )
       getTlsCtx();
    }
    
-   ok = loadPublicCert( getPath( dirPath, Data("public_keys/")) ) ? ok : false;
+#ifdef WIN32
+   Data pubKeyDir("public_keys\\");
+#else
+   Data pubKeyDir("public_keys/");
+#endif
+
+   ok = loadPublicCert( getPath(dirPath,pubKeyDir) ) ? ok : false;
    
    return ok;
 }
@@ -386,10 +395,13 @@ Security::loadMyPublicCert( const Data&  filePath )
 {
    assert( !filePath.empty() );
    
-   FILE* fp = fopen(filePath.c_str(),"r");
+   FILE* fp = fopen(filePath.c_str(),"rb");
    if ( !fp )
    {
-      ErrLog( << "Could not read public cert from " << filePath );
+      ErrLog( "Could not read public cert from " << filePath );
+	  Data err( "Could not read public cert from " );
+	  err += filePath;
+	  throw Exception(err, __FILE__,__LINE__);
       return false;
    }
    
@@ -397,6 +409,11 @@ Security::loadMyPublicCert( const Data&  filePath )
    if (!publicCert)
    {
       ErrLog( << "Error reading contents of public cert file " << filePath );
+	    
+	  Data err( "Error reading contents of public cert file " );
+	  err += filePath;
+	  throw Exception(err, __FILE__,__LINE__);
+
       return false;
    }
    
@@ -417,7 +434,11 @@ Security::loadRootCerts(  const Data& filePath )
    if ( X509_STORE_load_locations(certAuthorities,filePath.c_str(),NULL) != 1 )
    {  
       ErrLog( << "Error reading contents of root cert file " << filePath );
-      return false;
+
+	  Data err( "Error reading contents of root cert file  " );
+	  err += filePath;
+	  throw Exception(err, __FILE__,__LINE__);
+	  return false;
    }
    
    InfoLog( << "Loaded public CAs from " << filePath );
@@ -432,54 +453,119 @@ Security::loadPublicCert(  const Data& filePath )
    assert( !filePath.empty() );
 
 #ifdef WIN32
-   return true; // !cj! - needs to be fixed - very bogus windows port
+   WIN32_FIND_DATA FileData; 
+   HANDLE hSearch; 
+   Data searchPath = filePath + Data("*");
+   hSearch = FindFirstFile( searchPath.c_str(), &FileData); 
+   if (hSearch == INVALID_HANDLE_VALUE) 
+   { 
+	  Data err( "Error reading public cert directory " );
+	  err += filePath;
+	  throw Exception(err, __FILE__,__LINE__);
+	  return false;
+   } 
+
+   bool done = false;
+   while (!done) 
+   { 
+	   Data name( FileData.cFileName);
+	   Data path = filePath;
+	   //path += "\\";
+	   path += name;
+
+	   if ( strchr( name.c_str(), '@' ))
+	   {
+		   FILE* fp = fopen(path.c_str(),"rb");
+		   if ( !fp )
+		   {
+			   ErrLog( << "Could not read public key from " << path );
+			   Data err( "Could not read other persons public key from " );
+			   err += path;
+			   throw Exception(err, __FILE__,__LINE__);
+		   }
+		   else
+		   {
+			   X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
+			   if (!cert)
+			   {
+				   ErrLog( << "Error reading contents of public key file " << path );
+				   Data err( "Error reading contents of other persons public key file " );
+				   err += path;
+				   throw Exception(err, __FILE__,__LINE__);
+			   }
+			   else
+			   {
+				   publicKeys[name] = cert;
+			   }
+		   }
+
+	   }   
+
+	   if (!FindNextFile(hSearch, &FileData)) 
+	   {
+		   if (GetLastError() == ERROR_NO_MORE_FILES) 
+		   { 
+			   done = true;
+		   } 
+		   else 
+		   { 
+			   Data err( "Bizarre problem reading public certificate direcotyr" );
+			   err += filePath;
+			   throw Exception(err, __FILE__,__LINE__);
+			   return false;
+		   } 
+	   }
+   } 
+   FindClose(hSearch);
+
+   return true; 
 #else
    DIR* dir = opendir( filePath.c_str() );
-  
+
    if (!dir )
    {
-      ErrLog( << "Error reading public key directory  " << filePath );
-      return false;
+	   ErrLog( << "Error reading public key directory  " << filePath );
+	   return false;
    }
-   
+
    struct dirent * d = NULL;
    while (1)
    {
-      d = readdir(dir);
-      if ( !d )
-      {
-         break;
-      }
-      
-      Data name( d->d_name );
-      Data path = filePath;
-      path += name;
+	   d = readdir(dir);
+	   if ( !d )
+	   {
+		   break;
+	   }
 
-      if ( !strchr( name.c_str(), '@' ))
-      {
-         DebugLog( << "skipping file " << path );
-         continue;
-      }
-      
-      FILE* fp = fopen(path.c_str(),"r");
-      if ( !fp )
-      {
-         ErrLog( << "Could not read public key from " << path );
-         continue;
-      }
-   
-      X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
-      if (!cert)
-      {
-         ErrLog( << "Error reading contents of public key file " << path );
-         continue;
-      }
-   
-      publicKeys[name] = cert;
-         
-      DebugLog( << "Loaded public key from " << name );         
+	   Data name( d->d_name );
+	   Data path = filePath;
+	   path += name;
+
+	   if ( !strchr( name.c_str(), '@' ))
+	   {
+		   DebugLog( << "skipping file " << path );
+		   continue;
+	   }
+
+	   FILE* fp = fopen(path.c_str(),"rb");
+	   if ( !fp )
+	   {
+		   ErrLog( << "Could not read public key from " << path );
+		   continue;
+	   }
+
+	   X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
+	   if (!cert)
+	   {
+		   ErrLog( << "Error reading contents of public key file " << path );
+		   continue;
+	   }
+
+	   publicKeys[name] = cert;
+
+	   DebugLog( << "Loaded public key from " << name );         
    }
-   
+
    closedir( dir );
 #endif
 
@@ -500,11 +586,16 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
 {
    assert( !filePath.empty() );
    
-   FILE* fp = fopen(filePath.c_str(),"r");
+   FILE* fp = fopen(filePath.c_str(),"rb");
    if ( !fp )
    {
       ErrLog( << "Could not read private key from " << filePath );
-      return false;
+
+	  Data err( "Could not read private key from " );
+	  err += filePath;
+	  throw Exception(err, __FILE__,__LINE__);
+	  
+	  return false;
    }
    
    //DebugLog( "password is " << password );
@@ -513,6 +604,10 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
    if (!privateKey)
    {
       ErrLog( << "Error reading contents of private key file " << filePath );
+  
+	  Data err( "Error reading contents of private key file " );
+	  err += filePath;
+	  throw Exception(err, __FILE__,__LINE__);
 
       while (1)
       {
@@ -647,12 +742,9 @@ Security::pkcs7Sign( Contents* bodyIn )
    
    Data bodyData;
    oDataStream strm(bodyData);
-#if 1
+
    bodyIn->encodeHeaders(strm);
-#else
-   strm << "Content-Type: " << bodyIn->getStaticType() << Symbols::CRLF;
-   strm << Symbols::CRLF;
-#endif
+
    bodyIn->encode( strm );
    strm.flush();
    
@@ -690,16 +782,8 @@ Security::pkcs7Sign( Contents* bodyIn )
    }
    DebugLog( << "created PKCS7 sign object " );
 
-#if 0
-   if ( SMIME_write_PKCS7(out,pkcs7,in,0) != 1 )
-   {
-      ErrLog( << "Error doind S/MIME write of signed object" );
-      return NULL;
-   }
-   DebugLog( << "created SMIME write object" );
-#else
    i2d_PKCS7_bio(out,pkcs7);
-#endif
+
    BIO_flush(out);
    
    char* outBuf=NULL;
@@ -760,12 +844,9 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    
    Data bodyData;
    oDataStream strm(bodyData);
-#if 1
+
    bodyIn->encodeHeaders(strm);
-#else
-   strm << "Content-Type: " << bodyIn->getStaticType() << Symbols::CRLF;
-   strm << Symbols::CRLF;
-#endif
+
    bodyIn->encode( strm );
    strm.flush();
    
@@ -822,16 +903,8 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    }
    DebugLog( << "created PKCS7 encrypt object " );
 
-#if 0
-   if ( SMIME_write_PKCS7(out,pkcs7,in,0) != 1 )
-   {
-      ErrLog( << "Error doind S/MIME write of signed object" );
-      return NULL;
-   }
-   DebugLog( << "created SMIME write object" );
-#else
    i2d_PKCS7_bio(out,pkcs7);
-#endif
+
    BIO_flush(out);
    
    char* outBuf=NULL;
