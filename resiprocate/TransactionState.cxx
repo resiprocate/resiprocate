@@ -1370,6 +1370,10 @@ TransactionState::sendToWire(Message* msg, bool resend)
          mController.mTransportSelector.transmit(sip, target);
       }
    }
+   else if (sip->getDestination().transport)
+   {
+      mController.mTransportSelector.transmit(sip, sip->getDestination()); // dns not used
+   }
    else if (mDnsResult == 0 && !mIsCancel) // no dns query yet
    {
       DebugLog (<< "sendToWire with no dns result: " << *this);
