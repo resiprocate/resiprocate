@@ -23,6 +23,22 @@ main()
 
       assert(skipSipLWS(pb) == txt.data()+1);
    }
+   {
+      cerr << "Test unparsed copy constructor" << endl;
+   
+      const Data txt("Messages-Waiting: yes\r\n"
+                     "voice-message: 7/0\r\n");
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("text", "data");
+      MessageWaitingContents mwb(&hfv, type);
+
+      MessageWaitingContents* mwb2 =
+         dynamic_cast<MessageWaitingContents*>(mwb.clone());
+
+      assert(mwb2->header(mw_voice).newCount() == 7);
+      assert(mwb2->header(mw_voice).oldCount() == 0);
+   }
 
    {
       const Data txt("Messages-Waiting: yes\r\n"
