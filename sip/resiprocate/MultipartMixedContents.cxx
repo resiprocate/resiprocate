@@ -89,7 +89,7 @@ MultipartMixedContents::clone() const
 }
 
 const Mime& 
-MultipartMixedContents::getStaticType() const
+MultipartMixedContents::getStaticType() 
 {
    static Mime type("multipart","mixed");
    return type;
@@ -248,7 +248,7 @@ MultipartRelatedContents::clone() const
 }
 
 const Mime& 
-MultipartRelatedContents::getStaticType() const
+MultipartRelatedContents::getStaticType() 
 {
    static Mime type("multipart","related");
    return type;

@@ -23,7 +23,8 @@ class MultipartMixedContents : public Contents
       MultipartMixedContents& operator=(const MultipartMixedContents& rhs);
       virtual Contents* clone() const;
 
-      virtual const Mime& getStaticType() const;
+      //virtual 
+		  static const Mime& getStaticType() ;
 
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
@@ -51,7 +52,8 @@ class MultipartRelatedContents : public MultipartMixedContents
       MultipartRelatedContents& operator=(const MultipartRelatedContents& rhs);
       virtual Contents* clone() const;
 
-      virtual const Mime& getStaticType() const;
+      //virtual 
+		  static const Mime& getStaticType() ;
       
    private:
       static ContentsFactory<MultipartRelatedContents> Factory;

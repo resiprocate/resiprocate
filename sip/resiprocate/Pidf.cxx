@@ -83,7 +83,7 @@ Pidf::clone() const
 
 
 const Mime& 
-Pidf::getStaticType() const
+Pidf::getStaticType() 
 {
    static Mime type("application","cpim-pidf+xml");
    return type;
