@@ -48,12 +48,12 @@ class Transport : public ThreadIf
       
       // These methods are used by the TransportSelector
       const Data& interfaceName() const { return mInterface; } 
-      int port() const { return mPort; } 
-      bool isV4() const { return mV4; }
-
+      int port() const { return mTuple.getPort(); } 
+      bool isV4() const { return mTuple.isV4(); }
+      
       const Data& tlsDomain() const { return Data::Empty; }
-      const sockaddr& boundInterface() const { return mBoundInterface; }
-
+      const sockaddr& boundInterface() const { return mTuple.getSockaddr(); }
+      
       virtual TransportType transport() const =0 ;
       virtual bool isReliable() const =0;
       
@@ -70,18 +70,9 @@ class Transport : public ThreadIf
       bool operator==(const Transport& rhs) const;
       
    protected:
-      bool mV4;
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
-      int mPort;
       Data mInterface;
-
-      union {
-            sockaddr mBoundInterface;
-            sockaddr_in mbiV4;
-#ifdef USE_IPV6
-			sockaddr_in6 mbiV6;
-#endif
-      };
+      Tuple mTuple;
       
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in

@@ -28,10 +28,9 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 }
 
 Transport::Transport(Fifo<Message>& rxFifo, int portNum, const Data& intfc, bool ipv4) : 
-   mV4(ipv4),
    mFd(-1),
-   mPort(portNum), 
    mInterface(intfc),
+   mTuple(intfc, portNum, ipv4),
    mStateMachineFifo(rxFifo)
 {
 }
@@ -62,7 +61,7 @@ Transport::socket(TransportType type, bool ipv4)
    
    if ( fd == INVALID_SOCKET )
    {
-	   	int e = getErrno();
+      int e = getErrno();
       InfoLog (<< "Failed to create socket: " << strerror(e));
       throw Exception("Can't create TcpBaseTransport", __FILE__,__LINE__);
    }
@@ -75,55 +74,19 @@ Transport::socket(TransportType type, bool ipv4)
 void 
 Transport::bind()
 {
-   if (mV4)
-   {
-      sockaddr_in* addr4 = reinterpret_cast<sockaddr_in*>(&mBoundInterface);
-      memset(addr4, 0, sizeof(*addr4));
-      
-      addr4->sin_family = AF_INET;
-      addr4->sin_port = htons(mPort);
-      if (mInterface == Data::Empty)
-      {
-         addr4->sin_addr.s_addr = htonl(INADDR_ANY); 
-      }
-      else
-      {
-         DnsUtil::inet_pton(mInterface, addr4->sin_addr);
-      }
-   }
-   else
-   {
-#if defined(USE_IPV6)
-      sockaddr_in6* addr6 = reinterpret_cast<sockaddr_in6*>(&mBoundInterface);;
-      memset(addr6, 0, sizeof(*addr6));
-      
-      addr6->sin6_family = AF_INET6;
-      addr6->sin6_port = htons(mPort);
-      if (mInterface == Data::Empty)
-      {
-         addr6->sin6_addr = in6addr_any;
-      }
-      else
-      {
-         DnsUtil::inet_pton(mInterface, addr6->sin6_addr);
-      }
-#else
-      assert(0);
-#endif
-   }
-   DebugLog (<< "Binding to " << DnsUtil::inet_ntop(mBoundInterface));
+   DebugLog (<< "Binding to " << DnsUtil::inet_ntop(mTuple));
    
-   if ( ::bind( mFd, &mBoundInterface, sizeof(mBoundInterface)) == SOCKET_ERROR )
+   if ( ::bind( mFd, &mTuple.getMutableSockaddr(), mTuple.length()) == SOCKET_ERROR )
    {
-	   	int e = getErrno();
+      int e = getErrno();
       if ( e == EADDRINUSE )
       {
-         ErrLog (<< "port " << mPort << " already in use");
+         ErrLog (<< "port " << port() << " already in use");
          throw Exception("port already in use", __FILE__,__LINE__);
       }
       else
       {
-         ErrLog (<< "Could not bind to port: " << mPort);
+         ErrLog (<< "Could not bind to port: " << port());
          throw Exception("Could not use port", __FILE__,__LINE__);
       }
    }
@@ -131,7 +94,7 @@ Transport::bind()
    bool ok = makeSocketNonBlocking(mFd);
    if ( !ok )
    {
-      ErrLog (<< "Could not make socket non-blocking " << mPort);
+      ErrLog (<< "Could not make socket non-blocking " << port());
       throw Exception("Failed making socket non-blocking", __FILE__,__LINE__);
    }
 }
@@ -159,6 +122,59 @@ Transport::error(int e)
       case EFAULT:
          InfoLog (<< "buf is outside your accessible address space : " << strerror(e));
          break;
+
+#if defined(WIN32)
+      case WSAENETDOWN: 
+         DebugLog (<<" The network subsystem has failed.  ");
+         break;
+      case WSAEFAULT:
+         DebugLog (<<" The buf or from parameters are not part of the user address space, "
+                   "or the fromlen parameter is too small to accommodate the peer address.  ");
+         break;
+      case WSAEINTR: 
+         DebugLog (<<" The (blocking) call was canceled through WSACancelBlockingCall.  ");
+         break;
+      case WSAEINPROGRESS: 
+         DebugLog (<<" A blocking Windows Sockets 1.1 call is in progress, or the "
+                   "service provider is still processing a callback function.  ");
+         break;
+      case WSAEINVAL: 
+         DebugLog (<<" The socket has not been bound with bind, or an unknown flag was specified, "
+                   "or MSG_OOB was specified for a socket with SO_OOBINLINE enabled, "
+                   "or (for byte stream-style sockets only) len was zero or negative.  ");
+         break;
+      case WSAEISCONN : 
+         DebugLog (<<"The socket is connected. This function is not permitted with a connected socket, "
+                   "whether the socket is connection-oriented or connectionless.  ");
+         break;
+      case WSAENETRESET:
+         DebugLog (<<" The connection has been broken due to the keep-alive activity "
+                   "detecting a failure while the operation was in progress.  ");
+         break;
+      case WSAENOTSOCK :
+         DebugLog (<<"The descriptor is not a socket.  ");
+         break;
+      case WSAEOPNOTSUPP:
+         DebugLog (<<" MSG_OOB was specified, but the socket is not stream-style such as type "
+                   "SOCK_STREAM, OOB data is not supported in the communication domain associated with this socket, "
+                   "or the socket is unidirectional and supports only send operations.  ");
+         break;
+      case WSAESHUTDOWN:
+         DebugLog (<<"The socket has been shut down; it is not possible to recvfrom on a socket after "
+                   "shutdown has been invoked with how set to SD_RECEIVE or SD_BOTH.  ");
+         break;
+      case WSAEMSGSIZE:
+         DebugLog (<<" The message was too large to fit into the specified buffer and was truncated.  ");
+         break;
+      case WSAETIMEDOUT: 
+         DebugLog (<<" The connection has been dropped, because of a network failure or because the "
+                   "system on the other end went down without notice.  ");
+         break;
+      case WSAECONNRESET : 
+         DebugLog (<<"Reset ");
+         break;
+#endif
+
       default:
          InfoLog (<< "Some other error (" << e << "): " << strerror(e));
          break;
@@ -230,9 +246,9 @@ Transport::stampReceived(SipMessage* message)
 bool 
 Transport::operator==(const Transport& rhs) const
 {
-   return ( ( mV4 == rhs.mV4) &&
-            ( mPort == rhs.mPort) &&
-            ( memcmp(&mBoundInterface,&rhs.mBoundInterface,sizeof(mBoundInterface)) == 0) );
+   return ( ( mTuple.isV4() == rhs.isV4()) &&
+            ( port() == rhs.port()) &&
+            ( memcmp(&boundInterface(),&rhs.boundInterface(),mTuple.length()) == 0) );
 }
 
 /* ====================================================================
