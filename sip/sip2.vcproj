@@ -261,7 +261,7 @@
 				RelativePath="sipstack\Uri.cxx">
 			</File>
 			<File
-				RelativePath="sipstack\test\testSipStack1.cxx">
+				RelativePath="sipstack\test\test2.cxx">
 			</File>
 			<File
 				RelativePath="util\vmd5.cxx">
