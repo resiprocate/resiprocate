@@ -9,12 +9,12 @@ namespace resip
 class UnknownParameterType
 {
    public:
-      explicit UnknownParameterType(const char* unknownParameterName);
+      explicit UnknownParameterType(const Data& unknownParameterName);
 
       const Data& getName() const {return mName;}
 
    private:
-      Data mName;
+      const Data mName;
 };
 
 }
