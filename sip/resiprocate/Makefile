@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.129 2003/09/14 03:40:30 davidb Exp $
+# $Id: Makefile,v 1.130 2003/09/14 08:27:16 jason Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIPROCATE  ARES OPENSSL PTHREAD 
+PACKAGES += RESIPROCATE ARES OPENSSL PTHREAD 
 
 CODE_SUBDIRS = os
 TARGET_LIBRARY = libresiprocate
@@ -36,6 +36,7 @@ SRC = \
 	os/Subsystem.cxx \
 	os/ThreadIf.cxx \
 	os/Timer.cxx \
+	os/Tuple.cxx \
 	os/vmd5.cxx \
 	X_msMsgsInvite.cxx \
 	GenericContents.cxx \
