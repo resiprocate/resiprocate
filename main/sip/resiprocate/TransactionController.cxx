@@ -84,10 +84,10 @@ TransactionController::buildFdSet( FdSet& fdset)
 void
 TransactionController::addTransport( TransportType protocol, 
                                      int port,
-                                     bool ipv6,
+                                     IpVersion version,
                                      const Data& ipInterface)
 {
-   mTransportSelector.addTransport(protocol, port, ipv6, ipInterface);
+   mTransportSelector.addTransport(protocol, port, version, ipInterface);
 }
 
 void 
@@ -95,10 +95,10 @@ TransactionController::addTlsTransport( int port,
                                         const Data& keyDir,
                                         const Data& privateKeyPassPhrase,
                                         const Data& domainname,
-                                        bool ipv6,
+                                        IpVersion version,
                                         const Data& ipInterface)
 {
-   mTransportSelector.addTlsTransport(domainname, keyDir, privateKeyPassPhrase, port, ipv6, ipInterface);
+   mTransportSelector.addTlsTransport(domainname, keyDir, privateKeyPassPhrase, port, version, ipInterface);
 }
 
 void
