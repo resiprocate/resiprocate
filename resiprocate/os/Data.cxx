@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.74 2003/09/19 23:29:43 davidb Exp $";
+// "$Id: Data.cxx,v 1.75 2003/10/03 01:52:42 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -1016,9 +1016,9 @@ static const unsigned char randomPermutation[256] =
    235, 217, 165, 122, 15, 141, 158, 147, 240, 24, 162, 18, 60, 73, 227, 248
 };
 
-#if ( ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) ) || defined(__INTEL_COMPILER ) )
-size_t 
-__gnu_cxx::hash<resip::Data>::operator()(const resip::Data& data) const
+
+#if defined(HASH_MAP_NAMESPACE)
+size_t HASH_MAP_NAMESPACE::hash<resip::Data>::operator()(const resip::Data& data) const
 {
    // 4 byte Pearson's hash
    // essentially random hashing
@@ -1045,6 +1045,38 @@ __gnu_cxx::hash<resip::Data>::operator()(const resip::Data& data) const
    return ntohl((size_t)(byte0));
 }
 #endif
+
+#if defined(__INTEL_COMPILER)
+size_t std::hash_value(const resip::Data& data)
+{
+   // 4 byte Pearson's hash
+   // essentially random hashing
+
+   // .dlb. better if layed out in host byte order
+
+   // network order is big endian:
+   unsigned char byte0(randomPermutation[0]);
+   unsigned char byte1(randomPermutation[1]);
+   unsigned char byte2(randomPermutation[2]);
+   unsigned char byte3(randomPermutation[3]);
+
+   const char* c = data.data();
+   const char* end = c + data.size();
+   for ( ; c != end; ++c)
+   {
+      byte0 = randomPermutation[*c ^ byte0];
+      byte1 = randomPermutation[*c ^ byte1];
+      byte2 = randomPermutation[*c ^ byte2];
+      byte3 = randomPermutation[*c ^ byte3];
+   }
+
+   // convert from network to host byte order
+   return ntohl((size_t)(byte0));
+}
+#endif
+
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
