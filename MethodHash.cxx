@@ -94,10 +94,10 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
       {"RESIP_BYE", RESIP_BYE},
       {"INFO", RESIP_INFO},
       {"REFER",RESIP_REFER},
-      {"NOTIFY", RESIP_NOTIFY},
-      {"OPTIONS", RESIP_OPTIONS},
+      {"RESIP_NOTIFY", RESIP_NOTIFY},
+      {"RESIP_OPTIONS", RESIP_OPTIONS},
       {"RESPONSE", RESIP_RESPONSE},
-      {"SUBSCRIBE", RESIP_SUBSCRIBE},
+      {"RESIP_SUBSCRIBE", RESIP_SUBSCRIBE},
       {"CANCEL", RESIP_CANCEL},
       {"MESSAGE", RESIP_MESSAGE},
       {"RESIP_REGISTER", RESIP_REGISTER},
@@ -106,7 +106,7 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
       {"RESIP_ACK", RESIP_ACK},
       {"PRACK", RESIP_PRACK},
       {"UPDATE", RESIP_UPDATE},
-      {"PUBLISH", RESIP_PUBLISH}
+      {"RESIP_PUBLISH", RESIP_PUBLISH}
     };
 
   static signed char lookup[] =
