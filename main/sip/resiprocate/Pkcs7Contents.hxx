@@ -51,7 +51,7 @@ class Pkcs7SignedContents : public Pkcs7Contents
       Pkcs7SignedContents& operator=(const Pkcs7SignedContents& rhs);
 
       //virtual 
-		  static const Mime& getStaticType() ;
+      static const Mime& getStaticType() ;
       virtual Contents* clone() const;
 
    private:

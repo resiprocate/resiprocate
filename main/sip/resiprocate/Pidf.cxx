@@ -10,7 +10,6 @@ using namespace std;
 
 ContentsFactory<Pidf> Pidf::Factory;
 
-
 Pidf::Pidf()
    : Contents(getStaticType())
 {}
@@ -21,13 +20,11 @@ Pidf::Pidf(const Data& txt)
 {}
 #endif
 
-
 Pidf::Pidf(HeaderFieldValue* hfv, const Mime& contentsType)
    : Contents(hfv, contentsType)
 {
 }
  
-
 #if 0
 Pidf::Pidf(const Data& txt, const Mime& contentsType)
    : Contents(contentsType)
@@ -49,11 +46,9 @@ Pidf::Pidf(const Pidf& rhs)
    assert(  mTuple.size() ==  rhs.mTuple.size() );
 }
 
-
 Pidf::~Pidf()
 {
 }
-
 
 Pidf&
 Pidf::operator=(const Pidf& rhs)
@@ -61,10 +56,10 @@ Pidf::operator=(const Pidf& rhs)
    if (this != &rhs)
    {
       Contents::operator=(rhs);
+      clear();
       
       mNote = rhs.mNote;
       mEntity = rhs.mEntity;
-      mTuple.clear();
       for( unsigned int i=0; i < rhs.mTuple.size(); i++)
       {
          Tuple t = rhs.mTuple[i];
@@ -74,13 +69,11 @@ Pidf::operator=(const Pidf& rhs)
    return *this;
 }
 
-
 Contents* 
 Pidf::clone() const
 {
    return new Pidf(*this);
 }
-
 
 const Mime& 
 Pidf::getStaticType() 
@@ -209,4 +202,8 @@ Pidf::getSimpleStatus( Data* note )
    return mTuple[0].status;
 }
 
-   
+void
+Pidf::clear()
+{
+   mTuple.clear();
+}   
