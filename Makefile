@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.51 2002/10/02 23:08:15 jason Exp $
+# $Id: Makefile,v 1.52 2002/10/03 19:49:23 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -120,11 +120,6 @@ $(BIN)/libSipStack.a: $(OBJS)
 	@$(MAKE) $(^)
 	ar $(ARFLAGS) $@ $^
 	@- ln -s $(shell pwd)/$@ $(LIB)
-
-testParameterList:  $(OBJS) $(OBJ)/testParameterList.o 
-	@$(MAKE) $(^:.o=.d)
-	@$(MAKE) $(^)
-	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testUdp:  $(OBJS) $(OBJ)/testUdp.o
 	@$(MAKE) $(^:.o=.d)
