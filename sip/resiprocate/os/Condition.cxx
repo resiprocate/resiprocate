@@ -59,35 +59,73 @@ using namespace Vocal2;
 
 Condition::Condition()
 {
+#ifdef WIN32
+	mId =  CreateEvent(
+		NULL, //LPSECURITY_ATTRIBUTES lpEventAttributes,
+		// pointer to security attributes
+		FALSE, // BOOL bManualReset,  // flag for manual-reset event
+		FALSE, //BOOL bInitialState, // flag for initial state
+		NULL //LPCTSTR lpName      // pointer to event-object name
+		);
+	assert(mId);
+#else
     int  rc =  pthread_cond_init(&mId,0);
     assert( rc == 0 );
+#endif
 }
 
 
 Condition::~Condition ()
 {
+#ifdef WIN32
+	assert(0);
+#else
     int  rc = pthread_cond_destroy(&mId);
     assert( rc == 0 );
+#endif
 }
 
 
-int
+void
 Condition::wait (Mutex* mutex)
 {
-   return ( pthread_cond_wait(&mId, mutex->getId()) );
+#ifdef WIN32 
+	WaitForSingleObject(mId,INFINITE);
+#else
+   int ret = pthread_cond_wait(&mId, mutex->getId());
+   assert( ret == 0 );
+#endif
 }
 
-int
+
+void
 Condition::signal ()
 {
-    return ( pthread_cond_signal(&mId) );
+#ifdef WIN32
+	BOOL ret = SetEvent(
+		mId // HANDLE hEvent   // handle to event object
+		);
+	assert(ret);
+	
+#else
+    int ret = pthread_cond_signal(&mId);
+    assert( ret == 0);
+#endif
 }
 
-int
+
+#if 0 
+void
 Condition::broadcast()
 {
+#ifdef WIN32
+	assert(0);
+#else
     return ( pthread_cond_broadcast(&mId) );
+#endif
 }
+#endif
+
 
 #if 0
 const vcondition_t*
