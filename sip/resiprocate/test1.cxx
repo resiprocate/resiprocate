@@ -52,11 +52,11 @@ main(int argc, char* argv[])
       message->header(h_Vias).front().sentHost() = udp->hostname();
       message->header(h_Vias).front().sentPort() = udp->port();
 
-      Data encoded(2048, true);
-      DataStream strm(encoded);
+      Data* encoded = new Data(2048, true);
+      DataStream strm(*encoded);
       message->encode(strm);
       strm.flush();
-      udp->send(&resolver.mCurrent->ipv4, encoded.data(), encoded.size()); 
+      udp->send(resolver.mCurrent->ipv4, encoded);
       
       fd_set fdSet; 
       int fdSetSize=0;

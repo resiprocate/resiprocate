@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <util/Logger.hxx>
 #include <util/Socket.hxx>
 
@@ -5,6 +7,7 @@
 #include <sipstack/SipMessage.hxx>
 
 using namespace Vocal2;
+using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP 
 
@@ -70,6 +73,14 @@ Transport::shutdown()
 
 Transport::~Transport()
 {
+}
+
+void 
+Transport::send( const sockaddr_in dest, const Data* d)
+{
+   SendData* data = new  SendData(dest, d);
+   DebugLog (<< "Adding message to tx buffer: " << endl << d->c_str());
+   mTxFifo.add(data); // !jf!
 }
 
 
