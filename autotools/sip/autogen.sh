@@ -26,7 +26,7 @@ automake  --foreign --copy --add-missing && \
 echo +++ Running autoconf  && \
 autoconf  && \
 echo +++ Configuring and building ares.  && \
-(cd contrib/ares ; ./configure && make) 
+(cd contrib/ares ; ./configure --disable-maintainer-mode && make) 
 
 [ -d /usr/local/bin ] && export PATH=/usr/local/bin:$PATH
 
