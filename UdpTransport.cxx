@@ -107,7 +107,7 @@ UdpTransport::process()
       DebugLog (<< "Sending message on udp");
       int count = sendto(mFd, data->buffer, data->length, 0,
                                     (const sockaddr*)&data->destination, 
-                                    sizeof(data->destination) );
+                                    int(sizeof(data->destination)) );
    
       if ( count == SOCKET_ERROR )
       {
@@ -175,6 +175,7 @@ UdpTransport::process()
    }
    else if (len > 0)
    {
+	   // TODO - the next line is really really gross
       unsigned long len = static_cast<unsigned long>(len);
       
       if (len == MaxBufferSize)
