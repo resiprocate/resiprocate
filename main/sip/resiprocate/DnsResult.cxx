@@ -147,7 +147,7 @@ DnsResult::lookup(const Uri& uri)
    {
       if (isNumeric || uri.port() != 0)
       {
-         if (mSips)
+         if (mSips || mTransport == TLS)
          {
             mTransport = TLS;
          }
@@ -304,7 +304,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
          if (aptr)
          {
             StackLog (<< "Adding NAPTR record: " << naptr);
-            if (mSips && naptr.service.find("SIPS") == 0)
+            if ( mSips && naptr.service.find("SIPS") == 0)
             {
                if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
                {
@@ -381,20 +381,18 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       // This will result in no NAPTR results. In this case, send out SRV
       // queries for each supported protocol
      NAPTRFail:
-      if (mSips)
       {
          lookupSRV("_sips._tcp." + mTarget);
          mSRVCount++;
+         if (!mSips) 
+         {
+             lookupSRV("_sip._tcp." + mTarget);
+             mSRVCount++;
+             lookupSRV("_sip._udp." + mTarget);
+             mSRVCount++;
+         }
       }
-      else
-      {
-         // For now, don't add _sips._tcp in this case. 
-         lookupSRV("_sip._tcp." + mTarget);
-         mSRVCount++;
-         lookupSRV("_sip._udp." + mTarget);
-         mSRVCount++;
-      }
-      StackLog (<< "Doing SRV query " << mSRVCount << " for " << mTarget);
+      StackLog (<< "Doing SRV queries " << mSRVCount << " for " << mTarget);
    }
 }
 
@@ -687,6 +685,7 @@ DnsResult::primeResults()
 DnsResult::SRV 
 DnsResult::retrieveSRV()
 {
+    // !ah! if mTransport is known -- should we ignore those that don't match?!
    assert(!mSRVResults.empty());
 
    const SRV& srv = *mSRVResults.begin();
