@@ -9,7 +9,7 @@
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/Executive.hxx"
 #include "resiprocate/TransactionController.hxx"
-
+#include "resiprocate/Security.hxx"
 namespace resip 
 {
 
@@ -68,7 +68,9 @@ class SipStack
                              const Data& privateKeyPassPhrase = Data::Empty,
                              const Data& sipDomainname = Data::Empty, 
                              IpVersion version = V4,
-                             const Data& ipInterface = Data::Empty);
+                             const Data& ipInterface = Data::Empty,
+                             SecurityTypes::SSLType  sslType = SecurityTypes::TLSv1
+                             );
 
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
@@ -136,10 +138,11 @@ class SipStack
       // output current state of the stack - for debug
       std::ostream& dump(std::ostream& strm) const;
       
-      /// if this object exists, it manages advanced security featues
-      Security* security;
-
+      Security *getSecurity() const;
    private:
+      /// if this object exists, it manages advanced security featues
+      Security* mSecurity;
+
       SipStack(const SipStack& copy);
       SipStack& operator=(const SipStack& rhs);
       

@@ -89,7 +89,7 @@ bool
 TuIM::haveCerts( bool sign, const Data& encryptFor )
 {
 #if defined( USE_SSL )
-   Security* sec = mStack->security;
+   Security* sec = mStack->getSecurity();
    assert(sec);
    
    if ( sign )
@@ -152,7 +152,7 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
 #if defined( USE_SSL )
    if ( !encryptFor.empty() )
    {
-      Security* sec = mStack->security;
+      Security* sec = mStack->getSecurity();
       assert(sec);
       
       Contents* old = body;
@@ -168,7 +168,7 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
 
    if ( sign )
    {
-      Security* sec = mStack->security;
+      Security* sec = mStack->getSecurity();
       assert(sec);
     
       Contents* old = body;
@@ -250,7 +250,7 @@ TuIM::processSipFrag(SipMessage* msg)
    MultipartSignedContents* mBody = dynamic_cast<MultipartSignedContents*>(contents);
    if ( mBody )
    {
-      Security* sec = mStack->security;
+      Security* sec = mStack->getSecurity();
       assert(sec);
       
       contents = sec->uncodeSigned( mBody, &signedBy, &sigStat );
@@ -565,7 +565,7 @@ TuIM::processMessageRequest(SipMessage* msg)
    MultipartSignedContents* mBody = dynamic_cast<MultipartSignedContents*>(contents);
    if ( mBody )
    {
-      Security* sec = mStack->security;
+      Security* sec = mStack->getSecurity();
       assert(sec);
       
       contents = sec->uncodeSigned( mBody, &signedBy, &sigStat );
@@ -586,7 +586,7 @@ TuIM::processMessageRequest(SipMessage* msg)
    if ( sBody )
    {
       assert( sBody );
-      Security* sec = mStack->security;
+      Security* sec = mStack->getSecurity();
       assert(sec);
 
       contents = sec->decrypt( sBody );
@@ -607,7 +607,7 @@ TuIM::processMessageRequest(SipMessage* msg)
    if ( eBody )
    {
       assert( eBody );
-      Security* sec = mStack->security;
+      Security* sec = mStack->getSecurity();
       assert(sec);
 
       contents = sec->decrypt( eBody );

@@ -5,6 +5,7 @@
 #include <map>
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/SecurityTypes.hxx"
 
 #if defined(USE_SSL)
 //#define PERL5 // !cj! why's this here ?
@@ -40,7 +41,9 @@ class Security
             const char* name() const { return "SecurityException"; }
       };
 
-      Security( bool tlsServer, bool useTls/*use ssl if false*/ );
+            /// Backwards compatible ctor.
+            Security( bool tlsServer, bool useTls);
+            Security( bool tlsServer, resip::SecurityTypes::SSLType type);
       ~Security();
   
       // used to initialize the openssl library
@@ -136,6 +139,10 @@ class Security
 
    private:
 
+            // do the ctor work
+            void initialize(bool, SecurityTypes::SSLType);
+
+
       SSL_CTX* getTlsCtx(bool isServer);
       
       // map of name to certificates
@@ -157,7 +164,9 @@ class Security
       SSL_CTX* ctxTls;
 
       bool mTlsServer;
-      bool mUseTls;
+
+            // bit mask of SSLType enum
+            unsigned int mSSLMode;
 
 };
  
