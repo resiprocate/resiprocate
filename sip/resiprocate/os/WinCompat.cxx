@@ -85,6 +85,8 @@ WinCompat::getVersion()
       default:
          return WinCompat::WindowsUnknown;
    }
+
+   return WindowsUnknown;
 #else
    return WinCompat::NotWindows;
 #endif
@@ -93,7 +95,11 @@ WinCompat::getVersion()
 Tuple
 WinCompat::determineSourceInterface(const Tuple& destination)
 {
-#if defined(WIN32)
+// Note:  IPHLPAPI has been known to conflict with some thirdparty DLL's if linked in
+//        statically.  If you don't care about Win95/98/Me as your target system - then
+//        you can define NO_IPHLPAPI so that you are not required to link with this 
+//        library. (SLG)
+#if defined(WIN32) && !defined(NO_IPHLPAPI)  
    // try to figure the best route to the destination
    MIB_IPFORWARDROW bestRoute;
    memset(&bestRoute, 0, sizeof(bestRoute));
