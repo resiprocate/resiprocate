@@ -100,33 +100,34 @@ Data::Data(const char* str, int length, bool)
    assert(memset(mPreBuffer, 0, LocalAlloc+1));
 }
 
-Data::Data(ShareEnum, const char* buffer, int length)
+Data::Data(ShareEnum se, const char* buffer, int length)
    : mSize(length),
      mBuf(const_cast<char*>(buffer)),
      mCapacity(mSize),
-     mMine(false)
+     mMine(se == Take)
 {
    assert(buffer);
    assert(memset(mPreBuffer, 0, LocalAlloc+1));
 }
 
-Data::Data(ShareEnum, const char* buffer)
+Data::Data(ShareEnum se, const char* buffer)
    : mSize(strlen(buffer)),
      mBuf(const_cast<char*>(buffer)),
      mCapacity(mSize),
-     mMine(false)
+     mMine(se == Take)
 {
    assert(buffer);
    assert(memset(mPreBuffer, 0, LocalAlloc+1));
 }
 
-Data::Data(ShareEnum, const Data& staticData)
+Data::Data(ShareEnum se, const Data& staticData)
    : mSize(staticData.mSize),
      mBuf(staticData.mBuf),
      mCapacity(mSize),
      mMine(false)
 {
    assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   assert(se == Share); // makes no sense to call this with 'Take'.
 }
 //=============================================================================
 
@@ -647,15 +648,28 @@ Data::operator^=(const Data& rhs)
 Data&
 Data::operator+=(char c)
 {
-   return append(&c, 1);
+    return append(&c, 1);
 }
 
 char& 
 Data::operator[](size_type p)
 {
-   assert(p < mCapacity);
-   own();
-   return mBuf[p];
+    assert(p < mSize);
+    own();
+    return mBuf[p];
+}
+
+
+char& 
+Data::at(size_type p)
+{
+    if (p >= mCapacity)
+	resize(p+1, true);
+    else
+	own();
+    if (p > mSize)
+	mSize = p + 1;
+    return mBuf[p];
 }
 
 char 
@@ -746,6 +760,7 @@ Data::append(const char* str, size_type len)
    return *this;
 }
 
+
 Data
 Data::operator+(char c) const
 {
@@ -786,6 +801,7 @@ void
 Data::resize(size_type newCapacity, bool copy)
 {
    char *oldBuf = mBuf;
+   newCapacity += 32; // Pad this a bit to avoid too many resizings
    mBuf = new char[newCapacity+1];
    if (copy)
    {

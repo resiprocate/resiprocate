@@ -218,7 +218,8 @@ TransportSelector::dnsResolve( SipMessage* msg, DnsHandler* handler)
    }
    else if (msg->isResponse())
    {
-      assert(0);
+       ErrLog(<<"unimplemented response dns");
+       assert(0);
    }
    else
    {
