@@ -3,6 +3,9 @@
 #include <sipstack/Uri.hxx>
 #include <util/Logger.hxx>
 
+#include "sipstack/Helper.hxx"
+#include "util/DataStream.hxx"
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -43,9 +46,13 @@ main(int argc, char *argv[])
     reg->encode(strm);
     strm.flush();
 
-
+    DebugLog(<<"size="<<encoded.size());
+    
     // send the test message to the stack
     int err = sendto(fd, encoded.data(), encoded.size(), 0, (struct sockaddr*) & sa, sizeof(sa));
+
+    DebugLog(<<"errno="<<errno);
+    
     assert (err == 0);
 
 
