@@ -6,7 +6,7 @@
 using namespace resip;
 
 bool 
-ServerAuthManager::handle(Identity& identity, const SipMessage& response)
+ServerAuthManager::handle(const SipMessage& response)
 {
    assert(0);
    return true;
