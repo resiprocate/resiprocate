@@ -7,6 +7,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/DumTimeout.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/dum/PublicationHandler.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -23,7 +24,9 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
                                      Dialog& dialog,
                                      SipMessage& req)
    : BaseUsage(dum, dialog),
-     mPublish(req)
+     mPublish(req),
+     mEventType(req.header(h_Event).value()),
+     mTimerSeq(0)
 {}
 
 ClientPublication::~ClientPublication()
@@ -32,7 +35,7 @@ ClientPublication::~ClientPublication()
 }
 
 SipMessage& 
-ClientPublication::unpublish()
+ClientPublication::end()
 {
    mPublish.header(h_Expires).value() = 0;
    return mPublish;
@@ -41,36 +44,70 @@ ClientPublication::unpublish()
 void 
 ClientPublication::dispatch(const SipMessage& msg)
 {
-   assert(msg.isResponse());
-   const int& code = msg.header(h_StatusLine).statusCode();
-   if (code < 200)
+   ClientPublicationHandler* handler = mDum.getClientPublicationHandler(mEventType);
+   assert(handler);   
+
+   if (msg.isRequest())
    {
-      // throw it away
-      return;
-   }
-   else if (code < 300) // success
-   {
-      mPublish.header(h_SIPIfMatch) = msg.header(h_SIPETag);
-      
-      mDum.addTimer(DumTimeout::Publication, 
-                    Helper::aBitSmallerThan(mPublish.header(h_Expires).value()), 
-                    getBaseHandle(),
-                    ++mTimerSeq);
+      DebugLog( << "Dropping stray request to ClientPublication usage: " << msg);
    }
    else
    {
-      if (code == 412)
+      const int& code = msg.header(h_StatusLine).statusCode();
+      if (code < 200)
       {
-         InfoLog(<< "SIPIfMatch failed -- republish");
-         mPublish.remove(h_SIPIfMatch);
-         refresh();
          return;
       }
-      
-      if (code == 423) // interval too short
+      else if (code < 300)
       {
-         delete this;
-         return;
+         if (mPublish.header(h_Expires).value() == 0)
+         {
+            handler->onRemove(getHandle(), msg);
+            delete this;
+            return;
+         }
+         else if (msg.exists(h_SIPETag) && msg.exists(h_Expires))
+         {
+            mPublish.header(h_SIPIfMatch) = msg.header(h_SIPETag);
+            mDum.addTimer(DumTimeout::Publication, 
+                          Helper::aBitSmallerThan(msg.header(h_Expires).value()), 
+                          getBaseHandle(),
+                          ++mTimerSeq);
+            handler->onSuccess(getHandle(), msg);
+         }
+         else
+         {
+            handler->onFailure(getHandle(), msg);
+            delete this;
+         }
+      }
+      else
+      {
+         if (code == 412)
+         {
+            InfoLog(<< "SIPIfMatch failed -- republish");
+            mPublish.remove(h_SIPIfMatch);
+            refresh();
+            return;
+         }         
+         else if (code == 423) // interval too short
+         {
+            if (msg.exists(h_MinExpires))
+            {
+               mPublish.header(h_Expires).value() = msg.header(h_MinExpires).value();
+               refresh();
+            }
+            else
+            {
+               handler->onFailure(getHandle(), msg);
+               delete this;
+            }
+         }
+         else
+         {
+            handler->onFailure(getHandle(), msg);
+            delete this;
+         }
       }
    }
 }
@@ -93,6 +130,7 @@ ClientPublication::refresh(unsigned int expiration)
    }
    ++mPublish.header(h_CSeq).sequence();
    mDum.send(mPublish);
+   mPublish.releaseContents();   
 }
 
 void

@@ -122,7 +122,7 @@ class DialogUsageManager : public HandleManager
       //unsolicited refer
       SipMessage& makeRefer(const Uri& aor, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
 
-      SipMessage& makePublication(const Uri& targetDocument, const Contents& body, 
+      SipMessage& makePublication(const Uri& target, const Contents& body, 
                                   const Data& eventType, unsigned expiresSeconds, AppDialogSet* = 0);
 
       SipMessage& makeRegistration(const NameAddr& aor, AppDialogSet* = 0);
@@ -222,13 +222,16 @@ class DialogUsageManager : public HandleManager
       ClientRegistrationHandler* mClientRegistrationHandler;
       ServerRegistrationHandler* mServerRegistrationHandler;      
 
+      ClientPublicationHandler* getClientPublicationHandler(const Data& eventType);
+      ServerPublicationHandler* getServerPublicationHandler(const Data& eventType);
+
       ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
       ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
       
       std::map<Data, ClientSubscriptionHandler*> mClientSubscriptionHandlers;
       std::map<Data, ServerSubscriptionHandler*> mServerSubscriptionHandlers;
-      std::map<Data, ClientPublicationHandler*> mClientPublicationHandler;
-      std::map<Data, ServerPublicationHandler*> mServerPublicationHandler;
+      std::map<Data, ClientPublicationHandler*> mClientPublicationHandlers;
+      std::map<Data, ServerPublicationHandler*> mServerPublicationHandlers;
       std::map<MethodTypes, OutOfDialogHandler*> mOutOfDialogHandler;
 
       AppDialogSetFactory* mAppDialogSetFactory;
