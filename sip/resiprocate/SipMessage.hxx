@@ -92,8 +92,7 @@ class SipMessage : public Message
       bool exists(const HeaderBase& headerType) const;
       void remove(const HeaderBase& headerType);
 
-//#define METHOD_TEMPLATES
-#ifdef METHOD_TEMPLATES
+#ifdef PARTIAL_TEMPLATE_SPECIALIZATION
 
       template <class T>
       typename T::UnknownReturn::Type&
