@@ -1,4 +1,4 @@
-d
+
 #include <sipstack/Fifo.hxx>
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/Logger.hxx>
@@ -17,6 +17,17 @@ main(int argc, char* argv[])
    DebugLog (<< "testing");
    
    UdpTransport t(5060, fifo);
+   while (1)
+   {
+    t.process();
 
-   t.run();
+    //msg = sipStack.receive();
+    //if ( msg )
+    //{
+    //cout << msg << endl;
+    //}
+
+    usleep( 50*1000); // sleep for 20 ms
+  }
+
 }
