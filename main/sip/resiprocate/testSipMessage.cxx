@@ -68,6 +68,11 @@ main()
 
       cerr << "Encode after messing: " << endl;
       message.encode(cerr);
+
+      SipMessage copy(message);
+
+      cerr << "Encode after copying: " << endl;
+      copy.encode(cerr);
    }
    
    return 0;
