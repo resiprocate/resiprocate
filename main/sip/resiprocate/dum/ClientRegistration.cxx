@@ -106,8 +106,6 @@ ClientRegistration::myContacts()
 const NameAddrs& 
 ClientRegistration::allContacts()
 {
-    // !ah! need to combine mMyContacts
-    assert(0);
    return mAllContacts;
 }
 
@@ -156,7 +154,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
       if (msg.exists(h_Contacts))
       {
-         mMyContacts = msg.header(h_Contacts);
+         mAllContacts = msg.header(h_Contacts);
          // goes away -- updateMyContacts(mOtherContacts);
          // make timers to re-register
          mDum.addTimer(DumTimeout::Registration, 
