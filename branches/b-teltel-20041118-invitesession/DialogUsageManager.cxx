@@ -1171,24 +1171,29 @@ DialogUsageManager::processRequest(const SipMessage& request)
          }
          case CANCEL:
          {
-            // find the appropropriate ServerInvSession - using CallId, FromTag, CSeq(number only) and RequestURI
-            MergedRequestKey cancelKey(request);
-            CSeqCategory cseq;
-            cseq.method() = INVITE;  // Looks for matching INVITE dialogsets
-            cseq.sequence() = request.header(h_CSeq).sequence();  // Sequence number of CANCEL must match INVITE
-            cancelKey.cseq() = Data::from(cseq);
-
-            map<MergedRequestKey, DialogSet*>::iterator it = mMergedRequests.find(cancelKey);
-            if (it != mMergedRequests.end())
+            // find the appropropriate ServerInvSession
+            DialogSet* ds = findDialogSet(DialogSetId(request));
+            if (ds == 0)
             {
-               it->second->dispatch(request);
-            }
-            else
-            {
+               // !dlb! leaving this in for now -- but seems like 'protocol
+               // repair' for non-conformant UA?
+               //!dcm! -- temporary hack...do a map by TID?
+               for (DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); it++)
+               {
+                  if (it->second->getId().getCallId() == request.header(h_CallID).value())
+                  {
+                     it->second->dispatch(request);
+                     return;
+                  }
+               }
                InfoLog (<< "Received a CANCEL on a non-existent transaction ");
                SipMessage failure;
                makeResponse(failure, request, 481);
                sendResponse(failure);
+            }
+            else
+            {
+               ds->dispatch(request);
             }
             break;
          }
