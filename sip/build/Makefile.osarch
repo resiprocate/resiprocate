@@ -1,4 +1,4 @@
-# $Id: Makefile.osarch,v 1.11 2004/02/07 20:52:29 jason Exp $
+# $Id: Makefile.osarch,v 1.12 2004/02/18 22:56:38 jason Exp $
 
 ######################################################################
 
@@ -59,9 +59,15 @@ endif
 ifeq ($(OSTYPE),SunOS)
 
     USE_LIBGETOPT = 1
-    CFLAGS   += -DSUNXIL_WARNING_DISABLE -DHAVE_POPT_H -I/opt/sfw/include
-    CXXFLAGS += -DSUNXIL_WARNING_DISABLE -DHAVE_POPT_H -I/opt/sfw/include
+    CFLAGS   += -DSUNXIL_WARNING_DISABLE -I/opt/sfw/include
+    CXXFLAGS += -DSUNXIL_WARNING_DISABLE -I/opt/sfw/include
     LDFLAGS  += -L/opt/sfw/lib
+
+    ifeq ($(USE_POPT), true)
+      CFLAGS   += -DHAVE_POPT_H 
+      CXXFLAGS += -DHAVE_POPT_H 
+      LDLIBS_LAST   += -lpopt
+    endif
 
     ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
         CXXFLAGS += -D_REENTRANT
