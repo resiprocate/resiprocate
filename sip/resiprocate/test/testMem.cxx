@@ -19,11 +19,11 @@ main(int argc, char* argv[])
    register int* data;
    unsigned int num = 1;
 
-   if ( argc != 3 ) 
+   if ( argc != 4 ) 
    {
-      cerr << "Usage: testMem size num" << endl;
+      cerr << "Usage: testMem size num writeBool" << endl;
       cerr << " mem used is 2^size " << endl;
-      cerr << "Example: ./testMem 22 1000000000" << endl;
+      cerr << "Example: ./testMem 22 1000000000 0" << endl;
       exit(1);
    }
 
@@ -31,6 +31,7 @@ main(int argc, char* argv[])
    
    size = (1 << atoi( argv[1] )) - 1;
    num  = atoi( argv[2] );
+   int write = atoi( argv[3] );
    clog << "Doing " << num << " interations on " << size*4 << " bytes " << endl;
    clog << "Doing " << num/1000000 << " M interations on " << size*4/1000000 << " M bytes " << endl;
    assert( num > 1 );
@@ -51,11 +52,22 @@ main(int argc, char* argv[])
    UInt64 t1 = Timer::getTimeMicroSec();
    i=0;                                         
    n = num;
-   while ( --n > 0 )
+   if ( write == 0 )
    {
-      data[i] |= 0x8000;
-      i = (data[i]+n) & size;
-      //clog << i << endl;
+      while ( --n > 0 )
+      {
+         i = (data[i]+n) & size;
+         //clog << i << endl;
+      }
+   }
+   else
+   {
+      while ( --n > 0 )
+      {
+         data[i] |= 0x8000;
+         i = (data[i]+n) & size;
+         //clog << i << endl;
+      }
    }
    UInt64 t2 = Timer::getTimeMicroSec();
    
