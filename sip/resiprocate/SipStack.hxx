@@ -19,6 +19,10 @@ class SipStack
 {
    public:
       SipStack(bool multiThreaded=false);
+
+      // Used by the application to add in a new transport
+      // by default, you will get UDP and TCP on 5060 (for now)
+      void addTransport( Transport::Type, int port, const Data& hostName="", const Data& interface="");
   
       void send(const SipMessage& msg);
 
@@ -27,8 +31,11 @@ class SipStack
       void sendTo(const SipMessage& msg, const Data &dest="default" );
 
       // caller now owns the memory
+      // returns 0 if nothing there
       SipMessage* receive(); 
       
+      // should call buildFdSet before calling process
+      // !jf! what should this do if fdSet = 0? 
       void process(fd_set* fdSet=NULL);
 
       // build the FD set to use in a select to find out when process bust be called again
