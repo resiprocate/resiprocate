@@ -3,19 +3,27 @@
 
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/Handled.hxx"
+#include "resiprocate/dum/DialogSetId.hxx"
 
 namespace resip
 {
 
-class HandleManager;
+class SipMessage;
+class DialogUsageManager;
 
 class AppDialogSet : public Handled
 {
    public:
-      AppDialogSet(HandleManager& ham);
+      AppDialogSet(DialogUsageManager& dum);
+
       virtual ~AppDialogSet();
-      
+      virtual void cancel();
+      virtual AppDialog* createAppDialog(const SipMessage&);
       AppDialogSetHandle getHandle();
+   private:
+      friend class DialogUsageManager;
+      DialogUsageManager* mDum;      
+      DialogSetId mDialogSetId;
 };
 
 }
