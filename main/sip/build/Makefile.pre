@@ -107,6 +107,7 @@ endif
 ######################################################################
 
 USE_SSL=true
+USE_DTLS=false
 
 #include $(BUILD)/Makefile.opt
 
