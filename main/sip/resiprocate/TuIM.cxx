@@ -17,14 +17,9 @@
 #include <cassert>
 #include <memory>
 
-#include "resiprocate/os/Socket.hxx"
-
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Dialog.hxx"
-
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/os/Random.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TuIM.hxx"
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/Dialog.hxx"
@@ -39,6 +34,11 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/Pidf.hxx"
 #include "resiprocate/SipFrag.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/Socket.hxx"
+
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
@@ -831,7 +831,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
 
    if ( number >= 200 )
    { 
-      mRegistrationDialog.createRegistrationAsUAC( *msg );
+      mRegistrationDialog.createDialogAsUAC( *msg );
    }
    
    if ( ((number == 401) || (number == 407)) && (cSeq != mLastAuthCSeq) )
