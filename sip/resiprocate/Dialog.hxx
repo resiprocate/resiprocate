@@ -53,7 +53,7 @@
 #define DIALOG_HXX
 
 #include <iostream>
-#include "sipstack/SipMessage.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
 
 namespace Vocal2
 {
@@ -74,12 +74,14 @@ class Dialog
       // pass in a contact for this location e.g. "sip:local@domain:5060"
       Dialog(const NameAddr& localContact);
       
+      // If a dialog is not yet created, make a dialog or early dialog as
+      // follows. Otherwise, just make response from the dialog state
       // Used by the UAS to create a dialog or early dialog, will return a 1xx(code)
       // UAS should call this upon receiving the invite/subscribe. 
       // This should not be called twice if the UAS sends back a 180 and a 200,
       // it should call it for the 180 and then use Dialog::makeResponse to make
       // the 200
-      SipMessage* createDialogAsUAS(const SipMessage& request, int code=200);
+      SipMessage* makeResponse(const SipMessage& request, int code=200);
       
       // This happens when a dialog gets created on a UAC when 
       // a UAC receives a response that creates a dialog
@@ -94,9 +96,10 @@ class Dialog
       int targetRefreshRequest(const SipMessage& request);
 
       const Data& dialogId() const { return mDialogId; }
-      const Data& getLocalTag() const { return mLocalTag; }
-      const NameAddr& getRemoteTarget() const { return mRemoteTarget; }
       const CallId& getCallId() const { return mCallId; }
+      const NameAddr& getRemoteTarget() const { return mRemoteTarget; }
+      //const Data& getLocalTag() const { return mLocalTag; }
+      //const Data& getRemoteTag() const { return mRemoteTag; }
       
 
       // For creating requests within a dialog
@@ -107,7 +110,7 @@ class Dialog
       SipMessage* makeOptions();
       SipMessage* makeAck(const SipMessage& request);
       SipMessage* makeCancel(const SipMessage& request);
-      SipMessage* makeResponse(const SipMessage& request, int code);
+      CallId makeReplaces();
       
       // resets to an empty dialog with no state
       void clear();

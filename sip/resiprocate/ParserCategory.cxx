@@ -1,13 +1,13 @@
-#include "sipstack/ParserCategory.hxx"
-#include "sipstack/HeaderFieldValue.hxx"
-#include "sipstack/UnknownParameter.hxx"
-#include "util/compat.hxx"
-#include "util/ParseBuffer.hxx"
+#include "sip2/sipstack/ParserCategory.hxx"
+#include "sip2/sipstack/HeaderFieldValue.hxx"
+#include "sip2/sipstack/UnknownParameter.hxx"
+#include "sip2/util/compat.hxx"
+#include "sip2/util/ParseBuffer.hxx"
 #include <iostream>
 #include <cassert>
 
 // !ah! just for debugging
-#include "util/Logger.hxx"
+#include "sip2/util/Logger.hxx"
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 using namespace Vocal2;

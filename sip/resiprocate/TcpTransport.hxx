@@ -1,9 +1,9 @@
 #if !defined(TCPTRANSPORT_HXX)
 #define TCPTRANSPORT_HXX
 
-#include "sipstack/Transport.hxx"
-#include "sipstack/Message.hxx"
-#include "sipstack/ConnectionMap.hxx"
+#include "sip2/sipstack/Transport.hxx"
+#include "sip2/sipstack/Message.hxx"
+#include "sip2/sipstack/ConnectionMap.hxx"
 
 namespace Vocal2
 {

@@ -1,6 +1,6 @@
-#include "sipstack/StringSubComponent.hxx"
-#include "sipstack/SubComponentList.hxx"
-#include "sipstack/HeaderFieldValueList.hxx"
+#include "sip2/sipstack/StringSubComponent.hxx"
+#include "sip2/sipstack/SubComponentList.hxx"
+#include "sip2/sipstack/HeaderFieldValueList.hxx"
 #include <iostream>
 
 using namespace Vocal2;
