@@ -1,4 +1,6 @@
 #include <sipstack/Helper.hxx>
+#include <sipstack/Uri.hxx>
+#include <util/RandomHex.hxx>
 
 using namespace Vocal2;
 
@@ -12,7 +14,7 @@ Helper::makeRequest(const NameAddr& target,
 {
    SipMessage request;
    RequestLine rLine(method);
-   Helper::setUri(rLine, target);
+   rLine.uri() = target.uri();
    request.header(h_To) = target;
    request.header(h_RequestLine) = rLine;
    request.header(h_MaxForwards).value() = 70;
@@ -71,18 +73,6 @@ Helper::makeRequest(const NameAddr& target, MethodTypes method)
 }
 
 
-// copy the values from Url into rline (with sip-uri parameters?)
-void 
-Helper::setUri(RequestLine& rLine, const NameAddr& url)
-{
-   assert(0);
-}
-
-void 
-Helper::setUri(StatusLine& rLine, const NameAddr& url)
-{
-   assert(0);
-}
 
 
 SipMessage 
@@ -107,14 +97,15 @@ Helper::computeProxyBranch()
 Data
 Helper::computeCallId()
 {
-   assert(0);
+   // !jf! need to include host as well (should cache it)
+   return RandomHex::get(4);
 }
 
 
 Data
 Helper::computeTag(int numBytes)
 {
-   assert(0);
+   return RandomHex::get(4);
 }
 
 
