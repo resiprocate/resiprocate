@@ -13,6 +13,7 @@
 
 #include <sipstack/HeaderTypes.hxx>
 #include <sipstack/Message.hxx>
+#include <sipstack/ParserCategories.hxx>
 
 namespace Vocal2
 {
@@ -35,6 +36,9 @@ class SipMessage : public Message
       {
          return nIsExternal;
       }
+
+      bool isRequest() const;
+      bool isResponse() const;
 
       void addBuffer(char* buf);
 
@@ -97,7 +101,7 @@ class SipMessage : public Message
       // note: removeFirst/removeLast through the component 
 
       // unknown header interface
-      Unknowns& operator[](const Data& symbol);
+      StringComponents& operator[](const Data& symbol);
 
       void remove(const Data& symbol);
 

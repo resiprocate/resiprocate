@@ -11,31 +11,11 @@ namespace Vocal2
 class HeaderFieldValueList;
 
 //====================
-// Unknown:
-//====================
-class Unknown : public ParserCategory
-{
-   public:
-      Unknown() {};
-      Unknown(HeaderFieldValueList& hvfs) {}
-      Unknown(HeaderFieldValue& hvf) {}
-      ParserCategory* clone(HeaderFieldValue*) const;
-      UnknownSubComponent& operator[](const Data& param)
-      {
-         checkParsed();
-         return *mHeaderField->get(param);
-      }
-      virtual void parse();
-};
-typedef ParserContainer<Unknown> Unknowns;
-
-//====================
 // Token:
 //====================
 class Token : public ParserCategory
 {
    public:
-      Token() {};
       Token(HeaderFieldValueList& hvfs) {}
       Token(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -53,7 +33,6 @@ typedef ParserContainer<Token> Tokens;
 class Mime : public ParserCategory
 {
    public:
-      Mime() {};
       Mime(HeaderFieldValueList& hvfs) {}
       Mime(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -71,7 +50,6 @@ typedef ParserContainer<Mime> Mimes;
 class Auth : public ParserCategory
 {
    public:
-      Auth() {};
       Auth(HeaderFieldValueList& hvfs) {}
       Auth(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -83,7 +61,6 @@ class Auth : public ParserCategory
 class IntegerComponent : public ParserCategory
 {
    public:
-      IntegerComponent() {};
       IntegerComponent(HeaderFieldValueList& hvfs) {}
       IntegerComponent(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -100,11 +77,16 @@ class IntegerComponent : public ParserCategory
 class StringComponent : public ParserCategory
 {
    public:
-      StringComponent() {};
       StringComponent(HeaderFieldValueList& hvfs) {}
       StringComponent(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
+      virtual void parse();
+      virtual std::ostream& encode(std::ostream& str) const;
+      Data& value();
+   private:
+      Data mValue;
 };
+typedef ParserContainer<StringComponent> StringComponents;
 
 //====================
 // GenericUri:
@@ -112,7 +94,6 @@ class StringComponent : public ParserCategory
 class GenericURI : public ParserCategory
 {
    public:
-      GenericURI() {};
       GenericURI(HeaderFieldValueList& hvfs) {}
       GenericURI(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -130,7 +111,6 @@ typedef ParserContainer<GenericURI> GenericURIs;
 class NameAddr : public ParserCategory
 {
    public:
-      NameAddr() {};
       NameAddr(HeaderFieldValueList& hvfs) {}
       NameAddr(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -148,7 +128,6 @@ typedef ParserContainer<NameAddr> NameAddrs;
 class NameAddrOrAddrSpec : public ParserCategory
 {
    public:
-      NameAddrOrAddrSpec() {};
       NameAddrOrAddrSpec(HeaderFieldValueList& hvfs) {}
       NameAddrOrAddrSpec(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -166,7 +145,6 @@ class NameAddrOrAddrSpec : public ParserCategory
 class Contact : public ParserCategory
 {
    public:
-      Contact() {};
       Contact(HeaderFieldValueList& hvfs) {}
       Contact(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -184,7 +162,6 @@ typedef ParserContainer<Contact> Contacts;
 class CallId : public ParserCategory
 {
    public:
-      CallId() {};
       CallId(HeaderFieldValueList& hvfs) {}
       CallId(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -202,7 +179,6 @@ typedef ParserContainer<CallId> CallIds;
 class CSeqComponent : public ParserCategory
 {
    public:
-      CSeqComponent() {};
       CSeqComponent(HeaderFieldValue& hvf) {}
       CSeqComponent(HeaderFieldValueList& hvfs) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -214,7 +190,6 @@ class CSeqComponent : public ParserCategory
 class DateComponent : public ParserCategory
 {
    public:
-      DateComponent() {};
       DateComponent(HeaderFieldValueList& hvfs) {}
       DateComponent(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -226,7 +201,6 @@ class DateComponent : public ParserCategory
 class WarningComponent : public ParserCategory
 {
    public:
-      WarningComponent() {};
       WarningComponent(HeaderFieldValueList& hvfs) {}
       WarningComponent(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -238,7 +212,6 @@ class WarningComponent : public ParserCategory
 class Via : public ParserCategory
 {
    public:
-      Via() {};
       Via(HeaderFieldValueList& hvfs) {}
       Via(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -256,10 +229,10 @@ typedef ParserContainer<Via> Vias;
 class RequestLine : public ParserCategory
 {
    public:
-      RequestLine() {};
       RequestLine(HeaderFieldValueList& hvfs) {}
       RequestLine(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
+//    CommandType getMethod() const;
 };
 
 //====================
@@ -268,12 +241,14 @@ class RequestLine : public ParserCategory
 class StatusLine : public ParserCategory
 {
    public:
-      StatusLine() {};
       StatusLine(HeaderFieldValueList& hvfs) {}
       StatusLine(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
+      int getResponseCode() const;
 };
 
 }
+
+
 
 #endif

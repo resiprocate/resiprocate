@@ -157,7 +157,7 @@ SipMessage::copyFrom(const SipMessage& from)
 }
 
 // unknown header interface
-Unknowns& 
+StringComponents& 
 SipMessage::operator[](const Data& headerName)
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
@@ -171,23 +171,23 @@ SipMessage::operator[](const Data& headerName)
             HeaderFieldValue* it = hfvs->first;
             while (it != 0)
             {
-               it->mParserCategory = new Unknown(*it);
+               it->mParserCategory = new StringComponent(*it);
             }
             
-            hfvs->setParserContainer(new Unknowns(*hfvs));
+            hfvs->setParserContainer(new StringComponents(*hfvs));
          }
-         return (Unknowns&)*hfvs->getParserCategory();
+         return (StringComponents&)*hfvs->getParserCategory();
       }
    }
    
    // create the list with a new component
    HeaderFieldValueList* hfvs = new HeaderFieldValueList;
    HeaderFieldValue* hfv = new HeaderFieldValue;
-   hfv->mParserCategory = new Unknown(*hfv);
+   hfv->mParserCategory = new StringComponent(*hfv);
    hfvs->push_back(hfv);
-   hfvs->setParserContainer(new Unknowns(*hfvs));
+   hfvs->setParserContainer(new StringComponents(*hfvs));
    mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(headerName, hfvs));
-   return (Unknowns&)*hfvs->getParserCategory();
+   return (StringComponents&)*hfvs->getParserCategory();
 }
 
 void
