@@ -52,8 +52,8 @@ UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, F
    bool ok = makeSocketNonBlocking(mFd);
    if ( !ok )
    {
-	    ErrLog (<< "Could not make UDP port non blocking " << portNum);
-		throw Exception("Cont not use UDP port", __FILE__,__LINE__);
+      ErrLog (<< "Could not make UDP port non blocking " << portNum);
+      throw Exception("Cont not use UDP port", __FILE__,__LINE__);
    }
 }
 
