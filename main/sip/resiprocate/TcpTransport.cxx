@@ -210,9 +210,8 @@ TcpTransport::processAllWrites( FdSet& fdset )
          conn->mSendPos = 0;
       }
       conn->mOutstandingSends.push_back(data);
+      sendFromRoundRobin(fdset);
    }
-   
-   sendFromRoundRobin(fdset);
 }         
 
 void
@@ -291,9 +290,12 @@ TcpTransport::processWrite(ConnectionMap::Connection* c)
 void 
 TcpTransport::process(FdSet& fdSet)
 {
+   DebugLog(<<"TcpTransport::process");
+   DebugLog(<<"mTxFifo:size: " << mTxFifo.size());
    processAllWrites(fdSet);
    processListen(fdSet);
    processAllReads(fdSet);
+   DebugLog(<<"TcpTransport::process:finished");
 }
 
 
