@@ -519,7 +519,7 @@ main(int arc, char** argv)
    }
 
    {
-     char* genericString = "<http://www.google.com>;purpose=icon;fake=true";
+      char* genericString = "<http://www.google.com>;purpose=icon;fake=true";
       HeaderFieldValue hfv(genericString, strlen(genericString));
 
       GenericURI generic(&hfv);
@@ -537,12 +537,48 @@ main(int arc, char** argv)
       assert(s.str() == "<http://www.google.com>;purpose=icon;fake=true");
    }
 
+   {
+      char *dateString = "Mon, 04 Nov 2002 17:34:15 GMT";
+      HeaderFieldValue hfv(dateString, strlen(dateString));
+      
+      DateCategory date(&hfv);
+
+      assert(date.dayOfWeek() == Mon);
+      assert(date.dayOfMonth() == 17);
+      assert(date.month() == Nov);
+      assert(date.year() == 2002);
+      assert(date.hour() == 17);
+      assert(date.hour() == 17);
+      assert(date.minute() == 34);
+      assert(date.second() == 15);
+
+      stringstream s;
+      date.encode(s);
+      assert(s.str() == dateString);
+   }
+
+   {
+      char *dateString = "  Sun  , 14    Jan 2222 07:04:05   GMT    ";
+      HeaderFieldValue hfv(dateString, strlen(dateString));
+      
+      DateCategory date(&hfv);
+
+      assert(date.dayOfWeek() == Mon);
+      assert(date.dayOfMonth() == 17);
+      assert(date.month() == Nov);
+      assert(date.year() == 2002);
+      assert(date.hour() == 17);
+      assert(date.hour() == 17);
+      assert(date.minute() == 34);
+      assert(date.second() == 15);
+
+      stringstream s;
+      date.encode(s);
+      assert(s.str() == "Sun, 14 Jan 2222 07:04:05 GMT");
+   }
 
    cerr << "\nTEST OK" << endl;
 }
-
-
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
