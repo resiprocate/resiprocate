@@ -727,7 +727,7 @@ TransactionState::processServerInvite(  Message* msg )
 	      /*
 	        The server transaction has already been constructed so this
 		message is a retransmission.  The server transaction must
-		response with a 100 Trying_or_ the last provision response
+		respond with a 100 Trying _or_ the last provisional response
 		passed from the TU for this transaction.
 	      */
                DebugLog (<< "Received invite from wire - forwarding to TU state=" << mState);
