@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2002/09/26 00:34:43 jason Exp $
+# $Id: Makefile,v 1.5 2002/09/27 13:50:25 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -78,11 +78,20 @@ $(OBJ)/%.o: %.cxx
 	@rm  $(@:.o=_tmp.d)
 
 
+$(OBJ)/%.d: %.cxx
+	$(CXX) $(CXXFLAGS) -c -o $(@:.d=.o) $<
+	@[ -f $(@F) ] && mv $(@F) $(@:.d=_tmp.d) || \
+		mv $(@) $(@:.d=_tmp.d)
+	@sed -e "s/^$(@F:.d=.o)/$(@D)\/$(@F:.d=.o)/" < $(@:.d=_tmp.d) > $(@)
+	@rm  $(@:.d=_tmp.d)
+
 %.S: %.cxx
 	$(CXX) $(CXXFLAGS)  -fverbose-asm -g -Wa,-ahln -c \
 		-o /tmp/cjJunk.o $< > $@
 
 $(BIN)/libutil2.a: $(OBJS)
+	@$(MAKE) $(^:.o=.d)
+	@$(MAKE) $(^)
 	ar $(ARFLAGS) $@ $^
 	-@ ln -s $(shell pwd)/$@ $(LIB)
 
