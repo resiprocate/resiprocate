@@ -143,6 +143,7 @@ DnsResult::lookup(const Uri& uri)
          DebugLog (<< "Found immediate result: " << tuple);
          mResults.push_back(tuple);
          mType = Available;
+         mHandler->handle(this);
       }
       else if (uri.port() != 0)
       {
@@ -175,6 +176,7 @@ DnsResult::lookup(const Uri& uri)
             mResults.push_back(tuple);
             mType = Available;
             DebugLog (<< "Numeric result so return immediately: " << tuple);
+            mHandler->handle(this);
          }
          else // port specified so we know the transport
          {
@@ -389,16 +391,15 @@ DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
      NAPTRFail:
       if (mSips)
       {
-         lookupSRV("_sips._tcp." + mTarget);
          mSRVCount++;
+         lookupSRV("_sips._tcp." + mTarget);
       }
       else
       {
          // For now, don't add _sips._tcp in this case. 
+         mSRVCount+=2;         
          lookupSRV("_sip._tcp." + mTarget);
-         mSRVCount++;
          lookupSRV("_sip._udp." + mTarget);
-         mSRVCount++;
       }
       StackLog (<< "Doing SRV query " << mSRVCount << " for " << mTarget);
    }

@@ -81,8 +81,8 @@ class SipStack : public ProcessNotifier::Handler
                              const Data& ipInterface = Data::Empty,
                              SecurityTypes::SSLType sslType = SecurityTypes::TLSv1);
 
-      //external transports
       void addExternalTransport(ExternalAsyncCLessTransport* transport, bool ownedByMe);
+      void addExternalTransport(ExternalAsyncStreamTransport* externalTransport, bool ownedByMe);
 
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
