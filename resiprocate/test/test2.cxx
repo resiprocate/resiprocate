@@ -54,7 +54,7 @@ main(int argc, char* argv[])
          FdSet fdset;
          stack1.buildFdSet(fdset);
 
-         int err = fdset.selectMiliSeconds(5000);
+         int err = fdset.selectMilliSeconds(5);
          assert (err != -1);
       
          stack1.send(*message);
@@ -79,7 +79,7 @@ main(int argc, char* argv[])
       {
          FdSet fdset; 
          stack2.buildFdSet(fdset);
-         int  err = fdset.selectMiliSeconds(5000);
+         int  err = fdset.selectMilliSeconds(5);
          assert (err != -1);
       
          stack2.process(fdset);
