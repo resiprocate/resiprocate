@@ -31,6 +31,11 @@ class LogThread : public ThreadIf
       Log::ThreadSetting mSetting;
 };
 
+int logsInCall()
+{
+   InfoLog(<< "Got here?");
+   return 17;
+}
 
 int
 main(int argc, char* argv[])
@@ -86,4 +91,7 @@ main(int argc, char* argv[])
    service2a.join();
    service2b.join();
 
+   cerr << "All OK -- will assert or lock next" << endl;
+   // this will assert except on WIN32 where it will deadlock
+   InfoLog(<< "Assert or deadlock: " << logsInCall());
 }
