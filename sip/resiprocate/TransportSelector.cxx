@@ -5,6 +5,11 @@
 #include <sipstack/SipStack.hxx>
 #include <util/Logger.hxx>
 
+// Hack, hack, hack
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
@@ -38,6 +43,11 @@ TransportSelector::send( SipMessage* msg )
    // encode the message
    // send it to the appropriate transport
 
+   std::cerr << "Sending message to the wire." << std::endl;
+   msg->encode(std::cerr);
+   std::cerr.flush();
+
+   // Hmmmm... we shouldn't add a Via if this is a response.
    assert(!msg->header(h_Vias).empty());
    msg->header(h_Vias).front().param(p_maddr) = "";
    //msg->header(h_Vias).front().param(p_ttl) = 1;
@@ -49,6 +59,10 @@ TransportSelector::send( SipMessage* msg )
    msg->encode(strm);
    
    sockaddr_in dest;
+   dest.sin_family = PF_INET;
+   dest.sin_addr.s_addr = inet_addr("127.0.0.1");
+   dest.sin_port = htons(9999);
+   // Figure out what the heck goes in dest here.
    mUdp->send(dest, strm.str().c_str(), strm.str().length());
    
    //mUdp->send(msg->str(), msg->size());
