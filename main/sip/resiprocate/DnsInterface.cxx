@@ -32,6 +32,20 @@ DnsInterface::DnsInterface(bool sync)
    if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
    {
       ErrLog (<< "Failed to initialize async dns library (ares)");
+      switch (status)
+      {
+         case ARES_EFILE:
+            ErrLog (<< "ares: couldn't read configuration file");
+            break;
+            
+         case ARES_ENOMEM:
+            ErrLog (<< "ares: memory exhausted");
+            break;
+         default:
+            ErrLog (<< "ares: unspecified error " << status);
+            break;
+      }
+      
       char* errmem=0;
       ErrLog (<< ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
