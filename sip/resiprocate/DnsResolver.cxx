@@ -13,7 +13,6 @@
 #include "sip2/util/Logger.hxx"
 
 #include "sip2/sipstack/DnsResolver.hxx"
-#include "sip2/sipstack/DnsMessage.hxx"
 #include "sip2/sipstack/Symbols.hxx"
 #include "sip2/sipstack/ParserCategories.hxx"
 #include "sip2/sipstack/SipStack.hxx"
@@ -24,15 +23,44 @@
 using namespace Vocal2;
 using namespace std;
 
-DnsResolver::~DnsResolver()
+DnsResolver::DnsResolver(SipStack& stack) : mStack(stack)
 {
+#if defined(__linux__)
+   int status=0;
+   if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
+   {
+      ErrLog (<< "Failed to initialize async dns library (ares)");
+      char* errmem=0;
+      ErrLog (<< ares_strerror(status, &errmem));
+      ares_free_errmem(errmem);
+      throw Exception("failed to initialize ares", __FILE__,__LINE__);
+   }
+#endif
 }
 
-void 
-DnsResolver::stop(Id id)
+DnsResolver::~DnsResolver()
 {
-   delete id;
+#if defined(__linux__)
+   ares_destroy(mChannel);
+#endif
 }
+
+void
+DnsResolver::buildFdSet(FdSet& fdset)
+{
+#if defined(__linux__)
+   fdset.size = ares_fds(mChannel, &fdset.read, &fdset.write);
+#endif
+}
+
+void
+DnsResolver::process(FdSet& fdset)
+{
+#if defined(__linux__)
+   ares_process(mChannel, &fdset.read, &fdset.write);
+#endif
+}
+
 
 int 
 determinePort(const Data& scheme, Transport::Type transport)
@@ -50,50 +78,38 @@ DnsResolver::lookup(const Data& transactionId,
                     const Via& via)
 {
    //duplicate entry has not been eliminated
-   DnsResolver::Id id = 0;
    Transport::Type transport = Transport::toTransport(via.transport());
    Data& target = via.exists(p_maddr) ? via.param(p_maddr) : via.sentHost();
    if (via.exists(p_received))
    {
       if (via.exists(p_rport))
       {
-         id = lookupARecords(transactionId, via.param(p_received), via.param(p_rport).value(), transport, false);
+         lookupARecords(transactionId, via.param(p_received), via.param(p_rport).value(), transport);
       }
       else
       {
          if (via.sentPort())
          {
-            id = lookupARecords(transactionId, via.param(p_received), via.sentPort(), transport, false);
+            lookupARecords(transactionId, via.param(p_received), via.sentPort(), transport);
          }
          else
          {
-            id = lookupARecords(transactionId, via.param(p_received), 
-                                determinePort(via.protocolName(), transport), 
-                                transport, false);
+            lookupARecords(transactionId, via.param(p_received),  determinePort(via.protocolName(), transport), transport);
          }
       }
    }
    else if (via.exists(p_rport))
    {
-      id = lookupARecords(transactionId,
-                          target, 
-                          via.param(p_rport).value(), 
-                          transport, false);
+      lookupARecords(transactionId, target,  via.param(p_rport).value(), transport);
    }
    
    if (via.sentPort())
    {
-      id = lookupARecords(transactionId,
-                          target, 
-                          via.sentPort(), 
-                          transport, true, id);
+      lookupARecords(transactionId, target, via.sentPort(), transport);
    }
    else
    {
-      id = lookupARecords(transactionId,
-                          target, 
-                          determinePort(via.protocolName(), transport), 
-                          transport, true, id);
+      lookupARecords(transactionId, target, determinePort(via.protocolName(), transport), transport);
    }
 }
 
@@ -132,13 +148,7 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
             }
             else
             {
-               Entry* entry = new Entry(transactionId);
-               mStack.mStateMacFifo.add(
-                  new DnsMessage(entry, 
-                                 transactionId, 
-                                 entry->tupleList.begin(), 
-                                 entry->tupleList.end(), 
-                                 true));
+               mStack.mStateMacFifo.add(new DnsMessage(transactionId));
                return;
             }
          }
@@ -159,24 +169,24 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
       port = determinePort(uri.scheme(), transport);
    }
          
-   lookupARecords(transactionId, target, port, transport, true);         
+   lookupARecords(transactionId, target, port, transport);         
 }
  
 
-DnsResolver::Id
-DnsResolver::lookupARecords(const Data& transactionId, 
-                            const Data& host, int port, Transport::Type transport, bool complete, Id id)
+void
+DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int port,  Transport::Type transport)
+
 {
+#if defined(__linux__)
+   //ares_query(mChannel, host.c_str(), C_IN, T_A, DnsResolver::aresCallback, transactionId.data());
+   Request* request = new Request(mStack, transactionId, host, port, transport);
+   ares_gethostbyname(mChannel, host.c_str(), AF_INET, DnsResolver::aresCallback2, request);
+#else   
    struct hostent* result=0;
    int ret=0;
    int herrno=0;
 
-#if defined(__linux__)
-   struct hostent hostbuf; 
-    char buffer[8192];
-  ret = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
-   assert (ret != ERANGE);
-#elif defined(WIN32) 
+#if defined(WIN32) 
    result = gethostbyname( host.c_str() );
    herrno = WSAGetLastError();
 #elif defined( __MACH__ )
@@ -217,19 +227,8 @@ DnsResolver::lookupARecords(const Data& transactionId,
       assert(result);
       assert(result->h_length == 4);
       
-      Entry* entry;
-      if (id)
-      {
-         entry = id;
-      }
-      else
-      {
-         entry = new Entry(transactionId);
-      }
-      
+      DnsMessage* dns = new DnsMessage(transactionId);
       DebugLog (<< "DNS lookup of " << host << ": canonical name: " << result->h_name);
-      bool first = true;
-      TupleList::iterator start;
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
          Transport::Tuple tuple;
@@ -238,20 +237,12 @@ DnsResolver::lookupARecords(const Data& transactionId,
          tuple.transportType = transport;
          tuple.transport = 0;
          
-         entry->tupleList.push_back(tuple);
-         if (first)
-         {
-            start = entry->tupleList.end();
-            start--;
-            first = false;
-         }
-         
          DebugLog(<< tuple);
+         dns->mTuples.push_back(tuple);
       }
-      mStack.mStateMacFifo.add(new DnsMessage(entry, transactionId, start, entry->tupleList.end(), complete));
-      return entry;
+      mStack.mStateMacFifo.add(dns);
    }
-   return 0;
+#endif
 }
 
 bool
@@ -274,4 +265,99 @@ DnsResolver::isIpAddress(const Data& data)
    }
 } 
 
+void 
+DnsResolver::aresCallback2(void *arg, int status, struct hostent* result)
+{
+#if defined(__linux__)
+   std::auto_ptr<Request> request(reinterpret_cast<Request*>(arg));
 
+   DebugLog (<< "Received dns update: " << request->tid);
+   DnsMessage* dns = new DnsMessage(request->tid);
+   
+   if (status != ARES_SUCCESS)
+   {
+      char* errmem=0;
+      InfoLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
+      ares_free_errmem(errmem);
+   }
+
+   DebugLog (<< "DNS lookup canonical name: " << result->h_name);
+   for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
+   {
+      Transport::Tuple tuple;
+      tuple.ipv4.s_addr = *((u_int32_t*)(*pptr));
+      tuple.port = request->port;
+      tuple.transportType = request->transport;
+      tuple.transport = 0;
+      
+      DebugLog(<< tuple);
+      dns->mTuples.push_back(tuple);
+   }
+   request->stack.mStateMacFifo.add(dns);
+#endif
+}
+
+
+void 
+DnsResolver::aresCallback(void *arg, int status, unsigned char *abuf, int alen)
+{
+#if defined(__linux__)
+   std::auto_ptr<Request> request(reinterpret_cast<Request*>(arg));
+#if 0
+   DebugLog (<< "Received dns update: " << request->tid << " for " << request->host);
+   DnsMessage* dns = new DnsMessage(request->tid);
+   
+   if (status != ARES_SUCCESS)
+   {
+      char* errmem=0;
+      InfoLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
+      ares_free_errmem(errmem);
+   }
+   assert(alen < HFIXEDSZ);
+
+   /* Parse the answer header. */
+   int id = DNS_HEADER_QID(abuf); // query identification number
+   int qr = DNS_HEADER_QR(abuf);  // query response
+   int opcode = DNS_HEADER_OPCODE(abuf); // opcode
+   int aa = DNS_HEADER_AA(abuf); // authoritative answer
+   int tc = DNS_HEADER_TC(abuf); // truncation
+   int rd = DNS_HEADER_RD(abuf); // recursion desired
+   int ra = DNS_HEADER_RA(abuf); // recursion available
+   int rcode = DNS_HEADER_RCODE(abuf); // response code
+   unsigned int qdcount = DNS_HEADER_QDCOUNT(abuf); // question count
+   unsigned int ancount = DNS_HEADER_ANCOUNT(abuf); // answer record count
+   unsigned int nscount = DNS_HEADER_NSCOUNT(abuf); // name server record count
+   unsigned int arcount = DNS_HEADER_ARCOUNT(abuf); // additional record count
+
+   DebugLog (<< "id: " << id);
+   DebugLog (<< "flags: " 
+             << qr ? "qr " : ""
+             << aa ? "aa " : "" 
+             << tc ? "tc " : ""
+             << rd ? "rd " : ""
+             << ra ? "ra " : "");
+#endif
+#endif // _linux_
+}
+
+Data 
+DnsResolver::DnsMessage::brief() const 
+{ 
+   Data result;
+   DataStream strm(result);
+   strm << "DnsMessage: tid=" << mTransactionId;
+   // could output the tuples
+   strm.flush();
+   return result;
+}
+
+std::ostream& 
+DnsResolver::DnsMessage::encode(std::ostream& strm) const
+{
+   strm << "Dns: tid=" << mTransactionId;
+   for (DnsResolver::TupleIterator i=mTuples.begin(); i != mTuples.end(); i++)
+   {
+      strm << *i << ",";
+   }
+   return strm;
+}
