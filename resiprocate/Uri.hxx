@@ -1,6 +1,8 @@
 #ifndef Uri_hxx
 #define Uri_hxx
 
+#include <cassert>
+
 #include <sipstack/ParserCategory.hxx>
 
 namespace Vocal2

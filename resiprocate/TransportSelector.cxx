@@ -1,3 +1,8 @@
+
+
+#include <util/Socket.hxx>
+
+
 #include <sipstack/Resolver.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/SipStack.hxx>
@@ -32,7 +37,7 @@ void
 TransportSelector::addTransport( Transport::Type protocol, 
                                  int port,
                                  const Data& hostName,
-                                 const Data& interface) 
+                                 const Data& nic) 
 {
    assert( port >  0 );
 
@@ -55,7 +60,7 @@ TransportSelector::addTransport( Transport::Type protocol,
    switch ( protocol )
    {
       case Transport::UDP:
-         transport = new UdpTransport(hostname, port, interface, mStack.mStateMacFifo);
+         transport = new UdpTransport(hostname, port, nic, mStack.mStateMacFifo);
          break;
       default:
          assert(0);
