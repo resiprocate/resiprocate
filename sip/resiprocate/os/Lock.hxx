@@ -3,10 +3,10 @@
 
 
 static const char* const Lock_hxx_Version =
-    "$Id: Lock.hxx,v 1.3 2002/11/06 02:59:30 davidb Exp $";
+"$Id: Lock.hxx,v 1.4 2002/11/07 03:07:27 jason Exp $";
 
 
-#include "util/Lockable.hxx"
+#include "sip2/util/Lockable.hxx"
 
 namespace Vocal2
 {
@@ -20,12 +20,12 @@ enum LockType
 
 class Lock
 {
-    public:
-        Lock(Lockable &, LockType = VOCAL_LOCK);
-        virtual ~Lock();
+   public:
+      Lock(Lockable &, LockType = VOCAL_LOCK);
+      virtual ~Lock();
 
-    private:
-        Lockable	&   myLockable;
+   private:
+      Lockable&   myLockable;
 };
 
 } // namespace Vocal2

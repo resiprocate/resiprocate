@@ -1,4 +1,4 @@
-#include "sipstack/Symbols.hxx"
+#include "sip2/sipstack/Symbols.hxx"
 
 using namespace Vocal2;
 

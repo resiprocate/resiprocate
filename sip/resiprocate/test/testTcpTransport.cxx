@@ -1,12 +1,11 @@
 #include <iostream>
 
-#include "sipstack/TcpTransport.hxx"
-#include "sipstack/SipMessage.hxx"
-#include "sipstack/ConnectionMap.hxx"
-#include "util/Fifo.hxx"
-#include "sipstack/Preparse.hxx"
-#include "sipstack/Helper.hxx"
-
+#include "sip2/sipstack/TcpTransport.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/ConnectionMap.hxx"
+#include "sip2/util/Fifo.hxx"
+#include "sip2/sipstack/Preparse.hxx"
+#include "sip2/sipstack/Helper.hxx"
 
 
 using namespace Vocal2;

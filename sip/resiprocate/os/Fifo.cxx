@@ -51,5 +51,5 @@
 
 //#include <errno.h>
 
-#include "util/Fifo.hxx"
+#include "sip2/util/Fifo.hxx"
 

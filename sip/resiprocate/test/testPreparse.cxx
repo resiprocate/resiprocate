@@ -2,9 +2,9 @@
 #include <iomanip>
 #include <stdio.h>
 
-#include "sipstack/Preparse.hxx"
-#include "util/Logger.hxx"
-#include "sipstack/SipMessage.hxx"
+#include "sip2/sipstack/Preparse.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
 
 #include <ctype.h>
 

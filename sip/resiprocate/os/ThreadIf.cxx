@@ -6,10 +6,10 @@
 
 #include <cassert>
 #include <iostream>
-#include "util/ThreadIf.hxx"
-#include "util/Mutex.hxx"
-#include "util/Lock.hxx"
-#include "util/Socket.hxx"
+#include "sip2/util/ThreadIf.hxx"
+#include "sip2/util/Mutex.hxx"
+#include "sip2/util/Lock.hxx"
+#include "sip2/util/Socket.hxx"
 
 
 

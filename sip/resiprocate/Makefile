@@ -1,17 +1,18 @@
-# $Id: Makefile,v 1.75 2002/11/07 02:57:22 derekm Exp $
+# $Id: Makefile,v 1.76 2002/11/07 03:07:22 jason Exp $
 
 BUILD = ../../build
 
 include $(BUILD)/Makefile.pre
 
 USE_REPO=false
-PACKAGES += UTIL2 PTHREAD
+PACKAGES += SIP2 UTIL2 PTHREAD
 
 ifeq ($(USE_SSL),1)
 PACKAGES += OPENSSL
 endif
 
 TARGET_LIBRARY = libsip2
+TESTPROGRAMS =  
 
 parsetest: bin.debug.Linux.i686/testParserCategories
 	./bin.debug.Linux.i686/testParserCategories

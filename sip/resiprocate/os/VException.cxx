@@ -1,9 +1,9 @@
 static const char* const VException_cxx_Version =
-    "$Id: VException.cxx,v 1.5 2002/11/06 02:59:30 davidb Exp $";
+    "$Id: VException.cxx,v 1.6 2002/11/07 03:07:27 jason Exp $";
 
 
-#include "util/VException.hxx"
-#include "util/Logger.hxx"
+#include "sip2/util/VException.hxx"
+#include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;
