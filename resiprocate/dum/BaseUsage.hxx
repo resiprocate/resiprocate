@@ -47,9 +47,6 @@ class BaseUsage
             static UInt64 getNext();
       };
 
-      BaseUsage(DialogUsageManager& dum, Dialog& dialog);
-      virtual ~BaseUsage();
-
       // to send a request on an existing dialog (made from make... methods above)
       virtual void send(const SipMessage& request);
       
@@ -61,6 +58,10 @@ class BaseUsage
       virtual BaseUsage::Handle getBaseHandle() = 0;
 
    protected:
+      friend class DialogUsageManager;
+      BaseUsage(DialogUsageManager& dum, Dialog& dialog);
+      virtual ~BaseUsage();
+
       DialogUsageManager& mDum;
       Dialog& mDialog;
 };
