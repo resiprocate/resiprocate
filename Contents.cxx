@@ -16,7 +16,8 @@ Contents::Contents(const Mime& contentType)
 {}
 
 Contents::Contents(const Contents& rhs) 
-   : LazyParser(rhs) 
+    : LazyParser(rhs),
+      mContentsType(rhs.mContentsType)
 {}
   
 Contents::~Contents()
