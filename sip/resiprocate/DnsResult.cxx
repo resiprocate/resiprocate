@@ -584,6 +584,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
 void
 DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
 {
+#ifdef USE_IPV6
    DebugLog (<< "DnsResult::processAAAA() " << status);
    // This function assumes that the AAAA query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
@@ -624,6 +625,9 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
 #endif
    }
    lookupARecords(mPassHostFromAAAAtoA);
+#else
+	assert(0);
+#endif
 }
 
 void
@@ -691,8 +695,13 @@ DnsResult::primeResults()
       SRV next = retrieveSRV();
       DebugLog (<< "Primed with SRV=" << next);
       
-      if ( mARecords.count(next.target) + mAAAARecords.count(next.target) )
+      if ( mARecords.count(next.target) 
+#ifdef USE_IPV6 
+			+ mAAAARecords.count(next.target)
+#endif
+			)
       {
+#ifdef USE_IPV6 
          std::list<struct in6_addr>& aaaarecs = mAAAARecords[next.target];
          for (std::list<struct in6_addr>::const_iterator i=aaaarecs.begin();
 	         i!=aaaarecs.end(); i++)
@@ -700,6 +709,7 @@ DnsResult::primeResults()
             Tuple tuple(*i,next.port,next.transport);
             mResults.push_back(tuple);
          }
+#endif
          std::list<struct in_addr>& arecs = mARecords[next.target];
          for (std::list<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
@@ -902,6 +912,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       mARecords[key].push_back(addr);
       return aptr + dlen;
    }
+#ifdef USE_IPV6
    else if (type == T_AAAA)
    {
       if (dlen != 16) // The RR is 128 bits of ipv6 address
@@ -915,6 +926,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       mAAAARecords[key].push_back(addr);
       return aptr + dlen;
    }
+#endif
    else // just skip it (we don't care :)
    {
       //DebugLog (<< "Skipping: " << key);
@@ -1032,6 +1044,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
 }
       
 
+#ifdef USE_IPV6
 // adapted from the adig.c example in ares
 const unsigned char* 
 DnsResult::parseAAAA(const unsigned char *aptr,
@@ -1077,6 +1090,7 @@ DnsResult::parseAAAA(const unsigned char *aptr,
    free(name);
 
    // Display the RR data.  Don't touch aptr. 
+
    if (type == T_AAAA)
    {
       // The RR data is 128 bits of ipv6 address in network byte
@@ -1085,11 +1099,14 @@ DnsResult::parseAAAA(const unsigned char *aptr,
       return aptr + dlen;
    }
    else
+
    {
       DebugLog (<< "Failed parse of RR");
       return NULL;
    }
 }
+#endif
+
 
 // adapted from the adig.c example in ares
 const unsigned char* 

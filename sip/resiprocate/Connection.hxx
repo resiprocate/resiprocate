@@ -46,8 +46,8 @@ class Connection : public IntrusiveListElement<Connection*, 1>,
       enum { ChunkSize = 2048 }; //!dcm! -- bad size, perhaps 2048-4096?
       
       // pure virtual, but need concrete Connection
-      virtual int read(char* buffer, int count) { return 0; }
-      virtual int write(const char* buffer, int count) { return 0; }
+      virtual int read(char* buffer, const int count) { return 0; }
+      virtual int write(const char* buffer, const int count) { return 0; }
       
    protected:
       Connection();
