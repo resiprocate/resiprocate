@@ -29,7 +29,8 @@ class SdpContents : public Contents
 {
    public:
       typedef enum {IP4=1, IP6} AddrType;
-
+      static const SdpContents Empty;
+      
       class Session;
 
       class Session 
