@@ -16,10 +16,6 @@ using namespace std;
 const Pkcs7Contents Pkcs7Contents::Empty;
 const Pkcs7SignedContents Pkcs7SignedContents::Empty;
 
-static bool invokePkcs7ContentsInit = Pkcs7Contents::init();
-static bool invokePkcs7SignedContentsInit = Pkcs7SignedContents::init();
-
-
 bool
 Pkcs7Contents::init()
 {
