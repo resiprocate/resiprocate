@@ -5,10 +5,12 @@
 #include <ctype.h>
 #include "resiprocate/MethodTypes.hxx"
 
+//using namespace std;
+using namespace resip;
+
 namespace resip
 {
-using namespace std;
-using namespace resip;
+
 struct methods { char *name; MethodTypes type; };
 /* maximum key range = 20, duplicates = 0 */
 
