@@ -98,7 +98,7 @@ RCS file: /cvsroot/gaim/gaim/Makefile.mingw,v
 retrieving revision 1.37
 diff -u -r1.37 Makefile.mingw
 --- Makefile.mingw	17 Apr 2004 13:55:26 -0000	1.37
-+++ Makefile.mingw	24 Jun 2004 01:11:11 -0000
++++ Makefile.mingw	24 Jun 2004 04:00:50 -0000
 @@ -24,6 +24,7 @@
  TREPIA = $(GAIM_PROTOS)/trepia
  GG = $(GAIM_PROTOS)/gg
@@ -123,15 +123,19 @@ diff -u -r1.37 Makefile.mingw
  	$(MAKE) -C $(GAIM_SRC) -f Makefile.mingw
  	$(MAKE) -C $(GAIM_PLUGINS) -f Makefile.mingw
  
-@@ -81,6 +84,7 @@
+@@ -81,8 +84,11 @@
  	$(MAKE) TYPE='$(JABBER_TYPE)' -C $(JABBER) -f Makefile.mingw install
  	$(MAKE) TYPE='$(GG_TYPE)' -C $(GG) -f Makefile.mingw install
  	$(MAKE) TYPE='$(NOVELL_TYPE)' -C $(NOVELL) -f Makefile.mingw install
 +	$(MAKE) TYPE='$(SIMPLE_TYPE)' -C $(SIMPLE) -f Makefile.mingw install
  	cp $(NEEDED_DLLS) $(GAIM_INSTALL_DIR)
  	cp $(SOUNDS) $(GAIM_INSTALL_DIR)/sounds/gaim
++	cp /usr/bin/cygwin1.dll $(GAIM_INSTALL_DIR)
++	cp /usr/local/bin/gag.exe $(GAIM_INSTALL_DIR)
  
-@@ -105,6 +109,7 @@
+ installer:
+ 	makensis.exe /DGAIM_VERSION="$(VERSION)" /DWITH_GTK gaim-installer.nsi
+@@ -105,6 +111,7 @@
  	$(MAKE) -C $(JABBER) -f Makefile.mingw clean
  	$(MAKE) -C $(GG) -f Makefile.mingw clean
  	$(MAKE) -C $(NOVELL) -f Makefile.mingw clean
@@ -139,3 +143,30 @@ diff -u -r1.37 Makefile.mingw
  	$(MAKE) -C $(GAIM_SRC) -f Makefile.mingw clean
  	$(MAKE) -C $(GAIM_PLUGINS) -f Makefile.mingw clean
  	rm -rf config.h $(GAIM_INSTALL_DIR)
+
+Index: gaim-installer.nsi
+===================================================================
+RCS file: /cvsroot/gaim/gaim/gaim-installer.nsi,v
+retrieving revision 1.66
+diff -u -r1.66 gaim-installer.nsi
+--- gaim-installer.nsi	30 May 2004 21:54:05 -0000	1.66
++++ gaim-installer.nsi	24 Jun 2004 04:03:59 -0000
+@@ -559,6 +559,7 @@
+     Delete "$INSTDIR\plugins\liboscar.dll"
+     Delete "$INSTDIR\plugins\libtoc.dll"
+     Delete "$INSTDIR\plugins\libyahoo.dll"
++    Delete "$INSTDIR\plugins\libsimple.dll"
+     Delete "$INSTDIR\plugins\perl.dll"
+     Delete "$INSTDIR\plugins\relnot.dll"
+     Delete "$INSTDIR\plugins\spellchk.dll"
+@@ -594,6 +595,10 @@
+     Delete "$INSTDIR\exchndl.dll"
+     !endif
+ 
++    ; Additional files required to support SIMPLE plugin
++    Delete "$INSTDIR\gag.exe"
++    Delete "$INSTDIR\cygwin1.dll"
++
+     ;Try to remove Gaim install dir .. if empty
+     RMDir "$INSTDIR"
+ 
