@@ -15,12 +15,12 @@ class IntegerParameter : public Parameter
    public:
       typedef int Type;
 
-      IntegerParameter(ParameterTypes::Type, ParseBuffer& pb);
+      IntegerParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
       IntegerParameter(ParameterTypes::Type type, int value = -666999666);
       
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb)
+      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
-         return new IntegerParameter(type, pb);
+         return new IntegerParameter(type, pb, terminators);
       }
 
       int& value();

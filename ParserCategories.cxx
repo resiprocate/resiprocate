@@ -187,7 +187,7 @@ Auth::parse(ParseBuffer& pb)
 {
    const char* start;
    start = pb.skipWhitespace();
-   pb.skipToOneOf(ParseBuffer::Whitespace, ",=");
+   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::EQUALS);
 
    if (*pb.position() == Symbols::EQUALS[0])
    {
@@ -240,7 +240,16 @@ Auth::parseAuthParameters(ParseBuffer& pb)
    {
       const char* keyStart = pb.position();
       const char* keyEnd = pb.skipToOneOf(" \t\r\n=");
-      mUnknownParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb, " \t\r\n,"));
+      ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
+      if (type == ParameterTypes::UNKNOWN)
+      {
+         mUnknownParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb));
+      }
+      else
+      {
+         // invoke the particular factory
+         mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n,"));
+      }
       pb.skipWhitespace();
       if (*pb.position() != Symbols::COMMA[0])
       {
@@ -254,18 +263,200 @@ Auth::parseAuthParameters(ParseBuffer& pb)
 ostream&
 Auth::encodeAuthParameters(ostream& str) const
 {
+   bool first = true;
+   for (ParameterList::iterator it = mParameters.begin();
+        it != mParameters.end(); it++)
+   {
+      if (!first)
+      {
+         str << Symbols::COMMA;
+      }
+      first = false;
+      (*it)->encode(str);
+   }
+
    for (ParameterList::iterator it = mUnknownParameters.begin();
         it != mUnknownParameters.end(); it++)
    {
-      if (it != mUnknownParameters.begin()) 
+      if (!first)
       {
-	 str << Symbols::COMMA;
+         str << Symbols::COMMA;
       }
+      first = false;
       (*it)->encode(str);
    }
    return str;
 }
 
+      
+Algorithm_Param::DType&
+Auth::param(const Algorithm_Param& paramType) const
+{
+   checkParsed();
+   Algorithm_Param::Type* p = dynamic_cast<Algorithm_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Algorithm_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Cnonce_Param::DType&
+Auth::param(const Cnonce_Param& paramType) const
+{
+   checkParsed();
+   Cnonce_Param::Type* p = dynamic_cast<Cnonce_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Cnonce_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Nonce_Param::DType&
+Auth::param(const Nonce_Param& paramType) const
+{
+   checkParsed();
+   Nonce_Param::Type* p = dynamic_cast<Nonce_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Nonce_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Domain_Param::DType&
+Auth::param(const Domain_Param& paramType) const
+{
+   checkParsed();
+   Domain_Param::Type* p = dynamic_cast<Domain_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Domain_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Nc_Param::DType&
+Auth::param(const Nc_Param& paramType) const
+{
+   checkParsed();
+   Nc_Param::Type* p = dynamic_cast<Nc_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Nc_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Opaque_Param::DType&
+Auth::param(const Opaque_Param& paramType) const
+{
+   checkParsed();
+   Opaque_Param::Type* p = dynamic_cast<Opaque_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Opaque_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Realm_Param::DType&
+Auth::param(const Realm_Param& paramType) const
+{
+   checkParsed();
+   Realm_Param::Type* p = dynamic_cast<Realm_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Realm_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Response_Param::DType&
+Auth::param(const Response_Param& paramType) const
+{
+   checkParsed();
+   Response_Param::Type* p = dynamic_cast<Response_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Response_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Stale_Param::DType&
+Auth::param(const Stale_Param& paramType) const
+{
+   checkParsed();
+   Stale_Param::Type* p = dynamic_cast<Stale_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Stale_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Username_Param::DType&
+Auth::param(const Username_Param& paramType) const
+{
+   checkParsed();
+   Username_Param::Type* p = dynamic_cast<Username_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Username_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Uri_Param::DType&
+Auth::param(const Uri_Param& paramType) const
+{
+   checkParsed();
+   Uri_Param::Type* p = dynamic_cast<Uri_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Uri_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Qop_Options_Param::DType&
+Auth::param(const Qop_Options_Param& paramType) const
+{
+   checkParsed();
+   Qop_Options_Param::Type* p = dynamic_cast<Qop_Options_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Qop_Options_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Qop_Param::DType&
+Auth::param(const Qop_Param& paramType) const
+{
+   checkParsed();
+   Qop_Param::Type* p = dynamic_cast<Qop_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Qop_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
 
 //====================
 // CSeqCategory:
@@ -1373,9 +1564,9 @@ StatusLine::parse(ParseBuffer& pb)
    start = pb.skipWhitespace();
    mResponseCode = pb.integer();
    start = pb.skipNonWhitespace();
-   if (*pb.position() != ' ' && pb.position() != pb.end())
+   if (*pb.position() != Symbols::SPACE[0] && pb.position() != pb.end())
    {
-      start = pb.skipChar(' ');
+      start = pb.skipChar(Symbols::SPACE[0]);
       pb.reset(pb.end());
       pb.data(mReason, start);
    }
