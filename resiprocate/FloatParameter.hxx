@@ -1,7 +1,7 @@
 #ifndef FloatParameter_hxx
 #define FloatParameter_hxx
 
-#include <sip2/sipstack/Parameter.hxx>
+#include <sipstack/Parameter.hxx>
 #include <iostream>
 
 namespace Vocal2
