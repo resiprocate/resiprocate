@@ -2,12 +2,11 @@
 #include <iomanip>
 #include <stdio.h>
 
-#define DEBUG_HELPERS
-#include "sip2/sipstack/Preparse.hxx"
-#undef DEBUG_HELPERS
 
 #include "sip2/util/Logger.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
+
+#include "sip2/sipstack/test/TestSupport.hxx"
 
 #include <ctype.h>
 
@@ -157,91 +156,6 @@ extern Data ppStatusName(BufferAction s);
 #else
 #define ppStatusName(s) s
 #endif
-
-const int chPerRow = 20;
-
-void labels(int len, int row)
-{
-    int start = chPerRow*row;
-    cout << ' ';
-    for(int i = 0; i < chPerRow && start+i < len; i++)
-    {
-        cout << setw(3) << start+i << ' ';
-    }
-    cout << endl;
-}
-
-void banner(int len, int row)
-{
-    int chThisRow = 0;
-    
-    if (row >= len/chPerRow)
-        chThisRow = len%chPerRow;
-    else
-        chThisRow = chPerRow;
-
-    if (chThisRow < 1) return;
-    
-    cout << "+";
-    for(int i = 0 ; i < chThisRow; i++)
-    {
-        cout << "---+";
-    }
-    cout << endl;
-    return;
-}
-
-void data(const char * p , int len, int row)
-{
-    cout << "|";
-    for(int c = 0; c < chPerRow; c++)
-    {
-        int o = row*chPerRow + c;
-        if (o >= len) break;
-        char ch = p[o];
-        
-        if (isalnum(ch) || ispunct(ch) || ch == ' ' )
-        {
-            cout << ' ' << (char)ch << ' ';
-        }
-        else if ( ch == '\t' )
-        {
-            cout << " \\t";
-        }
-        else if ( ch >= '\t' || ch <= '\r')
-        {
-            cout << " \\" << "tnvfr"[ch-'\t'];
-        }
-        else
-        {
-            cout << 'x' << hex << ch << dec;
-        }
-        cout << '|';
-        
-        
-    }
-    cout << endl;
-    
-}
-
-void pp(const char * p, int len)
-{
-    int row = 0;
-    
-    for ( row = 0 ; row <= len/chPerRow ; row++)
-    {
-        // do this row's banner
-        banner(len,row);
-        // do this row's data
-        data(p,len,row);
-        // do this row's banner
-        banner(len,row);
-        // do this row's counts
-        labels(len,row);
-        
-    }
-}
-
 void od(const char * p , int len)
 {
     int i;
@@ -329,7 +243,6 @@ void doTest1()
 
     size_t len = 1;
 
-    Preparse::Status  status = stNone;
 
     
     // Create a SipMessage
@@ -341,10 +254,6 @@ void doTest1()
 
     len = 1;
 
-    
-    size_t discard = 0;
-    size_t used = 0;
-    size_t start = 0;
     bool chunkMine = true;
 
     size_t readQuant = 1;
@@ -357,7 +266,7 @@ void doTest1()
 //    fakeResetRead(tortureMsg,strlen(tortureMsg));
 //    fakeResetRead(wrappy,strlen(wrappy));
     
-   pp(wrappy,strlen(wrappy));
+    TestSupport::prettyPrint(wrappy,strlen(wrappy));
 
     // get the first chunk
 
@@ -371,11 +280,17 @@ void doTest1()
         
         InfoLog(<<"Preparsing " << chunkSize << " bytes");
         InfoLog(<<"len   : " << chunkSize);
-        InfoLog(<<"start : " << start);
 
-        pp(chunk,chunkSize);
+        TestSupport::prettyPrint(chunk,chunkSize);
+        int status = 0;
+        if ((status = pre.process(*msg,chunk,chunkSize)))
+        {
+           CritLog(<<"preparse error");
+        }
         
-        pre.process(*msg,chunk,chunkSize,start,used,discard,status);
+
+        size_t used = pre.nBytesUsed();
+        size_t discard = pre.nDiscardOffset();
 
         DebugLog(<<"used   : " << used);
         DebugLog(<<"discard: " << discard);
@@ -383,9 +298,9 @@ void doTest1()
 #if !defined(PP_DEBUG_HELPERS)
 #define statusName(x) x
 #endif
-        DebugLog(<<"status :" << statusName(status));
 
-        if (status & stPreparseError)
+        
+        if (status)
         {
             if (chunkMine)
             {
@@ -395,12 +310,10 @@ void doTest1()
             chunk = 0;
             
             CritLog(<<"preparserError -- unexpected");
-            assert(~(status & stPreparseError));
-            assert(("whoops you goofed -- should never see this",0));
-            
+            assert(0);
         }
         
-        if (status & stDataAssigned)
+        if (pre.isDataAssigned())
         {
             // something used ... need to add this to the message
             DebugLog(<<"dataAssigned");
@@ -418,7 +331,7 @@ void doTest1()
             }
         }
 
-        if (status & stFragmented)
+        if (pre.isFragmented())
         {
             // need to call again with more data,
             // there is an optimization here ...
@@ -432,7 +345,7 @@ void doTest1()
             char * newChunk = new char[chunkSize-discard + readQuant];
             memcpy(newChunk, chunk+discard, chunkSize-discard);
 
-            if (! ( status & stDataAssigned))
+            if (! ( pre.isDataAssigned()))
             {
                 // we didn't use the last one ... 
                 DebugLog(<<"delete chunk (0x"<<hex<<(unsigned long)chunk<<dec<<")");
@@ -447,12 +360,10 @@ void doTest1()
             chunkSize = chunkSize - discard + nBytes;
 
             DebugLog(<<"read in " << readQuant << " more bytes, chunkSize: " << chunkSize);
-            start = used - discard;
         }
         else
         {
             // not fragmented just get another buffer
-            start = 0;
             DebugLog(<<"NO FRAG -- reading next chunk.");
             if (chunk)
             {
@@ -483,7 +394,7 @@ void doTest1()
         
         
     }
-    while (~ status & stHeadersComplete);
+    while (!pre.isHeadersComplete());
 
     InfoLog(<< "Read in a message");
     InfoLog(<<*msg);
