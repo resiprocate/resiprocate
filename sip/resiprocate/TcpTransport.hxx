@@ -27,16 +27,16 @@ class TcpTransport : public Transport
       void processAllWrites(FdSet& fdset);
       void processAllReads(FdSet& fdset);
 
-      bool processWrite(ConnectionMap::Connection* c);
+      bool processWrite(Connection* c);
       void sendFromRoundRobin(FdSet& fdset);
 
-      bool processRead(ConnectionMap::Connection* c);
+      bool processRead(Connection* c);
 
       void processListen(FdSet& fdSet);
 
       static const int MaxBufferSize;
       ConnectionMap mConnectionMap;
-      typedef std::list<ConnectionMap::Connection*> ConnectionList;
+      typedef std::list<Connection*> ConnectionList;
       ConnectionList mSendRoundRobin;
       ConnectionList::iterator mSendPos;
 };
