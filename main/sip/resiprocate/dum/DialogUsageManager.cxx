@@ -231,9 +231,12 @@ DialogUsageManager::addOutOfDialogHandler(MethodTypes& type, OutOfDialogHandler*
 }
 
 SipMessage& 
-DialogUsageManager::makeNewSession(AppDialogSet* appDs, BaseCreator* creator)
+DialogUsageManager::makeNewSession(BaseCreator* creator, AppDialogSet* appDs)
 {
-   
+   if (appDs == 0)
+   {
+      appDs = new AppDialogSet(*this);
+   }
    prepareInitialRequest(creator->getLastRequest());
    DialogSet* ds = new DialogSet(creator, *this);
    
@@ -266,31 +269,31 @@ DialogUsageManager::sendResponse(const SipMessage& response)
    
 
 SipMessage&
-DialogUsageManager::makeInviteSession(AppDialogSet* appDs, const Uri& target, const SdpContents* initialOffer)
+DialogUsageManager::makeInviteSession(const Uri& target, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
-   return makeNewSession(appDs, new InviteSessionCreator(*this, target, initialOffer));
+   return makeNewSession(new InviteSessionCreator(*this, target, initialOffer), appDs);
 }
 
 SipMessage&
-DialogUsageManager::makeSubscription(AppDialogSet* appDs, const Uri& aor, const NameAddr& target,const Data& eventType)
+DialogUsageManager::makeSubscription(const Uri& aor, const NameAddr& target, const Data& eventType, AppDialogSet* appDs)
 {
-   return makeNewSession(appDs, new SubscriptionCreator(*this, target, eventType));
+   return makeNewSession(new SubscriptionCreator(*this, target, eventType), appDs);
 }
 
 SipMessage& 
-DialogUsageManager::makeRegistration(AppDialogSet* appDs, const NameAddr& aor)
+DialogUsageManager::makeRegistration(const NameAddr& aor, AppDialogSet* appDs)
 {
-   return makeNewSession(appDs, new RegistrationCreator(*this, aor)); 
+   return makeNewSession(new RegistrationCreator(*this, aor), appDs); 
 }
 
 SipMessage& 
-DialogUsageManager::makePublication(AppDialogSet* appDs, 
-                                    const Uri& targetDocument,  
+DialogUsageManager::makePublication(const Uri& targetDocument,  
                                     const Contents& body, 
                                     const Data& eventType, 
-                                    unsigned expiresSeconds )
+                                    unsigned expiresSeconds, 
+                                    AppDialogSet* appDs)
 { 
-   return makeNewSession(appDs, new PublicationCreator(*this, targetDocument, body, eventType, expiresSeconds)); 
+   return makeNewSession(new PublicationCreator(*this, targetDocument, body, eventType, expiresSeconds), appDs); 
 }
 
 
