@@ -3,6 +3,7 @@
 #include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 #include <cassert>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM

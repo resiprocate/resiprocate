@@ -19,6 +19,7 @@
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
 #include "resiprocate/dum/ServerRegistration.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
