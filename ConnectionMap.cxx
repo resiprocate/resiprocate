@@ -47,6 +47,7 @@ ConnectionMap::touch(Connection* connection)
 Connection*
 ConnectionMap::add(Transport::Tuple& who, Socket socket)
 {
+   DebugLog (<< "Adding " << who);
    assert(mConnections.count(who) == 0);
    
    Connection* connection = new Connection(who, socket);
@@ -75,12 +76,14 @@ ConnectionMap::get(const Transport::Tuple& who)
 void
 ConnectionMap::close(const Transport::Tuple& who)
 {
+   DebugLog (<< "Closing " << who);
+   
    Map::iterator i = mConnections.find(who);
    if (i != mConnections.end())
    {
       i->second->remove();
       mConnections.erase(i);
-      delete i->second;
+      //delete i->second;
    }
 }
 
