@@ -49,7 +49,11 @@ void
 DnsResolver::buildFdSet(FdSet& fdset)
 {
 #if defined(USE_ARES)
-   fdset.size = ares_fds(mChannel, &fdset.read, &fdset.write);
+   int size = ares_fds(mChannel, &fdset.read, &fdset.write);
+   if ( size > fdset.size )
+   {
+      fdset.size = size;
+   }
 #endif
 }
 

@@ -93,14 +93,6 @@ Transport::send( const Tuple& dest, const Data& d, const Data& tid)
    mTxFifo.add(data); // !jf!
 }
 
-
-void 
-Transport::buildFdSet( FdSet& fdset )
-{
-   fdset.setRead(mFd);
-   fdset.setWrite(mFd);
-}
-
 Data
 Transport::toData(Transport::Type type)
 {

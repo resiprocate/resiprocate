@@ -444,12 +444,12 @@ main(int argc, char* argv[])
    {
       FdSet fdset; 
       sipStack.buildFdSet(fdset);
+      int time = sipStack.getTimeTillNextProcessMS();
 
       fdset.setRead( fileno(stdin) );
       
-      int time = sipStack.getTimeTillNextProcessMS();
-      cerr << time << endl;
-      
+      //cerr << time << endl;
+
       int  err = fdset.selectMiliSeconds( time );
       if ( err == -1 )
       {
@@ -463,6 +463,15 @@ main(int argc, char* argv[])
                break;
          }
       }
+      if ( err == 0 )
+      {
+         //cerr << "select timed out" << endl;
+      }
+      if ( err > 0 )
+      {
+         //cerr << "select has " << err << " fd ready" << endl;
+      }
+      
       ////InfoLog(<< "Select returned");
        
       if ( fdset.readyToRead( fileno(stdin) ) )
