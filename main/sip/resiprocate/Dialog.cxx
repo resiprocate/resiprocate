@@ -139,47 +139,47 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
 
          mCreated = true;
       }
-   }
-   else if (msg.isRequest() && msg.header(h_CSeq).method() == NOTIFY)
-   {
-      const SipMessage& notify = msg;
-      if (notify.exists(h_RecordRoutes))
+      else if (msg.isRequest() && msg.header(h_CSeq).method() == NOTIFY)
       {
-         mRouteSet = notify.header(h_RecordRoutes);
-      }
+         const SipMessage& notify = msg;
+         if (notify.exists(h_RecordRoutes))
+         {
+            mRouteSet = notify.header(h_RecordRoutes);
+         }
       
-      if (!notify.exists(h_Contacts) && notify.header(h_Contacts).size() != 1)
-      {
-         InfoLog (<< "Notify doesn't have a contact header or more than one contact, so can't create dialog");
-         DebugLog (<< notify);
-         throw Exception("Invalid or missing contact header in notify", __FILE__,__LINE__);
-      }
+         if (!notify.exists(h_Contacts) && notify.header(h_Contacts).size() != 1)
+         {
+            InfoLog (<< "Notify doesn't have a contact header or more than one contact, so can't create dialog");
+            DebugLog (<< notify);
+            throw Exception("Invalid or missing contact header in notify", __FILE__,__LINE__);
+         }
 
-      mRemoteTarget = notify.header(h_Contacts).front();
-      mRemoteSequence = notify.header(h_CSeq).sequence();
-      mRemoteEmpty = false;
-      mLocalSequence = 0;
-      mLocalEmpty = true;
-      mCallId = notify.header(h_CallId);
-      if (notify.header(h_To).exists(p_tag))
-      {
-         mLocalTag = notify.header(h_To).param(p_tag); 
-      }
-      if (notify.header(h_From).exists(p_tag))  // 2543 compat
-      {
-         mRemoteTag = notify.header(h_From).param(p_tag); 
-      }
+         mRemoteTarget = notify.header(h_Contacts).front();
+         mRemoteSequence = notify.header(h_CSeq).sequence();
+         mRemoteEmpty = false;
+         mLocalSequence = 0;
+         mLocalEmpty = true;
+         mCallId = notify.header(h_CallId);
+         if (notify.header(h_To).exists(p_tag))
+         {
+            mLocalTag = notify.header(h_To).param(p_tag); 
+         }
+         if (notify.header(h_From).exists(p_tag))  // 2543 compat
+         {
+            mRemoteTag = notify.header(h_From).param(p_tag); 
+         }
       
-      mRemoteUri = notify.header(h_From);
-      mLocalUri = notify.header(h_To);
+         mRemoteUri = notify.header(h_From);
+         mLocalUri = notify.header(h_To);
 
-      mDialogId = mCallId;
-      mDialogId.param(p_toTag) = mLocalTag;
-      mDialogId.param(p_fromTag) = mRemoteTag;
+         mDialogId = mCallId;
+         mDialogId.param(p_toTag) = mLocalTag;
+         mDialogId.param(p_fromTag) = mRemoteTag;
 
-      mCreated = true;
+         mCreated = true;
+      }
    }
-   else
+   else if (msg.isResponse())
    {
       targetRefreshResponse(msg);
    }
