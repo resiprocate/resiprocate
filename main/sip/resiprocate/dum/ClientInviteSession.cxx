@@ -11,7 +11,9 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          const SipMessage& request, 
                                          const SdpContents* initialOffer)
    : InviteSession(dum, dialog),
-     mHandle(dum)
+     mHandle(dum),
+     lastReceivedRSeq(0),
+     lastExpectedRSeq(0)
 {
    mProposedLocalSdp = static_cast<SdpContents*>(initialOffer->clone());
    mLastRequest = request;

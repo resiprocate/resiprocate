@@ -57,6 +57,10 @@ class ClientInviteSession : public InviteSession
 
       ClientInviteSession::Handle mHandle;
       
+      int lastReceivedRSeq;
+      int lastExpectedRSeq;
+            
+      
       // disabled
       ClientInviteSession(const ClientInviteSession&);
       ClientInviteSession& operator=(const ClientInviteSession&);
