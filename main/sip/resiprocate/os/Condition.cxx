@@ -121,6 +121,41 @@ Condition::wait (Mutex* mutex, int ms)
 #ifdef WIN32 
     // FixMe: Race condition between time we get mId and when we
     // re-acquire the mutex.
+	//
+	// SLG: A Note about the Win32 Implementation of Conditions
+	//
+	// I have investigated a fix for this.  A solution to this problem is 
+	// non-trivial.  Please read http://www.cs.wustl.edu/~schmidt/win32-cv-1.html 
+	// for a full explanation.  This is an implementation of the SetEvent solution
+	// discussed in that article.  This solution has the following issues:
+	// 1.  Unfairness - ie.  First thread to call wait may not be first thread
+	//     to be released from condition.
+	// 2.  Incorrectness due to a race condition when a broadcast occurs 
+	// (see the link for more details on these issues)
+	//
+	// There is a solution that corrects these two problem, but also introduces 2 more.
+	// This solution (also discussed in the link) requires the use of a primitive only
+	// available in WinNT and above.  It also requires that the Mutex passed in be
+	// implemented using windows Mutexes instead of CriticalSections - they are less
+	// efficient.  Thus the problems with this SignalObjectAndWait solution are:
+	// 1.  Not portable to all versions of windows - ie.  will not work with Win98/Me
+	// 2.  Less efficient than tthe SetEvent solution
+	//
+	// I have choosen to stick with the SetEvent Solution for the following reasons:
+	// 1.  Speed is important.
+	// 2.  The Unfairness issue is not really a big problem since the stack currently
+	//     does not call a wait function from two different threads.  (assuming the 
+	//     hosting application always calls process() from the same thread).  The only
+	//     time multi-threading comes into the picture is when the transports queue
+	//     messages from the wire onto the stateMacFifo - but they are retrieved off the
+	//     Fifo by a single thread.
+	// 3.  The Incorrectness issue is also not a big problem, since the stack currently
+	//     doesn't use the broadcast member of this class.
+	// 
+	// Note:  The implementation of broadcast remains incomplete - since it is currently
+	//        unused and would require an additional CriticalSection Enter and Leave to 
+	//        keep track of a counter (see the above link for more info).  This can be
+	//        easily added in the future if required.
     mutex->unlock();
     WaitForSingleObject(mId, ms);
     mutex->lock();
