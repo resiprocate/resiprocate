@@ -32,11 +32,6 @@ ClientSubscription::Handle::operator->()
 }
 
 void 
-ClientSubscription::process(const SipMessage& subOrNotify)
-{
-}
-
-void 
 ClientSubscription::dispatch(const SipMessage& msg)
 {
 }
