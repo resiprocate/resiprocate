@@ -92,8 +92,6 @@ namespace resip
 
 */
 
-class XMLCursor;
-
 class XMLCursor
 {
    public:
@@ -173,7 +171,6 @@ public:
             // friend std::ostream& operator<<(std::ostream& str, const XMLCursor::Node& cursor); // this line won't compile in windows 
       };
    private:
-      
       friend std::ostream& operator<<(std::ostream&, const XMLCursor&);
       friend std::ostream& operator<<(std::ostream&, const XMLCursor::Node&);
 
