@@ -49,7 +49,7 @@ class DnsUtil
       // XXXX:0:0:0:YYYY:192.168.2.233 => XXXX::::YYYY:192.168.2.233
       // so string (case) comparison will work
       // or something
-      static void canonicalizeIpV6Address(Data& ipV6Address);
+      static Data canonicalizeIpV6Address(const Data& ipV6Address);
 };
 
 }
