@@ -3,7 +3,7 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/ClientAuthManager.hxx"
-#include "resiprocate/dum/Identity.hxx"
+#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 
@@ -12,13 +12,14 @@
 using namespace resip;
 using namespace std;
 
-ClientAuthManager::ClientAuthManager() 
+ClientAuthManager::ClientAuthManager(Profile& profile) :
+   mProfile(profile)
 {
 }
 
 
 bool 
-ClientAuthManager::handle(Identity& identity, SipMessage& origRequest, const SipMessage& response)
+ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
 {
    assert( response.isResponse() );
    assert( origRequest.isRequest() );
@@ -112,7 +113,7 @@ ClientAuthManager::handle(Identity& identity, SipMessage& origRequest, const Sip
       for (Auths::const_iterator i = response.header(h_WWWAuthenticates).begin();  
            i != response.header(h_WWWAuthenticates).end(); ++i)                    
       {    
-         if (!handleAuthHeader(identity, *i, it, origRequest, response, false))
+         if (!handleAuthHeader(*i, it, origRequest, response, false))
          {
             it->second.state = Failed;   
             return false;
@@ -124,7 +125,7 @@ ClientAuthManager::handle(Identity& identity, SipMessage& origRequest, const Sip
       for (Auths::const_iterator i = response.header(h_ProxyAuthenticates).begin();  
            i != response.header(h_ProxyAuthenticates).end(); ++i)                    
       {    
-         if (!handleAuthHeader(identity, *i, it, origRequest, response, true))
+         if (!handleAuthHeader(*i, it, origRequest, response, true))
          {
             it->second.state = Failed;   
             return false;
@@ -136,20 +137,17 @@ ClientAuthManager::handle(Identity& identity, SipMessage& origRequest, const Sip
    return true;
 }
 
-bool ClientAuthManager::handleAuthHeader(Identity& identity, 
-                                         const Auth& auth, 
-                                         AttemptedAuthMap::iterator authState,
+bool ClientAuthManager::handleAuthHeader(const Auth& auth, AttemptedAuthMap::iterator authState,
                                          SipMessage& origRequest, 
-                                         const SipMessage& response, 
-                                         bool proxy)
+                                         const SipMessage& response, bool proxy)
 {
    const Data& realm = auth.param(p_realm);                   
    
    //!dcm! -- icky, expose static empty soon...ptr instead of reference?
-   Identity::DigestCredential credential = identity.getDigestCredential(realm);
+   Profile::DigestCredential credential = mProfile.getDigestCredential(realm);
    if ( credential.password.empty() )                       
    {                                        
-      credential = identity.getDigestCredential(response);
+      credential = mProfile.getDigestCredential(response);
       if ( credential.password.empty() )                       
       {                                        
          InfoLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
