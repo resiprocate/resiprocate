@@ -1,3 +1,4 @@
+
 #ifndef WIN32
 #include <errno.h>
 #include <fcntl.h>
@@ -28,8 +29,8 @@ using namespace Vocal2;
 const int UdpTransport::MaxBufferSize = 8192;
 
 
-UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& interface, Fifo<Message>& fifo) : 
-   Transport(sendhost, portNum, interface, fifo)
+UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo) : 
+   Transport(sendhost, portNum, nic , fifo)
 {
    mFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -106,9 +107,12 @@ UdpTransport::process(fd_set* fdSet)
       const sockaddr_in* addrin = data->destination;
       const sockaddr* addr = (const sockaddr*) addrin;
 
+#ifdef WIN32
+#else
       char str[256];
       DebugLog (<< "Sending to " <<  inet_ntop(AF_INET, &addrin->sin_addr.s_addr, str, sizeof(str)));
-      
+#endif
+
       int count = sendto(mFd, 
                          data->buffer, data->length, 
                          0, // flags
@@ -219,7 +223,7 @@ UdpTransport::process(fd_set* fdSet)
          // determine that there is a fragment that needs to be done
          // alloc buffer to hold remainder and next network fragment
          // as per !cj! ideas on anti-frag.
-         // need interface to Preparser that can detect frags remaining. !ah!
+         // need nic to Preparser that can detect frags remaining. !ah!
          // ?? think about this design.
 
          InfoLog(<<"Rejecting datagram as unparsable.");

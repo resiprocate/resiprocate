@@ -33,7 +33,7 @@ class TransportSelector
       // I don't think we really need this at this level, handled one level up.
       //   void send(SipMessage* msg, const Data& dest="default" );
 
-      void addTransport( Transport::Type, int port, const Data& hostName="", const Data& interface="");
+      void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
 	
       void buildFdSet( fd_set* fdSet, int* fdSetSize );
 	

@@ -56,7 +56,7 @@ class Transport
       
       // sendHost is localhost (may be a dns name referring to this sip element)
       // portNum is the port to receive and/or send on
-      Transport(const Data& sendHost, int portNum, const Data& interface, Fifo<Message>& rxFifo);
+      Transport(const Data& sendHost, int portNum, const Data& nic, Fifo<Message>& rxFifo);
       // !ah! need to think about type for
       // interface specification here.
       
