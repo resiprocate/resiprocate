@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
-
+#include <string>
 #include "sip2/sipstack/HeaderFieldValue.hxx"
 #include "sip2/sipstack/HeaderTypes.hxx"
 #include "sip2/sipstack/Headers.hxx"
@@ -11,15 +11,48 @@
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/util/DataStream.hxx"
 #include "sip2/util/ParseBuffer.hxx"
+#include "sip2/util/Logger.hxx"
 
 using namespace std;
 using namespace Vocal2;
 
+#define VOCAL_SUBSYSTEM Subsystem::TEST
+
+class TR
+{
+   private:
+      ostream& os;
+      Data label;
+
+      TR(const TR&);
+
+      void show(const char * s)
+      {
+	 os << s << ' ' << label << endl;
+      }
+
+      void start()
+      {
+	 show("-->");
+      }
+
+      void end()
+      {
+	 show("<--");
+      }
+
+   public:
+      TR(Data  s,ostream& o = cerr ):os(o),label(s) { start(); }
+      TR(const char* l,ostream& o = cerr):os(o),label(l) { start(); }
+      ~TR() { end();}
+};
+
 int
 main(int arc, char** argv)
 {
+   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
    {
-      cerr << "Test typeless parameter copy" << endl;
+      TR _tr("Test typeless parameter copy");
       Token s;
       s.value() = "value";
       s.param(p_expires) = 17;
@@ -38,7 +71,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "Test typeless parameter overwrite" << endl;
+      TR a("Test typeless parameter overwrite" );
       Token s;
       s.value() = "value";
       s.param(p_expires) = 17;
@@ -61,7 +94,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "Test StringCategory" << endl;
+      TR _tr( "Test StringCategory");
       Data stringString("Lame Agent");
       HeaderFieldValue hfv(stringString.data(), stringString.size());
       
@@ -84,7 +117,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "Test Token parameters" << endl;
+      TR _tr( "Test Token parameters");
       Token state;
       state.value() = Data("active");
       state.param(p_expires) = 666;
@@ -92,7 +125,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "StatusLine, with reason code" << endl;
+      TR _tr( "StatusLine, with reason code");
       Data statusLineString("SIP/2.0 180 Ringing");
       HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
       
@@ -119,7 +152,10 @@ main(int arc, char** argv)
       for (int i = Headers::CSeq; i < Headers::MAX_HEADERS; i++)
       {
          Data hdr = Headers::getHeaderName(i);
-         cerr << "Checking hash of: " << hdr << endl;
+	 if (!hdr.size()) continue;
+	 Data msg("Checking hash of: ");
+	 msg += hdr;
+	 TR _tr(msg);
          assert(Headers::getType(Headers::getHeaderName(i).c_str(), Headers::getHeaderName(i).size()) == i);
       }
       checkHeaderName(To);
@@ -239,7 +275,8 @@ main(int arc, char** argv)
              i != ParameterTypes::qop &&
              i != ParameterTypes::qopFactory)
          {
-            cerr << "Checking hash of: " << ParameterTypes::ParameterNames[i] <<  endl;
+	    
+            TR _tr( Data("Checking hash of: ") +  Data(ParameterTypes::ParameterNames[i]));
             assert(ParameterTypes::getType(ParameterTypes::ParameterNames[i].c_str(), 
                                            ParameterTypes::ParameterNames[i].size()) == i);
          }
@@ -251,7 +288,7 @@ main(int arc, char** argv)
    }
    
    {
-      cerr << "simple Token parse test" << endl;
+      TR _tr( "simple Token parse test");
       char *org = "WuggaWuggaFoo";
       
       HeaderFieldValue hfv(org, strlen(org));
@@ -260,7 +297,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "Token + parameters parse test" << endl;
+      TR _tr( "Token + parameters parse test");
       char *org = "WuggaWuggaFoo;ttl=2";
       
       HeaderFieldValue hfv(org, strlen(org));
@@ -270,7 +307,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "Test NameAddr(Data) constructor" << endl;
+      TR _tr( "Test NameAddr(Data) constructor");
       
       Data nad("bob<sips:bob@foo.com>;tag=wd834f");
       NameAddr na(nad); 
@@ -278,7 +315,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "full on via parse" << endl;
+      TR _tr( "full on via parse");
       char *viaString = /* Via: */ " SIP/2.0/UDP a.b.c.com:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
@@ -289,7 +326,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "URI parse" << endl;
+      TR _tr( "URI parse");
       Data uriString = "sip:bob@foo.com";
       ParseBuffer pb(uriString.data(), uriString.size());
       NameAddr to;
@@ -303,7 +340,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "URI parse, no displayName" << endl;
+      TR _tr( "URI parse, no displayName");
       Data uriString = "sips:foo.com";
       ParseBuffer pb(uriString.data(), uriString.size());
       NameAddr to;
@@ -316,7 +353,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "URI parse, parameters" << endl;
+      TR _tr( "URI parse, parameters");
       Data uriString = "sips:bob;param=gargle:password@foo.com";
       ParseBuffer pb(uriString.data(), uriString.size());
       NameAddr to;
@@ -330,7 +367,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "URI parse, parameters, port" << endl;
+      TR _tr( "URI parse, parameters, port");
       Data uriString = "sips:bob;param=gargle:password@foo.com:6000";
       ParseBuffer pb(uriString.data(), uriString.size());
 
@@ -346,7 +383,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "URI parse, parameters, correct termination check" << endl;
+      TR _tr( "URI parse, parameters, correct termination check");
       Data uriString = "sips:bob;param=gargle:password@foo.com notHost";
       ParseBuffer pb(uriString.data(), uriString.size());
 
@@ -362,7 +399,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "URI parse, transport parameter" << endl;
+      TR _tr( "URI parse, transport parameter");
       Data uriString = "sip:bob@biloxi.com;transport=udp";
       ParseBuffer pb(uriString.data(), uriString.size());
 
@@ -497,7 +534,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "Request Line parse" << endl;
+      TR _tr( "Request Line parse");
       Data requestLineString("INVITE sips:bob@foo.com SIP/2.0");
       HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
 
@@ -510,7 +547,7 @@ main(int arc, char** argv)
       assert(requestLine.getSipVersion() == "SIP/2.0");
    }
    {
-      cerr << "Request Line parse, parameters" << endl;
+      TR _tr( "Request Line parse, parameters");
       Data requestLineString("INVITE sips:bob@foo.com;maddr=1.2.3.4 SIP/2.0");
       HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
 
@@ -525,7 +562,7 @@ main(int arc, char** argv)
       assert(requestLine.getSipVersion() == "SIP/2.0");
    }
    {
-      cerr << "NameAddr parse" << endl;
+      TR _tr( "NameAddr parse");
       Data nameAddrString("sips:bob@foo.com");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
@@ -535,7 +572,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().host() == "foo.com");
    }
    {
-      cerr << "NameAddr parse, displayName" << endl;
+      TR _tr( "NameAddr parse, displayName");
       Data nameAddrString("Bob<sips:bob@foo.com>");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
@@ -546,7 +583,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().host() == "foo.com");
    }
    {
-      cerr << "NameAddr parse, quoted displayname" << endl;
+      TR _tr( "NameAddr parse, quoted displayname");
       Data nameAddrString = "\"Bob\"<sips:bob@foo.com>";
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
@@ -557,7 +594,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().host() == "foo.com");
    }
    {
-      cerr << "NameAddr parse, quoted displayname, embedded quotes" << endl;
+      TR _tr( "NameAddr parse, quoted displayname, embedded quotes");
       Data nameAddrString("\"Bob   \\\" asd   \"<sips:bob@foo.com>");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
@@ -568,7 +605,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().host() == "foo.com");
    }
    {
-      cerr << "NameAddr parse, unquoted displayname, paramterMove" << endl;
+      TR _tr( "NameAddr parse, unquoted displayname, paramterMove");
       Data nameAddrString("Bob<sips:bob@foo.com>;tag=456248;mobility=hobble");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
@@ -590,7 +627,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().exists(p_mobility) == false);
    }
    {
-      cerr << "NameAddr parse, quoted displayname, parameterMove" << endl;
+      TR _tr( "NameAddr parse, quoted displayname, parameterMove");
       Data nameAddrString("\"Bob\"<sips:bob@foo.com>;tag=456248;mobility=hobble");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
@@ -613,7 +650,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().exists(p_mobility) == false);
    }
    {
-      cerr << "NameAddr parse, unquoted displayname, paramterMove" << endl;
+      TR _tr( "NameAddr parse, unquoted displayname, paramterMove");
       Data nameAddrString("Bob<sips:bob@foo.com;tag=456248;mobility=hobble>");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
@@ -635,7 +672,7 @@ main(int arc, char** argv)
       assert(nameAddr.exists(p_mobility) == false);
    }
    {
-      cerr << "NameAddr parse, unquoted displayname, paramterMove" << endl;
+      TR _tr( "NameAddr parse, unquoted displayname, paramterMove");
       Data nameAddrString("Bob<sips:bob@foo.com;mobility=\"hobb;le\";tag=\"true;false\">");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
@@ -657,7 +694,7 @@ main(int arc, char** argv)
       assert(nameAddr.exists(p_mobility) == false);
    }
    {
-      cerr << "NameAddr parse" << endl;
+      TR _tr( "NameAddr parse");
       Data nameAddrString("sip:101@localhost:5080;transport=UDP");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
       
@@ -667,7 +704,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().user() == "101");
    }
    {
-      cerr << "NameAddr parse, no user in uri" << endl;
+      TR _tr( "NameAddr parse, no user in uri");
       Data nameAddrString("sip:localhost:5070");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
       
@@ -679,7 +716,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().port() == 5070);
    }
    {
-      cerr << "StatusLine, no reason code" << endl;
+      TR _tr( "StatusLine, no reason code");
       Data statusLineString("SIP/2.0 100 ");
       HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
       
@@ -689,7 +726,7 @@ main(int arc, char** argv)
       assert(statusLine.getSipVersion() == "SIP/2.0");
    }
    {
-      cerr << "StatusLine, no reason code" << endl;
+      TR _tr( "StatusLine, no reason code");
       Data statusLineString("SIP/2.0 100");
       HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
       
@@ -699,6 +736,7 @@ main(int arc, char** argv)
       assert(statusLine.getSipVersion() == "SIP/2.0");
    }
    {
+      TR _tr("Auth Schemes");
      char* authorizationString = "Digest realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
       
@@ -723,6 +761,7 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("More Auth");
      char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
       
@@ -747,6 +786,8 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("More Auth Encoding");
+
       Auth auth;
       Auth auth2;
       auth.scheme() = "Digest";
@@ -776,6 +817,8 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Generic URI stuff");
+
       char* genericString = "<http://www.google.com>;purpose=icon;fake=true";
       HeaderFieldValue hfv(genericString, strlen(genericString));
 
@@ -795,6 +838,7 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Date testing 1");
       char *dateString = "Mon, 04 Nov 2002 17:34:15 GMT";
       HeaderFieldValue hfv(dateString, strlen(dateString));
       
@@ -817,6 +861,7 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Date testing 2");
       char *dateString = "  Sun  , 14    Jan 2222 07:04:05   GMT    ";
       HeaderFieldValue hfv(dateString, strlen(dateString));
       
@@ -837,6 +882,8 @@ main(int arc, char** argv)
 
 
    {
+      TR _tr("Mime types 1");
+
       char* mimeString = "application/sdp";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
@@ -852,6 +899,7 @@ main(int arc, char** argv)
 
 
    {
+      TR _tr("Mime types 2");
       char* mimeString = "text/html ; charset=ISO-8859-4";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
@@ -867,6 +915,8 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Mime types 3");
+
       char* mimeString = "    text   /     html        ;  charset=ISO-8859-4";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
@@ -882,6 +932,8 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Via 1");
+
       Via via;
       via.encode(cerr);
       cerr << endl;
@@ -908,6 +960,8 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Via 2");
+      
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv);
@@ -935,6 +989,7 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Via 3");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv);
@@ -947,6 +1002,7 @@ main(int arc, char** argv)
    
 
    {
+      TR _tr("Via 4");
       char* viaString = "SIP/2.0/UDP ;branch=oldassbranch";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv);
@@ -967,6 +1023,7 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Branch testing 1");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv);
@@ -985,6 +1042,7 @@ main(int arc, char** argv)
 
 
    {
+      TR _tr("Branch Testing 2");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv);
@@ -998,6 +1056,7 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Branch testing 3");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport=100";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv);
@@ -1013,7 +1072,7 @@ main(int arc, char** argv)
 
    //3329 tests
    {
-      cerr << "Token + parameters parse test" << endl;
+      TR _tr( "Token + parameters parse test 3329 ");
       char *org = "digest;d-alg=md5";
       
       HeaderFieldValue hfv(org, strlen(org));
@@ -1023,7 +1082,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "Token + parameters parse test" << endl;
+      TR _tr( "Token + parameters parse test");
       char *org = "digest;d-qop=verify";
       
       HeaderFieldValue hfv(org, strlen(org));
@@ -1033,7 +1092,7 @@ main(int arc, char** argv)
    }
 
    {
-      cerr << "Token + parameters parse test" << endl;
+      TR _tr( "Token + parameters parse test");
       char *org = "digest;d-ver=\"0000000000000000000000000000abcd\"";
       
       HeaderFieldValue hfv(org, strlen(org));
