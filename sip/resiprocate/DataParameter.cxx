@@ -18,6 +18,10 @@ DataParameter::DataParameter(ParameterTypes::Type type,
      mQuoted(false)
 {
    pb.skipWhitespace();
+   if (pb.eof() || *pb.position() != Symbols::EQUALS[0])
+   {
+      return;
+   }
    pb.skipChar(Symbols::EQUALS[0]);
    pb.skipWhitespace(); // .dlb. space allowed only before "
    if (!pb.eof() && *pb.position() == Symbols::DOUBLE_QUOTE[0])
