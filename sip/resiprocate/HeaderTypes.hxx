@@ -5,10 +5,10 @@
 #include "resiprocate/os/Data.hxx"
 
 // eventually use these macros to automate Headers.hxx, Headers.cxx+gperf
-#define UNUSEDsingle(_enum, _category) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
-#define UNUSEDmulti(_enum, _category) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
-#define single(_enum, _category) _enum
-#define multi(_enum, _category) _enum
+#define UNUSED_defineHeader(_enum, _name, _type, _rfc) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
+#define UNUSED_defineMultiHeader(_enum, _name, _type, _rfc) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
+#define defineHeader(_enum, _name, _type, _rfc) _enum
+#define defineMultiHeader(_enum, _name, _type, _rfc) _enum
 
 namespace resip
 {
@@ -24,60 +24,60 @@ class Headers
       enum Type
       {
          UNKNOWN = -1,
-         single(To, NameAddr), 
-         single(From, NameAddr),
-         multi(Via, Via),
-         single(CallId, CallId),
-         single(CSeq, CSeqCategory),
-         multi(Route, NameAddr),
-         multi(RecordRoute, NameAddr),
-         multi(Contact, NameAddr),
-         single(Subject, StringCategory),
-         single(Expires, IntegerCategory),
-         single(MaxForwards, IntegerCategory),
-         multi(Accept, Mime),
-         multi(AcceptEncoding, AcceptEncoding),
-         multi(AcceptLanguage, Token),
-         multi(AlertInfo, GenericURI),
-         multi(Allow, Token),
-         single(AuthenticationInfo, Auth),
-         multi(CallInfo, GenericURI),
-         single(ContentDisposition, Token),
-         single(ContentEncoding, Token),
-         multi(ContentLanguage, Token),
-         single(ContentTransferEncoding, Token), // !dlb! multi
-         single(ContentType, Mime),
-         single(Date, DateCategory),
-         UNUSEDmulti(ErrorInfo, GenericURI),
-         single(InReplyTo, CallId),
-         single(MinExpires, IntegerCategory),
-         single(MIMEVersion, Token),
-         single(Organization, StringCategory),
-         single(Priority, Token),
-         multi(ProxyAuthenticate, Auth),
-         multi(ProxyAuthorization, Auth),
-         multi(ProxyRequire, Token),
-         single(ReplyTo, NameAddr),
-         multi(Require, Token),
-         single(RetryAfter, IntegerCategory),
-         single(Server, StringCategory),
-         multi(Supported, Token),
-         single(Timestamp, StringCategory),
-         multi(Unsupported, Token),
-         single(UserAgent, StringCategory),
-         single(Warning, WarningCategory),
-         multi(WWWAuthenticate, Auth),
-         multi(SubscriptionState, Token),
-         single(ReferTo, NameAddr),
-         single(ReferredBy, NameAddr),
-         multi(Authorization, header),
-         single(Replaces, CallId),
-         single(Event, Token),
-         multi(AllowEvents, Token),
-         multi(SecurityClient, Token),
-         multi(SecurityServer, Token),
-         multi(SecurityVerify, Token),
-         single(ContentLength, Token),
+         defineHeader(To, "To", NameAddr, "RFC ????"), 
+         defineHeader(From, "From", NameAddr, "RFC ????"),
+         defineMultiHeader(Via, "Via", Via, "RFC ????"),
+         defineHeader(CallId, "Call-ID", CallId, "RFC ????"),
+         defineHeader(CSeq, "CSeq", CSeqCategory, "RFC ????"),
+         defineMultiHeader(Route, "Route", NameAddr, "RFC ????"),
+         defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC ????"),
+         defineMultiHeader(Contact, "Contact", NameAddr, "RFC ????"),
+         defineHeader(Subject, "Subject", StringCategory, "RFC ????"),
+         defineHeader(Expires, "Expires", IntegerCategory, "RFC ????"),
+         defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC ????"),
+         defineMultiHeader(Accept, "Accept", Mime, "RFC ????"),
+         defineMultiHeader(AcceptEncoding, "Accept-Encoding", AcceptEncoding, "RFC ????"),
+         defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC ????"),
+         defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC ????"),
+         defineMultiHeader(Allow, "Allow", Token, "RFC ????"),
+         defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC ????"),
+         defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC ????"),
+         defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ????"),
+         defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ????"),
+         defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC ????"),
+         defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", Token, "RFC ????"), // !dlb! defineMultiHeader
+         defineHeader(ContentType, "Content-Type", Mime, "RFC ????"),
+         defineHeader(Date, "Date", DateCategory, "RFC ????"),
+         UNUSED_defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC ????"),
+         defineHeader(InReplyTo, "In-Reply-To", CallId, "RFC ????"),
+         defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC ????"),
+         defineHeader(MIMEVersion, "MIME-Version", Token, "RFC ????"),
+         defineHeader(Organization, "Organization", StringCategory, "RFC ????"),
+         defineHeader(Priority, "Priority", Token, "RFC ????"),
+         defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth, "RFC ????"),
+         defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC ????"),
+         defineMultiHeader(ProxyRequire, "Proxy-Require", Token, "RFC ????"),
+         defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC ????"),
+         defineMultiHeader(Require, "Require", Token, "RFC ????"),
+         defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC ????"),
+         defineHeader(Server, "Server", StringCategory, "RFC ????"),
+         defineMultiHeader(Supported, "Supported", Token, "RFC ????"),
+         defineHeader(Timestamp, "Timestamp", StringCategory, "RFC ????"),
+         defineMultiHeader(Unsupported, "Unsupported", Token, "RFC ????"),
+         defineHeader(UserAgent, "User-Agent", StringCategory, "RFC ????"),
+         defineHeader(Warning, "Warning", WarningCategory, "RFC ????"),
+         defineMultiHeader(WWWAuthenticate, "WWW-Authenticate", Auth, "RFC ????"),
+         defineMultiHeader(SubscriptionState, "Subscription-State", Token, "RFC ????"),
+         defineHeader(ReferTo, "Refer-To", NameAddr, "RFC ????"),
+         defineHeader(ReferredBy, "Referred-By", NameAddr, "RFC ????"),
+         defineMultiHeader(Authorization, "Authorization", header, "RFC ????"),
+         defineHeader(Replaces, "Replaces", CallId, "RFC ????"),
+         defineHeader(Event, "Event", Token, "RFC ????"),
+         defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC ????"),
+         defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC ????"),
+         defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC ????"),
+         defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC ????"),
+         defineHeader(ContentLength, "Content-Length", Token, "RFC ????"),
 
          MAX_HEADERS,
          NONE
@@ -96,6 +96,11 @@ class Headers
 };
  
 }
+
+#undef UNUSED_defineHeader
+#undef UNUSED_defineMultiHeader
+#undef defineHeader
+#undef defineMultiHeader
 
 #endif
 

@@ -8,26 +8,29 @@
 
 using namespace resip;
 
+#define defineMethod(_enum, _name, _rfc) _name
+
+// !dlb! this file will be subsumed by MethodHash.cxx on auto-generate
+// move into MethodHash.cxx -- generated from MethodTypes.hxx
 Data resip::MethodNames[MAX_METHODS] = 
 {
-   "ACK",
-   "BYE",
-   "CANCEL",
-   "INVITE",
-   "NOTIFY",
-   "OPTIONS",
-   "REFER",
-   "REGISTER",
-   "SUBSCRIBE",
-   "RESPONSE",
-   "MESSAGE",
-   "INFO",
-   "UNKNOWN",
-   "PRACK",
-   "PUBLISH"
-};
+   defineMethod(ACK, "ACK", "RFC ????"),
+   defineMethod(BYE, "BYE", "RFC ????"),
+   defineMethod(CANCEL, "CANCEL", "RFC ????"),
+   defineMethod(INVITE, "INVITE", "RFC ????"),
+   defineMethod(NOTIFY, "NOTIFY", "RFC ????"),
+   defineMethod(OPTIONS, "OPTIONS", "RFC ????"),
+   defineMethod(REFER, "REFER", "RFC ????"),
+   defineMethod(REGISTER, "REGISTER", "RFC ????"),
+   defineMethod(SUBSCRIBE, "SUBSCRIBE", "RFC ????"),
+   defineMethod(RESPONSE, "RESPONSE", "RFC ????"),
+   defineMethod(MESSAGE, "MESSAGE", "RFC ????"),
+   defineMethod(INFO, "INFO", "RFC ????"),
+   defineMethod(PRACK, "PRACK", "RFC ????"),
+   defineMethod(PUBLISH, "PUBLISH", "RFC ????"),
 
-// !dlb! should the hash/comparison be case insensitive?
+   defineMethod(UNKNOWN, "UNKNOWN", ""),
+};
 
 #include "MethodHash.hxx"
 
@@ -45,6 +48,7 @@ resip::getMethodType(const char* name, int len)
    return m ? m->type : UNKNOWN;
 }
 
+// ?dlb? why aren't we using the lib strncasecmp?
 int strncasecmp(const char* a, const char* b, int len)
 {
     //!ah! whoever implemented this should be shot.
