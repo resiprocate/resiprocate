@@ -842,12 +842,20 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
 //		      request.header(h_Contacts).size() == 1);
       Helper::makeResponse(response, request, code, mLocalContact);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
+
+      if(request.header(h_RequestLine).getMethod() == INVITE && code >= 200 && code < 300)
+      {
+         // Check if we should add our capabilites to the invite success response 
+         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Allow)) response.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
+         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) response.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
+         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) response.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) response.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
+      }
    }
    else
    {
       Helper::makeResponse(response, request, code);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
-
    }
    DebugLog ( << "Dialog::makeResponse: " << response);   
 }
