@@ -2,7 +2,7 @@
 #define STRINGDATA_H_
 
 static const char* const DataHeaderVersion =
-"$Id: Data.hxx,v 1.3 2002/09/27 02:00:36 jason Exp $";
+"$Id: Data.hxx,v 1.4 2002/09/29 23:41:01 fluffy Exp $";
 
 //Authors: Sunitha Kumar, Cullen Jennings
 
@@ -40,7 +40,7 @@ class Data : public std::string
       //char getChar( int i ) const;  //return the i'th char of string.
       //void setchar( int i, char c );  //write to the i'th char of string.
 
-      int length() const { return size(); }
+      int length() const { return int(size()); }
 
       //string convertString() const;
       int convertInt() const;
