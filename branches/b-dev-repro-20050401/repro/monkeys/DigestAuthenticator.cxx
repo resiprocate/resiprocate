@@ -9,7 +9,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/UserDb.hxx"
-#include "repro/UserAuthInfo.hxx"
+#include "resiprocate/dum/UserAuthInfo.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
 
 using namespace resip;
