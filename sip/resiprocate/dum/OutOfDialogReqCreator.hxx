@@ -9,10 +9,6 @@ namespace resip
 class Uri;
 class SipMessage;
 
-/** @file OutOfDialogReqCreator.hxx
- *   @todo This file is empty
- */
-
 class OutOfDialogReqCreator: public BaseCreator
 {
    public:
