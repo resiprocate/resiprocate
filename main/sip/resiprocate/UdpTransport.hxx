@@ -27,16 +27,6 @@ class UdpTransport : public Transport
       static const int MaxBufferSize;
 };
 
-// !jf! go away
-class TcpTransport : public UdpTransport
-{
-   public:
-      TcpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo);
-
-      bool isReliable() const { return true; }
-      Transport::Type transport() const { return TCP; }
-};
- 
 }
 
 #endif
