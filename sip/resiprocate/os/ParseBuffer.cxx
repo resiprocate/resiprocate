@@ -160,7 +160,7 @@ const char*
 ParseBuffer::skipN(int count)
 {
    mTraversalPtr += count;
-   mTraversalPtr = std::max(mEnd, mTraversalPtr);
+   mTraversalPtr = std::min(mEnd, mTraversalPtr);
    return mTraversalPtr;
 }
 
