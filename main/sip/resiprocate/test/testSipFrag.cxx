@@ -1,3 +1,8 @@
+
+#include <iostream>
+#include <memory>
+#include <list>
+
 #include "resiprocate/os/DataStream.hxx"
 
 #include "resiprocate/SipMessage.hxx"
@@ -6,21 +11,23 @@
 #include "resiprocate/SipFrag.hxx"
 #include "TestSupport.hxx"
 #include "resiprocate/os/Logger.hxx"
-
-#include <iostream>
-#include <memory>
+#include "resiprocate/test/tassert.h"
 
 using namespace resip;
 using namespace std;
 
 #define CRLF "\r\n"
 
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+
 int
 main(int argc, char* argv[])
 {
-    Log::initialize(Log::COUT, Log::INFO, argv[0]);
+  tassert_init(4);
 
-   {
+  Log::initialize(Log::COUT, Log::INFO, argv[0]);
+
+  {
      // !ah! This test doesn't work with the MsgHeaderScanner -- works w/ preparser.
 
       Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
@@ -35,24 +42,25 @@ main(int argc, char* argv[])
                "Content-Length: 35\r\n"
                "\r\n"
                "INVITE sip:bob@biloxi.com SIP/2.0\r\n");
-      std::cerr << "hiya " << std::endl;
+      std::cout << "hiya " << std::endl;
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       Contents* body = msg->getContents();
 
-      assert(body != 0);
+      tassert(body != 0);
       SipFrag* frag = dynamic_cast<SipFrag*>(body);
-      assert(frag != 0);
+      tassert(frag != 0);
 
-      cerr << "!! ";
-      frag->encode(cerr);
+      cout << "!! ";
+      frag->encode(cout);
 
-      assert(frag->message().header(h_RequestLine).uri().user() == "bob");
-      msg->encode(cerr);
-      cerr << "-- exiting 1st test ok" << endl;
+      tassert(frag->message().header(h_RequestLine).uri().user() == "bob");
+      msg->encode(cout);
+      tassert_verify(1);
    }
 
    {
+     tassert_reset();
       // tests end of message problem (MsgHeaderScanner?)
       Data txt("NOTIFY sip:proxy@66.7.238.210:5060 SIP/2.0" CRLF
                "Via: SIP/2.0/UDP  66.7.238.211:5060" CRLF
@@ -76,17 +84,17 @@ main(int argc, char* argv[])
       
       Contents* body = msg->getContents();
 
-      assert(body != 0);
+      tassert(body != 0);
       SipFrag* frag = dynamic_cast<SipFrag*>(body);
-      assert(frag != 0);
+      tassert(frag != 0);
 
-      assert(frag->message().header(h_StatusLine).responseCode() == 503);
-      msg->encode(cerr);
-
-      return 0;
+      tassert(frag->message().header(h_StatusLine).responseCode() == 503);
+      msg->encode(cout);
+      tassert_verify(2);
    }
 
    {
+     tassert_reset();
       Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                "To: Bob <sip:bob@biloxi.com>\r\n"
@@ -109,22 +117,24 @@ main(int argc, char* argv[])
       
       Contents* body = msg->getContents();
 
-      assert(body != 0);
+      tassert(body != 0);
       SipFrag* frag = dynamic_cast<SipFrag*>(body);
-      assert(frag != 0);
+      tassert(frag != 0);
 
-      cerr << "!! ";
-      frag->encode(cerr);
+      cout << "!! ";
+      frag->encode(cout);
 
-      assert(frag->message().exists(h_From));
-      assert(frag->message().header(h_From).uri().user() == "alice");
+      tassert(frag->message().exists(h_From));
+      tassert(frag->message().header(h_From).uri().user() == "alice");
 
-      assert(frag->message().exists(h_CSeq));
-      assert(frag->message().header(h_CSeq).sequence() == 314159);
+      tassert(frag->message().exists(h_CSeq));
+      tassert(frag->message().header(h_CSeq).sequence() == 314159);
       
-      msg->encode(cerr);
+      msg->encode(cout);
+      tassert_verify(3);
    }
    {
+     tassert_reset();
       Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                "To: Bob <sip:bob@biloxi.com>\r\n"
@@ -142,20 +152,38 @@ main(int argc, char* argv[])
       
       Contents* body = msg->getContents();
 
-      assert(body != 0);
+      tassert(body != 0);
       SipFrag* frag = dynamic_cast<SipFrag*>(body);
-      assert(frag != 0);
+      tassert(frag != 0);
 
-      cerr << "!! ";
-      frag->encode(cerr);
+      cout << "!! ";
+      frag->encode(cout);
 
-      assert(frag->message().header(h_RequestLine).getMethod() == INVITE);
-      assert(frag->message().header(h_RequestLine).getSipVersion() == "SIP/2.0");
+      tassert(frag->message().header(h_RequestLine).getMethod() == INVITE);
+      tassert(frag->message().header(h_RequestLine).getSipVersion() == "SIP/2.0");
       
-      msg->encode(cerr);
+      msg->encode(cout);
+
+      Contents* body2 = msg->getContents();
+      tassert(body2);
+      SipFrag* f2 = dynamic_cast<SipFrag*>(body);
+      tassert(f2);
+
+      // There should NOT be a content length header in the sipfrag !!
+      {
+        Data d;
+        DataStream ds(d);
+        f2->encode(ds);
+        ds.flush();
+
+        tassert(!d.find("Content-Length"));
+
+      }
+      tassert_verify(4);
    }
 
-   cerr << "\nTEST OK" << endl;
+   tassert_report();
+
    return 0;
 }
 
