@@ -364,7 +364,13 @@ DnsResolver::aresCallbackHost(void *arg, int status, struct hostent* result)
 
    DebugLog (<< "Received dns update: " << request->tid);
    DnsMessage* dns = new DnsMessage(request->tid);
-   
+   // Leaked !ah! BUGBUG
+   //  21752 bytes in 90 blocks are possibly lost in loss record 9 of 11
+   //  at 0x4003FD9C: malloc (in /usr/lib/valgrind/valgrind.so)
+   //  by 0x8178A20: operator new(unsigned)
+   //  by 0x80F5952: (...)::DnsResolver::lookupARecords...(DnsResolver.cxx:320)
+   //  by 0x80F497E: Vocal2::DnsResolver::lookup...       (DnsResolver.cxx:251)
+
    if (status != ARES_SUCCESS)
    {
       char* errmem=0;

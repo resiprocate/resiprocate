@@ -367,7 +367,7 @@ Helper::authenticateRequest(const SipMessage& request,
       if (i->param(p_realm) == realm)
       {
          ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
-         if (!isdigit(*pb.position()))
+         if (!pb.eof() && !isdigit(*pb.position()))
          {
             DebugLog(<< "Invalid nonce; expected timestamp.");
             return Failed;
