@@ -51,15 +51,19 @@ main()
       cerr << "Encode from unparsed: " << endl;
       message.encode(cerr);
 
-      message.header(h_To).uri().user();
-      message.header(h_From).uri().user();
-      message.header(h_MaxForwards).value();
-      message.header(h_Contacts).empty();
-      message.header(h_CallId).value();
-      message.header(h_CSeq).sequence();
-      message.header(h_Vias).empty();
-      message.header(h_Expires).value();
-
+      assert(message.header(h_To).uri().user() == "bob");
+      assert(message.header(h_From).uri().user() == "bob");
+      assert(message.header(h_MaxForwards).value() == 70);
+      assert(message.header(h_Contacts).empty() == false);
+      assert(message.header(h_CallId).value() == "843817637684230@998sdasdh09");
+      assert(message.header(h_CSeq).sequence() == 1826);
+      assert(message.header(h_CSeq).method() == REGISTER);
+      assert(message.header(h_Vias).empty() == false);
+      assert(message.header(h_Vias).size() == 5);
+      assert(message.header(h_Expires).value() == 7200);
+      assert(message.header(h_ContentLength).value() == 0);
+      //assert(message.header(h_RequestLine).uri().getAor() == "registrar.biloxi.com");
+      
       cerr << "Encode from parsed: " << endl;
       message.encode(cerr);
 
@@ -69,6 +73,19 @@ main()
       message.encode(cerr);
 
       SipMessage copy(message);
+      assert(copy.header(h_To).uri().user() == "bob");
+      assert(copy.header(h_From).uri().user() == "bob");
+      assert(copy.header(h_MaxForwards).value() == 70);
+      assert(copy.header(h_Contacts).empty() == false);
+      assert(copy.header(h_CallId).value() == "843817637684230@998sdasdh09");
+      assert(copy.header(h_CSeq).sequence() == 1826);
+      assert(copy.header(h_CSeq).method() == REGISTER);
+      assert(copy.header(h_Vias).empty() == false);
+      assert(copy.header(h_Vias).size() == 5);
+      assert(copy.header(h_Expires).value() == 7200);
+      assert(copy.header(h_ContentLength).value() == 0);
+      //assert(copy.header(h_RequestLine).uri().getAor() == "registrar.biloxi.com");
+
 
       cerr << "Encode after copying: " << endl;
       copy.encode(cerr);
