@@ -1,6 +1,5 @@
 CXX = ${DISTCC} @CXX@
 LDFLAGS += -lpopt
-LIBTOOL = @LIBTOOL@ --tag=CXX
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
 noinst_LIBRARIES = libtestsupport.a
 libtestsupport_a_SOURCES = \
