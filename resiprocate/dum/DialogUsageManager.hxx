@@ -220,8 +220,10 @@ class DialogUsageManager : public HandleManager
       ClientRegistrationHandler* mClientRegistrationHandler;
       ServerRegistrationHandler* mServerRegistrationHandler;      
 
-      std::map<Data, ClientSubscriptionHandler*> mClientSubscriptionHandler;
-      std::map<Data, ServerSubscriptionHandler*> mServerSubscriptionHandler;
+      ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
+      
+      std::map<Data, ClientSubscriptionHandler*> mClientSubscriptionHandlers;
+      std::map<Data, ServerSubscriptionHandler*> mServerSubscriptionHandlers;
       std::map<Data, ClientPublicationHandler*> mClientPublicationHandler;
       std::map<Data, ServerPublicationHandler*> mServerPublicationHandler;
       std::map<MethodTypes, OutOfDialogHandler*> mOutOfDialogHandler;

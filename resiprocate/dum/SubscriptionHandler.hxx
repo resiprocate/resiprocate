@@ -10,20 +10,22 @@ class SipMessage;
 class ClientSubscriptionHandler
 {
   public:
-      virtual void onRefreshRejected(ClientSubscriptionHandle, SipMessage& rejection)=0;
-      virtual void onUpdatePending(ClientSubscriptionHandle, SipMessage& notify)=0;
-      virtual void onUpdateActive(ClientSubscriptionHandle, SipMessage& notify)=0;      
-      virtual void onTerminated(ClientSubscriptionHandle, SipMessage& notify)=0;      
-      virtual void onNewSubscription(ClientSubscriptionHandle, SipMessage& sub)=0;
+      virtual void onRefreshRejected(ClientSubscriptionHandle, const SipMessage& rejection)=0;
+      virtual void onUpdatePending(ClientSubscriptionHandle, const SipMessage& notify)=0;
+      virtual void onUpdateActive(ClientSubscriptionHandle, const SipMessage& notify)=0;      
+      virtual void onTerminated(ClientSubscriptionHandle, const SipMessage& notify)=0;   
+      //not sure if this has any value
+      virtual void onNewSubscription(ClientSubscriptionHandle, const SipMessage& sub)=0; 
 };
 
 class ServerSubscriptionHandler
 {
   public:
-      virtual void onNewSubscription(ServerSubscriptionHandle, SipMessage& sub)=0;
-      virtual void onRefresh(ServerSubscriptionHandle, SipMessage& sub)=0;
-      virtual void onTerminated(ServerSubscriptionHandle, SipMessage& sub)=0;
+      virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;
+      virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub)=0;
+      virtual void onTerminated(ServerSubscriptionHandle, const SipMessage& sub)=0;
 };
  
 }
 
+#endif

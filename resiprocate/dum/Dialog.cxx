@@ -11,6 +11,7 @@
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
+#include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
 #include "resiprocate/dum/ServerRegistration.hxx"
@@ -377,60 +378,60 @@ Dialog::dispatch(const SipMessage& msg)
    else if (msg.isResponse())
    {
 #if 0
-      //Auth related
-      if (mDum.mClientAuthManager && !mDialogSet.mCancelled)
-      {
-         if (mDialogSet.getCreator())
-         {
-            if ( mDum.mClientAuthManager->handle( mDialogSet.getCreator()->getLastRequest(), msg))
-            {
-               InfoLog( << "about to retransmit request with digest credentials" );
-               InfoLog( << mDialogSet.getCreator()->getLastRequest() );
+//       //Auth related
+//       if (mDum.mClientAuthManager && !mDialogSet.mCancelled)
+//       {
+//          if (mDialogSet.getCreator())
+//          {
+//             if ( mDum.mClientAuthManager->handle( mDialogSet.getCreator()->getLastRequest(), msg))
+//             {
+//                InfoLog( << "about to retransmit request with digest credentials" );
+//                InfoLog( << mDialogSet.getCreator()->getLastRequest() );
                
-               mDum.send(mDialogSet.getCreator()->getLastRequest());
-               return;
-            }
-         }
-         else
-         {
-            SipMessage* lastRequest = 0;            
-            switch (msg.header(h_CSeq).method())
-            {
-               case INVITE:
-               case CANCEL:
-               case REFER: 
-                  if (mInviteSession == 0)
-                  {
-                     return;
-                  }
-                  else
-                  {
-                     lastRequest = &mInviteSession->mLastRequest;
-                  }
-                  break;               
-               case REGISTER:
-                  if (mClientRegistration == 0)
-                  {
-                     return;
-                  }
-                  else
-                  {
-                     lastRequest = &mClientRegistration->mLastRequest;
-                  }
-                  break;               
-               default:
-                  break;
-            }
-            if ( lastRequest && mDum.mClientAuthManager->handle( *lastRequest, msg ) )
-            {
-               InfoLog( << "about to retransmit request with digest credentials" );
-               InfoLog( << *lastRequest );
+//                mDum.send(mDialogSet.getCreator()->getLastRequest());
+//                return;
+//             }
+//          }
+//          else
+//          {
+//             SipMessage* lastRequest = 0;            
+//             switch (msg.header(h_CSeq).method())
+//             {
+//                case INVITE:
+//                case CANCEL:
+//                case REFER: 
+//                   if (mInviteSession == 0)
+//                   {
+//                      return;
+//                   }
+//                   else
+//                   {
+//                      lastRequest = &mInviteSession->mLastRequest;
+//                   }
+//                   break;               
+//                case REGISTER:
+//                   if (mClientRegistration == 0)
+//                   {
+//                      return;
+//                   }
+//                   else
+//                   {
+//                      lastRequest = &mClientRegistration->mLastRequest;
+//                   }
+//                   break;               
+//                default:
+//                   break;
+//             }
+//             if ( lastRequest && mDum.mClientAuthManager->handle( *lastRequest, msg ) )
+//             {
+//                InfoLog( << "about to retransmit request with digest credentials" );
+//                InfoLog( << *lastRequest );
                
-               mDum.send(*lastRequest);
-               return;
-            }
-         }
-      }
+//                mDum.send(*lastRequest);
+//                return;
+//             }
+//          }
+//       }
 #endif
       const SipMessage& response = msg;
       // !jf! should this only be for 2xx responses? !jf! Propose no as an
@@ -463,25 +464,42 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession->dispatch(response);
             }
             // else drop on the floor
-            break;
-               
-         case SUBSCRIBE:
+            break;               
          case REFER: 
          {
-            ClientSubscription* client = findMatchingClientSub(response);
-            if (client)
+            int code = response.header(h_StatusLine).statusCode();
+            if (code < 300)
             {
-               client->dispatch(response);
-            }
+               // throw it away
+               return;
+            }            
             else
             {
-               ClientSubscription* sub = makeClientSubscription(response);
-               mClientSubscriptions.push_back(sub);
-               sub->dispatch(response);
-            }
-            break;
+               if (mInviteSession && mDum.mInviteSessionHandler)
+               {
+                  mDum.mInviteSessionHandler->onReferRejected(mInviteSession->getSessionHandle(), response);
+               }
+            }         
          }
-               
+         break;         
+         case SUBSCRIBE:
+         {
+            int code = response.header(h_StatusLine).statusCode();
+            if (code < 300)
+            {
+               // throw it away
+               return;
+            }            
+            else
+            {
+               ClientSubscription* client = findMatchingClientSub(response);
+               if (client)
+               {
+                  client->dispatch(response);
+               }
+            }
+         }
+         break;
          case PUBLISH:
             // !jf! could assert that no other usages exist
             if (mClientPublication == 0)
@@ -800,6 +818,7 @@ Dialog::makeCancel(SipMessage& request)
    //not allowed in a CANCEL
    request.remove(h_Requires);
    request.remove(h_ProxyRequires);
+   request.header(h_To).remove(p_tag);   
 }
 
 void 
@@ -854,11 +873,9 @@ Dialog::makeClientPublication(const SipMessage& response)
 }
 
 ClientSubscription*
-Dialog::makeClientSubscription(const SipMessage& response)
+Dialog::makeClientSubscription(const SipMessage& request)
 {
-   BaseCreator* creator = mDialogSet.getCreator();
-   assert(creator);
-   return new ClientSubscription(mDum, *this, creator->getLastRequest());
+   return new ClientSubscription(mDum, *this, request);
 }
 
 ClientOutOfDialogReq*

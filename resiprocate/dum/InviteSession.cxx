@@ -201,8 +201,9 @@ InviteSession::dispatch(const SipMessage& msg)
 SipMessage& 
 InviteSession::makeRefer(const NameAddr& referTo)
 {
-   assert(0);
-   return mLastRequest;
+   mDialog.makeRequest(mLastRequest, REFER);
+   mLastRequest.header(h_ReferTo) = referTo;
+   return mLastRequest;   
 }
 
 SipMessage&
