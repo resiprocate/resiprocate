@@ -16,9 +16,7 @@ class ParserContainer : public ParserContainerBase
    public:
       ParserContainer()
          : ParserContainerBase(Headers::UNKNOWN)
-      {
-         assert(0);
-      }
+      {}
       
       // private to SipMessage
       ParserContainer(HeaderFieldValueList* hfvs,
@@ -28,31 +26,31 @@ class ParserContainer : public ParserContainerBase
          for (HeaderFieldValueList::iterator i = hfvs->begin();
               i != hfvs->end(); i++)
          {
-            mParsers.push_back(T(*i));
+            // create, store without copying -- 
+            // keeps the HeaderFieldValue from reallocating its buffer
+            mParsers.push_back(new T(*i));
          }
       }
 
       ParserContainer(const ParserContainer& other)
          : ParserContainerBase(other)
       {
-         assert(0);
-         for (typename std::list<T>::const_iterator i = other.mParsers.begin(); 
+         for (typename std::list<T*>::const_iterator i = other.mParsers.begin(); 
               i != other.mParsers.end(); i++)
          {
-            mParsers.push_back(*i);
+            mParsers.push_back(new T(**i));
          }
       }
       
       ParserContainer& operator=(const ParserContainer& other)
       {
-         assert(0);
          if (this != &other)
          {
             mParsers.clear();
-            for (typename std::list<T>::const_iterator i = other.mParsers.begin(); 
+            for (typename std::list<T*>::const_iterator i = other.mParsers.begin(); 
                  i != other.mParsers.end(); i++)
             {
-               push_back(*i);
+               mParsers.push_back(new T(**i));
             }
          }
          return *this;
@@ -60,13 +58,21 @@ class ParserContainer : public ParserContainerBase
       
       bool empty() const { return mParsers.empty(); }
       int size() const { return mParsers.size(); }
-      void clear() {mParsers.clear();}
+      void clear()
+      {
+         for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
+              i != mParsers.end(); i++)
+         {
+            delete *i;
+         }
+         mParsers.clear();
+      }
       
-      T& front() { return mParsers.front();}
-      T& back() { return mParsers.back();}
+      T& front() { return *mParsers.front();}
+      T& back() { return *mParsers.back();}
       
-      void push_front(const T & t) { mParsers.push_front(t); }
-      void push_back(const T & t) { mParsers.push_back(t); }
+      void push_front(const T & t) { mParsers.push_front(new T(t)); }
+      void push_back(const T & t) { mParsers.push_back(new T(t)); }
       
       void pop_front() { mParsers.pop_front(); }
       void pop_back() { mParsers.pop_back(); }
@@ -78,7 +84,7 @@ class ParserContainer : public ParserContainerBase
          return tmp;
       }
       
-      typedef typename std::list<T>::iterator iterator;
+      typedef typename std::list<T*>::iterator iterator;
       iterator begin() { return mParsers.begin(); }
       iterator end() { return mParser.end(); }
 
@@ -89,18 +95,18 @@ class ParserContainer : public ParserContainerBase
 
       virtual std::ostream& encode(std::ostream& str) const
       {
-         for (typename std::list<T>::const_iterator i = mParsers.begin(); 
+         for (typename std::list<T*>::const_iterator i = mParsers.begin(); 
               i != mParsers.end(); i++)
          {
-            if (i->isParsed())
+            str << Headers::HeaderNames[mType] << Symbols::COLON << Symbols::SPACE;
+            if ((*i)->isParsed())
             {
                assert(mType >= 0 && mType < Headers::UNKNOWN);
-               str << Headers::HeaderNames[mType] << Symbols::COLON << Symbols::SPACE;
-               i->encode(str);
+               (*i)->encode(str);
             }
             else
             {
-               i->encodeFromHeaderFieldValue(str);
+               (*i)->encodeFromHeaderFieldValue(str);
             }
             str << Symbols::CRLF;
          }
@@ -108,7 +114,7 @@ class ParserContainer : public ParserContainerBase
       }
 
    private:
-      std::list<T> mParsers;
+      std::list<T*> mParsers;
 };
  
 }
