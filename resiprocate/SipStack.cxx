@@ -48,6 +48,7 @@ SipStack::SipStack(Security* pSecurity,
 #else
    mSecurity(0),
 #endif
+   mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
    mAppTimers(mTuSelector),
@@ -55,7 +56,6 @@ SipStack::SipStack(Security* pSecurity,
    mTransactionController(*this),
    mStrictRouting(false),
    mShuttingDown(false),
-   mAsyncProcessHandler(handler),
    mTuSelector(mTUFifo)
 {
    Timer::getTimeMs(); // initalize time offsets
@@ -269,7 +269,10 @@ SipStack::send(const SipMessage& msg, TransactionUser* tu)
    //assert(!mShuttingDown);
    
    SipMessage* toSend = new SipMessage(msg);
-   if (tu) toSend->setTransactionUser(tu);
+   if (tu) 
+   {
+      toSend->setTransactionUser(tu);
+   }         
    toSend->setFromTU();
 
    mTransactionController.send(toSend);
