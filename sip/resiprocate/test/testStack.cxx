@@ -43,8 +43,8 @@ main(int argc, char* argv[])
    int v6 = 0;
 
 #ifdef WIN32
-  runs = 1;
-  window = 1;
+  runs = 500;
+  window = 25;
   // logType = "file";
    logLevel = "ALERT";
    logLevel = "INFO";
@@ -160,7 +160,7 @@ main(int argc, char* argv[])
    
    UInt64 elapsed = Timer::getTimeMs() - startTime;
    cout <<  runs * ( 1000.0 / (float) elapsed) * ( 1000.0 / (float)Timer::getCpuSpeedMhz() ) 
-        << " half calls/s/GHz  ["
+        << " double transactions/s/GHz  ["
         << runs << " calls peformed in " << elapsed << " ms, a rate of " 
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
 #if defined(HAVE_POPT_H)
