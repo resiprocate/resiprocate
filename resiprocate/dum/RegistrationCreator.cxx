@@ -14,7 +14,7 @@ RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, const NameAddr
    mLastRequest.header(h_RequestLine).uri().user() = Data::Empty;
    mLastRequest.header(h_Expires).value() = dum.getProfile()->getDefaultRegistrationTime();
 
-   InfoLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
+   DebugLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
    // add instance parameter to the contact for gruu !cj! TODO 
 
    // store caller prefs in Contact
