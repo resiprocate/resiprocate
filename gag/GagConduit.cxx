@@ -93,7 +93,7 @@ GagConduit::gaimIm(GagImMessage *msg)
   map<Uri,TuIM *>::iterator tu = getTu(*from);
   if (tu == tuIM.end()) return;
 
-  tu->second->sendPage(*im, *to, false, to->getAor());
+  tu->second->sendPage(*im, *to, false, Data::Empty);
 }
 
 void
