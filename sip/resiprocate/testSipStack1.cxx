@@ -1,10 +1,15 @@
+#include <sipstack/SipStack.hxx>
+#include <iostream>
+#include <unistd.h>
 
+using namespace Vocal2;
+using namespace std;
 
 int
 main()
 {
   SipStack sipStack;
-  Message* msg=NULL;
+  SipMessage* msg=NULL;
 
   while (1)
   {

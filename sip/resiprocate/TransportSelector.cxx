@@ -4,17 +4,27 @@
 
 using namespace Vocal2;
 
+
+TransportSelector::TransportSelector(int portNum)
+  :mPortNum(portNum)
+{
+  mUdp = new UdpTransport(mPortNum, mRxFifo);
+}
+
 void 
 TransportSelector::process
 {
+  
+  mUdp->process();
+
 }
 
 void 
 TransportSelector::send( SipMessage& msg )
 {
+  
+  mUdp->send(msg);
+
 }
 
-void TransportSelector::send(SipMessage* msg, const Data& dest="default" )
-{
-}
 

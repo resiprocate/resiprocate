@@ -6,7 +6,7 @@
 #include <sipstack/TransactionMap.hxx>
 // #include <sipstack/TransportDirector.hxx>
 #include <sipstack/Fifo.hxx>
-#include <sipstack/TimerWheel.hxx>
+#include <sipstack/Timer.hxx>
 
 namespace Vocal2
 {
@@ -17,7 +17,10 @@ namespace Vocal2
 
 class SipStack
 {
-   public:
+public:
+  
+  SipStack();
+  
       void send(SipMessage* msg);
 
       // this is only if you want to send to a destination not in the route. You
@@ -35,21 +38,23 @@ class SipStack
 
       void runThread( enum ThreadFunction funcType);
 
-
-   private:
+      Fifo<Message> mTUFifo;
+      Fifo<Message> mStateMacFifo;
 
       Executive mExecutive;
       TransportSelector mTransportSelector;
 
-      TransactionMap mTransactionMap;
+        TransactionMap mTransactionMap;
+
+  Timer  mTimers;
+
+
+   private:
+
 
   //      TransportDirector mTransportDirector;
       
-      Fifo<Message> mTUFifo;
 
-      Fifo<Message> mStateMacFifo;
-
-  TimerWheel  mTimers;
 };
  
 }
