@@ -331,6 +331,7 @@ main(int argc, char** argv)
    }
 
    std::cerr << "All OK" << std::endl;
+   return 0;
 }
 
 /* ====================================================================
@@ -382,4 +383,3 @@ main(int argc, char** argv)
  * <http://www.vovida.org/>.
  *
  */
-

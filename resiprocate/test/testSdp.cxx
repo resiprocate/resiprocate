@@ -264,8 +264,6 @@ main(int argc, char* argv[])
       tassert_verify(5);
    }
    tassert_report();
-   
-
-
+   return 0;   
 }
 
