@@ -16,7 +16,7 @@ class ClientRegistrationHandler
       /// refreshed. 
       virtual void onSuccess(ClientRegistrationHandle, const SipMessage& response)=0;
 
-      /// Called if registration fails. 
+      /// Called if registration fails, usage will be destroyed
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)=0;
 };
 
