@@ -1,6 +1,8 @@
+#include <string.h>
+
 #include <sipstack/MethodTypes.hxx>
 #include <sipstack/Symbols.hxx>
-#include <string.h>
+#include <sipstack/Data.hxx>
 
 using namespace Vocal2;
 
@@ -28,6 +30,12 @@ static const unsigned int IntVal_OPT = 5525583;
 static const unsigned int IntVal_REF = 4605266;
 static const unsigned int IntVal_REG = 4670802;
 static const unsigned int IntVal_SUB = 4347219;
+
+MethodTypes
+getMethodType(const Data& name)
+{
+   return getMethodType(name.c_str(), name.size());
+}
 
 MethodTypes
 getMethodType(const char* name, int len)
