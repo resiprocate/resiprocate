@@ -40,7 +40,7 @@ const int tassert_nstack = sizeof(tassert_stack)/sizeof(*tassert_stack);
 static int tassert_stack_ptr = 0;
 const int tassert_max_cases = 100;
 static int tassert_ncases = 0;
-list<int> tassert_location;
+std::list<int> tassert_location;
 
 struct {
       bool ran;
