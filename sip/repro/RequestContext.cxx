@@ -17,6 +17,9 @@ RequestContext::RequestContext(Proxy& proxy,
    mTransactionCount(1),
    mProxy(proxy)
 {
+ //!RjS! Be sure to call fixStrictRouterDamage()
+ //      and checkTopRouteForSelf() before 
+ //      visiting the monkeys
 }
 
 RequestContext::~RequestContext()
@@ -86,6 +89,44 @@ std::vector<resip::NameAddr>&
 RequestContext::getCandidates()
 {
    return mCandidateTargets;
+}
+
+//!RjS! This function assumes that if ;lr shows up in the
+//      RURI, that it's a URI we put in a Record-Route header
+//      earlier. It will do the wrong thing if some other 
+//      malbehaving implementation lobs something at us with
+//      ;lr in the RURI and it wasn't us.
+void
+RequestContext::fixStrictRouterDamage()
+{
+   if (mOriginalRequest.header(h_RequestLine).getAor().exists(p_lr))
+   {
+     if (    mOriginalRequest.exists(h_Routes)
+         && !mOriginalRequest.header(h_Routes).empty())
+     {
+        mOriginalRequest.header(h_RequestLine).setAor(
+           mOriginalRequest.header(h_Routes).back().uri());
+        mOriginalRequest.header(h_Routes).pop_back();
+     }
+     else
+     {
+       //!RjS! When we wire this class for logging, here's a
+       //      place to log a warning
+     }
+   }
+}
+
+/** @brief Pops the topmost route if it's us */
+void
+RequestContext::checkTopRouteForSelf()
+{
+  if (    mOriginalRequest.exists(h_Routes)
+      && !mOriginalRequest.header(h_Routes).empty()
+      &&  mProxy.isMyDomain(mOriginalRequest.header(h_Routes).front().uri() )
+  {
+     mOriginalRequest.header(h_Routes).pop_front();
+  }
+
 }
 
 
