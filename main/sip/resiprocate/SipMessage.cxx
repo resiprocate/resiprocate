@@ -1145,6 +1145,7 @@ defineHeader(CSeq);
 defineHeader(CallID);
 defineHeader(AuthenticationInfo);
 defineHeader(ContentDisposition);
+defineHeader(ContentId);
 defineHeader(ContentTransferEncoding);
 defineHeader(ContentEncoding);
 defineHeader(ContentLength);

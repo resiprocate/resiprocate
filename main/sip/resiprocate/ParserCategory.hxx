@@ -142,6 +142,8 @@ class ParserCategory : public LazyParser
       defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework");
       defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework");
 
+      defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05");
+
       defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
 
       void parseParameters(ParseBuffer& pb);

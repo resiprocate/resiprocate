@@ -1179,13 +1179,13 @@ Helper::determineFailureMessageEffect(const SipMessage& response)
          return DialogTermination;
       case 403:
       case 489: //only for only subscription
+      case 408:  //again, maybe not. This seems best.
          return UsageTermination;      
       case 400:
       case 401:
       case 402:
       case 405:  //doesn't agree w/  -00 of dialogusage
       case 406:
-      case 408:  //again, maybe not. This seems best.
       case 412:
       case 413:
       case 414:

@@ -104,6 +104,8 @@ class ParameterTypes
          defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework"),
          defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework"),
 
+         defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05"),
+
          // NOTE: Do not copy these elsewhere, they are special case
          // !dlb! please insert an explanation of why (above)
          defineParam(qop, "qopFactory", SPECIAL, "RFC 3261"),
