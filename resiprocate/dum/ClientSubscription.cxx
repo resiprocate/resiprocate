@@ -6,7 +6,8 @@
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
-#include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/SubscriptionCreator.hxx"
+
 
 using namespace resip;
 
@@ -47,6 +48,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
 
       if (!mOnNewSubscriptionCalled)
       {
+         InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To)  << "Terminated");                   
          handler->onNewSubscription(getHandle(), msg);
          mOnNewSubscriptionCalled = true;
       }         
@@ -101,12 +103,27 @@ ClientSubscription::dispatch(const SipMessage& msg)
          }
          return;
       }
+
+      SubscriptionCreator* creator = dynamic_cast<SubscriptionCreator*> (mDialog.mDialogSet.getCreator());
+      
+      int refreshInterval = 0;
+      if (expires)
+      {      
+         if (creator && creator->hasRefreshInterval() && creator->getRefreshInterval() <  expires)
+         {
+            refreshInterval = creator->getRefreshInterval();
+         }
+         else
+         {
+            refreshInterval = Helper::aBitSmallerThan((unsigned long)expires);
+         }
+      }
          
       if (msg.header(h_SubscriptionState).value() == "active")
       {
-         if (expires)
-         {            
-            unsigned long t = Helper::aBitSmallerThan((unsigned long)(expires));
+         if (refreshInterval)
+         {
+            unsigned long t = refreshInterval;            
             mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
             DebugLog (<< "[ClientSubscription] reSUBSCRIBE in " << t);
          }
@@ -115,9 +132,9 @@ ClientSubscription::dispatch(const SipMessage& msg)
       }
       else if (msg.header(h_SubscriptionState).value() == "pending")
       {
-         if (expires)
+         if (refreshInterval)
          {
-            unsigned long t = Helper::aBitSmallerThan((unsigned long)(expires));
+            unsigned long t = refreshInterval;
             mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
             DebugLog (<< "[ClientSubscription] reSUBSCRIBE in " << t);
          }
@@ -127,7 +144,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
       else if (msg.header(h_SubscriptionState).value() == "terminated")
       {
          handler->onTerminated(getHandle(), msg);
-         DebugLog (<< "[ClientSubscription] Terminated");                   
+         DebugLog (<< "[ClientSubscription] " << mLastRequest.header(h_To) << "[ClientSubscription] Terminated");                   
          delete this;
          return;
       }
