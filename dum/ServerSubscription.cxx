@@ -4,6 +4,8 @@
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 
+#include <time.h>
+
 using namespace resip;
 
 ServerSubscriptionHandle 
@@ -16,7 +18,8 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
                                        Dialog& dialog,
                                        const SipMessage& req)
    : BaseSubscription(dum, dialog, req),
-     mExpires(60)
+     mExpires(60),
+     mAbsoluteExpiry(0)
 {
    mLastRequest = req;
 }
@@ -26,11 +29,25 @@ ServerSubscription::~ServerSubscription()
    mDialog.mServerSubscriptions.remove(this);
 }
 
+int
+ServerSubscription::getTimeLeft()
+{
+   int timeleft =  mAbsoluteExpiry - time(0);
+   if (timeleft < 0)
+   {
+      return 0;
+   }
+   else
+   {
+      return timeleft;
+   }
+}
+
 SipMessage& 
 ServerSubscription::accept(int statusCode)
 {
    mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
-   mLastResponse.header(h_Expires).value() = mExpires;   
+   mLastResponse.header(h_Expires).value() = mExpires;
    return mLastResponse;
 }
 
@@ -73,6 +90,7 @@ ServerSubscription::send(SipMessage& msg)
       else
       {
          mDum.send(msg);
+         handler->onTerminated(getHandle());
          delete this;
          return;
       }
@@ -105,32 +123,42 @@ ServerSubscription::dispatch(const SipMessage& msg)
    {      
       //!dcm! -- need to have a mechanism to retrieve default & acceptable
       //expiration times for an event package--part of handler API?
+      //added to handler for now.
       mLastRequest = msg;      
       if (msg.exists(h_Expires))
       {         
          mExpires = msg.header(h_Expires).value();
-         if (mExpires == 0)
-         {
-            makeNotifyExpires();
-            handler->onExpiredByClient(getHandle(), msg, mLastNotify);
-
-            mDialog.makeResponse(mLastResponse, mLastRequest, 200);
-            mLastResponse.header(h_Expires).value() = mExpires;
-            send(mLastResponse);            
-
-            end(Timeout);
-            return;
-         }
-         if (mSubscriptionState == Invalid)
-         {
-            //!dcm! -- should initial state be pending?
-            mSubscriptionState = Init;
-            handler->onNewSubscription(getHandle(), msg);            
-         }
-         else
-         {
-            handler->onRefresh(getHandle(), msg);            
-         }
+      }
+      else if (handler->hasDefaultExpires())
+      {
+         mExpires = handler->getDefaultExpires();
+      }
+      else
+      {
+         handler->onError(getHandle(), msg);
+         send(reject(400));
+         return;
+      }
+      if (mExpires == 0)
+      {
+         makeNotifyExpires();
+         handler->onExpiredByClient(getHandle(), msg, mLastNotify);
+         
+         mDialog.makeResponse(mLastResponse, mLastRequest, 200);
+         mLastResponse.header(h_Expires).value() = mExpires;
+         send(mLastResponse);            
+         end(Timeout);
+         return;
+      }
+      if (mSubscriptionState == Invalid)
+      {
+         //!dcm! -- should initial state be pending?
+         mSubscriptionState = Init;
+         handler->onNewSubscription(getHandle(), msg);            
+      }
+      else
+      {
+         handler->onRefresh(getHandle(), msg);            
       }
    }
    else
@@ -164,7 +192,7 @@ ServerSubscription::makeNotify()
    }
    else
    {
-      mLastNotify.header(h_SubscriptionState).param(p_expires) = mExpires;
+      mLastNotify.header(h_SubscriptionState).param(p_expires) = getTimeLeft();
    }
    
    mLastNotify.header(h_Event).value() = mEventType;   
@@ -215,6 +243,15 @@ ServerSubscription::update(const Contents* document)
    mLastNotify.setContents(document);
    return mLastNotify;
 }
+
+SipMessage& 
+ServerSubscription::neutralNotify()
+{
+   makeNotify();
+   mLastNotify.releaseContents();   
+   return mLastNotify;
+}
+
 
 
 /* ====================================================================
