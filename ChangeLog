@@ -1,3 +1,21 @@
+2004-01-12    <alan@jasomi.com>
+	* os/Timer.cxx:
+		Minor timer cleanup.
+	
+	* TransactionState.hxx:
+		Added mNetSource for explicit tracking of sources.
+		Fixes for force target support.
+	
+	* SipMessage.hxx: renamed ...Target to ...ForceTarget.
+
+	* ParserCategories.hxx (class Via): 
+		Changed default transport to
+		be empty.
+
+	* Helper.cxx: cleanup of reason phrase code.
+	(getPortForReply): renamed getSentPort to be in line with use.
+	(getPortForReply): added notion of symmetric response.
+
 2003-10-09 12:59  davidb
 
 	* test/testData.cxx: added some tests

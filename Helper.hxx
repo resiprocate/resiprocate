@@ -114,7 +114,10 @@ class Helper
 
       static void processStrictRoute(SipMessage& request);
 
-      static int getSentPort(SipMessage& request);
+      // renamed to make more explicit that this is the port that we should reply too
+      // given that we are following SIP rules WRT rport etc.
+      // NOTE: sym means to return symmetric info no matter what.
+      static int getPortForReply(SipMessage& request, bool sym);
 
       static Uri fromAor(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
 
