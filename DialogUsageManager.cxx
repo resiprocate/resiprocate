@@ -25,8 +25,15 @@ DialogUsageManager::~DialogUsageManager()
    }
 }
 
-DialogUsageManager::DialogUsageManager(SipStack& stack) 
-   : mStack(stack)
+DialogUsageManager::DialogUsageManager(SipStack& stack) :
+   mProfile(0),
+   mRedirectManager(0),
+   mClientAuthManager(0),
+   mServerAuthManager(0),
+   mInviteSessionHandler(0),
+   mClientRegistrationHandler(0),
+   mServerRegistrationHandler(0),
+   mStack(stack)
 {
 }
 
