@@ -1,0 +1,40 @@
+digraph UAC {
+        rankdir=LR;
+        node [shape = box];
+
+        Start -> OfferRel [ label = "onInviteOfferRel" ];
+        Start -> NoOfferRel [ label = "onInviteNoOfferRel" ];
+
+        OfferRel -> FirstEarlyRel [ label = "dum::provideAnswer/1xx-answer,makeTimer(1xx)" ];
+
+        FirstEarlyRel -> FirstEarlyRel [ label = "onTimer/resend1xx,makeTimer(1xx)" ];
+        FirstEarlyRel -> Accepted [ label = "dum::accept/queue2xx" ];
+        FirstEarlyRel -> EarlyRel [ label = "onPrack/200P" ];
+
+        Accepted -> Connected [ label = "onPrack/2xxP,2xxI" ];
+
+        EarlyRel -> EarlyRel [ label = "onPrack/200P" ];
+        EarlyRel -> EarlyRel [ label = "dum::onProvisional/1XX,makeTimer" ];
+        EarlyRel -> EarlyRel [ label = "onTimer/resend" ];
+        EarlyRel -> Connected [ label = "dum::accept/2xx,makeTimer" ];
+        EarlyRel -> RecvedUpdate [ label = "onUpdate/app::onOffer" ];
+        EarlyRel -> SentUpdate [ label = "dum::provideOffer/sendUpdate" ];
+
+        SentUpdate -> SentUpdateAccepted [ label = "dum::accept/2xxI" ];
+        SentUpdate -> EarlyRel [ label = "on2xxU" ];
+
+        SentUpdateAccepted -> Connected [ label = "on2xxU/app::onAnswer" ];
+        SentUpdateAccepted -> Connected [ label = "on488U/app::onOfferRejected" ];
+
+        RecvedUpdate -> RecvedUpdateWaitingAnswer [ label = "dum::accept" ];
+
+        RecvedUpdateWaitingAnswer -> Connected [ label = "dum::provideAnswer/2xxU,2xxI" ];
+
+        Connected -> Connected [ label = "onTimer/resend" ];
+        Connected -> Terminated [ label = "dum::end/BYE" ];
+
+        NoOfferRel -> FirstSentOfferRel [ label = "dum::provideOffer/1xxWithOffer,makeTimer" ];
+
+        FirstSentOfferRel -> FirstSentOfferRel [ label = "onTimer/resend1xx" ];
+        FirstSentOfferRel -> EarlyRel [ label = "onPrackWithSdp/200P,app::onAnswer(SDP)" ];
+}
