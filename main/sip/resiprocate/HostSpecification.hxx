@@ -14,11 +14,16 @@ class HostSpecification
       
       const Data& getHost() const;
       const Data& getAddressString() const;
+
+      static Data getLocalHostName();
+      
       int getPort() const;
    private:
       Data mHost;
       int mPort;
 };
 
+ 
+}
 
 #endif

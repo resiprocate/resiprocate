@@ -12,8 +12,6 @@
 #include <vector>
 #include <utility>
 
-
-
 #include <sipstack/HeaderTypes.hxx>
 #include <sipstack/ParameterTypes.hxx>
 #include <sipstack/Message.hxx>
@@ -22,6 +20,10 @@
 
 namespace Vocal2
 {
+
+// !dlb!
+typedef NameAddr Url;
+typedef ParserContainer<NameAddr> Urls;
 
 class HeaderFieldValue;
 
@@ -119,16 +121,14 @@ class SipMessage : public Message
       template <int T>
       void remove(const Header<T>& headerType)
       {
-         HeaderTypeHolder<T> parserFactory;
-
-         delete mHeaders[parserFactory.getValue()];
-         mHeaders[parserFactory.getValue()] = 0;
+         delete mHeaders[T];
+         mHeaders[T] = 0;
       }
 
       // note: removeFirst/removeLast through the component 
 
       // unknown header interface
-      StringComponents& header(const Data& symbol) const;
+      StringCategories& header(const Data& symbol) const;
 
       void remove(const Data& symbol);
 
