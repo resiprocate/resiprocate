@@ -23,3 +23,10 @@ UnknownParameter::getName()
 {
    return mName;
 }
+
+Parameter* 
+UnknownParameter::clone() const
+{
+   return new UnknownParameter(*this);
+}
+

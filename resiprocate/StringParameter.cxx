@@ -25,3 +25,10 @@ StringParameter::getData()
    return mData;
 }
 
+
+Parameter* 
+StringParameter::clone() const
+{
+   return new StringParameter(*this);
+}
+
