@@ -10,6 +10,10 @@ namespace resip
 
 class ServerOutOfDialogReq : public BaseUsage
 {
+  public:
+    class Handle
+    {
+    };
 };
  
 }
