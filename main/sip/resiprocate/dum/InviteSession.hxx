@@ -53,24 +53,33 @@ class InviteSession : public BaseUsage
 
       virtual InviteSession::Handle getSessionHandle() = 0;
 
-   protected:
-      // If sdp==0, the offer was rejected
-      void incomingSdp(SdpContents* sdp);
-
-      // If sdp==0, the offer is being rejected
-      void sendSdp(SdpContents* sdp);
-      
-      InviteSession(DialogUsageManager& dum, Dialog& dialog);
-      void copyAuthorizations(SipMessage& request);
-      void makeAck(const SipMessage& response2xx);
-      
       typedef enum
       {
-         None, 
+         None, // means no Offer or Answer (may have SDP)
+         Offer,
+         Answer
+      } OfferAnswerType;
+
+   protected:
+      typedef enum
+      {
+         Nothing,
          Offerred,
          Answered, // agreed
          CounterOfferred,
       } OfferState;
+
+      // If sdp==0, the offer was rejected
+      void incomingSdp(const SipMessage& msg, const SdpContents* sdp);
+
+      // If sdp==0, the offer is being rejected
+      void sendSdp(const SdpContents* sdp);
+
+      std::pair<OfferAnswerType, const SdpContents*> getOfferOrAnswer(const SipMessage& msg) const;
+      
+      InviteSession(DialogUsageManager& dum, Dialog& dialog);
+      void copyAuthorizations(SipMessage& request);
+      void makeAck(const SipMessage& response2xx);
 
       OfferState mOfferState;
       SdpContents* mCurrentLocalSdp;
