@@ -1,10 +1,11 @@
 #include <cassert>
 #include <iostream>
-#include <util/Data.hxx>
 #include <stdio.h>
+#include <util/Data.hxx>
+#include <util/Socket.hxx>
 #ifndef WIN32
-#include <sys/time.h>
-#endif
+#include <sys/time.h>#endif
+
 #include <sys/types.h>
 #include <time.h>
 
@@ -18,11 +19,7 @@ Log::Level Log::_level = Log::DEBUG;
 Log::Type Log::_type = COUT;
 Data Log::_appName;
 Data Log::_hostname;
-#ifndef WIN32
-pid_t Log::_pid=0;
-#else
-int Log::_pid=0;
-#endif
+#ifndef WIN32pid_t Log::_pid=0;#elseint Log::_pid=0;#endif
 
 const char
 Log::_descriptions[][32] = {"EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "DEBUG_STACK", ""}; 
@@ -37,16 +34,10 @@ Log::initialize(Type type, Level level, const Data& appName)
    _appName = appName.substr(appName.find_last_of("/")+1);
    
  
-#ifdef WIN32
-    // TODO FIX 
-   _hostname = "Unkown";
-   _pid = 0;
-#else
-    char buffer[1024];
-    gethostname(buffer, sizeof(buffer));
+#ifdef WIN32    // TODO FIX    asssert(0);   _hostname = "Unkown";   _pid = 0;#else    char buffer[1024];    gethostname(buffer, sizeof(buffer));
    _hostname = buffer;
-   _pid = getpid();
-#endif
+   _pid = getpid();#endif
+
 }
 
 void
@@ -124,7 +115,6 @@ Log::timestamp()
          (Under Unix, this will never happen:  gettimeofday can fail only
         if the timezone is invalid [which it can't be, since it is
         uninitialized] or if &tv or &tz are invalid pointers.) */
-
         datebuf [0] = '\0';
     }
     else

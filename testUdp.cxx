@@ -1,3 +1,5 @@
+
+#include <util/Socket.hxx>
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/Message.hxx>
 #include <util/Fifo.hxx>

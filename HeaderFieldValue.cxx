@@ -49,10 +49,12 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
   // param lists
 }
 
+#ifndef WIN32
 // !dlb! when does this get called?
 HeaderFieldValue::HeaderFieldValue(ParserCategory* parser)
    : mParserCategory(parser)
 {}
+#endif
 
 HeaderFieldValue::~HeaderFieldValue()
 {

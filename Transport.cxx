@@ -1,4 +1,5 @@
-#include <errno.h>
+
+#include <util/Socket.hxx>
 
 #include <sipstack/Transport.hxx>
 #include <sipstack/SipMessage.hxx>
@@ -36,7 +37,15 @@ Transport::run()
       FD_ZERO(&fdSet); 
       fdSetSize=0;
       FD_SET(mFd,&fdSet); 
-      fdSetSize = std::max( mFd+1, fdSetSize );
+
+#ifdef WIN32
+	  assert(0);
+#else
+		if ( mFd+1 > fdSetSize )
+		{	
+				fdSetSize =  mFd+1; 
+		}
+#endif
 
       int  err = select(fdSetSize, &fdSet, 0, 0, 0);
       if (err == 0)

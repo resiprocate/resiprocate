@@ -13,7 +13,7 @@ namespace Vocal2
 
 #ifdef WIN32
 typedef int socklen_t;
-#define errno WSAGetLastError()
+//#define errno WSAGetLastError()
 typedef SOCKET Socket;
 
 #define EWOULDBLOCK             WSAEWOULDBLOCK

@@ -76,7 +76,9 @@ class Headers
       static bool isCommaTokenizing(Type type);
 };
 
+#ifndef WIN32
 Headers::Type& Vocal2::operator++(Headers::Type&t);
+#endif
 
 // map enum to parser category via specialized templates
 template <int T>

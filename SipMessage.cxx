@@ -5,6 +5,10 @@
 using namespace Vocal2;
 using namespace std;
 
+int strcasecmp(const char*, const char*);
+int strncasecmp(const char*, const char*, int len);
+
+
 #ifndef USE_METHOD_TEMPLATE
 #include <sipstack/SipMessageExplicit.cxx>
 #endif
@@ -23,6 +27,11 @@ SipMessage::SipMessage()
 }
 
 SipMessage::SipMessage(const SipMessage& from)
+#ifdef WIN32
+// TODO - I have no idea if this should be true or false 
+: mIsExternal(false)
+#else
+#endif
 {
    if (this != &from)
    {
@@ -129,7 +138,7 @@ SipMessage::addBuffer(char* buf)
 }
 
 void
-SipMessage::addSource(const sockaddr_in& addr)
+SipMessage::setSource(const sockaddr_in& addr)
 {
    mSource = addr;
 }

@@ -2,9 +2,9 @@
 #define ParserCategory_hxx
 
 #include <iostream>
-#include <sipstack/ParameterTypes.hxx>
 #include <util/Data.hxx>
 
+#include <sipstack/ParameterTypes.hxx>
 
 namespace Vocal2
 {
@@ -32,6 +32,7 @@ class ParserCategory
 
       virtual std::ostream& encode(std::ostream& str) const = 0;
 
+#ifndef WIN32
       template <int T>
       typename ParameterType<T>::Type::Type& 
       operator[](const ParameterType<T>& parameterType) const
@@ -39,6 +40,7 @@ class ParserCategory
          checkParsed();
          return mHeaderField->getParameter(parameterType).value();
       }
+#endif
 
       template <int T>
       bool
