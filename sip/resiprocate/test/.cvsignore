@@ -79,4 +79,5 @@ testFifo
 makeSelfCert
 testTime
 testDnsUtil
-testRSP-2
+testRSP-254
+test503Generator
