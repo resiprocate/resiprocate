@@ -725,16 +725,18 @@ TransactionState::processServerInvite(  Message* msg )
             if (mState == Proceeding || mState == Completed)
             {
 	      /*
-		server transaction is constructed for a request, it enters the
-		"Proceeding" state.  The server transaction MUST generate a 100
-		(Trying) response. The request MUST be passed to the TU
+	        The server transaction has already been constructed so this
+		message is a retransmission.  The server transaction must
+		response with a 100 Trying_or_ the last provision response
+		passed from the TU for this transaction.
 	      */
                DebugLog (<< "Received invite from wire - forwarding to TU state=" << mState);
 	       if (!mMsgToRetransmit)
 	       {
 	          mMsgToRetransmit = make100(sip); // for when TimerTrying fires
                }
-	       sendToTU(msg); // don't delete
+               delete msg;
+	       sendToWire(mMsgToRetransmit);
             }
             else
             {
