@@ -59,7 +59,7 @@ class Log
          INFO = LOG_INFO,
          DEBUG = LOG_DEBUG,
          STACK = 8,
-         OUT = 9,
+         STDERR = 9,
          BOGUS = 666
       } Level;
 #endif
