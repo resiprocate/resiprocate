@@ -177,18 +177,13 @@ static Data up_Msgr("msgr");
 ostream&
 ParserCategory::encodeParameters(ostream& str) const
 {
+    
    for (ParameterList::iterator it = mParameters.begin();
         it != mParameters.end(); it++)
    {
-      str << Symbols::SEMI_COLON;
-      // !ah! this is a TOTAL hack to work around an MSN bug that
-      // !ah! requires a SPACE after the SEMI following the MIME type.
-      if (it == mParameters.begin() && getParameterByData(up_Msgr))
-      {
-         str << Symbols::SPACE;
-      }
 #if 1
       // !cj! - may be wrong just hacking 
+      // The goal of all this is not to add a tag if the tag is empty 
       ParameterTypes::Type type = (*it)->getType();
       
       if ( type ==  ParameterTypes::tag )
@@ -200,15 +195,39 @@ ParserCategory::encodeParameters(ostream& str) const
          
          if ( !data.empty() )
          {
+            str << Symbols::SEMI_COLON;
+            // !ah! this is a TOTAL hack to work around an MSN bug that
+            // !ah! requires a SPACE after the SEMI following the MIME type.
+            if (it == mParameters.begin() && getParameterByData(up_Msgr))
+            {
+               str << Symbols::SPACE;
+            }
+
             (*it)->encode(str);
          }
       }
       else
       {
+         str << Symbols::SEMI_COLON;
+         // !ah! this is a TOTAL hack to work around an MSN bug that
+         // !ah! requires a SPACE after the SEMI following the MIME type.
+         if (it == mParameters.begin() && getParameterByData(up_Msgr))
+         {
+            str << Symbols::SPACE;
+         }
+
          (*it)->encode(str);
       }
       
 #else
+      str << Symbols::SEMI_COLON;
+      // !ah! this is a TOTAL hack to work around an MSN bug that
+      // !ah! requires a SPACE after the SEMI following the MIME type.
+      if (it == mParameters.begin() && getParameterByData(up_Msgr))
+      {
+         str << Symbols::SPACE;
+      }
+      
       (*it)->encode(str);
 #endif
    }
