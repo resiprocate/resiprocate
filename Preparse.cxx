@@ -8,6 +8,10 @@
 #include <sipstack/HeaderTypes.hxx>
 #include <sipstack/SipMessage.hxx>
 
+#include <sipstack/Logger.hxx>
+
+#define VOCAL_SUBSYSTEM Subsystem::SIP
+
 using namespace Vocal2;
 
 // Table helpers
@@ -18,14 +22,15 @@ using namespace Vocal2::PreparseStateTable;
 
 Edge *** mTransitionTable = 0;
 
-#if defined(DEBUG)
 // HACK REMOVE !ah!
-#include <iostream>
-ostream& showN(ostream& os, const char * p, size_t l)
+
+string showN(const char * p, size_t l)
 {
+   string s;
+   
    for(unsigned int i = 0 ; i < l ; i++)
-      os << p[i];
-   return os;
+      s += p[i];
+   return s;
 }
 
 const char *  stateName(PreparseStateTable::State s)
@@ -52,10 +57,10 @@ const char *  stateName(PreparseStateTable::State s)
    }
 }
 
-ostream& operator<<(ostream& os, const PreparseStateTable::State s)
-{
-   return os << stateName(s);
-}
+//ostream& operator<<(ostream& os, const PreparseStateTable::State s)
+//{
+//   return os << stateName(s);
+//}
 
 ostream& outStateRange(ostream& os, int s, int e)
 {
@@ -87,33 +92,38 @@ ostream& printable(ostream& os, char c)
    
 }
 
-void
-showWork(ostream& os, int m)
+string
+workString(int m)
 {
-   os << '[';
-   if ( m &  actNil) os << " actNil ";
-   if ( m &  actAdd) os << " actAdd ";
-   if ( m &  actBack) os << " actBack ";
-   if ( m &  actFline) os << " actFline ";
-   if ( m &  actReset) os << " actReset ";
-   if ( m &  actHdr) os << " actHdr ";
-   if ( m &  actData) os << " actData ";
-   if ( m &  actBad) os << " actBad ";
-   if ( m & actEndHdrs) os << " actEndHdrs ";
-   os << ']';
+   string s("[");
+
+   if ( m &  actNil) s += " actNil ";
+   if ( m &  actAdd) s += " actAdd ";
+   if ( m &  actBack) s += " actBack ";
+   if ( m &  actFline) s += " actFline ";
+   if ( m &  actReset) s += " actReset ";
+   if ( m &  actHdr) s += " actHdr ";
+   if ( m &  actData) s += " actData ";
+   if ( m &  actBad) s += " actBad ";
+   if ( m & actEndHdrs) s += " actEndHdrs ";
+   s += ']';
+   return s;
 }
 
 void
 showEdge(const char*msg, State s, Disposition d, char c, Edge& e)
 {
+}
+
+#if 0
    cout << msg;
    cout << stateName(s);
    cout << hex << " (0x" << (int) c << ')';
-   
    cout << " -> " << stateName(e.nextState);
    showWork(cout, e.workMask);
-}
+#endif
 
+#if 0
 ostream& outCharRange(ostream& os, int s, int e)
 {
    if ( s == e-1)
@@ -131,7 +141,6 @@ ostream& outCharRange(ostream& os, int s, int e)
    return os;
 
 }
-
 #endif
 
 const int X = -1;
@@ -355,11 +364,8 @@ Preparse::process()
    {
       //using namespace PreparseStateTable;
       Edge& e(mTransitionTable[mState][mDisposition][*mPtr]);
-      
-#if defined(DEBUG)  && 0
-      showEdge("selected edge ", mState, mDisposition, *mPtr, e);
-      cout << endl;
-#endif
+
+      DebugLog( << "EDGE " << ::stateName(mState) << hex << " (0x" << (int) *mPtr << ')' << " -> " << ::stateName(e.nextState) << ::workString(e.workMask) );
       
       
       if (e.workMask & actAdd)
