@@ -15,6 +15,10 @@ class Handle
       {
       }
 
+      Handle() : mHam(0)
+      {
+      }
+
       bool isValid() const
       {
          return mHam->isValidHandle(mId);
@@ -49,9 +53,6 @@ class Handle
       }
 
       //for invalid handles
-      Handle() : mHam(0)
-      {
-      }
 
    private:
       HandleManager* mHam;
