@@ -1,9 +1,6 @@
 #if !defined(RESIP_BASEEXCEPTION_HXX)
 #define RESIP_BASEEXCEPTION_HXX 
 
-static const char* const resipBaseExceptionHeaderVersion =
-   "$Id: BaseException.hxx,v 1.10 2003/06/02 20:52:32 ryker Exp $";
-
 #include <exception>
 #include <iostream>
 
@@ -24,8 +21,7 @@ class BaseException : public std::exception
       BaseException(const Data& msg,
                     const Data& file,
                     int line);
-      // not pure virtual -- don't want to require every derived class to have
-      // to define
+
       virtual ~BaseException() throw();
       
       resip::Data message;

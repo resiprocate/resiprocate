@@ -1,9 +1,6 @@
 #if !defined(RESIP_AbstractFifo_hxx)
 #define RESIP_AbstractFifo_hxx 
 
-static const char* const resipAbstractFifo_h_Version =
-   "$Id: AbstractFifo.hxx,v 1.1 2003/09/24 18:04:09 davidb Exp $";
-
 #include <deque>
 
 #include "resiprocate/os/Mutex.hxx"
