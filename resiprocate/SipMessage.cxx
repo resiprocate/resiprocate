@@ -727,10 +727,13 @@ auto_ptr<Contents>
 SipMessage::releaseContents()
 {
    auto_ptr<Contents> ret(getContents());
-   // the buffer may go away...
-   ret->checkParsed();
-   mContents = 0;
-   // ...here
+   if (ret.get() != 0)
+   {
+      // the buffer may go away...
+      ret->checkParsed();
+      mContents = 0;
+      // ...here
+   }
    setContents(auto_ptr<Contents>(0));
    
    return ret;
