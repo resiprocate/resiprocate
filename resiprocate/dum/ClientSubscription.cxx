@@ -108,7 +108,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          {
             unsigned long t = Helper::aBitSmallerThan((unsigned long)(expires));
             mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
-            InfoLog (<< "reSUBSCRIBE in " << t);
+            DebugLog (<< "reSUBSCRIBE in " << t);
          }
          
          handler->onUpdateActive(getHandle(), msg);
@@ -119,7 +119,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
          {
             unsigned long t = Helper::aBitSmallerThan((unsigned long)(expires));
             mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
-            InfoLog (<< "reSUBSCRIBE in " << t);
+            DebugLog (<< "reSUBSCRIBE in " << t);
          }
 
          handler->onUpdatePending(getHandle(), msg);
