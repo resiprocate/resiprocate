@@ -51,7 +51,7 @@ UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, F
    if ( !ok )
    {
       ErrLog (<< "Could not make UDP port non blocking " << portNum);
-      throw Exception("Cont not use UDP port", __FILE__,__LINE__);
+      throw Exception("Could not use UDP port", __FILE__,__LINE__);
    }
 }
 
