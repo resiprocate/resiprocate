@@ -291,6 +291,10 @@ class TestData
             d = c;
             assert(c == "S");
          }         
+         {
+            Data d((unsigned long)235235);
+            assert(d == "235235");
+         }
       }
 };
 
