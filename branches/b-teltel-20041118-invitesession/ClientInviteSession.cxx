@@ -258,61 +258,6 @@ ClientInviteSession::startCancelTimer()
    // !jf! do something here
 }
 
-
-void
-ClientInviteSession::targetRefresh (const NameAddr& localUri)
-{
-   WarningLog (<< "Can't send INFO before Connected");
-   assert(0);
-   throw UsageUseException("Can't send TARGETREFRESH before Connected", __FILE__, __LINE__);
-}
-
-void
-ClientInviteSession::refer(const NameAddr& referTo)
-{
-   if (isConnected())
-   {
-      InviteSession::refer(referTo);
-   }
-   else
-   {
-      WarningLog (<< "Can't refer before Connected");
-      assert(0);
-      throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
-   }
-}
-
-void
-ClientInviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace)
-{
-   if (isConnected())
-   {
-      InviteSession::refer(referTo, sessionToReplace);
-   }
-   else
-   {
-      WarningLog (<< "Can't refer before Connected");
-      assert(0);
-      throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
-   }
-}
-
-void
-ClientInviteSession::info(const Contents& contents)
-{
-   if (isConnected())
-   {
-      InviteSession::info(contents);
-   }
-   else
-   {
-      WarningLog (<< "Can't send INFO before Connected");
-      assert(0);
-      throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
-   }
-}
-
-
 void
 ClientInviteSession::dispatch(const SipMessage& msg)
 {
@@ -541,6 +486,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case On2xxOffer:
          transition(UAC_Answered);
          handleSessionTimerResponse(msg);
+         storePeerCapabilities(msg);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
@@ -551,6 +497,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case On2xxAnswer:
          transition(Connected);
          handleSessionTimerResponse(msg);
+         storePeerCapabilities(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Answer, msg);
@@ -628,6 +575,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case On2xxOffer:
          transition(UAC_Answered);
          handleSessionTimerResponse(msg);
+         storePeerCapabilities(msg);
 
          assert(mProposedLocalSdp.get() == 0);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -639,6 +587,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case On2xxAnswer:
          transition(Connected);
          handleSessionTimerResponse(msg);
+         storePeerCapabilities(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, *sdp);
@@ -788,6 +737,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case On2xx:
          transition(Connected);
          handleSessionTimerResponse(msg);
+         storePeerCapabilities(msg);
          handler->onConnected(getHandle(), msg);
          {
             SipMessage ack;
@@ -861,6 +811,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On2xx:
          transition(SentUpdate);
          handleSessionTimerResponse(msg);
+         storePeerCapabilities(msg);
          handler->onConnected(getHandle(), msg);
          {
             SipMessage ack;
@@ -932,6 +883,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       case On2xx:
          transition(Connected);
          handleSessionTimerResponse(msg);
+         storePeerCapabilities(msg);
          handler->onConnected(getHandle(), msg);
          {
             SipMessage ack;

@@ -67,10 +67,26 @@ InviteSession::getSessionHandle()
    return InviteSessionHandle(mDum, getBaseHandle().getId());
 }
 
-bool
-InviteSession::peerSupportsUpdateMethod() const
+void InviteSession::storePeerCapabilities(const SipMessage& msg)
 {
-   // !jf!
+   // !slg! ToDo - add methods to get this data, App may be interested
+   // Only store each capability once - do not overwrite
+   mPeerSupportedMethods = msg.header(h_Allows);
+   mPeerSupportedOptionTags = msg.header(h_Supporteds);
+   mPeerSupportedEncodings = msg.header(h_AcceptEncodings);
+   mPeerSupportedLanguages = msg.header(h_AcceptLanguages);
+   mPeerSupportedMimeTypes = msg.header(h_Accepts);
+}
+
+bool
+InviteSession::updateMethodSupported() const
+{
+   // Check if Update is supported locally 
+   if(mDum.getMasterProfile()->isMethodSupported(UPDATE))
+   {
+       // Check if peer supports UPDATE
+       return mPeerSupportedMethods.find(Token("UPDATE"));  
+   }
    return false;
 }
 
@@ -166,7 +182,7 @@ InviteSession::provideOffer(const SdpContents& offer)
    {
       case Connected:
       case WaitingToOffer:
-         if (peerSupportsUpdateMethod())
+         if (updateMethodSupported())
          {
             transition(SentUpdate);
             mDialog.makeRequest(mLastSessionModification, UPDATE);
@@ -342,26 +358,42 @@ InviteSession::reject(int statusCode)
 void
 InviteSession::targetRefresh(const NameAddr& localUri)
 {
-   // !jf! add interface to Dialog
-   //mDialog.setLocalContact(localUri);
-   provideOffer(*mCurrentLocalSdp);
+   if (isConnected()) // !slg! likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+   {
+      // !jf! add interface to Dialog
+      //mDialog.setLocalContact(localUri);
+      provideOffer(*mCurrentLocalSdp);
+   }
+   else
+   {
+      WarningLog (<< "Can't targetRefresh before Connected");
+      assert(0);
+      throw UsageUseException("targetRefresh not allowed in this context", __FILE__, __LINE__);
+   }
 }
 
 void
 InviteSession::refer(const NameAddr& referTo)
 {
-   assert(isConnected()); 
    if (mSentRefer)
    {
       throw UsageUseException("Attempted to send overlapping refer", __FILE__, __LINE__);
    }
-      
 
-   mSentRefer = true;
-   SipMessage refer;
-   mDialog.makeRequest(refer, REFER);
-   refer.header(h_ReferTo) = referTo;
-   mDialog.send(refer);
+   if (isConnected()) // !slg! likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+   {
+      mSentRefer = true;
+      SipMessage refer;
+      mDialog.makeRequest(refer, REFER);
+      refer.header(h_ReferTo) = referTo;
+      mDialog.send(refer);
+   }
+   else
+   {
+      WarningLog (<< "Can't refer before Connected");
+      assert(0);
+      throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
+   }
 }
 
 void
@@ -377,20 +409,28 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       throw UsageUseException("Attempted to send overlapping refer", __FILE__, __LINE__);
    }
 
-   assert(isConnected()); // !slg! should refer only be allowed if state is Connected
-   mSentRefer = true;
-   SipMessage refer;
-   mDialog.makeRequest(refer, REFER);
+   if (isConnected())  // !slg! likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+   {
+      mSentRefer = true;
+      SipMessage refer;
+      mDialog.makeRequest(refer, REFER);
 
-   refer.header(h_ReferTo) = referTo;
-   CallId replaces;
-   DialogId id = sessionToReplace->mDialog.getId();
-   replaces.value() = id.getCallId();
-   replaces.param(p_toTag) = id.getRemoteTag();
-   replaces.param(p_fromTag) = id.getLocalTag();
+      refer.header(h_ReferTo) = referTo;
+      CallId replaces;
+      DialogId id = sessionToReplace->mDialog.getId();
+      replaces.value() = id.getCallId();
+      replaces.param(p_toTag) = id.getRemoteTag();
+      replaces.param(p_fromTag) = id.getLocalTag();
 
-   refer.header(h_ReferTo).uri().embedded().header(h_Replaces) = replaces;
-   mDialog.send(refer);
+      refer.header(h_ReferTo).uri().embedded().header(h_Replaces) = replaces;
+      mDialog.send(refer);
+   }
+   else
+   {
+      WarningLog (<< "Can't refer before Connected");
+      assert(0);
+      throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
+   }
 }
 
 void
@@ -398,12 +438,21 @@ InviteSession::info(const Contents& contents)
 {
    if (mNitState == NitComplete)
    {
-      mNitState = NitProceeding;
-      SipMessage info;
-      mDialog.makeRequest(info, INFO);
-      // !jf! handle multipart here
-      info.setContents(&contents); 
-      mDialog.send(info);
+      if (isConnected())  // !slg! likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+      {
+         mNitState = NitProceeding;
+         SipMessage info;
+         mDialog.makeRequest(info, INFO);
+         // !jf! handle multipart here
+         info.setContents(&contents); 
+         mDialog.send(info);
+      }
+      else
+      {
+         WarningLog (<< "Can't send INFO before Connected");
+         assert(0);
+         throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
+      }
    }
    else
    {
@@ -1001,10 +1050,10 @@ InviteSession::start491Timer()
 }
 
 void 
-
 InviteSession::handleSessionTimerResponse(const SipMessage& msg) 
-
 { 
+   assert(msg.header(h_CSeq).method() == INVITE || msg.header(h_CSeq).method() == UPDATE);
+
    // If session timers are locally supported then handle response 
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer))) 
    { 
@@ -1052,24 +1101,23 @@ InviteSession::handleSessionTimerResponse(const SipMessage& msg)
             mDum.addTimer(DumTimeout::SessionExpiration, mSessionInterval - resipMin(32,mSessionInterval/3), getBaseHandle(), ++mSessionTimerSeq); 
          } 
       } 
+      else
+      {
+          ++mSessionTimerSeq;  // increment seq, incase old timers are running and now session timers are disabled
+      }
    } 
 }
 
 void 
 InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage& request) 
 { 
+   assert(request.header(h_CSeq).method() == INVITE || request.header(h_CSeq).method() == UPDATE);
+
    // If session timers are locally supported then add necessary headers to response 
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer))) 
    { 
       bool fUAS = dynamic_cast<ServerInviteSession*>(this) != NULL; 
-  
-      // Check if we are the refresher 
-      if((fUAS && mSessionRefresherUAS) || (!fUAS && !mSessionRefresherUAS)) 
-      { 
-         // If we receive a reinvite, but we are the refresher - don't process for session timers (probably just a TargetRefresh or hold request) 
-         return; 
-      } 
-   
+     
       mSessionInterval = mDialog.mDialogSet.getUserProfile()->getDefaultSessionTime();  // Used only if UAC doesn't request a time 
       mSessionRefresherUAS = true;  // Used only if UAC doesn't request a time 
     
@@ -1095,7 +1143,11 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
       { 
          if(farEndSupportsTimer) 
          { 
-            response.header(h_Requires).push_back(Token(Symbols::Timer)); 
+            // If far end supports session-timer then require it, if not already present
+            if(!response.header(h_Requires).find(Token(Symbols::Timer)))
+            {
+                response.header(h_Requires).push_back(Token(Symbols::Timer)); 
+            }
          } 
          response.header(h_SessionExpires).value() = mSessionInterval; 
          response.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac"); 
@@ -1112,6 +1164,10 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
             mDum.addTimer(DumTimeout::SessionExpiration, mSessionInterval - resipMin(32,mSessionInterval/3), getBaseHandle(), ++mSessionTimerSeq); 
          } 
       } 
+      else
+      {
+          ++mSessionTimerSeq;  // increment seq, incase old timers are running and now session timers are disabled
+      }
    } 
 }
 

@@ -786,13 +786,6 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
    }
 
-   // Remove Session Timer headers for all requests except INVITE and UPDATE
-   // Probably not required now...?????????
-   //if(method != INVITE && method != UPDATE)
-   //{
-   //   request.remove(h_SessionExpires);
-   //   request.remove(h_MinSE);
-   //}
    DebugLog ( << "Dialog::makeRequest: " << request );
 }
 
