@@ -4,6 +4,7 @@
 static const char* const resipTimeLimitFifo_h_Version =
    "$Id: TimeLimitFifo.hxx,v 1.1 2003/09/24 18:04:09 davidb Exp $";
 
+#include <cassert>
 #include "resiprocate/os/AbstractFifo.hxx"
 #include <iostream>
 #if defined( WIN32 )
