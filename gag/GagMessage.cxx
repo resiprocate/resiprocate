@@ -205,7 +205,8 @@ void
 GagAddBuddyMessage::parse(istream &is)
 {
   valid = false;
-  if (!GagMessage::parse(is, buddy)) return;
+  if (!GagMessage::parse(is, us)) return;
+  if (!GagMessage::parse(is, them)) return;
   valid = true;
 }
 
@@ -213,7 +214,8 @@ ostream &
 GagAddBuddyMessage::serialize(ostream &os) const
 {
   GagMessage::serialize(os);
-  GagMessage::serialize(os, buddy);
+  GagMessage::serialize(os, us);
+  GagMessage::serialize(os, them);
   return os;
 }
 
@@ -222,7 +224,8 @@ void
 GagRemoveBuddyMessage::parse(istream &is)
 {
   valid = false;
-  if (!GagMessage::parse(is, buddy)) return;
+  if (!GagMessage::parse(is, us)) return;
+  if (!GagMessage::parse(is, them)) return;
   valid = true;
 }
 
@@ -230,7 +233,8 @@ ostream &
 GagRemoveBuddyMessage::serialize(ostream &os) const
 {
   GagMessage::serialize(os);
-  GagMessage::serialize(os, buddy);
+  GagMessage::serialize(os, us);
+  GagMessage::serialize(os, them);
   return os;
 }
 
