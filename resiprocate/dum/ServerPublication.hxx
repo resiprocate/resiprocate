@@ -23,8 +23,13 @@ class ServerPublication : public BaseUsage
       void accept(const SipMessage& ok);
       void reject(int statusCode);
 
+      virtual void end();
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimer& timer);
+
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ServerPublication::Handle getHandle() {return mHandle;}
+
 
    private:
       friend class DialogUsageManager;
