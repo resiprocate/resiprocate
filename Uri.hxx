@@ -14,6 +14,7 @@ class Uri : public ParserCategory
       Uri();
       Uri(const Data& data);
       Uri(const Uri&);
+      Uri(const Data& unparsed);
       
       Data& host() const {checkParsed(); return mHost;}
       Data& user() const {checkParsed(); return mUser;}
