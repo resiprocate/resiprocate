@@ -335,17 +335,17 @@ processInject()
     else
     {
 	DebugLog(<< "Warning: error parsing test specification.");
-	TestSpecParseBuf->skipToOneOf("}");
+	TestSpecParseBuf->skipToChar('}');
 	TestSpecParseBuf->skipChar();
 	return;
     }
 
-    TestSpecParseBuf->skipToOneOf("{");
+    TestSpecParseBuf->skipToChar('{');
     TestSpecParseBuf->skipChar();
     TestSpecParseBuf->skipWhitespace();
 
     start = TestSpecParseBuf->position();
-    now = TestSpecParseBuf->skipToOneOf("}");
+    now = TestSpecParseBuf->skipToChar('}');
     *const_cast<char*>(now) = 0;
     DebugLog(<< "Injecting (isWireInject=" << isWireInject << "): " << start);
     TestSpecParseBuf->skipChar();
@@ -388,13 +388,13 @@ processExpect()
     else
     {
 	DebugLog(<< "Warning: error parsing test specification"); 
-	TestSpecParseBuf->skipToOneOf("}");
+	TestSpecParseBuf->skipToChar('}');
 	TestSpecParseBuf->skipChar();
 	delete thisWait;
 	return;
     }
 
-    TestSpecParseBuf->skipToOneOf("{");
+    TestSpecParseBuf->skipToChar('{');
     TestSpecParseBuf->skipChar();
     TestSpecParseBuf->skipWhitespace();
     start = TestSpecParseBuf->position();
@@ -402,7 +402,7 @@ processExpect()
     // We will want to get two of these in an expect_ clause.
     for (int i = 0; i < 2; i++)
     {
-	TestSpecParseBuf->skipToOneOf("=");
+	TestSpecParseBuf->skipToChar('=');
 	TestSpecParseBuf->skipChar();
 	TestSpecParseBuf->skipWhitespace();
 	if (!strncasecmp(start, "method", strlen("method")))
@@ -426,7 +426,7 @@ processExpect()
 	else
 	{
 	    DebugLog(<< "Warning: error parsing test specification"); 
-	    TestSpecParseBuf->skipToOneOf("}");
+	    TestSpecParseBuf->skipToChar('}');
 	    TestSpecParseBuf->skipChar();
 	    delete thisWait;
 	    return;
@@ -442,7 +442,7 @@ processExpect()
     thisWait->mExpiry.tv_usec += (expireTime % 1000) * 1000;
     WaitQueue.push_front(thisWait);
 
-    TestSpecParseBuf->skipToOneOf("}");
+    TestSpecParseBuf->skipToChar('}');
     TestSpecParseBuf->skipChar();
 
     /*
@@ -457,7 +457,7 @@ processExpect()
 void
 processDelays()
 {
-    TestSpecParseBuf->skipToOneOf("{");
+    TestSpecParseBuf->skipToChar('{');
     TestSpecParseBuf->skipChar();
     TestSpecParseBuf->skipWhitespace();
 
@@ -475,7 +475,7 @@ processDelays()
 	ts = remainder;
     }
 
-    TestSpecParseBuf->skipToOneOf("}");
+    TestSpecParseBuf->skipToChar('}');
     TestSpecParseBuf->skipChar();
 }
 
@@ -498,12 +498,12 @@ processClause()
 	processDelays();
 	break;
     case '#':
-	TestSpecParseBuf->skipToOneOf("\n");
+	TestSpecParseBuf->skipToChar('\n');
 	TestSpecParseBuf->skipChar();
 	break;
     default:
 	DebugLog(<< "Warning: error parsing test specification");
-	TestSpecParseBuf->skipToOneOf("}");
+	TestSpecParseBuf->skipToChar('}');
 	TestSpecParseBuf->skipChar();
     }
 
