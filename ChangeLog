@@ -1,3 +1,13 @@
+2002-10-25    <alan@jasomi.com>
+
+	* SipMessage.hxx (class SipMessage): Moved preparser client declaration.
+
+	* ParserCategory.cxx (ParserCategory): Re-ordered initialisers.
+
+	* ParserCategories.cxx (parse): renamed a few confusing variables.
+
+	* HostSpecification.cxx: Added includes for gcc 2.9X
+
 2002-10-04  Alan Hawrylyshen  <alan@jasomi.com>
 
 	* Preparse.cxx (process): Added setStartLine  call.

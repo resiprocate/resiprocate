@@ -13,7 +13,7 @@ class ParseBuffer
       // does NOT OWN the buffer memory
       ParseBuffer(const char* buff, unsigned int len)
          : mBuff(buff),
-           mStart(buff),
+           mTraversalPtr(buff),
            mEnd(buff+len)
       {}
 
@@ -29,11 +29,11 @@ class ParseBuffer
       // allow the buffer to be rolled back
       void reset(const char* pos);
 
-      bool eof() { return mStart >= mEnd;}
-      const char* position() { return mStart; }
+      bool eof() { return mTraversalPtr >= mEnd;}
+      const char* position() { return mTraversalPtr; }
       const char* end() { return mEnd; }
 
-      const char* skipChar() { return ++mStart; }
+      const char* skipChar() { return ++mTraversalPtr; }
       const char* skipChar(char c);
       const char* skipNonWhitespace();
       const char* skipWhitespace();
@@ -42,8 +42,10 @@ class ParseBuffer
       const char* skipToOneOf(const char* cs1, const char* cs2);
 
       const char* skipToEndQuote(char quote = '"');
+
       // make the passed in data share memory with the buffer
       void data(Data& data, const char* start) const;
+
       Data data(const char* start) const;
       
       int integer();
@@ -55,7 +57,7 @@ class ParseBuffer
       ParseBuffer& operator=(const ParseBuffer& other);
       
       const char* mBuff;
-      const char* mStart;
+      const char* mTraversalPtr;
       const char* mEnd;
 };
 
