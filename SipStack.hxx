@@ -71,7 +71,7 @@ class SipStack
       void buildFdSet(FdSet& fdset);
 	
       /// returns time in milliseconds when process next needs to be called 
-      int getTimeTillNextProcess(); 
+      int getTimeTillNextProcessMS(); 
 
 #ifdef USE_SSL
       /// if this object exists, it manages advanced security featues

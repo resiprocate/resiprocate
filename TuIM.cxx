@@ -221,7 +221,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
    Contents* contents = msg->getContents();
    if ( !contents )
    {
-      ErrLog( "Received NOTIFY message event with no contents" );
+      InfoLog( "Received NOTIFY message event with no contents" );
       mPressCallback->presenseUpdate( from, true, Data::Empty );
       return;
    }
@@ -232,7 +232,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
    Pidf* body = dynamic_cast<Pidf*>(contents);
    if ( !body )
    {
-      ErrLog( "Received NOTIFY message event with no PIDF contents" );
+      InfoLog( "Received NOTIFY message event with no PIDF contents" );
       mPressCallback->presenseUpdate( from, true, Data::Empty );
       return;
    }
@@ -258,7 +258,7 @@ TuIM::processMessageRequest(SipMessage* msg)
    Contents* contents = msg->getContents();
    if ( !contents )
    {
-      ErrLog( "Receiveed Message message with no contents" );
+      InfoLog( "Received Message message with no contents" );
       delete msg; msg=0;
       return;
    }
@@ -282,7 +282,7 @@ TuIM::processMessageRequest(SipMessage* msg)
       contents = sec->uncode( sBody, &signedBy, &sigStat, &encrypted );
       if ( !contents )
       {
-         ErrLog( << "Some problem decoding SMIME message");
+         InfoLog( << "Some problem decoding SMIME message");
       }
    }
 #endif
@@ -304,7 +304,7 @@ TuIM::processMessageRequest(SipMessage* msg)
       }
       else
       {
-         ErrLog ( << "Can not handle type " << contents->getType() );
+         InfoLog ( << "Can not handle type " << contents->getType() );
          assert(0);
       }
    }
@@ -354,7 +354,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
 {
    int number = msg->header(h_StatusLine).responseCode();
    Uri to = msg->header(h_To).uri();
-   ErrLog ( << "register of " << to << " got response " << number );   
+   InfoLog ( << "register of " << to << " got response " << number );   
 
    int expires = 3600;
    if ( msg->exists(h_Expires) )
@@ -363,7 +363,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
    }
    if ( expires < 5 )
    {
-      ErrLog( << "Got very small expiers of " << expires );
+      InfoLog( << "Got very small expiers of " << expires );
       expires = 5;
    }
     
@@ -377,7 +377,7 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
 {
    int number = msg->header(h_StatusLine).responseCode();
    Uri to = msg->header(h_To).uri();
-   ErrLog ( << "subscribe got response " << number << " from " << to );   
+   InfoLog ( << "subscribe got response " << number << " from " << to );   
 
    if ( (number>=200) && (number<300) )
    {
@@ -388,7 +388,7 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
       }
       if ( expires < 5 )
       {
-         ErrLog( << "Got very small expiers of " << expires );
+         InfoLog( << "Got very small expiers of " << expires );
          expires = 5;
       } 
       
@@ -527,6 +527,24 @@ TuIM::getBuddyGroup(const int index)
 
    return mBuddy[index].group;
 }
+
+
+bool 
+TuIM::getBuddyStatus(const int index, Data* status)
+{ 
+   assert( index >= 0 );
+   assert( index < getNumBuddies() );
+
+   if (status)
+   {
+      *status =  mBuddy[index].status;
+   }
+   
+   bool online = mBuddy[index].online;
+
+   return online;
+}
+
 
 void 
 TuIM::addBuddy( const Uri& uri, const Data& group )
