@@ -329,7 +329,7 @@ TransactionState::processDns(Message* message)
          InfoLog (<< "Failed to send a request to any tuples. Send 503");
          delete this;
       }
-
+      
       delete message;
       return;
    }
@@ -337,31 +337,40 @@ TransactionState::processDns(Message* message)
    DnsResolver::DnsMessage* dns = dynamic_cast<DnsResolver::DnsMessage*>(message);
    if (dns)
    {
-     if (dns->mTuples.size())
-     {
-	if (mCurrent == mTuples.end())
-	{
-	   mTuples = dns->mTuples;
-	   mCurrent = mTuples.begin();
-	   sendToWire(mMsgToRetransmit);
-	}
-	else
-	{
-	   // Don't overwrite mTuples - we may still be using them.
-	   mTuples.insert(mTuples.end(),
-	      dns->mTuples.begin(), dns->mTuples.end());
-	}
-     }
+      if (!dns->mTuples.empty())
+      {
+         if (mCurrent == mTuples.end())
+         {
+            mTuples = dns->mTuples;
+            mCurrent = mTuples.begin();
+            sendToWire(mMsgToRetransmit);
+         }
+         else
+         {
+            // Don't overwrite mTuples - we may still be using them.
+            mTuples.insert(mTuples.end(),
+                           dns->mTuples.begin(), dns->mTuples.end());
+         }
+      }
+      
+      if (dns->isFinal)
+      {
+         mDnsState = Complete;
+         
+         // Didn't receive any dns results
+         if (mCurrent == mTuples.end())
+         {
+            InfoLog (<< "Ran out of dns entries for " << mMsgToRetransmit->brief());
+            sendToTU(Helper::makeResponse(*mMsgToRetransmit, 480, "No DNS left"));
+            terminateClientTransaction(mMsgToRetransmit->getTransactionId());
+            delete this; 
+         }
+      }
 
-     if (dns->isFinal)
-     {
-	mDnsState = Complete;
-     }
-
-     delete dns;
-     return;
+      delete dns;
+      return;
    }
-
+   
    InfoLog (<< "Some other kind of message passed to processDns()");
    assert(0);
 }
@@ -499,16 +508,16 @@ TransactionState::processClientNonInvite(  Message* msg )
    {
       if (mMsgToRetransmit->isRequest() && mMsgToRetransmit->header(h_RequestLine).getMethod() == CANCEL)
       {
-	 // In the case of a client-initiated CANCEL, we don't want to
-	 // try other transports in the case of transport error as the
-	 // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
-	 sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));
-	 delete msg;
+         // In the case of a client-initiated CANCEL, we don't want to
+         // try other transports in the case of transport error as the
+         // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
+         sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));
+         delete msg;
       }
       else
       {
-	 // Try more potential delivery tuples.
-	 processDns(msg);
+         // Try more potential delivery tuples.
+         processDns(msg);
       }
    }
    else
@@ -695,7 +704,7 @@ TransactionState::processClientInvite(  Message* msg )
                         are received while in the "Completed" state MUST
                         cause the ACK to be re-passed to the transport
                         layer for retransmission.
-                      */
+                     */
                      assert (mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK);
                      resendToWire(mMsgToRetransmit);
                   }
@@ -888,7 +897,7 @@ TransactionState::processServerNonInvite(  Message* msg )
    else if (isTimer(msg))
    {
       if (mState == Completed &&
-	  dynamic_cast<TimerMessage*>(msg)->getType() == Timer::TimerJ)
+          dynamic_cast<TimerMessage*>(msg)->getType() == Timer::TimerJ)
       {
          terminateServerTransaction(msg->getTransactionId());
          delete this;
@@ -1394,13 +1403,15 @@ TransactionState::sendToWire(Message* msg)
    }
    else if (mDnsState == Complete)
    {
-      assert (mCurrent != mTuples.end());
-      mStack.mTransportSelector.send(sip, *mCurrent, mId);	  
+      if (mCurrent != mTuples.end())
+      {
+         mStack.mTransportSelector.send(sip, *mCurrent, mId);	  
+      }
    }
 }
 
 void
-TransactionState::resendToWire(Message* msg) const
+TransactionState::resendToWire(Message* msg) 
 {
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
    assert(sip);
@@ -1415,8 +1426,10 @@ TransactionState::resendToWire(Message* msg) const
    }
    else
    {
-      assert (mCurrent != mTuples.end());
-      mStack.mTransportSelector.send(sip, *mCurrent, mId, true);
+      if (mCurrent != mTuples.end())
+      {
+         mStack.mTransportSelector.send(sip, *mCurrent, mId, true);
+      }
    }
 }
 
