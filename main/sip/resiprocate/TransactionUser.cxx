@@ -11,6 +11,12 @@ TransactionUser::~TransactionUser()
 }
 
 void 
+TransactionUser::post(Message* msg)
+{
+  mFifo.add(msg, TimeLimitFifo<Message>::InternalElement);
+}
+
+void 
 TransactionUser::postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
 {
    mFifo.add(msg, usage);
