@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2002/11/14 17:26:52 jason Exp $
+# $Id: Makefile,v 1.9 2002/11/14 18:48:40 jason Exp $
 
 BUILD = ../../../build
 
@@ -31,6 +31,6 @@ CXXFLAGS += -mcpu=i686 -march=i686
 endif
 
 
-SRC = \
+SRC = Resolver.cxx 
 
 include $(BUILD)/Makefile.post
