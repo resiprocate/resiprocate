@@ -12,7 +12,8 @@ namespace Vocal2
 class TuIM
 {
    public:
-
+      class Buddy;
+      
       class PageCallback
       {
          public:
@@ -53,16 +54,25 @@ class TuIM
       void registerAor( const Uri& uri, const Data& password = Data::Empty );
 
       // Buddy List management
-      int getNumBudies() const;
+      int getNumBuddies() const;
       const Uri getBuddyUri(const int index);
       const Data getBuddyGroup(const int index);
       void addBuddy( const Uri& uri, const Data& group );
-      void removeBudy( const Uri& name);
+      void removeBuddy( const Uri& name);
 
       // Presense management
       void setMyPresense( const bool open, const Data& status = Data::Empty );
 
    private:
+      void processRequest(SipMessage* msg);
+      void processMessageRequest(SipMessage* msg);
+      void processSubscribeRequest(SipMessage* msg);
+      void processNotifyRequest(SipMessage* msg);
+
+      void processResponse(SipMessage* msg);
+      void processRegisterResponse(SipMessage* msg);
+      void processSubscribeResponse(SipMessage* msg, Buddy& buddy );
+
       PageCallback* mPageCallback;
       ErrCallback* mErrCallback; 
       PresCallback* mPressCallback;
@@ -81,6 +91,8 @@ class TuIM
       };
 
       vector<Buddy> mBuddy;
+
+      vector<Dialog*> mSubscribers;
 
       // registration information
       Dialog mRegistrationDialog;
