@@ -32,3 +32,10 @@ AppDialogSet::createAppDialog(const SipMessage&)
 {
    return new AppDialog(mDum);
 }
+
+const DialogSetId& 
+AppDialogSet::getDialogSetId()
+{
+   return mDialogSetId;   
+}
+
