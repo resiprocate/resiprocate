@@ -1,5 +1,5 @@
-#include "sip2/util/ThreadIf.hxx"
-#include "sip2/util/Timer.hxx"
+#include "resiprocate/util/ThreadIf.hxx"
+#include "resiprocate/util/Timer.hxx"
 
 #include <unistd.h>
 #include <iostream>

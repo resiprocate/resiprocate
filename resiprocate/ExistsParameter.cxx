@@ -1,5 +1,5 @@
-#include "sip2/sipstack/ExistsParameter.hxx"
-#include "sip2/util/ParseBuffer.hxx"
+#include "resiprocate/sipstack/ExistsParameter.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
 
 using namespace Vocal2;
 using namespace std;

@@ -1,9 +1,9 @@
 #if !defined(UDPTRANSPORT_HXX)
 #define UDPTRANSPORT_HXX
 
-#include "sip2/sipstack/Transport.hxx"
-#include "sip2/sipstack/Message.hxx"
-#include "sip2/sipstack/Preparse.hxx"
+#include "resiprocate/sipstack/Transport.hxx"
+#include "resiprocate/sipstack/Message.hxx"
+#include "resiprocate/sipstack/Preparse.hxx"
 
 namespace Vocal2
 {

@@ -1,8 +1,8 @@
 #ifndef HeaderTypes_hxx
 #define HeaderTypes_hxx
 
-#include "sip2/sipstack/supported.hxx"
-#include "sip2/util/Data.hxx"
+#include "resiprocate/sipstack/supported.hxx"
+#include "resiprocate/util/Data.hxx"
 
 // eventually use these macros to automate Headers.hxx, Headers.cxx+gperf
 #define UNUSEDsingle(_enum, _category) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1

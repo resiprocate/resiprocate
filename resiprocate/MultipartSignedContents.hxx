@@ -2,7 +2,7 @@
 #define MultipartSignedContents_hxx
 
 
-#include "sip2/sipstack/MultipartMixedContents.hxx"
+#include "resiprocate/sipstack/MultipartMixedContents.hxx"
 
 
 namespace Vocal2

@@ -1,19 +1,9 @@
-# $Id: Makefile,v 1.25 2002/12/20 22:32:32 alan Exp $
+# $Id: Makefile,v 1.26 2003/03/24 22:42:27 jason Exp $
 
-BUILD = ../../build
-
-USE_SSL = 1
-
+BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-USE_REPO=false
-
-PACKAGES += SIP2 PTHREAD
-
-ifeq ($(USE_SSL),1)
-PACKAGES += OPENSSL
-endif
-
+PACKAGES += RESIPROCATE OPENSSL PTHREAD 
 TARGET_LIBRARY = libutil2
 
 TESTPROGRAMS =	testParseBuffer.cxx \
@@ -25,11 +15,6 @@ TESTPROGRAMS =	testParseBuffer.cxx \
 	        testCoders.cxx \
 		testThreadIf.cxx \
 		testLogger.cxx
-
-# Include architecture depenadant / cross compilation stuff.
-# PLEASE LEAVE THIS ALONE
--include ../Makefile.opt
-
 
 SRC = \
 	Coders.cxx \

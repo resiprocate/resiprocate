@@ -1,9 +1,9 @@
 #ifndef QuotedDataParameter_hxx
 #define QuotedDataParameter_hxx
 
-#include "sip2/sipstack/Parameter.hxx"
-#include "sip2/sipstack/ParameterTypeEnums.hxx"
-#include "sip2/sipstack/DataParameter.hxx"
+#include "resiprocate/sipstack/Parameter.hxx"
+#include "resiprocate/sipstack/ParameterTypeEnums.hxx"
+#include "resiprocate/sipstack/DataParameter.hxx"
 #include <iostream>
 
 namespace Vocal2
