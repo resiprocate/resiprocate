@@ -8,9 +8,8 @@
 #ifndef WIN32
 #include <syslog.h>
 #include <unistd.h>
-#endif
-
 #include <pthread.h>
+#endif
 
 #include <map>
 #include <set>
@@ -42,7 +41,8 @@ class Log
          WARNING = 3,
          INFO = 4,
          DEBUG = 5,
-         DEBUG_STACK = 8
+         DEBUG_STACK = 8,
+		 BOGUS = 666
       }Level;
 #else
       typedef enum 
@@ -52,7 +52,8 @@ class Log
          WARNING = LOG_WARNING,
          INFO = LOG_INFO,
          DEBUG = LOG_DEBUG,
-         DEBUG_STACK = 8
+         DEBUG_STACK = 8,
+		 BOGUS = 666
       }Level;
 #endif
 
@@ -105,11 +106,13 @@ class Log
       static int _pid;
 #endif
       static const char _descriptions[][32];
-      static std::map<pthread_t, std::pair<ThreadSetting, bool> > _threadToLevel;
-      static std::map<int, std::set<pthread_t> > _serviceToThreads;
       static std::map<int, Level> _serviceToLevel;
 
+#ifndef WIN32
+      static std::map<pthread_t, std::pair<ThreadSetting, bool> > _threadToLevel;
+      static std::map<int, std::set<pthread_t> > _serviceToThreads;
       static pthread_key_t _levelKey;
+#endif
 };
 
 } // namespace Vocal2
