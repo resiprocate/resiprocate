@@ -2,7 +2,6 @@
 #define RESIP_SERVERSUBSCRIPTION_HXX
 
 #include "resiprocate/dum/BaseSubscription.hxx"
-#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
@@ -17,12 +16,11 @@ class ServerSubscription : public BaseSubscription
       typedef Handle<ServerSubscription> ServerSubscriptionHandle;
       ServerSubscriptionHandle getHandle();
      
-      //only 200 and 202 are permissable.  SubscriptionState is not affected,
-      //although it may be correct to transition to Active for a 200. 
+      //only 200 and 202 are permissable.  SubscriptionState is not affected.
+      //currently must be called for a refresh as well as initial creation.
       SipMessage& accept(int statusCode = 200);
       void reject(int responseCode);
 
-      SubscriptionState getSubscriptionState();      
       void setSubscriptionState(SubscriptionState state);
 
       SipMessage& update(const Contents* document);
@@ -45,11 +43,7 @@ class ServerSubscription : public BaseSubscription
 
       void makeNotifyExpires();
 
-      SubscriptionState mSubscriptionState;
-
 //      const Contents* mCurrentEventDocument;
-      SipMessage mLastRequest;
-      SipMessage mLastResponse;
       SipMessage mLastNotify;
 
       int mExpires;
