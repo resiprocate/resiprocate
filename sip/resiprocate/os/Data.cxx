@@ -581,6 +581,22 @@ Data::operator=(const Data& data)
    return *this;
 }
 
+size_t
+Data::truncate(size_type len)
+{
+    // size_type SHOULD be unsigned, but you never know...
+    if (len < 0)
+        len += mSize;
+
+    if (len >= 0 && len < mSize)
+    {
+        mSize = len;
+        mBuf[mSize] = 0;
+    }
+    return mSize;
+}
+
+
 Data 
 Data::operator+(const Data& data) const
 {

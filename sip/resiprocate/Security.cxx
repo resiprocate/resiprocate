@@ -821,7 +821,7 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    assert( cert );
    sk_X509_push(certs, cert);
 
-#if (  OPENSSL_VERSION_NUMBER >= 0x0090605fL ) // may be earlier versions that
+#if (  OPENSSL_VERSION_NUMBER == 0x0090605fL ) // may be earlier versions that
                                                // need const here 
    const EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
 #else  
@@ -831,7 +831,8 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    //const EVP_CIPHER* cipher = EVP_enc_null();
    assert( cipher );
    
-   PKCS7* pkcs7 = PKCS7_encrypt( certs, in, cipher, flags);
+   PKCS7* pkcs7 = 
+     PKCS7_encrypt( certs, in, cipher, flags);
    if ( !pkcs7 )
    {
       ErrLog( << "Error creating PKCS7 encrypt object" );

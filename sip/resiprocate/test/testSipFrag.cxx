@@ -21,6 +21,38 @@ main(int argc, char* argv[])
     Log::initialize(Log::COUT, Log::INFO, argv[0]);
 
    {
+     // !ah! This test doesn't work with the MsgHeaderScanner -- works w/ preparser.
+
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+               "To: Bob <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: a84b4c76e66710\r\n"
+               "CSeq: 314159 INVITE\r\n"
+               "Max-Forwards: 70\r\n"
+               "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+               "Content-Type: message/sipfrag\r\n"
+               "Content-Length: 35\r\n"
+               "\r\n"
+               "INVITE sip:bob@biloxi.com SIP/2.0\r\n");
+      std::cerr << "hiya " << std::endl;
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      
+      Contents* body = msg->getContents();
+
+      assert(body != 0);
+      SipFrag* frag = dynamic_cast<SipFrag*>(body);
+      assert(frag != 0);
+
+      cerr << "!! ";
+      frag->encode(cerr);
+
+      assert(frag->message().header(h_RequestLine).uri().user() == "bob");
+      msg->encode(cerr);
+      cerr << "-- exiting 1st test ok" << endl;
+   }
+
+   {
       // tests end of message problem (MsgHeaderScanner?)
       Data txt("NOTIFY sip:proxy@66.7.238.210:5060 SIP/2.0" CRLF
                "Via: SIP/2.0/UDP  66.7.238.211:5060" CRLF
@@ -64,35 +96,6 @@ main(int argc, char* argv[])
                "Max-Forwards: 70\r\n"
                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                "Content-Type: message/sipfrag\r\n"
-               "Content-Length: 35\r\n"
-               "\r\n"
-               "INVITE sip:bob@biloxi.com SIP/2.0\r\n");
-      
-      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
-      
-      Contents* body = msg->getContents();
-
-      assert(body != 0);
-      SipFrag* frag = dynamic_cast<SipFrag*>(body);
-      assert(frag != 0);
-
-      cerr << "!! ";
-      frag->encode(cerr);
-
-      assert(frag->message().header(h_RequestLine).uri().user() == "bob");
-      msg->encode(cerr);
-   }
-
-   {
-      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
-               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
-               "To: Bob <sip:bob@biloxi.com>\r\n"
-               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
-               "Call-ID: a84b4c76e66710\r\n"
-               "CSeq: 314159 INVITE\r\n"
-               "Max-Forwards: 70\r\n"
-               "Contact: <sip:alice@pc33.atlanta.com>\r\n"
-               "Content-Type: message/sipfrag\r\n"
                "\r\n"
                "INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "From: Alice <sip:alice@atlanta.com>\r\n"
@@ -100,7 +103,7 @@ main(int argc, char* argv[])
                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                "Date: Thu, 21 Feb 2002 13:02:03 GMT\r\n"
                "Call-ID: a84b4c76e66710\r\n"
-               "Cseq: 314159 INVITE\r\n\r\n");
+               "Cseq: 314159 INVITE");
 
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
@@ -118,6 +121,36 @@ main(int argc, char* argv[])
 
       assert(frag->message().exists(h_CSeq));
       assert(frag->message().header(h_CSeq).sequence() == 314159);
+      
+      msg->encode(cerr);
+   }
+   {
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+               "To: Bob <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: a84b4c76e66710\r\n"
+               "CSeq: 314159 INVITE\r\n"
+               "Max-Forwards: 70\r\n"
+               "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+               "Content-Type: message/sipfrag\r\n"
+               "\r\n"
+               "INVITE sip:bob@biloxi.com SIP/2.0"
+        );
+
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+      
+      Contents* body = msg->getContents();
+
+      assert(body != 0);
+      SipFrag* frag = dynamic_cast<SipFrag*>(body);
+      assert(frag != 0);
+
+      cerr << "!! ";
+      frag->encode(cerr);
+
+      assert(frag->message().header(h_RequestLine).getMethod() == INVITE);
+      assert(frag->message().header(h_RequestLine).getSipVersion() == "SIP/2.0");
       
       msg->encode(cerr);
    }
