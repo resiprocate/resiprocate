@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.105 2003/01/22 01:09:39 alan Exp $
+# $Id: Makefile,v 1.106 2003/01/25 18:32:28 jason Exp $
 
 BUILD = ../../build
 
@@ -17,6 +17,8 @@ PACKAGES += OPENSSL
 CFLAGS += -DUSE_SSL
 CXXFLAGS += -DUSE_SSL
 endif
+
+#CXXFLAGS += -DVOCAL2_AOR_HAS_SCHEME
 
 TARGET_LIBRARY = libsip2
 TESTPROGRAMS =  

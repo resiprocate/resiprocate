@@ -11,6 +11,10 @@ namespace Vocal2
 
 class ParseBuffer;
 
+
+// BranchParameter of the form: 
+// rfc3261cookie-sip2cookie-tid.clientseq-transportseq-clientdata
+
 class BranchParameter : public Parameter
 {
    public:
@@ -19,10 +23,27 @@ class BranchParameter : public Parameter
       BranchParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
       BranchParameter(ParameterTypes::Type);
 
+      // contains z9hG4bK
       bool hasMagicCookie();
-      Data& transactionId();
-      void incrementCounter();
+
+      // returns tid.clientseq if sip2, otherwise whole id
+      const Data& getTransactionId();
+
+      // returns tid (not including clientseq)
+      const Data& getServerTransactionId();
+      
+      // increments the transport sequence component - not part of tid
+      void incrementTransportSequence();
+
+      // sets the client sequence (used by proxies) - part of tid
+      void setClientSequence(unsigned long seq);
+
+      // pseudo-random server tid if none specified, zero sequences either way
+      void reset(const Data& serverTransactionId = Data::Empty);
+
+      // access the client specific portion of the branch - not part of tid
       Data& clientData();
+
       Type& value() {return *this;}
 
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
@@ -33,24 +54,19 @@ class BranchParameter : public Parameter
       virtual Parameter* clone() const;
       virtual std::ostream& encode(std::ostream& stream) const;
 
-      BranchParameter(const BranchParameter& other) 
-         : Parameter(other), 
-           mHasMagicCookie(other.mHasMagicCookie),
-           mIsMyBranch(other.mIsMyBranch),
-           mTransactionId(other.mTransactionId),
-           mCounter(other.mCounter),
-           mClientData(other.mClientData)
-      {
-      }
-
+      BranchParameter(const BranchParameter& other);
       BranchParameter& operator=(const BranchParameter& other);
          
    private:
+      void setServerTransactionId();
+
       bool mHasMagicCookie;
       bool mIsMyBranch;
       Data mTransactionId;
-      unsigned long mCounter;
+      unsigned long mClientSeq;
+      unsigned long mTransportSeq;
       Data mClientData;
+      Data mServerTransactionId;
 };
  
 }
