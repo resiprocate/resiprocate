@@ -141,7 +141,7 @@ TestSupport::makeMessage(const Data& data, bool isExternal )
 {
    using namespace PreparseConst;
     
-   SipMessage* msg = new SipMessage(isExternal);
+   SipMessage* msg = new SipMessage(isExternal ? SipMessage::FromWire : SipMessage::NotFromWire);
 
    size_t size = data.size();
    char *buffer = new char[size];
