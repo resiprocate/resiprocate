@@ -1,50 +1,47 @@
-#ifndef LazyParser_hxx
-#define LazyParser_hxx
+#ifndef MultipartMixedContents_hxx
+#define MultipartMixedContents_hxx
 
-#include <iostream>
+#include "sip2/sipstack/Contents.hxx"
+#include "sip2/util/Data.hxx"
 
 namespace Vocal2
 {
 
-class HeaderFieldValue;
+class Mime;
 class ParseBuffer;
 
-class LazyParser
+class MultipartMixedContents : public Contents
 {
    public:
-      LazyParser(HeaderFieldValue* headerFieldValue);
-      LazyParser(const LazyParser& rhs);
-      LazyParser& operator=(const LazyParser& rhs);
-      virtual ~LazyParser();
+      MultipartMixedContents();
+      MultipartMixedContents(HeaderFieldValue* hfv, const Mime& contentType);
+      MultipartMixedContents(const MultipartMixedContents& rhs);
+      virtual ~MultipartMixedContents();
+      MultipartMixedContents& operator=(const MultipartMixedContents& rhs);
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const = 0;
-      virtual void parse(ParseBuffer& pb) = 0;
+      virtual Contents* clone() const;
 
-      std::ostream& encode(std::ostream& str) const;
-      std::ostream& encodeFromHeaderFieldValue(std::ostream& str) const;
-      bool isParsed() const {return mIsParsed;}
+      virtual const Mime& getStaticType() const;
 
-      HeaderFieldValue& getHeaderField() { return *mHeaderField; }
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual void parse(ParseBuffer& pb);
+
+      // !dlb! full on container interface
+      list<Contents*>& contents() {return mContents;}
+      const list<Contents*>& contents() const {return mContents;}
 
    protected:
-      LazyParser();
-      // call before every access 
-      void checkParsed() const;
-
-      // called in destructor and on assignment -- call parent when overridden
       virtual void clear();
       
    private:
-      // !dlb! bit of a hack until the dust settles
-      friend class Contents;
+      Contents* createContents(const Mime& contentType, 
+                               const char* anchor, 
+                               ParseBuffer& pb);
 
-      HeaderFieldValue* mHeaderField;
-      bool mIsMine;
-      bool mIsParsed;
+      static ContentsFactory<MultipartMixedContents> Factory;
+
+      std::list<Contents*> mContents;
 };
-
-std::ostream&
-operator<<(std::ostream&, const LazyParser& lp);
 
 }
 
@@ -60,10 +57,10 @@ operator<<(std::ostream&, const LazyParser& lp);
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this std::list of conditions and the following disclaimer.
+ *    notice, this list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this std::list of conditions and the following disclaimer in
+ *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  * 
