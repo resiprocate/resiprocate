@@ -27,7 +27,7 @@ class Server : public ThreadIf
 {
     public:
 
-      Server(SipStack& stack, int numCalls, Transport::Type transport) 
+      Server(SipStack& stack, int numCalls, TransportType transport) 
          : mStack(stack), 
            mNumCalls(numCalls),
            mTransport(transport)
@@ -92,7 +92,7 @@ class Server : public ThreadIf
    private:
       SipStack& mStack;
       int mNumCalls;
-      Transport::Type mTransport;
+      TransportType mTransport;
 };
 
 
@@ -108,7 +108,7 @@ main(int argc, char* argv[])
    SipStack stack;
 
 
-   Transport::Type protocol = Transport::UDP;
+   TransportType protocol = Transport::UDP;
    if (strcasecmp(argv[3], "UDP") == 0)
    {
       protocol = Transport::UDP;

@@ -19,22 +19,24 @@ using namespace resip;
 const size_t TlsTransport::MaxWriteSize = 4096;
 const size_t TlsTransport::MaxReadSize = 4096;
 
-TlsTransport::TlsTransport(const Data& domain, 
-                           const Data& sendhost, int portNum, 
+TlsTransport::TlsTransport(Fifo<Message>& fifo, 
+                           const Data& sipDomain, 
+                           const Data& interface, 
+                           int portNum, 
                            const Data& keyDir, const Data& privateKeyPassPhrase,
-                           const Data& nic, Fifo<Message>& fifo) : 
-   Transport(sendhost, portNum, nic , fifo),
-   mDomain(domain),
+                           bool ipv4) : 
+   Transport(fifo, portNum, interface, ipv4),
+   mDomain(sipDomain),
    mSecurity(new Security(true, true))
 {
    InfoLog (<< "Creating TLS transport for domain " 
-            << domain << " host=" << sendhost 
-            << " port=" << portNum << " nic=" << nic);
+            << sipDomain << " interface=" << interface 
+            << " port=" << portNum);
    
    bool ok = true;
    ok = mSecurity->loadRootCerts(  mSecurity->getPath( keyDir, "root.pem")) ? ok : false;
-   ok = mSecurity->loadMyPublicCert( mSecurity->getPath( keyDir , domain + "_cert.pem")) ? ok : false;
-   ok = mSecurity->loadMyPrivateKey( privateKeyPassPhrase, mSecurity->getPath( keyDir , domain + "_key.pem")) ? ok : false;
+   ok = mSecurity->loadMyPublicCert( mSecurity->getPath( keyDir , mDomain + "_cert.pem")) ? ok : false;
+   ok = mSecurity->loadMyPrivateKey( privateKeyPassPhrase, mSecurity->getPath( keyDir , mDomain + "_key.pem")) ? ok : false;
    
    mSendPos = mSendRoundRobin.end();
    mFd = socket(PF_INET, SOCK_STREAM, 0);
@@ -162,10 +164,10 @@ TlsTransport::processListen(FdSet& fdset)
       
       makeSocketNonBlocking(sock);
       
-      Transport::Tuple who;
+      Tuple who;
       who.ipv4 = peer.sin_addr;
       who.port = ntohs(peer.sin_port);
-      who.transportType = Transport::TLS;
+      who.transportType = TLS;
       who.transport = this;
       
       Connection* con = mConnectionMap.add(who, sock);

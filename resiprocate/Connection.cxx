@@ -26,7 +26,7 @@ Connection::Connection()
 {
 }
 
-Connection::Connection(const Transport::Tuple& who,
+Connection::Connection(const Tuple& who,
                        Socket socket)
    : mYounger(0),
      mOlder(0),
