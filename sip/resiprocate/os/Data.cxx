@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.75 2003/10/03 01:52:42 jason Exp $";
+// "$Id: Data.cxx,v 1.76 2003/10/03 02:35:50 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -16,58 +16,70 @@ using namespace std;
 const Data Data::Empty("", 0);
 const int Data::npos = INT_MAX;
 
-char* 
-Data::initializeHack()
-{
-   assert(Data::Empty.mBuf == 0);
-   static char buffer[1];
-
-   return buffer;
-}
-
 Data::Data() 
    : mSize(0),
-     mBuf(Data::Empty.mBuf ? Data::Empty.mBuf : initializeHack()),
-     mCapacity(mSize),
+     mBuf(mPreBuffer),
+     mCapacity(LocalAlloc),
      mMine(false)
 {
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   mBuf[mSize] = 0;
 }
 
 // pre-allocate capacity
 Data::Data(int capacity, bool) 
    : mSize(0),
-     mBuf(new char[capacity + 1]),
-     mCapacity(capacity),
-     mMine(true)
+     mBuf(capacity > LocalAlloc 
+          ? new char[capacity + 1]
+          : mPreBuffer),
+     mCapacity(capacity > LocalAlloc
+               ? capacity
+               : LocalAlloc),
+     mMine(capacity > LocalAlloc)
 {
    assert( capacity >= 0 );
-   mBuf[0] = 0;
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   mBuf[mSize] = 0;
 }
 
 Data::Data(const char* str, int length) 
    : mSize(length),
-     mBuf(new char[length+1]),
-     mCapacity(length),
-     mMine(true)
+     mBuf(mSize > LocalAlloc 
+          ? new char[mSize + 1]
+          : mPreBuffer),
+     mCapacity(mSize > LocalAlloc
+               ? mSize
+               : LocalAlloc),
+     mMine(mSize > LocalAlloc)
 {
-   assert( length >= 0 );
-   if ( length > 0 )
+   assert( mSize >= 0 );
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));   
+   if (mSize > 0)
    {
       assert(str);
       memcpy(mBuf, str, mSize);
-      mBuf[mSize]=0;
    }
+   mBuf[mSize]=0;
 }
 
 Data::Data(const unsigned char* str, int length) 
    : mSize(length),
-     mBuf(new char[mSize+1]),
-     mCapacity(mSize),
-     mMine(true)
+     mBuf(mSize > LocalAlloc 
+          ? new char[mSize + 1]
+          : mPreBuffer),
+     mCapacity(mSize > LocalAlloc
+               ? mSize
+               : LocalAlloc),
+     mMine(mSize > LocalAlloc)
 {
-   assert(str);
-   memcpy(mBuf, str, mSize);
-     mBuf[mSize]=0;
+   assert( mSize >= 0 );
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+   if (mSize > 0)
+   {
+      assert(str);
+      memcpy(mBuf, str, mSize);
+   }
+   mBuf[mSize]=0;
 }
 
 // share memory KNOWN to be in a surrounding scope
@@ -80,6 +92,7 @@ Data::Data(const char* str, int length, bool)
      mMine(false)
 {
    assert(str);
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
 }
 
 Data::Data(ShareEnum, const char* buffer, int length)
@@ -89,6 +102,7 @@ Data::Data(ShareEnum, const char* buffer, int length)
      mMine(false)
 {
    assert(buffer);
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
 }
 
 Data::Data(ShareEnum, const char* buffer)
@@ -98,6 +112,7 @@ Data::Data(ShareEnum, const char* buffer)
      mMine(false)
 {
    assert(buffer);
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
 }
 
 Data::Data(ShareEnum, const Data& staticData)
@@ -105,62 +120,77 @@ Data::Data(ShareEnum, const Data& staticData)
      mBuf(staticData.mBuf),
      mCapacity(mSize),
      mMine(false)
-{}
+{
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+}
 //=============================================================================
 
 Data::Data(const char* str) 
    : mSize(str ? strlen(str) : 0),
-     mBuf(new char[mSize + 1]),
-     mCapacity(mSize),
-     mMine(true)
+     mBuf(mSize > LocalAlloc
+          ? new char[mSize + 1]
+          : mPreBuffer),
+     mCapacity(mSize > LocalAlloc
+               ? mSize
+               : LocalAlloc),
+     mMine(mSize > LocalAlloc)
 {
-   assert(str);
-   memcpy(mBuf, str, mSize+1);
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));   
+   if (str)
+   {
+      memcpy(mBuf, str, mSize+1);
+   }
+   else
+   {
+      mBuf[mSize] = 0;
+   }
 }
 
-Data::Data(const string& str) : 
-   mSize(str.size()),
-   mBuf(new char[mSize + 1]),
-   mCapacity(mSize),
-   mMine(true)
+Data::Data(const string& str)
+   : mSize(str.size()),
+     mBuf(mSize > LocalAlloc
+          ? new char[mSize + 1]
+          : mPreBuffer),
+     mCapacity(mSize > LocalAlloc
+               ? mSize
+               : LocalAlloc),
+     mMine(mSize > LocalAlloc)
 {
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
    memcpy(mBuf, str.c_str(), mSize + 1);
 }
 
 Data::Data(const Data& data) 
    : mSize(data.mSize),
-     mBuf(mSize ? new char[mSize+1] : Empty.mBuf),
-     mCapacity(mSize),
-     mMine(mSize != 0)
+     mBuf(mSize > LocalAlloc
+          ? new char[mSize + 1]
+          : mPreBuffer),
+     mCapacity(mSize > LocalAlloc
+               ? mSize
+               : LocalAlloc),
+     mMine(mSize > LocalAlloc)
 {
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
    if (mSize)
    {
       memcpy(mBuf, data.mBuf, mSize);
-      mBuf[mSize] = 0;
    }
-}
-
-Data::~Data()
-{
-   if (mMine)
-   {
-      delete[] mBuf;
-   }
+   mBuf[mSize] = 0;
 }
 
 Data::Data(int val)
    : mSize(0),
-     mBuf(0),
-     mCapacity(0),
-     mMine(true)
+     mBuf(mPreBuffer),
+     mCapacity(LocalAlloc),
+     mMine(false)
 {
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+
    if (val == 0)
    {
-      mBuf = new char[2];
       mBuf[0] = '0';
       mBuf[1] = 0;
       mSize = 1;
-      mCapacity = mSize;
       return;
    }
 
@@ -177,17 +207,15 @@ Data::Data(int val)
    int v = value;
    while (v /= 10)
    {
-      c++;
+      ++c;
    }
 
    if (neg)
    {
-      c++;
+      ++c;
    }
 
    mSize = c+1;
-   mCapacity = mSize;
-   mBuf = new char[c+2];
    mBuf[c+1] = 0;
    
    v = value;
@@ -205,10 +233,11 @@ Data::Data(int val)
 
 Data::Data(double value, int precision)
    : mSize(0), 
-     mBuf(0),
-     mCapacity(0), 
-     mMine(true)
+     mBuf(mPreBuffer),
+     mCapacity(LocalAlloc), 
+     mMine(false)
 {
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));   
    assert(precision < 10);
 
    double v = value;
@@ -240,7 +269,6 @@ Data::Data(double value, int precision)
    }
    else
    {
-      d.resize(precision, false);
       d.mBuf[precision] = 0;
       p = precision;
       // neglect trailing zeros
@@ -250,7 +278,7 @@ Data::Data(double value, int precision)
          if (dec % 10 || significant)
          {
             significant = true;
-            d.mSize++;
+            ++d.mSize;
             d.mBuf[p] = '0' + (dec % 10);
          }
          else
@@ -264,7 +292,6 @@ Data::Data(double value, int precision)
 
    if (neg)
    {
-      resize(m.size() + d.size() + 2, false);
       mBuf[0] = '-';
       memcpy(mBuf+1, m.mBuf, m.size());
       mBuf[1+m.size()] = '.';
@@ -283,13 +310,13 @@ Data::Data(double value, int precision)
 
 Data::Data(unsigned long value)
    : mSize(0), 
-     mBuf(0),
-     mCapacity(0),
-     mMine(true)
+     mBuf(mPreBuffer),
+     mCapacity(LocalAlloc),
+     mMine(false)
 {
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
    if (value == 0)
    {
-      mBuf = new char[2];
       mBuf[0] = '0';
       mBuf[1] = 0;
       mSize = 1;
@@ -300,19 +327,17 @@ Data::Data(unsigned long value)
    unsigned long v = value;
    while (v /= 10)
    {
-      c++;
+      ++c;
    }
 
    mSize = c+1;
-   mCapacity = c+1;
-   mBuf = new char[c+2];
    mBuf[c+1] = 0;
    
    v = value;
    while (v)
    {
       unsigned int digit = v%10;
-	  unsigned char d = (char)digit;
+      unsigned char d = (char)digit;
       mBuf[c--] = '0' + d;
       v /= 10;
    }
@@ -320,13 +345,13 @@ Data::Data(unsigned long value)
 
 Data::Data(unsigned int value)
    : mSize(0), 
-     mBuf(0),
-     mCapacity(0),
-     mMine(true)
+     mBuf(mPreBuffer),
+     mCapacity(LocalAlloc),
+     mMine(false)
 {
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
    if (value == 0)
    {
-      mBuf = new char[2];
       mBuf[0] = '0';
       mBuf[1] = 0;
       mSize = 1;
@@ -337,32 +362,29 @@ Data::Data(unsigned int value)
    unsigned long v = value;
    while (v /= 10)
    {
-      c++;
+      ++c;
    }
 
    mSize = c+1;
-   mCapacity = c+1;
-   mBuf = new char[c+2];
    mBuf[c+1] = 0;
    
    v = value;
    while (v)
    {
       unsigned int digit = v%10;
-	  unsigned char d = (char)digit;
+      unsigned char d = (char)digit;
       mBuf[c--] = '0' + d;
       v /= 10;
    }
 }
 
-
 Data::Data(char c)
    : mSize(1), 
-     mBuf(0),
-     mCapacity(mSize),
-     mMine(true)
+     mBuf(mPreBuffer),
+     mCapacity(LocalAlloc),
+     mMine(false)
 {
-   mBuf = new char[2];
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));   
    mBuf[0] = c;
    mBuf[1] = 0;
 }
@@ -373,6 +395,8 @@ Data::Data(bool value)
      mCapacity(0),
      mMine(false)
 {
+   assert(memset(mPreBuffer, 0, LocalAlloc+1));
+
    static char truec[] = "true";
    static char falsec[] = "false";
 
@@ -387,6 +411,14 @@ Data::Data(bool value)
       mBuf = falsec;
       mSize = 5;
       mCapacity = 5;
+   }
+}
+
+Data::~Data()
+{
+   if (mMine)
+   {
+      delete[] mBuf;
    }
 }
 
@@ -498,7 +530,7 @@ Data::operator=(const Data& data)
    
    if (&data != this)
    {
-      if (!mMine)
+      if (!mMine && mBuf != mPreBuffer)
       {
          resize(data.mSize, false);
       }
@@ -595,7 +627,7 @@ Data::operator=(const char* str)
    assert(str);
    size_type l = strlen(str);
 
-   if (!mMine)
+   if (!mMine && mBuf != mPreBuffer)
    {
       resize(l, false);
    }
@@ -648,7 +680,7 @@ Data::append(const char* str, size_type len)
    }
    else
    {
-      if (!mMine)
+      if (!mMine && mBuf != mPreBuffer)
       {
          // !dlb! violates invariant
          // if !mMine, then mCapacity == mSize, so should have resized
@@ -661,6 +693,7 @@ Data::append(const char* str, size_type len)
          mMine = true;
       }
    }
+
    // could conceivably overlap
    memmove(mBuf + mSize, str, len);
    mSize += len;
@@ -686,7 +719,6 @@ const char*
 Data::c_str() const
 {
    own();
-   mBuf[mSize] = 0;
    return mBuf;
 }
 
@@ -694,6 +726,15 @@ const char*
 Data::data() const
 {
    return mBuf;
+}
+
+void
+Data::own() const
+{
+   if (!mMine && mBuf != mPreBuffer)
+   {
+      const_cast<Data*>(this)->resize(mSize, true);
+   }
 }
 
 // generate additional capacity
@@ -739,7 +780,7 @@ Data::escaped() const
    Data ret(2*size(), true );  
 
    const char* p = data();
-   for (size_type i=0; i < size(); i++)
+   for (size_type i=0; i < size(); ++i)
    {
       unsigned char c = *p++;
 
@@ -778,7 +819,7 @@ Data::hex() const
 
    char* p = mBuf;
    char* r = ret.mBuf;
-   for (size_type i=0; i < mSize; i++)
+   for (size_type i=0; i < mSize; ++i)
    {
       unsigned char temp = *p++;
 	   
@@ -798,10 +839,10 @@ Data::lowercase()
 {
    own();
    char* p = mBuf;
-   for (size_type i=0; i < mSize; i++)
+   for (size_type i=0; i < mSize; ++i)
    {
       *p = tolower(*p);
-      p++;
+      ++p;
    }
    return *this;
 }
@@ -811,10 +852,10 @@ Data::uppercase()
 {
    own();
    char* p = mBuf;
-   for (size_type i=0; i < mSize; i++)
+   for (size_type i=0; i < mSize; ++i)
    {
       *p = toupper(*p);
-      p++;
+      ++p;
    }
    return *this;
 }
@@ -842,7 +883,7 @@ Data::convertInt() const
    if (*p == '-')
    {
       s = -1;
-      p++;
+      ++p;
       l--;
    }
    
@@ -876,19 +917,19 @@ Data::convertDouble() const
    if (*p == '-')
    {
       s = -1;
-      p++;
+      ++p;
    }
    
    while (isdigit(*p))
    {
       val *= 10;
       val += *p - '0';
-      p++;
+      ++p;
    }
 
    if (*p == '.')
    {
-      p++;
+      ++p;
       long d = 0;
       double div = 1.0;
       while (isdigit(*p))
@@ -896,7 +937,7 @@ Data::convertDouble() const
          d *= 10;
          d += *p - '0';
          div *= 10;
-         p++;
+         ++p;
       }
       return s*(val + d/div);
    }
@@ -1016,7 +1057,6 @@ static const unsigned char randomPermutation[256] =
    235, 217, 165, 122, 15, 141, 158, 147, 240, 24, 162, 18, 60, 73, 227, 248
 };
 
-
 #if defined(HASH_MAP_NAMESPACE)
 size_t HASH_MAP_NAMESPACE::hash<resip::Data>::operator()(const resip::Data& data) const
 {
@@ -1074,9 +1114,6 @@ size_t std::hash_value(const resip::Data& data)
    return ntohl((size_t)(byte0));
 }
 #endif
-
-
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
