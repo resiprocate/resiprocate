@@ -89,7 +89,7 @@ class SdpContents : public Contents
                   int mPayloadType;
                   Data mParameters;
 
-                  static CodecMap sStaticCodecs;
+                  static CodecMap* sStaticCodecs;
                   static bool sStaticCodecsCreated;
                   friend std::ostream& operator<<(std::ostream&, const Codec&);
             };
@@ -98,8 +98,8 @@ class SdpContents : public Contents
             {
                public:
                   Origin(const Data& user,
-                         const unsigned long long& sessionId,
-                         const unsigned long long& version,
+                         const UInt64& sessionId,
+                         const UInt64& version,
                          AddrType addr,
                          const Data& address);
                   Origin(const Origin& rhs);
@@ -108,11 +108,11 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
-                  const unsigned long long& getSessionId() const {return mSessionId;}
-                  unsigned long long& getSessionId() { return mSessionId; }
+                  const UInt64& getSessionId() const {return mSessionId;}
+                  UInt64& getSessionId() { return mSessionId; }
 
-                  const unsigned long long& getVersion() const {return mVersion;}
-                  unsigned long long& getVersion() { return mVersion; }
+                  const UInt64& getVersion() const {return mVersion;}
+                  UInt64& getVersion() { return mVersion; }
                   const Data& user() const {return mUser;}
                   Data& user() {return mUser;}
                   AddrType getAddressType() const {return mAddrType;}
@@ -123,8 +123,8 @@ class SdpContents : public Contents
                   Origin();
 
                   Data mUser;
-                  unsigned long long mSessionId;
-                  unsigned long long mVersion;
+                  UInt64 mSessionId;
+                  UInt64 mVersion;
                   AddrType mAddrType;
                   Data mAddress;
 
