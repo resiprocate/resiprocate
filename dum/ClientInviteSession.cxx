@@ -4,8 +4,11 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/DumTimeout.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 ClientInviteSession::ClientInviteSession(DialogUsageManager& dum, 
                                          Dialog& dialog,
@@ -42,6 +45,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
    std::pair<OfferAnswerType, const SdpContents*> offans;
    offans = InviteSession::getOfferOrAnswer(msg);
    
+   // !jf! consider UPDATE method
+
    switch(mState)
    {
       case Initial:
@@ -85,7 +90,6 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          }
          else if (code >= 300)
          {
-            mState = Terminated;
             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
             delete this;
          }
@@ -130,7 +134,6 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          }
          else if (code >= 300)
          {
-            mState = Terminated;
             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
             delete this;
          }
@@ -138,14 +141,69 @@ ClientInviteSession::dispatch(const SipMessage& msg)
       }
       
       case Cancelled:
+      {
+         if (msg.isResponse())
+         {
+            int code = msg.header(h_StatusLine).statusCode();
+            if (code / 100 == 2 && msg.header(h_CSeq).method() == INVITE)
+            {
+               mDialog.makeRequest(mLastRequest, BYE);
+               mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), mLastRequest);
+               mState = Terminated;
+            }
+            else if (code >= 300 && msg.header(h_CSeq).method() == INVITE)
+            {
+               delete this;
+            }
+         }
          break;
+      }
          
       case Connected:
+         // reINVITE
+         if (msg.isRequest())
+         {
+            switch(msg.header(h_RequestLine).method())
+            {
+               case INVITE:
+                  mDialog.update(msg);
+                  mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
+                  
+                  if (offans.first != None)
+                  {
+                     InviteSession::incomingSdp(msg, offans.second);
+                  }
+                  break;
+
+               case BYE:
+                  mDialog.makeResponse(msg, mLastRequest, 200); 
+                  mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), mLastRequest);
+                  mState = Terminated;
+                  break;
+
+               case UPDATE:
+                  assert(0);
+                  break;
+                  
+               case INFO:
+                  mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
+                  break;
+                  
+               case REFER:
+                  assert(0); // !jf! 
+                  mDum.mInviteSessionHandler->onRefer(getSessionHandle(), msg);
+                  break;
+                  
+               default:
+                  InfoLog (<< "Ignoring request in an INVITE dialog: " << msg.brief());
+                  break;
+            }
+         }
          break;
          
       case Terminated:
          break;
-   }
+      }
 }
 
 SipMessage&
