@@ -15,7 +15,7 @@ extern "C"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/socket.hxx"
 
-#include "resiprocate/DnsStub.hxx"
+#include "resiprocate/dns/DnsStub.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsResult.hxx"
