@@ -19,6 +19,9 @@ GagConduit::handleMessage(GagMessage *message)
     case GagMessage::PRESENCE:
       gaimPresence(reinterpret_cast<GagPresenceMessage *>(message));
       break;
+    case GagMessage::HELLO:
+      gaimHello(reinterpret_cast<GagHelloMessage *>(message));
+      break;
     case GagMessage::LOGIN:
       gaimLogin(reinterpret_cast<GagLoginMessage *>(message));
       break;
@@ -52,8 +55,7 @@ GagConduit::getTu(Uri &aor)
     Data error;
     error = "You are not logged in as ";
     error += aor.getAor();
-    GagErrorMessage errorMessage(error);
-    errorMessage.serialize(cout);
+    GagErrorMessage(error).serialize(cout);
   }
   return tu;
 }
@@ -85,6 +87,13 @@ GagConduit::gaimPresence(GagPresenceMessage *msg)
 }
 
 void
+GagConduit::gaimHello(GagHelloMessage *msg)
+{
+  // We don't need to do anything when we get a hello.
+  // Not yet, at least.
+}
+
+void
 GagConduit::gaimLogin(GagLoginMessage *msg)
 {
   Uri *aor = msg->getAorPtr();
@@ -99,8 +108,7 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
     Data error;
     error = "You are already logged in as ";
     error += aor->getAor();
-    GagErrorMessage errorMessage(error);
-    errorMessage.serialize(cout);
+    GagErrorMessage(error).serialize(cout);
   }
 
   // Figure out what out contact is
@@ -170,8 +178,7 @@ void
 GagConduit::presenceUpdate(const Uri& dest, bool open,
                            const Data& status )
 {
-  GagPresenceMessage presenceMessage(dest, open, status);
-  presenceMessage.serialize(cout);
+  GagPresenceMessage(dest, open, status).serialize(cout);
 }
 
 void 
@@ -181,8 +188,7 @@ GagConduit::receivedPage( const Data& msg, const Uri& from ,
                           bool wasEncryped)
 {
   Uri to("a@a"); // XXX
-  GagImMessage imMessage(from, to, msg);
-  imMessage.serialize(cout);
+  GagImMessage (from, to, msg).serialize(cout);
 }
 
 void 
@@ -195,8 +201,7 @@ GagConduit::sendPageFailed( const Uri& dest,int respNumber )
   error += respNumber;
   error = ")";
 
-  GagErrorMessage errorMessage(error);
-  errorMessage.serialize(cout);
+  GagErrorMessage (error).serialize(cout);
 }
 
 void 
@@ -210,8 +215,7 @@ GagConduit::registrationFailed(const resip::Uri& uri, int respNumber)
   error += respNumber;
   error = ")";
 
-  GagErrorMessage errorMessage(error);
-  errorMessage.serialize(cout);
+  GagErrorMessage (error).serialize(cout);
 }
 
 void 
@@ -227,6 +231,5 @@ GagConduit::receivePageFailed(const Uri& sender)
   error = "Could not get IM from ";
   error += sender.getAor();
 
-  GagErrorMessage errorMessage(error);
-  errorMessage.serialize(cout);
+  GagErrorMessage (error).serialize(cout);
 }
