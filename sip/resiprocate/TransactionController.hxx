@@ -51,6 +51,11 @@ class TransactionController
       // Inform the TU that whenever a transaction has been terminated. 
       void registerForTransactionTermination();
 
+      unsigned int getTuFifoSize() const;
+      unsigned int sumTransportFifoSizes() const;
+      unsigned int getTransactionFifoSize() const;
+      unsigned int getTimerQueueSize() const;
+
    private:
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
