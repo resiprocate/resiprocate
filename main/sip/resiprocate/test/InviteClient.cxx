@@ -73,7 +73,7 @@ InviteClient::go()
             Dialog dlog(contact);
 
             DebugLog(<< "Creating dialog as UAC.");
-            dlog.createDialogAsUAC(*invite, *i_200);
+            dlog.createDialogAsUAC(*i_200);
             
             DebugLog(<< "making ack.");
             auto_ptr<SipMessage> ack(dlog.makeAck(*invite));
