@@ -35,3 +35,6 @@ Verify a message
 openssl smime -verify -in bar.msg -signer fluffy.pem -CAfile root.pem
 
 
+-- Generating a self signed cert and key -- 
+openssl genrsa -out id_key.pem 512
+openssl req -x509 -new  -key id_key.pem -days 180 -out id.pem
