@@ -374,11 +374,13 @@ ServerInviteSession::accept(int code)
          // waiting for PRACK
          transition(UAS_Accepted);
          mDialog.makeResponse(mInvite200, mFirstRequest, code);
+         handleSessionTimerRequest(mInvite200, mFirstRequest);
          break;
          
       case UAS_EarlyReliable:
          transition(Connected);
          mDialog.makeResponse(mInvite200, mFirstRequest, code);
+         handleSessionTimerRequest(mInvite200, mFirstRequest);
          mDialog.send(mInvite200);
          startRetransmitTimer(); // 2xx timer
          handler->onConnected(getSessionHandle(), mInvite200);
@@ -387,6 +389,7 @@ ServerInviteSession::accept(int code)
       case UAS_SentUpdate:
          transition(UAS_SentUpdateAccepted);
          mDialog.makeResponse(mInvite200, mFirstRequest, code);
+         handleSessionTimerRequest(mInvite200, mFirstRequest);
          mDialog.send(mInvite200);
          startRetransmitTimer(); // 2xx timer
          break;
@@ -394,6 +397,7 @@ ServerInviteSession::accept(int code)
       case UAS_ReceivedUpdate:
          transition(UAS_ReceivedUpdateWaitingAnswer);
          mDialog.makeResponse(mInvite200, mFirstRequest, code);// queue 2xx
+         handleSessionTimerRequest(mInvite200, mFirstRequest);
          break;
          
       case UAS_FirstSentOfferReliable:
@@ -824,6 +828,7 @@ void
 ServerInviteSession::sendAccept(int code, std::auto_ptr<SdpContents> sdp)
 {
    mDialog.makeResponse(mInvite200, mFirstRequest, code);
+   handleSessionTimerRequest(mInvite200, mFirstRequest);
    if (sdp.get())
    {
       setSdp(mInvite200, *sdp);
