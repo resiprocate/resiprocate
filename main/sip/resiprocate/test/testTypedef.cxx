@@ -1,3 +1,8 @@
+#include <cassert>
+#include <iostream>
+
+using namespace std;
+
 namespace resip
 {
 
