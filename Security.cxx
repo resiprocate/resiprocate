@@ -48,7 +48,7 @@ using namespace std;
 static void
 dumpAsn( char* name, Data data)
 {
-#if 0 // !CJ! TODO turn off 
+#if 1 // !CJ! TODO turn off 
    assert(name);
    
    if (true) // dump asn.1 stuff to debug file
@@ -62,6 +62,7 @@ dumpAsn( char* name, Data data)
       {
          strm.write( data.data() , data.size() );
       }
+      strm.flush();
    }
 #endif
 }
@@ -858,10 +859,11 @@ bool
 Security::checkIdentity( const Data& in, const Data& sigBase64 )
 {
    DebugLog( << "Check identity for " << in );
+   DebugLog( << " base64 data is " << sigBase64 );
      
    Data sig = sigBase64.base64decode();
 
-   DebugLog( << "rsa sig of hash is 0x"<< sig.hex() );
+   DebugLog( << "decoded sig is 0x"<< sig.hex() );
    
    assert(SHA_DIGEST_LENGTH == 20);
    unsigned char hashRes[SHA_DIGEST_LENGTH];
@@ -871,7 +873,8 @@ Security::checkIdentity( const Data& in, const Data& sigBase64 )
    SHA1_Init( &sha );
    SHA1_Update(&sha, in.data() , in.size() );
    SHA1_Final( hashRes, &sha );
-   
+    Data computedHash(hashRes, hashResLen);
+  
    DebugLog( << "hash of string is 0x" <<  Data(hashRes,sizeof(hashRes)).hex() );
 
    EVP_PKEY* pKey = X509_get_pubkey( publicIdentityCert );
@@ -880,13 +883,33 @@ Security::checkIdentity( const Data& in, const Data& sigBase64 )
    assert( pKey->type ==  EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey); 
 
+#if 1
    int ret = RSA_verify(NID_sha1, hashRes, hashResLen,
                         (unsigned char*)sig.data(), sig.size(),
                         rsa);
-
+#else
+   unsigned char result[4096];
+   int resultSize = sizeof(result);
+   assert( resultSize >= RSA_size(rsa) );
+   
+   resultSize = RSA_public_decrypt(sig.size(),(unsigned char*)sig.data(), 
+                                   result, rsa, RSA_PKCS1_PADDING );
+   assert( resultSize != -1 );
+   //assert( resultSize == SHA_DIGEST_LENGTH );
+   Data recievedHash(result,resultSize);
+   dumpAsn("identity-out-decrypt", recievedHash );
+   
+   bool ret =  ( computedHash == recievedHash );
+#endif
+   
    DebugLog( << "rsa verify result is " << ret  );
-         
-   return ( ret == 1 );
+   
+   dumpAsn("identity-out-msg", in );
+   dumpAsn("identity-out-base64", sigBase64 );
+   dumpAsn("identity-out-sig", sig );
+   dumpAsn("identity-out-hash", computedHash );
+    
+   return ret;
 }
 
 
@@ -895,8 +918,6 @@ Security::computeIdentity( const Data& in )
 {
    DebugLog( << "Compute identity for " << in );
    
-   Data ret;
-   
    EVP_PKEY* pKey = privateIdentityKey; 
    assert( pKey );
        
@@ -904,8 +925,8 @@ Security::computeIdentity( const Data& in )
    RSA* rsa = EVP_PKEY_get1_RSA(pKey); 
 
    unsigned char result[4096];
-   unsigned int resultSize = sizeof(result);
-   assert( resultSize > (unsigned int)RSA_size(rsa) );
+   int resultSize = sizeof(result);
+   assert( resultSize >= RSA_size(rsa) );
    
    assert(SHA_DIGEST_LENGTH == 20);
    unsigned char hashRes[SHA_DIGEST_LENGTH];
@@ -917,17 +938,49 @@ Security::computeIdentity( const Data& in )
    SHA1_Final( hashRes, &sha );
    
    DebugLog( << "hash of string is 0x" <<  Data(hashRes,sizeof(hashRes)).hex() );
-   
-   RSA_sign(NID_sha1, hashRes, hashResLen,
-            result, &resultSize,
+
+#if 1  
+   int r = RSA_sign(NID_sha1, hashRes, hashResLen,
+                    result, (unsigned int*)( &resultSize ),
             rsa);
-
-   ret = Data(result,resultSize);
-  
-   DebugLog( << "rsa encrypt of hash is 0x"<< ret.hex() );
-
-   Data enc = ret.base64encode();
+   assert( r == 1 );
+#else
+   resultSize = RSA_private_encrypt(hashResLen, hashRes,
+                                    result, rsa, RSA_PKCS1_PADDING);
+   if ( resultSize == -1 )
+   {  
+      DebugLog( << "Problem doing RSA encrypt for identity");
+      while (1)
+      {
+         const char* file;
+         int line;
          
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
+         
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         InfoLog( << "Error code = " << code << " file="<<file<<" line=" << line );
+      }
+
+      return Data::Empty;
+   }
+#endif
+
+   Data res(result,resultSize);
+   DebugLog( << "rsa encrypt of hash is 0x"<< res.hex() );
+
+   Data enc = res.base64encode();
+   
+   dumpAsn("identity-in", in );
+   dumpAsn("identity-in-hash", Data(hashRes, hashResLen) );
+   dumpAsn("identity-in-rsa",res);
+   dumpAsn("identity-in-base64",enc);
+          
    return enc;
 }
 
