@@ -1,4 +1,4 @@
-#include <sys/time.h>
+#include <time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <iostream>
@@ -27,7 +27,7 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   Log::initialize(Log::Cout, Log::Debug, argv[0]);
    int runs = 100000;
    if (argc == 2)
    {

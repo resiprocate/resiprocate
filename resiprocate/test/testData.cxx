@@ -13,7 +13,7 @@ class TestData
    public:
       int main()
       {
-         Log::initialize(Log::COUT, Log::DEBUG, Data::Empty);
+         Log::initialize(Log::Cout, Log::Debug, Data::Empty);
 
          {
             Data needsCharEncode("CharEncode % me");

@@ -18,8 +18,8 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-   Log::Level l = Log::DEBUG;
-   Log::initialize(Log::CERR, l, argv[0]);
+   Log::Level l = Log::Debug;
+   Log::initialize(Log::Cerr, l, argv[0]);
    
    {
       Uri uri("sip:speedy_AT_home.com@whistler.gloo.net:5062");

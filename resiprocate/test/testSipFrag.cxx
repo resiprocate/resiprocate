@@ -25,7 +25,7 @@ main(int argc, char* argv[])
 {
   tassert_init(4);
 
-  Log::initialize(Log::COUT, Log::INFO, argv[0]);
+  Log::initialize(Log::Cout, Log::Info, argv[0]);
 
   {
      // test from RFC3420

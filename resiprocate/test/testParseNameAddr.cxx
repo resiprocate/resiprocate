@@ -39,8 +39,8 @@ class TR
 int
 main(int argc, char* argv[])
 {
-   Log::Level l = Log::DEBUG;
-   Log::initialize(Log::COUT, l, argv[0]);
+   Log::Level l = Log::Debug;
+   Log::initialize(Log::Cout, l, argv[0]);
 
    {
        TR _tr("Test odd name-addr from odd vendor");
