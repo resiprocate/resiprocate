@@ -32,7 +32,7 @@ class GagMessage
   public:
     static GagMessage *getMessage(istream &is);
     bool isValid() {return valid;}
-    virtual ostream &serialize(ostream &os) const = 0;
+    virtual ostream &serialize(ostream &os) const;
     command_t getMessageType() {return messageType;}
 
   protected: // methods

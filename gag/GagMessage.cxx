@@ -6,10 +6,10 @@
 GagMessage *
 GagMessage::getMessage(istream &is)
 {
-  char messageType;
-  is.get(messageType);
+  int type;
+  is.get((char *)type, sizeof(type));
 
-  switch (messageType)
+  switch (type)
   {
     case IM:
         return new GagImMessage(is);
@@ -45,6 +45,14 @@ GagMessage::getMessage(istream &is)
         return 0;
       break;
   }
+}
+
+// Spit out header
+ostream &
+GagMessage::serialize(ostream &os) const
+{
+  os.write((char *)(int)messageType, sizeof(int));
+  return os;
 }
 
 // Helper functions for I/O
@@ -127,6 +135,7 @@ GagImMessage::parse(istream &is)
 ostream &
 GagImMessage::serialize(ostream &os) const
 {
+  GagMessage::serialize(os);
   GagMessage::serialize(os, to);
   GagMessage::serialize(os, from);
   GagMessage::serialize(os, im);
@@ -147,6 +156,7 @@ GagPresenceMessage::parse(istream &is)
 ostream &
 GagPresenceMessage::serialize(ostream &os) const
 {
+  GagMessage::serialize(os);
   GagMessage::serialize(os, aor);
   GagMessage::serialize(os, available);
   GagMessage::serialize(os, status);
@@ -167,6 +177,7 @@ GagLoginMessage::parse(istream &is)
 ostream &
 GagLoginMessage::serialize(ostream &os) const
 {
+  GagMessage::serialize(os);
   GagMessage::serialize(os, aor);
   GagMessage::serialize(os, userid);
   GagMessage::serialize(os, password);
@@ -185,6 +196,7 @@ GagLogoutMessage::parse(istream &is)
 ostream &
 GagLogoutMessage::serialize(ostream &os) const
 {
+  GagMessage::serialize(os);
   GagMessage::serialize(os, aor);
   return os;
 }
@@ -200,6 +212,7 @@ GagAddBuddyMessage::parse(istream &is)
 ostream &
 GagAddBuddyMessage::serialize(ostream &os) const
 {
+  GagMessage::serialize(os);
   GagMessage::serialize(os, buddy);
   return os;
 }
@@ -216,6 +229,7 @@ GagRemoveBuddyMessage::parse(istream &is)
 ostream &
 GagRemoveBuddyMessage::serialize(ostream &os) const
 {
+  GagMessage::serialize(os);
   GagMessage::serialize(os, buddy);
   return os;
 }
@@ -232,8 +246,7 @@ GagErrorMessage::parse(istream &is)
 ostream &
 GagErrorMessage::serialize(ostream &os) const
 {
+  GagMessage::serialize(os);
   GagMessage::serialize(os, message);
   return os;
 }
-
-
