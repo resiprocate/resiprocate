@@ -1,13 +1,40 @@
+#include "sip2/util/Logger.hxx"
 #include "sip2/sipstack/SdpContents.hxx"
 #include "sip2/sipstack/HeaderFieldValue.hxx"
+
 #include <iostream>
+#include "TestSupport.hxx"
+#include "tassert.h"
 
 using namespace Vocal2;
 using namespace std;
 
+#define VOCAL_SUBSYSTEM Subsystem::APP
+
 int
-main()
+main(int argc, char* argv[])
 {
+    Log::Level l = Log::DEBUG;
+    
+    if (argc > 1)
+    {
+        switch(*argv[1])
+        {
+            case 'd': l = Log::DEBUG;
+                break;
+            case 'i': l = Log::INFO;
+                break;
+            case 's': l = Log::DEBUG_STACK;
+                break;
+            case 'c': l = Log::CRIT;
+                break;
+        }
+        
+    }
+    
+    Log::initialize(Log::COUT, l, argv[0]);
+    CritLog(<<"Test Driver Starting");
+    tassert_init(4);
    {
       Data txt("v=0\r\n"
                "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
@@ -21,11 +48,16 @@ main()
       Mime type("application", "sdp");
       SdpContents sdp(&hfv, type);
 
-      assert(sdp.getSession().getVersion() == 0);
-      assert(sdp.getSession().getOrigin().getUser() == "alice");
-      assert(!sdp.getSession().getMedia().empty());
+      tassert_reset();
+      
+      tassert(sdp.getSession().getVersion() == 0);
+      tassert(sdp.getSession().getOrigin().getUser() == "alice");
+      tassert(!sdp.getSession().getMedia().empty());
+      
       //this fails, but should probably not parse(t before c not in sdp)
-      assert(sdp.getSession().getMedia().front().getValue("rtpmap") == "0 PCMU/8000");
+      tassert(sdp.getSession().getMedia().front().getValue("rtpmap") == "0 PCMU/8000");
+      tassert_verify(1);
+      
    }
 
    {
@@ -42,33 +74,35 @@ main()
       HeaderFieldValue hfv(txt, strlen(txt));
       Mime type("application", "sdp");
       SdpContents sdp(&hfv, type);
+      tassert_reset();
+      tassert(sdp.getSession().getVersion() == 0);
+      tassert(sdp.getSession().getOrigin().getUser() == "UserA");
+      tassert(sdp.getSession().getOrigin().getSessionId() == "2890844526");
+      tassert(sdp.getSession().getOrigin().getVersion() == "2890844527");
+      tassert(sdp.getSession().getOrigin().getAddressType() == SdpContents::IP4);
+      tassert(sdp.getSession().getOrigin().getAddress() == "here.com");
+
+      tassert(sdp.getSession().getName() == "Session SDP");
+
+      tassert(sdp.getSession().getConnection().getAddressType() == SdpContents::IP4);
+      tassert(sdp.getSession().getConnection().getAddress() == "pc33.atlanta.com");
+      tassert(sdp.getSession().getConnection().getTTL() == 0);
+
+      tassert(sdp.getSession().getTimes().front().getStart() == 5);
+      tassert(sdp.getSession().getTimes().front().getStop() == 17);
+      tassert(sdp.getSession().getTimes().front().getRepeats().empty());
+      tassert(sdp.getSession().getTimezones().getAdjustments().empty());
+
+      tassert(sdp.getSession().getMedia().front().getName() == "audio");
+      tassert(sdp.getSession().getMedia().front().getPort() == 49172);
+      tassert(sdp.getSession().getMedia().front().getMulticast() == 1);
+      tassert(sdp.getSession().getMedia().front().getProtocol() == "RTP/AVP");
+      tassert(sdp.getSession().getMedia().front().getFormats().front() == "0");
+
+      tassert(sdp.getSession().getMedia().front().getValue("rtpmap") == "0 PCMU/8000");
+      tassert(sdp.getSession().getMedia().front().exists("fuzzy") == false);
+      tassert_verify(2);
       
-      assert(sdp.getSession().getVersion() == 0);
-      assert(sdp.getSession().getOrigin().getUser() == "UserA");
-      assert(sdp.getSession().getOrigin().getSessionId() == "2890844526");
-      assert(sdp.getSession().getOrigin().getVersion() == "2890844527");
-      assert(sdp.getSession().getOrigin().getAddressType() == SdpContents::IP4);
-      assert(sdp.getSession().getOrigin().getAddress() == "here.com");
-
-      assert(sdp.getSession().getName() == "Session SDP");
-
-      assert(sdp.getSession().getConnection().getAddressType() == SdpContents::IP4);
-      assert(sdp.getSession().getConnection().getAddress() == "pc33.atlanta.com");
-      assert(sdp.getSession().getConnection().getTTL() == 0);
-
-      assert(sdp.getSession().getTimes().front().getStart() == 5);
-      assert(sdp.getSession().getTimes().front().getStop() == 17);
-      assert(sdp.getSession().getTimes().front().getRepeats().empty());
-      assert(sdp.getSession().getTimezones().getAdjustments().empty());
-
-      assert(sdp.getSession().getMedia().front().getName() == "audio");
-      assert(sdp.getSession().getMedia().front().getPort() == 49172);
-      assert(sdp.getSession().getMedia().front().getMulticast() == 1);
-      assert(sdp.getSession().getMedia().front().getProtocol() == "RTP/AVP");
-      assert(sdp.getSession().getMedia().front().getFormats().front() == "0");
-
-      assert(sdp.getSession().getMedia().front().getValue("rtpmap") == "0 PCMU/8000");
-      assert(sdp.getSession().getMedia().front().exists("fuzzy") == false);
    }
 
    {
@@ -83,38 +117,37 @@ main()
       HeaderFieldValue hfv(txt, strlen(txt));
       Mime type("application", "sdp");
       SdpContents sdp(&hfv, type);
-      
-      assert(sdp.getSession().getVersion() == 0);
-      assert(sdp.getSession().getOrigin().getUser() == "CiscoSystemsSIP-GW-UserAgent");
-      assert(sdp.getSession().getOrigin().getSessionId() == "3559");
-      assert(sdp.getSession().getOrigin().getVersion() == "3228");
-      assert(sdp.getSession().getOrigin().getAddressType() == SdpContents::IP4);
-      assert(sdp.getSession().getOrigin().getAddress() == "192.168.2.122");
+      tassert_reset();
+      tassert(sdp.getSession().getVersion() == 0);
+      tassert(sdp.getSession().getOrigin().getUser() == "CiscoSystemsSIP-GW-UserAgent");
+      tassert(sdp.getSession().getOrigin().getSessionId() == "3559");
+      tassert(sdp.getSession().getOrigin().getVersion() == "3228");
+      tassert(sdp.getSession().getOrigin().getAddressType() == SdpContents::IP4);
+      tassert(sdp.getSession().getOrigin().getAddress() == "192.168.2.122");
 
-      assert(sdp.getSession().getName() == "SIP Call");
+      tassert(sdp.getSession().getName() == "SIP Call");
 
-      assert(sdp.getSession().getConnection().getAddressType() == SdpContents::IP4);
-      assert(sdp.getSession().getConnection().getAddress() == "192.168.2.122");
-      assert(sdp.getSession().getConnection().getTTL() == 0);
+      tassert(sdp.getSession().getConnection().getAddressType() == SdpContents::IP4);
+      tassert(sdp.getSession().getConnection().getAddress() == "192.168.2.122");
+      tassert(sdp.getSession().getConnection().getTTL() == 0);
 
-      assert(sdp.getSession().getTimes().front().getStart() == 0);
-      assert(sdp.getSession().getTimes().front().getStop() == 0);
-      assert(sdp.getSession().getTimes().front().getRepeats().empty());
-      assert(sdp.getSession().getTimezones().getAdjustments().empty());
+      tassert(sdp.getSession().getTimes().front().getStart() == 0);
+      tassert(sdp.getSession().getTimes().front().getStop() == 0);
+      tassert(sdp.getSession().getTimes().front().getRepeats().empty());
+      tassert(sdp.getSession().getTimezones().getAdjustments().empty());
 
-      assert(sdp.getSession().getMedia().front().getName() == "audio");
-      assert(sdp.getSession().getMedia().front().getPort() == 17124);
-      assert(sdp.getSession().getMedia().front().getMulticast() == 1);
-      assert(sdp.getSession().getMedia().front().getProtocol() == "RTP/AVP");
-      assert(sdp.getSession().getMedia().front().getFormats().front() == "18");
+      tassert(sdp.getSession().getMedia().front().getName() == "audio");
+      tassert(sdp.getSession().getMedia().front().getPort() == 17124);
+      tassert(sdp.getSession().getMedia().front().getMulticast() == 1);
+      tassert(sdp.getSession().getMedia().front().getProtocol() == "RTP/AVP");
+      tassert(sdp.getSession().getMedia().front().getFormats().front() == "18");
 
-      assert(sdp.getSession().getMedia().front().getValue("rtpmap") == "18 G729/8000");
-      assert(sdp.getSession().getMedia().front().exists("fuzzy") == false);
+      tassert(sdp.getSession().getMedia().front().getValue("rtpmap") == "18 G729/8000");
+      tassert(sdp.getSession().getMedia().front().exists("fuzzy") == false);
+      tassert_verify(3);
    }
 
-   cerr << "All OK" << endl;
 
-   cerr << "Except this will assert." << endl;
    {
       Data txt("v=0\r\n"
                "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
@@ -128,12 +161,15 @@ main()
       Mime type("application", "sdp");
       SdpContents sdp(&hfv, type);
 
-      assert(sdp.getSession().getVersion() == 0);
-      assert(sdp.getSession().getOrigin().getUser() == "alice");
-      assert(!sdp.getSession().getMedia().empty());
+      tassert(sdp.getSession().getVersion() == 0);
+      tassert(sdp.getSession().getOrigin().getUser() == "alice");
+      tassert(!sdp.getSession().getMedia().empty());
       //this fails, but should probably not parse(t before c not in sdp)
-      assert(sdp.getSession().getMedia().front().getValue("rtpmap") == "0 PCMU/8000");
+      tassert(sdp.getSession().getMedia().front().getValue("rtpmap") == "0 PCMU/8000");
+      tassert_verify(4);
    }
+   tassert_report();
+   
 
 
 }
