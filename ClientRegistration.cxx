@@ -154,61 +154,77 @@ ClientRegistration::updateMyContacts(const NameAddrs& allContacts)
 void 
 ClientRegistration::dispatch(const SipMessage& msg)
 {
-   // !jf! there may be repairable errors that we can handle here
-   assert(msg.isResponse());
-   const int& code = msg.header(h_StatusLine).statusCode();
-   if (code < 200)
+   try
    {
-      // throw it away
-      return;
-   }
-   else if (code < 300) // success
-   {
-      //Profile* profile = mDum.getProfile();
-      
-      // !jf! consider what to do if no contacts
-       // !ah! take list of ctcs and push into mMy or mOther as required.
-
-      if (msg.exists(h_Contacts))
+      // !jf! there may be repairable errors that we can handle here
+      assert(msg.isResponse());
+      const int& code = msg.header(h_StatusLine).statusCode();
+      if (code < 200)
       {
-         mAllContacts = msg.header(h_Contacts);
-         // goes away -- updateMyContacts(mOtherContacts);
-         // make timers to re-register
-
-         NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
-         int expiry = it->param(p_expires);
-         while(it != msg.header(h_Contacts).end())
-         {
-            if(it->exists(p_expires))
-            {
-               expiry = resipMin(it->param(p_expires), expiry);
-            }
-            it++;
-         }
-        
-         mDum.addTimer(DumTimeout::Registration, 
-                       Helper::aBitSmallerThan(expiry),
-                       getBaseHandle(),
-                       ++mTimerSeq);
-         
+         // throw it away
+         return;
       }
-
-      mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
-   }
-   else
-   {
-      if (code == 423) // interval too short
+      else if (code < 300) // success
       {
-         // maximum 1 day 
-          // !ah! why max check? -- profile?
-         if (msg.exists(h_MinExpires) && msg.header(h_MinExpires).value()  < 86400) 
+         //Profile* profile = mDum.getProfile();
+         
+         // !jf! consider what to do if no contacts
+         // !ah! take list of ctcs and push into mMy or mOther as required.
+         
+         if (msg.exists(h_Contacts))
+         {
+            mAllContacts = msg.header(h_Contacts);
+            // goes away -- updateMyContacts(mOtherContacts);
+            // make timers to re-register
+            
+            int expiry = INT_MAX;            
+            for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); 
+                 it != msg.header(h_Contacts).end(); it++)
+            {
+               if(it->exists(p_expires))
+               {
+                  expiry = resipMin(it->param(p_expires), expiry);
+               }
+            }
+            if (expiry == INT_MAX)
+            {
+               if (msg.exists(h_Expires))
+               {
+                  expiry = msg.header(h_Expires).value();
+               }
+            }
+            if (expiry != INT_MAX)
+            {
+               mDum.addTimer(DumTimeout::Registration, 
+                             Helper::aBitSmallerThan(expiry),
+                             getBaseHandle(),
+                             ++mTimerSeq);
+            }
+         }
+         
+         mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+      }
+      else
+      {
+         if (code == 423) // interval too short
+         {
+            // maximum 1 day 
+            // !ah! why max check? -- profile?
+            if (msg.exists(h_MinExpires) && msg.header(h_MinExpires).value()  < 86400) 
          {
             mLastRequest.header(h_Expires).value() = msg.header(h_MinExpires).value();
             mLastRequest.header(h_CSeq).sequence()++;
             mDum.send(mLastRequest);
             return;
          }
+         }
+         mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
+         delete this;
       }
+   }
+   catch(BaseException& e)
+   {
+      InfoLog( << "Exception in ClientRegistration::dispatch: "  <<  e.getMessage());
       mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
       delete this;
    }
