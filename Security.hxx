@@ -4,6 +4,7 @@
 #include <map>
 
 #ifdef USE_SSL
+#include <openssl/e_os2.h>
 #include <openssl/evp.h>
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
