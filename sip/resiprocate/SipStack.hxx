@@ -8,24 +8,9 @@
 #include <set>
 
 #include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/DataStream.hxx"
-
-#include "resiprocate/ApplicationSip.hxx"
-#include "resiprocate/Dialog.hxx"
-#include "resiprocate/DnsResolver.hxx"
 #include "resiprocate/Executive.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/SdpContents.hxx"
-#include "resiprocate/ShutdownMessage.hxx"
-#include "resiprocate/SipFrag.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/StatelessHandler.hxx"
-#include "resiprocate/TimerQueue.hxx"
-#include "resiprocate/TransactionMap.hxx"
-#include "resiprocate/TransactionTerminated.hxx"
-#include "resiprocate/TransportSelector.hxx"
-#include "resiprocate/UnknownParameterType.hxx"
+#include "resiprocate/Transport.hxx"
+#include "resiprocate/TransactionController.hxx"
 
 namespace resip
 {
@@ -33,12 +18,7 @@ namespace resip
 class Data;
 class Message;
 class SipMessage;
-class DnsResolver;
 class Executive;
-class TransportSelector;
-class TransactionState;
-class TestDnsResolver;
-class TestFSM;
 class Security;
 class Uri;
 	
@@ -140,59 +120,22 @@ class SipStack
       // fifo used to communicate between the TU (Transaction User) and stack 
       Fifo<Message> mTUFifo;
 
-      // fifo used to communicate to the transaction state machine within the
-      // stack. Not for external use by the application. May contain, sip
-      // messages (requests and responses), timers (used by state machines),
-      // asynchronous dns responses, transport errors from the underlying
-      // transports, etc. 
-      // For stateless stacks, this has a different behavior and does not create
-      // a transaction for each request and does not do any special transaction
-      // processing for requests or responses
-      Fifo<Message> mStateMacFifo;
-
       // Controls the processing of the various stack elements
       Executive mExecutive;
 
-      // Used to decide which transport to send a sip message on. 
-      TransportSelector mTransportSelector;
-
-      // stores all of the transactions that are currently active in this stack 
-      TransactionMap mClientTransactionMap;
-      TransactionMap mServerTransactionMap;
-
-      // Used to handle the stateless stack incoming requests and responses as
-      // well as maintaining a state machine for the async dns responses
-      StatelessHandler mStatelessHandler;
-
-      // timers associated with the transactions. When a timer fires, it is
-      // placed in the mStateMacFifo
-      TimerQueue  mTimers;
-
-      // Used to make dns queries by the
-      // TransactionState/TransportSelector. Provides an async mechanism for
-      // communicating dns responses back to the Transaction. 
-      DnsResolver mDnsResolver;
-      
-      bool mStateless;
-      
-      // If true, indicate to the Transaction to ignore responses for which
-      // there is no transaction. 
-      // !jf! Probably should transmit stray responses statelessly. see RFC3261
-      bool mDiscardStrayResponses;
+      // All aspects of the Transaction State Machine / DNS resolver
+      TransactionController mTransactionController;
 
       // store all domains that this stack is responsible for. Controlled by
       // addAlias and addTransport interfaces and checks can be made with isMyDomain()
       std::set<Data> mDomains;
 
-      bool mRegisteredForTransactionTermination;
       bool mStrictRouting;
       bool mShuttingDown;
       
-      friend class DnsResolver;
-      friend class Executive;
-      friend class TransportSelector;
       friend class TransactionState;
       friend class StatelessHandler;
+      friend class Executive;
       friend class TestDnsResolver;
       friend class TestFSM;
 };

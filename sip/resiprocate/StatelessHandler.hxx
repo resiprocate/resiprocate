@@ -2,26 +2,35 @@
 #define RESIP_STATELESS_HANDLER_HXX
 
 #include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/DnsHandler.hxx"
+
 namespace resip
 {
 
-class SipStack;
+class TransactionController;
+class TransportSelector;
 
-class StatelessHandler
+class StatelessHandler 
 {
    public:
-      StatelessHandler(SipStack& stack);
+      StatelessHandler(TransactionController& c);
       void process();
       
    private:
-      // map from transactionId -> SipMessage*
-      typedef HashMap<Data, SipMessage*> Map;
-      typedef Map::iterator MapIterator;
-      typedef Map::const_iterator MapConstIterator;
+      TransactionController& mController;
+};
 
-      SipStack& mStack;
-      Map mMap;
-      unsigned long mTid;
+class StatelessMessage : public DnsHandler
+{
+   public:
+      StatelessMessage(TransportSelector& selector, SipMessage* msg);
+      ~StatelessMessage() {};
+         
+      void handle(DnsResult* result);
+
+   private:
+      TransportSelector& mSelector;
+      SipMessage* mMsg;
 };
 
 }

@@ -27,7 +27,7 @@ extern "C"
 
 namespace resip
 {
-class SipStack;
+class TransactionController;
 class Data;
 class Uri;
 class Via;
@@ -80,12 +80,12 @@ class DnsResolver
 
       struct Request
       {
-            Request(SipStack& pstack, const Data& ptid, const Data& phost, int pport, Transport::Type ptransport, Data pscheme)
-               : stack(pstack),tid(ptid),host(phost),port(pport),transport(ptransport),scheme(pscheme),isFinal(false)
+            Request(TransactionController& pstack, const Data& ptid, const Data& phost, int pport, Transport::Type ptransport, Data pscheme)
+               : controller(pstack),tid(ptid),host(phost),port(pport),transport(ptransport),scheme(pscheme),isFinal(false)
             {
             }
             
-            SipStack& stack;
+            TransactionController& controller;
             Data tid;
             Data host;
             int port;
@@ -118,7 +118,7 @@ class DnsResolver
       };
 
  
-      DnsResolver(SipStack& stack);
+      DnsResolver(TransactionController& controller);
       ~DnsResolver();
 
       void process(FdSet& fdset);
@@ -146,7 +146,7 @@ class DnsResolver
       static void aresCallbackNaptr(void *arg, int status, unsigned char *abuf, int alen);
 #endif
 
-      SipStack& mStack;
+      TransactionController& mController;
 };
       
 }
