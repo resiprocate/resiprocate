@@ -25,7 +25,8 @@ SipMessage::SipMessage(const FromWireType* fromWire)
      mContents(0),
      mRFC2543TransactionId(),
      mRequest(false),
-     mResponse(false)
+     mResponse(false),
+     mCreatedTime(Timer::getTimeMicroSec())
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -41,7 +42,8 @@ SipMessage::SipMessage(const SipMessage& from)
      mContents(0),
      mRFC2543TransactionId(from.mRFC2543TransactionId),
      mRequest(from.mRequest),
-     mResponse(from.mResponse)
+     mResponse(from.mResponse),
+     mCreatedTime(Timer::getTimeMicroSec())
 {
    if (this != &from)
    {
