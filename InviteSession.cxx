@@ -316,7 +316,7 @@ InviteSession::dispatch(const SipMessage& msg)
                CSeqToMessageMap::iterator it = mAckMap.find(msg.header(h_CSeq).sequence());
                if (it != mAckMap.end())
                {
-                  send(it->second);
+                  mDum.send(it->second);
                }
             }
          }
@@ -366,7 +366,7 @@ InviteSession::dispatch(const SipMessage& msg)
                      CSeqToMessageMap::iterator it = mAckMap.find(msg.header(h_CSeq).sequence());
                      if (it != mAckMap.end())
                      {
-                        send(it->second);
+                        mDum.send(it->second);
                      }
                   }
                }
@@ -551,6 +551,7 @@ void
 InviteSession::send(SipMessage& msg)
 {
    Destroyer::Guard guard(mDestroyer);
+   msg.releaseContents();
    if (mQueuedBye && (mQueuedBye == &msg))
    {
       //queued
@@ -559,8 +560,6 @@ InviteSession::send(SipMessage& msg)
       
    if (msg.isRequest())
    {
-      //unless the message is an ACK(in which case it is mAck)
-      //strip out the SDP after sending
       switch(msg.header(h_RequestLine).getMethod())
       {
          case INVITE:
@@ -575,16 +574,7 @@ InviteSession::send(SipMessage& msg)
          default:
             break;            
       }
-      
-      if (msg.header(h_RequestLine).getMethod() == ACK)
-      {
-         mDum.send(msg);
-      }
-      else
-      {
-         mDum.send(msg);
-         msg.releaseContents();
-      }
+      mDum.send(msg);
    }
    else
    {
@@ -619,7 +609,6 @@ InviteSession::send(SipMessage& msg)
       else
       {
          mDum.send(msg);
-         msg.releaseContents();
       }
    }      
 }
