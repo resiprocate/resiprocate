@@ -15,6 +15,8 @@
 
 #include <memory>
 
+#include "ares.h"
+
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
