@@ -55,6 +55,20 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
 }
 
 
+const char*
+TlsConnection::fromState(TlsConnection::State s)
+{
+    switch(s)
+    {
+        case Handshaking: return "Handshaking"; break;
+        case Accepting: return "Accepting"; break;
+        case Broken: return "Broken"; break;
+        case Connecting: return "Connecting"; break;
+        case Up: return "Up"; break;
+    }
+    return "????";
+}
+
 TlsConnection::State
 TlsConnection::checkState()
 {
