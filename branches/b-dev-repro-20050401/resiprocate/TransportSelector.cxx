@@ -631,7 +631,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 #if defined(USE_SSL)
             try
             {
-               Data domain = msg->header(h_From).uri().host();
+               const Data& domain = msg->header(h_From).uri().host();
                msg->header(h_Identity).value() = mSecurity->computeIdentity( domain,
                                                                              msg->getCanonicalIdentityString());
             }

@@ -1,6 +1,7 @@
 #if !defined(RESIP_WEBADMIN_HXX)
 #define RESIP_WEBADMIN_HXX 
 
+#include "resiprocate/Security.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/TransportType.hxx"
@@ -23,6 +24,7 @@ class WebAdmin: public HttpBase
    public:
       WebAdmin( UserAbstractDb& userDb,
                 resip::RegistrationPersistenceManager& regDb,
+                resip::Security& security,
                 int port=5080, 
                 resip::IpVersion version=resip::V4);
       
@@ -37,8 +39,10 @@ class WebAdmin: public HttpBase
       resip::Data buildShowRegsPage();
       resip::Data buildShowRoutesPage();
       resip::Data buildShowUsersPage();
-
+      resip::Data buildCertPage(const resip::Data& domain);
+      
       UserAbstractDb& mUserDb;
+      resip::Security& mSecurity;
       resip::RegistrationPersistenceManager& mRegDb;
 };
 
