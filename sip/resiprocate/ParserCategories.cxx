@@ -420,7 +420,7 @@ DateCategory::DateCategory()
    }
    
    struct tm gmt;
-#ifdef WIN32
+#if defined(WIN32) || defined(__sun)
    struct tm *gmtp = gmtime(&now);
    if (gmtp == 0)
    {
