@@ -68,24 +68,34 @@ typedef unsigned int u_int32_t;
 //typedef size_t socklen_t;
 #endif
 
+#if !defined(T_NAPTR)
+#define T_NAPTR 35
+#endif
+
+#if !defined(T_SRV)
+#define T_SRV 33
+#endif
 
 namespace resip
 {
 
 template<typename _Tp>
 inline const _Tp&
-vocal2Min(const _Tp& __a, const _Tp& __b)
+resipMin(const _Tp& __a, const _Tp& __b)
 {
    if (__b < __a) return __b; return __a;
 }
 
 template<typename _Tp>
 inline const _Tp&
-vocal2Max(const _Tp& __a, const _Tp& __b) 
+resipMax(const _Tp& __a, const _Tp& __b) 
 {
    if (__a < __b) return __b; return __a;
 }
 
+#if defined(__DARWIN__)
+typedef size_t socklen_t;
+#endif
 }
 
 #endif
