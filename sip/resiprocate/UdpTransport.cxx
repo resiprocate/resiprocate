@@ -19,7 +19,7 @@ const int UdpTransport::MaxBufferSize = 8192;
 UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo) : 
    Transport(sendhost, portNum, nic , fifo)
 {
-   DebugLog (<< "Creating udp transport host=" << sendhost << " port=" << portNum << " nic=" << nic);
+   InfoLog (<< "Creating udp transport host=" << sendhost << " port=" << portNum << " nic=" << nic);
    
    mFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
