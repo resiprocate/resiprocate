@@ -1162,8 +1162,14 @@ DialogUsageManager::processRequest(const SipMessage& request)
          }
          case CANCEL:
          {
-            // find the appropropriate ServerInvSession - using CallId, FromTag, CSeq and RequestURI
-            map<MergedRequestKey, DialogSet*>::iterator it = mMergedRequests.find(MergedRequestKey(request));
+            // find the appropropriate ServerInvSession - using CallId, FromTag, CSeq(number only) and RequestURI
+            MergedRequestKey cancelKey(request);
+            CSeqCategory cseq;
+            cseq.method() = INVITE;  // Looks for matching INVITE dialogsets
+            cseq.sequence() = request.header(h_CSeq).sequence();  // Sequence number of CANCEL must match INVITE
+            cancelKey.cseq() = Data::from(cseq);
+
+            map<MergedRequestKey, DialogSet*>::iterator it = mMergedRequests.find(cancelKey);
             if (it != mMergedRequests.end())
             {
                it->second->dispatch(request);
