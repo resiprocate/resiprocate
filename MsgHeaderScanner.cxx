@@ -658,14 +658,6 @@ enum { chunkTermSentinelChar = '\0' };
 
     bool MsgHeaderScanner::mInitialized = false;
 
-    MsgHeaderScanner::MsgHeaderScanner()
-    {
-        if (!mInitialized)
-        {
-            mInitialized = true;
-            initialize();
-        }
-    }
 
     int
     MsgHeaderScanner::dumpStateMachine(int fd)
@@ -876,6 +868,14 @@ enum { chunkTermSentinelChar = '\0' };
 
 #endif //!defined(RESIP_MSG_HEADER_SCANNER_DEBUG) }
 
+    MsgHeaderScanner::MsgHeaderScanner()
+    {
+        if (!mInitialized)
+        {
+            mInitialized = true;
+            initialize();
+        }
+    }
 
     void
     MsgHeaderScanner::prepareForMessage(SipMessage *  msg)
