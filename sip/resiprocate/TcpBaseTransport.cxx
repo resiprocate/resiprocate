@@ -183,6 +183,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       {
          // attempt to open
          Socket sock = Transport::socket( TCP, isV4());
+         fdset.clear(sock);
          
          if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
          {
