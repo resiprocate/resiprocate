@@ -25,6 +25,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       
       virtual void thread();
       
+      virtual bool isMyDomain(resip::Uri& uri);
+      
    private:
       static RequestProcessorChain mRequestProcessorChain;
       resip::SipStack& mStack;
