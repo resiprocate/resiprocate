@@ -99,7 +99,7 @@ TcpBaseTransport::processListen(FdSet& fdset)
       Tuple who(peer, transport());
       who.transport = this;
 
-      DebugLog (<< "Received TCP connection from: " << who);
+      DebugLog (<< "Received TCP connection from: " << who << " as fd=" << sock);
       createConnection(who, sock, true);
    }
 }
@@ -124,18 +124,20 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
    {
       if (fdset.readyToRead(curr->getSocket()))
       {
-         //DebugLog (<< "TcpBaseTransport::processSomeReads() " << curr->getSocket());
-         //FD_CLR(curr->getSocket(), &fdset.read);
-
+         //DebugLog (<< "TcpBaseTransport::processSomeReads() " << *curr);
+         //fdset.clear(curr->getSocket());
+         
          std::pair<char*, size_t> writePair = curr->getWriteBuffer();
          size_t bytesToRead = resipMin(writePair.second, size_t(Connection::ChunkSize));
-            
+
+         assert(bytesToRead > 0);
          int bytesRead = curr->read(writePair.first, bytesToRead);
+         DebugLog (<< "TcpBaseTransport::processSomeReads() " << *curr << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
          if (bytesRead == INVALID_SOCKET)
          {
             delete curr;
          }
-         else if (bytesRead > 0)
+         else if (bytesRead >= 0)
          {
             curr->performRead(bytesRead, mStateMachineFifo);
          }
