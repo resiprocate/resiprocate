@@ -17,18 +17,18 @@ class Uri : public ParserCategory
       
       Data& host() const {checkParsed(); return mHost;}
       Data& user() const {checkParsed(); return mUser;}
+      Data& opaque() const {checkParsed(); return mHost;}
+         
       const Data& getAor() const;
       const Data getAorNoPort() const;
       Data& scheme() const {checkParsed(); return mScheme;}
       int& port() const {checkParsed(); return mPort;}
       Data& password() const {checkParsed(); return mPassword;}
       
-	  const Data value() const;
-
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encodeParsed(std::ostream& str) const;
-
+      
       // parse the headers into this as SipMessage -- called from parse
       void parseEmbeddedHeaders();
 
