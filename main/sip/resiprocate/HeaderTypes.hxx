@@ -93,7 +93,7 @@ class Headers
          defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3262"),
          defineHeader(RAck, "RAck", RAckCategory, "RFC 3262"),
 
-         defineHeader(Identity, "Identity", Token, "draft-sip-identity-03"),
+         defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03"),
          defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03"),
 
          defineHeader(ContentLength, "Content-Length", Token, "RFC ????"),

@@ -110,6 +110,9 @@ class BaseSecurity
       Data computeIdentity( const Data& signerDomain, const Data& in );
       bool checkIdentity( const Data& signerDomain, const Data& in, const Data& sig );
 
+      void checkAndSetIdentity( const SipMessage& msg );
+
+
       // returns NULL if it fails
       Contents* decrypt( const Data& decryptorAor, Pkcs7Contents* );
 

@@ -1036,23 +1036,21 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
                          pair.substr(pos+sep.size()).c_str());
 }
 #endif
-
 Helper::ContentsSecAttrs::ContentsSecAttrs()
-{
-}
-   
+   : mContents(0),
+     mAttributes(0)
+{}
+
 Helper::ContentsSecAttrs::ContentsSecAttrs(std::auto_ptr<Contents> contents,
                                            std::auto_ptr<SecurityAttributes> attributes)
    : mContents(contents),
      mAttributes(attributes)
-{
-}
+{}
 
 Helper::ContentsSecAttrs::ContentsSecAttrs(const ContentsSecAttrs& rhs)
    : mContents(rhs.mContents),
      mAttributes(rhs.mAttributes)
-{
-}
+{}
 
 Helper::ContentsSecAttrs& 
 Helper::ContentsSecAttrs::operator=(const ContentsSecAttrs& rhs)

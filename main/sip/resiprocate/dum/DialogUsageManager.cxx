@@ -33,6 +33,8 @@
 #include "resiprocate/dum/ServerPublication.hxx"
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resiprocate/SecurityAttributes.hxx"
+#include "resiprocate/Security2.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -703,12 +705,17 @@ DialogUsageManager::process()
                      return true;
                   }
                }
-               //!dcm! -- make this generic and pluggable
-               processRequest(*sipMsg);
+               if (!queueForIdentityCheck(msg))
+               {
+                  processRequest(*sipMsg);
+               }
             }
             else if (sipMsg->isResponse())
             {
-               processResponse(*sipMsg);
+               if (!processIdentityCheckResponse(*sipMsg))
+               {
+                  processResponse(*sipMsg);
+               }
             }
             return true;
          }
@@ -755,6 +762,71 @@ DialogUsageManager::process()
    return false;
 }
 
+bool 
+DialogUsageManager::processIdentityCheckResponse(const SipMessage& msg)
+{
+   if (msg.header(h_CSeq).method() == OPTIONS)
+   {
+      RequiresCerts::iterator it = mRequiresCerts.find(msg.getTransactionId());
+      if (it == mRequiresCerts.end())
+      {
+         return false;
+      }
+      else
+      {
+         getSecurity().checkAndSetIdentity(msg);
+         processRequest(*it->second);
+         delete it->second;
+         mRequiresCerts.erase(it);
+         return true;
+      }
+   }
+   else
+   {
+      return false;
+   }
+}
+
+bool
+DialogUsageManager::queueForIdentityCheck(std::auto_ptr<Message> msg)
+{
+   SipMessage& sipMsg = *dynamic_cast<SipMessage*>(msg.get());
+
+   if (sipMsg.exists(h_Identity) && 
+       sipMsg.exists(h_IdentityInfo) && 
+       sipMsg.exists(h_Date))
+   {
+      if (getSecurity().hasDomainCert(sipMsg.header(h_From).uri().host()))
+      {
+         getSecurity().checkAndSetIdentity(sipMsg);
+         return false;         
+      }
+      else
+      {
+         try 
+         {
+            Uri certTarget(sipMsg.header(h_IdentityInfo).uri());
+            //?dcm? -- IdentityInfo must use TLS
+            SipMessage* opt = Helper::makeRequest(NameAddr(certTarget), sipMsg.header(h_From), OPTIONS);
+            mRequiresCerts[opt->getTransactionId()] = &sipMsg;
+            msg.release();
+            //!dcm! -- bypassing DialogUsageManager::send to keep transactionID;
+            //are there issues with outbound proxies.
+            mStack->send(*opt);
+            
+            return true;            
+         }
+         catch (BaseException&)
+         {}
+      }
+   }
+
+   SecurityAttributes* sec = new SecurityAttributes();
+   sec->setIdentity(sipMsg.header(h_From).uri().getAor());
+   sec->setIdentityStrength(SecurityAttributes::From);
+   return false;
+}
+          
 void
 DialogUsageManager::process(FdSet& fdset)
 {
@@ -1045,7 +1117,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
                DebugLog ( << "************* Adding DialogSet ***************" ); 
                DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
                mDialogSetMap[dset->getId()] = dset;
-               DebugLog ( << "After: " << Inserter(mDialogSetMap) );
+               DebugLog ( << "After: Req" << Inserter(mDialogSetMap) );
                
                dset->dispatch(request);
             }
