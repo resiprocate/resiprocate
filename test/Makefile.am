@@ -1,13 +1,13 @@
 CXX = ${DISTCC} @CXX@
+LDFLAGS += -lpopt
 LIBTOOL = @LIBTOOL@ --tag=CXX
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
-noinst_LTLIBRARIES = libtestsupport.la
-libtestsupport_la_SOURCES = \
+noinst_LIBRARIES = libtestsupport.a
+libtestsupport_a_SOURCES = \
 	InviteClient.cxx \
 	InviteServer.cxx \
 	Register.cxx \
 	Registrar.cxx \
-	Resolver.cxx \
 	TestSupport.cxx 
 
 noinst_HEADERS = \
@@ -21,7 +21,7 @@ noinst_HEADERS = \
 	Registrar.hxx \
 	TestSupport.hxx
 
-LDADD = libtestsupport.la ../libresiprocate.la
+LDADD = libtestsupport.a ../libresiprocate.a
 check_PROGRAMS = \
 	testSource \
 	SipTortureTests \
@@ -54,38 +54,38 @@ check_PROGRAMS = \
 	testSipMessage \
 	testSipMessageMemory \
 	testSpeed \
-	testTcpTransport \
 	testThreadIf \
 	testTimer \
 	testTransactionFSM \
 	testUri \
 	testXMLCursor \
-	testUdp testTcp \
-	limpc
-
+	testUdp \
+	testTcp \
+	testStack
 
 bin_PROGRAMS = limpc testTcp
 
 TESTS = $(check_PROGRAMS)
 SipTortureTests_SOURCES = SipTortureTests.cxx
 lg_SOURCES = lg.cxx
-testSource_SOURCES = testSource.cxx
+#testDnsResolver_SOURCES = testDnsResolver.cxx
+#testLockStep_SOURCES = testLockStep.cxx
+#testSipStack1_SOURCES = testSipStack1.cxx
+limpc_SOURCES = limpc.cxx
 test1_SOURCES = test1.cxx
 test2_SOURCES = test2.cxx
 testApplicationSip_SOURCES = testApplicationSip.cxx
 testClient_SOURCES = testClient.cxx
 testCoders_SOURCES = testCoders.cxx
 testCountStream_SOURCES = testCountStream.cxx
-testData_SOURCES = testData.cxx
 testDataPerformance_SOURCES = testDataPerformance.cxx
 testDataStream_SOURCES = testDataStream.cxx
+testData_SOURCES = testData.cxx
 testDigestAuthentication_SOURCES = testDigestAuthentication.cxx
 testDns_SOURCES = testDns.cxx
-#testDnsResolver_SOURCES = testDnsResolver.cxx
 testEmbedded_SOURCES = testEmbedded.cxx
 testEmptyHeader_SOURCES = testEmptyHeader.cxx
 testIM_SOURCES = testIM.cxx
-#testLockStep_SOURCES = testLockStep.cxx
 testLogger_SOURCES = testLogger.cxx
 testMessageWaiting_SOURCES = testMessageWaiting.cxx
 testMultipartMixedContents_SOURCES = testMultipartMixedContents.cxx
@@ -97,18 +97,17 @@ testRandomHex_SOURCES = testRandomHex.cxx
 testSdp_SOURCES = testSdp.cxx
 testServer_SOURCES = testServer.cxx
 testSipFrag_SOURCES = testSipFrag.cxx
-testSipMessage_SOURCES = testSipMessage.cxx
 testSipMessageMemory_SOURCES = testSipMessageMemory.cxx
-#testSipStack1_SOURCES = testSipStack1.cxx
+testSipMessage_SOURCES = testSipMessage.cxx
+testSource_SOURCES = testSource.cxx
 testSpeed_SOURCES = testSpeed.cxx
-testTcpTransport_SOURCES = testTcpTransport.cxx
+testStack_SOURCES = testStack.cxx
+testTcp_SOURCES = testTcp.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
 testTimer_SOURCES = testTimer.cxx
 testTransactionFSM_SOURCES = testTransactionFSM.cxx
+testUdp_SOURCES = testUdp.cxx
 testUri_SOURCES = testUri.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
-testUdp_SOURCES = testUdp.cxx
-testTcp_SOURCES = testTcp.cxx
-limpc_SOURCES = limpc.cxx
 
 
