@@ -21,30 +21,15 @@ BaseUsage::Exception::name() const
    return "BaseUsage::Exception";
 }
 
-BaseUsage::BaseUsage(DialogUsageManager& dum, Dialog& dialog) :
+BaseUsage::BaseUsage(DialogUsageManager& dum) :
    Handled(dum),
    mDum(dum),
-   mDialog(dialog),
    mHandle(dum, mId)
 {
 }
 
 BaseUsage::~BaseUsage()
-{
-   mDialog.possiblyDie();
-}
-
-AppDialogSetHandle 
-BaseUsage::getAppDialogSet()
-{
-   return mDialog.mDialogSet.mAppDialogSet->getHandle();
-}
-
-AppDialogHandle 
-BaseUsage::getAppDialog()
-{
-   return mDialog.mAppDialog->getHandle();
-}
+{}
 
 void
 BaseUsage::send(SipMessage& msg)

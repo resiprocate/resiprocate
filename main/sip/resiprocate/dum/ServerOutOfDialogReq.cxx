@@ -12,16 +12,16 @@ ServerOutOfDialogReq::getHandle()
 
 
 ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum,
-                                           Dialog& dialog,
+                                           DialogSet& dialogSet,
                                            const SipMessage& req)
-   : BaseUsage(dum, dialog)
+   : NonDialogUsage(dum, dialogSet)
 {
    assert(false);
 }
 
 ServerOutOfDialogReq::~ServerOutOfDialogReq()
 {
-   mDialog.mServerOutOfDialogRequest = 0;
+   mDialogSet.mServerOutOfDialogRequest = 0;
 }
 
 

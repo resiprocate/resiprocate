@@ -24,13 +24,10 @@ class BaseUsage : public Handled
             virtual const char* name() const;
       };
 
-      AppDialogSetHandle getAppDialogSet();
-      AppDialogHandle getAppDialog();
-     
       virtual void send(SipMessage& request);
 
    protected:
-      BaseUsage(DialogUsageManager& dum, Dialog& dialog);
+      BaseUsage(DialogUsageManager& dum);      
       virtual ~BaseUsage();
 
       virtual void dispatch(const SipMessage& msg) = 0;
@@ -39,8 +36,6 @@ class BaseUsage : public Handled
       BaseUsageHandle getBaseHandle();
 
       DialogUsageManager& mDum;
-      Dialog& mDialog;
-
    private:
       BaseUsageHandle mHandle;
 

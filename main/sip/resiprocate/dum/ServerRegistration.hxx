@@ -1,12 +1,12 @@
 #if !defined(RESIP_SERVERREGISTRATION_HXX)
 #define RESIP_SERVERREGISTRATION_HXX
 
-#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/dum/NonDialogUsage.hxx"
 
 namespace resip
 {
 
-class ServerRegistration: public BaseUsage 
+class ServerRegistration: public NonDialogUsage 
 {
    public:
       typedef Handle<ServerRegistration> ServerRegistrationHandle;
@@ -27,8 +27,8 @@ class ServerRegistration: public BaseUsage
    protected:
       virtual ~ServerRegistration();
    private:
-      friend class Dialog;
-      ServerRegistration(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
+      friend class DialogSet;
+      ServerRegistration(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
 
 
       // disabled
