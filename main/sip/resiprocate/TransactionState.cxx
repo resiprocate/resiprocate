@@ -394,9 +394,14 @@ TransactionState::processClientNonInvite(  Message* msg )
       }
       else if (code >= 200)
       {
-         if (mIsReliable)
+         // don't notify the TU of retransmissions
+         if (mState == Trying || mState == Proceeding)
          {
             sendToTU(msg); // don't delete
+         }
+
+         if (mIsReliable)
+         {
             terminateClientTransaction(mId);
             delete this;
          }
@@ -404,7 +409,6 @@ TransactionState::processClientNonInvite(  Message* msg )
          {
             mState = Completed;
             mController.mTimers.add(Timer::TimerK, mId, Timer::T4 );            
-            sendToTU(msg); // don't delete            
          }
       }
    }
