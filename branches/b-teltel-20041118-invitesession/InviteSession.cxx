@@ -966,6 +966,31 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    {
       return OnRedirect;
    }
+   else if (method == INVITE && code == 0)
+   {
+      if (sdp)
+      {
+         if (reliable)
+         {
+            return OnInviteReliableOffer;
+         }
+         else
+         {
+            return OnInviteOffer;
+         }
+      }
+      else
+      {
+         if (reliable)
+         {
+            return OnInviteReliable;
+         }
+         else
+         {
+            return OnInvite;
+         }
+      }
+   }
    else if (method == INVITE && code > 100 && code < 200)
    {
       if (reliable)
@@ -1046,6 +1071,14 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    else if (method == CANCEL && code >= 400)
    {
       return OnCancelFailure;
+   }
+   else if (method == BYE && code == 0)
+   {
+      return OnBye;
+   }
+   else if (method == BYE && code / 200 == 1)
+   {
+      return On200Bye;
    }
    else if (method == PRACK && code == 0)
    {

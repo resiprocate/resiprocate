@@ -60,6 +60,25 @@ class ServerInviteSession: public InviteSession
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
+      void dispatchStart(const SipMessage& msg);
+      void dispatchOffer(const SipMessage& msg);
+      void dispatchEarly(const SipMessage& msg);
+      void dispatchAccepted(const SipMessage& msg);
+      void dispatchNoOffer(const SipMessage& msg);
+      void dispatchEarlyNoOffer(const SipMessage& msg);
+      void dispatchAcceptedWaitingAnswer(const SipMessage& msg);
+      void dispatchOfferReliable(const SipMessage& msg);
+      void dispatchNoOfferReliable(const SipMessage& msg);
+      void dispatchFirstSentOfferReliable(const SipMessage& msg);
+      void dispatchFirstEarlyReliable(const SipMessage& msg);
+      void dispatchEarlyReliable(const SipMessage& msg);
+      void dispatchSentUpdate(const SipMessage& msg);
+      void dispatchSentUpdateAccepted(const SipMessage& msg);
+      void dispatchReceivedUpdate(const SipMessage& msg);
+      void dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg);
+      void dispatchWaitingToTerminate(const SipMessage& msg);
+      void dispatchWaitingToHangup(const SipMessage& msg);
+
       // utilities
       void sendProvisional(int code);
       void sendUpdate(const SdpContents& sdp);
