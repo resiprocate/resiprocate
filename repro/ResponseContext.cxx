@@ -130,7 +130,7 @@ ResponseContext::processPendingTargets()
          // hostname. 
          rt.uri().host() = DnsUtil::getLocalHostName();
          rt.uri().param(p_lr);
-         request.header(h_RecordRoutes).push_back(rt);
+         request.header(h_RecordRoutes).push_front(rt);
       }
       
       // !jf! unleash the baboons here
@@ -170,7 +170,7 @@ ResponseContext::processCancel(const SipMessage& request)
 void
 ResponseContext::processResponse(SipMessage& response)
 {
-   InfoLog (<< "processResponse: " << response);
+   InfoLog (<< "processResponse: " << endl << response);
    
    // store this before we pop the via and lose the branch tag
    const Data transactionId = response.getTransactionId();
@@ -215,7 +215,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 2:
-         //removeClientTransaction(transactionId);
+         terminateClientTransaction(transactionId);
          if (response.header(h_CSeq).method() == INVITE)
          {
             cancelProceedingClientTransactions();
@@ -232,9 +232,9 @@ ResponseContext::processResponse(SipMessage& response)
       case 3:
       case 4:
       case 5:
-         //removeClientTransaction(transactionId);
          DebugLog (<< "forwardedFinal=" << mForwardedFinalResponse 
                    << " outstanding client transactions: " << Inserter(mClientTransactions));
+         terminateClientTransaction(transactionId);
          if (!mForwardedFinalResponse)
          {
             int priority = getPriority(response);
@@ -280,7 +280,7 @@ ResponseContext::processResponse(SipMessage& response)
                mBestResponse = response;
             }
             
-            if (mClientTransactions.empty())
+            if (areAllTransactionsTerminated())
             {
                InfoLog (<< "Forwarding best response: " << response.brief());
                
@@ -296,7 +296,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 6:
-         //removeClientTransaction(transactionId);
+         terminateClientTransaction(transactionId);
          if (!mForwardedFinalResponse)
          {
             if (mBestResponse.header(h_StatusLine).statusCode() / 100 != 6)
@@ -338,20 +338,37 @@ ResponseContext::cancelProceedingClientTransactions()
 {
    // CANCEL INVITE branches
    for (TransactionMap::iterator i = mClientTransactions.begin(); 
-        i != mClientTransactions.end(); )
+        i != mClientTransactions.end(); ++i)
    {
       if (i->second.status == Proceeding)
       {
          cancelClientTransaction(i->second);
-         TransactionMap::iterator c = i++;
-         mClientTransactions.erase(c);
+         i->second.status = Terminated;
       }
       else if (i->second.status == Trying)
       {
          i->second.status = WaitingToCancel;
-         i++;
       }
    }
+}
+
+void
+ResponseContext::terminateClientTransaction(const Data& transactionId)
+{
+   for (TransactionMap::iterator i = mClientTransactions.begin(); i != mClientTransactions.end(); i++)
+   {
+      i->second.status = Terminated;
+   }
+}
+
+bool
+ResponseContext::areAllTransactionsTerminated()
+{
+   for (TransactionMap::iterator i = mClientTransactions.begin(); i != mClientTransactions.end(); i++)
+   {
+      if (i->second.status != Terminated) return false;
+   }
+   return true;
 }
 
 bool

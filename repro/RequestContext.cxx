@@ -45,7 +45,8 @@ RequestContext::~RequestContext()
 void
 RequestContext::process(resip::TransactionTerminated& msg)
 {
-   InfoLog (<< "RequestContext::process(TransactionTerminated) " << *this);
+   InfoLog (<< "RequestContext::process(TransactionTerminated) " 
+            << msg.getTransactionId() << " : " << *this);
    if (mResponseContext.removeClientTransaction(msg.getTransactionId()))
    {
       mTransactionCount--;
