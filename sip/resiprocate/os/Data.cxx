@@ -26,9 +26,9 @@ Data::Data()
    : mSize(0),
      mBuf(mPreBuffer),
      mCapacity(LocalAlloc),
-     mMine(false)
+     mMine(Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    mBuf[mSize] = 0;
 }
 
@@ -41,10 +41,10 @@ Data::Data(int capacity, bool)
      mCapacity(capacity > LocalAlloc
                ? capacity
                : LocalAlloc),
-     mMine(capacity > LocalAlloc)
+     mMine(capacity > LocalAlloc ? Take : Borrow)
 {
    assert( capacity >= 0 );
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    mBuf[mSize] = 0;
 }
 
@@ -56,9 +56,9 @@ Data::Data(const char* str, int length)
      mCapacity(mSize > LocalAlloc
                ? mSize
                : LocalAlloc),
-     mMine(mSize > LocalAlloc)
+     mMine(mSize > LocalAlloc ? Take : Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize > 0)
    {
       assert(str);
@@ -75,9 +75,9 @@ Data::Data(const unsigned char* str, int length)
      mCapacity(mSize > LocalAlloc
                ? mSize
                : LocalAlloc),
-     mMine(mSize > LocalAlloc)
+     mMine(mSize > LocalAlloc ? Take : Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize > 0)
    {
       assert(str);
@@ -93,39 +93,39 @@ Data::Data(const char* str, int length, bool)
    : mSize(length),
      mBuf(const_cast<char*>(str)),
      mCapacity(mSize),
-     mMine(false)
+     mMine(Share)
 {
    assert(str);
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const char* buffer, int length)
    : mSize(length),
      mBuf(const_cast<char*>(buffer)),
      mCapacity(mSize),
-     mMine(se == Take)
+     mMine(se)
 {
    assert(buffer);
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const char* buffer)
    : mSize(strlen(buffer)),
      mBuf(const_cast<char*>(buffer)),
      mCapacity(mSize),
-     mMine(se == Take)
+     mMine(se)
 {
    assert(buffer);
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const Data& staticData)
    : mSize(staticData.mSize),
      mBuf(staticData.mBuf),
      mCapacity(mSize),
-     mMine(false)
+     mMine(Share)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    // !dlb! maybe:
    // if you are trying to use Take, but make sure that you unset the mMine on
    // the staticData
@@ -141,9 +141,9 @@ Data::Data(const char* str)
      mCapacity(mSize > LocalAlloc
                ? mSize
                : LocalAlloc),
-     mMine(mSize > LocalAlloc)
+     mMine(mSize > LocalAlloc ? Take : Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (str)
    {
       memcpy(mBuf, str, mSize+1);
@@ -162,9 +162,9 @@ Data::Data(const string& str)
      mCapacity(mSize > LocalAlloc
                ? mSize
                : LocalAlloc),
-     mMine(mSize > LocalAlloc)
+     mMine(mSize > LocalAlloc ? Take : Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    memcpy(mBuf, str.c_str(), mSize + 1);
 }
 
@@ -176,9 +176,9 @@ Data::Data(const Data& data)
      mCapacity(mSize > LocalAlloc
                ? mSize
                : LocalAlloc),
-     mMine(mSize > LocalAlloc)
+     mMine(mSize > LocalAlloc ? Take : Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize)
    {
       memcpy(mBuf, data.mBuf, mSize);
@@ -197,9 +197,9 @@ Data::Data(int val)
      mCapacity(IntMaxSize > LocalAlloc
                ? IntMaxSize
                : LocalAlloc),
-     mMine(IntMaxSize > LocalAlloc)
+     mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
 
    if (val == 0)
    {
@@ -255,9 +255,9 @@ Data::Data(unsigned long value)
      mCapacity(MaxLongSize > LocalAlloc
                ? MaxLongSize
                : LocalAlloc),
-     mMine(MaxLongSize > LocalAlloc)
+     mMine(MaxLongSize > LocalAlloc ? Take : Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (value == 0)
    {
       mBuf[0] = '0';
@@ -296,9 +296,9 @@ Data::Data(double value, int precision)
      mCapacity(DoubleMaxSize + precision > LocalAlloc
                ? DoubleMaxSize + precision
                : LocalAlloc),
-     mMine(DoubleMaxSize + precision > LocalAlloc)
+     mMine(DoubleMaxSize + precision > LocalAlloc ? Take : Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    assert(precision >= 0);
    assert(precision < DoubleMaxPrecision);
 
@@ -380,9 +380,9 @@ Data::Data(unsigned int value)
      mCapacity(IntMaxSize > LocalAlloc
                ? IntMaxSize
                : LocalAlloc),
-     mMine(IntMaxSize > LocalAlloc)
+     mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (value == 0)
    {
       mBuf[0] = '0';
@@ -420,9 +420,9 @@ Data::Data(char c)
      mCapacity(CharMaxSize > LocalAlloc
                ? CharMaxSize
                : LocalAlloc),
-     mMine(CharMaxSize > LocalAlloc)
+     mMine(CharMaxSize > LocalAlloc ? Take : Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
    mBuf[0] = c;
    mBuf[1] = 0;
 }
@@ -431,9 +431,9 @@ Data::Data(bool value)
    : mSize(0), 
      mBuf(0),
      mCapacity(0),
-     mMine(false)
+     mMine(Borrow)
 {
-   memset(mPreBuffer, 0, LocalAlloc+1);
+   //memset(mPreBuffer, 0, LocalAlloc+1);
 
    static char truec[] = "true";
    static char falsec[] = "false";
@@ -454,7 +454,7 @@ Data::Data(bool value)
 
 Data::~Data()
 {
-   if (mMine)
+   if (mMine == Take)
    {
       delete[] mBuf;
    }
@@ -568,7 +568,7 @@ Data::operator=(const Data& data)
    
    if (&data != this)
    {
-      if (!mMine && mBuf != mPreBuffer)
+      if (mMine == Share)
       {
          resize(data.mSize, false);
       }
@@ -582,7 +582,7 @@ Data::operator=(const Data& data)
       
       mSize = data.mSize;
       // could overlap!
-      if ( mSize > 0 )
+      if (mSize > 0)
       {
          memmove(mBuf, data.mBuf, mSize);
       }
@@ -694,7 +694,7 @@ Data::operator=(const char* str)
    assert(str);
    size_type l = strlen(str);
 
-   if (!mMine && mBuf != mPreBuffer)
+   if (mMine == Share)
    {
       resize(l, false);
    }
@@ -747,17 +747,13 @@ Data::append(const char* str, size_type len)
    }
    else
    {
-      if (!mMine && mBuf != mPreBuffer)
+      if (mMine == Share)
       {
-         // !dlb! violates invariant
-         // if !mMine, then mCapacity == mSize, so should have resized
-         assert(false);
-
          char *oldBuf = mBuf;
          mCapacity = mSize + len;
          mBuf = new char[mSize + len];
          memcpy(mBuf, oldBuf, mSize);
-         mMine = true;
+         mMine = Take;
       }
    }
 
@@ -819,7 +815,7 @@ Data::end() const
 void
 Data::own() const
 {
-   if (!mMine && mBuf != mPreBuffer)
+   if (mMine == Share)
    {
       const_cast<Data*>(this)->resize(mSize, true);
    }
@@ -836,11 +832,11 @@ Data::resize(size_type newCapacity, bool copy)
       memcpy(mBuf, oldBuf, mSize);
       mBuf[mSize] = 0;
    }
-   if (mMine)
+   if (mMine == Take)
    {
       delete[] oldBuf;
    }
-   mMine = true;
+   mMine = Take;
    mCapacity = newCapacity;
 }
 
@@ -1326,6 +1322,145 @@ Data::rawHash(const char* c, size_t size)
 
    // convert from network to host byte order
    return ntohl(st);
+}
+
+// buzHash
+static size_t buzArray[256] =
+{
+     0x4476081a, 0x45768b8a, 0xebd556c1,
+     0x72ed2da1, 0x3ff2030b,
+     0xcbc33023, 0x737807fe, 0x74dabaed,
+     0x968f065c, 0xd3f4018a,
+     0x954b389b, 0x2f97a9d8, 0xb9bea2b4,
+     0xaf2f4253, 0x85d99166,
+     0xb9e12602, 0xf3ea8839, 0xfaf8c83f,
+     0x4274fe90, 0x3f20b157,
+     0x68b48972, 0x694837b6, 0xeecb51d1,
+     0xf1c633f0, 0xa6549ec9,
+     0x451dc944, 0x446d6ace, 0x1c8a5b30,
+     0x5908ca36, 0x4fd55d3f,
+     0xa03a8dbe, 0x3ccbbe07, 0x1da53a25,
+     0xfb27a96f, 0x50aba242,
+     0x24d4e414, 0x83971844, 0xc26a3fde,
+     0xc2380d04, 0xab418aa8,
+     0xd95b6b92, 0x8b3b2171, 0xe15cd0ae,
+     0x5a4e27f9, 0x377bd28c,
+     0xbbeb9828, 0x7c8df263, 0xba0a48a5,
+     0x57cc1b88, 0x8c570975,
+     0x76bdcd6f, 0x529b15b6, 0x9147c7a5,
+     0x2f96a772, 0xe46602f4,
+     0x22834c4d, 0x2644cf5a, 0x907c6de9,
+     0xadfe8ba9, 0xa85199ae,
+     0x2d749b94, 0x76e35457, 0x90410bf6,
+     0x536ad04d, 0x8cc0d767,
+     0xae0249f6, 0x1bdfd075, 0xd8e04f70,
+     0x4ab23622, 0x37a5613d,
+     0x19a56203, 0x158ffab5, 0x0bee714e,
+     0x69b71a59, 0x0fc7fc62,
+     0x513966de, 0xc16fae9c, 0xb66f0ac5,
+     0x11e124ae, 0x86cf5a57,
+     0x33f33ba6, 0xde6c4d1d, 0x6a99220d,
+     0x2dc06ca9, 0x96413b52,
+     0xb4715ce8, 0xe6a75900, 0x6448f13a,
+     0xb9057c28, 0xf4023daf,
+     0x877c2650, 0xb7ea587d, 0xc048cf11,
+     0x112012c1, 0xc95f52b1,
+     0xa47e624e, 0x26928606, 0x5d020462,
+     0x8bbde651, 0xd5db83db,
+     0x3105e355, 0xdd7fe1b8, 0x1f3a818c,
+     0xd902de81, 0x4200e633,
+     0x0e919cdc, 0x5360dd54, 0xa3182d0e,
+     0x13ee462c, 0x1b1b6087,
+     0x81c36d0b, 0xc2487993, 0x1faa756e,
+     0x61651b24, 0x30fe3d93,
+     0x7be867c7, 0x973e52c7, 0x75d6b699,
+     0x25d2a9e9, 0xe65fb599,
+     0x6ac27960, 0xdfacc04c, 0xa46cd07f,
+     0x652031d8, 0x1185bd96,
+     0xfc9bd84c, 0x0a0c5987, 0x63885727,
+     0x5e88b439, 0xf0005cca,
+     0x474e4428, 0x32de151c, 0x2c4b86d5,
+     0xccd93deb, 0x3743236f,
+     0x42ed2f26, 0x99c74afd, 0x2d663bb8,
+     0x7912033b, 0xb442862f,
+     0x94b1a540, 0x5ce285fe, 0xe8a7dbe5,
+     0x219131af, 0x7b3a80d1,
+     0xbaa5d285, 0x821cfb69, 0xf68cfb6e,
+     0x18244132, 0x2ed0bda1,
+     0x4ed48cdf, 0xfd37a7a2, 0x82c102b2,
+     0xadac6517, 0x5a1294d3,
+     0xea84fe65, 0x4f96f8a9, 0x9831dff8,
+     0x4ca927cd, 0x030900b2,
+     0x644b263b, 0xa601d4e3, 0x34d897eb,
+     0xa6101c37, 0xc29d2a8b,
+     0xc6b07df8, 0xce1b7d92, 0xfa2f9944,
+     0xd8863e4c, 0x033b2ccc,
+     0x757dc335, 0xf07b1ff6, 0x1569e75f,
+     0xfa33fa08, 0x6eb79aa2,
+     0x15706120, 0x25e5a71f, 0x5df1fe93,
+     0x235b5609, 0xe5106861,
+     0x45bd47b8, 0x6595e179, 0xc9b5848c,
+     0x65985146, 0x4ab4a17b,
+     0xfd94f4ca, 0xcf9bad58, 0x92b4f0b5,
+     0xbcbec076, 0x8dbd31de,
+     0xdd1f5ed9, 0x61c1e6a5, 0xf24475f3,
+     0xdb2dffa6, 0xac06d88e,
+     0xa215fc47, 0x86d7caeb, 0x9eaec319,
+     0x0fba2214, 0x5a32975a,
+     0x8cceebc9, 0x7e12c458, 0xa49ad49f,
+     0x3d142dd9, 0x9f13589e,
+     0x5e8dbac1, 0xcc23b93a, 0x1ef35f5f,
+     0x63ae9cc0, 0x5bbabee5,
+     0xabfd7299, 0x9d71a13a, 0xd9daf5aa,
+     0xe145ec05, 0x143befc2,
+     0xa8e19255, 0xcbeda244, 0x997f0a93,
+     0x01014a97, 0x70c026ff,
+     0xf8737b1b, 0x8afcbef3, 0x0e1bb068,
+     0x4cbad70a, 0xd4a31f52,
+     0xdb0f057a, 0x400894a9, 0x6a626a9b,
+     0xf907fd7e, 0xe10e4a56,
+     0xb17f9f54, 0x6b9e6904, 0x8b74b6a4,
+     0x027954d4, 0xd07207b8,
+     0xf397c47d, 0x05e4e8b1, 0x36adb3f7,
+     0x607d9540, 0xb639118e,
+     0xd0a40677, 0x3cbee821, 0x467967bb,
+     0xb115fe29, 0xba740e6f,
+     0xb4e51be9, 0xc9a081c6, 0x2e1fbcd8,
+     0xf626e789, 0x3ce6e9b5,
+     0x46e87f26, 0x8c1dc526, 0x7b482672,
+     0x2966e009, 0xbb0dd524, 0x0d527cc6
+};
+
+Data
+bits(size_t v)
+{
+   Data ret;
+   for (unsigned int i = 0; i < 8*sizeof(size_t); ++i)
+   {
+      ret += ('0' + v%2);
+      v /= 2;
+   }
+
+   return ret;
+}
+
+//http://www.serve.net/buz/hash.adt/java.002.html
+// buzHash is a little slower. Not sure why.
+size_t
+buzHash(const char* c, size_t size)
+{
+   size_t h = 0x294b71649;
+   const char* end = c + size;
+   for ( ; c != end; ++c)
+   {
+      // circular shift one bit
+      //std::cerr << bits(h) << " => " << bits((h >> 1) ^ (h%2 << (8*sizeof(size_t))-1)) << std::endl;
+      h = (h >> 1) ^ (h%2 << (8*sizeof(size_t))-1);
+      h = h ^ buzArray[*c];
+   }
+ 
+   // convert from network to host byte order
+   return ntohl(h);
 }
 
 size_t
