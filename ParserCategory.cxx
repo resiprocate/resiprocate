@@ -51,10 +51,6 @@ ParserCategory::operator=(const ParserCategory& rhs)
    {
       clear();
       mIsParsed = rhs.mIsParsed;
-      if (mMine)
-      {
-         delete mHeaderField;
-      }
       if (rhs.mIsParsed)
       {
          copyParametersFrom(rhs);
@@ -88,6 +84,7 @@ ParserCategory::clear()
    if (mMine)
    {
       delete mHeaderField;
+      mHeaderField = 0;
    }
 }
 
