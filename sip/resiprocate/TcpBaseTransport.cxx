@@ -129,27 +129,28 @@ TcpBaseTransport::processSomeWrites(FdSet& fdset)
 void
 TcpBaseTransport::processSomeReads(FdSet& fdset)
 {
-   Connection* curr = mConnectionManager.getNextRead(); 
-   if (curr)
+   Connection* currConnection = mConnectionManager.getNextRead(); 
+   if (currConnection)
    {
-      if (fdset.readyToRead(curr->getSocket()))
+      if (fdset.readyToRead(currConnection->getSocket()))
       {
-         //DebugLog (<< "TcpBaseTransport::processSomeReads() " << *curr);
-         //fdset.clear(curr->getSocket());
+         //DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection);
+         //fdset.clear(currConnection->getSocket());
          
-         std::pair<char*, size_t> writePair = curr->getWriteBuffer();
-         size_t bytesToRead = resipMin(writePair.second, size_t(Connection::ChunkSize));
+         std::pair<char*, size_t> writePair = currConnection->getWriteBuffer();
+         size_t bytesToRead = resipMin(writePair.second, 
+                                       static_cast<size_t>(Connection::ChunkSize));
 
          assert(bytesToRead > 0);
-         int bytesRead = curr->read(writePair.first, bytesToRead);
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " << *curr << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
+         int bytesRead = currConnection->read(writePair.first, bytesToRead);
+         DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
          if (bytesRead == INVALID_SOCKET)
          {
-            delete curr;
+            delete currConnection;
          }
          else if (bytesRead >= 0)
          {
-            curr->performRead(bytesRead, mStateMachineFifo);
+            currConnection->performRead(bytesRead, mStateMachineFifo);
          }
       }
    } 

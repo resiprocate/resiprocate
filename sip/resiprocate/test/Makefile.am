@@ -22,9 +22,7 @@ noinst_HEADERS = \
 
 LDADD = libtestsupport.a ../libresiprocate.a
 check_PROGRAMS = \
-	testSource \
 	SipTortureTests \
-	lg \
 	test1 \
 	test2 \
 	testApplicationSip \
@@ -34,8 +32,8 @@ check_PROGRAMS = \
 	testData \
 	testDataPerformance \
 	testDataStream \
-	testDns \
 	testDigestAuthentication \
+	testDns \
 	testEmbedded \
 	testEmptyHeader \
 	testIM \
@@ -47,20 +45,22 @@ check_PROGRAMS = \
 	testPlainContents \
 	testPreparse \
 	testRandomHex \
+	testResponses \
 	testSdp \
 	testServer \
 	testSipFrag \
 	testSipMessage \
 	testSipMessageMemory \
+	testSource \
 	testSpeed \
+	testStack \
+	testTcp \
 	testThreadIf \
 	testTimer \
 	testTransactionFSM \
-	testUri \
-	testXMLCursor \
 	testUdp \
-	testTcp \
-	testStack
+	testUri \
+	testXMLCursor 
 
 bin_PROGRAMS = limpc testTcp
 
@@ -93,6 +93,7 @@ testParserCategories_SOURCES = testParserCategories.cxx
 testPlainContents_SOURCES = testPlainContents.cxx
 testPreparse_SOURCES = testPreparse.cxx
 testRandomHex_SOURCES = testRandomHex.cxx
+testResponses_SOURCES = testResponses.cxx
 testSdp_SOURCES = testSdp.cxx
 testServer_SOURCES = testServer.cxx
 testSipFrag_SOURCES = testSipFrag.cxx
