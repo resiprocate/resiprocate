@@ -6,6 +6,7 @@ const Subsystem Subsystem::APP("APP");
 const Subsystem Subsystem::BASE("BASE");
 const Subsystem Subsystem::CONTENTS("CONTENTS");
 const Subsystem Subsystem::DNS("DNS");
+const Subsystem Subsystem::DUM("DUM");
 const Subsystem Subsystem::NONE("NONE");
 const Subsystem Subsystem::PRESENCE("PRESENCE");
 const Subsystem Subsystem::SDP("SDP");
