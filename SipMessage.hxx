@@ -25,7 +25,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Timer.hxx"
-
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -36,6 +36,7 @@ class UnknownHeaderType;
 class SipMessage : public TransactionMessage
 {
    public:
+      RESIP_HeapCount(SipMessage);
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
 
       explicit SipMessage(const Transport* fromWire = 0);

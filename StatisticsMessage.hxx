@@ -5,6 +5,7 @@
 #include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/os/Mutex.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -13,6 +14,7 @@ class Subsystem;
 class StatisticsMessage : public ApplicationMessage
 {
    public:
+      RESIP_HeapCount(StatisticsMessage);
       class AtomicPayload;
       StatisticsMessage(const AtomicPayload& payload);
       StatisticsMessage(const StatisticsMessage& rhs);

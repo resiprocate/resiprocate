@@ -8,6 +8,8 @@ static const char* const resipDataHeaderVersion =
 #include "resiprocate/os/DataStream.hxx"
 #include <iostream>
 #include <string>
+#include "resiprocate/os/HeapInstanceCounter.hxx"
+
 #include "HashMap.hxx"
 #if defined(HAVE_CONFIG_HXX)
 #include "resiprocate/config.hxx"
@@ -24,6 +26,8 @@ namespace resip
 class Data 
 {
    public:
+      RESIP_HeapCount(Data);
+
       typedef size_t size_type;
 
       Data();

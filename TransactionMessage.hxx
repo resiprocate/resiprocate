@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include "resiprocate/Message.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -10,6 +11,8 @@ namespace resip
 class TransactionMessage : public Message
 {
    public:
+      RESIP_HeapCount(TransactionMessage);
+
       virtual const Data& getTransactionId() const=0; 
 
       // indicates this message is associated with a Client Transaction for the

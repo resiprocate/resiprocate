@@ -6,6 +6,7 @@
 
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/TransportType.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 #if !defined(WIN32)
 #include <netinet/in.h>
@@ -28,6 +29,7 @@ typedef unsigned long ConnectionId;
 class Tuple
 {
    public:
+      RESIP_HeapCount(Tuple);
       Tuple();
       Tuple(const Data& printableAddress, int port, bool ipv4, TransportType type=UNKNOWN_TRANSPORT);
       Tuple(const Data& printableAddress, int port, TransportType type);

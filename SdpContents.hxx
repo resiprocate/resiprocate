@@ -9,6 +9,7 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -18,6 +19,7 @@ class SdpContents;
 class AttributeHelper
 {
    public:
+      RESIP_HeapCount(AttributeHelper);
       AttributeHelper();
       AttributeHelper(const AttributeHelper& rhs);
       AttributeHelper& operator=(const AttributeHelper& rhs);
@@ -35,6 +37,7 @@ class AttributeHelper
 class SdpContents : public Contents
 {
    public:
+      RESIP_HeapCount(SdpContents);
       typedef enum {IP4=1, IP6} AddrType;
       static const SdpContents Empty;
       
