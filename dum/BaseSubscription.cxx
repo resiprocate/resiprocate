@@ -29,12 +29,19 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
 }
 
 bool
-BaseSubscription::matches(const SipMessage& subOrNotify)
+BaseSubscription::matches(const SipMessage& msg)
 {
-   return (subOrNotify.exists(h_Event) && 
-           subOrNotify.header(h_Event).value() == mEventType && 
-           ( !subOrNotify.header(h_Event).exists(p_id) || 
-             subOrNotify.header(h_Event).param(p_id) == mSubscriptionId));
+   if (msg.isResponse() && msg.header(h_CSeq) == mLastRequest.header(h_CSeq))
+   {
+      return true;
+   }
+   else
+   {
+      return (msg.exists(h_Event) && 
+              msg.header(h_Event).value() == mEventType && 
+              ( !msg.header(h_Event).exists(p_id) || 
+                msg.header(h_Event).param(p_id) == mSubscriptionId));
+   }
 }
 
 BaseSubscription::~BaseSubscription()
