@@ -31,9 +31,9 @@ AC_CONFIG_SRCDIR([resiprocate/config.hxx.in])
 AC_CONFIG_HEADER([resiprocate/config.hxx])
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
-AC_DISABLE_STATIC
+dnl AC_DISABLE_STATIC
 
-AC_REVISION($Id: configure.ac,v 1.16 2003/10/07 23:35:00 alan Exp $)
+AC_REVISION($Id: configure.ac,v 1.17 2003/10/24 20:37:51 alan Exp $)
 
 
 AM_MAINTAINER_MODE
