@@ -206,37 +206,15 @@ TuIM::sendPage(const Data& text, const Uri& dest,
 #if 1
    {
       // Compute the identity header.
+      Security* sec = mStack->getSecurity();
+      assert(sec);
       
       DateCategory now;
       msg->header(h_Date) = now;
       
-      Data token;
-      DataStream strm(token);
-      
-      strm << msg->header(h_From).uri();
-      strm << Symbols::COLON;
-      
-      msg->header(h_CallId).value();
-      strm << Symbols::COLON;
-      
-      msg->header(h_Date).encodeParsed( strm );
-      strm << Symbols::COLON;
-      
-      msg->header(h_Contacts).front().uri();
-      strm << Symbols::COLON;
-      
-      // TODO FIX - next line asserts in some cases
-      strm << *body;
-      strm.flush();
-      
-      // CerrLog( << "token is " << token );
-      
-      Security* sec = mStack->getSecurity();
-      assert(sec);
-      
+      Data token = msg->getCanonicalIdentityString();
       Data res = sec->computeIdentity( token );
-
-      msg->header(UnknownHeaderType("Identity")).push_back( StringCategory( res ) );
+      msg->header(h_Identity).value() = res;
    }
 #endif
    
