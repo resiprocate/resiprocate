@@ -23,6 +23,6 @@ class UnknownSubComponent : public StringSubComponent
 
 }
 
-std::ostream& operator<<(std::ostream& stream, const UnknownSubComponent& comp);
+std::ostream& operator<<(std::ostream& stream, Vocal2::UnknownSubComponent& comp);
 
 #endif
