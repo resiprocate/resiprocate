@@ -28,9 +28,23 @@ char *registerMessage =
 "Contact: <sip:me@123.123.123.123>" CRLF
 "Content-Length: 0" CRLF CRLF;
 
+
+char *inviteMessage =
+"INVITE sip:B@127.0.0.1 SIP/2.0" CRLF
+"Via: SIP/2.0/UDP 127.0.0.1:5060;branch=z9hG4bK0000" CRLF
+"Max-Forwards: 70" CRLF
+"From: A <sip:A@127.0.0.1>;tag=12345" CRLF
+"To: B <sip:B@127.0.0.1>" CRLF
+"Call-ID: 0123456789@127.0.0.1" CRLF
+"CSeq: 1 INVITE" CRLF
+"Contact: <sip:A@127.0.0.1>" CRLF
+"Content-Length: 0" CRLF CRLF;
+
 int
 main(int argc, char *argv[])
 {
+    char* message = inviteMessage;
+
     Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
     InfoLog( << "Starting up, making stack");
@@ -47,14 +61,14 @@ main(int argc, char *argv[])
     sa.sin_addr.s_addr = inet_addr("127.0.0.1");
     sa.sin_port = htons(5060);
 
-    DebugLog(<<"size="<<strlen(registerMessage) << endl << "message= " << endl << registerMessage );
+    DebugLog(<<"size="<<strlen(message) << endl << "message= " << endl << message );
     
     // send the test message to the stack
-    int err = sendto(fd, registerMessage, strlen(registerMessage), 0, (struct sockaddr*) & sa, sizeof(sa));
+    int err = sendto(fd, message, strlen(message), 0, (struct sockaddr*) & sa, sizeof(sa));
 
     DebugLog(<<"errno="<<errno);
     
-    assert (err == strlen(registerMessage));
+    assert (err == strlen(message));
 
 
     int count=0;
@@ -85,7 +99,6 @@ main(int argc, char *argv[])
           cout << "request line uri user" << sipMessage->header(h_RequestLine).uri().user() << endl;
        }
 
-       theStack->process(fdReadSet);
        usleep(20);
     }
 
