@@ -1,15 +1,23 @@
 #include <sipstack/IntegerParameter.hxx>
 #include <sipstack/Symbols.hxx>
+#include <util/ParseBuffer.hxx>
+#include <sipstack/ParseException.hxx>
 
 using namespace Vocal2;
 using namespace std;
 
 IntegerParameter::IntegerParameter(ParameterTypes::Type type,
-                                   const char* startData, unsigned int dataSize)
+                                   ParseBuffer& pb)
    : Parameter(type),
      mValue(0)
 {
-   mValue = atoi(startData);
+   if (*pb.position() != '=')
+   {
+      throw ParseException("parameter constructor expected '='", __FILE__, __LINE__);
+   }
+   pb.skipChar();
+   // .dlb. error detection?
+   mValue = atoi(pb.position());
 }
 
 IntegerParameter::IntegerParameter(ParameterTypes::Type type, int value)

@@ -1,10 +1,11 @@
 #include <iostream>
 
 #include <sipstack/UnknownParameter.hxx>
+#include <sipstack/ExistsParameter.hxx>
 #include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/ParserCategory.hxx>
 #include <sipstack/Symbols.hxx>
-
+#include <util/ParseBuffer.hxx>
 #include <util/Logger.hxx>
 
 using namespace std;
@@ -72,81 +73,34 @@ HeaderFieldValue::clone() const
 {
   return new HeaderFieldValue(*this);
 }
-      
+
+// ;lr;ttl=7;user=phone
+// pass as ParseBuffer& (who makes it?)
+// extract key, induce parse generically
 void 
 HeaderFieldValue::parseParameters(const char* startPos, unsigned int length)
 {
-   Data data(startPos, length);
+   ParseBuffer pb(startPos, length);
 
-   Data key;
-   Data value;
-
-   bool done = false;
-   while(!done)
+   while (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0])
    {
-      bool isQuoted = false;
-      char matchedChar=0;
       
-      key = data.matchChar(Symbols::SEMI_OR_EQUAL, &matchedChar);
-      if(matchedChar == Symbols::EQUALS[0])
-      {
-         // this is a separator, so stuff before this is a thing
-         value = data.matchChar(Symbols::SEMI_COLON, &matchedChar);
-         if(matchedChar != Symbols::SEMI_COLON[0])
-         {
-            value = data;
-            done = true;
-         }
+      // extract the key
+      const char* keyStart = pb.skipChar();
+      const char* keyEnd = pb.skipToOneOf(";=?");
+      ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
 
-         int eaten = value.eatWhiteSpace();
-         if (value.size() && value[0] == Symbols::DOUBLE_QUOTE[0])
-         {
-            isQuoted = true;
-            value = value.substr(1, value.size()-2);
-         }
-         else if (value.empty())
-         {
-            DebugLog (<< "Found no value after param " << key);
-            throw ParseException("error parsing param", __FILE__,__LINE__);
-         }
-         else if (eaten)
-         {
-            DebugLog (<< "Found whitespace before non-quoted value in param: " << key);
-            throw ParseException("error parsing param", __FILE__,__LINE__);
-         }
-
-         ParameterTypes::Type type = ParameterTypes::getType(key.data(), key.size());
-         if (type == ParameterTypes::UNKNOWN)
-         {
-            UnknownParameter* p = new UnknownParameter(key.data(), key.size(), value.data(), value.size());
-            p->setQuoted(isQuoted);
-            mParameterList.insert(p);
-         }
-         else
-         {
-            //Parameter* p = ParameterTypes::make(type);
-         }
-      }
-      else if(matchedChar == Symbols::SEMI_COLON[0])
+      if(type == ParameterTypes::UNKNOWN)
       {
-         // no value here, so just stuff nothing into the value
-         assert (key != "");
-         //operator[](key) = "";
+         mUnknownParameterList.insert(new UnknownParameter(keyStart, (keyEnd - keyStart), pb));
       }
       else
       {
-         // nothing left, so done
-         // done
-         if(data.size() != 0)
-         {
-            assert (data != "");
-            //operator[](data) = "";
-         }
-         done = true;
+         // invoke the particular factory
+         mParameterList.insert(ParameterTypes::ParameterFactories[type](type, pb));
       }
    }
-}
-
+}      
 
 ParameterList& 
 HeaderFieldValue::getParameters()

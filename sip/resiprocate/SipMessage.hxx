@@ -154,6 +154,7 @@ class SipMessage : public Message
 
       sockaddr_in mSource;
 
+      // !dlb! hack out with pre-data pointer in buffer for intrusive list?
       std::vector<char*> mBufferList;
       mutable HeaderFieldValue* mStartLine;
       mutable HeaderFieldValue* mBody;
