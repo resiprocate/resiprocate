@@ -582,11 +582,11 @@ TransportSelector::findTransport(const Tuple& search)
       }
    }
 
-   //DebugLog (<< "Exact interface / Specific port: " << Inserter(mExactTransports));
-   //DebugLog (<< "Any interface / Specific port: " << Inserter(mAnyInterfaceTransports));
-   //DebugLog (<< "Exact interface / Any port: " << Inserter(mAnyPortTransports));
-   //DebugLog (<< "Any interface / Any port: " << Inserter(mAnyPortAnyInterfaceTransports));
-
+   DebugLog (<< "Exact interface / Specific port: " << Inserter(mExactTransports));
+   DebugLog (<< "Any interface / Specific port: " << Inserter(mAnyInterfaceTransports));
+   DebugLog (<< "Exact interface / Any port: " << Inserter(mAnyPortTransports));
+   DebugLog (<< "Any interface / Any port: " << Inserter(mAnyPortAnyInterfaceTransports));
+   
    WarningLog(<< "Can't find matching transport " << search);
    return 0;
 }
