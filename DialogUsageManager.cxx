@@ -389,7 +389,7 @@ DialogUsageManager::makeRegistration(const NameAddr& target, AppDialogSet* appDs
 }
 
 SipMessage& 
-DialogUsageManager::makePublication(const Uri& targetDocument,  
+DialogUsageManager::makePublication(const NameAddr& targetDocument,  
                                     const NameAddr& from, 
                                     const Contents& body, 
                                     const Data& eventType, 
