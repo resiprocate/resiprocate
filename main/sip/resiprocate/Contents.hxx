@@ -59,7 +59,6 @@ class ContentsFactory : public ContentsFactoryBase
          HeaderFieldValue hfv;
          T tmp;
          Contents::getFactoryMap()[tmp.getType()] = this;
-         cerr << "Registered factory for type: " << tmp.getType() << endl;
       }
       
       // pass Mime instance for parameters
