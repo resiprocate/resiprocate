@@ -20,12 +20,78 @@ int
 main()
 {
    {
+      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+                   "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
+                   "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1-c87542-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1-c87542-;received=192.168.2.220\r\n"
+                   "Call-ID: 643f2f06\r\n"
+                   "CSeq: 1 INVITE\r\n"
+                   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+                   "Contact: <sip:ext103@192.168.2.220:5068;transport=UDP>\r\n"
+                   "Max-Forwards: 69\r\n"
+                   "Content-Length: 0\r\n"
+                   "\r\n");
+
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      cerr << *message << endl;
+
+      assert(message->header(h_Vias).front().param(UnknownParameterType("stid")) == "489573115");
+      message->header(h_Vias).front().param(p_received) = "received";
+      assert(message->header(h_Vias).front().param(UnknownParameterType("stid")) == "489573115");
+   }
+
+   {
       char* txt = ("SIP/2.0 200 OK""\r\n"
                    "From: 1245<sip:4000@193.12.63.124:5060>;tag=7c3f0cc1-13c4-3e5a380c-1ac5646-257e""\r\n"
                    "To: prolab<sip:5000@host2.sipdragon.sipit.net>;tag=7c3f0cc1-13c5-3e5a380d-1ac5827-618f""\r\n"
                    "Call-ID: 9e9017c-7c3f0cc1-13c4-3e5a380c-1ac5646-3700@193.12.63.124""\r\n"
                    "CSeq: 1 INVITE""\r\n"
-                   "Via: SIP/2.0/UDP host2.sipdragon.sipit.net;received=193.12.62.209;branch=z9hG4bK-c87542--3e5a380c-1ac5646-adf.1-1""\r\n"
+                   "Via: SIP/2.0/UDP host2.sipdragon.sipit.net;received=193.12.62.209;branch=z9hG4bK-c87542--3e5a380c-1ac5646-adf-c87542-1-1""\r\n"
+                   "Via: SIP/2.0/UDP 193.12.63.124:5060;received=193.12.63.124;branch=z9hG4bK-3e5a380c-1ac5646-adf""\r\n"
+                   "Contact: <sip:5000@193.12.63.124:5061>""\r\n"
+                   "Record-Route: <sip:proxy@host2.sipdragon.sipit.net:5060;lr>""\r\n"
+                   "Content-Length:0\r\n\r\n");
+      
+  
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      cerr << *message << endl;
+      message->header(h_Vias).front();
+      message->header(h_From);
+      message->header(h_To);
+      cerr << message->header(h_Vias).front().param(p_branch).getTransactionId() << endl;
+      cerr << message->header(h_Vias).back().param(p_branch).getTransactionId() << endl;
+   }
+
+   {
+      char *txt = ("SIP/2.0 200 OK\r\n"
+                   "From: 1245<sip:4000@193.12.63.124:5060>;tag=7c3f0cc1-13c4-3e5a380c-1ac5646-257e\r\n"
+                   "To: prolab<sip:5000@host2.sipdragon.sipit.net>;tag=7c3f0cc1-13c5-3e5a380d-1ac5827-618f\r\n"
+                   "Call-ID: 9e9017c-7c3f0cc1-13c4-3e5a380c-1ac5646-3700@193.12.63.124\r\n"
+                   "CSeq: 1 INVITE\r\n"
+                   "Via: SIP/2.0/UDP host2.sipdragon.sipit.net;received=193.12.62.209;branch=z9hG4bK-c87542--3e5a380c-1ac5646-adf-c87542-1-1\r\n"
+                   "Via: SIP/2.0/UDP 193.12.63.124:5060;received=193.12.63.124;branch=z9hG4bK-3e5a380c-1ac5646-adf\r\n"
+                   "Contact: <sip:5000@193.12.63.124:5061>\r\n"
+                   "Record-Route: <sip:proxy@host2.sipdragon.sipit.net:5060;lr>\r\n"
+                   "Content-Length:0\r\n\r\n");
+
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      assert(message.get());
+      for (Vias::iterator i = message->header(h_Vias).begin();
+           i != message->header(h_Vias).end(); i++)
+      {
+         i->param(p_branch).encode(cerr);
+         cerr << endl;
+      }
+   }
+
+   {
+      char* txt = ("SIP/2.0 200 OK""\r\n"
+                   "From: 1245<sip:4000@193.12.63.124:5060>;tag=7c3f0cc1-13c4-3e5a380c-1ac5646-257e""\r\n"
+                   "To: prolab<sip:5000@host2.sipdragon.sipit.net>;tag=7c3f0cc1-13c5-3e5a380d-1ac5827-618f""\r\n"
+                   "Call-ID: 9e9017c-7c3f0cc1-13c4-3e5a380c-1ac5646-3700@193.12.63.124""\r\n"
+                   "CSeq: 1 INVITE""\r\n"
+                   "Via: SIP/2.0/UDP host2.sipdragon.sipit.net;received=193.12.62.209;branch=z9hG4bK-c87542--3e5a380c-1ac5646-adf-c87542-1-1""\r\n"
                    "Via: SIP/2.0/UDP 193.12.63.124:5060;received=193.12.63.124;branch=z9hG4bK-3e5a380c-1ac5646-adf""\r\n"
                    "Contact: <sip:5000@193.12.63.124:5061>""\r\n"
                    "Record-Route: <sip:proxy@host2.sipdragon.sipit.net:5060;lr>""\r\n"
@@ -42,6 +108,7 @@ main()
       cerr << message->header(h_Vias).front().param(p_branch).getTransactionId() << endl;
       cerr << message->header(h_Vias).back().param(p_branch).getTransactionId() << endl;
    }
+
    {
       char *txt = ("To: <sip:106@kelowna.gloo.net>"
                    "From: <sip:106@kelowna.gloo.net>;tag=18c7b33a-430c-429c-9f46-e5b509264519\r\n"
