@@ -175,7 +175,7 @@ DnsStub::createOverlay(const unsigned char* abuf,
 void
 DnsStub::setupCache()
 {
-   mCacheMap.insert(IntToCache(T_CNAME, &mCnameCache));   
+   mCacheMap.insert(CacheMap::value_type(T_CNAME, &mCnameCache));
 }
 
 void

@@ -23,8 +23,6 @@ template<class T>
 class RRCache : public RRCacheBase
 {
    public:
-      //typedef typename T::LruList LruListType;
-      //typedef typename T::Records Result;
       typedef typename RRList<T>::LruList LruListType;
       typedef typename RRList<T>::Records Result;
 
@@ -111,7 +109,6 @@ class RRCache : public RRCacheBase
          mRRSet.clear();
       }
 
-      //T mHead;
       RRList<T> mHead;
       LruListType* mLruHead;
                   
