@@ -1,6 +1,7 @@
 #include <sipstack/Fifo.hxx>
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/Logger.hxx>
+#include <sipstack/Message.hxx>
 
 using namespace Vocal2;
 
@@ -15,5 +16,6 @@ main(int argc, char* argv[])
    DebugLog (<< "testing");
    
    UdpTransport t(5060, fifo);
+
    t.run();
 }

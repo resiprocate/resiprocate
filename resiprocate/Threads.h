@@ -15,8 +15,7 @@
 #define DEFAULT_THREADING /**/ ::Loki::SingleThreaded
 #endif
 
-#ifdef __linux__
-#include <asm/atomic.h>
+#if defined(__linux__) || defined(__CYGWIN32__)
 #include <pthread.h>
 #endif
 
@@ -41,33 +40,9 @@ class SingleThreaded
       typedef Host VolatileType;
 
       typedef int IntType; 
-
-      static IntType AtomicAdd(volatile IntType& lval, IntType val)
-      { return lval += val; }
-        
-      static IntType AtomicSubtract(volatile IntType& lval, IntType val)
-      { return lval -= val; }
-
-      static IntType AtomicMultiply(volatile IntType& lval, IntType val)
-      { return lval *= val; }
-        
-      static IntType AtomicDivide(volatile IntType& lval, IntType val)
-      { return lval /= val; }
-        
-      static IntType AtomicIncrement(volatile IntType& lval)
-      { return ++lval; }
-        
-      static IntType AtomicDivide(volatile IntType& lval)
-      { return --lval; }
-        
-      static void AtomicAssign(volatile IntType & lval, IntType val)
-      { lval = val; }
-        
-      static void AtomicAssign(IntType & lval, volatile IntType & val)
-      { lval = val; }
 };
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__CYGWIN32__)
 template <class Host>
 class ClassLevelLockable
 {
@@ -115,72 +90,6 @@ class ClassLevelLockable
       typedef volatile Host VolatileType;
 
       typedef long IntType; 
-
-      static IntType AtomicIncrement(volatile IntType& lval)
-      { return atomic_inc_and_test(static_cast<atomic_t&>(lval)); }
-          
-      static IntType AtomicDecrement(volatile IntType& lval)
-      { return atomic_dec_and_test(static_cast<atomic_t&>(lval)); }
-        
-      static void AtomicAssign(volatile IntType& lval, IntType val)
-      { atomic_set(static_cast<atomic_t&>(lval), val); }
-      
-        
-      static void AtomicAssign(IntType& lval, volatile IntType& val)
-      { atomic_set(static_cast<atomic_t&>(lval), val); };
-};
-
-template <class Host>
-class ObjectLevelLockable
-{
-      pthread_mutex_t mtx_;
-
-   public:
-      ObjectLevelLockable()
-      {
-         pthread_mutex_init(&mtx_, NULL);
-      }
-
-      ~ObjectLevelLockable()
-      {
-         pthread_mutex_destroy(&mtx);
-      }
-
-      class Lock;
-      friend class Lock;
-        
-      class Lock
-      {
-            ObjectLevelLockable& host_;
-            
-            Lock(const Lock&);
-            Lock& operator=(const Lock&);
-         public:
-            Lock(Host& host) : host_(host)
-            {
-               pthread_mutex_lock(&host_.mtx_);
-            }
-            ~Lock()
-            {
-               pthread_mutex_unlock(&host_.mtx_);
-            }
-      };
-
-      typedef volatile Host VolatileType;
-
-      typedef long IntType; 
-
-      static IntType AtomicIncrement(volatile IntType& lval)
-      { return atomic_inc_and_test(static_cast<atomic_t&>(lval)); }
-          
-      static IntType AtomicDecrement(volatile IntType& lval)
-      { return atomic_dec_and_test(static_cast<atomic_t&>(lval)); }
-        
-      static void AtomicAssign(volatile IntType& lval, IntType val)
-      { atomic_set(static_cast<atomic_t&>(lval), val); }
-      
-      static void AtomicAssign(IntType& lval, volatile IntType& val)
-      { atomic_set(static_cast<atomic_t&>(lval), val); };
 };
 
 template <class Host>
@@ -192,8 +101,8 @@ ClassLevelLockable<Host>::initializer_;
           
 #endif
     
-#ifdef _WINDOWS_
-    
+#ifdef _WINDOWS_ 
+
 template <class Host>
 class ClassLevelLockable
 {
@@ -242,17 +151,6 @@ class ClassLevelLockable
 
       typedef LONG IntType; 
 
-      static IntType AtomicIncrement(volatile IntType& lval)
-      { return InterlockedIncrement(&const_cast<IntType&>(lval)); }
-        
-      static IntType AtomicDivide(volatile IntType& lval)
-      { return InterlockedDecrement(&const_cast<IntType&>(lval)); }
-        
-      static void AtomicAssign(volatile IntType& lval, IntType val)
-      { InterlockedExchange(&const_cast<IntType&>(lval), val); }
-        
-      static void AtomicAssign(IntType& lval, volatile IntType& val)
-      { InterlockedExchange(&lval, val); }
 };
     
 template <class Host>
