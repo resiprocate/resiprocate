@@ -220,7 +220,17 @@ ParseBuffer::data(const char* start) const
 int
 ParseBuffer::integer()
 {
-   if (!isdigit(*position()))
+   if ( this->eof() )
+   {
+      DebugLog(<< "Expected a digit, got eof ");
+      throw Exception("Expected a digit, got eof", __FILE__, __LINE__);
+   }
+
+   const char* p = position();
+   assert( p );
+   char c = *p;
+
+   if (!isdigit(c))
    {
       DebugLog(<< "Expected a digit, got: " << Data(position(), (mEnd - position())));
       throw Exception("Expected a digit", __FILE__, __LINE__);
