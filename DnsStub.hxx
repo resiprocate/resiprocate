@@ -163,6 +163,7 @@ class DnsStub
                   notifyUser(status, Empty);
                   mStub.removeQuery(this);
                   delete this;
+                  mReQuery = 0;
                   return;
                }
 
