@@ -16,6 +16,8 @@
 #include "repro/monkeys/DigestAuthenticator.hxx"
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/monkeys/ConstantLocationMonkey.hxx"
+#include "repro/monkeys/RouteMonkey.hxx"
+#include "repro/RouteDbMemory.hxx"
 #include "repro/UserDb.hxx"
 #include "repro/Registrar.hxx"
 #include "repro/WebAdmin.hxx"
@@ -60,56 +62,59 @@ main(int argc, char** argv)
    Registrar registrar;
    InMemoryRegistrationDatabase regData;
    MasterProfile profile;
-
+   
+   RouteDbMemory routeDb;
+   
    /* Initialize a proxy */
    RequestProcessorChain requestProcessors;
-
+   
    if (args.mRequestProcessorChainName=="StaticTest")
    {
-     ConstantLocationMonkey* testMonkey = new ConstantLocationMonkey();
-     requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(testMonkey));
+      ConstantLocationMonkey* testMonkey = new ConstantLocationMonkey();
+      requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(testMonkey));
    }
    else
    {
-     // Either the chainName is default or we don't know about it
-     // Use default if we don't recognize the name
-     // Should log about it.
-     RequestProcessorChain* locators = new RequestProcessorChain();
-  
-     RouteProcessor* rp = new RouteProcessor;
-     locators->addProcessor(std::auto_ptr<RequestProcessor>(rp));
-	 
-     AmIResponsible* isme = new AmIResponsible;
-     locators->addProcessor(std::auto_ptr<RequestProcessor>(isme));
-     
-     // [TODO] !rwm! put Gruu monkey here
-     
-     // [TODO] !rwm! put Tel URI monkey here 
-     
-#if 1
-     // TODO - remove next forwards all to 
-     //ConstantLocationMonkey* cls = new ConstantLocationMonkey;
-     //locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
+      // Either the chainName is default or we don't know about it
+      // Use default if we don't recognize the name
+      // Should log about it.
+      RequestProcessorChain* locators = new RequestProcessorChain();
+      
+      RouteProcessor* rp = new RouteProcessor;
+      locators->addProcessor(std::auto_ptr<RequestProcessor>(rp));
+      
+      AmIResponsible* isme = new AmIResponsible;
+      locators->addProcessor(std::auto_ptr<RequestProcessor>(isme));
+      
+      // [TODO] !rwm! put Gruu monkey here
+      
+      // [TODO] !rwm! put Tel URI monkey here 
+      
+#if 0
+      // TODO - remove next forwards all to 
+      //ConstantLocationMonkey* cls = new ConstantLocationMonkey;
+      //locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
 #endif
-
-     // [TODO] !jf! put static route monkey here
-
-     LocationServer* ls = new LocationServer(regData);
-     locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
-  
-     requestProcessors.addProcessor(auto_ptr<RequestProcessor>(locators));
-    
-     if (!args.mNoChallenge)
-     {
-        DigestAuthenticator* da = new DigestAuthenticator();
-        //requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
-     }
+      
+      RouteMonkey* routeMonkey = new RouteMonkey(routeDb);
+      locators->addProcessor(std::auto_ptr<RequestProcessor>(routeMonkey));
+      
+      LocationServer* ls = new LocationServer(regData);
+      locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
+      
+      requestProcessors.addProcessor(auto_ptr<RequestProcessor>(locators));
+      
+      if (!args.mNoChallenge)
+      {
+         DigestAuthenticator* da = new DigestAuthenticator();
+         //requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+      }
    }
- 
+   
    UserDb userDb;
-
+   
    Proxy proxy(stack, requestProcessors, userDb);
-
+   
    proxy.addDomain(DnsUtil::getLocalHostName());
    proxy.addDomain(DnsUtil::getLocalHostName(), 5060);
 #if !defined( __APPLE__ ) // fails on mac  
@@ -123,9 +128,8 @@ main(int argc, char** argv)
       //InfoLog (<< "Adding domain " << i->host() << " " << i->port());
       proxy.addDomain(i->host(), i->port());
    }
-
    
-   WebAdmin admin(userDb, regData, security);
+   WebAdmin admin(userDb, regData, routeDb, security);
    WebAdminThread adminThread(admin);
 
    profile.clearSupportedMethods();

@@ -8,6 +8,11 @@ PACKAGES += DUM RESIPROCATE OPENSSL ARES DB42 PTHREAD
 CODE_SUBDIRS = monkeys
 TARGET_LIBRARY = librepro
 
+CXXFLAGS += -I/sw/include
+LDFLAGS  += -L/sw/lib 
+LDLIBS   += -ldb-4.2 -lpopt
+
+
 TESTPROGRAMS = \
 	repro.cxx \
 #	userAdmin.cxx 
@@ -17,6 +22,7 @@ SRC =   \
 	HttpBase.cxx \
 	HttpConnection.cxx \
         monkeys/DigestAuthenticator.cxx \
+        monkeys/RouteMonkey.cxx \
 	monkeys/RouteProcessor.cxx \
 	monkeys/AmIResponsible.cxx \
 	monkeys/LocationServer.cxx \
@@ -29,6 +35,7 @@ SRC =   \
 	ResponseContext.cxx \
 	UserDb.cxx \
 	UserAbstractDb.cxx \
+	RouteDbMemory.cxx \
 	WebAdminThread.cxx \
         RequestProcessor.cxx \
         RequestProcessorChain.cxx
