@@ -17,7 +17,7 @@ class RequestProcessorChain;
 class RequestContext
 {
    public:
-      RequestContext(resip::SipMessage& sipMsg, RequestProcessorChain& chain);
+      RequestContext(std::auto_ptr<resip::SipMessage> sipMsg, RequestProcessorChain& chain);
       ~RequestContext();
 
       void process(resip::TransactionTerminated& msg);
@@ -30,11 +30,11 @@ class RequestContext
       const resip::Data& getDigestIdentity() const;
       
    private:
-      RequestProcessorChain &mRequestProcessorChain;
+      std::auto_ptr<resip::SipMessage> mOriginalRequest;
+      RequestProcessorChain& mRequestProcessorChain;
       resip::Data mDigestIdentity;
-      resip::SipMessage mSipRequest;
-
       std::vector<resip::Uri> mTargetSet;
+      int mTransactionCount;
 };
 }
 #endif
