@@ -140,7 +140,8 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
          mDialogId.param(p_fromTag) = mRemoteTag;
 
          mCreated = true;
-         mEarly = (response.header(h_StatusLine).statusCode() < 200);
+         mEarly = (response.header(h_StatusLine).statusCode() > 100 &&
+                   response.header(h_StatusLine).statusCode() < 200);
       }
       else if (msg.isRequest() && msg.header(h_CSeq).method() == NOTIFY)
       {
@@ -185,10 +186,9 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
    }
    else if (msg.isResponse())
    {
-      if (mEarly) 
-      {
-         mEarly = (msg.header(h_StatusLine).statusCode() < 200);
-      }
+      mEarly = (msg.header(h_StatusLine).statusCode() < 200 && 
+                msg.header(h_StatusLine).statusCode() > 100);
+
       // don't update target for register since contact is not a target
       if ( msg.header(h_CSeq).method() != REGISTER )
       {
@@ -334,6 +334,8 @@ Dialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
       mDialogId.param(p_toTag) = mLocalTag;
       mDialogId.param(p_fromTag) = mRemoteTag;
 
+      mEarly = (code > 100 && code < 200);
+
       mCreated = true;
    }
    else
@@ -342,6 +344,7 @@ Dialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
       if (mCreated)
       {
          response.header(h_To).param(p_tag) = mLocalTag;
+         mEarly = false;
       }
    }
 }
