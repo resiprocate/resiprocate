@@ -101,7 +101,7 @@ UdpTransport::process(fd_set* fdSet)
    // how do we know that buffer won't get deleted on us !jf!
    if (mTxFifo.messageAvailable())
    {
-      SendData* data = mTxFifo.getNext();
+      std::auto_ptr<SendData> data = std::auto_ptr<SendData>(mTxFifo.getNext());
       DebugLog (<< "Sending message on udp");
 
       const sockaddr_in* addrin = data->destination;
