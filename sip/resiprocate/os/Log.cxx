@@ -102,7 +102,7 @@ Log::initialize(Type type, Level level, const Data& appName, const char * logFil
    gethostname(buffer, sizeof(buffer));
    _hostname = buffer;
 #ifdef WIN32 
-   _pid = (int)GetCurrentProcess;;
+   _pid = (int)GetCurrentProcess();
 #else
    _pid = getpid();
 #endif
@@ -173,12 +173,19 @@ Log::toType(const Data& arg)
 ostream&
 Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm) 
 {
-#if defined( WIN32 ) || defined( __APPLE__ )
+#if defined( __APPLE__ )
    strm << _descriptions[level+1] << DELIM 
         << time(0) << DELIM 
         << _appName << DELIM
         << subsystem << DELIM;
 #else   
+#if defined( WIN32 )
+     strm << _descriptions[level+1] << DELIM
+        << timestamp() << DELIM  
+        << _appName << DELIM
+        << subsystem << DELIM 
+        << GetCurrentThreadId() << DELIM;
+#else
    strm << _descriptions[level+1] << DELIM
         << timestamp() << DELIM  
         << _hostname << DELIM  
@@ -186,7 +193,8 @@ Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm)
         << subsystem << DELIM 
         << _pid << DELIM
         << pthread_self() << DELIM;
-#endif 
+#endif // #if defined( WIN32 ) 
+#endif // #if defined( __APPLE__ )
   return strm;
 }
 
@@ -199,6 +207,7 @@ Log::timestamp()
 #ifdef WIN32 
  int result = 1; 
   struct { int tv_sec; int tv_usec; } tv = {0,0};
+  time((time_t *)(&tv.tv_sec));
 #else 
   struct timeval tv; 
   int result = gettimeofday (&tv, NULL);
@@ -225,10 +234,14 @@ Log::timestamp()
     }
    
    char msbuf[5];
+#if defined( WIN32 )
+   msbuf[0] = '\0';
+#else
    /* Dividing (without remainder) by 1000 rounds the microseconds
       measure to the nearest millisecond. */
    sprintf(msbuf, ".%3.3ld", long(tv.tv_usec / 1000));
-   
+#endif
+
    int datebufCharsRemaining = datebufSize - strlen (datebuf);
    strncat (datebuf, msbuf, datebufCharsRemaining - 1);
    datebuf[datebufSize - 1] = '\0'; /* Just in case strncat truncated msbuf,
