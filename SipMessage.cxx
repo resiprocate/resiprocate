@@ -47,7 +47,7 @@ SipMessage::clone() const
 bool
 SipMessage::isRequest() const
 {
-   assert(0);
+   //assert(0); // !jf!
    return true;
 }
 

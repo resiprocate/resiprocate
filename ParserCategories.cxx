@@ -38,7 +38,7 @@ StringComponent::value()
 MethodTypes
 RequestLineComponent::getMethod() const
 {
-   assert(0);
+   //assert(0); // !jf!
    return INVITE;
 }
 
