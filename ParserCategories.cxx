@@ -420,12 +420,22 @@ DateCategory::DateCategory()
    }
    
    struct tm gmt;
-   if (gmtime_r(&now, &gmt) == 0)
+#ifdef WIN32
+   struct tm *gmtp = gmtime(&now);
+   if (gmtp == 0)
    {
       DebugLog (<< "Failed to convert to gmt: " << strerror(errno));
       return;
    }
-   
+   memcpy(&gmt,gmtp,sizeof(gmt));
+#else
+  if (gmtime_r(&now, &gmt) == 0)
+   {
+      DebugLog (<< "Failed to convert to gmt: " << strerror(errno));
+      return;
+   }
+#endif
+
    mDayOfWeek = static_cast<DayOfWeek>(gmt.tm_wday);
    mDayOfMonth = gmt.tm_mday;
    mMonth = static_cast<Month>(gmt.tm_mon);
