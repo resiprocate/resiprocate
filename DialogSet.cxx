@@ -94,7 +94,6 @@ Dialog*
 DialogSet::findDialog(const SipMessage& msg)
 {
    DialogId id(msg);
-   InfoLog ( << "*********** Looking for dialog: " << id << "***********" );   
    return findDialog(id);
 }
 
@@ -108,33 +107,25 @@ void
 DialogSet::dispatch(const SipMessage& msg)
 {
    assert(msg.isRequest() || msg.isResponse());
+
+   if (mDum.mClientAuthManager && !mCancelled)
+   {
+      if (getCreator())
+      {
+         if ( mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg))
+         {
+            InfoLog( << "about to retransmit request with digest credentials" );
+            InfoLog( << getCreator()->getLastRequest() );
+            
+            mDum.send(getCreator()->getLastRequest());
+            return;                     
+         }                  
+      }
+   }
+
    Dialog* dialog = findDialog(msg);
    if (dialog == 0)
    {
-      //!dcm! -- think this is correct
-
-      if (msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 300)
-      {
-         int code = msg.header(h_StatusLine).statusCode();
-         if (code == 401 || code == 407)
-         {
-            if (mDum.mClientAuthManager && !mCancelled)
-            {
-               if (getCreator())
-               {
-                  if ( mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg))
-                  {
-                     InfoLog( << "about to retransmit request with digest credentials" );
-                     InfoLog( << getCreator()->getLastRequest() );
-               
-                     mDum.send(getCreator()->getLastRequest());
-                  }
-               }
-            }
-         }
-         return;         
-      }      
-
       InfoLog ( << "Creating a new Dialog from msg: " << msg);
       // !jf! This could throw due to bad header in msg, should we catch and rethrow
       // !jf! if this threw, should we check to delete the DialogSet? 
@@ -148,7 +139,6 @@ DialogSet::dispatch(const SipMessage& msg)
          dialog->cancel();
       }
    }     
-
    dialog->dispatch(msg);
 }
 
