@@ -1,9 +1,8 @@
 #ifndef STRINGDATA_H_
 #define STRINGDATA_H_
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.11 2002/10/13 02:26:18 fluffy Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.12 2002/10/13 06:02:36 jason Exp $";
 
-#include <string>
 #include <iostream>
 
 namespace Vocal2
@@ -14,35 +13,52 @@ class Data
       
    public:
       Data();
+      Data(int capacity, bool);
       Data(const char* str);
       Data(const char* buffer, int length);
       Data(const Data& data);
       Data(const std::string& str);
-      explicit Data( const int value);
+      explicit Data(int value);
+      
+      ~Data();
 
       bool operator==(const Data& rhs) const;
       bool operator!=(const Data& rhs) const { return !(*this == rhs); }
-      bool operator<(const Data& rhs) const;
       bool operator==(const char* rhs) const;
       bool operator==(const std::string& rhs) const;
 
       Data& operator=(const Data& data);
       Data& operator+=(const Data& rhs);
       Data operator+(const Data& rhs);
+      Data& operator=(const char* str);
+      Data& operator+=(const char* str);
+      Data operator+(const char* str);
 
-      bool empty() const { return mRep.empty(); }
-      int size() const { return int(mRep.size()); }
-      const char* c_str() const { return mRep.c_str(); }
-      const char* data() const { return mRep.data(); }
+      bool empty() const { return mSize == 0; }
+      int size() const { return mSize; }
+      const char* c_str() const;
+      // not necessarily NULL terminated
+      const char* data() const;
 
    private:
-      std::string mRep;
+      Data(const char* buffer, int length, bool);
+      void resize(unsigned int newSize, bool copy);
+      unsigned int mSize;
+      char* mBuf;
+      unsigned int mCapacity;
+      bool mMine;
       
+      friend bool operator==(const char* s, const Data& d);
+      friend bool operator!=(const char* s, const Data& d);
       friend std::ostream& operator<<(std::ostream& strm, const Data& d);
+      friend class ParseBuffer;
 };
 
-}
+bool operator==(const char* s, const Data& d);
+bool operator!=(const char* s, const Data& d);
+std::ostream& operator<<(std::ostream& strm, const Data& d);
 
+}
 
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 #include <ext/hash_map>

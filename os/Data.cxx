@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.5 2002/10/13 03:37:21 fluffy Exp $";
+"$Id: Data.cxx,v 1.6 2002/10/13 06:02:36 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -9,66 +9,184 @@ static const char* const Data_cxx_Version =
 using namespace Vocal2;
 using namespace std;
 
-Data::Data() : mRep()
+Data::Data() 
+   : mSize(0),
+     mBuf(new char[mSize + 1]),
+     mCapacity(mSize),
+     mMine(true)
 {
+   mBuf[0] = 0;
 }
 
-Data::Data( const char* str, int length ) : mRep(str,length)
+Data::Data(const char* str, int length) 
+   : mSize(length),
+     mBuf(new char[mSize + 1]),
+     mCapacity(mSize),
+     mMine(true)
 {
+   assert(str);
+   memcpy(mBuf, str, mSize + 1);
 }
 
-Data::Data( const char* str ) : mRep(str)
+// share memory KNOWN to be in a surrounding scope
+// wears off on modify, copy, c_str, assign
+Data::Data(const char* str, int length, bool) 
+   : mSize(length),
+     mBuf(const_cast<char*>(str)),
+     mCapacity(mSize),
+     mMine(false)
 {
+   assert(str);
 }
 
-Data::Data( const string& str) : mRep(str)
+Data::Data(const char* str) 
+   : mSize(str ? strlen(str) : 0),
+     mBuf(new char[mSize + 1]),
+     mCapacity(mSize),
+     mMine(true)
 {
+   assert(str);
+   memcpy(mBuf, str, mSize+1);
 }
 
-Data::Data( const int value) : mRep()
+Data::Data(const string& str) : 
+   mSize(str.size()),
+   mBuf(new char[mSize + 1]),
+   mCapacity(mSize),
+   mMine(true)
 {
-   // !ah! sprintf needs a punt
-   char buffer[32];
+   memcpy(mBuf, str.c_str(), mSize + 1);
+}
+
+Data::Data(int val)
+   : mSize(0),
+     mBuf(0),
+     mCapacity(0),
+     mMine(true)
+{
+   if (val == 0)
+   {
+      mBuf = new char[2];
+      mBuf[0] = '0';
+      mBuf[1] = 0;
+      mSize = 1;
+      mCapacity = mSize;
+      return;
+   }
+
+   bool neg = false;
    
-   sprintf(buffer,"%d",value);
-   *this = buffer; // !ah! ie
+   int value = val;
+   if (value < 0)
+   {
+      value = -value;
+      neg = true;
+   }
+
+   int c = 0;
+   int v = value;
+   while (v /= 10)
+   {
+      c++;
+   }
+
+   if (neg)
+   {
+      c++;
+   }
+
+   mSize = c+1;
+   mCapacity = mSize;
+   mBuf = new char[c+2];
+   mBuf[c+1] = 0;
+   
+   v = value;
+   while (v)
+   {
+      mBuf[c--] = '0' + v%10;
+      v /= 10;
+   }
+
+   if (neg)
+   {
+      mBuf[0] = '-';
+   }
 }
 
-Data::Data( const Data& data ) : mRep(data.mRep)
+Data::Data(const Data& data) 
+   : mSize(data.mSize),
+     mBuf(new char[mSize+1]),
+     mCapacity(mSize),
+     mMine(true)
 {
+   memcpy(mBuf, data.mBuf, mSize);
+   mBuf[mSize] = 0;
+}
+
+Data::~Data()
+{
+   if (mMine)
+   {
+      delete[] mBuf;
+   }
 }
 
 bool 
 Data::operator==(const Data& rhs) const
 {
-   return mRep == rhs.mRep;
+   if (mSize != rhs.mSize)
+   {
+      return false;
+   }
+   return strncmp(mBuf, rhs.mBuf, mSize) == 0;
 }
 
 bool 
 Data::operator==(const char* rhs) const
 {
-   return mRep == rhs;
+   assert(rhs);
+   if (strncmp(mBuf, rhs, mSize) != 0)
+   {
+      return false;
+   }
+   else
+   {
+      // make sure the string terminates at size
+      return rhs[mSize] == 0;
+   }
 }
 
 bool 
 Data::operator==(const std::string& rhs) const
 {
-   return mRep == rhs;
+   if (mSize != rhs.size())
+   {
+      return false;
+   }
+   return strncmp(mBuf, rhs.c_str(), mSize) == 0;
 }
-
-bool 
-Data::operator<(const Data& rhs) const
-{
-   return mRep < rhs.mRep;
-}
-
 
 Data& 
 Data::operator=(const Data& data)
 {
    if (&data != this)
    {
-      mRep = data.mRep;
+      if (!mMine)
+      {
+         resize(data.mSize, false);
+      }
+      else
+      {
+         if (data.mSize > mCapacity)
+         {
+            resize(data.mSize, false);
+         }
+      }
+      
+      mSize = data.mSize;
+      memcpy(mBuf, data.mBuf, mSize);
+      mBuf[mSize] = 0;
+      mMine = false;
    }
    return *this;
 }
@@ -76,24 +194,176 @@ Data::operator=(const Data& data)
 Data 
 Data::operator+(const Data& data)
 {
-   mRep += data.mRep;
-   return *this;
+   Data tmp(mSize + data.mSize, true);
+   tmp.mSize = mSize + data.mSize;
+   tmp.mCapacity = tmp.mSize;
+   memcpy(tmp.mBuf, mBuf, mSize);
+   memcpy(tmp.mBuf + mSize, data.mBuf, data.mSize);
+   tmp.mBuf[tmp.mSize] = 0;
+
+   return tmp;
 }
 
 Data& 
 Data::operator+=(const Data& data)
 {
-   mRep += data.mRep;
+   if (mCapacity < mSize + data.mSize)
+   {
+      // .dlb. pad for future growth?
+      resize(mSize + data.mSize, true);
+   }
+   else
+   {
+      if (!mMine)
+      {
+         char *oldBuf = mBuf;
+         mBuf = new char[mSize + data.mSize];
+         memcpy(mBuf, oldBuf, mSize);
+         mMine = true;
+      }
+   }
+   memcpy(mBuf + mSize, data.mBuf, data.mSize);
+   mSize += data.mSize;
+   mCapacity = mSize;
+   mBuf[mSize] = 0;
+
    return *this;
+}
+
+Data& 
+Data::operator=(const char* str)
+{
+   unsigned int l = strlen(str);
+
+   if (!mMine)
+   {
+      resize(l, false);
+   }
+   else
+   {
+      if (l > mCapacity)
+      {
+         resize(l, false);
+      }
+   }
+      
+   mSize = l;
+   memcpy(mBuf, str, mSize+1);
+   mMine = false;
+
+   return *this;
+}
+
+Data 
+Data::operator+(const char* str)
+{
+   unsigned int l = strlen(str);
+   Data tmp(mSize + l, true);
+   tmp.mSize = mSize + l;
+   tmp.mCapacity = tmp.mSize;
+   memcpy(tmp.mBuf, mBuf, mSize);
+   memcpy(tmp.mBuf + mSize, str, l+1);
+
+   return tmp;
+}
+
+Data& 
+Data::operator+=(const char* str)
+{
+   unsigned int l = strlen(str);
+   if (mCapacity < mSize + l)
+   {
+      // .dlb. pad for future growth?
+      resize(mSize + l, true);
+   }
+   else
+   {
+      if (!mMine)
+      {
+         char *oldBuf = mBuf;
+         mBuf = new char[mSize + l];
+         memcpy(mBuf, oldBuf, mSize);
+         mMine = true;
+      }
+   }
+   memcpy(mBuf + mSize, str, l + 1);
+   mSize += l;
+   mCapacity = mSize;
+
+   return *this;
+}
+
+const char* 
+Data::c_str() const
+{
+   if (!mMine)
+   {
+      const_cast<Data*>(this)->resize(mSize, true);
+   }
+   return mBuf;
+}
+
+const char* 
+Data::data() const
+{
+   return mBuf;
+}
+
+// pre-allocate capacity
+Data::Data(int capacity, bool) 
+   : mSize(0),
+     mBuf(new char[capacity + 1]),
+     mCapacity(capacity),
+     mMine(true)
+{
+   mBuf[0] = 0;
+}
+
+// generate additional capacity
+void
+Data::resize(unsigned int newCapacity, 
+             bool copy)
+{
+   char *oldBuf = mBuf;
+   mBuf = new char[newCapacity+1];
+   if (copy)
+   {
+      memcpy(mBuf, oldBuf, mSize);
+      mBuf[mSize] = 0;
+   }
+   if (mMine)
+   {
+      delete[] oldBuf;
+   }
+   mMine = true;
+   mCapacity = newCapacity;
+}
+
+bool
+Vocal2::operator==(const char* s, const Data& d)
+{
+   return d == s;
+}
+
+bool
+Vocal2::operator!=(const char* s, const Data& d)
+{
+   return d != s;
 }
 
 ostream& 
 Vocal2::operator<<(ostream& strm, const Data& d)
 {
-   strm << d.mRep;
+   const char* b = d.mBuf;
+   const char* e = d.mBuf + d.mSize;
+   while (b != e)
+   {
+      strm << *b;
+      b++;
+   }
+
    return strm;
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
