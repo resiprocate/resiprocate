@@ -275,6 +275,7 @@ ClientInviteSession::end()
          break;
       case Terminated: 
       case Connected:
+      case ReInviting:
          return InviteSession::end();
          break;
       case Cancelled: //user error
