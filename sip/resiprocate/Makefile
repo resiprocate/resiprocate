@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.130 2003/09/14 08:27:16 jason Exp $
+# $Id: Makefile,v 1.131 2003/09/18 21:08:48 jason Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -54,7 +54,6 @@ SRC = \
 	LazyParser.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
-	ConnectionMap.cxx \
 	Contents.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
@@ -96,7 +95,12 @@ SRC = \
 	SipStack.cxx \
 	StatelessHandler.cxx \
 	Symbols.cxx \
+	ConnectionManager.cxx \
+	TcpConnection.cxx \
+	TlsConnection.cxx \
+	TcpBaseTransport.cxx \
 	TcpTransport.cxx \
+	TlsTransport.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
 	TlsTransport.cxx \
