@@ -37,7 +37,7 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
   // the copy for the param lists will end up with empty lists
   if (!(isParsed()))
     {
-      const_cast<char*>(mField) = new char[mFieldLength];
+      const_cast<char*&>(mField) = new char[mFieldLength];
       memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
     }
   
