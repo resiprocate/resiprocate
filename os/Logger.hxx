@@ -19,9 +19,9 @@
 */
 
 // unconditionally output to cerr -- easily change back and forth
-#define CerrLog(args_)                                                          \
-  resip::Log::tags(resip::Log::StdErr, RESIPROCATE_SUBSYSTEM, std::cerr)           \
-          << __FILE__ << ':' << __LINE__ << DELIM                               \
+#define CerrLog(args_)                                          \
+  resip::Log::tags(resip::Log::StdErr, RESIPROCATE_SUBSYSTEM,   \
+                   __FILE__, __LINE__, std::cerr) << DELIM      \
           args_ << std::endl;
 
 #define StackLog(args_)                                                         \
@@ -67,9 +67,9 @@ do                                                                              
          AssertOnRecursiveLock check;                                           \
          resip::Lock lock(resip::Log::_mutex);                                  \
          check.set();                                                           \
-         resip::Log::tags(level_, system_, resip::GenericLogImpl::Instance())   \
-                              << __FILE__ << ':' << __LINE__ << DELIM           \
-            args_ << std::endl;                                                 \
+         resip::Log::tags(level_, system_, __FILE__, __LINE__,                  \
+                          resip::GenericLogImpl::Instance()) << DELIM           \
+                          args_ << std::endl;                                   \
       }                                                                         \
    }                                                                            \
    else                                                                         \
@@ -81,10 +81,9 @@ do                                                                              
          check.set();                                                           \
          if (resip::GenericLogImpl::isLogging(level_))                          \
          {                                                                      \
-            resip::Log::tags(level_, system_,                                   \
-                              resip::GenericLogImpl::Instance())                \
-                                 << __FILE__ << ':' << __LINE__ << DELIM        \
-               args_ << std::endl;                                              \
+            resip::Log::tags(level_, system_, __FILE__, __LINE__,               \
+                             resip::GenericLogImpl::Instance()) << DELIM        \
+                             args_ << std::endl;                                \
          }                                                                      \
       }                                                                         \
    }                                                                            \
