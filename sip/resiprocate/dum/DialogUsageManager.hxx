@@ -172,8 +172,6 @@ class DialogUsageManager : public HandleManager
       std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id);
       std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id, const Data& eventType, const Data& subId);
       ServerSubscriptionHandle findServerSubscription(DialogId id);
-      ClientRegistrationHandle findClientRegistration(DialogId id);
-      ServerRegistrationHandle findServerRegistration(DialogId id);
       ClientPublicationHandle findClientPublication(DialogId id);
       ServerPublicationHandle findServerPublication(DialogId id);
       std::vector<ClientOutOfDialogReqHandle> findClientOutOfDialog(DialogId id);

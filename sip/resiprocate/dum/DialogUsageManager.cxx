@@ -1006,13 +1006,13 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
       switch(method)
       {
          case SUBSCRIBE:
-            if (getServerSubscriptionHandler(request.header(h_Event).value()))
+            if (!getServerSubscriptionHandler(request.header(h_Event).value()))
             {
                failureCode = 489;
             }
             break;
          case NOTIFY:
-            if (getClientSubscriptionHandler(request.header(h_Event).value()))
+            if (!getClientSubscriptionHandler(request.header(h_Event).value()))
             {
                failureCode = 489;
             }
