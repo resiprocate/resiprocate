@@ -168,6 +168,7 @@ main(int argc, char* argv[])
             "A line with a singe period on it ends the program\n" );
    
    int port = 5060;
+   int tlsPort = 0;
    Uri aor("sip:aor@localhost:5060" );
    Uri dest("sip:you@localhost:5070");
       
@@ -186,6 +187,12 @@ main(int argc, char* argv[])
          i++;
          assert( i<argc );
          port = atoi( argv[i] );
+      } 
+      else if (!strcmp(argv[i],"-tlsport"))
+      {
+         i++;
+         assert( i<argc );
+         tlsPort = atoi( argv[i] );
       } 
       else if (!strcmp(argv[i],"-aor"))
       {
@@ -224,12 +231,23 @@ main(int argc, char* argv[])
 #endif
    
     Vocal2::Transport::Type transport = Transport::UDP;
-   
 
-//   sipStack.addTransport(Transport::UDP, port);
-//   sipStack.addTransport(Transport::TCP, port);
-//   sipStack.addTransport(Transport::TLS, port);
-   sipStack.addTransport(transport, port);
+   sipStack.addTransport(Transport::UDP, port);
+   sipStack.addTransport(Transport::TCP, port);
+#if USE_SSL
+   if ( port == 5060 )
+   {
+       if ( tlsPort == 0 )
+       {
+           tlsPort = 5061;
+           
+       }
+   }
+   if ( tlsPort != 0 )
+   {
+       sipStack.addTransport(Transport::TLS, tlsPort);
+   }
+#endif
 
    TestPageCallback pageCallback;
    pageCallback.mDest = &dest;
@@ -238,14 +256,14 @@ main(int argc, char* argv[])
     
    TestPresCallback presCallback;
 
-   aor.port() = port;
-   
-   Uri contact("sip:me-contact@localhost");
-   contact.port() = port;
-   contact.param(p_transport) = Transport::toData( transport );
    dest.param(p_transport) = Transport::toData( transport );
    aor.param(p_transport) = Transport::toData( transport );
 
+   Uri contact = aor;
+   contact.port() = port;
+   contact.param(p_transport) =  aor.param(p_transport);
+   contact.host() = "localhost"; // TODO - fix this 
+   
    TuIM tuIM(&sipStack,aor,contact,&pageCallback,&errCallback,&presCallback);
     
    //Vocal2::makeSocketNonBlocking( fileno(stdin) );
