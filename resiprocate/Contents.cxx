@@ -4,7 +4,7 @@
 
 using namespace Vocal2;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define VOCAL_SUBSYSTEM Subsystem::CONTENTS
 
 MIME_Id_Header Vocal2::h_Id;
 MIME_Description_Header Vocal2::h_Description;

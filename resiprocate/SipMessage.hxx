@@ -27,6 +27,7 @@ namespace Vocal2
 {
 
 class Contents;
+class UnknownHeaderType;
 
 class SipMessage : public Message
 {
@@ -91,6 +92,23 @@ class SipMessage : public Message
       bool exists(const HeaderBase& headerType) const;
       void remove(const HeaderBase& headerType);
 
+//#define METHOD_TEMPLATES
+#ifdef METHOD_TEMPLATES
+
+      template <class T>
+      typename T::UnknownReturn::Type&
+      SipMessage::header(const T& headerType) const
+      {
+         HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), T::Single);
+         if (hfvs->getParserContainer() == 0)
+         {
+            hfvs->setParserContainer(new ParserContainer<typename T::Type>(hfvs, headerType.getTypeNum()));
+         }
+         return T::knownReturn(hfvs->getParserContainer());
+      };
+
+#else
+
       CSeq_Header::Type& header(const CSeq_Header& headerType) const;
       CallId_Header::Type& header(const CallId_Header& headerType) const;
       AuthenticationInfo_Header::Type& header(const AuthenticationInfo_Header& headerType) const;
@@ -148,10 +166,12 @@ class SipMessage : public Message
       ParserContainer<Unsupported_MultiHeader::Type>& header(const Unsupported_MultiHeader& headerType) const;
       ParserContainer<Via_MultiHeader::Type>& header(const Via_MultiHeader& headerType) const;
 
+#endif // METHOD_TEMPLATES
+
       // unknown header interface
-      StringCategories& header(const Data& symbol) const;
-      bool exists(const Data& symbol) const;
-      void remove(const Data& symbol);
+      StringCategories& header(const UnknownHeaderType& symbol) const;
+      bool exists(const UnknownHeaderType& symbol) const;
+      void remove(const UnknownHeaderType& symbol);
 
       // typeless header interface
       const HeaderFieldValueList* getRawHeader(Headers::Type headerType) const;
@@ -193,8 +213,7 @@ class SipMessage : public Message
       
    private:
       void copyFrom(const SipMessage& message);
-      HeaderFieldValueList* ensureHeader(Headers::Type type) const;
-      HeaderFieldValueList* ensureHeaders(Headers::Type type) const;
+      HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single) const;
 
       // not available
       SipMessage& operator=(const SipMessage&);
@@ -222,11 +241,11 @@ class SipMessage : public Message
       friend class TransportSelector;
 };
 
-
 }
 
-#endif
-
+#undef ensureHeaderTypeUseable
+#undef ensureSingleHeader
+#undef ensureMultiHeader
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -277,3 +296,5 @@ class SipMessage : public Message
  * <http://www.vovida.org/>.
  *
  */
+
+#endif

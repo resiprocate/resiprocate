@@ -19,10 +19,6 @@ Headers::isCommaTokenizing(Type type)
    return CommaTokenizing[type];
 }
 
-/// outline constructor!
-#undef defineHeader
-#undef defineMultiHeader
-
 #define defineHeader(_enum, _name, _type)                               \
 Headers::Type                                                           \
 _enum##_Header::getTypeNum() const {return Headers::_enum;}             \
@@ -31,6 +27,13 @@ _enum##_Header::_enum##_Header()                                        \
    Headers::CommaTokenizing[Headers::_enum] = Type::isCommaTokenizing;  \
    Headers::HeaderNames[Headers::_enum] = _name;                        \
 }                                                                       \
+                                                                        \
+_type&                                                                  \
+_enum##_Header::knownReturn(ParserContainerBase* container)             \
+{                                                                       \
+   return dynamic_cast<ParserContainer<_type>*>(container)->front();    \
+}                                                                       \
+                                                                        \
 _enum##_Header Vocal2::h_##_enum
 
 #define defineMultiHeader(_enum, _name, _type)                          \
@@ -41,6 +44,13 @@ _enum##_MultiHeader::_enum##_MultiHeader()                              \
    Headers::CommaTokenizing[Headers::_enum] = Type::isCommaTokenizing;  \
    Headers::HeaderNames[Headers::_enum] = _name;                        \
 }                                                                       \
+                                                                        \
+ParserContainer<_type>&                                                 \
+_enum##_MultiHeader::knownReturn(ParserContainerBase* container)        \
+{                                                                       \
+   return *dynamic_cast<ParserContainer<_type>*>(container);            \
+}                                                                       \
+                                                                        \
 _enum##_MultiHeader Vocal2::h_##_enum##s
 
 defineHeader(ContentDisposition, "Content-Disposition", Token);
@@ -121,7 +131,7 @@ defineHeader(MinExpires, "Min-Expires", IntegerCategory);
 
 // !dlb! this one is not quite right -- can have (comment) after field value
 defineHeader(RetryAfter, "Retry-After", IntegerCategory);
-defineHeader(Expires, "Expires", IntegerCategory);
+defineHeader(Expires, "Expires", ExpiresCategory);
 
 //====================
 // CallId:

@@ -91,8 +91,7 @@ SipFrag::parse(ParseBuffer& pb)
    // than size bytes of the message.
    if ( pre.process(*mMessage, buffer, size))
    {
-     DebugLog("SipFrag::parse failure.");
-     pb.fail("SipFrag parse failure");
+     pb.fail(__FILE__, __LINE__);
    }
    else 
    {

@@ -1,12 +1,13 @@
 #include "sip2/sipstack/Contents.hxx"
 #include "sip2/sipstack/HeaderFieldValueList.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/UnknownHeaderType.hxx"
+#include "sip2/util/Coders.hxx"
 #include "sip2/util/CountStream.hxx"
-#include "sip2/util/MD5Stream.hxx"
 #include "sip2/util/Logger.hxx"
+#include "sip2/util/MD5Stream.hxx"
 #include "sip2/util/compat.hxx"
 #include "sip2/util/vmd5.hxx"
-#include "sip2/util/Coders.hxx"
 
 using namespace Vocal2;
 using namespace std;
@@ -31,7 +32,6 @@ SipMessage::SipMessage(const FromWireType* fromWire)
    {
       mHeaders[i] = 0;
    }
-
 }
 
 SipMessage::SipMessage(const SipMessage& from)
@@ -232,7 +232,7 @@ SipMessage::updateRFC2543TransactionId()
    strm2 << mRFC2543TransactionId;
    if (exists(h_To))
    {
-       strm2 << header(h_To).param(p_tag);
+      strm2 << header(h_To).param(p_tag);
    }
    mRFC2543TransactionId = strm2.getHex();
    return mRFC2543TransactionId;
@@ -538,12 +538,13 @@ SipMessage::getContents() const
 
 // unknown header interface
 StringCategories& 
-SipMessage::header(const Data& headerName) const
+SipMessage::header(const UnknownHeaderType& headerName) const
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
-      if (i->first == headerName)
+      // !dlb! case sensitive?
+      if (i->first == headerName.getName())
       {
          HeaderFieldValueList* hfvs = i->second;
          if (hfvs->getParserContainer() == 0)
@@ -554,24 +555,20 @@ SipMessage::header(const Data& headerName) const
       }
    }
 
-   // !dlb! backward compatibility -- Unknown header becomes a known header
-   // lookup known header of same name
-   // if found, convert to Unknown header and remove as known header
-
    // create the list empty
    HeaderFieldValueList* hfvs = new HeaderFieldValueList;
    hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs, Headers::NONE));
-   mUnknownHeaders.push_back(make_pair(headerName, hfvs));
+   mUnknownHeaders.push_back(make_pair(headerName.getName(), hfvs));
    return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
 }
 
 bool
-SipMessage::exists(const Data& symbol) const
+SipMessage::exists(const UnknownHeaderType& symbol) const
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
-      if (i->first == symbol)
+      if (i->first == symbol.getName())
       {
          return true;
       }
@@ -580,12 +577,12 @@ SipMessage::exists(const Data& symbol) const
 }
 
 void
-SipMessage::remove(const Data& headerName)
+SipMessage::remove(const UnknownHeaderType& headerName)
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
-      if (i->first == headerName)
+      if (i->first == headerName.getName())
       {
          delete i->second;
          mUnknownHeaders.erase(i);
@@ -667,22 +664,7 @@ SipMessage::header(const StatusLineType& l) const
 }
 
 HeaderFieldValueList* 
-SipMessage::ensureHeaders(Headers::Type type) const
-{
-   HeaderFieldValueList* hfvs = mHeaders[type];
-   
-   // empty?
-   if (hfvs == 0)
-   {
-      // create the list
-      hfvs = new HeaderFieldValueList;
-      mHeaders[type] = hfvs;
-   }
-   return hfvs;
-}
-
-HeaderFieldValueList* 
-SipMessage::ensureHeader(Headers::Type type) const
+SipMessage::ensureHeaders(Headers::Type type, bool single) const
 {
    HeaderFieldValueList* hfvs = mHeaders[type];
    
@@ -691,9 +673,12 @@ SipMessage::ensureHeader(Headers::Type type) const
    {
       // create the list with a new component
       hfvs = new HeaderFieldValueList;
-      HeaderFieldValue* hfv = new HeaderFieldValue;
-      hfvs->push_back(hfv);
       mHeaders[type] = hfvs;
+      if (single)
+      {
+         HeaderFieldValue* hfv = new HeaderFieldValue;
+         hfvs->push_back(hfv);
+      }
    }
    return hfvs;
 }
@@ -712,10 +697,11 @@ SipMessage::remove(const HeaderBase& headerType)
    mHeaders[headerType.getTypeNum()] = 0; 
 };
 
+#ifndef METHOD_TEMPLATES
 CSeq_Header::Type&
 SipMessage::header(const CSeq_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<CSeq_Header::Type>(hfvs, headerType.getTypeNum()));
@@ -726,7 +712,7 @@ SipMessage::header(const CSeq_Header& headerType) const
 CallId_Header::Type&
 SipMessage::header(const CallId_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<CallId_Header::Type>(hfvs, headerType.getTypeNum()));
@@ -737,7 +723,7 @@ SipMessage::header(const CallId_Header& headerType) const
 AuthenticationInfo_Header::Type&
 SipMessage::header(const AuthenticationInfo_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<AuthenticationInfo_Header::Type>(hfvs,
@@ -749,7 +735,7 @@ SipMessage::header(const AuthenticationInfo_Header& headerType) const
 ContentDisposition_Header::Type&
 SipMessage::header(const ContentDisposition_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ContentDisposition_Header::Type>(hfvs,
@@ -761,7 +747,7 @@ SipMessage::header(const ContentDisposition_Header& headerType) const
 ContentTransferEncoding_Header::Type&
 SipMessage::header(const ContentTransferEncoding_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ContentTransferEncoding_Header::Type>(hfvs,
@@ -773,7 +759,7 @@ SipMessage::header(const ContentTransferEncoding_Header& headerType) const
 ContentEncoding_Header::Type&
 SipMessage::header(const ContentEncoding_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ContentEncoding_Header::Type>(hfvs,
@@ -785,7 +771,7 @@ SipMessage::header(const ContentEncoding_Header& headerType) const
 ContentLength_Header::Type&
 SipMessage::header(const ContentLength_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ContentLength_Header::Type>(hfvs,
@@ -797,7 +783,7 @@ SipMessage::header(const ContentLength_Header& headerType) const
 ContentType_Header::Type&
 SipMessage::header(const ContentType_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ContentType_Header::Type>(hfvs,
@@ -809,7 +795,7 @@ SipMessage::header(const ContentType_Header& headerType) const
 Date_Header::Type&
 SipMessage::header(const Date_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Date_Header::Type>(hfvs, headerType.getTypeNum()));
@@ -820,7 +806,7 @@ SipMessage::header(const Date_Header& headerType) const
 Event_Header::Type&
 SipMessage::header(const Event_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Event_Header::Type>(hfvs, headerType.getTypeNum()));
@@ -831,7 +817,7 @@ SipMessage::header(const Event_Header& headerType) const
 Expires_Header::Type&
 SipMessage::header(const Expires_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Expires_Header::Type>(hfvs, headerType.getTypeNum()));
@@ -842,7 +828,7 @@ SipMessage::header(const Expires_Header& headerType) const
 From_Header::Type&
 SipMessage::header(const From_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<From_Header::Type>(hfvs, headerType.getTypeNum()));
@@ -853,7 +839,7 @@ SipMessage::header(const From_Header& headerType) const
 InReplyTo_Header::Type&
 SipMessage::header(const InReplyTo_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<InReplyTo_Header::Type>(hfvs, headerType.getTypeNum()));
@@ -864,7 +850,7 @@ SipMessage::header(const InReplyTo_Header& headerType) const
 MIMEVersion_Header::Type&
 SipMessage::header(const MIMEVersion_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<MIMEVersion_Header::Type>(hfvs,
@@ -876,7 +862,7 @@ SipMessage::header(const MIMEVersion_Header& headerType) const
 MaxForwards_Header::Type&
 SipMessage::header(const MaxForwards_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<MaxForwards_Header::Type>(hfvs,
@@ -888,7 +874,7 @@ SipMessage::header(const MaxForwards_Header& headerType) const
 MinExpires_Header::Type&
 SipMessage::header(const MinExpires_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<MinExpires_Header::Type>(hfvs, headerType.getTypeNum()));
@@ -899,7 +885,7 @@ SipMessage::header(const MinExpires_Header& headerType) const
 Organization_Header::Type&
 SipMessage::header(const Organization_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Organization_Header::Type>(hfvs,
@@ -911,7 +897,7 @@ SipMessage::header(const Organization_Header& headerType) const
 Priority_Header::Type&
 SipMessage::header(const Priority_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Priority_Header::Type>(hfvs,
@@ -923,7 +909,7 @@ SipMessage::header(const Priority_Header& headerType) const
 ReferTo_Header::Type&
 SipMessage::header(const ReferTo_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ReferTo_Header::Type>(hfvs,
@@ -935,7 +921,7 @@ SipMessage::header(const ReferTo_Header& headerType) const
 ReferredBy_Header::Type&
 SipMessage::header(const ReferredBy_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ReferredBy_Header::Type>(hfvs, headerType.getTypeNum()));
@@ -946,7 +932,7 @@ SipMessage::header(const ReferredBy_Header& headerType) const
 Replaces_Header::Type&
 SipMessage::header(const Replaces_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Replaces_Header::Type>(hfvs,
@@ -958,7 +944,7 @@ SipMessage::header(const Replaces_Header& headerType) const
 ReplyTo_Header::Type&
 SipMessage::header(const ReplyTo_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ReplyTo_Header::Type>(hfvs,
@@ -970,7 +956,7 @@ SipMessage::header(const ReplyTo_Header& headerType) const
 RetryAfter_Header::Type&
 SipMessage::header(const RetryAfter_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<RetryAfter_Header::Type>(hfvs, headerType.getTypeNum()));
@@ -981,7 +967,7 @@ SipMessage::header(const RetryAfter_Header& headerType) const
 Server_Header::Type&
 SipMessage::header(const Server_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Server_Header::Type>(hfvs,
@@ -993,7 +979,7 @@ SipMessage::header(const Server_Header& headerType) const
 Subject_Header::Type&
 SipMessage::header(const Subject_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Subject_Header::Type>(hfvs,
@@ -1005,7 +991,7 @@ SipMessage::header(const Subject_Header& headerType) const
 Timestamp_Header::Type&
 SipMessage::header(const Timestamp_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Timestamp_Header::Type>(hfvs,
@@ -1017,7 +1003,7 @@ SipMessage::header(const Timestamp_Header& headerType) const
 To_Header::Type&
 SipMessage::header(const To_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<To_Header::Type>(hfvs,
@@ -1029,7 +1015,7 @@ SipMessage::header(const To_Header& headerType) const
 UserAgent_Header::Type&
 SipMessage::header(const UserAgent_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<UserAgent_Header::Type>(hfvs,
@@ -1041,11 +1027,10 @@ SipMessage::header(const UserAgent_Header& headerType) const
 Warning_Header::Type&
 SipMessage::header(const Warning_Header& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);
    if (hfvs->getParserContainer() == 0)
    {
-      hfvs->setParserContainer(new ParserContainer<Warning_Header::Type>(hfvs,
-                                                                         headerType.getTypeNum()));
+      hfvs->setParserContainer(new ParserContainer<Warning_Header::Type>(hfvs, headerType.getTypeNum()));
    }
    return dynamic_cast<ParserContainer<Warning_Header::Type>*>(hfvs->getParserContainer())->front();
 };
@@ -1053,7 +1038,7 @@ SipMessage::header(const Warning_Header& headerType) const
 ParserContainer<SecurityClient_MultiHeader::Type>&
 SipMessage::header(const SecurityClient_MultiHeader& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<SecurityClient_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1064,7 +1049,7 @@ SipMessage::header(const SecurityClient_MultiHeader& headerType) const
 ParserContainer<SecurityServer_MultiHeader::Type>&
 SipMessage::header(const SecurityServer_MultiHeader& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<SecurityServer_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1075,7 +1060,7 @@ SipMessage::header(const SecurityServer_MultiHeader& headerType) const
 ParserContainer<SecurityVerify_MultiHeader::Type>&
 SipMessage::header(const SecurityVerify_MultiHeader& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<SecurityVerify_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1086,7 +1071,7 @@ SipMessage::header(const SecurityVerify_MultiHeader& headerType) const
 ParserContainer<Authorization_MultiHeader::Type>&
 SipMessage::header(const Authorization_MultiHeader& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Authorization_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1097,7 +1082,7 @@ SipMessage::header(const Authorization_MultiHeader& headerType) const
 ParserContainer<ProxyAuthenticate_MultiHeader::Type>&
 SipMessage::header(const ProxyAuthenticate_MultiHeader& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ProxyAuthenticate_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1108,7 +1093,7 @@ SipMessage::header(const ProxyAuthenticate_MultiHeader& headerType) const
 ParserContainer<ProxyAuthorization_MultiHeader::Type>&
 SipMessage::header(const ProxyAuthorization_MultiHeader& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ProxyAuthorization_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1119,7 +1104,7 @@ SipMessage::header(const ProxyAuthorization_MultiHeader& headerType) const
 ParserContainer<WWWAuthenticate_MultiHeader::Type>&
 SipMessage::header(const WWWAuthenticate_MultiHeader& headerType) const
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<WWWAuthenticate_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1130,7 +1115,7 @@ SipMessage::header(const WWWAuthenticate_MultiHeader& headerType) const
 ParserContainer<Accept_MultiHeader::Type>&
 SipMessage::header(const Accept_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Accept_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1141,7 +1126,7 @@ SipMessage::header(const Accept_MultiHeader& headerType) const
 ParserContainer<AcceptEncoding_MultiHeader::Type>&
 SipMessage::header(const AcceptEncoding_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<AcceptEncoding_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1152,7 +1137,7 @@ SipMessage::header(const AcceptEncoding_MultiHeader& headerType) const
 ParserContainer<AcceptLanguage_MultiHeader::Type>&
 SipMessage::header(const AcceptLanguage_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<AcceptLanguage_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1163,7 +1148,7 @@ SipMessage::header(const AcceptLanguage_MultiHeader& headerType) const
 ParserContainer<AlertInfo_MultiHeader::Type>&
 SipMessage::header(const AlertInfo_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<AlertInfo_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1174,7 +1159,7 @@ SipMessage::header(const AlertInfo_MultiHeader& headerType) const
 ParserContainer<Allow_MultiHeader::Type>&
 SipMessage::header(const Allow_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Allow_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1185,7 +1170,7 @@ SipMessage::header(const Allow_MultiHeader& headerType) const
 ParserContainer<CallInfo_MultiHeader::Type>&
 SipMessage::header(const CallInfo_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<CallInfo_MultiHeader::Type>(hfvs,
@@ -1197,7 +1182,7 @@ SipMessage::header(const CallInfo_MultiHeader& headerType) const
 ParserContainer<Contact_MultiHeader::Type>&
 SipMessage::header(const Contact_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Contact_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1208,7 +1193,7 @@ SipMessage::header(const Contact_MultiHeader& headerType) const
 ParserContainer<ContentLanguage_MultiHeader::Type>&
 SipMessage::header(const ContentLanguage_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ContentLanguage_MultiHeader::Type>(hfvs,
@@ -1220,7 +1205,7 @@ SipMessage::header(const ContentLanguage_MultiHeader& headerType) const
 ParserContainer<ErrorInfo_MultiHeader::Type>&
 SipMessage::header(const ErrorInfo_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ErrorInfo_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1231,7 +1216,7 @@ SipMessage::header(const ErrorInfo_MultiHeader& headerType) const
 ParserContainer<ProxyRequire_MultiHeader::Type>&
 SipMessage::header(const ProxyRequire_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<ProxyRequire_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1242,7 +1227,7 @@ SipMessage::header(const ProxyRequire_MultiHeader& headerType) const
 ParserContainer<RecordRoute_MultiHeader::Type>&
 SipMessage::header(const RecordRoute_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<RecordRoute_MultiHeader::Type>(hfvs,
@@ -1254,7 +1239,7 @@ SipMessage::header(const RecordRoute_MultiHeader& headerType) const
 ParserContainer<Require_MultiHeader::Type>&
 SipMessage::header(const Require_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Require_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1265,7 +1250,7 @@ SipMessage::header(const Require_MultiHeader& headerType) const
 ParserContainer<Route_MultiHeader::Type>&
 SipMessage::header(const Route_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Route_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1276,7 +1261,7 @@ SipMessage::header(const Route_MultiHeader& headerType) const
 ParserContainer<SubscriptionState_MultiHeader::Type>&
 SipMessage::header(const SubscriptionState_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<SubscriptionState_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1287,7 +1272,7 @@ SipMessage::header(const SubscriptionState_MultiHeader& headerType) const
 ParserContainer<Supported_MultiHeader::Type>&
 SipMessage::header(const Supported_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Supported_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1298,7 +1283,7 @@ SipMessage::header(const Supported_MultiHeader& headerType) const
 ParserContainer<Unsupported_MultiHeader::Type>&
 SipMessage::header(const Unsupported_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Unsupported_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
@@ -1309,13 +1294,14 @@ SipMessage::header(const Unsupported_MultiHeader& headerType) const
 ParserContainer<Via_MultiHeader::Type>&
 SipMessage::header(const Via_MultiHeader& headerType) const 
 {
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum());
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);
    if (hfvs->getParserContainer() == 0)
    {
       hfvs->setParserContainer(new ParserContainer<Via_MultiHeader::Type>(hfvs, headerType.getTypeNum()));
    }
    return *dynamic_cast<ParserContainer<Via_MultiHeader::Type>*>(hfvs->getParserContainer());
 };
+#endif
 
 const HeaderFieldValueList*
 SipMessage::getRawHeader(Headers::Type headerType) const
@@ -1383,7 +1369,6 @@ operator new(size_t size)
    }
    
    return p;
-   
 }
 
 void operator delete(void* p)

@@ -10,31 +10,60 @@
 namespace Vocal2
 {
 
+template<class T, class F, bool>
+class TypeIf
+{
+};
+
+template <class T, class F>
+class TypeIf<T, F, true>
+{
+   public:
+      typedef T Type;
+};
+
+template <class T, class F>
+class TypeIf<T, F, false>
+{
+   public:
+      typedef F Type;
+};
+
 class HeaderBase
 {
    public:
       virtual Headers::Type getTypeNum() const = 0;
 };
 
-#define defineHeader(_enum, _name, _type)       \
-class _enum##_Header : public HeaderBase        \
-{                                               \
-   public:                                      \
-      typedef _type Type;                       \
-      virtual Headers::Type getTypeNum() const; \
-      _enum##_Header();                         \
-};                                              \
+class UnusedHeader
+{
+};
+
+#define defineHeader(_enum, _name, _type)                                               \
+class _enum##_Header : public HeaderBase                                                \
+{                                                                                       \
+   public:                                                                              \
+      enum {Single = true};                                                             \
+      typedef _type Type;                                                               \
+      typedef TypeIf<UnusedHeader, Type, Headers::_enum == Headers::UNKNOWN> UnknownReturn; \
+      static Type& knownReturn(ParserContainerBase* container);                                \
+      virtual Headers::Type getTypeNum() const;                                         \
+      _enum##_Header();                                                                 \
+};                                                                                      \
 extern _enum##_Header h_##_enum
 
-#define defineMultiHeader(_enum, _name, _type)  \
-class _enum##_MultiHeader : public HeaderBase   \
-{                                               \
-   public:                                      \
-      typedef _type Type;                       \
-      virtual Headers::Type getTypeNum() const; \
-      _enum##_MultiHeader();                    \
-};                                              \
-extern _enum##_MultiHeader h_##_enum##s;
+#define defineMultiHeader(_enum, _name, _type)                                                                  \
+class _enum##_MultiHeader : public HeaderBase                                                                   \
+{                                                                                                               \
+   public:                                                                                                      \
+      enum {Single = false};                                                                                    \
+      typedef _type Type;                                                                                       \
+      typedef TypeIf<UnusedHeader, ParserContainer<Type>, Headers::_enum == Headers::UNKNOWN> UnknownReturn;        \
+      static ParserContainer<Type>& knownReturn(ParserContainerBase* container);                                       \
+      virtual Headers::Type getTypeNum() const;                                                                 \
+      _enum##_MultiHeader();                                                                                    \
+};                                                                                                              \
+extern _enum##_MultiHeader h_##_enum##s
 
 //====================
 // Token:
@@ -63,6 +92,7 @@ defineMultiHeader(Unsupported, "Unsupported", Token);
 defineMultiHeader(SecurityClient, "Security-Client", Token);
 defineMultiHeader(SecurityServer, "Security-Server", Token);
 defineMultiHeader(SecurityVerify, "Security-Verify", Token);
+// explicitly declare to avoid h_AllowEventss, ugh
 extern SecurityVerify_MultiHeader h_SecurityVerifies;
 
 //====================
@@ -118,7 +148,7 @@ defineHeader(MinExpires, "Min-Expires", IntegerCategory);
 
 // !dlb! this one is not quite right -- can have (comment) after field value
 defineHeader(RetryAfter, "Retry-After", IntegerCategory);
-defineHeader(Expires, "Expires", IntegerCategory);
+defineHeader(Expires, "Expires", ExpiresCategory);
 
 //====================
 // CallId:
@@ -165,7 +195,8 @@ extern StatusLineType h_StatusLine;
  
 }
 
-#endif
+#undef defineHeader
+#undef defineMultiHeader
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -216,3 +247,5 @@ extern StatusLineType h_StatusLine;
  * <http://www.vovida.org/>.
  *
  */
+
+#endif

@@ -10,6 +10,7 @@ const Subsystem Subsystem::SIP("SIP");    // SIP Stack / Parser
 const Subsystem Subsystem::TRANSACTION("TRANSACTION");    // SIP Stack / Parser
 const Subsystem Subsystem::TRANSPORT("TRANSPORT");    // SIP Stack / Parser
 const Subsystem Subsystem::APP("APP");    // application
+const Subsystem Subsystem::CONTENTS("CONTENTS");
 
 std::ostream& 
 Vocal2::operator<<(std::ostream& strm, const Subsystem& ss)
