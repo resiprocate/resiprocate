@@ -155,9 +155,9 @@ class InviteSession : public DialogUsage
          On200Update,
          OnPrack, // UAS
          On200Prack, // UAC
-		 OnRefer,
-		 On200Refer,
-		 OnReferRejected,
+         OnRefer,
+         On200Refer,
+         OnReferRejected,
          Unknown
       } Event;
 
