@@ -1,4 +1,5 @@
 #include "resiprocate/SdpContents.hxx"
+#include "resiprocate/MultipartMixedContents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
@@ -716,8 +717,26 @@ InviteSession::getOfferOrAnswer(const SipMessage& msg) const
 {
    std::pair<InviteSession::OfferAnswerType, const SdpContents*> ret;
    ret.first = None;
-   
-   const SdpContents* contents = dynamic_cast<const SdpContents*>(msg.getContents());
+   const SdpContents* contents = NULL;
+
+   MultipartMixedContents* mixed = dynamic_cast<MultipartMixedContents*>(msg.getContents());
+   if ( mixed )
+   {
+      // Look for first SDP Contents in a multipart contents    
+      MultipartMixedContents::Parts& parts = mixed->parts();
+      for( MultipartMixedContents::Parts::const_iterator i = parts.begin(); 
+           i != parts.end();  
+           ++i)
+      {
+	     contents = dynamic_cast<const SdpContents*>(*i);
+		 if(contents != NULL) break;  // Found SDP contents
+      }
+   }
+   else
+   {
+      contents = dynamic_cast<const SdpContents*>(msg.getContents());
+   }
+
    if (contents)
    {
       static Token c100rel(Symbols::C100rel);
