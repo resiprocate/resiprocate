@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.35 2002/11/23 22:06:27 fluffy Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.36 2002/11/25 19:29:27 davidb Exp $";
 
 #include <iostream>
 #include <string>
@@ -84,6 +84,8 @@ class Data
       int convertInt() const;
       double convertDouble() const;
 
+      static const Data Empty;
+
    private:
       friend class TestData;
       Data(const char* buffer, int length, bool);
@@ -93,8 +95,6 @@ class Data
       size_type mCapacity;
       bool mMine;
 
-      static const Data Empty;
-      
       friend bool operator==(const char* s, const Data& d);
       friend bool operator!=(const char* s, const Data& d);
       friend std::ostream& operator<<(std::ostream& strm, const Data& d);
