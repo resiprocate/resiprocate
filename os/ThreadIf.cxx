@@ -30,7 +30,7 @@ threadWrapper( void* threadParm )
 	return 0;
 }
 
-ThreadIf::ThreadIf() : mId(0), mShutdown(false)
+ThreadIf::ThreadIf() : mId(0), mShutdown(false), mShutdownMutex()
 {
 }
 
