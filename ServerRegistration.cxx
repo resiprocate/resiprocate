@@ -10,6 +10,11 @@ ServerRegistration::ServerRegistration(DialogUsageManager& dum,
      mHandle(dum)
 {}
 
+ServerRegistration::~ServerRegistration()
+{
+   mDialog.mServerRegistration = 0;
+}
+
 ServerRegistration::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
 {}

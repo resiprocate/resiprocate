@@ -65,20 +65,33 @@ class Dialog
       void processNotify(const SipMessage& notify);
       
    private:
+      friend class BaseUsage;
+      friend class ClientSubscription;
+      friend class ServerSubscription;
+      friend class InviteSession;
+      friend class ClientRegistration;
+      friend class ServerRegistration;
+      friend class ClientPublication;
+      friend class ServerPublication;
+      friend class ClientOutOfDialogReq;
+      friend class ServerOutOfDialogReq;
+
+      void possiblyDie();
+
       ClientOutOfDialogReq* findMatchingClientOutOfDialogReq(const SipMessage& msg);
       ClientSubscription* findMatchingClientSub(const SipMessage& msg);
 
       DialogId mId;  
       DialogUsageManager& mDum;
 
-      std::vector<ClientSubscription*> mClientSubscriptions;
+      std::list<ClientSubscription*> mClientSubscriptions;
       ServerSubscription* mServerSubscription;
       InviteSession* mInviteSession;
       ClientRegistration* mClientRegistration;
       ServerRegistration* mServerRegistration;
       ClientPublication* mClientPublication;
       ServerPublication* mServerPublication;
-      std::vector<ClientOutOfDialogReq*> mClientOutOfDialogRequests;
+      std::list<ClientOutOfDialogReq*> mClientOutOfDialogRequests;
       ServerOutOfDialogReq* mServerOutOfDialogRequest;
 
       //invariants
@@ -100,6 +113,7 @@ class Dialog
       unsigned long mLocalCSeq;
       unsigned long mRemoteCSeq;
       NameAddr mRemoteTarget;
+
 };
  
 }
