@@ -67,6 +67,7 @@ typedef int Socket;
 static const Socket INVALID_SOCKET = -1;
 static const int SOCKET_ERROR = -1;
 
+#define WSANOTINITIALISED  EPROTONOSUPPORT
 
 int closesocket( Socket fd );
 

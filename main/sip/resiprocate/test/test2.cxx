@@ -1,13 +1,15 @@
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <iostream>
-#include <memory>
 
+#ifndef WIN32
+#include <sys/time.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
 
+#include <sys/types.h>
+#include <iostream>
+#include <memory>
 
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
@@ -24,6 +26,8 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
+	 // initNetwork();
+
    Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::INFO, argv[0]);
    
    SipStack stack1;

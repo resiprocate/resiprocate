@@ -12,6 +12,11 @@ void
 Vocal2::initNetwork()
 {
 #ifdef WIN32 
+	bool doneInit=false;
+	if( !doneInit )
+	{ 
+		doneInit=true;
+
    WORD wVersionRequested = MAKEWORD( 2, 2 );
    WSADATA wsaData;
    int err;
@@ -40,7 +45,8 @@ Vocal2::initNetwork()
       cerr << "Bad winsock verion" << endl;
       assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
       exit(1);
-   }    
+   }  
+	}
 #endif
 }
 /* ====================================================================
