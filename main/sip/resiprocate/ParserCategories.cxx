@@ -109,7 +109,7 @@ Auth::operator=(const Auth& rhs)
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
-      assert(0);
+      mScheme = rhs.mScheme;
    }
    return *this;
 }
@@ -142,7 +142,13 @@ Auth::parse(ParseBuffer& pb)
 std::ostream& 
 Auth::encode(std::ostream& str) const
 {
-   assert(0);
+   if (!mScheme.empty())
+   {
+      str << mScheme << Symbols::SPACE;
+   }
+
+   encodeAuthParameters(str);
+
    return str;
 }
 
@@ -184,7 +190,10 @@ Auth::encodeAuthParameters(ostream& str) const
    for (ParameterList::iterator it = mUnknownParameters.begin();
         it != mUnknownParameters.end(); it++)
    {
-      str << Symbols::COMMA;
+      if (it != mUnknownParameters.begin()) 
+      {
+	 str << Symbols::COMMA;
+      }
       (*it)->encode(str);
    }
    return str;
