@@ -65,7 +65,6 @@ DnsResolver::lookup(const Data& transactionId,
 {
    //duplicate entry has not been eliminated
    DnsResolver::Id id = 0;
-   bool removeDuplicates = false;
    Transport::Type transport = Transport::toTransport(via.transport());
    Data& target = via.exists(p_maddr) ? via.param(p_maddr) : via.sentHost();
    if (via.exists(p_received))
@@ -87,7 +86,6 @@ DnsResolver::lookup(const Data& transactionId,
                                 transport, false);
          }
       }
-      removeDuplicates = true;
    }
    else if (via.exists(p_rport))
    {
@@ -95,7 +93,6 @@ DnsResolver::lookup(const Data& transactionId,
                           target, 
                           via.param(p_rport), 
                           transport, false);
-      removeDuplicates = true;
    }
    else if (via.sentPort()) // !jf!
    {
@@ -110,11 +107,6 @@ DnsResolver::lookup(const Data& transactionId,
                           target, 
                           determinePort(via.protocolName(), transport), 
                           transport, true, id);
-   }
-   if (removeDuplicates)
-   {
-      id->tupleList.sort();
-      id->tupleList.unique();
    }
 }
 
