@@ -28,17 +28,17 @@ ClientSubscription::~ClientSubscription()
    mDialog.mClientSubscriptions.remove(this);
 }
 
-ClientSubscriptionHandle 
+ClientSubscriptionHandle
 ClientSubscription::getHandle()
 {
    return ClientSubscriptionHandle(mDum, getBaseHandle().getId());
 }
 
-void 
+void
 ClientSubscription::dispatch(const SipMessage& msg)
 {
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-   assert(handler);   
+   assert(handler);
 
    // asserts are checks the correctness of Dialog::dispatch
    if (msg.isRequest() )
@@ -52,8 +52,8 @@ ClientSubscription::dispatch(const SipMessage& msg)
          InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To));
          handler->onNewSubscription(getHandle(), msg);
          mOnNewSubscriptionCalled = true;
-      }         
-      int expires = 0;      
+      }
+      int expires = 0;
       //default to 60 seconds so non-compliant endpoints don't result in leaked usages
       if (msg.exists(h_SubscriptionState) && msg.header(h_SubscriptionState).exists(p_expires))
       {
@@ -67,7 +67,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
       {
          mLastRequest.header(h_Expires).value() = expires;
       }
-      
+
       //if no subscription state header, treat as an extension. Only allow for
       //refer to handle non-compliant implementations
       if (!msg.exists(h_SubscriptionState))
@@ -106,10 +106,10 @@ ClientSubscription::dispatch(const SipMessage& msg)
       }
 
       SubscriptionCreator* creator = dynamic_cast<SubscriptionCreator*> (mDialog.mDialogSet.getCreator());
-      
+
       int refreshInterval = 0;
       if (expires)
-      {      
+      {
          if (creator && creator->hasRefreshInterval() && creator->getRefreshInterval() <  expires)
          {
             refreshInterval = creator->getRefreshInterval();
@@ -119,16 +119,16 @@ ClientSubscription::dispatch(const SipMessage& msg)
             refreshInterval = Helper::aBitSmallerThan((unsigned long)expires);
          }
       }
-         
+
       if (!mEnded && msg.header(h_SubscriptionState).value() == "active")
       {
          if (refreshInterval)
          {
-            unsigned long t = refreshInterval;            
+            unsigned long t = refreshInterval;
             mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
             DebugLog (<< "[ClientSubscription] reSUBSCRIBE in " << t);
          }
-         
+
          handler->onUpdateActive(getHandle(), msg);
       }
       else if (!mEnded && msg.header(h_SubscriptionState).value() == "pending")
@@ -145,13 +145,13 @@ ClientSubscription::dispatch(const SipMessage& msg)
       else if (msg.header(h_SubscriptionState).value() == "terminated")
       {
          handler->onTerminated(getHandle(), msg);
-         DebugLog (<< "[ClientSubscription] " << mLastRequest.header(h_To) << "[ClientSubscription] Terminated");                   
+         DebugLog (<< "[ClientSubscription] " << mLastRequest.header(h_To) << "[ClientSubscription] Terminated");
          delete this;
          return;
       }
       else if (!mEnded)
       {
-         handler->onUpdateExtension(getHandle(), msg);         
+         handler->onUpdateExtension(getHandle(), msg);
       }
    }
    else
@@ -160,12 +160,14 @@ ClientSubscription::dispatch(const SipMessage& msg)
       // to ignore this case
       if (msg.header(h_StatusLine).statusCode() == 481)
       {
-         InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) " 
+         InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
                   << mDialog.mRemoteTarget);
+         // !kh!
+         // why not absorb this error if DUM reSUBs for user?
          handler->onTerminated(getHandle(), msg);
          SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType());
          mDum.send(sub);
-         
+
          delete this;
          return;
       }
@@ -178,7 +180,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
    }
 }
 
-void 
+void
 ClientSubscription::dispatch(const DumTimeout& timer)
 {
    if (timer.seq() == mTimerSeq)
@@ -187,7 +189,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
    }
 }
 
-void  
+void
 ClientSubscription::requestRefresh()
 {
    if (!mEnded)
@@ -195,13 +197,13 @@ ClientSubscription::requestRefresh()
       mDialog.makeRequest(mLastRequest, SUBSCRIBE);
       //!dcm! -- need a mechanism to retrieve this for the event package...part of
       //the map that stores the handlers, or part of the handler API
-      //mLastRequest.header(h_Expires).value() = 300;   
+      //mLastRequest.header(h_Expires).value() = 300;
       InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
       send(mLastRequest);
    }
 }
 
-void  
+void
 ClientSubscription::end()
 {
    InfoLog (<< "End subscription: " << mLastRequest.header(h_RequestLine).uri());
@@ -209,13 +211,13 @@ ClientSubscription::end()
    if (!mEnded)
    {
       mDialog.makeRequest(mLastRequest, SUBSCRIBE);
-      mLastRequest.header(h_Expires).value() = 0;   
+      mLastRequest.header(h_Expires).value() = 0;
       mEnded = true;
       send(mLastRequest);
    }
 }
 
-std::ostream& 
+std::ostream&
 ClientSubscription::dump(std::ostream& strm) const
 {
    strm << "ClientSubscription " << mLastRequest.header(h_From).uri();
@@ -224,22 +226,22 @@ ClientSubscription::dump(std::ostream& strm) const
 
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -249,7 +251,7 @@ ClientSubscription::dump(std::ostream& strm) const
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -263,9 +265,9 @@ ClientSubscription::dump(std::ostream& strm) const
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
