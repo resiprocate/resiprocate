@@ -12,7 +12,9 @@ class ClientSubscriptionHandler
   public:
       virtual void onRefreshRejected(ClientSubscriptionHandle, const SipMessage& rejection)=0;
       virtual void onUpdatePending(ClientSubscriptionHandle, const SipMessage& notify)=0;
-      virtual void onUpdateActive(ClientSubscriptionHandle, const SipMessage& notify)=0;      
+      virtual void onUpdateActive(ClientSubscriptionHandle, const SipMessage& notify)=0;
+      //unknown Subscription-State value
+      virtual void onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify);      
 
       //subscription can be ended through a notify or a failure response.
       virtual void onTerminated(ClientSubscriptionHandle, const SipMessage& msg)=0;   
@@ -22,7 +24,7 @@ class ClientSubscriptionHandler
 
 class ServerSubscriptionHandler
 {
-  public:
+  public:   
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;
       virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub)=0;
 
@@ -32,7 +34,7 @@ class ServerSubscriptionHandler
       virtual void onTerminated(ServerSubscriptionHandle)=0;
 
       //will be called when a NOTIFY is not delivered
-      virtual void onError(const SipMessage& msg);      
+      virtual void onError(ServerSubscriptionHandle, const SipMessage& msg);      
 
       //app can synchronously decorate terminating NOTIFY messages. The only
       //graceful termination mechanism is expiration, but the client can
