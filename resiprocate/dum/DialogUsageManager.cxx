@@ -19,7 +19,7 @@ using namespace resip;
 
 DialogUsageManager::~DialogUsageManager()
 {
-   for(DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); it++)
+   for(UsageHandleMap::iterator it = mUsageMap.begin(); it != mUsageMap.end(); it++)
    {
       delete it->second;
    }

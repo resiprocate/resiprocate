@@ -65,10 +65,13 @@ class Dialog
       void processNotify(const SipMessage& notify);
       
    private:
+      virtual ~Dialog();
       friend class BaseUsage;
+      friend class DialogSet;
+
       friend class ClientSubscription;
-      friend class ServerSubscription;
       friend class InviteSession;
+      friend class ServerSubscription;
       friend class ClientRegistration;
       friend class ServerRegistration;
       friend class ClientPublication;
