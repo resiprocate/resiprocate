@@ -7,6 +7,11 @@
 #include "sip2/util/Coders.hxx"
 #include <iostream>
 
+#ifdef __FreeBSD__
+#define NEW_THROWS 1
+#else
+#define NEW_THROWS 0
+#endif
 
 using namespace std;
 using namespace Vocal2;
@@ -45,9 +50,14 @@ int compareData(const Data &a, const Data& b)
    return a == b;
 }
 
-
+#if NEW_THROWS
 void*
 operator new(size_t size)
+    throw (std::bad_alloc)
+#else
+void*
+operator new(size_t size)
+#endif
 {
    static size_t poolSize = 16*1024*1024;
    static void *pool = 0;
@@ -75,7 +85,11 @@ operator new(size_t size)
    
 }
 
+#if NEW_THROWS
+void operator delete(void* p) throw()
+#else
 void operator delete(void* p)
+#endif
 {
    void *z = 0;
    unsigned char a[4]; a[0] = 'D';
@@ -85,7 +99,11 @@ void operator delete(void* p)
    return;
 }
 
+#if NEW_THROWS
+void operator delete[](void* p) throw()
+#else
 void operator delete[](void* p)
+#endif
 {
    void *z = 0;
    unsigned char a[4]; a[0] = 'X';

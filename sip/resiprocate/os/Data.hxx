@@ -1,12 +1,13 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.54 2003/01/26 20:54:11 jason Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.55 2003/01/31 20:58:18 bko Exp $";
 
 #include "sip2/util/compat.hxx"
 #include "sip2/util/DataStream.hxx"
 #include <iostream>
 #include <string>
+#include "HashMap.hxx"
 
 class TestData;
 namespace Vocal2
@@ -171,21 +172,23 @@ operator+(const char* c, const Data& d)
  
 }
 
-#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
-#include <ext/hash_map>
+#if defined(HAS_HASH_MAP)
 
+#  if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 namespace __gnu_cxx
 {
+#  endif
 
 struct hash<Vocal2::Data>
 {
       size_t operator()(const Vocal2::Data& data) const;
 };
 
+#  if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 }
+#  endif
 
-
-#endif // gcc >= 3.1
+#endif // we have hash map
 
 #endif
 
