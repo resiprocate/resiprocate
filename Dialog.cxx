@@ -44,8 +44,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalNameAddr(),
      mRemoteNameAddr(),
      mCallId(msg.header(h_CallID)),
-     mDestroying(false),
-     mAppDialog(0)
+     mAppDialog(0),
+     mDestroying(false)
 {
    assert(msg.isExternal());
 
@@ -421,7 +421,7 @@ Dialog::dispatch(const SipMessage& msg)
    else if (msg.isResponse())
    {
       if (!mDialogSet.getCreator() ||
-          !(msg.header(h_CSeq).method() == mDialogSet.getCreator()->getLastRequest().header(h_RequestLine).method()))
+          !(msg.header(h_CSeq) == mDialogSet.getCreator()->getLastRequest().header(h_CSeq)))
       {
          SipMessage* lastRequest = 0;            
          switch (msg.header(h_CSeq).method())
@@ -448,7 +448,7 @@ Dialog::dispatch(const SipMessage& msg)
          {
             InfoLog( << "about to re-send request with digest credentials" );
             InfoLog( << *lastRequest );
-            
+            mLocalCSeq++;            
             mDum.send(*lastRequest);
             return;
          }
@@ -900,6 +900,74 @@ void Dialog::possiblyDie()
          delete this;
       }
    }   
+}
+
+bool
+Dialog::matches(const SipMessage& msg)
+{
+   //currently only responses are passed to this method
+   if (msg.isRequest())
+   {
+      return false;
+   }
+
+   switch (msg.header(h_CSeq).method())
+   {
+      case INVITE:
+      case CANCEL:
+      case REFER: 
+      case BYE:
+         if (mInviteSession == 0)
+         {
+            return false;
+         }
+         else
+         {
+            return msg.getTransactionId() == mInviteSession->mLastRequest.getTransactionId();
+         }
+         break;               
+      case INFO:
+         if (mInviteSession == 0)
+         {
+            return false;
+         }
+         else
+         {
+            return msg.getTransactionId() == mInviteSession->mLastNit.getTransactionId();
+         }
+         break;
+      case SUBSCRIBE:
+         if (mClientSubscriptions.empty())
+         {
+            return false;
+         }
+         else
+         {
+            for (std::list<ClientSubscription*>::iterator it = mClientSubscriptions.begin();
+                 it != mClientSubscriptions.end(); it++)
+            {
+               return msg.getTransactionId() == (*it)->mLastRequest.getTransactionId();
+            }
+         }
+         break;
+      case NOTIFY:
+         if (mServerSubscriptions.empty())
+         {
+            return false;
+         }
+         else
+         {
+            for (std::list<ServerSubscription*>::iterator it = mServerSubscriptions.begin();
+                 it != mServerSubscriptions.end(); it++)
+            {
+               return msg.getTransactionId() == (*it)->mLastNotify.getTransactionId();
+            }
+         }
+         break;
+      default:
+         return false;
+   }
+   return false;   
 }
 
 ostream& 
