@@ -243,9 +243,27 @@ IntegerComponent::value()
 }
 
 
+//====================
+// RequestLine:
+//====================
+
+RequestLineComponent::~RequestLineComponent()
+{
+}
+
+//====================
+// StatusLine:
+//====================
+
 int
 StatusLineComponent::getResponseCode() const
 {
    assert(0);
    return 200;
 }
+
+StatusLineComponent::~StatusLineComponent()
+{
+}
+
+
