@@ -5,6 +5,9 @@
 #include "resiprocate/MessageFilterRule.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TRANSACTION
 
 using namespace resip;
 using namespace std;
@@ -36,10 +39,12 @@ MessageFilterRule::MessageFilterRule(SchemeList    schemeList,
 bool
 MessageFilterRule::matches(const SipMessage &msg) const
 {
+   DebugLog(<< "Matching rule for " << msg);
    const Data scheme = msg.header(h_RequestLine).uri().scheme();
 
    if (!schemeIsInList(scheme))
    {
+      DebugLog(<< "Scheme is not in list. Rule does not match.");
       return false;
    }
    
@@ -48,6 +53,7 @@ MessageFilterRule::matches(const SipMessage &msg) const
       // !rwm! Should be hostport, not host
       if (!hostIsInList( msg.header(h_RequestLine).uri().host()))
       {
+         DebugLog(<< "Host is not in list. Rule does not match.");
          return false;
       }
    }
@@ -55,6 +61,7 @@ MessageFilterRule::matches(const SipMessage &msg) const
    MethodTypes method = msg.header(h_RequestLine).method();
    if (!methodIsInList(method))
    {
+      DebugLog(<< "Method is not in list. Rule does not match.");
       return false;
    }
    else
@@ -66,6 +73,7 @@ MessageFilterRule::matches(const SipMessage &msg) const
          case PUBLISH:      
             if (!eventIsInList(msg.header(h_Event).value()))
             {
+               DebugLog(<< "Event is not in list. Rule does not match.");
                return false;
             }
             break;
