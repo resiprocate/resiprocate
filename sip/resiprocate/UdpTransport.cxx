@@ -101,16 +101,20 @@ UdpTransport::process(FdSet& fdset)
       if ( count == SOCKET_ERROR )
       {
          int err = errno;
-         DebugLog (<< strerror(err));
+         ErrLog (<< "UDPTransport - sendto failed " << strerror(err) );
          fail(sendData->transactionId);
-
-         // !jf! what to do if it fails
-         assert(0);
       }
       else
       {
-         assert ( (count == int(sendData->data.size()) ) || (count == SOCKET_ERROR ) );
-         ok(sendData->transactionId);
+         if (count == int(sendData->data.size()) )
+         {
+            ok(sendData->transactionId);
+         }
+         else
+         {  
+            ErrLog (<< "UDPTransport - send buffer full" );
+            fail(sendData->transactionId);
+         }
       }
    }
 

@@ -120,3 +120,11 @@ Pkcs7Contents::parse(ParseBuffer& pb)
 
    DebugLog("Pkcs7Contents::parsed <" << mText.escaped() << ">" );
 }
+
+
+Data 
+Pkcs7Contents::getBodyData() const
+{
+   checkParsed();
+   return mText;
+}
