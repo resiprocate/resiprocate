@@ -2,7 +2,7 @@
 #define RESIP_PARSERCATEGORY_HXX 
 
 #include <iostream>
-#include <list>
+#include <vector>
 #include "resiprocate/HeaderTypes.hxx"
 #include "resiprocate/LazyParser.hxx"
 #include "resiprocate/ParameterTypes.hxx"
@@ -141,7 +141,7 @@ class ParserCategory : public LazyParser
 
       virtual const Data& errorContext() const;
 
-      typedef std::list<Parameter*> ParameterList; 
+      typedef std::vector<Parameter*> ParameterList; 
       mutable ParameterList mParameters;
       mutable ParameterList mUnknownParameters;
    private:
