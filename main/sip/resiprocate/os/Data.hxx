@@ -2,7 +2,7 @@
 #define RESIP_DATA_HXX 
 
 static const char* const resipDataHeaderVersion =
-   "$Id: Data.hxx,v 1.65 2003/06/02 20:52:32 ryker Exp $";
+   "$Id: Data.hxx,v 1.66 2003/06/17 23:17:45 davidb Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -57,9 +57,13 @@ class Data
       //bool operator!=(const std::string& rhs) const { return !(*this == rhs); }
 
       bool operator<(const Data& rhs) const;
+      bool operator<=(const Data& rhs) const;
       bool operator<(const char* rhs) const;
+      bool operator<=(const char* rhs) const;
       bool operator>(const Data& rhs) const;
+      bool operator>=(const Data& rhs) const;
       bool operator>(const char* rhs) const;
+      bool operator>=(const char* rhs) const;
 
       Data& operator=(const Data& data);
       Data& operator=(const char* str);
@@ -99,7 +103,7 @@ class Data
       // return a HEX representation of binary data
       Data hex() const;
 	
-      // return a representation with any non printable chracters escaped - very
+      // return a representation with any non printable characters escaped - very
       // slow only use for debug stuff 
       Data escaped() const;
 	
