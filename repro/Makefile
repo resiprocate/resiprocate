@@ -7,10 +7,13 @@ PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
 
 TARGET_LIBRARY = librepro
 
-TESTPROGRAMS = repro.cxx
+TESTPROGRAMS = \
+	repro.cxx \
+	userAdmin.cxx
 
 SRC =   \
 	Proxy.cxx \
+	UserDb.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
         RequestProcessor.cxx \
