@@ -15,12 +15,16 @@ ParserCategory::ParserCategory()
 {}
 
 ParserCategory::ParserCategory(const ParserCategory& rhs)
-   : mIsParsed(rhs.mIsParsed)
+   : mIsParsed(rhs.mIsParsed),
+     mMine(true)
 {
    if (rhs.mHeaderField)
    {
       mHeaderField = new HeaderFieldValue(*rhs.mHeaderField, this);
-      mMine = true;
+   }
+   else
+   {
+      mHeaderField = 0;
    }
 }
 
