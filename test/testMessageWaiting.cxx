@@ -1,4 +1,4 @@
-#include "sip2/sipstack/MessageWaitingBody.hxx"
+#include "sip2/sipstack/MessageWaitingContents.hxx"
 #include "sip2/sipstack/HeaderFieldValue.hxx"
 #include <iostream>
 
@@ -30,7 +30,7 @@ main()
                      "Voice-Message: 4/8 (1/2)\r\n");
 
       HeaderFieldValue hfv(txt.data(), txt.size());
-      MessageWaitingBody mwb(&hfv);
+      MessageWaitingContents mwb(&hfv);
 
       assert(mwb.header(mw_account).scheme() == "sip");
       assert(mwb.header(mw_account).user() == "alice");
@@ -54,7 +54,7 @@ main()
                      "Something: fine choice\r\n");
 
       HeaderFieldValue hfv(txt.data(), txt.size());
-      MessageWaitingBody mwb(&hfv);
+      MessageWaitingContents mwb(&hfv);
 
       assert(mwb.header(mw_account).scheme() == "sip");
       assert(mwb.header(mw_account).user() == "alice");
