@@ -14,7 +14,7 @@ class Security;
 class TlsTransport : public TcpBaseTransport
 {
    public:
-      TlsTransport(Fifo<Message>& fifo, 
+      TlsTransport(Fifo<TransactionMessage>& fifo, 
                    const Data& sipDomain, 
                    const Data& interfaceObj, 
                    int portNum, 

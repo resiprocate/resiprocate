@@ -9,7 +9,7 @@ namespace resip
 {
 
 class DnsResult;
-class Message;
+class TransactionMessage;
 class SipMessage;
 class TransactionMap;
 class TransactionController;
@@ -47,13 +47,13 @@ class TransactionState : public DnsHandler
       
       void handle(DnsResult*);
 
-      void processStateless( Message* msg);
-      void processClientNonInvite(  Message* msg );
-      void processClientInvite(  Message* msg );
-      void processServerNonInvite(  Message* msg );
-      void processServerInvite(  Message* msg );
-      void processClientStale(  Message* msg );
-      void processServerStale(  Message* msg );
+      void processStateless(TransactionMessage* msg);
+      void processClientNonInvite(TransactionMessage* msg);
+      void processClientInvite(TransactionMessage* msg);
+      void processServerNonInvite(TransactionMessage* msg);
+      void processServerInvite(TransactionMessage* msg);
+      void processClientStale(TransactionMessage* msg);
+      void processServerStale(TransactionMessage* msg);
       void processTransportFailure();
       void processNoDnsResults();
       void processReliability(TransportType type);
@@ -62,19 +62,19 @@ class TransactionState : public DnsHandler
       void erase(const Data& tid);
       
    private:
-      bool isRequest(Message* msg) const;
-      bool isInvite(Message* msg) const;
-      bool isTimer(Message* msg) const;
-      bool isResponse(Message* msg, int lower=0, int upper=699) const;
-      bool isFromTU(Message* msg) const;
-      bool isFromWire(Message* msg) const;
-      bool isTransportError(Message* msg) const;
-      bool isSentReliable(Message* msg) const;
-      bool isSentUnreliable(Message* msg) const;
-      bool isReliabilityIndication(Message* msg) const;
-      bool isSentIndication(Message* msg) const;
-      void sendToTU(Message* msg) const;
-      void sendToWire(Message* msg, bool retransmit=false);
+      bool isRequest(TransactionMessage* msg) const;
+      bool isInvite(TransactionMessage* msg) const;
+      bool isTimer(TransactionMessage* msg) const;
+      bool isResponse(TransactionMessage* msg, int lower=0, int upper=699) const;
+      bool isFromTU(TransactionMessage* msg) const;
+      bool isFromWire(TransactionMessage* msg) const;
+      bool isTransportError(TransactionMessage* msg) const;
+      bool isSentReliable(TransactionMessage* msg) const;
+      bool isSentUnreliable(TransactionMessage* msg) const;
+      bool isReliabilityIndication(TransactionMessage* msg) const;
+      bool isSentIndication(TransactionMessage* msg) const;
+      void sendToTU(TransactionMessage* msg) const;
+      void sendToWire(TransactionMessage* msg, bool retransmit=false);
       SipMessage* make100(SipMessage* request) const;
       void terminateClientTransaction(const Data& tid); 
       void terminateServerTransaction(const Data& tid); 
