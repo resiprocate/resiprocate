@@ -50,7 +50,10 @@ class TransportSelector
                          const Data& privateKeyPassPhrase,
                          SecurityTypes::SSLType sslType );
 
-      DnsResult* dnsResolve(SipMessage* msg, DnsHandler* handler);
+
+      DnsResult* createDnsResult(DnsHandler* handler);
+
+      void dnsResolve(DnsResult* result, SipMessage* msg);
 
       // this will result in msg->resolve() being called to either
       // kick off dns resolution or to pick the next tuple , will cause the
