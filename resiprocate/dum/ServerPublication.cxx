@@ -1,15 +1,21 @@
 #include "ServerPublication.hxx"
 
-ServerPublication::Handle::Handle(DialogUsageManager& dum,
-                                  Dialog& dialog)
+using namespace resip;
+
+ServerPublication::ServerPublication(DialogUsageManager& dum,
+                                     Dialog& dialog)
    : BaseUsage(dum, dialog),
      mHandle(dum)
 {}
 
+ServerPublication::Handle::Handle(DialogUsageManager& dum)
+   : BaseUsage::Handle(dum)
+{}
+
 ServerPublication* 
-ClientRegistration::Handle::operator->()
+ServerPublication::Handle::operator->()
 {
-   return static_cast<ClientRegistration*>get();
+   return static_cast<ServerPublication*>(get());
 }
 
 /* ====================================================================

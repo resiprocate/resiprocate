@@ -12,6 +12,7 @@
 #include "ClientPublication.hxx"
 #include "ServerOutOfDialogReq.hxx"
 #include "ClientOutOfDialogReq.hxx"
+#include "resiprocate/ParserCategories.hxx"
 
 namespace resip
 {
@@ -29,7 +30,7 @@ class Dialog
       {
          public:
             Exception(const Data& msg, const Data& file, int line);
-            const char* name() const = 0;
+            virtual const char* name() const {return "Dialog::Exception";}
       };
          
       // different behavior from request vs. response
@@ -86,7 +87,7 @@ class Dialog
       DialogType mType; // !jf! is this necessary?
       Data mLocalTag;
       Data mRemoteTag;
-      Data mCallId;
+      CallID mCallId;
       NameAddrs mRouteSet;
       NameAddr mMe;
 

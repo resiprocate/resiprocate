@@ -1,7 +1,12 @@
 #include "ServerSubscription.hxx"
 
-ServerSubscription::ServerSubscription(DialogUsageManager& dum)
-   : mHandle(dum)
+using namespace resip;
+
+ServerSubscription::ServerSubscription(DialogUsageManager& dum,
+                                       Dialog& dialog,
+                                       const SipMessage& req)
+   : BaseUsage(dum, dialog),
+     mHandle(dum)
 {}
 
 ServerSubscription::Handle::Handle(DialogUsageManager& dum)
@@ -11,7 +16,7 @@ ServerSubscription::Handle::Handle(DialogUsageManager& dum)
 ServerSubscription*
 ServerSubscription::Handle::operator->()
 {
-   return static_cast<ServerSubscription*>get();
+   return static_cast<ServerSubscription*>(get());
 }
 
 /* ====================================================================

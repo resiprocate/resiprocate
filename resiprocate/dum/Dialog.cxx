@@ -1,13 +1,19 @@
- #include "resiprocate/Contents.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Contents.hxx"
+#include "resiprocate/os/Logger.hxx"
+
 #include "Dialog.hxx"
-#include "ClientInviteSession.hxx"
+#include "DialogUsageManager.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 using namespace std;
 
 class ServerInviteSession;
 
-Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg) 
+Dialog::Dialog(DialogUsageManager& dum, 
+               const SipMessage& msg) 
    : mId(msg),
      mDum(dum),
      mClientSubscriptions(),
@@ -29,13 +35,13 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
      mRemoteCSeq(0),
      mRemoteTarget()
 {
-   assert(msg.isFromWire());
+   assert(msg.isExternal());
 
-   if (request.header(h_CSeq).method() == INVITE)
+   if (msg.header(h_CSeq).method() == INVITE)
    {
       mType = Invitation;
    }
-   else if (request.header(h_CSeq).method() == SUBSCRIBE)
+   else if (msg.header(h_CSeq).method() == SUBSCRIBE)
    {
       mType = Subscription;
    }
@@ -48,10 +54,10 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
       switch (request.header(h_CSeq).method())
       {
          case INVITE:
-         case SUBSRIBE:
+         case SUBSCRIBE:
             if (request.exists(h_Contacts) && request.header(h_Contacts).size() == 1)
             {
-               NameAddr& contact = request.header(h_Contacts).front();
+               const NameAddr& contact = request.header(h_Contacts).front();
                if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
                    isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
                {
@@ -59,8 +65,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
                }
                else
                {
-                  InfoLog (<< "Got an INVITE or SUBSCRIBE with invalid scheme");
-                  DebugLog (<< request);
+                  InfoLog(<< "Got an INVITE or SUBSCRIBE with invalid scheme");
+                  DebugLog(<< request);
                   throw Exception("Invalid dialog", __FILE__, __LINE__);
                }
             }
@@ -71,20 +77,22 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
                throw Exception("Invalid dialog", __FILE__, __LINE__);
             }
             break;
+         default:
+            break;
       }
       
       mRemoteCSeq = request.header(h_CSeq).sequence();
       mLocalCSeq = 0;
       
-      if ( response.header(h_From).exists(p_tag) ) // 2543 compat
+      if (request.header(h_From).exists(p_tag) ) // 2543 compat
       {
-         mRemoteTag = response.header(h_From).param(p_tag);  
+         mRemoteTag = request.header(h_From).param(p_tag);  
       }
-      if ( response.header(h_To).exists(p_tag) )  // 2543 compat
+      if ( request.header(h_To).exists(p_tag) )  // 2543 compat
       {
-         mLocalTag = response.header(h_To).param(p_tag); 
+         mLocalTag = request.header(h_To).param(p_tag); 
       }
-      mMe = response.header(h_To);
+      mMe = request.header(h_To);
 
       //mDialogId = mCallId;
       //mDialogId.param(p_toTag) = mLocalTag;
@@ -101,10 +109,10 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
       switch (response.header(h_CSeq).method())
       {
          case INVITE:
-         case SUBSRIBE:
+         case SUBSCRIBE:
             if (response.exists(h_Contacts) && response.header(h_Contacts).size() == 1)
             {
-               NameAddr& contact = response.header(h_Contacts).front();
+               const NameAddr& contact = response.header(h_Contacts).front();
                if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
                    isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
                {
@@ -123,6 +131,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
                DebugLog (<< response);
                throw Exception("Invalid dialog", __FILE__, __LINE__);
             }
+            break;
+         default:
             break;
       }
 
@@ -166,7 +176,7 @@ Dialog::dispatch(const SipMessage& msg)
          switch (msg.header(h_CSeq).method())
          {
             case INVITE:  // new INVITE
-               usage = mDum.createServerInviteSession(msg);
+               mInviteSession = mDum.makeServerInviteSession(*this, msg);
                break;
                
             case ACK:
@@ -177,23 +187,23 @@ Dialog::dispatch(const SipMessage& msg)
 
             case SUBSCRIBE:
             case REFER: //!jf! does this create a server subs?
-               usage = mDum.createServerSubscription(msg);
+               mServerSubscription = mDum.makeServerSubscription(*this, msg);
                break;
                
             case NOTIFY:
-               usage = mDum.createClientSubscription(msg);
+               mClientSubscriptions.push_back(mDum.makeClientSubscription(*this, msg));
                break;
                
             case PUBLISH:
-               usage = mDum.createServerPublication(msg);
+               mServerPublication = mDum.makeServerPublication(*this, msg);
                break;
                
             case REGISTER:
-               usage = mDum.createServerRegistration(msg);
+               mServerRegistration = mDum.makeServerRegistration(*this, msg);
                break;
                
             default:
-               usage = mDum.createServerOutOfDialog(msg);
+               mServerOutOfDialogReq = mDum.makeServerOutOfDialog(*this, msg);
                break;
          }
       }
@@ -203,7 +213,7 @@ Dialog::dispatch(const SipMessage& msg)
          switch (msg.header(h_CSeq).method())
          {
             case INVITE:  
-               usage = mDum.createClientInviteSession(msg);
+               mInviteSession = mDum.makeClientInviteSession(*this, msg);
                break;
                
             case ACK:
@@ -213,29 +223,26 @@ Dialog::dispatch(const SipMessage& msg)
                
             case SUBSCRIBE:
             case REFER: //!jf! does this create a server subs?
-               usage = mDum.createClientSubscription(msg);
+               mClientSubscriptions.push_back(mDum.makeClientSubscription(*this, msg));
                break;
                
             case NOTIFY:
-               usage = mDum.createClientSubscription(msg);
+               mClientSubscriptions.push_back(mDum.makeClientSubscription(*this, msg));
                break;
                
             case PUBLISH:
-               usage = mDum.createClientPublication(msg);
+               mClientPublication = mDum.makeClientPublication(*this, msg);
                break;
                
             case REGISTER:
-               usage = mDum.createClientRegistration(msg);
+               mClientRegistration = mDum.makeClientRegistration(*this, msg);
                break;
                
             default:
-               usage = mDum.createClientOutOfDialog(msg);
+               mClientOutOfDialogReq = mDum.makeClientOutOfDialog(*this, msg);
                break;
          }
       }
-      
-      assert(usage);
-      mUsages.push_back(usage);
    }
 }
 
@@ -252,10 +259,10 @@ Dialog::findUsage(const SipMessage& msg)
       case SUBSCRIBE:
       case REFER: 
       case NOTIFY: 
-         for (std::vector<ClientSubscription*>::iterator i=mClientSubscriptions.begin(); 
-              i != mClientSubscriptions.end(); i++)
+         for (std::vector<ClientSubscription*>::iterator i = mClientSubscriptions.begin(); 
+              i != mClientSubscriptions.end(); ++i)
          {
-            if (i->matches(msg))
+            if ((*i)->matches(msg))
             {
                return *i;
             }
@@ -291,80 +298,62 @@ Dialog::findUsage(const SipMessage& msg)
    return 0;
 }
 
-DialogId Dialog::getId() const
+InviteSession::Handle
+Dialog::findInviteSession()
 {
-   return mId;
+   if (mInviteSession)
+   {
+      return mInviteSession->getSessionHandle();
+   }
+   else
+   {
+      throw BaseUsage::Exception("no such invite session",
+                                 __FILE__, __LINE__);
+   }
 }
 
-BaseUsage&
-Dialog::findInvSession()
+std::vector<ClientSubscription::Handle> 
+Dialog::findClientSubscriptions()
 {
-   std::list<BaseUsage*>::iterator it = mUsages.begin();
-    BaseUsage *usage;
-    while (it != mUsages.end())
-    {
-        usage = it->next();
-        if ((dynamic_cast<ClientInviteSession*>(usage) != NULL) ||
-            (dynamic_cast<ServerInviteSession*>(usage) != NULL))
-        {
-            return *usage;
-        }
-    }
-    return  BaseUsage::empty();
+   std::vector<ClientSubscription::Handle> handles;
+   
+   for (std::vector<ClientSubscription*>::const_iterator i = mClientSubscriptions.begin();
+        i != mClientSubscriptions.end(); ++i)
+   {
+      handles.push_back((*i)->getHandle());
+   }
+
+   return handles;
 }
 
-UsageSet 
-Dialog::findSubscriptions()
+ClientRegistration::Handle 
+Dialog::findClientRegistration()
 {
-    std::list<BaseUsage*>::iterator it = mUsages.begin();
-    BaseUsage *usage;
-    UsageSet usageSet;
-    while (it != mUsages.end())
-    {
-        usage = it.next();
-        if ((dynamic_cast<ClientSubscription*>(usage) != null) ||
-            (dynamic_cast<ServerSubscription*>(usage) != null))
-        {
-            usageSet.push_back(*usage);
-        }
-    }
-    return usageSet:
+   if (mClientRegistration)
+   {
+      return mClientRegistration->getHandle();
+   }
+   else
+   {
+      throw BaseUsage::Exception("no such client registration session",
+                                 __FILE__, __LINE__);
+   }
 }
 
-BaseUsage&
-Dialog::findRegistration()
+ServerRegistration::Handle 
+Dialog::findServerRegistration()
 {
-    std::list<BaseUsage*>::iterator it = mUsages.begin();
-    BaseUsage *usage;
-    while (it != mUsages.end())
-    {
-        usage = it.next();
-        if ((dynamic_cast<CientRegistration*>(usage) != null) ||
-            (dynamic_cast<ServerRegistration*>(usage) != null))
-        {
-            return *usage;
-        }
-    }
-    return  BaseUsage::empty();
+   if (mServerRegistration)
+   {
+      return mServerRegistration->getHandle();
+   }
+   else
+   {
+      throw BaseUsage::Exception("no such server registration session",
+                                 __FILE__, __LINE__);
+   }
 }
 
-
-BaseUsage&
-Dialog::findPublication()
-{
-    std::list<BaseUsage*>::iterator it = mUsages.begin();
-    BaseUsage *usage;
-    while (it != mUsages.end())
-    {
-        usage = it.next();
-        if ((dynamic_cast<CientPublication*>(usage) != null) ||
-            (dynamic_cast<ServerPublication*>(usage) != null))
-        {
-            return *usage;
-        }
-    }
-    return  BaseUsage::empty();
-}
 
 UsageSet 
 Dialog::findOutOfDialogs()
@@ -513,3 +502,8 @@ Dialog::processInviteRelated(const SipMessage& msg)
       }
    }
 }
+
+Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
+   : BaseException(msg, file, line)
+{}
+

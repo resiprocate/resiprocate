@@ -1,7 +1,11 @@
 #include "ServerInviteSession.hxx"
 
-ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, const SipMessage& msg)
-   : InviteSession(dum),
+using namespace resip;
+
+ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, 
+                                         Dialog& dialog,
+                                         const SipMessage& msg)
+   : InviteSession(dum, dialog),
      mHandle(dum)
 {
 }
@@ -52,12 +56,7 @@ ServerInviteSession::reject(int statusCode)
 }
 
 void 
-ServerInviteSession::rejectOffer(int statusCode)
-{
-}
-
-void 
-ServerInviteSession::process(const SipMessage& msg)
+ServerInviteSession::handle(const SipMessage& msg)
 {
 }
 
@@ -68,14 +67,14 @@ ServerInviteSession::Handle::Handle(DialogUsageManager& dum)
 ServerInviteSession* 
 ServerInviteSession::Handle::operator->()
 {
-   return static_cast<ServerInviteSession*>get();
+   return static_cast<ServerInviteSession*>(get());
 }
 
 InviteSession::Handle 
 ServerInviteSession::getSessionHandle()
 {
    // don't ask, don't tell
-   return (InviteSession::Handle)mHandle;
+   return (InviteSession::Handle&)mHandle;
 }
 
 /* ====================================================================

@@ -53,16 +53,13 @@ class InviteSession : public BaseUsage
       virtual InviteSession::Handle getSessionHandle() = 0;
 
    protected:
-      InviteSession(DialogUsageManager& dum);
-      DialogUsageManager& mDum;
+      InviteSession(DialogUsageManager& dum, Dialog& dialog);
       SdpContents* mLocalSdp;
       SdpContents* mRemoteSdp;
       SdpContents* mMyNextOffer;
       SdpContents* mPendingReceivedOffer;
 
    private:
-      InviteSession::Handle mHandle;
-      
       friend class DialogUsageManager;
       
       // disabled
