@@ -36,7 +36,9 @@ class ClientRegistration: public BaseUsage
       
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-
+   
+   protected:
+      virtual ~ClientRegistration();
    private:
       friend class DialogUsageManager;
       ClientRegistration(DialogUsageManager& dum,
