@@ -3,7 +3,7 @@
 
 using namespace resip;
 
-AbstractFifo::AbstractFifo(unsigned int maxSize) 
+AbstractFifo::AbstractFifo(unsigned int maxSize)
    : mSize(0),
      mMaxSize(maxSize)
 {
@@ -22,7 +22,7 @@ AbstractFifo ::getNext()
    //
    while (mFifo.empty())
    {
-      mCondition.wait(&mMutex);
+      mCondition.wait(mMutex);
    }
 
    // Return the first message on the fifo.
@@ -44,7 +44,7 @@ unsigned int
 AbstractFifo ::size() const
 {
    Lock lock(mMutex); (void)lock;
-   return mSize; 
+   return mSize;
 }
 
 bool
