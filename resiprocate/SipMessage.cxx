@@ -613,6 +613,17 @@ SipMessage::header(const Date_Header& headerType) const
    return dynamic_cast<ParserContainer<Date_Header::Type>*>(hfvs->getParserContainer())->front();
 };
 
+Event_Header::Type&
+SipMessage::header(const Event_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (hfvs->getParserContainer() == 0)
+   {
+      hfvs->setParserContainer(new ParserContainer<Event_Header::Type>(hfvs, headerType.getTypeNum()));
+   }
+   return dynamic_cast<ParserContainer<Event_Header::Type>*>(hfvs->getParserContainer())->front();
+};
+
 Expires_Header::Type&
 SipMessage::header(const Expires_Header& headerType) const
 {
