@@ -72,7 +72,8 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
       fixStrictRouterDamage();
       removeTopRouteIfSelf();
    }
-   
+
+   RequestProcessor::processor_action_t ret=RequestProcessor::Continue;
    // if it's a CANCEL I need to call processCancel here 
    if (sip && sip->isRequest())
    {
@@ -82,9 +83,7 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
       }
       else
       {
-         //InfoLog (<< "process monkeys for " << *this);
-         mRequestProcessorChain.handleRequest(*this); 
-         //InfoLog (<< "done process monkeys for " << *this);
+         ret = mRequestProcessorChain.handleRequest(*this);
       }
    }
    else if (sip && sip->isResponse())
@@ -95,14 +94,10 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
    }
    else
    {
-      if (mRequestProcessorChain.handleRequest(*this) == RequestProcessor::WaitingForEvent)
-      {
-         InfoLog (<< "Waiting for event on " << *this);
-         return;
-      }
+      ret = mRequestProcessorChain.handleRequest(*this);
    }
 
-   if (!mHaveSentFinalResponse)
+   if (!mHaveSentFinalResponse && ret != RequestProcessor::WaitingForEvent)
    {
       InfoLog (<< "process candidates for " << *this);
       mResponseContext.processCandidates();
