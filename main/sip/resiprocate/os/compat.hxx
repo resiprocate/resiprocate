@@ -15,6 +15,12 @@ typedef unsigned int u_int32_t;
 #include <sys/socket.h> // for u_int32_t
 #endif
 
+#if defined (__QNX__)
+
+typedef size_t socklen_t;
+
+#endif
+
 #endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

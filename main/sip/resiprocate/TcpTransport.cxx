@@ -18,7 +18,7 @@
 #include "sip2/sipstack/TcpTransport.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/Preparse.hxx"
-
+#include "sip2/util/compat.hxx"
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
