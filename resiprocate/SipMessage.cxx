@@ -7,7 +7,8 @@ using namespace std;
 
 SipMessage::SipMessage(char* buff)
    : mBuff(buff),
-     nIsExternal(true)
+     nIsExternal(true),
+     mFixedDest(false)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -60,6 +61,12 @@ SipMessage::cleanUp()
 void
 SipMessage::copyFrom(const SipMessage& from)
 {
+  if(from.hasFixedDest())
+    {
+      mHaveFixedDest = true;
+      mFixedDest = from.getFixedDest();
+    }
+
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
       if (mHeaders[i] != 0)
@@ -165,4 +172,35 @@ SipMessage::addHeader(int header, char* headerName, int headerLen,
       mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(Data(headerName, headerLen),
                                                                     hfvs));
    }
+}
+
+
+bool
+SipMessage::hasFixedDest()
+{
+  return mHaveFixedDest;
+}
+
+
+Data
+SipMessage::getFixedDest()
+{
+  return mFixedDest;
+  mHaveFixedDest = true;
+}
+
+
+void
+SipMessage::setFixedDest(const Data& dest)
+{
+  mFixedDest = dest;
+  mHaveFixedDest = true;
+}
+
+
+void
+SipMessage::clearFixedDest()
+{
+  mFixedDest = "";
+  mHaveFixedDest = false;
 }
