@@ -9,6 +9,7 @@
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/TimerMessage.hxx"
 #include "resiprocate/TransactionMessage.hxx"
+#include "resiprocate/TuSelector.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
@@ -32,8 +33,8 @@ DtlsTimerQueue::DtlsTimerQueue( Fifo<DtlsMessage>& fifo )
 
 #endif
 
-TimeLimitTimerQueue::TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo)
-   : mFifo(fifo)
+TimeLimitTimerQueue::TimeLimitTimerQueue(TuSelector& fifoSelector)
+   : mFifoSelector(fifoSelector)
 {
 }
 
@@ -135,7 +136,7 @@ TimeLimitTimerQueue::process()
       for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
       {
          assert(i->getMessage());
-         mFifo.add(i->getMessage(), TimeLimitFifo<Message>::InternalElement);
+         mFifoSelector.add(i->getMessage(), TimeLimitFifo<Message>::InternalElement);
       }
       mTimers.erase(mTimers.begin(), end);
    }

@@ -287,7 +287,11 @@ Dialog::dispatch(const SipMessage& msg)
    // !jf! Should be checking for messages with out of order CSeq and rejecting
 
    DebugLog ( << "Dialog::dispatch: " << msg.brief());
-   mNetworkAssociation.update(msg);
+   int keepAliveTime = mDialogSet.getUserProfile()->getKeepAliveTime();
+   if(keepAliveTime > 0)
+   {
+      mNetworkAssociation.update(msg, keepAliveTime);
+   }
    handleTargetRefresh(msg);
    if (msg.isRequest())
    {
