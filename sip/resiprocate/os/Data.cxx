@@ -1,8 +1,9 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.23 2002/11/04 23:41:51 bko Exp $";
+"$Id: Data.cxx,v 1.24 2002/11/05 02:56:36 derekm Exp $";
 
 #include <algorithm>
 #include <cassert>
+#include <ctype.h>
 
 #include <util/Data.hxx>
 #include <util/vmd5.hxx>
@@ -419,6 +420,32 @@ Data::md5() const
    MD5Final(digest, &context);
    return RandomHex::convertToHex(digest, 16);
 }
+
+
+Data&
+Data::lowercase()
+{
+   char* p = mBuf;
+   for (unsigned int i=0; i < mSize; i++)
+   {
+      *p = tolower(*p);
+      p++;
+   }
+   return *this;
+}
+
+Data&
+Data::uppercase()
+{
+   char* p = mBuf;
+   for (unsigned int i=0; i < mSize; i++)
+   {
+      *p = toupper(*p);
+      p++;
+   }
+   return *this;
+}
+
 
 bool
 Vocal2::operator==(const char* s, const Data& d)

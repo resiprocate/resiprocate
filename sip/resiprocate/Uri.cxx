@@ -1,6 +1,7 @@
 #include <sipstack/Uri.hxx>
 #include <util/ParseBuffer.hxx>
 #include <sipstack/Symbols.hxx>
+#include <sipstack/UnknownParameter.hxx>
 
 using namespace Vocal2;
 
@@ -33,26 +34,35 @@ Uri::operator=(const Uri& rhs)
    }
    return *this;
 }
-   
+
+class OrderUnknownParameters
+{
+   public:
+      bool operator()(const Parameter* p1, const Parameter* p2) const
+      {
+         return dynamic_cast<const UnknownParameter*>(p1)->getName() < dynamic_cast<const UnknownParameter*>(p2)->getName();
+      }
+};
+
 bool 
 Uri::operator==(const Uri& other) const
 {
    if (isEqualNoCase(mScheme, other.mScheme) &&
        isEqualNoCase(mHost, other.mHost) &&
-       mUser == other.mUser,
-       mPassword == other.mPassword,
+       mUser == other.mUser &&
+       mPassword == other.mPassword &&
        mPort == other.mPort)
    {
       for (ParameterList::iterator it = mParameters.begin(); it != mParameters.end(); it++)
       {
-         Parameter* otherParam = other.getParameterByEnum((*it)->getType());            
+         Parameter* otherParam = other.getParameterByEnum((*it)->getType());
          switch ((*it)->getType())
          {
             case ParameterTypes::user:
             {
                if(!(otherParam &&
-                    dynamic_cast<DataParameter*>(*it)->value() == 
-                    dynamic_cast<DataParameter*>(otherParam)->value()))
+                    isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                  dynamic_cast<DataParameter*>(otherParam)->value())))
                {
                   return false;
                }
@@ -61,7 +71,7 @@ Uri::operator==(const Uri& other) const
             case ParameterTypes::ttl:
             {
                if(!(otherParam &&
-                    dynamic_cast<IntegerParameter*>(*it)->value() == 
+                    dynamic_cast<IntegerParameter*>(*it)->value(),
                     dynamic_cast<IntegerParameter*>(otherParam)->value()))
                {
                   return false;
@@ -69,9 +79,11 @@ Uri::operator==(const Uri& other) const
             }
             case ParameterTypes::method:
             {
+               //this should possilby be case sensitive, but is allowed to be
+               //case insensitive for robustness.  
                if(!(otherParam &&
-                    dynamic_cast<DataParameter*>(*it)->value() == 
-                    dynamic_cast<DataParameter*>(otherParam)->value()))
+                    isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                  dynamic_cast<DataParameter*>(otherParam)->value())))
                {
                   return false;
                }
@@ -80,8 +92,18 @@ Uri::operator==(const Uri& other) const
             case ParameterTypes::maddr:
             {               
                if(!(otherParam &&
-                    dynamic_cast<DataParameter*>(*it)->value() == 
-                    dynamic_cast<DataParameter*>(otherParam)->value()))
+                    isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                  dynamic_cast<DataParameter*>(otherParam)->value())))
+               {
+                  return false;
+               }
+            }
+            break;
+            case ParameterTypes::transport:
+            {
+               if(!(otherParam &&
+                    isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                  dynamic_cast<DataParameter*>(otherParam)->value())))
                {
                   return false;
                }
@@ -89,16 +111,6 @@ Uri::operator==(const Uri& other) const
             break;
             //the parameters that follow don't affect comparison if only present
             //in one of the URI's
-            case ParameterTypes::transport:
-            {
-               if(otherParam &&
-                  dynamic_cast<DataParameter*>(*it)->value() == 
-                  dynamic_cast<DataParameter*>(otherParam)->value())
-               {
-                  return false;
-               }
-            }
-            break;
             case ParameterTypes::lr:
                break;
             default:
@@ -111,9 +123,46 @@ Uri::operator==(const Uri& other) const
    {
       return false;
    }
+   ParameterList unA = mUnknownParameters;
+   ParameterList unB = other.mUnknownParameters;
+
+   OrderUnknownParameters orderUnknown;
+   
+   unA.sort(orderUnknown);
+   unB.sort(orderUnknown);
+   
+   ParameterList::iterator a = unA.begin();
+   ParameterList::iterator b = unB.begin();
+   
+   while(a != unA.end() && b != unB.end())
+   {
+      if (orderUnknown(*a, *b))
+      {
+         a++;
+      }
+      else if (orderUnknown(*b, *a))
+      {
+         b++;
+      }
+      else
+      {
+         if (!isEqualNoCase(dynamic_cast<UnknownParameter*>(*a)->value(),
+                            dynamic_cast<UnknownParameter*>(*b)->value()))
+         {
+            return false;
+         }
+         a++;
+         b++;
+      }
+   }
    return true;
 }
 
+bool 
+Uri::operator!=(const Uri& other) const
+{
+   return !(*this == other);
+}
 
 const Data&
 Uri::getAor() const
@@ -152,9 +201,11 @@ Uri::parse(ParseBuffer& pb)
    const char* start = pb.position();
    pb.skipToChar(Symbols::COLON[0]);
    pb.data(mScheme, start);
-   pb.skipChar();
-   if (mScheme == Symbols::Sip || mScheme == Symbols::Sips)
+//   mScheme = pb.data(start);
+   pb.skipChar();   
+   if (isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips))
    {
+      mScheme.lowercase();
       start = pb.position();
       pb.skipToChar(Symbols::AT_SIGN[0]);
       if (!pb.eof())
