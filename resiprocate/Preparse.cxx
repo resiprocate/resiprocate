@@ -219,36 +219,36 @@ Preparse::InitStatePreparseStateTable()
     //    (Analyse the impact on the Preparse FSM).
     //
 
-    assert(Symbols::CR && strlen(Symbols::CR) == 1);
-    assert(Symbols::LF && strlen(Symbols::LF) == 1);
-    assert(Symbols::LA_QUOTE && strlen(Symbols::LA_QUOTE) == 1);
-    assert(Symbols::RA_QUOTE && strlen(Symbols::RA_QUOTE) == 1);
-    assert(Symbols::DOUBLE_QUOTE && strlen(Symbols::DOUBLE_QUOTE) == 1);
-    assert(Symbols::COLON && strlen(Symbols::COLON) == 1);
-    assert(Symbols::B_SLASH && strlen(Symbols::B_SLASH) == 1);
-    assert(Symbols::COMMA && strlen(Symbols::COMMA) == 1);
-    assert(Symbols::SPACE && strlen(Symbols::SPACE) == 1);
-    assert(Symbols::TAB && strlen(Symbols::TAB) == 1);
+    assert(Symbols::CR.size() == 1);
+    assert(Symbols::LF.size() == 1);
+    assert(Symbols::LA_QUOTE.size() == 1);
+    assert(Symbols::RA_QUOTE.size() == 1);
+    assert(Symbols::DOUBLE_QUOTE.size() == 1);
+    assert(Symbols::COLON.size() == 1);
+    assert(Symbols::B_SLASH.size() == 1);
+    assert(Symbols::COMMA.size() == 1);
+    assert(Symbols::SPACE.size() == 1);
+    assert(Symbols::TAB.size() == 1);
 
     // Setup the table with useful transitions.
     // NOTE: This is done to (1) make them ints (2) make the automatic diagram
     // have reasonable symbol names.  DO NOT put Symbols::XX in the AE() calls.
 
-    const int CR = (int)(*Symbols::CR);
-    const int LF = (int)(*Symbols::LF);
-    const int LAQUOT = (int)(*Symbols::LA_QUOTE);
-    const int RAQUOT = (int)(*Symbols::RA_QUOTE);
-    const int QUOT = (int)(*Symbols::DOUBLE_QUOTE);
+    const int CR = (int)Symbols::CR[0];
+    const int LF = (int)Symbols::LF[0];
+    const int LAQUOT = (int)Symbols::LA_QUOTE[0];
+    const int RAQUOT = (int)Symbols::RA_QUOTE[0];
+    const int QUOT = (int)Symbols::DOUBLE_QUOTE[0];
    
-    const int COLON = (int)(*Symbols::COLON);
-    const int LSLASH = (int)(*Symbols::B_SLASH);
-    const int COMMA = (int)(*Symbols::COMMA);
+    const int COLON = (int)Symbols::COLON[0];
+    const int LSLASH = (int)Symbols::B_SLASH[0];
+    const int COMMA = (int)Symbols::COMMA[0];
 
     // Remember... this works b/c the assertion above ensured it would.
     const char LWS[3]  =
         {
-            (*Symbols::SPACE),
-            (*Symbols::TAB),
+            Symbols::SPACE[0],
+            Symbols::TAB[0],
             0
         }
     ;
