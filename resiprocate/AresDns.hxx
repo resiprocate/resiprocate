@@ -9,7 +9,7 @@ extern "C"
 struct ares_channeldata;
 }
 
-struct fd_set;
+//struct fd_set;
 
 namespace resip
 {
