@@ -15,16 +15,17 @@
 namespace Vocal2
 {
 
-  class Data;
-  class Message;
-  class SipMessage;
-	class DnsResolver;
-	class Executive;
-	class TransportSelector;
-	class TransactionState;
-	class TestDnsResolver;
-	class TestFSM;
-	
+class Data;
+class Message;
+class SipMessage;
+class DnsResolver;
+class Executive;
+class TransportSelector;
+class TransactionState;
+class TestDnsResolver;
+class TestFSM;
+class Security;
+
 	
 class SipStack
 {
@@ -54,6 +55,11 @@ class SipStack
 	
       /// returns time in milliseconds when process next needs to be called 
       int getTimeTillNextProcess(); 
+
+#ifdef USE_SSL
+      /// if this object exists, it manages advanced security featues
+      Security* security;
+#endif
 
 private:
 	friend class DnsResolver;
