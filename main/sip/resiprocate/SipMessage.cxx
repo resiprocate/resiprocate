@@ -623,18 +623,15 @@ void
 SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLen, 
                       const char* start, int len)
 {
-   HeaderFieldValue* newHeader = new HeaderFieldValue(start, len);
-   
    if (header != Headers::UNKNOWN)
    {
       if (mHeaders[header] == 0)
       {
          mHeaders[header] = new HeaderFieldValueList;
-         mHeaders[header]->push_back(newHeader);
       }
-      else
+      if (len)
       {
-         mHeaders[header]->push_back(newHeader);
+         mHeaders[header]->push_back(new HeaderFieldValue(start, len));
       }
    }
    else
@@ -645,13 +642,20 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
          if (strncasecmp(i->first.data(), headerName, headerLen) == 0)
          {
             // add to end of list
-            i->second->push_back(newHeader);
+            if (len)
+            {
+               i->second->push_back(new HeaderFieldValue(start, len));
+            }
             return;
          }
       }
+
       // didn't find it, add an entry
       HeaderFieldValueList *hfvs = new HeaderFieldValueList();
-      hfvs->push_back(newHeader);
+      if (len)
+      {
+         hfvs->push_back(new HeaderFieldValue(start, len));
+      }
       mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(Data(headerName, headerLen),
                                                                   hfvs));
    }
@@ -708,6 +712,16 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
          hfvs->push_back(hfv);
       }
    }
+   // !dlb! not thrilled about checking this every access
+   else if (single)
+   {
+      if (hfvs->empty())
+      {
+         // create an unparsed shared header field value
+         hfvs->push_back(new HeaderFieldValue(Data::Empty.data(), 0));
+      }
+   }
+
    return hfvs;
 }
 
