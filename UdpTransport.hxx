@@ -12,7 +12,11 @@ class SipMessage;
 class UdpTransport : public Transport
 {
    public:
-      UdpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo);
+      UdpTransport(const Data& sendhost,
+                   int portNum,
+                   const Data& nic,
+                   Fifo<Message>& fifo);
+
       virtual  ~UdpTransport();
 
       void process(fd_set* fdSet=NULL) ;

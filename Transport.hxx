@@ -13,7 +13,7 @@
 #include <util/Socket.hxx>
 #include <util/VException.hxx>
 #include <sipstack/Message.hxx>
-
+#include <sipstack/Preparse.hxx>
 namespace Vocal2
 {
 
@@ -97,7 +97,8 @@ class Transport
       Data mInterface;
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
-
+      Preparse mPreparse;
+        
    private:
 
       bool mShutdown ;
