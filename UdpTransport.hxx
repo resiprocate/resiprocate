@@ -1,5 +1,5 @@
-#if !defined(UDPTRANSPORT_HXX)
-#define UDPTRANSPORT_HXX
+#if !defined(RESIP_UDPTRANSPORT_HXX)
+#define RESIP_UDPTRANSPORT_HXX
 
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Message.hxx"
@@ -33,7 +33,6 @@ class UdpTransport : public Transport
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

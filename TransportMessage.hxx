@@ -1,5 +1,5 @@
-#ifndef TransportMessage_hxx
-#define TransportMessage_hxx
+#if !defined(RESIP_TRANSPORTMESSAGE_HXX)
+#define RESIP_TRANSPORTMESSAGE_HXX 
 
 #include <iostream>
 #include "resiprocate/Message.hxx"
@@ -42,9 +42,7 @@ class TransportMessage : public Message
 
 }
 
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
