@@ -120,7 +120,12 @@ TransactionState::process(SipStack& stack)
                // !rk! This might be needlessly created.  Design issue.
                state->mMsgToRetransmit = state->make100(sip);
                state->mSource = sip->getSource();
-               
+               // since we don't want to reply to the source port unless rport present 
+               if (!sip->header(h_Vias).front().exists(p_rport))
+               {
+                  state->mSource.port = sip->header(h_Vias).front().sentPort();
+               }
+
                if( sip->header(h_Vias).front().exists(p_branch) && 
                    sip->header(h_Vias).front().param(p_branch).hasMagicCookie() )
                {
@@ -135,6 +140,12 @@ TransactionState::process(SipStack& stack)
                DebugLog(<<"Adding non-INVITE transaction state " << tid);
                TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
                state->mSource = sip->getSource();
+               // since we don't want to reply to the source port unless rport present 
+               if (!sip->header(h_Vias).front().exists(p_rport))
+               {
+                  state->mSource.port = sip->header(h_Vias).front().sentPort();
+               }
+
                stack.mTransactionMap.add(tid,state);
             }
             // Incoming ACK just gets passed to the TU
