@@ -36,11 +36,12 @@ class TransportSelector
       void process(FdSet& fdset);
       void buildFdSet(FdSet& fdset);
      
-      void addTransport( TransportType,
+      // returns true, if the transport was added successfully. 
+      bool addTransport( TransportType,
                          int port,
                          IpVersion version,
                          const Data& ipInterface=Data::Empty);
-      void addTlsTransport(const Data& domainName, 
+      bool addTlsTransport(const Data& domainName, 
                            const Data& keyDir,
                            const Data& privateKeyPassPhrase,
                            int port, 
