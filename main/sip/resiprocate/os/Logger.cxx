@@ -71,11 +71,11 @@ GenericLogImpl::Instance()
 #ifdef WIN32
       case Log::VSDebugWindow:
          if (mWin32DebugStream == 0)
-		 {
-			 mWin32DebugData = new Data();
-	     	 mWin32DebugStream = new DataStream(*mWin32DebugData);
-		 }
-		 return *mWin32DebugStream;
+         {
+            mWin32DebugData = new Data();
+            mWin32DebugStream = new DataStream(*mWin32DebugData);
+         }
+         return *mWin32DebugStream;
 #endif
                
       case Log::File:
@@ -112,13 +112,13 @@ void
 GenericLogImpl::OutputToWin32DebugWindow()
 {
 #ifdef WIN32
-	mWin32DebugStream->flush();
-	const char *text = mWin32DebugData->c_str();
-    OutputDebugStringA(text);
-	delete mWin32DebugData;
-	delete mWin32DebugStream;
-	mWin32DebugData = 0;
-	mWin32DebugStream = 0;
+   mWin32DebugStream->flush();
+   const char *text = mWin32DebugData->c_str();
+   OutputDebugStringA(text);
+   delete mWin32DebugData;
+   delete mWin32DebugStream;
+   mWin32DebugData = 0;
+   mWin32DebugStream = 0;
 #endif
 }
 
