@@ -10,8 +10,8 @@
 #include "resiprocate/os/ParseBuffer.hxx"
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
-      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType)
+      const _enum##_Param::DType& param(const _enum##_Param& paramType, unsigned int inst = 1) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType, unsigned int inst = 1)
 
 namespace resip
 {
@@ -40,32 +40,17 @@ class ParserCategory : public LazyParser
 
       virtual ParserCategory* clone() const = 0;
 
-      bool exists(const ParamBase& paramType) const;
-      void remove(const ParamBase& paramType);
+      bool exists(const ParamBase& paramType, unsigned int inst = 1) const;
+      // inst = 0 means remove all, inst = i means remove ith
+      void remove(const ParamBase& paramType, unsigned int inst = 0);
 
       // !dlb! causes compiler error in windows -- change template to const T*
       const Data& param(const UnknownParameterType& param) const;
       Data& param(const UnknownParameterType& param);
 
-      void remove(const UnknownParameterType& param); 
-      bool exists(const UnknownParameterType& param) const;
+      void remove(const UnknownParameterType& param, unsigned int inst = 0); 
+      bool exists(const UnknownParameterType& param, unsigned int inst = 1) const;
 
-//#define TEMPLATE_METHODS
-#ifdef TEMPLATE_METHODS
-      template <class T> 
-      typename T::DType& param(const T& paramType) const
-      {
-         checkParsed();
-         typename T::Type* p = static_cast<typename T::Type*>(getParameterByEnum(paramType.getTypeNum()));
-         if (!p)
-         {
-            p = new typename T::Type(paramType.getTypeNum());
-            mParameters.push_back(p);
-         }
-         return p->value();
-      }
-
-#else
       defineParam(accessType, "access-type", DataParameter, "RFC 2046");
       defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
       defineParam(boundary, "boundary", DataParameter, "RFC 2046");
@@ -120,8 +105,6 @@ class ParserCategory : public LazyParser
 
       defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
 
-#endif
-      
       void parseParameters(ParseBuffer& pb);
       std::ostream& encodeParameters(std::ostream& str) const;
       
@@ -129,15 +112,15 @@ class ParserCategory : public LazyParser
       Data commutativeParameterHash() const;
       
       // typeless parameter interface
-      Parameter* getParameterByEnum(ParameterTypes::Type type) const;
-      void removeParameterByEnum(ParameterTypes::Type type);
-      void setParameter(const Parameter* parameter);
+      Parameter* getParameterByEnum(ParameterTypes::Type type, unsigned int inst = 1) const;
+      void removeParameterByEnum(ParameterTypes::Type type, unsigned inst = 0);
+      void setParameter(const Parameter* parameter, unsigned inst = 1);
 
    protected:
       ParserCategory();
 
-      Parameter* getParameterByData(const Data& data) const;
-      void removeParameterByData(const Data& data);
+      Parameter* getParameterByData(const Data& data, unsigned int inst = 1) const;
+      void removeParameterByData(const Data& data, unsigned inst = 0);
 
       virtual const Data& errorContext() const;
 
