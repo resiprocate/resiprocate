@@ -5,26 +5,26 @@
 #include "resiprocate/TransactionTerminated.hxx"
 #include "resiprocate/ApplicationMessage.hxx"
 #include "repro/RequestProcessorChain.hxx"
-#include "repro/Repro.hxx"
+#include "repro/Proxy.hxx"
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-RequestProcessorChain Repro::mRequestProcessorChain;
+RequestProcessorChain Proxy::mRequestProcessorChain;
 
-Repro::Repro(SipStack& stack) : mStack(stack)
+Proxy::Proxy(SipStack& stack) : mStack(stack)
 {
 }
 
-Repro::~Repro()
+Proxy::~Proxy()
 {
    shutdown();
    join();
 }
 
 void
-Repro::thread()
+Proxy::thread()
 {
    while (!isShutdown())
    {
