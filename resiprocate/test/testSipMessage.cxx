@@ -48,6 +48,29 @@ main(int argc, char** argv)
    }
 
    {
+      cerr << "test CRLFs before the start line" << endl;
+      Data txt1 = "\r\n\r\n\r\nSIP/2.0 407 Proxy Authentication Required\r\n"
+         "To: <sip:jason_AT_meet2talk.com@beta.meet2talk.com>\r\n"
+         "From: <sip:jason_AT_meet2talk.com@beta.meet2talk.com>;tag=113cba09\r\n"
+         "Via: SIP/2.0/UDP 64.124.66.32:9091;branch=z9hG4bK-c87542-5b42cb698e8c6827790212ac5bdade1a-1-PA32768-c87542-;rport;received=64.124.66.32\r\n"
+         "Via: SIP/2.0/UDP 192.168.1.102:5100;branch=z9hG4bK-c87542-175255966-1--c87542-;rport\r\n"
+         "Call-ID: d8023c1dc2559a21\r\n"
+         "CSeq: 1 REGISTER\r\n"
+         "Contact: <sip:64.124.66.32:5060>\r\n"
+         "Content-Length: 0\r\n\r\n";
+
+      try
+      {
+         auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
+         message1->header(h_StatusLine).statusCode() == 407;
+      }
+      catch (BaseException& e)
+      {
+         assert(false);
+      }
+   }
+
+   {
       cerr << "test complex content copy" << endl;
 
       Data txt = ("MESSAGE sip:fluffy@212.157.205.40 SIP/2.0\r\n"
