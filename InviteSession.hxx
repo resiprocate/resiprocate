@@ -2,8 +2,9 @@
 #define RESIP_INVITESESSION_HXX
 
 #include "resiprocate/dum/DialogUsage.hxx"
-#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/RefCountedDestroyer.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/SdpContents.hxx"
 
 #include <map>
 
@@ -71,7 +72,22 @@ class InviteSession : public DialogUsage
          Answered,
          WaitingToOffer,
          WaitingToTerminate,
-         Terminated // Ended. waiting to delete
+         Terminated, // Ended. waiting to delete
+
+         UAS_Start,
+         UAS_OfferReliable,
+         UAS_NoOfferReliable,
+         UAS_FirstSentOfferReliable,
+         UAS_FirstEarlyReliable,
+         UAS_Accepted,
+         UAS_EarlyReliable,
+         UAS_SentUpdate,
+         UAS_SentUpdateAccepted,
+         UAS_ReceivedUpdate,
+         UAS_ReceivedUpdateWaitingAnswer,
+         UAS_WaitingToTerminate,
+         UAS_WaitingToHangup
+
       } State;
 
       typedef enum
@@ -82,7 +98,7 @@ class InviteSession : public DialogUsage
 
       //typedef std::pair<OfferAnswerType, const SdpContents*> OfferAnswer;
 
-      InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState);
+      InviteSession(DialogUsageManager& dum, Dialog& dialog);
       virtual ~InviteSession();
 
       virtual void dispatch(const SipMessage& msg);
@@ -106,7 +122,7 @@ class InviteSession : public DialogUsage
       static const SdpContents* getSdp(const SipMessage& msg);
       static void setSdp(SipMessage& msg, const SdpContents& sdp);
       
-      State mState;
+      State mState; 
       NitState mNitState;
 
       SdpContents mCurrentLocalSdp;

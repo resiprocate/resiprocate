@@ -2,7 +2,6 @@
 #define RESIP_SERVERINVITESESSION_HXX
 
 #include "resiprocate/dum/InviteSession.hxx"
-
 #include "resiprocate/SipMessage.hxx"
 
 #include <deque>
@@ -19,33 +18,49 @@ class ServerInviteSession: public InviteSession
       // send a 3xx
       virtual void redirect(const NameAddrs& contacts, int code=302);
 
-      /// Returns a 200 the user should end to accept the call
-      SipMessage& accept();
-      
-      /// Returns provisional response (a 1xx but not 100). This may contain an
-      /// offer or answer depending on if setOffer or setAnswer was called
-      /// before this.
-      SipMessage& provisional(int statusCode);
-      
-      /// Rejects an INVITE with a response like 3xx,4xx,5xx, or 6xx. 
-      virtual SipMessage& reject(int statusCode);
+      /// Called to set the offer that will be used in the next messages that
+      /// sends and offer. Does not send an offer
+      virtual void provideOffer(const SdpContents& offer);
 
-      virtual void send(SipMessage& msg);
+      /// Called to set the answer that will be used in the next messages that
+      /// sends an offer. Does not send an answer
+      virtual void provideAnswer(const SdpContents& answer);
 
-      /// Makes the dialog end. Depending on the current state, this might
-      /// results in BYE or CANCEL being sent.
+      /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
       virtual void end();
-      
-      void dispatch(const SipMessage& msg);
 
+      /// Rejects an offer at the SIP level. So this can send a 488 to a
+      /// reINVITE or UPDATE
+      virtual void reject(int statusCode);
+
+      //accept a re-invite, etc.  Always 200?
+      //this is only applicable to the UAS
+      virtual void accept(int statusCode=200);
+
+      // Following methods are for sending requests within a dialog
+      virtual void refer(const NameAddr& referTo);
+      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
+      virtual void info(const Contents& contents);
+      
    private:
+      typedef enum
+      {
+      } State;
+      
       friend class Dialog;
+
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimeout& timer);
+
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 
       // disabled
       ServerInviteSession(const ServerInviteSession&);
       ServerInviteSession& operator=(const ServerInviteSession&);
 
+      // stores the original request
+      SipMessage mFirstRequest;
+      
       std::deque<SipMessage> mUnacknowledgedProvisionals; // all of them
       SipMessage m200; // for retransmission
 };
