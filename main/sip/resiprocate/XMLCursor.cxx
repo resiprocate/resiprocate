@@ -66,7 +66,7 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
    lPb.skipToChars(COMMENT_START);
    if (!lPb.eof())
    {
-      DebugLog(<< "removing comments");
+      StackLog(<< "removing comments");
       lPb.reset(start);
       mData.reserve(lPb.end() - lPb.start());
 
@@ -239,11 +239,11 @@ XMLCursor::nextSibling()
 {
    if (atRoot())
    {
-      DebugLog(<< "XMLCursor::nextSibling" << *this->mCursor << " <<root>>");
+      StackLog(<< "XMLCursor::nextSibling" << *this->mCursor << " <<root>>");
       return false;
    }
 
-   DebugLog(<< "XMLCursor::nextSibling" << *this->mCursor << " " << *this->mCursor->mParent);
+   StackLog(<< "XMLCursor::nextSibling" << *this->mCursor << " " << *this->mCursor->mParent);
    if (mCursor->mParent == mRoot)
    {
       parseNextRootChild();
@@ -360,7 +360,7 @@ XMLCursor::getAttributes() const
          pb.data(attribute, anchor);
          XMLCursor::decodeName(attribute);
 
-         DebugLog(<< "attribute: " << attribute);
+         StackLog(<< "attribute: " << attribute);
 
          pb.skipWhitespace();
          pb.skipToChar(Symbols::EQUALS[0]);
@@ -370,7 +370,7 @@ XMLCursor::getAttributes() const
 	 {
 	    const char quote = *pb.position();
 
-	    DebugLog(<< "quote is <" << quote << ">");
+	    StackLog(<< "quote is <" << quote << ">");
 	    
 	    if (quote != Symbols::DOUBLE_QUOTE[0] &&
 		quote != '\'')
@@ -434,7 +434,7 @@ XMLCursor::Node::Node(const ParseBuffer& pb)
      mIsLeaf(false)
 {
    mPb.assertNotEof();
-   DebugLog(<< "XMLCursor::Node::Node" << *this);
+   StackLog(<< "XMLCursor::Node::Node" << *this);
 }
 
 XMLCursor::Node::~Node()
@@ -487,8 +487,8 @@ void
 XMLCursor::Node::skipToEndTag()
 {
    extractTag();
-   DebugLog(<< "XMLCursor::Node::skipToEndTag(" <<  mTag << ")");
-   //DebugLog(<< "XMLCursor::Node::skipToEndTag(" << Data(mPb.position(), mPb.end() - mPb.position()) << ")");
+   StackLog(<< "XMLCursor::Node::skipToEndTag(" <<  mTag << ")");
+   //StackLog(<< "XMLCursor::Node::skipToEndTag(" << Data(mPb.position(), mPb.end() - mPb.position()) << ")");
 
    //<foo />
    mPb.skipToChar(Symbols::RA_QUOTE[0]);
@@ -571,7 +571,7 @@ XMLCursor::Node::skipToEndTag()
       child->skipToEndTag();
       mPb.reset(child->mPb.end());
       XMLCursor::decodeName(child->mTag);
-      DebugLog(<< mTag << "(" << child->mTag << ")");
+      StackLog(<< mTag << "(" << child->mTag << ")");
     }
 }
 
