@@ -53,7 +53,7 @@ main(int argc, char* argv[])
        {"from",        'f', POPT_ARG_STRING, &fromUri,   0, "The From: Header URI", 0},
        {"ctc",         'm', POPT_ARG_STRING, &contactUri,0, "The Contact: URI", 0},
        {"target-uri",  'g', POPT_ARG_STRING, &targetUri, 0, "The target (forced) URI", 0},
-       {"method",      'M', POPT_ARG_STRING, &method,    0, "The method to use", "RESIP_REGISTER|RESIP_INVITE|OPTIONS|MESSAGE|CANCEL|RESIP_ACK|RESIP_BYE"},
+       {"method",      'M', POPT_ARG_STRING, &method,    0, "The method to use", "RESIP_REGISTER|RESIP_INVITE|RESIP_OPTIONS|MESSAGE|CANCEL|RESIP_ACK|RESIP_BYE"},
        POPT_AUTOHELP
        { 0, 0, 0, 0, 0 }
    };
@@ -81,15 +81,15 @@ main(int argc, char* argv[])
        fromUri = toUri;
    }
 
-   MethodTypes meth(OPTIONS);
+   MethodTypes meth(RESIP_OPTIONS);
 
    if (method)
    {
        meth=getMethodType(method);
        if (meth == RESIP_UNKNOWN)
        {
-           ErrLog(<<"Unknown method, using OPTIONS for now: " << method );
-           meth = OPTIONS;
+           ErrLog(<<"Unknown method, using RESIP_OPTIONS for now: " << method );
+           meth = RESIP_OPTIONS;
        }
    }
 
