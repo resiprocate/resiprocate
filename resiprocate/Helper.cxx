@@ -326,6 +326,7 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr
          case 486: reason = "Busy Here"; break;
          case 487: reason = "Request Terminated"; break;
          case 488: reason = "Not Acceptable Here"; break;
+         case 489: reason = "Event Package Not Supported"; break;
          case 491: reason = "Request Pending"; break;
          case 493: reason = "Undecipherable"; break;
          case 500: reason = "Server Internal Error"; break;
