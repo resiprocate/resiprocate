@@ -27,8 +27,13 @@ TcpTransport::~TcpTransport()
 Connection* 
 TcpTransport::createConnection(Tuple& who, Socket fd, bool server)
 {
+   assert(this);
    who.transport = this;
-   return new TcpConnection(who, fd);
+   assert(  who.transport );
+   
+   Connection* conn = new TcpConnection(who, fd);
+   assert( conn->transport() );
+   return conn;
 }
 
 
