@@ -77,7 +77,7 @@ GagConduit::gaimPresence(GagPresenceMessage *msg)
 
   map<Uri,TuIM>::iterator tu = getTu(*aor);
   if (tu == tuIM.end()) return;
-
+  
   tu->second.setMyPresence(online, *status);
 }
 
@@ -120,7 +120,7 @@ GagConduit::process()
 }
 
 void 
-GagConduit::presenseUpdate(const Uri& dest, bool open,
+GagConduit::presenceUpdate(const Uri& dest, bool open,
                            const Data& status )
 {
   GagPresenceMessage presenceMessage(dest, open, status);
