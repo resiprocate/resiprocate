@@ -74,6 +74,7 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
    // bind it to the local addr
 
    // make non blocking 
+#if 0
 #if WIN32
    unsigned long block = 0;
    int errNoBlock = ioctlsocket( mFd, FIONBIO , &block );
@@ -83,7 +84,7 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
    int errNoBlock = fcntl(mFd,F_SETFL, flags| O_NONBLOCK );
    assert( errNoBlock == 0 );
 #endif
-
+#endif
    // do the listen, seting the maximum queue size for compeletly established
    // sockets -- on linux, tcp_max_syn_backlog should be used for the incomplete
    // queue size(see man listen)
@@ -123,20 +124,30 @@ TcpTransport::processListen(FdSet& fdset)
       struct sockaddr_in peer;
 		
       socklen_t peerLen=sizeof(peer);
-      Socket s = accept( mFd, (struct sockaddr*)&peer,&peerLen);
-      if ( s == -1 )
+      Socket sock = accept( mFd, (struct sockaddr*)&peer,&peerLen);
+      if ( sock == -1 )
       {
          int err = errno;
          DebugLog( << "Error on accept: " << strerror(err));
          return;
       }
 
+#if WIN32
+      unsigned long block = 0;
+      int errNoBlock = ioctlsocket( sock, FIONBIO , &block );
+      assert( errNoBlock == 0 );
+#else
+      int flags  = fcntl( sock, F_GETFL, 0);
+      int errNoBlock = fcntl(sock, F_SETFL, flags| O_NONBLOCK );
+      assert( errNoBlock == 0 );
+#endif
+      
       Transport::Tuple who;
       who.ipv4 = peer.sin_addr;
       who.port = ntohs(peer.sin_port);
       who.transportType = Transport::TCP;
       who.transport = this;
-      mConnectionMap.add(who, s);
+      mConnectionMap.add(who, sock);
    }
 }
 
@@ -200,18 +211,21 @@ TcpTransport::processAllWrites( FdSet& fdset )
       
       if (conn == 0)
       {
+         DebugLog (<< "Failed to create/get connection: " << data->destination);
          fail(data->transactionId);
          delete data;
          return;
       }
       if (conn->mOutstandingSends.empty())
       {
+         DebugLog (<< "Adding " << *conn << " to send roundrobin");
          mSendRoundRobin.push_back(conn);
          conn->mSendPos = 0;
       }
+      DebugLog (<< "Queuing " << data->transactionId << " : " << data->data);
       conn->mOutstandingSends.push_back(data);
-      sendFromRoundRobin(fdset);
    }
+   sendFromRoundRobin(fdset);
 }         
 
 void
@@ -274,10 +288,12 @@ TcpTransport::processWrite(ConnectionMap::Connection* c)
    }
    else if ((size_t)bytesWritten < data->data.size() - c->mSendPos)
    {
+      DebugLog (<< "Wrote " << bytesWritten << " to " << *c);
       c->mSendPos += bytesWritten;
    }
    else
    {
+      DebugLog (<< "Finished write " << bytesWritten << " to " << *c);
       c->mOutstandingSends.pop_front();
       c->mSendPos = 0;
       ok(data->transactionId);
@@ -290,12 +306,10 @@ TcpTransport::processWrite(ConnectionMap::Connection* c)
 void 
 TcpTransport::process(FdSet& fdSet)
 {
-   DebugLog(<<"TcpTransport::process");
-   DebugLog(<<"mTxFifo:size: " << mTxFifo.size());
+   if (mTxFifo.messageAvailable()) DebugLog(<<"mTxFifo:size: " << mTxFifo.size());
    processAllWrites(fdSet);
    processListen(fdSet);
    processAllReads(fdSet);
-   DebugLog(<<"TcpTransport::process:finished");
 }
 
 
