@@ -6,7 +6,6 @@
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
-#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 
