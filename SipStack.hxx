@@ -1,12 +1,19 @@
 #if !defined(SIPSTACK_HXX)
 #define SIPSTACK_HXX
 
+#include <sipstack/Executive.hxx>
+#include <sipstack/TransportSelector.hxx>
+#include <sipstack/TransactionMap.hxx>
+// #include <sipstack/TransportDirector.hxx>
 #include <sipstack/Fifo.hxx>
+#include <sipstack/TimerWheel.hxx>
 
 namespace Vocal2
 {
 
-class SipMessage;
+  class Data;
+  class Message;
+  class SipMessage;
 
 class SipStack
 {
@@ -15,7 +22,7 @@ class SipStack
 
       // this is only if you want to send to a destination not in the route. You
       // probably don't want to use it. 
-      void send(SipMessage* msg, const Data& dest="default" );
+      void send(SipMessage* msg, const Data &dest="default" );
       
       SipMessage* receive();
 
@@ -26,7 +33,7 @@ class SipStack
 
       enum ThreadFunction { Timer, UDP, StateMachine, TCP, };
 
-      void runThread( ThreadFunction );
+      void runThread( enum ThreadFunction funcType);
 
 
    private:
@@ -36,15 +43,15 @@ class SipStack
 
       TransactionMap mTransactionMap;
 
-      TransportDirectory mTransportDirector;
-
+  //      TransportDirector mTransportDirector;
       
-      Fifo<SipMessage> mTUFifo;
+      Fifo<Message> mTUFifo;
 
-      Fifo<SipMessage> mStateMacFifo;
+      Fifo<Message> mStateMacFifo;
 
-      Timer mTimers;
+  TimerWheel  mTimers;
 };
  
 }
 
+#endif
