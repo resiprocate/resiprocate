@@ -86,7 +86,7 @@ Proxy::thread()
          }
          else if (app)
          {
-            HashMap<Data,RequestContext*>::iterator i=mRequestContexts.find(term->getTransactionId());
+            HashMap<Data,RequestContext*>::iterator i=mRequestContexts.find(app->getTransactionId());
             // the underlying RequestContext may not exist
             if (i != mRequestContexts.end())
             {
