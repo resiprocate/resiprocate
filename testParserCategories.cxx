@@ -578,6 +578,54 @@ main(int arc, char** argv)
       assert(s.str() == "Sun, 14 Jan 2222 07:04:05 GMT");
    }
 
+
+   {
+      char* mimeString = "application/sdp";
+      HeaderFieldValue hfv(mimeString, strlen(mimeString));
+      
+      Mime mime(&hfv);
+
+      assert(mime.type() == "application");
+      assert(mime.subType() == "sdp");
+
+      stringstream s;
+      mime.encode(s);
+      assert(s.str() == mimeString);
+   }
+
+
+   {
+      char* mimeString = "text/html ; charset=ISO-8859-4";
+      HeaderFieldValue hfv(mimeString, strlen(mimeString));
+      
+      Mime mime(&hfv);
+
+      assert(mime.type() == "text");
+      assert(mime.subType() == "html");
+      assert(mime.param("charset") == "ISO-8859-4");
+
+      stringstream s;
+      mime.encode(s);
+      assert(s.str() == "text/html;charset=ISO-8859-4");
+   }
+
+   {
+      char* mimeString = "    text   /     html        ;  charset=ISO-8859-4";
+      HeaderFieldValue hfv(mimeString, strlen(mimeString));
+      
+      Mime mime(&hfv);
+
+      assert(mime.type() == "text");
+      assert(mime.subType() == "html");
+      assert(mime.param("charset") == "ISO-8859-4");
+
+      stringstream s;
+      mime.encode(s);
+      assert(s.str() == "text/html;charset=ISO-8859-4");
+   }
+
+
+
    cerr << "\nTEST OK" << endl;
 }
 
