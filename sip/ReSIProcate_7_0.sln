@@ -13,8 +13,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "contrib\ares\ares_7
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "limpc", "resiprocate\test\test_7_0.vcproj", "{16CD976A-5D3B-4329-88BA-A32560CDFCC5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gag", "gag\gag_7_0.vcproj", "{53862038-09E5-4FE1-9BDF-D482D8C735ED}"
-EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		ConfigName.0 = Debug
@@ -57,14 +55,6 @@ Global
 		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.SSL-Debug.Build.0 = Debug|Win32
 		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.SSL-Release.ActiveCfg = Release|Win32
 		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.SSL-Release.Build.0 = Release|Win32
-		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.Debug.ActiveCfg = Debug|Win32
-		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.Debug.Build.0 = Debug|Win32
-		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.Release.ActiveCfg = Release|Win32
-		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.Release.Build.0 = Release|Win32
-		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.SSL-Debug.ActiveCfg = Debug|Win32
-		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.SSL-Debug.Build.0 = Debug|Win32
-		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.SSL-Release.ActiveCfg = Release|Win32
-		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.SSL-Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
