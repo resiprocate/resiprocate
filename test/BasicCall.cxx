@@ -26,6 +26,7 @@
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 using namespace resip;
+using namespace std;
 
 void sleepSeconds(unsigned int seconds)
 {
@@ -169,25 +170,25 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          cout << name << ": ClientInviteSession-onRedirected - " << msg.brief() << endl;
       }
 
-      virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)
+      virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
-         cout << name << ": InviteSession-onTerminated - " << msg.brief() << endl;
+         cout << name << ": InviteSession-onTerminated - " << (msg ? msg->brief() : "") << endl;
          assert(0); // This is overrideen in UAS and UAC specific handlers
       }
 
-      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents*sdp)
+      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents& sdp)
       {
          cout << name << ": InviteSession-onAnswer(SDP)" << endl;
          //sdp->encode(cout);
       }
 
-      virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents*sdp)      
+      virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp)      
       {
          cout << name << ": InviteSession-onOffer(SDP)" << endl;
          //sdp->encode(cout);
       }
 
-      virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage& msg, const SdpContents*sdp)
+      virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage& msg, const SdpContents& sdp)
       {
          cout << name << ": InviteSession-onEarlyMedia(SDP)" << endl;
          //sdp->encode(cout);
@@ -216,6 +217,11 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       virtual void onRefer(InviteSessionHandle, ServerSubscriptionHandle, const SipMessage& msg)
       {
          cout << name << ": InviteSession-onRefer - " << msg.brief() << endl;
+      }
+
+      virtual void onReferAccepted(InviteSessionHandle, ClientSubscriptionHandle, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onReferAccepted - " << msg.brief() << endl;
       }
 
       virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg)
@@ -289,9 +295,9 @@ class TestUac : public TestInviteSessionHandler
          delete sdp;
       }
 
-      virtual void onTerminated(InviteSessionHandle is, const SipMessage& msg)
+      virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
-         cout << name << ": InviteSession-onTerminated - " << msg.brief() << endl;
+         cout << name << ": InviteSession-onTerminated - " << (msg ? msg->brief() : "") << endl;
          done = true;
       }
 };
@@ -344,22 +350,22 @@ class TestUas : public TestInviteSessionHandler
          cout << name << ": ServerInviteSession-onNewSession - " << msg.brief() << endl;
          cout << name << ": Sending 180 response." << endl;
          mSis = sis;         
-         sis->send(sis->provisional(180));
+         sis->provisional(180);
       }
 
-      virtual void onTerminated(InviteSessionHandle is, const SipMessage& msg)
+      virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
-         cout << name << ": InviteSession-onTerminated - " << msg.brief() << endl;
+         cout << name << ": InviteSession-onTerminated - " << (msg ? msg->brief() : "") << endl;
          done = true;
       }
 
-      virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents* sdp)      
+      virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp)      
       {
          cout << name << ": InviteSession-onOffer(SDP)" << endl;
          //sdp->encode(cout);
          cout << name << ": Sending 200 response with SDP answer." << endl;
-         is->setAnswer(sdp);
-         mSis->send(mSis->accept());
+         is->provideAnswer(sdp);
+         mSis->accept();
          *pHangupAt = time(NULL) + 5;
       }
 
@@ -371,6 +377,7 @@ class TestUas : public TestInviteSessionHandler
          {
             cout << name << ": Sending BYE." << endl;
             mSis->end();
+            done = true;
          }
       }
    private:
