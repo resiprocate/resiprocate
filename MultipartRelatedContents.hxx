@@ -1,57 +1,26 @@
-#if !defined(RESIP_MULTIPARTMIXEDCONTENTS_HXX)
-#define RESIP_MULTIPARTMIXEDCONTENTS_HXX 
+#ifndef RESIP_MultipartRelatedContents_hxx
+#define RESIP_MultipartRelatedContents_hxx
 
-#include <list>
-
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resiprocate/MultipartMixedContents.hxx"
 
 namespace resip
 {
 
-class Mime;
-class ParseBuffer;
-
-class MultipartMixedContents : public Contents
+class MultipartRelatedContents : public MultipartMixedContents
 {
    public:
-      MultipartMixedContents();
-      explicit MultipartMixedContents(const Mime& contentType);
-      MultipartMixedContents(HeaderFieldValue* hfv, const Mime& contentType);
-      MultipartMixedContents(const MultipartMixedContents& rhs);
-      virtual ~MultipartMixedContents();
-      MultipartMixedContents& operator=(const MultipartMixedContents& rhs);
+      MultipartRelatedContents();
+      MultipartRelatedContents(HeaderFieldValue* hfv, const Mime& contentType);
+      MultipartRelatedContents(const MultipartRelatedContents& rhs);
+      MultipartRelatedContents& operator=(const MultipartRelatedContents& rhs);
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-      virtual void parse(ParseBuffer& pb);
-
-      typedef list<Contents*> Parts;
-      Parts& parts() {checkParsed(); return mContents;}
-      const Parts& parts() const {checkParsed(); return mContents;}
-
-      class Exception : public BaseException
-      {
-        public:
-         Exception(const Data& msg, const Data& file, const int line)
-            : BaseException(msg, file, line) {}
-
-         const char* name() const { return "MultipartMixedContents::Exception"; }
-      };
-      
-      static bool init();
-      
-   protected:
-      void clear();
-      
-   private:
-      void setBoundary();
-      std::list<Contents*> mContents;
+      static bool init();      
 };
 
-static bool invokeMultipartMixedContentsInit = MultipartMixedContents::init();
+static bool invokeMultipartRelatedContentsInit = MultipartRelatedContents::init();
 
 }
 
