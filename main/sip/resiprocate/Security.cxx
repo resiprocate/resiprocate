@@ -62,7 +62,7 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
       char buf[256];
       ERR_error_string_n(err,buf,sizeof(buf));
       
-      ErrLog( << "ssl connection failed with err= " << err << " " << buf );
+      ErrLog( << "ssl connection failed with server=" << server << " err=" << err << " " << buf );
       assert(0); // !jf! - need to deal gracefull with error and shut down this connection
    }
 }

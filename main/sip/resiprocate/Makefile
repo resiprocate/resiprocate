@@ -1,8 +1,9 @@
-# $Id: Makefile,v 1.100 2002/12/24 00:14:43 jason Exp $
+# $Id: Makefile,v 1.101 2002/12/31 06:04:02 fluffy Exp $
 
 BUILD = ../../build
 
 USE_SSL = 1
+VOCAL_USE_DEPRECATED=0
 
 include $(BUILD)/Makefile.pre
 -include ../Makefile.opt
@@ -13,6 +14,8 @@ PACKAGES += SIP2 UTIL2 ARES PTHREAD
 
 ifeq ($(USE_SSL),1)
 PACKAGES += OPENSSL
+CFLAGS += -DUSE_SSL
+CXXFLAGS += -DUSE_SSL
 endif
 
 TARGET_LIBRARY = libsip2
