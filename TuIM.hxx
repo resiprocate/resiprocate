@@ -1,6 +1,8 @@
 #if !defined(UDPTRANSPORT_HXX)
 #define UDPTRANSPORT_HXX
 
+#include "sip2/sipstack/Security.hxx"
+
 namespace Vocal2
 {
 
@@ -11,7 +13,9 @@ class TuIM
       class PageCallback
       {
          public:
-            virtual void receivedPage(const Data& msg, const Uri& from ); 
+            virtual void receivedPage(const Data& msg, const Uri& from, 
+                                      const Data& signedBy,  Security::SignatureStatus sigStatus,
+                                      bool wasEncryped  ) = 0; 
             virtual ~PageCallback();
       };
       
@@ -28,7 +32,7 @@ class TuIM
            PageCallback* pageCallback, 
            ErrCallback* errCallback);
       
-      void sendPage(const Data& text, const Uri& dest);
+      void sendPage(const Data& text, const Uri& dest, bool sign, const Data& encryptFor );
 
       void process();
       
