@@ -5,6 +5,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -22,12 +23,14 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
                                        SipMessage& request)
    : NonDialogUsage(dum, dialogSet),
      mLastRequest(request),
-     mTimerSeq(0)
+     mTimerSeq(0),
+     mState(mLastRequest.exists(h_Contacts) ? Adding : Querying),
+     mEndWhenDone(false)
 {
+   // If no Contacts header, this is a query
    if (mLastRequest.exists(h_Contacts))
    {
       mMyContacts = mLastRequest.header(h_Contacts);
-//      mLastRequest.header(h_To).param(p_tag) = mDialog.getId().getRemoteTag();
    }
 }
 
@@ -45,12 +48,24 @@ ClientRegistration::addBinding(const NameAddr& contact)
    mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
    mLastRequest.header(h_CSeq).sequence()++;
    // caller prefs
+
+   if (mState != Registered)
+   {
+      throw UsageUseException("Can't add binding when already modifying registration bindings", __FILE__,__LINE__);
+   }
+
+   mState = Adding;
    mDum.send(mLastRequest);
 }
 
 void 
 ClientRegistration::removeBinding(const NameAddr& contact)
 {
+   if (mState != Registered)
+   {
+      throw UsageUseException("Can't remove binding when already modifying registration bindings", __FILE__,__LINE__);
+   }
+
    for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
    {
       if (i->uri() == contact.uri())
@@ -60,8 +75,9 @@ ClientRegistration::removeBinding(const NameAddr& contact)
          mLastRequest.header(h_Contacts) = mMyContacts;
          mLastRequest.header(h_Expires).value() = 0;
          mLastRequest.header(h_CSeq).sequence()++;
+         mState = Removing;
          mDum.send(mLastRequest);
-
+         
          return;
       }
    }
@@ -70,8 +86,13 @@ ClientRegistration::removeBinding(const NameAddr& contact)
 }
 
 void 
-ClientRegistration::removeAll()
+ClientRegistration::removeAll(bool stopRegisteringWhenDone)
 {
+   if (mState != Registered)
+   {
+      throw UsageUseException("Can't remove bindings when already modifying registration bindings", __FILE__,__LINE__);
+   }
+
    mAllContacts.clear();
    mMyContacts.clear();
    
@@ -81,12 +102,23 @@ ClientRegistration::removeAll()
    mLastRequest.header(h_Contacts).push_back(all);
    mLastRequest.header(h_Expires).value() = 0;
    mLastRequest.header(h_CSeq).sequence()++;
+   mEndWhenDone = stopRegisteringWhenDone;
+   
+   mState = Removing;
    mDum.send(mLastRequest);
 }
 
 void 
-ClientRegistration::removeMyBindings()
+ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 {
+   InfoLog (<< "Removing binding");
+
+   if (mState != Registered)
+   {
+      InfoLog (<< "Trying to remove bindings when modifying: " << mState);
+      throw UsageUseException("Can't remove binding when already modifying registration bindings", __FILE__,__LINE__);
+   }
+
    for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
    {
       i->param(p_expires) = 0;
@@ -95,6 +127,8 @@ ClientRegistration::removeMyBindings()
    mLastRequest.header(h_Contacts) = mMyContacts;
    mLastRequest.remove(h_Expires);
    mLastRequest.header(h_CSeq).sequence()++;
+   mEndWhenDone = stopRegisteringWhenDone;
+   mState = Removing;
    mDum.send(mLastRequest);
 }
 
@@ -109,9 +143,6 @@ ClientRegistration::requestRefresh()
 {
    mLastRequest.header(h_CSeq).sequence()++;
    mDum.send(mLastRequest);
-//   mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
-//   unsigned long t = Helper::aBitSmallerThan((unsigned long)(mLastRequest.header(h_Expires).value()));
-//   mDum.addTimer(DumTimeout::Registration, t, getBaseHandle(), ++mTimerSeq);
 }
 
 const NameAddrs& 
@@ -125,31 +156,6 @@ ClientRegistration::allContacts()
 {
    return mAllContacts;
 }
-
-void
-ClientRegistration::updateMyContacts(const NameAddrs& allContacts)
-{
-    //!ah! not used
-    assert(0);
-
-   NameAddrs myNewContacts;
-   for (NameAddrs::const_iterator i=allContacts.begin(); i != allContacts.end(); i++)
-   {
-      for (NameAddrs::iterator j=mMyContacts.begin(); j != mMyContacts.end(); j++)
-      {
-         if (i->uri() == j->uri())
-         {
-            if (i->exists(p_gruu))
-            {
-               mDum.getProfile()->addGruu(mLastRequest.header(h_To).uri().getAor(), *i);
-            }
-            myNewContacts.push_back(*i);
-         }
-      }
-   }
-   mMyContacts = myNewContacts;
-}
-
 
 void 
 ClientRegistration::dispatch(const SipMessage& msg)
@@ -174,9 +180,8 @@ ClientRegistration::dispatch(const SipMessage& msg)
          if (msg.exists(h_Contacts))
          {
             mAllContacts = msg.header(h_Contacts);
-            // goes away -- updateMyContacts(mOtherContacts);
+
             // make timers to re-register
-            
             int expiry = INT_MAX;            
             for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); 
                  it != msg.header(h_Contacts).end(); it++)
@@ -202,7 +207,27 @@ ClientRegistration::dispatch(const SipMessage& msg)
             }
          }
          
-         mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+         switch (mState)
+         {
+            case Querying:
+            case Adding:
+               mState = Registered;
+               mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+               break;
+               
+            case Removing:
+               mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+               mDum.mClientRegistrationHandler->onRemoved(getHandle());
+               if (mEndWhenDone)
+               {
+                  stopRegistering();
+               }
+               break;
+
+            case Registered:
+               break;
+               
+         }
       }
       else
       {
@@ -211,14 +236,20 @@ ClientRegistration::dispatch(const SipMessage& msg)
             // maximum 1 day 
             // !ah! why max check? -- profile?
             if (msg.exists(h_MinExpires) && msg.header(h_MinExpires).value()  < 86400) 
-         {
-            mLastRequest.header(h_Expires).value() = msg.header(h_MinExpires).value();
-            mLastRequest.header(h_CSeq).sequence()++;
-            mDum.send(mLastRequest);
-            return;
-         }
+            {
+               mLastRequest.header(h_Expires).value() = msg.header(h_MinExpires).value();
+               mLastRequest.header(h_CSeq).sequence()++;
+               mDum.send(mLastRequest);
+               return;
+            }
          }
          mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
+
+         // assume that if a failure occurred, the bindings are gone
+         if (mEndWhenDone) 
+         {
+            mDum.mClientRegistrationHandler->onRemoved(getHandle());
+         }
          delete this;
       }
    }
@@ -233,13 +264,13 @@ ClientRegistration::dispatch(const SipMessage& msg)
 void
 ClientRegistration::dispatch(const DumTimeout& timer)
 {
-    if (timer.seq() == mTimerSeq)
-    {
-        if (!mMyContacts.empty())
-        {
-            requestRefresh();
-        }
-    }
+   if (timer.seq() == mTimerSeq)
+   {
+      if (!mMyContacts.empty())
+      {
+         requestRefresh();
+      }
+   }
 }
 
 /* ====================================================================
