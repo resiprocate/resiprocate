@@ -1,5 +1,5 @@
-#ifndef LazyParser_hxx
-#define LazyParser_hxx
+#if !defined(RESIP_LAZYPARSER_HXX)
+#define RESIP_LAZYPARSER_HXX 
 
 #include <iostream>
 
