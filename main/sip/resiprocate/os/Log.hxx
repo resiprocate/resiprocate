@@ -1,7 +1,7 @@
 #ifndef Vocal2_Log_hxx
 #define Vocal2_Log_hxx
 
-#define DELIM " | "
+#define DELIM ' ' << '|' << ' '
 
 #include "sip2/util/Data.hxx"
 

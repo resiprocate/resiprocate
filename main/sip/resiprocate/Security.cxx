@@ -189,14 +189,14 @@ TlsConnection::peerName()
 #ifdef WIN32
 	assert(0);
 #else
-   ErrLog("request peer certificate" );
+   ErrLog(<< "request peer certificate" );
    X509* cert = SSL_get_peer_certificate(ssl);
    if ( !cert )
    {
-      ErrLog("No peer certifiace in TLS connection" );
+      ErrLog(<< "No peer certifiace in TLS connection" );
       return ret;
    }
-   ErrLog("Got peer certificate" );
+   ErrLog(<< "Got peer certificate" );
 
    X509_NAME* subject = X509_get_subject_name(cert);
    assert(subject);
@@ -241,7 +241,7 @@ TlsConnection::peerName()
    }
    
    int numExt = X509_get_ext_count(cert);
-   ErrLog("Got peer certificate with " << numExt << " extentions" );
+   ErrLog(<< "Got peer certificate with " << numExt << " extentions" );
 
    for ( int i=0; i<numExt; i++ )
    {
@@ -251,7 +251,7 @@ TlsConnection::peerName()
       const char* str = OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
       assert(str);
       
-      ErrLog("Got certificate extention" << str );
+      ErrLog(<< "Got certificate extention" << str );
    }
    
    X509_free(cert); cert=NULL;
@@ -398,10 +398,10 @@ Security::loadMyPublicCert( const Data&  filePath )
    FILE* fp = fopen(filePath.c_str(),"rb");
    if ( !fp )
    {
-      ErrLog( "Could not read public cert from " << filePath );
-	  Data err( "Could not read public cert from " );
-	  err += filePath;
-	  throw Exception(err, __FILE__,__LINE__);
+      ErrLog(<< "Could not read public cert from " << filePath );
+      Data err( "Could not read public cert from " );
+      err += filePath;
+      throw Exception(err, __FILE__,__LINE__);
       return false;
    }
    
@@ -1045,7 +1045,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
          for ( int j=0; j<sk_num(emails); j++)
          {
             char* e = sk_value(emails,j);
-            InfoLog("email field of signing cert is <" << e << ">" );
+            InfoLog(<< "email field of signing cert is <" << e << ">" );
             if ( signedBy)
             {
                *signedBy = Data(e);
@@ -1118,7 +1118,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
          break;
       
          default:
-            ErrLog("Got PKCS7 data that could not be handled type=" << type );
+            ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
             return NULL;
       }
       
@@ -1261,7 +1261,7 @@ Security::decrypt( Pkcs7Contents* sBody )
       break;
       
       default:
-         ErrLog("Got PKCS7 data that could not be handled type=" << type );
+         ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
          return NULL;
    }
       
