@@ -14,6 +14,7 @@ class ClientSubscriptionHandler
       virtual void onUpdatePending(ClientSubscriptionHandle, SipMessage& notify)=0;
       virtual void onUpdateActive(ClientSubscriptionHandle, SipMessage& notify)=0;      
       virtual void onTerminated(ClientSubscriptionHandle, SipMessage& notify)=0;      
+      virtual void onNewSubscription(ClientSubscriptionHandle, SipMessage& sub)=0;
 };
 
 class ServerSubscriptionHandler
