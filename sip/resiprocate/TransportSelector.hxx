@@ -69,7 +69,7 @@ class TransportSelector
       HashMap<Data, TlsTransport*> mTlsTransports;
 
       // fake socket for connect() and route table lookups
-      int mSocket;
+      mutable Socket mSocket;
 
       friend class DnsResolver;
 };
