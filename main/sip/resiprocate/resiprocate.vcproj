@@ -222,6 +222,9 @@
 				RelativePath="DialogSet.cxx">
 			</File>
 			<File
+				RelativePath="DnsInterface.cxx">
+			</File>
+			<File
 				RelativePath="DnsResolver.cxx">
 			</File>
 			<File
@@ -235,6 +238,9 @@
 			</File>
 			<File
 				RelativePath="FloatParameter.cxx">
+			</File>
+			<File
+				RelativePath="GenericContents.cxx">
 			</File>
 			<File
 				RelativePath="HeaderFieldValue.cxx">
@@ -372,6 +378,12 @@
 				RelativePath="os\Socket.cxx">
 			</File>
 			<File
+				RelativePath="StatelessHandler.cxx">
+			</File>
+			<File
+				RelativePath="StatelessHandler.hxx">
+			</File>
+			<File
 				RelativePath="Subscription.cxx">
 			</File>
 			<File
@@ -487,7 +499,13 @@
 				RelativePath="DialogSet.hxx">
 			</File>
 			<File
+				RelativePath="DnsInterface.hxx">
+			</File>
+			<File
 				RelativePath="DnsResolver.hxx">
+			</File>
+			<File
+				RelativePath="DnsResult.hxx">
 			</File>
 			<File
 				RelativePath="Embedded.hxx">
@@ -503,6 +521,9 @@
 			</File>
 			<File
 				RelativePath="FloatParameter.hxx">
+			</File>
+			<File
+				RelativePath="GenericContents.hxx">
 			</File>
 			<File
 				RelativePath="os\HashMap.hxx">
