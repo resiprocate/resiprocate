@@ -9,7 +9,6 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
-
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
@@ -63,10 +62,9 @@ class TransportSelector
       DnsInterface mDns;
       Fifo<Message>& mStateMacFifo;
       std::map<Tuple, Transport*> mTransports;
+      HashMap<int, Transport*> mDefaultTransports; // from TransportType -> Transport
+      HashMap<Data, TlsTransport*> mTlsTransports;      // domain name -> Transport
       
-      // map from domain name to transport
-      HashMap<Data, TlsTransport*> mTlsTransports;
-
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
 
