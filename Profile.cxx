@@ -150,12 +150,12 @@ Profile::hasOverrideHostAndPort() const
 }
 
 const Uri& 
-Profile::getOverideHostAndPort() const
+Profile::getOverrideHostAndPort() const
 {
    // Fall through seting (if required)
    if(!mHasOverrideHostPort && mBaseProfile)
    {
-       return mBaseProfile->getOverideHostAndPort();
+       return mBaseProfile->getOverrideHostAndPort();
    }
    return mOverrideHostPort;
 }
