@@ -12,6 +12,7 @@
 #else
 #include "resiprocate/MsgHeaderScanner.hxx"
 #endif
+#include "resiprocate/os/IntrusiveListElement.hxx"
 
 namespace resip
 {
@@ -19,8 +20,14 @@ namespace resip
 class Message;
 class TlsConnection;
 
-class Connection
+class Connection : public IntrusiveListElement<Connection*, 1>, 
+                   public IntrusiveListElement<Connection*, 2>,
+                   public IntrusiveListElement<Connection*, 3>
 {
+      typedef IntrusiveListElement<Connection*, 1> lruList;
+      typedef IntrusiveListElement<Connection*, 2> readList;
+      typedef IntrusiveListElement<Connection*, 3> writeList;
+
       friend class ConnectionManager;
       friend std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
 
@@ -62,10 +69,6 @@ class Connection
       // position in current message being sent
       Data::size_type mSendPos;
       std::list<SendData*> mOutstandingSends; // !jacob! intrusive queue?
-
-      // least recenty used doubly linked list
-      Connection* mYounger;
-      Connection* mOlder;
 
       SipMessage* mMessage;
       char* mBuffer;
