@@ -218,6 +218,16 @@ ParseBuffer::floatVal()
       throw Exception("Expected a floating point value", __FILE__, __LINE__);
    }
 }
+
+void
+ParseBuffer::assertEof()
+{
+   if (!eof())
+   {
+      throw Exception("Expected eof", __FILE__, __LINE__);
+   }      
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
