@@ -321,6 +321,8 @@ XMLCursor::getTag() const
 //<foo/>
 //<foo attr = 'value'   attr="value">
 //<foo attr = 'value'   attr="value" >
+//
+//<foo attr = 'value'   attr="value" />
 const XMLCursor::AttributeMap&
 XMLCursor::getAttributes() const
 {
@@ -334,9 +336,12 @@ XMLCursor::getAttributes() const
       Data attribute;
       Data value;
 
-      pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::RA_QUOTE);
+      static const Data term(">/");
+      pb.skipToOneOf(ParseBuffer::Whitespace, term);
 
-      while (!pb.eof() && *pb.position() != Symbols::RA_QUOTE[0])
+      while (!pb.eof() && 
+             *pb.position() != Symbols::RA_QUOTE[0] &&
+             *pb.position() != Symbols::SLASH[0])
       {
          attribute.clear();
          value.clear();
@@ -405,7 +410,7 @@ XMLCursor::encode(std::ostream& str, const AttributeMap& attrs)
       {
          str << " ";
       }
-      // !dlb! some sort of encoding required here
+      // !dlb! some sort of character encoding required here
       str << i->first << "=\"" << i->second << "\"";
    }
 
