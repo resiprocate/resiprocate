@@ -34,7 +34,6 @@ class ClientRegistration: public BaseUsage
       virtual BaseUsage::Handle getBaseHandle() { return mHandle; }
       ClientRegistration::Handle getHandle() { return mHandle; }
       
-      virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
