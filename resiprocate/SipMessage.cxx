@@ -13,8 +13,11 @@ using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
-SipMessage::SipMessage(bool fromWire)
-   : mIsExternal(fromWire),
+const SipMessage::FromWireType* SipMessage::FromWire = new SipMessage::FromWireType();
+const SipMessage::FromWireType* SipMessage::NotFromWire = new SipMessage::FromWireType();
+
+SipMessage::SipMessage(const FromWireType* fromWire)
+   : mIsExternal(fromWire == SipMessage::FromWire),
      mHaveFixedDest(false),
      mFixedDest(),
      mStartLine(0),
