@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2002/09/27 13:50:25 fluffy Exp $
+# $Id: Makefile,v 1.6 2002/09/28 04:44:52 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -13,6 +13,7 @@ SRC =	\
 	Logger.cxx \
 	Mutex.cxx \
 	RandomHex.cxx \
+	Socket.cxx \
 	Subsystem.cxx \
 	ThreadIf.cxx \
 	Timer.cxx \
