@@ -112,7 +112,7 @@ DnsUtil::inet_ntop(const struct in_addr& addr)
 #else
    // !cj! TODO 
 	u_int32_t i = *((u_int32_t*)(&addr));
-	sprintf(str,"%d.%d.%d.%d\0",(i>>24)&0xFF,(i>>16)&0xFF,(i>>8)&0xFF,(i)&0xFF);
+	sprintf(str,"%d.%d.%d.%d\0",(i>>0)&0xFF,(i>>8)&0xFF,(i>>16)&0xFF,(i>>24)&0xFF);
 #endif
 	return Data(str);
 }
