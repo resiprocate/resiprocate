@@ -114,7 +114,8 @@ DialogSet::dispatch(const SipMessage& msg)
 bool
 DialogSet::mergeRequest(const SipMessage& request)
 {
-   for (std::list<Dialog*>::iterator i = mDialogs.begin(); i != mDialogs.end(); ++i)
+   for (std::list<Dialog*>::iterator i = mDialogs.begin(); 
+        i != mDialogs.end(); ++i)
    {
       if ((*i)->shouldMerge(request))
       {
@@ -122,6 +123,8 @@ DialogSet::mergeRequest(const SipMessage& request)
          return true;
       }
    }
+
+   return false;
 }
 
 bool
