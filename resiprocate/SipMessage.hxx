@@ -165,6 +165,7 @@ class SipMessage : public Message
       defineHeader(RetryAfter);
       defineHeader(Server);
       defineHeader(Subject);
+      defineHeader(SubscriptionState);
       defineHeader(Timestamp);
       defineHeader(To);
       defineHeader(UserAgent);
@@ -193,7 +194,6 @@ class SipMessage : public Message
       defineMultiHeader(RecordRoute);
       defineMultiHeader(Require);
       defineMultiHeader(Route);
-      defineMultiHeader(SubscriptionState);
       defineMultiHeader(Supported);
       defineMultiHeader(Unsupported);
       defineMultiHeader(Via);

@@ -1283,7 +1283,7 @@ TuIM::sendNotify(Dialog* dialog)
    Token state;
    state.value() = Data("active");
    state.param(p_expires) = dialog->getExpirySeconds(); 
-   msg->header(h_SubscriptionStates).push_front(state);
+   msg->header(h_SubscriptionState) = state;
 
    msg->setContents( pidf );
    
