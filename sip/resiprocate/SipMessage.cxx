@@ -364,8 +364,8 @@ SipMessage::brief() const
 {
    Data result(128, true);
 
-   static const Data request("SipRequest: ");
-   static const Data response("SipResponse: ");
+   static const Data  request("SipReq:  ");
+   static const Data response("SipResp: ");
    static const Data tid(" tid=");
    static const Data cseq(" cseq=");
    static const Data slash(" / ");

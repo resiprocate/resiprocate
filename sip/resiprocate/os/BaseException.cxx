@@ -1,5 +1,5 @@
 static const char* const BaseException_cxx_Version =
-    "$Id: BaseException.cxx,v 1.6 2003/03/25 06:33:47 jason Exp $";
+    "$Id: BaseException.cxx,v 1.7 2004/03/16 23:23:08 alan Exp $";
 
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -16,7 +16,9 @@ BaseException::BaseException( const Data& msg,
         fileName( file ),
         lineNumber( line )
 {
+#if !defined(RESIP_NO_EXCEPTION_DEBUG_LOGS)
    DebugLog(<< "BaseException at " << file << ":" << line << " " << message);
+#endif
 }
 
 BaseException::~BaseException() throw()
