@@ -229,7 +229,7 @@ DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int por
 #elif defined(WIN32) 
    result = gethostbyname( host.c_str() );
    herrno = WSAGetLastError();
-#elif defined( __MACH__ )
+#elif defined( __MACH__ ) || defined (__FreeBSD__)
    result = gethostbyname( host.c_str() );
    herrno = h_errno;
 #elif defined(__QNX__) || defined(__SUNPRO_CC)
