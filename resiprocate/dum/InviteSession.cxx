@@ -236,6 +236,11 @@ InviteSession::dispatch(const SipMessage& msg)
                {
                   incomingSdp(msg, offans.second);
                }
+               else
+               {
+                  //reset the sdp state machine
+                  incomingSdp(msg, 0);
+               }
             }
             else
             {
