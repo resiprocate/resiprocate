@@ -34,6 +34,15 @@ ClientOutOfDialogReq::dispatch(const DumTimeout& timer)
 }
 
 
+bool 
+ClientOutOfDialogReq::matches(const SipMessage& msg) const
+{
+   assert(0);
+   return false;
+}
+
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
