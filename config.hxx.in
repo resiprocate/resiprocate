@@ -13,6 +13,9 @@
 /* Define to 1 if you have the sys/sockio.h header file. */
 #undef HAVE_SYS_SOCKIO_H
 
+/* Define to 1 if you have the sys/int_types.h header file. */
+#undef HAVE_SYS_INT_TYPES_H
+
 /* Name of package */
 #undef PACKAGE
 
