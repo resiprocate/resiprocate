@@ -14,7 +14,8 @@ const Data ParseBuffer::Pointer::msg("dereferenced ParseBuffer eof");
 ParseBuffer::ParseBuffer(const ParseBuffer& rhs)
    : mBuff(rhs.mBuff),
      mPosition(rhs.mPosition),
-     mEnd(rhs.mEnd)
+     mEnd(rhs.mEnd),
+     mErrorContext(rhs.mErrorContext)
 {}
 
 ParseBuffer& 
@@ -708,8 +709,10 @@ ParseBuffer::fail(const char* file, unsigned int line) const
 {
    InfoLog(<< "Parse failed, line:" << line
            << std::endl
+           << "in context: " << mErrorContext
+           << std::endl
            << escapeAndAnnotate(mBuff, mEnd - mBuff, mPosition));
-   throw Exception(Data::Empty, file, line);
+   throw Exception(mErrorContext, file, line);
 }
 
 /* ====================================================================

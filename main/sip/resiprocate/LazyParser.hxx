@@ -8,6 +8,7 @@ namespace Vocal2
 
 class HeaderFieldValue;
 class ParseBuffer;
+class Data;
 
 class LazyParser
 {
@@ -33,6 +34,9 @@ class LazyParser
 
       // called in destructor and on assignment 
       void clear();
+
+      // context for error messages
+      virtual const Data& errorContext() const = 0;
       
    private:
       // !dlb! bit of a hack until the dust settles

@@ -59,8 +59,9 @@ main(int argc, char** argv)
    {
       std::cerr << "!! Test fail multiline" << std::endl;
       
+      const Data test("Test input");
       char buf[] = "Here is a \r\n buffer with \r\nsome stuff.";
-      ParseBuffer pb(buf, strlen(buf));
+      ParseBuffer pb(buf, strlen(buf), test);
 
       do
       {
@@ -72,6 +73,7 @@ main(int argc, char** argv)
          }
          catch (ParseBuffer::Exception& e)
          {
+            assert(e.getMessage() == test);
             break;
          }
          assert(0);
