@@ -41,51 +41,34 @@ ClientInviteSession::getHandle()
    return ClientInviteSessionHandle(mDum, getBaseHandle().getId());
 }
 
-// !kh! ================
-
-namespace   //  unnamed namespace
-{
-    //  !kh!
-    //  local (a.k.a. static) functions
-
-    bool is1xx (int statusCode)
-    {
-        return  (statusCode / 100 == 1);
-    }
-    bool is2xx (int statusCode)
-    {
-        return  (statusCode / 200 == 1);
-    }
-
-}   //  unnamed namespace
-
 #if(0)
-
-    switch(mState)
-    {
-        case UAC_Start:
-            break;
-        case UAC_Early:
-            break;
-        case UAC_EarlyWithOffer:
-            break;
-        case UAC_EarlyWithAnswer:
-            break;
-        case UAC_WaitingForAnswerFromApp:
-            break;
-        case UAC_Terminated:
-            break;
-        case UAC_SentUpdateEarly:
-            break;
-        case UAC_ReceivedUpdateEarly:
-            break;
-        case UAC_PrackAnswerWait:
-            break;
-        case UAC_Canceled:
-            break;
-        default:
-            break;
-    }
+{
+   switch(mState)
+   {
+      case UAC_Start:
+         break;
+      case UAC_Early:
+         break;
+      case UAC_EarlyWithOffer:
+         break;
+      case UAC_EarlyWithAnswer:
+         break;
+      case UAC_WaitingForAnswerFromApp:
+         break;
+      case UAC_Terminated:
+         break;
+      case UAC_SentUpdateEarly:
+         break;
+      case UAC_ReceivedUpdateEarly:
+         break;
+      case UAC_PrackAnswerWait:
+         break;
+      case UAC_Canceled:
+         break;
+      default:
+         break;
+   }
+}
 
 #endif
 
@@ -177,6 +160,31 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
 void
 ClientInviteSession::end()
 {
+   switch(mState)
+   {
+      case UAC_Start:
+         break;
+      case UAC_Early:
+         break;
+      case UAC_EarlyWithOffer:
+         break;
+      case UAC_EarlyWithAnswer:
+         break;
+      case UAC_WaitingForAnswerFromApp:
+         break;
+      case UAC_Terminated:
+         break;
+      case UAC_SentUpdateEarly:
+         break;
+      case UAC_ReceivedUpdateEarly:
+         break;
+      case UAC_PrackAnswerWait:
+         break;
+      case UAC_Canceled:
+         break;
+      default:
+         break;
+   }
 }
 
 void
@@ -220,6 +228,31 @@ ClientInviteSession::reject (int statusCode)
 void
 ClientInviteSession::cancel()
 {
+   switch(mState)
+   {
+      case UAC_Start:
+         break;
+      case UAC_Early:
+         break;
+      case UAC_EarlyWithOffer:
+         break;
+      case UAC_EarlyWithAnswer:
+         break;
+      case UAC_WaitingForAnswerFromApp:
+         break;
+      case UAC_Terminated:
+         break;
+      case UAC_SentUpdateEarly:
+         break;
+      case UAC_ReceivedUpdateEarly:
+         break;
+      case UAC_PrackAnswerWait:
+         break;
+      case UAC_Canceled:
+         break;
+      default:
+         break;
+   }
 }
 
 void
@@ -301,24 +334,88 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
 {
 }
 
-
 void
 ClientInviteSession::dispatchStart (const SipMessage& msg)
 {
-   if (msg.isRequest())
+   assert(msg.isResponse());
+   int code = msg.header(h_StatusLine).statusCode();
+   assert(code > 100);
+   assert(msg.header(h_CSeq).method() == INVITE);
+
+
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   if (code >= 400)
    {
-      //mDum.mInviteSessionHandler->onInfoFailure(getSessionHandle(), msg);
-      return;
+      handler->onFailure(getHandle(), msg);
    }
-
-   int         code = msg.header(h_StatusLine).statusCode();
-   MethodTypes  method = msg.header(h_CSeq).method();
-
-   if (is1xx(code) && method == INVITE)
+   if (code >= 300)
    {
-      //mDum.mInviteSessionHandler->onNewSession(getSessionHandle(), msg, sdp);
-      //mDum.mInviteSessionHandler->onProvisional(getSessionHandle(), msg, sdp);
-      //mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, sdp);
+      handler->onRedirected(getHandle(), msg);
+   }
+   else
+   {
+      const SdpContents* sdp = InviteSession::getSdp(msg);
+      bool reliable = InviteSession::isReliable(msg);
+      bool sentOffer = mProposedLocalSdp.get();
+
+      if (code < 200 && !sdp) // on1xx
+      {
+         handler->onNewSession(getHandle(), None, msg);
+         handler->onProvisional(getHandle(), msg);
+         transition(UAC_Early);
+      }
+      else if (code < 200 && !sentOffer && reliable && sdp) // on1xx-offer
+      {
+         handler->onNewSession(getHandle(), Offer, msg);
+         handler->onProvisional(getHandle(), msg);
+         handler->onOffer(getSessionHandle(), msg, sdp);
+         transition(UAC_EarlyWithOffer);
+      }
+      else if (code < 200 && sentOffer && reliable && sdp) // on1xx-answer
+      {
+         handler->onNewSession(getHandle(), Answer, msg);
+         handler->onProvisional(getHandle(), msg);
+         handler->onAnswer(getSessionHandle(), msg, sdp);
+
+         // send PRACK
+         SipMessage prack;
+         mDialog.makeRequest(prack, PRACK);
+         mDum.send(prack);
+
+         transition(UAC_EarlyWithAnswer);
+      }
+      else if (code >= 200 && !sentOffer && sdp) // on2xx-offer
+      {
+         handler->onNewSession(getHandle(), Offer, msg);
+         handler->onOffer(getSessionHandle(), msg, sdp);
+         handler->onConnected(getHandle(), msg);
+         transition(UAC_WaitingForAnswerFromApp);
+      }
+      else if (code >= 200 && sentOffer && sdp) // on2xx-answer
+      {
+         handler->onNewSession(getHandle(), Answer, msg);
+         handler->onAnswer(getSessionHandle(), msg, sdp);
+         handler->onConnected(getHandle(), msg);
+
+         SipMessage ack;
+         mDialog.makeRequest(ack, ACK);
+         mDum.send(ack);
+
+         transition(Connected);
+      }
+      else // UAS is confused
+      {
+         SipMessage ack;
+         mDialog.makeRequest(ack, ACK);
+         mDum.send(ack);
+
+         SipMessage bye;
+         mDialog.makeRequest(bye, BYE);
+         mDum.send(bye);
+
+         handler->onFailure(getHandle(), msg);
+         transition(Terminated);
+      }
    }
 }
 void
@@ -373,6 +470,25 @@ ClientInviteSession::dispatchCanceled (const SipMessage& msg)
 
 
 #if 0
+
+// !kh! ================
+
+namespace   //  unnamed namespace
+{
+    //  !kh!
+    //  local (a.k.a. static) functions
+
+    bool is1xx (int statusCode)
+    {
+        return  (statusCode / 100 == 1);
+    }
+    bool is2xx (int statusCode)
+    {
+        return  (statusCode / 200 == 1);
+    }
+
+}   //  unnamed namespace
+
 // !kh! ================
 
 void
