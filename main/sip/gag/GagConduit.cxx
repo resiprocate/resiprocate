@@ -140,6 +140,8 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
 
   // Figure out what out contact is
   Uri contact;
+
+/* Were going to leave all of this stuff to the stack now - RjS
   contact.port() = udpPort;
 
 #ifdef WIN32
@@ -157,10 +159,11 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
     }
   }
 #endif
+*/
 
   contact.user() = aor->user();
 
-  newTu = new TuIM(sipStack, *aor, contact, this);
+  newTu = new TuIM(sipStack, *aor, contact, this );
   if (!newTu)
   {
     Data error;
