@@ -269,22 +269,23 @@ TransactionState::processStateless(Message* message)
 void
 TransactionState::processDns(Message* message)
 {
+   DebugLog (<< "TransactionState::processDns: " << message->brief());
+      
    // handle Sending::Failed messages here
    if (isTransportError(message))
    {
-      DebugLog (<< "TransactionState::processDns: " << message->brief());
       assert (mDnsState != NotStarted);
       
-      DnsResolver::TupleIterator next = mCurrent;
-      next++;
+      // DnsResolver::TupleIterator next = mCurrent;
+      // next++;
+      ++mCurrent;
       
-      if (next != mTuples.end()) // not at end
+      if (mCurrent != mTuples.end()) // not at end
       {
-         mCurrent = next;
          mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
          sendToWire(mMsgToRetransmit);
       }
-      else
+      else if (mDnsState != Waiting)
       {
          // send 503 
          // not for response or ACK !jf!
@@ -304,56 +305,28 @@ TransactionState::processDns(Message* message)
    DnsResolver::DnsMessage* dns = dynamic_cast<DnsResolver::DnsMessage*>(message);
    if (dns)
    {
-      // SRV and A/AAAA results do not appear in the same message.
-      assert(!(dns->mSrvs.size() && dns->mTuples.size()));
+     DebugLog (<< "TransactionState::processDns: dns message" << *message);
+     if (dns->mTuples.size())
+     {
+	if (mCurrent == mTuples.end())
+	{
+	   mTuples = dns->mTuples;
+	   mCurrent = mTuples.begin();
+	   sendToWire(mMsgToRetransmit);
+	}
+	else
+	{
+	   // Don't overwrite mTuples - we may still be using them.
+	   mTuples.insert(mTuples.end(),
+	      dns->mTuples.begin(), dns->mTuples.end());
+	}
+     }
 
-      if (dns->mSrvs.size())
-      {
-         // We have to do more work: recurse on SRV results.
-         for (DnsResolver::SrvIterator s = dns->mSrvs.begin();
-              s != dns->mSrvs.end();
-              s++)
-         {
-            mStack.mDnsResolver.lookupARecords(dns->mTransactionId,
-               s->host, s->port, s->transport);
-         }
-      }
-      else
-      {
-         assert(mDnsOutstandingQueries > 0);
-         if(--mDnsOutstandingQueries == 0)
-         {
-            DebugLog (<< "Setting DNS complete for tid=" <<
-              mMsgToRetransmit->getTransactionId() << " outstanding: "
-              << mDnsOutstandingQueries);
-            mDnsState = Complete;
-         }
-         else
-         {
-	    DebugLog (<< "Setting DNS the same for tid=" <<
-              mMsgToRetransmit->getTransactionId() << " outstanding: "
-              << mDnsOutstandingQueries);
-         }
-
-         if (dns->mTuples.size())
-         {
-	    if (mCurrent == mTuples.end())
-	    {
-	       mTuples = dns->mTuples;
-	       mCurrent = mTuples.begin();
-	       sendToWire(mMsgToRetransmit);
-	    }
-	    else
-	    {
-               // Don't overwrite mTuples - we may still be using them.
-               mTuples.insert(mTuples.end(),
-                  dns->mTuples.begin(), dns->mTuples.end());
-	    }
-         }
-      }
-
-      delete message;
-      return;
+     if (dns->isFinal)
+     {
+	mDnsState = Complete;
+     }
+     return;
    }
 
    DebugLog (<< "Some other kind of message passed to processDns()");
@@ -533,7 +506,16 @@ TransactionState::processClientInvite(  Message* msg )
          case CANCEL:
 	    if (!mCancelStateMachine)
 	    {
-	       //mCancelStateMachine = new TransactionState(mStack, ClientNonInvite, Trying);
+	       if (mCurrent == mTuples.end())
+	       {
+		  // The CANCEL was received before the INVITE was sent!
+		  SipMessage* response200 = Helper::makeResponse(*sip, 200);
+		  sendToTU(response200);
+		  SipMessage* response487 = Helper::makeResponse(*mMsgToRetransmit, 487);
+		  sendToTU(response487);
+		  delete this;
+		  break;
+	       }
                mCancelStateMachine = TransactionState::makeCancelTransaction(this, ClientNonInvite);
 	    }
 	    // It would seem more logical to pass sip to processClientNonInvite
@@ -734,7 +716,7 @@ TransactionState::processClientInvite(  Message* msg )
             break;
       }
    }
-   else if (isDns(msg))
+   else if (isDns(msg) || isTransportError(msg))
    {
       if (mCancelStateMachine &&
 	  mCancelStateMachine->mMsgToRetransmit &&
@@ -841,7 +823,7 @@ TransactionState::processServerNonInvite(  Message* msg )
       delete msg;
       delete this;
    }
-   else if (isDns(msg))
+   else if (isDns(msg) || isTransportError(msg))
    {
       processDns(msg);
    }
@@ -1042,7 +1024,8 @@ TransactionState::processServerInvite(  Message* msg )
 	       break;
 	    }
             mCancelStateMachine->processServerNonInvite(new SipMessage(*sip));
-            //sendToTU(msg); // don't delete
+            WarningLog(<<"former sendToTU(msg)(skipped) : " << msg->brief() );
+            //sendToTU(msg); // don't delete -- beacuse it is still being used...
             break;
             
          default:
@@ -1110,7 +1093,7 @@ TransactionState::processServerInvite(  Message* msg )
             break;
       }
    }
-   else if (isDns(msg))
+   else if (isDns(msg) || isTransportError(msg))
    {
       processDns(msg);
    }
@@ -1312,9 +1295,9 @@ TransactionState::resendToWire(Message* msg) const
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
    assert(sip);
 
-   assert (mDnsState != NotStarted); 
-   assert (mDnsState != Waiting);  // !jf! can this happen? 
-   
+   // Don't assert a lot of things about mDnsState here as DNS
+   // may not even be in use for this transaction.
+
    if (mDnsState == NoLookupRequired)
    {
       assert(sip->isResponse());
@@ -1417,15 +1400,6 @@ Vocal2::operator<<(std::ostream& strm, const Vocal2::TransactionState& state)
 
    strm << (state.mIsReliable ? " reliable" : " unreliable");
    return strm;
-}
-
-
-void
-TransactionState::registerDnsLookup()
-{
-   mDnsOutstandingQueries++;
-   DebugLog(<< "registerDnsLookup outstanding: " << mDnsOutstandingQueries
-      << " for tid " << tid(mMsgToRetransmit));
 }
 
 /* Local Variables: */
