@@ -142,7 +142,7 @@ Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr&
 SipMessage*
 Helper::makeResponse(const SipMessage& request, int responseCode, const Data& reason)
 {
-   DebugLog(<< "Helper::makeResponse(" << request);
+   DebugLog(<< "Helper::makeResponse(" << request.brief() << " code=" << responseCode << " reason=" << reason);
    SipMessage* response = new SipMessage;
    response->header(h_StatusLine).responseCode() = responseCode;
    response->header(h_From) = request.header(h_From);
