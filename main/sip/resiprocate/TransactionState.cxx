@@ -982,7 +982,7 @@ TransactionState::processStale(  Message* msg )
    DebugLog (<< "TransactionState::processStale: " << msg->brief());
 
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-   if ( sip->header(h_RequestLine).getMethod() == ACK ||
+   if ( sip && sip->header(h_RequestLine).getMethod() == ACK ||
 	isResponse(msg, 200, 299 ) )
    {
       if (isFromTU(msg))
@@ -1001,7 +1001,7 @@ TransactionState::processStale(  Message* msg )
    }
    else if (isTimer(msg))
    {
-      DebugLog (<< "received timer in client non-invite transaction");
+      DebugLog (<< "received timer in client stale transaction");
       
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       switch (timer->getType())
