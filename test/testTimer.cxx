@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Message.hxx"
+#include "sip2/sipstack/Message.hxx"
 #include "sip2/sipstack/TimerQueue.hxx"
 #include "sip2/util/Fifo.hxx"
 #include <unistd.h>
@@ -15,13 +15,20 @@ main()
 
    cerr << "Before Fifo size: " << f.size() << endl;
    assert(f.size() == 0);
+   assert(timer.msTillNextTimer() == 0);
 
    // throw a few events in the queue
    timer.add(Timer::TimerA, "first", 1000);
+   cerr << "next timer will fire in " << timer.msTillNextTimer() << "ms" << endl;
+   assert(timer.msTillNextTimer() <  1000 && timer.msTillNextTimer() > 950);
    timer.add(Timer::TimerA, "second", 2000);
+   assert(timer.msTillNextTimer() <  1000 && timer.msTillNextTimer() > 950);
    timer.add(Timer::TimerA, "third", 4000);
+   assert(timer.msTillNextTimer() <  1000 && timer.msTillNextTimer() > 950);
    timer.add(Timer::TimerA, "fourth", 8000);
+   assert(timer.msTillNextTimer() <  1000 && timer.msTillNextTimer() > 950);
    timer.add(Timer::TimerA, "fifth", 16000);
+   assert(timer.msTillNextTimer() <  1000 && timer.msTillNextTimer() > 950);
 
    cerr << timer;
 
@@ -53,6 +60,10 @@ main()
    assert(f.size() == 4);
    timer.process();   
    assert(f.size() == 4);
+
+
+   cerr << "next timer will fire in " << timer.msTillNextTimer() << "ms" << endl;
+   assert(timer.msTillNextTimer() <  8000 && timer.msTillNextTimer() > 7950);
 
    sleep(8);
    timer.process();
