@@ -39,20 +39,17 @@ SipStack::send(SipMessage* msg, const Data& dest)
 SipMessage* 
 SipStack::receive()
 {
-
-  // Check to see if a message is available and if it is return the 
-  // waiting message. Otherwise, return 0
-  if (mTUFifo.messageAvailable())
-    {
-
+   // Check to see if a message is available and if it is return the 
+   // waiting message. Otherwise, return 0
+   if (mTUFifo.messageAvailable())
+   {
       // we should only ever have SIP messages on the TU Fifo
       Message *tmpMsg = mTUFifo.getNext();
       SipMessage *sipMsg = dynamic_cast<SipMessage*>(tmpMsg);
       assert (sipMsg);
       return sipMsg;
-    }
-  return 0;
-  
+   }
+   return 0;
 }
 
 
