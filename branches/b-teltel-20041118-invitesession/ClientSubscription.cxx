@@ -16,10 +16,9 @@ using namespace resip;
 
 ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
    : BaseSubscription(dum, dialog, request),
-     mOnNewSubscriptionCalled(mEventType == "refer"),
+     mOnNewSubscriptionCalled(mEventType == "refer"),  // don't call onNewSubscription for Refer subscriptions
      mEnded(false)
 {
-   mLastRequest = request;
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
 }
 
