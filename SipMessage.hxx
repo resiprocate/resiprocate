@@ -23,6 +23,7 @@
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/Contents.hxx"
+#include "resiprocate/os/Data.hxx"
 
 #if !defined(WIN32)
 #include <pthread.h>
@@ -249,10 +250,10 @@ class SipMessage : public Message
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
 
       // deal with a notion of an "out-of-band" forced target for SIP routing
-      void setTarget(const Uri& uri);
-      void clearTarget();
-      const Uri& getTarget() const;
-      bool hasTarget() const;
+      void setForceTarget(const Uri& uri);
+      void clearForceTarget();
+      const Uri& getForceTarget() const;
+      bool hasForceTarget() const;
 
       const Data& getTlsDomain() const { return mTlsDomain; }
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
@@ -310,9 +311,10 @@ class SipMessage : public Message
       Data mEncoded; // to be retransmitted
       UInt64 mCreatedTime;
 
-      // used when next element is a strict router
-      Uri* mTarget;
-      
+      // used when next element is a strict router OR 
+      // client forces next hop OOB
+      Uri* mForceTarget;
+
       // domain associated with this message for tls cert
       Data mTlsDomain;
 
