@@ -133,6 +133,35 @@ Transport::bind(Socket fd, int portNum, const Data& netInterface, bool ipv4)
    }
 }
 
+void
+Transport::error()
+{
+   switch (errno)
+   {
+      case EAGAIN:
+         //InfoLog (<< "No data ready to read" << strerror(errno));
+         break;
+      case EINTR:
+         InfoLog (<< "The call was interrupted by a signal before any data was read : " << strerror(errno));
+         break;
+      case EIO:
+         InfoLog (<< "I/O error : " << strerror(errno));
+         break;
+      case EBADF:
+         InfoLog (<< "fd is not a valid file descriptor or is not open for reading : " << strerror(errno));
+         break;
+      case EINVAL:
+         InfoLog (<< "fd is attached to an object which is unsuitable for reading : " << strerror(errno));
+         break;
+      case EFAULT:
+         InfoLog (<< "buf is outside your accessible address space : " << strerror(errno));
+         break;
+      default:
+         InfoLog (<< "Some other error : " << strerror(errno));
+         break;
+   }
+}
+
 
 void
 Transport::thread()
