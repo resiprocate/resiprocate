@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.12 2002/10/30 18:46:18 jason Exp $";
+"$Id: Data.cxx,v 1.13 2002/10/30 20:30:28 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -213,7 +213,7 @@ Data::operator=(const Data& data)
       // could overlap!
       memmove(mBuf, data.mBuf, mSize);
       mBuf[mSize] = 0;
-      mMine = false;
+      mMine = true;
    }
    return *this;
 }
@@ -277,7 +277,7 @@ Data::operator=(const char* str)
    mSize = l;
    // could conceivably overlap
    memmove(mBuf, str, mSize+1);
-   mMine = false;
+   mMine = true;
 
    return *this;
 }
