@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <iostream>
+#include <iomanip>
 #include "resiprocate/ApiCheck.hxx"
 
 
@@ -8,73 +9,67 @@
 namespace resip
 {
 
-ApiCheck::ApiCheck(ApiEntry* list)
+ApiCheck::ApiCheck( ApiEntry * list, int len)
 {
     int bad = 0;
-    int clientListLength = 0;
 
-#if defined(OLD_BUBBLE_SORT)    
-    for( ; list->name ; ++list)
+    ApiEntry* p = list;
+    ApiEntry* q = ::anonymous_resipApiSizeList;
+    int resipListLen = sizeof(::anonymous_resipApiSizeList)/sizeof(*::anonymous_resipApiSizeList);
+
+    if (list == ::anonymous_resipApiSizeList )
     {
-        ++clientListLength;
-        ApiEntry *localList = ::anonymous_resipApiSizeList;
-        for ( ; localList->name ; ++localList)
-        {
-            if (!strcmp(localList->name,list->name))
-            {
-                const char *n = localList->name;
-                // matched , check sizes.
-                bool oops = localList->sz != list->sz;
-                const char w = oops?'!':' ';
-
-#if defined(RESIP_QUIET_API_CHECK)
-                if (oops)
-                {
-#endif
-
-                    // We are too low level (runtime-wise) to use the logging
-                    // facilities, hence the direct output to cerr.
-                    std::cerr << "application == " << list->sz << "\t"
-                              << w << w << w << " resip == " << localList->sz 
-                              <<"\t (resip::"<< n << ")" 
-                              << std::endl;
-                    if (oops)
-                    {
-                        std::cerr << "\t" << w << w << w << " Check flag(s): " << localList->culprits
-                                  << std::endl;
-                    }
-
-#if defined(RESIP_QUIET_API_CHECK)
-                }
-#endif
-                if (oops)
-                {
-                    ++bad;
-                }
-
-                break;
-            }
-        }
-
-        if (!localList->name)
-        {
-            std::cerr << "ERR:" << (list->name?list->name:"(nil)")
-                      << ": no matching class in Library's ApiCheckList." << std::endl;
-            ++bad;
-        }
+        return;
     }
 
-
-       // -1 for {0,0} @ end.
-    int resipListLen = sizeof(::anonymous_resipApiSizeList)/sizeof(*::anonymous_resipApiSizeList)-1;
-
-
-    if ( resipListLen != clientListLength)
+    if (resipListLen != len)
     {
-        std::cerr <<"Type verification lists are different lengths. resip == "
-                  << resipListLen << ", client == " << clientListLength
-                  << std::endl;
+        std::cerr << "reSIProcate Type verification list lengths are different."
+                  << std::endl
+                  << "\tEither the library and application are radically out of date" 
+                  <<std::endl
+                  << "\tor NEW_MSG_HEADER_SCANNER is not defined in one of the components."
+                  << std::endl
+                  << "application length: " << len << std::endl
+                  << "reSIProcate length: " << resipListLen << std::endl;
         ++bad;
+    }
+
+    std::cerr << std::setfill(' ') 
+              << std::setw(34) << "Class" << ' '
+              << std::setw(8) << "App" << ' '
+              << std::setw(8) << "Lib" << ' '
+              << std::setw(8) << "Possible Culprit Flags"
+              << std::endl;
+
+    for(int i = 0 ; i < resipListLen && i < len; ++i)
+    {
+        bool oops = false;
+        if (strcmp(p[i].name, q[i].name))
+        {
+            std::cerr << "!!! Miss match entry for : (app)"
+                      << p[i].name << " vs. (resip)" <<  q[i].name
+                      << std::endl;
+            ++bad;
+            continue;
+        }
+
+        if (p[i].sz != q[i].sz)
+        {
+            ++bad;
+            oops = true;
+        }
+        const char w = oops?'!':' ';
+
+        std::cerr << w << w << w << std::setfill(' ')
+                  << std::setw(30-strlen(p[i].name)) << "resip::" 
+                  << p[i].name << ' '
+                  << std::setw(8) << p[i].sz << ' '
+                  << std::setw(8) << q[i].sz << ' '
+                  << (oops?p[i].culprits:"")
+                  << std::endl;
+
+
     }
 
     if (bad)
@@ -83,6 +78,7 @@ ApiCheck::ApiCheck(ApiEntry* list)
         abort();
         exit(bad);
     }
+    std::cerr << std::endl;
 }
 
 }
