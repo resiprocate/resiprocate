@@ -109,7 +109,7 @@ class Auth : public ParserCategory
       defineParam(response, "response", QuotedDataParameter, "RFC ????");
       defineParam(stale, "stale", DataParameter, "RFC ????");
       defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
-      defineParam(username, "username", DataParameter, "RFC ????");
+      defineParam(username, "username", QuotedDataParameter, "RFC ????");
 
       Qop_Options_Param::DType& param(const Qop_Options_Param& paramType) const;
    private:
