@@ -109,8 +109,10 @@ SipMessage::getTransactionId() const
        if( mRFC2543TransactionId.empty() )
        {
            Data key = header(h_CallId).value().lowercase() +
-                      header(h_From).uri().param(p_tag).lowercase() +
                       Data( header(h_CSeq).sequence() );
+	   if (header(h_From).exists(p_tag)) {
+                      key += header(h_From).param(p_tag).lowercase();
+	   }
 	   if (header(h_Vias).front().exists(p_branch)) {
                       key += header(h_Vias).front().param(p_branch).transactionId().lowercase();
 	   }
