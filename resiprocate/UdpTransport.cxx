@@ -231,11 +231,21 @@ UdpTransport::process(FdSet& fdset)
    }
 
    stampReceived(message);
- 
 
    mStateMachineFifo.add(message);
 }
 
+
+void 
+UdpTransport::buildFdSet( FdSet& fdset )
+{
+   fdset.setRead(mFd);
+    
+   if (mTxFifo.messageAvailable())
+   {
+      fdset.setWrite(mFd);
+   }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

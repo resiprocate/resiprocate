@@ -104,10 +104,12 @@ TcpTransport::buildFdSet( FdSet& fdset)
         it != mConnectionMap.mConnections.end(); it++)
    {
       fdset.setRead(it->second->getSocket());
-      fdset.setWrite(it->second->getSocket());
+
+      // !cj! only should add this if
+      //there is data to write 
+      //fdset.setWrite(it->second->getSocket());
    }
    fdset.setRead(mFd);
-      
 }
 
 
