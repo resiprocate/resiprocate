@@ -55,7 +55,7 @@ TransportSelector::~TransportSelector()
 void 
 TransportSelector::addTransport( TransportType protocol, 
                                  int port,
-                                 bool ipv6,
+                                 IpVersion version,
                                  const Data& ipInterface)
 {
    assert( port >  0 );
@@ -64,10 +64,10 @@ TransportSelector::addTransport( TransportType protocol,
    switch ( protocol )
    {
       case UDP:
-         transport = new UdpTransport(mStateMacFifo, port, ipInterface, !ipv6);
+         transport = new UdpTransport(mStateMacFifo, port, ipInterface, version == V4);
          break;
       case TCP:
-         transport = new TcpTransport(mStateMacFifo, port, ipInterface, !ipv6);
+         transport = new TcpTransport(mStateMacFifo, port, ipInterface, version == V4);
          break;
       default:
          assert(0);
@@ -79,7 +79,7 @@ TransportSelector::addTransport( TransportType protocol,
       transport->run();
    }
    
-   Tuple key(ipInterface, port, !ipv6, protocol);
+   Tuple key(ipInterface, port, version == V4, protocol);
    assert(mTransports.count(key) == 0);
    DebugLog (<< "Adding transport: " << key);
    mTransports[key] = transport;
@@ -94,7 +94,7 @@ void
 TransportSelector::addTlsTransport(const Data& domainName, 
                                    const Data& keyDir, const Data& privateKeyPassPhrase,
                                    int port,
-                                   bool ipv6,
+                                   IpVersion version,
                                    const Data& ipInterface)
 {
 #if defined( USE_SSL )
@@ -107,7 +107,7 @@ TransportSelector::addTlsTransport(const Data& domainName,
                                               domainName, 
                                               ipInterface, port, 
                                               keyDir, privateKeyPassPhrase,
-                                              !ipv6); 
+                                              version == V4); 
    if (mMultiThreaded)
    {
       transport->run();
