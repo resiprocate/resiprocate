@@ -1,9 +1,10 @@
-﻿<?xml version="1.0" encoding = "UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="7.10"
 	Name="resiprocate"
 	ProjectGUID="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
+	RootNamespace="resiprocate"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -22,7 +23,7 @@
 				AdditionalOptions="/Zm300
 "
 				Optimization="0"
-				AdditionalIncludeDirectories="c:\sip;C:\sip\contrib\ares"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -50,6 +51,12 @@
 				Name="VCResourceCompilerTool"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -95,6 +102,12 @@
 				Name="VCResourceCompilerTool"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="SSL-Debug|Win32"
@@ -135,6 +148,12 @@
 				Name="VCResourceCompilerTool"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="SSL-Release|Win32"
@@ -177,12 +196,26 @@
 				Name="VCResourceCompilerTool"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+			Name="ares"/>
+	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
+			<File
+				RelativePath=".\ApiCheck.cxx">
+			</File>
 			<File
 				RelativePath="os\BaseException.cxx">
 			</File>
@@ -259,10 +292,10 @@
 				RelativePath="HeaderHash.cxx">
 			</File>
 			<File
-				RelativePath="HeaderTypes.cxx">
+				RelativePath="Headers.cxx">
 			</File>
 			<File
-				RelativePath="Headers.cxx">
+				RelativePath="HeaderTypes.cxx">
 			</File>
 			<File
 				RelativePath="Helper.cxx">
@@ -322,16 +355,16 @@
 				RelativePath="os\ParseBuffer.cxx">
 			</File>
 			<File
-				RelativePath="ParseUtil.cxx">
-			</File>
-			<File
-				RelativePath="ParseUtil.hxx">
-			</File>
-			<File
 				RelativePath="ParserCategories.cxx">
 			</File>
 			<File
 				RelativePath="ParserCategory.cxx">
+			</File>
+			<File
+				RelativePath="ParseUtil.cxx">
+			</File>
+			<File
+				RelativePath="ParseUtil.hxx">
 			</File>
 			<File
 				RelativePath="Pidf.cxx">
@@ -352,9 +385,6 @@
 				RelativePath="QuotedDataParameter.cxx">
 			</File>
 			<File
-				RelativePath="os\RWMutex.cxx">
-			</File>
-			<File
 				RelativePath="os\Random.cxx">
 			</File>
 			<File
@@ -365,6 +395,9 @@
 			</File>
 			<File
 				RelativePath="RportParameter.cxx">
+			</File>
+			<File
+				RelativePath="os\RWMutex.cxx">
 			</File>
 			<File
 				RelativePath="SdpContents.cxx">
@@ -454,13 +487,13 @@
 				RelativePath="TuIM.cxx">
 			</File>
 			<File
-				RelativePath="TuShim.cxx">
-			</File>
-			<File
 				RelativePath="os\Tuple.cxx">
 			</File>
 			<File
 				RelativePath="os\Tuple.hxx">
+			</File>
+			<File
+				RelativePath="TuShim.cxx">
 			</File>
 			<File
 				RelativePath="UdpTransport.cxx">
@@ -478,10 +511,10 @@
 				RelativePath="Uri.cxx">
 			</File>
 			<File
-				RelativePath="XMLCursor.cxx">
+				RelativePath="os\vmd5.cxx">
 			</File>
 			<File
-				RelativePath="os\vmd5.cxx">
+				RelativePath="XMLCursor.cxx">
 			</File>
 		</Filter>
 		<Filter
@@ -498,6 +531,9 @@
 			</File>
 			<File
 				RelativePath="os\Coders.hxx">
+			</File>
+			<File
+				RelativePath="os\compat.hxx">
 			</File>
 			<File
 				RelativePath="os\Condition.hxx">
@@ -575,10 +611,10 @@
 				RelativePath="HeaderHash.hxx">
 			</File>
 			<File
-				RelativePath="HeaderTypes.hxx">
+				RelativePath="Headers.hxx">
 			</File>
 			<File
-				RelativePath="Headers.hxx">
+				RelativePath="HeaderTypes.hxx">
 			</File>
 			<File
 				RelativePath="Helper.hxx">
@@ -680,9 +716,6 @@
 				RelativePath="QuotedDataParameter.hxx">
 			</File>
 			<File
-				RelativePath="os\RWMutex.hxx">
-			</File>
-			<File
 				RelativePath="os\Random.hxx">
 			</File>
 			<File
@@ -698,7 +731,13 @@
 				RelativePath="ReliabilityMessage.hxx">
 			</File>
 			<File
+				RelativePath="resource.h">
+			</File>
+			<File
 				RelativePath="RportParameter.hxx">
+			</File>
+			<File
+				RelativePath="os\RWMutex.hxx">
 			</File>
 			<File
 				RelativePath="SdpContents.hxx">
@@ -732,6 +771,9 @@
 			</File>
 			<File
 				RelativePath="os\Subsystem.hxx">
+			</File>
+			<File
+				RelativePath="supported.hxx">
 			</File>
 			<File
 				RelativePath="Symbols.hxx">
@@ -806,22 +848,13 @@
 				RelativePath="Uri.hxx">
 			</File>
 			<File
-				RelativePath="XMLCursor.hxx">
-			</File>
-			<File
-				RelativePath="os\compat.hxx">
-			</File>
-			<File
-				RelativePath="resource.h">
-			</File>
-			<File
-				RelativePath="supported.hxx">
-			</File>
-			<File
 				RelativePath="os\vmd5.hxx">
 			</File>
 			<File
 				RelativePath="os\vthread.hxx">
+			</File>
+			<File
+				RelativePath="XMLCursor.hxx">
 			</File>
 		</Filter>
 		<File
