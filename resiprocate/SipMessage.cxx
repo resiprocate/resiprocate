@@ -306,10 +306,7 @@ SipMessage::clearFixedDest()
 RequestLine& 
 SipMessage::header(const RequestLineType& l) const
 {
-   if (isResponse())
-   {
-      throw Exception("Tried to retrieve a RequestLine from a Response", __FILE__, __LINE__);
-   }
+   assert (!isResponse());
    if (mStartLine == 0 )
    { 
       mStartLine = new HeaderFieldValueList;
@@ -323,10 +320,7 @@ SipMessage::header(const RequestLineType& l) const
 StatusLine& 
 SipMessage::header(const StatusLineType& l) const
 {
-   if (isRequest())
-   {
-      throw Exception("Tried to retrieve a StatusLine from a Request", __FILE__, __LINE__);
-   }
+   assert (!isRequest());
    if (mStartLine == 0 )
    { 
       mStartLine = new HeaderFieldValueList;
