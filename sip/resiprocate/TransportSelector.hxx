@@ -58,7 +58,7 @@ class TransportSelector
       Transport* findTransport(const TransportType type) const;
       Transport* findTransport(const Tuple& tuple) const;
       Transport* findTlsTransport(const Data& domain);
-
+      Tuple srcAddrForDest(const Tuple& dest, bool& ok) const;
       bool mMultiThreaded;
       DnsInterface mDns;
       Fifo<Message>& mStateMacFifo;

@@ -117,7 +117,9 @@ TransportSelector::process(FdSet& fdset)
    
    if (!mMultiThreaded)
    {
-      for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
+      for (std::vector<Transport*>::const_iterator i=mTransports.begin();
+           i != mTransports.end();
+           i++)
       {
          try
          {
@@ -215,6 +217,112 @@ TransportSelector::dnsResolve( SipMessage* msg, DnsHandler* handler)
    return result;
 }
 
+
+
+Tuple
+TransportSelector::srcAddrForDest(const Tuple& dest, bool& ok) const
+{
+  ok = true;
+  Tuple srcTuple;
+  sockaddr_in sock4_src;
+  sockaddr_in sock4_dest;
+
+#if defined(USE_IPV6)
+  sockaddr_in6 sock6_src;
+  sockaddr_in6 sock6_dest;
+#endif  
+
+  const sockaddr* destaddr = reinterpret_cast<const sockaddr * >(&sock4_dest);
+  sockaddr* srcaddr = reinterpret_cast<sockaddr * >(&sock4_src);
+  socklen_t addrlen = sizeof(sock4_src);
+
+  DebugLog(<<"Seeking src address for destination: " << DnsUtil::inet_ntop(dest));
+  
+  if ( dest.v6 )
+#if defined(USE_IPV6)
+  {
+    // Move pts to v6 structs change addrlen.
+    destaddr = reinterpret_cast<const sockaddr *>(&sock6_dest);
+    srcaddr  = reinterpret_cast<sockaddr *>(&sock6_src);
+    addrlen      = sizeof(sock6_src);
+    // Setup v6 data
+    sock6_dest.sin6_addr = dest.ipv6;
+    sock6_dest.sin6_family = AF_INET6;
+    sock6_dest.sin6_port = dest.port;
+  }
+#else
+  {
+    assert(("No IPv6 support compiled into stack.",0));
+  }
+#endif
+  else
+  {
+    // Setup v4 data.
+    sock4_dest.sin_family = AF_INET;
+    sock4_dest.sin_port = dest.port;
+    sock4_dest.sin_addr = dest.ipv4;
+  }
+  int count = 0;
+unreach:
+  int connectError = connect(mSocket, destaddr, addrlen);
+  int connectErrno = errno;
+  
+  if (connectError < 0)
+  {
+    switch (connectErrno)
+    {
+      case EAGAIN:
+        if (count++ < 10)
+        {
+          DebugLog(<<"EAGAIN -- trying.");
+          goto unreach;
+        }
+        ok = false;
+        break;
+      case ENETUNREACH:
+        // error condition -- handle this better !ah!
+        // sock6_src.sin6_addr = in6addr_any;
+        // sock4_src.sin_addr.s_addr = INADDR_ANY;
+        ErrLog(<< DnsUtil::inet_ntop(dest) << ": destination unreachable.");
+        ok = false;
+        break;
+      default:
+        break;
+    }
+  }
+
+  DebugLog(<< DnsUtil::inet_ntop(dest) << ": destination unreachable == " << !!!ok);
+
+  if (ok || 1) // !ah! might be ok all the time
+  {
+    getsockname(mSocket,srcaddr, &addrlen);
+
+    if (srcTuple.v6)
+    {
+#if defined(USE_IPV6)
+      srcTuple.v6 = true;
+      srcTuple.ipv6 = sock6_src.sin6_addr;
+#else
+      assert(((void)"Stack not compiled with IPv6 Support, internal error",0));
+#endif
+    }
+    else
+    {
+      srcTuple.v6 = false;
+      srcTuple.ipv4 = sock4_src.sin_addr;
+    }
+
+    DebugLog(<<"Src address is : " << DnsUtil::inet_ntop(srcTuple));
+    if (!ok)
+    {
+      ErrLog(<<"Unable to route to destination address : " << DnsUtil::inet_ntop(srcTuple));
+    }
+  }
+
+  return srcTuple;
+
+}
+
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.  
 void 
@@ -222,27 +330,21 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
 {
    assert( &destination != 0 );
    DebugLog (<< "Transmitting " << *msg << " to " << destination);
-   
+   bool srcRouteStatus = true;
+   Tuple srcTuple(srcAddrForDest(destination,srcRouteStatus));
+
    if (destination.transport == 0)
    {
       if (destination.transportType == TLS)
       {
-         destination.transport = findTlsTransport(msg->getTlsDomain());
+         destination.transport = findTlsTransport(msg->getTlsDomain(),srcTuple);
       }
       else
       {
-         destination.transport = findTransport(destination);
+         destination.transport = findTransport(destination,srcTuple);
       }
    }
 
-   // !jf!
-   // This can be problematic if the far side closed the TcpTransport after the
-   // SipMessage was handed to the TU. The TU can then process the request and
-   // send a response to the transaction. In the meantime, the Transport has
-   // been deleted. So when the response gets here it references a transport
-   // that has already been deleted. 
-   // To solve the problem, a transport handle should be used instead of a
-   // pointer. A smart pointer would also work. 
    if (destination.transport)
    {
       // insert the via
@@ -250,24 +352,38 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
       {
          assert(!msg->header(h_Vias).empty());
          msg->header(h_Vias).front().remove(p_maddr);
-         //msg->header(h_Vias).front().param(p_ttl) = 1;
-         msg->header(h_Vias).front().transport() = Tuple::toData(destination.transport->transport());  //cache !jf! 
+         msg->header(h_Vias).front().transport() =
+           Tuple::toData(destination.transport->transport());  //cache !jf! 
 
          // wing in the transport address based on where this is going.
-         Data interfaceHost;
-         
-         sockaddr server;
-         sockaddr client;
-         destination.toSockaddr(server);
-         
-         connect(mSocket, &server, sizeof(server));
-         socklen_t len = sizeof(client);
-         getsockname(mSocket, &client, &len);
-         interfaceHost = DnsUtil::inet_ntop(client);
-         DebugLog(<<"Route table selection chooses: " << interfaceHost);
-         
-         msg->header(h_Vias).front().sentHost() = interfaceHost;
-         msg->header(h_Vias).front().sentPort() = destination.transport->port();
+         //!ah! xyzzy
+         bool status = true;
+         msg->header(h_Vias).front().sentHost() = 
+           DnsUtil::inet_ntop(srcTuple);
+
+         if (!status)
+         {
+           InfoLog (<< "No route to destination " << msg->getTransactionId() << " to " << destination);
+           mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
+           return;
+         }
+            
+         // DebugLog(<<"Route table selection chooses: " << interfaceHost);
+
+         const Via &v(msg->header(h_Vias).front());
+
+         if (!DnsUtil::isIpAddress(v.sentHost()) &&
+             destination.transport->port() == 5060)
+         {
+            DebugLog(<<"supressing port 5060 w/ symname");
+            // backward compat for 2543 and the symbolic host w/ 5060 ;
+            // being a clue for SRV (see RFC 3263 sec 4.2 par 5).
+         }
+         else
+         {
+            msg->header(h_Vias).front().sentPort() = 
+              destination.transport->port();
+         }
       }
 
       Data& encoded = msg->getEncoded();
@@ -294,7 +410,9 @@ TransportSelector::retransmit(SipMessage* msg, Tuple& destination)
 {
    assert(destination.transport);
    assert(!msg->getEncoded().empty());
-   destination.transport->send(destination, msg->getEncoded(), msg->getTransactionId());
+   destination.transport->send(destination,
+                               msg->getEncoded(), 
+                               msg->getTransactionId());
 }
 
 
@@ -329,7 +447,18 @@ Transport*
 TransportSelector::findTransport(const TransportType type) const
 {
    // !jf! not done yet
-   for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
+   // !ah! adding destination resolution.
+   // !ah! Each transport is either bound to a single interface, or all
+   // !ah! interfaces.  In the case it is bound to a single interface, it
+   // !ah! is bound to a SPECIFIC IP address (v4 or v6).
+   // !ah! Determining the source address for a message will result in an
+   // !ah! IP address and this, in combination with the TransportType can
+   // !ah! be used to select the outbound interface.
+
+   
+   for (std::vector<Transport*>::const_iterator i=mTransports.begin();
+        i != mTransports.end();
+        i++)
    {
       //ErrLog( << "have transport type" <<  (*i)->transport() );
       if ( (*i)->transport() == type )
