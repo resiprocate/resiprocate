@@ -190,7 +190,6 @@ SipMessage::setBody(const char* start, int len)
 }
 
 // unknown header interface
-// !dlb! need to convert existing header by enum to StringCategory for backward compatibility
 StringCategories& 
 SipMessage::header(const Data& headerName) const
 {
@@ -207,7 +206,11 @@ SipMessage::header(const Data& headerName) const
          return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
       }
    }
-   
+
+   // !dlb! backward compatibility -- Unknown header becomes a known header
+   // lookup known header of same name
+   // if found, convert to Unknown header and remove as known header
+
    // create the list empty
    HeaderFieldValueList* hfvs = new HeaderFieldValueList;
    hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs, Headers::NONE));
