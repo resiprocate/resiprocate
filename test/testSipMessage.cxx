@@ -32,9 +32,26 @@ main(int argc, char** argv)
       cerr << empty.brief() << endl;
       empty.header(h_Vias).push_back(Via());
       cerr << empty.brief() << endl;
-      return 0;
    }
-      
+   
+   {
+      Data txt("INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
+               "To: <sip:yiwen_AT_meet2talk.com@whistler.gloo.net>\r\n"
+               "From: Jason Fischl<sip:jason_AT_meet2talk.com@whistler.gloo.net>;tag=ba1aee2d\r\n"
+               "Via: SIP/2.0/UDP 192.168.2.220:5060;branch=z9hG4bK-c87542-da4d3e6a.0-1--c87542-;rport=5060;received=192.168.2.220;stid=579667358\r\n"
+               "Via: SIP/2.0/UDP 192.168.2.15:5100;branch=z9hG4bK-c87542-579667358-1--c87542-;rport=5100;received=192.168.2.15\r\n"
+               "Call-ID: 6c64b42fce01b007\r\n"
+               "CSeq: 2 INVITE\r\n"
+               "Route: <sip:proxy@192.168.2.220:5060;lr>\r\n"
+               "Contact: <sip:192.168.2.15:5100>\r\n"
+               "Content-Length: 0\r\n"
+               "\r\n");
+
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      msg->header(h_Routes).pop_back();
+      cerr << *msg << endl;
+   }
+   
    {
       Data txt("INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
                "To: <sip:yiwen_AT_meet2talk.com@whistler.gloo.net>\r\n"
@@ -47,7 +64,6 @@ main(int argc, char** argv)
                "Contact: <sip:192.168.2.15:5100>\r\n"
                "Max-Forwards: 69\r\n"
                "Content-Type: application/sdp\r\n"
-               "Proxy-Authorization: Digest username=jason@meet2talk.com,realm=\"whistler.gloo.net\",nonce=\"1086134832:c12a4271d885a2ac4f31635d1b2d5e70\",uri=\"sip:yiwen_AT_meet2talk.com@whistler.gloo.net\",response=\"ad9bfe6f1d205681c937ba23edec3f58\",algorithm=MD5\r\n"
                "Content-Length: 307\r\n"
                "\r\n"
                "v=0\r\n"
