@@ -77,16 +77,22 @@ Headers::Type& Vocal2::operator++(Headers::Type& t)
 }
 #endif
 
+// to generate the perfect hash:
+// gperf -L ANSI-C -t -k '*' headers.gperf > bar
+// call tolower() on instances of the source string
+// change strcmp to strncasecmp and pass len-1
+// will NOT work for non alphanum chars 
+
 /* ANSI-C code produced by gperf version 2.7.2 */
-/* Command-line: gperf -L ANSI-C -t -k '3,$' headers.gperf  */
+/* Command-line: gperf -L ANSI-C -t -k '*' headers.gperf  */
 struct params { char *name; Headers::Type type; };
 
 #define TOTAL_KEYWORDS 48
 #define MIN_WORD_LENGTH 2
 #define MAX_WORD_LENGTH 19
 #define MIN_HASH_VALUE 2
-#define MAX_HASH_VALUE 96
-/* maximum key range = 95, duplicates = 0 */
+#define MAX_HASH_VALUE 157
+/* maximum key range = 156, duplicates = 0 */
 
 #ifdef __GNUC__
 __inline
@@ -98,157 +104,197 @@ inline
 static unsigned int
 hash (register const char *str, register unsigned int len)
 {
-  static unsigned char asso_values[] =
-    {
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 20, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97,  0, 20,  0,
-      25,  0,  0, 25,  0, 25, 97, 97,  0, 30,
-      30,  0, 20, 16, 45, 46, 20, 20, 97,  0,
-      10,  0, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-      97, 97, 97, 97, 97, 97
-    };
-  register int hval = len;
+   static unsigned char asso_values[] =
+      {
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158,   0, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158,   0,  25,   0,
+         5,   0,  50,   0,   5,   0,  15, 158,  30,  35,
+         0,   0,   0,  35,   0,   0,   0,   0,  25,  30,
+         25,  15,   0, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158, 158, 158, 158, 158,
+         158, 158, 158, 158, 158, 158
+      };
+   register int hval = len;
 
-  switch (hval)
-    {
+   switch (hval)
+   {
       default:
+      case 19:
+         hval += asso_values[(unsigned char)tolower(str[18])];
+      case 18:
+         hval += asso_values[(unsigned char)tolower(str[17])];
+      case 17:
+         hval += asso_values[(unsigned char)tolower(str[16])];
+      case 16:
+         hval += asso_values[(unsigned char)tolower(str[15])];
+      case 15:
+         hval += asso_values[(unsigned char)tolower(str[14])];
+      case 14:
+         hval += asso_values[(unsigned char)tolower(str[13])];
+      case 13:
+         hval += asso_values[(unsigned char)tolower(str[12])];
+      case 12:
+         hval += asso_values[(unsigned char)tolower(str[11])];
+      case 11:
+         hval += asso_values[(unsigned char)tolower(str[10])];
+      case 10:
+         hval += asso_values[(unsigned char)tolower(str[9])];
+      case 9:
+         hval += asso_values[(unsigned char)tolower(str[8])];
+      case 8:
+         hval += asso_values[(unsigned char)tolower(str[7])];
+      case 7:
+         hval += asso_values[(unsigned char)tolower(str[6])];
+      case 6:
+         hval += asso_values[(unsigned char)tolower(str[5])];
+      case 5:
+         hval += asso_values[(unsigned char)tolower(str[4])];
+      case 4:
+         hval += asso_values[(unsigned char)tolower(str[3])];
       case 3:
-        hval += asso_values[tolower((unsigned char)str[2])];
+         hval += asso_values[(unsigned char)tolower(str[2])];
       case 2:
-        break;
-    }
-  return hval + asso_values[tolower((unsigned char)str[len - 1])];
+         hval += asso_values[(unsigned char)tolower(str[1])];
+      case 1:
+         hval += asso_values[(unsigned char)tolower(str[0])];
+         break;
+   }
+   return hval;
 }
 
 #ifdef __GNUC__
 __inline
 #endif
 struct params *
-in_word_set (register const char *str, register unsigned int len)
+h_in_word_set (register const char *str, register unsigned int len)
 {
-  static struct params wordlist[] =
-    {
-      {""}, {""},
-      {"to", Headers::To},
-      {"via", Headers::Via},
-      {""},
-      {"allow", Headers::Allow},
-      {""}, {""},
-      {"refer-to",Headers::Refer_To},
-      {"call-info", Headers::Call_Info},
-      {"alert-info",Headers::Alert_Info},
-      {"referred-by",Headers::Referred_By},
-      {"record-route", Headers::Record_Route},
-      {"proxy-require", Headers::Proxy_Require},
-      {""},
-      {"accept-language", Headers::Accept_Language},
-      {"www-authenticate",Headers::WWW_Authenticate},
-      {""},
-      {"proxy-authenticate", Headers::Proxy_Authenticate},
-      {""},
-      {"cseq", Headers::CSeq},
-      {""}, {""},
-      {"require", Headers::Require},
-      {"date", Headers::Date},
-      {"route", Headers::Route},
-      {"accept", Headers::Accept},
-      {""},
-      {"reply-to", Headers::Reply_To},
-      {""},
-      {"user-agent", Headers::User_Agent},
-      {"in-reply-to", Headers::In_Reply_To},
-      {"call-id", Headers::Call_ID},
-      {"priority", Headers::Priority},
-      {"from", Headers::From},
-      {""}, {""}, {""},
-      {"subscription-state",Headers::Subscription_State},
-      {"authentication-info", Headers::Authentication_Info},
-      {"accept-encoding", Headers::Accept_Encoding},
-      {""},
-      {"content-type", Headers::Content_Type},
-      {""},
-      {"content-length", Headers::Content_Length},
-      {""},
-      {"content-language", Headers::Content_Language},
-      {"subject", Headers::Subject},
-      {""},
-      {"proxy-authorization", Headers::Proxy_Authorization},
-      {""}, {""}, {""}, {""},
-      {"supported", Headers::Supported},
-      {"error-info", Headers::Error_Info},
-      {""},
-      {"contact", Headers::Contact},
-      {""},
-      {"timestamp", Headers::Timestamp},
-      {""}, {""}, {""},
-      {"authorization", Headers::Authorization},
-      {""}, {""}, {""},
-      {"organization", Headers::Organization},
-      {"max-forwards", Headers::Max_Forwards},
-      {""}, {""},
-      {"content-encoding", Headers::Content_Encoding},
-      {"mime-version", Headers::MIME_Version},
-      {"expires", Headers::Expires},
-      {"replaces",Headers::Replaces},
-      {""},
-      {"retry-after", Headers::Retry_After},
-      {"warning", Headers::Warning},
-      {""},
-      {"content-disposition", Headers::Content_Disposition},
-      {""}, {""},
-      {"unsupported", Headers::Unsupported},
-      {""}, {""}, {""}, {""},
-      {"min-expires", Headers::Min_Expires},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"server", Headers::Server}
-    };
+   static struct params wordlist[] =
+      {
+         {""}, {""},
+         {"to", Headers::To},
+         {""}, {""},
+         {"route", Headers::Route},
+         {"accept", Headers::Accept},
+         {"contact", Headers::Contact},
+         {""},
+         {"date", Headers::Date},
+         {"user-agent", Headers::User_Agent},
+         {""},
+         {"organization", Headers::Organization},
+         {""},
+         {"supported", Headers::Supported},
+         {""},
+         {"unsupported", Headers::Unsupported},
+         {"record-route", Headers::Record_Route},
+         {"authorization", Headers::Authorization},
+         {""},
+         {"accept-encoding", Headers::Accept_Encoding},
+         {"content-encoding", Headers::Content_Encoding},
+         {""},
+         {"priority", Headers::Priority},
+         {"content-disposition", Headers::Content_Disposition},
+         {""}, {""},
+         {"content-type", Headers::Content_Type},
+         {"via", Headers::Via},
+         {""}, {""},
+         {"server", Headers::Server},
+         {"expires", Headers::Expires},
+         {""}, {""}, {""}, {""},
+         {"warning", Headers::Warning},
+         {"replaces",Headers::Replaces},
+         {"cseq", Headers::CSeq},
+         {""}, {""},
+         {"require", Headers::Require},
+         {"subscription-state",Headers::Subscription_State},
+         {""},
+         {"accept-language", Headers::Accept_Language},
+         {"content-language", Headers::Content_Language},
+         {"subject", Headers::Subject},
+         {""},
+         {"content-length", Headers::Content_Length},
+         {""}, {""}, {""},
+         {"reply-to", Headers::Reply_To},
+         {""}, {""},
+         {"in-reply-to", Headers::In_Reply_To},
+         {""},
+         {"refer-to",Headers::Refer_To},
+         {""},
+         {"error-info", Headers::Error_Info},
+         {""}, {""},
+         {"proxy-authenticate", Headers::Proxy_Authenticate},
+         {"proxy-authorization", Headers::Proxy_Authorization},
+         {""}, {""}, {""}, {""}, {""}, {""},
+         {"min-expires", Headers::Min_Expires},
+         {"call-id", Headers::Call_ID},
+         {""},
+         {"authentication-info", Headers::Authentication_Info},
+         {""},
+         {"retry-after", Headers::Retry_After},
+         {""}, {""},
+         {"timestamp", Headers::Timestamp},
+         {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+         {"proxy-require", Headers::Proxy_Require},
+         {"from", Headers::From},
+         {"alert-info",Headers::Alert_Info},
+         {""}, {""}, {""}, {""},
+         {"allow", Headers::Allow},
+         {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+         {""},
+         {"referred-by",Headers::Referred_By},
+         {"mime-version", Headers::MIME_Version},
+         {""}, {""}, {""},
+         {"www-authenticate",Headers::WWW_Authenticate},
+         {""}, {""}, {""}, {""}, {""}, {""}, {""},
+         {"call-info", Headers::Call_Info},
+         {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+         {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+         {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+         {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+         {""},
+         {"max-forwards", Headers::Max_Forwards}
+      };
 
-  if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
-    {
+   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
+   {
       register int key = hash (str, len);
 
       if (key <= MAX_HASH_VALUE && key >= 0)
-        {
-          register const char *s = wordlist[key].name;
+      {
+         register const char *s = wordlist[key].name;
 
-          if (tolower(*str) == *s && !strcasecmp (str + 1, s + 1))
+         if (tolower(*str) == *s && !strncasecmp (str + 1, s + 1, len-1))
+         {
             return &wordlist[key];
-        }
-    }
-  return 0;
+         }
+      }
+   }
+   return 0;
 }
 
-// to generate the perfect hash:
-// gperf -L ANSI-C -t -k '*' headers.gperf > bar
-// also needed to call tolower() on instances of the source string
-// chars. Also change strcmp to strcasecmp
-// will NOT work for non alpha chars 
-// 
 Headers::Type
-Headers::getHeaderType(const char* name, int len)
+Headers::getType(const char* name, int len)
 {
    struct params* p;
-   p = in_word_set(name, len);
+   p = h_in_word_set(name, len);
    return p ? Headers::Type(p->type) : Headers::UNKNOWN;
 }
 
