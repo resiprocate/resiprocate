@@ -30,6 +30,8 @@ class ClientInviteSession : public InviteSession
       virtual void refer (const NameAddr& referTo, InviteSessionHandle sessionToReplace);
       virtual void info (const Contents& contents);
 
+      const SdpContents& getEarlyMedia() const;
+      
    private:
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
@@ -42,20 +44,27 @@ class ClientInviteSession : public InviteSession
       void dispatchConnected (const SipMessage& msg);
       void dispatchTerminated (const SipMessage& msg);
       void dispatchSentUpdateEarly (const SipMessage& msg);
+      void dispatchSentUpdateConnected (const SipMessage& msg);
       void dispatchReceivedUpdateEarly (const SipMessage& msg);
       void dispatchPrackAnswerWait (const SipMessage& msg);
       void dispatchCanceled (const SipMessage& msg);
 
       void handleRedirect (const SipMessage& msg);
+      void handleProvisional (const SipMessage& msg);
       void handleOffer (const SipMessage& msg, const SdpContents* sdp);
+      void handleAnswer (const SipMessage& msg, const SdpContents* sdp);
+      void sendPrack(const SipMessage& msg);
+      bool isRetransmission(const SipMessage& msg);
+      
       // Called by the DialogSet (friend) when the app has CANCELed the request
       void cancel();
 
    private:
       std::auto_ptr<SdpContents> mEarlyMedia;
+      void startCancelTimer();
 
-      int lastReceivedRSeq;
-      int lastExpectedRSeq;
+      int mLastReceivedRSeq;
+      //int lastExpectedRSeq; // !jf! why do I care? 
       int mStaleCallTimerSeq;
       ServerSubscriptionHandle mServerSub;
 

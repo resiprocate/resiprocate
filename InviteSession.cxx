@@ -82,13 +82,13 @@ InviteSession::provideOffer(const SdpContents& offer)
       case WaitingToOffer:
          if (peerSupportsUpdateMethod())
          {
-            mDialog.makeRequest(mLastSessionModification, UPDATE);
             transition(SentUpdate);
+            mDialog.makeRequest(mLastSessionModification, UPDATE);
          }
          else
          {
-            mDialog.makeRequest(mLastSessionModification, INVITE);
             transition(SentReinvite);
+            mDialog.makeRequest(mLastSessionModification, INVITE);
          }
 
          // !jf! should I check if value > 90? 
@@ -103,8 +103,8 @@ InviteSession::provideOffer(const SdpContents& offer)
 
       case Answered:
          // queue the offer to be sent after the ACK is received
-         mProposedLocalSdp = InviteSession::makeSdp(offer);
          transition(WaitingToOffer);
+         mProposedLocalSdp = InviteSession::makeSdp(offer);
          break;
          
       default:
@@ -119,11 +119,11 @@ InviteSession::provideAnswer(const SdpContents& answer)
    switch (mState)
    {
       case ReceivedReinvite:
-         mDialog.makeResponse(mInvite200, mLastSessionModification, 200);
+         transition(Connected);
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
+         mDialog.makeResponse(mInvite200, mLastSessionModification, 200);
          InviteSession::setSdp(mInvite200, answer);
-         transition(Connected);
          InfoLog (<< "Sending " << mInvite200.brief());
          mDum.send(mInvite200);
          startRetransmitTimer();
@@ -131,12 +131,13 @@ InviteSession::provideAnswer(const SdpContents& answer)
          
       case ReceivedUpdate: // same as ReceivedReinvite case.
       {
+         transition(Connected);
+
          SipMessage response;
          mDialog.makeResponse(response, mLastSessionModification, 200);
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
          InviteSession::setSdp(response, answer);
-         transition(Connected);
          InfoLog (<< "Sending " << response.brief());
          mDum.send(response);
          break;
@@ -155,10 +156,11 @@ InviteSession::end()
    {
       case Connected:
       {
+         transition(Terminated);
+
          // !jf! do we need to store the BYE somewhere? 
          SipMessage bye;
          mDialog.makeRequest(bye, BYE);
-         transition(Terminated);
          InfoLog (<< "Sending " << bye.brief());
          mDum.send(bye);
          break;
@@ -176,9 +178,10 @@ InviteSession::end()
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
       {
+         transition(Terminated);
+
          SipMessage response;
          mDialog.makeResponse(response, mLastSessionModification, 488);
-         transition(Terminated);
          InfoLog (<< "Sending " << response.brief());
          mDum.send(response);
 
@@ -191,9 +194,10 @@ InviteSession::end()
 
       case WaitingToTerminate:
       {
+         transition(Terminated);
+
          SipMessage bye;
          mDialog.makeRequest(bye, BYE);
-         transition(Terminated);
          InfoLog (<< "Sending " << bye.brief());
          mDum.send(bye);
          break;
@@ -222,9 +226,10 @@ InviteSession::reject(int statusCode)
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
       {
+         transition(Connected);
+
          SipMessage response;
          mDialog.makeResponse(response, mLastSessionModification, statusCode);
-         transition(Connected);
          InfoLog (<< "Sending " << response.brief());
          mDum.send(response);
          break;
@@ -365,15 +370,17 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       if (mState == SentUpdateGlare)
       {
+         transition(SentUpdate);
+
          InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
          mDum.send(mLastSessionModification);
-         transition(SentUpdate);
       }
       else if (mState == SentReinviteGlare)
       {
+         transition(SentReinvite);
+
          InfoLog (<< "Retransmitting the reINVITE (glare condition timer)");
          mDum.send(mLastSessionModification);
-         transition(SentReinvite);
       }
    }
    else if (timeout.type() == DumTimeout::SessionExpiration)
@@ -439,11 +446,12 @@ InviteSession::dispatchConnected(const SipMessage& msg, const SdpContents* sdp )
          {
             InfoLog (<< "Received " << msg.brief());
             
+            transition(ReceivedUpdate);
+
             //  !kh!
             //  Find out if it's an UPDATE requiring state change.
             //  See rfc3311 5.2, 4th paragraph.
             mLastSessionModification = msg;
-            transition(ReceivedUpdate);
             mDum.mInviteSessionHandler->onOffer(getSessionHandle(), msg, sdp);
          }
          else
@@ -475,15 +483,17 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg, const SdpContents* sdp)
       int code = msg.header(h_StatusLine).statusCode();
       if(code / 200 == 1)
       {
+         transition(Connected);
+
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, sdp);
-         transition(Connected);
       }
       else if (code == 491)
       {
-         start491Timer();
          transition(SentUpdateGlare);
+
+         start491Timer();
       }
       else if (code == 408 || code == 481)
       {
@@ -492,8 +502,9 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg, const SdpContents* sdp)
       }
       else if (code >= 300)
       {
-         mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
          transition(Connected);
+
+         mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
       }
    }
    else
@@ -517,6 +528,8 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg, const SdpContents* sd
       int code = msg.header(h_StatusLine).statusCode();
       if(code / 200 == 1)
       {
+         transition(Connected);
+
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, sdp);
@@ -529,12 +542,11 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg, const SdpContents* sd
          // !jf! do I need to allow a reINVITE overlapping the retransmission of
          // the ACK when a 200I is received? If yes, then I need to store all
          // ACK messages for 64*T1
-         transition(Connected);
       }
       else if (code == 491)
       {
-         start491Timer();
          transition(SentUpdateGlare);
+         start491Timer();
       }
       else if (code == 408 || code == 481)
       {
@@ -543,8 +555,8 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg, const SdpContents* sd
       }
       else if (code >= 300)
       {
-         mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
          transition(Connected);
+         mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
       }
    }
    else
@@ -559,13 +571,13 @@ InviteSession::dispatchGlare(const SipMessage& msg)
    MethodTypes method = msg.header(h_CSeq).method();
    if (method == INVITE && msg.isRequest())
    {
-      mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
       transition(ReceivedReinvite);
+      mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
    }
    else if (method == UPDATE && msg.isRequest())
    {
-      mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
       transition(ReceivedUpdate);
+      mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
    }
    else
    {
@@ -626,12 +638,13 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
        msg.header(h_CSeq).sequence() / 200 == 1 && 
        msg.header(h_CSeq).method() == INVITE)
    {
+      transition(Terminated);
+
       // !jf! Need to include the answer here. 
       SipMessage ack;
       mDialog.makeRequest(ack, ACK);
       ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
       mDum.send(ack);
-      transition(Terminated);
    }
    else if (msg.isResponse() && msg.header(h_CSeq).method() == INVITE)
    {
@@ -685,6 +698,8 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
    assert(msg.isRequest());
    assert(msg.header(h_CSeq).method() == INVITE);
 
+   transition(Terminated);
+
    // If we get an INVITE request from the wire and we are not in
    // Connected state, reject the request and send a BYE
    SipMessage response;
@@ -696,8 +711,6 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
    mDialog.makeRequest(bye, BYE);
    InfoLog (<< "Sending " << bye.brief());
    mDum.send(bye);
-
-   transition(Terminated);
 }
 
 void
@@ -706,6 +719,11 @@ InviteSession::dispatchCancel(const SipMessage& msg)
    assert(msg.header(h_CSeq).method() == CANCEL);
    if(msg.isRequest())
    {
+      transition(Terminated);
+
+      // !jf! should we make some other callback here
+      mDum.mInviteSessionHandler->onTerminated(getSessionHandle());
+
       SipMessage rsp;
       mDialog.makeResponse(rsp, msg, 200);
       mDum.send(rsp);
@@ -715,10 +733,6 @@ InviteSession::dispatchCancel(const SipMessage& msg)
       InfoLog (<< "Sending " << bye.brief());
       mDum.send(bye);
 
-      transition(Terminated);
-
-      // !jf! should we make some other callback here
-      mDum.mInviteSessionHandler->onTerminated(getSessionHandle());
    }
    else
    {
@@ -730,14 +744,16 @@ InviteSession::dispatchCancel(const SipMessage& msg)
 void
 InviteSession::dispatchBye(const SipMessage& msg)
 {
+   Destroyer::Guard guard(mDestroyer);
+
    if (msg.isRequest())
    {
-      Destroyer::Guard guard(mDestroyer);
+      transition(Terminated);
+
       SipMessage rsp;
       InfoLog (<< "Received " << msg.brief());
       mDialog.makeResponse(rsp, msg, 200);
       mDum.send(rsp);
-      transition(Terminated);
 
       // !jf! should we make some other callback here
       mDum.mInviteSessionHandler->onTerminated(getSessionHandle());
@@ -860,6 +876,8 @@ InviteSession::toData(State state)
          return "UAC_Terminated";
       case UAC_SentUpdateEarly:
          return "UAC_SentUpdateEarly";
+      case UAC_SentUpdateConnected:
+         return "UAC_SentUpdateConnected";
       case UAC_ReceivedUpdateEarly:
          return "UAC_ReceivedUpdateEarly";
       case UAC_PrackAnswerWait:
