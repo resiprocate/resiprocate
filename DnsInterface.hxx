@@ -29,7 +29,7 @@ class DnsInterface
          public:
             // call when dns entries are available (or nothing found)
             // this may be called synchronously with the call to lookup
-            virtual void handle()=0;
+            virtual void handle(DnsResult* result)=0;
       };
 
       // Used to create a synchronous Dns Interface. Any lookup requests passed
