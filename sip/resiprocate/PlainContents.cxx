@@ -8,6 +8,7 @@ using namespace std;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 ContentsFactory<PlainContents> PlainContents::Factory;
+const PlainContents PlainContents::Empty;
 
 PlainContents::PlainContents()
    : Contents(getStaticType()),
