@@ -62,7 +62,6 @@ main(int argc, char* argv[])
       from.uri().user() = "fluffy";
       from.uri().host() = "localhost";
       from.uri().port() = 5060;
-      from.uri().param(p_transport) == "udp";
             
       dest = from;
       contact = from;
