@@ -428,6 +428,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
                if  ( e != EAFNOSUPPORT )
                {
                   ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
+                  Transport::error(e);
                   throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
                }
             }
