@@ -996,6 +996,7 @@ BaseSecurity::getRootCertDescriptions() const
 void
 BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
 {
+    return;
    assert(0);
 #if 0
    assert( !x509PEMEncodedRootCerts.empty() );
