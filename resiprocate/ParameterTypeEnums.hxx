@@ -4,7 +4,7 @@
 #include "resiprocate/os/Data.hxx"
 
 #define defineParam(_enum, _name, _type, _rfc) _enum
-#define UNUSED_defineParam(_enum, _name, _type, _rfc) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
+#define UNUSED_defineParam(_enum, _name, _type, _rfc) SAVE##_enum, _enum = RESIP_UNKNOWN, RESET##enum = SAVE##_enum-1
 
 namespace resip
 {
@@ -21,7 +21,7 @@ class ParameterTypes
       // Also needs to be in ParserCategory.hxx/cxx
       enum Type
       {
-         UNKNOWN = -1,
+         RESIP_UNKNOWN = -1,
          defineParam(data, "data", ExistsParameter, "callee-caps"),
          defineParam(control, "control", ExistsParameter, "callee-caps"),
          defineParam(mobility, "mobility", QuotedDataParameter, "callee-caps"), // mobile|fixed

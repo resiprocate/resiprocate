@@ -97,14 +97,14 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                }
                else
                {
-                  InfoLog(<< "Got an INVITE or SUBSCRIBE with invalid scheme");
+                  InfoLog(<< "Got an RESIP_INVITE or SUBSCRIBE with invalid scheme");
                   DebugLog(<< request);
                   throw Exception("Invalid scheme in request", __FILE__, __LINE__);
                }
             }
             else
             {
-               InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
+               InfoLog (<< "Got an RESIP_INVITE or SUBSCRIBE that doesn't have exactly one contact");
                DebugLog (<< request);
                throw Exception("Too many (or no contact) contacts in request", __FILE__, __LINE__);
             }
@@ -172,14 +172,14 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                   }
                   else
                   {
-                     InfoLog (<< "Got an INVITE or SUBSCRIBE with invalid scheme");
+                     InfoLog (<< "Got an RESIP_INVITE or SUBSCRIBE with invalid scheme");
                      DebugLog (<< response);
                      throw Exception("Bad scheme in contact in response", __FILE__, __LINE__);
                   }
                }
                else
                {
-                  InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
+                  InfoLog (<< "Got an RESIP_INVITE or SUBSCRIBE that doesn't have exactly one contact");
                   DebugLog (<< response);
                   throw Exception("Too many contacts (or no contact) in response", __FILE__, __LINE__);
                }
@@ -252,7 +252,7 @@ Dialog::cancel()
          }
          else
          {
-            throw UsageUseException("Can only CANCEL an INVITE", __FILE__, __LINE__);
+            throw UsageUseException("Can only CANCEL an RESIP_INVITE", __FILE__, __LINE__);
          }
       }
       else
@@ -271,7 +271,7 @@ Dialog::dispatch(const SipMessage& msg)
       const SipMessage& request = msg;
       switch (request.header(h_CSeq).method())
      {
-         case RESIP_INVITE:  // new INVITE
+         case RESIP_INVITE:  // new RESIP_INVITE
             if (mInviteSession == 0)
             {
                DebugLog ( << "Dialog::dispatch  --  Created new server invite session" << msg.brief());
@@ -279,11 +279,11 @@ Dialog::dispatch(const SipMessage& msg)
             }
             mInviteSession->dispatch(request);
             break;
-            //refactor, send bad request for BYE, INFO, CANCEL?
+            //refactor, send bad request for RESIP_BYE, INFO, CANCEL?
          case RESIP_BYE:
             if (mInviteSession == 0)
             {
-               InfoLog ( << "Spurious BYE" );
+               InfoLog ( << "Spurious RESIP_BYE" );
                return;               
             }
             else
@@ -306,7 +306,7 @@ Dialog::dispatch(const SipMessage& msg)
          case RESIP_CANCEL:
             if (mInviteSession == 0)
             {
-               InfoLog (<< "Drop stray ACK or CANCEL in dialog on the floor");
+               InfoLog (<< "Drop stray RESIP_ACK or CANCEL in dialog on the floor");
                DebugLog (<< request);
             }
             else
@@ -787,14 +787,14 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       assert(request.exists(h_Vias));
    }
 
-   //don't increment CSeq for ACK or CANCEL
+   //don't increment CSeq for RESIP_ACK or CANCEL
    if (method != RESIP_ACK && method != RESIP_CANCEL)
    {
       request.header(h_CSeq).sequence() = ++mLocalCSeq;
    }
    else
    {
-      // ACK and cancel have a minimal header set
+      // RESIP_ACK and cancel have a minimal header set
       request.remove(h_Accepts);
       request.remove(h_AcceptEncodings);
       request.remove(h_AcceptLanguages);
@@ -804,7 +804,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       request.remove(h_Supporteds);
    }
 
-   // If method is INVITE then advertise required headers
+   // If method is RESIP_INVITE then advertise required headers
    if(method == RESIP_INVITE)
    {
       if(mDum.getProfile()->isAdvertisedCapability(Headers::Allow)) request.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
@@ -813,7 +813,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       if(mDum.getProfile()->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
    }
 
-   // Remove Session Timer headers for all requests except INVITE and UPDATE
+   // Remove Session Timer headers for all requests except RESIP_INVITE and UPDATE
    if(method != RESIP_INVITE && method != RESIP_UPDATE)
    {
       request.remove(h_SessionExpires);
@@ -865,7 +865,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
              );
       
 //      assert (request.header(h_RequestLine).getMethod() == CANCEL ||  // Contact header is not required for Requests that do not form a dialog
-//		      request.header(h_RequestLine).getMethod() == BYE ||
+//		      request.header(h_RequestLine).getMethod() == RESIP_BYE ||
 //		      request.header(h_Contacts).size() == 1);
       Helper::makeResponse(response, request, code, mLocalContact);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
