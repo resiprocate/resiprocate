@@ -28,13 +28,13 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
      mEventType(req.header(h_Event).value()),
      mTimerSeq(0)
 {
-   InfoLog( << "ClientPublication::ClientPublication: " << mId);   
+   DebugLog( << "ClientPublication::ClientPublication: " << mId);   
    mPublish.releaseContents();   
 }
 
 ClientPublication::~ClientPublication()
 {
-   InfoLog( << "ClientPublication::~ClientPublication: " << mId);   
+   DebugLog( << "ClientPublication::~ClientPublication: " << mId);   
    mDialogSet.mClientPublication = 0;
 }
 

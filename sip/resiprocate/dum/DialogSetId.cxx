@@ -26,7 +26,7 @@ DialogSetId::DialogSetId(const SipMessage& msg) :
          }
          else
          {
-            InfoLog ( <<  "********** Generated Local Tag *********** " );            
+            DebugLog ( <<  "********** Generated Local Tag *********** " );            
             mTag = Helper::computeTag(Helper::tagSize);
          }
       }

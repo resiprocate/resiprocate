@@ -40,7 +40,7 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
    }
    mAttemptedAuths.insert(id);
 
-   InfoLog (<< "Doing client auth");
+   DebugLog (<< "Doing client auth");
    // !ah! TODO : check ALL appropriate auth headers.
    if (response.exists(h_WWWAuthenticates))
    {      
