@@ -115,7 +115,7 @@ defineMultiHeader(Unsupported, "Unsupported", Token);
 defineMultiHeader(SecurityClient, "Security-Client", Token);
 defineMultiHeader(SecurityServer, "Security-Server", Token);
 defineMultiHeader(SecurityVerify, "Security-Verify", Token);
-// explicitly declare to avoid h_AllowEventss, ugh
+// explicitly declare to avoid h_SecurityVerifys, ugh
 extern SecurityVerify_MultiHeader h_SecurityVerifies;
 
 //====================
