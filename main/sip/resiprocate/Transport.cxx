@@ -51,6 +51,7 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 }
 
 Transport::Transport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& rxFifo) :
+   mFd(-1),
    mHost(sendhost),
    mPort(portNum), 
    mInterface(nic),
@@ -113,6 +114,7 @@ Transport::Transport(const Data& sendhost, int portNum, const Data& nic, Fifo<Me
 
 Transport::~Transport()
 {
+   mFd = -2;
 }
 
 
