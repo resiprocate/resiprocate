@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.46 2002/12/22 15:44:39 fluffy Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.47 2003/01/03 07:31:08 fluffy Exp $";
 
 #include <iostream>
 #include <string>
@@ -125,7 +125,7 @@ inline bool isEqualNoCase(const Data& left, const Data& right)
 
 inline bool isLessThanNoCase(const Data& left, const Data& right)
 {
-   size_t minsize = left.size() < right.size() ? left.size() : right.size();
+   size_t minsize = vocal2Min( left.size(), right.size() );
    int res = strncasecmp(left.data(), right.data(), minsize);
 
    if (res < 0)
