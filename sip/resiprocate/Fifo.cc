@@ -50,8 +50,9 @@
 
 
 static const char* const Fifo_cc_Version =
-    "$Id: Fifo.cc,v 1.1 2002/09/21 05:57:28 jason Exp $";
+    "$Id: Fifo.cc,v 1.2 2002/09/21 23:31:18 dabryan Exp $";
 
+#include <errno.h>
 
 template <class Msg>
 Fifo<Msg>::Fifo()
