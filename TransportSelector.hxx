@@ -24,6 +24,7 @@ class Message;
 class TransactionMessage;
 class SipMessage;
 class TlsTransport;
+class DtlsTransport;
 class TransactionController;
 class Security;
 
@@ -89,7 +90,10 @@ class TransportSelector
 
       typedef std::map<Data, TlsTransport*> TlsTransportMap ;
       TlsTransportMap mTlsTransports;      // domain name -> Transport
-      
+
+      typedef std::map<Data, DtlsTransport*> DtlsTransportMap ;
+      DtlsTransportMap mDtlsTransports;    // domain name -> Transport
+
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
       mutable Socket mSocket6;
