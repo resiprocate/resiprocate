@@ -3,10 +3,11 @@
 
 #include <iostream>
 #include <list>
+#include "sip2/sipstack/HeaderTypes.hxx"
+#include "sip2/sipstack/LazyParser.hxx"
+#include "sip2/sipstack/ParameterTypes.hxx"
 #include "sip2/util/Data.hxx"
 #include "sip2/util/ParseBuffer.hxx"
-#include "sip2/sipstack/ParameterTypes.hxx"
-#include "sip2/sipstack/LazyParser.hxx"
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
       _enum##_Param::DType& param(const _enum##_Param& paramType) const
@@ -22,7 +23,7 @@ class ParserCategory : public LazyParser
     public:
       enum {UnknownParserCategory = -1};
 
-      ParserCategory(HeaderFieldValue* headerFieldValue);
+      ParserCategory(HeaderFieldValue* headerFieldValue, Headers::Type type);
       ParserCategory(const ParserCategory& rhs);
       ParserCategory& operator=(const ParserCategory& rhs);
 
@@ -128,10 +129,13 @@ class ParserCategory : public LazyParser
       Parameter* getParameterByData(const Data& data) const;
       void removeParameterByData(const Data& data);
 
+      virtual const Data& errorContext() const;
+
       typedef std::list<Parameter*> ParameterList; 
       mutable ParameterList mParameters;
       mutable ParameterList mUnknownParameters;
    private:
+      Headers::Type mHeaderType;
       void clear();
       void copyParametersFrom(const ParserCategory& other);
       friend std::ostream& operator<<(std::ostream&, const ParserCategory&);

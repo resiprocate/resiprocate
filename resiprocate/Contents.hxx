@@ -93,6 +93,7 @@ class Contents : public LazyParser
 
    protected:
       void clear();
+      virtual const Data& errorContext() const;
 
       // MIME version? version & minorVersion as ints?
       mutable Mime mType;
