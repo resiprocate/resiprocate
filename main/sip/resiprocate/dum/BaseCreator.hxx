@@ -9,6 +9,7 @@ class BaseCreator
    public:
       BaseCreator(DialogUsageManager& dum);
       SipMessage& getLastRequest();
+      BaseUsage* makeUsage(const SipMessage& response);
       
    private:
       // this will get updated when an initial request is challenged. where we
