@@ -133,7 +133,8 @@ class DialogUsageManager
       friend class ClientRegistration;
       friend class ClientInviteSession;
       friend class ServerInviteSession;
-      
+      friend class BaseUsage::Handle;
+
       SipMessage& makeNewSession(BaseCreator* creator);
       void addTimer(DumTimer::Type type, unsigned long duration, int cseq, int rseq=-1);
 
@@ -155,6 +156,7 @@ class DialogUsageManager
       typedef HashMap<BaseUsage::Handle::Id, BaseUsage*> UsageHandleMap;
       UsageHandleMap mUsageMap;
 	  
+      bool isValid(const BaseUsage::Handle& handle);
       // throws if not found
       BaseUsage* getUsage(const BaseUsage::Handle& handle);
       
