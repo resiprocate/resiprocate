@@ -12,7 +12,7 @@ class SecurityAttributes
       SecurityAttributes()  {};
       ~SecurityAttributes() {};
 
-      typedef enum {From, IdentityFailed, Identity} IdentityStrength;
+      typedef enum {From, FailedIdentity, Identity} IdentityStrength;
 
       Security::SignatureStatus getSignatureStatus() const
       {

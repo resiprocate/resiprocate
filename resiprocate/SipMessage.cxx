@@ -1335,6 +1335,12 @@ SipMessage::mergeUri(const Uri& source)
    return *this;   
 }
 
+void 
+SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec) const
+{
+   mSecurityAttributes = sec;   
+}
+
 
 #if defined(DEBUG) && defined(DEBUG_MEMORY)
 namespace resip
