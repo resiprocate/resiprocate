@@ -149,7 +149,8 @@ class DialogUsageManager : public HandleManager
       int getTimeTillNextProcessMS(); 
 
       InviteSessionHandle findInviteSession(DialogId id);
-      InviteSessionHandle findInviteSession(CallId replaces);
+      //if the handle is inValid, int represents the errorcode
+      std::pair<InviteSessionHandle, int> findInviteSession(CallId replaces);
 
       std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogId id);
       std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id);
