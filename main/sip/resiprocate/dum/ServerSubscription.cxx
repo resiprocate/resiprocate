@@ -102,9 +102,10 @@ ServerSubscription::dispatch(const SipMessage& msg)
    assert(handler);
 
    if (msg.isRequest())
-   {
+   {      
       //!dcm! -- need to have a mechanism to retrieve default & acceptable
       //expiration times for an event package--part of handler API?
+      mLastRequest = msg;      
       if (msg.exists(h_Expires))
       {         
          mExpires = msg.header(h_Expires).value();
@@ -112,7 +113,8 @@ ServerSubscription::dispatch(const SipMessage& msg)
          {
             makeNotifyExpires();
             handler->onExpiredByClient(getHandle(), msg, mLastNotify);
-            send(mLastNotify);
+            send(end(Timeout));
+            handler->onTerminated(getHandle());            
             return;
          }
          if (mSubscriptionState == Invalid)
@@ -184,6 +186,7 @@ ServerSubscription::dispatch(const DumTimeout& timeout)
       makeNotifyExpires();
       handler->onExpired(getHandle(), mLastNotify);
       send(mLastNotify);
+      handler->onTerminated(getHandle());      
    }
 }
 
