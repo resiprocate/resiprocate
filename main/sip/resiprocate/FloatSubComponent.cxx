@@ -20,7 +20,7 @@ FloatSubComponent::clone() const
    return new FloatSubComponent(*this);
 }
 
-ostream& operator<<(ostream& stream, FloatSubComponent& comp)
+ostream& Vocal2::operator<<(ostream& stream, FloatSubComponent& comp)
 {
    return stream << comp.getName() << "=" << comp.value();
 }
