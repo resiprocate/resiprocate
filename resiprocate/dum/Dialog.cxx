@@ -70,8 +70,10 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
          default:
             mType = Fake;
       }
-     
-      mRouteSet = request.header(h_RecordRoutes); // !jf! is this right order
+      if (request.exists(h_RecordRoutes))
+      {
+         mRouteSet = request.header(h_RecordRoutes); // !jf! is this right order
+      }
 
       switch (request.header(h_CSeq).method())
       {
@@ -697,7 +699,6 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
 
    request.header(h_CallId) = mCallId;
 
-   request.header(h_Routes) = mRouteSet;
    request.remove(h_RecordRoutes);  //!dcm! -- all of this is rather messy
 
    request.remove(h_Contacts);   
@@ -708,6 +709,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    //must keep old via for cancel
    if (method != CANCEL)
    {
+      request.header(h_Routes) = mRouteSet;
       request.remove(h_Vias);      
       Via via;
       via.param(p_branch); // will create the branch
@@ -717,8 +719,8 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    {
       assert(request.exists(h_Vias));
    }
-   //don'y increment CSeq for ACK
-   if (method != ACK)
+   //don't increment CSeq for ACK or CANCEL
+   if (method != ACK && method != CANCEL)
    {
       request.header(h_CSeq).sequence() = ++mLocalCSeq;
    }
@@ -744,7 +746,8 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
       assert(request.isRequest());
       assert(request.header(h_RequestLine).getMethod() == INVITE ||
              request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
-             request.header(h_RequestLine).getMethod() == BYE);
+             request.header(h_RequestLine).getMethod() == BYE ||
+             request.header(h_RequestLine).getMethod() == CANCEL);
       
       assert (request.header(h_Contacts).size() == 1);
       Helper::makeResponse(response, request, code, mLocalContact);
