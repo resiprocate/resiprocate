@@ -148,6 +148,24 @@ TlsConnection::write( const void* buf, const int count )
          break;
          default:
          {
+      while (true)
+      {
+         const char* file;
+         int line;
+         
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
+
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
+      
+
             ErrLog( << "Got TLS write error " << err  );
             return 0;
          }
@@ -423,6 +441,24 @@ Security::loadMyPublicCert( const Data&  filePath )
    {
       ErrLog( << "Error reading contents of public cert file " << filePath );
 	    
+      while (true)
+      {
+         const char* file;
+         int line;
+         
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
+
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
+      
+
 	  Data err( "Error reading contents of public cert file " );
 	  err += filePath;
 	  throw Exception(err, __FILE__,__LINE__);
@@ -447,6 +483,24 @@ Security::loadRootCerts(  const Data& filePath )
    if ( X509_STORE_load_locations(certAuthorities,filePath.c_str(),NULL) != 1 )
    {  
       ErrLog( << "Error reading contents of root cert file " << filePath );
+
+      while (true)
+      {
+         const char* file;
+         int line;
+         
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
+
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
+      
 
 	  Data err( "Error reading contents of root cert file  " );
 	  err += filePath;
@@ -502,6 +556,25 @@ Security::loadPublicCert(  const Data& filePath )
 			   if (!cert)
 			   {
 				   ErrLog( << "Error reading contents of public key file " << path );
+
+      while (true)
+      {
+         const char* file;
+         int line;
+         
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
+
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
+      
+
 				   Data err( "Error reading contents of other persons public key file " );
 				   err += path;
 				   throw Exception(err, __FILE__,__LINE__);
@@ -571,7 +644,24 @@ Security::loadPublicCert(  const Data& filePath )
 	   if (!cert)
 	   {
 		   ErrLog( << "Error reading contents of public key file " << path );
-		   continue;
+		       while (true)
+      {
+         const char* file;
+         int line;
+         
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
+
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
+      
+  continue;
 	   }
 
 	   publicKeys[name] = cert;
@@ -617,12 +707,29 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
    if (!privateKey)
    {
       ErrLog( << "Error reading contents of private key file " << filePath );
-  
+        while (true)
+      {
+         const char* file;
+         int line;
+         
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
+
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
+      
+
 	  Data err( "Error reading contents of private key file " );
 	  err += filePath;
 	  throw Exception(err, __FILE__,__LINE__);
 
-      while (1)
+      while (true)
       {
          const char* file;
          int line;
