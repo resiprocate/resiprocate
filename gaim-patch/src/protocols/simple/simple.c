@@ -342,13 +342,13 @@ sippy_recv_cb(gpointer data, gint source, GaimInputCondition condition)
 
 
 static void
-sippy_add_buddy(GaimConnection *gc, const char *who, GaimGroup *dontCare)
+sippy_add_buddy(GaimConnection *gc, GaimBuddy *who, GaimGroup *dontCare)
 {
    if (!gaginitialized) {return;}
-   gaim_debug(GAIM_DEBUG_INFO,"sippy","sending ADD BUDDY to gag us=%s them=%s\n",gc->account->username,who);
+   gaim_debug(GAIM_DEBUG_INFO,"sippy","sending ADD BUDDY to gag us=%s them=%s\n",gc->account->username,who->name);
    sippy_send_command( SIMPLE_ADD_BUDDY );
    sippy_send_string( gc->account->username );
-   sippy_send_string( who );
+   sippy_send_string( who->name );
 }
 
 static void
@@ -363,13 +363,13 @@ sippy_logout(GaimConnection *gc)
 }
 
 static void
-sippy_remove_buddy(GaimConnection *gc, const char *who, const char *group)
+sippy_remove_buddy(GaimConnection *gc, GaimBuddy *who, GaimGroup *group)
 {
    if (!gaginitialized) {return;}
-   gaim_debug(GAIM_DEBUG_INFO,"sippy","sending REMOVE BUDDY to gag us=%s them=%s\n",gc->account->username,who);
+   gaim_debug(GAIM_DEBUG_INFO,"sippy","sending REMOVE BUDDY to gag us=%s them=%s\n",gc->account->username,who->name);
    sippy_send_command( SIMPLE_REMOVE_BUDDY );
    sippy_send_string( gc->account->username );
-   sippy_send_string( who );
+   sippy_send_string( who->name );
 }
 
 static gboolean sippy_unload_plugin(GaimPlugin *plugin)
@@ -751,19 +751,20 @@ simple_tooltip_text(GaimBuddy *b)
 
 static GaimPluginProtocolInfo prpl_info =
 {
-        4,			/* API version number */
+        5,			/* API version number */
 
 				/* GaimProtocolOptions */
 	OPT_PROTO_PASSWORD_OPTIONAL,
 
 	NULL,			/* user_splits */
 	NULL,			/* protocol_options */
+        NO_BUDDY_ICONS,         /* icon_spec */
  	sippy_list_icon, 	/* list_icon */
 	NULL, 			/* list_emblems  */
 	simple_status_text,	/* status_text */
 	simple_tooltip_text,	/* tooltip_text */
 	NULL,			/* away_states */
-	NULL,			/* buddy_menu */
+	NULL,			/* blist_node_menu */
 	NULL,			/* chat_info */
 	sippy_login,		/* login */
 	sippy_logout, 		/* close */
