@@ -13,16 +13,18 @@ typedef enum
    defineMethod(BYE, "BYE", "RFC ????"),
    defineMethod(CANCEL, "CANCEL", "RFC ????"),
    defineMethod(INVITE, "INVITE", "RFC ????"),
-   defineMethod(NOTIFY, "NOTIFY", "RFC ????"),
+   defineMethod(NOTIFY, "NOTIFY", "RFC 3265"),
    defineMethod(OPTIONS, "OPTIONS", "RFC ????"),
    defineMethod(REFER, "REFER", "RFC ????"),
    defineMethod(REGISTER, "REGISTER", "RFC ????"),
-   defineMethod(SUBSCRIBE, "SUBSCRIBE", "RFC ????"),
+   defineMethod(SUBSCRIBE, "SUBSCRIBE", "RFC 3265"),
    defineMethod(RESPONSE, "RESPONSE", "RFC ????"),
    defineMethod(MESSAGE, "MESSAGE", "RFC ????"),
    defineMethod(INFO, "INFO", "RFC ????"),
-   defineMethod(PRACK, "PRACK", "RFC ????"),
-   defineMethod(PUBLISH, "PUBLISH", "RFC ????"),
+   defineMethod(PRACK, "PRACK", "RFC 3262"),
+   defineMethod(PUBLISH, "PUBLISH", "RFC draft"),
+
+   //defineMethod(UPDATE, "UPDATE", "RFC 3311"), // don't forget to fix hashes!
 
    defineMethod(UNKNOWN, "UNKNOWN", ""),
    MAX_METHODS
