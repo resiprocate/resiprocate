@@ -88,7 +88,7 @@ ConnectionMap::get(Transport::Tuple who, int attempt)
    servaddr.sin_port = who.port;
    servaddr.sin_addr = who.ipv4;
    
-   Socket e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
+   int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
    if ( e == -1 ) 
    {
       // !cj! do error printouets 
