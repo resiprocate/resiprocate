@@ -1,5 +1,4 @@
-static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.40 2002/11/30 20:56:15 fluffy Exp $";
+// "$Id: Data.cxx,v 1.41 2002/11/30 23:04:20 fluffy Exp $";
 
 #include <algorithm>
 #include <cassert>
