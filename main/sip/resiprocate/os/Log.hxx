@@ -88,7 +88,11 @@ class Log
       };
 
       /// Return the loglevel, hostname, appname, pid, tid, subsystem
-      static std::ostream& tags(Log::Level level, const Subsystem& subsystem, std::ostream& strm); 
+      static std::ostream& tags(Log::Level level, 
+                                const Subsystem& subsystem, 
+                                const char* file,
+                                int line,
+                                std::ostream& strm); 
       static Data timestamp();
       static void initialize(Type type,
                              Level level,
