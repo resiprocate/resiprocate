@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "sip2/sipstack/HeaderTypes.hxx"
-namespace Vocal2 {
+
 using namespace std;
 using namespace Vocal2;
 struct headers { char *name; Headers::Type type; };
@@ -292,6 +292,5 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
         }
     }
   return 0;
-}
 }
 
