@@ -29,26 +29,20 @@ class Log
          Cout = 0,
          Syslog, 
          File, 
-         Cerr
+         Cerr,
+         VSDebugWindow,   // Use only for Visual Studio Debug Window logging - WIN32 must be defined
       } Type;
       
-#ifdef WIN32 
       typedef enum 
       {
          None = -1,
+#ifdef WIN32
          Crit = 2,
          Err = 3,
          Warning = 4,
          Info = 6,
          Debug = 7,
-         Stack = 8,
-         StdErr = 9,
-         Bogus = 666
-      } Level;
 #else
-      typedef enum 
-      {
-         None = -1,
          Crit = LOG_CRIT,
 // #ifdef ERR // ncurses defines a macro called ERR 
 //          SIP2_ERR = LOG_ERR,
@@ -59,11 +53,11 @@ class Log
          Warning = LOG_WARNING,
          Info = LOG_INFO,
          Debug = LOG_DEBUG,
+#endif
          Stack = 8,
          StdErr = 9,
          Bogus = 666
       } Level;
-#endif
 
       class ThreadSetting
       {
@@ -122,9 +116,9 @@ class Log
       static void setThreadSetting(int serv, Level l);
       static void setThreadSetting(int serv);
       static volatile short touchCount;
+      static Type _type;
    protected:
       static Level _level;
-      static Type _type;
       static Data _appName;
       static Data _hostname;
       static Data _logFileName;
