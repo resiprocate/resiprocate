@@ -18,6 +18,7 @@ class HandleManager
       bool isValidHandle(Handled::Id) const;
       Handled* getHandled(Handled::Id) const;
 
+      virtual void shutdownWhenEmpty();
    private:
       friend class Handled;
       
@@ -26,6 +27,7 @@ class HandleManager
 
       typedef HashMap<Handled::Id, Handled*> HandleMap;
       HandleMap mHandleMap;
+      bool mShuttingDown;      
       Handled::Id mLastId;
 };
  
