@@ -109,11 +109,17 @@ Resolver::lookupARecords()
 
    int herrno=0;
    char buffer[8192];
-   int ret = gethostbyname2_r (mHost.c_str(), AF_INET, &hostbuf, buffer, sizeof(buffer), &result, &herrno);
+#ifdef __QNX__
+   result = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno);
+   if (result == 0)
+   {
+#else
+   int ret = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
    assert (ret != ERANGE);
 
    if (ret != 0)
    {
+#endif
       switch (herrno)
       {
          case HOST_NOT_FOUND:
@@ -140,7 +146,7 @@ Resolver::lookupARecords()
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
          Resolver::Tuple tuple;
-         bzero((char *) &tuple.ipv4, sizeof(tuple.ipv4));
+         memset(&tuple.ipv4, 0, sizeof(tuple.ipv4));
          tuple.ipv4.sin_family = AF_INET; //result->h_addrtype;
          tuple.ipv4.sin_port = htons(mPort);
          tuple.ipv4.sin_addr.s_addr = *((u_int32_t*)(*pptr));

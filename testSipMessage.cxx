@@ -1,9 +1,9 @@
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/Preparse.hxx>
 #include <sipstack/Uri.hxx>
+#include <sipstack/Helper.hxx>
 
 #include <iostream>
-#include <sstream>
 
 using namespace Vocal2;
 using namespace std;
@@ -41,8 +41,11 @@ main()
       SipMessage message1;
 
       Preparse parse1(message1, txt1, strlen(txt1));
-      while (parse1.process())
-         ;
+      while (parse1.process());
+
+
+      SipMessage r = Helper::makeResponse(message1, 100);
+      r.encode(cerr);
 
       char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfirst\r\n"
@@ -235,9 +238,8 @@ main()
       
       
       SipMessage copy(message);
-      stringstream str;
-      copy.encode(str);
-      cerr << str.str();
+      copy.encode(cerr);
+      cerr << endl;
    }
    
    {
@@ -275,9 +277,7 @@ main()
       SipMessage message;
       
       Preparse parse(message, txt, strlen(txt));
-      while (parse.process())
-         ;
-      
+      while (parse.process());
       
       cerr << "Encode from unparsed: " << endl;
       message.encode(cerr);
@@ -476,7 +476,6 @@ main()
 
       cerr << "Headers::Expires enum = " << h_Expires.getTypeNum() << endl;
       
-      stringstream str;
       message.encode(cerr);
    }
 
