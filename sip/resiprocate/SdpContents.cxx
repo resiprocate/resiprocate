@@ -388,6 +388,9 @@ void parseEorP(ParseBuffer& pb, Data& eOrp, Data& freeText)
       }
       else
       {
+         pb.reset(anchor);
+         pb.skipToOneOf(Symbols::CRLF);         
+         
          // mjh@isi.edu
          //            ^
          pb.data(eOrp, anchor);
