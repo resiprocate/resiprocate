@@ -102,6 +102,8 @@ class InviteSession : public BaseUsage
 
       SipMessage mLastRequest;
       SipMessage mLastResponse;
+      //used to cache 200 to Invite
+      SipMessage mFinalResponse;      
       SipMessage mAck;
 
       ~InviteSession();
