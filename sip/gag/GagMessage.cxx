@@ -5,7 +5,7 @@
 #include "GagMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::APP
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 // Yeah, this is kind of ugly, but I can't think of
 // a good pattern for this off the top of my head.

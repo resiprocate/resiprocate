@@ -9,7 +9,7 @@
 #include "GagConduit.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::APP
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 GagConduit::GagConduit(SipStack &stack, int _udpPort)
   : sipStack(&stack), udpPort(_udpPort), running(true)
@@ -159,6 +159,10 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
   }
   newTu->setUAName(Data("gag/0.0.1 (gaim)"));
   newTu->registerAor(*aor, *password);
+
+  /* RjS : force publish for now - this (and the register 
+           call above needs to be controlled by a gui widgit */
+  newTu->addStateAgent(*aor);
 
   /* adam: This is a temporary hack until we get the
      configuration plumbing working */
