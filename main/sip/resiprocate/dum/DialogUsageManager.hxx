@@ -152,7 +152,8 @@ class DialogUsageManager
       Dialog& findDialog(const DialogId& id);
       DialogSet& findDialogSet(const DialogSetId& id);
       
-      BaseCreator& findCreator(const DialogId& id);
+      // return 0, if no matching BaseCreator
+      BaseCreator* findCreator(const DialogId& id);
 
       void prepareInitialRequest(SipMessage& request);
       void processRequest(const SipMessage& request);
