@@ -1,5 +1,5 @@
-#ifndef resip_SysLogStream_hxx
-#define resip_SysLogStream_hxx
+#if !defined(RESIP_SYSLOGSTREAM_HXX)
+#define RESIP_SYSLOGSTREAM_HXX 
 
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/SysLogBuf.hxx"
@@ -29,8 +29,8 @@ class SysLogStream : public std::ostream
 
 }
 
-
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

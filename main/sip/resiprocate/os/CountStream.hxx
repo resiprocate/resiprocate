@@ -1,5 +1,5 @@
-#ifndef resip_CountStream_hxx
-#define resip_CountStream_hxx
+#if !defined(RESIP_COUNTSTREAM_HXX)
+#define RESIP_COUNTSTREAM_HXX 
 
 #include <iostream>
 #include "resiprocate/os/Data.hxx"

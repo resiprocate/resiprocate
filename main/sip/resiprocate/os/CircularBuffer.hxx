@@ -1,7 +1,8 @@
-#ifndef CircularBuffer_hxx
-#define CircularBuffer_hxx
+#if !defined(RESIP_CIRCULARBUFFER_HXX)
+#define RESIP_CIRCULARBUFFER_HXX  
 
-static const char* const resipCircularBufferHeaderVersion = "$Id: CircularBuffer.hxx,v 1.3 2003/03/25 06:33:48 jason Exp $";
+static const char* const resipCircularBufferHeaderVersion =
+   "$Id: CircularBuffer.hxx,v 1.4 2003/06/02 20:52:32 ryker Exp $";
 
 #include <vector>
 
@@ -79,4 +80,3 @@ class CircularBuffer : private vector<unsigned char>
  * <http://www.vovida.org/>.
  *
  */
-

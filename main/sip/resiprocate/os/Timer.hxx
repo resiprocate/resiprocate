@@ -1,5 +1,5 @@
-#if !defined(resip_Timer_hxx)
-#define resip_Timer_hxx
+#if !defined(RESIP_TIMER_HXX)
+#define RESIP_TIMER_HXX 
      
 #include "resiprocate/os/Data.hxx"
 #include <iostream>
@@ -133,6 +133,7 @@ Timer K  T4 for UDP       Section 17.1.2.2     Wait time for
 #endif
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

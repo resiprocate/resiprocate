@@ -1,5 +1,5 @@
-#ifndef resip_Log_hxx
-#define resip_Log_hxx
+#if !defined(RESIP_LOG_HXX)
+#define RESIP_LOG_HXX 
 
 #define DELIM ' ' << '|' << ' '
 
@@ -123,9 +123,10 @@ class Log
 #endif
 };
 
-} // namespace resip
+}
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

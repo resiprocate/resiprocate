@@ -1,8 +1,8 @@
-#if !defined(resip_Lock_hxx)
-#define resip_Lock_hxx
+#if !defined(RESIP_LOCK_HXX)
+#define RESIP_LOCK_HXX  
 
 static const char* const resipLock_hxx_Version =
-"$Id: Lock.hxx,v 1.10 2003/03/25 06:33:48 jason Exp $";
+   "$Id: Lock.hxx,v 1.11 2003/06/02 20:52:32 ryker Exp $";
 
 
 #include "resiprocate/os/Lockable.hxx"
@@ -39,8 +39,9 @@ class WriteLock : public Lock
       WriteLock(Lockable &);
 };
 
-} // namespace resip
+}
 
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -91,5 +92,3 @@ class WriteLock : public Lock
  * <http://www.vovida.org/>.
  *
  */
-
-#endif // !defined(VOCAL_LOCK_HXX)
