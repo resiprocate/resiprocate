@@ -803,22 +803,22 @@ bool
 DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
 {
 #if defined(USE_SSL)
-   if (sipMsg.exists(h_Identity) && 
-       sipMsg.exists(h_IdentityInfo) && 
-       sipMsg.exists(h_Date))
+   if (sipMsg->exists(h_Identity) && 
+       sipMsg->exists(h_IdentityInfo) && 
+       sipMsg->exists(h_Date))
    {
-      if (getSecurity().hasDomainCert(sipMsg.header(h_From).uri().host()))
+      if (getSecurity().hasDomainCert(sipMsg->header(h_From).uri().host()))
       {
-         getSecurity().checkAndSetIdentity(sipMsg);
+         getSecurity().checkAndSetIdentity(*sipMsg);
          return false;         
       }
       else
       {
          try 
          {
-            Uri certTarget(sipMsg.header(h_IdentityInfo).uri());
+            Uri certTarget(sipMsg->header(h_IdentityInfo).uri());
             //?dcm? -- IdentityInfo must use TLS
-            SipMessage* opt = Helper::makeRequest(NameAddr(certTarget), sipMsg.header(h_From), OPTIONS);
+            SipMessage* opt = Helper::makeRequest(NameAddr(certTarget), sipMsg->header(h_From), OPTIONS);
             mRequiresCerts[opt->getTransactionId()] = sipMsg;
             //!dcm! -- bypassing DialogUsageManager::send to keep transactionID;
             //are there issues with outbound proxies.
