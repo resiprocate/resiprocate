@@ -86,7 +86,8 @@ class TransactionState
       DnsResolver::TupleIterator mDnsListBegin;
       DnsResolver::TupleIterator mDnsListEnd;
       DnsResolver::TupleIterator mDnsListCurrent;
-
+      Transport::Tuple mSource; // used to reply to requests
+      
       bool mRFC2543ResponseUpdated;
       
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
