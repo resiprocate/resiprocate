@@ -51,9 +51,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-
 static const Data PEM(".pem");
-
 
 static const Data 
 pemTypePrefixes(  Security::PEMType pType )
@@ -416,7 +414,7 @@ BaseSecurity::addCertDER (PEMType type,
 {
    assert( !certDER.empty() );
 
-   X509* cert;
+   X509* cert = 0;
    unsigned char* in = (unsigned char*)certDER.data();
    if (d2i_X509(&cert,&in,certDER.size()) == 0)
    {
@@ -424,7 +422,6 @@ BaseSecurity::addCertDER (PEMType type,
       throw BaseSecurity::Exception("Could not read DER certificate ", 
                                     __FILE__,__LINE__);
    }
-   
    addCertX509(type,key,cert,write);
 }
 
@@ -966,6 +963,7 @@ BaseSecurity::BaseSecurity () :
    assert(mRootCerts);
 
    static char* cipher="RSA+SHA+AES+3DES";
+   // static char* cipher="TLS_RSA_WITH_AES_128_CBC_SHA:TLS_RSA_WITH_3DES_EDE_CBC_SHA";
 
    mTlsCtx = SSL_CTX_new( TLSv1_method() );
    assert(mTlsCtx);
@@ -981,42 +979,28 @@ BaseSecurity::BaseSecurity () :
 }
 
 
+template<class T, class Func> 
+void clearMap(T& m, Func& clearFunc)
+{
+   for (typename T::iterator it = m.begin(); it != m.end(); it++)
+   {
+      clearFunc(it->second);
+   }
+   m.clear();
+}
+         
 BaseSecurity::~BaseSecurity ()
 {
-   {
       // cleanup certificates
-      X509Map::iterator iter = mDomainCerts.begin();
-      for (; iter != mDomainCerts.end(); ++iter)
-      {
-         X509_free(iter->second);
-         mDomainCerts.erase(iter);
-      }
-      iter = mUserCerts.begin();
-      for (; iter != mUserCerts.end(); ++iter)
-      {
-         X509_free(iter->second);
-         mUserCerts.erase(iter);
-      }
-   }
-   {
+      clearMap(mDomainCerts, X509_free);
+	  clearMap(mUserCerts, X509_free);
+
       // cleanup private keys
-      PrivateKeyMap::iterator iter = mDomainPrivateKeys.begin();
-      for (; iter != mDomainPrivateKeys.end(); ++iter)
-      {
-         EVP_PKEY_free(iter->second);
-         mDomainPrivateKeys.erase(iter);
-      }
-      iter = mUserPrivateKeys.begin();
-      for (; iter != mUserPrivateKeys.end(); ++iter)
-      {
-         EVP_PKEY_free(iter->second);
-         mUserPrivateKeys.erase(iter);
-      }
-   }
-   {
+      clearMap(mDomainPrivateKeys, EVP_PKEY_free);
+      clearMap(mUserPrivateKeys, EVP_PKEY_free);
+
       // cleanup root certs
       X509_STORE_free(mRootCerts);
-   }
 #if 0 // TODO - mem leak but seg faults
    {
       // cleanup SSL_CTXes
@@ -2341,8 +2325,10 @@ BaseSecurity::getDomainKey(  const Data& domain )
    
 }
 
-
 #endif
+
+
+
 
 /* ====================================================================
 * The Vovida Software License, Version 1.0

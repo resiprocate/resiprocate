@@ -92,48 +92,84 @@ UserProfile::setDigestCredential( const Data& aor, const Data& realm, const Data
 }
      
 const UserProfile::DigestCredential&
-UserProfile::getDigestCredential( const Data& realm )
+UserProfile::getDigestCredential( const Data& realm, const SipMessage& challenge )
 {
+   if(mDigestCredentials.size() == 0)
+   {
+      // !jf! why not just throw here? 
+      static const DigestCredential empty;
+      return empty;
+   }
+
    DigestCredential dc;
    dc.realm = realm;
-   
+   dc.aor = challenge.header(h_From).uri().getAor();
+
+   StackLog (<< Inserter(mDigestCredentials));
+   DebugLog (<< "Using From header: " <<  dc.aor << " to find credential");   
+
+   // 1.  Look for any credential whose AOR matches the From field and with a matching realm. 
    DigestCredentials::const_iterator i = mDigestCredentials.find(dc);
    if (i != mDigestCredentials.end())
    {
       return *i;
    }
-   
-   static const DigestCredential empty;
-   return empty;
-}
-
-const UserProfile::DigestCredential&
-UserProfile::getDigestCredential( const SipMessage& challenge )
-{
-   StackLog (<< Inserter(mDigestCredentials));
-   DebugLog (<< "Using From header: " <<  challenge.header(h_From).uri().getAor() << " to find credential");   
-   const Data& aor = challenge.header(h_From).uri().getAor();
-   for (DigestCredentials::const_iterator it = mDigestCredentials.begin(); 
-        it != mDigestCredentials.end(); it++)
-   {
-      if (it->aor == aor)
-      {
-         return *it;
-      }
-   }
+      
+   // 2.  Look for any credential whose user matches the User in the From field and with a matching realm. 
+   // 3.  Look for any credential with a matching realm.  (required before 4 - since there could be the same AOR in 2 different realms???) 
+   // 4.  Look for any credential whose AOR matches the From field. 
+   // 5.  Look for any credential whose user matches the User in the From field. 
    const Data& user = challenge.header(h_From).uri().user();
-   for (DigestCredentials::const_iterator it = mDigestCredentials.begin(); 
-        it != mDigestCredentials.end(); it++)
+   DigestCredentials::const_iterator RealmOnlyMatch = mDigestCredentials.end();
+   DigestCredentials::const_iterator AOROnlyMatch = mDigestCredentials.end();
+   DigestCredentials::const_iterator UserOnlyMatch = mDigestCredentials.end();
+   for (i = mDigestCredentials.begin(); i != mDigestCredentials.end(); i++)
    {
-      if (it->user == user)
+      bool fUserMatches=false;
+      bool fRealmMatches=false;
+      if (i->user == user)
       {
-         return *it;
+         fUserMatches = true;
+      }
+      if(i->realm == realm)
+      {
+         fRealmMatches = true;
+      }
+      if(fUserMatches && fRealmMatches)  // If both user and realm match (# 2) - no need to look further
+      {
+         return *i;
+      }
+      if(fRealmMatches && RealmOnlyMatch == mDigestCredentials.end())
+      {
+         RealmOnlyMatch = i;  // Store first Realm only match
+      }
+      else if(i->aor == dc.aor && AOROnlyMatch == mDigestCredentials.end())
+      {
+         AOROnlyMatch = i;    // Store first AOR only match
+      }
+      else if(fUserMatches && UserOnlyMatch == mDigestCredentials.end())
+      {
+         UserOnlyMatch = i;   // Store first User only match
       }
    }
 
-   // !jf! why not just throw here? 
-   static const DigestCredential empty;
-   return empty;
+   if(RealmOnlyMatch != mDigestCredentials.end())
+   {
+       return *RealmOnlyMatch;
+   }
+   else if(AOROnlyMatch != mDigestCredentials.end())
+   {
+       return *AOROnlyMatch;
+   }
+   else if(UserOnlyMatch != mDigestCredentials.end())
+   {
+       return *UserOnlyMatch;
+   }
+   // 6.  Any (first) Digest Credential 
+   else
+   {
+       return *mDigestCredentials.begin();
+   }
 }
 
 UserProfile::DigestCredential::DigestCredential(const Data& a, const Data& r, const Data& u, const Data& p) :

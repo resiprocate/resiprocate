@@ -1,37 +1,38 @@
-#if !defined(RESIP_TRANSACTIONTERMINATED_HXX)
-#define RESIP_TRANSACTIONTERMINATED_HXX 
+#if !defined(RESIP_TU_HXX)
+#define RESIP_TU_HXX 
 
-#include "TransactionMessage.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/os/TimeLimitFifo.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/Message.hxx"
 
 namespace resip
 {
-class TransactionUser;
+class SipMessage;
 
-class TransactionTerminated : public TransactionMessage
+class TransactionUser
 {
    public:
-      RESIP_HeapCount(TransactionTerminated);
+      void post(Message *);
 
-      TransactionTerminated(const Data& tid, bool isClient, TransactionUser* tu) : 
-         mTransactionId(tid), 
-         mIsClient(isClient)
-      {
-         setTransactionUser(tu);         
-      }
-      virtual const Data& getTransactionId() const { return mTransactionId; }
-      virtual bool isClientTransaction() const { return mIsClient; }
-
-      virtual Data brief() const { return (mIsClient ? Data("ClientTransactionTerminated ") : Data("ServerTransactionTerminated ")) + mTransactionId; }
-      virtual std::ostream& encode(std::ostream& strm) const { return strm << brief(); }
+   protected:
+      TransactionUser();
+      virtual ~TransactionUser()=0;
+      virtual bool isForMe(const SipMessage& msg) const=0;
       
-      Data mTransactionId;
-      bool mIsClient;
+      TimeLimitFifo<Message> mFifo;
+
+   private:
+      void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
+      unsigned int size() const;
+      bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
+
+      friend class TuSelector;      
 };
- 
+
 }
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

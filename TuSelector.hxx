@@ -1,37 +1,39 @@
-#if !defined(RESIP_TRANSACTIONTERMINATED_HXX)
-#define RESIP_TRANSACTIONTERMINATED_HXX 
+#if !defined(RESIP_TuSelector_HXX)
+#define RESIP_TuSelector_HXX 
 
-#include "TransactionMessage.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/TimeLimitFifo.hxx"
 
 namespace resip
 {
+class Message;
 class TransactionUser;
+class TransactionUserMessage;
 
-class TransactionTerminated : public TransactionMessage
+class TuSelector
 {
    public:
-      RESIP_HeapCount(TransactionTerminated);
-
-      TransactionTerminated(const Data& tid, bool isClient, TransactionUser* tu) : 
-         mTransactionId(tid), 
-         mIsClient(isClient)
-      {
-         setTransactionUser(tu);         
-      }
-      virtual const Data& getTransactionId() const { return mTransactionId; }
-      virtual bool isClientTransaction() const { return mIsClient; }
-
-      virtual Data brief() const { return (mIsClient ? Data("ClientTransactionTerminated ") : Data("ServerTransactionTerminated ")) + mTransactionId; }
-      virtual std::ostream& encode(std::ostream& strm) const { return strm << brief(); }
+      TuSelector(TimeLimitFifo<Message>& fallBackFifo);
       
-      Data mTransactionId;
-      bool mIsClient;
+      void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
+      unsigned int size() const;      
+      bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
+  
+      TransactionUser* selectTransactionUser(const SipMessage& msg);
+      bool haveTransactionUsers() const { return !mTuList.empty(); }
+      void registerTransactionUser(TransactionUser&);
+      bool exists(TransactionUser* tu);
+
+ private:
+      typedef std::vector<TransactionUser*> TuList;
+      TuList mTuList;
+      TimeLimitFifo<Message>& mFallBackFifo;
+      bool mTuSelectorMode;
 };
- 
 }
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

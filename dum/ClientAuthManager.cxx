@@ -149,17 +149,13 @@ bool ClientAuthManager::handleAuthHeader(UserProfile& userProfile,
    const Data& realm = auth.param(p_realm);                   
    
    //!dcm! -- icky, expose static empty soon...ptr instead of reference?
-   UserProfile::DigestCredential credential = userProfile.getDigestCredential(realm);
+   UserProfile::DigestCredential credential = userProfile.getDigestCredential(realm, response);
    if ( credential.password.empty() )                       
    {                                        
-      credential = userProfile.getDigestCredential(response);
-      if ( credential.password.empty() )                       
-      {                                        
-         InfoLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
-         DebugLog (<< auth);
-         DebugLog (<< response);
-         return false;                                        
-      }
+      InfoLog( << "Got a 401 or 407 but could not find credentials for realm: " << realm);
+      DebugLog (<< auth);
+      DebugLog (<< response);
+      return false;                                        
    }                                                           
    if (proxy)
    {

@@ -141,12 +141,14 @@ SRC = \
 	TlsTransport.cxx \
 	TlsTransport.cxx \
 	TransactionController.cxx \
+	TransactionUser.cxx \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
 	TransportMessage.cxx \
 	TransportSelector.cxx \
 	TuIM.cxx \
+	TuSelector.cxx \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \

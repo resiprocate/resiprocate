@@ -35,6 +35,7 @@ subject, Headers::Subject
 to, Headers::To
 via, Headers::Via
 accept, Headers::Accept
+accept-contact, Headers::AcceptContact
 accept-encoding, Headers::AcceptEncoding
 accept-language, Headers::AcceptLanguage
 alert-info,Headers::AlertInfo
@@ -78,25 +79,28 @@ event, Headers::Event
 hide, Headers::UNKNOWN
 identity, Headers::Identity
 identity-info, Headers::IdentityInfo
-p-asserted-identity, Headers::UNKNOWN
-p-media-authorization, Headers::UNKNOWN
-p-preferred-identity, Headers::UNKNOWN
-path, Headers::UNKNOWN
-privacy, Headers::UNKNOWN
+join, Headers::Join
+p-asserted-identity, Headers::PAssertedIdentity
+p-associated-uri, Headers::PAssociatedUri
+p-called-party-id, Headers::PCalledPartyId
+p-media-authorization, Headers::PMediaAuthorization
+p-preferred-identity, Headers::PPreferredIdentity
+path, Headers::Path
+privacy, Headers::Privacy
 rack, Headers::RAck
-reason, Headers::UNKNOWN
+reason, Headers::Reason
 refer-to,Headers::ReferTo
 referred-by,Headers::ReferredBy
 replaces,Headers::Replaces
+reject-contact, Headers::RejectContact
+request-disposition, Headers::RequestDisposition
 response-key, Headers::UNKNOWN
 rseq, Headers::RSeq
 security-client, Headers::SecurityClient
 security-server, Headers::SecurityServer
 security-verify, Headers::SecurityVerify
-RSeq, Headers::RSeq
-RAck, Headers::RAck
+service-route, Headers::ServiceRoute
 session-expires, Headers::SessionExpires
 min-se, Headers::MinSE
-content, Headers::ContentId
 %%
 }
