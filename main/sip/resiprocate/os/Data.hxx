@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.44 2002/12/12 03:52:06 derekm Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.45 2002/12/14 19:55:39 davidb Exp $";
 
 #include <iostream>
 #include <string>
@@ -102,6 +102,7 @@ class Data
    private:
       friend class TestData;
       friend class MD5Buffer;
+      friend class Contents;
       Data(const char* buffer, int length, bool);
       void resize(size_type newSize, bool copy);
       size_type mSize;
