@@ -30,19 +30,21 @@ RequestContext::RequestContext(Proxy& proxy,
 
 RequestContext::~RequestContext()
 {
-   DebugLog (<< "RequestContext::~RequestContext() " << *this);
-   if (mOriginalRequest!=mCurrentEvent)
+   InfoLog (<< "RequestContext::~RequestContext() " << this);
+   if (mOriginalRequest != mCurrentEvent)
    {
       delete mOriginalRequest;
+      mOriginalRequest = 0;
    }
    delete mCurrentEvent;
+   mCurrentEvent = 0;
 }
 
 
 void
 RequestContext::process(resip::TransactionTerminated& msg)
 {
-   DebugLog (<< "RequestContext::process(TransactionTerminated) " << *this);
+   InfoLog (<< "RequestContext::process(TransactionTerminated) " << *this);
    mTransactionCount--;
    if (mTransactionCount == 0)
    {
@@ -55,7 +57,10 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
 {
    DebugLog (<< "RequestContext::process(Message) " << *this);
 
-   delete mCurrentEvent;
+   if (mCurrentEvent != mOriginalRequest)
+   {
+      delete mCurrentEvent;
+   }
    mCurrentEvent = msg.release();
    SipMessage* sip = dynamic_cast<SipMessage*>(mCurrentEvent);
    if (!mOriginalRequest) 
@@ -235,8 +240,8 @@ repro::operator<<(std::ostream& strm, const RequestContext& rc)
         << " count=" << rc.mTransactionCount
         << " final=" << rc.mHaveSentFinalResponse;
 
-   if (rc.mOriginalRequest) strm << " original=" << rc.mOriginalRequest->brief();
-   if (rc.mCurrentEvent) strm << " current=" << rc.mCurrentEvent->brief();
+   //if (rc.mOriginalRequest) strm << " original=" << rc.mOriginalRequest->brief();
+   //if (rc.mCurrentEvent) strm << " current=" << rc.mCurrentEvent->brief();
    return strm;
 }
 

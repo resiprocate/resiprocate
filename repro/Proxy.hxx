@@ -24,14 +24,16 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       Proxy(resip::SipStack&, RequestProcessorChain&, UserDb &);
       virtual ~Proxy();
 
-      void addDomain(const resip::Uri& uri);
-      virtual bool isMyDomain(const resip::Uri& uri) const;
       virtual bool isShutDown() const ;
       virtual void thread();
       
       UserDb &getUserDb();
       void send(const resip::SipMessage& msg);
-      
+      void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
+
+   protected:
+      virtual const resip::Data& name() const;
+
    private:
       resip::SipStack& mStack;
 
