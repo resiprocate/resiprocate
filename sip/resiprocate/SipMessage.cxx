@@ -337,6 +337,61 @@ SipMessage::encode(std::ostream& str) const
    return str;
 }
 
+std::ostream& 
+SipMessage::encodeEmbedded(std::ostream& str) const
+{
+   bool first = true;
+   for (int i = 0; i < Headers::MAX_HEADERS; i++)
+   {
+      if (i != Headers::Content_Length) // !dlb! hack...
+      {
+         if (mHeaders[i] != 0)
+         {
+            if (!first)
+            {
+               first = false;
+               str << Symbols::AMPERSAND;
+            }
+            else
+            {
+               str << Symbols::QUESTION;
+            }
+            mHeaders[i]->encodeEmbedded(Headers::HeaderNames[static_cast<Headers::Type>(i)], str);
+         }
+      }
+   }
+
+   for (UnknownHeaders::const_iterator i = mUnknownHeaders.begin(); 
+        i != mUnknownHeaders.end(); i++)
+   {
+      if (!first)
+      {
+         first = false;
+         str << Symbols::AMPERSAND;
+      }
+      else
+      {
+         str << Symbols::QUESTION;
+      }
+      i->second->encodeEmbedded(i->first, str);
+   }
+
+   if (mContents != 0)
+   {
+      str << "&body=";
+      // !dlb! encodeEmbedded for characters
+      mContents->encode(str);
+   }
+   else if (mContentsHfv != 0)
+   {
+      str << "&body=";
+      // !dlb! encodeEmbedded for characters
+      mContentsHfv->encode(str);
+   }
+   
+   return str;
+}
+
 void
 SipMessage::addBuffer(char* buf)
 {
