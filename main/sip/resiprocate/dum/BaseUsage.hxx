@@ -1,6 +1,8 @@
 #if !defined(RESIP_BASEUSAGE_HXX)
 #define RESIP_BASEUSAGE_HXX
 
+#include "resiprocate/os/compat.hxx"
+
 namespace resip
 {
 

@@ -1,137 +1,26 @@
-#include "DialogSet.hxx"
+#ifndef RESIP_UInt64Hash_hxx
+#define RESIP_UInt64Hash_hxx
 
-using namespace resip;
-using namespace std;
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/HashMap.hxx"
 
-DialogSet::DialogSet(const BaseCreator *creator) : 
-    mDialogs(),
-    mCreator(creator)
+#if  defined(__INTEL_COMPILER )
+namespace std
 {
-   Dialog* dialog = new Dialog(*this, request);
-   addDialog(dialog);
-   dialog->dispatch(request);
+size_t hash_value(const UInt64 v);
 }
 
-DialogSet::DialogSet(const SipMessage& request)
-   mDialogs(),
-   mCreator(NULL),
-   mId(request)
+#elif defined(HASH_MAP_NAMESPACE)  //#elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+namespace HASH_MAP_NAMESPACE
 {
-   assert(request.isRequest());
+struct hash<UInt64>
+{
+      size_t operator()(const UInt64& v) const;
+};
 }
+#endif
 
-DialogSet::~DialogSet()
-{
-}
-
-DialogSetId
-Dialogset::getId()
-{
-   return mId;
-}
-
-void
-DialogSet::addDialog(Dialog *dialog)
-{
-   mDialogs.push_back(dialog);
-}
-
-void 
-DialogSet::removeDialog(const Dialog *dialog)
-{
-    mDialogs.remove(dialog);
-}
-
-DialogIdSet 
-DialogSet::getDialogs() const
-{
-    /** @todo Implment this method */
-}
-
-Dialog* 
-DialogSet::findDialog(const DialogId id)
-{
-    std::list<Dialog*>::iterator it = mDialogs.start();
-    Dialog *dialog;
-    while (it != mDialogs.end())
-    {
-        dialog  = it->next();
-        if (dialog->getId() == id)
-        {
-            return dialog;
-        }
-    }
-    return NULL;
-}
-
-Dialog*
-Dialogset::findDialog( const Data& otherTag )
-{
-    std::list<Dialog*>::iterator it = mDialogs.start();
-    Dialog *dialog;
-    while (it != mDialogs.end())
-    {
-        dialog  = it->next();
-        if (dialog->getId() == otherTag)
-        {
-            return dialog;
-        }
-    }
-    return NULL;
-}
-
-Dialog* findDialog(SipMessage& msg)
-{
-    std::list<Dialog*>::iterator it = mDialogs.start();
-    Dialog *dialog;
-    while (it != mDialogs.end())
-    {
-        dialog = it->next();
-        if (dialog->getId() == msg)
-        {
-            return dialog;
-        }
-    }
-    return NULL;
-}
-
-BaseCreator* 
-DialogSet::getCreator()
-{
-    return mCreator;
-}
-    
-void
-DialogSet::dispatch(const SipMessage& msg)
-{
-   assert(msg.isRequest() || msg.isResponse());
-   Dialog* dialog = findDialog(msg);
-   if (dialog == 0)
-   {
-      dialog = new Dialog(mDum, msg);
-      this->addDialog(dialog);
-   }
-   dialog->dispatch(msg);
-}
-
-bool
-DialogSet::mergeRequest(const SipMessage& request)
-{
-   for (DialogSet::const_iterator i = dialogs.begin(); i != dialogs.end(); ++i)
-   {
-      if (i->shouldMerge(request))
-      {
-         InfoLog (<< "Merging request for: " << request.brief());
-         return true;
-      }
-   }
-}
-
-bool
-DialogSet::empty() const
-{
-   return mDialogs.empty();
-}
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
