@@ -5,6 +5,15 @@
 #include "resiprocate/Message.hxx"
 #include "resiprocate/os/DataStream.hxx"
 
+using namespace resip;
+
+Message* 
+Message::clone() const
+{
+   assert(false);
+   return 0;
+}
+
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::Message& msg)
 {
