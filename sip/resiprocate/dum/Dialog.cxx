@@ -364,6 +364,7 @@ Dialog::dispatch(const SipMessage& msg)
    }
    else if (msg.isResponse())
    {
+#if 0
       //Auth related
       if (mDum.mClientAuthManager && !mDialogSet.mCancelled)
       {
@@ -418,7 +419,7 @@ Dialog::dispatch(const SipMessage& msg)
             }
          }
       }
-      
+#endif
       const SipMessage& response = msg;
       // !jf! should this only be for 2xx responses? !jf! Propose no as an
       // answer !dcm! what is he on?
