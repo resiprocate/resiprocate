@@ -51,7 +51,7 @@ DialogSet::findDialog(const DialogId id)
     Dialog *dialog;
     while (it != mDialogs.end())
     {
-        dialog  = it.next();
+        dialog  = it->next();
         if (dialog->getId() == id)
         {
             return dialog;
@@ -67,7 +67,7 @@ Dialogset::findDialog( const Data& otherTag )
     Dialog *dialog;
     while (it != mDialogs.end())
     {
-        dialog  = it.next();
+        dialog  = it->next();
         if (dialog->getId() == otherTag)
         {
             return dialog;
@@ -82,7 +82,7 @@ Dialog* findDialog(SipMessage& msg)
     Dialog *dialog;
     while (it != mDialogs.end())
     {
-        dialog  = it.next();
+        dialog = it->next();
         if (dialog->getId() == msg)
         {
             return dialog;
