@@ -1283,11 +1283,18 @@ DialogUsageManager::processRequest(const SipMessage& request)
             DialogSet* ds = findDialogSet(DialogSetId(request));
             if (ds == 0)
             {
-               SipMessage failure;
-               makeResponse(failure, request, 481);
-               failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
-               InfoLog (<< "Rejected request (which was in a dialog) " << request.brief());
-               sendResponse(failure);
+               if (request.header(h_RequestLine).method() != ACK)
+               {
+                  SipMessage failure;
+                  makeResponse(failure, request, 481);
+                  failure.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+                  InfoLog (<< "Rejected request (which was in a dialog) " << request.brief());
+                  sendResponse(failure);
+               }
+               else
+               {
+                  InfoLog (<< "ACK doesn't match any dialog" << request.brief());                  
+               }
             }
             else
             {
