@@ -23,6 +23,9 @@ class Profile
       virtual void setDefaultSubscriptionTime(int secs);
       virtual int getDefaultSubscriptionTime() const;
 
+      virtual void setDefaultPublicationTime(int secs);
+      virtual int getDefaultPublicationTime() const;
+
       // Only used if timer option tag is set.
       // Note:  Add timer to options tag and set DefaultSessionTime to 0 to show  
       // support, but not request a session timer.
@@ -75,6 +78,9 @@ class Profile
 
       bool mHasDefaultSubscriptionExpires;
       int mDefaultSubscriptionExpires;
+
+      bool mHasDefaultPublicationExpires;
+      int mDefaultPublicationExpires;
 
       bool mHasDefaultSessionExpires;
       int mDefaultSessionExpires;
