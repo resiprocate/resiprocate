@@ -109,7 +109,7 @@ TransportSelector::addTransport(TransportType protocol,
    assert(mExactTransports.find(key) == mExactTransports.end() &&
           mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
 
-   DebugLog (<< "Adding transport: " << key);
+   InfoLog (<< "Adding transport: " << key);
 
    // Store the transport in the ANY interface maps if the tuple specifies ANY
    // interface. Store the transport in the specific interface maps if the tuple
@@ -270,6 +270,7 @@ TransportSelector::dnsResolve(SipMessage* msg,
       }
       else
       {
+         DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri());
          result = mDns.lookup(msg->header(h_RequestLine).uri(), handler);
       }
    }
@@ -550,8 +551,15 @@ TransportSelector::findTransport(const Tuple& search)
          }
       }
    }
+
+   //DebugLog (<< "Exact interface / Specific port: " << Inserter(mExactTransports));
+   //DebugLog (<< "Any interface / Specific port: " << Inserter(mAnyInterfaceTransports));
+   //DebugLog (<< "Exact interface / Any port: " << Inserter(mAnyPortTransports));
+   //DebugLog (<< "Any interface / Any port: " << Inserter(mAnyPortAnyInterfaceTransports));
    
-   ErrLog(<< "Can't find matching transport " << DnsUtil::inet_ntop(search));
+   WarningLog(<< "Can't find matching transport " << search);
+   assert(0);
+   
    return 0;
 }
 
