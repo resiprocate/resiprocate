@@ -8,9 +8,6 @@
 #include <map>
 
 #if defined(USE_SSL)
-//#include <openssl/e_os2.h>
-//#include <openssl/evp.h>
-//#include <openssl/x509.h>
 #define PERL5
 #include <openssl/ssl.h>
 #else
