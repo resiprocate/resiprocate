@@ -60,16 +60,28 @@ Proxy::thread()
          {
             if (sip->isRequest())
             {
+			   // [TODO] !rwm! need to verify that the request has required headers
+			   // (To, From, Call-ID, CSeq)  Via is already checked by stack.  
+			   // See RFC 3261 Section 16.3 Step 1
+			   
+			   // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
+			   
                if (sip->exists(h_MaxForwards) && sip->header(h_MaxForwards).value() <= 0)
                {
-                  std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 482));
+			      // [TODO] !rwm! If the request is an OPTIONS, send an appropropriate response
+				  			   
+                  std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
                   mStack.send(*response, this);
                   break;
                }
+
+			   // [TODO] !rwm! Need to check Proxy-Require header field values
                
                if (sip->header(h_RequestLine).method() == CANCEL)
                {
                   HashMap<Data,RequestContext*>::iterator i = mRequestContexts.find(sip->getTransactionId());
+
+				  // [TODO] !rwm! this should not be an assert.  log and ignore instead.
                   assert (i != mRequestContexts.end());
                   i->second->process(std::auto_ptr<resip::Message>(msg));
                }
@@ -91,6 +103,7 @@ Proxy::thread()
                }
                else
                {
+				  // This is a new request, so create a Request Context for it
                   assert(mRequestContexts.count(sip->getTransactionId()) == 0);                  
                   RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
                   mRequestContexts[sip->getTransactionId()] = context;
@@ -103,6 +116,7 @@ Proxy::thread()
                HashMap<Data,RequestContext*>::iterator i = mRequestContexts.find(sip->getTransactionId());
                assert (i != mRequestContexts.end());
                i->second->process(std::auto_ptr<resip::Message>(msg));
+			   // [TODO] !rwm! who throws stray responses away?  does the stack do this?
             }
          }
          else if (app)
@@ -116,6 +130,7 @@ Proxy::thread()
             else
             {
                //InfoLog (<< "No matching request context...ignoring " << *msg);
+			   // [TODO] !rwm! do we need to delete the app event message?
             }
          }
          else if (term)
