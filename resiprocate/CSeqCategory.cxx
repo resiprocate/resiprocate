@@ -19,15 +19,17 @@ using namespace std;
 // CSeqCategory:
 //====================
 CSeqCategory::CSeqCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), mMethod(UNKNOWN), mSequence(-1) 
-{}
+   : ParserCategory(hfv, type), mMethod(RESIP_UNKNOWN), mSequence(-1)
+{
+}
 
 CSeqCategory::CSeqCategory() 
    : ParserCategory(), 
-     mMethod(UNKNOWN), 
-     mUnknownMethodName(getMethodName(UNKNOWN)),
+     mMethod(RESIP_UNKNOWN),
+     mUnknownMethodName(getMethodName(RESIP_UNKNOWN)),
      mSequence(-1) 
-{}
+{
+}
 
 CSeqCategory::CSeqCategory(const CSeqCategory& rhs)
    : ParserCategory(rhs),
@@ -53,7 +55,7 @@ bool
 CSeqCategory::operator==(const CSeqCategory& rhs) const
 {
    return (mMethod == rhs.mMethod &&
-           (mMethod != UNKNOWN || mUnknownMethodName == rhs.mUnknownMethodName) &&
+           (mMethod != RESIP_UNKNOWN || mUnknownMethodName == rhs.mUnknownMethodName) &&
            mSequence == rhs.mSequence);
 }
 
@@ -149,7 +151,7 @@ CSeqCategory::parse(ParseBuffer& pb)
 std::ostream& 
 CSeqCategory::encodeParsed(std::ostream& str) const
 {
-   str << mSequence << Symbols::SPACE << (mMethod != UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName);
+   str << mSequence << Symbols::SPACE << (mMethod != RESIP_UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName);
    return str;
 }
 
