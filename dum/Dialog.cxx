@@ -338,7 +338,7 @@ Dialog::dispatch(const SipMessage& msg)
                   server->dispatch(request);
                }
             }
-            mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), server->getHandle(), msg);
+//            mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), server->getHandle(), msg);
          }
          break;
          case REFER:
@@ -543,7 +543,7 @@ Dialog::dispatch(const SipMessage& msg)
                else
                {
                   //!dcm! -- can't subscribe in an existing Dialog, this is all 
-                  //a bit of a hack.
+                  //a bit of a hack; currently, spurious failure messages may cause callbacks
                   BaseCreator* creator = mDialogSet.getCreator();
                   if (!creator || !creator->getLastRequest().exists(h_Event))
                   {
@@ -555,8 +555,9 @@ Dialog::dispatch(const SipMessage& msg)
                         mDum.getClientSubscriptionHandler(creator->getLastRequest().header(h_Event).value());
                      if (handler)
                      {
-                        handler->onTerminated(ClientSubscriptionHandle::NotValid(), response);
-                        possiblyDie();
+                        ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
+                        mClientSubscriptions.push_back(sub);
+                        sub->dispatch(response);
                      }
                   }
                }
