@@ -436,14 +436,6 @@ Contents::encodeHeaders(ostream& str) const
       str << Symbols::CRLF;
    }
 
-   if (exists(h_ContentTransferEncoding))
-   {
-      str <<  "Content-Transfer-Encoding" << Symbols::COLON[0] << Symbols::SPACE[0];
-
-      header(h_ContentTransferEncoding).encode(str);
-      str << Symbols::CRLF;
-   }
-
    if (exists(h_ContentLanguages))
    {
       str <<  "Content-Languages" << Symbols::COLON[0] << Symbols::SPACE[0];
@@ -456,6 +448,16 @@ Contents::encodeHeaders(ostream& str) const
          str << Symbols::CRLF;
       }
    }
+
+#if 0 // !cj! this look redudneatn with next thing but I don't know 
+   if (exists(h_ContentTransferEncoding))
+   {
+      str <<  "Content-Transfer-Encoding" << Symbols::COLON[0] << Symbols::SPACE[0];
+
+      header(h_ContentTransferEncoding).encode(str);
+      str << Symbols::CRLF;
+   }
+#endif 
 
    if (mTransferEncoding)
    {
