@@ -27,7 +27,6 @@ class Profile
             Data password;
 
             bool operator<(const DigestCredential& rhs) const;
-            std::ostream& operator<<(std::ostream&) const;
       };
       
       Profile();
@@ -122,7 +121,8 @@ class Profile
       DigestCredentials mDigestCredentials;
 };
    
-
+std::ostream& 
+operator<<(std::ostream&, const Profile::DigestCredential& cred);
  
 }
 
