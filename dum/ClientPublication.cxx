@@ -93,7 +93,7 @@ ClientPublication::dispatch(const SipMessage& msg)
          {
             InfoLog(<< "SIPIfMatch failed -- republish");
             mPublish.remove(h_SIPIfMatch);
-            update(mDocument->clone());
+            update(mDocument);
             return;
          }         
          else if (code == 423) // interval too short
@@ -143,8 +143,11 @@ void
 ClientPublication::update(const Contents* body)
 {
    assert(body);
-   delete mDocument;
-   mDocument = body;
+   if (mDocument != body)
+   {
+      delete mDocument;
+      mDocument = body;
+   }
    
    mPublish.header(h_CSeq).sequence()++;
    mPublish.setContents(mDocument);
