@@ -24,7 +24,7 @@ class TlsConnection : public Connection
       RESIP_HeapCount(TlsConnection);
 
       TlsConnection( const Tuple& who, Socket fd, 
-                     Security* security, bool server, 
+                     Security* security, bool server, Data domain, 
                      SecurityTypes::SSLType sslType );
       
       int read( char* buf, const int count );
@@ -44,6 +44,7 @@ class TlsConnection : public Connection
       bool mServer;
       Security* mSecurity;
       SecurityTypes::SSLType mSslType;
+      Data mDomain;
       
       State mState;
 
