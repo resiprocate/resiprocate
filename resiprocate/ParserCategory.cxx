@@ -1,6 +1,7 @@
 #include <sipstack/ParserCategory.hxx>
 #include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/UnknownParameter.hxx>
+#include <util/compat.hxx>
 #include <util/ParseBuffer.hxx>
 #include <iostream>
 
