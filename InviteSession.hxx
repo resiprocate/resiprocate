@@ -58,8 +58,8 @@ class InviteSession : public DialogUsage
       virtual SipMessage& makeRefer(const NameAddr& referTo);
       virtual SipMessage& makeRefer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
 
-      const SdpContents* getLocalSdp();
-      const SdpContents* getRemoteSdp();
+      const SdpContents* getLocalSdp() const;
+      const SdpContents* getRemoteSdp() const;
 
       virtual SipMessage& makeInfo(auto_ptr<Contents> contents);
 
