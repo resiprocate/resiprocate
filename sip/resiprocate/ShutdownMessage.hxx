@@ -1,20 +1,18 @@
-#if !defined(RESIP_SHUTDOWNMESSAGE_HXX)
-#define RESIP_SHUTDOWNMESSAGE_HXX 
+#ifndef RESIP_ShutdownMessage_hxx
+#define RESIP_ShutdownMessage_hxx 
 
-// Copyright 2002 Cathay Networks, Inc. 
-
-#include "Message.hxx"
+#include "resiprocate/ApplicationMessage.hxx"
 
 namespace resip
 {
 
-class ShutdownMessage : public Message
+class ShutdownMessage : public ApplicationMessage
 {
    public:
       ShutdownMessage() {};
-      virtual const Data& getTransactionId() const { return Data::Empty; }
-      virtual bool isClientTransaction() const { return false; }
+
       virtual Data brief() const { return ("Shutdown"); }
+      virtual Message* clone() const { return new ShutdownMessage; }
       virtual std::ostream& encode(std::ostream& strm) const { return strm << brief(); }
 };
  
@@ -24,7 +22,7 @@ class ShutdownMessage : public Message
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
