@@ -25,7 +25,8 @@ Security::Security()
 {
    privateKey = NULL;
    publicCert = NULL;
-
+   certAuthorities = NULL;
+   
    static bool initDone=false;
    if ( !initDone )
    {
@@ -42,28 +43,74 @@ Security::Security()
 Security::~Security()
 {
 }
+  
+
+Data 
+Security::getPath( const Data& dirPath, const Data& file )
+{
+   Data path = dirPath;
+   
+   if ( path.empty() )
+   {
+#ifdef WIN32
+      assert(0);
+#else
+      char* v = getenv("SIP");
+      if (v)
+      {
+         path = Data(v);
+      }
+      else
+      {  
+          v = getenv("HOME");
+          if ( v )
+          {
+             path = Data(v);
+             path += Data("/.sip");
+          }
+          else
+          {
+             ErrLog( << "Environment variobal HOME is not set" );
+             path = "/etc/sip";
+          }
+      }
+#endif
+   }
+   
+#ifdef WIN32
+   path += Data("\\");
+#else
+   path += Data("/");
+#endif
+
+   assert( !file.empty() );
+   
+   path += file;
+
+   DebugLog( << "Using file path " << path );
+   
+   return path;
+}
 
 
 bool 
-Security::loadAllCerts( const Data& password, char* directoryPath )
+Security::loadAllCerts( const Data& password, const Data&  dirPath )
 {
    bool ok = true;
-   ok = loadMyPublicCert() ? ok : false;
-   ok = loadMyPrivateKey(password) ? ok : false;
+   ok = loadRootCerts( getPath( dirPath, Data("root.pem")) ) ? ok : false;
+   ok = loadMyPublicCert( getPath( dirPath, Data("id.pem")) ) ? ok : false;
+   ok = loadMyPrivateKey( password, getPath(dirPath,Data("id_key.pem") )) ? ok : false;
 
    return ok;
 }
      
 
 bool 
-Security::loadMyPublicCert( char* filePath )
+Security::loadMyPublicCert( const Data&  filePath )
 {
-   if ( !filePath )
-   {
-      filePath = "/home/cullen/certs/id.pem";
-   }
+   assert( !filePath.empty() );
    
-   FILE* fp = fopen(filePath,"r");
+   FILE* fp = fopen(filePath.c_str(),"r");
    if ( !fp )
    {
       ErrLog( << "Could not read public cert from " << filePath );
@@ -84,14 +131,31 @@ Security::loadMyPublicCert( char* filePath )
 
 
 bool 
-Security::loadMyPrivateKey( const Data& password, char* filePath )
-{
-   if ( !filePath )
-   {
-      filePath = "/home/cullen/certs/id_key.pem";
+Security::loadRootCerts(  const Data& filePath )
+{ 
+   assert( !filePath.empty() );
+   
+   certAuthorities = X509_STORE_new();
+   assert( certAuthorities );
+   
+   if ( X509_STORE_load_locations(certAuthorities,filePath.c_str(),NULL) != 1 )
+   {  
+      ErrLog( << "Error reading contents of root cert file " << filePath );
+      return false;
    }
    
-   FILE* fp = fopen(filePath,"r");
+   DebugLog( << "Loaded public CAs");
+
+   return true;
+}
+
+
+bool 
+Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
+{
+   assert( !filePath.empty() );
+   
+   FILE* fp = fopen(filePath.c_str(),"r");
    if ( !fp )
    {
       ErrLog( << "Could not read private key from " << filePath );
@@ -194,7 +258,7 @@ Security::sign( Contents* bodyIn )
    
    Data outData(outBuf,size);
   
-   // DebugLog( << "Signed body is <" << outData << ">" );
+   // DebugLog( << "Signed body is <" << outData.hex() << ">" );
 
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
    assert( outBody );
@@ -244,29 +308,20 @@ Security::uncode( Pkcs7Contents* sBody )
       ErrLog( << "Problems doing decode of PKCS7 object" );
       return NULL;
    }
-    BIO_flush(in);
+   BIO_flush(in);
 #endif
-
-   X509_STORE* store;
-   store = X509_STORE_new();
-   assert( store);
-   
-   if ( X509_STORE_load_locations(store,"/home/cullen/certs/root.pem",NULL) != 1 )
-   {  
-      ErrLog( << "Problems doing X509_STORE_load_locations" );
-      assert(0);
-   }
    
    STACK_OF(X509)* certs;
    certs = sk_X509_new_null();
    assert( certs );
-   
    //sk_X509_push(certs, publicCert);
    
    int flags = 0;
    //flags |=  PKCS7_NOVERIFY;
    
-   if ( PKCS7_verify(pkcs7, certs, store, pkcs7Bio, out, flags ) != 1 )
+   assert( certAuthorities );
+   
+   if ( PKCS7_verify(pkcs7, certs, certAuthorities, pkcs7Bio, out, flags ) != 1 )
    {
       ErrLog( << "Problems doing PKCS7_verify" );
       while (1)
@@ -292,10 +347,10 @@ Security::uncode( Pkcs7Contents* sBody )
    BIO_flush(out);
    char* outBuf=NULL;
    long size = BIO_get_mem_data(out,&outBuf);
-   assert( size > 0 );
+   assert( size >= 0 );
    
    Data outData(outBuf,size);
-  
+   
    DebugLog( << "uncodec body is <" << outData << ">" );
 
    PlainContents* outBody = new PlainContents( outData );
