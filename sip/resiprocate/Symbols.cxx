@@ -48,8 +48,8 @@ const Data Symbols::Sips = "sips";
 const Data Symbols::Tel = "tel";
 
 const Data Symbols::Phone = "phone";
-const Data Symbols::Isub = "isub";
-const Data Symbols::Postd = "postd";
+const Data Symbols::Isub = "isub=";
+const Data Symbols::Postd = "postd=";
 
 const Data Symbols::auth = "auth";
 
