@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.60 2002/11/04 06:22:24 jason Exp $
+# $Id: Makefile,v 1.61 2002/11/04 06:29:58 jason Exp $
 
 BUILD = ../../build
 
@@ -13,7 +13,7 @@ endif
 
 TARGET_LIBRARY = libsip2
 
-TESTPROGRAMS =  test1.cxx test2.cxx testSipStack1.cxx testSipMessage.cxx testParserCategories.cxx 
+TESTPROGRAMS =  test2.cxx testSipStack1.cxx testSipMessage.cxx testParserCategories.cxx testNonInviteServerTx.cxx testNonInviteClientTx.cxx 
 #testPreparse.cxx
 
 ifeq ($(ARCH),i686)
@@ -41,6 +41,7 @@ SRC = \
 	ParserCategories.cxx \
 	Preparse.cxx \
 	Resolver.cxx \
+	SendingMessage.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
 	Symbols.cxx \
