@@ -187,6 +187,8 @@ Tuple::isAnyInterface() const
    {
       return memcmp(&m_anonv6.sin6_addr, &in6addr_any, sizeof(in6_addr)) == 0;
    }
+#else
+   return false;
 #endif
 }
 

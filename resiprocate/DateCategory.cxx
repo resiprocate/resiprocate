@@ -239,7 +239,7 @@ DateCategory::DayOfWeekFromData(const Data& dow)
    static const int MAX_HASH_VALUE = 12;
 
    register const char *str = dow.data();
-   register size_type len = dow.size();
+   register Data::size_type len = dow.size();
 
    static struct days wordlist[] =
       {
@@ -342,7 +342,7 @@ DateCategory::MonthFromData(const Data& mon)
    static const int MAX_HASH_VALUE = 33;
 
    register const char *str = mon.data();
-   register size_type len = mon.size();
+   register Data::size_type len = mon.size();
 
    static struct months wordlist[] =
       {
