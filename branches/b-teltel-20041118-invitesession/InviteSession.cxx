@@ -18,6 +18,13 @@
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/compat.hxx"
 
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif 
+
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32)
 #pragma warning( disable : 4355 ) // using this in base member initializer list
