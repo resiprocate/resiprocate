@@ -133,10 +133,6 @@ class DialogUsageManager
 	  
       // throws if not found
       BaseUsage* getUsage(const BaseUsage::Handle& handle);
-
-      bool validateRequest(const SipMessage& request);
-      bool validateTo(const SipMessage& request);
-      bool mergeRequest(const SipMessage& request);
       
       Dialog& findOrCreateDialog(SipMessage* msg);
       Dialog& findDialog(DialogId id);
@@ -145,6 +141,11 @@ class DialogUsageManager
       BaseCreator& findCreator(DialogId id);
 
       void prepareInitialRequest(SipMessage& request);
+      void processRequest(const SipMessage& request);
+      void processResponse(const SipMessage& response);
+      bool validateRequest(const SipMessage& request);
+      bool validateTo(const SipMessage& request);
+      bool mergeRequest(const SipMessage& request);
       
       HashMap<DialogSetId, DialogSet* > mDialogSetMap;
 
@@ -152,6 +153,7 @@ class DialogUsageManager
       RedirectManager* mRedirectManager;
       ClientAuthManager* mClientAuthManager;
       ServerAuthManager* mServerAuthManager;  
+
     
       InviteSessionHandler* mInviteSessionHandler;
       ClientRegistrationHandler* mClientRegistrationHandler;
