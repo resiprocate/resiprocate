@@ -16,9 +16,7 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, 
    : BaseSubscription(dum, dialog, request),
      mOnNewSubscriptionCalled(false)
 {
-   BaseCreator* creator = mDialog.mDialogSet.getCreator();
-   assert(creator);
-   mLastRequest = creator->getLastRequest();
+   mLastRequest = request;
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
 }
 
@@ -51,13 +49,37 @@ ClientSubscription::dispatch(const SipMessage& msg)
          handler->onNewSubscription(getHandle(), msg);
          mOnNewSubscriptionCalled = true;
       }         
-
-      int expires = 0;
+      int expires = 0;      
+      //default to 60 seconds so non-compliant endpoints don't result in leaked usages
       if (msg.exists(h_SubscriptionState) && msg.header(h_SubscriptionState).exists(p_expires))
       {
          expires = msg.header(h_SubscriptionState).param(p_expires);
       }
-
+      else
+      {
+         expires = 60;
+      }
+      if (!mLastRequest.exists(h_Expires))
+      {
+         mLastRequest.header(h_Expires).value() = expires;
+      }
+      
+      //if no subscription state header, treat as an extension. Only allow for
+      //refer to handle non-compliant implementations
+      if (!msg.exists(h_SubscriptionState))
+      {
+         if (msg.header(h_Event).value() == "refer")
+         {
+            handler->onUpdateExtension(getHandle(), msg);
+         }
+         else
+         {
+            handler->onTerminated(getHandle(), msg);
+            delete this;
+         }
+         return;
+      }
+         
       if (msg.header(h_SubscriptionState).value() == "active")
       {
          if (expires)
@@ -118,7 +140,6 @@ ClientSubscription::requestRefresh()
 {
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
    mLastRequest.header(h_CSeq).sequence()++;
-   
    //!dcm! -- need a mechanism to retrieve this for the event package...part of
    //the map that stores the handlers, or part of the handler API
    //mLastRequest.header(h_Expires).value() = 300;   
