@@ -95,7 +95,7 @@ class FdSet
          return ::select(size, &read, &write, NULL, &tv);
       }
 
-      int selectMiliSeconds(unsigned long ms)
+      int selectMilliSeconds(unsigned long ms)
       {
          struct timeval tv;
          tv.tv_sec = (ms/1000);
