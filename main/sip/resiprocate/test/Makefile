@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.20 2002/12/02 23:43:43 derekm Exp $
+# $Id: Makefile,v 1.21 2002/12/04 20:46:27 derekm Exp $
 
 USE_SSL = 1
 
@@ -31,6 +31,7 @@ TESTPROGRAMS =	\
 		testSipMessageMemory.cxx \
 		testTransactionFSM.cxx \
 		lg.cxx \
+		testDigestAuthentication.cxx \
 #	        testTcpTransport.cxx \
 
 SRC = \
