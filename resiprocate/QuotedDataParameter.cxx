@@ -3,13 +3,16 @@
 #endif
 
 #include <cassert>
+#include "resiprocate/ParseException.hxx"
 #include "resiprocate/QuotedDataParameter.hxx"
 #include "resiprocate/Symbols.hxx"
+#include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/ParseException.hxx"
 
 using namespace resip;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 QuotedDataParameter::QuotedDataParameter(ParameterTypes::Type type,
                                          ParseBuffer& pb,
@@ -18,7 +21,9 @@ QuotedDataParameter::QuotedDataParameter(ParameterTypes::Type type,
 {
    if (!mQuoted)
    {
-      pb.fail(__FILE__, __LINE__);
+      DebugLog (<< "Fixing unquoted parameter to be quoted: " << mValue);
+      mQuoted = true; // may want to fail in this case if we are being strict
+      //pb.fail(__FILE__, __LINE__);
    }
 }
 
