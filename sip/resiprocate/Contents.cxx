@@ -301,16 +301,28 @@ Contents::parseHeaders(ParseBuffer& pb)
       return;
    }
 
-   DebugLog(<< "Contents::parseHeaders");
+#if 1
+   const char* start = pb.position();
+   Data all( start, pb.end()-start);
+   DebugLog(<< "Contents::parseHeaders" << all.escaped() );
+#endif
 
    Data headerName;
-   while (!pb.eof() &&
-          !(*pb.position() == Symbols::CR[0] &&
-            *(pb.position()+1) == Symbols::LF[0]))
+
+   while ( !pb.eof() )
    {
+      if ( *pb.position() == Symbols::CR[0] )
+      {
+         if ( *(pb.position()+1) == Symbols::LF[0] )
+         {
+            break;
+         }
+      }
+            
       const char* anchor = pb.skipWhitespace();
       pb.skipToOneOf(Symbols::COLON, ParseBuffer::Whitespace);
       pb.data(headerName, anchor);
+
       pb.skipWhitespace();
       pb.skipChar(Symbols::COLON[0]);
       anchor = pb.skipWhitespace();
@@ -472,4 +484,13 @@ Contents::encodeHeaders(ostream& str) const
 
    str << Symbols::CRLF;
    return str;
+}
+
+
+Data
+Contents::getBodyData() const 
+{
+   ErrLog( << "Need to implement getBodyData function for " << getType() );
+   assert(0);
+   return Data::Empty;
 }

@@ -13,6 +13,7 @@
 #include "sip2/sipstack/ParserCategories.hxx"
 #include "sip2/sipstack/PlainContents.hxx"
 #include "sip2/sipstack/Pkcs7Contents.hxx"
+#include "sip2/sipstack/MultipartSignedContents.hxx"
 #include "sip2/sipstack/Security.hxx"
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/Pidf.hxx"
@@ -143,9 +144,7 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
 
    setOutbound( *msg );
 
-#if 1
-   ErrLog( "About to send " << *msg );
-#endif
+   //ErrLog( "About to send " << *msg );
 
    mStack->send( *msg );
 
@@ -322,6 +321,22 @@ TuIM::processMessageRequest(SipMessage* msg)
    bool encrypted=false;
 
 #ifdef USE_SSL
+   MultipartSignedContents* mBody = dynamic_cast<MultipartSignedContents*>(contents);
+   if ( mBody )
+   {
+      Security* sec = mStack->security;
+      assert(sec);
+      
+      contents = sec->uncodeSigned( mBody, &signedBy, &sigStat );
+      if ( !contents )
+      { 
+         Uri from = msg->header(h_From).uri();
+         InfoLog( << "Some problem decoding multipart/signed message");
+         
+         mCallback->receivePageFailed( from );
+      }    
+   }
+
    Pkcs7Contents* sBody = dynamic_cast<Pkcs7Contents*>(contents);
    if ( sBody )
    {

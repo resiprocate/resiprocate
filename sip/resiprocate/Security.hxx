@@ -17,7 +17,7 @@ namespace Vocal2
 class Contents;
 class Pkcs7Contents;
 class Security;
-class MultipartMixedContents;
+class MultipartSignedContents;
 
 
 class TlsConnection
@@ -98,7 +98,7 @@ class Security
       bool haveCert();
       Contents* sign( Contents* );
       Pkcs7Contents* pkcs7Sign( Contents* );
-      MultipartMixedContents* multipartSign( Contents* );
+      MultipartSignedContents* multipartSign( Contents* );
       bool havePublicKey( const Data& recipCertName );
       Pkcs7Contents* encrypt( Contents* , const Data& recipCertName );
       Pkcs7Contents* signAndEncrypt( Contents* , const Data& recipCertName );
@@ -129,7 +129,13 @@ class Security
       // saves on disk
 
       Contents* uncode( Pkcs7Contents*,       
-                        Data* signedBy, SignatureStatus* sigStat, bool* encryped ); // returns NULL if fails 
+                        Data* signedBy, 
+                        SignatureStatus* sigStat, 
+                        bool* encryped ); // returns NULL if fails 
+
+      Contents* uncodeSigned( MultipartSignedContents*,       
+                              Data* signedBy, 
+                              SignatureStatus* sigStat ); // returns NULL if fails 
 
    private:
       Contents* uncodeSingle( Pkcs7Contents*, bool verifySig,

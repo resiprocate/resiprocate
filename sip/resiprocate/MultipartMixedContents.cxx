@@ -97,9 +97,8 @@ MultipartMixedContents::encodeParsed(std::ostream& str) const
    encodeHeaders(str);
 
    const Data& boundaryToken = mType.param("boundary");
-   Data boundary(boundaryToken.size() + 6, true);
+   Data boundary(boundaryToken.size() + 4, true);
    boundary = Symbols::CRLF;
-   boundary += "_=";
    boundary += Symbols::DASHDASH;
    boundary += boundaryToken;
 
@@ -111,6 +110,7 @@ MultipartMixedContents::encodeParsed(std::ostream& str) const
       str << boundary << Symbols::CRLF;
       (*i)->encode(str);
    }
+
    str << boundary << Symbols::DASHDASH;
    return str;
 }
@@ -121,61 +121,58 @@ MultipartMixedContents::encodeParsed(std::ostream& str) const
 void 
 MultipartMixedContents::parse(ParseBuffer& pb)
 {
-   DebugLog(<< "MultipartMixedContents::parse");
-
    parseHeaders(pb);
-   // back up two characters to include the CRLF in the boundary, sigh
-   pb.reset(pb.position()-2);
 
-   // determine the boundary
    const Data& boundaryToken = mType.param("boundary");
+   
    Data boundary(boundaryToken.size() + 4, true);
-   boundary = Symbols::CRLF;
+   boundary += Symbols::CRLF;
    boundary += Symbols::DASHDASH;
    boundary += boundaryToken;
 
-   pb.skipToChars(boundary);
+   Data boundaryNoCRLF(boundaryToken.size() + 2, true);
+   boundaryNoCRLF += Symbols::DASHDASH;
+   boundaryNoCRLF += boundaryToken;
+
+   pb.skipToChars(boundaryNoCRLF);
+   pb.skipN(boundaryNoCRLF.size());
+   pb.assertNotEof();
+
    do
    {
-      DebugLog(<< "MultipartMixedContents::parse <" << pb.position() << ">");
       // skip over boudary
-      pb.skipN(boundary.size());
+ 
+      assert( *pb.position() == Symbols::CR[0] );
+      pb.skipChar();
+      assert( *pb.position() == Symbols::LF[0] );
+      pb.skipChar();
+      
+      pb.assertNotEof();
 
-      if (*pb.position() == Symbols::DASH[0])
-      {
-         pb.skipChar();
-         if (*pb.position() != Symbols::DASH[0])
-         {
-            // not really a boundary
-            continue;
-         }
-         // terminating boundary
-         break;
-      }
-      else if (*pb.position() == Symbols::CR[0])
-      {
-         pb.skipChar();
-         if (*pb.position() != Symbols::LF[0])
-         {
-            // not really a boundary
-            continue;
-         }
-      }
-
-      const char* headerStart = pb.skipWhitespace();
+      const char* headerStart = pb.position();
 
       // pull out contents type only
       pb.skipToChars("Content-Type");
-      pb.skipToOneOf(Symbols::COLON, ParseBuffer::Whitespace);
-      pb.skipWhitespace();
-      const char* typeStart = pb.skipChar(Symbols::COLON[0]);
+      pb.assertNotEof();
 
+      pb.skipToChar(Symbols::COLON[0]);
+      pb.skipChar();
+      pb.assertNotEof();
+      
+      pb.skipWhitespace();
+      const char* typeStart = pb.position();
+      pb.assertNotEof();
+      
       // determine contents-type header buffer
       pb.skipToTermCRLF();
+      pb.assertNotEof();
 
       ParseBuffer subPb(typeStart, pb.position() - typeStart);
       Mime contentType;
       contentType.parse(subPb);
+      //DebugLog( <<"got type " << contentType );
+      
+      pb.assertNotEof();
 
       // determine contents buffer
       pb.skipToChars(boundary);
@@ -183,8 +180,22 @@ MultipartMixedContents::parse(ParseBuffer& pb)
       Data tmp;
       pb.data(tmp, headerStart);
       mContents.push_back(createContents(contentType, tmp));
+
+      pb.skipN(boundary.size());
+
+      const char* loc = pb.position();
+      pb.skipChar();
+      pb.skipChar();
+      Data next;
+      pb.data(next, loc);
+
+      if ( next == Symbols::DASHDASH )
+      {
+         break;
+      }
+      pb.reset( loc );
    }
-   while (!pb.eof());
+   while ( !pb.eof() );
 
    // replace the boundary
    setBoundary();
