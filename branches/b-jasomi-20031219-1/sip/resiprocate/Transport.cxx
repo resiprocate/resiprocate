@@ -359,7 +359,6 @@ Transport::makeFailedBasicCheckResponse(const SipMessage& msg,
     return 0;
   }
 
-  // !ah! YUCK! SendData ctor copies the data! Ugh.
   InfoLog(<<"Sending response directly to " << dest << " : " << errMsg->brief() );
   SendData * sd = new SendData( dest, encoded, Data::Empty );
   
