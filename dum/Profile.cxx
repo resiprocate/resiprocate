@@ -16,6 +16,8 @@ Profile::Profile() :
    mHasUserAgent(false),
    mHasOverrideHostPort(true)
 {
+   addAdvertisedCapability(Headers::Type::Accept);  
+   addAdvertisedCapability(Headers::Type::Supported);  
 }
 
 void
@@ -166,6 +168,30 @@ Tokens
 Profile::getSupportedLanguages()
 {
    return mSupportedLanguages;
+}
+
+void 
+Profile::addAdvertisedCapability(const Headers::Type header)
+{
+   assert(header == Headers::Type::Accept ||
+	      header == Headers::Type::Allow ||
+		  header == Headers::Type::AcceptEncoding ||
+		  header == Headers::Type::AcceptLanguage ||
+		  header == Headers::Type::Supported);
+
+   mAdvertisedCapabilities.insert(header);
+}
+ 
+bool 
+Profile::isAdvertisedCapability(const Headers::Type header)
+{
+   return mAdvertisedCapabilities.count(header) != 0;
+}
+
+void 
+Profile::clearAdvertisedCapabilities(void)
+{
+   return mAdvertisedCapabilities.clear();
 }
 
 void 
