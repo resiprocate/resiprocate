@@ -63,7 +63,7 @@ class Contents : public LazyParser
       virtual ~Contents();
       Contents& operator=(const Contents& rhs);
 
-      void parseHeaders(ParseBuffer& pb);
+      void preParseHeaders(ParseBuffer& pb);
       std::ostream& encodeHeaders(std::ostream& str) const;
 
       virtual Contents* getContents() {return this;}
@@ -115,9 +115,6 @@ class Contents : public LazyParser
 
    private:
       static std::map<Mime, ContentsFactoryBase*>* FactoryMap;
-
-      friend class SipMessage;
-      bool mHeadersFromMessage;
 };
 
 template<class T>

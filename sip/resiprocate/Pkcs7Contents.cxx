@@ -106,8 +106,6 @@ std::ostream&
 Pkcs7Contents::encodeParsed(std::ostream& str) const
 {
    //DebugLog(<< "Pkcs7Contents::encodeParsed " << mText);
-   encodeHeaders(str);
-
    str << mText;
    return str;
 }
@@ -116,8 +114,6 @@ Pkcs7Contents::encodeParsed(std::ostream& str) const
 void 
 Pkcs7Contents::parse(ParseBuffer& pb)
 {
-   parseHeaders(pb);
-
    const char* anchor = pb.position();
    pb.skipToEnd();
    pb.data(mText, anchor);
