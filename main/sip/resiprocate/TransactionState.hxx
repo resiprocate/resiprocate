@@ -58,7 +58,6 @@ class TransactionState
       void sendToTU(Message* msg) const;
       void sendToWire(Message* msg) const;
       SipMessage* make100(SipMessage* request) const;
-      SipMessage* makeAck(SipMessage* response) const;
       
       SipStack& mStack;
       Machine mMachine;
@@ -69,7 +68,7 @@ class TransactionState
 
       // !rk! The contract for this variable needs to be defined.
       SipMessage* mMsgToRetransmit;
-
+      
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
 };
 
