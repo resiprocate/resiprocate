@@ -1,12 +1,13 @@
 #ifndef Subsystem_hxx
 #define Subsystem_hxx
 
+#include <iostream>
 #include <util/Data.hxx>
 
 namespace Vocal2
 {
 
-class Subsystem : public Data
+class Subsystem 
 {
    public:
       // Add new systems below
@@ -17,7 +18,13 @@ class Subsystem : public Data
       static const Subsystem SIP;    // SIP Stack / Parser
       
    private:
-      Subsystem(const Data& str) : Data(str) {};
+      Subsystem(const char* rhs) : mSubsystem(rhs) {};
+      Subsystem(const Data& rhs);
+      Subsystem& operator=(const Data& rhs);
+
+      Data mSubsystem;
+
+      friend std::ostream& operator<<(std::ostream& strm, const Subsystem& ss);
 };
  
 }

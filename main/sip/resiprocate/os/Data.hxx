@@ -1,23 +1,15 @@
 #ifndef STRINGDATA_H_
 #define STRINGDATA_H_
 
-static const char* const DataHeaderVersion =
-"$Id: Data.hxx,v 1.8 2002/10/04 20:52:01 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.9 2002/10/06 20:59:21 jason Exp $";
 
-//Authors: Sunitha Kumar, Cullen Jennings
-
-#include <cstring>
 #include <string>
+#include <iostream>
 
 namespace Vocal2
 {
 
-#define NOT_FOUND -1
-#define FIRST -2
-#define FOUND 0
-static const char SPACE[] = " ";
-
-class Data : public std::string
+class Data 
 {
       
    public:
@@ -27,107 +19,24 @@ class Data : public std::string
       Data( const Data& data );
       Data( const std::string& str);
       explicit Data( const int value);
-      Data( const unsigned int count, char c);
 
-      //Data& operator=(const Data& data);
+      bool operator==(const Data& rhs) const;
+      bool operator==(const char* rhs) const;
+      bool operator==(const std::string& rhs) const;
 
-      // getData returns a NUL terminated (e.g. a C string) buffer
-      const char* logData() const { return c_str(); }
-      //const char* getData(char* buf, int len) const;
-      //const char* getData(LocalScopeAllocator& lo) const;
-      //const char* getDataBuf() const; // not null terminated
-        
-      //char getChar( int i ) const;  //return the i'th char of string.
-      //void setchar( int i, char c );  //write to the i'th char of string.
+      Data& operator=(const Data& data);
+      Data& operator+=(const Data& rhs);
+      Data operator+(const Data& rhs);
 
-      int length() const { return int(size()); }
+      bool empty() const { return mRep.empty(); }
+      int size() const { return mRep.size(); }
+      const char* c_str() const { return mRep.c_str(); }
+      const char* data() const { return mRep.data(); }
 
-      //string convertString() const;
-      int convertInt() const;
-
-      // match
-      int match(const Data& match,
-                Data* data,
-                bool replace = false,
-                const Data& replaceWith = "");
-        
-      // removes spaces before and after a string.
-      void removeSpaces();
-
-      // remove whitespace from the beginning and return num chars eaten
-      int eatWhiteSpace();
+   private:
+      std::string mRep;
       
-      //expand requird for expandin headers
-      void expand(const Data& startFrom, 
-                  const Data& findstr, 
-                  const Data& replstr, 
-                  const Data& delimiter);
-
-      /** returns a substring of this object
-          @param first      the first character to be part of the substring
-          @param last       the last character of the substring, or -1 to 
-          mean the last character overall
-          thus, x.substring(0, -1) == x.
-      */
-      Data substring(int first, int last) const;
-
-      //
-      void deepCopy (const Data& src, char ** bufPtr = 0, int *bufLenPtr = 0);
-
-      //
-      int find( const Data& match, int start = 0 );
-
-      // convert this Data to lower case
-      void lowercase();
-
-      // convert this Data to upper case
-      void uppercase();
-
-      /* 
-         match (and eat) the first contiguous block composed of the
-         characters in match, which is outside of double quotes <">
-         and angle brackets "<" and ">". Returned is the data
-         before the matched characters.  If no characters match,
-         return the empty Data.  If matchFail is set to a bool ptr,
-         the bool *matchFail will be set to true if the match
-         fails, and false otherwise.
-
-         This is designed for use in separating a list of
-         parameters at the commas (e.g. Contact:)
-      */
-      Data parseOutsideQuotes(const char* match, 
-                              bool useQuote,
-                              bool useAngle,
-                              bool* matchFail = 0 );
-        
-      /* 
-         match (and eat) the first contiguous block composed of the
-         characters in match. Returned is the data before the
-         matched characters.  If no characters match, return the
-         empty Data.  If matchFail is set to a bool ptr, the bool
-         *matchFail will be set to true if the match fails, and
-         false otherwise.
-      */
-      Data parse(const char* match, bool* matchFail = 0 );
-
-      /* match (and eat) any one of the characters in match.  If
-         matchedChar points to a char, it will be set to the
-         matching character, or \0 if not matched to anything.
-         Returns characters before the match, or the empty string
-         if no characters match.
-      */
-      Data matchChar(const char* match, char* matchedChar = 0);
-
-      /* get the next line in the text, delimited by \r\n or \n .
-         Differs from parse("\r\n", matchFail) in that if there is
-         a blank line (which has the contiguous text \r\n\r\n),
-         parse will merely skip the empty line, while getLine will
-         return the empty line as an empty Data.
-      */
-      Data getLine(bool* matchFail = 0 );
-
-      // remove leading white space.
-      void removeLWS();
+      friend std::ostream& operator<<(std::ostream& strm, const Data& d);
 };
 
 }
@@ -137,16 +46,6 @@ class Data : public std::string
 #include <ext/hash_map>
 namespace __gnu_cxx
 {
-
-struct hash<std::string>
-{
-      size_t operator()(const std::string& __s) const
-      {
-         return __gnu_cxx::__stl_hash_string(__s.c_str());
-      }
-};
-
-
 struct hash<Vocal2::Data>
 {
       size_t operator()(const Vocal2::Data& __s) const
