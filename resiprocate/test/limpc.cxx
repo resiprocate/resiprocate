@@ -385,11 +385,16 @@ processStdin( Uri* dest, bool sign, bool encryp )
             Data text(buf);
             
             Data destValue  = dest->getAor();
+            
+            DebugLog( << "Destination is " << destValue );
+
             Data encFor = Data::Empty;
             if (encryp)
             { 
                encFor = dest->getAorNoPort();
             }
+
+            DebugLog( << "Destination encrypt for is " << encFor );
 
             if ( tuIM->haveCerts(sign,encFor) )
             {
