@@ -22,7 +22,7 @@ class ParserCategory
          : mHeaderField(headerFieldValue),
            mParameters(),
            mUnknownParameters(),
-           mIsParsed(false),
+           mIsParsed(headerFieldValue->mField == 0),
            mMine(false)
       {}
 

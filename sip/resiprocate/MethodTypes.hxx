@@ -19,7 +19,7 @@ typedef enum
    SUBSCRIBE,
    RESPONSE,
    UNKNOWN,
-   MAX_METHODS = UNKNOWN
+   MAX_METHODS
 } MethodTypes;
 
 extern Data MethodNames[MAX_METHODS];
@@ -31,7 +31,6 @@ MethodTypes
 getMethodType(const char* name, int len);
 
 }
-
 
 #endif
 
