@@ -38,11 +38,12 @@ SRC =   \
 	InviteSession.cxx \
 	InviteSessionCreator.cxx \
 	InviteSessionHandler.cxx \
-	MasterProfile.cxx \
 	MergedRequestKey.cxx \
 	NonDialogUsage.cxx \
 	OutOfDialogReqCreator.cxx \
 	PagerMessageCreator.cxx \
+	MasterProfile.cxx \
+	UserProfile.cxx \
 	Profile.cxx \
 	PublicationCreator.cxx \
 	RedirectManager.cxx \
@@ -58,6 +59,5 @@ SRC =   \
 	SubscriptionCreator.cxx \
 	SubscriptionState.cxx \
 	UInt64Hash.cxx \
-	UserProfile.cxx \
 
 include $(BUILD)/Makefile.post
