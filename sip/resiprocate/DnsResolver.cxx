@@ -155,7 +155,8 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
          else
          {
             //should be doing Naptr, Srv, a la 3263 Sec 4.1
-            transport = Transport::UDP;
+           DebugLog(<<"hould be doing Naptr, Srv, a la 3263 Sec 4.1");
+           transport = Transport::UDP;
          }         
       }
    }
