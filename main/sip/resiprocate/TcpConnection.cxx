@@ -97,7 +97,7 @@ TcpConnection::write( const char* buf, const int count )
 bool 
 TcpConnection::hasDataToRead()
 {
-   return true;
+   return false;
 }
 
 bool 
