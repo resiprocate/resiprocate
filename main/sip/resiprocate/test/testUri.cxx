@@ -150,7 +150,7 @@ main(int argc, char* argv[])
 
    {
       Uri tel("tel:+358-555-1234567;pOstd=pP2;isUb=1411");
-      Uri sip(Uri::fromTel(tel, "company.com"));
+      Uri sip(Uri::fromTel(tel, Uri("sip:company.com")));
 
       cerr << "!! " << Data::from(sip) << endl;
       assert(Data::from(sip) == "sip:+358-555-1234567;isub=1411;postd=pp2@company.com;user=phone");
@@ -158,7 +158,7 @@ main(int argc, char* argv[])
 
    {
       Uri tel("tel:+358-555-1234567;foo=bar;aaaa=baz;pOstd=pP2;isUb=1411");
-      Uri sip(Uri::fromTel(tel, "company.com"));
+      Uri sip(Uri::fromTel(tel, Uri("sip:company.com")));
 
       cerr << "!! " << Data::from(sip) << endl;
       assert(Data::from(sip) == "sip:+358-555-1234567;isub=1411;postd=pp2;aaaa=baz;foo=bar@company.com;user=phone");
@@ -166,7 +166,7 @@ main(int argc, char* argv[])
    
    {
       Uri tel("tel:+358-555-1234567;postd=pp22");
-      Uri sip(Uri::fromTel(tel, "foo.com"));
+      Uri sip(Uri::fromTel(tel, Uri("sip:foo.com")));
       assert(Data::from(sip) == "sip:+358-555-1234567;postd=pp22@foo.com;user=phone");
    }
    {
@@ -195,8 +195,8 @@ main(int argc, char* argv[])
    {
       Uri tel1("tel:+358-555-1234567;postd=pp22");
       Uri tel2("tel:+358-555-1234567;POSTD=PP22");
-      Uri sip1(Uri::fromTel(tel1, "foo.com"));
-      Uri sip2(Uri::fromTel(tel2, "foo.com"));
+      Uri sip1(Uri::fromTel(tel1, Uri("sip:foo.com")));
+      Uri sip2(Uri::fromTel(tel2, Uri("sip:foo.com")));
       assert (sip1 == sip2);
       assert (Data::from(sip1) == "sip:+358-555-1234567;postd=pp22@foo.com;user=phone");
       assert (Data::from(sip2) == "sip:+358-555-1234567;postd=pp22@foo.com;user=phone");
@@ -204,8 +204,8 @@ main(int argc, char* argv[])
    {
       Uri tel1("tel:+358-555-1234567;tsp=a.b;phone-context=5");
       Uri tel2("tel:+358-555-1234567;phone-context=5;tsp=a.b");
-      Uri sip1(Uri::fromTel(tel1, "foo.com"));
-      Uri sip2(Uri::fromTel(tel2, "foo.com"));
+      Uri sip1(Uri::fromTel(tel1, Uri("sip:foo.com")));
+      Uri sip2(Uri::fromTel(tel2, Uri("sip:foo.com")));
       assert (sip1 == sip2);
       assert (Data::from(sip1) == "sip:+358-555-1234567;phone-context=5;tsp=a.b@foo.com;user=phone");
       assert (Data::from(sip2) == "sip:+358-555-1234567;phone-context=5;tsp=a.b@foo.com;user=phone");
