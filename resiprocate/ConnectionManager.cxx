@@ -112,12 +112,14 @@ ConnectionManager::buildFdSet(FdSet& fdset)
         i != mReadHead->end(); ++i)
    {
       fdset.setRead((*i)->getSocket());
+      fdset.setExcept((*i)->getSocket());
    }
 
    for (ConnectionWriteList::iterator i = mWriteHead->begin(); 
         i != mWriteHead->end(); ++i)
    {
       fdset.setWrite((*i)->getSocket());
+      fdset.setExcept((*i)->getSocket());
    }
 }
 

@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <errno.h>
+#include <algorithm>
 
 #ifdef WIN32
 #include <winsock2.h>
@@ -93,11 +94,12 @@ class FdSet
       {
          FD_ZERO(&read);
          FD_ZERO(&write);
+         FD_ZERO(&except);
       }
       
       int select(struct timeval& tv)
       {
-         return ::select(size, &read, &write, NULL, &tv);
+         return ::select(size, &read, &write, &except, &tv);
       }
 
       int selectMilliSeconds(unsigned long ms)
@@ -105,7 +107,7 @@ class FdSet
          struct timeval tv;
          tv.tv_sec = (ms/1000);
          tv.tv_usec = (ms%1000)*1000;
-         return ::select(size, &read, &write, NULL, &tv);
+         return select(tv);
       }
 
       bool readyToRead(Socket fd)
@@ -116,6 +118,11 @@ class FdSet
       bool readyToWrite(Socket fd)
       {
          return ( FD_ISSET(fd, &write) != 0);
+      }
+
+      bool hasException(Socket fd)
+      {
+          return (FD_ISSET(fd,&except) != 0);
       }
 
       void setRead(Socket fd)
@@ -137,10 +144,22 @@ class FdSet
          size = ( int(fd+1) > size) ? int(fd+1) : size;
       }
       
+      void setExcept(Socket fd)
+      {
+#       if !defined(WIN32)
+          assert( fd < FD_SETSIZE );
+#       endif
+
+          FD_SET(fd,&except);
+          size = std::max( static_cast<int>(fd+1), size );
+      }
+
+
       void clear(Socket fd)
       {
          FD_CLR(fd, &read);
          FD_CLR(fd, &write);
+         FD_CLR(fd, &except);
       }
       
       void reset()
@@ -148,11 +167,13 @@ class FdSet
          size = 0;
          FD_ZERO(&read);
          FD_ZERO(&write);
+         FD_ZERO(&except);
       }
 
       // Make this stuff public for async dns/ares to use
       fd_set read;
       fd_set write;
+      fd_set except;
       int size;
 };
 
