@@ -10,6 +10,7 @@ namespace resip
 class SipMessage;
 class BaseCreator;
 
+//!dcm! -- shutdown/deletion API -- end?
 class ClientRegistration: public BaseUsage
 {
    public:

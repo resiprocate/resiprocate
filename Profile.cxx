@@ -1,8 +1,8 @@
 
 #include "resiprocate/dum/Profile.hxx"
-#include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Inserter.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -249,6 +249,24 @@ Profile::getDigestCredential( const Data& realm )
       return *i;
    }
    
+   static const DigestCredential empty;
+   return empty;
+}
+
+const Profile::DigestCredential&
+Profile::getDigestCredential( const SipMessage& challenge )
+{
+   InfoLog (<< "Useing From header(effective realm: " <<  challenge.header(h_From).uri().host() << " ) to find credential");   
+   const Data& host = challenge.header(h_From).uri().host();
+   for (DigestCredentials::const_iterator it = mDigestCredentials.begin(); 
+        it != mDigestCredentials.end(); it++)
+   {
+      //should check username evetually
+      if (it->realm == host)
+      {
+         return *it;
+      }
+   }
    static const DigestCredential empty;
    return empty;
 }

@@ -125,6 +125,7 @@ DialogSet::dispatch(const SipMessage& msg)
          if ( mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg ) )
          {
             InfoLog( << "about to retransmit request with digest credentials" );
+            InfoLog( << getCreator()->getLastRequest() );
             
             mDum.send(getCreator()->getLastRequest());
             
