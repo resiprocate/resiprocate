@@ -2,8 +2,6 @@
 #  define usleep(t) Sleep(t)
 #endif
 
-#define HAVE_POPT_H
-
 #if defined (HAVE_POPT_H)
 #include <popt.h>
 #endif
@@ -282,7 +280,8 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
          mCertServer(getSecurity()),
          mPrivateKeyServer(getSecurity()),
          mCertUpdater(getSecurity()),
-         mPrivateKeyUpdater(getSecurity())
+         mPrivateKeyUpdater(getSecurity()),
+         mDone(false)
       {
          addTransport(UDP, 5100);
          addTransport(TCP, 5100);
