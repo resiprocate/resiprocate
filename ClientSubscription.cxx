@@ -48,7 +48,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
 
       if (!mOnNewSubscriptionCalled)
       {
-         InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To)  << "Terminated");                   
+         InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To));
          handler->onNewSubscription(getHandle(), msg);
          mOnNewSubscriptionCalled = true;
       }         
@@ -71,7 +71,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
       //refer to handle non-compliant implementations
       if (!msg.exists(h_SubscriptionState))
       {
-         if (msg.header(h_Event).value() == "refer")
+         if (msg.exists(h_Event) && msg.header(h_Event).value() == "refer")
          {
             SipFrag* frag  = dynamic_cast<SipFrag*>(msg.getContents());
             if (frag)

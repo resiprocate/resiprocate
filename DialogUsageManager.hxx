@@ -19,6 +19,7 @@
 namespace resip 
 {
 
+class Security;
 class SipStack;
 class FdSet;
 class Profile;
@@ -69,11 +70,19 @@ class DialogUsageManager : public HandleManager
       void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
       void shutdownIfNoUsages(DumShutdownHandler*, unsigned long giveUpSeconds=0);
       void forceShutdown(DumShutdownHandler*);
-      
+
       bool addTransport( TransportType protocol,
-                         int port, 
+                         int port=0, 
                          IpVersion version=V4,
-                         const Data& ipInterface = Data::Empty);
+                         const Data& ipInterface = Data::Empty, 
+                         const Data& sipDomainname = Data::Empty, // only used
+                                                                  // for TLS
+                                                                  // based stuff 
+                         const Data& privateKeyPassPhrase = Data::Empty,
+                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1 );
+
+      Security& getSecurity();
+      
       Data getHostAddress();
 
       void setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory>);
@@ -257,9 +266,14 @@ class DialogUsageManager : public HandleManager
       bool validateTo(const SipMessage& request);
       bool mergeRequest(const SipMessage& request);
 
+      void processPublish(const SipMessage& publish);
+
       void removeDialogSet(const DialogSetId& );      
 
       bool checkEventPackage(const SipMessage& request);
+
+      bool queueForIdentityCheck(SipMessage* msg);
+      bool processIdentityCheckResponse(const SipMessage& msg);
 
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
@@ -305,6 +319,16 @@ class DialogUsageManager : public HandleManager
          Destroying
       } ShutdownState;
       ShutdownState mShutdownState;
+
+      // from ETag -> ServerPublication
+      typedef std::map<Data, ServerPublication*> ServerPublications;
+      ServerPublications mServerPublications;
+      typedef std::map<Data, SipMessage*> RequiresCerts;
+      RequiresCerts mRequiresCerts;      
+      // from Event-Type+document-aor -> ServerSubscription
+      // Managed by ServerSubscription
+      typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
+      ServerSubscriptions mServerSubscriptions;
 };
 
 }
