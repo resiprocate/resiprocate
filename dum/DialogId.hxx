@@ -41,10 +41,13 @@ class DialogId
 #if defined(HASH_MAP_NAMESPACE)
 namespace HASH_MAP_NAMESPACE
 {
+
+template<>
 struct hash<resip::DialogId>
 {
       size_t operator()(const resip::DialogId& id) const;
 };
+
 }
 #elif defined(__INTEL_COMPILER)
 namespace std { size_t hash_value(const resip::DialogId& id); }
