@@ -54,14 +54,10 @@ class ServerInviteSession: public InviteSession
       /// Rejects an INVITE with a response like 3xx,4xx,5xx, or 6xx. 
       void reject(int statusCode);
       
-      /// Rejects an offer at the SIP level. So this can send a 487 to a
-      /// reINVITE or and UPDATE
-      void rejectOffer(int statusCode);
-      
       void process(const SipMessage& msg);
 
       virtual InviteSession::Handle getSessionHandle();
-      ClientInviteSession::Handle getHandle() {return mHandle;}
+      ServerInviteSession::Handle getHandle() {return mHandle;}
 
    private:
       friend class DialogUsageManager;

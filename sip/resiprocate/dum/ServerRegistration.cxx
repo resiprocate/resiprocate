@@ -1,7 +1,11 @@
 #include "ServerRegistration.hxx"
+#include "DialogUsageManager.hxx"
+#include "Dialog.hxx"
 
-ServerRegistration::ServerRegistration(DialogUsageManager& dum)
-   : mHandle(dum)
+ServerRegistration::ServerRegistration(DialogUsageManager& dum,
+                                       Dialog& dialog)
+   : BaseUsage(dum, dialog),
+     mHandle(dum)
 {}
 
 ServerRegistration::Handle::Handle(DialogUsageManager& dum)
