@@ -701,7 +701,7 @@ SipMessage::getContents() const
    {
       if (!exists(h_ContentType))
       {
-         DebugLog(<< "SipMessage::getContents: ContentType header does not exist");
+         StackLog(<< "SipMessage::getContents: ContentType header does not exist - implies no contents");
          return 0;
       }
       DebugLog(<< "SipMessage::getContents: " << header(h_ContentType));
