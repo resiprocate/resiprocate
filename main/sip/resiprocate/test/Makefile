@@ -6,20 +6,15 @@ include $(BUILD)/Makefile.pre
 PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
 LDLIBS += -lncurses 
 
-CXXFLAGS += -I/sw/include
-LDFLAGS  += -L/sw/lib
-
 # this is so that popt only works where there is popt
 # To enable popt, add USE_POPT=true to sip/build/Makefile.conf
 # This only applies to the non-autotools build system
 ifdef USE_POPT
 LDLIBS += -lpopt
-TESTPROGRAMS +=
 endif
 
 TESTPROGRAMS += makeSelfCert.cxx \
 		limpc.cxx \
-		testIdentity.cxx \
 		SipTortureTests.cxx \
 		testRSP-2.cxx \
 		testPidf.cxx \
@@ -59,6 +54,7 @@ TESTPROGRAMS += makeSelfCert.cxx \
 		testSipMessageMemory.cxx \
 		testSpeed.cxx \
 		testThreadIf.cxx \
+		testTime.cxx \
 		testTimer.cxx \
 		testAppTimer.cxx \
 		testTransactionFSM.cxx \
@@ -73,7 +69,7 @@ TESTPROGRAMS += makeSelfCert.cxx \
 	        testParserCategories.cxx \
 	        testRandomHex.cxx \
 	        testSipMessage.cxx \
-	        testSipStack1.cxx \
+	        testSipStack1.cxx 
 
 SRC = 		TestSupport.cxx
 
