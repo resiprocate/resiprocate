@@ -1,5 +1,5 @@
-#ifndef HeaderTypes_hxx
-#define HeaderTypes_hxx
+#if !defined(RESIP_HEADERTYPES_HXX)
+#define RESIP_HEADERTYPES_HXX 
 
 #include "resiprocate/supported.hxx"
 #include "resiprocate/os/Data.hxx"
@@ -95,6 +95,8 @@ class Headers
  
 }
 
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -144,5 +146,3 @@ class Headers
  * <http://www.vovida.org/>.
  *
  */
-
-#endif

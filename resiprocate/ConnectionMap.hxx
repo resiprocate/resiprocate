@@ -1,5 +1,5 @@
-#if !defined(ConnectionMap_hxx)
-#define ConnectionMap_hxx
+#if !defined(RESIP_CONNECTIONMAP_HXX)
+#define RESIP_CONNECTIONMAP_HXX 
 
 
 #include <list>

@@ -1,5 +1,5 @@
-#ifndef IntegerParameter_hxx
-#define IntegerParameter_hxx
+#if !defined(RESIP_INTEGERPARAMETER_HXX)
+#define RESIP_INTEGERPARAMETER_HXX 
 
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/Parameter.hxx"
@@ -33,11 +33,7 @@ class IntegerParameter : public Parameter
  
 }
 
-
-
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

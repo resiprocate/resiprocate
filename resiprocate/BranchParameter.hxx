@@ -1,5 +1,5 @@
-#ifndef BranchParameter_hxx
-#define BranchParameter_hxx
+#if !defined(RESIP_BRANCHPARAMETER_HXX)
+#define RESIP_BRANCHPARAMETER_HXX 
 
 #include "resiprocate/Parameter.hxx"
 #include "resiprocate/ParameterTypeEnums.hxx"
@@ -58,7 +58,6 @@ class BranchParameter : public Parameter
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -1,5 +1,5 @@
-#ifndef MethodTypes_hxx
-#define MethodTypes_hxx
+#if !defined(RESIP_METHODTYPES_HXX)
+#define RESIP_METHODTYPES_HXX 
 
 namespace resip
 {
@@ -35,7 +35,6 @@ getMethodType(const char* name, int len);
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
