@@ -20,13 +20,6 @@ using namespace Vocal2;
 
 
 void
-TuIM::PageCallback::receivedPage(const Data& msg, const Uri& from )
-{
-   assert(0);
-}
-
-
-void
 TuIM::ErrCallback::sendPageFailed(const Uri& dest )
 {
    assert(0);
@@ -60,7 +53,7 @@ TuIM::TuIM(SipStack* stack,
 }
 
       
-void TuIM::sendPage(const Data& text, const Uri& dest )
+void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& encryptFor)
 {
    DebugLog( << "send to <" << dest << ">" << "\n" << text );
 
@@ -76,45 +69,36 @@ void TuIM::sendPage(const Data& text, const Uri& dest )
    SipMessage* msg = Helper::makeRequest(target, from, contact, MESSAGE);
    assert( msg );
 
-   // !cj! huge memory leaks here - need to free the bodies 
-
-#if 0 // plain 
-   PlainContents body(text);
-   msg->setContents(&body);
-#endif
-
-#if 0 // sign
-   Security* sec = mStack->security;
-   assert(sec);
-    
-   PlainContents body(text);
-   Pkcs7Contents* sBody = sec->sign( &body );
-    
-   msg->setContents( sBody );
-#endif
-
-#if 1 // encrypt
-   Security* sec = mStack->security;
-   assert(sec);
-    
-   PlainContents body(text);
-   Pkcs7Contents* eBody = sec->encrypt( &body , dest.getAor());
+   PlainContents plainBody(text);
+   Contents* body = &plainBody;
    
-   msg->setContents( eBody );
-#endif
-
-#if 0  // sign and encrypt 
-   Security* sec = mStack->security;
-   assert(sec);
+   if ( sign )
+   {
+      Security* sec = mStack->security;
+      assert(sec);
     
-   PlainContents body(text);
-   Pkcs7Contents* sBody = sec->sign( &body );
-   Pkcs7Contents* fBody = sec->encrypt( sBody , dest.getAor());
+      Contents* old = body;
+      body = sec->sign( body );
+      if (old!=&plainBody) delete old;
+   }
    
-   msg->setContents( fBody );
-#endif
-
+   if ( !encryptFor.empty() )
+   {
+      Security* sec = mStack->security;
+      assert(sec);
+      
+      Contents* old = body;
+      body = sec->encrypt( body, encryptFor );
+      if (old!=&plainBody) delete old;
+   }
+   
+   msg->setContents(body);
    mStack->send( *msg );
+
+   if ( body != &plainBody )
+   {
+      delete body;
+   }
 }
 
 
@@ -159,7 +143,9 @@ TuIM::process()
             DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
 
             Data signedBy;
-         
+            Security::SignatureStatus sigStat;
+            bool encrypted;
+            
             Pkcs7Contents* sBody = dynamic_cast<Pkcs7Contents*>(contents);
             if ( sBody )
             {
@@ -167,7 +153,7 @@ TuIM::process()
                Security* sec = mStack->security;
                assert(sec);
 
-               contents = sec->uncode( sBody, &signedBy );
+               contents = sec->uncode( sBody, &signedBy, &sigStat, &encrypted );
                if ( !contents )
                {
                   ErrLog( << "Some problem decoding SMIME message");
@@ -185,7 +171,7 @@ TuIM::process()
                   Uri from = msg->header(h_From).uri();
                   DebugLog ( << "got message from " << from );
                   
-                  mPageCallback->receivedPage( text, from );
+                  mPageCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
                }
                else
                {

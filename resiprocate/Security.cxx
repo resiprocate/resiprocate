@@ -357,89 +357,50 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
 }
 
 
-Security::OperationNeeded 
-Security::operationNeeded( Contents* inBody )
-{ 
-   assert( inBody );
-
-   
-   Pkcs7Contents* body = dynamic_cast<Pkcs7Contents*>( inBody );
-   if ( !body )
-   {
-      return isPlain;
-   }
- 
-   const char* p = body->text().data();
-   int   s = body->text().size();
-   
-   BIO* in;
-   in = BIO_new_mem_buf( (void*)p,s);
-   assert(in);
-   DebugLog( << "ceated in BIO");
-    
-#if 0
-   BIO* pkcs7Bio=NULL;
-   PKCS7* pkcs7 = SMIME_read_PKCS7(in,&pkcs7Bio);
-   if ( !pkcs7 )
-   {
-      ErrLog( << "Problems doing SMIME_read_PKCS7" );
-      return NULL;
-   }
-   if ( pkcs7Bio )
-   {
-      ErrLog( << "Can not deal with mutlipart mime version stuff " );
-      return NULL;
-   }  
-#else
-   PKCS7* pkcs7 = d2i_PKCS7_bio(in, NULL);
-   if ( !pkcs7 )
-   {
-      ErrLog( << "Problems doing decode of PKCS7 object" );
-      return isBad;
-   }
-   BIO_flush(in);
-#endif
-   
-   int type=OBJ_obj2nid(pkcs7->type);
-   switch (type)
-   {
-      case NID_pkcs7_signed:
-      {
-         return isSigned;
-      }
-      
-      case NID_pkcs7_enveloped:
-      {
-         return isEncrypted;
-      }
-      
-      default:
-         return isUnknown;
-   }
-
-   assert(0);
-   return isUnknown;
-}
-
-
 Contents* 
-Security::uncode( Pkcs7Contents* sBody, Data* signedBy )
+Security::uncode( Pkcs7Contents* sBody, Data* signedBy, SignatureStatus* sigStat, bool* encrypted )
 {
-   Contents* outBody = uncodeSingle( sBody, signedBy );
+   SignatureStatus localSigStat;
+   if (!sigStat) sigStat=&localSigStat;
+   bool localEncyped;
+   if (!encrypted) encrypted=&localEncyped;
+   Data localSignedby;
+   if (!signedBy) signedBy=&localSignedby;
+
+   *encrypted = false;
+   *sigStat = none;
+   *signedBy = Data::Empty;
+   
+   InfoLog( << "Calling first layer of Security:uncode");
+   Contents* outBody = uncodeSingle( sBody, true, signedBy, sigStat, encrypted );
+   if ( (!outBody) && (*sigStat==isBad ) )
+   {
+      InfoLog( << "Retry first layer of Security:uncode");
+      outBody = uncodeSingle( sBody, false, signedBy, sigStat, encrypted ); 
+   }
    
    Pkcs7Contents* recuriveBody = dynamic_cast<Pkcs7Contents*>( outBody );
    if ( recuriveBody )
    {
-      InfoLog( << "Recursively calling Security::uncode");
-      Contents* ret = uncodeSingle( recuriveBody, signedBy );
-      return ret;
+      InfoLog( << "Calling Second layer of Security:uncode");
+
+      outBody = uncodeSingle( recuriveBody, true, signedBy, sigStat, encrypted );
+      if ( (!outBody) && (*sigStat==isBad ) )
+      {
+         InfoLog( << "Retry Second layer of Security:uncode");
+         outBody = uncodeSingle( recuriveBody, false, signedBy, sigStat, encrypted ); 
+      }
+      
+      delete recuriveBody;
    }
    
    return outBody;
 }
 
+
 Contents* 
-Security::uncodeSingle( Pkcs7Contents* sBody, Data* signedBy )
+Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,  
+                        Data* signedBy, SignatureStatus* sigStatus, bool* encrypted )
 {
    int flags=0;
    flags |= PKCS7_BINARY;
@@ -552,9 +513,11 @@ Security::uncodeSingle( Pkcs7Contents* sBody, Data* signedBy )
    STACK_OF(X509)* certs;
    certs = sk_X509_new_null();
    assert( certs );
-   //sk_X509_push(certs, publicCert);
    
-   //flags |=  PKCS7_NOVERIFY;
+   if ( !verifySig )
+   {
+      flags |= PKCS7_NOVERIFY;
+   }
    
    assert( certAuthorities );
    
@@ -590,6 +553,10 @@ Security::uncodeSingle( Pkcs7Contents* sBody, Data* signedBy )
            
            return NULL;
         }
+        if ( encrypted )
+        {
+           *encrypted = true;
+        }
      }
      break;
       
@@ -598,6 +565,12 @@ Security::uncodeSingle( Pkcs7Contents* sBody, Data* signedBy )
          if ( PKCS7_verify(pkcs7, certs, certAuthorities, pkcs7Bio, out, flags ) != 1 )
          {
             ErrLog( << "Problems doing PKCS7_verify" );
+
+            if ( sigStatus )
+            {
+               *sigStatus = isBad;
+            }
+
             while (1)
             {
                const char* file;
@@ -616,6 +589,24 @@ Security::uncodeSingle( Pkcs7Contents* sBody, Data* signedBy )
             }
             
             return NULL;
+         }
+         if ( sigStatus )
+         {
+            if ( flags & PKCS7_NOVERIFY )
+            {
+               *sigStatus = notTrusted;
+            }
+            else
+            {
+               if (false) // !cj! TODO look for this cert in store
+               {
+                  *sigStatus = trusted;
+               }
+               else
+               {
+                  *sigStatus = caTrusted;
+               }
+            }
          }
       }
       break;
