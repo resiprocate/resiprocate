@@ -138,6 +138,13 @@ class Helper
                                             const Data& cnonce,
                                             unsigned int& nonceCount,
                                             Data& nonceCountString);      
+      static Auth makeChallengeResponseAuthWithA1(SipMessage& request,
+                                                  const Data& username,
+                                                  const Data& passwordHashA1,
+                                                  const Auth& challenge,
+                                                  const Data& cnonce,
+                                                  unsigned int& nonceCount,
+                                                  Data& nonceCountString);      
 
       static Data makeResponseMD5WithA1(const Data& a1,
                                         const Data& method, const Data& digestUri, const Data& nonce,
