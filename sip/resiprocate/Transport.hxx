@@ -20,9 +20,11 @@ class SipMessage;
 class SendData
       {
 	  public:
-		  SendData();
-
-            sockaddr_in& destination;
+            SendData(const sockaddr_in& dest)
+               : destination(dest) 
+               {}
+            
+            const sockaddr_in& destination;
             //TransactionId tid;
             const char* buffer;
             size_t length;
