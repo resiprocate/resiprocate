@@ -14,6 +14,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/RedirectManager.hxx"
+#include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
 #include "resiprocate/dum/ServerPublication.hxx"
 #include "resiprocate/dum/ServerRegistration.hxx"
@@ -514,10 +515,18 @@ DialogSet::cancel()
       last--;   
       for (DialogMap::iterator it = mDialogs.begin(); it != last;)
       {
-         //cancel could invalidate it
-         Dialog* d = it->second;
-         it++;
-         d->cancel();
+         //not quite right, should re-structure CANCEL so it does the right
+         //thing for all things.
+         try
+         {
+            //cancel could invalidate it
+            Dialog* d = it->second;
+            it++;
+            d->cancel();
+         }
+         catch(UsageUseException)
+         {
+         }
       }
       last->second->cancel();      
    }
