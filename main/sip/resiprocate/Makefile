@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.141 2004/04/13 04:47:45 jason Exp $
+# $Id: Makefile,v 1.142 2004/04/14 16:27:07 jason Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -39,10 +39,6 @@ SRC = \
 	X_msMsgsInvite.cxx \
 	GenericContents.cxx \
 	SipSession.cxx	\
-	Registration.cxx \
-	Subscription.cxx \
-	DialogSet.cxx \
-	Dialog2.cxx \
 	XMLCursor.cxx \
 	UnknownHeaderType.cxx \
 	UnknownParameterType.cxx \
@@ -84,6 +80,7 @@ SRC = \
 	QopParameter.cxx \
 	QuotedDataParameter.cxx \
 	QuotedDataParameter.cxx \
+	Registration.cxx \
 	RportParameter.cxx \
 	SdpContents.cxx \
 	Security.cxx \
@@ -116,6 +113,12 @@ SRC = \
 	ParameterHash.cxx \
 	ApiCheck.cxx \
 	MethodHash.cxx
+
+#	Preparse.cxx \
+#	Subscription.cxx \
+#	DialogSet.cxx \
+#	Dialog2.cxx \
+
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
