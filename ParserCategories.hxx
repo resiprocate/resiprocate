@@ -21,7 +21,7 @@ class HeaderFieldValueList;
 class Token : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = false};
+      enum {isCommaTokenizing = true};
 
       Token() : ParserCategory(), mValue() {}
       Token(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type), mValue() {}
