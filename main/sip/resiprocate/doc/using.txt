@@ -21,11 +21,11 @@ Each header type defined in RFC3261 has a corresponding header access token. For
 example, the header access tokens for To and From headers are h_To and
 h_From. The rule for determing the header access token from a header as named in
 RFC3261 is to remove all dashes from the header name and prefix the result with
-"h_". For example, "Record-Route" becomes h_RecordRoute.
+"h_". For example, "Content-Disposition" becomes h_ContentDisposition.
 
 Given a existing message, fetching the To header is simply:
 <code>
-const To::Type& to = message->header(h_To);
+const NameAddr& to = message->header(h_To);
 </code>
 
 The header methods are both accessors and setters. Accessing a header that isn't
@@ -34,7 +34,7 @@ To header:
 
 <code>
 SipMessage message;
-// displaName and uri are accessor/setter methods on NameAddr, the storage class
+// displayName and uri are accessor/setter methods on NameAddr, the storage class
 // for To headers.
 message.header(h_To).displayName() = "Speedy Shannon";
 message.header(h_To).uri() = Uri("speedy@home.com");
@@ -54,7 +54,7 @@ if (!message->exists(h_To))
 }
 else
 {
-   To::Type& to = message->header(h_To);
+   NameAddr& to = message->header(h_To);
    ...
 }
 </code>
@@ -86,18 +86,20 @@ SipMessage* message = ...;
 message->remove(h_RecordRoutes);
 </code>
 
-
 Each header type is either a single instance or multiple instance. For example,
 the header type To is single instance while the header type Record-Route is
 multiple instance. The return types differ accordingly. 
 
-Multiple instance headers are accessed through a collection of the appropriate
-header type. As a programming hint, access tokens for multiple headers are
-pluralized. This works fine for all headers but Expires; the Expires header
-happens to be single but the access token is the plural-ambiguous h_Expires.
+Multiple instance headers are accessed through a collection of the
+appropriate header type. As a programming hint, access tokens for
+multiple headers are pluralized.
+
+Similarly, the collection of each header type is named the pluralized
+header type. Below is an example accessing a collection of NameAddr
+instances.
 
 <code>
-NameAddrs& rr = message.header(h_RecordRoute);
+NameAddrs& rr = message.header(h_RecordRoutes);
 </code>
 
 The collection of header values can be iterated in the usual stl like fashion.
@@ -123,10 +125,11 @@ rr.push_back(na);
 
 --
 
-The request/status lines are special cases of headers. They are accessed by the
-header method with the header type tokens h_RequestLine and h_StatusLine. A
-message may have one or the other of these types but never both. To determine if
-a message has a Request Line, use:
+The request/status lines are special cases of headers. They are
+accessed by the header method with the header type tokens
+h_RequestLine and h_StatusLine. A message may have one or the other of
+these headers but never both. To determine if a message has a Request
+Line, use:
 
 <code>
 if (message->isRequest())
@@ -142,7 +145,6 @@ if (message->isResponse())
 {
    ...
 }
-
 </code>
 
 Note that a newly created message has neither a request or status line. The
@@ -151,16 +153,17 @@ application must add one or the other for the message to be well formed.
 Body:
 ====
 
-A message body is accessed with the getContents method. The retured value is of
-type Contents*, an abstract type. The return value must be cast (dynamic_cast is
-recommended for safety) to be used. The content type of a message can be
-determined by examining the Content-Type header of the message. The Content-Type
-return value is Mime, which has a type and subType.
+A message body is accessed with the getContents method. The retured
+value is of type Contents*, an abstract type. The return value must be
+cast (dynamic_cast is recommended for runtime type safety) to be
+used. The content type of a message can be determined by examining the
+Content-Type header of the message. 
 
-New message contents are created by instantiating an instance of a type derived
-from Contents. For example, SdpContents. A variety of content types are
-currently supported, including mulitpart, signed, and Pkcs7. New content types
-can be created without difficulty.
+New message contents are created by instantiating an instance of a
+type derived from Contents. For example, SdpContents. A variety of
+content types are currently supported, including mulitpart, signed,
+and Pkcs7. New content types can be created either inside or outside
+of the reSIP library (see Creating a New Contents Type).
 
 Setting the contents of a message takes care of setting the Content-Type and
 Content-Length of the message.
@@ -175,67 +178,70 @@ Recursive multipart contents are supported.
 
 --
 
-Every RFC 3261 header has a corresponding access token. However, many of the
-headers have identical form. For example. The To and From headers both consist
-of a display name and a URI. The To and From headers are managed
-programmatically as NameAddr instances. The classes that manage headers are
-responsible for parsing header text, providing storage and access during the
-life of the message, and serializing the header to text for transmission.
+Every RFC 3261 header has a corresponding access token. However, many
+of the headers have identical form. For example. The To and From
+header values both consist of a display name and a URI. The To and
+From headers are managed programmatically as NameAddr instances. The
+class that manages each header type is responsible for parsing header
+text, providing storage and access during the life of the message, and
+serializing the header value to text for transmission.
 
-The table below shows the reSIP types for each of the built in RFC header types
-currently supported by reSIP. The reSIP type is the return type of a SipMessage
-header call with the access token as its argument.
+The table below shows the reSIP types for each of the built in RFC
+headers currently supported by reSIP. The reSIP type is the return
+type of a SipMessage header call with the access token as its
+argument.
 
 Table of headers
 ================
-RFC name                reSIP access token        reSIP type
-------------------------------------------------------------
-Accept                  h_Accepts                 Mime            
-Accept-Encoding         h_AcceptEncodings         Token           
-Accept-Language         h_AcceptLanguages         Token           
-Alert-Info              h_AlertInfos              GenericUri      
-Allow                   h_Allows                  Token           
-Authentication-Info     h_AuthenticationInfos     Auth            
-Authorization           h_Authorizations          Auth            
-Call-ID                 h_CallId                  CallId           // dlb should be h_CallID
-Call-Info               h_CallInfos               GenericUri      
-Contact                 h_Contacts                NameAddr        
-Content-Disposition     h_ContentDisposition      Token           
-Content-Encoding        h_ContentEncoding         Token           
-Content-Language        h_ContentLanguages        Token           
-Content-Length          h_ContentLength           IntegerCategory 
-Content-Type            h_ContentType             Mime            
-CSeq                    h_CSeq                    CSeqCategory    
-Date                    h_Date                    DateCategory    
-Error-Info              h_ErrorInfos              GenericUri      
-Expires                 h_Expires                 IntegerCategory //single
-From                    h_From                    NameAddr        
-In-ReplyTo              h_InReplyTo               CallId          
-Max-Forwards            h_MaxForwards             IntegerCategory 
-MIME-Version            h_MIMEVersion             Token           
-Min-Expires             h_MinExpires              IntegerCategory 
-Organization            h_Organization            StringCategory              
-Priority                h_Priority                Token           
-Proxy-Authenticate      h_ProxyAuthenticates      Auth            
-Proxy-Authorization     h_ProxyAuthorizations     Auth            
-Proxy-Require           h_ProxyRequires           Token           
-Record-Route            h_RecordRoutes            NameAddr        
-Reply-To                h_ReplyTo                 NameAddr        
-Require                 h_Requires                Token           
-Retry-After             h_RetryAfter              IntegerCategory 
-Route                   h_Routes                  NameAddr        
-Server                  h_Server                  StringCategory  
-Subject                 h_Subject                 StringCategory  
-Supported               h_Supporteds              Token           
-Timestamp               Timestamp                 StringCategory  
-To                      h_To                      NameAddr        
-Unsupported             h_Unsupporteds            Token           
-User-Agent              h_UserAgent               StringCategory  
-Via                     h_Vias                    Via             
-Warning                 h_Warnings                WarningCategory 
-WWW-Authenticate        h_WWWAuthenticate         Auth            
+RFC name                   reSIP access token         reSIP type
+----------------------------------------------------------------
+Accept                     h_Accepts                  Mimes            
+Accept-Encoding            h_AcceptEncodings          Tokens           
+Accept-Language            h_AcceptLanguages          Tokens           
+Alert-Info                 h_AlertInfos               GenericUris
+Allow                      h_Allows                   Tokens     
+Authentication-Info        h_AuthenticationInfos      Auths          
+Authorization              h_Authorizations           Auths           
+Call-ID                    h_CallID, h_CallId         CallID, CallId
+Call-Info                  h_CallInfos                GenericUris
+Contact                    h_Contacts                 NameAddrs     
+Content-Disposition        h_ContentDisposition       Token       
+Content-Encoding           h_ContentEncoding          Token           
+Content-Language           h_ContentLanguages         Tokens           
+Content-Length             h_ContentLength            IntegerCategory 
+Content-Type               h_ContentType              Mime            
+Content-Transfer-Encoding  h_ContentTransferEncoding  StringCategory	  
+CSeq                       h_CSeq                     CSeqCategory    
+Date                       h_Date                     DateCategory    
+Error-Info                 h_ErrorInfos               GenericUris
+Expires                    h_Expires                  IntegerCategory
+From                       h_From                     NameAddr        
+In-ReplyTo                 h_InReplyTo                CallID, CallId
+Max-Forwards               h_MaxForwards              IntegerCategory 
+MIME-Version               h_MIMEVersion              Tokens
+Min-Expires                h_MinExpires               IntegerCategory 
+Organization               h_Organization             StringCategory              
+Priority                   h_Priority                 Token           
+Proxy-Authenticate         h_ProxyAuthenticates       Auths          
+Proxy-Authorization        h_ProxyAuthorizations      Auths
+Proxy-Require              h_ProxyRequires            Tokens           
+Record-Route               h_RecordRoutes             NameAddrs
+Reply-To                   h_ReplyTo                  NameAddr        
+Require                    h_Requires                 Tokens       
+Retry-After                h_RetryAfter               IntegerCategory 
+Route                      h_Routes                   NameAddrs
+Server                     h_Server                   StringCategory  
+Subject                    h_Subject                  StringCategory  
+Supported                  h_Supporteds               Tokens
+Timestamp                  h_Timestamp                StringCategory  
+To                         h_To                       NameAddr        
+Unsupported                h_Unsupporteds             Tokens          
+User-Agent                 h_UserAgent                StringCategory  
+Via                        h_Vias                     Vias          
+Warning                    h_Warnings                 WarningCategories
+WWW-Authenticate           h_WWWAuthenticates         Auths
 
-(dlb: const headers accessors return non-const references -- should have const
+(!dlb!: const headers accessors return non-const references -- should have const
 and non-const versions of all settable accessors)
 
 The following table lists each of the reSIP types for managing headers. A
@@ -290,7 +296,7 @@ Auth
   RFC name: 
     challenge
   Description:
-    Identifies the authentication scheme in a challenge response
+    Identifies the authentication scheme in a challenge response.
   Example:
     Digest-Authenticate: username="Alice", realm="atlanta.com",
                          nonce="84a4cc6f3082121f32b42a2187831a9e",
@@ -323,7 +329,7 @@ CSeqCategory
    RFC Headers:
      CSeq
 
-CallId
+CallID
 ======
   RFC name:
     Call-ID
@@ -334,7 +340,7 @@ CallId
   Parts:
     RFC Name          accessor        reSIP type      settable
     ----------------------------------------------------------
-                      value()         Data          yes  
+                      value()         Data            yes  
    RFC Headers:
      Call-ID
 
@@ -426,7 +432,7 @@ Mime
     m-type            type()          Data            yes
     m-subtype         subType()       Data            yes
   RFC Headers:
-    Accept
+    Accept (*)
     Content-Type
    
 NameAddr        
@@ -552,18 +558,18 @@ reSIP programmer must take responsibilty when adding parameters to a header.
 A corollary to this simplifying assumption is that the form of a parameter is
 independent of the header it appears in. A ttl parameter must always be followed
 by an integer even when used in a header that does not specify the syntax for
-a ttl parameter.
+a ttl parameter. (!dlb! potential compatibility issue)
 
 Parameters, like headers, corresponds to a small set of classes that manage
-parsing, accesing, and emitting.
+parsing, accesing, and serializing to text.
 
-(dlb: QuotedDataParameter should be super of DataParameter -- currently
+(!dlb!: QuotedDataParameter should be super of DataParameter -- currently
 allow setting quoted on QuotedDataParameter)
 
 Table of Parameters
 ===================
-RFC name                reSIP access token        reSIP type      
-------------------------------------------------------------
+RFC name               reSIP access token       reSIP type      
+-----------------------------------------------------------
   access-type          p_accessType            DataParameter
   algorithm            p_algorithm             DataParameter
   boundary             p_boundary              DataParameter
@@ -644,7 +650,7 @@ DataParameter
   RFC name:
     token
   Description:
-    Quoted or unquoted. Unquoted must be word.
+    Quoted or unquoted. Unquoted must be single word.
   Example:
     Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bK776asdhds
   Parts:
@@ -724,7 +730,7 @@ IntegerParameter
   Description:
     Integer
   Example:
-    Accept-Language: da, en-gb;q=0.8, en;q=0.7
+    sip:alice@atlanta.com;maddr=239.255.255.1;ttl=15
   Parts:
     accessor                reSIP type      settable
     ------------------------------------------------
@@ -866,6 +872,25 @@ Contents
       7GhIGfHfYT64VQbnj756
 
       --boundary42-
+  Parts:
+    accessor                   reSIP type      settable  notes                                      
+    ----------------------------------------------------------
+    exists                     bool            no
+    remove                     void	       no
+    header		       <various>       yes 
+      // shared header types 
+      H_ContentType::Type& header(const H_ContentType& headerType) const; 
+      H_ContentDisposition::Type& header(const H_ContentDisposition& headerType) const; 
+      H_ContentTransferEncoding::Type& header(const H_ContentTransferEncoding& headerType) const; 
+      H_ContentLanguages::Type& header(const H_ContentLanguages& headerType) const; 
+ 
+      // MIME specific header types 
+      H_ContentID::Type& header(const H_ContentID& headerType) const; 
+      H_ContentDescription::Type& header(const H_ContentDescription& headerType) const; 
+ 
+      int& verion() {return mVersion;} 
+      int& minorVersion() {return mMinorVersion;} 
+
 
 MultipartRelatedContents
 MultipartMixedContents
