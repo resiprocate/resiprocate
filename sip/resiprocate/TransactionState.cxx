@@ -1301,7 +1301,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
    if (mMachine == ServerNonInvite || mMachine == ServerInvite)
    {
       assert(mDnsResult == 0);
-
+      DebugLog(<<"sendToWire(): replying to mSource=" << mSource);
       if (resend)
       {
          mController.mTransportSelector.retransmit(sip, mSource);
@@ -1353,7 +1353,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
    else // reuse the last dns tuple
    {
       assert(mTarget.getType() != UNKNOWN_TRANSPORT);
-
+      DebugLog(<<"DNS results being used for mTarget=" << mTarget);
       if (resend)
       {
          mController.mTransportSelector.retransmit(sip, mTarget);
