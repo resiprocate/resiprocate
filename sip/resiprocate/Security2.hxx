@@ -75,25 +75,31 @@ class BaseSecurity
       void addDomainCertPEM(const Data& domainName, const Data& certPEM);
       void addDomainCertDER(const Data& domainName, const Data& certDER);
       bool hasDomainCert(const Data& domainName) const;
-      Data getDomainCert(const Data& domainName) const;
+      bool removeDomainCert(const Data& domainName);
+      Data getDomainCertDER(const Data& domainName) const;
 
-      void addDomainPrivateKeyPEM(const Data& domainName, const Data& cert);
-      bool hasDomainPrivateKey(const Data& domainName);
+      void setDomainPassPhrase(const Data& domainName, const Data& passphrase);
+      bool hasDomainPassPhrase(const Data& domainName);
 
-      void addUserCertPEM(const Data& aor, const Data& cert);
-      void addUserCertDER(const Data& aor, const Data& cert);
+      void addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM);
+      bool hasDomainPrivateKey(const Data& domainName) const;
+      bool removeDomainPrivateKey(const Data& domainName);
+
+      void addUserCertPEM(const Data& aor, const Data& certPEM);
+      void addUserCertDER(const Data& aor, const Data& certDER);
       bool hasUserCert(const Data& aor);
       bool removeUserCert(const Data& aor);
       Data getUserCertDER(const Data& aor);
 
+      void setUserPassPhrase(const Data& aor, const Data& passPhrase);
+      bool hasUserPassPhrase(const Data& aor);
+
       void addUserPrivateKeyPEM(const Data& aor, const Data& cert);
-      void addUserPrivateKeyDER(const Data& aor, const Data& cert);
+      //void addUserPrivateKeyDER(const Data& aor, const Data& cert);
       bool hasUserPrivateKey(const Data& aor);
       bool removeUserPrivateKey(const Data& aor);
       Data getUserPrivateKeyDER(const Data& aor);
 
-      bool hasPassPhrase(const Data& aor);
-      void setPassPhrase(const Data& aor, const Data& passphrase);
 
       // produces a detached signature
       MultipartSignedContents* sign(const Data& senderAor, Contents* );
@@ -131,6 +137,7 @@ class BaseSecurity
 
       X509Map        mDomainCerts;
       PrivateKeyMap  mDomainPrivateKeys;
+      PassPhraseMap  mDomainPassPhrases;
 
       X509Map        mUserCerts;
       PrivateKeyMap  mUserPrivateKeys;
