@@ -8,6 +8,7 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/Socket.hxx"
 
+#if defined(USE_SSL)
 #include <openssl/e_os2.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
@@ -16,6 +17,7 @@
 #include <openssl/pkcs7.h>
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
+#endif
 
 using namespace resip;
 
@@ -29,6 +31,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    mSslType( sslType ),
    mDomain(domain)
 {
+#if defined(USE_SSL)
    DebugLog (<< "Creating TLS connection " << tuple << " on " << fd);
 
    mSsl = NULL;
@@ -104,7 +107,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    {
       throw Transport::Exception( Data("TLS setup failed"), __FILE__, __LINE__ );
    }
-   
+#endif // USE_SSL   
 }
 
 
@@ -125,6 +128,7 @@ TlsConnection::fromState(TlsConnection::State s)
 TlsConnection::State
 TlsConnection::checkState()
 {
+#if defined(USE_SSL)
    //DebugLog(<<"state is " << fromState(mState));
 
    if (mState == Up || mState == Broken)
@@ -260,7 +264,7 @@ TlsConnection::checkState()
    mState = Up;
    
    computePeerName(); // force peer name to get checked and perhaps cert loaded
-   
+#endif // USE_SSL   
    return mState;
 }
 
@@ -268,6 +272,7 @@ TlsConnection::checkState()
 int 
 TlsConnection::read(char* buf, int count )
 {
+#if defined(USE_SSL)
    assert( mSsl ); 
    assert( buf );
 
@@ -321,12 +326,15 @@ TlsConnection::read(char* buf, int count )
    }
    //DebugLog(<<"SSL bytesRead="<<bytesRead);
    return bytesRead;
+#endif // USE_SSL
+   return -1;
 }
 
 
 int 
 TlsConnection::write( const char* buf, int count )
 {
+#if defined(USE_SSL)
    assert( mSsl );
    assert( buf );
    int ret;
@@ -391,24 +399,33 @@ TlsConnection::write( const char* buf, int count )
    DebugLog( << "Did TLS write"  );
 
    return ret;
+#endif // USE_SSL
+   return -1;
 }
 
 
 bool 
 TlsConnection::hasDataToRead() // has data that can be read 
 {
-    if (checkState() != Up)
-	return false;
+#if defined(USE_SSL)
+   if (checkState() != Up)
+   {
+      return false;
+   }
 
    int p = SSL_pending(mSsl);
    //DebugLog(<<"hasDataToRead(): "<<p);
    return (p>0);
+#else // USE_SSL
+   return -1;
+#endif 
 }
 
 
 bool 
 TlsConnection::isGood() // has data that can be read 
 {
+#if defined(USE_SSL)
    if ( mBio == 0 )
    {
       return false;
@@ -419,7 +436,8 @@ TlsConnection::isGood() // has data that can be read
    {
       return false;
    }
-      
+
+#endif       
    return true;
 }
 
@@ -434,6 +452,7 @@ TlsConnection::getPeerName()
 void
 TlsConnection::computePeerName()
 {
+#if defined(USE_SSL)
    assert(mSsl);
    
    if (checkState() != Up)
@@ -559,5 +578,6 @@ TlsConnection::computePeerName()
    }
 
    X509_free(cert); cert=NULL;
+#endif // USE_SSL
 }
 
