@@ -93,25 +93,17 @@ doit(int serverResponse, int expectedRetrans, int expectedClientResponse)
     TestBufType::const_iterator iter = cbuf.begin();
     int i=0;
     for (; iter != cbuf.end(); iter++, i++ )
-      {
-	newbuf[i] = *iter;
-      }
+    {
+       newbuf[i] = *iter;
+    }
 
-      SipMessage* message = new SipMessage(true);
+    SipMessage* message = Helper::makeMessage(newbuf);
+    delete [] newbuf;
       
-      // set the received from information into the received= parameter in the
-      // via
-      // sockaddr_in from;
-      // message->setSource(from);
-
-
-      // Tell the SipMessage about this buffer.
-      message->addBuffer(newbuf);
-
-      Preparse preParser(*message, newbuf, len);
-
-      bool ppStatus = preParser.process();
-
+    // set the received from information into the received= parameter in the
+    // via
+    // sockaddr_in from;
+    // message->setSource(from);
 
     // send the response message
 
