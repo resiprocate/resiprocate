@@ -200,6 +200,7 @@ Dialog::makeInitialRegister(const NameAddr& registrar, const NameAddr& aor)
    SipMessage* msg = Helper::makeRegister( registrar, aor, mContact );
    assert( msg );
 
+   mRequestUri = msg->header(h_RequestLine).uri();
    mLocalEmpty = false;
    mLocalSequence = msg->header(h_CSeq).sequence();
    mCallId = msg->header(h_CallId);
@@ -207,6 +208,7 @@ Dialog::makeInitialRegister(const NameAddr& registrar, const NameAddr& aor)
    mLocalTag = msg->header(h_From).param(p_tag);  
    mRemoteUri = msg->header(h_To);
    mLocalUri = msg->header(h_From);
+   mCreated = true;
    
    mRemoteTarget = mRemoteUri;
    
@@ -220,6 +222,7 @@ Dialog::makeInitialSubscribe(const NameAddr& target, const NameAddr& from)
    SipMessage* msg = Helper::makeSubscribe( target, from, mContact );
    assert( msg );
 
+   mRequestUri = msg->header(h_RequestLine).uri();
    mLocalEmpty = false;
    mLocalSequence = msg->header(h_CSeq).sequence();
    mCallId = msg->header(h_CallId);
@@ -238,6 +241,7 @@ Dialog::makeInitialPublish(const NameAddr& target, const NameAddr& from)
    SipMessage* msg = Helper::makePublish( target, from, mContact );
    assert( msg );
 
+   mRequestUri = msg->header(h_RequestLine).uri();
    mLocalEmpty = false;
    mLocalSequence = msg->header(h_CSeq).sequence();
    mCallId = msg->header(h_CallId);
@@ -256,6 +260,7 @@ Dialog::makeInitialMessage(const NameAddr& target, const NameAddr& from)
    SipMessage* msg = Helper::makeMessage( target, from, mContact );
    assert( msg );
 
+   mRequestUri = msg->header(h_RequestLine).uri();
    mLocalEmpty = false;
    mLocalSequence = msg->header(h_CSeq).sequence();
    mCallId = msg->header(h_CallId);
@@ -274,6 +279,7 @@ Dialog::makeInitialInvite(const NameAddr& target, const NameAddr& from)
    SipMessage* msg = Helper::makeInvite( target, from, mContact );
    assert( msg );
 
+   mRequestUri = msg->header(h_RequestLine).uri();
    mLocalEmpty = false;
    mLocalSequence = msg->header(h_CSeq).sequence();
    mCallId = msg->header(h_CallId);
@@ -353,6 +359,14 @@ Dialog::makeOptions()
 }
 
 SipMessage*
+Dialog::makePublish()
+{
+   SipMessage* request = makeRequestInternal(PUBLISH);
+   incrementCSeq(*request);
+   return request;
+}
+
+SipMessage*
 Dialog::makeRequest(resip::MethodTypes method)
 {
    assert(method != ACK);
@@ -382,6 +396,14 @@ Dialog::makeAck(const SipMessage& original)
       request->header(h_Authorizations) = original.header(h_Authorizations);
    }
    request->header(h_CSeq).sequence() = original.header(h_CSeq).sequence();
+   return request;
+}
+
+SipMessage*
+Dialog::makeAck()
+{
+   SipMessage* request = makeRequestInternal(ACK);
+   copyCSeq(*request);
    return request;
 }
 
@@ -438,18 +460,16 @@ Dialog::clear()
 SipMessage*
 Dialog::makeRequestInternal(MethodTypes method)
 {
-   assert(mCreated);
    SipMessage* request = new SipMessage;
    RequestLine rLine(method);
-   
-   if ( method == REGISTER )
+
+   if (!mCreated)
    {
-       rLine.uri().scheme() = mRemoteTarget.uri().scheme();
-       rLine.uri().host() = mRemoteTarget.uri().host();
+      rLine.uri() = mRequestUri;
    }
    else
    {
-       rLine.uri() = mRemoteTarget.uri();
+      rLine.uri() = mRemoteTarget.uri();
    }
    
    request->header(h_RequestLine) = rLine;
