@@ -1,11 +1,12 @@
-#include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/MessageFilterRule.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/StackThread.hxx"
-#include "resiprocate/MessageFilterRule.hxx"
 #include "resiprocate/dum/DumThread.hxx"
 #include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Log.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #include "repro/CommandLineParser.hxx"
 #include "repro/Proxy.hxx"
@@ -98,8 +99,10 @@ main(int argc, char** argv)
    }
  
    UserDb userDb;
-   
+
    Proxy proxy(stack, requestProcessors, userDb);
+   proxy.addDomain(DnsUtil::getLocalHostName());
+   proxy.addDomain(DnsUtil::getLocalIpAddress());
    for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
         i != args.mDomains.end(); ++i)
    {

@@ -63,7 +63,7 @@ class ResponseContext
       void sendRequest(const resip::SipMessage& request);
       void cancelClientTransaction(const Branch& branch);
       void cancelProceedingClientTransactions();
-      void removeClientTransaction(const resip::SipMessage& response);
+      void removeClientTransaction(const resip::Data& transactionId);
       int getPriority(const resip::SipMessage& msg);
 
       RequestContext& mRequestContext;
@@ -87,6 +87,9 @@ class ResponseContext
 
 std::ostream&
 operator<<(std::ostream& strm, const repro::ResponseContext& rc);
+
+std::ostream& 
+operator<<(std::ostream& strm, const repro::ResponseContext::Branch& b);
 
 }
 #endif
