@@ -21,7 +21,8 @@ using namespace Vocal2::PreparseStateTable;
 
 Edge *** mTransitionTable = 0;
 
-// HACK REMOVE !ah!
+
+#if !defined(NDEBUG) && defined(DEBUG)
 
 Data showN(const char * p, size_t l)
 {
@@ -75,6 +76,8 @@ workString(int m)
    s += ']';
    return s;
 }
+
+#endif
 
 const int X = -1;
 const char XC = -1;
@@ -144,22 +147,45 @@ PreparseStateTable::InitStatePreparseStateTable()
       }
    }
 
+   // Assert that the Symbols package is as we expect.
+   // Better than redefining symbols here.
+   // This is only done once at initialisation.
+
+   assert(Symbols::CR && strlen(Symbols::CR) == 1);
+   assert(Symbols::LF && strlen(Symbols::LF) == 1);
+   assert(Symbols::LA_QUOTE && strlen(Symbols::LA_QUOTE) == 1);
+   assert(Symbols::RA_QUOTE && strlen(Symbols::RA_QUOTE) == 1);
+   assert(Symbols::DOUBLE_QUOTE && strlen(Symbols::DOUBLE_QUOTE) == 1);
+   assert(Symbols::COLON && strlen(Symbols::COLON) == 1);
+   assert(Symbols::B_SLASH && strlen(Symbols::B_SLASH) == 1);
+   assert(Symbols::COMMA && strlen(Symbols::COMMA) == 1);
+   assert(Symbols::SPACE && strlen(Symbols::SPACE) == 1);
+   assert(Symbols::TAB && strlen(Symbols::TAB) == 1);
+
    // Setup the table with useful transitions.
+   // NOTE: This is done to (1) make them ints (2) make the automatic diagram
+   // have reasonable symbol names.  DO NOT put Symbols::XX in the AE() calls.
+
+   const int CR = (int)(*Symbols::CR);
+   const int LF = (int)(*Symbols::LF);
+   const int LAQUOT = (int)(*Symbols::LA_QUOTE);
+   const int RAQUOT = (int)(*Symbols::RA_QUOTE);
+   const int QUOT = (int)(*Symbols::DOUBLE_QUOTE);
+   
+   const int COLON = (int)(*Symbols::COLON);
+   const int LSLASH = (int)(*Symbols::B_SLASH);
+   const int COMMA = (int)(*Symbols::COMMA);
+   const char LWS[3]  =
+      {
+         (*Symbols::SPACE),
+         (*Symbols::TAB),
+         0
+      }
+   ;
+
 
    // AE -- add edge(s)
    // AE ( state, disp, char, newstate, work)
-
-
-   const int CR = (int)'\r';
-   const int LF = (int)'\n';
-   const int LAQUOT = (int)'<';
-   const int RAQUOT = (int)'>';
-   const int QUOT = (int)'\"';
-   const int COLON = (int)':';
-   const int LSLASH = (int)'\\';
-   const int COMMA = (int)',';
-   const char LWS[] = " \t";
-
 
    // MUST be AE( format ) so fsm generation will work.
    AE( NewMsg,X,XC,StartLine,actAdd); // all chars
@@ -289,7 +315,7 @@ ostream& showchar(ostream& os, char c)
    
 }
 #endif
-// END HACK REMOVE !ah!
+
 
 bool
 Preparse::process()
@@ -299,7 +325,7 @@ Preparse::process()
       //using namespace PreparseStateTable;
       Edge& e(mTransitionTable[mState][mDisposition][*mPtr]);
 
-#if defined(DEBUG) // || 1
+#if defined(DEBUG)
       DebugLog( << "EDGE " << ::stateName(mState)
                 << " (" << (int) *mPtr << ')'
                 << " -> " << ::stateName(e.nextState)
@@ -316,11 +342,13 @@ Preparse::process()
 #endif
       }
 
-      if (e.workMask & actHdr)
+      if (e.workMask & actHdr) // this edge indicates a header was seen
       {
          mHeader = mAnchorBeg;
          mHeaderLength = mAnchorEnd-mAnchorBeg+1;
          mHeaderType = Headers::getType(mHeader, mHeaderLength);
+
+         // ask header class if this is a header that needs to be split on commas?
          if ( Headers::isCommaTokenizing( mHeaderType ))
          {
             mDisposition = dCommaSep;
@@ -329,14 +357,14 @@ Preparse::process()
          {
             mDisposition = dContinuous;
          }
-         
+#if defined(DEBUG)         
          DebugLog(<<"Hdr \'"
                   << showN(mHeader, mHeaderLength)
                   << "\' Type: " << int(mHeaderType) );
-       
+#endif
       }
 
-      if (e.workMask & actData)
+      if (e.workMask & actData) // there is some header data to pass up
       {
          mSipMessage.addHeader(mHeaderType,
                                mHeader,
@@ -344,20 +372,20 @@ Preparse::process()
                                mAnchorBeg,
                                mAnchorEnd - mAnchorBeg + 1
             );
-                   
+#if defined(DEBUG)                   
          DebugLog(<<"DATA \'"
                   << showN(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1)
                   << "\'");
-         
-
+#endif
       }
 
-      if (e.workMask & actFline)
+      if (e.workMask & actFline) // first line complete.
       {
          DebugLog(<<"FLINE \'"
                   << showN(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1)
                   << "\'");
-         
+
+         mSipMessage.setStartLine(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1);
       }
 
       if (e.workMask & actBack)
