@@ -15,6 +15,7 @@ const Data Symbols::AT_SIGN = "@";
 const Data Symbols::SPACE = " ";
 const Data Symbols::DASH = "-";
 const Data Symbols::DASHDASH = "--";
+const Data Symbols::DOT = ".";
 const Data Symbols::COLON = ":";
 const Data Symbols::EQUALS = "=";
 const Data Symbols::SEMI_OR_EQUAL = ";=";
