@@ -39,7 +39,6 @@ class Transport
       //only call buildFdSet and process if requiresProcess is true. This won't
       //be true for most external transports, or transports that have their own
       //threading model. 
-      virtual bool requiresProcess() = 0;
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
 

@@ -4,6 +4,7 @@
 
 #include "resiprocate/AresDns.hxx"
 #include "resiprocate/AsyncCLessTransport.hxx"
+#include "resiprocate/AsyncStreamTransport.hxx"
 #include "resiprocate/external/AsyncTransportInterfaces.hxx"
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/Uri.hxx"
@@ -117,10 +118,26 @@ TransportSelector::isFinished() const
    return true;
 }
 
-Transport*
+Transport* 
 TransportSelector::addExternalTransport(ExternalAsyncCLessTransport* externalTransport, bool ownedByMe)
 {
    AsyncCLessTransport* transport = new AsyncCLessTransport(mStateMacFifo, externalTransport, ownedByMe);
+   addExternalTransport(transport, ownedByMe);
+   return transport;
+}
+
+Transport* 
+TransportSelector::addExternalTransport(ExternalAsyncStreamTransport* externalTransport, bool ownedByMe)
+{
+   AsyncStreamTransport* transport = new AsyncStreamTransport(mStateMacFifo, externalTransport, ownedByMe);
+   addExternalTransport(transport, ownedByMe);
+   return transport;
+}
+
+void
+TransportSelector::addExternalTransport(Transport* transport, bool ownedByMe)
+{
+//   AsyncCLessTransport* transport = new AsyncCLessTransport(mStateMacFifo, externalTransport, ownedByMe);
    InfoLog (<< "Adding transport: " << transport->getTuple());
    mExternalSelector->externalTransportAdded(transport);
 
@@ -144,8 +161,6 @@ TransportSelector::addExternalTransport(ExternalAsyncCLessTransport* externalTra
       mExactTransports[key] = transport;
       mAnyPortTransports[key] = transport;
    }
-
-   return transport;
 }
 
 // !jf! Note that it uses ipv6 here but ipv4 in the Transport classes (ugggh!)
@@ -347,39 +362,45 @@ TransportSelector::hasDataToSend() const
    return false;
 }
 
-DnsResult*
-TransportSelector::dnsResolve(SipMessage* msg, 
-                              DnsHandler* handler)
+//!jf! the problem here is that DnsResult is returned after looking
+//mDns.lookup() but this can result in a synchronous call to handle() which
+//assumes that dnsresult has been assigned to the TransactionState
+//!dcm! -- that really sucked. I mean, really, really, sucked.  
+DnsResult* 
+TransportSelector::createDnsResult(DnsHandler* handler)
+{
+   return mDns.createDnsResult(handler);
+}
+
+void
+TransportSelector::dnsResolve(DnsResult* result, 
+                              SipMessage* msg)
 {
    // Picking the target destination:
    //   - for request, use forced target if set
    //     otherwise use loose routing behaviour (route or, if none, request-uri)
    //   - for response, use forced target if set, otherwise look at via  
 
-   //!jf! the problem here is that DnsResult is returned after looking
-   //mDns.lookup() but this can result in a synchronous call to handle() which
-   //assumes that dnsresult has been assigned to the TransactionState
-   DnsResult* result=0;
    if (msg->isRequest())
    {
       // If this is an ACK we need to fix the tid to reflect that
       if (msg->hasForceTarget())
       {
           //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
-          result = mDns.lookup(msg->getForceTarget(), handler);
+         mDns.lookup(result, msg->getForceTarget());         
       }
-//       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
-//       {
-//          // put this into the target, in case the send later fails, so we don't
-//          // lose the target
-//          msg->setForceTarget(msg->header(h_Routes).front().uri());
-//          DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
-//          result = mDns.lookup(msg->getForceTarget(), handler);
-//       }
+      else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
+      {
+         // put this into the target, in case the send later fails, so we don't
+         // lose the target
+         msg->setForceTarget(msg->header(h_Routes).front().uri());
+         DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
+         mDns.lookup(result, msg->getForceTarget());         
+      }
       else
       {
          DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri());
-         result = mDns.lookup(msg->header(h_RequestLine).uri(), handler);
+         mDns.lookup(result, msg->header(h_RequestLine).uri());         
       }
    }
    else if (msg->isResponse())
@@ -391,9 +412,6 @@ TransportSelector::dnsResolve(SipMessage* msg,
    {
       assert(0);
    }
-
-   assert(result);
-   return result;
 }
 
 // This method decides what interface a sip request will be sent on. 

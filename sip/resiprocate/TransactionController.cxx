@@ -120,7 +120,7 @@ TransactionController::getTimeTillNextProcessMS()
 #if 1 // !cj! just keep a max of 500ms for good luck - should not be needed   
    if ( ret > 1 )
    {
-      ret = 1;
+      ret = 500;
    }
 #endif
 
