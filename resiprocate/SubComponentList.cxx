@@ -44,7 +44,7 @@ void SubComponentList::insert(SubComponent* param)
    first = param;
 }
 
-SubComponent* SubComponentList::find(SubComponent::ParamType type) const
+SubComponent* SubComponentList::find(SubComponent::Type type) const
 {
    if (first)
    {
@@ -63,7 +63,7 @@ SubComponent* SubComponentList::find(SubComponent::ParamType type) const
    return 0;
 }
 
-void SubComponentList::erase(SubComponent::ParamType type)
+void SubComponentList::erase(SubComponent::Type type)
 {
    if(first)
    {
