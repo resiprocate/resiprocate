@@ -89,6 +89,8 @@ class Symbols
       static const char* Pending;
       static const char* Active;
       static const char* Terminated;
+
+      static const char* pathSep;
 };
 
 }

@@ -118,9 +118,12 @@ TransactionController::addTlsTransport( int port,
                                         const Data& privateKeyPassPhrase,
                                         const Data& domainname,
                                         IpVersion version,
-                                        const Data& ipInterface)
+                                        const Data& ipInterface,
+                                        SecurityTypes::SSLType sslType
+                                        )
 {
-   return mTransportSelector.addTlsTransport(domainname, keyDir, privateKeyPassPhrase, port, version, ipInterface);
+   return mTransportSelector.addTlsTransport(domainname, keyDir, privateKeyPassPhrase, 
+                                             port, version, ipInterface, sslType);
 }
 
 void
