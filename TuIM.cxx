@@ -243,7 +243,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    // see if we already have this subscription
    for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {
-      Dialog* d = *i;
+      Dialog* d = i->dialog;
       assert( d );
       
       if ( d->getCallId() == id )
@@ -258,10 +258,18 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    {
       // create a new subscriber 
       DebugLog ( << "Creating new subscrition dialog ");
-      
-      dialog = new Dialog( NameAddr(mContact) );
 
-      mSubscribers.push_back( dialog );
+      Subscriber s;
+      
+      s.dialog = new Dialog( NameAddr(mContact) );
+
+      Uri from = msg->header(h_From).uri();
+      s.aor = from.getAorNoPort();
+
+      assert( mCallback );
+      s.authorized = mCallback->authorizeSubscription( from );
+      
+      mSubscribers.push_back( s );
    }
    
    dialog->setExpirySeconds( expires );
@@ -528,7 +536,7 @@ TuIM::processResponse(SipMessage* msg)
    // see if it is a notify response
    for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {
-      Dialog* dialog = *i;
+      Dialog* dialog = i->dialog;
       assert( dialog );
       InfoLog( << "check subscriber id =" <<  dialog->getCallId() );
       if ( dialog->getCallId() == id  )
@@ -1028,7 +1036,7 @@ TuIM::setMyPresence( const bool open, const Data& status )
    
    for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {
-      Dialog* dialog = *i;
+      Dialog* dialog = i->dialog;
       assert( dialog );
       
       sendNotify(dialog);
@@ -1121,13 +1129,21 @@ TuIM::addStateAgent( const Uri& uri )
 }
 
 
+bool 
+TuIM::Callback::authorizeSubscription( const Uri& user )
+{
+   return true;
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
+ * modification, are permitted provi
+ded that the following conditions
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
