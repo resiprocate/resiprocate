@@ -4,42 +4,49 @@
 #include <iostream>
 #include <set>
 #include <list>
+#include <map>
 
 #include "resiprocate/Transport.hxx"
+
+struct hostent;
 
 namespace resip
 {
 class DnsInterface;
+class DnsHandler;
 
 class DnsResult
 {
    public:
-      DnsResult(DnsInterface& i);
+      DnsResult(DnsInterface& interface, DnsHandler* handler);
       ~DnsResult();
 
       typedef enum
       {
-         Available, // A result is returned
+         Available, // A result is available now
          Pending,   // More results may be pending 
-         Finished,  // No more results available
+         Finished,  // No more results available and none pending
          Destroyed  // the associated transaction has been deleted
       } Type;
 
       // Check if there are tuples available now. Will load new tuples in if
       // necessary at a lower priority. 
-      bool available();
+      Type available();
       
-      // return the next tuple available for this query. 
+      // return the next tuple available for this query. The caller should have
+      // checked available() before calling next()
       Transport::Tuple next();
 
       // Will delete this DnsResult if no pending queries are out there or wait
       // until the pending queries get responses and then delete
       void destroy();
       
+      // Used to store a NAPTR result
       class NAPTR
       {
          public:
             NAPTR();
+            // As defined by RFC3263
             bool operator<(const NAPTR& rhs) const;
 
             Data key; // NAPTR record key
@@ -56,6 +63,7 @@ class DnsResult
       {
          public:
             SRV();
+            // As defined by RFC3263, RFC2782
             bool operator<(const SRV& rhs) const;
             
             Data key; // SRV record key
@@ -69,13 +77,34 @@ class DnsResult
       };
 
    private:
-      void lookup(const Uri& uri, const Data& tid);
+      // Called by DnsInterface. Has the rules for determining the transport
+      // from a uri as per rfc3263 and then does a NAPTR lookup or an A
+      // lookup depending on the uri
+      void lookup(const Uri& uri);
+
+      // Given a transport and port from uri, return the default port to use
+      int getDefaultPort(Transport::Type transport, int port);
+      
+      // performs an A record lookup on target. May be asynchronous if ares is
+      // used. Otherwise, load the results into mResults
       void lookupARecords(const Data& target);
+
+      // performs a NAPTR lookup on mTarget. May be asynchronous if ares is
+      // used. Otherwise, load the results into mResults
       void lookupNAPTR();
+
+      // peforms an SRV lookup on target. May be asynchronous if ares is
+      // used. Otherwise, load the results into mResults
       void lookupSRV(const Data& target);
     
+      // process a NAPTR record as per rfc3263
       void processNAPTR(int status, unsigned char* abuf, int alen);
+
+      // process an SRV record as per rfc3263 and rfc2782. There may be more
+      // than one SRV dns request outstanding at a time
       void processSRV(int status, unsigned char* abuf, int alen);
+
+      // process an A record as per rfc3263
       void processHost(int status, struct hostent* result);
       
       // compute the cumulative weights for the SRV entries with the lowest
@@ -97,10 +126,12 @@ class DnsResult
                                            const unsigned char* abuf,
                                            int alen);
 
+      // The callbacks associated with ares queries
       static void aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen);
       static void aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen);
       static void aresHostCallback(void *arg, int status, struct hostent* result);
 
+      // Some utilities for parsing dns results
       static const unsigned char* skipDNSQuestion(const unsigned char *aptr,
                                                   const unsigned char *abuf,
                                                   int alen);
@@ -112,32 +143,39 @@ class DnsResult
                                              const unsigned char *abuf, 
                                              int alen,
                                              NAPTR& naptr);
-
-
-      
    private:
       DnsInterface& mInterface;
+      DnsHandler* mHandler;
       int mSRVCount;
       bool mSips;
       Data mTarget;
-      Data mTransactionId;
       Transport::Type mTransport; // current
       int mPort; // current
       Type mType;
       
+      // This is where the current pending (ordered) results are stored. As they
+      // are retrieved by calling next(), they are popped from the front of the list
       std::list<Transport::Tuple> mResults;
       
+      // The best NAPTR record. Only one NAPTR record will be selected
       NAPTR mPreferredNAPTR;
+
+      // used in determining the next SRV record to use as per rfc2782
       int mCumulativeWeight; // for current priority
+
+      // All SRV records sorted in order of preference
       std::set<SRV> mSRVResults;
+
+      // All cached A records associated with this query/queries
       std::map<Data,std::list<struct in_addr> > mARecords;
       
       friend class DnsInterface;
+      friend std::ostream& operator<<(std::ostream& strm, const DnsResult&);
+      friend std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
+      friend std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
 };
 
 
-std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
-std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
 
 }
 

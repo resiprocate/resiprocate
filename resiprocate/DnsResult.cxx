@@ -2,15 +2,17 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/compat.hxx"
+
+#include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsResult.hxx"
-#include "resiprocate/Uri.hxx"
 #include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/Uri.hxx"
 
 #ifndef WIN32
 #include <sys/types.h>
@@ -18,7 +20,10 @@
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <resolv.h>
 #endif
+
 
 // This is here so we can use the same macros to parse a dns result using the
 // standard synchronous unix dns_query call
@@ -56,8 +61,9 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
-DnsResult::DnsResult(DnsInterface& interface) 
+DnsResult::DnsResult(DnsInterface& interface, DnsHandler* handler) 
    : mInterface(interface),
+     mHandler(handler),
      mSRVCount(0),
      mSips(false),
      mTransport(Transport::Unknown),
@@ -71,7 +77,7 @@ DnsResult::~DnsResult()
    assert(mType != Destroyed);
 }
 
-bool
+DnsResult::Type
 DnsResult::available()
 {
    assert(mType != Destroyed);
@@ -79,7 +85,7 @@ DnsResult::available()
    {
       if (!mResults.empty())
       {
-         return true;
+         return Available;
       }
       else
       {
@@ -89,22 +95,24 @@ DnsResult::available()
    }
    else
    {
-      return false;
+      return mType;
    }
 }
 
 Transport::Tuple
 DnsResult::next() 
 {
-   assert(available());
+   assert(available() == Available);
    Transport::Tuple next = mResults.front();
    mResults.pop_front();
+   DebugLog (<< "Returning next dns entry: " << next);
    return next;
 }
 
 void
 DnsResult::destroy()
 {
+   assert(this);
    DebugLog (<< "DnsResult::destroy() " << this);
    
    if (mType == Pending)
@@ -118,22 +126,41 @@ DnsResult::destroy()
 }
 
 void
-DnsResult::lookup(const Uri& uri, const Data& tid)
+DnsResult::lookup(const Uri& uri)
 {
-   DebugLog (<< "DnsResult::lookup " << uri << " : " << tid);
+   InfoLog (<< "DnsResult::lookup " << uri);
    
    assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
    mTarget = uri.exists(p_maddr) ? uri.param(p_maddr) : uri.host();
    mSips = (uri.scheme() == Symbols::Sips);
-   
-   mTransactionId = tid;
+   bool isNumeric = DnsUtil::isIpAddress(mTarget);
+
    if (uri.exists(p_transport))
    {
       mTransport = Transport::toTransport(uri.param(p_transport));
+
+      if (isNumeric) // IP address specified
+      {
+         Transport::Tuple tuple;
+         tuple.transportType = mTransport;
+         tuple.transport = 0;
+         inet_pton(AF_INET, mTarget.c_str(), &tuple.ipv4);
+         mPort = getDefaultPort(mTransport, uri.port());
+         tuple.port = mPort;
+
+         DebugLog (<< "Found immediate result: " << tuple);
+         mResults.push_back(tuple);
+         mType = Available;
+         //mHandler->handle(this); // !jf! should I call this? 
+      }
+      else if (uri.port() != 0)
+      {
+         mPort = uri.port();
+         lookupARecords(mTarget); // for current target and port         
+      }
    }
    else 
    {
-      bool isNumeric = DnsUtil::isIpAddress(mTarget);
       if (isNumeric || uri.port() != 0)
       {
          if (mSips)
@@ -151,23 +178,13 @@ DnsResult::lookup(const Uri& uri, const Data& tid)
             tuple.transportType = mTransport;
             tuple.transport = 0;
             inet_pton(AF_INET, mTarget.c_str(), &tuple.ipv4);
-            tuple.port = uri.port();
-            if (tuple.port == 0)
-            {
-               if (mSips) 
-               {
-                  mPort = 5061;
-                  tuple.port = 5061;
-               }
-               else
-               {
-                  mPort = 5060;
-                  tuple.port = 5060;
-               }
-            }
+
+            mPort = getDefaultPort(mTransport, uri.port());
+            tuple.port = mPort;
+
             mResults.push_back(tuple);
             mType = Available;
-            mInterface.mHandler->handle(this); // !jf! should I call this? 
+            //mHandler->handle(this); // !jf! should I call this? 
          }
          else // port specified so we know the transport
          {
@@ -182,10 +199,32 @@ DnsResult::lookup(const Uri& uri, const Data& tid)
    }
 }
 
+int
+DnsResult::getDefaultPort(Transport::Type transport, int port)
+{
+   if (port == 0)
+   {
+      switch (transport)
+      {
+         case Transport::UDP:
+            return 5060;
+         case Transport::TCP:
+            return mSips ? 5061 : 5060;
+         default:
+            assert(0);
+      }
+   }
+   else
+   {
+      return port;
+   }
+}
+
+
 void
 DnsResult::lookupARecords(const Data& target)
 {
-   DebugLog (<< "Doing A lookup: " << target);
+   InfoLog (<< "Doing A lookup: " << target);
 
 #if defined(USE_ARES)
    ares_gethostbyname(mInterface.mChannel, target.c_str(), AF_INET, DnsResult::aresHostCallback, this);
@@ -197,18 +236,18 @@ DnsResult::lookupARecords(const Data& target)
 #if defined(__linux__)
    struct hostent hostbuf; 
    char buffer[8192];
-   ret = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
+   ret = gethostbyname_r( target.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
    assert (ret != ERANGE);
 #elif defined(WIN32) 
-   result = gethostbyname( host.c_str() );
+   result = gethostbyname( target.c_str() );
    herrno = WSAGetLastError();
 #elif defined( __MACH__ ) || defined (__FreeBSD__)
-   result = gethostbyname( host.c_str() );
+   result = gethostbyname( target.c_str() );
    herrno = h_errno;
 #elif defined(__QNX__) || defined(__sun)
    struct hostent hostbuf; 
    char buffer[8192];
-   result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
+   result = gethostbyname_r( target.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
 #else
 #   error "need to define some version of gethostbyname for your arch"
 #endif
@@ -218,19 +257,19 @@ DnsResult::lookupARecords(const Data& target)
       switch (herrno)
       {
          case HOST_NOT_FOUND:
-            InfoLog ( << "host not found: " << host);
+            InfoLog ( << "host not found: " << target);
             break;
          case NO_DATA:
-            InfoLog ( << "no data found for: " << host);
+            InfoLog ( << "no data found for: " << target);
             break;
          case NO_RECOVERY:
-            InfoLog ( << "no recovery lookup up: " << host);
+            InfoLog ( << "no recovery lookup up: " << target);
             break;
          case TRY_AGAIN:
-            InfoLog ( << "try again: " << host);
+            InfoLog ( << "try again: " << target);
             break;
 		 default:
-            ErrLog( << "DNS Resolver got error" << herrno << " looking up " << host );
+            ErrLog( << "DNS Resolver got error" << herrno << " looking up " << target );
             assert(0);
             break;
       }
@@ -245,7 +284,7 @@ DnsResult::lookupARecords(const Data& target)
 void
 DnsResult::lookupNAPTR()
 {
-   DebugLog (<< "Doing NAPTR lookup: " << mTarget);
+   InfoLog (<< "Doing NAPTR lookup: " << mTarget);
 
 #if defined(USE_ARES)
    ares_query(mInterface.mChannel, mTarget.c_str(), C_IN, T_NAPTR, DnsResult::aresNAPTRCallback, this); 
@@ -259,14 +298,14 @@ DnsResult::lookupNAPTR()
 void
 DnsResult::lookupSRV(const Data& target)
 {
-   DebugLog (<< "Doing SRV lookup: " << target);
+   InfoLog (<< "Doing SRV lookup: " << target);
    
 #if defined(USE_ARES)
    ares_query(mInterface.mChannel, target.c_str(), C_IN, T_SRV, DnsResult::aresSRVCallback, this); 
 #else
    unsigned char result[4096];
    int len = res_query(mTarget.c_str(), C_IN, T_SRV, result, sizeof(result));
-   processNAPTR(ARES_SUCCESS, result, len);
+   processSRV(ARES_SUCCESS, result, len);
 #endif
 }
 
@@ -275,7 +314,7 @@ void
 DnsResult::aresHostCallback(void *arg, int status, struct hostent* result)
 {
    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   DebugLog (<< "Received A result for: " << thisp->mTransactionId << " for " << thisp->mTarget);
+   DebugLog (<< "Received A result for: " << thisp->mHandler << " for " << thisp->mTarget);
    thisp->processHost(status, result);
 }
 
@@ -283,7 +322,7 @@ void
 DnsResult::aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   DebugLog (<< "Received NAPTR result for: " << thisp->mTransactionId << " for " << thisp->mTarget);
+   DebugLog (<< "Received NAPTR result for: " << thisp->mHandler << " for " << thisp->mTarget);
    thisp->processNAPTR(status, abuf, alen);
 }
 
@@ -292,7 +331,7 @@ void
 DnsResult::aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   DebugLog (<< "Received SRV result for: " << thisp->mTransactionId << " for " << thisp->mTarget);
+   DebugLog (<< "Received SRV result for: " << thisp->mHandler << " for " << thisp->mTarget);
    thisp->processSRV(status, abuf, alen);
 }
 #endif
@@ -348,7 +387,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       {
          InfoLog (<< "No NAPTR records that are supported by this client");
          mType = Finished;
-         mInterface.mHandler->handle(this);         
+         mHandler->handle(this);
          return;
       }
 
@@ -395,9 +434,11 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
    else
    {
       {
+#ifdef USE_ARES
          char* errmem=0;
          InfoLog (<< "NAPTR lookup failed: " << ares_strerror(status, &errmem));
          ares_free_errmem(errmem);
+#endif
       }
       
       // This will result in no NAPTR results. In this case, send out SRV
@@ -483,16 +524,37 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
    }
    else
    {
+#ifdef USE_ARES
       char* errmem=0;
       InfoLog (<< "SRV lookup failed: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
+#endif
    }
 
    // no outstanding queries 
    if (mSRVCount == 0) 
    {
-      DebugLog(<< "Got all SRV responses. Priming " << Inserter(mSRVResults));
-      primeResults();
+      if (mSRVResults.empty())
+      {
+         if (mSips)
+         {
+            mTransport = Transport::TCP;
+            mPort = 5060;
+         }
+         else
+         {
+            mTransport = Transport::UDP;
+            mPort = 5060;
+         }
+         
+         InfoLog (<< "No SRV records for " << mTarget << ". Trying A records");
+         lookupARecords(mTarget);
+      }
+      else
+      {
+         DebugLog(<< "Got all SRV responses. Priming " << Inserter(mSRVResults));
+         primeResults();
+      }
    }
 }
 
@@ -524,13 +586,25 @@ DnsResult::processHost(int status, struct hostent* result)
    }
    else
    {
+#ifdef USE_ARES
       char* errmem=0;
       InfoLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
+#endif
    }
 
-   mType = Available;
-   mInterface.mHandler->handle(this);
+   if (mSRVCount == 0)
+   {
+      if (mResults.empty())
+      {
+         mType = Finished;
+      }
+      else 
+      {
+         mType = Available;
+      }
+      mHandler->handle(this);
+   }
 }
 
 void
@@ -563,7 +637,7 @@ DnsResult::primeResults()
          DebugLog (<< "Try: " << Inserter(mResults));
          
          mType = Available;
-         mInterface.mHandler->handle(this);
+         mHandler->handle(this);
       }
       else
       {
@@ -1031,6 +1105,13 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
       }
    }
    return false;
+}
+
+std::ostream& 
+resip::operator<<(std::ostream& strm, const resip::DnsResult& result)
+{
+   strm << "target=" << result.mTarget;
+   return strm;
 }
 
 
