@@ -97,15 +97,15 @@ Log::initialize(Type type, Level level, const Data& appName, const char * logFil
       _appName = Data(copy.substr(pos+1).c_str());
    }
  
-  char buffer[1024];  
-  gethostname(buffer, sizeof(buffer));
+   char buffer[1024];  
+   gethostname(buffer, sizeof(buffer));
    _hostname = buffer;
 #ifdef WIN32 
    _pid = (int)GetCurrentProcess;;
 #else
    _pid = getpid();
 #endif
-
+   
 #ifndef WIN32
    pthread_key_create(&Log::_levelKey, freeThreadSetting);
 #endif
