@@ -16,7 +16,7 @@ class UnknownParameter : public StringParameter
       UnknownParameter(const std::string& name, const std::string& data);
       
       virtual const std::string& getName();
-      
+      virtual Parameter* clone() const;
    private:
       std::string mName;
 };
