@@ -30,7 +30,7 @@ using namespace std;
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32)
-#pragma warning( disable : 4355 ) // using this in base member initializer list 
+#pragma warning( disable : 4355 ) // using this in base member initializer list
 #endif
 
 DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
@@ -57,7 +57,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
 }
 
-DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) : 
+DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mMergeKey(request),
    mDialogs(),
    mCreator(0),
@@ -90,7 +90,7 @@ DialogSet::~DialogSet()
    {
       mDum.mClientAuthManager->dialogSetDestroyed(getId());
    }
-   
+
    if (mMergeKey != MergedRequestKey::Empty)
    {
       mDum.mMergedRequests.erase(mMergeKey);
@@ -100,14 +100,14 @@ DialogSet::~DialogSet()
    while(!mDialogs.empty())
    {
       delete mDialogs.begin()->second;
-   } 
+   }
 
    delete mClientRegistration;
    delete mServerRegistration;
    delete mClientPublication;
    delete mServerOutOfDialogRequest;
    delete mClientPagerMessage;
-   delete mServerPagerMessage;   
+   delete mServerPagerMessage;
 
    while (!mClientOutOfDialogRequests.empty())
    {
@@ -125,7 +125,7 @@ void DialogSet::possiblyDie()
 {
    if (!mDestroying)
    {
-      if(mDialogs.empty() && 
+      if(mDialogs.empty() &&
          mClientOutOfDialogRequests.empty() &&
          !(mClientPublication ||
            mServerOutOfDialogRequest ||
@@ -135,7 +135,7 @@ void DialogSet::possiblyDie()
            mServerRegistration))
       {
          mDum.destroy(this);
-      }   
+      }
    }
 }
 
@@ -151,13 +151,13 @@ DialogSet::addDialog(Dialog *dialog)
    mDialogs[dialog->getId()] = dialog;
 }
 
-BaseCreator* 
+BaseCreator*
 DialogSet::getCreator()
 {
    return mCreator;
 }
 
-UserProfile* 
+UserProfile*
 DialogSet::getUserProfile()
 {
    if(mUserProfile)
@@ -170,15 +170,15 @@ DialogSet::getUserProfile()
       return mDum.getMasterProfile();
    }
 }
- 
-void 
+
+void
 DialogSet::setUserProfile(UserProfile *userProfile)
 {
    assert(!mUserProfile);
    mUserProfile = userProfile;
 }
 
-Dialog* 
+Dialog*
 DialogSet::findDialog(const SipMessage& msg)
 {
    DialogId id(msg);
@@ -188,11 +188,11 @@ DialogSet::findDialog(const SipMessage& msg)
    {
       return dlog;
    }
-   else if (msg.exists(h_Contacts) && 
-            msg.header(h_Contacts).size() == 1 
-            && msg.isResponse() 
+   else if (msg.exists(h_Contacts) &&
+            msg.header(h_Contacts).size() == 1
+            && msg.isResponse()
             && getUserProfile()->getLooseToTagMatching()
-            && msg.header(h_To).exists(p_tag))     
+            && msg.header(h_To).exists(p_tag))
    {
       //match by contact
       for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
@@ -204,7 +204,7 @@ DialogSet::findDialog(const SipMessage& msg)
             //find out how deep this rabbit hole goes, may just have a pugabble
             //filter api that can be added for dialog matching if things get any
             //more specific--this is the VonageKludgeFilter
-            Dialog* dialog = it->second;            
+            Dialog* dialog = it->second;
             DialogId old = dialog->getId();
             dialog->mId = DialogId(old.getCallId(), old.getLocalTag(), msg.header(h_To).param(p_tag));
             dialog->mRemoteNameAddr.param(p_tag) = msg.header(h_To).param(p_tag);
@@ -240,9 +240,9 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                DebugLog( << "about to re-send request with digest credentials" );
                StackLog( << getCreator()->getLastRequest() );
-               
+
                mDum.send(getCreator()->getLastRequest());
-               return;                     
+               return;
             }
          }
          //!dcm! -- need to protect against 3xx highjacking a dialogset which
@@ -253,30 +253,30 @@ DialogSet::dispatch(const SipMessage& msg)
             if (mDum.mRedirectManager->handle(*this, getCreator()->getLastRequest(), msg))
             {
                //terminating existing dialogs(branches) as this is a final
-               //response--?dcm?--merge w/ forking logic somehow?                              
+               //response--?dcm?--merge w/ forking logic somehow?
                //!dcm! -- really, really horrible.  Should make a don't die
                //scoped guard
-               mDestroying = true;               
+               mDestroying = true;
                for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
                {
                   Dialog* d = it->second;
                   it++;
-                  d->redirected(msg);         
+                  d->redirected(msg);
                }
                mDestroying = false;
-               
+
                if (!mDialogs.empty())
                {
                   //a dialog is refusing this 3xx(only implemented for INVITE,
                   //Subscribe dialogs always refuse as they don't have an early state)
-                  return; //(toss 3xx)                  
+                  return; //(toss 3xx)
                }
 
                InfoLog( << "about to re-send request to redirect destination" );
                DebugLog( << getCreator()->getLastRequest() );
-               
+
                mDum.send(getCreator()->getLastRequest());
-               return;                     
+               return;
             }
          }
       }
@@ -310,11 +310,11 @@ DialogSet::dispatch(const SipMessage& msg)
                mServerOutOfDialogRequest->dispatch(request);
                return;
             }
-            break;                              
+            break;
          case PUBLISH:
             assert(false);
-            return; 
-         case INFO:   
+            return;
+         case INFO:
             if (dialog)
             {
                break;
@@ -322,7 +322,7 @@ DialogSet::dispatch(const SipMessage& msg)
             else
             {
                return;
-            }            
+            }
          case REGISTER:
             if (mServerRegistration == 0)
             {
@@ -333,9 +333,9 @@ DialogSet::dispatch(const SipMessage& msg)
          case MESSAGE:
             mServerPagerMessage = makeServerPagerMessage(request);
             mServerPagerMessage->dispatch(request);
-            return; 
-         default: 
-            DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );            
+            return;
+         default:
+            DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );
             // only can be one ServerOutOfDialogReq at a time
             assert(mServerOutOfDialogRequest == 0);
             mServerOutOfDialogRequest = makeServerOutOfDialog(request);
@@ -358,8 +358,8 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             return;
          }
-      }      
-         
+      }
+
       switch (response.header(h_CSeq).method())
       {
          case INVITE:
@@ -375,7 +375,7 @@ DialogSet::dispatch(const SipMessage& msg)
 //             else
 //             {
 //                //throw away, informational status message eventually
-//                return;               
+//                return;
 //             }
          case CANCEL:
          case REFER:  //need to add out-of-dialog refer logic
@@ -399,8 +399,8 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                mClientPagerMessage->dispatch(response);
             }
-            return;            
-         case INFO:   
+            return;
+         case INFO:
             if (dialog)
             {
                break;
@@ -408,7 +408,7 @@ DialogSet::dispatch(const SipMessage& msg)
             else
             {
                return;
-            }            
+            }
          case NOTIFY:
             if (dialog)
             {
@@ -446,7 +446,7 @@ DialogSet::dispatch(const SipMessage& msg)
       if (msg.isResponse())
       {
          int code = msg.header(h_StatusLine).statusCode();
-         
+
          if (code > 100 && code < 200 && !msg.exists(h_Contacts))
          {
             InfoLog ( << "Cannot create a dialog, no Contact in 180." );
@@ -456,20 +456,27 @@ DialogSet::dispatch(const SipMessage& msg)
             }
 
             //call OnProgress in proposed DialogSetHandler here
-            return;         
+            return;
          }
          else
          {
             InfoLog (<< "No matching dialog: " << msg.brief());
+
+            if(code >= 400)
+            {
+                // !kh!
+                // don't need to try resuming on an error response.
+                return;
+            }
          }
       }
-      
+
       DebugLog ( << "Creating a new Dialog from msg: " << msg);
 
       try
       {
          // !jf! This could throw due to bad header in msg, should we catch and rethrow
-         // !jf! if this threw, should we check to delete the DialogSet? 
+         // !jf! if this threw, should we check to delete the DialogSet?
          // !dcm! -- check to delete for now, but we will need to keep the
          // Dialoset around in case something forked.
          dialog = new Dialog(mDum, msg, *this);
@@ -482,25 +489,25 @@ DialogSet::dispatch(const SipMessage& msg)
          if(mDialogs.empty() && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 200))
          {
             mDum.destroy(this);
-            return;            
+            return;
          }
       }
 
       if (mCancelled && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 300))
       {
          dialog->cancel();
-         return;         
+         return;
       }
       else
       {
          DebugLog ( << "### Calling CreateAppDialog ### " << msg);
          AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
          dialog->mAppDialog = appDialog;
-         appDialog->mDialog = dialog;         
+         appDialog->mDialog = dialog;
       }
-   }     
+   }
    if (dialog)
-   {     
+   {
       dialog->dispatch(msg);
    }
    else if (msg.isRequest())
@@ -514,7 +521,7 @@ DialogSet::dispatch(const SipMessage& msg)
 ClientOutOfDialogReq*
 DialogSet::findMatchingClientOutOfDialogReq(const SipMessage& msg)
 {
-   for (std::list<ClientOutOfDialogReq*>::iterator i=mClientOutOfDialogRequests.begin(); 
+   for (std::list<ClientOutOfDialogReq*>::iterator i=mClientOutOfDialogRequests.begin();
         i != mClientOutOfDialogRequests.end(); ++i)
    {
       if ((*i)->matches(msg))
@@ -525,11 +532,11 @@ DialogSet::findMatchingClientOutOfDialogReq(const SipMessage& msg)
    return 0;
 }
 
-Dialog* 
+Dialog*
 DialogSet::findDialog(const DialogId id)
 {
    DebugLog (<< "findDialog: " << id << " in " << Inserter(mDialogs));
-   
+
    DialogMap::iterator i = mDialogs.find(id);
    if (i == mDialogs.end())
    {
@@ -543,7 +550,7 @@ DialogSet::findDialog(const DialogId id)
 
 void
 DialogSet::cancel()
-{   
+{
    mCancelled = true;
    if (mReceivedProvisional && getCreator())
    {
@@ -552,13 +559,13 @@ DialogSet::cancel()
       //exception to cancel UAS DialogSet?
 
       InfoLog (<< "Canceling " << mId);
-      auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));         
+      auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));
       mDum.send(*cancel);
 
       for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
       {
          // let the early dialogs know they are being canceled in case they get
-         // a 200 to the INVITE which crossed the CANCEL so they will BYE them. 
+         // a 200 to the INVITE which crossed the CANCEL so they will BYE them.
          it->second->cancel();
       }
 
@@ -568,7 +575,7 @@ DialogSet::cancel()
 }
 
 
-ClientRegistrationHandle 
+ClientRegistrationHandle
 DialogSet::getClientRegistration()
 {
    if (mClientRegistration)
@@ -581,7 +588,7 @@ DialogSet::getClientRegistration()
    }
 }
 
-ServerRegistrationHandle 
+ServerRegistrationHandle
 DialogSet::getServerRegistration()
 {
    if (mServerRegistration)
@@ -594,7 +601,7 @@ DialogSet::getServerRegistration()
    }
 }
 
-ClientPublicationHandle 
+ClientPublicationHandle
 DialogSet::getClientPublication()
 {
    if (mClientPublication)
@@ -603,7 +610,7 @@ DialogSet::getClientPublication()
    }
    else
    {
-      return ClientPublicationHandle::NotValid();      
+      return ClientPublicationHandle::NotValid();
    }
 }
 
@@ -631,13 +638,13 @@ DialogSet::makeClientOutOfDialogReq(const SipMessage& response)
    return new ClientOutOfDialogReq(mDum, *this, creator->getLastRequest());
 }
 
-ServerRegistration* 
+ServerRegistration*
 DialogSet::makeServerRegistration(const SipMessage& request)
 {
    return new ServerRegistration(mDum, *this, request);
 }
 
-ServerOutOfDialogReq* 
+ServerOutOfDialogReq*
 DialogSet::makeServerOutOfDialog(const SipMessage& request)
 {
    return new ServerOutOfDialogReq(mDum, *this, request);
@@ -650,7 +657,7 @@ DialogSet::makeServerPagerMessage(const SipMessage& request)
 }
 
 #if 0
-ClientOutOfDialogReqHandle 
+ClientOutOfDialogReqHandle
 DialogSet::findClientOutOfDialog()
 {
    if (mClientOutOfDialogRequests)
@@ -680,22 +687,22 @@ DialogSet::getServerOutOfDialog()
 
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -705,7 +712,7 @@ DialogSet::getServerOutOfDialog()
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -719,9 +726,9 @@ DialogSet::getServerOutOfDialog()
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
