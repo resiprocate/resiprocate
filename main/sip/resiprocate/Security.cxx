@@ -556,39 +556,44 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, 
       }
    }
 
-   BIO *bio = BIO_new(BIO_s_mem());
-   assert(bio);
-   assert( EVP_des_ede3_cbc() );
-
-   const EVP_CIPHER* cipher = EVP_des_ede3_cbc();
-   if (kstr == NULL )
-   {
-      cipher = NULL;
-   }
-#if 1 // TODO - need to figure out what format to write in 
-   int ret = PEM_write_bio_PrivateKey(bio, pKey, cipher, 
-                                      (unsigned char*)kstr, klen,
-                                      NULL, NULL);
-#else
-   int ret = PEM_write_bio_PKCS8PrivateKey(bio, pKey, cipher, 
-                                           kstr, klen,
-                                           NULL, NULL);
-#endif
-   assert(ret);
-   BUF_MEM *bptr = NULL;
-   BIO_get_mem_ptr(bio, &bptr);
-   assert( bptr );
-   assert( bptr->length > 0 );
-   assert( bptr->data );
-   
-   Data pem( bptr->data, bptr->length );
-   
    if (write)
    {
-      onWritePEM(name, type, pem );
+      BIO *bio = BIO_new(BIO_s_mem());
+      assert(bio);
+      try
+      {
+         assert( EVP_des_ede3_cbc() );
+         const EVP_CIPHER* cipher = EVP_des_ede3_cbc();
+         if (kstr == NULL )
+         {
+            cipher = NULL;
+         }
+#if 0 // TODO - need to figure out what format to write in 
+         int ret = PEM_write_bio_PrivateKey(bio, pKey, cipher, 
+                                            (unsigned char*)kstr, klen,
+                                            NULL, NULL);
+#else
+         int ret = PEM_write_bio_PKCS8PrivateKey(bio, pKey, cipher, 
+                                                 kstr, klen,
+                                                 NULL, NULL);
+#endif
+         assert(ret);
+         
+         BIO_flush(bio);
+         char* p = 0;
+         size_t len = BIO_get_mem_data(bio,&p);
+         assert(p);
+         assert(len);
+         Data  pem(Data::Take, p, len);
+         onWritePEM(name, type, pem );
+      }
+      catch(...)
+      {
+         BIO_free(bio);
+         throw;
+      }
+      BIO_free(bio);
    }
-
-   BIO_free(bio);
 }
 
 
@@ -1253,68 +1258,26 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    ret = X509_set_pubkey(cert, privkey);
    assert(ret);
    
-   // need to fiddle with this to make this work with lists of IA5 URIs and UTF8
-   // using GENERAL_NAMES seems like a promissing approach
-   // (search for GENERAL_NAMES in Security.cxx)
-   //
-   //ext = X509V3_EXT_conf_nid( NULL , NULL , NID_subject_alt_name, subjectAltNameStr.cstr() );
-   //X509_add_ext( cert, ext, -1);
-   //X509_EXTENSION_free(ext);
+   Data subjectAltNameStr = Data("URI:sip:") + aor
+      + Data(",URI:im:")+aor
+      + Data(",URI:pres:")+aor;
+   ext = X509V3_EXT_conf_nid( NULL , NULL , NID_subject_alt_name, 
+                              (char*) subjectAltNameStr.c_str() );
+   X509_add_ext( cert, ext, -1);
+   X509_EXTENSION_free(ext);
    
    ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, "CA:FALSE");
    ret = X509_add_ext( cert, ext, -1);
    assert(ret);  
    X509_EXTENSION_free(ext);
    
-   // add extensions NID_subject_key_identifier and NID_authority_key_identifier
+   // TODO add extensions NID_subject_key_identifier and NID_authority_key_identifier
    
    ret = X509_sign(cert, privkey, EVP_sha1());
    assert(ret);
    
    addCertX509( UserCert, aor, cert, true /* write */ );
    addPrivateKeyPKEY( UserPrivateKey, aor, privkey, true /* write */ );
-
-#if 0 
-   unsigned char* buffer = NULL;     
-   int len = i2d_X509(cert, &buffer);   // if buffer is NULL, openssl
-											// assigns memory for buffer
-   assert(buffer);
-   Data derData((char *) buffer, len);
-   X509Contents *certpart = new X509Contents( derData );
-   assert(certpart);
-   
-//  TDOD: remove later, just useful for debugging
-//   ret = PEM_write_PKCS8PrivateKey( stdout, privkey, NULL, NULL, 0, NULL, NULL);
-	  
-   // make an in-memory BIO        [ see  BIO_s_mem(3) ]
-   BIO *mbio = BIO_new(BIO_s_mem());
-   assert(mbio);
-
-   assert(EVP_des_ede3_cbc());
-   // encrypt the the private key with the passphrase and put it in the BIO in DER format
-   ret = i2d_PKCS8PrivateKey_bio( mbio, privkey, EVP_des_ede3_cbc(), 
-      (char *) passphrase.data(), passphrase.size(), NULL, NULL);
-   assert(ret);
-
-   // dump the BIO into a Contents and free the BIO
-   BIO_get_mem_ptr(mbio, &bptr);
-   Pkcs8Contents *keypart = new Pkcs8Contents(Data(bptr->data, bptr->length));
-   assert(keypart);
-   BIO_free(mbio);
-
-   // make the multipart body
-   MultipartMixedContents *certsbody = new MultipartMixedContents;
-   certsbody->parts().push_back(certpart);
-   certsbody->parts().push_back(keypart);
-   assert(certsbody);
-   
-   Data foo;
-   DataStream foostr(foo);
-   certsbody->encode(foostr);
-   foostr.flush();
-   
-   DebugLog ( << foo );
-#endif
 }
 
 
