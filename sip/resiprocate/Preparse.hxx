@@ -32,6 +32,8 @@ typedef enum {
     BuildHdr,
     EWSPostHdr,
     EWSPostColon,
+    EmptyHdrCrLf,
+    EmptyHdrCont,
     BuildData,
     BuildDataCrLf,
     CheckCont,
