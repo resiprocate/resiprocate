@@ -325,116 +325,236 @@ void
 InviteSession::dispatch(const SipMessage& msg)
 {
    Destroyer::Guard guard(mDestroyer);
-   std::pair<OfferAnswerType, const SdpContents*> offans;
+   OfferAnswer offans;
    offans = InviteSession::getOfferOrAnswer(msg);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   if (msg.isRequest())
+
+   switch (mState)
    {
-      switch (msg.header(h_CSeq).method())
-      {
-         case INVITE: 
-            switch (mState)
-            {
-               case Connected:
-                  if (offans.first == None)
-                  {
-                     transition(ReinvitePendingNoOffer);
-                     handler->onDialogModified(getSessionHandle(), offans.type, msg);
-                     handler->onOfferRequired(getSessionHandle(), msg);
-                  }
-                  else
-                  {
-                     transition(ReinvitePending);
-                     handler->onOffer(getSessionHandle(), msg, offans.second);
-                  }
-                  break;
-                  
-               default:
-                  // what should I do if I get a reINVITE overlapping another
-                  // reINVITE or UPDATE? 
-                  break;
-            }
-            break;
-         
-         case CANCEL:
-         {
-            SipMessage rsp;
-            mDialog.makeResponse(rsp, msg, 200);
-            mDum.send(rsp);
-         }
+      case Connected:
+         dispatchConnected(msg, offans);
          break;
-         
-         case BYE:
-            switch (mState)
-            {
-               case Connected:
-               {
-                  SipMessage rsp;
-                  mDialog.makeResponse(rsp, msg, 200);
-                  mDum.send(rsp);
-                  transition(Terminated);                  
-               }
-               break;
-               
-               case default:
-                  //  inconsistant state?
-                  break;
-            }
-            
-            break;
-         
-         case INFO:
-            //  are we getting these?
-            break;
-         
-         case UPDATE:
-            switch (mState)
-            {
-               case Connected:               
-                  //  transition(UpdatePending);
-                  //  handler->onOffer(...);
-                  //  break;
-               default:
-                  //  inconsistant state?
-                  //  assert(0) or throw ?
-                  break;             
-            }
-            
-            break;
-         
-         case REFER:
-            break;
-      }
+      case Updating:
+         dispatchUpdating(msg, offans);
+         break;
+      case Reinviting:
+         dispatchReinviting(msg, offans);
+         break;
+      case UpdatePending:
+         dispatchUpdatePending(msg, offans);
+         break;
+      case ReinvitePending:
+         dispatchReinvitePending(msg, offans);
+         break;
+      case ReinvitePendingNoOffer:
+         dispatchReinvitePendingNoOffer(msg, offans);
+         break;
+      case Terminated:
+         dispatchTerminated(msg, offans);
+         break;
+      case Undefined:
+         assert(0);
+         break;
    }
-   else if (msg.isResponse())
+}
+
+void
+InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
+{
+   assert(msg.isRequest());
+   assert(msg.header(h_CSeq).method() == INVITE);
+   
+   // If we get an INVITE request from the wire and we are not in
+   // Connected state, reject the request and send a BYE
+   SipMessage response;
+   mDialog.makeResponse(response, msg, 400); // !jf! what code to use?
+   InfoLog (<< "Sending " << response.brief());
+   mDum.send(response);
+                  
+   SipMessage bye;
+   mDialog.makeRequest(bye, BYE);
+   InfoLog (<< "Sending " << bye.brief());
+   mDum.send(bye);
+                  
+   transition(Terminated);
+}
+
+void
+InviteSession::dispatchCancel(const SipMessage& msg)
+{
+   assert(msg.header(h_CSeq).method() == CANCEL);
+   if(msg.isRequest())
    {
-      switch (msg.header(h_CSeq).method())
-      {
-         case INVITE: 
-            break;
-         
-         case CANCEL:
-            break;
-         
-         case BYE:
-            break;
-         
-         case INFO:
-            break;
-         
-         case UPDATE:
-            break;
-         
-         case REFER:
-            break;
-      }
+      Destroyer::Guard guard(mDestroyer);
+
+      SipMessage rsp;
+      mDialog.makeResponse(rsp, msg, 200);
+      mDum.send(rsp);
+
+      SipMessage bye;
+      mDialog.makeRequest(bye, BYE);
+      InfoLog (<< "Sending " << bye.brief());
+      mDum.send(bye);
+
+      transition(Terminated);                  
+   
+      // !jf! should we make some other callback here
+      mDum.mInviteSessionHandler->onTerminated(getSessionHandle());
    }
    else
    {
+      WarningLog (<< "DUM let me send a CANCEL at an incorrect state " << endl << msg);
       assert(0);
    }
 }
+
+void
+InviteSession::dispatchBye(const SipMessage& msg)
+{
+   if (msg.isRequest())
+   {
+      Destroyer::Guard guard(mDestroyer);
+      SipMessage rsp;
+      InfoLog (<< "Received " << msg.brief());
+      mDialog.makeResponse(rsp, msg, 200);
+      mDum.send(rsp);
+      transition(Terminated); 
+
+      // !jf! should we make some other callback here
+      mDum.mInviteSessionHandler->onTerminated(getSessionHandle());
+      guard.destroy();
+   }
+   else
+   {
+      WarningLog (<< "DUM let me send a BYE at an incorrect state " << endl << msg);
+      assert(0);
+   }
+}
+
+void
+InviteSession::dispatchInfo(const SipMessage& msg)
+{
+   if (msg.isRequest())
+   {
+      InfoLog (<< "Received " << msg.brief());
+      SipMessage response;         
+      mDialog.makeResponse(response, msg, 200);
+      send(response);
+      mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
+   }
+}
+
+void
+InviteSession::dispatchConnected(const SipMessage& msg, OfferAnswer offans )
+{
+   Destroyer::Guard guard(mDestroyer);
+
+   switch (msg.header(h_CSeq).method())
+   {
+      case INVITE: 
+         if (msg.isRequest())
+         {
+            if (offans.first == None)
+            {
+               transition(ReinvitePendingNoOffer);
+               handler->onDialogModified(getSessionHandle(), offans.type, msg);
+               handler->onOfferRequired(getSessionHandle(), msg);
+            }
+            else
+            {
+               transition(ReinvitePending);
+               handler->onOffer(getSessionHandle(), msg, offans.second);
+            }
+         }
+         else 
+         {
+            // !jf! the stack or DUM should not allow this message through
+            WarningLog (<< "the stack or DUM should not allow this message through " << endl << msg);
+            assert(0);
+         }
+         break;
+
+      case CANCEL:
+         dispatchCancel(msg);
+         break;
+            
+      case BYE:
+         dispatchBye(msg);
+         break;
+
+      case INFO:
+         dispatchInfo(msg);
+         break;
+            
+      case UPDATE:
+         if (msg.isRequest())
+         {
+            InfoLog (<< "Received " << msg.brief());
+            mDum.mInviteSessionHandler->onOffer(getSessionHandle(), msg, offans.second);
+            transition(UpdatePending);
+         }
+         else
+         {
+            WarningLog (<< "DUM delivered an UPDATE/200 in an incorrect state " << endl << msg);
+            assert(0);
+         }
+         break;
+      
+      case REFER:
+      default:
+         // handled in Dialog
+         WarningLog (<< "DUM delivered a REFER to the InviteSession " << endl << msg);
+         assert(0);
+         break;
+   }
+}
+
+
+void
+InviteSession::dispatchUpdating(const SipMessage& msg, OfferAnswer offans )
+{
+   Destroyer::Guard guard(mDestroyer);
+
+   switch (msg.header(h_CSeq).method())
+   {
+      case INVITE: 
+         dispatchUnhandledInvite(msg);
+         break;
+
+      case CANCEL:
+         dispatchCancel(msg);
+         break;
+            
+      case BYE:
+         dispatchBye(msg);
+         break;
+         
+      case INFO:
+         dispatchInfo(msg);
+         break;
+         
+      case UPDATE:
+         if (msg.isRequest())
+         {
+            InfoLog (<< "Received " << msg.brief());
+            // This is glare
+         }
+         else
+         {
+            
+         }
+         break;
+      
+      case REFER:
+      default:
+         // handled in Dialog
+         WarningLog (<< "DUM delivered a REFER to the InviteSession " << endl << msg);
+         assert(0);
+         break;
+   }
+}
+
 
 void
 InviteSession::dispatch(const SipMessage& msg)
