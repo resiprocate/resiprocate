@@ -11,6 +11,8 @@ class BaseUsage
       DialogUsageManager& dum();
       Dialog& dialog();
       
+      virtual void end();
+
    private:
       DialogUsageManager& mDUM;
       DialogImpl& mDialog;
