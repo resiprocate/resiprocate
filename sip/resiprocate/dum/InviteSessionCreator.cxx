@@ -13,5 +13,3 @@ InviteSessionCreator::end()
 {
    assert(0);
 }
-
-   
