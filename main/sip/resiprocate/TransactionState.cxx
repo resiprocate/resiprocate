@@ -571,8 +571,7 @@ TransactionState::processServerInvite(  Message* msg )
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       int code = (*sip)[StatusLine].getResponseCode();
       
-      assert(0);
-      switch (0) // (*sip)[CSeq].getMethod())
+      switch ((*sip)[CSeq].getMethod())
       {
          case INVITE:
             if (code == 100)
