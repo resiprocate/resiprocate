@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.62 2002/11/04 06:33:51 derekm Exp $
+# $Id: Makefile,v 1.63 2002/11/04 19:07:27 derekm Exp $
 
 BUILD = ../../build
 
@@ -41,8 +41,10 @@ SRC = \
 	ParserCategories.cxx \
 	Preparse.cxx \
 	Resolver.cxx \
+	DnsResolver.cxx \
 	SendingMessage.cxx \
 	SipMessage.cxx \
+	DnsMessage.cxx \
 	SipStack.cxx \
 	Symbols.cxx \
 	TimerMessage.cxx \
