@@ -25,9 +25,9 @@ HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& other)
       }
    }
 
-   if (mParserContainer != 0)
+   if (other.mParserContainer != 0)
    {
-      mParserContainer = mParserContainer->clone(this);
+      mParserContainer = other.mParserContainer->clone(this);
    }
 }
 
@@ -52,8 +52,8 @@ HeaderFieldValueList::clone() const
    return new HeaderFieldValueList(*this);
 }
 
-ParserCategory*
-HeaderFieldValueList::getParserCategory()
+ParserContainerBase*
+HeaderFieldValueList::getParserContainer()
 {
    return mParserContainer;
 }
