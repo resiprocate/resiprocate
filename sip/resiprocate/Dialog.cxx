@@ -45,7 +45,7 @@ Dialog::makeResponse(const SipMessage& request, int code)
       
       assert (request.header(h_Contacts).size() == 1);
 
-      SipMessage* response = Helper::makeResponse(request, code);
+      SipMessage* response = Helper::makeResponse(request, code, mContact);
       assert (!response->header(h_To).uri().exists(p_tag));
       response->header(h_To).uri().param(p_tag) = Helper::computeTag(Helper::tagSize);
       
@@ -94,7 +94,7 @@ Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
 
       // reverse order from response
       mRouteSet = response.header(h_RecordRoutes).reverse();
-      
+
       mRemoteTarget = response.header(h_Contacts).front();
       mRemoteSequence = 0;
       mRemoteEmpty = true;
