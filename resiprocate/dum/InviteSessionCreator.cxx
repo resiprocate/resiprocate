@@ -3,10 +3,14 @@
 
 using namespace resip;
 
-InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum, const Uri& aor, const SdpContents* initial)
+InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum, 
+                                           const Uri& aor, 
+                                           const SdpContents* initial, 
+                                           ServerSubscriptionHandle serverSub)
    : BaseCreator(dum),
      mState(Initialized),
-     mInitialOffer(static_cast<SdpContents*>(initial->clone()))
+     mInitialOffer(static_cast<SdpContents*>(initial->clone())),
+     mServerSub(serverSub)
 {
    makeInitialRequest(NameAddr(aor), INVITE);
    getLastRequest().setContents(mInitialOffer);
