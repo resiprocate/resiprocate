@@ -69,10 +69,10 @@ class IntrusiveListElement
       // make this element an empty list
       static P makeList(P elem)
       {
-         assert(!elem->IntrusiveListElement::mNext);
+         assert(!elem->IntrusiveListElement<P>::mNext);
 
-         elem->IntrusiveListElement::mPrev = elem;
-         elem->IntrusiveListElement::mNext = elem;
+         elem->IntrusiveListElement<P>::mPrev = elem;
+         elem->IntrusiveListElement<P>::mNext = elem;
 
          return elem;
       }
@@ -102,7 +102,7 @@ class IntrusiveListElement
 
             iterator& operator++()
             {
-               mPos = mPos->IntrusiveListElement::mNext;
+               mPos = mPos->IntrusiveListElement<P>::mNext;
                return *this;
             }
 
@@ -147,11 +147,11 @@ class IntrusiveListElement
          assert(mPrev);
          assert(mNext);
 
-         elem->IntrusiveListElement::mNext = mNext;
-         elem->IntrusiveListElement::mPrev = static_cast<P>(this);
+         elem->IntrusiveListElement<P>::mNext = mNext;
+         elem->IntrusiveListElement<P>::mPrev = static_cast<P>(this);
          
-         elem->IntrusiveListElement::mNext->IntrusiveListElement::mPrev = elem;
-         elem->IntrusiveListElement::mPrev->IntrusiveListElement::mNext = elem;
+         elem->IntrusiveListElement<P>::mNext->IntrusiveListElement<P>::mPrev = elem;
+         elem->IntrusiveListElement<P>::mPrev->IntrusiveListElement<P>::mNext = elem;
       }
 
       // putting an element onto the same list twice is undefined
@@ -160,11 +160,11 @@ class IntrusiveListElement
          assert(mPrev);
          assert(mNext);
 
-         elem->IntrusiveListElement::mPrev = mPrev;
-         elem->IntrusiveListElement::mNext = static_cast<P>(this);
+         elem->IntrusiveListElement<P>::mPrev = mPrev;
+         elem->IntrusiveListElement<P>::mNext = static_cast<P>(this);
          
-         elem->IntrusiveListElement::mPrev->IntrusiveListElement::mNext = elem;
-         elem->IntrusiveListElement::mNext->IntrusiveListElement::mPrev = elem;
+         elem->IntrusiveListElement<P>::mPrev->IntrusiveListElement<P>::mNext = elem;
+         elem->IntrusiveListElement<P>::mNext->IntrusiveListElement<P>::mPrev = elem;
       }
 
       void remove()
@@ -176,8 +176,8 @@ class IntrusiveListElement
             //
             // prev -> next
             //      <-
-            mNext->IntrusiveListElement::mPrev = mPrev;
-            mPrev->IntrusiveListElement::mNext = mNext;
+            mNext->IntrusiveListElement<P>::mPrev = mPrev;
+            mPrev->IntrusiveListElement<P>::mNext = mNext;
          }
 
          mNext = 0;
@@ -206,10 +206,10 @@ class IntrusiveListElement1
       // make this element an empty list
       static P makeList(P elem)
       {
-         assert(!elem->IntrusiveListElement1::mNext);
+         assert(!elem->IntrusiveListElement1<P>::mNext);
 
-         elem->IntrusiveListElement1::mPrev = elem;
-         elem->IntrusiveListElement1::mNext = elem;
+         elem->IntrusiveListElement1<P>::mPrev = elem;
+         elem->IntrusiveListElement1<P>::mNext = elem;
 
          return elem;
       }
@@ -239,7 +239,7 @@ class IntrusiveListElement1
 
             iterator& operator++()
             {
-               mPos = mPos->IntrusiveListElement1::mNext;
+               mPos = mPos->IntrusiveListElement1<P>::mNext;
                return *this;
             }
 
@@ -284,11 +284,11 @@ class IntrusiveListElement1
          assert(mPrev);
          assert(mNext);
 
-         elem->IntrusiveListElement1::mNext = mNext;
-         elem->IntrusiveListElement1::mPrev = static_cast<P>(this);
+         elem->IntrusiveListElement1<P>::mNext = mNext;
+         elem->IntrusiveListElement1<P>::mPrev = static_cast<P>(this);
          
-         elem->IntrusiveListElement1::mNext->IntrusiveListElement1::mPrev = elem;
-         elem->IntrusiveListElement1::mPrev->IntrusiveListElement1::mNext = elem;
+         elem->IntrusiveListElement1<P>::mNext->IntrusiveListElement1<P>::mPrev = elem;
+         elem->IntrusiveListElement1<P>::mPrev->IntrusiveListElement1<P>::mNext = elem;
       }
 
       // putting an element onto the same list twice is undefined
@@ -297,11 +297,11 @@ class IntrusiveListElement1
          assert(mPrev);
          assert(mNext);
 
-         elem->IntrusiveListElement1::mPrev = mPrev;
-         elem->IntrusiveListElement1::mNext = static_cast<P>(this);
+         elem->IntrusiveListElement1<P>::mPrev = mPrev;
+         elem->IntrusiveListElement1<P>::mNext = static_cast<P>(this);
          
-         elem->IntrusiveListElement1::mPrev->IntrusiveListElement1::mNext = elem;
-         elem->IntrusiveListElement1::mNext->IntrusiveListElement1::mPrev = elem;
+         elem->IntrusiveListElement1<P>::mPrev->IntrusiveListElement1<P>::mNext = elem;
+         elem->IntrusiveListElement1<P>::mNext->IntrusiveListElement1<P>::mPrev = elem;
       }
 
       void remove()
@@ -313,8 +313,8 @@ class IntrusiveListElement1
             //
             // prev -> next
             //      <-
-            mNext->IntrusiveListElement1::mPrev = mPrev;
-            mPrev->IntrusiveListElement1::mNext = mNext;
+            mNext->IntrusiveListElement1<P>::mPrev = mPrev;
+            mPrev->IntrusiveListElement1<P>::mNext = mNext;
          }
 
          mNext = 0;
@@ -343,10 +343,10 @@ class IntrusiveListElement2
       // make this element an empty list
       static P makeList(P elem)
       {
-         assert(!elem->IntrusiveListElement2::mNext);
+         assert(!elem->IntrusiveListElement2<P>::mNext);
 
-         elem->IntrusiveListElement2::mPrev = elem;
-         elem->IntrusiveListElement2::mNext = elem;
+         elem->IntrusiveListElement2<P>::mPrev = elem;
+         elem->IntrusiveListElement2<P>::mNext = elem;
 
          return elem;
       }
@@ -376,7 +376,7 @@ class IntrusiveListElement2
 
             iterator& operator++()
             {
-               mPos = mPos->IntrusiveListElement2::mNext;
+               mPos = mPos->IntrusiveListElement2<P>::mNext;
                return *this;
             }
 
@@ -421,11 +421,11 @@ class IntrusiveListElement2
          assert(mPrev);
          assert(mNext);
 
-         elem->IntrusiveListElement2::mNext = mNext;
-         elem->IntrusiveListElement2::mPrev = static_cast<P>(this);
+         elem->IntrusiveListElement2<P>::mNext = mNext;
+         elem->IntrusiveListElement2<P>::mPrev = static_cast<P>(this);
          
-         elem->IntrusiveListElement2::mNext->IntrusiveListElement2::mPrev = elem;
-         elem->IntrusiveListElement2::mPrev->IntrusiveListElement2::mNext = elem;
+         elem->IntrusiveListElement2<P>::mNext->IntrusiveListElement2<P>::mPrev = elem;
+         elem->IntrusiveListElement2<P>::mPrev->IntrusiveListElement2<P>::mNext = elem;
       }
 
       // putting an element onto the same list twice is undefined
@@ -434,11 +434,11 @@ class IntrusiveListElement2
          assert(mPrev);
          assert(mNext);
 
-         elem->IntrusiveListElement2::mPrev = mPrev;
-         elem->IntrusiveListElement2::mNext = static_cast<P>(this);
+         elem->IntrusiveListElement2<P>::mPrev = mPrev;
+         elem->IntrusiveListElement2<P>::mNext = static_cast<P>(this);
          
-         elem->IntrusiveListElement2::mPrev->IntrusiveListElement2::mNext = elem;
-         elem->IntrusiveListElement2::mNext->IntrusiveListElement2::mPrev = elem;
+         elem->IntrusiveListElement2<P>::mPrev->IntrusiveListElement2<P>::mNext = elem;
+         elem->IntrusiveListElement2<P>::mNext->IntrusiveListElement2<P>::mPrev = elem;
       }
 
       void remove()
@@ -450,8 +450,8 @@ class IntrusiveListElement2
             //
             // prev -> next
             //      <-
-            mNext->IntrusiveListElement2::mPrev = mPrev;
-            mPrev->IntrusiveListElement2::mNext = mNext;
+            mNext->IntrusiveListElement2<P>::mPrev = mPrev;
+            mPrev->IntrusiveListElement2<P>::mNext = mNext;
          }
 
          mNext = 0;
