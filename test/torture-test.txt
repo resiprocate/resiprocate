@@ -104,13 +104,6 @@ Johnston et al         Expires - February 2003               [Page 1]
       2.40 INVITE with an Unquoted Display Name Containg Non-Token 
       Characters....................................................27 
       2.41 INVITE with Unknown (Higher) Protocol Version in Start Line27 
- 
- 
-Johnston et al         Expires - February 2002               [Page 2] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
       2.42 INVITE with RFC2543 syntax...............................28 
    Security Considerations..........................................28 
    References.......................................................28 
@@ -376,13 +369,6 @@ Johnston et al         Expires - February 2002               [Page 6]
     
     
    Message Details 
-    
- 
- 
-Johnston et al         Expires - February 2002               [Page 7] 
-
-                      SIP Torture Test Messages           August 2002 
- 
  
    NEWMETHOD sip:user@comapny.com SIP/2.0 
    To: sip:j.user@company.com 
@@ -409,10 +395,8 @@ Johnston et al         Expires - February 2002               [Page 7]
    This message is a REGISTER request with an unknown authorization 
    scheme. 
     
-    
    The server should do something reasonable, such as rejecting the 
    request. 
-    
     
    Message Details 
     
@@ -426,7 +410,6 @@ Johnston et al         Expires - February 2002               [Page 7]
    Authorization: Super-PGP ajsohdaosdh0asyhdaind08yasdknasd09asidhas0d8 
     
     
-    
 2.10     Multiple SIP Request in a Single Message 
     
    This message contains two requests, separated by a bunch of 
@@ -434,14 +417,6 @@ Johnston et al         Expires - February 2002               [Page 7]
    Content-Length header, the message should be rejected. (Multiple SIP 
    requests per UDP packet are no longer allowed.)  
  
- 
-Johnston et al         Expires - February 2002               [Page 8] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
-    
-    
    Message Details 
     
    REGISTER sip:company.com SIP/2.0 
@@ -453,7 +428,6 @@ Johnston et al         Expires - February 2002               [Page 8]
    CSeq: 8 REGISTER 
    Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw 
    Content-Length: 0 
-    
     
     
    INVITE sip:joe@company.com SIP/2.0 
@@ -483,19 +457,11 @@ Johnston et al         Expires - February 2002               [Page 8]
    The server should not crash, and ideally should respond with an 
    error. 
     
-    
    Message Details 
     
    INVITE sip:user@company.com SIP/2.0 
    CSeq: 0 INVITE 
    Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw 
- 
- 
-Johnston et al         Expires - February 2002               [Page 9] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
    Content-Type: application/sdp 
     
    v=0 
@@ -515,7 +481,6 @@ Johnston et al         Expires - February 2002               [Page 9]
     
    The server should not crash, and should ideally respond with an 
    error. 
-    
     
    Message Details 
     
@@ -539,20 +504,10 @@ Johnston et al         Expires - February 2002               [Page 9]
    m=video 3227 RTP/AVP 31 
    a=rtpmap:31 LPC 
     
-    
-    
 2.13     INVITE with Illegal Expires Header 
     
    This message contains an Expires header which has illegal values for 
    a number of components, but otherwise is syntactically correct. 
- 
- 
-Johnston et al         Expires - February 2002              [Page 10] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
-    
     
    Message Details 
     
@@ -574,7 +529,6 @@ Johnston et al         Expires - February 2002              [Page 10]
    m=audio 492170 RTP/AVP 0 12 
    m=video 3227 RTP/AVP 31 
    a=rtpmap:31 LPC 
-    
     
     
 2.14     200 OK Response with Broadcast Via Header 
@@ -601,13 +555,6 @@ Johnston et al         Expires - February 2002              [Page 10]
    Content-Type: application/sdp 
     
    v=0 
- 
- 
-Johnston et al         Expires - February 2002              [Page 11] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
    o=mhandley 29739 7272939 IN IP4 126.5.4.3 
    s=- 
    c=IN IP4 224.2.17.12/127 
@@ -615,7 +562,6 @@ Johnston et al         Expires - February 2002              [Page 11]
    m=audio 492170 RTP/AVP 0 12 
    m=video 3227 RTP/AVP 31 
    a=rtpmap:31 LPC 
-    
     
     
 2.15     INVITE with Invalid Via and Contact Headers 
@@ -649,7 +595,6 @@ Johnston et al         Expires - February 2002              [Page 11]
    a=rtpmap:31 LPC 
     
     
-    
 2.16     INVITE with Incorrect Content-Length Header 
     
    This is a request message with a Content Length that is much larger 
@@ -657,14 +602,6 @@ Johnston et al         Expires - February 2002              [Page 11]
     
    When sent UDP, the server should respond with an error. With TCP, 
    there's not much you can do but wait... 
- 
- 
-Johnston et al         Expires - February 2002              [Page 12] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
-    
     
    Message Details 
     
@@ -687,14 +624,11 @@ Johnston et al         Expires - February 2002              [Page 12]
    m=video 3227 RTP/AVP 31 
    a=rtpmap:31 LPC 
     
-    
-    
 2.17     INVITE with Invalid Value for Content-Length 
     
    This is a request message with a negative value for Content-Length. 
     
    The server should respond with an error. 
-    
     
    Message Details 
     
@@ -713,17 +647,9 @@ Johnston et al         Expires - February 2002              [Page 12]
    s=- 
    c=IN IP4 135.180.130.88 
    t=0 0 
- 
- 
-Johnston et al         Expires - February 2002              [Page 13] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
    m=audio 492170 RTP/AVP 0 12 
    m=video 3227 RTP/AVP 31 
    a=rtpmap:31 LPC 
-    
     
     
 2.18     INVITE with Garbage after Message Body 
@@ -760,7 +686,6 @@ Johnston et al         Expires - February 2002              [Page 13]
     a0sdjhg8a0''...'';;;; 
     
     
-    
 2.19     INVITE with Error in Display Name in To Header 
     
    This is a request with an unterminated quote in the display name of 
@@ -768,14 +693,6 @@ Johnston et al         Expires - February 2002              [Page 13]
     
    The server can either return an error, or proxy it if it is 
    successful parsing without the terminating quote. 
-    
- 
- 
-Johnston et al         Expires - February 2002              [Page 14] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
     
    Message Details 
     
@@ -796,8 +713,6 @@ Johnston et al         Expires - February 2002              [Page 14]
    m=audio 492170 RTP/AVP 0 12 
    m=video 3227 RTP/AVP 31 
    a=rtpmap:31 LPC 
-    
-    
     
 2.20     INVITE with a Semicolon-Separated Parameter in the "user" Part 
     
@@ -823,13 +738,6 @@ Johnston et al         Expires - February 2002              [Page 14]
     
    This INVITE is illegal because the Request-URI has been enclosed 
    within in "<>". 
-    
- 
- 
-Johnston et al         Expires - February 2002              [Page 15] 
-
-                      SIP Torture Test Messages           August 2002 
- 
  
    An intelligent server may be able to deal with this and fix up  
    athe Request-URI if acting as a Proxy. If not it should respond 400 
@@ -858,7 +766,6 @@ Johnston et al         Expires - February 2002              [Page 15]
    a=rtpmap:31 LPC 
     
     
-    
 2.22     INVITE with Illegal LWS within Elements of Request-URI  
     
    This INVITE has illegal LWS within the SIP URI. 
@@ -866,7 +773,6 @@ Johnston et al         Expires - February 2002              [Page 15]
    An intelligent server may be able to deal with this and fix up  
    the Request-URI if acting as a Proxy. If not it should respond 400 
    with an appropriate reason phrase. 
-    
     
    Message Details 
     
@@ -879,13 +785,6 @@ Johnston et al         Expires - February 2002              [Page 15]
    Via: SIP/2.0/UDP 135.180.130.133:5060;branch=z9hG4bKkdjuw 
    Content-Type: application/sdp 
    Content-Length: 174 
-    
- 
- 
-Johnston et al         Expires - February 2002              [Page 16] 
-
-                      SIP Torture Test Messages           August 2002 
- 
  
    v=0 
    o=mhandley 29739 7272939 IN IP4 126.5.4.3 
@@ -895,8 +794,7 @@ Johnston et al         Expires - February 2002              [Page 16]
    m=audio 492170 RTP/AVP 0 12 
    m=video 3227 RTP/AVP 31 
    a=rtpmap:31 LPC 
-    
-    
+`    
     
 2.23     INVITE with illegal >1 SP between elements of Request URI  
     
@@ -934,14 +832,6 @@ Johnston et al         Expires - February 2002              [Page 16]
     
    This INVITE is legal and has a Request-URI with a SIP URI containing 
    escaped characters. 
-    
-    
- 
- 
-Johnston et al         Expires - February 2002              [Page 17] 
-
-                      SIP Torture Test Messages           August 2002 
- 
  
    Message Details 
     
@@ -964,7 +854,6 @@ Johnston et al         Expires - February 2002              [Page 17]
    m=audio 492170 RTP/AVP 0 12 
    m=video 3227 RTP/AVP 31 
    a=rtpmap:31 LPC 
-    
     
     
 2.25     INVITE with the illegal use of escaped headers in Request-URI 
@@ -992,13 +881,6 @@ Johnston et al         Expires - February 2002              [Page 17]
    v=0 
    o=mhandley 29739 7272939 IN IP4 126.5.4.3 
    s=- 
- 
- 
-Johnston et al         Expires - February 2002              [Page 18] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
    c=IN IP4 135.180.130.88 
    t=0 0 
    m=audio 492170 RTP/AVP 0 12 
@@ -1046,13 +928,6 @@ Johnston et al         Expires - February 2002              [Page 18]
    Message Details 
     
    OPTIONS sip:user@company.com SIP/2.0 
- 
- 
-Johnston et al         Expires - February 2002              [Page 19] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
    To: sip:user@company.com 
    From: "caller"<sip:caller@example.com>;tag=323 
    Max-Forwards: 70 
@@ -1099,14 +974,6 @@ Johnston et al         Expires - February 2002              [Page 19]
    Date: Fri, 01 Jan 2010 16:00:00 EST 
    Content-Type: application/sdp 
    Content-Length: 174 
-    
- 
- 
-Johnston et al         Expires - February 2002              [Page 20] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
    v=0 
    o=mhandley 29739 7272939 IN IP4 126.5.4.3 
    s=- 
@@ -1156,14 +1023,6 @@ Johnston et al         Expires - February 2002              [Page 20]
     
    A proxy or gateway should not forward the request and respond 483 
    (Too Many Hops). 
- 
- 
-Johnston et al         Expires - February 2002              [Page 21] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
-    
     
    Message Details 
     
@@ -1208,12 +1067,6 @@ Johnston et al         Expires - February 2002              [Page 21]
    Contact: <sip:user@example.com?Route=%3Csip:sip.example.com%3E> 2.33     REGISTER with a Escaped Header in a Illegal SIP URI of a Contact 
     
    This is an illegal message as the REGISTER request contains a SIP 
- 
- 
-Johnston et al         Expires - February 2002              [Page 22] 
-
-                      SIP Torture Test Messages           August 2002 
- 
  
    URI with an escaped header but it is not enclosed in  <> A server should respond 400 with an appropriate reason phrase. 
     
@@ -1261,13 +1114,6 @@ Johnston et al         Expires - February 2002              [Page 22]
    Via: SIP/2.0/TCP sip23.example.com 
    Via: SIP/2.0/TCP sip22.example.com 
    Via: SIP/2.0/TCP sip21.example.com 
- 
- 
-Johnston et al         Expires - February 2002              [Page 23] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
    Via: SIP/2.0/TCP sip20.example.com 
    Via: SIP/2.0/TCP sip19.example.com 
    Via: SIP/2.0/TCP sip18.example.com 
@@ -1317,13 +1163,6 @@ Johnston et al         Expires - February 2002              [Page 23]
    OPTIONS sip:135.180.130.133 SIP/2.0 
    Via: SIP/2.0/UDP company.com:5604 
    Max-Forwards: 70 
- 
- 
-Johnston et al         Expires - February 2002              [Page 24] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
    From: sip:iuser@company.com;tag=74345345 
    To: sip:user@135.180.130.133 
    Call-ID: 1804928587@company.com 
@@ -1373,13 +1212,6 @@ Johnston et al         Expires - February 2002              [Page 24]
    a=T38FaxTranscodingMMR:0 
    a=T38FaxTranscodingJBIG:0 
    a=T38FaxRateManagement:transferredTCF 
- 
- 
-Johnston et al         Expires - February 2002              [Page 25] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
    a=T38FaxMaxBuffer:260 
    a=T38FaxUdpEC:t38UDPR 
     
@@ -1424,14 +1256,9 @@ Johnston et al         Expires - February 2002              [Page 25]
    To: sip:watson@bell-tel.com 
    Call-ID: 70710@saturn.bell-tel.com 
    CSeq: 3 REGISTER 
-   Contact: <sip:+19725552222@gw1.atlanta.com;user=phone> 2.39     INVITE with an Unquoted Display Name Containing Multiple Tokens 
-    
- 
- 
-Johnston et al         Expires - February 2002              [Page 26] 
+   Contact: <sip:+19725552222@gw1.atlanta.com;user=phone> 
 
-                      SIP Torture Test Messages           August 2002 
- 
+2.39     INVITE with an Unquoted Display Name Containing Multiple Tokens 
  
    This is a legal INVITE where the To and From header contain display 
    names that contain multiple tokens but are unquoted. 
@@ -1480,13 +1307,6 @@ Johnston et al         Expires - February 2002              [Page 26]
    INVITE sip:t.watson@ieee.org SIP/7.0 
    Via:     SIP/2.0/UDP c.bell-tel.com;branch=z9hG4bKkdjuw 
    Max-Forwards:     70 
- 
- 
-Johnston et al         Expires - February 2002              [Page 27] 
-
-                      SIP Torture Test Messages           August 2002 
- 
- 
    From:    A. Bell <sip:a.g.bell@bell-tel.com>;tag=qweoiqpe 
    To:      T. Watson <sip:t.watson@ieee.org> Call-ID: 31417@c.bell-tel.com 
    CSeq:    1 INVITE 

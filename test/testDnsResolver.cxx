@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 
 #include "sip2/util/Logger.hxx"
+#include "sip2/sipstack/DnsResolver.hxx"
 
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::TEST
 
