@@ -1,4 +1,5 @@
 #include "sip2/sipstack/MultipartMixedContents.hxx"
+#include "sip2/sipstack/PlainContents.hxx"
 #include "sip2/util/ParseBuffer.hxx"
 #include <iostream>
 
@@ -9,9 +10,13 @@ int
 main()
 {
    {
-      const Data txt("--example-1\r\n"
+      const Data txt("Content-Type: Multipart/Related; boundary=example-1;"
+                     "start=\"<950120.aaCC@XIson.com>\";"
+                     "type=\"Application/X-FixedRecord\";start-info=\"-o ps\"\r\n"
+                     "\r\n"
+                     "--example-1\r\n"
                      "Content-Type: text/plain\r\n"
-                     "Content-ID: <950120.aaCC@XIson.com>\r\n"
+                     "Content-ID: <1_950120.aaCC@XIson.com>\r\n"
                      "\r\n"
                      "25\r\n"
                      "10\r\n"
@@ -25,7 +30,7 @@ main()
                      "Content-Type: text/plain\r\n"
                      "Content-Description: The fixed length records\r\n"
                      "Content-Transfer-Encoding: base64\r\n"
-                     "Content-ID: <950120.aaCB@XIson.com>\r\n"
+                     "Content-ID: <2_950120.aaCB@XIson.com>\r\n"
                      "\r\n"
                      "T2xkIE1hY0RvbmFsZCBoYWQgYSBmYXJtCkUgSS\r\n"
                      "BFIEkgTwpBbmQgb24gaGlzIGZhcm0gaGUgaGFk\r\n"
@@ -50,6 +55,8 @@ main()
       MultipartMixedContents mpc(&hfv, contentType);
 
       assert(mpc.parts().size() == 2);
+
+      PlainContents *f = dynamic_cast<PlainContents*>(mpc.parts().front());
 
       mpc.encode(cerr);
    }
