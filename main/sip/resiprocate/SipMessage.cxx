@@ -124,6 +124,8 @@ SipMessage::~SipMessage()
 const Data& 
 SipMessage::getTransactionId() const
 {
+   // !jf! this should be caught early on just after preparsing and the message
+   // should be rejected. 
    assert (!header(h_Vias).empty());
    if( header(h_Vias).front().exists(p_branch) 
        && header(h_Vias).front().param(p_branch).hasMagicCookie() )
@@ -229,6 +231,12 @@ SipMessage::compute2543TransactionHash() const
       }
            
       mRFC2543TransactionId = strm.getHex();
+   }
+   else
+   {
+      InfoLog (<< "Trying to compute a transaction id on a 2543 response. Drop the response");
+      DebugLog (<< *this);
+      throw Exception("Drop invalid 2543 response", __FILE__, __LINE__);
    }
 }
 
