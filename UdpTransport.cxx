@@ -110,9 +110,11 @@ UdpTransport::process(fd_set* fdSet)
          // !jf! what to do if it fails
          assert(0);
       }
-
-      assert ( (count == int(sendData->data.size()) ) || (count == SOCKET_ERROR ) );
-      ok(sendData->transactionId);
+      else
+      {
+         assert ( (count == int(sendData->data.size()) ) || (count == SOCKET_ERROR ) );
+         ok(sendData->transactionId);
+      }
    }
 
    struct sockaddr_in from;
