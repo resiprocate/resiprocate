@@ -52,7 +52,7 @@ TestDnsResolver::test()
    {
       FdSet fdset;
       stack.mDnsResolver.buildFdSet(fdset);
-      int err = fdset.selectMiliSeconds(1000);
+      int err = fdset.selectMilliSeconds(1);
       assert (err != -1);
       
       stack.mDnsResolver.process(fdset);
