@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/HeaderTypes.hxx"
