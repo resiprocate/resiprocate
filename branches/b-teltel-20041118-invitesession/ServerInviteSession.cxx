@@ -462,6 +462,19 @@ ServerInviteSession::dispatch(const SipMessage& msg)
 void 
 ServerInviteSession::dispatch(const DumTimeout& msg)
 {
+   if (timeout.type() == DumTimeout::Retransmit1xx)
+   {
+      mDum.send(m1xx);
+      if (mCurrentRetransmit1xx)
+      {
+         mCurrentRetransmit1xx *= 2;
+         mDum.addTimerMs(DumTimeout::Retransmit1xx, resipMin(Timer::T2, mCurrentRetransmit1xx), getBaseHandle(), timeout.seq());
+      }
+   }
+   else
+   {
+      InviteSession::dispatch(msg);
+   }
 }
 
 void

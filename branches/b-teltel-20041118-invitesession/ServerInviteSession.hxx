@@ -91,7 +91,8 @@ class ServerInviteSession: public InviteSession
       // stores the original request
       SipMessage mFirstRequest;
       SipMessage m1xx; // for 1xx retransmissions
-
+      unsigned long mCurrentRetransmit1xx;
+      
       //std::deque<SipMessage> mUnacknowledgedProvisionals; // all of them
       //SipMessage m200; // for retransmission
 };
