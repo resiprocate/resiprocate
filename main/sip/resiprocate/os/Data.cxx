@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.22 2002/11/04 20:36:13 derekm Exp $";
+"$Id: Data.cxx,v 1.23 2002/11/04 23:41:51 bko Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -24,12 +24,12 @@ Data::Data()
 
 Data::Data(const char* str, int length) 
    : mSize(length),
-     mBuf(new char[mSize + 1]),
+     mBuf(new char[mSize]),
      mCapacity(mSize),
      mMine(true)
 {
    assert(str);
-   memcpy(mBuf, str, mSize + 1);
+   memcpy(mBuf, str, mSize);
 }
 
 // share memory KNOWN to be in a surrounding scope
