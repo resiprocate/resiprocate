@@ -189,13 +189,20 @@ TransactionState::processAck(Message* message)
       assert(sip->header(h_RequestLine).getMethod() == ACK);
       sendToWire(sip);
    }
+   else if (isDns(message))
+   {
+      processDns(message);
+   }
    else if (result)
    {
-      processDns(message); // handle the DnsMessage*    
-      delete message;
       if (result->isFailed())
       {
+         delete message;
          delete this;
+      }
+      else
+      {
+      delete message;
       }
    }
    else
