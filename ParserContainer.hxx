@@ -79,8 +79,8 @@ class ParserContainer : public ParserContainerBase
       void push_front(const T & t) { mParsers.push_front(new T(t)); }
       void push_back(const T & t) { mParsers.push_back(new T(t)); }
       
-      void pop_front() { mParsers.pop_front(); }
-      void pop_back() { mParsers.pop_back(); }
+      void pop_front() { delete mParsers.front(); mParsers.pop_front(); }
+      void pop_back() { delete mParsers.back(); mParsers.pop_back(); }
       
       ParserContainer reverse()
       {
