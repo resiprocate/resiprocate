@@ -78,3 +78,12 @@ openssl pkcs7 -inform DER -in j2 -print_certs -text -noout
 
 openssl pkcs7 -inform DER -in j2 -outform PEM -out j3
 
+
+ setenv SIP ~/.sip_alice
+ setenv SIP ~/.sip_bob
+
+limp  -contact sip:alice@a.example.com:5070 -aor sip:alice@a.example.com -port 5070 -to sip:bob@b.example.com  -noRegister -tlsPort 0 
+limp  -contact sip:bob@b.example.com:5060 -aor sip:bob@b.example.com -noRegister -tlsPort 0 
+
+openssl base 64 -in foo -out bar -e ( or the -d to decode) 
+
