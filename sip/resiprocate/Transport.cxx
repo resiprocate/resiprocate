@@ -208,7 +208,7 @@ Transport::stampReceived(SipMessage* message)
 {
    //DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
    // set the received= and rport= parameters in the message if necessary !jf!
-   if (message->isRequest() && !message->header(h_Vias).empty())
+   if (message->isRequest() && message->exists(h_Vias) && !message->header(h_Vias).empty())
    {
       const Tuple& tuple = message->getSource();
       
