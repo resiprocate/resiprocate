@@ -216,9 +216,9 @@ const Log::ThreadSetting*
 Log::getThreadSetting()
 {
 #ifdef WIN32
-	return 0;
+   return 0;
 #else
-	ThreadSetting* setting = static_cast<ThreadSetting*>(pthread_getspecific(Log::_levelKey));
+   ThreadSetting* setting = static_cast<ThreadSetting*>(pthread_getspecific(Log::_levelKey));
    if (setting == 0)
    {
       return 0;
