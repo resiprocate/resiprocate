@@ -114,9 +114,11 @@ HeaderFieldValue::get(const Data& type)
   return dynamic_cast<UnknownSubComponent*>(mUnknownSubComponentList.get(type));
 }
 
-ostream& encode(ostream& str) const
+ostream& 
+HeaderFieldValue::encode(ostream& str) const
 {
-   
+   str.write(mField, mFieldLength);
+   str << endl;
    return str;
 }
 
