@@ -224,6 +224,7 @@ TransportSelector::srcAddrForDest(const Tuple& dest, bool& ok) const
 {
   ok = true;
   Tuple srcTuple;
+
   sockaddr_in sock4_src;
   sockaddr_in sock4_dest;
 
@@ -231,14 +232,14 @@ TransportSelector::srcAddrForDest(const Tuple& dest, bool& ok) const
   sockaddr_in6 sock6_src;
   sockaddr_in6 sock6_dest;
 #endif  
-
+  
   const sockaddr* destaddr = reinterpret_cast<const sockaddr * >(&sock4_dest);
   sockaddr* srcaddr = reinterpret_cast<sockaddr * >(&sock4_src);
   socklen_t addrlen = sizeof(sock4_src);
 
   DebugLog(<<"Seeking src address for destination: " << DnsUtil::inet_ntop(dest));
   
-  if ( dest.v6 )
+  if ( !dest.isV4() )
 #if defined(USE_IPV6)
   {
     // Move pts to v6 structs change addrlen.
@@ -335,7 +336,7 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
 
    if (destination.transport == 0)
    {
-      if (destination.transportType == TLS)
+      if (destination.getType() == TLS)
       {
         destination.transport = findTlsTransport(msg->getTlsDomain()//,
                                                  /*srcTuple*/
@@ -360,6 +361,7 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
            Tuple::toData(destination.transport->transport());  //cache !jf! 
 
          // wing in the transport address based on where this is going.
+
          //!ah! xyzzy
          bool status = true;
          msg->header(h_Vias).front().sentHost() = 
@@ -444,7 +446,7 @@ TransportSelector::buildFdSet( FdSet& fdset )
 Transport*
 TransportSelector::findTransport(const Tuple& tuple) const
 {
-    return findTransport(tuple.transportType);
+   return findTransport(tuple.getType());
 }
 
 Transport*

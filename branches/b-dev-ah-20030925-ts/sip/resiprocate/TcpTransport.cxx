@@ -18,13 +18,10 @@ using namespace resip;
 TcpTransport::TcpTransport(Fifo<Message>& fifo, int portNum, const Data& pinterface, bool ipv4)
    : TcpBaseTransport(fifo, portNum, pinterface, ipv4)
 {
-   DebugLog (<< "Creating TCP transport on " << pinterface << ":" << portNum);
-
 }
 
 TcpTransport::~TcpTransport()
 {
-   DebugLog (<< "Shutting down TCP Transport " << mFd << " " << this);   //!rm!
 }
 
 Connection* 

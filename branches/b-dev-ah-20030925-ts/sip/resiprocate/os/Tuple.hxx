@@ -44,39 +44,35 @@ class Tuple
 {
    public:
       Tuple();
+      Tuple(const in_addr& pipv4, int pport, TransportType ptype);
+      Tuple(const sockaddr& addr, TransportType ptype);
+      Tuple(const Data& printableAddress, int port, TransportType type);
 #ifdef USE_IPV6
-      Tuple(const in6_addr& pipv6,
-            int pport,
-            TransportType ptype);
+      Tuple(const in6_addr& pipv6,  int pport, TransportType ptype);
 #endif
-      Tuple(const in_addr& pipv4,
-            int pport,
-            TransportType ptype);
-      Tuple(const sockaddr& addr, 
-            TransportType ptype);
       
       // convert from a tuple to a sockaddr structure
-      void toSockaddr(struct sockaddr& addrOut) const;
+      const sockaddr& getSockaddr() const { return mSockaddr; }
+      TransportType getType() const { return mTransportType; }
+      void setPort(int port);
+      int getPort() const;
+      bool isV4() const;
 
       bool operator<(const Tuple& rhs) const;
       bool operator==(const Tuple& rhs) const;
       
-      bool v6;
-      struct in_addr ipv4;
-#ifdef USE_IPV6
-      struct in6_addr ipv6;
-#endif
+      static TransportType toTransport( const Data& );
+      static const Data& toData( TransportType );
 
-      int port;
-      TransportType transportType;
       Transport* transport;
       ConnectionId connectionId;
       
-      static TransportType toTransport( const Data& );
-      static const Data& toData( TransportType );
-};
+   private:
+      sockaddr mSockaddr;
+      TransportType mTransportType;
 
-std::ostream& operator<<(std::ostream& strm, const Tuple& tuple);
+      friend std::ostream& operator<<(std::ostream& strm, const Tuple& tuple);
+};
 
 }
 
