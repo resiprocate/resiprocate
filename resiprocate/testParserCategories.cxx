@@ -544,16 +544,18 @@ main(int arc, char** argv)
       DateCategory date(&hfv);
 
       assert(date.dayOfWeek() == Mon);
-      assert(date.dayOfMonth() == 17);
+      assert(date.dayOfMonth() == 04);
       assert(date.month() == Nov);
       assert(date.year() == 2002);
-      assert(date.hour() == 17);
       assert(date.hour() == 17);
       assert(date.minute() == 34);
       assert(date.second() == 15);
 
       stringstream s;
       date.encode(s);
+
+      cerr << s.str() << endl;
+
       assert(s.str() == dateString);
    }
 
@@ -563,14 +565,13 @@ main(int arc, char** argv)
       
       DateCategory date(&hfv);
 
-      assert(date.dayOfWeek() == Mon);
-      assert(date.dayOfMonth() == 17);
-      assert(date.month() == Nov);
-      assert(date.year() == 2002);
-      assert(date.hour() == 17);
-      assert(date.hour() == 17);
-      assert(date.minute() == 34);
-      assert(date.second() == 15);
+      assert(date.dayOfWeek() == Sun);
+      assert(date.dayOfMonth() == 14);
+      assert(date.month() == Jan);
+      assert(date.year() == 2222);
+      assert(date.hour() == 07);
+      assert(date.minute() == 04);
+      assert(date.second() == 05);
 
       stringstream s;
       date.encode(s);
