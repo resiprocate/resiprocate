@@ -1,5 +1,6 @@
 
 #ifndef WIN32
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -15,7 +16,6 @@ typedef uint32_t u_int32_t;
 
 #include <stdio.h>
 #include <errno.h>
-#include <sys/types.h>
 
 #include "sip2/util/Socket.hxx"
 #include "sip2/util/Logger.hxx"
@@ -184,9 +184,12 @@ DnsResolver::lookupARecords(const Data& transactionId,
     char buffer[8192];
   ret = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
    assert (ret != ERANGE);
-#elif defined(WIN32)
+#elif defined(WIN32) 
    result = gethostbyname( host.c_str() );
    herrno = WSAGetLastError();
+#elif defined( __MACH__ )
+   result = gethostbyname( host.c_str() );
+   herrno = h_errno;
 #elif defined(__QNX__) || defined(__SUNPRO_CC)
    struct hostent hostbuf; 
    char buffer[8192];
