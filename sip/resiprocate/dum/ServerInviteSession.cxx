@@ -120,9 +120,9 @@ ServerInviteSession::dispatch(const SipMessage& msg)
             if (msg.header(h_RequestLine).method() == CANCEL)
             {
                mDialog.makeResponse(mLastResponse, msg, 200);
-               mDum.send(msg);
+               mDum.send(mLastResponse);
                mDialog.makeResponse(mLastResponse, msg, 487);         
-               mDum.send(msg);
+               mDum.send(mLastResponse);
             }
             else
             {
@@ -139,11 +139,6 @@ ServerInviteSession::dispatch(const SipMessage& msg)
    }
 }
 
-//!dcm! Nothing here, all up in InviteSession?
-void 
-ServerInviteSession::dispatch(const DumTimeout& timer)
-{
-}
 
 
 /* ====================================================================

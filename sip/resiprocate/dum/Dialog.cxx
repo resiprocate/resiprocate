@@ -219,6 +219,7 @@ Dialog::cancel()
 void
 Dialog::dispatch(const SipMessage& msg)
 {
+   InfoLog ( << "Dialog::dispatch: " << msg.brief());
    if (msg.isRequest())
    {
       const SipMessage& request = msg;
