@@ -72,6 +72,7 @@ ServerPagerMessage::accept(int statusCode)
 {   
    //!dcm! -- should any responses include a contact?
    mDum.makeResponse(mResponse, mRequest, statusCode);
+   mResponse.remove(h_Contacts);   
    return mResponse;
 }
 
