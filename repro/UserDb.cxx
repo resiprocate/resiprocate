@@ -19,10 +19,6 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
-UserAbstractDb::UserAbstractDb( )
-{ 
-}
-
 UserDb::UserDb( char* fileName )
 { 
    mDb = dbopen(fileName,O_CREAT|O_RDWR,0000600,DB_BTREE,0);
@@ -34,183 +30,10 @@ UserDb::UserDb( char* fileName )
 }
 
 
-UserAbstractDb::~UserAbstractDb()
-{ 
-}
-
-
 UserDb::~UserDb()
 { 
    int ret = mDb->close(mDb);
    assert( ret == 0 );
-}
-
-
-void 
-UserAbstractDb::requestUserAuthInfo( const resip::Data& user, 
-                                     const resip::Data& realm,
-                                     const resip::Data& transactionId,
-                                     resip::TransactionUser& transactionUser ) const
-{
-   Data key = buildKey(user,realm);
-   Data a1 = getUserAuthInfo(key);
-    
-   UserAuthInfo* msg = new UserAuthInfo(user,realm,transactionId, a1);
-   transactionUser.post( msg );
-}
-
-
-Data 
-UserAbstractDb::getUserAuthInfo( const Data& key ) const
-{
-   Data record;
-   bool ok = dbReadRecord( key, record );
-   if (!ok)
-   {
-      return  Data::Empty;
-   }
-   
-   UserRecord rec = decodeUserRecord( record );
-
-   return rec.passwordHash;
-}
-
-
-void 
-UserAbstractDb::addUser( const Data& username,
-                         const Data& realm,
-                         const Data& password, 
-                         const Data& fullName, 
-                         const Data& emailAddress )
-{
-   Data key = buildKey( username, realm );
-     
-   MD5Stream a1;
-   a1 << username
-      << Symbols::COLON
-      << realm
-      << Symbols::COLON
-      << password;
-
-   UserAbstractDb::UserRecord rec;
-   rec.version = 1;
-   rec.passwordHash = a1.getHex();
-   rec.name = fullName;
-   rec.email = emailAddress;
-   rec.forwardAddress = Data::Empty;
-
-   Data data = encodeUserRecord( rec );;
-   
-   dbWriteRecord( key , data );  
-}
-
-
-void 
-UserAbstractDb::removeUser( const Data& aor )
-{ 
-   Data key = aor;
-   dbRemoveRecord(key);
-}
-
-
-Data 
-UserAbstractDb::encodeUserRecord( const UserRecord& rec ) const
-{
-   Data data;
-   oDataStream s(data);
-   short len;
-   assert( sizeof(len) == 2 );
-   
-   assert( rec.version == 1 );
-   
-   assert( sizeof( rec.version) == 2 );
-   s.write( (char*)(&rec.version) , sizeof( rec.version ) );
-   
-   len = rec.passwordHash.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.passwordHash.data(), len );
-   
-   len = rec.name.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.name.data(), len );
-   
-   len = rec.email.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.email.data(), len );
-   
-   len = rec.forwardAddress.size();
-   s.write( (char*)(&len) , sizeof( len ) );
-   s.write( rec.forwardAddress.data(), len );
-      
-   return data;
-}
-
-
-UserAbstractDb::UserRecord 
-UserAbstractDb::decodeUserRecord( const Data& pData ) const 
-{
-   UserAbstractDb::UserRecord rec;
-
-   Data data = pData;
-   
-   iDataStream s(data);
-   short len;
-   assert( sizeof(len) == 2 );
-
-   s.read( (char*)(&len), sizeof(len) );
-   rec.version =  len;
-   
-   if (  rec.version == 1 )
-   {
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.passwordHash = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.name = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.email = data;
-      }
-      
-      {
-         s.read( (char*)(&len), sizeof(len) ); 
-         char buf[len+1];
-         s.read( buf, len );
-         Data data( buf, len );
-         rec.forwardAddress = data;
-      }
-   }
-   else
-   {
-      // unkonwn version 
-      ErrLog( <<"Data in user database with unknown version " << rec.version );
-      assert(0);
-   }
-      
-   return rec;
-}
-
-
-resip::Data 
-UserAbstractDb::buildKey( const resip::Data& user, 
-                          const resip::Data& realm) const
-{
-   Data ret = user + Data("@") + realm;
-   return ret;
 }
 
 
@@ -285,20 +108,6 @@ UserDb::dbRemoveRecord( const Data& pKey )
 
 
 resip::Data 
-UserAbstractDb::getFirstKey()
-{
-   return dbFirstKey();
-}
-
-
-resip::Data 
-UserAbstractDb::getNextKey()
-{
-   return dbNextKey();
-}
-
-
-resip::Data 
 UserDb::dbFirstKey()
 { 
    DBT key,data;
@@ -342,7 +151,6 @@ UserDb::dbNextKey()
    assert ( ret == 0 );
          // key found 
    
-   //Data d(Data::Take, reinterpret_cast<const char*>(key.data), key.size );
    Data d(reinterpret_cast<const char*>(key.data), key.size );
 
    //clog << "Got key of "<< d << endl;
