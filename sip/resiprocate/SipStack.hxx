@@ -5,6 +5,7 @@
 
 #include "sip2/util/Fifo.hxx"
 #include "sip2/util/Socket.hxx"
+#include "sip2/util/DataStream.hxx"
 
 #include "sip2/sipstack/Executive.hxx"
 #include "sip2/sipstack/TransportSelector.hxx"
