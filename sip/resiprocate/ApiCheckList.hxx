@@ -35,7 +35,7 @@ static ::resip::ApiCheck::ApiEntry anonymous_resipApiSizeList[] =
     TENT(UdpTransport,"NEW_MSG_HEADER_SCANNER")
 };
 
-static resip::ApiCheck::ApiCheck
+static resip::ApiCheck
  anonymous_resipApiCheckObj(anonymous_resipApiSizeList,
                             sizeof(anonymous_resipApiSizeList)/sizeof(*anonymous_resipApiSizeList)
      );
