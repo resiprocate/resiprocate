@@ -80,17 +80,21 @@ DialogId::getDialogSetId() const
    return mDialogSetId;
 }
 
+size_t DialogId::hash() const 
+{
+   return mDialogSetId.hash() ^ mRemoteTag.hash();
+}
 #if defined(HASH_MAP_NAMESPACE)
 size_t HASH_MAP_NAMESPACE::hash<resip::DialogId>::operator()(const resip::DialogId& id) const
 {
-   return id.mDialogSetId.hash() ^ id.mRemoteTag.hash();
+    return id.hash();
 }
 #endif
 
 #if defined(__INTEL_COMPILER)
 size_t std::hash_value(const resip::DialogId& id)
 {
-   return id.mDialogSetId.hash() ^ id.mRemoteTag.hash();
+    return id.hash();
 }
 #endif
 
