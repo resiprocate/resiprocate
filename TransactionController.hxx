@@ -25,7 +25,7 @@ class TransactionController
       // graceful shutdown (eventually)
       void shutdown();
 
-      void addTransport( Transport::Type protocol, 
+      void addTransport( TransportType protocol, 
                          int port,
                          const Data& hostName,
                          const Data& nic);
