@@ -18,7 +18,8 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mId(creator->getLastRequest()),
    mDum(dum),
    mAppDialogSet(0),
-   mCancelled(false)
+   mCancelled(false),
+   mDestroying(false)
 {
    assert(!creator->getLastRequest().isExternal());
 }
@@ -30,7 +31,8 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mId(request),
    mDum(dum),
    mAppDialogSet(0),
-   mCancelled(false)
+   mCancelled(false),
+   mDestroying(false)
 {
    assert(request.isRequest());
    assert(request.isExternal());
@@ -39,18 +41,32 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
 
 DialogSet::~DialogSet()
 {
+   mDestroying = true;
    if (mMergeKey != MergedRequestKey::Empty)
    {
       mDum.mMergedRequests.erase(mMergeKey);
    }
 
    delete mCreator;
-   for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+   while(!mDialogs.empty())
    {
-      delete it->second;
+      delete mDialogs.begin()->second;
    } 
+   mDum.removeDialogSet(this->getId());
    delete mAppDialogSet;
 }
+
+void DialogSet::possiblyDie()
+{
+   if (!mDestroying)
+   {
+      if (mDialogs.empty())
+      {
+         delete this;
+      }   
+   }
+}
+
 
 DialogSetId
 DialogSet::getId()

@@ -76,25 +76,6 @@ class InviteSession : public BaseUsage
 
       std::pair<OfferAnswerType, const SdpContents*> getOfferOrAnswer(const SipMessage& msg) const;
       
-      InviteSession(DialogUsageManager& dum, Dialog& dialog);
-      void copyAuthorizations(SipMessage& request);
-      void makeAck();
-
-      OfferState mOfferState;
-      SdpContents* mCurrentLocalSdp;
-      SdpContents* mCurrentRemoteSdp;
-      SdpContents* mProposedLocalSdp;
-      SdpContents* mProposedRemoteSdp;
-      SdpContents* mNextOfferOrAnswerSdp;
-
-      SipMessage mLastRequest; 
-      //potentiall could be heap
-      SipMessage mAck;
-      SipMessage mFinalResponse;      
-   protected:
-      ~InviteSession();
-      friend class DialogUsageManager;
-
       typedef enum
       {
          Initial,  // No session setup yet
@@ -105,7 +86,28 @@ class InviteSession : public BaseUsage
          Connected,
          Terminated
       } State;
+
       State mState;
+
+      InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState);
+      void copyAuthorizations(SipMessage& request);
+      void makeAck();
+
+      OfferState mOfferState;
+      SdpContents* mCurrentLocalSdp;
+      SdpContents* mCurrentRemoteSdp;
+      SdpContents* mProposedLocalSdp;
+      SdpContents* mProposedRemoteSdp;
+      SdpContents* mNextOfferOrAnswerSdp;
+
+      SipMessage mLastRequest;
+      SipMessage mLastResponse;
+      SipMessage mAck;
+
+      ~InviteSession();
+
+   private:
+      friend class DialogUsageManager;
       
       // disabled
       InviteSession(const InviteSession&);
