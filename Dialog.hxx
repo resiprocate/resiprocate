@@ -56,6 +56,9 @@ class Dialog
       void cancel();
       void dispatch(const SipMessage& msg);
       void processNotify(const SipMessage& notify);
+      
+      //will end this dialog(if it makes sense)
+      void redirected(const SipMessage& msg);      
 
    private:
       virtual ~Dialog();
