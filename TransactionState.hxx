@@ -27,6 +27,8 @@ class TransactionState : public DnsHandler
          ClientInvite,
          ServerNonInvite,
          ServerInvite,
+         ClientStale,
+         ServerStale,
          Stateless  // may not be needed
       } Machine;
       
@@ -50,7 +52,8 @@ class TransactionState : public DnsHandler
       void processClientInvite(  Message* msg );
       void processServerNonInvite(  Message* msg );
       void processServerInvite(  Message* msg );
-      void processStale(  Message* msg );
+      void processClientStale(  Message* msg );
+      void processServerStale(  Message* msg );
       void processTransportFailure();
       void processNoDnsResults();
       void processReliability(TransportType type);
@@ -88,8 +91,6 @@ class TransactionState : public DnsHandler
       // Indicates that the message has been sent with a reliable protocol. Set
       // by the TransportSelector
       bool mIsReliable;
-
-      TransactionState* mCancelStateMachine;
 
       // !rk! The contract for this variable needs to be defined.
       SipMessage* mMsgToRetransmit;
