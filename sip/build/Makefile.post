@@ -1,4 +1,4 @@
-# $Id: Makefile.post,v 1.1 2003/03/24 22:09:53 jason Exp $
+# $Id: Makefile.post,v 1.2 2003/03/25 04:48:48 jason Exp $
 
 # The license applies to all software incorporated in the "Vovida
 # Open Communication Application Library" except for those portions
@@ -77,7 +77,6 @@ endif
 
 PURIFY = purify
 PURIFY5 = /usr/pure/purify-5.3-solaris2/purify
-#PURIFY5 = /usr/local/purify-5.1-beta-L2-solaris2/purify-5.1-beta-L2-solaris2/purify
 QUANTIFY = quantify
 
 # this section adds the appropriate flags, headers, etc. for packages.
@@ -126,9 +125,7 @@ CXXFLAGS += $(INCLUDE_LIST) $(DEFINE_LIST)
 CFLAGS += $(INCLUDE_LIST) $(DEFINE_LIST)
 
 OBJ = obj.$(TARGET_NAME)
-#OBJ = $(shell $(TOOLS)/reportbuilddir $(ROOT)/.make_prefs)/obj.$(TARGET_NAME)
 BIN = bin.$(TARGET_NAME)
-#BIN = $(shell $(TOOLS)/reportbuilddir $(ROOT)/.make_prefs)/bin.$(TARGET_NAME)
 
 .PHONY : all code clean default $(BIN) $(OBJ) prefs full headercheck verify fakepre
 
@@ -171,28 +168,6 @@ CODETARGETS = $(patsubst %.c,$(BIN)/%,$(patsubst %.cxx,$(BIN)/%,$(TESTPROGRAMS))
 TESTCASE_PROGRAMS = $(patsubst %,$(BIN)/%,$(TESTCASES))
 
 VERIFY_TESTCASE_PROGRAMS = $(patsubst %.c,$(BIN)/%,$(patsubst %.cxx,$(BIN)/%,$(VERIFY_TESTCASES)))
-
-ifdef USE_LEAKTRACE
-$(LEAKTRACE):
-	cd $(ROOT)/contrib ; $(MAKE) all
-
-CODETARGETS_LT = $(patsubst %,%.lt,$(strip $(CODETARGETS)))
-endif
-
-ifdef USE_LTNEW
-$(LTNEW):
-	cd $(ROOT)/contrib/andreasen/newLT ; $(MAKE) all
-
-CODETARGETS_LT = $(patsubst %,%.ltnew,$(strip $(CODETARGETS)))
-endif
-
-ifdef USE_LTHEAP
-$(LTNEW):
-	cd $(ROOT)/contrib/andreasen/Heap ; $(MAKE)
-
-CODETARGETS_LT = $(patsubst %,%.ltheap,$(strip $(CODETARGETS)))
-endif
-
 
 CODETARGETS_PURE = $(patsubst %,%.pure,$(strip $(CODETARGETS)))
 CODETARGETS_PURE5 = $(patsubst %,%.pure5,$(strip $(CODETARGETS)))
@@ -253,8 +228,6 @@ pure5_lib: $(LIBTARGETS_PURE5)
 
 quantify: $(CODETARGETS_QUANTIFY)
 
-backup:
-	tar cvf - $(SRC) $(OSRC) | gzip > `date +"backup_$(PROG)-%Y%m%d-%H%M.tgz"`
 
 $(BIN):
 	-@ $(TOOLS)/mkbuildlinks $(BIN) $(ROOT)/.make_prefs
@@ -318,45 +291,10 @@ $(OBJ)/%.o: %.cxx $(OBJ)/%.d $(OBJ)/cxxflags
 	$(CXX) $(CXXFLAGS) -c $(OUTPUT_FLAG)$@ $<
 endif
 
-# build assembly listings 
-%.S: %.cxx
-	$(CXX) $(CXXFLAGS)  -fverbose-asm -g -Wa,-ahln -c \
-		-o /tmp/cjJunk.o $< > $@
-
-
-#$(DATESTAMP_DIR):
-#	mkdir -p $@
-
-#$(DATESTAMP): $(DATESTAMP_DIR)
-#	$(CC) $(CFLAGS) -c -o $@ $(DATESRC)
-
-
 # build executables
 $(BIN)/%: $(OBJ)/%.o $(OBJS)  $(EXTRAS)  .dependlibs
 	$(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS)
 
-
-# build leaktraced version of executable
-ifdef USE_LEAKTRACE
-.dependlibs: $(LEAKTRACE)
-$(BIN)/%.lt: $(OBJ)/%.o $(OBJS) $(EXTRAS)  .dependlibs
-	$(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS) $(LEAKTRACE)
-
-endif
-
-ifdef USE_LTNEW
-.dependlibs: $(LTNEW)
-$(BIN)/%.ltnew: $(OBJ)/%.o $(OBJS) $(EXTRAS)  .dependlibs
-	$(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS) $(LTNEW)
-
-endif
-
-ifdef USE_LTHEAP
-.dependlibs: $(LTNEW)
-$(BIN)/%.ltheap: $(OBJ)/%.o $(OBJS) $(EXTRAS)  .dependlibs
-	$(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS) $(LTHEAP)
-
-endif
 
 # build purified version of executable
 $(BIN)/%.pure: $(OBJ)/%.o $(OBJS) $(EXTRAS)  .dependlibs
