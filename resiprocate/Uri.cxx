@@ -7,7 +7,7 @@ using namespace Vocal2;
 Uri::Uri() 
    : ParserCategory(),
      mScheme(Symbols::DefaultSipScheme),
-     mPort(Symbols::DefaultSipPort)
+     mPort(0)
 {}
 
 Uri::Uri(const Uri& rhs)
@@ -16,10 +16,104 @@ Uri::Uri(const Uri& rhs)
      mHost(rhs.mHost),
      mUser(rhs.mUser),
      mPort(rhs.mPort),
-     mAor(rhs.mAor),
      mPassword(rhs.mPassword)
+{}
+
+Uri&
+Uri::operator=(const Uri& rhs)
 {
+   if (this != &rhs)
+   {
+      ParserCategory::operator=(rhs);
+      mScheme = rhs.mScheme;
+      mHost = rhs.mHost;
+      mUser = rhs.mUser;
+      mPort = rhs.mPort;
+      mPassword = rhs.mPassword;
+   }
+   return *this;
 }
+   
+bool 
+Uri::operator==(const Uri& other) const
+{
+   if (isEqualNoCase(mScheme, other.mScheme) &&
+       isEqualNoCase(mHost, other.mHost) &&
+       mUser == other.mUser,
+       mPassword == other.mPassword,
+       mPort == other.mPort)
+   {
+      for (ParameterList::iterator it = mParameters.begin(); it != mParameters.end(); it++)
+      {
+         Parameter* otherParam = other.getParameterByEnum((*it)->getType());            
+         switch ((*it)->getType())
+         {
+            case ParameterTypes::user:
+            {
+               if(!(otherParam &&
+                    dynamic_cast<DataParameter*>(*it)->value() == 
+                    dynamic_cast<DataParameter*>(otherParam)->value()))
+               {
+                  return false;
+               }
+            }
+            break;
+            case ParameterTypes::ttl:
+            {
+               if(!(otherParam &&
+                    dynamic_cast<IntegerParameter*>(*it)->value() == 
+                    dynamic_cast<IntegerParameter*>(otherParam)->value()))
+               {
+                  return false;
+               }
+            }
+            case ParameterTypes::method:
+            {
+               if(!(otherParam &&
+                    dynamic_cast<DataParameter*>(*it)->value() == 
+                    dynamic_cast<DataParameter*>(otherParam)->value()))
+               {
+                  return false;
+               }
+            }
+            break;
+            case ParameterTypes::maddr:
+            {               
+               if(!(otherParam &&
+                    dynamic_cast<DataParameter*>(*it)->value() == 
+                    dynamic_cast<DataParameter*>(otherParam)->value()))
+               {
+                  return false;
+               }
+            }
+            break;
+            //the parameters that follow don't affect comparison if only present
+            //in one of the URI's
+            case ParameterTypes::transport:
+            {
+               if(otherParam &&
+                  dynamic_cast<DataParameter*>(*it)->value() == 
+                  dynamic_cast<DataParameter*>(otherParam)->value())
+               {
+                  return false;
+               }
+            }
+            break;
+            case ParameterTypes::lr:
+               break;
+            default:
+               break;
+               //treat as unknown parameter?
+         }
+      }         
+   }
+   else
+   {
+      return false;
+   }
+   return true;
+}
+
 
 const Data&
 Uri::getAor() const
@@ -49,7 +143,6 @@ Uri::getAor() const
          mAor += Data(Symbols::COLON) + Data(mPort);
       }
    }
-   
    return mAor;
 }
 
@@ -101,7 +194,7 @@ Uri::parse(ParseBuffer& pb)
       }
       else
       {
-         mPort = Symbols::DefaultSipPort;
+         mPort = 0;
       }
    }
    else
@@ -120,7 +213,7 @@ Uri::clone() const
 std::ostream& 
 Uri::encode(std::ostream& str) const
 {
-   str << mScheme << Symbols::COLON;
+   str << mScheme << Symbols::COLON; 
    if (!mUser.empty())
    {
       str << mUser;
