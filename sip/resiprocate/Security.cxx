@@ -385,7 +385,6 @@ BaseSecurity::addCertDER (PEMType type, const Data& key, const Data& certDER, bo
             assert(len);
             Data  buf(Data::Take, p, len);
 
-            BIO_get_mem_data(out, &p);
             this->onWritePEM(key, type, buf);
          }
          catch(...)
@@ -711,16 +710,56 @@ BaseSecurity::getPrivateKeyPEM(
    int ret = PEM_write_bio_PrivateKey(out, pk, 0, 0, 0, 0, p);
    assert(ret == 1);
 
-   // get length of BIO buffer.
-   // TODO: make sure this is right.
-   size_t len = BIO_ctrl_pending(out);
-   assert(len > 0);
-
-   // copy content in BIO buffer to our buffer.
-   char* buf = new char[len];
-   BIO_get_mem_data(out, &buf);
-
+   // get content in BIO buffer to our buffer.
    // hand our buffer to a Data object.
+   BIO_flush(out);
+   char* buf = 0;
+   int len = BIO_get_mem_data(out, &buf);
+   return   Data(Data::Take, buf, len);
+}
+Data
+BaseSecurity::getPrivateKeyDER(
+   PEMType type,
+   const Data& key,
+   bool read) const
+{
+   assert( !key.empty() );
+
+   if (hasPrivateKey(type, key, true) == false)
+   {
+      ErrLog(<< "Could find private key for '" << key << "'");
+      throw Exception("Could not find private key", __FILE__,__LINE__);
+   }
+
+   PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
+
+   PrivateKeyMap::const_iterator where = privateKeys.find(key);
+   char* p = 0;
+   if (type != DomainPrivateKey)
+   {
+      PassPhraseMap::const_iterator iter = mUserPassPhrases.find(key);
+      if(iter != mUserPassPhrases.end())
+      {
+         p = const_cast<char*>(iter->second.c_str());
+      }
+   }
+
+   // !kh!
+   // creates a read/write BIO buffer.
+   BIO *out = BIO_new(BIO_s_mem());
+   assert(out);
+   EVP_PKEY* pk = where->second;
+   assert(pk);
+
+   // write pk to out using key phrase p, with no cipher.
+   int ret = i2d_PKCS8PrivateKey_bio(out, pk, 0, 0, 0, 0, p);
+   assert(ret == 1);
+
+   // get content in BIO buffer to our buffer.
+   // hand our buffer to a Data object.
+   BIO_flush(out);
+   char* buf = 0;
+   int len = BIO_get_mem_data(out, &buf);
    return   Data(Data::Take, buf, len);
 }
 bool
@@ -1012,12 +1051,10 @@ BaseSecurity::getUserPrivateKeyPEM(const Data& aor) const
 {
    return   getPrivateKeyPEM(UserPrivateKey, aor, true);
 }
-
 Data
 BaseSecurity::getUserPrivateKeyDER(const Data& aor) const
 {
-   assert(0);
-   return Data::Empty;
+   return   getPrivateKeyDER(UserPrivateKey, aor, true);
 }
 
 void
@@ -1725,7 +1762,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
          sk_X509_push(certs, cert);
       }
    }
-   
+
    //flags |= PKCS7_NOINTERN;
    //flags |= PKCS7_NOVERIFY;
    //flags |= PKCS7_NOSIGS;
