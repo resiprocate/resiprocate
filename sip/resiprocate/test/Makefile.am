@@ -20,7 +20,7 @@ noinst_HEADERS = \
 	Registrar.hxx \
 	TestSupport.hxx
 
-LDADD = libtestsupport.a ../libresiprocate.a
+LDADD = libtestsupport.a ../libresiprocate.la
 check_PROGRAMS = \
 	SipTortureTests \
 	test1 \
