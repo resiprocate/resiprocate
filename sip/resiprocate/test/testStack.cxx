@@ -1,16 +1,9 @@
-#ifndef WIN32
-#include <sys/time.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#endif
-
 #include <popt.h>
 #include <sys/types.h>
 #include <iostream>
 #include <memory>
 
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/Dialog.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
@@ -58,7 +51,7 @@ main(int argc, char* argv[])
    NameAddr target;
    target.uri().scheme() = "sip";
    target.uri().user() = "fluffy";
-   target.uri().host() = "localhost";
+   target.uri().host() = DnsUtil::getLocalHostName();
    target.uri().port() = 5080;
    target.uri().param(p_transport) = "tcp";
    
