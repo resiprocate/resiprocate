@@ -6,40 +6,51 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+
+static FileSystem::Directory::iterator staticEnd;
+
+
 FileSystem::Directory::Directory(const Data& path)
    : mPath(path)
 {
 }
 
-#ifndef WIN32
 
+#ifndef WIN32
 // !jf! added this constructor since it was missing - don't know if it is correct
 FileSystem::Directory::iterator::iterator() : mNixDir(0), mDirent(0)
 {
 }
 
+
 FileSystem::Directory::iterator::iterator(const Directory& dir)
 {
    assert(!dir.getPath().empty());   
-   InfoLog(<< "FileSystem::Directory::iterator::iterator: " << dir.getPath());   
+   //InfoLog(<< "FileSystem::Directory::iterator::iterator: " << dir.getPath());   
    if ((mNixDir = opendir( dir.getPath().c_str() )))
    {
       mDirent = readdir(mNixDir);
       if (mDirent)
       {
-         InfoLog(<< "FileSystem::Directory::iterator::iterator, first file " << mFile);   
+         //InfoLog(<< "FileSystem::Directory::iterator::iterator, first file " << mFile);   
          mFile = mDirent->d_name;
       }
    }
    else
+   {
       mDirent = 0;
+   }
 }
+
 
 FileSystem::Directory::iterator::~iterator()
 {
    if (mNixDir)
+   {
       closedir(mNixDir);
+   }
 }
+
 
 FileSystem::Directory::iterator& 
 FileSystem::Directory::iterator::operator++()
@@ -50,17 +61,19 @@ FileSystem::Directory::iterator::operator++()
       if (mDirent)
       {
          mFile = mDirent->d_name;
-         InfoLog(<< "FileSystem::Directory::iterator::iterator, next file " << mFile);   
+         //InfoLog(<< "FileSystem::Directory::iterator::iterator, next file " << mFile);   
       }
    }
    return *this;
 }
+
 
 bool 
 FileSystem::Directory::iterator::operator!=(const iterator& rhs) const
 {
    return !(*this == rhs);
 }
+
 
 bool 
 FileSystem::Directory::iterator::operator==(const iterator& rhs) const
@@ -75,23 +88,27 @@ FileSystem::Directory::iterator::operator==(const iterator& rhs) const
    }
 }
 
+
 const Data& 
 FileSystem::Directory::iterator::operator*() const
 {
    return mFile;
 }
 
+
 const Data*
 FileSystem::Directory::iterator::operator->() const
 {
    return &mFile;
 }
-
 #else
+
 
 FileSystem::Directory::iterator::iterator() :
    mWinSearch(0)
-{}
+{
+}
+
 
 FileSystem::Directory::iterator::iterator(const Directory& dir)
 {
@@ -117,6 +134,7 @@ FileSystem::Directory::iterator::iterator(const Directory& dir)
    }
 }
 
+
 FileSystem::Directory::iterator::~iterator()
 {
    if (mWinSearch)
@@ -124,6 +142,7 @@ FileSystem::Directory::iterator::~iterator()
       FindClose(mWinSearch);
    }
 }
+
 
 FileSystem::Directory::iterator&
 FileSystem::Directory::iterator::operator++()
@@ -145,11 +164,13 @@ FileSystem::Directory::iterator::operator++()
    return *this;
 }
 
+
 bool 
 FileSystem::Directory::iterator::operator!=(const iterator& rhs) const
 {
    return !(*this == rhs);
 }
+
 
 bool 
 FileSystem::Directory::iterator::operator==(const iterator& rhs) const
@@ -164,26 +185,27 @@ FileSystem::Directory::iterator::operator==(const iterator& rhs) const
    }
 }
 
+
 const Data& 
 FileSystem::Directory::iterator::operator*() const
 {
    return mFile;
 }
 
+
 const Data* 
 FileSystem::Directory::iterator::operator->() const
 {
    return &mFile;
 }
-
 #endif
+
 
 FileSystem::Directory::iterator FileSystem::Directory::begin() const
 {
    return iterator(*this);   
 }
 
-static FileSystem::Directory::iterator staticEnd;
 
 FileSystem::Directory::iterator FileSystem::Directory::end() const
 {
