@@ -35,6 +35,7 @@ libresiprocate_la_SOURCES = \
 	os/Tuple.cxx \
 	os/vmd5.cxx \
 	os/WinCompat.cxx \
+	AresDns.cxx \
 	ApiCheck.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
@@ -45,6 +46,7 @@ libresiprocate_la_SOURCES = \
 	DnsResult.cxx \
 	Embedded.cxx \
 	ExistsParameter.cxx \
+	ExternalDnsFactory.cxx \
 	FloatParameter.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
@@ -89,6 +91,7 @@ libresiprocate_la_SOURCES = \
 	Registration.cxx \
 	RportParameter.cxx \
 	Security.cxx \
+	SecurityAttributes.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
 	StackThread.cxx \
@@ -142,6 +145,7 @@ libresiprocate_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 resiprocate_includedir=$(includedir)/resiprocate
 resiprocate_include_HEADERS = \
     ApplicationSip.hxx \
+	AresDns.hxx \
 	Auth.hxx \
 	BranchParameter.hxx \
 	CSeqCategory.hxx \
@@ -159,6 +163,7 @@ resiprocate_include_HEADERS = \
 	Embedded.hxx \
 	ExistsParameter.hxx \
 	ExpiresCategory.hxx \
+	ExternalDnsFactory.hxx \
 	FloatParameter.hxx \
 	GenericContents.hxx \
 	GenericUri.hxx \
@@ -203,6 +208,7 @@ resiprocate_include_HEADERS = \
 	RportParameter.hxx \
 	SdpContents.hxx \
 	Security.hxx \
+	SecurityAttributes.hxx \
 	SecurityTypes.hxx \
 	ShutdownMessage.hxx \
 	SipFrag.hxx \
