@@ -195,7 +195,7 @@ main(int arc, char** argv)
 
       cerr << "!!" << legal.displayName() << endl;
 
-      assert(legal.displayName() == "\"A. Bell\"");
+      assert(legal.displayName() == "A. Bell");
    }
 
    {
@@ -866,7 +866,7 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv, Headers::UNKNOWN);
-      assert(nameAddr.displayName() == "\"Bob\"");
+      assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
@@ -877,7 +877,7 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv, Headers::UNKNOWN);
-      assert(nameAddr.displayName() == "\"Bob   \\\" asd   \"");
+      assert(nameAddr.displayName() == "Bob   \\\" asd   ");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
@@ -910,7 +910,7 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv, Headers::UNKNOWN);
-      assert(nameAddr.displayName() == "\"Bob\"");
+      assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
 
@@ -1255,7 +1255,7 @@ main(int arc, char** argv)
       stringstream s2;
       via.encode(s2);
       cerr << "!! " << s2.str() << endl;
-      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-c87542-jason-1--c87542-");
+      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-d87543-jason-1--d87543-");
       assert(via.param(p_branch).getTransactionId() == "jason");
    }
 
@@ -1286,7 +1286,7 @@ main(int arc, char** argv)
       via.param(p_branch).reset("jason");
       stringstream s2;
       via.encode(s2);
-      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-c87542-jason-1--c87542-");
+      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-d87543-jason-1--d87543-");
       assert(via.param(p_branch).getTransactionId() == "jason");
    }
 
@@ -1309,7 +1309,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Via 6 parse with known parameter");
-      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1--c87542-;ttl=4\r\n";
+      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-ec1e.0-1--d87543-;ttl=4\r\n";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1321,7 +1321,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Via 7 parse with unknown parameter");
-      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1--c87542-;stid=489573115\r\n";
+      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-ec1e.0-1--d87543-;stid=489573115\r\n";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1334,7 +1334,7 @@ main(int arc, char** argv)
    {
       TR _tr("Branch parameter 1");
       
-      Data txt("=z9hG4bK-c87542-jason-1--c87542-");
+      Data txt("=z9hG4bK-d87543-jason-1--d87543-");
       ParseBuffer pb(txt.data(), txt.size());
       BranchParameter bp(ParameterTypes::branch, pb, ";");
       assert(bp.hasMagicCookie());
@@ -1350,13 +1350,13 @@ main(int arc, char** argv)
          bp.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-c87542-jason.10-1--c87542-");
+      assert(o == "branch=z9hG4bK-d87543-jason.10-1--d87543-");
    }
 
       
    {
       TR _tr("Branch parameter 2");
-      Data txt("=z9hG4bK-c87542-jason.1.2.3-14--c87542-");
+      Data txt("=z9hG4bK-d87543-jason.1.2.3-14--d87543-");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpc(ParameterTypes::branch, pb, ";");
@@ -1369,17 +1369,17 @@ main(int arc, char** argv)
          bpc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-c87542-jason.1.2.3-14--c87542-");
+      assert(o == "branch=z9hG4bK-d87543-jason.1.2.3-14--d87543-");
    }
 
    {
       TR _tr("Branch parameter 3");
-      Data txt("=z9hG4bK-c87542-3e565-ef7w-17.1.2.3-14--c87542-foobie");
+      Data txt("=z9hG4bK-d87543-3e565-ef7w-17.1.2.3-14--d87543-foobie");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpcc(ParameterTypes::branch, pb, ";");
       assert(bpcc.hasMagicCookie());
-      assert(bpcc.getTransactionId() == "-c87542-3e565-ef7w-17.1.2.3-14--c87542-foobie");
+      assert(bpcc.getTransactionId() == "-d87543-3e565-ef7w-17.1.2.3-14--d87543-foobie");
 
       Data o;
       {
@@ -1387,7 +1387,7 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-c87542-3e565-ef7w-17.1.2.3-14--c87542-foobie");
+      assert(o == "branch=z9hG4bK-d87543-3e565-ef7w-17.1.2.3-14--d87543-foobie");
 
       bpcc.reset("foobie");
 
@@ -1397,12 +1397,12 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-c87542-foobie-1--c87542-");
+      assert(o == "branch=z9hG4bK-d87543-foobie-1--d87543-");
    }
 
    {
       TR _tr("Branch parameter 4");
-      Data txt("=z9hG4bK-c87542-3e565-ef7w-17.1.2.3-14--c87542-");
+      Data txt("=z9hG4bK-d87543-3e565-ef7w-17.1.2.3-14--d87543-");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpcc(ParameterTypes::branch, pb, ";");
@@ -1415,17 +1415,17 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-c87542-3e565-ef7w-17.1.2.3-14--c87542-");
+      assert(o == "branch=z9hG4bK-d87543-3e565-ef7w-17.1.2.3-14--d87543-");
    }
 
    {
       TR _tr("Branch parameter 5 externally spiralled branch returns");
-      Data txt("=z9hG4bK-c87542--c87542-3e565-ef7w-17.1.2.3-14-c87542-foobie-1--c87542-");
+      Data txt("=z9hG4bK-d87543--d87543-3e565-ef7w-17.1.2.3-14-d87543-foobie-1--d87543-");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpcc(ParameterTypes::branch, pb, ";");
       assert(bpcc.hasMagicCookie());
-      assert(bpcc.getTransactionId() == "-c87542-3e565-ef7w-17.1.2.3-14-c87542-foobie");
+      assert(bpcc.getTransactionId() == "-d87543-3e565-ef7w-17.1.2.3-14-d87543-foobie");
 
       Data o;
       {
@@ -1433,17 +1433,17 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-c87542--c87542-3e565-ef7w-17.1.2.3-14-c87542-foobie-1--c87542-");
+      assert(o == "branch=z9hG4bK-d87543--d87543-3e565-ef7w-17.1.2.3-14-d87543-foobie-1--d87543-");
    }
    
    {
       TR _tr("Branch parameter 6 not one of ours");
-      Data txt("=z9hG4bK-c87542-");
+      Data txt("=z9hG4bK-d87543-");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpcc(ParameterTypes::branch, pb, ";");
       assert(bpcc.hasMagicCookie());
-      assert(bpcc.getTransactionId() == "-c87542-");
+      assert(bpcc.getTransactionId() == "-d87543-");
 
       Data o;
       {
@@ -1451,12 +1451,12 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-c87542-");
+      assert(o == "branch=z9hG4bK-d87543-");
    }
 
    {
       TR _tr("Branch parameter 7 empty ours");
-      Data txt("=z9hG4bK-c87542--1--c87542-");
+      Data txt("=z9hG4bK-d87543--1--d87543-");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpcc(ParameterTypes::branch, pb, ";");
@@ -1469,12 +1469,12 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-c87542--1--c87542-");
+      assert(o == "branch=z9hG4bK-d87543--1--d87543-");
    }
 
    {
       TR _tr("Branch parameter 8 badly formed ours");
-      Data txt("=z9hG4bK-c87542--------c87542-");
+      Data txt("=z9hG4bK-d87543--------d87543-");
       ParseBuffer pb(txt.data(), txt.size());
 
       try
@@ -1488,15 +1488,16 @@ main(int arc, char** argv)
       {
       }
    }
-   
+
    {
       TR _tr("Branch parameter 9");
 
-      Data txt("=z9hG4bK-c87542-5b42cb698e8c6827790212ac5bdade1a-1-PA32768-c87542-;rport;received=64.124.66.32");
+      Data txt("=z9hG4bK-d87543-5b42cb698e8c6827790212ac5bdade1a-1-UEEzMjc2OA..-d87543-;rport;received=64.124.66.32");
       ParseBuffer pb(txt.data(), txt.size());
       BranchParameter bp(ParameterTypes::branch, pb, ";");
       assert(bp.hasMagicCookie());
       assert(bp.getTransactionId() == "5b42cb698e8c6827790212ac5bdade1a");
+      cerr << "!! " << bp.clientData() << endl;
       assert(bp.clientData() == "PA32768");
       
       bp.encode(cerr); cerr << endl;
@@ -1548,7 +1549,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Branch testing 4 with clientData");
-      Data txt("=z9hG4bK-c87542-T-i-D-314-ClientData-c87542-");
+      Data txt("=z9hG4bK-d87543-T-i-D-314-Q2xpZW50RGF0YQ..-d87543-");
 
       ParseBuffer pb(txt.data(), txt.size());
 
@@ -1562,7 +1563,7 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       // cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-c87542-T-i-D-314-ClientData-c87542-");
+      assert(o == "branch=z9hG4bK-d87543-T-i-D-314-Q2xpZW50RGF0YQ..-d87543-");
    }
 
    //3329 tests

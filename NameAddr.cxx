@@ -153,10 +153,10 @@ NameAddr::parse(ParseBuffer& pb)
    {
       if (!pb.eof() && *pb.position() == Symbols::DOUBLE_QUOTE[0])
       {
-         pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
+         start = pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          pb.skipToEndQuote();
-         pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          pb.data(mDisplayName, start);
+         pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          laQuote = true;
          pb.skipToChar(Symbols::LA_QUOTE[0]);
          if (pb.eof())
@@ -239,7 +239,13 @@ NameAddr::encodeParsed(ostream& str) const
   }
   else
   {
-     str << Symbols::DOUBLE_QUOTE << mDisplayName << Symbols::DOUBLE_QUOTE << Symbols::LA_QUOTE;
+     if (!mDisplayName.empty())
+     {
+        // .dlb. doesn't deal with embedded quotes
+        str << Symbols::DOUBLE_QUOTE << mDisplayName << Symbols::DOUBLE_QUOTE;
+     }
+
+     str << Symbols::LA_QUOTE;
      mUri.encodeParsed(str);
      str << Symbols::RA_QUOTE;
   }
