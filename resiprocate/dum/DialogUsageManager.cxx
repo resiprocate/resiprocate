@@ -341,16 +341,36 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    contents.message().header(h_StatusLine).statusCode() = 100;   
    contents.message().header(h_StatusLine).reason() = "Trying";
    //will be cloned...ServerSub may not have the most efficient API possible
+   serverSub->setSubscriptionState(Active);   
    SipMessage& notify = serverSub->update(&contents);
 //   mInviteSessionHandler->onReadyToSend(InviteSessionHandle::NotValid(), notify);
    serverSub->send(notify);
 
-   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, 
-                                                             refer.header(h_ReferTo), 
-                                                             refer.header(h_From), // !jf!???
-                                                             initialOffer, serverSub), appDs);
-   inv.header(h_ReferredBy) =  refer.header(h_From); // !jf! ??
+   //19.1.5
+   NameAddr target = refer.header(h_ReferTo);
+   target.uri().embedded() = SipMessage();   
+   target.uri().remove(p_method);
    
+   //could pass dummy target, then apply merge rules from 19.1.5...or
+   //makeNewSession would use rules from 19.1.5
+   NameAddr from  = serverSub->mDialog.mLocalNameAddr;
+   from.remove(p_tag);   
+   
+   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, 
+                                                             target,                                                                                                                  from,
+                                                             initialOffer, serverSub), appDs);
+
+   if (refer.exists(h_ReferredBy))
+   {
+      inv.header(h_ReferredBy) =  refer.header(h_ReferredBy);
+   }
+
+   const Uri& referTo = refer.header(h_ReferTo).uri();
+   //19.1.5
+   if (referTo.hasEmbedded() && referTo.embedded().exists(h_Replaces))      
+   {
+      inv.header(h_Replaces) = referTo.embedded().header(h_Replaces);
+   }
    return inv;
 }
 
@@ -762,7 +782,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             if (mDumShutdownHandler)
             {
                SipMessage forbidden;
-               makeResponse(forbidden, request, 403);
+               makeResponse(forbidden, request, 480);
                forbidden.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
                sendResponse(forbidden);
                return;
