@@ -294,7 +294,6 @@ Dialog::dispatch(const SipMessage& msg)
             }
             else
             {
-               InfoLog (<< request);
                mInviteSession->dispatch(request);
             }
             break;

@@ -273,7 +273,6 @@ ServerInviteSession::end()
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdate:
       case UAS_SentUpdateAccepted:
-      case UAS_WaitingToHangup:
       case UAS_WaitingToTerminate:
          reject(480);
          break;
@@ -283,6 +282,9 @@ ServerInviteSession::end()
          break;
 
       case UAS_Accepted:
+         transition(UAS_WaitingToHangup);
+         break;
+         
       default:
          InviteSession::end();
          break;
@@ -356,7 +358,7 @@ ServerInviteSession::accept(int code)
 
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyProvidedAnswer:
-         transition(Connected);
+         transition(UAS_Accepted);
          sendAccept(code, mCurrentLocalSdp.get());
          handler->onConnected(getSessionHandle(), mInvite200);
          break;
@@ -367,7 +369,7 @@ ServerInviteSession::accept(int code)
 
       case UAS_ProvidedOffer:
       case UAS_EarlyProvidedOffer:
-         transition(UAS_Accepted);
+         transition(UAS_AcceptedWaitingAnswer);
          sendAccept(code, mProposedLocalSdp.get());
          break;
          
@@ -556,16 +558,29 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
-
+   InfoLog (<< "dispatchAccepted: " << msg.brief());
+   
    switch (toEvent(msg, sdp.get()))
    {
-      case OnAckAnswer:
+      case OnAck:
+      {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
          handler->onConnected(getSessionHandle(), msg);
          break;
+      }
 
+      case OnAckAnswer:
+      {
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         transition(Terminated);
+         SipMessage bye;
+         mDialog.makeRequest(bye, BYE);
+         mDialog.send(bye);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);  // !slg!
+         break;
+      }
+      
       case OnCancel:
       {
          SipMessage c200;
@@ -581,17 +596,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          mDialog.send(b200);
          break;
       }
-         
-      case OnAck:
-      {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         transition(Terminated);
-         SipMessage bye;
-         mDialog.makeRequest(bye, BYE);
-         mDialog.send(bye);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);  // !slg!
-         break;
-      }
+        
       
       default:
          if(msg.isRequest())
@@ -703,6 +708,27 @@ ServerInviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
 void
 ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 {
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnPrack:
+      case OnAck:
+      case OnAckAnswer:
+      {
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         transition(Terminated);
+
+         SipMessage bye;
+         mDialog.makeRequest(bye, BYE);
+         InfoLog (<< "Sending " << bye.brief());
+         mDialog.send(bye);
+         break;
+      }
+      
+      default:
+         break;
+   }
 }
 
 void
@@ -787,6 +813,7 @@ ServerInviteSession::sendAccept(int code, SdpContents* sdp)
    handleSessionTimerRequest(mInvite200, mFirstRequest);
    if (sdp)
    {
+      assert(sdp->session().getTimes().size() <= 1);
       setSdp(mInvite200, *sdp);
    }
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer
