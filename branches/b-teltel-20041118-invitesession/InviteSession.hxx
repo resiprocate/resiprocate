@@ -48,7 +48,6 @@ class InviteSession : public DialogUsage
       const NameAddr& peerAddr() const;
       const SdpContents& getLocalSdp() const;
       const SdpContents& getRemoteSdp() const;
-      bool peerSupportsUpdateMethod() const;
 
       bool isConnected() const;
       bool isTerminated() const;
@@ -194,6 +193,15 @@ class InviteSession : public DialogUsage
       static bool isReliable(const SipMessage& msg);
       static std::auto_ptr<SdpContents> makeSdp(const SdpContents& sdp);
       static void setSdp(SipMessage& msg, const SdpContents& sdp);
+
+      void storePeerCapabilities(const SipMessage& msg);
+      bool updateMethodSupported() const;
+
+      Tokens mPeerSupportedMethods;
+      Tokens mPeerSupportedOptionTags;
+      Mimes mPeerSupportedMimeTypes;
+      Tokens mPeerSupportedEncodings;
+      Tokens mPeerSupportedLanguages;
 
       Event toEvent(const SipMessage& msg, const SdpContents* sdp);
       
