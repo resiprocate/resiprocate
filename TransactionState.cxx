@@ -715,8 +715,8 @@ TransactionState::processServerNonInvite(  Message* msg )
          {
             mMsgToRetransmit = sip;
             sendToWire(sip); // don't delete msg
-            delete this;
             terminateServerTransaction(mId);
+            delete this;
          }
          else
          {
