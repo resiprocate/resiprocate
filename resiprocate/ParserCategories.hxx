@@ -1,13 +1,13 @@
 #ifndef ParserCategories_hxx
 #define ParserCategories_hxx
 
-#include <sipstack/ParserCategory.hxx>
-#include <sipstack/ParserContainer.hxx>
-#include <sipstack/HeaderFieldValue.hxx>
-#include <sipstack/MethodTypes.hxx>
-#include <sipstack/Symbols.hxx>
-#include <sipstack/Uri.hxx>
-#include <util/Data.hxx>
+#include "util/Data.hxx"
+#include "sipstack/ParserCategory.hxx"
+#include "sipstack/ParserContainer.hxx"
+#include "sipstack/HeaderFieldValue.hxx"
+#include "sipstack/MethodTypes.hxx"
+#include "sipstack/Symbols.hxx"
+#include "sipstack/Uri.hxx"
 
 
 namespace Vocal2
@@ -155,7 +155,10 @@ class GenericURI : public ParserCategory
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
+      Data& uri();
+
    private:
+      mutable Data mUri;
 };
 typedef ParserContainer<GenericURI> GenericURIs;
 
@@ -457,3 +460,7 @@ class StatusLine : public ParserCategory
  * <http://www.vovida.org/>.
  *
  */
+
+/* Local Variables: */
+/* c-file-style: "ellemtel" */
+/* End: */
