@@ -189,6 +189,7 @@ ppWorkString(int m)
     DO_BIT(d,m,actDiscard);
     DO_BIT(d,m,actDiscardKnown);
     DO_BIT(d,m,actFlat);
+    DO_BIT(d,m,actEmptyHdr);
     d += ']';
     return d;
 }
