@@ -17,11 +17,16 @@ class Symbols
       static const char * const LF;
       static const char * const TAB;
       static const char * const DOUBLE_QUOTE;
+      static const char * const LA_QUOTE;
+      static const char * const RA_QUOTE;
       static const char * const EQUALS;
       static const char * const SEMI_COLON;
       static const char * const SEMI_OR_EQUAL;
       static const char * const SLASH;
       static const char * const SPACE;
+
+      static const char * const Sip;
+      static const char * const Sips;
 
       static const char * const Accept;
       static const char * const Accept_Encoding;

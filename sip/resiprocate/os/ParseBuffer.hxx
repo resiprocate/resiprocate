@@ -29,6 +29,7 @@ class ParseBuffer
 
       bool eof() { return mStart >= mEnd;}
       const char* position() { return mStart; }
+      const char* end() { return mEnd; }
 
       const char* skipChar() { return ++mStart; }
       const char* skipNonWhitespace();
@@ -39,9 +40,13 @@ class ParseBuffer
 
       static const char* WhitespaceOrParamTerm;
       static const char* WhitespaceOrSlash;
-      static const char* WhitespaceOrSemi;
+      static const char* WhitespaceOrSemiColon;
+      static const char* WhitespaceOrColonOrSemiColon;
+      static const char* WhitespaceOrSemiColonOrRAQuote;
+      static const char* WhitespaceOrColonOrSemiColonOrRAQuote;
       static const char* Whitespace;
       static const char* SemiColonOrColon;
+      static const char* ColonOrAtSign;
    private:
       Data tmpData;
       

@@ -18,7 +18,6 @@ FloatParameter::FloatParameter(ParameterTypes::Type type,
 
    // .dlb. not zero terminated; no error detection
    mValue = atof(pb.position());
-   pb.skipToOneOf(";?");
 }
 
 FloatParameter::FloatParameter(ParameterTypes::Type type, float value)
