@@ -18,7 +18,7 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, 
      mOnNewSubscriptionCalled(false)
 {
    mLastRequest = request;
-   mDialog.makeRequest(mLastRequest, SUBSCRIBE);
+   mDialog.makeRequest(mLastRequest, RESIP_SUBSCRIBE);
 }
 
 ClientSubscription::~ClientSubscription()
@@ -41,7 +41,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
    // asserts are checks the correctness of Dialog::dispatch
    if (msg.isRequest() )
    {
-      assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
+      assert( msg.header(h_RequestLine).getMethod() == RESIP_NOTIFY );
       mDialog.makeResponse(mLastResponse, msg, 200);
       send(mLastResponse);
 
@@ -161,7 +161,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 void  
 ClientSubscription::requestRefresh()
 {
-   mDialog.makeRequest(mLastRequest, SUBSCRIBE);
+   mDialog.makeRequest(mLastRequest, RESIP_SUBSCRIBE);
    //!dcm! -- need a mechanism to retrieve this for the event package...part of
    //the map that stores the handlers, or part of the handler API
    //mLastRequest.header(h_Expires).value() = 300;   
@@ -174,7 +174,7 @@ ClientSubscription::end()
 {
    InfoLog (<< "End subscription: " << mLastRequest.header(h_RequestLine).uri());
    
-   mDialog.makeRequest(mLastRequest, SUBSCRIBE);
+   mDialog.makeRequest(mLastRequest, RESIP_SUBSCRIBE);
    mLastRequest.header(h_Expires).value() = 0;   
    send(mLastRequest);
 }
