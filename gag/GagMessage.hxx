@@ -46,10 +46,12 @@ class GagMessage
     static bool parse(istream &, Data &);
     static bool parse(istream &, Uri &);
     static bool parse(istream &, bool &);
+    static bool parse(istream &, int &);
 
     static void serialize(ostream &, const Data &);
     static void serialize(ostream &, const Uri &);
     static void serialize(ostream &, const bool &);
+    static void serialize(ostream &, const int &);
 
   protected: // attributes
     command_t messageType;
