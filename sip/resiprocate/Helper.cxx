@@ -837,8 +837,6 @@ Helper::makeUri(const Data& aor, const Data& scheme)
 void
 Helper::processStrictRoute(SipMessage& request)
 {
-   InfoLog ( << "Helper::processStrictRoute, before: " << request );
-   
    if (request.exists(h_Routes) && 
        !request.header(h_Routes).empty() &&
        !request.header(h_Routes).front().exists(p_lr))
@@ -851,9 +849,6 @@ Helper::processStrictRoute(SipMessage& request)
       request.header(h_Routes).pop_front();
       request.setForceTarget(request.header(h_RequestLine).uri());
    }
-
-   InfoLog ( << "Helper::processStrictRoute, after: " << request );
-
 }
 
 int
