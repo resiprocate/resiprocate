@@ -63,25 +63,25 @@
 
 namespace Vocal2
 {
-	class Condition;
+class Condition;
 	
 class Mutex : public Lockable
 {
-	friend Condition;
+      friend class Condition;
 	
-    public:
-        Mutex();
-        virtual ~Mutex();
-        virtual void    lock();
-        virtual void    unlock();
+   public:
+      Mutex();
+      virtual ~Mutex();
+      virtual void    lock();
+      virtual void    unlock();
 
-    private:
+   private:
 #ifdef WIN32   
-	HANDLE mId;
+      HANDLE mId;
 #else
       mutable  pthread_mutex_t mId;
 
-        pthread_mutex_t   *   getId() const;
+      pthread_mutex_t   *   getId() const;
 #endif
 };
 
