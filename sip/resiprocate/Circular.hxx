@@ -1,31 +1,34 @@
-/******************************************************************************
- * $Id: circular.hxx,v 1.1 2002/11/05 07:22:43 kdc Exp $
- * $Name:  $
- *
- * Author: Pete Goodliffe
- *
- * ----------------------------------------------------------------------------
- * Copyright 2002 Pete Goodliffe All rights reserved.
- *
- * ----------------------------------------------------------------------------
- * Purpose: STL-style circular buffer
- *
- * ----------------------------------------------------------------------------
- * History: See source control system log.
- *
- *****************************************************************************/
+#if !defined(CIRCULAR__HXX)
+#define CIRCULAR__HXX
 
-#ifndef CIRCULAR_BUFFER_H
-#define CIRCULAR_BUFFER_H
 
-#include <exception>
-#include <iterator>
-#include <memory>
+// simple char circular buffer  CONTAINS NO ERROR CHECKING
 
-/******************************************************************************
- * Iterators
- *****************************************************************************/
+namespace Vocal2
+{
 
+class Circular
+{
+    public:
+        Circular(int);
+        ~Circular();
+
+        void push_back(char c);
+        void pop_front();
+        char front();
+        int size();
+        bool empty();
+
+    private:
+        int mFront;
+        int mBack;
+        int mSize;
+        char *mBuf;
+};
+
+}
+
+#if 0
 /**
  * Iterator type for the circular_buffer class.
  *
@@ -488,5 +491,5 @@ bool operator<(const circular_buffer<T, consume_policy, Alloc> &a,
 {
     return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
 }
-
+#endif // 0
 #endif

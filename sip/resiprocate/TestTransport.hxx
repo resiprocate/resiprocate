@@ -3,7 +3,7 @@
 
 #include "sipstack/Transport.hxx"
 #include "sipstack/Message.hxx"
-#include "sipstack/circular.hxx"
+#include "sipstack/Circular.hxx"
 
 namespace Vocal2
 {
@@ -39,7 +39,7 @@ class TestUnreliableTransport : public Transport
 
 // singleton classes for input and output buffers
 
-typedef circular_buffer<char> TestBufType;
+typedef Circular TestBufType;
 
 
 class TestInBuffer
