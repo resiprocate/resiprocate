@@ -10,7 +10,9 @@ namespace resip
 class WinCompat
 {
    public:
-      typedef enum Version
+      //typedef enum Version
+      // above is not valid C++ syntax
+      enum Version
       {
          Windows2003Server,
          WindowsXP,
