@@ -163,6 +163,7 @@ TuIM::process()
                }
             }
 #endif
+
             if ( contents )
             {
                PlainContents* body = dynamic_cast<PlainContents*>(contents);
@@ -170,7 +171,8 @@ TuIM::process()
                {
                   assert( body );
                   const Data& text = body->text();
-                  
+                  DebugLog ( << "got message from with text of <" << text << ">" );
+                 
                   Uri from = msg->header(h_From).uri();
                   DebugLog ( << "got message from " << from );
                   
@@ -178,7 +180,7 @@ TuIM::process()
                }
                else
                {
-                  ErrLog ( << "Can not hangle type " << contents->getType() );
+                  ErrLog ( << "Can not handle type " << contents->getType() );
                   assert(0);
                }
             }
