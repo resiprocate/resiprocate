@@ -105,8 +105,6 @@ TransactionState::process(SipStack& stack)
                   TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
                   stack.mTransactionMap.add(tid,state);
                   state->processClientInvite(sip);
-                  //stack.mTimers.add(Timer::TimerB, tid, 64*Timer::T1 );
-                  //stack.mTransportSelector.send(sip);
                }
                else 
                {
@@ -145,26 +143,23 @@ TransactionState::process(SipStack& stack)
 void
 TransactionState::processClientNonInvite(  Message* msg )
 { 
-   if (isRequest(msg) && isFromTU(msg))
+   if (isRequest(msg) && !isInvite(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       mMsgToRetransmit = sip;
       mStack.mTimers.add(Timer::TimerF, msg->getTransactionId(), 64*Timer::T1 );
       sendToWire(sip);  // don't delete
    }
-   else if (isSentIndication(msg))
+   else if (isSentReliable(msg))
    {
-      if (mIsReliable)
-      {
-         // ignore
-         delete msg;
-      }
-      else
-      {
-         // state might affect this !jf!
-         mStack.mTimers.add(Timer::TimerE1, msg->getTransactionId(), Timer::T1 );
-         delete msg;
-      }
+      // ignore
+      delete msg;
+   } 
+   else if (isSentUnreliable(msg))
+   {
+      // state might affect this !jf!
+      mStack.mTimers.add(Timer::TimerE1, msg->getTransactionId(), Timer::T1 );
+      delete msg;
    }
    else if (isResponse(msg) && !isFromTU(msg)) // from the wire
    {
@@ -260,13 +255,171 @@ TransactionState::processClientNonInvite(  Message* msg )
 void
 TransactionState::processClientInvite(  Message* msg )
 {
+   if (isInvite(msg) && isFromTU(msg))
+   {
+      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      switch ((*sip)[RequestLine].getMethod())
+      {
+         case INVITE:
+            mMsgToRetransmit = sip;
+            mStack.mTimers.add(Timer::TimerB, msg->getTransactionId(), 64*Timer::T1 );
+            sendToWire(msg); // don't delete msg
+            break;
+            
+         case CANCEL:
+            mCancelStateMachine = new TransactionState(mStack, ClientNonInvite, Trying);
+            mStack.mTransactionMap.add(msg->getTransactionId(), mCancelStateMachine);
+            mCancelStateMachine->processClientNonInvite(msg);
+            sendToWire(msg); // don't delete msg
+            break;
+            
+         default:
+            delete msg;
+            break;
+      }
+   }
+   else if (isSentIndication(msg))
+   {
+      switch ((*mMsgToRetransmit)[RequestLine].getMethod())
+      {
+         case INVITE:
+            if (isSentReliable(msg))
+            {
+               mStack.mTimers.add(Timer::TimerA, msg->getTransactionId(), Timer::T1 );
+            }
+            delete msg;
+            break;
+            
+         case CANCEL:
+            mCancelStateMachine->processClientNonInvite(msg);
+            // !jf! memory mgmt? 
+            break;
+            
+         default:
+            delete msg;
+            break;
+      }
+   }
+   else if (isResponse(msg) && !isFromTU(msg))
+   {
+      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      int code = (*sip)[StatusLine].getResponseCode();
+
+      switch ((*sip)[CSeq].getMethod())
+      {
+         case INVITE:
+            if (code >= 100 && code < 200) // 1XX
+            {
+               if (mState == Calling || mState == Proceeding)
+               {
+                  mState = Proceeding;
+                  sendToTU(sip); // don't delete msg
+               }
+               else
+               {
+                  delete msg;
+               }
+            }
+            else if (code >= 200 && code < 300)
+            {
+               mMachine = Stale;
+               mState = Terminated;
+               mStack.mTimers.add(Timer::TimerStale, msg->getTransactionId(), Timer::TS );               
+               sendToTU(sip); // don't delete msg               
+            }
+            else if (code >= 300)
+            {
+               if (mIsReliable)
+               {
+                  delete mMsgToRetransmit;
+                  mMsgToRetransmit = makeAck(sip);
+                  sendToWire(mMsgToRetransmit); 
+                  sendToTU(msg); // don't delete msg
+                  delete this;
+               }
+               else
+               {
+                  if (mState == Calling || mState == Proceeding)
+                  {
+                     mState = Completed;
+                     delete mMsgToRetransmit;
+                     mStack.mTimers.add(Timer::TimerD, msg->getTransactionId(), Timer::TD );
+                     mMsgToRetransmit = makeAck(sip);
+                     sendToWire(mMsgToRetransmit); 
+                     sendToTU(msg); // don't delete msg
+                  }
+                  else if (mState == Completed)
+                  {
+                     sendToWire(mMsgToRetransmit); 
+                     sendToTU(msg); // don't delete msg
+                  }
+                  else
+                  {
+                     assert(0);
+                  }
+               }
+            }
+            break;
+            
+         case CANCEL:
+            mCancelStateMachine->processClientNonInvite(msg);
+            // !jf! memory mgmt? 
+            break;
+
+         default:
+            delete msg;
+            break;
+      }
+   }
+   else if (isTimer(msg))
+   {
+      TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
+      switch (timer->getType())
+      {
+         case Timer::TimerA:
+            if (mState == Calling)
+            {
+               unsigned long d = timer->getDuration();
+               if (d < Timer::T2) d *= 2;
+
+               mStack.mTimers.add(Timer::TimerA, msg->getTransactionId(), d);
+               sendToWire(mMsgToRetransmit); 
+            }
+            delete msg;
+            break;
+
+         case Timer::TimerB:
+            // inform TU 
+            delete msg;
+            delete this;
+            assert(0);
+            break;
+
+         case Timer::TimerD:
+            delete msg;
+            delete this;
+            break;
+
+         default:
+            assert(mCancelStateMachine);
+            mCancelStateMachine->processClientNonInvite(msg);
+            break;
+      }
+   }
+   else if (isTranportError(msg))
+   {
+      // inform TU 
+      delete msg;
+      delete this;
+      assert(0);
+   }
 }
 
 
 void
 TransactionState::processServerNonInvite(  Message* msg )
 {
-   if (isRequest(msg) && !isFromTU(msg)) // from the wire
+   if (isRequest(msg) && !isInvite(msg) && !isFromTU(msg)) // from the wire
    {
       if (mState == Trying)
       {
@@ -345,7 +498,7 @@ TransactionState::processServerNonInvite(  Message* msg )
    }
    else if (isTranportError(msg))
    {
-      // inform TU
+      // inform TU 
       delete msg;
       delete this;
       assert(0);
@@ -418,7 +571,9 @@ TransactionState::processServerInvite(  Message* msg )
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       int code = (*sip)[StatusLine].getResponseCode();
       
-      switch ((*sip)[CSeq].getMethod())
+      switch (((*sip)[CSeq]).getMethod())
+//      switch (((*sip)[Vocal2::Headers::CSeq]).getMethod())
+//      switch (0)
       {
          case INVITE:
             if (code == 100)
@@ -574,8 +729,8 @@ TransactionState::processServerInvite(  Message* msg )
    }
    else
    {
-      DebugLog (<< "TransactionState::processServerInvite received " << *msg << " out of context");
-      assert(0); // !jf! programming error
+      DebugLog (<< "TransactionState::processServerInvite received " << *msg << " out of context"); 
+      delete msg; // !jf!
    }
 }
 
@@ -590,6 +745,17 @@ TransactionState::isRequest(Message* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);   
    return sip && sip->isRequest();
+}
+
+bool
+TransactionState::isInvite(Message* msg) const
+{
+   if (isRequest(msg))
+   {
+      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      return ((*sip)[RequestLine].getMethod()) == INVITE;
+   }
+   return false;
 }
 
 bool
@@ -630,6 +796,19 @@ TransactionState::isSentIndication(Message* msg) const
    return false; // !jf!
 }
 
+bool
+TransactionState::isSentReliable(Message* msg) const
+{
+   return false; // !jf!
+}
+
+bool
+TransactionState::isSentUnreliable(Message* msg) const
+{
+   return false; // !jf!
+}
+
+
 
 void
 TransactionState::sendToWire(Message* msg) const
@@ -653,6 +832,13 @@ TransactionState::make100(SipMessage* request) const
    SipMessage* response = 0;
    // make sure request is a request and build it !jf!
    return response;
+}
+
+SipMessage*
+TransactionState::makeAck(SipMessage* response) const
+{
+   SipMessage* ack = 0;
+   return ack;
 }
 
 
