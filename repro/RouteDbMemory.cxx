@@ -3,6 +3,8 @@
 #include <db4/db_185.h>
 #include <cassert>
 
+#include <regex.h>
+
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Uri.hxx"
 
@@ -121,25 +123,35 @@ RouteDbMemory::erase(const resip::Data& method,
 }
 
       
-resip::Uri 
-RouteDbMemory::process(const resip::Uri& ruri, const resip::Data& method, const resip::Data& event )
+RouteAbstractDb::UriList
+RouteDbMemory::process(const resip::Uri& ruri, 
+                       const resip::Data& method, 
+                       const resip::Data& event )
 {
+   RouteAbstractDb::UriList ret;
+   
    for (RouteOperatorList::iterator it = mRouteOperators.begin();
         it != mRouteOperators.end(); it++)
    {
       if (it->matches(ruri, method, event))
       {
-         return it->transform(ruri);
+         ret.push_back( it->transform(ruri) );
       }
    }
-   return ruri;
+   return ret;
 }
+
 
 bool 
 RouteDbMemory::RouteOperator::matches(const resip::Uri& ruri, 
                                       const resip::Data& method, 
                                       const resip::Data& event)
 {
+   DebugLog( << "Consider route " << mMatchingPattern 
+             << " reqUri=" << ruri
+             << " method=" << method 
+             << " event=" << event );
+   
    if ( !mMethod.empty() )
    {
       if ( mMethod != method) return false;
@@ -148,12 +160,28 @@ RouteDbMemory::RouteOperator::matches(const resip::Uri& ruri,
    {
       if ( mEvent != event) return false;
    }
-   if ( !mMatchingPattern.empty()) //!dcm! -- use regexp
+   if ( !mMatchingPattern.empty() ) //!dcm! -- use regexp
    {
+      regex_t preq;
+      int ret = regcomp(&preq,mMatchingPattern.c_str(), REG_EXTENDED|REG_NOSUB );
+      if ( ret != 0 )
+      { 
+         ErrLog( << "Routing rule has invalid match expression: " 
+                 << mMatchingPattern );
+         return false;
+      }
+      ret = regexec(&preq, ruri.getAor().c_str(), 0, NULL, 0/*eflags*/);
+      if ( ret != 0 )
+      {
+         // did not match 
+         return false;
+      }
+      
       if (mMatchingPattern != ruri.getAor()) return false;
    }
    return true;   
 }
+
 
 resip::Uri 
 RouteDbMemory::RouteOperator::transform(const resip::Uri& ruri)
@@ -164,15 +192,10 @@ RouteDbMemory::RouteOperator::transform(const resip::Uri& ruri)
    }
    catch( BaseException& e)
    {
-      ErrLog( << "Invalid transform: " << mRewriteExpression);
+      ErrLog( << "Routing rule has invalid transform: " << mRewriteExpression);
       return ruri;
    }
 }
-
-
-
-
-
 
 
 /* ====================================================================
