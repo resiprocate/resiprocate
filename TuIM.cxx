@@ -87,6 +87,7 @@ TuIM::TuIM(SipStack* stack,
    mPidf->setSimpleStatus( true, Data::Empty, mContact.getAor() );
 }
 
+
 bool
 TuIM::haveCerts( bool sign, const Data& encryptFor )
 {
@@ -117,7 +118,9 @@ TuIM::haveCerts( bool sign, const Data& encryptFor )
    return true;
 }
 
-void TuIM::sendPage(const Data& text, const Uri& dest, 
+
+void 
+TuIM::sendPage(const Data& text, const Uri& dest, 
                     const bool sign, const Data& encryptFor)
 {
    if ( text.empty() )
@@ -150,9 +153,8 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
    mPages.push_back(page);
    
    Contents* body = ( new PlainContents(text) );
-#if 1
-   // need for interop ???
-   msg->header(h_ContentTransferEncoding) = StringCategory(Data("8bit"));
+#if 0
+   msg->header(h_ContentTransferEncoding) = StringCategory(Data("binary"));
 #endif
 
 #if defined( USE_SSL )
@@ -162,8 +164,8 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
       assert(sec);
       
       Contents* old = body;
-      body->header(h_ContentTransferEncoding) = msg->header(h_ContentTransferEncoding);
-      body = sec->encrypt( body, encryptFor );
+      old->header(h_ContentTransferEncoding) = msg->header(h_ContentTransferEncoding);
+      body = sec->encrypt( old, encryptFor );
       delete old;
 
       if ( !body )
@@ -171,8 +173,10 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
          mCallback->sendPageFailed( dest, -2 );
          return;
       }
-      
+
+#if 0      
       msg->header(h_ContentTransferEncoding) = StringCategory(Data("binary"));
+#endif
    }
 
    if ( sign )
@@ -181,8 +185,8 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
       assert(sec);
     
       Contents* old = body;
-      body->header(h_ContentTransferEncoding) = msg->header(h_ContentTransferEncoding);
-      body = sec->sign( body );
+      old->header(h_ContentTransferEncoding) = msg->header(h_ContentTransferEncoding);
+      body = sec->sign( old );
       delete old;
 
       if ( !body )
@@ -191,35 +195,40 @@ void TuIM::sendPage(const Data& text, const Uri& dest,
          return;
       }
 
+#if 0
       msg->header(h_ContentTransferEncoding) = StringCategory(Data("binary"));
+#endif
    }
 #endif
+
    msg->setContents(body);
 
 #if 1
    {
+      // Compute the identity header.
+      
       DateCategory now;
       msg->header(h_Date) = now;
       
-      // Compute the identity header.
       Data token;
-      {
-         DataStream strm(token);
-
-         strm << msg->header(h_From).uri();
-         strm << Symbols::COLON;
-
-         msg->header(h_CallId).value();
-         strm << Symbols::COLON;
-         
-         msg->header(h_Date).encodeParsed( strm );
-         strm << Symbols::COLON;
-         
-         msg->header(h_Contacts).front().uri();
-         strm << Symbols::COLON;
-
-         strm << *body;
-      }
+      DataStream strm(token);
+      
+      strm << msg->header(h_From).uri();
+      strm << Symbols::COLON;
+      
+      msg->header(h_CallId).value();
+      strm << Symbols::COLON;
+      
+      msg->header(h_Date).encodeParsed( strm );
+      strm << Symbols::COLON;
+      
+      msg->header(h_Contacts).front().uri();
+      strm << Symbols::COLON;
+      
+      // TODO FIX - next line asserts in some cases
+      strm << *body;
+      strm.flush();
+      
       CerrLog( << "token is " << token );
       
       Security* sec = mStack->getSecurity();
