@@ -189,12 +189,6 @@ SipMessage::addBuffer(char* buf)
    mBufferList.push_back(buf);
 }
 
-void
-SipMessage::setSource(const Transport::Tuple& addr)
-{
-   mSource = addr;
-}
-
 void 
 SipMessage::setStartLine(const char* st, int len)
 {
