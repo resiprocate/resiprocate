@@ -16,6 +16,7 @@
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
 #include "resiprocate/dum/ServerRegistration.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
+#include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/ClientPublication.hxx"
 #include "resiprocate/dum/ServerPublication.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -499,6 +500,19 @@ Dialog::dispatch(const SipMessage& msg)
                {
                   client->dispatch(response);
                }
+               else
+               {
+                  //!dcm! -- can't subscribe in an existing Dialog, this is all 
+                  //a bit of a hack.
+                  BaseCreator* creator = mDialogSet.getCreator();
+                  assert(creator);
+                  assert(creator->getLastRequest().exists(h_Event));
+                  ClientSubscriptionHandler* handler = 
+                     mDum.getClientSubscriptionHandler(creator->getLastRequest().header(h_Event).value());
+                  assert(handler);
+                  handler->onTerminated(ClientSubscriptionHandle::NotValid(), response);
+                  possiblyDie();
+               }
             }
          }
          break;
@@ -833,7 +847,9 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
       assert(request.header(h_RequestLine).getMethod() == INVITE ||
              request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
              request.header(h_RequestLine).getMethod() == BYE ||
-             request.header(h_RequestLine).getMethod() == CANCEL);
+             request.header(h_RequestLine).getMethod() == CANCEL ||
+             request.header(h_RequestLine).getMethod() == NOTIFY 
+             );
       
       assert (request.header(h_RequestLine).getMethod() == CANCEL ||  // Contact header is not required for Requests that do not form a dialog
 		      request.header(h_RequestLine).getMethod() == BYE ||

@@ -8,7 +8,8 @@
 using namespace resip;
 
 ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
-   : BaseSubscription(dum, dialog, request)
+   : BaseSubscription(dum, dialog, request),
+     mOnNewSubscriptionCalled(false)
 {
 }
 
@@ -35,6 +36,12 @@ ClientSubscription::dispatch(const SipMessage& msg)
       assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
       mDialog.makeResponse(mLastResponse, msg, 200);
       send(mLastResponse);
+
+      if (!mOnNewSubscriptionCalled)
+      {
+         handler->onNewSubscription(getHandle(), msg);
+         mOnNewSubscriptionCalled = true;
+      }         
 
       if (msg.header(h_SubscriptionState).value() == "active")
       {
