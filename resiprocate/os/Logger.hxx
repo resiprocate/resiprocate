@@ -39,21 +39,38 @@ GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, args_)
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, args_)
 
 // do/while allows a {} block in an expression
-#define GenericLog(system_, level_, args_)                      \
-do                                                              \
-{                                                               \
-  if (Vocal2::GenericLogImpl::isLogging(level_))                \
-  {                                                             \
-     Vocal2::Lock lock(Vocal2::Log::_mutex);                    \
-     if (Vocal2::GenericLogImpl::isLogging(level_))             \
-     {                                                          \
-        Vocal2::Log::tags(level_, system_,                      \
-                          Vocal2::GenericLogImpl::Instance())   \
-          << __FILE__ << ':' << __LINE__ << DELIM               \
-          args_ << std::endl;                                   \
-     }                                                          \
-  }                                                             \
+#define GenericLog(system_, level_, args_)                                      \
+do                                                                              \
+{                                                                               \
+   const Vocal2::Log::ThreadSetting* setting = Vocal2::Log::getThreadSetting(); \
+   if (setting > 0)                                                             \
+   {                                                                            \
+      if (level_ <= setting->level)                                             \
+      {                                                                         \
+         Vocal2::Lock lock(Vocal2::Log::_mutex);                                \
+         Vocal2::Log::tags(level_, system_,                                     \
+                           Vocal2::GenericLogImpl::Instance())                  \
+                              << __FILE__ << ':' << __LINE__ << DELIM           \
+            args_ << std::endl;                                                 \
+      }                                                                         \
+   }                                                                            \
+   else                                                                         \
+   {                                                                            \
+      if (Vocal2::GenericLogImpl::isLogging(level_))                            \
+      {                                                                         \
+         Vocal2::Lock lock(Vocal2::Log::_mutex);                                \
+         if (Vocal2::GenericLogImpl::isLogging(level_))                         \
+         {                                                                      \
+            Vocal2::Log::tags(level_, system_,                                  \
+                              Vocal2::GenericLogImpl::Instance())               \
+                                 << __FILE__ << ':' << __LINE__ << DELIM        \
+               args_ << std::endl;                                              \
+         }                                                                      \
+      }                                                                         \
+   }                                                                            \
 } while (0)
+
+
 
 #ifdef NO_DEBUG
 #undefine DebugLog
