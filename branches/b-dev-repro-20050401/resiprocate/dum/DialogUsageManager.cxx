@@ -800,6 +800,15 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       return false;
    }
 
+   if (mServerAuthManager.get())
+   {
+      if ( mServerAuthManager->handleUserAuthInfo(msg) )
+      {
+         InfoLog(<< "ServerAuth rejected/didn't find secret " << msg->brief() );
+         return true;
+      }
+   }
+
    try
    {
       InfoLog (<< "Got: " << msg->brief());
