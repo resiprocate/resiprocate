@@ -1,3 +1,11 @@
+2003-08-19  Wensong Zhang  <wensong@purplecomm.com>
+
+	* TcpTransport.cxx (processAllWrites): fixed the wrong parameter
+	order in the memset() call.
+
+	* TlsTransport.cxx (processAllWrites): fixed the wrong parameter
+	order in the memset() call.
+
 2003-08-10  Wensong Zhang  <wensong@purplecomm.com>
 
 	* Makefile.am (libresiprocate_la_LDFLAGS): added to set the shared
