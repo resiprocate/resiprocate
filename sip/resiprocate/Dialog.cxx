@@ -79,8 +79,11 @@ Dialog::makeResponse(const SipMessage& request, int code)
       SipMessage* response = Helper::makeResponse(request, code, mContact);
       if (mCreated)
       {
-         assert (!response->header(h_To).exists(p_tag));
-         response->header(h_To).param(p_tag) = mLocalTag;
+         if (!response->header(h_To).exists(p_tag))
+         {
+            response->header(h_To).param(p_tag) = mLocalTag;
+         }
+         assert(response->header(h_To).param(p_tag) == mLocalTag);
       }
       DebugLog(<< "Created response within dialog: " << *response);
       return response;
@@ -194,15 +197,16 @@ Dialog::targetRefreshRequest(const SipMessage& request)
 SipMessage*
 Dialog::makeInvite()
 {
-   SipMessage* request=makeRequest(INVITE);
+   SipMessage* request = makeRequest(INVITE);
    incrementCSeq(*request);
+   DebugLog(<< "Dialog::makeInvite: " << *request);
    return request;
 }
 
 SipMessage*
 Dialog::makeBye()
 {
-   SipMessage* request=makeRequest(BYE);
+   SipMessage* request = makeRequest(BYE);
    incrementCSeq(*request);
    return request;
 }
@@ -211,7 +215,7 @@ Dialog::makeBye()
 SipMessage*
 Dialog::makeRefer(const NameAddr& referTo)
 {
-   SipMessage* request=makeRequest(REFER);
+   SipMessage* request = makeRequest(REFER);
    request->header(h_ReferTo) = referTo;
    request->header(h_ReferredBy) = mLocalUri;
    incrementCSeq(*request);
@@ -221,7 +225,7 @@ Dialog::makeRefer(const NameAddr& referTo)
 SipMessage*
 Dialog::makeNotify()
 {
-   SipMessage* request=makeRequest(NOTIFY);
+   SipMessage* request = makeRequest(NOTIFY);
    incrementCSeq(*request);
    return request;
 }
@@ -230,7 +234,7 @@ Dialog::makeNotify()
 SipMessage*
 Dialog::makeOptions()
 {
-   SipMessage* request=makeRequest(OPTIONS);
+   SipMessage* request = makeRequest(OPTIONS);
    incrementCSeq(*request);
    return request;
 }
@@ -238,7 +242,7 @@ Dialog::makeOptions()
 SipMessage*
 Dialog::makeAck(const SipMessage& original)
 {
-   SipMessage* request=makeRequest(ACK);
+   SipMessage* request = makeRequest(ACK);
    copyCSeq(*request);
 
    // !dcm! should we copy the authorizations? 
@@ -354,7 +358,8 @@ Dialog::incrementCSeq(SipMessage& request)
       mLocalSequence = 1;
       mLocalEmpty = false;
    }
-   request.header(h_CSeq).sequence()++;
+   DebugLog ( << "mLocalSequence: " << mLocalSequence);
+   request.header(h_CSeq).sequence() = ++mLocalSequence;
 }
 
 std::ostream&
