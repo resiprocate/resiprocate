@@ -612,8 +612,9 @@ DialogUsageManager::process(FdSet& fdset)
          return;
       }
 
-      ErrLog(<<"Unknown message received." << msg->brief());
-      assert(0);
+      // !jf! might want to do something with StatisticsMessage
+      //ErrLog(<<"Unknown message received." << msg->brief());
+      //assert(0);
    }
    catch(BaseException& e)
    {
