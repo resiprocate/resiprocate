@@ -138,13 +138,13 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
       break;
       case TLS:
       {
-         mTlsTransports[transport->interfaceName()] = transport;
+         mTlsTransports[transport->tlsDomain()] = transport;
       }
       break;
 #ifdef USE_DTLS
       case DTLS:
       {
-         mDtlsTransports[transport->interfaceName()] = transport;
+         mDtlsTransports[transport->tlsDomain()] = transport;
       }
       break;
 #endif
@@ -543,12 +543,13 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          {
             if (target.getType() == TLS)
             {
-               target.transport = findTlsTransport(msg->getTlsDomain());
+               //target.transport = findTlsTransport(msg->getTlsDomain());
+               target.transport = findTlsTransport(msg->header(h_To).uri().host());
             }
 #if defined( USE_DTLS )
             else if (target.getType() == DTLS)
             {
-                target.transport = findDtlsTransport(msg->getTlsDomain());
+                target.transport = findDtlsTransport(msg->header(h_To).uri().host());
             }
 #endif
             else

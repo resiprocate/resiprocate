@@ -163,8 +163,8 @@ UdpTransport::process(FdSet& fdset)
                                       &unprocessedCharPtr) !=
           MsgHeaderScanner::scrEnd)
       {
-         DebugLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
-         DebugLog(<< Data(buffer, len));
+         StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
+         StackLog(<< Data(buffer, len));
          delete message; 
          message=0; 
          return;
