@@ -114,6 +114,8 @@ const char * const Symbols::comp = "comp";
 const char * const Symbols::rport = "rport";
 
 const int Symbols::DefaultSipPort = 5060;
+const int Symbols::SipTlsPort = 5061;
+const int Symbols::DefaultSipsPort = 5061;
 
 
 /* ====================================================================

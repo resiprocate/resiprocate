@@ -624,9 +624,12 @@ NameAddr::parse(ParseBuffer& pb)
    {
       switch ((*it)->getType())
       {
-         case ParameterTypes::mobility:
-         case ParameterTypes::tag:
-         case ParameterTypes::q: 
+         case ParameterTypes::transport:
+         case ParameterTypes::ttl:
+         case ParameterTypes::maddr:
+         case ParameterTypes::lr:
+         case ParameterTypes::method: 
+         case ParameterTypes::comp:             
          {
             mUri.mParameters.push_back(*it);
             it = mParameters.erase(it);
