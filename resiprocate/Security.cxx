@@ -48,7 +48,7 @@ using namespace std;
 static void
 dumpAsn( char* name, Data data)
 {
-#if 1 // !CJ! TODO turn off 
+#if 0 // !CJ! TODO turn off 
    assert(name);
    
    if (true) // dump asn.1 stuff to debug file
@@ -748,6 +748,8 @@ Security::setRootCerts(  const Data& certPem )
 Data 
 Security::computeIdentityHash( const Data& in )
 {
+   DebugLog( << "Compute identity has for " << in );
+   
    Data ret;
    
    EVP_PKEY* pKey = privateKey; // TODO - wrong one - need TLS not smime key
@@ -768,11 +770,15 @@ Security::computeIdentityHash( const Data& in )
    SHA1_Update(&sha, in.data() , in.size() );
    SHA1_Final( hashRes, &sha );
    
+   DebugLog( << "hash of string is " <<  Data(hashRes,sizeof(hashRes)).hex() );
+   
    RSA_sign(NID_sha1, hashRes, hashResLen,
             result, &resultSize,
             rsa);
 
    ret = Data(result,resultSize);
+  
+   DebugLog( << "rsa encrypt of has is "<< ret.hex() );
    
    return ret;
 }
@@ -800,10 +806,13 @@ Security::multipartSign( Contents* bodyIn )
    
    // add the main body to it 
    Contents* body =  bodyIn->clone();
+   assert( body );
+   
 #if 0
    // this need to be set in body before it is passed in
    body->header(h_ContentTransferEncoding).value() = StringCategory(Data("binary"));
 #endif
+
    multi->parts().push_back( body );
 
    // compute the signature 
@@ -818,9 +827,8 @@ Security::multipartSign( Contents* bodyIn )
 
    Data bodyData;
    DataStream strm( bodyData );
-   strm << *body;
-   //body->encodeHeaders( strm );
-   //body->encode( strm );
+   body->encodeHeaders( strm );
+   body->encode( strm );
    strm.flush();
 
    DebugLog( << "sign the data <" << bodyData << ">" );
@@ -901,9 +909,8 @@ Security::pkcs7Sign( Contents* bodyIn )
   
    Data bodyData;
    DataStream strm(bodyData);
-   strm << *bodyIn;
-   //bodyIn->encodeHeaders(strm);
-   //bodyIn->encode( strm );
+   bodyIn->encodeHeaders(strm);
+   bodyIn->encode( strm );
    strm.flush();
    
    DebugLog( << "body data to sign is <" << bodyData << ">" );
@@ -1006,9 +1013,8 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    
    Data bodyData;
    DataStream strm(bodyData);
-   strm << *bodyIn;
-   //bodyIn->encodeHeaders(strm);
-   //bodyIn->encode( strm );
+   bodyIn->encodeHeaders(strm);
+   bodyIn->encode( strm );
    strm.flush();
    
    InfoLog( << "body data to encrypt is <" << bodyData.escaped() << ">" );
@@ -1133,9 +1139,8 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    
    Data bodyData;
    DataStream strm( bodyData );
-   strm << *first;
-   //first->encodeHeaders( strm );
-   //first->encode( strm );
+   first->encodeHeaders( strm );
+   first->encode( strm );
    strm.flush();
    CerrLog( << "encoded version to sign is " << bodyData );
    
