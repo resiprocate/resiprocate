@@ -74,7 +74,7 @@ class SipMessage : public Message
          // already parsed?
          if (!hfvs->front()->isParsed())
          {
-            hfvs->front()->setParserCategory(new typename Header<T>::Type(*hfvs->front()));
+            hfvs->front()->setParserCategory(new typename Header<T>::Type(hfvs->front()));
             if (hfvs->moreThanOne())
             {
                // WarningLog(<< "Single content header appears multiple times!");
