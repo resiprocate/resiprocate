@@ -105,7 +105,8 @@ Security::preload()
    FileSystem::Directory dir(mPath);
    char buffer[8192];
    Data fileT(Data::Borrow, buffer, sizeof(buffer));
-   for (FileSystem::Directory::iterator it = dir.begin(); it != dir.end(); ++it)
+   FileSystem::Directory::iterator it(dir);
+   for (; it != dir.end(); ++it)
    {
       if (it->postfix(pem))
       {
