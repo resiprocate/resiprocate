@@ -723,12 +723,18 @@ SipMessage::getContents() const
          StackLog(<< "SipMessage::getContents: ContentType header does not exist - implies no contents");
          return 0;
       }
-      DebugLog(<< "SipMessage::getContents: " << header(h_ContentType));
+      DebugLog(<< "SipMessage::getContents: " 
+               << header(h_ContentType).type()
+               << "/"
+               << header(h_ContentType).subType());
 
       if ( Contents::getFactoryMap().find(header(h_ContentType)) == Contents::getFactoryMap().end() )
       {
          InfoLog(<< "SipMessage::getContents: got content type ("
-                 <<  header(h_ContentType) << ") that is not known, "
+                 << header(h_ContentType).type()
+                 << "/"
+                 << header(h_ContentType).subType()
+                 << ") that is not known, "
                  << "returning as opaque application/octet-stream");
          mContents = Contents::getFactoryMap()[OctetContents::getStaticType()]->create(mContentsHfv, OctetContents::getStaticType());
       }
@@ -1141,6 +1147,9 @@ defineMultiHeader(Unsupported);
 defineMultiHeader(Via);
 defineHeader(RSeq);
 defineHeader(RAck);
+defineHeader(Identity);
+defineHeader(IdentityInfo);
+
 #endif
 
 const HeaderFieldValueList*

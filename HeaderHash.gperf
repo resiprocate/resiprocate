@@ -21,6 +21,7 @@ k, Headers::Supported
 t, Headers::To
 v, Headers::Via
 x, Headers::SessionExpires
+y, Headers::Idenity
 cseq, Headers::CSeq
 call-id, Headers::CallID
 contact, Headers::Contact
@@ -73,6 +74,8 @@ allow-events, Headers::AllowEvents
 encryption, Headers::UNKNOWN
 event, Headers::Event
 hide, Headers::UNKNOWN
+identity, Headers::Identity
+identity-info, Headers::IdentityInfo
 p-asserted-identity, Headers::UNKNOWN
 p-media-authorization, Headers::UNKNOWN
 p-preferred-identity, Headers::UNKNOWN
