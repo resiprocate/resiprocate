@@ -1198,6 +1198,38 @@ Security::uncodeSigned( MultipartSignedContents* multi,
          X509* x = sk_X509_value(signers,i);
          InfoLog(<< "Got a signer <" << i << ">" );
          
+#if 1
+         GENERAL_NAMES* gens;
+         gens = (GENERAL_NAMES*)X509_get_ext_d2i(x, NID_subject_alt_name, NULL, NULL);
+          
+         for(i = 0; i < sk_GENERAL_NAME_num(gens); i++)
+         {
+            GENERAL_NAME* gen = sk_GENERAL_NAME_value(gens, i);
+            if(gen->type == GEN_URI) 
+            {
+               ASN1_IA5STRING* uri = gen->d.uniformResourceIdentifier;
+               int l = uri->length;
+               unsigned char* dat = uri->data;
+               Data name(dat,l);
+               InfoLog(<< "subjectAltName of signing cert contains <" << name << ">" );
+               
+               try
+               {
+                  Uri n(name);
+                  if ( n.scheme() == "sip" )
+                  {
+                     *signedBy = name;
+                     InfoLog(<< "choose <" << name << "> signature" );
+                 }
+               }
+               catch (...)
+               {
+               }
+            }
+         }
+
+         sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+#else
          STACK* emails = X509_get1_email(x);
          
          for ( int j=0; j<sk_num(emails); j++)
@@ -1206,9 +1238,11 @@ Security::uncodeSigned( MultipartSignedContents* multi,
             InfoLog(<< "email field of signing cert is <" << e << ">" );
             if ( signedBy)
             {
+
                *signedBy = Data(e);
             }
          }
+#endif
       }
    }
    else
