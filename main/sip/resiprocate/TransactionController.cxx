@@ -47,7 +47,7 @@ void
 TransactionController::process(FdSet& fdset)
 {
    if (mShuttingDown && 
-       mTimers.empty() && 
+       //mTimers.empty() && 
        !mStateMacFifo.messageAvailable() && 
        !mTUFifo.messageAvailable() &&
        mTransportSelector.isFinished())
@@ -103,16 +103,16 @@ TransactionController::buildFdSet( FdSet& fdset)
    mTransportSelector.buildFdSet( fdset );
 }
 
-void
+bool
 TransactionController::addTransport( TransportType protocol, 
                                      int port,
                                      IpVersion version,
                                      const Data& ipInterface)
 {
-   mTransportSelector.addTransport(protocol, port, version, ipInterface);
+   return mTransportSelector.addTransport(protocol, port, version, ipInterface);
 }
 
-void 
+bool
 TransactionController::addTlsTransport( int port, 
                                         const Data& keyDir,
                                         const Data& privateKeyPassPhrase,
@@ -120,7 +120,7 @@ TransactionController::addTlsTransport( int port,
                                         IpVersion version,
                                         const Data& ipInterface)
 {
-   mTransportSelector.addTlsTransport(domainname, keyDir, privateKeyPassPhrase, port, version, ipInterface);
+   return mTransportSelector.addTlsTransport(domainname, keyDir, privateKeyPassPhrase, port, version, ipInterface);
 }
 
 void

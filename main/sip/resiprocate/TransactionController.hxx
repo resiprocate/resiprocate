@@ -24,11 +24,11 @@ class TransactionController
       // graceful shutdown (eventually)
       void shutdown();
 
-      void addTransport( TransportType protocol, 
+      bool addTransport( TransportType protocol, 
                          int port,
                          IpVersion version,
                          const Data& ipInterface);
-      void addTlsTransport( int port, 
+      bool addTlsTransport( int port, 
                             const Data& keyDir,
                             const Data& privateKeyPassPhrase,
                             const Data& domainname,
