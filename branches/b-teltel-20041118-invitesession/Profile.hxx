@@ -40,7 +40,7 @@ class Profile
       //force tcp vs udp vs tls?
       virtual void setOverrideHostAndPort(const Uri& hostPort);
       virtual bool hasOverrideHostAndPort() const;
-      virtual const Uri& getOverideHostAndPort() const;      
+      virtual const Uri& getOverrideHostAndPort() const;      
       
 	  //enable/disable sending of Allow/Supported/Accept-Language/Accept-Encoding headers 
 	  //on initial outbound requests (ie. Initial INVITE, REGISTER, etc.) and Invite 200 responses
