@@ -65,7 +65,7 @@ class Headers
          Authorization, 
          Replaces,
          UNKNOWN,
-         MAX_HEADERS
+         MAX_HEADERS = UNKNOWN
       };
 
       static bool CommaTokenizing[MAX_HEADERS];
