@@ -118,7 +118,7 @@ class DialogUsageManager : public HandleManager
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
       SipMessage& makeInviteSession(const Uri& target, const SdpContents* initialOffer, AppDialogSet* = 0);
-      SipMessage& makeSubscription(const Uri& aor, const NameAddr& target, const Data& eventType, AppDialogSet* = 0);
+      SipMessage& makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* = 0);
       //unsolicited refer
       SipMessage& makeRefer(const Uri& aor, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
 
@@ -188,6 +188,12 @@ class DialogUsageManager : public HandleManager
                     BaseUsageHandle target, 
                     int seq, 
                     int altseq=-1);
+
+      void addTimerMs(DumTimeout::Type type,
+                      unsigned long duration,
+                      BaseUsageHandle target, 
+                      int seq, 
+                      int altseq=-1);
 
       Dialog& findOrCreateDialog(const SipMessage* msg);
       Dialog& findDialog(const DialogId& id);
