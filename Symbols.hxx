@@ -8,6 +8,7 @@ class Symbols
 {
    public:
       static const char * const DefaultSipVersion;
+      static const char * const DefaultSipScheme;
 
       static const char * const AT_SIGN;
       static const char * const COLON;

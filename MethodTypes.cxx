@@ -19,6 +19,7 @@ Data Vocal2::MethodNames[MAX_METHODS] =
    "REFER",
    "REGISTER",
    "SUBSCRIBE",
+   "RESPONSE",
    "UNKNOWN",
 };
 
