@@ -172,6 +172,7 @@ class SipStack
    private:
       /// if this object exists, it manages advanced security featues
       Security* mSecurity;
+      AsyncProcessHandler* mAsyncProcessHandler;
 
       SipStack(const SipStack& copy);
       SipStack& operator=(const SipStack& rhs);         
@@ -196,8 +197,6 @@ class SipStack
 
       bool mStrictRouting;
       bool mShuttingDown;
-
-      AsyncProcessHandler* mAsyncProcessHandler;
 
       TuSelector mTuSelector;
 
