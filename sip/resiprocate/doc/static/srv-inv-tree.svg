@@ -275,7 +275,7 @@
 </g>
 <g id="LABEL_NODE" class="node">
 <text text-anchor="middle" transform="rotate(-90 159 523)" x="159" y="523" style="font-family:Helvetica;font-size:3.37">Server INVITE FSM</text>
-<text text-anchor="middle" transform="rotate(-90 162 523)" x="162" y="523" style="font-family:Helvetica;font-size:3.37">$Id: srv-inv-tree.svg,v 1.1 2002/11/06 21:06:05 alan Exp $ $Name:  $</text>
+<text text-anchor="middle" transform="rotate(-90 162 523)" x="162" y="523" style="font-family:Helvetica;font-size:3.37">$Id: srv-inv-tree.svg,v 1.2 2003/04/09 20:07:10 alan Exp $ $Name:  $</text>
 </g>
 </g>
 </svg>
