@@ -4,6 +4,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
+#include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -63,42 +64,57 @@ InviteSession::dispatch(const SipMessage& msg)
    std::pair<OfferAnswerType, const SdpContents*> offans;
    offans = InviteSession::getOfferOrAnswer(msg);
 
-   // reINVITE
-   if (msg.isRequest())
+   switch(mState)
    {
-      switch(msg.header(h_RequestLine).method())
-      {
-         case INVITE:
-            mDialog.update(msg);
-            mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
-                  
-            if (offans.first != None)
+      case Terminated:
+         InviteSession::dispatch(msg);
+         break;
+         //!dcm! -- 481 behaviour here
+         if (msg.isResponse() && msg.header(h_StatusLine).statusCode() == 200 && msg.header(h_CSeq).method() == BYE)
+         {
+            delete this;
+         }
+         break;
+      case Connected:
+         // reINVITE
+         if (msg.isRequest())
+         {
+            switch(msg.header(h_RequestLine).method())
             {
-               InviteSession::incomingSdp(msg, offans.second);
+               case INVITE:
+                  mDialog.update(msg);
+                  mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
+                  
+                  if (offans.first != None)
+                  {
+                     InviteSession::incomingSdp(msg, offans.second);
+                  }
+                  break;
+
+               case BYE:
+                  end();
+                  break;
+
+               case UPDATE:
+                  assert(0);
+                  break;
+                  
+               case INFO:
+                  mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
+                  break;
+                  
+               case REFER:
+                  assert(0); // !jf! 
+                  mDum.mInviteSessionHandler->onRefer(getSessionHandle(), msg);
+                  break;
+                  
+               default:
+                  InfoLog (<< "Ignoring request in an INVITE dialog: " << msg.brief());
+                  break;
             }
-            break;
-
-         case BYE:
-            end();
-            break;
-
-         case UPDATE:
-            assert(0);
-            break;
-                  
-         case INFO:
-            mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
-            break;
-                  
-         case REFER:
-            assert(0); // !jf! 
-            mDum.mInviteSessionHandler->onRefer(getSessionHandle(), msg);
-            break;
-                  
-         default:
-            InfoLog (<< "Ignoring request in an INVITE dialog: " << msg.brief());
-            break;
-      }
+         }      
+      default:
+         assert(0);  //all other cases should be handled in base classes
    }
 }
 
@@ -110,15 +126,19 @@ InviteSession::makeRefer(const H_ReferTo::Type& referTo)
 SipMessage&
 InviteSession::end()
 {
-   //!dcm! -- why wouldn't bye be based on mLastRequest
-   //assert(mState == Connected);
-
-   // no way for the application to modify the BYE yet
-//   SipMessage bye;
-   mDialog.makeRequest(mLastRequest, BYE);
-//   copyAuthorizations(bye);
-   //mDum.send(bye);
-   return mLastRequest;
+   switch (mState)
+   {
+      case Terminated: 
+         throw new UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
+         break;
+      case Connected:
+         mDialog.makeRequest(mLastRequest, BYE);
+         mState = Terminated;
+         return mLastRequest;
+         break;
+      default:
+         assert(0); // out of states
+   }
 }
 
 // If sdp==0, it means the last offer failed
