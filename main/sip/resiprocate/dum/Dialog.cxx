@@ -95,3 +95,31 @@ Dialog::findOutOfDialogs()
     }
     return usageSet:
 }
+
+void
+Dialog::processNotify(const SipMessage& notify)
+{
+   if (notify.isRequest())
+   {
+      if (findSubscriptions().empty())
+      {
+         SubscriptionCreator* creator = dynamic_cast<SubscriptionCreator*>(DialogSetId(notify).getCreator());
+         if (creator)
+         {
+            creator->makeNewSubscription(notify);
+         }
+      }
+      else
+      {
+         for (std::list<BaseUsage*>::iterator i=mUsages.begin(); i!=mUsages.end(); i++)
+         {
+            ClientSubscription* sub = dynamic_cast<ClientSubscription*>(*i);
+            if (sub && sub->matches(notify))
+            {
+               sub->process(notify);
+               break;
+            }
+         }
+      }
+   }
+}
