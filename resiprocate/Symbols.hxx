@@ -36,7 +36,10 @@ class Symbols
       static const Data LPAREN;
       static const Data RPAREN;
       static const Data PERIOD;
-      
+      static const Data QUESTION;
+      static const Data AMPERSAND;
+      static const Data PERCENT;
+
       static const Data ProtocolName;
       static const Data ProtocolVersion;
       static const Data UDP;
