@@ -115,6 +115,7 @@ class Security
       Data computeIdentity( const Data& in );
       bool checkIdentity( const Data& in, const Data& sig );
       
+    
       /* stuff to receive messages */
       enum SignatureStatus 
       {
