@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.17 2002/11/01 22:01:07 jason Exp $";
+"$Id: Data.cxx,v 1.18 2002/11/02 19:31:48 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -440,6 +440,19 @@ ostream&
 Vocal2::operator<<(ostream& strm, const Data& d)
 {
    return strm.write(d.mBuf, d.mSize);
+}
+
+size_t 
+__gnu_cxx::hash<Vocal2::Data>::operator()(const Vocal2::Data& data) const
+{
+   unsigned long __h = 0; 
+   const char* start = data.data(); // non-copying
+   const char* end = start + data.size();
+   for ( ; start != end; ++start)
+   {
+      __h = 5*__h + *start; // .dlb. weird hash
+   }
+   return size_t(__h);
 }
 
 /* ====================================================================
