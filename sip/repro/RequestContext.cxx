@@ -137,6 +137,27 @@ RequestContext::checkTopRouteForSelf()
 
 }
 
+void
+RequestContext::pushChainIterator(RequestProcessorChain::Chain::iterator& i)
+{
+  mChainIteratorStack.push_back(i);
+}
+
+RequestProcessorChain::Chain::iterator
+RequestContext::popChainIterator()
+{
+  RequestProcessorChain::Chain::iterator i;
+  i = mChainIteratorStack.back();
+  mChainIteratorStack.pop_back();
+  return i;
+}
+
+bool
+RequestContext::chainIteratorStackIsEmpty()
+{
+  return mChainIteratorStack.empty();
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
