@@ -1,3 +1,8 @@
+
+
+#include <cassert>
+
+
 #include <sipstack/DataParameter.hxx>
 #include <sipstack/Symbols.hxx>
 
