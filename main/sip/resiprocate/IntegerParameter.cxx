@@ -17,7 +17,7 @@ IntegerParameter::IntegerParameter(ParameterTypes::Type type,
    }
    pb.skipChar();
    // .dlb. error detection?
-   mValue = atoi(pb.position());
+   mValue = pb.integer();
 }
 
 IntegerParameter::IntegerParameter(ParameterTypes::Type type, int value)
