@@ -364,30 +364,30 @@ class TestData
          {
             char *txt = "here is some text";
             Data notOwner(Data::Share, txt, strlen(txt));
-            assert(!notOwner.mMine);
+            assert(notOwner.mMine == Data::Share);
             
             notOwner += " more text";
-            assert(notOwner.mMine);
+            assert(notOwner.mMine == Data::Take);
             assert(notOwner == "here is some text more text");
          }
 
          {
             char *txt = "here is some text";
             Data notOwner(Data::Share, txt, strlen(txt));
-            assert(!notOwner.mMine);
+            assert(notOwner.mMine == Data::Share);
             
             notOwner += '!';
-            assert(notOwner.mMine);
+            assert(notOwner.mMine == Data::Take);
             assert(notOwner == "here is some text!");
          }
 
          {
             char *txt = "here is some text";
             Data notOwner(Data::Share, txt, strlen(txt));
-            assert(!notOwner.mMine);
+            assert(notOwner.mMine == Data::Share);
             
             notOwner += Data(" more text");
-            assert(notOwner.mMine);
+            assert(notOwner.mMine == Data::Take);
             assert(notOwner == "here is some text more text");
          }
 
