@@ -170,7 +170,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          InfoLog(  << "TestInviteSessionHandler::onInfo" << msg.brief());
       }
 
-      virtual void onRefer(InviteSessionHandle, const SipMessage& msg) 
+      virtual void onRefer(InviteSessionHandle, ServerSubscriptionHandle, const SipMessage& msg)
       {
          InfoLog(  << "TestInviteSessionHandler::onRefer " << msg.brief());
       }
@@ -178,6 +178,12 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       virtual void onReInvite(InviteSessionHandle, const SipMessage& msg)
       {
          InfoLog(  << "TestInviteSessionHandler::onReInvite " << msg.brief());
+      }
+
+      /// called when an REFER message receives a failure response 
+      virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onReferRejected " << msg.brief());
       }
 };
 
@@ -340,8 +346,9 @@ class TestShutdownHandler : public DumShutdownHandler
       {
       }
       bool dumShutDown;
-      virtual void dumDestroyed() 
+      virtual void onDumDestroyed() 
       {
+         InfoLog ( << "TestShutdownHandler::onDumDestroyed" );         
          dumShutDown = true;
       }
 };
@@ -351,87 +358,101 @@ class TestShutdownHandler : public DumShutdownHandler
 int 
 main (int argc, char** argv)
 {
-   int level=(int)Log::Info;
-   if (argc >1 ) level = atoi(argv[1]);
+//    int level=(int)Log::Info;
+//    if (argc >1 ) level = atoi(argv[1]);
    
-   Log::initialize(Log::Cout, (resip::Log::Level)level, argv[0]);
+//    Log::initialize(Log::Cout, (resip::Log::Level)level, argv[0]);
+
+    Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
+
 
    //set up UAC
    SipStack stackUac;
-   stackUac.addTransport(UDP, 15060);
-   DialogUsageManager dumUac(stackUac);
+   stackUac.addTransport(UDP, 12005);
+   DialogUsageManager* dumUac = new DialogUsageManager(stackUac);
 
    Profile uacProfile;   
    ClientAuthManager uacAuth(uacProfile);
-   dumUac.setProfile(&uacProfile);
-   dumUac.setClientAuthManager(&uacAuth);
+   dumUac->setProfile(&uacProfile);
+   dumUac->setClientAuthManager(&uacAuth);
 
    TestUac uac;
-   dumUac.setInviteSessionHandler(&uac);
-   dumUac.setClientRegistrationHandler(&uac);
+   dumUac->setInviteSessionHandler(&uac);
+   dumUac->setClientRegistrationHandler(&uac);
    
    //your aor, credentials, etc here
-   NameAddr uacAor("sip:foo@bar.com");
-   dumUac.getProfile()->addDigestCredential( "bar.com", "realm", "pwd" );
-   dumUac.getProfile()->setOutboundProxy(Uri(""));    
-
-   dumUac.getProfile()->setDefaultAor(uacAor);
-   dumUac.getProfile()->setDefaultRegistrationTime(70);
+   NameAddr uacAor("sip:101@foo.net");
+   dumUac->getProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
+//   dumUac->getProfile()->setOutboundProxy(Uri("sip:64.125.66.33:9090"));    
+   dumUac->getProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
+   dumUac->getProfile()->setDefaultAor(uacAor);
+   dumUac->getProfile()->setDefaultRegistrationTime(70);
 
    //set up UAS
    SipStack stackUas;
-   stackUas.addTransport(UDP, 15070);
-   DialogUsageManager dumUas(stackUas);
+   stackUas.addTransport(UDP, 12010);
+   DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
    
    Profile uasProfile;   
    ClientAuthManager uasAuth(uasProfile);
-   dumUas.setProfile(&uasProfile);
-   dumUas.setClientAuthManager(&uasAuth);
+   dumUas->setProfile(&uasProfile);
+   dumUas->setClientAuthManager(&uasAuth);
 
    //your aor, credentials, etc here
-   NameAddr uasAor("sip:bar@baz.com");
-   dumUas.getProfile()->addDigestCredential( "baz.com", "realm", "pwd" );
-   dumUas.getProfile()->setOutboundProxy(Uri(""));    
+   NameAddr uasAor("sip:105@foo.net");
+   dumUas->getProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
 
-   dumUas.getProfile()->setDefaultRegistrationTime(70);
-   dumUas.getProfile()->setDefaultAor(uasAor);
+//   dumUas->getProfile()->setOutboundProxy(Uri("sip:64.125.66.33:9090"));    
+   dumUas->getProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
+
+   dumUas->getProfile()->setDefaultRegistrationTime(70);
+   dumUas->getProfile()->setDefaultAor(uasAor);
 
 
    time_t bHangupAt = 0;
    TestUas uas(&bHangupAt);
-   dumUas.setClientRegistrationHandler(&uas);
-   dumUas.setInviteSessionHandler(&uas);
+   dumUas->setClientRegistrationHandler(&uas);
+   dumUas->setInviteSessionHandler(&uas);
 
 //   NameAddr contact;
 //   contact.uri().user() = "13015604286";   
 //   regMessage.header(h_Contacts).push_back(contact);   
    {
-      SipMessage& regMessage = dumUas.makeRegistration(uasAor);
+      SipMessage& regMessage = dumUas->makeRegistration(uasAor);
       InfoLog( << regMessage << "Generated register for Uas: " << endl << regMessage );
-      dumUas.send(regMessage);
+      dumUas->send(regMessage);
    }
    {
-      SipMessage& regMessage = dumUac.makeRegistration(uacAor);
+      SipMessage& regMessage = dumUac->makeRegistration(uacAor);
       InfoLog( << regMessage << "Generated register for Uac: " << endl << regMessage );
-      dumUac.send(regMessage);
+      dumUac->send(regMessage);
    }
    bool finishedTest = false;
-   
+
    bool startedCallFlow = false;
    bool hungup = false;   
    bool stoppedRegistering = false;
    TestShutdownHandler uasShutdownHandler;   
    TestShutdownHandler uacShutdownHandler;   
 
-   while (!finishedTest)
+   while (!(uasShutdownHandler.dumShutDown && uacShutdownHandler.dumShutDown))
    {
-     FdSet fdset;
-     dumUac.buildFdSet(fdset);
-     dumUas.buildFdSet(fdset);
-     int err = fdset.selectMilliSeconds(100);
-     assert ( err != -1 );
-     dumUac.process(fdset);
-     dumUas.process(fdset);
+     if (!uacShutdownHandler.dumShutDown)
+     {
+        FdSet fdset;
+        dumUac->buildFdSet(fdset);
+        int err = fdset.selectMilliSeconds(100);
+        assert ( err != -1 );
+        dumUac->process(fdset);
+     }
+     if (!uasShutdownHandler.dumShutDown)
+     {
+        FdSet fdset;
+        dumUas->buildFdSet(fdset);
+        int err = fdset.selectMilliSeconds(100);
+        assert ( err != -1 );
+        dumUas->process(fdset);
+     }
 
      if (!(uas.done && uac.done))
      {
@@ -441,7 +462,7 @@ main (int argc, char** argv)
               startedCallFlow = true;
               InfoLog( << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " );        
               InfoLog( << "#### Sending Invite ####");
-              dumUac.send(dumUac.makeInviteSession(uasAor.uri(), uac.sdp));
+              dumUac->send(dumUac->makeInviteSession(uasAor.uri(), uac.sdp));
            }
 
         if (bHangupAt!=0)
@@ -459,12 +480,12 @@ main (int argc, char** argv)
         {
            finishedTest = true;
            stoppedRegistering = true;
+           dumUas->shutdown(&uasShutdownHandler);
+           dumUac->shutdown(&uacShutdownHandler);
            uas.registerHandle->stopRegistering();
            uac.registerHandle->stopRegistering();
         }
      }
    }
    InfoLog ( << "!!!!!!!!!!!!!!!!!! Somewhat successful !!!!!!!!!! " );
-   // How do I turn these things off? For now, we just blow
-   // out with all the wheels turning...try graceful shutdown in this test soon.
 }
