@@ -95,6 +95,8 @@ class InviteSessionHandler
       /// called when an REFER message receives a failure response 
       virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg)=0;
 
+      virtual void onReferAccepted(InviteSessionHandle, ClientSubscriptionHandle, const SipMessage& msg)=0;
+
       //default behaviour is to send a BYE to end the dialog, msg is the 
       //2xx that was being retransmitted
       virtual void onAckNotReceived(InviteSessionHandle);

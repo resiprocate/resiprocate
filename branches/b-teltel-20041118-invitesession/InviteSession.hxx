@@ -180,6 +180,8 @@ class InviteSession : public DialogUsage
       void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchTerminated(const SipMessage& msg);
 
+      void dispatchRefer(const SipMessage& msg);      
+
       void startRetransmit200Timer();
       void start491Timer();
 
