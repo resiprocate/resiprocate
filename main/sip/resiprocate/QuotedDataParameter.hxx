@@ -1,5 +1,5 @@
-#ifndef QuotedDataParameter_hxx
-#define QuotedDataParameter_hxx
+#if !defined(RESIP_QUOTEDDATAPARAMETER_HXX)
+#define RESIP_QUOTEDDATAPARAMETER_HXX 
 
 #include "resiprocate/Parameter.hxx"
 #include "resiprocate/ParameterTypeEnums.hxx"
@@ -33,7 +33,6 @@ class QuotedDataParameter : public DataParameter
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

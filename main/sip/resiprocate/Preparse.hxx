@@ -1,5 +1,5 @@
-#if !defined(PREPARSE_HXX)
-#define PREPARSE_HXX
+#if !defined(RESIP_PREPARSE_HXX)
+#define RESIP_PREPARSE_HXX
 
 #include <sys/types.h>
 
@@ -177,9 +177,7 @@ namespace PreparseConst
 #endif
 }
 
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

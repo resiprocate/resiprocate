@@ -1,5 +1,5 @@
-#ifndef Parameter_hxx
-#define Parameter_hxx
+#if !defined(RESIP_PARAMETER_HXX)
+#define RESIP_PARAMETER_HXX 
 
 #include "resiprocate/os/Data.hxx"
 #include <iostream>
@@ -37,7 +37,6 @@ class Parameter
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

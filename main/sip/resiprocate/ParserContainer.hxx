@@ -1,5 +1,5 @@
-#ifndef ParserContainer_hxx
-#define ParserContainer_hxx
+#if !defined(RESIP_PARSERCONTAINER_HXX)
+#define RESIP_PARSERCONTAINER_HXX 
 
 #include "resiprocate/HeaderFieldValueList.hxx"
 #include "resiprocate/ParserContainerBase.hxx"
@@ -210,7 +210,6 @@ class ParserContainer : public ParserContainerBase
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
