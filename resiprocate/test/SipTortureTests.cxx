@@ -91,8 +91,8 @@ test1()
         
         tassert(message->exists(h_Contacts) == true);
         tassert(message->header(h_Contacts).empty() == false);
-        tassert(message->header(h_Contacts).front().uri().user() == "user");
-        tassert(message->header(h_Contacts).front().uri().host() == "host.company.com");
+        tassert(message->header(h_Contacts).front().uri().user() == "caller");
+        tassert(message->header(h_Contacts).front().uri().host() == "caller-company.com");
         tassert(message->header(h_Contacts).front().uri().port() == 0);
         
       }
