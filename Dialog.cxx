@@ -12,11 +12,35 @@ class ServerInviteSession;
 Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg) 
    : mId(msg),
      mDum(dum),
+     mClientSubscriptions(),
+     mServerSubscription(0),
+     mInviteSession(0),
+     mClientRegistration(0),
+     mServerRegistration(0),
+     mClientPublication(0),
+     mServerPublication(0),
+     mClientOutOfDialogReq(0),
+     mServerOutOfDialogReq(0),
+     mType(Fake),
+     mLocalTag(),
+     mRemoteTag(),
+     mCallId(msg.header(h_CallID)),
+     mRouteSet(),
+     mMe(),
      mLocalCSeq(0),
      mRemoteCSeq(0),
-     mCallId(msg.header(h_CallID))
+     mRemoteTarget()
 {
    assert(msg.isFromWire());
+
+   if (request.header(h_CSeq).method() == INVITE)
+   {
+      mType = Invitation;
+   }
+   else if (request.header(h_CSeq).method() == SUBSCRIBE)
+   {
+      mType = Subscription;
+   }
 
    if (msg.isRequest()) // UAS
    {
@@ -119,12 +143,15 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
       //mDialogId = mCallId;
       //mDialogId.param(p_toTag) = mLocalTag;
       //mDialogId.param(p_fromTag) = mRemoteTag;
-
-      BaseUsage* usage = mCreator->makeUsage(response);
-      assert(usage);
-      mUsages.push_back(usage);
    }
 }
+
+DialogId
+Dialog::getId() const
+{
+   return mId;
+}
+
 
 void
 Dialog::dispatch(const SipMessage& msg)
