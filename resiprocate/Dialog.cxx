@@ -535,6 +535,24 @@ Dialog::dialogId() const
 }
 
 
+void 
+Dialog::setExpirySeconds( int secondsInFuture )
+{ 
+   expireyTimeAbsoluteMs = Timer::getTimeMs() + 1000*secondsInFuture;
+}
+
+
+int  
+Dialog::getExpirySeconds()
+{
+   UInt64 delta = ( expireyTimeAbsoluteMs - Timer::getTimeMs() )/1000;
+
+   int ret = delta;
+   return ret;
+}
+
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
