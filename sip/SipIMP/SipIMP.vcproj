@@ -84,7 +84,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="C:\sip"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/contrib/ares&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG"
 				StringPooling="TRUE"
 				MinimalRebuild="FALSE"
@@ -100,7 +100,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib C:\sip\resiprocate\Release\sipstack.lib C:\sip\contrib\ares\Release\ares.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
@@ -146,7 +146,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="C:\sip;C:\openssl\inc32"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/contrib/ares&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;USE_SSL"
 				StringPooling="TRUE"
 				MinimalRebuild="FALSE"
@@ -207,7 +207,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Zm300"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\sip;C:\openssl\inc32"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/contrib/ares&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;USE_SSL"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -228,7 +228,7 @@ copy C:\openssl-0.9.7\out32dll.dbg\ssleay32.dll  $(TargetDir)
 				Outputs="libeay.dll ssleay.dll;"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib libeay32.lib ssleay32.lib Ws2_32.lib  C:/sip/resiprocate/Debug/sipstack.lib"
+				AdditionalDependencies="Ws2_32.lib libeay32.lib ssleay32.lib Ws2_32.lib  "
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;C:\openssl\out32dll.dbg&quot;"
 				GenerateDebugInformation="TRUE"
