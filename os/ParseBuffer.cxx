@@ -1,7 +1,5 @@
-
 #include <cassert>
 
-#include "sip2/util/Socket.hxx"
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/ParseBuffer.hxx"
 
@@ -9,9 +7,26 @@ using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
-const char* ParseBuffer::ParamTerm = ";?";
+const char* ParseBuffer::ParamTerm = ";?"; // maybe include "@>,"?
 const char* ParseBuffer::Whitespace = " \t\r\n";
 
+ParseBuffer::ParseBuffer(const ParseBuffer& rhs)
+   : mBuff(rhs.mBuff),
+     mTraversalPtr(rhs.mTraversalPtr),
+     mEnd(rhs.mEnd)
+{}
+
+ParseBuffer& 
+ParseBuffer::operator=(const ParseBuffer& rhs)
+{
+   mBuff = rhs.mBuff;
+   mTraversalPtr = rhs.mTraversalPtr;
+   mEnd = rhs.mEnd;
+
+   return *this;
+}
+
+// !dlb! replace with copy and assign
 void
 ParseBuffer::reset(const char* pos) //should be renamed to set
 {
@@ -141,6 +156,7 @@ ParseBuffer::skipToEndQuote(char quote)
 {
    while (mTraversalPtr < mEnd)
    {
+      // !dlb! mark character encoding
       if (*position() == '\\')
       {
          mTraversalPtr += 2;
@@ -165,7 +181,7 @@ ParseBuffer::skipN(int count)
    mTraversalPtr += count;
    if (mTraversalPtr > mEnd)
    {
-	   mTraversalPtr = mEnd;
+      mTraversalPtr = mEnd;
    }
    return mTraversalPtr;
 }
@@ -177,11 +193,11 @@ ParseBuffer::skipToEnd()
    return mTraversalPtr;
 }
 
-
-
 void
 ParseBuffer::data(Data& data, const char* start) const
 {
+   assert(mBuff <= start && start <= mTraversalPtr);
+
    if (data.mMine)
    {
       delete[] data.mBuf;
@@ -195,6 +211,8 @@ ParseBuffer::data(Data& data, const char* start) const
 Data
 ParseBuffer::data(const char* start) const
 {
+   assert(mBuff <= start && start <= mTraversalPtr);
+
    Data data(start, mTraversalPtr - start);
    return data;
 }
@@ -225,6 +243,7 @@ ParseBuffer::floatVal()
    try
    {
       int num = integer();
+      // !dlb! a little too fussy -- can't parse "1 "
       skipChar('.');
       const char* pos = position();
       float mant = float(integer());
