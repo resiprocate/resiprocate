@@ -196,14 +196,17 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 }
 
 void
-ClientSubscription::requestRefresh()
+ClientSubscription::requestRefresh(int expires)
 {
    if (!mEnded)
    {
       mDialog.makeRequest(mLastRequest, SUBSCRIBE);
       //!dcm! -- need a mechanism to retrieve this for the event package...part of
       //the map that stores the handlers, or part of the handler API
-      //mLastRequest.header(h_Expires).value() = 300;
+      if(expires > 0)
+      {
+         mLastRequest.header(h_Expires).value() = expires;
+      }
       InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
       send(mLastRequest);
    }
