@@ -10,6 +10,7 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
@@ -84,10 +85,10 @@ Proxy::thread()
                
                   if (sip->header(h_RequestLine).method() == CANCEL)
                   {
-                     HashMap<Data,RequestContext*>::iterator i = mRequestContexts.find(sip->getTransactionId());
+                     HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
 
                      // [TODO] !rwm! this should not be an assert.  log and ignore instead.
-                     assert (i != mRequestContexts.end());
+                     assert (i != mServerRequestContexts.end());
                      i->second->process(std::auto_ptr<resip::Message>(msg));
                   }
                   else if (sip->header(h_RequestLine).method() == ACK)
@@ -96,10 +97,10 @@ Proxy::thread()
                      // unique transaction id. 
                      static Data ack("ack");
                      Data tid = sip->getTransactionId() + ack;
-                     assert (mRequestContexts.count(tid) == 0);
+                     assert (mServerRequestContexts.count(tid) == 0);
                   
                      RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
-                     mRequestContexts[tid] = context;
+                     mServerRequestContexts[tid] = context;
 
                      // The stack will send TransactionTerminated messages for
                      // client and server transaction which will clean up this
@@ -109,10 +110,13 @@ Proxy::thread()
                   else
                   {
                      // This is a new request, so create a Request Context for it
-                     assert(mRequestContexts.count(sip->getTransactionId()) == 0);                  
+                     InfoLog (<< "New RequestContext " << sip->getTransactionId());
+                     InfoLog (<< Inserter(mServerRequestContexts));
+                     
+                     assert(mServerRequestContexts.count(sip->getTransactionId()) == 0);                  
                      RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
                      InfoLog (<< "Inserting new RequestContext " << sip->getTransactionId() << " -> " << *context);
-                     mRequestContexts[sip->getTransactionId()] = context;
+                     mServerRequestContexts[sip->getTransactionId()] = context;
                      context->process(std::auto_ptr<resip::Message>(msg));
                   }
                }
@@ -121,17 +125,17 @@ Proxy::thread()
                   InfoLog (<< "Looking up RequestContext " << sip->getTransactionId());
                
                   // is there a problem with a stray 200
-                  HashMap<Data,RequestContext*>::iterator i = mRequestContexts.find(sip->getTransactionId());
-                  assert (i != mRequestContexts.end());
+                  HashMap<Data,RequestContext*>::iterator i = mClientRequestContexts.find(sip->getTransactionId());
+                  assert (i != mClientRequestContexts.end());
                   i->second->process(std::auto_ptr<resip::Message>(msg));
                   // [TODO] !rwm! who throws stray responses away?  does the stack do this?
                }
             }
             else if (app)
             {
-               HashMap<Data,RequestContext*>::iterator i=mRequestContexts.find(app->getTransactionId());
+               HashMap<Data,RequestContext*>::iterator i=mServerRequestContexts.find(app->getTransactionId());
                // the underlying RequestContext may not exist
-               if (i != mRequestContexts.end())
+               if (i != mServerRequestContexts.end())
                {
                   i->second->process(std::auto_ptr<Message>(msg));
                }
@@ -143,11 +147,23 @@ Proxy::thread()
             }
             else if (term)
             {
-               HashMap<Data,RequestContext*>::iterator i=mRequestContexts.find(term->getTransactionId());
-               if (i != mRequestContexts.end())
+               if (term->isClientTransaction())
                {
-                  i->second->process(*term);
-                  mRequestContexts.erase(i);
+                  HashMap<Data,RequestContext*>::iterator i=mClientRequestContexts.find(term->getTransactionId());
+                  if (i != mClientRequestContexts.end())
+                  {
+                     i->second->process(*term);
+                     mClientRequestContexts.erase(i);
+                  }
+               }
+               else 
+               {
+                  HashMap<Data,RequestContext*>::iterator i=mServerRequestContexts.find(term->getTransactionId());
+                  if (i != mServerRequestContexts.end())
+                  {
+                     i->second->process(*term);
+                     mServerRequestContexts.erase(i);
+                  }
                }
             }
          }
@@ -173,8 +189,9 @@ Proxy::send(const SipMessage& msg)
 void
 Proxy::addClientTransaction(const Data& transactionId, RequestContext* rc)
 {
-   assert(mRequestContexts.count(transactionId) == 0);
-   mRequestContexts[transactionId] = rc;
+   assert(mClientRequestContexts.count(transactionId) == 0);
+   InfoLog (<< "add client transaction " << transactionId << " " << rc);
+   mClientRequestContexts[transactionId] = rc;
 }
 
 const Data& 

@@ -31,7 +31,7 @@ RouteProcessor::~RouteProcessor()
 RequestProcessor::processor_action_t
 RouteProcessor::handleRequest(RequestContext& context)
 {
-  DebugLog(<< "Monkey handling request: " << this 
+  DebugLog(<< "Monkey handling request: " << *this 
            << "; reqcontext = " << context);
 
   resip::SipMessage& request = context.getOriginalRequest();
