@@ -187,7 +187,13 @@ Timer::getSystemTicks()
    tick *= 1000000;
    tick += now.tv_usec;
 #      else
-   tick = cjGetSystemTimeOfDay();
+   struct timeval now;
+   gettimeofday( &now , NULL );
+   //assert( now );
+   tick = now.tv_sec;
+   tick *= 1000000;
+   tick += now.tv_usec;
+   //tick = cjGetSystemTimeOfDay();
 #      endif
 #    endif
 #  endif
