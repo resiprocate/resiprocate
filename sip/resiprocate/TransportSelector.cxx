@@ -293,6 +293,25 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
             msg->header(h_Vias).front().sentPort() = destination.transport->port();
          }
 
+
+         // There is a contact header and it contains exactly one entry
+         if (msg->exists(h_Contacts) && !msg->header(h_Contacts).empty())
+         {
+            for (NameAddrs::iterator i=msg->header(h_Contacts).begin(); 
+                 i != msg->header(h_Contacts).end(); i++)
+            {
+               NameAddr& contact = *i;
+               // No host specified, so use the ip address and port of the
+               // transport used. Otherwise, leave it as is. 
+               if (contact.uri().host().empty())
+               {
+                  contact.uri().host() = DnsUtil::inet_ntop(source);
+                  contact.uri().port() = destination.transport->port();
+                  contact.uri().param(p_transport) = Tuple::toData(destination.transport->transport());
+               }
+            }
+         }
+         
          Data& encoded = msg->getEncoded();
          encoded.clear();
          DataStream encodeStream(encoded);
