@@ -1,4 +1,5 @@
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/os/Logger.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/Dialog.hxx"
@@ -6,6 +7,9 @@
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
 
 ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
    : BaseSubscription(dum, dialog, request),
@@ -45,12 +49,32 @@ ClientSubscription::dispatch(const SipMessage& msg)
          mOnNewSubscriptionCalled = true;
       }         
 
+      int expires = 0;
+      if (msg.exists(h_SubscriptionState) && msg.header(h_SubscriptionState).exists(p_expires))
+      {
+         expires = msg.header(h_SubscriptionState).param(p_expires);
+      }
+
       if (msg.header(h_SubscriptionState).value() == "active")
       {
+         if (expires)
+         {
+            unsigned long t = Helper::aBitSmallerThan((unsigned long)(expires));
+            mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
+         }
+         
+         InfoLog (<< "reSUBSCRIBE in " << expires);
          handler->onUpdateActive(getHandle(), msg);
       }
       else if (msg.header(h_SubscriptionState).value() == "pending")
       {
+         if (expires)
+         {
+            unsigned long t = Helper::aBitSmallerThan((unsigned long)(expires));
+            mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
+         }
+
+         InfoLog (<< "reSUBSCRIBE in " << expires);
          handler->onUpdatePending(getHandle(), msg);
       }
       else if (msg.header(h_SubscriptionState).value() == "terminated")
@@ -66,16 +90,9 @@ ClientSubscription::dispatch(const SipMessage& msg)
    }
    else
    {
-      int code = msg.header(h_StatusLine).statusCode();
-      if(code > 100 && code < 300)
-      {
-         if(msg.exists(h_Expires))
-         {
-            unsigned long t = Helper::aBitSmallerThan((unsigned long)(mLastRequest.header(h_Expires).value()));
-            mDum.addTimer(DumTimeout::Subscription, t, getBaseHandle(), ++mTimerSeq);
-         }
-      }
-      else
+      // !jf! might get an expiration in the 202 but not in the NOTIFY - we're going
+      // to ignore this case
+      if (msg.header(h_StatusLine).statusCode() >= 300)
       {
          handler->onTerminated(getHandle(), msg);
          delete this;
@@ -99,7 +116,8 @@ ClientSubscription::requestRefresh()
    mLastRequest.header(h_CSeq).sequence()++;
    //!dcm! -- need a mechanism to retrieve this for the event package...part of
    //the map that stores the handlers, or part of the handler API
-   mLastRequest.header(h_Expires).value() = 300;   
+   //mLastRequest.header(h_Expires).value() = 300;   
+   InfoLog (<< "Request ClientSubscription refresh: " << mLastResponse.brief());
    send(mLastRequest);
 }
 
