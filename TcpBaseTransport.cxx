@@ -23,7 +23,7 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data&
    : Transport(fifo, portNum, pinterface, ipv4)
 {
    mFd = Transport::socket(TCP, ipv4);
-   InfoLog (<< "Opening TCP " << mFd << " : " << this);
+   DebugLog (<< "Opening TCP " << mFd << " : " << this);
    
 #if !defined(WIN32)
    int on = 1;
@@ -54,7 +54,7 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data&
 
 TcpBaseTransport::~TcpBaseTransport()
 {
-   InfoLog (<< "Shutting down TCP Transport " << mFd << " " << this);   //!rm!
+   DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << mPort); 
    
    //::shutdown(mFd, SHUT_RDWR);
    closesocket(mFd);
@@ -154,6 +154,8 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       
       // this will check by connectionId first, then by address
       Connection* conn = mConnectionManager.findConnection(data->destination);
+      //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
+      
       // There is no connection yet, so make a client connection
       if (conn == 0)
       {
@@ -189,6 +191,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
             {
                // !jf! this has failed
                InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(errno));
+               fdset.clear(sock);
                close(sock);
                fail(data->transactionId);
                delete data;

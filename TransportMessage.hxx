@@ -16,7 +16,8 @@ class TransportMessage : public Message
       TransportMessage(Data transactionId, bool isFailure) : 
          mTransactionId(transactionId), 
          mFailure(isFailure) 
-      {}
+      {
+      }
 
       virtual const Data& getTransactionId() const
       {
@@ -30,7 +31,7 @@ class TransportMessage : public Message
       
       virtual std::ostream& encode(std::ostream& strm) const
       {
-         strm << mTransactionId << " : " << mFailure;
+         strm << "Transport Failure: " << mTransactionId;
          return strm;
       }
       
