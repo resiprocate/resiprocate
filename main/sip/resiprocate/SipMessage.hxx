@@ -73,12 +73,6 @@ class SipMessage : public Message
             if (headerType.isMulti())
             {
                hfvs->setParserContainer((ParserContainerBase*)parserFactory.createParserContainer(*hfvs));
-               HeaderFieldValue* it = hfvs->front();
-               while (it != 0)
-               {
-                  it->setParserCategory(parserFactory.createParserCategory(*it));
-                  it = it->next;
-               }
             }
             else
             {
@@ -89,6 +83,12 @@ class SipMessage : public Message
          return *(typename Header<T>::Type*)mHeaders[parserFactory.getValue()]->getParserCategory();
       }
 
+      RequestLineComponent& 
+      operator[](const RequestLine& l);
+
+      StatusLineComponent& 
+      operator[](const StatusLine& l);
+      
       template <int T>
       void remove(const Header<T>& headerType)
       {
