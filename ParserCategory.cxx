@@ -108,7 +108,11 @@ ParserCategory::param(const UnknownParameterType& param) const
 {
    checkParsed();
    Parameter* p = getParameterByData(param.getName());
-   assert(p);
+   if (!p)
+   {
+      InfoLog(<< "Referenced an unknown parameter " << param.getName());
+      throw Exception("Missing unknown parameter", __FILE__, __LINE__);
+   }
    return static_cast<UnknownParameter*>(p)->value();
 }
 
