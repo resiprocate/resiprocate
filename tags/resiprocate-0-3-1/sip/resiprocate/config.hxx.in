@@ -1,0 +1,28 @@
+#if !defined(RESIP_CONFIG_HXX)
+#define RESIP_CONFIG_HXX
+
+/* Version number of RESIP */
+#undef RESIP_VERSION
+
+/* Major, minor and micro version number of the resip library package.
+   Use these macros to test for features in specific releases. */
+#undef RESIP_MAJOR_VERSION
+#undef RESIP_MINOR_VERSION
+#undef RESIP_MICRO_VERSION
+
+/* Define to utilize the OpenSSL cryptography library. */
+#undef USE_SSL
+
+/* Define to utilize the ARES resolver library. */
+#undef USE_ARES
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Define to 1 if you have the sys/sockio.h header file. */
+#undef HAVE_SYS_SOCKIO_H
+
+/* Define to 1 if you have the sys/int_types.h header file. */
+#undef HAVE_SYS_INT_TYPES_H
+
+#endif
