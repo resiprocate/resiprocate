@@ -30,5 +30,5 @@ echo +++ Running autoreconf again...  && \
 autoreconf  
 export PATH=/usr/local/bin:$PATH
 mkdir build
-echo +++ Manually run : ../configure -C --enable-scanner --enable-ipv6
+echo +++ Manually run : ../configure -C --enable-ipv6
 echo +++ From the build subdirectory.
