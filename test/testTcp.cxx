@@ -60,7 +60,7 @@ main(int argc, char* argv[])
 
    Fifo<Message> rxFifo;
    TcpTransport* receiver = new TcpTransport(rxFifo, 5080, Data::Empty);
-
+   
    NameAddr target;
    target.uri().scheme() = "sip";
    target.uri().user() = "fluffy";
@@ -72,7 +72,7 @@ main(int argc, char* argv[])
    from.uri().port() = 5070;
 
    InfoLog (<< "Creating messages");
-
+   
    list<SipMessage*> messages;
    {
       UInt64 startTime = Timer::getTimeMs();
@@ -87,14 +87,14 @@ main(int argc, char* argv[])
       }
 
       UInt64 elapsed = Timer::getTimeMs() - startTime;
-      cout <<  runs * ( 1000.0 / (float) elapsed) * ( 1000.0 / (float)Timer::getCpuSpeedMhz() ) 
-           << " half calls/s/GHz  ["
-           << runs << " calls performed in " << elapsed << " ms, a rate of " 
+      cout << runs << " calls performed in " << elapsed << " ms, a rate of " 
            << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
       
       InfoLog (<< "Messages created");
    }
    
+   //delete receiver;
+   //receiver=0;
    
    in_addr in;
    DnsUtil::inet_pton("127.0.0.1", in);
@@ -154,9 +154,7 @@ main(int argc, char* argv[])
    }
 
    UInt64 elapsed = Timer::getTimeMs() - startTime;
-   cout <<  runs * ( 1000.0 / (float) elapsed) * ( 1000.0 / (float)Timer::getCpuSpeedMhz() ) 
-        << " half calls/s/GHz  ["
-        << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+   cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
 
    return 0;
