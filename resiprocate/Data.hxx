@@ -2,7 +2,7 @@
 #define STRINGDATA_H_
 
 static const char* const DataHeaderVersion =
-"$Id: Data.hxx,v 1.4 2002/09/21 20:15:50 dabryan Exp $";
+"$Id: Data.hxx,v 1.5 2002/09/22 01:30:28 dabryan Exp $";
 
 //Authors: Sunitha Kumar, Cullen Jennings
 
@@ -134,39 +134,33 @@ class Data : public std::string
 }
 
 
-#if JASON_SAYS
-
-#if ( (__GNUC__ == 3))
-#if ( (__GNUC_MINOR__ >= 1) )
-using namespace __gnu_cxx;
+#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+#include <ext/hash_map>
 namespace __gnu_cxx
 {
-#else
-using namespace std;
-namespace std
+
+struct hash<std::string>
 {
-#endif
-struct hash<Data>
-{
-size_t operator()(const string& __s) const
-{
-   return __stl_hash_string(__s.c_str());
-}
+      size_t operator()(const std::string& __s) const
+      {
+         return __gnu_cxx::__stl_hash_string(__s.c_str());
+      }
 };
 
-struct hash<Data>
+
+struct hash<Vocal2::Data>
 {
-      size_t operator()(const Data& __s) const
+      size_t operator()(const Vocal2::Data& __s) const
       {
-         return __stl_hash_string(__s.logData());
+         return __gnu_cxx::__stl_hash_string(__s.c_str());
+      }
+};
+
 }
 
-} // namespace
-#endif
+#endif // gcc >= 3.1
 
 #endif
-
-#endif // JASON_SAYS
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
