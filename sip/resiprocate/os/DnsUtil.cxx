@@ -103,8 +103,14 @@ DnsUtil::inet_pton(const Data& printableIp, struct in_addr& dst)
    return ::inet_pton(AF_INET, printableIp.c_str(), &dst);
 #else
    // !cj! TODO
-   assert(0);
-   return -1;
+	unsigned long i = inet_addr(printableIp.c_str());
+	if ( i == INADDR_NONE )
+	{
+		return 0;
+	}
+	u_int32_t* d = reinterpret_cast<u_int32_t*>( &dst );
+    *d = i;
+   return 1;
 #endif   
 }
 
