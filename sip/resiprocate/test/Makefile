@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.27 2002/12/17 18:06:30 jason Exp $
+# $Id: Makefile,v 1.28 2002/12/21 00:35:40 alan Exp $
 
 USE_SSL = 1
 
@@ -53,9 +53,7 @@ SRC = \
 #	        testNonInviteClientTx.cxx \
 #		testNameAddrParamExclusions.cxx \
 
-ifeq ($(ARCH),i686)
-CXXFLAGS += -mcpu=i686 -march=i686
-endif
+-include ../../Makefile.opt
 
 
 include $(BUILD)/Makefile.post
