@@ -27,9 +27,10 @@ TcpConnection::read( char* buf, int count )
 #else
    int bytesRead = ::read(mSocket, buf, count);
 #endif
+
    if (bytesRead == INVALID_SOCKET)
    {
-	   	int e = getErrno();
+      int e = getErrno();
       switch (e)
       {
          case EAGAIN:
@@ -56,12 +57,15 @@ TcpConnection::read( char* buf, int count )
       }
 
       InfoLog (<< "Failed read on " << mSocket << " " << strerror(e));
+      
+      return -1;
    }
    else if (bytesRead == 0)
    {
       InfoLog (<< "Connection closed by remote " << *this);
-      return INVALID_SOCKET;
+      return -1;
    }
+
    return bytesRead;
 }
 
@@ -79,10 +83,12 @@ TcpConnection::write( const char* buf, const int count )
 #else
    int bytesWritten = ::write(mSocket, buf, count);
 #endif
+
    if (bytesWritten == INVALID_SOCKET)
    {
-	   	int e = getErrno();
+      int e = getErrno();
       InfoLog (<< "Failed write on " << mSocket << " " << strerror(e));
+      return -1;
    }
    
    return bytesWritten;
