@@ -125,6 +125,12 @@ SipStack::getHostname()
    assert( err == 0 );
    
    struct hostent* hostEnt = gethostbyname( hostName );
+   if ( !hostEnt )
+   {
+      // this can fail when there is no name server 
+      // !cj! - need to decided what error to return 
+      ErrLog( << "gethostbyname failed - name server is probably down" );
+   }
    assert( hostEnt );
    
    struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
