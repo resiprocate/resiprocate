@@ -5,6 +5,8 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/RefCountedDestroyer.hxx"
 
+#include <map>
+
 namespace resip
 {
 
@@ -16,6 +18,10 @@ class InviteSession : public DialogUsage
 
       virtual void send(SipMessage& msg);
 
+      //call after setOffer. Will do the right thing w/ respect to an ACK to a
+      //200, eventually PRACK/UPDATE
+      virtual void send();
+
       /// Called to set the offer that will be used in the next messages that
       /// sends and offer. Does not send an offer 
       virtual void setOffer(const SdpContents* offer);
@@ -23,10 +29,6 @@ class InviteSession : public DialogUsage
       /// Called to set the answer that will be used in the next messages that
       /// sends an offer. Does not send an answer
       virtual void setAnswer(const SdpContents* answer);
-
-      /// Completes the three way handshake.  In some circumstances(not re-invite), setAnswer
-      /// must have been called or else this will throw(3261 13.2.1)
-      virtual SipMessage& ackConnection();
 
       /// Makes the dialog end. Depending on the current state, this might
       /// results in BYE or CANCEL being sent.
@@ -58,6 +60,8 @@ class InviteSession : public DialogUsage
 
       const SdpContents* getLocalSdp();
       const SdpContents* getRemoteSdp();
+
+      virtual SipMessage& makeInfo(auto_ptr<Contents> contents);
 
    public:
       virtual void dispatch(const SipMessage& msg);
@@ -95,19 +99,25 @@ class InviteSession : public DialogUsage
          Initial,  // No session setup yet
          Early,    
          Proceeding,
-         Accepting, 
          Cancelled,
          Connected,
          Terminated,
          ReInviting,
-         AcceptingReInvite
       } State;
 
       State mState;
 
+      typedef enum
+      {
+         NitComplete, 
+         NitProceeding
+      } NitState;
+      
+      NitState mNitState;               
+
       InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState);
-      void copyAuthorizations(SipMessage& request);
-      void makeAck();
+      SipMessage& makeAck();
+      SipMessage& makeFinalResponse(int code);      
 
       OfferState mOfferState;
       SdpContents* mCurrentLocalSdp;
@@ -118,9 +128,13 @@ class InviteSession : public DialogUsage
 
       SipMessage mLastRequest;
       SipMessage mLastResponse;
-      //used to cache 200 to Invite
-      SipMessage mFinalResponse;      
-      SipMessage mAck;
+      SipMessage mLastNit;      
+
+      typedef map<int, SipMessage> CSeqToMessageMap;
+      CSeqToMessageMap mAckMap;
+      CSeqToMessageMap mFinalResponseMap;
+      
+      bool mUserConnected;
 
       virtual ~InviteSession();
       
@@ -133,10 +147,6 @@ class InviteSession : public DialogUsage
       friend class DialogUsageManager;      
 
       unsigned long mCurrentRetransmit200;      
-      static unsigned long T1;
-      static unsigned long T2;
-      static unsigned long TimerH;
-
 
       // disabled
       InviteSession(const InviteSession&);

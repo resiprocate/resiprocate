@@ -8,6 +8,7 @@
 #include "resiprocate/dum/DialogSetId.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/dum/RefCountedDestroyer.hxx"
 
 namespace resip
 {
@@ -95,6 +96,11 @@ class DialogSet
 
       ClientPagerMessage* mClientPagerMessage;
       ServerPagerMessage* mServerPagerMessage;
+
+      typedef RefCountedDestroyer<DialogSet> Destroyer;
+      Destroyer mDestroyer;
+      friend class Destroyer::Guard;      
+
 };
  
 }
