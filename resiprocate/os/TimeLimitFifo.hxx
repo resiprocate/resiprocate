@@ -141,7 +141,14 @@ Msg*
 TimeLimitFifo<Msg>::getNext(int ms)
 {
    std::auto_ptr<Timestamped> tm(static_cast<Timestamped*>(AbstractFifo::getNext(ms)));
-   return tm->mMsg;
+   if (tm.get())
+   {
+      return tm->mMsg;
+   }
+   else
+   {
+      return 0;
+   }
 }
 
 template <class Msg>
