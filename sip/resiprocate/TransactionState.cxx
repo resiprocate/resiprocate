@@ -70,8 +70,15 @@ TransactionState::process(SipStack& stack)
    assert(message);
 
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
-   Data tid = message->getTransactionId();
 
+   if (sip && sip->isExternal() && sip->header(h_Vias).empty())
+   {
+      DebugLog(<< "TransactionState::process dropping message with no Via");
+      delete sip;
+      return;
+   }
+
+   Data tid = message->getTransactionId();
    DebugLog (<< "TransactionState::process: tid='" << tid << "' " << message->brief());
    
    TransactionState* state = ( message->isClientTransaction() 
