@@ -47,31 +47,39 @@ class Profile
       int getDefaultRegistrationTime();
       int getDefaultSubscriptionTime();
 
-      void addSupportedScheme(const Data& scheme);
-      void addSupportedMethod(const MethodTypes& method);
-      void addSupportedOptionTags(const Token& tag);
-      void addSupportedMimeType(const Mime& mimeType);
-      void addSupportedEncoding(const Token& encoding);
-      void addSupportedLanguage(const Token& lang);
-
+      void addSupportedScheme(const Data& scheme);          // Default is "sip"
       bool isSchemeSupported(const Data& scheme);
-      bool isMethodSupported(MethodTypes method);
-      bool isMimeTypeSupported(const Mime& mimeType);
-      bool isContentEncodingSupported(const Token& contentEncoding);
-      bool isLanguageSupported(const Tokens& lang);
-      
-      // return the list of unsupported tokens from set of requires tokens
-      Tokens isSupported(const Tokens& requires);
-      Tokens getSupportedOptionTags();
-      Tokens getAllowedMethods();
-      Mimes getSupportedMimeTypes();
-      Tokens getSupportedEncodings();
-      Tokens getSupportedLanguages();
+      void clearSupportedSchemes(void);
 
-	  //enable/disable sending of Allow/Supported/Accept/Accept-Language/Accept-Encoding headers 
+      void addSupportedMethod(const MethodTypes& method);   // Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE
+      bool isMethodSupported(MethodTypes method);
+      Tokens getAllowedMethods();
+      void clearSupportedMethods(void);
+
+      void addSupportedOptionTag(const Token& tag);        // Default is none
+      Tokens getUnsupportedOptionsTags(const Tokens& requires); // Returns list of unsupported option tags
+      Tokens getSupportedOptionTags();
+      void clearSupportedOptionTags(void);
+
+      void addSupportedMimeType(const Mime& mimeType);      // Default is application/sdp
+      bool isMimeTypeSupported(const Mime& mimeType);
+      Mimes getSupportedMimeTypes();
+      void clearSupportedMimeTypes(void);
+
+      void addSupportedEncoding(const Token& encoding);     // Default is no encoding
+      bool isContentEncodingSupported(const Token& contentEncoding);
+      Tokens getSupportedEncodings();
+      void clearSupportedEncodings(void);
+
+      void addSupportedLanguage(const Token& lang);         // Default is all - if nothing is set, then all are allowed
+      bool isLanguageSupported(const Tokens& lang);
+      Tokens getSupportedLanguages();
+      void clearSupportedLanguages(void);
+      
+	  //enable/disable sending of Allow/Supported/Accept-Language/Accept-Encoding headers 
 	  //on initial outbound requests (ie. Initial INVITE, REGISTER, etc.) and Invite 200 responses
-	  //Note:  Default is to advertise Headers::Accept and Headers::Supported, use clearAdvertisedCapabilities to remove these
-	  //       Currently implemented header values are: Headers::Accept, Headers::Allow, 
+	  //Note:  Default is to advertise Headers::Allow and Headers::Supported, use clearAdvertisedCapabilities to remove these
+	  //       Currently implemented header values are: Headers::Allow, 
 	  //       Headers::AcceptEncoding, Headers::AcceptLanguage, Headers::Supported
 	  void addAdvertisedCapability(const Headers::Type header);
       bool isAdvertisedCapability(const Headers::Type header);
@@ -117,7 +125,19 @@ class Profile
 
       //enable/disable rport for requests. rport is enabled by default
       bool& rportEnabled();      
-      const bool rportEnabled() const;      
+      const bool rportEnabled() const; 
+
+      //enable/disable content validation
+      bool& validateContentEnabled();
+      const bool validateContentEnabled() const;
+
+      //enable/disable content language validation
+      bool& validateContentLanguageEnabled();
+      const bool validateContentLanguageEnabled() const;
+
+      //enable/disable Accept header validation
+      bool& validateAcceptEnabled();
+      const bool validateAcceptEnabled() const;
 
 	  //if set then UserAgent header is added to outbound messages
       void setUserAgent( const Data& userAgent );
@@ -144,6 +164,9 @@ class Profile
 
       bool mLooseToTagMatching;
       bool mRportEnabled;
+      bool mValidateContentEnabled;
+      bool mValidateContentLanguageEnabled;
+      bool mValidateAcceptEnabled;
       bool mHasUserAgent;      
       
       Data mUserAgent;
