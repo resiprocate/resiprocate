@@ -13,22 +13,22 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_init.c,v 1.1 2003/06/05 00:30:35 ryker Exp $";
+static const char rcsid[] = "$Id: ares_init.c,v 1.2 2003/09/14 00:27:24 fluffy Exp $";
 
 #include <sys/types.h>
-#include <sys/time.h>
-#include <sys/param.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <arpa/nameser.h>
+//#include <sys/time.h>
+//#include <sys/param.h>
+//#include <netinet/in.h>
+//#include <arpa/inet.h>
+//#include <arpa/nameser.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#include <unistd.h>
-#include <errno.h>
-#include <netdb.h>
+//#include <unistd.h>
+//#include <errno.h>
+//#include <netdb.h>
 #include "ares.h"
 #include "ares_private.h"
 
@@ -61,7 +61,7 @@ int ares_init_options(ares_channel *channelptr, struct ares_options *options,
   ares_channel channel;
   int i, status;
   struct server_state *server;
-  struct timeval tv;
+//  struct timeval tv;
 
   channel = malloc(sizeof(struct ares_channeldata));
   if (!channel)
@@ -130,8 +130,12 @@ int ares_init_options(ares_channel *channelptr, struct ares_options *options,
    * answer also has to guess the query ID, but it's only a 16-bit
    * field, so there's not much to be done about that.
    */
-  gettimeofday(&tv, NULL);
-  channel->next_id = (tv.tv_sec ^ tv.tv_usec ^ getpid()) & 0xffff;
+//  gettimeofday(&tv, NULL);
+//  channel->next_id = (tv.tv_sec ^ tv.tv_usec ^ getpid()) & 0xffff;
+  {
+	int cjNextID=1;
+	  channel->next_id = cjNextID++;
+  }
 
   channel->queries = NULL;
 
