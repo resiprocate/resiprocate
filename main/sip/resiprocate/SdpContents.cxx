@@ -1594,6 +1594,30 @@ SdpContents::Session::Medium::codecs()
    return mCodecs;
 }
 
+const Codec& SdpContents::Session::Medium::findFirstMatchingCodecs(const std::vector<Codec>& codecs) const
+{
+   static Codec emptyCodec;
+   std::vector<resip::SdpContents::Session::Codec>::const_iterator sIter;
+   std::vector<resip::SdpContents::Session::Codec>::const_iterator sEnd =
+      mCodecs.end();
+   std::vector<resip::SdpContents::Session::Codec>::const_iterator eIter;
+   std::vector<resip::SdpContents::Session::Codec>::const_iterator eEnd =
+      codecs.end();
+   bool found = false;
+   for (eIter = codecs.begin();eIter != eEnd ; ++eIter)
+   {
+      for (sIter = mCodecs.begin();sIter != sEnd; ++sIter)
+      {
+         if (*sIter == *eIter)
+         {
+            found = true;
+            return *sIter;
+         }
+      }
+   }
+   return emptyCodec;
+}
+
 Codec::Codec(const Data& name,
              unsigned long rate,
              const Data& parameters)
