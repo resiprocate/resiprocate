@@ -42,6 +42,7 @@ ClientPublication::~ClientPublication()
 void
 ClientPublication::end()
 {
+   InfoLog (<< "End client publication to " << mPublish.header(h_RequestLine).uri());
    mPublish.header(h_CSeq).sequence()++;
    mPublish.header(h_Expires).value() = 0;
    send(mPublish);
@@ -153,6 +154,13 @@ ClientPublication::update(const Contents* body)
    mPublish.header(h_CSeq).sequence()++;
    mPublish.setContents(mDocument);
    refresh();
+}
+
+std::ostream& 
+ClientPublication::dump(std::ostream& strm) const
+{
+   strm << "ClientPublication " << mId << " " << mPublish.header(h_From).uri();
+   return strm;
 }
 
 /* ====================================================================
