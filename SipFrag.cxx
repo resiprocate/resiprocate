@@ -82,7 +82,10 @@ SipFrag::parse(ParseBuffer& pb)
 
    Preparse pre;
 
-   char* buffer = const_cast<char*>(pb.position());
+   pb.assertNotEof();
+   const char* const_buffer = pb.position();
+   char* buffer = const_cast<char*>(const_buffer);
+
    size_t size = pb.end() - pb.position();
 
    // !dlb! fragment not required to CRLF terminate
