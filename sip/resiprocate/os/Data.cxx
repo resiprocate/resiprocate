@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.49 2003/01/03 07:31:08 fluffy Exp $";
+// "$Id: Data.cxx,v 1.50 2003/01/04 04:59:03 fluffy Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -415,7 +415,10 @@ Data::operator=(const Data& data)
       
       mSize = data.mSize;
       // could overlap!
+	  if ( mSize > 0 )
+	  {
       memmove(mBuf, data.mBuf, mSize);
+	  }
       mBuf[mSize] = 0;
    }
    return *this;
