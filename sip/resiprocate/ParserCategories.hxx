@@ -217,6 +217,7 @@ class CallId : public ParserCategory
       CallId(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue() {}
       CallId(const CallId&);
       CallId& operator=(const CallId&);
+      bool operator==(const CallId&) const;
       
       Data& value() const {checkParsed(); return mValue;}
 
