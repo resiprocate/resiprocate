@@ -38,7 +38,7 @@ InMemoryRegistrationDatabase::removeAor(Uri &aor)
 InMemoryRegistrationDatabase::UriList 
 InMemoryRegistrationDatabase::getAors()
 {
-  RegistrationPersistenceManager:UriList retList;   
+   UriList retList;   
    for( database_map_t::const_iterator it = mDatabase.begin();
         it != mDatabase.end(); it++)
    {
@@ -60,14 +60,6 @@ InMemoryRegistrationDatabase::aorIsRegistered(Uri &aor)
     return false;
   }
   return true;
-}
-
-bool
-InMemoryRegistrationDatabase::aorExists(Uri &aor)
-{
-   // [TODO] !rwm! need a way to use the database to find out if the AOR even exists
-   
-   return true;
 }
 
 void
