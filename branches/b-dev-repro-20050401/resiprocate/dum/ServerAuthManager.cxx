@@ -14,6 +14,12 @@ ServerAuthManager::ServerAuthManager(DialogUsageManager& dum):
 {
 }
 
+
+ServerAuthManager::~ServerAuthManager()
+{
+}
+
+      
       
 // return true if request is authorized
 bool 
