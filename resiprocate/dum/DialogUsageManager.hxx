@@ -180,7 +180,7 @@ class DialogUsageManager
       
       Dialog& findOrCreateDialog(const SipMessage* msg);
       Dialog& findDialog(const DialogId& id);
-      DialogSet& findDialogSet(const DialogSetId& id);
+      DialogSet* findDialogSet(const DialogSetId& id);
       
       // return 0, if no matching BaseCreator
       BaseCreator* findCreator(const DialogId& id);
