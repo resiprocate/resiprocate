@@ -272,7 +272,7 @@ class DialogUsageManager : public HandleManager
 
       bool checkEventPackage(const SipMessage& request);
 
-      bool queueForIdentityCheck(std::auto_ptr<Message> msg);
+      bool queueForIdentityCheck(SipMessage* msg);
       bool processIdentityCheckResponse(const SipMessage& msg);
 
       typedef std::set<MergedRequestKey> MergedRequests;
