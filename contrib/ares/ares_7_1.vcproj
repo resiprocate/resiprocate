@@ -26,7 +26,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -140,6 +140,12 @@
 			</File>
 			<File
 				RelativePath="ares_init.c">
+			</File>
+			<File
+				RelativePath=".\ares_local.c">
+			</File>
+			<File
+				RelativePath=".\ares_local.h">
 			</File>
 			<File
 				RelativePath="ares_mkquery.c">
