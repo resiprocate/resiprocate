@@ -4,6 +4,7 @@
 #include <sipstack/Helper.hxx>
 
 #include <iostream>
+#include <memory>
 
 using namespace Vocal2;
 using namespace std;
