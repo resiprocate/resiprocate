@@ -5,9 +5,14 @@
 #include <sys/select.h>
 #endif
 
-#include <sipstack/SipMessage.hxx>
+#include <vector>
+
 #include <util/Data.hxx>
 #include <util/Fifo.hxx>
+
+#include <sipstack/SipMessage.hxx>
+#include <sipstack/Transport.hxx>
+
 
 namespace Vocal2
 {
@@ -20,22 +25,22 @@ class TransportSelector
 {
    public:
       TransportSelector(SipStack& stack);
+      ~TransportSelector();
+      
       void process(fd_set* fdSet);
 
       void send( SipMessage* msg );
-
-      // I don't think we really need this at this level, handled one level
-      // up.
+      // I don't think we really need this at this level, handled one level up.
       //   void send(SipMessage* msg, const Data& dest="default" );
+
+      void addTransport( Transport::TransportType, int port, const Data& hostName="", const Data& interface="");
 	
-	void buildFdSet( fd_set* fdSet, int* fdSetSize );
+      void buildFdSet( fd_set* fdSet, int* fdSetSize );
 	
    private:
 
-      // this eventually will have to allow for construction and management
-      // of n of these guys
       SipStack& mStack;
-      UdpTransport* mUdp;
+      std::vector<Transport*> mTransports;
 };
 
 }
