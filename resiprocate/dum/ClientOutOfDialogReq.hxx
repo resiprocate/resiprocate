@@ -27,6 +27,10 @@ class ClientOutOfDialogReq : public BaseUsage
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ClientOutOfDialogReq::Handle getHandle() {return mHandle;}
       bool matches(const SipMessage& msg) const;
+
+      virtual void end();
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimer& timer);
       
    private:
       friend class DialogUsageManager;

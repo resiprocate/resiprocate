@@ -23,7 +23,7 @@ class ServerInviteSession: public InviteSession
 
       /// Called to set the offer that will be used in the next messages that
       /// sends and offer. Does not send an offer 
-      virtual void setOffer(SdpContents* offer);
+      virtual void setOffer(const SdpContents* offer);
       
       /// Sends an offer in whatever messages is approperate to send one at
       /// this point in the dialog. Must call setOffer before this.
@@ -31,7 +31,7 @@ class ServerInviteSession: public InviteSession
       
       /// Called to set the answer that will be used in the next messages that
       /// sends and offer. Does not send an answer
-      virtual void setAnswer(SdpContents* answer);
+      virtual void setAnswer(const SdpContents* answer);
 
       /// Sends an offer in whatever messages is approperate to send one at
       /// this point in the dialog. Must call setAnswer before this. 
@@ -62,7 +62,8 @@ class ServerInviteSession: public InviteSession
       virtual InviteSession::Handle getSessionHandle();
       ServerInviteSession::Handle getHandle() {return mHandle;}
 
-      virtual void dispatch(const SipMessage& msg);
+      void dispatch(const SipMessage& msg);
+      void dispatch(const DumTimer& timer);
 
    private:
       friend class DialogUsageManager;
