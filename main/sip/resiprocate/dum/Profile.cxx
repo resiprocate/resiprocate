@@ -21,7 +21,7 @@ Profile::Profile() :
    mValidateContentLanguageEnabled(false),
    mValidateAcceptEnabled(true),
    mHasUserAgent(false),
-   mHasOverrideHostPort(true)
+   mHasOverrideHostPort(false)
 {
    // Default settings
    addAdvertisedCapability(Headers::Allow);  
