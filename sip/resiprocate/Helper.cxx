@@ -264,7 +264,6 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
    ack->header(h_CSeq) = request.header(h_CSeq);
    ack->header(h_CSeq).method() = ACK;
    ack->header(h_Routes) = request.header(h_Routes);
-   //ack->header(h_ContentLength).value() = 0;
    
    return ack;
 }
@@ -567,7 +566,7 @@ Helper::addAuthorization(SipMessage& request,
            i != auths.end(); i++)
       {
          request.header(h_ProxyAuthorizations).push_back(makeChallengeResponseAuth(request, username, password, *i, 
-                                                                                   cnonce, nonceCount, nonceCountString));
+                                                                                    cnonce, nonceCount, nonceCountString));
       }
    }
    {
@@ -576,7 +575,7 @@ Helper::addAuthorization(SipMessage& request,
            i != auths.end(); i++)
       {
          request.header(h_Authorizations).push_back(makeChallengeResponseAuth(request, username, password, *i,
-                                                                              cnonce, nonceCount, nonceCountString));
+                                                                               cnonce, nonceCount, nonceCountString));
       }
    }
    return request;

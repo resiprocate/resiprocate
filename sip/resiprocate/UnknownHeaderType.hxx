@@ -1,81 +1,24 @@
-#ifndef Vocal2_ParseBuffer_hxx
-#define Vocal2_ParseBuffer_hxx
+#ifndef UnknownHeaderType_hxx
+#define UnknownHeaderType_hxx
+
 #include "sip2/util/Data.hxx"
-#include "sip2/util/BaseException.hxx"
 
 namespace Vocal2
 {
 
-class ParseBuffer
+class UnknownHeaderType
 {
    public:
-      // does NOT OWN the buffer memory
-      ParseBuffer(const char* buff, unsigned int len)
-         : mBuff(buff),
-           mTraversalPtr(buff),
-           mEnd(buff+len)
-      {}
+      UnknownHeaderType(const char* unknownHeaderName);
 
-      ParseBuffer(const ParseBuffer& other);
+      const Data& getName() const {return mName;}
 
-      class Exception : public Vocal2::BaseException
-      {
-         public:
-            Exception(const Data& msg, const Data& file, const int line)
-               : Vocal2::BaseException(msg, file, line) {}
-            
-            const char* name() const { return "ParseBuffer::Exception"; }
-      };
-      
-      // allow the buffer to be rolled back
-      ParseBuffer& operator=(const ParseBuffer& other);
-      void reset(const char* pos);
-
-      bool eof() const { return ( (mEnd==0) || (mTraversalPtr >= mEnd) );}
-      const char* start() const { return mBuff; }
-      const char* position() const { return mTraversalPtr; }
-      const char* end() const { return mEnd; }
-
-      const char* skipChar();
-      const char* skipChar(char c);
-      const char* skipChars(const char* cs);
-      const char* skipChars(const Data& cs);
-      const char* skipNonWhitespace();
-      const char* skipWhitespace();
-      const char* skipLWS();
-      const char* skipToTermCRLF();
-      const char* skipToChar(char c);
-      const char* skipToChars(const char* cs);
-      const char* skipToChars(const Data& cs); // ?dlb? case sensitivity arg?
-      const char* skipToOneOf(const char* cs);
-      const char* skipToOneOf(const char* cs1, const char* cs2);
-      const char* skipToOneOf(const Data& cs1, const Data& cs2);
-      const char* skipToEndQuote(char quote = '"');
-      const char* skipN(int count);
-      const char* skipToEnd();
-
-      void assertEof() const;
-      void assertNotEof() const;
-      void fail(const char* file, unsigned int line) const;
-
-      // make the passed in data share memory with the buffer
-      void data(Data& data, const char* start) const;
-
-      Data data(const char* start) const;
-      
-      int integer();
-      float floatVal();
-      static const char* Whitespace;
-      static const char* ParamTerm;
    private:
-      const char* mBuff;
-      const char* mTraversalPtr;
-      const char* mEnd;
+      Data mName;
 };
 
 }
 
-#endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -125,3 +68,5 @@ class ParseBuffer
  * <http://www.vovida.org/>.
  *
  */
+
+#endif

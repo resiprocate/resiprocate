@@ -5,14 +5,12 @@
 
 #include "sip2/sipstack/HeaderFieldValue.hxx"
 #include "sip2/sipstack/HeaderTypes.hxx"
-#include "sip2/sipstack/ParserCategories.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/util/ParseBuffer.hxx"
-#include "sip2/util/DataStream.hxx"
-
 #include "sip2/sipstack/Headers.hxx"
-
-
+#include "sip2/sipstack/ParserCategories.hxx"
+#include "sip2/sipstack/UnknownParameterType.hxx"
+#include "sip2/sipstack/Uri.hxx"
+#include "sip2/util/DataStream.hxx"
+#include "sip2/util/ParseBuffer.hxx"
 
 using namespace std;
 using namespace Vocal2;
@@ -26,7 +24,7 @@ main(int arc, char** argv)
       s.value() = "value";
       s.param(p_expires) = 17;
       s.param(p_lr);
-      s.param("foobie") = "quux";
+      s.param(UnknownParameterType("foobie")) = "quux";
 
       Token s1;
       s1.value() = "other";
@@ -36,7 +34,7 @@ main(int arc, char** argv)
       assert(s.value() == "value");
       assert(s.param(p_ttl) == 21);
       assert(s.param(p_lr));
-      assert(s.param("foobie") == "quux");
+      assert(s.param(UnknownParameterType("foobie")) == "quux");
    }
 
    {
@@ -46,7 +44,7 @@ main(int arc, char** argv)
       s.param(p_expires) = 17;
       s.param(p_ttl) = 12;
       s.param(p_lr);
-      s.param("foobie") = "quux";
+      s.param(UnknownParameterType("foobie")) = "quux";
 
       Token s1;
       s1.value() = "other";
@@ -56,7 +54,7 @@ main(int arc, char** argv)
       assert(s.value() == "value");
       assert(s.param(p_ttl) == 21);
       assert(s.param(p_lr));
-      assert(s.param("foobie") == "quux");
+      assert(s.param(UnknownParameterType("foobie")) == "quux");
 
       s.encode(cerr);
       cerr << endl;
@@ -785,7 +783,7 @@ main(int arc, char** argv)
       assert(generic.uri() == "http://www.google.com");
       cerr << generic.param(p_purpose) << endl;
       assert(generic.param(p_purpose) == "icon");
-      assert(generic.param("fake") == "true");
+      assert(generic.param(UnknownParameterType("fake")) == "true");
 
       stringstream s;
       generic.encode(s);

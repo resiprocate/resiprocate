@@ -1,13 +1,14 @@
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/Contents.hxx"
-#include "sip2/sipstack/SdpContents.hxx"
-#include "sip2/util/Logger.hxx"
-#include "TestSupport.hxx"
-#include "tassert.h"
-
 #include <iostream>
 #include <memory>
+
+#include "TestSupport.hxx"
+#include "sip2/sipstack/Contents.hxx"
+#include "sip2/sipstack/SdpContents.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/UnknownHeaderType.hxx"
+#include "sip2/sipstack/Uri.hxx"
+#include "sip2/util/Logger.hxx"
+#include "tassert.h"
 
 using namespace Vocal2;
 using namespace std;
@@ -99,16 +100,15 @@ test1()
       {
          CritLog(<<"TODO: Compact headers .. doing by unknown interface!!");
          tassert(message->exists(h_Contacts) == false);
-         tassert(message->exists("m") == true);
-         tassert(message->header("m").empty() == false);
+         tassert(message->exists(UnknownHeaderType("m")) == true);
+         tassert(message->header(UnknownHeaderType("m")).empty() == false);
          //!ah! temporary until compact headers fixed.
-         tassert(message->header("m").front().value() == 
+         tassert(message->header(UnknownHeaderType("m")).front().value() == 
                  "\"Quoted string\\\"\\\"\"<sip:caller@caller-company.com>;"
                  " newparam =   newvalue ;    secondparam = secondvalue  ; q"
                  " = 0.33,   tel:4443322 ");
       }
 
-      
       tassert(message->exists(h_CallId));
       tassert(message->header(h_CallId).value() == "0ha0isndaksdj@10.0.0.1");
 
@@ -129,8 +129,8 @@ test1()
       tassert(!message->exists(h_Subject));
       tassert(message->header(h_Subject).value().empty());
 
-      tassert(message->exists("NewFangledHeader"));
-      tassert(message->header("NewFangledHeader").front().value() == "newfangled value   more newfangled value"BUGTRAILINGSPACE);
+      tassert(message->exists(UnknownHeaderType("NewFangledHeader")));
+      tassert(message->header(UnknownHeaderType("NewFangledHeader")).front().value() == "newfangled value   more newfangled value"BUGTRAILINGSPACE);
       //TODO: Need to check the ContentType header value
       tassert(message->exists(h_ContentType));
       CritLog(<<"TODO:Check content type"); // << *message);

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.35 2003/01/10 02:51:17 derekm Exp $
+# $Id: Makefile,v 1.36 2003/01/22 00:55:41 davidb Exp $
 
 USE_SSL = 1
 
@@ -23,6 +23,7 @@ CXXFLAGS += -DUSE_SSL
 endif
 
 TESTPROGRAMS =	\
+		testXMLCursor.cxx \
 		testEmbedded.cxx \
 		testIM.cxx \
 		testUri.cxx \

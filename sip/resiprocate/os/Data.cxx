@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.53 2003/01/15 20:54:12 jason Exp $";
+// "$Id: Data.cxx,v 1.54 2003/01/22 00:55:42 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -62,7 +62,7 @@ Data::Data(const unsigned char* str, int length)
 
 // share memory KNOWN to be in a surrounding scope
 // wears off on, c_str, operator=, operator+=, non-const
-// operator[], append
+// operator[], append, reserve
 Data::Data(const char* str, int length, bool) 
    : mSize(length),
      mBuf(const_cast<char*>(str)),
@@ -611,6 +611,15 @@ Data::operator+(const char* str) const
    memcpy(tmp.mBuf + mSize, str, l+1);
 
    return tmp;
+}
+
+void
+Data::reserve(size_type len)
+{
+   if (len > mCapacity)
+   {
+      resize(len, true);
+   }
 }
 
 Data&
