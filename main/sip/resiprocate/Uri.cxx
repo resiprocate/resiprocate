@@ -22,6 +22,7 @@ Uri::Uri(const Data& data)
    ParseBuffer pb(data.data(), data.size());
    Uri tmp;
    tmp.parse(pb);
+
    *this = tmp;
 }
 
@@ -253,62 +254,64 @@ Uri::getAor() const
 void
 Uri::parse(ParseBuffer& pb)
 {
+   pb.skipWhitespace();
    const char* start = pb.position();
    pb.skipToChar(Symbols::COLON[0]);
    pb.data(mScheme, start);
    pb.skipChar();   
    if (isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips))
    {
-      mScheme.lowercase();
-      start = pb.position();
-      pb.skipToChar(Symbols::AT_SIGN[0]);
-      if (!pb.eof())
-      {
-         pb.reset(start);
-         start = pb.position();
-         pb.skipToOneOf(":@");
-         pb.data(mUser, start);
-         if (*pb.position() == Symbols::COLON[0])
-         {
-            start = pb.skipChar();
-            pb.skipToChar(Symbols::AT_SIGN[0]);
-            pb.data(mPassword, start);
-         }
-         start = pb.skipChar();
-      }
-      else
-      {
-         pb.reset(start);
-      }
-
-      if (*start == '[')
-      {
-         pb.skipToChar(']');
-      }
-      else
-      {
-         pb.skipToOneOf(ParseBuffer::Whitespace, ":;>");
-      }
-      pb.data(mHost, start);
-      pb.skipToOneOf(ParseBuffer::Whitespace, ":;>");
-      if (!pb.eof() && *pb.position() == ':')
-      {
-         start = pb.skipChar();
-         mPort = pb.integer();
-         pb.skipToOneOf(ParseBuffer::Whitespace, ";>");
-      }
-      else
-      {
-          mPort = 0;
-      }
    }
    else
    {
-      // generic URL
-         mPort = 0;
-         mUser = "UNKNOWN_SCHEME";
-         mHost = "UNKNOWN_SCHEME";
+      // asume sip if nothing else found
+      mScheme = Symbols::Sip;
+      pb.reset(start);
    }
+   
+   mScheme.lowercase();
+   start = pb.position();
+   pb.skipToChar(Symbols::AT_SIGN[0]);
+   if (!pb.eof())
+   {
+      pb.reset(start);
+      start = pb.position();
+      pb.skipToOneOf(":@");
+      pb.data(mUser, start);
+      if (*pb.position() == Symbols::COLON[0])
+      {
+         start = pb.skipChar();
+         pb.skipToChar(Symbols::AT_SIGN[0]);
+         pb.data(mPassword, start);
+      }
+      start = pb.skipChar();
+   }
+   else
+   {
+      pb.reset(start);
+   }
+   
+   if (*start == '[')
+   {
+      pb.skipToChar(']');
+   }
+   else
+   {
+      pb.skipToOneOf(ParseBuffer::Whitespace, ":;>");
+   }
+   pb.data(mHost, start);
+   pb.skipToOneOf(ParseBuffer::Whitespace, ":;>");
+   if (!pb.eof() && *pb.position() == ':')
+   {
+      start = pb.skipChar();
+      mPort = pb.integer();
+      pb.skipToOneOf(ParseBuffer::Whitespace, ";>");
+   }
+   else
+   {
+      mPort = 0;
+   }
+   
    parseParameters(pb);
 }
 

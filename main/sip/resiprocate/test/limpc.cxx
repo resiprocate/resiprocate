@@ -29,16 +29,48 @@ static WINDOW* commandWin=0;
 static WINDOW* textWin=0;
 static WINDOW* statusWin=0;
 
+static TuIM* tuIM;
+static Uri   dest;
 
-class TestPresCallback: public TuIM::PresCallback
+
+void 
+displayPres()
+{
+      werase(statusWin);
+
+      for( int i=0; i<tuIM->getNumBuddies();i++)
+      {
+         Uri uri = tuIM->getBuddyUri(i);
+         Data status;
+         bool online = tuIM->getBuddyStatus(i,&status);
+         const char* stat = (online)?"online":"offline";
+         
+         waddstr(statusWin,uri.getAor().c_str());
+         waddstr(statusWin," ");
+         waddstr(statusWin,stat);
+         waddstr(statusWin," ");
+         waddstr(statusWin,status.c_str());
+         waddstr(statusWin,"\n");
+      }
+
+     wrefresh(statusWin);  
+}
+
+
+class TestCallback: public TuIM::Callback
 {
    public:
       virtual void presenseUpdate(const Uri& dest, bool open, const Data& status );
+      virtual void receivedPage( const Data& msg, const Uri& from ,
+                                 const Data& signedBy,  Security::SignatureStatus sigStatus,
+                                 bool wasEncryped  );
+      virtual void sendPageFailed( const Uri& dest,int respNumber );
+      virtual void registrationFailed(const Vocal2::Uri&, int respNumber);
 };
   
 
 void 
-TestPresCallback::presenseUpdate(const Uri& from, bool open, const Data& status )
+TestCallback::presenseUpdate(const Uri& from, bool open, const Data& status )
 {
    const char* stat = (open)?"online":"offline";
    //cout << from << " set presence to " << stat << " " << status.c_str() << endl;
@@ -52,39 +84,23 @@ TestPresCallback::presenseUpdate(const Uri& from, bool open, const Data& status 
    waddstr(textWin,"\n");
 
    wrefresh(textWin);
+
+   displayPres();
 }
 
-
-class TestPageCallback: public TuIM::PageCallback
-{
-   public:
-      virtual void receivedPage( const Data& msg, const Uri& from ,
-                                 const Data& signedBy,  Security::SignatureStatus sigStatus,
-                                 bool wasEncryped  );
-
-      Uri* mDest;
-};
-    
-class TestErrCallback: public  TuIM::ErrCallback
-{
-   public:
-      virtual void sendPageFailed( const Uri& dest );
-};
-
-
 void 
-TestPageCallback::receivedPage( const Data& msg, const Uri& from,
-                                const Data& signedBy,  Security::SignatureStatus sigStatus,
-                                bool wasEncryped  )
+TestCallback::receivedPage( const Data& msg, const Uri& from,
+                            const Data& signedBy,  Security::SignatureStatus sigStatus,
+                            bool wasEncryped  )
 {  
    //DebugLog(<< "In TestPageCallback");
 
-   if ( mDest && ( *mDest != from) )
+   if ( dest != from )
    {
-      *mDest = from;
+      dest = from;
       //cerr << "Set destination to <" << *mDest << ">" << endl;
       waddstr(textWin,"Set destination to ");
-      waddstr(textWin, mDest->value().c_str());
+      waddstr(textWin, dest.value().c_str());
       waddstr(textWin,"\n");
    }
    
@@ -136,19 +152,37 @@ TestPageCallback::receivedPage( const Data& msg, const Uri& from,
 
 
 void 
-TestErrCallback::sendPageFailed( const Uri& dest )
+TestCallback::sendPageFailed( const Uri& dest, int respNum )
 {
    //InfoLog(<< "In TestErrCallback");  
-   // cerr << "Message to " << dest << " failed" << endl;   
+   // cerr << "Message to " << dest << " failed" << endl;  
+   Data num(respNum);
+   
    waddstr(textWin,"Message to ");
    waddstr(textWin,dest.value().c_str());
-   waddstr(textWin," failed\n");
+   waddstr(textWin," failed (");
+   waddstr(textWin,num.c_str());
+   waddstr(textWin," response)\n");
    wrefresh(textWin);
 }
 
 
+void 
+TestCallback::registrationFailed(const Vocal2::Uri&, int respNum )
+{
+   Data num(respNum);
+   
+   waddstr(textWin,"Registration to ");
+   waddstr(textWin,dest.value().c_str());
+   waddstr(textWin," failed (");
+   waddstr(textWin,num.c_str());
+   waddstr(textWin," response)\n");
+   wrefresh(textWin);
+}
+  
+                              
 bool
-processStdin(  TuIM& tuIM, Uri* dest )
+processStdin( Uri* dest )
 {
    static unsigned int num=0;
    static char buf[1024];
@@ -225,12 +259,13 @@ processStdin(  TuIM& tuIM, Uri* dest )
          waddstr(textWin,"\n");
          wrefresh(textWin);
          
-         tuIM.addBuddy( uri, Data::Empty );
+         tuIM->addBuddy( uri, Data::Empty );
+         displayPres();
       }
-      else if ( (num>7) && (!strncmp("status:",buf,7)) )
+      else if ( (num>=7) && (!strncmp("status:",buf,7)) )
       {
          buf[num] = 0;
-         Data stat(buf+3);
+         Data stat(buf+7);
 
          //cerr << "setting presence status to  <" << stat << ">";
          waddstr(textWin,"Set presece status to <");
@@ -238,7 +273,7 @@ processStdin(  TuIM& tuIM, Uri* dest )
          waddstr(textWin,">\n");
          wrefresh(textWin);
 
-         tuIM.setMyPresense( !stat.empty(), stat );
+         tuIM->setMyPresense( !stat.empty(), stat );
       }
       else if ( (num==1) && (!strncmp(".",buf,1)) )
       {
@@ -265,7 +300,7 @@ processStdin(  TuIM& tuIM, Uri* dest )
             waddstr(textWin,"\n");
             wrefresh(textWin);
 
-            tuIM.sendPage( text , *dest, false /*sign*/, Data::Empty /*encryptFor*/ );
+            tuIM->sendPage( text , *dest, false /*sign*/, Data::Empty /*encryptFor*/ );
             //tuIM.sendPage( text , *dest, false /*sign*/, dest->getAorNoPort() /*encryptFor*/ );
             //tuIM.sendPage( text , *dest, true /*sign*/,  Data::Empty /*encryptFor*/ );
             //tuIM.sendPage( text , *dest, true /*sign*/, dest->getAorNoPort()
@@ -306,9 +341,13 @@ main(int argc, char* argv[])
     
    int port = 5060;
    int tlsPort = 0;
-   Uri aor("sip:aor@localhost:5060" );
-   Uri dest("sip:you@localhost:5070");
+   Uri aor;
+   bool haveAor=false;
+   dest = Uri("sip:nobody@example.com");
    Data aorPassword;
+   
+   int numAdd=0;
+   Data addList[100];
    
    for ( int i=1; i<argc; i++)
    {
@@ -337,6 +376,14 @@ main(int argc, char* argv[])
          i++;
          assert( i<argc );
          aor = Uri(Data(argv[i]));
+         haveAor=true;
+      } 
+      else if (!strcmp(argv[i],"-add"))
+      {
+         i++;
+         assert( i<argc );
+         addList[numAdd++] = Data(argv[i]);
+         assert( numAdd < 100 );
       } 
       else if (!strcmp(argv[i],"-aorPassword"))
       {
@@ -349,14 +396,26 @@ main(int argc, char* argv[])
          i++;
          assert( i<argc );
          dest = Uri(Data(argv[i]));
-
-         //cout << "Destination is " << dest << endl;
       } 
       else
       { 
-         //ErrLog(<<"Bad command line opion: " << argv[i] );
-         //ErrLog(<<"options are: [-v] [-vv] [-port 1234] [-aor sip:flffuy@flouf.com] [-to sip:1@foo.com]" << argv[i] );
-         assert(0);
+         cerr <<"Bad command line opion: " << argv[i] << endl;
+         cerr <<"options are: " << endl
+              << "\t [-v] [-vv] [-port 5060] [-tlsport 5061]" << endl
+              << "\t [-aor sip:alice@example.com] [-aorPassword password]" << endl
+              << "\t [-to sip:friend@example.com] [-add sip:buddy@example.com]" << endl;
+         cerr << endl
+              << " -v is verbose" << endl
+              << " -vv is very verbose" << endl
+              << " -port sets the UDP and TCP port to listen on" << endl
+              << " -tlsPort sets the port to listen for TLS on" << endl
+              << " -aor sets the proxy and user name to register with" << endl
+              << " -aorPasswrod sets the password to use for registration" << endl
+              << " -to sets initial location to send messages to" << endl
+              << " -add adds a budy who's presense will be monitored" << endl
+              << "\t there can be many -add " << endl
+              << endl;
+         exit(1);
       }
    }
    
@@ -374,17 +433,18 @@ main(int argc, char* argv[])
    }
 #endif
    
-   Vocal2::Transport::Type transport = Transport::UDP;
-
-   sipStack.addTransport(Transport::UDP, port);
-   sipStack.addTransport(Transport::TCP, port);
+   if (port!=0)
+   {
+      sipStack.addTransport(Transport::UDP, port);
+      sipStack.addTransport(Transport::TCP, port);
+   }
+   
 #if USE_SSL
    if ( port == 5060 )
    {
       if ( tlsPort == 0 )
       {
          tlsPort = 5061;
-           
       }
    }
    if ( tlsPort != 0 )
@@ -393,27 +453,35 @@ main(int argc, char* argv[])
    }
 #endif
 
-   TestPageCallback pageCallback;
-   pageCallback.mDest = &dest;
-   
-   TestErrCallback errCallback;
-    
-   TestPresCallback presCallback;
+   TestCallback callback;
 
-   dest.param(p_transport) = Transport::toData( transport );
-   aor.param(p_transport) = Transport::toData( transport );
-
-   Uri contact = aor;
+   Uri contact("sip:user@localhost");
    contact.port() = port;
-   contact.param(p_transport) =  aor.param(p_transport);
-   contact.host() = "localhost"; // TODO - fix this 
-   
-   TuIM tuIM(&sipStack,aor,contact,&pageCallback,&errCallback,&presCallback);
+   contact.host() = sipStack.getHostname();
 
-#if 0
-   tuIM.registerAor( aor, aorPassword );
+   if ( haveAor )
+   {
+      contact.user() = aor.user();
+#if USE_SSL
+      if ( aor.scheme() == "sips" )
+      {
+         contact.scheme() = aor.scheme();
+         contact.port() = tlsPort;
+      }
 #endif
+   }
+   else
+   {
+      aor = contact;
+   }
+   
+   tuIM = new TuIM(&sipStack,aor,contact,&callback);
 
+   if ( haveAor )
+   {
+      tuIM->registerAor( aor, aorPassword );
+   }
+   
    initscr(); 
    cbreak(); 
    noecho();
@@ -439,6 +507,27 @@ main(int argc, char* argv[])
    mvhline(rows-3,0,ACS_HLINE,cols);
    mvvline(0,(cols*3/4),ACS_VLINE,rows-3);
    refresh();
+
+   for ( int i=0; i<numAdd; i++ )
+   { 
+      Uri uri(addList[i]);
+      tuIM->addBuddy( uri, Data::Empty );
+   }
+
+   displayPres();
+ 
+   waddstr(textWin,"Use -help on the command line to view options\n");
+   waddstr(textWin,"To set where your messages will get sent type\n");
+   waddstr(textWin,"    to: sip:alice@example.com \n");
+   waddstr(textWin,"To monitores someeone presense type\n");
+   waddstr(textWin,"    add: sip:buddy@example.com \n");
+   waddstr(textWin,"To change you online status type\n");
+   waddstr(textWin,"    status: in meetin\n");
+   waddstr(textWin,"To set youselft to offline type\n");
+   waddstr(textWin,"   status:\n");
+   waddstr(textWin,"To exit type a single period\n");
+   waddstr(textWin,"\n");
+   wrefresh(textWin);     
 
    while (1)
    {
@@ -476,7 +565,7 @@ main(int argc, char* argv[])
        
       if ( fdset.readyToRead( fileno(stdin) ) )
       {
-         bool keepGoing = processStdin(tuIM,&dest);
+         bool keepGoing = processStdin(&dest);
          if (!keepGoing) 
          {
             break;
@@ -486,7 +575,7 @@ main(int argc, char* argv[])
       // //DebugLog ( << "Try TO PROCESS " );
       sipStack.process(fdset);
        
-      tuIM.process();       
+      tuIM->process();       
    }
 }
 

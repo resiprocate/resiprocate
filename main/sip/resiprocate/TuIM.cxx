@@ -21,19 +21,7 @@
 using namespace Vocal2;
 
 
-void
-TuIM::ErrCallback::sendPageFailed(const Uri& dest )
-{
-   assert(0);
-}
-
-
-TuIM::ErrCallback::~ErrCallback()
-{
-}
-
-
-TuIM::PageCallback::~PageCallback()
+TuIM::Callback::~Callback()
 {
 }
 
@@ -41,12 +29,8 @@ TuIM::PageCallback::~PageCallback()
 TuIM::TuIM(SipStack* stack, 
            const Uri& aor, 
            const Uri& contact,
-           PageCallback* msgCallback, 
-           ErrCallback* errCallback,
-           PresCallback* pressCallback)
-   : mPageCallback(msgCallback),
-     mErrCallback(errCallback),
-     mPressCallback(pressCallback),
+           Callback* callback)
+   : mCallback(callback),
      mStack(stack),
      mAor(aor),
      mContact(contact),
@@ -56,20 +40,12 @@ TuIM::TuIM(SipStack* stack,
      mNextTimeToRegister(0)
 {
    assert( mStack );
-   assert(mPageCallback);
-   assert(mErrCallback);
+   assert(mCallback);
    assert(mPidf);
    
    mPidf->setSimpleId( Random::getRandomHex(4) );  
    mPidf->setEntity( mAor.getAor() );  
    mPidf->setSimpleStatus( true, Data::Empty, mContact.getAor() );
-   
-  
-}
-
-
-TuIM::PresCallback::~PresCallback()
-{
 }
 
 
@@ -209,7 +185,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
 void 
 TuIM::processNotifyRequest(SipMessage* msg)
 {
-   assert( mPressCallback );
+   assert( mCallback );
    assert( msg->header(h_RequestLine).getMethod() == NOTIFY ); 
 
    auto_ptr<SipMessage> response( Helper::makeResponse( *msg, 200 ));
@@ -222,7 +198,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
    if ( !contents )
    {
       InfoLog( "Received NOTIFY message event with no contents" );
-      mPressCallback->presenseUpdate( from, true, Data::Empty );
+      mCallback->presenseUpdate( from, true, Data::Empty );
       return;
    }
 
@@ -233,13 +209,39 @@ TuIM::processNotifyRequest(SipMessage* msg)
    if ( !body )
    {
       InfoLog( "Received NOTIFY message event with no PIDF contents" );
-      mPressCallback->presenseUpdate( from, true, Data::Empty );
+      mCallback->presenseUpdate( from, true, Data::Empty );
       return;
    }
  
    Data note;
-   bool open = body->getSimpleStatus( &note );;
-   mPressCallback->presenseUpdate( from, open, note );
+   bool open = body->getSimpleStatus( &note );
+
+   bool changed = true;
+
+   // update if found in budy list 
+   for ( int i=0; i<getNumBuddies();i++)
+   {
+      Uri u = getBuddyUri(i);
+      
+      if ( u.getAor() == from.getAor() )
+      {
+         if ( (mBuddy[i].status == note) &&
+              (mBuddy[i].online == open) )
+         {
+            changed = false;
+         }
+         
+         mBuddy[i].status = note;
+         mBuddy[i].online = open;
+      }
+   }
+   
+   // notify callback 
+   if (changed)
+   {
+      assert(mCallback);
+      mCallback->presenseUpdate( from, open, note );
+   }
 }
 
 
@@ -299,8 +301,8 @@ TuIM::processMessageRequest(SipMessage* msg)
          Uri from = msg->header(h_From).uri();
          DebugLog ( << "got message from " << from );
                   
-         assert( mPageCallback );
-         mPageCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
+         assert( mCallback );
+         mCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
       }
       else
       {
@@ -344,7 +346,8 @@ TuIM::processResponse(SipMessage* msg)
    if ( number >= 300 )
    {
       Uri dest = msg->header(h_To).uri();
-      mErrCallback->sendPageFailed( dest );
+      assert( mCallback );
+      mCallback->sendPageFailed( dest,number );
    }
 }
 
@@ -356,6 +359,18 @@ TuIM::processRegisterResponse(SipMessage* msg)
    Uri to = msg->header(h_To).uri();
    InfoLog ( << "register of " << to << " got response " << number );   
 
+   if ( number <200 )
+   {
+      return;
+   }
+   
+   if ( number >= 300 )
+   {
+      assert( mCallback );
+      mCallback->registrationFailed( to, number );
+      return;
+   }
+   
    int expires = 3600;
    if ( msg->exists(h_Expires) )
    {
@@ -405,12 +420,33 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
    
    if (  (number>=400) )
    {
-      InfoLog( << "Got an error to so9me subscription" );     
+      DebugLog( << "Got an error to some subscription" );     
 
       // take this buddy off line 
       Uri to = msg->header(h_To).uri();
-      assert( mPressCallback );
-      mPressCallback->presenseUpdate( to, false, Data::Empty );
+      assert( mCallback );
+      
+      bool changed = true;
+      
+      for ( int i=0; i<getNumBuddies();i++)
+      {
+         Uri u = getBuddyUri(i);
+         
+         if ( u.getAor() == to.getAor() )
+         {
+            if (  mBuddy[i].online == false )
+            {  
+               changed = false;
+            }
+            
+            mBuddy[i].online = false;
+         }
+      }
+
+      if ( changed )
+      {
+         mCallback->presenseUpdate( to, false, Data::Empty );
+      }
       
       // try to contact this buddy agian in 10 minutes 
       buddy.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 10*60*1000 );
@@ -551,6 +587,8 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
 {
    Buddy b;
    b.uri = uri;
+   b.online = false;
+   b.status = Data::Empty;
    b.group = group;
    b.presDialog = new Dialog( NameAddr(mContact) );
    assert( b.presDialog );

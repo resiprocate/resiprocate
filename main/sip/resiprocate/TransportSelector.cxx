@@ -113,6 +113,21 @@ TransportSelector::process(FdSet& fdset)
    }
 }
 
+
+bool 
+TransportSelector::hasDataToSend() const
+{   
+   for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
+   {
+      if (  (*i)->hasDataToSend() )
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+
 void
 TransportSelector::dnsResolve( SipMessage* msg)
 {

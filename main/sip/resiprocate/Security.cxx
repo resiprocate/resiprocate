@@ -63,7 +63,8 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
       ERR_error_string_n(err,buf,sizeof(buf));
       
       ErrLog( << "ssl connection failed with server=" << server << " err=" << err << " " << buf );
-      assert(0); // !jf! - need to deal gracefull with error and shut down this connection
+      
+      bio = NULL;
    }
 }
 
@@ -74,7 +75,13 @@ TlsConnection::read( const void* buf, const int count )
    assert( ssl );
    assert( buf );
    int ret;
-   
+
+   if (!bio)
+   {
+      DebugLog( << "Got TLS read bad bio  " );
+     return 0;
+   }
+      
    ret = SSL_read(ssl,(char*)buf,count);
    if (ret < 0 )
    {
@@ -85,7 +92,7 @@ TlsConnection::read( const void* buf, const int count )
          case SSL_ERROR_WANT_WRITE:
          case SSL_ERROR_NONE:
          {
-            DebugLog( << "Got TLS read got codition of " << err  );
+            DebugLog( << "Got TLS read got condition of " << err  );
             return 0;
          }
          break;
@@ -110,7 +117,13 @@ TlsConnection::write( const void* buf, const int count )
    assert( ssl );
    assert( buf );
    int ret;
-   
+ 
+   if (!bio)
+   {
+      DebugLog( << "Got TLS write bad bio "  );
+     return 0;
+   }
+        
    ret = SSL_write(ssl,(const char*)buf,count);
    if (ret < 0 )
    {
@@ -138,12 +151,33 @@ TlsConnection::write( const void* buf, const int count )
 }
 
 
+bool 
+TlsConnection::hasDataToRead() // has data that can be read 
+{
+   int p = SSL_pending(ssl);
+   return (p>0);
+}
+
+
+bool 
+TlsConnection::isGood() // has data that can be read 
+{
+   return (bio!=0);
+}
+
+
 Data 
 TlsConnection::peerName()
 {
    assert(ssl);
    Data ret = Data::Empty;
 
+   if (!bio)
+   {
+      DebugLog( << "bad bio" );
+      return Data::Empty;
+   }
+      
 #ifdef WIN32
    assert(0);
 #else

@@ -84,6 +84,8 @@ class Transport
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
 
+      bool hasDataToSend() const;
+      
    protected:
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Data mHost;
