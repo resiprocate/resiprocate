@@ -233,7 +233,7 @@ UdpTransport::process(fd_set* fdSet)
       bool ppStatus = preParser.process();
       // this won't work if UDPs are fragd !ah!
 
-      if (!ppStatus)
+      if (ppStatus)
       {
          // ppStatus will be false ONLY when the DATAGRAM did not
          // contain a Preparsable byte-stream. In the UDP transport,

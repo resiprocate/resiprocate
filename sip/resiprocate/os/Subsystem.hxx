@@ -11,6 +11,7 @@ class Subsystem
 {
    public:
       // Add new systems below
+      static const Subsystem APP;
       static const Subsystem TEST;   
       static const Subsystem NONE; // default subsystem
       static const Subsystem UTIL;
