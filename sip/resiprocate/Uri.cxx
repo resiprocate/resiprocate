@@ -193,8 +193,25 @@ class OrderUnknownParameters
 
       bool operator()(const Parameter* p1, const Parameter* p2) const
       {
-         return dynamic_cast<const UnknownParameter*>(p1)->getName() < dynamic_cast<const UnknownParameter*>(p2)->getName();
+         const UnknownParameter* u1 = dynamic_cast<const UnknownParameter*>(p1);
+         const UnknownParameter* u2 = dynamic_cast<const UnknownParameter*>(p2);
+
+         if (u1->getName() < 
+             u2->getName())
+         {
+            return true;
+         }
+
+         if (u1->getName() > 
+             u2->getName())
+         {
+            return false;
+         }
+
+         // deal with same parameter appearing more than once
+         return u1->value() < u2->value();
       }
+
    private:
       bool notUsed;
 };
@@ -419,6 +436,8 @@ Uri::operator==(const Uri& other) const
    ParameterSet::iterator a = unA.begin();
    ParameterSet::iterator b = unB.begin();
 #else
+   // .dlb. more efficient to copy to vector for sorting?
+   // Uri comparison is expensive; consider caching? ugh
    ParameterList unA = mUnknownParameters;
    ParameterList unB = other.mUnknownParameters;
 
@@ -431,18 +450,23 @@ Uri::operator==(const Uri& other) const
 
    while(a != unA.end() && b != unB.end())
    {
-      if (orderUnknown(*a, *b))
+      const UnknownParameter* u1 = dynamic_cast<const UnknownParameter*>(*a);
+      const UnknownParameter* u2 = dynamic_cast<const UnknownParameter*>(*b);
+
+      if (u1->getName() < 
+          u2->getName())
       {
          ++a;
       }
-      else if (orderUnknown(*b, *a))
+      else if (u1->getName() >
+               u2->getName())
       {
          ++b;
       }
       else
       {
-         if (!isEqualNoCase(dynamic_cast<UnknownParameter*>(*a)->value(),
-                            dynamic_cast<UnknownParameter*>(*b)->value()))
+         if (!isEqualNoCase(u1->value(),
+                            u2->value()))
          {
             return false;
          }
