@@ -9,8 +9,8 @@ namespace resip
 class SecurityAttributes
 {
    public:
-      SecurityAttributes();
-      ~SecurityAttributes();
+      SecurityAttributes()  {};
+      ~SecurityAttributes() {};
 
       Security::SignatureStatus getSignatureStatus() const
       {
