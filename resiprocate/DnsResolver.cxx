@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+#include <memory>
+
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
