@@ -2,6 +2,8 @@
 #define RESIP_SERVERINVITESESSION_HXX
 
 #include "InviteSession.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include <deque>
 
 namespace resip
 {
