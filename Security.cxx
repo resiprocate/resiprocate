@@ -1013,6 +1013,13 @@ BaseSecurity::getUserPrivateKeyPEM(const Data& aor) const
    return   getPrivateKeyPEM(UserPrivateKey, aor, true);
 }
 
+Data
+BaseSecurity::getUserPrivateKeyDER(const Data& aor) const
+{
+   assert(0);
+   return Data::Empty;
+}
+
 void
 BaseSecurity::generateUserCert (const Data& aor, const Data& passPhrase)
 {
