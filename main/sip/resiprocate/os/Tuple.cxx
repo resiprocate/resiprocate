@@ -205,10 +205,15 @@ Tuple::length() const
    {
       return sizeof(sockaddr_in);
    }
-   else
+#ifdef USE_IPV6
+   else  if (mSockaddr.sa_family == AF_INET6) // v6
    {
       return sizeof(sockaddr_in6);
    }
+#endif
+
+   assert(0);
+   return 0;
 }
 
 
@@ -322,18 +327,6 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 {
 	ostrm << "[ " ;
 
-#if defined(WIN32) 
-	assert( tuple.mSockaddr.sa_family != AF_INET6 );
-	for ( int i=0; i<4; i++)
-	{
-		const char* p = reinterpret_cast<const char*>( &tuple.mSockaddr );
-		p += i;
-		int v = *p;
-		ostrm << v << ".";
-	}
-	// ostrm << ":" << ntohs(addr->sin_port);
-#else	
-	char str[256];
 #ifdef USE_IPV6
     if (tuple.mSockaddr.sa_family == AF_INET6)
     {
@@ -346,15 +339,27 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
     }
     else
 #endif
-    {
+     if (tuple.mSockaddr.sa_family == AF_INET)
+	 {
        ostrm << "V4 ";
-       ostrm << inet_ntop(AF_INET,
+#ifdef WIN32
+	   ostrm << static_cast<unsigned int>(tuple.m_anonv4.sin_addr.S_un.S_un_b.s_b1) << "." 
+             << static_cast<unsigned int>(tuple.m_anonv4.sin_addr.S_un.S_un_b.s_b2) << "." 
+             << static_cast<unsigned int>(tuple.m_anonv4.sin_addr.S_un.S_un_b.s_b3) << "." 
+             << static_cast<unsigned int>(tuple.m_anonv4.sin_addr.S_un.S_un_b.s_b4) ;
+#else
+	    char str[256];
+	    ostrm << inet_ntop(AF_INET,
                           &(tuple.m_anonv4.sin_addr),
                           str, sizeof(str));
+#endif
        ostrm << ":" << ntohs(tuple.m_anonv4.sin_port);
     }
-#endif	
-	
+	 else
+	 {
+		 assert(0);
+	 }
+
 	ostrm  << " , " 
 	       << Tuple::toData(tuple.mTransportType) 
 	       << " ,transport="
