@@ -65,7 +65,7 @@ DnsResolver::lookup(const Data& transactionId,
    {
       if (via.exists(p_rport))
       {
-         id = lookupARecords(transactionId, via.param(p_received), via.param(p_rport), transport, false);
+         id = lookupARecords(transactionId, via.param(p_received), via.param(p_rport).value(), transport, false);
       }
       else
       {
@@ -85,7 +85,7 @@ DnsResolver::lookup(const Data& transactionId,
    {
       id = lookupARecords(transactionId,
                           target, 
-                          via.param(p_rport), 
+                          via.param(p_rport).value(), 
                           transport, false);
    }
    
