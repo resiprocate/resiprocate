@@ -30,8 +30,8 @@ class AresDns : public ExternalDns
       virtual void process(fd_set& read, fd_set& write);
 
       //?dcm?  I believe these need to do nothing in the ARES case.
-      virtual void freeResult(ExternalDnsRawResult res) {}
-      virtual void freeResult(ExternalDnsHostResult res) {}
+      virtual void freeResult(ExternalDnsRawResult /* res */) {}
+      virtual void freeResult(ExternalDnsHostResult /* res */) {}
 
       virtual char* errorMessage(long errorCode);
 

@@ -28,8 +28,8 @@ class AsyncCLessTransport : public Transport, public ExternalAsyncCLessTransport
       virtual bool requiresProcess() { return true; }
 
       //may go away w/ transportSelector rewrite
-      virtual void process(FdSet& fdset) { assert(false); }
-      virtual void buildFdSet( FdSet& fdset){ assert(false); }
+      virtual void process(FdSet&) { assert(false); }
+      virtual void buildFdSet( FdSet&){ assert(false); }
 //      virtual int maxFileDescriptors() const { return 1;}
       virtual bool hasDataToSend() const { return false; }
 

@@ -42,8 +42,8 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       virtual int read(Fifo< Message >& fifo);
    protected:
 
-      virtual int read(char* buffer, const int count) { return 0; }
-      virtual int write(const char* buffer, const int count) { return 0; }
+      virtual int read(char* /* buffer */, const int /* count */) { return 0; }
+      virtual int write(const char* /* buffer */, const int /* count */) { return 0; }
       Connection();
       Socket mSocket;
 
