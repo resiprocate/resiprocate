@@ -259,6 +259,60 @@ class CSeqCategory : public ParserCategory
 //====================
 // DateCategory:
 //====================
+
+enum DayOfWeek { 
+   Sun = 0,
+   Mon,
+   Tue,
+   Wed,
+   Thu,
+   Fri,
+   Sat
+};
+
+Data DayOfWeekData[] 
+{
+   "Sun",
+   "Mon",
+   "Tue",
+   "Wed",
+   "Thu",
+   "Fri",
+   "Sat"
+};
+
+Data DayOfMonthData[] 
+{
+   "Jan",
+   "Feb",
+   "Mar",
+   "Apr",
+   "May",
+   "Jun",
+   "Jul",
+   "Aug",
+   "Sep",
+   "Oct",
+   "Nov",
+   "Dec"
+};
+
+
+enum Month {
+   Jan = 0,
+   Feb,
+   Mar,
+   Apr,
+   May,
+   Jun,
+   Jul,
+   Aug,
+   Sep,
+   Oct,
+   Nov,
+   Dec
+};
+
 class DateCategory : public ParserCategory
 {
    public:
@@ -276,7 +330,13 @@ class DateCategory : public ParserCategory
       virtual std::ostream& encode(std::ostream& str) const;
 
    private:
-      mutable Data mValue;
+      mutable enum DayOfWeek mDayOfWeek;
+      mutable int mDay;
+      mutable enum Month mMonth;
+      mutable int mYear;
+      mutable int mHour;
+      mutable int mMin;
+      mutable int mSec;
 };
 
 //====================
