@@ -56,7 +56,7 @@
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/Socket.hxx"
 
-#include "sip2/sipstack/Helper.hxx"
+#include "sip2/sipstack/test/TestSupport.hxx"
 #include "sip2/sipstack/MethodTypes.hxx"
 #include "sip2/sipstack/Preparse.hxx"
 #include "sip2/sipstack/SipStack.hxx"
@@ -115,7 +115,7 @@ int
 sendto(int s, const void *msg, size_t len, int flags,
        const struct sockaddr *to, socklen_t tolen)
 {
-    fakeTxFifo.add(Helper::makeMessage(Data((const char *)msg, (int)len), true));
+    fakeTxFifo.add(TestSupport::makeMessage(Data((const char *)msg, (int)len), true));
     return len;
 }
 
@@ -353,7 +353,7 @@ processInject()
     {
 	// sendToWire() is a helper function for TestTransport stuff.
 	// sendToWire(start);
-	SipMessage* message = Helper::makeMessage(start, true);
+	SipMessage* message = TestSupport::makeMessage(start, true);
 	assert(message);
 
 	TestFSM::addMessage(client,message); //  does a client->mStateMacFifo.add(message);
@@ -361,7 +361,7 @@ processInject()
     }
     else
     {
-	SipMessage* message = Helper::makeMessage(start, false);
+	SipMessage* message = TestSupport::makeMessage(start, false);
 	assert(message);
 	client->send(*message);
     }
