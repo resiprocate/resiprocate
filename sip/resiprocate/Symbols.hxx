@@ -85,6 +85,10 @@ class Symbols
 
       static const char* C100rel;
       static const char* Undefined;
+
+      static const char* Pending;
+      static const char* Active;
+      static const char* Terminated;
 };
 
 }
