@@ -117,6 +117,10 @@ Transport::toData(Transport::Type type)
          return"SCTP";
       case DCCP:
          return "DCCP";
+      case TestReliable:
+         return "TestReliable";
+      case TestUnreliable:
+         return "TestUnreliable";
       case Unknown:
       default:
          assert(0);
@@ -146,6 +150,14 @@ Transport::toTransport(const Data& type)
    else if (type == "DCCP")
    {
       return DCCP;
+   }
+   else if (type == "TestReliable")
+   {
+      return TestReliable;
+   }
+   else if (type == "TestUnreliable")
+   {
+      return TestUnreliable;
    }
    else if (type == "Unknown")
    {
