@@ -23,6 +23,28 @@ main()
       HeaderFieldValue h1(b, strlen(b));
       HeaderFieldValue h2(h1);
    }
+   
+   {
+      cerr << "test backward compatible expires parameter" << endl;
+      char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=third\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=fourth\r\n"
+                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=fifth\r\n"
+                    "Max-Forwards: 70\r\n"
+                    "To: Bob <sip:bob@biloxi.com>\r\n"
+                    "From: Bob <sip:bob@biloxi.com>;tag=456248\r\n"
+                    "Call-ID: 843817637684230@998sdasdh09\r\n"
+                    "CSeq: 1826 REGISTER\r\n"
+                    "Contact: <sip:bob@192.0.2.4>;expires=\"Sat, 01 Dec 2040 16:00:00 GMT\";foo=bar\r\n"
+                    "Contact: <sip:qoq@192.0.2.4>\r\n"
+                    "Content-Length: 0\r\n\r\n");
+      auto_ptr<SipMessage> message1(Helper::makeMessage(txt1));
+      cerr << message1->header(h_Contacts).front().param(p_expires) << endl;
+      assert(message1->header(h_Contacts).front().param(p_expires) == 3600);
+      assert(message1->header(h_Contacts).front().param("foo") == "bar");
+   }
 
    {
       cerr << "test header copying between unparsed messages" << endl;
