@@ -413,12 +413,13 @@ class Via : public ParserCategory
    public:
       enum {isCommaTokenizing = true};
 
-      Via() : ParserCategory(), 
-              mProtocolName(Symbols::ProtocolName),
-              mProtocolVersion(Symbols::ProtocolVersion),
-              mTransport(Symbols::UDP),
-              mSentHost(),
-              mSentPort(0) 
+      Via() 
+         : ParserCategory(), 
+           mProtocolName(Symbols::ProtocolName),
+           mProtocolVersion(Symbols::ProtocolVersion),
+           mTransport(Symbols::UDP),
+           mSentHost(),
+           mSentPort(0) 
       {
          // insert a branch in all Vias (default constructor)
          this->param(p_branch);
