@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.1 2002/09/25 22:24:41 jason Exp $";
+"$Id: Data.cxx,v 1.2 2002/09/26 02:03:58 jason Exp $";
 
 #include <cstdio>
 #include <ctype.h>
@@ -61,6 +61,10 @@ Data::Data( const int value)
 }
 
 Data::Data( const Data& data ) : string(data)
+{
+}
+
+Data::Data( const unsigned int count, char c) : string(count ,c)
 {
 }
 
