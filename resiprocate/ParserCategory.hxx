@@ -45,7 +45,7 @@ class ParserCategory
       exists(const ParameterType<T>& parameterType) const
       {
          checkParsed();
-         hHeaderField->exists(parameterType);
+         return mHeaderField->exists(parameterType);
       }
 
       //not necessary to call exists before remove(removing nothing is allowed)      
@@ -54,7 +54,7 @@ class ParserCategory
       remove(const ParameterType<T>& parameterType)
       {
          checkParsed();
-         hHeaderField->remove(parameterType);
+         mHeaderField->remove(parameterType);
       }
       
       void parseParameters(const char* start, unsigned int length);

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.48 2002/09/27 13:48:25 fluffy Exp $
+# $Id: Makefile,v 1.49 2002/09/28 01:38:06 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -35,6 +35,7 @@ SRC =	\
 	TransportSelector.cxx \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
+	Uri.cxx \
 
 # Make sure there is a blank line above this comment.
 

@@ -37,28 +37,36 @@ class HeaderFieldValue
          return *(dynamic_cast<typename ParameterType<T>::Type*>(p));
       }
 
+      template <typename ParameterTypes::Type T>
+      bool exists(const ParameterType<T> type)
+      {
+         return mParameterList.find(T);
+      }
+
+      template <typename ParameterTypes::Type T>
+      void 
+      remove(const ParameterType<T> type)
+      {
+         mParameterList.erase(T);
+      }
+
       ParameterList& getParameters();
 
       ParameterList& getUnknownParameters();
 
       void parseParameters(const char* startPos, unsigned int length);
 
-
       UnknownParameter* get(const Data& type);
 
       bool exists(const Data& parameter);
 
-      bool exists(const ParameterTypes::Type type);
 
       //shouldn't complain if parameter doesn't exists, otherwise there will be
       //two list walks
       void remove(const ParameterTypes::Type type);
       void remove(const Data& parameter);
       
-      
       bool isParsed() const;
-
-
 
       ParserCategory* getParserCategory()
       {
@@ -90,7 +98,5 @@ std::ostream& operator<<(std::ostream& stream,
 
 
 }
-
-
 
 #endif
