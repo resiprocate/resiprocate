@@ -45,18 +45,12 @@ DnsResolver::stop(Id id)
 int 
 determinePort(const Data& scheme, Transport::Type transport)
 {
-   if (isEqualNoCase(scheme, Symbols::Sip))
-   {
-      if (transport != Transport::TLS)
-      {
-         return Symbols::DefaultSipPort;
-      }
-      return Symbols::SipTlsPort;
-   }
-   else
+   if ( isEqualNoCase(scheme, Symbols::Sips) || (transport == Transport::TLS) )
    {
       return Symbols::DefaultSipsPort;
    }
+   
+   return Symbols::DefaultSipPort;
 }
 
 void
@@ -120,40 +114,50 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
    int port;
    
    Transport::Type transport;
-   if (uri.exists(p_transport))
+
+   if (uri.scheme() == Symbols::Sips)
    {
-      transport = Transport::toTransport(uri.param(p_transport));
+      transport = Transport::TLS;
    }
    else
    {
-      if (isNumeric || uri.port() != 0)
+      if (uri.exists(p_transport))
       {
-         if (uri.scheme() == Symbols::Sip)
-         {
-            transport = Transport::UDP;
-         }
-         else if (uri.scheme() == Symbols::Sips)
-         {
-            transport = Transport::TCP;
-         }
-         else
-         {
-            Entry* entry = new Entry(transactionId);
-            mStack.mStateMacFifo.add(
-               new DnsMessage(entry, 
-                              transactionId, 
-                              entry->tupleList.begin(), 
-                              entry->tupleList.end(), 
-                              true));
-            return;
-         }
+         transport = Transport::toTransport(uri.param(p_transport));
       }
       else
       {
-         //should be doing Naptr, Srv, a la 3263 Sec 4.1
-         transport = Transport::UDP;
-      }         
+         if (isNumeric || uri.port() != 0)
+         {
+            if (uri.scheme() == Symbols::Sip)
+            {
+               transport = Transport::UDP;
+            }
+            else if (uri.scheme() == Symbols::Sips)
+            {
+               assert(0);
+               transport = Transport::TLS;
+            }
+            else
+            {
+               Entry* entry = new Entry(transactionId);
+               mStack.mStateMacFifo.add(
+                  new DnsMessage(entry, 
+                                 transactionId, 
+                                 entry->tupleList.begin(), 
+                                 entry->tupleList.end(), 
+                                 true));
+               return;
+            }
+         }
+         else
+         {
+            //should be doing Naptr, Srv, a la 3263 Sec 4.1
+            transport = Transport::UDP;
+         }         
+      }
    }
+
    if (uri.port())
    {
       port = uri.port();
