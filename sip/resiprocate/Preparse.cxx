@@ -262,11 +262,11 @@ Preparse::InitStatePreparseStateTable()
     AE( EWSPostColon,X,LWS,EWSPostColon,actReset|actDiscardKnown);
     AE( EWSPostColon,X,CR,EmptyHdrCrLf,actReset|actDiscardKnown);
 
-    AE(EmptyHdrCrLf,X,XC,EndMsg,actBad|actDiscard);
-    AE(EmptyHdrCrLf,X,LF,EmptyHdrCont,actReset|actDiscardKnown);
+    AE( EmptyHdrCrLf,X,XC,EndMsg,actBad|actDiscard);
+    AE( EmptyHdrCrLf,X,LF,EmptyHdrCont,actReset|actDiscardKnown);
     
-    AE(EmptyHdrCont,X,XC,BuildHdr,actReset|actBack|actDiscard|actData);
-    AE(EmptyHdrCont,X,LWS,EWSPostColon,actReset|actDiscardKnown);
+    AE( EmptyHdrCont,X,XC,BuildHdr,actReset|actBack|actDiscard);
+    AE( EmptyHdrCont,X,LWS,EWSPostColon,actReset|actDiscardKnown);
     
     // Add edges that will ''skip'' data building and
     // go straight to quoted states
@@ -422,6 +422,7 @@ Preparse::process(SipMessage& msg,
      DebugLog(<<"mHeaderType:"<<mHeaderType);
      DebugLog(<<"mHeaderOff:"<<mHeaderOff);
      DebugLog(<<"mState:"<<stateName(mState));
+     DebugLog(<<"buffer: 0x"<<hex<<(unsigned long)buffer<<dec);
 
      if (mState == EndMsg) // restart machine if required.
      {
@@ -491,7 +492,7 @@ Preparse::process(SipMessage& msg,
 #if defined(PP_DEBUG)
              DebugLog(<<"DATA : \'"
                       << showN(&buffer[mAnchorBegOff], mAnchorEndOff - mAnchorBegOff + 1)
-                      << "\'");
+                      << "\' (offset=" << mAnchorBegOff <<")");
 #endif
          }
 
@@ -509,6 +510,7 @@ Preparse::process(SipMessage& msg,
 
          if (edge.workMask & actBack)
          {
+             DebugLog(<<"BACK");
              traversalOff--;
          }
 
