@@ -19,7 +19,7 @@ class UdpTransport : public Transport
       virtual void process() ;
 
    private:
-      static const unsigned long MaxBufferSize;
+      static const size_t MaxBufferSize;
 };
  
 }
