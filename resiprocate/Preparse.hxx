@@ -170,7 +170,7 @@ namespace PreparseConst
   const Preparse::Action actDiscardKnown = (1 << 9);
   const Preparse::Action actFlat         = (1 << 10);
 // --
-};
+}
 #if defined(PP_DO_INLINES)
 #include "sip2/sipstack/PreparseInlines.cxx"
 #endif
