@@ -4,6 +4,7 @@
 #include <sipstack/ParserCategory.hxx>
 #include <sipstack/ParserContainer.hxx>
 #include <sipstack/HeaderFieldValue.hxx>
+#include <sipstack/MethodTypes.hxx>
 
 namespace Vocal2
 {
@@ -230,7 +231,7 @@ class RequestLineComponent : public ParserCategory
       RequestLineComponent(HeaderFieldValueList& hvfs) {}
       RequestLineComponent(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
-//    CommandType getMethod() const;
+      MethodTypes getMethod() const;
 };
 
 //====================
