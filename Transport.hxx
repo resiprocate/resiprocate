@@ -50,6 +50,7 @@ class Transport : public ThreadIf
       const Data& interfaceName() const { return mInterface; } 
       int port() const { return mPort; } 
       bool isV4() const { return mV4; }
+
       const Data& tlsDomain() const { return Data::Empty; }
       const sockaddr& boundInterface() const { return mBoundInterface; }
 
@@ -73,7 +74,12 @@ class Transport : public ThreadIf
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       int mPort;
       Data mInterface;
-      sockaddr mBoundInterface;
+
+      union {
+            sockaddr mBoundInterface;
+            sockaddr_in mbiV4;
+            sockaddr_in6 mbiV6;
+      };
       
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in

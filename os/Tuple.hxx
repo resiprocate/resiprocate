@@ -68,7 +68,12 @@ class Tuple
       ConnectionId connectionId;
       
    private:
-      sockaddr mSockaddr;
+      // !ah! needs to big enough for the IPv6 address.
+      union {
+            sockaddr mSockaddr;
+            sockaddr_in m_anonv4;
+            sockaddr_in6 m_anonv6;
+      };
       TransportType mTransportType;
 
       friend std::ostream& operator<<(std::ostream& strm, const Tuple& tuple);
