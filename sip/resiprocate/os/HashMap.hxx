@@ -7,13 +7,16 @@
 #    include <ext/hash_map>
 #    define HASH_MAP_NAMESPACE __gnu_cxx
 #    define HashMap __gnu_cxx::hash_map
+#    define HashSet __gnu_cxx::hash_set
 #  elif  defined(__INTEL_COMPILER )
 #    include <hash_map>
 #    define HASH_MAP_NAMESPACE std
 #    define HashMap std::hash_map
+#    define HashSet std::hash_set
 #  else
 #    include <map>
 #    define HashMap std::map
+#    define HashSet std::set
 #  endif
 
 #endif
