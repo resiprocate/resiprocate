@@ -1,5 +1,5 @@
-#if !defined(RESIP_REPRO_HXX)
-#define RESIP_REPRO_HXX 
+#if !defined(RESIP_PROXY_HXX)
+#define RESIP_PROXY_HXX 
 
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransactionUser.hxx"
@@ -17,11 +17,11 @@ namespace repro
 
 class RequestProcessorChain;
 
-class Repro : public resip::TransactionUser, public resip::ThreadIf
+class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
-      Repro(resip::SipStack& stack);
-      virtual ~Repro();
+      Proxy(resip::SipStack& stack);
+      virtual ~Proxy();
       
       virtual void thread();
       
