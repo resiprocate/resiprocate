@@ -22,7 +22,7 @@ class Helper
                                    const NameAddr& contact);
 
       static SipMessage* makeMessage(const Data& msg);
-      // WARNING: For testing only.
+      // WARNING: For testing only. MOVEME !ah! test_support
 
       static SipMessage* makeForwardedInvite(const SipMessage& invite);
       
