@@ -18,26 +18,26 @@ class ServerInviteSession: public InviteSession
       // send a 3xx
       void redirect(const NameAddrs& contacts, int code=302);
 
-      // send a 1xx - provisional response
+      /// send a 1xx - provisional response
       void provisional(int code=180);
       
-      /// Called to set the offer that will be used in the next messages that
-      /// sends and offer. Does not send an offer
+      /** Called to set the offer that will be used in the next messages that
+          sends and offer. Does not send an offer */
       virtual void provideOffer(const SdpContents& offer);
 
-      /// Called to set the answer that will be used in the next messages that
-      /// sends an offer. Does not send an answer
+      /** Called to set the answer that will be used in the next messages that
+          sends an offer. Does not send an answer */
       virtual void provideAnswer(const SdpContents& answer);
 
       /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
       virtual void end();
 
-      /// Rejects an offer at the SIP level. So this can send a 488 to a
-      /// reINVITE or UPDATE
+      /** Rejects an offer at the SIP level. So this can send a 488 to a
+          reINVITE or UPDATE */
       virtual void reject(int statusCode, WarningCategory *warning = 0);
 
-      //accept a re-invite, etc.  Always 200?
-      //this is only applicable to the UAS
+      /** accept a re-invite, etc.  Always 200? this is only applicable to the
+          UAS */
       virtual void accept(int statusCode=200);
             
    private:

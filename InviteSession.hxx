@@ -12,57 +12,53 @@ namespace resip
 
 class SdpContents;
 
-/// Base class for class ClientInviteSession and class ServerInviteSession.
-/// Implements common attributes and behavior (i.e.t post connected) of the two classes.
+/** Base class for class ClientInviteSession and class ServerInviteSession.
+    Implements common attributes and behavior (i.e.t post connected) of the two
+    classes.
+*/
 class InviteSession : public DialogUsage
 {
    public:
-      /// Called to set the offer that will be used in the next messages that
-      /// sends and offer. Does not send an offer
-     virtual void provideOffer(const SdpContents& offer);
+      /** Called to set the offer that will be used in the next message that
+          sends an offer. If possible, this will synchronously send the
+          appropriate request or response. In some cases, the UAS might have to
+          call accept in order to cause the message to be sent. */
+      virtual void provideOffer(const SdpContents& offer);
 
-      /// Called to set the answer that will be used in the next messages that
-      /// sends an offer. Does not send an answer
+      /** Similar to provideOffer - called to set the answer to be signalled to
+          the peer. May result in message being sent synchronously depending on
+          the state. */
       virtual void provideAnswer(const SdpContents& answer);
 
       /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
       virtual void end();
 
-      /// Rejects an offer at the SIP level. So this can send a 488 to a
-      /// reINVITE or UPDATE
+      /** Rejects an offer at the SIP level. So this can send a 488 to a
+          reINVITE or UPDATE */
       virtual void reject(int statusCode, WarningCategory *warning = 0);
 
-      //accept a re-invite, etc.  Always 200?
-      //this is only applicable to the UAS
-      //virtual void accept(int statusCode=200);
-
-      // will resend the current sdp in an UPDATE or reINVITE
+      /// will resend the current sdp in an UPDATE or reINVITE
       virtual void targetRefresh(const NameAddr& localUri);
 
       // Following methods are for sending requests within a dialog
+
+      ///
       virtual void refer(const NameAddr& referTo);
+      ///
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
+      ///
       virtual void info(const Contents& contents);
 
+      // Convenience methods for accessing attributes of a dialog. 
       const NameAddr& myAddr() const;
       const NameAddr& peerAddr() const;
       const SdpContents& getLocalSdp() const;
       const SdpContents& getRemoteSdp() const;
-
       bool isConnected() const;
       bool isTerminated() const;
       bool isEarly() const;
       
       virtual std::ostream& dump(std::ostream& strm) const;
-
-      
-      typedef enum
-      {
-         None, // means no Offer or Answer (may have SDP)
-         Offer,
-         Answer
-      } OfferAnswerType;
-
       InviteSessionHandle getSessionHandle();
 
    protected:
