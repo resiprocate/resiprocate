@@ -68,9 +68,8 @@ AttributeHelper::getValues(const Data& key) const
 {
    if (!exists(key))
    {
-      assert(false);
-      static const list<Data> errorList;
-      return errorList;
+      static const list<Data> emptyList;
+      return emptyList;
    }
    return mAttributes.find(key)->second;
 }
@@ -227,8 +226,8 @@ SdpContents::Session::Origin::operator=(const Origin& rhs)
 
 
 SdpContents::Session::Origin::Origin(const Data& user,
-                                     const int& sessionId,
-                                     const int& version,
+                                     const unsigned long long& sessionId,
+                                     const unsigned long long& version,
                                      AddrType addr,
                                      const Data& address)
    : mUser(user),
@@ -271,7 +270,7 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
    mSessionId = pb.unsignedInteger();
    
    anchor = pb.skipChar(Symbols::SPACE[0]);
-   mVersion = pb.unsignedInteger();
+   mVersion = pb.unsignedLongLong();
 
    pb.skipChar(Symbols::SPACE[0]);
    pb.skipChar('I');
@@ -1285,7 +1284,7 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
    {
       addConnection(Connection());
       mConnections.back().parse(pb);
-      if (*pb.position() == Symbols::SLASH[0])
+      if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
       {
          pb.skipChar();
          int num = pb.integer();
