@@ -324,26 +324,27 @@ static int init_by_defaults(ares_channel channel)
 		size = sizeof(buf);
 		adapter = 0;
 
+		// The return values from DnsQueryConfig don't seem to be documented.
+		// For DnsConfigDnsServerList, it returns (in buf) an array of 4 byte integers
+		// The first one says how many ip addresses follow and can be ignored
+		// (Using the 'size' parameter to determine number of results seems safer.)
 		DnsQueryConfig(DnsConfigDnsServerList,FALSE,adapter,NULL,buf,&size);
 
 		// assume only IPv4 address 
 		assert( size%4 == 0 );
 		num = size/4;
-		assert( num > 0 );
+		assert( num > 1 ); // (num - 1) is how many DNS servers are configured
 
-		channel->servers = malloc( num * sizeof(struct server_state));
+		channel->servers = malloc( (num-1) * sizeof(struct server_state));
 		if (!channel->servers)
 		{
 			return ARES_ENOMEM;
 		}
 
 		channel->nservers = 0;
-		for ( i=0; i< num ; i++ )
+		for ( i=1; i< num ; i++ )
 		{
-			if ( buf[i] != 1 /* loopback */  )
-			{
-				channel->servers[ channel->nservers++ ].addr.s_addr = ( buf[i] ); 
-			}
+			channel->servers[ channel->nservers++ ].addr.s_addr = ( buf[i] ); 
 		}
 
 		// channel->servers[0].addr.s_addr =  inet_addr("10.0.1.1");
