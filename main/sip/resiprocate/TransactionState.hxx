@@ -8,13 +8,17 @@
 namespace Vocal2
 {
 
+class Message;
+class SipMessage;
+class SipStack;
+
 class TransactionState
 {
    public:
       
       TransactionState();
       
-      static void process(); 
+      static void process(SipStack& stack); 
 
       void process( Message* msg );
      
