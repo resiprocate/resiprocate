@@ -152,7 +152,7 @@ TransportSelector::dnsResolve( SipMessage* msg, const Data& tid)
          // put this into the target, in case the send later fails, so we don't
          // lose the target
          msg->setTarget(msg->header(h_Routes).front().uri());
-         msg->header(h_Routes).pop_front();
+         //msg->header(h_Routes).pop_front();
          mStack.mDnsResolver.lookup(tid, msg->getTarget());
       }
       else
