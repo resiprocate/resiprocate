@@ -354,11 +354,25 @@ class TestData
             assert(v.prefix("some"));
             assert(v.prefix("some "));
             assert(!v.prefix("ome "));
+            assert(!v.prefix("some more text"));
 
             assert(v.prefix(Data::Empty));
             assert(v.prefix("some text"));
             assert(v.prefix(v));
             assert(!v.prefix("some text "));
+         }
+
+         {
+            Data v("some text");
+            assert(v.postfix("text"));
+            assert(v.postfix(" text"));
+            assert(!v.postfix("tex"));
+            assert(!v.postfix("more some text"));
+
+            assert(v.postfix(Data::Empty));
+            assert(v.postfix("some text"));
+            assert(v.postfix(v));
+            assert(!v.postfix(" some text"));
          }
 
          {
