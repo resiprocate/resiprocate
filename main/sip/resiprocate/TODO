@@ -1,4 +1,4 @@
-$Id: TODO,v 1.15 2003/10/07 23:49:41 alan Exp $
+$Id: TODO,v 1.16 2004/04/13 05:07:27 jason Exp $
 
 Change the names of all the parser "components" to "integerparser" or
 something like that
@@ -70,3 +70,17 @@ TcpTransport has a long timeout in it if a tcp rst occurs
 
 Fix popt on os/x platforms.
 Fix (improve) default configure behaviours.
+
+
+
+REMOVE the following files from sip/resiprocate
+Dialog2.cxx/hxx
+Dialog.cxx/hxx
+DialogSet.cxx/hxx
+Registration.cxx/hxx
+SipMessageExplicit.cxx/hxx
+SipSession.cxx/hxx
+Subscription.cxx/hxx
+TuIM.cxx/hxx
+TuShim.cxx/hxx
+TuUa.hxx
