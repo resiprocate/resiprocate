@@ -34,6 +34,11 @@ class DnsResult
          Destroyed  // the associated transaction has been deleted
       } Type;
 
+      // Starts a lookup.  Has the rules for determining the transport
+      // from a uri as per rfc3263 and then does a NAPTR lookup or an A
+      // lookup depending on the uri
+      void lookup(const Uri& uri);
+
       // Check if there are tuples available now. Will load new tuples in if
       // necessary at a lower priority. 
       Type available();
@@ -85,10 +90,6 @@ class DnsResult
       };
 
    private:
-      // Called by DnsInterface. Has the rules for determining the transport
-      // from a uri as per rfc3263 and then does a NAPTR lookup or an A
-      // lookup depending on the uri
-      void lookup(const Uri& uri);
 
       // Given a transport and port from uri, return the default port to use
       int getDefaultPort(TransportType transport, int port);
@@ -111,17 +112,17 @@ class DnsResult
       void lookupSRV(const Data& target);
     
       // process a NAPTR record as per rfc3263
-      void processNAPTR(int status, unsigned char* abuf, int alen);
+      void processNAPTR(int status, const unsigned char* abuf, int alen);
 
       // process an SRV record as per rfc3263 and rfc2782. There may be more
       // than one SRV dns request outstanding at a time
-      void processSRV(int status, unsigned char* abuf, int alen);
+      void processSRV(int status, const unsigned char* abuf, int alen);
 
       // process the result of a AAAA query
-      void processAAAA(int status, unsigned char* abuf, int alen);
+      void processAAAA(int status, const unsigned char* abuf, int alen);
       //
       // process an A record as per rfc3263
-      void processHost(int status, struct hostent* result);
+      void processHost(int status, const struct hostent* result);
       
       // compute the cumulative weights for the SRV entries with the lowest
       // priority, then randomly pick according to RFC2782 from the entries with
@@ -143,11 +144,6 @@ class DnsResult
                                            const unsigned char* abuf,
                                            int alen);
 
-      // The callbacks associated with ares queries
-      static void aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen);
-      static void aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen);
-      static void aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen);
-      static void aresHostCallback(void *arg, int status, struct hostent* result);
 
       // Some utilities for parsing dns results
       static const unsigned char* skipDNSQuestion(const unsigned char *aptr,
