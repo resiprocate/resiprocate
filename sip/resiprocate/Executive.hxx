@@ -3,7 +3,7 @@
 
 #include <util/Socket.hxx>
 #include <sys/types.h>
-
+#include <sys/select.h> // posix
 
 namespace Vocal2
 {
