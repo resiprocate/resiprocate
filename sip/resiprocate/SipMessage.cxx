@@ -61,7 +61,19 @@ SipMessage::isResponse() const
 Data
 SipMessage::brief() const
 {
+   assert(0);
    return Data();
+}
+
+std::ostream& 
+SipMessage::dump(ostream& strm)
+{
+}
+
+std::ostream& 
+Vocal2::operator<<(std::ostream& strm, const Vocal2::SipMessage& msg)
+{
+   return strm;
 }
 
 

@@ -1,7 +1,7 @@
 #if !defined(TRANSACTIONSTATE_HXX)
 #define TRANSACTIONSTATE_HXX
 
-
+#include <iostream>
 
 namespace Vocal2
 {
@@ -61,10 +61,10 @@ class TransactionState
       TransactionState* cancelStateMachine;
 
       SipMessage* mMsgToRetransmit;
+
+      friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
 };
 
-ostream& 
-operator<<(ostream& strm, const TransactionState& state);
 
 }
 
