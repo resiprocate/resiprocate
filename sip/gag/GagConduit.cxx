@@ -132,6 +132,8 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
   Uri *aor = msg->getAorPtr();
   Data *userid = msg->getUseridPtr();
   Data *password = msg->getPasswordPtr();
+  bool register_with_service = msg->getRegisterWithService();
+  bool publish_to_service = msg->getPublishToService();
   TuIM *newTu;
 
 
@@ -158,11 +160,23 @@ GagConduit::gaimLogin(GagLoginMessage *msg)
     return;
   }
   newTu->setUAName(Data("gag/0.0.1 (gaim)"));
-  newTu->registerAor(*aor, *password);
 
-  /* RjS : force publish for now - this (and the register 
-           call above needs to be controlled by a gui widgit */
-  newTu->addStateAgent(*aor);
+  if (register_with_service)
+  {
+    newTu->registerAor(*aor, *password);
+  }
+  else
+  {
+    // If we're not registering, then login always
+    // trivially succeeds :)
+    Data ok("Okay");
+    GagLoginStatusMessage (true, 200, ok).serialize(cout);
+  }
+
+  if (publish_to_service)
+  {
+    newTu->addStateAgent(*aor);
+  }
 
   /* adam: This is a temporary hack until we get the
      configuration plumbing working */

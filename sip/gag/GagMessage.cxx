@@ -308,9 +308,14 @@ GagLoginMessage::parse(int in_fd)
   if (!GagMessage::parse(in_fd, aor)) return;
   if (!GagMessage::parse(in_fd, userid)) return;
   if (!GagMessage::parse(in_fd, password)) return;
+  if (!GagMessage::parse(in_fd, register_with_service)) return;
+  if (!GagMessage::parse(in_fd, publish_to_service)) return;
   DebugLog ( << "Got login from Gaim [aor = '" << aor 
              << "' userid = '" << userid 
-             << "' password = '" << password << "']");
+             << "' password = '" << password
+             << "' register_with_service = '" << register_with_service
+             << "' publish_to_service = '" << publish_to_service
+             << "']");
   valid = true;
 }
 
