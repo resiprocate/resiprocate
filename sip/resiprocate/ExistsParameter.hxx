@@ -15,7 +15,7 @@ class ExistsParameter : public Parameter
       typedef bool Type;
       
       ExistsParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
-      ExistsParameter(ParameterTypes::Type type);
+      explicit ExistsParameter(ParameterTypes::Type type);
 
       bool& value();
 
