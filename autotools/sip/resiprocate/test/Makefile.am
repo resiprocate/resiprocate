@@ -50,7 +50,6 @@ check_PROGRAMS = \
 	testParserCategories \
 	testParseNameAddr \
 	testPlainContents \
-	testPreparse \
 	testRandomHex \
 	testResponses \
 	testSdp \
