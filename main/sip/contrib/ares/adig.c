@@ -13,8 +13,6 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: adig.c,v 1.6 2003/09/16 03:05:07 fluffy Exp $";
-
 #include <sys/types.h>
 
 #ifdef WIN32
