@@ -1,8 +1,8 @@
 #include <iostream>
 
+#include <sip2/sipstack/UnknownSubComponent.hxx>
 #include <sip2/sipstack/HeaderFieldValue.hxx>
 #include <sip2/sipstack/ParserCategory.hxx>
-#include <sip2/sipstack/UnknownSubComponent.hxx>
 
 using namespace std;
 using namespace Vocal2;
@@ -99,16 +99,17 @@ HeaderFieldValue::get(const std::string& type) const
    return dynamic_cast<UnknownSubComponent*>(mUnknownSubComponentList.get(type));
 }
 
-ostream& operator<<(ostream& stream, HeaderFieldValue& hfv)
+ostream& Vocal2::operator<<(ostream& stream, HeaderFieldValue& hfv)
 {
   if (!hfv.isParsed())
   {
-     stream << mSubComponentList() << " : " << mUnknownSubComponentList;
+     stream << hfv.mSubComponentList << " : " << hfv.mUnknownSubComponentList;
   }
   else
   {
-     stream << string(mField, mFieldLength);
+     stream << string(hfv.mField, hfv.mFieldLength);
   }
+  return stream;
 }
 
 
