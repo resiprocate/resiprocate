@@ -229,17 +229,14 @@ TuIM::sendPage(const Data& text, const Uri& dest,
       strm << *body;
       strm.flush();
       
-      CerrLog( << "token is " << token );
+      // CerrLog( << "token is " << token );
       
       Security* sec = mStack->getSecurity();
       assert(sec);
       
-      Data res = sec->computeIdentityHash( token );
+      Data res = sec->computeIdentity( token );
 
-      //Data enc = res.charEncoded();
-      Data enc = res.hex();
-      
-      msg->header(UnknownHeaderType("Identity")).push_front( StringCategory( enc ) );
+      msg->header(UnknownHeaderType("Identity")).push_front( StringCategory( res ) );
    }
 #endif
    
