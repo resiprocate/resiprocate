@@ -2,7 +2,7 @@
 #define RESIP_DATA_HXX 
 
 static const char* const resipDataHeaderVersion =
-   "$Id: Data.hxx,v 1.77 2004/05/18 23:51:51 davidb Exp $";
+   "$Id: Data.hxx,v 1.78 2004/05/19 02:11:36 davidb Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -116,7 +116,9 @@ class Data
       // return a representation with any non printable characters escaped - very
       // slow only use for debug stuff 
       Data escaped() const;
-      Data unescaped() const;
+
+      Data charEncoded() const;
+      Data charUnencoded() const;
 	
       // resize to zero without changing capacity
       void clear();
