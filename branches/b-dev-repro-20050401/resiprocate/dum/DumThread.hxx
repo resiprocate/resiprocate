@@ -1,39 +1,27 @@
-#if !defined(RESIP_REGISTRAR_HXX)
-#define RESIP_REGISTRAR_HXX 
+#ifndef RESIP_DumThread__hxx
+#define RESIP_DumThread__hxx
 
-#include "resiprocate/dum/RegistrationHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
 
-namespace repro
+namespace resip
 {
 
-class Registrar: public resip::ServerRegistrationHandler
+class DialogUsageManager;
+
+class DumThread : public ThreadIf
 {
    public:
-      Registrar();
-      virtual ~Registrar();
+      DumThread(DialogUsageManager& dum);
+      virtual void thread();
       
-      virtual void onRefresh(resip::ServerRegistrationHandle,
-                             const resip::SipMessage& reg);
-
-      virtual void onRemove(resip::ServerRegistrationHandle,
-                            const resip::SipMessage& reg);
-      
-      virtual void onRemoveAll(resip::ServerRegistrationHandle,
-                               const resip::SipMessage& reg);
-      
-      virtual void onAdd(resip::ServerRegistrationHandle,
-                         const resip::SipMessage& reg);
-      
-      virtual void onQuery(resip::ServerRegistrationHandle,
-                           const resip::SipMessage& reg);
-
    private:
+      DialogUsageManager& mDum;
 };
+
 }
+
 #endif
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
