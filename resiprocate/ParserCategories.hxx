@@ -258,6 +258,7 @@ class RequestLineComponent : public ParserCategory
    public:
       RequestLineComponent(HeaderFieldValueList& hfvs) {}
       RequestLineComponent(HeaderFieldValue& hfv) {}
+  virtual ~RequestLineComponent();
       ParserCategory* clone(HeaderFieldValue*) const;
       MethodTypes getMethod() const;
   // MOVE TO .CXX WHEN IMPLEMENTING
@@ -272,6 +273,7 @@ class StatusLineComponent : public ParserCategory
    public:
       StatusLineComponent(HeaderFieldValueList& hfvs) {}
       StatusLineComponent(HeaderFieldValue& hfv) {}
+  virtual ~StatusLineComponent();
       ParserCategory* clone(HeaderFieldValue*) const;
       int getResponseCode() const;
   // MOVE TO .CXX WHEN IMPLEMENTING
