@@ -10,6 +10,49 @@ main(int arc, char** argv)
    {
       char *buf = "Here is a \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
+      pb.skipToChars("some");
+      std::cerr << pb.position() << std::endl;
+      pb.skipChars("some stu");
+   }
+
+   {
+      char *buf = "Here is asom \t buffer with some stuff.";
+      ParseBuffer pb(buf, strlen(buf));
+      pb.skipToChars("some");
+      pb.skipChars("some stuf");
+   }
+
+   {
+      char *buf = "Here is asom \t buffer with som stuff.";
+      ParseBuffer pb(buf, strlen(buf));
+      pb.skipToChars("some");
+      pb.assertEof();
+   }
+
+   {
+      char *buf = "Here is a \t buffer with some stuff.";
+      ParseBuffer pb(buf, strlen(buf));
+      pb.skipToChars(Data("some"));
+      pb.skipChars("some stuf");
+   }
+
+   {
+      char *buf = "Here is asom \t buffer with some stuff.";
+      ParseBuffer pb(buf, strlen(buf));
+      pb.skipToChars(Data("some"));
+      pb.skipChars("some stuf");
+   }
+
+   {
+      char *buf = "Here is asom \t buffer with som stuff.";
+      ParseBuffer pb(buf, strlen(buf));
+      pb.skipToChars(Data("some"));
+      pb.assertEof();
+   }
+
+   {
+      char *buf = "Here is a \t buffer with some stuff.";
+      ParseBuffer pb(buf, strlen(buf));
 
       pb.skipChars("Here is a");
    }
