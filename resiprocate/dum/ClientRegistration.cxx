@@ -43,9 +43,15 @@ ClientRegistration::~ClientRegistration()
 void 
 ClientRegistration::addBinding(const NameAddr& contact)
 {
+   addBinding(contact, mDum.getProfile()->getDefaultRegistrationTime());
+}
+
+void 
+ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
+{
    mMyContacts.push_back(contact);
    mLastRequest.header(h_Contacts) = mMyContacts;
-   mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
+   mLastRequest.header(h_Expires).value() = registrationTime;
    mLastRequest.header(h_CSeq).sequence()++;
    // caller prefs
 
