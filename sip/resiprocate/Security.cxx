@@ -319,7 +319,9 @@ Security::getPath( const Data& dirPath, const Data& file )
    if ( path.empty() )
    {
 #ifdef WIN32
-      assert(0);
+  //      assert(0); 
+	   // !cj! TODO need to fix
+	   path = "C:\\.";
 #else
       char* v = getenv("SIP");
       if (v)
