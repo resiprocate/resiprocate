@@ -207,9 +207,14 @@ Dialog::makeAck(const SipMessage& original)
    // !jf! will this do the right thing if these headers weren't in original 
    // we should be able to store this stuff in the Dialog and not need to pass
    // in the original
-//   request->header(h_ProxyAuthorization) = original.header(h_ProxyAuthorization); !dcm auth not implemented yet
-//   request->header(h_Authorization) = original.header(h_Authorization);
-
+   if (original.exists(h_ProxyAuthorization))
+   {
+      request->header(h_ProxyAuthorization) = original.header(h_ProxyAuthorization);
+   }
+   if (original.exists(h_Authorization))
+   {    
+      request->header(h_Authorization) = original.header(h_Authorization);
+   }
    return request;
 }
 
