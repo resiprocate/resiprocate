@@ -15,14 +15,14 @@ class FloatParameter : public Parameter
    public:
       typedef float Type;
       
-      FloatParameter(ParameterTypes::Type, ParseBuffer& pb);
+      FloatParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
       FloatParameter(ParameterTypes::Type type);
 
       float& value();
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb)
+      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
-         return new FloatParameter(type, pb);
+         return new FloatParameter(type, pb, terminators);
       }
 
       virtual Parameter* clone() const;

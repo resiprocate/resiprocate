@@ -13,7 +13,7 @@ class ParseBuffer;
 class QopParameter : public Parameter
 {
    public:
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb);
+      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
    private:
       QopParameter();
 };
