@@ -226,7 +226,6 @@ resiprocate_include_HEADERS = \
 	UnknownParameter.hxx \
 	UnknownParameterType.hxx \
 	Uri.hxx \
-	WinCompat.hxx \
 	XMLCursor.hxx \
 	X_msMsgsInvite.hxx \
 	config.hxx
@@ -264,7 +263,9 @@ resiprocate_os_include_HEADERS = \
 	os/Tuple.hxx \
 	os/compat.hxx \
 	os/vmd5.hxx \
-	os/vthread.hxx
+	os/vthread.hxx \
+	os/WinCompat.hxx 
+
 
 
 #SUFFIXES = .gperf .cxx
