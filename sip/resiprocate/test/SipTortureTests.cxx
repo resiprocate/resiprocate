@@ -1,8 +1,8 @@
-#include "sipstack/SipMessage.hxx"
-#include "sipstack/Helper.hxx"
-#include "sipstack/Uri.hxx"
-#include "sipstack/Helper.hxx"
-#include "util/Logger.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/Helper.hxx"
+#include "sip2/sipstack/Uri.hxx"
+#include "sip2/sipstack/Helper.hxx"
+#include "sip2/util/Logger.hxx"
 #include "tassert.h"
 
 #include <iostream>
@@ -13,30 +13,10 @@ using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::APP
 
-int
-main(int argc, char*argv[])
-{
-    Log::Level l = Log::DEBUG;
-    
-    if (argc > 1)
-    {
-        switch(*argv[1])
-        {
-            case 'd': l = Log::DEBUG;
-                break;
-            case 'i': l = Log::INFO;
-                break;
-            case 's': l = Log::DEBUG_STACK;
-                break;
-            case 'c': l = Log::CRIT;
-                break;
-        }
-    }
-    
-    Log::initialize(Log::COUT, l, argv[0]);
-    CritLog(<<"Test Driver Starting");
 
-   {
+void 
+test1()
+{
       cerr << "2.1 INVITE Parser Torture Test Message" << endl;
       
       char *txt = ("INVITE sip:called@called-company.com SIP/2.0\r\n"
@@ -137,6 +117,8 @@ main(int argc, char*argv[])
       tassert_verify();
    }
 
+   void 
+	   test2()
    {
        InfoLog( << "2.2 INVITE with Proxy-Require and Require");
        
@@ -206,7 +188,9 @@ main(int argc, char*argv[])
 
    }
 
-   {
+void 
+test3()
+{
        InfoLog( << "2.3 INVITE with Unknown Schemes in URIs");
        
       
@@ -288,7 +272,9 @@ main(int argc, char*argv[])
       
    }
 
-   {
+void 
+test4()
+{
       InfoLog( << "2.4 REGISTER with Y2038 Test (This tests for Absolute Time in Expires)");
        
       char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
@@ -374,6 +360,8 @@ main(int argc, char*argv[])
       tassert_verify();
    }
 
+void 
+test5()
    {
       InfoLog( << "2.5    INVITE with inconsistent Accept and message body");
       
@@ -451,6 +439,36 @@ main(int argc, char*argv[])
       // .dlb. someday the body will gack on parse
    }
 
+
+   
+int
+main(int argc, char*argv[])
+{
+    Log::Level l = Log::DEBUG;
+    
+    if (argc > 1)
+    {
+        switch(*argv[1])
+        {
+            case 'd': l = Log::DEBUG;
+                break;
+            case 'i': l = Log::INFO;
+                break;
+            case 's': l = Log::DEBUG_STACK;
+                break;
+            case 'c': l = Log::CRIT;
+                break;
+        }
+    }
+    
+    Log::initialize(Log::COUT, l, argv[0]);
+    CritLog(<<"Test Driver Starting");
+
+		test1();
+		test2();
+		test3();
+		test4();
+		test5();
 }
 
 /* ====================================================================

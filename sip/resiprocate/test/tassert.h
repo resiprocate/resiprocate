@@ -1,6 +1,9 @@
 #if !defined (TASSERT_HXX)
 #define TASSERT_HXX
 
+#if 0 // If you are having bib memory problems with your compiler - try putting this to 1
+#define tassert assert
+#else
 #define tassert(expr)                           \
 if ( tassert_enabled )                          \
 {                                               \
@@ -15,6 +18,7 @@ else                                            \
 {                                               \
     CritLog(<<"SUPRESSED: "#expr);              \
 }
+#endif
 
 #define tassert_reset() (tassert_enabled = 1, tassert_failure = 0)
 #define tassert_verify() { CritLog(<<"TASSERT: Section " << (tassert_failure ? "FAILED":"PASSED")); }

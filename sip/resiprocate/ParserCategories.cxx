@@ -859,7 +859,7 @@ ExpiresCategory::parse(ParseBuffer& pb)
    {
       mValue = pb.integer();
    }
-   catch (ParseBuffer::Exception& e)
+   catch (ParseBuffer::Exception&)
    {
       mValue = 3600;
       pb.skipToChar(Symbols::SEMI_COLON[0]);

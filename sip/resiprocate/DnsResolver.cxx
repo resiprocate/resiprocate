@@ -171,19 +171,21 @@ DnsResolver::Id
 DnsResolver::lookupARecords(const Data& transactionId, 
                             const Data& host, int port, Transport::Type transport, bool complete, Id id)
 {
-   struct hostent hostbuf; 
    struct hostent* result=0;
    int ret=0;
    int herrno=0;
-   char buffer[8192];
 
 #if defined(__linux__)
-   ret = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
+   struct hostent hostbuf; 
+    char buffer[8192];
+  ret = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
    assert (ret != ERANGE);
 #elif defined(WIN32)
    result = gethostbyname( host.c_str() );
    herrno = WSAGetLastError();
 #elif defined(__QNX__) || defined(__SUNPRO_CC)
+   struct hostent hostbuf; 
+   char buffer[8192];
    result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
 #else
 #error "need to define some version of gethostbyname for your arch"
