@@ -1,4 +1,7 @@
+
 #include <cassert>
+
+#include "util/Socket.hxx"
 #include "util/Logger.hxx"
 #include "util/ParseBuffer.hxx"
 
@@ -160,7 +163,10 @@ const char*
 ParseBuffer::skipN(int count)
 {
    mTraversalPtr += count;
-   mTraversalPtr = std::min(mEnd, mTraversalPtr);
+   if (mTraversalPtr > mEnd)
+   {
+	   mTraversalPtr = mEnd;
+   }
    return mTraversalPtr;
 }
 
