@@ -1,0 +1,83 @@
+//  names start with cap are states
+//  names start with app:: are appliction handlers
+//  names start with dum:: are dum interface to application
+//  names start with lower case are actions
+//  names start with on are events
+
+digraph UAC {
+        rankdir=LR;
+        node [shape = box];
+
+        Start -> Early [ label = "on1xx/app::onNewSession,app::onProvisional" ];
+        Start -> EarlyWithOffer [ label = "on1xx-offer/app::onOffer" ];
+        Start -> EarlyWithAnswer [ label = "on1xx-answer/app::onNewSession,app::onAnswer,PRACK" ];
+        Start -> WaitingForAnswerFromApp [ label = "on2xx-offer/app::onOffer" ];
+        Start -> Connected [ label = "on2xx-answer/send::ACK" ];
+        //Start -> Terminated [ label = "on2xx/send::ACK,send::BYE,app::onFailure" ];
+        // Done
+
+        Early -> Early [ label = "on1xx/app::onProvisional" ];
+        Early -> EarlyWithAnswer [ label = "on1xx-answer/app::onAnswer" ];
+        Early -> EarlyWithOffer [ label = "on1xx-offer/app::onOffer" ];
+        Early -> WaitingForAnswerFromApp [ label = "on2xx-offer/app::onOffer" ];
+        Early -> Connected [ label = "on2xx-answer/send::ACK" ];
+        //Early -> Finish [ label = "onGeneralFailure" ];
+        //Early -> Canceled  [ label = "dum::cancel/timer" ];
+        //Early -> Terminated [ label = "on2xx/send::ACK,send::BYE" ];
+        // Done
+
+        EarlyWithOffer -> Connected [ label = "on2xx-answer/send::ACK" ];
+        EarlyWithOffer -> PrackAnswerWait [ label = "dum::provideAnswer/send::PRACK" ];
+        // Done
+
+        EarlyWithAnswer -> Connected [ label = "on2xx/send::ACK" ];
+        EarlyWithAnswer -> EarlyWithAnswer [ label = "on1xx/send::PRACK" ];
+        EarlyWithAnswer -> EarlyWithAnswer [ label = "on1xx-answer-retran/ignore" ];
+        // Can I send the UPDATE before I get 200/PRACK
+        EarlyWithAnswer -> SentUpdateEarly [ label = "dum::povideOffer/send::UPDATE" ];
+        EarlyWithAnswer -> RecvUpdateEarly [ label = "onUPDATE/app::onOffer" ];
+        //EarlyWithAnswer -> Terminated [ label = "on2XX-answer/send::ACK,send::BYE" ];
+        //EarlyWithAnswer -> Finished [ label = "onGeneralFailure" ];
+        //EarlyWithAnswer -> Canceled  [ label = "dum::cancel/timer" ];
+        // Done
+
+        SentUpdateEarly -> EarlyWithAnswer [ label = "on200U/app::onAnswer" ];
+        SentUpdateEarly -> EarlyWithAnswer [ label = "onUPDATE/489glare" ];
+        SentUpdateEarly -> EarlyWithAnswer [ label = "on489/glare" ];
+        SentUpdateEarly -> SentUpdateConnected [ label = "on2xxI/send::ACK" ];
+        //SentUpdateEarly -> Finish [ label = "onGeneralFailure" ];
+        //SentUpdateEarly -> Canceled  [ label = "dum::cancel/timer" ];
+        // Done
+
+        SentUpdateConnected -> Connected [ label = "on2xxU/app::onAnswer" ];
+        SentUpdateConnected -> Connected [ label = "on488U/app::onRejected" ];
+        SentUpdateConnected -> Connected [ label = "on489U/glare" ];
+        // Done
+
+        RecvUpdateEarly -> EarlyWithAnswer [ label = "dum::provideAnswer/send::200U-answer" ];
+        RecvUpdateEarly -> EarlyWithAnswer [ label = "dum::reject/send::488U" ];
+        //RecvUpdateEarly -> Canceled  [ label = "dum::cancel/timer" ];// Only UAC can CANCEL
+        // Done
+
+        WaitingForAnswerFromApp -> Connected [ label = "dum::provideAnswer/send::ACK-answer" ];
+        // Done
+
+        PrackAnswerWait -> EarlyWithAnswer [ label = "dum::provideOffer/queueOffer" ];
+        PrackAnswerWait -> SentUpdateEarly [ label = "on200P-queued/UPDATE-queued" ];
+        PrackAnswerWait -> EarlyWithAnswer [ label = "on200P-notQueued" ];
+        PrackAnswerWait -> Connected [ label = "on2xxI/send::ACK" ];
+        // Done
+
+        Canceled -> Finished [ label = "onTimer" ];
+        Canceled -> Finished [ label = "onGeneralFailure" ];
+        Canceled -> Finished [ label = "on4xxC" ];
+        Canceled -> Terminated [ label = "on200I/send::BYE" ];
+        // Done
+
+        Connected -> Terminated [ label = "dum::end/send::BYE" ];
+        Connected -> Finish [ label = "on2xxB" ];
+        // Done
+
+        Terminated -> Finish [ label = "2XX BYE" ];
+        // Done
+}
