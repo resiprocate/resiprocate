@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/dum/SubscriptionState.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
@@ -50,12 +51,12 @@ class ServerSubscription : public BaseUsage
    protected:
       virtual ~ServerSubscription();
    private:
-      friend class DialogUsageManager;
-      ServerSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& req);
+      friend class Dialog;
+      ServerSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& req);
 
 
       ServerSubscription::Handle mHandle;
-      SipMessage& mLastRequest;
+      SipMessage mLastRequest;
 
       // disabled
       ServerSubscription(const ServerSubscription&);
