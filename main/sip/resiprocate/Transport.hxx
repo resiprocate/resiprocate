@@ -29,7 +29,7 @@ class Transport
       
       // sendHost what to put in the Via:sent-by
       // portNum is the port to receive and/or send on
-      Transport(Fifo<Message>& rxFifo, int portNum, const Data& interface, bool ipv4);
+      Transport(Fifo<Message>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
       
       virtual ~Transport();
       

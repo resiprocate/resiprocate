@@ -17,7 +17,7 @@ class TlsTransport : public Transport
    public:
       TlsTransport(Fifo<Message>& fifo, 
                    const Data& sipDomain, 
-                   const Data& interface, 
+                   const Data& interfaceObj, 
                    int portNum, 
                    const Data& keyDir, 
                    const Data& privateKeyPassPhrase, 
