@@ -3,10 +3,12 @@
 
 namespace repro
 {
+  class RequestProcessorChain;
+
   class RequestContext
   {
     private:
-      
+      RequestProcessorChain &mRequestProcessorChain;
   };
 }
 #endif
