@@ -16,6 +16,7 @@ namespace resip
         TransactionState* find( const Data& transactionId ) const;
         void add( const Data& transactionId, TransactionState* state  );
         void erase( const Data& transactionId );
+        int size() const;
         
      private:
         typedef HashMap<Data, TransactionState*> Map;
