@@ -46,8 +46,9 @@ class Pidf : public Contents
             Data note;
             Data timeStamp;
       };
-      
+
    private:
+      void clear();
       static ContentsFactory<Pidf> Factory;
 
       Data mEntity;
