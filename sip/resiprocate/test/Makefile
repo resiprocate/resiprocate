@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2002/11/08 17:43:26 jason Exp $
+# $Id: Makefile,v 1.5 2002/11/08 18:33:10 ryker Exp $
 
 BUILD = ../../../build
 
@@ -27,6 +27,8 @@ TESTPROGRAMS =	SipTortureTests.cxx \
 ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
 endif
+
+CXXFLAGS += -DUSETESTTRANSPORT
 
 
 SRC = \
