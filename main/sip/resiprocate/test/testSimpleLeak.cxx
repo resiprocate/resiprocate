@@ -1,11 +1,11 @@
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/Preparse.hxx"
-#include "sip2/sipstack/Uri.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/Preparse.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
 
 #include <iostream>
 #include <sstream>
 
-#include "sip2/util/Logger.hxx"
+#include "resiprocate/util/Logger.hxx"
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 using namespace Vocal2;

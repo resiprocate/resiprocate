@@ -1,9 +1,9 @@
 
 #include <cassert>
 
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Data.hxx"
 
-#include "sip2/sipstack/Registration.hxx"
+#include "resiprocate/sipstack/Registration.hxx"
 
 
 

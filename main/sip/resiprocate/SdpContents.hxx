@@ -5,9 +5,9 @@
 #include <map>
 #include <iostream>
 
-#include "sip2/sipstack/Contents.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/util/Data.hxx"
+#include "resiprocate/sipstack/Contents.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
+#include "resiprocate/util/Data.hxx"
 
 namespace Vocal2
 {

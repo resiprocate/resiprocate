@@ -1,5 +1,5 @@
-#include "sip2/sipstack/Message.hxx"
-#include "sip2/util/DataStream.hxx"
+#include "resiprocate/sipstack/Message.hxx"
+#include "resiprocate/util/DataStream.hxx"
 
 std::ostream& 
 Vocal2::operator<<(std::ostream& strm, const Vocal2::Message& msg)

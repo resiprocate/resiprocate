@@ -3,8 +3,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "sip2/util/Logger.hxx"
-#include "sip2/sipstack/DnsResolver.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/sipstack/DnsResolver.hxx"
 
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::TEST
 
@@ -19,7 +19,7 @@ public:
  
 }
 
-#include "sipstack/SipStack.hxx"
+#include "resiprocate/sipstack/SipStack.hxx"
 
 using namespace Vocal2;
 

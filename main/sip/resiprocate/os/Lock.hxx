@@ -2,10 +2,10 @@
 #define Vocal2_Lock_hxx
 
 static const char* const Vocal2Lock_hxx_Version =
-"$Id: Lock.hxx,v 1.7 2002/11/12 05:15:37 jason Exp $";
+"$Id: Lock.hxx,v 1.8 2003/03/24 22:42:27 jason Exp $";
 
 
-#include "sip2/util/Lockable.hxx"
+#include "resiprocate/util/Lockable.hxx"
 
 namespace Vocal2
 {

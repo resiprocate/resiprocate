@@ -1,10 +1,10 @@
 #ifndef Vocal2_Logger_hxx
 #define Vocal2_Logger_hxx
 
-#include "sip2/util/Socket.hxx"
-#include "sip2/util/Log.hxx"
-#include "sip2/util/SysLogStream.hxx"
-#include "sip2/util/Lock.hxx"
+#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/util/Log.hxx"
+#include "resiprocate/util/SysLogStream.hxx"
+#include "resiprocate/util/Lock.hxx"
 
 /**
    Defines a set of logging macros, one for each level of logging.

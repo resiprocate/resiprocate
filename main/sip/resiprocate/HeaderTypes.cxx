@@ -1,8 +1,8 @@
-#include "sip2/util/compat.hxx"
-#include "sip2/util/Data.hxx"
-#include "sip2/sipstack/HeaderTypes.hxx"
-#include "sip2/sipstack/Headers.hxx"
-#include "sip2/sipstack/Symbols.hxx"
+#include "resiprocate/util/compat.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/sipstack/HeaderTypes.hxx"
+#include "resiprocate/sipstack/Headers.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
 
 using namespace Vocal2;
 

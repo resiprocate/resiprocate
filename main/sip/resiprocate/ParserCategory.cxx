@@ -1,17 +1,17 @@
-#include "sip2/sipstack/HeaderFieldValue.hxx"
-#include "sip2/sipstack/ParserCategory.hxx"
+#include "resiprocate/sipstack/HeaderFieldValue.hxx"
+#include "resiprocate/sipstack/ParserCategory.hxx"
 
-#include "sip2/util/DataStream.hxx"
-#include "sip2/util/ParseBuffer.hxx"
-#include "sip2/util/compat.hxx"
+#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/util/compat.hxx"
 
-#include "sip2/sipstack/UnknownParameter.hxx"
-#include "sip2/sipstack/UnknownParameterType.hxx"
+#include "resiprocate/sipstack/UnknownParameter.hxx"
+#include "resiprocate/sipstack/UnknownParameterType.hxx"
 
 #include <iostream>
 #include <cassert>
 
-#include "sip2/util/Logger.hxx"
+#include "resiprocate/util/Logger.hxx"
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 using namespace Vocal2;

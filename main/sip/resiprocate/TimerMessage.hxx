@@ -2,9 +2,9 @@
 #define TimerMessage_hxx
 
 #include <iostream>
-#include "sip2/sipstack/Message.hxx"
-#include "sip2/util/Timer.hxx"
-#include "sip2/util/Data.hxx"
+#include "resiprocate/sipstack/Message.hxx"
+#include "resiprocate/util/Timer.hxx"
+#include "resiprocate/util/Data.hxx"
 
 namespace Vocal2
 {

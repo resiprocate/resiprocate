@@ -1,7 +1,7 @@
-#include "sip2/sipstack/RportParameter.hxx"
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/util/ParseBuffer.hxx"
-#include "sip2/util/Logger.hxx"
+#include "resiprocate/sipstack/RportParameter.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/util/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;

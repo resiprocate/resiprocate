@@ -51,18 +51,18 @@
 #include <fstream>
 #include <string>
 
-#include "sip2/util/Data.hxx"
-#include "sip2/util/DataStream.hxx"
-#include "sip2/util/Logger.hxx"
-#include "sip2/util/Socket.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/util/Socket.hxx"
 
-#include "sip2/sipstack/test/TestSupport.hxx"
-#include "sip2/sipstack/MethodTypes.hxx"
-#include "sip2/sipstack/Preparse.hxx"
-#include "sip2/sipstack/SipStack.hxx"
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/sipstack/Transport.hxx"
+#include "resiprocate/sipstack/test/TestSupport.hxx"
+#include "resiprocate/sipstack/MethodTypes.hxx"
+#include "resiprocate/sipstack/Preparse.hxx"
+#include "resiprocate/sipstack/SipStack.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/sipstack/Transport.hxx"
 
 using namespace Vocal2;
 using namespace std;
