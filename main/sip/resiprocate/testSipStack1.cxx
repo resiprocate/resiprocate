@@ -18,7 +18,7 @@ main()
     msg = sipStack.receive();
     if ( msg )
     {
-      cout << msg << endl;
+       cout << msg << endl;
     }
 
     usleep( 50*1000); // sleep for 20 ms
