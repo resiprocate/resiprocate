@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: use-autotools.sh,v 1.5 2004/02/24 01:24:54 alan Exp $
+# $Id: use-autotools.sh,v 1.6 2004/02/24 01:35:35 alan Exp $
 
 AUTOTOOLS_BRANCH=b-autotools
 # We 'remove' these files in CVS.
@@ -43,6 +43,7 @@ AUTOTOOLS_REAL="Makefile.am
             resiprocate/test/Makefile.am 
             configure.ac 
             acinclude.m4
+         autogen.sh
             "
 
 
