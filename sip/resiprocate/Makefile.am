@@ -54,6 +54,7 @@ libresiprocate_la_SOURCES = \
 	MessageWaitingContents.cxx \
 	MethodHash.cxx \
 	MethodTypes.cxx \
+	MsgHeaderScanner.cxx \
 	MultipartMixedContents.cxx \
 	MultipartSignedContents.cxx \
 	OctetContents.cxx \
@@ -124,6 +125,7 @@ resiprocate_include_HEADERS = \
 	MessageWaitingContents.hxx \
 	MethodHash.hxx \
 	MethodTypes.hxx \
+	MsgHeaderScanner.hxx \
 	MultipartMixedContents.hxx \
 	MultipartSignedContents.hxx \
 	OctetContents.hxx \
