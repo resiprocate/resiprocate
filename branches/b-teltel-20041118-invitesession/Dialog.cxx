@@ -760,8 +760,6 @@ Dialog::redirected(const SipMessage& msg)
       {
          cInv->handleRedirect(msg);         
       }
-      // !slg! temp hack to get being redirected to work
-      delete this;
    }
 }
 
