@@ -1,10 +1,9 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.51 2003/01/24 02:48:28 jason Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.52 2003/01/25 03:35:25 jason Exp $";
 
 #include <iostream>
-#include <string>
 #include "sip2/util/compat.hxx"
 #include "sip2/util/DataStream.hxx"
 
@@ -16,7 +15,7 @@ class Data
 {
       
    public:
-	  typedef size_t size_type;
+      typedef size_t size_type;
 
       Data();
       Data(int capacity, bool);
@@ -24,7 +23,6 @@ class Data
       Data(const char* buffer, int length);
       Data(const unsigned char* buffer, int length);
       Data(const Data& data);
-      explicit Data(const std::string& str);
       explicit Data(int value);
       explicit Data(unsigned long value);
       explicit Data(unsigned int value);
@@ -114,7 +112,7 @@ class Data
       static const int npos;
 
    private:
-      friend class TestData;
+      friend class ::TestData;
       friend class MD5Buffer;
       friend class Contents;
       Data(const char* buffer, int length, bool);

@@ -1,13 +1,7 @@
 #if !defined(Vocal2_Mutex_hxx)
 #define Vocal2_Mutex_hxx
 
-#ifdef WIN32
-#include <windows.h>
-#include <winbase.h>
-#else
-#include <pthread.h>
-#endif
-
+#include "sip2/util/compat.hxx"
 #include "sip2/util/Lockable.hxx"
 
 

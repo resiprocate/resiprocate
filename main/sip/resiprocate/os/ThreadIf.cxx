@@ -15,6 +15,8 @@
 
 using namespace Vocal2;
 
+extern "C"
+{
 static void*
 threadWrapper( void* threadParm )
 {
@@ -24,6 +26,7 @@ threadWrapper( void* threadParm )
    assert( t );
    t->thread();
    return 0;
+}
 }
 
 ThreadIf::ThreadIf() : mId(0), mShutdown(false), mShutdownMutex()

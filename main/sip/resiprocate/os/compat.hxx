@@ -1,6 +1,23 @@
 #if !defined(compat_hxx)
 #define compat_hxx
 
+#if defined(__sparc)
+#include <inttypes.h>
+/* typedef unsigned char u_int8_t; */
+typedef uint8_t u_int8_t;
+typedef uint16_t u_int16_t;
+typedef uint32_t u_int32_t;
+#endif
+
+#if defined(__SUNPRO_CC)
+#if defined(_TIME_T)
+ using std::time_t;
+#endif
+#include <time.h>
+#include <memory.h>
+#include <string.h>
+#endif
+
 #include <cstring>
 
 #if defined(WIN32) || defined(__QNX__)
@@ -10,10 +27,19 @@
 
 // perhaps not the best thing to do here
 #ifdef WIN32
+# include <windows.h>
+# include <winbase.h>
+# include <errno.h>
+# include <winsock2.h>
+# include <io.h>
 typedef unsigned int u_int32_t;
 #else
-#include <sys/types.h>
-#include <sys/socket.h> // for u_int32_t
+# include <sys/types.h>
+# include <sys/socket.h> // for u_int32_t
+# include <sys/select.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+# include <pthread.h>
 #endif
 
 #if defined (__QNX__)
@@ -23,13 +49,6 @@ typedef unsigned int u_int32_t;
 
 #endif
 
-#if defined(__sparc)
-#include <inttypes.h>
-/* typedef unsigned char u_int8_t; */
-typedef uint8_t u_int8_t;
-typedef uint16_t u_int16_t;
-typedef uint32_t u_int32_t;
-#endif
 
 namespace Vocal2
 {
