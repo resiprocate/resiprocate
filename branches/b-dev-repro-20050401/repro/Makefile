@@ -3,20 +3,14 @@
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD
+PACKAGES += DUM RESIPROCATE OPENSSL ARES DB42 PTHREAD
 
 CODE_SUBDIRS = monkeys
 TARGET_LIBRARY = librepro
 
-
 TESTPROGRAMS = \
 	repro.cxx \
 #	userAdmin.cxx 
-
-CXXFLAGS += -I/sw/include
-LDFLAGS  += -L/sw/lib 
-LDLIBS   += -ldb-4.2 -lpopt
-
 
 SRC =   \
 	WebAdmin.cxx \
