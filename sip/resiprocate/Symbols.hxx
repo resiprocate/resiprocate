@@ -49,6 +49,16 @@ class Symbols
       static const char * const Via;
       static const char * const WWW_Authenticate;
       static const char * const Warning;
+
+      static const char * const Ack;
+      static const char * const Bye;
+      static const char * const Cancel;
+      static const char * const Invite;
+      static const char * const Notify;
+      static const char * const Options;
+      static const char * const Refer;
+      static const char * const Register;
+      static const char * const Subscribe;
 };
 
 }
