@@ -7,13 +7,16 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/Transport.hxx"
+#ifndef NEW_MSG_HEADER_SCANNER
 #include "resiprocate/Preparse.hxx"
+#else
+#include <resiprocate/MsgHeaderScanner.hxx>
+#endif
 
 namespace resip
 {
 
 class Message;
-class Preparse;
 class TlsConnection;
 
 class Connection
@@ -45,9 +48,6 @@ class Connection
       enum { ChunkSize = 2048 }; //!dcm! -- bad size, perhaps 2048-4096?
    private:
             
-      bool prepNextMessage(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
-      bool readAnyBody(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
-
       SipMessage* mMessage;
       char* mBuffer;
       size_t mBufferPos;
@@ -67,7 +67,11 @@ class Connection
       UInt64 mLastUsed;
             
       State mState;
+#ifndef NEW_MSG_HEADER_SCANNER
       Preparse mPreparse;
+#else
+      MsgHeaderScanner mMsgHeaderScanner;
+#endif
       
       friend class ConnectionMap;
 };
