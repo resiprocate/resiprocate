@@ -144,8 +144,7 @@ AE ( PreparseStateTable::State start,
      PreparseStateTable::State next,
      int workMask)
 {
-
-
+   // change back to <0 iff it will work !ah!
    int stateStart = (start==X) ? 0 : start;
    int stateEnd = (start==X) ? nStates : start+1;
 
@@ -157,7 +156,6 @@ AE ( PreparseStateTable::State start,
 
 #if defined(DEBUG) && 0
    outStateRange(cout, stateStart, stateEnd) ;
-   
    cout   << " -> "
           << stateName(next)
           << " : ";
@@ -173,7 +171,6 @@ AE ( PreparseStateTable::State start,
 	    e.nextState = next;
 	    e.workMask = workMask;
 	 }
-
 }
 
 static void
@@ -225,8 +222,8 @@ PreparseStateTable::InitStatePreparseStateTable()
    const int QUOT = (int)'\"';
    const int COLON = (int)':';
    const int LSLASH = (int)'\\';
-
    const char LWS[] = " \t";
+
    // MUST be AE( format ) so fsm generation will work.
    AE( NewMsg,X,XC,StartLine,actAdd); // all chars
    AE( NewMsg,X,CR,NewMsgCrLf,actNil); // eat CR
@@ -263,14 +260,25 @@ PreparseStateTable::InitStatePreparseStateTable()
 
    AE( BuildData,dCommaSep,LAQUOT,InAng,actAdd);
 
-   AE( InAng,X,XC,InAng,actAdd);
-   AE( InAng,X,RAQUOT,BuildData,actAdd);
-   AE( InAng,X,QUOT,InAngQ,actAdd);
+   // Angle Quotes
+   AE(InAng,X,XC,InAng,actAdd);
+   AE(InAng,X,RAQUOT,BuildData,actAdd);
+   AE(InAng,X,QUOT,InAngQ,actAdd);
 
-   AE( InAngQ, X, XC, InAngQ, actAdd);
-   AE( InAngQ, X, QUOT, InAng, actAdd);
-   AE( InAngQ, X, LSLASH, InAngQEsc, actAdd);
-  
+   AE(InAngQ,X,XC,InAngQ,actAdd);
+   AE(InAngQ,X,QUOT,InAng,actAdd);
+   AE(InAngQ,X,LSLASH,InAngQEsc,actAdd);
+
+   AE(InAngQEsc,X,XC,InAngQ,actAdd);
+
+   // Bare Quotes
+   AE(BuildData,dCommaSep,QUOT,InQ,actAdd);
+   AE(InQ,X,XC,InQ,actAdd);
+   AE(InQ,X,QUOT,BuildData,actAdd);
+   AE(InQ,X,LSLASH,InQEsc,actAdd);
+   AE(InQEsc,X,XC,InQ,actAdd);
+   
+
    // add quotes within la/ra pairs
    // add bare quotes from BuildData
    // add comma transition
@@ -339,6 +347,7 @@ ostream& showchar(ostream& os, char c)
 }
 #endif
 // END HACK REMOVE !ah!
+
 bool
 Preparse::process()
 {
