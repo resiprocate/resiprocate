@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "sipstack/ConnectionMap.hxx"
 #include "util/Socket.hxx"
 #include "sipstack/Preparse.hxx"

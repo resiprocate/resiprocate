@@ -3,11 +3,21 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
+#if defined(__sparc)
+#include <inttypes.h>
+
+/* typedef unsigned char u_int8_t; */
+typedef uint8_t u_int8_t;
+typedef uint16_t u_int16_t;
+typedef uint32_t u_int32_t;
+
+#endif
 
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
 
+#include <netdb.h>
 #include "util/Socket.hxx"
 #include "util/Logger.hxx"
 
@@ -185,12 +195,17 @@ DnsResolver::lookupARecords(const Data& transactionId,
 	assert(0); // !cj! 
 	int ret = -1;
 #else
+#if !defined(__SUNPRO_CC)
    int ret = gethostbyname_r (host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
-#endif
    assert (ret != ERANGE);
 
    if (ret != 0)
    {
+#else
+  result = gethostbyname_r (host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno);
+  if (result == 0) {
+#endif
+#endif
 #endif
       switch (herrno)
       {
