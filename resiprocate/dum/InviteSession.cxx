@@ -152,6 +152,8 @@ InviteSession::dispatch(const SipMessage& msg)
 SipMessage& 
 InviteSession::makeRefer(const H_ReferTo::Type& referTo)
 {
+   assert(0);
+   return mLastRequest;
 }
 
 SipMessage&
@@ -170,6 +172,7 @@ InviteSession::end()
       default:
          assert(0); // out of states
    }
+   throw UsageUseException("Programmer error", __FILE__, __LINE__); //make VC++ happy
 }
 
 // If sdp==0, it means the last offer failed
@@ -393,6 +396,15 @@ SipMessage&
 InviteSession::targetRefresh(const NameAddr& localUri)
 {
    assert(0);
+   return mLastRequest;
+}
+
+SipMessage& 
+InviteSession::ackConnection()
+{
+   //if not a reinvite, and a pending offer exists, throw
+   makeAck();
+   return mAck;
 }
 
 void 
@@ -410,6 +422,8 @@ InviteSession::makeAck()
 SipMessage& 
 InviteSession::reInvite(const SdpContents* offer)
 {
+   assert(0);
+   return mLastRequest;
 }
 
 /* ====================================================================

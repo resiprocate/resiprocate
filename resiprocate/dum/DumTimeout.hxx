@@ -24,7 +24,10 @@ class DumTimeout : public Message
       static const unsigned long StaleCallTimeout;
 
       DumTimeout(Type type, unsigned long duration, BaseUsageHandle target,  int seq, int aseq = -1);
+      DumTimeout(const DumTimeout&);      
       ~DumTimeout();
+
+      Message* clone() const;
       
       Type type() const;
       int seq() const;

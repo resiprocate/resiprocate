@@ -1,4 +1,4 @@
-#include "resiprocate/dum/InviteSessionHandler.hxx"
+\#include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
@@ -6,54 +6,125 @@
 
 using namespace resip;
 
-
-class HandlerA : public InviteSessionHandler, public ClientRegistrationHandler
+//default, Debug outputs
+class TestInviteSessionHandler : public InviteSessionHandler
 {
+   public:
+      /// called when an initial INVITE arrives 
+      virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onNewSession " << msg.brief());
+      }
+      
+      virtual void onNewSession(ServerInviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onNewSession " << msg.brief());
+      }
+      virtual void onFailure(ClientInviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onFailure " << msg.brief());
+      }
+      
+      virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage& msg, const SdpContents*)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onEarlyMedia " << msg.brief());
+      }
 
+      virtual void onProvisional(ClientInviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onProvisional " << msg.brief());
+      }
+
+      virtual void onConnected(ClientInviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onConnected(Uac)" << msg.brief());
+      }
+
+      virtual void onConnected(InviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onConnected(Uas) " << msg.brief());
+      }
+
+      virtual void onStaleCallTimeout(ClientInviteSessionHandle)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onStaleCallTimeout " << msg.brief());
+      }
+
+      virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onTerminated " << msg.brief());
+      }
+
+      virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg);
+      {
+         InfoLog(  << "TestInviteSessionHandler::onReadyToSend " << msg.brief());
+      }
+
+      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onAnswer" << msg.brief());
+      }
+
+      virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)      
+      {
+         InfoLog(  << "TestInviteSessionHandler::onOffer " << msg.brief());
+      }
+      
+      virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onOfferRejected " << msg.brief());
+      }
+
+      virtual void onDialogModified(InviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onDialogModified " << msg.brief());
+      }
+
+      virtual void onInfo(InviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onInfo" << msg.brief());
+      }
+
+      virtual void onRefer(InviteSessionHandle, const SipMessage& msg) 
+      {
+         InfoLog(  << "TestInviteSessionHandler::onRefer " << msg.brief());
+      }
+
+      virtual void onReInvite(InviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onReInvite " << msg.brief());
+      }
+};
+
+   
+      
+
+
+class TestUac : public TestInviteSessionHandler
+{
    public:
       bool* pDone;
 
-      HandlerA(bool* pDone) { this->pDone = pDone; }
+      TestUac(bool* pDone) { this->pDone = pDone; }
 
-      // Put some onNewInvSessionStuff here
-      void 
-      onNewSession(ClientInviteSession::Handle, OfferAnswerType oat, const SipMessage& msg)=0
+      virtual void onProvisional(ClientInviteSessionHandle, const SipMessage&)
       {
-         cout << "A thinks there's a new INVITE session now" << endl;
-      }
-         
-      void
-      onAnswer(ClientInviteSession::Handle cis, const SipMessage& msg)
+         InfoLog ( << "TestUac::onProvisional" << msg->brief() << endl);
+      }      
+
+      virtual void onConnected(ClientInviteSession::Handle cis, const SipMessage& msg)
       {
-         cout << "A has an answer(SDP) from B" << endl;
+         InfoLog ( << "TestUac::onConnected" << msg->brief() << endl);
+         cis->send(cis->ackConnection());
       }
 
-      void
-      onConnected(ClientInviteSession::Handle cis, const SipMessage& msg)
-      {
-         cout << "A thinks it's got a connected session" << endl;
-      }
-
-      void
-      onTerminated(InviteSession::Handle is, const SipMessage& msg)
+      virtual void onTerminated(InviteSession::Handle is, const SipMessage& msg)
       {
          cout << "A thinks a session has been terminated" << endl;
       }
-
-      void onSuccess(ClientRegistration::Handle, const SipMessage& response)
-      {
-         cout << "Registration worked" << endl;
-      }
-      
-      void onFailure(ClientRegistration::Handle, const SipMessage& response)
-      {
-         cout << "Registration Failed" << endl;
-      }
-
-
 };
 
-class HandlerB : public InviteSessionHandler, public ClientRegistrationHandler
+class TestUas : public InviteSessionHandler
 {
 
    public:
@@ -61,8 +132,10 @@ class HandlerB : public InviteSessionHandler, public ClientRegistrationHandler
       time_t* pHangupAt;
 
       HandlerB(bool* pDone, time_t* pHangupAt) 
-      { this.pDone = pDone; this.pHangupAt = pHangupAt;}
-
+      { 
+         this.pDone = pDone; 
+         this.pHangupAt = pHangupAt;
+      }
 
       void 
       onNewSession(ClientInviteSession::Handle, OfferAnswerType oat, const SipMessage& msg)=0
@@ -75,7 +148,7 @@ class HandlerB : public InviteSessionHandler, public ClientRegistrationHandler
       {
          cout <<  "B got an offer from A and is trying to accept it" << endl;
          sis->setAnswer(new SdpContents());
-         sis->accept();
+         sis->send(sis->accept());
          pHangupAt = time(NULL)+5;
       }
       
@@ -95,27 +168,6 @@ class HandlerB : public InviteSessionHandler, public ClientRegistrationHandler
             mSiS->end();
          }
       }
-
-      void onRefresh(ServerRegistration::Handle, const SipMessage& reg)
-      {
-      }
-
-      void onRemoveOne(ServerRegistration::Handle, const SipMessage& reg)
-      {
-      }
-      
-      void onRemoveAll(ServerRegistration::Handle, const SipMessage& reg)
-      {
-      }
-      
-      void onAdd(ServerRegistration::Handle, const SipMessage& reg)
-      {
-      }
-      
-      void onExpired(ServerRegistration::Handle, const NameAddr& contact)
-      {
-      }
-
    private:
       ServerInviteSession::Handle mSis;      
 };

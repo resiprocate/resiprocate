@@ -11,14 +11,8 @@
 using namespace resip;
 
 ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg)
-   : InviteSession(dum, dialog, Proceeding)
+   : InviteSession(dum, dialog, Initial)
 {
-   std::pair<OfferAnswerType, const SdpContents*> offans;
-   offans = InviteSession::getOfferOrAnswer(msg);
-   if (offans.first == Offer)
-   {
-      InviteSession::incomingSdp(msg, offans.second);
-   }
 }
 
 ServerInviteSessionHandle 
@@ -107,13 +101,21 @@ ServerInviteSession::dispatch(const SipMessage& msg)
 {
    std::pair<OfferAnswerType, const SdpContents*> offans;
    offans = InviteSession::getOfferOrAnswer(msg);
-
-   switch(mState)
+   mDum.mInviteSessionHandler->onNewSession(getHandle(), msg);
+   if (msg.isRequest())
    {
-      case Proceeding:
+      switch(mState)
       {
-         if (msg.isRequest())
-         {
+         case Initial:
+            assert(msg.header(h_RequestLine).method() == INVITE);
+            mState = Proceeding;
+            
+            if (offans.first == Offer)
+            {
+               InviteSession::incomingSdp(msg, offans.second);
+            }
+            break;
+         case Proceeding:
             // !jf! consider UPDATE method
             if (msg.header(h_RequestLine).method() == CANCEL)
             {
@@ -124,17 +126,16 @@ ServerInviteSession::dispatch(const SipMessage& msg)
             }
             else
             {
-               assert(0); //!dcm! -- throw, toss away, inform other endpoint?
+               assert(0);  //!dcm! -- throw, toss away, inform other endpoint?
             }
-         }
-         else
-         {
-            assert(0);  //!dcm! -- throw, toss away, inform other endpoint?
-         }
-      }
-      break;
+            break;
       default:
          InviteSession::dispatch(msg);
+      }
+   }
+   else
+   {
+      assert(0); //!dcm! -- throw, toss away, inform other endpoint?
    }
 }
 
