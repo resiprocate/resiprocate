@@ -1162,29 +1162,18 @@ DialogUsageManager::processRequest(const SipMessage& request)
          }
          case CANCEL:
          {
-            // find the appropropriate ServerInvSession
-            DialogSet* ds = findDialogSet(DialogSetId(request));
-            if (ds == 0)
+            // find the appropropriate ServerInvSession - using CallId, FromTag, CSeq and RequestURI
+            map<MergedRequestKey, DialogSet*>::iterator it = mMergedRequests.find(MergedRequestKey(request));
+            if (it != mMergedRequests.end())
             {
-               //!dcm! -- temporary hack...do a map by TID?  !slg! Added TID matching - is this enough?
-               for (DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); it++)
-               {
-                  if (it->second->getId().getCallId() == request.header(h_CallID).value() &&
-					  it->second->getCreatingTransactionId() == request.getTransactionId())
-                  {
-	                  InfoLog (<< "Received a CANCEL with no To tag - matching on CallID and TID");
-                      it->second->dispatch(request);
-                      return;
-                  }
-               }
+               it->second->dispatch(request);
+            }
+            else
+            {
                InfoLog (<< "Received a CANCEL on a non-existent transaction ");
                SipMessage failure;
                makeResponse(failure, request, 481);
                sendResponse(failure);
-            }
-            else
-            {
-               ds->dispatch(request);
             }
             break;
          }
