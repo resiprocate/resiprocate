@@ -1550,7 +1550,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
    }
    if (result.status == 0)
    {
-      for (vector<DnsAAAARecord>::iterator it; it = result.records.begin(); it != result.records.end(); ++it)
+      for (vector<DnsAAAARecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
       {
          Tuple tuple((*it).v6Address(), mPort, mTransport, mTarget);
          mResults.push_back(tuple);
