@@ -38,9 +38,6 @@
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/Socket.hxx"
 
-#include "resiprocate/UnknownHeaderType.hxx"
-
-
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 using namespace resip;

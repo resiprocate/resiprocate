@@ -7,7 +7,7 @@
 #include "resiprocate/HeaderTypes.hxx"
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/ParserCategories.hxx"
-#include "resiprocate/UnknownHeaderType.hxx"
+#include "resiprocate/ExtensionHeader.hxx"
 #include "resiprocate/UnknownParameterType.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/DataStream.hxx"

@@ -40,7 +40,7 @@ Headers::getHeaderName(int type)
    return HeaderNames[type+1];
 }
 
-#define defineHeader(_enum, _name, _type)                                                                               \
+#define defineHeader(_enum, _name, _type, _reference)                                                                   \
 Headers::Type                                                                                                           \
 H_##_enum::getTypeNum() const {return Headers::_enum;}                                                                  \
                                                                                                                         \
@@ -67,7 +67,7 @@ H_##_enum::knownReturn(ParserContainerBase* container)                          
                                                                                                                         \
 H_##_enum resip::h_##_enum
 
-#define defineMultiHeader(_enum, _name, _type)                                                                                         \
+#define defineMultiHeader(_enum, _name, _type, _reference)                                                                              \
    Headers::Type                                                                                                                        \
 H_##_enum##s::getTypeNum() const {return Headers::_enum;}                                                                               \
                                                                                                                                         \
@@ -94,35 +94,35 @@ H_##_enum##s::knownReturn(ParserContainerBase* container)                       
                                                                                                                                         \
 H_##_enum##s resip::h_##_enum##s
 
-defineHeader(ContentDisposition, "Content-Disposition", Token);
-defineHeader(ContentEncoding, "Content-Encoding", Token);
-defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory);
-defineHeader(MIMEVersion, "Mime-Version", Token);
-defineHeader(Priority, "Priority", Token);
-defineHeader(Event, "Event", Token);
-defineHeader(SubscriptionState, "Subscription-State", Token);
+defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ????");
+defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ????");
+defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ????"); // !dlb! defineMultiHeader
+defineHeader(MIMEVersion, "MIME-Version", Token, "RFC ????");
+defineHeader(Priority, "Priority", Token, "RFC ????");
+defineHeader(Event, "Event", Token, "RFC ????");
+defineHeader(SubscriptionState, "Subscription-State", Token, "RFC ????");
 
-defineHeader(SIPETag, "SIP-ETag", Token);
-defineHeader(SIPIfMatch, "SIP-If-Match", Token);
-defineHeader(ContentId, "Content-ID", Token);
+defineHeader(SIPETag, "SIP-ETag", Token, "PUBLISH draft");
+defineHeader(SIPIfMatch, "SIP-If-Match", Token, "PUBLISH draft");
+defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
 
-defineHeader(Identity, "Identity", StringCategory);
+defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03");
 
-defineMultiHeader(AllowEvents, "Allow-Events", Token);
+defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC ????");
 // explicitly declare to avoid h_AllowEventss, ugh
 H_AllowEventss resip::h_AllowEvents;
 
-defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token);
-defineMultiHeader(AcceptLanguage, "Accept-Language", Token);
-defineMultiHeader(Allow, "Allow", Token);
-defineMultiHeader(ContentLanguage, "Content-Language", Token);
-defineMultiHeader(ProxyRequire, "Proxy-Require", Token);
-defineMultiHeader(Require, "Require", Token);
-defineMultiHeader(Supported, "Supported", Token);
-defineMultiHeader(Unsupported, "Unsupported", Token);
-defineMultiHeader(SecurityClient, "Security-Client", Token);
-defineMultiHeader(SecurityServer, "Security-Server", Token);
-defineMultiHeader(SecurityVerify, "Security-Verify", Token);
+defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC ????");
+defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC ????");
+defineMultiHeader(Allow, "Allow", Token, "RFC ????");
+defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC ????");
+defineMultiHeader(ProxyRequire, "Proxy-Require", Token, "RFC ????");
+defineMultiHeader(Require, "Require", Token, "RFC ????");
+defineMultiHeader(Supported, "Supported", Token, "RFC ????");
+defineMultiHeader(Unsupported, "Unsupported", Token, "RFC ????");
+defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC ????");
+defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC ????");
+defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC ????");
 // explicitly declare to avoid h_SecurityVerifys, ugh
 H_SecurityVerifys resip::h_SecurityVerifies;
 
@@ -131,43 +131,43 @@ H_SecurityVerifys resip::h_SecurityVerifies;
 //====================
 typedef ParserContainer<Mime> Mimes;
 
-defineMultiHeader(Accept, "Accept", Mime);
-defineHeader(ContentType, "Content-Type", Mime);
+defineMultiHeader(Accept, "Accept", Mime, "RFC ????");
+defineHeader(ContentType, "Content-Type", Mime, "RFC ????");
 
 //====================
 // GenericURIs:
 //====================
-defineHeader(IdentityInfo, "Identity-Info", GenericURI);
+defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03");
 
 typedef ParserContainer<GenericURI> GenericURIs;
-defineMultiHeader(CallInfo, "Call-Info", GenericURI);
-defineMultiHeader(AlertInfo, "Alert-Info", GenericURI);
-defineMultiHeader(ErrorInfo, "Error-Info", GenericURI);
+defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC ????");
+defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC ????");
+defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC ????");
 
 //====================
 // NameAddr:
 //====================
 typedef ParserContainer<NameAddr> NameAddrs;
 
-defineMultiHeader(RecordRoute, "Record-Route", NameAddr);
-defineMultiHeader(Route, "Route", NameAddr);
-defineMultiHeader(Contact, "Contact", NameAddr);
-defineHeader(From, "From", NameAddr);
-defineHeader(To, "To", NameAddr);
-defineHeader(ReplyTo, "Reply-To", NameAddr);
-defineHeader(ReferTo, "Refer-To", NameAddr);
-defineHeader(ReferredBy, "Referred-By", NameAddr);
+defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC ????");
+defineMultiHeader(Route, "Route", NameAddr, "RFC ????");
+defineMultiHeader(Contact, "Contact", NameAddr, "RFC ????");
+defineHeader(From, "From", NameAddr, "RFC ????");
+defineHeader(To, "To", NameAddr, "RFC ????"); 
+defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC ????");
+defineHeader(ReferTo, "Refer-To", NameAddr, "RFC ????");
+defineHeader(ReferredBy, "Referred-By", NameAddr, "RFC ????");
 
 //====================
 // String:
 //====================
 typedef ParserContainer<StringCategory> StringCategories;
 
-defineHeader(Organization, "Organization", StringCategory);
-defineHeader(Server, "Server", StringCategory);
-defineHeader(Subject, "Subject", StringCategory);
-defineHeader(UserAgent, "User-Agent", StringCategory);
-defineHeader(Timestamp, "Timestamp", StringCategory);
+defineHeader(Organization, "Organization", StringCategory, "RFC ????");
+defineHeader(Server, "Server", StringCategory, "RFC ????");
+defineHeader(Subject, "Subject", StringCategory, "RFC ????");
+defineHeader(UserAgent, "User-Agent", StringCategory, "RFC ????");
+defineHeader(Timestamp, "Timestamp", StringCategory, "RFC ????");
 
 //====================
 // Integer:
@@ -175,55 +175,55 @@ defineHeader(Timestamp, "Timestamp", StringCategory);
 typedef ParserContainer<IntegerCategory> IntegerCategories;
 
 // !dlb! not clear this needs to be exposed
-defineHeader(ContentLength, "Content-Length", IntegerCategory);
-defineHeader(MaxForwards, "Max-Forwards", IntegerCategory);
-defineHeader(MinExpires, "Min-Expires", IntegerCategory);
-defineHeader(RSeq, "RSeq", IntegerCategory);
+defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC ????");
+defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC ????");
+defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC ????");
+defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3262");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
-defineHeader(RetryAfter, "Retry-After", IntegerCategory);
-defineHeader(Expires, "Expires", ExpiresCategory);
-defineHeader(SessionExpires, "Session-Expires", ExpiresCategory);
-defineHeader(MinSE, "Min-SE", ExpiresCategory);
+defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC ????");
+defineHeader(Expires, "Expires", ExpiresCategory, "RFC ????");
+defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "Session Timer draft");
+defineHeader(MinSE, "Min-SE", ExpiresCategory, "Session Timer draft");
 
 //====================
 // CallId:
 //====================
-defineHeader(CallID, "Call-ID", CallID);
+defineHeader(CallID, "Call-ID", CallId, "RFC ????");
 H_CallId resip::h_CallId; // code convention compatible
-defineHeader(Replaces, "Replaces", CallID);
-defineHeader(InReplyTo, "In-Reply-To", CallID);
+defineHeader(Replaces, "Replaces", CallId, "RFC ????");
+defineHeader(InReplyTo, "In-Reply-To", CallId, "RFC ????");
 
 //====================
 // Auth:
 //====================
-defineHeader(AuthenticationInfo, "Authentication-Info", Auth);
-defineMultiHeader(Authorization, "Authorization", Auth);
-defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth);
-defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth);
-defineMultiHeader(WWWAuthenticate, "Www-Authenticate", Auth);
+defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC ????");
+defineMultiHeader(Authorization, "Authorization", Auth, "RFC ????");
+defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth, "RFC ????");
+defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC ????");
+defineMultiHeader(WWWAuthenticate, "WWW-Authenticate", Auth, "RFC ????");
 
 //====================
 // CSeqCategory:
 //====================
-defineHeader(CSeq, "CSeq", CSeqCategory);
+defineHeader(CSeq, "CSeq", CSeqCategory, "RFC ????");
 
 //====================
 // DateCategory:
 //====================
-defineHeader(Date, "Date", DateCategory);
+defineHeader(Date, "Date", DateCategory, "RFC ????");
 
 //====================
 // WarningCategory:
 //====================
-defineMultiHeader(Warning, "Warning", WarningCategory);
+defineMultiHeader(Warning, "Warning", WarningCategory, "RFC ????");
 
 //====================
 // RAckCategory
 //====================
-defineHeader(RAck, "RAck", RAckCategory);
+defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 
-defineMultiHeader(Via, "Via", Via);
+defineMultiHeader(Via, "Via", Via, "RFC ????");
 
 RequestLineType resip::h_RequestLine;
 StatusLineType resip::h_StatusLine;
@@ -235,9 +235,6 @@ Headers::getType(const char* name, int len)
    p = HeaderHash::in_word_set(name, len);
    return p ? Headers::Type(p->type) : Headers::UNKNOWN;
 }
-
-
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -1,33 +1,14 @@
 #if !defined(RESIP_UNKNOWNHEADERTYPE_HXX)
 #define RESIP_UNKNOWNHEADERTYPE_HXX 
 
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/BaseException.hxx"
+// !dlb! deprecated -- use ExtensionHeader.hxx
+
+#include "ExtensionHeader.hxx"
+
 namespace resip
 {
-
-class UnknownHeaderType
-{
-   public:
-      explicit UnknownHeaderType(const char* unknownHeaderName);
-      explicit UnknownHeaderType(const Data& unknownHeaderName);
-
-      const Data& getName() const {return mName;}
-
-      class Exception : public BaseException
-      {
-        public:
-         Exception(const Data& msg, const Data& file, const int line)
-            : BaseException(msg, file, line) {}
-
-         const char* name() const { return "UnknownHeaderType::Exception"; }
-      };
-
-   private:
-      Data mName;
+   typedef ExtensionHeader UnknownHeaderType;
 };
-
-}
 
 #endif
 
