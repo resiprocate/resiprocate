@@ -100,6 +100,9 @@ const char* Symbols::Terminated = "terminated";
 const char* Symbols::Certificate = "certificate";
 const char* Symbols::Credential = "credential";
 
+const char* Symbols::SipProfile = "sip-profile";
+
+
 #if defined(WIN32)
 const char *Symbols::pathSep = "\\";
 #else
