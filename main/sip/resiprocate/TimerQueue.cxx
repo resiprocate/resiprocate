@@ -6,7 +6,6 @@
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/TimerMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
-//#include "resiprocate/os/Inserter.hxx"
 
 using namespace resip;
 using namespace std;
