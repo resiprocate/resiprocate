@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.48 2003/09/04 18:20:41 jason Exp $
+# $Id: Makefile,v 1.49 2003/09/09 02:04:22 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -11,7 +11,6 @@ LDLIBS += -lncurses
 #LDLIBS   += /usr/local/ssl/lib/libssl.a /usr/local/ssl/lib/libcrypto.a 
 
 TESTPROGRAMS =	limpc.cxx \
-		testDns.cxx  \
 		testParseBuffer.cxx \
 	        testData.cxx \
 	        testDataStream.cxx \
@@ -31,7 +30,6 @@ TESTPROGRAMS =	limpc.cxx \
 		test1.cxx \
 		test2.cxx \
 		testDigestAuthentication.cxx \
-		testDnsResolver.cxx \
 		testIM.cxx \
 		testLockStep.cxx \
 		testMessageWaiting.cxx \
@@ -47,11 +45,12 @@ TESTPROGRAMS =	limpc.cxx \
 	        testPreparse.cxx \
 	        testSipMessage.cxx \
 	        testSipStack1.cxx \
-	        testTcpTransport.cxx \
 		testLockStep.cxx \
 		testMultipartMixedContents.cxx \
 		testClient.cxx \
 		testServer.cxx \
+
+#	        testTcpTransport.cxx \
 
 SRC = \
 		Register.cxx \
