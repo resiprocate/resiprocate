@@ -267,5 +267,6 @@ main()
       traverseMulti(mpc);
    }
 
+   cerr << "All OK" << endl;
    return 0;
 }
