@@ -80,7 +80,7 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
          pb.reset(anchorEnd);
          Data encoded;
          pb.data(encoded, anchorStart);
-         mClientData = Base64Coder::decode(encoded);
+         mClientData = encoded.base64decode();
          pb.reset(anchorStart);
       }
       
@@ -217,7 +217,7 @@ BranchParameter::encode(ostream& stream) const
              << Symbols::DASH[0]
              << mTransportSeq
              << Symbols::DASH[0]
-             << Base64Coder::encode(mClientData)
+             << mClientData.base64encode(true/*safe URL*/)
              << Symbols::resipCookie;
    }
    else

@@ -19,8 +19,6 @@ class Base64Coder
       static Data decode(const Data&);
       
    private:
-      static unsigned char toBits(unsigned char c);
-      static unsigned char codeChar[];
 };
 
 }
