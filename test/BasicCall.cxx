@@ -239,6 +239,11 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          cout << name << ": InviteSession-onInfoFailure - " << msg.brief() << endl;
       }
 
+      virtual void onForkDestroyed(ClientInviteSessionHandle)
+	  {
+         cout << name << ": ClientInviteSession-onForkDestroyed" << endl;
+	  }
+
       // Out-of-Dialog Callbacks
       virtual void onSuccess(ClientOutOfDialogReqHandle, const SipMessage& successResponse)
       {
