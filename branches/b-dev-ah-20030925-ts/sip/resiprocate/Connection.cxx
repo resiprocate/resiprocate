@@ -49,7 +49,7 @@ Connection::~Connection()
 {
    if (mSocket != INVALID_SOCKET) // bogus Connections
    {
-      InfoLog (<< "Deleting " << mSocket << " with " << mOutstandingSends.size() << " to write");
+      InfoLog (<< "Deleting " << this << " " << mSocket << " with " << mOutstandingSends.size() << " to write");
       while (!mOutstandingSends.empty())
       {
          SendData* sendData = mOutstandingSends.front();
@@ -89,115 +89,17 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
          DebugLog(<< "Connection::process setting source " << mWho);
          mMessage->setSource(mWho);
          mMessage->setTlsDomain(mWho.transport->tlsDomain());
-#ifndef NEW_MSG_HEADER_SCANNER
-         mPreparse.reset();
-#else
+#if defined(NEW_MSG_HEADER_SCANNER)
          mMsgHeaderScanner.prepareForMessage(mMessage);
+#else
+         mPreparse.reset();
 #endif
          // Fall through to the next case.
       }
       case ReadingHeaders:
       {
-#ifndef NEW_MSG_HEADER_SCANNER // {
-         if (mPreparse.process(*mMessage, mBuffer, mBufferPos + bytesRead) != 0)
-         {
-            WarningLog(<< "Discarding preparse!");
-            delete mBuffer;
-            mBuffer = 0;
-            delete mMessage;
-            mMessage = 0;
-            delete this;
-            return;
-         }
-         else if (!mPreparse.isDataAssigned())
-         {
-            mBufferPos += bytesRead;
-            if (mBufferPos == mBufferSize)
-            {
-               size_t newBufferSize = size_t(mBufferSize*3/2);
-               char* largerBuffer = new char[newBufferSize];
-               memcpy(largerBuffer, mBuffer, mBufferSize);
-               delete[] mBuffer;
-               mBuffer = largerBuffer;
-               mBufferSize = newBufferSize;
-            }
-            mState = ReadingHeaders;
-         }
-         else if (mPreparse.isFragmented())
-         {
-            mMessage->addBuffer(mBuffer);
-            int overHang = mBufferPos + bytesRead - mPreparse.nDiscardOffset();
-            size_t size = overHang*3/2;
-            if ( size < Connection::ChunkSize )
-            {
-               size = Connection::ChunkSize;
-            }
-            char* newBuffer = new char[size];
-            
-            memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset(), overHang);
-            mBuffer = newBuffer;
-            mBufferPos = overHang;
-            mBufferSize = size;
-            mState = ReadingHeaders;
-         }
-         else if (mPreparse.isHeadersComplete())
-         {         
-            mMessage->addBuffer(mBuffer);
-            size_t contentLength = mMessage->header(h_ContentLength).value();
-            
-            if (mBufferPos + bytesRead - mPreparse.nDiscardOffset() >= contentLength)
-            {
-               mMessage->setBody(mBuffer + mPreparse.nDiscardOffset(), contentLength);
-               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-               
-               Transport::stampReceived(mMessage);
-               fifo.add(mMessage);
+#if defined (NEW_MSG_HEADER_SCANNER) // {
 
-               int overHang = (mBufferPos + bytesRead) - (mPreparse.nDiscardOffset() + contentLength);
-
-               mState = NewMessage;
-               if (overHang > 0) 
-               {
-                  size_t size = overHang*3/2;
-                  if ( size < Connection::ChunkSize )
-                  {
-                     size = Connection::ChunkSize;
-                  }
-                  char* newBuffer = new char[size];
-                  memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset() + contentLength, overHang);
-                  mBuffer = newBuffer;
-                  mBufferPos = 0;
-                  mBufferSize = size;
-                  
-                  DebugLog (<< "Extra bytes after message: " << overHang);
-                  DebugLog (<< Data(mBuffer, overHang));
-                  
-                  bytesRead = overHang;
-                  goto start;
-               }
-            }
-            else
-            {
-               mBufferPos += bytesRead;
-               char* newBuffer = new char[contentLength];
-               memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset(), mBufferPos - mPreparse.nDiscardOffset());
-               mBufferPos = mBufferPos - mPreparse.nDiscardOffset();
-               mBufferSize = contentLength;
-               mBuffer = newBuffer;
-            
-               mState = PartialBody;
-            }
-         }
-         else
-         {
-            //DebugLog(<< "Data assigned, not fragmented, not complete");
-            mMessage->addBuffer(mBuffer);
-            mBuffer = new char[ChunkSize];
-            mBufferPos = 0;
-            mBufferSize = ChunkSize;
-            mState = ReadingHeaders;
-         }
-#else // defined(NEW_MSG_HEADER_SCANNER) } {
          unsigned int chunkLength = mBufferPos + bytesRead;
          char *unprocessedCharPtr;
          MsgHeaderScanner::ScanChunkResult scanChunkResult =
@@ -298,7 +200,106 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
                }
             }
          }
-#endif // defined(NEW_MSG_HEADER_SCANNER) }
+#else // defined(NEW_MSG_HEADER_SCANNER) } {
+         if (mPreparse.process(*mMessage, mBuffer, mBufferPos + bytesRead) != 0)
+         {
+            WarningLog(<< "Discarding preparse!");
+            delete mBuffer;
+            mBuffer = 0;
+            delete mMessage;
+            mMessage = 0;
+            delete this;
+            return;
+         }
+         else if (!mPreparse.isDataAssigned())
+         {
+            mBufferPos += bytesRead;
+            if (mBufferPos == mBufferSize)
+            {
+               size_t newBufferSize = size_t(mBufferSize*3/2);
+               char* largerBuffer = new char[newBufferSize];
+               memcpy(largerBuffer, mBuffer, mBufferSize);
+               delete[] mBuffer;
+               mBuffer = largerBuffer;
+               mBufferSize = newBufferSize;
+            }
+            mState = ReadingHeaders;
+         }
+         else if (mPreparse.isFragmented())
+         {
+            mMessage->addBuffer(mBuffer);
+            int overHang = mBufferPos + bytesRead - mPreparse.nDiscardOffset();
+            size_t size = overHang*3/2;
+            if ( size < Connection::ChunkSize )
+            {
+               size = Connection::ChunkSize;
+            }
+            char* newBuffer = new char[size];
+            
+            memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset(), overHang);
+            mBuffer = newBuffer;
+            mBufferPos = overHang;
+            mBufferSize = size;
+            mState = ReadingHeaders;
+         }
+         else if (mPreparse.isHeadersComplete())
+         {         
+            mMessage->addBuffer(mBuffer);
+            size_t contentLength = mMessage->header(h_ContentLength).value();
+            
+            if (mBufferPos + bytesRead - mPreparse.nDiscardOffset() >= contentLength)
+            {
+               mMessage->setBody(mBuffer + mPreparse.nDiscardOffset(), contentLength);
+               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+               
+               Transport::stampReceived(mMessage);
+               fifo.add(mMessage);
+
+               int overHang = (mBufferPos + bytesRead) - (mPreparse.nDiscardOffset() + contentLength);
+
+               mState = NewMessage;
+               if (overHang > 0) 
+               {
+                  size_t size = overHang*3/2;
+                  if ( size < Connection::ChunkSize )
+                  {
+                     size = Connection::ChunkSize;
+                  }
+                  char* newBuffer = new char[size];
+                  memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset() + contentLength, overHang);
+                  mBuffer = newBuffer;
+                  mBufferPos = 0;
+                  mBufferSize = size;
+                  
+                  DebugLog (<< "Extra bytes after message: " << overHang);
+                  DebugLog (<< Data(mBuffer, overHang));
+                  
+                  bytesRead = overHang;
+                  goto start;
+               }
+            }
+            else
+            {
+               mBufferPos += bytesRead;
+               char* newBuffer = new char[contentLength];
+               memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset(), mBufferPos - mPreparse.nDiscardOffset());
+               mBufferPos = mBufferPos - mPreparse.nDiscardOffset();
+               mBufferSize = contentLength;
+               mBuffer = newBuffer;
+            
+               mState = PartialBody;
+            }
+         }
+         else
+         {
+            //DebugLog(<< "Data assigned, not fragmented, not complete");
+            mMessage->addBuffer(mBuffer);
+            mBuffer = new char[ChunkSize];
+            mBufferPos = 0;
+            mBufferSize = ChunkSize;
+            mState = ReadingHeaders;
+         }
+#endif // defined(!NEW_MSG_HEADER_SCANNER) }
          break;
       }
       case PartialBody:
@@ -382,6 +383,8 @@ Connection::getWriteBuffer()
 {
    if (mState == NewMessage)
    {
+      DebugLog (<< "Creating buffer for " << *this);
+
       mBuffer = new char [Connection::ChunkSize];
       mBufferSize = Connection::ChunkSize;
       mBufferPos = 0;
@@ -392,7 +395,7 @@ Connection::getWriteBuffer()
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::Connection& c)
 {
-   strm << "CONN: " << int(c.getSocket()) << " " << c.mWho;
+   strm << "CONN: " << &c << " " << int(c.getSocket()) << " " << c.mWho;
    return strm;
 }
 

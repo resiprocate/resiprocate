@@ -4,6 +4,8 @@
 
 #include "resiprocate/ConnectionManager.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
+
 #include <vector>
 
 using namespace resip;
@@ -149,6 +151,8 @@ ConnectionManager::addConnection(Connection* connection)
 
    mReadHead->push_back(connection);
    mLRUHead->push_back(connection);
+
+   assert(mAddrMap.count(connection->mWho) == 1);
 }
 
 void
@@ -157,6 +161,9 @@ ConnectionManager::removeConnection(Connection* connection)
    DebugLog (<< "ConnectionManager::removeConnection()");
 
    assert(!mReadHead->empty());
+
+   mIdMap.erase(connection->mWho.connectionId);
+   mAddrMap.erase(connection->mWho);
 
    connection->readList::remove();
    connection->writeList::remove();
