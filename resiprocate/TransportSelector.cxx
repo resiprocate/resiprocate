@@ -373,10 +373,10 @@ TransportSelector::dnsResolve(DnsResult* result,
 
 namespace
 {
-   bool isDgramTransport (const Tuple& t)
+   bool isDgramTransport (TransportType type)
    {
       static const bool unknown_transport = false;
-      switch(t.getType())
+      switch(type)
       {
       case UDP:
       case DTLS:
@@ -395,6 +395,64 @@ namespace
    }
 }
 
+namespace
+{
+Tuple
+getFirstInterface(bool is_v4, TransportType type)
+{
+   // !kh!
+   // 1. Query local hostname.
+   char hostname[256] = "";
+   if(gethostname(hostname, sizeof(hostname)) != 0)
+   {
+      int e = getErrno();
+      Transport::error( e );
+      InfoLog(<< "Can't query local hostname : [" << e << "] " << strerror(e) );
+      throw Transport::Exception("Can't query local hostname", __FILE__,__LINE__);
+   }
+   InfoLog(<< "Local hostname is [" << hostname << "]");
+
+   // !kh!
+   // 2. Resolve address(es) of local hostname for specified transport.
+   const bool is_dgram = isDgramTransport(type);
+   addrinfo hint;
+   memset(&hint, 0, sizeof(hint));
+   hint.ai_family    = is_v4 ? PF_INET : PF_INET6;
+   hint.ai_flags     = AI_PASSIVE;
+   hint.ai_socktype  = is_dgram ? SOCK_DGRAM : SOCK_STREAM;
+
+   addrinfo* results;
+   int ret = getaddrinfo(
+      hostname,
+      0,
+      &hint,
+      &results);
+
+   if(ret != 0)
+   {
+      Transport::error( ret ); // !kh! is this the correct sematics? ret is not errno.
+      InfoLog(<< "Can't resolve " << hostname << "'s address : [" << ret << "] " << gai_strerror(ret) );
+      throw Transport::Exception("Can't resolve hostname", __FILE__,__LINE__);
+   }
+
+   // !kh!
+   // 3. Use first address resolved if there are more than one.
+   // What should I do if there are more than one address?
+   // i.e. results->ai_next != 0.
+   Tuple source(*(results->ai_addr), type);
+   InfoLog(<< "Local address is " << source);
+   addrinfo* ai = results->ai_next;
+   for(; ai; ai = ai->ai_next)
+   {
+      Tuple addr(*(ai->ai_addr), type);
+      InfoLog(<<"Additional address " << addr);
+   }
+   freeaddrinfo(results);
+
+   return   source;
+}
+}
+
 Tuple
 TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target) const
 {
@@ -408,63 +466,6 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    }
    else
    {
-
-#if(1)
-
-      // !kh!
-      // 1. Query local hostname.
-      char hostname[256] = "";
-      if(gethostname(hostname, sizeof(hostname)) != 0)
-      {
-         int e = getErrno();
-         Transport::error( e );
-         InfoLog(<< "Can't query local hostname : [" << e << "] " << strerror(e) );
-         throw Transport::Exception("Can't query local hostname", __FILE__,__LINE__);
-      }
-      InfoLog(<< "Local hostname is [" << hostname << "]");
-
-      // !kh!
-      // 2. Resolve address(es) of local hostname for specified transport.
-      const bool is_v4 = target.isV4();
-      const bool is_dgram = isDgramTransport(target);
-      addrinfo hint;
-      memset(&hint, 0, sizeof(hint));
-      hint.ai_family    = is_v4 ? PF_INET : PF_INET6;
-      hint.ai_flags     = AI_PASSIVE;
-      hint.ai_socktype  = is_dgram ? SOCK_DGRAM : SOCK_STREAM;
-
-      addrinfo* results;
-      int ret = getaddrinfo(
-         hostname,
-         0,
-         &hint,
-         &results);
-
-      if(ret != 0)
-      {
-         Transport::error( ret ); // !kh! is this the correct sematics? ret is not errno.
-         InfoLog(<< "Can't resolve " << hostname << "'s address : [" << ret << "] " << gai_strerror(ret) );
-         throw Transport::Exception("Can't resolve hostname", __FILE__,__LINE__);
-      }
-
-      // !kh!
-      // 3. Use first address resolved if there are more than one.
-      // What should I do if there are more than one address?
-      // i.e. results->ai_next != 0.
-      Tuple source(*(results->ai_addr), target.getType());
-      InfoLog(<< "Local address is " << source);
-      addrinfo* ai = results->ai_next;
-      for(; ai; ai = ai->ai_next)
-      {
-         Tuple addr(*(ai->ai_addr), target.getType());
-         InfoLog(<<"Additional address " << addr);
-      }
-      freeaddrinfo(results);
-
-      return   source;
-
-#else
-
       Tuple source(target);
       switch (mWindowsVersion)
       {
@@ -481,10 +482,11 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 #endif
          {
             // !kh!
-            // This doesn't work if there are two or more interfaces (either physical or
-            // virtual) on the same host and destination is reachable from more than one
-            // interface. In some cases a socket's source address might not be determined
-            // until first I/O took place.
+            // This doesn't work all the time.
+            // 1. Might not work on all implementaions as stated in UNP vol.1 8.14.
+            // 2. Might not work under unspecified condition on Windows,
+            //    search "getsockname" in MSDN library.
+            // 3. We experience this issue on our production software.
 
             // this process will determine which interface the kernel would use to
             // send a packet to the target by making a connect call on a udp socket.
@@ -524,6 +526,28 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
                InfoLog(<< "Can't determine name of socket " << target << " : " << strerror(e) );
                throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
             }
+
+            if(source.isV4())
+            {
+               long src = (reinterpret_cast<const sockaddr_in*>(&source.getSockaddr())->sin_addr.s_addr);
+               if(src == INADDR_ANY)
+               {
+                  InfoLog(<< "Connected UDP failed to determine source address, use first address instaed.");
+                  source = getFirstInterface(true, target.getType());
+               }
+            }
+            else
+            {
+#if(1)
+               static const bool ipv6_support_not_completed = false;
+               assert(ipv6_support_not_completed);
+#else
+               const void * src = (&reinterpret_cast<const sockaddr_in6*>(&source.getSockaddr())->sin6_addr);
+               if(memcmp(src, INADDR6_ANY, sizeof(INADDR6_ANY)) == 0)
+                  source = getFirstInterface(false, target.getType());
+#endif
+            }
+            //if(source.getSockaddr() ==
 
             // Unconnect.
             // !jf! This is necessary, but I am not sure what we can do if this
@@ -588,8 +612,6 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
                 << " sent-port=" << via.sentPort());
 
       return source;
-
-#endif
    }
 }
 
