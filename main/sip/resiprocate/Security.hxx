@@ -71,7 +71,7 @@ class Security
        */
 
       /* load function return true if they worked, false otherwise */
-      bool loadAllCerts( const Data& password,  const Data& dirPath=Data::Empty );
+      bool loadAllCerts( const Data& password,  const Data& dirPath  );
       bool loadRootCerts(  const Data& filePath );
 
       bool loadMyPublicCert(  const Data& filePath );
