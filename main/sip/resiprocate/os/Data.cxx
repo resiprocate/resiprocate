@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.2 2002/09/26 02:03:58 jason Exp $";
+"$Id: Data.cxx,v 1.3 2002/09/27 02:00:36 jason Exp $";
 
 #include <cstdio>
 #include <ctype.h>
@@ -151,6 +151,18 @@ bool isEqualNoCase(const Data& left, const Data& right )
    }
 
    return true;
+}
+
+int 
+Data::eatWhiteSpace()
+{
+   if (!empty())
+   {
+      Data::size_type count = 0;
+      replace(0,count=find_first_not_of(" \t"),"");
+      return count;
+   }
+   return 0;
 }
 
 void Data::removeSpaces()
