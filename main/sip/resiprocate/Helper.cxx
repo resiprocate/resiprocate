@@ -68,13 +68,73 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
 {
    SipMessage* response = new SipMessage;
    response->header(h_StatusLine).responseCode() = responseCode;
-   response->header(h_StatusLine).reason() = reason;
    response->header(h_From) = request.header(h_From);
    response->header(h_To) = request.header(h_To);
    response->header(h_CallId) = request.header(h_CallId);
    response->header(h_CSeq) = request.header(h_CSeq);
    response->header(h_Vias) = request.header(h_Vias);
    response->header(h_ContentLength).value() = 0;
+
+   if (reason.size())
+   {
+      response->header(h_StatusLine).reason() = reason;
+   }
+   else
+   {
+      switch (responseCode)
+      {
+         case 100: response->header(h_StatusLine).reason() = "Trying"; break;
+         case 180: response->header(h_StatusLine).reason() = "Ringing"; break;
+         case 181: response->header(h_StatusLine).reason() = "Call Is Being Forwarded"; break;
+         case 182: response->header(h_StatusLine).reason() = "Queued"; break;
+         case 183: response->header(h_StatusLine).reason() = "Session Progress"; break;
+         case 200: response->header(h_StatusLine).reason() = "OK"; break;
+         case 300: response->header(h_StatusLine).reason() = "Multiple Choices"; break;
+         case 301: response->header(h_StatusLine).reason() = "Moved Permanently"; break;
+         case 302: response->header(h_StatusLine).reason() = "Moved Temporarily"; break;
+         case 305: response->header(h_StatusLine).reason() = "Use Proxy"; break;
+         case 380: response->header(h_StatusLine).reason() = "Alternative Service"; break;
+         case 400: response->header(h_StatusLine).reason() = "Bad Request"; break;
+         case 401: response->header(h_StatusLine).reason() = "Unauthorized"; break;
+         case 402: response->header(h_StatusLine).reason() = "Payment Required"; break;
+         case 403: response->header(h_StatusLine).reason() = "Forbidden"; break;
+         case 404: response->header(h_StatusLine).reason() = "Not Found"; break;
+         case 405: response->header(h_StatusLine).reason() = "Method Not Allowed"; break;
+         case 406: response->header(h_StatusLine).reason() = "Not Acceptable"; break;
+         case 407: response->header(h_StatusLine).reason() = "Proxy Authentication Required"; break;
+         case 408: response->header(h_StatusLine).reason() = "Request Timeout"; break;
+         case 410: response->header(h_StatusLine).reason() = "Gone"; break;
+         case 413: response->header(h_StatusLine).reason() = "Request Entity Too Large"; break;
+         case 414: response->header(h_StatusLine).reason() = "Request-URI Too Long"; break;
+         case 415: response->header(h_StatusLine).reason() = "Unsupported Media Type"; break;
+         case 416: response->header(h_StatusLine).reason() = "Unsupported URI Scheme"; break;
+         case 420: response->header(h_StatusLine).reason() = "Bad Extension"; break;
+         case 421: response->header(h_StatusLine).reason() = "Extension Required"; break;
+         case 423: response->header(h_StatusLine).reason() = "Interval Too Brief"; break;
+         case 480: response->header(h_StatusLine).reason() = "Temporarily Unavailable"; break;
+         case 481: response->header(h_StatusLine).reason() = "Call/Transaction Does Not Exist"; break;
+         case 482: response->header(h_StatusLine).reason() = "Loop Detected"; break;
+         case 483: response->header(h_StatusLine).reason() = "Too Many Hops"; break;
+         case 484: response->header(h_StatusLine).reason() = "Address Incomplete"; break;
+         case 485: response->header(h_StatusLine).reason() = "Ambiguous"; break;
+         case 486: response->header(h_StatusLine).reason() = "Busy Here"; break;
+         case 487: response->header(h_StatusLine).reason() = "Request Terminated"; break;
+         case 488: response->header(h_StatusLine).reason() = "Not Acceptable Here"; break;
+         case 491: response->header(h_StatusLine).reason() = "Request Pending"; break;
+         case 493: response->header(h_StatusLine).reason() = "Undecipherable"; break;
+         case 500: response->header(h_StatusLine).reason() = "Server Internal Error"; break;
+         case 501: response->header(h_StatusLine).reason() = "Not Implemented"; break;
+         case 502: response->header(h_StatusLine).reason() = "Bad Gateway"; break;
+         case 503: response->header(h_StatusLine).reason() = "Service Unavailable"; break;
+         case 504: response->header(h_StatusLine).reason() = "Server Time-out"; break;
+         case 505: response->header(h_StatusLine).reason() = "Version Not Supported"; break;
+         case 513: response->header(h_StatusLine).reason() = "Message Too Large"; break;
+         case 600: response->header(h_StatusLine).reason() = "Busy Everywhere"; break;
+         case 603: response->header(h_StatusLine).reason() = "Decline"; break;
+         case 604: response->header(h_StatusLine).reason() = "Does Not Exist Anywhere"; break;
+         case 606: response->header(h_StatusLine).reason() = "Not Acceptable"; break;
+      }
+   }
 
    return response;
 }
