@@ -24,6 +24,7 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
    if (mLastRequest.exists(h_Contacts))
    {
       mMyContacts = mLastRequest.header(h_Contacts);
+      mLastRequest.header(h_To).param(p_tag) = mDialog.getId().getRemoteTag();
    }
 }
 
@@ -104,9 +105,9 @@ ClientRegistration::requestRefresh()
 {
    mLastRequest.header(h_CSeq).sequence()++;
    mDum.send(mLastRequest);
-   mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
-   unsigned long t = Helper::aBitSmallerThan((unsigned long)(mLastRequest.header(h_Expires).value()));
-   mDum.addTimer(DumTimeout::Registration, t, getBaseHandle(), ++mTimerSeq);
+//   mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
+//   unsigned long t = Helper::aBitSmallerThan((unsigned long)(mLastRequest.header(h_Expires).value()));
+//   mDum.addTimer(DumTimeout::Registration, t, getBaseHandle(), ++mTimerSeq);
 }
 
 const NameAddrs& 
@@ -169,8 +170,20 @@ ClientRegistration::dispatch(const SipMessage& msg)
          mAllContacts = msg.header(h_Contacts);
          // goes away -- updateMyContacts(mOtherContacts);
          // make timers to re-register
+
+         NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
+         int expiry = it->param(p_expires);
+         while(it != msg.header(h_Contacts).end())
+         {
+            if(it->exists(p_expires))
+            {
+               expiry = resipMin(it->param(p_expires), expiry);
+            }
+            it++;
+         }
+        
          mDum.addTimer(DumTimeout::Registration, 
-                       Helper::aBitSmallerThan(mLastRequest.header(h_Expires).value()), 
+                       Helper::aBitSmallerThan(expiry),
                        getBaseHandle(),
                        ++mTimerSeq);
          
