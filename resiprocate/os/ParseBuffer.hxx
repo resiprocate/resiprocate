@@ -51,7 +51,7 @@ class ParseBuffer
 
       const char* skipToEndQuote(char quote = '"');
       //create a data from start to the current position
-      Data data(const char* start) const { return Data(start, mStart - start); }
+      Data data(const char* start) const { return Data(start, int(mStart - start) ); }
 
       static const char* Whitespace;
       static const char* ParamTerm;

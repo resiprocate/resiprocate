@@ -1,5 +1,7 @@
+
 #include <util/ParseBuffer.hxx>
-#include <assert.h>
+#include <cassert>
+
 //#include <iostream>
 //using namespace std;
 
