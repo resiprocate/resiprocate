@@ -79,10 +79,9 @@ Executive::processTimer()
 int 
 Executive::getTimeTillNextProcess()
 {
-   // FIX there needs to be some code here once the executive can tell
+   // !cj! FIX there needs to be some code here once the executive can tell
    // us this
-   return 50;
-
+   return 10;
 } 
 
 
