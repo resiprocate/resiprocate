@@ -955,12 +955,12 @@ TransportSelector::findDtlsTransport(const Data& domainname)
    if (domainname == Data::Empty && mDtlsTransports.size() == 1)
    {
       DebugLog (<< "Found default DTLS transport for domain=" << mDtlsTransports.begin()->first);
-      return mDtlsTransports.begin()->second;
+      return (Transport*)mDtlsTransports.begin()->second;
    }
    else if (mDtlsTransports.count(domainname))
    {
       DebugLog (<< "Found DTLS transport for domain=" << mDtlsTransports.begin()->first);
-      return mDtlsTransports[domainname];
+      return (Transport*)mDtlsTransports[domainname];
    }
    else  // don't know which one to use
    {
