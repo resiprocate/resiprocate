@@ -1,0 +1,5 @@
+*.d
+bin.*
+obj.*
+fsm.pdf
+fsm.ps
