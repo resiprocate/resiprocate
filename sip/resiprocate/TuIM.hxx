@@ -33,7 +33,7 @@ public:
             virtual void receivePageFailed(const Uri& sender) =0;
             virtual void registrationFailed(const Uri& dest, int respNumber ) =0;
             virtual void registrationWorked(const Uri& dest ) =0;
-            virtual void presenseUpdate(const Uri& dest, bool open, const Data& status ) =0;
+            virtual void presenceUpdate(const Uri& dest, bool open, const Data& status ) =0;
             virtual ~Callback();
       };
       
@@ -65,8 +65,8 @@ public:
       void addBuddy( const Uri& uri, const Data& group );
       void removeBuddy( const Uri& name);
 
-      // Presense management
-      void setMyPresense( const bool open, const Data& status = Data::Empty );
+      // Presence management
+      void setMyPresence( const bool open, const Data& status = Data::Empty );
 
    private:
       void processRequest(SipMessage* msg);
