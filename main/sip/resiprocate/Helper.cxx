@@ -841,7 +841,7 @@ Helper::processStrictRoute(SipMessage& request)
 {
    if (request.exists(h_Routes) && 
        !request.header(h_Routes).empty() &&
-       !request.header(h_Routes).front().exists(p_lr))
+       !request.header(h_Routes).front().uri().exists(p_lr))
    {
       // The next hop is a strict router.  Move the next hop into the
       // Request-URI and move the ultimate destination to the end of the
