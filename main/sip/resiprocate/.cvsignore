@@ -1,6 +1,7 @@
 *.d
 bin.*
-obj.*
+fsm.dot
 fsm.pdf
 fsm.ps
-fsm.dot
+obj.*
+testUdp
