@@ -24,6 +24,13 @@ const char * const Symbols::COMMA = ",";
 const char * const Symbols::SEMI_OR_EQUAL = ";=";
 const char * const Symbols::COMMA_OR_EQUAL = ",=";
 
+const char * const Symbols::ProtocolName = "SIP";
+const char * const Symbols::ProtocolVersion = "2.0";
+const char * const Symbols::UDP = "UDP";
+const char * const Symbols::TCP = "TCP";
+const char * const Symbols::TLS = "TLS";
+const char * const Symbols::SCTP = "SCTP";
+
 const char * const Symbols::Sip = "sip";
 const char * const Symbols::Sips = "sips";
 
