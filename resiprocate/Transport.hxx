@@ -35,7 +35,7 @@ class Transport : public ThreadIf
 
       // shared by UDP, TCP, and TLS
       static Socket socket(TransportType type, bool ipv4);
-      static void error();
+      static void error( int err );
       void bind();
       
       virtual void send( const Tuple& tuple, const Data& data, const Data& tid);

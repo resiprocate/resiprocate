@@ -15,7 +15,8 @@
 #ifdef WIN32
 
 typedef int socklen_t;
-//#define errno WSAGetLastError()
+inline int getErrno() { return WSAGetLastError(); }
+
 typedef SOCKET Socket;
 
 #define EWOULDBLOCK             WSAEWOULDBLOCK
@@ -68,6 +69,8 @@ typedef int socklen_t;
 namespace resip
 {
 
+	int closeSocket( Socket fd );
+
 /// set up network - does nothing in unix but needed for windows
 void
 initNetwork();
@@ -76,7 +79,7 @@ initNetwork();
 typedef int Socket;
 static const Socket INVALID_SOCKET = -1;
 static const int SOCKET_ERROR = -1;
-int closesocket( Socket fd );
+inline int getErrno() { return WSAGetLastError(); }
 #endif
 
 bool makeSocketNonBlocking(Socket fd);
@@ -119,14 +122,19 @@ class FdSet
 
       void setRead(Socket fd)
       {
+		  assert( FD_SETSIZE >= 8 );
+#ifndef WIN32 // windows fd are not int's and don't start at 0 - this won't work in windows
          assert( fd < FD_SETSIZE ); // redefineing FD_SETSIZE will not work 
+#endif
          FD_SET(fd, &read);
          size = ( int(fd+1) > size) ? int(fd+1) : size;
       }
 
       void setWrite(Socket fd)
       {
-         assert( fd < FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
+#ifndef WIN32 // windows fd are not int's and don't start at 0 - this won't work in windows
+		  assert( fd < FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
+#endif
          FD_SET(fd, &write);
          size = ( int(fd+1) > size) ? int(fd+1) : size;
       }
