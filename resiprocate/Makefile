@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.123 2003/08/06 16:25:11 jason Exp $
+# $Id: Makefile,v 1.124 2003/08/07 20:50:19 jason Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -22,6 +22,7 @@ SRC = \
 	os/CountStream.cxx \
 	os/Data.cxx \
 	os/DataStream.cxx \
+	os/DnsUtil.cxx \
 	os/Lock.cxx \
 	os/Log.cxx \
 	os/Logger.cxx \
