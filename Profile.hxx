@@ -16,13 +16,26 @@ class Profile
    public:        
       Profile(Profile *baseProfile = 0);  // Default to no base profile
       virtual ~Profile();
-      
+
+      // This default is used if no value is passed in when creating a registration
       virtual void setDefaultRegistrationTime(int secs);
       virtual int getDefaultRegistrationTime() const;
 
+      // If a registration gets rejected with a 423, then we with the MinExpires value - if it is less than this
+      // Set to 0 to disable this check and accept any time suggested by the server.
+      virtual void setDefaultMaxRegistrationTime(int secs);
+      virtual int getDefaultMaxRegistrationTime() const;
+
+      // The time to retry registrations on error responses (if Retry-After header is not present in error)
+      // Set to 0 to never retry on errors
+      virtual void setDefaultRegistrationRetryTime(int secs);
+      virtual int getDefaultRegistrationRetryTime() const;
+
+      // This default is used if no value is passed in when creating a subscription
       virtual void setDefaultSubscriptionTime(int secs);
       virtual int getDefaultSubscriptionTime() const;
 
+      // This default is used if no value is passed in when creating a publication
       virtual void setDefaultPublicationTime(int secs);
       virtual int getDefaultPublicationTime() const;
 
@@ -55,6 +68,7 @@ class Profile
       virtual void setDefaultSessionTimerMode(Profile::SessionTimerMode mode);
       virtual Profile::SessionTimerMode getDefaultSessionTimerMode() const;
 
+      // The amount of time that can pass before dum will resubmit an unreliable provisional response
       virtual void set1xxRetransmissionTime(int secs);
       virtual int get1xxRetransmissionTime() const;
 
@@ -75,7 +89,8 @@ class Profile
 	  virtual void addAdvertisedCapability(const Headers::Type header);
       virtual bool isAdvertisedCapability(const Headers::Type header) const;
 	  virtual void clearAdvertisedCapabilities();
-      
+
+      // Use to route all outbound requests through a particular proxy
       virtual void setOutboundProxy( const Uri& uri );
       virtual const NameAddr& getOutboundProxy() const;
       virtual bool hasOutboundProxy() const;
@@ -97,6 +112,12 @@ class Profile
       // !slg! - should we provide a mechanism to clear the mHasxxxxx members to re-enable fall through after setting?
 	  bool mHasDefaultRegistrationExpires;
       int mDefaultRegistrationExpires;
+
+      bool mHasDefaultMaxRegistrationExpires;
+      int mDefaultMaxRegistrationExpires;
+
+      bool mHasDefaultRegistrationRetryInterval;
+      int  mDefaultRegistrationRetryInterval;
 
       bool mHasDefaultSubscriptionExpires;
       int mDefaultSubscriptionExpires;

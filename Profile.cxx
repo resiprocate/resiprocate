@@ -15,6 +15,12 @@ Profile::Profile(Profile *baseProfile) :
       mHasDefaultRegistrationExpires = true;
       mDefaultRegistrationExpires = 3600; // 1 hour
 
+      mHasDefaultMaxRegistrationExpires = true;
+      mDefaultMaxRegistrationExpires = 0; // No restriction
+
+      mHasDefaultRegistrationRetryInterval = true;
+      mDefaultRegistrationRetryInterval = 0; // Retries disabled
+
       mHasDefaultSubscriptionExpires = true;
       mDefaultSubscriptionExpires = 3600; // 1 hour
 
@@ -52,6 +58,8 @@ Profile::Profile(Profile *baseProfile) :
    else
    {
       mHasDefaultRegistrationExpires = false;
+      mHasDefaultMaxRegistrationExpires = false;
+      mHasDefaultRegistrationRetryInterval = false;
       mHasDefaultSubscriptionExpires = false;
       mHasDefaultPublicationExpires = false;
       mHasDefaultStaleCallTime = false;
@@ -87,6 +95,42 @@ Profile::getDefaultRegistrationTime() const
        return mBaseProfile->getDefaultRegistrationTime();
    }
    return mDefaultRegistrationExpires;
+}
+
+void
+Profile::setDefaultMaxRegistrationTime(int secs)
+{
+   mDefaultMaxRegistrationExpires = secs;
+   mHasDefaultMaxRegistrationExpires = true;
+}
+
+int 
+Profile::getDefaultMaxRegistrationTime() const
+{
+   // Fall through seting (if required)
+   if(!mHasDefaultMaxRegistrationExpires && mBaseProfile)
+   {
+       return mBaseProfile->getDefaultMaxRegistrationTime();
+   }
+   return mDefaultMaxRegistrationExpires;
+}
+
+void
+Profile::setDefaultRegistrationRetryTime(int secs)
+{
+   mDefaultRegistrationRetryInterval = secs;
+   mHasDefaultRegistrationRetryInterval = true;
+}
+
+int 
+Profile::getDefaultRegistrationRetryTime() const
+{
+   // Fall through seting (if required)
+   if(!mHasDefaultRegistrationRetryInterval && mBaseProfile)
+   {
+       return mBaseProfile->getDefaultRegistrationRetryTime();
+   }
+   return mDefaultRegistrationRetryInterval;
 }
 
 void
