@@ -1,7 +1,13 @@
+#ifndef WIN32
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#else
+#include <winsock2.h>
+#include <stdlib.h>
+#include <io.h>
+#endif
 #include <stdio.h>
 #include <unistd.h>
 
