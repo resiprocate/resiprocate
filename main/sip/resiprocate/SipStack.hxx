@@ -46,7 +46,7 @@ public:
 
         TransactionMap mTransactionMap;
 
-  Timer  mTimers;
+  TimerQueue  mTimers;
 
 
    private:
