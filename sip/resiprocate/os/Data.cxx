@@ -632,6 +632,9 @@ Data::operator^=(const Data& rhs)
    if (mCapacity < rhs.mSize)
    {
       resize(rhs.mSize, true);
+   }
+   if (mSize < rhs.mSize)
+   {
       memset(mBuf+mSize, 0, mCapacity - mSize);
    }
 
@@ -823,7 +826,8 @@ Data::own() const
 
 // generate additional capacity
 void
-Data::resize(size_type newCapacity, bool copy)
+Data::resize(size_type newCapacity, 
+             bool copy)
 {
    char *oldBuf = mBuf;
    mBuf = new char[newCapacity+1];
