@@ -38,7 +38,6 @@ ClientInviteSession::setAnswer(const SdpContents* sdp)
 {
 }
 
-
 void
 ClientInviteSession::dispatch(const SipMessage& msg)
 {
@@ -147,9 +146,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             int code = msg.header(h_StatusLine).statusCode();
             if (code / 100 == 2 && msg.header(h_CSeq).method() == INVITE)
             {
-               mDialog.makeRequest(mLastRequest, BYE);
-               mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), mLastRequest);
-               mState = Terminated;
+               end();
             }
             else if (code >= 300 && msg.header(h_CSeq).method() == INVITE)
             {
@@ -160,50 +157,33 @@ ClientInviteSession::dispatch(const SipMessage& msg)
       }
          
       case Connected:
-         // reINVITE
-         if (msg.isRequest())
-         {
-            switch(msg.header(h_RequestLine).method())
-            {
-               case INVITE:
-                  mDialog.update(msg);
-                  mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
-                  
-                  if (offans.first != None)
-                  {
-                     InviteSession::incomingSdp(msg, offans.second);
-                  }
-                  break;
-
-               case BYE:
-                  mDialog.makeResponse(msg, mLastRequest, 200); 
-                  mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), mLastRequest);
-                  mState = Terminated;
-                  break;
-
-               case UPDATE:
-                  assert(0);
-                  break;
-                  
-               case INFO:
-                  mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
-                  break;
-                  
-               case REFER:
-                  assert(0); // !jf! 
-                  mDum.mInviteSessionHandler->onRefer(getSessionHandle(), msg);
-                  break;
-                  
-               default:
-                  InfoLog (<< "Ignoring request in an INVITE dialog: " << msg.brief());
-                  break;
-            }
-         }
+         InviteSession::dispatch(msg);
          break;
          
       case Terminated:
+         if (msg.isResponse() && msg.header(h_StatusLine).statusCode() == 200 && msg.header(h_CSeq).method() == BYE)
+         {
+            delete this;
+         }
          break;
       }
+}
+
+void
+ClientInviteSession::dispatch(const DumTimeout& timeout)
+{
+   
+}
+
+void
+ClientInviteSession::send(const SipMessage& msg)
+{
+   if (msg.header(h_CSeq).method() == BYE && 
+       msg.isResponse() && msg.header(h_StatusLine).statusCode() == 200)       
+   {
+      mState = Terminated;
+   }
+   InviteSession::send(msg);
 }
 
 SipMessage&
@@ -481,11 +461,6 @@ ClientInviteSession::getSessionHandle()
 {
    // don't ask, don't tell
    return (InviteSession::Handle&)mHandle;
-}
-
-void 
-ClientInviteSession::dispatch(const DumTimeout& timout)
-{
 }
 
 
