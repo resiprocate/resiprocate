@@ -2,19 +2,16 @@
 
 using namespace resip;
 
-const Subsystem Subsystem::APP("APP");
-const Subsystem Subsystem::BASE("BASE");
-const Subsystem Subsystem::CONTENTS("CONTENTS");
-const Subsystem Subsystem::DNS("DNS");
-const Subsystem Subsystem::DUM("DUM");
-const Subsystem Subsystem::NONE("NONE");
-const Subsystem Subsystem::PRESENCE("PRESENCE");
-const Subsystem Subsystem::SDP("SDP");
-const Subsystem Subsystem::SIP("SIP");    // SIP Stack / Parser
-const Subsystem Subsystem::TEST("TEST");
-const Subsystem Subsystem::TRANSACTION("TRANSACTION");
-const Subsystem Subsystem::TRANSPORT("TRANSPORT");
-const Subsystem Subsystem::UTIL("UTIL");
+const Subsystem Subsystem::CONTENTS("RESIP:CONTENTS");
+const Subsystem Subsystem::DNS("RESIP:DNS");
+const Subsystem Subsystem::DUM("RESIP:DUM");
+const Subsystem Subsystem::PRESENCE("RESIP:PRESENCE");
+const Subsystem Subsystem::SDP("RESIP:SDP");
+const Subsystem Subsystem::SIP("RESIP");    // SIP Stack / Parser
+const Subsystem Subsystem::TEST("RESIP:TEST");
+const Subsystem Subsystem::TRANSACTION("RESIP:TRANSACTION");
+const Subsystem Subsystem::TRANSPORT("RESIP:TRANSPORT");
+const Subsystem Subsystem::NONE("UNDEFINED");
 
 std::ostream& 
 resip::operator<<(std::ostream& strm, const Subsystem& ss)

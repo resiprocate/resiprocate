@@ -13,7 +13,7 @@
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::UTIL
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 bool 
 resip::makeSocketNonBlocking(Socket fd)

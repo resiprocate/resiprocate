@@ -10,7 +10,7 @@
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::APP
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 int
 main(int argc, char* argv[])
