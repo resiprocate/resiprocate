@@ -30,7 +30,8 @@ ParseBuffer::operator=(const ParseBuffer& rhs)
 void
 ParseBuffer::reset(const char* pos) //should be renamed to set
 {
-   assert(pos >= mBuff && pos <= mEnd);
+   assert( mBuff <= mEnd);
+   assert( (pos >= mBuff) && (pos <= mEnd) );
    mTraversalPtr = pos;
 }
 
@@ -480,7 +481,7 @@ ParseBuffer::assertEof()
 {
    if (!eof())
    {
-      throw Exception("Expected eof", __FILE__, __LINE__);
+      fail("Expected eof");
    }      
 }
 
@@ -489,13 +490,14 @@ ParseBuffer::assertNotEof()
 {
    if (eof())
    {
-      throw Exception("Expected not eof", __FILE__, __LINE__);
+      fail( "Expected not eof" );
    }      
 }
 
 void
 ParseBuffer::fail(const Data& message)
 {
+   InfoLog("Parse failed - exception - " << message );
    throw Exception(message, __FILE__, __LINE__);
 }
 
