@@ -29,7 +29,7 @@ main(int argc, char *argv[])
    InfoLog( << "Starting up, making stack");
 
    client = new SipStack();
-   client->addTransport(Transport::UDP, 5070);
+   client->addTransport(UDP, 5070);
 
    // Test 1: 
    // client sends a reg, server does nothing, client should retransmit 10

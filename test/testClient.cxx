@@ -115,11 +115,11 @@ main(int argc, char* argv[])
    TransportType protocol;
    if (isEqualNoCase(target.uri().param(p_transport), "UDP"))
    {
-      protocol = Transport::UDP;
+      protocol = UDP;
    }
    else if (isEqualNoCase(target.uri().param(p_transport), "TCP"))
    {
-      protocol = Transport::TCP;
+      protocol = TCP;
    }
    else
    {

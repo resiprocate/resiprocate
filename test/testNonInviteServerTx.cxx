@@ -35,7 +35,7 @@ main(int argc, char *argv[])
     InfoLog( << "Starting up, making stack");
 
     client = new SipStack();
-    client->addTransport(Transport::UDP, 5060);
+    client->addTransport(UDP, 5060);
 
     server = new UdpTransport("localhost", 5070, "default", received);
 
