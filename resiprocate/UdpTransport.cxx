@@ -101,9 +101,15 @@ UdpTransport::process(FdSet& fdset)
                        MaxBufferSize,
                        0 /*flags */,
                        &from, &fromLen);
+
    if ( len == SOCKET_ERROR )
    {
-      error(getErrno());
+	  int err = getErrno();
+
+	  if ( err != EWOULDBLOCK  )
+	  {
+		error( err );
+	  }
    }
 
    if (len == 0 || len == SOCKET_ERROR)
