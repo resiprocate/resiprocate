@@ -178,6 +178,23 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          break;
       }
       //!dcm! -- cancel handling needs work
+      case IgnoreFork:
+         if (msg.isResponse())
+         {
+            int code = msg.header(h_StatusLine).statusCode();
+            if (code / 100 == 2 && msg.header(h_CSeq).method() == INVITE)
+            {
+               //!dcm! -- ack the crossover 200?
+               mState = Connected;               
+               end();
+            }
+            else if (code >= 300 && msg.header(h_CSeq).method() == INVITE)
+            {
+	           mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
+               guard.destroy();
+            }
+         }
+         break;         
       case Cancelled:
       {
          if (msg.isResponse())
@@ -214,7 +231,7 @@ ClientInviteSession::dispatch(const DumTimeout& timeout)
       mDum.mInviteSessionHandler->onStaleCallTimeout(getHandle());
       end();  // Terminate call
    }
-   else if (timeout.type() == DumTimeout::Forked && mState == Forked)
+   else if (timeout.type() == DumTimeout::Forked && (mState == Forked || mState == IgnoreFork))
    {
       mDum.mInviteSessionHandler->onForkDestroyed(getHandle());
       guard.destroy();
@@ -335,6 +352,9 @@ ClientInviteSession::end()
       case Cancelled: //user error
          InfoLog ( << "ClientInviteSession::end, Cannot end a session that has already been cancelled.)" );        
          throw UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
+      case Forked:
+         mState = IgnoreFork;
+         break;
       default:
          InfoLog ( << "ClientInviteSession::end, Progammer error)" );        
          assert(false);//throw UsageUseException("Progammer error", __FILE__, __LINE__);
@@ -410,7 +430,7 @@ ClientInviteSession::forked()
    {
       case Initial:
       case Early:
-      case Proceeding:
+      case Proceeding:         
          mState = Forked;
          mDum.addTimerMs(DumTimeout::Forked, Timer::TH, getBaseHandle(), 0);         
          break;
