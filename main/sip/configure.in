@@ -18,13 +18,6 @@ AC_SUBST(VOCAL_USE_TOOLCHAIN)dnl
 
 # allow alternate toolchain root
 
-AC_ARG_WITH(template-repository, [
-  --with-template-repository	  use a template repository with gcc.],
-	[VOCAL_USE_GCC_REPO=true],
-	[VOCAL_USE_GCC_REPO=false])
-AC_SUBST(VOCAL_USE_GCC_REPO)dnl
-
-
 AC_ARG_WITH(builddir, [
 Toolchain options:
   --with-builddir=/path/to/builddir      build in a local directory],
@@ -45,7 +38,7 @@ AC_ARG_WITH(ar, [
 AC_SUBST(VOCAL_AR_PATH)dnl
 
 AC_ARG_WITH(shared-libs, [
-  --with-shared-libs              don't build with shared libraries],
+  --with-shared-libs              only build shared libraries],
 	[VOCAL_BUILD_SHARED_LIBS=$with_shared_libs],
 	[VOCAL_BUILD_SHARED_LIBS=no])
 AC_SUBST(VOCAL_BUILD_SHARED_LIBS)dnl
@@ -61,6 +54,13 @@ AC_ARG_WITH(distcc, [
 	[USE_DISTCC=true],
 	[USE_DISTCC=false])
 AC_SUBST(USE_DISTCC)dnl
+
+AC_ARG_WITH(popt, [
+  --with-popt                  use the popt library for some test cases
+	[USE_POPT=true],
+	[USE_POPT=false])
+AC_SUBST(USE_POPT)dnl
+
 
 # vocalconfig.h is NOT to be generated via AC_CONFIG_HEADER(S) but by
 # AC_OUTPUT.
