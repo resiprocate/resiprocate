@@ -1,5 +1,5 @@
-#ifndef Headers_hxx
-#define Headers_hxx
+#if !defined(RESIP_HEADERS_HXX)
+#define RESIP_HEADERS_HXX 
 
 #include "resiprocate/supported.hxx"
 #include "resiprocate/ParserCategories.hxx"
@@ -222,6 +222,8 @@ extern StatusLineType h_StatusLine;
 #undef defineHeader
 #undef defineMultiHeader
 
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -271,5 +273,3 @@ extern StatusLineType h_StatusLine;
  * <http://www.vovida.org/>.
  *
  */
-
-#endif

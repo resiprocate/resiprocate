@@ -1,5 +1,5 @@
-#ifndef Contents_hxx
-#define Contents_hxx
+#if !defined(RESIP_CONTENTS_HXX)
+#define RESIP_CONTENTS_HXX 
 
 #include "resiprocate/LazyParser.hxx"
 #include "resiprocate/ParserCategories.hxx" // .dlb. Mime, Token, StringCategory

@@ -1,5 +1,5 @@
-#ifndef MessageWaitingContents_hxx
-#define MessageWaitingContents_hxx
+#if !defined(RESIP_MESSAGEWAITINGCONTENTS_HXX)
+#define RESIP_MESSAGEWAITINGCONTENTS_HXX 
 
 #include <map>
 

@@ -1,5 +1,5 @@
-#if !defined(DIALOGSET_HXX)
-#define DIALOGSET_HXX
+#if !defined(RESIP_DIALOGSET_HXX)
+#define RESIP_DIALOGSET_HXX
 
 #include <map>
 
@@ -33,9 +33,7 @@ class DialogSet
  
 }
 
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -86,5 +84,3 @@ class DialogSet
  * <http://www.vovida.org/>.
  *
  */
-
-

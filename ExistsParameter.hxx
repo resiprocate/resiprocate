@@ -1,5 +1,5 @@
-#ifndef ExistsParameter_hxx
-#define ExistsParameter_hxx
+#if !defined(RESIP_EXISTSPARAMETER_HXX)
+#define RESIP_EXISTSPARAMETER_HXX 
 
 #include "resiprocate/Parameter.hxx"
 #include <iostream>
@@ -34,7 +34,6 @@ class ExistsParameter : public Parameter
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
