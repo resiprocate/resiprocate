@@ -105,6 +105,27 @@ typedef unsigned __int64 UInt64;
 typedef unsigned long long UInt64;
 #endif
 
+#if defined( WIN32 )
+namespace std
+{
+template <class T>
+inline const T& min(const T& a, const T& b)
+{
+   return b < a ? b : a;
+}
+
+template <class T>
+inline const T& max(const T& a, const T& b)
+{
+   return  a < b ? b : a;
+}
+};
+#if !defined( NOMINMAX )
+#define NOMINMAX // Prevent Windows from #defining min/max
+#endif // NOMINMAX
+
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
