@@ -219,9 +219,9 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
             return;
 #else
             DebugLog(<<"Should be doing NAPTR+SRV per RFC 3263 s4.1, 4.2");
+            transport = Transport::UDP;
 
 #if defined(USE_ARES)
-            transport = Transport::UDP;
             DebugLog(<<"For now assuming UDP and just doing SRV");
             port = determinePort(uri.scheme(), transport);
             Request* request = new Request(mStack, transactionId,
