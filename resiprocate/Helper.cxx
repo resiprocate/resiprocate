@@ -2,7 +2,6 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include <openssl/blowfish.h>
 #include <string.h>
 #include <iomanip>
 #include <algorithm>
@@ -901,6 +900,9 @@ Helper::validateMessage(const SipMessage& message)
    }
 }
 
+#if defined(USE_SSL)
+#include <openssl/blowfish.h>
+
 static const Data sep("[]");
 static const Data pad("\0\0\0\0\0\0\0", 7);
 static const Data GRUU("_GRUU");
@@ -991,7 +993,8 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
    return std::make_pair(pair.substr(2*saltBytes, pos), // strip out the salt
                          pair.substr(pos+sep.size()).c_str());
 }
-      
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
