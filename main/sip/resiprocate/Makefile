@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.138 2004/02/12 08:36:42 fluffy Exp $
+# $Id: Makefile,v 1.139 2004/02/12 14:01:34 fluffy Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -80,6 +80,7 @@ SRC = \
 	ParserCategory.cxx \
 	Pkcs7Contents.cxx \
 	PlainContents.cxx \
+	CpimContents.cxx \
 	Preparse.cxx \
 	MsgHeaderScanner.cxx \
 	QopParameter.cxx \
