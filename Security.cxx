@@ -871,7 +871,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    
    list<Contents*>::const_iterator i = multi->parts().begin();
    Contents* first = *i;
-   i++;
+   ++i;
    assert( i != multi->parts().end() );
    Contents* second = *i;
    Pkcs7SignedContents* sig = dynamic_cast<Pkcs7SignedContents*>( second );
