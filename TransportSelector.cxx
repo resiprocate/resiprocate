@@ -500,8 +500,16 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 
 #ifndef NO_IPHLPAPI  
          default:
-            // will not work on ipv6
-            source = WinCompat::determineSourceInterface(target);
+            try
+            {
+               // will not work on ipv6
+               source = WinCompat::determineSourceInterface(target);
+            }
+            catch (WinCompat::Exception&)
+            {
+               ErrLog (<< "Can't find source interface to use");
+               throw Transport::Exception("Can't find source interface", __FILE__, __LINE__);
+            }
             break;
 #endif
       }
