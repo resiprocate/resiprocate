@@ -1,59 +1,111 @@
-#if !defined(RESIP_WEBADMIN_HXX)
-#define RESIP_WEBADMIN_HXX 
 
-#include "resiprocate/Security.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/Uri.hxx"
 
-#include "repro/UserAbstractDb.hxx"
-#include "repro/RouteAbstractDb.hxx"
-#include "repro/HttpBase.hxx"
+#include "repro/RouteDbMemory.hxx"
 
-namespace resip
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+
+RouteDbMemory::RouteDbMemory()
 {
-class RegistrationPersistenceManager;
 }
 
 
-namespace repro
+RouteDbMemory::~RouteDbMemory()
 {
-
-class WebAdmin: public HttpBase
-{
-   public:
-      WebAdmin( UserAbstractDb& userDb,
-                resip::RegistrationPersistenceManager& regDb,
-                RouteAbstractDb& routeDb,
-                resip::Security& security,
-                int port=5080, 
-                resip::IpVersion version=resip::V4);
-      
-   protected:
-      virtual void buildPage( const resip::Data& uri, int pageNumber );
-
-   private: 
-      resip::Data buildDefaultPage();
-
-      resip::Data buildAddRoutePage();
-      resip::Data buildAddUserPage();
-      resip::Data buildShowRegsPage();
-      resip::Data buildShowRoutesPage();
-      resip::Data buildShowUsersPage();
-      resip::Data buildCertPage(const resip::Data& domain);
-      
-      UserAbstractDb& mUserDb;
-      resip::RegistrationPersistenceManager& mRegDb;
-      RouteAbstractDb& mRouteDb;
-      resip::Security& mSecurity;
-};
-
-
-
 }
 
-#endif  
+
+void 
+RouteDbMemory::add(const resip::Data& method,
+                   const resip::Data& event,
+                   const resip::Data& matchingPattern,
+                   const resip::Data& rewriteExpression)
+{
+}
+
+
+RouteDbMemory::RouteList 
+RouteDbMemory::getRoutes() const
+{
+   RouteDbMemory::RouteList result;
+   result.reserve(mRouteOperators.size());
+   
+   for (RouteOperatorList::const_iterator it = mRouteOperators.begin();
+        it != mRouteOperators.end(); it++)
+   {
+      result.push_back(*it);
+   }
+   return result;   
+}
+
+
+void 
+RouteDbMemory::erase(const Route& )
+{
+   assert(0);
+}
+
+      
+resip::Uri 
+RouteDbMemory::process(const resip::Uri& ruri, const resip::Data& method, const resip::Data& event )
+{
+   for (RouteOperatorList::iterator it = mRouteOperators.begin();
+        it != mRouteOperators.end(); it++)
+   {
+      if (it->matches(ruri, method, event))
+      {
+         return it->transform(ruri);
+      }
+   }
+   return ruri;
+}
+
+bool 
+RouteDbMemory::RouteOperator::matches(const resip::Uri& ruri, 
+                                      const resip::Data& method, 
+                                      const resip::Data& event)
+{
+   if ( !mMethod.empty() )
+   {
+      if ( mMethod != method) return false;
+   }
+   if ( !mEvent.empty() )
+   {
+      if ( mEvent != event) return false;
+   }
+   if ( !mMatchingPattern.empty()) //!dcm! -- use regexp
+   {
+      if (mMatchingPattern != ruri.getAor()) return false;
+   }
+   return true;   
+}
+
+resip::Uri 
+RouteDbMemory::RouteOperator::transform(const resip::Uri& ruri)
+{
+   try
+   {
+      return Uri(mRewriteExpression); //!dcm! -- bogus
+   }
+   catch( BaseException& e)
+   {
+      ErrLog( << "Invalid transform: " << mRewriteExpression);
+      return ruri;
+   }
+}
+
+
+
+
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -1,58 +1,48 @@
-#if !defined(RESIP_WEBADMIN_HXX)
-#define RESIP_WEBADMIN_HXX 
+#if !defined(REPRO_ROUTEABSTRACTDB_HXX)
+#define REPRO_ROUTEABSTRACTDB_HXX
 
-#include "resiprocate/Security.hxx"
+#include <vector>
+
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Tuple.hxx"
-
-#include "repro/UserAbstractDb.hxx"
-#include "repro/RouteAbstractDb.hxx"
-#include "repro/HttpBase.hxx"
 
 namespace resip
 {
-class RegistrationPersistenceManager;
+class Uri;
 }
-
 
 namespace repro
 {
 
-class WebAdmin: public HttpBase
+class RouteAbstractDb
 {
    public:
-      WebAdmin( UserAbstractDb& userDb,
-                resip::RegistrationPersistenceManager& regDb,
-                RouteAbstractDb& routeDb,
-                resip::Security& security,
-                int port=5080, 
-                resip::IpVersion version=resip::V4);
+      class Route
+      {
+         public:
+            //!dcm! -- cleanse
+            resip::Data mMethod;
+            resip::Data mEvent;
+            resip::Data mMatchingPattern;
+            resip::Data mRewriteExpression;
+      };
       
-   protected:
-      virtual void buildPage( const resip::Data& uri, int pageNumber );
-
-   private: 
-      resip::Data buildDefaultPage();
-
-      resip::Data buildAddRoutePage();
-      resip::Data buildAddUserPage();
-      resip::Data buildShowRegsPage();
-      resip::Data buildShowRoutesPage();
-      resip::Data buildShowUsersPage();
-      resip::Data buildCertPage(const resip::Data& domain);
+      typedef std::vector<Route> RouteList;
+            
+      RouteAbstractDb() {}
+      virtual ~RouteAbstractDb() {}
       
-      UserAbstractDb& mUserDb;
-      resip::RegistrationPersistenceManager& mRegDb;
-      RouteAbstractDb& mRouteDb;
-      resip::Security& mSecurity;
+      virtual void add(const resip::Data& method,
+                       const resip::Data& event,
+                       const resip::Data& matchingPattern,
+                       const resip::Data& rewriteExpression)=0;
+      
+      virtual RouteList getRoutes() const=0;
+      virtual void erase(const Route& )=0;
+      
+      virtual resip::Uri process(const resip::Uri& ruri, const resip::Data& method, const resip::Data& event ) =0;
 };
 
-
-
-}
-
+ }
 #endif  
 
 /* ====================================================================

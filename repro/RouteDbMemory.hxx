@@ -1,58 +1,41 @@
-#if !defined(RESIP_WEBADMIN_HXX)
-#define RESIP_WEBADMIN_HXX 
+#if !defined(REPRO_ROUTEDBMEMORY_HXX)
+#define REPRO_ROUTEDBMEMORY_HXX
 
-#include "resiprocate/Security.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#include <vector>
 
-#include "repro/UserAbstractDb.hxx"
 #include "repro/RouteAbstractDb.hxx"
-#include "repro/HttpBase.hxx"
-
-namespace resip
-{
-class RegistrationPersistenceManager;
-}
-
 
 namespace repro
 {
 
-class WebAdmin: public HttpBase
+class RouteDbMemory : public RouteAbstractDb
 {
    public:
-      WebAdmin( UserAbstractDb& userDb,
-                resip::RegistrationPersistenceManager& regDb,
-                RouteAbstractDb& routeDb,
-                resip::Security& security,
-                int port=5080, 
-                resip::IpVersion version=resip::V4);
-      
-   protected:
-      virtual void buildPage( const resip::Data& uri, int pageNumber );
+      RouteDbMemory();
+      ~RouteDbMemory();
 
-   private: 
-      resip::Data buildDefaultPage();
-
-      resip::Data buildAddRoutePage();
-      resip::Data buildAddUserPage();
-      resip::Data buildShowRegsPage();
-      resip::Data buildShowRoutesPage();
-      resip::Data buildShowUsersPage();
-      resip::Data buildCertPage(const resip::Data& domain);
+      virtual void add(const resip::Data& method,
+                       const resip::Data& event,
+                       const resip::Data& matchingPattern,
+                       const resip::Data& rewriteExpression);
       
-      UserAbstractDb& mUserDb;
-      resip::RegistrationPersistenceManager& mRegDb;
-      RouteAbstractDb& mRouteDb;
-      resip::Security& mSecurity;
+      virtual RouteList getRoutes() const;
+      virtual void erase(const Route& );
+      
+      virtual resip::Uri process(const resip::Uri& ruri, const resip::Data& method, const resip::Data& event );
+   private:
+      
+      class RouteOperator : public Route 
+      {
+         public:
+            bool matches(const resip::Uri& ruri, const resip::Data& method, const resip::Data& event);
+            resip::Uri transform(const resip::Uri& ruri);
+      };
+      typedef std::vector<RouteOperator> RouteOperatorList;
+      RouteOperatorList mRouteOperators;
 };
 
-
-
 }
-
 #endif  
 
 /* ====================================================================
