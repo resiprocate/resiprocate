@@ -42,7 +42,6 @@ libresiprocate_la_SOURCES = \
 	Connection.cxx \
 	ConnectionManager.cxx \
 	DataParameter.cxx \
-	Dialog.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
 	Embedded.cxx \
@@ -115,9 +114,7 @@ libresiprocate_la_SOURCES = \
 	TransportMessage.cxx \
 	TransportSelector.cxx \
 	UdpTransport.cxx \
-	UnknownHeaderType.cxx \
 	UnknownParameter.cxx \
-	UnknownParameterType.cxx \
 	Uri.cxx \
 	XMLCursor.cxx 
 
@@ -157,7 +154,6 @@ resiprocate_include_HEADERS = \
 	CpimContents.hxx \
 	DataParameter.hxx \
 	DateCategory.hxx \
-	Dialog.hxx \
 	DnsInterface.hxx \
 	DnsResult.hxx \
 	DnsHandler.hxx \
@@ -243,9 +239,7 @@ resiprocate_include_HEADERS = \
 	TransportSelector.hxx \
 	TuIM.hxx \
 	UdpTransport.hxx \
-	UnknownHeaderType.hxx \
 	UnknownParameter.hxx \
-	UnknownParameterType.hxx \
 	Uri.hxx \
 	Via.hxx \
 	WarningCategory.hxx \

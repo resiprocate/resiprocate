@@ -31,9 +31,9 @@ check_PROGRAMS = \
 	testApplicationSip \
 	testClient \
 	testCoders \
+	testConvertRaw \
 	testCountStream \
 	testData \
-	testDataPerformance \
 	testDataStream \
 	testDigestAuthentication \
 	testDns \
@@ -72,7 +72,7 @@ check_PROGRAMS = \
 	testUri \
 	testXMLCursor 
 
-bin_PROGRAMS = limpc testTcp
+bin_PROGRAMS = limpc testTcp testDataPerformance
 
 TESTS = $(check_PROGRAMS)
 SipTortureTests_SOURCES = SipTortureTests.cxx
@@ -88,6 +88,7 @@ testGperfHash_SOURCES = testGperfHash.cxx
 testApplicationSip_SOURCES = testApplicationSip.cxx
 testClient_SOURCES = testClient.cxx
 testCoders_SOURCES = testCoders.cxx
+testConvertRaw_SOURCES = testConvertRaw.cxx
 testCountStream_SOURCES = testCountStream.cxx
 testDataPerformance_SOURCES = testDataPerformance.cxx
 testDataStream_SOURCES = testDataStream.cxx
