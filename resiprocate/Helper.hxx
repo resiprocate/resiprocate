@@ -53,6 +53,15 @@ class Helper
 
       static Data computeCallId();
       static Data computeTag(int numBytes);
+
+      // pass in a request and md5 password
+      // return true if the request has the correct ProxyAuthorization or Authorization
+      static bool authenticateRequest(const SipMessage& request, const Data& encodedPassword);
+      
+      // create a 407 response with Proxy-Authenticate header filled in
+      static SipMessage* makeProxyChallenge(const SipMessage& request, const Data& realm, const Data& encodedPassword);
+
+      static Uri makeUri(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
 };
  
 }
