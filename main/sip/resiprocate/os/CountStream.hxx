@@ -11,7 +11,7 @@ namespace resip
 class CountBuffer : public std::streambuf 
 {
    public:
-      CountBuffer();
+      CountBuffer(size_t& count);
       virtual ~CountBuffer();
 
       unsigned long size() const {return mCount;}
@@ -21,13 +21,13 @@ class CountBuffer : public std::streambuf
       virtual int overflow(int c = -1);
 
    private:
-      unsigned long mCount;
+      size_t& mCount;
 };
 
 class CountStream : public std::ostream
 {
    public:
-      CountStream();
+      CountStream(size_t& count);
       ~CountStream();
 
       unsigned long size() const {return mStreamBuf.size();}
