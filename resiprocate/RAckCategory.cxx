@@ -19,15 +19,15 @@ using namespace std;
 //====================
 RAckCategory::RAckCategory(HeaderFieldValue* hfv, Headers::Type type)
    : ParserCategory(hfv, type), 
-     mMethod(RESIP_UNKNOWN),
+     mMethod(UNKNOWN), 
      mRSequence(-1),
      mCSequence(-1) 
 {}
 
 RAckCategory::RAckCategory() 
    : ParserCategory(), 
-     mMethod(RESIP_UNKNOWN),
-     mUnknownMethodName(getMethodName(RESIP_UNKNOWN)),
+     mMethod(UNKNOWN), 
+     mUnknownMethodName(getMethodName(UNKNOWN)),
      mRSequence(-1),
      mCSequence(-1) 
 {}
@@ -58,7 +58,7 @@ bool
 RAckCategory::operator==(const RAckCategory& rhs) const
 {
    return (mMethod == rhs.mMethod &&
-           (mMethod != RESIP_UNKNOWN || mUnknownMethodName == rhs.mUnknownMethodName) &&
+           (mMethod != UNKNOWN || mUnknownMethodName == rhs.mUnknownMethodName) &&
            mRSequence == rhs.mRSequence &&
            mCSequence == rhs.mCSequence);
 }
@@ -147,7 +147,7 @@ RAckCategory::encodeParsed(std::ostream& str) const
 {
    str << mRSequence << Symbols::SPACE 
        << mCSequence << Symbols::SPACE 
-       << (mMethod != RESIP_UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName);
+       << (mMethod != UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName);
    return str;
 }
 

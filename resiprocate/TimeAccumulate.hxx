@@ -7,41 +7,9 @@
 #include "resiprocate/os/Lock.hxx"
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Timer.hxx"
-#include <iosfwd>
 
 namespace resip
 {
-
-class DelayOutputBase
-{
-   public:
-      virtual ~DelayOutputBase() {}
-      virtual void put(std::ostream& str) const = 0;
-};
-
-std::ostream&
-operator<<(std::ostream&, const DelayOutputBase& iib);
-
-template <class T>
-class DelayOutput : public DelayOutputBase
-{
-   public:
-      DelayOutput()
-         : mT(0)
-      {}
-
-      DelayOutput(const T& t)
-         : mT(&t)
-      {}
-
-      virtual void put(std::ostream& str) const
-      {
-         str << *myT;
-      }
-
-   private:
-      const T* mT;
-};
 
 /**
    Accumulates time and count by distinct string.
@@ -61,20 +29,19 @@ class TimeAccumulate
 #if 1
       TimeAccumulate(const Data& name)
          : mName(name),
-           mStart(Timer::getTimeMs()),
-           mTooLong(0),
-           mTooLongOutputter(0)
+           mStart(Timer::getTimeMs())
       {}
 
-      TimeAccumulate(const Data& name,
-                     unsigned int tooLong,
-                     const DelayOutputBase* outputter)
-         : mName(name),
-           mStart(Timer::getTimeMs()),
-           mTooLongOutputter(outputter)
-      {}
+      ~TimeAccumulate()
+      {
+         UInt64 end = Timer::getTimeMs();
+         end -= mStart;
+         Lock lock(TimeAccumulate::mMutex);
 
-      ~TimeAccumulate();
+         Accumulator& acc = TimeAccumulate::mTimes[mName];
+         acc.count += 1;
+         acc.totalTime += end;
+      }
 #else
       TimeAccumulate(const char* chars)
          : mName(Data::Empty),
@@ -128,8 +95,6 @@ class TimeAccumulate
 
       const Data mName;
       const UInt64 mStart;
-      const UInt64 mTooLong;
-      const DelayOutputBase *mTooLongOutputter;
 
       static Mutex mMutex;
       static TimeMap mTimes;

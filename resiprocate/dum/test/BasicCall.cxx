@@ -231,7 +231,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       {
           cout << name << ": ServerOutOfDialogReq-onReceivedRequest - " << request.brief() << endl;
           // Add SDP to response here if required
-          cout << name << ": Sending 200 response to RESIP_OPTIONS." << endl;
+          cout << name << ": Sending 200 response to OPTIONS." << endl;
           ood->send(ood->answerOptions());
       }
 };
@@ -354,7 +354,7 @@ class TestUas : public TestInviteSessionHandler
       {
          if (mSis.isValid())
          {
-            cout << name << ": Sending RESIP_BYE." << endl;
+            cout << name << ": Sending BYE." << endl;
             mSis->send(mSis->end());
          }
       }
@@ -396,7 +396,7 @@ main (int argc, char** argv)
    TestUac uac;
    dumUac->setInviteSessionHandler(&uac);
    dumUac->setClientRegistrationHandler(&uac);
-   dumUac->addOutOfDialogHandler(RESIP_OPTIONS, &uac);
+   dumUac->addOutOfDialogHandler(OPTIONS, &uac);
 
    auto_ptr<testAppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
    dumUac->setAppDialogSetFactory(uac_dsf);
@@ -439,7 +439,7 @@ main (int argc, char** argv)
    TestUas uas(&bHangupAt);
    dumUas->setClientRegistrationHandler(&uas);
    dumUas->setInviteSessionHandler(&uas);
-   dumUas->addOutOfDialogHandler(RESIP_OPTIONS, &uas);
+   dumUas->addOutOfDialogHandler(OPTIONS, &uas);
 
    auto_ptr<testAppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
    dumUas->setAppDialogSetFactory(uas_dsf);
@@ -497,12 +497,12 @@ main (int argc, char** argv)
               cout << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " << endl;
 #endif
 
-              // Kick off call flow by sending an RESIP_OPTIONS request then an RESIP_INVITE request from the UAC to the UAS
+              // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
               cout << "UAC: Sending Options Request to UAS." << endl;
-			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, uacAor, RESIP_OPTIONS, new testAppDialogSet(*dumUac, "UAC(RESIP_OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
+			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, uacAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
 
               cout << "UAC: Sending Invite Request to UAS." << endl;
-              dumUac->send(dumUac->makeInviteSession(uasAor, uacAor, uac.sdp, new testAppDialogSet(*dumUac, "UAC(RESIP_INVITE)")));
+              dumUac->send(dumUac->makeInviteSession(uasAor, uacAor, uac.sdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
            }
         }
 

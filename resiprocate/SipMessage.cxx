@@ -248,27 +248,27 @@ SipMessage::compute2543TransactionHash() const
    assert (mRFC2543TransactionId.empty());
    
    /*  From rfc3261, 17.2.3
-       The RESIP_INVITE request matches a transaction if the Request-URI, To tag,
+       The INVITE request matches a transaction if the Request-URI, To tag,
        From tag, Call-ID, CSeq, and top Via header field match those of the
-       RESIP_INVITE request which created the transaction.  In this case, the
-       RESIP_INVITE is a retransmission of the original one that created the
+       INVITE request which created the transaction.  In this case, the
+       INVITE is a retransmission of the original one that created the
        transaction.  
 
-       The RESIP_ACK request matches a transaction if the Request-URI, From tag,
+       The ACK request matches a transaction if the Request-URI, From tag,
        Call-ID, CSeq number (not the method), and top Via header field match
-       those of the RESIP_INVITE request which created the transaction, and the To
-       tag of the RESIP_ACK matches the To tag of the response sent by the server
+       those of the INVITE request which created the transaction, and the To
+       tag of the ACK matches the To tag of the response sent by the server
        transaction.  
 
        Matching is done based on the matching rules defined for each of those
-       header fields.  Inclusion of the tag in the To header field in the RESIP_ACK
-       matching process helps disambiguate RESIP_ACK for 2xx from RESIP_ACK for other
+       header fields.  Inclusion of the tag in the To header field in the ACK
+       matching process helps disambiguate ACK for 2xx from ACK for other
        responses at a proxy, which may have forwarded both responses (This
        can occur in unusual conditions.  Specifically, when a proxy forked a
        request, and then crashes, the responses may be delivered to another
        proxy, which might end up forwarding multiple responses upstream).  An
-       RESIP_ACK request that matches an RESIP_INVITE transaction matched by a previous
-       RESIP_ACK is considered a retransmission of that previous RESIP_ACK.
+       ACK request that matches an INVITE transaction matched by a previous
+       ACK is considered a retransmission of that previous ACK.
 
        For all other request methods, a request is matched to a transaction
        if the Request-URI, To tag, From tag, Call-ID, CSeq (including the
@@ -309,9 +309,9 @@ SipMessage::compute2543TransactionHash() const
       }
 
       // Only include the totag for non-invite requests
-      if (header(h_RequestLine).getMethod() != RESIP_INVITE &&
-          header(h_RequestLine).getMethod() != RESIP_ACK &&
-          header(h_RequestLine).getMethod() != RESIP_CANCEL &&
+      if (header(h_RequestLine).getMethod() != INVITE && 
+          header(h_RequestLine).getMethod() != ACK && 
+          header(h_RequestLine).getMethod() != CANCEL &&
           header(h_To).exists(p_tag))
       {
          strm << header(h_To).param(p_tag);
@@ -319,10 +319,10 @@ SipMessage::compute2543TransactionHash() const
 
       strm << header(h_CallID).value();
 
-      if (header(h_RequestLine).getMethod() == RESIP_ACK ||
-          header(h_RequestLine).getMethod() == RESIP_CANCEL)
+      if (header(h_RequestLine).getMethod() == ACK || 
+          header(h_RequestLine).getMethod() == CANCEL)
       {
-         strm << RESIP_INVITE;
+         strm << INVITE;
          strm << header(h_CSeq).sequence();
       }
       else
@@ -401,7 +401,7 @@ SipMessage::brief() const
    {
       result += request;
       MethodTypes meth = header(h_RequestLine).getMethod();
-      if (meth != RESIP_UNKNOWN)
+      if (meth != UNKNOWN)
       {
          result += getMethodName(meth);
       }
@@ -429,7 +429,7 @@ SipMessage::brief() const
    }
 
    result += cseq;
-   if (header(h_CSeq).method() != RESIP_UNKNOWN)
+   if (header(h_CSeq).method() != UNKNOWN)
    {
       result += getMethodName(header(h_CSeq).method());
    }
@@ -628,7 +628,7 @@ SipMessage::setStartLine(const char* st, int len)
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
    MethodTypes method = getMethodType(start, pb.position() - start);
-   if (method == RESIP_UNKNOWN) //probably a status line
+   if (method == UNKNOWN) //probably a status line
    {
       start = pb.skipChar(Symbols::SPACE[0]);
       pb.skipNonWhitespace();
@@ -858,7 +858,7 @@ void
 SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLen, 
                       const char* start, int len)
 {
-   if (header != Headers::RESIP_UNKNOWN)
+   if (header != Headers::UNKNOWN)
    {
       if (mHeaders[header] == 0)
       {

@@ -40,12 +40,12 @@ class TypeIf<false>
 };
 
 #define UnusedChecking(_enum)                                           \
-      typedef TypeIf<Headers::_enum != Headers::RESIP_UNKNOWN> TypeIfT;       \
+      typedef TypeIf<Headers::_enum != Headers::UNKNOWN> TypeIfT;       \
       typedef TypeIfT::Resolve<Type> Resolver;                          \
       typedef Resolver::Type UnknownReturn
 
 #define MultiUnusedChecking(_enum)                                              \
-      typedef TypeIf<Headers::_enum != Headers::RESIP_UNKNOWN> TypeIfT;               \
+      typedef TypeIf<Headers::_enum != Headers::UNKNOWN> TypeIfT;               \
       typedef TypeIfT::Resolve< ParserContainer<Type> > Resolver;               \
       typedef Resolver::Type UnknownReturn
 
@@ -103,8 +103,8 @@ defineHeader(Priority, "Priority", Token, "RFC ????");
 defineHeader(Event, "Event", Token, "RFC 3265");
 defineHeader(SubscriptionState, "Subscription-State", Token, "RFC 3265");
 
-defineHeader(SIPETag, "SIP-ETag", Token, "RESIP_PUBLISH draft");
-defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RESIP_PUBLISH draft");
+defineHeader(SIPETag, "SIP-ETag", Token, "PUBLISH draft");
+defineHeader(SIPIfMatch, "SIP-If-Match", Token, "PUBLISH draft");
 
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 // explicitly declare to avoid h_AllowEventss, ugh

@@ -135,7 +135,7 @@ main(int argc, char* argv[])
  
          MethodTypes meth = received2->header(h_RequestLine).getMethod();
 
-         if ( meth == RESIP_INVITE )
+         if ( meth == INVITE )
          {
             //Data localTag = Helper::computeTag(4);
 
@@ -148,7 +148,7 @@ main(int argc, char* argv[])
             stack2.send(*msg200);
          }
 
-         if ( meth == RESIP_BYE )
+         if ( meth == BYE )
          {
             auto_ptr<SipMessage> msg200(Helper::makeResponse(*received2, 200, dest, "OK"));
             InfoLog (<< "stack2 got bye - send 200 : " << *msg200 );   

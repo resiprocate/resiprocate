@@ -60,7 +60,7 @@ hashcasen(const char* data,
 // the name is stored by hashcasen(name) % num_buckets
 // if the position is occupied, move up the array until a free spot is found
 // on lookup:
-//    if the name array [hash] is empty, return RESIP_UNKNOWN
+//    if the name array [hash] is empty, return UNKNOWN
 //    if the name array[hash] is occupied and equal, found, return enum[hash]
 //    if the name array[hash] is occupied and !equal, try hash++
 
