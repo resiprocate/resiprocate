@@ -28,7 +28,9 @@ TimerQueue::msTillNextTimer()
       }
       else
       {
-         return next - now;
+         UInt64 ret64 = next - now;
+		 int ret = int(ret64);
+		 return ret;
       }
    }
    else
