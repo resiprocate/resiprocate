@@ -34,6 +34,7 @@ TESTPROGRAMS += limpc.cxx \
 		testDns.cxx \
 		testDnsUtil.cxx \
 		testFifo.cxx \
+		testFileSystem.cxx \
 		testTcp.cxx \
 		testUdp.cxx \
 		testStack.cxx \
@@ -50,6 +51,7 @@ TESTPROGRAMS += limpc.cxx \
 		testLockStep.cxx \
 		testLockStep.cxx \
 		testLogger.cxx \
+		testExternalLogger.cxx \
 		testMessageWaiting.cxx \
 		testMultipartMixedContents.cxx \
 		testParseBuffer.cxx \
