@@ -20,27 +20,11 @@ Executive::process(FdSet& fdset)
    
    //DebugLog (<< "start Executive::process()");
    
-   while( workToDo )
-   {
-      workToDo = false;
-     
-      if ( processTransports(fdset) )
-      {
-         workToDo=true;
-      }
-     
-      if ( processTimer()) 
-      {
-         workToDo=true;
-      }
-     
-      if ( processStateMachine()) 
-      {
-         workToDo=true;
-      }
-   }
 
-   //DebugLog (<< "finish Executive::process()");
+   processTransports(fdset);
+   processTimer();
+   
+   while( processStateMachine() );
 }
 
  

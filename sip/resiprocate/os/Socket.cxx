@@ -1,12 +1,30 @@
 
 #include <iostream>
 #include <cassert>
+#include <fcntl.h>
 
 #include "sip2/util/Socket.hxx"
+
+
 
 using namespace Vocal2;
 using namespace std;
 
+void 
+Vocal2::makeSocketNonBlocking(Socket fd)
+{
+#if WIN32
+   unsigned long block = 0;
+   int errNoBlock = ioctlsocket( fd, FIONBIO , &block );
+   assert( errNoBlock == 0 );
+#else
+   int flags  = fcntl( fd, F_GETFL, 0);
+   int errNoBlock = fcntl(fd, F_SETFL, flags | O_NONBLOCK );
+   assert( errNoBlock == 0 );
+#endif
+}
+
+   
 
 void
 Vocal2::initNetwork()
