@@ -36,9 +36,9 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
 
 // MOVEME !ah! this goes in a test_support package
 SipMessage*
-Helper::makeMessage(const Data& data)
+Helper::makeMessage(const Data& data, bool isExternal = false)
 {
-   SipMessage* msg = new SipMessage();
+   SipMessage* msg = new SipMessage(isExternal);
    int size = data.size();
    char *buffer = new char[size];
 
