@@ -37,6 +37,8 @@ Transport::Transport(Fifo<Message>& rxFifo, int portNum, const Data& intfc, bool
 
 Transport::~Transport()
 {
+   DebugLog (<< "Closing " << mFd);
+   closeSocket(mFd);
    mFd = -2;
 }
 
@@ -187,7 +189,7 @@ Transport::error(int e)
 void
 Transport::thread()
 {
-   InfoLog (<< "Starting transport thread for " << this);
+   InfoLog (<< "Starting transport thread for " << mTuple);
    while (!mShutdown)
    {
       FdSet fdset; 
