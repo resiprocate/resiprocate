@@ -35,7 +35,7 @@ class Dialog
       // different behavior from request vs. response
       // (request creates to tag)
       Dialog(DialogUsageManager& dum, const SipMessage& msg);
-
+      
       DialogId getId() const;
       
       SipMessage* makeInviteSession(const Uri& target);
@@ -62,6 +62,9 @@ class Dialog
    private:
       BaseUsage* findUsage(const SipMessage& msg);
 
+      DialogId mId;  
+      DialogUsageManager& mDum;
+
       std::vector<ClientSubscription*> mClientSubscriptions;
       ServerSubscription* mServerSubscription;
       InviteSession* mInviteSession;
@@ -72,10 +75,15 @@ class Dialog
       ClientOutOfDialogReq* mClientOutOfDialogReq;
       ServerOutOfDialogReq* mServerOutOfDialogReq;
 
-      DialogId mId;  
-      DialogUsageManager& mDum;
-
       //invariants
+      typedef enum // need to add
+      {
+         Invitation,   // INVITE dialog
+         Subscription, // Created by a SUBSCRIBE / NOTIFY / REFER
+         Fake          // Not really a dialog (e.g. created by a REGISTER)
+      } DialogType;
+      
+      DialogType mType; // !jf! is this necessary?
       Data mLocalTag;
       Data mRemoteTag;
       Data mCallId;
