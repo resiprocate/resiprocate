@@ -1,3 +1,8 @@
+2003-08-10  Wensong Zhang  <wensong@purplecomm.com>
+
+	* Makefile.am (libresiprocate_la_LDFLAGS): added to set the shared
+	library with the right resip version.
+
 2003-08-09  Wensong Zhang  <wensong@purplecomm.com>
 
 	* config.hxx.in: added the macros RESIP_MAJOR_VERSION,
