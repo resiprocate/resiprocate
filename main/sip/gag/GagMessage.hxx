@@ -119,8 +119,12 @@ class GagHelloMessage : public GagMessage
 class GagLoginMessage : public GagMessage
 {
   public:
-    GagLoginMessage(const Uri &_aor, Data &_userid, const Data &_password):
-      aor(_aor), userid(_userid), password(_password)
+    GagLoginMessage(const Uri &_aor, Data &_userid, const Data &_password,
+                    const bool _register_with_service, 
+                    const bool _publish_to_service):
+      aor(_aor), userid(_userid), password(_password),
+      register_with_service(_register_with_service),
+      publish_to_service(_publish_to_service) 
       { messageType=LOGIN; }
     GagLoginMessage(int in_fd) { messageType=LOGIN; parse (in_fd); }
 
@@ -130,10 +134,14 @@ class GagLoginMessage : public GagMessage
     Uri *getAorPtr() {return &aor;}
     Data *getUseridPtr() {return &userid;}
     Data *getPasswordPtr() {return &password;}
+    bool getRegisterWithService() {return register_with_service;}
+    bool getPublishToService() {return publish_to_service;}
   private:
     Uri aor;
     Data userid;
     Data password;
+    bool register_with_service;
+    bool publish_to_service;
 };
 
 class GagLogoutMessage : public GagMessage
