@@ -75,6 +75,8 @@ TcpTransport::~TcpTransport()
 {
    //   ::shutdown(mFd, SHUT_RDWR);
    closesocket(mFd);
+
+   InfoLog (<< "Shutting down TCP Transport");   //!rm! 
 }
 
 
@@ -118,6 +120,10 @@ TcpTransport::processListen(FdSet& fdset)
       who.transportType = Transport::TCP;
       who.transport = this;
       mConnectionMap.add(who, sock);
+
+      InfoLog (<< "Received TCP connection from: "
+               << inet_ntoa(who.ipv4) 
+               << ":" <<  who.port); //!rm!
    }
 }
 
@@ -213,12 +219,15 @@ TcpTransport::processAllWrites( FdSet& fdset )
             servaddr.sin_addr =  data->destination.ipv4;
 
             makeSocketNonBlocking(sock);
+
+            DebugLog (<<"Trying to open new connection");
+
             int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
 
             if ((e == -1) && (errno != EINPROGRESS)) 
             {
                int err = errno;
-               DebugLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
+               InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
             }
             else
             {
@@ -250,7 +259,7 @@ TcpTransport::processAllWrites( FdSet& fdset )
 	       }
 	       if (e < 1)
 	       {
-                  DebugLog( << "Timeout on TCP connect to " <<  data->destination); 
+                  InfoLog( << "Timeout on TCP connect to " <<  data->destination); 
 		  close(sock);
 	       }
 	       else
@@ -259,6 +268,9 @@ TcpTransport::processAllWrites( FdSet& fdset )
 		  mConnectionMap.add( data->destination, sock);
 		  conn = mConnectionMap.get(data->destination);
 		  assert( conn );
+                  InfoLog (<< "Opened new connection to "
+                           << inet_ntoa(data->destination.ipv4) 
+                           << ":" << data->destination.port ); // !rm!
 	       }
             }
          }
