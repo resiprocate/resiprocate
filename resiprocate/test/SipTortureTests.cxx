@@ -606,22 +606,15 @@ void test9()
                 "Call-ID: 0ha0isndaksdj@10.0.1.1\r\n"
                 "CSeq: 8 REGISTER\r\n"
                 "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
-                "Authorization: Super-PGP ajsohdaosdh0asyhdaind08yasdknasd09asidhas0d8\r\n\r\n");
-   try
-   {
-      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
-      tassert_reset();
-      tassert(message->isRequest());
-      tassert(!message->isResponse());
-
-      tassert(message->header(h_RequestLine).getMethod() == REGISTER);
-      tassert(message->header(h_Authorizations).front().scheme() == "Super-PGP");
-      tassert_verify(9);
-   }
-   catch(BaseException& e)
-   {
-      tassert(0);
-   }
+                "Authorization: Super-PGP foo=ajsohdaosdh0asyhdaind08yasdknasd09asidhas0d8\r\n\r\n");
+   auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+   tassert_reset();
+   tassert(message->isRequest());
+   tassert(!message->isResponse());
+   
+   tassert(message->header(h_RequestLine).getMethod() == REGISTER);
+   tassert(message->header(h_Authorizations).front().scheme() == "Super-PGP");
+   tassert_verify(9);
 }
 
 
