@@ -27,27 +27,45 @@ LocationServer::handleRequest(RequestContext& context)
   //!RjS! This doesn't look exception safe - need guards
   mStore.lockRecord(inputUri);
   
-  RegistrationPersistenceManager::contact_list_t contacts 
-                                = mStore.getContacts(inputUri);
+  if (mStore.aorExists(inputUri))
+  {  
+	 RegistrationPersistenceManager::contact_list_t contacts = mStore.getContacts(inputUri);
 
-  // [TODO] !rwm! Need to verify that we actually got some contacts
-  // Another monkey needs to run before this to return 404 responses
+     mStore.unlockRecord(inputUri);
 
-  mStore.unlockRecord(inputUri);
-
-  for ( RegistrationPersistenceManager::contact_list_t::iterator  
-            i  = contacts.begin()
-          ; i != contacts.end()
-          ; ++i)
-  {
-    RegistrationPersistenceManager::contact_t contact = *i;
-    if (contact.second>=time(NULL))
-    {
-      context.addTarget(NameAddr(contact.first));
-    }
-  }
-
-  return RequestProcessor::Continue;
+     for ( RegistrationPersistenceManager::contact_list_t::iterator i  = contacts.begin()
+             ; i != contacts.end()    ; ++i)
+     {
+	    RegistrationPersistenceManager::contact_t contact = *i;
+        if (contact.second>=time(NULL))
+        {
+           context.addTarget(NameAddr(contact.first));
+        }
+     }
+	 // if target list is empty return a 480
+	 if (context.getCandidates().empty())
+	 {
+	    // make 480, send, dispose of memory
+		resip::SipMessage response;
+		Helper::makeResponse(response, context.getOriginalRequest(), 480); 
+		RequestContext::sendResponse(response);
+	    return RequestProcessor::SkipThisChain;
+	 }
+	 else
+	 {
+	    return RequestProcessor::Continue;
+	 }
+   }
+   else
+   {
+      mStore.unlockRecord(inputUri);
+	  
+	  // make 404, send, dispose of memory 
+	  resip::SipMessage response;
+	  Helper::makeResponse(response, context.getOriginalRequest(), 404); 
+	  RequestContext::sendResponse(response);
+	  return RequestProcessor::SkipThisChain;
+   }
 }
 
 void
