@@ -2,10 +2,11 @@
 #define Vocal2_DataStream_hxx
 
 #include <iostream>
-#include "sip2/util/Data.hxx"
 
 namespace Vocal2
 {
+
+class Data;
 
 class DataBuffer : public std::streambuf 
 {
@@ -23,11 +24,13 @@ class DataBuffer : public std::streambuf
 
 // To use:
 // Data result(4096, true); // size zero, capacity 4096
-// DataStream ds(result);
-// msg->encode(ds);
+// {
+//    DataStream ds(result);
+//    msg->encode(ds);
+// }
 //
 // result contains the encoded message
-// -- may be larger than previously allocated
+// -- may be larger than initially allocated
 
 class DataStream : public std::iostream
 {

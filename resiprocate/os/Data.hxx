@@ -1,12 +1,12 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.47 2003/01/03 07:31:08 fluffy Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.48 2003/01/05 18:59:58 davidb Exp $";
 
 #include <iostream>
 #include <string>
 #include "sip2/util/compat.hxx"
-
+#include "sip2/util/DataStream.hxx"
 
 class TestData;
 namespace Vocal2
@@ -32,7 +32,19 @@ class Data
       explicit Data(char c);
       
       ~Data();
-	
+
+      // convert from something to a Data -- requires 'something' has operator<<
+      template<class T>
+      static Data from(const T& x)
+      {
+         Data d;
+         {
+            DataStream s(d);
+            s << x;
+         }
+         return d;
+      }
+
       bool operator==(const Data& rhs) const;
       bool operator==(const char* rhs) const;
       //bool operator==(const std::string& rhs) const;
