@@ -275,6 +275,8 @@ class SipMessage : public TransactionMessage
       const Data& getTlsDomain() const { return mTlsDomain; }
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
 
+      Data getCanonicalIdentityString() const;
+      
       SipMessage& mergeUri(const Uri& source);      
 
    protected:
