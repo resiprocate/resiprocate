@@ -239,7 +239,16 @@ TcpTransport::processAllWrites( FdSet& fdset )
 	       timeout.tv_sec = 16 * Timer::T1 / 1000; /* !rk! change? */
 	       timeout.tv_usec = 0;
 
-	       if (select(sock+1, &rset, &wset, NULL, &timeout) < 1)
+	       while ((e = select(sock+1, &rset, &wset, NULL, &timeout)) < 0)
+	       {
+		  // may not be portable outside Linux as Linux will set
+		  // the timeout be be the remaining time on EINTR
+		  if (errno != EINTR)
+		  {
+		     break;
+		  }
+	       }
+	       if (e < 1)
 	       {
                   DebugLog( << "Timeout on TCP connect to " <<  data->destination); 
 		  close(sock);
