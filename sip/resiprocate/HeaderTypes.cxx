@@ -1,6 +1,7 @@
 #include <util/compat.hxx>
 #include <util/Data.hxx>
 #include <sipstack/HeaderTypes.hxx>
+#include <sipstack/Headers.hxx>
 #include <sipstack/Symbols.hxx>
 
 using namespace Vocal2;
