@@ -30,7 +30,15 @@ cat >> openssl.cnf  <<EOF
 subjectAltName=\${ENV::ALTNAME}
 basicConstraints=CA:FALSE
 subjectKeyIdentifier=hash
-authorityKeyIdentifier=keyid,issuer:always
+#authorityKeyIdentifier=keyid,issuer:always
+
+[ cj_req ]
+basicConstraints = CA:FALSE
+subjectAltName=\${ENV::ALTNAME}
+subjectKeyIdentifier=hash
+#authorityKeyIdentifier=keyid,issuer:always
+#keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+
 EOF
 
 cat > demoCA/private/cakey.pem <<EOF
