@@ -14,6 +14,9 @@ Build options:
   --with-toolchain=gnu		  use alternate toolchain to compile.],
 	[VOCAL_USE_TOOLCHAIN=$with_toolchain],
 	[VOCAL_USE_TOOLCHAIN=default])
+AC_MSG_CHECKING([Vocal style toolchain use])
+AC_MSG_RESULT([$VOCAL_USE_TOOL_CHAIN])
+
 AC_SUBST(VOCAL_USE_TOOLCHAIN)dnl
 
 # allow alternate toolchain root
@@ -22,6 +25,8 @@ AC_ARG_WITH(builddir, [
 Toolchain options:
   --with-builddir=/path/to/builddir      build in a local directory],
 	[echo USE_BUILDDIR=$with_builddir > .make_prefs])
+AC_MSG_CHECKING([build dir])
+AC_MSG_RESULT([$with_builddir])
 
 AC_ARG_WITH(crossroot, [
   --with-crossroot=/path/to/bin   root directory for alternate toolchain
@@ -29,6 +34,8 @@ AC_ARG_WITH(crossroot, [
 	[VOCAL_CROSS_ROOT=$with_crossroot],
 	[VOCAL_CROSS_ROOT=default])
 AC_SUBST(VOCAL_CROSS_ROOT)dnl
+AC_MSG_CHECKING([cross toolchain root])
+AC_MSG_RESULT([$VOCAL_CROSS_ROOT])
 
 
 AC_ARG_WITH(ar, [
@@ -42,11 +49,15 @@ AC_ARG_WITH(shared-libs, [
 	[VOCAL_BUILD_SHARED_LIBS=$with_shared_libs],
 	[VOCAL_BUILD_SHARED_LIBS=no])
 AC_SUBST(VOCAL_BUILD_SHARED_LIBS)dnl
+AC_MSG_CHECKING([shared libraries])
+AC_MSG_RESULT([$VOCAL_BUILD_SHARED_LIBS])
 
 AC_ARG_WITH(openssl, [
   --with-openssl                  include TLS support via OpenSSL],
 	[VOCAL_USE_OPENSSL=true],
 	[VOCAL_USE_OPENSSL=false])
+AC_MSG_CHECKING([openssl])
+AC_MSG_RESULT([$VOCAL_USE_OPENSSL])
 AC_SUBST(VOCAL_USE_OPENSSL)dnl
 
 AC_ARG_WITH(distcc, [
@@ -54,13 +65,23 @@ AC_ARG_WITH(distcc, [
 	[USE_DISTCC=true],
 	[USE_DISTCC=false])
 AC_SUBST(USE_DISTCC)dnl
-
+AC_MSG_CHECKING([distcc])
+AC_MSG_RESULT([$USE_DISTCC])
 AC_ARG_WITH(popt, [
-  --with-popt                  use the popt library for some test cases
+  --with-popt                  use the popt library for some test cases],
 	[USE_POPT=true],
 	[USE_POPT=false])
 AC_SUBST(USE_POPT)dnl
+AC_MSG_CHECKING([popt])
+AC_MSG_RESULT([$USE_POPT])
 
+AC_ARG_WITH(data-local-size, [
+  --with-data-local-size      use local stack frame size of arg for Data class],
+        [RESIP_LOCAL_DATA_SIZE=$with_data_local_size],
+	[RESIP_LOCAL_DATA_SIZE=128])
+AC_SUBST(RESIP_LOCAL_DATA_SIZE)dnl
+AC_MSG_CHECKING([local data size])
+AC_MSG_RESULT([$RESIP_LOCAL_DATA_SIZE])
 
 # vocalconfig.h is NOT to be generated via AC_CONFIG_HEADER(S) but by
 # AC_OUTPUT.
