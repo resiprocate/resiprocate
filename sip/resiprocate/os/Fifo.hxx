@@ -2,7 +2,7 @@
 #define RESIP_FIFO_HXX 
 
 static const char* const resipFifo_h_Version =
-   "$Id: Fifo.hxx,v 1.15 2003/06/03 15:15:05 ryker Exp $";
+   "$Id: Fifo.hxx,v 1.16 2003/08/27 00:48:28 jason Exp $";
 
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Condition.hxx"
@@ -104,7 +104,7 @@ Fifo<Msg> ::getNext()
    Msg* firstMessage = mFifo.front();
    mFifo.pop_front();
    mSize--;
-
+   assert (mSize != -1UL);
    return ( firstMessage );
 }
 
@@ -123,7 +123,7 @@ bool
 Fifo<Msg>::messageAvailable() const
 {
    Lock lock(mMutex); (void)lock;
-   
+   assert (mSize != -1UL);
    return ( !mFifo.empty() );
 }
 
