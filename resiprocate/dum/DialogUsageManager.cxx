@@ -48,8 +48,6 @@ using namespace std;
 DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mProfile(0),
    mRedirectManager(new RedirectManager()),
-   mClientAuthManager(0),
-   mServerAuthManager(0),
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
    mServerRegistrationHandler(0),
@@ -199,16 +197,14 @@ RedirectHandler* DialogUsageManager::getRedirectHandler()
 }
 
 void 
-DialogUsageManager::setClientAuthManager(ClientAuthManager* manager)
+DialogUsageManager::setClientAuthManager(std::auto_ptr<ClientAuthManager> manager)
 {
-   assert(!mClientAuthManager);
    mClientAuthManager = manager;
 }
 
 void 
-DialogUsageManager::setServerAuthManager(ServerAuthManager* manager)
+DialogUsageManager::setServerAuthManager(std::auto_ptr<ServerAuthManager> manager)
 {
-   assert(!mServerAuthManager);
    mServerAuthManager = manager;
 }
 
@@ -440,7 +436,7 @@ DialogUsageManager::send(SipMessage& msg)
          msg.header(h_Vias).front().param(p_branch).reset();
       }
       
-      if (mClientAuthManager && msg.header(h_RequestLine).method() != ACK)
+      if (mClientAuthManager.get() && msg.header(h_RequestLine).method() != ACK)
       {
          mClientAuthManager->addAuthentication(msg);
       }
@@ -600,7 +596,7 @@ DialogUsageManager::process(bool separateThread)
                }
             }
          
-            if ( mServerAuthManager )
+            if ( mServerAuthManager.get() )
             { 
                if ( mServerAuthManager->handle(*sipMsg) )
                {
