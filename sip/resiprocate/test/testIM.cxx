@@ -131,7 +131,9 @@ processStdin(  TuIM& tuIM, Uri* dest )
          
          InfoLog( << "Send to <" << *dest << ">" );
          
-         tuIM.sendPage( text , *dest, false /*sign*/, Data::Empty /*dest->getAor()*/ /*encryptFor*/ );
+         //tuIM.sendPage( text , *dest, false /*sign*/, Data::Empty /*encryptFor*/ );
+         //tuIM.sendPage( text , *dest, false /*sign*/, dest->getAor() /*encryptFor*/ );
+         tuIM.sendPage( text , *dest, true /*sign*/, dest->getAor() /*encryptFor*/ );
       }
    }
 
