@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.35 2002/09/23 00:24:42 fluffy Exp $
+# $Id: Makefile,v 1.36 2002/09/23 17:33:53 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -32,14 +32,12 @@ SRC =	\
 	Timer.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
-	TransactionState.cxx \
 	TransactionMap.cxx \
+	TransactionState.cxx \
 	Transport.cxx \
 	TransportSelector.cxx \
 	UdpTransport.cxx \
 	UnknownSubComponent.cxx \
-
-
 
 
 OSRC =   *.hxx Makefile
@@ -131,6 +129,5 @@ testSipMessage:  $(OBJS) $(OBJ)/testSipMessage.o
 
 convertStringToInt:  $(OBJS) $(OBJ)/convertStringToInt.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
-
 
 -include $(OBJ)/*.d

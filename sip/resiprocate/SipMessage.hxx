@@ -13,6 +13,7 @@
 #include <sipstack/HeaderTypes.hxx>
 #include <sipstack/Message.hxx>
 #include <sipstack/ParserCategories.hxx>
+#include <sipstack/ParserContainer.hxx>
 
 namespace Vocal2
 {
@@ -55,7 +56,6 @@ class SipMessage : public Message
          return mHeaders[T] != 0;
       }
 
-      // known header interface
       template <int T>
       typename Header<T>::Type& 
       operator[](const Header<T>& headerType)
@@ -66,40 +66,47 @@ class SipMessage : public Message
          {
             // create the list with a new component
             hfvs = new HeaderFieldValueList;
-            if (Header<T>::isMulti)
-            {
-               // create an empty parser container
-               hfvs->setParserContainer(new ParserContainer<typename Header<T>::Type>(*hfvs));
-            }
-            else
-            {
-               // asked for a single, create it on the fly
-               HeaderFieldValue* hfv = new HeaderFieldValue;
-               hfvs->push_back(hfv);
-            }
-            
+            HeaderFieldValue* hfv = new HeaderFieldValue;
+            hfvs->push_back(hfv);
             mHeaders[T] = hfvs;
          }
                   
          // already parsed?
          if (!hfvs->front()->isParsed())
          {
-            if (Header<T>::isMulti)
+            hfvs->front()->setParserCategory(new typename Header<T>::Type(*hfvs->front()));
+            if (hfvs->moreThanOne())
             {
-               // create the child parsers
-               hfvs->setParserContainer(new ParserContainer<typename Header<T>::Type>(*hfvs));
-            }
-            else
-            {
-               hfvs->front()->setParserCategory(new typename Header<T>::Type(*hfvs->front()));
-               if (hfvs->moreThanOne())
-               {
-                  // WarningLog(<< "Single content header appears multiple times!");
-               }
+               // WarningLog(<< "Single content header appears multiple times!");
             }
          }
 
          return *(typename Header<T>::Type*)mHeaders[T]->getParserCategory();
+      }
+
+      template <int T>
+      ParserContainer<typename MultiHeader<T>::Type>& 
+      operator[](const MultiHeader<T>& headerType)
+      {
+         HeaderFieldValueList* hfvs = mHeaders[T];
+         // empty?
+         if (hfvs == 0)
+         {
+            // create the list with a new component
+            hfvs = new HeaderFieldValueList;
+            // create an empty parser container
+            hfvs->setParserContainer(new ParserContainer<typename Header<T>::Type>(*hfvs));
+            mHeaders[T] = hfvs;
+         }
+                  
+         // already parsed?
+         if (!hfvs->front()->isParsed())
+         {
+            // create the child parsers
+            hfvs->setParserContainer(new ParserContainer<typename Header<T>::Type>(*hfvs));
+         }
+
+         return *(ParserContainer<typename Header<T>::Type>*)mHeaders[T]->getParserCategory();
       }
 
       RequestLineComponent& 
