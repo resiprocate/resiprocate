@@ -175,6 +175,9 @@
 				RelativePath="sipstack\HeaderFieldValueList.cxx">
 			</File>
 			<File
+				RelativePath="sipstack\HeaderTypes.cxx">
+			</File>
+			<File
 				RelativePath="sipstack\Headers.cxx">
 			</File>
 			<File
@@ -319,7 +322,7 @@
 				RelativePath="sipstack\Uri.cxx">
 			</File>
 			<File
-				RelativePath="sipstack\test\testSpeed.cxx">
+				RelativePath="sipstack\test\testIM.cxx">
 			</File>
 			<File
 				RelativePath="util\vmd5.cxx">

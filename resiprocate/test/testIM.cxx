@@ -248,8 +248,7 @@ main(int argc, char* argv[])
       // DebugLog ( << "Try TO PROCESS " );
       sipStack.process(fdset);
        
-      tuIM.process();
-       
+      tuIM.process();       
    }
 }
 
