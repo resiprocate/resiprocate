@@ -77,8 +77,27 @@ class Uri : public ParserCategory
       Data mEmbeddedHeadersText;
       SipMessage* mEmbeddedHeaders;
 };
- 
+
 }
+
+#include "resiprocate/os/HashMap.hxx"
+
+#if  defined(__INTEL_COMPILER )
+namespace std
+{
+size_t hash_value(const resip::Uri& v);
+}
+
+#elif defined(HASH_MAP_NAMESPACE)  //#elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+namespace HASH_MAP_NAMESPACE
+{
+struct hash<resip::Uri>
+{
+      size_t operator()(const resip::Uri& v) const;
+};
+}
+#endif
+
 
 #endif
 
