@@ -6,7 +6,6 @@
 
 #include "resiprocate/Embedded.hxx"
 #include "resiprocate/NameAddr.hxx" 
-#include "resiprocate/ParseUtil.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/UnknownParameter.hxx"
@@ -803,7 +802,7 @@ Uri::encodeParsed(std::ostream& str) const
      {
        str << Symbols::AT_SIGN;
      }
-     if (ParseUtil::fastRejectIsIpV6Address(mHost))
+     if (DnsUtil::isIpV6Address(mHost))
      {
         str << '[' << mHost << ']';
      }

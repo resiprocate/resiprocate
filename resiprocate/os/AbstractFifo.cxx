@@ -9,8 +9,7 @@ AbstractFifo::AbstractFifo(unsigned int maxSize)
 }
 
 AbstractFifo::~AbstractFifo()
-{
-}
+{}
 
 bool
 AbstractFifo::add(void* msg)
@@ -42,6 +41,12 @@ AbstractFifo ::getNext()
    assert(mSize != 0);
    mSize--;
    return firstMessage;
+}
+
+bool
+AbstractFifo::empty() const
+{
+   return mSize == 0;
 }
 
 unsigned int

@@ -23,6 +23,8 @@ class AbstractFifo
    public:
       AbstractFifo(unsigned int maxSize);
       virtual ~AbstractFifo() = 0;
+
+      bool empty() const;
             
       /** Get the current size of the fifo. Note you should not use this function
        *  to determine whether a call to getNext() will block or not.

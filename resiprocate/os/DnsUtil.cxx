@@ -80,6 +80,11 @@ DnsUtil::getLocalIpAddress(const Data& myInterface)
    
    if (ifs.size() > 1)
    {
+      for (std::list<std::pair<Data, Data> >::const_iterator i = ifs.begin();
+           i != ifs.end(); ++i)
+      {
+         WarningLog(<< i->first << " -> " << i->second);
+      }
       assert(0);
    }
   
@@ -194,23 +199,24 @@ DnsUtil::isIpV6Address(const Data& ipAddress)
       case 1:
          return false;
       case 2:
-         return (*(ipAddress.data()+2) == ':' ||
-                 *(ipAddress.data()+1) == ':');
+         return (*(ipAddress.data()+1) == ':' ||
+                 *(ipAddress.data()+0) == ':');
       case 3:
+         return (*(ipAddress.data()+2) == ':' ||
+                 *(ipAddress.data()+1) == ':' ||
+                 *(ipAddress.data()+0) == ':');
+      case 4:
          return (*(ipAddress.data()+3) == ':' ||
                  *(ipAddress.data()+2) == ':' ||
-                 *(ipAddress.data()+1) == ':');
-      case 4:
+                 *(ipAddress.data()+1) == ':' ||
+                 *(ipAddress.data()+0) == ':');
+      default:
+         
          return (*(ipAddress.data()+4) == ':' ||
                  *(ipAddress.data()+3) == ':' ||
                  *(ipAddress.data()+2) == ':' ||
-                 *(ipAddress.data()+1) == ':');
-      default:
-         return (*(ipAddress.data()+5) == ':' ||
-                 *(ipAddress.data()+4) == ':' ||
-                 *(ipAddress.data()+3) == ':' ||
-                 *(ipAddress.data()+2) == ':' ||
-                 *(ipAddress.data()+1) == ':');
+                 *(ipAddress.data()+1) == ':' ||
+                 *(ipAddress.data()+0) == ':');
    }
 }
 

@@ -14,7 +14,7 @@ namespace resip
 {
 
 template < class Msg >
-class FiniteFiniteFifo : public AbstractFifo
+class FiniteFifo : public AbstractFifo
 {
    public:
       FiniteFifo(unsigned int maxSize);
@@ -40,7 +40,7 @@ FiniteFifo<Msg>::FiniteFifo(unsigned int maxSize)
 }
 
 template <class Msg>
-Fifo<Msg>::~Fifo()
+FiniteFifo<Msg>::~FiniteFifo()
 {
    Lock lock(mMutex); (void)lock;
    while ( ! mFifo.empty() )
@@ -52,7 +52,7 @@ Fifo<Msg>::~Fifo()
 }
 
 template <class Msg>
-void
+bool
 FiniteFifo<Msg>::add(Msg* msg)
 {
    Lock lock(mMutex); (void)lock;
@@ -66,6 +66,7 @@ FiniteFifo<Msg>::add(Msg* msg)
       mFiniteFifo.push_back(msg);
       mSize++;
       mCondition.signal();
+      return true;
    }
 }
 

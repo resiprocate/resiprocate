@@ -28,6 +28,8 @@ TESTPROGRAMS += limpc.cxx \
 		testRlmi.cxx \
 		testMultipartRelated.cxx \
 		testDns.cxx \
+		testDnsUtil.cxx \
+		testFifo.cxx \
 		testTcp.cxx \
 		testUdp.cxx \
 		testStack.cxx \
@@ -47,7 +49,6 @@ TESTPROGRAMS += limpc.cxx \
 		testMessageWaiting.cxx \
 		testMultipartMixedContents.cxx \
 		testParseBuffer.cxx \
-		testParseUtil.cxx \
 		testPidf.cxx \
 		testPlainContents.cxx \
 		testSdp.cxx \
