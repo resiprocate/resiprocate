@@ -1,8 +1,8 @@
-#ifndef BaseException_hxx
-#define BaseException_hxx
+#if !defined(RESIP_BASEEXCEPTION_HXX)
+#define RESIP_BASEEXCEPTION_HXX 
 
 static const char* const resipBaseExceptionHeaderVersion =
-    "$Id: BaseException.hxx,v 1.9 2003/03/25 06:33:47 jason Exp $";
+   "$Id: BaseException.hxx,v 1.10 2003/06/02 20:52:32 ryker Exp $";
 
 #include <exception>
 #include <iostream>
@@ -37,7 +37,6 @@ class BaseException : public std::exception
  
 }
 
-// VEXCEPTION_HXX
 #endif
 
 /* ====================================================================
@@ -89,4 +88,3 @@ class BaseException : public std::exception
  * <http://www.vovida.org/>.
  *
  */
-

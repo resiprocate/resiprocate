@@ -1,5 +1,5 @@
-#ifndef resip_DataStream_hxx
-#define resip_DataStream_hxx
+#if !defined(RESIP_DATASTREAM_HXX)
+#define RESIP_DATASTREAM_HXX 
 
 #include <iostream>
 

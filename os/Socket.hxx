@@ -1,5 +1,5 @@
-#if !defined(resip_Socket_hxx)
-#define resip_Socket_hxx
+#if !defined(RESIP_SOCKET_HXX)
+#define RESIP_SOCKET_HXX  
 
 #include "compat.hxx"
 
@@ -130,10 +130,9 @@ class FdSet
 };
 
 	
-} // end of namespace
+}
 
 #endif 
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

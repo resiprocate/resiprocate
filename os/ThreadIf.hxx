@@ -1,5 +1,5 @@
-#ifndef resip_ThreadIf_hxx
-#define resip_ThreadIf_hxx
+#if !defined(RESIP_THREADIF_HXX)
+#define RESIP_THREADIF_HXX 
 
 #include "resiprocate/os/Socket.hxx"
 
@@ -93,9 +93,7 @@ class ThreadIf
  
 }
 
-
-#endif // THREADIF_HXX
-
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
