@@ -205,12 +205,27 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, bool isR
          msg->header(h_Vias).front().remove(p_maddr);
          //msg->header(h_Vias).front().param(p_ttl) = 1;
          msg->header(h_Vias).front().transport() = Transport::toData(destination.transport->transport());  //cache !jf! 
+
 #if 1 // select if we use an IP address of FQDN in via 
          msg->header(h_Vias).front().sentHost() = destination.transport->hostName(); // use hostname 
 #else
 		 msg->header(h_Vias).front().sentHost() = destination.transport->interfaceName(); // use IP address 
 #endif
-         msg->header(h_Vias).front().sentPort() = destination.transport->port();
+
+         const Via &v(msg->header(h_Vias).front());
+
+         if (!DnsResolver::isIpAddress(v.sentHost()) && 
+             destination.transport->port() == 5060)
+           {
+             DebugLog(<<"supressing port 5060 w/ symname");
+             // backward compat for 2543 and the symbolic host w/ 5060 ;
+             // being a clue for SRV (see RFC 3263 sec 4.2 par 5).
+           }
+         else
+           {
+             msg->header(h_Vias).front().sentPort() = 
+               destination.transport->port();
+           }
       }
 
       Data& encoded = msg->getEncoded();
