@@ -1,9 +1,10 @@
-#if !defined(CODERS_HXX)
-#define CODERS_HXX
+#if !defined(RESIP_CODERS_HXX)
+#define RESIP_CODERS_HXX
 
 #include "resiprocate/os/Data.hxx"
 
-static const char* const resipCodersHeaderVersion = "$Id: Coders.hxx,v 1.8 2003/03/25 06:33:48 jason Exp $";
+static const char* const resipCodersHeaderVersion =
+   "$Id: Coders.hxx,v 1.9 2003/06/02 20:52:32 ryker Exp $";
 
 namespace resip
 {
@@ -24,13 +25,7 @@ class Base64Coder
         static unsigned char codeChar[];
         
 };
-};
 
+}
 
 #endif
-// Local Variables:
-// mode:c++
-// c-file-style:"ellemtel"
-// c-file-offsets:((case-label . +))
-// indent-tabs-mode:nil
-// End

@@ -1,5 +1,5 @@
-#ifndef resip_Random_hxx
-#define resip_Random_hxx
+#if !defined(RESIP_RANDOM_HXX)
+#define RESIP_RANDOM_HXX 
 
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Data.hxx"

@@ -1,5 +1,5 @@
-#if !defined(resip_RecursiveMutex_hxx)
-#define resip_RecursiveMutex_hxx
+#if !defined(RESIP_RECURSIVEMUTEX_HXX)
+#define RESIP_RECURSIVEMUTEX_HXX 
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Lockable.hxx"
@@ -26,8 +26,7 @@ class RecursiveMutex : public Lockable
 #endif
 };
 
-} // namespace resip
-
+}
 
 #endif
 
