@@ -9,6 +9,8 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Embedded.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/ParseUtil.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 
 using namespace resip;
 
@@ -518,13 +520,17 @@ Uri::parse(ParseBuffer& pb)
    
    if (*start == '[')
    {
+      start = pb.skipChar();
       pb.skipToChar(']');
+      pb.data(mHost, start);
+      DnsUtil::canonicalizeIpV6Address(mHost);
+      pb.skipChar();
    }
    else
    {
       pb.skipToOneOf(ParseBuffer::Whitespace, ":;?>");
+      pb.data(mHost, start);
    }
-   pb.data(mHost, start);
 
    pb.skipToOneOf(ParseBuffer::Whitespace, ":;?>");
    if (!pb.eof() && *pb.position() == ':')
@@ -577,7 +583,14 @@ Uri::encodeParsed(std::ostream& str) const
      {
        str << Symbols::AT_SIGN;
      }
-      str << mHost;
+     if (ParseUtil::fastRejectIsIpV6Address(mHost))
+     {
+        str << '[' << mHost << ']';
+     }
+     else
+     {
+        str << mHost;
+     }
    }
    if (mPort != 0)
    {

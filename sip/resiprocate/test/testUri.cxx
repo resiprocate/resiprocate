@@ -17,7 +17,25 @@ main(int argc, char* argv[])
 {
    Log::Level l = Log::DEBUG;
    Log::initialize(Log::COUT, l, argv[0]);
+   
+   {
+      Uri uri("sip:[5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12]");
 
+      cerr << "!! " << uri.host() << endl;
+      assert(uri.host() == "5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12");
+      cerr << "!! " << Data::from(uri) << endl;
+      assert(Data::from(uri) == "sip:[5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12]");
+   }
+
+   {
+      Uri uri("sip:user@[5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12]");
+
+      cerr << "!! " << uri.host() << endl;
+      assert(uri.host() == "5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12");
+      cerr << "!! " << Data::from(uri) << endl;
+      assert(Data::from(uri) == "sip:user@[5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12]");
+   }
+   
    {
       Uri uri("sips:192.168.2.12");
 

@@ -152,18 +152,12 @@ main(int arc, char** argv)
 
    {
       TR _tr("Test parameter with spaces");
-      Data txt("Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\", Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n");
+      Data txt("Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n");
       HeaderFieldValue hfv(txt.data(), txt.size());
-      Auth auth(&hfv, Headers::UNKNOWN);
-
-      try
-      {
-         auth.exists(p_realm);
-         assert(0);
-      }
-      catch (ParseBuffer::Exception& e)
-      {
-      }
+      Auth auth(&hfv, Headers::AuthenticationInfo);
+      
+      assert(auth.scheme() == "Digest");
+      assert(auth.exists(p_realm));
    }
 
    {
@@ -460,6 +454,18 @@ main(int arc, char** argv)
       Via via(&hfv, Headers::UNKNOWN);
       assert(via.sentPort() == 5000);
       assert(via.sentHost() == "a.b.c.com");
+      assert(via.param(p_maddr) == "1.2.3.4");
+   }
+
+   {
+      TR _tr( "full on via parse, IPV6");
+      // !dlb! deal with maddr=[5f1b:df00:ce3e:e200:20:800:2b37:6426]
+      char *viaString = /* Via: */ " SIP/2.0/UDP [5f1b:df00:ce3e:e200:20:800:2b37:6426]:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
+      
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv, Headers::UNKNOWN);
+      assert(via.sentPort() == 5000);
+      assert(via.sentHost() == "5f1b:df00:ce3e:e200:20:800:2b37:6426");
       assert(via.param(p_maddr) == "1.2.3.4");
    }
 
