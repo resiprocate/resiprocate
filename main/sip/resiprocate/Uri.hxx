@@ -18,11 +18,13 @@ class Uri : public ParserCategory
 
       ~Uri();
       
+      static Uri fromTel(const Uri&, const Data& host);
+
       Data& host() const {checkParsed(); return mHost;}
       Data& user() const {checkParsed(); return mUser;}
       Data& userParameters() const {checkParsed(); return mUserParameters;}
       Data& opaque() const {checkParsed(); return mHost;}
-         
+
       const Data& getAor() const;
       const Data getAorNoPort() const;
       Data& scheme() const {checkParsed(); return mScheme;}
