@@ -3,9 +3,12 @@
 #include "sip2/sipstack/Symbols.hxx"
 #include "sip2/util/ParseBuffer.hxx"
 #include "sip2/sipstack/ParseException.hxx"
+#include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;
+
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 DataParameter::DataParameter(ParameterTypes::Type type,
                              ParseBuffer& pb,
@@ -66,6 +69,10 @@ DataParameter::encode(ostream& stream) const
       // this will assert if you've accessed a parameter that doesn't exist and
       // then the stack has created an empty parameter with no value. Try
       // calling exists(p_foo) before calling param(p_foo)
+      if (mValue.empty())
+      {
+         InfoLog (<< "Warning: bad: mValue " << getName() << " is empty");
+      }
       assert(!mValue.empty()); // !jf!  probably should throw here
       return stream << getName() << Symbols::EQUALS << mValue;
    }
