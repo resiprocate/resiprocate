@@ -42,7 +42,7 @@ class SipMessage : public Message
             Exception(const Data& msg, const Data& file, const int line)
                : VException(msg, file, line) {}
 
-            Data getName() const { return "SipMessage::Exception"; }
+            const char* name() const { return "SipMessage::Exception"; }
       };
 
       bool isExternal() const
