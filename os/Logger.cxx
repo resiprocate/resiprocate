@@ -47,7 +47,7 @@ GenericLogImpl::Instance()
 {
    switch (Log::_type)
    {
-      case Log::SYSLOG:
+      case Log::Syslog:
          if (mLogger == 0)
          {
             std::cerr << "Creating a syslog stream" << std::endl;
@@ -55,13 +55,13 @@ GenericLogImpl::Instance()
          }
          return *mLogger;
                
-      case Log::CERR:
+      case Log::Cerr:
          return std::cerr;
                
-      case Log::COUT:
+      case Log::Cout:
          return std::cout;
                
-      case Log::FILE:
+      case Log::File:
          if (mLogger == 0)
          {
             std::cerr << "Creating a file logger" << std::endl;

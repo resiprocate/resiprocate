@@ -48,18 +48,18 @@ int debugLogsInCall()
 int
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::SYSLOG, Log::INFO, argv[0]);
-   //Log::initialize(Log::COUT, Log::INFO, argv[0]);
+   Log::initialize(Log::Syslog, Log::Info, argv[0]);
+   //Log::initialize(Log::Cout, Log::Info, argv[0]);
 
    DebugLog(<<"This should not appear.");
    InfoLog(<<"This should appear.");
 
-   LogThread service1a("service1----A", Log::ThreadSetting(1, Log::DEBUG));
-   LogThread service1b("service1-------B", Log::ThreadSetting(1, Log::DEBUG));
-   LogThread service1c("service1---------C", Log::ThreadSetting(1, Log::DEBUG));
+   LogThread service1a("service1----A", Log::ThreadSetting(1, Log::Debug));
+   LogThread service1b("service1-------B", Log::ThreadSetting(1, Log::Debug));
+   LogThread service1c("service1---------C", Log::ThreadSetting(1, Log::Debug));
 
-   LogThread service2a("service2-----------A", Log::ThreadSetting(2, Log::DEBUG));
-   LogThread service2b("service2------------------B", Log::ThreadSetting(2, Log::ERR));
+   LogThread service2a("service2-----------A", Log::ThreadSetting(2, Log::Debug));
+   LogThread service2b("service2------------------B", Log::ThreadSetting(2, Log::Err));
 
    service1a.run();
    service1b.run();
@@ -70,19 +70,19 @@ main(int argc, char* argv[])
    sleep(2);
 
    InfoLog(<<"Setting service 1 to INFO\n");
-   Log::setServiceLevel(1, Log::INFO);
+   Log::setServiceLevel(1, Log::Info);
    sleep(2);
 
    InfoLog(<<"Setting service 1 to CRIT\n");
-   Log::setServiceLevel(1, Log::CRIT);
+   Log::setServiceLevel(1, Log::Crit);
    sleep(2);
 
    InfoLog(<<"Setting service 2 to STACK\n");
-   Log::setServiceLevel(2, Log::STACK);
+   Log::setServiceLevel(2, Log::Stack);
    sleep(2);
 
    InfoLog(<<"Setting service 1 to DEBUG\n");
-   Log::setServiceLevel(1, Log::DEBUG);
+   Log::setServiceLevel(1, Log::Debug);
    sleep(2);
 
    DebugLog(<<"This should still not appear.");
@@ -100,7 +100,7 @@ main(int argc, char* argv[])
    service2a.join();
    service2b.join();
 
-   Log::setLevel(Log::DEBUG);
+   Log::setLevel(Log::Debug);
 
    if (false)
    {
