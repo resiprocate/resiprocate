@@ -2,7 +2,7 @@ AUTOMAKE_OPTIONS = foreign
 
 SUBDIRS = resiprocate
 EXTRA_DIST = contrib/ares certs README.windows ReSIProcate.sln	\
-		SipIMP SipIMP-Qt SipIMPSetup
+		SipIMP SipIMP-Qt SipIMPSetup resip.spec.in
 
 dist-hook:
 	if [ -f $(distdir)/contrib/ares/Makefile ]; then \
