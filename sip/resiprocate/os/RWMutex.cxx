@@ -1,58 +1,3 @@
-
-
-static const char* const Lock_cxx_Version =
-    "$Id: Lock.cxx,v 1.5 2002/11/12 05:15:37 jason Exp $";
-
-#include "sip2/util/Lock.hxx"
-
-using Vocal2::Lock;
-using Vocal2::ReadLock;
-using Vocal2::WriteLock;
-using Vocal2::LockType;
-using Vocal2::Lockable;
-
-Lock::Lock(Lockable & lockable, LockType lockType)
-   : myLockable(lockable)
-{
-   switch ( lockType )
-    {
-	case VOCAL_READLOCK:
-	{
-	    myLockable.readlock();
-	    break;
-	}
-	    
-	case VOCAL_WRITELOCK:
-	{
-	    myLockable.writelock();
-	    break;
-	}
-
-    	default:
-	{
-    	    myLockable.lock();
-	    break;
-	}
-    }
-}
-
-
-Lock::~Lock()
-{
-    myLockable.unlock();
-}
-
-ReadLock::ReadLock(Lockable & lockable)
-   : Lock(lockable, VOCAL_READLOCK)
-{
-}
-
-WriteLock::WriteLock(Lockable & lockable)
-   : Lock(lockable, VOCAL_WRITELOCK)
-{
-}
-
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -102,3 +47,122 @@ WriteLock::WriteLock(Lockable & lockable)
  * <http://www.vovida.org/>.
  *
  */
+
+static const char* const Vocal2RWMutex_cxx_Version =
+"$Id: RWMutex.cxx,v 1.1 2002/11/12 05:15:37 jason Exp $";
+
+#include "RWMutex.hxx"
+#include "Lock.hxx"
+#include <cassert>
+
+using Vocal2::RWMutex;
+using Vocal2::Lock;
+
+RWMutex::RWMutex()
+   :   Lockable(), 
+       mReaderCount(0),
+       mWriterHasLock(false),
+       mPendingWriterCount(0)
+{
+}
+
+
+RWMutex::~RWMutex()
+{
+}
+
+
+void
+RWMutex::readlock()
+{
+   Lock    lock(mMutex);
+    
+   while ( mWriterHasLock || mPendingWriterCount > 0 )
+   {
+      mReadCondition.wait(&mMutex);
+   }
+
+   mReaderCount++;
+}
+
+
+void
+RWMutex::writelock()
+{
+   Lock    lock(mMutex);
+
+   mPendingWriterCount++;
+    
+   while ( mWriterHasLock || mReaderCount > 0 )
+   {
+      mPendingWriteCondition.wait(&mMutex);
+   }
+
+   mPendingWriterCount--;
+    
+   mWriterHasLock = true;
+}
+
+
+void
+RWMutex::lock()
+{
+   writelock();
+}
+
+
+void
+RWMutex::unlock()
+{
+   Lock    lock(mMutex);
+    
+   // Unlocking a write lock.
+   //
+   if ( mWriterHasLock )
+   {
+      assert( mReaderCount == 0 );
+	
+      mWriterHasLock = false;
+
+      // Pending writers have priority. Could potentially starve readers.
+      //
+      if ( mPendingWriterCount > 0 )
+      {	
+         mPendingWriteCondition.signal();
+      }
+
+      // No writer, no pending writers, so all the readers can go.
+      //	
+      else
+      {
+         mReadCondition.broadcast();
+      }
+
+   }
+    
+   // Unlocking a read lock.
+   //
+   else
+   {
+      assert( mReaderCount > 0 );
+	
+      mReaderCount--;
+	
+      if ( mReaderCount == 0 && mPendingWriterCount > 0 )
+      {
+         mPendingWriteCondition.signal();
+      }
+   }
+}
+
+unsigned int
+RWMutex::readerCount() const
+{
+   return ( mReaderCount );
+}
+
+unsigned int
+RWMutex::pendingWriterCount() const
+{
+   return ( mPendingWriterCount );
+}
