@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2002/09/21 20:15:50 dabryan Exp $
+# $Id: Makefile,v 1.14 2002/09/21 23:41:11 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -15,7 +15,6 @@ SRC =	Condition.cxx \
 	Lock.cxx \
 	Log.cxx \
 	Mutex.cxx \
-	Preparse.cxx \
 	SipMessage.cxx \
 	StringSubComponent.cxx \
 	SubComponent.cxx \
@@ -23,7 +22,12 @@ SRC =	Condition.cxx \
 	Subsystem.cxx \
 	Transport.cxx \
 	UdpTransport.cxx \
-	UnknownSubComponent.cxx \
+	UnknownSubComponent.cxx
+
+#	Executive.cxx \
+#       TimerWheel.cxx \
+#	Preparse.cxx \
+#	SipStack.cxx \
 
 
 OSRC =   *.hxx Makefile
