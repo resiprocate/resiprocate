@@ -28,8 +28,9 @@ RequestContext::process(resip::TransactionTerminated& msg)
 }
 
 void
-RequestContext::process(resip::Message& msg)
+RequestContext::process(std::auto_ptr<resip::Message> msg)
 {
+   mCurrentEvent = msg;
 }
 
 resip::SipMessage& 
@@ -42,6 +43,18 @@ const resip::SipMessage&
 RequestContext::getOriginalRequest() const
 {
    return *mOriginalRequest;
+}
+
+resip::Message* 
+RequestContext::getCurrentEvent()
+{
+   return mCurrentEvent.get();
+}
+
+const resip::Message* 
+RequestContext::getCurrentEvent() const
+{
+   return mCurrentEvent.get();
 }
 
 void 
