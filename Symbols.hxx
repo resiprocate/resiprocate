@@ -100,7 +100,9 @@ class Symbols
       static const char * const Replaces;
       static const char * const Register;
       static const char * const Subscribe;
-
+      static const char * const Event;
+      static const char * const Allow_Events;
+      
       static const char * const transport;
       static const char * const user;
       static const char * const method;
