@@ -57,8 +57,9 @@ class Dialog
       // For UAS, make a response and create the dialog if necessary
       void makeResponse(const SipMessage& request, SipMessage& response, int code=200);
 
-      bool isCreated() const { return mCreated; };
-      
+      bool isCreated() const { return mCreated; }
+      bool isEarly() const { return mEarly; }
+
       static Data dialogId(const SipMessage& msg);
       const Data dialogId() const;
       const CallID& getCallId() const { return mCallId; }
@@ -107,7 +108,8 @@ class Dialog
 
       // Dialog State
       bool mCreated;
-
+      bool mEarly;
+      
       Uri mRequestUri;
       
       NameAddrs mRouteSet;
