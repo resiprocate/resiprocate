@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.69 2003/07/03 16:25:31 ryker Exp $";
+// "$Id: Data.cxx,v 1.70 2003/07/07 22:22:09 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -21,6 +21,7 @@ Data::initializeHack()
 {
    assert(Data::Empty.mBuf == 0);
    static char buffer[1];
+
    return buffer;
 }
 
@@ -514,27 +515,7 @@ Data::operator+(const Data& data) const
 Data& 
 Data::operator+=(const Data& data)
 {
-   if (mCapacity < mSize + data.mSize)
-   {
-      // .dlb. pad for future growth?
-      resize(mSize + data.mSize, true);
-   }
-   else
-   {
-      if (!mMine)
-      {
-         char *oldBuf = mBuf;
-         mCapacity = mSize + data.mSize;
-         mBuf = new char[mCapacity];
-         memcpy(mBuf, oldBuf, mSize);
-         mMine = true;
-      }
-   }
-   memmove(mBuf + mSize, data.mBuf, data.mSize);
-   mSize += data.mSize;
-   mBuf[mSize] = 0;
-
-   return *this;
+   return append(data.data(), data.size());
 }
 
 Data& 
@@ -568,26 +549,7 @@ Data::operator^=(const Data& rhs)
 Data&
 Data::operator+=(char c)
 {
-   if (mCapacity < mSize + 1)
-   {
-      // .dlb. pad for future growth?
-      resize(mSize + 1, true);
-   }
-   else
-   {
-      if (!mMine)
-      {
-         char *oldBuf = mBuf;
-         mBuf = new char[mSize + 1];
-         memcpy(mBuf, oldBuf, mSize);
-         mMine = true;
-      }
-   }
-   mBuf[mSize] = c;
-   mSize += 1;
-   mBuf[mSize] = 0;
-
-   return *this;
+   return append(&c, 1);
 }
 
 char& 
@@ -666,7 +628,12 @@ Data::append(const char* str, size_type len)
    {
       if (!mMine)
       {
+         // !dlb! violates invariant
+         // if !mMine, then mCapacity == mSize, so should have resized
+         assert(false);
+
          char *oldBuf = mBuf;
+         mCapacity = mSize + len;
          mBuf = new char[mSize + len];
          memcpy(mBuf, oldBuf, mSize);
          mMine = true;
@@ -706,7 +673,6 @@ Data::data() const
 {
    return mBuf;
 }
-
 
 // generate additional capacity
 void
