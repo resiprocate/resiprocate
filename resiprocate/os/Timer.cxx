@@ -13,6 +13,7 @@
 #include <iostream>
 #include "sip2/util/Timer.hxx"
 #include "sip2/util/Logger.hxx"
+#include "sip2/util/Random.hxx"
 
 using namespace Vocal2;
 
@@ -88,6 +89,7 @@ Timer::toData(Type timer)
    return "Bad Bad Bad in timer";
 }
 
+
 Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
    mWhen(tms + getTimeMs()),
    mId(++mTimerCount),
@@ -97,12 +99,14 @@ Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
 {
 }
 
+
 Timer::Timer(unsigned long tms) :
    mWhen(tms + getTimeMs()),
    mId(0),
    mDuration(tms)
 {
 }
+
 
 Timer::Timer(const Timer& other) : 
    mWhen(other.mWhen),
@@ -112,6 +116,7 @@ Timer::Timer(const Timer& other) :
    mDuration(other.mDuration)
 {
 }
+
 
 Timer&
 Timer::operator=(const Timer& other)
@@ -126,6 +131,7 @@ Timer::operator=(const Timer& other)
    }
    return *this;
 }
+
 
 UInt64
 Timer::getSystemTime()
@@ -147,6 +153,7 @@ Timer::getSystemTime()
 #endif
    return time;
 }
+
 
 UInt64
 Timer::getSystemTicks()
@@ -308,15 +315,30 @@ Timer::getTimeMs()
 UInt64 
 Timer::getRandomFutureTimeMs( UInt64 futureMs )
 {
-   assert(0);
-   return 0;
+   UInt64 now = getTimeMs();
+   
+   // make r a random number between 5000 and 9000 
+   int r = Random::getRandom()%4000;
+   r += 5000;
+   
+   UInt64 ret = now;
+   ret += (futureMs*r)/10000;
+
+   assert( ret >= now );
+   assert( ret >= now+(futureMs/2) );
+   assert( ret <= now+futureMs );
+
+   return ret;
 }
 
-bool Vocal2::operator<(const Timer& t1, const Timer& t2)
+
+bool 
+Vocal2::operator<(const Timer& t1, const Timer& t2)
 {
    //std::cerr << "operator(<" << t1.mWhen << ", " << t2.mWhen << ") = " << (t1.mWhen < t2.mWhen) << std::endl;
    return t1.mWhen < t2.mWhen;
 }
+
 
 std::ostream& 
 Vocal2::operator<<(std::ostream& str, const Timer& t)
