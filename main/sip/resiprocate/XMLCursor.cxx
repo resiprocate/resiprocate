@@ -395,6 +395,23 @@ XMLCursor::getValue() const
    return mValue;
 }
 
+std::ostream&
+XMLCursor::encode(std::ostream& str, const AttributeMap& attrs)
+{
+   for(AttributeMap::const_iterator i = attrs.begin();
+       i != attrs.end(); ++i)
+   {
+      if (i != attrs.begin())
+      {
+         str << " ";
+      }
+      // !dlb! some sort of encoding required here
+      str << i->first << "=\"" << i->second << "\"";
+   }
+
+   return str;
+}
+
 XMLCursor::Node::Node(const ParseBuffer& pb)
    : mPb(pb.position(), pb.end() - pb.position()),
      mParent(0),
