@@ -7,7 +7,7 @@
 #include "resiprocate/os/ThreadIf.hxx"
 #include <unistd.h>
 
-// #define VERBOSE
+#define VERBOSE
 
 using namespace resip;
 using namespace std;
@@ -111,6 +111,8 @@ main()
    Fifo<Foo> f;
    FiniteFifo<Foo> ff(5);
 
+   cerr << "!! PreFirst" << endl;
+
    {
       bool c;
       TimeLimitFifo<Foo> tlf(5, 10); // 5 seconds or 10 count limit
@@ -121,6 +123,8 @@ main()
 
       c = tlf.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
+
+      cerr << __LINE__ << endl;
    
       assert(!tlf.empty());
       assert(tlf.size() == 1);
@@ -128,6 +132,8 @@ main()
       cerr << tlf.timeDepth() << endl;
 #endif
       assert(tlf.timeDepth() == 0);
+
+      cerr << __LINE__ << endl;
 
       sleep(2);
 
@@ -141,6 +147,8 @@ main()
       assert(tlf.size() == 0);
       assert(tlf.timeDepth() == 0);
 
+      cerr << __LINE__ << endl;
+
       c = tlf.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
       sleep(3);
@@ -153,6 +161,8 @@ main()
       assert(c);
       c = tlf.add(new Foo("internal"), TimeLimitFifo<Foo>::InternalElement);
       assert(c);
+
+      cerr << __LINE__ << endl;
 
       Foo* fp = tlf.getNext();
       assert(fp->mVal == "first");
