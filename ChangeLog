@@ -1,3 +1,9 @@
+2003-08-09  Wensong Zhang  <wensong@purplecomm.com>
+
+	* config.hxx.in: added the macros RESIP_MAJOR_VERSION,
+	RESIP_MINOR_VERSION and RESIP_MICRO_VERSION, so that applications
+	know which specific versions they build on.
+
 2003-08-08  Wensong Zhang  <wensong@purplecomm.com>
 
 	* Makefile.am (libresiprocate_la_SOURCES): added the
