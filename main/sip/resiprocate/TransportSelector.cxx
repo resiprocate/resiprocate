@@ -113,11 +113,11 @@ TransportSelector::send( SipMessage* msg )
       target.host() = via.sentHost();
       target.port() = via.sentPort();
       
-      if (!via.exists(p_received))
+      if (via.exists(p_received))
       {
          target.host() = via.param(p_received);
       }
-      if (!via.exists(p_rport))
+      if (via.exists(p_rport))
       {
          target.port() = via.param(p_rport);
       }
