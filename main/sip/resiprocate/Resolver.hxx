@@ -17,6 +17,8 @@ class Resolver
       // 
       Resolver(const Uri& url);
       
+      Resolver(const Data& host, int port, Transport::Type transport);
+      
       // return true if data of the form a.b.c.d
       static bool isIpAddress(const Data& data);
 
