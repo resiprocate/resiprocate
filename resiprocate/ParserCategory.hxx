@@ -17,6 +17,7 @@ class Parameter;
 class ParserCategory
 {
     public:
+      ParserCategory(const Data& unparsed);
       ParserCategory(HeaderFieldValue* headerFieldValue);
 
       ParserCategory(const ParserCategory& rhs);
