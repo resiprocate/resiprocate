@@ -11,7 +11,7 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/HeapInstanceCounter.hxx"
-#include "resiprocate/DnsStub.hxx"
+#include "resiprocate/dns/DnsStub.hxx"
 
 struct hostent;
 
