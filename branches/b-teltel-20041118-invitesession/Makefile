@@ -24,6 +24,7 @@ SRC =   \
 	ClientRegistration.cxx \
 	ClientSubscription.cxx \
 	DefaultServerReferHandler.cxx \
+	DestroyUsage.cxx \
 	Dialog.cxx \
 	DialogId.cxx \
 	DialogSet.cxx \

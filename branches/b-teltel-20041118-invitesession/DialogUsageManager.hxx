@@ -256,7 +256,6 @@ class DialogUsageManager : public HandleManager
       // return 0, if no matching BaseCreator
       BaseCreator* findCreator(const DialogId& id);
 
-      void prepareInitialRequest(SipMessage& request);
       void processRequest(const SipMessage& request);
       void processResponse(const SipMessage& response);
       bool validateRequestURI(const SipMessage& request);

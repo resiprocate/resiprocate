@@ -537,37 +537,23 @@ DialogSet::cancel()
 {   
    Destroyer::Guard guard(mDestroyer);
    mCancelled = true;
-   if (mDialogs.empty())
+   if (mReceivedProvisional && getCreator())
    {
-      if (mReceivedProvisional && getCreator())
-      {
-         //unify makeCancel w/ Dialog makeCancel, verify both
-         //exception to cancel UAS DialogSet?
-         auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));         
-         mDum.send(*cancel);
-         guard.destroy();         
-         return;         
-      }
-   }
-   else
-   {
-      //need to lag and do last element ouside of look as this DialogSet will be
-      //deleted if all dialogs are destroyed
+      // !jf! What is this comment about?
+      //unify makeCancel w/ Dialog makeCancel, verify both
+      //exception to cancel UAS DialogSet?
+
+      auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));         
+      mDum.send(*cancel);
+
       for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
       {
-         //not quite right, should re-structure CANCEL so it does the right
-         //thing for all things.
-         try
-         {
-            //cancel could invalidate it
-            Dialog* d = it->second;
-            it++;
-            d->cancel();
-         }
-         catch(UsageUseException)
-         {
-         }
+         // let the early dialogs know they are being canceled in case they get
+         // a 200 to the INVITE which crossed the CANCEL so they will BYE them. 
+         it->second->cancel();
       }
+
+      guard.destroy();         
    }
 }
 
