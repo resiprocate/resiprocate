@@ -49,7 +49,7 @@ class TransactionState
       } DnsState;
 
       
-      TransactionState(SipStack& stack, Machine m, State s);
+      TransactionState(SipStack& stack, Machine m, State s, const Data& tid);
       
       void processDns( Message* msg );
       void processStateless( Message* msg);
@@ -89,7 +89,8 @@ class TransactionState
       
       Machine mMachine;
       State mState;
-
+      bool mIsCancel;
+      
       // Indicates that the message has been sent with a reliable protocol. Set
       // by the TransportSelector
       bool mIsReliable;
