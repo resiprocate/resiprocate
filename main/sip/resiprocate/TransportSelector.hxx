@@ -1,9 +1,9 @@
 #if !defined(TRANSPORTSELECTOR_HXX)
 #define TRANSPORTSELECTOR_HXX
 
-#include <sipstack/Data.hxx>
 #include <sipstack/SipMessage.hxx>
-#include <sipstack/Fifo.hxx>
+#include <util/Data.hxx>
+#include <util/Fifo.hxx>
 
 namespace Vocal2
 {
