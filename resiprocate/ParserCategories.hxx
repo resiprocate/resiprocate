@@ -179,7 +179,7 @@ class NameAddr : public ParserCategory
 
       virtual ~NameAddr();
       
-      Uri& uri() const {checkParsed(); return *mUri;}
+      Uri& uri() const;
       Data& displayName() const {checkParsed(); return mDisplayName;}
       void setAllContacts() { mAllContacts = true;}
       
@@ -342,7 +342,8 @@ class RequestLine : public ParserCategory
 
       virtual ~RequestLine();
 
-      Uri& uri() const {checkParsed(); return *mUri;}
+      Uri& uri() const;
+      
       MethodTypes getMethod() const {checkParsed(); return mMethod;}
       const Data& getSipVersion() const {checkParsed(); return mSipVersion;}
 
@@ -351,9 +352,9 @@ class RequestLine : public ParserCategory
       virtual std::ostream& encode(std::ostream& str) const;
 
    private:
-      Uri* mUri;
-      MethodTypes mMethod;
-      Data mSipVersion;
+      mutable Uri* mUri;
+      mutable MethodTypes mMethod;
+      mutable Data mSipVersion;
 };
 
 //====================
