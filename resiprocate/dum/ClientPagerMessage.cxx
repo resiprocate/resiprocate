@@ -35,7 +35,7 @@ ClientPagerMessage::page(std::auto_ptr<Contents> contents)
 {
    if (mInTransaction)
    {
-      throw new UsageUseException("Cannot send a MESSAGE until the previous MESSAGE transaction has completed", 
+      throw UsageUseException("Cannot send a MESSAGE until the previous MESSAGE transaction has completed", 
                                   __FILE__, __LINE__);
    }
    mRequest.header(h_CSeq).sequence()++;

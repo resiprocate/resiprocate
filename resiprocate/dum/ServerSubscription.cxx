@@ -39,7 +39,7 @@ ServerSubscription::reject(int statusCode)
 {
    if (statusCode < 400)
    {
-      throw new UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
+      throw UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
    }
    mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
    return mLastResponse;
@@ -67,7 +67,7 @@ ServerSubscription::send(SipMessage& msg)
          }
          else
          {
-            throw new UsageUseException("2xx to a Subscribe MUST contain an Expires header", __FILE__, __LINE__);
+            throw UsageUseException("2xx to a Subscribe MUST contain an Expires header", __FILE__, __LINE__);
          }
       }
       else
