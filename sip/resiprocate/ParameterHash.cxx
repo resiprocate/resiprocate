@@ -141,7 +141,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       {"charset", ParameterTypes::charset},
       {"description", ParameterTypes::description},
       {"duration", ParameterTypes::duration},
-      {"+instance", ParameterTypes::Instance},
+      {"+sip.instance", ParameterTypes::Instance},
       {"maddr", ParameterTypes::maddr},
       {"received", ParameterTypes::received},
       {"opaque", ParameterTypes::opaque},
