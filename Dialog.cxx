@@ -44,8 +44,8 @@ Dialog::makeResponse(const SipMessage& request, int code)
       assert (code > 100);
       assert (code < 300);      
       assert(request.isRequest());
-      assert(request.header(h_RequestLine).getMethod() == INVITE ||
-             request.header(h_RequestLine).getMethod() == SUBSCRIBE);
+      assert(request.header(h_RequestLine).getMethod() == RESIP_INVITE ||
+             request.header(h_RequestLine).getMethod() == RESIP_SUBSCRIBE);
       
       assert (request.header(h_Contacts).size() == 1);
 
@@ -156,7 +156,7 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
 
          mCreated = true;
       }
-      else if (msg.isRequest() && msg.header(h_CSeq).method() == NOTIFY)
+      else if (msg.isRequest() && msg.header(h_CSeq).method() == RESIP_NOTIFY)
       {
          const SipMessage& notify = msg;
          if (notify.exists(h_RecordRoutes))
@@ -203,7 +203,7 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
                 msg.header(h_StatusLine).statusCode() > 100);
 
       // don't update target for register since contact is not a target
-      if ( msg.header(h_CSeq).method() != REGISTER )
+      if ( msg.header(h_CSeq).method() != RESIP_REGISTER )
       {
          targetRefreshResponse(msg);
       }
@@ -222,8 +222,8 @@ Dialog::targetRefreshResponse(const SipMessage& response)
 int 
 Dialog::targetRefreshRequest(const SipMessage& request)
 {
-   assert (request.header(h_RequestLine).getMethod() != CANCEL);
-   if (request.header(h_RequestLine).getMethod() != ACK)
+   assert (request.header(h_RequestLine).getMethod() != RESIP_CANCEL);
+   if (request.header(h_RequestLine).getMethod() != RESIP_ACK)
    {
       unsigned long cseq = request.header(h_CSeq).sequence();
    
@@ -303,8 +303,8 @@ Dialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
    assert(request.isRequest());
    if ( (!mCreated) && (code < 300) && (code > 100) )
    {
-      assert(request.header(h_RequestLine).getMethod() == INVITE ||
-             request.header(h_RequestLine).getMethod() == SUBSCRIBE);
+      assert(request.header(h_RequestLine).getMethod() == RESIP_INVITE ||
+             request.header(h_RequestLine).getMethod() == RESIP_SUBSCRIBE);
       assert (request.header(h_Contacts).size() == 1);
 
       Helper::makeResponse(response, request, code, mContact);
@@ -459,7 +459,7 @@ Dialog::makeInitialInvite(const NameAddr& target, const NameAddr& from)
 SipMessage*
 Dialog::makeInvite()
 {
-   SipMessage* request = makeRequestInternal(INVITE);
+   SipMessage* request = makeRequestInternal(RESIP_INVITE);
    incrementCSeq(*request);
    DebugLog(<< "Dialog::makeInvite: " << *request);
    return request;
@@ -469,7 +469,7 @@ Dialog::makeInvite()
 SipMessage*
 Dialog::makeRegister()
 {
-   SipMessage* request = makeRequestInternal(REGISTER);
+   SipMessage* request = makeRequestInternal(RESIP_REGISTER);
    incrementCSeq(*request);
    DebugLog(<< "Dialog::makeRegister: " << *request);
    return request;
@@ -479,7 +479,7 @@ Dialog::makeRegister()
 SipMessage*
 Dialog::makeSubscribe()
 {
-   SipMessage* request = makeRequestInternal(SUBSCRIBE);
+   SipMessage* request = makeRequestInternal(RESIP_SUBSCRIBE);
    incrementCSeq(*request);
    DebugLog(<< "Dialog::makeSubscribe: " << *request);
    return request;
@@ -488,7 +488,7 @@ Dialog::makeSubscribe()
 SipMessage*
 Dialog::makeBye()
 {
-   SipMessage* request = makeRequestInternal(BYE);
+   SipMessage* request = makeRequestInternal(RESIP_BYE);
    incrementCSeq(*request);
 
    return request;
@@ -498,7 +498,7 @@ Dialog::makeBye()
 SipMessage*
 Dialog::makeRefer(const NameAddr& referTo)
 {
-   SipMessage* request = makeRequestInternal(REFER);
+   SipMessage* request = makeRequestInternal(RESIP_REFER);
    request->header(h_ReferTo) = referTo;
    request->header(h_ReferredBy) = mLocalUri;
    incrementCSeq(*request);
@@ -508,7 +508,7 @@ Dialog::makeRefer(const NameAddr& referTo)
 SipMessage*
 Dialog::makeNotify()
 {
-   SipMessage* request = makeRequestInternal(NOTIFY);
+   SipMessage* request = makeRequestInternal(RESIP_NOTIFY);
    incrementCSeq(*request);
    return request;
 }
@@ -517,7 +517,7 @@ Dialog::makeNotify()
 SipMessage*
 Dialog::makeOptions()
 {
-   SipMessage* request = makeRequestInternal(OPTIONS);
+   SipMessage* request = makeRequestInternal(RESIP_OPTIONS);
    incrementCSeq(*request);
    return request;
 }
@@ -525,7 +525,7 @@ Dialog::makeOptions()
 SipMessage*
 Dialog::makePublish()
 {
-   SipMessage* request = makeRequestInternal(PUBLISH);
+   SipMessage* request = makeRequestInternal(RESIP_PUBLISH);
    incrementCSeq(*request);
    return request;
 }
@@ -533,8 +533,8 @@ Dialog::makePublish()
 SipMessage*
 Dialog::makeRequest(resip::MethodTypes method)
 {
-   assert(method != ACK);
-   assert(method != CANCEL);
+   assert(method != RESIP_ACK);
+   assert(method != RESIP_CANCEL);
    
    SipMessage* request = makeRequestInternal(method);
    incrementCSeq(*request);
@@ -544,7 +544,7 @@ Dialog::makeRequest(resip::MethodTypes method)
 SipMessage*
 Dialog::makeAck(const SipMessage& original)
 {
-   SipMessage* request = makeRequestInternal(ACK);
+   SipMessage* request = makeRequestInternal(RESIP_ACK);
    copyCSeq(*request);
 
    // !dcm! should we copy the authorizations? 
@@ -566,7 +566,7 @@ Dialog::makeAck(const SipMessage& original)
 SipMessage*
 Dialog::makeAck()
 {
-   SipMessage* request = makeRequestInternal(ACK);
+   SipMessage* request = makeRequestInternal(RESIP_ACK);
    copyCSeq(*request);
    return request;
 }
@@ -575,18 +575,18 @@ SipMessage*
 Dialog::makeCancel(const SipMessage& request)
 {
    assert (request.header(h_Vias).size() >= 1);
-   assert (request.header(h_RequestLine).getMethod() == INVITE);
+   assert (request.header(h_RequestLine).getMethod() == RESIP_INVITE);
    
    SipMessage* cancel = new SipMessage;
    
    cancel->header(h_RequestLine) = request.header(h_RequestLine);
-   cancel->header(h_RequestLine).method() = CANCEL;
+   cancel->header(h_RequestLine).method() = RESIP_CANCEL;
    
    cancel->header(h_CallId) = request.header(h_CallId);
    cancel->header(h_To) = request.header(h_To); 
    cancel->header(h_From) = request.header(h_From);
    cancel->header(h_CSeq) = request.header(h_CSeq);
-   cancel->header(h_CSeq).method() = CANCEL;
+   cancel->header(h_CSeq).method() = RESIP_CANCEL;
    cancel->header(h_Vias).push_back(request.header(h_Vias).front());
    
    return cancel;

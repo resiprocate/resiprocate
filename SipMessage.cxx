@@ -309,9 +309,9 @@ SipMessage::compute2543TransactionHash() const
       }
 
       // Only include the totag for non-invite requests
-      if (header(h_RequestLine).getMethod() != INVITE && 
-          header(h_RequestLine).getMethod() != ACK && 
-          header(h_RequestLine).getMethod() != CANCEL &&
+      if (header(h_RequestLine).getMethod() != RESIP_INVITE &&
+          header(h_RequestLine).getMethod() != RESIP_ACK &&
+          header(h_RequestLine).getMethod() != RESIP_CANCEL &&
           header(h_To).exists(p_tag))
       {
          strm << header(h_To).param(p_tag);
@@ -319,10 +319,10 @@ SipMessage::compute2543TransactionHash() const
 
       strm << header(h_CallID).value();
 
-      if (header(h_RequestLine).getMethod() == ACK || 
-          header(h_RequestLine).getMethod() == CANCEL)
+      if (header(h_RequestLine).getMethod() == RESIP_ACK ||
+          header(h_RequestLine).getMethod() == RESIP_CANCEL)
       {
-         strm << INVITE;
+         strm << RESIP_INVITE;
          strm << header(h_CSeq).sequence();
       }
       else
@@ -401,7 +401,7 @@ SipMessage::brief() const
    {
       result += request;
       MethodTypes meth = header(h_RequestLine).getMethod();
-      if (meth != UNKNOWN)
+      if (meth != RESIP_UNKNOWN)
       {
          result += getMethodName(meth);
       }
@@ -429,7 +429,7 @@ SipMessage::brief() const
    }
 
    result += cseq;
-   if (header(h_CSeq).method() != UNKNOWN)
+   if (header(h_CSeq).method() != RESIP_UNKNOWN)
    {
       result += getMethodName(header(h_CSeq).method());
    }
@@ -628,7 +628,7 @@ SipMessage::setStartLine(const char* st, int len)
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
    MethodTypes method = getMethodType(start, pb.position() - start);
-   if (method == UNKNOWN) //probably a status line
+   if (method == RESIP_UNKNOWN) //probably a status line
    {
       start = pb.skipChar(Symbols::SPACE[0]);
       pb.skipNonWhitespace();

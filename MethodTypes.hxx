@@ -7,30 +7,29 @@ namespace resip
 
 class Data;
 
-#ifdef  __BORLANDC__
-   #undef MESSAGE
-#endif
+//#ifdef  __BORLANDC__
+//   #undef MESSAGE
+//#endif
 
 typedef enum
 {
-   defineMethod(UNKNOWN, "UNKNOWN", "NA"),
-   defineMethod(ACK, "ACK", " RFC 3261"),
-   defineMethod(BYE, "BYE", "RFC 3261"),
-   defineMethod(CANCEL, "CANCEL", "RFC 3261"),
-   defineMethod(INVITE, "INVITE", "RFC 3261"),
-   defineMethod(NOTIFY, "NOTIFY", "RFC 3265"),
-   defineMethod(OPTIONS, "OPTIONS", "RFC 3261"),
-   defineMethod(REFER, "REFER", "RFC 3515"),
-   defineMethod(REGISTER, "REGISTER", "RFC 3261"),
-   defineMethod(SUBSCRIBE, "SUBSCRIBE", "RFC 3265"),
-   defineMethod(RESPONSE, "RESPONSE", "RFC ????"),
-   defineMethod(MESSAGE, "MESSAGE", "RFC ????"),
-   //_MESSAGE,
-   defineMethod(INFO, "INFO", "RFC 2976"),
-   defineMethod(PRACK, "PRACK", "RFC 3262"),
-   defineMethod(PUBLISH, "PUBLISH", "RFC draft"),
-   defineMethod(SERVICE, "SERVICE", "!RFC"),
-   defineMethod(UPDATE, "UPDATE", "RFC 3311"),
+   defineMethod(RESIP_UNKNOWN, "UNKNOWN", "NA"),
+   defineMethod(RESIP_ACK, "ACK", " RFC 3261"),
+   defineMethod(RESIP_BYE, "BYE", "RFC 3261"),
+   defineMethod(RESIP_CANCEL, "CANCEL", "RFC 3261"),
+   defineMethod(RESIP_INVITE, "INVITE", "RFC 3261"),
+   defineMethod(RESIP_NOTIFY, "NOTIFY", "RFC 3265"),
+   defineMethod(RESIP_OPTIONS, "OPTIONS", "RFC 3261"),
+   defineMethod(RESIP_REFER, "REFER", "RFC 3515"),
+   defineMethod(RESIP_REGISTER, "REGISTER", "RFC 3261"),
+   defineMethod(RESIP_SUBSCRIBE, "SUBSCRIBE", "RFC 3265"),
+   defineMethod(RESIP_RESPONSE, "RESPONSE", "RFC ????"),
+   defineMethod(RESIP_MESSAGE, "MESSAGE", "RFC ????"),
+   defineMethod(RESIP_INFO, "INFO", "RFC 2976"),
+   defineMethod(RESIP_PRACK, "PRACK", "RFC 3262"),
+   defineMethod(RESIP_PUBLISH, "PUBLISH", "RFC draft"),
+   defineMethod(RESIP_SERVICE, "SERVICE", "!RFC"),
+   defineMethod(RESIP_UPDATE, "UPDATE", "RFC 3311"),
    MAX_METHODS
 } MethodTypes;
 
