@@ -109,7 +109,7 @@ SubDialog::sendNotify(const Contents* document)
         substateHFV.value() = Data("active");// pending?
         substateHFV.param(p_expires) = mSubState->expires()-time(NULL);
       }
-      notify->header(h_SubscriptionStates).push_front(substateHFV);
+      notify->header(h_SubscriptionState) = substateHFV;
     }
     
     /*hackage*/
