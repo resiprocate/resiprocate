@@ -292,22 +292,23 @@ InviteSession::provideAnswer(const SdpContents& answer)
 void
 InviteSession::end()
 {
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+
    switch (mState)
    {
       case Connected:
       {
-         transition(Terminated);
-
          // !jf! do we need to store the BYE somewhere?
-         SipMessage bye;
-         mDialog.makeRequest(bye, BYE);
-         InfoLog (<< "Sending " << bye.brief());
-         mDialog.send(bye);
+         sendBye();
+         transition(Terminated);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
          break;
       }
 
       case SentUpdate:
+         sendBye();
          transition(Terminated);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
          break;
 
       case SentReinvite:
@@ -318,28 +319,22 @@ InviteSession::end()
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
       {
-         transition(Terminated);
-
          SipMessage response;
          mDialog.makeResponse(response, mLastSessionModification, 488);
          InfoLog (<< "Sending " << response.brief());
          mDialog.send(response);
 
-         SipMessage bye;
-         mDialog.makeRequest(bye, BYE);
-         InfoLog (<< "Sending " << bye.brief());
-         mDialog.send(bye);
+         sendBye();
+         transition(Terminated);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
          break;
       }
 
       case WaitingToTerminate:
       {
+         sendBye();
          transition(Terminated);
-
-         SipMessage bye;
-         mDialog.makeRequest(bye, BYE);
-         InfoLog (<< "Sending " << bye.brief());
-         mDialog.send(bye);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
          break;
       }
 
@@ -351,11 +346,6 @@ InviteSession::end()
          assert(0);
          break;
    }
-
-   // Notify the application right away that the session is kaput but let dum
-   // worry about the cleanup issues
-   //InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   //handler->onTerminated(getSessionHandle());
 }
 
 void
@@ -564,12 +554,9 @@ InviteSession::dispatch(const DumTimeout& timeout)
          // If we are waiting for an Ack and it times out, then end with a BYE
          if(mState == UAS_WaitingToHangup)
          {
+             sendBye();
              transition(Terminated);
-
-             SipMessage bye;
-             mDialog.makeRequest(bye, BYE);
-             InfoLog (<< "Sending " << bye.brief());
-             mDialog.send(bye);
+             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
          }
       }
    }
@@ -594,8 +581,9 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       if(timeout.seq() == mSessionTimerSeq)
       {
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::SessionExpired);
-         end();  // end expired session
+         // this is so the app can decided to ignore this. default implementation
+         // will call end next
+         mDum.mInviteSessionHandler->onSessionExpired(getSessionHandle());
       }
    }
    else if (timeout.type() == DumTimeout::SessionRefresh)
@@ -640,13 +628,8 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case On2xxOffer:
       case On2xxAnswer:
          // retransmission of 200I
-         {
-            // !jf! Need to include the answer here.
-            SipMessage ack;
-            mDialog.makeRequest(ack, ACK);
-            // ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence(); // !slg! not required since change in Dialog.cxx to store ACK CSeq when 200 to INVITE is received
-            mDialog.send(ack);
-         }
+         // !jf! Need to include the answer here.
+         sendAck();
          break;
 
       case OnUpdate:
@@ -724,8 +707,9 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          break;
 
       case OnGeneralFailure:
+         sendBye();
+         transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-         end();
          break;
 
       default:
@@ -767,10 +751,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          // !jf! I need to potentially include an answer in the ACK here
-         SipMessage ack;
-         mDialog.makeRequest(ack, ACK);
-         mDialog.send(ack);
-
+         sendAck();
          handler->onAnswer(getSessionHandle(), msg, *sdp);
 
 
@@ -780,17 +761,11 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
       }
       case On2xx:
-      {
+         sendAck();
          transition(Connected);
-         SipMessage ack;
-         mDialog.makeRequest(ack, ACK);
-         mDialog.send(ack);
-
          handleSessionTimerResponse(msg);
          handler->onIllegalNegotiation(getSessionHandle(), msg);
-
          break;
-      }
 
       case On491Invite:
          transition(SentUpdateGlare);
@@ -798,8 +773,9 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
 
       case OnGeneralFailure:
+         sendBye();
+         transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-         end();
          break;
 
       case OnInviteFailure:
@@ -820,11 +796,13 @@ InviteSession::dispatchGlare(const SipMessage& msg)
    MethodTypes method = msg.header(h_CSeq).method();
    if (method == INVITE && msg.isRequest())
    {
+      // Received inbound reinvite, when waiting to resend outbound reinvite or update
       transition(ReceivedReinvite);
       handler->onOfferRejected(getSessionHandle(), msg);
    }
    else if (method == UPDATE && msg.isRequest())
    {
+      // Received inbound update, when waiting to resend outbound reinvite or update
       transition(ReceivedUpdate);
       handler->onOfferRejected(getSessionHandle(), msg);
    }
@@ -886,20 +864,16 @@ void
 InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
 {
    if (msg.isResponse() &&
-       msg.header(h_CSeq).sequence() / 200 == 1 &&
        msg.header(h_CSeq).method() == INVITE)
    {
+      if(msg.header(h_StatusLine).statusCode() / 200 == 1)  // Note: stack ACK's non-2xx final responses only
+      {
+         // !jf! Need to include the answer here.
+         sendAck();
+      }
+      sendBye();
       transition(Terminated);
-
-      // !jf! Need to include the answer here.
-      SipMessage ack;
-      mDialog.makeRequest(ack, ACK);
-      // ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence(); // !slg! not required since change in Dialog.cxx to store ACK CSeq when 200 to INVITE is received
-      mDialog.send(ack);
-   }
-   else if (msg.isResponse() && msg.header(h_CSeq).method() == INVITE)
-   {
-      end();
+      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
    }
 }
 
@@ -964,8 +938,6 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
    assert(msg.isRequest());
    assert(msg.header(h_CSeq).method() == INVITE);
 
-   transition(Terminated);
-
    // If we get an INVITE request from the wire and we are not in
    // Connected state, reject the request and send a BYE
    SipMessage response;
@@ -973,34 +945,25 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
    InfoLog (<< "Sending " << response.brief());
    mDialog.send(response);
 
-   SipMessage bye;
-   mDialog.makeRequest(bye, BYE);
-   InfoLog (<< "Sending " << bye.brief());
-   mDialog.send(bye);
+   sendBye();
+   transition(Terminated);
+   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg); 
 }
 
 void
 InviteSession::dispatchPrack(const SipMessage& msg)
 {
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-
    assert(msg.header(h_CSeq).method() == PRACK);
    if(msg.isRequest())
    {
-      transition(Terminated);
-
-      // !jf! should we make some other callback here
-      handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-
       SipMessage rsp;
       mDialog.makeResponse(rsp, msg, 481);
       mDialog.send(rsp);
 
-      SipMessage bye;
-      mDialog.makeRequest(bye, BYE);
-      InfoLog (<< "Sending " << bye.brief());
-      mDialog.send(bye);
-
+      sendBye();
+      // !jf! should we make some other callback here
+      transition(Terminated);
+      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
    }
    else
    {
@@ -1015,20 +978,14 @@ InviteSession::dispatchCancel(const SipMessage& msg)
    assert(msg.header(h_CSeq).method() == CANCEL);
    if(msg.isRequest())
    {
-      transition(Terminated);
-
-      // !jf! should we make some other callback here
-      handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
-
       SipMessage rsp;
       mDialog.makeResponse(rsp, msg, 200);
       mDialog.send(rsp);
 
-      SipMessage bye;
-      mDialog.makeRequest(bye, BYE);
-      InfoLog (<< "Sending " << bye.brief());
-      mDialog.send(bye);
-
+      sendBye();
+      // !jf! should we make some other callback here
+      transition(Terminated);
+      handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
    }
    else
    {
@@ -1044,7 +1001,6 @@ InviteSession::dispatchBye(const SipMessage& msg)
 
    if (msg.isRequest())
    {
-      transition(Terminated);
 
       SipMessage rsp;
       InfoLog (<< "Received " << msg.brief());
@@ -1052,6 +1008,7 @@ InviteSession::dispatchBye(const SipMessage& msg)
       mDialog.send(rsp);
 
       // !jf! should we make some other callback here
+      transition(Terminated);
       handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
       mDum.destroy(this);
    }
@@ -1592,6 +1549,25 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    }
 }
 
+void InviteSession::sendAck(const SdpContents *sdp)
+{
+   SipMessage ack;
+   mDialog.makeRequest(ack, ACK);
+   if(sdp != 0)
+   {
+      setSdp(ack, *sdp);
+   }
+   InfoLog (<< "Sending " << ack.brief());
+   mDialog.send(ack);
+}
+
+void InviteSession::sendBye()
+{
+   SipMessage bye;
+   mDialog.makeRequest(bye, BYE);
+   InfoLog (<< "Sending " << bye.brief());
+   mDialog.send(bye);
+}
 
 
 /* ====================================================================
