@@ -1,7 +1,7 @@
 #ifndef FloatSubComponent_hxx
 #define FloatSubComponent_hxx
 
-#include <sip2/sipstack/SubComponent.hxx>
+#include <sipstack/SubComponent.hxx>
 #include <iostream>
 
 namespace Vocal2
