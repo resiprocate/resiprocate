@@ -31,9 +31,9 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 
-TransportSelector::TransportSelector(Fifo<Message>& fifo) :
-   mStateMacFifo(fifo),
-   mSocket()
+TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo) :
+   mMultiThreaded(multithreaded),
+   mStateMacFifo(fifo)
 {
    mSocket = socket(AF_INET, SOCK_DGRAM, 0);
 }
@@ -77,6 +77,11 @@ TransportSelector::addTransport( TransportType protocol,
          break;
    }
 
+   if (mMultiThreaded)
+   {
+      transport->run();
+   }
+   
    mTransports.push_back(transport);
 }
 
@@ -103,6 +108,11 @@ TransportSelector::addTlsTransport(const Data& domainName,
                                               hostname, port, 
                                               keyDir, privateKeyPassPhrase,
                                               true); // ipv4
+   if (mMultiThreaded)
+   {
+      transport->run();
+   }
+
    mTlsTransports[domainName] = transport;
    
 #else
@@ -116,28 +126,31 @@ TransportSelector::process(FdSet& fdset)
 {
    mDns.process(fdset);
    
-   for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
+   if (!mMultiThreaded)
    {
-      try
+      for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
       {
-         (*i)->process(fdset);
+         try
+         {
+            (*i)->process(fdset);
+         }
+         catch (BaseException& e)
+         {
+            InfoLog (<< "Uncaught exception: " << e);
+         }
       }
-      catch (BaseException& e)
-      {
-         InfoLog (<< "Uncaught exception: " << e);
-      }
-   }
 
-   for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
-        i != mTlsTransports.end(); i++)
-   {
-      try
+      for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
+           i != mTlsTransports.end(); i++)
       {
-         (i->second)->process(fdset);
-      }
-      catch (BaseException& e)
-      {
-         InfoLog (<< "Uncaught exception: " << e);
+         try
+         {
+            (i->second)->process(fdset);
+         }
+         catch (BaseException& e)
+         {
+            InfoLog (<< "Uncaught exception: " << e);
+         }
       }
    }
 }
@@ -146,22 +159,25 @@ TransportSelector::process(FdSet& fdset)
 bool 
 TransportSelector::hasDataToSend() const
 {   
-   for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
+   if (!mMultiThreaded)
    {
-      if (  (*i)->hasDataToSend() )
+      for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
       {
-         return true;
+         if (  (*i)->hasDataToSend() )
+         {
+            return true;
+         }
+      }
+      for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
+           i != mTlsTransports.end(); i++)
+      {
+         if ( (i->second)->hasDataToSend() )
+         {
+            return true;
+         }
       }
    }
-   for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
-        i != mTlsTransports.end(); i++)
-   {
-      if ( (i->second)->hasDataToSend() )
-      {
-         return true;
-      }
-   }
-
+   
    return false;
 }
 
@@ -329,16 +345,19 @@ TransportSelector::buildFdSet( FdSet& fdset )
 {
    mDns.buildFdSet(fdset);
    
-   for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
+   if (!mMultiThreaded)
    {
-      (*i)->buildFdSet( fdset );
-   }
+      for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
+      {
+         (*i)->buildFdSet( fdset );
+      }
 
    
-   for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
-        i != mTlsTransports.end(); i++)
-   {
-      (i->second)->buildFdSet( fdset );
+      for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
+           i != mTlsTransports.end(); i++)
+      {
+         (i->second)->buildFdSet( fdset );
+      }
    }
 }
 

@@ -3,12 +3,13 @@
 
 #include <exception>
 
+#include "resiprocate/Message.hxx"
+#include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Tuple.hxx"
-#include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/Message.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
 
 namespace resip
 {
@@ -17,7 +18,7 @@ class SipMessage;
 class SendData;
 class Connection;
 
-class Transport
+class Transport : public ThreadIf
 {
    public:
       class Exception : public BaseException
@@ -37,11 +38,9 @@ class Transport
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
       
-      void run(); // will not return.
-      void shutdown();
-
+      void thread(); // from ThreadIf
+      
       void fail(const Data& tid); // called when transport failed
-      void ok(const Data& tid); // called when the transport succeeds
       
       // These methods are used by the TransportSelector
       virtual const Data& hostName() const { return mHost; } 
@@ -72,7 +71,6 @@ class Transport
 
    private:
       static const Data transportNames[MAX_TRANSPORT];
-      bool mShutdown ;
 };
 
 class SendData
