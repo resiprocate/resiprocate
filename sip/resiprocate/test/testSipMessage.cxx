@@ -4,7 +4,7 @@
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/Helper.hxx"
-#include "sip2/sipstack/SdpBody.hxx"
+#include "sip2/sipstack/SdpContents.hxx"
 
 #include <iostream>
 #include <memory>
@@ -37,10 +37,10 @@ main()
 
       auto_ptr<SipMessage> msg(Helper::makeMessage(txt.c_str()));
       
-      Body* body = msg->getBody();
+      Contents* body = msg->getContents();
 
       assert(body != 0);
-      SdpBody* sdp = dynamic_cast<SdpBody*>(body);
+      SdpContents* sdp = dynamic_cast<SdpContents*>(body);
       assert(sdp != 0);
 
       assert(sdp->getSession().getVersion() == 0);
@@ -51,7 +51,45 @@ main()
       msg->encode(cerr);
    }
 
-   return 0;
+   {
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+               "To: Bob <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: a84b4c76e66710\r\n"
+               "CSeq: 314159 INVITE\r\n"
+               "Max-Forwards: 70\r\n"
+               "Foobie-Blech: it is not a glass paperweight\r\n"
+               "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+               "Content-Type: application/sdp\r\n"
+               "Content-Length: 150\r\n"
+               "\r\n"
+               "v=0\r\n"
+               "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
+               "s=-\r\n"
+               "c=IN IP4 pc33.atlanta.com\r\n"
+               "t=0 0\r\n"
+               "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
+               "a=rtpmap:0 PCMU/8000\r\n");
+
+      auto_ptr<SipMessage> msg(Helper::makeMessage(txt.c_str()));
+
+      assert(!msg->header("Foobie-Blech").empty());
+      assert(msg->header("Foobie-Blech").front().value() == "it is not a glass paperweight");
+      
+      Contents* body = msg->getContents();
+
+      assert(body != 0);
+      SdpContents* sdp = dynamic_cast<SdpContents*>(body);
+      assert(sdp != 0);
+
+      assert(sdp->getSession().getVersion() == 0);
+      assert(sdp->getSession().getOrigin().getUser() == "alice");
+      assert(!sdp->getSession().getMedia().empty());
+      assert(sdp->getSession().getMedia().front().getValue("rtpmap") == "0 PCMU/8000");
+
+      msg->encode(cerr);
+   }
 
    {
       char* b = "shared buffer";
@@ -528,7 +566,7 @@ main()
       auto_ptr<SipMessage> message(Helper::makeMessage(txt));
 
       assert(message->header(h_MaxForwards).value() == 8);
-      message->getRawHeader(Headers::Max_Forwards)->getParserContainer()->encode(cerr) << endl;
+      message->getRawHeader(Headers::Max_Forwards)->getParserContainer()->encode(Headers::HeaderNames[Headers::Max_Forwards], cerr) << endl;
    }
 
    {
