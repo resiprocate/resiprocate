@@ -113,7 +113,7 @@ TransactionState::process(TransactionController& controller)
 
    if (state) // found transaction for sip msg
    {
-      DebugLog (<< "Found matching transaction for " << *state);
+      DebugLog (<< "Found matching transaction for " << message->brief() << " -> " << *state);
 
       switch (state->mMachine)
       {
@@ -148,6 +148,8 @@ TransactionState::process(TransactionController& controller)
    }
    else if (sip)  // new transaction
    {
+      DebugLog (<< "No matching transaction for " << sip->brief());
+      
       if (sip->isRequest())
       {
          // create a new state object and insert in the TransactionMap
@@ -280,7 +282,7 @@ TransactionState::process(TransactionController& controller)
       {
          if (controller.mDiscardStrayResponses)
          {
-            DebugLog (<< "discarding stray response: " << sip->brief());
+            InfoLog (<< "discarding stray response: " << sip->brief());
             delete message;
          }
          else
@@ -1089,9 +1091,19 @@ TransactionState::processClientStale(  Message* msg )
    }
    else
    {
-      assert(isResponse(msg, 200, 299));
-      assert(isFromWire(msg));
-      sendToTU(msg);
+      if(isResponse(msg, 200, 299))
+      {
+         assert(isFromWire(msg));
+         sendToTU(msg);
+      }
+      else
+      {
+         // might have received some other response because a downstream UAS is
+         // misbehaving. For instance, sending a 487/INVITE after already
+         // sending a 200/INVITE. In this case, discard the response
+         DebugLog (<< "Discarding extra response: " << *msg);
+         delete msg;
+      }
    }
 }
 
@@ -1100,7 +1112,7 @@ TransactionState::processServerStale(  Message* msg )
 {
    DebugLog (<< "TransactionState::processServerStale: " << msg->brief());
 
-   //SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (isTimer(msg))
    {
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
@@ -1120,6 +1132,14 @@ TransactionState::processServerStale(  Message* msg )
       DebugLog (<< *this);
       processTransportFailure();
       delete msg;
+   }
+   else if (sip && isRequest(sip) && sip->header(h_RequestLine).getMethod() == ACK)
+   {
+      // this can happen when an upstream UAC sends an ACK with no to-tag when
+      // it should
+      assert(isFromWire(msg));
+      InfoLog (<< "Passing ACK directly to TU: " << sip->brief());
+      sendToTU(msg);
    }
    else
    {
