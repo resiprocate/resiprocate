@@ -52,7 +52,11 @@ namespace resip
 RecursiveMutex::RecursiveMutex()
 {
    int rc = pthread_mutexattr_init(&mMutexAttr);
+#if defined(__linux__)
    pthread_mutexattr_settype(&mMutexAttr, PTHREAD_MUTEX_RECURSIVE_NP);
+#else
+   pthread_mutexattr_settype(&mMutexAttr, PTHREAD_MUTEX_RECURSIVE);
+#endif
    rc = pthread_mutex_init(&mId, &mMutexAttr);
    assert( rc == 0 );
 }
