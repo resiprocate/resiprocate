@@ -82,19 +82,14 @@ class Condition
        */
       void signal();
 
-#if 0 
       /** Signal all waiting threads.
        *  Returns 0, if successful, or an errorcode.
        */
       void broadcast();
-#endif   
 
-#if 0
       /** Returns the operating system dependent unique id of the condition.
        */
-      const vcondition_t*
-      getId() const;
-#endif
+      //const vcondition_t* getId() const;
 
    private:
 
