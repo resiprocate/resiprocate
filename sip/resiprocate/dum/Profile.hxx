@@ -32,12 +32,19 @@ class Profile
       Profile();
       
       void setDefaultFrom(const NameAddr& from);
-      void setDefaultRegistrationTime(int secs);
-      void setDefaultSubscriptionTime(int secs);
-
       NameAddr& getDefaultFrom();
+
+      void setDefaultRegistrationTime(int secs);
       int getDefaultRegistrationTime() const;
+
+      void setDefaultSubscriptionTime(int secs);
       int getDefaultSubscriptionTime() const;
+
+      // Only used if timer option tag is set.
+      // Note:  Add timer to options tag and set DefaultSessionTime to 0 to show  
+      // support, but not request a session timer.
+      void setDefaultSessionTime(int secs); 
+      int getDefaultSessionTime() const;
 
       //overrides the value used to populate the contact
       //?dcm? -- also change via entries? Also, dum currently uses(as a uas)
@@ -152,6 +159,7 @@ class Profile
       NameAddr mDefaultFrom;
       int mDefaultRegistrationExpires;
       int mDefaultSubscriptionExpires;
+      int mDefaultSessionExpires;
 
       bool mHasOutboundProxy;
       NameAddr mOutboundProxy;

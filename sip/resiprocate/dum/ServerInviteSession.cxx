@@ -118,15 +118,7 @@ ServerInviteSession::reject(int statusCode)
 SipMessage& 
 ServerInviteSession::accept()
 {
-   SipMessage &msg = makeFinalResponse(200);
-
-   // Check if we should add our capabilites to the invite success response 
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::Allow)) msg.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) msg.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) msg.header(h_AcceptLanguages) = mDum.getProfile()->getSupportedLanguages();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::Supported)) msg.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
-
-   return msg;
+   return makeFinalResponse(200);
 }
 
 void 

@@ -12,6 +12,7 @@ using namespace resip;
 Profile::Profile() : 
    mDefaultRegistrationExpires(3600),
    mDefaultSubscriptionExpires(3600),
+   mDefaultSessionExpires(1800),
    mHasOutboundProxy(false),
    mLooseToTagMatching(false),
    mRportEnabled(true),
@@ -40,28 +41,16 @@ Profile::setDefaultFrom(const NameAddr& from)
    mDefaultFrom = from;
 }
 
-void
-Profile::setDefaultRegistrationTime(int secs)
-{
-   mDefaultRegistrationExpires = secs;
-}
-
-void
-Profile::setDefaultSubscriptionTime(int secs)
-{
-   mDefaultSubscriptionExpires = secs;
-}
-
 NameAddr& 
 Profile::getDefaultFrom()
 {
    return mDefaultFrom;
 }
 
-int 
-Profile::getDefaultSubscriptionTime() const
+void
+Profile::setDefaultRegistrationTime(int secs)
 {
-   return mDefaultSubscriptionExpires;
+   mDefaultRegistrationExpires = secs;
 }
 
 int 
@@ -70,10 +59,65 @@ Profile::getDefaultRegistrationTime() const
    return mDefaultRegistrationExpires;
 }
 
+void
+Profile::setDefaultSubscriptionTime(int secs)
+{
+   mDefaultSubscriptionExpires = secs;
+}
+
+int 
+Profile::getDefaultSubscriptionTime() const
+{
+   return mDefaultSubscriptionExpires;
+}
+
+void
+Profile::setDefaultSessionTime(int secs)
+{
+   mDefaultSessionExpires = secs;
+}
+
+int 
+Profile::getDefaultSessionTime() const
+{
+   return mDefaultSessionExpires;
+}
+
+void 
+Profile::setOverrideHostAndPort(const Uri& hostPort)
+{
+   mHasOverrideHostPort = true;   
+   mOverrideHostPort = hostPort;   
+}
+
+bool 
+Profile::hasOverrideHostAndPort() const
+{
+   return mHasOverrideHostPort;
+}
+
+const Uri& 
+Profile::getOverideHostAndPort() const
+{
+   return mOverrideHostPort;
+}
+
 void 
 Profile::addSupportedScheme(const Data& scheme)
 {
    mSupportedSchemes.insert(scheme);
+}
+
+bool 
+Profile::isSchemeSupported(const Data& scheme) const
+{
+   return mSupportedSchemes.count(scheme) != 0;
+}
+
+void 
+Profile::clearSupportedSchemes()
+{
+   mSupportedSchemes.clear();
 }
 
 void 
@@ -83,34 +127,16 @@ Profile::addSupportedMethod(const MethodTypes& method)
    mSupportedMethods.push_back(Token(getMethodName(method)));
 }
 
-void 
-Profile::addSupportedOptionTag(const Token& tag)
+bool 
+Profile::isMethodSupported(MethodTypes method) const
 {
-   mSupportedOptionTags.push_back(tag);
+   return mSupportedMethodTypes.count(method) != 0;
 }
 
-void 
-Profile::addSupportedMimeType(const Mime& mimeType)
+Tokens 
+Profile::getAllowedMethods() const
 {
-   mSupportedMimeTypes.push_back(mimeType);
-}
-
-void 
-Profile::addSupportedEncoding(const Token& encoding)
-{
-   mSupportedEncodings.push_back(encoding);
-}
-
-void 
-Profile::addSupportedLanguage(const Token& lang)
-{
-   mSupportedLanguages.push_back(lang);
-}
-
-void 
-Profile::clearSupportedSchemes()
-{
-   mSupportedSchemes.clear();
+   return mSupportedMethods;
 }
 
 void 
@@ -121,64 +147,9 @@ Profile::clearSupportedMethods()
 }
 
 void 
-Profile::clearSupportedOptionTags()
+Profile::addSupportedOptionTag(const Token& tag)
 {
-   mSupportedOptionTags.clear();
-}
-
-void 
-Profile::clearSupportedMimeTypes()
-{
-   mSupportedMimeTypes.clear();
-}
-
-void 
-Profile::clearSupportedEncodings()
-{
-   mSupportedEncodings.clear();
-}
-
-void 
-Profile::clearSupportedLanguages()
-{
-   mSupportedLanguages.clear();
-}
-
-bool 
-Profile::isSchemeSupported(const Data& scheme) const
-{
-   return mSupportedSchemes.count(scheme) != 0;
-}
-
-bool 
-Profile::isMethodSupported(MethodTypes method) const
-{
-   return mSupportedMethodTypes.count(method) != 0;
-}
-
-bool 
-Profile::isMimeTypeSupported(const Mime& mimeType) const
-{
-   return mSupportedMimeTypes.find(mimeType);
-}
-
-bool 
-Profile::isContentEncodingSupported(const Token& encoding) const
-{
-   return mSupportedEncodings.find(encoding);
-}
-
-bool 
-Profile::isLanguageSupported(const Tokens& langs) const
-{
-   for (Tokens::const_iterator i=langs.begin(); i != langs.end(); ++i)
-   {
-      if (mSupportedLanguages.find(*i) == false)
-      {
-         return false;
-      }
-   }
-   return true;
+   mSupportedOptionTags.push_back(tag);
 }
 
 Tokens 
@@ -203,10 +174,22 @@ Profile::getSupportedOptionTags() const
    return mSupportedOptionTags;
 }
 
-Tokens 
-Profile::getAllowedMethods() const
+void 
+Profile::clearSupportedOptionTags()
 {
-   return mSupportedMethods;
+   mSupportedOptionTags.clear();
+}
+
+void 
+Profile::addSupportedMimeType(const Mime& mimeType)
+{
+   mSupportedMimeTypes.push_back(mimeType);
+}
+
+bool 
+Profile::isMimeTypeSupported(const Mime& mimeType) const
+{
+   return mSupportedMimeTypes.find(mimeType);
 }
 
 Mimes 
@@ -215,16 +198,65 @@ Profile::getSupportedMimeTypes() const
    return mSupportedMimeTypes;
 }
 
+void 
+Profile::clearSupportedMimeTypes()
+{
+   mSupportedMimeTypes.clear();
+}
+
+void 
+Profile::addSupportedEncoding(const Token& encoding)
+{
+   mSupportedEncodings.push_back(encoding);
+}
+
+bool 
+Profile::isContentEncodingSupported(const Token& encoding) const
+{
+   return mSupportedEncodings.find(encoding);
+}
+
 Tokens 
 Profile::getSupportedEncodings() const
 {
    return mSupportedEncodings;
 }
 
+void 
+Profile::clearSupportedEncodings()
+{
+   mSupportedEncodings.clear();
+}
+
+void 
+Profile::addSupportedLanguage(const Token& lang)
+{
+   mSupportedLanguages.push_back(lang);
+}
+
+bool 
+Profile::isLanguageSupported(const Tokens& langs) const
+{
+   for (Tokens::const_iterator i=langs.begin(); i != langs.end(); ++i)
+   {
+      if (mSupportedLanguages.find(*i) == false)
+      {
+         return false;
+      }
+   }
+   return true;
+}
+
 Tokens 
 Profile::getSupportedLanguages() const
 {
    return mSupportedLanguages;
+}
+
+void 
+Profile::clearSupportedLanguages()
+{
+   mSupportedLanguages.clear();
 }
 
 void 
@@ -503,22 +535,4 @@ Profile::hasUserAgent() const
    return mHasUserAgent;
 }
 
-bool 
-Profile::hasOverrideHostAndPort() const
-{
-   return mHasOverrideHostPort;
-}
-
-void 
-Profile::setOverrideHostAndPort(const Uri& hostPort)
-{
-   mHasOverrideHostPort = true;   
-   mOverrideHostPort = hostPort;   
-}
-
-const Uri& 
-Profile::getOverideHostAndPort() const
-{
-   return mOverrideHostPort;
-}
    
