@@ -175,10 +175,10 @@ main(int argc, char* argv[])
    Log::toLevel( Data("DEBUG") );
 
    SipStack stack1;
-   stack1.addTransport(Transport::TCP, 5070);
+   stack1.addTransport(TCP, 5070);
 
    SipStack stack2;
-   stack2.addTransport(Transport::TCP, 5080);
+   stack2.addTransport(TCP, 5080);
 
    Client client(stack1);
    Server server(stack2);
