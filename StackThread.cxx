@@ -21,13 +21,8 @@ StackThread::thread()
          resip::FdSet fdset;
          buildFdSet(fdset);
          mStack.buildFdSet(fdset);
-#if defined(WIN32)  // std::min conflicts with microsoft defines for min and max
-		 int ret = fdset.selectMilliSeconds(min(mStack.getTimeTillNextProcessMS(),
+		 int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(),
                                                      getTimeTillNextProcessMS()));
-#else
-		 int ret = fdset.selectMilliSeconds(std::min(mStack.getTimeTillNextProcessMS(),
-                                                     getTimeTillNextProcessMS()));
-#endif
          if (ret >= 0)
          {
             // .dlb. use return value to peak at the message to see if it is a
