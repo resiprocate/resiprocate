@@ -31,7 +31,7 @@ TransactionController::TransactionController(bool multi,
    mShuttingDown(false),
    mStatsManager(0)
 {
-   RESIP_STATISTICS(mStatsManager = new StatisticsManager(tufifo));
+   RESIP_STATISTICS(mStatsManager = new StatisticsManager(*this));
 }
 
 #if defined(WIN32)
@@ -160,6 +160,30 @@ void
 TransactionController::registerForTransactionTermination()
 {
    mRegisteredForTransactionTermination = true;
+}
+
+unsigned int 
+TransactionController::getTuFifoSize() const
+{
+   return mTUFifo.size();
+}
+
+unsigned int 
+TransactionController::sumTransportFifoSizes() const
+{
+   return mTransportSelector.sumTransportFifoSizes();
+}
+
+unsigned int 
+TransactionController::getTransactionFifoSize() const
+{
+   return mStateMacFifo.size();
+}
+
+unsigned int 
+TransactionController::getTimerQueueSize() const
+{
+   return mTimers.size();
 }
 
 StatisticsManager&
