@@ -203,8 +203,8 @@ Dialog::makeAck(const SipMessage& original)
    // !jf! will this do the right thing if these headers weren't in original 
    // we should be able to store this stuff in the Dialog and not need to pass
    // in the original
-   request->header(h_ProxyAuthorization) = original.header(h_ProxyAuthorization);
-   request->header(h_Authorization) = original.header(h_Authorization);
+//   request->header(h_ProxyAuthorization) = original.header(h_ProxyAuthorization); !dcm auth not implemented yet
+//   request->header(h_Authorization) = original.header(h_Authorization);
 
    return request;
 }
@@ -264,9 +264,9 @@ Dialog::makeRequest(MethodTypes method)
    
    request->header(h_RequestLine) = rLine;
    request->header(h_To) = mRemoteUri;
-   request->header(h_To).param(p_tag) = mRemoteTag;
+   request->header(h_To).uri().param(p_tag) = mRemoteTag;
    request->header(h_From) = mLocalUri;
-   request->header(h_From).param(p_tag) = mLocalTag; // !jf! may not be necessary
+   request->header(h_From).uri().param(p_tag) = mLocalTag; // !jf! may not be necessary
    request->header(h_CallId) = mCallId;
    request->header(h_Routes) = mRouteSet;
    request->header(h_Contacts).push_front(mContact);
