@@ -1,7 +1,10 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/ServerPublication.hxx"
-#include "resiprocate/Helper.hxx"
 #include "resiprocate/dum/PublicationHandler.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
+#include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/SecurityAttributes.hxx"
 
 using namespace resip;
 
@@ -12,7 +15,8 @@ ServerPublication::ServerPublication(DialogUsageManager& dum,
      mEtag(etag),
      mEventType(msg.header(h_Event).value()),
      mTimerSeq(0)
-{}
+{
+}
 
 ServerPublication::~ServerPublication()
 {
@@ -31,11 +35,40 @@ ServerPublication::getEtag() const
    return mEtag;
 }
 
+const Data& 
+ServerPublication::getPublisher() const
+{
+   return mLastRequest.header(h_From).uri().getAor();
+}
+
+void
+ServerPublication::updateMatchingSubscriptions()
+{
+   Data key = mEventType + mLastRequest.header(h_RequestLine).uri().getAor();
+   std::pair<DialogUsageManager::ServerSubscriptions::iterator,DialogUsageManager::ServerSubscriptions::iterator> subs;
+   subs = mDum.mServerSubscriptions.equal_range(key);
+   
+   ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
+   for (DialogUsageManager::ServerSubscriptions::iterator i=subs.first; i!=subs.second; ++i)
+   {
+      handler->onPublished(i->second->getHandle(), 
+                           getHandle(), 
+                           mLastBody.mContents.get(), 
+                           mLastBody.mAttributes.get());
+   }
+   mLastBody.mContents.release();
+   mLastBody.mAttributes.release();
+}
+
+
 SipMessage& 
 ServerPublication::accept(int statusCode)
 {
    Helper::makeResponse(mLastResponse, mLastRequest, statusCode);
    mLastResponse.header(h_Expires).value() = mExpires;
+
+   updateMatchingSubscriptions();
+
    return mLastResponse;   
 }
 
@@ -74,25 +107,29 @@ ServerPublication::dispatch(const SipMessage& msg)
          delete this;
          return;
       }
-      std::pair< std::auto_ptr<Contents>, std::auto_ptr<SecurityAttributes> > csa =
-         Helper::extractFromPkcs7(msg, mDum.getSecurity());
+      mLastBody = Helper::extractFromPkcs7(msg, mDum.getSecurity());
       if (msg.getContents())
       {
          handler->onUpdate(getHandle(), mEtag, msg, 
-                           csa.first.get(), csa.second.get(), mExpires);         
+                           mLastBody.mContents.get(), 
+                           mLastBody.mAttributes.get(), 
+                           mExpires);
       }
       else
       {
          handler->onRefresh(getHandle(), mEtag, msg, 
-                            csa.first.get(), csa.second.get(), mExpires);
+                            mLastBody.mContents.get(), 
+                            mLastBody.mAttributes.get(), 
+                            mExpires);
       }
    }
    else
    {
-      std::pair< std::auto_ptr<Contents>, std::auto_ptr<SecurityAttributes> > csa =
-         Helper::extractFromPkcs7(msg, mDum.getSecurity());
+      mLastBody = Helper::extractFromPkcs7(msg, mDum.getSecurity());
       handler->onInitial(getHandle(), mEtag, msg, 
-                         csa.first.get(), csa.second.get(), mExpires);
+                         mLastBody.mContents.get(), 
+                         mLastBody.mAttributes.get(), 
+                         mExpires);
    }
 }
 
