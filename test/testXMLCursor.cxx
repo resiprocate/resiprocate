@@ -27,6 +27,31 @@ main()
    assert(!XMLCursor::WhitespaceSignificant);
 
    {
+      cerr << "test attributes in self-terminating tag" << endl;
+      Data contents("<?xml version=\"1.0\"?><root><foo attr=\"true\"/></root>");
+      try
+      {      
+         XMLCursor xmlc(ParseBuffer(contents.data(), contents.size()));
+
+         assert(xmlc.getTag() == "root");
+         assert(xmlc.getValue().empty());
+         assert(xmlc.getAttributes().empty());
+         assert(xmlc.atRoot());
+         assert(!xmlc.atLeaf());
+         assert(!xmlc.parent());
+         assert(xmlc.firstChild());
+         assert(xmlc.getValue().empty());
+         assert(!xmlc.getAttributes().empty());
+         assert(!xmlc.nextSibling());
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         cerr << e << endl;
+         assert(false);
+      }
+   }
+
+   {
       cerr << "test empty root" << endl;
       Data contents("<?xml version=\"1.0\"?><foo/>");
       try
