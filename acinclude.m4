@@ -16,6 +16,7 @@ AC_DEFUN([RESIP_LIB_OPENSSL],
 	    if test x_$found_ssl != x_yes; then
 		AC_MSG_ERROR([not found])
 	    else
+		LIBS="$LIBS -lssl -lcrypto"
 		AC_MSG_RESULT([yes])
 	    fi
         ],
@@ -48,6 +49,7 @@ AC_DEFUN([RESIP_LIB_ARES],
 	    if test x_$found_ares != x_yes; then
 		AC_MSG_ERROR([not found])
 	    else
+		LIBS="$LIBS -lares"
 		AC_MSG_RESULT([yes])
 	    fi
         ],
