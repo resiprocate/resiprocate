@@ -129,6 +129,7 @@ TcpTransport::processListen(FdSet& fdset)
 bool
 TcpTransport::processRead(ConnectionMap::Connection* c)
 {
+/*
    c->allocateBuffer(MaxBufferSize);
    int bytesRead = read(c->getSocket(), c->mBuffer + c->mBytesRead, c->mBufferSize - c->mBytesRead);
    if (bytesRead < 0)
@@ -143,6 +144,7 @@ TcpTransport::processRead(ConnectionMap::Connection* c)
       return false;
       
    }
+*/// !dcm!
    mConnectionMap.touch(c);
    return true;
 }
