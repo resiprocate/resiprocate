@@ -34,10 +34,6 @@ class MultipartMixedContents : public Contents
       virtual void clear();
       
    private:
-      Contents* createContents(const Mime& contentType, 
-                               const char* anchor, 
-                               ParseBuffer& pb);
-
       static ContentsFactory<MultipartMixedContents> Factory;
 
       std::list<Contents*> mContents;

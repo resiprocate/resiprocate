@@ -15,6 +15,8 @@ main()
       Mime type("text", "plain");
       PlainContents pc(&hfv, type);
 
+      cerr << pc.text() << endl;
+
       assert(pc.text() == "some plain text");
    }
 

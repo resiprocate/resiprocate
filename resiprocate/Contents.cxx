@@ -5,17 +5,13 @@ using namespace Vocal2;
 
 std::map<Mime, ContentsFactoryBase*>* Contents::FactoryMap = 0;
 
-Contents::Contents() 
-   : LazyParser()
-{}
-
 Contents::Contents(HeaderFieldValue* headerFieldValue,
                    const Mime& contentType) 
    : LazyParser(headerFieldValue),
      mContentsType(contentType)
 {}
 
-Contents::Contents( const Mime& contentType) 
+Contents::Contents(const Mime& contentType) 
    : mContentsType(contentType)
 {}
 
