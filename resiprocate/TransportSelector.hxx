@@ -50,7 +50,7 @@ class TransportSelector
    private:
       Transport* findTransport(const Transport::Type type) const;
       Transport* findTransport(const Transport::Tuple& tuple) const;
-      Transport* findTlsTransport(const Data& domain) const;
+      Transport* findTlsTransport(const Data& domain);
 
       SipStack& mStack;
       std::vector<Transport*> mTransports;

@@ -312,14 +312,18 @@ TransportSelector::findTransport(const Transport::Type type) const
 }
 
 Transport*
-TransportSelector::findTlsTransport(const Data& domainname) const
+TransportSelector::findTlsTransport(const Data& domainname) 
 {
-   HashMap<Data, TlsTransport*>::const_iterator i = mTlsTransports.find(domainname);
-   if (i != mTlsTransports.end())
+   // If no domainname specified and there is only 1 TLS transport, use it. 
+   if (domainname == Data::Empty && mTlsTransports.size() == 1)
    {
-      return i->second;
+      return mTlsTransports.begin()->second;
    }
-   else
+   else if (mTlsTransports.count(domainname))
+   {
+      return mTlsTransports[domainname];
+   }
+   else  // don't know which one to use
    {
       return 0;
    }
