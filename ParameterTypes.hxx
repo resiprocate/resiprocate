@@ -100,7 +100,7 @@ namespace resip
    defineParam(ttl, "ttl", IntegerParameter, "RFC ????");
    defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
    defineParam(user, "user", DataParameter, "RFC ????");
-   defineParam(username, "username", DataParameter, "RFC ????");
+   defineParam(username, "username", QuotedDataParameter, "RFC 3261");
 
    // SPECIAL-CASE
    class Qop_Options_Param : public ParamBase
