@@ -36,7 +36,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
    mServerRegistrationHandler(0),
-   mAppDialogSetFactory(0),
+   mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
    mDumShutdownHandler(0)
 {
@@ -67,7 +67,7 @@ void DialogUsageManager::shutdown(DumShutdownHandler* h)
 
 void DialogUsageManager::setAppDialogSetFactory(AppDialogSetFactory* factory)
 {
-   assert(mAppDialogSetFactory = 0);
+   delete mAppDialogSetFactory;   
    mAppDialogSetFactory = factory;
 }
 
@@ -386,17 +386,19 @@ DialogUsageManager::process(FdSet& fdset)
       InfoLog ( << "DialogUsageManager::process: " << sipMsg->brief());      
       if (sipMsg->isRequest())
       {
-         if( !validateRequest(*sipMsg) )
-         {
-            InfoLog (<< "Failed request validation " << *sipMsg);
-            return;
-         }
-         if ( !validateTo(*sipMsg) )
-         {
-            InfoLog (<< "Failed to validation " << *sipMsg);
-            return;
-         }
-         if (mergeRequest(*sipMsg) )
+
+//          if( !validateRequest(*sipMsg) )
+//          {
+//             InfoLog (<< "Failed request validation " << *sipMsg);
+//             return;
+//          }
+//          if ( !validateTo(*sipMsg) )
+//          {
+//             InfoLog (<< "Failed to validation " << *sipMsg);
+//             return;
+//          }
+  
+       if (mergeRequest(*sipMsg) )
          {
             InfoLog (<< "Merged request: " << *sipMsg);
             return;
@@ -594,7 +596,8 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
          {
             DialogSetId id(request);
-            assert(mDialogSetMap.find(id) == mDialogSetMap.end());
+            //cryptographically dangerous
+            assert(mDialogSetMap.find(id) == mDialogSetMap.end()); 
             try
             {
                DialogSet* dset =  new DialogSet(request, *this);

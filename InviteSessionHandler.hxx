@@ -16,7 +16,7 @@ class InviteSessionHandler
    public:
       /// called when an initial INVITE or the intial response to an outoing invite  
       virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
-      virtual void onNewSession(ServerInviteSessionHandle, const SipMessage& msg)=0;
+      virtual void onNewSession(ServerInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
 
       // Received a failure response from UAS
       virtual void onFailure(ClientInviteSessionHandle, const SipMessage& msg)=0;
