@@ -35,10 +35,12 @@ PTHREAD_LDFLAGS :=
 PTHREAD_LIBNAME :=
 endif
 
+ifneq ($(USE_DTLS),true)
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
 OPENSSL_INCLUDEDIRS := /usr/local/ssl/include /usr/kerberos/include/
 OPENSSL_LIBDIRS := /usr/local/ssl/lib
+endif
 
 ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
 ARES_LIBDIRS := $(ROOT)/contrib/ares
