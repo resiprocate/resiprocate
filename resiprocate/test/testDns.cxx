@@ -17,16 +17,9 @@ class TestDnsHandler : public DnsHandler
    public:
       void handle(DnsResult* result)
       {
-         switch (result->available())
+         while (result->available() == DnsResult::Available)
          {
-            case DnsResult::Available:
-               std::cout << result->next() << std::endl;
-               break;
-            case DnsResult::Finished:
-               std::cout << "No more dns results" << std::endl;
-               break;
-            default:
-               break;
+            std::cout << result->next() << std::endl;
          }
       }
 };
@@ -91,8 +84,15 @@ main(int argc, char* argv[])
    InfoLog (<< "Deleting results");
    while (!results.empty())
    {
-      delete results.front();
-      results.pop_front();
+      if (results.front()->available() == DnsResult::Finished)
+      {
+         delete results.front();
+         results.pop_front();
+      }
+      else
+      {
+         sleep(1);
+      }
    }
 
    return 0;
