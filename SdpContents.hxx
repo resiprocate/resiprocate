@@ -358,7 +358,8 @@ class SdpContents : public Contents
 
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
-      virtual const Mime& getStaticType() const;
+      //virtual 
+		  static const Mime& getStaticType() ;
    private:
       Session mSession;
       static ContentsFactory<SdpContents> Factory;

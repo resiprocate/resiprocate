@@ -87,7 +87,7 @@ Pkcs7SignedContents::clone() const
 }
 
 const Mime& 
-Pkcs7Contents::getStaticType() const
+Pkcs7Contents::getStaticType() 
 {
    static Mime type("application","pkcs7-mime");
    return type;
@@ -95,7 +95,7 @@ Pkcs7Contents::getStaticType() const
 
 
 const Mime& 
-Pkcs7SignedContents::getStaticType() const
+Pkcs7SignedContents::getStaticType() 
 {
    static Mime type("application","pkcs7-signature");
    return type;
