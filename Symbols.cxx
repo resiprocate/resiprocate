@@ -119,7 +119,7 @@ const char * const Symbols::mobility = "mobility";
 const char * const Symbols::comp = "comp";
 const char * const Symbols::rport = "rport";
 const char * const Symbols::MagicCookie = "z9hG4bK";
-const char * const Symbols::Vocal2Cookie= "-kcD23-";
+const char * const Symbols::Vocal2Cookie= "-c87542-";
 
 const char * const Symbols::algorithm = "algorithm";
 const char * const Symbols::cnonce = "cnonce";
