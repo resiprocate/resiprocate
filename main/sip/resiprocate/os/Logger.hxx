@@ -17,159 +17,49 @@
    DebugLog(<< "hi there " << mix << 5 << types);  // note leading << and no endl
 */
 
-//#define VOCAL_SUBSYSTEM Vocal2::Subsystem::NONE
+// unconditionally output to cerr -- easily change back and forth
+#define CerrLog(args_)                                                          \
+  Vocal2::Log::tags(Vocal2::Log::DEBUG_STACK, VOCAL_SUBSYSTEM, std::cerr)       \
+          << __FILE__ << ':' << __LINE__ << DELIM                               \
+          args_ << std::endl;
 
+#define DebugLog(args_) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, args_)
 
-#if ( (__GNUC__ < 3) )
+#define CritLog(args_) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, args_)
 
-// variadic to handle comma in template arguments
-#define DebugLog(arg__, args__...)  /* eat the comma if no extra arguments */ \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, arg__, ##args__)
+#define ErrLog(args_) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, args_)
 
-#define CritLog(arg__, args__...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, arg__, ##args__)
+#define WarningLog(args_) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, args_)
 
-#define ErrLog(arg__, args__...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, arg__, ##args__)
-
-#define WarningLog(arg__, args__...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, arg__, ##args__)
-
-#define InfoLog(arg__, args__...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, arg__, ##args__)
+#define InfoLog(args_) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, args_)
 
 // do/while allows a {} block in an expression
-#define GenericLog(system__, level__, arg__, args__...)         \
+#define GenericLog(system_, level_, args_)                      \
 do                                                              \
 {                                                               \
-  if (Vocal2::GenericLogImpl::isLogging(level__))               \
+  if (Vocal2::GenericLogImpl::isLogging(level_))                \
   {                                                             \
      Vocal2::Lock lock(Vocal2::Log::_mutex);                    \
-     if (Vocal2::GenericLogImpl::isLogging(level__))            \
+     if (Vocal2::GenericLogImpl::isLogging(level_))             \
      {                                                          \
-        Vocal2::Log::tags(level__, system__,                    \
+        Vocal2::Log::tags(level_, system_,                      \
                           Vocal2::GenericLogImpl::Instance())   \
           << __FILE__ << ':' << __LINE__ << DELIM               \
-                  /* eat the comma if no extra arguments */     \
-          arg__ , ##args__ << std::endl;                        \
+          args_ << std::endl;                                   \
      }                                                          \
   }                                                             \
 } while (0)
-
-
-#elif ( defined(__SUNPRO_CC) || (__GNUC__ >= 3) )
-
-
-// variadic to handle comma in template arguments
-#define DebugLog(args__)/* eat the comma if no extra arguments */ \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, args__)
-
-#define CritLog(args__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, args__)
-
-#define ErrLog(args__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, args__)
-
-#define WarningLog(args__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, args__)
-
-#define InfoLog(args__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, args__)
-
-// do/while allows a {} block in an expression
-#define GenericLog(system__, level__, args__)         \
-do                                                              \
-{                                                               \
-  if (Vocal2::GenericLogImpl::isLogging(level__))               \
-  {                                                             \
-     Vocal2::Lock lock(Vocal2::Log::_mutex);                    \
-     if (Vocal2::GenericLogImpl::isLogging(level__))            \
-     {                                                          \
-        Vocal2::Log::tags(level__, system__,                    \
-                          Vocal2::GenericLogImpl::Instance())   \
-          << __FILE__ << ':' << __LINE__ << DELIM               \
-                  /* eat the comma if no extra arguments */     \
-          args__ << std::endl;                        \
-     }                                                          \
-  }                                                             \
-} while (0)
-
-#elif ( defined (WIN32) )
-
-#define DebugLog(__VA_ARGS__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, __VA_ARGS__)
-
-#define CritLog(__VA_ARGS__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, __VA_ARGS__)
-
-#define ErrLog(__VA_ARGS__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, __VA_ARGS__)
-
-#define WarningLog(__VA_ARGS__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, __VA_ARGS__)
-
-#define InfoLog(__VA_ARGS__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, __VA_ARGS__)
-
-// do/while allows a {} block in an expression
-#define GenericLog(system__, level__,  __VA_ARGS__ )                     \
-do                                                              \
-{                                                               \
-  if (Vocal2::GenericLogImpl::isLogging(level__))               \
-  {                                                             \
-     Vocal2::Lock lock(Vocal2::Log::_mutex);                    \
-     if (Vocal2::GenericLogImpl::isLogging(level__))            \
-     {                                                          \
-        Vocal2::Log::tags(level__, system__,                    \
-                          Vocal2::GenericLogImpl::Instance())   \
-          << __FILE__ << ':' << __LINE__ << DELIM               \
-          __VA_ARGS__  << std::endl;                            \
-     }                                                          \
-  }                                                             \
-} while (0)
-
-#else
-
-#define DebugLog(...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, __VA_ARGS__ )
-
-#define CritLog(...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, __VA_ARGS__ )
-
-#define ErrLog( ...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, __VA_ARGS__ )
-
-#define WarningLog(...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, __VA_ARGS__ )
-
-#define InfoLog(...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, __VA_ARGS__ )
-
-// do/while allows a {} block in an expression
-#define GenericLog(system__, level__,  ...)                     \
-do                                                              \
-{                                                               \
-  if (Vocal2::GenericLogImpl::isLogging(level__))               \
-  {                                                             \
-     Vocal2::Lock lock(Vocal2::Log::_mutex);                    \
-     if (Vocal2::GenericLogImpl::isLogging(level__))            \
-     {                                                          \
-        Vocal2::Log::tags(level__, system__,                    \
-                          Vocal2::GenericLogImpl::Instance())   \
-          << __FILE__ << ':' << __LINE__ << DELIM               \
-          __VA_ARGS__  << std::endl;                            \
-     }                                                          \
-  }                                                             \
-} while (0)
-
-#endif
-
 
 #ifdef NO_DEBUG
-// Suppress debug loging at compile time
-#define DebugLog(arg__, args__...)
+#undefine DebugLog
+// Suppress debug logging at compile time
+#define DebugLog(args_)
 #endif
-
 
 namespace Vocal2
 {
@@ -188,14 +78,14 @@ class GenericLogImpl :  public Log
             return *mLogger;
          }
          else 
-		 {
-			 if (Log::_type == Log::FILE)
          {
-            assert(0);
+            if (Log::_type == Log::FILE)
+            {
+               assert(0);
+            }
          }
-		 }
 
-		 return std::cout;
+         return std::cout;
       }
       
       static bool isLogging(Log::Level level) 
