@@ -113,7 +113,7 @@ Condition::wait (Mutex* mutex)
     WaitForSingleObject(mId,INFINITE);
     mutex->lock();
 #else
-   int ret = pthread_cond_WAIT(&mId, mutex->getId());
+   int ret = pthread_cond_wait(&mId, mutex->getId());
    assert( ret == 0 );
 #endif
 }
@@ -136,7 +136,7 @@ Condition::wait (Mutex* mutex, int ms)
 	// non-trivial.  Please read http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
 	// for a full explanation.  This is an implementation of the SetEvent solution
 	// discussed in that article.  This solution has the following issues:
-	// 1.  Unfairness - ie.  First thread to call WAIT may not be first thread
+	// 1.  Unfairness - ie.  First thread to call wait may not be first thread
 	//     to be released from condition.
 	// 2.  Incorrectness due to a race condition when a broadcast occurs
 	// (see the link for more details on these issues)
@@ -145,14 +145,14 @@ Condition::wait (Mutex* mutex, int ms)
 	// This solution (also discussed in the link) requires the use of a primitive only
 	// available in WinNT and above.  It also requires that the Mutex passed in be
 	// implemented using windows Mutexes instead of CriticalSections - they are less
-	// efficient.  Thus the problems with this SignalObjectAndWAIT solution are:
+	// efficient.  Thus the problems with this SignalObjectAndWait solution are:
 	// 1.  Not portable to all versions of windows - ie.  will not work with Win98/Me
 	// 2.  Less efficient than tthe SetEvent solution
 	//
 	// I have choosen to stick with the SetEvent Solution for the following reasons:
 	// 1.  Speed is important.
 	// 2.  The Unfairness issue is not really a big problem since the stack currently
-	//     does not call a WAIT function from two different threads.  (assuming the
+	//     does not call a wait function from two different threads.  (assuming the
 	//     hosting application always calls process() from the same thread).  The only
 	//     time multi-threading comes into the picture is when the transports queue
 	//     messages from the wire onto the stateMacFifo - but they are retrieved off the
@@ -177,8 +177,8 @@ Condition::wait (Mutex* mutex, int ms)
 
     assert( expiresTS.tv_nsec < 1000000000L );
 
-    //std::cerr << "Condition::WAIT " << mutex << "ms=" << ms << " expire=" << expiresTS.tv_sec << " " << expiresTS.tv_nsec << std::endl;
-    int ret = pthread_cond_timedWAIT(&mId, mutex->getId(), &expiresTS);
+    //std::cerr << "Condition::wait " << mutex << "ms=" << ms << " expire=" << expiresTS.tv_sec << " " << expiresTS.tv_nsec << std::endl;
+    int ret = pthread_cond_timedwait(&mId, mutex->getId(), &expiresTS);
 
     if (ret == EINTR || ret == ETIMEDOUT)
     {
@@ -186,7 +186,7 @@ Condition::wait (Mutex* mutex, int ms)
     }
     else
     {
-       //std::cerr << this << " pthread_cond_timedWAIT failed " << ret << " mutex=" << mutex << std::endl;
+       //std::cerr << this << " pthread_cond_timedwait failed " << ret << " mutex=" << mutex << std::endl;
        assert( ret == 0 );
        return true;
     }
