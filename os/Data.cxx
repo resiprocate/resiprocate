@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.15 2002/10/30 23:48:39 jason Exp $";
+"$Id: Data.cxx,v 1.16 2002/10/31 20:52:17 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -438,15 +438,7 @@ Vocal2::operator!=(const char* s, const Data& d)
 ostream& 
 Vocal2::operator<<(ostream& strm, const Data& d)
 {
-   const char* b = d.mBuf;
-   const char* e = d.mBuf + d.mSize;
-   while (b != e)
-   {
-      strm << *b;
-      b++;
-   }
-
-   return strm;
+   return strm.write(d.mBuf, d.mSize);
 }
 
 /* ====================================================================
