@@ -32,11 +32,13 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State init
      mCurrentRetransmit200(0)      
 
 {
+   InfoLog ( << "^^^ InviteSession::InviteSession " << this);   
    assert(mDum.mInviteSessionHandler);
 }
 
 InviteSession::~InviteSession()
 {
+   InfoLog ( << "^^^ InviteSession::~InviteSession " << this);   
    delete mCurrentLocalSdp;
    delete mCurrentRemoteSdp;
    delete mProposedLocalSdp;
@@ -118,6 +120,7 @@ InviteSession::dispatch(const SipMessage& msg)
             {
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      
                delete this;
+               return;
             }
          }
          break;
@@ -161,7 +164,16 @@ InviteSession::dispatch(const SipMessage& msg)
                   InfoLog (<< "Ignoring request in an INVITE dialog: " << msg.brief());
                   break;
             }
-         }      
+         }
+         else
+         {
+            //!dcm! -- need to change this logic for when we don't have an ACK yet
+            if ( msg.header(h_StatusLine).statusCode() == 200)
+            {
+               //retransmist ack
+               mDum.send(mAck);
+            }
+         }
       case Accepting:
          if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
          {
@@ -174,11 +186,6 @@ InviteSession::dispatch(const SipMessage& msg)
          }
          else
          {
-            if ( msg.header(h_StatusLine).statusCode() == 200)
-            {
-               //retransmist ack
-               mDum.send(mAck);
-            }
             ErrLog ( << "Spurious message sent to UAS " << msg );            
             return;            
          }
@@ -198,15 +205,15 @@ InviteSession::makeRefer(const H_ReferTo::Type& referTo)
 SipMessage&
 InviteSession::end()
 {
+   InfoLog ( << "InviteSession::end, state: " << mState);  
    switch (mState)
    {
-      InfoLog ( << "InviteSession::end, state: " << mState);  
-
       case Terminated: 
          throw UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
          break;
       case Connected:
-         InfoLog ( << "InviteSession::end, connected state" );  
+      case Accepting:
+         InfoLog ( << "InviteSession::end, connected or Accepting" );  
          mDialog.makeRequest(mLastRequest, BYE);
          //new transaction
          assert(mLastRequest.header(h_Vias).size() == 1);

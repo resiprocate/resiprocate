@@ -54,8 +54,9 @@ DialogSet::~DialogSet()
       delete mDialogs.begin()->second;
    } 
    InfoLog ( << " ********** DialogSet::~DialogSet: " << mId << "*************" );
-   mDum.removeDialogSet(this->getId());
+   //!dcm! -- very delicate code, change the order things go horribly wrong
    delete mAppDialogSet;
+   mDum.removeDialogSet(this->getId());
 }
 
 void DialogSet::possiblyDie()
@@ -92,6 +93,7 @@ Dialog*
 DialogSet::findDialog(const SipMessage& msg)
 {
    DialogId id(msg);
+   InfoLog ( << "*********** Looking for dialog: " << id << "***********" );   
    return findDialog(id);
 }
 
@@ -108,16 +110,18 @@ DialogSet::dispatch(const SipMessage& msg)
    Dialog* dialog = findDialog(msg);
    if (dialog == 0)
    {
+      InfoLog ( << "Creating a new Dialog from msg: " << msg);
       // !jf! This could throw due to bad header in msg, should we catch and rethrow
       // !jf! if this threw, should we check to delete the DialogSet? 
       dialog = new Dialog(mDum, msg, *this);
+      InfoLog ( << "### Calling CreateAppDialog ### " << msg);
+
       AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
       dialog->mAppDialog = appDialog;
       if (mCancelled)
       {
          dialog->cancel();
       }
-      InfoLog (<< "Created a new dialog: " << *dialog);
    }     
 
    dialog->dispatch(msg);

@@ -19,7 +19,9 @@ DumProcessHandler::start(DialogUsageManager* dum)
 {
    mDum = dum;
    //!dcm! -- temporary
-   mTimerID = mExternalTimer->generateAsyncID();   
+
+   mExternalTimer->setHandler(this);
+   mTimerID = mExternalTimer->generateAsyncID();
    mExternalTimer->createRecurringTimer(mTimerID, 30);   
 }
 
@@ -40,8 +42,8 @@ DumProcessHandler::handleProcessNotification()
          fds.selectMilliSeconds((long)0);
       }
       mDum->process(fds);      
-   }
-   mCurrentlyProcessing = false;
+      mCurrentlyProcessing = false;
+   }   
 }
 
 void 
