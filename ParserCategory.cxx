@@ -168,7 +168,8 @@ ParserCategory::parseParameters(ParseBuffer& pb)
          ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
          if (type == ParameterTypes::UNKNOWN)
          {
-            mUnknownParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb));
+            mUnknownParameters.push_back(new UnknownParameter(keyStart, 
+                                                              int((keyEnd - keyStart)), pb, " \t\r\n;?>"));
          }
          else
          {

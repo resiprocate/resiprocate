@@ -242,7 +242,9 @@ Auth::parseAuthParameters(ParseBuffer& pb)
       ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
       if (type == ParameterTypes::UNKNOWN)
       {
-         mUnknownParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb));
+         mUnknownParameters.push_back(new UnknownParameter(keyStart, 
+                                                           int((keyEnd - keyStart)), pb, 
+                                                           " \t\r\n,"));
       }
       else
       {
@@ -333,6 +335,7 @@ Auth::param(const Qop_Options_Param& paramType) const
 CSeqCategory::CSeqCategory(const CSeqCategory& rhs)
    : ParserCategory(rhs),
      mMethod(rhs.mMethod),
+     mUnknownMethodName(rhs.mUnknownMethodName),
      mSequence(rhs.mSequence)
 {}
 
@@ -350,6 +353,7 @@ CSeqCategory::operator=(const CSeqCategory& rhs)
    {
       ParserCategory::operator=(rhs);
       mMethod = rhs.mMethod;
+      mUnknownMethodName = rhs.mUnknownMethodName;
       mSequence = rhs.mSequence;
    }
    return *this;
@@ -376,7 +380,6 @@ void
 CSeqCategory::parse(ParseBuffer& pb)
 {
    const char* anchorPtr;
-   //      anchorPtr = 
    pb.skipWhitespace();
    mSequence = pb.integer();
 
