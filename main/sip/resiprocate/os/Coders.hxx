@@ -3,9 +3,6 @@
 
 #include "resiprocate/os/Data.hxx"
 
-static const char* const resipCodersHeaderVersion =
-   "$Id: Coders.hxx,v 1.10 2003/09/16 13:50:57 fluffy Exp $";
-
 namespace resip
 {
 

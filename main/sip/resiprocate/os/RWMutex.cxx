@@ -48,9 +48,6 @@
  *
  */
 
-static const char* const resipRWMutex_cxx_Version =
-"$Id: RWMutex.cxx,v 1.2 2003/03/25 06:33:48 jason Exp $";
-
 #include "RWMutex.hxx"
 #include "Lock.hxx"
 #include <cassert>

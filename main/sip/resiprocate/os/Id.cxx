@@ -1,7 +1,3 @@
-
-static const char* const resipId_cxx_version = 
-    "@(#) $Id: Id.cxx,v 1.2 2004/04/05 18:54:31 alan Exp $";
-
 #include <typeinfo>
 #if defined(RESIP_ID_DEBUG)
 # include <typeinfo>

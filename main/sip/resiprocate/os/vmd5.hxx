@@ -1,9 +1,6 @@
 #if !defined(RESIP_VMD5_HXX)
 #define RESIP_VMD5_HXX 
 
-static const char* const resipvmd5HeaderVersion =
-   "$Id: vmd5.hxx,v 1.13 2003/06/02 21:14:36 ryker Exp $";
-
 /*
  * This is the header file for the MD5 message-digest algorithm.
  * The algorithm is due to Ron Rivest.  This code was
