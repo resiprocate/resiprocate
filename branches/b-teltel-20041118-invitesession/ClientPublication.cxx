@@ -152,12 +152,12 @@ ClientPublication::refresh(unsigned int expiration)
    }
    mPublish.header(h_CSeq).sequence()++;
    send(mPublish);
-   mPublish.releaseContents();
 }
 
 void
 ClientPublication::update(const Contents* body)
 {
+   InfoLog (<< "Updating presence document: " << mPublish.header(h_To).uri());
    assert(body);
 
    if (mDocument != body)
@@ -168,7 +168,7 @@ ClientPublication::update(const Contents* body)
 
    mPublish.header(h_CSeq).sequence()++;
    mPublish.setContents(mDocument);
-   refresh();
+   send(mPublish);
 }
 
 void 
@@ -183,6 +183,7 @@ ClientPublication::send(SipMessage& request)
       mDum.send(request);
       mWaitingForResponse = true;
       mPendingPublish = false;
+      mPublish.releaseContents();
    }
 }
 
