@@ -100,6 +100,12 @@ SipMessage::SipMessage(const SipMessage& from)
    }
 }
 
+Message*
+SipMessage::clone() const
+{
+   return new SipMessage(*this);
+}
+
 SipMessage::~SipMessage()
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
