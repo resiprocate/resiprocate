@@ -59,3 +59,11 @@ Convert certificate in DER to PRM
 openssl x509 -in root_der.crt -inform DER -out root.pem
 
 ----
+
+Dumping asn 
+
+openssl asn1parse -inform der -i -in resip-asn-decrypt 
+
+or
+
+resiprocate/test/dumpasn1 resip-encrpt-out
