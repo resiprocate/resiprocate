@@ -9,6 +9,10 @@
 #  include <unistd.h>
 #endif
 
+#ifdef __APPLE__
+#include "/Developer/Headers/FlatCarbon/Gestalt.h"
+#endif
+
 #include <cassert>
 #include <iostream>
 #include "resiprocate/os/Timer.hxx"
@@ -269,8 +273,13 @@ Timer::setupTimeOffsets()
       }
       i++;
    }
-#if defined(__MACH__) || defined(__PPC__)
+#ifdef __APPLE__
    cpuSpeed = 1;
+   long s=1;
+   // link with -framework AppKit 
+   //Gestalt (gestaltProcClkSpeed, &s );
+   cpuSpeed = s;
+   
 #else
    assert( index != 0 );
    cpuSpeed = 0;
