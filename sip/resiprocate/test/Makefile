@@ -18,6 +18,7 @@ TESTPROGRAMS +=
 endif
 
 TESTPROGRAMS += limpc.cxx \
+		SipTortureTests.cxx \
 		testRSP-2.cxx \
 		testSrv \
 		testPidf.cxx \
