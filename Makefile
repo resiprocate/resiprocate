@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2004/04/11 23:41:33 davidb Exp $
+# $Id: Makefile,v 1.7 2004/04/13 17:02:39 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -9,20 +9,29 @@ TARGET_LIBRARY = libdum
 
 TESTPROGRAMS = 
 
-SRC =   Dialog.cxx \
-	UInt64Hash.cxx \
-	DialogUsageManager.cxx \
+SRC =   \
+	BaseCreator.cxx \
 	BaseUsage.cxx \
-	InviteSession.cxx \
 	ClientInviteSession.cxx \
-	ServerInviteSession.cxx \
-	ClientSubscription.cxx \
-	ServerSubscription.cxx \
-	ClientRegistration.cxx \
-	ServerRegistration.cxx \
-	ServerPublication.cxx \
-	ClientPublication.cxx \
-	ServerOutOfDialogReq.cxx \
 	ClientOutOfDialogReq.cxx \
+	ClientPublication.cxx \
+	ClientRegistration.cxx \
+	ClientSubscription.cxx \
+	Dialog.cxx \
+	DialogUsageManager.cxx \
+	InviteSessionCreator.cxx \
+	InviteSession.cxx \
+	OutOfDialogReqCreator.cxx \
+	PublicationCreator.cxx \
+	RegistrationCreator.cxx \
+	ServerInviteSession.cxx \
+	ServerOutOfDialogReq.cxx \
+	ServerPublication.cxx \
+	ServerRegistration.cxx \
+	ServerSubscription.cxx \
+	SubscriptionCreator.cxx \
+	UInt64Hash.cxx \
+
+#	DialogSet.cxx DialogSetId.cxx \
 
 include $(BUILD)/Makefile.post
