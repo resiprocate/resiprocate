@@ -26,6 +26,11 @@
 using namespace resip;
 using namespace std;
 
+// Remove warning about 'this' use in initiator list - pointer is only stored
+#if defined(WIN32)
+#pragma warning( disable : 4355 ) // using this in base member initializer list 
+#endif
+
 DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mMergeKey(),
    mDialogs(),
@@ -258,11 +263,11 @@ DialogSet::dispatch(const SipMessage& msg)
                if (!mDialogs.empty())
                {
                   //a dialog is refusing this 3xx(only implemented for INVITE,
-                  //Subscibe dialogs always refuse as they don't have an early state)
+                  //Subscribe dialogs always refuse as they don't have an early state)
                   return; //(toss 3xx)                  
                }
 
-               InfoLog( << "about to re-send request with digest credentials" );
+               InfoLog( << "about to re-send request to redirect destination" );
                DebugLog( << getCreator()->getLastRequest() );
                
                mDum.send(getCreator()->getLastRequest());
