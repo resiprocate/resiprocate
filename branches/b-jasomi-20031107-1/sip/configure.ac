@@ -33,7 +33,7 @@ AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 dnl AC_DISABLE_STATIC
 
-AC_REVISION($Id: configure.ac,v 1.17 2003/10/24 20:37:51 alan Exp $)
+AC_REVISION($Id: configure.ac,v 1.17.2.1 2003/11/08 01:26:21 alan Exp $)
 
 
 AM_MAINTAINER_MODE
@@ -57,6 +57,7 @@ fi
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
+AC_PROG_LIBTOOL
 
 AC_CHECK_HEADERS([sys/sockio.h sys/int_types.h netinet/in.h sys/socket.h ])
 AC_CHECK_HEADER([popt.h],[AC_DEFINE([HAVE_POPT_H],[1],[ Has popt.h ]) LIBS="$LIBS -lpopt"])
