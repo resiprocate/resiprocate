@@ -200,7 +200,7 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri)
    assert(!mShuttingDown);
 
    SipMessage* toSend = new SipMessage(msg);
-   toSend->setTarget(uri);
+   toSend->setForceTarget(uri);
    toSend->setFromTU();
 
    mTransactionController.send(toSend);

@@ -114,6 +114,26 @@ TransactionController::registerForTransactionTermination()
 {
    mRegisteredForTransactionTermination = true;
 }
+
+#warning Need force target support to work properly.
+
+void
+TransactionController::symetricResponses(const Data& tid, bool onoff)
+{
+    TransactionMap* maps[] = { &mClientTransactionMap, &mServerTransactionMap };
+    TransactionState* ts = 0;
+    for(unsigned int i = 0 ; i < sizeof(maps)/sizeof(*maps); i++)
+    {
+        ts = maps[i]->find(tid);
+        if (ts) break;
+    }
+
+    assert(ts != 0); // !ah! unable to find transaction
+
+    ts->mSymResponses = onoff;
+    DebugLog(<<"Set sym responses " << (onoff ? "on" : "off") << " for " << tid );
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
