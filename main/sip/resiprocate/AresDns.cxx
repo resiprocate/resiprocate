@@ -1,4 +1,5 @@
 #include "resiprocate/AresDns.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #if !defined(WIN32)
 #include <arpa/nameser.h>
