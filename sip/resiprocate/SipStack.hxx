@@ -20,12 +20,15 @@ class SipStack
    public:
       SipStack();
   
-      void send(SipMessage* msg);
+      void send(const SipMessage& msg);
 
       // this is only if you want to send to a destination not in the route. You
       // probably don't want to use it. 
-      void send(SipMessage* msg, const Data &dest="default" );
-      SipMessage* receive();
+      void send(const SipMessage& msg, const Data &dest="default" );
+
+      // caller now owns the memory
+      SipMessage* receive(); 
+      
       void process();
 
       /// returns time in milliseconds when process next needs to be called 
@@ -34,9 +37,6 @@ class SipStack
       enum ThreadFunction { Timer, UDP, StateMachine, TCP, };
 
       void runThread( enum ThreadFunction funcType);
-
-
-
 
       Fifo<Message> mTUFifo;
       Fifo<Message> mStateMacFifo;
