@@ -23,10 +23,8 @@ MultipartSignedContents::init()
 }
 
 MultipartSignedContents::MultipartSignedContents()
-   : MultipartMixedContents()
-{
-}
-
+   : MultipartMixedContents(getStaticType())
+{}
 
 MultipartSignedContents::MultipartSignedContents(HeaderFieldValue* hfv, const Mime& contentsType)
    : MultipartMixedContents(hfv, contentsType)
