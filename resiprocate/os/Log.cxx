@@ -1,10 +1,10 @@
 
-#include <util/Socket.hxx>
+#include "util/Socket.hxx"
 
 #include <cassert>
 #include <iostream>
 #include <stdio.h>
-#include <util/Data.hxx>
+#include "util/Data.hxx"
 
 #ifndef WIN32
 #include <sys/time.h>
@@ -13,8 +13,8 @@
 #include <sys/types.h>
 #include <time.h>
 
-#include <util/Log.hxx>
-#include <util/Lock.hxx>
+#include "util/Log.hxx"
+#include "util/Lock.hxx"
 
 using namespace Vocal2;
 using namespace std;

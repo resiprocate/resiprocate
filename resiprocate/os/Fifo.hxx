@@ -53,11 +53,11 @@
 
 
 static const char* const Fifo_h_Version =
-"$Id: Fifo.hxx,v 1.5 2002/10/22 15:47:08 jason Exp $";
+"$Id: Fifo.hxx,v 1.6 2002/11/06 02:59:30 davidb Exp $";
 
-#include <util/Mutex.hxx>
-#include <util/Condition.hxx>
-#include <util/Lock.hxx>
+#include "util/Mutex.hxx"
+#include "util/Condition.hxx"
+#include "util/Lock.hxx"
 #include <list>
 
 #include <errno.h>

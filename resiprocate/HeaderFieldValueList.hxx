@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <list>
-#include <sipstack/HeaderTypes.hxx>
+#include "sipstack/HeaderTypes.hxx"
 
 namespace Vocal2
 {

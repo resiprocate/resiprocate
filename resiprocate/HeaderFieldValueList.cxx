@@ -1,6 +1,6 @@
-#include <sipstack/HeaderFieldValue.hxx>
-#include <sipstack/HeaderFieldValueList.hxx>
-#include <sipstack/ParserContainerBase.hxx>
+#include "sipstack/HeaderFieldValue.hxx"
+#include "sipstack/HeaderFieldValueList.hxx"
+#include "sipstack/ParserContainerBase.hxx"
 
 using namespace Vocal2;
 

@@ -2,12 +2,12 @@
 #define VEXCEPTION_HXX
 
 static const char* const VExceptionHeaderVersion =
-    "$Id: VException.hxx,v 1.2 2002/10/06 18:31:33 jason Exp $";
+    "$Id: VException.hxx,v 1.3 2002/11/06 02:59:30 davidb Exp $";
 
 #include <exception>
 #include <iostream>
 
-#include <util/Data.hxx>
+#include "util/Data.hxx"
 
 namespace Vocal2
 {

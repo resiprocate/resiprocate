@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-#include <sipstack/ParserCategory.hxx>
+#include "sipstack/ParserCategory.hxx"
 
 namespace Vocal2
 {

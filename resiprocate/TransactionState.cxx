@@ -1,13 +1,13 @@
-#include <sipstack/TransactionState.hxx>
-#include <sipstack/TransportSelector.hxx>      
-#include <sipstack/SipStack.hxx>
-#include <sipstack/SipMessage.hxx>
-#include <sipstack/TimerMessage.hxx>
-#include <sipstack/MethodTypes.hxx>
-#include <sipstack/Helper.hxx>
-#include <sipstack/SendingMessage.hxx>
-#include <sipstack/DnsMessage.hxx>
-#include <util/Logger.hxx>
+#include "sipstack/TransactionState.hxx"
+#include "sipstack/TransportSelector.hxx"      
+#include "sipstack/SipStack.hxx"
+#include "sipstack/SipMessage.hxx"
+#include "sipstack/TimerMessage.hxx"
+#include "sipstack/MethodTypes.hxx"
+#include "sipstack/Helper.hxx"
+#include "sipstack/SendingMessage.hxx"
+#include "sipstack/DnsMessage.hxx"
+#include "util/Logger.hxx"
 
 using namespace Vocal2;
 

@@ -3,12 +3,12 @@
 
 #include <exception>
 
-#include <util/Data.hxx>
-#include <util/Fifo.hxx>
-#include <util/Socket.hxx>
-#include <util/VException.hxx>
-#include <sipstack/Message.hxx>
-#include <sipstack/Preparse.hxx>
+#include "util/Data.hxx"
+#include "util/Fifo.hxx"
+#include "util/Socket.hxx"
+#include "util/VException.hxx"
+#include "sipstack/Message.hxx"
+#include "sipstack/Preparse.hxx"
 namespace Vocal2
 {
 
