@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.137 2004/02/07 21:28:12 jason Exp $
+# $Id: Makefile,v 1.138 2004/02/12 08:36:42 fluffy Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -9,8 +9,8 @@ CODE_SUBDIRS = os
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =  
 
-CXXFLAGS += -I/usr/local/ssl/include
-LDFLAGS  += -L/usr/local/ssl/lib
+CXXFLAGS += -I/sw/include
+LDFLAGS  += -L/sw/lib
 
 #	XPidf.cxx \
 
