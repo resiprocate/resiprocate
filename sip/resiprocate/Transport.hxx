@@ -85,7 +85,7 @@ class Transport : public ThreadIf
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Data mInterface;
       Tuple mTuple;
-        friend class TransportSelector; // !ah! debug hack
+      
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
 

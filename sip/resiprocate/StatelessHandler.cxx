@@ -68,7 +68,7 @@ StatelessHandler::process()
             DebugLog (<< "Processing response from TU: " << msg->brief());
             const Via& via = sip->header(h_Vias).front();
             int port = via.sentPort();
-			if (via.exists(p_rport) && via.param(p_rport).hasValue())
+            if (via.exists(p_rport) && via.param(p_rport).hasValue())
             {
                port = via.param(p_rport).port();
             }

@@ -27,6 +27,8 @@ class TransactionState : public DnsHandler
          ClientInvite,
          ServerNonInvite,
          ServerInvite,
+         ClientStale,
+         ServerStale,
          Stateless  // may not be needed
       } Machine;
       
@@ -50,13 +52,15 @@ class TransactionState : public DnsHandler
       void processClientInvite(  Message* msg );
       void processServerNonInvite(  Message* msg );
       void processServerInvite(  Message* msg );
-      void processStale(  Message* msg );
+      void processClientStale(  Message* msg );
+      void processServerStale(  Message* msg );
       void processTransportFailure();
       void processNoDnsResults();
       void processReliability(TransportType type);
       
       void add(const Data& tid);
       void erase(const Data& tid);
+      
    private:
       bool isRequest(Message* msg) const;
       bool isInvite(Message* msg) const;
@@ -88,8 +92,6 @@ class TransactionState : public DnsHandler
       // by the TransportSelector
       bool mIsReliable;
 
-      TransactionState* mCancelStateMachine;
-
       // !rk! The contract for this variable needs to be defined.
       SipMessage* mMsgToRetransmit;
 
@@ -100,15 +102,13 @@ class TransactionState : public DnsHandler
       // CANCEL to exactly the same tuple as the original INVITE went to. 
       Tuple mTarget; 
 
-      Tuple mTrueSource;
-      Tuple mReplyLocation;
-
       Tuple mSource; // used to reply to requests
+      Tuple mNetSource;
+      bool mSymResponses;
+
       Data mId;
       Data mToTag; // for failure responses on ServerInviteTransaction 
-   
-      bool mSymResponses; // for responding to message source
-
+      
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
       friend class TransactionController;
 };
