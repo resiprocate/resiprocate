@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.122 2003/07/28 10:45:03 davidb Exp $
+# $Id: Makefile,v 1.123 2003/08/06 16:25:11 jason Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -90,6 +90,7 @@ SRC = \
 	ApplicationSip.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
+	StatelessHandler.cxx \
 	Symbols.cxx \
 	TcpTransport.cxx \
 	TimerMessage.cxx \

@@ -41,6 +41,9 @@ StatelessHandler::process()
          if (sip->isExternal())
          {
             DebugLog (<< "Processing sip from wire: " << msg->brief());
+            Via& via = sip->header(h_Vias).front();
+            // this is here so that we will reuse the tcp connection
+            via.param(p_rport).port() = sip->getSource().port;
             mStack.mTUFifo.add(sip);
          }
          else if (sip->isRequest())
@@ -62,8 +65,20 @@ StatelessHandler::process()
          {
             assert(sip->isResponse());
             DebugLog (<< "Processing response from TU: " << msg->brief());
-            assert (sip->getDestination().transport);
-            mStack.mTransportSelector.send(sip, sip->getDestination(), Data::Empty); // results not used
+            const Via& via = sip->header(h_Vias).front();
+            Transport::Tuple destination;
+            inet_pton(AF_INET, via.param(p_received).c_str(), &destination.ipv4);
+            if (via.exists(p_rport) && via.param(p_rport).hasValue())
+            {
+               destination.port = via.param(p_rport).port();
+            }
+            else
+            {
+               destination.port = via.sentPort();
+            }
+            destination.transportType = Transport::toTransport(via.transport());
+            
+            mStack.mTransportSelector.send(sip, destination, Data::Empty); // results not used
          }
       }
    }

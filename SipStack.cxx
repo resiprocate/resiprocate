@@ -32,13 +32,14 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-SipStack::SipStack(bool multiThreaded, Security* security)
-   : 
+SipStack::SipStack(bool multiThreaded, Security* security, bool stateless) : 
    security( security ),
    mExecutive(*this),
    mTransportSelector(*this),
+   mStatelessHandler(*this),
    mTimers(mStateMacFifo),
    mDnsResolver(*this),
+   mStateless(stateless),
    mDiscardStrayResponses(false),
    mRegisteredForTransactionTermination(false),
    mStrictRouting(false),
@@ -180,6 +181,21 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri)
    mStateMacFifo.add(toSend);
 }
 
+// this is only if you want to send to a destination not in the route. You
+// probably don't want to use it. 
+void 
+SipStack::sendTo(const SipMessage& msg, const Transport::Tuple& destination)
+{
+   assert(!mShuttingDown);
+   assert(destination.transport);
+   
+   SipMessage* toSend = new SipMessage(msg);
+   toSend->setDestination(destination);
+   toSend->setFromTU();
+   mStateMacFifo.add(toSend);
+}
+
+
 
 SipMessage* 
 SipStack::receive()
@@ -200,7 +216,7 @@ SipStack::receive()
       else
       {
          assert(0);
-	 delete msg;
+         delete msg;
          return 0;
       }
    }
