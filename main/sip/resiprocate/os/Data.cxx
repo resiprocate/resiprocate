@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.36 2002/11/23 22:06:27 fluffy Exp $";
+"$Id: Data.cxx,v 1.37 2002/11/25 19:29:27 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -72,6 +72,27 @@ Data::Data(const string& str) :
    mMine(true)
 {
    memcpy(mBuf, str.c_str(), mSize + 1);
+}
+
+Data::Data(const Data& data) 
+   : mSize(data.mSize),
+     mBuf(mSize ? new char[mSize+1] : Empty.mBuf),
+     mCapacity(mSize),
+     mMine(mSize != 0)
+{
+   if (mSize)
+   {
+      memcpy(mBuf, data.mBuf, mSize);
+      mBuf[mSize] = 0;
+   }
+}
+
+Data::~Data()
+{
+   if (mMine)
+   {
+      delete[] mBuf;
+   }
 }
 
 Data::Data(int val)
@@ -249,7 +270,8 @@ Data::Data(unsigned long value)
 Data::Data(char c)
    : mSize(1), 
      mBuf(0),
-     mCapacity(mSize)
+     mCapacity(mSize),
+     mMine(true)
 {
    mBuf = new char[2];
    mBuf[0] = c;
@@ -259,52 +281,27 @@ Data::Data(char c)
 Data::Data(bool value)
    : mSize(0), 
      mBuf(0),
-     mCapacity(0)
+     mCapacity(0),
+     mMine(false)
 {
    static char* truec = "true";
    static char* falsec = "false";
 
    if (value)
    {
-      mBuf = new char[5];
+      mBuf = truec;
       mSize = 4;
       mCapacity = 4;
-      memcpy(mBuf, truec, 5);
    }
    else
    {
-      mBuf = new char[6];
+      mBuf = falsec;
       mSize = 5;
       mCapacity = 5;
-      memcpy(mBuf, falsec, 6);
    }
 }
-
 
 // end new functions
-
-
-
-
-
-
-Data::Data(const Data& data) 
-   : mSize(data.mSize),
-     mBuf(new char[mSize+1]),
-     mCapacity(mSize),
-     mMine(true)
-{
-   memcpy(mBuf, data.mBuf, mSize);
-   mBuf[mSize] = 0;
-}
-
-Data::~Data()
-{
-   if (mMine)
-   {
-      delete[] mBuf;
-   }
-}
 
 bool 
 Data::operator==(const Data& rhs) const
@@ -330,18 +327,6 @@ Data::operator==(const char* rhs) const
       return rhs[mSize] == 0;
    }
 }
-
-/*
-bool 
-Data::operator==(const std::string& rhs) const
-{
-   if (mSize != rhs.size())
-   {
-      return false;
-   }
-   return strncmp(mBuf, rhs.c_str(), mSize) == 0;
-}
-*/
 
 bool
 Data::operator<(const Data& rhs) const
@@ -493,7 +478,7 @@ Data::operator+=(char c)
 char& 
 Data::operator[](size_type p)
 {
-   assert(p > 0 && p < mSize);
+   assert(p >= 0 && p < mSize);
    if (!mMine)
    {
       resize(mSize, true);
@@ -504,10 +489,9 @@ Data::operator[](size_type p)
 char 
 Data::operator[](size_type p) const
 {
-   assert(p > 0 && p < mSize);
+   assert(p >= 0 && p < mSize);
    return mBuf[p];
 }
-
 
 Data& 
 Data::operator=(const char* str)
