@@ -19,6 +19,7 @@
 #include "resiprocate/Executive.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Message.hxx"
+#include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/Security.hxx"
 
 
@@ -40,7 +41,8 @@ SipStack::SipStack(bool multiThreaded, Security* security)
    mDnsResolver(*this),
    mDiscardStrayResponses(false),
    mRegisteredForTransactionTermination(false),
-   mStrictRouting(false)
+   mStrictRouting(false),
+   mShuttingDown(false)
 {
    Random::initialize();
    initNetwork();
@@ -58,9 +60,17 @@ SipStack::SipStack(bool multiThreaded, Security* security)
 
 SipStack::~SipStack()
 {
+   assert (mShuttingDown);
 #ifdef USE_SSL
    delete security;
 #endif
+}
+
+void
+SipStack::shutdown()
+{
+   mShuttingDown = true;
+   mTUFifo.add(new ShutdownMessage);
 }
 
 void 
@@ -69,6 +79,7 @@ SipStack::addTransport( Transport::Type protocol,
                         const Data& hostName,
                         const Data& nic) 
 {
+   assert(!mShuttingDown);
    mTransportSelector.addTransport(protocol, port, hostName, nic);
    if (!hostName.empty()) 
    {
@@ -80,6 +91,7 @@ void
 SipStack::addAlias(const Data& domain, int port)
 {
    InfoLog (<< "Adding domain alias: " << domain << ":" << port);
+   assert(!mShuttingDown);
    mDomains.insert(domain + Data(":") + Data(port));
 }
 
@@ -142,8 +154,9 @@ SipStack::isMyDomain(const Data& domain, int port) const
 void 
 SipStack::send(const SipMessage& msg)
 {
-   InfoLog (<< "SEND: " << msg.brief());
+   DebugLog (<< "SEND: " << msg.brief());
    //DebugLog (<< msg);
+   assert(!mShuttingDown);
    
    SipMessage* toSend = new SipMessage(msg);
    toSend->setFromTU();
@@ -156,6 +169,8 @@ SipStack::send(const SipMessage& msg)
 void 
 SipStack::sendTo(const SipMessage& msg, const Uri& uri)
 {
+   assert(!mShuttingDown);
+
    SipMessage* toSend = new SipMessage(msg);
    toSend->setTarget(uri);
    toSend->setFromTU();
@@ -176,7 +191,7 @@ SipStack::receive()
       SipMessage* sip=0;
       if ((sip=dynamic_cast<SipMessage*>(msg)))
       {
-         InfoLog (<< "RECV: " << sip->brief());
+         DebugLog (<< "RECV: " << sip->brief());
          return sip;
       }
       else
@@ -202,22 +217,12 @@ SipStack::receiveAny()
       // we should only ever have SIP messages on the TU Fifo
       // unless we've registered for termination messages. 
       Message* msg = mTUFifo.getNext();
-      SipMessage* sip=0;
-      TransactionTerminated* term=0;
-      if ((sip=dynamic_cast<SipMessage*>(msg)))
+      SipMessage* sip=dynamic_cast<SipMessage*>(msg);
+      if (sip)
       {
-         InfoLog (<< "RECV: " << sip->brief());
-         return sip;
+         DebugLog (<< "RECV: " << sip->brief());
       }
-      else if ((term=dynamic_cast<TransactionTerminated*>(msg)))
-      {
-         return term;
-      }
-      else
-      {
-         assert(0);
-         return 0;
-      }
+      return msg;
    }
    else
    {
@@ -243,7 +248,6 @@ SipStack::getTimeTillNextProcessMS()
 void
 SipStack::registerForTransactionTermination()
 {
-   InfoLog (<< "Register for transaction termination events in TU");
    mRegisteredForTransactionTermination = true;
 }
 
