@@ -13,6 +13,7 @@
 #include <list>
 #include <vector>
 #include <utility>
+#include <memory> 
 
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/Message.hxx"
