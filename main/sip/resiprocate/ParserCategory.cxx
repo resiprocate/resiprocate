@@ -1,23 +1,25 @@
 #include <sipstack/ParserCategory.hxx>
-#include <sipstack/UnknownSubComponent.hxx>
 #include <sipstack/HeaderFieldValue.hxx>
+#include <sipstack/UnknownParameter.hxx>
 #include <iostream>
 
-UnknownSubComponent&
-ParseCategory::operator[](const Data& param)
+using namespace Vocal2;
+
+UnknownParameter&
+ParserCategory::operator[](const Data& param)
 {
    checkParsed();
    return *mHeaderField->get(param);
 }
 
 void
-ParseCategory::parseParameters(const char* start)
+ParserCategory::parseParameters(const char* start)
 {
    mHeaderField->parseParameters(start);
 }
 
-ostream&
-Vocal2::operator<<(ostream&, const ParserCategory& category)
+std::ostream&
+Vocal2::operator<<(std::ostream& stream, const ParserCategory& category)
 {
    return category.encode(stream);
 }
