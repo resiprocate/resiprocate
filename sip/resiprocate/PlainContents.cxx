@@ -80,7 +80,6 @@ PlainContents::parse(ParseBuffer& pb)
 
    const char* anchor = pb.position();
    pb.skipToEnd();
-   pb.reset(pb.position());
    pb.data(mText, anchor);
 
    //DebugLog("PlainContents::parsed <" << mText << ">" );
