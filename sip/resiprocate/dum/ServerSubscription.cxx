@@ -114,7 +114,6 @@ ServerSubscription::dispatch(const SipMessage& msg)
             makeNotifyExpires();
             handler->onExpiredByClient(getHandle(), msg, mLastNotify);
             send(end(Timeout));
-            handler->onTerminated(getHandle());            
             return;
          }
          if (mSubscriptionState == Invalid)
@@ -186,7 +185,6 @@ ServerSubscription::dispatch(const DumTimeout& timeout)
       makeNotifyExpires();
       handler->onExpired(getHandle(), mLastNotify);
       send(mLastNotify);
-      handler->onTerminated(getHandle());      
    }
 }
 
