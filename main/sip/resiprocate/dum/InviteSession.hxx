@@ -32,7 +32,7 @@ class InviteSession : public DialogUsage
 
       /// Makes the dialog end. Depending on the current state, this might
       /// results in BYE or CANCEL being sent.
-      virtual SipMessage& end();
+      virtual void end();
 
       /// Rejects an offer at the SIP level. So this can send a 487 !dcm! --
       /// should be 488? to a reinvite INVITE or an UPDATE

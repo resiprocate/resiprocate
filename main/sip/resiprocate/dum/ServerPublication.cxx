@@ -12,7 +12,8 @@ ServerPublication::getHandle()
 
 ServerPublication::ServerPublication(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage&)
    : NonDialogUsage(dum, dialogSet)
-{}
+{
+}
 
 ServerPublication::~ServerPublication()
 {
@@ -22,6 +23,7 @@ ServerPublication::~ServerPublication()
 void 
 ServerPublication::end()
 {
+   delete this;
 }
 
 void 

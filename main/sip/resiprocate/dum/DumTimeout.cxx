@@ -71,14 +71,15 @@ DumTimeout::brief() const
 {
    Data data;
    DataStream strm(data);
-   strm << "DumTimeout: " << mType << " : " << mDuration << "," << mSeq << "," << mSecondarySeq ;
+   encode(strm);
+   strm.flush();
    return data;
 }
 
 std::ostream& 
 DumTimeout::encode(std::ostream& strm) const
 {
-   strm << brief();
+   strm << "DumTimeout: " << mType << " : " << mDuration << "," << mSeq << "," << mSecondarySeq ;
    return strm;
 }
 
