@@ -6,9 +6,12 @@
 #include "resiprocate/ParseException.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 FloatParameter::FloatParameter(ParameterTypes::Type type, 
                                ParseBuffer& pb,
@@ -19,6 +22,7 @@ FloatParameter::FloatParameter(ParameterTypes::Type type,
    pb.skipWhitespace();
    if (!pb.eof() && *pb.position() != '=')
    {
+      DebugLog( << "parameter constructor expected '='" );
       throw ParseException("parameter constructor expected '='", __FILE__, __LINE__);
    }
    pb.skipChar();
