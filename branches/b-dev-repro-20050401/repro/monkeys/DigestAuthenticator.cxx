@@ -30,7 +30,7 @@ DigestAuthenticator::~DigestAuthenticator()
 repro::RequestProcessor::processor_action_t
 DigestAuthenticator::handleRequest(repro::RequestContext &rc)
 {
-  DebugLog(<< "Monkey handling request: " << this 
+  DebugLog(<< "Monkey handling request: " << *this 
            << "; reqcontext = " << rc);
 
   Message *message = rc.getCurrentEvent();

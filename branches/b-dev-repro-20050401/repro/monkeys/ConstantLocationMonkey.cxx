@@ -23,7 +23,7 @@ ConstantLocationMonkey::~ConstantLocationMonkey()
 RequestProcessor::processor_action_t
 ConstantLocationMonkey::handleRequest(RequestContext& context)
 {
-  DebugLog(<< "Monkey handling request: " << this 
+  DebugLog(<< "Monkey handling request: " << *this 
            << "; reqcontext = " << context);
 
   context.addTarget(NameAddr("<sip:monkey1@192.168.1.108:5080>"));

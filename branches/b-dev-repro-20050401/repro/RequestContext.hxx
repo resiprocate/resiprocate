@@ -70,7 +70,7 @@ class RequestContext
           async processing */
       ChainIteratorStack;
       ChainIteratorStack mChainIteratorStack;
-
+      
       void fixStrictRouterDamage();
       void removeTopRouteIfSelf();
       

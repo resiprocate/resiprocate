@@ -44,8 +44,9 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
           TransactionTerminated events from the stack will be passed to the
           RequestContext
       */
-      HashMap<resip::Data, RequestContext*> mRequestContexts;
-
+      HashMap<resip::Data, RequestContext*> mClientRequestContexts;
+      HashMap<resip::Data, RequestContext*> mServerRequestContexts;
+      
       UserDb &mUserDb;
 };
 }
