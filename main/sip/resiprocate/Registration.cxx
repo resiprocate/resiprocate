@@ -77,7 +77,11 @@ Registration::refreshRegistration()
 SipMessage&
 Registration::unregister() 
 {
-   mRegister->header(h_Vias).front().param(p_branch).reset();
+   assert(mRegister.get());
+   if (!mRegister->header(h_Vias).empty()) 
+   {
+      mRegister->header(h_Vias).front().param(p_branch).reset();
+   }
    mRegister->header(h_CSeq).sequence()++;
    mRegister->header(h_Contacts).clear();
    NameAddr wildcard;
