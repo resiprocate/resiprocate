@@ -3,6 +3,7 @@
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/os/Log.hxx"
 
 using namespace resip;
 
@@ -55,6 +56,8 @@ int
 main (int argc, char** argv)
 {
 
+    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+
    SipStack clientStack;
    clientStack.addTransport(UDP, 5060);
 
@@ -66,7 +69,7 @@ main (int argc, char** argv)
    clientDum.setClientRegistrationHandler(&client);
    
    clientDum.getProfile()->setDefaultRegistrationTime(70);
-   SipMessage & regMessage = clientDum.makeRegistration(NameAddr("502@jasomi.com"));
+   SipMessage & regMessage = clientDum.makeRegistration(NameAddr("sip:502@jasomi.com"));
    cerr << regMessage << "Generated register: " << endl << regMessage << endl;
 
 #if 0
