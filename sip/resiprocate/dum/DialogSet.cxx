@@ -42,7 +42,8 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mClientOutOfDialogRequests(),
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
-   mServerPagerMessage(0)
+   mServerPagerMessage(0),
+   mDestroyer(this)
 {
    assert(!creator->getLastRequest().isExternal());
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
@@ -65,7 +66,9 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mClientOutOfDialogRequests(),
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
-   mServerPagerMessage(0)
+   mServerPagerMessage(0),
+   mDestroyer(this)
+
 {
    assert(request.isRequest());
    assert(request.isExternal());
@@ -109,12 +112,13 @@ DialogSet::~DialogSet()
    DebugLog ( << " ********** DialogSet::~DialogSet: " << mId << "*************" );
    //!dcm! -- very delicate code, change the order things go horribly wrong
 
-   mAppDialogSet->destroy();
    mDum.removeDialogSet(this->getId());
+   mAppDialogSet->destroy();
 }
 
 void DialogSet::possiblyDie()
 {
+   Destroyer::Guard guard(mDestroyer);
    if (!mDestroying)
    {
       if(mDialogs.empty() && 
@@ -127,7 +131,7 @@ void DialogSet::possiblyDie()
            mClientRegistration ||
            mServerRegistration))
       {
-         delete this;
+         guard.destroy();         
       }   
    }
 }
@@ -198,6 +202,8 @@ DialogSet::empty() const
 void
 DialogSet::dispatch(const SipMessage& msg)
 {
+   Destroyer::Guard guard(mDestroyer);
+
    assert(msg.isRequest() || msg.isResponse());
 
    if (msg.isResponse() && !mCancelled)
@@ -231,7 +237,6 @@ DialogSet::dispatch(const SipMessage& msg)
                mDestroying = true;               
                for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
                {
-                  //cancel could invalidate it
                   Dialog* d = it->second;
                   it++;
                   d->redirected(msg);         
@@ -309,6 +314,9 @@ DialogSet::dispatch(const SipMessage& msg)
          case MESSAGE:
             mServerPagerMessage = makeServerPagerMessage(request);
             mServerPagerMessage->dispatch(request);
+            return; 
+         case UPDATE:
+            //not implemented
             return;            
          default: 
             DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );            
@@ -457,7 +465,7 @@ DialogSet::dispatch(const SipMessage& msg)
          //valid 200
          if(mDialogs.empty() && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 200))
          {
-            delete this;
+            guard.destroy();            
             return;            
          }
       }
@@ -518,6 +526,7 @@ DialogSet::findDialog(const DialogId id)
 void
 DialogSet::cancel()
 {   
+   Destroyer::Guard guard(mDestroyer);
    mCancelled = true;
    if (mDialogs.empty())
    {
@@ -527,7 +536,7 @@ DialogSet::cancel()
          //exception to cancel UAS DialogSet?
          auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));         
          mDum.send(*cancel);
-         delete this;
+         guard.destroy();         
          return;         
       }
    }
