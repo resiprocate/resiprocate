@@ -335,10 +335,9 @@ void
 ClientInviteSession::handleRedirect (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   Destroyer::Guard guard(mDestroyer);
-   guard.destroy();
    transition(Terminated);
    handler->onRedirected(getHandle(), msg);
+   mDum.destroy(this);
 }
 
 void
@@ -561,7 +560,6 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 void
 ClientInviteSession::dispatchEarly (const SipMessage& msg)
 {
-   Destroyer::Guard    guard(mDestroyer);
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    const SdpContents* sdp = InviteSession::getSdp(msg);
 
@@ -636,7 +634,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
-         guard.destroy();
+         mDum.destroy(this);
          break;
 
       default:
@@ -648,7 +646,6 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 void
 ClientInviteSession::dispatchAnswered (const SipMessage& msg)
 {
-   Destroyer::Guard    guard(mDestroyer);
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    const SdpContents* sdp = InviteSession::getSdp(msg);
 
@@ -677,7 +674,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          mDialog.send(bye);
 
          handler->onFailure(getHandle(), msg);
-         guard.destroy();
+         mDum.destroy(this);
          break;
       }
 
@@ -691,7 +688,6 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
 void
 ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
 {
-   Destroyer::Guard    guard(mDestroyer);
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    const SdpContents* sdp = InviteSession::getSdp(msg);
 
@@ -724,7 +720,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
-         guard.destroy();
+         mDum.destroy(this);
          break;
 
       default:
@@ -736,7 +732,6 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
 void
 ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
 {
-   Destroyer::Guard    guard(mDestroyer);
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    const SdpContents* sdp = InviteSession::getSdp(msg);
 
@@ -785,7 +780,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
-         guard.destroy();
+         mDum.destroy(this);
          break;
 
       default:
@@ -797,7 +792,6 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
 void
 ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
 {
-   Destroyer::Guard    guard(mDestroyer);
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    const SdpContents* sdp = InviteSession::getSdp(msg);
 
@@ -861,7 +855,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
-         guard.destroy();
+         mDum.destroy(this);
          break;
 
       default:
@@ -875,7 +869,6 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
 void
 ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 {
-   Destroyer::Guard    guard(mDestroyer);
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    const SdpContents* sdp = InviteSession::getSdp(msg);
 
@@ -923,7 +916,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
-         guard.destroy();
+         mDum.destroy(this);
          break;
 
       default:

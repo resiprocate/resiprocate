@@ -29,7 +29,6 @@ void
 ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 {
    InfoLog (<< toData(mState) << ": redirect(" << code << ")"); // -> " << contacts);
-   Destroyer::Guard guard(mDestroyer);
 
    switch (mState)
    {
@@ -60,8 +59,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          mDialog.makeResponse(response, mFirstRequest, code);
          response.header(h_Contacts) = contacts;
          mDialog.send(response);
-
-         guard.destroy();
+         mDum.destroy(this);
          break;
       }
 
@@ -291,7 +289,6 @@ void
 ServerInviteSession::reject(int code)
 {
    InfoLog (<< toData(mState) << ": reject(" << code << ")");
-   Destroyer::Guard guard(mDestroyer);
 
    switch (mState)
    {
@@ -321,7 +318,7 @@ ServerInviteSession::reject(int code)
          SipMessage response;
          mDialog.makeResponse(response, mFirstRequest, code);
          mDialog.send(response);
-         guard.destroy();
+         mDum.destroy(this);
          break;
       }
 
