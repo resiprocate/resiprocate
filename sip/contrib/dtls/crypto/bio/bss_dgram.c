@@ -132,7 +132,7 @@ static int dgram_new(BIO *bi)
 	if (data == NULL)
 		return 0;
 	memset(data, 0x00, sizeof(bio_dgram_data));
-	BIO_set_ex_data(bi, 0, data);
+    bi->ptr = data;
 
 	bi->flags=0;
 	return(1);
@@ -146,7 +146,7 @@ static int dgram_free(BIO *a)
 	if ( ! dgram_clear(a))
 		return 0;
 
-	data = (bio_dgram_data *)BIO_get_ex_data(a, 0);
+	data = (bio_dgram_data *)a->ptr;
 	if(data != NULL) OPENSSL_free(data);
 
 	return(1);
@@ -170,7 +170,7 @@ static int dgram_clear(BIO *a)
 static int dgram_read(BIO *b, char *out, int outl)
 	{
 	int ret=0;
-	bio_dgram_data *data = (bio_dgram_data *)BIO_get_ex_data(b, 0);
+	bio_dgram_data *data = (bio_dgram_data *)b->ptr;
 
 	struct sockaddr peer;
 	socklen_t peerlen = sizeof(peer);
@@ -181,7 +181,7 @@ static int dgram_read(BIO *b, char *out, int outl)
 		memset(&peer, 0x00, peerlen);
 		ret=recvfrom(b->num,out,outl,0,&peer,&peerlen);
 
-		if ( ! data->connected)
+		if ( ! data->connected  && ret > 0)
 			BIO_ctrl(b, BIO_CTRL_DGRAM_CONNECT, 0, &peer);
 
 		BIO_clear_retry_flags(b);
@@ -200,7 +200,7 @@ static int dgram_read(BIO *b, char *out, int outl)
 static int dgram_write(BIO *b, const char *in, int inl)
 	{
 	int ret;
-	bio_dgram_data *data = (bio_dgram_data *)BIO_get_ex_data(b, 0);
+	bio_dgram_data *data = (bio_dgram_data *)b->ptr;
 	clear_socket_error();
 
     if ( data->connected )
@@ -213,15 +213,14 @@ static int dgram_write(BIO *b, const char *in, int inl)
 		{
 		if (BIO_sock_should_retry(ret))
 			{
-			/* XDTLS: is this needed?  yup, in the case of 
-			 * non-blocking sockets.  hmm, on second thoughts looks
-			 * like the error is really EAGAIN.
-			 */
 			BIO_set_retry_write(b);  
 			data->_errno = get_last_socket_error();
+
+#if 0 /* higher layers are responsible for querying MTU, if necessary */
 			if ( data->_errno == EMSGSIZE)
 				/* retrieve the new MTU */
 				BIO_ctrl(b, BIO_CTRL_DGRAM_QUERY_MTU, 0, NULL);
+#endif
 			}
 		}
 	return(ret);
@@ -233,10 +232,10 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
 	int *ip;
 	struct sockaddr *to = NULL;
 	bio_dgram_data *data = NULL;
-	int sockopt_val = 0;
+	long sockopt_val = 0;
 	unsigned int sockopt_len = 0;
 
-	data = (bio_dgram_data *)BIO_get_ex_data(b, 0);
+	data = (bio_dgram_data *)b->ptr;
 
 	switch (cmd)
 		{
@@ -281,14 +280,16 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
 		break;
 	case BIO_CTRL_DGRAM_CONNECT:
 		to = (struct sockaddr *)ptr;
-
+#if 0
 		if (connect(b->num, to, sizeof(struct sockaddr)) < 0)
 			{ perror("connect"); ret = 0; }
 		else
 			{
-			data->connected = 1;
+#endif
 			memcpy(&(data->peer),to, sizeof(struct sockaddr));
+#if 0
 			}
+#endif
 		break;
 		/* (Linux)kernel sets DF bit on outgoing IP packets */
 #ifdef IP_MTU_DISCOVER
@@ -300,9 +301,10 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
 		break;
 #endif
 	case BIO_CTRL_DGRAM_QUERY_MTU:
+         sockopt_len = sizeof(sockopt_val);
 		if ((ret = getsockopt(b->num, IPPROTO_IP, IP_MTU, &sockopt_val,
-			&sockopt_len)) < 0)
-			{ perror("getsockopt"); ret = 0; }
+			&sockopt_len)) < 0 || sockopt_val < 0)
+			{ ret = 0; }
 		else
 			{
 			data->mtu = sockopt_val;

@@ -192,6 +192,12 @@ int dtls1_accept(SSL *s)
 				s->ctx->stats.sess_accept_renegotiate++;
 				s->state=SSL3_ST_SW_HELLO_REQ_A;
 				}
+
+            if ( (SSL_get_options(s) & SSL_OP_COOKIE_EXCHANGE))
+                s->d1->send_cookie = 1;
+            else
+                s->d1->send_cookie = 0;
+
 			break;
 
 		case SSL3_ST_SW_HELLO_REQ_A:
@@ -575,6 +581,16 @@ int dtls1_send_hello_verify_request(SSL *s)
 		*(p++) = s->version & 0xFF;
 
 		*(p++) = (unsigned char) s->d1->cookie_len;
+        if ( s->d1->default_gen_cookie_callback != NULL &&
+            s->d1->default_gen_cookie_callback(s, s->d1->cookie, 
+                &(s->d1->cookie_len)) == 0)
+            {
+            /* XDTLS: signal an error */
+            return 0;
+            }
+        /* else the cookie is assumed to have 
+         * been initialized by the application */
+
 		memcpy(p, s->d1->cookie, s->d1->cookie_len);
 		p += s->d1->cookie_len;
 		msg_len = p - msg;
