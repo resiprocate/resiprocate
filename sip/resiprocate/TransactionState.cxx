@@ -54,8 +54,30 @@ TransactionState::~TransactionState()
    const Data& id = tid(mMsgToRetransmit);
    
    DebugLog (<< "Deleting TransactionState " << id);
-   erase(id);
-   
+
+   if (mMsgToRetransmit != 0 &&
+       mMsgToRetransmit->header(h_CSeq).method() == CANCEL)
+   {
+      TransactionState *parent = 0;
+      if (mMachine == ClientNonInvite || mMachine == ClientInvite || mMachine == Stateless)
+      {
+         parent = mStack.mClientTransactionMap.find(id);
+      }
+      else
+      {
+         parent = mStack.mServerTransactionMap.find(id);
+      }
+      if (parent)
+      {
+         parent->mCancelStateMachine = 0;
+      }
+   }
+   else
+   {
+      // CANCEL transactions do not appear in the maps
+      erase(id);
+   }
+
    // mCancelStateMachine will take care of deleting itself
    
    delete mMsgToRetransmit;
@@ -234,6 +256,7 @@ TransactionState::processStateless(Message* message)
       if (isFromTU(message))
       {
          DebugLog (<< "Sending to wire statelessly: " << sip->getTransactionId() << endl << *sip);
+         delete mMsgToRetransmit;
          mMsgToRetransmit = sip;
          sendToWire(sip);
       }
@@ -447,16 +470,19 @@ TransactionState::processClientNonInvite(  Message* msg )
             // !jf! is this correct
             sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
             terminateClientTransaction(msg->getTransactionId());
+            delete msg;
             delete this;
             break;
 
          case Timer::TimerK:
             terminateClientTransaction(msg->getTransactionId());
+            delete msg;
             delete this;
             break;
 
          default:
             InfoLog (<< "Ignoring timer: " << *msg);
+            delete msg;
             break;
       }
    }
@@ -510,6 +536,14 @@ TransactionState::processClientInvite(  Message* msg )
             break;
             
          case CANCEL:
+            if (mState != Calling && mState != Trying && mState != Proceeding)
+            {
+               // A final response was already seen for this INVITE transaction
+               SipMessage* response200 = Helper::makeResponse(*sip, 200);
+               sendToTU(response200);
+               delete sip;
+               break;
+            }
             if (!mCancelStateMachine)
             {
                if (mCurrent == mTuples.end())
@@ -637,6 +671,8 @@ TransactionState::processClientInvite(  Message* msg )
                      mStack.mTimers.add(Timer::TimerD, msg->getTransactionId(), Timer::TD );
                      SipMessage* ack;
                      ack = Helper::makeFailureAck(*mMsgToRetransmit, *sip);
+                     delete mMsgToRetransmit;
+                     mMsgToRetransmit = ack; 
                      resendToWire(ack);
                      sendToTU(msg); // don't delete msg
                   }
@@ -715,8 +751,14 @@ TransactionState::processClientInvite(  Message* msg )
             break;
 
          default:
-            assert(mCancelStateMachine);
-            mCancelStateMachine->processClientNonInvite(msg);
+            if (mCancelStateMachine)
+            {
+               mCancelStateMachine->processClientNonInvite(msg);
+            }
+            else
+            {
+               delete msg;
+            }
             break;
       }
    }
@@ -827,11 +869,13 @@ TransactionState::processServerNonInvite(  Message* msg )
    }
    else if (isTimer(msg))
    {
-      assert (mState == Completed);
-      assert(dynamic_cast<TimerMessage*>(msg)->getType() == Timer::TimerJ);
-      terminateServerTransaction(msg->getTransactionId());
+      if (mState == Completed &&
+	  dynamic_cast<TimerMessage*>(msg)->getType() == Timer::TimerJ)
+      {
+         terminateServerTransaction(msg->getTransactionId());
+         delete this;
+      }
       delete msg;
-      delete this;
    }
    else if (isDns(msg) || isTransportError(msg))
    {
@@ -969,11 +1013,17 @@ TransactionState::processServerInvite(  Message* msg )
             {
                if (mState == Trying || mState == Proceeding)
                {
-                  DebugLog (<< "Received 2xx when in Trying or Proceeding State. Start Stale Timer, move to terminated.");
+                  DebugLog (<< "Received 2xx when in Trying or Proceeding State."
+                            << "Send statelessly and move to terminated"); 
                   
+                  TransactionState* state = new TransactionState(mStack, Stateless, Terminated);
+                  state->mId = Data(TransactionState::StatelessIdCounter++);
+                  state->add(state->mId);
+                  DebugLog (<< "Creating stateless transaction: " << state->mId);
+                  state->processStateless(sip);
+
                   terminateServerTransaction(msg->getTransactionId());
-                  sendToWire(msg); // don't delete
-                  delete this; // !jf! don't delete since still need confirmation
+                  delete this;
                }
                else
                {
@@ -1033,9 +1083,7 @@ TransactionState::processServerInvite(  Message* msg )
                delete msg;
                break;
             }
-            mCancelStateMachine->processServerNonInvite(new SipMessage(*sip));
-            //WarningLog(<<"former sendToTU(msg)(skipped) : " << msg->brief() );
-            //sendToTU(msg); // don't delete -- beacuse it is still being used...
+            mCancelStateMachine->processServerNonInvite(sip);
             break;
             
          default:
@@ -1070,16 +1118,24 @@ TransactionState::processServerInvite(  Message* msg )
             */
          case Timer::TimerH:
          case Timer::TimerI:
-            DebugLog (<< "TimerH or TimerI fired. Delete this");
-            terminateServerTransaction(msg->getTransactionId());
-            delete this;
+            if (mCancelStateMachine)
+            {
+               DebugLog (<< "TimerH or TimerI fired.  Waiting for cancel");
+               mStack.mTimers.add(Timer::TimerH, msg->getTransactionId(), 64*Timer::T1);
+            }
+            else
+            {
+               DebugLog (<< "TimerH or TimerI fired. Delete this");
+               terminateServerTransaction(msg->getTransactionId());
+               delete this;
+            }
             delete msg;
             break;
             
          case Timer::TimerJ:
             DebugLog (<< "TimerJ fired. Delete state of cancel");
-            mCancelStateMachine = 0;
             delete mCancelStateMachine;
+            mCancelStateMachine = 0;
             delete msg;
             break;
             
