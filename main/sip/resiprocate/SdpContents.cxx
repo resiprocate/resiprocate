@@ -236,6 +236,13 @@ SdpContents::Session::Origin::encode(ostream& s) const
 }
 
 void
+SdpContents::Session::Origin::setAddress(const Data& host, AddrType addr)
+{
+    mAddress = host;
+    mAddrType = addr;
+}
+
+void
 SdpContents::Session::Origin::parse(ParseBuffer& pb)
 {
    pb.skipChar('o');
@@ -467,6 +474,13 @@ SdpContents::Session::Connection::encode(ostream& s) const
    return s;
 }
 
+
+void
+SdpContents::Session::Connection::setAddress(const Data& host, AddrType addr)
+{
+    mAddress = host;
+    mAddrType = addr;
+}
 
 void
 SdpContents::Session::Connection::parse(ParseBuffer& pb)
