@@ -17,16 +17,18 @@ const size_t TcpTransport::MaxReadSize = 4096;
 TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo) :
    Transport(sendhost, portNum, nic , fifo)
 {
-   InfoLog (<< "Creating TCP transport on " << sendhost << ":" << portNum << " " << nic);
+   DebugLog (<< "Creating TCP transport on " << sendhost << ":" << portNum << " " << nic);
 
    mSendPos = mSendRoundRobin.end();
    mFd = socket(PF_INET, SOCK_STREAM, 0);
-
+   
    if ( mFd == INVALID_SOCKET )
    {
       InfoLog (<< "Failed to open socket: " << portNum);
+      throw Exception("Can't create TcpTransport", __FILE__,__LINE__);
    }
-
+   assert(mFd > 2);
+   
 #ifndef WIN32
    int on = 1;
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, // | SO_REUSEPORT,
@@ -71,10 +73,13 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
 
 TcpTransport::~TcpTransport()
 {
-   //   ::shutdown(mFd, SHUT_RDWR);
+   //::shutdown(mFd, SHUT_RDWR);
    closesocket(mFd);
-
-   InfoLog (<< "Shutting down TCP Transport");   //!rm!
+   // !jf! this is not right. should drain the sends before 
+   while (mTxFifo.messageAvailable()) mTxFifo.getNext();
+   
+   mSendRoundRobin.clear(); // clear before we delete the connections
+   //DebugLog (<< "Shutting down TCP Transport " << mFd << " " << this);   //!rm!
 }
 
 
@@ -106,7 +111,7 @@ TcpTransport::processListen(FdSet& fdset)
       if ( sock == -1 )
       {
          int err = errno;
-         DebugLog( << "Error on accept: " << strerror(err));
+         InfoLog( << "Error on accept: " << mFd << " : " << " : " << this << " " << strerror(err));
          return;
       }
 
@@ -119,7 +124,7 @@ TcpTransport::processListen(FdSet& fdset)
       who.transport = this;
       mConnectionMap.add(who, sock);
 
-      InfoLog (<< "Received TCP connection from: "
+      DebugLog (<< "Received TCP connection from: "
                << inet_ntoa(who.ipv4)
                << ":" <<  who.port); //!rm!
    }
@@ -210,7 +215,7 @@ TcpTransport::processAllWrites( FdSet& fdset )
 
          if ( sock == -1 )
          {
-            DebugLog( << "Error in TCP finding free socket to use" );
+            InfoLog( << "Error in TCP finding free socket to use" );
          }
          else
          {
@@ -271,7 +276,7 @@ TcpTransport::processAllWrites( FdSet& fdset )
                   mConnectionMap.add( data->destination, sock);
                   conn = mConnectionMap.get(data->destination);
                   assert( conn );
-                  InfoLog (<< "Opened new connection to "
+                  DebugLog (<< "Opened new connection to "
                            << inet_ntoa(data->destination.ipv4)
                            << ":" << data->destination.port ); // !rm!
                }
