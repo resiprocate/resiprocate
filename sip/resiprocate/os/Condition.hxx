@@ -10,7 +10,7 @@
 
 // !kh!
 // Attempt to resolve POSIX behaviour conformance for win32 build.
-//#define RESIP_WIN32_CONDITION_POSIX_CONFORMANCE
+#define RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
 
 namespace resip
 {
@@ -27,12 +27,12 @@ class Condition
       /** returns true if the condition was woken up by activity, false if timeout.
        *  or interrupt.
        */
-      bool wait (Mutex& mutex, int ms);
+      bool wait (Mutex& mutex, unsigned int ms);
 
       // !kh!
       //  deprecate these?
       void wait (Mutex* mutex);
-      bool wait (Mutex* mutex, int ms);
+      bool wait (Mutex* mutex, unsigned int ms);
 
       /** Signal one waiting thread.
        *  Returns 0, if successful, or an errorcode.
@@ -44,10 +44,6 @@ class Condition
        */
       void broadcast();
 
-      /** Returns the operating system dependent unique id of the condition.
-       */
-      //const vcondition_t* getId() const;
-
    private:
       // !kh!
       //  no value sematics, therefore private and not implemented.
@@ -56,9 +52,23 @@ class Condition
 
    private:
 #ifdef WIN32
-	HANDLE mId;
+#  ifdef RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
+   // !kh!
+   // boost clone with modification
+   // credit boost?
+   void enterWait ();
+   void* m_gate;
+   void* m_queue;
+   void* m_mutex;
+   unsigned m_gone;  // # threads that timed out and never made it to m_queue
+   unsigned long m_blocked; // # threads blocked on the condition
+   unsigned m_waiting; // # threads no longer waiting for the condition but
+                        // still waiting to be removed from m_queue
+#  else
+   HANDLE mId;
+#  endif
 #else
-	mutable  pthread_cond_t mId;
+   mutable  pthread_cond_t mId;
 #endif
 };
 
