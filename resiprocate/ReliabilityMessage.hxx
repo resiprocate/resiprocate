@@ -24,6 +24,7 @@ class ReliabilityMessage : public Message
       }
 
       bool isReliable() const { return mReliable; }
+      virtual bool isClientTransaction() const { return true; }  // !jf! may not be strictly true
       
       virtual Data brief() const { return "ReliabilityMessage, isReliable: " + Data(mReliable); }
       virtual std::ostream& encode(std::ostream& strm) const
