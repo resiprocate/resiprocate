@@ -31,7 +31,8 @@ class ClientPublication : public NonDialogUsage
       SipMessage& mPublish;
       Data mEventType;
       int mTimerSeq; // expected timer seq (all < are stale)
-
+      const Contents* mDocument;
+      
       // disabled
       ClientPublication(const ClientPublication&);
       ClientPublication& operator=(const ClientPublication&);
