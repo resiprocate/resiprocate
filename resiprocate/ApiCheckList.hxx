@@ -26,9 +26,7 @@ static ::resip::ApiCheck::ApiEntry anonymous_resipApiSizeList[] =
     TENT(Connection,"NEW_MSG_HEADER_SCANNER"),
     TENT(DnsResult,"USE_IPV6"),
     TENT(Headers,"PARTIAL_TEMPLATE_SPECIALIZATION"),
-#if defined(NEW_MSG_HEADER_SCANNER)
     TENT(MsgHeaderScanner,"NEW_MSG_HEADER_SCANNER"),
-#endif
     TENT(SipMessage, "PARTIAL_TEMPLATE_SPECIALIZATION"),
     TENT(TlsConnection,"USE_SSL"),
     TENT(TransportSelector,"USE_IPV6"),

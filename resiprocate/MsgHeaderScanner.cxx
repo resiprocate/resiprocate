@@ -2,19 +2,15 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#if defined(NEW_MSG_HEADER_SCANNER)
-
-#include "resiprocate/MsgHeaderScanner.hxx"
-
 #include <ctype.h>
 #include <limits.h>
-#if defined( RESIP_MSG_HEADER_SCANNER_DEBUG ) 
 #include <stdio.h>
-#endif
 #include "resiprocate/HeaderTypes.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/MsgHeaderScanner.hxx"
 
-namespace resip {
+namespace resip 
+{
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1076,7 +1072,6 @@ main(unsigned int   numArgs,
 
 #endif //!defined(RESIP_MSG_HEADER_SCANNER_DEBUG) }
 
-#endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
