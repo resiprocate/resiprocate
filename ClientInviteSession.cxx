@@ -419,20 +419,20 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
 }
 
 void
-ClientInviteSession::handleOffer (const SipMessage& msg, const SdpContents* sdp)
+ClientInviteSession::handleOffer (const SipMessage& msg, const SdpContents& sdp)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    
    handleProvisional(msg);
-   mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+   mProposedRemoteSdp = InviteSession::makeSdp(sdp);
    handler->onOffer(getSessionHandle(), msg, sdp);
 }
 
 void
-ClientInviteSession::handleAnswer (const SipMessage& msg, const SdpContents* sdp)
+ClientInviteSession::handleAnswer (const SipMessage& msg, const SdpContents& sdp)
 {
    mCurrentLocalSdp = mProposedLocalSdp;
-   mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+   mCurrentRemoteSdp = InviteSession::makeSdp(sdp);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    handleProvisional(msg);
@@ -502,9 +502,9 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
    assert(msg.header(h_CSeq).method() == INVITE);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case OnRedirect:
          handleRedirect(msg);
@@ -523,19 +523,19 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          mEarlyMedia = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), None, msg);
          handler->onProvisional(getHandle(), msg);
-         handler->onEarlyMedia(getHandle(), msg, sdp);
+         handler->onEarlyMedia(getHandle(), msg, *sdp);
          break;
 
       case On1xxOffer:
          transition(UAC_EarlyWithOffer);
          handler->onNewSession(getHandle(), Offer, msg);
-         handleOffer(msg, sdp);
+         handleOffer(msg, *sdp);
          break;
 
       case On1xxAnswer:
          transition(UAC_EarlyWithAnswer);
          handler->onNewSession(getHandle(), Answer, msg);
-         handleAnswer(msg, sdp);
+         handleAnswer(msg, *sdp);
          break;
 
       case On2xxOffer:
@@ -544,7 +544,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
-         handler->onOffer(getSessionHandle(), msg, sdp);
+         handler->onOffer(getSessionHandle(), msg, *sdp);
          handler->onConnected(getHandle(), msg);
          break;
 
@@ -554,7 +554,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Answer, msg);
-         handler->onAnswer(getSessionHandle(), msg, sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
          handler->onConnected(getHandle(), msg);
          {
             SipMessage ack;
@@ -596,9 +596,9 @@ void
 ClientInviteSession::dispatchEarly (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case On1xx:
          transition(UAC_Early);
@@ -609,18 +609,18 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          transition(UAC_Early);
          handler->onProvisional(getHandle(), msg);
          mEarlyMedia = InviteSession::makeSdp(*sdp);
-         handler->onEarlyMedia(getHandle(), msg, sdp);
+         handler->onEarlyMedia(getHandle(), msg, *sdp);
          break;
 
       case On1xxOffer:
          transition(UAC_EarlyWithOffer);
          handler->onNewSession(getHandle(), Offer, msg);
-         handleOffer(msg, sdp);
+         handleOffer(msg, *sdp);
          break;
 
       case On1xxAnswer:
          transition(UAC_EarlyWithAnswer);
-         handleAnswer(msg, sdp);
+         handleAnswer(msg, *sdp);
          break;
 
       case On2xxOffer:
@@ -630,7 +630,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          assert(mProposedLocalSdp.get() == 0);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
 
-         handler->onOffer(getSessionHandle(), msg, sdp);
+         handler->onOffer(getSessionHandle(), msg, *sdp);
          handler->onConnected(getHandle(), msg);
          break;
 
@@ -639,7 +639,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          handleSessionTimerResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
          handler->onConnected(getHandle(), msg);
          {
             SipMessage ack;
@@ -684,9 +684,9 @@ void
 ClientInviteSession::dispatchAnswered (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case On1xx:
       case On1xxEarly:
@@ -726,9 +726,9 @@ void
 ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case On1xx: // must be reliable
          handleProvisional(msg);
@@ -770,9 +770,9 @@ void
 ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case On200Prack:
          transition(UAC_EarlyWithAnswer);
@@ -831,9 +831,9 @@ void
 ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case On200Prack:
          transition(UAC_SentUpdateEarly);
@@ -909,9 +909,9 @@ void
 ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case On1xx:
          handler->onProvisional(getHandle(), msg);
@@ -946,7 +946,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
       case OnUpdate:
          transition(UAC_ReceivedUpdateEarly);
-         handler->onOffer(getSessionHandle(), msg, sdp);
+         handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
 
       case OnRedirect:
@@ -987,9 +987,9 @@ void
 ClientInviteSession::dispatchCanceled (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case OnGeneralFailure:
       case OnCancelFailure:

@@ -1,6 +1,7 @@
 #include "resiprocate/MultipartMixedContents.hxx"
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Helper.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
@@ -34,7 +35,8 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mCurrentRetransmit200(0),
      mSessionInterval(0),
      mSessionRefresherUAS(false),
-     mSessionTimerSeq(0)
+     mSessionTimerSeq(0),
+     mSentRefer(false)
 {
    DebugLog ( << "^^^ InviteSession::InviteSession " << this);
    assert(mDum.mInviteSessionHandler);
@@ -349,6 +351,13 @@ void
 InviteSession::refer(const NameAddr& referTo)
 {
    assert(isConnected()); 
+   if (mSentRefer)
+   {
+      throw UsageUseException("Attempted to send overlapping refer", __FILE__, __LINE__);
+   }
+      
+
+   mSentRefer = true;
    SipMessage refer;
    mDialog.makeRequest(refer, REFER);
    refer.header(h_ReferTo) = referTo;
@@ -363,7 +372,13 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       throw UsageUseException("Attempted to make a refer w/ and invalid replacement target", __FILE__, __LINE__);
    }
 
+   if (mSentRefer)
+   {
+      throw UsageUseException("Attempted to send overlapping refer", __FILE__, __LINE__);
+   }
+
    assert(isConnected()); // !slg! should refer only be allowed if state is Connected
+   mSentRefer = true;
    SipMessage refer;
    mDialog.makeRequest(refer, REFER);
 
@@ -505,9 +520,9 @@ void
 InviteSession::dispatchConnected(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
-
-   switch (toEvent(msg, sdp))
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   
+   switch (toEvent(msg, sdp.get()))
    {
       case OnInvite:
       case OnInviteReliable:
@@ -522,7 +537,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          mLastSessionModification = msg;
          transition(ReceivedReinvite);
          //handler->onDialogModified(getSessionHandle(), Offer, msg);
-         handler->onOffer(getSessionHandle(), msg, sdp);
+         handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
          
       case On2xx:
@@ -552,7 +567,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          //  Find out if it's an UPDATE requiring state change.
          //  See rfc3311 5.2, 4th paragraph.
          mLastSessionModification = msg;
-         handler->onOffer(getSessionHandle(), msg, sdp);
+         handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
          
       case OnUpdateRejected:
@@ -577,9 +592,9 @@ void
 InviteSession::dispatchSentUpdate(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case OnInvite:
       case OnInviteReliable:
@@ -599,7 +614,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          handleSessionTimerResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
          break;
          
       case On491Update:
@@ -627,9 +642,9 @@ void
 InviteSession::dispatchSentReinvite(const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   const SdpContents* sdp = InviteSession::getSdp(msg);
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
-   switch (toEvent(msg, sdp))
+   switch (toEvent(msg, sdp.get()))
    {
       case OnInvite:
       case OnInviteReliable:
@@ -656,7 +671,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          handleSessionTimerResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
 
          // !jf! I need to potentially include an answer in the ACK here
          SipMessage ack;
@@ -749,7 +764,7 @@ InviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 {
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
-      const SdpContents* sdp = InviteSession::getSdp(msg);
+      std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
       provideOffer(*sdp);
    }
    else
@@ -818,6 +833,10 @@ InviteSession::dispatchOthers(const SipMessage& msg)
          break;
       case INFO:
          dispatchInfo(msg);
+         break;
+      case NOTIFY:
+         // !jf! handle NOTIFY to a REFER
+         //dispatchNotify(msg);
          break;
       case REFER:
       default:
@@ -990,7 +1009,6 @@ InviteSession::handleSessionTimerResponse(const SipMessage& msg)
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer))) 
    { 
       bool fUAS = dynamic_cast<ServerInviteSession*>(this) != NULL; 
-
       // Process Session Timer headers 
       if(msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::Timer))) 
       { 
@@ -1037,7 +1055,6 @@ InviteSession::handleSessionTimerResponse(const SipMessage& msg)
    } 
 }
 
-   
 void 
 InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage& request) 
 { 
@@ -1097,7 +1114,6 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
       } 
    } 
 }
-
 
 Data
 InviteSession::toData(State state)
@@ -1217,31 +1233,23 @@ InviteSession::isReliable(const SipMessage& msg)
    return msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel));
 }
 
-const SdpContents*
+std::auto_ptr<SdpContents>
 InviteSession::getSdp(const SipMessage& msg) 
 {
-   const SdpContents* sdp=0;
-   MultipartMixedContents* mixed = dynamic_cast<MultipartMixedContents*>(msg.getContents());
-   if ( mixed )
+   // !jf! this code doesn't yet work - definitely if USE_SSL=false
+   //Helper::ContentsSecAttrs attrs = Helper::extractFromPkcs7(msg, mDum.getSecurity());
+   //return std::auto_ptr<SdpContents>(dynamic_cast<SdpContents*>(attrs.mContents.get()));
+   SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+   if (sdp)
    {
-      // Look for first SDP Contents in a multipart contents
-      MultipartMixedContents::Parts& parts = mixed->parts();
-      for( MultipartMixedContents::Parts::const_iterator i = parts.begin();
-           i != parts.end(); ++i)
-      {
-	     sdp = dynamic_cast<const SdpContents*>(*i);
-		 if(sdp)
-         {
-            break;  // Found SDP contents
-         }
-      }
+      SdpContents* cloned = static_cast<SdpContents*>(sdp->clone());
+      return std::auto_ptr<SdpContents>(cloned);
    }
    else
    {
-      sdp = dynamic_cast<const SdpContents*>(msg.getContents());
+      static std::auto_ptr<SdpContents> empty;
+      return empty;
    }
-
-   return sdp;
 }
 
 std::auto_ptr<SdpContents>
