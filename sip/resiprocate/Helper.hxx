@@ -13,6 +13,8 @@ namespace resip
 
 class SipMessage;
 class NameAddr;
+class SecurityAttributes;
+class Security;
 
 class UnsupportedAuthenticationScheme : public BaseException
 {
@@ -158,6 +160,18 @@ class Helper
       // GRUU support -- extract instance id and aor from user portion
       static std::pair<Data,Data> fromGruuUserPart(const Data& gruuUserPart,
                                                    const Data& key);
+
+      struct ContentsSecAttrs
+      {
+            ContentsSecAttrs(std::auto_ptr<Contents> contents,
+                             std::auto_ptr<SecurityAttributes> attributes);
+            ContentsSecAttrs(const ContentsSecAttrs& rhs);
+
+            mutable std::auto_ptr<Contents> mContents;
+            mutable std::auto_ptr<SecurityAttributes> mAttributes;
+      };
+
+      static ContentsSecAttrs extractFromPkcs7(const SipMessage& message, Security& security);
 };
  
 }

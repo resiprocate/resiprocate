@@ -31,11 +31,18 @@ class ClientPublicationHandler
 class ServerPublicationHandler
 {
    public:
-      virtual void onInitial(ServerPublicationHandle, const Data& etag, const SipMessage& pub, int expires)=0;
+      virtual void onInitial(ServerPublicationHandle, const Data& etag, 
+                             const SipMessage& pub, const Contents* contents,
+                             const SecurityAttributes* attrs, int expires)=0;
       virtual void onExpired(ServerPublicationHandle, const Data& etag)=0;
-      virtual void onRefresh(ServerPublicationHandle, const Data& etag, const SipMessage& pub, int expires)=0;
-      virtual void onUpdate(ServerPublicationHandle, const Data& etag, const SipMessage& pub, int expires)=0;
-      virtual void onRemoved(ServerPublicationHandle, const Data& etag, const SipMessage& pub, int expires)=0;
+      virtual void onRefresh(ServerPublicationHandle, const Data& etag, 
+                             const SipMessage& pub, const Contents* contents,
+                             const SecurityAttributes* attrs, int expires)=0;
+      virtual void onUpdate(ServerPublicationHandle, const Data& etag, 
+                            const SipMessage& pub, const Contents* contents,
+                            const SecurityAttributes* attrs, int expires)=0;
+      virtual void onRemoved(ServerPublicationHandle, const Data& etag, 
+                             const SipMessage& pub, int expires)=0;
 };
  
 }
