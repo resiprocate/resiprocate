@@ -477,6 +477,12 @@ SipMessage::setContents(const Contents* contents)
    delete mContents;
    delete mContentsHfv;
    mContentsHfv = 0;
+
+   if (contents == 0)
+   {
+      // The semantics of setContents(0) are to delete message contents
+      return;
+   }
  
    mContents = contents->clone();
 
