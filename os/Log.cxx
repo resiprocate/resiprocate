@@ -22,6 +22,7 @@ Log::Level Log::_level = Log::DEBUG;
 Log::Type Log::_type = COUT;
 Data Log::_appName;
 Data Log::_hostname;
+Data Log::_logFileName;
 
 #ifdef WIN32
 	int Log::_pid=0;
@@ -41,7 +42,7 @@ map<int, std::set<pthread_t> > Log::_serviceToThreads;
 map<int, Log::Level> Log::_serviceToLevel;
 
 const char
-Log::_descriptions[][32] = {"EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "DEBUG_STACK", ""}; 
+Log::_descriptions[][32] = {"NONE", "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "DEBUG_STACK", ""}; 
 
 Mutex Log::_mutex;
 
@@ -54,13 +55,14 @@ extern "C"
 }
 
 void
-Log::initialize(const char* typed, const char* leveld, const Data& appName)
+Log::initialize(const char* typed, const char* leveld, const Data& appName, const char *logFileName)
 {
    Type type = Log::COUT;
    if (typed)
    {
       if (typed == "cout" || typed == "COUT") type = Log::COUT;
       else if (typed == "cerr" || typed == "CERR") type = Log::CERR;
+	  else if (typed == "file" || typed == "FILE") type = Log::FILE;
       else type = Log::SYSLOG;
    }
    
@@ -69,17 +71,21 @@ Log::initialize(const char* typed, const char* leveld, const Data& appName)
    {
       level = toLevel(leveld);
    }
-   Log::initialize(type, level, appName);
+   Log::initialize(type, level, appName, logFileName);
 }
 
 void 
-Log::initialize(Type type, Level level, const Data& appName)
+Log::initialize(Type type, Level level, const Data& appName, const char * logFileName)
 {
    string copy(appName.c_str());
    
    _type = type;
    _level = level;
 
+    if (logFileName)
+    {
+ 	   _logFileName = logFileName;
+    }
 
    string::size_type pos = copy.find_last_of('/');
    if ( pos == string::npos || pos == copy.size())
@@ -115,7 +121,7 @@ Log::setLevel(Level level)
 Data
 Log::toString(Level l)
 {
-   return Data("LOG_") + _descriptions[l];
+   return Data("LOG_") + _descriptions[l+1];
 }
 
 Log::Level
@@ -132,7 +138,7 @@ Log::toLevel(const Data& l)
    {
       if (pri == string(_descriptions[i])) 
       {
-         return Level(i);
+         return Level(i-1);
       }
       i++;
    }
@@ -167,9 +173,9 @@ ostream&
 Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm) 
 {
 #if defined( WIN32 ) || defined( __APPLE__ )
-   strm << _descriptions[level] << "\t" << DELIM;
+   strm << _descriptions[level+1] << "\t" << DELIM;
 #else   
-     strm << _descriptions[level] << DELIM
+     strm << _descriptions[level+1] << DELIM
         << timestamp() << DELIM  
         << _hostname << DELIM  
         << _appName << DELIM
