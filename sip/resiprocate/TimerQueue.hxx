@@ -22,7 +22,8 @@ class TimerQueue
       
       void process();
       void run();
-
+      int size() const;
+      
       // returns ms until the next timer will fire, returns 0 if timers occur in
       // the past and returs INT_MAX if there are no timers 
       unsigned int msTillNextTimer();
