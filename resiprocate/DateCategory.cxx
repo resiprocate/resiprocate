@@ -2,6 +2,8 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include <time.h>
+
 #include "resiprocate/DateCategory.hxx"
 #include "resiprocate/ParseUtil.hxx"
 #include "resiprocate/os/Data.hxx"
@@ -237,7 +239,7 @@ DateCategory::DayOfWeekFromData(const Data& dow)
    static const int MAX_HASH_VALUE = 12;
 
    register const char *str = dow.data();
-   register unsigned int len = dow.size();
+   register size_type len = dow.size();
 
    static struct days wordlist[] =
       {
@@ -340,7 +342,7 @@ DateCategory::MonthFromData(const Data& mon)
    static const int MAX_HASH_VALUE = 33;
 
    register const char *str = mon.data();
-   register unsigned int len = mon.size();
+   register size_type len = mon.size();
 
    static struct months wordlist[] =
       {
