@@ -82,7 +82,7 @@ Log::toString(Level l)
 Log::Level
 Log::toLevel(const Data& l)
 {
-   string pri = "l";
+   string pri = l.c_str();
    if (pri.find("LOG_", 0) == 0)
    {
       pri.erase(0, 4);
