@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.68 2004/04/18 18:46:03 fluffy Exp $
+# $Id: Makefile,v 1.69 2004/05/04 22:25:53 davidb Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -17,7 +17,9 @@ LDLIBS += -lpopt
 TESTPROGRAMS +=
 endif
 
-TESTPROGRAMS += limpc.cxx \
+TESTPROGRAMS += testPidf.cxx \
+		testPksc7.cxx \
+		limpc.cxx \
 		testMem.cxx \
 		testRlmi.cxx \
 		testMultipartRelated.cxx \
@@ -51,6 +53,7 @@ TESTPROGRAMS += limpc.cxx \
 		testSpeed.cxx \
 		testThreadIf.cxx \
 		testTimer.cxx \
+		testAppTimer.cxx \
 		testTransactionFSM.cxx \
 		testTransportSelector.cxx \
 		testTypedef.cxx \
