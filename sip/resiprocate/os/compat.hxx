@@ -1,7 +1,7 @@
 #if !defined(compat_hxx)
 #define compat_hxx
 
-#include <strings.h>
+#include <cstring>
 
 #if defined(WIN32) || defined(__QNX__)
 #define strcasecmp(a,b) stricmp(a,b)

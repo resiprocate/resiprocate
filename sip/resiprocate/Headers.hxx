@@ -690,7 +690,7 @@ extern RequestLineType h_RequestLine;
 class StatusLineType {};
 extern StatusLineType h_StatusLine;
  
-}
+}7
 
 #endif
 
