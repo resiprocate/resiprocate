@@ -60,7 +60,6 @@ SipStack::SipStack(bool multiThreaded, Security* security)
 
 SipStack::~SipStack()
 {
-   assert (mShuttingDown);
 #ifdef USE_SSL
    delete security;
 #endif
