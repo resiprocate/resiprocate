@@ -17,6 +17,16 @@ using namespace std;
 #define VOCAL_SUBSYSTEM Subsystem::APP
 #define CRLF "\r\n"
 
+char *registerMessage = 
+"REGISTER sip:test.com SIP/2.0" CRLF
+"Via: SIP/2.0/UDP client.test.com:5060;branch=z9hG4bK-kcD23" CRLF
+"Max-Forwards: 70" CRLF
+"From: Me <sip:user@test.com>;tag=62e0154b" CRLF
+"To: You <sip:you@other.com>" CRLF
+"Call-ID: b7e6fb02f0e8413d" CRLF
+"CSeq: 1 REGISTER" CRLF
+"Contact: <sip:me@123.123.123.123>" CRLF
+"Content-Length: 0" CRLF CRLF;
 
 int
 main(int argc, char *argv[])
@@ -37,47 +47,26 @@ main(int argc, char *argv[])
     sa.sin_addr.s_addr = inet_addr("127.0.0.1");
     sa.sin_port = htons(5060);
 
-    NameAddr me;
-    me.uri().host() = "localhost";
-    me.uri().port() = 5060;
-    SipMessage* reg = Helper::makeRegister(me, me);
-    Data encoded(2048, true);
-    DataStream strm(encoded);
-    reg->encode(strm);
-    strm.flush();
-
-    DebugLog(<<"size="<<encoded.size());
+    DebugLog(<<"size="<<strlen(registerMessage) << endl << "message= " << endl << registerMessage );
     
     // send the test message to the stack
-    int err = sendto(fd, encoded.data(), encoded.size(), 0, (struct sockaddr*) & sa, sizeof(sa));
+    int err = sendto(fd, registerMessage, strlen(registerMessage), 0, (struct sockaddr*) & sa, sizeof(sa));
 
     DebugLog(<<"errno="<<errno);
     
-    assert (err == 0);
+    assert (err == strlen(registerMessage));
 
 
     int count=0;
     while (1)
     {
-       struct timeval tv;
-       fd_set fdReadSet;
-       int fdSetSize = 0;
+       FdSet fdReadSet;
        
-       // Init the fd_set for the select()
-       FD_ZERO(&fdReadSet);
+       theStack->buildFdSet(fdReadSet);
        
-       fdSetSize = 0;
-       theStack->buildFdSet(&fdReadSet, &fdSetSize);
+       fdReadSet.select(1000);
        
-       // block on fdset
-       tv.tv_sec = 0;
-       tv.tv_usec = 1000 * theStack->getTimeTillNextProcess();
-
-       // get the sip message that we just sent and process it
-       err = select(fdSetSize, &fdReadSet, 0, 0, &tv);
-       assert (err == 0);
-       
-       theStack->process(&fdReadSet);
+       theStack->process(fdReadSet);
        SipMessage* sipMessage = theStack->receive();
             
        if (sipMessage) 
@@ -96,9 +85,8 @@ main(int argc, char *argv[])
           cout << "request line uri user" << sipMessage->header(h_RequestLine).uri().user() << endl;
        }
 
-       theStack->process(&fdReadSet);
+       theStack->process(fdReadSet);
        usleep(20);
-       DebugLog(<<"spin");
     }
 
     return 0;
