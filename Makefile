@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.109 2003/02/28 23:34:22 fluffy Exp $
+# $Id: Makefile,v 1.110 2003/03/06 22:49:34 davidb Exp $
 
 BUILD = ../../build
 
@@ -19,7 +19,7 @@ CXXFLAGS += -DUSE_SSL
 LDFLAGS += -lssl -lcrypto
 endif
 
-#CXXFLAGS += -DVOCAL2_AOR_HAS_SCHEME
+CXXFLAGS += -DVOCAL2_AOR_HAS_SCHEME
 
 TARGET_LIBRARY = libsip2
 TESTPROGRAMS =  
@@ -78,6 +78,7 @@ SRC = \
 	SdpContents.cxx \
 	Security.cxx \
 	SipFrag.cxx \
+	ApplicationSip.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
 	Symbols.cxx \
