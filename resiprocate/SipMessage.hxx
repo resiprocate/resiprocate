@@ -28,7 +28,7 @@ class SipMessage : public Message
    public:
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
 
-      SipMessage();
+      SipMessage(bool fromWire=false);
       
       SipMessage(const SipMessage& message);
 
@@ -45,6 +45,11 @@ class SipMessage : public Message
             const char* name() const { return "SipMessage::Exception"; }
       };
 
+      void setFromTU() 
+      {
+         mIsExternal = false;
+      }
+      
       bool isExternal() const
       {
          return mIsExternal;
@@ -153,7 +158,7 @@ class SipMessage : public Message
       // not available
       SipMessage& operator=(const SipMessage&);
 
-      const bool mIsExternal;
+      bool mIsExternal;
       mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
       mutable UnknownHeaders mUnknownHeaders;
   
