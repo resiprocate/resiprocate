@@ -53,7 +53,7 @@ main(int argc, char* argv[])
    n = num;
    while ( --n > 0 )
    {
-      //data[i] |= 0x8000;
+      data[i] |= 0x8000;
       i = (data[i]+n) & size;
       //clog << i << endl;
    }
