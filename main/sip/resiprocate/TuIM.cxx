@@ -3,6 +3,9 @@
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/Random.hxx"
 #include "sip2/sipstack/TuIM.hxx"
+#include "sip2/sipstack/Contents.hxx"
+#include "sip2/sipstack/ParserCategories.hxx"
+#include "sip2/sipstack/PlainContents.hxx"
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
@@ -64,8 +67,16 @@ void TuIM::sendPage( Data& text, Uri& dest )
    SipMessage* msg = Helper::makeRequest(target, from, contact, MESSAGE);
    assert( msg );
 
+#if 0
+   PlainContents body;
+   body.setText( text );
+   msg->setContents( &body );
+#else
    msg->header(h_ContentType).type() = Data("text");
+   msg->header(h_ContentType).subType() = Data("plain");
    msg->setBody( text.data(), text.size() );
+#endif
+
    
    mStack->send( *msg );
 }
@@ -105,14 +116,23 @@ TuIM::process()
             mStack->send( *response );
 
             delete response;
-
+            
+#if 1
+            Contents* contents = msg->getContents();
+            assert( contents );
+            Mime mime = contents->getType();
+            DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
+            PlainContents* body = dynamic_cast<PlainContents*>(contents);
+            assert( body );
+            Data text = body->getText();;
+#else
             const HeaderFieldValue* hfv = msg->getBody(); 
             Data text = Data( hfv->mField,hfv->mFieldLength ); // !cj! UGLY -
                                                                // must be a
                                                                // better way
-            
-            Uri from = msg->header(h_From).uri();
+#endif
 
+            Uri from = msg->header(h_From).uri();
             DebugLog ( << "got message from " << from );
 
             mPageCallback->receivedPage( text, from );

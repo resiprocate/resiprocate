@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.15 2002/11/26 02:28:42 davidb Exp $
+# $Id: Makefile,v 1.16 2002/11/26 05:27:09 fluffy Exp $
 
 USE_SSL = 1
 
@@ -13,7 +13,9 @@ ifeq ($(USE_SSL),1)
 PACKAGES += OPENSSL
 endif
 
-TESTPROGRAMS =	testSipFrag.cxx \
+TESTPROGRAMS =	\
+		testIM.cxx \
+		testSipFrag.cxx \
 		testMessageWaiting.cxx \
 		testSdp.cxx \
 		SipTortureTests.cxx \
@@ -28,7 +30,7 @@ TESTPROGRAMS =	testSipFrag.cxx \
 	        testTcpTransport.cxx \
 		testTransactionFSM.cxx \
 		lg.cxx \
-#		testIM.cxx \
+
 
 SRC = \
 		Register.cxx \
