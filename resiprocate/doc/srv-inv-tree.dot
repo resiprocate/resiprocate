@@ -130,9 +130,11 @@ digraph srv_inv_tree {
 
         LABEL_NODE
         [
+         fixedsize=false
+         style=solid
          shape=plaintext
          fontsize=6
-         label="Server INVITE FSM\n$Id: srv-inv-tree.dot,v 1.1 2002/09/23 00:09:24 fluffy Exp $ $Name:  $" 
+         label="Server INVITE FSM\n$Id: srv-inv-tree.dot,v 1.2 2002/09/23 00:11:57 fluffy Exp $ $Name:  $" 
         ]
         
 
