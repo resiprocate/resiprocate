@@ -2,6 +2,7 @@
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/TimeLimitFifo.hxx"
 #include <unistd.h>
 
 using namespace resip;
@@ -19,7 +20,7 @@ int
 main()
 {
 
-   Fifo<Message> f;
+   TimeLimitFifo<Message> f(0, 0);
    Fifo<TransactionMessage> r;
    
    TimerQueue timer(r, f);

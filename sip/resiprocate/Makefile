@@ -13,6 +13,7 @@ CXXFLAGS += -I/sw/include
 LDFLAGS  += -L/sw/lib
 
 SRC = \
+	os/AbstractFifo.cxx \
 	os/BaseException.cxx \
 	os/Coders.cxx \
 	os/Condition.cxx \
@@ -132,7 +133,6 @@ SRC = \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \
-	ParseUtil.cxx \
 	HeaderHash.cxx \
 	ParameterHash.cxx \
 	ApiCheck.cxx \
@@ -142,7 +142,7 @@ SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
 #GPERFVER="GNU gperf 2.7.2"
 
-# rule for sentisive sorts of hash
+# rule for case sensitive sorts of hash
 MethodHash.cxx: MethodHash.gperf
 	gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< >  $@
 
