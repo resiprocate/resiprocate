@@ -326,13 +326,13 @@ DialogUsageManager::findDialog(DialogId id)
     DialogSetId setId = id.getDialogSetId();
     if ((it = mDialogSetMap.find(setId)) == mDialogSetMap.end())
     {
-        /**  @todo: return empty object (?)
+        /**  @todo: return empty object (?) */
     }
     DialogSet dialogSet = it->second();
     Dialog dialog;
     if ((dialog = dialogSet.find(id)) == NULL)
     {
-    /**  @todo: return empty object (?) */
+        /**  @todo: return empty object (?) */
     }
     return *dialog;
     
@@ -359,7 +359,7 @@ DialogUsageManager::findCreator(DialogId id)
     BaseCreator creator = dialogset.getCreator();
     if (creator == NULL)
     {
-        /* @todo; return empty object (?) */
+        /** @todo; return empty object (?) */
     }
     return (*creator);
     
