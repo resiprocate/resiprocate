@@ -61,7 +61,8 @@ class Dialog
       virtual ~Dialog();
       friend class DialogUsage;
       friend class DialogSet;
-
+      friend class DialogUsageManager;
+      
       friend class ClientSubscription;
       friend class InviteSession;
       friend class ServerSubscription;
