@@ -565,6 +565,7 @@ class StatusLine : public ParserCategory
       StatusLine& operator=(const StatusLine&);
 
       int& responseCode() const {checkParsed(); return mResponseCode;}
+      int& statusCode() const {checkParsed(); return mResponseCode;}
       const Data& getSipVersion() const {checkParsed(); return mSipVersion;}
       Data& reason() const {checkParsed(); return mReason;}
 

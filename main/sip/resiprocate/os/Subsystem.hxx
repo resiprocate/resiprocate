@@ -16,6 +16,7 @@ class Subsystem
       static const Subsystem CONTENTS;
       static const Subsystem DNS;
       static const Subsystem NONE; // default subsystem
+      static const Subsystem PRESENCE; 
       static const Subsystem SDP;
       static const Subsystem SIP;    // SIP Stack / Parser
       static const Subsystem TEST;   

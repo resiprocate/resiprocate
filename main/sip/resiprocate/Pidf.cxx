@@ -7,6 +7,7 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/XMLCursor.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 using namespace resip;
 using namespace std;
@@ -324,6 +325,18 @@ Pidf::getSimpleStatus(Data* note) const
    }
    return false;
 }
+
+std::ostream& 
+resip::operator<<(std::ostream& strm, const Pidf::Tuple& tuple)
+{
+   strm << "Tuple [" 
+        << " status=" << tuple.status
+        << " id=" << tuple.id
+        << " contact=" << tuple.contact
+        << " attributes=" << Inserter(tuple.attributes);
+   return strm;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

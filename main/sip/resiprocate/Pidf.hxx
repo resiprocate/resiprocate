@@ -57,6 +57,7 @@ class Pidf : public Contents
       std::vector<Tuple> mTuples;
 };
 
+std::ostream& operator<<(std::ostream& strm, const Pidf::Tuple& tuple);
 static bool invokePidfInit = Pidf::init();
 
 }
