@@ -47,7 +47,7 @@ DialogId::DialogId(const SipMessage& msg) :
          }
       }
    }
-   InfoLog ( << "DialogId::DialogId: " << *this);   
+   DebugLog ( << "DialogId::DialogId: " << *this);   
 }
 
 DialogId::DialogId(const Data& callId, const Data& localTag, const Data& remoteTag) : 
@@ -60,7 +60,7 @@ DialogId::DialogId(const DialogSetId& id, const Data& remoteTag) :
    mDialogSetId(id),
    mRemoteTag(remoteTag)
 {
-   InfoLog ( << "DialogId::DialogId: " << *this);   
+   DebugLog ( << "DialogId::DialogId: " << *this);   
 }
 
 bool
