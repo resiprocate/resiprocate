@@ -1,5 +1,5 @@
-#ifndef PlainContents_hxx
-#define PlainContents_hxx
+#if !defined(RESIP_PLAINCONTENTS_HXX)
+#define RESIP_PLAINCONTENTS_HXX 
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Data.hxx"

@@ -1,5 +1,5 @@
-#ifndef RportParameter_hxx
-#define RportParameter_hxx
+#if !defined(RESIP_RPORTPARAMETER_HXX)
+#define RESIP_RPORTPARAMETER_HXX 
 
 #include <iostream>
 
@@ -43,11 +43,7 @@ class RportParameter : public Parameter
  
 }
 
-
-
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

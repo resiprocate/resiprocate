@@ -1,5 +1,5 @@
-#ifndef ParameterTypeEnums_hxx
-#define ParameterTypeEnums_hxx
+#if !defined(RESIP_PARAMETERTYPEENUMS_HXX)
+#define RESIP_PARAMETERTYPEENUMS_HXX 
 
 #include "resiprocate/os/Data.hxx"
 
@@ -96,7 +96,6 @@ class ParameterTypes
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
