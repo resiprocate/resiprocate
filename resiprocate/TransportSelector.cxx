@@ -108,13 +108,19 @@ TransportSelector::dnsResolve( SipMessage* msg)
 
    if (msg->isRequest())
    {
+      // If this is an ACK we need to fix the tid to reflect that
+      Data tid = msg->getTransactionId();
+      if (msg->header(h_RequestLine).getMethod() == ACK)
+      {
+	 tid += "ACK";
+      }
       if (msg->header(h_Routes).size() && !msg->header(h_Routes).front().exists(p_lr))
       {
-         mStack.mDnsResolver.lookup(msg->getTransactionId(), msg->header(h_Routes).front().uri());
+         mStack.mDnsResolver.lookup(tid, msg->header(h_Routes).front().uri());
       }
       else
       {
-         mStack.mDnsResolver.lookup(msg->getTransactionId(), msg->header(h_RequestLine).uri());
+         mStack.mDnsResolver.lookup(tid, msg->header(h_RequestLine).uri());
       }
    }
    else if (msg->isResponse())
