@@ -1449,7 +1449,7 @@ bits(size_t v)
 size_t
 buzHash(const char* c, size_t size)
 {
-   size_t h = 0x294b71649;
+   size_t h = 0x294b7164;
    const char* end = c + size;
    for ( ; c != end; ++c)
    {
