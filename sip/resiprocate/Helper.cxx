@@ -293,7 +293,7 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);   
    } 
     
-   //response.setRFC2543TransactionId(request.getRFC2543TransactionId());
+   response.setRFC2543TransactionId(request.getRFC2543TransactionId());
    //response.header(h_ContentLength).value() = 0;
    
    if (responseCode >= 180 && responseCode < 300 && request.exists(h_RecordRoutes))
