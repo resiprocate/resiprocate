@@ -1,7 +1,7 @@
 #if !defined(Vocal2_Data_hxx)
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.57 2003/02/07 02:49:17 jason Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.58 2003/02/11 00:09:54 davidb Exp $";
 
 #include "sip2/util/compat.hxx"
 #include "sip2/util/DataStream.hxx"
@@ -118,6 +118,15 @@ class Data
       char* initializeHack();
       
       Data(const char* buffer, int length, bool);
+
+      // copy if not mine
+      void own() const
+      {
+         if (!mMine) 
+         {
+            const_cast<Data*>(this)->resize(mSize, true);
+         }
+      }
       void resize(size_type newSize, bool copy);
       size_type mSize;
       char* mBuf;

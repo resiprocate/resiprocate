@@ -6,7 +6,6 @@
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/util/DataStream.hxx"
 #include "sip2/util/Logger.hxx"
-#include "tassert.h"
 
 using namespace Vocal2;
 using namespace std;
@@ -16,122 +15,139 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-  Log::Level l = Log::DEBUG;
-  Log::initialize(Log::COUT, l, argv[0]);
+   Log::Level l = Log::DEBUG;
+   Log::initialize(Log::COUT, l, argv[0]);
 
-   tassert_init(12);
-   
    {
-      tassert_reset();      
-      Uri uri( "sip:fluffy@iii.ca:666" );
-      tassert( uri.scheme() == "sip" );
-      tassert( uri.user() == "fluffy" );
-      tassert( uri.host() == "iii.ca" );
-      tassert( uri.port() == 666 );
-      
-      tassert_verify(1);
+      Uri uri("sip:fluffy@iii.ca:666");
+      assert(uri.scheme() == "sip");
+      assert(uri.user() == "fluffy");
+      assert(uri.host() == "iii.ca");
+      assert(uri.port() == 666);
    }
    
    {
-      tassert_reset();
-      Uri uri( "sip:fluffy@iii.ca;transport=tcp" );
-      tassert( uri.param(p_transport) == "tcp"  );
-      
-      tassert_verify(2);
+      Uri uri("sip:fluffy@iii.ca;transport=tcp");
+      assert(uri.param(p_transport) == "tcp");
    }
    
    {
-      tassert_reset();
-      Uri uri( "sips:fluffy@iii.ca;transport=tls" );
-      tassert( uri.scheme() == "sips" );
-      tassert( uri.param(p_transport) == "tls"  );
-      tassert_verify(3);
+      Uri uri("sips:fluffy@iii.ca;transport=tls");
+      assert(uri.scheme() == "sips");
+      assert(uri.param(p_transport) == "tls");
    }
    
    {
-      tassert_reset();
-      Uri uri( "sip:fluffy@iii.ca;transport=sctp" );
-      tassert( uri.param(p_transport) == "sctp"  );
-      tassert_verify(4);
+      Uri uri("sip:fluffy@iii.ca;transport=sctp");
+      assert(uri.param(p_transport) == "sctp");
    }
    
    {
-      tassert_reset();
-      Uri uri( "sip:fluffy:password@iii.ca" );
-      tassert( uri.password() == "password" );
-      tassert_verify(5);
+      Uri uri("sip:fluffy:password@iii.ca");
+      assert(uri.password() == "password");
    }
 
-  {
-      tassert_reset();
-      Uri uri( "sip:fluffy@iii.ca;user=phone;ttl=5;lr;maddr=1.2.3.4" );
-      tassert( uri.param(p_ttl) == 5 );
-      tassert( uri.exists(p_lr) == true );
-      tassert( uri.param(p_maddr) == "1.2.3.4" );
-      tassert( uri.param(p_user) == "phone" );
-
-      tassert_verify(6);
+   {
+      Uri uri("sip:fluffy@iii.ca;user=phone;ttl=5;lr;maddr=1.2.3.4");
+      assert(uri.param(p_ttl) == 5);
+      assert(uri.exists(p_lr) == true);
+      assert(uri.param(p_maddr) == "1.2.3.4");
+      assert(uri.param(p_user) == "phone");
    }
  
    {
-      tassert_reset();
-      Uri uri( "sip:fluffy@iii.ca;x-fluffy=foo" );
-      tassert( uri.exists(UnknownParameterType("x-fluffy")) == true );
-      tassert( uri.exists(UnknownParameterType("x-fufu")) == false );
-      tassert( uri.param(UnknownParameterType("x-fluffy")) == "foo" );
-      tassert_verify(7);
+      Uri uri("sip:fluffy@iii.ca;x-fluffy=foo");
+      assert(uri.exists(UnknownParameterType("x-fluffy")) == true);
+      assert(uri.exists(UnknownParameterType("x-fufu")) == false);
+      assert(uri.param(UnknownParameterType("x-fluffy")) == "foo");
    }
  
    {
-      tassert_reset();
-      Uri uri( "sip:fluffy@iii.ca;method=MESSAGE" );
-      tassert( uri.param(p_method) == "MESSAGE" );
-      tassert_verify(8);
+      Uri uri("sip:fluffy@iii.ca;method=MESSAGE");
+      assert(uri.param(p_method) == "MESSAGE");
    }
 
-#if 0
    {
-      tassert_reset();
-      try
-      {
-         Uri uri( "sip:fluffy@iii.ca?Subject=foo&Call-Info=<http://www.foo.com>" );
-         tassert( false /* need test here */  );
-      }
-      catch(std::exception e)
-      { 
-         tassert( false /* got an exception*/  );
-      }
-      
-      tassert_verify(9);
-   }
-#endif
-              
-  {
-      tassert_reset();
-      Uri uri( "sip:+1(408) 444-1212:666@gw1" );
-      tassert( uri.user() == "+1(408) 444-1212"  );
-      tassert( uri.password() == "666"  );
-      tassert( uri.host() == "gw1"  );
-      tassert_verify(10);
+      Uri uri("sip:+1(408) 444-1212:666@gw1");
+      assert(uri.user() == "+1(408) 444-1212");
+      assert(uri.password() == "666");
+      assert(uri.host() == "gw1");
    }
  
-  {
-      tassert_reset();
-      Uri uri( "sip:fluffy;x-utag=foo@iii.ca" );
-      tassert( uri.user() == "fluffy;x-utag=foo"  );
-      tassert( uri.host() == "iii.ca"  );
-      tassert_verify(11);
+   {
+      Uri uri("sip:fluffy;x-utag=foo@iii.ca");
+      assert(uri.user() == "fluffy");
+      assert(uri.userParameters() == "x-utag=foo");
+      assert(uri.host() == "iii.ca");
+
+      Data out(Data::from(uri));
+      assert(out == "sip:fluffy;x-utag=foo@iii.ca");
    }
 
-#if 0 
-  {
-      tassert_reset();
-      Uri uri( "tel:+1 (408) 555-1212" );
-      tassert( uri.scheme() == "tel"  );
-      tassert( 0  );
-      tassert_verify(12);
+   {
+      Uri uri("sip:fluffy;x-utag=foo:password@iii.ca");
+      assert(uri.user() == "fluffy");
+      assert(uri.userParameters() == "x-utag=foo");
+      assert(uri.host() == "iii.ca");
+      assert(uri.password() == "password");
+
+      Data out(Data::from(uri));
+      cerr << "!! " << out << endl;
+      assert(out == "sip:fluffy;x-utag=foo:password@iii.ca");
    }
-#endif
+
+   {
+      Uri uri("tel:+14086661212");
+      assert(uri.user() == "+14086661212");
+      assert(uri.userParameters() == "");
+      assert(uri.host() == "");
+      assert(uri.password() == "");
+
+      Data out(Data::from(uri));
+      cerr << "!! " << out << endl;
+      assert(out == "tel:+14086661212");
+   }
+
+   {
+      Uri uri("tel:+14086661212;foo=bie");
+      assert(uri.user() == "+14086661212");
+      assert(uri.userParameters() == "foo=bie");
+      assert(uri.host() == "");
+      assert(uri.password() == "");
+
+      Data out(Data::from(uri));
+      cerr << "!! " << out << endl;
+      assert(out == "tel:+14086661212;foo=bie");
+   }
+
+   {
+      Uri uri("tel:+14086661212;");
+      assert(uri.user() == "+14086661212");
+      assert(uri.userParameters() == "");
+      assert(uri.host() == "");
+      assert(uri.password() == "");
+
+      Data out(Data::from(uri));
+      cerr << "!! " << out << endl;
+      assert(out == "tel:+14086661212");
+   }
+
+   {
+      Uri uri("sip:;:@");
+      assert(uri.user() == "");
+      assert(uri.userParameters() == "");
+      assert(uri.host() == "");
+      assert(uri.password() == "");
+
+      Data out(Data::from(uri));
+      cerr << "!! " << out << endl;
+      assert(out == "sip:");
+   }
+
+   {
+      Uri uri("tel:+1 (408) 555-1212");
+      assert(uri.scheme() == "tel");
+   }
                 
-  tassert_report();
+   cerr << endl << "All OK" << endl;
 }

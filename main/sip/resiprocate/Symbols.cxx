@@ -45,6 +45,7 @@ const Data Symbols::SCTP = "SCTP";
 
 const Data Symbols::Sip = "sip";
 const Data Symbols::Sips = "sips";
+const Data Symbols::Tel = "tel";
 
 const Data Symbols::auth = "auth";
 
