@@ -152,6 +152,55 @@ const char shortMessage[] =
                    "m=video 3227 RTP/AVP 31 \r\n"
                    "a=rtpmap:31 LPC \r\n");
 
+char* longMessage = 
+(
+   "SIP/2.0 404 Not Found\r\n"
+   "To: <sip:spiral1@whistler.gloo.net:5061;transport=TCP>\r\n"
+   "From: <sip:ext102@whistler.gloo.net:5061>;tag=57ac\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5062;branch=z9hG4bK-c87542-694430024.0.1.1.1.1.1.1.1.1.1.1.1.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5061;branch=z9hG4bK-c87542-694430024.0.1.1.1.1.1.1.1.1.1.1.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5062;branch=z9hG4bK-c87542-694430024.0.1.1.1.1.1.1.1.1.1.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5061;branch=z9hG4bK-c87542-694430024.0.1.1.1.1.1.1.1.1.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5062;branch=z9hG4bK-c87542-694430024.0.1.1.1.1.1.1.1.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5061;branch=z9hG4bK-c87542-694430024.0.1.1.1.1.1.1.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5062;branch=z9hG4bK-c87542-694430024.0.1.1.1.1.1.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5061;branch=z9hG4bK-c87542-694430024.0.1.1.1.1.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5062;branch=z9hG4bK-c87542-694430024.0.1.1.1.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5061;branch=z9hG4bK-c87542-694430024.0.1.1.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5062;branch=z9hG4bK-c87542-694430024.0.1.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5061;branch=z9hG4bK-c87542-694430024.0.1.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5062;branch=z9hG4bK-c87542-694430024.0.1.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5061;branch=z9hG4bK-c87542-694430024.0.1-1;received=192.168.2.220\r\n"
+   "Via: SIP/2.0/TCP whistler.gloo.net:5068;branch=z9hG4bK-c87542-694430024.0-1;received=192.168.2.220\r\n"
+   "Call-ID: 793cc52f\r\n"
+   "CSeq: 1 INVITE\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5062;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5062;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5062;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5062;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5062;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5062;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5062;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5062;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5062;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5062;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5062;lr>\r\n"
+   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr;last=true>\r\n"
+   "Content-Length: 0\r\n"
+   "\r\n");
+
 #if defined(PP_DEBUG_HELPERS)
 extern Data ppStatusName(BufferAction s);
 #else
@@ -263,11 +312,12 @@ void doTest1()
     // set the ''reader'' to use the test message
 
 //    fakeResetRead(reallyShortMessage,strlen(reallyShortMessage));
-    fakeResetRead(testData,strlen(testData));
+//    fakeResetRead(testData,strlen(testData));
 //    fakeResetRead(tortureMsg,strlen(tortureMsg));
 //    fakeResetRead(wrappy,strlen(wrappy));
+    fakeResetRead(longMessage,strlen(longMessage));
     
-    TestSupport::prettyPrint(wrappy,strlen(wrappy));
+    //TestSupport::prettyPrint(longMessage,strlen(longMessage));
 
     // get the first chunk
 
@@ -279,10 +329,10 @@ void doTest1()
     do
     {
         
-        InfoLog(<<"Preparsing " << chunkSize << " bytes");
-        InfoLog(<<"len   : " << chunkSize);
+        DebugLog(<<"Preparsing " << chunkSize << " bytes");
+        DebugLog(<<"len   : " << chunkSize);
 
-        TestSupport::prettyPrint(chunk,chunkSize);
+        //TestSupport::prettyPrint(chunk,chunkSize);
         int status = 0;
         if ((status = pre.process(*msg,chunk,chunkSize)))
         {
@@ -430,7 +480,7 @@ void doTest1()
 int
 main(int argc, char *argv[])
 {
-    Log::Level l = Log::DEBUG;
+    Log::Level l = Log::INFO;
     
     if (argc > 1)
     {
@@ -456,7 +506,37 @@ main(int argc, char *argv[])
     doTest1(); // fragging one char at a time
 
     checkalltests();
+
+
+    // dlb chunked test of preparser
+    Preparse pre;
+
+    pre.reset();
+    Data longMsg(longMessage);
+    SipMessage *message = new SipMessage(SipMessage::FromWire);
+
+    unsigned int chunk = 2048;
+    char* o = const_cast<char*>(longMsg.data());
+
+    InfoLog(<< "processing: [" << Data(o, chunk));
+    int ret = pre.process(*message, o, chunk);
+
+    InfoLog(<< "preparser process returned: " << ret);
+    InfoLog(<< "preparser isDataAssigned: " <<pre.isDataAssigned());
+    InfoLog(<< "preparser isFragmented: " <<pre.isFragmented());
+    InfoLog(<< "preparser isHeadersComplete: " <<pre.isHeadersComplete());
+
+    // preparse remainder -- just call against remainder of buffer
+    InfoLog(<< "processing: [" << Data(o + chunk, longMsg.size()-chunk));
+    ret = pre.process(*message, o+chunk, longMsg.size()-chunk);
+
+    InfoLog(<< "preparser process returned: " << ret);
+    InfoLog(<< "preparser isDataAssigned: " <<pre.isDataAssigned());
+    InfoLog(<< "preparser isFragmented: " <<pre.isFragmented());
+    InfoLog(<< "preparser isHeadersComplete: " <<pre.isHeadersComplete());
     
+
+    cerr << *message;
     return 0;
     
    
