@@ -70,12 +70,11 @@ class Condition
       Condition();
       virtual ~Condition();
 
-      /** Block on the condition. Will return after the relativeTime, 
-       *  specified in millseconds, has passed. If set to -1, the default,
-       *  it will wait indefinately. Uses the specified mutex to synchronize 
-       *  access to the condition. Returns 0, if successful, or an errorcode.
-       */
       void wait (Mutex* mutex);
+
+      //returns true if the condition was woken up by activity, false if timeout
+      //or interrupt
+      bool wait (Mutex* mutex, int ms);
 
       /** Signal one waiting thread.
        *  Returns 0, if successful, or an errorcode.
