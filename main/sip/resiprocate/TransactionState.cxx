@@ -493,7 +493,7 @@ TransactionState::processClientInvite(  Message* msg )
      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       switch (sip->header(h_RequestLine).getMethod())
       {
-         /* Received INVITE request from TU="Transaction User", Fire Timer B which controls
+         /* Received INVITE request from TU="Transaction User", Start Timer B which controls
             transaction timeouts. alsoHandle CANCEL , To Handle Response to the CANCEL use
             processClientNonInvite 
          */
