@@ -1,4 +1,4 @@
-all: resiprocate tests presSvr
+all: resiprocate dum tests 
 
 .PHONY : resiprocate tests ares contrib
 
@@ -7,6 +7,9 @@ resiprocate: contrib
 
 tests: resiprocate
 	cd resiprocate/test; $(MAKE)
+
+dum:	resiprocate
+	cd resiprocate/dum; $(MAKE)
 
 presSvr: resiprocate
 	cd presSvr; $(MAKE)
