@@ -760,8 +760,9 @@ myMain(int argc, char* argv[])
 #ifdef USE_SSL
    try
    {
-      assert( sipStack.security );
-      bool ok = sipStack.security->loadAllCerts( key , Data::Empty );
+      Security* security = sipStack.getSecurity();
+      assert(security != 0);
+      bool ok = security->loadAllCerts( key , Data::Empty );
       if ( !ok )
       {
          InfoLog( << "Could not load the certificates" );
