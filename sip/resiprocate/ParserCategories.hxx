@@ -270,33 +270,8 @@ enum DayOfWeek {
    Sat
 };
 
-Data DayOfWeekData[] 
-{
-   "Sun",
-   "Mon",
-   "Tue",
-   "Wed",
-   "Thu",
-   "Fri",
-   "Sat"
-};
-
-Data DayOfMonthData[] 
-{
-   "Jan",
-   "Feb",
-   "Mar",
-   "Apr",
-   "May",
-   "Jun",
-   "Jul",
-   "Aug",
-   "Sep",
-   "Oct",
-   "Nov",
-   "Dec"
-};
-
+extern Data DayOfWeekData[];
+extern Data MonthData[];
 
 enum Month {
    Jan = 0,
@@ -318,20 +293,50 @@ class DateCategory : public ParserCategory
    public:
       enum {isCommaTokenizing = false};
 
-      DateCategory() : ParserCategory(), mValue() {}
-      DateCategory(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue() {}
+      DateCategory() : 
+         ParserCategory(),
+         mDayOfWeek(Sun),
+         mDayOfMonth(),
+         mMonth(Jan),
+         mYear(0),
+         mHour(0),
+         mMin(0),
+         mSec(0)
+      {}
+
+      DateCategory(HeaderFieldValue* hfv)
+         : ParserCategory(hfv),
+           mDayOfWeek(Sun),
+           mDayOfMonth(),
+           mMonth(Jan),
+           mYear(0),
+           mHour(0),
+           mMin(0),
+           mSec(0)
+      {}
+
       DateCategory(const DateCategory&);
       DateCategory& operator=(const DateCategory&);
 
-      Data& value() const {checkParsed(); return mValue;}
-
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
+
       virtual std::ostream& encode(std::ostream& str) const;
+      
+      static DayOfWeek DayOfWeekFromData(const Data&);
+      static Month MonthFromData(const Data&);
+
+      DayOfWeek& dayOfWeek() {checkParsed(); return mDayOfWeek;}
+      int& dayOfMonth() {checkParsed(); return mDayOfMonth;}
+      Month month() {checkParsed(); return mMonth;}
+      int& year() {checkParsed(); return mYear;}
+      int& hour() {checkParsed(); return mHour;}
+      int& minute() {checkParsed(); return mMin;}
+      int& second() {checkParsed(); return mSec;}
 
    private:
       mutable enum DayOfWeek mDayOfWeek;
-      mutable int mDay;
+      mutable int mDayOfMonth;
       mutable enum Month mMonth;
       mutable int mYear;
       mutable int mHour;
