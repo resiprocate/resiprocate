@@ -22,7 +22,7 @@ class AppDialogSet : public Handled
       // wants to manage memory on its own. 
       virtual void destroy();
 
-      virtual void cancel();
+      virtual void end();
 
       virtual UserProfile* getUserProfile();
 
