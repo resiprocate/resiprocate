@@ -277,6 +277,13 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_Warnings).push_back(warn);
    }
 
+   // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.   
+   // No totag for failure responses or 100s   
+   if (!response.header(h_To).exists(p_tag) && responseCode > 100)   
+   {   
+      response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);   
+   } 
+    
    response.setRFC2543TransactionId(request.getRFC2543TransactionId());
 
    //response.header(h_ContentLength).value() = 0;
