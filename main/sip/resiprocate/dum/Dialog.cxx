@@ -278,10 +278,22 @@ Dialog::dispatch(const SipMessage& msg)
             }
             mInviteSession->dispatch(request);
             break;
+            //refactor, send bad request for BYE, INFO, CANCEL?
          case BYE:
             if (mInviteSession == 0)
             {
                InfoLog ( << "Spurious BYE" );
+               return;               
+            }
+            else
+            {
+               mInviteSession->dispatch(request);
+            }
+            break;
+         case INFO:
+            if (mInviteSession == 0)
+            {
+               InfoLog ( << "Spurious INFO" );
                return;               
             }
             else
@@ -409,6 +421,7 @@ Dialog::dispatch(const SipMessage& msg)
             case CANCEL:
             case REFER: 
             case BYE:
+            case INFO:
                if (mInviteSession == 0)
                {
                   //spurious
