@@ -31,6 +31,16 @@ MessageWaitingContents::MessageWaitingContents(HeaderFieldValue* hfv, const Mime
    }
 }
 
+MessageWaitingContents::MessageWaitingContents(const Data& data, const Mime& contentType)
+   : Contents(contentType)
+{
+   for(int i = 0; i < (int)MW_MAX; i++)
+   {
+      mHeaders[i] = 0;
+   }
+   assert(0);
+}
+
 MessageWaitingContents::MessageWaitingContents(const MessageWaitingContents& rhs)
    : mHasMessages(rhs.mHasMessages),
      mAccountUri(rhs.mAccountUri ? new Uri(*rhs.mAccountUri) : 0),
