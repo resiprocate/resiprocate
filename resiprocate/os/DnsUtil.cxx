@@ -284,6 +284,7 @@ DnsUtil::getInterfaces(const Data& matching)
       e = ioctl(s,SIOCGIFADDR,&ifr2);
 
       struct sockaddr a = ifr2.ifr_addr;
+
       Data ip = DnsUtil::inet_ntop(a);
       DebugLog (<< "Considering: " << name << " -> " << ip << " flags=" << ifr2.ifr_flags);
       if (matching == Data::Empty || matching == name)
@@ -339,7 +340,8 @@ const char *
 DnsUtil::inet_ntop(int af, const void * __restrict src, char * __restrict dst,
                    size_t size)
 {
-   switch (af) {
+   switch (af) 
+   {
       case AF_INET:
          return (inet_ntop4((const u_char *)src, dst, size));
 #ifdef USE_IPV6
@@ -352,6 +354,7 @@ DnsUtil::inet_ntop(int af, const void * __restrict src, char * __restrict dst,
    }
    /* NOTREACHED */
 }
+
 
 const char*
 inet_ntop4(const u_char *src, char *dst, size_t size)
