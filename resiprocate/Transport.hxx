@@ -58,9 +58,6 @@ class Transport : public ThreadIf
       virtual TransportType transport() const =0 ;
       virtual bool isReliable() const =0;
       
-      static TransportType toTransport( const Data& );
-      static const Data& toData( TransportType );
-
       // Perform basic sanity checks on message. Return false
       // if there is a problem eg) no Vias. --SIDE EFFECT--
       // This will queue a response if it CAN for a via-less 
