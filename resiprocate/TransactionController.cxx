@@ -18,7 +18,7 @@ using namespace resip;
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
 #endif
 
-unsigned int TransactionController::MaxTUFifoSize = 1000;
+unsigned int TransactionController::MaxTUFifoSize = 0;
 
 TransactionController::TransactionController(bool multi, 
                                              Fifo<Message>& tufifo, 
