@@ -15,30 +15,19 @@ using namespace Vocal2;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 HeaderFieldValue::HeaderFieldValue(const char* field, unsigned int fieldLength)
-   : mParserCategory(0),
-     mField(field),
+   : mField(field),
      mFieldLength(fieldLength),
      mMine(false)
 {}
 
-HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv,
-                                   ParserCategory* assignParser)
-   : mParserCategory(assignParser),
-     mField(0),
+HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
+   : mField(0),
      mFieldLength(hfv.mFieldLength),
      mMine(true)
 {
-   // if this isn't parsed, chunk and copy the block of memory
-   if (!isParsed())
-   {
-      // !dlb! remove this when comfortable that reallocation occurs
-      // only when necessary
-      //assert(0);
-      InfoLog (<< "Making a copy of a HFV" << hex << this);
-      
-      const_cast<char*&>(mField) = new char[mFieldLength];
-      memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
-   }
+   InfoLog (<< "Making a copy of a HFV" << hex << this);
+   const_cast<char*&>(mField) = new char[mFieldLength];
+   memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
 }
 
 HeaderFieldValue::~HeaderFieldValue()
@@ -50,33 +39,16 @@ HeaderFieldValue::~HeaderFieldValue()
   }
 }
 
-bool 
-HeaderFieldValue::isParsed() const
-{
-   return (mParserCategory != 0 && mParserCategory->isParsed());
-}
-
 ostream& 
 HeaderFieldValue::encode(ostream& str) const
 {
-   if (mParserCategory != 0 && mParserCategory->isParsed())
-   {
-      return mParserCategory->encode(str);
-   }
    str.write(mField, mFieldLength);
    return str;
 }
 
 ostream& Vocal2::operator<<(ostream& stream, HeaderFieldValue& hfv)
 {
-   if (hfv.isParsed())
-   {
-      hfv.mParserCategory->encode(stream);
-   }
-   else
-   {
-      stream << Data(hfv.mField, hfv.mFieldLength);
-   }
+   hfv.encode(stream);
    return stream;
 }
 

@@ -24,7 +24,7 @@ HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
    {
       for (const_iterator i = rhs.begin(); i != rhs.end(); i++)
       {
-         push_back(new HeaderFieldValue(**i, 0));
+         push_back(new HeaderFieldValue(**i));
       }
    }
 }
