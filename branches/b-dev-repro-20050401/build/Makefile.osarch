@@ -39,7 +39,7 @@ endif
 	CFLAGS   += -D_REENTRANT 
 	DISTCC   = distcc 
 	CCACHE   = ccache
-        LDFLAGS  += -lpopt 
+        LDLIBS_LAST   += -lpopt
 endif
 
 
@@ -90,6 +90,10 @@ endif
 # the 
 
 ifeq ($(OSTYPE),Darwin)
+    CXXFLAGS += -D_REENTRANT -I/opt/sfw/include
+    CFLAGS   += -D_REENTRANT -I/opt/sfw/include
+    LDFLAGS  += -L/opt/sfw/lib
+    LDLIBS_LAST   += -lpopt
 
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
@@ -102,6 +106,7 @@ ifeq ($(OSTYPE),cygwin)
     USE_LIBGETOPT = 1
     CFLAGS += -I$(ROOT)/contrib/win32/mingw/include -I$(ROOT)/contrib/win32/pthreads
     CXXFLAGS += -I$(ROOT)/contrib/win32/mingw/include -I$(ROOT)/contrib/win32/pthreads
+    LDLIBS_LAST   += -lpopt
 endif
 
 
