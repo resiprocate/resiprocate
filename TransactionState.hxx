@@ -101,9 +101,7 @@ class TransactionState : public DnsHandler
       // current selection from the DnsResult. e.g. it is important to send the
       // CANCEL to exactly the same tuple as the original INVITE went to. 
       Tuple mTarget; 
-
-      Tuple mSource; // used to reply to requests
-      Tuple mNetSource;
+      Tuple mResponseTarget; // used to reply to requests
 
       Data mId;
       Data mToTag; // for failure responses on ServerInviteTransaction 
