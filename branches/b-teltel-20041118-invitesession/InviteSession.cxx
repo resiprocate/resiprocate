@@ -26,6 +26,7 @@
 #endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+#define THROW(msg)  throw DialogUsage::Exception(msg, __FILE__,__LINE__);
 
 using namespace resip;
 using namespace std;
@@ -151,6 +152,7 @@ InviteSession::provideAnswer(const SdpContents& answer)
    switch (mState)
    {
       case ReceivedUpdate:
+      //    same as ReceivedReinvite case.
       case ReceivedReinvite:
       {
          SipMessage response;
@@ -185,25 +187,15 @@ InviteSession::end()
       }
 
       case SentUpdate:
+      //  same as SentReinvite case.
       case SentReinvite:
          transition(Terminated);
          break;
 
       case ReceivedUpdate:
-      {
-         SipMessage response;
-         mDialog.makeResponse(response, mLastRequest, 488);
-         transition(Terminated);
-         InfoLog (<< "Sending " << response.brief());
-         mDum.send(response);
-
-         mDialog.makeRequest(mLastRequest, BYE);
-         InfoLog (<< "Sending " << mLastRequest.brief());
-         mDum.send(mLastRequest);
-         break;
-      }
-
+      //  same as ReceivedReinviteNoOffer case.
       case ReceivedReinvite:
+      //  same as ReceivedReinviteNoOffer case.
       case ReceivedReinviteNoOffer:
       {
          SipMessage response;
@@ -219,10 +211,10 @@ InviteSession::end()
       }
 
       case Terminated:
-         transition(Terminated);
+         // no-op.
          break;
 
-      case Undefined:
+      case default:
          assert(0);
          break;
    }
