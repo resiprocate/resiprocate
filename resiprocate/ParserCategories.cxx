@@ -145,7 +145,9 @@ Mime::parse(ParseBuffer& pb)
    pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
    pb.data(mSubType, anchor);
 
-   pb.skipWhitespace();
+   //   pb.skipWhitespace(); -- This is really a bad line - don't do it - it eat
+   //   the CRLF before the body of a message 
+
    parseParameters(pb);
 }
 
