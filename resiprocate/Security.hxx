@@ -98,7 +98,8 @@ class BaseSecurity
       bool removeUserPassPhrase(const Data& aor);
       Data getUserPassPhrase(const Data& aor) const;
 
-      void addUserPrivateKeyPEM(const Data& aor, const Data& cert);
+      void addUserPrivateKeyPEM(const Data& aor, const Data& certPEM);
+      void addUserPrivateKeyDER(const Data& aor, const Data& certDER);
       bool hasUserPrivateKey(const Data& aor) const;
       bool removeUserPrivateKey(const Data& aor);
       Data getUserPrivateKeyPEM(const Data& aor) const;
@@ -157,6 +158,7 @@ class BaseSecurity
       Data getCertDER (PEMType type, const Data& key, bool read) const;
 
       void addPrivateKeyPEM (PEMType type, const Data& key, const Data& privateKeyPEM, bool write);
+      void addPrivateKeyDER (PEMType type, const Data& key, const Data& privateKeyDER, bool write);
       bool hasPrivateKey (PEMType type, const Data& key, bool read) const;
       bool removePrivateKey (PEMType type, const Data& key, bool remove);
       Data getPrivateKeyPEM (PEMType type, const Data& key, bool read) const;
