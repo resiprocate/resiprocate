@@ -1,13 +1,15 @@
 #if !defined(RESIP_SERVERREGISTRATION_HXX)
 #define RESIP_SERVERREGISTRATION_HXX
 
+#include "BaseUsage.hxx"
+
 namespace resip
 {
 
 class ServerRegistration: public BaseUsage 
 {
    public:
-      class Handle : public DialogUsageManager::Handle
+      class Handle : public BaseUsage::Handle
       {
          public:
             // throws if no session 

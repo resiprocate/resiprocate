@@ -10,7 +10,7 @@ ClientSubscription::matches(const SipMessage& subOrNotify)
 }
 
 ClientSubscription::Handle::Handle(DialogUsageManager& dum)
-   : DialogUsageManager::Handle(dum)
+   : BaseUsage::Handle(dum)
 {}
 
 ClientSubscription*

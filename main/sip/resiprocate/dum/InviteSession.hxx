@@ -1,18 +1,17 @@
 #if !defined(RESIP_INVITESESSION_HXX)
 #define RESIP_INVITESESSION_HXX
 
-#include "resiprocate/sam/BaseUsage.hxx"
+#include "BaseUsage.hxx"
 
 namespace resip
 {
 
 class SdpContents;
-class DialogUsageManager;
 
 class InviteSession : public BaseUsage
 {
    public:
-      class Handle : public DialogUsageManager::Handle
+      class Handle : public BaseUsage::Handle
       {
          public:
             // throws if no session 

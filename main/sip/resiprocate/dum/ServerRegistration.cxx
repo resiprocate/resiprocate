@@ -1,7 +1,7 @@
 #include "ServerRegistration.hxx"
 
 ServerRegistration::Handle::Handle(DialogUsageManager& dum)
-   : DialogUsageManager::Handle(dum)
+   : BaseUsage::Handle(dum)
 {}
 
 ServerRegistration* 
