@@ -10,26 +10,26 @@
 
 #ifdef NO_DEBUG
 // Suppress debug loging at compile time
-#define DebugLog(__VA_ARGS__ )
+#define DebugLog(...)
 #else
-#define DebugLog(__VA_ARGS__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, __VA_ARGS__ )
+#define DebugLog(...) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, ...)
 #endif
 
-#define CritLog(__VA_ARGS__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, __VA_ARGS__ )
+#define CritLog(...) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, __VA_ARGS__)
 
-#define ErrLog(__VA_ARGS__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, __VA_ARGS__ )
+#define ErrLog(...) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, __VA_ARGS__)
 
-#define WarningLog(__VA_ARGS__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, __VA_ARGS__ )
+#define WarningLog(...) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, __VA_ARGS__)
 
-#define InfoLog(__VA_ARGS__) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, __VA_ARGS__ )
+#define InfoLog(...) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, __VA_ARGS__)
 
 // do/while allows a {} block in an expression
-#define GenericLog(system__, level__,  __VA_ARGS__)                     \
+#define GenericLog(system__, level__,  ...)                     \
 do                                                              \
 {                                                               \
   if (Vocal2::GenericLogImpl::isLogging(level__))               \
@@ -63,20 +63,20 @@ do                                                              \
 // Suppress debug loging at compile time
 #define DebugLog(arg__, ...)
 #else
-#define DebugLog(arg__, ...) \
+#define DebugLog(...) \
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, __VA_ARGS__ )
 #endif
 
-#define CritLog(arg__, ...) \
+#define CritLog(...) \
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, __VA_ARGS__ )
 
-#define ErrLog(arg__, ...) \
+#define ErrLog( ...) \
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, __VA_ARGS__ )
 
-#define WarningLog(arg__, ...) \
+#define WarningLog(...) \
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, __VA_ARGS__ )
 
-#define InfoLog(arg__, ...) \
+#define InfoLog(...) \
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, __VA_ARGS__ )
 
 // do/while allows a {} block in an expression
