@@ -22,7 +22,7 @@
 namespace resip
 {
 
-#if !defined(__SUNPRO_CC)
+#if !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
 /// Completely generic insert function
 template <class T>
 std::ostream&
@@ -60,6 +60,7 @@ insert(std::ostream& s, const C<T>& c)
 }
 #endif // WIN32
 
+#if !defined(__INTEL_COMPILER)
 template <class K, class C>
 std::ostream&
 insert(std::ostream& s, const std::set <K, C>& c)
@@ -78,7 +79,7 @@ insert(std::ostream& s, const std::set <K, C>& c)
    s << "]";
    return s;
 }
-
+#endif
 
 // HashMap
 #if defined(HASH_MAP_NAMESPACE)
@@ -159,7 +160,7 @@ class InserterClass
       const T& _t;
 };
 
-#if !defined(__SUNPRO_CC)
+#if !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
 
 /// Function to allow an Inserter to be used directly with a stream
 template <class T>
