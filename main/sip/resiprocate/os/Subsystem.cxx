@@ -11,6 +11,7 @@ const Subsystem Subsystem::SIP("RESIP");    // SIP Stack / Parser
 const Subsystem Subsystem::TEST("RESIP:TEST");
 const Subsystem Subsystem::TRANSACTION("RESIP:TRANSACTION");
 const Subsystem Subsystem::TRANSPORT("RESIP:TRANSPORT");
+const Subsystem Subsystem::STATS("RESIP:STATS");
 const Subsystem Subsystem::NONE("UNDEFINED");
 
 std::ostream& 
