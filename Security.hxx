@@ -3,7 +3,6 @@
 
 #include <map>
 
-
 #ifdef USE_SSL
 #include <openssl/evp.h>
 #include <openssl/x509.h>
