@@ -24,3 +24,7 @@ int ares_local_query(ares_channel channel, const char *name, int dnsclass,
    return 0;
 }
 
+void ares_local_process_requests()
+{
+  return;
+}

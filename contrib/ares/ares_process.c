@@ -67,9 +67,9 @@ void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
   read_udp_packets(channel, read_fds, now);
   process_timeouts(channel, now);
 
-  /* See if our local pseudo-domain has any results. */
+  /* See if our local pseudo-db has any results. */
   /* Querying this only on timeouts is OK (is not high-performance) */
-  //ares_local_process_requests();
+  ares_local_process_requests();
 }
 
 /* If any TCP sockets select true for writing, write out queued data
