@@ -20,7 +20,7 @@
 #include "sip2/sipstack/Preparse.hxx"
 #include "sip2/util/compat.hxx"
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
 
 using namespace std;
 using namespace Vocal2;
