@@ -4,11 +4,12 @@
 #include <sipstack/TimerQueue.hxx>
 #include <sipstack/TimerMessage.hxx>
 #include <util/Logger.hxx>
+#include <util/Inserter.hxx>
 
 using namespace Vocal2;
+using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
-
 
 TimerQueue::TimerQueue(Fifo<Message>& fifo) : mFifo(fifo)
 {
@@ -29,13 +30,18 @@ TimerQueue::process()
 {
    // get the set of timers that have fired and insert TimerMsg into the fifo
 
-   Timer now(Timer::getTimeMs());
-   for (std::multiset<Timer>::iterator i=mTimers.begin(); 
-        i != mTimers.upper_bound(now); i++)
+   Timer now(0);
+   DebugLog(<< "now = " << now);
+   DebugLog(<< "begin = " << *mTimers.begin());
+   DebugLog(<< "upper bound now = " << *mTimers.upper_bound(now));
+   DebugLog(<< "end = " << *mTimers.end());
+   for (std::multiset<Timer>::iterator i = mTimers.begin(); 
+        i != mTimers.upper_bound(now);)
    {
       TimerMessage* t = new TimerMessage(i->mTransactionId, i->mType, i->mDuration);
       DebugLog (<< "Adding timer to fifo: " << " tid=" << i->mTransactionId << " type=" << i->mType);
       mFifo.add(t);
+      mTimers.erase(i++);
    }
 }
 
@@ -46,6 +52,12 @@ TimerQueue::run()
    // for the thread
 }
 
+ostream& 
+Vocal2::operator<<(ostream& str, const TimerQueue& tq)
+{
+   str << "TimerQueue[" << Inserter(tq.mTimers) << "]" << endl;
+   return str;
+}
 
 
 /* ====================================================================
