@@ -103,7 +103,7 @@ main(int argc, char* argv[])
       cerr << argv[0] << " LOG_LEVEL TARGET_URI" << endl;
       exit(-1);
    } 
-   Log::initialize(Log::COUT, Log::toLevel(argv[1]), argv[0]);
+   Log::initialize(Log::Cout, Log::toLevel(argv[1]), argv[0]);
 
    NameAddr target(argv[2]);
 
