@@ -50,7 +50,9 @@ class Transport
       
       virtual void send( const sockaddr_in& address, const  char* buffer, size_t length)=0; //, TransactionId txId) = 0;
 
-      virtual void process() = 0 ;
+      virtual void process(fd_set* fdSet=NULL) = 0 ;
+	
+	virtual void buildFdSet( fd_set* fdSet, int* fdSetSize );
 
       void run();               // will not return.
       

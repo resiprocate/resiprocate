@@ -16,14 +16,16 @@ class TransportSelector
 {
    public:
       TransportSelector(SipStack& stack);
-      void process();
+      void process(fd_set* fdSet);
 
       void send( SipMessage* msg );
 
       // I don't think we really need this at this level, handled one level
       // up.
       //   void send(SipMessage* msg, const Data& dest="default" );
-
+	
+	void buildFdSet( fd_set* fdSet, int* fdSetSize );
+	
    private:
 
       // this eventually will have to allow for construction and management
