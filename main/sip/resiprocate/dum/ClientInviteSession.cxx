@@ -157,7 +157,11 @@ ClientInviteSession::dispatch(const SipMessage& msg)
                {
                   InviteSession::incomingSdp(msg, offans.second);
                }
-//            sendAck(msg); !dcm! -- doesn't allow user to set answer, adorn message
+               if (mOfferState == Answered)
+               {
+                  //no late media required, so just send the ACK
+                  send(makeAck());
+               }
             }
             else if (code >= 300)
             {
