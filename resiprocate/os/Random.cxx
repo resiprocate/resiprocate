@@ -169,30 +169,19 @@ Random::getRandom(unsigned int len)
      initialize();
    }
    assert( mIsInitialized == true );
-
-   // !dlb! unnecessary copy
-   char buf[512];
-   assert( len <= sizeof(buf) );
-
-   char* p=buf;
-   unsigned int count=0;
+   assert(len < 512);
    
-   while ( count < len )
+   union 
    {
-      int data = Random::getRandom();
-
-      assert(sizeof(int) == 4 );
-      char* d = reinterpret_cast<char*>( &data );
-		
-      memcpy(p,d,sizeof(int));
-      p += sizeof(int);
-      count += sizeof(int);
+         char cbuf[512];
+         unsigned int  ibuf[512/sizeof(int)];
+   };
+   
+   for (unsigned int count=0; count<(len+sizeof(int)-1)/sizeof(int); ++count)
+   {
+      ibuf[count] = Random::getRandom();
    }
-
-   Data ret(buf,len);
-
-   assert( ret.size() == len );
-   return ret;
+   return Data(cbuf, len);
 }
 
 Data 
@@ -203,29 +192,19 @@ Random::getCryptoRandom(unsigned int len)
      initialize();
    }
    assert( mIsInitialized == true );
-
-   char buf[512];
-   assert( len <= sizeof(buf) );
-
-   char* p=buf;
-   unsigned int count=0;
+   assert(len < 512);
    
-   while ( count < len )
+   union 
    {
-     
-      int data = Random::getCryptoRandom();
-      assert(sizeof(int) == 4 );
-      char* d = reinterpret_cast<char*>( &data );
-		
-      memcpy(p,d,sizeof(int));
-      p += sizeof(int);
-      count += sizeof(int);
+         char cbuf[512];
+         unsigned int  ibuf[512/sizeof(int)];
+   };
+   
+   for (unsigned int count=0; count<(len+sizeof(int)-1)/sizeof(int); ++count)
+   {
+      ibuf[count] = Random::getCryptoRandom();
    }
-
-   Data ret(buf,len);
-
-   assert( ret.size() == len );
-   return ret;
+   return Data(cbuf, len);
 }
 
 Data 
@@ -236,8 +215,7 @@ Random::getRandomHex(unsigned int numBytes)
      initialize();
    }
    assert( mIsInitialized == true );
-   Data rand = Random::getRandom(numBytes);
-   return rand.hex();
+   return Random::getRandom(numBytes).hex();
 }
 
 Data 
@@ -248,8 +226,7 @@ Random::getCryptoRandomHex(unsigned int numBytes)
      initialize();
    }
    assert( mIsInitialized == true );
-   Data rand = Random::getCryptoRandom(numBytes);
-   return rand.hex();
+   return Random::getCryptoRandom(numBytes).hex();
 }
 
 /* ====================================================================
