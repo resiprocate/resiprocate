@@ -2,7 +2,7 @@ digraph UAC {
         rankdir=LR;
         node [shape = box]; 
 
-        Start -> Early [ label = "on1xx/onNewSession,onProvisional" ];
+        Start -> Early [ label = "on1xx/dum::onNewSession,dum::onProvisional" ];
         Start -> EarlyWithOffer [ label = "on1xx-offer/onOffer" ];
         Start -> EarlyWithAnswer [ label = "on1xx-answer/onNewSession,onAnswer,PRACK" ];
         Start -> WaitingForAnswerFromApp [ label = "on2xx-offer/onOffer" ];
@@ -68,7 +68,7 @@ digraph UAC {
         Canceled -> Terminated [ label = "on200I/BYE" ];
         // Done
 
-        Connected -> Terminated [ label = "end/BYE" ];
+        Connected -> Terminated [ label = "appEnd/BYE" ];
         Connected -> Finish [ label = "on2xxB" ];
         // Done
 
