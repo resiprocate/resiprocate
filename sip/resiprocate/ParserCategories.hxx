@@ -300,7 +300,8 @@ class Via : public ParserCategory
               mProtocolVersion(Symbols::ProtocolVersion),
               mTransport(Symbols::UDP),
               mSentHost(),
-              mSentPort(-1) {}
+              mSentPort(0) {}
+
       Via(HeaderFieldValue* hfv) : ParserCategory(hfv),
                                    mProtocolName(Symbols::ProtocolName),
                                    mProtocolVersion(Symbols::ProtocolVersion),
