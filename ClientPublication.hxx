@@ -10,13 +10,17 @@ namespace resip
 
 class ClientPublication: public BaseUsage 
 {
-
+      
    public:
       class Handle
       {
       };
-
       
+      ClientPublication(DialogUsageManager& dum, const SipMessage& pub);
+      
+      void refresh(int expiration=0);
+      void update(const Contents* body);
+      void end();
 };
  
 }
