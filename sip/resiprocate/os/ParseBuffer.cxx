@@ -12,8 +12,8 @@ const char* ParseBuffer::Whitespace = " \t\r\n";
 void
 ParseBuffer::reset(const char* pos)
 {
-   assert(pos >= mBuff && pos <= mStart);
-   mStart = pos;
+   assert(pos >= mBuff && pos <= mTraversalPtr);
+   mTraversalPtr = pos;
 }
 
 const char*
@@ -24,13 +24,13 @@ ParseBuffer::skipChar(char c)
       DebugLog (<< "Expected " << c );
       throw Exception("parse error", __FILE__, __LINE__);
    }
-   return ++mStart;
+   return ++mTraversalPtr;
 }
 
 const char* 
 ParseBuffer::skipNonWhitespace()
 {
-   while (mStart < mEnd)
+   while (mTraversalPtr < mEnd)
    {
       switch (*position())
       {
@@ -40,7 +40,7 @@ ParseBuffer::skipNonWhitespace()
          case '\n' : 
             return position();
          default : 
-            mStart++;
+            mTraversalPtr++;
       }
    }
    return position();
@@ -49,7 +49,7 @@ ParseBuffer::skipNonWhitespace()
 const char* 
 ParseBuffer::skipWhitespace()
 {
-   while (mStart < mEnd)
+   while (mTraversalPtr < mEnd)
    {
       switch (*position())
       {
@@ -58,7 +58,7 @@ ParseBuffer::skipWhitespace()
          case '\r' : 
          case '\n' : 
          {
-            mStart++;
+            mTraversalPtr++;
             break;
          }
          default : 
@@ -71,7 +71,7 @@ ParseBuffer::skipWhitespace()
 const char* 
 ParseBuffer::skipToChar(char c)
 {
-   while (mStart < mEnd)
+   while (mTraversalPtr < mEnd)
    {
       if (*position() == c)
       {
@@ -79,7 +79,7 @@ ParseBuffer::skipToChar(char c)
       }
       else
       {
-         mStart++;
+         mTraversalPtr++;
       }
    }
    return position();
@@ -100,7 +100,7 @@ bool oneOf(char c, const char* cs)
 const char* 
 ParseBuffer::skipToOneOf(const char* cs)
 {
-   while (mStart < mEnd)
+   while (mTraversalPtr < mEnd)
    {
       if (oneOf(*position(), cs))
       {
@@ -108,7 +108,7 @@ ParseBuffer::skipToOneOf(const char* cs)
       }
       else
       {
-         mStart++;
+         mTraversalPtr++;
       }
    }
    return position();
@@ -118,7 +118,7 @@ const char*
 ParseBuffer::skipToOneOf(const char* cs1,
                          const char* cs2)
 {
-   while (mStart < mEnd)
+   while (mTraversalPtr < mEnd)
    {
       if (oneOf(*position(), cs1) ||
           oneOf(*position(), cs2))
@@ -127,7 +127,7 @@ ParseBuffer::skipToOneOf(const char* cs1,
       }
       else
       {
-         mStart++;
+         mTraversalPtr++;
       }
    }
    return position();
@@ -136,11 +136,11 @@ ParseBuffer::skipToOneOf(const char* cs1,
 const char* 
 ParseBuffer::skipToEndQuote(char quote)
 {
-   while (mStart < mEnd)
+   while (mTraversalPtr < mEnd)
    {
       if (*position() == '\\')
       {
-         mStart += 2;
+         mTraversalPtr += 2;
       }
       else if (*position() == quote)
       {
@@ -148,7 +148,7 @@ ParseBuffer::skipToEndQuote(char quote)
       }
       else
       {
-         mStart++;
+         mTraversalPtr++;
       }
    }
 
@@ -163,7 +163,7 @@ ParseBuffer::data(Data& data, const char* start) const
    {
       delete[] data.mBuf;
    }
-   data.mSize = (unsigned int)(mStart - start);
+   data.mSize = (unsigned int)(mTraversalPtr - start);
    data.mBuf = const_cast<char*>(start);
    data.mCapacity = data.mSize;
    data.mMine = false;
@@ -172,7 +172,7 @@ ParseBuffer::data(Data& data, const char* start) const
 Data
 ParseBuffer::data(const char* start) const
 {
-   Data data(start, mStart - start);
+   Data data(start, mTraversalPtr - start);
    return data;
 }
 

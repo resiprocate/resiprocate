@@ -172,18 +172,18 @@ CSeqCategory::clone() const
 void
 CSeqCategory::parse(ParseBuffer& pb)
 {
-   const char* start;
-   start = pb.skipWhitespace();
+   const char* anchorPtr;
+   anchorPtr = pb.skipWhitespace();
    mSequence = pb.integer();
 
    pb.skipNonWhitespace();
-   start = pb.skipWhitespace();
+   anchorPtr = pb.skipWhitespace();
    pb.skipNonWhitespace(); // .dcm. maybe pass an arg that says throw if you
                            // don't move
-   mMethod = getMethodType(start, pb.position() - start);
+   mMethod = getMethodType(anchorPtr, pb.position() - anchorPtr);
    if (mMethod == UNKNOWN)
    {
-      pb.data(mUnknownMethodName, start);
+      pb.data(mUnknownMethodName, anchorPtr);
    }
 }
 
@@ -654,15 +654,17 @@ NameAddr::parse(ParseBuffer& pb)
 ostream&
 NameAddr::encode(ostream& str) const
 {
-   if (!mDisplayName.empty())
+   bool displayName = !mDisplayName.empty();
+    
+   if (displayName)
    {
       str << mDisplayName << Symbols::LA_QUOTE;
    }
 
-   assert(mUri != 0);
+   assert(mUri != 0); 
    mUri->encode(str);
-   
-   if (!mDisplayName.empty())
+
+   if (displayName)
    {
       str << Symbols::RA_QUOTE;
    }

@@ -9,7 +9,6 @@
 #include <sipstack/ParameterTypes.hxx>
 #include <sipstack/HeaderFieldValue.hxx>
 
-
 namespace Vocal2
 {
 class UnknownParameter;
@@ -22,8 +21,8 @@ class ParserCategory
          : mHeaderField(headerFieldValue),
            mParameters(),
            mUnknownParameters(),
-           mIsParsed(headerFieldValue->mField == 0),
-           mMine(false)
+           mMine(false),
+           mIsParsed(headerFieldValue->mField == 0)
       {}
 
       ParserCategory(const ParserCategory& rhs);
@@ -50,9 +49,8 @@ class ParserCategory
          removeParameterByEnum(paramType.getTypeNum());
       }
 
-#if 1
-	  Transport_Param::DType& param(const Transport_Param& paramType) const;
-	  User_Param::DType& param(const User_Param& paramType) const;
+      Transport_Param::DType& param(const Transport_Param& paramType) const;
+      User_Param::DType& param(const User_Param& paramType) const;
       Method_Param::DType& param(const Method_Param& paramType) const;
       Ttl_Param::DType& param(const Ttl_Param& paramType) const;
       Maddr_Param::DType& param(const Maddr_Param& paramType) const;
@@ -70,28 +68,6 @@ class ParserCategory
       Mobility_Param::DType& param(const Mobility_Param& paramType) const;
       Comp_Param::DType& param(const Comp_Param& paramType) const;
       Rport_Param::DType& param(const Rport_Param& paramType) const;
-#else
-		// old code delete this 
-      Transport_Param::Type::Type& param(const Transport_Param& paramType) const;
-	  User_Param::Type::Type& param(const User_Param& paramType) const;
-      Method_Param::Type::Type& param(const Method_Param& paramType) const;
-      Ttl_Param::Type::Type& param(const Ttl_Param& paramType) const;
-      Maddr_Param::Type::Type& param(const Maddr_Param& paramType) const;
-      Lr_Param::Type::Type& param(const Lr_Param& paramType) const;
-      Q_Param::Type::Type& param(const Q_Param& paramType) const;
-      Purpose_Param::Type::Type& param(const Purpose_Param& paramType) const;
-      Expires_Param::Type::Type& param(const Expires_Param& paramType) const;
-      Handling_Param::Type::Type& param(const Handling_Param& paramType) const;
-      Tag_Param::Type::Type& param(const Tag_Param& paramType) const;
-      ToTag_Param::Type::Type& param(const ToTag_Param& paramType) const;
-      FromTag_Param::Type::Type& param(const FromTag_Param& paramType) const;
-      Duration_Param::Type::Type& param(const Duration_Param& paramType) const;
-      Branch_Param::Type::Type& param(const Branch_Param& paramType) const;
-      Received_Param::Type::Type& param(const Received_Param& paramType) const;
-      Mobility_Param::Type::Type& param(const Mobility_Param& paramType) const;
-      Comp_Param::Type::Type& param(const Comp_Param& paramType) const;
-      Rport_Param::Type::Type& param(const Rport_Param& paramType) const;
-#endif
 
       UnknownParameter& param(const Data& param) const;
       void remove(const Data& param); 
@@ -125,8 +101,9 @@ class ParserCategory
    private:
       friend std::ostream& operator<<(std::ostream&, const ParserCategory&);
       friend class NameAddr;
-      bool mIsParsed;
       bool mMine;
+   protected: // !rk! moved mIsParsed to protected for debugging
+      bool mIsParsed;
 };
 
 std::ostream&
