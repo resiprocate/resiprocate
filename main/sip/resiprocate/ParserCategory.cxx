@@ -179,15 +179,16 @@ ParserCategory::exists(const Data& param) const
 void
 ParserCategory::parseParameters(ParseBuffer& pb)
 {
+   pb.skipWhitespace();
    while (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0])
    {
       // extract the key
-      const char* keyStart = pb.skipChar();
+      pb.skipChar();
+      const char* keyStart = pb.skipWhitespace();
       const char* keyEnd = pb.skipToOneOf(" \t\r\n;=?>");  //!dlb! @ here?
       ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
       if (type == ParameterTypes::UNKNOWN)
       {
-	 // bko -- changed this to mUnknownParameters
          mUnknownParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb));
       }
       else
@@ -195,7 +196,7 @@ ParserCategory::parseParameters(ParseBuffer& pb)
          // invoke the particular factory
          mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb));
       }
-      pb.skipToOneOf(" \t\r\n;?>");      
+      pb.skipWhitespace();
    }
 }      
 
