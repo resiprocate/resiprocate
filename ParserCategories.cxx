@@ -27,7 +27,7 @@ Token::parse()
    const char* pos = find(pstart, pstart+getHeaderField().mFieldLength, Symbols::SEMI_COLON[0]);
    mValue = Data(pstart, pos-pstart);
    DebugLog (<< "Token::parse() --> " << mValue);
-   parseParameters(pos);
+   parseParameters(pos, pos-pstart);
 }
 
 ParserCategory* 

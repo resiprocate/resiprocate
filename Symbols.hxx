@@ -10,11 +10,14 @@ class Symbols
       static const char * const DefaultSipVersion;
 
       static const char * const CRLF;
+      static const char * const SEMI_OR_EQUAL;
+      static const char * const COMMA_OR_EQUAL;
       static const char * const SPACE;
       static const char * const COLON;
       static const char * const EQUALS;
       static const char * const SEMI_COLON;
       static const char * const SLASH;
+      static const char * const DOUBLE_QUOTE;
 
       static const char * const Accept;
       static const char * const Accept_Encoding;
