@@ -345,7 +345,7 @@ SipImpApp::imInit()
 	tuIM = new TuIM(sipStack,aor,contact,callback);
 	assert(tuIM);
 
-	tuIM->setUAName( Data("SIPimp.org (win32) ver 0.2.2") );
+	tuIM->setUAName( Data("SIPimp.org (win32) ver 0.3.0") );
 
 	if ( !mOutbound.IsEmpty() )
 	{
