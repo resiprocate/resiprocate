@@ -7,7 +7,7 @@
 using namespace Vocal2;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define VOCAL_SUBSYSTEM Subsystem::CONTENTS
 
 ContentsFactory<MultipartMixedContents> MultipartMixedContents::Factory;
 
