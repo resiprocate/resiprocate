@@ -26,6 +26,9 @@ class CommandLineParser
       bool mNoV6;
       std::vector<Uri> mDomains;
       Data mCertPath;
+      bool mNoChallenge;
+      bool mNoRegistrar;
+      Data mRequestProcessorChainName;
 };
  
 }
