@@ -13,7 +13,3 @@ SubscriptionCreator::SubscriptionCreator(DialogUsageManager& dum, const NameAddr
    mLastRequest.header(h_Expires).value() =  mDum.getProfile()->getDefaultSubscriptionTime();
 }
 
-void SubscriptionCreator::dispatch(SipMessage& msg)
-{
-}
-
