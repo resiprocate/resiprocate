@@ -1,4 +1,4 @@
-
+#include <util/Logger.hxx>
 #include <util/Socket.hxx>
 
 #include <sipstack/Transport.hxx>
@@ -6,16 +6,12 @@
 
 using namespace Vocal2;
 
-Transport::TransportException::TransportException(const Data& msg, const Data& file, const int line)
+#define VOCAL_SUBSYSTEM Subsystem::SIP 
+
+Transport::Exception::Exception(const Data& msg, const Data& file, const int line) :
+   VException(msg,file,line)
 {
 }
-
-const char* 
-Transport::TransportException::what() const throw()
-{
-   return "TransportException";
-}
-
 
 Transport::Transport(int portNum, Fifo<Message>& rxFifo) :
    mPort(portNum), 
@@ -38,18 +34,25 @@ Transport::run()
       FD_SET(mFd,&fdSet); 
 
 #ifdef WIN32
-	  assert(0);
+      assert(0);
 #else
-		if ( mFd+1 > fdSetSize )
-		{	
-				fdSetSize =  mFd+1; 
-		}
+      if ( mFd+1 > fdSetSize )
+      {	
+         fdSetSize =  mFd+1; 
+      }
 #endif
 
       int  err = select(fdSetSize, &fdSet, 0, 0, 0);
       if (err == 0)
       {
-         process();
+         try
+         {
+            process();
+         }
+         catch (VException& e)
+         {
+            InfoLog (<< "Uncaught exception: " << e);
+         }
       }
       else
       {
@@ -72,14 +75,14 @@ Transport::~Transport()
 void 
 Transport::buildFdSet( fd_set* fdSet, int* fdSetSize )
 {
-	assert( fdSet );
-	assert( fdSetSize );
+   assert( fdSet );
+   assert( fdSetSize );
 	
-	FD_SET(mFd,fdSet);
-	if ( mFd <= *fdSetSize )
-	{
-		*fdSetSize = mFd+1;
-	}
+   FD_SET(mFd,fdSet);
+   if ( mFd <= *fdSetSize )
+   {
+      *fdSetSize = mFd+1;
+   }
 }
 
 
