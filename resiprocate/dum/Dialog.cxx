@@ -229,6 +229,7 @@ Dialog::dispatch(const SipMessage& msg)
          case INVITE:  // new INVITE
             if (mInviteSession == 0)
             {
+               InfoLog ( << "Dialog::dispatch  --  Created new server invite session" << msg.brief());
                mInviteSession = makeServerInviteSession(request);
             }
             mInviteSession->dispatch(request);
@@ -385,7 +386,8 @@ Dialog::dispatch(const SipMessage& msg)
                //assert (creator); // stray responses have been rejected already 
                //creator->dispatch(response); 
                // #endif!jf! 
-               
+               InfoLog ( << "Dialog::dispatch  --  Created new client invite session" << msg.brief());
+
                mInviteSession = makeClientInviteSession(response);
                mInviteSession->dispatch(response);
             }
@@ -651,13 +653,14 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
 
    request.header(h_CallId) = mCallId;
    request.header(h_Routes) = mRouteSet;
-   request.header(h_Contacts).push_front(mLocalContact);
+   request.header(h_Contacts) = mLocalContact;   
    request.header(h_CSeq).method() = method;
    request.header(h_MaxForwards).value() = 70;
 
    //must keep old via for cancel
    if (method != CANCEL)
    {
+      request.remove(h_Vias);      
       Via via;
       via.param(p_branch); // will create the branch
       request.header(h_Vias).push_front(via);
@@ -687,31 +690,21 @@ void
 Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
 {
    assert( code >= 100 );
-   response.header(h_To).param(p_tag) = mId.getLocalTag();
-   if ( (code < 300) && (code > 100) )
+   if (code < 300 && code > 100)
    {
       assert(request.isRequest());
       assert(request.header(h_RequestLine).getMethod() == INVITE ||
              request.header(h_RequestLine).getMethod() == SUBSCRIBE);
       
       assert (request.header(h_Contacts).size() == 1);
+      Helper::makeResponse(response, request, code, mLocalContact);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
-
-      Helper::makeResponse(response, request, code);
-
-      if (!request.exists(h_Contacts) && request.header(h_Contacts).size() != 1)
-      {
-         InfoLog (<< "Request doesn't have a contact header or more than one contact, so can't create dialog");
-         DebugLog (<< request);
-         throw Exception("Invalid or missing contact header in request", __FILE__,__LINE__);
-      }
-
-      assert (response.header(h_To).exists(p_tag));
    }
    else
    {
       Helper::makeResponse(response, request, code, mLocalContact);
    }
+   InfoLog ( << "Dialog::makeResponse: " << response);   
 }
 
 
