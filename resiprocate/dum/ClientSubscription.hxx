@@ -4,16 +4,21 @@
 namespace resip
 {
 
-/** @file ClientSubscription.hxx
- *   @todo This file is empty
- */
-
 class ClientSubscription: public BaseUsage
 {
   public:
     class Handle
     {
     };
+
+  void refreshNow();
+
+  private:
+
+   SubscriptionState mSubState;
+   Contents   mCurrentEventDocument;
+   UInt64     mExpirationTime;
+
 };
  
 }

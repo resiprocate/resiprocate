@@ -1,3 +1,14 @@
-/** @file SubscribeHandler.hxx
- *   @todo This file is empty
- */
+
+class SubscribeHandler {
+
+  public:
+    void onSubscribe(ServerSubscription::Handle sub, SipMessage& msg);
+
+    virtual void 
+      onNotifyReady(ServerSubscription::Handle sub,
+                              SipMessage& notify)
+      {
+        sub->sendNotify(notify);
+      }    
+
+};
