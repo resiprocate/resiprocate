@@ -2,6 +2,7 @@
 #define RESIP_REQUEST_CONTEXT_HXX 
 
 #include <vector>
+#include <iosfwd>
 #include "resiprocate/Uri.hxx"
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/ResponseContext.hxx"
@@ -74,7 +75,12 @@ class RequestContext
       void removeTopRouteIfSelf();
       
       friend class ResponseContext;
+      friend std::ostream& operator<<(std::ostream& strm, const repro::RequestContext& rc);
 };
+
+std::ostream&
+operator<<(std::ostream& strm, const repro::RequestContext& rc);
+
 
 }
 
