@@ -30,9 +30,11 @@
 #include "resiprocate/Dialog.hxx"
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/PlainContents.hxx"
+#include "resiprocate/CpimContents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/MultipartMixedContents.hxx"
+#include "resiprocate/OctetContents.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/Pidf.hxx"
@@ -535,6 +537,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
 void 
 TuIM::processMessageRequest(SipMessage* msg)
 {
+   assert( msg );
    assert( msg->header(h_RequestLine).getMethod() == MESSAGE );
    
    NameAddr contact; 
@@ -606,13 +609,29 @@ TuIM::processMessageRequest(SipMessage* msg)
 
    if ( contents )
    {
-      PlainContents* body = dynamic_cast<PlainContents*>(contents);
-      if ( body )
+      PlainContents* plain = dynamic_cast<PlainContents*>(contents);
+      if ( plain )
       {
-         assert( body );
-         const Data& text = body->text();
+         assert( plain );
+         const Data& text = plain->text();
          DebugLog ( << "got message from with text of <" << text << ">" );
                  
+         Uri from = msg->header(h_From).uri();
+         DebugLog ( << "got message from " << from );
+                  
+         assert( mCallback );
+         mCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
+         return;
+      }
+ 
+      CpimContents* cpim = dynamic_cast<CpimContents*>(contents);
+      if ( cpim )
+      {
+         assert( cpim );
+         const Data& text = cpim->text();
+         DebugLog ( << "got CPIM message from with text of <" << text << ">" );
+                 
+         // !cj! TODO - should get from out of CPIM message 
          Uri from = msg->header(h_From).uri();
          DebugLog ( << "got message from " << from );
                   
@@ -655,13 +674,32 @@ TuIM::processMessageRequest(SipMessage* msg)
                   mCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
                   return;
                }
+
+               // !cj! TODO - should deal with CPIM too 
             }
             
          }
          
          return;
       }
-      
+   
+#if 1   // !cj! TODO remove 
+      OctetContents* octets = dynamic_cast<OctetContents*>(contents);
+      if (octets)
+      {
+         assert( contents );
+         const Data& text = octets->getBodyData();
+         DebugLog ( << "got message from with text of <" << text << ">" );
+         
+         Uri from = msg->header(h_From).uri();
+         DebugLog ( << "got message from " << from );
+                  
+         assert( mCallback );
+         mCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
+         return;
+      }
+#endif
+
       // deal with it if no one else has 
       {
          InfoLog ( << "Can not handle type " << contents->getType() );
