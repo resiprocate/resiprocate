@@ -3,6 +3,7 @@
 
 namespace resip
 {
+class Data;
 
 typedef enum 
 {
@@ -11,7 +12,8 @@ typedef enum
    Pending,
    Active,
    Waiting,
-   Terminated
+   Terminated,
+   Unknown
 } SubscriptionState;
 
 typedef enum 
@@ -22,9 +24,16 @@ typedef enum
    Rejected,
    Timeout,
    Giveup,
-   NoResource,
-   Unknown
+   NoResource
 } Reason;
+
+
+const Data&
+resip::getSubscriptionStateString(SubscriptionState state);
+
+const Data&
+resip::getSubscriptionStateReasonString(Reason state);
+
 
 }
 

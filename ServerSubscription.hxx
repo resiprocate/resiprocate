@@ -49,7 +49,8 @@ class ServerSubscription : public BaseSubscription
 
       const Contents* mCurrentEventDocument;
       SipMessage mLastRequest;  //?dcm? -- enough for both subscribe and notify?
-
+      SipMessage mLastResponse;
+      
       // disabled
       ServerSubscription(const ServerSubscription&);
       ServerSubscription& operator=(const ServerSubscription&);
