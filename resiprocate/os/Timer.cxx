@@ -344,7 +344,11 @@ UInt64
 Timer::getForever()
 {
    assert( sizeof(UInt64) == 8 );
+#ifdef WIN32
+   return 18446744073709551615ui64;
+#else
    return 18446744073709551615ULL;
+#endif
 }
 
 
