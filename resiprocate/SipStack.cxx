@@ -35,12 +35,16 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) : 
-   mSecurity( pSecurity ),
+#ifdef USE_SSL
+   mSecurity( pSecurity ? pSecurity : new Security(true,true)),
+#else
+   mSecurity(0),
+#endif
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
    mAppTimers(mTUFifo),
    mStatsManager(*this),
-   mTransactionController(multiThreaded, mTUFifo, mStatsManager, stateless),
+   mTransactionController(multiThreaded, mTUFifo, mStatsManager, mSecurity, stateless),
    mStrictRouting(false),
    mShuttingDown(false)   
 {
@@ -48,12 +52,6 @@ SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) :
    Random::initialize();
    initNetwork();
 
-#ifdef USE_SSL
-   if ( !pSecurity )
-   {
-       mSecurity = new Security( true, true );
-   }
-#endif
    assert(!mShuttingDown);
 }
 
@@ -126,8 +124,7 @@ SipStack::addTlsTransport(  int port,
 {
    assert(!mShuttingDown);
    
-   bool ret = mTransactionController.addTlsTransport(port, sipDomainname, security, 
-						     version, ipInterface);
+   bool ret = mTransactionController.addTlsTransport(port, sipDomainname, version, ipInterface);
    if (ret && !ipInterface.empty()) 
    {
       addAlias(ipInterface, port);
