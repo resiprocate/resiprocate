@@ -11,6 +11,8 @@ template<class T>
 class ParserContainer : public ParserContainerBase
 {
    public:
+      ParserContainer(); // !dlb!
+       
       ParserContainer(HeaderFieldValueList* list)
          : mList(*list)
       {
@@ -22,6 +24,8 @@ class ParserContainer : public ParserContainerBase
          }
       }
    
+      ParserContainer& operator=(const ParserContainer& other);
+      
       bool empty() { return (mList.first == 0); }
    
       T& front() { return *dynamic_cast<T*>(mList.first->parserCategory); }
@@ -34,6 +38,8 @@ class ParserContainer : public ParserContainerBase
       void pop_back(T & t) { mList.pop_back(); }
 
       ParserContainer reverse();
+
+      int size() const;
    
       class Iterator
       {
