@@ -36,21 +36,14 @@ class TransactionController
       // graceful shutdown (eventually)
       void shutdown();
 
-      bool addTransport( TransportType protocol, 
-                         int port,
+      bool addTransport( TransportType protocol,
+                         int port, 
                          IpVersion version,
-                         const Data& ipInterface);
-      bool addTlsTransport( int port, 
-                            const Data& keyDir,
-                            const Data& privateKeyPassPhrase,
-                            const Data& domainname,
-                            IpVersion version,
-                            const Data& ipInterface,
-                            SecurityTypes::SSLType sslType = SecurityTypes::TLSv1);
-      bool addTlsTransport( int port, 
-                            const Data& domainname,
-                            IpVersion version,
-                            const Data& ipInterface);
+                         const Data& ipInterface , 
+                         const Data& sipDomainname ,
+                         const Data& privateKeyPassPhrase ,
+                         SecurityTypes::SSLType sslType  );
+
       bool isTUOverloaded() const;
       
       void send(SipMessage* msg);
