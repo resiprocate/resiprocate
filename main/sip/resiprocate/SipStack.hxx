@@ -76,8 +76,6 @@ private:
       
       bool mDiscardStrayResponses;
       
-   private:
-      // TransportDirector mTransportDirector;
 };
  
 }
