@@ -17,7 +17,7 @@
 using namespace Vocal2;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP 
+#define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
 
 Transport::Exception::Exception(const Data& msg, const Data& file, const int line) :
    BaseException(msg,file,line)
