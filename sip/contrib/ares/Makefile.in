@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.1 2003/06/05 00:30:31 ryker Exp $
+# $Id: Makefile.in,v 1.2 2003/06/05 00:45:45 ryker Exp $
 
 SHELL=/bin/sh
 INSTALL=@INSTALL@
@@ -26,7 +26,7 @@ OBJS=	ares__close_sockets.o ares__get_hostent.o ares__read_line.o \
 	ares_parse_ptr_reply.o ares_process.o ares_query.o ares_search.o \
 	ares_send.o ares_strerror.o ares_timeout.o
 
-all: libares.a adig ahost
+all: libares.a
 
 libares.a: ${OBJS}
 	ar cru $@ ${OBJS}
@@ -38,7 +38,7 @@ adig: adig.o libares.a
 ahost: ahost.o libares.a
 	${CC} ${LDFLAGS} -o $@ ahost.o libares.a ${LIBS}
 
-${OBJS}: ares.h ares_dns.h ares_private.h
+${OBJS}: ares.h ares_dns.h ares_compat.h ares_private.h
 
 .c.o:
 	${CC} -c ${ALL_CFLAGS} $<
@@ -53,6 +53,8 @@ install:
 	${RANLIB} ${DESTDIR}${libdir}/libares.a
 	chmod u-w ${DESTDIR}${libdir}/libares.a
 	${INSTALL} -m 444 ${srcdir}/ares.h ${DESTDIR}${includedir}
+	${INSTALL} -m 444 ${srcdir}/ares_dns.h ${DESTDIR}${includedir}
+	${INSTALL} -m 444 ${srcdir}/ares_compat.h ${DESTDIR}${includedir}
 	${INSTALL} -m 444 ${srcdir}/ares_destroy.3 ${DESTDIR}${mandir}/man3
 	${INSTALL} -m 444 ${srcdir}/ares_expand_name.3 ${DESTDIR}${mandir}/man3
 	${INSTALL} -m 444 ${srcdir}/ares_fds.3 ${DESTDIR}${mandir}/man3
