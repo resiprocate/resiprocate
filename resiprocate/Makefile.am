@@ -239,4 +239,3 @@ GPERFFLAGS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
 	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
 	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' > $@
 
-SUBDIRS = . test
