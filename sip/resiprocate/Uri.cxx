@@ -38,6 +38,9 @@ Uri::operator=(const Uri& rhs)
 class OrderUnknownParameters
 {
    public:
+	  OrderUnknownParameters() {};
+	  ~OrderUnknownParameters() {};
+
       bool operator()(const Parameter* p1, const Parameter* p2) const
       {
          return dynamic_cast<const UnknownParameter*>(p1)->getName() < dynamic_cast<const UnknownParameter*>(p2)->getName();
@@ -126,28 +129,13 @@ Uri::operator==(const Uri& other) const
    ParameterList unA = mUnknownParameters;
    ParameterList unB = other.mUnknownParameters;
 
-#ifdef WIN32
    OrderUnknownParameters orderUnknown;
 
-   unA.sort();
-   unB.sort();
-   
-   ParameterList::iterator a = unA.begin();
-   ParameterList::iterator b = unB.begin();
-#else
-   OrderUnknownParameters orderUnknown;
-
-   assert(0); // !cj! You need to initialize the orderUnkonwn variable above this line
-#if defined (__SUNPRO_CC)
-   unA.sort(); ///!Veer! Not Sure Please verify this...
-   unB.sort();
-#else
-   unA.sort(orderUnknown); // !cj! this line crashes the microsfot compiler. 
+   unA.sort(orderUnknown);  
    unB.sort(orderUnknown);
-#endif   
+ 
    ParameterList::iterator a = unA.begin();
    ParameterList::iterator b = unB.begin();
-#endif
 
    while(a != unA.end() && b != unB.end())
    {
