@@ -308,7 +308,6 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
    {
       Tuple source(destination);
       srcAddrForDest(destination,source);
-      DebugLog (<< "Transmitting " << *msg << " to " << destination << " via " << source);
 
       if (destination.transport == 0)
       {
@@ -359,6 +358,8 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
             }
          }
          
+         DebugLog (<< "Transmitting " << *msg << " to " << destination << " via " << source);
+
          Data& encoded = msg->getEncoded();
          encoded.clear();
          DataStream encodeStream(encoded);
@@ -426,6 +427,7 @@ TransportSelector::findTransport(const Tuple& search)
    std::map<Tuple, Transport*>::iterator i = mTransports.find(search);
    if (i != mTransports.end())
    {
+      DebugLog (<< "Found match: " << i->second);
       return i->second;
    }
    else
@@ -433,17 +435,21 @@ TransportSelector::findTransport(const Tuple& search)
       Tuple tuple(search);
       tuple.setAny();
       
+      DebugLog (<< "Searching for any match: " << tuple);
       std::map<Tuple, Transport*>::iterator i = mTransports.find(tuple);
       if (i != mTransports.end())
       {
+         DebugLog (<< "Found match: " << i->second);
          return i->second;
       }
       else 
       {
          // now just find a matching transport type
+         DebugLog (<< "Searching for matching type: " << tuple);         
          HashMap<int, Transport*>::iterator i = mDefaultTransports.find(int(tuple.getType()));
          if (i != mDefaultTransports.end())
          {
+            DebugLog (<< "Found match: " << i->second);
             return i->second;
          }
       }
