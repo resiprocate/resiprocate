@@ -869,12 +869,11 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    
    list<Contents*>::const_iterator i = multi->parts().begin();
    Contents* first = *i;
-   
    i++;
    assert( i != multi->parts().end() );
-   
    Contents* second = *i;
    Pkcs7SignedContents* sig = dynamic_cast<Pkcs7SignedContents*>( second );
+   
    if ( !sig )
    {
       ErrLog( << "Don't know how to deal with signature type" );
@@ -974,10 +973,31 @@ Security::uncodeSigned( MultipartSignedContents* multi,
          break;
    }
 
-   STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7, NULL/*certs*/, 0/*flags*/ );
+   STACK_OF(X509)* certs;
+   certs = sk_X509_new_null();
+   assert( certs );
+#if 1
+   // add all the public certs to the stack 
+   //  !cj! TODO - should be just the people names that match who this msg was from
+   MapConstIterator index = publicKeys.begin();
+   while ( index != publicKeys.end())
+   {
+      X509* cert = index->second;  
+      sk_X509_push(certs, cert);
+      index++;
+   }
+#endif
+
+   //flags |= PKCS7_NOINTERN;
+   //flags |= PKCS7_NOVERIFY;
+   //flags |= PKCS7_NOSIGS;
+
+   STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7,certs, flags );
+   assert( signers );
    for (int i=0; i<sk_X509_num(signers); i++)
    {
       X509* x = sk_X509_value(signers,i);
+      InfoLog(<< "Got a signer <" << i << ">" );
 
       STACK* emails = X509_get1_email(x);
 
@@ -992,12 +1012,30 @@ Security::uncodeSigned( MultipartSignedContents* multi,
       }
    }
 
-   STACK_OF(X509)* certs;
-   certs = sk_X509_new_null();
-   assert( certs );
-   
-   //   flags |= PKCS7_NOVERIFY;
-   
+#if 0 
+   STACK_OF(PKCS7_SIGNER_INFO) *sinfos;
+   PKCS7_SIGNER_INFO *si;
+   PKCS7_ISSUER_AND_SERIAL *ias; 
+   ASN1_INTEGER* asnSerial;
+   long longSerial;
+   X509_NAME* name;
+
+   sinfos = PKCS7_get_signer_info(pkcs7);
+   if ( sinfos  ) 
+   {
+      int num = sk_PKCS7_SIGNER_INFO_num(sinfos);
+      for ( int i=0; i<num; i++ )
+      { 
+         si = sk_PKCS7_SIGNER_INFO_value (sinfos, i) ;
+         ias = si->issuer_and_serial;
+         name = ias->issuer;
+         asnSerial = ias->serial;
+         longSerial = ASN1_INTEGER_get( (ASN1_INTEGER*)asnSerial );
+         InfoLog(<<"Signed with serial " << hex << longSerial );
+      }
+   }
+#endif
+
    assert( certAuthorities );
    
    switch (type)
