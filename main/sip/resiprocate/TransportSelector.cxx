@@ -427,10 +427,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
      // !ah! know it's IP addres(es) in all cases, AND it's function of the dest.
      // (imagine a synthetic message...)
 
-      Tuple tempTuple = determineSourceInterface(msg, target);
-
+      Tuple source;
       if (msg->isRequest())
       {
+         // there must be a via, use the port in the via as a hint of what
+         // port to send on
+         source = determineSourceInterface(msg, target);
 
          // would already be specified for ACK or CANCEL
          if (target.transport == 0)
@@ -441,7 +443,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             else
             {
-               target.transport = findTransport(tempTuple);
+               target.transport = findTransport(source);
             }
          }
          
@@ -457,7 +459,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             if (!topVia.sentHost().size())
             {
-               msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(tempTuple);
+               msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(source);
             }
             if (!topVia.sentPort())
             {
@@ -470,6 +472,15 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // We assume that all stray responses have been discarded, so we always
          // know the transport that the corresponding request was received on
          // and this has been copied by TransactionState::sendToWire into target.transport
+         assert(target.transport);
+         if (target.transport->getTuple().isAnyInterface())
+         {
+            source = determineSourceInterface(msg, target);
+         }
+         else
+         {
+            source = target.transport->getTuple();
+         }
       }
       else
       {
@@ -488,7 +499,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                // transport used. Otherwise, leave it as is. 
                if (contact.uri().host().empty())
                {
-                  contact.uri().host() = DnsUtil::inet_ntop(tempTuple);
+                  contact.uri().host() = DnsUtil::inet_ntop(source);
                   contact.uri().port() = target.transport->port();
                   if (target.transport->transport() != UDP)
                   {
@@ -507,7 +518,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          assert(!msg->getEncoded().empty());
          DebugLog (<< "Transmitting to " << target
-		   << " via " << tempTuple << endl << encoded.escaped());
+		   << " via " << source << endl << encoded.escaped());
          target.transport->send(target, encoded, msg->getTransactionId());
       }
       else
