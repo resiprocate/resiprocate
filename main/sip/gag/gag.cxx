@@ -182,12 +182,16 @@ main (int argc, char **argv)
     }
 
 #ifndef WIN32
-	// !ah! not portable to windows -- works for now.
-    if (getppid() != parent)
-    {
-      ErrLog(<<"Unsupervised child -- crying, exiting.");
-      shutdown(&sipStack);
-      exit(-1);
+    /* !ah! not portable to windows -- works for now. */
+    { 
+      pid_t current_parent = getppid();
+      if (current_parent != parent)
+      {
+        ErrLog(<<"Unsupervised child found [" << current_parent << "] while looking for ["
+  		                            << parent << "] -- crying, exiting.");
+        shutdown(&sipStack);
+        exit(-1);
+      }
     }
 #endif
 
