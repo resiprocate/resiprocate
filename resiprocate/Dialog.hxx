@@ -55,7 +55,7 @@ class Dialog
       void updateRequest(SipMessage& msg);
 
       // For UAS, make a response and create the dialog if necessary
-      void makeResponse(SipMessage& request, SipMessage& response, int code=200);
+      void makeResponse(const SipMessage& request, SipMessage& response, int code=200);
 
       bool isCreated() const { return mCreated; };
       
