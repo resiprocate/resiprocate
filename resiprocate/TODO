@@ -1,4 +1,4 @@
-$Id: TODO,v 1.5 2002/11/05 06:49:00 davidb Exp $
+$Id: TODO,v 1.6 2002/11/06 00:33:36 alan Exp $
 
 Change the names of all the parser "components" to "integerparser" or
 something like that
@@ -7,8 +7,6 @@ Complete the pre parser stuff so that transport can do framented messages
 
 Change name of HeadersTy
 
-
-Should the Via set the default transport to UDP? 
 
 need to add quote interface to DataParameter -- particularly, fetching
 a parameter should return DataParameter& rather than Data .  the
@@ -42,3 +40,6 @@ Missing classes of headers:
 	(someone should check these after done)
 
 Make Symbols Data
+
+Convert Data to unsigned char interface.
+
