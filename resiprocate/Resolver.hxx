@@ -14,44 +14,23 @@ class Via;
 class Resolver
 {
    public:
-      // specified like sip.vovida.org:5060
-      Resolver(const Data& hostPort);
-
-      // separated into host and port
-      Resolver(const Data& host, int port, Transport::Type protocol);
-
       // 
       Resolver(const Uri& url);
-      Resolver(const Via& via);
-
       
-      struct Tuple
-      {
-            struct sockaddr_in ipv4;
-            int port;
-            Data transport;
-      };
-      // this will convert the host specification into a list of Tuples using
-      // the rules in section 4 of rfc3263
-      // !jf! need to deal with ipv6 in here somewhere
-      //list<Tuple> getNextHop();
-
       // return true if data of the form a.b.c.d
       static bool isIpAddress(const Data& data);
 
       // return the localhostname (posix: gethostname())
       static Data getHostName();
       
-      std::list<Tuple>::const_iterator mCurrent;
+      std::list<Transport::Tuple>::const_iterator mCurrent;
 
    private:
       void lookupARecords();
-
+      std::list<Transport::Tuple> mNextHops;
+      Transport::Type mTransport;
       Data mHost;
       int mPort;
-      Data mTransport;
-
-      std::list<Tuple> mNextHops;
 };
 
  
