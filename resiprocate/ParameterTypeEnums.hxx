@@ -57,6 +57,10 @@ class ParameterTypes
          qopOptions,
          qopFactory,
 
+         dAlg,
+         dQop,
+         dVer,
+
          UNKNOWN,
          MAX_PARAMETER
       };
