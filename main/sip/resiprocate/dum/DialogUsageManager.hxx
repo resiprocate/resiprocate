@@ -135,7 +135,8 @@ class DialogUsageManager
       friend class ServerInviteSession;
       friend class InviteSession;
       friend class BaseUsage::Handle;
-
+      friend class DialogSet;
+      
       SipMessage& makeNewSession(BaseCreator* creator);
 
       void addTimer(DumTimeout::Type type,
