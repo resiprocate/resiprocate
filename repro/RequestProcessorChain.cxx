@@ -2,7 +2,7 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include <ostream>
+#include <iostream>
 
 #include "resiprocate/SipMessage.hxx"
 #include "repro/RequestProcessorChain.hxx"

@@ -30,7 +30,7 @@ RequestContext::RequestContext(Proxy& proxy,
 
 RequestContext::~RequestContext()
 {
-   InfoLog (<< "RequestContext::~RequestContext() " << this);
+   DebugLog (<< "RequestContext::~RequestContext() " << this);
    if (mOriginalRequest != mCurrentEvent)
    {
       delete mOriginalRequest;
@@ -82,7 +82,9 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
       }
       else
       {
+         //InfoLog (<< "process monkeys for " << *this);
          mRequestProcessorChain.handleRequest(*this); 
+         //InfoLog (<< "done process monkeys for " << *this);
       }
    }
    else if (sip && sip->isResponse())
@@ -93,11 +95,16 @@ RequestContext::process(std::auto_ptr<resip::Message> msg)
    }
    else
    {
-      mRequestProcessorChain.handleRequest(*this);       
+      if (mRequestProcessorChain.handleRequest(*this) == RequestProcessor::WaitingForEvent)
+      {
+         InfoLog (<< "Waiting for event on " << *this);
+         return;
+      }
    }
 
    if (!mHaveSentFinalResponse)
    {
+      InfoLog (<< "process candidates for " << *this);
       mResponseContext.processCandidates();
    }
 }
