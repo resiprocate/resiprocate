@@ -13,6 +13,13 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
+// typedef not available for method naming, sigh
+#if defined(__SUNPRO_CC)
+  typedef IntrusiveListElement<Connection*> lruList;
+  typedef IntrusiveListElement1<Connection*> readList;
+  typedef IntrusiveListElement2<Connection*> writeList;
+#endif
+
 // smallest time to reuse
 const UInt64 
 ConnectionManager::MinLastUsed = 1;
