@@ -1,11 +1,69 @@
 #if !defined(RESIP_RESPONSE_CONTEXT_HXX)
 #define RESIP_RESPONSE_CONTEXT_HXX 
 
+#include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/NameAddr.hxx"
+
+namespace resip
+{
+class SipMessage;
+}
+
 namespace repro
 {
-  class ResponseContext
-  {
-  };
+
+class RequestContext;
+
+class ResponseContext
+{
+   public:
+      ResponseContext(RequestContext& parent);
+
+      /// Called by RequestContext after every event other than a response
+      void processEvent();
+      void processCandidates();
+      void processPendingTargets();
+      
+      /// Called by RequestContext after every response is received
+      void processResponse(const resip::SipMessage& response);
+      
+   private:
+      RequestContext& mRequestContext;
+      
+      class CompareStatus  : public std::binary_function<const resip::SipMessage&, const resip::SipMessage&, bool>  
+      {
+         public:
+            bool operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const;
+      };      
+      
+      class CompareQ  : public std::binary_function<const resip::NameAddr&, const resip::NameAddr&, bool>
+      {
+         public:
+            bool operator()(const resip::NameAddr& lhs, const resip::NameAddr& rhs) const;
+      };      
+      
+      typedef std::set<resip::NameAddr, CompareQ> PendingTargetSet;
+      PendingTargetSet mPendingTargetSet;
+
+      HashSet<resip::NameAddr> mTargetSet;
+      
+      typedef enum
+      {
+         PendingTarget,
+         Trying,
+         Proceeding,
+         WaitingToCancel
+      } Status;
+
+      struct Branch
+      {
+            Status status;
+            resip::Uri uri;
+      };
+      typedef HashMap<resip::Data, Branch> TransactionMap;
+      TransactionMap mClientTransactions;
+};
+
 }
 #endif
 
