@@ -403,7 +403,11 @@ GenericURI::encode(std::ostream& str) const
 //====================
 Via::Via(const Via& rhs)
    : ParserCategory(rhs),
-     mSentPort(0)
+     mProtocolName(rhs.mProtocolName),
+     mProtocolVersion(rhs.mProtocolVersion),
+     mTransport(rhs.mTransport),
+     mSentHost(rhs.mSentHost),
+     mSentPort(rhs.mSentPort) // !jf!
 {
 }
 

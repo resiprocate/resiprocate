@@ -302,7 +302,12 @@ class Via : public ParserCategory
               mTransport(Symbols::UDP),
               mSentHost(),
               mSentPort(-1) {}
-      Via(HeaderFieldValue* hfv) : ParserCategory(hfv),mProtocolName(),mProtocolVersion(),mTransport(),mSentHost(),mSentPort(-1) {}
+      Via(HeaderFieldValue* hfv) : ParserCategory(hfv),
+                                   mProtocolName(Symbols::ProtocolName),
+                                   mProtocolVersion(Symbols::ProtocolVersion),
+                                   mTransport(Symbols::UDP), // !jf! 
+                                   mSentHost(),
+                                   mSentPort(-1) {}
       Via(const Via&);
       Via& operator=(const Via&);
 
