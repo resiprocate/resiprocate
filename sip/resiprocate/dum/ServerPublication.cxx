@@ -74,18 +74,25 @@ ServerPublication::dispatch(const SipMessage& msg)
          delete this;
          return;
       }
+      std::pair< std::auto_ptr<Contents>, std::auto_ptr<SecurityAttributes> > csa =
+         Helper::extractFromPkcs7(msg, mDum.getSecurity());
       if (msg.getContents())
       {
-         handler->onUpdate(getHandle(), mEtag, msg, mExpires);         
+         handler->onUpdate(getHandle(), mEtag, msg, 
+                           csa.first.get(), csa.second.get(), mExpires);         
       }
       else
       {
-         handler->onRefresh(getHandle(), mEtag, msg, mExpires);
+         handler->onRefresh(getHandle(), mEtag, msg, 
+                            csa.first.get(), csa.second.get(), mExpires);
       }
    }
    else
    {
-      handler->onInitial(getHandle(), mEtag, msg, mExpires);
+      std::pair< std::auto_ptr<Contents>, std::auto_ptr<SecurityAttributes> > csa =
+         Helper::extractFromPkcs7(msg, mDum.getSecurity());
+      handler->onInitial(getHandle(), mEtag, msg, 
+                         csa.first.get(), csa.second.get(), mExpires);
    }
 }
 
