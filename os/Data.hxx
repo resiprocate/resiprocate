@@ -2,7 +2,7 @@
 #define RESIP_DATA_HXX 
 
 static const char* const resipDataHeaderVersion =
-   "$Id: Data.hxx,v 1.67 2003/07/03 19:07:29 ryker Exp $";
+   "$Id: Data.hxx,v 1.68 2003/08/13 20:34:39 davidb Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -16,7 +16,6 @@ namespace resip
 
 class Data 
 {
-      
    public:
       typedef size_t size_type;
 
@@ -33,7 +32,14 @@ class Data
       explicit Data(double value, int precision = 4);
       explicit Data(bool value);
       explicit Data(char c);
-      
+
+      // contruct a Data that shares memory; the passed characters MUST be
+      // immutable and in a longer lasting scope
+      enum  ShareEnum {Share};
+      Data(ShareEnum, const char* buffer, int length);
+      Data(ShareEnum, const char* buffer);
+      Data(ShareEnum, const Data& staticData);
+
       ~Data();
 
       // convert from something to a Data -- requires 'something' has operator<<
@@ -123,7 +129,7 @@ class Data
    private:
       char* initializeHack();
       
-      Data(const char* buffer, int length, bool);
+      Data(const char* buffer, int length, bool); // deprecated: use // Data(ShareEnum ...)
 
       // copy if not mine
       void own() const
