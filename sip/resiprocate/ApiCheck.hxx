@@ -8,9 +8,11 @@
 
 #if !defined(RESIP_API_CHECK_HXX)
 #define RESIP_API_CHECK_HXX
-
+#if defined(WIN32)
+#include <stddef.h>
+#else
 #include <unistd.h>
-
+#endif
 namespace resip
 {
 class ApiCheck
