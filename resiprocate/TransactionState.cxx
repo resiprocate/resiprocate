@@ -203,6 +203,7 @@ TransactionState::process(TransactionController& controller)
             if (!tu && sip->isRequest() && 
                 sip->header(h_RequestLine).getMethod() != ACK)
             {
+               InfoLog( << "No TU found for message: " << sip->brief());               
                SipMessage* noMatch = Helper::makeResponse(*sip, 500);
                Tuple target(sip->getSource());
                delete sip;
