@@ -43,6 +43,7 @@ Headers::isCommaTokenizing(Type type)
       Headers::CommaTokenizing[Headers::Proxy_Require] = true;
       Headers::CommaTokenizing[Headers::Record_Route] = true;
       Headers::CommaTokenizing[Headers::Reply_To] = true;
+      Headers::CommaTokenizing[Headers::Refer_To] = true;
       Headers::CommaTokenizing[Headers::Require] = true;
       Headers::CommaTokenizing[Headers::Retry_After] = false;
       Headers::CommaTokenizing[Headers::Route] = true;
@@ -254,6 +255,7 @@ Headers::getHeaderType(const char* name, int len)
             }
             return UNKNOWN;
          }
+         // !dlb! missing Refer-To
          case IntVal_In_R :
          {
             if (strncasecmp(name, Symbols::In_Reply_To, len) == 0)
@@ -432,6 +434,7 @@ MultiHeader<Headers::Route> Vocal2::h_Routes;
 MultiHeader<Headers::Contact> Vocal2::h_Contacts;
 Header<Headers::From> Vocal2::h_From;
 Header<Headers::Reply_To> Vocal2::h_Reply_To;
+Header<Headers::Refer_To> Vocal2::h_Refer_To;
 Header<Headers::To> Vocal2::h_To;
 Header<Headers::Organization> Vocal2::h_Organization;
 Header<Headers::Server> Vocal2::h_Server;
