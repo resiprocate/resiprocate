@@ -111,6 +111,8 @@ class SipStack : public ProcessNotifier::Handler
       void sendTo(const SipMessage& msg, const Uri& uri);
       void sendTo(const SipMessage& msg, const Tuple& tuple);
 
+      void postMS(const Message& message, unsigned int ms);
+
       // makes the message available to the TU later
       void post(const Message& message,
                 unsigned int secondsLater);
