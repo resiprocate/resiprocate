@@ -13,8 +13,8 @@ class TransactionUserMessage;
 class TuSelector
 {
    public:
-      TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
-         mFallBackFifo(fallBackFifo) {}
+      TuSelector(TimeLimitFifo<Message>& fallBackFifo);
+      
       void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
       bool messageAvailable() const;
       unsigned int size() const;      
@@ -42,6 +42,7 @@ class TuSelector
       typedef std::vector<Item> TuList;
       TuList mTuList;
       TimeLimitFifo<Message>& mFallBackFifo;
+      bool mTuSelectorMode;
 };
 }
 

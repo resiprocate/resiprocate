@@ -6,6 +6,12 @@
 
 using namespace resip;
 
+TuSelector::TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
+   mFallBackFifo(fallBackFifo) ,
+   mTuSelectorMode(false)
+{
+}
+
 void
 TuSelector::process(TransactionUserMessage* msg)
 {
@@ -39,30 +45,45 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
 bool
 TuSelector::wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const
 {
-   for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
+   if (mTuSelectorMode)
    {
-      if (!it->shuttingDown && it->tu->wouldAccept(usage))
+      for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
       {
-         return true;
+         if (!it->shuttingDown && it->tu->wouldAccept(usage))
+         {
+            return true;
+         }
       }
+      return false;
    }
-   return false;   
+   else
+   {
+      return mFallBackFifo.wouldAccept(usage);
+   }
 }
       
 unsigned int 
 TuSelector::size() const      
 {
-   unsigned int total=0;   
-   for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
+   if (mTuSelectorMode)
    {
-      total += it->tu->size();
+      unsigned int total=0;   
+      for(TuList::const_iterator it = mTuList.begin(); it != mTuList.end(); it++)
+      {
+         total += it->tu->size();
+      }
+      return total;
    }
-   return total;   
+   else
+   {
+      return mFallBackFifo.size();
+   }
 }
 
 void 
 TuSelector::registerTransactionUser(TransactionUser& tu)
 {
+   mTuSelectorMode = true;
    mTuList.push_back(Item(&tu));
 }
 
