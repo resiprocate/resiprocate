@@ -89,12 +89,14 @@ DnsResolver::lookup(const Data& transactionId, const Via& via)
       if (via.exists(p_rport))
       {
          lookupARecords(transactionId, via.param(p_received), via.param(p_rport).value(), transport);
+         // try with via.sentPort() too, even if via.exists(p_rport)?
       }
       else
       {
          if (via.sentPort())
          {
             lookupARecords(transactionId, via.param(p_received), via.sentPort(), transport);
+            // try with default port too, even if via.sentPort()?
          }
          else
          {
@@ -110,6 +112,7 @@ DnsResolver::lookup(const Data& transactionId, const Via& via)
    if (via.sentPort())
    {
       lookupARecords(transactionId, target, via.sentPort(), transport);
+      // try with default port too, even if via.sentPort()?
    }
    else
    {
