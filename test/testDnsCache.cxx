@@ -214,6 +214,9 @@ void MyDnsSink::onDnsResult(const DNSResult<DnsAAAARecord>& result)
    cout << endl;
 }
 
+
+// NOTE: In order to run this test, you need to change the USE_LOCAL_DNS define in
+// ExternalDnsFactory.cxx.
 main(int argc, char* argv[])
 {
    {
