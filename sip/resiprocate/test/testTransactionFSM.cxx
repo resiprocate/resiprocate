@@ -309,11 +309,13 @@ processInject()
 	// sendToWire() is a helper function for TestTransport stuff.
 	// sendToWire(start);
 	SipMessage* message = Helper::makeMessage(start, true);
+	assert(message);
 	client->mStateMacFifo.add(message);
     }
     else
     {
 	SipMessage* message = Helper::makeMessage(start, false);
+	assert(message);
 	client->send(*message);
     }
 }
@@ -494,7 +496,7 @@ main(int argc, char *argv[])
 
     client = new SipStack();
     assert(client);
-    client->addTransport(Transport::TestUnreliable, 5060);
+    client->addTransport(Transport::TestUnreliable, 1234);
     FdSet clientFdSet;
 
     signal(SIGALRM, processTimeouts);
