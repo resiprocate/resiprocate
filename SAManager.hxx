@@ -26,7 +26,7 @@ class SAManager
 
       void addHandler(MethodTypes&, OutOfDialogHandler*);
       
-      InvSessionCreator makeInvSession(const Uri& aor);
+      InvSessionCreator makeInvSession(const Uri& aor, SdpContents* initial);
       SubscriptionCreator makeSubscription(const Uri& aor, const Data& eventType);
       SubscriptionCreator makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
       PublicationCreator makePublication(const Uri& aor, const Data& eventType);
@@ -40,6 +40,9 @@ class SAManager
       RegistrationCreator makeRegistration(BaseSession&, const Uri& aor);
       
    private:
+      DialogImpl& findOrCreateDialog(SipMessage* msg);
+      DialogImpl& findOrCreateDialog(DialogId id);
+
       Profile* mProfile;
       RedirectManager* mRedirectManager;
       ClientAuthManager* mClientAuthManager;
