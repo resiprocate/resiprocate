@@ -68,6 +68,17 @@ main()
   cout << "decoded: '" << decoded << "'" << endl;
 
 
+  testData = Data("1");
+
+  encoded =    
+     Base64Coder::encode(testData);
+
+  decoded = Base64Coder::decode(encoded);
+
+  cout << "encoded: '" << encoded << "'" << endl;
+  cout << "decoded: '" << decoded << "'" << endl;
+
+
   int rVal = 0; // test return val
   for(int i=1;i<320;i++)
   {
@@ -84,9 +95,9 @@ main()
 
      Data decoded = Base64Coder::decode(coded);
 
-     assert(originalData->size() == decoded.size());
-
      showData(decoded);
+
+     assert(originalData->size() == decoded.size());
 
      cout << "encoded: " << coded << endl;
      

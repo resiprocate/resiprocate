@@ -148,7 +148,7 @@ class Data
       Data base64decode() const;
 
       /// return base64 encode as specified in RFC 3548
-      Data base64encode() const;
+      Data base64encode(bool useUrlSafe=false) const;
 
       static size_t rawHash(const char* c, size_t size);
       size_t hash() const;
