@@ -26,7 +26,7 @@ int main()
    for (DnsResolver::TupleIterator ti = myMsg->begin();
         ti != myMsg->end(); ti++)
    {
-      std::cerr << "--> Driver result: host=" << inet_ntoa((*ti).ipv4.sin_addr)
+      std::cerr << "--> Driver result: host=" << inet_ntoa((*ti).ipv4)
                 << " port=" << (*ti).port
                 << " transport=" << (*ti).transport << std::endl;
       
@@ -46,9 +46,6 @@ int main()
    for (DnsResolver::TupleIterator ti = myMsg->begin();
         ti != myMsg->end(); ti++)
    {
-      std::cerr << "--> Driver result: host=" << inet_ntoa((*ti).ipv4.sin_addr)
-                << " port=" << (*ti).port
-                << " transport=" << (*ti).transport << std::endl;
-      
+      std::cerr << "--> Driver result: " << *ti << std::endl;
    }
 }
