@@ -8,7 +8,7 @@ namespace resip
 
 class Data;
 
-class DataBuffer : public std::streambuf 
+class DataBuffer : public std::streambuf
 {
    public:
       DataBuffer(Data& str);
@@ -32,33 +32,33 @@ class DataBuffer : public std::streambuf
 // result contains the encoded message
 // -- may be larger than initially allocated
 
-class DataStream : public std::iostream
+class DataStream : private DataBuffer, public std::iostream
 {
    public:
       DataStream(Data& str);
       ~DataStream();
 
    private:
-      DataBuffer mStreambuf;
+      //DataBuffer mStreambuf;
 };
 
-class iDataStream : public std::istream 
+class iDataStream : private DataBuffer, public std::istream
 {
    public:
       iDataStream(Data& str);
       ~iDataStream();
       
    private:
-      DataBuffer mStreambuf;
+      //DataBuffer mStreambuf;
 };
 
-class oDataStream : public std::ostream {
+class oDataStream : private DataBuffer, public std::ostream {
    public:
       oDataStream(Data& str);
       ~oDataStream();
 
    private:
-      DataBuffer mStreambuf;
+      //DataBuffer mStreambuf;
 };
 
 }
