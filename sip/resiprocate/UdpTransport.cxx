@@ -168,7 +168,7 @@ UdpTransport::process(FdSet& fdset)
 
    if ( !mPreparse.isHeadersComplete() )
    {
-      InfoLog(<<"Rejecting datagram as unparsable / fragmented.");
+      InfoLog(<<"Rejecting datagram as unparsable / fragmented from " << tuple);
       DebugLog(<< Data(buffer, len));
       delete message; 
       message=0;
@@ -190,7 +190,7 @@ UdpTransport::process(FdSet& fdset)
                                    &unprocessedCharPtr) !=
                                                       MsgHeaderScanner::scrEnd)
    {
-      InfoLog(<<"Preparse Rejecting datagram as unparsable / fragmented.");
+      InfoLog(<<"Preparse Rejecting datagram as unparsable / fragmented from " << tuple);
       DebugLog(<< Data(buffer, len));
       delete message; 
       message=0; 
