@@ -1,3 +1,4 @@
+#include <cassert>
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/IntrusiveListElement.hxx"
 
