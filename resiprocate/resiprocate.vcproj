@@ -228,6 +228,9 @@
 				RelativePath="DnsResolver.cxx">
 			</File>
 			<File
+				RelativePath="os\DnsUtil.cxx">
+			</File>
+			<File
 				RelativePath="Embedded.cxx">
 			</File>
 			<File
@@ -508,6 +511,9 @@
 				RelativePath="DnsResult.hxx">
 			</File>
 			<File
+				RelativePath="os\DnsUtil.hxx">
+			</File>
+			<File
 				RelativePath="Embedded.hxx">
 			</File>
 			<File
@@ -769,6 +775,9 @@
 				RelativePath="os\compat.hxx">
 			</File>
 			<File
+				RelativePath="resource.h">
+			</File>
+			<File
 				RelativePath="supported.hxx">
 			</File>
 			<File
@@ -778,6 +787,9 @@
 				RelativePath="os\vthread.hxx">
 			</File>
 		</Filter>
+		<File
+			RelativePath="resiprocate.rc">
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
