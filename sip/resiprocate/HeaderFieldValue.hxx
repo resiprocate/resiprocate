@@ -1,7 +1,6 @@
 #ifndef HeaderFieldValue_hxx
 #define HeaderFieldValue_hxx
 
-#include <sipstack/ParameterList.hxx>
 #include <sipstack/ParseException.hxx>
 #include <sipstack/ParameterTypes.hxx>
 
