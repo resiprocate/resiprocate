@@ -69,7 +69,7 @@ class ServerInviteSession: public InviteSession
       void dispatch(const DumTimeout& timer);
 
    private:
-      friend class DialogUsageManager;
+      friend class Dialog;
       ServerInviteSession::Handle mHandle;
       
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);

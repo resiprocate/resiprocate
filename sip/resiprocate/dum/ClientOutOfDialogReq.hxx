@@ -33,7 +33,7 @@ class ClientOutOfDialogReq : public BaseUsage
    protected:
       virtual ~ClientOutOfDialogReq();
    private:
-      friend class DialogUsageManager;
+      friend class Dialog;
       ClientOutOfDialogReq(DialogUsageManager& dum,
                            Dialog& dialog,
                            const SipMessage& req);

@@ -155,18 +155,7 @@ class DialogUsageManager
                     int seq, 
                     int altseq=-1);
 
-
-      ClientInviteSession* makeClientInviteSession(Dialog& dialog,const SipMessage& msg);
-      ClientSubscription* makeClientSubscription(Dialog& dialog,const SipMessage& msg);
-      ClientRegistration* makeClientRegistration(Dialog& dialog,const SipMessage& msg);
-      ClientPublication* makeClientPublication(Dialog& dialog, const SipMessage& msg);
-      ClientOutOfDialogReq* makeClientOutOfDialogReq(Dialog& dialog,const SipMessage& msg);
-      
-      ServerInviteSession* makeServerInviteSession(Dialog& dialog,const SipMessage& msg);
-      ServerSubscription* makeServerSubscription(Dialog& dialog,const SipMessage& msg);
-      ServerRegistration* makeServerRegistration(Dialog& dialog,const SipMessage& msg);
-      ServerPublication* makeServerPublication(Dialog& dialog,const SipMessage& msg);
-      ServerOutOfDialogReq* makeServerOutOfDialog(Dialog& dialog,const SipMessage& msg);
+      void addUsage(BaseUsage* usage);
 
       // delete the usage, remove from usage handle map
       void destroyUsage(BaseUsage* usage);
