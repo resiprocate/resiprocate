@@ -73,7 +73,7 @@ ServerInviteSession::send(SipMessage& msg)
          if (msg.header(h_CSeq).method() == INVITE)
          {
             InviteSession::send(msg);
-            if (mOfferState = Answered)
+            if (mOfferState == Answered)
             {
                mUserConnected = true;            
                mDum.mInviteSessionHandler->onConnected(getSessionHandle(), msg);
