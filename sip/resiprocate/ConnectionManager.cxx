@@ -145,10 +145,7 @@ void
 ConnectionManager::addConnection(Connection* connection)
 {
    connection->mWho.connectionId = ++mConnectionIdGenerator;
-   DebugLog (<< "ConnectionManager::addConnection() " 
-             << connection->mWho.connectionId 
-             << ":" 
-             << connection->mSocket);
+   //DebugLog (<< "ConnectionManager::addConnection() " << connection->mWho.connectionId  << ":" << connection->mSocket);
    
    mAddrMap[connection->mWho] = connection;
    mIdMap[connection->mWho.connectionId] = connection;
@@ -162,7 +159,7 @@ ConnectionManager::addConnection(Connection* connection)
 void
 ConnectionManager::removeConnection(Connection* connection)
 {
-   DebugLog (<< "ConnectionManager::removeConnection()");
+   //DebugLog (<< "ConnectionManager::removeConnection()");
 
    assert(!mReadHead->empty());
 

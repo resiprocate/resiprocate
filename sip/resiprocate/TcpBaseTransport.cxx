@@ -24,7 +24,7 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum,
    : Transport(fifo, portNum, pinterface, ipv4)
 {
    mFd = Transport::socket(TCP, ipv4);
-   DebugLog (<< "Opening TCP " << mFd << " : " << this);
+   //DebugLog (<< "Opening TCP " << mFd << " : " << this);
    
 #if !defined(WIN32)
    int on = 1;
@@ -57,7 +57,7 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum,
 
 TcpBaseTransport::~TcpBaseTransport()
 {
-   DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port()); 
+   //DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port()); 
    
    // !jf! this is not right. should drain the sends before 
    while (mTxFifo.messageAvailable()) 
@@ -141,12 +141,10 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
          assert(bytesToRead > 0);
          int bytesRead = currConnection->read(writePair.first, bytesToRead);
 
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " 
-                   << *currConnection 
-                   << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
+         //DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
          if (bytesRead == -1)
          {
-            InfoLog (<< "Closing connection bytesRead=" << bytesRead);
+            DebugLog (<< "Closing connection bytesRead=" << bytesRead);
             delete currConnection;
          }
          else if (bytesRead > 0) 
