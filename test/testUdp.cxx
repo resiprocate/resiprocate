@@ -41,10 +41,10 @@ main(int argc, char* argv[])
    cout << "Performing " << runs << " runs." << endl;
    
    Fifo<Message> txFifo;
-   UdpTransport* sender = new UdpTransport(txFifo, 5070, Data::Empty);
+   UdpTransport* sender = new UdpTransport(txFifo, 5070);
 
    Fifo<Message> rxFifo;
-   UdpTransport* receiver = new UdpTransport(rxFifo, 5080, Data::Empty);
+   UdpTransport* receiver = new UdpTransport(rxFifo, 5080);
 
    NameAddr target;
    target.uri().scheme() = "sip";
@@ -126,9 +126,10 @@ main(int argc, char* argv[])
             outstanding--;
          
             assert (received->header(h_RequestLine).uri().host() == "localhost");
-            assert (received->header(h_To).uri().host() == "127.0.0.1");
+            assert (received->header(h_To).uri().host() == "localhost");
             assert (received->header(h_From).uri().host() == "localhost");
-            assert (!received->header(h_Vias).begin()->sentHost().empty());
+            //assert (!received->header(h_Vias).begin()->sentHost().empty());
+	    assert(received->header(h_Vias).begin()->param(p_received) == "127.0.0.1");
             assert (received->header(h_Contacts).begin()->uri().host() == "localhost");
             assert (!received->header(h_CallId).value().empty());
             delete received;
