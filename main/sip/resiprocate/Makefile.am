@@ -1,4 +1,4 @@
-SUBDIRS = test
+SUBDIRS = . test
 CXX = ${DISTCC} @CXX@
 LIBTOOL = @LIBTOOL@ --tag=CXX
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I/usr/kerberos/include
