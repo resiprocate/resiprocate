@@ -118,12 +118,56 @@ ClientPublication::dispatch(const SipMessage& msg)
                return;
             }
          }
+         else if (code == 408 ||
+                  ((code == 404 ||
+                    code == 413 ||
+                    code == 480 ||
+                    code == 486 ||
+                    code == 500 ||
+                    code == 503 ||
+                    code == 600 ||
+                    code == 603) &&
+                   msg.exists(h_RetryAfter)))
+         {
+            int retryMinimum = 0;
+            if (msg.exists(h_RetryAfter))
+            {
+               retryMinimum = msg.header(h_RetryAfter).value();
+            }
+
+            // RFC 3261:20.33 Retry-After
+            int retry = handler->onRequestRetry(getHandle(), retryMinimum, msg);
+            if (retry < 0)
+            {
+               DebugLog(<< "Application requested failure on Retry-After");
+               delete this;
+               return;
+            }
+            else if (retry == 0 && retryMinimum == 0)
+            {
+               DebugLog(<< "Application requested immediate retry on Retry-After");
+               refresh();
+               return;
+            }
+            else
+            {
+               retry = resipMax(retry, retryMinimum);
+               DebugLog(<< "Application requested delayed retry on Retry-After: " << retry);
+               mDum.addTimer(DumTimeout::Publication, 
+                             retry, 
+                             getBaseHandle(),
+                             ++mTimerSeq);       
+               return;
+               
+            }
+         }
          else
          {
             handler->onFailure(getHandle(), msg);
             delete this;
             return;
          }
+
       }
 
       if (mPendingPublish)
