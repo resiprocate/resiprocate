@@ -1,5 +1,5 @@
-#if !defined(REGISTRATION_HXX)
-#define REGISTRATION_HXX
+#if !defined(RESIP_REGISTRATION_HXX)
+#define RESIP_REGISTRATION_HXX
 
 
 #include "resiprocate/os/Timer.hxx"
@@ -32,7 +32,6 @@ class Registration
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -83,7 +82,3 @@ class Registration
  * <http://www.vovida.org/>.
  *
  */
-
-
-
-
