@@ -60,6 +60,9 @@ const Data Symbols::SrvSips = "_sips";
 const Data Symbols::SrvUdp = "_udp";
 const Data Symbols::SrvTcp = "_tcp";
 
+const Data Symbols::audio = "audio";
+const Data Symbols::RTP_AVP = "RTP/AVP";
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
