@@ -176,7 +176,7 @@ Security::sign( Contents* bodyIn )
    }
     DebugLog( << "created PKCS7 sign object " );
 
-#if 1
+#if 0
    if ( SMIME_write_PKCS7(out,pkcs7,in,0) != 1 )
    {
       ErrLog( << "Error doind S/MIME write of signed object" );
@@ -223,6 +223,7 @@ Security::uncode( Pkcs7Contents* sBody )
    assert(out);
    DebugLog( << "created out BIO" );
 
+#if 0
    BIO* pkcs7Bio=NULL;
    PKCS7* pkcs7 = SMIME_read_PKCS7(in,&pkcs7Bio);
    if ( !pkcs7 )
@@ -235,7 +236,17 @@ Security::uncode( Pkcs7Contents* sBody )
       ErrLog( << "Can not deal with mutlipart mime version stuff " );
       return NULL;
    }  
-   
+#else
+   BIO* pkcs7Bio=NULL;
+   PKCS7* pkcs7 = d2i_PKCS7_bio(in, NULL);
+   if ( !pkcs7 )
+   {
+      ErrLog( << "Problems doing decode of PKCS7 object" );
+      return NULL;
+   }
+    BIO_flush(in);
+#endif
+
    X509_STORE* store;
    store = X509_STORE_new();
    assert( store);
