@@ -27,12 +27,14 @@ ParserCategory::ParserCategory(HeaderFieldValue* headerFieldValue,
 }
 
 ParserCategory::ParserCategory()
-   : LazyParser()
+   : LazyParser(),
+     mHeaderType(Headers::NONE)
 {
 }
 
 ParserCategory::ParserCategory(const ParserCategory& rhs)
-   : LazyParser(rhs)
+   : LazyParser(rhs),
+     mHeaderType(rhs.mHeaderType)
 {
    if (isParsed())
    {
@@ -46,6 +48,7 @@ ParserCategory::operator=(const ParserCategory& rhs)
    if (this != &rhs)
    {
       clear();
+      mHeaderType = rhs.mHeaderType;
       LazyParser::operator=(rhs);
       if (rhs.isParsed())
       {
