@@ -16,6 +16,8 @@ class ParseBuffer
            mEnd(buff+len)
       {}
 
+      ParseBuffer(const ParseBuffer& other);
+
       class Exception : public Vocal2::BaseException
       {
          public:
@@ -26,6 +28,7 @@ class ParseBuffer
       };
       
       // allow the buffer to be rolled back
+      ParseBuffer& operator=(const ParseBuffer& other);
       void reset(const char* pos);
 
       bool eof() { return mTraversalPtr >= mEnd;}
@@ -55,9 +58,6 @@ class ParseBuffer
       static const char* Whitespace;
       static const char* ParamTerm;
    private:
-      ParseBuffer(const ParseBuffer& other);
-      ParseBuffer& operator=(const ParseBuffer& other);
-      
       const char* mBuff;
       const char* mTraversalPtr;
       const char* mEnd;
