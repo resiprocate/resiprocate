@@ -331,7 +331,7 @@ Preparse::process()
          
          DebugLog(<<"Hdr \'"
                   << showN(mHeader, mHeaderLength)
-                  << "\' Type: " << mHeaderType);
+                  << "\' Type: " << int(mHeaderType) );
          
  
       }
