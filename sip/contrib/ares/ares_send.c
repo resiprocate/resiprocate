@@ -58,8 +58,16 @@ void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
       callback(arg, ARES_ENOMEM, NULL, 0);
       return;
     }
-  query->skip_server = malloc(channel->nservers * sizeof(int));
-  if (!query->skip_server)
+    if (channel->nservers)
+    {
+      query->skip_server = malloc(channel->nservers * sizeof(int));
+    }
+    else
+    {
+        query->skip_server = 0;
+    }
+  
+    if (!query->skip_server)
     {
       free(query->tcpbuf);
       free(query);
