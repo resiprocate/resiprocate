@@ -282,6 +282,7 @@ Security::loadMyPublicCert( const Data&  filePath )
       
       Data err( "Error reading contents of my public cert file " );
       err += filePath;
+         DebugLog( << "bad" );
       throw Exception(err, __FILE__,__LINE__);
       
       return false;

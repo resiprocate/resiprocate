@@ -4,10 +4,13 @@
 
 #include "UnknownHeaderType.hxx"
 #include "HeaderTypes.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #include <cassert>
 #include <string.h>
 #include "resiprocate/os/ParseBuffer.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 using namespace resip;
 
@@ -21,6 +24,7 @@ UnknownHeaderType::UnknownHeaderType(const char* name)
    if (mName.empty())
    {
       assert(false);
+      DebugLog( << "bad" );
       throw Exception("Empty unknown header",__FILE__,__LINE__);
    }
    assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
@@ -35,6 +39,7 @@ UnknownHeaderType::UnknownHeaderType(const Data& name)
    if (mName.empty())
    {
       assert(false);
+         DebugLog( << "bad" );
       throw Exception("Empty unknown header",__FILE__,__LINE__);
    }
    assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);

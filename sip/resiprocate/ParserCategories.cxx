@@ -1358,6 +1358,7 @@ NameAddr::parse(ParseBuffer& pb)
          pb.skipToChar(Symbols::LA_QUOTE[0]);
          if (pb.eof())
          {
+         DebugLog( << "bad" );
             throw ParseException("Expected '<'", __FILE__, __LINE__);
          }
          else
