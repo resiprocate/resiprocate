@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.2 2002/09/22 21:34:23 fluffy Exp $
+# $Id: Makefile,v 1.3 2002/09/22 22:08:35 fluffy Exp $
 #
 FSMS=srv-inv-fsm
 OUTDIR=out
@@ -32,6 +32,11 @@ $(OUTDIR)/%.png: %.dot
 
 $(OUTDIR)/%.svg: %.dot Makefile $(OUTDIR)
 	$(DOT) -Tsvg -o$@ $<
+
+
+# Code autogen
+%.dot: ../%.cxx fsm-dot.awk
+	awk -f fsm-dot.awk $< > $@
 
 clean: 
 	-/bin/rm -f $(FILES) *.ps
