@@ -91,7 +91,7 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
 
   static struct methods wordlist[] =
     {
-      {"BYE", RESIP_BYE},
+      {"RESIP_BYE", RESIP_BYE},
       {"INFO", RESIP_INFO},
       {"REFER",RESIP_REFER},
       {"NOTIFY", RESIP_NOTIFY},
@@ -100,10 +100,10 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
       {"SUBSCRIBE", RESIP_SUBSCRIBE},
       {"CANCEL", RESIP_CANCEL},
       {"MESSAGE", RESIP_MESSAGE},
-      {"REGISTER", RESIP_REGISTER},
-      {"INVITE", RESIP_INVITE},
+      {"RESIP_REGISTER", RESIP_REGISTER},
+      {"RESIP_INVITE", RESIP_INVITE},
       {"SERVICE", RESIP_SERVICE},
-      {"ACK", RESIP_ACK},
+      {"RESIP_ACK", RESIP_ACK},
       {"PRACK", RESIP_PRACK},
       {"UPDATE", RESIP_UPDATE},
       {"PUBLISH", RESIP_PUBLISH}

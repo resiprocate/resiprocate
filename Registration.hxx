@@ -26,7 +26,7 @@ class Registration
 
       void setExpiration(int secs);
 
-      // returns time (in secs) when REGISTER should be refreshed
+      // returns time (in secs) when RESIP_REGISTER should be refreshed
       time_t getTimeToRefresh() const;
       const CallID& getCallID() const;
       bool isRegistered() const;

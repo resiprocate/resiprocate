@@ -175,7 +175,7 @@ ParserCategory::parseParameters(ParseBuffer& pb)
          const char* keyStart = pb.skipWhitespace();
          const char* keyEnd = pb.skipToOneOf(" \t\r\n;=?>");  //!dlb! @ here?
          ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
-         if (type == ParameterTypes::UNKNOWN)
+         if (type == ParameterTypes::RESIP_UNKNOWN)
          {
             mUnknownParameters.push_back(new UnknownParameter(keyStart, 
                                                               int((keyEnd - keyStart)), pb, " \t\r\n;?>"));

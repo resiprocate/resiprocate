@@ -30,18 +30,18 @@ main(int argc, char* argv[])
   {
      // test from RFC3420
      {
-        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+        Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                  "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                  "To: Bob <sip:bob@biloxi.com>\r\n"
                  "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                  "Call-ID: a84b4c76e66710\r\n"
-                 "CSeq: 314159 INVITE\r\n"
+                 "CSeq: 314159 RESIP_INVITE\r\n"
                  "Max-Forwards: 70\r\n"
                  "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                  "Content-Type: message/sipfrag\r\n"
                  "Content-Length: 38\r\n"
                  "\r\n"
-                 "INVITE sip:alice@atlanta.com SIP/2.0\r\n");
+                 "RESIP_INVITE sip:alice@atlanta.com SIP/2.0\r\n");
         
         try
         {
@@ -54,12 +54,12 @@ main(int argc, char* argv[])
      }
 
      {
-        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+        Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                  "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                  "To: Bob <sip:bob@biloxi.com>\r\n"
                  "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                  "Call-ID: a84b4c76e66710\r\n"
-                 "CSeq: 314159 INVITE\r\n"
+                 "CSeq: 314159 RESIP_INVITE\r\n"
                  "Max-Forwards: 70\r\n"
                  "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                  "Content-Type: message/sipfrag\r\n"
@@ -78,18 +78,18 @@ main(int argc, char* argv[])
      }
 
      {
-        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+        Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                  "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                  "To: Bob <sip:bob@biloxi.com>\r\n"
                  "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                  "Call-ID: a84b4c76e66710\r\n"
-                 "CSeq: 314159 INVITE\r\n"
+                 "CSeq: 314159 RESIP_INVITE\r\n"
                  "Max-Forwards: 70\r\n"
                  "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                  "Content-Type: message/sipfrag\r\n"
                  "Content-Length: 150\r\n"
                  "\r\n"
-                 "REGISTER sip:atlanta.com SIP/2.0\r\n"
+                 "RESIP_REGISTER sip:atlanta.com SIP/2.0\r\n"
                  "To: sip:alice@atlanta.com\r\n"
                  "Contact: <sip:alicepc@atlanta.com>;q=0.9,\r\n"
                  "         <sip:alicemobile@atlanta.com>;q=0.1\r\n");
@@ -105,12 +105,12 @@ main(int argc, char* argv[])
      }
 
      {
-        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+        Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                  "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                  "To: Bob <sip:bob@biloxi.com>\r\n"
                  "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                  "Call-ID: a84b4c76e66710\r\n"
-                 "CSeq: 314159 INVITE\r\n"
+                 "CSeq: 314159 RESIP_INVITE\r\n"
                  "Max-Forwards: 70\r\n"
                  "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                  "Content-Type: message/sipfrag\r\n"
@@ -130,12 +130,12 @@ main(int argc, char* argv[])
      }
 
      {
-        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+        Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                  "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                  "To: Bob <sip:bob@biloxi.com>\r\n"
                  "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                  "Call-ID: a84b4c76e66710\r\n"
-                 "CSeq: 314159 INVITE\r\n"
+                 "CSeq: 314159 RESIP_INVITE\r\n"
                  "Max-Forwards: 70\r\n"
                  "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                  "Content-Type: message/sipfrag\r\n"
@@ -146,7 +146,7 @@ main(int argc, char* argv[])
                  "Contact: <sip:alice@pc33.atlanta.com>>href=mailto:<sip:alice@pc33.atlanta.com>><sip:alice@pc33.atlanta.com>\r\n"
                  "Date: Thu, 21 Feb 2002 13:02:03 GMT\r\n"
                  "Call-ID: a84b4c76e66710\r\n"
-                 "Cseq: 314159 INVITE\r\n");
+                 "Cseq: 314159 RESIP_INVITE\r\n");
 
         try
         {
@@ -159,12 +159,12 @@ main(int argc, char* argv[])
      }
 
      {
-        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+        Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                  "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                  "To: Bob <sip:bob@biloxi.com>\r\n"
                  "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                  "Call-ID: a84b4c76e66710\r\n"
-                 "CSeq: 314159 INVITE\r\n"
+                 "CSeq: 314159 RESIP_INVITE\r\n"
                  "Max-Forwards: 70\r\n"
                  "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                  "Content-Type: message/sipfrag\r\n"
@@ -196,12 +196,12 @@ main(int argc, char* argv[])
      }
 
      {
-        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+        Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                  "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                  "To: Bob <sip:bob@biloxi.com>\r\n"
                  "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                  "Call-ID: a84b4c76e66710\r\n"
-                 "CSeq: 314159 INVITE\r\n"
+                 "CSeq: 314159 RESIP_INVITE\r\n"
                  "Max-Forwards: 70\r\n"
                  "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                  "Content-Type: message/sipfrag\r\n"
@@ -226,18 +226,18 @@ main(int argc, char* argv[])
   {
      // !ah! This test doesn't work with the MsgHeaderScanner -- works w/ preparser.
 
-      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+      Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                "To: Bob <sip:bob@biloxi.com>\r\n"
                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                "Call-ID: a84b4c76e66710\r\n"
-               "CSeq: 314159 INVITE\r\n"
+               "CSeq: 314159 RESIP_INVITE\r\n"
                "Max-Forwards: 70\r\n"
                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                "Content-Type: message/sipfrag\r\n"
                "Content-Length: 35\r\n"
                "\r\n"
-               "INVITE sip:bob@biloxi.com SIP/2.0\r\n");
+               "RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n");
       std::cout << "hiya " << std::endl;
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
@@ -295,23 +295,23 @@ main(int argc, char* argv[])
 
    {
      tassert_reset();
-      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+      Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                "To: Bob <sip:bob@biloxi.com>\r\n"
                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                "Call-ID: a84b4c76e66710\r\n"
-               "CSeq: 314159 INVITE\r\n"
+               "CSeq: 314159 RESIP_INVITE\r\n"
                "Max-Forwards: 70\r\n"
                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                "Content-Type: message/sipfrag\r\n"
                "\r\n"
-               "INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "From: Alice <sip:alice@atlanta.com>\r\n"
                "To: Bob <sip:bob@biloxi.com>\r\n"
                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                "Date: Thu, 21 Feb 2002 13:02:03 GMT\r\n"
                "Call-ID: a84b4c76e66710\r\n"
-               "Cseq: 314159 INVITE");
+               "Cseq: 314159 RESIP_INVITE");
 
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
@@ -335,17 +335,17 @@ main(int argc, char* argv[])
    }
    {
      tassert_reset();
-      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+      Data txt("RESIP_INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
                "To: Bob <sip:bob@biloxi.com>\r\n"
                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
                "Call-ID: a84b4c76e66710\r\n"
-               "CSeq: 314159 INVITE\r\n"
+               "CSeq: 314159 RESIP_INVITE\r\n"
                "Max-Forwards: 70\r\n"
                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                "Content-Type: message/sipfrag\r\n"
                "\r\n"
-               "INVITE sip:bob@biloxi.com SIP/2.0"
+               "RESIP_INVITE sip:bob@biloxi.com SIP/2.0"
         );
 
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
@@ -359,7 +359,7 @@ main(int argc, char* argv[])
       cout << "!! ";
       frag->encode(cout);
 
-      tassert(frag->message().header(h_RequestLine).getMethod() == INVITE);
+      tassert(frag->message().header(h_RequestLine).getMethod() == RESIP_INVITE);
       tassert(frag->message().header(h_RequestLine).getSipVersion() == "SIP/2.0");
       
       msg->encode(cout);

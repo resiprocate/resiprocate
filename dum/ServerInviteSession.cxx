@@ -161,7 +161,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
                mDum.send(mLastResponse);
                guard.destroy();
             }
-            // RFC3261 - section 15 indicates callers UA can send a BYE on early dialogs
+            // RFC3261 - section 15 indicates callers UA can send a RESIP_BYE on early dialogs
             else if (msg.header(h_RequestLine).method() == RESIP_BYE)  
             {
                mState = Terminated;

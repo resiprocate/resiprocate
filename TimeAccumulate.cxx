@@ -1,5 +1,6 @@
 #include "resiprocate/TimeAccumulate.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/DataStream.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::STATS
 
@@ -38,6 +39,35 @@ TimeAccumulate::clear()
       i->second.totalTime = 0;
    }
 }
+
+TimeAccumulate::~TimeAccumulate()
+{
+   UInt64 end = Timer::getTimeMs();
+   end -= mStart;
+
+   if (mTooLong &&
+       end > mTooLong)
+   {
+      WarningLog(<< mName << " took too long: " << *mTooLongOutputter);
+   }
+
+   delete mTooLongOutputter;
+
+   Lock lock(TimeAccumulate::mMutex);
+   
+   Accumulator& acc = TimeAccumulate::mTimes[mName];
+   acc.count += 1;
+   acc.totalTime += end;
+}
+
+std::ostream&
+resip::operator<<(std::ostream& str, 
+                  const DelayOutputBase& iib)
+{
+   iib.put(str);
+   return str;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -1,5 +1,5 @@
 /* C++ code produced by gperf version 2.7.2 */
-/* Command-line: gperf -D -E -L C++ -t -k'*' --compare-strncmp -Z HeaderHash HeaderHash.gperf  */
+/* Command-line: gperf -D --enum -E -L C++ -t -k '*' --compare-strncmp -Z HeaderHash HeaderHash.gperf  */
 #include <string.h>
 #include <ctype.h>
 #include "resiprocate/HeaderTypes.hxx"
@@ -7,6 +7,7 @@
 namespace resip
 {
 using namespace std;
+using namespace resip;
 struct headers { char *name; Headers::Type type; };
 /* maximum key range = 325, duplicates = 0 */
 
@@ -131,10 +132,10 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"l", Headers::ContentLength},
       {"c", Headers::ContentType},
       {"require", Headers::Require},
-      {"hide", Headers::UNKNOWN},
+      {"hide", Headers::RESIP_UNKNOWN},
       {"s", Headers::Subject},
       {"allow", Headers::Allow},
-      {"reason", Headers::UNKNOWN},
+      {"reason", Headers::RESIP_UNKNOWN},
       {"rseq", Headers::RSeq},
       {"t", Headers::To},
       {"to", Headers::To},
@@ -143,7 +144,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"k", Headers::Supported},
       {"min-se", Headers::MinSE},
       {"warning", Headers::Warning},
-      {"path", Headers::UNKNOWN},
+      {"path", Headers::RESIP_UNKNOWN},
       {"x", Headers::SessionExpires},
       {"cseq", Headers::CSeq},
       {"reply-to", Headers::ReplyTo},
@@ -156,7 +157,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"from", Headers::From},
       {"in-reply-to", Headers::InReplyTo},
       {"supported", Headers::Supported},
-      {"encryption", Headers::UNKNOWN},
+      {"encryption", Headers::RESIP_UNKNOWN},
       {"unsupported", Headers::Unsupported},
       {"proxy-require", Headers::ProxyRequire},
       {"RAck", Headers::RAck},
@@ -168,7 +169,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"organization", Headers::Organization},
       {"refer-to",Headers::ReferTo},
       {"user-agent", Headers::UserAgent},
-      {"response-key", Headers::UNKNOWN},
+      {"response-key", Headers::RESIP_UNKNOWN},
       {"via", Headers::Via},
       {"min-expires", Headers::MinExpires},
       {"subject", Headers::Subject},
@@ -179,9 +180,9 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"timestamp", Headers::Timestamp},
       {"alert-info",Headers::AlertInfo},
       {"server", Headers::Server},
-      {"privacy", Headers::UNKNOWN},
+      {"privacy", Headers::RESIP_UNKNOWN},
       {"event", Headers::Event},
-      {"p-media-authorization", Headers::UNKNOWN},
+      {"p-media-authorization", Headers::RESIP_UNKNOWN},
       {"content-type", Headers::ContentType},
       {"retry-after", Headers::RetryAfter},
       {"accept-encoding", Headers::AcceptEncoding},
@@ -190,7 +191,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"mime-version", Headers::MIMEVersion},
       {"accept-language", Headers::AcceptLanguage},
       {"content-encoding", Headers::ContentEncoding},
-      {"p-preferred-identity", Headers::UNKNOWN},
+      {"p-preferred-identity", Headers::RESIP_UNKNOWN},
       {"proxy-authorization", Headers::ProxyAuthorization},
       {"security-client", Headers::SecurityClient},
       {"content-language", Headers::ContentLanguage},
@@ -198,7 +199,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"session-expires", Headers::SessionExpires},
       {"content-length", Headers::ContentLength},
       {"allow-events", Headers::AllowEvents},
-      {"p-asserted-identity", Headers::UNKNOWN},
+      {"p-asserted-identity", Headers::RESIP_UNKNOWN},
       {"proxy-authenticate", Headers::ProxyAuthenticate},
       {"content-disposition", Headers::ContentDisposition},
       {"security-server", Headers::SecurityServer},
