@@ -4,7 +4,9 @@
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Random.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsResult.hxx"
 #include "resiprocate/Uri.hxx"
@@ -70,36 +72,24 @@ DnsResult::~DnsResult()
 }
 
 bool
-DnsResult::available() const
+DnsResult::available()
 {
-   return (mType == Available && !mResults.empty());
-}
-
-bool
-DnsResult::finished()
-{
-   if (available())
+   assert(mType != Destroyed);
+   if (mType == Available)
    {
-      return false;
-   }
-   else if (mType == Pending)
-   {
-      return false;
-   }
-   else if (!mSRVResults.empty())
-   {
-      mType = Pending;
-      
-      const SRV& srv = *mSRVResults.begin();
-      mPort = srv.port;
-      mTransport = srv.transport;
-      lookupARecords(srv.target);
-      mSRVResults.erase(mSRVResults.begin());
-      return false;
+      if (!mResults.empty())
+      {
+         return true;
+      }
+      else
+      {
+         primeResults();
+         return available(); // recurse
+      }
    }
    else
    {
-      return true;
+      return false;
    }
 }
 
@@ -195,6 +185,8 @@ DnsResult::lookup(const Uri& uri, const Data& tid)
 void
 DnsResult::lookupARecords(const Data& target)
 {
+   DebugLog (<< "Doing A lookup: " << target);
+
 #if defined(USE_ARES)
    ares_gethostbyname(mInterface.mChannel, target.c_str(), AF_INET, DnsResult::aresHostCallback, this);
 #else   
@@ -253,6 +245,8 @@ DnsResult::lookupARecords(const Data& target)
 void
 DnsResult::lookupNAPTR()
 {
+   DebugLog (<< "Doing NAPTR lookup: " << mTarget);
+
 #if defined(USE_ARES)
    ares_query(mInterface.mChannel, mTarget.c_str(), C_IN, T_NAPTR, DnsResult::aresNAPTRCallback, this); 
 #else
@@ -265,6 +259,8 @@ DnsResult::lookupNAPTR()
 void
 DnsResult::lookupSRV(const Data& target)
 {
+   DebugLog (<< "Doing SRV lookup: " << target);
+   
 #if defined(USE_ARES)
    ares_query(mInterface.mChannel, target.c_str(), C_IN, T_SRV, DnsResult::aresSRVCallback, this); 
 #else
@@ -300,6 +296,176 @@ DnsResult::aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen)
    thisp->processSRV(status, abuf, alen);
 }
 #endif
+
+void
+DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
+{
+   DebugLog (<< "DnsResult::processNAPTR() " << status);
+
+   // There can only be one NAPTR query outstanding at a time
+   if (mType == Destroyed)
+   {
+      destroy();
+      return;
+   }
+
+   if (status == ARES_SUCCESS)
+   {
+      const unsigned char *aptr = abuf + HFIXEDSZ;
+      int qdcount = DNS_HEADER_QDCOUNT(abuf);    /* question count */
+      for (int i = 0; i < qdcount && aptr; i++)
+      {
+         aptr = skipDNSQuestion(aptr, abuf, alen);
+      }
+      
+      int ancount = DNS_HEADER_ANCOUNT(abuf);    /* answer record count */
+      for (int i = 0; i < ancount && aptr; i++)
+      {
+         NAPTR naptr;
+         aptr = parseNAPTR(aptr, abuf, alen, naptr);
+         
+         if (aptr)
+         {
+            DebugLog (<< "Adding NAPTR record: " << naptr);
+            if (mSips && naptr.service.find("SIPS") == 0)
+            {
+               if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
+               {
+                  mPreferredNAPTR = naptr;
+                  DebugLog (<< "Picked preferred: " << mPreferredNAPTR);
+               }
+            }
+            else if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
+            {
+               mPreferredNAPTR = naptr;
+               DebugLog (<< "Picked preferred: " << mPreferredNAPTR);
+            }
+         }
+      }
+
+      // This means that dns / NAPTR is misconfigured for this client 
+      if (mPreferredNAPTR.key.empty())
+      {
+         InfoLog (<< "No NAPTR records that are supported by this client");
+         mType = Finished;
+         mInterface.mHandler->handle(this);         
+         return;
+      }
+
+      int nscount = DNS_HEADER_NSCOUNT(abuf);    /* name server record count */
+      DebugLog (<< "Found " << nscount << " nameserver records");
+      for (int i = 0; i < nscount && aptr; i++)
+      {
+         // this will ignore NS records
+         aptr = parseAdditional(aptr, abuf, alen);
+      }
+
+      int arcount = DNS_HEADER_ARCOUNT(abuf);    /* additional record count */
+      DebugLog (<< "Found " << arcount << " additional records");
+      for (int i = 0; i < arcount && aptr; i++)
+      {
+         // this will store any related SRV and A records
+         // don't store SRV records other than the one in the selected NAPTR
+         aptr = parseAdditional(aptr, abuf, alen);
+      }
+
+      if (ancount == 0) // didn't find any NAPTR records
+      {
+         InfoLog (<< "There are no NAPTR records so do an SRV lookup instead");
+         goto NAPTRFail; // same as if no NAPTR records
+      }
+      else
+      {
+         // This will fill in mResults based on the DNS result
+         primeResults();
+      }
+   }
+   else
+   {
+      {
+         char* errmem=0;
+         InfoLog (<< "NAPTR lookup failed: " << ares_strerror(status, &errmem));
+         ares_free_errmem(errmem);
+      }
+      
+      // This will result in no NAPTR results. In this case, send out SRV
+      // queries for each supported protocol
+     NAPTRFail:
+      // For now, don't add _sips._tcp in this case. 
+      lookupSRV("_sip._tcp." + mTarget);
+      mSRVCount++;
+      lookupSRV("_sip._udp." + mTarget);
+      mSRVCount++;
+      DebugLog (<< "Doing SRV query " << mSRVCount << " for " << mTarget);
+   }
+}
+
+void
+DnsResult::processSRV(int status, unsigned char* abuf, int alen)
+{
+   mSRVCount--;
+   DebugLog (<< "DnsResult::processSRV() " << mSRVCount << " status=" << status);
+
+   // There could be multiple SRV queries outstanding
+   if (mType == Destroyed && mSRVCount == 0)
+   {
+      destroy();
+      return;
+   }
+
+   if (status == ARES_SUCCESS)
+   {
+      const unsigned char *aptr = abuf + HFIXEDSZ;
+      int qdcount = DNS_HEADER_QDCOUNT(abuf);    /* question count */
+      for (int i = 0; i < qdcount && aptr; i++)
+      {
+         aptr = skipDNSQuestion(aptr, abuf, alen);
+      }
+      
+      int ancount = DNS_HEADER_ANCOUNT(abuf);    /* answer record count */
+      for (int i = 0; i < ancount && aptr; i++)
+      {
+         SRV srv;
+         aptr = parseSRV(aptr, abuf, alen, srv);
+         
+         if (aptr)
+         {
+            srv.transport = mTransport;
+            DebugLog (<< "Adding SRV record (no NAPTR): " << srv);
+            mSRVResults.insert(srv);
+         }
+      }
+
+      int nscount = DNS_HEADER_NSCOUNT(abuf);    /* name server record count */
+      DebugLog (<< "Found " << nscount << " nameserver records");
+      for (int i = 0; i < nscount && aptr; i++)
+      {
+         // this will ignore NS records
+         aptr = parseAdditional(aptr, abuf, alen);
+      }
+      
+      int arcount = DNS_HEADER_ARCOUNT(abuf);    /* additional record count */
+      DebugLog (<< "Found " << arcount << " additional records");
+      for (int i = 0; i < arcount && aptr; i++)
+      {
+         // this will store any related A records
+         aptr = parseAdditional(aptr, abuf, alen);
+      }
+   }
+   else
+   {
+      char* errmem=0;
+      InfoLog (<< "SRV lookup failed: " << ares_strerror(status, &errmem));
+      ares_free_errmem(errmem);
+   }
+
+   // no outstanding queries 
+   if (mSRVCount == 0) 
+   {
+      primeResults();
+   }
+}
+
 
 void
 DnsResult::processHost(int status, struct hostent* result)
@@ -338,170 +504,221 @@ DnsResult::processHost(int status, struct hostent* result)
 }
 
 void
-DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
+DnsResult::primeResults()
 {
-   DebugLog (<< "DnsResult::processNAPTR() " << status);
+   DebugLog (<< "primeResults() " << mType);
+   
+   //assert(mType != Pending);
+   //assert(mType != Finished);
+   assert(mResults.empty());
 
-   // There can only be one NAPTR query outstanding at a time
-   if (mType == Destroyed)
+   if (!mSRVResults.empty())
    {
-      destroy();
-      return;
-   }
-
-   if (status == ARES_SUCCESS)
-   {
-      const unsigned char *aptr = abuf + HFIXEDSZ;
-      int qdcount = DNS_HEADER_QDCOUNT(abuf);    /* question count */
-      for (int i = 0; i < qdcount && aptr; i++)
-      {
-         aptr = skipDNSQuestion(aptr, abuf, alen);
-      }
+      SRV next = retrieveSRV();
+      DebugLog (<< "Primed with SRV=" << next);
       
-      int ancount = DNS_HEADER_ANCOUNT(abuf);    /* answer record count */
-      for (int i = 0; i < ancount && aptr; i++)
+      if (mARecords.count(next.target))
       {
-         NAPTR naptr;
-         aptr = parseNAPTR(aptr, abuf, alen, naptr);
-
-         if (aptr)
+         std::list<struct in_addr>& arecs = mARecords[next.target];
+         for (std::list<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
-            DebugLog (<< "Adding NAPTR record: " << naptr);
-            if (mSips && naptr.service.find("SIPS"))
-            {
-               mNAPTRResults.insert(naptr);
-            }
-            else if (naptr.service == "SIPS+D2T" || 
-                     naptr.service == "SIP+D2T" || 
-                     naptr.service == "SIP+D2U")
-            {
-               mNAPTRResults.insert(naptr);
-            }
+            Transport::Tuple tuple;
+            tuple.port = next.port;
+            tuple.transportType = next.transport;
+            tuple.transport = 0;
+            tuple.ipv4 = *i;
+            mResults.push_back(tuple);
          }
-      }
-
-      if (mNAPTRResults.empty())
-      {
-         InfoLog (<< "There are no NAPTR records so do an SRV lookup instead");
-         goto NAPTRFail; // same as if no NAPTR records
-      }
-
-      mSRVCount++;
-      const NAPTR& naptr = *mNAPTRResults.begin();
-      lookupSRV(naptr.replacement);
-      mNAPTRResults.erase(mNAPTRResults.begin());
-   }
-   else
-   {
-      {
-         char* errmem=0;
-         InfoLog (<< "NAPTR lookup failed: " << ares_strerror(status, &errmem));
-         ares_free_errmem(errmem);
-      }
-      
-      // This will result in no NAPTR results. In this case, send out SRV
-      // queries for each supported protocol
-     NAPTRFail:
-      for (std::set<Transport::Type>::const_iterator i=mInterface.mSupportedTransports.begin(); 
-           i != mInterface.mSupportedTransports.end(); i++)
-      {
-         Data target;
-         DataStream strm(target);
-         strm << "_sip.";
-         switch(*i)
-         {
-            case Transport::UDP:
-               strm << "_udp";
-               break;
-            case Transport::TCP:
-               strm << "_tcp";
-               break;
-            case Transport::SCTP:
-               strm << "_sctp";
-               break;
-            default:
-               assert(0);
-         }
+         DebugLog (<< "Try: " << Inserter(mResults));
          
-         strm << ".";
-         strm << mTarget;
-         strm.flush();
-         
-         mSRVCount++;
-         DebugLog (<< "Doing SRV query " << mSRVCount << " for " << target);
-         lookupSRV(target);
-      }
-   }
-}
-
-void
-DnsResult::processSRV(int status, unsigned char* abuf, int alen)
-{
-   mSRVCount--;
-   DebugLog (<< "DnsResult::processSRV() " << mSRVCount << " status=" << status);
-
-   // There could be multiple SRV queries outstanding
-   if (mType == Destroyed && mSRVCount == 0)
-   {
-      destroy();
-      return;
-   }
-
-   if (status == ARES_SUCCESS)
-   {
-      const unsigned char *aptr = abuf + HFIXEDSZ;
-      int qdcount = DNS_HEADER_QDCOUNT(abuf);    /* question count */
-      for (int i = 0; i < qdcount && aptr; i++)
-      {
-         aptr = skipDNSQuestion(aptr, abuf, alen);
-      }
-      
-      int ancount = DNS_HEADER_ANCOUNT(abuf);    /* answer record count */
-      for (int i = 0; i < ancount && aptr; i++)
-      {
-         SRV srv;
-         aptr = parseSRV(aptr, abuf, alen, srv);
-         
-         if (aptr)
-         {
-            srv.transport = mTransport;
-            DebugLog (<< "Adding SRV record: " << srv);
-            mSRVResults.insert(srv);
-         }
-      }
-   }
-   else
-   {
-      char* errmem=0;
-      InfoLog (<< "SRV lookup failed: " << ares_strerror(status, &errmem));
-      ares_free_errmem(errmem);
-   }
-
-   if (mSRVCount == 0)
-   {
-      if (mSRVResults.empty())
-      {
-         if (mSips) 
-         {
-            mTransport = Transport::TCP;
-            mPort = 5061;
-         }
-         else
-         {
-            mTransport = Transport::UDP;
-            mPort = 5060;
-         }
-         mType = Pending;
-         lookupARecords(mTarget); // for current target and port
+         mType = Available;
+         mInterface.mHandler->handle(this);
       }
       else
       {
-         const SRV& srv = *mSRVResults.begin();
-         mPort = srv.port;
-         mTransport = srv.transport;
-         lookupARecords(srv.target);
-         mSRVResults.erase(mSRVResults.begin());
+         // !jf! not going to test this for now
+         // this occurs when the A records were not provided in the Additional
+         // Records of the DNS result
+         // we will need to store the SRV record that is being looked up so we
+         // can populate the resulting Tuples 
+         assert(0); 
+         mType = Pending;
+         lookupARecords(next.target);
       }
+
+      // recurse if there are no results. This could happen if the DNS SRV
+      // target record didn't have any A/AAAA records. This will terminate if we
+      // run out of SRV results. 
+      if (mResults.empty())
+      {
+         primeResults();
+      }
+   }
+   else
+   {
+      mType = Finished;
+   }
+
+   // Either we are finished or there are results primed
+   assert(mType == Finished || (mType == Available && !mResults.empty()));
+}
+
+DnsResult::SRV 
+DnsResult::retrieveSRV()
+{
+   assert(!mSRVResults.empty());
+
+   const SRV& srv = *mSRVResults.begin();
+   if (srv.cumulativeWeight == 0)
+   {
+      int priority = srv.priority;
+   
+      mCumulativeWeight=0;
+      for (std::set<SRV>::iterator i=mSRVResults.begin(); 
+           i!=mSRVResults.end() && i->priority == priority; i++)
+      {
+         mCumulativeWeight += i->weight;
+         SRV copy(srv);
+         copy.cumulativeWeight = mCumulativeWeight;
+         mSRVResults.erase(mSRVResults.begin());
+         mSRVResults.insert(copy);
+      }
+   }
+   
+   int selected = Random::getRandom() % (mCumulativeWeight+1);
+
+   DebugLog (<< "cumulative weight = " << mCumulativeWeight << " selected=" << selected);
+   DebugLog (<< "SRV: " << Inserter(mSRVResults));
+
+   std::set<SRV>::iterator i;
+   for (i=mSRVResults.begin(); i!=mSRVResults.end(); i++)
+   {
+      if (i->cumulativeWeight >= selected)
+      {
+         break;
+      }
+   }
+   
+   assert(i != mSRVResults.end());
+   SRV next = *i;
+   mSRVResults.erase(i);
+
+   return next;
+}
+
+
+// adapted from the adig.c example in ares
+const unsigned char* 
+DnsResult::parseAdditional(const unsigned char *aptr,
+                           const unsigned char *abuf, 
+                           int alen)
+{
+   char *name=0;
+   int len=0;
+   int status=0;
+
+   // Parse the RR name. 
+   status = ares_expand_name(aptr, abuf, alen, &name, &len);
+   if (status != ARES_SUCCESS)
+   {
+      InfoLog (<< "Failed parse of RR");
+      return NULL;
+   }
+   aptr += len;
+
+   /* Make sure there is enough data after the RR name for the fixed
+    * part of the RR.
+    */
+   if (aptr + RRFIXEDSZ > abuf + alen)
+   {
+      InfoLog (<< "Failed parse of RR");
+      free(name);
+      return NULL;
+   }
+  
+   // Parse the fixed part of the RR, and advance to the RR data
+   // field. 
+   int type = DNS_RR_TYPE(aptr);
+   int dlen = DNS_RR_LEN(aptr);
+   aptr += RRFIXEDSZ;
+   if (aptr + dlen > abuf + alen)
+   {
+      InfoLog (<< "Failed parse of RR");
+      free(name);
+      return NULL;
+   }
+
+   // Display the RR data.  Don't touch aptr. 
+   Data key = name;
+   free(name);
+
+   if (type == T_SRV)
+   {
+      SRV srv;
+      
+      // The RR data is three two-byte numbers representing the
+      // priority, weight, and port, followed by a domain name.
+      srv.key = key;
+      srv.priority = DNS__16BIT(aptr);
+      srv.weight = DNS__16BIT(aptr + 2);
+      srv.port = DNS__16BIT(aptr + 4);
+      status = ares_expand_name(aptr + 6, abuf, alen, &name, &len);
+      if (status != ARES_SUCCESS)
+      {
+         return NULL;
+      }
+      srv.target = name;
+      free(name);
+      
+      // Only add SRV results for the preferred NAPTR target as per rfc3263
+      // (section 4.1). 
+      assert(!mPreferredNAPTR.key.empty());
+      if (srv.key == mPreferredNAPTR.replacement && srv.target != Symbols::DOT)
+      {
+         if (srv.key.find("_sip._udp") == 0)
+         {
+            srv.transport = Transport::UDP;
+         }
+         else if (srv.key.find("_sip._tcp") == 0)
+         {
+            srv.transport = Transport::TCP;
+         }
+         else if (srv.key.find("_sips._tcp") == 0)
+         {
+            srv.transport = Transport::TLS;
+         }
+         else
+         {
+            InfoLog (<< "Skipping SRV " << srv.key);
+            return aptr + dlen;
+         }
+         
+         DebugLog (<< "Inserting SRV: " << srv);
+         mSRVResults.insert(srv);
+      }
+
+      return aptr + dlen;
+
+   }
+   else if (type == T_A)
+   {
+      // The RR data is a four-byte Internet address. 
+      if (dlen != 4)
+      {
+         InfoLog (<< "Failed parse of RR");
+         return NULL;
+      }
+
+      struct in_addr addr;
+      memcpy(&addr, aptr, sizeof(struct in_addr));
+      DebugLog (<< "From additional: " << key << ":" << DnsUtil::getIpAddress(addr));
+      mARecords[key].push_back(addr);
+      return aptr + dlen;
+   }
+   else // just skip it (we don't care :)
+   {
+      //DebugLog (<< "Skipping: " << key);
+      return aptr + dlen;
    }
 }
 
@@ -519,6 +736,7 @@ DnsResult::skipDNSQuestion(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
+      InfoLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -528,6 +746,7 @@ DnsResult::skipDNSQuestion(const unsigned char *aptr,
    if (aptr + QFIXEDSZ > abuf + alen)
    {
       free(name);
+      InfoLog (<< "Failed parse of RR");
       return NULL;
    }
 
@@ -555,6 +774,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
+      InfoLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -565,6 +785,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
    if (aptr + RRFIXEDSZ > abuf + alen)
    {
       free(name);
+      InfoLog (<< "Failed parse of RR");
       return NULL;
    }
   
@@ -576,8 +797,10 @@ DnsResult::parseSRV(const unsigned char *aptr,
    if (aptr + dlen > abuf + alen)
    {
       free(name);
+      InfoLog (<< "Failed parse of RR");
       return NULL;
    }
+   Data key = name;
    free(name);
 
    // Display the RR data.  Don't touch aptr. 
@@ -585,12 +808,14 @@ DnsResult::parseSRV(const unsigned char *aptr,
    {
       // The RR data is three two-byte numbers representing the
       // priority, weight, and port, followed by a domain name.
+      srv.key = key;
       srv.priority = DNS__16BIT(aptr);
       srv.weight = DNS__16BIT(aptr + 2);
       srv.port = DNS__16BIT(aptr + 4);
       status = ares_expand_name(aptr + 6, abuf, alen, &name, &len);
       if (status != ARES_SUCCESS)
       {
+         InfoLog (<< "Failed parse of RR");
          return NULL;
       }
       srv.target = name;
@@ -601,6 +826,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
    }
    else
    {
+      InfoLog (<< "Failed parse of RR");
       return NULL;
    }
 }
@@ -621,6 +847,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
+      InfoLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -630,6 +857,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
    if (aptr + RRFIXEDSZ > abuf + alen)
    {
       free(name);
+      InfoLog (<< "Failed parse of RR");
       return NULL;
    }
   
@@ -641,8 +869,11 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
    if (aptr + dlen > abuf + alen)
    {
       free(name);
+      InfoLog (<< "Failed parse of RR");
       return NULL;
    }
+
+   Data key = name;
    free(name);
 
    // Look at the RR data.  Don't touch aptr. 
@@ -652,12 +883,14 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       // order and preference, followed by three character strings
       // representing flags, services, a regex, and a domain name.
 
+      naptr.key = key;
       naptr.order = DNS__16BIT(aptr);
       naptr.pref = DNS__16BIT(aptr + 2);
       p = aptr + 4;
       len = *p;
       if (p + len + 1 > aptr + dlen)
       {
+         InfoLog (<< "Failed parse of RR");
          return NULL;
       }
       naptr.flags = Data(p+1, len);
@@ -666,6 +899,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       len = *p;
       if (p + len + 1 > aptr + dlen)
       {
+         InfoLog (<< "Failed parse of RR");
          return NULL;
       }
       naptr.service = Data(p+1, len);
@@ -674,6 +908,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       len = *p;
       if (p + len + 1 > aptr + dlen)
       {
+         InfoLog (<< "Failed parse of RR");
          return NULL;
       }
       naptr.regex = Data(p+1, len);
@@ -682,43 +917,88 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       status = ares_expand_name(p, abuf, alen, &name, &len);
       if (status != ARES_SUCCESS)
       {
+         InfoLog (<< "Failed parse of RR");
          return NULL;
       }
-      naptr.replacement = Data(p+1, len);
+      naptr.replacement = name;
       
       free(name);
       return aptr + dlen;
    }
    else
    {
+      InfoLog (<< "Failed parse of RR");
       return NULL;
    }
+}
+
+DnsResult::NAPTR::NAPTR() : order(0), pref(0)
+{
 }
 
 bool 
 DnsResult::NAPTR::operator<(const DnsResult::NAPTR& rhs) const
 {
-   if (order != rhs.order)
+   if (key.empty()) // default value
    {
-      return pref < rhs.pref;
+      return false;
    }
-   else
+   else if (rhs.key.empty()) // default value
    {
-      return order < rhs.order;
+      return true;
    }
+   else if (order < rhs.order)
+   {
+      return true;
+   }
+   else if (order == rhs.order)
+   {
+      if (pref < rhs.pref)
+      {
+         return true;
+      }
+      else if (pref == rhs.pref)
+      {
+         return replacement < rhs.replacement;
+      }
+   }
+   return false;
+}
+
+DnsResult::SRV::SRV() : cumulativeWeight(0)
+{
 }
 
 bool 
 DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
 {
-   return priority < rhs.priority;
+   if (priority < rhs.priority)
+   {
+      return true;
+   }
+   else if (priority == rhs.priority)
+   {
+      if (weight < rhs.weight)
+      {
+         return true;
+      }
+      else if (weight == rhs.weight)
+      {
+         if (key < rhs.key)
+         {
+            return true;
+         }
+      }
+   }
+   return false;
 }
 
 
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::DnsResult::NAPTR& naptr)
 {
-   strm << "order=" << naptr.order
+   strm << "key=" << naptr.key
+        << " order=" << naptr.order
         << " pref=" << naptr.pref
         << " flags=" << naptr.flags
         << " service=" << naptr.service
@@ -730,9 +1010,11 @@ resip::operator<<(std::ostream& strm, const resip::DnsResult::NAPTR& naptr)
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::DnsResult::SRV& srv)
 {
-   strm << Transport::toData(srv.transport) 
+   strm << "key=" << srv.key
+        << " t=" << Transport::toData(srv.transport) 
         << " p=" << srv.priority
         << " w=" << srv.weight
+        << " c=" << srv.cumulativeWeight
         << " port=" << srv.port
         << " target=" << srv.target;
    return strm;
