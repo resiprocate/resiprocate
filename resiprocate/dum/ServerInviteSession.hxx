@@ -33,11 +33,10 @@ class ServerInviteSession: public InviteSession
       virtual SipMessage& end();
       
       void dispatch(const SipMessage& msg);
-      void dispatch(const DumTimeout& timer);
 
    private:
       friend class Dialog;
-      
+
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 
       // disabled
