@@ -1,4 +1,4 @@
-# $Id: Makefile.osarch,v 1.6 2003/10/05 02:45:42 jason Exp $
+# $Id: Makefile.osarch,v 1.7 2003/10/05 02:46:15 jason Exp $
 
 ######################################################################
 
@@ -57,8 +57,8 @@ endif
 ifeq ($(OSTYPE),SunOS)
 
     USE_LIBGETOPT = 1
-    CFLAGS += -DSUNXIL_WARNING_DISABLE
-    CXXFLAGS += -DSUNXIL_WARNING_DISABLE
+    CFLAGS += -DSUNXIL_WARNING_DISABLE -DHAVE_POPT_H
+    CXXFLAGS += -DSUNXIL_WARNING_DISABLE -DHAVE_POPT_H
     INSTALL_PATH_DEFAULT = /opt/vocal
 
     ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
