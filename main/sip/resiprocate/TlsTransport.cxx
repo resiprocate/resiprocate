@@ -217,7 +217,7 @@ TlsTransport::processAllWrites( FdSet& fdset )
          // need to create the connection 
    
          // attempt to open
-         int sock = socket( AF_INET, SOCK_STREAM, 0 );
+         Socket sock = socket( AF_INET, SOCK_STREAM, 0 );
          if ( sock != -1 )
          {
             struct sockaddr_in servaddr;
