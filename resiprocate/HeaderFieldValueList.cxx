@@ -57,19 +57,28 @@ HeaderFieldValueList::encode(const Data& headerName, std::ostream& str)
 std::ostream&
 HeaderFieldValueList::encodeEmbedded(const Data& headerName, std::ostream& str)
 {
+   assert(!headerName.empty());
+
    if (getParserContainer() != 0)
    {
       getParserContainer()->encodeEmbedded(headerName, str);
    }
    else
    {
+      bool first = true;
       for (HeaderFieldValueList::const_iterator j = begin();
            j != end(); j++)
       {
-         if (!headerName.empty())
+         if (first)
          {
-            str << headerName << Symbols::EQUALS;
+            first = false;
          }
+         else
+         {
+            str << Symbols::AMPERSAND;
+         }
+
+         str << headerName << Symbols::EQUALS;
          Data buf;
          {
             DataStream s(buf);

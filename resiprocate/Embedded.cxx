@@ -75,16 +75,13 @@ Embedded::encode(const Data& dat)
       {
          switch (dat[i])
          {
-            case '%' : 
-            case ' ' :
             case ';' :
-            case '/' :
-            case '?' :
-            case ':' :
             case '@' :
             case '&' :
             case '=' :
-            case '+' :
+            case ' ' :
+            case ',' :
+            case '%' : 
             {
                str << Symbols::PERCENT;
 
@@ -104,4 +101,3 @@ Embedded::encode(const Data& dat)
 
    return out;
 }
-
