@@ -22,6 +22,7 @@
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/PublicationCreator.hxx"
+#include "resiprocate/dum/RedirectManager.hxx"
 #include "resiprocate/dum/RegistrationCreator.hxx"
 #include "resiprocate/dum/ServerAuthManager.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
@@ -45,31 +46,40 @@ using namespace std;
 
 DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mProfile(0),
-   mRedirectManager(0),
+   mRedirectManager(new RedirectManager()),
    mClientAuthManager(0),
    mServerAuthManager(0),
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
    mServerRegistrationHandler(0),
+   mRedirectHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
-   mDumShutdownHandler(0)
+   mDumShutdownHandler(0),
+   mDestroying(false)
 {
    addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());   
 }
 
 DialogUsageManager::~DialogUsageManager()
 {  
+   mDestroying = true;   
    DebugLog ( << "~DialogUsageManager" );
    while(!mDialogSetMap.empty())
    {
       delete mDialogSetMap.begin()->second;
    }
-   if (mDumShutdownHandler)
+}
+
+void 
+DialogUsageManager::shutdown()
+{
+   if (mDumShutdownHandler && !mDestroying)
    {
-      mDumShutdownHandler->onDumDestroyed();
+      mDumShutdownHandler->onDumCanBeDeleted();      
    }
 }
+
 
 void DialogUsageManager::shutdown(DumShutdownHandler* h)
 {
@@ -170,11 +180,20 @@ void DialogUsageManager::setProfile(Profile* profile)
    mProfile = profile;
 }
 
-
 void DialogUsageManager::setRedirectManager(RedirectManager* manager)
 {
-   assert(!mRedirectManager);
+   delete mRedirectManager;
    mRedirectManager = manager;
+}
+
+void DialogUsageManager::setRedirectHandler(RedirectHandler* handler)
+{
+   mRedirectHandler = handler;
+}
+   
+RedirectHandler* DialogUsageManager::getRedirectHandler()
+{
+   return mRedirectHandler;
 }
 
 void 
