@@ -72,7 +72,6 @@ InviteSession::getSessionHandle()
 void InviteSession::storePeerCapabilities(const SipMessage& msg)
 {
    // !slg! ToDo - add methods to get this data, App may be interested
-   // Only store each capability once - do not overwrite
    if (msg.exists(h_Allows))
    {
       mPeerSupportedMethods = msg.header(h_Allows);
@@ -611,17 +610,10 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case On2xxAnswer:
          // retransmission of 200I
          {
-            // We can construct the ACK using the dialog and then override the
-            // CSeq by looking at the value in the 200I. We don't need to store
-            // all the ACK messages sent which saves us from having to also have
-            // a timer to clean them up after 64T1
-            // might want to add a makeAck method in Dialog so we don't
-            // increment CSeq unnecessarily
-
             // !jf! Need to include the answer here. 
             SipMessage ack;
             mDialog.makeRequest(ack, ACK);
-            ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
+            // ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence(); // !slg! not required since change in Dialog.cxx to store ACK CSeq when 200 to INVITE is received
             mDialog.send(ack);
          }
          break;
@@ -868,7 +860,7 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
       // !jf! Need to include the answer here. 
       SipMessage ack;
       mDialog.makeRequest(ack, ACK);
-      ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
+      // ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence(); // !slg! not required since change in Dialog.cxx to store ACK CSeq when 200 to INVITE is received
       mDialog.send(ack);
    }
    else if (msg.isResponse() && msg.header(h_CSeq).method() == INVITE)
@@ -1233,7 +1225,7 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
       bool fUAS = dynamic_cast<ServerInviteSession*>(this) != NULL; 
      
       mSessionInterval = mDialog.mDialogSet.getUserProfile()->getDefaultSessionTime();  // Used only if UAC doesn't request a time 
-      mSessionRefresherUAS = true;  // Used only if UAC doesn't request a time 
+      mSessionRefresherUAS = fUAS;  // Default to us as refresher
     
       // Check if far-end supports 
       bool farEndSupportsTimer = false; 
@@ -1606,7 +1598,8 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    }
    else
    {
-      assert(0);
+      //assert(0); !slg! need to remove to allow Refer to be handled by dispatchOthers 
+      // !slg! should there be OnRefer events returned here???
       return Unknown;
    }
 }
