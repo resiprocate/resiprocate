@@ -61,19 +61,26 @@ HeaderFieldValue::clone() const
 {
   return new HeaderFieldValue(*this);
 }
-
-Parameter& 
-HeaderFieldValue::getParameter(ParameterTypes::Type type)
-{
-   assert(0);
-}
       
 void 
-HeaderFieldValue::parseParameters(unsigned int start)
+HeaderFieldValue::parseParameters(const char* startPos)
 {
-   assert(0);
-}
+   const char* endPos = mField + mFieldLength;
+   if (startPos < endPos)
+   {
+      assert(*startPos == Symbols::SEMI_COLON[0]);
+      //const char* endKey = scan(startPos, endPos, Symbols::SEMI_OR_EQUAL);
       
+      
+   }
+}
+
+#if 0
+const char* 
+HeaderFieldValue::scan(const char* start, const char* end, const Data& charset)
+{
+}
+#endif
 
 ParameterList& 
 HeaderFieldValue::getParameters()

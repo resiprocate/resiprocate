@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sipstack/ParameterList.hxx>
 #include <sipstack/ParseException.hxx>
+#include <sipstack/ParameterTypes.hxx>
 
 
 namespace Vocal2
@@ -23,19 +24,35 @@ class HeaderFieldValue
       ~HeaderFieldValue();
 
       HeaderFieldValue* clone() const;
-      Parameter& getParameter(ParameterTypes::Type type);
-      ParameterList& getParameters();
-      ParameterList& getUnknownParameters();
-      bool isParsed() const;
 
-      bool exists(const Data& subcomponent);
+      template <typename ParameterTypes::Type T>
+      typename ParameterType<T>::Type& getParameter(const ParameterType<T>& type)
+      {
+         Parameter* p = mParameterList.find(T);
+         if (p == 0)
+         {
+            mParameterList.insert(p = new typename ParameterType<T>::Type(ParameterTypes::Type(T)));
+         }
+         assert(p);
+         return *(dynamic_cast<typename ParameterType<T>::Type*>(p));
+      }
+
+      ParameterList& getParameters();
+
+      ParameterList& getUnknownParameters();
+
+      void parseParameters(const char* startPos);
+
+
+      UnknownParameter* get(const Data& type);
+
+      bool exists(const Data& parameter);
+
       bool exists(const ParameterTypes::Type type);
       
-      UnknownParameter* get(const Data& type);
-      
-      HeaderFieldValue* next;
+      bool isParsed() const;
 
-      void parseParameters(unsigned int start);
+
 
       ParserCategory* getParserCategory()
       {
@@ -49,15 +66,17 @@ class HeaderFieldValue
 
       std::ostream& encode(std::ostream& str) const;
       
-      friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
-
+      HeaderFieldValue* next;
       ParserCategory* mParserCategory;
       const char* mField;
       const unsigned int mFieldLength;
+
    private:
       ParameterList mParameterList;
       ParameterList mUnknownParameterList;
       bool mMine;
+
+      friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
 };
 
 std::ostream& operator<<(std::ostream& stream, 

@@ -1,9 +1,10 @@
 #ifndef Parameter_hxx
 #define Parameter_hxx
 
-#include <sipstack/ParameterTypeEnums.hxx>
 #include <util/Data.hxx>
 #include <iostream>
+#include <sipstack/ParameterTypeEnums.hxx>
+
 
 namespace Vocal2
 {
@@ -19,10 +20,12 @@ class Parameter
       virtual const Data& getName() const;
 
       virtual Parameter* clone() const = 0;
-      virtual std::ostream& encode(std::ostream& stream) const = 0;
 
+      virtual std::ostream& encode(std::ostream& stream) const = 0;
+     
       Parameter* next;
    private:
+
       ParameterTypes::Type mType;
 
 };

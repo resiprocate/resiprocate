@@ -2,6 +2,7 @@
 #define DataParameter_hxx
 
 #include <sipstack/Parameter.hxx>
+#include <sipstack/ParameterTypeEnums.hxx>
 #include <util/Data.hxx>
 #include <iostream>
 
@@ -14,7 +15,7 @@ class DataParameter : public Parameter
       typedef Data Type;
       
       DataParameter(ParameterTypes::Type, const char* startData, unsigned int dataSize);
-      DataParameter(ParameterTypes::Type, const Data& data);
+      DataParameter(ParameterTypes::Type);
       
       Data& value();
       virtual Parameter* clone() const;
