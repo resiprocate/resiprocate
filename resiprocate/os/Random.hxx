@@ -23,18 +23,6 @@ class Random
    private:
       static bool  mIsInitialized;
       
-#if 0
-      class Init
-      {
-         public:
-            Init()
-            {
-               Random::initialize();
-            }
-      };
-
-      static Init initer;
-#endif
 };
  
 }
