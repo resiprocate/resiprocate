@@ -136,6 +136,8 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
       {
          DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection);
          fdset.clear(currConnection->getSocket());
+         assert(!fdset.readyToRead(currConnection->getSocket()));
+         
          std::pair<char*, size_t> writePair = currConnection->getWriteBuffer();
          size_t bytesToRead = resipMin(writePair.second, 
                                        static_cast<size_t>(Connection::ChunkSize));
@@ -148,6 +150,7 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
          if (bytesRead == -1)
          {
             DebugLog (<< "Closing connection bytesRead=" << bytesRead);
+            delete writePair.first;
             delete currConnection;
          }
          else if (bytesRead > 0) 
