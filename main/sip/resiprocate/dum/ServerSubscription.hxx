@@ -20,6 +20,10 @@ class ServerSubscription : public BaseSubscription
       SipMessage& accept(int statusCode = 200);
       SipMessage& reject(int responseCode);
 
+      //used to accept a reresh when there is no useful state to convey to the
+      //client     
+      SipMessage& neutralNotify();
+      
       void setSubscriptionState(SubscriptionState state);
 
       SipMessage& update(const Contents* document);
@@ -43,7 +47,9 @@ class ServerSubscription : public BaseSubscription
       ServerSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& req);
 
       void makeNotifyExpires();
-      void makeNotify();      
+      void makeNotify();    
+      
+      int getTimeLeft();
 
 //      const Contents* mCurrentEventDocument;
       SipMessage mLastNotify;
@@ -53,6 +59,7 @@ class ServerSubscription : public BaseSubscription
       // disabled
       ServerSubscription(const ServerSubscription&);
       ServerSubscription& operator=(const ServerSubscription&);
+      time_t mAbsoluteExpiry;      
 };
  
 }

@@ -8,12 +8,18 @@ namespace resip
 
 class SubscriptionCreator : public BaseCreator 
 {
-  public:
+   public:
    
       //probably want to have things like the Accept list here too
       SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, const NameAddr& from, const Data& event, int subscriptionTime);
-  private:
-    Data mEvent; 
+      SubscriptionCreator(DialogUsageManager& dum, const NameAddr& target, const NameAddr& from, const Data& event, 
+                          int subscriptionTime, int refreshInterval);
+
+      bool hasRefreshInterval() const;      
+      int getRefreshInterval() const;
+   private:
+      int mRefreshInterval;      
+      Data mEvent; 
 };
  
 }
