@@ -79,6 +79,8 @@ class ResponseContext
       bool mForwardedFinalResponse;
       int mBestPriority;
       bool mSecure;
+
+      friend class RequestContext;
 };
 
 }

@@ -4,6 +4,7 @@
 #include <vector>
 #include "resiprocate/Uri.hxx"
 #include "repro/RequestProcessorChain.hxx"
+#include "repro/ResponseContext.hxx"
 #include "resiprocate/NameAddr.hxx"
 
 namespace resip
@@ -49,8 +50,8 @@ class RequestContext
       std::vector<resip::NameAddr>& getCandidates();
       
    private:
-      SipMessage*  mOriginalRequest;
-      Message*  mCurrentEvent;
+      resip::SipMessage*  mOriginalRequest;
+      resip::Message*  mCurrentEvent;
       RequestProcessorChain& mRequestProcessorChain;
       resip::Data mDigestIdentity;
       std::vector<resip::NameAddr> mCandidateTargets;
@@ -68,8 +69,8 @@ class RequestContext
       ChainIteratorStack mChainIteratorStack;
 
       void fixStrictRouterDamage();
-      void checkTopRouteForSelf();
-
+      void removeTopRouteIfSelf();
+      
       friend class ResponseContext;
 };
 
