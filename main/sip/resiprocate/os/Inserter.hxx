@@ -5,7 +5,10 @@
 #include <utility>
 #include <map>
 #include <set>
+
+#ifndef WIN32
 #include <ext/hash_map>
+#endif
 
 /**
    Allows a (possibly recursive) container of anything with operator<< to be
