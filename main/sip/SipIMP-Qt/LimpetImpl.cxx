@@ -121,7 +121,7 @@ LimpetImpl::logon()
 
 #ifdef USE_SSL
    assert( sipStack->security );
-   bool ok = sipStack->security->loadAllCerts( Data(mKey) );
+   bool ok = sipStack->security->loadAllCerts( ".", Data(mKey) );
    if ( !ok )
    {
       //InfoLog( << "Could not load the certificates" );
@@ -205,7 +205,7 @@ LimpetImpl::logon()
 
 #ifdef USE_SSL
    assert( sipStack->security );
-   ok = sipStack->security->loadAllCerts( mKey.data() );
+   ok = sipStack->security->loadAllCerts( ".", mKey.data() );
    if ( !ok )
    {
       //ErrLog( << "Could not load the certificates" );
