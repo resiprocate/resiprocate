@@ -30,7 +30,7 @@ DnsUtil::getLocalHostName()
    {
        if ( e != 0 )
        {
-           int err = errno;
+           int err = getErrno();
            switch (err)
            {
                case WSANOTINITIALISED:
@@ -60,7 +60,7 @@ DnsUtil::getLocalDomainName()
    {
        if ( e != 0 )
        {
-           int err = errno;
+           int err = getErrno();
            CritLog(<< "Couldn't find domainname: " << strerror(err));
            throw Exception(strerror(err), __FILE__,__LINE__);
        }
