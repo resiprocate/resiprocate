@@ -41,6 +41,7 @@ check_PROGRAMS = \
 	testLogger \
 	testMessageWaiting \
 	testMultipartMixedContents \
+	testMultipartRelated \
 	testMsgHeaderDiagram \
 	testParseBuffer \
 	testParserCategories \
@@ -91,6 +92,7 @@ testIM_SOURCES = testIM.cxx
 testLogger_SOURCES = testLogger.cxx
 testMessageWaiting_SOURCES = testMessageWaiting.cxx
 testMultipartMixedContents_SOURCES = testMultipartMixedContents.cxx
+testMultipartRelated_SOURCES = testMultipartRelated.cxx
 testParseBuffer_SOURCES = testParseBuffer.cxx
 testParserCategories_SOURCES = testParserCategories.cxx
 testPlainContents_SOURCES = testPlainContents.cxx
