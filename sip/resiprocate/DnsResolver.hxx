@@ -5,20 +5,19 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#if defined(__linux__) && !defined(USE_ARES)
-#define USE_ARES
-#endif
-
-#include <list>
-#include <set>
+//#if defined(__linux__) && !defined(USE_ARES)
+//#define USE_ARES
+//#endif
 
 #if defined(USE_ARES)
 extern "C"
 {
-#include "ares.h"
-#include "ares_dns.h"
+	struct ares_channeldata;
 }
 #endif
+
+#include <list>
+#include <set>
 
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/BaseException.hxx"
@@ -139,7 +138,7 @@ class DnsResolver
 
    private:
 #if defined(USE_ARES)
-      ares_channel mChannel;
+	  struct ares_channeldata* mChannel;
       static void aresCallbackHost(void *arg, int status, struct hostent* host);
       static void aresCallbackSrvTcp(void *arg, int status, unsigned char *abuf, int alen);
       static void aresCallbackSrvUdp(void *arg, int status, unsigned char *abuf, int alen);
