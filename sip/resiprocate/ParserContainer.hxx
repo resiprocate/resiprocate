@@ -38,11 +38,11 @@ class ParserContainer : public ParserContainerBase
       T& front() { return *dynamic_cast<T*>(mList->first->getParserCategory()); }
       T& back() { return *dynamic_cast<T*>(mList->last->getParserCategory()); }
       
-      void push_front(T & t) { mList->push_front(new HeaderFieldValue(t.clone())); }
-      void push_back(T & t) { mList->push_front(new HeaderFieldValue(t.clone())); }
+      void push_front(const T & t) { mList->push_front(new HeaderFieldValue(t.clone())); }
+      void push_back(const T & t) { mList->push_front(new HeaderFieldValue(t.clone())); }
       
-      void pop_front(T & t) { mList->pop_front(); }
-      void pop_back(T & t) { mList->pop_back(); }
+      void pop_front() { mList->pop_front(); }
+      void pop_back() { mList->pop_back(); }
       
       ParserContainer reverse();
       

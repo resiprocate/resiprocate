@@ -409,3 +409,5 @@ MultiHeader<Headers::Via> Vocal2::h_Vias;
 MultiHeader<Headers::Subscription_State> Vocal2::h_SubscriptionStates;
 Vocal2::RequestLineType Vocal2::h_RequestLine;
 Vocal2::StatusLineType Vocal2::h_StatusLine;
+
+Header<Headers::Call_ID> Vocal2::h_Replaces;

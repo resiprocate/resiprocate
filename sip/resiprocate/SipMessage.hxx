@@ -52,14 +52,14 @@ class SipMessage : public Message
 
       template <int T>
       bool
-      exists(const Header<T>& headerType)
+      exists(const Header<T>& headerType) const
       {
          return mHeaders[T] != 0;
       }
 
       template <int T>
       typename Header<T>::Type& 
-      header(const Header<T>& headerType)
+      header(const Header<T>& headerType) const
       {
          HeaderFieldValueList* hfvs = mHeaders[T];
          // empty?
@@ -87,7 +87,7 @@ class SipMessage : public Message
 
       template <int T>
       ParserContainer<typename MultiHeader<T>::Type>& 
-      header(const MultiHeader<T>& headerType)
+      header(const MultiHeader<T>& headerType) const
       {
          HeaderFieldValueList* hfvs = mHeaders[T];
          // empty?
@@ -111,10 +111,10 @@ class SipMessage : public Message
       }
 
       RequestLine& 
-      header(const RequestLineType& l);
+      header(const RequestLineType& l) const;
 
       StatusLine& 
-      header(const StatusLineType& l);
+      header(const StatusLineType& l) const;
       
       template <int T>
       void remove(const Header<T>& headerType)
@@ -128,7 +128,7 @@ class SipMessage : public Message
       // note: removeFirst/removeLast through the component 
 
       // unknown header interface
-      StringComponents& header(const Data& symbol);
+      StringComponents& header(const Data& symbol) const;
 
       void remove(const Data& symbol);
 
@@ -155,20 +155,20 @@ class SipMessage : public Message
       SipMessage& operator=(const SipMessage&);
 
       const bool mIsExternal;
-      HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
+      mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
-      UnknownHeaders mUnknownHeaders;
+      mutable UnknownHeaders mUnknownHeaders;
   
       bool mHaveFixedDest;
       Data mFixedDest;
-      
+
 #ifndef WIN32 // CJ TODO FIX 
       sockaddr_in mSource;
 #endif
 
       std::vector<char*> mBufferList;
-      HeaderFieldValue* mStartLine;
-      HeaderFieldValue* mBody;
+      mutable HeaderFieldValue* mStartLine;
+      mutable HeaderFieldValue* mBody;
 
       Data mTransactionId;  // !jf!
 };
