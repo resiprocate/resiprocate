@@ -143,9 +143,13 @@ TransportSelector::dnsResolve( SipMessage* msg, const Data& tid)
       {
          mStack.mDnsResolver.lookup(tid, msg->getTarget());
       }
-      else if (msg->header(h_Routes).size())
+      else if (!msg->header(h_Routes).empty())
       {
-         mStack.mDnsResolver.lookup(tid, msg->header(h_Routes).front().uri());
+         // put this into the target, in case the send later fails, so we don't
+         // lose the target
+         msg->setTarget(msg->header(h_Routes).front().uri());
+         msg->header(h_Routes).pop_front();
+         mStack.mDnsResolver.lookup(tid, msg->getTarget());
       }
       else
       {
@@ -194,17 +198,12 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, const Da
 
          if (msg->header(h_Vias).front().sentHost().empty())
          {
-#if 1 // select if we use an IP address of FQDN in via 
-             msg->header(h_Vias).front().sentHost() = destination.transport->hostName(); // use hostname 
-#else
-             msg->header(h_Vias).front().sentHost() = destination.transport->interfaceName(); // use IP address 
-#endif
+            msg->header(h_Vias).front().sentHost() = destination.transport->hostName(); // use hostname 
          }
 
          const Via &v(msg->header(h_Vias).front());
 
-         if (!DnsResolver::isIpAddress(v.sentHost()) && 
-             destination.transport->port() == 5060)
+         if (!DnsResolver::isIpAddress(v.sentHost()) &&  destination.transport->port() == 5060)
          {
             DebugLog(<<"supressing port 5060 w/ symname");
             // backward compat for 2543 and the symbolic host w/ 5060 ;
