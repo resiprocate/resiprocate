@@ -27,12 +27,13 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, Log::INFO, argv[0]);
+   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
    int runs = 100000;
    if (argc == 2)
    {
       runs = atoi(argv[1]);
    }
+
    cout << "Performing " << runs << " runs." << endl;
    
    Fifo<Message> received;
@@ -44,11 +45,11 @@ main(int argc, char* argv[])
    dest.uri().user() = "fluffy";
    dest.uri().host() = "localhost";
    dest.uri().port() = 5070;
-   dest.uri().param(p_transport) == "udp";
+   dest.uri().param(p_transport) = "udp";
    
    NameAddr from = dest;
    from.uri().port() = 5070;
-   
+
    for (int i=0; i<runs; i++)
    {
       auto_ptr<SipMessage> message = auto_ptr<SipMessage>(Helper::makeInvite( dest, from, from));
@@ -60,10 +61,14 @@ main(int argc, char* argv[])
       message->header(h_Vias).front().sentHost() = udp->hostName();
       message->header(h_Vias).front().sentPort() = udp->port();
 
-      Data encoded(2048, true);
-      DataStream strm(encoded);
-      message->encode(strm);
-      strm.flush();
+      Data encoded;
+      {
+         DataStream strm(encoded);
+         message->encode(strm);
+      }
+      assert(!resolver.mNextHops.empty());
+      cerr << "!! " << resolver.mNextHops.front() << endl;
+
       udp->send(resolver.mNextHops.front(), encoded, "foo");
       
       FdSet fdset; 
