@@ -226,11 +226,11 @@ typedef ParserContainer<Via> Vias;
 //====================
 // RequestLine:
 //====================
-class RequestLine : public ParserCategory
+class RequestLineComponent : public ParserCategory
 {
    public:
-      RequestLine(HeaderFieldValueList& hvfs) {}
-      RequestLine(HeaderFieldValue& hvf) {}
+      RequestLineComponent(HeaderFieldValueList& hvfs) {}
+      RequestLineComponent(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
 //    CommandType getMethod() const;
 };
@@ -238,11 +238,11 @@ class RequestLine : public ParserCategory
 //====================
 // StatusLine:
 //====================
-class StatusLine : public ParserCategory
+class StatusLineComponent : public ParserCategory
 {
    public:
-      StatusLine(HeaderFieldValueList& hvfs) {}
-      StatusLine(HeaderFieldValue& hvf) {}
+      StatusLineComponent(HeaderFieldValueList& hvfs) {}
+      StatusLineComponent(HeaderFieldValue& hvf) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       int getResponseCode() const;
 };

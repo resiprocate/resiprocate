@@ -3,6 +3,10 @@
 using namespace Vocal2;
 
 
+/*StringComponent::StringComponent(const StringComponent& other)
+   : mValue(other.mValue)
+{}
+*/
 void 
 StringComponent::parse()
 {
@@ -12,6 +16,7 @@ StringComponent::parse()
 std::ostream& 
 StringComponent::encode(std::ostream& str) const
 {
+   str << mValue;
    return str;
 }
 
@@ -22,3 +27,5 @@ StringComponent::value()
    checkParsed();
    return mValue; 
 }
+
+
