@@ -59,14 +59,14 @@ main(int argc, char* argv[])
    strm.write( in.data(), in.size() );
    strm.flush();
    
-   Data res = security->computeIdentity( in );
+   Data res = security->computeIdentity( Data("localhost"), in );
 
    //ErrLog( << "input is encoded " << in.charEncoded()  );
    //ErrLog( << "input is hex " << in.hex() );
    //ErrLog( << "input is  " << in );
    //ErrLog( << "identity is " << res  );
 
-   bool c  = security->checkIdentity( in , res );
+   bool c  = security->checkIdentity( Data("localhost"), in , res );
    
    if ( !c )
    {
