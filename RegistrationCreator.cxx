@@ -4,10 +4,12 @@
 
 using namespace resip;
 
-RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, NameAddr& aor)
+RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, const NameAddr& aor)
    : BaseCreator(dum)
 {
    makeInitialRequest(aor, REGISTER);
    mLastRequest.header(h_RequestLine).uri().user() = Data::Empty;
-   mLastRequest.header(h_Expires) = dum.getProfile()->getDefaultRegistrationTime();
+   mLastRequest.header(h_Expires).value() = dum.getProfile()->getDefaultRegistrationTime();
+
+   // store caller prefs in Contact
 }

@@ -47,3 +47,9 @@ BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
 
    mLastRequest.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
 }
+
+void
+BaseCreator::dispatch(const SipMessage& msg)
+{
+   assert(0);
+}

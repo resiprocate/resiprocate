@@ -4,7 +4,7 @@
 
 using namespace resip;
 
-ClientRegistration::ClientRegistration(DialogUsageManager& dum,
+ClientOutOfDialogReq::ClientOutOfDialogReq(DialogUsageManager& dum,
                                        Dialog& dialog,
                                        const SipMessage& req)
    : BaseUsage(dum, dialog),
@@ -13,14 +13,14 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
    assert(false);
 }
 
-ClientRegistration::Handle::Handle(DialogUsageManager& dum)
+ClientOutOfDialogReq::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
 {}
 
-ClientRegistration* 
-ClientRegistration::Handle::operator->()
+ClientOutOfDialogReq* 
+ClientOutOfDialogReq::Handle::operator->()
 {
-   return static_cast<ClientRegistration*>(get());
+   return static_cast<ClientOutOfDialogReq*>(get());
 }
 
 /* ====================================================================
