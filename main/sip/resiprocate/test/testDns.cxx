@@ -10,22 +10,21 @@
 namespace resip
 {
 
-class TestDnsHandler : public DnsInterface::Handler
+class TestDnsHandler : public DnsHandler
 {
    public:
       void handle(DnsResult* result)
       {
-         if (result->available())
+         switch (result->available())
          {
-            InfoLog (<< "Results: " );
-            while (result->available())
-            {
+            case DnsResult::Available:
                InfoLog (<< result->next());
-            }
-         }
-         else
-         {
-            InfoLog (<< "No more dns results");
+               break;
+            case DnsResult::Finished:
+               InfoLog (<< "No more dns results");
+               break;
+            default:
+               break;
          }
       }
 };
@@ -33,7 +32,7 @@ class TestDnsHandler : public DnsInterface::Handler
 class TestDns : public DnsInterface, public ThreadIf
 {
    public:
-      TestDns(DnsInterface::Handler* handler) : DnsInterface(handler)
+      TestDns() : DnsInterface(false)
       {
       }
 
@@ -56,9 +55,9 @@ using namespace resip;
 int 
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   Log::initialize(Log::COUT, Log::INFO, argv[0]);
    TestDnsHandler handler;
-   TestDns dns(&handler);
+   TestDns dns;
    dns.run();
    
    Uri uri;
@@ -67,7 +66,7 @@ main(int argc, char* argv[])
    for (int i=1; i<argc; i++)
    {
       uri.host() = argv[i];
-      dns.lookup(uri, Data::from(i));
+      dns.lookup(uri, &handler);
    }
 
    sleep(2);

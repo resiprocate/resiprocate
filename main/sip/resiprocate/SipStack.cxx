@@ -9,18 +9,18 @@
 #include <arpa/inet.h>
 #endif
 
-#include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/Socket.hxx"
 
-#include "resiprocate/SipStack.hxx"
 #include "resiprocate/Executive.hxx"
-#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Message.hxx"
-#include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/Security.hxx"
+#include "resiprocate/ShutdownMessage.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/SipStack.hxx"
 
 
 
@@ -35,13 +35,7 @@ using namespace resip;
 SipStack::SipStack(bool multiThreaded, Security* security, bool stateless) : 
    security( security ),
    mExecutive(*this),
-   mTransportSelector(*this),
-   mStatelessHandler(*this),
-   mTimers(mStateMacFifo),
-   mDnsResolver(*this),
-   mStateless(stateless),
-   mDiscardStrayResponses(false),
-   mRegisteredForTransactionTermination(false),
+   mTransactionController(mTUFifo, stateless),
    mStrictRouting(false),
    mShuttingDown(false)
 {
@@ -54,9 +48,7 @@ SipStack::SipStack(bool multiThreaded, Security* security, bool stateless) :
       security = new Security( true, true );
    }
 #endif
-
-   //addTransport(Transport::UDP, 5060);
-   //addTransport(Transport::TCP, 5060); // !jf!
+   assert(!mShuttingDown);
 }
 
 SipStack::~SipStack()
@@ -69,6 +61,7 @@ SipStack::~SipStack()
 void
 SipStack::shutdown()
 {
+   //InfoLog (<< "Shutting down stack " << this);
    mShuttingDown = true;
    mTUFifo.add(new ShutdownMessage);
 }
@@ -81,8 +74,8 @@ SipStack::addTransport( Transport::Type protocol,
 {
    assert(!mShuttingDown);
    assert(protocol != Transport::TLS);
-   
-   mTransportSelector.addTransport(protocol, port, hostName, nic);
+
+   mTransactionController.addTransport(protocol, port, hostName, nic);
    if (!hostName.empty()) 
    {
       addAlias(hostName, port);
@@ -101,12 +94,7 @@ SipStack::addTlsTransport( int port,
    
    try
    {
-      mTransportSelector.addTlsTransport(domainname, keyDir, privateKeyPassPhrase, port, hostName, nic);
-
-      if (!hostName.empty()) 
-      {
-         addAlias(hostName, port);
-      }
+      mTransactionController.addTlsTransport(port,keyDir,privateKeyPassPhrase, domainname, hostName, nic);
    }
    catch(BaseException& e)
    {
@@ -187,7 +175,8 @@ SipStack::send(const SipMessage& msg)
    
    SipMessage* toSend = new SipMessage(msg);
    toSend->setFromTU();
-   mStateMacFifo.add(toSend);
+
+   mTransactionController.send(toSend);
 }
 
 
@@ -201,7 +190,8 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri)
    SipMessage* toSend = new SipMessage(msg);
    toSend->setTarget(uri);
    toSend->setFromTU();
-   mStateMacFifo.add(toSend);
+
+   mTransactionController.send(toSend);
 }
 
 // this is only if you want to send to a destination not in the route. You
@@ -215,7 +205,8 @@ SipStack::sendTo(const SipMessage& msg, const Transport::Tuple& destination)
    SipMessage* toSend = new SipMessage(msg);
    toSend->setDestination(destination);
    toSend->setFromTU();
-   mStateMacFifo.add(toSend);
+
+   mTransactionController.send(toSend);
 }
 
 
@@ -290,7 +281,7 @@ SipStack::getTimeTillNextProcessMS()
 void
 SipStack::registerForTransactionTermination()
 {
-   mRegisteredForTransactionTermination = true;
+   mTransactionController.registerForTransactionTermination();
 }
 
 void 

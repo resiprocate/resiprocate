@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.125 2003/08/15 23:28:26 davidb Exp $
+# $Id: Makefile,v 1.126 2003/09/13 19:57:06 jason Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -9,7 +9,6 @@ CODE_SUBDIRS = os
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =  
 
-DEFINES += xNEW_MSG_HEADER_SCANNER
 CXXFLAGS += -I/usr/local/ssl/include
 LDFLAGS  += -L/usr/local/ssl/lib
 
@@ -58,7 +57,8 @@ SRC = \
 	Contents.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
-	DnsResolver.cxx \
+	DnsInterface.cxx \
+	DnsResult.cxx \
 	Executive.cxx \
 	ExistsParameter.cxx \
 	FloatParameter.cxx \
@@ -99,6 +99,7 @@ SRC = \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
 	TlsTransport.cxx \
+	TransactionController.cxx \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
@@ -111,7 +112,6 @@ SRC = \
 	ParameterHash.cxx \
 	MethodHash.cxx
 
-ifeq ($(HASHES),1)
 GPERFOPTS=-D --enum -E -L C++ -t -k '*' --compare-strncmp
 GPERFVER="GNU gperf 2.7.2"
 
@@ -123,12 +123,11 @@ GPERFVER="GNU gperf 2.7.2"
 
 # Exceptions (case sensitive)
 MethodHash.cxx: MethodHash-raw.cxx
-	../util/fixupGperf $< -o $@
+	os/fixupGperf $< -o $@
 	\rm MethodHash-raw.cxx
 
 # The rest of the hashes.
 %.cxx: %-raw.cxx
-	../util/fixupGperf $< -o $@ --ignorecase
-endif
+	os/fixupGperf $< -o $@ --ignorecase
 
 include $(BUILD)/Makefile.post
