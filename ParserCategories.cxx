@@ -107,7 +107,35 @@ Mime::operator=(const Mime& rhs)
 void
 Mime::parse(ParseBuffer& pb)
 {
-   assert(0);
+   const char* anchor = pb.skipWhitespace();
+
+   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SLASH);
+   pb.data(mType, anchor);
+
+   pb.skipWhitespace();
+   pb.skipChar(Symbols::SLASH[0]);
+
+   anchor = pb.skipWhitespace();
+   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+   pb.data(mSubType, anchor);
+
+   pb.skipWhitespace();
+   parseParameters(pb);
+}
+
+
+Data& 
+Mime::type()
+{
+   checkParsed();
+   return mType;
+}
+
+Data&
+Mime::subType()
+{
+   checkParsed();
+   return mSubType;
 }
 
 ParserCategory* 
@@ -119,7 +147,8 @@ Mime::clone() const
 std::ostream&
 Mime::encode(std::ostream& str) const
 {
-   str << mType << Symbols::SLASH << mSubType;
+   str << mType << Symbols::SLASH << mSubType ;
+   encodeParameters(str);
    return str;
 }
 
