@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.131 2003/09/18 21:08:48 jason Exp $
+# $Id: Makefile,v 1.132 2003/11/02 19:10:43 fluffy Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -15,7 +15,6 @@ LDFLAGS  += -L/usr/local/ssl/lib
 #	XPidf.cxx \
 
 SRC = \
-	libSipImp.cxx \
 	os/BaseException.cxx \
 	os/Coders.cxx \
 	os/Condition.cxx \
