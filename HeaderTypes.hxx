@@ -27,7 +27,7 @@ class Headers
          defineHeader(To, "To", NameAddr, "RFC ????"), 
          defineHeader(From, "From", NameAddr, "RFC ????"),
          defineMultiHeader(Via, "Via", Via, "RFC ????"),
-         defineHeader(CallId, "Call-ID", CallId, "RFC ????"),
+         defineHeader(CallID, "Call-ID", CallId, "RFC ????"),
          defineHeader(CSeq, "CSeq", CSeqCategory, "RFC ????"),
          defineMultiHeader(Route, "Route", NameAddr, "RFC ????"),
          defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC ????"),

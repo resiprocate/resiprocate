@@ -127,7 +127,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
     {
       {"e", Headers::ContentEncoding},
       {"m", Headers::Contact},
-      {"i", Headers::CallId},
+      {"i", Headers::CallID},
       {"l", Headers::ContentLength},
       {"require", Headers::Require},
       {"c", Headers::ContentType},
@@ -150,7 +150,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
       {"reply-to", Headers::ReplyTo},
       {"from", Headers::From},
       {"min-expires", Headers::MinExpires},
-      {"call-id", Headers::CallId},
+      {"call-id", Headers::CallID},
       {"priority", Headers::Priority},
       {"v", Headers::Via},
       {"record-route", Headers::RecordRoute},
