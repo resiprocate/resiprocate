@@ -97,6 +97,7 @@ class Timer
       friend std::ostream& operator<<(std::ostream&, const Timer&);
       friend class BaseTimerQueue;
       friend class TimerQueue;
+      friend class DtlsTimerQueue;
       friend class TimeLimitTimerQueue;
 };
  

@@ -4,9 +4,12 @@
 #include <set>
 #include <iosfwd>
 #include "resiprocate/TransactionMessage.hxx"
+#include "resiprocate/DtlsMessage.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include "resiprocate/os/Timer.hxx"
+
+#include <openssl/ssl.h>
 
 // .dlb. 
 // to do: timer wheel for transaction-bound timers and a heap for
@@ -57,6 +60,21 @@ class TimerQueue : public BaseTimerQueue
    private:
       Fifo<TransactionMessage>& mFifo;
 };
+
+#ifdef USE_DTLS
+
+class DtlsTimerQueue : public BaseTimerQueue
+{
+   public:
+      DtlsTimerQueue( Fifo<DtlsMessage>& fifo ) ;
+      void add( SSL *, unsigned long msOffset ) ;
+      virtual void process() ;
+      
+   private:
+      Fifo<DtlsMessage>& mFifo ;
+};
+
+#endif
 
 std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
 

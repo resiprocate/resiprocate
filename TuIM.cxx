@@ -91,7 +91,7 @@ TuIM::TuIM(SipStack* stack,
 bool
 TuIM::haveCerts( bool sign, const Data& encryptFor )
 {
-   assert(0);
+/*   assert(0); */
 
 #if defined( USE_SSL )
    Security* sec = mStack->getSecurity();
