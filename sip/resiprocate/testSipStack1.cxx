@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #ifndef WIN32
 #include <sys/time.h>
@@ -11,6 +12,7 @@
 #include <sipstack/Helper.hxx>
 #include <sipstack/Transport.hxx>
 #include <util/Logger.hxx>
+
 
 using namespace Vocal2;
 using namespace std;
