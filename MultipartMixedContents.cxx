@@ -1,7 +1,7 @@
 #include "sip2/sipstack/MultipartMixedContents.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/util/Logger.hxx"
-#include "sip2/sipstack/EncodingContext.hxx"
+//#include "sip2/sipstack/EncodingContext.hxx"
 #include "sip2/util/Random.hxx"
 
 using namespace Vocal2;
