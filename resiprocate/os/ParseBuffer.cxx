@@ -5,21 +5,24 @@
 
 using namespace Vocal2;
 
-const char* ParseBuffer::WhitespaceOrParamTerm = " \t\r\n;?";
-const char* ParseBuffer::WhitespaceOrSlash = " \t\r\n/";
-const char* ParseBuffer::WhitespaceOrColonOrSemiColon = " \t\r\n/;:";
-const char* ParseBuffer::WhitespaceOrSemiColonOrRAQuote = " \t\r\n/;>";
-const char* ParseBuffer::WhitespaceOrColonOrSemiColonOrRAQuote = " \t\r\n/:;>";
-const char* ParseBuffer::WhitespaceOrSemiColon = " \t\r\n;";
+const char* ParseBuffer::ParamTerm = ";?";
 const char* ParseBuffer::Whitespace = " \t\r\n";
-const char* ParseBuffer::SemiColonOrColon = ";:";
-const char* ParseBuffer::ColonOrAtSign = ":@";
 
 void
 ParseBuffer::reset(const char* pos)
 {
    assert(pos >= mBuff && pos <= mStart);
    mStart = pos;
+}
+
+const char*
+ParseBuffer::skipChar(char c)
+{
+   if (*position() != c)
+   {
+      throw Exception("Expected '" + Data(1, c) + "'", __FILE__, __LINE__);
+   }
+   return ++mStart;
 }
 
 const char* 
@@ -110,26 +113,42 @@ ParseBuffer::skipToOneOf(const char* cs)
 }
 
 const char* 
-ParseBuffer::skipToEndQuote()
+ParseBuffer::skipToOneOf(const char* cs1,
+                         const char* cs2)
 {
    while (mStart < mEnd)
    {
-      switch (*position())
+      if (oneOf(*position(), cs1) ||
+          oneOf(*position(), cs2))
       {
-         case '\\' :
-         {
-            mStart += 2;
-            break;
-         }
-         case '"' :
-         {
-            return position();
-         }
-         default :
-         {
-            mStart++;
-         }
+         return position();
+      }
+      else
+      {
+         mStart++;
       }
    }
    return position();
+}
+
+const char* 
+ParseBuffer::skipToEndQuote(char quote)
+{
+   while (mStart < mEnd)
+   {
+      if (*position() == '\\')
+      {
+         mStart += 2;
+      }
+      else if (*position() == quote)
+      {
+         return position();
+      }
+      else
+      {
+         mStart++;
+      }
+   }
+
+   throw Exception("Missing '" + Data(1, quote) + "'", __FILE__, __LINE__);
 }

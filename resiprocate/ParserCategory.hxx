@@ -2,17 +2,18 @@
 #define ParserCategory_hxx
 
 #include <iostream>
+#include <list>
 #include <util/Data.hxx>
+#include <util/ParseBuffer.hxx>
 
 #include <sipstack/ParameterTypes.hxx>
+#include <sipstack/HeaderFieldValue.hxx>
 
 
 namespace Vocal2
 {
-
-class HeaderFieldValue;
 class UnknownParameter;
-class ParseBuffer;
+class Parameter;
 
 class ParserCategory
 {
@@ -27,7 +28,7 @@ class ParserCategory
       //!dcm! -- will need to add different type of clones to HeaderFieldValue
       //in order to write copy constructor
 
-      virtual ~ParserCategory() {}
+      virtual ~ParserCategory();
 
       // called by HeaderFieldValue::clone()
       ParserCategory* clone(HeaderFieldValue*) const;
@@ -41,7 +42,13 @@ class ParserCategory
       param(const ParameterType<T>& parameterType) const
       {
          checkParsed();
-         return mHeaderField->getParameter(parameterType).value();
+         typename ParameterType<T>::Type* p = dynamic_cast<typename ParameterType<T>::Type*>(getParameterByEnum(T));
+         if (!p)
+         {
+            p = new typename ParameterType<T>::Type(T);
+            mParameters.push_back(p);
+         }
+         return p->value();
       }
 #endif
 
@@ -50,7 +57,7 @@ class ParserCategory
       exists(const ParameterType<T>& parameterType) const
       {
          checkParsed();
-         return mHeaderField->exists(parameterType);
+         return getParameterByEnum(T);
       }
 
       //not necessary to call exists before remove(removing nothing is allowed)      
@@ -59,7 +66,7 @@ class ParserCategory
       remove(const ParameterType<T>& parameterType)
       {
          checkParsed();
-         mHeaderField->remove(parameterType);
+         removeParameterByEnum(T);
       }
       
       void parseParameters(ParseBuffer& pb);
@@ -70,7 +77,7 @@ class ParserCategory
          return mIsParsed;
       }
       
-      virtual void parse() = 0;
+      virtual void parse(ParseBuffer& pb) = 0;
 
       UnknownParameter& param(const Data& param) const;
 
@@ -90,11 +97,22 @@ class ParserCategory
          {
             ParserCategory* ncThis = const_cast<ParserCategory*>(this);
             ncThis->mIsParsed = true;
-            ncThis->parse();
+            ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength);
+            ncThis->parse(pb);
          }
       }
 
+      Parameter* getParameterByEnum(ParameterTypes::Type type) const;
+      void removeParameterByEnum(ParameterTypes::Type type);
+
+      Parameter* getParameterByData(const Data& data) const;
+      void removeParameterByData(const Data& data);
+
       HeaderFieldValue* mHeaderField;
+      typedef std::list<Parameter*> ParameterList; 
+      mutable ParameterList mParameters;
+      mutable ParameterList mUnknownParameters;
+
    private:
       friend std::ostream& operator<<(std::ostream&, const ParserCategory&);
       bool mIsParsed;

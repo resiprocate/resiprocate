@@ -11,6 +11,7 @@
 using namespace std;
 using namespace Vocal2;
 
+
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 HeaderFieldValue::HeaderFieldValue()
@@ -22,32 +23,30 @@ HeaderFieldValue::HeaderFieldValue()
 {}
 
 HeaderFieldValue::HeaderFieldValue(const char* field, unsigned int fieldLength)
-  : next(0),
-    mParserCategory(0),
-    mField(field),
-    mFieldLength(fieldLength),
-    mMine(false)
+   : next(0),
+     mParserCategory(0),
+     mField(field),
+     mFieldLength(fieldLength),
+     mMine(false)
 {}
 
 HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
-  : next(hfv.next),
-    mParserCategory(hfv.mParserCategory->clone(this)),
-    mField(0),
-    mFieldLength(hfv.mFieldLength),
-    mParameterList(hfv.mParameterList),
-    mUnknownParameterList(hfv.mUnknownParameterList),
-    mMine(true)
+   : next(hfv.next),
+     mParserCategory(hfv.mParserCategory->clone(this)),
+     mField(0),
+     mFieldLength(hfv.mFieldLength),
+     mMine(true)
 {
-  // if this isn't parsed, chunk and copy the block of memory
-  // the copy for the param lists will end up with empty lists
-  if (!(isParsed()))
-    {
+   // if this isn't parsed, chunk and copy the block of memory
+   // the copy for the param lists will end up with empty lists
+   if (!isParsed())
+   {
       const_cast<char*&>(mField) = new char[mFieldLength];
       memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
-    }
-  
-  // if it is, the above will end up with null unparsed fields and valid 
-  // param lists
+   }
+   
+   // if it is, the above will end up with null unparsed fields and valid 
+   // param lists
 }
 
 #ifndef WIN32
@@ -60,10 +59,11 @@ HeaderFieldValue::HeaderFieldValue(ParserCategory* parser)
 HeaderFieldValue::~HeaderFieldValue()
 {
   if (mMine)
-    {
-      HeaderFieldValue* ncThis = const_cast<HeaderFieldValue*>(this);      
-      delete [] ncThis->mField;
-    }
+  {
+     HeaderFieldValue* ncThis = const_cast<HeaderFieldValue*>(this);      
+     delete [] ncThis->mField;
+  }
+  delete mParserCategory;
 }
 
 // make destructor
@@ -74,78 +74,11 @@ HeaderFieldValue::clone() const
   return new HeaderFieldValue(*this);
 }
 
-// ;lr;ttl=7;user=phone
-// pass as ParseBuffer& (who makes it?)
-// extract key, induce parse generically
-void 
-HeaderFieldValue::parseParameters(ParseBuffer& pb)
-{
-   while (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0])
-   {
-      // extract the key
-      const char* keyStart = pb.skipChar();
-      const char* keyEnd = pb.skipToOneOf(" \t\r\n;=?>");  //!dlb! @ here?
-      
-      ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
-
-      if (type == ParameterTypes::UNKNOWN)
-      {
-         mUnknownParameterList.insert(new UnknownParameter(keyStart, (keyEnd - keyStart), pb));
-      }
-      else
-      {
-         // invoke the particular factory
-         mParameterList.insert(ParameterTypes::ParameterFactories[type](type, pb));
-      }
-      pb.skipToOneOf(" \t\r\n;?>");      
-   }
-}      
-
-ParameterList& 
-HeaderFieldValue::getParameters()
-{
-  return mParameterList;
-}
-
-ParameterList& 
-HeaderFieldValue::getUnknownParameters()
-{
-  return mParameterList;
-}
 
 bool 
 HeaderFieldValue::isParsed() const
 {
   return mParserCategory != 0;
-}
-
-
-bool 
-HeaderFieldValue::exists(const Data& subcomponent)
-{
-  
-  Parameter* exists = mUnknownParameterList.find(subcomponent);
-  if (!exists)
-  {
-     exists = mParameterList.find(subcomponent);
-     if (exists)
-     {
-        throw ParseException("???", __FILE__, __LINE__); // !jf!
-     }
-  }
-  return exists;
-}
-
-void 
-HeaderFieldValue::remove(const Data& parameter)
-{
-   mUnknownParameterList.erase(parameter);
-}
-
-UnknownParameter* 
-HeaderFieldValue::get(const Data& type)
-{
-  return dynamic_cast<UnknownParameter*>(mUnknownParameterList.get(type));
 }
 
 ostream& 
@@ -163,9 +96,7 @@ ostream& Vocal2::operator<<(ostream& stream, HeaderFieldValue& hfv)
 {
    if (hfv.isParsed())
    {
-      hfv.mParameterList.encode(stream);
-      stream << Symbols::SPACE << Symbols::COLON << Symbols::SPACE;
-      hfv.mUnknownParameterList.encode(stream);
+      hfv.mParserCategory->encode(stream);
    }
    else
    {
@@ -173,6 +104,7 @@ ostream& Vocal2::operator<<(ostream& stream, HeaderFieldValue& hfv)
    }
    return stream;
 }
+
 
 
 
