@@ -3,15 +3,10 @@
 
 #include "sip2/util/Socket.hxx"
 
-#if 0
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#endif
-
 #include "sip2/sipstack/Connection.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/util/Logger.hxx"
+
 
 using namespace Vocal2;
 
@@ -39,8 +34,9 @@ Connection::Connection(const Transport::Tuple& who,
 Connection::~Connection()
 {
    remove();
-//   shutdown(mSocket, SHUT_RDWR);
-   ::close(mSocket);
+
+   //shutdown(mSocket, SD_BOTH );
+   closesocket(mSocket);
 }
 
 Connection* 
@@ -206,7 +202,7 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
 std::ostream& 
 Vocal2::operator<<(std::ostream& strm, const Vocal2::Connection& c)
 {
-   strm << "CONN: " << c.getSocket() << " " << c.mWho;
+   strm << "CONN: " << int(c.getSocket()) << " " << c.mWho;
    return strm;
 }
 
