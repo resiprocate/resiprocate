@@ -2,9 +2,14 @@
 #define PREPARSE_HXX
 
 #include <sys/types.h>
-#include <limits.h>
 
 #include "sip2/sipstack/HeaderTypes.hxx"
+
+#if defined(PP_DO_INLINES)
+#define INLINE inline
+#else
+#define INLINE
+#endif
 
 namespace Vocal2
 {
@@ -12,26 +17,6 @@ namespace Vocal2
 class Transport;
 
 class SipMessage;            // fwd decl
-
-
-  
-typedef enum {
-    dCommaSep,
-    dContinuous,
-    lastDispositionMarker
-} Disposition;
-
-const int nDisp   = 2;
-const int nOct    = UCHAR_MAX+1;
-    
-/// Our sizes
-  
- 
-//}
-
-
-
-
 
 class Preparse
 {
@@ -67,56 +52,57 @@ class Preparse
 
         typedef short Action;
 
-        typedef short Status;
-        
-        
         typedef struct 
         {
                 State nextState;
                 int workMask;
         }
         Edge;
+        typedef enum
+        {
+            dContinuous = 0,
+            dCommaSep,
+            nDisp
+        }
+        Disposition;
         
-        void process(SipMessage& msg,
-                     char * buffer,
-                     size_t length,
-                     size_t start,
-                     size_t& used,
-                     size_t& discard,
-                     Status& status);
+        /// New interface.
+        /// -- return non-zero when preparse error.
+        int process(SipMessage& msg,
+                    char * buffer,
+                    size_t length);
 
-        // msg -- A SipMessage for use with this data buffer.
-        //        Will have HFV's installed by the pre-parser.
-        //
-        // buffer -- The character data to work on.  non-const since
-        //           it can flatten CRLFs
-        // 
-        // length -- The number of chars in buffer.
-        //
-        // start -- begin the Preparse at this char offset.
-        //          Used to restart on fragments.
-        //
-        // discard -- the preparse process has used this many
-        //            chars and they are no longer required for
-        //            subsequent preparse processing.
-        // 
-        // status -- returns a bitset. If the following bits are set,
-        // the listed action / situation applies.
-        //
-        //   preparseError -- There was an error processing this chunk
-        //   of data. You may discard up to 'discard' bytes of this
-        //   packet and take appropriate action for the transport
-        //   invovled (UDP - discard packet, TCP - close connection).
-        //
+        /// Reset internal state for a new message.
+        void reset();
+
+        /// Return number of bytes used in last call to 
+        //  process. -- used bytes are bytes that have
+        //  been looked at by the PP FSM.
+        INLINE size_t nBytesUsed();
+        
+        // Return offset for safe discard of data
+        // -- it is safe to discard bytes from the buffer
+        //    from this offset onward when copying to the 
+        //    new buffer.
+        INLINE size_t nDiscardOffset();
+        
+        /// Return true if any data was assigned to msg
+        /// in last call to process()
         //   dataAssigned -- Pointers into this chunk were passed into
         //   the SipMessage (msg).  This data is now REQUIRED to be associated
         //   with th SipMessage msg.  Can be used (with caution) for avoiding
         //   needless copies while dealing with the preparser.
-        //
+        INLINE bool isDataAssigned();
+        
+        /// Return true if headers were complete in last
+        /// call to process()
         //   headersComplete -- the preparser has detected the end of the
         //   SipMessage headers for this message.  discard is set such that
         //   the body of the SipMessage starts after 'discard' characters.
-        //  
+
+        INLINE bool isHeadersComplete();
+        
+        /// Return true if the headers and/or body were fragmented.
         //   fragmented -- more data is needed; call process() again
         //   with the same buffer, concatenated with more data from
         //   the wire; set 'start' to the appropriate value for the
@@ -124,8 +110,7 @@ class Preparse
         //   ::process, you MUST assign this buffer to the SipMessage
         //   and the new buffer call for fragment processing has to include
         //   all the data from the current buffer.
-        //
-
+        INLINE bool isFragmented();
 
     private:
 
@@ -164,6 +149,11 @@ class Preparse
         
         size_t mAnchorBegOff;
         size_t mAnchorEndOff;
+
+        short mStatus;
+        size_t mStart;
+        size_t mDiscard;
+        size_t mUsed;
         
 };
 
@@ -182,15 +172,10 @@ namespace PreparseConst
   const Preparse::Action actDiscardKnown = (1 << 9);
   const Preparse::Action actFlat         = (1 << 10);
 // --
-const Preparse::Status stNone            = 0;
-const Preparse::Status stHeadersComplete = (1 << 0);
-const Preparse::Status stPreparseError   = (1 << 1);
-const Preparse::Status stDataAssigned    = (1 << 2);
-const Preparse::Status stFragmented      = (1 << 3);
-// --
-
 };
- 
+#if defined(PP_DO_INLINES)
+#include "sip2/sipstack/PreparseInlines.cxx"
+#endif
 }
 
 
