@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.61 2003/02/11 00:09:54 davidb Exp $";
+// "$Id: Data.cxx,v 1.62 2003/02/11 16:49:33 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -893,6 +893,12 @@ Data::convertDouble() const
    }
 
    return s*val;
+}
+
+bool
+Data::prefix(const Data& pre)
+{
+   return strncmp(data(), pre.data(), pre.size()) == 0;
 }
 
 Data 

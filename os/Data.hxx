@@ -1,7 +1,7 @@
 #if !defined(Vocal2_Data_hxx)
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.58 2003/02/11 00:09:54 davidb Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.59 2003/02/11 16:49:33 davidb Exp $";
 
 #include "sip2/util/compat.hxx"
 #include "sip2/util/DataStream.hxx"
@@ -107,6 +107,7 @@ class Data
       int convertInt() const;
       double convertDouble() const;
 
+      bool prefix(const Data& pre);
       Data substr(size_type first, size_type count = Data::npos) const;
       int find(const Data& match, size_type start = 0) const;
       int find(const char* match, size_type start = 0) const;
