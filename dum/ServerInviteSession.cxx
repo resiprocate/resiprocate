@@ -169,6 +169,15 @@ ServerInviteSession::dispatch(const SipMessage& msg)
                mDum.send(mLastResponse);
                guard.destroy();
             }
+            // RFC3261 - section 15 indicates callers UA can send a BYE on early dialogs
+            else if (msg.header(h_RequestLine).method() == BYE)  
+            {
+               mState = Terminated;
+               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
+               mDialog.makeResponse(mLastResponse, msg, 200);
+               send(mLastResponse);
+               break;
+            }
             else
             {
                assert(0);  //!dcm! -- throw, toss away, inform other endpoint?
