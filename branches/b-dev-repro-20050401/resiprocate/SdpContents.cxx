@@ -343,62 +343,60 @@ SdpContents::Session::Email::encode(ostream& s) const
 // helper to parse email and phone numbers with display name
 void parseEorP(ParseBuffer& pb, Data& eOrp, Data& freeText)
 {
-   // =mjh@isi.edu (Mark Handley)
-   // =mjh@isi.edu
-   // =Mark Handley <mjh@isi.edu>
-   // =<mjh@isi.edu>
+  // =mjh@isi.edu (Mark Handley)
+  // =mjh@isi.edu
+  // =Mark Handley <mjh@isi.edu>
+  // =<mjh@isi.edu>
 
-   const char* anchor = pb.skipChar(Symbols::EQUALS[0]);
+  const char* anchor = pb.skipChar(Symbols::EQUALS[0]);
 
-   pb.skipToChar(Symbols::LPAREN[0]);
-   if (!pb.eof())
-   {
+  pb.skipToOneOf("<(\n\r");  // find a left angle bracket "<", 
+                             // a left paren "(", or a CR 
+  switch (*pb.position())
+    {
+    case '\n':					// Symbols::CR[0]
+    case '\r':					// Symbols::LF[0]
+      // mjh@isi.edu
+      //            ^
+
+      pb.data(eOrp, anchor);
+      break;
+
+    case '<':					// Symbols::LA_QUOTE[0]
+      // Mark Handley <mjh@isi.edu>
+      //              ^
+      // <mjh@isi.edu>
+      // ^
+		  
+      pb.data(freeText, anchor);
+      anchor = pb.skipChar();
+      pb.skipToEndQuote(Symbols::RA_QUOTE[0]);
+      pb.data(eOrp, anchor);
+      pb.skipChar(Symbols::RA_QUOTE[0]);
+      break;
+		  
+    case '(':					// Symbols::LPAREN[0]
       // mjh@isi.edu (Mark Handley)
       //             ^
+		  
       pb.data(eOrp, anchor);
-
       anchor = pb.skipChar();
       pb.skipToEndQuote(Symbols::RPAREN[0]);
       pb.data(freeText, anchor);
       pb.skipChar(Symbols::RPAREN[0]);
-   }
-   else
-   {
-      pb.reset(anchor);
-      pb.skipToChar(Symbols::LA_QUOTE[0]);
-      if (!pb.eof())
-      {
-         // Mark Handley <mjh@isi.edu>
-         //              ^
-         pb.data(freeText, anchor);
-         pb.skipChar();
-
-         // <mjh@isi.edu>
-         // ^
-         anchor = pb.skipChar();
-         pb.skipToEndQuote(Symbols::RA_QUOTE[0]);
-         pb.data(eOrp, anchor);
-         pb.skipChar(Symbols::RA_QUOTE[0]);
-      }
-      else
-      {
-         pb.reset(anchor);
-         pb.skipToOneOf(Symbols::CRLF);
-
-         // mjh@isi.edu
-         //            ^
-         pb.data(eOrp, anchor);
-      }
-   }
-
-   skipEol(pb);
+      break;
+    default:
+      assert(0);
+    }
 }
+
 
 void
 SdpContents::Session::Email::parse(ParseBuffer& pb)
 {
    pb.skipChar('e');
    parseEorP(pb, mAddress, mFreeText);
+   skipEol(pb);
 }
 
 SdpContents::Session::Phone::Phone(const Data& number,
