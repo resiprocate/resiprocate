@@ -1,5 +1,5 @@
-#ifndef QopParameter_hxx
-#define QopParameter_hxx
+#if !defined(RESIP_QOPPARAMETER_HXX)
+#define RESIP_QOPPARAMETER_HXX 
 
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/Parameter.hxx"
@@ -20,11 +20,7 @@ class QopParameter : public Parameter
  
 }
 
-
-
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
