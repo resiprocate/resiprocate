@@ -1,16 +1,17 @@
-# $Id: Makefile,v 1.53 2003/09/14 20:42:49 fluffy Exp $
+# $Id: Makefile,v 1.54 2003/09/25 17:47:22 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
-LDLIBS += -lncurses
+LDLIBS += -lncurses -lpopt
 
 #CXXFLAGS += -I/usr/local/ssl/include
 #LDFLAGS  += -L/usr/local/ssl/lib 
 #LDLIBS   += /usr/local/ssl/lib/libssl.a /usr/local/ssl/lib/libcrypto.a 
 
-TESTPROGRAMS =	testSelect.cxx \
+TESTPROGRAMS =	testTcp.cxx testUdp.cxx \
+		testSelect.cxx \
 		limpc.cxx \
 		testParseUtil.cxx \
 		testParseBuffer.cxx \
@@ -48,6 +49,7 @@ TESTPROGRAMS =	testSelect.cxx \
 		testMultipartMixedContents.cxx \
 		testClient.cxx \
 		testServer.cxx \
+		testDns.cxx \
 
 #	        testTcpTransport.cxx \
 #		lg.cxx \
