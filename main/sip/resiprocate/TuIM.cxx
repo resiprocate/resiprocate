@@ -41,8 +41,10 @@
 using namespace resip;
 using namespace std;
 
-static int IMMethodList[] = { (int) REGISTER, (int) MESSAGE, 
-	                      (int) SUBSCRIBE, (int) NOTIFY };
+static int IMMethodList[] = { (int) REGISTER, 
+                              (int) MESSAGE, 
+	                      (int) SUBSCRIBE, 
+                              (int) NOTIFY };
 const int IMMethodListSize = sizeof(IMMethodList) / sizeof(*IMMethodList);
 
 
