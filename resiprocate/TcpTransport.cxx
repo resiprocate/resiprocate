@@ -267,6 +267,7 @@ TcpTransport::processAllWrites( FdSet& fdset )
                else
                {
                   // succeeded, add the connection
+                  data->destination.transport = this;
                   mConnectionMap.add( data->destination, sock);
                   conn = mConnectionMap.get(data->destination);
                   assert( conn );
