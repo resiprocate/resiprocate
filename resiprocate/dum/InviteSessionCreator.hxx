@@ -1,13 +1,13 @@
-#if !defined(RESIP_INVSESSIONCREATOR_HXX)
-#define RESIP_INVSESSIONCREATOR_HXX
+#if !defined(RESIP_INVITESESSIONCREATOR_HXX)
+#define RESIP_INVITESESSIONCREATOR_HXX
 
 namespace resip
 {
 
-class InvSessionCreator : public BaseCreator
+class InviteSessionCreator : public BaseCreator
 {
    public:
-      InvSessionCreator(const Uri& aor, SdpContents* initial);
+      InviteSessionCreator(const Uri& aor, SdpContents* initial);
       void end();
       
    private:
