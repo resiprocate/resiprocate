@@ -120,6 +120,9 @@
 				RelativePath=".\BaseCreator.cxx">
 			</File>
 			<File
+				RelativePath=".\BaseSubscription.cxx">
+			</File>
+			<File
 				RelativePath=".\BaseUsage.cxx">
 			</File>
 			<File
@@ -234,6 +237,9 @@
 			</File>
 			<File
 				RelativePath=".\BaseCreator.hxx">
+			</File>
+			<File
+				RelativePath=".\BaseSubscription.hxx">
 			</File>
 			<File
 				RelativePath=".\BaseUsage.hxx">

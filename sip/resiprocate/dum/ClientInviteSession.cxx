@@ -152,6 +152,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             int code = msg.header(h_StatusLine).statusCode();
             if (code / 100 == 2 && msg.header(h_CSeq).method() == INVITE)
             {
+               //!dcm! -- ack the crossover 200?
+               mState = Connected;               
                end();
             }
             else if (code >= 300 && msg.header(h_CSeq).method() == INVITE)
@@ -287,172 +289,172 @@ ClientInviteSession::handlePrackResponse(const SipMessage& response)
 }
 
 #if 0 //?dcm? --PRACKISH dispatch, or just cruft?
-void
-ClientInviteSession::dispatch(const SipMessage& msg)
-{
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   assert(handler);
+// void
+// ClientInviteSession::dispatch(const SipMessage& msg)
+// {
+//    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+//    assert(handler);
    
-   if (msg.isRequest())
-   {
-      InviteSession::dispatch(msg);
-      return;
-   }
-   else if (msg.isResponse())
-   {
-      switch (msg.header(h_CSeq).method())
-      {
-         case INVITE:
-            break;
+//    if (msg.isRequest())
+//    {
+//       InviteSession::dispatch(msg);
+//       return;
+//    }
+//    else if (msg.isResponse())
+//    {
+//       switch (msg.header(h_CSeq).method())
+//       {
+//          case INVITE:
+//             break;
             
-         case PRACK:
-            handlePrackResponse(msg);
-            return;
+//          case PRACK:
+//             handlePrackResponse(msg);
+//             return;
             
-         case CANCEL:
-            if (msg.header(h_StatusLine).statusCode() >= 400)
-            {
-               mState = Terminated;
-               end(); // cleanup the mess
-            }
-            return;            
+//          case CANCEL:
+//             if (msg.header(h_StatusLine).statusCode() >= 400)
+//             {
+//                mState = Terminated;
+//                end(); // cleanup the mess
+//             }
+//             return;            
             
-         default:
-            InviteSession::dispatch(msg);
-            return;
-      }
-   }
+//          default:
+//             InviteSession::dispatch(msg);
+//             return;
+//       }
+//    }
    
-   int code = msg.header(h_StatusLine).statusCode();
-   if (code < 300 && mState == Initial)
-   {
-      //handler->onNewSession(getHandle(), msg);
-   }
+//    int code = msg.header(h_StatusLine).statusCode();
+//    if (code < 300 && mState == Initial)
+//    {
+//       //handler->onNewSession(getHandle(), msg);
+//    }
          
-   if (code < 200) // 1XX
-   {
-      if (mState == Initial || mState == Early)
-      {
-         mState = Early;
-         //handler->onEarly(getHandle(), msg);
+//    if (code < 200) // 1XX
+//    {
+//       if (mState == Initial || mState == Early)
+//       {
+//          mState = Early;
+//          //handler->onEarly(getHandle(), msg);
             
-         SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-         bool reliable = msg.header(h_Supporteds).find(Token(Symbols::C100rel));
-         if (sdp)
-         {
-            if (reliable)
-            {
-               if (mProposedLocalSdp)
-               {
-                  mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
-                  mCurrentLocalSdp = mProposedLocalSdp;
-                  mProposedLocalSdp = 0;
+//          SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+//          bool reliable = msg.header(h_Supporteds).find(Token(Symbols::C100rel));
+//          if (sdp)
+//          {
+//             if (reliable)
+//             {
+//                if (mProposedLocalSdp)
+//                {
+//                   mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
+//                   mCurrentLocalSdp = mProposedLocalSdp;
+//                   mProposedLocalSdp = 0;
 
-                  //handler->onAnswer(getHandle(), msg);
-               }
-               else
-               {
-                  mProposedRemoteSdp = static_cast<SdpContents*>(sdp->clone());
-                  handler->onOffer(getSessionHandle(), msg);
+//                   //handler->onAnswer(getHandle(), msg);
+//                }
+//                else
+//                {
+//                   mProposedRemoteSdp = static_cast<SdpContents*>(sdp->clone());
+//                   handler->onOffer(getSessionHandle(), msg);
 
-                  // handler must provide an answer
-                  assert(mProposedLocalSdp);
-               }
-            }
-            else
-            {
-               // do nothing, not an offer/answer
-            }
-         }
-         if (reliable)
-         {
-            sendPrack(msg);
-         }
-      }
-      else
-      {
-         // drop it on the floor. Late 1xx
-      }
-   }
-   else if (code < 300) // 2XX
-   {
-      if (mState == Cancelled)
-      {
-         //sendAck(the200);  
-         end();
-         return;
-      }
-      else if (mState != Terminated)
-      {
-         mState = Connected;
-         // !jf!
-         //if (mReceived2xx) // retransmit ACK
-         {
-            mDum.send(mAck);
-            return;
-         }
+//                   // handler must provide an answer
+//                   assert(mProposedLocalSdp);
+//                }
+//             }
+//             else
+//             {
+//                // do nothing, not an offer/answer
+//             }
+//          }
+//          if (reliable)
+//          {
+//             sendPrack(msg);
+//          }
+//       }
+//       else
+//       {
+//          // drop it on the floor. Late 1xx
+//       }
+//    }
+//    else if (code < 300) // 2XX
+//    {
+//       if (mState == Cancelled)
+//       {
+//          //sendAck(the200);  
+//          end();
+//          return;
+//       }
+//       else if (mState != Terminated)
+//       {
+//          mState = Connected;
+//          // !jf!
+//          //if (mReceived2xx) // retransmit ACK
+//          {
+//             mDum.send(mAck);
+//             return;
+//          }
          
-         //mReceived2xx = true;
-         handler->onConnected(getHandle(), msg);
+//          //mReceived2xx = true;
+//          handler->onConnected(getHandle(), msg);
             
-         SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-         if (sdp)
-         {
-            if (mProposedLocalSdp) // got an answer
-            {
-               mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
-               mCurrentLocalSdp = mProposedLocalSdp;
-               mProposedLocalSdp = 0;
+//          SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+//          if (sdp)
+//          {
+//             if (mProposedLocalSdp) // got an answer
+//             {
+//                mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
+//                mCurrentLocalSdp = mProposedLocalSdp;
+//                mProposedLocalSdp = 0;
                   
-               //handler->onAnswer(getHandle(), msg);
-            }
-            else  // got an offer
-            {
-               mProposedRemoteSdp = static_cast<SdpContents*>(sdp->clone());
-               handler->onOffer(getSessionHandle(), msg);
-            }
-         }
-         else
-         {
-            if (mProposedLocalSdp)
-            {
-               // Got a 2xx with no answer (sent an INVITE with an offer,
-               // unreliable provisionals)
-               end();
-               return;
-            }
-            else if (mCurrentLocalSdp == 0 && mProposedRemoteSdp == 0)
-            {        Transport::error( e );
-               InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
-               throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-               // Got a 2xx with no offer (sent an INVITE with no offer,
-               // unreliable provisionals)
-               end();
-               return;
-            }
-            else
-            {
-               assert(mCurrentLocalSdp != 0);
-               // do nothing
-            }
-         }
-         sendAck(msg);
-      }
-   }
-   else if (code >= 400)
-   {
-      if (mState != Terminated)
-      {
-         mState = Terminated;
-         handler->onTerminated(getSessionHandle(), msg);
-         delete this;
-      }
-   }
-   else // 3xx
-   {
-      assert(0);
-   }
-}
+//                //handler->onAnswer(getHandle(), msg);
+//             }
+//             else  // got an offer
+//             {
+//                mProposedRemoteSdp = static_cast<SdpContents*>(sdp->clone());
+//                handler->onOffer(getSessionHandle(), msg);
+//             }
+//          }
+//          else
+//          {
+//             if (mProposedLocalSdp)
+//             {
+//                // Got a 2xx with no answer (sent an INVITE with an offer,
+//                // unreliable provisionals)
+//                end();
+//                return;
+//             }
+//             else if (mCurrentLocalSdp == 0 && mProposedRemoteSdp == 0)
+//             {        Transport::error( e );
+//                InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
+//                throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+//                // Got a 2xx with no offer (sent an INVITE with no offer,
+//                // unreliable provisionals)
+//                end();
+//                return;
+//             }
+//             else
+//             {
+//                assert(mCurrentLocalSdp != 0);
+//                // do nothing
+//             }
+//          }
+//          sendAck(msg);
+//       }
+//    }
+//    else if (code >= 400)
+//    {
+//       if (mState != Terminated)
+//       {
+//          mState = Terminated;
+//          handler->onTerminated(getSessionHandle(), msg);
+//          delete this;
+//       }
+//    }
+//    else // 3xx
+//    {
+//       assert(0);
+//    }
+// }
 #endif
 
 

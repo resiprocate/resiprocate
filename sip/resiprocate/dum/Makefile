@@ -12,8 +12,10 @@ TESTPROGRAMS =
 SRC =   \
 	AppDialog.cxx \
 	AppDialogSet.cxx \
+	AppDialogSetFactory.cxx \
 	BaseCreator.cxx \
 	BaseUsage.cxx \
+	BaseSubscription.cxx \
 	ClientAuthManager.cxx \
 	ClientInviteSession.cxx \
 	ClientOutOfDialogReq.cxx \

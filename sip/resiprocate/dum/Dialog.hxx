@@ -43,15 +43,21 @@ class Dialog
       //void setLocalContact(const NameAddr& localContact);
       //void setRemoteTarget(const NameAddr& remoteTarget);
       
-      std::vector<ClientSubscriptionHandle> findClientSubscriptions();
-      ServerSubscriptionHandle findServerSubscription();
-      InviteSessionHandle findInviteSession();
-      ClientRegistrationHandle findClientRegistration();
-      ServerRegistrationHandle findServerRegistration();
-      ClientPublicationHandle findClientPublication();
-      ServerPublicationHandle findServerPublication();
-      ClientOutOfDialogReqHandle findClientOutOfDialog();
-      ServerOutOfDialogReqHandle findServerOutOfDialog();
+      
+      std::vector<ClientSubscriptionHandle> getClientSubscriptions();
+      std::vector<ClientSubscriptionHandle> findClientSubscriptions(const Data& event);
+
+      std::vector<ServerSubscriptionHandle> getServerSubscriptions();
+      std::vector<ServerSubscriptionHandle> findServerSubscriptions(const Data& event);
+
+      //returns an invalid handle if there is no session
+      InviteSessionHandle getInviteSession();
+      ClientRegistrationHandle getClientRegistration();
+      ServerRegistrationHandle getServerRegistration();
+      ClientPublicationHandle getClientPublication();
+      ServerPublicationHandle getServerPublication();
+      ClientOutOfDialogReqHandle getClientOutOfDialog();
+      ServerOutOfDialogReqHandle getServerOutOfDialog();
       
       void cancel();
       void dispatch(const SipMessage& msg);
@@ -76,6 +82,7 @@ class Dialog
 
       ClientOutOfDialogReq* findMatchingClientOutOfDialogReq(const SipMessage& msg);
       ClientSubscription* findMatchingClientSub(const SipMessage& msg);
+      ServerSubscription* findMatchingServerSub(const SipMessage& msg);
 
       void addUsage(BaseUsage* usage);
       ClientInviteSession* makeClientInviteSession(const SipMessage& msg);
@@ -96,7 +103,7 @@ class Dialog
       DialogSet& mDialogSet;
 
       std::list<ClientSubscription*> mClientSubscriptions;
-      ServerSubscription* mServerSubscription;
+      std::list<ServerSubscription*> mServerSubscriptions;
       InviteSession* mInviteSession;
       ClientRegistration* mClientRegistration;
       ServerRegistration* mServerRegistration;
