@@ -348,7 +348,7 @@ InviteSession::end()
 }
 
 void
-InviteSession::reject(int statusCode)
+InviteSession::reject(int statusCode, WarningCategory *warning)
 {
    switch (mState)
    {
@@ -360,6 +360,10 @@ InviteSession::reject(int statusCode)
 
          SipMessage response;
          mDialog.makeResponse(response, mLastSessionModification, statusCode);
+         if(warning)
+         {
+            response.header(h_Warnings).push_back(*warning);
+         }
          InfoLog (<< "Sending " << response.brief());
          mDialog.send(response);
          break;
