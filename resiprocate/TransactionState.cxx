@@ -854,7 +854,9 @@ TransactionState::processServerInvite(  Message* msg )
             // DO NOT REMOVE THIS!
             if (code > 100)
             {
-               if (!mRFC2543ResponseUpdated)
+               if (!mRFC2543ResponseUpdated && 
+                   !(sip->header(h_Vias).front().exists(p_branch) 
+                     && sip->header(h_Vias).front().param(p_branch).hasMagicCookie()))
                {
                   // !jf! need to have a way to clean up the old one (back pointer)
                   mStack.mTransactionMap.add(sip->updateRFC2543TransactionId(), this);
