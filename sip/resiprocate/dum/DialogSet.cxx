@@ -447,9 +447,7 @@ DialogSet::dispatch(const SipMessage& msg)
       {
          int code = msg.header(h_StatusLine).statusCode();
          
-         if (code < 200                     
-             && msg.header(h_To).exists(p_tag) 
-             && !msg.exists(h_Contacts))
+         if (code > 100 && code < 200 && !msg.exists(h_Contacts))
          {
             InfoLog ( << "Cannot create a dialog, no Contact in 180." );
             if (mDum.mDialogSetHandler)
