@@ -71,31 +71,16 @@ ServerOutOfDialogReq::dispatch(const DumTimeout& msg)
 }
 
 SipMessage& 
-ServerOutOfDialogReq::answerOptions(bool fIncludeAllows)
+ServerOutOfDialogReq::answerOptions()
 {
 	mDum.makeResponse(mResponse, mRequest, 200);
 
 	// Add in Allow, Accept, Accept-Encoding, Accept-Language, and Supported Headers from Profile
-	Profile *pProfile = mDum.getProfile();
-
-	// Add Allows (if required)
-	mResponse.header(h_Allows).clear();
-	if(fIncludeAllows)
-	{
-		mResponse.header(h_Allows) = pProfile->getAllowedMethods();
-	}
-
-	// Add Accept Header
-	mResponse.header(h_Accepts) = pProfile->getSupportedMimeTypes();
-
-	// Add Accept-Encoding Header
-	mResponse.header(h_AcceptEncodings) = pProfile->getSupportedEncodings();
-
-	// Add Accept-Language Header
-	mResponse.header(h_AcceptLanguages) = pProfile->getSupportedLanguages();
-
-	// Add Supported Header
-	mResponse.header(h_Supporteds) = pProfile->getSupportedOptionTags();
+	mResponse.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
+	mResponse.header(h_Accepts) = mDum.getProfile()->getSupportedMimeTypes();
+	mResponse.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
+	mResponse.header(h_AcceptLanguages) = mDum.getProfile()->getSupportedLanguages();
+	mResponse.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
 
 	return mResponse;
 }

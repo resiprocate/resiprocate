@@ -19,9 +19,8 @@ class ServerOutOfDialogReq : public NonDialogUsage
       virtual void dispatch(const DumTimeout& timer);
 
 	  // Return Options response based on current Profile settings - application may need to add SDP Contents before
-	  // sending and/or change the status code.
-	  // Set fIncludeAllows to false if this is a proxy server (RFC3261 section 11.2)
-      virtual SipMessage& answerOptions(bool fIncludeAllows=true);
+	  // sending
+      virtual SipMessage& answerOptions();
 	  virtual void send(SipMessage& msg);
 
    protected:
