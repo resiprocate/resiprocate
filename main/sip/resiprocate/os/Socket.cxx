@@ -14,6 +14,7 @@ using namespace std;
 bool 
 resip::makeSocketNonBlocking(Socket fd)
 {
+#if 1
 #if WIN32
 	unsigned long noBlock = 1;
 	int errNoBlock = ioctlsocket( fd, FIONBIO , &noBlock );
@@ -29,8 +30,29 @@ resip::makeSocketNonBlocking(Socket fd)
 		return false;
 	}
 #endif
+#endif
+	return true;
+}
 
-
+   
+bool 
+resip::makeSocketBlocking(Socket fd)
+{
+#if WIN32
+	unsigned long noBlock = 0;
+	int errNoBlock = ioctlsocket( fd, FIONBIO , &noBlock );
+	if ( errNoBlock != 0 )
+	{
+		return false;
+	}
+#else
+	int flags  = fcntl( fd, F_GETFL, 0);
+	int errNoBlock = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK );
+	if ( errNoBlock != 0 ) // !cj! I may have messed up this line 
+	{
+		return false;
+	}
+#endif
 	return true;
 }
 
