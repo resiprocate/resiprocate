@@ -1,11 +1,19 @@
-# $Id: Makefile,v 1.42 2003/03/24 23:25:36 jason Exp $
+# $Id: Makefile,v 1.43 2003/03/24 23:37:09 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
 LDLIBS += -lncurses
-TESTPROGRAMS =	\
+TESTPROGRAMS =	testParseBuffer.cxx \
+	        testData.cxx \
+	        testDataStream.cxx \
+		testCountStream.cxx \
+	        testDataPerformance.cxx \
+	        testRandomHex.cxx \
+	        testCoders.cxx \
+		testThreadIf.cxx \
+		testLogger.cxx \
 		testXMLCursor.cxx \
 		testEmbedded.cxx \
 		testIM.cxx \
