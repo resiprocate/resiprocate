@@ -80,6 +80,11 @@ main()
       delete fp;
       c = tlf.add(new Foo("third"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
+
+      while (!tlf.empty())
+      {
+         delete tlf.getNext();
+      }
    }
 
    {
@@ -103,6 +108,11 @@ main()
       delete fp;
       c = tlfNS.add(new Foo("third"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
+
+      while (!tlfNS.empty())
+      {
+         delete tlfNS.getNext();
+      }
    }
 
    {
@@ -135,6 +145,11 @@ main()
 
       c = tlfNS.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
+
+      while (!tlfNS.empty())
+      {
+         delete tlfNS.getNext();
+      }
    }
 
    {
@@ -172,6 +187,11 @@ main()
 
       c = tlfNS.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
+
+      while (!tlfNS.empty())
+      {
+         delete tlfNS.getNext();
+      }
    }
 
    {
@@ -188,6 +208,11 @@ main()
          c = tlfNS.add(new Foo(Data("element") + Data(i)), TimeLimitFifo<Foo>::EnforceTimeDepth);
          assert(c);
          sleep(1);
+      }
+
+      while (!tlfNS.empty())
+      {
+         delete tlfNS.getNext();
       }
    }
    
