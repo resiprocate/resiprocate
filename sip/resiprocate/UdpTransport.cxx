@@ -19,8 +19,8 @@
 
 #endif
 
-#include <sip2/sipstack/UdpTransport.hxx>
-
+#include <sipstack/UdpTransport.hxx>
+#include <sipstack/SipMessage.hxx>
 
 
 using namespace std;
@@ -29,7 +29,7 @@ using namespace Vocal2;
 const unsigned long
 UdpTransport::MaxBufferSize = 64000;
 
-UdpTransport::UdpTransport(in_port_t portNum, Fifo<Message>& fifo) : 
+UdpTransport::UdpTransport(in_port_t portNum, Fifo<SipMessage>& fifo) : 
    Transport(portNum, fifo)
 {
    mFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -128,7 +128,7 @@ void UdpTransport::process()
    {
       cerr << "Received : " << len << " bytes" << endl;
       
-      Message* message = new Message;
+      SipMessage* message = new SipMessage;
       
       // set the received from information into the received= parameter in the via
       // save the interface information in the message
