@@ -229,53 +229,25 @@ addCertPEM (BaseSecurity::X509Map& certs, const Data& key, const Data& certPEM)
 
       if ( !in )
       {
-         ErrLog(<< "Could not read PEM certificate from " << certPEM );
-         throw BaseSecurity::Exception("Could not read PEM certificate ", __FILE__,__LINE__);
+         ErrLog(<< "Could not create BIO buffer from '" << certPEM << "'");
+         throw BaseSecurity::Exception("Could not create BIO buffer", __FILE__,__LINE__);
       }
 
-      BIO_set_close(in, BIO_NOCLOSE);
+      try
+      {
+         BIO_set_close(in, BIO_NOCLOSE);
 
-      X509* cert = PEM_read_bio_X509(in,0,0,0);
-      certs.insert(std::make_pair(key, cert));
-      // !kh!
-      // bug, leaking <in>, if insert throw.
+         X509* cert = PEM_read_bio_X509(in,0,0,0);
+         certs.insert(std::make_pair(key, cert));
+      }
+      catch(...)
+      {
+         BIO_free(in);
+         throw;
+      }
       BIO_free(in);
    }
 }
-#if 0
-{
-   // Why is this different from other PEM certs?
-   assert( !x509PEMEncodedRootCerts.empty() );
-
-   static X509_LOOKUP_METHOD x509_pemstring_lookup =
-	{
-   	"Load cert from PEM string into cache",
-   	NULL,		      /* new */
-   	NULL,		      /* free */
-   	NULL, 		   /* init */
-   	NULL,		      /* shutdown */
-   	pemstring_ctrl,/* ctrl */
-   	NULL,		      /* get_by_subject */
-   	NULL,		      /* get_by_issuer_serial */
-   	NULL,		      /* get_by_fingerprint */
-   	NULL,		      /* get_by_alias */
-	};
-
-   if (mRootCerts == 0)
-       mRootCerts = X509_STORE_new();
-
-   assert( mRootCerts );
-
-   X509_LOOKUP* lookup = X509_STORE_add_lookup(mRootCerts, &x509_pemstring_lookup);
-
-   if (lookup == NULL)
-      throw Exception("Error in BaseSecurity::addRootCertPEM()", __FILE__,__LINE__);
-
-   // !kh!
-   // bug, should be handling failure case here?
-   X509_LOOKUP_ctrl(lookup, X509_L_FILE_LOAD, x509PEMEncodedRootCerts.c_str(), 0, 0);
-}
-#endif
 bool
 hasCert (const BaseSecurity::X509Map& certs, const Data& key)
 {
@@ -293,14 +265,64 @@ removeCert (BaseSecurity::X509Map& certs, const Data& key)
    BaseSecurity::X509Map::iterator iter = certs.find(key);
    if (iter == certs.end())
    {
-      delete &*iter;
+      X509_free(iter->second);
       certs.erase(iter);
       return   true;
    }
    return   false;
 }
+Data
+getCertDER (const BaseSecurity::X509Map& certs, const Data& key)
+{
+   assert( !key.empty() );
+   BaseSecurity::X509Map::const_iterator where = certs.find(key);
+   if (where == certs.end())
+   {
+      ErrLog(<< "Could find certificate for '" << key << "'");
+      throw BaseSecurity::Exception("Could not find certificate", __FILE__,__LINE__);
+   }
+   else
+   {
+      X509* x = where->second;
+      int len = i2d_X509(x, NULL);
+
+      // !kh!
+      // Although len == 0 is not an error, I am not sure what quite to do.
+      // Asserting for now.
+      assert(len != 0);
+      if(len < 0)
+      {
+         ErrLog(<< "Could encode certificate of '" << key << "' to DER form");
+         throw BaseSecurity::Exception("Could encode certificate to DER form", __FILE__,__LINE__);
+      }
+      char*    out = new char[len];
+      return   Data(Data::Take, out, len);
+   }
+}
+
 void
-addPrivateKeyPEM(BaseSecurity::PrivateKeyMap& privateKeys, const Data& key, const Data& privateKeyPEM)
+setPassPhrase(BaseSecurity::PassPhraseMap& passPhrases, const Data& key, const Data& passPhrase)
+{
+   BaseSecurity::PassPhraseMap::iterator iter = passPhrases.find(key);
+   if (iter == passPhrases.end())
+      passPhrases.insert(std::make_pair(key, passPhrase));
+}
+bool
+hasPassPhrase(const BaseSecurity::PassPhraseMap& passPhrases, const Data& key)
+{
+   BaseSecurity::PassPhraseMap::const_iterator iter = passPhrases.find(key);
+   if (iter == passPhrases.end())
+      return   false;
+   else
+      return   true;
+}
+
+void
+addPrivateKeyPEM(
+   BaseSecurity::PrivateKeyMap& privateKeys,
+   const BaseSecurity::PassPhraseMap& passPhrases,
+   const Data& key,
+   const Data& privateKeyPEM)
 {
    assert( !privateKeyPEM.empty() );
    BaseSecurity::PrivateKeyMap::iterator where = privateKeys.find(key);
@@ -310,22 +332,42 @@ addPrivateKeyPEM(BaseSecurity::PrivateKeyMap& privateKeys, const Data& key, cons
 
       if ( !in )
       {
-         ErrLog(<< "Could not read private key from " << privateKeyPEM );
-         throw BaseSecurity::Exception("Could not read private key ", __FILE__,__LINE__);
+         ErrLog(<< "Could create BIO buffer from '" << privateKeyPEM << "'");
+         throw BaseSecurity::Exception("Could not create BIO buffer", __FILE__,__LINE__);
       }
 
-      BIO_set_close(in, BIO_NOCLOSE);
+      try
+      {
+         BaseSecurity::PassPhraseMap::const_iterator iter = passPhrases.find(key);
+         char* p = 0;
+         if(iter != passPhrases.end())
+         {
+            p = const_cast<char*>(iter->second.c_str());
+         }
 
-      // !kh!
-      // bug, how do I make a EVP_KEY out of a binary seq (Data)?
-      EVP_PKEY* privateKey = 0;
-      privateKeys.insert(std::make_pair(key, privateKey));
-      // !kh! leaking <in>, if insert throw.
+         BIO_set_close(in, BIO_NOCLOSE);
+
+         EVP_PKEY* privateKey;
+         if (PEM_read_bio_PrivateKey(in, &privateKey, 0, p) == 0)
+         {
+            ErrLog(<< "Could not read private key from '" << privateKeyPEM << "' using pass phrase '" << p << "'" );
+            throw BaseSecurity::Exception("Could not read private key ", __FILE__,__LINE__);
+         }
+
+         privateKeys.insert(std::make_pair(key, privateKey));
+      }
+      catch(...)
+      {
+         BIO_free(in);
+         throw;
+      }
       BIO_free(in);
    }
 }
 bool
-hasPrivateKey(const BaseSecurity::PrivateKeyMap& privateKeys, const Data& key)
+hasPrivateKey(
+   const BaseSecurity::PrivateKeyMap& privateKeys,
+   const Data& key)
 {
    BaseSecurity::PrivateKeyMap::const_iterator where = privateKeys.find(key);
    if (where == privateKeys.end())
@@ -333,9 +375,70 @@ hasPrivateKey(const BaseSecurity::PrivateKeyMap& privateKeys, const Data& key)
    else
       return   true;
 }
+Data
+getPrivateKey(
+   const BaseSecurity::PrivateKeyMap& privateKeys,
+   const BaseSecurity::PassPhraseMap& passPhrases,
+   const Data& key)
+{
+   BaseSecurity::PrivateKeyMap::const_iterator where = privateKeys.find(key);
+   if (where == privateKeys.end())
+   {
+      ErrLog(<< "Could find private key for '" << key << "'");
+      throw BaseSecurity::Exception("Could not find private key", __FILE__,__LINE__);
+   }
+   else
+   {
+      BaseSecurity::PassPhraseMap::const_iterator iter = passPhrases.find(key);
+      char* p = 0;
+      if(iter != passPhrases.end())
+      {
+         p = const_cast<char*>(iter->second.c_str());
+      }
 
+      // !kh!
+      // creates a read/write BIO buffer.
+      BIO *out = BIO_new(BIO_s_mem());
+      assert(out);
+      EVP_PKEY* pk = where->second;
+      assert(pk);
+      // write pk to out using key phrase p, with no cipher.
+      int ret = PEM_write_bio_PrivateKey(out, pk, 0, 0, 0, 0, p);
+      assert(ret == 1);
+
+      // get length of BIO buffer, not sure this is right.
+      size_t len = BIO_ctrl_pending(out);
+      assert(len > 0);
+      char* buf = new char[len];
+      // copy content in BIO buffer to our buffer.
+      BIO_get_mem_data(out, &buf);
+      // hand our buffer to a Data object.
+      return   Data(Data::Take, buf, len);
+   }
+}
+bool
+removePrivateKey(BaseSecurity::PrivateKeyMap& privateKeys, const Data& key)
+{
+   assert( !key.empty() );
+   BaseSecurity::PrivateKeyMap::iterator iter = privateKeys.find(key);
+   if (iter == privateKeys.end())
+   {
+      EVP_PKEY_free(iter->second);
+      privateKeys.erase(iter);
+      return   true;
+   }
+   return   false;
+}
 
 }  // namespace
+
+
+
+
+
+
+
+
 
 #if(0)
 SecuredTransportCtx::SecuredTransportCtx (const BaseSecurity& sec, SSLv23Tag)
@@ -483,7 +586,8 @@ BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
    if (lookup == NULL)
       throw Exception("Error in BaseSecurity::addRootCertPEM()", __FILE__,__LINE__);
 
-   // !kh! should be handling failure case here?
+   // !kh!
+   // bug, no error handling here.
    X509_LOOKUP_ctrl(lookup, X509_L_FILE_LOAD, x509PEMEncodedRootCerts.c_str(), 0, 0);
 }
 void
@@ -503,13 +607,38 @@ BaseSecurity::hasDomainCert(const Data& domainName) const
 {
    return   hasCert(mDomainCerts, domainName);
 }
+bool
+BaseSecurity::removeDomainCert(const Data& domainName)
+{
+   return   removeCert(mDomainCerts, domainName);
+}
+Data
+BaseSecurity::getDomainCertDER(const Data& domainName) const
+{
+   return   getCertDER(mDomainCerts, domainName);
+}
+
+void
+BaseSecurity::setDomainPassPhrase(const Data& domainName, const Data& passPhrase)
+{
+   setPassPhrase(mDomainPassPhrases, domainName, passPhrase);
+}
+bool
+BaseSecurity::hasDomainPassPhrase(const Data& domainName)
+{
+   return   hasPassPhrase(mDomainPassPhrases, domainName);
+}
+
+
+
+
 void
 BaseSecurity::addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM)
 {
-   addPrivateKeyPEM(mDomainPrivateKeys, domainName, privateKeyPEM);
+   addPrivateKeyPEM(mDomainPrivateKeys, mDomainPassPhrases, domainName, privateKeyPEM);
 }
 bool
-BaseSecurity::hasDomainPrivateKey(const Data& domainName)
+BaseSecurity::hasDomainPrivateKey(const Data& domainName) const
 {
    return   hasPrivateKey(mDomainPrivateKeys, domainName);
 }
