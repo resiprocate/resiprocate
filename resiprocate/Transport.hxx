@@ -22,13 +22,9 @@ class SipMessage;
 class SendData
 {
    public:
-      SendData(const sockaddr_in dest, const Data* pdata): destination(dest),data(pdata)  { }
-      ~SendData() 
-      {
-         delete data;
-      }
+      SendData(const sockaddr_in dest, const Data& pdata): destination(dest),data(pdata)  { }
       const sockaddr_in destination;
-      const Data* data;
+      const Data& data;
 };
 
 class Transport
@@ -75,7 +71,7 @@ class Transport
       
       virtual ~Transport();
       
-      virtual void send( const sockaddr_in address, const  Data* data);
+      virtual void send( const sockaddr_in address, const Data& data);
       virtual void process(fd_set* fdSet=NULL) = 0 ;
       virtual void buildFdSet( fd_set* fdSet, int* fdSetSize );
 
