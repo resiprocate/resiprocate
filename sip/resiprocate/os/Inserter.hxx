@@ -243,7 +243,7 @@ template <class T>
 std::ostream&
 operator<<(std::ostream& s, const InserterClass<T>& inserter)
 {
-#ifdef WIN32
+#if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)
 	assert(0); // CJ - really need to fix this
 	return s;
 #else
