@@ -840,7 +840,7 @@ TransactionState::sendToTU(Message* msg) const
 SipMessage*
 TransactionState::make100(SipMessage* request) const
 {
-   SipMessage* sip=new SipMessage(Helper::makeResponse(request, 100));
+   SipMessage* sip=new SipMessage(Helper::makeResponse(*request, 100));
    return sip;
 }
 
