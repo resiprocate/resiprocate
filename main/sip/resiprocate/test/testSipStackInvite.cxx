@@ -3,7 +3,6 @@
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/util/Logger.hxx"
 
-#include "sip2/sipstack/Helper.hxx"
 #include "sip2/util/DataStream.hxx"
 
 #include <sys/socket.h>
