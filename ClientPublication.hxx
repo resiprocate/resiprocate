@@ -28,10 +28,14 @@ class ClientPublication : public NonDialogUsage
 
    protected:
       virtual ~ClientPublication();
-
+      virtual void send(SipMessage& request);
+      
    private:
       friend class DialogSet;
 
+      bool mWaitingForResponse;
+      bool mPendingPublish;
+      
       SipMessage& mPublish;
       Data mEventType;
       int mTimerSeq; // expected timer seq (all < are stale)
