@@ -56,9 +56,9 @@ main(int argc, char* argv[])
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
       {"num-runs",    'r', POPT_ARG_INT,    &runs,      0, "number of calls in test", 0},
-      {"window-size", 'w', POPT_ARG_INT,    &window,    0, "number of registrations in test", 0},
+      {"window-size", 'w', POPT_ARG_INT,    &window,    0, "number of concurrent transactions", 0},
       {"select-time", 's', POPT_ARG_INT,    &seltime,   0, "number of runs in test", 0},
-      {"protocol",    'p', POPT_ARG_STRING, &proto,     0, "number of runs in test", 0},
+      {"protocol",    'p', POPT_ARG_STRING, &proto,     0, "protocol to use (tcp | udp)", 0},
       {"bind",        'b', POPT_ARG_STRING, &bindAddr,  0, "interface address to bind to",0},
       {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       POPT_AUTOHELP
