@@ -11,12 +11,28 @@ DumTimeout::DumTimeout(Type type, unsigned long duration, BaseUsageHandle target
       mUsageHandle(targetBu),
       mSeq(seq),
       mSecondarySeq(altSeq)
- {
+{
+}
+
+DumTimeout::DumTimeout(const DumTimeout& source)
+    : mType(source.mType),
+      mDuration(source.mDuration),
+      mUsageHandle(source.mUsageHandle),
+      mSeq(source.mSeq),
+      mSecondarySeq(source.mSecondarySeq)
+{
 }
 
 DumTimeout::~DumTimeout()
 {
 }
+
+Message*
+DumTimeout::clone() const
+{
+   return new DumTimeout(*this);
+}
+
       
 DumTimeout::Type 
 DumTimeout::type() const

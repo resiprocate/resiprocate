@@ -28,7 +28,7 @@ HandleManager::remove(Handled::Id id)
    HandleMap::iterator i = mHandleMap.find(id);
    assert (i != mHandleMap.end());
 
-   delete i->second;
+//!dcm! -- looks completely wrong   delete i->second;
    mHandleMap.erase(i);
 }
 
