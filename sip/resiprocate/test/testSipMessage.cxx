@@ -15,15 +15,28 @@ int
 main()
 {
    {
-      assert(ParameterTypes::getType("tag", 3) == ParameterTypes::tag);
-   }
-
-   {
       char* b = "shared buffer";
       HeaderFieldValue h1(b, strlen(b));
       HeaderFieldValue h2(h1);
    }
    
+   {
+      char *txt = 
+         ("SIP/2.0 200\r\n"
+          "To: <sip:ext102@squamish.gloo.net:5060>;tag=8be36d98\r\n"
+          "From: <sip:ext102@squamish.gloo.net:5060>;tag=38810b6d\r\n"
+          "Call-ID: a6aea86d75a6bb45\r\n"
+          "CSeq: 2 REGISTER\r\n"
+          "Contact: <sip:ext102@whistler.gloo.net:6064>;expires=63\r\n"
+          "Via: SIP/2.0/UDP whistler.gloo.net:6064;rport=6064;received=192.168.2.220;branch=z9hG4bK-kcD23-4-1\r\n"
+          "Content-Length: 0\r\n"
+          "\r\n");
+      
+      auto_ptr<SipMessage> msg(Helper::makeMessage(txt));
+      cerr << msg->header(h_Contacts).front().param(p_expires) << endl;
+      assert(msg->header(h_Contacts).front().param(p_expires) == 63);
+   }
+
    {
       cerr << "test backward compatible expires parameter" << endl;
       char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
