@@ -977,24 +977,6 @@ main(int arc, char** argv)
       cerr << endl;
 
       assert (via.param(p_branch).hasMagicCookie());
-//      assert (via.param(p_branch).transactionId() == "1");
-      assert (via.param(p_branch).clientData().empty());
-
-      stringstream s;
-      via.encode(s);
-      cerr << s.str() << endl;
-//      assert(s.str() == "SIP/2.0/UDP ;branch=z9hG4bK-kcD23-1-1");
-      via.param(p_branch).clientData() = "jason";
-      assert (via.param(p_branch).clientData() == "jason");
-      
-      via.param(p_branch).setClientSequence(5);
-
-      stringstream s2;
-      via.encode(s2);
-      via.encode(cerr);
-      cerr << endl;
-
-//      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-kcD23-1-3-jason");
    }
 
    {
@@ -1011,8 +993,7 @@ main(int arc, char** argv)
       cerr << s0.str() << endl;
       assert(s0.str() == "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj");
       
-      assert (via.param(p_branch).getServerTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
-      assert (via.param(p_branch).clientData().empty());
+      assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
       
       stringstream s1;
       via.encode(s1);
@@ -1022,8 +1003,8 @@ main(int arc, char** argv)
       stringstream s2;
       via.encode(s2);
       cerr << "!! " << s2.str() << endl;
-      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-c87542-jason.0-1");
-      assert(via.param(p_branch).getServerTransactionId() == "jason");
+      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-c87542-jason-1-c87542-");
+      assert(via.param(p_branch).getTransactionId() == "jason");
    }
 
    {
@@ -1033,11 +1014,9 @@ main(int arc, char** argv)
       Via via(&hfv);
       
       assert (via.param(p_branch).hasMagicCookie());
-      assert (via.param(p_branch).getServerTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
-      assert (via.param(p_branch).clientData().empty());
+      assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
       assert (via.param(p_ttl) == 70);
    }
-   
 
    {
       TR _tr("Via 4");
@@ -1046,8 +1025,7 @@ main(int arc, char** argv)
       Via via(&hfv);
       
       assert (!via.param(p_branch).hasMagicCookie());
-      assert (via.param(p_branch).getServerTransactionId() == "oldassbranch");
-      assert (via.param(p_branch).clientData().empty());
+      assert (via.param(p_branch).getTransactionId() == "oldassbranch");
       
       stringstream s;
       via.encode(s);
@@ -1056,54 +1034,208 @@ main(int arc, char** argv)
       via.param(p_branch).reset("jason");
       stringstream s2;
       via.encode(s2);
-      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-c87542-jason.0-1");
-      assert(via.param(p_branch).getServerTransactionId() == "jason");
+      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-c87542-jason-1-c87542-");
+      assert(via.param(p_branch).getTransactionId() == "jason");
    }
-   
+
+   {
+      TR _tr("Via 5 assignment with unknown parameter");
+      char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;stid=abcd.2";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv);
+      
+      assert (via.param(p_branch).hasMagicCookie());
+      assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
+      assert (via.param(p_ttl) == 70);
+
+      Via via1;
+      via1 = via;
+
+      cerr << "!! "; via1.encode(cerr); cerr << endl;
+      assert(via1.param(UnknownParameterType("stid")) == "abcd.2");
+   }
+
+   {
+      TR _tr("Via 6 parse with known parameter");
+      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1-c87542-;ttl=4\r\n";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv);
+      
+      assert (via.param(p_branch).hasMagicCookie());
+      assert (via.param(p_branch).getTransactionId() == "ec1e.0");
+      cerr << "!! "; via.encode(cerr); cerr << endl;
+      assert(via.param(p_ttl) == 4);
+   }
+
+   {
+      TR _tr("Via 7 parse with unknown parameter");
+      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1-c87542-;stid=489573115\r\n";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv);
+      
+      assert (via.param(p_branch).hasMagicCookie());
+      assert (via.param(p_branch).getTransactionId() == "ec1e.0");
+      cerr << "!! "; via.encode(cerr); cerr << endl;
+      assert(via.param(UnknownParameterType("stid")) == "489573115");
+   }
+
    {
       TR _tr("Branch parameter 1");
       
-      Data txt("=z9hG4bK-c87542-jason.0-1-clientData");
+      Data txt("=z9hG4bK-c87542-jason-1-c87542-");
       ParseBuffer pb(txt.data(), txt.size());
       BranchParameter bp(ParameterTypes::branch, pb, ";");
       assert(bp.hasMagicCookie());
-      cerr << "!! " << bp.clientData() << endl;
-      assert(bp.clientData() == "clientData");
-      assert(bp.getTransactionId() == "jason.0");
-      assert(bp.getServerTransactionId() == "jason");
+      assert(bp.getTransactionId() == "jason");
 
-      bp.reset(bp.getTransactionId());
-      bp.setClientSequence(10);
+      bp.reset(bp.getTransactionId() + ".10");
       bp.encode(cerr); cerr << endl;
-      assert(bp.getTransactionId() == "jason.0.10");
-      assert(bp.getServerTransactionId() == "jason.0");
+      assert(bp.getTransactionId() == "jason.10");
+
+      Data o;
+      {
+         DataStream s(o);
+         bp.encode(s);
+      }
+      cerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK-c87542-jason.10-1-c87542-");
    }
       
    {
       TR _tr("Branch parameter 2");
-      Data txt("=z9hG4bK-c87542-jason.1.2.3.14-1-clientData");
+      Data txt("=z9hG4bK-c87542-jason.1.2.3-14-c87542-");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpc(ParameterTypes::branch, pb, ";");
       assert(bpc.hasMagicCookie());
-      assert(bpc.clientData() == "clientData");
-      assert(bpc.getTransactionId() == "jason.1.2.3.14");
-      assert(bpc.getServerTransactionId() == "jason.1.2.3");
+      assert(bpc.getTransactionId() == "jason.1.2.3");
+
+      Data o;
+      {
+         DataStream s(o);
+         bpc.encode(s);
+      }
+      cerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK-c87542-jason.1.2.3-14-c87542-");
    }
-      
+
    {
       TR _tr("Branch parameter 3");
-      Data txt("=z9hG4bK-c87542-jason.1.2.3.14-1-clientData-dash.dot-dash.dot");
+      Data txt("=z9hG4bK-c87542-3e565-ef7w-17.1.2.3-14-c87542-foobie");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpcc(ParameterTypes::branch, pb, ";");
       assert(bpcc.hasMagicCookie());
-      assert(bpcc.clientData() == "clientData-dash.dot-dash.dot");
-      assert(bpcc.getTransactionId() == "jason.1.2.3.14");
-      assert(bpcc.getServerTransactionId() == "jason.1.2.3");
+      assert(bpcc.getTransactionId() == "-c87542-3e565-ef7w-17.1.2.3-14-c87542-foobie");
+
+      Data o;
+      {
+         DataStream s(o);
+         bpcc.encode(s);
+      }
+      cerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK-c87542-3e565-ef7w-17.1.2.3-14-c87542-foobie");
+
+      bpcc.reset("foobie");
+
+      o.clear();
+      {
+         DataStream s(o);
+         bpcc.encode(s);
+      }
+      cerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK-c87542-foobie-1-c87542-");
+   }
+
+   {
+      TR _tr("Branch parameter 4");
+      Data txt("=z9hG4bK-c87542-3e565-ef7w-17.1.2.3-14-c87542-");
+      ParseBuffer pb(txt.data(), txt.size());
+
+      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      assert(bpcc.hasMagicCookie());
+      assert(bpcc.getTransactionId() == "3e565-ef7w-17.1.2.3");
+
+      Data o;
+      {
+         DataStream s(o);
+         bpcc.encode(s);
+      }
+      cerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK-c87542-3e565-ef7w-17.1.2.3-14-c87542-");
+   }
+
+   {
+      TR _tr("Branch parameter 5 externally spiralled branch returns");
+      Data txt("=z9hG4bK-c87542--c87542-3e565-ef7w-17.1.2.3-14-c87542-foobie-1-c87542-");
+      ParseBuffer pb(txt.data(), txt.size());
+
+      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      assert(bpcc.hasMagicCookie());
+      assert(bpcc.getTransactionId() == "-c87542-3e565-ef7w-17.1.2.3-14-c87542-foobie");
+
+      Data o;
+      {
+         DataStream s(o);
+         bpcc.encode(s);
+      }
+      cerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK-c87542--c87542-3e565-ef7w-17.1.2.3-14-c87542-foobie-1-c87542-");
    }
    
-      
+   {
+      TR _tr("Branch parameter 6 not one of ours");
+      Data txt("=z9hG4bK-c87542-");
+      ParseBuffer pb(txt.data(), txt.size());
+
+      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      assert(bpcc.hasMagicCookie());
+      assert(bpcc.getTransactionId() == "-c87542-");
+
+      Data o;
+      {
+         DataStream s(o);
+         bpcc.encode(s);
+      }
+      cerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK-c87542-");
+   }
+
+   {
+      TR _tr("Branch parameter 7 empty ours");
+      Data txt("=z9hG4bK-c87542--1-c87542-");
+      ParseBuffer pb(txt.data(), txt.size());
+
+      BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+      assert(bpcc.hasMagicCookie());
+      assert(bpcc.getTransactionId() == "");
+
+      Data o;
+      {
+         DataStream s(o);
+         bpcc.encode(s);
+      }
+      cerr << "!! " << o << endl;
+      assert(o == "branch=z9hG4bK-c87542--1-c87542-");
+   }
+
+   {
+      TR _tr("Branch parameter 8 badly formed ours");
+      Data txt("=z9hG4bK-c87542--------c87542-");
+      ParseBuffer pb(txt.data(), txt.size());
+
+      try
+      {
+         BranchParameter bpcc(ParameterTypes::branch, pb, ";");
+         assert(bpcc.hasMagicCookie());
+         bpcc.getTransactionId();
+         assert(false);
+      }
+      catch (ParseBuffer::Exception &e)
+      {
+      }
+   }
+   
    {
       TR _tr("Branch testing 1");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
@@ -1111,8 +1243,7 @@ main(int arc, char** argv)
       Via via(&hfv);
       
       assert (via.param(p_branch).hasMagicCookie());
-      assert (via.param(p_branch).getServerTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
-      assert (via.param(p_branch).clientData().empty());
+      assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
       assert (via.param(p_ttl) == 70);
       assert (!via.exists(p_rport));
       
@@ -1122,7 +1253,6 @@ main(int arc, char** argv)
       assert (!via.param(p_rport).hasValue());
    }
 
-
    {
       TR _tr("Branch Testing 2");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport";
@@ -1130,8 +1260,7 @@ main(int arc, char** argv)
       Via via(&hfv);
       
       assert (via.param(p_branch).hasMagicCookie());
-      assert (via.param(p_branch).getServerTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
-      assert (via.param(p_branch).clientData().empty());
+      assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
       assert (via.param(p_ttl) == 70);
       assert (via.exists(p_rport));
       assert (!via.param(p_rport).hasValue());
@@ -1144,8 +1273,7 @@ main(int arc, char** argv)
       Via via(&hfv);
       
       assert (via.param(p_branch).hasMagicCookie());
-      assert (via.param(p_branch).getServerTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
-      assert (via.param(p_branch).clientData().empty());
+      assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
       assert (via.param(p_ttl) == 70);
       assert (via.exists(p_rport));
       assert (via.param(p_rport).hasValue());
