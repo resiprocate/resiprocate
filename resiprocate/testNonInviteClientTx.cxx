@@ -72,19 +72,11 @@ doit(int serverResponse, int expectedRetrans, int expectedClientResponse)
    DataStream strm(encoded);
    reg->encode(strm);
    strm.flush();
-
-
     
    client->send(*reg);   // send message down the stack
 
-
-   fd_set fdReadSet;
-       
-   // Init the fd_set for the select()
-   FD_ZERO(&fdReadSet);
-       
-   client->process(&fdReadSet);
-
+   FdSet fdset;
+   client->process(fdset);
 
    // read the message off the stack
    Data fromStack;
@@ -109,65 +101,7 @@ doit(int serverResponse, int expectedRetrans, int expectedClientResponse)
 
    while (1)
    {
-      client->process();
+      client->process(fdset);
       usleep(20);
    }
-
-#if 0
-   int count=0;
-   while (1)
-   {
-      fd_set fdReadSet;
-      int fdSetSize = 0;
-       
-      // Init the fd_set for the select()
-      FD_ZERO(&fdReadSet);
-       
-      client->process(&fdReadSet);
-       
-      SipMessage* sipMessage = client->receive();
-            
-      if (sipMessage) 
-      {
-         InfoLog( << "got message (client)" << *sipMessage);
-         assert(sipMessage->isResponse());
-         assert(sipMessage->header(h_StatusLine).responseCode() == expectedClientResponse);
-         assert(count == expectedRetrans);
-         return;
-      }
-
-      client->process(&fdReadSet);
-      if (received.messageAvailable())
-      {
-         count++;
-          
-         SipMessage* sip = dynamic_cast<SipMessage*>(received.getNext());
-         assert(sip);
-         InfoLog( << "got message (server)" << *sip);
-
-         if (serverResponse)
-         {
-            SipMessage* response = Helper::makeResponse(*sip, serverResponse);
-            DebugLog (<< "server sending response = " << endl << *response);
-            
-            DataStream strm(encodedResponse);
-            response->encode(strm);
-            strm.flush();
-
-            // create address to send to
-            struct sockaddr_in sa;
-            
-            sa.sin_family = PF_INET;
-            sa.sin_addr.s_addr = inet_addr("127.0.0.1");
-            sa.sin_port = htons(5070);
-            
-         }
-         
-         delete sip;
-            
-      }
-
-      usleep(20);
-   }
-#endif
 }

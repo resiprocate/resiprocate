@@ -81,7 +81,7 @@ TestReliableTransport::~TestReliableTransport()
 
 
 void 
-TestReliableTransport::process(fd_set* fdSet)
+TestReliableTransport::process(FdSet& fdSet)
 {
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
@@ -110,7 +110,7 @@ TestReliableTransport::process(fd_set* fdSet)
 }
 
 void 
-TestReliableTransport::buildFdSet( fd_set* fdSet, int* fdSetSize )
+TestReliableTransport::buildFdSet( FdSet& fdset )
 {
    // nothing to do here
 }
@@ -141,7 +141,7 @@ TestUnreliableTransport::~TestUnreliableTransport()
 
 
 void 
-TestUnreliableTransport::process(fd_set* fdSet)
+TestUnreliableTransport::process(FdSet& fdset)
 {
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
@@ -170,7 +170,7 @@ TestUnreliableTransport::process(fd_set* fdSet)
 }
 
 void 
-TestUnreliableTransport::buildFdSet( fd_set* fdSet, int* fdSetSize )
+TestUnreliableTransport::buildFdSet( FdSet& fdset )
 {
    // nothing to do here
 }

@@ -90,13 +90,13 @@ TransportSelector::addTransport( Transport::Type protocol,
 
 
 void 
-TransportSelector::process(fd_set* fdSet)
+TransportSelector::process(FdSet& fdset)
 {
    for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
    {
       try
       {
-         (*i)->process(fdSet);
+         (*i)->process(fdset);
       }
       catch (VException& e)
       {
@@ -182,11 +182,11 @@ TransportSelector::retransmit(SipMessage* msg, Transport::Tuple& destination)
 
 
 void 
-TransportSelector::buildFdSet( fd_set* fdSet, int* fdSetSize )
+TransportSelector::buildFdSet( FdSet& fdset )
 {
    for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
    {
-      (*i)->buildFdSet( fdSet, fdSetSize );
+      (*i)->buildFdSet( fdset );
    }
 }
 

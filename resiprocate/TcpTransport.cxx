@@ -88,31 +88,23 @@ TcpTransport::~TcpTransport()
 
 
 void 
-TcpTransport::buildFdSet( fd_set* fdSet, int* fdSetSize )
+TcpTransport::buildFdSet( FdSet& fdset)
 {
    int maxFd = -1;
    for (ConnectionMap::Map::iterator it = mConnectionMap.mConnections.begin();
         it != mConnectionMap.mConnections.end(); it++)
    {
-      int fd = it->second->getSocket();
-      if (fd > maxFd)
-      {
-         maxFd = fd;
-      }
-      FD_SET(fd, fdSet);
-   }
-   if ((maxFd + 1) > *fdSetSize)
-   {
-      *fdSetSize = maxFd + 1;
+      fdset.setRead(it->second->getSocket());
+      fdset.setWrite(it->second->getSocket());
    }
 }
 
 void 
-TcpTransport::processListen(fd_set* fdSet)
+TcpTransport::processListen(FdSet& fdset)
 {
    assert( mFd );
 	
-   if ( FD_ISSET( mFd, fdSet ) )
+   if (fdset.readyToRead(mFd))
    {
       struct sockaddr_in peer;
 		
@@ -159,19 +151,17 @@ TcpTransport::processRead(ConnectionMap::Connection* c)
 
 
 void
-TcpTransport::processAllReads(fd_set* fdset)
-
+TcpTransport::processAllReads(FdSet& fdset)
 {
    if (mConnectionMap.mConnections.empty())
    {
       return;
    }
-   
 
    for (ConnectionMap::Connection * c = mConnectionMap.mPostOldest.mYounger;
         c != &mConnectionMap.mPreYoungest; c = c->mYounger)
    {
-      if (FD_ISSET(c->getSocket(), fdset))
+      if (fdset.readyToRead(c->getSocket()))
       {
          if (processRead(c))
          {
@@ -186,9 +176,8 @@ TcpTransport::processAllReads(fd_set* fdset)
    }
 }
 
-
 void
-TcpTransport::processAllWrites( fd_set* fdset )
+TcpTransport::processAllWrites( FdSet& fdset )
 {
    // how do we know that buffer won't get deleted on us !jf!
 
@@ -222,7 +211,7 @@ TcpTransport::processAllWrites( fd_set* fdset )
 }         
 
 bool 
-TcpTransport::sendFromRoundRobin(fd_set* fdset)
+TcpTransport::sendFromRoundRobin(FdSet& fdset)
 {
    if (mSendRoundRobin.empty())
    {
@@ -236,7 +225,7 @@ TcpTransport::sendFromRoundRobin(fd_set* fdset)
       {
          mSendPos = mSendRoundRobin.begin();
       }
-      if (FD_ISSET((*mSendPos)->getSocket(), fdset))
+      if (fdset.readyToWrite((*mSendPos)->getSocket()))
       {
          if (processWrite(*mSendPos))
          {
@@ -298,7 +287,7 @@ TcpTransport::processWrite(ConnectionMap::Connection* c)
 }
 
 void 
-TcpTransport::process(fd_set* fdSet)
+TcpTransport::process(FdSet& fdSet)
 {
    processAllWrites(fdSet);
    processListen(fdSet);
