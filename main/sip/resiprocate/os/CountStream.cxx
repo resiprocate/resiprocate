@@ -1,5 +1,10 @@
 #include "resiprocate/os/CountStream.hxx"
 
+// Remove warning about 'this' use in initiator list - pointer is only stored
+#if defined(WIN32)
+#pragma warning( disable : 4355 ) // using this in base member initializer list 
+#endif
+
 using namespace resip;
 
 static const int BuffSize(2048);
@@ -43,9 +48,7 @@ CountBuffer::overflow(int c)
 
 CountStream::CountStream(size_t& count)
    : CountBuffer(count), std::ostream(this)
-     //mStreamBuf(count)
 {
-   //init(&mStreamBuf);
 }
 
 CountStream::~CountStream()

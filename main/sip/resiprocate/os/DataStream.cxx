@@ -1,6 +1,11 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Data.hxx"
 
+// Remove warning about 'this' use in initiator list - pointer is only stored
+#if defined(WIN32)
+#pragma warning( disable : 4355 ) // using this in base member initializer list 
+#endif
+
 using namespace resip;
 
 DataBuffer::DataBuffer(Data& str)
@@ -66,7 +71,6 @@ DataBuffer::overflow(int c)
 iDataStream::iDataStream(Data& str)
    : DataBuffer(str), std::istream(this)
 {
-//   init(&mStreambuf);
 }
 
 iDataStream::~iDataStream()
@@ -76,7 +80,6 @@ iDataStream::~iDataStream()
 oDataStream::oDataStream(Data& str)
    : DataBuffer(str), std::ostream(this)
 {
-//   init(&mStreambuf);
 }
 
 oDataStream::~oDataStream()
@@ -87,7 +90,6 @@ oDataStream::~oDataStream()
 DataStream::DataStream(Data& str)
    : DataBuffer(str), std::iostream(this)
 {
-   //init(&mStreambuf);
 }
 
 DataStream::~DataStream()
