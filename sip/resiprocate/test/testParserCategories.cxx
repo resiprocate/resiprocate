@@ -608,6 +608,17 @@ main(int arc, char** argv)
       assert(requestLine.getSipVersion() == "SIP/2.0");
    }
    {
+      TR _tr( "Request Line parse tel");
+      Data requestLineString("INVITE tel:4153331212 SIP/2.0");
+      HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
+
+      RequestLine requestLine(&hfv, Headers::UNKNOWN);
+      assert(requestLine.uri().scheme() == "tel");
+      assert(requestLine.uri().user() == "4153331212");
+      assert(requestLine.getMethod() == INVITE);
+      assert(requestLine.getSipVersion() == "SIP/2.0");
+   }
+   {
       TR _tr( "Request Line parse, parameters");
       Data requestLineString("INVITE sips:bob@foo.com;maddr=1.2.3.4 SIP/2.0");
       HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
