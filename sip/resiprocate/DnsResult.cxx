@@ -190,6 +190,8 @@ DnsResult::getDefaultPort(TransportType transport, int port)
          case TCP:
             return mSips ? 5061 : 5060;
          default:
+            InfoLog( << "Should not get this - unkown transport" );
+            return 5060; // !cj! todo - remove 
             assert(0);
       }
    }
