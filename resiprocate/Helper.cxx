@@ -36,7 +36,7 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
 
 // MOVEME !ah! this goes in a test_support package
 SipMessage*
-Helper::makeMessage(const Data& data, bool isExternal = false)
+Helper::makeMessage(const Data& data, bool isExternal )
 {
    SipMessage* msg = new SipMessage(isExternal);
    int size = data.size();
