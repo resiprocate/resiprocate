@@ -110,7 +110,7 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc)
   SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
   assert(sipMessage);
 
-  UserDB &database = rc.getProxy().getUserDb();
+  UserDb &database = rc.getProxy().getUserDb();
   Data realm = getRealm(rc);
 
   // Extract the user from the appropriate Proxy-Authorization header
