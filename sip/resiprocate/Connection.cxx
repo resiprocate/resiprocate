@@ -32,7 +32,9 @@ Connection::Connection(const Transport::Tuple& who,
      mSocket(socket),
      mLastUsed(Timer::getTimeMs()),
      mState(NewMessage)
-{}
+{
+   mWho.connection = this;
+}
 
 Connection::~Connection()
 {
@@ -147,20 +149,21 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
                fifo.add(mMessage);
 
                int overHang = (mBufferPos + bytesRead) - (mPreparse.nDiscardOffset() + contentLength);
-               size_t size = overHang*3/2;
-               if ( size < Connection::ChunkSize )
-               {
-                  size = Connection::ChunkSize;
-               }
-               char* newBuffer = new char[size];
-               memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset() + contentLength, overHang);
-               mBuffer = newBuffer;
-               mBufferPos = 0;
-               mBufferSize = size;
 
                mState = NewMessage;
                if (overHang > 0) 
                {
+                  size_t size = overHang*3/2;
+                  if ( size < Connection::ChunkSize )
+                  {
+                     size = Connection::ChunkSize;
+                  }
+                  char* newBuffer = new char[size];
+                  memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset() + contentLength, overHang);
+                  mBuffer = newBuffer;
+                  mBufferPos = 0;
+                  mBufferSize = size;
+                  
                   DebugLog (<< "Extra bytes after message: " << overHang);
                   DebugLog (<< Data(mBuffer, overHang));
                   
