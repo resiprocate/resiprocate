@@ -56,24 +56,24 @@ class DnsResolver
 
       struct Naptr
       {
-	    int order;
-	    int pref;
-	    Data flags;
-	    Data service;
-	    Data regex;
-	    Data replacement;
+            int order;
+            int pref;
+            Data flags;
+            Data service;
+            Data regex;
+            Data replacement;
 
             bool operator<(const Naptr& rhs) const
             {
-	       if (order != rhs.order)
-	       {
-		  return pref < rhs.pref;
-	       }
-	       else
-	       {
-	          return order < rhs.order;
-	       }
-	    }
+               if (order != rhs.order)
+               {
+                  return pref < rhs.pref;
+               }
+               else
+               {
+                  return order < rhs.order;
+               }
+            }
       };
       typedef std::set<DnsResolver::Naptr> NaptrSet;
       typedef std::set<DnsResolver::Naptr>::const_iterator NaptrIterator;
@@ -90,9 +90,9 @@ class DnsResolver
             Data host;
             int port;
             Transport::Type transport;
-	    Data scheme;
-	    std::list<Transport::Type> otherTransports;
-	    bool isFinal;
+            Data scheme;
+            std::list<Transport::Type> otherTransports;
+            bool isFinal;
       };
      
       class DnsMessage : public Message
@@ -107,7 +107,7 @@ class DnsResolver
             Data mTransactionId;
             TupleList mTuples;
             SrvSet mSrvs;
-	    bool isFinal;
+            bool isFinal;
       };
       
       class Exception : public BaseException
