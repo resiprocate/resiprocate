@@ -34,173 +34,21 @@ TransactionUser::wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const
    return mFifo.wouldAccept(usage);
 }
 
-#if 0
 bool
-TransactionUser::isForMe(const SipMessage& msg)
+TransactionUser::isForMe(const SipMessage& msg) const
 {
-	// do this for each MessageFilterRule
-	for (MessageFilterRuleList::iterator i = mMessageFilterRules.begin() ; mMessageFilterRules.end() ; ++i)
-	{
-       if (i.matches(msg))
+   // do this for each MessageFilterRule
+   for (MessageFilterRuleList::const_iterator i = mRuleList.begin() ; 
+        i != mRuleList.end() ; ++i)
+   {
+       if (i->matches(msg))
        {
           return true;
        }       
-	}
-	return false;
+   }
+   return false;
 }
 
-
-class MessageFilterRule
-{
-	public:
-		bool matches();
-	private:
-		bool schemeIsInList(Data scheme)
-		bool hostpartIsInList(Data hostpart)
-
-		typedef vector<Data> SchemeList;
-		SchemeList mSchemeList;
-		int mHostpartMatches // ANY, HOSTISME, DOMAINISME, or LIST
-		typedef vector<Data> HostpartList;
-		HostpartList mHostpartList;
-		typedef vector<Data> EventTypeList;
-		EventTypeList mEventTypeList;
-		bool mAnyEventType;
-		bool mAcceptWinfoTypes; // matches *.winfo  ?? do we nned this ??
-}
-
-
-typedef vector<MessageFilterRule> MessageFilterRuleList;
-
-bool
-MessageFilterRule::matches()
-{
-	const Data scheme = msg.header(h_StartLine).uri().scheme()
-
-	if (!schemeIsInList(scheme)
-		return false;
-	
-	if (msg.header(scheme == Symbols::Tel)
-		return true;
-	else
-	{
-		if (!hostIsInList( msg.header(h_StartLine).uri().hostpart())
-			return false;
-
-		if (scheme == Symbols::Sip || scheme == Symbols::Sips)
-		{	
-			int method = msg.header(h_StartLine).method();
-			if (!methodIsInList(method))
-				return false;
-			else
-			{
-				switch(method)
-				{
-					case SUBSCRIBE:
-					case NOTIFY:
-					case PUBLISH:		
-						if (!eventIsInList(msg.header(h_Event).value())
-							return false;
-						break;
-					default:
-						break;
-				}
-			}
-		}
-	}
-}
-
-
-//defaults for the constructor of a MessageFilterRule
-const SchemeList schemes(SIP, SIPS, TEL, IM, PRES, H323);
-const MethodList methods(INVITE, ACK, CANCEL, BYE, REGISTER, 
- PUBLISH, SUBSCRIBE, NOTIFY, INFO, OPTIONS, REFER, UPDATE, PRACK, MESSAGE);
-// legal values for hostpart comparison are ANY, HOSTISME, DOMAINISME, or a list of Datas
-// legal values for events are ANY or a list of Datas
-
-
-bool
-schemeIsInList(Data& scheme)
-{
-   // step through mSchemeList looking for supported schemes
-}
-
-bool
-hostpartIsInList(Data& hostpart)
-{
-	switch(mHostpartMatches)
-	{
-		case ANY:
-			return true;
-		case HOSTISME:
-			return (Helper::hostIsMe(hostpart));  // this func does not exist yet
-			break;
-		case DOMAINISME:
-			return (Helper::domainIsMe(hostpart));  // nor this one
-			break;
-		case LIST:
-			// walk the list for specific matches
-			for (HostpartList::iterator i = mHostpartList.begin() ; mHostpartList.end() ; ++i)
-			{
-				if (*i.value() == hostpart)
-					return true;
-			}
-			break;
-		default:
-			break;
-	}
-	return false;
-}
-
-
-};
-
-
-//defaults for the constructor of a MessageFilterRule
-const SchemeList schemes(SIP, SIPS, TEL, IM, PRES, H323);
-const MethodList methods(INVITE, ACK, CANCEL, BYE, REGISTER, 
- PUBLISH, SUBSCRIBE, NOTIFY, INFO, OPTIONS, REFER, UPDATE, PRACK, MESSAGE);
-// legal values for hostpart comparison are ANY, HOSTISME, DOMAINISME, or a list of Datas
-// legal values for events are ANY or a list of Datas
-
-
-bool
-schemeIsInList(Data& scheme)
-{
-   // step through mSchemeList looking for supported schemes
-}
-
-bool
-hostpartIsInList(Data& hostpart)
-{
-	switch(mHostpartMatches)
-	{
-		case ANY:
-			return true;
-		case HOSTISME:
-			return (Helper::hostIsMe(hostpart));  // this func does not exist yet
-			break;
-		case DOMAINISME:
-			return (Helper::domainIsMe(hostpart));  // nor this one
-			break;
-		case LIST:
-			// walk the list for specific matches
-			for (HostpartList::iterator i = mHostpartList.begin() ; mHostpartList.end() ; ++i)
-			{
-				if (*i.value() == hostpart)
-					return true;
-			}
-			break;
-		default:
-			break;
-	}
-	return false;
-}
-
-
-};
-
-#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
