@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.26 2002/12/15 22:26:53 fluffy Exp $
+# $Id: Makefile,v 1.27 2002/12/17 18:06:30 jason Exp $
 
 USE_SSL = 1
 
@@ -22,6 +22,8 @@ TESTPROGRAMS =	\
 		test1.cxx \
 		test2.cxx \
 		testDigestAuthentication.cxx \
+		testIM.cxx \
+		testLockStep.cxx \
 		testMessageWaiting.cxx \
 		testPlainContents.cxx \
 		testSdp.cxx \
