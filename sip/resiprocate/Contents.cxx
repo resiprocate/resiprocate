@@ -145,14 +145,24 @@ Contents*
 Contents::createContents(const Mime& contentType, 
                          const Data& contents)
 {
-   //CerrLog(<< "createContents(" << contentType << ")");
-
   // !ass! why are we asserting that the Data doesn't own the buffer?
+  // .dlb. because this method is to be called only within a multipart
   // !ass! HFV is an overlay -- then setting c->mIsMine to true ?? dlb Q
+  // .dlb. we are telling the content that it owns its HFV, not the data that it
+  // .dlb. owns its memory
+
    assert(!contents.mMine);
    HeaderFieldValue *hfv = new HeaderFieldValue(contents.data(), contents.size());
-   assert(Contents::getFactoryMap().find(contentType) != Contents::getFactoryMap().end());
-   Contents* c = Contents::getFactoryMap()[contentType]->create(hfv, contentType);
+
+   Contents* c;
+   if (Contents::getFactoryMap().find(contentType) != Contents::getFactoryMap().end())
+   {
+      c = Contents::getFactoryMap()[contentType]->create(hfv, contentType);
+   }
+   else
+   {
+      c = new GenericContents(hfv, contentType);
+   }
    c->mIsMine = true;
    return c;
 }
