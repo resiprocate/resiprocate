@@ -232,7 +232,8 @@ void
 TransportSelector::transmit( SipMessage* msg, Tuple& destination)
 {
    assert( &destination != 0 );
-
+   DebugLog (<< "Transmitting " << *msg << " to " << destination);
+   
    if (destination.transport == 0)
    {
       if (destination.transportType == TLS)

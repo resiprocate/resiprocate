@@ -43,9 +43,7 @@ class Transport : public ThreadIf
       void fail(const Data& tid); // called when transport failed
       
       // These methods are used by the TransportSelector
-      virtual const Data& hostName() const { return mHost; } 
       virtual const Data& interfaceName() const { return mInterface; } 
-      virtual const Data& ipAddress() const { return mIpAddress; } 
       virtual int port() const { return mPort; } 
       virtual TransportType transport() const =0 ;
       virtual bool isReliable() const =0;
@@ -62,10 +60,8 @@ class Transport : public ThreadIf
    protected:
       bool mV4;
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
-      Data mHost;
       int mPort;
       Data mInterface;
-      Data mIpAddress;
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
 
