@@ -169,7 +169,7 @@ SipMessage::cleanUp()
 }
 
 // unknown header interface
-StringComponents& 
+StringCategories& 
 SipMessage::header(const Data& headerName) const
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
@@ -183,20 +183,20 @@ SipMessage::header(const Data& headerName) const
             HeaderFieldValue* it = hfvs->first;
             while (it != 0)
             {
-               it->mParserCategory = new StringComponent(it);
+               it->mParserCategory = new StringCategory(it);
             }
             
-            hfvs->setParserContainer(new StringComponents(hfvs));
+            hfvs->setParserContainer(new StringCategories(hfvs));
          }
-         return *dynamic_cast<StringComponents*>(hfvs->getParserContainer());
+         return *dynamic_cast<StringCategories*>(hfvs->getParserContainer());
       }
    }
    
    // create the list empty
    HeaderFieldValueList* hfvs = new HeaderFieldValueList;
-   hfvs->setParserContainer(new StringComponents(hfvs));
+   hfvs->setParserContainer(new StringCategories(hfvs));
    mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(headerName, hfvs));
-   return *dynamic_cast<StringComponents*>(hfvs->getParserContainer());
+   return *dynamic_cast<StringCategories*>(hfvs->getParserContainer());
 }
 
 void

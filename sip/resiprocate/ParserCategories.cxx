@@ -5,7 +5,7 @@
 #include <util/Data.hxx>
 #include <util/Logger.hxx>
 #include <sipstack/ParserCategories.hxx>
-
+#include <sipstack/Uri.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -99,18 +99,18 @@ Auth::clone() const
 }
 
 //====================
-// CSeqComponent:
+// CSeqCategory:
 //====================
-CSeqComponent::CSeqComponent(const CSeqComponent& rhs)
+CSeqCategory::CSeqCategory(const CSeqCategory& rhs)
    : ParserCategory(rhs),
      mMethod(rhs.mMethod),
      mSequence(rhs.mSequence)
 {}
 
 ParserCategory* 
-CSeqComponent::clone() const
+CSeqCategory::clone() const
 {
-   return new CSeqComponent(*this);
+   return new CSeqCategory(*this);
 }
 
 // examples to test: 
@@ -125,7 +125,7 @@ CSeqComponent::clone() const
 // "CSeq:\t\t  \t15\t\t\t    \t"  // bad
 
 void
-CSeqComponent::parse()
+CSeqCategory::parse()
 {
    // !jf! this does not need to copy the memory until after parsing - see Token
    Data number;
@@ -149,7 +149,7 @@ CSeqComponent::parse()
 }
 
 std::ostream& 
-CSeqComponent::encode(std::ostream& str) const
+CSeqCategory::encode(std::ostream& str) const
 {
    str << MethodNames[mMethod] << Symbols::SPACE << mSequence;
    return str;
@@ -158,52 +158,52 @@ CSeqComponent::encode(std::ostream& str) const
 //====================
 // Date
 //====================
-DateComponent::DateComponent(const DateComponent& rhs)
+DateCategory::DateCategory(const DateCategory& rhs)
    : ParserCategory(rhs),
      mValue(rhs.mValue)
 {}
 
 void
-DateComponent::parse()
+DateCategory::parse()
 {
    mValue = Data(getHeaderField().mField, getHeaderField().mFieldLength);
 }
 
 ParserCategory* 
-DateComponent::clone() const
+DateCategory::clone() const
 {
-   return new DateComponent(*this);
+   return new DateCategory(*this);
 }
 
 std::ostream& 
-DateComponent::encode(std::ostream& str) const
+DateCategory::encode(std::ostream& str) const
 {
    str << mValue;
    return str;
 }
 
 //====================
-// WarningComponent
+// WarningCategory
 //====================
-WarningComponent::WarningComponent(const WarningComponent& rhs)
+WarningCategory::WarningCategory(const WarningCategory& rhs)
    : ParserCategory(rhs)
 {
 }
 
 void
-WarningComponent::parse()
+WarningCategory::parse()
 {
    assert(0);
 }
 
 ParserCategory* 
-WarningComponent::clone() const
+WarningCategory::clone() const
 {
-   return new WarningComponent(*this);
+   return new WarningCategory(*this);
 }
 
 std::ostream& 
-WarningComponent::encode(std::ostream& str) const
+WarningCategory::encode(std::ostream& str) const
 {
    return str;
 }
@@ -211,18 +211,18 @@ WarningComponent::encode(std::ostream& str) const
 //====================
 // Integer:
 //====================
-IntegerComponent::IntegerComponent(const IntegerComponent& rhs)
+IntegerCategory::IntegerCategory(const IntegerCategory& rhs)
    : ParserCategory(rhs),
      mValue(0)
 {}
 
-ParserCategory* IntegerComponent::clone() const
+ParserCategory* IntegerCategory::clone() const
 {
-   return new IntegerComponent(*this);
+   return new IntegerCategory(*this);
 }
 
 void
-IntegerComponent::parse()
+IntegerCategory::parse()
 {
 
   Data rawdata = Data(mHeaderField->mField, mHeaderField->mFieldLength);
@@ -296,7 +296,7 @@ IntegerComponent::parse()
 }
 
 std::ostream& 
-IntegerComponent::encode(std::ostream& str) const
+IntegerCategory::encode(std::ostream& str) const
 {
   str << mValue;
   if (!mComment.empty())
@@ -309,26 +309,26 @@ IntegerComponent::encode(std::ostream& str) const
 }
 
 //====================
-// StringComponent
+// StringCategory
 //====================
-StringComponent::StringComponent(const StringComponent& rhs)
+StringCategory::StringCategory(const StringCategory& rhs)
    : ParserCategory(rhs)
 {}
 
 ParserCategory* 
-StringComponent::clone() const
+StringCategory::clone() const
 {
-   return new StringComponent(*this);
+   return new StringCategory(*this);
 }
 
 void 
-StringComponent::parse()
+StringCategory::parse()
 {
    mValue = Data(getHeaderField().mField, getHeaderField().mFieldLength);
 }
 
 std::ostream& 
-StringComponent::encode(std::ostream& str) const
+StringCategory::encode(std::ostream& str) const
 {
    str << mValue;
    return str;
@@ -414,26 +414,31 @@ CallId::encode(ostream& str) const
 }
 
 //====================
-// Url:
+// NameAddr:
 //====================
-Url::Url(const Url& rhs)
+NameAddr::NameAddr(const NameAddr& rhs)
    : ParserCategory(rhs)
 {}
 
-ParserCategory *
-Url::clone() const
+NameAddr::~NameAddr()
 {
-   return new Url(*this);
+   delete mUri;
+}
+
+ParserCategory *
+NameAddr::clone() const
+{
+   return new NameAddr(*this);
 }
 
 void
-Url::parse()
+NameAddr::parse()
 {
    assert(0);
 }
 
 ostream&
-Url::encode(ostream& str) const
+NameAddr::encode(ostream& str) const
 {
    assert(0);
 }
@@ -442,10 +447,15 @@ Url::encode(ostream& str) const
 // RequestLine:
 //====================
 RequestLine::RequestLine(const RequestLine& rhs)
-   : Url(rhs),
+   : mUri(rhs.mUri ? new Uri(*rhs.mUri) : 0),
      mMethod(rhs.mMethod),
      mSipVersion(rhs.mSipVersion)
 {}
+
+RequestLine::~RequestLine()
+{
+   delete mUri;
+}
 
 ParserCategory *
 RequestLine::clone() const
@@ -456,15 +466,16 @@ RequestLine::clone() const
 void 
 RequestLine::parse()
 {
+   mUri = new Uri();
    assert(0);
 }
 
 ostream&
 RequestLine::encode(ostream& str) const
 {
-   str << MethodNames[mMethod] << Symbols::SPACE 
-       << Url::encode(str) << Symbols::SPACE 
-       << mSipVersion;
+   str << MethodNames[mMethod] << Symbols::SPACE;
+   mUri->encode(str);
+   str << Symbols::SPACE << mSipVersion;
    return str;
 }
 
