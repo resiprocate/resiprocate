@@ -25,6 +25,127 @@ main(int argc, char** argv)
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
    {
+      // exercise header remove
+      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+                   "Allow-Events: foo\r\n"
+                   "Allow-Events: bar\r\n"
+                   "Allow-Events: baz\r\n"
+                   "Allow-Events: quux\r\n"
+                   "Unsupported: \r\n"
+                   "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
+                   "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-107338443-1--c87542-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1--c87542-;received=192.168.2.220\r\n"
+                   "Call-ID: 643f2f06\r\n"
+                   "CSeq: 1 INVITE\r\n"
+                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Proxy-Authorization: Digest username=\"Betty\", realm = \"fresno.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+                   "Contact: <sip:ext103@192.168.2.220:5068;transport=UDP>\r\n"
+                   "Max-Forwards: 69\r\n"
+                   "Content-Length: 0\r\n"
+                   "Unknown: foobie\r\n"
+                   "Unknown: biefoo\r\n"
+                   "\r\n");
+
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      // note message has not been parsed
+
+      message->remove(h_AllowEvents);
+      message->remove(h_Unsupporteds);
+      message->remove(h_To);
+      message->remove(h_From);
+      message->remove(h_Vias);
+      message->remove(h_CallId);
+      message->remove(h_CSeq);
+      message->remove(h_ProxyAuthorizations);
+      message->remove(h_RecordRoutes);
+      message->remove(h_Contacts);
+      message->remove(h_MaxForwards);
+      message->remove(h_ContentLength);
+      message->remove(UnknownHeaderType("Unknown"));
+
+      Data enc;
+      {
+         DataStream str(enc);
+         str << *message;
+      }
+
+      assert(enc == ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+                     "Content-Length: 0\r\n"
+                     "\r\n"));
+   }
+
+   {
+      // exercise header remove
+      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+                   "Allow-Events: foo\r\n"
+                   "Allow-Events: bar\r\n"
+                   "Allow-Events: baz\r\n"
+                   "Allow-Events: quux\r\n"
+                   "Unsupported: \r\n"
+                   "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
+                   "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-107338443-1--c87542-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1--c87542-;received=192.168.2.220\r\n"
+                   "Call-ID: 643f2f06\r\n"
+                   "CSeq: 1 INVITE\r\n"
+                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Proxy-Authorization: Digest username=\"Betty\", realm = \"fresno.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+                   "Contact: <sip:ext103@192.168.2.220:5068;transport=UDP>\r\n"
+                   "Max-Forwards: 69\r\n"
+                   "Content-Length: 0\r\n"
+                   "Unknown: foobie\r\n"
+                   "Unknown: biefoo\r\n"
+                   "\r\n");
+
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+
+      message->header(h_AllowEvents).front().value();
+      message->header(h_Unsupporteds).empty();
+      message->header(h_To).uri().user();
+      message->header(h_From);
+      message->header(h_Vias).front();
+      message->header(h_CallId).value();
+      message->header(h_CSeq).sequence();
+      message->header(h_ProxyAuthorizations).size();
+      message->header(h_RecordRoutes).front().uri().host();
+      message->header(h_Contacts).size();
+      message->header(h_MaxForwards).value();
+      message->header(h_ContentLength).value();
+      message->header(UnknownHeaderType("Unknown")).size();
+
+      // note message has been parsed
+      message->remove(h_AllowEvents);
+      message->remove(h_Unsupporteds);
+      message->remove(h_To);
+      message->remove(h_From);
+      message->remove(h_Vias);
+      message->remove(h_CallId);
+      message->remove(h_CSeq);
+      message->remove(h_ProxyAuthorizations);
+      message->remove(h_RecordRoutes);
+      message->remove(h_Contacts);
+      message->remove(h_MaxForwards);
+      message->remove(h_ContentLength);
+      message->remove(UnknownHeaderType("Unknown"));
+      
+      // not present
+      message->remove(h_Routes);
+
+      Data enc;
+      {
+         DataStream str(enc);
+         str << *message;
+      }
+
+      assert(enc == ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+                     "Content-Length: 0\r\n"
+                     "\r\n"));
+   }
+
+   {
       // demonstrate comma encoding
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "Allow-Events: foo\r\n"
