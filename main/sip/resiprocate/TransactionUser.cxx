@@ -1,6 +1,8 @@
 #include  "resiprocate/TransactionUser.hxx"
 
-TransactionUser::TransactionUser()
+using namespace resip;
+
+TransactionUser::TransactionUser() : mFifo(0, 0)
 {
 }
 
@@ -14,8 +16,8 @@ TransactionUser::postToTransactionUser(Message* msg, TimeLimitFifo<Message>::Dep
    mFifo.add(msg, usage);
 }
 
-virtual 
-unsigned int TransactionUser::size() const
+unsigned int 
+TransactionUser::size() const
 {
    return mFifo.size();
 }    
