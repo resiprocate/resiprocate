@@ -1,11 +1,17 @@
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Security.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/StackThread.hxx"
+#include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
 
 #include "repro/Proxy.hxx"
+#include "repro/RequestProcessorChain.hxx"
 #include "repro/monkeys/RouteProcessor.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
 #include "repro/monkeys/LocationServer.hxx"
+
+
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
