@@ -13,44 +13,40 @@ main(int argc, char** argv)
 {
 
 /* Initialize a stack */
-  SipStack stack();
-  stack.addTransport(UDP,5060);
-  stack.addTransport(TCP,5060);
+   Log::initialize(Log::COUT, Log::INFO, argv[0]);
+   Security security;
+   SipStack stack(&security);
+   stack.addTransport(UDP,5060);
+   stack.addTransport(TCP,5060);
+   stack.addTransport(TLS,5061);
+   StackThread stackThread(stack);
 
-/* Initialize a proxy */
-  RequestProcessorChain requestProcessors;
+   InMemoryRegistrationDatabase regData;
 
-  RouteProcessor rp();
-  requestProcessors.addProcessor(rp);
+   /* Initialize a proxy */
+   RequestProcessorChain requestProcessors;
 
-  DigestAuthenticator da();
-  requestProcessors.addProcessor(rp); 
+   RouteProcessor rp;
+   requestProcessors.addProcessor(rp);
+
+   DigestAuthenticator da;
+   requestProcessors.addProcessor(rp); 
    
-  InMemoryRegistrationDatabase regData();
-  LocationServer ls(regData);
-  requestProcessors.addProcessor(rp);
+   LocationServer ls(regData);
+   requestProcessors.addProcessor(rp);
 
-  Proxy theProxyTU(stack,requestProcessors);
+   Proxy proxy(stack, requestProcessors);
 
-/* Initialize a registrar */
-  Registrar registrar();
-  Profile   profile();
-  
-  profile.clearSupportedMethods();
-  profile.addSupportedMethod(resip::REGISTER);
- 
-  DialogUsageManager registrarDum(stack);
-  registrarDum.setServerRegistrationHandler(&registrar);
-  registrarDum.setRegistrationPersistenceManager(&regData);
-  registrarDum.setProfile(&profile);
+   /* Initialize a registrar */
+   Registrar registrar(stack, regData);
 
-/* Make it all go */
-  theProxyTu.run();
-  registrarDum.run();
-
-  //!RjS! catch signals instead
-  while (1)
-  {
-  }
-
+   /* Make it all go */
+   stack.run();
+   proxy.run();
+   registrar.run();
+   registrar.join();
+   proxy.join();
+   stack.join();
+   
+   // shutdown the stack now...
 }
