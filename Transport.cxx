@@ -16,6 +16,7 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/Helper.hxx"
 
 using namespace resip;
 using namespace std;
@@ -27,12 +28,16 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 {
 }
 
-Transport::Transport(Fifo<Message>& rxFifo, int portNum, const Data& intfc, bool ipv4) : 
+Transport::Transport(Fifo<Message>& rxFifo,
+                     int portNum,
+                     const Data& intfc,
+                     bool ipv4) :
    mFd(-1),
    mInterface(intfc),
    mTuple(intfc, portNum, ipv4),
    mStateMachineFifo(rxFifo)
 {
+   //mTuple.type = transport();
 }
 
 Transport::~Transport()
@@ -216,7 +221,8 @@ Transport::thread()
 void
 Transport::fail(const Data& tid)
 {
-   mStateMachineFifo.add(new TransportMessage(tid, true));
+  if (!tid.empty())
+    mStateMachineFifo.add(new TransportMessage(tid, true));
 }
 
 bool 
@@ -235,6 +241,60 @@ Transport::send( const Tuple& dest, const Data& d, const Data& tid)
    mTxFifo.add(data); // !jf!
 }
 
+SendData*
+Transport::makeFailedBasicCheckResponse(const SipMessage& msg,
+                                        int responseCode,
+                                        const char * warning)
+{
+  if (msg.isResponse()) return 0;
+
+  const Tuple& dest = msg.getSource();
+
+
+  std::auto_ptr<SipMessage> errMsg(new SipMessage);
+
+  errMsg->header(h_StatusLine).responseCode() = responseCode;
+  errMsg->header(h_From) = msg.header(h_From);
+  errMsg->header(h_To) = msg.header(h_To);
+  errMsg->header(h_CallId) = msg.header(h_CallId);
+  errMsg->header(h_CSeq) = msg.header(h_CSeq);
+  errMsg->header(h_StatusLine).reason() = "Bad Request";
+  errMsg->header(h_Warning).code() = responseCode;
+  errMsg->header(h_Warning).hostname() = DnsUtil::getLocalHostName(); 
+                                // !ah! hostname should be from transport.
+  errMsg->header(h_Warning).text() = Data(warning ?
+                                          warning :
+                                          "Original request had no Vias.");
+  Via v;
+  v.sentPort() = dest.getPort();
+  v.sentHost() = DnsUtil::inet_ntop(dest);
+  errMsg->header(h_Vias).push_front(v);
+  // synthetic Via:
+
+
+  // make send data here w/ blank tid and blast it out.
+  // encode message
+  Data encoded;
+  encoded.clear();
+  DataStream encodeStream(encoded);
+  errMsg->encode(encodeStream);
+  encodeStream.flush();
+
+  if (encoded.empty()) 
+  {
+    ErrLog(<<"Unable to encode failed response." << errMsg->brief());
+    assert(0);
+    return 0;
+  }
+
+  // !ah! YUCK! SendData ctor copies the data! Ugh.
+  InfoLog(<<"Sending response directly to " << dest << " : " << errMsg->brief() );
+  SendData * sd = new SendData( dest, encoded, Data::Empty );
+  
+  return sd;
+}
+
+
 void
 Transport::stampReceived(SipMessage* message)
 {
@@ -249,6 +309,36 @@ Transport::stampReceived(SipMessage* message)
          message->header(h_Vias).front().param(p_rport).port() = tuple.getPort();
       }
    }
+}
+
+
+bool
+Transport::basicCheck(const SipMessage& msg)
+{
+  if (msg.isExternal())
+  {
+    if (!msg.exists(h_Vias))
+    {
+      InfoLog(<<"Message Failed basicCheck :" << msg.brief());
+      if (msg.isRequest())
+      {
+        // this is VERY low-level b/c we don't have a transaction...
+        // here we make a response to warn the offending party.
+        SendData * sd = makeFailedBasicCheckResponse(msg);
+
+        if (sd)
+        {
+          mTxFifo.add(sd);
+        }
+        else
+        {
+          ErrLog(<<"Unable to make SendData for bad message response.");
+        }
+      }
+      return false;
+    }
+  }
+  return true;
 }
 
 bool 
