@@ -8,13 +8,10 @@ digraph UAS {
   rankdir=LR;
   node [shape = box];
 
-  Start -> Offer                                        [ label = "onInvite-offer/app::onOffer" ];
-  Start -> NoOffer                                      [ label = "onInvite" ];
-  Start -> OfferReliable                                [ label = "onInvite-offer-rel/app::onOffer" ];
-  Start -> NoOfferReliable                              [ label = "onInvite-rel" ];
-
   //////////////////////////////////////////
   // UAS - offer in INVITE
+  Start -> Offer                                        [ label = "onInvite-offer/app::onOffer" ];
+
   Offer -> OfferProvidedAnswer                          [ label = "dum::provideAnswer/store::answer" ];
   Offer -> EarlyOffer                                   [ label = "dum::provisional/send::1xx,timer::1xx" ]; // include early-media
   Offer -> Assert                                       [ label = "dum::accept/assert" ];
@@ -49,6 +46,8 @@ digraph UAS {
 
   //////////////////////////////////////////
   // UAS - no offer in INVITE
+  Start -> NoOffer                                      [ label = "onInvite" ];
+
   NoOffer -> ProvidedOffer                              [ label = "dum::provideOffer/store::offer" ];
   NoOffer -> EarlyNoOffer                               [ label = "dum::provisional/send::1xx,timer::1xx" ]; // include early-media
   NoOffer -> Assert                                     [ label = "dum::accept/assert" ];
@@ -88,6 +87,9 @@ digraph UAS {
   Accepted -> WaitingToHangup                           [ label = "dum::end" ];
   //////////////////////////////////////////
 
+
+  Start -> OfferReliable                                [ label = "onInvite-offer-rel/app::onOffer" ];
+  Start -> NoOfferReliable                              [ label = "onInvite-rel" ];
 
   // this doesn't attach from anything
   AcceptedWaitingAnswer -> Connected                    [ label = "onACK-answer/onAnswer" ];
