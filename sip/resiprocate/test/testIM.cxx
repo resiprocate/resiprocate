@@ -23,6 +23,20 @@ using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
+class TestPresCallback: public TuIM::PresCallback
+      {
+         public:
+            virtual void presenseUpdate(const Uri& dest, bool open, const Data& status );
+      };
+  
+
+void 
+TestPresCallback::presenseUpdate(const Uri& dest, bool open, const Data& status )
+{
+	assert(0);
+}
+
+
 class TestPageCallback: public TuIM::PageCallback
 {
    public:
@@ -214,12 +228,14 @@ main(int argc, char* argv[])
    
    TestErrCallback errCallback;
     
+   TestPresCallback presCallback;
+
    aor.port() = port;
    
    Uri contact("sip:me-contact@localhost");
    contact.port() = port;
    
-   TuIM tuIM(&sipStack,aor,contact,&pageCallback,&errCallback);
+   TuIM tuIM(&sipStack,aor,contact,&pageCallback,&errCallback,&presCallback);
     
    //Vocal2::makeSocketNonBlocking( fileno(stdin) );
 
