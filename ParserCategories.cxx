@@ -4,8 +4,10 @@
 
 #include <util/Data.hxx>
 #include <util/Logger.hxx>
+#include <util/ParseBuffer.hxx>
 #include <sipstack/ParserCategories.hxx>
 #include <sipstack/Uri.hxx>
+
 
 using namespace Vocal2;
 using namespace std;
@@ -23,11 +25,12 @@ Token::Token(const Token& rhs)
 void
 Token::parse()
 {
-   const char* pstart = getHeaderField().mField;
-   const char* pos = find(pstart, pstart+getHeaderField().mFieldLength, Symbols::SEMI_COLON[0]);
-   mValue = Data(pstart, pos-pstart);
-   DebugLog (<< "Token::parse() --> " << mValue);
-   parseParameters(pos, pos-pstart);
+   ParseBuffer buff(mHeaderField->mField, mHeaderField->mFieldLength);
+   const char* startMark = buff.skipWhitespace();
+   buff.skipToOneOf(ParseBuffer::WhitespaceOrSemi);
+   mValue = Data(startMark, buff.position() - startMark);
+   buff.skipToChar(Symbols::SEMI_COLON[0]);
+   parseParameters(buff);
 }
 
 ParserCategory* 
@@ -377,7 +380,45 @@ Via::clone() const
 void
 Via::parse()
 {
-   assert(0);
+   ParseBuffer buff(mHeaderField->mField, mHeaderField->mFieldLength);
+   const char* startMark;
+   const char* endMark;
+   startMark = buff.skipWhitespace();
+   endMark = buff.skipToOneOf(ParseBuffer::WhitespaceOrSlash);
+   mProtocolName = Data(startMark, endMark - startMark);
+   buff.skipToChar('/');
+   
+   startMark = buff.skipWhitespace();
+   endMark = buff.skipToOneOf(ParseBuffer::WhitespaceOrSlash);
+   mProtocolVersion = Data(startMark, endMark - startMark);
+
+   buff.skipToChar('/');
+   startMark = buff.skipWhitespace();
+   endMark = buff.skipNonWhitespace();
+   mTransport = Data(startMark, endMark - startMark);
+
+   startMark = buff.skipWhitespace();
+   if (*startMark == '[')
+   {
+      buff.skipToChar(']');
+      endMark = buff.skipChar();
+   }
+   else
+   {
+      endMark = buff.skipToOneOf(ParseBuffer::SemiColonOrColon);
+   }
+   mSentHost = Data(startMark, endMark - startMark);
+   endMark = buff.skipToOneOf(";:");
+   if (*endMark == ':')
+   {
+      startMark = buff.skipChar();
+      endMark = buff.skipToOneOf(ParseBuffer::WhitespaceOrSemi);
+      mSentPort = atoi(startMark);
+   }
+   if (*endMark == Symbols::SEMI_COLON[0])
+   {
+      parseParameters(buff);
+   }
 }
 
 ostream&

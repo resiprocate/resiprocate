@@ -1,6 +1,7 @@
 #include <sipstack/ParserCategory.hxx>
 #include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/UnknownParameter.hxx>
+#include <util/ParseBuffer.hxx>
 #include <iostream>
 
 using namespace Vocal2;
@@ -57,15 +58,18 @@ ParserCategory::exists(const Data& param) const
 }
 
 void
-ParserCategory::parseParameters(const char* pos, unsigned int length)
+ParserCategory::parseParameters(ParseBuffer& pb)
 {
-   // nice to be able to not bother parsing past the end
-   mHeaderField->parseParameters(pos, length);
+   if (!pb.eof())
+   {
+      mHeaderField->parseParameters(pb);
+   }
 }
 
 std::ostream&
 Vocal2::operator<<(std::ostream& stream, const ParserCategory& category)
 {
+   category.checkParsed();
    return category.encode(stream);
 }
 
