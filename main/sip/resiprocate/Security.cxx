@@ -579,6 +579,8 @@ Security::multipartSign( Contents* bodyIn )
    flags |= PKCS7_DETACHED;
 #if 0 // TODO !cj!
    flags |= PKCS7_NOCERTS; // should remove 
+   flags |= PKCS7_NOATTR;
+   flags |= PKCS7_NOSMIMECAP;
 #endif
 
    Data bodyData;
