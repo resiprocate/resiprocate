@@ -7,6 +7,7 @@
 
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include <errno.h>
 
 #endif
 
@@ -49,7 +50,7 @@ DnsUtil::getLocalHostName()
 Data 
 DnsUtil::getLocalDomainName()
 {
-#if defined( __MACH__ ) || defined( WIN32 )
+#if defined( __MACH__ ) || defined( WIN32 ) || defined(__SUNPRO_CC)
    assert(0);
  // !cj! TODO 
    return NULL;
@@ -273,7 +274,7 @@ DnsUtil::getInterfaces(const Data& matching)
 {
    std::list<std::pair<Data,Data> > results;
    
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(__SUNPRO_CC)
    struct ifconf ifc;
    
    int s = socket( AF_INET, SOCK_DGRAM, 0 );
