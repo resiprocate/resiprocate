@@ -2,25 +2,19 @@
 #define RESIP_CLIENTREGISTRATION_HXX
 
 #include "resiprocate/dum/BaseUsage.hxx"
-#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/NameAddr.hxx"
 
 namespace resip
 {
 
+class SipMessage;
 class BaseCreator;
 
 class ClientRegistration: public BaseUsage
 {
    public:
-      class Handle : public BaseUsage::Handle
-      {
-         public:
-            // throws if no usage
-            ClientRegistration* operator->();
-         private:
-            friend class ClientRegistration;
-            Handle(DialogUsageManager& dum);
-      };
+      ClientRegistration(DialogUsageManager& dum, Dialog& dialog, SipMessage& req);
+      ClientRegistrationHandle getHandle();
 
       void addBinding(const NameAddr& contact);
       void removeBinding(const NameAddr& contact);
@@ -31,8 +25,6 @@ class ClientRegistration: public BaseUsage
       const NameAddrs& myContacts();
       const NameAddrs& allContacts();
 
-      ClientRegistration::Handle& getHandle() { return reinterpret_cast<ClientRegistration::Handle&>(mHandle); }
-      
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
    
@@ -40,9 +32,6 @@ class ClientRegistration: public BaseUsage
       virtual ~ClientRegistration();
    private:
       friend class Dialog;
-      ClientRegistration(DialogUsageManager& dum,
-                         Dialog& dialog,
-                         SipMessage& req);
 
       void updateMyContacts(const NameAddrs& allContacts);
       

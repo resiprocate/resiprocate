@@ -1,13 +1,12 @@
 #if !defined(RESIP_DUMTIMER_HXX)
 #define RESIP_DUMTIMER_HXX 
 
-#include <iostream>
+#include <iosfwd>
 #include "resiprocate/Message.hxx"
-#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/dum/Handles.hxx"
 
 namespace resip
 {
-class Data;
 
 class DumTimeout : public Message
 {
@@ -24,14 +23,14 @@ class DumTimeout : public Message
       } Type;
       static const unsigned long StaleCallTimeout;
 
-      DumTimeout(Type type, unsigned long duration, resip::BaseUsage::Handle target,  int seq, int aseq = -1);
+      DumTimeout(Type type, unsigned long duration, BaseUsageHandle target,  int seq, int aseq = -1);
       ~DumTimeout();
       
       Type type() const;
       int seq() const;
       int secondarySeq() const;
 
-      BaseUsage::Handle getBaseUsage() const;
+      BaseUsageHandle getBaseUsage() const;
 
       virtual const Data& getTransactionId() const;
       virtual bool isClientTransaction() const;
@@ -42,7 +41,7 @@ class DumTimeout : public Message
    private:
       Type mType;
       unsigned long mDuration;
-      BaseUsage::Handle mUsageHandle;
+      BaseUsageHandle mUsageHandle;
       int mSeq;
       int mSecondarySeq;
 

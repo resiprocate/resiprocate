@@ -2,46 +2,34 @@
 #define RESIP_CLIENTOUTOFDIALOGREQ_HXX
 
 #include "resiprocate/dum/BaseUsage.hxx"
-#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/CSeqCategory.hxx"
 
 namespace resip
 {
-
-/** @file ClientOutOfDialogReq.hxx
- *   @todo This file is empty
- */
+class SipMessage;
 
 class ClientOutOfDialogReq : public BaseUsage
 {
   public:
-      class Handle : public BaseUsage::Handle
-      {
-         public:
-            // throws if no session 
-            ClientOutOfDialogReq* operator->();
-         private:
-            friend class ClientOutOfDialogReq;
-            Handle(DialogUsageManager& dum);
-      };
+      ClientOutOfDialogReq(DialogUsageManager& dum, Dialog& dialog, const SipMessage& req);
+      ClientOutOfDialogReqHandle getHandle();
 
-      ClientOutOfDialogReq::Handle& getHandle() {return static_cast<ClientOutOfDialogReq::Handle&>(mHandle);}
       bool matches(const SipMessage& msg) const;
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
+
    protected:
       virtual ~ClientOutOfDialogReq();
+
    private:
-      friend class Dialog;
-      ClientOutOfDialogReq(DialogUsageManager& dum,
-                           Dialog& dialog,
-                           const SipMessage& req);
-      
       CSeqCategory mCSeq;
       
       // disabled
       ClientOutOfDialogReq(const ClientOutOfDialogReq&);
       ClientOutOfDialogReq& operator=(const ClientOutOfDialogReq&);
+
+      friend class Dialog;
 };
  
 }

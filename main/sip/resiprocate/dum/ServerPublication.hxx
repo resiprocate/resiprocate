@@ -9,15 +9,8 @@ namespace resip
 class ServerPublication : public BaseUsage 
 {
    public:
-      class Handle : public BaseUsage::Handle
-      {
-         public:
-            // throws if no session 
-            ServerPublication* operator->();
-         private:
-            friend class ServerPublication;
-            Handle(DialogUsageManager& dum);
-      };
+      typedef Handle<ServerPublication> ServerPublicationHandle;
+      ServerPublicationHandle getHandle();
 
       // application may have to muck with expires or Etag
       void accept(const SipMessage& ok);
@@ -27,7 +20,6 @@ class ServerPublication : public BaseUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      ServerPublication::Handle& getHandle() { return reinterpret_cast<ServerPublication::Handle&>(mHandle); }
    protected:
       virtual ~ServerPublication();
    private:

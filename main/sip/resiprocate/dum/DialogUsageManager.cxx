@@ -1,10 +1,19 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
+#include "resiprocate/dum/AppDialog.hxx"
+#include "resiprocate/dum/AppDialogSet.hxx"
+#include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
+#include "resiprocate/dum/ClientInviteSession.hxx"
+#include "resiprocate/dum/ClientPublication.hxx"
+#include "resiprocate/dum/ClientSubscription.hxx"
+#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
+#include "resiprocate/dum/ClientRegistration.hxx"
+#include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/PublicationCreator.hxx"
 #include "resiprocate/dum/RegistrationCreator.hxx"
@@ -17,17 +26,6 @@
 
 using namespace resip;
 
-DialogUsageManager::~DialogUsageManager()
-{  
-   DebugLog ( << "~DialogUsageManager" );
-   DebugLog ( << "UsageMap size: " << mUsageMap.size());
-   DebugLog ( << Inserter(mUsageMap) );
-   while (!mUsageMap.empty())
-   {
-      delete mUsageMap.begin()->second;
-   }
-}
-
 DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mProfile(0),
    mRedirectManager(0),
@@ -39,6 +37,88 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mStack(stack)
 {
 }
+
+DialogUsageManager::~DialogUsageManager()
+{  
+   DebugLog ( << "~DialogUsageManager" );
+   // !jf! iterate through dialogsets and dispose, this will cause them to be
+   // removed from HandleManager on destruction
+}
+
+#if 0
+AppDialogSet* 
+DialogUsageManager::createAppDialogSet()
+{
+   return new AppDialogSet(*this);
+}
+
+AppDialog* 
+DialogUsageManager::createAppDialog()
+{
+   return new AppDialog(*this);
+}
+
+ClientRegistration* 
+DialogUsageManager::createAppClientRegistration(Dialog& dialog, BaseCreator& creator)
+{
+   return new ClientRegistration(*this, dialog, creator.getLastRequest());
+}
+
+ClientInviteSession* 
+DialogUsageManager::createAppClientInviteSession(Dialog& dialog, const InviteSessionCreator& creator)
+{
+   return new ClientInviteSession(*this, dialog, creator.getLastRequest(), creator.getInitialOffer());   
+}
+
+ClientSubscription* 
+DialogUsageManager::createAppClientSubscription(Dialog& dialog, BaseCreator& creator)
+{
+   return new ClientSubscription(*this, dialog, creator.getLastRequest());
+}
+
+ClientOutOfDialogReq* 
+DialogUsageManager::createAppClientOutOfDialogRequest(Dialog& dialog, BaseCreator& creator)
+{
+   return new ClientOutOfDialogReq(*this, dialog, creator.getLastRequest());
+}
+
+ClientPublication* 
+DialogUsageManager::createAppClientPublication(Dialog& dialog, BaseCreator& creator)
+{
+   return new ClientPublication(*this, dialog, creator.getLastRequest());
+}
+
+ServerInviteSession*
+DialogUsageManager::createAppServerInviteSession()
+{
+   return 0;
+}
+
+ServerSubscription* 
+DialogUsageManager::createAppServerSubscription()
+{
+   return 0;
+}
+
+ServerPublication* 
+DialogUsageManager::createAppServerPublication()
+{
+   return 0;
+}
+
+ServerRegistration* 
+DialogUsageManager::createAppServerRegistration()
+{
+   return 0;
+}
+
+ServerOutOfDialogReq* 
+DialogUsageManager::createAppServerOutOfDialogRequest()
+{
+   return 0;
+}
+#endif
+
 
 Profile* 
 DialogUsageManager::getProfile()
@@ -95,7 +175,7 @@ DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
 
 void 
 DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration, 
-                             resip::BaseUsage::Handle target, int cseq, int rseq)
+                             BaseUsageHandle target, int cseq, int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
    mStack.post(t, duration);
@@ -555,44 +635,8 @@ DialogUsageManager::findCreator(const DialogId& id)
    }
 }
 
-bool
-DialogUsageManager::isValid(const BaseUsage::Handle& handle)
-{
-   return mUsageMap.find(handle.mId) != mUsageMap.end();
-}
 
-void
-DialogUsageManager::addUsage(BaseUsage* usage)
-{
-   assert(mUsageMap.find(usage->getBaseHandle().mId) == mUsageMap.end());
-   mUsageMap[usage->getBaseHandle().mId] = usage;
-}
 
-BaseUsage* 
-DialogUsageManager::getUsage(const BaseUsage::Handle& handle)
-{
-   UsageHandleMap::iterator i = mUsageMap.find(handle.mId);
-   if (i == mUsageMap.end())
-   {
-      throw Exception("Stale BaseUsage handle",
-                      __FILE__, __LINE__);
-   }
-   else
-   {
-      return i->second;
-   }
-}
-
-void
-DialogUsageManager::destroyUsage(BaseUsage* usage)
-{
-   UsageHandleMap::iterator i = mUsageMap.find(usage->getBaseHandle().mId);
-   if (i != mUsageMap.end())
-   {
-      delete i->second;
-      mUsageMap.erase(i);
-   }
-}
 
 
 

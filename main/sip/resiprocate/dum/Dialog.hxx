@@ -1,27 +1,21 @@
 #if !defined(RESIP_CLIENTDIALOG_HXX)
 #define RESIP_CLIENTDIALOG_HXX
 
+#include <iosfwd>
 #include <vector>
 #include "resiprocate/dum/DialogId.hxx"
-#include "resiprocate/dum/ClientInviteSession.hxx"
-#include "resiprocate/dum/ServerInviteSession.hxx"
-#include "resiprocate/dum/ClientSubscription.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
-#include "resiprocate/dum/ClientRegistration.hxx"
-#include "resiprocate/dum/ServerRegistration.hxx"
-#include "resiprocate/dum/ServerPublication.hxx"
-#include "resiprocate/dum/ClientPublication.hxx"
-#include "resiprocate/dum/ServerOutOfDialogReq.hxx"
-#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
-#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/MethodTypes.hxx"
+#include "resiprocate/NameAddr.hxx"
+#include "resiprocate/CallId.hxx"
 
 namespace resip
 {
 class BaseUsage;
-class UsageSet;
 class SipMessage;
 class DialogUsageManager;
 class DialogSet;
+class AppDialog;
 
 //!dcm! -- kill typedef std::list<DialogId> DialogIdSet;
 
@@ -48,15 +42,15 @@ class Dialog
       //void setLocalContact(const NameAddr& localContact);
       //void setRemoteTarget(const NameAddr& remoteTarget);
       
-      std::vector<ClientSubscription::Handle> findClientSubscriptions();
-      ServerSubscription::Handle findServerSubscription();
-      InviteSession::Handle findInviteSession();
-      ClientRegistration::Handle findClientRegistration();
-      ServerRegistration::Handle findServerRegistration();
-      ClientPublication::Handle findClientPublication();
-      ServerPublication::Handle findServerPublication();
-      ClientOutOfDialogReq::Handle findClientOutOfDialog();
-      ServerOutOfDialogReq::Handle findServerOutOfDialog();
+      std::vector<ClientSubscriptionHandle> findClientSubscriptions();
+      ServerSubscriptionHandle findServerSubscription();
+      InviteSessionHandle findInviteSession();
+      ClientRegistrationHandle findClientRegistration();
+      ServerRegistrationHandle findServerRegistration();
+      ClientPublicationHandle findClientPublication();
+      ServerPublicationHandle findServerPublication();
+      ClientOutOfDialogReqHandle findClientOutOfDialog();
+      ServerOutOfDialogReqHandle findServerOutOfDialog();
       
       void cancel();
       void dispatch(const SipMessage& msg);
@@ -129,10 +123,12 @@ class Dialog
       unsigned long mRemoteCSeq;
       NameAddr mRemoteTarget;
 
-      friend ostream& operator<<(ostream& strm, const Dialog& dialog);
+      AppDialog* mAppDialog;
+      
+      friend std::ostream& operator<<(std::ostream& strm, const Dialog& dialog);
 };
 
-ostream& operator<<(ostream& strm, const Dialog& dialog);
+std::ostream& operator<<(std::ostream& strm, const Dialog& dialog);
 
 }
 

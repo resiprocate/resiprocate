@@ -13,15 +13,8 @@ class DialogUsageManager;
 class ServerSubscription : public BaseUsage 
 {
    public:
-      class Handle : public BaseUsage::Handle
-      {
-         public:
-            // throws if no session 
-            ServerSubscription* operator->();
-         private:
-            Handle(DialogUsageManager& dum);
-            friend class ServerSubscription;
-      };
+      typedef Handle<ServerSubscription> ServerSubscriptionHandle;
+      ServerSubscriptionHandle getHandle();
       
       typedef enum
       {
@@ -46,10 +39,9 @@ class ServerSubscription : public BaseUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
-
    protected:
       virtual ~ServerSubscription();
+
    private:
       friend class Dialog;
       ServerSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& req);
