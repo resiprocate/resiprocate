@@ -3,6 +3,8 @@
 
 
 #include <map>
+#include <vector>
+
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/SecurityTypes.hxx"
