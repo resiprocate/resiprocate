@@ -6,7 +6,7 @@
 #include "sip2/util/Data.hxx"
 #include "sip2/util/Fifo.hxx"
 #include "sip2/util/Socket.hxx"
-#include "sip2/util/VException.hxx"
+#include "sip2/util/BaseException.hxx"
 #include "sip2/sipstack/Message.hxx"
 #include "sip2/sipstack/Preparse.hxx"
 namespace Vocal2
@@ -49,7 +49,7 @@ class Transport
             Transport* transport;
       };
       
-      class Exception : public VException
+      class Exception : public BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, const int line);
