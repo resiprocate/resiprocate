@@ -1322,12 +1322,17 @@ TransactionState::sendToWire(Message* msg, bool resend)
          assert (!sip->header(h_Vias).empty());
 
          Via& via = sip->header(h_Vias).front();
+         if (sip->hasTarget())
+         {
+            DebugLog(<<"sendToWire(response): has forceTarget -- will be ignored ? : " << sip->getTarget() );
+         }
 
          if (via.exists(p_received))
          {
             Tuple tuple(via.param(p_received), 
                         (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort(),
                         Tuple::toTransport(via.transport()));
+            DebugLog(<<"sendToWire(response): received/rport case:" << tuple << " for " << sip->brief() ); 
             mController.mTransportSelector.transmit(sip, tuple);
          }
          else
@@ -1335,6 +1340,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
             Tuple tuple(via.sentHost(),
                         (via.exists(p_rport) && via.param(p_rport).hasValue()) ? via.param(p_rport).port() : via.sentPort(),
                         Tuple::toTransport(via.transport()));
+            DebugLog(<<"sendToWire(response): sentHost case:" << tuple << " for " << sip->brief() ); 
             mController.mTransportSelector.transmit(sip, tuple);
          }
       }
