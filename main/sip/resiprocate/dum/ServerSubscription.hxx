@@ -53,6 +53,8 @@ class ServerSubscription : public BaseSubscription
       
       int getTimeLeft();
 
+      bool shouldDestroyAfterSendingFailure(const SipMessage& msg);      
+
       Data mSubscriber;
 
 //      const Contents* mCurrentEventDocument;
