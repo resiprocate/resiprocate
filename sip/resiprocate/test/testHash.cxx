@@ -42,9 +42,9 @@ unsigned int  InitHeaderInfo()
    {
        Headers::Type t = static_cast<Headers::Type>(i);
        
-      char* p = strdup(Headers::HeaderNames[t].c_str());
+      char* p = strdup(Headers::getHeaderName(i).c_str());
       
-      headerInfo[i].len = Headers::HeaderNames[t].size();
+      headerInfo[i].len = Headers::getHeaderName(i).size();
       headerInfo[i].keyword = p;
       headerInfo[i].type = t;
       
@@ -132,7 +132,7 @@ main()
          ErrLog(<<headerInfo[i].keyword << "["
                 <<headerInfo[i].type << "] hashed to "
                 << t << " ["
-                << Headers::HeaderNames[t] << "]");
+                << Headers::getHeaderName(i) << "]");
       }
       
    }

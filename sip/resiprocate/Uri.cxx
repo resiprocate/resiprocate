@@ -334,7 +334,7 @@ Uri::parse(ParseBuffer& pb)
    {
       start = pb.position();
       pb.skipToEnd();
-	  assert( start <= pb.position() );
+      assert( start <= pb.position() );
       pb.data(mHost, start);
       return;
    }
@@ -370,6 +370,7 @@ Uri::parse(ParseBuffer& pb)
       pb.skipToOneOf(ParseBuffer::Whitespace, ":;?>");
    }
    pb.data(mHost, start);
+
    pb.skipToOneOf(ParseBuffer::Whitespace, ":;?>");
    if (!pb.eof() && *pb.position() == ':')
    {
