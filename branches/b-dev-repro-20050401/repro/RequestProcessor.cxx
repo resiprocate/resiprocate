@@ -17,10 +17,6 @@ RequestProcessor::~RequestProcessor()
 {
 }
 
-RequestProcessor::processor_action_t 
-RequestProcessor::handleRequest(RequestContext &)
-{
-}
 
 
 /* ====================================================================

@@ -20,7 +20,7 @@ namespace repro
       }
       processor_action_t;
 
-      virtual processor_action_t handleRequest(RequestContext &);
+      virtual processor_action_t handleRequest(RequestContext &)=0;
   };
 }
 #endif
