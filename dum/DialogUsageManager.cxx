@@ -45,16 +45,11 @@ DialogUsageManager::setHandler(ServerRegistrationHandler* handler)
 }
 
 void 
-DialogUsageManager::setHandler(ClientInvSessionHandler* handler)
+DialogUsageManager::setHandler(InvSessionHandler* handler)
 {
-   mClientInviteSessionHandler = handler;
+   mInviteSessionHandler = handler;
 }
 
-void 
-DialogUsageManager::setHandler(ServerInvSessionHandler* handler)
-{
-   mServerInviteSessionHandler = handler;
-}
 
 void 
 DialogUsageManager::addHandler(const Data& eventType, ClientSubscriptionHandler*)
