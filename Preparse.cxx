@@ -395,7 +395,6 @@ Preparse::process()
 
       if (e.workMask & actBad)
       {
-
          DebugLog(<<"BAD");
          mDone = true;
       }
