@@ -1,0 +1,249 @@
+# $Id: Makefile.osarch,v 1.7 2003/10/05 02:46:15 jason Exp $
+
+######################################################################
+
+# these options are NECESSARY options for a give operating system or
+# architecture.  If they could or should be turned off, they shouldn't
+# be here (or they should be wrapped in if code that is controllable
+# in Makefile.pre (now - moved from Makefile.opt)
+
+
+############################## FreeBSD ##############################
+
+# recent FreeBSDs (as of 6/1999) should have a sufficiently modern
+# version of ecgs to build this code cleanly with the default c++
+# compiler, but the releases generally don't.  install the ecgs
+# port/package for older versions.
+
+ifeq ($(OSTYPE),FreeBSD)
+
+    USE_LIBGETOPT = 1
+    USE_R_WRAPPER = 1
+endif
+
+############################## Linux ##############################
+
+ifeq ($(OSTYPE),Linux)
+
+ifeq ($(ARCH),i686)
+	CXXFLAGS += -march=i686
+endif
+ifeq ($(ARCH),i486)
+	CXXFLAGS += -march=i486
+endif
+ifeq ($(ARCH),i386)
+	CXXFLAGS += -march=i386
+endif
+
+	CXXFLAGS += -D_REENTRANT -DHAVE_POPT_H
+	CFLAGS   += -D_REENTRANT -DHAVE_POPT_H
+	DISTCC   = distcc 
+endif
+
+
+############################# QNX ##################################
+
+ifeq ($(OSTYPE),QNX)
+
+    CXXFLAGS += -D_REENTRANT
+    CFLAGS   += -D_REENTRANT
+    LDLIBS_LAST   += -lsocket -lstdc++ 
+    USE_SSL = 0
+endif
+
+
+############################## Solaris ##############################
+
+ifeq ($(OSTYPE),SunOS)
+
+    USE_LIBGETOPT = 1
+    CFLAGS += -DSUNXIL_WARNING_DISABLE -DHAVE_POPT_H
+    CXXFLAGS += -DSUNXIL_WARNING_DISABLE -DHAVE_POPT_H
+    INSTALL_PATH_DEFAULT = /opt/vocal
+
+    ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
+
+        CXXFLAGS += -D_REENTRANT
+        CFLAGS   += -D_REENTRANT
+        LDLIBS_LAST_PURE   += -lnsl -lsocket -nodefaultlibs -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic -lc -lgcc -lm
+        LDLIBS_LAST   += -R/usr/local/lib -lnsl -lsocket
+
+    else
+
+        CXXFLAGS += -D_REENTRANT -mt -D_RWSTD_MULTI_THREAD -dalign -xarch=v8plus
+        CFLAGS   += -D_REENTRANT -xarch=v8plus
+        LDFLAGS  +=  -DTHREAD=MULTI -mt  -dalign -xarch=v8plus -L/opt/SUNWspro/WS6/lib/rw7 -L/opt/SUNWspro/WS6/lib/ 
+        LDLIBS_LAST_PURE   += -lnsl -lsocket -lm
+        LDLIBS_LAST   += -lrwtool -liostream -lnsl -lsocket -lCstd
+
+        ifeq ($(USE_VARARG_HACK),1)
+            CFLAGS+= -DVARARG_HACK
+            CXXFLAGS+= -DVARARG_HACK
+            FILEPP = $(HOME)/filepp-1.2.0/filepp
+        endif
+
+    endif
+
+endif
+
+
+############################## MacOS X ##############################
+
+# Mac OS X is missing poll and some pthreads bits which are built by
+# the 
+
+ifeq ($(OSTYPE),Darwin)
+
+    USE_LIBGETOPT = 1
+    USE_R_WRAPPER = 1
+endif
+
+
+############################ cygwin ##################################
+
+ifeq ($(OSTYPE),cygwin)
+    USE_LIBGETOPT = 1
+    CFLAGS += -I$(ROOT)/contrib/win32/mingw/include -I$(ROOT)/contrib/win32/pthreads
+    CXXFLAGS += -I$(ROOT)/contrib/win32/mingw/include -I$(ROOT)/contrib/win32/pthreads
+endif
+
+
+ifeq ($(VOCAL_PROCESSOR_OPTS),1)
+    ifeq ($(ARCH),i686)
+        CXXFLAGS += -march=i686
+        CFLAGS += -march=i686
+        LDFLAGS  +=
+        LDLIBS	 +=
+    endif
+endif
+
+
+
+# set up general compilation options
+
+LDFLAGS  += 
+CXXFLAGS += -DUSE_PTHREADS
+CFLAGS   += -DUSE_PTHREADS
+LDLIBS   +=
+INCDIRS  += $(BUILD)
+
+
+
+######################################################################
+
+# this section lets you override the default compile type
+
+######################################################################
+
+ifdef CODE_OPTIMIZE
+VOCAL_COMPILE_TYPE := opt
+endif
+
+ifdef CODE_GOPTIMIZE
+VOCAL_COMPILE_TYPE := gopt
+endif
+
+ifdef CODE_PROFILE
+VOCAL_COMPILE_TYPE := prof
+endif
+
+ifdef CODE_NODEBUG
+VOCAL_COMPILE_TYPE := nodebug
+endif
+
+ifdef CODE_SMALL
+VOCAL_COMPILE_TYPE := small
+endif
+
+ifdef LIB_DYNAMIC
+VOCAL_BUILD_SHARED_LIBS := yes
+endif
+
+TARGET_TYPE := $(VOCAL_COMPILE_TYPE)
+
+
+ifeq ($(VOCAL_COMPILE_TYPE),small)
+CXXFLAGS += $(COMPILE_SMALL_FLAG)
+CFLAGS += $(COMPILE_SMALL_FLAG)
+endif
+
+ifeq ($(VOCAL_COMPILE_TYPE),nodebug)
+endif
+
+ifeq ($(VOCAL_COMPILE_TYPE),debug)
+CXXFLAGS += $(DEBUG_FLAG)
+CFLAGS   += $(DEBUG_FLAG)
+endif
+
+ifeq ($(VOCAL_COMPILE_TYPE),opt)
+CXXFLAGS += $(OPTFLAGS) -DNDEBUG
+CFLAGS += $(OPTFLAGS) -DNDEBUG
+endif
+
+ifeq ($(VOCAL_COMPILE_TYPE),gopt)
+CXXFLAGS += $(DEBUG_FLAG) $(OPTFLAGS) 
+CFLAGS   += $(DEBUG_FLAG) $(OPTFLAGS) 
+endif
+
+
+# profiling
+
+ifeq ($(VOCAL_COMPILE_TYPE),prof)
+LDFLAGS  += -pg $(OPTFLAGS) -DNDEBUG
+CXXFLAGS += -pg $(OPTFLAGS) -DNDEBUG
+CFLAGS   += -pg $(OPTFLAGS) -DNDEBUG
+endif
+
+ifeq ($(USE_SSL),1)
+DEFINES += USE_SSL
+endif
+
+######################################################################
+#              More Toolchain defaults
+######################################################################
+
+
+ifeq ($(OSCLASS),VXWORKS)
+
+# these are VxWorks defaults
+
+# by default, we will use a real linker as the linker
+
+ifndef LINKER
+LINKER = $(LD)
+endif
+
+LDFLAGS += -Ur
+
+endif
+
+
+
+
+# SH hardware -- this code should actually be separated as this is
+# toolchain stuff, by and large.
+
+
+ifeq ($(ARCH),sh)
+
+CXX=sh-wrs-vxworks-g++
+DEP=sh-wrs-vxworks-gcc
+CC=sh-wrs-vxworks-gcc
+AR=sh-wrs-vxworks-ar
+LD=sh-wrs-vxworks-ld
+CROSS_COMPILE=1
+
+DEFINES += BSD43_COMPATIBLE
+
+CXXFLAGS += 
+CFLAGS   += 
+LDFLAGS  += -L/usr/local/lib/gcc-lib/sh-wrs-vxworks/2.95.1/m2
+LDLIBS_LAST   +=  -lstdc++ -lgcc
+
+OSCLASS = VXWORKS
+
+USE_LEAKTRACE=
+endif
+
+OS_ARCH  := $(OSTYPE).$(ARCH)
+TARGET_NAME := $(TARGET_TYPE).$(OS_ARCH)
