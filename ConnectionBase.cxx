@@ -74,6 +74,20 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
    {
       case NewMessage:
       {
+         if (strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
+         {
+            StackLog(<<"Throwing away incoming firewall keep-alive");
+            mBufferPos += 4;
+            bytesRead -= 4;
+            if (bytesRead)
+            {
+               goto start;
+            }
+            else
+            {
+               return;
+            }
+         }
          assert(mWho.transport);
          mMessage = new SipMessage(mWho.transport);
          
