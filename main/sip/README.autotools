@@ -1,5 +1,5 @@
 2004.02.22
-$Id: README.autotools,v 1.5 2004/02/24 01:47:42 alan Exp $
+$Id: README.autotools,v 1.6 2004/02/24 16:08:52 alan Exp $
 
 USING AUTOTOOLS WITH RESIPROCATE
 ================================
@@ -19,7 +19,7 @@ directory to 'bootstrap' the autotools files.
 
 You should run autogen.sh in it's own sub-shell:
 
-% bash autotools.sh
+% bash autogen.sh
 
 Once this step is complete, you no longer need to mess around with
 autogen.sh. A simple autoreconf will do in case you add files to the
