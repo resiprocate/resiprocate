@@ -6,13 +6,13 @@
 
 #include "resiprocate/MsgHeaderScanner.hxx"
 
-
+#include <ctype.h>
 #include <limits.h>
 #if defined( RESIP_MSG_HEADER_SCANNER_DEBUG ) 
 #include <stdio.h>
 #endif
-#include <resiprocate/HeaderTypes.hxx>
-#include <resiprocate/SipMessage.hxx>
+#include "resiprocate/HeaderTypes.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip {
 
@@ -61,13 +61,15 @@ initCharInfoArray()
   for(unsigned int charIndex = 0; charIndex <= UCHAR_MAX; ++charIndex) {
     charInfoArray[charIndex].category        = ccOther;
     charInfoArray[charIndex].textPropBitMask = 0;
-  }//for
+  }
+
   for(const char *charPtr = "abcdefghijklmnopqrstuvwxyz"
                             "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.!%*_+`'~";
       *charPtr;
       ++charPtr) {
     charInfoArray[c2i(*charPtr)].category = ccFieldName;
-  }//for
+  }
+
   charInfoArray[c2i(' ')].category  = ccWhiteSpace;
   charInfoArray[c2i('\t')].category = ccWhiteSpace;
   charInfoArray[c2i(':')].category  = ccColon;
@@ -438,6 +440,72 @@ printText(const char *  text,
   }//for
 }
 
+static const char *
+categorySymbol(CharCategory c)
+{
+    switch(c)
+    {
+        case ccChunkTermSentinel: return "TERM";
+        case ccOther: return "*";
+        case ccFieldName: return "FName";
+        case ccWhiteSpace: return "WS";
+        case ccColon: return "\\\":\\\"";
+        case ccDoubleQuotationMark: return "\\\"";
+        case ccLeftAngleBracket: return "\\\"<\\\"";
+        case ccRightAngleBracket: return "\\\">\\\"";
+        case ccBackSlash: return "\\\"\\\\\\\"";
+        case ccComma: return "\\\",\\\"";
+        case ccCarriageReturn: return "CR";
+        case ccLineFeed: return "LF";
+    }
+    return "??CC??";
+}
+static const char *
+categoryName(CharCategory c)
+{
+    switch(c)
+    {
+        case ccChunkTermSentinel: return "ccChunkTermSentinel";
+        case ccOther: return "ccOther";
+        case ccFieldName: return "ccFieldName";
+        case ccWhiteSpace: return "ccWhiteSpace";
+        case ccColon: return "ccColon";
+        case ccDoubleQuotationMark: return "ccDoubleQuotationMark";
+        case ccLeftAngleBracket: return "ccLeftAngleBracket";
+        case ccRightAngleBracket: return "ccRightAngleBracket";
+        case ccBackSlash: return "ccBackSlash";
+        case ccComma: return "ccComma";
+        case ccCarriageReturn: return "ccCarriageReturn";
+        case ccLineFeed: return "ccLineFeed";
+    }
+    return "UNKNOWNCC";
+}
+
+static const char * cleanName(const char * name)
+{
+    // Remove leading type-noise from name
+    static char *leaders[] = {
+        "cc",
+        "s",
+        "taChunkTerm", // hack to make ChunkTermSentinel smaller
+        "ta"
+    };
+    const int nLeaders = sizeof(leaders)/sizeof(*leaders);
+    int offset = 0;
+    for(int i = 0 ; i < nLeaders ; i++)
+    {
+        unsigned int l = strlen(leaders[i]);
+        if (strstr(name,leaders[i]) == name &&
+            strlen(name) > l && 
+            isupper(name[l]))
+        {
+            offset = l;
+            break;
+        }
+    }
+    return &name[offset];
+}
+
 static const char * 
 stateName(State state)
 {
@@ -578,9 +646,9 @@ printStateTransition(State             state,
                      char              character,
                      TransitionAction  transitionAction)
 {
-  printf("                %s['", stateName(state));
+  printf("                %s['", cleanName(stateName(state)));
   printText(&character, 1);
-  printf("']: %s\n", trActionName(transitionAction));
+  printf("']: %s\n", cleanName(trActionName(transitionAction)));
 }
 #if !defined(RESIP_MSG_HEADER_SCANNER_DEBUG)
 static const char* stateName(const char*)
@@ -598,22 +666,35 @@ MsgHeaderScanner::dumpStateMachine(int fd)
       fprintf(stderr,"MsgHeaderScanner:: unable to open output file\n");
       return -1;
    }
-   MsgHeaderScanner scanner;
+   // Force instance so things are initialized -- YUCK! 
+   MsgHeaderScanner scanner;(void)scanner;
    fprintf(fp,"digraph MsgHeaderScannerFSM {\n");
+   fprintf(fp,"\tnode[shape=record\n\t\tfontsize=8\n\t\tfontname=\"Helvetica\"\n\t]\n");
+   fprintf(fp,"\tedge [ fontsize=6 fontname=\"Helvetica\"]\n");
+   
+   fprintf(fp,"\tgraph [ ratio=0.8\n\t\tfontsize=6 compound=true ]");
    for(int state  = 0 ; state < numStates; ++state)
    {
       fprintf(fp,
-              "  S%d [ label = \"%s|%d\"; ]\n",
-              stateName(state),
-              state
+              "  %s [ label = \"%d|%s\" ]\n",
+              cleanName(stateName(state)),
+              state,
+              cleanName(stateName(state))
          );
       for(int category = 0 ; category < numCharCategories; ++category)
       {
+          // Skip Verbose Error or Empty Transitions
+          if (stateMachine[state][category].nextState == state &&
+              (stateMachine[state][category].action == taError ||
+               stateMachine[state][category].action == taNone
+              )) continue;
+              
          fprintf(fp,
-                 "    %s -> %s [\n      label=\"%s\"\n    ]\n",
-                 stateName(state),
-                 stateName(stateMachine[state][category].nextState),
-                 trActionName(stateMachine[state][category].action));
+                 "    %s -> %s [label=\"%s\\n%s\" ]\n",
+                 cleanName(stateName(state)),
+                 cleanName(stateName(stateMachine[state][category].nextState)),
+                 categorySymbol(category),
+                 cleanName(trActionName(stateMachine[state][category].action)));
       }
       fprintf(fp,"\n");
    }

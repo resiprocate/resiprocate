@@ -1,24 +1,23 @@
 #include <stdio.h>
 
-// It has obviously been a while since anyone even tried to make this work.
-// Maybe it isn't intended to anymore, but what do I know? If it is no longer
-// useful *maybe* it should be removed from the Makefile.
 
 #include "resiprocate/config.hxx"
-#define RESIP_MSG_HEADER_SCANNER_DEBUG
-#define main NoMain
 #include "resiprocate/MsgHeaderScanner.cxx"
-#undef main
 
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+// Caveat Emptor:
+// You cannot compile this test driver and get useful results without
+// compiling resiprocate's library with --enable-scanner-debug.
+// DO NOT TRY TO HACK THIS SOME OTHER WAY.
+
 int
 main(int argc, char* argv[])
 {
-   return MsgHeaderScanner::dumpStateMachine(fileno(stdout));
+    return resip::MsgHeaderScanner::dumpStateMachine(fileno(stdout));
 }
 
 /* ====================================================================
