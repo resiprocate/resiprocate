@@ -6,7 +6,7 @@ using namespace Vocal2;
 using namespace std;
 
 SipMessage::SipMessage()
-   : nIsExternal(true),
+   : mIsExternal(true),
      mFixedDest(false),
      mStartLine(0)
 {
@@ -43,6 +43,27 @@ SipMessage::clone() const
    newMessage->copyFrom(*this);
    return newMessage;
 }
+
+bool
+SipMessage::isRequest() const
+{
+   assert(0);
+   return true;
+}
+
+bool
+SipMessage::isResponse() const
+{
+   return !isRequest();
+}
+
+
+Data
+SipMessage::brief() const
+{
+   return Data();
+}
+
 
 ostream& 
 SipMessage::encode(ostream& str) const

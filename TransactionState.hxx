@@ -13,8 +13,6 @@ class SipStack;
 class TransactionState
 {
    public:
-      TransactionState(SipStack& stack);
-      
       static void process(SipStack& stack); 
      
    private:
@@ -45,17 +43,21 @@ class TransactionState
 
       TransactionState(SipStack& stack, Machine m, State s) : mStack(stack), mMachine(m), mState(s){}
       
+
    private:
+      bool isRequest(Message* msg) const;
       bool isFinalResponse(Message* msg) const;
       bool isProvisionalResponse(Message* msg) const;
       bool isFailureResponse(Message* msg) const;
       bool isSuccessResponse(Message* msg) const;
       bool isFromTU(Message* msg) const;
+      bool isTranportError(Message* msg) const;
       
-      const SipStack& mStack;
+      SipStack& mStack;
       Machine mMachine;
       State mState;
-            
+      bool mIsReliable;
+      
       TransactionState* cancelStateMachine;
 
       SipMessage* mMsgToRetransmit;
