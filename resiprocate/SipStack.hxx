@@ -4,9 +4,8 @@
 #include <sipstack/Executive.hxx>
 #include <sipstack/TransportSelector.hxx>
 #include <sipstack/TransactionMap.hxx>
-// #include <sipstack/TransportDirector.hxx>
-#include <sipstack/Fifo.hxx>
 #include <sipstack/TimerQueue.hxx>
+#include <util/Fifo.hxx>
 
 namespace Vocal2
 {

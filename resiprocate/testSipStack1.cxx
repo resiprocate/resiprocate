@@ -4,7 +4,7 @@
 #endif
 
 #include <sipstack/SipStack.hxx>
-#include <sipstack/Logger.hxx>
+#include <util/Logger.hxx>
 
 using namespace Vocal2;
 using namespace std;

@@ -1,6 +1,6 @@
 #include <sipstack/TimerQueue.hxx>
 #include <sipstack/TimerMessage.hxx>
-#include <sipstack/Logger.hxx>
+#include <util/Logger.hxx>
 
 using namespace Vocal2;
 
