@@ -163,12 +163,35 @@ doTest2()
 void
 doTest3()
 {
+   // Build a SipMessage one char per PP call
+
     assert(0);
 }
 
 void
 doTest4()
 {
+   // Split a request line.
+   const char *testData[2] = 
+      {
+         "INVITE sip:vivekg@cha",
+         "ir.dnrc.bell-labs.com:5060 SIP/2.0" CRLF
+         "Via: SIP/2.0/UDP 135.180.130.133:5060" CRLF
+         "Via: SIP/2.0/TCP 12.3.4.5:5060;branch=9ikj8" CRLF
+         "Via: SIP/2.0/UDP 1.2.3.4:5060;hidden" CRLF
+         "From: \"J Rosenberg \\\\\\\"\"<sip:jdrosen@lucent.com:5060>;tag=98asjd8" CRLF
+         "To: <sip:vivekg@chair.dnrc.bell-labs.com:5060>;tag=1a1b1f1H33n" CRLF
+         "Call-ID: 0ha0isndaksdj@10.1.1.1" CRLF
+         "CSeq: 8 INVITE" CRLF
+         "Contact: \"Quoted string \\\"\\\"\" <sip:jdrosen@bell-labs.com:5060>" CRLF
+         "Contact: tel:4443322" CRLF
+         "Content-Type: application/sdp" CRLF
+         "Content-Length: 152" CRLF
+         "NewFangledHeader: newfangled value more newfangled value" CRLF
+         CRLF
+      };
+
+
     assert(0);
 }
 
