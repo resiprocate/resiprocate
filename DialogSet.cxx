@@ -11,6 +11,7 @@
 #include "resiprocate/dum/ServerPagerMessage.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogSet.hxx"
+#include "resiprocate/dum/DialogSetHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/RedirectManager.hxx"
@@ -336,7 +337,10 @@ DialogSet::dispatch(const SipMessage& msg)
          mReceivedProvisional = true;
          if (response.header(h_StatusLine).statusCode() == 100)
          {
-            //!dcm! -- SessionProgress callback
+            if (mDum.mDialogSetHandler)
+            {
+               mDum.mDialogSetHandler->onTrying(mAppDialogSet->getHandle(), msg);
+            }
             return;
          }
       }      
@@ -431,6 +435,11 @@ DialogSet::dispatch(const SipMessage& msg)
              && !msg.exists(h_Contacts))
          {
             InfoLog ( << "Cannot create a dialog, no Contact in 180." );
+            if (mDum.mDialogSetHandler)
+            {
+               mDum.mDialogSetHandler->onNonDialogCreatingProvisional(mAppDialogSet->getHandle(), msg);
+            }
+
             //call OnProgress in proposed DialogSetHandler here
             return;         
          }
