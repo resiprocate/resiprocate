@@ -6,6 +6,7 @@
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/SdpContents.hxx"
 #include "sip2/sipstack/test/TestSupport.hxx"
+#include "sip2/sipstack/PlainContents.hxx"
 
 #include <iostream>
 #include <memory>
@@ -16,6 +17,47 @@ using namespace std;
 int
 main()
 {
+   {
+      SipMessage inv;
+      
+      inv.header(h_RequestLine) = RequestLine(INVITE);
+      inv.header(h_RequestLine).uri() = Uri("sip:bob@biloxi.com");
+      inv.header(h_To) = NameAddr("sip:bob@biloxi.com");
+      inv.header(h_From) = NameAddr("Alice <sip:alice@atlanta.com>;tag=1928301774");
+      inv.header(h_CallId).value() = "314159";
+      inv.header(h_CSeq).sequence() = 14;
+      inv.header(h_CSeq).method() = INVITE;
+
+      PlainContents pc("here is some plain ol' contents");
+      inv.setContents(&pc);
+
+      assert(inv.header(h_ContentType).type() == "text");
+      assert(inv.header(h_ContentType).subType() == "plain");
+
+      assert(!inv.exists(h_ContentLength));
+
+      assert(inv.getContents());
+      assert(dynamic_cast<PlainContents*>(inv.getContents()));
+      assert(dynamic_cast<PlainContents*>(inv.getContents())->text() == "here is some plain ol' contents");
+
+      Data d;
+      {
+         DataStream s(d);
+         inv.encode(s);
+      }
+      
+      cerr << "!! " << d;
+      assert(d == ("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+                   "To: <sip:bob@biloxi.com>\r\n"
+                   "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                   "Call-ID: 314159\r\n"
+                   "CSeq: 14 INVITE\r\n"
+                   "Content-Type: text/plain\r\n"
+                   "Content-Length: 31\r\n"
+                   "\r\n"
+                   "here is some plain ol' contents"));
+   }
+   
    {
       Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
