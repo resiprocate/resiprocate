@@ -99,15 +99,15 @@ extern H_##_enum##s h_##_enum##s
 //====================
 typedef ParserContainer<Token> Tokens;
 
-defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ????");
-defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ????");
-defineHeader(MIMEVersion, "Mime-Version", Token, "RFC ????");
-defineHeader(Priority, "Priority", Token, "RFC ????");
+defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC 3261");
+defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC 3261");
+defineHeader(MIMEVersion, "Mime-Version", Token, "RFC 3261");
+defineHeader(Priority, "Priority", Token, "RFC 3261");
 defineHeader(Event, "Event", Token, "RFC 3265");
 defineHeader(SubscriptionState, "Subscription-State", Token, "RFC 3265");
 
-defineHeader(SIPETag, "SIP-ETag", Token, "PUBLISH draft");
-defineHeader(SIPIfMatch, "SIP-If-Match", Token, "PUBLISH draft");
+defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903");
+defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
 defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
 
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
@@ -116,35 +116,43 @@ defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03");
 // explicitly declare to avoid h_AllowEventss, ugh
 extern H_AllowEventss h_AllowEvents;
 
-defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC ????");
-defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC ????");
-defineMultiHeader(Allow, "Allow", Token, "RFC ????");
-defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC ????");
-defineMultiHeader(ProxyRequire, "Proxy-Require", Token, "RFC ????");
-defineMultiHeader(Require, "Require", Token, "RFC ????");
-defineMultiHeader(Supported, "Supported", Token, "RFC ????");
-defineMultiHeader(Unsupported, "Unsupported", Token, "RFC ????");
-defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC ????");
-defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC ????");
-defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC ????");
+defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC 3261");
+defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC 3261");
+defineMultiHeader(Allow, "Allow", Token, "RFC 3261");
+defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC 3261");
+defineMultiHeader(ProxyRequire, "Proxy-Require", Token, "RFC 3261");
+defineMultiHeader(Require, "Require", Token, "RFC 3261");
+defineMultiHeader(Supported, "Supported", Token, "RFC 3261");
+defineMultiHeader(Unsupported, "Unsupported", Token, "RFC 3261");
+defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC 3329");
+defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC 3329");
+defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC 3329");
 // explicitly declare to avoid h_SecurityVerifys, ugh
 extern H_SecurityVerifys h_SecurityVerifies;
+
+defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841");
+defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
+defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
+// explicitly declare to avoid h_Privacys
+extern H_Privacys h_Privacies;
+
+defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
 
 //====================
 // Mime
 //====================
 typedef ParserContainer<Mime> Mimes;
 
-defineMultiHeader(Accept, "Accept", Mime, "RFC ????");
-defineHeader(ContentType, "Content-Type", Mime, "RFC ????");
+defineMultiHeader(Accept, "Accept", Mime, "RFC 3261");
+defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
 
 //====================
 // GenericURIs:
 //====================
 typedef ParserContainer<GenericURI> GenericURIs;
-defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC ????");
-defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC ????");
-defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC ????");
+defineMultiHeader(CallInfo, "Call-Info", GenericURI, "RFC 3261");
+defineMultiHeader(AlertInfo, "Alert-Info", GenericURI, "RFC 3261");
+defineMultiHeader(ErrorInfo, "Error-Info", GenericURI, "RFC 3261");
 defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03");
 
 //====================
@@ -152,26 +160,41 @@ defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03")
 //====================
 typedef ParserContainer<NameAddr> NameAddrs;
 
-defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC ????");
-defineMultiHeader(Route, "Route", NameAddr, "RFC ????");
-defineMultiHeader(Contact, "Contact", NameAddr, "RFC ????");
-defineHeader(From, "From", NameAddr, "RFC ????");
-defineHeader(To, "To", NameAddr, "RFC ????");
-defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC ????");
-defineHeader(ReferTo, "Refer-To", NameAddr, "RFC ????");
-defineHeader(ReferredBy, "Referred-By", NameAddr, "RFC ????");
+defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC 3261");
+defineMultiHeader(Route, "Route", NameAddr, "RFC 3261");
+defineMultiHeader(Contact, "Contact", NameAddr, "RFC 3261");
+defineHeader(From, "From", NameAddr, "RFC 3261");
+defineHeader(To, "To", NameAddr, "RFC 3261");
+defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC 3261");
+defineHeader(ReferTo, "Refer-To", NameAddr, "RFC 3515");
+defineHeader(ReferredBy, "Referred-By", NameAddr, "RFC 3892");
+
+defineMultiHeader(Path, "Path", NameAddr, "RFC 3327");
+defineMultiHeader(AcceptContact, "Accept-Contact", NameAddr, "RFC 3841");
+defineMultiHeader(RejectContact, "Reject-Contact", NameAddr, "RFC 3841");
+defineMultiHeader(PPreferredIdentity, "P-Preferred-Identity", NameAddr, "RFC 3325");
+// explicitly declare to avoid h_PAssertedIdentitys
+extern H_PPreferredIdentitys h_PPreferredIdentities;
+
+defineMultiHeader(PAssertedIdentity, "P-Asserted-Identity", NameAddr, "RFC 3325");
+// explicitly declare to avoid h_PAssertedIdentitys
+extern H_PAssertedIdentitys h_PAssertedIdentities;
+
+defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455");
+defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
+defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
 
 //====================
 // StringCategory:
 //====================
 typedef ParserContainer<StringCategory> StringCategories;
 
-defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ????");
-defineHeader(Organization, "Organization", StringCategory, "RFC ????");
-defineHeader(Server, "Server", StringCategory, "RFC ????");
-defineHeader(Subject, "Subject", StringCategory, "RFC ????");
-defineHeader(UserAgent, "User-Agent", StringCategory, "RFC ????");
-defineHeader(Timestamp, "Timestamp", StringCategory, "RFC ????");
+defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ?");
+defineHeader(Organization, "Organization", StringCategory, "RFC 3261");
+defineHeader(Server, "Server", StringCategory, "RFC 3261");
+defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
+defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
+defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
 //====================
 // IntegerCategory:
@@ -179,57 +202,61 @@ defineHeader(Timestamp, "Timestamp", StringCategory, "RFC ????");
 typedef ParserContainer<IntegerCategory> IntegerCategories;
 
 // !dlb! not clear this needs to be exposed
-defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC ????");
-defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC ????");
-defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC ????");
+defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
+defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
+defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
 defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
-defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC ????");
-defineHeader(Expires, "Expires", ExpiresCategory, "RFC ????");
+defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
+defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "Session Timer draft");
 defineHeader(MinSE, "Min-SE", ExpiresCategory, "Session Timer draft");
 
 //====================
 // CallId:
 //====================
-defineHeader(CallID, "Call-ID", CallID, "RFC ????");
-defineHeader(Replaces, "Replaces", CallID, "RFC ????");
-defineHeader(InReplyTo, "In-Reply-To", CallID, "RFC ????");
+defineHeader(CallID, "Call-ID", CallID, "RFC 3261");
+defineHeader(Replaces, "Replaces", CallID, "RFC 3261");
+defineHeader(InReplyTo, "In-Reply-To", CallID, "RFC 3261");
 
 typedef H_CallID H_CallId; // code convention compatible
 extern H_CallId h_CallId; // code convention compatible
+
+defineHeader(Join, "Join", CallId, "RFC 3911");
+defineHeader(TargetDialog, "Target-Dialog", CallId, "Target Dialog draft");
+
 
 //====================
 // Auth:
 //====================
 typedef ParserContainer<Auth> Auths;
-defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC ????");
-defineMultiHeader(Authorization, "Authorization", Auth, "RFC ????");
-defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth, "RFC ????");
-defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC ????");
-defineMultiHeader(WWWAuthenticate, "Www-Authenticate", Auth, "RFC ????");
+defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC 3261");
+defineMultiHeader(Authorization, "Authorization", Auth, "RFC 3261");
+defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth, "RFC 3261");
+defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC 3261");
+defineMultiHeader(WWWAuthenticate, "Www-Authenticate", Auth, "RFC 3261");
 
 //====================
 // CSeqCategory:
 //====================
-defineHeader(CSeq, "CSeq", CSeqCategory, "RFC ????");
+defineHeader(CSeq, "CSeq", CSeqCategory, "RFC 3261");
 
 //====================
 // DateCategory:
 //====================
-defineHeader(Date, "Date", DateCategory, "RFC ????");
+defineHeader(Date, "Date", DateCategory, "RFC 3261");
 
 //====================
 // WarningCategory:
 //====================
-defineMultiHeader(Warning, "Warning", WarningCategory, "RFC ????");
+defineMultiHeader(Warning, "Warning", WarningCategory, "RFC 3261");
 
 //====================
 // Via
 //====================
 typedef ParserContainer<Via> Vias;
-defineMultiHeader(Via, "Via", Via, "RFC ????");
+defineMultiHeader(Via, "Via", Via, "RFC 3261");
 
 //====================
 // RAckCategory

@@ -18,6 +18,7 @@ namespace resip
 
 class Message;
 class TransactionMessage;
+class TuSelector;
 
 class BaseTimerQueue
 {
@@ -39,12 +40,12 @@ class BaseTimerQueue
 class TimeLimitTimerQueue : public BaseTimerQueue
 {
    public:
-      TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo);
+      TimeLimitTimerQueue(TuSelector& fifoSelector);
       void add(const Timer& timer);
       virtual void process();
       
    private:
-      TimeLimitFifo<Message>& mFifo;
+      TuSelector& mFifoSelector;
 };
 
 

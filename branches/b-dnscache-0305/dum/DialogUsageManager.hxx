@@ -66,6 +66,9 @@ class DialogUsageManager : public HandleManager
             virtual const char* name() const {return "DialogUsageManager::Exception";}
       };
       
+      DialogUsageManager(Security* security, AsyncProcessHandler* handler = 0);
+
+      // deprecated interface
       DialogUsageManager(std::auto_ptr<SipStack> stack = std::auto_ptr<SipStack>(new SipStack(false)));
 
       virtual ~DialogUsageManager();
@@ -84,6 +87,7 @@ class DialogUsageManager : public HandleManager
                          const Data& privateKeyPassPhrase = Data::Empty,
                          SecurityTypes::SSLType sslType = SecurityTypes::TLSv1 );
 
+      SipStack& getSipStack();
       Security& getSecurity();
       
       Data getHostAddress();

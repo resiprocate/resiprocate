@@ -1,6 +1,7 @@
 #include <iostream>
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TimerQueue.hxx"
+#include "resiprocate/TuSelector.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include <unistd.h>
@@ -22,9 +23,10 @@ main()
 
    TimeLimitFifo<Message> f(0, 0);
    Fifo<TransactionMessage> r;
+   TuSelector sel(f);   
    
    TimerQueue timer(r);
-   TimeLimitTimerQueue timer2(f);
+   TimeLimitTimerQueue timer2(sel);
 
    cerr << "Before Fifo size: " << f.size() << endl;
    assert(f.size() == 0);

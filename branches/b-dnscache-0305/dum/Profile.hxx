@@ -104,6 +104,11 @@ class Profile
       virtual const Data& getUserAgent() const;
       virtual bool hasUserAgent() const;
 
+      //time between CR/LF keepalive messages in seconds.  Set to 0 to disable.  Default is 30.
+      //Note:  You must set a KeepAliveManager on DUM for this to work.
+      virtual void setKeepAliveTime(int keepAliveTime);
+      virtual int getKeepAliveTime() const;      
+
    private:
       // !slg! - should we provide a mechanism to clear the mHasxxxxx members to re-enable fall through after setting?
 	  bool mHasDefaultRegistrationExpires;
@@ -147,6 +152,9 @@ class Profile
 
       bool mHasOverrideHostPort;
       Uri  mOverrideHostPort;
+
+      bool mHasKeepAliveTime;
+      int  mKeepAliveTime;
 
 	  Profile *mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
