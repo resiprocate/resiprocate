@@ -114,15 +114,15 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
 const char*
 TlsConnection::fromState(TlsConnection::State s)
 {
-    switch(s)
-    {
-        case Handshaking: return "Handshaking"; break;
-        case Accepting: return "Accepting"; break;
-        case Broken: return "Broken"; break;
-        case Connecting: return "Connecting"; break;
-        case Up: return "Up"; break;
-    }
-    return "????";
+   switch(s)
+   {
+      case Handshaking: return "Handshaking"; break;
+      case Accepting: return "Accepting"; break;
+      case Broken: return "Broken"; break;
+      case Connecting: return "Connecting"; break;
+      case Up: return "Up"; break;
+   }
+   return "????";
 }
 
 TlsConnection::State
@@ -132,105 +132,105 @@ TlsConnection::checkState()
    //DebugLog(<<"state is " << fromState(mState));
 
    if (mState == Up || mState == Broken)
-     return mState;
+      return mState;
 
    int ok=0;
 
    if (mState != Handshaking)
    {
-       if (mState == Accepting)
-       {
-	   ok = SSL_accept(mSsl);
-       }
-       else
-       {
-	   ok = SSL_connect(mSsl);
-       }
+      if (mState == Accepting)
+      {
+         ok = SSL_accept(mSsl);
+      }
+      else
+      {
+         ok = SSL_connect(mSsl);
+      }
 
-       if ( ok <= 0 )
-       {
-	   int err = SSL_get_error(mSsl,ok);
-	   char buf[256];
-	   ERR_error_string_n(err,buf,sizeof(buf));
-	   DebugLog( << "TLS error ok=" << ok << " err=" << err << " " << buf );
+      if ( ok <= 0 )
+      {
+         int err = SSL_get_error(mSsl,ok);
+         char buf[256];
+         ERR_error_string_n(err,buf,sizeof(buf));
+         DebugLog( << "TLS error ok=" << ok << " err=" << err << " " << buf );
           
-	   switch (err)
-	   {
-	       case SSL_ERROR_WANT_READ:
-		   DebugLog( << "TLS connection want read" );
-		   return mState;
-	       case SSL_ERROR_WANT_WRITE:
-		   DebugLog( << "TLS connection want write" );
-		   return mState;
-	       case SSL_ERROR_WANT_CONNECT:
-		   DebugLog( << "TLS connection want connect" );
-		   return mState;
+         switch (err)
+         {
+            case SSL_ERROR_WANT_READ:
+               DebugLog( << "TLS connection want read" );
+               return mState;
+            case SSL_ERROR_WANT_WRITE:
+               DebugLog( << "TLS connection want write" );
+               return mState;
+            case SSL_ERROR_WANT_CONNECT:
+               DebugLog( << "TLS connection want connect" );
+               return mState;
 #if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
-	       case SSL_ERROR_WANT_ACCEPT:
-		   DebugLog( << "TLS connection want accept" );
-		   return mState;
+            case SSL_ERROR_WANT_ACCEPT:
+               DebugLog( << "TLS connection want accept" );
+               return mState;
 #endif
-	   }
+         }
 	   
-	   ErrLog( << "TLS connection failed "
-		   << "ok=" << ok << " err=" << err << " " << buf );
+         ErrLog( << "TLS connection failed "
+                 << "ok=" << ok << " err=" << err << " " << buf );
          
-	   switch (err)
-	   {
-	       case SSL_ERROR_NONE: 
-		   ErrLog( <<" (SSL Error none)" );
-		   break;
-	       case SSL_ERROR_SSL: 
-		   ErrLog( <<" (SSL Error ssl)" );
-		   break;
-	       case SSL_ERROR_WANT_READ: 
-		   ErrLog( <<" (SSL Error want read)" ); 
-                   break;
-	       case SSL_ERROR_WANT_WRITE: 
-		   ErrLog( <<" (SSL Error want write)" ); 
-		   break;
-	       case SSL_ERROR_WANT_X509_LOOKUP: 
-		   ErrLog( <<" (SSL Error want x509 lookup)" ); 
-		   break;
-	       case SSL_ERROR_SYSCALL: 
-		   ErrLog( <<" (SSL Error want syscall)" ); 
-		   ErrLog( <<"Error may be because trying ssl connection to tls server" ); 
-		   break;
-	       case SSL_ERROR_WANT_CONNECT: 
-		   ErrLog( <<" (SSL Error want connect)" ); 
-		   break;
+         switch (err)
+         {
+            case SSL_ERROR_NONE: 
+               ErrLog( <<" (SSL Error none)" );
+               break;
+            case SSL_ERROR_SSL: 
+               ErrLog( <<" (SSL Error ssl)" );
+               break;
+            case SSL_ERROR_WANT_READ: 
+               ErrLog( <<" (SSL Error want read)" ); 
+               break;
+            case SSL_ERROR_WANT_WRITE: 
+               ErrLog( <<" (SSL Error want write)" ); 
+               break;
+            case SSL_ERROR_WANT_X509_LOOKUP: 
+               ErrLog( <<" (SSL Error want x509 lookup)" ); 
+               break;
+            case SSL_ERROR_SYSCALL: 
+               ErrLog( <<" (SSL Error want syscall)" ); 
+               ErrLog( <<"Error may be because trying ssl connection to tls server" ); 
+               break;
+            case SSL_ERROR_WANT_CONNECT: 
+               ErrLog( <<" (SSL Error want connect)" ); 
+               break;
 #if ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
-	       case SSL_ERROR_WANT_ACCEPT: 
-		   ErrLog( <<" (SSL Error want accept)" ); 
-		   break;
+            case SSL_ERROR_WANT_ACCEPT: 
+               ErrLog( <<" (SSL Error want accept)" ); 
+               break;
 #endif
-		   while (true)
-		   {
-		       const char* file;
-		       int line;
+               while (true)
+               {
+                  const char* file;
+                  int line;
                   
-		       unsigned long code = ERR_get_error_line(&file,&line);
-		       if ( code == 0 )
-		       {
-			   break;
-		       }
+                  unsigned long code = ERR_get_error_line(&file,&line);
+                  if ( code == 0 )
+                  {
+                     break;
+                  }
                   
-		       char buf[256];
-		       ERR_error_string_n(code,buf,sizeof(buf));
-		       ErrLog( << buf  );
-		       InfoLog( << "Error code = " 
-				<< code << " file=" << file << " line=" << line );
-		   }
-	   }
+                  char buf[256];
+                  ERR_error_string_n(code,buf,sizeof(buf));
+                  ErrLog( << buf  );
+                  InfoLog( << "Error code = " 
+                           << code << " file=" << file << " line=" << line );
+               }
+         }
+         
+         mState = Broken;
+         mBio = 0;
+         ErrLog (<< "Couldn't TLS connect");
+         return mState;
+      }
 
-	   mState = Broken;
-	   mBio = 0;
-	   ErrLog (<< "Couldn't TLS connect");
-	   return mState;
-       }
-
-       InfoLog( << "TLS connected" ); 
-       mState = Handshaking;
+      InfoLog( << "TLS connected" ); 
+      mState = Handshaking;
    }
 
    InfoLog( << "TLS handshake starting" ); 
@@ -239,25 +239,25 @@ TlsConnection::checkState()
       
    if ( ok <= 0 )
    {
-       int err = SSL_get_error(mSsl,ok);
-       char buf[256];
-       ERR_error_string_n(err,buf,sizeof(buf));
+      int err = SSL_get_error(mSsl,ok);
+      char buf[256];
+      ERR_error_string_n(err,buf,sizeof(buf));
          
-       switch (err)
-       {
-	   case SSL_ERROR_WANT_READ:
-               DebugLog( << "TLS handshake want read" );
-	       return mState;
-	   case SSL_ERROR_WANT_WRITE:
-               DebugLog( << "TLS handshake want write" );
-	       return mState;
-	   default:
-               ErrLog( << "TLS handshake failed "
-                       << "ok=" << ok << " err=" << err << " " << buf );
-               mBio = NULL;
-	       mState = Broken;
-	       return mState;
-       }
+      switch (err)
+      {
+         case SSL_ERROR_WANT_READ:
+            DebugLog( << "TLS handshake want read" );
+            return mState;
+         case SSL_ERROR_WANT_WRITE:
+            DebugLog( << "TLS handshake want write" );
+            return mState;
+         default:
+            ErrLog( << "TLS handshake failed "
+                    << "ok=" << ok << " err=" << err << " " << buf );
+            mBio = NULL;
+            mState = Broken;
+            return mState;
+      }
    }
    
    InfoLog( << "TLS handshake done" ); 
@@ -278,14 +278,14 @@ TlsConnection::read(char* buf, int count )
 
    switch(checkState())
    {
-       case Broken:
-           return -1;
-           break;
-       case Up:
-           break;
-       default:
-       return 0;
-           break;
+      case Broken:
+         return -1;
+         break;
+      case Up:
+         break;
+      default:
+         return 0;
+         break;
    }
 
    if (!mBio)
@@ -341,14 +341,14 @@ TlsConnection::write( const char* buf, int count )
  
    switch(checkState())
    {
-       case Broken:
-           return -1;
-           break;
-       case Up:
-           break;
-       default:
-       return 0;
-           break;
+      case Broken:
+         return -1;
+         break;
+      case Up:
+         break;
+      default:
+         return 0;
+         break;
    }
 
    if (!mBio)
@@ -556,12 +556,12 @@ TlsConnection::computePeerName()
           
       if (gen->type == GEN_EMAIL)
       {
-            DebugLog(<< "subjectAltName of cert has EMAIL type" );
+         DebugLog(<< "subjectAltName of cert has EMAIL type" );
       }
           
       if(gen->type == GEN_URI) 
       {
-           DebugLog(<< "subjectAltName of cert has GEN_URI type" );
+         DebugLog(<< "subjectAltName of cert has GEN_URI type" );
       }
    }
    sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
@@ -574,7 +574,7 @@ TlsConnection::computePeerName()
       int len = i2d_X509( cert, &buf );
       Data derCert( buf, len );
       mSecurity->addDomainCertDER(mPeerName,derCert);
-      free(buf); buf=NULL; // TODO - this may leak 
+      OPENSSL_free(buf); buf=NULL;
    }
 
    X509_free(cert); cert=NULL;
