@@ -58,8 +58,6 @@ class SipMessage : public Message
       bool isRequest() const;
       bool isResponse() const;
 
-      void addBuffer(char* buf);
-
       virtual std::ostream& encode(std::ostream& str) const;
 
       Data brief() const;
@@ -136,7 +134,6 @@ class SipMessage : public Message
       // transport interface
       void setStartLine(const char* start, int len); 
       void setBody(const char* start, int len); 
-
       
       // add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,
@@ -144,6 +141,8 @@ class SipMessage : public Message
                      const char* start, int len);
 
       void setSource(const sockaddr_in& addr);
+
+      void addBuffer(char* buf);
 
       bool hasFixedDest() const;
       Data getFixedDest() const;

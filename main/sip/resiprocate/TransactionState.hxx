@@ -67,6 +67,7 @@ class TransactionState
       
       TransactionState* mCancelStateMachine;
 
+      // !rk! The contract for this variable needs to be defined.
       SipMessage* mMsgToRetransmit;
 
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);

@@ -33,6 +33,7 @@ SipStack::sendTo(const SipMessage& msg, const Data& dest)
 {
    SipMessage* toSend = new SipMessage(msg);
    toSend->setFixedDest(dest);
+   toSend->setFromTU();
    mStateMacFifo.add(toSend);
 }
 
