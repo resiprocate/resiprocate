@@ -75,6 +75,7 @@ class MessageWaitingContents : public Contents
             friend class MessageWaitingContents;
       };
 
+      static bool init();
    private:
       void clear();
 
@@ -83,11 +84,10 @@ class MessageWaitingContents : public Contents
       Header* mHeaders[MW_MAX];
       
       mutable std::map<Data, Data> mExtensions;
-
-      static ContentsFactory<MessageWaitingContents> Factory;
 };
 
 extern MessageWaitingContents::AccountHeader mw_account;
+static bool invokeMessageWaitingContentsInit = MessageWaitingContents::init();
 
 }
 
