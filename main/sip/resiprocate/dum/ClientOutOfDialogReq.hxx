@@ -1,7 +1,7 @@
 #if !defined(RESIP_CLIENTOUTOFDIALOGREQ_HXX)
 #define RESIP_CLIENTOUTOFDIALOGREQ_HXX
 
-#include "BaseUsage.hxx"
+#include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/ParserCategories.hxx"
 
 namespace resip
