@@ -541,6 +541,101 @@ Dialog::processNotify(const SipMessage& notify)
 #endif
 
 
+void 
+Dialog::makeRequest(SipMessage& request, MethodTypes method)
+{
+   SipMessage* request = new SipMessage;
+   RequestLine rLine(method);
+
+   rLine.uri() = mRemoteTarget;
+   
+   request.header(h_RequestLine) = rLine;
+   request.header(h_To) = mRemoteUri;
+   request.header(h_To).param(p_tag) = mRemoteTag;
+   request.header(h_From) = mLocalContact;
+   request.header(h_From).param(p_tag) = mLocalTag; 
+
+   request.header(h_CallId) = mCallId;
+   request.header(h_Routes) = mRouteSet;
+   request.header(h_Contacts).push_front(mLocalContact);
+   request.header(h_CSeq).method() = method;
+   request.header(h_MaxForwards).value() = 70;
+
+   Via via;
+   via.param(p_branch); // will create the branch
+   request.header(h_Vias).push_front(via);
+
+   request.header(h_CSeq).sequence() = ++mLocalCSeq;
+}
+
+
+void 
+Dialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
+{
+   assert( code >= 100 );
+   response.header(h_To).param(p_tag) = mLocalTag;
+   if ( (code < 300) && (code > 100) )
+   {
+      assert(request.isRequest());
+      assert(request.header(h_RequestLine).getMethod() == INVITE ||
+             request.header(h_RequestLine).getMethod() == SUBSCRIBE);
+      
+      assert (request.header(h_Contacts).size() == 1);
+      response.header(h_To).param(p_tag) = mLocalTag;
+
+      Helper::makeResponse(proto, request, code);
+
+      if (!request.exists(h_Contacts) && request.header(h_Contacts).size() != 1)
+      {
+         InfoLog (<< "Request doesn't have a contact header or more than one contact, so can't create dialog");
+         DebugLog (<< request);
+         throw Exception("Invalid or missing contact header in request", __FILE__,__LINE__);
+      }
+
+      assert (response->header(h_To).exists(p_tag));
+   }
+   else
+   {
+      Helper::makeResponse(proto, request, code, mContact);
+   }
+}
+
+
+void 
+Dialog::makeMethod(SipMessage& proto, MethodTypes method)
+{
+   RequestLine rLine(method);
+/*
+   rLine.uri().scheme() = target.uri().scheme();
+   rLine.uri().host() = target.uri().host();
+   rLine.uri().port() = target.uri().port();
+   mLastRequest.header(h_RequestLine) = rLine;
+
+   mLastRequest.header(h_To) = target;
+   mLastRequest.header(h_MaxForwards).value() = 70;
+   mLastRequest.header(h_CSeq).method() = method;
+   mLastRequest.header(h_CSeq).sequence() = 1;
+   mLastRequest.header(h_From) = mDum.getProfile()->getDefaultAor();
+   mLastRequest.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   mLastRequest.header(h_CallId).value() = Helper::computeCallId();
+
+   NameAddr contact; // if no GRUU, let the stack fill in the contact 
+   if (mDum.getProfile()->hasGruu(target.uri().getAor()))
+   {
+      contact = mDum.getProfile()->getGruu(target.uri().getAor());
+   }
+   mLastRequest.header(h_Contacts).push_front(contact);
+   
+   Via via;
+   mLastRequest.header(h_Vias).push_front(via);
+
+   mLastRequest.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
+*/
+
+}
+
+
+
 Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
    : BaseException(msg, file, line)
 {}

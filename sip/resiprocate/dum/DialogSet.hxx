@@ -8,6 +8,7 @@ namespace resip
 {
 
 class BaseCreator;
+class DialogUsageManager;
 
 /** @file DialogSet.hxx
  * 
@@ -16,8 +17,8 @@ class BaseCreator;
 class DialogSet
 {
    public:
-      DialogSet(BaseCreator*);
-      DialogSet(const SipMessage& request);
+      DialogSet(BaseCreator* creator, DialogUsageManager& dum);
+      DialogSet(const SipMessage& request, DialogUsageManager& dum);
       virtual ~DialogSet();
       
       DialogSetId getId();
@@ -43,6 +44,7 @@ class DialogSet
       std::list<Dialog*> mDialogs;
       BaseCreator* mCreator;
       DialogSetId mId;
+      DialogUsageManager& mDum;
 };
  
 }
