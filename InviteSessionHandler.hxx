@@ -33,8 +33,7 @@ class InviteSessionHandler
       // called when a dialog initiated as a UAS enters the connected state
       virtual void onConnected(InviteSessionHandle, const SipMessage& msg)=0;
 
-      // UAC gets no final response within the stale call timeout (default is 1 hour)
-      // expect an onTerminated after this
+      // UAC gets no final response within the stale call timeout (default is 3 minutes)
       virtual void onStaleCallTimeout(ClientInviteSessionHandle)=0;
 
       /// called when an dialog enters the terminated state - this can happen

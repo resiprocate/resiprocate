@@ -46,6 +46,7 @@ class ClientInviteSession : public InviteSession
 
       void handleRedirect (const SipMessage& msg);
       void handleProvisional (const SipMessage& msg);
+      void handleFinalResponse (const SipMessage& msg);
       void handleOffer (const SipMessage& msg, const SdpContents& sdp);
       void handleAnswer (const SipMessage& msg, const SdpContents& sdp);
       void sendPrackIfNeeded(const SipMessage& msg);
@@ -57,6 +58,7 @@ class ClientInviteSession : public InviteSession
    private:
       std::auto_ptr<SdpContents> mEarlyMedia;
       void startCancelTimer();
+      void startStaleCallTimer();
       void sendSipFrag(const SipMessage& response);
 
       SipMessage mInvite; // the original INVITE sent
