@@ -320,71 +320,19 @@ DialogUsageManager::processRequest(const SipMessage& request)
    {
       switch (request.header(h_RequestLine).getMethod())
       {
-         // a NOTIFY is the only request that can
-         // create a full dialog (when the 2xx from the
-         // SUBSCRIBE arrives *after* the NOTIFY
-         case NOTIFY : 
+         case REGISTER:
          {
-            Dialog& dialog = findDialog(DialogId(request));
-            dialog.processNotify(request);
-            break;
-         }
-
-
-         case ACK:
-            DebugLog (<< "Discarding request: " << request.brief());
-            break;
-                        
-         case PRACK:
-         case BYE:
-         case UPDATE:
-            //case INFO: // !rm! in an ideal world
-            //case NOTIFY: // !rm! in an ideal world
-         {
-            std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 481));
+            std::auto_ptr<SipMessage> failure(Helper::makeResponse(request, 400, "rjs says, Go to hell"));
             mStack.send(*failure);
             break;
          }
-
-         case INVITE:  // new INVITE
-         {
-            ServerInvSession* session = new ServerInvSession(*this, request);
-            break;
-         }
-         case CANCEL:
-         {
-            // find the appropropriate ServerInvSession
-            DialogSet& dialogs = findDialogSet(DialogSetId(request));
-            dialogs.cancel(request);
-            break;
-         }
-         case SUBSCRIBE:
-         case REFER: // out-of-dialog REFER
-         {
-            ServerSubscription* sub = new ServerSubscription(*this, request);
-            break;
-         }
-         case REGISTER:
-         {
-            ServerRegistration* reg = new ServerRegistration(*this, request);
-            break;
-         }
-         case PUBLISH:
-         {
-            ServerPublication* pub = new ServerPublication(*this, request);
-            break;                       
-         }
-         case MESSAGE :
-         case OPTIONS :
-         case INFO :   // handle non-dialog (illegal) INFOs
+         
          default:
-            assert(0);
-            break;
+         {
+            Dialog& dialog = findDialog(DialogId(request));
+            dialog.process(DialogId(request));
+         }
       }
-
-      Dialog& dialog = findDialog(
-      DialogSet& dialogs = findDialogSet(DialogSetId(request));
-      dialogs.
    }
 }
 

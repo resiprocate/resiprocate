@@ -51,6 +51,8 @@ class ServerInvSession: public BaseUsage
       const SdpContents* getLocalSdp();
       const SdpContents* getRemoteSdp();
       
+      void process(const SipMessage& msg);
+
    private:
       SdpContents* mLocalSdp;
       SdpContents* mRemoteSdp;
