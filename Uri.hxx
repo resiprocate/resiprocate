@@ -99,10 +99,13 @@ size_t hash_value(const resip::Uri& v);
 #elif defined(HASH_MAP_NAMESPACE)  //#elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 namespace HASH_MAP_NAMESPACE
 {
+
+template <>
 struct hash<resip::Uri>
 {
       size_t operator()(const resip::Uri& v) const;
 };
+
 }
 #endif
 
