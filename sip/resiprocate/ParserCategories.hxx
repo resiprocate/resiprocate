@@ -297,10 +297,10 @@ typedef ParserContainer<Via> Vias;
 class RequestLine : public Url
 {
    public:
-      RequestLine(MethodTypes method, const Data& sipVersion = Symbols::DefaultSipVersion) : 
-         Url(),
-         mMethod(method),
-         mSipVersion(sipVersion)
+      RequestLine(MethodTypes method, const Data& sipVersion = Symbols::DefaultSipVersion)
+         : Url(),
+           mMethod(method),
+           mSipVersion(sipVersion)
       {}
       RequestLine(HeaderFieldValue* hfv) : Url(hfv) {}
 
