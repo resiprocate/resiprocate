@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.31 2002/12/31 06:04:03 fluffy Exp $
+# $Id: Makefile,v 1.32 2003/01/01 02:15:17 fluffy Exp $
 
 USE_SSL = 1
 
@@ -14,6 +14,8 @@ ifeq ($(USE_ARES),1)
 PACKAGES += ARES
 endif
 
+LDLIBS += -lncurses
+
 ifeq ($(USE_SSL),1)
 PACKAGES += OPENSSL
 CFLAGS += -DUSE_SSL
@@ -21,6 +23,7 @@ CXXFLAGS += -DUSE_SSL
 endif
 
 TESTPROGRAMS =	\
+		limpc.cxx\
 		testIM.cxx \
 		testUri.cxx \
 		SipTortureTests.cxx \
@@ -60,7 +63,5 @@ SRC = \
 #	        testNonInviteClientTx.cxx \
 #		testNameAddrParamExclusions.cxx \
 
-limpc: obj.debug.Linux.i686/limpc.o
-	g++ -o limpc obj.debug.Linux.i686/limpc.o obj.debug.Linux.i686/Register.o obj.debug.Linux.i686/Transceiver.o obj.debug.Linux.i686/Registrar.o obj.debug.Linux.i686/InviteClient.o obj.debug.Linux.i686/InviteServer.o obj.debug.Linux.i686/TestSupport.o obj.debug.Linux.i686/Resolver.o -L../../../build/../sip2/sipstack/obj.debug.Linux.i686 -L../../../build/../sip2/util/obj.debug.Linux.i686 -lsip2 -lutil2 -lpthread -lssl -lcrypto -lncurses
 
 include $(BUILD)/Makefile.post
