@@ -5,6 +5,7 @@
 #include "resiprocate/StackThread.hxx"
 #include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
 
+#include "repro/CommandLineParser.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/monkeys/RouteProcessor.hxx"
@@ -25,14 +26,29 @@ using namespace std;
 int
 main(int argc, char** argv)
 {
+   /* Initialize a stack */
+   CommandLineParser args(argc, argv);
+   Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
 
-/* Initialize a stack */
-   Log::initialize(Log::Cout, Log::Info, argv[0]);
    Security security;
    SipStack stack(&security);
-   stack.addTransport(UDP,5060);
-   stack.addTransport(TCP,5060);
-   stack.addTransport(TLS,5061);
+   if (args.mUdpPort)
+   {
+      stack.addTransport(UDP, args.mUdpPort);
+   }
+   if (args.mTcpPort)
+   {
+      stack.addTransport(TCP,args.mTcpPort);
+   }
+   if (args.mTlsPort)
+   {
+      stack.addTransport(TLS,args.mTlsPort);
+   }
+   if (args.mDtlsPort)
+   {
+      stack.addTransport(DTLS, args.mDtlsPort);
+   }
+
    StackThread stackThread(stack);
 
    InMemoryRegistrationDatabase regData;
@@ -53,12 +69,16 @@ main(int argc, char** argv)
    DigestAuthenticator* da = new DigestAuthenticator();
    requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
    
-
    UserDb userDb;
    WebAdmin admin(userDb);
    WebAdminThread adminThread(admin);
    
    Proxy proxy(stack, requestProcessors, userDb);
+   for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
+        i != args.mDomains.end(); ++i)
+   {
+      proxy.addDomain(*i);
+   }
 
    /* Initialize a registrar */
    DialogUsageManager dum(stack);

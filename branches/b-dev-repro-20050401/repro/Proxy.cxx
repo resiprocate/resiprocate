@@ -131,8 +131,14 @@ Proxy::thread()
    }
 }
 
+void
+Proxy::addDomain(const resip::Uri& uri) 
+{
+   mStack.addAlias(uri.host(), uri.port());
+}
+
 bool
-Proxy::isMyDomain(resip::Uri& uri) const
+Proxy::isMyDomain(const resip::Uri& uri) const
 {
    return mStack.isMyDomain(uri.host(),uri.port());
 }
