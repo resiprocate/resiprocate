@@ -58,7 +58,7 @@ Transceiver::send(SipMessage& message)
       }
       if (via.exists(p_rport))
       {
-         target.port() = via.param(p_rport);
+         target.port() = via.param(p_rport).value();
       }
    }
    else

@@ -243,7 +243,7 @@ UdpTransport::process(FdSet& fdset)
       char * buf = inet_ntoa(tuple.ipv4); // !jf! not threadsafe
       message->header(h_Vias).front().param(p_received) = buf;
 #endif
-      message->header(h_Vias).front().param(p_rport) = tuple.port;
+      message->header(h_Vias).front().param(p_rport).value() = tuple.port;
    }
 
    mStateMachineFifo.add(message);
