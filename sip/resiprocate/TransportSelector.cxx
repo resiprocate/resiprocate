@@ -287,11 +287,26 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
                interfaceHost = DnsUtil::inet_ntop(cliaddr.sin_addr);
 
             }
+
+#if USE_IPV6
             else
             {
-               ErrLog(<<"IPv6 Route Table search unimplemented.");
-            }
+               sockaddr_in6 servaddr, cliaddr;
+               memset(&servaddr, 0, sizeof(servaddr));
+               servaddr.sin6_addr = destination.ipv6;
+               servaddr.sin6_port = htons(destination.port);
+               servaddr.sin6_family = AF_INET;
 
+               connect(mSocket,
+                       (const sockaddr *)&servaddr,
+                       sizeof(servaddr));
+
+               socklen_t len = sizeof(cliaddr);
+               getsockname(mSocket, (sockaddr*)&cliaddr, &len);
+               interfaceHost = DnsUtil::inet_ntop(cliaddr.sin6_addr);
+
+            }
+#endif
             msg->header(h_Vias).front().sentHost() = 
                interfaceHost;
             
