@@ -30,14 +30,14 @@ LocationServer::handleRequest(RequestContext& context)
   
   if (mStore.aorExists(inputUri))
   {  
-	 RegistrationPersistenceManager::contact_list_t contacts = mStore.getContacts(inputUri);
+	 RegistrationPersistenceManager::ContactPairList contacts = mStore.getContacts(inputUri);
 
      mStore.unlockRecord(inputUri);
 
-     for ( RegistrationPersistenceManager::contact_list_t::iterator i  = contacts.begin()
+     for ( RegistrationPersistenceManager::ContactPairList::iterator i  = contacts.begin()
              ; i != contacts.end()    ; ++i)
      {
-	    RegistrationPersistenceManager::contact_t contact = *i;
+	    RegistrationPersistenceManager::ContactPair contact = *i;
         if (contact.second>=time(NULL))
         {
            context.addTarget(NameAddr(contact.first));
