@@ -1,7 +1,7 @@
 #if !defined(RESIP_DUM_PROCESS_HANDLER_HXX)
 #define RESIP_DUM_PROCESS_HANDLER_HXX
 
-#include "resiprocate/ProcessNotifier.hxx"
+#include "resiprocate/os/AsyncProcessHandler.hxx"
 #include "resiprocate/external/ExternalTimer.hxx"
 
 
@@ -11,7 +11,7 @@ namespace resip
 class DialogUsageManager;
 
 
-class DumProcessHandler : public ProcessNotifier::Handler, public ExternalTimerHandler
+class DumProcessHandler : public AsyncProcessHandler, public ExternalTimerHandler
 {
    public:
       DumProcessHandler(ExternalTimer*);      
@@ -22,6 +22,7 @@ class DumProcessHandler : public ProcessNotifier::Handler, public ExternalTimerH
       void start(DialogUsageManager*);
       void stop();//!dcm! -- temporary      
    private:
+      bool mHaveActiveTimer;      
       AsyncID mTimerID;      
       DialogUsageManager* mDum;      
       ExternalTimer* mExternalTimer;      
