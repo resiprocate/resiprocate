@@ -265,6 +265,13 @@ CSeqCategory::CSeqCategory(const CSeqCategory& rhs)
      mSequence(rhs.mSequence)
 {}
 
+CSeqCategory::CSeqCategory() 
+   : ParserCategory(), 
+     mMethod(UNKNOWN), 
+     mUnknownMethodName(MethodNames[UNKNOWN]),
+     mSequence(-1) 
+{}
+
 CSeqCategory&
 CSeqCategory::operator=(const CSeqCategory& rhs)
 {
