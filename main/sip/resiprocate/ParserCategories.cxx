@@ -1152,7 +1152,8 @@ NameAddr::parse(ParseBuffer& pb)
    if (laQuote)
    {
       mUri.parseParameters(pb);
-      pb.skipChar('>');
+//      pb.skipChar('>'); // !ah! temporary fix for unknown Uri's
+      pb.skipToChar('>');
       pb.skipWhitespace();
    }
    parseParameters(pb);
