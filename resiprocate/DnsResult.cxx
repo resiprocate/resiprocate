@@ -39,6 +39,7 @@ extern "C"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsResult.hxx"
 #include "resiprocate/Uri.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #if !defined(USE_ARES)
 #warning "ARES is required"

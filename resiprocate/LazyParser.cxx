@@ -9,6 +9,7 @@
 #include "resiprocate/HeaderFieldValue.hxx"
 #include "resiprocate/LazyParser.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 

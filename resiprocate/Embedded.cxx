@@ -8,6 +8,7 @@
 #include "resiprocate/Embedded.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/Symbols.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 

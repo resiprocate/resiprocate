@@ -25,13 +25,7 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/StatisticsManager.hxx"
-
-#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
-#endif 
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #ifdef WIN32
 #pragma warning( disable : 4355 )
