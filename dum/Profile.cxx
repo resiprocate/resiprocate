@@ -1,7 +1,12 @@
+
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 using namespace resip;
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
 
 Profile::Profile() : mDefaultRegistrationExpires(3600)
 {
@@ -218,6 +223,7 @@ Profile::disableGruu()
 void 
 Profile::addDigestCredential( const Data& realm, const Data& users, const Data& password)
 {
+   
 }
      
 Profile::DigestCredentialHandler* 
@@ -231,6 +237,8 @@ Profile::getDigestCredential( const Data& realm )
 {
    DigestCredential dc;
    dc.realm = realm;
+   
+   InfoLog (<< "Comparing " << realm << " to " << mDigestCredentials.begin()->realm );
    
    DigestCredentials::const_iterator i = mDigestCredentials.find(dc);
    if (i != mDigestCredentials.end())
@@ -246,4 +254,11 @@ bool
 Profile::DigestCredential::operator<(const DigestCredential& rhs) const
 {
    return (realm < rhs.realm);
+}
+
+std::ostream&
+Profile::DigestCredential::operator<<(std::ostream& strm) const
+{
+   strm << realm << "," << user << "," << password;
+   return strm;
 }
