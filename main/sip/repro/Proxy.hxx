@@ -15,13 +15,13 @@ class SipStack;
 namespace repro
 {
 
-class UserDB;
+class UserDb;
 class RequestProcessorChain;
 
 class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
-      Proxy(resip::SipStack&, RequestProcessorChain&, UserDB &);
+      Proxy(resip::SipStack&, RequestProcessorChain&, UserDb &);
       virtual ~Proxy();
 
       virtual bool isMyDomain(resip::Uri& uri) const;
@@ -29,7 +29,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       virtual bool isShutDown() const ;
       virtual void thread();
       
-      UserDB &getUserDb();
+      UserDb &getUserDb();
       
    private:
       resip::SipStack& mStack;
@@ -46,7 +46,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       */
       HashMap<resip::Data, RequestContext*> mRequestContexts;
 
-      UserDB &mUserDb;
+      UserDb &mUserDb;
 };
 }
 #endif
