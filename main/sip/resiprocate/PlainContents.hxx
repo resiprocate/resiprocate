@@ -36,6 +36,8 @@ class PlainContents : public Contents
       Data mText;
 };
 
+static bool invokePlainContentsInit = PlainContents::init();
+
 }
 
 #endif
