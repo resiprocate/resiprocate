@@ -10,16 +10,20 @@ class ParseBuffer
 {
    public:
       // does NOT OWN the buffer memory
-      ParseBuffer(const char* buff, unsigned int len)
+      ParseBuffer(const char* buff, unsigned int len, 
+                  const Data& errorContext = Data::Empty)
          : mBuff(buff),
            mPosition(buff),
-           mEnd(buff+len)
+           mEnd(buff+len),
+           mErrorContext(errorContext)
       {}
 
-      explicit ParseBuffer(const Data& data)
+      explicit ParseBuffer(const Data& data,
+                           const Data& errorContext = Data::Empty)
          : mBuff(data.data()),
            mPosition(mBuff),
-           mEnd(mBuff + data.size())
+           mEnd(mBuff + data.size()),
+           mErrorContext(errorContext)
       {}
 
       ParseBuffer(const ParseBuffer& other);
@@ -123,6 +127,7 @@ class ParseBuffer
       const char* mBuff;
       const char* mPosition;
       const char* mEnd;
+      const Data& mErrorContext;
 };
 
 }

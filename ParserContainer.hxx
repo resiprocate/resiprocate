@@ -37,7 +37,7 @@ class ParserContainer : public ParserContainerBase
          {
             // create, store without copying -- 
             // keeps the HeaderFieldValue from reallocating its buffer
-            mParsers.push_back(new T(*i));
+            mParsers.push_back(new T(*i, type));
          }
       }
 
