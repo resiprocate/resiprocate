@@ -1,18 +1,20 @@
 #if !defined(RESIP_SYSLOGSTREAM_HXX)
 #define RESIP_SYSLOGSTREAM_HXX 
 
+#include "resiprocate/os/SysLogBuf.hxx"
+
 namespace resip
 {
-class SysLogBuf;
+//class SysLogBuf;
 
-class SysLogStream : public std::ostream
+class SysLogStream : private SysLogBuf, public std::ostream
 {
    public:
       SysLogStream();
       virtual ~SysLogStream();
 
    private:
-      SysLogBuf* _buf;
+      //SysLogBuf* _buf;
       
       SysLogStream(const SysLogStream& );
       SysLogStream& operator=(const SysLogStream&);
