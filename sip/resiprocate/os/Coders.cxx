@@ -4,6 +4,7 @@
 #include "compat.hxx"
 #include "resiprocate/os/Coders.hxx"
 
+
 namespace resip
 {
 
