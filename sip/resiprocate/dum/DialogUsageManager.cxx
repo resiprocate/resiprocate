@@ -92,7 +92,7 @@ SipMessage&
 DialogUsageManager::makeNewSession(BaseCreator* creator)
 {
    prepareInitialRequest(creator->getLastRequest());
-   DialogSet* ds = new DialogSet(creator);
+   DialogSet* ds = new DialogSet(creator, *this);
    mDialogSetMap[ds->getId()] = ds;
    return creator->getLastRequest();
 }
@@ -361,7 +361,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             assert(mDialogSetMap.find(id) == mDialogSetMap.end());
             try
             {
-               DialogSet* dset =  new DialogSet(request);
+               DialogSet* dset =  new DialogSet(request, *this);
                mDialogSetMap[id] = dset;
                dset->dispatch(request);
             }
