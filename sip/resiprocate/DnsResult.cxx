@@ -116,7 +116,7 @@ DnsResult::lookup(const Uri& uri)
 {
    DebugLog (<< "DnsResult::lookup " << uri);
    
-   assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
+   //assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
    mTarget = uri.exists(p_maddr) ? uri.param(p_maddr) : uri.host();
    mSips = (uri.scheme() == Symbols::Sips);
    bool isNumeric = DnsUtil::isIpAddress(mTarget);
