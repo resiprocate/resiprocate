@@ -134,7 +134,7 @@ Dialog::dispatch(const SipMessage& msg)
    {
       usage->dispatch(msg);
    }
-   else
+   else // no matching usage
    {
       if (msg.isRequest())
       {
@@ -183,6 +183,7 @@ Dialog::dispatch(const SipMessage& msg)
                
             case ACK:
             case CANCEL:
+               // Drop on the floor
                break;
                
             case SUBSCRIBE:
@@ -208,7 +209,6 @@ Dialog::dispatch(const SipMessage& msg)
          }
       }
       
-      BaseUsage* usage = mCreator->makeUsage(msg);
       assert(usage);
       mUsages.push_back(usage);
    }
@@ -220,20 +220,50 @@ Dialog::findUsage(const SipMessage& msg)
    switch (msg.header(h_CSeq).method())
    {
       case INVITE:  // new INVITE
+      case CANCEL:
+      case ACK:
          return mInviteSession;
+
       case SUBSCRIBE:
       case REFER: 
       case NOTIFY: 
+         for (std::vector<ClientSubscription*>::iterator i=mClientSubscriptions.begin(); 
+              i != mClientSubscriptions.end(); i++)
+         {
+            if (i->matches(msg))
+            {
+               return *i;
+            }
+         }
          break;
       case REGISTER:
-         assert(0);
+         InfoLog (<< "Received REGISTER inside an existing dialog. This is not supported. ");
+         DebugLog (<< msg);
+         break;
+         
       case PUBLISH:
-         break;                       
-      case MESSAGE :
-      case OPTIONS :
-      case INFO :   
+         if (msg.isRequest())
+         {
+            return mServerPublication;
+         }
+         else if (msg.isRequest())
+         {
+            return mClientPublication;
+         }
+         break;
+
+      default:
+         if (msg.isRequest())
+         {
+            return mServerOutOfDialogReq;
+         }
+         else if (msg.isRequest())
+         {
+            return mClientOutOfDialogReq;
+         }
          break;
    }
+   return 0;
 }
 
 DialogId Dialog::getId() const
