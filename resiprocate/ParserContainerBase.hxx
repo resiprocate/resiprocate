@@ -22,6 +22,7 @@ class ParserContainerBase
       virtual ~ParserContainerBase() {}
       virtual ParserContainerBase* clone() const = 0;
       virtual std::ostream& encode(const Data& headerName, std::ostream& str) const = 0;
+      virtual std::ostream& encodeEmbedded(const Data& headerName, std::ostream& str) const = 0;
 
    protected:
       const Headers::Type mType;
