@@ -52,6 +52,7 @@ ServerInviteSession::send(SipMessage& msg)
       }
       else if (code < 300)
       {
+         mState = Accepting;         
          if (msg.header(h_CSeq).method() == INVITE)
          {
             InviteSession::send(msg);
