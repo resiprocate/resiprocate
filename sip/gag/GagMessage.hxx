@@ -1,3 +1,6 @@
+#ifndef _GAG_MESSAGE_HXX
+#define _GAG_MESSAGE_HXX
+
 #include <iostream>
 
 #include "resiprocate/os/Data.hxx"
@@ -30,6 +33,7 @@ class GagMessage
     static GagMessage *getMessage(istream &is);
     bool isValid() {return valid;}
     virtual ostream &serialize(ostream &os) const = 0;
+    command_t getMessageType() {return messageType;}
 
   protected: // methods
     virtual void parse(istream &is) = 0;
@@ -52,7 +56,7 @@ class GagMessage
 class GagImMessage : public GagMessage
 {
   public:
-    GagImMessage(Uri &_from, Uri &_to, Data &_im) :
+    GagImMessage(const Uri &_from, const Uri &_to, const Data &_im) :
       from(_from), to(_to), im(_im) {messageType = IM;}
 
     GagImMessage(istream &is) { messageType = IM; parse (is); }
@@ -68,7 +72,7 @@ class GagImMessage : public GagMessage
 class GagPresenceMessage : public GagMessage
 {
   public:
-    GagPresenceMessage(Uri &_aor, bool _available, Data &_status):
+    GagPresenceMessage(const Uri &_aor, bool _available, const Data &_status):
       aor(_aor), available(_available), status(_status)
       { messageType=PRESENCE ;}
 
@@ -85,7 +89,7 @@ class GagPresenceMessage : public GagMessage
 class GagLoginMessage : public GagMessage
 {
   public:
-    GagLoginMessage(Uri &_aor, Data &_userid, Data &_password):
+    GagLoginMessage(const Uri &_aor, Data &_userid, const Data &_password):
       aor(_aor), userid(_userid), password(_password)
       { messageType=LOGIN; }
     GagLoginMessage(istream &is) { messageType=LOGIN; parse (is); }
@@ -101,7 +105,7 @@ class GagLoginMessage : public GagMessage
 class GagLogoutMessage : public GagMessage
 {
   public:
-    GagLogoutMessage(Uri &_aor) : aor(_aor) {messageType=LOGOUT;}
+    GagLogoutMessage(const Uri &_aor) : aor(_aor) {messageType=LOGOUT;}
     GagLogoutMessage(istream &is) {messageType=LOGOUT; parse(is); }
 
     virtual ostream &serialize(ostream &os) const;
@@ -113,7 +117,7 @@ class GagLogoutMessage : public GagMessage
 class GagAddBuddyMessage : public GagMessage
 {
   public:
-    GagAddBuddyMessage(Uri &_buddy) : buddy(_buddy)
+    GagAddBuddyMessage(const Uri &_buddy) : buddy(_buddy)
       { messageType=ADD_BUDDY; }
     GagAddBuddyMessage(istream &is) { messageType=ADD_BUDDY; parse(is); }
 
@@ -126,7 +130,7 @@ class GagAddBuddyMessage : public GagMessage
 class GagRemoveBuddyMessage : public GagMessage
 {
   public:
-    GagRemoveBuddyMessage(Uri &_buddy) : buddy(_buddy)
+    GagRemoveBuddyMessage(const Uri &_buddy) : buddy(_buddy)
       {messageType=REMOVE_BUDDY;}
     GagRemoveBuddyMessage(istream &is) 
       { messageType=REMOVE_BUDDY; parse (is); }
@@ -140,7 +144,7 @@ class GagRemoveBuddyMessage : public GagMessage
 class GagErrorMessage : public GagMessage
 {
   public:
-    GagErrorMessage(Data &_message) : message(_message)
+    GagErrorMessage(const Data &_message) : message(_message)
       {messageType=ERROR;}
     GagErrorMessage(istream &is) {messageType=ERROR; parse(is);}
 
@@ -156,3 +160,5 @@ operator<< (ostream &os, const GagMessage &msg)
 {
   return msg.serialize(os);
 }
+
+#endif
