@@ -69,7 +69,7 @@ class InviteSession : public BaseUsage
          Nothing,
          Offerred,
          Answered, // agreed
-         CounterOfferred,
+         CounterOfferred
       } OfferState;
 
       // If sdp==0, the offer was rejected
