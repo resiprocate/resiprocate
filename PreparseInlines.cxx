@@ -10,20 +10,20 @@ const short stFragmented      = (1 << 3);
 INLINE bool
 Preparse::isDataAssigned()
 {
-    return mStatus & stDataAssigned;
+    return (mStatus & stDataAssigned)!=0;
 }
 
 INLINE bool
 Preparse::isHeadersComplete()
 {
-    return mStatus & stHeadersComplete;
+    return (mStatus & stHeadersComplete)!=0;
 }
 
 
 INLINE bool
 Preparse::isFragmented()
 {
-    return mStatus & stFragmented;
+    return (mStatus & stFragmented)!=0;
 }
 
 INLINE size_t
