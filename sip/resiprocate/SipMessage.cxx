@@ -614,24 +614,29 @@ SipMessage::setBody(const char* start, int len)
    mContentsHfv = new HeaderFieldValue(start, len);
 }
 
-void 
-SipMessage::setContents(const Contents* contents)
+void
+SipMessage::setContents(auto_ptr<Contents> contents)
 {
+   Contents* contentsP = contents.release();
+
    delete mContents;
    mContents = 0;
    delete mContentsHfv;
    mContentsHfv = 0;
 
-   if (contents == 0)
+   if (contentsP == 0)
    {
       // The semantics of setContents(0) are to delete message contents
+      remove(h_ContentType);
+      remove(h_ContentDisposition);
+      remove(h_ContentTransferEncoding);
+      remove(h_ContentLanguages);
       return;
    }
- 
-   mContents = contents->clone();
+
+   mContents = contentsP;
 
    // copy contents headers into message
-   header(h_ContentType) = contents->getType();
    if (mContents->exists(h_ContentDisposition))
    {
       header(h_ContentDisposition) = mContents->header(h_ContentDisposition);
@@ -653,6 +658,19 @@ SipMessage::setContents(const Contents* contents)
    else
    {
       header(h_ContentType) = mContents->getType();
+   }
+}
+
+void 
+SipMessage::setContents(const Contents* contents)
+{ 
+   if (contents)
+   {
+      setContents(auto_ptr<Contents>(contents->clone()));
+   }
+   else
+   {
+      setContents(auto_ptr<Contents>(0));
    }
 }
 
@@ -700,6 +718,19 @@ SipMessage::getContents() const
       // !dlb! Content-Transfer-Encoding?
    }
    return mContents;
+}
+
+auto_ptr<Contents>
+SipMessage::releaseContents()
+{
+   auto_ptr<Contents> ret(getContents());
+   // the buffer may go away...
+   ret->checkParsed();
+   mContents = 0;
+   // ...here
+   setContents(auto_ptr<Contents>(0));
+   
+   return ret;
 }
 
 // unknown header interface
