@@ -104,7 +104,8 @@ public:
 	virtual void sendPageFailed( const Uri& dest,int num  );
 	virtual void registrationFailed( const Uri& dest, int num );
    virtual void registrationWorked( const Uri& dest );
-	virtual void presenseUpdate(const Uri& dest, bool open, const Data& status );
+   virtual void presenceUpdate(const Uri& dest, bool open, const Data& status );
+
 	virtual void receivePageFailed(const Uri& sender);
 
 };
@@ -123,7 +124,7 @@ ImCallback::receivedPage( const Data& msg, const Uri& from,
 
 
 void 
-ImCallback::presenseUpdate(const Uri& dest, bool open, const Data& status )
+ImCallback::presenceUpdate(const Uri& dest, bool open, const Data& status )
 {
 	assert( theApp.m_pMainWnd );
 	BuddyDlg* buddy = dynamic_cast<BuddyDlg*>( theApp.m_pMainWnd );
@@ -508,7 +509,7 @@ SipImpApp::setStatus(bool online, CString note)
 	}
 	assert(theApp.tuIM);
 	resip::Data status( note );
-	theApp.tuIM->setMyPresense( online, status );
+	theApp.tuIM->setMyPresence( online, status );
 }
 
 /* ====================================================================
