@@ -4,6 +4,9 @@
 #include "resiprocate/Connection.hxx"
 #ifdef USE_SSL
 #include <openssl/ssl.h>
+#else
+typedef void BIO;
+typedef void SSL;
 #endif
 
 namespace resip
@@ -32,10 +35,8 @@ class TlsConnection : public Connection
     State checkState();
 
 
-#ifdef USE_SSL
      SSL* mSsl;
      BIO* mBio;
-#endif
 };
  
 }
