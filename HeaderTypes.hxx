@@ -3,8 +3,8 @@
 
 #include <sipstack/supported.hxx>
 #include <sipstack/ParserCategories.hxx>
-#include <sipstack/Data.hxx>
 #include <sipstack/Symbols.hxx>
+#include <util/Data.hxx>
 
 namespace Vocal2
 {

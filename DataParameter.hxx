@@ -2,7 +2,7 @@
 #define DataParameter_hxx
 
 #include <sipstack/Parameter.hxx>
-#include <sipstack/Data.hxx>
+#include <util/Data.hxx>
 #include <iostream>
 
 namespace Vocal2

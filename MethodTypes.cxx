@@ -3,7 +3,7 @@
 
 #include <sipstack/MethodTypes.hxx>
 #include <sipstack/Symbols.hxx>
-#include <sipstack/Data.hxx>
+#include <util/Data.hxx>
 
 using namespace Vocal2;
 
