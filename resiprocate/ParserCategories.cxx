@@ -696,14 +696,29 @@ WarningCategory::operator=(const WarningCategory& rhs)
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
-      assert(0);
+      mCode = rhs.mCode;
+      mHostname = rhs.mHostname;
+      mText = rhs.mText;
    }
    return *this;
 }
 void
 WarningCategory::parse(ParseBuffer& pb)
 {
-   assert(0);
+   pb.skipWhitespace();
+   mCode = pb.integer();
+
+   const char* anchor = pb.skipWhitespace();
+   pb.skipNonWhitespace();
+   pb.data(mHostname, anchor);
+
+   pb.skipWhitespace();
+   anchor = pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
+   pb.skipToEndQuote(Symbols::DOUBLE_QUOTE[0]);
+   pb.data(mText, anchor);
+   anchor = pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
+   pb.skipWhitespace();
+   pb.assertEof();
 }
 
 ParserCategory* 
@@ -712,9 +727,34 @@ WarningCategory::clone() const
    return new WarningCategory(*this);
 }
 
+int&
+WarningCategory::code()
+{
+   checkParsed();
+   return mCode;
+}
+
+Data&
+WarningCategory::hostname()
+{
+   checkParsed();
+   return mHostname;
+}
+
+Data&
+WarningCategory::text()
+{
+   checkParsed();
+   return mText;
+}
+
 std::ostream& 
 WarningCategory::encode(std::ostream& str) const
 {
+   str << mCode << Symbols::SPACE[0];
+   str << mHostname << Symbols::SPACE[0];
+   str << Symbols::DOUBLE_QUOTE[0] << mText << Symbols::DOUBLE_QUOTE[0];
+
    return str;
 }
 
