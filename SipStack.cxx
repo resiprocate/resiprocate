@@ -146,12 +146,8 @@ SipStack::getHostAddress()
 bool 
 SipStack::isMyDomain(const Data& domain, int port) const
 {
-   Data d(domain.size()+10, true);
-   d += domain;
-   d += ":";
-   d += Data(port == 0 ? Symbols::DefaultSipPort : port);
-   
-   return (mDomains.count(d) != 0);
+   return (mDomains.count(domain + Data(":") + 
+                          Data(port == 0 ? Symbols::DefaultSipPort : port)) != 0);
 }
 
 
