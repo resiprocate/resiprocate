@@ -30,14 +30,6 @@ rm -f demoCA/index.txt
 touch demoCA/index.txt
 rm -f demoCA/newcerts/*
 
-#setenv ALTNAME "URI:${ADDR}"
-#setenv ALTNAME "email:${ADDR}"
-#setenv ALTNAME "DNS:${ADDR}"
-#ALTNAME="$TYPE:${ADDR}"
-
-# altname could be URI:sip:fluffy@cisco.com,URI:im:fluffy@cisco.com,URI:pres:fluffy@cisco.com
-
-
 export ALTNAME
 
 openssl genrsa  -out ${ADDR}_key.pem 1024 
@@ -77,6 +69,8 @@ openssl pkcs12 -passin pass:password \
 openssl x509 -in ${ADDR}_cert.pem -noout -text
 
 case ${ADDR} in
-*@*) mv ${ADDR}_key.pem user_key_${ADDR}.pem;   mv ${ADDR}_cert.pem user_cert_${ADDR}.pem ;;
-*)   mv ${ADDR}_key.pem domain_key_${ADDR}.pem; mv ${ADDR}_cert.pem domain_cert_${ADDR}.pem ;;
+*@*) mv ${ADDR}_key.pem user_key_${ADDR}.pem; \
+     mv ${ADDR}_cert.pem user_cert_${ADDR}.pem ;;
+*)   mv ${ADDR}_key.pem domain_key_${ADDR}.pem; \
+     mv ${ADDR}_cert.pem domain_cert_${ADDR}.pem ;;
 esac
