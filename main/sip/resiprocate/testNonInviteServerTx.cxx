@@ -1,11 +1,11 @@
-#include <sipstack/SipStack.hxx>
-#include <sipstack/Transport.hxx>
-#include <sipstack/Uri.hxx>
-#include <sipstack/Helper.hxx>
-#include <sipstack/UdpTransport.hxx>
+#include "sipstack/SipStack.hxx"
+#include "sipstack/Transport.hxx"
+#include "sipstack/Uri.hxx"
+#include "sipstack/Helper.hxx"
+#include "sipstack/UdpTransport.hxx"
 
-#include <util/Logger.hxx>
-#include <util/DataStream.hxx>
+#include "util/Logger.hxx"
+#include "util/DataStream.hxx"
 
 #include <sys/socket.h>
 #include <netinet/in.h>

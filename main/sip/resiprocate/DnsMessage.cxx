@@ -1,7 +1,7 @@
 
 
-#include <util/Data.hxx>
-#include <sipstack/DnsMessage.hxx>
+#include "util/Data.hxx"
+#include "sipstack/DnsMessage.hxx"
 
 using namespace Vocal2;
 

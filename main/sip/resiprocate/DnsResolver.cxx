@@ -8,14 +8,14 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#include <util/Socket.hxx>
-#include <util/Logger.hxx>
+#include "util/Socket.hxx"
+#include "util/Logger.hxx"
 
-#include <sipstack/DnsResolver.hxx>
-#include <sipstack/DnsMessage.hxx>
-#include <sipstack/Symbols.hxx>
-#include <sipstack/ParserCategories.hxx>
-#include <sipstack/SipStack.hxx>
+#include "sipstack/DnsResolver.hxx"
+#include "sipstack/DnsMessage.hxx"
+#include "sipstack/Symbols.hxx"
+#include "sipstack/ParserCategories.hxx"
+#include "sipstack/SipStack.hxx"
 
 
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::SIP

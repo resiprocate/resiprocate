@@ -1,6 +1,6 @@
-#include <util/Data.hxx>
-#include <sipstack/Headers.hxx>
-#include <sipstack/Symbols.hxx>
+#include "util/Data.hxx"
+#include "sipstack/Headers.hxx"
+#include "sipstack/Symbols.hxx"
 
 int strcasecmp(const char*, const char*);
 int strncasecmp(const char*, const char*, int len);

@@ -1,12 +1,13 @@
 #include <assert.h>
 #include <iostream>
 #include <sstream>
-#include <sipstack/HeaderFieldValue.hxx>
-#include <sipstack/HeaderTypes.hxx>
-#include <sipstack/ParserCategories.hxx>
 #include <string.h>
-#include <util/ParseBuffer.hxx>
-#include <sipstack/Uri.hxx>
+
+#include "sipstack/HeaderFieldValue.hxx"
+#include "sipstack/HeaderTypes.hxx"
+#include "sipstack/ParserCategories.hxx"
+#include "sipstack/Uri.hxx"
+#include "util/ParseBuffer.hxx"
 
 using namespace std;
 using namespace Vocal2;
@@ -14,37 +15,6 @@ using namespace Vocal2;
 int
 main(int arc, char** argv)
 {
-   {
-      Via via;
-      via.encode(cerr);
-      cerr << endl;
-
-      assert (via.param(p_branch).hasMagicCookie());
-      assert (via.param(p_branch).transactionId() == "1");
-      assert (via.param(p_branch).clientData().empty());
-
-      stringstream s;
-      via.encode(s);
-      assert(s.str() == "SIP/2.0/UDP ;branch=z9hG4bK-kcD23X-1-1");
-
-      via.param(p_branch).clientData() = "jason";
-      assert (via.param(p_branch).clientData() == "jason");
-      
-
-      via.param(p_branch).incrementCounter();
-      via.param(p_branch).incrementCounter();
-
-
-      stringstream s2;
-      via.encode(s2);
-      via.encode(cerr);
-      cerr << endl;
-
-      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-kcD23X-1-3-jason");
-   }
-
-   return 0;
-   
    {
       // test header hash
       for (int i = Headers::CSeq; i < Headers::UNKNOWN; i++)

@@ -53,7 +53,7 @@
 #define DIALOG_HXX
 
 #include <iostream>
-#include <sipstack/SipMessage.hxx>
+#include "sipstack/SipMessage.hxx"
 
 namespace Vocal2
 {

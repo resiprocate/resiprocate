@@ -1,7 +1,7 @@
 #ifndef ExistsParameter_hxx
 #define ExistsParameter_hxx
 
-#include <sipstack/Parameter.hxx>
+#include "sipstack/Parameter.hxx"
 #include <iostream>
 
 namespace Vocal2
