@@ -211,20 +211,46 @@ TcpTransport::processAllWrites( FdSet& fdset )
             servaddr.sin_family = AF_INET;
             servaddr.sin_port = htons( data->destination.port);
             servaddr.sin_addr =  data->destination.ipv4;
-            
+
+            makeSocketNonBlocking(sock);
             int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
-            if ( e == -1 ) 
+
+            if ((e == -1) && (errno != EINPROGRESS)) 
             {
                int err = errno;
                DebugLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
             }
             else
             {
-               // succeeded, add the connection
-               makeSocketNonBlocking(sock);
-               mConnectionMap.add( data->destination, sock);
-               conn = mConnectionMap.get(data->destination);
-               assert( conn );
+	       // !rk! Even though a TCP stack may get a TCP RST that
+	       // does not necessarily indicate an error condition.  It
+	       // may indicate a transient error and the OS will likely
+	       // retry rather than returning right away.  While this is
+	       // good, most timeout defaults will exceed SIP timeouts
+	       // which mean that another protocol (e.g. UDP) will never
+	       // be tried.  So wait for a while but give up pretty quickly.
+
+	       fd_set rset, wset;
+	       FD_ZERO(&rset);
+	       FD_ZERO(&wset);
+	       FD_SET(sock, &rset);
+	       wset = rset;
+	       struct timeval timeout;
+	       timeout.tv_sec = 16 * Timer::T1 / 1000; /* !rk! change? */
+	       timeout.tv_usec = 0;
+
+	       if (select(sock, &rset, &wset, NULL, &timeout) < 1)
+	       {
+                  DebugLog( << "Timeout on TCP connect to " <<  data->destination); 
+		  close(sock);
+	       }
+	       else
+	       {
+		  // succeeded, add the connection
+		  mConnectionMap.add( data->destination, sock);
+		  conn = mConnectionMap.get(data->destination);
+		  assert( conn );
+	       }
             }
          }
       }
