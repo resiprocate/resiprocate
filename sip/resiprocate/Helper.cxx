@@ -4,10 +4,12 @@
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/Preparse.hxx"
-
+#include "sip2/util/Logger.hxx"
 #include "sip2/util/Random.hxx"
 
 using namespace Vocal2;
+
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 const int Helper::tagSize = 4;
 
@@ -26,7 +28,7 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_Contacts).push_front(contact);
    request->header(h_CallId).value() = Helper::computeCallId();
-   request->header(h_ContentLength).value() = 0;
+   //request->header(h_ContentLength).value() = 0;
    
    Via via;
    request->header(h_Vias).push_front(via);
@@ -45,6 +47,8 @@ Helper::makeMessage(const Data& data, bool isExternal )
 
    size_t size = data.size();
    char *buffer = new char[size];
+
+   msg->addBuffer(buffer);
 
    memcpy(buffer,data.data(),size);
    
@@ -66,7 +70,7 @@ Helper::makeMessage(const Data& data, bool isExternal )
    {
        assert(used == discard);
        // no pp error
-       if (status ==  stHeadersComplete &&
+       if (status & stHeadersComplete) &&
            used < size)
       {
          // body is present .. add it up.
@@ -75,8 +79,8 @@ Helper::makeMessage(const Data& data, bool isExternal )
          // will be contiguous (of course).
          // it doesn't need a new buffer in UDP b/c there
          // will only be one datagram per buffer. (1:1 strict)
-         
-         msg->setBody(buffer+used,size-used);
+         DebugLog(<< "setting body");
+         msg->setContents(buffer+used,size-used);
       }
    }
    return msg;
@@ -100,7 +104,7 @@ Helper::makeRegister(const NameAddr& registrar,
    request->header(h_From) = aor;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
-   request->header(h_ContentLength).value() = 0;
+   //request->header(h_ContentLength).value() = 0;
 
    Via via;
    request->header(h_Vias).push_front(via);
@@ -125,7 +129,7 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
    response->header(h_CallId) = request.header(h_CallId);
    response->header(h_CSeq) = request.header(h_CSeq);
    response->header(h_Vias) = request.header(h_Vias);
-   response->header(h_ContentLength).value() = 0;
+   //response->header(h_ContentLength).value() = 0;
    
    if (request.exists(h_RecordRoutes))
    {
@@ -250,7 +254,7 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
    ack->header(h_CSeq) = request.header(h_CSeq);
    ack->header(h_CSeq).method() = ACK;
    ack->header(h_Routes) = request.header(h_Routes);
-   ack->header(h_ContentLength).value() = 0;
+   //ack->header(h_ContentLength).value() = 0;
    
    return ack;
 }

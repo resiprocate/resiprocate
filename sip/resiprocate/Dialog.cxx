@@ -292,7 +292,7 @@ Dialog::makeRequest(MethodTypes method)
    request->header(h_Contacts).push_front(mContact);
    request->header(h_CSeq).method() = method;
    request->header(h_MaxForwards).value() = 70;
-   request->header(h_ContentLength).value() = 0;
+   //request->header(h_ContentLength).value() = 0;
 
 
    Via via;
