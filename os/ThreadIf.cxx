@@ -102,6 +102,9 @@ ThreadIf::join()
          break;
       }
    }
+
+   // !kh!
+   CloseHandle(mThread);
 #else
    void* stat;
    int r = pthread_join( mId , &stat );
@@ -137,7 +140,7 @@ bool
 ThreadIf::waitForShutdown(int ms) const
 {
    Lock lock(mShutdownMutex);
-   mShutdownCondition.wait(&mShutdownMutex, ms);
+   mShutdownCondition.wait(mShutdownMutex, ms);
    return mShutdown;
 }
 
