@@ -16,13 +16,13 @@ class Registration
 {
    public: 
       // Register a binding from aor to default contact
-      Registration(const Uri& aor);
+      Registration(const Uri& aor, const Data& instance=Data::Empty);
 
       // Register a binding from aor to specified contact
-      Registration(const Uri& aor, const Uri& contact);
+      Registration(const Uri& aor, const Uri& contact, const Data& instance=Data::Empty);
 
       // Register a binding from aor to specified contact as third party from
-      Registration(const Uri& from, const Uri& aor, const Uri& contact);
+      Registration(const Uri& from, const Uri& aor, const Uri& contact, const Data& instance=Data::Empty);
 
       void setExpiration(int secs);
 
@@ -46,6 +46,7 @@ class Registration
       NameAddr mAor;
       NameAddr mContact;
       NameAddr mFrom;
+      Data mInstance;
       
       time_t mTimeTillExpiration;
       

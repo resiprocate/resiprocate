@@ -14,31 +14,45 @@
 
 using namespace resip;
 
-Registration::Registration(const Uri& aor)
+Registration::Registration(const Uri& aor, const Data& instance)
    : mAor(aor),
      mFrom(aor), 
+     mInstance(instance),
      mTimeTillExpiration(3600),
      mState(Initialized)
 {
+   if (!instance.empty())
+   {
+      mContact.param(p_Instance) = instance;
+   }
 }
 
-Registration::Registration(const Uri& aor, const Uri& contact)
+Registration::Registration(const Uri& aor, const Uri& contact, const Data& instance)
    : mAor(aor),
      mContact(contact),
      mFrom(aor),
+     mInstance(instance),
      mTimeTillExpiration(3600),
      mState(Initialized)
 {
+   if (!instance.empty())
+   {
+      mContact.param(p_Instance) = instance;
+   }
 }
 
-Registration::Registration(const Uri& from, const Uri& aor, const Uri& contact)
+Registration::Registration(const Uri& from, const Uri& aor, const Uri& contact, const Data& instance)
    : mAor(aor),
      mContact(contact),
      mFrom(from),
+     mInstance(instance),
      mTimeTillExpiration(3600),
      mState(Initialized)
 {
-   //mContact.param(p_Instance) = ;
+   if (!instance.empty())
+   {
+      mContact.param(p_Instance) = instance;
+   }
 }
 
 void
