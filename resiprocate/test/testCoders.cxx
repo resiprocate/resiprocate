@@ -1,10 +1,12 @@
-#include <iostream>
+#include <stdlib.h>
 #include <unistd.h>
-#include <string>
-#include <assert.h>
-
-#include "sip2/util/Coders.hxx"
+#include <cassert>
 #include <memory>
+
+#include "sip2/util/compat.hxx"
+#include "sip2/util/Coders.hxx"
+#include <iostream>
+
 
 using namespace std;
 using namespace Vocal2;

@@ -2,7 +2,6 @@
 
 #include "sip2/util/Data.hxx"
 #include "assert.h"
-#include <string>
 #include <iostream>
 
 using namespace Vocal2;

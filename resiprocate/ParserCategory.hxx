@@ -35,6 +35,7 @@ class ParserCategory : public LazyParser
 
       // !dlb! causes compiler error in windows -- change template to const T*
       Data& param(const UnknownParameterType& param) const;
+
       void remove(const UnknownParameterType& param); 
       bool exists(const UnknownParameterType& param) const;
 
@@ -44,7 +45,7 @@ class ParserCategory : public LazyParser
       typename T::DType& param(const T& paramType) const
       {
          checkParsed();
-         typename T::Type* p = dynamic_cast<typename T::Type*>(getParameterByEnum(paramType.getTypeNum()));
+         typename T::Type* p = static_cast<typename T::Type*>(getParameterByEnum(paramType.getTypeNum()));
          if (!p)
          {
             p = new typename T::Type(paramType.getTypeNum());

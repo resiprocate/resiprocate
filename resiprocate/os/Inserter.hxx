@@ -5,10 +5,7 @@
 #include <utility>
 #include <map>
 #include <set>
-
-#ifndef WIN32
-#include <ext/hash_map>
-#endif
+#include "HashMap.hxx"
 
 /**
    Allows a (possibly recursive) container of anything with operator<< to be
@@ -74,17 +71,11 @@ insert(std::ostream& s, const std::set <K, C>& c)
    return s;
 }
 
-#if ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
-#define HM __gnu_cxx::hash_map<K,V,H>
-#else
-#define HM std::hash_map<K,V,H>
-#endif
-
 
 // hash_map
 template <class K, class V, class H>
 std::ostream&
-insert(std::ostream& s, const HM& c)
+insert(std::ostream& s, const hash_map<K,V,H>& c)
 {
    s << "[";
    for (typename HM::const_iterator i = c.begin();

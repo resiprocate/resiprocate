@@ -144,7 +144,7 @@ TcpTransport::processListen(FdSet& fdset)
 bool
 TcpTransport::processRead(Connection* c)
 {
-   std::pair<char* const, size_t> writePair = c->getWriteBuffer();
+   std::pair<char*, size_t> writePair = c->getWriteBuffer();
    
    size_t bytesToRead = vocal2Min(writePair.second, TcpTransport::MaxReadSize);
 

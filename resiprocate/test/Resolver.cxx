@@ -154,11 +154,11 @@ Resolver::lookupARecords()
    {
 #else
 
-#if defined( WIN32 ) || defined( __MACH__ )
+#if defined( WIN32 ) || defined( __MACH__ ) || defined (__SUNPRO_CC)
 	assert(0); // !cj! 
 	int ret = -1;
 #else
-   int ret = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
+        int ret = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
 #endif
    assert (ret != ERANGE);
 

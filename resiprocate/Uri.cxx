@@ -19,7 +19,8 @@ Uri::Uri()
      mPort(0),
      mOldPort(0),
      mEmbeddedHeaders(0)
-{}
+{
+}
 
 Uri::Uri(const Data& data)
    : ParserCategory(), 
