@@ -608,10 +608,7 @@ DnsResult::processHost(int status, struct hostent* result)
 void
 DnsResult::primeResults()
 {
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
    StackLog(<< "Priming " << Inserter(mSRVResults));
-#endif
-
    //assert(mType != Pending);
    //assert(mType != Finished);
    assert(mResults.empty());
@@ -643,10 +640,7 @@ DnsResult::primeResults()
             StackLog (<< "Adding " << tuple << " to result set");
             mResults.push_back(tuple);
          }
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
          StackLog (<< "Try: " << Inserter(mResults));
-#endif
-
 
          bool changed = (mType == Pending);
          mType = Available;
@@ -725,18 +719,13 @@ DnsResult::retrieveSRV()
    if (i == mSRVResults.end())
    {
       InfoLog (<< "SRV Results problem selected=" << selected << " cum=" << mCumulativeWeight);
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
-      InfoLog (<< "SRV: " << Inserter(mSRVResults) ); // !cj! does not work in windows 
-#endif
    }
    assert(i != mSRVResults.end());
    SRV next = *i;
    mCumulativeWeight -= next.cumulativeWeight;
    mSRVResults.erase(i);
    
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
    StackLog (<< "SRV: " << Inserter(mSRVResults));
-#endif
 
    return next;
 }
@@ -1229,9 +1218,7 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::DnsResult& result)
 {
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
    strm << result.mTarget << " --> " << Inserter(result.mResults);
-#endif
    return strm;
 }
 
