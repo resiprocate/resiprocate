@@ -9,6 +9,7 @@
 #include "sip2/util/Fifo.hxx"
 #include "sip2/util/Data.hxx"
 #include "sip2/util/Logger.hxx"
+#include "sip2/util/Random.hxx"
 
 
 
@@ -26,7 +27,9 @@ SipStack::SipStack(bool multiThreaded)
     mTimers(mStateMacFifo),
     mDnsResolver(*this)
 {
-	  initNetwork();
+   Random::initialize();
+   initNetwork();
+
    //addTransport(Transport::UDP, 5060);
    //addTransport(Transport::TCP, 5060); // !jf!
 }

@@ -104,7 +104,7 @@ Transceiver::receive(int waitMs)
 
    UInt64 currentTime = Timer::getTimeMs();
    
-   while(waitMs > currentTime - startTime)
+   while( UInt64(waitMs) > currentTime - startTime)
    {
       int timeLeft = waitMs - (currentTime - startTime);
       if (!mReceived.messageAvailable())
