@@ -35,10 +35,16 @@ unsigned long
 resip::Timer::T100 = 80;
 
 unsigned long
+resip::Timer::TB = 64*T1;
+
+unsigned long
 resip::Timer::TD = 32000;
 
 unsigned long
 resip::Timer::TC = 3*60*1000;
+
+unsigned long
+resip::Timer::TF = 64*T1;
 
 unsigned long
 resip::Timer::TS = 32000;
