@@ -90,7 +90,7 @@ security-server, Headers::SecurityServer
 security-verify, Headers::SecurityVerify
 RSeq, Headers::RSeq
 RAck, Headers::RAck
-Session-Expires, Headers::SessionExpires
-Min-SE, Headers::MinSE
+session-expires, Headers::SessionExpires
+min-se, Headers::MinSE
 %%
 }
