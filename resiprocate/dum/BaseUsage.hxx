@@ -35,6 +35,8 @@ class BaseUsage
             typedef UInt64 Id;
          protected:
             Handle(DialogUsageManager& dum);
+
+	    bool isValid() const;
             // throws if not found
             BaseUsage* get();
          private:
