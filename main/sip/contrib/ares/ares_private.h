@@ -1,4 +1,4 @@
-/* $Id: ares_private.h,v 1.1 2003/06/05 00:30:36 ryker Exp $ */
+/* $Id: ares_private.h,v 1.2 2003/09/14 00:27:24 fluffy Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
@@ -15,9 +15,29 @@
  * without express or implied warranty.
  */
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <sys/types.h>
-#include <netinet/in.h>
+//#include <netinet/in.h>
+
+#ifdef WIN32
+#include <errno.h>
+#include <winsock2.h>
+#include <io.h>
+
+#include <string.h>
+#include <stdio.h>
+
+#endif
+
+#if 0
+struct hostent {
+	char* h_name;
+	char **h_aliases;
+	int h_addrtype;
+	int h_length;
+	char **h_addr_list;
+};
+#endif
 
 #define	DEFAULT_TIMEOUT		5
 #define DEFAULT_TRIES		4
@@ -40,6 +60,7 @@ struct send_request {
   /* Next request in queue */
   struct send_request *next;
 };
+
 
 struct server_state {
   struct in_addr addr;
@@ -121,3 +142,6 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now);
 void ares__close_sockets(struct server_state *server);
 int ares__get_hostent(FILE *fp, struct hostent **host);
 int ares__read_line(FILE *fp, char **buf, int *bufsize);
+
+#define strcasecmp(a,b) stricmp(a,b)
+#define strcasencmp(a,b,n) strnicmp(a,b,n)
