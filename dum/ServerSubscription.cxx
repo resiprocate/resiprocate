@@ -26,6 +26,21 @@ ServerSubscription::Handle::operator->()
    return static_cast<ServerSubscription*>(get());
 }
 
+void 
+ServerSubscription::end()
+{
+}
+
+void 
+ServerSubscription::dispatch(const SipMessage& msg)
+{
+}
+
+void
+ServerSubscription::dispatch(const DumTimeout& msg)
+{
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

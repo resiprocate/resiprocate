@@ -13,6 +13,21 @@ ServerPublication::~ServerPublication()
    mDialog.mServerPublication = 0;
 }
 
+void 
+ServerPublication::end()
+{
+}
+
+void 
+ServerPublication::dispatch(const SipMessage& msg)
+{
+}
+
+void
+ServerPublication::dispatch(const DumTimeout& msg)
+{
+}
+
 ServerPublication::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
 {}

@@ -8,3 +8,8 @@ OutOfDialogReqCreator::OutOfDialogReqCreator(DialogUsageManager& dum, MethodType
    makeInitialRequest(NameAddr(target), method);
 }
 
+void
+OutOfDialogReqCreator::dispatch(SipMessage& msg)
+{
+}
+
