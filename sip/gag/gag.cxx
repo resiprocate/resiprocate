@@ -41,6 +41,12 @@ main (int argc, char **argv)
 
   GagConduit conduit(sipStack, udpPort);
 
+  // Say hello to GAIM (eventually, we should
+  // make certain things work, and base the
+  // value of "ok" on this).
+  GagHelloMessage(true).serialize(cout);
+
+
   // Main processing loop
   int time;
   int err;
@@ -62,8 +68,7 @@ main (int argc, char **argv)
       error += "] ";
       error += strerror(errno);
 
-      GagErrorMessage errorMessage(error);
-      errorMessage.serialize(cout);
+      GagErrorMessage(error).serialize(cout);
     }
 
     if (fdset.readyToRead(fileno(stdin)))
