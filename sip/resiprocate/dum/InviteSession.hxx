@@ -51,7 +51,7 @@ class InviteSession : public BaseUsage
 
    public:
       virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer) = 0;
+      virtual void dispatch(const DumTimeout& timer);
 
       typedef Handle<InviteSession> InviteSessionHandle;
       InviteSessionHandle getSessionHandle();
@@ -115,7 +115,12 @@ class InviteSession : public BaseUsage
    private:
       friend class Dialog;      
       friend class DialogUsageManager;
-      
+
+      unsigned long mCurrentRetransmit200;      
+      static unsigned long T1;
+      static unsigned long T2;
+      static unsigned long TimerH;
+
       // disabled
       InviteSession(const InviteSession&);
       InviteSession& operator=(const InviteSession&);
