@@ -1,25 +1,25 @@
 digraph ClientInviteSession {
-	node [ fonstsize=8 fontname="Helvetica" ]
+	node [ fonstsize=8 fontname="VeraSans-Roman" ]
 	graph
 	[
 //		ranksep=1.5 // modify to shrink nodes etc
 //		nodesep=1.5
 		fontsize=8
-		fontname="Helvetica"
+		fontname="VeraSans-Roman"
 		labelfontsize=8
-		labelfontname="Helvetica"
+		labelfontname="VeraSans-Roman"
 	]
 
 	edge
 	[
-		fontname="Helvetica"	
+		fontname="VeraSans-Roman"	
 		fontsize=8
 		arrowhead=normal
 	]
 
 // Now setup labels and visual stuff.
 
-        fontname="Helvetica"
+        fontname="VeraSans-Roman"
 
         Start -> Proceeding
                 [ label="100/create timer" ]
