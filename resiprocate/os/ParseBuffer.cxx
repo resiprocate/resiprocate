@@ -352,6 +352,23 @@ ParseBuffer::skipToOneOf(const char* cs1,
 }
 
 const char* 
+ParseBuffer::skipToOneOf(const Data& cs)
+{
+   while (mPosition < mEnd)
+   {
+      if (oneOf(*mPosition, cs))
+      {
+         return mPosition;
+      }
+      else
+      {
+         mPosition++;
+      }
+   }
+   return mPosition;
+}
+
+const char* 
 ParseBuffer::skipToOneOf(const Data& cs1,
                          const Data& cs2)
 {
