@@ -1,11 +1,10 @@
 #if !defined(RESIP_HEADERS_HXX)
 #define RESIP_HEADERS_HXX 
 
-#include "resiprocate/supported.hxx"
+#include "resiprocate/HeaderTypes.hxx"
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/HeaderTypes.hxx"
 
 namespace resip
 {
