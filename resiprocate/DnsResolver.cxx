@@ -100,11 +100,11 @@ determineSrvPrefix(const Data& scheme, Transport::Type transport)
 
    if ( (transport == Transport::TLS) || (transport == Transport::TCP) )
    {
-      prefix += "." + Symbols::SrvTcp;
+      prefix += "." + Data(Symbols::SrvTcp);
    }
    else
    {
-      prefix += "." + Symbols::SrvUdp;
+      prefix += "." + Data(Symbols::SrvUdp);
    }
 
    return prefix;
