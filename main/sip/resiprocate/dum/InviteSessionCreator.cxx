@@ -10,11 +10,14 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
                                            ServerSubscriptionHandle serverSub)
    : BaseCreator(dum),
      mState(Initialized),
-     mInitialOffer(static_cast<SdpContents*>(initial->clone())),
      mServerSub(serverSub)
 {
    makeInitialRequest(target, from, INVITE);
-   getLastRequest().setContents(mInitialOffer);
+   if (initial)
+   {
+      mInitialOffer = static_cast<SdpContents*>(initial->clone());
+      getLastRequest().setContents(mInitialOffer);
+   }
 }
 
 InviteSessionCreator::~InviteSessionCreator()
