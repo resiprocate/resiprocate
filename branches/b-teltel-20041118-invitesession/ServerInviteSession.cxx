@@ -58,7 +58,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          SipMessage response;
          mDialog.makeResponse(mFirstRequest, response, code);
          response.header(h_Contacts) = contacts;
-         mDum.send(response);
+         mDialog.send(response);
 
          guard.destroy();
          break;
@@ -313,7 +313,7 @@ ServerInviteSession::reject(int code)
 
          SipMessage response;
          mDialog.makeResponse(mFirstRequest, response, code);
-         mDum.send(response);
+         mDialog.send(response);
          guard.destroy();
          break;
       }
@@ -370,14 +370,14 @@ ServerInviteSession::accept(int code)
       case UAS_EarlyReliable:
          transition(Connected);
          mDialog.makeResponse(mInvite200, mFirstRequest, code);
-         mDum.send(mInvite200);
+         mDialog.send(mInvite200);
          startRetransmitTimer(); // 2xx timer
          break;
 
       case UAS_SentUpdate:
          transition(UAS_SentUpdateAccepted);
          mDialog.makeResponse(mInvite200, mFirstRequest, code);
-         mDum.send(mInvite200);
+         mDialog.send(mInvite200);
          startRetransmitTimer(); // 2xx timer
          break;
 
@@ -467,7 +467,7 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
 {
    if (timeout.type() == DumTimeout::Retransmit1xx)
    {
-      mDum.send(m1xx);
+      mDialog.send(m1xx);
       if (mCurrentRetransmit1xx)
       {
          mCurrentRetransmit1xx *= 2;
@@ -554,7 +554,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       {
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
-         mDum.send(c200);
+         mDialog.send(c200);
          break;
       }
 
@@ -562,7 +562,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       {
          SipMessage b200;
          mDialog.makeResponse(b200, msg, 200);
-         mDum.send(b200);
+         mDialog.send(b200);
          break;
       }
          
@@ -571,7 +571,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          transition(Terminated);
          SipMessage bye;
          mDialog.makeRequest(bye, BYE);
-         mDum.send(bye);
+         mDialog.send(bye);
          break;
       }
       
@@ -605,7 +605,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
-         mDum.send(c200);
+         mDialog.send(c200);
          break;
       }
 
@@ -615,11 +615,11 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 
          SipMessage p200;
          mDialog.makeResponse(p200, msg, 200);
-         mDum.send(p200);
+         mDialog.send(p200);
          
          mDum.makeResponse(mInvite200, msg, 200);
          startRetransmitTimer(); // make 2xx timer
-         mDum.send(mInvite200);  
+         mDialog.send(mInvite200);  
          
          break;
       }
@@ -696,11 +696,11 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
 
    SipMessage c200;
    mDialog.makeResponse(c200, msg, 200);
-   mDum.send(c200);
+   mDialog.send(c200);
 
    SipMessage i487;
    mDialog.makeResponse(i487, msg, 487);
-   mDum.send(i487);
+   mDialog.send(i487);
 
    handler->onTerminated(getSessionHandle());
 }
@@ -713,11 +713,11 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
 
    SipMessage b200;
    mDialog.makeResponse(b200, msg, 200);
-   mDum.send(b200);
+   mDialog.send(b200);
 
    SipMessage i487;
    mDialog.makeResponse(i487, msg, 487);
-   mDum.send(i487);
+   mDialog.send(i487);
 
    handler->onTerminated(getSessionHandle());
 }
@@ -730,11 +730,11 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
 
    SipMessage r481; // !jf! what should we send here? 
    mDialog.makeResponse(r481, msg, 481);
-   mDum.send(r481);
+   mDialog.send(r481);
    
    SipMessage i400;
    mDialog.makeResponse(i400, msg, 400);
-   mDum.send(i400);
+   mDialog.send(i400);
 
    handler->onTerminated(getSessionHandle());
 }
@@ -780,7 +780,7 @@ ServerInviteSession::sendProvisional(int code)
       setSdp(m1xx, *mProposedLocalSdp);
    }
    // !jf! start 1xx timer
-   mDum.send(m1xx);
+   mDialog.send(m1xx);
 }
 
 void
@@ -793,7 +793,7 @@ ServerInviteSession::sendAccept(int code, std::auto_ptr<SdpContents> sdp)
    }
    // make timer::2xx
    // make timer::NoAck
-   mDum.send(mInvite200);
+   mDialog.send(mInvite200);
 }
 
 void
@@ -804,171 +804,13 @@ ServerInviteSession::sendUpdate(const SdpContents& sdp)
       SipMessage update;
       mDialog.makeRequest(update, UPDATE);
       InviteSession::setSdp(update, sdp);
-      mDum.send(update);
+      mDialog.send(update);
    }
    else
    {
       throw UsageUseException("Can't send UPDATE to peer", __FILE__, __LINE__);
    }
 }
-
-
-//////////////////////////////////////////
-// OLD code follows
-//////////////////////////////////////////
-#if 0
-void
-ServerInviteSession::end()
-{
-   InfoLog ( << "ServerInviteSession::end" );  
-   switch (mState)
-   {
-      case Terminated: 
-      case Connected:
-      case ReInviting:
-         InviteSession::end();
-         break;
-      default:
-         send(reject(410));
-   }
-}
-
-void 
-ServerInviteSession::send(SipMessage& msg)
-{
-   Destroyer::Guard guard(mDestroyer);
-   if (mState == Connected || mState == Terminated || mState == ReInviting)
-   {
-      InviteSession::send(msg);
-      return;
-   }
-
-   //!dcm! -- not considering prack, so offer/answer only happens in 2xx
-   if(msg.isResponse())
-   {
-      int code = msg.header(h_StatusLine).statusCode();
-      if (code < 200)
-      {
-         mDum.send(msg);
-         msg.releaseContents();  //!dcm! -- maybe?         
-      }
-      else if (code < 300)
-      {
-         mState = Connected;         
-         if (msg.header(h_CSeq).method() == INVITE)
-         {
-            InviteSession::send(msg);
-            if (mOfferState == Answered)
-            {
-               mUserConnected = true;            
-               mDum.mInviteSessionHandler->onConnected(getSessionHandle(), msg);
-            }
-         }
-         else
-         {
-            mDum.send(msg);
-         }
-      }
-      else 
-      {
-         mDum.send(msg);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      
-         guard.destroy();
-      }
-   }
-   else
-   {
-      //!dcm!-- accepting logic is in InviteSession(merge w/ reinvite),
-      //so no requests should be legal, which makes this user error? UPDATE eventually?
-      throw UsageUseException("No request legal in this context.", __FILE__, __LINE__);
-   }
-}
-
-SipMessage& 
-ServerInviteSession::provisional(int statusCode)
-{
-   mDialog.makeResponse(mLastResponse, mLastIncomingRequest, statusCode);
-   return mLastResponse;
-}
-
-SipMessage& 
-ServerInviteSession::reject(int statusCode)
-{
-   mDialog.makeResponse(mLastResponse, mLastIncomingRequest, statusCode);
-   return mLastResponse;
-}
-
-SipMessage& 
-ServerInviteSession::accept()
-{
-   return makeFinalResponse(200);
-}
-
-void 
-ServerInviteSession::dispatch(const SipMessage& msg)
-{
-   Destroyer::Guard guard(mDestroyer);
-   std::pair<OfferAnswerType, const SdpContents*> offans;
-   offans = InviteSession::getOfferOrAnswer(msg);
-   if (msg.isRequest())
-   {
-      switch(mState)
-      {
-         case Initial:
-            mLastIncomingRequest.releaseContents();  //!dcm! -- not sure, but seems right
-            assert(msg.header(h_RequestLine).method() == INVITE);
-            mState = Proceeding;
-            mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
-            if (guard.destroyed())
-            {
-               return;
-            }
-
-            if (offans.first == Offer)
-            {
-               InviteSession::incomingSdp(msg, offans.second);
-            }
-            else
-            {
-               mDum.mInviteSessionHandler->onOfferRequired(getSessionHandle(), msg);
-            }
-            break;            
-         case Proceeding:
-            // !jf! consider UPDATE method
-            if (msg.header(h_RequestLine).method() == CANCEL)
-            {
-               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);               
-               mDialog.makeResponse(mLastResponse, msg, 200);
-               mDum.send(mLastResponse);
-               mDialog.makeResponse(mLastResponse, mLastIncomingRequest, 487);         
-               mDum.send(mLastResponse);
-               guard.destroy();
-            }
-            // RFC3261 - section 15 indicates callers UA can send a BYE on early dialogs
-            else if (msg.header(h_RequestLine).method() == BYE)  
-            {
-               mState = Terminated;
-               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
-               mDialog.makeResponse(mLastResponse, msg, 200);
-               send(mLastResponse);
-               break;
-            }
-            else
-            {
-               assert(0);  //!dcm! -- throw, toss away, inform other endpoint?
-            }
-            break;
-      default:
-         InviteSession::dispatch(msg);
-      }
-   }
-   else
-   {
-      InviteSession::dispatch(msg);
-   }
-}
-#endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
