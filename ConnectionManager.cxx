@@ -125,9 +125,9 @@ ConnectionManager::removeFromWritable()
 void
 ConnectionManager::addConnection(Connection* connection)
 {
-   connection->mWho.connectionId = connection->mSocket; //++mConnectionIdGenerator;
+   connection->mWho.connectionId = ++mConnectionIdGenerator;
    DebugLog (<< "ConnectionManager::addConnection() " << connection->mWho.connectionId);
-
+   
    mAddrMap[connection->mWho] = connection;
    mIdMap[connection->mWho.connectionId] = connection;
    mReadSet.push_back(connection);
