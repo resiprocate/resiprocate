@@ -1,3 +1,5 @@
+
+#include "util/Socket.hxx"
 #include "sipstack/Resolver.hxx"
 #include "sipstack/SipMessage.hxx"
 #include "sipstack/SipStack.hxx"
@@ -14,8 +16,12 @@
 
 
 #include <sys/types.h>
+
+#ifndef WIN32
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#endif
+
 
 using namespace Vocal2;
 

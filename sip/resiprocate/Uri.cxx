@@ -126,14 +126,25 @@ Uri::operator==(const Uri& other) const
    ParameterList unA = mUnknownParameters;
    ParameterList unB = other.mUnknownParameters;
 
-   OrderUnknownParameters orderUnknown;
+#ifdef WIN32
+     OrderUnknownParameters orderUnknown;
+
+    unA.sort();
+   unB.sort();
    
-   unA.sort(orderUnknown);
+   ParameterList::iterator a = unA.begin();
+   ParameterList::iterator b = unB.begin();
+#else
+   OrderUnknownParameters orderUnknown;
+   assert(0); // !cj! You need to initialize the orderUnkonwn valuriabe above this line
+
+   unA.sort(orderUnknown); // !cj! this line crashes the microsfot compiler. 
    unB.sort(orderUnknown);
    
    ParameterList::iterator a = unA.begin();
    ParameterList::iterator b = unB.begin();
-   
+#endif
+
    while(a != unA.end() && b != unB.end())
    {
       if (orderUnknown(*a, *b))
