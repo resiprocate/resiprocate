@@ -71,7 +71,7 @@ readIntoData(const Data& filename)
   ifstream is;
   is.open(filename.c_str(), ios::binary );
   assert(is.is_open());
-  
+
   // get length of file:
   is.seekg (0, ios::end);
   int length = is.tellg();
@@ -108,7 +108,7 @@ Security::preload()
    for (FileSystem::Directory::iterator it = dir.begin(); it != dir.end(); ++it)
    {
       if (it->postfix(pem))
-      {         
+      {
          if (it->prefix(userCert))
          {
             addUserCertPEM(getAor(*it, userCert), readIntoData(*it));
@@ -133,7 +133,7 @@ Security::preload()
    }
 }
 
-void 
+void
 Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 {
    Data filename = mPath + pemTypePrefixes[type] + name + pem;
@@ -146,12 +146,12 @@ void
 Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
 {
    Data filename = mPath + pemTypePrefixes[type] + name + pem;
-   
+
    ofstream str(filename.c_str(), ios::binary);
    str.write(buffer.data(), buffer.size());
 }
-      
-void 
+
+void
 Security::onRemovePEM(const Data& name, PEMType type) const
 {
 }
@@ -520,6 +520,64 @@ BaseSecurity::getCertDER (PEMType type, const Data& key, bool read) const
 
 
 
+void
+BaseSecurity::addPrivateKeyDER(
+   PEMType type,
+   const Data& key,
+   const Data& privateKeyDER,
+   bool write)
+{
+   assert( !key.empty() );
+   assert( !privateKeyDER.empty() );
+
+   PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
+
+   PrivateKeyMap::iterator where = privateKeys.find(key);
+   if (where == privateKeys.end())
+   {
+      if (write)
+      {
+         onWritePEM(key, type, privateKeyDER);
+      }
+      BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyDER.c_str()), -1);
+
+      if ( !in )
+      {
+         ErrLog(<< "Could create BIO buffer from '" << privateKeyDER << "'");
+         throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
+      }
+
+      try
+      {
+         char* p = 0;
+         if (type != DomainPrivateKey)
+         {
+            PassPhraseMap::const_iterator iter = mUserPassPhrases.find(key);
+            if(iter != mUserPassPhrases.end())
+            {
+               p = const_cast<char*>(iter->second.c_str());
+            }
+         }
+
+         BIO_set_close(in, BIO_NOCLOSE);
+
+         EVP_PKEY* privateKey;
+         if (d2i_PKCS8PrivateKey_bio(in, &privateKey, 0, p) == 0)
+         {
+            ErrLog(<< "Could not read private key from '" << privateKeyDER << "' using pass phrase '" << p << "'" );
+            throw Exception("Could not read private key ", __FILE__,__LINE__);
+         }
+
+         privateKeys.insert(std::make_pair(key, privateKey));
+      }
+      catch(...)
+      {
+         BIO_free(in);
+         throw;
+      }
+      BIO_free(in);
+   }
+}
 
 void
 BaseSecurity::addPrivateKeyPEM(
@@ -933,6 +991,11 @@ BaseSecurity::addUserPrivateKeyPEM(const Data& aor, const Data& cert)
 {
    addPrivateKeyPEM(UserPrivateKey, aor, cert, true);
 }
+void
+BaseSecurity::addUserPrivateKeyDER(const Data& aor, const Data& cert)
+{
+   addPrivateKeyDER(UserPrivateKey, aor, cert, true);
+}
 bool
 BaseSecurity::hasUserPrivateKey(const Data& aor) const
 {
@@ -1300,11 +1363,11 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    return ret;
 }
 
-void 
+void
 BaseSecurity::checkAndSetIdentity( const SipMessage& msg ) const
 {
    auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
-   
+
    try
    {
       if (checkIdentity(msg.header(h_From).uri().host(),
