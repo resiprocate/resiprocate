@@ -318,7 +318,7 @@ Qop_Options_Param::DType&
 Auth::param(const Qop_Options_Param& paramType) const
 {
    checkParsed();
-   Qop_Options_Param::Type* p = dynamic_cast<Qop_Options_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   Qop_Options_Param::Type* p = static_cast<Qop_Options_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
    if (!p)
    {
       p = new Qop_Options_Param::Type(paramType.getTypeNum());
@@ -431,7 +431,7 @@ DateCategory::operator=(const DateCategory& rhs)
 
 /* ANSI-C code produced by gperf version 2.7.2 */
 /* Command-line: gperf -L ANSI-C -t -k '*' dayofweek.gperf  */
-struct days { char *name; DayOfWeek day; };
+struct days { char name[32]; DayOfWeek day; };
 
 #ifdef __GNUC__
 __inline
@@ -572,7 +572,7 @@ DateCategory::DayOfWeekFromData(const Data& dow)
 
 /* ANSI-C code produced by gperf version 2.7.2 */
 /* Command-line: gperf -L ANSI-C -t -k '*' month.gperf  */
-struct months { char *name; Month type; };
+struct months { char name[32]; Month type; };
 
 /* maximum key range = 31, duplicates = 0 */
 

@@ -100,10 +100,10 @@ Qop_Factory_Param Vocal2::p_qopFactory;
 #include "sip2/sipstack/ParameterHash.hxx"
 
 ParameterTypes::Type
-ParameterTypes::getType(const char* name, unsigned int len)
+ParameterTypes::getType(const char* pname, unsigned int len)
 {
    struct params* p;
-   p = ParameterHash::in_word_set(name, len);
+   p = ParameterHash::in_word_set(pname, len);
    return p ? p->type : ParameterTypes::UNKNOWN;
    
 }
