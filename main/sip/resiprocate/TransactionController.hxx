@@ -24,6 +24,7 @@ class TransactionController
 
       TransactionController(bool multithreaded, 
                             TimeLimitFifo<Message>& tufifo, 
+                            StatisticsManager& stats,
                             bool stateless=false);
       ~TransactionController();
 
@@ -56,10 +57,6 @@ class TransactionController
       
       void send(SipMessage* msg);
 
-      // makes the message available to the TU later
-      void post(const ApplicationMessage& message);
-      void post(const ApplicationMessage& message, unsigned int milliseconds);
-
       // Inform the TU that whenever a transaction has been terminated. 
       void registerForTransactionTermination();
 
@@ -69,7 +66,7 @@ class TransactionController
       unsigned int getNumClientTransactions() const;
       unsigned int getNumServerTransactions() const;
       unsigned int getTimerQueueSize() const;
-      void setStatisticsInterval(unsigned long seconds) const;
+      //void setStatisticsInterval(unsigned long seconds) const;
 
    private:
       TransactionController(const TransactionController& rhs);
@@ -115,8 +112,7 @@ class TransactionController
       unsigned long StatelessIdCounter;
       bool mShuttingDown;
       
-      StatisticsManager* mStatsManager;
-      StatisticsManager& getStatisticsManager() const;
+      StatisticsManager& mStatsManager;
 
       friend class SipStack; // for debug only
       friend class StatelessHandler;
