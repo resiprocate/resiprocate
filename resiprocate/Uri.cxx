@@ -193,23 +193,7 @@ class OrderUnknownParameters
 
       bool operator()(const Parameter* p1, const Parameter* p2) const
       {
-         const UnknownParameter* u1 = dynamic_cast<const UnknownParameter*>(p1);
-         const UnknownParameter* u2 = dynamic_cast<const UnknownParameter*>(p2);
-
-         if (u1->getName() < 
-             u2->getName())
-         {
-            return true;
-         }
-
-         if (u1->getName() > 
-             u2->getName())
-         {
-            return false;
-         }
-
-         // deal with same parameter appearing more than once
-         return u1->value() < u2->value();
+         return dynamic_cast<const UnknownParameter*>(p1)->getName() < dynamic_cast<const UnknownParameter*>(p2)->getName();
       }
 
    private:
@@ -262,9 +246,6 @@ Uri::operator==(const Uri& other) const
        mPassword == other.mPassword &&
        mPort == other.mPort)
    {
-      // !dlb! doesn't work for repeated known parameters
-      // fixable with (inst =) interface, but painful
-      // might be easier to sort?
       for (ParameterList::iterator it = mParameters.begin(); it != mParameters.end(); ++it)
       {
          Parameter* otherParam = other.getParameterByEnum((*it)->getType());
@@ -453,23 +434,18 @@ Uri::operator==(const Uri& other) const
 
    while(a != unA.end() && b != unB.end())
    {
-      const UnknownParameter* u1 = dynamic_cast<const UnknownParameter*>(*a);
-      const UnknownParameter* u2 = dynamic_cast<const UnknownParameter*>(*b);
-
-      if (u1->getName() < 
-          u2->getName())
+      if (orderUnknown(*a, *b))
       {
          ++a;
       }
-      else if (u1->getName() >
-               u2->getName())
+      else if (orderUnknown(*b, *a))
       {
          ++b;
       }
       else
       {
-         if (!isEqualNoCase(u1->value(),
-                            u2->value()))
+         if (!isEqualNoCase(dynamic_cast<UnknownParameter*>(*a)->value(),
+                            dynamic_cast<UnknownParameter*>(*b)->value()))
          {
             return false;
          }
