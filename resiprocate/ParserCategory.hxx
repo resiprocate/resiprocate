@@ -70,7 +70,9 @@ class ParserCategory : public LazyParser
       Digest_Qop_Param::DType& param(const Digest_Qop_Param& paramType) const;
       Digest_Verify_Param::DType& param(const Digest_Verify_Param& paramType) const;
 #endif
-//    Data& param(const UnknownParameterType& param) const;
+#ifndef WIN32
+      Data& param(const UnknownParameterType& param) const;
+#endif
       void remove(const UnknownParameterType& param); 
       bool exists(const UnknownParameterType& param) const;
       
