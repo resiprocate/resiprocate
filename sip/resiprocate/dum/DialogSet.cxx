@@ -1,20 +1,21 @@
+
+#include "resiprocate/Helper.hxx"
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/BaseCreator.hxx"
 #include "resiprocate/dum/ClientAuthManager.hxx"
+#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
+#include "resiprocate/dum/ClientPublication.hxx"
+#include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
-#include "resiprocate/dum/ClientRegistration.hxx"
-#include "resiprocate/dum/ServerOutOfDialogReq.hxx"
-#include "resiprocate/dum/ServerRegistration.hxx"
-#include "resiprocate/dum/ClientPublication.hxx"
-#include "resiprocate/dum/ServerPublication.hxx"
 #include "resiprocate/dum/Profile.hxx"
-#include "resiprocate/Helper.hxx"
-
+#include "resiprocate/dum/RedirectManager.hxx"
+#include "resiprocate/dum/ServerOutOfDialogReq.hxx"
+#include "resiprocate/dum/ServerPublication.hxx"
+#include "resiprocate/dum/ServerRegistration.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -45,7 +46,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
 DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) : 
    mMergeKey(request),
    mDialogs(),
-   mCreator(NULL),
+   mCreator(0),
    mId(request),
    mDum(dum),
    mAppDialogSet(0),
@@ -182,20 +183,60 @@ DialogSet::dispatch(const SipMessage& msg)
 {
    assert(msg.isRequest() || msg.isResponse());
 
-   if (msg.isResponse() && mDum.mClientAuthManager && !mCancelled)
+   if (msg.isResponse() && !mCancelled)
    {
       //!dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
           msg.header(h_CSeq).method() == getCreator()->getLastRequest().header(h_RequestLine).method())
       {
-         if (mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg))
+         if (mDum.mClientAuthManager)
          {
-            InfoLog( << "about to re-send request with digest credentials" );
-            DebugLog( << getCreator()->getLastRequest() );
-            
-            mDum.send(getCreator()->getLastRequest());
-            return;                     
-         }                  
+            if (mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg))
+            {
+               InfoLog( << "about to re-send request with digest credentials" );
+               DebugLog( << getCreator()->getLastRequest() );
+               
+               mDum.send(getCreator()->getLastRequest());
+               return;                     
+            }
+         }
+         //!dcm! -- need to protect against 3xx highjacking a dialogset which
+         //has a fully established dialog. also could case strange behaviour
+         //by sending 401/407 at the wrong time.
+         if (mDum.mRedirectManager)
+         {
+            if (mDum.mRedirectManager->handle(*this, getCreator()->getLastRequest(), msg))
+            {
+               //terminating existing dialogs(branches) as this is a final
+               //response--?dcm?--merge w/ forking logic somehow?                              
+               DialogMap::iterator last = mDialogs.end();
+               last--;   
+               //!dcm! -- really, really horrible.  Should make a don't die
+               //scoped guard
+               mDestroying = true;               
+               for (DialogMap::iterator it = mDialogs.begin(); it != last;)
+               {
+                  //cancel could invalidate it
+                  Dialog* d = it->second;
+                  it++;
+                  d->redirected(msg);         
+               }
+               mDestroying = false;
+               
+               if (!mDialogs.empty())
+               {
+                  //a dialog is refusing this 3xx(only implemented for INVITE,
+                  //Subscibe dialogs always refuse as they don't have an early state)
+                  return; //(toss 3xx)                  
+               }
+
+               InfoLog( << "about to re-send request with digest credentials" );
+               DebugLog( << getCreator()->getLastRequest() );
+               
+               mDum.send(getCreator()->getLastRequest());
+               return;                     
+            }
+         }
       }
    }
 
@@ -218,6 +259,8 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             else // no to tag - unsolicited notify
             {
+               // unsolicited - not allowed but commonly implemented
+               // by large companies with a bridge as their logo
                assert(mServerOutOfDialogRequest == 0);
                mServerOutOfDialogRequest = makeServerOutOfDialog(request);
                mServerOutOfDialogRequest->dispatch(request);
@@ -289,8 +332,6 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             mClientRegistration->dispatch(response);
             return;
-            // unsolicited - not allowed but commonly implemented
-            // by large companies with a bridge as their logo
          case NOTIFY: 
             break;            
          case INFO:   

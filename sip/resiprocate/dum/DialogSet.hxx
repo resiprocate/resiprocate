@@ -51,6 +51,7 @@ class DialogSet
       friend class ServerOutOfDialogReq;
       friend class ClientPublication;
       friend class ServerPublication;
+      friend class RedirectManager;      
       
       void possiblyDie();
 
