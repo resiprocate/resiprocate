@@ -8,13 +8,20 @@
 namespace Vocal2
 {
 
+class ParseBuffer;
+
 class IntegerParameter : public Parameter
 {
    public:
       typedef int Type;
       
-      IntegerParameter(ParameterTypes::Type, const char* startData, unsigned int dataSize);
+      IntegerParameter(ParameterTypes::Type, ParseBuffer& pb);
       IntegerParameter(ParameterTypes::Type type, int value);
+      
+      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb)
+      {
+         return new IntegerParameter(type, pb);
+      }
 
       int& value();
       virtual std::ostream& encode(std::ostream& stream) const;

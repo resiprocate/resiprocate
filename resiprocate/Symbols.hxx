@@ -13,6 +13,9 @@ class Symbols
       static const char * const COLON;
       static const char * const COMMA_OR_EQUAL;
       static const char * const CRLF;
+      static const char * const CR;
+      static const char * const LF;
+      static const char * const TAB;
       static const char * const DOUBLE_QUOTE;
       static const char * const EQUALS;
       static const char * const SEMI_COLON;
