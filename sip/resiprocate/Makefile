@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2002/09/21 01:13:24 fluffy Exp $
+# $Id: Makefile,v 1.5 2002/09/21 05:08:43 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -6,10 +6,12 @@ ARCH = i686
 PROG = sipstack
 
 SRC = \
-	Parameter.cxx \
-	ParameterList.cxx \
-	StringParameter.cxx \
-	UnknownParameter.cxx 
+	SubComponent.cxx \
+	SubComponentList.cxx \
+	StringSubComponent.cxx \
+	IntSubComponent.cxx \
+	FloatSubComponent.cxx \
+	UnknownSubComponent.cxx 
 
 OSRC =   *.hxx Makefile
 
@@ -108,7 +110,7 @@ $(BIN)/libSipStack.a: $(OBJS)
 
 
 
-testParameterList:  $(OBJS) $(OBJ)/testParameterList.o
+testSubComponentList:  $(OBJS) $(OBJ)/testSubComponentList.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 

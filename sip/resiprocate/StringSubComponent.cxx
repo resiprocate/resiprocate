@@ -4,27 +4,23 @@ using namespace Vocal2;
 using namespace std;
 
 
-StringSubComponent::StringSubComponent(ParamType type,
-                                 const char* startData, uint dataSize)
+StringSubComponent::StringSubComponent(Type type,
+                                 const char* startData, unsigned int dataSize)
    : SubComponent(type), 
      mData(startData, dataSize)
-{
-}
+{}
 
 
-StringSubComponent::StringSubComponent(ParamType type, const string& data)
+StringSubComponent::StringSubComponent(Type type, const string& data)
    : SubComponent(type), 
      mData(data)
-{
-}
-
+{}
 
 string& 
-StringSubComponent::getData()
+StringSubComponent::value()
 {
    return mData;
 }
-
 
 SubComponent* 
 StringSubComponent::clone() const
@@ -32,3 +28,7 @@ StringSubComponent::clone() const
    return new StringSubComponent(*this);
 }
 
+ostream& operator<<(ostream& stream, StringSubComponent& comp)
+{
+   return stream << comp.getName() << "=" << comp.value();
+}
