@@ -117,7 +117,7 @@ main(int argc, char** argv)
    proxy.addDomain(DnsUtil::getLocalIpAddress(), 5060);
 #endif
 
- for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
+   for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
         i != args.mDomains.end(); ++i)
    {
       //InfoLog (<< "Adding domain " << i->host() << " " << i->port());
@@ -125,7 +125,7 @@ main(int argc, char** argv)
    }
 
    
-   WebAdmin admin(userDb,regData);
+   WebAdmin admin(userDb, regData, security);
    WebAdminThread adminThread(admin);
 
    profile.clearSupportedMethods();

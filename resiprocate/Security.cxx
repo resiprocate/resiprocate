@@ -589,10 +589,11 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       assert(0);
    }
 
-   assert(0); // the code following this has no hope of working 
+   //assert(0); // the code following this has no hope of working 
    
    X509* x = where->second;
-   int len = i2d_X509(x, NULL);
+   unsigned char* buffer=0;
+   int len = i2d_X509(x, &buffer);
 
    // !kh!
    // Although len == 0 is not an error, I am not sure what quite to do.
@@ -603,8 +604,7 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       ErrLog(<< "Could encode certificate of '" << key << "' to DER form");
       throw BaseSecurity::Exception("Could encode certificate to DER form", __FILE__,__LINE__);
    }
-   char*    out = new char[len];
-  return   Data(Data::Take, out, len);
+   return   Data(Data::Take, (char*)buffer, len);
 }
 
 
