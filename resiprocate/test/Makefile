@@ -20,6 +20,7 @@ endif
 TESTPROGRAMS += testPidf.cxx \
 		testPksc7.cxx \
 		limpc.cxx \
+		testCorruption.cxx \
 		testMem.cxx \
 		testRlmi.cxx \
 		testMultipartRelated.cxx \
