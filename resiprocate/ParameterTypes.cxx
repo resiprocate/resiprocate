@@ -106,6 +106,8 @@ defineParam(document, "document", DataParameter, "draft-ietf-sipping-config-fram
 defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework");
 defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework");
 
+defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05");
+
 // SPECIAL-CASE
 ParameterTypes::Type
 Qop_Options_Param::getTypeNum() const {return ParameterTypes::qopOptions;}

@@ -153,6 +153,7 @@ class SipMessage : public TransactionMessage
       defineHeader(CallID);
       defineHeader(AuthenticationInfo);
       defineHeader(ContentDisposition);
+      defineHeader(ContentId);
       defineHeader(ContentTransferEncoding);
       defineHeader(ContentEncoding);
       defineHeader(ContentLength);
