@@ -16,13 +16,13 @@ SipStack::SipStack(bool multiThreaded)
     mTransportSelector(*this),
     mTimers(mStateMacFifo)
 {
-
 }
 
 void 
 SipStack::send(const SipMessage& msg)
 {
    SipMessage* toSend = new SipMessage(msg);
+   toSend->setFromTU();
    mStateMacFifo.add(toSend);
 }
 
