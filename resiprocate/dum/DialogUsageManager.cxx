@@ -370,27 +370,28 @@ DialogUsageManager::makePublication(const Uri& targetDocument,
 void
 DialogUsageManager::send(SipMessage& msg)
 {
-   InfoLog (<< "SEND: " << msg.brief());
+   InfoLog (<< "SEND: " << msg);
    if (msg.isRequest()) //!dcm! -- invariant?
    {
       if (msg.header(h_RequestLine).method() != CANCEL &&
-          msg.header(h_RequestLine).method() != ACK && 
+//          msg.header(h_RequestLine).method() != ACK && 
           msg.exists(h_Vias))
       {
          msg.header(h_Vias).front().param(p_branch).reset();
       }
 
-      //will have no affect unless a strict route is sent
-      Helper::processStrictRoute(msg);
-      
-      if (getProfile()->hasOutboundProxy())
+      //copy message if processStrictRoute will modify it
+      if (msg.exists(h_Routes) && 
+          !msg.header(h_Routes).empty() &&
+          !msg.header(h_Routes).front().exists(p_lr))
       {
-         DebugLog ( << "Using outbound proxy");
-         mStack.sendTo(msg, getProfile()->getOutboundProxy().uri());         
+         SipMessage copyOfMessage(msg);
+         Helper::processStrictRoute(copyOfMessage);
+         sendUsingOutboundIfAppropriate(copyOfMessage);          
       }
       else
       {
-         mStack.send(msg);
+         sendUsingOutboundIfAppropriate(msg);          
       }
    }   
    else
@@ -398,6 +399,21 @@ DialogUsageManager::send(SipMessage& msg)
       sendResponse(msg);
    }   
 }
+
+void 
+DialogUsageManager::sendUsingOutboundIfAppropriate(SipMessage& msg)
+{
+   if (getProfile()->hasOutboundProxy())
+   {
+      DebugLog ( << "Using outbound proxy");
+      mStack.sendTo(msg, getProfile()->getOutboundProxy().uri());         
+   }
+   else
+   {
+      mStack.send(msg);
+   }
+}
+
 
 void
 DialogUsageManager::cancel(DialogSetId setid)
