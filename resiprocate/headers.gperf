@@ -1,51 +1,61 @@
 struct headers { char *name; Headers::Type type; };
 %%
+i, Headers::Headers::CallId
+m, Headers::Contact
+e, Headers::ContentEncoding
+l, Headers::ContentLength
+o, Headers::ContentType
+f, Headers::From
+s, Headers::Subject
+t, Headers::To
+v, Headers::Via
 cseq, Headers::CSeq
-call-id, Headers::Call_ID
+call-id, Headers::CallID
 contact, Headers::Contact
-content-length, Headers::Content_Length
+content-length, Headers::ContentLength
 expires, Headers::Expires
 from, Headers::From
-max-forwards, Headers::Max_Forwards
+max-forwards, Headers::MaxForwards
 route, Headers::Route
 subject, Headers::Subject
 to, Headers::To
 via, Headers::Via
 accept, Headers::Accept
-accept-encoding, Headers::Accept_Encoding
-accept-language, Headers::Accept_Language
-alert-info,Headers::Alert_Info
+accept-encoding, Headers::AcceptEncoding
+accept-language, Headers::AcceptLanguage
+alert-info,Headers::AlertInfo
 allow, Headers::Allow
-authentication-info, Headers::Authentication_Info
-call-info, Headers::Call_Info
-content-disposition, Headers::Content_Disposition
-content-encoding, Headers::Content_Encoding
-content-language, Headers::Content_Language
-content-type, Headers::Content_Type
+authentication-info, Headers::AuthenticationInfo
+call-info, Headers::CallInfo
+content-disposition, Headers::ContentDisposition
+content-encoding, Headers::ContentEncoding
+content-language, Headers::ContentLanguage
+content-type, Headers::ContentType
+content-transfer-encoding, Headers::ContentTransferEncoding
 date, Headers::Date
-error-info, Headers::Error_Info
-in-reply-to, Headers::In_Reply_To
-min-expires, Headers::Min_Expires
-mime-version, Headers::MIME_Version
+error-info, Headers::ErrorInfo
+in-reply-to, Headers::InReplyTo
+min-expires, Headers::MinExpires
+mime-version, Headers::MIMEVersion
 organization, Headers::Organization
 priority, Headers::Priority
-proxy-authenticate, Headers::Proxy_Authenticate
-proxy-authorization, Headers::Proxy_Authorization
-proxy-require, Headers::Proxy_Require
-record-route, Headers::Record_Route
-reply-to, Headers::Reply_To
+proxy-authenticate, Headers::ProxyAuthenticate
+proxy-authorization, Headers::ProxyAuthorization
+proxy-require, Headers::ProxyRequire
+record-route, Headers::RecordRoute
+reply-to, Headers::ReplyTo
 require, Headers::Require
-retry-after, Headers::Retry_After
+retry-after, Headers::RetryAfter
 server, Headers::Server
 supported, Headers::Supported
 timestamp, Headers::Timestamp
 unsupported, Headers::Unsupported
-user-agent, Headers::User_Agent
+user-agent, Headers::UserAgent
 warning, Headers::Warning
-www-authenticate,Headers::WWW_Authenticate
-subscription-state,Headers::Subscription_State
+www-authenticate,Headers::WWWAuthenticate
+subscription-state,Headers::SubscriptionState
 authorization, Headers::Authorization
-allow-events, Headers::Allow_Events
+allow-events, Headers::AllowEvents
 encryption, Headers::UNKNOWN
 event, Headers::Event
 hide, Headers::UNKNOWN
@@ -56,11 +66,11 @@ path, Headers::UNKNOWN
 privacy, Headers::UNKNOWN
 rack, Headers::UNKNOWN
 reason, Headers::UNKNOWN
-refer-to,Headers::Refer_To
-referred-by,Headers::Referred_By
+refer-to,Headers::ReferTo
+referred-by,Headers::ReferredBy
 replaces,Headers::Replaces
 response-key, Headers::UNKNOWN
 rseq, Headers::UNKNOWN
-security-client, Headers::Security_Client
-security-server, Headers::Security_Server
-security-verify, Headers::Security_Verify
+security-client, Headers::SecurityClient
+security-server, Headers::SecurityServer
+security-verify, Headers::SecurityVerify
