@@ -431,7 +431,7 @@ Security::loadPublicCert(  const Data& filePath )
    assert( !filePath.empty() );
 
 #ifdef WIN32
-   assert(0);
+   return true; // !cj! - needs to be fixed - very bogus windows port
 #else
    DIR* dir = opendir( filePath.c_str() );
   
