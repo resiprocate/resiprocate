@@ -1,17 +1,16 @@
 #include "resiprocate/Helper.hxx"
-
-#include "BaseCreator.hxx"
-#include "ClientRegistration.hxx"
-#include "RegistrationHandler.hxx"
-#include "DialogUsageManager.hxx"
-#include "Dialog.hxx"
-#include "Profile.hxx"
+#include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/ClientRegistration.hxx"
+#include "resiprocate/dum/RegistrationHandler.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/Profile.hxx"
 
 using namespace resip;
 
 ClientRegistration::ClientRegistration(DialogUsageManager& dum,
                                        Dialog& dialog,
-                                       const SipMessage& request)
+                                       SipMessage& request)
    : BaseUsage(dum, dialog),
      mHandle(dum),
      mLastRequest(request)
@@ -89,7 +88,8 @@ ClientRegistration::requestRefresh()
    mLastRequest.header(h_CSeq).sequence()++;
    mDum.send(mLastRequest);
    mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
-   mDum.addTimer(DumTimer::Registration, Helper::aBitSmallerThan(mLastRequest.header(h_Expires).value()), mLastRequest.header(h_CSeq).sequence());
+   unsigned long t = Helper::aBitSmallerThan((unsigned long)(mLastRequest.header(h_Expires).value()));
+   mDum.addTimer(DumTimer::Registration, t,  mLastRequest.header(h_CSeq).sequence());
 }
 
 const NameAddrs& 
@@ -108,9 +108,9 @@ void
 ClientRegistration::updateMyContacts(const NameAddrs& allContacts)
 {
    NameAddrs myNewContacts;
-   for (NameAddrs::iterator i=allContacts.begin(); i != allContacts.end(); i++)
+   for (NameAddrs::const_iterator i=allContacts.begin(); i != allContacts.end(); i++)
    {
-      for (NameAddrs::iterator j=mMyContacts.begin(); j != mMyContacts.end(); i++)
+      for (NameAddrs::iterator j=mMyContacts.begin(); j != mMyContacts.end(); j++)
       {
          if (i->uri() == j->uri())
          {
@@ -138,7 +138,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
    }
    else if (code < 300) // success
    {
-      Profile* profile = mDum.getProfile();
+      //Profile* profile = mDum.getProfile();
       
       // !jf! consider what to do if no contacts
       mAllContacts = msg.header(h_Contacts);
