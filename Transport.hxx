@@ -33,6 +33,9 @@ class Transport : public ThreadIf
       Transport(Fifo<Message>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
       virtual ~Transport();
 
+      bool isFinished() const;
+      void shutdown();
+      
       // shared by UDP, TCP, and TLS
       static Socket socket(TransportType type, bool ipv4);
       static void error( int err );
@@ -66,9 +69,9 @@ class Transport : public ThreadIf
 
       bool basicCheck(const SipMessage& msg);
 
-      SendData* makeFailedBasicCheckResponse(const SipMessage& msg,
-                                             int responseCode = 400,
-                                             const char * warning = 0);
+      SendData* makeFailedResponse(const SipMessage& msg,
+                                   int responseCode = 400,
+                                   const char * warning = 0);
 
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
@@ -86,7 +89,8 @@ class Transport : public ThreadIf
       
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
-
+      bool mShuttingDown;
+      
    private:
       static const Data transportNames[MAX_TRANSPORT];
       friend std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
