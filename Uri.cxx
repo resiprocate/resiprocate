@@ -207,6 +207,17 @@ Uri::operator<(const Uri& other) const
    return mPort < other.mPort;
 }
 
+const Data
+Uri::getAorNoPort() const
+{
+   checkParsed();
+       
+   Data aor( (mUser.empty()) ? (mHost) : (mUser + Symbols::AT_SIGN + mHost) );
+   
+   return aor;
+}
+
+
 const Data&
 Uri::getAor() const
 {
