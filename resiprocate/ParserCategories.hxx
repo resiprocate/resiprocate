@@ -17,6 +17,7 @@ class HeaderFieldValueList;
 class Token : public ParserCategory
 {
    public:
+      enum {isCommaTokenizing = false};
       Token(HeaderFieldValue& hfv) {}
       ParserCategory* clone(HeaderFieldValue*) const;
       virtual void parse();
