@@ -105,9 +105,9 @@ TransportSelector::send( SipMessage* msg )
    }
    else if (msg->isResponse())
    {
-      assert (msg->header(h_Vias).size() >= 2);
-      const Via& via = *(++msg->header(h_Vias).begin());
-
+      assert (!msg->header(h_Vias).empty());
+      const Via& via = msg->header(h_Vias).front();
+      
       // should look at via.transport()
       target.param(p_transport) = Symbols::UDP; // !jf!
       target.host() = via.sentHost();
