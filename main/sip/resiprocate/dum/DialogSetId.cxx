@@ -40,7 +40,7 @@ DialogSetId::DialogSetId(const Data& callId, const Data& tag)
    : mCallId(callId),
      mTag(tag)
 {
-   assert(false);
+    
 }
 
 bool
