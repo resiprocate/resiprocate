@@ -1,11 +1,13 @@
-# $Id: Makefile,v 1.44 2003/04/17 04:43:25 alan Exp $
+# $Id: Makefile,v 1.45 2003/04/26 19:30:36 fluffy Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
 LDLIBS += -lncurses
-TESTPROGRAMS =	testParseBuffer.cxx \
+
+TESTPROGRAMS =	limpc.cxx \
+		testParseBuffer.cxx \
 	        testData.cxx \
 	        testDataStream.cxx \
 		testCountStream.cxx \
