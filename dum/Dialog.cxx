@@ -190,6 +190,12 @@ Dialog::getId() const
 }
 
 void
+Dialog::cancel()
+{
+   mInviteSession->end();
+}
+
+void
 Dialog::dispatch(const SipMessage& msg)
 {
    if (msg.isRequest())
