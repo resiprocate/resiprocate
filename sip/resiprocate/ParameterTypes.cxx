@@ -2,16 +2,15 @@
 #include "sip2/util/compat.hxx"
 #include <iostream>
 
-#undef defineParamType
-#define defineParamType(_class, _enum, _name, _type, _RFC_ref_ignored)        \
-ParameterTypes::Type                                                          \
-_class::getTypeNum() const {return ParameterTypes::_enum;}                    \
-_class::_class()                                                              \
-{                                                                             \
-   ParameterTypes::ParameterFactories[ParameterTypes::_enum] = Type::decode;  \
-   ParameterTypes::ParameterNames[ParameterTypes::_enum] = _name;             \
-}                                                                             \
-_class Vocal2::p_##_enum
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+ParameterTypes::Type                                                            \
+_enum##_Param::getTypeNum() const {return ParameterTypes::_enum;}               \
+_enum##_Param::_enum##_Param()                                                  \
+{                                                                               \
+   ParameterTypes::ParameterFactories[ParameterTypes::_enum] = Type::decode;    \
+   ParameterTypes::ParameterNames[ParameterTypes::_enum] = _name;               \
+}                                                                               \
+_enum##_Param Vocal2::p_##_enum
 
 int strncasecmp(char*,char*,int);
 
@@ -22,43 +21,59 @@ using namespace Vocal2;
 ParameterTypes::Factory ParameterTypes::ParameterFactories[ParameterTypes::MAX_PARAMETER] = {0};
 Data ParameterTypes::ParameterNames[ParameterTypes::MAX_PARAMETER] = {"PARAMETER?"};
 
-   defineParamType(Transport_Param, transport, "transport", DataParameter, "RFC ????");
-   defineParamType(User_Param, user, "user", DataParameter, "RFC ????");
-   defineParamType(Method_Param, method, "method", DataParameter, "RFC ????");
-   defineParamType(Ttl_Param, ttl, "ttl", IntegerParameter, "RFC ????");
-   defineParamType(Maddr_Param, maddr, "maddr", DataParameter, "RFC ????");
-   defineParamType(Lr_Param, lr, "lr", ExistsParameter, "RFC ????");
-   defineParamType(Q_Param, q, "q", FloatParameter, "RFC ????");
-   defineParamType(Purpose_Param, purpose, "purpose", DataParameter, "RFC ????");
-   defineParamType(Handling_Param, handling, "handling", DataParameter, "RFC ????");
-   defineParamType(Expires_Param, expires, "expires", IntegerParameter, "RFC ????");
-   defineParamType(Tag_Param, tag, "tag", DataParameter, "RFC ????");
-   defineParamType(ToTag_Param, toTag, "to-tag", DataParameter, "RFC ????");
-   defineParamType(FromTag_Param, fromTag, "from-tag", DataParameter, "RFC ????");
-   defineParamType(Duration_Param, duration, "duration", IntegerParameter, "RFC ????");
-   defineParamType(Branch_Param, branch, "branch", BranchParameter, "RFC ????");
-   defineParamType(Rport_Param, rport, "rport", RportParameter, "RFC ????");
-   defineParamType(Received_Param, received, "received", DataParameter, "RFC ????");
-   defineParamType(Mobility_Param, mobility, "mobility", DataParameter, "RFC ????");
-   defineParamType(Comp_Param, comp, "comp", DataParameter, "RFC ????");
-   defineParamType(Id_Param, id, "id", DataParameter, "RFC ????");
-   defineParamType(Reason_Param, reason, "reason", DataParameter, "RFC ????");
-   defineParamType(Retry_After_Param, retryAfter, "retry-after", IntegerParameter, "RFC ????");
+defineParam(accessType, "access-type", DataParameter, "RFC 2046");
+defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
+defineParam(boundary, "boundary", DataParameter, "RFC 2046");
+defineParam(branch, "branch", BranchParameter, "RFC ????");
+defineParam(charset, "charset", DataParameter, "RFC 2045");
+defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
+defineParam(comp, "comp", DataParameter, "RFC ????");
+defineParam(dAlg, "d-alg", DataParameter, "RFC 3329");
+defineParam(dQop, "d-qop", DataParameter, "RFC ????");
+defineParam(dVer, "d-ver", QuotedDataParameter, "RFC ????");
+defineParam(directory, "directory", DataParameter, "RFC 2046");
+defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
+defineParam(duration, "duration", IntegerParameter, "RFC ????");
+defineParam(expiration, "expiration", IntegerParameter, "RFC 2046");
+defineParam(expires, "expires", IntegerParameter, "RFC ????");
+defineParam(filename, "filename", DataParameter, "RFC ????");
+defineParam(fromTag, "from-tag", DataParameter, "RFC ????");
+defineParam(handling, "handling", DataParameter, "RFC ????");
+defineParam(id, "id", DataParameter, "RFC ????");
+defineParam(lr, "lr", ExistsParameter, "RFC ????");
+defineParam(maddr, "maddr", DataParameter, "RFC ????");
+defineParam(method, "method", DataParameter, "RFC ????");
+defineParam(micalg, "micalg", DataParameter, "RFC 1847");
+defineParam(mobility, "mobility", DataParameter, "RFC ????");
+defineParam(mode, "mode", DataParameter, "RFC 2046");
+defineParam(name, "name", DataParameter, "RFC 2046");
+defineParam(nc, "nc", DataParameter, "RFC ????");
+defineParam(nonce, "nonce", QuotedDataParameter, "RFC ????");
+defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
+defineParam(permission, "permission", DataParameter, "RFC 2046");
+defineParam(protocol, "protocol", DataParameter, "RFC 1847");
+defineParam(purpose, "purpose", DataParameter, "RFC ????");
+defineParam(q, "q", FloatParameter, "RFC ????");
+defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
+defineParam(reason, "reason", DataParameter, "RFC ????");
+defineParam(received, "received", DataParameter, "RFC ????");
+defineParam(response, "response", QuotedDataParameter, "RFC ????");
+defineParam(retryAfter, "retry-after", IntegerParameter, "RFC ????");
+defineParam(rport, "rport", RportParameter, "RFC ????");
+defineParam(server, "server", DataParameter, "RFC 2046");
+defineParam(site, "site", DataParameter, "RFC 2046");
+defineParam(size, "size", DataParameter, "RFC 2046");
+defineParam(smimeType, "smime-type", DataParameter, "RFC 2633");
+defineParam(stale, "stale", DataParameter, "RFC ????");
+defineParam(tag, "tag", DataParameter, "RFC ????");
+defineParam(toTag, "to-tag", DataParameter, "RFC ????");
+defineParam(transport, "transport", DataParameter, "RFC ????");
+defineParam(ttl, "ttl", IntegerParameter, "RFC ????");
+defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
+defineParam(user, "user", DataParameter, "RFC ????");
+defineParam(username, "username", DataParameter, "RFC ????");
 
-   defineParamType(Algorithm_Param, algorithm, "algorithm", DataParameter, "RFC ????");
-   defineParamType(Cnonce_Param, cnonce, "cnonce", QuotedDataParameter, "RFC ????");
-   defineParamType(Nonce_Param, nonce, "nonce", QuotedDataParameter, "RFC ????");
-   defineParamType(Domain_Param, domain, "domain", QuotedDataParameter, "RFC ????");
-   defineParamType(Nc_Param, nc, "nc", DataParameter, "RFC ????");
-   defineParamType(Opaque_Param, opaque, "opaque", QuotedDataParameter, "RFC ????");
-   defineParamType(Realm_Param, realm, "realm", QuotedDataParameter, "RFC ????");
-   defineParamType(Username_Param, username, "username", DataParameter, "RFC ????");
-
-   defineParamType(Response_Param, response, "response", QuotedDataParameter, "RFC ????");
-   defineParamType(Stale_Param, stale, "stale", DataParameter, "RFC ????");
-   defineParamType(Uri_Param, uri, "uri", QuotedDataParameter, "RFC ????");
-
-   // peculiar case
+// SPECIAL-CASE
 ParameterTypes::Type
 Qop_Options_Param::getTypeNum() const {return ParameterTypes::qopOptions;}
 Qop_Options_Param::Qop_Options_Param()
@@ -68,12 +83,12 @@ Qop_Options_Param::Qop_Options_Param()
 Qop_Options_Param Vocal2::p_qopOptions;
 
 ParameterTypes::Type
-Qop_Param::getTypeNum() const {return ParameterTypes::qop;}
-Qop_Param:: Qop_Param()
+qop_Param::getTypeNum() const {return ParameterTypes::qop;}
+qop_Param:: qop_Param()
 {
    ParameterTypes::ParameterNames[ParameterTypes::qop] = "qop";
 }
-Qop_Param Vocal2::p_qop;
+qop_Param Vocal2::p_qop;
 
 Qop_Factory_Param::Qop_Factory_Param()
 {
@@ -81,26 +96,6 @@ Qop_Factory_Param::Qop_Factory_Param()
    ParameterTypes::ParameterNames[ParameterTypes::qopFactory] = "qop";
 }
 Qop_Factory_Param Vocal2::p_qopFactory;
-
-   defineParamType(Digest_Algorithm_Param, dAlg, "d-alg", DataParameter, "rfc 3329");
-   defineParamType(Digest_Qop_Param, dQop, "d-qop", DataParameter, "RFC ????");
-   defineParamType(Digest_Verify_Param, dVer, "d-ver", QuotedDataParameter, "RFC ????");
-
-   defineParamType(Smime_Type_Param, smimeType, "smime-type", DataParameter, "RFC 2633");
-   defineParamType(Name_Param, name, "name", DataParameter, "RFC 2046");
-   defineParamType(Filename_Param, filename, "filename", DataParameter, "RFC ????");
-   defineParamType(Protocol_Param, protocol, "protocol", DataParameter, "RFC 1847");
-   defineParamType(Micalg_Param, micalg, "micalg", DataParameter, "RFC 1847");
-   defineParamType(Boundary_Param, boundary, "boundary", DataParameter, "RFC 2046");
-   defineParamType(Expiration_Param, expiration, "expiration", IntegerParameter, "RFC 2046");
-   defineParamType(Size_Param, size, "size", DataParameter, "RFC 2046");
-   defineParamType(Permission_Param, permission, "permission", DataParameter, "RFC 2046");
-   defineParamType(Site_Param, site, "site", DataParameter, "RFC 2046");
-   defineParamType(Directory_Param, directory, "directory", DataParameter, "RFC 2046");
-   defineParamType(Mode_Param, mode, "mode", DataParameter, "RFC 2046");
-   defineParamType(Server_Param, server, "server", DataParameter, "RFC 2046");
-   defineParamType(Charset_Param, charset, "charset", DataParameter, "RFC 2045");
-   defineParamType(Access_Type_Param, accessType, "access-type", DataParameter, "RFC 2046");
 
 #include "sip2/sipstack/ParameterHash.hxx"
 

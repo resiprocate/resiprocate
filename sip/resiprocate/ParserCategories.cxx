@@ -287,149 +287,32 @@ Auth::encodeAuthParameters(ostream& str) const
    return str;
 }
 
-      
-Algorithm_Param::DType&
-Auth::param(const Algorithm_Param& paramType) const
-{
-   checkParsed();
-   Algorithm_Param::Type* p = dynamic_cast<Algorithm_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Algorithm_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                                                      \
+_enum##_Param::DType&                                                                                           \
+Auth::param(const _enum##_Param& paramType) const                                                               \
+{                                                                                                               \
+   checkParsed();                                                                                               \
+   _enum##_Param::Type* p = static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));      \
+   if (!p)                                                                                                      \
+   {                                                                                                            \
+      p = new _enum##_Param::Type(paramType.getTypeNum());                                                      \
+      mParameters.push_back(p);                                                                                 \
+   }                                                                                                            \
+   return p->value();                                                                                           \
 }
 
-Cnonce_Param::DType&
-Auth::param(const Cnonce_Param& paramType) const
-{
-   checkParsed();
-   Cnonce_Param::Type* p = dynamic_cast<Cnonce_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Cnonce_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
-
-Nonce_Param::DType&
-Auth::param(const Nonce_Param& paramType) const
-{
-   checkParsed();
-   Nonce_Param::Type* p = dynamic_cast<Nonce_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Nonce_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
-
-Domain_Param::DType&
-Auth::param(const Domain_Param& paramType) const
-{
-   checkParsed();
-   Domain_Param::Type* p = dynamic_cast<Domain_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Domain_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
-
-Nc_Param::DType&
-Auth::param(const Nc_Param& paramType) const
-{
-   checkParsed();
-   Nc_Param::Type* p = dynamic_cast<Nc_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Nc_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
-
-Opaque_Param::DType&
-Auth::param(const Opaque_Param& paramType) const
-{
-   checkParsed();
-   Opaque_Param::Type* p = dynamic_cast<Opaque_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Opaque_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
-
-Realm_Param::DType&
-Auth::param(const Realm_Param& paramType) const
-{
-   checkParsed();
-   Realm_Param::Type* p = dynamic_cast<Realm_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Realm_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
-
-Response_Param::DType&
-Auth::param(const Response_Param& paramType) const
-{
-   checkParsed();
-   Response_Param::Type* p = dynamic_cast<Response_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Response_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
-
-Stale_Param::DType&
-Auth::param(const Stale_Param& paramType) const
-{
-   checkParsed();
-   Stale_Param::Type* p = dynamic_cast<Stale_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Stale_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
-
-Username_Param::DType&
-Auth::param(const Username_Param& paramType) const
-{
-   checkParsed();
-   Username_Param::Type* p = dynamic_cast<Username_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Username_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
-
-Uri_Param::DType&
-Auth::param(const Uri_Param& paramType) const
-{
-   checkParsed();
-   Uri_Param::Type* p = dynamic_cast<Uri_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Uri_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
+defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
+defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
+defineParam(nonce, "nonce", QuotedDataParameter, "RFC ????");
+defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
+defineParam(nc, "nc", DataParameter, "RFC ????");
+defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
+defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
+defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
+defineParam(response, "response", QuotedDataParameter, "RFC ????");
+defineParam(stale, "stale", DataParameter, "RFC ????");
+defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
+defineParam(username, "username", DataParameter, "RFC ????");
 
 Qop_Options_Param::DType&
 Auth::param(const Qop_Options_Param& paramType) const
@@ -439,19 +322,6 @@ Auth::param(const Qop_Options_Param& paramType) const
    if (!p)
    {
       p = new Qop_Options_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
-
-Qop_Param::DType&
-Auth::param(const Qop_Param& paramType) const
-{
-   checkParsed();
-   Qop_Param::Type* p = dynamic_cast<Qop_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Qop_Param::Type(paramType.getTypeNum());
       mParameters.push_back(p);
    }
    return p->value();
