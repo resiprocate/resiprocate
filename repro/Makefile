@@ -15,7 +15,7 @@ TESTPROGRAMS = \
 
 CXXFLAGS += -I/sw/include
 LDFLAGS  += -L/sw/lib 
-LDLIBS   += -ldb-4.2
+LDLIBS   += -ldb-4.2 -lpopt
 
 
 SRC =   \
@@ -23,6 +23,7 @@ SRC =   \
 	monkeys/RouteProcessor.cxx \
 	monkeys/AmIResponsible.cxx \
 	monkeys/LocationServer.cxx \
+	monkeys/ConstantLocationMonkey.cxx \
 	CommandLineParser.cxx \
 	Proxy.cxx \
 	Registrar.cxx \
