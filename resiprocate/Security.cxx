@@ -133,7 +133,7 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
                      ErrLog( <<"Error may be because trying ssl connection to tls server" ); 
                      break;
                   case SSL_ERROR_WANT_CONNECT: ErrLog( <<" (SSL Error want connect)" ); break;
-                  case SSL_ERROR_WANT_ACCEPT: ErrLog( <<" (SSL Error want accpet)" ); break;
+                     //case SSL_ERROR_WANT_ACCEPT: ErrLog( <<" (SSL Error want accpet)" ); break;
                }
                
                      
