@@ -55,22 +55,17 @@ extern "C"
 }
 
 void
-Log::initialize(const char* typed, const char* leveld, const Data& appName, const char *logFileName)
+Log::initialize(const Data& typed, const Data& leveld, const Data& appName, const char *logFileName)
 {
    Type type = Log::COUT;
-   if (typed)
-   {
-      if (typed == "cout" || typed == "COUT") type = Log::COUT;
-      else if (typed == "cerr" || typed == "CERR") type = Log::CERR;
-	  else if (typed == "file" || typed == "FILE") type = Log::FILE;
-      else type = Log::SYSLOG;
-   }
+   if (isEqualNoCase(typed, "cout")) type = Log::COUT;
+   else if (isEqualNoCase(typed, "cerr")) type = Log::CERR;
+   else if (isEqualNoCase(typed, "file")) type = Log::FILE;
+   else type = Log::SYSLOG;
    
    Level level = Log::INFO;
-   if (leveld)
-   {
-      level = toLevel(leveld);
-   }
+   level = toLevel(leveld);
+
    Log::initialize(type, level, appName, logFileName);
 }
 
