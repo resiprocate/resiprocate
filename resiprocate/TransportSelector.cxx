@@ -25,7 +25,7 @@
 
 using namespace Vocal2;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define VOCAL_SUBSYSTEM Subsystem::TRANSACTION
 
 
 TransportSelector::TransportSelector(SipStack& stack) :
