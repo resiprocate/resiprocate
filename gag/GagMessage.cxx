@@ -162,6 +162,7 @@ GagHelloMessage::serialize(ostream &os) const
 {
   GagMessage::serialize(os);
   GagMessage::serialize(os, ok);
+  os.flush();
 
   return os;
 }
