@@ -141,6 +141,7 @@ class XMLCursor
       mutable Data mValue;
       // store attributes for reference
       mutable AttributeMap mAttributes;
+      mutable bool mAttributesSet;
 
 public:
       class Node
