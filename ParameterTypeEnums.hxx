@@ -6,6 +6,9 @@
 namespace Vocal2
 {
 
+class Parameter;
+class ParseBuffer;
+
 class ParameterTypes
 {
   
@@ -40,7 +43,10 @@ class ParameterTypes
 
       // convert to enum from two pointers into the HFV raw buffer
       static Type getType(const char* start, unsigned int length);
-      
+
+      typedef Parameter* (*Factory)(ParameterTypes::Type, ParseBuffer&);
+
+      static Factory ParameterFactories[MAX_PARAMETER];
       static Data ParameterNames[MAX_PARAMETER];
 };
  

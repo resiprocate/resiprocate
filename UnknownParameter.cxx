@@ -1,15 +1,14 @@
 #include <sipstack/UnknownParameter.hxx>
+#include <util/ParseBuffer.hxx>
 
 using namespace Vocal2;
 using namespace std;
 
 UnknownParameter::UnknownParameter(const char* startName, unsigned int nameSize,
-                                   const char* startData, unsigned int dataSize)
-   : DataParameter(ParameterTypes::UNKNOWN, startData, dataSize),
+                                   ParseBuffer& pb)
+   : DataParameter(ParameterTypes::UNKNOWN, pb),
      mName(startName, nameSize)
-{
-}
-
+{}
 
 UnknownParameter::UnknownParameter(const Data& name)
    : DataParameter(ParameterTypes::UNKNOWN),
