@@ -148,8 +148,14 @@ Dialog::createDialogAsUAC(const SipMessage& response)
       mLocalSequence = response.header(h_CSeq).sequence();
       mLocalEmpty = false;
       mCallId = response.header(h_CallId);
-      mLocalTag = response.header(h_From).param(p_tag);  
-      mRemoteTag = response.header(h_To).param(p_tag); 
+      if ( response.header(h_From).exists(p_tag) )
+      {
+          mLocalTag = response.header(h_From).param(p_tag);  
+      }
+      if ( response.header(h_To).exists(p_tag) )
+      {
+          mRemoteTag = response.header(h_To).param(p_tag); 
+      }
       mRemoteUri = response.header(h_To);
       mLocalUri = response.header(h_From);
       mCreated = true;
@@ -407,13 +413,28 @@ Dialog::makeRequest(MethodTypes method)
    assert(mCreated);
    SipMessage* request = new SipMessage;
    RequestLine rLine(method);
-   rLine.uri() = mRemoteTarget.uri();
+   
+   if ( method == REGISTER )
+   {
+       rLine.uri().scheme() = mRemoteTarget.uri().scheme();
+       rLine.uri().host() = mRemoteTarget.uri().host();
+   }
+   else
+   {
+       rLine.uri() = mRemoteTarget.uri();
+   }
    
    request->header(h_RequestLine) = rLine;
    request->header(h_To) = mRemoteUri;
-   request->header(h_To).param(p_tag) = mRemoteTag;
+   if ( !mRemoteTag.empty() )
+   {
+       request->header(h_To).param(p_tag) = mRemoteTag;
+   }
    request->header(h_From) = mLocalUri;
-   request->header(h_From).param(p_tag) = mLocalTag; // !jf! may not be necessary
+   if ( !mLocalTag.empty() )
+   {
+      request->header(h_From).param(p_tag) = mLocalTag; // !jf! may not be necessary
+   }
    request->header(h_CallId) = mCallId;
    request->header(h_Routes) = mRouteSet;
    request->header(h_Contacts).push_front(mContact);
