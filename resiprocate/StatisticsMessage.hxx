@@ -25,8 +25,9 @@ class StatisticsMessage : public ApplicationMessage
 
             Payload();
             
-            unsigned int transportFifoSize; // .dlb. not implemented
             unsigned int tuFifoSize;
+            unsigned int transportFifoSizeSum;
+            unsigned int transactionFifoSize;
             unsigned int activeTimers;
             unsigned int openTcpConnections; // .dlb. not implemented
             unsigned int activeInviteTransactions; // .dlb. not implemented

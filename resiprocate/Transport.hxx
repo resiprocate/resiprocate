@@ -82,6 +82,8 @@ class Transport : public ThreadIf
       // requires that the two transports be 
       bool operator==(const Transport& rhs) const;
 
+      unsigned int getFifoSize() const;
+
    protected:
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Data mInterface;

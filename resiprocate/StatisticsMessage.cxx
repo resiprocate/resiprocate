@@ -56,6 +56,11 @@ StatisticsMessage::logStats(const resip::Subsystem& subsystem,
    }
 
    WarningLog(<< subsystem
+              << " TU " << stats.tuFifoSize
+              << " TRANSPORT " << stats.transportFifoSizeSum
+              << " TRANSACTION " << stats.transactionFifoSize
+              << " TIMERS " << stats.activeTimers
+
               << " reqi " << stats.requestsReceived
               << " reqo " << stats.requestsSent
               << " rspi " << stats.responsesReceived
@@ -98,8 +103,9 @@ StatisticsMessage::clone() const
 }
 
 StatisticsMessage::Payload::Payload()
-   : transportFifoSize(0),
-     tuFifoSize(0),
+   : tuFifoSize(0),
+     transportFifoSizeSum(0),
+     transactionFifoSize(0),
      activeTimers(0),
      openTcpConnections(0),
      activeInviteTransactions(0),
@@ -129,9 +135,11 @@ StatisticsMessage::Payload::operator=(const StatisticsMessage::Payload& rhs)
 {
    if (&rhs != this)
    {
-      transportFifoSize = rhs.transportFifoSize;
+      transportFifoSizeSum = rhs.transportFifoSizeSum;
       tuFifoSize = rhs.tuFifoSize;
       activeTimers = rhs.activeTimers;
+      transactionFifoSize = rhs.transactionFifoSize;
+
       openTcpConnections = rhs.openTcpConnections;
       activeInviteTransactions = rhs.activeInviteTransactions;
       activeNonInviteTransactions = rhs.activeNonInviteTransactions;

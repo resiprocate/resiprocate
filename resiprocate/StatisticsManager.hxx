@@ -4,7 +4,6 @@
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/StatisticsMessage.hxx"
-#include "resiprocate/os/Fifo.hxx"
 
 // !dlb! part of the build script
 #define RESIP_STATISTICS(_x) _x
@@ -14,6 +13,7 @@ namespace resip
 {
 
 class SipMessage;
+class TransactionController;
 
 class StatisticsManager : public StatisticsMessage::Payload
 {
@@ -31,7 +31,7 @@ class StatisticsManager : public StatisticsMessage::Payload
          StatsMemUsed
       } Measurement;
       
-      StatisticsManager(Fifo<Message>& tuFifo,
+      StatisticsManager(TransactionController& transactionController,
                         unsigned long intervalSecs=60);
 
       void process();
@@ -44,10 +44,9 @@ class StatisticsManager : public StatisticsMessage::Payload
       void poll(); // force an update
       void setInterval(unsigned long intvSecs); // needs to be called through the fifo somehow
 
+      TransactionController& mTransactionController;
       UInt64 mInterval;
       UInt64 mNextPoll;
-
-      Fifo<Message>& mTuFifo;
 };
 
 }
