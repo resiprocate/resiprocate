@@ -99,7 +99,7 @@ RedirectManager::TargetSet::makeNextRequest(SipMessage& request)
       {
          request.mergeUri(mTargetQueue.top().uri());
          mTargetQueue.pop();
-         if (request.isRequest() && request.header(h_RequestLine).method() == INVITE)
+         if (request.isRequest() && request.header(h_RequestLine).method() == RESIP_INVITE)
          {
             DebugLog(<< "RedirectManager::TargetSet::makeNextRequest: " << request);
             request.header(h_CSeq).sequence()++;

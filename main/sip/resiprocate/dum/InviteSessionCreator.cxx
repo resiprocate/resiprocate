@@ -14,7 +14,7 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
      mState(Initialized),
      mServerSub(serverSub)
 {
-   makeInitialRequest(target, from, INVITE);
+   makeInitialRequest(target, from, RESIP_INVITE);
    if(mDum.getProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
        if(mDum.getProfile()->getDefaultSessionTime() >= 90)
