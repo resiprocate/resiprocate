@@ -35,6 +35,7 @@ class BranchParameter : public Parameter
       BranchParameter(const BranchParameter& other) 
          : Parameter(other), 
            mHasMagicCookie(other.mHasMagicCookie),
+           mIsMyBranch(other.mIsMyBranch),
            mTransactionId(other.mTransactionId),
            mCounter(other.mCounter),
            mClientData(other.mClientData)
