@@ -7,360 +7,6 @@ using namespace Vocal2;
 Data Headers::HeaderNames[MAX_HEADERS] = {};
 bool Headers::CommaTokenizing[] = {false};
 
-bool
-Headers::isCommaTokenizing(Type type)
-{
-   return CommaTokenizing[type];
-}
-
-// can't do  *(int*)"Acce" at compile time, so precalculated
-static const unsigned int IntVal_Acce = 1701012289;
-static const unsigned int IntVal_Aler = 1919249473;
-static const unsigned int IntVal_Allo = 1869376577;
-static const unsigned int IntVal_Auth = 1752462657;
-static const unsigned int IntVal_Call = 1819042115;
-static const unsigned int IntVal_Cont = 1953394499;
-static const unsigned int IntVal_CSeq = 1902465859;
-static const unsigned int IntVal_Date = 1702125892;
-static const unsigned int IntVal_Erro = 1869771333;
-static const unsigned int IntVal_Expi = 1768978501;
-static const unsigned int IntVal_From = 1836020294;
-static const unsigned int IntVal_In_R = 1378709065;
-static const unsigned int IntVal_Max_ = 762863949;
-static const unsigned int IntVal_Min_ = 762210637;
-static const unsigned int IntVal_MIME = 1162692941;
-static const unsigned int IntVal_Orga = 1634169423;
-static const unsigned int IntVal_Prio = 1869181520;
-static const unsigned int IntVal_Prox = 2020569680;
-static const unsigned int IntVal_Reco = 1868784978;
-static const unsigned int IntVal_Repl = 1819305298;
-static const unsigned int IntVal_Retr = 1920230738;
-static const unsigned int IntVal_Rout = 1953853266;
-static const unsigned int IntVal_Serv = 1987208531;
-static const unsigned int IntVal_Supp = 1886418259;
-static const unsigned int IntVal_Time = 1701669204;
-static const unsigned int IntVal_Unsu = 1970499157;
-static const unsigned int IntVal_User = 1919251285;
-static const unsigned int IntVal_Warn = 1852989783;
-static const unsigned int IntVal_WWW_ = 760698711;
-
-Headers::Type
-Headers::getHeaderType(const char* name, int len)
-{
-   if (len == 1)
-   {
-      switch (name[0])
-      {
-         case 'i' : return Call_ID;
-         case 'm' : return Contact;
-         case 'l' : return Content_Length;
-         case 'f' : return From;
-         case 's' : return Subject;
-         case 't' : return To;
-         case 'v' : return Via;
-         default : return UNKNOWN;
-      }
-   }
-   else if (len < 4)
-   {
-      if (strncasecmp(name, Symbols::To, len))
-      {
-         return To;
-      }
-      else if (strncasecmp(name, Symbols::Via, len))
-      {
-         return Via;
-      }
-      else
-      {
-         return UNKNOWN;
-      }
-   }
-   else
-   {
-      switch (*(int*)name)
-      {
-         case IntVal_Acce : 
-         {
-            if (strncasecmp(name, Symbols::Accept, len) == 0)
-            {
-               return Accept;
-            }
-            if (strncasecmp(name, Symbols::Accept_Encoding, len) == 0)
-            {
-               return Accept_Encoding;
-            }
-            if (strncasecmp(name, Symbols::Accept_Language, len) == 0)
-            {
-               return Accept_Language;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Aler :
-         {
-            if (strncasecmp(name, Symbols::Alert_Info, len) == 0)
-            {
-               return Alert_Info;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Allo :
-         {
-            if (strncasecmp(name, Symbols::Allow, len) == 0)
-            {
-               return Allow;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Auth :
-         {
-            if (strncasecmp(name, Symbols::Authentication_Info, len) == 0)
-            {
-               return Authentication_Info;
-            }
-            if (strncasecmp(name, Symbols::Authorization, len) == 0)
-            {
-               return Authorization;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Call :
-         {
-            if (strncasecmp(name, Symbols::Call_ID, len) == 0)
-            {
-               return Call_ID;
-            }
-            if (strncasecmp(name, Symbols::Call_Info, len) == 0)
-            {
-               return Call_Info;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Cont :
-         {
-            if (strncasecmp(name, Symbols::Contact, len) == 0)
-            {
-               return Contact;
-            }
-            if (strncasecmp(name, Symbols::Content_Disposition, len) == 0)
-            {
-               return Content_Disposition;
-            }
-            if (strncasecmp(name, Symbols::Content_Encoding, len) == 0)
-            {
-               return Content_Encoding;
-            }
-            if (strncasecmp(name, Symbols::Content_Language, len) == 0)
-            {
-               return Content_Language;
-            }
-            if (strncasecmp(name, Symbols::Content_Length, len) == 0)
-            {
-               return Content_Length;
-            }
-            if (strncasecmp(name, Symbols::Content_Type, len) == 0)
-            {
-               return Content_Type;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_CSeq :
-         {
-            if (strncasecmp(name, Symbols::CSeq, len) == 0)
-            {
-               return CSeq;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Date :
-         {
-            if (strncasecmp(name, Symbols::Date, len) == 0)
-            {
-               return Date;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Erro :
-         {
-            if (strncasecmp(name, Symbols::Error_Info, len) == 0)
-            {
-               return Error_Info;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Expi :
-         {
-            if (strncasecmp(name, Symbols::Expires, len) == 0)
-            {
-               return Expires;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_From :
-         {
-            if (strncasecmp(name, Symbols::From, len) == 0)
-            {
-               return From;
-            }
-            return UNKNOWN;
-         }
-         // !dlb! missing Refer-To, Referred_By
-         case IntVal_In_R :
-         {
-            if (strncasecmp(name, Symbols::In_Reply_To, len) == 0)
-            {
-               return In_Reply_To;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Max_ :
-         {
-            if (strncasecmp(name, Symbols::Max_Forwards, len) == 0)
-            {
-               return Max_Forwards;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Min_ :
-         {
-            if (strncasecmp(name, Symbols::Min_Expires, len) == 0)
-            {
-               return Min_Expires;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_MIME :
-         {
-            if (strncasecmp(name, Symbols::MIME_Version, len) == 0)
-            {
-               return MIME_Version;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Orga :
-         {
-            if (strncasecmp(name, Symbols::Organization, len) == 0)
-            {
-               return Organization;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Prio :
-         {
-            if (strncasecmp(name, Symbols::Priority, len) == 0)
-            {
-               return Priority;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Prox :
-         {
-            if (strncasecmp(name, Symbols::Proxy_Authenticate, len) == 0)
-            {
-               return Proxy_Authenticate;
-            }
-            if (strncasecmp(name, Symbols::Proxy_Authorization, len) == 0)
-            {
-               return Proxy_Authorization;
-            }
-            if (strncasecmp(name, Symbols::Proxy_Require, len) == 0)
-            {
-               return Proxy_Require;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Reco :
-         {
-            if (strncasecmp(name, Symbols::Record_Route, len) == 0)
-            {
-               return Record_Route;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Repl :
-         {
-            if (strncasecmp(name, Symbols::Reply_To, len) == 0)
-            {
-               return Reply_To;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Retr :
-         {
-            if (strncasecmp(name, Symbols::Retry_After, len) == 0)
-            {
-               return Retry_After;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Rout :
-         {
-            if (strncasecmp(name, Symbols::Route, len) == 0)
-            {
-               return Route;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Serv :
-         {
-            if (strncasecmp(name, Symbols::Server, len) == 0)
-            {
-               return Server;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Supp :
-         {
-            if (strncasecmp(name, Symbols::Supported, len) == 0)
-            {
-               return Supported;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Time :
-         {
-            if (strncasecmp(name, Symbols::Timestamp, len) == 0)
-            {
-               return Alert_Info;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Unsu :
-         {
-            if (strncasecmp(name, Symbols::Unsupported, len) == 0)
-            {
-               return Unsupported;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_User :
-         {
-            if (strncasecmp(name, Symbols::User_Agent, len) == 0)
-            {
-               return User_Agent;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_Warn :
-         {
-            if (strncasecmp(name, Symbols::Warning, len) == 0)
-            {
-               return Warning;
-            }
-            return UNKNOWN;
-         }
-         case IntVal_WWW_ :
-         {
-            if (strncasecmp(name, Symbols::WWW_Authenticate, len) == 0)
-            {
-               return WWW_Authenticate;
-            }
-            return UNKNOWN;
-         }
-         default : return UNKNOWN;
-      }
-   }
-}
 
 Header<Headers::Content_Disposition> Vocal2::h_ContentDisposition;
 Header<Headers::Content_Encoding> Vocal2::h_ContentEncoding;
@@ -409,5 +55,229 @@ MultiHeader<Headers::Via> Vocal2::h_Vias;
 MultiHeader<Headers::Subscription_State> Vocal2::h_SubscriptionStates;
 Vocal2::RequestLineType Vocal2::h_RequestLine;
 Vocal2::StatusLineType Vocal2::h_StatusLine;
-
 Header<Headers::Call_ID> Vocal2::h_Replaces;
+
+bool
+Headers::isCommaTokenizing(Type type)
+{
+   return CommaTokenizing[type];
+}
+
+/* ANSI-C code produced by gperf version 2.7.2 */
+/* Command-line: gperf -L ANSI-C -t -k '*' headers.gperf  */
+struct params { char *name; Headers::Type type; };
+
+#define TOTAL_KEYWORDS 48
+#define MIN_WORD_LENGTH 2
+#define MAX_WORD_LENGTH 19
+#define MIN_HASH_VALUE 2
+#define MAX_HASH_VALUE 162
+/* maximum key range = 161, duplicates = 0 */
+
+#ifdef __GNUC__
+__inline
+#else
+#ifdef __cplusplus
+inline
+#endif
+#endif
+static unsigned int
+hash (register const char *str, register unsigned int len)
+{
+  static unsigned char asso_values[] =
+    {
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163,   0, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163,   0,   0,   0,   5,   0,
+       60,   0,   0,   0,  15, 163,  30,  30,   0,   0,
+        0,  35,   0,   0,   0,   0,  25,  30,  25,  15,
+        0, 163, 163, 163, 163,  15, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
+      163, 163, 163, 163, 163, 163
+    };
+  register int hval = len;
+
+  switch (hval)
+    {
+      default:
+      case 19:
+        hval += asso_values[(unsigned char)str[18] & 0xDF ];
+      case 18:
+        hval += asso_values[(unsigned char)str[17] & 0xDF ];
+      case 17:
+        hval += asso_values[(unsigned char)str[16] & 0xDF ];
+      case 16:
+        hval += asso_values[(unsigned char)str[15] & 0xDF ];
+      case 15:
+        hval += asso_values[(unsigned char)str[14] & 0xDF ];
+      case 14:
+        hval += asso_values[(unsigned char)str[13] & 0xDF ];
+      case 13:
+        hval += asso_values[(unsigned char)str[12] & 0xDF ];
+      case 12:
+        hval += asso_values[(unsigned char)str[11] & 0xDF ];
+      case 11:
+        hval += asso_values[(unsigned char)str[10] & 0xDF ];
+      case 10:
+        hval += asso_values[(unsigned char)str[9] & 0xDF ];
+      case 9:
+        hval += asso_values[(unsigned char)str[8] & 0xDF ];
+      case 8:
+        hval += asso_values[(unsigned char)str[7] & 0xDF ];
+      case 7:
+        hval += asso_values[(unsigned char)str[6] & 0xDF ];
+      case 6:
+        hval += asso_values[(unsigned char)str[5] & 0xDF ];
+      case 5:
+        hval += asso_values[(unsigned char)str[4] & 0xDF ];
+      case 4:
+        hval += asso_values[(unsigned char)str[3] & 0xDF ];
+      case 3:
+        hval += asso_values[(unsigned char)str[2] & 0xDF ];
+      case 2:
+        hval += asso_values[(unsigned char)str[1] & 0xDF ];
+      case 1:
+        hval += asso_values[(unsigned char)str[0] & 0xDF ];
+        break;
+    }
+  return hval;
+}
+
+#ifdef __GNUC__
+__inline
+#endif
+struct params *
+in_word_set (register const char *str, register unsigned int len)
+{
+  static struct params wordlist[] =
+    {
+      {""}, {""},
+      {"TO", Headers::To},
+      {""}, {""},
+      {"ROUTE", Headers::Route},
+      {"ACCEPT", Headers::Accept},
+      {"CONTACT", Headers::Contact},
+      {""},
+      {"DATE", Headers::Date},
+      {"USER-AGENT", Headers::User_Agent},
+      {""},
+      {"ORGANIZATION", Headers::Organization},
+      {"AUTHORIZATION", Headers::Authorization},
+      {"SUPPORTED", Headers::Supported},
+      {""},
+      {"UNSUPPORTED", Headers::Unsupported},
+      {"RECORD-ROUTE", Headers::Record_Route},
+      {"SUBSCRIPTION-STATE",Headers::Subscription_State},
+      {""},
+      {"ACCEPT-ENCODING", Headers::Accept_Encoding},
+      {"CONTENT-ENCODING", Headers::Content_Encoding},
+      {"SUBJECT", Headers::Subject},
+      {"PRIORITY", Headers::Priority},
+      {"CONTENT-DISPOSITION", Headers::Content_Disposition},
+      {""}, {""},
+      {"CONTENT-TYPE", Headers::Content_Type},
+      {"VIA", Headers::Via},
+      {""}, {""},
+      {"SERVER", Headers::Server},
+      {"EXPIRES", Headers::Expires},
+      {""}, {""}, {""}, {""},
+      {"WARNING", Headers::Warning},
+      {"REPLACES",Headers::Replaces},
+      {"CSEQ", Headers::CSeq},
+      {""}, {""},
+      {"REQUIRE", Headers::Require},
+      {""},
+      {"CONTENT-LENGTH", Headers::Content_Length},
+      {"ACCEPT-LANGUAGE", Headers::Accept_Language},
+      {"CONTENT-LANGUAGE", Headers::Content_Language},
+      {""}, {""}, {""}, {""}, {""}, {""},
+      {"REPLY-TO", Headers::Reply_To},
+      {""}, {""}, {""}, {""},
+      {"PROXY-AUTHENTICATE", Headers::Proxy_Authenticate},
+      {"PROXY-AUTHORIZATION", Headers::Proxy_Authorization},
+      {""}, {""}, {""}, {""}, {""}, {""},
+      {"MIN-EXPIRES", Headers::Min_Expires},
+      {""},
+      {"REFER-TO",Headers::Refer_To},
+      {"TIMESTAMP", Headers::Timestamp},
+      {"ERROR-INFO", Headers::Error_Info},
+      {"IN-REPLY_TO", Headers::In_Reply_To},
+      {"CALL-ID", Headers::Call_ID},
+      {""}, {""}, {""}, {""}, {""}, {""},
+      {"AUTHENTICATION-INFO", Headers::Authentication_Info},
+      {""}, {""}, {""}, {""}, {""}, {""},
+      {"RETRY-AFTER", Headers::Retry_After},
+      {""},
+      {"PROXY-REQUIRE", Headers::Proxy_Require},
+      {""}, {""},
+      {"REFERRED-BY",Headers::Referred_By},
+      {""}, {""},
+      {"FROM", Headers::From},
+      {"ALLOW", Headers::Allow},
+      {""},
+      {"MIME-VERSION", Headers::MIME_Version},
+      {""}, {""},
+      {"ALERT-INFO",Headers::Alert_Info},
+      {""}, {""}, {""}, {""}, {""},
+      {"WWW-AUTHENTICATE",Headers::WWW_Authenticate},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""},
+      {"CALL-INFO", Headers::Call_Info},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""},
+      {"MAX-FORWARDS", Headers::Max_Forwards}
+    };
+
+  if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
+    {
+      register int key = hash (str, len);
+
+      if (key <= MAX_HASH_VALUE && key >= 0)
+        {
+          register const char *s = wordlist[key].name;
+
+          if (( (*str) & 0xDF) == *s && !strcasecmp (str + 1, s + 1))
+            return &wordlist[key];
+        }
+    }
+  return 0;
+}
+
+
+
+// to generate the perfect hash:
+// gperf -L ANSI-C -t -k '*' headers.gperf > bar
+// also needed to bitwise and all char comparisons with 0xDF to force to
+// uppercase. All names in headers.gperf must be uppercased
+// will NOT work for non alpha chars 
+// 
+Headers::Type
+Headers::getHeaderType(const char* name, int len)
+{
+   struct params* p;
+   p = in_word_set(name, len);
+   return p ? Headers::Type(p->type) : Headers::UNKNOWN;
+}
+
+
