@@ -7,6 +7,9 @@ DialogSet::DialogSet(const BaseCreator *creator) :
     mDialogs(),
     mCreator(creator)
 {
+   Dialog* dialog = new Dialog(*this, request);
+   addDialog(dialog);
+   dialog->dispatch(request);
 }
 
 DialogSet::DialogSet(const SipMessage& request)
