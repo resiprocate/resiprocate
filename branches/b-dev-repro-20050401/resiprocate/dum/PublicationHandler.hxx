@@ -2,9 +2,11 @@
 #define RESIP_PUBLICATIONHANDLER_HXX
 
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/Mime.hxx"
 
 namespace resip
 {
+
 class ClientPublication;
 class ServerPublication;
 class SipMessage;
@@ -59,7 +61,7 @@ class ServerPublicationHandler
                              const SipMessage& pub,
                              int expires)=0;
 
-      const Mimes& getSupportedMimeTypes() const;
+      const resip::Mimes& getSupportedMimeTypes() const;
 };
 
 }
