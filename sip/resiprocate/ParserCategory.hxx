@@ -5,7 +5,6 @@
 #include <list>
 #include "sip2/util/Data.hxx"
 #include "sip2/util/ParseBuffer.hxx"
-
 #include "sip2/sipstack/ParameterTypes.hxx"
 #include "sip2/sipstack/LazyParser.hxx"
 
@@ -69,7 +68,7 @@ class ParserCategory : public LazyParser
       Digest_Qop_Param::DType& param(const Digest_Qop_Param& paramType) const;
       Digest_Verify_Param::DType& param(const Digest_Verify_Param& paramType) const;
 #endif
-      Data& param(const UnknownParameterType& param) const;
+//    Data& param(const UnknownParameterType& param) const;
       void remove(const UnknownParameterType& param); 
       bool exists(const UnknownParameterType& param) const;
       
