@@ -18,6 +18,7 @@
 
 #include "Resolver.hxx"
 
+
 using namespace Vocal2;
 using namespace std;
 
@@ -59,7 +60,7 @@ main(int argc, char* argv[])
       message->header(h_Vias).front().sentHost() = udp->hostname();
       message->header(h_Vias).front().sentPort() = udp->port();
 
-      Data encoded(2048);
+      Data encoded(2048, true);
       DataStream strm(encoded);
       message->encode(strm);
       strm.flush();
@@ -73,7 +74,7 @@ main(int argc, char* argv[])
 
       udp->process(fdset);
 
-      if (received.messageAvailable())
+      while (received.messageAvailable())
       {
          Message* msg = received.getNext();
          SipMessage* next = dynamic_cast<SipMessage*>(msg);
