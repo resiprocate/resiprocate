@@ -94,26 +94,31 @@ UdpTransport::process(fd_set* fdSet)
    // how do we know that buffer won't get deleted on us !jf!
    if (mTxFifo.messageAvailable())
    {
-      std::auto_ptr<SendData> data = std::auto_ptr<SendData>(mTxFifo.getNext());
+      std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
       DebugLog (<< "Sending message on udp");
 
-      const sockaddr_in* addrin = &data->destination;
-      const sockaddr* addr = (const sockaddr*) addrin;
-
+      sockaddr_in addrin;
+      addrin.sin_addr = sendData->destination.ipv4;
+      addrin.sin_port = htons(sendData->destination.port);
+      addrin.sin_family = AF_INET;
+      
       int count = sendto(mFd, 
-                         data->data.data(), data->data.size(),  // !jf! ugghhh
+                         sendData->data.data(), sendData->data.size(),  
                          0, // flags
-                         addr, sizeof(sockaddr_in) );
+                         (const sockaddr*)&addrin, sizeof(sockaddr_in) );
    
       if ( count == SOCKET_ERROR )
       {
          int err = errno;
          DebugLog (<< strerror(err));
+         fail(sendData->transactionId);
+         
          // !jf! what to do if it fails
          assert(0);
       }
 
-      assert ( (count == int(data->data.size()) ) || (count == SOCKET_ERROR ) );
+      assert ( (count == int(sendData->data.size()) ) || (count == SOCKET_ERROR ) );
+      ok(sendData->transactionId);
    }
 
    struct sockaddr_in from;
@@ -188,7 +193,13 @@ UdpTransport::process(fd_set* fdSet)
       // each one is a unique SIP message
 
 
-      message->setSource(from);
+      // Save all the info where this message came from
+      Tuple tuple;
+      tuple.ipv4 = from.sin_addr;
+      tuple.port = ntohs(from.sin_port);
+      tuple.transport = this;
+      tuple.transportType = transport();
+      message->setSource(tuple);
 
       // Tell the SipMessage about this datagram buffer.
       message->addBuffer(buffer);

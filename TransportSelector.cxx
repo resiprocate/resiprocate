@@ -6,6 +6,7 @@
 #include <sipstack/TestTransport.hxx>
 #include <sipstack/Uri.hxx>
 #include <sipstack/SendingMessage.hxx>
+#include <sipstack/ParserCategories.hxx>
 
 #include <util/DataStream.hxx>
 #include <util/Logger.hxx>
@@ -97,47 +98,79 @@ TransportSelector::process(fd_set* fdSet)
    }
 }
 
-void 
-TransportSelector::send( SipMessage* msg )
+void
+TransportSelector::dnsResolve( SipMessage* msg)
 {
    // pick the target destination 
    //   - for request route then request URI -  unless if firs entry in route is
    //     strict router in which case use the URI
    //   - for response look at via  
 
-   Resolver::Tuple tuple = msg->resolve();
-   Transport* transport = *mTransports.begin();
-
-   // insert the via
    if (msg->isRequest())
    {
-      assert(!msg->header(h_Vias).empty());
-      msg->header(h_Vias).front().remove(p_maddr);
-      //msg->header(h_Vias).front().param(p_ttl) = 1;
-      msg->header(h_Vias).front().transport() = Transport::toData(transport->transport());  //cache !jf! 
-      msg->header(h_Vias).front().sentHost() = transport->hostname();
-      msg->header(h_Vias).front().sentPort() = transport->port();
+      if (msg->header(h_Routes).size() && !msg->header(h_Routes).front().exists(p_lr))
+      {
+         mStack.mDnsResolver.lookup(msg->getTransactionId(), msg->header(h_Routes).front().uri());
+      }
+      else
+      {
+         mStack.mDnsResolver.lookup(msg->getTransactionId(), msg->header(h_RequestLine).uri());
+      }
+   }
+   else if (msg->isResponse())
+   {
+      assert (!msg->header(h_Vias).empty());
+      mStack.mDnsResolver.lookup(msg->getTransactionId(), msg->header(h_Vias).front());
+   }
+   else
+   {
+      assert(0);
+   }
+}
+ 
+void 
+TransportSelector::send( SipMessage* msg, Transport::Tuple& destination )
+{
+   if (destination.transport == 0)
+   {
+      destination.transport = findTransport(destination);
    }
 
-   Data& encoded = msg->getEncoded();
-   DataStream encodeStream(encoded);
-   msg->encode(encodeStream);
-   encodeStream.flush();
+   if (destination.transport)
+   {
+      // insert the via
+      if (msg->isRequest())
+      {
+         assert(!msg->header(h_Vias).empty());
+         msg->header(h_Vias).front().remove(p_maddr);
+         //msg->header(h_Vias).front().param(p_ttl) = 1;
+         msg->header(h_Vias).front().transport() = Transport::toData(destination.transport->transport());  //cache !jf! 
+         msg->header(h_Vias).front().sentHost() = destination.transport->hostname();
+         msg->header(h_Vias).front().sentPort() = destination.transport->port();
+      }
 
-   DebugLog (<< "encoded=" << encoded.c_str());
+      Data& encoded = msg->getEncoded();
+      DataStream encodeStream(encoded);
+      msg->encode(encodeStream);
+      encodeStream.flush();
+
+      DebugLog (<< "encoded=" << encoded.c_str());
    
-   
-   // send it over the transport
-   transport->send(tuple.ipv4, encoded);
-   mStack.mStateMacFifo.add(new SendingMessage(msg->getTransactionId(), transport->isReliable()));
+      // send it over the transport
+      destination.transport->send(destination, encoded, msg->getTransactionId());
+      mStack.mStateMacFifo.add(new SendingMessage(msg->getTransactionId(), destination.transport->isReliable()));
+   }
+   else
+   {
+      mStack.mStateMacFifo.add(new SendingMessage(msg->getTransactionId(), SendingMessage::Failed));
+   }
 }
 
 void
-TransportSelector::retransmit(SipMessage* msg)
+TransportSelector::retransmit(SipMessage* msg, Transport::Tuple& destination)
 {
-   Transport* transport = *mTransports.begin();
-   assert(transport);
-   transport->send(msg->tuple().ipv4, msg->getEncoded());
+   assert(destination.transport);
+   destination.transport->send(destination, msg->getEncoded(), msg->getTransactionId());
 }
 
 
@@ -148,6 +181,20 @@ TransportSelector::buildFdSet( fd_set* fdSet, int* fdSetSize )
    {
       (*i)->buildFdSet( fdSet, fdSetSize );
    }
+}
+
+Transport*
+TransportSelector::findTransport(const Transport::Tuple& tuple)
+{
+   // !jf! not done yet
+   for (std::vector<Transport*>::iterator i=mTransports.begin(); i != mTransports.end(); i++)
+   {
+      if ((*i)->transport() == tuple.transportType)
+      {
+         return *i;
+      }
+   }
+   return 0;
 }
 
 

@@ -15,8 +15,7 @@ SipMessage::SipMessage(bool fromWire)
      mStartLine(0),
      mBody(0),
      mRequest(false),
-     mResponse(false),
-     mResolver(0)
+     mResponse(false)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -30,8 +29,7 @@ SipMessage::SipMessage(const SipMessage& from)
      mStartLine(0),
      mBody(0),
      mRequest(from.mRequest),
-     mResponse(from.mResponse),
-     mResolver(0)
+     mResponse(from.mResponse)
 {
    if (this != &from)
    {
@@ -92,7 +90,6 @@ SipMessage::~SipMessage()
    
    delete mStartLine;
    delete mBody;
-   delete mResolver;
 }
 
 const Data& 
@@ -100,8 +97,8 @@ SipMessage::getTransactionId() const
 {
    assert (!header(h_Vias).empty());
    assert (header(h_Vias).front().exists(p_branch));
-   assert (!header(h_Vias).front().param(p_branch).empty());
-   return header(h_Vias).front().param(p_branch);
+   assert (!header(h_Vias).front().param(p_branch).transactionId().empty());
+   return header(h_Vias).front().param(p_branch).transactionId();
 }
 
 bool
@@ -168,7 +165,7 @@ SipMessage::addBuffer(char* buf)
 }
 
 void
-SipMessage::setSource(const sockaddr_in& addr)
+SipMessage::setSource(const Transport::Tuple& addr)
 {
    mSource = addr;
 }
@@ -331,64 +328,10 @@ SipMessage::clearFixedDest()
    mHaveFixedDest = false;
 }
 
-Resolver::Tuple
-SipMessage::resolve()
-{
-   if (!mResolver)
-   {
-      if (isRequest())
-      {
-         if (header(h_Routes).size() && !header(h_Routes).front().exists(p_lr))
-         {
-            mResolver = new Resolver(header(h_Routes).front().uri());
-         }
-         else
-         {
-            mResolver = new Resolver(header(h_RequestLine).uri());
-         }
-      }
-      else if (isResponse())
-      {
-         assert (!header(h_Vias).empty());
-         Via& via = header(h_Vias).front();
-         Uri target;
-         // should look at via.transport()
-         target.param(p_transport) = Symbols::UDP; // !jf!
-         target.host() = via.sentHost();
-         target.port() = via.sentPort();
-   
-         if (via.exists(p_received))
-         {
-            target.host() = via.param(p_received);
-         }
-         if (via.exists(p_rport))
-         {
-            target.port() = via.param(p_rport);
-         }
-         mResolver = new Resolver(target);
-      }
-      else
-      {
-         assert(0);
-      }
-   }
-
-   // get next destination !jf!
-   return *mResolver->mCurrent;
-}
-
-Resolver::Tuple
-SipMessage::tuple()
-{
-   assert (mResolver);
-   return *mResolver->mCurrent;
-}
-
 
 Data&
 SipMessage::getEncoded() 
 {
-   assert(mResolver); 
    return mEncoded;
 }
 
