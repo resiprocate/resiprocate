@@ -192,6 +192,9 @@
 				RelativePath=".\InviteSessionHandler.cxx">
 			</File>
 			<File
+				RelativePath=".\MasterProfile.cxx">
+			</File>
+			<File
 				RelativePath=".\MergedRequestKey.cxx">
 			</File>
 			<File
@@ -247,6 +250,9 @@
 			</File>
 			<File
 				RelativePath=".\UInt64Hash.cxx">
+			</File>
+			<File
+				RelativePath=".\UserProfile.cxx">
 			</File>
 		</Filter>
 		<Filter
@@ -335,6 +341,9 @@
 				RelativePath=".\InviteSessionHandler.hxx">
 			</File>
 			<File
+				RelativePath=".\MasterProfile.hxx">
+			</File>
+			<File
 				RelativePath=".\MergedRequestKey.hxx">
 			</File>
 			<File
@@ -408,6 +417,9 @@
 			</File>
 			<File
 				RelativePath=".\UsageSet.hxx">
+			</File>
+			<File
+				RelativePath=".\UserProfile.hxx">
 			</File>
 		</Filter>
 		<Filter
