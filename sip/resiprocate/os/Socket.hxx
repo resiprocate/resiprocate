@@ -130,6 +130,12 @@ class FdSet
          size = ( int(fd+1) > size) ? int(fd+1) : size;
       }
       
+      void clear(Socket fd)
+      {
+         FD_CLR(fd, &read);
+         FD_CLR(fd, &write);
+      }
+      
       void reset()
       {
          size = 0;
