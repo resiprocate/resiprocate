@@ -21,7 +21,8 @@ class ServerAuthManager
       
       // return true if request is authorized
       bool handle(std::auto_ptr<Message>& msg);
-
+      bool handleUserAuthInfo(std::auto_ptr<Message>& msg);
+      
    protected:
       // this call back should async cause a post of UserAuthInfo
       virtual void requestCredential(const Data& user, 
@@ -29,9 +30,8 @@ class ServerAuthManager
                                      const Data& transactionToken ) = 0;
       
    private:
-      int nextTransactionToken;
-      
-      typedef std::map<int,SipMessage*> MessageMap;
+      DialogUsageManager& mDum;      
+      typedef std::map<Data, SipMessage*> MessageMap;
       MessageMap mMessages;
       
 };
