@@ -11,6 +11,7 @@ class ApplicationMessage : public Message
    public:
       ApplicationMessage() {};
 
+      virtual const Data& getTransactionId() const { assert(0); return Data::Empty; } 
       virtual Data brief() const=0;
       virtual Message* clone() const=0;
 };
