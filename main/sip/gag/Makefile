@@ -1,4 +1,4 @@
-LIBSIP = ../build/resiprocate/libresiprocate.a
+LIBSIP = ../resiprocate/.libs/libresiprocate.a
 LIBARES = ../contrib/ares/libares.a
 GETOPT = ../contrib/getopt/getopt.o
 CFLAGS = -I .. -g
