@@ -1,0 +1,102 @@
+#! /usr/bin/perl
+
+# this program will make the vocal-buildpaths tool.  
+
+
+# here is a comment about usage, etc:
+
+# OK.  I just hacked up a solution to this one.  look at
+# vocal/build/mkbuildpaths on HEAD.  it should create a script called
+# vocal-buildpaths which works like gtk-config -- you can pass it arguments 
+# which will ask it to spew out the right includes, etc.  e.g.
+  
+#         ./vocal-buildpaths --sip-cflags
+  
+# or   
+  
+#         ./vocal-buildpaths --sip-ldflags
+
+# these are hardwired to whichever copy of vocal you're using, so make
+# sure you run mkbuildpaths if you happen to move your vocal tree around.   
+
+# one problem with these is that they get more complex if you need RTP (e.g.
+# if you're trying to build a user agent w/ audio support) or a full VOCAL
+# app -- those cases aren't implemented yet.
+     
+# if you're interested, the way these are implemented is that mkbuildpaths
+# invokes the makefiles to generate the proper include path information from
+# the package magic.
+
+
+
+$vocal_buildpaths = "vocal-buildpaths";
+
+open(F, ">$vocal_buildpaths") || die "cannot write to vocal-buildpaths: $!";
+print F <<EOF
+#! /bin/sh
+
+# this program is automatically generated!  DO NOT EDIT!
+
+usage()
+{
+    cat <<USAGE_INFO
+Usage: vocal-buildpaths [options]
+Options:
+    [--sip-cflags]
+    [--sip-ldflags]
+USAGE_INFO
+    exit 1
+}
+
+EOF
+  ;
+
+chomp($sip_cflags = `make -f Makefile.buildpaths BUILD=\`pwd\` PACKAGES="SIP SDP2 SIPMGCP UTIL LIBCEXT LIBXML" build_cflags`);
+
+chomp($sip_ldflags = `make -f Makefile.buildpaths BUILD=\`pwd\` PACKAGES="SIP SDP2 SIPMGCP UTIL LIBCEXT LIBXML PTHREAD" build_ldflags`);
+
+$sip_cflags =~ s/\/build\/..\//\//g;
+$sip_ldflags =~ s/\/build\/..\//\//g;
+
+print F <<EOJ
+
+cflags=0
+ldflags=0
+
+while [ \$# -gt 0 ] ; do
+
+    case \$1 in
+        --sip-cflags)
+            cflags="$sip_cflags"
+            ;;
+        --sip-ldflags)
+            ldflags="$sip_ldflags"
+            ;;
+	*)
+	    usage
+	    ;;
+    esac
+    shift
+done
+
+if [ "\$cflags" == "0" -a "\$ldflags" == "0" ] ; then
+    usage
+fi
+
+if [ "\$cflags" != "0" ] ; then
+    flags=\$cflags
+fi
+
+if [ "\$ldflags" != "0" ] ; then
+    flags="\$flags \$ldflags"
+fi
+
+echo \$flags
+
+EOJ
+  ;
+
+
+
+close(F);
+chmod 0755, $vocal_buildpaths;
