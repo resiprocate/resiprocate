@@ -15,6 +15,8 @@ main()
       for (int i=0; i<100000; i++)
       {
          strm << data;
+         strm << 'c';
+         strm << "chars";
       }
    }
    return 0;
