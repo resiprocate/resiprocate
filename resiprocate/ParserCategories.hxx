@@ -23,8 +23,8 @@ class Token : public ParserCategory
    public:
       enum {isCommaTokenizing = false};
 
-      Token(): ParserCategory(), mValue() {}
-      explicit Token(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue() {}
+      Token() : ParserCategory(), mValue() {}
+      Token(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type), mValue() {}
       Token(const Token&);
       Token& operator=(const Token&);
       bool operator<(const Token& rhs) const;
@@ -50,7 +50,11 @@ class Mime : public ParserCategory
       Mime() : ParserCategory(), mType(), mSubType() {};
       Mime(const Data& type, const Data& subType);
 
-      explicit Mime(HeaderFieldValue* hfv) : ParserCategory(hfv), mType(), mSubType() {}
+      Mime(HeaderFieldValue* hfv, Headers::Type type)
+         : ParserCategory(hfv, type),
+           mType(), 
+           mSubType()
+      {}
       Mime(const Mime&);
       Mime& operator=(const Mime&);
       bool operator<(const Mime& rhs) const;
@@ -79,7 +83,7 @@ class Auth : public ParserCategory
       enum {isCommaTokenizing = false};
 
       Auth() : ParserCategory() {}
-      explicit Auth(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      Auth(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type) {}
       Auth(const Auth&);
       Auth& operator=(const Auth&);
 
@@ -121,7 +125,11 @@ class IntegerCategory : public ParserCategory
       enum {isCommaTokenizing = false};
 
       IntegerCategory() : ParserCategory(), mValue(0), mComment() {}
-      explicit IntegerCategory(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue(0), mComment() {}
+      IntegerCategory(HeaderFieldValue* hfv, Headers::Type type)
+         : ParserCategory(hfv, type), 
+           mValue(0), 
+           mComment() 
+      {}
       IntegerCategory(const IntegerCategory&);
       IntegerCategory& operator=(const IntegerCategory&);
 
@@ -146,7 +154,10 @@ class StringCategory : public ParserCategory
       enum {isCommaTokenizing = false};
       
       StringCategory() : ParserCategory(), mValue() {}
-      explicit StringCategory(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue() {}
+      StringCategory(HeaderFieldValue* hfv, Headers::Type type)
+         : ParserCategory(hfv, type),
+           mValue()
+      {}
       StringCategory(const StringCategory&);
       StringCategory& operator=(const StringCategory&);
 
@@ -170,7 +181,7 @@ class GenericURI : public ParserCategory
       enum {isCommaTokenizing = false};
 
       GenericURI() : ParserCategory() {}
-      explicit GenericURI(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      GenericURI(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type) {}
       GenericURI(const GenericURI&);
       GenericURI& operator=(const GenericURI&);
 
@@ -199,8 +210,9 @@ class NameAddr : public ParserCategory
          mDisplayName()
       {}
 
-      explicit NameAddr(HeaderFieldValue* hfv)
-         : ParserCategory(hfv), 
+      NameAddr(HeaderFieldValue* hfv,
+               Headers::Type type)
+         : ParserCategory(hfv, type), 
            mAllContacts(false),
            mDisplayName()
       {}
@@ -253,7 +265,10 @@ class CallId : public ParserCategory
       enum {isCommaTokenizing = false};
 
       CallId() : ParserCategory(), mValue() {}
-      explicit CallId(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue() {}
+      CallId(HeaderFieldValue* hfv, 
+             Headers::Type type) 
+         : ParserCategory(hfv, type), mValue()
+      {}
       CallId(const CallId&);
       CallId& operator=(const CallId&);
       bool operator==(const CallId&) const;
@@ -278,7 +293,9 @@ class CSeqCategory : public ParserCategory
       enum {isCommaTokenizing = false};
       
       CSeqCategory();
-      explicit CSeqCategory(HeaderFieldValue* hfv) : ParserCategory(hfv), mMethod(UNKNOWN), mSequence(-1) {}
+      CSeqCategory(HeaderFieldValue* hfv, Headers::Type type)
+         : ParserCategory(hfv, type), mMethod(UNKNOWN), mSequence(-1) 
+      {}
       CSeqCategory(const CSeqCategory&);
       CSeqCategory& operator=(const CSeqCategory&);
 
@@ -335,8 +352,8 @@ class DateCategory : public ParserCategory
 
       DateCategory();
 
-      explicit DateCategory(HeaderFieldValue* hfv)
-         : ParserCategory(hfv),
+      DateCategory(HeaderFieldValue* hfv, Headers::Type type)
+         : ParserCategory(hfv, type),
            mDayOfWeek(Sun),
            mDayOfMonth(),
            mMonth(Jan),
@@ -384,7 +401,9 @@ class WarningCategory : public ParserCategory
       enum {isCommaTokenizing = true};
 
       WarningCategory() : ParserCategory() {}
-      explicit WarningCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      WarningCategory(HeaderFieldValue* hfv, Headers::Type type)
+         : ParserCategory(hfv, type) 
+      {}
       WarningCategory(const WarningCategory&);
       WarningCategory& operator=(const WarningCategory&);
 
@@ -422,9 +441,8 @@ class Via : public ParserCategory
          this->param(p_branch);
       }
 
-      explicit 
-      Via(HeaderFieldValue* hfv) 
-         : ParserCategory(hfv),
+      Via(HeaderFieldValue* hfv, Headers::Type type) 
+         : ParserCategory(hfv, type),
            mProtocolName(Symbols::ProtocolName),
            mProtocolVersion(Symbols::ProtocolVersion),
            mTransport(Symbols::UDP), // !jf! 
@@ -461,7 +479,9 @@ class ExpiresCategory : public ParserCategory
       enum {isCommaTokenizing = false};
 
       ExpiresCategory() : ParserCategory(), mValue(0) {}
-      explicit ExpiresCategory(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue(0) {}
+      ExpiresCategory(HeaderFieldValue* hfv, Headers::Type type)
+         : ParserCategory(hfv, type), mValue(0)
+      {}
       ExpiresCategory(const ExpiresCategory&);
       ExpiresCategory& operator=(const ExpiresCategory&);
 
@@ -487,8 +507,8 @@ class RequestLine : public ParserCategory
            mSipVersion(sipVersion)
       {}
 
-      explicit RequestLine(HeaderFieldValue* hfv) 
-         : ParserCategory(hfv),
+      RequestLine(HeaderFieldValue* hfv, Headers::Type type) 
+         : ParserCategory(hfv, type),
            mMethod(UNKNOWN),
            mUnknownMethodName(MethodNames[UNKNOWN]),
            mSipVersion(Symbols::DefaultSipVersion)
@@ -522,9 +542,14 @@ class RequestLine : public ParserCategory
 class StatusLine : public ParserCategory
 {
    public:
-      StatusLine() : ParserCategory(), mResponseCode(-1), mSipVersion(Symbols::DefaultSipVersion), mReason() {}
-      explicit StatusLine(HeaderFieldValue* hfv) 
-         : ParserCategory(hfv), 
+      StatusLine() : 
+         ParserCategory(), 
+         mResponseCode(-1),
+         mSipVersion(Symbols::DefaultSipVersion), 
+         mReason()
+      {}
+      StatusLine(HeaderFieldValue* hfv, Headers::Type type)
+         : ParserCategory(hfv, type), 
            mResponseCode(-1), 
            mSipVersion(Symbols::DefaultSipVersion), 
            mReason() 
