@@ -697,7 +697,7 @@ SipMessage::remove(const HeaderBase& headerType)
    mHeaders[headerType.getTypeNum()] = 0; 
 };
 
-#ifndef METHOD_TEMPLATES
+#ifndef PARTIAL_TEMPLATE_SPECIALIZATION
 CSeq_Header::Type&
 SipMessage::header(const CSeq_Header& headerType) const
 {

@@ -10,33 +10,52 @@
 namespace Vocal2
 {
 
-//template<class T, class F, bool>
-//class TypeIf
-//{
-//};
+//#define PARTIAL_TEMPLATE_SPECIALIZATION
+#ifdef PARTIAL_TEMPLATE_SPECIALIZATION
+template<bool, class T, class F>
+class TypeIf
+{
+};
 
-//template <class T, class F>
-//class TypeIf<T, F, true>
-//{
-//   public:
-//      typedef T Type;
-//};
+template <class T, class F>
+class TypeIf<true, T, F>
+{
+   public:
+      typedef T Type;
+};
 
-//template <class T, class F>
-//class TypeIf<T, F, false>
-//{
-//   public:
-//     typedef F Type;
-//};
+template <class T, class F>
+class TypeIf<false, T, F>
+{
+   public:
+     typedef F Type;
+};
+
+class UnusedHeader
+{
+};
+
+#define UnusedChecking(_enum)                                                                   \
+      typedef TypeIf<Headers::_enum == Headers::UNKNOWN, UnusedHeader, Type> UnknownReturn;     \
+      static Type& knownReturn(ParserContainerBase* container)
+
+#define MultiUnusedChecking(_enum)                                                                              \
+      typedef TypeIf<Headers::_enum == Headers::UNKNOWN, UnusedHeader, ParserContainer<Type> > UnknownReturn;   \
+      static ParserContainer<Type>& knownReturn(ParserContainerBase* container)
+#else
+
+#define UnusedChecking(_enum) \
+      static Type& knownReturn(ParserContainerBase* container)
+
+#define MultiUnusedChecking(_enum) \
+      static ParserContainer<Type>& knownReturn(ParserContainerBase* container)
+
+#endif
 
 class HeaderBase
 {
    public:
       virtual Headers::Type getTypeNum() const = 0;
-};
-
-class UnusedHeader
-{
 };
 
 #define defineHeader(_enum, _name, _type)                                               \
@@ -45,8 +64,7 @@ class _enum##_Header : public HeaderBase                                        
    public:                                                                              \
       enum {Single = true};                                                             \
       typedef _type Type;                                                               \
-      /* typedef TypeIf<UnusedHeader, Type, Headers::_enum == Headers::UNKNOWN> UnknownReturn; */ \
-      static Type& knownReturn(ParserContainerBase* container);                                \
+      UnusedChecking(_enum);                                                            \
       virtual Headers::Type getTypeNum() const;                                         \
       _enum##_Header();                                                                 \
 };                                                                                      \
@@ -58,8 +76,7 @@ class _enum##_MultiHeader : public HeaderBase                                   
    public:                                                                                                      \
       enum {Single = false};                                                                                    \
       typedef _type Type;                                                                                       \
-      /* typedef TypeIf<UnusedHeader, ParserContainer<Type>, Headers::_enum == Headers::UNKNOWN> UnknownReturn; */       \
-      static ParserContainer<Type>& knownReturn(ParserContainerBase* container);                                       \
+      MultiUnusedChecking(_enum);                                                                               \
       virtual Headers::Type getTypeNum() const;                                                                 \
       _enum##_MultiHeader();                                                                                    \
 };                                                                                                              \
