@@ -41,16 +41,19 @@ class ServerSubscription : public BaseUsage
       void setCurrentEventDocument(const Contents* document);
       void setSubscriptionState(SubscriptionState state, Reason reason);
 
+      virtual void end();
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimer& timer);
+
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
 
    private:
       friend class DialogUsageManager;
-      ServerSubscription(DialogUsageManager& dum, 
-                         Dialog& dialog,
-                         const SipMessage& req);
+      ServerSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& req);
 
 
       ServerSubscription::Handle mHandle;
+      SipMessage& mLastRequest;
 
       // disabled
       ServerSubscription(const ServerSubscription&);
