@@ -15,7 +15,7 @@ digraph UAC {
   Connected -> ReceivedReinviteNoOffer    [ label = "onINVITE/app::onDialogModified" ];
   Connected -> Connected                  [ label = "on200I/resend::ACK" ]; 
   Connected -> Connected                  [ label = "onCANCEL/send::200C" ]; // is this right?
-  Connected -> Terminated                 [ label = "dum::end/send::BYE" ;]
+  Connected -> Terminated                 [ label = "dum::end/send::BYE" ];
   Connected -> Terminated                 [ label = "onBYE/send::200B" ];
 
   SentUpdate -> Connected                 [ label = "on200U/app::onAnswer" ];
@@ -48,14 +48,13 @@ digraph UAC {
   // async then this state is necessary and the app must respond in a timely manner
   ReceivedUpdate -> Connected             [ label = "dum::provideAnswer/send::200U" ];
   ReceivedUpdate -> Connected             [ label = "dum::reject/send::488U" ];
-  ReceivedUpdate -> ReceivedUpdate        [ label = "onINVITE|UPDATE/send::500" ]; // set Retry-After
   ReceivedUpdate -> Terminated            [ label = "dum::end/send::488U,send::BYE" ];
+  ReceivedUpdate -> ReceivedUpdate        [ label = "onINVITE|onUPDATE/send::500" ]; 
 
   ReceivedReinvite -> Answered            [ label = "dum::provideAnswer/send::200I,timer::200I,timer::NoACK" ];
   ReceivedReinvite -> Connected           [ label = "dum::reject/send::488U" ];
-  ReceivedReinvite -> ReceivedReinvite    [ label = "onINVITE/send::500" ]; // set Retry-After
-  ReceivedReinvite -> ReceivedReinvite    [ label = "onUPDATE/send::500" ]; // set Retry-After
   ReceivedReinvite -> Terminated          [ label = "dum::end/send::488I,send::BYE" ];
+  ReceivedReinvite -> ReceivedReinvite    [ label = "onINVITE|onUPDATE/send::500" ]; 
 
   Answered -> Answered                    [ label = "timer::2xx/resend::2xx" ];
   Answered -> WaitingToOffer              [ label = "dum::provideOffer/saveOffer" ];
@@ -63,16 +62,18 @@ digraph UAC {
   Answered -> Terminated                  [ label = "timer::NoACK/send::BYE" ];
 
   WaitingToOffer -> Answered              [ label = "timer::2xx/resend::2xx" ];
-  WaitingToOffer -> SentUpdate            [ label = "onACK/send::UPDATE-offer" ]; // saved offer
-  WaitingToOffer -> SentReinvite          [ label = "onACK/send::INVITE-offer" ]; // saved offer
+  WaitingToOffer -> SentUpdate            [ label = "onACK/send::UPDATE-offer" ]; 
+  WaitingToOffer -> SentReinvite          [ label = "onACK/send::INVITE-offer" ]; 
   WaitingToOffer -> Terminated            [ label = "timer::NoACK/send::BYE" ];
 
   ReceivedReinviteNoOffer -> Connected    [ label = "dum::provideOffer/send::200-offer" ];
   ReceivedReinviteNoOffer -> Connected    [ label = "dum::reject/send::488I" ];
   ReceivedReinviteNoOffer -> Terminated   [ label = "dum::end/send::488I,send::BYE" ];
+  ReceivedReinviteNoOffer -> ReceivedReinviteNoOffer  [ label = "onINVITE|onUPDATE/send::500" ]; 
 
   WaitingToTerminate -> Terminated        [ label = "on200I/send::ACK,send::BYE" ];
   WaitingToTerminate -> Terminated        [ label = "onFailureI/send::BYE" ];
 
-  Terminated -> Terminated                [ label = "on200I/send::ACK" ];
+  Terminated -> Terminated                [ label = "onResponse/destroy" ];
+  Terminated -> Terminated                [ label = "onRequest/send::481,destroy" ];
 }
