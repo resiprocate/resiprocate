@@ -67,6 +67,7 @@ static const Data pemTypePrefixes[] =
    userKey
 };
 
+
 Data
 readIntoData(const Data& filename)
 {
@@ -93,15 +94,18 @@ readIntoData(const Data& filename)
    return target;
 }
 
+
 Data
 getAor(const Data& filename, const Data& prefix)
 {
    return filename.substr(prefix.size(), filename.size() - prefix.size() - pem.size());
 }
 
+
 Security::Security(const Data& directory) : mPath(directory)
 {
-}
+ }
+
 
 void
 Security::preload()
@@ -159,6 +163,8 @@ Security::preload()
 
       if (name.postfix(pem))
       {
+         InfoLog( << "Going to read file " << mPath + name );
+         
          if (name.prefix(userCert))
          {
             addUserCertPEM(getAor(name, userCert), readIntoData(mPath + name));
@@ -169,7 +175,7 @@ Security::preload()
          }
          else if (name.prefix(domainCert))
          {
-            addDomainPrivateKeyPEM(getAor(name, domainCert), readIntoData(mPath + name));
+            addDomainCertPEM(getAor(name, domainCert), readIntoData(mPath + name));
          }
          else if (name.prefix(domainKey))
          {
@@ -183,8 +189,8 @@ Security::preload()
    }
    closedir( dir );
 #endif
-
 }
+
 
 void
 Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
@@ -194,6 +200,7 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
    // .dlb. extra copy
    buffer = readIntoData(filename);
 }
+
 
 void
 Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
@@ -210,11 +217,10 @@ Security::onRemovePEM(const Data& name, PEMType type) const
 }
 
 
-
 namespace
 {
-
-FILE* fopenHelper (const char* pathname, const char* option)
+FILE* 
+fopenHelper (const char* pathname, const char* option)
 {
    FILE* fp = fopen(pathname, option);
 
@@ -232,12 +238,17 @@ FILE* fopenHelper (const char* pathname, const char* option)
    return   fp;
 }
 
-void clearError ()
+
+void 
+clearError ()
 {
     while (ERR_get_error())
         ;
 }
-void onReadError (bool do_throw = false)
+
+
+void 
+onReadError (bool do_throw = false)
 {
     Data msg;
     while (true)
@@ -262,14 +273,21 @@ void onReadError (bool do_throw = false)
     if(do_throw)
         throw BaseSecurity::Exception(msg, __FILE__,__LINE__);
 }
-void logReadError ()
+
+
+void 
+logReadError ()
 {
    onReadError(false);
 }
-void throwReadError ()
+
+
+void 
+throwReadError ()
 {
    onReadError(true);
 }
+
 
 struct FileGuard
 {
@@ -282,6 +300,7 @@ struct FileGuard
 
     FILE* mFp;
 };
+
 
 #if defined(WIN32)
 
@@ -312,88 +331,23 @@ struct DirGuard
 };
 #endif
 
-// ------------------------------------------------------------
-// OpenSSL certificate loading from PEM strings
-//
-
-// derived from openssl/crypto/x509/by_file.c : X509_load_cert_crl_file
-//
-int
-pemstring_cert_crl(X509_LOOKUP *lu, const char *certPem)
-{
-	BIO* in = BIO_new_mem_buf(const_cast<char*>(certPem), -1);
-
-	if(!in) {
-		X509err(X509_F_X509_LOAD_CERT_CRL_FILE,ERR_R_SYS_LIB);
-		return 0;
-	}
-	BIO_set_close(in, BIO_NOCLOSE);
-	STACK_OF(X509_INFO)* inf = PEM_X509_INFO_read_bio(in, NULL, NULL, NULL);
-	BIO_free(in);
-	if(!inf) {
-		X509err(X509_F_X509_LOAD_CERT_CRL_FILE,ERR_R_PEM_LIB);
-		return 0;
-	}
-
-	int count = 0;
-	for(int i = 0; i < sk_X509_INFO_num(inf); i++) {
-		X509_INFO* itmp = sk_X509_INFO_value(inf, i);
-		if(itmp->x509) {
-			X509_STORE_add_cert(lu->store_ctx, itmp->x509);
-			count++;
-		} else if(itmp->crl) {
-			X509_STORE_add_crl(lu->store_ctx, itmp->crl);
-			count++;
-		}
-	}
-	sk_X509_INFO_pop_free(inf, X509_INFO_free);
-	return count;
-}
-
-int
-pemstring_ctrl(X509_LOOKUP *lu, int cmd, const char *argp, long argl, char **ret)
-{
-    int ok = 0;
-
-    switch (cmd)
-    {
-	case X509_L_FILE_LOAD:
-	    ok = (pemstring_cert_crl(lu,argp) != 0);
-	    break;
-    }
-    return ok;
-}
-// ----------- END of OpenSSL support section ---------------
-
-void configSslCtx (SSL_CTX* ctx, X509_STORE* certStore)
-{
-   // associate root certs to mTlsCtx
-   int ret;
-   SSL_CTX_set_cert_store(ctx, certStore);
-   //assert(ret);
-
-   // set up the cipher
-   static char* cipher="RSA+SHA+AES+3DES";
-   ret = SSL_CTX_set_cipher_list(ctx,cipher);
-   assert(ret);
-}
-
 
 void
 setPassPhrase(BaseSecurity::PassPhraseMap& passPhrases, const Data& key, const Data& passPhrase)
 {
    BaseSecurity::PassPhraseMap::iterator iter = passPhrases.find(key);
    if (iter == passPhrases.end())
+   {
       passPhrases.insert(std::make_pair(key, passPhrase));
+   }
 }
+
+
 bool
 hasPassPhrase(const BaseSecurity::PassPhraseMap& passPhrases, const Data& key)
 {
    BaseSecurity::PassPhraseMap::const_iterator iter = passPhrases.find(key);
-   if (iter == passPhrases.end())
-      return   false;
-   else
-      return   true;
+   return (iter != passPhrases.end());
 }
 
 
@@ -405,91 +359,93 @@ void
 BaseSecurity::addCertDER (PEMType type, const Data& key, const Data& certDER, bool write)
 {
    assert( !certDER.empty() );
-   X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
 
-   X509Map::iterator where = certs.find(key);
-   if (where == certs.end())
+   X509* cert;
+   unsigned char* in = reinterpret_cast<unsigned char*>(const_cast<char*>(certDER.data()));
+   if (d2i_X509(&cert,&in,certDER.size()) == 0)
    {
-      X509* cert;
-      unsigned char* in = reinterpret_cast<unsigned char*>(const_cast<char*>(certDER.data()));
-      if (d2i_X509(&cert,&in,certDER.size()) == 0)
-      {
-         ErrLog(<< "Could not read DER certificate from " << certDER );
-         throw BaseSecurity::Exception("Could not read DER certificate ", __FILE__,__LINE__);
-      }
-      certs.insert(std::make_pair(key, cert));
-
-      if (write)
-      {
-         // creates a read/write BIO buffer.
-         BIO *out = BIO_new(BIO_s_mem());
-         assert(out);
-         try
-         {
-            int ret = PEM_write_bio_X509(out, cert);
-            assert(ret);
-
-            BIO_flush(out);
-            // get content in BIO buffer to our buffer.
-            char* p = 0;
-            size_t len = BIO_get_mem_data(out,&p);
-            assert(p);
-            assert(len);
-            Data  buf(Data::Take, p, len);
-
-            this->onWritePEM(key, type, buf);
-         }
-         catch(...)
-         {
-            BIO_free(out);
-            throw;
-         }
-         BIO_free(out);
-      }
+      ErrLog(<< "Could not read DER certificate from " << certDER );
+      throw BaseSecurity::Exception("Could not read DER certificate ", __FILE__,__LINE__);
    }
+   
+   addCertX509(type,key,cert,write);
 }
+
+
 void
-BaseSecurity::addCertPEM (PEMType type, const Data& key, const Data& certPEM, bool write)
+BaseSecurity::addCertPEM (PEMType type, const Data& name, const Data& certPEM, bool write)
 {
    assert( !certPEM.empty() );
+   X509* cert=NULL;
+   
+   BIO* in = BIO_new_mem_buf(const_cast<char*>(certPEM.c_str()), -1);
+   if ( !in )
+   {
+      ErrLog(<< "Could not create BIO buffer from '" << certPEM << "'");
+      throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
+   }
+   try
+   {
+      BIO_set_close(in, BIO_NOCLOSE);
+      
+      cert = PEM_read_bio_X509(in,0,0,0);
+   }
+   catch(...)
+   {
+      BIO_free(in);
+      throw;
+   }
+   
+   addCertX509(type,name,cert,write);
+   
+   BIO_free(in);
+}
+
+
+void
+BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
+{
    X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
 
-   X509Map::iterator where = certs.find(key);
-   if (where == certs.end())
+   certs.insert(std::make_pair(key, cert));
+   
+   if (write)
    {
-      if (write)
-         this->onWritePEM(key, type, certPEM);
-
-      BIO* in = BIO_new_mem_buf(const_cast<char*>(certPEM.c_str()), -1);
-
-      if ( !in )
-     {
-         ErrLog(<< "Could not create BIO buffer from '" << certPEM << "'");
-         throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
-      }
-
+      // creates a read/write BIO buffer.
+      BIO *out = BIO_new(BIO_s_mem());
+      assert(out);
       try
       {
-         BIO_set_close(in, BIO_NOCLOSE);
-
-         X509* cert = PEM_read_bio_X509(in,0,0,0);
-         certs.insert(std::make_pair(key, cert));
+         int ret = PEM_write_bio_X509(out, cert);
+         assert(ret);
+         
+         BIO_flush(out);
+         // get content in BIO buffer to our buffer.
+         char* p = 0;
+         size_t len = BIO_get_mem_data(out,&p);
+         assert(p);
+         assert(len);
+         Data  buf(Data::Take, p, len);
+         
+         this->onWritePEM(key, type, buf);
       }
       catch(...)
       {
-         BIO_free(in);
+         BIO_free(out);
          throw;
       }
-      BIO_free(in);
+      BIO_free(out);
    }
 }
+
+
 bool
-BaseSecurity::hasCert (PEMType type, const Data& key, bool read) const
+BaseSecurity::hasCert (PEMType type, const Data& aor, bool read) const
 {
-   assert( !key.empty() );
+   assert( !aor.empty() );
    X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
 
-   X509Map::iterator where = certs.find(key);
+   X509Map::iterator where = certs.find(aor);
    if (where == certs.end())
    {
       if (read)
@@ -497,9 +453,9 @@ BaseSecurity::hasCert (PEMType type, const Data& key, bool read) const
          Data certPEM;
          try
          {
-            onReadPEM(key, type, certPEM);
+            onReadPEM(aor, type, certPEM);
             BaseSecurity*  mutable_this = const_cast<BaseSecurity*>(this);
-            mutable_this->addCertPEM(type, key, certPEM, false);
+            mutable_this->addCertPEM(type, aor, certPEM, false);
             return   true;
          }
          catch (...)
@@ -514,25 +470,31 @@ BaseSecurity::hasCert (PEMType type, const Data& key, bool read) const
    }
    return   true;
 }
+
+
 bool
-BaseSecurity::removeCert (PEMType type, const Data& key, bool remove)
+BaseSecurity::removeCert (PEMType type, const Data& aor, bool remove)
 {
-   assert( !key.empty() );
+   assert( !aor.empty() );
    X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
 
-   X509Map::iterator iter = certs.find(key);
+   X509Map::iterator iter = certs.find(aor);
    if (iter != certs.end())
    {
       X509_free(iter->second);
       certs.erase(iter);
 
       if (remove)
-         onRemovePEM(key, type);
-
+      {
+         onRemovePEM(aor, type);
+      }
+      
       return   true;
    }
    return   false;
 }
+
+
 Data
 BaseSecurity::getCertDER (PEMType type, const Data& key, bool read) const
 {
@@ -571,129 +533,172 @@ BaseSecurity::getCertDER (PEMType type, const Data& key, bool read) const
 }
 
 
+void 
+BaseSecurity::addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, bool write)
+{ 
+   PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? 
+                                 mDomainPrivateKeys : mUserPrivateKeys);
+
+   privateKeys.insert(std::make_pair(name, pKey));
+   
+   char* kstr=NULL;
+   int klen=0;
+   
+   if (type != DomainPrivateKey)
+   {
+      PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
+      if(iter != mUserPassPhrases.end())
+      {
+         Data passPhrase = iter->second;
+         
+         kstr = (char*)passPhrase.c_str(); // TODO !cj! mem leak 
+         klen = passPhrase.size();
+      }
+   }
+
+   BIO *bio = BIO_new(BIO_s_mem());
+   assert(bio);
+   assert( EVP_des_ede3_cbc() );
+
+   const EVP_CIPHER* cipher = EVP_des_ede3_cbc();
+   if (kstr == NULL )
+   {
+      cipher = NULL;
+   }
+#if 1 // TODO - need to figure out what format to write in 
+   int ret = PEM_write_bio_PrivateKey(bio, pKey, cipher, 
+                                      (unsigned char*)kstr, klen,
+                                      NULL, NULL);
+#else
+   int ret = PEM_write_bio_PKCS8PrivateKey(bio, pKey, cipher, 
+                                           kstr, klen,
+                                           NULL, NULL);
+#endif
+   assert(ret);
+   BUF_MEM *bptr = NULL;
+   BIO_get_mem_ptr(bio, &bptr);
+   assert( bptr );
+   assert( bptr->length > 0 );
+   assert( bptr->data );
+   
+   Data pem( bptr->data, bptr->length );
+   
+   if (write)
+   {
+      onWritePEM(name, type, pem );
+   }
+
+   BIO_free(bio);
+}
+
 
 void
-BaseSecurity::addPrivateKeyDER(
-   PEMType type,
-   const Data& key,
-   const Data& privateKeyDER,
-   bool write)
+BaseSecurity::addPrivateKeyDER( PEMType type,
+                                const Data& name,
+                                const Data& privateKeyDER,
+                                bool write)
 {
-   assert( !key.empty() );
+   assert( !name.empty() );
    assert( !privateKeyDER.empty() );
 
-   PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
-
-   PrivateKeyMap::iterator where = privateKeys.find(key);
-   if (where == privateKeys.end())
+   BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyDER.c_str()), -1);
+   if ( !in )
    {
-      if (write)
-      {
-         onWritePEM(key, type, privateKeyDER);
-      }
-      BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyDER.c_str()), -1);
-
-      if ( !in )
-      {
-         ErrLog(<< "Could create BIO buffer from '" << privateKeyDER << "'");
-         throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
-      }
-
-      try
-      {
-         char* p = 0;
-         if (type != DomainPrivateKey)
-         {
-            PassPhraseMap::const_iterator iter = mUserPassPhrases.find(key);
-            if(iter != mUserPassPhrases.end())
-            {
-               p = const_cast<char*>(iter->second.c_str());
-            }
-         }
-
-         BIO_set_close(in, BIO_NOCLOSE);
-
-         EVP_PKEY* privateKey;
-         if (d2i_PKCS8PrivateKey_bio(in, &privateKey, 0, p) == 0)
-         {
-            ErrLog(<< "Could not read private key from '" << privateKeyDER << "' using pass phrase '" << p << "'" );
-            throw Exception("Could not read private key ", __FILE__,__LINE__);
-         }
-
-         privateKeys.insert(std::make_pair(key, privateKey));
-      }
-      catch(...)
-      {
-         BIO_free(in);
-         throw;
-      }
-      BIO_free(in);
+      ErrLog(<< "Could create BIO buffer from '" << privateKeyDER << "'");
+      throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
    }
+   
+   try
+   {
+      char* passPhrase = 0;
+      if (type != DomainPrivateKey)
+      {
+         PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
+         if(iter != mUserPassPhrases.end())
+         {
+            passPhrase = const_cast<char*>(iter->second.c_str());
+         }
+      }
+      BIO_set_close(in, BIO_NOCLOSE);
+
+      EVP_PKEY* privateKey;
+      if (d2i_PKCS8PrivateKey_bio(in, &privateKey, 0, passPhrase) == 0)
+      {
+         ErrLog(<< "Could not read private key from '" << privateKeyDER << "' using pass phrase '" << passPhrase << "'" );
+         throw Exception("Could not read private key ", __FILE__,__LINE__);
+      }
+      
+      if (passPhrase) 
+      {
+         free( passPhrase ); passPhrase=NULL;
+      }
+      addPrivateKeyPKEY(type,name,privateKey,write);
+   }
+   catch(...)
+   {
+      BIO_free(in);
+      throw;
+   }
+   BIO_free(in);
 }
+
 
 void
-BaseSecurity::addPrivateKeyPEM(
-   PEMType type,
-   const Data& key,
-   const Data& privateKeyPEM,
-   bool write)
+BaseSecurity::addPrivateKeyPEM( PEMType type,
+                                const Data& name,
+                                const Data& privateKeyPEM,
+                                bool write)
 {
-   assert( !key.empty() );
+   assert( !name.empty() );
    assert( !privateKeyPEM.empty() );
 
-   PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? mDomainPrivateKeys : mUserPrivateKeys);
-
-   PrivateKeyMap::iterator where = privateKeys.find(key);
-   if (where == privateKeys.end())
+   BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyPEM.c_str()), -1);
+   if ( !in )
    {
-      if (write)
-      {
-         onWritePEM(key, type, privateKeyPEM);
-      }
-      BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyPEM.c_str()), -1);
-
-      if ( !in )
-      {
-         ErrLog(<< "Could create BIO buffer from '" << privateKeyPEM << "'");
-         throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
-      }
-
-      try
-      {
-         char* p = 0;
-         if (type != DomainPrivateKey)
-         {
-            PassPhraseMap::const_iterator iter = mUserPassPhrases.find(key);
-            if(iter != mUserPassPhrases.end())
-            {
-               p = const_cast<char*>(iter->second.c_str());
-            }
-         }
-
-         BIO_set_close(in, BIO_NOCLOSE);
-
-         EVP_PKEY* privateKey;
-         if (PEM_read_bio_PrivateKey(in, &privateKey, 0, p) == 0)
-         {
-            ErrLog(<< "Could not read private key from '" << privateKeyPEM << "' using pass phrase '" << p << "'" );
-            throw Exception("Could not read private key ", __FILE__,__LINE__);
-         }
-
-         privateKeys.insert(std::make_pair(key, privateKey));
-      }
-      catch(...)
-      {
-         BIO_free(in);
-         throw;
-      }
-      BIO_free(in);
+      ErrLog(<< "Could create BIO buffer from '" << privateKeyPEM << "'");
+      throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
    }
+   
+   try
+   {
+      char* passPhrase = 0;
+      if (type != DomainPrivateKey)
+      {
+         PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
+         if(iter != mUserPassPhrases.end())
+         {
+            passPhrase = const_cast<char*>(iter->second.c_str());
+         }
+      }
+      BIO_set_close(in, BIO_NOCLOSE);
+      
+      EVP_PKEY* privateKey;
+      if (PEM_read_bio_PrivateKey(in, &privateKey, 0, passPhrase) == 0)
+      {
+         ErrLog(<< "Could not read private key from '" << endl 
+                << privateKeyPEM << "using pass phrase '" << passPhrase <<endl );
+         throw Exception("Could not read private key ", __FILE__,__LINE__);
+      }
+      
+      if (passPhrase) 
+      {
+         free( passPhrase ); passPhrase=NULL;
+      }
+      addPrivateKeyPKEY(type,name,privateKey,write);
+   }
+   catch(...)
+   {
+      BIO_free(in);
+      throw;
+   }
+   BIO_free(in);
 }
+
+
 bool
-BaseSecurity::hasPrivateKey(
-   PEMType type,
-   const Data& key,
-   bool read) const
+BaseSecurity::hasPrivateKey( PEMType type,
+                             const Data& key,
+                             bool read) const
 {
    assert( !key.empty() );
 
@@ -724,11 +729,12 @@ BaseSecurity::hasPrivateKey(
       return   true;
    }
 }
+
+
 Data
-BaseSecurity::getPrivateKeyPEM(
-   PEMType type,
-   const Data& key,
-   bool read) const
+BaseSecurity::getPrivateKeyPEM( PEMType type,
+                                const Data& key,
+                                bool read) const
 {
    assert( !key.empty() );
 
@@ -769,11 +775,12 @@ BaseSecurity::getPrivateKeyPEM(
    int len = BIO_get_mem_data(out, &buf);
    return   Data(Data::Take, buf, len);
 }
+
+
 Data
-BaseSecurity::getPrivateKeyDER(
-   PEMType type,
-   const Data& key,
-   bool read) const
+BaseSecurity::getPrivateKeyDER( PEMType type,
+                                const Data& key,
+                                bool read) const
 {
    assert( !key.empty() );
 
@@ -814,6 +821,8 @@ BaseSecurity::getPrivateKeyDER(
    int len = BIO_get_mem_data(out, &buf);
    return   Data(Data::Take, buf, len);
 }
+
+
 bool
 BaseSecurity::removePrivateKey(PEMType type, const Data& key, bool remove)
 {
@@ -835,20 +844,40 @@ BaseSecurity::removePrivateKey(PEMType type, const Data& key, bool remove)
 }
 
 
-
-
-
 Security::Exception::Exception(const Data& msg, const Data& file, const int line)
 :  BaseException(msg,file,line)
 {
 }
 
+
 BaseSecurity::BaseSecurity () :
    mTlsCtx(0),
    mSslCtx(0),
    mRootCerts(0)
-{
+{ 
+   int ret;
+   
+   initialize(); // TODO !cj! - this should only run once - ues pthreadOnce  
+   
+   mRootCerts = X509_STORE_new();
+   assert(mRootCerts);
+
+   static char* cipher="RSA+SHA+AES+3DES";
+
+   mTlsCtx = SSL_CTX_new( TLSv1_method() );
+   assert(mTlsCtx);
+   SSL_CTX_set_cert_store(mTlsCtx, mRootCerts);
+   ret = SSL_CTX_set_cipher_list(mTlsCtx,cipher);
+   assert(ret);
+   
+   mSslCtx = SSL_CTX_new( SSLv23_method() );
+   assert(mSslCtx);
+   SSL_CTX_set_cert_store(mSslCtx, mRootCerts);
+   ret = SSL_CTX_set_cipher_list(mSslCtx,cipher);
+   assert(ret);
 }
+
+
 BaseSecurity::~BaseSecurity ()
 {
    {
@@ -891,6 +920,8 @@ BaseSecurity::~BaseSecurity ()
       SSL_CTX_free(mSslCtx);
    }
 }
+
+
 void
 BaseSecurity::initialize ()
 {
@@ -899,13 +930,14 @@ BaseSecurity::initialize ()
    SSL_library_init();
    SSL_load_error_strings();
    OpenSSL_add_all_algorithms();
-   //OpenSSL_add_ssl_algorithms();
+ 
    Random::initialize();
    Timer::getTimeMs(); // initalize time offsets
 
    // make sure that necessary algorithms exist:
    assert(EVP_des_ede3_cbc());
 }
+
 
 std::vector<BaseSecurity::CertificateInfo>
 BaseSecurity::getRootCertDescriptions() const
@@ -915,9 +947,13 @@ BaseSecurity::getRootCertDescriptions() const
    assert(0);
    return   std::vector<CertificateInfo>();
 }
+
+
 void
 BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
 {
+   assert(0);
+#if 0
    assert( !x509PEMEncodedRootCerts.empty() );
 
    static X509_LOOKUP_METHOD x509_pemstring_lookup =
@@ -947,7 +983,9 @@ BaseSecurity::addRootCertPEM(const Data& x509PEMEncodedRootCerts)
    // !kh!
    // bug, no error handling here.
    X509_LOOKUP_ctrl(lookup, X509_L_FILE_LOAD, x509PEMEncodedRootCerts.c_str(), 0, 0);
+#endif
 }
+
 
 void
 BaseSecurity::addDomainCertPEM(const Data& domainName, const Data& certPEM)
@@ -955,11 +993,13 @@ BaseSecurity::addDomainCertPEM(const Data& domainName, const Data& certPEM)
    addCertPEM(DomainCert, domainName, certPEM, true);
 }
 
+
 void
 BaseSecurity::addDomainCertDER(const Data& domainName, const Data& certDER)
 {
    addCertDER(DomainCert, domainName, certDER, true);
 }
+
 
 bool
 BaseSecurity::hasDomainCert(const Data& domainName) const
@@ -967,11 +1007,13 @@ BaseSecurity::hasDomainCert(const Data& domainName) const
    return   hasCert(DomainCert, domainName, true);
 }
 
+
 bool
 BaseSecurity::removeDomainCert(const Data& domainName)
 {
    return   removeCert(DomainCert, domainName, true);
 }
+
 
 Data
 BaseSecurity::getDomainCertDER(const Data& domainName) const
@@ -979,47 +1021,63 @@ BaseSecurity::getDomainCertDER(const Data& domainName) const
    return   getCertDER(DomainCert, domainName, true);
 }
 
+
 void
 BaseSecurity::addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM)
 {
    addPrivateKeyPEM(DomainPrivateKey, domainName, privateKeyPEM, true);
 }
+
+
 bool
 BaseSecurity::hasDomainPrivateKey(const Data& domainName) const
 {
    return   hasPrivateKey(DomainPrivateKey, domainName, true);
 }
+
+
 bool
 BaseSecurity::removeDomainPrivateKey(const Data& domainName)
 {
    return   removePrivateKey(DomainPrivateKey, domainName, true);
 }
+
+
 Data
 BaseSecurity::getDomainPrivateKeyPEM(const Data& domainName) const
 {
    return   getPrivateKeyPEM(DomainPrivateKey, domainName, true);
 }
 
+
 void
 BaseSecurity::addUserCertPEM(const Data& aor, const Data& certPEM)
 {
    addCertPEM(UserCert, aor, certPEM, true);
 }
+
+
 void
 BaseSecurity::addUserCertDER(const Data& aor, const Data& certDER)
 {
    addCertDER(UserCert, aor, certDER, true);
 }
+
+
 bool
 BaseSecurity::hasUserCert(const Data& aor) const
 {
    return   hasCert(UserCert, aor, true);
 }
+
+
 bool
 BaseSecurity::removeUserCert(const Data& aor)
 {
    return   removeCert(UserCert, aor, true);
 }
+
+
 Data
 BaseSecurity::getUserCertDER(const Data& aor) const
 {
@@ -1046,6 +1104,8 @@ BaseSecurity::hasUserPassPhrase(const Data& aor) const
    else
       return   true;
 }
+
+
 bool
 BaseSecurity::removeUserPassPhrase(const Data& aor)
 {
@@ -1062,6 +1122,8 @@ BaseSecurity::removeUserPassPhrase(const Data& aor)
       return   true;
    }
 }
+
+
 Data
 BaseSecurity::getUserPassPhrase(const Data& aor) const
 {
@@ -1078,128 +1140,183 @@ BaseSecurity::getUserPassPhrase(const Data& aor) const
    }
 }
 
+
 void
 BaseSecurity::addUserPrivateKeyPEM(const Data& aor, const Data& cert)
 {
    addPrivateKeyPEM(UserPrivateKey, aor, cert, true);
 }
+
+
 void
 BaseSecurity::addUserPrivateKeyDER(const Data& aor, const Data& cert)
 {
    addPrivateKeyDER(UserPrivateKey, aor, cert, true);
 }
+
+
 bool
 BaseSecurity::hasUserPrivateKey(const Data& aor) const
 {
    return   hasPrivateKey(UserPrivateKey, aor, true);
 }
+
+
 bool
 BaseSecurity::removeUserPrivateKey(const Data& aor)
 {
    return   removePrivateKey(UserPrivateKey, aor, true);
 }
+
+
 Data
 BaseSecurity::getUserPrivateKeyPEM(const Data& aor) const
 {
    return   getPrivateKeyPEM(UserPrivateKey, aor, true);
 }
+
+
 Data
 BaseSecurity::getUserPrivateKeyDER(const Data& aor) const
 {
    return   getPrivateKeyDER(UserPrivateKey, aor, true);
 }
 
+
 void
-BaseSecurity::generateUserCert (const Data& aor,  int keyLen )
+BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
 {
-   //   Data passphrase;
-   //   EVP_PKEY *privkey = NULL;
-   //   X509 *selfcert = NULL;
-   //   BUF_MEM *bptr = NULL;
+   int ret;
    
-   // initilization:  are these needed?
-   //   CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
-   //   bio_err=BIO_new_fp(stderr, BIO_NOCLOSE);
+   InfoLog( <<"Generating new user cert for " << pAor );
+ 
+   Data domain;
+   Data aor;
+
+   try
+   {
+      Uri uri( Data("sip:")+pAor );
+      aor = uri.getAor();
+      domain = uri.host();
+   }
+   catch (...)
+   { 
+      ErrLog( <<"Invalid aor passed to generateUserCert");
+      throw Exception("Bad aor passed to generateUserCert", __FILE__,__LINE__);
+   }
    
-   RSA* rsa = RSA_generate_key( keyLen, RSA_F4, NULL, NULL);
+   // Make sure that necessary algorithms exist:
+   assert(EVP_sha1());
+
+   RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
    assert(rsa);    // couldn't make key pair
    
-   EVP_PKEY* privkey = NULL;
-   EVP_PKEY_assign_RSA(privkey, rsa);
+   EVP_PKEY* privkey = EVP_PKEY_new();
    assert(privkey);
-   
+   ret = EVP_PKEY_set1_RSA(privkey, rsa);
+   assert(ret);
+
    X509* cert = X509_new();
+   assert(cert);
    
-    
    // Setup the subjectAltName structure here with sip:, im:, and pres: URIs
    // TODO:
    
-   X509_set_version(cert, 2L);	// set version to X509v3 (starts from 0)
+   X509_NAME* subject = X509_NAME_new();
+   X509_EXTENSION* ext = X509_EXTENSION_new();
+   
+   // set version to X509v3 (starts from 0)
+   X509_set_version(cert, 2L);	
    
    int serial = Random::getRandom();  // get an int worth of randomness
-   assert(sizeof(serial)==4);
+   assert(sizeof(int)==4);
    ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
    
-   X509_NAME *subject = NULL;
-   X509_EXTENSION *ext = NULL;
-   Data domain("example.org");
-   Data userAtDomain("user@example.org");
-   X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_UTF8, 
-                               (unsigned char *) domain.data(), domain.size(), -1, 0);
-   X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_UTF8, 
-                               (unsigned char *) userAtDomain.data(), userAtDomain.size(), -1, 0);
+   ret = X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_UTF8, 
+                                     (unsigned char *) domain.data(), domain.size(), 
+                                     -1, 0);
+   assert(ret);
+   ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_UTF8, 
+                                     (unsigned char *) aor.data(), aor.size(), 
+                                     -1, 0);
+   assert(ret);
    
-   X509_set_issuer_name(cert, subject);
-   X509_set_subject_name(cert, subject);
+   ret = X509_set_issuer_name(cert, subject);
+   assert(ret);
+   ret = X509_set_subject_name(cert, subject);
+   assert(ret);
    
+   const long duration = 60*60*24*expireDays;   
    X509_gmtime_adj(X509_get_notBefore(cert),0);
-   const long duration = 60*60*24*30;   // make cert valid for 30 days
    X509_gmtime_adj(X509_get_notAfter(cert), duration);
    
-   X509_set_pubkey(cert, privkey);
+   ret = X509_set_pubkey(cert, privkey);
+   assert(ret);
    
    // need to fiddle with this to make this work with lists of IA5 URIs and UTF8
+   // using GENERAL_NAMES seems like a promissing approach
+   // (search for GENERAL_NAMES in Security.cxx)
+   //
    //ext = X509V3_EXT_conf_nid( NULL , NULL , NID_subject_alt_name, subjectAltNameStr.cstr() );
    //X509_add_ext( cert, ext, -1);
    //X509_EXTENSION_free(ext);
    
    ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, "CA:FALSE");
-   X509_add_ext( cert, ext, -1);
+   ret = X509_add_ext( cert, ext, -1);
+   assert(ret);  
    X509_EXTENSION_free(ext);
    
    // add extensions NID_subject_key_identifier and NID_authority_key_identifier
    
-#if 0 // stuff to convert to DER and for bodies 
-   X509_sign(cert, privkey, EVP_sha1());
+   ret = X509_sign(cert, privkey, EVP_sha1());
+   assert(ret);
    
+   addCertX509( UserCert, aor, cert, true /* write */ );
+   addPrivateKeyPKEY( UserPrivateKey, aor, privkey, true /* write */ );
+
+#if 0 
    unsigned char* buffer = NULL;     
    int len = i2d_X509(cert, &buffer);   // if buffer is NULL, openssl
-   // assigns memory for buffer
+											// assigns memory for buffer
    assert(buffer);
    Data derData((char *) buffer, len);
    X509Contents *certpart = new X509Contents( derData );
    assert(certpart);
    
+//  TDOD: remove later, just useful for debugging
+//   ret = PEM_write_PKCS8PrivateKey( stdout, privkey, NULL, NULL, 0, NULL, NULL);
+	  
    // make an in-memory BIO        [ see  BIO_s_mem(3) ]
    BIO *mbio = BIO_new(BIO_s_mem());
-   
-   // encrypt the the private key with the passphrase and put it in the BIO in DER format
-   i2d_PKCS8PrivateKey_bio( mbio, privkey, EVP_des_ede3_cbc(), 
-      (char *) passphrase.data(), 
-      passphrase.size(), NULL, NULL);
+   assert(mbio);
 
-   // dump the BIO into a Contents
+   assert(EVP_des_ede3_cbc());
+   // encrypt the the private key with the passphrase and put it in the BIO in DER format
+   ret = i2d_PKCS8PrivateKey_bio( mbio, privkey, EVP_des_ede3_cbc(), 
+      (char *) passphrase.data(), passphrase.size(), NULL, NULL);
+   assert(ret);
+
+   // dump the BIO into a Contents and free the BIO
    BIO_get_mem_ptr(mbio, &bptr);
    Pkcs8Contents *keypart = new Pkcs8Contents(Data(bptr->data, bptr->length));
    assert(keypart);
    BIO_free(mbio);
 
+   // make the multipart body
    MultipartMixedContents *certsbody = new MultipartMixedContents;
    certsbody->parts().push_back(certpart);
    certsbody->parts().push_back(keypart);
    assert(certsbody);
+   
+   Data foo;
+   DataStream foostr(foo);
+   certsbody->encode(foostr);
+   foostr.flush();
+   
+   DebugLog ( << foo );
 #endif
 }
+
 
 MultipartSignedContents*
 BaseSecurity::sign(const Data& senderAor, Contents* contents)
@@ -1304,6 +1421,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    return multi;
 }
 
+
 Pkcs7Contents*
 BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 {
@@ -1399,12 +1517,14 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
    return outBody;
 }
 
+
 Pkcs7Contents*
 BaseSecurity::signAndEncrypt( const Data& senderAor, Contents* body, const Data& recipCertName )
 {
    return 0;
    //return sign(senderAor, encrypt(body, recipCertName));
 }
+
 
 Data
 BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
@@ -1483,6 +1603,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    return enc;
 }
 
+
 bool
 BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Data& sigBase64 ) const
 {
@@ -1546,6 +1667,7 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    return ret;
 }
 
+
 void
 BaseSecurity::checkAndSetIdentity( const SipMessage& msg ) const
 {
@@ -1573,6 +1695,7 @@ BaseSecurity::checkAndSetIdentity( const SipMessage& msg ) const
    }
    msg.setSecurityAttributes(sec);
 }
+
 
 Contents*
 BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
@@ -1767,6 +1890,7 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
 
    return ret;
 }
+
 
 Contents*
 BaseSecurity::checkSignature(MultipartSignedContents* multi,
@@ -2052,36 +2176,22 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    return first;
 }
 
+
 SSL_CTX*
 BaseSecurity::getTlsCtx ()
 {
-   if (mTlsCtx == 0)
-   {
-      mTlsCtx = SSL_CTX_new( TLSv1_method() );
-      assert(mTlsCtx);
-
-      // make sure we have root certs
-      assert(mRootCerts);
-      configSslCtx(mTlsCtx, mRootCerts);
-   }
-
+   assert(mTlsCtx);
    return   mTlsCtx;
 }
+
+
 SSL_CTX*
 BaseSecurity::getSslCtx ()
 {
-   if (mSslCtx == 0)
-   {
-      mSslCtx = SSL_CTX_new( SSLv23_method() );
-      assert(mSslCtx);
-
-      // make sure we have root certs
-      assert(mRootCerts);
-      configSslCtx(mSslCtx, mRootCerts);
-   }
-
+   assert(mSslCtx);
    return   mSslCtx;
 }
+
 
 void
 BaseSecurity::dumpAsn( char* name, Data data)
@@ -2104,6 +2214,20 @@ BaseSecurity::dumpAsn( char* name, Data data)
    }
 #endif
 }
+
+X509*     
+BaseSecurity::getDomainCert( const Data& domain )
+{
+   return mDomainCerts[domain];
+}
+
+EVP_PKEY* 
+BaseSecurity::getDomainKey(  const Data& domain )
+{
+   return mDomainPrivateKeys[domain];
+   
+}
+
 
 #endif
 

@@ -106,7 +106,7 @@ class BaseSecurity
       Data getUserPrivateKeyPEM(const Data& aor) const;
       Data getUserPrivateKeyDER(const Data& aor) const;
 
-      void generateUserCert(const Data& aor, int keyLen=1024);
+      void generateUserCert(const Data& aor, int expireDays=365, int keyLen=1024);
 
       // Produces a detached signature
       MultipartSignedContents* sign(const Data& senderAor, Contents* );
@@ -122,20 +122,30 @@ class BaseSecurity
       Contents* decrypt( const Data& decryptorAor, Pkcs7Contents* );
       
       // returns NULL if fails. returns the data that was originally signed
-      Contents* checkSignature( MultipartSignedContents*, Data* signedBy, SignatureStatus* sigStat );
+      Contents* checkSignature( MultipartSignedContents*, 
+                                Data* signedBy, SignatureStatus* sigStat );
+
+      // allow particular classes to acces the fucntions below 
+      // friend class TlsConnection;
+   public:
+      SSL_CTX*       getTlsCtx ();
+      SSL_CTX*       getSslCtx ();
+      
+      X509*     getDomainCert( const Data& domain );
+      EVP_PKEY* getDomainKey(  const Data& domain );
 
       // map of name to certificates
       typedef std::map<Data,X509*>     X509Map;
       typedef std::map<Data,EVP_PKEY*> PrivateKeyMap;
       typedef std::map<Data,Data>      PassPhraseMap;
 
-   private:
+   protected:
       SSL_CTX*       mTlsCtx;
       SSL_CTX*       mSslCtx;
       static void dumpAsn(char*, Data);
 
       // root cert list
-      X509_STORE*    mRootCerts;
+      mutable X509_STORE*    mRootCerts;
 
       mutable X509Map        mDomainCerts;
       mutable PrivateKeyMap  mDomainPrivateKeys;
@@ -144,23 +154,21 @@ class BaseSecurity
       mutable PassPhraseMap  mUserPassPhrases;
       mutable PrivateKeyMap  mUserPrivateKeys;
 
-      void addCertPEM (PEMType type, const Data& key, const Data& certPEM, bool write);
-      void addCertDER (PEMType type, const Data& key, const Data& certDER, bool write);
-      bool hasCert (PEMType type, const Data& key, bool read) const;
-      bool removeCert (PEMType type, const Data& key, bool remove);
-      Data getCertDER (PEMType type, const Data& key, bool read) const;
+      void addCertPEM (PEMType type, const Data& name, const Data& certPEM, bool write);
+      void addCertDER (PEMType type, const Data& name, const Data& certDER, bool write);
+      bool hasCert (PEMType type, const Data& name, bool read) const;
+      bool removeCert (PEMType type, const Data& name, bool remove);
+      Data getCertDER (PEMType type, const Data& name, bool read) const;
+      void addCertX509(PEMType type, const Data& name, X509* cert, bool write);
 
-      void addPrivateKeyPEM (PEMType type, const Data& key, const Data& privateKeyPEM, bool write);
-      void addPrivateKeyDER (PEMType type, const Data& key, const Data& privateKeyDER, bool write);
-      bool hasPrivateKey (PEMType type, const Data& key, bool read) const;
-      bool removePrivateKey (PEMType type, const Data& key, bool remove);
-      Data getPrivateKeyPEM (PEMType type, const Data& key, bool read) const;
-      Data getPrivateKeyDER (PEMType type, const Data& key, bool read) const;
-
-      //===========================
-      friend class TlsConnection;
-      SSL_CTX*       getTlsCtx ();
-      SSL_CTX*       getSslCtx ();
+      void addPrivateKeyPEM (PEMType type, const Data& name, const Data& privateKeyPEM, bool write);
+      void addPrivateKeyDER (PEMType type, const Data& name, const Data& privateKeyDER, bool write);
+      bool hasPrivateKey (PEMType type, const Data& name, bool read) const;
+      bool removePrivateKey (PEMType type, const Data& name, bool remove);
+      Data getPrivateKeyPEM (PEMType type, const Data& name, bool read) const;
+      Data getPrivateKeyDER (PEMType type, const Data& name, bool read) const;
+      void addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, bool write);
+      
 };
 
 
