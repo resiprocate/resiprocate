@@ -283,6 +283,9 @@
 				RelativePath="sipstack\TcpTransport.cxx">
 			</File>
 			<File
+				RelativePath="sipstack\test\TestSupport.cxx">
+			</File>
+			<File
 				RelativePath="util\ThreadIf.cxx">
 			</File>
 			<File
@@ -319,7 +322,7 @@
 				RelativePath="sipstack\Uri.cxx">
 			</File>
 			<File
-				RelativePath="sipstack\test\testIM.cxx">
+				RelativePath="sipstack\test\testSpeed.cxx">
 			</File>
 			<File
 				RelativePath="util\vmd5.cxx">
@@ -558,9 +561,6 @@
 			</File>
 			<File
 				RelativePath="sipstack\TransportSelector.hxx">
-			</File>
-			<File
-				RelativePath="sipstack\TuIM.hxx">
 			</File>
 			<File
 				RelativePath="sipstack\UdpTransport.hxx">
