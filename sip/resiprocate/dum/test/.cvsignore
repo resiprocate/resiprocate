@@ -26,3 +26,5 @@ testMem
 testLockStep
 testPksc7
 testTransactionFSM
+obj.debug.Darwin.Power_Macintosh
+bin.debug.Darwin.Power_Macintosh
