@@ -84,6 +84,7 @@ TransactionState::process(SipStack& stack)
                
             if (sip->isExternal()) // new sip msg from transport
             {
+               DebugLog (<< "Create new transaction for inbound msg ");
                if (sip->header(h_RequestLine).getMethod() == INVITE)
                {
                   TransactionState* state = new TransactionState(stack, ServerInvite, Proceeding);
@@ -100,6 +101,7 @@ TransactionState::process(SipStack& stack)
             }
             else // new sip msg from the TU
             {
+               DebugLog (<< "Create new transaction for msg from TU ");
                if (sip->header(h_RequestLine).getMethod() == INVITE)
                {
                   TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
@@ -255,6 +257,8 @@ TransactionState::processClientNonInvite(  Message* msg )
 void
 TransactionState::processClientInvite(  Message* msg )
 {
+   DebugLog(<< "TransactionState::processClientInvite: " << *msg);
+   
    if (isInvite(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
@@ -373,6 +377,8 @@ TransactionState::processClientInvite(  Message* msg )
    else if (isTimer(msg))
    {
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
+      DebugLog (<< "timer fired: " << *timer);
+      
       switch (timer->getType())
       {
          case Timer::TimerA:
