@@ -163,7 +163,7 @@ processTimeouts(int arg)
 	}
 	else
 	{
-	    cerr << "Success: expected message seen on the wire." << endl;
+	    DebugLog( << "Success: expected message seen on the wire");
 	}
     }
 
@@ -220,7 +220,7 @@ processTimeouts(int arg)
 	}
 	else
 	{
-	    cerr << "Success: expected message seen at TU." << endl;
+	    DebugLog( << "Success: expected message seen at TU");
 	}
     }
 
