@@ -211,7 +211,7 @@ TlsTransport::processRead(Connection* c)
 void
 TlsTransport::processAllReads(FdSet& fdset)
 {
-#ifdef USE_SSL
+#if defined( USE_SSL )
 	if (!mConnectionMap.mConnections.empty())
    {
       for (Connection* c = mConnectionMap.mPostOldest.mYounger;
@@ -243,7 +243,7 @@ TlsTransport::processAllReads(FdSet& fdset)
 void
 TlsTransport::processAllWrites( FdSet& fdset )
 {
-#ifdef USE_SSL	
+#if defined( USE_SSL )
    if (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
@@ -343,7 +343,7 @@ TlsTransport::processAllWrites( FdSet& fdset )
 void
 TlsTransport::sendFromRoundRobin(FdSet& fdset)
 {
-#ifdef USE_SSL
+#if defined( USE_SSL )
    if (!mSendRoundRobin.empty())
    {
       ConnectionList::iterator rrPos = mSendPos;
@@ -392,7 +392,7 @@ TlsTransport::sendFromRoundRobin(FdSet& fdset)
 bool
 TlsTransport::processWrite(Connection* c)
 {
-	#ifdef USE_SSL
+#if defined( USE_SSL )
    assert(c);
    
    assert(!c->mOutstandingSends.empty());
@@ -440,7 +440,7 @@ TlsTransport::processWrite(Connection* c)
 void 
 TlsTransport::process(FdSet& fdSet)
 {
-#ifdef USE_SSL
+#if defined( USE_SSL )
 	if ( mTxFifo.messageAvailable() ) 
    {
       DebugLog(<<"TLSTransport mTxFifo:size: " << mTxFifo.size());
