@@ -510,6 +510,7 @@ InviteSession::copyAuthorizations(SipMessage& request)
 SipMessage& 
 InviteSession::rejectOffer(int statusCode)
 {
+   //sdp state change here--go to initial state?
    mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
    return mLastResponse;
 }
