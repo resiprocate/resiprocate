@@ -27,6 +27,7 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
 TransactionState::~TransactionState()
 {
    const Data& tid = mMsgToRetransmit->getTransactionId();
+   DebugLog (<< "Deleting TransactionState " << tid);
    mStack.mTransactionMap.remove(tid);
 
    delete mCancelStateMachine;
@@ -86,8 +87,7 @@ TransactionState::process(SipStack& stack)
          default:
             assert(0);
       }
-      
-      state->processDns(message); // handle the DnsMessage*
+      state->processDns(message); // handle the DnsMessage*    
    }
    else // new transaction
    {
