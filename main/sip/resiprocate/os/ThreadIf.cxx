@@ -31,8 +31,9 @@ threadWrapper( void* threadParm )
    srand(unsigned(time(0)) ^ unsigned(GetCurrentThreadId()) ^ unsigned(GetCurrentProcessId()));
 #endif
    t->thread();
+#if defined(WIN32)
    ExitThread( 0 );	 
-
+#endif
    return 0;
 }
 }
