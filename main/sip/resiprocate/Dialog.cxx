@@ -287,7 +287,8 @@ Dialog::updateRequest(SipMessage& request)
       via.param(p_branch); // will create the branch
       request.header(h_Vias).clear();
       request.header(h_Vias).push_front(via);
-      
+
+      request.clearForceTarget();
       Helper::processStrictRoute(request);
    }
    else
