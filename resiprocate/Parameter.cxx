@@ -21,8 +21,6 @@ Parameter::getName() const
    return ParameterTypes::ParameterNames[mType];
 }
 
-
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
