@@ -9,7 +9,6 @@
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
@@ -242,18 +241,138 @@ NameAddr::encodeParsed(ostream& str) const
   {
      if (!mDisplayName.empty())
      {
+#ifndef HANDLE_EMBEDDED_QUOTES_DNAME
         // .dlb. doesn't deal with embedded quotes
         str << Symbols::DOUBLE_QUOTE << mDisplayName << Symbols::DOUBLE_QUOTE;
-     }
-
+#else
+        // does nothing if display name is properly quoted
+        if (mustQuoteDisplayName())
+        {
+           str << Symbols::DOUBLE_QUOTE;
+           for (unsigned int i=0; i < mDisplayName.size(); i++)
+           {
+              char c = mDisplayName[i];
+              switch(c)
+              {
+                 case '"':
+                 case '\\':
+                    str << '\\' << c;
+                    break;
+                 default:
+                    str << c;
+              }
+           }
+           str << Symbols::DOUBLE_QUOTE;
+        }
+        else
+        {
+           str << mDisplayName;           
+        }
+#endif
+     }     
      str << Symbols::LA_QUOTE;
      mUri.encodeParsed(str);
      str << Symbols::RA_QUOTE;
   }
+  
   encodeParameters(str);
   return str;
 }
 
+
+bool 
+NameAddr::mustQuoteDisplayName() const
+{
+   if (mDisplayName.empty())
+   {
+      return false;
+   }
+   ParseBuffer pb(mDisplayName.data(), mDisplayName.size());   
+   
+   //shouldn't really be any leading whitespace
+   pb.skipWhitespace();
+   if (pb.eof())
+   {
+      return false;
+   }
+   if ((*pb.position() == '"'))
+   {
+      bool escaped = false;
+      while(!pb.eof())
+      {
+         pb.skipChar();
+         if (escaped)
+         {
+            escaped = false;
+         }
+         else if (*pb.position() == '\\')
+         {
+            escaped = true;
+         }
+         else if (*pb.position() == '"')
+         {
+            break;
+         }
+      }
+      if (*pb.position() == '"')
+      {
+         //should only have whitespace left, and really non of that
+         pb.skipChar();
+         if (pb.eof())
+         {
+            return false;
+         }
+         pb.skipWhitespace();
+         if (pb.eof())
+         {
+            return false; //properly quoted
+         }
+         else
+         {
+            return true; 
+         }
+      }
+      else
+      {
+         return true; //imbalanced quotes
+      }
+   }
+   else
+   {
+      while (!pb.eof())
+      {
+         const char* start;
+         start = pb.skipWhitespace();
+         pb.skipNonWhitespace();
+         for (const char* c = start; c < pb.position(); c++)
+         {
+            if ( (*c >= 'a' && *c <= 'z') ||
+                 (*c >= 'A' && *c <= 'Z') ||
+                 (*c >= '0' && *c <= '9'))
+            {
+               continue;
+            }
+            switch(*c)
+            {
+               case '-':
+               case '.':
+               case '!':
+               case '%':
+               case '*':
+               case '_':
+               case '+':
+               case '`':
+               case '\'':
+               case '~':
+                  break;
+               default:
+                  return true;
+            }
+         }
+      }
+   }
+   return false;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

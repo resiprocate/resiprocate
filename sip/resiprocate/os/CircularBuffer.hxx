@@ -1,9 +1,6 @@
 #if !defined(RESIP_CIRCULARBUFFER_HXX)
 #define RESIP_CIRCULARBUFFER_HXX  
 
-static const char* const resipCircularBufferHeaderVersion =
-   "$Id: CircularBuffer.hxx,v 1.4 2003/06/02 20:52:32 ryker Exp $";
-
 #include <vector>
 
 namespace resip

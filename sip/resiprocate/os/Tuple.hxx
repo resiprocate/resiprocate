@@ -17,6 +17,7 @@ namespace resip
 {
 
 class Transport;
+struct GenericIPAddress;
 
 // WARNING!!
 // When you change this structure, make sure to update the hash function,
@@ -31,6 +32,8 @@ class Tuple
    public:
       RESIP_HeapCount(Tuple);
       Tuple();
+      explicit Tuple(const GenericIPAddress& genericAddress, TransportType type=UNKNOWN_TRANSPORT, 
+                     const Data& targetDomain = Data::Empty);
       Tuple(const Data& printableAddress, int port, bool ipv4, TransportType type=UNKNOWN_TRANSPORT, const Data& targetDomain = Data::Empty);
       Tuple(const Data& printableAddress, int port, TransportType type, const Data& targetDomain = Data::Empty);
       Tuple(const in_addr& pipv4, int pport, TransportType ptype, const Data& targetDomain = Data::Empty);
@@ -53,9 +56,13 @@ class Tuple
       
       bool operator<(const Tuple& rhs) const;
       bool operator==(const Tuple& rhs) const;
+           
+      Data presentationFormat() const;
       
       static TransportType toTransport( const Data& );
       static const Data& toData( TransportType );
+
+      GenericIPAddress toGenericIPAddress() const;
 
       Transport* transport;
       ConnectionId connectionId;
