@@ -1,4 +1,5 @@
 #include "sip2/util/DataStream.hxx"
+#include "sip2/util/Data.hxx"
 
 using namespace Vocal2;
 
