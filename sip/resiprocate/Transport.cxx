@@ -155,6 +155,8 @@ Transport::toTransport(const Data& type)
    {
       assert(0);
    }
+
+   return Unknown;
 };
 
 Transport::Tuple::Tuple() : 

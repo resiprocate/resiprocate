@@ -19,6 +19,7 @@ SendingMessage::brief() const
       default:
          assert(0);
    }
+   return "Bad Bad Bad in SendingMessage::brief";
 }
 
 std::ostream& SendingMessage::encode(std::ostream& strm) const
