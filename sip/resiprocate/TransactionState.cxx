@@ -1112,10 +1112,20 @@ TransactionState::sendToWire(Message* msg)
    else
    {
 #if defined(USETESTTRANSPORT)
-      Transport::Tuple fakeTuple;
-      fakeTuple.transportType =
-	 Transport::toTransport(sip->header(h_Vias).front().transport());
-      mStack.mTransportSelector.send(sip, fakeTuple);
+      if ((sip->header(h_Vias).front().transport() ==
+	   Transport::toData(Transport::TestReliable)) ||
+	  (sip->header(h_Vias).front().transport() ==
+           Transport::toData(Transport::TestUnreliable)))
+      {
+	 Transport::Tuple fakeTuple;
+	 fakeTuple.transportType =
+	    Transport::toTransport(sip->header(h_Vias).front().transport());
+	 mStack.mTransportSelector.send(sip, fakeTuple);
+      }
+      else
+      {
+	 mStack.mTransportSelector.send(sip, *mDnsListCurrent);
+      }
 #else
       mStack.mTransportSelector.send(sip, *mDnsListCurrent);
 #endif
