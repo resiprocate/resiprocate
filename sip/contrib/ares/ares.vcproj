@@ -62,12 +62,14 @@
 				InlineFunctionExpansion="1"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				MinimalRebuild="FALSE"
-				UsePrecompiledHeader="3"
+				RuntimeLibrary="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLibrarianTool"/>
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/ares.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
