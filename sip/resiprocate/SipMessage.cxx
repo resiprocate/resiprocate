@@ -700,6 +700,7 @@ SipMessage::getContents() const
       {
          mContents = Contents::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv, header(h_ContentType));
       }
+      assert( mContents );
       
       // copy contents headers into the contents
       if (exists(h_ContentDisposition))

@@ -11,6 +11,13 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+const Pkcs7Contents Pkcs7Contents::Empty;
+const Pkcs7SignedContents Pkcs7SignedContents::Empty;
+
+static bool invokePkcs7ContentsInit = Pkcs7Contents::init();
+static bool invokePkcs7SignedContentsInit = Pkcs7SignedContents::init();
+
+
 bool
 Pkcs7Contents::init()
 {
@@ -153,6 +160,8 @@ Pkcs7Contents::getBodyData() const
    checkParsed();
    return mText;
 }
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
