@@ -98,6 +98,7 @@ showWork(ostream& os, int m)
    if ( m &  actHdr) os << " actHdr ";
    if ( m &  actData) os << " actData ";
    if ( m &  actBad) os << " actBad ";
+   if ( m & actEndHdrs) os << " actEndHdrs ";
    os << ']';
 }
 
@@ -153,7 +154,7 @@ AE ( PreparseStateTable::State start,
    int charStart = (c==X) ? 0 : (int)c;
    int charEnd = (c==X) ? nOct : (int)(c+1);
 
-#if defined(DEBUG) && 0
+#if defined(DEBUG)// && 0
    outStateRange(cout, stateStart, stateEnd) ;
    
    cout   << " -> "
@@ -206,10 +207,8 @@ PreparseStateTable::InitStatePreparseStateTable()
      }
   }
 
-  cout << "cleared table " << endl;
   // Setup the table with useful transitions.
 
-  Edge *** t = mTransitionTable;
   // AE -- add edge(s)
   // AE ( state, disp, char, newstate, work)
 
@@ -273,12 +272,29 @@ PreparseStateTable::InitStatePreparseStateTable()
 }
 
 
+Preparse::Preparse():
+   mBuffer(0), mLength(0), 
+   mDisposition(dContinuous),
+   mState(PreparseStateTable::NewMsg),
+   mPtr(mBuffer), mHeader(0), mHeaderLength(0),
+   mAnchorBeg(0),
+   mAnchorEnd(0),
+   mDone(false)
+{
+   ;
+}
 
 Preparse::Preparse(const char * buffer, size_t length):
-   mBuffer(buffer), mLength(length), mState(PreparseStateTable::NewMsg),
-   mPtr(mBuffer), mHeader(0), mHeaderLength(0),
-   mAnchorBeg(buffer), mAnchorEnd(buffer),
-   mDisposition(dContinuous)
+   mBuffer(buffer),
+   mLength(length), 
+   mDisposition(dContinuous),
+   mState(PreparseStateTable::NewMsg),
+   mPtr(mBuffer),
+   mHeader(0),
+   mHeaderLength(0),
+   mAnchorBeg(buffer),
+   mAnchorEnd(buffer),
+   mDone(false)
 {
   static int initialised = 0;
   if (!initialised)
@@ -288,6 +304,15 @@ Preparse::Preparse(const char * buffer, size_t length):
   }
 
 }
+void
+Preparse::addBuffer(const char * buffer, size_t length)
+{
+   mBuffer = buffer;
+   mLength = length;
+   mPtr = buffer;
+}
+
+#if defined(DEBUG)
 #include <ctype.h>
 
 ostream& showchar(ostream& os, char c)
@@ -296,18 +321,21 @@ ostream& showchar(ostream& os, char c)
       os << c;
    else
       os << (int)c;
+
+   return os;
+   
 }
+#endif
 // END HACK REMOVE !ah!
 bool
 Preparse::process()
 {
-   cout << "process()" << endl;
-   while ((mPtr - mBuffer) < mLength)
+   while ((mPtr - mBuffer) < mLength && !mDone)
    {
-      using namespace PreparseStateTable;
+      //using namespace PreparseStateTable;
       Edge& e(mTransitionTable[mState][mDisposition][*mPtr]);
       
-#if defined(DEBUG) && 0
+#if defined(DEBUG)// && 0
       showEdge("selected edge ", mState, mDisposition, *mPtr, e);
       cout << endl;
 #endif
@@ -316,7 +344,7 @@ Preparse::process()
       if (e.workMask & actAdd)
       {
 	 mAnchorEnd = mPtr;
-#if defined(DEBUG) && 0
+#if defined(DEBUG)// && 0
 	 cout << "+++Adding char '";
 //         showchar(cout, *mPtr);
          showN(cout,mAnchorBeg, mAnchorEnd-mAnchorBeg+1);
@@ -337,11 +365,13 @@ Preparse::process()
 
       if (e.workMask & actData)
       {
+#if defined(DEBUG)
          cout << "+++Data element: \'";
          showN(cout, mAnchorBeg, mAnchorEnd-mAnchorBeg+1);
          cout << '\'' << endl;
-         
+#endif         
       }
+
       if (e.workMask & actFline)
       {
 #if defined(DEBUG)
@@ -350,6 +380,7 @@ Preparse::process()
          cout << ")" << endl;
 #endif
       }
+
       if (e.workMask & actBack)
       {
 #if defined(DEBUG)
@@ -358,16 +389,34 @@ Preparse::process()
          mPtr--;
       }
 
+      if (e.workMask & actBad)
+      {
+#if defined(DEBUG)
+         cout << "+++BAD" <<endl;
+#endif         
+         mDone = true;
+      }
+
+      if (e.workMask & actEndHdrs)
+      {
+#if defined(DEBUG)
+         cout << "+++End Headers : report body" <<endl;
+#endif         
+         mDone = true;
+      }
+      
       mState = e.nextState;
       *mPtr++;
 
       if (e.workMask & actReset)
       {
 	 mAnchorBeg = mAnchorEnd = mPtr;
-#if defined(DEBUG) && 0
+#if defined(DEBUG)// && 0
          cout << "+++Reset anchors." << endl;
 #endif
       }
-
+      
    }
+   return mDone;
+   
 }
