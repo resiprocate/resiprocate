@@ -634,7 +634,7 @@ main()
       me.uri().host() = "localhost";
       me.uri().port() = 5070;
       //auto_ptr<SipMessage> msg(Helper::makeRegister(me, me));
-      SipMessage* msg = Helper::makeRegister(me, me);
+      SipMessage* msg = Helper::makeRegister(me, me, me );
       cerr << "encoded=" << *msg << endl;
    }
    {

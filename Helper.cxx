@@ -42,9 +42,9 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
 
 SipMessage*
 Helper::makeRegister(const NameAddr& registrar,
-                     const NameAddr& aor)
+                     const NameAddr& aor,
+                     const NameAddr& contact)
 {
-
    SipMessage* request = new SipMessage;
    RequestLine rLine(REGISTER);
    rLine.uri() = registrar.uri();
@@ -57,13 +57,41 @@ Helper::makeRegister(const NameAddr& registrar,
    request->header(h_From) = aor;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
-   //request->header(h_ContentLength).value() = 0;
-
+   assert( request->header(h_Contacts).empty() );
+   request->header(h_Contacts).push_front( contact );
+   
    Via via;
    request->header(h_Vias).push_front(via);
    
    return request;
 }
+
+
+SipMessage*
+Helper::makeSubscribe(const NameAddr& target, 
+                      const NameAddr& from,
+                      const NameAddr& contact)
+{
+   SipMessage* request = new SipMessage;
+   RequestLine rLine(SUBSCRIBE);
+   rLine.uri() = target.uri();
+
+   request->header(h_To) = target;
+   request->header(h_RequestLine) = rLine;
+   request->header(h_MaxForwards).value() = 70;
+   request->header(h_CSeq).method() = REGISTER;
+   request->header(h_CSeq).sequence() = 1;
+   request->header(h_From) = from;
+   request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   request->header(h_CallId).value() = Helper::computeCallId();
+   assert( request->header(h_Contacts).empty() );
+   request->header(h_Contacts).push_front( contact );
+   Via via;
+   request->header(h_Vias).push_front(via);
+   
+   return request;
+}
+
 
 SipMessage*
 Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
@@ -170,18 +198,12 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr
 
    SipMessage* response = Helper::makeResponse(request, responseCode, reason);
    response->header(h_Contacts).push_front(contact);
+
+   // !cj! - It seems like this should copy the record-route to the route too
+
    return response;
 }
 
-
-//to, requestLine& cseq method set
-SipMessage*
-Helper::makeRequest(const NameAddr& target, MethodTypes method)
-{
-   assert(0);
-   SipMessage* junk=0;
-   return junk;
-}
 
 SipMessage*
 Helper::makeCancel(const SipMessage& request)

@@ -171,7 +171,8 @@ main(int argc, char* argv[])
    int tlsPort = 0;
    Uri aor("sip:aor@localhost:5060" );
    Uri dest("sip:you@localhost:5070");
-      
+   Data aorPassword;
+         
    for ( int i=1; i<argc; i++)
    {
       if (!strcmp(argv[i],"-vv"))
@@ -199,6 +200,12 @@ main(int argc, char* argv[])
          i++;
          assert( i<argc );
          aor = Uri(Data(argv[i]));
+      } 
+      else if (!strcmp(argv[i],"-aorPassword"))
+      {
+         i++;
+         assert( i<argc );
+         aorPassword = Data(argv[i]);
       } 
       else if (!strcmp(argv[i],"-to"))
       {
@@ -265,7 +272,9 @@ main(int argc, char* argv[])
    contact.host() = "localhost"; // TODO - fix this 
    
    TuIM tuIM(&sipStack,aor,contact,&pageCallback,&errCallback,&presCallback);
-    
+
+   tuIM.registerAor( aor, aorPassword );
+
    //Vocal2::makeSocketNonBlocking( fileno(stdin) );
 
    while (1)

@@ -70,7 +70,6 @@ class Dialog
             const char* name() const { return "Dialog::Exception"; }
       };
       
-      
       // pass in a contact for this location e.g. "sip:local@domain:5060"
       Dialog(const NameAddr& localContact);
       
@@ -99,15 +98,27 @@ class Dialog
       // return status code of response to generate - 0 if ok
       int targetRefreshRequest(const SipMessage& request);
 
-      const Data& dialogId() const { return mDialogId; }
+      bool isCreated() const { return mCreated; };
+      
+      const Data dialogId() const;
       const CallId& getCallId() const { return mCallId; }
       const NameAddr& getRemoteTarget() const { return mRemoteTarget; }
       //const Data& getLocalTag() const { return mLocalTag; }
       //const Data& getRemoteTag() const { return mRemoteTag; }
       
-
+      // For creating request which do not form a dialog but whose response
+      // might create a dialog 
+      SipMessage* makeInitialRegister(const NameAddr& registrar,
+                                      const NameAddr& aor);
+      SipMessage* makeInitialSubscribe(const NameAddr& target, 
+                                       const NameAddr& from);
+      SipMessage* makeInitialInvite(const NameAddr& target,
+                                    const NameAddr& from);
+      
       // For creating requests within a dialog
       SipMessage* makeInvite();
+      SipMessage* makeRegister();
+      SipMessage* makeSubscribe();
       SipMessage* makeBye();
       SipMessage* makeRefer(const NameAddr& referTo);
       SipMessage* makeNotify();
@@ -129,19 +140,26 @@ class Dialog
 
       // Dialog State
       bool mCreated;
+
       NameAddrs mRouteSet;
       NameAddr mRemoteTarget;
+
       unsigned long mRemoteSequence;
       bool mRemoteEmpty;
       unsigned long mLocalSequence;
       bool mLocalEmpty;
+
       CallId mCallId;
       Data mLocalTag;
       Data mRemoteTag;
+
       NameAddr mRemoteUri;
       NameAddr mLocalUri;
-      Data mDialogId;
 
+      //Data mDialogId;
+
+      bool secure; // indicates the messages in this Dialog must use TLS
+      
       friend std::ostream& operator<<(std::ostream& strm, Dialog& d);
 };
 
