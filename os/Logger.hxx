@@ -20,24 +20,27 @@
 
 // unconditionally output to cerr -- easily change back and forth
 #define CerrLog(args_)                                                          \
-  resip::Log::tags(resip::Log::DEBUG_STACK, RESIPROCATE_SUBSYSTEM, std::cerr)   \
+  resip::Log::tags(resip::Log::OUT, RESIPROCATE_SUBSYSTEM, std::cerr)           \
           << __FILE__ << ':' << __LINE__ << DELIM                               \
           args_ << std::endl;
+
+#define StackLog(args_)                                                         \
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::STACK, args_)
 
 #define DebugLog(args_) \
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::DEBUG, args_)
 
-#define CritLog(args_) \
-GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::CRIT, args_)
-
-#define ErrLog(args_) \
-GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::ERR, args_)
+#define InfoLog(args_) \
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::INFO, args_)
 
 #define WarningLog(args_) \
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::WARNING, args_)
 
-#define InfoLog(args_) \
-GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::INFO, args_)
+#define ErrLog(args_) \
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::ERR, args_)
+
+#define CritLog(args_) \
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::CRIT, args_)
 
 #define CHECK_RECURSIVE_LOG
 class AssertOnRecursiveLock
@@ -64,8 +67,7 @@ do                                                                              
          AssertOnRecursiveLock check;                                           \
          resip::Lock lock(resip::Log::_mutex);                                  \
          check.set();                                                           \
-         resip::Log::tags(level_, system_,                                      \
-                           resip::GenericLogImpl::Instance())                   \
+         resip::Log::tags(level_, system_, resip::GenericLogImpl::Instance())   \
                               << __FILE__ << ':' << __LINE__ << DELIM           \
             args_ << std::endl;                                                 \
       }                                                                         \
@@ -92,6 +94,8 @@ do                                                                              
 #undef DebugLog
 // Suppress debug logging at compile time
 #define DebugLog(args_)
+#undef StackLog(args_)
+#define StackLog(args_)
 #endif
 
 namespace resip
