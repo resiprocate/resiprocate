@@ -3,6 +3,7 @@
 #include "resiprocate/Security.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/StackThread.hxx"
+#include "resiprocate/dum/DumThread.hxx"
 #include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
 
 #include "repro/CommandLineParser.hxx"
@@ -51,7 +52,6 @@ main(int argc, char** argv)
    }
 
    StackThread stackThread(stack);
-
    InMemoryRegistrationDatabase regData;
 
    /* Initialize a proxy */
@@ -96,18 +96,24 @@ main(int argc, char** argv)
    }
 
    Registrar registrar;
+   MasterProfile profile;
+      
+   profile.clearSupportedMethods();
+   profile.addSupportedMethod(resip::REGISTER);
+
+   DialogUsageManager* dum = 0;
+   DumThread* dumThread = 0;
+   
    if (!args.mNoRegistrar)
    {   
-     /* Initialize a registrar */
-     DialogUsageManager dum(stack);
-     MasterProfile profile;
-
-     profile.clearSupportedMethods();
-     profile.addSupportedMethod(resip::REGISTER);
-
-     dum.setServerRegistrationHandler(&registrar);
-     dum.setRegistrationPersistenceManager(&regData);
-     dum.setMasterProfile(&profile);
+      /* Initialize a registrar */
+      dum = new DialogUsageManager(stack);
+      
+      dum->setServerRegistrationHandler(&registrar);
+      dum->setRegistrationPersistenceManager(&regData);
+      dum->setMasterProfile(&profile);
+      
+      dumThread = new DumThread(*dum);
    }
 
    //ServerAuthManager uasAuth;
@@ -116,13 +122,17 @@ main(int argc, char** argv)
    /* Make it all go */
    stackThread.run();
    proxy.run();
-   if (!args.mNoRegistrar) { registrar.run(); }
    adminThread.run();
+   if (dumThread)
+   {
+      dumThread->run();
+   }
    
-   if (!args.mNoRegistrar) {registrar.join();}
    proxy.join();
    stackThread.join();
    adminThread.join();
-   
-   // shutdown the stack now...
+   if (dumThread)
+   {
+      dumThread->join();
+   }
 }

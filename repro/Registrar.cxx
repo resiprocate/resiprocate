@@ -17,16 +17,6 @@ Registrar::~Registrar()
 {
 }
 
-void
-Registrar::thread()
-{
-   // !jf! should really block on condition in the fifo
-   while(!waitForShutdown(10))
-   {
-      //process();
-   }
-}
-
 void 
 Registrar::onRefresh(resip::ServerRegistrationHandle sr,
                      const resip::SipMessage& reg)
