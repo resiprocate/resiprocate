@@ -112,12 +112,14 @@ Pkcs7Contents::encodeParsed(std::ostream& str) const
    return str;
 }
 
+
 void 
 Pkcs7Contents::parse(ParseBuffer& pb)
 {
+   parseHeaders(pb);
+
    const char* anchor = pb.position();
    pb.skipToEnd();
-   pb.reset(pb.position()); 
    pb.data(mText, anchor);
 
    DebugLog("Pkcs7Contents::parsed <" << mText.escaped() << ">" );
