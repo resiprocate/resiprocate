@@ -1,5 +1,5 @@
-#ifndef Pidf_hxx
-#define Pidf_hxx
+#if !defined(RESIP_XPIDF_HXX)
+#define RESIP_XPIDF_HXX 
 
 #include <vector>
 
