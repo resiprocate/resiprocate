@@ -8,7 +8,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/DumShutdownHandler.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
@@ -49,9 +49,13 @@ class testAppDialog : public AppDialog
 {
 public:
    testAppDialog(HandleManager& ham, Data &SampleAppData) : AppDialog(ham), mSampleAppData(SampleAppData)
-   {  cout << mSampleAppData << ": testAppDialog: created." << endl;  }
+   {  
+      cout << mSampleAppData << ": testAppDialog: created." << endl;  
+   }
    virtual ~testAppDialog() 
-   { cout << mSampleAppData << ": testAppDialog: destroyed." << endl; }
+   { 
+      cout << mSampleAppData << ": testAppDialog: destroyed." << endl; 
+   }
    Data mSampleAppData;
 };
 
@@ -59,11 +63,22 @@ class testAppDialogSet : public AppDialogSet
 {
 public:
    testAppDialogSet(DialogUsageManager& dum, Data SampleAppData) : AppDialogSet(dum), mSampleAppData(SampleAppData)
-   {  cout << mSampleAppData << ": testAppDialogSet: created." << endl;  }
+   {  
+      cout << mSampleAppData << ": testAppDialogSet: created." << endl;  
+   }
    virtual ~testAppDialogSet() 
-   {  cout << mSampleAppData << ": testAppDialogSet: destroyed." << endl;  }
+   {  
+      cout << mSampleAppData << ": testAppDialogSet: destroyed." << endl;  
+   }
    virtual AppDialog* createAppDialog(const SipMessage& msg) 
-   {  return new testAppDialog(mDum, mSampleAppData);  }
+   {  
+      return new testAppDialog(mDum, mSampleAppData);  
+   }
+   virtual UserProfile* selectUASUserProfile(const SipMessage& msg) 
+   { 
+      cout << mSampleAppData << ": testAppDialogSet: UAS UserProfile requested for msg: " << msg.brief() << endl;  
+      return mDum.getMasterProfile(); 
+   }
    Data mSampleAppData;
 };
 
@@ -387,9 +402,9 @@ main (int argc, char** argv)
    DialogUsageManager* dumUac = new DialogUsageManager();
    dumUac->addTransport(UDP, 12005);
 
-   Profile uacProfile;      
-   auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager(uacProfile));
-   dumUac->setProfile(&uacProfile);
+   MasterProfile uacMasterProfile;      
+   auto_ptr<ClientAuthManager> uacAuth(new ClientAuthManager);
+   dumUac->setMasterProfile(&uacMasterProfile);
    dumUac->setClientAuthManager(uacAuth);
 
    TestUac uac;
@@ -403,35 +418,35 @@ main (int argc, char** argv)
 #if !defined(NO_REGISTRATION)
    //your aor, credentials, etc here
    NameAddr uacAor("sip:101@foo.net");
-   dumUac->getProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
-   dumUac->getProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
+   dumUac->getMasterProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
+   dumUac->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
 #else
    NameAddr uacAor("sip:UAC@127.0.0.1:12005");
 #endif
 
-   dumUac->getProfile()->setDefaultFrom(uacAor);
-   dumUac->getProfile()->setDefaultRegistrationTime(70);
+   dumUac->getMasterProfile()->setDefaultFrom(uacAor);
+   dumUac->getMasterProfile()->setDefaultRegistrationTime(70);
 
    //set up UAS
    DialogUsageManager* dumUas = new DialogUsageManager();
    dumUas->addTransport(UDP, 12010);
    
-   Profile uasProfile;   
-   std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager(uasProfile));
-   dumUas->setProfile(&uasProfile);
+   MasterProfile uasMasterProfile;   
+   std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
+   dumUas->setMasterProfile(&uasMasterProfile);
    dumUas->setClientAuthManager(uasAuth);
 
 #if !defined(NO_REGISTRATION)
    //your aor, credentials, etc here
    NameAddr uasAor("sip:105@foo.net");
-   dumUas->getProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
-   dumUas->getProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
+   dumUas->getMasterProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
+   dumUas->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
 #else
    NameAddr uasAor("sip:UAS@127.0.0.1:12010");
 #endif
 
-   dumUas->getProfile()->setDefaultRegistrationTime(70);
-   dumUas->getProfile()->setDefaultFrom(uasAor);
+   dumUas->getMasterProfile()->setDefaultRegistrationTime(70);
+   dumUas->getMasterProfile()->setDefaultFrom(uasAor);
 
    time_t bHangupAt = 0;
    TestUas uas(&bHangupAt);
@@ -497,10 +512,10 @@ main (int argc, char** argv)
 
               // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
               cout << "UAC: Sending Options Request to UAS." << endl;
-			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, uacAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
+			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
 
               cout << "UAC: Sending Invite Request to UAS." << endl;
-              dumUac->send(dumUac->makeInviteSession(uasAor, uacAor, uac.sdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
+              dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
            }
         }
 
