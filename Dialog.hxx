@@ -3,6 +3,8 @@
 
 #include <iosfwd>
 #include <vector>
+#include <map>
+
 #include "resiprocate/dum/DialogId.hxx"
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/MethodTypes.hxx"
@@ -32,17 +34,19 @@ class Dialog
       // different behavior from request vs. response
       // (request creates to tag)
       Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds);
-      
+
       DialogId getId() const;
+      
+      // pass dialog sip messages through dialog so we can cache the requests on
+      // the way out to be able to respond to digest authenticate requests
+      void send(SipMessage& msg);
       
       void makeRequest(SipMessage& request, MethodTypes method);
       void makeResponse(SipMessage& response, const SipMessage& request, int responseCode);
       void makeCancel(SipMessage& request);
 
-      void update(const SipMessage& msg);
       //void setLocalContact(const NameAddr& localContact);
       //void setRemoteTarget(const NameAddr& remoteTarget);
-      
       
       std::vector<ClientSubscriptionHandle> getClientSubscriptions();
       std::vector<ClientSubscriptionHandle> findClientSubscriptions(const Data& event);
@@ -89,9 +93,6 @@ class Dialog
       ServerInviteSession*  makeServerInviteSession(const SipMessage& msg);
       ServerSubscription* makeServerSubscription(const SipMessage& msg);
 
-      //matches using tid of response
-      bool matches(const SipMessage& msg);      
-
       DialogUsageManager& mDum;
       DialogSet& mDialogSet;
       DialogId mId;  
@@ -121,6 +122,10 @@ class Dialog
       NameAddr mLocalNameAddr;
       NameAddr mRemoteNameAddr;
       CallID mCallId;
+
+      // store until we get a response (non-401/407)
+      typedef std::map<int,SipMessage> RequestMap;
+      RequestMap mRequests;
 
       AppDialog* mAppDialog;
       
