@@ -18,7 +18,6 @@
 
 #if !defined(WIN32)
 #include <unistd.h>
-#include <pthread.h>
 #include <dirent.h>
 #endif 
 
@@ -51,20 +50,19 @@ Security::Security( bool tlsServer, bool useTls )
    ctxTls = NULL;
    mTlsServer = tlsServer;
    mUseTls = useTls;
-      
-#ifdef WIN32
-   // !jf! not threadsafe
-   static bool initDone=false;
+
+   // check-lock-check
+   static bool initDone = false;
    if (!initDone)
    {
-      initialize();
-      initDone = true;
+      static Mutex once;
+      Lock lock(once);
+      if (!initDone)
+      {
+         initDone = true;
+         initialize();
+      }
    }
-#else
-   // for thread safety
-   pthread_once_t once_control = PTHREAD_ONCE_INIT;
-   pthread_once(&once_control, Security::initialize);
-#endif
 }
 
 void
