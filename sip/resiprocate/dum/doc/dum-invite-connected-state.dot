@@ -1,6 +1,12 @@
+//  names start with cap are states
+//  names start with app:: are appliction handlers
+//  names start with dum:: are dum interface to application
+//  names start with lower case are actions
+//  names start with on are events
+
 digraph UAC {
         rankdir=LR;
-        node [shape = box]; 
+        node [shape = box];
 
         Connected -> Updating [ label = "dum::provideOffer/send::UPDATE" ];
         Updating -> Connected [ label = "on200U/app::onAnswer" ];
