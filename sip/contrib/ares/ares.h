@@ -1,4 +1,4 @@
-/* $Id: ares.h,v 1.6 2003/10/30 18:19:01 adamr Exp $ */
+/* $Id: ares.h,v 1.7 2003/10/30 19:02:20 fluffy Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
@@ -22,11 +22,11 @@
 #include <errno.h>
 #include <winsock2.h>
 #include <io.h>
-
 #include <string.h>
 #include <stdio.h>
-
-
+#else
+#include <arpa/nameser.h>
+#include <arpa/nameser_compat.h>
 #endif
 
 #include <sys/types.h>
@@ -133,6 +133,7 @@ void ares_free_hostent(struct hostent *host);
 const char *ares_strerror(int code, char **memptr);
 void ares_free_errmem(char *mem);
 
+
 #if defined(WIN32) || defined (__CYGWIN__)
 
 #define T_A             1               /* host address */
@@ -206,6 +207,5 @@ void ares_free_errmem(char *mem);
 #define MAXLABEL 63
 
 #endif
-
 
 #endif /* ARES__H */
