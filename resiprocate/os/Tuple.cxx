@@ -24,8 +24,8 @@ Tuple::Tuple() :
 Tuple::Tuple(const in_addr& pipv4,
              int pport,
              TransportType ptype)
-   : ipv4(pipv4),
-     v6(false),
+   : v6(false),
+     ipv4(pipv4),
      port(pport),
      transportType(ptype),
      transport(0),
@@ -36,8 +36,8 @@ Tuple::Tuple(const in_addr& pipv4,
 Tuple::Tuple(const in6_addr& pipv6,
              int pport,
              TransportType ptype)
-   : ipv6(pipv6),
-     v6(true),
+   : v6(true),
+     ipv6(pipv6),
      port(pport),
      transportType(ptype),
      transport(0),
@@ -124,6 +124,8 @@ bool Tuple::operator<(const Tuple& rhs) const
          return transportType < rhs.transportType;
       }
    }
+   // !jf!
+   return false;
 }
 
 std::ostream&
@@ -191,6 +193,8 @@ std::hash_value(const resip::Tuple& tuple)
    }
 }
 
+#endif
+
 static const Data transportNames[MAX_TRANSPORT] =
 {
    Data("UNKNOWN_TRANSPORT"),
@@ -212,11 +216,11 @@ Tuple::toTransport(const Data& type)
          return i;
       }
    }
-   return Transport::UNKNOWN_TRANSPORT;
+   return UNKNOWN_TRANSPORT;
 };
 
 const Data&
-Transport::toData(TransportType type)
+Tuple::toData(TransportType type)
 {
    assert(type >= UNKNOWN_TRANSPORT && type < MAX_TRANSPORT);
    return transportNames[type];
@@ -224,4 +228,3 @@ Transport::toData(TransportType type)
 
 
 
-#endif
