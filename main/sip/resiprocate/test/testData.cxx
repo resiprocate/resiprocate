@@ -16,7 +16,29 @@ class TestData
             Data transport("transport");
             assert(isEqualNoCase(transport, "transport"));
          }
-
+         
+         {
+            Data d1("0123456789");
+            assert(d1.find("0") == 0);
+            assert(d1.find("1") == 1);
+            assert(d1.find("8") == 8);
+            assert(d1.find("9") == 9);
+            assert(d1.find("01") == 0);
+            assert(d1.find("12") == 1);
+            assert(d1.find("a") == Data::npos);
+            assert(d1.find("0123456789") == 0);
+            assert(d1.find("0123456789a") == Data::npos);
+            
+            Data d2;
+            assert(d2.find("0") == Data::npos);            
+            assert(d2.find("abc") == Data::npos);
+            assert(d2.find("") == Data::npos);
+         }
+         {
+            Data d1("abcdefghi");
+            assert (d1.substr(d1.find("def"), 3) == "def");
+            cerr << "substr = " << d1.substr(5,4) << endl;
+         }
          {
             Data d1("0");
             Data d2("0");
@@ -76,7 +98,7 @@ class TestData
             Data buffer;
             Data working;
             DataStream strm(buffer);
-
+            
             buffer.clear();
             strm << "user=phone";
             strm.flush();
