@@ -910,6 +910,10 @@ TuIM::registerAor( const Uri& uri, const Data& password  )
    msg->header(h_Expires).value() = mRegistrationTimeSeconds;
    msg->header(h_Contacts).front().param(p_expires) = mRegistrationTimeSeconds;
    
+   Token t;
+   t = Token(Data("presence"));
+   msg->header(h_AllowEvents).push_front( t );
+   
    mNextTimeToRegister = Timer::getRandomFutureTimeMs( mRegistrationTimeSeconds*1000 );
    
    setOutbound( *msg );
