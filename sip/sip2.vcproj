@@ -120,6 +120,9 @@
 				RelativePath="sipstack\BranchParameter.cxx">
 			</File>
 			<File
+				RelativePath="sipstack\Circular.cxx">
+			</File>
+			<File
 				RelativePath="util\Coders.cxx">
 			</File>
 			<File
