@@ -104,6 +104,10 @@ class GagLoginMessage : public GagMessage
 
     virtual ostream &serialize(ostream &os) const;
     virtual void parse(istream &is);
+
+    Uri *getAorPtr() {return &aor;}
+    Data *getUseridPtr() {return &userid;}
+    Data *getPasswordPtr() {return &password;}
   private:
     Uri aor;
     Data userid;
@@ -118,6 +122,8 @@ class GagLogoutMessage : public GagMessage
 
     virtual ostream &serialize(ostream &os) const;
     virtual void parse(istream &is);
+
+    Uri *getAorPtr() {return &aor;}
   private:
     Uri aor;
 };
@@ -125,28 +131,36 @@ class GagLogoutMessage : public GagMessage
 class GagAddBuddyMessage : public GagMessage
 {
   public:
-    GagAddBuddyMessage(const Uri &_buddy) : buddy(_buddy)
-      { messageType=ADD_BUDDY; }
+    GagAddBuddyMessage(const Uri &_us, const Uri &_them) 
+      : us(_us), them(_them) { messageType=ADD_BUDDY; }
     GagAddBuddyMessage(istream &is) { messageType=ADD_BUDDY; parse(is); }
 
     virtual ostream &serialize(ostream &os) const;
     virtual void parse(istream &is);
+
+    Uri *getUsPtr() {return &us;}
+    Uri *getThemPtr() {return &them;}
   private:
-    Uri buddy;
+    Uri us;
+    Uri them;
 };
 
 class GagRemoveBuddyMessage : public GagMessage
 {
   public:
-    GagRemoveBuddyMessage(const Uri &_buddy) : buddy(_buddy)
-      {messageType=REMOVE_BUDDY;}
+    GagRemoveBuddyMessage(const Uri &_us, const Uri &_them) 
+      : us(_us), them(_them) { messageType=REMOVE_BUDDY; }
     GagRemoveBuddyMessage(istream &is) 
       { messageType=REMOVE_BUDDY; parse (is); }
 
     virtual ostream &serialize(ostream &os) const;
     virtual void parse(istream &is);
+
+    Uri *getUsPtr() {return &us;}
+    Uri *getThemPtr() {return &them;}
   private:
-    Uri buddy;
+    Uri us;
+    Uri them;
 };
 
 class GagErrorMessage : public GagMessage
