@@ -1,24 +1,14 @@
-USE_SSL = 1
-
-BUILD = ../../build
+BUILD = ../build
 
 include $(BUILD)/Makefile.pre
--include ../Makefile.opt
 
-USE_REPO=false
 QT_LIBNAME = qt
 QT_LIBDIRS = /usr/lib/qt-3.0.5/lib
 QT_INCLUDEDIRS = /usr/lib/qt-3.0.5/include
 NCURSES_LIBNAME = ncurses
-PACKAGES += SIP2 SIPSTACK2 UTIL2 ARES PTHREAD NCURSES QT
+PACKAGES += RESIPROCATE ARES PTHREAD NCURSES QT OPENSSL
 
-ifeq ($(USE_SSL),1)
-PACKAGES += OPENSSL
-endif
-
-TESTPROGRAMS =	\
-		limpetx.cxx
-
+TESTPROGRAMS =	limpetx.cxx
 
 SRC = \
 		Limpet.cxx \
