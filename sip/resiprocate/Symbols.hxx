@@ -125,6 +125,23 @@ class Symbols
       static const char * const MagicCookie;
       static const char * const Vocal2Cookie;
 
+      static const char * const algorithm;
+      static const char * const cnonce;
+      static const char * const domain;
+      static const char * const nonce;
+      static const char * const nc;
+      static const char * const opaque;
+      static const char * const realm;
+      static const char * const response;
+      static const char * const stale;
+      static const char * const username;
+      static const char * const qop;
+      static const char * const uri;
+      
+      static const char * const id;
+      static const char * const retryAfter;
+      static const char * const reason;
+
       static const int DefaultSipPort;
       static const int SipTlsPort;
       static const int DefaultSipsPort;

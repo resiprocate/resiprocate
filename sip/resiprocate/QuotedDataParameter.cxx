@@ -1,79 +1,34 @@
-#ifndef ParameterTypeEnums_hxx
-#define ParameterTypeEnums_hxx
+#include <cassert>
+#include "sip2/sipstack/QuotedDataParameter.hxx"
+#include "sip2/sipstack/Symbols.hxx"
+#include "sip2/util/ParseBuffer.hxx"
+#include "sip2/sipstack/ParseException.hxx"
 
-#include "sip2/util/Data.hxx"
+using namespace Vocal2;
+using namespace std;
 
-namespace Vocal2
+QuotedDataParameter::QuotedDataParameter(ParameterTypes::Type type,
+                                         ParseBuffer& pb,
+                                         const char* terminators)
+   : DataParameter(type, pb, terminators)
 {
-
-class Parameter;
-class ParseBuffer;
-
-class ParameterTypes
-{
-  
-   public:
-      // When you add something to this enum Type, you must add an entry to
-      // Parameter::make
-      
-      enum Type
-      {
-         transport,
-         user,
-         method,
-         ttl,
-         maddr,
-         lr,
-         q,
-         purpose,
-         expires,
-         handling,
-         tag,
-         toTag,
-         fromTag,
-         duration,
-         branch,
-         received,
-         mobility,
-
-         comp,
-         rport,
-
-         algorithm,
-         cnonce,
-         domain,
-         id,
-         nonce,
-         nc,
-         opaque,
-         realm,
-         response,
-         stale,
-         username,
-         qop,
-         uri,
-         retryAfter,
-         reason,
-         qopOptions,
-         qopFactory,
-
-         UNKNOWN,
-         MAX_PARAMETER
-      };
-
-      // convert to enum from two pointers into the HFV raw buffer
-      static Type getType(const char* start, unsigned int length);
-
-      typedef Parameter* (*Factory)(ParameterTypes::Type, ParseBuffer&);
-
-      static Factory ParameterFactories[MAX_PARAMETER];
-      static Data ParameterNames[MAX_PARAMETER];
-};
- 
+   if(!mQuoted)
+   {
+      pb.fail();
+   }
 }
 
-#endif
+QuotedDataParameter::QuotedDataParameter(ParameterTypes::Type type)
+   : DataParameter(type)
+{
+   mQuoted = true;
+}
 
+Parameter* 
+QuotedDataParameter::clone() const
+{
+   return new QuotedDataParameter(*this);
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -3,6 +3,8 @@
 
 #include "sip2/sipstack/BranchParameter.hxx"
 #include "sip2/sipstack/DataParameter.hxx"
+#include "sip2/sipstack/QuotedDataParameter.hxx"
+#include "sip2/sipstack/QopParameter.hxx"
 #include "sip2/sipstack/IntegerParameter.hxx"
 #include "sip2/sipstack/FloatParameter.hxx"
 #include "sip2/sipstack/ExistsParameter.hxx"
@@ -284,6 +286,250 @@ class Rport_Param : public ParamBase
 };
 extern Rport_Param p_rport;
  
+class Id_Param : public ParamBase
+{
+   public:
+      typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::id;}
+      Id_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::id] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::id] = Symbols::id;
+      }
+};
+extern Id_Param p_id;
+
+class Reason_Param : public ParamBase
+{
+   public:
+      typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::reason;}
+      Reason_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::reason] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::reason] = Symbols::reason;
+      }
+};
+extern Reason_Param p_reason;
+
+class Retry_After_Param : public ParamBase
+{
+   public:
+      typedef IntegerParameter Type;
+	  typedef IntegerParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::retryAfter;}
+      Retry_After_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::retryAfter] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::retryAfter] = Symbols::retryAfter;
+      }
+};
+extern Retry_After_Param p_retryAfter;
+
+//auth parameters
+class Algorithm_Param : public ParamBase
+{
+   public:
+      typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::algorithm;}
+      Algorithm_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::algorithm] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::algorithm] = Symbols::algorithm;
+      }
+};
+extern Algorithm_Param p_algorithm;
+
+class Cnonce_Param : public ParamBase
+{
+   public:
+      typedef QuotedDataParameter Type;
+      typedef QuotedDataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::cnonce;}
+      Cnonce_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::cnonce] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::cnonce] = Symbols::cnonce;
+      }
+};
+extern Cnonce_Param p_cnonce;
+
+class Nonce_Param : public ParamBase
+{
+   public:
+      typedef QuotedDataParameter Type;
+      typedef QuotedDataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::nonce;}
+      Nonce_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::nonce] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::nonce] = Symbols::nonce;
+      }
+};
+extern Nonce_Param p_nonce;
+
+class Domain_Param : public ParamBase
+{
+   public:
+      typedef QuotedDataParameter Type;
+      typedef QuotedDataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::domain;}
+      Domain_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::domain] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::domain] = Symbols::domain;
+      }
+};
+extern Domain_Param p_domain;
+
+class Nc_Param : public ParamBase
+{
+   public:
+      typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::nc;}
+      Nc_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::nc] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::nc] = Symbols::nc;
+      }
+};
+extern Nc_Param p_nc;
+
+class Opaque_Param : public ParamBase
+{
+   public:
+      typedef QuotedDataParameter Type;
+      typedef QuotedDataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::opaque;}
+      Opaque_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::opaque] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::opaque] = Symbols::opaque;
+      }
+};
+extern Opaque_Param p_opaque;
+
+class Realm_Param : public ParamBase
+{
+   public:
+      typedef QuotedDataParameter Type;
+      typedef QuotedDataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::realm;}
+      Realm_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::realm] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::realm] = Symbols::realm;
+      }
+};
+extern Realm_Param p_realm;
+
+class Response_Param : public ParamBase
+{
+   public:
+      typedef QuotedDataParameter Type;
+      typedef QuotedDataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::response;}
+      Response_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::response] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::response] = Symbols::response;
+      }
+};
+extern Response_Param p_response;
+
+class Stale_Param : public ParamBase  //new type, bool true/false?
+{
+   public:
+      typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::stale;}
+      Stale_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::stale] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::stale] = Symbols::stale;
+      }
+};
+extern Stale_Param p_stale;
+
+class Username_Param : public ParamBase
+{
+   public:
+      typedef QuotedDataParameter Type;
+      typedef QuotedDataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::username;}
+      Username_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::username] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::username] = Symbols::username;
+      }
+};
+extern Username_Param p_username;
+
+class Uri_Param : public ParamBase
+{
+   public:
+      typedef QuotedDataParameter Type;
+      typedef QuotedDataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::uri;}
+      Uri_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::uri] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::uri] = Symbols::uri;
+      }
+};
+extern Uri_Param p_uri;
+
+class Qop_Options_Param : public ParamBase
+{
+   public:
+      typedef QuotedDataParameter Type;
+      typedef QuotedDataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::qopOptions;}
+      Qop_Options_Param()
+      {
+         ParameterTypes::ParameterNames[ParameterTypes::qopOptions] = Symbols::qop;
+      }
+};
+extern Qop_Options_Param p_qopOptions;
+
+class Qop_Param : public ParamBase
+{
+   public:
+      typedef DataParameter Type;
+      typedef DataParameter::Type DType;
+      virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::qop;}
+      Qop_Param()
+      {
+         ParameterTypes::ParameterNames[ParameterTypes::qop] = Symbols::qop;
+      }
+};
+extern Qop_Param p_qop;
+
+class Qop_Factory_Param
+{
+   public:
+      typedef QopParameter Type;
+      Qop_Factory_Param()
+      {
+         ParameterTypes::ParameterFactories[ParameterTypes::qopFactory] = Type::decode;
+         ParameterTypes::ParameterNames[ParameterTypes::qopFactory] = Symbols::qop;
+      }
+};
+extern Qop_Factory_Param p_qopFactory;
+
+
+
+
+
+
+
+
+
+
 }
 
 #endif
