@@ -820,7 +820,7 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    assert( cert );
    sk_X509_push(certs, cert);
   
-   const EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
+   EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
    //const EVP_CIPHER* cipher = EVP_aes_128_cbc();
    //const EVP_CIPHER* cipher = EVP_enc_null();
    assert( cipher );
