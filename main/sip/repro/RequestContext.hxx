@@ -16,6 +16,9 @@ namespace repro
   class RequestContext
   {
     public:
+      RequestContext(RequestProcessorChain &);
+      ~RequestContext();
+
       void setSipRequest(resip::SipMessage *);
       resip::SipMessage *getSipRequest();
 
