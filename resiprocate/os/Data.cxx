@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.27 2002/11/07 03:07:27 jason Exp $";
+"$Id: Data.cxx,v 1.28 2002/11/08 17:45:13 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -25,7 +25,7 @@ Data::Data()
 
 Data::Data(const char* str, int length) 
    : mSize(length),
-     mBuf(new char[mSize]),
+     mBuf(new char[mSize+1]),
      mCapacity(mSize),
      mMine(true)
 {
@@ -296,6 +296,10 @@ char&
 Data::operator[](size_type p)
 {
    assert(p > 0 && p < mSize);
+   if (!mMine)
+   {
+      resize(mSize, true);
+   }
    return mBuf[p];
 }
 
@@ -391,6 +395,7 @@ Data::c_str() const
    {
       const_cast<Data*>(this)->resize(mSize, true);
    }
+   mBuf[mSize] = 0;
    return mBuf;
 }
 
