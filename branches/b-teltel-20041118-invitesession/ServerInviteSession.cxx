@@ -67,6 +67,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
       }
 
       case UAS_Accepted:
+	  case UAS_WaitingToOffer:
       case UAS_WaitingToHangup:
       case UAS_WaitingToTerminate:
       case UAS_SentUpdateAccepted:
@@ -121,6 +122,7 @@ ServerInviteSession::provisional(int code)
          
       case UAS_EarlyProvidedAnswer:
       case UAS_Accepted:
+	  case UAS_WaitingToOffer:
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_OfferReliable: 
@@ -166,6 +168,12 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
          break;
          
       case UAS_Accepted:
+         // queue the offer to be sent after the ACK is received
+         transition(UAS_WaitingToOffer);
+         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         break;
+
+	  case UAS_WaitingToOffer:
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
       case UAS_FirstEarlyReliable:
@@ -200,7 +208,7 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          break;
-         
+
       case UAS_EarlyOffer:
          transition(UAS_EarlyProvidedAnswer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
@@ -225,6 +233,7 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          break;
 
       case UAS_Accepted:
+	  case UAS_WaitingToOffer:
       case UAS_EarlyNoOffer:
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
@@ -283,6 +292,7 @@ ServerInviteSession::end()
          break;
 
       case UAS_Accepted:
+	  case UAS_WaitingToOffer:
          if(mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet - wait for it
          {
             transition(UAS_WaitingToHangup);
@@ -350,6 +360,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       }
 
       case UAS_Accepted:
+	  case UAS_WaitingToOffer:
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdateAccepted:
       case UAS_Start:
@@ -391,7 +402,8 @@ ServerInviteSession::accept(int code)
          break;
          
       case UAS_Accepted:
-         assert(0);
+	  case UAS_WaitingToOffer:
+         assert(0);  // Already Accepted
          break;
          
       case UAS_FirstEarlyReliable:
@@ -453,6 +465,9 @@ ServerInviteSession::dispatch(const SipMessage& msg)
          break;       
       case UAS_Accepted:
          dispatchAccepted(msg);
+         break;
+      case UAS_WaitingToOffer:
+         dispatchWaitingToOffer(msg);
          break;
       case UAS_AcceptedWaitingAnswer:
          dispatchAcceptedWaitingAnswer(msg);
@@ -526,23 +541,27 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    switch (toEvent(msg, sdp.get()))
    {
       case OnInviteOffer:
+         mLastSessionModification = msg;
          transition(UAS_Offer);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
       case OnInvite:
+         mLastSessionModification = msg;
          transition(UAS_NoOffer);
          handler->onNewSession(getHandle(), None, msg);
          handler->onOfferRequired(getSessionHandle(), msg);
          break;
       case OnInviteReliableOffer:
+         mLastSessionModification = msg;
          transition(UAS_OfferReliable);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
       case OnInviteReliable:
+         mLastSessionModification = msg;
          transition(UAS_NoOfferReliable);
          handler->onNewSession(getHandle(), None, msg);
          handler->onOfferRequired(getSessionHandle(), msg);
@@ -603,6 +622,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       
       case OnCancel:
       {
+	     // Cancel and 200 crossed
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
          mDialog.send(c200);
@@ -611,13 +631,72 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
 
       case OnBye:
       {
+	     transition(Terminated);
          SipMessage b200;
          mDialog.makeResponse(b200, msg, 200);
          mDialog.send(b200);
+		 handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+		 mDum.destroy(this);
          break;
       }
         
       
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
+}
+
+void
+ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   InfoLog (<< "dispatchAccepted: " << msg.brief());
+   
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnAck:
+      {
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         InviteSession::provideOffer(*mProposedLocalSdp);
+         break;
+      }
+
+      case OnAckAnswer:
+      {
+         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         transition(Terminated);
+         SipMessage bye;
+         mDialog.makeRequest(bye, BYE);
+         mDialog.send(bye);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);  // !slg!
+         break;
+      }
+      
+      case OnCancel:
+      {
+	     // Cancel and 200 crossed
+         SipMessage c200;
+         mDialog.makeResponse(c200, msg, 200);
+         mDialog.send(c200);
+         break;
+      }
+
+      case OnBye:
+      {
+	     transition(Terminated);
+         SipMessage b200;
+         mDialog.makeResponse(b200, msg, 200);
+         mDialog.send(b200);
+		 handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+		 mDum.destroy(this);
+         break;
+      }
+              
       default:
          if(msg.isRequest())
          {
@@ -853,6 +932,7 @@ ServerInviteSession::sendUpdate(const SdpContents& sdp)
       mDialog.makeRequest(update, UPDATE);
       InviteSession::setSdp(update, sdp);
       mDialog.send(update);
+      mLastSessionModification = update;
    }
    else
    {

@@ -49,6 +49,7 @@ class ServerInviteSession: public InviteSession
       void dispatchStart(const SipMessage& msg);
       void dispatchOfferOrEarly(const SipMessage& msg);
       void dispatchAccepted(const SipMessage& msg);
+      void dispatchWaitingToOffer(const SipMessage& msg);
       void dispatchAcceptedWaitingAnswer(const SipMessage& msg);
       void dispatchOfferReliable(const SipMessage& msg);
       void dispatchNoOfferReliable(const SipMessage& msg);
