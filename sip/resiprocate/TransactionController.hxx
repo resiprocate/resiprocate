@@ -65,6 +65,9 @@ class TransactionController
       // !jf! Probably should transmit stray responses statelessly. see RFC3261
       bool mDiscardStrayResponses;
 
+      // from the sipstack (for convenience)
+      Fifo<Message>& mTUFifo;
+
       // Used to handle the stateless stack incoming requests and responses as
       // well as maintaining a state machine for the async dns responses
       StatelessHandler mStatelessHandler;
@@ -79,8 +82,6 @@ class TransactionController
       // processing for requests or responses
       Fifo<Message>* mStateMacFifo;
 
-      // from the sipstack (for convenience)
-      Fifo<Message>& mTUFifo;
 
       // Used to decide which transport to send a sip message on. 
       TransportSelector mTransportSelector;

@@ -219,6 +219,12 @@
 				RelativePath=".\ApiCheck.cxx">
 			</File>
 			<File
+				RelativePath=".\AresDns.cxx">
+			</File>
+			<File
+				RelativePath=".\AsyncCLessTransport.cxx">
+			</File>
+			<File
 				RelativePath=".\Auth.cxx">
 			</File>
 			<File
@@ -238,6 +244,9 @@
 			</File>
 			<File
 				RelativePath="Connection.cxx">
+			</File>
+			<File
+				RelativePath=".\ConnectionBase.cxx">
 			</File>
 			<File
 				RelativePath="ConnectionManager.cxx">
@@ -274,9 +283,6 @@
 			</File>
 			<File
 				RelativePath="Embedded.cxx">
-			</File>
-			<File
-				RelativePath="Executive.cxx">
 			</File>
 			<File
 				RelativePath="ExistsParameter.cxx">
@@ -316,6 +322,9 @@
 			</File>
 			<File
 				RelativePath="IntegerParameter.cxx">
+			</File>
+			<File
+				RelativePath=".\InternalTransport.cxx">
 			</File>
 			<File
 				RelativePath="LazyParser.cxx">
@@ -544,6 +553,9 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
 			<File
+				RelativePath=".\AsyncCLessTransport.hxx">
+			</File>
+			<File
 				RelativePath=".\Auth.hxx">
 			</File>
 			<File
@@ -569,6 +581,9 @@
 			</File>
 			<File
 				RelativePath="Connection.hxx">
+			</File>
+			<File
+				RelativePath=".\ConnectionBase.hxx">
 			</File>
 			<File
 				RelativePath="ConnectionManager.hxx">
@@ -614,9 +629,6 @@
 			</File>
 			<File
 				RelativePath="Embedded.hxx">
-			</File>
-			<File
-				RelativePath="Executive.hxx">
 			</File>
 			<File
 				RelativePath="ExistsParameter.hxx">
