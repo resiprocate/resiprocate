@@ -8,4 +8,5 @@ config.log
 config.status
 lib.debug.Linux.i686
 lib.opt.Linux.i686
+lib.prof.Linux.i686
 libtool
