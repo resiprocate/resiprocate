@@ -26,7 +26,8 @@ SipMessage::SipMessage(const FromWireType* fromWire)
      mRFC2543TransactionId(),
      mRequest(false),
      mResponse(false),
-     mCreatedTime(Timer::getTimeMicroSec())
+     mCreatedTime(Timer::getTimeMicroSec()),
+     mTarget(0)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -47,7 +48,8 @@ SipMessage::SipMessage(const SipMessage& from)
      mRFC2543TransactionId(from.mRFC2543TransactionId),
      mRequest(from.mRequest),
      mResponse(from.mResponse),
-     mCreatedTime(Timer::getTimeMicroSec())
+     mCreatedTime(Timer::getTimeMicroSec()),
+     mTarget(0)
 {
    if (this != &from)
    {
@@ -92,6 +94,10 @@ SipMessage::SipMessage(const SipMessage& from)
       {
           // no body to copy
       }
+      if (from.mTarget != 0)
+      {
+	 mTarget = new Uri(*from.mTarget);
+      }
    }
 }
 
@@ -119,6 +125,7 @@ SipMessage::~SipMessage()
    delete mStartLine;
    delete mContents;
    delete mContentsHfv;
+   delete mTarget;
 }
 
 const Data& 
@@ -1189,6 +1196,33 @@ SipMessage::setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerT
       delete mHeaders[headerType];
       mHeaders[headerType] = new HeaderFieldValueList(*hfvs);
    }
+}
+
+void
+SipMessage::setTarget(const Uri& uri)
+{
+   if (mTarget)
+   {
+      DebugLog(<< "SipMessage::setTarget: replacing forced target");
+      *mTarget = uri;
+   }
+   else
+   {
+      mTarget = new Uri(uri);
+   }
+}
+
+const Uri&
+SipMessage::getTarget() const
+{
+   assert(mTarget);
+   return *mTarget;
+}
+
+bool
+SipMessage::hasTarget() const
+{
+   return (mTarget != 0);
 }
 
 #if defined(DEBUG) && defined(DEBUG_MEMORY)
