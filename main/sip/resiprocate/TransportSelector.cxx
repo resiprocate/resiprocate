@@ -7,7 +7,8 @@
 #include "sipstack/UdpTransport.hxx"
 #include "sipstack/TestTransport.hxx"
 #include "sipstack/Uri.hxx"
-#include "sipstack/SendingMessage.hxx"
+#include "sipstack/TransportMessage.hxx"
+#include "sipstack/ReliabilityMessage.hxx"
 #include "sipstack/ParserCategories.hxx"
 
 #include "util/DataStream.hxx"
@@ -164,11 +165,11 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple& destination )
    
       // send it over the transport
       destination.transport->send(destination, encoded, msg->getTransactionId());
-      mStack.mStateMacFifo.add(new SendingMessage(msg->getTransactionId(), destination.transport->isReliable()));
+      mStack.mStateMacFifo.add(new ReliabilityMessage(msg->getTransactionId(), destination.transport->isReliable()));
    }
    else
    {
-      mStack.mStateMacFifo.add(new SendingMessage(msg->getTransactionId(), SendingMessage::Failed));
+      mStack.mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
    }
 }
 
