@@ -15,8 +15,9 @@
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="4"
+			UseOfMFC="2"
 			CharacterSet="2"
-			ManagedExtensions="TRUE">
+			ManagedExtensions="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
@@ -26,7 +27,7 @@
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 				CompileAsManaged="0"
 				CompileAs="1"/>
 			<Tool
