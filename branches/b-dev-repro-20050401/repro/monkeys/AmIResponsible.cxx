@@ -24,8 +24,8 @@ AmIResponsible::~AmIResponsible()
 RequestProcessor::processor_action_t
 AmIResponsible::handleRequest(RequestContext& context)
 {
-  DebugLog(<< "Monkey handling request: " << this 
-           << "; reqcontext = " << context);
+   DebugLog(<< "Monkey handling request: " << *this 
+            << "; reqcontext = " << context);
 
   resip::SipMessage& request = context.getOriginalRequest();
 
@@ -45,7 +45,7 @@ AmIResponsible::handleRequest(RequestContext& context)
 	   // if this request is not for a domain for which the proxy is responsible,
 	   // send to the Request URI
        context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
-	   
+	   InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());
 	   // skip the rest of the monkeys
 	   return RequestProcessor::SkipThisChain;	
     }
