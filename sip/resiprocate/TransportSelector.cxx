@@ -151,11 +151,13 @@ TransportSelector::dnsResolve( SipMessage* msg)
       assert(0);
    }
 }
- 
+
+// !jf! there may be an extra copy of a tuple here. can probably get rid of it
+// but there are some const issues.  
 void 
-TransportSelector::send( SipMessage* msg, Transport::Tuple& destination, bool isResend )
+TransportSelector::send( SipMessage* msg, Transport::Tuple destination, bool isResend )
 {
-	assert( &destination != 0 );
+   assert( &destination != 0 );
 
    if (destination.transport == 0)
    {
