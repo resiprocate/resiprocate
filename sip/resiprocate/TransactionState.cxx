@@ -634,7 +634,7 @@ TransactionState::processServerNonInvite(  Message* msg )
          // ignore
          delete msg;
       }
-      else if (mState == Proceeding || mState == Trying)
+      else if (mState == Proceeding)
       {
          resendToWire(mMsgToRetransmit);
          delete msg;
@@ -1139,7 +1139,21 @@ TransactionState::resendToWire(Message* msg) const
    assert(sip);
 
    assert (mDnsState != DnsResolver::NotStarted);
-   assert (mDnsState != DnsResolver::Waiting); // !jf!
+   assert (mDnsState != DnsResolver::Waiting); // !jf! - is this bogus?
+
+#if defined(USETESTTRANSPORT)
+   if ((sip->header(h_Vias).front().transport() ==
+	Transport::toData(Transport::TestReliable)) ||
+       (sip->header(h_Vias).front().transport() ==
+	Transport::toData(Transport::TestUnreliable)))
+   {
+      Transport::Tuple fakeTuple;
+      fakeTuple.transportType =
+	 Transport::toTransport(sip->header(h_Vias).front().transport());
+      mStack.mTransportSelector.send(sip, fakeTuple);
+      return;
+   }
+#endif
 
    mStack.mTransportSelector.send(sip, *mDnsListCurrent);
 }
