@@ -32,6 +32,7 @@ class Content_Disposition_Header : public HeaderBase
 };
 extern Content_Disposition_Header h_ContentDisposition;
 
+// !dlb! should be multiple -- allows composed encodings
 class Content_Encoding_Header : public HeaderBase
 {
    public:
