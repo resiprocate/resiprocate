@@ -1,14 +1,14 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/BaseCreator.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
-BaseCreator::BaseCreator(DialogUsageManager& dum) : mDum(dum)
+BaseCreator::BaseCreator(DialogUsageManager& dum, Identity &identity) : mDum(dum), mIdentity(identity)
 {
 }
 
@@ -27,8 +27,14 @@ BaseCreator::getLastRequest() const
    return mLastRequest;
 }
 
+Identity&
+BaseCreator::getIdentity()
+{
+   return mIdentity;
+}
+
 void 
-BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodTypes method)
+BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
 {
    RequestLine rLine(method);
    rLine.uri() = target.uri();   
@@ -38,33 +44,34 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    mLastRequest.header(h_MaxForwards).value() = 70;
    mLastRequest.header(h_CSeq).method() = method;
    mLastRequest.header(h_CSeq).sequence() = 1;
-   mLastRequest.header(h_From) = from;
+   mLastRequest.header(h_From) = mIdentity.getDefaultFrom();
    mLastRequest.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    mLastRequest.header(h_CallId).value() = Helper::computeCallId();
 
    NameAddr contact; // if no GRUU, let the stack fill in the contact 
-   if (mDum.getProfile()->hasGruu(target.uri().getAor()))
+   if (mIdentity.hasGruu(target.uri().getAor()))
    {
-      contact = mDum.getProfile()->getGruu(target.uri().getAor());
+      contact = mIdentity.getGruu(target.uri().getAor());
       mLastRequest.header(h_Contacts).push_front(contact);
    }
    else
    {
-      if (mDum.getProfile()->hasOverrideHostAndPort())
+      if (mIdentity.hasOverrideHostAndPort())
       {
-         contact.uri() = mDum.getProfile()->getOverideHostAndPort();
+         contact.uri() = mIdentity.getOverideHostAndPort();
       }
-      contact.uri().user() = from.uri().user();      
+      contact.uri().user() = mIdentity.getDefaultFrom().uri().user();      
       mLastRequest.header(h_Contacts).push_front(contact);
    }
       
    Via via;
    mLastRequest.header(h_Vias).push_front(via);
 
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::Allow)) mLastRequest.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) mLastRequest.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) mLastRequest.header(h_AcceptLanguages) = mDum.getProfile()->getSupportedLanguages();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::Supported)) mLastRequest.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
+   if(mIdentity.isAdvertisedCapability(Headers::Allow)) mLastRequest.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
+   if(mIdentity.isAdvertisedCapability(Headers::AcceptEncoding)) mLastRequest.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
+   if(mIdentity.isAdvertisedCapability(Headers::AcceptLanguage)) mLastRequest.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+   if(mIdentity.isAdvertisedCapability(Headers::Supported)) mLastRequest.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
 
    DebugLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
 }
+

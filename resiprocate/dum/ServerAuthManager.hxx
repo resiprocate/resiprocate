@@ -1,6 +1,8 @@
 #if !defined(RESIP_SERVERAUTHMANAGER_HXX)
 #define RESIP_SERVERAUTHMANAGER_HXX
 
+#include "resiprocate/dum/Identity.hxx"
+
 namespace resip
 {
 class SipMessage;
@@ -9,13 +11,12 @@ class Profile;
 class ServerAuthManager
 {
    public:
-      ServerAuthManager(Profile& profile);
+      ServerAuthManager();
 
       // return true if request is authorized
-      bool handle(const SipMessage& request);
+      bool handle(Identity& identity, const SipMessage& request);
       
    private:
-      Profile& mProfile;
 };
 
  
