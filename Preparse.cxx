@@ -262,6 +262,7 @@ Preparse::Preparse(SipMessage& sipMsg):
    mDisposition(dContinuous),
    mState(PreparseStateTable::NewMsg),
    mPtr(mBuffer), mHeader(0), mHeaderLength(0),
+   mHeaderType(Headers::UNKNOWN),
    mAnchorBeg(0),
    mAnchorEnd(0),
    mDone(false)
