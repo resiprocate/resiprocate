@@ -200,14 +200,8 @@ SipMessage::header(const Data& headerName) const
       if (i->first == headerName)
       {
          HeaderFieldValueList* hfvs = i->second;
-         if (!hfvs->empty() && !hfvs->front()->isParsed())
+         if (hfvs->getParserContainer() == 0)
          {
-            for (HeaderFieldValueList::iterator j = hfvs->begin(); 
-                 j != hfvs->end(); i++)
-            {
-               (*j)->mParserCategory = new StringCategory(*j);
-            }
-            
             hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs, Headers::NONE));
          }
          return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
