@@ -1,5 +1,5 @@
 #if !defined(RESIP_DNSRESULT_HXX)
-#define RESIP_DNSINTERFACE_HXX
+#define RESIP_DNSRESULT_HXX
 
 #include <iostream>
 #include <set>
@@ -9,6 +9,7 @@
 
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/Transport.hxx"
+#include "resiprocate/Uri.hxx"
 
 struct hostent;
 
