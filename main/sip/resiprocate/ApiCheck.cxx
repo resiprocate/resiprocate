@@ -1,9 +1,7 @@
 #include <stdlib.h>
-
+#include <iostream>
 #include "resiprocate/ApiCheck.hxx"
-#include "resiprocate/os/Logger.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 #include "resiprocate/ApiCheckList.hxx"
 
@@ -14,11 +12,12 @@ ApiCheck::ApiCheck(ApiEntry* list)
 {
     int bad = 0;
     int clientListLength = 0;
-    
+
+#if defined(OLD_BUBBLE_SORT)    
     for( ; list->name ; ++list)
     {
         ++clientListLength;
-        ApiEntry *localList = ::resipApiSizeList;
+        ApiEntry *localList = ::anonymous_resipApiSizeList;
         for ( ; localList->name ; ++localList)
         {
             if (!strcmp(localList->name,list->name))
@@ -28,35 +27,59 @@ ApiCheck::ApiCheck(ApiEntry* list)
                 bool oops = localList->sz != list->sz;
                 const char w = oops?'!':' ';
 
-                InfoLog(<< "application == " << list->sz << "\t"
-                        << w << w << w << " resip == " << localList->sz 
-                        <<"\t (resip::"<< n << ")");
+#if defined(RESIP_QUIET_API_CHECK)
+                if (oops)
+                {
+#endif
 
-                if (oops) ++bad;
+                    // We are too low level (runtime-wise) to use the logging
+                    // facilities, hence the direct output to cerr.
+                    std::cerr << "application == " << list->sz << "\t"
+                              << w << w << w << " resip == " << localList->sz 
+                              <<"\t (resip::"<< n << ")" 
+                              << std::endl;
+                    if (oops)
+                    {
+                        std::cerr << "\t" << w << w << w << " Check flag(s): " << localList->culprits
+                                  << std::endl;
+                    }
+
+#if defined(RESIP_QUIET_API_CHECK)
+                }
+#endif
+                if (oops)
+                {
+                    ++bad;
+                }
 
                 break;
             }
         }
+
         if (!localList->name)
         {
-            ErrLog(<< list->name << ": no matching class in Library.");
+            std::cerr << "ERR:" << (list->name?list->name:"(nil)")
+                      << ": no matching class in Library's ApiCheckList." << std::endl;
             ++bad;
         }
     }
 
-    int resipListLen = sizeof(::resipApiSizeList)/sizeof(*::resipApiSizeList)-1; // -1 for {0,0} @ end.
+
+       // -1 for {0,0} @ end.
+    int resipListLen = sizeof(::anonymous_resipApiSizeList)/sizeof(*::anonymous_resipApiSizeList)-1;
+
 
     if ( resipListLen != clientListLength)
     {
-        CritLog(<<"Type verification lists are different lengths. resip == "
-                << resipListLen << ", client == " << clientListLength
-            );
+        std::cerr <<"Type verification lists are different lengths. resip == "
+                  << resipListLen << ", client == " << clientListLength
+                  << std::endl;
         ++bad;
     }
 
     if (bad)
     {
-        CritLog(<<"SERIOUS COMPILATION / CONFIGURATION ERRORS -- ABORTING");
+        std::cerr <<"SERIOUS COMPILATION / CONFIGURATION ERRORS -- ABORTING" << std::endl;
         abort();
         exit(bad);
     }
