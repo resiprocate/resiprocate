@@ -385,7 +385,7 @@ SipMessage::brief() const
       MethodTypes meth = header(h_RequestLine).getMethod();
       if (meth != UNKNOWN)
       {
-         result += MethodNames[meth];
+         result += getMethodName(meth);
       }
       else
       {
@@ -413,7 +413,7 @@ SipMessage::brief() const
    result += cseq;
    if (header(h_CSeq).method() != UNKNOWN)
    {
-      result += MethodNames[header(h_CSeq).method()];
+      result += getMethodName(header(h_CSeq).method());
    }
    else
    {
