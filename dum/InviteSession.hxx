@@ -86,6 +86,8 @@ class InviteSession : public DialogUsage
          CounterOfferred
       } OfferState;
 
+      virtual void dialogDestroyed(const SipMessage& msg);      
+
       // If sdp==0, the offer was rejected
       void incomingSdp(const SipMessage& msg, const SdpContents* sdp);
 

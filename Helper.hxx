@@ -178,7 +178,7 @@ class Helper
       enum FailureMessageEffect{ DialogTermination, TransactionTermination, UsageTermination, 
                                  RetryAfter, OptionalRetryAfter, ApplicationDependant };
       
-      FailureMessageEffect determineFailureMessageEffect(const SipMessage& response);      
+      static FailureMessageEffect determineFailureMessageEffect(const SipMessage& response);      
 };
  
 }

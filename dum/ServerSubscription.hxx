@@ -42,7 +42,7 @@ class ServerSubscription : public BaseSubscription
 
    protected:
       virtual ~ServerSubscription();
-
+      virtual void dialogDestroyed(const SipMessage& msg);           
    private:
       friend class Dialog;
       
