@@ -25,6 +25,7 @@ class ParameterType<ParameterTypes::transport>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::transport] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::transport] = Symbols::transport;
       }
 };
@@ -37,6 +38,7 @@ class ParameterType<ParameterTypes::user>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::user] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::user] = Symbols::user;
       }
 };
@@ -49,6 +51,7 @@ class ParameterType<ParameterTypes::method>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::method] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::method] = Symbols::method;
       }
 };
@@ -61,6 +64,7 @@ class ParameterType<ParameterTypes::ttl>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::ttl] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::ttl] = Symbols::ttl;
       }
 };
@@ -73,6 +77,7 @@ class ParameterType<ParameterTypes::maddr>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::maddr] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::maddr] = Symbols::maddr;
       }
 };
@@ -85,6 +90,7 @@ class ParameterType<ParameterTypes::lr>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::lr] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::lr] = Symbols::lr;
       }
 };
@@ -97,6 +103,7 @@ class ParameterType<ParameterTypes::q>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::q] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::q] = Symbols::q;
       }
 };
@@ -109,6 +116,7 @@ class ParameterType<ParameterTypes::purpose>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::purpose] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::purpose] = Symbols::purpose;
       }
 };
@@ -121,6 +129,7 @@ class ParameterType<ParameterTypes::expires>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::expires] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::expires] = Symbols::expires;
       }
 };
@@ -133,6 +142,7 @@ class ParameterType<ParameterTypes::handling>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::handling] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::handling] = Symbols::handling;
       }
 };
@@ -145,6 +155,7 @@ class ParameterType<ParameterTypes::tag>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::tag] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::tag] = Symbols::tag;
       }
 };
@@ -157,6 +168,7 @@ class ParameterType<ParameterTypes::toTag>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::toTag] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::toTag] = Symbols::toTag;
       }
 };
@@ -169,6 +181,7 @@ class ParameterType<ParameterTypes::fromTag>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::fromTag] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::fromTag] = Symbols::fromTag;
       }
 };
@@ -181,6 +194,7 @@ class ParameterType<ParameterTypes::duration>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::duration] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::duration] = Symbols::duration;
       }
 };
@@ -193,6 +207,7 @@ class ParameterType<ParameterTypes::branch>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::branch] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::branch] = Symbols::branch;
       }
 };
@@ -205,6 +220,7 @@ class ParameterType<ParameterTypes::received>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::received] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::received] = Symbols::received;
       }
 };
@@ -217,6 +233,7 @@ class ParameterType<ParameterTypes::comp>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::comp] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::comp] = Symbols::comp;
       }
 };
@@ -229,6 +246,7 @@ class ParameterType<ParameterTypes::rport>
 
       ParameterType()
       {
+         ParameterTypes::ParameterFactories[ParameterTypes::rport] = Type::decode;
          ParameterTypes::ParameterNames[ParameterTypes::rport] = Symbols::rport;
       }
 };

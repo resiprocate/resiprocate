@@ -2,6 +2,7 @@
 
 using namespace Vocal2;
 
+ParameterTypes::Factory ParameterTypes::ParameterFactories[MAX_PARAMETER] = {0};
 Data ParameterTypes::ParameterNames[MAX_PARAMETER] = {0};
 
 ParameterType<ParameterTypes::transport> Vocal2::p_transport;
