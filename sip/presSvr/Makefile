@@ -1,12 +1,14 @@
 # VSM (Very Simplistic Makefile)
 
 CC=g++
+RESIPHOME=..
+RESIPINC=$(RESIPHOME)
+RESIPLIB=$(RESIPHOME)/build/resiprocate
 
-RESIPHOME=/home/rjsparks/resiprocate/sip
 
-CXXFLAGS = -Wall -fPIC -Wno-deprecated -mcpu=i686 -march=i686 -D_REENTRANT -DUSE_PTHREADS -ggdb -DUSE_SSL -O0 -I.  -I${RESIPHOME}/contrib/ares -I${RESIPHOME}
+CXXFLAGS = -Wall -fPIC -Wno-deprecated -mcpu=i686 -march=i686 -D_REENTRANT -DUSE_PTHREADS -ggdb -DUSE_SSL -O0 -I.  -I$(RESIPINC)/contrib/ares -I$(RESIPINC)
 
-LDFLAGS = -L${RESIPHOME}/contrib/ares -L${RESIPHOME}/resiprocate/.libs
+LDFLAGS = -L$(RESIPHOME)/contrib/ares -L$(RESIPLIB)
 
 LDLIBS = -lresiprocate -lssl -lcrypto -lares -lpthread 
 
