@@ -1023,6 +1023,8 @@ defineHeader(Replaces);
 defineHeader(ReplyTo);
 defineHeader(RetryAfter);
 defineHeader(Server);
+defineHeader(SIPETag);
+defineHeader(SIPIfMatch);
 defineHeader(Subject);
 defineHeader(SubscriptionState);
 defineHeader(Timestamp);
