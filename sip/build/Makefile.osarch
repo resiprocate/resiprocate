@@ -1,4 +1,4 @@
-# $Id: Makefile.osarch,v 1.1 2003/03/24 22:09:53 jason Exp $
+# $Id: Makefile.osarch,v 1.2 2003/03/24 22:41:38 jason Exp $
 
 ######################################################################
 
@@ -26,9 +26,19 @@ endif
 
 ifeq ($(OSTYPE),Linux)
 
-    CXXFLAGS += -D_REENTRANT
-    CFLAGS   += -D_REENTRANT
-    DISTCC   = distcc 
+ifeq ($(ARCH),i686)
+	CXXFLAGS += -mcpu=i686 -march=i686 -DDEBUGOUTPUTMEMORY
+endif
+ifeq ($(ARCH),i486)
+	CXXFLAGS += -mcpu=i486 -march=i486
+endif
+ifeq ($(ARCH),i386)
+	CXXFLAGS += -mcpu=i386 -march=i386
+endif
+
+	CXXFLAGS += -D_REENTRANT
+	CFLAGS   += -D_REENTRANT
+	DISTCC   = distcc 
 endif
 
 

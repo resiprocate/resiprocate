@@ -29,28 +29,30 @@ PTHREAD_LDFLAGS :=
 PTHREAD_LIBNAME :=
 endif
 
-
-
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
 
-SIP2_INCLUDEDIRS := $(ROOT)/..
+ARES_INCLUDEDIRS := $(ROOT)/contrib/ares-1.1.1
+ARES_LIBDIRS := $(ROOT)/contrib/ares-1.1.1
+ARES_LIBNAME := ares
 
-SIPSTACK2_INCLUDEDIRS := $(ROOT)/sip2
-SIPSTACK2_LIBDIRS := $(ROOT)/sip2/sipstack/obj.$(TARGET_NAME) 
+RESIPROCATE_INCLUDEDIRS := $(ROOT)/..
+
+SIPSTACK2_INCLUDEDIRS := $(ROOT)/
+SIPSTACK2_LIBDIRS := $(ROOT)/sipstack/obj.$(TARGET_NAME) 
 SIPSTACK2_LIBNAME := sip2
 SIPSTACK2_LDFLAGS :=
-SIPSTACK2_DEPENDS := $(ROOT)/sip2/sipstack/obj.$(TARGET_NAME)/libsip2.a
+SIPSTACK2_DEPENDS := $(ROOT)/sipstack/obj.$(TARGET_NAME)/libsip2.so
 
 $(SIPSTACK2_DEPENDS):
-	cd $(ROOT)/sip2/sipstack;$(MAKE)
+	cd $(ROOT)/sipstack;$(MAKE)
 
 
-UTIL2_INCLUDEDIRS := $(ROOT)/sip2
-UTIL2_LIBDIRS := $(ROOT)/sip2/util/obj.$(TARGET_NAME) 
+UTIL2_INCLUDEDIRS := $(ROOT)
+UTIL2_LIBDIRS := $(ROOT)/util/obj.$(TARGET_NAME) 
 UTIL2_LIBNAME := util2
 UTIL2_LDFLAGS :=
-UTIL2_DEPENDS := $(ROOT)/sip2/util/obj.$(TARGET_NAME)/libutil2.a
+UTIL2_DEPENDS := $(ROOT)/util/obj.$(TARGET_NAME)/libutil2.so
 
 $(UTIL2_DEPENDS):
-	cd $(ROOT)/sip2/util;$(MAKE)
+	cd $(ROOT)/util;$(MAKE)
