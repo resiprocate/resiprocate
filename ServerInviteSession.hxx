@@ -16,6 +16,9 @@ class ServerInviteSession: public InviteSession
       typedef Handle<ServerInviteSession> ServerInviteSessionHandle;
       ServerInviteSessionHandle getHandle();
 
+      // send a 3xx
+      virtual void redirect(const NameAddrs& contacts, int code=302);
+
       /// Returns a 200 the user should end to accept the call
       SipMessage& accept();
       

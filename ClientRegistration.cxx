@@ -25,7 +25,8 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
      mLastRequest(request),
      mTimerSeq(0),
      mState(mLastRequest.exists(h_Contacts) ? Adding : Querying),
-     mEndWhenDone(false)
+     mEndWhenDone(false),
+     mQueuedState(None)
 {
    // If no Contacts header, this is a query
    if (mLastRequest.exists(h_Contacts))
@@ -46,72 +47,104 @@ ClientRegistration::addBinding(const NameAddr& contact)
    addBinding(contact, mDum.getProfile()->getDefaultRegistrationTime());
 }
 
+SipMessage&
+ClientRegistration::tryModification(ClientRegistration::State state)
+{
+   if (mState != Registered)
+   {
+      if (mQueuedState != None)
+      {
+         WarningLog (<< "Trying to modify bindings when already another request is queued");
+         throw UsageUseException("Queuing multiple requests for Registration Bindings", __FILE__,__LINE__);
+      }
+
+      mQueuedRequest = mLastRequest;
+      mQueuedState = state;
+
+      return mQueuedRequest;
+   }
+
+   assert(mQueuedState == None);
+   mState = state;
+
+   return mLastRequest;
+}
+
 void 
 ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
 {
+   SipMessage& next = tryModification(Adding);
    mMyContacts.push_back(contact);
-   mLastRequest.header(h_Contacts) = mMyContacts;
-   mLastRequest.header(h_Expires).value() = registrationTime;
-   mLastRequest.header(h_CSeq).sequence()++;
+
+   next.header(h_Contacts) = mMyContacts;
+   next.header(h_Expires).value() = registrationTime;
+   next.header(h_CSeq).sequence()++;
    // caller prefs
 
-   if (mState != Registered)
+   if (mQueuedState == None)
    {
-      throw UsageUseException("Can't add binding when already modifying registration bindings", __FILE__,__LINE__);
+      mDum.send(next);
    }
-
-   mState = Adding;
-   mDum.send(mLastRequest);
 }
 
 void 
 ClientRegistration::removeBinding(const NameAddr& contact)
 {
-   if (mState != Registered)
+   if (mState == Removing)
    {
-      throw UsageUseException("Can't remove binding when already modifying registration bindings", __FILE__,__LINE__);
+      WarningLog (<< "Already removing a binding");
+      throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
 
+   SipMessage& next = tryModification(Removing);
    for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
    {
       if (i->uri() == contact.uri())
       {
          mMyContacts.erase(i);
-
-         mLastRequest.header(h_Contacts) = mMyContacts;
-         mLastRequest.header(h_Expires).value() = 0;
-         mLastRequest.header(h_CSeq).sequence()++;
-         mState = Removing;
-         mDum.send(mLastRequest);
+         
+         next.header(h_Contacts) = mMyContacts;
+         next.header(h_Expires).value() = 0;
+         next.header(h_CSeq).sequence()++;
+         
+         if (mQueuedState == None)
+         {
+            mDum.send(next);
+         }
          
          return;
       }
    }
 
+   // !jf! What state are we left in now? 
    throw Exception("No such binding", __FILE__, __LINE__);
 }
 
 void 
 ClientRegistration::removeAll(bool stopRegisteringWhenDone)
 {
-   if (mState != Registered)
+   if (mState == Removing)
    {
-      throw UsageUseException("Can't remove bindings when already modifying registration bindings", __FILE__,__LINE__);
+      WarningLog (<< "Already removing a binding");
+      throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
+   SipMessage& next = tryModification(Removing);
 
    mAllContacts.clear();
    mMyContacts.clear();
    
    NameAddr all;
    all.setAllContacts();
-   mLastRequest.header(h_Contacts).clear();
-   mLastRequest.header(h_Contacts).push_back(all);
-   mLastRequest.header(h_Expires).value() = 0;
-   mLastRequest.header(h_CSeq).sequence()++;
+   next.header(h_Contacts).clear();
+   next.header(h_Contacts).push_back(all);
+   next.header(h_Expires).value() = 0;
+   next.header(h_CSeq).sequence()++;
    mEndWhenDone = stopRegisteringWhenDone;
    
-   mState = Removing;
-   mDum.send(mLastRequest);
+   if (mQueuedState == None)
+   {
+      mDum.send(next);
+   }
 }
 
 void 
@@ -119,33 +152,32 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 {
    InfoLog (<< "Removing binding");
 
-   if (mState != Registered)
+   if (mState == Removing)
    {
-      InfoLog (<< "Trying to remove bindings when modifying: " << mState);
-      throw UsageUseException("Can't remove binding when already modifying registration bindings", __FILE__,__LINE__);
+      WarningLog (<< "Already removing a binding");
+      throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
    }
+   SipMessage& next = tryModification(Removing);
 
    for (NameAddrs::iterator i=mMyContacts.begin(); i != mMyContacts.end(); i++)
    {
       i->param(p_expires) = 0;
    }
 
-   mLastRequest.header(h_Contacts) = mMyContacts;
-   mLastRequest.remove(h_Expires);
-   mLastRequest.header(h_CSeq).sequence()++;
+   next.header(h_Contacts) = mMyContacts;
+   next.remove(h_Expires);
+   next.header(h_CSeq).sequence()++;
+
+   // !jf! is this ok if queued
    mEndWhenDone = stopRegisteringWhenDone;
-   mState = Removing;
-   mDum.send(mLastRequest);
+
+   if (mQueuedState == None)
+   {
+      mDum.send(next);
+   }
 }
 
-void
-ClientRegistration::end()
-{
-   stopRegistering();
-}
-
-void 
-ClientRegistration::stopRegistering()
+void ClientRegistration::stopRegistering()
 {
    //timers aren't a concern, as DUM checks for Handle validity before firing.
    delete this;     
@@ -154,6 +186,8 @@ ClientRegistration::stopRegistering()
 void 
 ClientRegistration::requestRefresh()
 {
+   assert (mState == Registered);
+   mState = Refreshing; 
    mLastRequest.header(h_CSeq).sequence()++;
    mDum.send(mLastRequest);
 }
@@ -169,6 +203,13 @@ ClientRegistration::allContacts()
 {
    return mAllContacts;
 }
+
+void
+ClientRegistration::end()
+{
+   removeMyBindings(true);
+}
+
 
 void 
 ClientRegistration::dispatch(const SipMessage& msg)
@@ -238,8 +279,21 @@ ClientRegistration::dispatch(const SipMessage& msg)
                break;
 
             case Registered:
+            case Refreshing:
+               mState = Registered;
                break;
-               
+
+            default:
+               break;
+         }
+
+         if (mQueuedState != None)
+         {
+            InfoLog (<< "Sending queued request: " << mQueuedRequest);
+            mState = mQueuedState;
+            mQueuedState = None;
+            mLastRequest = mQueuedRequest;
+            mDum.send(mLastRequest);
          }
       }
       else
