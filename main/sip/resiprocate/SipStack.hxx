@@ -112,6 +112,9 @@ class SipStack
                 unsigned int secondsLater);
       void postMS(const ApplicationMessage& message, unsigned int ms);
 
+      // Return true if the stack has new messages for the TU
+      bool hasMessage() const;
+      
       // applications posting non-sip messages must use receive any.
       // caller now owns the memory. returns 0 if nothing there
       SipMessage* receive(); 
