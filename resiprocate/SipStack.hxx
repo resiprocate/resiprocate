@@ -30,6 +30,7 @@ class TransactionState;
 class TestDnsResolver;
 class TestFSM;
 class Security;
+class Uri;
 
 	
 class SipStack
@@ -52,7 +53,7 @@ class SipStack
 
       // this is only if you want to send to a destination not in the route. You
       // probably don't want to use it. 
-      void sendTo(const SipMessage& msg, const Data &dest="default" );
+      void sendTo(const SipMessage& msg, const Uri& uri);
 
       // caller now owns the memory
       // returns 0 if nothing there
