@@ -145,6 +145,8 @@ Contents*
 Contents::createContents(const Mime& contentType, 
                          const Data& contents)
 {
+   //CerrLog(<< "createContents(" << contentType << ")");
+
   // !ass! why are we asserting that the Data doesn't own the buffer?
   // !ass! HFV is an overlay -- then setting c->mIsMine to true ?? dlb Q
    assert(!contents.mMine);
