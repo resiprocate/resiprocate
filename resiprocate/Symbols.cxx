@@ -50,6 +50,7 @@ const char* Symbols::SCTP = "SCTP";
 const char* Symbols::Sip = "sip";
 const char* Symbols::Sips = "sips";
 const char* Symbols::Tel = "tel";
+const char* Symbols::Pres = "pres";
 
 const char* Symbols::Phone = "phone";
 const char* Symbols::Isub = "isub=";
@@ -77,6 +78,8 @@ const char* Symbols::NaptrTcp = "D2T";
 
 const char* Symbols::audio = "audio";
 const char* Symbols::RTP_AVP = "RTP/AVP";
+
+const char* Symbols::Presence = "presence";
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
