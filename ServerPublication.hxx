@@ -12,14 +12,9 @@ class ServerPublication : public BaseUsage
       {
       };  
       
-      /** An application uses sendResponse to reply to
-       *  the stimulus received through 
-       *  PublicationHandler::onPublication.
-       *  Note that the DUM will have to correlate the
-       *  provide msg (a REGISTER response) to the appropriate
-       *  transaction.
-       */
-      void sendResponse(SipMessage& msg);
+      // application may have to muck with expires or Etag
+      void accept(const SipMessage& ok);
+      void reject(int statusCode);
 };
 
 }
