@@ -1,15 +1,16 @@
+
 #ifndef WIN32
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <unistd.h>
 #else
 #include <winsock2.h>
 #include <stdlib.h>
 #include <io.h>
 #endif
 #include <stdio.h>
-#include <unistd.h>
 
 #include "DnsUtil.hxx"
 #include "Logger.hxx"
@@ -43,7 +44,7 @@ DnsUtil::lookupARecords(const Data& host)
    struct hostent hostbuf; 
    char buffer[8192];
    result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
-#elif defined( __MACH__ ) || defined (__FreeBSD__)
+#elif defined( __MACH__ ) || defined (__FreeBSD__) || defined( WIN32 )
    result = gethostbyname( host.c_str() );
    herrno = h_errno;
 #else
@@ -79,8 +80,13 @@ DnsUtil::lookupARecords(const Data& host)
       char str[256];
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
-         inet_ntop(result->h_addrtype, (u_int32_t*)(*pptr), str, sizeof(str));
-         names.push_back(str);
+#if WIN32
+ // !cj! TODO 
+		  assert(0);
+#else
+		  inet_ntop(result->h_addrtype, (u_int32_t*)(*pptr), str, sizeof(str));
+#endif        
+		  names.push_back(str);
       }
       return names;
    }
@@ -103,7 +109,13 @@ DnsUtil::getHostByAddr(const Data& ipAddress)
    }
        
    struct in_addr addrStruct;
-   int ret = inet_aton(ipAddress.c_str(), &addrStruct);
+   int ret=0;
+#ifdef WIN32
+	assert(0);
+#else
+    ret = inet_aton(ipAddress.c_str(), &addrStruct);
+#endif
+
    if (ret == 0)
    {
       throw Exception("Not a valid ip address.", __FILE__, __LINE__);
@@ -134,7 +146,7 @@ DnsUtil::getHostByAddr(const Data& ipAddress)
                           buf,
                           8192,
                           &localErrno);
-#elif defined(__MACH__) || defined(__FreeBSD__)
+#elif defined(__MACH__) || defined(__FreeBSD__) || defined( WIN32 )
    hp = gethostbyaddr( (char *)(&addrStruct),
                        sizeof(addrStruct),
                        AF_INET);
@@ -148,6 +160,7 @@ DnsUtil::getHostByAddr(const Data& ipAddress)
    }
    return Data(hp->h_name);
 }
+
 
 Data 
 DnsUtil::getLocalHostName()
@@ -177,8 +190,9 @@ DnsUtil::getLocalHostName()
 Data 
 DnsUtil::getLocalDomainName()
 {
-#ifdef __MACH__
+#if defined( __MACH__ ) || defined( WIN32 )
    assert(0);
+ // !cj! TODO 
    return NULL;
 #else
    char buffer[1024];
@@ -239,6 +253,11 @@ Data
 DnsUtil::getIpAddress(const struct in_addr& addr)
 {
    char str[256];
+#ifdef WIN32
+// !cj! TODO 
+   assert(0);
+#else
    inet_ntop(AF_INET, (u_int32_t*)(&addr), str, sizeof(str));
+#endif
    return Data(str);
 }
