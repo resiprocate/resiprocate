@@ -524,8 +524,8 @@ CallId::encode(ostream& str) const
 NameAddr::NameAddr(const NameAddr& rhs)
    : ParserCategory(rhs),
      mAllContacts(rhs.mAllContacts),
-     mUri(dynamic_cast<Uri*>(rhs.mUri->clone())), // is this ok? !jf!
-   mDisplayName(rhs.mDisplayName)
+     mUri(new Uri(*rhs.mUri)),
+     mDisplayName(rhs.mDisplayName)
 {
    assert(mUri);
 }
