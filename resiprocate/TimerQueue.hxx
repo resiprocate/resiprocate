@@ -4,8 +4,8 @@
 #include <vector>
 #include <set>
 #include <iostream>
-#include "resiprocate/util/Timer.hxx"
-#include "resiprocate/util/Fifo.hxx"
+#include "resiprocate/os/Timer.hxx"
+#include "resiprocate/os/Fifo.hxx"
 
 namespace Vocal2
 {

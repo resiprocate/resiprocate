@@ -1,7 +1,7 @@
 #ifndef Message_hxx
 #define Message_hxx
 
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 #include <iostream>
 
 namespace Vocal2

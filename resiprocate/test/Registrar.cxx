@@ -1,7 +1,7 @@
 #include <memory>
 
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/Helper.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Helper.hxx"
 #include "Resolver.hxx"
 
 #include "Registrar.hxx"

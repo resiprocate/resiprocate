@@ -2,7 +2,7 @@
 #include <assert.h>
 
 #include "compat.hxx"
-#include "resiprocate/util/Coders.hxx"
+#include "resiprocate/os/Coders.hxx"
 
 namespace Vocal2
 {

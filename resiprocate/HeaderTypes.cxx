@@ -1,8 +1,8 @@
-#include "resiprocate/util/compat.hxx"
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/sipstack/HeaderTypes.hxx"
-#include "resiprocate/sipstack/Headers.hxx"
-#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/HeaderTypes.hxx"
+#include "resiprocate/Headers.hxx"
+#include "resiprocate/Symbols.hxx"
 
 using namespace Vocal2;
 

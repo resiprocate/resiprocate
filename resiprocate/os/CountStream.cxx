@@ -1,4 +1,4 @@
-#include "resiprocate/util/CountStream.hxx"
+#include "resiprocate/os/CountStream.hxx"
 
 using namespace Vocal2;
 

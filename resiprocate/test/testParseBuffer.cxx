@@ -1,7 +1,7 @@
-#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 #include <string.h>
 #include <assert.h>
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace Vocal2;
 

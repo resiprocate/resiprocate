@@ -1,4 +1,4 @@
-#include "resiprocate/sipstack/MessageWaitingContents.hxx"
+#include "resiprocate/MessageWaitingContents.hxx"
 
 using namespace Vocal2;
 using namespace std;

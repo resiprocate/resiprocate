@@ -4,12 +4,12 @@
 #include <time.h>
 #include <errno.h>
 
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/ParseBuffer.hxx"
-#include "resiprocate/sipstack/ParserCategories.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/sipstack/UnknownParameter.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/UnknownParameter.hxx"
 
 using namespace Vocal2;
 using namespace std;
