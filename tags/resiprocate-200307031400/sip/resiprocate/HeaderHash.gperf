@@ -1,0 +1,87 @@
+%{
+#include <string.h>
+#include <ctype.h>
+#include "sip2/sipstack/HeaderTypes.hxx"
+namespace Vocal2 {
+using namespace std;
+using namespace Vocal2;
+%}
+struct headers { char *name; Headers::Type type; };
+%%
+i, Headers::CallId
+m, Headers::Contact
+e, Headers::ContentEncoding
+l, Headers::ContentLength
+c, Headers::ContentType
+f, Headers::From
+s, Headers::Subject
+t, Headers::To
+v, Headers::Via
+cseq, Headers::CSeq
+call-id, Headers::CallId
+contact, Headers::Contact
+content-length, Headers::ContentLength
+expires, Headers::Expires
+from, Headers::From
+max-forwards, Headers::MaxForwards
+route, Headers::Route
+subject, Headers::Subject
+to, Headers::To
+via, Headers::Via
+accept, Headers::Accept
+accept-encoding, Headers::AcceptEncoding
+accept-language, Headers::AcceptLanguage
+alert-info,Headers::AlertInfo
+allow, Headers::Allow
+authentication-info, Headers::AuthenticationInfo
+call-info, Headers::CallInfo
+content-disposition, Headers::ContentDisposition
+content-encoding, Headers::ContentEncoding
+content-language, Headers::ContentLanguage
+content-type, Headers::ContentType
+content-transfer-encoding, Headers::ContentTransferEncoding
+date, Headers::Date
+error-info, Headers::ErrorInfo
+in-reply-to, Headers::InReplyTo
+min-expires, Headers::MinExpires
+mime-version, Headers::MIMEVersion
+organization, Headers::Organization
+priority, Headers::Priority
+proxy-authenticate, Headers::ProxyAuthenticate
+proxy-authorization, Headers::ProxyAuthorization
+proxy-require, Headers::ProxyRequire
+record-route, Headers::RecordRoute
+reply-to, Headers::ReplyTo
+require, Headers::Require
+retry-after, Headers::RetryAfter
+server, Headers::Server
+supported, Headers::Supported
+timestamp, Headers::Timestamp
+unsupported, Headers::Unsupported
+user-agent, Headers::UserAgent
+warning, Headers::Warning
+www-authenticate,Headers::WWWAuthenticate
+subscription-state,Headers::SubscriptionState
+authorization, Headers::Authorization
+allow-events, Headers::AllowEvents
+encryption, Headers::UNKNOWN
+event, Headers::Event
+hide, Headers::UNKNOWN
+p-asserted-identity, Headers::UNKNOWN
+p-media-authorization, Headers::UNKNOWN
+p-preferred-identity, Headers::UNKNOWN
+path, Headers::UNKNOWN
+privacy, Headers::UNKNOWN
+rack, Headers::UNKNOWN
+reason, Headers::UNKNOWN
+refer-to,Headers::ReferTo
+referred-by,Headers::ReferredBy
+replaces,Headers::Replaces
+response-key, Headers::UNKNOWN
+rseq, Headers::UNKNOWN
+security-client, Headers::SecurityClient
+security-server, Headers::SecurityServer
+security-verify, Headers::SecurityVerify
+%%
+}
+
