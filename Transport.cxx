@@ -176,7 +176,7 @@ Transport::stampReceived(SipMessage* message)
 
       if (message->header(h_Vias).front().exists(p_rport))
       {
-         message->header(h_Vias).front().param(p_rport).value() = tuple.port;
+         message->header(h_Vias).front().param(p_rport).port() = tuple.port;
       }
    }
 }

@@ -17,6 +17,8 @@ class Parameter;
 class ParserCategory : public LazyParser
 {
     public:
+      enum {UnknownParserCategory = -1};
+
       ParserCategory(HeaderFieldValue* headerFieldValue);
       ParserCategory(const ParserCategory& rhs);
       ParserCategory& operator=(const ParserCategory& rhs);
@@ -27,7 +29,21 @@ class ParserCategory : public LazyParser
 
       bool exists(const ParamBase& paramType) const;
       void remove(const ParamBase& paramType);
-        
+
+      template <class T> 
+      typename T::DType& param(const T& paramType) const
+      {
+         checkParsed();
+         typename T::Type* p = dynamic_cast<typename T::Type*>(getParameterByEnum(paramType.getTypeNum()));
+         if (!p)
+         {
+            p = new typename T::Type(paramType.getTypeNum());
+            mParameters.push_back(p);
+         }
+         return p->value();
+      }
+
+#ifdef NO_TEMPLATE_METHODS
       Transport_Param::DType& param(const Transport_Param& paramType) const;
       User_Param::DType& param(const User_Param& paramType) const;
       Method_Param::DType& param(const Method_Param& paramType) const;
@@ -51,7 +67,7 @@ class ParserCategory : public LazyParser
       Digest_Algorithm_Param::DType& param(const Digest_Algorithm_Param& paramType) const;
       Digest_Qop_Param::DType& param(const Digest_Qop_Param& paramType) const;
       Digest_Verify_Param::DType& param(const Digest_Verify_Param& paramType) const;
-
+#endif
       Data& param(const Data& param) const;
       void remove(const Data& param); 
       bool exists(const Data& param) const;
