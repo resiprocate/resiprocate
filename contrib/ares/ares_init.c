@@ -309,9 +309,9 @@ static int init_by_defaults(ares_channel channel)
   if (channel->ndots == -1)
     channel->ndots = 1;
   if (channel->udp_port == -1)
-    channel->udp_port = htons(NS_DEFAULTPORT);
+    channel->udp_port = htons(NAMESERVER_PORT);
   if (channel->tcp_port == -1)
-    channel->tcp_port = htons(NS_DEFAULTPORT);
+    channel->tcp_port = htons(NAMESERVER_PORT);
 
   if (channel->nservers == -1)
     {
@@ -327,7 +327,7 @@ static int init_by_defaults(ares_channel channel)
 	  int num;
 	  DWORD (WINAPI *GetNetworkParams)(FIXED_INFO*, DWORD*); 
 
-	  hLib = LoadLibrary("iphlpapi.dll");
+	  hLib = LoadLibraryA("iphlpapi.dll");
 	  if(!hLib)
 	  {
 		  return ARES_ENOTIMP;
