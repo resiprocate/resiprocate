@@ -415,7 +415,9 @@ MessageWaitingContents::parse(ParseBuffer& pb)
 
          while (true)
          {
-            const char* pos = pb.skipToChar(Symbols::CR[0]);
+            // CodeWarrior isn't helpful enough to pick the "obvious" operator definition
+            // so we add volatile here so CW is completely unconfused what to do.
+            const volatile char* pos = pb.skipToChar(Symbols::CR[0]);
             skipSipLWS(pb);
             if (pb.position() == pos)
             {

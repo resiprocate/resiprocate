@@ -22,7 +22,7 @@ using namespace std;
 int
 main(int argc, char** argv)
 {
-   Log::initialize(Log::COUT, Log::ERR, argv[0]);
+   Log::initialize(Log::Cout, Log::Err, argv[0]);
 
    {
       Data txt("INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"

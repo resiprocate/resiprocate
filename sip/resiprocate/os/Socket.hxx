@@ -10,6 +10,7 @@
 #include <winsock2.h>
 #include <stdlib.h>
 #include <io.h>
+#include <WS2TCPIP.H>
 #endif
 
 

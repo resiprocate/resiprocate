@@ -19,7 +19,7 @@ using namespace std;
 int
 main()
 {
-   //Log::initialize(Log::COUT, Log::DEBUG, "testXMLCursor");
+   //Log::initialize(Log::Cout, Log::Debug, "testXMLCursor");
 
    // test assume that whitespace is not significant
    //   may eventually be controlled by the document/element

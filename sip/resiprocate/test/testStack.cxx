@@ -45,10 +45,10 @@ main(int argc, char* argv[])
 #ifdef WIN32
   runs = 500;
   window = 25;
-  // logType = "file";
-   logLevel = "ALERT";
-   logLevel = "INFO";
-   //  logLevel = "DEBUG";
+  logType = "cout";
+  logLevel = "ALERT";
+  logLevel = "INFO";
+  //logLevel = "DEBUG";
 #endif
 
 #if defined(HAVE_POPT_H)
@@ -104,7 +104,7 @@ main(int argc, char* argv[])
    contact.uri().user() = "fluffy";
 
 #ifdef WIN32
-     target.uri().host() = Data("10.0.1.110");
+     target.uri().host() = Data("192.168.0.156");
      //target.uri().host() = Data("cj30.libvoip.com");
 #endif
 
