@@ -221,14 +221,14 @@ UdpTransport::process(FdSet& fdset)
          if (message->isRequest() && !message->header(h_Vias).empty())
          {
 #ifndef WIN32
-			 char received[255];
+            char received[255];
             inet_ntop(AF_INET, &tuple.ipv4.s_addr, received, sizeof(received));
-			 message->header(h_Vias).front().param(p_received) = received;
+            message->header(h_Vias).front().param(p_received) = received;
 #else
-			 char * buf = inet_ntoa(tuple.ipv4);
-			message->header(h_Vias).front().param(p_received) = buf;
+            char * buf = inet_ntoa(tuple.ipv4); // !jf! not threadsafe
+            message->header(h_Vias).front().param(p_received) = buf;
 #endif
-
+            
             message->header(h_Vias).front().param(p_rport) = tuple.port;
          }
          mStateMachineFifo.add(message);
