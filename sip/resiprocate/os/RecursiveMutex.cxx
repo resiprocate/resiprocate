@@ -10,6 +10,11 @@
 #  include <pthread.h>
 #endif
 
+#if defined(__INTEL_COMPILER)
+// !rk! hack, I'm not sure off hand why the Intel compiler can't find this
+extern int pthread_mutexattr_settype (pthread_mutexattr_t *__attr, int __kind)
+     __THROW;
+#endif
 
 using resip::RecursiveMutex;
 
