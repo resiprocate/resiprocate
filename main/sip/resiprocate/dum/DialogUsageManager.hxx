@@ -85,7 +85,7 @@ class DialogUsageManager
       SipMessage& makeSubscription(const Uri& aor, const Data& eventType);
       SipMessage& makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
       SipMessage& makePublication(const Uri& aor, const Data& eventType);
-      SipMessage& makeRegistration(const Uri& aor);
+      SipMessage& makeRegistration(const NameAddr& aor);
       SipMessage& makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
 
       SipMessage& makeInviteSession(DialogId, const Uri& target);
@@ -95,9 +95,9 @@ class DialogUsageManager
       SipMessage& makeRegistration(DialogId, const Uri& aor);
       SipMessage& makeOutOfDialogRequest(DialogId, const Uri& aor, const MethodTypes& meth);
       
-      void cancel(DialogIdSet invSessionId);
-      DialogSetId send(SipMessage* newClientRequest);
-
+      void cancel(DialogSetId invSessionId);
+      void send(const SipMessage& request); 
+      
       void process(FdSet& fdset);
       
       DialogIdSet findAllDialogs();

@@ -89,9 +89,9 @@ class Dialog
       Data mRemoteTag;
       CallID mCallId;
       NameAddrs mRouteSet;
-      NameAddr mMe;
-
+      
       //variants
+      NameAddr mLocalContact;
       unsigned long mLocalCSeq;
       unsigned long mRemoteCSeq;
       NameAddr mRemoteTarget;
