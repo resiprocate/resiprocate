@@ -1,14 +1,14 @@
 #ifndef ParserCategories_hxx
 #define ParserCategories_hxx
 
-#include "sip2/util/Data.hxx"
-#include "sip2/sipstack/ParserCategory.hxx"
-#include "sip2/sipstack/ParserContainer.hxx"
-#include "sip2/sipstack/HeaderFieldValue.hxx"
-#include "sip2/sipstack/MethodTypes.hxx"
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/ParameterTypes.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/sipstack/ParserCategory.hxx"
+#include "resiprocate/sipstack/ParserContainer.hxx"
+#include "resiprocate/sipstack/HeaderFieldValue.hxx"
+#include "resiprocate/sipstack/MethodTypes.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
+#include "resiprocate/sipstack/ParameterTypes.hxx"
 
 namespace Vocal2
 {

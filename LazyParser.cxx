@@ -1,10 +1,10 @@
 
 #include <cassert>
 
-#include "sip2/sipstack/LazyParser.hxx"
-#include "sip2/util/ParseBuffer.hxx"
-#include "sip2/sipstack/ParserCategories.hxx"
-#include "sip2/sipstack/Headers.hxx"
+#include "resiprocate/sipstack/LazyParser.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/sipstack/ParserCategories.hxx"
+#include "resiprocate/sipstack/Headers.hxx"
 
 using namespace Vocal2;
 

@@ -1,9 +1,9 @@
 
 #include <cassert>
 
-#include "sip2/sipstack/Embedded.hxx"
-#include "sip2/util/Data.hxx"
-#include "sip2/sipstack/Symbols.hxx"
+#include "resiprocate/sipstack/Embedded.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
 
 using namespace Vocal2;
 

@@ -2,7 +2,7 @@
 #define DnsResolver_hxx
 
 #if defined(__linux__) && !defined(USE_ARES)
-#error Not configured with ARES
+#define USE_ARES
 #endif
 
 #include <list>
@@ -11,15 +11,15 @@
 #if defined(USE_ARES)
 extern "C"
 {
-#include "sip2/contrib/ares-1.1.1/ares.h"
-#include "sip2/contrib/ares-1.1.1/ares_dns.h"
+#include "resiprocate/contrib/ares-1.1.1/ares.h"
+#include "resiprocate/contrib/ares-1.1.1/ares_dns.h"
 }
 #endif
 
-#include "sip2/util/HashMap.hxx"
-#include "sip2/util/BaseException.hxx"
-#include "sip2/sipstack/Transport.hxx"
-#include "sip2/sipstack/Message.hxx"
+#include "resiprocate/util/HashMap.hxx"
+#include "resiprocate/util/BaseException.hxx"
+#include "resiprocate/sipstack/Transport.hxx"
+#include "resiprocate/sipstack/Message.hxx"
 
 namespace Vocal2
 {

@@ -1,7 +1,7 @@
 #ifndef UnknownParameterType_hxx
 #define UnknownParameterType_hxx
 
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Data.hxx"
 
 namespace Vocal2
 {

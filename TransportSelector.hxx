@@ -7,11 +7,11 @@
 
 #include <vector>
 
-#include "sip2/util/Data.hxx"
-#include "sip2/util/Fifo.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/util/Fifo.hxx"
 
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/Transport.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/Transport.hxx"
 
 
 namespace Vocal2

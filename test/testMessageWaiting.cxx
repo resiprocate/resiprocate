@@ -1,5 +1,5 @@
-#include "sip2/sipstack/MessageWaitingContents.hxx"
-#include "sip2/sipstack/HeaderFieldValue.hxx"
+#include "resiprocate/sipstack/MessageWaitingContents.hxx"
+#include "resiprocate/sipstack/HeaderFieldValue.hxx"
 #include <iostream>
 
 using namespace Vocal2;

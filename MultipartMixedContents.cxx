@@ -1,8 +1,8 @@
-#include "sip2/sipstack/MultipartMixedContents.hxx"
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/util/Logger.hxx"
-//#include "sip2/sipstack/EncodingContext.hxx"
-#include "sip2/util/Random.hxx"
+#include "resiprocate/sipstack/MultipartMixedContents.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/util/Logger.hxx"
+//#include "resiprocate/sipstack/EncodingContext.hxx"
+#include "resiprocate/util/Random.hxx"
 
 using namespace Vocal2;
 using namespace std;
