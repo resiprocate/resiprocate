@@ -43,7 +43,7 @@ Transport::~Transport()
 {
    if (mFd != -1)
    {
-      DebugLog (<< "Closing " << mFd);
+      //DebugLog (<< "Closing " << mFd);
       closeSocket(mFd);
    }
    mFd = -2;
