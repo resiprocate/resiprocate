@@ -1,5 +1,6 @@
 #include <cassert>
 #include "ClientPublication.hxx"
+#include "Dialog.hxx"
 #include <cassert>
 
 using namespace resip;
@@ -12,6 +13,12 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
      mPublish(req)
 {
    assert(false);
+}
+
+
+ClientPublication::~ClientPublication()
+{
+   mDialog.mClientPublication = 0;
 }
 
 SipMessage& 

@@ -13,6 +13,11 @@ ClientOutOfDialogReq::ClientOutOfDialogReq(DialogUsageManager& dum,
    assert(false);
 }
 
+ClientOutOfDialogReq::~ClientOutOfDialogReq()
+{
+   mDialog.mClientOutOfDialogRequests.remove(this);
+}
+
 ClientOutOfDialogReq::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
 {}

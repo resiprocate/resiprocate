@@ -21,6 +21,11 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
    }
 }
 
+ClientRegistration::~ClientRegistration()
+{
+   mDialog.mClientRegistration = 0;
+}
+
 void 
 ClientRegistration::addBinding(const NameAddr& contact)
 {

@@ -1,4 +1,5 @@
 #include "ServerSubscription.hxx"
+#include "Dialog.hxx"
 
 using namespace resip;
 
@@ -9,6 +10,11 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
      mHandle(dum),
      mLastRequest(req)
 {}
+
+ServerSubscription::~ServerSubscription()
+{
+   mDialog.mServerSubscription = 0;
+}
 
 ServerSubscription::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)

@@ -25,6 +25,7 @@ class ClientSubscription: public BaseUsage
             friend class ClientSubscription;
       };
       
+      
       void requestRefresh();
       virtual void end();
 
@@ -36,7 +37,9 @@ class ClientSubscription: public BaseUsage
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ClientSubscription::Handle getHandle() {return mHandle;}
-      
+
+   protected:
+      virtual ~ClientSubscription();
    private:
       friend class DialogUsageManager;
       ClientSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& request);

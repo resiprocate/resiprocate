@@ -34,7 +34,8 @@ class ServerRegistration: public BaseUsage
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-      
+   protected:
+      virtual ~ServerRegistration();
    private:
       friend class DialogUsageManager;
       ServerRegistration(DialogUsageManager& dum,

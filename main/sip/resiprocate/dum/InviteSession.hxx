@@ -89,7 +89,8 @@ class InviteSession : public BaseUsage
 
       SipMessage mLastRequest; 
       SipMessage mAck;
-      
+   protected:
+      ~InviteSession();
    private:
       friend class DialogUsageManager;
       
