@@ -62,6 +62,7 @@ class ParserCategory
       Duration_Param::Type::Type& param(const Duration_Param& paramType) const;
       Branch_Param::Type::Type& param(const Branch_Param& paramType) const;
       Received_Param::Type::Type& param(const Received_Param& paramType) const;
+      Mobility_Param::Type::Type& param(const Mobility_Param& paramType) const;
       Comp_Param::Type::Type& param(const Comp_Param& paramType) const;
       Rport_Param::Type::Type& param(const Rport_Param& paramType) const;
       
@@ -70,7 +71,7 @@ class ParserCategory
       bool exists(const Data& param) const;
       
       void parseParameters(ParseBuffer& pb);
-      void encodeParameters(std::ostream& str) const;
+      std::ostream& encodeParameters(std::ostream& str) const;
 
       bool isParsed() const {return mIsParsed;}
       
@@ -106,6 +107,7 @@ class ParserCategory
 
    private:
       friend std::ostream& operator<<(std::ostream&, const ParserCategory&);
+      friend class NameAddr;
       bool mIsParsed;
 };
 

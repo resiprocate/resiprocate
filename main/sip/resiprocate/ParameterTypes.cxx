@@ -27,23 +27,26 @@ FromTag_Param Vocal2::p_fromTag;
 Duration_Param Vocal2::p_duration;
 Branch_Param Vocal2::p_branch;
 Received_Param Vocal2::p_received;
+Mobility_Param Vocal2::p_mobility;
 Comp_Param Vocal2::p_com;
 Rport_Param Vocal2::p_rport;
 
-///// Massaging required:
-///// 1. use not 0x20 as bit mask in character comparisons
-///// 2. use strncasecmp in string compare -- pass len-1
+
+// to generate the perfect hash:
+// call tolower() on instances of the source string
+// change strcmp to strncasecmp and pass len-1
+// will NOT work for non alphanum chars 
 
 /* ANSI-C code produced by gperf version 2.7.2 */
 /* Command-line: gperf -L ANSI-C -t -k '*' parameters.gperf  */
 struct params { char *name; ParameterTypes::Type type; };
 
-#define TOTAL_KEYWORDS 18
+#define TOTAL_KEYWORDS 19
 #define MIN_WORD_LENGTH 1
 #define MAX_WORD_LENGTH 9
 #define MIN_HASH_VALUE 1
-#define MAX_HASH_VALUE 38
-/* maximum key range = 38, duplicates = 0 */
+#define MAX_HASH_VALUE 53
+/* maximum key range = 53, duplicates = 0 */
 
 #ifdef __GNUC__
 __inline
@@ -52,61 +55,60 @@ __inline
 inline
 #endif
 #endif
-unsigned int
-p_hash (register const char *str, register unsigned int len)
+static unsigned int
+hash (register const char *str, register unsigned int len)
 {
   static unsigned char asso_values[] =
     {
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39,  5, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39,  0, 10, 10,
-       0,  0,  0,  0,  0,  0, 39, 39, 15, 15,
-       0,  0,  0,  0,  0,  0,  0,  0, 20, 39,
-       5, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
-      39, 39, 39, 39, 39, 39
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54,  0, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54,  0, 10,  0,
+       0,  0, 20,  5,  0,  0, 54, 54,  0, 20,
+       0,  0,  0,  0,  0,  0,  0, 15, 20, 54,
+       5,  0, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+      54, 54, 54, 54, 54, 54
     };
   register int hval = len;
-
   switch (hval)
     {
       default:
       case 9:
-        hval += asso_values[(unsigned char)str[8]];
+        hval += asso_values[(unsigned char)tolower(str[8])];
       case 8:
-        hval += asso_values[(unsigned char)str[7]];
+        hval += asso_values[(unsigned char)tolower(str[7])];
       case 7:
-        hval += asso_values[(unsigned char)str[6]];
+        hval += asso_values[(unsigned char)tolower(str[6])];
       case 6:
-        hval += asso_values[(unsigned char)str[5]];
+        hval += asso_values[(unsigned char)tolower(str[5])];
       case 5:
-        hval += asso_values[(unsigned char)str[4]];
+        hval += asso_values[(unsigned char)tolower(str[4])];
       case 4:
-        hval += asso_values[(unsigned char)str[3]];
+        hval += asso_values[(unsigned char)tolower(str[3])];
       case 3:
-        hval += asso_values[(unsigned char)str[2]];
+        hval += asso_values[(unsigned char)tolower(str[2])];
       case 2:
-        hval += asso_values[(unsigned char)str[1]];
+        hval += asso_values[(unsigned char)tolower(str[1])];
       case 1:
-        hval += asso_values[(unsigned char)str[0]];
+        hval += asso_values[(unsigned char)tolower(str[0])];
         break;
     }
   return hval;
@@ -116,54 +118,54 @@ p_hash (register const char *str, register unsigned int len)
 __inline
 #endif
 struct params *
-p_in_word_set (register const char *str, register unsigned int len)
+in_word_set (register const char *str, register unsigned int len)
 {
-  static struct params pwordlist[] =
-     {
-        {""},
-        {"q",ParameterTypes::q},
-        {""},
-        {"tag",ParameterTypes::tag},
-        {"user",ParameterTypes::user},
-        {"rport",ParameterTypes::rport},
-        {""},
-        {"purpose",ParameterTypes::purpose},
-        {"duration",ParameterTypes::duration},
-        {"transport",ParameterTypes::transport},
-        {""},
-        {"to-tag",ParameterTypes::toTag},
-        {"expires",ParameterTypes::expires},
-        {""}, {""}, {""}, {""},
-        {"lr",ParameterTypes::lr},
-        {"ttl",ParameterTypes::ttl},
-        {""},
-        {"maddr",ParameterTypes::maddr},
-        {"method",ParameterTypes::method},
-        {""},
-        {"handling",ParameterTypes::handling},
-        {""}, {""},
-        {"branch",ParameterTypes::branch},
-        {""},
-        {"from-tag",ParameterTypes::fromTag},
-        {"comp",ParameterTypes::comp},
-        {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-        {"received",ParameterTypes::received}
-     };
+  static struct params wordlist[] =
+    {
+      {""},
+      {"q", ParameterTypes::q},
+      {"lr", ParameterTypes::lr},
+      {"ttl", ParameterTypes::ttl},
+      {""},
+      {"rport", ParameterTypes::rport},
+      {""}, {""},
+      {"tag", ParameterTypes::tag},
+      {"transport", ParameterTypes::transport},
+      {""},
+      {"to-tag", ParameterTypes::toTag},
+      {"expires", ParameterTypes::expires},
+      {"handling", ParameterTypes::handling},
+      {""}, {""},
+      {"branch", ParameterTypes::branch},
+      {""}, {""},
+      {"user", ParameterTypes::user},
+      {""}, {""},
+      {"purpose", ParameterTypes::purpose},
+      {"duration", ParameterTypes::duration},
+      {"comp", ParameterTypes::comp},
+      {"maddr", ParameterTypes::maddr},
+      {"method", ParameterTypes::method},
+      {""},
+      {"received", ParameterTypes::received},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {"mobility", ParameterTypes::mobility},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""},
+      {"from-tag", ParameterTypes::fromTag}
+    };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
-  {
-     register int key = p_hash (str, len);
-     if (key <= MAX_HASH_VALUE && key >= 0)
-     {
-        register const char *s = pwordlist[key].name;
-        
-        if (*str == *s && !strncmp (str + 1, s + 1, len-1))
+    {
+      register int key = hash (str, len);
+
+      if (key <= MAX_HASH_VALUE && key >= 0)
         {
-           return &pwordlist[key];
+          register const char *s = wordlist[key].name;
+
+          if (tolower(*str) == *s && !strncasecmp (str + 1, s + 1, len-1))
+            return &wordlist[key];
         }
-     }
-  }
-  
+    }
   return 0;
 }
 
@@ -171,7 +173,7 @@ ParameterTypes::Type
 ParameterTypes::getType(const char* name, unsigned int len)
 {
    struct params* p;
-   p = p_in_word_set(name, len);
+   p = in_word_set(name, len);
    return p ? p->type : ParameterTypes::UNKNOWN;
 }
 
