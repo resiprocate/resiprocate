@@ -20,6 +20,7 @@ class Uri : public ParserCategory
       
       Data& host() const {checkParsed(); return mHost;}
       Data& user() const {checkParsed(); return mUser;}
+      Data& userParameters() const {checkParsed(); return mUserParameters;}
       Data& opaque() const {checkParsed(); return mHost;}
          
       const Data& getAor() const;
@@ -48,6 +49,7 @@ class Uri : public ParserCategory
       mutable Data mScheme;
       mutable Data mHost;
       mutable Data mUser;
+      mutable Data mUserParameters;
       mutable int mPort;
       mutable Data mAor;
       mutable Data mPassword;
