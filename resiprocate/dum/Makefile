@@ -15,6 +15,7 @@ SRC =   \
 	AppDialogSetFactory.cxx \
 	BaseCreator.cxx \
 	BaseUsage.cxx \
+	UserAuthInfo.cxx \
 	BaseSubscription.cxx \
 	ClientAuthManager.cxx \
 	ClientInviteSession.cxx \
