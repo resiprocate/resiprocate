@@ -39,8 +39,15 @@ Executive::processStateMachine()
    {
       return false;
    }
-   
-   TransactionState::process(mStack);
+
+   if (mStack.mStateless)
+   {
+      mStack.mStatelessHandler.process();
+   }
+   else
+   {
+      TransactionState::process(mStack);
+   }
    
    return true;
 }

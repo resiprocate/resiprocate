@@ -20,6 +20,7 @@
 #include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/SipFrag.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/TransactionMap.hxx"
 #include "resiprocate/TransactionTerminated.hxx"
@@ -44,7 +45,11 @@ class Uri;
 class SipStack
 {
    public:
-      SipStack(bool multiThreaded=false, Security* security=0);
+      // If multithreaded=true, run transports, timerqueue, transaction and dns
+      // in separate threads
+      // Set stateless=true, if you want to use the stack for a stateless proxy
+      // (no transactions)
+      SipStack(bool multiThreaded=false, Security* security=0, bool stateless=false);
       ~SipStack();
 
       // inform the transaction state machine processor that it should not
@@ -84,6 +89,7 @@ class SipStack
       // this is only if you want to send to a destination not in the route. You
       // probably don't want to use it. 
       void sendTo(const SipMessage& msg, const Uri& uri);
+      void sendTo(const SipMessage& msg, const Transport::Tuple& tuple);
 
       // caller now owns the memory. returns 0 if nothing there
       SipMessage* receive(); 
@@ -113,7 +119,7 @@ class SipStack
       /// if this object exists, it manages advanced security featues
       Security* security;
 
-private:
+   private:
       SipStack(const SipStack& copy);
       SipStack& operator=(const SipStack& rhs);
       
@@ -125,6 +131,9 @@ private:
       // messages (requests and responses), timers (used by state machines),
       // asynchronous dns responses, transport errors from the underlying
       // transports, etc. 
+      // For stateless stacks, this has a different behavior and does not create
+      // a transaction for each request and does not do any special tranaaction
+      // processing for requests or responses
       Fifo<Message> mStateMacFifo;
 
       // Controls the processing of the various stack elements
@@ -137,6 +146,10 @@ private:
       TransactionMap mClientTransactionMap;
       TransactionMap mServerTransactionMap;
 
+      // Used to handle the stateless stack incoming requests and responses as
+      // well as maintaining a state machine for the async dns responses
+      StatelessHandler mStatelessHandler;
+
       // timers associated with the transactions. When a timer fires, it is
       // placed in the mStateMacFifo
       TimerQueue  mTimers;
@@ -145,6 +158,8 @@ private:
       // TransactionState/TransportSelector. Provides an async mechanism for
       // communicating dns responses back to the Transaction. 
       DnsResolver mDnsResolver;
+      
+      bool mStateless;
       
       // If true, indicate to the Transaction to ignore responses for which
       // there is no transaction. 
@@ -163,6 +178,7 @@ private:
       friend class Executive;
       friend class TransportSelector;
       friend class TransactionState;
+      friend class StatelessHandler;
       friend class TestDnsResolver;
       friend class TestFSM;
 };
