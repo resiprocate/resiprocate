@@ -25,79 +25,109 @@ main(int argc, char** argv)
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
    {
-     char * txt =(              
-        "SIP/2.0 489 Bad Event" CRLF
-        "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
-        "CSeq: 1 SUBSCRIBE" CRLF
-        "Allow-Events: " CRLF
-        "Call-ID:  f354ce714fb8a95c" CRLF
-        "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
-        "To:  <sip:RjS@127.0.0.1:5060>" CRLF
-        CRLF
-        );
+     char * txt = ("SIP/2.0 489 Bad Event" CRLF
+                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
+                   "CSeq: " CRLF
+                   "Call-ID:  f354ce714fb8a95c" CRLF
+                   "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
+                   "To:  <sip:RjS@127.0.0.1:5060>" CRLF
+                   CRLF);
+     TestSupport::prettyPrint(txt,strlen(txt));
+
+     auto_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
+     try
+     {
+        response->header(h_CSeq).method();
+        assert(false);
+     }
+     catch (ParseBuffer::Exception& e)
+     {
+        cerr << e << endl;
+     }
+   }
+
+   {
+     char * txt = ("SIP/2.0 489 Bad Event" CRLF
+                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
+                   "CSeq: 1 SUBSCRIBE" CRLF
+                   "Allow-Events: " CRLF
+                   "Call-ID:  f354ce714fb8a95c" CRLF
+                   "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
+                   "To:  <sip:RjS@127.0.0.1:5060>" CRLF
+                   CRLF);
      TestSupport::prettyPrint(txt,strlen(txt));
 
      auto_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
      assert(response->exists(h_AllowEvents));
      assert(response->header(h_AllowEvents).size() == 0);
-     assert(response->header(h_AllowEvents).front().value().empty());
      
-     char * txt2 =(              
-
-     
-
-        "SIP/2.0 489 Bad Event" CRLF
-        "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
-        "CSeq: 1 SUBSCRIBE" CRLF
-        "Call-ID:  f354ce714fb8a95c" CRLF
-        "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
-        "To:  <sip:RjS@127.0.0.1:5060>" CRLF
-        "Allow-Events:" CRLF
-        CRLF
-        );
+     char * txt2 = ("SIP/2.0 489 Bad Event" CRLF
+                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
+                    "CSeq: 1 SUBSCRIBE" CRLF
+                    "Call-ID:  f354ce714fb8a95c" CRLF
+                    "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
+                    "To:  <sip:RjS@127.0.0.1:5060>" CRLF
+                    "Allow-Events:" CRLF
+                    CRLF);
      TestSupport::prettyPrint(txt2,strlen(txt2));
 
      SipMessage * r2 = TestSupport::makeMessage(txt2,true);
-     assert(r2->exists(h_AllowEvents) );
+     assert(r2->exists(h_AllowEvents));
      assert(r2->header(h_AllowEvents).size() == 0);
-     assert(r2->header(h_AllowEvents).front().value().empty());
-     
 
-     char * txt3 =(              
-        "SIP/2.0 489 Bad Event" CRLF
-        "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
-        "CSeq: 1 SUBSCRIBE" CRLF
-        "Call-ID:  f354ce714fb8a95c" CRLF
-        "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
-        "To:  <sip:RjS@127.0.0.1:5060>" CRLF
-        "Allow-Events: foo" CRLF
-        "Allow-Events: bar" CRLF
-        "Allow-Events: " CRLF
-        CRLF
-       );
+     char * txt3 =("SIP/2.0 489 Bad Event" CRLF
+                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
+                   "CSeq: 1 SUBSCRIBE" CRLF
+                   "Call-ID:  f354ce714fb8a95c" CRLF
+                   "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
+                   "To:  <sip:RjS@127.0.0.1:5060>" CRLF
+                   "Allow-Events: foo" CRLF
+                   "Allow-Events: bar" CRLF
+                   "Allow-Events: " CRLF
+                   CRLF);
+
      SipMessage * r3 = TestSupport::makeMessage(txt3,true);
-     assert(r3->exists(h_AllowEvents) );
+     assert(r3->exists(h_AllowEvents));
      assert(r3->header(h_AllowEvents).size() == 2);
      assert(r3->header(h_AllowEvents).front().value() == "foo");
 
-     char * txt4 =(              
-        "SIP/2.0 489 Bad Event" CRLF
-        "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
-        "CSeq: 1 SUBSCRIBE" CRLF
-        "Call-ID:  f354ce714fb8a95c" CRLF
-        "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
-        "To:  <sip:RjS@127.0.0.1:5060>" CRLF
-        "Allow-Events: foo,foobar" CRLF
-        "Allow-Events: bar,gak" CRLF
-        "Allow-Events: " CRLF
-        CRLF
-       );
-     SipMessage * r4 = TestSupport::makeMessage(txt3,true);
+     char * txt4 = ("SIP/2.0 489 Bad Event" CRLF
+                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
+                    "CSeq: 1 SUBSCRIBE" CRLF
+                    "Call-ID:  f354ce714fb8a95c" CRLF
+                    "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
+                    "To:  <sip:RjS@127.0.0.1:5060>" CRLF
+                    "Allow-Events: foo,foobar" CRLF
+                    "Allow-Events: bar,gak" CRLF
+                    "Allow-Events: " CRLF
+                    CRLF);
+
+     SipMessage * r4 = TestSupport::makeMessage(txt4,true);
      assert(r4->exists(h_AllowEvents) );
+
+     cerr << r4->header(h_AllowEvents).size() << endl;
+     cerr << r4->header(h_AllowEvents).front().value() << endl;
+
      assert(r4->header(h_AllowEvents).size() == 4);
      assert(r4->header(h_AllowEvents).front().value() == "foo");
 
+
+     char * txt5 = ("SIP/2.0 489 Bad Event" CRLF
+                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
+                    "CSeq: 1 SUBSCRIBE" CRLF
+                    "Call-ID:  f354ce714fb8a95c" CRLF
+                    "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
+                    "To:  <sip:RjS@127.0.0.1:5060>" CRLF
+                    "Allow-Events:      " CRLF
+                    "Allow-Events:   	     " CRLF
+                    "Allow-Events: " CRLF
+                    CRLF);
+
+     SipMessage * r5 = TestSupport::makeMessage(txt5,true);
+     assert(r5->exists(h_AllowEvents) );
+     assert(r5->header(h_AllowEvents).size() == 0);
    }
+
    {
       // Test just in time parsing with comparison: NameAddr;
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
@@ -1139,8 +1169,6 @@ main(int argc, char** argv)
       assert(message->header(h_SecurityVerifies).front().param(p_q) == 0.2f);
 
       assert(message->exists(h_AllowEvents) == false);
-      assert(message->header(h_AllowEvents).size() == 1);
-      assert(message->header(h_AllowEvents).front().value().empty());
    }
 
    {
@@ -1216,7 +1244,7 @@ main(int argc, char** argv)
                "Call-ID: a84b4c76e66710\r\n"
                "CSeq: 314159 INVITE\r\n"
                "Max-Forwards: 70\r\n"
-               "Accepts: \r\n"
+               "Accept: \r\n"
                "Foobie-Blech: \r\n"
                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                "Content-Type: application/sdp\r\n"
