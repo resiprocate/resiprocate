@@ -77,7 +77,7 @@ fi
 
 localdir=${USE_BUILDDIR}/`pwd`/$1
 
-echo $localdir
+#echo $localdir
 
 if [ ! -d ${USE_BUILDDIR}/ ]
 then
