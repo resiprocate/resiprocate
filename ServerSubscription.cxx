@@ -171,7 +171,10 @@ ServerSubscription::dispatch(const SipMessage& msg)
       {
          //!dcm! -- should initial state be pending?
          mSubscriptionState = Init;
-         handler->onNewSubscription(getHandle(), msg);            
+         if (mEventType != "refer")
+         {
+            handler->onNewSubscription(getHandle(), msg);
+         }
       }
       else
       {
