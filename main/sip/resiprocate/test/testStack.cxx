@@ -2,10 +2,12 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#if defined (HAVE_POPT_H) || 1
+#if defined (HAVE_POPT_H) 
 #include <popt.h>
 #else
+#ifndef WIN32
 #warning "will not work very well without libpopt"
+#endif
 #endif
 
 #include <sys/types.h>
@@ -36,11 +38,20 @@ main(int argc, char* argv[])
    char* bindAddr = 0;
 
    int runs = 100;
-   int window = 10;
+   int window = 5;
    int seltime = 100;
    int v6 = 0;
-   
-#if defined(HAVE_POPT_H) || 1
+
+#ifdef WIN32
+  runs = 1;
+  window = 1;
+  // logType = "file";
+   logLevel = "ALERT";
+   logLevel = "INFO";
+   //  logLevel = "DEBUG";
+#endif
+
+#if defined(HAVE_POPT_H)
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
@@ -85,7 +96,12 @@ main(int argc, char* argv[])
    target.uri().host() = DnsUtil::getLocalHostName();
    target.uri().port() = 5080;
    target.uri().param(p_transport) = proto;
-   
+  
+#ifdef WIN32
+     target.uri().host() = Data("10.0.1.110");
+     //target.uri().host() = Data("cj30.libvoip.com");
+#endif
+
    NameAddr from = target;
    from.uri().port() = 5070;
    
@@ -147,7 +163,7 @@ main(int argc, char* argv[])
         << " half calls/s/GHz  ["
         << runs << " calls peformed in " << elapsed << " ms, a rate of " 
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
-#if defined(HAVE_POPT_H) || 1
+#if defined(HAVE_POPT_H)
    poptFreeContext(context);
 #endif
    return 0;
