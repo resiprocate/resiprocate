@@ -13,7 +13,7 @@
       <address>
         <postal>
           <street>170 West Tasman Dr.</street>
-          <street>MS: SJC-21/3</street>
+          <street>MS: SJC-21/2</street>
           <city>San Jose</city> 
           <region>CA</region> <code>95134</code>
           <country>USA</country>
@@ -784,14 +784,14 @@ A sample SDP offer for a MSRP session could look like:
 c=IN IP4 invalid.none
  m=message 1234 sims/tcp+tls alice@alice.example.com
  a=accept: message/cpim text/plain text/html
- a=hop:sims:magic456@a.example.com:1234;transport=tcp+tls
+ a=hop:msrp:magic456@a.example.com:1234;transport=tcp+tls
 ]]>
 </artwork></figure>
 <t>
 In this offer Alice wishes to receive MSRP messages at
 alice@alice.example.com. She wants to use tcp+tls as the transport for the MSRP
 session. She can accept message/cpim, text/plain and text/html message boldies
-in SEND requests. She wishes to use the relay sims:magic456@a.example.com for
+in SEND requests. She wishes to use the relay msrp:magic456@a.example.com for
 the MSRP session.
 </t><t>
 To this offer, Bob's answer could look like:
@@ -800,8 +800,8 @@ To this offer, Bob's answer could look like:
 c=IN IP4 invalid.none
  m=message 1234 sims/tcp+tls bob@bob.example.com
  a=accept: message/cpim text/plain
- a=hop:sims:magic789@b1.example.com:1234;transport=tcp+tls
- a=hop:sims:magic012@b2.example.com:1234;transport=tcp+tls
+ a=hop:msrp:magic789@b1.example.com:1234;transport=tcp+tls
+ a=hop:msrp:magic012@b2.example.com:1234;transport=tcp+tls
 ]]>
 </artwork></figure>
 <t>
@@ -809,7 +809,7 @@ Here Bob has agreed to use tcp+tls as the transport, and wishes to receive the
 MSRP messages at bob@bob.example.com. He can accept only message/cpim and
 text/plain message bodies in SEND requests and has rejected text/html offer
 made by Alice. He wishes to use two relays for the MSRP session -
-sims:magic789@b1.example.com and sims:magic012@b2.example.com.
+msrp:magic789@b1.example.com and msrp:magic012@b2.example.com.
 </t>
 </section>
 </section>
@@ -918,7 +918,7 @@ CSeq: 986759 ACK
                 message. </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=z9hG4bKkjshdyff
 Call-ID: 987asjd97y7atg
 Message-ID: 34561345
@@ -948,7 +948,7 @@ Call-ID: 987asjd97y7atg
                delivery of the entire message. </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
 Delivery-Status:ok
 Message-ID: 34561345
@@ -1064,7 +1064,7 @@ In this example, Alice has been configured to use two relays (r1.example.com and
                the first relay </t>
 <figure><artwork><![CDATA[
 
-AUTH sims:r1.example.com MSRP/1.0
+AUTH msrp:r1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=z9hG4bK4b43c2ff8.1
 Expires: 3600
 
@@ -1090,13 +1090,13 @@ WWW-Authenticate: Digest
 3 AUTH Alice -> r1.example.com (MSRP) - Alice responds to the challenge </t>
 <figure><artwork><![CDATA[
 
-AUTH sims:r1.example.com MSRP/1.0
+AUTH msrp:r1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=z9hG4bK4b43c2ff8.1
 Expires: 3600
 Authorization: Digest username="Alice",
      realm="testrealm@host.com",
      nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
-     uri="sims:r1.example.com",
+     uri="msrp:r1.example.com",
      qop=auth,
      nc=00000001,
      cnonce="0a4f113b",
@@ -1115,7 +1115,7 @@ MSRP/1.0 200 OK
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=z9hG4bK4b43c2ff8.1
  ;received=192.0.2.3
 Expires: 3600
-Authentication-info: rspauth="sims:saiulfywifucbscb@r1.example.com"
+Authentication-info: rspauth="msrp:saiulfywifucbscb@r1.example.com"
 
 ]]>
 </artwork></figure>
@@ -1124,7 +1124,7 @@ Authentication-info: rspauth="sims:saiulfywifucbscb@r1.example.com"
              relay </t>
 <figure><artwork><![CDATA[
 
-AUTH sims:r3.example.com MSRP/1.0
+AUTH msrp:r3.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bK4b43c2ff8.1
 Expires: 3600
 
@@ -1151,13 +1151,13 @@ WWW-Authenticate: Digest
 7 AUTH Bob -> r3.example.com (MSRP) - Bob responds to the challenge </t>
 <figure><artwork><![CDATA[
 
-AUTH sims:r3.example.com MSRP/1.0
+AUTH msrp:r3.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bK4b43c2ff8.1
 Expires: 3600
 Authorization: Digest username="Bob",
      realm="testrealm@host.com",
      nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
-     uri="sims:r3.example.com",
+     uri="msrp:r3.example.com",
      qop=auth,
      nc=00000001,
      cnonce="0a4f113b",
@@ -1175,7 +1175,7 @@ MSRP/1.0 200 OK
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bK4b43c2ff8.1
  ;received=192.0.2.3
 Expires: 3600
-Authentication-Info: rspauth="sims:skusblfygwuhrwuh@r3.example.com"
+Authentication-Info: rspauth="msrp:skusblfygwuhrwuh@r3.example.com"
 
 ]]>
 </artwork></figure>
@@ -1184,9 +1184,9 @@ Authentication-Info: rspauth="sims:skusblfygwuhrwuh@r3.example.com"
                its second relay now </t>
 <figure><artwork><![CDATA[
 
-AUTH sims:r2.example.com MSRP/1.0
+AUTH msrp:r2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=z9hG4bK4b43c2ff8.1
-Route:sims:saiulfywifucbscb@r1.example.com
+Route:msrp:saiulfywifucbscb@r1.example.com
 Expires: 3600
 
 ]]>
@@ -1197,7 +1197,7 @@ Expires: 3600
                          already authenticated itself </t>
 <figure><artwork><![CDATA[
 
-AUTH sims:r2.example.com MSRP/1.0
+AUTH msrp:r2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=sldhgsdhgqfwaf
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=z9hG4bK4b43c2ff8.1
  ;received=192.0.2.3
@@ -1246,14 +1246,14 @@ WWW-Authenticate: Digest
 13 AUTH Alice -> r1.example.com (MSRP) - Alice responds to the challenge </t>
 <figure><artwork><![CDATA[
 
-AUTH sims:r2.example.com MSRP/1.0
+AUTH msrp:r2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=z9hG4bK4b43c2ff8.1
-Route: sims:saiulfywifucbscb@r1.example.com
+Route: msrp:saiulfywifucbscb@r1.example.com
 Expires: 3600
 Authorization: Digest username="Alice",
      realm="testrealm@host.com",
      nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
-     uri="sims:r2.example.com",
+     uri="msrp:r2.example.com",
      qop=auth,
      nc=00000001,
      cnonce="0a4f113b",
@@ -1267,7 +1267,7 @@ Authorization: Digest username="Alice",
                          response to Relay 2 </t>
 <figure><artwork><![CDATA[
 
-AUTH sims:r2.example.com MSRP/1.0
+AUTH msrp:r2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=sldhgsdhgqfwaf
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=z9hG4bK4b43c2ff8.1
  ;received=192.0.2.3
@@ -1275,7 +1275,7 @@ Expires: 3600
 Authorization: Digest username="Alice",
      realm="testrealm@host.com",
      nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
-     uri="sims:r2.example.com",
+     uri="msrp:r2.example.com",
      qop=auth,
      nc=00000001,
      cnonce="0a4f113b",
@@ -1295,7 +1295,7 @@ Via: MSRP/1.0/TCP-TLS r1.example.com;branch=sldhgsdhgqfwaf
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=z9hG4bK4b43c2ff8.1
  ;received=192.0.2.3
 Expires: 3600
-Authentication-Info: rspauth="sims:eioweoerhgerofef@r2.example.com"
+Authentication-Info: rspauth="msrp:eioweoerhgerofef@r2.example.com"
 
 
 ]]>
@@ -1309,7 +1309,7 @@ MSRP/1.0 200 OK
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=z9hG4bK4b43c2ff8.1
  ;received=192.0.2.3
 Expires: 3600
-Authentication-Info: rspauth="sims:eioweoerhgerofef@r2.example.com"
+Authentication-Info: rspauth="msrp:eioweoerhgerofef@r2.example.com"
 
 ]]>
 </artwork></figure>
@@ -1331,8 +1331,8 @@ Content-Length: 120
 c=IN IP4 invalid.none
 m=message 1234 sims/tcp+tls alice@pc2.example.com
 a=accept-types:text/plain message/cpim
-a=hop:sims:saiulfywifucbscb@r1.example.com
-a=hop:sims:eioweoerhgerofef@r2.example.com
+a=hop:msrp:saiulfywifucbscb@r1.example.com
+a=hop:msrp:eioweoerhgerofef@r2.example.com
 
 ]]>
 </artwork></figure>
@@ -1353,7 +1353,7 @@ Content-Length: 131
 c=IN IP4 invalid.none
 m=message 1234 sims/tcp+tls bob@pc1.example.com
 a=accept-types:text/plain 
-a=hop:sims:skusblfygwuhrwuh@r3.example.com
+a=hop:msrp:skusblfygwuhrwuh@r3.example.com
 
 ]]>
 </artwork></figure>
@@ -1378,11 +1378,11 @@ CSeq: 986759 ACK
                  be routed through the three relays </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=z9hG4bKkjshdyff
-Route: sims:saiulfywifucbscb@r1.example.com
-Route: sims:eioweoerhgerofef@r2.example.com
-Route: sims:skusblfygwuhrwuh@r3.example.com
+Route: msrp:saiulfywifucbscb@r1.example.com
+Route: msrp:eioweoerhgerofef@r2.example.com
+Route: msrp:skusblfygwuhrwuh@r3.example.com
 Call-ID: 987asjd97y7atg
 Message-ID: 34561345
 Max-Forwards: 70
@@ -1411,10 +1411,10 @@ Call-ID: 987asjd97y7atg
                           as-is to Relay2 </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=sldhgsdhgqfwaf
-Route: sims:eioweoerhgerofef@r2.example.com
-Route: sims:skusblfygwuhrwuh@r3.example.com
+Route: msrp:eioweoerhgerofef@r2.example.com
+Route: msrp:skusblfygwuhrwuh@r3.example.com
 Call-ID: 987asjd97y7atg
 Message-ID: 34561345
 Max-Forwards: 70
@@ -1443,9 +1443,9 @@ Call-ID: 987asjd97y7atg
                           as-is to Relay3 </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r2.example.com;branch=wuoshfuetyheiot
-Route: sims:skusblfygwuhrwuh@r3.example.com
+Route: msrp:skusblfygwuhrwuh@r3.example.com
 Call-ID: 987asjd97y7atg
 Message-ID: 34561345
 Max-Forwards: 70
@@ -1473,7 +1473,7 @@ Call-ID: 987asjd97y7atg
 26 SEND r3.example.com -> Bob (MSRP) - Relay3 forwards the SEND to Bob </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r3.example.com;branch=hsruoghlweugho
 Call-ID: 987asjd97y7atg
 Message-ID: 34561345
@@ -1503,11 +1503,11 @@ Call-ID: 987asjd97y7atg
                 indicate the successful end-to-end delivery of the message </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
-Route: sims:skusblfygwuhrwuh@r3.example.com
-Route: sims:eioweoerhgerofef@r2.example.com
-Route: sims:saiulfywifucbscb@r1.example.com
+Route: msrp:skusblfygwuhrwuh@r3.example.com
+Route: msrp:eioweoerhgerofef@r2.example.com
+Route: msrp:saiulfywifucbscb@r1.example.com
 Delivery-Status:ok
 Message-ID: 34561345
 Call-ID: 987asjd97y7atg
@@ -1518,12 +1518,12 @@ Call-ID: 987asjd97y7atg
 29 REPORT r3.example.com -> r2.example.com (MSRP) </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r3.example.com;branch=wvehrugheurghei
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
  ;received=192.0.2.1
-Route: sims:eioweoerhgerofef@r2.example.com
-Route: sims:saiulfywifucbscb@r1.example.com
+Route: msrp:eioweoerhgerofef@r2.example.com
+Route: msrp:saiulfywifucbscb@r1.example.com
 Delivery-Status:ok
 Message-ID: 34561345
 Call-ID: 987asjd97y7atg
@@ -1534,13 +1534,13 @@ Call-ID: 987asjd97y7atg
 30 REPORT r2.example.com -> r1.example.com (MSRP) </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r2.example.com;brnach=woifwehfovndjnv
 Via: MSRP/1.0/TCP-TLS r3.example.com;branch=wvehrugheurghei
  ;received=192.0.2.3
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
  ;received=192.0.2.1
-Route: sims:saiulfywifucbscb@r1.example.com
+Route: msrp:saiulfywifucbscb@r1.example.com
 Delivery-Status:ok
 Message-ID: 34561345
 Call-ID: 987asjd97y7atg
@@ -1551,7 +1551,7 @@ Call-ID: 987asjd97y7atg
 31 REPORT r1.example.com -> Alice (MSRP) </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=wkehweiothoqowq
 Via: MSRP/1.0/TCP-TLS r2.example.com;brnach=woifwehfovndjnv
  ;received=192.0.2.3
@@ -1668,7 +1668,7 @@ In this example, Alice wants to send a message to Bob. Alice decides to fragment
 1 SEND Alice -> r1.example.com (MSRP) - Alice sends the first SEND </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=hsruoghlweugho
 Route: saiulfywifucbscb@r1.example.com
 Call-ID: 987asjd97y7atg
@@ -1702,7 +1702,7 @@ Call-ID: 987asjd97y7atg
                          Bob </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=shoghwogiwhgokb
 Call-ID: 987asjd97y7atg
 Message-ID: 34561345
@@ -1734,9 +1734,9 @@ Call-ID: 987asjd97y7atg
                end-to-end delivery of the first part of the message </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
-Route: sims:saiulfywifucbscb@r1.example.com
+Route: msrp:saiulfywifucbscb@r1.example.com
 Delivery-Status:ok;range=0-44
 Message-ID: 34561345
 Call-ID: 987asjd97y7atg
@@ -1748,7 +1748,7 @@ Call-ID: 987asjd97y7atg
                           relay </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=wuwfiuhwifuhwif
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
  ;received=192.0.2.1
@@ -1788,7 +1788,7 @@ Call-ID: 987asjd97y7atg
                 message to Bob </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=hsruoghlweugho
 Route: saiulfywifucbscb@r1.example.com
 Call-ID: 987asjd97y7atg
@@ -1821,7 +1821,7 @@ Call-ID: 987asjd97y7atg
                           to Bob </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=shoghwogiwhgokb
 Call-ID: 987asjd97y7atg
 Message-ID: 34561345
@@ -1853,9 +1853,9 @@ Call-ID: 987asjd97y7atg
                 end-to-end delivery of the entire message </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
-Route: sims:saiulfywifucbscb@r1.example.com
+Route: msrp:saiulfywifucbscb@r1.example.com
 Delivery-Status:ok
 Message-ID: 34561345
 Call-ID: 987asjd97y7atg
@@ -1866,7 +1866,7 @@ Call-ID: 987asjd97y7atg
 14 REPORT r1.example.com -> Alice (MSRP) </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=wuwfiuhwifuhwif
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
  ;received=192.0.2.1
@@ -1943,7 +1943,7 @@ In this example, Alice sends a message to Bob in a single SEND request. The rela
 1 SEND Alice -> r1.example.com (MSRP) - Alice sends a message to Bob. </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc2.example.com;branch=hsruoghlweugho
 Route: saiulfywifucbscb@r1.example.com
 Call-ID: 987asjd97y7atg
@@ -1973,7 +1973,7 @@ Call-ID: 987asjd97y7atg
                          SEND message, and sends the first part to Bob. </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=scjbsdjfksbfsdj
 Call-ID: 987asjd97y7atg
 Message-ID: 34561345
@@ -2005,9 +2005,9 @@ Call-ID: 987asjd97y7atg
                end-to-end delivery of the first 32 bytes of the message </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
-Route: sims:saiulfywifucbscb@r1.example.com
+Route: msrp:saiulfywifucbscb@r1.example.com
 Delivery-Status:ok;range=0-32
 Message-ID: 34561345
 Call-ID: 987asjd97y7atg
@@ -2018,7 +2018,7 @@ Call-ID: 987asjd97y7atg
 6 REPORT r1.example.com -> Alice (MSRP)  </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=wsuefhwejhfwejfh
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
  ;received=192.0.2.1
@@ -2058,7 +2058,7 @@ Call-ID: 987asjd97y7atg
                          a second SEND message to Bob </t>
 <figure><artwork><![CDATA[
 
-SEND sims:bob@pc1.example.com MSRP/1.0
+SEND msrp:bob@pc1.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=scjbsdjfksbfsdj
 Call-ID: 987asjd97y7atg
 Message-ID: 34561345
@@ -2090,9 +2090,9 @@ Call-ID: 987asjd97y7atg
                 end-to-end delivery of the entire message </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
-Route: sims:saiulfywifucbscb@r1.example.com
+Route: msrp:saiulfywifucbscb@r1.example.com
 Delivery-Status:ok
 Message-ID: 34561345
 Call-ID: 987asjd97y7atg
@@ -2103,7 +2103,7 @@ Call-ID: 987asjd97y7atg
 12 REPORT r1.example.com -> Alice (MSRP) </t>
 <figure><artwork><![CDATA[
 
-REPORT sims:alice@pc2.example.com MSRP/1.0
+REPORT msrp:alice@pc2.example.com MSRP/1.0
 Via: MSRP/1.0/TCP-TLS r1.example.com;branch=wsuefhwejhfwejfh
 Via: MSRP/1.0/TCP-TLS pc1.example.com;branch=z9hG4bKnashds8
  ;received=192.0.2.1
