@@ -457,6 +457,9 @@ defineParam(ttl, "ttl", IntegerParameter, "RFC ????");
 defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
 defineParam(user, "user", DataParameter, "RFC ????");
 defineParam(username, "username", DataParameter, "RFC ????");
+defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891");
+defineParam(refresher, "refresher", DataParameter, "Session Timer Draft");
+
 
 defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
 
