@@ -730,6 +730,19 @@ ParseBuffer::fail(const char* file, unsigned int line) const
    throw Exception(mErrorContext, file, line);
 }
 
+const char& 
+ParseBuffer::Pointer::operator*() const
+{
+   if (mIsValid)
+   {
+      return *mPosition;
+   }
+   else
+   {
+      throw ParseBuffer::Exception(msg, __FILE__, __LINE__);
+   }
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
