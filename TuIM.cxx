@@ -328,13 +328,17 @@ TuIM::processMessageRequest(SipMessage* msg)
       assert(sec);
       
       contents = sec->uncodeSigned( mBody, &signedBy, &sigStat );
+      
+      //ErrLog("Signed by " << signedBy << " stat = " << sigStat );
+      
       if ( !contents )
       { 
          Uri from = msg->header(h_From).uri();
-         InfoLog( << "Some problem decoding multipart/signed message");
+         Infolog( << "Some problem decoding multipart/signed message");
          
          mCallback->receivePageFailed( from );
-      }    
+         return;
+      } 
    }
 
    Pkcs7Contents* sBody = dynamic_cast<Pkcs7Contents*>(contents);
@@ -344,15 +348,20 @@ TuIM::processMessageRequest(SipMessage* msg)
       Security* sec = mStack->security;
       assert(sec);
 
-      contents = sec->uncode( sBody, &signedBy, &sigStat, &encrypted );
+      contents = sec->decrypt( sBody );
+
       if ( !contents )
       { 
          Uri from = msg->header(h_From).uri();
          InfoLog( << "Some problem decoding SMIME message");
         
          mCallback->receivePageFailed( from );
+         return;
       }
+
+      encrypted=true;
    }
+ 
 #endif
 
    if ( contents )
@@ -375,6 +384,7 @@ TuIM::processMessageRequest(SipMessage* msg)
          InfoLog ( << "Can not handle type " << contents->getType() );
          Uri from = msg->header(h_From).uri();
          mCallback->receivePageFailed( from );
+         return;
       }
    }
 }
