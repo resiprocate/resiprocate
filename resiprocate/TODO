@@ -1,4 +1,4 @@
-$Id: TODO,v 1.4 2002/11/05 01:23:49 bko Exp $
+$Id: TODO,v 1.5 2002/11/05 06:49:00 davidb Exp $
 
 Change the names of all the parser "components" to "integerparser" or
 something like that
@@ -41,3 +41,4 @@ Missing classes of headers:
 	Warning
 	(someone should check these after done)
 
+Make Symbols Data
