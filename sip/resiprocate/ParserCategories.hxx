@@ -23,15 +23,15 @@ class Token : public ParserCategory
    public:
       enum {commaHandling = CommasAllowedOutputCommas};
 
-      Token() : ParserCategory(), mValue() {}
-      explicit Token(const Data& d) : mValue(d) {}
-      Token(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type), mValue() {}
+      Token();
+      explicit Token(const Data& d);
+      Token(HeaderFieldValue* hfv, Headers::Type type);
       Token(const Token&);
       Token& operator=(const Token&);
       bool operator==(const Token& rhs) const;
       bool operator<(const Token& rhs) const;
 
-      Data& value() const {checkParsed(); return mValue;}
+      Data& value() const;
 
       virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
       virtual ParserCategory* clone() const;
@@ -49,21 +49,16 @@ class Mime : public ParserCategory
    public:
       enum {commaHandling = CommasAllowedOutputCommas};
 
-      Mime() : ParserCategory(), mType(), mSubType() {};
+      Mime();
       Mime(const Data& type, const Data& subType);
-
-      Mime(HeaderFieldValue* hfv, Headers::Type type)
-         : ParserCategory(hfv, type),
-           mType(), 
-           mSubType()
-      {}
+      Mime(HeaderFieldValue* hfv, Headers::Type type);
       Mime(const Mime&);
       Mime& operator=(const Mime&);
       bool operator<(const Mime& rhs) const;
       bool operator==(const Mime& rhs) const;
       
-      Data& type() const {checkParsed(); return mType;}
-      Data& subType() const {checkParsed(); return mSubType;}
+      Data& type() const;
+      Data& subType() const;
          
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
@@ -75,7 +70,8 @@ class Mime : public ParserCategory
 typedef ParserContainer<Mime> Mimes;
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType) const
+      _enum##_Param::DType& param(const _enum##_Param& paramType); \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const
 
 //====================
 // Auth:
@@ -85,8 +81,8 @@ class Auth : public ParserCategory
    public:
       enum {commaHandling = NoCommaTokenizing};
 
-      Auth() : ParserCategory() {}
-      Auth(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type) {}
+      Auth();
+      Auth(HeaderFieldValue* hfv, Headers::Type type);
       Auth(const Auth&);
       Auth& operator=(const Auth&);
 
@@ -97,7 +93,8 @@ class Auth : public ParserCategory
       void parseAuthParameters(ParseBuffer& pb);
       std::ostream& encodeAuthParameters(std::ostream& str) const;
 
-      Data& scheme() const {checkParsed(); return mScheme;}
+      Data& scheme();
+      const Data& scheme() const;
 
       defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
       defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
@@ -127,12 +124,8 @@ class IntegerCategory : public ParserCategory
    public:
       enum {commaHandling = NoCommaTokenizing};
 
-      IntegerCategory() : ParserCategory(), mValue(0), mComment() {}
-      IntegerCategory(HeaderFieldValue* hfv, Headers::Type type)
-         : ParserCategory(hfv, type), 
-           mValue(0), 
-           mComment() 
-      {}
+      IntegerCategory();
+      IntegerCategory(HeaderFieldValue* hfv, Headers::Type type);
       IntegerCategory(const IntegerCategory&);
       IntegerCategory& operator=(const IntegerCategory&);
 
@@ -140,8 +133,8 @@ class IntegerCategory : public ParserCategory
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
-      int& value() const {checkParsed(); return mValue;}
-      Data& comment() const {checkParsed(); return mComment;}
+      int& value() const;
+      Data& comment() const;
 
    private:
       mutable int mValue;
@@ -156,12 +149,9 @@ class StringCategory : public ParserCategory
    public:
       enum {commaHandling = NoCommaTokenizing};
 
+      StringCategory();
       explicit StringCategory(const Data& value);
-      StringCategory() : ParserCategory(), mValue() {}
-      StringCategory(HeaderFieldValue* hfv, Headers::Type type)
-         : ParserCategory(hfv, type),
-           mValue()
-      {}
+      StringCategory(HeaderFieldValue* hfv, Headers::Type type);
       StringCategory(const StringCategory&);
       StringCategory& operator=(const StringCategory&);
 
@@ -185,7 +175,7 @@ class GenericURI : public ParserCategory
       enum {commaHandling = NoCommaTokenizing};
 
       GenericURI() : ParserCategory() {}
-      GenericURI(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type) {}
+      GenericURI(HeaderFieldValue* hfv, Headers::Type type);
       GenericURI(const GenericURI&);
       GenericURI& operator=(const GenericURI&);
 
@@ -194,6 +184,7 @@ class GenericURI : public ParserCategory
       virtual std::ostream& encodeParsed(std::ostream& str) const;
 
       Data& uri();
+      const Data& uri() const;
 
    private:
       mutable Data mUri;
@@ -208,19 +199,8 @@ class NameAddr : public ParserCategory
    public:
       enum {commaHandling = CommasAllowedOutputMulti};
 
-      NameAddr() : 
-         ParserCategory(),
-         mAllContacts(false),
-         mDisplayName()
-      {}
-
-      NameAddr(HeaderFieldValue* hfv,
-               Headers::Type type)
-         : ParserCategory(hfv, type), 
-           mAllContacts(false),
-           mDisplayName()
-      {}
-
+      NameAddr();
+      NameAddr(HeaderFieldValue* hfv, Headers::Type type);
       explicit NameAddr(const Uri&);
       explicit NameAddr(const Data& unparsed);
 
@@ -231,9 +211,10 @@ class NameAddr : public ParserCategory
       
       Uri& uri();
       const Uri& uri() const;
-      Data& displayName() const {checkParsed(); return mDisplayName;}
-      bool isAllContacts() const {checkParsed(); return mAllContacts; }
-      void setAllContacts() { mAllContacts = true;}
+      Data& displayName();
+      const Data& displayName() const;
+      bool isAllContacts() const;
+      void setAllContacts();
       
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
@@ -269,16 +250,14 @@ class CallID : public ParserCategory
    public:
       enum {commaHandling = NoCommaTokenizing};
 
-      CallID() : ParserCategory(), mValue() {}
-      CallID(HeaderFieldValue* hfv, 
-             Headers::Type type) 
-         : ParserCategory(hfv, type), mValue()
-      {}
+      CallID();
+      CallID(HeaderFieldValue* hfv, Headers::Type type);
       CallID(const CallID&);
       CallID& operator=(const CallID&);
       bool operator==(const CallID&) const;
       
-      Data& value() const {checkParsed(); return mValue;}
+      Data& value();
+      const Data& value() const;
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
@@ -299,15 +278,16 @@ class CSeqCategory : public ParserCategory
       enum {commaHandling = NoCommaTokenizing};
       
       CSeqCategory();
-      CSeqCategory(HeaderFieldValue* hfv, Headers::Type type)
-         : ParserCategory(hfv, type), mMethod(UNKNOWN), mSequence(-1) 
-      {}
+      CSeqCategory(HeaderFieldValue* hfv, Headers::Type type);
       CSeqCategory(const CSeqCategory&);
       CSeqCategory& operator=(const CSeqCategory&);
 
-      MethodTypes& method() const {checkParsed(); return mMethod;}
-      Data& unknownMethodName() const {checkParsed(); return mUnknownMethodName;}
-      int& sequence() const {checkParsed(); return mSequence;}
+      MethodTypes& method();
+      MethodTypes method() const;
+      Data& unknownMethodName();
+      const Data& unknownMethodName() const;
+      int& sequence();
+      int sequence() const;
 
       bool operator==(const CSeqCategory& rhs) const;
 
@@ -359,18 +339,7 @@ class DateCategory : public ParserCategory
       enum {commaHandling = NoCommaTokenizing};
 
       DateCategory();
-
-      DateCategory(HeaderFieldValue* hfv, Headers::Type type)
-         : ParserCategory(hfv, type),
-           mDayOfWeek(Sun),
-           mDayOfMonth(),
-           mMonth(Jan),
-           mYear(0),
-           mHour(0),
-           mMin(0),
-           mSec(0)
-      {}
-
+      DateCategory(HeaderFieldValue* hfv, Headers::Type type);
       DateCategory(const DateCategory&);
       DateCategory& operator=(const DateCategory&);
 
@@ -382,13 +351,19 @@ class DateCategory : public ParserCategory
       static DayOfWeek DayOfWeekFromData(const Data&);
       static Month MonthFromData(const Data&);
 
-      DayOfWeek& dayOfWeek() {checkParsed(); return mDayOfWeek;}
-      int& dayOfMonth() {checkParsed(); return mDayOfMonth;}
-      Month month() {checkParsed(); return mMonth;}
-      int& year() {checkParsed(); return mYear;}
-      int& hour() {checkParsed(); return mHour;}
-      int& minute() {checkParsed(); return mMin;}
-      int& second() {checkParsed(); return mSec;}
+      const DayOfWeek& dayOfWeek() const;
+      int& dayOfMonth();
+      int dayOfMonth() const;
+      Month& month();
+      Month month() const;
+      int& year();
+      int year() const;
+      int& hour();
+      int hour() const;
+      int& minute();
+      int minute() const;
+      int& second();
+      int second() const;
 
    private:
       mutable enum DayOfWeek mDayOfWeek;
@@ -408,10 +383,8 @@ class WarningCategory : public ParserCategory
    public:
       enum {commaHandling = CommasAllowedOutputCommas};
 
-      WarningCategory() : ParserCategory() {}
-      WarningCategory(HeaderFieldValue* hfv, Headers::Type type)
-         : ParserCategory(hfv, type) 
-      {}
+      WarningCategory();
+      WarningCategory(HeaderFieldValue* hfv, Headers::Type type);
       WarningCategory(const WarningCategory&);
       WarningCategory& operator=(const WarningCategory&);
 
@@ -420,8 +393,11 @@ class WarningCategory : public ParserCategory
       virtual std::ostream& encodeParsed(std::ostream& str) const;
 
       int& code();
+      int code() const;
       Data& hostname();
+      const Data& hostname() const;
       Data& text();
+      const Data& text() const;
 
    private:
       mutable int mCode;
@@ -443,11 +419,16 @@ class Via : public ParserCategory
       Via(const Via&);
       Via& operator=(const Via&);
 
-      Data& protocolName() const {checkParsed(); return mProtocolName;}
-      Data& protocolVersion() const {checkParsed(); return mProtocolVersion;}
-      Data& transport() const {checkParsed(); return mTransport;}
-      Data& sentHost() const {checkParsed(); return mSentHost;}
-      int& sentPort() const {checkParsed(); return mSentPort;}
+      Data& protocolName();
+      const Data& protocolName() const;
+      Data& protocolVersion();
+      const Data& protocolVersion() const;
+      Data& transport();
+      const Data& transport() const;
+      Data& sentHost();
+      const Data& sentHost() const;
+      int& sentPort();
+      int sentPort() const;
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
@@ -470,10 +451,8 @@ class ExpiresCategory : public ParserCategory
    public:
       enum {commaHandling = NoCommaTokenizing};
 
-      ExpiresCategory() : ParserCategory(), mValue(0) {}
-      ExpiresCategory(HeaderFieldValue* hfv, Headers::Type type)
-         : ParserCategory(hfv, type), mValue(0)
-      {}
+      ExpiresCategory();
+      ExpiresCategory(HeaderFieldValue* hfv, Headers::Type type);
       ExpiresCategory(const ExpiresCategory&);
       ExpiresCategory& operator=(const ExpiresCategory&);
 
@@ -481,7 +460,8 @@ class ExpiresCategory : public ParserCategory
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
-      int& value() const {checkParsed(); return mValue;}
+      int& value();
+      int value() const;
 
    private:
       mutable int mValue;
@@ -493,19 +473,8 @@ class ExpiresCategory : public ParserCategory
 class RequestLine : public ParserCategory
 {
    public:
-      RequestLine(MethodTypes method, const Data& sipVersion = Symbols::DefaultSipVersion)
-         : mMethod(method),
-           mUnknownMethodName(),
-           mSipVersion(sipVersion)
-      {}
-
-      RequestLine(HeaderFieldValue* hfv, Headers::Type type) 
-         : ParserCategory(hfv, type),
-           mMethod(UNKNOWN),
-           mUnknownMethodName(MethodNames[UNKNOWN]),
-           mSipVersion(Symbols::DefaultSipVersion)
-      {}
-      
+      RequestLine(MethodTypes method, const Data& sipVersion = Symbols::DefaultSipVersion);
+      RequestLine(HeaderFieldValue* hfv, Headers::Type type);
       RequestLine(const RequestLine&);
       RequestLine& operator=(const RequestLine&);
 
@@ -514,12 +483,13 @@ class RequestLine : public ParserCategory
       const Uri& uri() const;
       Uri& uri();
 
-      MethodTypes getMethod() const {checkParsed(); return mMethod;}
-      const MethodTypes& method() const {checkParsed(); return mMethod;}
-      MethodTypes& method() {checkParsed(); return mMethod;}
+      MethodTypes getMethod() const;
+      MethodTypes& method();
+      MethodTypes method() const;
 
-      Data& unknownMethodName() const {checkParsed(); return mUnknownMethodName;}
-      const Data& getSipVersion() const {checkParsed(); return mSipVersion;}
+      Data& unknownMethodName();
+      const Data& unknownMethodName() const;
+      const Data& getSipVersion() const;
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
@@ -538,26 +508,18 @@ class RequestLine : public ParserCategory
 class StatusLine : public ParserCategory
 {
    public:
-      StatusLine() : 
-         ParserCategory(), 
-         mResponseCode(-1),
-         mSipVersion(Symbols::DefaultSipVersion), 
-         mReason()
-      {}
-      StatusLine(HeaderFieldValue* hfv, Headers::Type type)
-         : ParserCategory(hfv, type), 
-           mResponseCode(-1), 
-           mSipVersion(Symbols::DefaultSipVersion), 
-           mReason() 
-      {}
-
+      StatusLine();
+      StatusLine(HeaderFieldValue* hfv, Headers::Type type);
       StatusLine(const StatusLine&);
       StatusLine& operator=(const StatusLine&);
 
-      int& responseCode() const {checkParsed(); return mResponseCode;}
-      int& statusCode() const {checkParsed(); return mResponseCode;}
-      const Data& getSipVersion() const {checkParsed(); return mSipVersion;}
-      Data& reason() const {checkParsed(); return mReason;}
+      int& responseCode();
+      int responseCode() const;
+      int& statusCode();
+      int statusCode() const;
+      const Data& getSipVersion() const;
+      Data& reason();
+      const Data& reason() const;
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
