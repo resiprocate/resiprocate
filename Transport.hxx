@@ -81,6 +81,8 @@ class Transport
       static Type toTransport( const Data& );
       static Data toData( Type );
 
+      // mark the received= and rport parameters if necessary
+      static void stampReceived(SipMessage* request);
 
    protected:
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
@@ -89,8 +91,8 @@ class Transport
       Data mInterface;
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
-   private:
 
+   private:
       bool mShutdown ;
 };
 
