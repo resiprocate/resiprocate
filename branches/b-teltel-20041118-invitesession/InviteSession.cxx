@@ -1406,7 +1406,7 @@ InviteSession::toData(State state)
 void
 InviteSession::transition(State target)
 {
-   WarningLog (<< "Transition " << toData(mState) << " -> " << toData(target));
+   InfoLog (<< "Transition " << toData(mState) << " -> " << toData(target));
    mState = target;
 }
 
