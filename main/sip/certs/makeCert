@@ -69,10 +69,14 @@ openssl ca -extensions cj_cert -config openssl.cnf \
      -infiles ${ADDR}.csr
 fi
 
-
 openssl pkcs12 -passin pass:password \
     -passout pass:password -export \
     -out ${ADDR}.p12 -in ${ADDR}_cert.pem \
-    -inkey ${ADDR}_key.pem -name TheName -certfile demoCA/cacert.pem
+    -inkey ${ADDR}_key.pem -name ${ADDR} -certfile demoCA/cacert.pem
 
 openssl x509 -in ${ADDR}_cert.pem -noout -text
+
+case ${ADDR} in
+*@*) mv ${ADDR}_key.pem user_key_${ADDR}.pem;   mv ${ADDR}_cert.pem user_cert_${ADDR}.pem ;;
+*)   mv ${ADDR}_key.pem domain_key_${ADDR}.pem; mv ${ADDR}_cert.pem domain_cert_${ADDR}.pem ;;
+esac

@@ -102,3 +102,7 @@ EOF
 
 openssl crl2pkcs7 -nocrl -certfile demoCA/cacert.pem \
         -outform DER -out demoCA/cacert.p7c
+
+cp demoCA/cacert.pem root_cert_fluffyCA.pem
+
+
