@@ -165,6 +165,23 @@ DnsUtil::getLocalHostName()
    return buffer;
 }
 
+Data 
+DnsUtil::getLocalDomainName()
+{
+   char buffer[1024];
+   if (int e = getdomainname(buffer,sizeof(buffer)) == -1)
+   {
+       if ( e != 0 )
+       {
+           int err = errno;
+           CritLog(<< "Couldn't find domainname: " << strerror(err));
+           throw Exception(strerror(err), __FILE__,__LINE__);
+       }
+   }
+   return buffer;
+}
+
+
 Data
 DnsUtil::getLocalIpAddress() 
 {
