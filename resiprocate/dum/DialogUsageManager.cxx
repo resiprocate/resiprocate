@@ -1104,6 +1104,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case INFO :    // handle non-dialog (illegal) INFOs
          case OPTIONS : // handle non-dialog OPTIONS
          case MESSAGE :
+         case REGISTER:
          {
             {
                DialogSetId id(request);
@@ -1144,14 +1145,6 @@ DialogUsageManager::processRequest(const SipMessage& request)
             
             break;
          }
-         case REGISTER:
-         {
-               SipMessage failure;
-               makeResponse(failure, request, 405);
-               failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
-               sendResponse(failure);
-         }
-         break;         
          case RESPONSE:
          case SERVICE:
             assert(false);
@@ -1169,7 +1162,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case REGISTER:
          {
             SipMessage failure;
-            makeResponse(failure, request, 400, "rjs says, Go to hell");
+            makeResponse(failure, request, 400, "Registration requests can't have To: tags.");
             failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
             sendResponse(failure);
             break;
