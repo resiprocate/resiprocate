@@ -71,6 +71,7 @@ class Symbols
       static const char * const Refer;
       static const char * const Refer_To;
       static const char * const Referred_By;
+      static const char * const Replaces;
       static const char * const Register;
       static const char * const Subscribe;
 

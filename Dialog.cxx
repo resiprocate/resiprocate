@@ -8,7 +8,7 @@ using namespace Vocal2;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 
-Dialog::Dialog(Url& localContact) 
+Dialog::Dialog(const Url& localContact) 
    : mVia(),
      mContact(localContact),
      mCreated(false),
@@ -38,7 +38,7 @@ Dialog::Dialog(Url& localContact)
 }
 
 void
-Dialog::createDialogAsUAS(SipMessage& request, SipMessage& response)
+Dialog::createDialogAsUAS(const SipMessage& request, const SipMessage& response)
 {
    if (!mCreated)
    {
@@ -46,6 +46,7 @@ Dialog::createDialogAsUAS(SipMessage& request, SipMessage& response)
       assert(response.isResponse());
       assert(request.header(h_RequestLine).getMethod() == INVITE ||
              request.header(h_RequestLine).getMethod() == SUBSCRIBE);
+      
       assert (request.header(h_Contacts).size() == 1);
 
       mRouteSet = request.header(h_RecordRoutes);
@@ -68,7 +69,7 @@ Dialog::createDialogAsUAS(SipMessage& request, SipMessage& response)
 }
 
 void 
-Dialog::createDialogAsUAC(SipMessage& request, SipMessage& response)
+Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
 {
    if (!mCreated)
    {
@@ -100,7 +101,7 @@ Dialog::createDialogAsUAC(SipMessage& request, SipMessage& response)
 }
 
 void 
-Dialog::targetRefreshResponse(SipMessage& response)
+Dialog::targetRefreshResponse(const SipMessage& response)
 {
    if (response.header(h_Contacts).size() == 1)
    {
@@ -109,7 +110,7 @@ Dialog::targetRefreshResponse(SipMessage& response)
 }
 
 int 
-Dialog::targetRefreshRequest(SipMessage& request)
+Dialog::targetRefreshRequest(const SipMessage& request)
 {
    assert (request.header(h_RequestLine).getMethod() != CANCEL);
    if (request.header(h_RequestLine).getMethod() != ACK)
@@ -161,7 +162,7 @@ Dialog::makeBye()
 
 
 SipMessage
-Dialog::makeRefer(Url& referTo)
+Dialog::makeRefer(const Url& referTo)
 {
    SipMessage request;
    request.header(h_RequestLine) = RequestLine(REFER);
@@ -193,7 +194,7 @@ Dialog::makeOptions()
 }
 
 SipMessage
-Dialog::makeAck(SipMessage& original)
+Dialog::makeAck(const SipMessage& original)
 {
    SipMessage request;
    request.header(h_RequestLine) = RequestLine(ACK);
@@ -203,7 +204,7 @@ Dialog::makeAck(SipMessage& original)
 }
 
 SipMessage
-Dialog::makeCancel(SipMessage& original)
+Dialog::makeCancel(const SipMessage& original)
 {
    SipMessage request;
    request.header(h_RequestLine) = RequestLine(CANCEL);
