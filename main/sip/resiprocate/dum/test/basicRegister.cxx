@@ -3,7 +3,7 @@
 #include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -98,19 +98,19 @@ main (int argc, char** argv)
    Log::initialize(Log::Cout, (resip::Log::Level)level, argv[0]);
 
    Client client;
-   Profile profile;   
-   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager(profile));   
+   MasterProfile profile;   
+   auto_ptr<ClientAuthManager> clientAuth(new ClientAuthManager);   
 
    DialogUsageManager clientDum;
    clientDum.addTransport(UDP, 15060);
-   clientDum.setProfile(&profile);
+   clientDum.setMasterProfile(&profile);
 
    clientDum.setClientRegistrationHandler(&client);
    clientDum.setClientAuthManager(clientAuth);
-   clientDum.getProfile()->setDefaultRegistrationTime(70);
+   clientDum.getMasterProfile()->setDefaultRegistrationTime(70);
 
    NameAddr from("sip:101@proxy.internal.xten.net");
-   clientDum.getProfile()->setDefaultFrom(from);
+   clientDum.getMasterProfile()->setDefaultFrom(from);
 
 
 //   profile.addDigestCredential( "xten.gloo.net", "derek@xten.gloo.net", "123456" );
