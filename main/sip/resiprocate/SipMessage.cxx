@@ -530,7 +530,7 @@ SipMessage::setContents(const Contents* contents)
 Contents*
 SipMessage::getContents() const
 {
-   if (mContents == 0)
+   if (mContents == 0 && mContentsHfv != 0)
    {
       if (!exists(h_ContentType))
       {
