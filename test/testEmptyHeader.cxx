@@ -28,7 +28,7 @@ main(int argc, char** argv)
      tassert_reset();
      char * txt =(              
        "SIP/2.0 489 Bad Event" CRLF
-       "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
+       "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1--c87542-" CRLF
        "CSeq: 1 SUBSCRIBE" CRLF
        "Allow-Events: " CRLF
        "Call-ID:  f354ce714fb8a95c" CRLF
@@ -46,7 +46,7 @@ main(int argc, char** argv)
 
      char * txt2 =(              
        "SIP/2.0 489 Bad Event" CRLF
-       "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
+       "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1--c87542-" CRLF
        "CSeq: 1 SUBSCRIBE" CRLF
        "Call-ID:  f354ce714fb8a95c" CRLF
        "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
