@@ -5,7 +5,16 @@ using namespace resip;
 
 TransactionUser::TransactionUser() : mFifo(0, 0)
 {
+  // This creates a default message filter rule, which
+  // handles all sip: and sips: requests.
+  mRuleList.push_back(MessageFilterRule());
 }
+
+TransactionUser::TransactionUser(MessageFilterRuleList &mfrl) 
+  : mFifo(0, 0), mRuleList(mfrl)
+{
+}
+
 
 TransactionUser::~TransactionUser()
 {
@@ -49,13 +58,6 @@ TransactionUser::isForMe(const SipMessage& msg) const
    }
    return false;
 }
-
-bool
-MessageFilterRule::matches(const SipMessage&) const
-{
-   return false;
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
