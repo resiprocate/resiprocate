@@ -29,19 +29,22 @@ class TransportSelector
       
       void process(fd_set* fdSet);
 
+      
+      void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
+      void dnsResolve(SipMessage* msg);
+
       // this will result in msg->resolve() being called to either
       // kick off dns resolution or to pick the next tuple , will cause the
       // message to be encoded and via updated
-      void send( SipMessage* msg );
+      void send( SipMessage* msg, Transport::Tuple& destination );
 
       // just resend to the same transport as last time
-      void retransmit(SipMessage* msg);
+      void retransmit(SipMessage* msg, Transport::Tuple& destination );
       
-      void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
-	
       void buildFdSet( fd_set* fdSet, int* fdSetSize );
 	
    private:
+      Transport* findTransport(const Transport::Tuple& tuple);
 
       SipStack& mStack;
       std::vector<Transport*> mTransports;

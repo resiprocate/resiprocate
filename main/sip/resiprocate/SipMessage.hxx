@@ -18,7 +18,7 @@
 #include <sipstack/Message.hxx>
 #include <sipstack/ParserCategories.hxx>
 #include <sipstack/ParserContainer.hxx>
-#include <sipstack/Resolver.hxx>
+#include <sipstack/Transport.hxx>
 #include <util/VException.hxx>
 
 namespace Vocal2
@@ -141,20 +141,15 @@ class SipMessage : public Message
                      const char* headerName, int headerLen, 
                      const char* start, int len);
 
-      void setSource(const sockaddr_in& addr);
-
+      void setSource(const Transport::Tuple& tuple);
+      void setDestination(const Transport::Tuple& dest);
+      
       void addBuffer(char* buf);
 
       bool hasFixedDest() const;
       Data getFixedDest() const;
       void setFixedDest(const Data& dest);
       void clearFixedDest();
-
-      // create a resolver, if necessary and return the first tuple
-      Resolver::Tuple resolve(); 
-
-      // the current tuple 
-      Resolver::Tuple tuple(); 
 
       // returns the encoded buffer which was encoded by resolve()
       // should only be called by the TransportSelector
@@ -175,7 +170,8 @@ class SipMessage : public Message
       bool mHaveFixedDest;
       Data mFixedDest;
 
-      sockaddr_in mSource;
+      Transport::Tuple mSource;
+      Transport::Tuple mDestination;
 
       // !dlb! hack out with pre-data pointer in buffer for intrusive list?
       std::vector<char*> mBufferList;
@@ -186,8 +182,9 @@ class SipMessage : public Message
       mutable bool mRequest;
       mutable bool mResponse;
 
-      Resolver* mResolver; // created by TransportSelector
       Data mEncoded; // to be retransmitted
+
+      friend class TransportSelector;
 };
 
 
