@@ -1124,19 +1124,10 @@
 				RelativePath="RportParameter.hxx">
 			</File>
 			<File
-				RelativePath=".\RRCache.hxx">
-			</File>
-			<File
 				RelativePath=".\dns\RRCache.hxx">
 			</File>
 			<File
-				RelativePath=".\RRList.hxx">
-			</File>
-			<File
 				RelativePath=".\dns\RRList.hxx">
-			</File>
-			<File
-				RelativePath=".\RROverlay.hxx">
 			</File>
 			<File
 				RelativePath=".\dns\RROverlay.hxx">
