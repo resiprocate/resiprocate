@@ -2,6 +2,8 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "resiprocate/os/compat.hxx"
+
 #include <iostream>
 #include <string.h>
 #include <sys/types.h>
