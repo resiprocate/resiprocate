@@ -26,7 +26,8 @@ class DumTimeout : public ApplicationMessage
          StaleCall, // UAC gets no final response
          Subscription,
          StaleReInvite,
-         Glare
+         Glare,
+         Cancelled
       } Type;
       static const unsigned long StaleCallTimeout;
 

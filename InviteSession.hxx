@@ -93,7 +93,7 @@ class InviteSession : public DialogUsage
          UAC_ReceivedUpdateEarly,
          UAC_SentAnswer,
          UAC_QueuedUpdate,
-         UAC_Canceled,
+         UAC_Cancelled,
 
          UAS_Start,
          UAS_Offer, 
@@ -198,10 +198,15 @@ class InviteSession : public DialogUsage
       bool updateMethodSupported() const;
 
       Tokens mPeerSupportedMethods;
+
       Tokens mPeerSupportedOptionTags;
+
       Mimes mPeerSupportedMimeTypes;
+
       Tokens mPeerSupportedEncodings;
+
       Tokens mPeerSupportedLanguages;
+
 
       Event toEvent(const SipMessage& msg, const SdpContents* sdp);
       
