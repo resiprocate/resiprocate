@@ -13,7 +13,7 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_init.c,v 1.5 2003/09/24 18:46:02 jason Exp $";
+static const char rcsid[] = "$Id: ares_init.c,v 1.6 2003/10/28 21:43:42 adamr Exp $";
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -28,7 +28,9 @@ static const char rcsid[] = "$Id: ares_init.c,v 1.5 2003/09/24 18:46:02 jason Ex
 #include <sys/param.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <arpa/nameser.h>
+#ifndef __CYGWIN__
+#  include <arpa/nameser.h>
+#endif
 #include <unistd.h>
 #include <errno.h>
 #include <netdb.h>
