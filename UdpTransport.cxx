@@ -79,17 +79,6 @@ UdpTransport::~UdpTransport()
 
 
 void 
-UdpTransport::send( const sockaddr_in* dest,
-                    const  char* buffer,
-                    const size_t length) 
-{
-   SendData* data = new  SendData(dest, buffer, length);
-   DebugLog (<< "Adding message to tx buffer: " << endl << string(buffer, length));
-   mTxFifo.add(data); // !jf!
-}
-
-
-void 
 UdpTransport::process(fd_set* fdSet)
 {
 	
@@ -104,17 +93,11 @@ UdpTransport::process(fd_set* fdSet)
       std::auto_ptr<SendData> data = std::auto_ptr<SendData>(mTxFifo.getNext());
       DebugLog (<< "Sending message on udp");
 
-      const sockaddr_in* addrin = data->destination;
+      const sockaddr_in* addrin = &data->destination;
       const sockaddr* addr = (const sockaddr*) addrin;
 
-#ifdef WIN32
-#else
-      char str[256];
-      DebugLog (<< "Sending to " <<  inet_ntop(AF_INET, &addrin->sin_addr.s_addr, str, sizeof(str)));
-#endif
-
       int count = sendto(mFd, 
-                         data->buffer, data->length, 
+                         data->data->data(), data->data->size(),  // !jf! ugghhh
                          0, // flags
                          addr, sizeof(sockaddr_in) );
    
@@ -126,7 +109,7 @@ UdpTransport::process(fd_set* fdSet)
          assert(0);
       }
 
-      assert ( (count == int(data->length) ) || (count == SOCKET_ERROR ) );
+      assert ( (count == int(data->data->size()) ) || (count == SOCKET_ERROR ) );
    }
 
    struct sockaddr_in from;
@@ -232,7 +215,7 @@ UdpTransport::process(fd_set* fdSet)
       else
       {
       
-         DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message);
+         DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
 
          // set the received= and rport= parameters in the message if necessary !jf!
          mStateMachineFifo.add(message);

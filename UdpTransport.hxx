@@ -15,7 +15,6 @@ class UdpTransport : public Transport
       UdpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo);
       virtual  ~UdpTransport();
 
-      void send( const sockaddr_in* address, const  char* buffer, size_t length); //, TransactionId txId) ;
       void process(fd_set* fdSet=NULL) ;
       bool isReliable() const { return false; }
       Transport::Type transport() const { return UDP; }

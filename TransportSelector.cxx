@@ -12,6 +12,10 @@
 #include <util/DataStream.hxx>
 #include <util/Logger.hxx>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
 using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
@@ -24,11 +28,11 @@ TransportSelector::TransportSelector(SipStack& stack) :
 
 TransportSelector::~TransportSelector()
 {
-   std::vector<Transport*>::iterator i;
    while (!mTransports.empty())
    {
-      delete *i;
-      mTransports.erase(i);
+      Transport* t = mTransports[0];
+      mTransports.erase(mTransports.begin());
+      delete t;
    }
 }
 
@@ -49,7 +53,7 @@ TransportSelector::addTransport( Transport::Type protocol,
       if ( e != 0 )
       {
          int err = errno;
-         InfoLog( << "cont not find local hostname:" << strerror(err) );
+         InfoLog( << "could not find local hostname:" << strerror(err) );
          throw Transport::Exception("could not find local hostname",__FILE__,__LINE__);
       }
       hostname = Data(buf);
@@ -74,7 +78,7 @@ TransportSelector::addTransport( Transport::Type protocol,
 void 
 TransportSelector::process(fd_set* fdSet)
 {
-   for (std::vector<Transport*>::const_iterator i; i != mTransports.end(); i++)
+   for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
    {
       try
       {
@@ -152,22 +156,25 @@ TransportSelector::send( SipMessage* msg )
       msg->header(h_Vias).front().sentPort() = transport->port();
    }
    
-   Data encoded(2048, true);
-   DataStream encodeStream(encoded);
+   Data* encoded = new Data(2048, true);
+   DataStream encodeStream(*encoded);
    msg->encode(encodeStream);
-
+   encodeStream.flush();
+   
+   DebugLog (<< "encoded=" << encoded->data());
+   
    // get next destination !jf!
    Resolver::Tuple tuple = *resolver.mCurrent;
    
    // send it over the transport
-   transport->send(&tuple.ipv4, encoded.data(), encoded.size());
+   transport->send(tuple.ipv4, encoded);
 }
 
 
 void 
 TransportSelector::buildFdSet( fd_set* fdSet, int* fdSetSize )
 {
-   for (std::vector<Transport*>::const_iterator i; i != mTransports.end(); i++)
+   for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
    {
       (*i)->buildFdSet( fdSet, fdSetSize );
    }
