@@ -1,9 +1,9 @@
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/sipstack/Headers.hxx"
-#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/Headers.hxx"
+#include "resiprocate/Symbols.hxx"
 
 // GPERF generated external routines
-#include "resiprocate/sipstack/HeaderHash.hxx"
+#include "resiprocate/HeaderHash.hxx"
 
 #include <iostream>
 using namespace std;

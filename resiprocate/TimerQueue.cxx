@@ -1,12 +1,12 @@
 
 #include <limits.h>
 
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 
-#include "resiprocate/sipstack/TimerQueue.hxx"
-#include "resiprocate/sipstack/TimerMessage.hxx"
-#include "resiprocate/util/Logger.hxx"
-//#include "resiprocate/util/Inserter.hxx"
+#include "resiprocate/TimerQueue.hxx"
+#include "resiprocate/TimerMessage.hxx"
+#include "resiprocate/os/Logger.hxx"
+//#include "resiprocate/os/Inserter.hxx"
 
 using namespace Vocal2;
 using namespace std;

@@ -1,9 +1,9 @@
 
 
 static const char* const Lock_cxx_Version =
-    "$Id: Lock.cxx,v 1.6 2003/03/24 22:42:27 jason Exp $";
+    "$Id: Lock.cxx,v 1.7 2003/03/24 23:25:36 jason Exp $";
 
-#include "resiprocate/util/Lock.hxx"
+#include "resiprocate/os/Lock.hxx"
 
 using Vocal2::Lock;
 using Vocal2::ReadLock;

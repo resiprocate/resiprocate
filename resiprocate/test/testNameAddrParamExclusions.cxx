@@ -1,4 +1,4 @@
-#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include <iostream>
 
 using namespace Vocal2;

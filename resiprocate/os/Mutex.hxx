@@ -1,8 +1,8 @@
 #if !defined(Vocal2_Mutex_hxx)
 #define Vocal2_Mutex_hxx
 
-#include "resiprocate/util/compat.hxx"
-#include "resiprocate/util/Lockable.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Lockable.hxx"
 
 
 namespace Vocal2

@@ -1,7 +1,7 @@
 #ifndef ParseException_hxx
 #define ParseException_hxx
 
-#include "resiprocate/util/BaseException.hxx"
+#include "resiprocate/os/BaseException.hxx"
 
 namespace Vocal2
 {

@@ -9,15 +9,15 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "resiprocate/util/compat.hxx"
-#include "resiprocate/util/Socket.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-#include "resiprocate/sipstack/DnsResolver.hxx"
-#include "resiprocate/sipstack/Symbols.hxx"
-#include "resiprocate/sipstack/ParserCategories.hxx"
-#include "resiprocate/sipstack/SipStack.hxx"
-#include "resiprocate/sipstack/TransactionState.hxx"
+#include "resiprocate/DnsResolver.hxx"
+#include "resiprocate/Symbols.hxx"
+#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/TransactionState.hxx"
 
 
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::TRANSACTION

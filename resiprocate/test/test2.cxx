@@ -11,11 +11,11 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/sipstack/Helper.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/sipstack/SipStack.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 
 using namespace Vocal2;

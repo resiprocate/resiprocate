@@ -3,8 +3,8 @@
 
 #include <iostream>
 
-#include "resiprocate/sipstack/ParameterTypeEnums.hxx"
-#include "resiprocate/sipstack/Parameter.hxx"
+#include "resiprocate/ParameterTypeEnums.hxx"
+#include "resiprocate/Parameter.hxx"
 
 namespace Vocal2
 {

@@ -2,8 +2,8 @@
 #define SUBSCRIPTION_HXX
 
 
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/util/Timer.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Timer.hxx"
 
 
 namespace Vocal2

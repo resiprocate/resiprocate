@@ -1,7 +1,7 @@
-#include "resiprocate/sipstack/Executive.hxx"
-#include "resiprocate/sipstack/SipStack.hxx"
-#include "resiprocate/sipstack/TransactionState.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/Executive.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/TransactionState.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace Vocal2;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
