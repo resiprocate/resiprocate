@@ -62,7 +62,8 @@ class DialogUsageManager : public HandleManager
             virtual const char* name() const {return "DialogUsageManager::Exception";}
       };
       
-      DialogUsageManager();
+      DialogUsageManager(std::auto_ptr<SipStack> stack = std::auto_ptr<SipStack>(new SipStack(false)));
+
       virtual ~DialogUsageManager();
       
       void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
@@ -292,7 +293,7 @@ class DialogUsageManager : public HandleManager
 
       StatisticsMessage::Payload mStatsPayload;
 
-      SipStack mStack;
+      std::auto_ptr<SipStack> mStack;
       StackThread mStackThread;
       DumShutdownHandler* mDumShutdownHandler;
       typedef enum 
