@@ -22,7 +22,7 @@
 using namespace resip;
 using namespace std;
 
-Data 
+Data
 DnsUtil::getLocalHostName()
 {
    char buffer[256];
@@ -47,12 +47,12 @@ DnsUtil::getLocalHostName()
 }
 
 
-Data 
+Data
 DnsUtil::getLocalDomainName()
 {
 #if defined( __APPLE__ ) || defined( WIN32 ) || defined(__SUNPRO_CC) || defined(__sun__)
    assert(0);
-   // !cj! TODO 
+   // !cj! TODO
    return NULL;
 #else
    char buffer[1024];
@@ -77,7 +77,7 @@ DnsUtil::getLocalIpAddress(const Data& myInterface)
    {
       throw Exception("No matching interface", __FILE__,__LINE__);
    }
-   
+
    if (ifs.size() > 1)
    {
       for (std::list<std::pair<Data, Data> >::const_iterator i = ifs.begin();
@@ -87,7 +87,7 @@ DnsUtil::getLocalIpAddress(const Data& myInterface)
       }
       assert(0);
    }
-  
+
    return ifs.front().second;
 }
 
@@ -158,13 +158,13 @@ DnsUtil::inet_pton(const Data& printableIp, struct in6_addr& dst)
 #endif
 
 
-bool 
+bool
 DnsUtil::isIpV4Address(const Data& ipAddress)
 {
-   // ok, this is fairly monstrous but it works. 
+   // ok, this is fairly monstrous but it works.
    unsigned int p1,p2,p3,p4;
    int count=0;
-   int result = sscanf( ipAddress.c_str(), 
+   int result = sscanf( ipAddress.c_str(),
                         "%u.%u.%u.%u%n",
                         &p1, &p2, &p3, &p4, &count );
 
@@ -179,7 +179,7 @@ DnsUtil::isIpV4Address(const Data& ipAddress)
 }
 
 // RFC 1884
-bool 
+bool
 DnsUtil::isIpV6Address(const Data& ipAddress)
 {
    if (ipAddress.empty())
@@ -211,7 +211,7 @@ DnsUtil::isIpV6Address(const Data& ipAddress)
                  *(ipAddress.data()+1) == ':' ||
                  *(ipAddress.data()+0) == ':');
       default:
-         
+
          return (*(ipAddress.data()+4) == ':' ||
                  *(ipAddress.data()+3) == ':' ||
                  *(ipAddress.data()+2) == ':' ||
@@ -239,29 +239,29 @@ DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
 #endif
 }
 
-bool 
+bool
 DnsUtil::isIpAddress(const Data& ipAddress)
 {
    return isIpV4Address(ipAddress) || isIpV6Address(ipAddress);
 }
 
 
-std::list<std::pair<Data,Data> > 
+std::list<std::pair<Data,Data> >
 DnsUtil::getInterfaces(const Data& matching)
 {
    std::list<std::pair<Data,Data> > results;
-   
+
 #if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined (__sun__)
    struct ifconf ifc;
-   
+
    int s = socket( AF_INET, SOCK_DGRAM, 0 );
    const int len = 100 * sizeof(struct ifreq);
-   
+
    char buf[ len ];
-   
+
    ifc.ifc_len = len;
    ifc.ifc_buf = buf;
-   
+
    int e = ioctl(s,SIOCGIFCONF,&ifc);
    char *ptr = buf;
    int tl = ifc.ifc_len;
@@ -271,16 +271,16 @@ DnsUtil::getInterfaces(const Data& matching)
    while ( (tl > 0) && ( count < maxRet) )
    {
       struct ifreq* ifr = (struct ifreq *)ptr;
-      
+
       int si = sizeof(ifr->ifr_name) + sizeof(struct sockaddr);
       tl -= si;
       ptr += si;
       //char* name = ifr->ifr_ifrn.ifrn_name;
       char* name = ifr->ifr_name;
- 
+
       struct ifreq ifr2;
       ifr2 = *ifr;
-      
+
       e = ioctl(s,SIOCGIFADDR,&ifr2);
 
       struct sockaddr a = ifr2.ifr_addr;
@@ -294,7 +294,9 @@ DnsUtil::getInterfaces(const Data& matching)
 #else // !WIN32
    assert(0);
 #endif
-   
+
+   close(s);
+
    return results;
 }
 
@@ -305,7 +307,7 @@ const char *DnsUtil::inet_ntop(int af, const void* src, char* dst,
    return ::inet_ntop(af, src, dst, size);
 //   ::inet_ntop(af, (u_int32_t*)src, dst, size); //is the cast necessary?
 }
-   
+
 int DnsUtil::inet_pton(int af, const char* src, void* dst)
 {
    return ::inet_pton(af, src, dst);
@@ -313,9 +315,9 @@ int DnsUtil::inet_pton(int af, const char* src, void* dst)
 #else
 #define __restrict
 
-#define  NS_INT16SZ   2 
-#define  NS_INADDRSZ  4 
-#define  NS_IN6ADDRSZ 16 
+#define  NS_INT16SZ   2
+#define  NS_INADDRSZ  4
+#define  NS_IN6ADDRSZ 16
 
 const char* inet_ntop4(const u_char *src, char *dst, size_t size);
 #ifdef USE_IPV6
@@ -355,7 +357,7 @@ const char*
 inet_ntop4(const u_char *src, char *dst, size_t size)
 {
    static const char fmt[] = "%u.%u.%u.%u";
-#ifdef WIN32    
+#ifdef WIN32
    if ( _snprintf(dst, size, fmt, src[0], src[1], src[2], src[3]) < 0)
 #else
    if ( snprintf(dst, size, fmt, src[0], src[1], src[2], src[3]) < 0)
@@ -650,22 +652,22 @@ inet_pton6(const char *src, u_char *dst)
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -675,7 +677,7 @@ inet_pton6(const char *src, u_char *dst)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -689,9 +691,9 @@ inet_pton6(const char *src, u_char *dst)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
