@@ -8,7 +8,7 @@ namespace Vocal2
 {
 
 class HeaderFieldValue;
-class UnknownSubComponent;
+class UnknownParameter;
 
 class ParserCategory
 {
@@ -31,7 +31,7 @@ class ParserCategory
 
       void parseParameters(const char* start);
 
-      UnknownSubComponent& operator[](const Data& param);
+      UnknownParameter& operator[](const Data& param);
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
    protected:

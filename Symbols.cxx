@@ -2,6 +2,11 @@
 
 using namespace Vocal2;
 
+const char * const Symbols::SPACE = " ";
+const char * const Symbols::COLON = ":";
+const char * const Symbols::EQUALS = "=";
+const char * const Symbols::SEMI_COLON = ";";
+
 const char * const Symbols::Accept = "Accept";
 const char * const Symbols::Accept_Encoding = "Accept-Encoding";
 const char * const Symbols::Accept_Language = "Accept-Language";
@@ -54,3 +59,20 @@ const char * const Symbols::Options = "Options";
 const char * const Symbols::Refer = "Refer";
 const char * const Symbols::Register = "Register";
 const char * const Symbols::Subscribe = "Subscribe";
+
+const char * const Symbols::transport = "transport";
+const char * const Symbols::user = "user";
+const char * const Symbols::method = "method";
+const char * const Symbols::ttl = "ttl";
+const char * const Symbols::maddr = "maddr";
+const char * const Symbols::lr = "lr";
+const char * const Symbols::q = "q";
+const char * const Symbols::purpose = "purpose";
+const char * const Symbols::expires = "expires";
+const char * const Symbols::handling = "handling";
+const char * const Symbols::tag = "tag";
+const char * const Symbols::duration = "duration";
+const char * const Symbols::branch = "branch";
+const char * const Symbols::received = "received";
+const char * const Symbols::comp = "comp";
+const char * const Symbols::rport = "rport";

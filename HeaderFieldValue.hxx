@@ -2,7 +2,7 @@
 #define HeaderFieldValue_hxx
 
 #include <iostream>
-#include <sipstack/SubComponentList.hxx>
+#include <sipstack/ParameterList.hxx>
 #include <sipstack/ParseException.hxx>
 
 
@@ -10,7 +10,7 @@ namespace Vocal2
 {
 
 class ParserCategory;
-class UnknownSubComponent;
+class UnknownParameter;
 
 class HeaderFieldValue
 {
@@ -23,14 +23,14 @@ class HeaderFieldValue
       ~HeaderFieldValue();
 
       HeaderFieldValue* clone() const;
-      SubComponentList& getSubComponents();
-      SubComponentList& getUnknownSubComponents();
+      ParameterList& getParameters();
+      ParameterList& getUnknownParameters();
       bool isParsed() const;
 
       bool exists(const Data& subcomponent);
-      bool exists(const SubComponent::Type type);
+      bool exists(const ParameterTypes::Type type);
       
-      UnknownSubComponent* get(const Data& type);
+      UnknownParameter* get(const Data& type);
       
       HeaderFieldValue* next;
 
@@ -54,11 +54,10 @@ class HeaderFieldValue
       const char* mField;
       const unsigned int mFieldLength;
    private:
-      SubComponentList mSubComponentList;
-      SubComponentList mUnknownSubComponentList;
+      ParameterList mParameterList;
+      ParameterList mUnknownParameterList;
       bool mMine;
 };
-
 
 std::ostream& operator<<(std::ostream& stream, 
 			 HeaderFieldValue& hList);
