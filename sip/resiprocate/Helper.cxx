@@ -736,7 +736,7 @@ Helper::getSentPort(SipMessage& request)
    if (!request.header(h_Vias).front().exists(p_rport))
    {
       port = request.header(h_Vias).front().sentPort();
-      if (port == 0) 
+      if (port <= 0 || port > 65535) 
       {
          port = Symbols::DefaultSipPort;
       }
