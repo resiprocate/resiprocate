@@ -82,21 +82,17 @@ Headers::Type& Vocal2::operator++(Headers::Type&t);
 template <int T>
 class Header
 {
-   public:
-      Header()
-      {
-         int arr[0];
-      }
+      // don't let this template instantiate implicitly
+   private:
+      Header() {}
 };
 
 template <int T>
 class MultiHeader
 {
-   public:
-      MultiHeader()
-      {
-         int arr[0];
-      }
+      // don't let this template instantiate implicitly
+   private:
+      MultiHeader() {}
 };
 
 //====================
@@ -328,12 +324,12 @@ class MultiHeader<Headers::Error_Info>
 extern MultiHeader<Headers::Error_Info> h_ErrorInfos;
 
 //====================
-// Url:
+// NameAddr:
 //====================
 class MultiHeader<Headers::Record_Route>
 {
    public:
-      typedef Url Type;
+      typedef NameAddr Type;
       MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Record_Route] = Type::isCommaTokenizing;
@@ -345,7 +341,7 @@ extern MultiHeader<Headers::Record_Route> h_RecordRoutes;
 class MultiHeader<Headers::Route>
 {
    public:
-      typedef Url Type;
+      typedef NameAddr Type;
       MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Route] = Type::isCommaTokenizing;
@@ -357,7 +353,7 @@ extern MultiHeader<Headers::Route> h_Routes;
 class MultiHeader<Headers::Contact>
 {
    public:
-      typedef Url Type;
+      typedef NameAddr Type;
       MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Contact] = Type::isCommaTokenizing;
@@ -369,7 +365,7 @@ extern MultiHeader<Headers::Contact> h_Contacts;
 class Header<Headers::From>
 {
    public:
-      typedef Url Type;
+      typedef NameAddr Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::From] = Type::isCommaTokenizing;
@@ -381,7 +377,7 @@ extern Header<Headers::From> h_From;
 class Header<Headers::To>
 {
    public:
-      typedef Url Type;
+      typedef NameAddr Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::To] = Type::isCommaTokenizing;
@@ -393,7 +389,7 @@ extern Header<Headers::To> h_To;
 class Header<Headers::Reply_To>
 {
    public:
-      typedef Url Type;
+      typedef NameAddr Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Reply_To] = Type::isCommaTokenizing;
@@ -405,7 +401,7 @@ extern Header<Headers::Reply_To> h_ReplyTo;
 class Header<Headers::Refer_To>
 {
    public:
-      typedef Url Type;
+      typedef NameAddr Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Refer_To] = Type::isCommaTokenizing;
@@ -417,7 +413,7 @@ extern Header<Headers::Refer_To> h_ReferTo;
 class Header<Headers::Referred_By>
 {
    public:
-      typedef Url Type;
+      typedef NameAddr Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Referred_By] = Type::isCommaTokenizing;
@@ -432,7 +428,7 @@ extern Header<Headers::Referred_By> h_ReferredBy;
 class Header<Headers::Organization>
 {
    public:
-      typedef StringComponent Type;
+      typedef StringCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Organization] = Type::isCommaTokenizing;
@@ -444,7 +440,7 @@ extern Header<Headers::Organization> h_Organization;
 class Header<Headers::Server>
 {
    public:
-      typedef StringComponent Type;
+      typedef StringCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Server] = Type::isCommaTokenizing;
@@ -456,7 +452,7 @@ extern Header<Headers::Server> h_Server;
 class Header<Headers::Subject>
 {
    public:
-      typedef StringComponent Type;
+      typedef StringCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Subject] = Type::isCommaTokenizing;
@@ -468,7 +464,7 @@ extern Header<Headers::Subject> h_Subject;
 class Header<Headers::User_Agent>
 {
    public:
-      typedef StringComponent Type;
+      typedef StringCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::User_Agent] = Type::isCommaTokenizing;
@@ -480,7 +476,7 @@ extern Header<Headers::User_Agent> h_UserAgent;
 class Header<Headers::Timestamp>
 {
    public:
-      typedef StringComponent Type;
+      typedef StringCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Timestamp] = Type::isCommaTokenizing;
@@ -495,7 +491,7 @@ extern Header<Headers::Timestamp> h_Timestamp;
 class Header<Headers::Content_Length>
 {
    public:
-      typedef IntegerComponent Type;
+      typedef IntegerCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Content_Length] = Type::isCommaTokenizing;
@@ -507,7 +503,7 @@ extern Header<Headers::Content_Length> h_ContentLength;
 class Header<Headers::Expires>
 {
    public:
-      typedef IntegerComponent Type;
+      typedef IntegerCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Expires] = Type::isCommaTokenizing;
@@ -519,7 +515,7 @@ extern Header<Headers::Expires> h_Expires;
 class Header<Headers::Max_Forwards>
 {
    public:
-      typedef IntegerComponent Type;
+      typedef IntegerCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Max_Forwards] = Type::isCommaTokenizing;
@@ -531,7 +527,7 @@ extern Header<Headers::Max_Forwards> h_MaxForwards;
 class Header<Headers::Min_Expires>
 {
    public:
-      typedef IntegerComponent Type;
+      typedef IntegerCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Min_Expires] = Type::isCommaTokenizing;
@@ -544,7 +540,7 @@ extern Header<Headers::Min_Expires> h_MinExpires;
 class Header<Headers::Retry_After>
 {
    public:
-      typedef IntegerComponent Type;
+      typedef IntegerCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Retry_After] = Type::isCommaTokenizing;
@@ -659,12 +655,12 @@ class Header<Headers::WWW_Authenticate>
 extern Header<Headers::WWW_Authenticate> h_WWWAuthenticate;
 
 //====================
-// CSeqComponent:
+// CSeqCategory:
 //====================
 class Header<Headers::CSeq>
 {
    public:
-      typedef CSeqComponent Type;
+      typedef CSeqCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::CSeq] = Type::isCommaTokenizing;
@@ -674,12 +670,12 @@ class Header<Headers::CSeq>
 extern Header<Headers::CSeq> h_CSeq;
 
 //====================
-// DateComponent:
+// DateCategory:
 //====================
 class Header<Headers::Date>
 {
    public:
-      typedef DateComponent Type;
+      typedef DateCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Date] = Type::isCommaTokenizing;
@@ -689,12 +685,12 @@ class Header<Headers::Date>
 extern Header<Headers::Date> h_Date;
 
 //====================
-// WarningComponent:
+// WarningCategory:
 //====================
 class Header<Headers::Warning>
 {
    public:
-      typedef WarningComponent Type;
+      typedef WarningCategory Type;
       Header()
       {
          Headers::CommaTokenizing[Headers::Warning] = Type::isCommaTokenizing;

@@ -49,6 +49,11 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
   // param lists
 }
 
+// !dlb! when does this get called?
+HeaderFieldValue::HeaderFieldValue(ParserCategory* parser)
+   : mParserCategory(parser)
+{}
+
 HeaderFieldValue::~HeaderFieldValue()
 {
   if (mMine)
@@ -174,20 +179,6 @@ HeaderFieldValue::exists(const Data& subcomponent)
      }
   }
   return exists;
-}
-
-
-bool 
-HeaderFieldValue::exists(const ParameterTypes::Type type)
-{
-  
-  return mParameterList.find(type);
-  
-}
-void 
-HeaderFieldValue::remove(const ParameterTypes::Type type)
-{
-   mParameterList.erase(type);
 }
 
 void 

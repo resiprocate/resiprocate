@@ -17,6 +17,7 @@ typedef enum
    REFER,
    REGISTER,
    SUBSCRIBE,
+   RESPONSE,
    UNKNOWN,
    MAX_METHODS
 } MethodTypes;
