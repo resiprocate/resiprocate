@@ -17,6 +17,7 @@ class ExternalAsyncTransport
    public:
       virtual GenericIPAddress boundAddress()=0;
       virtual TransportType transportType()=0;
+      virtual ~ExternalAsyncTransport() {}
 };
 
 class AsyncCLessReceiveResult : public AsyncResult
@@ -24,9 +25,9 @@ class AsyncCLessReceiveResult : public AsyncResult
    public:
       AsyncCLessReceiveResult(const GenericIPAddress& source, 
                               unsigned char* bytesRead, int count) : 
-         mSource(source),
          bytes(bytesRead), 
-         length(count) 
+         length(count),
+         mSource(source)
       {}
       AsyncCLessReceiveResult(long errorCode) : AsyncResult(errorCode) {}
          
@@ -50,6 +51,7 @@ class ExternalAsyncCLessTransport : public ExternalAsyncTransport
    public:
       virtual void setHandler(ExternalAsyncCLessTransportHandler* handler)=0;  
       virtual void send(GenericIPAddress dest, unsigned char* byte, int count)=0;
+      virtual ~ExternalAsyncCLessTransport() {}
 };
 
 //stream transport
@@ -60,9 +62,26 @@ class AsyncStreamResult : public AsyncResult
       AsyncStreamResult(AsyncID streamID) : mStreamID(streamID) {}
       AsyncStreamResult(AsyncID streamID, long errorCode) : AsyncResult(errorCode), mStreamID(streamID) {}
       AsyncID streamID() const { return mStreamID; }
-   private:
+   protected:
       AsyncID mStreamID;
 };
+
+class AsyncStreamAcceptResult : public AsyncStreamResult
+{
+   public:
+      AsyncStreamAcceptResult(AsyncID streamID, const GenericIPAddress& source) : 
+         AsyncStreamResult(streamID),
+         mSource(source)
+      {}
+      AsyncStreamAcceptResult(AsyncID streamID, long errorCode) : 
+         AsyncStreamResult(streamID, errorCode) 
+      {}
+
+      GenericIPAddress remoteAddress() { return mSource; }
+   private:
+      GenericIPAddress mSource;
+};
+
 
 //?dcm? -- memory must be destroyed by the receiver, not automatic in a destructor as this should eventually be
 //extended to the case where aysnc reads are read directly into the requestors buffer.  Also, some cleverness
@@ -89,7 +108,7 @@ class ExternalAsyncStreamTransportHandler
       //possibly a write refused, or a close with an error could be used instead;  for now, flow control
       //is pushed to the provider
       //virtual void handleWrite(AsyncID stream, int count)=0;
-      virtual void handleAccept(AsyncStreamResult res)=0;
+      virtual void handleAccept(AsyncStreamAcceptResult res)=0;
       virtual void handleConnect(AsyncStreamResult res)=0;
       virtual void handleClose(AsyncStreamResult res)=0;
 };
@@ -102,8 +121,10 @@ class ExternalAsyncStreamTransport : public ExternalAsyncTransport
       virtual void connect(GenericIPAddress host, AsyncID stream)=0;
       virtual void write(AsyncID stream, unsigned char* bytes, int count)=0;
       virtual void close(AsyncID stream)=0;
+      virtual ~ExternalAsyncStreamTransport() {}
 };
+
 }
-  
+
 
 #endif
