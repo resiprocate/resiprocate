@@ -4,6 +4,9 @@ BaseCreator::BaseCreator(DialogUsageManager& dum) : mDum(dum)
 {
 }
 
+BaseCreator::~BaseCreator()
+{}
+
 SipMessage& 
 BaseCreator::getLastRequest()
 {

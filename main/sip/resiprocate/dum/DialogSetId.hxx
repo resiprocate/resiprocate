@@ -1,6 +1,8 @@
 #if !defined(RESIP_DIALOGSETID_HXX)
 #define RESIP_DIALOGSETID_HXX
 
+#include "resiprocate/os/HashMap.hxx"
+
 namespace resip
 {
 
@@ -12,12 +14,30 @@ class DialogSetId
    public:
       DialogSetId(const SipMessage& msg);
       DialogSetId(const Data& callId, const Data& senderRequestFromTag);
-      
+
+      bool operator==(const DialogSetId& rhs) const;
    private:
       Data& mId;
 };
 
 }
+
+#if  defined(__INTEL_COMPILER )
+namespace std
+{
+size_t hash_value(const resip::DialogSetId& id);
+}
+
+#elif defined(HASH_MAP_NAMESPACE)  //#elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+namespace HASH_MAP_NAMESPACE
+{
+struct hash<resip::DialogSetId>
+{
+      size_t operator()(const resip::DialogSetId& id) const;
+};
+}
+#endif
+
 #endif
    
 /* ====================================================================
