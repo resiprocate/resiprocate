@@ -56,13 +56,14 @@ class RRCache : public RRCacheBase
             mRRSet.insert(lb, val);
             mLruHead->push_back(val);            
          }
+         delete key;
       }
                   
       Result lookup(const Data& target)
       {
-         RRList<T>* key = new RRList<T>(target);
-         
+         RRList<T>* key = new RRList<T>(target);         
          typename RRSet::iterator it = mRRSet.find(key);
+         delete key;
          if (it == mRRSet.end())
          {
             return Empty;
