@@ -259,7 +259,7 @@ Helper::makeNonce(const SipMessage& request, const Data& timestamp)
 
 //RFC 2617 3.2.2.1
 Data 
-Helper::makeResponseMD5(const Data& username, const Data& encodedPassword, const Data& realm, 
+Helper::makeResponseMD5(const Data& username, const Data& password, const Data& realm, 
                         const Data& method, const Data& digestUri, const Data& nonce,
                         const Data& qop, const Data& cnonce, const Data& cnonceCount)
 {
@@ -268,7 +268,7 @@ Helper::makeResponseMD5(const Data& username, const Data& encodedPassword, const
       << Symbols::COLON
       << realm
       << Symbols::COLON
-      << encodedPassword;
+      << password;
 
    MD5Stream a2;
    a2 << method
@@ -298,7 +298,7 @@ Helper::makeResponseMD5(const Data& username, const Data& encodedPassword, const
 Helper::AuthResult
 Helper::authenticateRequest(const SipMessage& request, 
                             const Data& realm,
-                            const Data& encodedPassword,
+                            const Data& password,
                             int expiresDelta)
 {
    const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
@@ -344,7 +344,7 @@ Helper::authenticateRequest(const SipMessage& request,
             if (i->param(p_qop) == Symbols::auth)
             {
                if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
-                                                           encodedPassword,
+                                                           password,
                                                            realm, 
                                                            MethodNames[request.header(h_RequestLine).getMethod()],
                                                            i->param(p_uri),
@@ -366,7 +366,7 @@ Helper::authenticateRequest(const SipMessage& request,
             }
          }
          else if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
-                                                          encodedPassword,
+                                                          password,
                                                           realm, 
                                                           MethodNames[request.header(h_RequestLine).getMethod()],
                                                           i->param(p_uri),
@@ -418,7 +418,7 @@ void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
 
 Auth makeChallengeResponseAuth(SipMessage& request,
                                const Data& username,
-                               const Data& encodedPassword,
+                               const Data& password,
                                const Auth& challenge,
                                const Data& cnonce,
                                unsigned int& nonceCount,
@@ -458,7 +458,7 @@ Auth makeChallengeResponseAuth(SipMessage& request,
    {
       updateNonceCount(nonceCount, nonceCountString);
       auth.param(p_response) = Helper::makeResponseMD5(username, 
-                                                       encodedPassword,
+                                                       password,
                                                        challenge.param(p_realm), 
                                                        MethodNames[request.header(h_RequestLine).getMethod()], 
                                                        digestUri, 
@@ -473,7 +473,7 @@ Auth makeChallengeResponseAuth(SipMessage& request,
    else
    {
       auth.param(p_response) = Helper::makeResponseMD5(username, 
-                                                       encodedPassword,
+                                                       password,
                                                        challenge.param(p_realm), 
                                                        MethodNames[request.header(h_RequestLine).getMethod()], 
                                                        digestUri, 
@@ -494,7 +494,7 @@ SipMessage&
 Helper::addAuthorization(SipMessage& request,
                          const SipMessage& challenge,
                          const Data& username,
-                         const Data& encodedPassword,
+                         const Data& password,
                          const Data& cnonce,
                          unsigned int& nonceCount)
 {
@@ -509,7 +509,7 @@ Helper::addAuthorization(SipMessage& request,
       for (ParserContainer<Auth>::const_iterator i = auths.begin();
            i != auths.end(); i++)
       {
-         request.header(h_ProxyAuthorizations).push_back(makeChallengeResponseAuth(request, username, encodedPassword, *i, 
+         request.header(h_ProxyAuthorizations).push_back(makeChallengeResponseAuth(request, username, password, *i, 
                                                                                    cnonce, nonceCount, nonceCountString));
       }
    }
@@ -518,7 +518,7 @@ Helper::addAuthorization(SipMessage& request,
       for (ParserContainer<Auth>::const_iterator i = auths.begin();
            i != auths.end(); i++)
       {
-         request.header(h_Authorizations).push_back(makeChallengeResponseAuth(request, username, encodedPassword, *i,
+         request.header(h_Authorizations).push_back(makeChallengeResponseAuth(request, username, password, *i,
                                                                               cnonce, nonceCount, nonceCountString));
       }
    }
