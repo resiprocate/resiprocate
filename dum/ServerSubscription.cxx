@@ -1,7 +1,7 @@
 #include "ServerSubscription.hxx"
 
 ServerSubscription::Handle::Handle(DialogUsageManager& dum)
-   : DialogUsageManager::Handle(dum)
+   : BaseUsage::Handle(dum)
 {}
 
 ServerSubscription*
