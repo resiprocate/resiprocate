@@ -62,7 +62,6 @@ PlainContents::encodeParsed(std::ostream& str) const
 {
    DebugLog(<< "PlainContents::encodeParsed " << mText);
    str << mText;
-   str << Symbols::CRLF;
    return str;
 }
 
@@ -73,7 +72,7 @@ PlainContents::parse(ParseBuffer& pb)
 
    const char* anchor = pb.position();
    pb.skipToEnd();
-   pb.reset(pb.position() - 2); // hack to discard terminating CRLF
+   pb.reset(pb.position());
    pb.data(mText, anchor);
 
    DebugLog("PlainContents::parsed <" << mText << ">" );
