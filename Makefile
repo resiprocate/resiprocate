@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.15 2002/09/22 00:23:44 jason Exp $
+# $Id: Makefile,v 1.16 2002/09/22 00:24:33 dabryan Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -27,7 +27,6 @@ SRC =	Condition.cxx \
 	TimerQueue.cxx \
 
 #	Executive.cxx \
-#       TimerWheel.cxx \
 #	Preparse.cxx \
 #	SipStack.cxx \
 
@@ -119,6 +118,11 @@ testUdp:  $(OBJS) $(OBJ)/testUdp.o
 
 testPreparse: $(OBJ)/Preparse.o $(OBJ)/testPreparse.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+testSipStack1:  $(OBJS) $(OBJ)/testSipStack1.o
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+
 
 
 -include $(OBJ)/*.d
