@@ -13,13 +13,15 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_timeout.c,v 1.2 2003/09/14 00:27:24 fluffy Exp $";
+static const char rcsid[] = "$Id: ares_timeout.c,v 1.3 2003/09/14 01:08:27 fluffy Exp $";
 
 #include <sys/types.h>
-//#include <sys/time.h>
 #include <time.h>
 #include "ares.h"
 #include "ares_private.h"
+#ifndef WIN32
+#include <sys/time.h>
+#endif
 
 struct timeval *ares_timeout(ares_channel channel, struct timeval *maxtv,
 			     struct timeval *tvbuf)
