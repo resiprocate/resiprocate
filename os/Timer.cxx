@@ -192,27 +192,8 @@ Timer::getSystemTicks()
    asm("rdtsc" : "=A" (tick)); // this should actually work anywhere GNUC does
 #  else
 */
+   tick = getSystemTime();
 
-#    if defined (__SUNPRO_CC)	
-   tick = gethrtime();//This is Not expensive Under solaris 8 & above but systemcall in solaris7
-#    else
-#      if defined (__MACH__) || defined (__PPC__)
-   struct timeval now;
-   gettimeofday( &now , NULL );
-   //assert( now );
-   tick = now.tv_sec;
-   tick *= 1000000;
-   tick += now.tv_usec;
-#      else
-   struct timeval now;
-   gettimeofday( &now , NULL );
-   //assert( now );
-   tick = now.tv_sec;
-   tick *= 1000000;
-   tick += now.tv_usec;
-   //tick = cjGetSystemTimeOfDay();
-#      endif
-#    endif
 /* RjS - endifs matching block ADFE9093
 #  endif
 #endif
