@@ -322,6 +322,7 @@ Helper::makeResponse(SipMessage& response,
          case 407: reason = "Proxy Authentication Required"; break;
          case 408: reason = "Request Timeout"; break;
          case 410: reason = "Gone"; break;
+         case 412: reason = "Precondition Failed"; break;
          case 413: reason = "Request Entity Too Large"; break;
          case 414: reason = "Request-URI Too Long"; break;
          case 415: reason = "Unsupported Media Type"; break;
