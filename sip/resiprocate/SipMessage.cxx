@@ -285,14 +285,14 @@ SipMessage::setBody(const char* start, int len)
 }
 
 void 
-SipMessage::setContents(const Contents* body)
+SipMessage::setContents(const Contents* contents)
 {
    delete mContents;
    delete mContentsHfv;
    mContentsHfv = 0;
    
-   mContents = body->clone();
-   header(h_ContentType) = body->getType();
+   mContents = contents->clone();
+   header(h_ContentType) = contents->getType();
 }
 
 Contents*
