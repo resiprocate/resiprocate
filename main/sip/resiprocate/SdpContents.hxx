@@ -328,7 +328,8 @@ class SdpContents : public Contents
             friend class SdpContents;
       };
 
-      SdpContents(HeaderFieldValue* hfv);
+      SdpContents();
+      SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes);
       virtual Contents* clone() const;
 
       const Session& getSession() {checkParsed(); return mSession;}
