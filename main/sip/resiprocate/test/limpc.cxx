@@ -431,7 +431,7 @@ main(int argc, char* argv[])
    InfoLog(<<"Test Driver for IM Starting");
     
    int port = 5060;
-   int tlsPort = 0;
+   int tlsPort = 5061;
    Uri aor;
    bool haveAor=false;
    dest = Uri("sip:nobody@example.com");
@@ -448,6 +448,8 @@ main(int argc, char* argv[])
    bool sign=false;
    Data key("password");
    bool useTls = true;
+   bool tls = false;
+   bool tcp = false;
    
    for ( int i=1; i<argc; i++)
    {
@@ -478,6 +480,14 @@ main(int argc, char* argv[])
       else if (!strcmp(argv[i],"-ssl"))
       {
          useTls = false;
+      }
+      else if (!strcmp(argv[i],"-tcp"))
+      {
+         tcp = true;
+      }
+      else if (!strcmp(argv[i],"-tls"))
+      {
+         tls = true;
       }
       else if (!strcmp(argv[i],"-port"))
       {
@@ -541,7 +551,7 @@ main(int argc, char* argv[])
       { 
          clog <<"Bad command line opion: " << argv[i] << endl;
          clog <<"options are: " << endl
-              << "\t [-v] [-vv] [-port 5060] [-tlsport 5061]" << endl
+              << "\t [-v] [-vv] [-tcp] [-tls] [-port 5060] [-tlsport 5061]" << endl
               << "\t [-aor sip:alice@example.com] [-aorPassword password]" << endl
               << "\t [-to sip:friend@example.com] [-add sip:buddy@example.com]" << endl
               << "\t [-sign] [-encrypt] [-key secret]" << endl
@@ -551,6 +561,8 @@ main(int argc, char* argv[])
          clog << endl
               << " -v is verbose" << endl
               << " -vv is very verbose" << endl
+              << " -tcp uses tcp instead of UDP" << endl
+              << " -tls uses tcp instead of UDP" << endl
               << " -port sets the UDP and TCP port to listen on" << endl
               << " -tlsPort sets the port to listen for TLS on" << endl
               << " -tlsServer - sets to act as tls server instead of  client" << endl
@@ -613,16 +625,9 @@ main(int argc, char* argv[])
    }
    
 #if USE_SSL
-   if ( port == 5060 )
-   {
-      if ( tlsPort == 0 )
-      {
-         tlsPort = 5061;
-      }
-   }
    if ( tlsPort != 0 )
    {
-      sipStack.addTransport(Transport::TLS, tlsPort);
+      sipStack.addTlsTransport(tlsPort);
    }
 #endif
 

@@ -84,14 +84,14 @@ libSipImp_Init()
    int port = 5060;
 
 #if defined( USE_SSL )
-   int tlsPort = 0;
+   int tlsPort = 5061;
    bool tlsServer=false;
    bool useTls = true;
 #endif
    
    Uri aor;
    bool haveAor=false;
-   Uri  dest = Uri("sip:nobody@example.com");
+//   Uri  dest = Uri("sip:nobody@example.com");
    Data aorPassword;
    Uri contact("sip:user@localhost");
    bool haveContact=false;
@@ -125,16 +125,9 @@ libSipImp_Init()
    }
    
 #if defined( USE_SSL )
-   if ( port == 5060 )
-   {
-      if ( tlsPort == 0 )
-      {
-         tlsPort = 5061;
-      }
-   }
    if ( tlsPort != 0 )
    {
-      sipStack->addTransport(Transport::TLS, tlsPort);
+      sipStack->addTlsTransport(tlsPort);
    }
 #endif
 
@@ -150,10 +143,13 @@ libSipImp_Init()
       {
          contact.user() = aor.user();
 #if defined( USE_SSL )
-         if ( aor.scheme() == "sips" )
+         if ( tlsPort != 0 )
          {
-            contact.scheme() = aor.scheme();
-            contact.port() = tlsPort;
+            if ( aor.scheme() == "sips" )
+            {
+               contact.scheme() = aor.scheme();
+               contact.port() = tlsPort;
+            }
          }
 #endif
       }
@@ -184,7 +180,6 @@ libSipImp_Init()
       }
    }
    
-  
    for ( int i=0; i<numAdd; i++ )
    { 
       Uri uri(addList[i]);
