@@ -14,6 +14,7 @@ class TransactionMessage;
 class SipMessage;
 class TransactionMap;
 class TransactionController;
+class TransactionUser;
 
 class TransactionState : public DnsHandler
 {
@@ -45,7 +46,8 @@ class TransactionState : public DnsHandler
          Bogus
       } State;
 
-      TransactionState(TransactionController& controller, Machine m, State s, const Data& tid);
+      TransactionState(TransactionController& controller, Machine m, State s, 
+                       const Data& tid, TransactionUser* tu);
       
       void handle(DnsResult*);
 
@@ -108,6 +110,7 @@ class TransactionState : public DnsHandler
 
       Data mId;
       Data mToTag; // for failure responses on ServerInviteTransaction 
+      TransactionUser* mTransactionUser;      
       
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
       friend class TransactionController;

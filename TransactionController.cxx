@@ -10,6 +10,7 @@
 #include "resiprocate/os/AsyncProcessHandler.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/SipStack.hxx"
 
 using namespace resip;
 
@@ -22,22 +23,20 @@ using namespace resip;
 unsigned int TransactionController::MaxTUFifoSize = 0;
 unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 
-TransactionController::TransactionController(TimeLimitFifo<Message>& tuFifo, 
-                                             StatisticsManager& stats,
-                                             Security* security,
-                                             AsyncProcessHandler* asyncHandler,
+TransactionController::TransactionController(SipStack& stack, 
                                              bool stateless) : 
+   mStack(stack),
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(true),
-   mStateMacFifo(asyncHandler),
-   mTUFifo(tuFifo),
-   mTransportSelector(mStateMacFifo, security),
+   mStateMacFifo(stack.mAsyncProcessHandler),
+   mTuSelector(stack.mTuSelector),
+   mTransportSelector(mStateMacFifo, stack.getSecurity()),
    mStatelessHandler(*this),
    mTimers(mStateMacFifo),
    StatelessIdCounter(1),
    mShuttingDown(false),
-   mStatsManager(stats)
+   mStatsManager(stack.mStatsManager)
 {
 }
 
@@ -53,7 +52,7 @@ TransactionController::~TransactionController()
 bool 
 TransactionController::isTUOverloaded() const
 {
-   return !mTUFifo.wouldAccept(TimeLimitFifo<Message>::EnforceTimeDepth);
+   return !mTuSelector.wouldAccept(TimeLimitFifo<Message>::EnforceTimeDepth);
 }
 
 void
@@ -68,11 +67,14 @@ TransactionController::process(FdSet& fdset)
 {
    if (mShuttingDown && 
        //mTimers.empty() && 
-       !mStateMacFifo.messageAvailable() && 
-       !mTUFifo.messageAvailable() &&
+       !mStateMacFifo.messageAvailable() && // !dcm! -- see below 
+       !mTuSelector.messageAvailable() &&
        mTransportSelector.isFinished())
+// !dcm! -- why would one wait for the Tu's fifo to be empty before delivering a
+// shutdown message?
    {
-      mTUFifo.add(new ShutdownMessage, TimeLimitFifo<Message>::InternalElement);
+      //!dcm! -- send to all?
+      mTuSelector.add(new ShutdownMessage, TimeLimitFifo<Message>::InternalElement);
    }
    else
    {
@@ -129,7 +131,7 @@ TransactionController::registerForTransactionTermination()
 unsigned int 
 TransactionController::getTuFifoSize() const
 {
-   return mTUFifo.size();
+   return mTuSelector.size();
 }
 
 unsigned int 
