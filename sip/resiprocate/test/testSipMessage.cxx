@@ -515,6 +515,8 @@ main()
       SipMessage* msg = Helper::makeRegister(me, me);
       cerr << "encoded=" << *msg << endl;
    }
+
+   cerr << "\nTEST OK" << endl;
 }
 
 /* ====================================================================
