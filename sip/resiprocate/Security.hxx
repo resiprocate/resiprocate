@@ -1,10 +1,11 @@
-#if defined(USE_SSL) && !defined(SECURITY_HXX)
+#if !defined(SECURITY_HXX)
 #define SECURITY_HXX
 
 
-
+#ifdef USE_SSL
 #include <openssl/evp.h>
 #include <openssl/x509.h>
+#endif
 
 
 namespace Vocal2
@@ -102,7 +103,7 @@ class Security
                               Data* signedBy, SignatureStatus* sigStat, bool* encryped ); // returns NULL if fails 
                
       Data getPath( const Data& dir, const Data& file );
-      
+#ifdef USE_SSL   
       // need a map of certName to certificates
 
       // root cert list 
@@ -113,6 +114,7 @@ class Security
       
       // my private key 
       EVP_PKEY* privateKey;
+#endif	
 };
 
 

@@ -196,16 +196,15 @@ main(int argc, char* argv[])
    
    SipStack sipStack;  
 
+#ifdef USE_SSL
    assert( sipStack.security );
-   //sipStack.security = new Security;
-   
    bool ok = sipStack.security->loadAllCerts( Data("password") );
    if ( !ok )
    {
       ErrLog( << "Could not load the certificates" );
+	  assert( ok );
    }
-   assert( ok );
-   
+#endif
    
    sipStack.addTransport(Transport::UDP, port);
 
