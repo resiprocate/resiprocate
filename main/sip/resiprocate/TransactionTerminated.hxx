@@ -1,14 +1,12 @@
 #if !defined(RESIP_TRANSACTIONTERMINATED_HXX)
 #define RESIP_TRANSACTIONTERMINATED_HXX 
 
-// Copyright 2002 Cathay Networks, Inc. 
-
-#include "Message.hxx"
+#include "TransactionMessage.hxx"
 
 namespace resip
 {
 
-class TransactionTerminated : public Message
+class TransactionTerminated : public TransactionMessage
 {
    public:
       TransactionTerminated(const Data& tid, bool isClient) : mTransactionId(tid), mIsClient(isClient) {}

@@ -8,24 +8,16 @@
 
 using namespace resip;
 
-Message* 
-Message::clone() const
-{
-   assert(false);
-   return 0;
-}
-
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::Message& msg)
 {
 
    // .dlb. what a bad idea..
-   // encoding should be handled at Data 
-   // msg scanner should indicate that it saw encoded characters
-   // Data's coming from a marked buffer should assome they need to be encoded.
-   // Data's coming from user should assume they need to be encoded.
-   // Otherwise, Data's should NOT encode.
-   // 
+   // escaping should be handled at Data 
+   // msg scanner should indicate that it saw escaped characters
+   // Data's coming from a marked buffer should assume they need to be escaped.
+   // Data's coming from user should assume they need to be escaped.
+   // Otherwise, Data's should NOT escape.
 /*
    Data encoded;
 
@@ -36,12 +28,10 @@ resip::operator<<(std::ostream& strm, const resip::Message& msg)
    strm << encoded.escaped();
 */
 
-   // in the meantime, hope for the best.
    msg.encode(strm);
    
    return strm;
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
