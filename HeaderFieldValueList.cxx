@@ -112,6 +112,20 @@ void HeaderFieldValueList::pop_front()
   delete tmp;
 }
 
+ostream& 
+HeaderFieldValueList::encode(std::ostream& str) const
+{
+   if (first)
+   {
+      HeaderFieldValue* current = first;
+      do
+      {
+         current->encode(str);
+         current = current->next;
+      } while (current != 0);
+   }
+   return str;
+}
 
 ostream& operator<<(ostream& stream, HeaderFieldValueList& hList)
 {
