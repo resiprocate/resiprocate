@@ -49,7 +49,7 @@ Connection::~Connection()
 {
    if (mSocket != INVALID_SOCKET) // bogus Connections
    {
-      InfoLog (<< "Deleting " << this << " " << mSocket << " with " << mOutstandingSends.size() << " to write");
+      DebugLog (<< "Deleting " << this << " " << mSocket << " with " << mOutstandingSends.size() << " to write");
       while (!mOutstandingSends.empty())
       {
          SendData* sendData = mOutstandingSends.front();
