@@ -11,7 +11,7 @@ class SipMessage;
 class UdpTransport : public Transport
 {
    public:
-      UdpTransport(in_port_t portNum, Fifo<SipMessage>& fifo);
+      UdpTransport(int portNum, Fifo<SipMessage>& fifo);
       virtual  ~UdpTransport();
 
       virtual void send( const sockaddr_in& address, const  char* buffer, size_t length); //, TransactionId txId) ;
