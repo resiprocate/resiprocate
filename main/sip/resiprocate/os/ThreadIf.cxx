@@ -31,6 +31,8 @@ threadWrapper( void* threadParm )
    srand(unsigned(time(0)) ^ unsigned(GetCurrentThreadId()) ^ unsigned(GetCurrentProcessId()));
 #endif
    t->thread();
+   ExitThread( 0 );	 
+
    return 0;
 }
 }
@@ -80,9 +82,24 @@ ThreadIf::join()
 
 #if defined(WIN32)
    DWORD exitCode;
-   while ( !GetExitCodeThread(mThread,&exitCode) )
+   while (true)
    {
-      WaitForSingleObject(mThread,INFINITE);
+      if (GetExitCodeThread(mThread,&exitCode) != 0)
+      {
+         if (exitCode != STILL_ACTIVE)
+         {
+            break;
+         }
+         else
+         {
+            WaitForSingleObject(mThread,INFINITE);
+         }
+      }
+      else
+      {
+         // log something here
+         break;
+      }
    }
 #else
    void* stat;
