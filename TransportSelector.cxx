@@ -371,6 +371,30 @@ TransportSelector::dnsResolve(DnsResult* result,
    }
 }
 
+namespace
+{
+   bool isDgramTransport (const Tuple& t)
+   {
+      static const bool unknown_transport = false;
+      switch(t.getType())
+      {
+      case UDP:
+      case DTLS:
+      case DCCP:
+      case SCTP:
+         return   true;
+
+      case TCP:
+      case TLS:
+         return   false;
+
+      default:
+         assert(unknown_transport);
+         return unknown_transport;
+      }
+   }
+}
+
 Tuple
 TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target) const
 {
@@ -384,6 +408,63 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    }
    else
    {
+
+#if(1)
+
+      // !kh!
+      // 1. Query local hostname.
+      char hostname[256] = "";
+      if(gethostname(hostname, sizeof(hostname)) != 0)
+      {
+         int e = getErrno();
+         Transport::error( e );
+         InfoLog(<< "Can't query local hostname : [" << e << "] " << strerror(e) );
+         throw Transport::Exception("Can't query local hostname", __FILE__,__LINE__);
+      }
+      InfoLog(<< "Local hostname is [" << hostname << "]");
+
+      // !kh!
+      // 2. Resolve address(es) of local hostname for specified transport.
+      const bool is_v4 = target.isV4();
+      const bool is_dgram = isDgramTransport(target);
+      addrinfo hint;
+      memset(&hint, 0, sizeof(hint));
+      hint.ai_family    = is_v4 ? PF_INET : PF_INET6;
+      hint.ai_flags     = AI_PASSIVE;
+      hint.ai_socktype  = is_dgram ? SOCK_DGRAM : SOCK_STREAM;
+
+      addrinfo* results;
+      int ret = getaddrinfo(
+         hostname,
+         0,
+         &hint,
+         &results);
+
+      if(ret != 0)
+      {
+         Transport::error( ret ); // !kh! is this the correct sematics? ret is not errno.
+         InfoLog(<< "Can't resolve " << hostname << "'s address : [" << ret << "] " << gai_strerror(ret) );
+         throw Transport::Exception("Can't resolve hostname", __FILE__,__LINE__);
+      }
+
+      // !kh!
+      // 3. Use first address resolved if there are more than one.
+      // What should I do if there are more than one address?
+      // i.e. results->ai_next != 0.
+      Tuple source(*(results->ai_addr), target.getType());
+      InfoLog(<< "Local address is " << source);
+      addrinfo* ai = results->ai_next;
+      for(; ai; ai = ai->ai_next)
+      {
+         Tuple addr(*(ai->ai_addr), target.getType());
+         InfoLog(<<"Additional address " << addr);
+      }
+      freeaddrinfo(results);
+
+      return   source;
+
+#else
+
       Tuple source(target);
       switch (mWindowsVersion)
       {
@@ -399,6 +480,12 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
          default:
 #endif
          {
+            // !kh!
+            // This doesn't work if there are two or more interfaces (either physical or
+            // virtual) on the same host and destination is reachable from more than one
+            // interface. In some cases a socket's source address might not be determined
+            // until first I/O took place.
+
             // this process will determine which interface the kernel would use to
             // send a packet to the target by making a connect call on a udp socket.
             Socket tmp = INVALID_SOCKET;
@@ -502,6 +589,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 
       return source;
 
+#endif
    }
 }
 
