@@ -1,3 +1,4 @@
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/TransactionMap.hxx"
 #include "resiprocate/TransactionState.hxx"
@@ -8,8 +9,11 @@ using namespace resip;
 
 TransactionMap::~TransactionMap()
 {
+   DebugLog (<< "Deleting TransactionMap: " << this << " " << mMap.size() << " entries");
+   //InfoLog (<< Inserter(mMap));
    while (!mMap.empty())
    {
+      DebugLog (<< mMap.begin()->first << " -> " << mMap.begin()->second << ": " << *mMap.begin()->second);
       delete mMap.begin()->second;
    }
 }
@@ -34,16 +38,17 @@ TransactionMap::add(const Data& tid, TransactionState* state  )
    MapIterator i = mMap.find(tid);
    if (i != mMap.end())
    {
-      DebugLog (<< "Trying to replace an existing transaction id with a new state: " << tid);
       if (i->second != state)
       {
          delete i->second;
          mMap.erase(i);
+         //DebugLog (<< "Replacing TMAP[" << tid << "] = " << state << " : " << *state);
          mMap[tid] = state;
       }
    }
    else
    {
+      //DebugLog (<< "Inserting TMAP[" << tid << "] = " << state << " : " << *state);
       mMap[tid] = state;
    }
 }
@@ -56,6 +61,7 @@ TransactionMap::erase(const Data& tid )
    {
       // don't delete it here, the TransactionState deletes itself and removes
       // itself from the map
+      //DebugLog (<< "Erasing " << tid << "(" << i->second << ")");
       mMap.erase(i);
    }
    else
