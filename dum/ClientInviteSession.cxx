@@ -6,15 +6,20 @@ using namespace resip;
 
 ClientInviteSession::ClientInviteSession(DialogUsageManager& dum, 
                                          Dialog& dialog,
-                                         const SipMessage& msg) 
+                                         const SipMessage& request, 
+                                         const SdpContents* initialOffer)
    : InviteSession(dum, dialog),
-     mHandle(dum)
+     mHandle(dum),
+     mLastRequest(request),
+     mReceived2xx(false)
 {
+   mProposedLocalSdp = initialOffer->clone();
 }
 
 void 
-ClientInviteSession::setOffer(SdpContents* offer)
+ClientInviteSession::setOffer(const SdpContents* offer)
 {
+   
 }
 
 void 
@@ -23,7 +28,7 @@ ClientInviteSession::sendOfferInAnyMessage()
 }
 
 void 
-ClientInviteSession::setAnswer(SdpContents* answer)
+ClientInviteSession::setAnswer(const SdpContents* answer)
 {
 }
 
@@ -35,12 +40,219 @@ ClientInviteSession::sendAnswerInAnyMessage()
 void 
 ClientInviteSession::end()
 {
+   switch (mState)
+   {
+      case Unknown:
+         assert(0);
+         break;
+         
+      case Early:
+         // is it legal to cancel a specific fork/dialog. 
+         // if so, this is the place to do it
+         break;
+         
+      case Connected:
+         InviteSession::end();
+         break;
+      }
+         
+      case Terminated:
+         // do nothing
+         break;
+   }
 }
 
 void 
 ClientInviteSession::rejectOffer(int statusCode)
 {
 }
+
+void
+ClientInviteSession::dispatch(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   assert(handler);
+   
+   if (msg.isRequest())
+   {
+      InviteSession::dispatch(msg);
+      return;
+   }
+   else if (msg.isResponse())
+   {
+      switch (msg.header(h_CSeq).method())
+      {
+         case INVITE:
+            break;
+            
+         case PRACK:
+            handlePrackResponse(msg);
+            return;
+            
+         case CANCEL:
+            if (msg.header(h_StatusLine).statusCode() >= 400)
+            {
+               mState = Terminated;
+               end(); // cleanup the mess
+            }
+            return;            
+            
+         default:
+            InviteSession::dispatch(msg);
+            return;
+      }
+   }
+   
+   int code = msg.header(h_StatusLine).statusCode();
+   if (code < 300 && mState == Unknown)
+   {
+      handler->onNewSession(getHandle(), msg);
+   }
+         
+   if (code < 200) // 1XX
+   {
+      if (mState == Unknown || mState == Early)
+      {
+         mState = Early;
+         handler->onEarly(getHandle(), msg);
+            
+         SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+         bool reliable = msg.header(h_Supporteds).contains(Symbols::C100rel);
+         if (sdp)
+         {
+            if (reliable)
+            {
+               if (mProposedLocalSdp)
+               {
+                  mCurrentRemoteSdp = sdp->clone();
+                  mCurrentLocalSdp = mProposedLocalSdp;
+                  mProposedLocalSdp = 0;
+
+                  handler->onAnswer(getHandle(), msg);
+               }
+               else
+               {
+                  mProposedRemoteSdp = sdp->clone();
+                  handler->onOffer(getHandle(), msg);
+               }
+            }
+            else
+            {
+               // do nothing, not an offer/answer
+            }
+         }
+         if (reliable)
+         {
+            sendPrack(msg);
+         }
+      }
+      else
+      {
+         // drop it on the floor. Late 1xx
+      }
+   }
+   else if (code < 300) // 2XX
+   {
+      if (mState == Cancelled)
+      {
+         sendAck();
+         end();
+         return;
+      }
+      else if (mState != Terminated)
+      {
+         mState = Connected;
+         if (mReceived2xx) // retransmit ACK
+         {
+            mDum.send(mAck);
+            return;
+         }
+         
+         mReceived2xx = true;
+         handler->onConnected(getHandle(), msg);
+            
+         SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+         if (sdp)
+         {
+            if (mProposedLocalSdp) // got an answer
+            {
+               mCurrentRemoteSdp = sdp->clone();
+               mCurrentLocalSdp = mProposedLocalSdp;
+               mProposedLocalSdp = 0;
+                  
+               handler->onAnswer(getHandle(), msg);
+            }
+            else  // got an offer
+            {
+               mProposedRemoteSdp = sdp->clone();
+               handler->onOffer(getHandle(), msg);
+            }
+         }
+         else
+         {
+            if (mProposedLocalSdp)
+            {
+               // Got a 2xx with no answer (sent an INVITE with an offer,
+               // unreliable provisionals)
+               end();
+               return;
+            }
+            else if (mCurrentLocalSdp == 0 && mProposedRemoteSdp == 0)
+            {
+               // Got a 2xx with no offer (sent an INVITE with no offer,
+               // unreliable provisionals)
+               end();
+               return;
+            }
+            else
+            {
+               assert(mCurrentLocalSdp != 0);
+               // do nothing
+            }
+         }
+         sendAck(msg);
+      }
+   }
+   else if (code >= 400)
+   {
+      if (mState != Terminated)
+      {
+         mState = Terminated;
+         handler->onTerminated(getHandle(), msg);
+      }
+   }
+   else // 3xx
+   {
+      assert(0);
+   }
+}
+
+void
+ClientInviteSession::sendPrack(const SipMessage& response)
+{
+   // much later!!! the deep rathole ....
+   // if there is a pending offer or answer, will include it in the PRACK body
+   assert(0);
+}
+
+void
+ClientInviteSession::handlePrackResponse(const SipMessage& response)
+{
+   // more PRACK goodness 
+   assert(0);
+}
+
+void
+ClientInviteSession::sendAck(const SipMessage& ok)
+{
+   mDialog.makeAck(mAck);
+   if (mProposedLocalSdp)
+   {
+      mDialog.setContents(mProposedLocalSdp);
+   }
+   mDum.send(mAck);
+}
+
 
 ClientInviteSession::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
