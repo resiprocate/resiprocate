@@ -29,6 +29,13 @@
 
 #include <sys/types.h>
 
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif // defined(WIN32) && defined(_DEBUG)
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -409,6 +416,16 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       switch (mWindowsVersion)
       {
          case WinCompat::NotWindows:
+
+// Note:  IPHLPAPI has been known to conflict with some thirdparty DLL's if linked in
+//        statically.  If you don't care about Win95/98/Me as your target system - then
+//        you can define NO_IPHLPAPI so that you are not required to link with this 
+//        library. (SLG)
+// Note:  WinCompat::determineSourceInterface uses IPHLPAPI and is only required for
+//        Win95/98/Me and to work around personal firewall issues.
+#ifdef NO_IPHLPAPI  
+         default:
+#endif
          {
             // this process will determine which interface the kernel would use to
             // send a packet to the target by making a connect call on a udp socket. 
@@ -481,10 +498,12 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
             break;
          }
 
+#ifndef NO_IPHLPAPI  
          default:
             // will not work on ipv6
             source = WinCompat::determineSourceInterface(target);
             break;
+#endif
       }
 
       // This is the port that the request will get sent out from. By default,
