@@ -31,3 +31,5 @@ testSipStack1
 testSipStack1
 testUdp
 tmp
+SSL-Release
+SSL-Debug
