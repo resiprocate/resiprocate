@@ -1062,6 +1062,9 @@ NameAddr::NameAddr(const NameAddr& rhs)
      mDisplayName(rhs.mDisplayName)
 {}
 
+NameAddr::~NameAddr()
+{}
+
 NameAddr&
 NameAddr::operator=(const NameAddr& rhs)
 {
@@ -1075,8 +1078,11 @@ NameAddr::operator=(const NameAddr& rhs)
    return *this;
 }
 
-NameAddr::~NameAddr()
-{}
+bool
+NameAddr::operator<(const NameAddr& rhs) const
+{
+   return mUri < rhs.mUri;
+}
 
 ParserCategory *
 NameAddr::clone() const
