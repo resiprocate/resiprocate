@@ -1,5 +1,5 @@
 #include <iostream>
-#include "resiprocate/Message.hxx"
+#include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Timer.hxx"
 
 #include <unistd.h>
@@ -20,6 +20,10 @@ int
 main(int, char *[])
 {
     cerr << "Time in ms " << Timer::getTimeMs() << endl;
+    cerr << "aBitSmallerThan(32) = " << Helper::aBitSmallerThan(time_t(32)) << endl;
+    cerr << "aBitSmallerThan(64) = " << Helper::aBitSmallerThan(time_t(64)) << endl;
+    cerr << "aBitSmallerThan(1000) = " << Helper::aBitSmallerThan(time_t(1000)) << endl;    
+
     return 0;
 }
 
