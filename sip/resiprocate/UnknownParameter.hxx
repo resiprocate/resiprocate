@@ -6,16 +6,18 @@
 namespace Vocal2
 {
 
+class ParseBuffer;
+
 class UnknownParameter : public DataParameter
 {
    public:
       UnknownParameter(const char* startName, unsigned int nameSize,
-                       const char* startData, unsigned int dataSize);
+                       ParseBuffer& pb);
       
       // for making a new unknown parameter 
       // msg->header(foo)["mynewparam"] = "bar";
       UnknownParameter(const Data& name);
-      
+
       virtual const Data& getName();
       virtual Parameter* clone() const;
    private:
