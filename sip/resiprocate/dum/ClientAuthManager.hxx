@@ -4,6 +4,7 @@
 namespace resip
 {
 
+class Auth;
 class SipMessage;
 class Profile;
 
@@ -16,6 +17,8 @@ class ClientAuthManager
       bool handle(SipMessage& origRequest, const SipMessage& response);
       
    private:
+      bool handleAuthHeader(const Auth& auth, SipMessage& origRequest, const SipMessage& response);
+      
       Profile& mProfile;
 };
  
