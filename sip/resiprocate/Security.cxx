@@ -33,6 +33,7 @@
 #include <openssl/ssl.h>
 
 using namespace resip;
+using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
@@ -819,8 +820,13 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    assert(certs);
    assert( cert );
    sk_X509_push(certs, cert);
-  
+
+#if (  OPENSSL_VERSION_NUMBER >= 0x0090605fL ) // may be earlier versions that
+                                               // need const here 
+   const EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
+#else  
    EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
+#endif
    //const EVP_CIPHER* cipher = EVP_aes_128_cbc();
    //const EVP_CIPHER* cipher = EVP_enc_null();
    assert( cipher );
@@ -892,7 +898,14 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    assert( second );
    assert( first );
       
-   Data textData = first->getBodyData();
+   Data bodyData;
+   DataStream strm( bodyData );
+   first->encodeHeaders( strm );
+   first->encode( strm );
+   strm.flush();
+
+   // Data textData = first->getBodyData();
+   Data textData = bodyData;
    Data sigData = sig->getBodyData();
       
    BIO* in = BIO_new_mem_buf( (void*)sigData.c_str(),sigData.size());
