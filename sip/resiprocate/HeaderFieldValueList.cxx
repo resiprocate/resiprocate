@@ -6,7 +6,7 @@
 #include "resiprocate/ParserContainerBase.hxx"
 #include "resiprocate/Embedded.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 HeaderFieldValueList::~HeaderFieldValueList()
 {

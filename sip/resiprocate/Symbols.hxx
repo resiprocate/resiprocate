@@ -3,7 +3,7 @@
 
 #include "resiprocate/os/Data.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Symbols
@@ -60,7 +60,7 @@ class Symbols
       static const Data auth;
 
       static const char * const MagicCookie;
-      static const char * const Vocal2Cookie;
+      static const char * const resipCookie;
 
       static const int DefaultSipPort;
       static const int SipTlsPort;

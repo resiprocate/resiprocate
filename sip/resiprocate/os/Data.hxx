@@ -1,7 +1,7 @@
-#if !defined(Vocal2_Data_hxx)
-#define Vocal2_Data_hxx
+#if !defined(resip_Data_hxx)
+#define resip_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.61 2003/03/24 23:25:36 jason Exp $";
+static const char* const resipDataHeaderVersion = "$Id: Data.hxx,v 1.62 2003/03/25 06:33:48 jason Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -10,7 +10,7 @@ static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.61 2003/03
 #include "HashMap.hxx"
 
 class TestData;
-namespace Vocal2
+namespace resip
 {
 
 class Data 
@@ -187,15 +187,15 @@ operator+(const char* c, const Data& d)
 #if  defined(__INTEL_COMPILER )
 namespace std
 {
-size_t hash_value(const Vocal2::Data& data);
+size_t hash_value(const resip::Data& data);
 }
 
 #elif defined(HASH_MAP_NAMESPACE)  //#elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 namespace HASH_MAP_NAMESPACE
 {
-struct hash<Vocal2::Data>
+struct hash<resip::Data>
 {
-      size_t operator()(const Vocal2::Data& data) const;
+      size_t operator()(const resip::Data& data) const;
 };
 }
 

@@ -8,7 +8,7 @@
 #include <cassert>
 #include <list>
 
-namespace Vocal2
+namespace resip
 {
 
 template<class T>

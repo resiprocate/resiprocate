@@ -1,11 +1,11 @@
 #ifndef CircularBuffer_hxx
 #define CircularBuffer_hxx
 
-static const char* const Vocal2CircularBufferHeaderVersion = "$Id: CircularBuffer.hxx,v 1.2 2002/11/11 23:09:55 jason Exp $";
+static const char* const resipCircularBufferHeaderVersion = "$Id: CircularBuffer.hxx,v 1.3 2003/03/25 06:33:48 jason Exp $";
 
 #include <vector>
 
-namespace Vocal2
+namespace resip
 {
 
 class CircularBuffer : private vector<unsigned char> 

@@ -9,11 +9,11 @@
 
 
 
-using namespace Vocal2;
+using namespace resip;
 using namespace Loadgen;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 Registrar::Registrar(Transceiver& transceiver)
    : mTransceiver(transceiver)

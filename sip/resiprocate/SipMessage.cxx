@@ -11,10 +11,10 @@
 #include "resiprocate/os/Coders.hxx"
 #include "resiprocate/os/Random.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 const SipMessage::FromWireType* SipMessage::FromWire = new SipMessage::FromWireType();
 const SipMessage::FromWireType* SipMessage::NotFromWire = new SipMessage::FromWireType();
@@ -1367,7 +1367,7 @@ SipMessage::hasTarget() const
 }
 
 #if defined(DEBUG) && defined(DEBUG_MEMORY)
-namespace Vocal2
+namespace resip
 {
 
 void*

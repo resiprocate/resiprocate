@@ -10,7 +10,7 @@
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Socket.hxx"
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 //#define PP_DEBUG
 
@@ -30,10 +30,10 @@ static int ppDebugFlags = 0xff;
 
 
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 using namespace PreparseConst;
 
-// using namespace Vocal2::PreparseState;
+// using namespace resip::PreparseState;
 
 
 Preparse::Edge *** Preparse::mTransitionTable = 0;

@@ -6,7 +6,7 @@
 #include "resiprocate/os/Data.hxx"
 
 //#include "resiprocate/Dialog2.hxx"
-namespace Vocal2
+namespace resip
 {
 class Dialog2;
 

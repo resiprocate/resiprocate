@@ -8,7 +8,7 @@
 #include <sys/select.h> // posix
 #endif
 
-namespace Vocal2
+namespace resip
 {
 
 class SipStack;

@@ -14,7 +14,7 @@
 #include "resiprocate/Transport.hxx"
 
 
-namespace Vocal2
+namespace resip
 {
 
 class DnsResolver;

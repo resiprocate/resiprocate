@@ -1,6 +1,6 @@
 #include "resiprocate/os/MD5Stream.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 MD5Buffer::MD5Buffer()
 {

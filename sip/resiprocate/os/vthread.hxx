@@ -1,5 +1,5 @@
-#if !defined(Vocal2_Vthread_hxx)
-#define Vocal2_Vthread_hxx
+#if !defined(resip_Vthread_hxx)
+#define resip_Vthread_hxx
 
 
 #ifdef WIN32
@@ -60,8 +60,8 @@
  */
 
 
-static const char* const Vocal2_vthread_h_Version =
-    "$Id: vthread.hxx,v 1.3 2002/11/11 23:09:55 jason Exp $";
+static const char* const resip_vthread_h_Version =
+    "$Id: vthread.hxx,v 1.4 2003/03/25 06:33:48 jason Exp $";
 
 
 #include <pthread.h>

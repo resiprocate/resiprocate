@@ -11,12 +11,12 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/UnknownParameter.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-Data Vocal2::DayOfWeekData[] =
+Data resip::DayOfWeekData[] =
 {
    "Sun",
    "Mon",
@@ -27,7 +27,7 @@ Data Vocal2::DayOfWeekData[] =
    "Sat"
 };
 
-Data Vocal2::MonthData[] =
+Data resip::MonthData[] =
 {
    "Jan",
    "Feb",

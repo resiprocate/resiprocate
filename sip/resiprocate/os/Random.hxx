@@ -1,10 +1,10 @@
-#ifndef Vocal2_Random_hxx
-#define Vocal2_Random_hxx
+#ifndef resip_Random_hxx
+#define resip_Random_hxx
 
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Data.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Random

@@ -1,11 +1,11 @@
 #include "resiprocate/MessageWaitingContents.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 ContentsFactory<MessageWaitingContents> MessageWaitingContents::Factory;
 
-Vocal2::MessageWaitingContents::AccountHeader Vocal2::mw_account;
+resip::MessageWaitingContents::AccountHeader resip::mw_account;
 const char* MessageHeaders[MW_MAX] = {"voice-message", 
                                       "fax-message", 
                                       "pager-message", 
@@ -185,7 +185,7 @@ isWhite(char c)
 }
 
 const char*
-Vocal2::skipSipLWS(ParseBuffer& pb)
+resip::skipSipLWS(ParseBuffer& pb)
 {
    enum {WS, CR, LF, CR1};
 

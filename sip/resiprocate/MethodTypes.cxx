@@ -6,9 +6,9 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Data.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
-Data Vocal2::MethodNames[MAX_METHODS] = 
+Data resip::MethodNames[MAX_METHODS] = 
 {
    "ACK",
    "BYE",
@@ -30,14 +30,14 @@ Data Vocal2::MethodNames[MAX_METHODS] =
 #include "MethodHash.hxx"
 
 MethodTypes
-Vocal2::getMethodType(const Data& name)
+resip::getMethodType(const Data& name)
 {
    // note: use data to prevent copying shared data
    return getMethodType(name.data(), name.size());
 }
 
 MethodTypes
-Vocal2::getMethodType(const char* name, int len)
+resip::getMethodType(const char* name, int len)
 {
    struct methods* m = MethodHash::in_word_set(name, len);
    return m ? m->type : UNKNOWN;

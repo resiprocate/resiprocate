@@ -10,13 +10,13 @@
 #include "Register.hxx"
 #include "Transceiver.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace Loadgen;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-Register::Register(Transceiver& transceiver, const Vocal2::Uri& registrand, 
+Register::Register(Transceiver& transceiver, const resip::Uri& registrand, 
                    int firstExtension, int lastExtension, 
                    int numRegistrations)
    : mTransceiver(transceiver),

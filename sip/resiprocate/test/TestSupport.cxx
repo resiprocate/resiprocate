@@ -9,7 +9,7 @@ using namespace std;
 
 
 const int boxWidth = 4;
-namespace Vocal2 
+namespace resip 
 {
 class TestSupportPriv
 {

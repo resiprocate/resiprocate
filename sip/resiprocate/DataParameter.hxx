@@ -6,7 +6,7 @@
 #include "resiprocate/os/Data.hxx"
 #include <iostream>
 
-namespace Vocal2
+namespace resip
 {
 
 class ParseBuffer;

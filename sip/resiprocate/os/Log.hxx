@@ -1,5 +1,5 @@
-#ifndef Vocal2_Log_hxx
-#define Vocal2_Log_hxx
+#ifndef resip_Log_hxx
+#define resip_Log_hxx
 
 #define DELIM ' ' << '|' << ' '
 
@@ -18,7 +18,7 @@
 #include "resiprocate/os/Mutex.hxx"
 #include <iostream>
 
-namespace Vocal2
+namespace resip
 {
 
 class Log
@@ -121,7 +121,7 @@ class Log
 #endif
 };
 
-} // namespace Vocal2
+} // namespace resip
 
 #endif
 /* ====================================================================

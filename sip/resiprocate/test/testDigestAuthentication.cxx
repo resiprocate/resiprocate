@@ -17,7 +17,7 @@
 #include "digcalc.hxx"
 
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 
 int
 main(int arc, char** argv)

@@ -10,7 +10,7 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/ParameterTypes.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class HeaderFieldValueList;

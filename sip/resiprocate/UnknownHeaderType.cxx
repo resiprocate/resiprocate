@@ -5,7 +5,7 @@
 #include <string.h>
 #include "resiprocate/os/ParseBuffer.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 UnknownHeaderType::UnknownHeaderType(const char* name)
 {

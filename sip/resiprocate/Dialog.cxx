@@ -4,9 +4,9 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 
 Dialog::Dialog(const NameAddr& localContact) 
@@ -442,7 +442,7 @@ Dialog::incrementCSeq(SipMessage& request)
 }
 
 std::ostream&
-Vocal2::operator<<(std::ostream& strm, Dialog& d)
+resip::operator<<(std::ostream& strm, Dialog& d)
 {
    strm << std::endl
         << "Dialog: [" << d.dialogId() << " " 

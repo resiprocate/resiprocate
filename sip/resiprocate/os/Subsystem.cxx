@@ -1,6 +1,6 @@
 #include "resiprocate/os/Subsystem.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 const Subsystem Subsystem::TEST("TEST");
 const Subsystem Subsystem::NONE("NONE");
@@ -14,7 +14,7 @@ const Subsystem Subsystem::APP("APP");
 const Subsystem Subsystem::CONTENTS("CONTENTS");
 
 std::ostream& 
-Vocal2::operator<<(std::ostream& strm, const Subsystem& ss)
+resip::operator<<(std::ostream& strm, const Subsystem& ss)
 {
    strm << ss.mSubsystem;
    return strm;

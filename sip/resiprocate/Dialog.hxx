@@ -54,7 +54,7 @@
 #include <iostream>
 #include "resiprocate/SipMessage.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Dialog
@@ -63,8 +63,8 @@ class Dialog
       class Exception : public BaseException 
       {
          public:
-            Exception( const Vocal2::Data& msg,
-                       const Vocal2::Data& file,
+            Exception( const resip::Data& msg,
+                       const resip::Data& file,
                        const int line): BaseException(msg,file,line){}
             const char* name() const { return "Dialog::Exception"; }
       };

@@ -1,15 +1,15 @@
 #ifndef BaseException_hxx
 #define BaseException_hxx
 
-static const char* const Vocal2BaseExceptionHeaderVersion =
-    "$Id: BaseException.hxx,v 1.8 2003/03/24 23:25:36 jason Exp $";
+static const char* const resipBaseExceptionHeaderVersion =
+    "$Id: BaseException.hxx,v 1.9 2003/03/25 06:33:47 jason Exp $";
 
 #include <exception>
 #include <iostream>
 
 #include "resiprocate/os/Data.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 // treat as abstract
@@ -28,8 +28,8 @@ class BaseException : public std::exception
       // to define
       ~BaseException() throw();
       
-      Vocal2::Data message;
-      Vocal2::Data fileName;
+      resip::Data message;
+      resip::Data fileName;
       int lineNumber;
 
       friend std::ostream& operator<<(std::ostream& strm, const BaseException& e);
