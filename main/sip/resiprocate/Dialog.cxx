@@ -374,7 +374,7 @@ Dialog::clear()
 //   mContact.clear(); // !cj! - likely need this 
    mCreated = false;
    mRouteSet.clear();
-   mRemoteTarget = NameAddr( Uri(Data::Empty) );
+   mRemoteTarget = NameAddr();
    mRemoteSequence = 0;
    mRemoteEmpty = true;
    mLocalSequence = 0;
@@ -382,8 +382,8 @@ Dialog::clear()
    mCallId.value() = Data::Empty;
    mLocalTag = Data::Empty;
    mRemoteTag = Data::Empty;
-   mRemoteUri = NameAddr(Uri(Data::Empty));
-   mLocalUri = NameAddr(Uri(Data::Empty));
+   mRemoteUri = NameAddr();
+   mLocalUri = NameAddr();
 }
 
 SipMessage*
