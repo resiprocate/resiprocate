@@ -267,6 +267,8 @@ ClientInviteSession::targetRefresh (const NameAddr& localUri)
    throw UsageUseException("Can't send TARGETREFRESH before Connected", __FILE__, __LINE__);
 }
 
+/* !slg if these are here, then you cannot use refer at all in a ClientInviteSession
+
 void
 ClientInviteSession::refer(const NameAddr& referTo)
 {
@@ -282,6 +284,7 @@ ClientInviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionT
    assert(0);
    throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
 }
+*/
 
 void
 ClientInviteSession::info(const Contents& contents)
