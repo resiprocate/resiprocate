@@ -27,6 +27,9 @@ class DialogUsage : public BaseUsage
       AppDialogSetHandle getAppDialogSet();
       AppDialogHandle getAppDialog();     
    protected:
+      friend class DialogSet;
+      friend class DialogUsageManager;
+      
       DialogUsage(DialogUsageManager& dum, Dialog& dialog);
       virtual ~DialogUsage();
       
