@@ -168,7 +168,7 @@ class StringCategory : public ParserCategory
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
-      Data& value() const {checkParsed(); return mValue;}
+      Data& value() const;
 
    private:
       mutable Data mValue;
@@ -260,21 +260,21 @@ class NameAddr : public ParserCategory
 typedef ParserContainer<NameAddr> NameAddrs;
 
 //====================
-// CallId:
+// CallID:
 //====================
-class CallId : public ParserCategory
+class CallID : public ParserCategory
 {
    public:
       enum {commaHandling = NoCommaTokenizing};
 
-      CallId() : ParserCategory(), mValue() {}
-      CallId(HeaderFieldValue* hfv, 
+      CallID() : ParserCategory(), mValue() {}
+      CallID(HeaderFieldValue* hfv, 
              Headers::Type type) 
          : ParserCategory(hfv, type), mValue()
       {}
-      CallId(const CallId&);
-      CallId& operator=(const CallId&);
-      bool operator==(const CallId&) const;
+      CallID(const CallID&);
+      CallID& operator=(const CallID&);
+      bool operator==(const CallID&) const;
       
       Data& value() const {checkParsed(); return mValue;}
 
@@ -285,7 +285,8 @@ class CallId : public ParserCategory
    private:
       mutable Data mValue;
 };
-typedef ParserContainer<CallId> CallIds;
+typedef ParserContainer<CallID> CallIDs;
+typedef CallID CallId; // code convention compatible
 
 //====================
 // CSeqCategory:
@@ -423,6 +424,7 @@ class WarningCategory : public ParserCategory
       mutable Data mHostname;
       mutable Data mText;
 };
+typedef ParserContainer<WarningCategory> WarningCategories;
 
 //====================
 // Via:
