@@ -84,6 +84,8 @@ class DialogSet
       
       ServerPagerMessage* makeServerPagerMessage(const SipMessage& request);      
 
+      void dispatchToAllDialogs(const SipMessage& msg);      
+
       MergedRequestKey mMergeKey;
       typedef std::map<DialogId,Dialog*> DialogMap;
       DialogMap mDialogs;
@@ -114,3 +116,4 @@ class DialogSet
 }
 
 #endif
+

@@ -250,8 +250,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
                {
                   Dialog* d = it->second;
-                  it++;   Destroyer::Guard guard(mDestroyer);
-
+                  it++;
                   d->redirected(msg);         
                }
                mDestroying = false;
@@ -338,6 +337,15 @@ DialogSet::dispatch(const SipMessage& msg)
    }
 
    Dialog* dialog = findDialog(msg);
+   //!dcm! -- hack...
+   if (dialog)
+   {
+      if (msg.header(h_CSeq).method() == MESSAGE)
+      {
+         assert(0);
+      }
+   }
+   
    if (msg.isRequest())
    {
       const SipMessage& request = msg;
@@ -413,9 +421,21 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                mState = ReceivedProvisional;
             }
-            else
+            else if(code < 300)
             {
                mState = Established;
+            }
+            else
+            {
+               if (mDialogs.empty())
+               {
+                  mState = Established;
+               }
+               else
+               {
+                  dispatchToAllDialogs(msg);
+                  return;
+               }
             }
          break;
          case ReceivedProvisional:
@@ -435,7 +455,15 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             else
             {
-               mState = Established;
+               if (mDialogs.empty())
+               {
+                  mState = Established;
+               }
+               else
+               {
+                  dispatchToAllDialogs(msg);
+                  return;
+               }
             }
       }
 
@@ -524,13 +552,8 @@ DialogSet::dispatch(const SipMessage& msg)
    {
       if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
       {
-         for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
-         {
-            Dialog* d = it->second;
-            it++;
-            d->dispatch(msg);
-         }
-         return;         
+         dispatchToAllDialogs(msg);
+         return;
       }
 
       if (msg.isResponse())
@@ -544,26 +567,12 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                mDum.mDialogSetHandler->onNonDialogCreatingProvisional(mAppDialogSet->getHandle(), msg);
             }
-
-            //call OnProgress in proposed DialogSetHandler here
             return;         
          }
-         else if (code >= 300)
+         else if (code >= 300 && !mDialogs.empty())
          {
-            //!dcm! no forking for now, think about onSessionTerminated call(vs
-            // forking) also think about 3xx after early dialog(ugh)--is this possible?
-            //so, short term appropach, dispatch this failur to all existing
-            //usages, return, if no usage allow one to be created.
-            if (!mDialogs.empty())
-            {
-               for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
-               {
-                  Dialog* d = it->second;
-                  it++;
-                  d->dispatch(msg);         
-               }
-               return;
-            }
+            dispatchToAllDialogs(msg);
+            return;
          }
       }
       
@@ -582,11 +591,24 @@ DialogSet::dispatch(const SipMessage& msg)
          InfoLog( << "Unable to create dialog: " << e.getMessage());
          //don't delete on provisional responses, as FWD will eventually send a
          //valid 200
-         if(mDialogs.empty() && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 200))
+         if (msg.isResponse())
          {
-            guard.destroy();            
-            return;            
+            if(mDialogs.empty() && msg.header(h_StatusLine).statusCode() >= 200)
+            {
+               guard.destroy();            
+            }
          }
+         else
+         {
+            SipMessage response;
+            mDum.makeResponse(response, msg, 400);
+            mDum.send(response);
+            if(mDialogs.empty())
+            {
+               guard.destroy();            
+            }
+         }
+         return;
       }
 
       if (mState == WaitingToEnd && !(msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 300))
@@ -601,22 +623,24 @@ DialogSet::dispatch(const SipMessage& msg)
          AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
          dialog->mAppDialog = appDialog;
          appDialog->mDialog = dialog;
+
+         dialog->dispatch(msg);
+//          if (msg.isResponse() && msg.header(h_StatusLine).statusCode() < 200 && mState == Established)
+//          {  
+//             dialog->forked(msg);
+//          }
       }
-   }     
-   if (dialog)
+   }
+   else
    {     
       dialog->dispatch(msg);
-      if (msg.isResponse() && msg.header(h_StatusLine).statusCode() < 200 && mState == Established)
-      {
-         dialog->forked(msg);
-      }
    }
-   else if (msg.isRequest())
-   {
-      SipMessage response;
-      mDum.makeResponse(response, msg, 481);
-      mDum.send(response);
-   }
+//    else if (msg.isRequest())
+//    {
+//       SipMessage response;
+//       mDum.makeResponse(response, msg, 481);
+//       mDum.send(response);
+//    }
 }
 
 ClientOutOfDialogReq*
@@ -873,6 +897,23 @@ DialogSet::getServerOutOfDialog()
    }
 }
 
+void DialogSet::dispatchToAllDialogs(const SipMessage& msg)
+{
+   mDestroying = true;               
+   if (!mDialogs.empty())
+   {
+      for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
+      {
+         Dialog* d = it->second;
+         it++;
+         d->dispatch(msg);         
+      }
+   }
+   mDestroying = false;
+   possiblyDie();
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -923,3 +964,4 @@ DialogSet::getServerOutOfDialog()
  * <http://www.vovida.org/>.
  *
  */
+
