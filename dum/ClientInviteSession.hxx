@@ -1,6 +1,7 @@
 #if !defined(RESIP_CLIENTINVITESESSION_HXX)
 #define RESIP_CLIENTINVITESESSION_HXX
 
+#include "resiprocate/SipMessage.hxx"
 #include "InviteSession.hxx"
 
 namespace resip
