@@ -21,6 +21,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mDestroying(false)
 {
    assert(!creator->getLastRequest().isExternal());
+   InfoLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
 }
 
 DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) : 
@@ -36,6 +37,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    assert(request.isRequest());
    assert(request.isExternal());
    mDum.mMergedRequests.insert(mMergeKey);
+   InfoLog ( << " ************* Created DialogSet(UAS)  -- " << mId << "*************" );
 }
 
 DialogSet::~DialogSet()
@@ -51,6 +53,7 @@ DialogSet::~DialogSet()
    {
       delete mDialogs.begin()->second;
    } 
+   InfoLog ( << " ********** DialogSet::~DialogSet: " << mId << "*************" );
    mDum.removeDialogSet(this->getId());
    delete mAppDialogSet;
 }
