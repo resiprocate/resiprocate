@@ -65,6 +65,10 @@ class TransactionController
       // !jf! Probably should transmit stray responses statelessly. see RFC3261
       bool mDiscardStrayResponses;
 
+      // Used to handle the stateless stack incoming requests and responses as
+      // well as maintaining a state machine for the async dns responses
+      StatelessHandler mStatelessHandler;
+
       // fifo used to communicate to the transaction state machine within the
       // stack. Not for external use by the application. May contain, sip
       // messages (requests and responses), timers (used by state machines),
@@ -85,9 +89,6 @@ class TransactionController
       TransactionMap mClientTransactionMap;
       TransactionMap mServerTransactionMap;
 
-      // Used to handle the stateless stack incoming requests and responses as
-      // well as maintaining a state machine for the async dns responses
-      StatelessHandler mStatelessHandler;
 
       // timers associated with the transactions. When a timer fires, it is
       // placed in the mStateMacFifo
