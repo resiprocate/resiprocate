@@ -49,6 +49,12 @@ traverseMulti(const MultipartMixedContents* mp,
             indent(level);
             cerr << "discovered a Pkcs7Contents" << endl;
          }
+         else if ((mps = dynamic_cast<MultipartSignedContents*>(*i)))
+         {
+            indent(level);
+            cerr << "discovered a multipart signed with " << mps->parts().size() << " parts " << endl;
+            traverseMulti(mps, level+1);
+         }
          else if ((mpm = dynamic_cast<MultipartMixedContents*>(*i)))
          {
             indent(level);
