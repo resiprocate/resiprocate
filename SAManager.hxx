@@ -1,6 +1,11 @@
 class Profile;
 class RedirectManager;
 
+namespace resip {
+
+class SipStack;
+
+
 class SAManager
 {
    public:
@@ -65,5 +70,4 @@ class SAManager
       SipStack& mStack;
 };
 
-
-   
+}
