@@ -22,8 +22,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          const SdpContents* initialOffer,
                                          ServerSubscriptionHandle serverSub) :
    InviteSession(dum, dialog),
-   lastReceivedRSeq(0),
-   lastExpectedRSeq(0),
+   mLastReceivedRSeq(0),
    mStaleCallTimerSeq(1),
    mServerSub(serverSub)
 {
@@ -41,36 +40,11 @@ ClientInviteSession::getHandle()
    return ClientInviteSessionHandle(mDum, getBaseHandle().getId());
 }
 
-#if(0)
+const SdpContents& 
+ClientInviteSession::getEarlyMedia() const
 {
-   switch(mState)
-   {
-      case UAC_Start:
-         break;
-      case UAC_Early:
-         break;
-      case UAC_EarlyWithOffer:
-         break;
-      case UAC_EarlyWithAnswer:
-         break;
-      case UAC_WaitingForAnswerFromApp:
-         break;
-      case UAC_Terminated:
-         break;
-      case UAC_SentUpdateEarly:
-         break;
-      case UAC_ReceivedUpdateEarly:
-         break;
-      case UAC_PrackAnswerWait:
-         break;
-      case UAC_Canceled:
-         break;
-      default:
-         break;
-   }
+   return *mEarlyMedia;
 }
-
-#endif
 
 void
 ClientInviteSession::provideOffer (const SdpContents& offer)
@@ -99,7 +73,6 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
         case UAC_Start:
         case UAC_Early:
         case UAC_EarlyWithOffer:
-        //case UAC_EarlyWithAnswer:
         case UAC_WaitingForAnswerFromApp:
         case UAC_Terminated:
         case UAC_SentUpdateEarly:
@@ -121,12 +94,14 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
    {
       case UAC_EarlyWithOffer:
       {
+         transition(UAC_PrackAnswerWait);
+
          //  Creates an PRACK request with application supplied offer.
          SipMessage req;
          mDialog.makeRequest(req, PRACK);
          InviteSession::setSdp(req, answer);
 
-         //  Remember last seesion modification.
+         //  Remember last session modification.
          mLastSessionModification = req;
 
          //  Remember proposed local SDP.
@@ -134,7 +109,6 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
 
          //  Send the req and do state transition.
          mDum.send(req);
-         transition(UAC_PrackAnswerWait);
          break;
       }
 
@@ -162,27 +136,27 @@ ClientInviteSession::end()
 {
    switch(mState)
    {
-      case UAC_Start:
-         break;
       case UAC_Early:
-         break;
       case UAC_EarlyWithOffer:
-         break;
       case UAC_EarlyWithAnswer:
-         break;
       case UAC_WaitingForAnswerFromApp:
-         break;
       case UAC_Terminated:
-         break;
       case UAC_SentUpdateEarly:
-         break;
       case UAC_ReceivedUpdateEarly:
-         break;
       case UAC_PrackAnswerWait:
-         break;
+      {
+         transition(Terminated);
+         SipMessage bye;
+         mDialog.makeRequest(bye, BYE);
+         mDum.send(bye);
+      }
+      
+      case UAC_Start:
       case UAC_Canceled:
+         assert(0);
          break;
       default:
+         InviteSession::end();
          break;
    }
 }
@@ -230,27 +204,18 @@ ClientInviteSession::cancel()
 {
    switch(mState)
    {
-      case UAC_Start:
-         break;
       case UAC_Early:
-         break;
       case UAC_EarlyWithOffer:
-         break;
       case UAC_EarlyWithAnswer:
-         break;
-      case UAC_WaitingForAnswerFromApp:
-         break;
-      case UAC_Terminated:
-         break;
       case UAC_SentUpdateEarly:
-         break;
       case UAC_ReceivedUpdateEarly:
-         break;
       case UAC_PrackAnswerWait:
+         startCancelTimer();
+         transition(UAC_Canceled);
          break;
-      case UAC_Canceled:
-         break;
+
       default:
+         assert(0);
          break;
    }
 }
@@ -314,6 +279,9 @@ ClientInviteSession::dispatch(const SipMessage& msg)
       case UAC_SentUpdateEarly:
          dispatchSentUpdateEarly(msg);
          break;
+      case UAC_SentUpdateConnected:
+         dispatchSentUpdateConnected(msg);
+         break;
       case UAC_ReceivedUpdateEarly:
          dispatchReceivedUpdateEarly(msg);
          break;
@@ -337,20 +305,62 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
 void
 ClientInviteSession::handleRedirect (const SipMessage& msg)
 {
-    Destroyer::Guard    guard(mDestroyer);
-    guard.destroy();
-    transition(Terminated);
-    handler->onRedirected(getHandle(), msg);
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   Destroyer::Guard guard(mDestroyer);
+   guard.destroy();
+   transition(Terminated);
+   handler->onRedirected(getHandle(), msg);
 }
+
+void
+ClientInviteSession::handleProvisional(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   handler->onProvisional(getHandle(), msg);
+   // store state about the provisional if reliable, so we can detect retransmissions
+}
+
 
 void
 ClientInviteSession::handleOffer (const SipMessage& msg, const SdpContents* sdp)
 {
-    transition(UAC_EarlyWithOffer);
-    handler->onNewSession(getHandle(), Offer, msg);
-    handler->onProvisional(getHandle(), msg);
-    mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
-    handler->onOffer(getSessionHandle(), msg, sdp);
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+
+   handleProvisional(msg);
+   mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+   handler->onOffer(getSessionHandle(), msg, sdp);
+}
+
+void
+ClientInviteSession::sendPrack(const SipMessage& msg)
+{
+}
+
+bool
+ClientInviteSession::isRetransmission(const SipMessage& msg)
+{
+   return false;
+}
+
+
+void
+ClientInviteSession::handleAnswer (const SipMessage& msg, const SdpContents* sdp)
+{
+
+   mCurrentLocalSdp = mProposedLocalSdp;
+   mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   handleProvisional(msg);
+   handler->onAnswer(getSessionHandle(), msg, sdp);
+   
+   // send PRACK
+   {
+      SipMessage prack;
+      mDialog.makeRequest(prack, PRACK);
+      // !jf! more to it. 
+      mDum.send(prack);
+   }
 }
 
 void
@@ -370,67 +380,58 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          break;
 
       case On1xx:
+         transition(UAC_Early);
          handler->onNewSession(getHandle(), None, msg);
          handler->onProvisional(getHandle(), msg);
-         transition(UAC_Early);
          break;
 
       case On1xxEarly:
+         transition(UAC_Early);
+         mEarlyMedia = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), None, msg);
          handler->onProvisional(getHandle(), msg);
-         mEarlyMedia = InviteSession::makeSdp(*sdp);
          handler->onEarlyMedia(getHandle(), msg, sdp);
-         transition(UAC_Early);
          break;
 
       case On1xxOffer:
+         transition(UAC_EarlyWithOffer);
+         handler->onNewSession(getHandle(), Offer, msg);
          handleOffer(msg, sdp);
          break;
 
       case On1xxAnswer:
-         handler->onNewSession(getHandle(), Answer, msg);
-         handler->onProvisional(getHandle(), msg);
-         mCurrentLocalSdp = mProposedLocalSdp;
-         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, sdp);
-
-         // send PRACK
-         {
-            SipMessage prack;
-            mDialog.makeRequest(prack, PRACK);
-            mDum.send(prack);
-         }
-
          transition(UAC_EarlyWithAnswer);
+         handler->onNewSession(getHandle(), Answer, msg);
+         handleAnswer(msg, sdp);
          break;
 
       case On2xxOffer:
+         transition(UAC_WaitingForAnswerFromApp);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onOffer(getSessionHandle(), msg, sdp);
          handler->onConnected(getHandle(), msg);
-         transition(UAC_WaitingForAnswerFromApp);
          break;
 
       case On2xxAnswer:
-         handler->onNewSession(getHandle(), Answer, msg);
+         transition(Connected);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onNewSession(getHandle(), Answer, msg);
          handler->onAnswer(getSessionHandle(), msg, sdp);
          handler->onConnected(getHandle(), msg);
-
          {
             SipMessage ack;
             mDialog.makeRequest(ack, ACK);
             mDum.send(ack);
          }
-
-         transition(Connected);
          break;
 
       case On2xx:
       {
+         transition(Terminated);
+
          SipMessage ack;
          mDialog.makeRequest(ack, ACK);
          mDum.send(ack);
@@ -440,12 +441,12 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          mDum.send(bye);
 
          handler->onFailure(getHandle(), msg);
-         transition(Terminated);
          break;
       }
 
       case OnInviteFailure:
       case OnGeneralFailure:
+         transition(Terminated);
          handler->onFailure(getHandle(), msg);
          break;
 
@@ -454,22 +455,16 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          break;
    }
 }
+
 void
 ClientInviteSession::dispatchEarly (const SipMessage& msg)
 {
-   assert(msg.isResponse());
-   assert(msg.header(h_StatusLine).statusCode() > 100);
-   assert(msg.header(h_CSeq).method() == INVITE);
-
+   Destroyer::Guard    guard(mDestroyer);
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    const SdpContents* sdp = InviteSession::getSdp(msg);
 
    switch (toEvent(msg, sdp))
    {
-      case OnRedirect:
-         handleRedirect(msg);
-         break;
-
       case On1xx:
          transition(UAC_Early);
          handler->onProvisional(getHandle(), msg);
@@ -483,46 +478,32 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          break;
 
       case On1xxOffer:
+         transition(UAC_EarlyWithOffer);
+         handler->onNewSession(getHandle(), Offer, msg);
          handleOffer(msg, sdp);
          break;
 
       case On1xxAnswer:
-        // !kh! here
          transition(UAC_EarlyWithAnswer);
-
-         handler->onNewSession(getHandle(), Answer, msg);
-         handler->onProvisional(getHandle(), msg);
-         mCurrentLocalSdp = mProposedLocalSdp;
-         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, sdp);
-
-         // send PRACK
-         {
-            SipMessage prack;
-            mDialog.makeRequest(prack, PRACK);
-            mDum.send(prack);
-         }
+         handleAnswer(msg, sdp);
          break;
 
       case On2xxOffer:
          transition(UAC_WaitingForAnswerFromApp);
 
-         handler->onNewSession(getHandle(), Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+
          handler->onOffer(getSessionHandle(), msg, sdp);
          handler->onConnected(getHandle(), msg);
          break;
 
       case On2xxAnswer:
          transition(Connected);
-
-         handler->onNewSession(getHandle(), Answer, msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, sdp);
          handler->onConnected(getHandle(), msg);
-
          {
             SipMessage ack;
             mDialog.makeRequest(ack, ACK);
@@ -546,9 +527,14 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          break;
       }
 
+      case OnRedirect:
+         handleRedirect(msg);
+         break;
+
       case OnInviteFailure:
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
+         guard.destroy();
          break;
 
       default:
@@ -560,26 +546,112 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 void
 ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
 {
+   Destroyer::Guard    guard(mDestroyer);
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   const SdpContents* sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp))
+   {
+      case On1xx:
+         handler->onProvisional(getHandle(), msg);
+         break;
+
+      case On2xx:
+      case On2xxAnswer:
+         transition(Terminated);
+         handler->onFailure(getHandle(), msg);
+         {
+            SipMessage ack;
+            mDialog.makeRequest(ack, ACK);
+            mDum.send(ack);
+            
+            SipMessage bye;
+            mDialog.makeRequest(bye, BYE);
+            mDum.send(bye);
+         }
+         break;
+
+      case OnRedirect:
+         handleRedirect(msg);
+         break;
+
+      case OnInviteFailure:
+      case OnGeneralFailure:
+         handler->onFailure(getHandle(), msg);
+         guard.destroy();
+         break;
+
+      default:
+         assert(0);
+         break;
+   }
 }
 
 void
 ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 {
-}
+   Destroyer::Guard    guard(mDestroyer);
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   const SdpContents* sdp = InviteSession::getSdp(msg);
 
-void
-ClientInviteSession::dispatchWaitingForAnswerFromApp (const SipMessage& msg)
-{
-}
+   switch (toEvent(msg, sdp))
+   {
+      case On1xx:
+         if (isRetransmission(msg))
+         {
+            // retransmit PRACK
+         }
+         else
+         {
+            handler->onProvisional(getHandle(), msg);
+            // send PRACK
+         }
+         break;
 
-void
-ClientInviteSession::dispatchConnected (const SipMessage& msg)
-{
-}
+      case On2xx:
+         transition(Connected);
+         handler->onConnected(getHandle(), msg);
+         {
+            SipMessage ack;
+            mDialog.makeRequest(ack, ACK);
+            mDum.send(ack);
+         }
+         break;
+         
+      case On2xxAnswer:
+      case On2xxOffer:
+         transition(Terminated);
+         handler->onFailure(getHandle(), msg);
+         {
+            SipMessage ack;
+            mDialog.makeRequest(ack, ACK);
+            mDum.send(ack);
+            
+            SipMessage bye;
+            mDialog.makeRequest(bye, BYE);
+            mDum.send(bye);
+         }
+         break;
 
-void
-ClientInviteSession::dispatchTerminated (const SipMessage& msg)
-{
+      case OnUpdate:
+         transition(UAC_ReceivedUpdateEarly);
+         handler->onOffer(getSessionHandle(), msg, sdp);
+         break;
+
+      case OnRedirect:
+         handleRedirect(msg);
+         break;
+
+      case OnInviteFailure:
+      case OnGeneralFailure:
+         handler->onFailure(getHandle(), msg);
+         guard.destroy();
+         break;
+
+      default:
+         assert(0);
+         break;
+   }
 }
 
 void
@@ -588,7 +660,17 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
 }
 
 void
+ClientInviteSession::dispatchSentUpdateConnected (const SipMessage& msg)
+{
+}
+
+void
 ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
+{
+}
+
+void
+ClientInviteSession::dispatchWaitingForAnswerFromApp (const SipMessage& msg)
 {
 }
 
