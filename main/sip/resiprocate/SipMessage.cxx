@@ -1,5 +1,3 @@
-//#include <sstream>
-#include <strstream>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/HeaderFieldValueList.hxx>
 #include <util/Logger.hxx>
@@ -145,17 +143,6 @@ SipMessage::encode(std::ostream& str) const
    }
    
    return str;
-}
-
-const Data& 
-SipMessage::encode() 
-{
-   char buff[2048]; //!jf!
-   ostrstream strm(buff, sizeof(buff));
-   encode(strm);
-   strm << ends;
-   mEncoded = strm.str();
-   return mEncoded;
 }
 
 void
