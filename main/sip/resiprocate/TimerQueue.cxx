@@ -20,7 +20,7 @@ TimerQueue::add(Timer::Type type, const Data& transactionId, unsigned long msOff
 {
    Timer t(msOffset, type, transactionId);
    mTimers.insert(t);
-   DebugLog (<< "Adding timer: " << type << " tid=" << transactionId << " ms=" << msOffset);
+   DebugLog (<< "Adding timer: " << Timer::toData(type) << " tid=" << transactionId << " ms=" << msOffset);
    
    return t.getId();
 }
@@ -35,7 +35,7 @@ TimerQueue::process()
         i != mTimers.upper_bound(now);)
    {
       TimerMessage* t = new TimerMessage(i->mTransactionId, i->mType, i->mDuration);
-      DebugLog (<< "Adding timer to fifo: " << " tid=" << i->mTransactionId << " type=" << i->mType);
+      DebugLog (<< "Adding timer to fifo: " << " tid=" << i->mTransactionId << " type=" << Timer::toData(i->mType));
       mFifo.add(t);
       mTimers.erase(i++);
    }
