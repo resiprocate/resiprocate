@@ -133,7 +133,7 @@ TlsTransport::processListen(FdSet& fdset)
       {
          tls = new TlsConnection( mSecurity, sock, /*server*/ true );
       }
-      catch ( Transport::Exception& e)
+      catch ( Transport::Exception& )
       {
           InfoLog( << "Failed to form new TLS server connection" );
           if (tls)
@@ -277,12 +277,12 @@ TlsTransport::processAllWrites( FdSet& fdset )
             {
                // succeeded, add the connection
                DebugLog( << "Trying to from new client TLS connection" );
-               TlsConnection* tls;
+               TlsConnection* tls=0;
                try 
                {
                   tls = new TlsConnection( mSecurity, sock, /*server*/ false );
                }
-               catch ( Transport::Exception& e )
+               catch ( Transport::Exception& )
                {
                   InfoLog( << "Failed to form new TLS client connection" );
                   if (tls)

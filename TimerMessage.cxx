@@ -1,3 +1,7 @@
+
+
+#include <cassert>
+
 #include "resiprocate/TimerMessage.hxx"
 
 using namespace resip;
@@ -33,8 +37,13 @@ TimerMessage::isClientTransaction() const
       case Timer::TimerC:
          assert(0);
          break;
+
+	  default:
+		    assert(0);
+         break;
    }
    assert(0);
+   return false;
 }
 
 
