@@ -1,7 +1,7 @@
 #ifndef ParserCategory_hxx
 #define ParserCategory_hxx
 
-#include <string>
+#include <sipstack/Data.hxx>
 
 namespace Vocal2
 {

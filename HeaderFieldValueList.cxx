@@ -1,5 +1,5 @@
-#include <sip2/sipstack/HeaderFieldValueList.hxx>
-#include <sip2/sipstack/ParserCategory.hxx>
+#include <sipstack/HeaderFieldValueList.hxx>
+#include <sipstack/ParserCategory.hxx>
 
 using namespace Vocal2;
 using namespace std;

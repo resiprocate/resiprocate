@@ -4,7 +4,7 @@
 #include <list>
 #include <utility>
 
-#include <sip2/sipstack/HeaderTypes.hxx>
+#include <sipstack/HeaderTypes.hxx>
 
 namespace Vocal2
 {
@@ -31,7 +31,7 @@ class SipMessage
          return nIsExternal;
       }
 
-      std::string encode();
+      Data encode();
 
       // known header interface
       template <int T>
@@ -90,9 +90,9 @@ class SipMessage
       // note: removeFirst/removeLast through the component 
 
       // unknown header interface
-      Unknowns& operator[](const std::string& symbol);
+      Unknowns& operator[](const Data& symbol);
 
-      void remove(const std::string& symbol);
+      void remove(const Data& symbol);
 
       // note: removeFirst/removeLast through the component 
 
@@ -112,7 +112,7 @@ class SipMessage
       char* mBuff;
       const bool nIsExternal;
       HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
-      typedef std::list< std::pair<std::string, HeaderFieldValueList*> > UnknownHeaders;
+      typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
       UnknownHeaders mUnknownHeaders;
 };
 
