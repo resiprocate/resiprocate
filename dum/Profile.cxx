@@ -63,6 +63,12 @@ Profile::getDefaultAor()
 }
 
 int 
+Profile::getDefaultSubscriptionTime()
+{
+   return 3600;
+}
+
+int 
 Profile::getDefaultRegistrationTime()
 {
    return mDefaultRegistrationExpires;
