@@ -1,34 +1,21 @@
-#include <assert.h>
-#include "sip2/sipstack/ConnectionMap.hxx"
-#include "sip2/util/Socket.hxx"
-#include "sip2/sipstack/Preparse.hxx"
+
+#include <cassert>
+
 #include "sip2/util/Logger.hxx"
+#include "sip2/sipstack/ConnectionMap.hxx"
+
 
 #define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
 
-#ifndef WIN32
-#include <errno.h>
-#include <fcntl.h>
-#include <iostream>
-#include <netinet/in.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#endif
 
-
-#include <iostream>
 using namespace std;
 
 using namespace Vocal2;
 
 
-
-
 const UInt64 ConnectionMap::MinLastUsed = 10*1000;
 const UInt64 ConnectionMap::MaxLastUsed = 10*60*60*1000;
+
 
 ConnectionMap::ConnectionMap()
 {
@@ -73,7 +60,7 @@ ConnectionMap::add(const Transport::Tuple& who, Socket socket)
 }
 
 Connection*
-ConnectionMap::get(const Transport::Tuple& who, int attempt)
+ConnectionMap::get(const Transport::Tuple& who)
 {
    Map::const_iterator i = mConnections.find(who);
    if (i != mConnections.end())
@@ -81,40 +68,7 @@ ConnectionMap::get(const Transport::Tuple& who, int attempt)
       return i->second;
    }
    
-   // attempt to open
-   Socket sock = socket( AF_INET, SOCK_STREAM, 0 );
-   if ( sock == -1 )
-   {
-      if (attempt > ConnectionMap::MaxAttempts)
-      {
-         return 0;
-      }
-
-      // !dlb! does the file descriptor become available immediately?
-      gc(ConnectionMap::MinLastUsed);
-      return get(who, attempt+1);
-   }
-   
-   struct sockaddr_in servaddr;
-   
-   memset( &servaddr, sizeof(servaddr), 0 );
-   servaddr.sin_family = AF_INET;
-   servaddr.sin_port = htons(who.port);
-   servaddr.sin_addr = who.ipv4;
-
-  
-   int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
-   if ( e == -1 ) 
-   {
-      int err = errno;
-      DebugLog( << "Error on connect to " << who << ": " << strerror(err));
-      return 0;
-   }
-
-   makeSocketNonBlocking(sock);
-
-   // succeeded, add the connection
-   return add(who, sock);
+   return 0;
 }
 
 void

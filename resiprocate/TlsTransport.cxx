@@ -29,7 +29,9 @@ using namespace Vocal2;
 const size_t TlsTransport::MaxWriteSize = 4096;
 const size_t TlsTransport::MaxReadSize = 4096;
 
-TlsTransport::TlsTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo,Security* security) : 
+
+TlsTransport::TlsTransport(const Data& sendhost, int portNum, 
+                           const Data& nic, Fifo<Message>& fifo,Security* security) : 
    Transport(sendhost, portNum, nic , fifo)
 {
    mSendPos = mSendRoundRobin.end();
@@ -54,7 +56,7 @@ TlsTransport::TlsTransport(const Data& sendhost, int portNum, const Data& nic, F
    }
 #endif
 
-   makeSocketNonBlocking(mFd);
+   //makeSocketNonBlocking(mFd);
 
    sockaddr_in addr;
    addr.sin_family = AF_INET;
@@ -76,12 +78,12 @@ TlsTransport::TlsTransport(const Data& sendhost, int portNum, const Data& nic, F
       throw Exception("Address already in use", __FILE__,__LINE__);
    }
 
+   makeSocketNonBlocking(mFd);
+
    // do the listen, seting the maximum queue size for compeletly established
    // sockets -- on linux, tcp_max_syn_backlog should be used for the incomplete
    // queue size(see man listen)
    int e = listen(mFd,64 );
-
-   makeSocketNonBlocking(mFd);
 
    if (e != 0 )
    {
@@ -91,11 +93,13 @@ TlsTransport::TlsTransport(const Data& sendhost, int portNum, const Data& nic, F
    }
 }
 
+
 TlsTransport::~TlsTransport()
 {
-//   ::shutdown(mFd, SHUT_RDWR);
-   ::close(mFd);
+   //::shutdown(mFd, SHUT_RDWR);
+   closesocket(mFd);
 }
+
 
 void 
 TlsTransport::buildFdSet( FdSet& fdset)
@@ -109,6 +113,7 @@ TlsTransport::buildFdSet( FdSet& fdset)
    fdset.setRead(mFd);
       
 }
+
 
 void 
 TlsTransport::processListen(FdSet& fdset)
@@ -126,10 +131,11 @@ TlsTransport::processListen(FdSet& fdset)
          return;
       }
 
+      TlsConnection* tls = new TlsConnection( mSecurity, sock, /*server*/ true );
+      assert(tls);
+      
       makeSocketNonBlocking(sock);
       
-      TlsConnection* tls = new TlsConnection( mSecurity, sock, /*server*/ true );
-    
       Transport::Tuple who;
       who.ipv4 = peer.sin_addr;
       who.port = ntohs(peer.sin_port);
@@ -138,24 +144,27 @@ TlsTransport::processListen(FdSet& fdset)
       
       Connection* con = mConnectionMap.add(who, sock);
       assert( con );
-      //  con->mTlsConnection = tls;
+      con->mTlsConnection = tls;
 
       ErrLog( << "Added server connection " << int(con) );
-      
    }
 }
+
 
 bool
 TlsTransport::processRead(Connection* c)
 {
    std::pair<char* const, size_t> writePair = c->getWriteBuffer();
-   size_t bytesToRead = min(writePair.second, TlsTransport::MaxReadSize);
-
+   size_t bytesToRead = writePair.second;
+   if ( bytesToRead > TlsTransport::MaxReadSize)
+   {
+      bytesToRead = TlsTransport::MaxReadSize;
+   }
+   
    ErrLog( << "Read from connection " << int(c) );
 
-   // int bytesRead = read(c->getSocket(), writePair.first, bytesToRead);
-//   assert( c->mTlsConnection );
-   int bytesRead = 0; // = c->mTlsConnection->read( writePair.first, bytesToRead);
+   assert( c->mTlsConnection );
+   int bytesRead = c->mTlsConnection->read( writePair.first, bytesToRead);
    if (bytesRead <= 0)
    {
       int err = errno;
@@ -176,6 +185,7 @@ TlsTransport::processRead(Connection* c)
    }
 }
 
+
 void
 TlsTransport::processAllReads(FdSet& fdset)
 {
@@ -184,7 +194,7 @@ TlsTransport::processAllReads(FdSet& fdset)
       for (Connection* c = mConnectionMap.mPostOldest.mYounger;
            c != &mConnectionMap.mPreYoungest; c = c->mYounger)
       {
-// !jf! - TODO - likely need to call the tlsConnection-.isReady stuff 
+         // !jf! - TODO - likely need to call the tlsConnection-.isReady stuff 
          if (fdset.readyToRead(c->getSocket()))
          {
             if (processRead(c))
@@ -202,65 +212,65 @@ TlsTransport::processAllReads(FdSet& fdset)
    }
 }
 
+
 void
 TlsTransport::processAllWrites( FdSet& fdset )
 {
    if (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
-      const Transport::Tuple& who = data->destination;
-      
-      Connection* conn = mConnectionMap.get(who);
-      
-      if ( !conn )
-      {
-         // need to create the connection 
-   
+      Connection* conn = mConnectionMap.get(data->destination);
+        
+      if (conn == 0)
+      { 
          // attempt to open
          Socket sock = socket( AF_INET, SOCK_STREAM, 0 );
-         if ( sock != -1 )
+
+         if ( sock == -1 ) // no socket found - try to free one up and try again
+         {
+            // !dlb! does the file descriptor become available immediately?
+            mConnectionMap.gc(ConnectionMap::MinLastUsed); // free one up 
+            sock = socket( AF_INET, SOCK_STREAM, 0 ); // try again 
+         }
+         
+         if ( sock == -1 )
+         { 
+            DebugLog( << "Error in TLS finding free socket to use" );
+         } 
+         else
          {
             struct sockaddr_in servaddr;
             memset( &servaddr, sizeof(servaddr), 0 );
             servaddr.sin_family = AF_INET;
-            servaddr.sin_port = htons(who.port);
-            servaddr.sin_addr = who.ipv4;
-
+            servaddr.sin_port = htons( data->destination.port);
+            servaddr.sin_addr =  data->destination.ipv4;
+            
             int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
             if ( e == -1 ) 
             {
                int err = errno;
-               InfoLog( << "Error on connect to " << who << ": " << strerror(err));
-             }
+               DebugLog( << "Error on TLS connect to " <<  data->destination << ": " << strerror(err));
+            }
             else
             {
-               makeSocketNonBlocking(sock);
-  
-               TlsConnection* tls = new TlsConnection( mSecurity, sock, /*server*/ false );
-   
                // succeeded, add the connection
-               conn =  mConnectionMap.add(who, sock);
+               TlsConnection* tls = new TlsConnection( mSecurity, sock, /*server*/ false );
+               assert(tls);
 
-               //     conn->mTlsConnection = tls;   
+               mConnectionMap.add( data->destination, sock);
 
-               ErrLog( << "Added client connection " << int(conn) );
+               conn = mConnectionMap.get(data->destination);
+               assert( conn );
+
+               conn->mTlsConnection = tls;   
+
+               makeSocketNonBlocking(sock);
+
+               ErrLog( << "Added TLS client connection " << int(conn) );
             }
-         }
-         else
-         {
-#if 0
-            if (attempt > MaxAttempts)
-            {
-               return 0;
-            }
-            
-            // !dlb! does the file descriptor become available immediately?
-            gc(MinLastUsed);
-            return get(who, attempt+1);
-#endif
          }
       }
-      
+        
       if (conn == 0)
       {
          DebugLog (<< "Failed to create/get connection: " << data->destination);
@@ -268,17 +278,20 @@ TlsTransport::processAllWrites( FdSet& fdset )
          delete data;
          return;
       }
+
       if (conn->mOutstandingSends.empty())
       {
          DebugLog (<< "Adding " << *conn << " to send roundrobin");
          mSendRoundRobin.push_back(conn);
          conn->mSendPos = 0;
       }
-      DebugLog (<< "Queuing " << data->transactionId << " : " << data->data);
+
       conn->mOutstandingSends.push_back(data);
    }
+
    sendFromRoundRobin(fdset);
 }         
+
 
 void
 TlsTransport::sendFromRoundRobin(FdSet& fdset)
@@ -324,20 +337,25 @@ TlsTransport::sendFromRoundRobin(FdSet& fdset)
    }
 }
 
+
 bool
 TlsTransport::processWrite(Connection* c)
 {
+   assert(c);
+   
    assert(!c->mOutstandingSends.empty());
    SendData* data = c->mOutstandingSends.front();
    
-   size_t bytesToWrite = min(data->data.size() - c->mSendPos, TlsTransport::MaxWriteSize);
+   size_t bytesToWrite = data->data.size() - c->mSendPos;
+   if ( bytesToWrite > TlsTransport::MaxWriteSize)
+   { 
+      bytesToWrite = TlsTransport::MaxWriteSize;
+   }
 
    ErrLog( << "Write to connection " << int(c) );
 
-   //int bytesWritten = write(c->getSocket(), data->data.data() + c->mSendPos,
-   //bytesToWrite);
-//   assert( c->mTlsConnection );
-   int bytesWritten = 0; // c->mTlsConnection->write( data->data.data() + c->mSendPos, bytesToWrite);
+   assert( c->mTlsConnection );
+   int bytesWritten = c->mTlsConnection->write( data->data.data() + c->mSendPos, bytesToWrite);
    int err = errno;
 
    if (bytesWritten <= 0)
@@ -365,10 +383,14 @@ TlsTransport::processWrite(Connection* c)
    return true;
 }
 
+
 void 
 TlsTransport::process(FdSet& fdSet)
 {
-   if (mTxFifo.messageAvailable()) DebugLog(<<"mTxFifo:size: " << mTxFifo.size());
+   if ( mTxFifo.messageAvailable() ) 
+   {
+      DebugLog(<<"TLSTransport mTxFifo:size: " << mTxFifo.size());
+   }
    processAllWrites(fdSet);
    processListen(fdSet);
    processAllReads(fdSet);
