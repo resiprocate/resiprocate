@@ -9,6 +9,7 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/WinCompat.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
 
@@ -88,6 +89,7 @@ class TransportSelector
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
       mutable Socket mSocket6;
+      WinCompat::Version mWindowsVersion;
       
       // An AF_UNSPEC addr_in for rapid unconnect
       struct sockaddr_in mUnspecified;
