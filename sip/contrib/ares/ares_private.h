@@ -1,4 +1,4 @@
-/* $Id: ares_private.h,v 1.4 2003/09/14 01:13:34 fluffy Exp $ */
+/* $Id: ares_private.h,v 1.5 2003/09/14 04:26:45 fluffy Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
@@ -134,6 +134,6 @@ int ares__read_line(FILE *fp, char **buf, int *bufsize);
 
 #ifdef WIN32
 #define strcasecmp(a,b) stricmp(a,b)
-#define strcasencmp(a,b,n) strnicmp(a,b,n)
+#define strncasecmp(a,b,n) strnicmp(a,b,n)
 #endif
 
