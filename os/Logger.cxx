@@ -1,5 +1,8 @@
+#include <ostream>
+#include <fstream>
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/os/SysLogStream.hxx"
 
 using namespace resip;
 
@@ -37,6 +40,51 @@ AssertOnRecursiveLock::~AssertOnRecursiveLock()
 #else
    currentThread = 0;
 #endif
+}
+
+std::ostream& 
+GenericLogImpl::Instance()
+{
+   switch (Log::_type)
+   {
+      case Log::SYSLOG:
+         if (mLogger == 0)
+         {
+            std::cerr << "Creating a syslog stream" << std::endl;
+            mLogger = new SysLogStream;
+         }
+         return *mLogger;
+               
+      case Log::CERR:
+         return std::cerr;
+               
+      case Log::COUT:
+         return std::cout;
+               
+      case Log::FILE:
+         if (mLogger == 0)
+         {
+            std::cerr << "Creating a file logger" << std::endl;
+            if (Log::_logFileName != "")
+            {
+               mLogger = new std::ofstream(_logFileName.c_str(), std::ios_base::out|std::ios_base::app);
+            }
+            else
+            {
+               mLogger = new std::ofstream("resiprocate.log", std::ios_base::out|std::ios_base::app);
+            }
+         }
+         return *mLogger;
+      default:
+         assert(0);
+         return std::cout;
+   }
+}
+      
+bool 
+GenericLogImpl::isLogging(Log::Level level) 
+{
+   return (level <= Log::_level);
 }
 
 /* ====================================================================
