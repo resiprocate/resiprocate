@@ -71,13 +71,33 @@ main(int argc, char** argv)
          SdpContents::Session::Connection(SdpContents::IP4, "localhost", 0); 
       SdpContents::Session::Medium medium(Symbols::audio, 0, 1, Symbols::RTP_AVP);
 
-      SdpContents::Session::Codec codec("gipsCodec.plname", 1, 800);
-      medium.addCodec(codec);
-      osdp.session().addMedium(medium);
+      SdpContents::Session::Codec codec1("iLBC", 102, 8000);
+      medium.addCodec(codec1);
 
+      SdpContents::Session::Codec codec2("PCMA", 8, 8000);
+      medium.addCodec(codec2);
+
+      SdpContents::Session::Codec codec3("PCMU", 0, 8000);
+      medium.addCodec(codec3);
+
+      SdpContents::Session::Codec codec4("EG711A", 101, 8000);
+      medium.addCodec(codec4);
+
+      SdpContents::Session::Codec codec5("EG711U", 100, 8000);
+      medium.addCodec(codec5);
+
+      SdpContents::Session::Codec codec6("IPCMWB", 97, 16000);
+      medium.addCodec(codec6);
+
+      SdpContents::Session::Codec codec7("ISAC", 103, 16000);
+      medium.addCodec(codec7);
+
+      osdp.session().addMedium(medium);
+      SdpContents::Session::Medium& myMedium = osdp.session().media().front();
+      
       SdpContents csdp;
       csdp = *sdp;
-      SdpContents::Session::Medium& myMedium = csdp.session().media().front();
+      SdpContents::Session::Medium& my1Medium = csdp.session().media().front();
       cerr << myMedium.protocol() << endl;
 
       SdpContents c2sdp;
