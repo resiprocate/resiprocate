@@ -64,7 +64,7 @@ namespace resip
    defineParam(permission, "permission", DataParameter, "RFC 2046");
    defineParam(protocol, "protocol", DataParameter, "RFC 1847");
    defineParam(purpose, "purpose", DataParameter, "RFC ????");
-   defineParam(q, "q", FloatParameter, "RFC ????");
+   defineParam(q, "q", FloatParameter, "RFC 3261");
    defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
    defineParam(reason, "reason", DataParameter, "RFC ????");
    defineParam(received, "received", DataParameter, "RFC ????");
