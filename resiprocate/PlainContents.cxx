@@ -59,7 +59,7 @@ PlainContents::clone() const
 }
 
 const Mime& 
-PlainContents::getStaticType() const
+PlainContents::getStaticType() 
 {
    static Mime type("text","plain");
    return type;
