@@ -294,8 +294,6 @@ Dialog::makeSubscribe()
    return request;
 }
 
-// create a BYE message, depending on whether the UA was the
-// originator of the dialog
 SipMessage*
 Dialog::makeBye()
 {
