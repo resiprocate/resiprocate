@@ -11,7 +11,7 @@ turn on RTTI (Real time type Information)
 
 Set the compiler heap to 300 megs (/Zm300)
 
-add the path where sip2 lives to the include path 
+add the path where sip2 lives to the include path - generally (../..)
 
 add Ws2_32.lib to link libraries
 
