@@ -238,13 +238,17 @@ TcpTransport::processAllWrites( FdSet& fdset )
             }
             else
             {
-               // !rk! Even though a TCP stack may get a TCP RST that
-               // does not necessarily indicate an error condition.  It
-               // may indicate a transient error and the OS will likely
-               // retry rather than returning right away.  While this is
-               // good, most timeout defaults will exceed SIP timeouts
-               // which mean that another protocol (e.g. UDP) will never
-               // be tried.  So wait for a while but give up pretty quickly.
+               // !rk! Since we made the connect(2) non-blocking we
+               // need to hang out until it succeeds or "times out".  This
+               // is still crap because it blocks the stack so we should
+               // add the fds to the fdset and process when ready.
+               //
+               // connect(2) must be non-blocking because a TCP RST may
+               // not interrupt a blocking connect and you could end up
+               // waiting for a TCP timeout (e.g. 120s) which is likely
+               // longer than a SIP timeout.  The consequence of this is
+               // that you might not try other suitable transports after
+               // TCP fails.
 
                fd_set rset, wset;
                FD_ZERO(&rset);
