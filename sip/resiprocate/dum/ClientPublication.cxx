@@ -36,6 +36,7 @@ ClientPublication::~ClientPublication()
 {
    DebugLog( << "ClientPublication::~ClientPublication: " << mId);   
    mDialogSet.mClientPublication = 0;
+   delete mDocument;
 }
 
 SipMessage& 
@@ -142,6 +143,7 @@ void
 ClientPublication::update(const Contents* body)
 {
    assert(body);
+   delete mDocument;
    mDocument = body;
    
    mPublish.header(h_CSeq).sequence()++;
