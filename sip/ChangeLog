@@ -1,3 +1,9 @@
+2003-08-14  Wensong Zhang  <wensong@purplecomm.com>
+
+	* Makefile.am (rpms): added "make rpms" to build RPM packages.
+
+	* resip.spec.in: added the RPM spec file to build RPM packages.
+
 2003-08-09  Wensong Zhang  <wensong@purplecomm.com>
 
 	* README: added some description how to build and install the
@@ -8,7 +14,7 @@
 
 	* configure.in: recovered for the original configure system, and
 	moved the new configure.in to configure.ac.
-	
+
 2003-08-08  Wensong Zhang  <wensong@purplecomm.com>
 
 	* acinclude.m4: fixed not to add -I/usr/include into CPPFLAGS and
