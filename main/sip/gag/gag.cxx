@@ -26,9 +26,9 @@ int
 main (int argc, char **argv)
 {
   // Defaults (override with commandline options)
-  int tcpPort = 5060;
-  int udpPort = 5060;
-  int tlsTcpPort = 5061;
+  int tcpPort = 8060;
+  int udpPort = 8060;
+  int tlsTcpPort = 8061;
   bool tlsServer = false;
 
   Log::initialize(Log::FILE, Log::DEBUG, argv[0]);
