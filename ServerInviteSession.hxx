@@ -21,6 +21,20 @@ class ServerInviteSession: public InviteSession
             Handle(DialogUsageManager& dum);
       };
 
+      /// Moves the state of the call to connected and sends a 200
+      void accept();
+      
+      /// Sends an provisional response (a 1xx but not 100). This may contain an
+      /// offer or answer depending on if setOffer or setAnswer was called
+      /// before this.
+      void provisional(int statusCode);
+      
+      /// Rejects an INVITE with a response like 3xx,4xx,5xx, or 6xx. 
+      void reject(int statusCode);
+
+
+      // Inherited methods follow
+      //////////////////////////////////////////////////////////////////////
       /// Called to set the offer that will be used in the next messages that
       /// sends and offer. Does not send an offer 
       virtual void setOffer(const SdpContents* offer);
@@ -43,18 +57,7 @@ class ServerInviteSession: public InviteSession
 
       /// Rejects an offer at the SIP level. So this can send a 487 to a
       /// reINVITE or and UPDATE
-      virtual void rejectOffer(int statusCode);
-
-      /// Moves the state of the call to connected and sends a 200
-      void accept();
-      
-      /// Sends an provisional response (a 1xx but not 100). This may contain an
-      /// offer or answer depending on if setOffer or setAnswer was called
-      /// before this.
-      void provisional(int statusCode);
-      
-      /// Rejects an INVITE with a response like 3xx,4xx,5xx, or 6xx. 
-      void reject(int statusCode);
+      virtual SipMessage& rejectOffer(int statusCode);
       
       void handle(const SipMessage& msg);
 
@@ -69,9 +72,7 @@ class ServerInviteSession: public InviteSession
       friend class DialogUsageManager;
       ServerInviteSession::Handle mHandle;
       
-      ServerInviteSession(DialogUsageManager& dum, 
-                          Dialog& dialog,
-                          const SipMessage& msg);
+      ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 
       // disabled
       ServerInviteSession(const ServerInviteSession&);
