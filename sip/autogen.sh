@@ -14,21 +14,20 @@ if [ $irep -lt 10705 ]; then
     aclocal --version
     exit 1
 fi
-echo +++ Running libtoolize && \
-libtoolize --force --copy && \
 echo +++ Running aclocal && \
 aclocal && \
 echo +++ Running autoheader && \
 autoheader && \
 echo +++ Running automake  && \
-automake  --add-missing && \
+automake  --foreign --copy --add-missing && \
 echo +++ Running autoconf  && \
 autoconf  && \
 echo +++ Configuring and building ares.  && \
-(cd contrib/ares ; ./configure && make)   && \
-echo +++ Running autoreconf again...  && \
-autoreconf  
-export PATH=/usr/local/bin:$PATH
-mkdir build
+(cd contrib/ares ; ./configure && make) 
+
+[ -d /usr/local/bin ] && export PATH=/usr/local/bin:$PATH
+
 echo +++ Manually run : ../configure -C --enable-ipv6
 echo +++ From the build subdirectory.
+echo +++ If need be, make your compilation directory now.
+echo "+++ Typically use 'mkdir proj' or 'mkdir compile'"
