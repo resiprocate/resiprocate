@@ -40,7 +40,7 @@ main(int argc, char** argv)
    /* Initialize a proxy */
    RequestProcessorChain requestProcessors;
 
-   RequestProcessorChain* locators = newRequestProcessorChain();
+   RequestProcessorChain* locators = new RequestProcessorChain();
 
    RouteProcessor* rp = new RouteProcessor();
    locators.addProcessor(std::auto_ptr<RequestProcessor>(rp));

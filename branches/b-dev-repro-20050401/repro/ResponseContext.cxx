@@ -5,6 +5,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/Helper.hxx"
+#include "repro/Proxy.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
 
@@ -23,7 +24,8 @@ ResponseContext::ResponseContext(RequestContext& context) :
 void 
 ResponseContext::sendRequest(const resip::SipMessage& request)
 {
-   assert(0);
+   assert (request.isRequest());
+   mRequestContext.mProxy.send(request);
 }
 
 void
