@@ -1,4 +1,7 @@
 
+#include "util/Socket.hxx"
+
+
 #include "sipstack/SipStack.hxx"
 #include "sipstack/Executive.hxx"
 #include "sipstack/SipMessage.hxx"
