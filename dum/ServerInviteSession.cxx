@@ -10,11 +10,13 @@
 
 using namespace resip;
 
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
 ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
    : InviteSession(dum, dialog, Initial)
 {
    assert(request.isRequest());
-   mLastRequest = request;
+   mLastRequest = request;   
 }
 
 ServerInviteSessionHandle 
@@ -26,6 +28,7 @@ ServerInviteSession::getHandle()
 SipMessage&
 ServerInviteSession::end()
 {
+   InfoLog ( << "ServerInviteSession::end" );  
    switch (mState)
    {
       case Accepting:
@@ -41,6 +44,12 @@ ServerInviteSession::end()
 void 
 ServerInviteSession::send(SipMessage& msg)
 {
+   if (mState == Accepting || mState == Connected || mState == Terminated)
+   {
+      InviteSession::send(msg);
+      return;
+   }
+
    //!dcm! -- not considering prack, so offer/answer only happens in 2xx
    if(msg.isResponse())
    {
@@ -97,8 +106,6 @@ ServerInviteSession::accept()
    return mFinalResponse;
 }
 
-
-
 void 
 ServerInviteSession::dispatch(const SipMessage& msg)
 {
@@ -117,7 +124,8 @@ ServerInviteSession::dispatch(const SipMessage& msg)
             {
                InviteSession::incomingSdp(msg, offans.second);
             }
-            break;
+            mLastRequest.releaseContents();  //!dcm! -- not sure, but seems right
+            break;            
          case Proceeding:
             // !jf! consider UPDATE method
             if (msg.header(h_RequestLine).method() == CANCEL)
@@ -138,7 +146,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
    }
    else
    {
-      assert(0); //!dcm! -- throw, toss away, inform other endpoint?
+      InviteSession::dispatch(msg);
    }
 }
 
