@@ -9,7 +9,6 @@ namespace resip
 {
 
 class Connection;
-class Data;
 class Message;
 class Security;
 
