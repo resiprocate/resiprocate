@@ -24,10 +24,10 @@ Log::Type Log::_type = COUT;
 Data Log::_appName;
 Data Log::_hostname;
 
-#ifndef WIN32
-pid_t Log::_pid=0;
-#else
-int Log::_pid=0;
+#ifdef WIN32
+	int Log::_pid=0;
+#else 
+	pid_t Log::_pid=0;
 #endif
 
 const char
@@ -43,17 +43,13 @@ Log::initialize(Type type, Level level, const Data& appName)
    _type = type;
    _level = level;
    _appName = copy.substr(copy.find_last_of("/")+1);
-   
  
-#ifdef WIN32 
-   // TODO FIX  
-  assert(0); 
-  _hostname = "Unkown"; 
-  _pid = 0;
-#else  
   char buffer[1024];  
   gethostname(buffer, sizeof(buffer));
    _hostname = buffer;
+#ifdef WIN32 
+   _pid = (int)GetCurrentProcess;;
+#else
    _pid = getpid();
 #endif
 
