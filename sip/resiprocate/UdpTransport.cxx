@@ -205,7 +205,7 @@ UdpTransport::process(fd_set* fdSet)
    else if (len > 0)
    {
 	   // TODO - the next line is really really gross
-      unsigned long len = static_cast<unsigned long>(len);
+      //unsigned long len = static_cast<unsigned long>(len);
       
       if (len == MaxBufferSize)
       {
