@@ -20,12 +20,14 @@ class Pkcs7Contents : public Contents
 
       virtual Contents* clone() const;
 
+      virtual Data getBodyData() const;
+
       virtual const Mime& getStaticType() const;
 
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
 
-      Data& text() {checkParsed(); return mText;}
+      //Data& text() {checkParsed(); return mText;}
       
    private:
       static ContentsFactory<Pkcs7Contents> Factory;
