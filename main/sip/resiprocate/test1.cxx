@@ -46,9 +46,6 @@ main(int argc, char* argv[])
    NameAddr from = dest;
    from.uri().port() = 5070;
    
-   
-   struct timeval tv;
-   
    for (int i=0; i<runs; i++)
    {
       auto_ptr<SipMessage> message = auto_ptr<SipMessage>(Helper::makeInvite( dest, from, from));
@@ -60,41 +57,35 @@ main(int argc, char* argv[])
       message->header(h_Vias).front().sentHost() = udp->hostname();
       message->header(h_Vias).front().sentPort() = udp->port();
 
-      Data* encoded = new Data(2048, true);
-      DataStream strm(*encoded);
+      Data encoded(2048);
+      DataStream strm(encoded);
       message->encode(strm);
       strm.flush();
-      udp->send(resolver.mCurrent->ipv4, encoded);
+      udp->send(*resolver.mCurrent, encoded, "foo");
       
-      fd_set fdSet; 
-      int fdSetSize=0;
-      FD_ZERO(&fdSet); 
-      udp->buildFdSet(&fdSet, &fdSetSize);
+      FdSet fdset; 
+      udp->buildFdSet(fdset);
       
-      tv.tv_sec=0;
-      tv.tv_usec= 5000;
-      
-      int  err = select(fdSetSize, &fdSet, NULL, NULL, &tv);
-      int e = errno;
-      if ( err == -1 )
-      {
-         InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
-      }
+      int  err = fdset.select(5000);
+      assert ( err != -1 );
 
-      udp->process(&fdSet);
+      udp->process(fdset);
 
       if (received.messageAvailable())
       {
-         SipMessage* next = dynamic_cast<SipMessage*>(received.getNext());
-         DebugLog (<< "got: " << next->brief());
-         assert (next->header(h_RequestLine).uri().host() == "localhost");
-         assert (next->header(h_To).uri().host() == "localhost");
-         assert (next->header(h_From).uri().host() == "localhost");
-         assert (!next->header(h_Vias).begin()->sentHost().empty());
-         assert (next->header(h_Contacts).begin()->uri().host() == "localhost");
-         assert (!next->header(h_CallId).value().empty());
-         
-         delete next;
+         Message* msg = received.getNext();
+         SipMessage* next = dynamic_cast<SipMessage*>(msg);
+         if (next)
+         {
+            DebugLog (<< "got: " << next->brief());
+            assert (next->header(h_RequestLine).uri().host() == "localhost");
+            assert (next->header(h_To).uri().host() == "localhost");
+            assert (next->header(h_From).uri().host() == "localhost");
+            assert (!next->header(h_Vias).begin()->sentHost().empty());
+            assert (next->header(h_Contacts).begin()->uri().host() == "localhost");
+            assert (!next->header(h_CallId).value().empty());
+         }
+         delete msg;
       }
    }
    delete udp;
