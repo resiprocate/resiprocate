@@ -2,7 +2,9 @@
 #define TlsConnection_hxx
 
 #include "resiprocate/Connection.hxx"
+#ifdef USE_SSL
 #include <openssl/ssl.h>
+#endif
 
 namespace resip
 {
@@ -23,8 +25,10 @@ class TlsConnection : public Connection
       Data peerName();
       
    private:
+#if USE_SSL
       SSL* ssl;
       BIO* bio;
+#endif
 };
  
 }

@@ -149,10 +149,12 @@ class DnsResult
                                            int alen,
                                            SRV& srv);
 
+#ifdef USE_IPV6
       static const unsigned char* parseAAAA(const unsigned char *aptr,
                                            const unsigned char *abuf, 
                                            int alen,
                                            in6_addr * aaaa);
+#endif
 
       static const unsigned char* parseNAPTR(const unsigned char *aptr,
                                              const unsigned char *abuf, 
@@ -185,11 +187,15 @@ class DnsResult
       std::set<SRV> mSRVResults;
 
       // All cached A records associated with this query/queries
-      std::map<Data,std::list<struct in_addr> > mARecords;
+	  typedef std::list<struct in_addr> InAddrList;
+      std::map<Data,InAddrList > mARecords;
 
+#ifdef USE_IPV6
       // All cached AAAA records associated with this query/queries
-      std::map<Data,std::list<struct in6_addr> > mAAAARecords;
-      
+	  typedef std::list<struct in6_addr> InAddr6List;
+      std::map<Data,InAddr6List> mAAAARecords;
+#endif
+
       friend class DnsInterface;
       friend std::ostream& operator<<(std::ostream& strm, const DnsResult&);
       friend std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
