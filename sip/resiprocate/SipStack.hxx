@@ -48,11 +48,11 @@ class SipStack
 
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
-      void addAlias(const Data& domain);
+      void addAlias(const Data& domain, int port=5060);
       
       // return true if domain is handled by this stack. convenience for
       // Transaction Users. 
-      bool isMyDomain(const Data& domain) const;
+      bool isMyDomain(const Data& domain, int port=5060) const;
       
       // get one of the names for this host (calls through to gethostbyname) and
       // is not threadsafe
