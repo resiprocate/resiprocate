@@ -47,6 +47,7 @@ const char *  stateName(PreparseStateTable::State s)
       case BuildData: return "BuildData";
       case BuildDataCrLf: return "BuildDataCrLf";
       case CheckCont: return "CheckCont";
+      case CheckEndHdr: return "CheckEndHdr";
       case InQ: return "InQ";
       case InQEsc: return "InQEsc";
       case InAng: return "InAng";
@@ -57,42 +58,7 @@ const char *  stateName(PreparseStateTable::State s)
    }
 }
 
-//ostream& operator<<(ostream& os, const PreparseStateTable::State s)
-//{
-//   return os << stateName(s);
-//}
-#if 0
-ostream& outStateRange(ostream& os, int s, int e)
-{
-   if ( s == e-1)
-   {
-      os << (State)s;
-   }
-   else
-   {
-      os << "[ " << (State)s << " - " << (State)(e-1) << " ]";
-   }
-   return os ;
-}
 
-//ostream& outStateRange(ostream& os, int s , int e)
-//{
-//   return os << '['<<s<<'-'<<e<<']';
-//}
-#if 0
-ostream& printable(ostream& os, char c)
-{
-   if (isprint(c) && ! isspace(c))
-   {
-      os << '\'' << c << "\' ";
-   }
-
-   os <<  "0x"<< ios::hex << (int)c << dec;
-   return os;
-   
-}
-#endif
-#endif
 Data
 workString(int m)
 {
@@ -110,39 +76,6 @@ workString(int m)
    s += ']';
    return s;
 }
-
-void
-showEdge(const char*msg, State s, Disposition d, char c, Edge& e)
-{
-}
-
-#if 0
-   cout << msg;
-   cout << stateName(s);
-   cout << hex << " (" << (int) c << ')';
-   cout << " -> " << stateName(e.nextState);
-   showWork(cout, e.workMask);
-#endif
-
-#if 0
-ostream& outCharRange(ostream& os, int s, int e)
-{
-   if ( s == e-1)
-   {
-      printable(os,s);
-   }
-   else
-   {
-      os << "[ ";
-      printable(os, s) ;
-      os << " - " ;
-      printable(os, e-1);
-      os << " ]";
-   }
-   return os;
-
-}
-#endif
 
 const int X = -1;
 const char XC = -1;
@@ -164,15 +97,6 @@ AE ( PreparseStateTable::State start,
    int charStart = (c==X) ? 0 : (int)c;
    int charEnd = (c==X) ? nOct : (int)(c+1);
 
-#if defined(DEBUG) && 0
-   outStateRange(cout, stateStart, stateEnd) ;
-   cout   << " -> "
-          << stateName(next)
-          << " : ";
-   outCharRange(cout, charStart, charEnd);
-   cout << endl;
-#endif
-   
    for(int st = stateStart ; st < stateEnd ; st++)
       for(int di = dispStart ; di < dispEnd ; di++)
 	 for(int ch = charStart ; ch < charEnd ; ch++)
@@ -266,11 +190,10 @@ PreparseStateTable::InitStatePreparseStateTable()
 
    // (push 1st then b/u)
    AE( CheckCont,X,XC, BuildHdr,actData|actReset|actBack );
-
    AE( CheckCont,X,LWS,BuildData,actAdd );
    
    // Check if double CRLF (end of hdrs)
-   AE( CheckCont,X,CR,CheckEndHdr,actData|actReset|actBack);
+   AE( CheckCont,X,CR,CheckEndHdr,actData|actReset);
    AE( CheckEndHdr,X,XC,Done,actBad);
    AE( CheckEndHdr,X,LF,Done,actEndHdrs);
 
@@ -374,9 +297,9 @@ Preparse::process()
       //using namespace PreparseStateTable;
       Edge& e(mTransitionTable[mState][mDisposition][*mPtr]);
 
-#if defined(DEBUG)
+#if defined(DEBUG) // || 1
       DebugLog( << "EDGE " << ::stateName(mState)
-                << " (0x" << (int) *mPtr << ')'
+                << " (" << (int) *mPtr << ')'
                 << " -> " << ::stateName(e.nextState)
                 << ::workString(e.workMask) );
 #endif      
