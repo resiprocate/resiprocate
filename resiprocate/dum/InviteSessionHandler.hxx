@@ -38,7 +38,7 @@ class InviteSessionHandler
       virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)=0;
 
       // called to allow app to adorn a message. default is to send immediately
-      virtual void onReadyToSend(InviteSessionHandle, const SipMessage& msg);
+      virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg);
 
       /** called when an SDP answer is received - has nothing to do with user
           answering the call */ 
@@ -61,6 +61,9 @@ class InviteSessionHandler
 
       /// called when an REFER messages is received 
       virtual void onRefer(InviteSessionHandle, const SipMessage& msg)=0;
+
+      virtual void onReInvite(InviteSessionHandle, const SipMessage& msg);
+
 };
 
 }

@@ -38,6 +38,7 @@ class Client : public ClientRegistrationHandler
          sleep(5);
 #endif
           InfoLog( << "Client::Success: " << endl << response );
+          ClientRegistration* foo = h.get();          
           h->removeAll();
           done = true;
       }
@@ -102,7 +103,7 @@ main (int argc, char** argv)
 
    profile.addDigestCredential( "sip.jasomi.com", "502", "resiprocate" );
 
-   SipMessage & regMessage = clientDum.makeRegistration(new RegisterAppDialogSet(clientDum), aor);
+   SipMessage & regMessage = clientDum.makeRegistration(aor, new RegisterAppDialogSet(clientDum));
 
    InfoLog( << regMessage << "Generated register: " << endl << regMessage );
    clientDum.send( regMessage );
