@@ -13,7 +13,9 @@ extern "C"
 #endif
 
 #if !defined(WIN32)
+#if !defined(__CYGWIN__)
 #include <arpa/nameser.h>
+#endif
 #endif
 
 using namespace resip;
