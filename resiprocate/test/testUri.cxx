@@ -17,7 +17,19 @@ int
 main(int argc, char* argv[])
 {
    Log::Level l = Log::DEBUG;
-   Log::initialize(Log::COUT, l, argv[0]);
+   Log::initialize(Log::CERR, l, argv[0]);
+
+   {
+      // Test order irrelevance of known parameters
+      Uri sip1("sip:user@domain;ttl=15;method=foo");
+      Uri sip2("sip:user@domain;method=foo;ttl=15");
+
+      cerr << "!!" << sip1.host() << endl;
+      cerr << "!!" << sip2.host() << endl;
+
+      assert (sip1 == sip2);
+      assert (sip2 == sip1);
+   }
    
    {
       cerr << "!! " << DnsUtil::canonicalizeIpV6Address("FEDC:BA98:7654:3210:FEDC:BA98:7654:3210") << endl;
@@ -339,12 +351,118 @@ main(int argc, char* argv[])
 
      assert( encoded == original );
    }
+
    {
       // Test order irrelevance of unknown parameters
       Uri sip1("sip:user@domain;foo=bar;baz=qux");
       Uri sip2("sip:user@domain;baz=qux;foo=bar");
       assert (sip1 == sip2);
+      assert (sip2 == sip1);
    }
+
+   {
+      // Test order irrelevance of known parameters
+      Uri sip1("sip:user@domain;ttl=15;method=foo");
+      Uri sip2("sip:user@domain;method=foo;ttl=15");
+
+      assert (sip1 == sip2);
+      assert (sip2 == sip1);
+   }
+   
+
+   // tests from 3261 19.1.4
+   {
+      Uri sip1("sip:alice@atlanta.com;transport=TCP");
+      Uri sip2("sip:alice@AtLanTa.CoM;Transport=tcp");
+
+      assert(sip1 == sip2);
+      assert(sip2 == sip1);
+   }
+
+   {
+      Uri sip1("sip:carol@chicago.com");
+      Uri sip2("sip:carol@chicago.com;newparam=5");
+      Uri sip3("sip:carol@chicago.com;security=on");
+
+      assert(sip1 == sip2);
+      assert(sip2 == sip1);
+      assert(sip2 == sip3);
+      assert(sip3 == sip2);
+      assert(sip3 == sip1);
+      assert(sip1 == sip3);
+   }
+
+   {
+      Uri sip1("sip:biloxi.com;transport=tcp;method=REGISTER?to=sip:bob%40biloxi.com");
+      Uri sip2("sip:biloxi.com;method=REGISTER;transport=tcp?to=sip:bob%40biloxi.com");
+
+      assert(sip1 == sip2);
+      assert(sip2 == sip1);
+   }
+
+  {
+     Uri sip1("sip:alice@atlanta.com?subject=project%20x&priority=urgent");
+     Uri sip2("sip:alice@atlanta.com?priority=urgent&subject=project%20x");
+
+     assert(sip1 == sip2);
+     assert(sip2 == sip1);
+  }
+
+  {
+     Uri sip1("SIP:ALICE@AtLanTa.CoM;Transport=udp"); // (different usernames)
+     Uri sip2("sip:alice@AtLanTa.CoM;Transport=UDP");
+
+     assert(sip1 != sip2);
+  }
+
+  {
+     Uri sip1("sip:bob@biloxi.com"); // (can resolve to different ports)
+     Uri sip2("sip:bob@biloxi.com:5060");
+
+     assert(sip1 != sip2);
+  }     
+
+  {
+     Uri sip1("sip:bob@biloxi.com"); // (can resolve to different transports)
+     Uri sip2("sip:bob@biloxi.com;transport=udp");
+
+     assert(sip1 != sip2);
+  }     
+
+  {
+     Uri sip1("sip:bob@biloxi.com"); // (can resolve to different port and transports)
+     Uri sip2("sip:bob@biloxi.com:6000;transport=tcp");
+
+     assert(sip1 != sip2);
+  }     
+
+  // !dlb! we ignore embedded headers at the moment
+  if (false)
+  {
+     Uri sip1("sip:carol@chicago.com"); // (different header component)
+     Uri sip2("sip:carol@chicago.com?Subject=next%20meeting");
+
+     assert(sip1 != sip2);
+  }     
+
+  {
+     Uri sip1("sip:bob@phone21.boxesbybob.com"); // (even though that's what phone21.boxesbybob.com resolves to)
+     Uri sip2("sip:bob@192.0.2.4");  
+
+     assert(sip1 != sip2);
+  }
+
+  {
+    Uri sip1("sip:carol@chicago.com");
+    Uri sip2("sip:carol@chicago.com;security=on");
+    Uri sip3("sip:carol@chicago.com;security=off");
+
+    assert(sip1 == sip2);
+    assert(sip1 == sip3);
+    assert(sip2 != sip3);
+    assert(sip3 != sip2);
+  }
+
    cerr << endl << "All OK" << endl;
    return 0;
 }
