@@ -179,6 +179,7 @@ DnsUtil::isIpV4Address(const Data& ipAddress)
    }
 }
 
+// RFC 1884
 bool 
 DnsUtil::isIpV6Address(const Data& ipAddress)
 {
@@ -218,10 +219,17 @@ DnsUtil::isIpV6Address(const Data& ipAddress)
    }
 }
 
-void
-DnsUtil::canonicalizeIpV6Address(Data& ipV6Address)
+Data
+DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
 {
-   // !dlb! implement me
+   struct in6_addr dst;
+   int res = DnsUtil::inet_pton(ipV6Address, dst);
+   if (res <= 0)
+   {
+      WarningLog(<< ipV6Address << " not well formed IPV6 address");
+      assert(0);
+   }
+   return DnsUtil::inet_ntop(dst);
 }
 
 bool 
