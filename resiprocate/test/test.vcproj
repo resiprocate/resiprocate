@@ -34,7 +34,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib C:\sip\resiprocate\Debug\sipstack.lib C:\sip\contrib\ares\Debug\ares.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib C:\sip\resiprocate\Debug\sipstack.lib C:\sip\contrib\ares\Debug\ares.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -118,9 +118,6 @@
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
-			<File
-				RelativePath="test.rc">
-			</File>
 		</Filter>
 		<File
 			RelativePath="ReadMe.txt">
