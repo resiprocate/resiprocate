@@ -18,7 +18,7 @@ class InviteSession : public DialogUsage
 
       virtual void send(SipMessage& msg);
 
-      //call after setOffer. Will do the right thing w/ respect to an ACK to a
+      //call after setOffer. Will do the right thing w/ respect to an RESIP_ACK to a
       //200, eventually PRACK/UPDATE
       virtual void send();
 
@@ -31,11 +31,11 @@ class InviteSession : public DialogUsage
       virtual void setAnswer(const SdpContents* answer);
 
       /// Makes the dialog end. Depending on the current state, this might
-      /// results in BYE or CANCEL being sent.
+      /// results in RESIP_BYE or CANCEL being sent.
       virtual void end();
 
       /// Rejects an offer at the SIP level. So this can send a 487 !dcm! --
-      /// should be 488? to a reinvite INVITE or an UPDATE
+      /// should be 488? to a reinvite RESIP_INVITE or an UPDATE
       virtual SipMessage& rejectDialogModification(int statusCode);
       
       //accept a re-invite, etc.  Always 200?
@@ -50,7 +50,7 @@ class InviteSession : public DialogUsage
       // established dialogs, in case user approval is required.
       virtual SipMessage& targetRefresh(const NameAddr& localUri);
 
-      //always does re-invite for now...ACK is hidden
+      //always does re-invite for now...RESIP_ACK is hidden
       //call setOffer or setAnswer bfore calling these.
       //calling answerModifySession /wout setAnswer is invalid
       virtual SipMessage& modifySession();

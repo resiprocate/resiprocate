@@ -6,12 +6,12 @@
    handle 302 in message
    handle 302 in subscribe
 
-   sort out how contact is formed 
-   keep track of ourstanding message dialogs 
-   add a publish sending dialogs 
-   send options to register, see if do publish, if so use 
+   sort out how contact is formed
+   keep track of ourstanding message dialogs
+   add a publish sending dialogs
+   send options to register, see if do publish, if so use
 
-   suppport loading destination certificates from server 
+   suppport loading destination certificates from server
 */
 
 #include <cassert>
@@ -47,10 +47,10 @@
 using namespace resip;
 using namespace std;
 
-static int IMMethodList[] = { (int) REGISTER, 
-                              (int) MESSAGE, 
-	                      (int) SUBSCRIBE, 
-                              (int) NOTIFY };
+static int IMMethodList[] = { (int) RESIP_REGISTER,
+                              (int) RESIP_MESSAGE,
+	                          (int) RESIP_SUBSCRIBE,
+                              (int) RESIP_NOTIFY };
 const int IMMethodListSize = sizeof(IMMethodList) / sizeof(*IMMethodList);
 
 
@@ -59,8 +59,8 @@ TuIM::Callback::~Callback()
 }
 
 
-TuIM::TuIM(SipStack* stack, 
-           const Uri& aor, 
+TuIM::TuIM(SipStack* stack,
+           const Uri& aor,
            const Uri& contact,
            Callback* callback,
            const int registrationTimeSeconds,
@@ -81,9 +81,9 @@ TuIM::TuIM(SipStack* stack,
    assert( mStack );
    assert(mCallback);
    assert(mPidf);
-   
-   mPidf->setSimpleId( Random::getRandomHex(4) );  
-   mPidf->setEntity(mAor);  
+
+   mPidf->setSimpleId( Random::getRandomHex(4) );
+   mPidf->setEntity(mAor);
    mPidf->setSimpleStatus( true, Data::Empty, mContact.getAor() );
 }
 
@@ -94,14 +94,14 @@ TuIM::haveCerts( bool sign, const Data& encryptFor )
 #if defined( USE_SSL )
    Security* sec = mStack->getSecurity();
    assert(sec);
-   
+
    if ( sign )
-   {    
+   {
       if ( !sec->haveCert() )
       {
          return false;
       }
-   } 
+   }
    if ( !encryptFor.empty() )
    {
       if ( !sec->havePublicKey( encryptFor ) )
@@ -119,8 +119,8 @@ TuIM::haveCerts( bool sign, const Data& encryptFor )
 }
 
 
-void 
-TuIM::sendPage(const Data& text, const Uri& dest, 
+void
+TuIM::sendPage(const Data& text, const Uri& dest,
                     const bool sign, const Data& encryptFor)
 {
    if ( text.empty() )
@@ -132,7 +132,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
 
    NameAddr target;
    target.uri() = dest;
-   
+
    NameAddr from;
    from.uri() = mAor;
 
@@ -140,18 +140,18 @@ TuIM::sendPage(const Data& text, const Uri& dest,
    contact.uri() = mContact;
 
    Dialog* dialog = new Dialog( NameAddr(mContact) );
- 
+
    auto_ptr<SipMessage> msg( dialog->makeInitialMessage(NameAddr(target),NameAddr(from)) );
- 
+
    Page page;
    page.text = text;
    page.uri = dest;
    page.sign = sign;
    page.encryptFor = encryptFor;
    page.dialog = dialog;
-   
+
    mPages.push_back(page);
-   
+
    Contents* body = ( new PlainContents(text) );
 #if 0
    msg->header(h_ContentTransferEncoding) = StringCategory(Data("binary"));
@@ -162,7 +162,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
    {
       Security* sec = mStack->getSecurity();
       assert(sec);
-      
+
       Contents* old = body;
       old->header(h_ContentTransferEncoding) = msg->header(h_ContentTransferEncoding);
       body = sec->encrypt( old, encryptFor );
@@ -174,7 +174,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
          return;
       }
 
-#if 0      
+#if 0
       msg->header(h_ContentTransferEncoding) = StringCategory(Data("binary"));
 #endif
    }
@@ -183,7 +183,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
    {
       Security* sec = mStack->getSecurity();
       assert(sec);
-    
+
       Contents* old = body;
       old->header(h_ContentTransferEncoding) = msg->header(h_ContentTransferEncoding);
       body = sec->sign( old );
@@ -206,43 +206,43 @@ TuIM::sendPage(const Data& text, const Uri& dest,
 #if 1
    {
       // Compute the identity header.
-      
+
       DateCategory now;
       msg->header(h_Date) = now;
-      
+
       Data token;
       DataStream strm(token);
-      
+
       strm << msg->header(h_From).uri();
       strm << Symbols::COLON;
-      
+
       msg->header(h_CallId).value();
       strm << Symbols::COLON;
-      
+
       msg->header(h_Date).encodeParsed( strm );
       strm << Symbols::COLON;
-      
+
       msg->header(h_Contacts).front().uri();
       strm << Symbols::COLON;
-      
+
       // TODO FIX - next line asserts in some cases
       strm << *body;
       strm.flush();
-      
+
       // CerrLog( << "token is " << token );
-      
+
       Security* sec = mStack->getSecurity();
       assert(sec);
-      
+
       Data res = sec->computeIdentity( token );
 
       msg->header(UnknownHeaderType("Identity")).push_back( StringCategory( res ) );
    }
 #endif
-   
+
    setOutbound( *msg );
    //ErrLog( "About to send " << *msg );
-   
+
    mStack->send( *msg );
 
    delete body;
@@ -252,36 +252,36 @@ TuIM::sendPage(const Data& text, const Uri& dest,
 void
 TuIM::processRequest(SipMessage* msg)
 {
-   if ( msg->header(h_RequestLine).getMethod() == MESSAGE )
+   if ( msg->header(h_RequestLine).getMethod() == RESIP_MESSAGE )
    {
       processMessageRequest(msg);
       return;
    }
-   if ( msg->header(h_RequestLine).getMethod() == SUBSCRIBE )
+   if ( msg->header(h_RequestLine).getMethod() == RESIP_SUBSCRIBE )
    {
       processSubscribeRequest(msg);
       return;
    }
-   if ( msg->header(h_RequestLine).getMethod() == REGISTER )
+   if ( msg->header(h_RequestLine).getMethod() == RESIP_REGISTER )
    {
       processRegisterRequest(msg);
       return;
    }
-   if ( msg->header(h_RequestLine).getMethod() == NOTIFY )
+   if ( msg->header(h_RequestLine).getMethod() == RESIP_NOTIFY )
    {
       processNotifyRequest(msg);
       return;
    }
 
    InfoLog(<< "Don't support this METHOD, send 405" );
-   
-   SipMessage * resp = Helper::make405( *msg, IMMethodList, IMMethodListSize ); 
-   mStack->send(*resp); 
+
+   SipMessage * resp = Helper::make405( *msg, IMMethodList, IMMethodListSize );
+   mStack->send(*resp);
    delete resp;
 }
 
 
-void 
+void
 TuIM::processSipFrag(SipMessage* msg)
 {
    Contents* contents = msg->getContents();
@@ -306,14 +306,14 @@ TuIM::processSipFrag(SipMessage* msg)
    {
       Security* sec = mStack->getSecurity();
       assert(sec);
-      
+
       contents = sec->uncodeSigned( mBody, &signedBy, &sigStat );
-      
+
       if ( !contents )
-      { 
+      {
          InfoLog( << "Some problem decoding multipart/signed message");
          return;
-      } 
+      }
 
       InfoLog( << "Signed by " << signedBy << " stat = " << sigStat );
    }
@@ -327,27 +327,27 @@ TuIM::processSipFrag(SipMessage* msg)
          InfoLog( << "Got a multipart mixed" );
 
          contents = NULL;
-         
+
          MultipartMixedContents::Parts& parts = mixed->parts();
-         for( MultipartMixedContents::Parts::const_iterator i = parts.begin(); 
-              i != parts.end();  
+         for( MultipartMixedContents::Parts::const_iterator i = parts.begin();
+              i != parts.end();
               ++i)
          {
-            Contents* c = *i;  
+            Contents* c = *i;
             assert( c );
             InfoLog ( << "mixed has a " << c->getType() );
 
             if ( c->getType() == Mime("application","sipfrag") )
             {
                InfoLog ( << "mixed has sipfrag " << c->getType() );
-           
+
                SipFrag* frag = dynamic_cast<SipFrag*>(c);
                if ( frag )
                {
                   InfoLog( << "Got a sipFrag inside mixed" );
-                  
+
                   SipMessage& m = frag->message();
-                  
+
                   InfoLog( <<"Frag is " << m );
                }
              }
@@ -363,7 +363,7 @@ TuIM::processSipFrag(SipMessage* msg)
          InfoLog( << "Got a sipFrag" );
 
          SipMessage& m = frag->message();
-         
+
          InfoLog( <<"Frag is " << m );
       }
       else
@@ -376,14 +376,14 @@ TuIM::processSipFrag(SipMessage* msg)
 }
 
 
-void 
+void
 TuIM::processSubscribeRequest(SipMessage* msg)
 {
-   assert( msg->header(h_RequestLine).getMethod() == SUBSCRIBE );
+   assert( msg->header(h_RequestLine).getMethod() == RESIP_SUBSCRIBE );
    CallId id = msg->header(h_CallId);
-   
+
    processSipFrag( msg );
-   
+
    int expires=mSubscriptionTimeSeconds;
    if ( msg->exists(h_Expires) )
    {
@@ -393,7 +393,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    {
       expires = mSubscriptionTimeSeconds;
    }
-   
+
    Dialog* dialog = NULL;
 
    // see if we already have this subscription
@@ -401,48 +401,48 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    {
       Dialog* d = i->dialog;
       assert( d );
-      
+
       if ( d->getCallId() == id )
       {
-         // found the subscrition in list of current subscrbtions 
+         // found the subscrition in list of current subscrbtions
          dialog = d;
          break;
       }
    }
-   
+
    if ( !dialog )
    {
-      // create a new subscriber 
+      // create a new subscriber
       DebugLog ( << "Creating new subscrition dialog ");
 
       Subscriber s;
-      
+
       s.dialog = new Dialog( NameAddr(mContact) );
       dialog = s.dialog;
-      
+
       Uri from = msg->header(h_From).uri();
       s.aor = from.getAorNoPort();
 
       assert( mCallback );
       s.authorized = mCallback->authorizeSubscription( from );
-      
+
       mSubscribers.push_back( s );
    }
 
    assert( dialog );
    dialog->setExpirySeconds( expires );
-   
+
    auto_ptr<SipMessage> response( dialog->makeResponse( *msg, 200 ));
- 
+
    response->header(h_Expires).value() = expires;
    response->header(h_Event).value() = Data("presence");
-   
+
    mStack->send( *response );
 
    sendNotify( dialog );
 
 #if 1
-   // do symetric subscriptions 
+   // do symetric subscriptions
    // See if this person is our buddy list and if we are not subscribed to them
 
     UInt64 now = Timer::getTimeMs();
@@ -451,7 +451,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
     for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
     {
        Data buddyAor = i->uri.getAor();
-       
+
        if ( ! (i->presDialog->isCreated()) )
        {
           if (  from.getAor() == i->uri.getAor() )
@@ -467,30 +467,30 @@ TuIM::processSubscribeRequest(SipMessage* msg)
 }
 
 
-void 
+void
 TuIM::processRegisterRequest(SipMessage* msg)
 {
-   assert( msg->header(h_RequestLine).getMethod() == REGISTER );
+   assert( msg->header(h_RequestLine).getMethod() == RESIP_REGISTER );
    CallId id = msg->header(h_CallId);
 
    int expires = msg->header(h_Expires).value();
-   if ( expires == 0 ) 
-   { 
+   if ( expires == 0 )
+   {
       expires = 3600;
-   } 
+   }
 
    SipMessage* response = Helper::makeResponse( *msg, 200 );
 
    // the Contacts from the default Helper are wrong for a Registration
    response->remove(h_Contacts);
-   
+
    if ( msg->exists(h_Contacts) )
    {
       ParserContainer<NameAddr> &providedContacts(msg->header(h_Contacts));
 
       int multipleContacts = providedContacts.size();
 
-      DebugLog ( << multipleContacts << " contacts were in received message." );   
+      DebugLog ( << multipleContacts << " contacts were in received message." );
 
       ParserContainer<NameAddr>::iterator i(providedContacts.begin());
       for ( ; i != providedContacts.end() ; ++ i) {
@@ -509,7 +509,7 @@ TuIM::processRegisterRequest(SipMessage* msg)
          response->header(h_Contacts).push_back(*i);   // copy each Contact into response
       }
    }
-   // else the REGISTER is a query, just send the message with no Contacts
+   // else the RESIP_REGISTER is a query, just send the message with no Contacts
 
    mStack->send( *response );
 
@@ -517,11 +517,11 @@ TuIM::processRegisterRequest(SipMessage* msg)
 }
 
 
-void 
+void
 TuIM::processNotifyRequest(SipMessage* msg)
 {
    assert( mCallback );
-   assert( msg->header(h_RequestLine).getMethod() == NOTIFY ); 
+   assert( msg->header(h_RequestLine).getMethod() == RESIP_NOTIFY );
 
    processSipFrag( msg );
 
@@ -534,33 +534,33 @@ TuIM::processNotifyRequest(SipMessage* msg)
    Contents* contents = msg->getContents();
    if ( !contents )
    {
-      InfoLog(<< "Received NOTIFY message event with no contents" );
+      InfoLog(<< "Received RESIP_NOTIFY message event with no contents" );
       mCallback->presenceUpdate( from, true, Data::Empty );
       return;
    }
 
    Mime mime = contents->getType();
-   DebugLog ( << "got  NOTIFY event with body of type  " << mime.type() << "/" << mime.subType() );
-  
+   DebugLog ( << "got  RESIP_NOTIFY event with body of type  " << mime.type() << "/" << mime.subType() );
+
    Pidf* body = dynamic_cast<Pidf*>(contents);
    if ( !body )
    {
-      InfoLog(<< "Received NOTIFY message event with no PIDF contents" );
+      InfoLog(<< "Received RESIP_NOTIFY message event with no PIDF contents" );
       mCallback->presenceUpdate( from, true, Data::Empty );
       return;
    }
- 
+
    Data note;
    bool open = body->getSimpleStatus( &note );
 
    bool changed = true;
 
 
-   // update if found in budy list 
+   // update if found in budy list
    for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
    {
       Uri u = i->uri; // getBuddyUri(i);
-      
+
       if ( u.getAor() == from.getAor() )
       {
 
@@ -569,14 +569,14 @@ TuIM::processNotifyRequest(SipMessage* msg)
          {
             changed = false;
          }
-         
+
          i->status = note;
          i->online = open;
       }
    }
-   
-   InfoLog(<< "Processed NOTIFY message : Presence changed: " << changed );
-   // notify callback 
+
+   InfoLog(<< "Processed RESIP_NOTIFY message : Presence changed: " << changed );
+   // notify callback
    if (changed)
    {
       assert(mCallback);
@@ -585,19 +585,19 @@ TuIM::processNotifyRequest(SipMessage* msg)
 }
 
 
-void 
+void
 TuIM::processMessageRequest(SipMessage* msg)
 {
    assert( msg );
-   assert( msg->header(h_RequestLine).getMethod() == MESSAGE );
-   
-   NameAddr contact; 
+   assert( msg->header(h_RequestLine).getMethod() == RESIP_MESSAGE );
+
+   NameAddr contact;
    contact.uri() = mContact;
-            
+
    SipMessage* response = Helper::makeResponse(*msg, 200, contact, "OK");
    mStack->send( *response );
    delete response; response=0;
-               
+
    Contents* contents = msg->getContents();
    if ( !contents )
    {
@@ -620,21 +620,21 @@ TuIM::processMessageRequest(SipMessage* msg)
    {
       Security* sec = mStack->getSecurity();
       assert(sec);
-      
+
       contents = sec->uncodeSigned( mBody, &signedBy, &sigStat );
-      
+
       //ErrLog("Signed by " << signedBy << " stat = " << sigStat );
-      
+
       if ( !contents )
-      { 
+      {
          Uri from = msg->header(h_From).uri();
          InfoLog( << "Some problem decoding multipart/signed message");
-         
+
          mCallback->receivePageFailed( from );
          return;
-      } 
+      }
    }
-  
+
    Pkcs7SignedContents* sBody = dynamic_cast<Pkcs7SignedContents*>(contents);
    if ( sBody )
    {
@@ -645,10 +645,10 @@ TuIM::processMessageRequest(SipMessage* msg)
       contents = sec->decrypt( sBody );
 
       if ( !contents )
-      { 
+      {
          Uri from = msg->header(h_From).uri();
          InfoLog( << "Some problem decoding signed SMIME message");
-        
+
          mCallback->receivePageFailed( from );
          return;
       }
@@ -666,17 +666,17 @@ TuIM::processMessageRequest(SipMessage* msg)
       contents = sec->decrypt( eBody );
 
       if ( !contents )
-      { 
+      {
          Uri from = msg->header(h_From).uri();
          InfoLog( << "Some problem decoding SMIME message");
-        
+
          mCallback->receivePageFailed( from );
          return;
       }
 
       encrypted=true;
    }
- 
+
 #endif
 
    if ( contents )
@@ -687,92 +687,92 @@ TuIM::processMessageRequest(SipMessage* msg)
          assert( plain );
          const Data& text = plain->text();
          DebugLog ( << "got message from with text of <" << text << ">" );
-                 
+
          Uri from = msg->header(h_From).uri();
          DebugLog ( << "got message from " << from );
-                  
+
          assert( mCallback );
          mCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
          return;
       }
- 
+
       CpimContents* cpim = dynamic_cast<CpimContents*>(contents);
       if ( cpim )
       {
          assert( cpim );
          const Data& text = cpim->text();
          DebugLog ( << "got CPIM message from with text of <" << text << ">" );
-                 
-         // !cj! TODO - should get from out of CPIM message 
+
+         // !cj! TODO - should get from out of CPIM message
          Uri from = msg->header(h_From).uri();
          DebugLog ( << "got message from " << from );
-                  
+
          assert( mCallback );
          mCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
          return;
       }
- 
+
       MultipartMixedContents* mixed = dynamic_cast<MultipartMixedContents*>(contents);
       if ( mixed )
       {
          InfoLog( << "Got a multipart mixed" );
-       
+
          contents = NULL;
-         
+
          MultipartMixedContents::Parts& parts = mixed->parts();
-         for( MultipartMixedContents::Parts::const_iterator i = parts.begin(); 
-              i != parts.end();  
+         for( MultipartMixedContents::Parts::const_iterator i = parts.begin();
+              i != parts.end();
               ++i)
          {
-            Contents* c = *i;  
+            Contents* c = *i;
             assert( c );
             InfoLog ( << "mixed has a " << c->getType() );
 
             if ( c->getType() == Mime("text","plain") )
             {
                InfoLog ( << "mixed has sipfrag " << c->getType() );
-      
+
                PlainContents* plainBody = dynamic_cast<PlainContents*>(c);
                if ( plainBody )
                {
                   assert( plainBody );
                   const Data& text = plainBody->text();
                   DebugLog ( << "got message from with text of <" << text << ">" );
-                  
+
                   Uri from = msg->header(h_From).uri();
                   DebugLog ( << "got message from " << from );
-                  
+
                   assert( mCallback );
                   mCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
                   return;
                }
 
-               // !cj! TODO - should deal with CPIM too 
+               // !cj! TODO - should deal with CPIM too
             }
-            
+
          }
-         
+
          return;
       }
-   
-#if 1   // !cj! TODO remove 
+
+#if 1   // !cj! TODO remove
       OctetContents* octets = dynamic_cast<OctetContents*>(contents);
       if (octets)
       {
          assert( contents );
          const Data& text = octets->getBodyData();
          DebugLog ( << "got message from with text of <" << text << ">" );
-         
+
          Uri from = msg->header(h_From).uri();
          DebugLog ( << "got message from " << from );
-                  
+
          assert( mCallback );
          mCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
          return;
       }
 #endif
 
-      // deal with it if no one else has 
+      // deal with it if no one else has
       {
          InfoLog ( << "Can not handle type " << contents->getType() );
          Uri from = msg->header(h_From).uri();
@@ -785,15 +785,15 @@ TuIM::processMessageRequest(SipMessage* msg)
 
 void
 TuIM::processResponse(SipMessage* msg)
-{  
+{
    assert( msg->exists(h_CallId));
    CallId id = msg->header(h_CallId);
    assert( id.value() != Data::Empty );
 
    processSipFrag( msg );
-   
-   // see if it is a registraition response 
-   CallId regId = mRegistrationDialog.getCallId(); 
+
+   // see if it is a registraition response
+   CallId regId = mRegistrationDialog.getCallId();
 
    Data v1 = id.value();
    Data v2 = regId.value();
@@ -802,13 +802,13 @@ TuIM::processResponse(SipMessage* msg)
 
    if ( id == regId )
    {
-      InfoLog ( << "matched the reg dialog" 
+      InfoLog ( << "matched the reg dialog"
                  <<  mRegistrationDialog.getCallId() << " = " << id  );
       processRegisterResponse( msg );
       return;
    }
-   
-   // see if it is a subscribe response 
+
+   // see if it is a subscribe response
    for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
    {
       Buddy& buddy = *i;
@@ -821,7 +821,7 @@ TuIM::processResponse(SipMessage* msg)
          return;
       }
    }
-   
+
    // see if it is a publish response
    for ( StateAgentIterator i=mStateAgents.begin(); i != mStateAgents.end(); i++)
    {
@@ -834,7 +834,7 @@ TuIM::processResponse(SipMessage* msg)
          return;
       }
    }
-   
+
    // see if it is a notify response
    for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {
@@ -848,31 +848,31 @@ TuIM::processResponse(SipMessage* msg)
          return;
       }
    }
-   
+
    // see if it is a page response
    for ( PageIterator i=mPages.begin(); i != mPages.end(); i++)
    {
-      assert( i->dialog ); 
+      assert( i->dialog );
       InfoLog( << "check page id =" <<  i->dialog->getCallId() );
       if ( i->dialog->getCallId() == id  )
       {
-         DebugLog ( << "matched the MESSAGE dialog" );
+         DebugLog ( << "matched the RESIP_MESSAGE dialog" );
          processPageResponse( msg, *i );
          return;
       }
    }
-  
+
    int number = msg->header(h_StatusLine).responseCode();
    InfoLog( << "got response that DID NOT MATCH of type " << number );
 }
 
 
-void 
+void
 TuIM::processRegisterResponse(SipMessage* msg)
 {
    int number = msg->header(h_StatusLine).responseCode();
    Uri to = msg->header(h_To).uri();
-   InfoLog ( << "register of " << to << " got response " << number );   
+   InfoLog ( << "register of " << to << " got response " << number );
    int cSeq = msg->header(h_CSeq).sequence();
 
    if ( number<200 )
@@ -881,44 +881,44 @@ TuIM::processRegisterResponse(SipMessage* msg)
    }
 
    if ( number >= 200 )
-   { 
+   {
       mRegistrationDialog.createDialogAsUAC( *msg );
    }
-   
+
    if ( ((number == 401) || (number == 407)) && (cSeq != mLastAuthCSeq) )
    {
       SipMessage* reg = mRegistrationDialog.makeRegister();
-      
+
       const Data cnonce = Data::Empty;
       unsigned int nonceCount=0;
-       
+
       Helper::addAuthorization(*reg,*msg,mAor.user(),mRegistrationPassword,cnonce,nonceCount);
 
       mLastAuthCSeq = reg->header(h_CSeq).sequence();
 
       reg->header(h_Expires).value() = mRegistrationTimeSeconds;
       reg->header(h_Contacts).front().param(p_expires) = mRegistrationTimeSeconds;
-   
+
       mNextTimeToRegister = Timer::getRandomFutureTimeMs( mRegistrationTimeSeconds*1000 );
 
       InfoLog( << *reg );
-      
+
       setOutbound( *reg );
 
       mStack->send( *reg );
 
       delete reg; reg=NULL;
-      
+
       return;
    }
-   
+
    if ( number >= 300 )
    {
       assert( mCallback );
       mCallback->registrationFailed( to, number );
       return;
    }
-   
+
    if ( (number>=200) && (number<300) )
    {
       int expires = mRegistrationTimeSeconds;
@@ -927,13 +927,13 @@ TuIM::processRegisterResponse(SipMessage* msg)
       {
          expires = msg->header(h_Expires).value();
       }
-      
+
       // loop throught the contacts, find me, and extract expire time
       resip::ParserContainer<resip::NameAddr>::iterator i =  msg->header(h_Contacts).begin();
       while ( i != msg->header(h_Contacts).end() )
       {
          try
-         { 
+         {
             Uri uri = i->uri();
 
             if ( uri.getAor() == mContact.getAor() )
@@ -948,7 +948,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
          {
             InfoLog(<< "Bad contact in 2xx to register - skipped" );
          }
-         
+
          i++;
       }
 
@@ -959,7 +959,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
       }
 
       mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
-      
+
       mCallback->registrationWorked( to );
 
       return;
@@ -967,25 +967,12 @@ TuIM::processRegisterResponse(SipMessage* msg)
 }
 
 
-void 
+void
 TuIM::processNotifyResponse(SipMessage* msg, Dialog& d )
-{ 
+{
    int number = msg->header(h_StatusLine).responseCode();
-   DebugLog( << "got NOTIFY response of type " << number );
-   
-   if ( number >= 300 )
-   {
-      // TODO 
-   }
-}
+   DebugLog( << "got RESIP_NOTIFY response of type " << number );
 
-
-void 
-TuIM::processPublishResponse(SipMessage* msg, StateAgent& sa )
-{ 
-   int number = msg->header(h_StatusLine).responseCode();
-   DebugLog( << "got PUBLISH response of type " << number );
-   
    if ( number >= 300 )
    {
       // TODO
@@ -993,12 +980,25 @@ TuIM::processPublishResponse(SipMessage* msg, StateAgent& sa )
 }
 
 
-void 
+void
+TuIM::processPublishResponse(SipMessage* msg, StateAgent& sa )
+{
+   int number = msg->header(h_StatusLine).responseCode();
+   DebugLog( << "got PUBLISH response of type " << number );
+
+   if ( number >= 300 )
+   {
+      // TODO
+   }
+}
+
+
+void
 TuIM::processPageResponse(SipMessage* msg, Page& page )
 {
    int number = msg->header(h_StatusLine).responseCode();
-   DebugLog( << "got MESSAGE response of type " << number );
-   
+   DebugLog( << "got RESIP_MESSAGE response of type " << number );
+
    if ( number >= 400 )
    {
       Uri dest = msg->header(h_To).uri();
@@ -1016,13 +1016,13 @@ TuIM::processPageResponse(SipMessage* msg, Page& page )
          // send a message to redirected location
          Uri uri = dest->uri();
          sendPage( page.text, uri, page.sign, page.encryptFor );
-         
+
          dest++;
       }
    }
 
    if (  (number>=200) && (number<300) )
-   { 
+   {
       // got a final response for notify - can remove this dialog information
       CallId id = msg->header(h_CallId);
 
@@ -1037,12 +1037,12 @@ TuIM::processPageResponse(SipMessage* msg, Page& page )
 }
 
 
-void 
+void
 TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
 {
    int number = msg->header(h_StatusLine).responseCode();
    Uri to = msg->header(h_To).uri();
-   InfoLog ( << "subscribe got response " << number << " from " << to );   
+   InfoLog ( << "subscribe got response " << number << " from " << to );
 
    if ( (number>=200) && (number<300) )
    {
@@ -1055,11 +1055,11 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
       {
          InfoLog( << "Got very small expiers of " << expires );
          expires = 15;
-      } 
-      
+      }
+
       assert( buddy.presDialog );
       buddy.presDialog->createDialogAsUAC( *msg );
-      
+
       buddy.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( expires*1000 );
    }
 
@@ -1074,32 +1074,32 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
          addBuddy( uri , buddy.group );
 
          buddy.mNextTimeToSubscribe = Timer::getForever();
- 
+
          dest++;
       }
    }
-   
+
    if (  (number>=400) )
    {
-      DebugLog( << "Got an error to some subscription" );     
+      DebugLog( << "Got an error to some subscription" );
 
-      // take this buddy off line 
+      // take this buddy off line
       Uri to = msg->header(h_To).uri();
       assert( mCallback );
-      
+
       bool changed = true;
-      
+
       for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
       {
          Uri u = i->uri; // getBuddyUri(i);
-         
+
          if ( u.getAor() == to.getAor() )
          {
             if (  i->online == false )
-            {  
+            {
                changed = false;
             }
-            
+
             i->online = false;
          }
       }
@@ -1108,20 +1108,20 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
       {
          mCallback->presenceUpdate( to, false, Data::Empty );
       }
-      
+
       // try to contact this buddy again later
       buddy.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( mSubscriptionTimeSeconds*1000 );
    }
 }
 
 
-void 
+void
 TuIM::process()
 {
    assert( mStack );
 
    UInt64 now = Timer::getTimeMs();
-   
+
    // check if register needs refresh
    if ( now > mNextTimeToRegister )
    {
@@ -1134,26 +1134,26 @@ TuIM::process()
       }
       mNextTimeToRegister = Timer::getRandomFutureTimeMs( mRegistrationTimeSeconds*1000 );
    }
-   
+
    // check if any subscribes need refresh
    for ( BuddyIterator i=mBuddies.begin(); i != mBuddies.end(); i++)
    {
       if (  now > i->mNextTimeToSubscribe )
       {
          Buddy& buddy = *i;
-         
-         buddy.mNextTimeToSubscribe 
+
+         buddy.mNextTimeToSubscribe
                     = Timer::getRandomFutureTimeMs( mSubscriptionTimeSeconds*1000 );
-         
+
          assert(  buddy.presDialog );
          if ( buddy.presDialog->isCreated() )
          {
             auto_ptr<SipMessage> msg( buddy.presDialog->makeSubscribe() );
-                        
+
             msg->header(h_Event).value() = Data("presence");;
             msg->header(h_Accepts).push_back( Mime( "application","pidf+xml") );
             msg->header(h_Expires).value() = mSubscriptionTimeSeconds;
-            
+
             setOutbound( *msg );
 
             mStack->send( *msg );
@@ -1168,17 +1168,17 @@ TuIM::process()
 
    // TODO - go and clean out any subscrption to us that have expired
 
-   // check for any messages from the sip stack 
+   // check for any messages from the sip stack
    SipMessage* msg( mStack->receive() );
    if ( msg )
    {
       InfoLog ( << "got message: " << *msg);
-   
+
       if ( msg->isResponse() )
-      { 
+      {
          processResponse( msg );
       }
-      
+
       if ( msg->isRequest() )
       {
          processRequest( msg );
@@ -1189,11 +1189,11 @@ TuIM::process()
 }
 
 
-void 
+void
 TuIM::registerAor( const Uri& uri, const Data& password  )
-{  
+{
    mRegistrationPassword = password;
-   
+
    //const NameAddr aorName;
    //const NameAddr contactName;
    //aorName.uri() = uri;
@@ -1204,27 +1204,27 @@ TuIM::registerAor( const Uri& uri, const Data& password  )
 
    msg->header(h_Expires).value() = mRegistrationTimeSeconds;
    msg->header(h_Contacts).front().param(p_expires) = mRegistrationTimeSeconds;
-   
+
    Token t;
    t = Token(Data("presence"));
    msg->header(h_AllowEvents).push_back( t );
-   
+
    mNextTimeToRegister = Timer::getRandomFutureTimeMs( mRegistrationTimeSeconds*1000 );
-   
+
    setOutbound( *msg );
 
    mStack->send( *msg );
 }
 
 
-int 
+int
 TuIM::getNumBuddies() const
 {
    return int(mBuddies.size());
 }
 
 
-const Uri 
+const Uri
 TuIM::getBuddyUri(const int index)
 {
    assert( index >= 0 );
@@ -1234,7 +1234,7 @@ TuIM::getBuddyUri(const int index)
 }
 
 
-const Data 
+const Data
 TuIM::getBuddyGroup(const int index)
 {
    assert( index >= 0 );
@@ -1244,9 +1244,9 @@ TuIM::getBuddyGroup(const int index)
 }
 
 
-bool 
+bool
 TuIM::getBuddyStatus(const int index, Data* status)
-{ 
+{
    assert( index >= 0 );
    assert( index < getNumBuddies() );
 
@@ -1254,32 +1254,32 @@ TuIM::getBuddyStatus(const int index, Data* status)
    {
       *status =  mBuddies[index].status;
    }
-   
+
    bool online = mBuddies[index].online;
 
    return online;
 }
 
 
-void 
+void
 TuIM::subscribeBuddy( Buddy& buddy )
 {
-   // subscribe to this budy 
+   // subscribe to this budy
    auto_ptr<SipMessage> msg( buddy.presDialog->makeInitialSubscribe(NameAddr(buddy.uri),NameAddr(mAor)) );
 
    msg->header(h_Event).value() = Data("presence");;
    msg->header(h_Accepts).push_back( Mime( "application","pidf+xml") );
    msg->header(h_Expires).value() = mSubscriptionTimeSeconds;
-   
+
    buddy.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( mSubscriptionTimeSeconds*1000 );
-   
+
    setOutbound( *msg );
 
    mStack->send( *msg );
 }
 
 
-void 
+void
 TuIM::addBuddy( const Uri& uri, const Data& group )
 {
    Buddy buddy;
@@ -1289,27 +1289,27 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
    buddy.group = group;
    buddy.presDialog = new Dialog( NameAddr(mContact) );
    assert( buddy.presDialog );
-   
+
    mBuddies.push_back( buddy );
 
    subscribeBuddy( buddy );
 }
 
 
-void 
+void
 TuIM::removeBuddy( const Uri& name)
 {
    TuIM::BuddyIterator i;
-	
-   i = mBuddies.begin();	
+
+   i = mBuddies.begin();
    while ( i != mBuddies.end() )
    {
       Uri u = i->uri;
 
       if ( u.getAor() == name.getAor() )
       {
-         // remove this buddy 
-         // !cj! - should unsubscribe 
+         // remove this buddy
+         // !cj! - should unsubscribe
          i = mBuddies.erase(i);
       }
       else
@@ -1320,11 +1320,11 @@ TuIM::removeBuddy( const Uri& name)
 }
 
 
-void 
+void
 TuIM::sendNotify(Dialog* dialog)
-{ 
+{
    assert( dialog );
-   
+
    auto_ptr<SipMessage> msg( dialog->makeNotify() );
 
    Pidf* pidf = new Pidf( *mPidf );
@@ -1333,22 +1333,22 @@ TuIM::sendNotify(Dialog* dialog)
 
    Token state;
    state.value() = Data("active");
-   state.param(p_expires) = dialog->getExpirySeconds(); 
+   state.param(p_expires) = dialog->getExpirySeconds();
    msg->header(h_SubscriptionState) = state;
 
    msg->setContents( pidf );
-   
+
    setOutbound( *msg );
 
    mStack->send( *msg );
 }
 
 
-void 
+void
 TuIM::sendPublish(StateAgent& sa)
-{ 
+{
    assert( sa.dialog );
-   
+
    auto_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
 
    Pidf* pidf = new Pidf( *mPidf );
@@ -1356,34 +1356,34 @@ TuIM::sendPublish(StateAgent& sa)
    msg->header(h_Event).value() = "presence";
 
    msg->setContents( pidf );
-   
+
    setOutbound( *msg );
 
    mStack->send( *msg );
 }
 
 
-void 
+void
 TuIM::authorizeSubscription( const Data& user )
 {
-   // TODO implement this 
+   // TODO implement this
 }
 
 
-void 
+void
 TuIM::setMyPresence( const bool open, const Data& status, const Data& user  )
 {
    // TODO implement the pser user status (when user is not empty)
    assert( mPidf );
    mPidf->setSimpleStatus( open, status, mContact.getAor() );
-   
+
    for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {
       Dialog* dialog = i->dialog;
       assert( dialog );
-      
+
       sendNotify(dialog);
-   } 
+   }
 
    for ( StateAgentIterator i=mStateAgents.begin(); i != mStateAgents.end(); i++)
    {
@@ -1392,15 +1392,15 @@ TuIM::setMyPresence( const bool open, const Data& status, const Data& user  )
 }
 
 
-void 
+void
 TuIM::setOutboundProxy( const Uri& uri )
 {
    InfoLog( << "Set outbound proxy to " << uri );
    mOutboundProxy = uri;
 }
 
-  
-void 
+
+void
 TuIM::setUAName( const Data& name )
 {
    DebugLog( << "Set User Agent Name to " << name );
@@ -1408,7 +1408,7 @@ TuIM::setUAName( const Data& name )
 }
 
 
-void 
+void
 TuIM::setOutbound( SipMessage& msg )
 {
    if ( msg.isResponse() )
@@ -1421,7 +1421,7 @@ TuIM::setOutbound( SipMessage& msg )
       NameAddr proxy( mOutboundProxy );
       msg.header(h_Routes).push_front( proxy );
    }
-   
+
    if ( !mUAName.empty() )
    {
       DebugLog( << "UserAgent name=" << mUAName  );
@@ -1451,28 +1451,28 @@ TuIM::setOutbound( SipMessage& msg )
 }
 
 
-void 
+void
 TuIM::setDefaultProtocol( TransportType protocol )
 {
    mDefaultProtocol = protocol;
 }
 
 
-void 
+void
 TuIM::addStateAgent( const Uri& uri )
 {
    StateAgent sa;
-   
+
    sa.dialog = new  Dialog( NameAddr(mContact) );
    sa.uri = uri;
-   
+
    mStateAgents.push_back( sa );
-   
+
    sendPublish( sa );
 }
 
 
-bool 
+bool
 TuIM::Callback::authorizeSubscription( const Uri& user )
 {
    return true;
@@ -1480,23 +1480,23 @@ TuIM::Callback::authorizeSubscription( const Uri& user )
 
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provi
 ded that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -1506,7 +1506,7 @@ ded that the following conditions
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -1520,9 +1520,9 @@ ded that the following conditions
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

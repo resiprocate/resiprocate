@@ -123,16 +123,16 @@ CSeqCategory::sequence() const
 }
 
 // examples to test: 
-// "CSeq:15 ACK"  // ok
-// "CSeq:ACK"     // bad
+// "CSeq:15 RESIP_ACK"  // ok
+// "CSeq:RESIP_ACK"     // bad
 // "CSeq:JOE"     // ok
 // "CSeq:1 JOE"   // ok
-// "CSeq:1323333 INVITE" // ok 
+// "CSeq:1323333 RESIP_INVITE" // ok 
 // "CSeq:1323333 Invite" // ok - not invite
 // "CSeq:1323333 InviTe" // ok - not invite
-// "CSeq:\t\t  \t15\t\t\t    \t ACK"  // ok
+// "CSeq:\t\t  \t15\t\t\t    \t RESIP_ACK"  // ok
 // "CSeq:\t\t  \t15\t\t\t    \t"  // bad
-// "CSeq:1xihzihsihtqnognsd INVITE" // not ok, but parses (?)
+// "CSeq:1xihzihsihtqnognsd RESIP_INVITE" // not ok, but parses (?)
 
 void
 CSeqCategory::parse(ParseBuffer& pb)

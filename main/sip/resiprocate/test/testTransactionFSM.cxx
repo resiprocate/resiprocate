@@ -13,7 +13,7 @@
 //
 // expect_wire (or expect_tu)
 // {
-// status=100 (or method=REGISTER)
+// status=100 (or method=RESIP_REGISTER)
 // timeout=32
 // }
 //

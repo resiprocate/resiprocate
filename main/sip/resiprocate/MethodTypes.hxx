@@ -13,15 +13,15 @@ class Data;
 
 typedef enum
 {
-   defineMethod(RESIP_UNKNOWN, "UNKNOWN", "NA"),
-   defineMethod(RESIP_ACK, "ACK", " RFC 3261"),
-   defineMethod(RESIP_BYE, "BYE", "RFC 3261"),
+   defineMethod(RESIP_UNKNOWN, "RESIP_UNKNOWN", "NA"),
+   defineMethod(RESIP_ACK, "RESIP_ACK", " RFC 3261"),
+   defineMethod(RESIP_BYE, "RESIP_BYE", "RFC 3261"),
    defineMethod(RESIP_CANCEL, "CANCEL", "RFC 3261"),
-   defineMethod(RESIP_INVITE, "INVITE", "RFC 3261"),
+   defineMethod(RESIP_INVITE, "RESIP_INVITE", "RFC 3261"),
    defineMethod(RESIP_NOTIFY, "NOTIFY", "RFC 3265"),
    defineMethod(RESIP_OPTIONS, "OPTIONS", "RFC 3261"),
    defineMethod(RESIP_REFER, "REFER", "RFC 3515"),
-   defineMethod(RESIP_REGISTER, "REGISTER", "RFC 3261"),
+   defineMethod(RESIP_REGISTER, "RESIP_REGISTER", "RFC 3261"),
    defineMethod(RESIP_SUBSCRIBE, "SUBSCRIBE", "RFC 3265"),
    defineMethod(RESIP_RESPONSE, "RESPONSE", "RFC ????"),
    defineMethod(RESIP_MESSAGE, "MESSAGE", "RFC ????"),

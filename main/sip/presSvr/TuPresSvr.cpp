@@ -28,7 +28,7 @@ TuPresSvr::process()
 	{
           processSubscribe(msg);
 	}
-	else if (msg->header(h_RequestLine).getMethod() == REGISTER )
+	else if (msg->header(h_RequestLine).getMethod() == RESIP_REGISTER )
 	{
 	  processPublish(msg);
 	}
@@ -108,10 +108,10 @@ void TuPresSvr::processNewSubscribe(SipMessage* msg)
 void TuPresSvr::processPublish(SipMessage* msg)
 {
   //ignore any PUBLISH related headers and any contacts
-  //provided in a REGISTER
+  //provided in a RESIP_REGISTER
   //This is a rather vile hack for SIMPLEt 1
   Data aor;
-  if ( msg->header(h_RequestLine).getMethod() == REGISTER )
+  if ( msg->header(h_RequestLine).getMethod() == RESIP_REGISTER )
   {
     aor = msg->header(h_To).uri().getAorNoPort();
   }
