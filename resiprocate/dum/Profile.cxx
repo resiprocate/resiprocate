@@ -59,13 +59,13 @@ Profile::getDefaultFrom()
 }
 
 int 
-Profile::getDefaultSubscriptionTime()
+Profile::getDefaultSubscriptionTime() const
 {
    return mDefaultSubscriptionExpires;
 }
 
 int 
-Profile::getDefaultRegistrationTime()
+Profile::getDefaultRegistrationTime() const
 {
    return mDefaultRegistrationExpires;
 }
@@ -145,31 +145,31 @@ Profile::clearSupportedLanguages()
 }
 
 bool 
-Profile::isSchemeSupported(const Data& scheme)
+Profile::isSchemeSupported(const Data& scheme) const
 {
    return mSupportedSchemes.count(scheme) != 0;
 }
 
 bool 
-Profile::isMethodSupported(MethodTypes method)
+Profile::isMethodSupported(MethodTypes method) const
 {
    return mSupportedMethodTypes.count(method) != 0;
 }
 
 bool 
-Profile::isMimeTypeSupported(const Mime& mimeType)
+Profile::isMimeTypeSupported(const Mime& mimeType) const
 {
    return mSupportedMimeTypes.find(mimeType);
 }
 
 bool 
-Profile::isContentEncodingSupported(const Token& encoding)
+Profile::isContentEncodingSupported(const Token& encoding) const
 {
    return mSupportedEncodings.find(encoding);
 }
 
 bool 
-Profile::isLanguageSupported(const Tokens& langs)
+Profile::isLanguageSupported(const Tokens& langs) const
 {
    for (Tokens::const_iterator i=langs.begin(); i != langs.end(); ++i)
    {
@@ -198,33 +198,39 @@ Profile::getUnsupportedOptionsTags(const Tokens& requiresOptionTags)
 }
 
 Tokens 
-Profile::getSupportedOptionTags()
+Profile::getSupportedOptionTags() const
 {
    return mSupportedOptionTags;
 }
 
 Tokens 
-Profile::getAllowedMethods()
+Profile::getAllowedMethods() const
 {
    return mSupportedMethods;
 }
 
 Mimes 
-Profile::getSupportedMimeTypes()
+Profile::getSupportedMimeTypes() const
 {
    return mSupportedMimeTypes;
 }
 
 Tokens 
-Profile::getSupportedEncodings()
+Profile::getSupportedEncodings() const
 {
    return mSupportedEncodings;
 }
 
 Tokens 
-Profile::getSupportedLanguages()
+Profile::getSupportedLanguages() const
 {
    return mSupportedLanguages;
+}
+
+Tokens
+Profile::getAllowedEvents() const
+{
+   return mAllowedEvents;
 }
 
 void 
@@ -239,7 +245,7 @@ Profile::addAdvertisedCapability(const Headers::Type header)
 }
  
 bool 
-Profile::isAdvertisedCapability(const Headers::Type header)
+Profile::isAdvertisedCapability(const Headers::Type header) const
 {
    return mAdvertisedCapabilities.count(header) != 0;
 }
@@ -256,13 +262,13 @@ Profile::addGruu(const Data& aor, const NameAddr& contact)
 }
 
 bool 
-Profile::hasGruu(const Data& aor)
+Profile::hasGruu(const Data& aor) const
 {
    return false;
 }
 
 bool 
-Profile::hasGruu(const Data& aor, const Data& instance)
+Profile::hasGruu(const Data& aor, const Data& instance) const
 {
    return false;
 }
@@ -303,6 +309,18 @@ Profile::hasOutboundProxy() const
    return mHasOutboundProxy;
 }
    
+void
+Profile::setUAName(const Data& name)
+{
+   mUAName = name;
+}
+
+const resip::Data&
+Profile::getUAName() const
+{
+   return mUAName;
+}
+
 void 
 Profile::disableGruu()
 {
