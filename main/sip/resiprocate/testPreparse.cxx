@@ -4,8 +4,6 @@
 #include <sipstack/Preparse.hxx>
 
 
-
-
 main()
 {
   using namespace Vocal2;
