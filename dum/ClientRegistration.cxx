@@ -187,13 +187,17 @@ void ClientRegistration::stopRegistering()
 }
 
 void
-ClientRegistration::requestRefresh()
+ClientRegistration::requestRefresh(int expires)
 {
    InfoLog (<< "requesting refresh of " << *this);
    
    assert (mState == Registered);
    mState = Refreshing;
    mLastRequest.header(h_CSeq).sequence()++;
+   if(expires > 0)
+   {
+      mLastRequest.header(h_Expires).value() = expires;
+   }
    mDum.send(mLastRequest);
 }
 
