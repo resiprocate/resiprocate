@@ -29,6 +29,8 @@ class Symbols
       static const char * const SPACE;
       static const char * const COMMA;
       static const char * const ZERO;
+      static const char * const LPAREN;
+      static const char * const RPAREN;
       
       static const char * const ProtocolName;
       static const char * const ProtocolVersion;
