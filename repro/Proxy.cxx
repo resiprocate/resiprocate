@@ -30,10 +30,10 @@ Proxy::isForMe(const SipMessage& msg) const
    return true;
 }
 
-void 
-Proxy::postToTransactionUser(const Message& msg)
+bool
+Proxy::isShutDown() const
 {
-   //mFifo.add(msg, TimeLimitFifo<Message>::EnforceTimeDepth);
+  return false;
 }
 
 UserDB &
