@@ -146,31 +146,25 @@ bool Tuple::operator<(const Tuple& rhs) const
    {
       return false;
    }
-   else
+
+   // c will be zero if same IP number
+
+   if ( c )
+     return c < 0;
+
+   // sort on ports
+   if (port < rhs.port)
    {
-      if (c < 0)
-      {
-         return true;
-      }
-      else if (c > 0)
-      {
-         return false;
-      }
-      else if (port < rhs.port)
-      {
-         return true;
-      }
-      else if (port > rhs.port)
-      {
-         return false;
-      }
-      else
-      {
-         return transportType < rhs.transportType;
-      }
+     return true;
    }
-   // !jf!
-   return false;
+   else if (port > rhs.port)
+   {
+     return false;
+   }
+
+   // if all else fails, sort on transport
+   return transportType < rhs.transportType;
+
 }
 
 std::ostream&
