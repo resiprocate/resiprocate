@@ -8,6 +8,7 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/TransactionUser.hxx"
 
 #include "repro/UserDb.hxx"
 #include "repro/UserAuthInfo.hxx"
@@ -48,15 +49,15 @@ UserDb::~UserDb()
 void 
 UserAbstractDb::requestUserAuthInfo( const resip::Data& user, 
                                      const resip::Data& realm,
-                                     MessageFifo* fifo ) const
+                                     resip::TransactionUser& transactionUser )
+                                   const
 {
    Data key = buildKey(user,realm);
    Data a1 = getUserAuthInfo(key);
     
    UserAuthInfo* msg = new UserAuthInfo(user,realm,a1);
    
-   assert(fifo);
-   fifo->add( msg );
+   transactionUser.post( msg );
 }
 
 

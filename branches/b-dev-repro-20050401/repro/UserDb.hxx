@@ -7,6 +7,10 @@
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/Message.hxx"
 
+namespace resip
+{
+  class TransactionUser;
+}
 
 namespace repro
 {
@@ -22,7 +26,7 @@ class UserAbstractDb
       
       void requestUserAuthInfo( const resip::Data& user, 
                                 const resip::Data& realm,
-                                MessageFifo* fifo ) const;
+                                resip::TransactionUser& transactionUser) const;
 
       resip::Data getUserAuthInfo( const resip::Data& key ) const;
       

@@ -10,6 +10,9 @@ class SipMessage;
 
 class TransactionUser
 {
+   public:
+      void post(Message *);
+
    protected:
       TransactionUser();
       virtual ~TransactionUser()=0;
