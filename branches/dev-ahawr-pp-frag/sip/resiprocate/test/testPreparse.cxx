@@ -73,6 +73,8 @@ const char shortMessage[] =
     "From: \"J Rosenberg \\\\\\\"\"<sip:jdrosen@lucent.com:5060>;tag=98asjd8" CRLF
     "To: <sip:vivekg@chair.dnrc.bell-labs.com:5060>;tag=1a1b1f1H33n" CRLF
     "Call-ID: 0ha0isndaksdj@10.1.1.1" CRLF
+    "Subject:"CRLF
+    "        This is my subject for you to hate\\\"\\\""CRLF
     "CSeq: 8 INVITE" CRLF
     "Contact: \"Quoted string \\\"\\\"\" <sip:jdrosen@bell-labs.com:5060>" CRLF
     "Contact: tel:4443322" CRLF
@@ -108,6 +110,8 @@ const char shortMessage[] =
         "To: Bob <sip:bob@biloxi.com>" CRLF
         "From: Bob <sip:bob@biloxi.com>;tag=456248" CRLF
         "Call-ID: 843817637684230@998sdasdh09" CRLF
+        "Subject : "CRLF
+        "        My subject."CRLF
         "CSeq: 1826 REGISTER" CRLF
         "Contact: <sip:bob@192.0.2.4>" CRLF
         "Contact: <sip:qoq@192.0.2.4>" CRLF
@@ -342,16 +346,19 @@ void doTest1()
     // set the ''reader'' to use the test message
 
 //    fakeResetRead(reallyShortMessage,strlen(reallyShortMessage));
-//    fakeResetRead(testData,strlen(testData));
+    fakeResetRead(testData,strlen(testData));
 //    fakeResetRead(tortureMsg,strlen(tortureMsg));
-    fakeResetRead(wrappy,strlen(wrappy));
+//    fakeResetRead(wrappy,strlen(wrappy));
     
-    
+   pp(wrappy,strlen(wrappy));
+
     // get the first chunk
 
     char * chunk = new char[chunkSize];
     chunkSize = fakeRead(chunk, readQuant);
     DebugLog(<<"initial chunk size is " << chunkSize);
+    DebugLog(<<"initial chunk memory is 0x" << hex << (unsigned long)chunk<<dec);
+    
     do
     {
         
@@ -370,8 +377,12 @@ void doTest1()
         if (status & PreparseState::preparseError)
         {
             if (chunkMine)
-                free(chunk);
+            {
+                DebugLog(<<"deleting chunk 0x"<<hex<<(unsigned long)chunk<<dec);
+                delete [] chunk;
+            }
             chunk = 0;
+            
             CritLog(<<"preparserError -- unexpected");
             assert(~(status & PreparseState::preparseError));
             assert(("whoops you goofed -- should never see this",0));
@@ -381,13 +392,15 @@ void doTest1()
         if (status & PreparseState::dataAssigned)
         {
             // something used ... need to add this to the message
+            DebugLog(<<"dataAssigned");
+            DebugLog(<<*msg);
             if (!chunkMine)
             {
                 DebugLog(<<"Duplicate dataAssigned --ignoring");
             }
             else
             {
-                DebugLog(<<"addBuffer() : something used");
+                DebugLog(<<"addBuffer(0x"<<hex<<(unsigned long)chunk<<dec<<") : something used");
                 msg->addBuffer(chunk);
                 chunkMine = false;
                 // handed to SipMsg
@@ -402,16 +415,22 @@ void doTest1()
             // the PP said it didn't assign any
             // data to the last one..
             DebugLog(<<"Fragmented");
-            if ( ~ (status & PreparseState::dataAssigned))
-            {
-                // can reuse....
-                DebugLog(<<"Could reuse... not going to.");
-            }
-            
+
+            // Get more memory.
+
             char * newChunk = new char[chunkSize-discard + readQuant];
             memcpy(newChunk, chunk+discard, chunkSize-discard);
-            free(chunk);
+
+            if (! ( status & PreparseState::dataAssigned))
+            {
+                // we didn't use the last one ... 
+                DebugLog(<<"delete chunk (0x"<<hex<<(unsigned long)chunk<<dec<<")");
+                delete [] chunk;
+            }
+            
             chunk = newChunk;
+            DebugLog(<<"new chunk (0x"<<hex<<(unsigned long)chunk<<dec<<")");
+            
             chunkMine = true;
             int nBytes = fakeRead(newChunk + chunkSize - discard, readQuant);
             chunkSize = chunkSize - discard + nBytes;
@@ -433,8 +452,9 @@ void doTest1()
                 // could reuse it here ... we choose to dispose of it.
                 else
                 {
-                    DebugLog(<<"Freeing unused chunk size="<<chunkSize);
-                    free(chunk);
+                    DebugLog(<<"delete unused chunk size="<<chunkSize);
+                    DebugLog(<<"delete chunk = 0x"<<hex<<(unsigned long)chunk<<dec);
+                    delete [] chunk;
                     chunk = 0;
                     
                 }
@@ -443,6 +463,7 @@ void doTest1()
             chunkMine = true;
             chunkSize = readQuant;
             chunkSize = fakeRead(chunk,chunkSize);
+            DebugLog(<<"new chunk = 0x"<<hex<<(unsigned long)chunk<<dec);
             DebugLog(<<"Read fresh " << chunkSize << " bytes.");
         }
         
@@ -452,7 +473,9 @@ void doTest1()
         
     }
     while (~ status & PreparseState::headersComplete);
-    
+
+    InfoLog(<< "Read in a message");
+    InfoLog(<<*msg);
     
 #if 0
     od(buffer,len);
@@ -469,6 +492,9 @@ void doTest1()
 
     InfoLog(<<"TEST1 -- Passed");
 #endif
+
+    delete msg;
+    
     rantest(1);
     
     return;
