@@ -12,9 +12,9 @@ class TransactionMessage;
 class TcpBaseTransport : public Transport
 {
    public:
-      enum {MaxFileDescriptors = 100000};
+      enum  {MaxFileDescriptors = 100000};
 
-      TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum,  IpVersion version, const Data& interface );
+     TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum,  IpVersion version, const Data& interfaceName );
       virtual  ~TcpBaseTransport();
       
       void process(FdSet& fdset);
