@@ -1,5 +1,3 @@
-// Copyright 2002 Cathay Networks, Inc. 
-
 #ifndef Subsystem_hxx
 #define Subsystem_hxx
 
