@@ -1,9 +1,17 @@
 #if defined(USE_SSL) && !defined(SECURITY_HXX)
 #define SECURITY_HXX
+
+
+
+#include <openssl/evp.h>
+#include <openssl/x509.h>
+
+
 namespace Vocal2
 {
  
-class Body;
+class Contents;
+class Pkcs7Contents;
 
 class Security
 {
@@ -54,9 +62,9 @@ class Security
       /* stuff to build messages 
        *  This is pertty straight forwartd - use ONE of the functions below to
        *  form a new body. */
-      Body* sign( Body* );
-      Body* encrypt( Body* , const Data& recipCertName );
-      Body* signAndEncrypt( Body* , const Data& recipCertName );
+      Pkcs7Contents* sign( Contents* );
+      Pkcs7Contents* encrypt( Contents* , const Data& recipCertName );
+      Pkcs7Contents* signAndEncrypt( Contents* , const Data& recipCertName );
       
       /* stuff to receive messages 
       *    This is a bit more complex - first operationNeeded is called to find
@@ -80,7 +88,7 @@ class Security
                              // trust 
          badSignature // signature is not valid
       };
-      OperationNeeded operationNeeded( Body* );
+      OperationNeeded operationNeeded( Pkcs7Contents* );
       struct CertificateInfo 
       {
             char name[1024];
@@ -88,14 +96,14 @@ class Security
             char validFrom[128];
             char validTo[128];
       };
-      CertificateInfo getCertificateInfo( Body* );
-      void addCertificate( Body*  ); // Just puts cert in trust list but does
+      CertificateInfo getCertificateInfo( Pkcs7Contents* );
+      void addCertificate( Pkcs7Contents*  ); // Just puts cert in trust list but does
                                      // not save on disk for future
                                      // sessions. You almost allways don't want
                                      // to use this but should use addAndAve
-      void addAndSaveCertificate( Body*, char* filePath=NULL ); // add cert and
+      void addAndSaveCertificate( Pkcs7Contents*, char* filePath=NULL ); // add cert and
                                                                 // saves on disk
-      Body* uncode( Body* ); // returns NULL if fails 
+      Contents* uncode( Pkcs7Contents* ); // returns NULL if fails 
                
 
    private:
@@ -103,9 +111,11 @@ class Security
 
       // need a root cert list 
 
-      // need my public cert
-
-      // need my private key 
+      // my public cert
+      X509* publicCert;
+      
+      // my private key 
+      EVP_PKEY* privateKey;
 };
 
 
