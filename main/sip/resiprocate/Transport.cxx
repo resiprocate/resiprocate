@@ -66,7 +66,7 @@ Transport::socket(TransportType type, bool ipv4)
       throw Exception("Can't create TcpBaseTransport", __FILE__,__LINE__);
    }
 
-   DebugLog (<< "Creating fd=" << fd);
+   DebugLog (<< "Creating fd=" << fd << (ipv4 ? " V4/" : " V6/") << (type == UDP ? "UDP" : "TCP"));
    
    return fd;
 }
@@ -81,12 +81,14 @@ Transport::bind()
       int e = getErrno();
       if ( e == EADDRINUSE )
       {
-         ErrLog (<< "port " << port() << " already in use");
+         error(getErrno());
+         ErrLog (<< mTuple << " already in use ");
          throw Exception("port already in use", __FILE__,__LINE__);
       }
       else
       {
-         ErrLog (<< "Could not bind to port: " << port());
+         error(getErrno());
+         ErrLog (<< "Could not bind to " << mTuple);
          throw Exception("Could not use port", __FILE__,__LINE__);
       }
    }
