@@ -1,3 +1,32 @@
+2003-10-16 Alan Hawrylyshen <alan@jasomi.com>
+	* Embedded.cxx (decode): Pointer checking made stronger
+	
+	* MultipartMixedContents.cxx : Added comments for assertion
+	verification.
+
+	* Preparse.cxx : Upgraded to handle SipFrags.
+	
+	* SdpContents.cxx : Made asserts less odious. (Open to discussion)
+
+	* SdpContents.hxx : Constification. Added methods for encryption
+	keys.
+
+	* Security.cxx : Narrowed scope of const - error check ifdef.
+
+	* SipFrag.cxx : Plumbed in new Preparse stuff.
+
+	* TransactionState.cxx : Various assertions promoted / demoted.
+			(Open for discussion)
+
+	* Data.hxx : Added truncate method.
+
+	* os/Random.cxx : Changed to /dev/urandom for seed. Fixes embedded
+		blocking problems.
+
+	* test/testSipFrag.cxx : Added test that fails with
+		MsgHeaderScanner and works with Preparser.  Message is
+		example from real UA in real scenario.
+	
 2003-08-14  Wensong Zhang  <wensong@purplecomm.com>
 
 	* Makefile.am (rpms): added "make rpms" to build RPM packages.

@@ -18,7 +18,11 @@ UnknownHeaderType::UnknownHeaderType(const char* name)
    const char* anchor = pb.skipWhitespace();
    pb.skipNonWhitespace();
    mName = pb.data(anchor);
-   assert(!mName.empty());
+   if (mName.empty())
+   {
+      assert(false);
+      throw Exception("Empty unknown header",__FILE__,__LINE__);
+   }
    assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
 }
 
@@ -28,7 +32,11 @@ UnknownHeaderType::UnknownHeaderType(const Data& name)
    const char* anchor = pb.skipWhitespace();
    pb.skipNonWhitespace();
    mName = pb.data(anchor);
-   assert(!mName.empty());
+   if (mName.empty())
+   {
+      assert(false);
+      throw Exception("Empty unknown header",__FILE__,__LINE__);
+   }
    assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
 }
 /* ====================================================================
