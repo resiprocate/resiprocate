@@ -11,7 +11,10 @@ gmon.out
 headers-hash.c
 html
 memprof.sh
+new-pp.tgz
 obj.*
+pp-safe.tgz
+pp-todo
 testSipStack1
 testSipStack1
 testUdp
