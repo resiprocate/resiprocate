@@ -24,9 +24,9 @@ void
 SipStack::addTransport( Transport::Type protocol, 
                         int port,
                         const Data& hostName,
-                        const Data& interface) 
+                        const Data& nic) 
 {
-   mTransportSelector.addTransport(protocol, port, hostName, interface);
+   mTransportSelector.addTransport(protocol, port, hostName, nic);
 }
 
 
