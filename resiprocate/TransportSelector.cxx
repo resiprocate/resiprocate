@@ -19,6 +19,7 @@
 #include "resiprocate/TransportMessage.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/UdpTransport.hxx"
+#include "resiprocate/DtlsTransport.hxx"
 #include "resiprocate/Uri.hxx"
 
 #include "resiprocate/os/DataStream.hxx"
@@ -144,6 +145,21 @@ TransportSelector::addTransport( TransportType protocol,
             return false;
 #endif
             break;
+         case DTLS:
+#if defined( USE_DTLS )
+            assert(mDtlsTransports.count(sipDomainname) == 0);
+            transport = new DtlsTransport(mStateMacFifo, 
+                                          port,
+                                          version,
+                                          ipInterface,
+                                          *mSecurity, 
+                                          sipDomainname);
+#else
+            CritLog (<< "TLS not supported in this stack. You don't have openssl");
+            assert(0);
+            return false;
+#endif
+            break;
          default:
             assert(0);
             break;
@@ -195,6 +211,15 @@ TransportSelector::addTransport( TransportType protocol,
          mTlsTransports[sipDomainname] = dynamic_cast<TlsTransport*>(transport);
       }
       break;
+#ifdef USE_DTLS
+      case DTLS:
+      {
+         assert( dynamic_cast<DtlsTransport*>(transport) ) ;
+         mDtlsTransports[ sipDomainname ] = 
+            dynamic_cast<DtlsTransport *>(transport) ;
+      }
+      break;
+#endif
       default:
          assert(0);
          break;
@@ -248,6 +273,21 @@ TransportSelector::process(FdSet& fdset)
             InfoLog (<< "Uncaught exception: " << e);
          }
       }
+
+#ifdef USE_DTLS
+      for (std::map<Data, DtlsTransport*>::const_iterator i=mDtlsTransports.begin(); 
+           i != mDtlsTransports.end(); i++)
+      {
+         try
+         {
+            (i->second)->process(fdset);
+         }
+         catch (BaseException& e)
+         {
+            InfoLog (<< "Uncaught exception: " << e);
+         }
+      }
+#endif
    }
 }
 
@@ -682,6 +722,14 @@ TransportSelector::buildFdSet(FdSet& fdset)
       {
          (i->second)->buildFdSet(fdset);
       }
+
+#ifdef USE_DTLS
+      for (std::map<Data, DtlsTransport*>::const_iterator i=mDtlsTransports.begin(); 
+           i != mDtlsTransports.end(); ++i)
+      {
+         (i->second)->buildFdSet(fdset);
+      }
+#endif
    }
 }
 

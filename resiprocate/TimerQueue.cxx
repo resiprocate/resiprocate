@@ -1,3 +1,4 @@
+
 #if defined(HAVE_CONFIG_H)
 #include "resiprocate/config.hxx"
 #endif
@@ -20,6 +21,15 @@ TimerQueue::TimerQueue(Fifo<TransactionMessage>& fifo)
    : mFifo(fifo)
 {
 }
+
+#ifdef USE_DTLS
+
+DtlsTimerQueue::DtlsTimerQueue( Fifo<DtlsMessage>& fifo )
+    : mFifo( fifo )
+{
+}
+
+#endif
 
 TimeLimitTimerQueue::TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo)
    : mFifo(fifo)
@@ -70,6 +80,17 @@ TimerQueue::add(Timer::Type type, const Data& transactionId, unsigned long msOff
    
    return t.getId();
 }
+
+#ifdef USE_DTLS
+
+void
+DtlsTimerQueue::add( SSL *ssl, unsigned long msOffset )
+{
+   Timer t( msOffset, new DtlsMessage( ssl ) ) ;
+   mTimers.insert( t ) ;
+}
+
+#endif
 
 void
 TimeLimitTimerQueue::add(const Timer& timer)
@@ -128,6 +149,27 @@ TimerQueue::process()
    }
 }
 
+#ifdef USE_DTLS
+
+void
+DtlsTimerQueue::process()
+{
+   // get the set of timers that have fired and insert TimerMsg into the state
+   // machine fifo and application messages into the TU fifo
+   
+   if (!mTimers.empty() && msTillNextTimer() == 0)
+   {
+      Timer now(0);
+      std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
+      for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
+      {
+          mFifo.add( (DtlsMessage *)i->getMessage() ) ;
+      }
+      mTimers.erase( mTimers.begin(), end );
+   }
+}
+
+#endif
 
 std::ostream& 
 resip::operator<<(std::ostream& str, const BaseTimerQueue& tq)
