@@ -146,6 +146,7 @@ resiprocate_include_HEADERS = \
 	SdpContents.hxx \
 	Security.hxx \
 	SendingMessage.hxx \
+	ShutdownMessage.hxx \
 	SipFrag.hxx \
 	SipMessage.hxx \
 	SipMessageExplicit.hxx \
