@@ -1,9 +1,7 @@
+#include <util/compat.hxx>
 #include <util/Data.hxx>
 #include <sipstack/HeaderTypes.hxx>
 #include <sipstack/Symbols.hxx>
-
-int strcasecmp(const char*, const char*);
-int strncasecmp(const char*, const char*, int len);
 
 using namespace Vocal2;
 
