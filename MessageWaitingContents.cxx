@@ -93,7 +93,7 @@ MessageWaitingContents::clone() const
 }
 
 ostream& 
-MessageWaitingContents::encode(ostream& s) const
+MessageWaitingContents::encodeParsed(ostream& s) const
 {
    s << "Messages-Waiting" << Symbols::COLON[0] << Symbols::SPACE[0]
      << (mHasMessages ? "yes" : "no") << Symbols::CRLF;
