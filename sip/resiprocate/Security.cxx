@@ -44,7 +44,7 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
    ssl = NULL;
    
    assert( security );
-   SSL_CTX* ctx = security->getTlsCtx();
+   SSL_CTX* ctx = security->getTlsCtx(server);
    assert(ctx);
    
    ssl = SSL_new(ctx);
@@ -288,7 +288,7 @@ Security::Security()
 
 
 SSL_CTX* 
-Security::getTlsCtx()
+Security::getTlsCtx(bool isServer)
 {
    if ( ctx )
    {
@@ -298,14 +298,25 @@ Security::getTlsCtx()
    ctx=SSL_CTX_new( TLSv1_method() );
    assert( ctx );
    
-   int ok;
-   assert( publicCert );
-   ok = SSL_CTX_use_certificate(ctx, publicCert);
-   assert( ok == 1);
+   if ( isServer )
+   {
+      assert( publicCert );
+      assert( privateKey );
+   }
    
-   assert( privateKey );
-   ok = SSL_CTX_use_PrivateKey(ctx,privateKey);
-   assert( ok == 1);
+   int ok;
+   
+   if ( publicCert )
+   {
+      ok = SSL_CTX_use_certificate(ctx, publicCert);
+      assert( ok == 1);
+   }
+   
+   if (privateKey)
+   {
+      ok = SSL_CTX_use_PrivateKey(ctx,privateKey);
+      assert( ok == 1);
+   }
    
    assert( certAuthorities );
    SSL_CTX_set_cert_store(ctx, certAuthorities);
@@ -373,10 +384,12 @@ Security::loadAllCerts( const Data& password, const Data&  dirPath )
    ok = loadMyPublicCert( getPath( dirPath, Data("id.pem")) ) ? ok : false;
    ok = loadMyPrivateKey( password, getPath(dirPath,Data("id_key.pem") )) ? ok : false;
 
+#if 0
    if (ok)
    {
       getTlsCtx();
    }
+#endif
    
 #ifdef WIN32
    Data pubKeyDir("public_keys\\");
