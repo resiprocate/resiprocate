@@ -170,8 +170,6 @@ UdpTransport::process(fd_set* fdSet)
    }
    else if (len > 0)
    {
-	   // TODO - the next line is really really gross
-      //unsigned long len = static_cast<unsigned long>(len);
       
       if (len == MaxBufferSize)
       {
@@ -195,33 +193,47 @@ UdpTransport::process(fd_set* fdSet)
       // Tell the SipMessage about this datagram buffer.
       message->addBuffer(buffer);
 
-      Preparse preParser(*message, buffer, len);
+      // This is UDP, so, initialise the preparser with this
+      // buffer.
 
-      bool ppStatus = preParser.process();
+
+      bool error = false;
+      bool complete = false;
+      
+      int used = 0;
+
+      PreparseState::TransportAction status = PreparseState::NONE;
+      
+      mPreparse.process(*message,buffer, len, used, status);
+
+      
       // this won't work if UDPs are fragd !ah!
 
-      if (ppStatus)
+      if (status == PreparseState::preparseError || 
+          status == PreparseState::fragment )
       {
-         // ppStatus will be false ONLY when the DATAGRAM did not
-         // contain a Preparsable byte-stream. In the UDP transport,
-         // this is an error. 
-
-         // OTHER TRANSPORTS will have to handle fragmentation when
-         // this condition is set.
-         // determine that there is a fragment that needs to be done
-         // alloc buffer to hold remainder and next network fragment
-         // as per !cj! ideas on anti-frag.
-         // need nic to Preparser that can detect frags remaining. !ah!
-         // ?? think about this design.
-
-         InfoLog(<<"Rejecting datagram as unparsable.");
+         InfoLog(<<"Rejecting datagram as unparsable / fragmented.");
          delete message;
+
       }
       else
       {
-      
-         DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
+          // no pp error
+          if (status == PreparseState::headersComplete &&
+              used < len)
+          {
+              // body is present .. add it up.
+              // NB. The Sip Message uses an overlay (again)
+              // for the body. It ALSO expects that the body
+              // will be contiguous (of course).
+              // it doesn't need a new buffer in UDP b/c there
+              // will only be one datagram per buffer. (1:1 strict)
 
+              message->setBody(buffer+used,len-used);
+              DebugLog(<<"added " << len-used << " byte body");
+          }
+          
+         DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
          // set the received= and rport= parameters in the message if necessary !jf!
          mStateMachineFifo.add(message);
       }

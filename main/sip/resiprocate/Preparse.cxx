@@ -5,6 +5,8 @@
 #include <sipstack/Preparse.hxx>
 #include <sipstack/HeaderTypes.hxx>
 #include <sipstack/SipMessage.hxx>
+#include <util/Mutex.hxx>
+#include <util/Lock.hxx>
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
@@ -15,420 +17,465 @@ using namespace std;
 //  AE(int start, int disposition, const char *p, int next, int workMask);
 //  AE(int start, int disposition, int ch, int next, int workMask);
 
-using namespace Vocal2::PreparseStateTable;
+using namespace Vocal2::PreparseState;
 
 Edge *** mTransitionTable = 0;
 
+#define PP_DEBUG
+#define SUPER_DEBUG
+#define DEBUG_HELPERS
+
 #if !defined(NDEBUG) && defined(PP_DEBUG)
+#if !defined(DEBUG_HELPERS)
+#define DEBUG_HELPERS
+#endif
 
 Data
 showN(const char * p, size_t l)
 {
-   Data s;
-   for(unsigned int i = 0 ; i < l ; i++)
-   {
-      s += p[i];
-   }
-   return s;
+    Data s;
+    for(unsigned int i = 0 ; i < l ; i++)
+    {
+        s += p[i];
+    }
+    return s;
+}
+#endif
+#if defined (DEBUG_HELPERS)
+
+const char * statusName(PreparseState::TransportAction s)
+{
+    switch (s)
+    {
+        case headersComplete: return "headersComplete"; break;
+        case preparseError: return "preparseError"; break;
+        case fragment: return "fragment"; break;
+        case NONE: return "NONE"; break;
+    }
+    assert(0);
 }
 
-const char *  stateName(PreparseStateTable::State s)
+const char *  stateName(PreparseState::State s)
 {
-   switch (s)
-   {
-      case NewMsg: return "NewMsg";
-      case NewMsgCrLf: return "NewMsgCrLf";
-      case StartLine: return "StartLine";
-      case StartLineCrLf: return "StartLineCrLf";
-      case BuildHdr: return "BuildHdr";
-      case EWSPostHdr: return "EWSPostHdr";
-      case EWSPostColon: return "EWSPostColon";
-      case BuildData: return "BuildData";
-      case BuildDataCrLf: return "BuildDataCrLf";
-      case CheckCont: return "CheckCont";
-      case CheckEndHdr: return "CheckEndHdr";
-      case InQ: return "InQ";
-      case InQEsc: return "InQEsc";
-      case InAng: return "InAng";
-      case InAngQ: return "InAngQ";
-      case InAngQEsc: return "InAngQEsc";
-      case Done: return "Done";
-      default: return "**UNK**";
-   }
+    switch (s)
+    {
+        case NewMsg: return "NewMsg";
+        case NewMsgCrLf: return "NewMsgCrLf";
+        case StartLine: return "StartLine";
+        case StartLineCrLf: return "StartLineCrLf";
+        case BuildHdr: return "BuildHdr";
+        case EWSPostHdr: return "EWSPostHdr";
+        case EWSPostColon: return "EWSPostColon";
+        case BuildData: return "BuildData";
+        case BuildDataCrLf: return "BuildDataCrLf";
+        case CheckCont: return "CheckCont";
+        case CheckEndHdr: return "CheckEndHdr";
+        case InQ: return "InQ";
+        case InQEsc: return "InQEsc";
+        case InAng: return "InAng";
+        case InAngQ: return "InAngQ";
+        case InAngQEsc: return "InAngQEsc";
+        case EndMsg: return "EndMsg";
+        default: assert(0);
+            
+    }
 }
 
 
 Data
 workString(int m)
 {
-   Data s("[");
+    Data s("[");
 
-   if ( m &  actNil) s += " Nil ";
-   if ( m &  actAdd) s += " Add ";
-   if ( m &  actBack) s += " Back ";
-   if ( m &  actFline) s += " Fline ";
-   if ( m &  actReset) s += " Reset ";
-   if ( m &  actHdr) s += " Hdr ";
-   if ( m &  actData) s += " Data ";
-   if ( m &  actBad) s += " Bad ";
-   if ( m & actEndHdrs) s += " EndHdrs ";
-   s += ']';
-   return s;
+    if ( m &  actNil) s += " Nil ";
+    if ( m &  actAdd) s += " Add ";
+    if ( m &  actBack) s += " Back ";
+    if ( m &  actFline) s += " Fline ";
+    if ( m &  actReset) s += " Reset ";
+    if ( m &  actHdr) s += " Hdr ";
+    if ( m &  actData) s += " Data ";
+    if ( m &  actBad) s += " Bad ";
+    if ( m & actEndHdrs) s += " EndHdrs ";
+    s += ']';
+    return s;
 }
-
 #endif
 
 const int X = -1;
 const char XC = -1;
 
 void
-AE ( PreparseStateTable::State start,
+AE ( PreparseState::State start,
      int disposition,
      int c,
-     PreparseStateTable::State next,
+     PreparseState::State next,
      int workMask)
 {
-   // change back to <0 iff it will work !ah!
-   int stateStart = (start==X) ? 0 : start;
-   int stateEnd = (start==X) ? nStates : start+1;
+    // change back to <0 iff it will work !ah!
+    int stateStart = (start==X) ? 0 : start;
+    int stateEnd = (start==X) ? nStates : start+1;
 
-   int dispStart = (disposition==X) ? 0 : disposition;
-   int dispEnd = (disposition==X) ? nDisp : disposition+1;
+    int dispStart = (disposition==X) ? 0 : disposition;
+    int dispEnd = (disposition==X) ? nDisp : disposition+1;
    
-   int charStart = (c==X) ? 0 : (int)c;
-   int charEnd = (c==X) ? nOct : (int)(c+1);
+    int charStart = (c==X) ? 0 : (int)c;
+    int charEnd = (c==X) ? nOct : (int)(c+1);
 
-   for(int st = stateStart ; st < stateEnd ; st++)
-      for(int di = dispStart ; di < dispEnd ; di++)
-	 for(int ch = charStart ; ch < charEnd ; ch++)
-	 {
-	    Edge& e( mTransitionTable[st][di][ch] );
-	    e.nextState = next;
-	    e.workMask = workMask;
-	 }
+    for(int st = stateStart ; st < stateEnd ; st++)
+        for(int di = dispStart ; di < dispEnd ; di++)
+            for(int ch = charStart ; ch < charEnd ; ch++)
+            {
+                Edge& e( mTransitionTable[st][di][ch] );
+                e.nextState = next;
+                e.workMask = workMask;
+            }
 }
 
 static void
-AE (PreparseStateTable::State start,
+AE (PreparseState::State start,
     int disposition,
     const char * p,
-    PreparseStateTable::State next,
+    PreparseState::State next,
     int workMask)
 {
-   const char *q = p;
-   while(*q)
-      AE (start, disposition, (int)*q++, next, workMask);
+    const char *q = p;
+    while(*q)
+        AE (start, disposition, (int)*q++, next, workMask);
 }
 
 void
-PreparseStateTable::InitStatePreparseStateTable()
+PreparseState::InitStatePreparseStateTable()
 {
-     
-   static bool initialised = false;
+    static Mutex m;
+    
+    Lock l(m); // lock this function against re-entrancy
+    
+    static bool initialised = false;
    
-   // !ah! This needs to be mutexd
+    // !ah! This needs to be mutexd
 
-   if (initialised) return;
+    if (initialised) return;
 
-   mTransitionTable = new Edge**[nStates];
-   for(int i = 0 ; i < nStates ; i++)
-   {
-      mTransitionTable[i] = new Edge*[nDisp];
-      for(int j = 0 ; j < nDisp ; j++)
-      {
-         mTransitionTable[i][j] = new Edge[nOct];
-         for(int k = 0 ; k < nOct ; k ++)
-         {
-            Edge& e(mTransitionTable[i][j][k]);
-            e.nextState = NewMsg;
-            e.workMask = 0;
-         }
-      }
-   }
+    mTransitionTable = new Edge**[nStates];
+    for(int i = 0 ; i < nStates ; i++)
+    {
+        mTransitionTable[i] = new Edge*[nDisp];
+        for(int j = 0 ; j < nDisp ; j++)
+        {
+            mTransitionTable[i][j] = new Edge[nOct];
+            for(int k = 0 ; k < nOct ; k ++)
+            {
+                Edge& e(mTransitionTable[i][j][k]);
+                e.nextState = NewMsg;
+                e.workMask = 0;
+            }
+        }
+    }
 
-   // Assert that the Symbols package is as we expect.
-   // Better than redefining symbols here.
-   // This is only done once at initialisation.
+    // Assert that the Symbols package is as we expect.
+    // Better than redefining symbols here.
+    // This is only done once at initialisation.
 
-   assert(Symbols::CR && strlen(Symbols::CR) == 1);
-   assert(Symbols::LF && strlen(Symbols::LF) == 1);
-   assert(Symbols::LA_QUOTE && strlen(Symbols::LA_QUOTE) == 1);
-   assert(Symbols::RA_QUOTE && strlen(Symbols::RA_QUOTE) == 1);
-   assert(Symbols::DOUBLE_QUOTE && strlen(Symbols::DOUBLE_QUOTE) == 1);
-   assert(Symbols::COLON && strlen(Symbols::COLON) == 1);
-   assert(Symbols::B_SLASH && strlen(Symbols::B_SLASH) == 1);
-   assert(Symbols::COMMA && strlen(Symbols::COMMA) == 1);
-   assert(Symbols::SPACE && strlen(Symbols::SPACE) == 1);
-   assert(Symbols::TAB && strlen(Symbols::TAB) == 1);
+    assert(Symbols::CR && strlen(Symbols::CR) == 1);
+    assert(Symbols::LF && strlen(Symbols::LF) == 1);
+    assert(Symbols::LA_QUOTE && strlen(Symbols::LA_QUOTE) == 1);
+    assert(Symbols::RA_QUOTE && strlen(Symbols::RA_QUOTE) == 1);
+    assert(Symbols::DOUBLE_QUOTE && strlen(Symbols::DOUBLE_QUOTE) == 1);
+    assert(Symbols::COLON && strlen(Symbols::COLON) == 1);
+    assert(Symbols::B_SLASH && strlen(Symbols::B_SLASH) == 1);
+    assert(Symbols::COMMA && strlen(Symbols::COMMA) == 1);
+    assert(Symbols::SPACE && strlen(Symbols::SPACE) == 1);
+    assert(Symbols::TAB && strlen(Symbols::TAB) == 1);
 
-   // Setup the table with useful transitions.
-   // NOTE: This is done to (1) make them ints (2) make the automatic diagram
-   // have reasonable symbol names.  DO NOT put Symbols::XX in the AE() calls.
+    // Setup the table with useful transitions.
+    // NOTE: This is done to (1) make them ints (2) make the automatic diagram
+    // have reasonable symbol names.  DO NOT put Symbols::XX in the AE() calls.
 
-   const int CR = (int)(*Symbols::CR);
-   const int LF = (int)(*Symbols::LF);
-   const int LAQUOT = (int)(*Symbols::LA_QUOTE);
-   const int RAQUOT = (int)(*Symbols::RA_QUOTE);
-   const int QUOT = (int)(*Symbols::DOUBLE_QUOTE);
+    const int CR = (int)(*Symbols::CR);
+    const int LF = (int)(*Symbols::LF);
+    const int LAQUOT = (int)(*Symbols::LA_QUOTE);
+    const int RAQUOT = (int)(*Symbols::RA_QUOTE);
+    const int QUOT = (int)(*Symbols::DOUBLE_QUOTE);
    
-   const int COLON = (int)(*Symbols::COLON);
-   const int LSLASH = (int)(*Symbols::B_SLASH);
-   const int COMMA = (int)(*Symbols::COMMA);
-   const char LWS[3]  =
-      {
-         (*Symbols::SPACE),
-         (*Symbols::TAB),
-         0
-      }
-   ;
+    const int COLON = (int)(*Symbols::COLON);
+    const int LSLASH = (int)(*Symbols::B_SLASH);
+    const int COMMA = (int)(*Symbols::COMMA);
+    const char LWS[3]  =
+        {
+            (*Symbols::SPACE),
+            (*Symbols::TAB),
+            0
+        }
+    ;
 
 
-   // AE -- add edge(s)
-   // AE ( state, disp, char, newstate, work)
+    // AE -- add edge(s)
+    // AE ( state, disp, char, newstate, work)
 
-   // MUST be AE( format ) so fsm generation will work.
-   AE( NewMsg,X,XC,StartLine,actAdd); // all chars
-   AE( NewMsg,X,CR,NewMsgCrLf,actNil); // eat CR
+    // MUST be AE( format ) so fsm generation will work.
+    AE( NewMsg,X,XC,StartLine,actAdd); // all chars
+    AE( NewMsg,X,CR,NewMsgCrLf,actNil); // eat CR
 
-   AE( NewMsgCrLf,X,XC,Done,actBad);
-   AE( NewMsgCrLf,X,LF,NewMsg,actNil); 
+    AE( NewMsgCrLf,X,XC,EndMsg,actBad);
+    AE( NewMsgCrLf,X,LF,NewMsg,actNil); 
 
-   AE( StartLine,X,XC,StartLine,actAdd);
-   AE( StartLine,X,CR,StartLineCrLf,actNil);
+    AE( StartLine,X,XC,StartLine,actAdd);
+    AE( StartLine,X,CR,StartLineCrLf,actNil);
 
-   AE( StartLineCrLf,X,XC,Done,actBad);
-   AE( StartLineCrLf,X,LF,BuildHdr,actReset | actFline);
+    AE( StartLineCrLf,X,XC,EndMsg,actBad);
+    AE( StartLineCrLf,X,LF,BuildHdr,actReset | actFline);
 
-   AE( BuildHdr,X,XC, BuildHdr,actAdd);
-   AE( BuildHdr,X,LWS,EWSPostHdr,actNil);
-   AE( BuildHdr,X,COLON,EWSPostColon,actHdr | actReset);
+    AE( BuildHdr,X,XC, BuildHdr,actAdd);
+    AE( BuildHdr,X,LWS,EWSPostHdr,actNil);
+    AE( BuildHdr,X,COLON,EWSPostColon,actHdr | actReset);
   
-   AE( EWSPostHdr,X,XC,Done,actBad);
-   AE( EWSPostHdr,X,LWS,EWSPostHdr,actNil);
-   AE( EWSPostHdr,X,COLON,EWSPostColon,actHdr | actReset);
+    AE( EWSPostHdr,X,XC,EndMsg,actBad);
+    AE( EWSPostHdr,X,LWS,EWSPostHdr,actNil);
+    AE( EWSPostHdr,X,COLON,EWSPostColon,actHdr | actReset);
 
-   AE( EWSPostColon,X,XC,BuildData,actAdd);
-   AE( EWSPostColon,X,LWS,EWSPostColon,actReset );
+    AE( EWSPostColon,X,XC,BuildData,actAdd);
+    AE( EWSPostColon,X,LWS,EWSPostColon,actReset );
 
-   // Add edges that will ''skip'' data building and
-   // go straight to quoted states
-   AE( EWSPostColon,dCommaSep,LAQUOT,InAng,actAdd );
-   AE( EWSPostColon,dCommaSep,QUOT,InQ,actAdd );
+    // Add edges that will ''skip'' data building and
+    // go straight to quoted states
+    AE( EWSPostColon,dCommaSep,LAQUOT,InAng,actAdd );
+    AE( EWSPostColon,dCommaSep,QUOT,InQ,actAdd );
 
-   AE( BuildData,X,XC,BuildData,actAdd);
-   AE( BuildData,X,CR,BuildDataCrLf,actNil);
+    AE( BuildData,X,XC,BuildData,actAdd);
+    AE( BuildData,X,CR,BuildDataCrLf,actNil);
 
-   AE( BuildDataCrLf,X,XC,Done,actBad);
-   AE( BuildDataCrLf,X,LF,CheckCont,actNil);
+    AE( BuildDataCrLf,X,XC,EndMsg,actBad);
+    AE( BuildDataCrLf,X,LF,CheckCont,actNil);
 
-   // (push 1st then b/u)
-   AE( CheckCont,X,XC, BuildHdr,actData|actReset|actBack );
-   AE( CheckCont,X,LWS,BuildData,actAdd );
+    // (push 1st then b/u)
+    AE( CheckCont,X,XC, BuildHdr,actData|actReset|actBack );
+    AE( CheckCont,X,LWS,BuildData,actAdd );
    
-   // Check if double CRLF (end of hdrs)
-   AE( CheckCont,X,CR,CheckEndHdr,actData|actReset);
-   AE( CheckEndHdr,X,XC,Done,actBad);
-   AE( CheckEndHdr,X,LF,Done,actEndHdrs);
+    // Check if double CRLF (end of hdrs)
+    AE( CheckCont,X,CR,CheckEndHdr,actData|actReset);
+    AE( CheckEndHdr,X,XC,EndMsg,actBad);
+    AE( CheckEndHdr,X,LF,EndMsg,actEndHdrs);
 
-   // Disposition sensitive edges
+    // Disposition sensitive edges
 
-   AE( BuildData,dCommaSep,LAQUOT,InAng,actAdd);
+    AE( BuildData,dCommaSep,LAQUOT,InAng,actAdd);
 
-   // Angle Quotes
-   AE(InAng,X,XC,InAng,actAdd);
-   AE(InAng,X,RAQUOT,BuildData,actAdd);
-   AE(InAng,X,QUOT,InAngQ,actAdd);
+    // Angle Quotes
+    AE(InAng,X,XC,InAng,actAdd);
+    AE(InAng,X,RAQUOT,BuildData,actAdd);
+    AE(InAng,X,QUOT,InAngQ,actAdd);
 
-   AE(InAngQ,X,XC,InAngQ,actAdd);
-   AE(InAngQ,X,QUOT,InAng,actAdd);
-   AE(InAngQ,X,LSLASH,InAngQEsc,actAdd);
+    AE(InAngQ,X,XC,InAngQ,actAdd);
+    AE(InAngQ,X,QUOT,InAng,actAdd);
+    AE(InAngQ,X,LSLASH,InAngQEsc,actAdd);
 
-   AE(InAngQEsc,X,XC,InAngQ,actAdd);
+    AE(InAngQEsc,X,XC,InAngQ,actAdd);
 
-   // Bare Quotes
-   AE(BuildData,dCommaSep,QUOT,InQ,actAdd);
-   AE(InQ,X,XC,InQ,actAdd);
-   AE(InQ,X,QUOT,BuildData,actAdd);
-   AE(InQ,X,LSLASH,InQEsc,actAdd);
-   AE(InQEsc,X,XC,InQ,actAdd);
+    // Bare Quotes
+    AE(BuildData,dCommaSep,QUOT,InQ,actAdd);
+    AE(InQ,X,XC,InQ,actAdd);
+    AE(InQ,X,QUOT,BuildData,actAdd);
+    AE(InQ,X,LSLASH,InQEsc,actAdd);
+    AE(InQEsc,X,XC,InQ,actAdd);
    
-   // add comma transition
-   AE(BuildData,dCommaSep,COMMA,EWSPostColon, actData|actReset);
+    // add comma transition
+    AE(BuildData,dCommaSep,COMMA,EWSPostColon, actData|actReset);
    
-   initialised = true;
+    initialised = true;
   
 }
 
 
-Preparse::Preparse(SipMessage& sipMsg):
-   mSipMessage(sipMsg),
-   mBuffer(0), mLength(0), 
-   mDisposition(dContinuous),
-   mState(PreparseStateTable::NewMsg),
-   mPtr(mBuffer), mHeader(0), mHeaderLength(0),
-   mHeaderType(Headers::UNKNOWN),
-   mAnchorBeg(0),
-   mAnchorEnd(0),
-   mDone(false)
+Preparse::Preparse():
+    mState(NewMsg)
 {
-   InitStatePreparseStateTable();
+    InitStatePreparseStateTable();
 }
 
-Preparse::Preparse(SipMessage& sipMsg, const char * buffer, size_t length):
-   mSipMessage(sipMsg),
-   mBuffer(buffer),
-   mLength(length), 
-   mDisposition(dContinuous),
-   mState(PreparseStateTable::NewMsg),
-   mPtr(mBuffer),
-   mHeader(0),
-   mHeaderLength(0),
-   mAnchorBeg(buffer),
-   mAnchorEnd(buffer),
-   mDone(false)
-{
-   InitStatePreparseStateTable();
-}
-
-void
-Preparse::addBuffer(const char * buffer, size_t length)
-{
-   mBuffer = buffer;
-   mAnchorBeg = mAnchorEnd = mBuffer = buffer; // will change when wraps
-                                               // implemented !ah!
-   mHeader = 0;
-   mHeaderLength = 0;
-   mLength = length;
-   mPtr = buffer;
-   mDone = false;
-#if defined(PP_DEBUG)
-   DebugLog( << "added buffer" << mBuffer << ' ' << mLength );
-#endif
-}
 
 #if defined(PP_DEBUG)
 #include <ctype.h>
 
 ostream& showchar(ostream& os, char c)
 {
-   if (isprint(c))
-      os << c;
-   else
-      os << (int)c;
+    if (isprint(c))
+        os << c;
+    else
+        os << (int)c;
 
-   return os;
+    return os;
    
 }
 #endif
 
 
-bool
-Preparse::process()
-{
-   while ( (static_cast<size_t>(mPtr - mBuffer)) < mLength && !mDone)
-   {
-      //using namespace PreparseStateTable;
-      Edge& e(mTransitionTable[mState][mDisposition][*mPtr]);
+void
+Preparse::process(SipMessage& msg,
+                  const char * buffer,
+                  size_t length,
+                  int& used,
+                  PreparseState::TransportAction& status)
+ {
+     Headers::Type headerType = Headers::NONE;
+     int headerLength = 0 ; // size of the header string (To,From, etc)
+
+     PreparseState::Disposition disposition = dContinuous;
+     // do we care about commas? See machine docs.
+      
+
+     State anchorState = NewMsg;
+     
+     bool done = false;
+     
+     
+     const char * traversalPtr = 0;
+     const char * headerPtr = 0;
+     const char * anchorBeg = 0;
+     const char * anchorEnd = 0;
+
+
+     // initialise the pointers
+     traversalPtr = anchorEnd = anchorBeg = buffer;
+     headerPtr = 0;
+     
+     // set return values so they are sensible
+     used = -1;
+     status = NONE;
+    
+    while ( (static_cast<size_t>(traversalPtr - buffer)) < length 
+            && !done)
+    {
+        //using namespace PreparseStateTable;
+        Edge& e(mTransitionTable[mState][disposition][*traversalPtr]);
 
 #if defined(PP_DEBUG) && defined(SUPER_DEBUG)
-      DebugLog( << "EDGE " << ::stateName(mState)
-                << " (" << (int) *mPtr << ')'
-                << " -> " << ::stateName(e.nextState)
-                << ::workString(e.workMask) );
+        DebugLog( << "EDGE " << ::stateName(mState)
+                  << " (" << (int) *traversalPtr << ')'
+                  << " -> " << ::stateName(e.nextState)
+                  << ::workString(e.workMask) );
 #endif      
       
-      if (e.workMask & actAdd)
-      {
-	 mAnchorEnd = mPtr;
+        if (e.workMask & actAdd)
+        {
+            anchorEnd = traversalPtr;
+
 #if defined(PP_DEBUG) && defined(SUPER_DEBUG)
-         DebugLog( << "+++Adding char '"
-                   << showN( mAnchorBeg, mAnchorEnd-mAnchorBeg+1)
-                   << '\'' );
+
+            DebugLog( << "+++Adding char '"
+                      << showN( anchorBeg, anchorEnd-anchorBeg+1)
+                      << '\'' );
 #endif
-      }
 
-      if (e.workMask & actHdr) // this edge indicates a header was seen
-      {
-         mHeader = mAnchorBeg;
-         mHeaderLength = mAnchorEnd-mAnchorBeg+1;
-         mHeaderType = Headers::getType(mHeader, mHeaderLength);
+        }
 
-         // ask header class if this is a header that needs to be split on commas?
-         if ( Headers::isCommaTokenizing( mHeaderType ))
-         {
-            mDisposition = dCommaSep;
-         }
-         else
-         {
-            mDisposition = dContinuous;
-         }
+        if (e.workMask & actHdr) // this edge indicates a header was seen
+        {
+            headerPtr = anchorBeg;
+            headerLength = anchorEnd-anchorBeg+1;
+
+            headerType = Headers::getType(headerPtr, headerLength);
+            
+
+            // ask header class if this is a header that needs to be split on commas?
+            if ( Headers::isCommaTokenizing( headerType ))
+            {
+                mDisposition = dCommaSep;
+            }
+            else
+            {
+                mDisposition = dContinuous;
+            }
 #if defined(PP_DEBUG)
-         DebugLog(<<"Hdr \'"
-                  << showN(mHeader, mHeaderLength)
-                  << "\' Type: " << int(mHeaderType) );
+            DebugLog(<<"Hdr \'"
+                     << showN(headerPtr, headerLength)
+                     << "\' Type: " << int(headerType) );
 #endif
-      }
+        }
 
-      if (e.workMask & actData) // there is some header data to pass up
-      {
-         mSipMessage.addHeader(mHeaderType,
-                               mHeader,
-                               mHeaderLength,
-                               mAnchorBeg,
-                               mAnchorEnd - mAnchorBeg + 1
-            );
+        if (e.workMask & actData) // there is some header data to pass up
+        {
+            msg.addHeader(headerType,
+                          headerPtr,
+                          headerLength,
+                          anchorBeg,
+                          anchorEnd - anchorBeg + 1
+                );
 #if defined(PP_DEBUG)
-         DebugLog(<<"DATA "
-                  << Headers::HeaderNames[mHeaderType]
-                  << ": \'"
-                  << showN(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1)
-                  << "\'");
+            DebugLog(<<"DATA "
+                     << Headers::HeaderNames[headerType]
+                     << ": \'"
+                     << showN(anchorBeg, anchorEnd - anchorBeg + 1)
+                     << "\'");
 #endif
-      }
+        }
 
-      if (e.workMask & actFline) // first line complete.
-      {
+        if (e.workMask & actFline) // first line complete.
+        {
 #if defined(PP_DEBUG)
-         DebugLog(<<"FLINE \'"
-                  << showN(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1)
-                  << "\'");
+            DebugLog(<<"FLINE \'"
+                     << showN(anchorBeg, anchorEnd - anchorBeg + 1)
+                     << "\'");
 #endif
-         mSipMessage.setStartLine(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1);
-      }
+            msg.setStartLine(anchorBeg, anchorEnd - anchorBeg + 1);
+        }
 
-      if (e.workMask & actBack)
-      {
-         mPtr--;
-      }
+        if (e.workMask & actBack)
+        {
+            traversalPtr--;
+        }
 
-      if (e.workMask & actBad)
-      {
-         DebugLog(<<"BAD");
-         mDone = true;
-      }
+        if (e.workMask & actBad)
+        {
+            DebugLog(<<"BAD");
+            status = PreparseState::preparseError;
+            used = traversalPtr - buffer;
+            done = true;
+        }
 
-      if (e.workMask & actEndHdrs)
-      {
+        if (e.workMask & actEndHdrs)
+        {
 #if defined(PP_DEBUG)
-         DebugLog(<<"END_HDR");
+            DebugLog(<<"END_HDR");
 #endif
-         mDone = true;
-      }
+            done = true;
+            status = headersComplete;
+            used = traversalPtr - buffer;
+        }
       
-      mState = e.nextState;
-      mPtr++;
+        mState = e.nextState;
+        traversalPtr++;
 
-      if (e.workMask & actReset)
-      {
-	 mAnchorBeg = mAnchorEnd = mPtr;
+        if (e.workMask & actReset) // Leave this AFTER the tp++ (above)
+        {
+            anchorBeg = anchorEnd = traversalPtr;
+            anchorState = mState; // remember our state here...
+            // if we run off the end of the buffer, this is the 
+            // state that we need to remember,
+            // likewise, the pointer offset that we return isn't
+            // the end of the buffer, but the location of the next unprocessed
+            // header / request line startup...
 #if defined(PP_DEBUG)
-         DebugLog(<<"RESET");
+            DebugLog(<<"RESET");
 #endif
-      }
+        }
       
-   }
-   return !mDone; // mDone means we a done, client wants false when
-                  // we are complete. (return inverse)
+    }
+
+    if (!done)
+    {
+        status = fragment;
+        used = headerPtr - buffer + 1; // !ah! wrong ... fixme see hxx
+    }
+    
+    assert(used > 0);
+
+    DebugLog(<<"nBytes examined " << traversalPtr - buffer  );
+    DebugLog(<< "used:" << used );
+    DebugLog(<< "state: " << stateName(mState));
+    DebugLog(<< "status: " << statusName(status));
+    
+    return ;
+
 }
 
 

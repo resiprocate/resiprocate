@@ -6,108 +6,118 @@
 
 #include <sipstack/HeaderTypes.hxx>
 
-
 namespace Vocal2
 {
-   class SipMessage;            // fwd decl
 
-   namespace PreparseStateTable
-   {
-      // Our actions
+class Transport;
 
-      const int actNil   = 0;
-      const int actAdd   = (1 << 0);
-      const int actBack  = (1 << 1);
-      const int actFline = (1 << 2);
-      const int actReset = (1 << 3);
-      const int actHdr   = (1 << 4);
-      const int actData  = (1 << 5);
-      const int actBad   = (1 << 6);
-      const int actEndHdrs = (1 << 7);
+class SipMessage;            // fwd decl
+
+namespace PreparseState
+{
+
+typedef enum 
+{
+    headersComplete=0,
+    preparseError,
+    fragment,
+    NONE
+} TransportAction;
+ 
+
+typedef enum {
+    NewMsg = 0,
+    NewMsgCrLf,
+    StartLine,
+    StartLineCrLf,
+    BuildHdr,
+    EWSPostHdr,
+    EWSPostColon,
+    BuildData,
+    BuildDataCrLf,
+    CheckCont,
+    CheckEndHdr,
+    InQ,
+    InQEsc,
+    InAng,
+    InAngQ,
+    InAngQEsc,
+    EndMsg,
+    lastStateMarker
+} State;
+
+// Our actions
+
+const int actNil   = 0;
+const int actAdd   = (1 << 0);
+const int actBack  = (1 << 1);
+const int actFline = (1 << 2);
+const int actReset = (1 << 3);
+const int actHdr   = (1 << 4);
+const int actData  = (1 << 5);
+const int actBad   = (1 << 6);
+const int actEndHdrs = (1 << 7);
 
   
-      typedef enum {
-         NewMsg = 0,
-         NewMsgCrLf,
-         StartLine,
-         StartLineCrLf,
-         BuildHdr,
-         EWSPostHdr,
-         EWSPostColon,
-         BuildData,
-         BuildDataCrLf,
-         CheckCont,
-         CheckEndHdr,
-         InQ,
-         InQEsc,
-         InAng,
-         InAngQ,
-         InAngQEsc,
-         Done,
-         lastStateMarker
-      } State;
+typedef enum {
+    dCommaSep,
+    dContinuous,
+    lastDispositionMarker
+} Disposition;
 
-      typedef enum {
-         dCommaSep,
-         dContinuous,
-         lastDispositionMarker
-      } Disposition;
-
-      const int nStates = lastStateMarker;
-      const int nDisp   = 2;
-      const int nOct    = UCHAR_MAX+1;
+const int nStates = lastStateMarker;
+const int nDisp   = 2;
+const int nOct    = UCHAR_MAX+1;
     
-      /// Our sizes
+/// Our sizes
     
-      typedef struct 
-      {
-            State nextState;
-            int workMask;
-      } Edge;
+typedef struct 
+{
+        State nextState;
+        int workMask;
+} Edge;
   
-      void InitStatePreparseStateTable();
+void InitStatePreparseStateTable();
+ 
+ 
+}
+;
 
-   }
+ 
 
-
-   class Preparse
-   {
-      public:
-         Preparse(SipMessage& sipMsg, const char * buffer, size_t length);
-         Preparse(SipMessage& sipMsg);
+class Preparse
+{
+    public:
+        Preparse();
         
-         bool process();
+        void process(SipMessage& msg,
+                     const char * buffer,
+                     size_t length,
+                     int& used,
+                     PreparseState::TransportAction& status);
 
-         void addBuffer(const char * buffer, size_t length);
+        // used returns:
+        //  -1 -- needs more data (ran off end)
+        //        call setBuffer() before calling process again
+        //   n -- Number of bytes used from the current buffer.
+        //        
+        // messageComplete is true if we processed the end of the mesage.
+        // housekeep the buffer overlap and recall:
+        // until -1 OR status == headersComplete and used == length.
+        // 
+        // err -- set to true if there is an error in this buffer, discard.
+        // !ah! do we want to chew data until CRLFCRLF??
 
-      private:
-         SipMessage& mSipMessage;
-                                // we are pre-parsing this message
 
-         const char * mBuffer;	// the char buffer
-         size_t mLength;		// 
+    private:
 
-         PreparseStateTable::Disposition mDisposition;
-         // the disposition of this machine, a function
-         // of the mHeader enum
+        PreparseState::Disposition mDisposition;
+        // the disposition of this machine, a function
+        // of the mHeader enum
       
-         PreparseStateTable::State mState;
-         // the state of the machine we are in
-
-         const char * mPtr;		// the current traversal pointer
-      
-         const char * mHeader;	// the current Header string
-         size_t mHeaderLength;  // length of header
-         Headers::Type mHeaderType; // the enum for the currently
-                                // active header
-         
-         const char * mAnchorBeg;		// A curious place we anchored.
-         // The location of the last actReset.
-         const char * mAnchorEnd;
-
-         bool mDone;
+        PreparseState::State mState;
         
-   };
+};
  
 }
 
