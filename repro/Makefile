@@ -28,6 +28,7 @@ SRC =   \
 	RequestContext.cxx \
 	ResponseContext.cxx \
         RequestProcessor.cxx \
+	Registrar.cxx \
         RequestProcessorChain.cxx
 
 
