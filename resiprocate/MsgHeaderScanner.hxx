@@ -121,6 +121,10 @@ class MsgHeaderScanner {
   bool
   init();
 
+                                // !ah! DEBUG only, write to fd.
+                                // !ah! for documentation generation
+  static int dumpStateMachine(int fd); 
+
  private:
 
   // Copy constructor: declared but not defined
@@ -129,6 +133,7 @@ class MsgHeaderScanner {
   // Assignment: declared but not defined
   MsgHeaderScanner &
   operator=(const MsgHeaderScanner & from);
+
 
 };
 

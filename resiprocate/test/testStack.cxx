@@ -78,6 +78,7 @@ main(int argc, char* argv[])
    sender.addTransport(TCP, 5060, version);
    if (bindAddr)
    {
+      InfoLog(<<"Binding to address: " << bindAddr);
       sender.addTransport(UDP, 5070,version,bindAddr);
       sender.addTransport(TCP, 5070,version,bindAddr);
    }
@@ -86,6 +87,7 @@ main(int argc, char* argv[])
       sender.addTransport(UDP, 5070, version);
       sender.addTransport(TCP, 5070, version);
    }
+
    receiver.addTransport(UDP, 5080, version);
    receiver.addTransport(TCP, 5080, version);
 
@@ -93,7 +95,7 @@ main(int argc, char* argv[])
    NameAddr target;
    target.uri().scheme() = "sip";
    target.uri().user() = "fluffy";
-   target.uri().host() = DnsUtil::getLocalHostName();
+   target.uri().host() = bindAddr?bindAddr:DnsUtil::getLocalHostName();
    target.uri().port() = 5080;
    target.uri().param(p_transport) = proto;
   

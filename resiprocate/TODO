@@ -1,4 +1,4 @@
-$Id: TODO,v 1.14 2003/08/27 00:49:59 jason Exp $
+$Id: TODO,v 1.15 2003/10/07 23:49:41 alan Exp $
 
 Change the names of all the parser "components" to "integerparser" or
 something like that
@@ -67,3 +67,6 @@ Change BaseException::~BaseException to be pure virtual - cullen has changed thi
 
 
 TcpTransport has a long timeout in it if a tcp rst occurs
+
+Fix popt on os/x platforms.
+Fix (improve) default configure behaviours.
