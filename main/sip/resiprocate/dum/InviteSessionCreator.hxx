@@ -15,7 +15,8 @@ class InviteSessionCreator : public BaseCreator
 {
    public:
       InviteSessionCreator(DialogUsageManager& dum, 
-                           const Uri& aor,
+                           const NameAddr& target,
+                           const NameAddr& from,
                            const SdpContents* initial, 
                            ServerSubscriptionHandle serverSub = ServerSubscriptionHandle::NotValid());      
 
