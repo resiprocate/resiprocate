@@ -30,12 +30,12 @@ class Profile
       virtual void setDefaultStaleCallTime(int secs);
       virtual int getDefaultStaleCallTime() const;
 
-      // Only used if timer option tag is set.
+      // Only used if timer option tag is set in MasterProfile.
       // Note:  Value must be higher than 90 (as specified in session-timer draft)
       virtual void setDefaultSessionTime(int secs); 
       virtual int getDefaultSessionTime() const;
 
-      // Only used if timer option tag is set.
+      // Only used if timer option tag is set in MasterProfile.
       // Set to PreferLocalRefreshes if you prefer that the local UA performs the refreshes.  
       // Set to PreferRemoteRefreshes if you prefer that the remote UA peforms the refreshes.
       // Set to PreferUACRefreshes if you prefer that the UAC performs the refreshes.
