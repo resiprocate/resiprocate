@@ -162,7 +162,7 @@ InviteSession::provideOffer(const SdpContents& offer)
          InfoLog (<< "Sending " << mLastSessionModification.brief());
          mProposedLocalSdp = InviteSession::makeSdp(offer);
          InviteSession::setSdp(mLastSessionModification, offer);
-         mDum.send(mLastSessionModification);
+         mDialog.send(mLastSessionModification);
          break;
 
       case Answered:
@@ -189,7 +189,7 @@ InviteSession::provideAnswer(const SdpContents& answer)
          mDialog.makeResponse(mInvite200, mLastSessionModification, 200);
          InviteSession::setSdp(mInvite200, answer);
          InfoLog (<< "Sending " << mInvite200.brief());
-         mDum.send(mInvite200);
+         mDialog.send(mInvite200);
          startRetransmitTimer();
          break;
          
@@ -203,7 +203,7 @@ InviteSession::provideAnswer(const SdpContents& answer)
          mCurrentRemoteSdp = mProposedRemoteSdp;
          InviteSession::setSdp(response, answer);
          InfoLog (<< "Sending " << response.brief());
-         mDum.send(response);
+         mDialog.send(response);
          break;
       }
       
@@ -226,7 +226,7 @@ InviteSession::end()
          SipMessage bye;
          mDialog.makeRequest(bye, BYE);
          InfoLog (<< "Sending " << bye.brief());
-         mDum.send(bye);
+         mDialog.send(bye);
          break;
       }
 
@@ -247,12 +247,12 @@ InviteSession::end()
          SipMessage response;
          mDialog.makeResponse(response, mLastSessionModification, 488);
          InfoLog (<< "Sending " << response.brief());
-         mDum.send(response);
+         mDialog.send(response);
 
          SipMessage bye;
          mDialog.makeRequest(bye, BYE);
          InfoLog (<< "Sending " << bye.brief());
-         mDum.send(bye);
+         mDialog.send(bye);
          break;
       }
 
@@ -263,7 +263,7 @@ InviteSession::end()
          SipMessage bye;
          mDialog.makeRequest(bye, BYE);
          InfoLog (<< "Sending " << bye.brief());
-         mDum.send(bye);
+         mDialog.send(bye);
          break;
       }
       
@@ -295,7 +295,7 @@ InviteSession::reject(int statusCode)
          SipMessage response;
          mDialog.makeResponse(response, mLastSessionModification, statusCode);
          InfoLog (<< "Sending " << response.brief());
-         mDum.send(response);
+         mDialog.send(response);
          break;
       }
 
@@ -319,7 +319,7 @@ InviteSession::refer(const NameAddr& referTo)
    SipMessage refer;
    mDialog.makeRequest(refer, REFER);
    refer.header(h_ReferTo) = referTo;
-   mDum.send(refer);
+   mDialog.send(refer);
 }
 
 void
@@ -341,7 +341,7 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
    replaces.param(p_fromTag) = id.getLocalTag();
 
    refer.header(h_ReferTo).uri().embedded().header(h_Replaces) = replaces;
-   mDum.send(refer);
+   mDialog.send(refer);
 }
 
 void
@@ -354,7 +354,7 @@ InviteSession::info(const Contents& contents)
       mDialog.makeRequest(info, INFO);
       // !jf! handle multipart here
       info.setContents(&contents); 
-      mDum.send(info);
+      mDialog.send(info);
    }
    else
    {
@@ -415,7 +415,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
 {
    if (timeout.type() == DumTimeout::Retransmit200)
    {
-      mDum.send(mInvite200);
+      mDialog.send(mInvite200);
       if (mCurrentRetransmit200)
       {
          mCurrentRetransmit200 *= 2;
@@ -437,14 +437,14 @@ InviteSession::dispatch(const DumTimeout& timeout)
          transition(SentUpdate);
 
          InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
-         mDum.send(mLastSessionModification);
+         mDialog.send(mLastSessionModification);
       }
       else if (mState == SentReinviteGlare)
       {
          transition(SentReinvite);
 
          InfoLog (<< "Retransmitting the reINVITE (glare condition timer)");
-         mDum.send(mLastSessionModification);
+         mDialog.send(mLastSessionModification);
       }
    }
    else if (timeout.type() == DumTimeout::SessionExpiration)
@@ -501,7 +501,7 @@ InviteSession::dispatchConnected(const SipMessage& msg, const SdpContents* sdp )
             SipMessage ack;
             mDialog.makeRequest(ack, ACK);
             ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
-            mDum.send(ack);
+            mDialog.send(ack);
          }
          break;
 
@@ -601,7 +601,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg, const SdpContents* sd
          // !jf! I need to potentially include an answer in the ACK here
          SipMessage ack;
          mDialog.makeRequest(ack, ACK);
-         mDum.send(ack);
+         mDialog.send(ack);
          
          // !jf! do I need to allow a reINVITE overlapping the retransmission of
          // the ACK when a 200I is received? If yes, then I need to store all
@@ -660,7 +660,7 @@ InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg)
       SipMessage response;
       mDialog.makeResponse(response, msg, 500);
       response.header(h_RetryAfter).value() = Random::getRandom() % 10;
-      mDum.send(response);
+      mDialog.send(response);
    }
    else
    {
@@ -708,7 +708,7 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
       SipMessage ack;
       mDialog.makeRequest(ack, ACK);
       ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
-      mDum.send(ack);
+      mDialog.send(ack);
    }
    else if (msg.isResponse() && msg.header(h_CSeq).method() == INVITE)
    {
@@ -724,7 +724,7 @@ InviteSession::dispatchTerminated(const SipMessage& msg)
    {
       SipMessage response;
       mDialog.makeResponse(response, msg, 481);
-      mDum.send(response);
+      mDialog.send(response);
       guard.destroy();
    }
    else 
@@ -772,12 +772,12 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
    SipMessage response;
    mDialog.makeResponse(response, msg, 400); // !jf! what code to use?
    InfoLog (<< "Sending " << response.brief());
-   mDum.send(response);
+   mDialog.send(response);
 
    SipMessage bye;
    mDialog.makeRequest(bye, BYE);
    InfoLog (<< "Sending " << bye.brief());
-   mDum.send(bye);
+   mDialog.send(bye);
 }
 
 void
@@ -793,12 +793,12 @@ InviteSession::dispatchPrack(const SipMessage& msg)
 
       SipMessage rsp;
       mDialog.makeResponse(rsp, msg, 481);
-      mDum.send(rsp);
+      mDialog.send(rsp);
 
       SipMessage bye;
       mDialog.makeRequest(bye, BYE);
       InfoLog (<< "Sending " << bye.brief());
-      mDum.send(bye);
+      mDialog.send(bye);
 
    }
    else
@@ -820,12 +820,12 @@ InviteSession::dispatchCancel(const SipMessage& msg)
 
       SipMessage rsp;
       mDialog.makeResponse(rsp, msg, 200);
-      mDum.send(rsp);
+      mDialog.send(rsp);
 
       SipMessage bye;
       mDialog.makeRequest(bye, BYE);
       InfoLog (<< "Sending " << bye.brief());
-      mDum.send(bye);
+      mDialog.send(bye);
 
    }
    else
@@ -847,7 +847,7 @@ InviteSession::dispatchBye(const SipMessage& msg)
       SipMessage rsp;
       InfoLog (<< "Received " << msg.brief());
       mDialog.makeResponse(rsp, msg, 200);
-      mDum.send(rsp);
+      mDialog.send(rsp);
 
       // !jf! should we make some other callback here
       mDum.mInviteSessionHandler->onTerminated(getSessionHandle());
@@ -868,7 +868,7 @@ InviteSession::dispatchInfo(const SipMessage& msg)
       InfoLog (<< "Received " << msg.brief());
       SipMessage response;
       mDialog.makeResponse(response, msg, 200);
-      mDum.send(response);
+      mDialog.send(response);
       mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
    }
    else
@@ -1227,6 +1227,7 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    else
    {
       assert(0);
+      return Unknown;
    }
 }
 
@@ -1256,7 +1257,7 @@ InviteSession::dispatch(const SipMessage& msg)
       {
          SipMessage response;
          mDialog.makeResponse(response, msg, 200);
-         mDum.send(response);
+         mDialog.send(response);
          mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
       }
       else
@@ -1295,7 +1296,7 @@ InviteSession::dispatch(const SipMessage& msg)
             mLastRequest = *mQueuedBye;
             delete mQueuedBye;
             mQueuedBye = 0;
-            mDum.send(mLastRequest);
+            mDialog.send(mLastRequest);
             return;
          }
 
@@ -1347,7 +1348,7 @@ InviteSession::dispatch(const SipMessage& msg)
             SipMessage failure;
             mDum.makeResponse(failure, msg, 481);
             failure.header(h_AcceptLanguages) = mDum.mProfile->getSupportedLanguages();
-            mDum.sendResponse(failure);
+            mDialog.sendResponse(failure);
          }
          break;
       case Connected:
@@ -1378,7 +1379,7 @@ InviteSession::dispatch(const SipMessage& msg)
                      SipMessage failure;
                      mDialog.makeResponse(failure, msg, 491);
                      InfoLog (<< "Sending 491 - overlapping Invite transactions");
-                     mDum.sendResponse(failure);
+                     mDialog.sendResponse(failure);
                   }
                   break;
                case BYE:
@@ -1420,7 +1421,7 @@ InviteSession::dispatch(const SipMessage& msg)
                CSeqToMessageMap::iterator it = mAckMap.find(msg.header(h_CSeq).sequence());
                if (it != mAckMap.end())
                {
-                  mDum.send(it->second);
+                  mDialog.send(it->second);
                }
             }
          }
@@ -1483,7 +1484,7 @@ InviteSession::dispatch(const SipMessage& msg)
                      CSeqToMessageMap::iterator it = mAckMap.find(msg.header(h_CSeq).sequence());
                      if (it != mAckMap.end())
                      {
-                        mDum.send(it->second);
+                        mDialog.send(it->second);
                      }
                   }
                }
@@ -1520,7 +1521,7 @@ InviteSession::dispatch(const SipMessage& msg)
                SipMessage failure;
                mDialog.makeResponse(failure, msg, 491);
                InfoLog (<< "Sending 491 - overlapping Invite transactions");
-               mDum.sendResponse(failure);
+               mDialog.sendResponse(failure);
                return;
             }
          }
@@ -1562,7 +1563,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       CSeqToMessageMap::iterator it = mFinalResponseMap.find(timeout.seq());
       if (it != mFinalResponseMap.end())
       {
-         mDum.send(it->second);
+         mDialog.send(it->second);
          mCurrentRetransmit200 *= 2;
          mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(),  timeout.seq());
       }
@@ -1981,7 +1982,7 @@ InviteSession::send(SipMessage& msg)
    //handle NITs separately
    if (msg.header(h_CSeq).method() == INFO)
    {
-      mDum.send(msg);
+      mDialog.send(msg);
       return;
    }
 
@@ -2009,7 +2010,7 @@ InviteSession::send(SipMessage& msg)
          default:
             break;
       }
-      mDum.send(msg);
+      mDialog.send(msg);
    }
    else
    {
@@ -2020,7 +2021,7 @@ InviteSession::send(SipMessage& msg)
 
       {
          mState = Terminated;
-         mDum.send(msg);
+         mDialog.send(msg);
 	     //mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      // This is actually called when recieving the BYE message so that the BYE message can be passed to onTerminated
          guard.destroy();
       }
@@ -2039,11 +2040,11 @@ InviteSession::send(SipMessage& msg)
             sendSdp(mNextOfferOrAnswerSdp);
             mNextOfferOrAnswerSdp = 0;
          }
-         mDum.send(msg);
+         mDialog.send(msg);
       }
       else
       {
-         mDum.send(msg);
+         mDialog.send(msg);
       }
    }
 }

@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/NonDialogUsage.hxx"
 #include "resiprocate/NameAddr.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
