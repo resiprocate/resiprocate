@@ -104,12 +104,13 @@ SipStack::isMyDomain(const Data& domain) const
 void 
 SipStack::send(const SipMessage& msg)
 {
-   DebugLog (<< "SipStack::Send: " << msg.brief());
+   InfoLog (<< "SipStack::Send: " << msg.brief());
    
    SipMessage* toSend = new SipMessage(msg);
    toSend->setFromTU();
    mStateMacFifo.add(toSend);
 }
+
 
 // this is only if you want to send to a destination not in the route. You
 // probably don't want to use it. 
