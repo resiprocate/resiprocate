@@ -4,6 +4,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/DumTimeout.hxx"
+#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
@@ -66,13 +67,13 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          int code = msg.header(h_StatusLine).statusCode();         
          if (code == 100)
          {
-            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
+            mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
             mState = Proceeding;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), None, msg);
          }
          else if (code < 200)
          {
-            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
+            mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
             mState = Early;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
             mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
@@ -89,9 +90,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          else if (code < 300)
          {
             sendSipFrag(msg);            
-            //!dcm! -- pretty sure the following timer was bogus
-//            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
-            ++mStaleCallTimerSeq;  //unifies timer handling logic
+            ++mStaleCallTimerSeq;  // call is not stale - increment timer Seq - so that when timer expires nothing happens
 
             // Handle any Session Timer headers in response
             handleSessionTimerResponse(msg);
@@ -131,7 +130,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             }
             else if (code < 200)
             {
-               mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), ++mStaleCallTimerSeq);
+               mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(), ++mStaleCallTimerSeq);
                mState = Early;
                mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
             
@@ -147,9 +146,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             else if (code < 300)
             {
                sendSipFrag(msg);            
-               //!dcm! -- pretty sure the following timer was bogus
-//            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
-               ++mStaleCallTimerSeq;  //unifies timer handling logic
+               ++mStaleCallTimerSeq;  // call is not stale - increment timer Seq - so that when timer expires nothing happens
                mState = Connected;
 
                // Handle any Session Timer headers in response
@@ -211,7 +208,7 @@ ClientInviteSession::dispatch(const DumTimeout& timeout)
        && timeout.seq() == mStaleCallTimerSeq)
    {
       mDum.mInviteSessionHandler->onStaleCallTimeout(getHandle());
-      guard.destroy();      
+      send(end());  // Terminate call
    }
    else
    {

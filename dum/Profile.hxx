@@ -46,6 +46,10 @@ class Profile
       void setDefaultSessionTime(int secs); 
       int getDefaultSessionTime() const;
 
+      /// Call is stale if UAC gets no final response within the stale call timeout (default 3 minutes)
+      void setDefaultStaleCallTime(int secs);
+      int getDefaultStaleCallTime() const;
+
       //overrides the value used to populate the contact
       //?dcm? -- also change via entries? Also, dum currently uses(as a uas)
       //the request uri of the dialog constructing request for the local contact
@@ -160,6 +164,7 @@ class Profile
       int mDefaultRegistrationExpires;
       int mDefaultSubscriptionExpires;
       int mDefaultSessionExpires;
+      int mDefaultStaleCallTime;
 
       bool mHasOutboundProxy;
       NameAddr mOutboundProxy;
