@@ -10,6 +10,11 @@
 #include <unistd.h>
 #endif
 
+#include <pthread.h>
+
+#include <map>
+#include <set>
+
 #include "sip2/util/Subsystem.hxx"
 #include "sip2/util/Mutex.hxx"
 #include <iostream>
@@ -51,6 +56,26 @@ class Log
       }Level;
 #endif
 
+      class ThreadSetting
+      {
+         public:
+            ThreadSetting()
+               : service(-1),
+                 level(ERR)
+            {}
+            ThreadSetting(int serv, Level l)
+               : service(serv),
+                 level(l)
+            {}
+            ThreadSetting(const ThreadSetting& rhs)
+               : service(rhs.service),
+                 level(rhs.level)
+            {}
+            
+            int service;
+            Level level;
+      };
+
       /// Return the loglevel, hostname, appname, pid, tid, subsystem
       static std::ostream& tags(Log::Level level, const Subsystem& subsystem, std::ostream& strm); 
       static Data timestamp();
@@ -61,6 +86,14 @@ class Log
       static Data toString(Level l);
       static Mutex _mutex;
 
+      static void setServiceLevel(int service, Level l);
+      static Level getServiceLevel(int service);
+
+      static const ThreadSetting* getThreadSetting();
+      static void setThreadSetting(ThreadSetting info);
+      static void setThreadSetting(int serv, Level l);
+      static void setThreadSetting(int serv);
+      static volatile short touchCount;
    protected:
       static Level _level;
       static Type _type;
@@ -72,6 +105,11 @@ class Log
       static int _pid;
 #endif
       static const char _descriptions[][32];
+      static std::map<pthread_t, std::pair<ThreadSetting, bool> > _threadToLevel;
+      static std::map<int, std::set<pthread_t> > _serviceToThreads;
+      static std::map<int, Level> _serviceToLevel;
+
+      static pthread_key_t _levelKey;
 };
 
 } // namespace Vocal2
