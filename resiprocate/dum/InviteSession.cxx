@@ -21,6 +21,10 @@ InviteSession::getRemoteSdp()
    return mRemoteSdp;
 }
 
+InviteSession::Handle::Handle(DialogUsageManager& dum)
+   : mDum(dum)
+{}
+
 InviteSession::Handle::Handle(ClientInviteSession::Handle& handle)
    : DialogUsageManager::Handle(handle.mDum)
 {

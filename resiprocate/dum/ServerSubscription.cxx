@@ -1,14 +1,13 @@
 #include "ServerSubscription.hxx"
 
-ServerSubscription::Handle::Handle(const ServerSubscription& handled)
-   : mDum(handled.mDum),
-     mDialogId(handled.dialog().getId())
+ServerSubscription::Handle::Handle(DialogUsageManager& dum)
+   : DialogUsageManager::Handle(dum)
 {}
 
 ServerSubscription*
 ServerSubscription::Handle::operator->()
 {
-   return &mDum.findServerSubscription(mDialogId);
+   return static_cast<ServerSubscription*>get();
 }
 
 /* ====================================================================
