@@ -3,7 +3,7 @@
 using namespace resip;
 
 void 
-InviteSessionHandler::onReadyToSend(InviteSessionHandle handle, const SipMessage& msg)
+InviteSessionHandler::onReadyToSend(InviteSessionHandle handle, SipMessage& msg)
 {
    handle->send(msg);
 }
