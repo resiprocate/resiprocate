@@ -717,7 +717,7 @@ Dialog::redirected(const SipMessage& msg)
       ClientInviteSession* cInv = dynamic_cast<ClientInviteSession*>(mInviteSession);
       if (cInv)
       {
-         cInv->redirected(msg);         
+         cInv->handleRedirect(msg);         
       }
    }
 }
