@@ -114,8 +114,11 @@ void
 ThreadIf::shutdown()
 {
    Lock lock(mShutdownMutex);
-   mShutdown = true;
-   mShutdownCondition.signal();
+   if (!mShutdown)
+   {
+      mShutdown = true;
+      mShutdownCondition.signal();
+   }
 }
 
 bool 
