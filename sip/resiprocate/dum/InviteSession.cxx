@@ -239,7 +239,8 @@ InviteSession::dispatch(const SipMessage& msg)
             }
             else
             {
-               mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);               
+               mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
+               mState = Connected;               
             }
          }
          else
