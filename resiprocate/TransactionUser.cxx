@@ -33,7 +33,7 @@ void
 TransactionUser::postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
 {
    mFifo.add(msg, usage);
-   DebugLog (<< "TransactionUser::postToTransactionUser " << msg->brief() << " &=" << &mFifo << " size=" << mFifo.size());
+   //DebugLog (<< "TransactionUser::postToTransactionUser " << msg->brief() << " &=" << &mFifo << " size=" << mFifo.size());
 }
 
 unsigned int 
