@@ -2,17 +2,36 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
 
-AC_INIT([resiprocate], [0.3], [resiprocate-devel@lists.sourceforge.net])
-AM_INIT_AUTOMAKE([1.7.5 nostdinc foreign])
+AC_INIT([resiprocate/SipStack.hxx],, [resiprocate-devel@lists.sourceforge.net])
 
-AC_REVISION($Id: configure.ac,v 1.5 2003/06/19 00:20:01 ryker Exp $)
+dnl
+dnl Release Version
+dnl
+RESIP_MAJOR_VERSION=0
+RESIP_MINOR_VERSION=2
+RESIP_MICRO_VERSION=0
+
+RESIP_VERSION=$RESIP_MAJOR_VERSION.$RESIP_MINOR_VERSION.$RESIP_MICRO_VERSION
+VERSION=$RESIP_VERSION
+PACKAGE=resiprocate
+
+AC_SUBST(RESIP_VERSION)
+AC_SUBST(RESIP_MAJOR_VERSION)
+AC_SUBST(RESIP_MINOR_VERSION)
+AC_SUBST(RESIP_MICRO_VERSION)
+
+AC_MSG_RESULT([Configuring ${PACKAGE} ${VERSION}])
+
+dnl [resiprocate], $RESIP_VERSION, )
+AC_CONFIG_SRCDIR([resiprocate/config.hxx.in])
+AC_CONFIG_HEADER([resiprocate/config.hxx])
+AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
+
+AC_REVISION($Id: configure.ac,v 1.6 2003/08/09 02:04:44 wensong Exp $)
 
 AM_MAINTAINER_MODE
 
 AC_LANG(C++)
-
-AC_CONFIG_SRCDIR([resiprocate/config.hxx.in])
-AC_CONFIG_HEADER([resiprocate/config.hxx])  
 
 AC_PROG_CXX
 AC_PROG_INSTALL
@@ -24,6 +43,11 @@ AC_CHECK_HEADERS([sys/sockio.h sys/int_types.h])
 RESIP_LIB_OPENSSL
 RESIP_LIB_ARES
 RESIP_PROG_DISTCC
+
+AC_DEFINE_UNQUOTED([RESIP_VERSION], ["$RESIP_VERSION"], [The version number of resip])
+AC_DEFINE_UNQUOTED([RESIP_MAJOR_VERSION], [$RESIP_MAJOR_VERSION], [The major version number of resip])
+AC_DEFINE_UNQUOTED([RESIP_MINOR_VERSION], [$RESIP_MINOR_VERSION], [The minor version number of resip])
+AC_DEFINE_UNQUOTED([RESIP_MICRO_VERSION], [$RESIP_MICRO_VERSION], [The micro version number of resip])
 
 dnl Temporary hack until proper, portable pthreads detection is added.
 LIBS="$LIBS -lpthread"
