@@ -1,26 +1,53 @@
 #ifndef HostSpecification_hxx
 #define HostSpecification_hxx
 
+#include <list>
 #include <util/Data.hxx>
 
 namespace Vocal2
 {
 
+class Uri;
+
 class HostSpecification
 {
    public:
-      HostSpecification(Data hostPort);
-      HostSpecification(Data host, int port);
-      
-      const Data& getHost() const;
-      const Data& getAddressString() const;
+      // for localhost
+      HostSpecification();
 
-      static Data getLocalHostName();
+      // specified like sip.vovida.org:5060
+      HostSpecification(const Data& hostPort);
+
+      // separated into host and port
+      HostSpecification(const Data& host, int port);
+
+      // 
+      HostSpecification(const Uri& url);
       
-      int getPort() const;
+      struct Tuple
+      {
+            struct sockaddr_in ipv4;
+            int port;
+            Data transport;
+      };
+      // this will convert the host specification into a list of Tuples using
+      // the rules in section 4 of rfc3263
+      // !jf! need to deal with ipv6 in here somewhere
+      //list<Tuple> getNextHop();
+
+      // return true if data of the form a.b.c.d
+      static bool isIpAddress(const Data& data);
+
+      std::list<Tuple>::const_iterator mCurrent;
+
    private:
+      void lookupARecords();
+
       Data mHost;
       int mPort;
+      Data mTransport;
+
+      std::list<Tuple> mNextHops;
 };
 
  

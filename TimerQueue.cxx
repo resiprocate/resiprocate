@@ -31,10 +31,6 @@ TimerQueue::process()
    // get the set of timers that have fired and insert TimerMsg into the fifo
 
    Timer now(0);
-   DebugLog(<< "now = " << now);
-   DebugLog(<< "begin = " << *mTimers.begin());
-   DebugLog(<< "upper bound now = " << *mTimers.upper_bound(now));
-   DebugLog(<< "end = " << *mTimers.end());
    for (std::multiset<Timer>::iterator i = mTimers.begin(); 
         i != mTimers.upper_bound(now);)
    {

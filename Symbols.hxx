@@ -28,6 +28,13 @@ class Symbols
       static const char * const SPACE;
       static const char * const COMMA;
       
+      static const char * const ProtocolName;
+      static const char * const ProtocolVersion;
+      static const char * const UDP;
+      static const char * const TCP;
+      static const char * const TLS;
+      static const char * const SCTP;
+      
       static const char * const Sip;
       static const char * const Sips;
 
