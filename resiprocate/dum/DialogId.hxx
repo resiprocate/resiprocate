@@ -33,6 +33,7 @@ class DialogId
 #endif
 
    private:
+      friend std::ostream& operator<<(std::ostream&, const DialogId& id);
       DialogSetId mDialogSetId;
       Data mRemoteTag;
 };
