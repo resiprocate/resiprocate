@@ -14,6 +14,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Timer.hxx"
 
 #include "resiprocate/Executive.hxx"
 #include "resiprocate/Message.hxx"
@@ -39,6 +40,7 @@ SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) :
    mStrictRouting(false),
    mShuttingDown(false)
 {
+   Timer::getTimeMs(); // initalize time offsets
    Random::initialize();
    initNetwork();
 
