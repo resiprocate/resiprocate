@@ -290,6 +290,14 @@ SipMessage::brief() const
    return result;
 }
 
+bool
+SipMessage::isClientTransaction() const
+{
+   assert(mRequest || mResponse);
+   return ((mIsExternal && mResponse) || (!mIsExternal && mRequest));
+}
+
+
 // dynamic_cast &str to DataStream* to avoid CountStream?
 
 std::ostream& 

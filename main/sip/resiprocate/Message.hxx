@@ -13,6 +13,11 @@ class Message
       virtual ~Message(){}
       virtual const Data& getTransactionId() const=0; 
       virtual Data brief() const=0;
+
+      // indicates this message is associated with a Client Transaction for the
+      // purpose of determining which TransactionMap to use
+      virtual bool isClientTransaction() const = 0; 
+
       virtual std::ostream& encode(std::ostream& strm) const=0;
 };
 
