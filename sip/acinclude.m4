@@ -77,19 +77,22 @@ AC_DEFUN([RESIP_SCANNER_DEBUG],
                 
 AC_DEFUN([RESIP_LIB_ARES],
 [
-    AC_MSG_CHECKING([for ares])
+dnl    AC_MSG_CHECKING([for ares])
     AC_ARG_WITH([ares],
 	AC_HELP_STRING([--with-ares=DIR], [use the ares resolver library]),
 	[
 	    for dir in $with_ares \
                         `pwd`/contrib/ares \
                         `pwd`/../contrib/ares \
+			`pwd`/../../contrib/ares \
                         /usr/local; do
+		AC_MSG_CHECKING([for ares in $dir])
 		if test -f "$dir/include/ares.h"; then
 		    found_ares=yes;
 		    CPPFLAGS="$CPPFLAGS -I$dir/include"
 		    LDFLAGS="$LDFLAGS -L$dir/lib"
 		    AC_DEFINE([USE_ARES],[1],[Select ARES Resolver])
+	            AC_MSG_RESULT([ yes ])
 		    break;
 		fi
 		if test -f "$dir/ares.h"; then
@@ -97,20 +100,23 @@ AC_DEFUN([RESIP_LIB_ARES],
 		    CPPFLAGS="$CPPFLAGS -I$dir"
 		    LDFLAGS="$LDFLAGS -L$dir"
 		    AC_DEFINE([USE_ARES],[1],[Select ARES Resolver])
+	            AC_MSG_RESULT([ yes ])
 		    break;
 		fi
+		AC_MSG_RESULT([no])
 	    done
 	    if test x_$found_ares != x_yes; then
+		AC_MSG_CHECKING([for ares in /usr/include])
 		if test -f "/usr/include/ares.h"; then
 		    found_ares=yes;
 		    AC_DEFINE([USE_ARES],[1],[Select ARES Resolver])
+	            AC_MSG_RESULT([ yes ])
 		fi
 	    fi
 	    if test x_$found_ares != x_yes; then
 		AC_MSG_ERROR([not found])
 	    else
 		LIBS="$LIBS -lares"
-		AC_MSG_RESULT([yes])
 	    fi
 	],
 	[ AC_MSG_RESULT([not requested])
