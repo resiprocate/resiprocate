@@ -1,7 +1,6 @@
 #include "sip2/sipstack/IntegerParameter.hxx"
 #include "sip2/sipstack/Symbols.hxx"
 #include "sip2/util/ParseBuffer.hxx"
-#include "sip2/sipstack/ParseException.hxx"
 
 using namespace Vocal2;
 using namespace std;
@@ -12,14 +11,24 @@ IntegerParameter::IntegerParameter(ParameterTypes::Type type,
      mValue(0)
 {
    pb.skipWhitespace();
-   if (*pb.position() != '=')
-   {
-      throw ParseException("parameter constructor expected '='", __FILE__, __LINE__);
-   }
-   pb.skipChar();
+   pb.skipChar('=');
    pb.skipWhitespace();
-   // .dlb. error detection?
-   mValue = pb.integer();
+
+   // hack to allow expires to have an 2543 style quoted Date
+   if (type == ParameterTypes::expires)
+   {
+      if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
+      {
+         pb.skipChar();
+         pb.skipToEndQuote();
+         pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
+      }
+      mValue = 3600;
+   }
+   else
+   {
+      mValue = pb.integer();
+   }
 }
 
 IntegerParameter::IntegerParameter(ParameterTypes::Type type, int value)
