@@ -662,8 +662,8 @@ Auth makeChallengeResponseAuth(SipMessage& request,
    Data digestUri;
    {
       DataStream s(digestUri);
-      s << request.header(h_RequestLine).uri();
-      //s << request.header(h_RequestLine).uri().host();
+      //s << request.header(h_RequestLine).uri().host(); // wrong 
+      s << request.header(h_RequestLine).uri(); // right 
    }
    auth.param(p_uri) = digestUri;
 
