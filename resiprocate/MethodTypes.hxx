@@ -21,6 +21,8 @@ typedef enum
    MESSAGE,
    INFO,
    UNKNOWN,
+   PRACK,
+   PUBLISH,
    MAX_METHODS
 } MethodTypes;
 
