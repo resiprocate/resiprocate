@@ -1,4 +1,4 @@
-#define USE_LOCAL_DNS 
+//#define USE_LOCAL_DNS 
 
 #ifdef USE_LOCAL_DNS
 #include "resiprocate/LocalDns.hxx"
