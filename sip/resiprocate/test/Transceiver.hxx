@@ -1,8 +1,8 @@
 #ifndef Transceiver_hxx
 #define Transceiver_hxx
 
-#include "sip2/sipstack/UdpTransport.hxx"
-#include "sip2/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/UdpTransport.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
 #include "Resolver.hxx"
 
 namespace Loadgen

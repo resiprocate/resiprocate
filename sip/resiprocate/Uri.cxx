@@ -1,14 +1,14 @@
 #include <set>
 
-#include "sip2/util/ParseBuffer.hxx"
-#include "sip2/util/DataStream.hxx"
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/UnknownParameter.hxx"
-#include "sip2/sipstack/ParserCategories.hxx" // !dlb! just NameAddr
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/Embedded.hxx"
-#include "sip2/util/Logger.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
+#include "resiprocate/sipstack/UnknownParameter.hxx"
+#include "resiprocate/sipstack/ParserCategories.hxx" // !dlb! just NameAddr
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/Embedded.hxx"
+#include "resiprocate/util/Logger.hxx"
 
 using namespace Vocal2;
 

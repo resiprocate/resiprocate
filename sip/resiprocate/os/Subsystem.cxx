@@ -1,4 +1,4 @@
-#include "sip2/util/Subsystem.hxx"
+#include "resiprocate/util/Subsystem.hxx"
 
 using namespace Vocal2;
 

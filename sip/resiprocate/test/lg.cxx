@@ -1,6 +1,6 @@
-#include "sip2/util/Logger.hxx"
+#include "resiprocate/util/Logger.hxx"
 
-#include "sip2/sipstack/Uri.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
 
 #include "Register.hxx"
 #include "Registrar.hxx"

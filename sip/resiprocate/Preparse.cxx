@@ -1,14 +1,14 @@
 #include <limits.h>
 // limits for UCHAR_MAX
 
-#include "sip2/sipstack/HeaderTypes.hxx"
-#include "sip2/sipstack/Preparse.hxx"
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/util/Data.hxx"
-#include "sip2/util/Lock.hxx"
-#include "sip2/util/Logger.hxx"
-#include "sip2/util/Mutex.hxx"
-#include "sip2/util/Socket.hxx"
+#include "resiprocate/sipstack/HeaderTypes.hxx"
+#include "resiprocate/sipstack/Preparse.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/util/Lock.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/util/Mutex.hxx"
+#include "resiprocate/util/Socket.hxx"
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
@@ -42,11 +42,11 @@ Preparse::Edge *** Preparse::mTransitionTable = 0;
 
 
 #if !defined(PP_DO_INLINES)
-#include "sip2/sipstack/PreparseInlines.cxx"
+#include "resiprocate/sipstack/PreparseInlines.cxx"
 #endif
 
 #if defined(PP_DEBUG)
-#include "sip2/sipstack/test/TestSupport.hxx"
+#include "resiprocate/sipstack/test/TestSupport.hxx"
 
 // DO_BIT is a tasty macro to assemble a Data that
 // represents the bitset (s) passed inside.

@@ -1,33 +1,15 @@
-# $Id: Makefile,v 1.111 2003/03/17 21:30:58 davidb Exp $
+# $Id: Makefile,v 1.112 2003/03/24 22:42:27 jason Exp $
 
-BUILD = ../../build
-
-USE_SSL = 1
-VOCAL_USE_DEPRECATED=0
-
+BUILD = ../build
 include $(BUILD)/Makefile.pre
--include ../Makefile.opt
 
-USE_REPO=false
-
-PACKAGES += SIP2 UTIL2 ARES PTHREAD
-
-ifeq ($(USE_SSL),1)
-PACKAGES += OPENSSL
-CFLAGS += -DUSE_SSL
-CXXFLAGS += -DUSE_SSL
-LDFLAGS += -lssl -lcrypto
-endif
-
-#CXXFLAGS += -DVOCAL2_AOR_HAS_SCHEME
+PACKAGES += RESIPROCATE  ARES OPENSSL PTHREAD 
 
 TARGET_LIBRARY = libsip2
 TESTPROGRAMS =  
 
 parsetest: bin.debug.Linux.i686/testParserCategories
 	./bin.debug.Linux.i686/testParserCategories
-
-#	TuShim.cxx \
 
 SRC = \
 	SipSession.cxx	\

@@ -1,10 +1,10 @@
 #if !defined(Vocal2_Data_hxx)
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.59 2003/02/11 16:49:33 davidb Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.60 2003/03/24 22:42:27 jason Exp $";
 
-#include "sip2/util/compat.hxx"
-#include "sip2/util/DataStream.hxx"
+#include "resiprocate/util/compat.hxx"
+#include "resiprocate/util/DataStream.hxx"
 #include <iostream>
 #include <string>
 #include "HashMap.hxx"

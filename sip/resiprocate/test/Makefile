@@ -1,28 +1,10 @@
-# $Id: Makefile,v 1.40 2003/03/06 22:49:34 davidb Exp $
+# $Id: Makefile,v 1.41 2003/03/24 22:42:27 jason Exp $
 
-USE_SSL = 1
-
-BUILD = ../../../build
-
+BUILD = ../../build
 include $(BUILD)/Makefile.pre
--include ../../Makefile.opt
 
-USE_REPO=false
-PACKAGES += SIP2 SIPSTACK2 UTIL2 PTHREAD
-
-ifeq ($(USE_ARES),1)
-PACKAGES += ARES
-endif
-
+PACKAGES += RESIPROCATE SIPSTACK2 UTIL2 OPENSSL ARES PTHREAD
 LDLIBS += -lncurses
-
-ifeq ($(USE_SSL),1)
-PACKAGES += OPENSSL
-CFLAGS += -DUSE_SSL
-CXXFLAGS += -DUSE_SSL
-LDFLAGS += -lssl -lcrypto
-endif
-
 TESTPROGRAMS =	\
 		testXMLCursor.cxx \
 		testEmbedded.cxx \
@@ -54,8 +36,6 @@ TESTPROGRAMS =	\
 		testMultipartMixedContents.cxx \
 		testClient.cxx \
 		testServer.cxx \
-#		testTlsConnection.cxx \
-
 
 SRC = \
 		Register.cxx \

@@ -4,12 +4,12 @@
 #include "SetupDlgImpl.hxx"
 #include "Limpet.hxx"
 
-//#include "sip2/util/Logger.hxx"
+//#include "resiprocate/util/Logger.hxx"
 //
-#include "sip2/sipstack/SipStack.hxx"
-#include "sip2/util/Data.hxx"
-#include "sip2/util/Socket.hxx"
-#include "sip2/sipstack/TuIM.hxx"
+#include "resiprocate/sipstack/SipStack.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/sipstack/TuIM.hxx"
 //#include "buddydlg.h"
 #include "sip2/sipstack/Security.hxx"
 

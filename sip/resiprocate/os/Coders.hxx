@@ -1,9 +1,9 @@
 #if !defined(CODERS_HXX)
 #define CODERS_HXX
 
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Data.hxx"
 
-static const char* const Vocal2CodersHeaderVersion = "$Id: Coders.hxx,v 1.5 2002/11/11 23:09:55 jason Exp $";
+static const char* const Vocal2CodersHeaderVersion = "$Id: Coders.hxx,v 1.6 2003/03/24 22:42:27 jason Exp $";
 
 namespace Vocal2
 {

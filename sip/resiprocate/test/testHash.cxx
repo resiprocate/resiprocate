@@ -6,10 +6,10 @@
 #include <limits.h>
 #include <signal.h>
 #include <sys/fcntl.h>
-#include "sip2/util/Logger.hxx"
-#include "sip2/sipstack/HeaderTypes.hxx"
-#include "sip2/sipstack/ParameterTypeEnums.hxx"
-#include "sip2/sipstack/ParameterTypes.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/sipstack/HeaderTypes.hxx"
+#include "resiprocate/sipstack/ParameterTypeEnums.hxx"
+#include "resiprocate/sipstack/ParameterTypes.hxx"
 
 using namespace Vocal2;
 using namespace std;

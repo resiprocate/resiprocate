@@ -1,7 +1,7 @@
 #include <cassert>
 #include <cerrno>
 
-#include "sip2/util/Mutex.hxx"
+#include "resiprocate/util/Mutex.hxx"
 
 #if defined(WIN32) 
 #  include <windows.h>

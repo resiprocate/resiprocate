@@ -8,9 +8,9 @@
 #include <arpa/inet.h>
 
 #include "Transceiver.hxx"
-#include "sip2/util/Logger.hxx"
-#include "sip2/util/DataStream.hxx"
-#include "sip2/util/Timer.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/util/Timer.hxx"
 
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP

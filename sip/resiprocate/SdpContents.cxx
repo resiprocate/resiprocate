@@ -1,7 +1,7 @@
-#include "sip2/sipstack/SdpContents.hxx"
-#include "sip2/util/ParseBuffer.hxx"
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/util/Logger.hxx"
+#include "resiprocate/sipstack/SdpContents.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/util/Logger.hxx"
 
 
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::SDP
