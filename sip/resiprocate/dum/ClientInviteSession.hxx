@@ -1,8 +1,12 @@
 #if !defined(RESIP_CLIENTINVITESESSION_HXX)
 #define RESIP_CLIENTINVITESESSION_HXX
 
+#include "resiprocate/sam/InviteSession.hxx"
+
 namespace resip
 {
+
+    class SdpContents;
 
 class ClientInviteSession : public InviteSession
 {

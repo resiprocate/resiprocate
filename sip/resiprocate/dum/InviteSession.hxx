@@ -1,10 +1,16 @@
 #if !defined(RESIP_INVITESESSION_HXX)
 #define RESIP_INVITESESSION_HXX
 
+#include "resiprocate/sam/BaseUsage.hxx"
+
 namespace resip
 {
 
+
+
+    class SdpContents;
 class DialogUsageManager;
+
 
 class InviteSession : public BaseUsage
 {

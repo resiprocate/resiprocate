@@ -3,13 +3,24 @@
 
 #include <list>
 
+#include "resiprocate/sam/DialogIdSet.hxx"
+
 namespace resip 
 {
 
 class SipStack;
 class Profile;
 class RedirectManager;
-
+class ClientAuthManager;
+class ServerAuthManager;
+class ClientRegistrationHandler;
+class ServerRegistrationHandler;
+class InvSessionHandler;
+class ClientSubscriptionHandler;
+class ServerSubscriptionHandler;
+class ClientPublicationHandler;
+class ServerPublicationHandler;
+class OutOfDialogHandler;
 
 class DialogUsageManager
 {
