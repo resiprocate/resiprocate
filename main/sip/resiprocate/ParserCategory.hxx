@@ -16,14 +16,8 @@ class Parameter;
 
 class ParserCategory
 {
-   public:
-      ParserCategory(HeaderFieldValue* headerFieldValue)
-         : mHeaderField(headerFieldValue),
-           mParameters(),
-           mUnknownParameters(),
-           mMine(false),
-           mIsParsed(headerFieldValue->mField == 0)
-      {}
+    public:
+      ParserCategory(HeaderFieldValue* headerFieldValue);
 
       ParserCategory(const ParserCategory& rhs);
       ParserCategory& operator=(const ParserCategory& rhs);
@@ -35,20 +29,11 @@ class ParserCategory
       virtual std::ostream& encode(std::ostream& str) const = 0;
       std::ostream& encodeFromHeaderFieldValue(std::ostream& str) const;
 
-      bool exists(const ParamBase& paramType) const
-      {
-         checkParsed();
-		 bool ret = getParameterByEnum(paramType.getTypeNum()) != NULL;
-         return ret;
-      }
-
+      bool exists(const ParamBase& paramType) const;
+        
       // removing non-present parameter is allowed      
-      void remove(const ParamBase& paramType)
-      {
-         checkParsed();
-         removeParameterByEnum(paramType.getTypeNum());
-      }
-
+      void remove(const ParamBase& paramType);
+        
       Transport_Param::DType& param(const Transport_Param& paramType) const;
       User_Param::DType& param(const User_Param& paramType) const;
       Method_Param::DType& param(const Method_Param& paramType) const;
@@ -81,6 +66,7 @@ class ParserCategory
       virtual void parse(ParseBuffer& pb) = 0;
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
+
    protected:
       ParserCategory();
 
