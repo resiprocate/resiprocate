@@ -1,6 +1,7 @@
 #if !defined(RESIP_PROFILE_HXX)
 #define RESIP_PROFILE_HXX
 
+#include <ostream>
 #include <set>
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/MethodTypes.hxx"
@@ -107,6 +108,7 @@ class Profile
             Data password;
 
             bool operator<(const DigestCredential& rhs) const;
+            std::ostream& operator<<(std::ostream&) const;
       };
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
