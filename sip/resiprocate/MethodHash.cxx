@@ -1,43 +1,55 @@
 /* C++ code produced by gperf version 2.7.2 */
-/* Command-line: gperf --enum -E -L C++ -t -k '*' -D -Z MethodHash MethodHash.gperf  */
+/* Command-line: gperf -D --enum -E -L C++ -t -k '*' --compare-strncmp -Z MethodHash MethodHash.gperf  */
 #include <string.h>
 #include <ctype.h>
 #include "resiprocate/MethodTypes.hxx"
-#include "resiprocate/MethodHash.hxx"
 
+namespace resip
+{
+using namespace std;
 using namespace resip;
+struct methods { char *name; MethodTypes type; };
+/* maximum key range = 18, duplicates = 0 */
+
+class MethodHash
+{
+private:
+  static inline unsigned int hash (const char *str, unsigned int len);
+public:
+  static struct methods *in_word_set (const char *str, unsigned int len);
+};
 
 inline unsigned int
 MethodHash::hash (register const char *str, register unsigned int len)
 {
   static unsigned char asso_values[] =
     {
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19,  0,  0,  0, 19,  0,
-       0, 10, 19,  0, 19, 10,  5,  0,  0,  0,
-       0, 19,  0,  0,  0,  0, 10, 19, 19,  0,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
-      19, 19, 19, 19, 19, 19
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21,  0,  0,  0, 21,  0,
+       0,  5,  0,  0, 21, 15, 10,  0,  0,  0,
+       0, 21,  0,  0,  0,  0,  5, 21, 21,  0,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+      21, 21, 21, 21, 21, 21
     };
   register int hval = len;
 
@@ -72,11 +84,11 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 12,
+      TOTAL_KEYWORDS = 14,
       MIN_WORD_LENGTH = 3,
       MAX_WORD_LENGTH = 9,
       MIN_HASH_VALUE = 3,
-      MAX_HASH_VALUE = 18
+      MAX_HASH_VALUE = 20
     };
 
   static struct methods wordlist[] =
@@ -88,17 +100,19 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
       {"OPTIONS", OPTIONS},
       {"RESPONSE", RESPONSE},
       {"SUBSCRIBE", SUBSCRIBE},
-      {"CANCEL", CANCEL},
-      {"ACK", ACK},
       {"INVITE", INVITE},
       {"MESSAGE", MESSAGE},
-      {"REGISTER", REGISTER}
+      {"REGISTER", REGISTER},
+      {"CANCEL", CANCEL},
+      {"PUBLISH", PUBLISH},
+      {"ACK", ACK},
+      {"PRACK", PRACK}
     };
 
   static signed char lookup[] =
     {
-      -1, -1, -1,  0,  1,  2,  3,  4,  5,  6, -1,  7, -1,  8,
-      -1, -1,  9, 10, 11
+      -1, -1, -1,  0,  1,  2,  3,  4,  5,  6, -1,  7,  8,  9,
+      -1, -1, 10, 11, 12, -1, 13
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -113,10 +127,11 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
             {
               register const char *s = wordlist[index].name;
 
-               if ((*str) == *s && !strncmp( str + 1, s + 1, len - 1))
+              if (*str == *s && !strncmp (str + 1, s + 1, len - 1) && s[len] == '\0')
                 return &wordlist[index];
             }
         }
     }
   return 0;
+}
 }
