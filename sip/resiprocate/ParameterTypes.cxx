@@ -31,22 +31,39 @@ Mobility_Param Vocal2::p_mobility;
 Comp_Param Vocal2::p_comp;
 Rport_Param Vocal2::p_rport;
 
+Id_Param Vocal2::p_id;
+Reason_Param Vocal2::p_reason;
+Retry_After_Param Vocal2::p_retryAfter;
+
+Algorithm_Param Vocal2::p_algorithm;
+Cnonce_Param Vocal2::p_cnonce;
+Nonce_Param Vocal2::p_nonce;
+Domain_Param Vocal2::p_domain;
+Nc_Param Vocal2::p_nc;
+Opaque_Param Vocal2::p_opaque;
+Realm_Param Vocal2::p_realm;
+Response_Param Vocal2::p_response;
+Stale_Param Vocal2::p_stale;
+Username_Param Vocal2::p_username;
+Uri_Param Vocal2::p_uri;
+Qop_Options_Param Vocal2::p_qopOptions;
+Qop_Param Vocal2::p_qop;
+Qop_Factory_Param Vocal2::p_qopFactory;
 
 // to generate the perfect hash:
 // call tolower() on instances of the source string
 // change strcmp to strncasecmp and pass len-1
 // will NOT work for non alphanum chars 
-
 /* ANSI-C code produced by gperf version 2.7.2 */
 /* Command-line: gperf -L ANSI-C -t -k '*' parameters.gperf  */
 struct params { char *name; ParameterTypes::Type type; };
 
-#define TOTAL_KEYWORDS 19
+#define TOTAL_KEYWORDS 34
 #define MIN_WORD_LENGTH 1
-#define MAX_WORD_LENGTH 9
-#define MIN_HASH_VALUE 1
-#define MAX_HASH_VALUE 53
-/* maximum key range = 53, duplicates = 0 */
+#define MAX_WORD_LENGTH 11
+#define MIN_HASH_VALUE 5
+#define MAX_HASH_VALUE 108
+/* maximum key range = 104, duplicates = 0 */
 
 #ifdef __GNUC__
 __inline
@@ -60,37 +77,42 @@ p_hash (register const char *str, register unsigned int len)
 {
   static unsigned char asso_values[] =
     {
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54,  0, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54,  0, 10,  0,
-       0,  0, 20,  5,  0,  0, 54, 54,  0, 20,
-       0,  0,  0,  0,  0,  0,  0, 15, 20, 54,
-       5,  0, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
-      54, 54, 54, 54, 54, 54
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109,   0, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109,   0,  25,  15,
+       20,   0,  35,  10,   5,   0, 109, 109,  45,  30,
+        0,   0,   0,  40,   0,   0,   0,  30,  20, 109,
+        5,   0, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
+      109, 109, 109, 109, 109, 109
     };
   register int hval = len;
+
   switch (hval)
     {
       default:
+      case 11:
+        hval += asso_values[(unsigned char)tolower(str[10])];
+      case 10:
+        hval += asso_values[(unsigned char)tolower(str[9])];
       case 9:
         hval += asso_values[(unsigned char)tolower(str[8])];
       case 8:
@@ -122,36 +144,64 @@ p_in_word_set (register const char *str, register unsigned int len)
 {
   static struct params wordlist[] =
     {
+      {""}, {""}, {""}, {""}, {""},
+      {"rport", ParameterTypes::rport},
+      {"reason", ParameterTypes::reason},
       {""},
+      {"response", ParameterTypes::response},
+      {"transport", ParameterTypes::transport},
+      {""}, {""},
+      {"expires", ParameterTypes::expires},
+      {"tag", ParameterTypes::tag},
+      {""}, {""},
+      {"to-tag", ParameterTypes::toTag},
+      {"nc", ParameterTypes::nc},
+      {""}, {""},
+      {"nonce", ParameterTypes::nonce},
+      {""},
+      {"id", ParameterTypes::id},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""},
+      {"uri", ParameterTypes::uri},
+      {"user", ParameterTypes::user},
+      {""},
+      {"cnonce", ParameterTypes::cnonce},
+      {"purpose", ParameterTypes::purpose},
+      {""}, {""}, {""},
       {"q", ParameterTypes::q},
+      {""},
+      {"qop", ParameterTypes::qopFactory},
+      {""}, {""},
+      {"retry-after", ParameterTypes::retryAfter},
       {"lr", ParameterTypes::lr},
       {"ttl", ParameterTypes::ttl},
-      {""},
-      {"rport", ParameterTypes::rport},
-      {""}, {""},
-      {"tag", ParameterTypes::tag},
-      {"transport", ParameterTypes::transport},
-      {""},
-      {"to-tag", ParameterTypes::toTag},
-      {"expires", ParameterTypes::expires},
-      {"handling", ParameterTypes::handling},
-      {""}, {""},
-      {"branch", ParameterTypes::branch},
-      {""}, {""},
-      {"user", ParameterTypes::user},
-      {""}, {""},
-      {"purpose", ParameterTypes::purpose},
-      {"duration", ParameterTypes::duration},
       {"comp", ParameterTypes::comp},
-      {"maddr", ParameterTypes::maddr},
+      {"stale", ParameterTypes::stale},
+      {"branch", ParameterTypes::branch},
+      {""}, {""}, {""}, {""},
+      {"domain", ParameterTypes::domain},
+      {""},
+      {"duration", ParameterTypes::duration},
+      {""}, {""},
       {"method", ParameterTypes::method},
       {""},
       {"received", ParameterTypes::received},
+      {""}, {""}, {""}, {""},
+      {"username", ParameterTypes::username},
+      {""}, {""}, {""}, {""}, {""}, {""},
+      {"maddr", ParameterTypes::maddr},
+      {"opaque", ParameterTypes::opaque},
+      {""}, {""}, {""},
+      {"realm", ParameterTypes::realm},
+      {""}, {""},
+      {"from-tag", ParameterTypes::fromTag},
+      {""}, {""}, {""}, {""},
+      {"handling", ParameterTypes::handling},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"mobility", ParameterTypes::mobility},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""},
-      {"from-tag", ParameterTypes::fromTag}
+      {""},
+      {"algorithm", ParameterTypes::algorithm},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {"mobility", ParameterTypes::mobility}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -168,6 +218,7 @@ p_in_word_set (register const char *str, register unsigned int len)
     }
   return 0;
 }
+
 
 ParameterTypes::Type
 ParameterTypes::getType(const char* name, unsigned int len)
