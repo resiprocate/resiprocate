@@ -4,6 +4,9 @@
 #include <iosfwd>
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/NameAddr.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Via.hxx"
+#include "resiprocate/Uri.hxx"
 
 namespace resip
 {
@@ -63,12 +66,13 @@ class ResponseContext
       void sendRequest(const resip::SipMessage& request);
       void cancelClientTransaction(const Branch& branch);
       void cancelProceedingClientTransactions();
-      void removeClientTransaction(const resip::Data& transactionId);
+      // return true if the transaction was found
+      bool removeClientTransaction(const resip::Data& transactionId); 
       int getPriority(const resip::SipMessage& msg);
 
       RequestContext& mRequestContext;
       
-      typedef std::set<resip::NameAddr, CompareQ> PendingTargetSet;
+      typedef std::multiset<resip::NameAddr, CompareQ> PendingTargetSet;
       PendingTargetSet mPendingTargetSet;
 
       HashSet<resip::Uri> mTargetSet;
