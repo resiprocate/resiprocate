@@ -42,8 +42,6 @@ method=REGISTER
 timeout=40000
 }
 
-
-
 expect_wire
 {
 method=REGISTER
