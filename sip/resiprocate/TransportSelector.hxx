@@ -82,7 +82,7 @@ class TransportSelector
       Fifo<TransactionMessage>& mStateMacFifo;
 
       // specific port and interface
-      typedef HashMap<Tuple, Transport*> ExactTupleMap;
+      typedef std::map<Tuple, Transport*> ExactTupleMap;
       ExactTupleMap mExactTransports;
 
       // specific port, ANY interface
@@ -97,7 +97,7 @@ class TransportSelector
       typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
       AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
 
-      typedef HashMap<Data, TlsTransport*> TlsTransportMap ;
+      typedef std::map<Data, TlsTransport*> TlsTransportMap ;
       TlsTransportMap mTlsTransports;      // domain name -> Transport
       
       // fake socket for connect() and route table lookups
