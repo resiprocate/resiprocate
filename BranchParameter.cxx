@@ -18,30 +18,12 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-static unsigned long
-getNextTransactionCount()
-{
-   assert( sizeof(long) >= 4 );
-#if 0 
-   //static volatile unsigned long TransactionCount=random()*2;
-   static volatile unsigned long transactionCount=0;
-   if ( transactionCount == 0 )
-   { 
-      transactionCount = 0x3FFFffff & Random::getRandom();
-      transactionCount -= (transactionCount%10000);
-   }
-   return ++transactionCount; // !jf! needs to be atomic
-#else
-	return ( 0x3FFFffff & Random::getRandom() );
-#endif
-}
-
 BranchParameter::BranchParameter(ParameterTypes::Type type,
                                  ParseBuffer& pb, const char* terminators)
    : Parameter(type), 
      mHasMagicCookie(false),
      mIsMyBranch(false),
-     mTransactionId(getNextTransactionCount()),
+     mTransactionId(Random::getRandomHex(8)),
      mTransportSeq(1),
      mClientData()
 {
@@ -106,7 +88,7 @@ BranchParameter::BranchParameter(ParameterTypes::Type type)
    : Parameter(type),
      mHasMagicCookie(true),
      mIsMyBranch(true),
-     mTransactionId(getNextTransactionCount()),
+     mTransactionId(Random::getRandomHex(8)),
      mTransportSeq(1)
 {
 }
@@ -193,7 +175,7 @@ BranchParameter::reset(const Data& transactionId)
    }
    else
    {
-      mTransactionId = Data(getNextTransactionCount());
+      mTransactionId = Random::getRandomHex(8);
    }
 }
 
