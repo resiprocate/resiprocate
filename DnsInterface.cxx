@@ -124,6 +124,7 @@ DnsInterface::lookup(const Via& via, const Data& transactionId)
 {
    assert(0);
    //DnsResult* result = new DnsResult(*this);
+   return NULL;
 }
 
 
