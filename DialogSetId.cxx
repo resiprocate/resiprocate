@@ -1,5 +1,7 @@
 #include "DialogSetId.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Helper.hxx"
+
 
 using namespace resip;
 
@@ -16,8 +18,14 @@ DialogSetId::DialogSetId(const SipMessage& msg) :
       }
       else //external request; generate to tag if not present
       {
-         assert(msg.header(h_To).exists(p_tag));
-         mTag = msg.header(h_To).param(p_tag);
+         if (msg.header(h_To).exists(p_tag))
+         {
+            mTag = msg.header(h_To).param(p_tag);
+         }
+         else
+         {
+            mTag = Helper::computeTag(Helper::tagSize);
+         }
       }
    }
    else

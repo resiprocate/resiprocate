@@ -12,8 +12,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Debug"
-			IntermediateDirectory="Debug"
+			OutputDirectory="DebugCall"
+			IntermediateDirectory="DebugCall"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			CharacterSet="2">
@@ -24,9 +24,11 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				BufferSecurityCheck="TRUE"
 				UsePrecompiledHeader="0"
+				ObjectFile="$(IntDir)/call/"
+				ProgramDataBaseFileName="$(IntDir)/vc70_call.pdb"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
 				DebugInformationFormat="3"/>
