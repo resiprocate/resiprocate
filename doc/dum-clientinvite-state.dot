@@ -18,49 +18,56 @@ digraph UAC {
     Start -> Terminated                     [ label = "on2xx/send::ACK,send::BYE,app::onFailure" ];
     Start -> Terminated                     [ label = "onInviteFailure|onGeneralFailure/app::onFailure" ];
     Start -> Terminated                     [ label = "onRedirect/app::onRedirected" ];
+    Start -> Assert                         [ label = "dum::cancel/assert" ];
 
     Early -> Early                          [ label = "on1xx/app::onProvisional" ];
     Early -> Early                          [ label = "on1xx-early/app::onProvisional,app::onEarlyMedia" ];
     Early -> EarlyWithOffer                 [ label = "on1xx-offer/app::onProvisional,app::onOffer" ];
     Early -> EarlyWithAnswer                [ label = "on1xx-answer/app::onProvisional,app::onAnswer,send::PRACK" ];
-    Early -> WaitingForAnswerFromApp        [ label = "on2xx-offer/app::onOffer" ];
+    Early -> WaitingForAnswerFromApp        [ label = "on2xx-offer/app::onOffer,app::onConnected" ];
     Early -> Connected                      [ label = "on2xx-answer/send::ACK" ];
     Early -> Terminated                     [ label = "on2xx/send::ACK,send::BYE" ];
-    Early -> Finish                         [ label = "onGeneralFailure" ];
+    Early -> Finish                         [ label = "onGeneralFailure|onInviteFailure/app::onFailure" ];
     Early -> Terminated                     [ label = "onRedirect/app::onRedirected" ];
-    Early -> Canceled                       [ label = "dum::cancel/send::CANCEL,timer" ];
+    Early -> Canceled                       [ label = "dum::cancel/timer::cancel" ];
     Early -> Terminated                     [ label = "dum::provideAnswer/assert(0)" ];
     Early -> Terminated                     [ label = "dum::provideOffer/assert(0)" ];
+    Early -> Terminated                     [ label = "dum::end/send::BYE" ];
 
-    EarlyWithOffer -> Connected             [ label = "on2xx-answer/send::ACK" ];
-    EarlyWithOffer -> Terminated            [ label = "onRedirect/app::onRedirected" ];
+
+    EarlyWithOffer -> EarlyWithOffer        [ label = "on1xx/app::onProvisional" ];
     //  Ken's note:
     //  Rohan says, the first 180 an UAS is to respond to an INVITE w/offer, must contain an answer.
-    EarlyWithOffer -> PrackAnswerWait       [ label = "dum::provideAnswer/send::PRACK" ];
-    EarlyWithOffer -> Terminated            [ label = "dum::provideOffer/assert(0)" ];
-    EarlyWithOffer -> Canceled              [ label = "dum::cancel/send::CANCEL,timer" ];
+    EarlyWithOffer -> PrackAnswerWait       [ label = "dum::provideAnswer/send::PRACK-answer" ];
+    EarlyWithOffer -> Terminated            [ label = "on2xx|on2xx-answer/app::onFailure,send::ACK,send::BYE" ];
+    EarlyWithOffer -> Terminated            [ label = "onRedirect/app::onRedirected" ];
+    EarlyWithOffer -> Finish                [ label = "onGeneralFailure|onInviteFailure/app::onFailure" ];
+    EarlyWithOffer -> Canceled              [ label = "dum::cancel/timer::cancel" ];
+    EarlyWithOffer -> Assert                [ label = "dum::provideOffer/assert(0)" ];
+    EarlyWithOffer -> Terminated            [ label = "dum::end/send::BYE" ];
 
-    EarlyWithAnswer -> Connected            [ label = "on2xx/send::ACK" ];
-    EarlyWithAnswer -> EarlyWithAnswer      [ label = "on1xx/send::PRACK" ];
-    EarlyWithAnswer -> EarlyWithAnswer      [ label = "on1xx-answer-retran/resend::lastPRACK" ];
-    // Can I send the UPDATE before I get 200/PRACK
+    EarlyWithAnswer -> EarlyWithAnswer      [ label = "on1xx/app::onProvisional,send::PRACK" ];
+    EarlyWithAnswer -> EarlyWithAnswer      [ label = "on1xx-retran" ];
+    EarlyWithAnswer -> Connected            [ label = "on2xx/send::ACK,app::onConnected" ];
+    EarlyWithAnswer -> Terminated           [ label = "on2XX-sdp/send::ACK,send::BYE,app::onFailure" ];
     EarlyWithAnswer -> ReceivedUpdateEarly  [ label = "onUPDATE/app::onOffer" ];
-    EarlyWithAnswer -> Terminated           [ label = "on2XX-answer/send::ACK,send::BYE" ];
-    EarlyWithAnswer -> Finished             [ label = "onGeneralFailure" ];
-    EarlyWithAnswer -> Terminated           [ label = "dum::provideAnswer/assert(0)" ];
-    EarlyWithAnswer -> SentUpdateEarly      [ label = "dum::povideOffer/send::UPDATE" ];
-    EarlyWithAnswer -> Canceled             [ label = "dum::cancel/send::CANCEL,timer" ];
+    EarlyWithAnswer -> SentUpdateEarly      [ label = "dum::provideOffer/send::UPDATE" ];    // Can I send the UPDATE before I get 200/PRACK
     EarlyWithAnswer -> Terminated           [ label = "onRedirect/app::onRedirected" ];
+    EarlyWithAnswer -> Finished             [ label = "onGeneralFailure" ];
+    EarlyWithAnswer -> Canceled             [ label = "dum::cancel/timer::cancel" ];
+    EarlyWithAnswer -> Terminated           [ label = "dum::end/send::BYE" ];
+    EarlyWithAnswer -> Assert               [ label = "dum::provideAnswer/assert(0)" ];
 
     SentUpdateEarly -> EarlyWithAnswer      [ label = "on200U/app::onAnswer" ];
     SentUpdateEarly -> EarlyWithAnswer      [ label = "onUPDATE/489glare" ];
     SentUpdateEarly -> EarlyWithAnswer      [ label = "on489/glare" ];
     SentUpdateEarly -> SentUpdateConnected  [ label = "on2xxI/send::ACK" ];
     SentUpdateEarly -> Finish               [ label = "onGeneralFailure" ];
-    SentUpdateEarly -> Canceled             [ label = "dum::cancel/send::CANCEL,timer" ];
+    SentUpdateEarly -> Canceled             [ label = "dum::cancel/timer::cancel" ];
     SentUpdateEarly -> Terminated           [ label = "dum::provideAnswer/assert(0)" ];
     SentUpdateEarly -> Terminated           [ label = "dum::provideOffer/assert(0)" ];
     SentUpdateEarly -> Terminated           [ label = "onRedirect/app::onRedirected" ];
+    SentUpdateEarly -> Terminated           [ label = "dum::end/send::BYE" ];
 
     SentUpdateConnected -> Connected        [ label = "on200U/app::onAnswer" ];
     SentUpdateConnected -> Connected        [ label = "on488U/app::onRejected" ];
@@ -68,40 +75,43 @@ digraph UAC {
     SentUpdateConnected -> Terminated       [ label = "dum::cancel/assert(0)" ];
     SentUpdateConnected -> Terminated       [ label = "dum::provideAnswer/assert(0)" ];
     SentUpdateConnected -> Terminated       [ label = "dum::provideOffer/assert(0)" ];
+    SentUpdateConnected -> Terminated       [ label = "dum::end/send::BYE" ];
 
     ReceivedUpdateEarly -> Terminated       [ label = "onRedirect/app::onRedirected" ];
     ReceivedUpdateEarly -> EarlyWithAnswer  [ label = "dum::provideAnswer/send::200U-answer" ];
     ReceivedUpdateEarly -> EarlyWithAnswer  [ label = "dum::reject/send::488U" ];
-    ReceivedUpdateEarly -> Canceled         [ label = "dum::cancel/send::CANCEL,timer" ];
-    ReceivedUpdateEarly -> Terminated       [ label = "dum::provideAnswer/assert(0)" ];
-    ReceivedUpdateEarly -> Terminated       [ label = "dum::provideOffer/assert(0)" ];
+    ReceivedUpdateEarly -> Canceled         [ label = "dum::cancel/timer::cancel" ];
+    ReceivedUpdateEarly -> Terminated       [ label = "dum::end/send::BYE" ];
+    ReceivedUpdateEarly -> Assert           [ label = "dum::provideAnswer/assert(0)" ];
+    ReceivedUpdateEarly -> Assert           [ label = "dum::provideOffer/assert(0)" ];
 
     WaitingForAnswerFromApp -> Connected    [ label = "dum::provideAnswer/send::ACK-answer" ];
     WaitingForAnswerFromApp -> Terminated   [ label = "onRedirect/app::onRedirected" ];
-    WaitingForAnswerFromApp -> Canceled     [ label = "dum::cancel/send::CANCEL,timer" ];
     WaitingForAnswerFromApp -> Terminated   [ label = "dum::provideAnswer/assert(0)" ];
     WaitingForAnswerFromApp -> Terminated   [ label = "dum::provideOffer/assert(0)" ];
+    WaitingForAnswerFromApp -> Terminated   [ label = "dum::end/send::BYE" ];
+    WaitingForAnswerFromApp -> Assert       [ label = "dum::cancel/assert" ];
 
     PrackAnswerWait -> EarlyWithAnswer      [ label = "dum::provideOffer/queueOffer" ];
     PrackAnswerWait -> SentUpdateEarly      [ label = "on200P-queued/UPDATE-queued" ];
     PrackAnswerWait -> EarlyWithAnswer      [ label = "on200P-notQueued" ];
     PrackAnswerWait -> Connected            [ label = "on2xxI/send::ACK" ];
     PrackAnswerWait -> Terminated           [ label = "onRedirect/app::onRedirected" ];
+    PrackAnswerWait -> Terminated           [ label = "dum::end/send::BYE" ];
     PrackAnswerWait -> EarlyWithAnswer      [ label = "dum::provideOffer/queueOffer" ];
-
-    PrackAnswerWait -> Canceled             [ label = "dum::cancel/send::CANCEL,timer" ];
-    PrackAnswerWait -> Terminated           [ label = "dum::provideAnswer/assert(0)" ];
-    PrackAnswerWait -> Terminated           [ label = "dum::provideOffer/assert(0)" ];
+    PrackAnswerWait -> Canceled             [ label = "dum::cancel/timer::cancel" ];
+    PrackAnswerWait -> Assert               [ label = "dum::provideAnswer/assert(0)" ];
+    PrackAnswerWait -> Assert               [ label = "dum::provideOffer/assert(0)" ];
 
     Canceled -> Finished                    [ label = "onTimer" ];
     Canceled -> Finished                    [ label = "onGeneralFailure" ];
     Canceled -> Finished                    [ label = "on4xxC" ];
     Canceled -> Terminated                  [ label = "on200I/send::BYE" ];
-    Canceled -> Canceled                    [ label = "no-op" ];
     Canceled -> Terminated                  [ label = "onRedirect/app::onRedirected" ];
-
+    Canceled -> Assert                      [ label = "dum::cancel/assert" ];
+    Canceled -> Assert                      [ label = "dum::end/assert" ];
+        
     Connected -> Terminated                 [ label = "dum::end/send::BYE" ];
-    Connected -> Finish                     [ label = "on2xxB" ];
 
-    Terminated -> Finish                    [ label = "2XX BYE" ];
+    Terminated -> Finish                    [ label = "on2XXB" ];
 }
