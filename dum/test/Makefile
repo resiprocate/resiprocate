@@ -11,8 +11,13 @@ PACKAGES += DUM RESIPROCATE OPENSSL ARES PTHREAD
 
 TARGET_LIBRARY = 
 
-TESTPROGRAMS = certServer.cxx
-#basicRegister.cxx BasicCall.cxx #testDumTimer.cxx
+#testDumTimer.cxx
+#TESTPROGRAMS += basicRegister.cxx BasicCall.cxx 
+
+ifeq ($(USE_SSL),true)
+TESTPROGRAMS += certServer.cxx
+endif
+
 SRC =   
 
 include $(BUILD)/Makefile.post
