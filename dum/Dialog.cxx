@@ -380,10 +380,10 @@ Dialog::dispatch(const SipMessage& msg)
                }
                else
                {
-                     SipMessage failure;
-                     makeResponse(failure, request, 481);
-                     mDum.sendResponse(failure);
-                     return;
+                  SipMessage failure;
+                  makeResponse(failure, request, 481);
+                  mDum.sendResponse(failure);
+                  return;
                }
             }
          }
@@ -635,6 +635,24 @@ Dialog::getServerSubscriptions()
    }
 
    return handles;
+}
+
+void 
+Dialog::redirected(const SipMessage& msg)
+{
+   //Established dialogs are not destroyed by a redirect
+   if (!mClientSubscriptions.empty() || !mServerSubscriptions.empty())
+   {
+      return;
+   }
+   if (mInviteSession)
+   {
+      ClientInviteSession* cInv = dynamic_cast<ClientInviteSession*>(mInviteSession);
+      if (cInv)
+      {
+         cInv->redirected(msg);         
+      }
+   }
 }
 
 
