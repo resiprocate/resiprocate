@@ -2,10 +2,6 @@
 #include "sip2/sipstack/Symbols.hxx"
 #include "sip2/util/Logger.hxx"
 
-// !dlb! prolog
-//<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>
-//<? ... ?>
-
 using namespace Vocal2;
 using namespace std;
 
@@ -21,6 +17,10 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
      mCursor(0)
 {
    ParseBuffer lPb(pb);
+
+   skipProlog(lPb);
+   const char* start = lPb.position();
+
    bool needsPreparse;
    lPb.skipToChars(COMMENT_START);
    needsPreparse = !lPb.eof();
@@ -31,7 +31,7 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
    if (needsPreparse)
    {
       DebugLog(<< "removing comments and cannonicalzing endlines");
-      lPb.reset(lPb.start());
+      lPb.reset(start);
       mData.reserve(lPb.end() - lPb.start());
 
       const char* anchor = lPb.position();
@@ -57,7 +57,7 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
    }
    else
    {
-      mRoot = new Node(ParseBuffer(pb));
+      mRoot = new Node(ParseBuffer(start, pb.end() - start));
    }
    mCursor = mRoot;
 
@@ -69,6 +69,8 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
 
    mTag = mRoot->mTag;
    decodeName(mRoot->mTag);
+
+   // check for # & and note -- make decode, decodeName do stuff if set
 
    //<top></top> // no children
    lPb.reset(lPb.start());
@@ -93,6 +95,17 @@ XMLCursor::~XMLCursor()
    delete mRoot;
 }
 
+static const Data QUESTION_RA_QUOTE("?>");
+void
+XMLCursor::skipProlog(ParseBuffer& pb)
+{
+   //'<?xml' VersionInfo '<xml?' EncodingDecl '?>'? '<?xml' SDDecl '?>'? S? '?>
+
+   // !dlb! much more complicated than this.. can contain comments
+   pb.skipToChars(QUESTION_RA_QUOTE);
+   pb.skipN(2);
+}
+
 void
 XMLCursor::decode(Data& text)
 {
@@ -106,14 +119,14 @@ XMLCursor::decodeName(Data& name)
 void
 XMLCursor::parseNextRootChild()
 {
-   // no next child to parse
+   // no next child to parse?
    if (mRoot->mPb.eof())
    {
       return;
    }
 
-   // next child already parsed
-   if (mRoot->mNext != mCursor->mChildren.end())
+   // next child already parsed?
+   if (mRoot->mNext != mRoot->mChildren.end())
    {
       return;
    }
@@ -123,44 +136,61 @@ XMLCursor::parseNextRootChild()
    {
       mRoot->mPb.skipToChar(Symbols::RA_QUOTE[0]);
       mRoot->mPb.skipChar();
-      mRoot->mPb.skipToChar(Symbols::LA_QUOTE[0]);
-      mRoot->mPb.assertNotEof();
    }
 
    // root end tag?
-   ParseBuffer pb(mRoot->mPb.position(), 
-                  mRoot->mPb.end() - mRoot->mPb.position());
-   pb.skipToChar(Symbols::LA_QUOTE[0]);
-   pb.skipChar();
-
-   if (*pb.position() == Symbols::SLASH[0])
+   if (*mRoot->mPb.position() == Symbols::LA_QUOTE[0])
    {
+      ParseBuffer pb(mRoot->mPb.position(), 
+                     mRoot->mPb.end() - mRoot->mPb.position());
       pb.skipChar();
-      if (mTag.size() + pb.position() > pb.end())
+      if (*pb.position() == Symbols::SLASH[0])
       {
-         InfoLog("XML: unexpected end");
-         pb.fail(__FILE__, __LINE__);
-      }
+         pb.skipChar();
+         if (mTag.size() + pb.position() > pb.end())
+         {
+            InfoLog("XML: unexpected end");
+            pb.fail(__FILE__, __LINE__);
+         }
          
-      if (strncmp(mTag.data(), pb.position(), mRoot->mTag.size()) == 0)
-      {
-         mRoot->mPb.skipToEnd();
-         return;
+         if (strncmp(mTag.data(), pb.position(), mRoot->mTag.size()) == 0)
+         {
+            mRoot->mPb.skipToEnd();
+            return;
+         }
       }
    }
 
-   Node* child = new Node(mRoot->mPb);
-   child->skipToEndTag();
+   // leaf?
+   if (*mRoot->mPb.position() != Symbols::LA_QUOTE[0])
+   {
+      const char* anchor = mRoot->mPb.position();
+      mRoot->mPb.skipToChar(Symbols::LA_QUOTE[0]);
+      Node* leaf = new Node(ParseBuffer(anchor, mRoot->mPb.position() - anchor));
+      leaf->mIsLeaf = true;
+      mRoot->addChild(leaf);
+   }
+   else
+   {
+      Node* child = new Node(mRoot->mPb);
+      child->skipToEndTag();
 
-   // leave the parse buffer after the child
-   mRoot->mPb.reset(child->mPb.end());
+      // leave the parse buffer after the child
+      mRoot->mPb.reset(child->mPb.end());
 
-   mRoot->addChild(child);
+      mRoot->addChild(child);
+   }
+
+   // mNext always points at cursored child
+   mRoot->mNext = mRoot->mChildren.end();
+   mRoot->mNext--;
 }
 
 bool
 XMLCursor::nextSibling()
 {
+   DebugLog(<< "XMLCursor::nextSibling" << this->mCursor << " " << this->mCursor->mParent);
+
    if (atRoot())
    {
       return false;
@@ -173,7 +203,7 @@ XMLCursor::nextSibling()
 
    if (mCursor->mParent->mNext != mCursor->mParent->mChildren.end())
    {
-      mCursor = *(++(mCursor->mParent->mNext));
+      mCursor = *((mCursor->mParent->mNext)++);
       return true;
    }
    else
@@ -185,7 +215,8 @@ XMLCursor::nextSibling()
 bool
 XMLCursor::firstChild()
 {
-   if (atRoot())
+   if (atRoot() &&
+       mRoot->mChildren.empty())
    {
       parseNextRootChild();
    }
@@ -196,10 +227,12 @@ XMLCursor::firstChild()
    }
    else
    {
-      mCursor->mNext = ++(mCursor->mChildren.begin());
+      // mNext always points after cursored child
+      mCursor->mNext = mCursor->mChildren.begin();
+      mCursor->mNext++;
       mCursor = mCursor->mChildren.front();
+      return true;
    }
-   return true;
 }
 
 bool
@@ -232,7 +265,7 @@ XMLCursor::atLeaf() const
    return mCursor->mIsLeaf;
 }
 
-Data 
+const Data&
 XMLCursor::getTag() const
 {
    return mCursor->mTag;
@@ -243,74 +276,76 @@ XMLCursor::getTag() const
 //<foo/>
 //<foo attr = 'value'   attr="value">
 //<foo attr = 'value'   attr="value" >
-std::map<Data, Data>
+const std::map<Data, Data>&
 XMLCursor::getAttributes() const
 {
-   std::map<Data, Data> attributes;
+   mAttributes.clear();
 
-   ParseBuffer pb(mCursor->mPb);
-   pb.reset(mCursor->mPb.start());
-
-   Data attribute;
-   Data value;
-
-   pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::RA_QUOTE);
-
-   while (*pb.position() != Symbols::RA_QUOTE[0])
+   if (!atLeaf())
    {
-      attribute.clear();
-      value.clear();
+      ParseBuffer pb(mCursor->mPb);
+      pb.reset(mCursor->mPb.start());
 
-      const char* anchor = pb.skipWhitespace();
-      pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::EQUALS);
-      pb.data(attribute, anchor);
-      XMLCursor::decodeName(attribute);
+      Data attribute;
+      Data value;
 
-      CerrLog(<< "attribute: " << attribute);
+      pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::RA_QUOTE);
 
-      pb.skipWhitespace();
-      pb.skipToChar(Symbols::EQUALS[0]);
-      pb.skipChar();
-      pb.skipWhitespace();
-      const char quote = *pb.position();
-
-      CerrLog(<< "quote is <" << quote << ">");
-
-      if (quote != Symbols::DOUBLE_QUOTE[0] &&
-          quote != '\'')
+      while (*pb.position() != Symbols::RA_QUOTE[0])
       {
-         InfoLog("XML: badly quoted attribute value");
-         pb.fail(__FILE__, __LINE__);
-      }
-      anchor = pb.skipChar();
-      pb.skipToChar(quote);
-      pb.data(value, anchor);
-      XMLCursor::decode(value);
-      pb.skipChar();
+         attribute.clear();
+         value.clear();
 
-      attributes[attribute] = value;
-      pb.skipWhitespace();
+         const char* anchor = pb.skipWhitespace();
+         pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::EQUALS);
+         pb.data(attribute, anchor);
+         XMLCursor::decodeName(attribute);
+
+         DebugLog(<< "attribute: " << attribute);
+
+         pb.skipWhitespace();
+         pb.skipToChar(Symbols::EQUALS[0]);
+         pb.skipChar();
+         pb.skipWhitespace();
+         const char quote = *pb.position();
+
+         DebugLog(<< "quote is <" << quote << ">");
+
+         if (quote != Symbols::DOUBLE_QUOTE[0] &&
+             quote != '\'')
+         {
+            InfoLog("XML: badly quoted attribute value");
+            pb.fail(__FILE__, __LINE__);
+         }
+         anchor = pb.skipChar();
+         pb.skipToChar(quote);
+         pb.data(value, anchor);
+         XMLCursor::decode(value);
+         pb.skipChar();
+
+         mAttributes[attribute] = value;
+         pb.skipWhitespace();
+      }
    }
 
-   return attributes;
+   return mAttributes;
 }
 
-Data
+const Data&
 XMLCursor::getValue() const
 {
    if (atLeaf())
    {
-      Data value;
       ParseBuffer pb(mCursor->mPb);
       pb.skipToEnd();
-      value = pb.data(pb.start());
-      XMLCursor::decode(value);
-      return value;
+      mValue = pb.data(pb.start());
+      XMLCursor::decode(mValue);
    }
    else
    {
-      return Data::Empty;
+      mValue.clear();
    }
+   return mValue;
 }
 
 XMLCursor::Node::Node(const ParseBuffer& pb)
@@ -321,7 +356,7 @@ XMLCursor::Node::Node(const ParseBuffer& pb)
      mIsLeaf(false)
 {
    mPb.assertNotEof();
-   CerrLog(<< "XMLCursor::Node::Node[" << Data(mPb.position(), mPb.end() - mPb.start()) << "]");
+   DebugLog(<< "XMLCursor::Node::Node" << this << "[" << Data(mPb.position(), mPb.end() - mPb.start()) << "]");
 }
 
 XMLCursor::Node::~Node()
@@ -374,7 +409,7 @@ void
 XMLCursor::Node::skipToEndTag()
 {
 
-   CerrLog(<< "XMLCursor::Node::skipToEndTag(" << Data(mPb.position(), mPb.end() - mPb.position()) << ")");
+   DebugLog(<< "XMLCursor::Node::skipToEndTag(" << Data(mPb.position(), mPb.end() - mPb.position()) << ")");
 
    extractTag();
 
@@ -423,9 +458,9 @@ XMLCursor::Node::skipToEndTag()
 
          if (strncmp(mTag.data(), mPb.position(), mTag.size()) == 0)
          {
-            //...</foo>
-            //   ^
-            mPb = ParseBuffer(mPb.start(), mPb.position() - mPb.start() - 2 - mTag.size());
+            mPb.skipToChar(Symbols::RA_QUOTE[0]);
+            mPb.skipChar();
+            mPb = ParseBuffer(mPb.start(), mPb.position() - mPb.start());
             return;
          }
          else
@@ -449,7 +484,9 @@ XMLCursor::Node::skipToEndTag()
       Node* child = new Node(mPb);
       addChild(child);
       child->skipToEndTag();
+      mPb.reset(child->mPb.end());
       XMLCursor::decodeName(child->mTag);
+      DebugLog(<< mTag << "(" << child->mTag << ")");
    }
 }
 

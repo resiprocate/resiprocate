@@ -72,11 +72,12 @@ class XMLCursor
       bool atRoot() const;
       bool atLeaf() const;
 
-      Data getTag() const;
-      std::map<Data, Data> getAttributes() const;
-      Data getValue() const;
+      const Data& getTag() const;
+      const std::map<Data, Data>& getAttributes() const;
+      const Data& getValue() const;
 
    private:
+      static void skipProlog(ParseBuffer& pb);
       static void decode(Data&);
       static void decodeName(Data&);
 
@@ -87,9 +88,18 @@ class XMLCursor
       Node* mRoot;
       Node* mCursor;
 
-      bool isEmpty;
+      //bool isEmpty;
+
+      // store for undecoded root tag
       Data mTag;
+
+      // store for copy of input if commented
       Data mData;
+
+      // store date for decoding
+      mutable Data mValue;
+      // store attributes for reference
+      mutable std::map<Data, Data> mAttributes;
 
       class Node
       {
