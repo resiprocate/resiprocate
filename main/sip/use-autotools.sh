@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: use-autotools.sh,v 1.1 2004/02/24 00:46:31 alan Exp $
+# $Id: use-autotools.sh,v 1.2 2004/02/24 01:12:44 alan Exp $
 
 AUTOTOOLS_BRANCH=b-ah-atools
 
@@ -60,6 +60,9 @@ AUTOTOOLS_REAL="Makefile.am
 
 
 cvs up -r ${AUTOTOOLS_BRANCH} ${AUTOTOOLS_REAL} ${AUTOTOOLS_ARTIFACTS}
+# Remove the 'old' build directory -- only if it's got a CVS dir in it.
+[ -d build/CVS ] && rm -rf build
+
 if [ "$1"x == "--remove-artifactsx" ]; then
  cvs remove -f ${AUTOTOOLS_ARTIFACTS}
 fi
