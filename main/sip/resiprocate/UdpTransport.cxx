@@ -46,14 +46,14 @@ UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, F
       int err = errno;
       if ( err == EADDRINUSE )
       {
-         InfoLog (<< "Address already in use");
+         ErrLog (<< "UDP port " << portNum << " already in use");
+         throw Exception("UDP port already in use", __FILE__,__LINE__);
       }
       else
       {
-         InfoLog (<< "Could not bind to port: " << portNum);
+         ErrLog (<< "Could not bind to port: " << portNum);
+         throw Exception("Cont not use UDP port", __FILE__,__LINE__);
       }
-      
-      throw Exception("Address already in use", __FILE__,__LINE__);
    }
 
    makeSocketNonBlocking(mFd);
