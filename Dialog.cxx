@@ -603,3 +603,15 @@ Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
    : BaseException(msg, file, line)
 {}
 
+void 
+Dialog::setLocalContact(const NameAddr& localContact)
+{
+   mLocalContact = localContact;
+}
+
+void 
+Dialog::setRemoteTarget(const NameAddr& remoteTarget)
+{
+   mRemoteTarget = remoteTarget;
+}
+

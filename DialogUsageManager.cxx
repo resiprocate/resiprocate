@@ -16,10 +16,24 @@
 
 using namespace resip;
 
+
+DialogUsageManager::~DialogUsageManager()
+{
+   for(DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); it++)
+   {
+      delete it->second;
+   }
+}
+
 DialogUsageManager::DialogUsageManager(SipStack& stack) 
    : mStack(stack)
 {
-   
+}
+
+Profile* 
+DialogUsageManager::getProfile()
+{
+   return mProfile;
 }
 
 void DialogUsageManager::setProfile(Profile* profile)
@@ -232,9 +246,9 @@ DialogUsageManager::process(FdSet& fdset)
    }
 
    DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg);
-   if (dumMsg && dumMsg->baseUsage().isValid())
+   if (dumMsg && dumMsg->getBaseUsage().isValid())
    {
-       dumMsg->baseUsage()->dispatch(*dumMsg);
+       dumMsg->getBaseUsage()->dispatch(*dumMsg);
        delete dumMsg;
        return;
    }
@@ -438,7 +452,8 @@ DialogUsageManager::processResponse(const SipMessage& response)
    }
 }
 
-
+//!dcm! -- kill
+#if 0
 Dialog&  
 DialogUsageManager::findDialog(const DialogId& id)
 {
@@ -458,6 +473,7 @@ DialogUsageManager::findDialog(const DialogId& id)
     }
     return *dialog;
 }
+#endif
  
 DialogSet&
 DialogUsageManager::findDialogSet(const DialogSetId& id)
@@ -471,6 +487,8 @@ DialogUsageManager::findDialogSet(const DialogSetId& id)
     return *it->second;
 }
 
+//!dcm! -- kill
+#if 0
 BaseCreator*
 DialogUsageManager::findCreator(const DialogId& id)
 {
@@ -479,6 +497,7 @@ DialogUsageManager::findCreator(const DialogId& id)
    BaseCreator* creator = dialogSet.getCreator();
    return creator;
 }
+#endif
 
 bool
 DialogUsageManager::isValid(const BaseUsage::Handle& handle)
