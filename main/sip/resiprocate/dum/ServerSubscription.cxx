@@ -49,6 +49,8 @@ ServerSubscription::reject(int statusCode)
 void 
 ServerSubscription::send(SipMessage& msg)
 {
+   ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
+   assert(handler);   
    if (msg.isResponse())
    {
       int code = msg.header(h_StatusLine).statusCode();
@@ -79,6 +81,11 @@ ServerSubscription::send(SipMessage& msg)
    {
       mDum.send(msg);
       msg.releaseContents();
+      if (mSubscriptionState == Terminated)
+      {
+         handler->onTerminated(getHandle());
+         delete this;
+      }
    }
 }
 
@@ -123,12 +130,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
    else
    {
       int code = msg.header(h_StatusLine).statusCode();
-      if (code == 200 && mSubscriptionState == Terminated)
-      {
-         handler->onTerminated(getHandle());
-         delete this;         
-      }
-      else if (code > 399)
+      if (code >= 300)
       {
          handler->onError(getHandle(), msg);
          handler->onTerminated(getHandle());
@@ -161,6 +163,7 @@ ServerSubscription::makeNotify()
 SipMessage& 
 ServerSubscription::end(TerminateReason reason, const Contents* document)
 {
+   mSubscriptionState = Terminated;
    makeNotify();
    mLastNotify.header(h_SubscriptionState).param(p_reason) = getTerminateReasonString(reason);   
    if (document)
