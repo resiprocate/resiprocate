@@ -20,6 +20,7 @@ SipMessage::SipMessage(bool fromWire)
      mStartLine(0),
      mContentsHfv(0),
      mContents(0),
+     mRFC2543TransactionId(),
      mRequest(false),
      mResponse(false)
 {
@@ -123,18 +124,90 @@ SipMessage::getTransactionId() const
    }
    else
    {
+
+      /*  From rfc3261, 17.2.3
+          The INVITE request matches a transaction if the Request-URI, To tag,
+          From tag, Call-ID, CSeq, and top Via header field match those of the
+          INVITE request which created the transaction.  In this case, the
+          INVITE is a retransmission of the original one that created the
+          transaction.  
+
+          The ACK request matches a transaction if the Request-URI, From tag,
+          Call-ID, CSeq number (not the method), and top Via header field match
+          those of the INVITE request which created the transaction, and the To
+          tag of the ACK matches the To tag of the response sent by the server
+          transaction.  
+
+          Matching is done based on the matching rules defined for each of those
+          header fields.  Inclusion of the tag in the To header field in the ACK
+          matching process helps disambiguate ACK for 2xx from ACK for other
+          responses at a proxy, which may have forwarded both responses (This
+          can occur in unusual conditions.  Specifically, when a proxy forked a
+          request, and then crashes, the responses may be delivered to another
+          proxy, which might end up forwarding multiple responses upstream).  An
+          ACK request that matches an INVITE transaction matched by a previous
+          ACK is considered a retransmission of that previous ACK.
+
+          For all other request methods, a request is matched to a transaction
+          if the Request-URI, To tag, From tag, Call-ID, CSeq (including the
+          method), and top Via header field match those of the request that
+          created the transaction.  Matching is done based on the matching
+      */
+
       if( mRFC2543TransactionId.empty() )
       {
          MD5Stream strm;
          // See section 17.2.3 Matching Requests to Server Transactions in rfc 3261
-         strm << header(h_RequestLine).uri();
-         if (header(h_From).exists(p_tag)) strm << header(h_From).param(p_tag).lowercase();
-         if (header(h_To).exists(p_tag))strm << header(h_To).param(p_tag).lowercase();
-         strm << header(h_CallId).value().lowercase();
-         strm << header(h_CSeq);
-         if (!header(h_Vias).empty()) strm << header(h_Vias).front();
-         strm.flush();
+         
+         strm << header(h_RequestLine).uri().scheme();
+         strm << header(h_RequestLine).uri().user();
+         strm << header(h_RequestLine).uri().host();
+         strm << header(h_RequestLine).uri().port();
+         strm << header(h_RequestLine).uri().password();
+         strm << header(h_RequestLine).uri().commutativeParameterHash();
+
+         if (!header(h_Vias).empty())
+         {
+            strm << header(h_Vias).front().protocolName();
+            strm << header(h_Vias).front().protocolVersion();
+            strm << header(h_Vias).front().transport();
+            strm << header(h_Vias).front().sentHost();
+            strm << header(h_Vias).front().sentPort();
+            strm << header(h_Vias).front().commutativeParameterHash();
+         }
+         
+         
+         if (header(h_From).exists(p_tag))
+         {
+            strm << header(h_From).param(p_tag);
+         }
+         
+   
+         strm << header(h_CallId).value();
+
+         if (header(h_RequestLine).getMethod() == ACK)
+         {
+            strm << INVITE;
+            strm << header(h_CSeq).sequence();
+         }
+         else
+         {
+            strm << header(h_CSeq).method();
+            strm << header(h_CSeq).sequence();
+         }
+         
          mRFC2543TransactionId = strm.getHex();
+
+         // Allows incremental computation of the transaction hash. When the
+         // response comes back from the server, the Transaction needs to add a
+         // new entry to the TransactionMap 
+         if (header(h_To).exists(p_tag) && header(h_RequestLine).getMethod() != INVITE)
+         {
+            MD5Stream strm2;
+            strm2 << mRFC2543TransactionId
+                  << header(h_To).param(p_tag);
+            mRFC2543TransactionId = strm2.getHex();
+         }
       }
       return mRFC2543TransactionId;
    }
@@ -143,7 +216,19 @@ SipMessage::getTransactionId() const
 void
 SipMessage::copyRFC2543TransactionId(const SipMessage& request)
 {
+   assert(isResponse());
    mRFC2543TransactionId = request.mRFC2543TransactionId;
+}
+
+const Data&
+SipMessage::updateRFC2543TransactionId()
+{
+   assert(isResponse());
+   MD5Stream strm2;
+   strm2 << mRFC2543TransactionId
+         << header(h_To).param(p_tag);
+   mRFC2543TransactionId = strm2.getHex();
+   return mRFC2543TransactionId;
 }
 
 bool
@@ -178,7 +263,8 @@ SipMessage::brief() const
    }
    result += " cseq=";
    result += Data(header(h_CSeq).sequence());
-
+   result += mIsExternal ? " from(wire)" : " from(TU)";
+   
    return result;
 }
 
