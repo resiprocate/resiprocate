@@ -573,7 +573,7 @@ main(int argc, char* argv[])
    
 #ifdef USE_SSL
    assert( sipStack.security );
-   bool ok = sipStack.security->loadAllCerts( key , "~/.sip" );
+   bool ok = sipStack.security->loadAllCerts( key , Data::Empty );
    if ( !ok )
    {
       InfoLog( << "Could not load the certificates" );
