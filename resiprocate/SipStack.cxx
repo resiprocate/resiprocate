@@ -65,7 +65,7 @@ SipStack::shutdown()
 {
    //InfoLog (<< "Shutting down stack " << this);
    mShuttingDown = true;
-   cerr << *this << endl;
+   //cerr << *this << endl;
    mTUFifo.add(new ShutdownMessage);
 }
 
