@@ -38,7 +38,8 @@ main(int argc, char* argv[])
    
    Fifo<Message> received;
    
-   UdpTransport* udp = new UdpTransport("localhost", 5070, "default", received);
+//   UdpTransport* udp = new UdpTransport("localhost", 5070, "default", received);
+   UdpTransport* udp = new UdpTransport(received, 5070, "default");
 
    NameAddr dest;
    dest.uri().scheme() = "sip";
