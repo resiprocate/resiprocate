@@ -11,6 +11,7 @@
 #endif
 
 #include <iostream>
+#include <list>
 
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
