@@ -41,23 +41,13 @@ class TransportSelector
       void buildFdSet(FdSet& fdset);
      
       // returns true, if the transport was added successfully. 
-      bool addTransport( TransportType,
-                         int port,
+      bool addTransport( TransportType protocol,
+                         int port, 
                          IpVersion version,
-                         const Data& ipInterface=Data::Empty);
-      bool addTlsTransport(const Data& domainName, 
-                           const Data& keyDir,
-                           const Data& privateKeyPassPhrase,
-                           int port, 
-                           IpVersion version,
-                           const Data& ipInterface=Data::Empty,
-                           SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
-                           );
-      bool addTlsTransport(const Data& domainName, 
-                           int port, 
-                           IpVersion version,
-                           const Data& ipInterface=Data::Empty
-                           );
+                         const Data& ipInterface, 
+                         const Data& sipDomainname,
+                         const Data& privateKeyPassPhrase,
+                         SecurityTypes::SSLType sslType );
 
       DnsResult* dnsResolve(SipMessage* msg, DnsHandler* handler);
 

@@ -114,38 +114,20 @@ TransactionController::buildFdSet( FdSet& fdset)
    mTransportSelector.buildFdSet( fdset );
 }
 
+
 bool
-TransactionController::addTransport( TransportType protocol, 
-                                     int port,
+TransactionController::addTransport( TransportType protocol,
+                                     int port, 
                                      IpVersion version,
-                                     const Data& ipInterface)
+                                     const Data& ipInterface, 
+                                     const Data& sipDomainname,
+                                     const Data& privateKeyPassPhrase,
+                                     SecurityTypes::SSLType sslType)
 {
-   return mTransportSelector.addTransport(protocol, port, version, ipInterface);
+   return mTransportSelector.addTransport( protocol, port, version, ipInterface, 
+                                           sipDomainname, privateKeyPassPhrase, sslType);
 }
 
-bool
-TransactionController::addTlsTransport( int port, 
-                                        const Data& keyDir,
-                                        const Data& privateKeyPassPhrase,
-                                        const Data& domainname,
-                                        IpVersion version,
-                                        const Data& ipInterface,
-                                        SecurityTypes::SSLType sslType
-                                        )
-{
-   return mTransportSelector.addTlsTransport(domainname, keyDir, privateKeyPassPhrase, 
-                                             port, version, ipInterface, sslType);
-}
-
-bool
-TransactionController::addTlsTransport( int port, 
-                                        const Data& domainname,
-                                        IpVersion version,
-                                        const Data& ipInterface
-                                        )
-{
-   return mTransportSelector.addTlsTransport(domainname, port, version, ipInterface);
-}
 
 void
 TransactionController::send(SipMessage* msg)
