@@ -2,6 +2,7 @@
 
 using namespace resip;
 
+const Subsystem Subsystem::APP("RESIP:APP");
 const Subsystem Subsystem::CONTENTS("RESIP:CONTENTS");
 const Subsystem Subsystem::DNS("RESIP:DNS");
 const Subsystem Subsystem::DUM("RESIP:DUM");
