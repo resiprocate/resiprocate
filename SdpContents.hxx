@@ -3,6 +3,7 @@
 
 #include <list>
 #include <map>
+#include <iostream>
 
 #include "sip2/sipstack/Contents.hxx"
 #include "sip2/sipstack/Uri.hxx"
@@ -11,16 +12,22 @@
 namespace Vocal2
 {
 
+class Codec;
 class SdpContents;
 
 class AttributeHelper
 {
    public:
+      AttributeHelper() {}
+      AttributeHelper(const AttributeHelper& rhs);
+      AttributeHelper& operator=(const AttributeHelper& rhs);
+      
       bool exists(const Data& key) const;
-      const list<Data>& getValue(const Data& key) const;
+      const list<Data>& getValues(const Data& key) const;
       ostream& encode(ostream& s) const;
       void parse(ParseBuffer& pb);
       void addAttribute(const Data& key, const Data& value = Data::Empty);
+      void clearAttribute(const Data& key);
    private:
       std::map< Data, std::list<Data> > mAttributes;
 };
@@ -41,17 +48,20 @@ class SdpContents : public Contents
             {
                public:
                   Origin(const Data& user,
-                         const Data& sesionId,
-                         const Data& version,
+                         const int& sessionId,
+                         const int& version,
                          AddrType addr,
                          const Data& address);
+                  Origin(const Origin& rhs);
+                  Origin& operator=(const Origin& rhs);
 
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
-                  const Data& getSessionId() const {return mSessionId;}
-                  const Data& getVersion() const {return mVersion;}
-                  const Data& getUser() const {return mUser;}
+                  const int& getSessionId() const {return mSessionId;}
+                  const int& getVersion() const {return mVersion;}
+                  const Data& user() const {return mUser;}
+                  Data& user() {return mUser;}
                   AddrType getAddressType() const {return mAddrType;}
                   const Data& getAddress() const {return mAddress;}
 
@@ -59,8 +69,8 @@ class SdpContents : public Contents
                   Origin();
 
                   Data mUser;
-                  Data mSessionId;
-                  Data mVersion;
+                  int mSessionId;
+                  int mVersion;
                   AddrType mAddrType;
                   Data mAddress;
 
@@ -72,6 +82,9 @@ class SdpContents : public Contents
                public:
                   Email(const Data& address,
                         const Data& freeText);
+
+                  Email(const Email& rhs);
+                  Email& operator=(const Email& rhs);
 
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
@@ -93,6 +106,8 @@ class SdpContents : public Contents
                public:
                   Phone(const Data& number,
                         const Data& freeText);
+                  Phone(const Phone& rhs);
+                  Phone& operator=(const Phone& rhs);
 
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
@@ -115,12 +130,17 @@ class SdpContents : public Contents
                   Connection(AddrType addType,
                              const Data& address,
                              unsigned int ttl = 0);
+                  Connection(const Connection& rhs);
+                  Connection& operator=(const Connection& rhs);
+                  
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
                   AddrType getAddressType() const {return mAddrType;}
                   const Data& getAddress() const {return mAddress;}
-                  unsigned int getTTL() const {return mTTL;}
+                  void setAddress(const Data& host, AddrType type = IP4);
+                  unsigned int ttl() const {return mTTL;}
+                  unsigned int& ttl() {return mTTL;}
 
                private:
                   Connection();
@@ -138,11 +158,16 @@ class SdpContents : public Contents
                public:
                   Bandwidth(const Data& modifier,
                             unsigned int kbPerSecond);
+                  Bandwidth(const Bandwidth& rhs);
+                  Bandwidth& operator=(const Bandwidth& rhs);
+                  
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
-                  const Data& getModifier() const {return mModifier;}
-                  unsigned int getKbPerSecond() const {return mKbPerSecond;}
+                  const Data& modifier() const {return mModifier;}
+                  Data modifier() {return mModifier;}
+                  unsigned int kbPerSecond() const {return mKbPerSecond;}
+                  unsigned int& kbPerSecond() {return mKbPerSecond;}
 
                private:
                   Bandwidth() {}
@@ -158,6 +183,9 @@ class SdpContents : public Contents
                public:
                   Time(unsigned int start,
                        unsigned int stop);
+                  Time(const Time& rhs);
+                  Time& operator=(const Time& rhs);
+                  
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
@@ -206,12 +234,17 @@ class SdpContents : public Contents
                      public:
                         Adjustment(unsigned int time,
                                    int offset);
+                        Adjustment(const Adjustment& rhs);
+                        Adjustment& operator=(const Adjustment& rhs);
                         
                         unsigned int time;
                         int offset;
                   };
 
                   Timezones();
+                  Timezones(const Timezones& rhs);
+                  Timezones& operator=(const Timezones& rhs);
+                  
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
@@ -227,54 +260,73 @@ class SdpContents : public Contents
                   typedef enum {NoEncryption = 0, Prompt, Clear, Base64, UriKey} KeyType;
                   Encryption(const KeyType& method,
                              const Data& key);
+                  Encryption(const Encryption& rhs);
+                  Encryption& operator=(const Encryption& rhs);
+                  
+                  
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
                   const KeyType& getMethod() const {return mMethod;}
-                  void setMethod( const KeyType& k) { mMethod=k; }
                   const Data& getKey() const {return mKey;}
 
                   Encryption();
                private:
-             
                   KeyType mMethod;
                   Data mKey;
-
-				  //friend class Vocal2::SdpContents::Session;
-				  //friend class Vocal2::SdpContents::Session::Medium;
             };
 
             class Medium
             {
                public:
+                  Medium();
+                  Medium(const Medium& rhs);
                   Medium(const Data& name,
                          unsigned int port,
                          unsigned int multicast,
                          const Data& protocol);
+                  Medium& operator=(const Medium& rhs);
+                  
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
                   
                   void addFormat(const Data& format);
+                  void setConnection(const Connection& connection);
                   void addConnection(const Connection& connection);
+                  void setBandwidth(const Bandwidth& bandwidth);
                   void addBandwidth(const Bandwidth& bandwidth);
                   void addAttribute(const Data& key, const Data& value = Data::Empty);
 
-                  const Data& getName() const {return mName;}
-                  int getPort() const {return mPort;}
-                  int getMulticast() const {return mMulticast;}
-                  const Data& getProtocol() const {return mProtocol;}
-                  const std::list<Data>& getFormats() const {return mFormats;}
-                  const Data& getInformation() const {return mInformation;}
-                  const std::list<Bandwidth>& getBandwidths() const {return mBandwidths;}
+                  const Data& name() const {return mName;}
+                  Data name() {return mName;}
 
-                  // from session if empty
+                  int port() const {return mPort;}
+                  unsigned int& port() {return mPort;}
+                  int multicast() const {return mMulticast;}
+                  unsigned int& multicast() {return mMulticast;}
+                  const Data& protocol() const {return mProtocol;}
+                  Data protocol() {return mProtocol;}
+
+                  // preferred codec/format interface
+                  const std::list<Codec>& codecs() const;
+                  std::list<Codec>& codecs();
+                  void clearCodecs();
+                  void addCodec(const Codec& codec);
+
+                  const std::list<Data>& getFormats() const {return mFormats;}
+                  const Data& information() const {return mInformation;}
+                  Data& information() {return mInformation;}
+                  const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
+                  std::list<Bandwidth>& bandwidths() {return mBandwidths;}
+
+                  // from session if empty !dlb! setConnection?
                   const std::list<Connection>& getConnections() const;
                   const Encryption& getEncryption() const;
                   bool exists(const Data& key) const;
-                  const list<Data>& getValue(const Data& key) const;
+                  const list<Data>& getValues(const Data& key) const;
+                  void clearAttribute(const Data& key);
 
                private:
-                  Medium();
                   void setSession(Session* session);
                   Session* mSession;
 
@@ -282,15 +334,18 @@ class SdpContents : public Contents
                   unsigned int mPort;
                   unsigned int mMulticast;
                   Data mProtocol;
-                  std::list<Data> mFormats;
-                  
+                  mutable std::list<Data> mFormats;
+                  mutable list<Codec> mCodecs;
                   Data mTransport;
-
                   Data mInformation;
                   std::list<Connection> mConnections;
                   std::list<Bandwidth> mBandwidths;
                   Encryption mEncryption;
-                  AttributeHelper mAttributeHelper;
+                  mutable AttributeHelper mAttributeHelper;
+
+                  mutable bool mRtpMapDone;
+                  typedef map<int, Codec> RtpMap;
+                  mutable RtpMap mRtpMap;
 
                   friend class Session;
             };
@@ -302,33 +357,43 @@ class SdpContents : public Contents
             void parse(ParseBuffer& pb);
             std::ostream& encode(std::ostream&) const;
 
-            int getVersion() const {return mVersion;}
-            const Origin& getOrigin() const {return mOrigin;}
-            const Data& getName() const {return mName;}
-            const Data& getInformation() const {return mInformation;}
-            const Uri& getUri() const {return mUri;}
+            int version() const {return mVersion;}
+            int& version() {return mVersion;}
+            const Origin& origin() const {return mOrigin;}
+            Origin& origin() {return mOrigin;}
+            const Data& name() const {return mName;}
+            Data& name() {return mName;}
+            const Data& information() const {return mInformation;}
+            Data& information() {return mInformation;}
+            const Uri& uri() const {return mUri;}
+            Uri& uri() {return mUri;}
             const std::list<Email>& getEmails() const {return mEmails;}
             const std::list<Phone>& getPhones() const {return mPhones;}
-            Connection& connection() {return mConnection;}
             const Connection& connection() const {return mConnection;}
-            const std::list<Bandwidth>& getBandwidths() const {return mBandwidths;}
+            Connection& connection() {return mConnection;} // !dlb! optional?
+            const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
+            std::list<Bandwidth>& bandwidths() {return mBandwidths;}
             const std::list<Time>& getTimes() const {return mTimes;}
             const Timezones& getTimezones() const {return mTimezones;}
             const Encryption& getEncryption() const {return mEncryption;}
-            const std::list<Medium> getMedia() const {return mMedia;}
+            const std::list<Medium>& media() const {return mMedia;}
+            std::list<Medium>& media() {return mMedia;}
             
             void addEmail(const Email& email);
             void addPhone(const Phone& phone);
             void addBandwidth(const Bandwidth& bandwidth);
             void addTime(const Time& t);
             void addMedium(const Medium& medium);
+            void clearAttribute(const Data& key);
             void addAttribute(const Data& key, const Data& value = Data::Empty);
             bool exists(const Data& key) const;
-            const list<Data>& getValue(const Data& key) const;
+            const list<Data>& getValues(const Data& key) const;
 
          private:
-            Session() {}
-
+            Session() : mVersion(0) {}
+            Session(const Session& rhs);
+            Session& operator=(const Session& rhs);
+            
             int mVersion;
             Origin mOrigin;
             Data mName;
@@ -352,6 +417,9 @@ class SdpContents : public Contents
       SdpContents();
       SdpContents(const Data& data, const Mime& contentTypes);
       SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes);
+      SdpContents(const SdpContents& rhs);
+      SdpContents& operator=(const SdpContents& rhs);
+
       virtual Contents* clone() const;
 
       Session& session() {checkParsed(); return mSession;}
@@ -360,11 +428,53 @@ class SdpContents : public Contents
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
       //virtual 
-		  static const Mime& getStaticType() ;
+      static const Mime& getStaticType() ;
    private:
+      
       Session mSession;
       static ContentsFactory<SdpContents> Factory;
 };
+
+class Codec
+{
+   public:
+      Codec() : mName(), mRate(0), mPayloadType(-1) {}
+      Codec(const Data& name, unsigned int rate, const Data& parameters = Data::Empty);
+      Codec(const Codec& rhs);
+      Codec& operator=(const Codec& codec);
+
+      void parse(ParseBuffer& pb, 
+                 const SdpContents::Session::Medium& medium, 
+                 int payLoadType);
+
+      const Data& getName() const;
+      int getRate() const;
+
+      int payloadType() const {return mPayloadType;}
+      int& payloadType() {return mPayloadType;}
+
+      const Data& parameters() const {return mParameters;}
+      Data& parameters() {return mParameters;}
+
+      static const Codec ULaw_8000;
+      static const Codec ALaw_8000;
+      static const Codec G729_8000;
+      static const Codec TelephoneEvent;
+      static const Codec FrfDialedDigit;
+
+   private:
+      Data mName;
+      unsigned int mRate;
+      int mPayloadType;
+      Data mParameters;
+
+      friend bool operator==(const Codec&, const Codec&);
+      friend std::ostream& operator<<(std::ostream&, const Codec&);
+};
+
+bool operator==(const Codec& lhs, const Codec& rhs);
+
+std::ostream& operator<<(std::ostream& str, const Codec& codec);
 
 }
 
