@@ -120,6 +120,36 @@ Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
    }
 }
 
+
+void 
+Dialog::createDialogAsUAC(const SipMessage& response)
+{
+   if (!mCreated)
+   {
+      assert(response.isResponse());
+
+      // reverse order from response
+      mRouteSet = response.header(h_RecordRoutes).reverse();
+
+      mRemoteTarget = response.header(h_Contacts).front();
+      mRemoteSequence = 0;
+      mRemoteEmpty = true;
+      mLocalSequence = response.header(h_CSeq).sequence();
+      mLocalEmpty = false;
+      mCallId = response.header(h_CallId);
+      mLocalTag = response.header(h_From).param(p_tag);  
+      mRemoteTag = response.header(h_To).param(p_tag); 
+      mRemoteUri = response.header(h_To);
+      mLocalUri = response.header(h_From);
+      mCreated = true;
+      
+      mDialogId = mCallId.value();
+      mDialogId += mRemoteTag;
+      mDialogId += mLocalTag;
+   }
+}
+
+
 void 
 Dialog::targetRefreshResponse(const SipMessage& response)
 {
