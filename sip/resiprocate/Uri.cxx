@@ -268,16 +268,32 @@ Uri::operator==(const Uri& other) const
    {
       return false;
    }
-   ParameterList unA = mUnknownParameters;
-   ParameterList unB = other.mUnknownParameters;
 
    OrderUnknownParameters orderUnknown;
+
+#if defined(__SUNPRO_CC)
+   // The Solaris Forte STL implementation does not support the
+   // notion of a list.sort() function taking a BinaryPredicate.
+   // The hacky workaround is to load the Parameter pointers into
+   // an STL set which does support an ordering function.
+
+   typedef std::set<Parameter*, OrderUnknownParameters> ParameterSet;
+
+   ParameterSet unA(mUnknownParameters.begin(), mUnknownParameters.end());
+   ParameterSet unB(other.mUnknownParameters.begin(), other.mUnknownParameters.end());
+
+   ParameterSet::iterator a = unA.begin();
+   ParameterSet::iterator b = unB.begin();
+#else
+   ParameterList unA = mUnknownParameters;
+   ParameterList unB = other.mUnknownParameters;
 
    unA.sort(orderUnknown);  
    unB.sort(orderUnknown);
  
    ParameterList::iterator a = unA.begin();
    ParameterList::iterator b = unB.begin();
+#endif
 
    while(a != unA.end() && b != unB.end())
    {
