@@ -25,12 +25,12 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
 
   // if this isn't parsed, chunk and copy the block of memory
   // the copy for the param lists will end up with empty lists
-   if (!(isParsed()))
-   {
+  if (!(isParsed()))
+    {
       const_cast<unsigned int&>(mFieldLength) = hfv.mFieldLength;
       const_cast<char*&>(mField) = new char[mFieldLength];
       memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
-   }
+    }
   
   // if it is, the above will end up with null unparsed fields and valid 
   // param lists
@@ -39,76 +39,82 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
 
 HeaderFieldValue::~HeaderFieldValue()
 {
-   if (mMine)
-   {
+  if (mMine)
+    {
       HeaderFieldValue* ncThis = const_cast<HeaderFieldValue*>(this);      
       delete [] ncThis->mField;
-   }
+    }
 }
 
 // make destructor
 
-HeaderFieldValue* HeaderFieldValue::clone() const
+HeaderFieldValue* 
+HeaderFieldValue::clone() const
 {
   return new HeaderFieldValue(*this);
 }
 
-SubComponentList& HeaderFieldValue::getSubComponents()
+SubComponentList& 
+HeaderFieldValue::getSubComponents()
 {
   return mSubComponentList;
 }
 
-SubComponentList& HeaderFieldValue::getUnknownSubComponents()
+SubComponentList& 
+HeaderFieldValue::getUnknownSubComponents()
 {
   return mSubComponentList;
 }
 
-bool HeaderFieldValue::isParsed() const
+bool 
+HeaderFieldValue::isParsed() const
 {
   return mParserCategory != 0;
 }
 
 
-bool HeaderFieldValue::exists(const std::string& subcomponent)
+bool 
+HeaderFieldValue::exists(const std::string& subcomponent)
 {
-
+  
   SubComponent* exists = mUnknownSubComponentList.find(subcomponent);
   if (!exists)
-  {
-     exists = mSubComponentList.find(subcomponent);
-     if (exists)
-     {
-        ParseException except();
-        throw except;
-     }
-  }
+    {
+      exists = mSubComponentList.find(subcomponent);
+      if (exists)
+	{
+	  ParseException except;
+	  throw except;
+	}
+    }
   return exists;
 }
 
 
-bool HeaderFieldValue::exists(const SubComponent::Type type)
+bool 
+HeaderFieldValue::exists(const SubComponent::Type type)
 {
   
   return mSubComponentList.find(type);
-
+  
 }
 
 UnknownSubComponent* 
-HeaderFieldValue::get(const std::string& type) const
+HeaderFieldValue::get(const std::string& type)
 {
-   return dynamic_cast<UnknownSubComponent*>(mUnknownSubComponentList.get(type));
+  return dynamic_cast<UnknownSubComponent*>(mUnknownSubComponentList.get(type));
 }
 
 ostream& Vocal2::operator<<(ostream& stream, HeaderFieldValue& hfv)
 {
-  if (!hfv.isParsed())
-  {
-     stream << hfv.mSubComponentList << " : " << hfv.mUnknownSubComponentList;
-  }
+  if (hfv.isParsed())
+    {
+      stream << hfv.mSubComponentList << " : " << hfv.mUnknownSubComponentList;
+    }
   else
-  {
-     stream << string(hfv.mField, hfv.mFieldLength);
-  }
+    {
+      stream << string(hfv.mField, hfv.mFieldLength);
+    }
   return stream;
 }
 
