@@ -7,7 +7,7 @@
 #include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Timer.hxx"
@@ -89,10 +89,10 @@ InviteSession::makeFinalResponse(int code)
    handleSessionTimerRequest(mLastIncomingRequest, finalResponse);
 
    // Check if we should add our capabilites to the invite success response 
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::Allow)) finalResponse.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) finalResponse.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) finalResponse.header(h_AcceptLanguages) = mDum.getProfile()->getSupportedLanguages();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::Supported)) finalResponse.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
+   if(mDialog.mDialogSet.getIdentity()->isAdvertisedCapability(Headers::Allow)) finalResponse.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
+   if(mDialog.mDialogSet.getIdentity()->isAdvertisedCapability(Headers::AcceptEncoding)) finalResponse.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
+   if(mDialog.mDialogSet.getIdentity()->isAdvertisedCapability(Headers::AcceptLanguage)) finalResponse.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+   if(mDialog.mDialogSet.getIdentity()->isAdvertisedCapability(Headers::Supported)) finalResponse.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
 
    return finalResponse;
 }
@@ -228,7 +228,7 @@ void
 InviteSession::handleSessionTimerResponse(const SipMessage& msg)
 {
    // If session timers are locally supported then handle response
-   if(mDum.getProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
+   if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
       bool fUAS = dynamic_cast<ServerInviteSession*>(this) != NULL;
 
@@ -282,7 +282,7 @@ void
 InviteSession::handleSessionTimerRequest(const SipMessage& request, SipMessage &response)
 {
    // If session timers are locally supported then add necessary headers to response
-   if(mDum.getProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
+   if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
       bool fUAS = dynamic_cast<ServerInviteSession*>(this) != NULL;
 
@@ -293,7 +293,7 @@ InviteSession::handleSessionTimerRequest(const SipMessage& request, SipMessage &
          return;
       }
 
-      mSessionInterval = mDum.getProfile()->getDefaultSessionTime();  // Used only if UAC doesn't request a time
+      mSessionInterval = mDialog.mDialogSet.getIdentity()->getDefaultSessionTime();  // Used only if UAC doesn't request a time
       mSessionRefresherUAS = true;  // Used only if UAC doesn't request a time
 
       // Check if far-end supports
@@ -448,7 +448,7 @@ InviteSession::dispatch(const SipMessage& msg)
             //make a function to do this & the occurences of this in DialogUsageManager
             SipMessage failure;
             mDum.makeResponse(failure, msg, 481);
-            failure.header(h_AcceptLanguages) = mDum.mProfile->getSupportedLanguages();
+            failure.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
             mDum.sendResponse(failure);
          }
          break;
