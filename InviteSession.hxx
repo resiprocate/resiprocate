@@ -51,7 +51,7 @@ class InviteSession : public BaseUsage
       void process(const SipMessage& msg);
 
    protected:
-
+      DialogUsageManager& mDum;
       SdpContents* mLocalSdp;
       SdpContents* mRemoteSdp;
       SdpContents* mMyNextOffer;
