@@ -1,6 +1,8 @@
 #if !defined(RESIP_SUBSCRIPTIONCREATOR_HXX)
 #define RESIP_SUBSCRIPTIONCREATOR_HXX
 
+#include "BaseCreator.hxx"
+
 namespace resip
 {
 
