@@ -20,6 +20,181 @@ int
 main()
 {
    {
+      char *txt = ("To: <sip:106@kelowna.gloo.net>"
+                   "From: <sip:106@kelowna.gloo.net>;tag=18c7b33a-430c-429c-9f46-e5b509264519\r\n"
+                   "Via: SIP/2.0/UDP 192.168.2.15:10276;received=192.168.2.15\r\n"
+                   "Call-ID: cb15283c-6efb-452e-aef2-5e44e02e2440@192.168.2.15\r\n"
+                   "CSeq: 2 REGISTER\r\n"
+                   "Contact: <sip:192.168.2.15:10276>;methods=\"INVITE, MESSAGE, INFO, SUBSCRIBE, OPTIONS, BYE, CANCEL, NOTIFY, ACK\"\r\n"
+                   "Expires: 0\r\n"
+                   "User-Agent: Windows RTC/1.0\r\n"
+                   "Content-Length: 0\r\n"
+                   "\r\n");
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      cerr << message->header(h_Contacts).front().param(UnknownParameterType("methods")) << endl;
+      cerr << *message << endl;
+   }
+
+   {
+      Data txt1("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP pc33.atlanta.com\r\n"
+                "To: Bob <sip:bob@biloxi.com>\r\n"
+                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                "Call-ID: a84b4c76e66710\r\n"
+                "CSeq: 314159 INVITE\r\n"
+                "Max-Forwards: 70\r\n"
+                "Foobie-Blech: it is not a glass paperweight\r\n"
+                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n");
+      
+      Data txt2("INVITE sip:joe@biloxi.com SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP pc33.atlanta.com\r\n"
+                "To: Bob <sip:bob@biloxi.com>\r\n"
+                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                "Call-ID: a84b4c76e66710\r\n"
+                "CSeq: 314159 INVITE\r\n"
+                "Max-Forwards: 70\r\n"
+                "Foobie-Blech: it is not a glass paperweight\r\n"
+                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n");
+
+      Data txt3("INVITE sip:bob@biloxi.com;user=phone SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP pc33.atlanta.com\r\n"
+                "To: Bob <sip:bob@biloxi.com>\r\n"
+                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                "Call-ID: a84b4c76e66710\r\n"
+                "CSeq: 314159 INVITE\r\n"
+                "Max-Forwards: 70\r\n"
+                "Foobie-Blech: it is not a glass paperweight\r\n"
+                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n");
+
+      Data txt4("INVITE sip:bob@biloxi.com;user=phone;lr SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP pc33.atlanta.com\r\n"
+                "To: Bob <sip:bob@biloxi.com>\r\n"
+                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                "Call-ID: a84b4c76e66710\r\n"
+                "CSeq: 314159 INVITE\r\n"
+                "Max-Forwards: 70\r\n"
+                "Foobie-Blech: it is not a glass paperweight\r\n"
+                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n");
+
+      Data txt5("INVITE sip:bob@biloxi.com;user=phone;lr;maddr=192.168.1.1 SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP pc33.atlanta.com\r\n"
+                "To: Bob <sip:bob@biloxi.com>\r\n"
+                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                "Call-ID: a84b4c76e66710\r\n"
+                "CSeq: 314159 INVITE\r\n"
+                "Max-Forwards: 70\r\n"
+                "Foobie-Blech: it is not a glass paperweight\r\n"
+                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n");
+
+      Data txt6("INVITE sip:bob@biloxi.com;maddr=192.168.1.1;user=phone SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP pc33.atlanta.com\r\n"
+                "To: Bob <sip:bob@biloxi.com>\r\n"
+                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                "Call-ID: a84b4c76e66710\r\n"
+                "CSeq: 314159 INVITE\r\n"
+                "Max-Forwards: 70\r\n"
+                "Foobie-Blech: it is not a glass paperweight\r\n"
+                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n");
+
+      Data txt7("INVITE sip:bob@biloxi.com;maddr=192.168.1.1;user=phone;jason=foo SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP pc33.atlanta.com\r\n"
+                "To: Bob <sip:bob@biloxi.com>\r\n"
+                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                "Call-ID: a84b4c76e66710\r\n"
+                "CSeq: 314159 INVITE\r\n"
+                "Max-Forwards: 70\r\n"
+                "Foobie-Blech: it is not a glass paperweight\r\n"
+                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n");
+
+      Data txt8("INVITE sip:bob@biloxi.com;maddr=192.168.1.1;lr;jason=foo;user=phone SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP pc33.atlanta.com\r\n"
+                "To: Bob <sip:bob@biloxi.com>\r\n"
+                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                "Call-ID: a84b4c76e66710\r\n"
+                "CSeq: 314159 INVITE\r\n"
+                "Max-Forwards: 70\r\n"
+                "Foobie-Blech: it is not a glass paperweight\r\n"
+                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n");
+
+      Data txt9("INVITE sip:bob@biloxi.com;maddr=192.168.1.1;lr;jason=foo;user=phone SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP pc33.atlanta.com; branch=foobar\r\n"
+                "To: Bob <sip:bob@biloxi.com>\r\n"
+                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                "Call-ID: a84b4c76e66710\r\n"
+                "CSeq: 314159 INVITE\r\n"
+                "Max-Forwards: 70\r\n"
+                "Foobie-Blech: it is not a glass paperweight\r\n"
+                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n");
+
+      Data txt10("INVITE sip:bob@biloxi.com;maddr=192.168.1.1;lr;jason=foo;user=phone SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP pc33.atlanta.com; branch=foobar\r\n"
+                "To: Bob <sip:bob@biloxi.com>\r\n"
+                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                "Call-ID: a84b4c76e66710\r\n"
+                "CSeq: 314158 INVITE\r\n"
+                "Max-Forwards: 70\r\n"
+                "Foobie-Blech: it is not a glass paperweight\r\n"
+                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n");
+
+      Data txt11("INVITE sip:bob@biloxi.com;maddr=192.168.1.1;lr;jason=foo;user=phone SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP pc33.atlanta.com; branch=foobar\r\n"
+                "To: Bob <sip:bob@biloxi.com>\r\n"
+                "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+                "Call-ID: a84b4c76e66710\r\n"
+                "CSeq: 314158 INVITE\r\n"
+                "Max-Forwards: 73\r\n"
+                "Foobie-Blech: it is not a glass paperweight\r\n"
+                "Contact: <sip:alice@pc.atlanta.com>\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n");
+      
+      
+      auto_ptr<SipMessage> msg1(TestSupport::makeMessage(txt1));
+      auto_ptr<SipMessage> msg2(TestSupport::makeMessage(txt2));
+      auto_ptr<SipMessage> msg3(TestSupport::makeMessage(txt3));
+      auto_ptr<SipMessage> msg4(TestSupport::makeMessage(txt4));
+      auto_ptr<SipMessage> msg5(TestSupport::makeMessage(txt5));
+      auto_ptr<SipMessage> msg6(TestSupport::makeMessage(txt6));
+      auto_ptr<SipMessage> msg7(TestSupport::makeMessage(txt7));
+      auto_ptr<SipMessage> msg8(TestSupport::makeMessage(txt8));
+      auto_ptr<SipMessage> msg9(TestSupport::makeMessage(txt9));
+      auto_ptr<SipMessage> msg10(TestSupport::makeMessage(txt10));
+      auto_ptr<SipMessage> msg11(TestSupport::makeMessage(txt11));
+
+      assert(msg1->getTransactionId() == msg1->getTransactionId());
+      assert(msg2->getTransactionId() != msg3->getTransactionId());
+      assert(msg3->getTransactionId() == msg4->getTransactionId());
+      assert(msg4->getTransactionId() != msg5->getTransactionId());
+      assert(msg4->getTransactionId() != msg6->getTransactionId());
+      assert(msg5->getTransactionId() == msg6->getTransactionId());
+      assert(msg7->getTransactionId() == msg8->getTransactionId());
+      assert(msg6->getTransactionId() != msg8->getTransactionId());
+      assert(msg8->getTransactionId() != msg9->getTransactionId());
+      assert(msg9->getTransactionId() != msg10->getTransactionId());
+      assert(msg10->getTransactionId() == msg11->getTransactionId());
+   }
+   
+   {
       SipMessage inv;
 
       inv.header(h_Vias);
@@ -93,10 +268,10 @@ main()
       SdpContents* sdp = dynamic_cast<SdpContents*>(body);
       assert(sdp != 0);
 
-      assert(sdp->session().getVersion() == 0);
-      assert(sdp->session().getOrigin().getUser() == "alice");
-      assert(!sdp->session().getMedia().empty());
-      assert(sdp->session().getMedia().front().getValue("rtpmap").front() == "0 PCMU/8000");
+      assert(sdp->session().version() == 0);
+      assert(sdp->session().origin().user() == "alice");
+      assert(!sdp->session().media().empty());
+      assert(sdp->session().media().front().getValues("rtpmap").front() == "0 PCMU/8000");
 
       msg->encode(cerr);
    }
@@ -133,10 +308,10 @@ main()
       SdpContents* sdp = dynamic_cast<SdpContents*>(body);
       assert(sdp != 0);
 
-      assert(sdp->session().getVersion() == 0);
-      assert(sdp->session().getOrigin().getUser() == "alice");
-      assert(!sdp->session().getMedia().empty());
-      assert(sdp->session().getMedia().front().getValue("rtpmap").front() == "0 PCMU/8000");
+      assert(sdp->session().version() == 0);
+      assert(sdp->session().origin().user() == "alice");
+      assert(!sdp->session().media().empty());
+      assert(sdp->session().media().front().getValues("rtpmap").front() == "0 PCMU/8000");
 
       msg->encode(cerr);
    }
@@ -639,7 +814,7 @@ main()
       me.uri().host() = "localhost";
       me.uri().port() = 5070;
       //auto_ptr<SipMessage> msg(Helper::makeRegister(me, me));
-      SipMessage* msg = Helper::makeRegister(me, me, me );
+      auto_ptr<SipMessage> msg(Helper::makeRegister(me, me, me));
       cerr << "encoded=" << *msg << endl;
    }
    {
@@ -750,7 +925,6 @@ main()
       
       assert(msgEncoded == msg2Encoded);
    }
-
 
    cerr << "\nTEST OK" << endl;
 }
