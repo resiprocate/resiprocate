@@ -19,7 +19,7 @@ aclocal && \
 echo +++ Running autoheader && \
 autoheader && \
 echo +++ Running automake  && \
-automake  && \
+automake  --add-missing && \
 echo +++ Running autoconf  && \
 autoconf  && \
 echo +++ Configuring and building ares.  && \
