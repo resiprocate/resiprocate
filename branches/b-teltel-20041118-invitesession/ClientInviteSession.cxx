@@ -48,6 +48,8 @@ ClientInviteSession::getEarlyMedia() const
 void
 ClientInviteSession::provideOffer (const SdpContents& offer)
 {
+   InfoLog (<< toData(mState) << ": provideOffer");
+   
    switch(mState)
    {
       case UAC_EarlyWithAnswer:
@@ -95,6 +97,8 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
 void
 ClientInviteSession::provideAnswer (const SdpContents& answer)
 {
+   InfoLog (<< toData(mState) << ": provideAnswer");
+
    switch(mState)
    {
       case UAC_EarlyWithOffer:
@@ -146,6 +150,8 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
 void
 ClientInviteSession::end()
 {
+   InfoLog (<< toData(mState) << ": end");
+
    switch(mState)
    {
       case UAC_Early:
@@ -160,10 +166,12 @@ ClientInviteSession::end()
          SipMessage bye;
          mDialog.makeRequest(bye, BYE);
          mDialog.send(bye);
+         break;
       }
       
       case UAC_Start:
       case UAC_Canceled:
+         WarningLog (<< "Try to end when in state=" << toData(mState));
          assert(0);
          break;
       default:
@@ -175,6 +183,8 @@ ClientInviteSession::end()
 void
 ClientInviteSession::reject (int statusCode)
 {
+   InfoLog (<< toData(mState) << ": reject(" << statusCode << ")");
+
    switch(mState)
    {
       case UAC_ReceivedUpdateEarly:
@@ -197,9 +207,9 @@ ClientInviteSession::reject (int statusCode)
       case UAC_EarlyWithAnswer:
       case UAC_Answered:
       case UAC_SentUpdateEarly:
-         //case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
       case UAC_Canceled:
+         WarningLog (<< "Try to reject when in state=" << toData(mState));         
          assert(0);
          break;
 
@@ -212,6 +222,7 @@ ClientInviteSession::reject (int statusCode)
 void
 ClientInviteSession::cancel()
 {
+   InfoLog (<< toData(mState) << ": cancel(");
    switch(mState)
    {
       case UAC_Early:
@@ -233,6 +244,7 @@ ClientInviteSession::cancel()
 void
 ClientInviteSession::startCancelTimer()
 {
+   InfoLog (<< toData(mState) << ": startCancelTimer");
    // !jf! do something here
 }
 
