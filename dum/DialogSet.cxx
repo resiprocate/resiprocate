@@ -69,6 +69,12 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
 DialogSet::~DialogSet()
 {
    mDestroying = true;
+
+   if (mDum.mClientAuthManager)
+   {
+      mDum.mClientAuthManager->dialogSetDestroyed(getId());
+   }
+   
    if (mMergeKey != MergedRequestKey::Empty)
    {
       mDum.mMergedRequests.erase(mMergeKey);
