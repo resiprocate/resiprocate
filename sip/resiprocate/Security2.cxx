@@ -9,7 +9,7 @@
 #include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/PlainContents.hxx"
-#include "resiprocate/Security.hxx"
+#include "resiprocate/Security2.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -60,8 +60,10 @@ FILE* fopenHelper (const char* pathname, const char* option)
       strm << "fopen(" << pathname << ", " << option << ")" << "failed";
 
       ErrLog(<< msg);
-      throw Exception(msg, __FILE__,__LINE__);
+      throw BaseSecurity::Exception(msg, __FILE__,__LINE__);
    }
+
+   return   fp;
 }
 
 void clearError ()
@@ -71,6 +73,7 @@ void clearError ()
 }
 void onReadError (bool do_throw = false)
 {
+    Data msg;
     while (true)
     {
         const char* file;
@@ -82,7 +85,7 @@ void onReadError (bool do_throw = false)
             break;
         }
 
-        Data msg;
+        msg.clear();
         DataStream strm(msg);
         char err_str[256];
         ERR_error_string_n(code, err_str, sizeof(err_str));
@@ -91,7 +94,7 @@ void onReadError (bool do_throw = false)
         ErrLog(<< msg);
     }
     if(do_throw)
-        throw Exception(msg, __FILE__,__LINE__);
+        throw BaseSecurity::Exception(msg, __FILE__,__LINE__);
 }
 void logReadError ()
 {
@@ -108,7 +111,7 @@ struct FileGuard
     :   mFp(fp) {}
     ~FileGuard ()
     {
-        fclose(fp);
+        fclose(mFp);
     }
 
     FILE* mFp;
@@ -136,8 +139,10 @@ struct DirGuard
     :   mDir(dir) {}
     ~DirGuard ()
     {
-        closedir(fp);
+        closedir(mDir);
     }
+
+    DIR*  mDir;
 };
 #endif
 
@@ -202,14 +207,15 @@ addCertDER (BaseSecurity::X509Map& certs, const Data& key, const Data& certDER)
    if (where == certs.end())
    {
       X509* cert;
-      unsigned char* in = static_cast<unsigned char*>(const_cast<char*>(certDER.data()));
+      unsigned char* in = reinterpret_cast<unsigned char*>(const_cast<char*>(certDER.data()));
       if (d2i_X509(&cert,&in,certDER.size()) == 0)
       {
          ErrLog(<< "Could not read DER certificate from " << certDER );
-         throw Exception("Could not read DER certificate ", __FILE__,__LINE__);
+         throw BaseSecurity::Exception("Could not read DER certificate ", __FILE__,__LINE__);
       }
       certs.insert(std::make_pair(key, cert));
-      // !kh! leaking <cert>, if insert throw.
+      // !kh!
+      // bug, leaking <cert>, if insert throw.
    }
 }
 void
@@ -224,14 +230,15 @@ addCertPEM (BaseSecurity::X509Map& certs, const Data& key, const Data& certPEM)
       if ( !in )
       {
          ErrLog(<< "Could not read PEM certificate from " << certPEM );
-         throw Exception("Could not read PEM certificate ", __FILE__,__LINE__);
+         throw BaseSecurity::Exception("Could not read PEM certificate ", __FILE__,__LINE__);
       }
 
       BIO_set_close(in, BIO_NOCLOSE);
 
       X509* cert = PEM_read_bio_X509(in,0,0,0);
       certs.insert(std::make_pair(key, cert));
-      // !kh! leaking <in>, if insert throw.
+      // !kh!
+      // bug, leaking <in>, if insert throw.
       BIO_free(in);
    }
 }
@@ -264,7 +271,8 @@ addCertPEM (BaseSecurity::X509Map& certs, const Data& key, const Data& certPEM)
    if (lookup == NULL)
       throw Exception("Error in BaseSecurity::addRootCertPEM()", __FILE__,__LINE__);
 
-   // !kh! should be handling failure case here?
+   // !kh!
+   // bug, should be handling failure case here?
    X509_LOOKUP_ctrl(lookup, X509_L_FILE_LOAD, x509PEMEncodedRootCerts.c_str(), 0, 0);
 }
 #endif
@@ -295,7 +303,7 @@ void
 addPrivateKeyPEM(BaseSecurity::PrivateKeyMap& privateKeys, const Data& key, const Data& privateKeyPEM)
 {
    assert( !privateKeyPEM.empty() );
-   BaseSecurity::PrivateKeyMap::iterator where = privateKeys.find(domainName);
+   BaseSecurity::PrivateKeyMap::iterator where = privateKeys.find(key);
    if (where == privateKeys.end())
    {
       BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyPEM.c_str()), -1);
@@ -303,13 +311,15 @@ addPrivateKeyPEM(BaseSecurity::PrivateKeyMap& privateKeys, const Data& key, cons
       if ( !in )
       {
          ErrLog(<< "Could not read private key from " << privateKeyPEM );
-         throw Exception("Could not read private key ", __FILE__,__LINE__);
+         throw BaseSecurity::Exception("Could not read private key ", __FILE__,__LINE__);
       }
 
       BIO_set_close(in, BIO_NOCLOSE);
 
-      X509* privateKey = PEM_read_bio_X509(in,0,0,0);
-      privateKeys.insert(std::make_pair(domainName, privateKey));
+      // !kh!
+      // bug, how do I make a EVP_KEY out of a binary seq (Data)?
+      EVP_PKEY* privateKey = 0;
+      privateKeys.insert(std::make_pair(key, privateKey));
       // !kh! leaking <in>, if insert throw.
       BIO_free(in);
    }
@@ -412,8 +422,9 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 }
 
 BaseSecurity::BaseSecurity ()
-:  mSslCtx(0),
-   mRootCerts(0)
+:  mRootCerts(0),
+   mTlsCtx(0),
+   mSslCtx(0)
 {
 }
 BaseSecurity::~BaseSecurity ()
@@ -436,7 +447,7 @@ void
 BaseSecurity::preload ()
 {
 }
-std::vector<CertificateInfo>
+std::vector<BaseSecurity::CertificateInfo>
 BaseSecurity::getRootCertDescriptions() const
 {
    // !kh!
@@ -485,7 +496,7 @@ BaseSecurity::addDomainCertPEM(const Data& domainName, const Data& certPEM)
 void
 BaseSecurity::addDomainCertDER(const Data& domainName, const Data& certDER)
 {
-   addCertDER(mDomainCerts, domainName, certPEM);
+   addCertDER(mDomainCerts, domainName, certDER);
 }
 bool
 BaseSecurity::hasDomainCert(const Data& domainName) const
@@ -493,75 +504,29 @@ BaseSecurity::hasDomainCert(const Data& domainName) const
    return   hasCert(mDomainCerts, domainName);
 }
 void
-BaseSecurity::addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyBin)
+BaseSecurity::addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM)
 {
-   assert( !privateKeyBin.empty() );
-   PrivateKeyMap::iterator where = mDomainPrivateKeys.find(domainName);
-   if (where == mDomainPrivateKeys.end())
-   {
-      BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyBin.c_str()), -1);
-
-      if ( !in )
-      {
-         ErrLog(<< "Could not read private key from " << privateKeyBin );
-         throw Exception("Could not read private key ", __FILE__,__LINE__);
-      }
-
-      BIO_set_close(in, BIO_NOCLOSE);
-
-      X509* privateKey = PEM_read_bio_X509(in,0,0,0);
-      mDomainPrivateKeys.insert(std::make_pair(domainName, privateKey));
-      // !kh! leaking <in>, if insert throw.
-      BIO_free(in);
-   }
+   addPrivateKeyPEM(mDomainPrivateKeys, domainName, privateKeyPEM);
 }
 bool
 BaseSecurity::hasDomainPrivateKey(const Data& domainName)
 {
-   PrivateKeyMap::const_iterator where = mDomainPrivateKeys.find(domainName);
-   if (where == mDomainPrivateKeys.end())
-      return   false;
-   else
-      return   true;
+   return   hasPrivateKey(mDomainPrivateKeys, domainName);
 }
 void
 BaseSecurity::addUserCertPEM(const Data& aor, const Data& certPEM)
 {
-   assert( !certPEM.empty() );
-   X509Map::iterator where = mUserCerts.find(aor);
-   if (where == mUserCerts.end())
-   {
-      BIO* in = BIO_new_mem_buf(const_cast<char*>(certPEM.c_str()), -1);
-
-      if ( !in )
-      {
-         ErrLog(<< "Could not read my public certificate from " << certPEM );
-         throw Exception("Could not read public certificate ", __FILE__,__LINE__);
-      }
-
-      BIO_set_close(in, BIO_NOCLOSE);
-
-      X509* cert = PEM_read_bio_X509(in,0,0,0);
-      mUserCerts.insert(std::make_pair(aor, cert));
-      // !kh! leaking <in>, if insert throw.
-      BIO_free(in);
-   }
+   addCertPEM(mUserCerts, aor, certPEM);
 }
 void
-BaseSecurity::addUserCertDER(const Data& aor, const Data& certPEM)
+BaseSecurity::addUserCertDER(const Data& aor, const Data& certDER)
 {
-   /*
-   X509Map::const_iterator where = mUserCerts.find(aor);
-   if (where == mUserCerts.end())
-      return   false;
-   else
-      return   true;
-      */
+   addCertDER(mUserCerts, aor, certDER);
 }
 
 
 
-
+#if(0)
 
 void
 Security::initialize()
@@ -2257,6 +2222,7 @@ dumpAsn( char* name, Data data)
    #endif
 }
 
+#endif
 
 #endif
 

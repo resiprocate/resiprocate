@@ -7,7 +7,7 @@ PACKAGES += RESIPROCATE ARES PTHREAD OPENSSL
 
 CODE_SUBDIRS = os
 TARGET_LIBRARY = libresiprocate
-TESTPROGRAMS =  
+TESTPROGRAMS =
 
 CXXFLAGS += -I/sw/include
 LDFLAGS  += -L/sw/lib
@@ -111,6 +111,7 @@ SRC = \
 	RportParameter.cxx \
 	SdpContents.cxx \
 	Security.cxx \
+	Security2.cxx \
 	SipFrag.cxx \
 	ApplicationSip.cxx \
 	SipMessage.cxx \
