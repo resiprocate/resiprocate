@@ -522,8 +522,13 @@ CallId::encode(ostream& str) const
 // NameAddr:
 //====================
 NameAddr::NameAddr(const NameAddr& rhs)
-   : ParserCategory(rhs)
-{}
+   : ParserCategory(rhs),
+     mAllContacts(rhs.mAllContacts),
+     mUri(dynamic_cast<Uri*>(rhs.mUri->clone())), // is this ok? !jf!
+   mDisplayName(rhs.mDisplayName)
+{
+   assert(mUri);
+}
 
 NameAddr&
 NameAddr::operator=(const NameAddr& rhs)
