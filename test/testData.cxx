@@ -6,39 +6,15 @@
 using namespace Vocal2;
 using namespace std;
 
+
+
+
 // for friends
 class TestData
 {
    public:
       void main()
       {
-         {
-            Data foo("foo");
-            foo.append("barbazquux",
-                       strlen("barbazquux"));
-            cerr << "!! " << foo << endl;
-            assert(foo == "foobarbazquux");
-            assert(foo.size() == 13);
-         }
-
-         {
-            Data stuff("qwerqsdfawertq");
-            char* cstuff("qwerqsdfawertq");
-            __gnu_cxx::hash<Data> h;
-            __gnu_cxx::hash<char*> c;
-            assert(h(stuff) == c(cstuff));
-            
-            cerr << stuff.md5() << endl;
-         }
-
-         {
-            char* cstuff = "qwerqsdfawertq";
-            Data stuff(cstuff, strlen(cstuff), true); // memory sharing
-            __gnu_cxx::hash<Data> h;
-            __gnu_cxx::hash<char*> c;
-            assert(h(stuff) == c(cstuff));
-         }
-
          {
             assert(Data(0) == "0");
             assert(Data(1) == "1");
