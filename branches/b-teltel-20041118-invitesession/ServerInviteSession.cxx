@@ -102,18 +102,18 @@ ServerInviteSession::provisional(int code)
          break;
 
       case UAS_ProvidedOffer:
+      case UAS_EarlyProvidedOffer:
          transition(UAS_EarlyProvidedOffer);
          sendProvisional(code);
          break;
          
       case UAS_EarlyOffer:
-      case UAS_EarlyNoOffer:
-      case UAS_EarlyProvidedOffer:
          transition(UAS_EarlyOffer);
          sendProvisional(code);
          break;
          
       case UAS_NoOffer:
+      case UAS_EarlyNoOffer:
          transition(UAS_EarlyNoOffer);
          sendProvisional(code);
          break;
@@ -440,12 +440,13 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_EarlyNoOffer:
       case UAS_EarlyProvidedOffer:
          dispatchOfferOrEarly(msg);
-         break;
-         
+         break;       
       case UAS_Accepted:
          dispatchAccepted(msg);
          break;
-         
+      case UAS_AcceptedWaitingAnswer:
+         dispatchAcceptedWaitingAnswer(msg);
+         break;         
       case UAS_EarlyReliable:
          dispatchEarlyReliable(msg);
          break;
@@ -523,6 +524,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
       case OnInvite:
          transition(UAS_NoOffer);
          handler->onNewSession(getHandle(), None, msg);
+         handler->onOfferRequired(getSessionHandle(), msg);
          break;
       case OnInviteReliableOffer:
          transition(UAS_OfferReliable);
@@ -533,6 +535,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
       case OnInviteReliable:
          transition(UAS_NoOfferReliable);
          handler->onNewSession(getHandle(), None, msg);
+         handler->onOfferRequired(getSessionHandle(), msg);
          break;
       default:
          assert(0);
