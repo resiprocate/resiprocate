@@ -93,6 +93,19 @@ HeaderFieldValueList::encodeEmbedded(const Data& headerName, std::ostream& str)
    return str;
 }
 
+bool
+HeaderFieldValueList::parsedEmpty() const
+{
+   if (mParserContainer)
+   {
+      return mParserContainer->empty();
+   }
+   else
+   {
+      return mHeaders.empty();
+   }
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
