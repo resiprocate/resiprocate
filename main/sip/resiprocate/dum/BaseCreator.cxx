@@ -62,9 +62,3 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    
    DebugLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
 }
-
-void
-BaseCreator::dispatch(const SipMessage& msg)
-{
-   assert(0);
-}

@@ -19,6 +19,7 @@ SRC =   \
 	ClientAuthManager.cxx \
 	ClientInviteSession.cxx \
 	ClientOutOfDialogReq.cxx \
+	ClientPagerMessage.cxx \
 	ClientPublication.cxx \
 	ClientRegistration.cxx \
 	ClientSubscription.cxx \
@@ -39,6 +40,7 @@ SRC =   \
 	MergedRequestKey.cxx \
 	NonDialogUsage.cxx \
 	OutOfDialogReqCreator.cxx \
+	PagerMessageCreator.cxx \
 	Profile.cxx \
 	PublicationCreator.cxx \
 	RedirectManager.cxx \
@@ -46,6 +48,7 @@ SRC =   \
 	ServerAuthManager.cxx \
 	ServerInviteSession.cxx \
 	ServerOutOfDialogReq.cxx \
+	ServerPagerMessage.cxx \
 	ServerPublication.cxx \
 	ServerRegistration.cxx \
 	ServerSubscription.cxx \

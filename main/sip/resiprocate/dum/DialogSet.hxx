@@ -51,7 +51,9 @@ class DialogSet
       friend class ServerOutOfDialogReq;
       friend class ClientPublication;
       friend class ServerPublication;
-      friend class RedirectManager;      
+      friend class RedirectManager;
+      friend class ClientPagerMessage;
+      friend class ServerPagerMessage;
       
       void possiblyDie();
 
@@ -67,6 +69,8 @@ class DialogSet
       ServerRegistration* makeServerRegistration(const SipMessage& msg);
       ServerPublication* makeServerPublication(const SipMessage& msg);
       ServerOutOfDialogReq* makeServerOutOfDialog(const SipMessage& msg);
+      
+      ServerPagerMessage* makeServerPagerMessage(const SipMessage& request);      
 
       MergedRequestKey mMergeKey;
       typedef std::map<DialogId,Dialog*> DialogMap;
@@ -88,6 +92,9 @@ class DialogSet
       ServerPublication* mServerPublication;
       std::list<ClientOutOfDialogReq*> mClientOutOfDialogRequests;
       ServerOutOfDialogReq* mServerOutOfDialogRequest;
+
+      ClientPagerMessage* mClientPagerMessage;
+      ServerPagerMessage* mServerPagerMessage;
 };
  
 }
