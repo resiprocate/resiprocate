@@ -27,10 +27,10 @@ class LazyParser
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
 
+      // call (internally) before every access 
+      void checkParsed() const;
    protected:
       LazyParser();
-      // call before every access 
-      void checkParsed() const;
 
       // called in destructor and on assignment 
       void clear();
