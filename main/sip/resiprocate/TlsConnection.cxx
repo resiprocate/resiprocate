@@ -26,8 +26,8 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    Connection(tuple, fd),
    mServer(server),
    mSecurity(security),
-   mDomain(domain),
-   mSslType( sslType )
+   mSslType( sslType ),
+   mDomain(domain)
 {
    DebugLog (<< "Creating TLS connection " << tuple << " on " << fd);
 
