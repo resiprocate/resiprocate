@@ -16,8 +16,8 @@ class ParserContainerBase
       ParserContainerBase(Headers::Type type = Headers::UNKNOWN)
          : mType(type)
       {}
-      ParserContainerBase(const ParserContainerBase&)
-         : mType(Headers::UNKNOWN)
+      ParserContainerBase(const ParserContainerBase& rhs)
+         : mType(rhs.mType)
       {}
       virtual ~ParserContainerBase() {}
       virtual ParserContainerBase* clone() const = 0;
