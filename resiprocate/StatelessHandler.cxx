@@ -102,8 +102,8 @@ StatelessHandler::process()
          MapIterator i = mMap.find(transport->getTransactionId());
          if (i != mMap.end())
          {
-            mMap.erase(i);
             delete i->second;
+            mMap.erase(i);
          }
       }
       else
@@ -111,8 +111,8 @@ StatelessHandler::process()
          MapIterator i = mMap.find(transport->getTransactionId());
          if (i != mMap.end())
          {
-            mMap.erase(i);
             delete i->second;
+            mMap.erase(i);
          }
       }
    }
