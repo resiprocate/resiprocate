@@ -1,8 +1,3 @@
-
-
-static const char* const Lock_cxx_Version =
-    "$Id: Lock.cxx,v 1.8 2003/03/25 06:33:48 jason Exp $";
-
 #include "resiprocate/os/Lock.hxx"
 
 using resip::Lock;

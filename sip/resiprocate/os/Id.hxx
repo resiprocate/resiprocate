@@ -51,9 +51,6 @@
  *
  */
 
-static const char* const resipIdHeaderVersion =
-    "@(#) $Id: Id.hxx,v 1.2 2004/04/05 18:54:31 alan Exp $";
-
 #include <map>
 #include "resiprocate/os/Data.hxx"
 

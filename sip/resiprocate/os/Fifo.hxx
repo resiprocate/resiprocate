@@ -1,9 +1,6 @@
 #if !defined(RESIP_FIFO_HXX)
 #define RESIP_FIFO_HXX 
 
-static const char* const resipFifo_h_Version =
-   "$Id: Fifo.hxx,v 1.19 2003/10/01 15:33:50 fluffy Exp $";
-
 #include <cassert>
 #include "resiprocate/os/AbstractFifo.hxx"
 
@@ -18,7 +15,8 @@ class Fifo : public AbstractFifo
       virtual ~Fifo();
       
       // Add a message to the fifo.
-      void add(Msg* msg);
+      //virtual to allow the NotifierFifo subclass to cause execution to occur.
+      virtual void add(Msg* msg);
 
       /** Returns the first message available. It will wait if no
        *  messages are available. If a signal interrupts the wait,

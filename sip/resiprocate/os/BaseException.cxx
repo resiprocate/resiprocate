@@ -1,6 +1,3 @@
-static const char* const BaseException_cxx_Version =
-    "$Id: BaseException.cxx,v 1.8 2004/04/21 21:20:15 jason Exp $";
-
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
