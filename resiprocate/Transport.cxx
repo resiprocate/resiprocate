@@ -66,6 +66,8 @@ Transport::socket(TransportType type, bool ipv4)
       throw Exception("Can't create TcpBaseTransport", __FILE__,__LINE__);
    }
 
+   DebugLog (<< "Creating fd=" << fd);
+   
    return fd;
 }
 
