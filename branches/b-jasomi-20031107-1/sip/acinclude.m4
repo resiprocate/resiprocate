@@ -1,3 +1,11 @@
+AC_DEFUN([RESIP_OBJ_LOCAL_DATA],
+[
+        AC_MSG_CHECKING([for obj-local Data])
+        AC_DEFINE([RESIP_OBJ_LOCAL_DATA_SIZE], [0], [Local Data Prebuffer Size])
+        AC_MSG_RESULT([disabled])
+])
+
+    
 AC_DEFUN([RESIP_LIB_OPENSSL],
 [
     AC_MSG_CHECKING([for OpenSSL])
