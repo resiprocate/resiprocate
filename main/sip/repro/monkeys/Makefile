@@ -11,6 +11,7 @@ TARGET_LIBRARY = librepro
 
 
 SRC =   \
+        DigestAuthenticator.cxx \
 	RouteProcessor.cxx \
 	LocationServer.cxx 
 
