@@ -45,9 +45,6 @@ class BaseUsage : public Handled
       friend class DialogUsageManager;
 };
 
-std::ostream& 
-operator<<(std::ostream& strm, const BaseUsage& usage);
-
 }
 
 #endif

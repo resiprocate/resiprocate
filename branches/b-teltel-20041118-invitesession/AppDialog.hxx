@@ -34,6 +34,9 @@ class AppDialog : public Handled
 
       //returns an invalid handle if there is no session
       InviteSessionHandle getInviteSession();
+
+      virtual std::ostream& dump(std::ostream& strm) const;
+
    private:
       friend class DialogSet;      
       Dialog* mDialog;      

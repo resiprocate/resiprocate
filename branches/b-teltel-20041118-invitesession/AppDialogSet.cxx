@@ -76,3 +76,10 @@ AppDialogSet::getDialogSetId()
    }
 }
 
+
+std::ostream& 
+AppDialogSet::dump(std::ostream& strm) const
+{
+   strm << "AppDialogSet " << mId;
+   return strm;
+}

@@ -57,3 +57,9 @@ AppDialog::getDialogId() const
    return mDialog->getId();   
 }
 
+std::ostream& 
+AppDialog::dump(std::ostream& strm) const
+{
+   strm << "AppDialog " << mId;
+   return strm;
+}

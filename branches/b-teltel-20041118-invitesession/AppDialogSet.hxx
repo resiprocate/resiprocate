@@ -31,6 +31,8 @@ class AppDialogSet : public Handled
       AppDialogSetHandle getHandle();
       DialogSetId getDialogSetId();
 
+      virtual std::ostream& dump(std::ostream& strm) const;
+
    protected:
       DialogUsageManager& mDum;      
       virtual ~AppDialogSet();
