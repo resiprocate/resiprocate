@@ -72,15 +72,16 @@ namespace resip
 void
 initNetwork();
 
+#ifndef WIN32
 typedef int Socket;
 static const Socket INVALID_SOCKET = -1;
 static const int SOCKET_ERROR = -1;
-
+#endif
 
 bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
 
-int closesocket( Socket fd );
+// int closesocket( Socket fd );
 
 
 

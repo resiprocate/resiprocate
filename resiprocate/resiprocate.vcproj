@@ -196,7 +196,10 @@
 				RelativePath="Connection.cxx">
 			</File>
 			<File
-				RelativePath="ConnectionMap.cxx">
+				RelativePath="ConnectionManager.cxx">
+			</File>
+			<File
+				RelativePath="ConnectionManager.hxx">
 			</File>
 			<File
 				RelativePath="Contents.cxx">
@@ -400,6 +403,18 @@
 				RelativePath="Symbols.cxx">
 			</File>
 			<File
+				RelativePath="TcpBaseTransport.cxx">
+			</File>
+			<File
+				RelativePath="TcpBaseTransport.hxx">
+			</File>
+			<File
+				RelativePath="TcpConnection.cxx">
+			</File>
+			<File
+				RelativePath="TcpConnection.hxx">
+			</File>
+			<File
 				RelativePath="TcpTransport.cxx">
 			</File>
 			<File
@@ -570,6 +585,9 @@
 			</File>
 			<File
 				RelativePath="IntegerParameter.hxx">
+			</File>
+			<File
+				RelativePath="os\IntrusiveListElement.hxx">
 			</File>
 			<File
 				RelativePath="LazyParser.hxx">
