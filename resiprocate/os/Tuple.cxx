@@ -382,6 +382,7 @@ __gnu_cxx::hash<resip::Tuple>::operator()(const resip::Tuple& tuple) const
 {
    // !dlb! do not include the connection
    const sockaddr& theSockaddr = tuple.getSockaddr();
+#ifdef USE_IPV6
    if (theSockaddr.sa_family == AF_INET6)
    {
       const sockaddr_in6& in6 =
@@ -392,6 +393,7 @@ __gnu_cxx::hash<resip::Tuple>::operator()(const resip::Tuple& tuple) const
                     25*tuple.getType());
    }
    else
+#endif
    {
       const sockaddr_in& in4 =
          reinterpret_cast<const sockaddr_in&>(theSockaddr);
