@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.24 2002/12/07 03:24:45 derekm Exp $
+# $Id: Makefile,v 1.25 2002/12/20 22:32:32 alan Exp $
 
 BUILD = ../../build
 
@@ -26,9 +26,9 @@ TESTPROGRAMS =	testParseBuffer.cxx \
 		testThreadIf.cxx \
 		testLogger.cxx
 
-ifeq ($(ARCH),i686)
-CXXFLAGS += -mcpu=i686 -march=i686
-endif
+# Include architecture depenadant / cross compilation stuff.
+# PLEASE LEAVE THIS ALONE
+-include ../Makefile.opt
 
 
 SRC = \
