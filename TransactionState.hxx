@@ -74,6 +74,7 @@ class TransactionState : public DnsHandler
       bool isReliabilityIndication(TransactionMessage* msg) const;
       bool isSentIndication(TransactionMessage* msg) const;
       void sendToTU(TransactionMessage* msg) const;
+      static void sendToTU(TransactionController& controller, TransactionMessage* msg);
       void sendToWire(TransactionMessage* msg, bool retransmit=false);
       SipMessage* make100(SipMessage* request) const;
       void terminateClientTransaction(const Data& tid); 
