@@ -54,6 +54,38 @@ main(int arc, char** argv)
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
    {
+      TR _tr("Test remove particular parameter that appears multiple times");
+      Uri uri1("sip:a@b;type=1;maddr=local;type=2;maddr=remote;type=3;maddr=other");
+      
+      uri1.remove(p_maddr, 2);
+      UnknownParameterType p_type("type");
+      uri1.remove(p_type, 1);
+      Data res1;
+      {
+         DataStream str(res1);
+         str << uri1;
+      }
+      cerr << "!! " << uri1 << endl;
+      assert(res1 == "sip:a@b;maddr=local;maddr=other;type=2;type=3");
+   }
+
+   {
+      TR _tr("Test remove particular parameter that appears multiple times");
+      Uri uri1("sip:a@b;type=1;maddr=local;type=2;maddr=remote;type=3;maddr=other");
+      
+      uri1.remove(p_maddr, 3);
+      UnknownParameterType p_type("type");
+      uri1.remove(p_type, 2);
+      Data res1;
+      {
+         DataStream str(res1);
+         str << uri1;
+      }
+      cerr << "!! " << uri1 << endl;
+      assert(res1 == "sip:a@b;maddr=local;maddr=remote;type=1;type=3");
+   }
+
+   {
       TR _tr("Test remove parameters that appear multiple times");
       Uri uri1("sip:a@b;type=1;maddr=local;type=2;maddr=remote;type=3;maddr=other");
       Uri uri2(uri1);
@@ -97,6 +129,21 @@ main(int arc, char** argv)
          str << uri2;
       }   
       assert(res2 == "sip:a@b;maddr=local;ttl=17;maddr=remote;ttl=42;maddr=other;ttl=111;foo=bar;foo=baz;foo=foo");
+   }
+
+   {
+      TR _tr("Test set multiple parameters");
+      Uri uris("sip:a@b;type=17;maddr=addr");
+      Uri uri1("sip:a@b;type=1;maddr=local;type=2;maddr=remote;type=3;maddr=other");
+      
+      uri1.setParameter(uris.getParameterByEnum(ParameterTypes::maddr), 2);
+      Data res1;
+      {
+         DataStream str(res1);
+         str << uri1;
+      }
+      cerr << "!! " << uri1 << endl;
+      assert(res1 == "sip:a@b;maddr=local;maddr=addr;maddr=other;type=1;type=;type=3");
    }
 
    {
