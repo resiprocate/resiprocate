@@ -33,13 +33,20 @@ MultipartMixedContents::MultipartMixedContents(const Mime& contentsType)
    : Contents(contentsType),
      mContents()
 {
-   setBoundary();
+   if (!mType.exists(p_boundary))
+   {
+      setBoundary();
+   }
 }
 
 MultipartMixedContents::MultipartMixedContents(HeaderFieldValue* hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mContents()
 {
+   if (!mType.exists(p_boundary))
+   {
+      setBoundary();
+   }
 }
 
 MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs)
