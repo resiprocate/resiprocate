@@ -13,10 +13,8 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares__close_sockets.c,v 1.3 2003/10/04 21:32:00 fluffy Exp $";
-
 #include <stdlib.h>
-//#include <unistd>
+#include <unistd.h>
 
 
 #include "ares.h"
