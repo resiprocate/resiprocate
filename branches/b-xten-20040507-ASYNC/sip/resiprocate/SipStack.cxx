@@ -160,6 +160,17 @@ SipStack::addExternalTransport(ExternalAsyncCLessTransport* externalTransport, b
    }   
 } 
 
+void   
+SipStack::addExternalTransport(ExternalAsyncStreamTransport* externalTransport, bool ownedByMe)   
+{   
+   Transport* transport = mTransactionController.transportSelector().addExternalTransport(externalTransport,   
+                                                                                          ownedByMe);   
+   if (!transport->interfaceName().empty())   
+   {   
+      addAlias(transport->interfaceName(), transport->port());   
+   }   
+} 
+
 void
 SipStack::addAlias(const Data& domain, int port)
 {

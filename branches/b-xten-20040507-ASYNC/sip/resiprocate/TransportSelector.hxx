@@ -26,6 +26,7 @@ class SipMessage;
 class TlsTransport;
 class TransactionController;
 class ExternalAsyncCLessTransport;
+class ExternalAsyncStreamTransport;
 
 class ExternalSelector
 {
@@ -54,6 +55,9 @@ class TransportSelector
       //ownedByMe determines who destroys the external transport
       //this is a factory method, so return the instance...used by the sipstack to set aliases
       Transport* addExternalTransport(ExternalAsyncCLessTransport* transport, bool ownedByMe);
+      Transport* addExternalTransport(ExternalAsyncStreamTransport* transport, bool ownedByMe);
+      void addExternalTransport(Transport* transport, bool ownedByMe);
+
 
       bool addTransport( TransportType,
                          int port,
@@ -69,7 +73,9 @@ class TransportSelector
                            SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
                            );
 
-      DnsResult* dnsResolve(SipMessage* msg, DnsHandler* handler);
+      DnsResult* createDnsResult(DnsHandler* handler);
+
+      void dnsResolve(DnsResult* result, SipMessage* msg);
 
       // this will result in msg->resolve() being called to either
       // kick off dns resolution or to pick the next tuple , will cause the
@@ -97,7 +103,6 @@ class TransportSelector
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
 
       bool mMultiThreaded;
-      DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
 
       // specific port and interface
@@ -126,6 +131,9 @@ class TransportSelector
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
       mutable Socket mSocket6;
+
+      DnsInterface mDns;
+
       WinCompat::Version mWindowsVersion;
       
       // An AF_UNSPEC addr_in for rapid unconnect
