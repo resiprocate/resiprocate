@@ -2,39 +2,39 @@ digraph UAC {
         rankdir=LR;
         node [shape = box]; 
 
-        Connected -> Updating [ label = "provideOffer/UPDATE" ];
-        Updating -> Connected [ label = "on200U/onAnswer" ];
-        Updating -> Connected [ label = "onFailU/onOfferRejected" ];
+        Connected -> Updating [ label = "dum::provideOffer/send::UPDATE" ];
+        Updating -> Connected [ label = "on200U/app::onAnswer" ];
+        Updating -> Connected [ label = "on4XXU/app::onOfferRejected" ];
         Updating -> Terminated [ label = "onGeneralFailure/Terminated" ];
-        Updating -> Terminated [ label = "appEnd/Terminated" ];
+        Updating -> Terminated [ label = "dum::end/Terminated" ];
 
-        Connected -> Reinviting [ label = "provideOfferNoUpdate/reINVITE" ];
-        Reinviting -> Connected [ label = "on200I/onAnswer,ACK" ];
-        Reinviting -> Connected [ label = "onFailureI/onOfferRejected" ];
+        Connected -> Reinviting [ label = "dum::provideOfferNoUpdate/reINVITE" ];
+        Reinviting -> Connected [ label = "on200I/app::onAnswer,ACK" ];
+        Reinviting -> Connected [ label = "on4XXI/app::onOfferRejected" ];
         Reinviting -> Terminated [ label = "onGeneralFailure/Terminated" ];
-        Reinviting -> Terminated [ label = "appEnd/Terminated" ]; // ok?
+        Reinviting -> Terminated [ label = "dum::end/Terminated" ]; // ok?
 
         Connected -> ReinvitingNoOffer [ label = "onReINVITE/reINVITE" ];
-        ReinvitingNoOffer -> Connected [ label = "on200I/onDialogModified,ACK" ];
-        ReinvitingNoOffer -> Connected [ label = "onFailureI/onReinviteFailure" ];
+        ReinvitingNoOffer -> Connected [ label = "on200I/app::onDialogModified,send::ACK" ];
+        ReinvitingNoOffer -> Connected [ label = "onFailureI/app::onReinviteFailure" ];
         ReinvitingNoOffer -> Terminated [ label = "onGeneralFailure/Terminated" ];
-        ReinvitingNoOffer -> Terminated [ label = "appEnd/Terminated" ]; // ok?
+        ReinvitingNoOffer -> Terminated [ label = "dum::end/Terminated" ]; // ok?
 
-        Connected -> UpdatePending [ label = "onUPDATE/onOffer" ];
-        UpdatePending -> Connected [ label = "provideAnswer/200U" ];
-        UpdatePending -> Connected [ label = "appRejectOffer/488U" ];
-        UpdatePending -> Terminated [ label = "appEnd/488U,BYE" ];
+        Connected -> UpdatePending [ label = "onUPDATE/app::onOffer" ];
+        UpdatePending -> Connected [ label = "dum::provideAnswer/send::200U" ];
+        UpdatePending -> Connected [ label = "dum::rejectOffer/send::488U" ];
+        UpdatePending -> Terminated [ label = "dum::end/send::488U,send::BYE" ];
 
-        Connected -> ReinvitePending [ label = "onreINVITE/onOffer" ];
-        ReinvitePending -> Connected [ label = "provideAnswer/200U" ];
-        ReinvitePending -> Connected [ label = "appRejectOffer/488U" ];
-        ReinvitePending -> Terminated [ label = "appEnd/488I,BYE" ];
+        Connected -> ReinvitePending [ label = "onreINVITE/app::onOffer" ];
+        ReinvitePending -> Connected [ label = "dum::provideAnswer/send::200U" ];
+        ReinvitePending -> Connected [ label = "dum::rejectOffer/send::488U" ];
+        ReinvitePending -> Terminated [ label = "dum::end/send::488I,send::BYE" ];
 
-        Connected -> ReinvitePendingNoOffer [ label = "onreINVITE/onDialogModified" ];
-        ReinvitePendingNoOffer -> Connected [ label = "appAccept/200I" ];
-        ReinvitePendingNoOffer -> Connected [ label = "appReject/488I" ];
-        ReinvitePendingNoOffer -> Terminated [ label = "appEnd/488I,BYE" ];
+        Connected -> ReinvitePendingNoOffer [ label = "onreINVITE/app::onDialogModified" ];
+        ReinvitePendingNoOffer -> Connected [ label = "dum::accept/send::200I" ];
+        ReinvitePendingNoOffer -> Connected [ label = "dum::reject/send::488I" ];
+        ReinvitePendingNoOffer -> Terminated [ label = "dum::end/send::488I,send::BYE" ];
 
-        Connected -> Terminated [ label = "appEnd/BYE" ];
-        Connected -> Terminated [ label = "BYE/200B,delete" ];
+        Connected -> Terminated [ label = "dum::end/send::BYE" ];
+        Connected -> Terminated [ label = "onBYE/send::200B,delete" ];
 }
