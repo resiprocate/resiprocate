@@ -368,9 +368,13 @@ Security::loadAllCerts( const Data& password, const Data&  dirPath )
    ok = loadRootCerts( getPath( dirPath, Data("root.pem")) ) ? ok : false;
    ok = loadMyPublicCert( getPath( dirPath, Data("id.pem")) ) ? ok : false;
    ok = loadMyPrivateKey( password, getPath(dirPath,Data("id_key.pem") )) ? ok : false;
-   ok = loadPublicCert( getPath( dirPath, Data("public_keys/")) ) ? ok : false;
 
-   getTlsCtx();
+   if (ok)
+   {
+      getTlsCtx();
+   }
+   
+   ok = loadPublicCert( getPath( dirPath, Data("public_keys/")) ) ? ok : false;
    
    return ok;
 }
@@ -531,6 +535,7 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
    
    InfoLog( << "Loaded private key from << " << filePath );
    
+   assert( privateKey );
    return true;
 }
 
@@ -612,6 +617,29 @@ Security::sign( Contents* bodyIn )
    assert( outBody );
 
    return outBody;
+}
+
+
+bool 
+Security::haveCert()
+{
+   if ( !privateKey ) return false;
+   if ( !publicCert ) return false;
+   
+   return true;
+}
+
+
+bool 
+Security::havePublicKey( const Data& recipCertName )
+{
+   MapConstIterator i = publicKeys.find(recipCertName);
+   if (i != publicKeys.end())
+   {
+      return true;
+   }
+
+   return false;
 }
 
 

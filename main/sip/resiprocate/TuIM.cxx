@@ -34,10 +34,10 @@ TuIM::TuIM(SipStack* stack,
      mStack(stack),
      mAor(aor),
      mContact(contact),
-     mPassword( Data::Empty ),
      mPidf( new Pidf ),
      mRegistrationDialog(NameAddr(contact)),
-     mNextTimeToRegister(0)
+     mNextTimeToRegister(0),
+     mRegistrationPassword( Data::Empty )
 {
    assert( mStack );
    assert(mCallback);
@@ -46,6 +46,37 @@ TuIM::TuIM(SipStack* stack,
    mPidf->setSimpleId( Random::getRandomHex(4) );  
    mPidf->setEntity( mAor.getAor() );  
    mPidf->setSimpleStatus( true, Data::Empty, mContact.getAor() );
+}
+
+
+bool
+TuIM::haveCerts( bool sign, const Data& encryptFor )
+{
+#ifdef USE_SSL 
+   Security* sec = mStack->security;
+   assert(sec);
+   
+   if ( sign )
+   {    
+      if ( !sec->haveCert() )
+      {
+         return false;
+      }
+   } 
+   if ( !encryptFor.empty() )
+   {
+      if ( !sec->havePublicKey( encryptFor ) )
+      {
+         return false;
+      }
+   }
+#else
+   if ( (!encryptFor.empty()) || (sign) )
+   {
+      return false;
+   }
+#endif
+   return true;
 }
 
 
@@ -69,9 +100,8 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
       
    SipMessage* msg = Helper::makeRequest(target, from, contact, MESSAGE);
    assert( msg );
-
-   PlainContents plainBody(text);
-   Contents* body = &plainBody;
+ 
+   Contents* body = new PlainContents(text);
    
 #if USE_SSL
    if ( sign )
@@ -81,7 +111,13 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
     
       Contents* old = body;
       body = sec->sign( body );
-      if (old!=&plainBody) delete old;
+      delete old;
+
+      if ( !body )
+      {
+          mCallback->sendPageFailed( dest, -1 );
+         return;
+      }
    }
    
    if ( !encryptFor.empty() )
@@ -91,17 +127,20 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
       
       Contents* old = body;
       body = sec->encrypt( body, encryptFor );
-      if (old!=&plainBody) delete old;
+      delete old;
+
+      if ( !body )
+      {
+          mCallback->sendPageFailed( dest, -2 );
+         return;
+      }
    }
 #endif
 
    msg->setContents(body);
    mStack->send( *msg );
 
-   if ( body != &plainBody )
-   {
-      delete body;
-   }
+   delete body;
 }
 
 
@@ -359,8 +398,33 @@ TuIM::processRegisterResponse(SipMessage* msg)
    Uri to = msg->header(h_To).uri();
    InfoLog ( << "register of " << to << " got response " << number );   
 
-   if ( number <200 )
+   if ( number<200 )
    {
+      return;
+   }
+
+   if ( number >= 200 )
+   { 
+      mRegistrationDialog.createDialogAsUAC( *msg );
+   }
+   
+   if ( (number == 401) || (number == 407) )
+   {
+      SipMessage* reg = mRegistrationDialog.makeRegister();
+      
+      const Data cnonce;
+      unsigned int nonceCount;
+       
+      Helper::addAuthorization(*reg,*msg,mAor.user(),mRegistrationPassword,cnonce,nonceCount);
+
+      int expires = 2*60*60; // time in seconds 
+      reg->header(h_Expires).value() = expires;
+      mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
+      
+      InfoLog( << *reg );
+      
+      mStack->send( *reg );
+
       return;
    }
    
@@ -371,19 +435,23 @@ TuIM::processRegisterResponse(SipMessage* msg)
       return;
    }
    
-   int expires = 3600;
-   if ( msg->exists(h_Expires) )
+   if ( (number>=200) && (number<300) )
    {
-      expires = msg->header(h_Expires).value();
+      int expires = 3600;
+      if ( msg->exists(h_Expires) )
+      {
+         expires = msg->header(h_Expires).value();
+      }
+      if ( expires < 5 )
+      {
+         InfoLog( << "Got very small expiers of " << expires );
+         expires = 5;
+      }
+      
+      mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
+      
+      return;
    }
-   if ( expires < 5 )
-   {
-      InfoLog( << "Got very small expiers of " << expires );
-      expires = 5;
-   }
-    
-   mRegistrationDialog.createDialogAsUAC( *msg );
-   mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
 }
 
 
@@ -501,7 +569,7 @@ TuIM::process()
    SipMessage* msg( mStack->receive() );
    if ( msg )
    {
-      DebugLog ( << "got message: " << *msg);
+      InfoLog ( << "got message: " << *msg);
    
       if ( msg->isResponse() )
       { 

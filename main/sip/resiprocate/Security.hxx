@@ -68,9 +68,9 @@ class Security
 
       bool loadMyPublicCert(  const Data& filePath );
       bool loadMyPrivateKey(  const Data& password,  const Data& filePath );
-      bool createMyKey( const Data& password, 
-                        const Data& filePathPrivateKey=Data::Empty,
-                        const Data& filePathPublicKey=Data::Empty );
+      bool createSelfSignedKey( const Data& password, 
+                                const Data& filePathPrivateKey=Data::Empty,
+                                const Data& filePathPublicKey=Data::Empty );
 
       bool loadPublicCert(  const Data& filePath=Data::Empty );
       bool savePublicCert( const Data& certName,  const Data& filePath=Data::Empty );
@@ -94,7 +94,9 @@ class Security
       /* stuff to build messages 
        *  This is pertty straight forwartd - use ONE of the functions below to
        *  form a new body. */
+      bool haveCert();
       Pkcs7Contents* sign( Contents* );
+      bool havePublicKey( const Data& recipCertName );
       Pkcs7Contents* encrypt( Contents* , const Data& recipCertName );
       Pkcs7Contents* signAndEncrypt( Contents* , const Data& recipCertName );
       
