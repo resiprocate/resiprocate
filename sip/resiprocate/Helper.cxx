@@ -41,28 +41,27 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
 
 
 SipMessage*
-Helper::makeRegister(const NameAddr& registrar,
-                     const NameAddr& aor,
+Helper::makeRegister(const NameAddr& to,
+                     const NameAddr& from,
                      const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
    RequestLine rLine(REGISTER);
 
-   rLine.uri().scheme() = registrar.uri().scheme();
-   rLine.uri().host() = registrar.uri().host();
-
-   rLine.uri().port() = registrar.uri().port();
-   if (registrar.uri().exists(p_transport))
+   rLine.uri().scheme() = to.uri().scheme();
+   rLine.uri().host() = to.uri().host();
+   rLine.uri().port() = to.uri().port();
+   if (to.uri().exists(p_transport))
    {
-      rLine.uri().param(p_transport) = registrar.uri().param(p_transport);
+      rLine.uri().param(p_transport) = to.uri().param(p_transport);
    }
 
-   request->header(h_To) = aor;
+   request->header(h_To) = to;
    request->header(h_RequestLine) = rLine;
    request->header(h_MaxForwards).value() = 70;
    request->header(h_CSeq).method() = REGISTER;
    request->header(h_CSeq).sequence() = 1;
-   request->header(h_From) = aor;
+   request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
    assert( request->header(h_Contacts).empty() );
@@ -75,27 +74,27 @@ Helper::makeRegister(const NameAddr& registrar,
 }
 
 SipMessage*
-Helper::makeRegister(const NameAddr& aor,
+Helper::makeRegister(const NameAddr& to,
                      const Data& transport,
                      const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
    RequestLine rLine(REGISTER);
 
-   rLine.uri().scheme() = aor.uri().scheme();
-   rLine.uri().host() = aor.uri().host();
-   rLine.uri().port() = aor.uri().port();
+   rLine.uri().scheme() = to.uri().scheme();
+   rLine.uri().host() = to.uri().host();
+   rLine.uri().port() = to.uri().port();
    if (!transport.empty())
    {
       rLine.uri().param(p_transport) = transport;
    }
 
-   request->header(h_To) = aor;
+   request->header(h_To) = to;
    request->header(h_RequestLine) = rLine;
    request->header(h_MaxForwards).value() = 70;
    request->header(h_CSeq).method() = REGISTER;
    request->header(h_CSeq).sequence() = 1;
-   request->header(h_From) = aor;
+   request->header(h_From) = to;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
    assert( request->header(h_Contacts).empty() );
