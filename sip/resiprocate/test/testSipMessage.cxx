@@ -22,7 +22,110 @@ using namespace std;
 int
 main(int argc, char** argv)
 {
-   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   Log::initialize(Log::COUT, Log::ERR, argv[0]);
+
+   {
+      Data txt1 = "SIP/2.0 407 Proxy Authentication Required\r\n"
+         "To: <sip:jason_AT_meet2talk.com@beta.meet2talk.com>\r\n"
+         "From: <sip:jason_AT_meet2talk.com@beta.meet2talk.com>;tag=113cba09\r\n"
+         "Via: SIP/2.0/64.124.66.32:9091;branch=z9hG4bK-c87542-5b42cb698e8c6827790212ac5bdade1a-1-PA32768-c87542-;rport;received=64.124.66.32\r\n"
+         "Via: SIP/2.0/UDP 192.168.1.102:5100;branch=z9hG4bK-c87542-175255966-1--c87542-;rport\r\n"
+         "Call-ID: d8023c1dc2559a21\r\n"
+         "CSeq: 1 REGISTER\r\n"
+         "Contact: <sip:64.124.66.32:5060>\r\n"
+         "Content-Length: 0\r\n\r\n";
+
+      auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
+
+      try
+      {
+         cerr << "transport=" << message1->header(h_Vias).front().transport() << endl;
+         assert(false);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+      }
+   }
+
+   {
+      cerr << "test complex content copy" << endl;
+
+      Data txt = ("MESSAGE sip:fluffy@212.157.205.40 SIP/2.0\r\n"
+                  "Via: SIP/2.0/TCP 212.157.205.198:5060;branch=z9hG4bK2367411811584019109\r\n"
+                  "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-107338443-1--c87542-;stid=489573115\r\n"
+                  "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1--c87542-;received=192.168.2.220\r\n"
+                  "To: sip:fluffy@212.157.205.40\r\n"
+                  "From: sip:ntt2@h1.ntt2.sipit.net;tag=727823805122397238\r\n"
+                  "Max-Forwards: 70\r\n"
+                  "CSeq: 1 NOTIFY\r\n"
+                  "Call-ID: 28067261571992032320\r\n"
+                  "Contact: sip:ntt2@212.157.205.198:5060\r\n"
+                  "Expires: 47\r\n"
+                  "Content-Length: 1929\r\n"
+                  "Content-Type: multipart/signed;\r\n"
+                  " protocol=\"application/pkcs7-signature\";\r\n"
+                  " micalg=sha1; boundary=\"----YvhIjyjTU8lfNqGe8Fyvxcmb4mleF6quxsMFpT2hOhrDfS3LLs1MyYBdLNgBLsSC\"\r\n"
+                  "\r\n"
+                  "------YvhIjyjTU8lfNqGe8Fyvxcmb4mleF6quxsMFpT2hOhrDfS3LLs1MyYBdLNgBLsSC\r\n"
+                  "Content-Type: multipart/mixed;boundary=\"----lRIGMC8E2Px6I2IODfk2rISgfWIirrOJwS3tY52HuxDP3pdTiFjsghJJWhvyRCEY\"\r\n"
+                  "Content-Length: 870\r\n"
+                  "Content-Disposition: attachment;handling=required\r\n"
+                  "\r\n"
+                  "------lRIGMC8E2Px6I2IODfk2rISgfWIirrOJwS3tY52HuxDP3pdTiFjsghJJWhvyRCEY\r\n"
+                  "Content-Type: application/sipfrag\r\n"
+                  "Content-Length: 320\r\n"
+                  "\r\n"
+                  "To: sip:fluffy@212.157.205.40\r\n"
+                  "From: sip:ntt2@h1.ntt2.sipit.net;tag=727823805122397238\r\n"
+                  "CSeq: 1 NOTIFY\r\n"
+                  "Call-ID: 28067261571992032320\r\n"
+                  "Contact: sip:ntt2@212.157.205.198:5060\r\n"
+                  "Event: presence\r\n"
+                  "Content-Length: 210\r\n"
+                  "Content-Type: application/xpidf+xml\r\n"
+                  "Subscription-State: active\r\n"
+                  "User-Agent: XXX SecureSession User-Agent\r\n"
+                  "\r\n"
+                  "------lRIGMC8E2Px6I2IODfk2rISgfWIirrOJwS3tY52HuxDP3pdTiFjsghJJWhvyRCEY\r\n"
+                  "Content-Type: application/xpidf+xml\r\n"
+                  "Content-Length: 210\r\n"
+                  "\r\n"
+                  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
+                  "<presence xmlns:impp=\"urn:ietf:params:xml:ns:pidf\" entity=\"pres:someone@example.com\">\r\n"
+                  "<tuple id=\"765\">\r\n"
+                  "<status>\r\n"
+                  "<basic>open</basic>\r\n"
+                  "</status>\r\n"
+                  "</tuple>\r\n"
+                  "</presence>\r\n"
+                  "\r\n"
+                  "------lRIGMC8E2Px6I2IODfk2rISgfWIirrOJwS3tY52HuxDP3pdTiFjsghJJWhvyRCEY--\r\n"
+                  "\r\n"
+                  "------YvhIjyjTU8lfNqGe8Fyvxcmb4mleF6quxsMFpT2hOhrDfS3LLs1MyYBdLNgBLsSC\r\n"
+                  "Content-Type: application/pkcs7-signature; name=\"smime.p7s\"\r\n"
+                  "Content-Transfer-Encoding: base64\r\n"
+                  "Content-Disposition: attachment; filename=\"smime.p7s\"; handling=required\r\n"
+                  "\r\n"
+                  "MIIBVgYJKoZIhvcNAQcCoIIBRzCCAUMCAQExCzAJBgUrDgMCGgUAMAsGCSqGSIb3\r\n"
+                  "DQEHATGCASIwggEeAgEBMHwwcDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlm\r\n"
+                  "b3JuaWExETAPBgNVBAcTCFNhbiBKb3NlMQ4wDAYDVQQKEwVzaXBpdDEpMCcGA1UE\r\n"
+                  "CxMgU2lwaXQgVGVzdCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkCCAIWABUCBgIVMAkG\r\n"
+                  "BSsOAwIaBQAwDQYJKoZIhvcNAQEBBQAEgYAer8TPSMtA3ZqweGnXLUYKR51bp52N\r\n"
+                  "oGBEqHZz7xR0Nhs6DsAOXiSFv19vTR//33u6Se3zpNNHP/zj7NRr+olimI2PeBNB\r\n"
+                  "tczNdqexoN0pjRW7l7mHZ0e39pqZmI5bhFl+z9CJJu5xW0aSarw84CZxbh5RQaYr\r\n"
+                  "zhSvTYdki20aiQ==\r\n"
+                  "\r\n"
+                  "------YvhIjyjTU8lfNqGe8Fyvxcmb4mleF6quxsMFpT2hOhrDfS3LLs1MyYBdLNgBLsSC--\r\n"
+         );
+
+      std::auto_ptr<SipMessage> msg(SipMessage::make(txt));
+      
+      SipMessage msg1;
+      msg1.setContents(msg->getContents());
+
+      CerrLog(<< Data::from(*msg1.getContents()));
+      CerrLog(<< Data::from(*msg->getContents()));
+   }
 
    {
       InfoLog(<< "Testing assignment");
