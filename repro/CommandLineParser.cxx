@@ -18,7 +18,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int udpPort = 5060;
    int tcpPort = 5060;
    int tlsPort = 5061;
-   int dtlsPort = 5061;
+   int dtlsPort = 0;
    int noV4 = false;
    int noV6 = false;
    char* domains = 0;
