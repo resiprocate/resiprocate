@@ -187,7 +187,7 @@ TransactionState::processClientNonInvite(  Message* msg )
       mStack.mTimers.add(Timer::TimerE1, msg->getTransactionId(), Timer::T1 );
       delete msg;
    }
-   else if (isResponse(msg) && !isFromTU(msg)) // from the wire
+   else if (isResponse(msg) && isFromWire(msg)) // from the wire
    {
       DebugLog (<< "received response from wire");
 
@@ -345,7 +345,7 @@ TransactionState::processClientInvite(  Message* msg )
             break;
       }
    }
-   else if (isResponse(msg) && !isFromTU(msg))
+   else if (isResponse(msg) && isFromWire(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       int code = sip->header(h_StatusLine).responseCode();
@@ -513,7 +513,7 @@ TransactionState::processClientInvite(  Message* msg )
 void
 TransactionState::processServerNonInvite(  Message* msg )
 {
-   if (isRequest(msg) && !isInvite(msg) && !isFromTU(msg)) // from the wire
+   if (isRequest(msg) && !isInvite(msg) && isFromWire(msg)) // from the wire
    {
       if (mState == Trying)
       {
@@ -603,7 +603,7 @@ TransactionState::processServerNonInvite(  Message* msg )
 void
 TransactionState::processServerInvite(  Message* msg )
 {
-   if (isRequest(msg) && !isFromTU(msg))
+   if (isRequest(msg) && isFromWire(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       switch (sip->header(h_RequestLine).getMethod())
@@ -862,6 +862,53 @@ TransactionState::processServerInvite(  Message* msg )
 void
 TransactionState::processStale(  Message* msg )
 {
+   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+   if ( sip->header(h_RequestLine).getMethod() == ACK ||
+	isResponse(msg, 200, 299 ) )
+   {
+      if (isFromTU(msg))
+      { 
+	 mMsgToRetransmit = sip;
+	 sendToWire(sip);
+      }
+      else if (isFromWire(msg))
+      {
+	 sendToTU(msg);
+      }
+      else 
+      {
+	 delete msg;
+      }
+      
+   }
+
+   else if (isTimer(msg))
+   {
+      DebugLog (<< "received timer in client non-invite transaction");
+      
+      TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
+      switch (timer->getType())
+      {
+	 case Timer::TimerStale:
+	    delete this;
+	    delete msg;
+	    break;
+	    
+	 default:
+	    
+	    assert(0);
+	    break;
+      }
+   }else if (isTranportError(msg))
+   {
+      // inform the TU
+      //assert(0);
+      sendToTU(msg);
+      delete this;
+      delete msg;
+   }else {
+      delete msg;
+   }
 }
 
 bool
@@ -906,6 +953,13 @@ TransactionState::isFromTU(Message* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    return sip && !sip->isExternal();
+}
+
+bool
+TransactionState::isFromWire(Message* msg) const
+{
+   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+   return sip && sip->isExternal();
 }
 
 bool
