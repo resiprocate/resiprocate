@@ -255,7 +255,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
                  it != msg.header(h_Contacts).end(); it++)
             {
-               if(it->exists(p_expires))
+               if (it->exists(p_expires))
                {
                   expiry = resipMin(it->param(p_expires), expiry);
                }
@@ -331,15 +331,44 @@ ClientRegistration::dispatch(const SipMessage& msg)
                return;
             }
          }
+         else if (code == 408)
+         {
+            int retry = mDum.mClientRegistrationHandler->onRequestRetry(getHandle(), 0, msg);
+            
+            if (retry < 0)
+            {
+               DebugLog(<< "Application requested failure on Retry-After");
+               delete this;
+               return;
+            }
+            else if (retry == 0)
+            {
+               DebugLog(<< "Application requested immediate retry on 408");
+               
+               mLastRequest.header(h_CSeq).sequence()++;
+               mDum.send(mLastRequest);
+               return;
+            }
+            else
+            {
+               DebugLog(<< "Application requested delayed retry on 408: " << retry);
+               mDum.addTimer(DumTimeout::RegistrationRetry, 
+                             retry, 
+                             getBaseHandle(),
+                             ++mTimerSeq);       
+               return;
+            }
+         }
+         
          mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
 
          // Retry if Profile setting is set
-         if(mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime() > 0 &&
-            (mState == Adding || mState == Refreshing) &&
-            !mEndWhenDone)
+         if (mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime() > 0 &&
+             (mState == Adding || mState == Refreshing) &&
+             !mEndWhenDone)
          {
              unsigned int retryInterval = mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime();
-             if(msg.exists(h_RetryAfter))
+             if (msg.exists(h_RetryAfter))
              {
                  // Use retry interval from error response
                  retryInterval = msg.header(h_RetryAfter).value();
@@ -386,7 +415,7 @@ ClientRegistration::dispatch(const DumTimeout& timer)
          break;
 
       case DumTimeout::RegistrationRetry:
-         if(timer.seq() == mTimerSeq)
+         if (timer.seq() == mTimerSeq)
          {
             assert(mState == Adding || mState == Refreshing);
 
