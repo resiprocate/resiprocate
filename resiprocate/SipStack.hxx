@@ -9,7 +9,7 @@
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/TransactionController.hxx"
-#include "resiprocate/Security.hxx"
+#include "resiprocate/SecurityTypes.hxx"
 #include "resiprocate/StatisticsManager.hxx"
 
 namespace resip 
@@ -139,7 +139,7 @@ class SipStack
       // output current state of the stack - for debug
       std::ostream& dump(std::ostream& strm) const;
       
-      Security *getSecurity() const;
+      Security* getSecurity() const;
    private:
       /// if this object exists, it manages advanced security featues
       Security* mSecurity;

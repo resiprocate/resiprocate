@@ -1087,7 +1087,7 @@ extractFromPkcs7Recurse(Contents* tree,
    if ((mps = dynamic_cast<MultipartSignedContents*>(tree)))
    {
       Data signer;
-      Security::SignatureStatus sigStatus;
+      SignatureStatus sigStatus;
       Contents* b = extractFromPkcs7Recurse(security.checkSignature(mps, 
                                                                     &signer,
                                                                     &sigStatus),
