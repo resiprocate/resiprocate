@@ -33,29 +33,33 @@ class GagMessage
     } command_t;
 
   public:
-    static GagMessage *getMessage(istream &is);
+    static GagMessage *getMessage(int in_fd);
     bool isValid() {return valid;}
     virtual ostream &serialize(ostream &os) const;
     command_t getMessageType() {return messageType;}
 
   protected: // methods
-    virtual void parse(istream &is) = 0;
+    virtual void parse(int in_fd) = 0;
     GagMessage(){valid = true;}
 
 
-    static bool parse(istream &, Data &);
-    static bool parse(istream &, Uri &);
-    static bool parse(istream &, bool &);
-    static bool parse(istream &, int &);
+    static bool parse(int , Data &);
+    static bool parse(int , Uri &);
+    static bool parse(int , bool &);
+    static bool parse(int , int &);
 
     static void serialize(ostream &, const Data &);
     static void serialize(ostream &, const Uri &);
     static void serialize(ostream &, const bool &);
     static void serialize(ostream &, const int &);
 
+  private: //methods
+    static ssize_t readAll(int, char*, size_t);
+
   protected: // attributes
     command_t messageType;
     bool valid;
+  
 };
 
 class GagImMessage : public GagMessage
@@ -64,10 +68,10 @@ class GagImMessage : public GagMessage
     GagImMessage(const Uri &_from, const Uri &_to, const Data &_im) :
       from(_from), to(_to), im(_im) {messageType = IM;}
 
-    GagImMessage(istream &is) { messageType = IM; parse (is); }
+    GagImMessage(int in_fd) { messageType = IM; parse (in_fd); }
 
     virtual ostream &serialize(ostream &os) const;
-    virtual void parse(istream &is);
+    virtual void parse(int in_fd);
 
     Uri *getFromPtr() {return &from;}
     Uri *getToPtr() {return &to;}
@@ -85,10 +89,10 @@ class GagPresenceMessage : public GagMessage
       aor(_aor), available(_available), status(_status)
       { messageType=PRESENCE ;}
 
-    GagPresenceMessage(istream &is) { messageType=PRESENCE; parse (is); }
+    GagPresenceMessage(int in_fd) { messageType=PRESENCE; parse (in_fd); }
 
     virtual ostream &serialize(ostream &os) const;
-    virtual void parse(istream &is);
+    virtual void parse(int in_fd);
 
     Uri *getAorPtr() {return &aor;}
     bool getAvailable() {return available;}
@@ -103,9 +107,9 @@ class GagHelloMessage : public GagMessage
 {
   public:
     GagHelloMessage(bool _ok) : ok(_ok) { messageType=HELLO; }
-    GagHelloMessage(istream &is) { messageType=HELLO; parse (is); }
+    GagHelloMessage(int in_fd) { messageType=HELLO; parse (in_fd); }
     virtual ostream &serialize(ostream &os) const;
-    virtual void parse(istream &is);
+    virtual void parse(int in_fd);
 
     bool getOk() {return ok;}
   private:
@@ -118,10 +122,10 @@ class GagLoginMessage : public GagMessage
     GagLoginMessage(const Uri &_aor, Data &_userid, const Data &_password):
       aor(_aor), userid(_userid), password(_password)
       { messageType=LOGIN; }
-    GagLoginMessage(istream &is) { messageType=LOGIN; parse (is); }
+    GagLoginMessage(int in_fd) { messageType=LOGIN; parse (in_fd); }
 
     virtual ostream &serialize(ostream &os) const;
-    virtual void parse(istream &is);
+    virtual void parse(int in_fd);
 
     Uri *getAorPtr() {return &aor;}
     Data *getUseridPtr() {return &userid;}
@@ -136,10 +140,10 @@ class GagLogoutMessage : public GagMessage
 {
   public:
     GagLogoutMessage(const Uri &_aor) : aor(_aor) {messageType=LOGOUT;}
-    GagLogoutMessage(istream &is) {messageType=LOGOUT; parse(is); }
+    GagLogoutMessage(int in_fd) {messageType=LOGOUT; parse(in_fd); }
 
     virtual ostream &serialize(ostream &os) const;
-    virtual void parse(istream &is);
+    virtual void parse(int in_fd);
 
     Uri *getAorPtr() {return &aor;}
   private:
@@ -151,10 +155,10 @@ class GagAddBuddyMessage : public GagMessage
   public:
     GagAddBuddyMessage(const Uri &_us, const Uri &_them) 
       : us(_us), them(_them) { messageType=ADD_BUDDY; }
-    GagAddBuddyMessage(istream &is) { messageType=ADD_BUDDY; parse(is); }
+    GagAddBuddyMessage(int in_fd) { messageType=ADD_BUDDY; parse(in_fd); }
 
     virtual ostream &serialize(ostream &os) const;
-    virtual void parse(istream &is);
+    virtual void parse(int in_fd);
 
     Uri *getUsPtr() {return &us;}
     Uri *getThemPtr() {return &them;}
@@ -168,11 +172,11 @@ class GagRemoveBuddyMessage : public GagMessage
   public:
     GagRemoveBuddyMessage(const Uri &_us, const Uri &_them) 
       : us(_us), them(_them) { messageType=REMOVE_BUDDY; }
-    GagRemoveBuddyMessage(istream &is) 
-      { messageType=REMOVE_BUDDY; parse (is); }
+    GagRemoveBuddyMessage(int in_fd) 
+      { messageType=REMOVE_BUDDY; parse (in_fd); }
 
     virtual ostream &serialize(ostream &os) const;
-    virtual void parse(istream &is);
+    virtual void parse(int in_fd);
 
     Uri *getUsPtr() {return &us;}
     Uri *getThemPtr() {return &them;}
@@ -185,9 +189,9 @@ class GagShutdownMessage : public GagMessage
 {
   public:
     GagShutdownMessage() {messageType = SHUTDOWN;}
-    GagShutdownMessage(istream &is) {messageType = SHUTDOWN;}
+    GagShutdownMessage(int in_fd) {messageType = SHUTDOWN;}
     virtual ostream &serialize(ostream &os) const {return os;}
-    virtual void parse(istream &is) {return;}
+    virtual void parse(int in_fd) {return;}
 };
 
 class GagErrorMessage : public GagMessage
@@ -195,10 +199,10 @@ class GagErrorMessage : public GagMessage
   public:
     GagErrorMessage(const Data &_message) : message(_message)
       {messageType= GAG_ERROR;}
-    GagErrorMessage(istream &is) {messageType= GAG_ERROR; parse(is);}
+    GagErrorMessage(int in_fd) {messageType= GAG_ERROR; parse(in_fd);}
 
     virtual ostream &serialize(ostream &os) const;
-    virtual void parse(istream &is);
+    virtual void parse(int in_fd);
   private:
     Data message;
 };
@@ -209,10 +213,10 @@ class GagLoginStatusMessage : public GagMessage
     GagLoginStatusMessage(bool _success, int _sipCode, const Data &_message) 
       : success (_success), sipCode (_sipCode), message(_message) 
       {messageType=LOGIN_STATUS;}
-    GagLoginStatusMessage(istream &is) {messageType=LOGIN_STATUS; parse(is);}
+    GagLoginStatusMessage(int in_fd) {messageType=LOGIN_STATUS; parse(in_fd);}
 
     virtual ostream &serialize(ostream &os) const;
-    virtual void parse(istream &is);
+    virtual void parse(int in_fd);
 
     bool succeeded() {return success;}
     int getSipCode() {return success;}
