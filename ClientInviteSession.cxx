@@ -67,13 +67,15 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          int code = msg.header(h_StatusLine).statusCode();         
          if (code == 100)
          {
-            mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
+            mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), 
+                          getBaseHandle(),  ++mStaleCallTimerSeq);
             mState = Proceeding;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), None, msg);
          }
          else if (code < 200)
          {
-            mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
+            mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), 
+                          getBaseHandle(),  ++mStaleCallTimerSeq);
             mState = Early;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
             mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
@@ -119,6 +121,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          break;
       }
       
+      case Forked:     
       case Proceeding:
       case Early:
       {
@@ -183,6 +186,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             if (code / 100 == 2 && msg.header(h_CSeq).method() == INVITE)
             {
                //!dcm! -- ack the crossover 200?
+               sendSipFrag(msg); //strange refer race
                mState = Connected;               
                end();
             }
@@ -204,11 +208,28 @@ void
 ClientInviteSession::dispatch(const DumTimeout& timeout)
 {
    Destroyer::Guard guard(mDestroyer);
-    if (timeout.type() == DumTimeout::StaleCall 
+   if (timeout.type() == DumTimeout::StaleCall 
        && timeout.seq() == mStaleCallTimerSeq)
    {
       mDum.mInviteSessionHandler->onStaleCallTimeout(getHandle());
       end();  // Terminate call
+   }
+   else if (timeout.type() == DumTimeout::Forked && mState == Forked)
+   {
+      mDum.mInviteSessionHandler->onForkDestroyed(getHandle());
+      guard.destroy();
+   }
+   else if(timeout.type() == DumTimeout::Cancelled)
+   {
+      SipMessage response;            
+      mDialog.makeResponse(response, mLastRequest, 487);
+      if (mServerSub.isValid())
+      {
+         sendSipFrag(response);
+      }
+      InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+      handler->onTerminated(getSessionHandle(), response);
+      guard.destroy();
    }
    else
    {
@@ -280,7 +301,6 @@ ClientInviteSession::end()
    switch (mState)
    {
       case Early:
-         //if there is no fork, CANCEL, if there is a fork send a BYE
          if (mDialog.mDialogSet.mDialogs.size() > 1)
          {
             InfoLog ( << "ClientInviteSession::end, Early(forking)" );        
@@ -289,14 +309,22 @@ ClientInviteSession::end()
             mLastRequest.header(h_Vias).front().param(p_branch).reset();
             mState = Terminated;
             send(mLastRequest);
-         }         
+         }
+         else
+         {
+            mDialog.mDialogSet.end();
+         }
+         break;         
       case Initial:
+#if 0
+         //!dcm! -- don't think this code should be here/can ever be called
          InfoLog ( << "ClientInviteSession::end, Early/Initial)" );        
          mDialog.makeCancel(mLastRequest);
          //!dcm! -- it could be argued that this(and similar) should happen in send so users
          //can't toast themselves
          mState = Cancelled;
          send(mLastRequest);
+#endif
          break;
       case Terminated: 
       case Connected:
@@ -375,174 +403,37 @@ void ClientInviteSession::redirected(const SipMessage& msg)
    }     
 }
 
-#if 0 //?dcm? --PRACKISH dispatch, or just cruft?
-// void
-// ClientInviteSession::dispatch(const SipMessage& msg)
-// {
-//    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-//    assert(handler);
-   
-//    if (msg.isRequest())
-//    {
-//       InviteSession::dispatch(msg);
-//       return;
-//    }
-//    else if (msg.isResponse())
-//    {
-//       switch (msg.header(h_CSeq).method())
-//       {
-//          case INVITE:
-//             break;
-            
-//          case PRACK:
-//             handlePrackResponse(msg);
-//             return;
-            
-//          case CANCEL:
-//             if (msg.header(h_StatusLine).statusCode() >= 400)
-//             {
-//                mState = Terminated;
-//                end(); // cleanup the mess
-//             }
-//             return;            
-            
-//          default:
-//             InviteSession::dispatch(msg);
-//             return;
-//       }
-//    }
-   
-//    int code = msg.header(h_StatusLine).statusCode();
-//    if (code < 300 && mState == Initial)
-//    {
-//       //handler->onNewSession(getHandle(), msg);
-//    }
-         
-//    if (code < 200) // 1XX
-//    {
-//       if (mState == Initial || mState == Early)
-//       {
-//          mState = Early;
-//          //handler->onEarly(getHandle(), msg);
-            
-//          SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-//          bool reliable = msg.header(h_Supporteds).find(Token(Symbols::C100rel));
-//          if (sdp)
-//          {
-//             if (reliable)
-//             {
-//                if (mProposedLocalSdp)
-//                {
-//                   mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
-//                   mCurrentLocalSdp = mProposedLocalSdp;
-//                   mProposedLocalSdp = 0;
+void 
+ClientInviteSession::forked()   
+{
+   switch(mState)
+   {
+      case Initial:
+      case Early:
+      case Proceeding:
+         mState = Forked;
+         mDum.addTimerMs(DumTimeout::Forked, Timer::TH, getBaseHandle(), 0);         
+         break;
+      default:
+         return;         
+   }
+}
 
-//                   //handler->onAnswer(getHandle(), msg);
-//                }
-//                else
-//                {
-//                   mProposedRemoteSdp = static_cast<SdpContents*>(sdp->clone());
-//                   handler->onOffer(getSessionHandle(), msg);
-
-//                   // handler must provide an answer
-//                   assert(mProposedLocalSdp);
-//                }
-//             }
-//             else
-//             {
-//                // do nothing, not an offer/answer
-//             }
-//          }
-//          if (reliable)
-//          {
-//             sendPrack(msg);
-//          }
-//       }
-//       else
-//       {
-//          // drop it on the floor. Late 1xx
-//       }
-//    }
-//    else if (code < 300) // 2XX
-//    {
-//       if (mState == Cancelled)
-//       {
-//          //sendAck(the200);  
-//          end();
-//          return;
-//       }
-//       else if (mState != Terminated)
-//       {
-//          mState = Connected;
-//          // !jf!
-//          //if (mReceived2xx) // retransmit ACK
-//          {
-//             mDum.send(mAck);
-//             return;
-//          }
-         
-//          //mReceived2xx = true;
-//          handler->onConnected(getHandle(), msg);
-            
-//          SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-//          if (sdp)
-//          {
-//             if (mProposedLocalSdp) // got an answer
-//             {
-//                mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
-//                mCurrentLocalSdp = mProposedLocalSdp;
-//                mProposedLocalSdp = 0;
-                  
-//                //handler->onAnswer(getHandle(), msg);
-//             }
-//             else  // got an offer
-//             {
-//                mProposedRemoteSdp = static_cast<SdpContents*>(sdp->clone());
-//                handler->onOffer(getSessionHandle(), msg);
-//             }
-//          }
-//          else
-//          {
-//             if (mProposedLocalSdp)
-//             {
-//                // Got a 2xx with no answer (sent an INVITE with an offer,
-//                // unreliable provisionals)
-//                end();
-//                return;
-//             }
-//             else if (mCurrentLocalSdp == 0 && mProposedRemoteSdp == 0)
-//             {        Transport::error( e );
-//                InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
-//                throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-//                // Got a 2xx with no offer (sent an INVITE with no offer,
-//                // unreliable provisionals)
-//                end();
-//                return;
-//             }
-//             else
-//             {
-//                assert(mCurrentLocalSdp != 0);
-//                // do nothing
-//             }
-//          }
-//          sendAck(msg);
-//       }
-//    }
-//    else if (code >= 400)
-//    {
-//       if (mState != Terminated)
-//       {
-//          mState = Terminated;
-//          handler->onTerminated(getSessionHandle(), msg);
-//                   guard.destroy();
-//       }
-//    }
-//    else // 3xx
-//    {
-//       assert(0);
-//    }
-// }
-#endif
+void 
+ClientInviteSession::cancel()   
+{
+   switch(mState)
+   {
+      case Initial:
+      case Early:
+      case Proceeding:
+         mState = Cancelled;
+         mDum.addTimerMs(DumTimeout::Cancelled, Timer::TH, getBaseHandle(), 0);         
+         break;
+      default:
+         return;         
+   }
+}
 
 
 /* ====================================================================
