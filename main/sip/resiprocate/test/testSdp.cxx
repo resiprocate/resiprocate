@@ -51,12 +51,12 @@ main(int argc, char* argv[])
 
       tassert_reset();
       
-      tassert(sdp.session().getVersion() == 0);
-      tassert(sdp.session().getOrigin().getUser() == "alice");
-      tassert(!sdp.session().getMedia().empty());
+      tassert(sdp.session().version() == 0);
+      tassert(sdp.session().origin().user() == "alice");
+      tassert(!sdp.session().media().empty());
       
       //this fails, but should probably not parse(t before c not in sdp)
-      tassert(sdp.session().getMedia().front().getValue("rtpmap").front() == "0 PCMU/8000");
+      tassert(sdp.session().media().front().getValues("rtpmap").front() == "0 PCMU/8000");
       tassert_verify(1);
       
    }
@@ -76,32 +76,32 @@ main(int argc, char* argv[])
       Mime type("application", "sdp");
       SdpContents sdp(&hfv, type);
       tassert_reset();
-      tassert(sdp.session().getVersion() == 0);
-      tassert(sdp.session().getOrigin().getUser() == "UserA");
-      tassert(sdp.session().getOrigin().getSessionId() == "2890844526");
-      tassert(sdp.session().getOrigin().getVersion() == "2890844527");
-      tassert(sdp.session().getOrigin().getAddressType() == SdpContents::IP4);
-      tassert(sdp.session().getOrigin().getAddress() == "here.com");
+      tassert(sdp.session().version() == 0);
+      tassert(sdp.session().origin().user() == "UserA");
+      tassert(sdp.session().origin().getSessionId() == 2890844526);
+      tassert(sdp.session().origin().getVersion() == 2890844527);
+      tassert(sdp.session().origin().getAddressType() == SdpContents::IP4);
+      tassert(sdp.session().origin().getAddress() == "here.com");
 
-      tassert(sdp.session().getName() == "Session SDP");
+      tassert(sdp.session().name() == "Session SDP");
 
       tassert(sdp.session().connection().getAddressType() == SdpContents::IP4);
       tassert(sdp.session().connection().getAddress() == "pc33.atlanta.com");
-      tassert(sdp.session().connection().getTTL() == 0);
+      tassert(sdp.session().connection().ttl() == 0);
 
       tassert(sdp.session().getTimes().front().getStart() == 5);
       tassert(sdp.session().getTimes().front().getStop() == 17);
       tassert(sdp.session().getTimes().front().getRepeats().empty());
       tassert(sdp.session().getTimezones().getAdjustments().empty());
 
-      tassert(sdp.session().getMedia().front().getName() == "audio");
-      tassert(sdp.session().getMedia().front().getPort() == 49172);
-      tassert(sdp.session().getMedia().front().getMulticast() == 1);
-      tassert(sdp.session().getMedia().front().getProtocol() == "RTP/AVP");
-      tassert(sdp.session().getMedia().front().getFormats().front() == "0");
+      tassert(sdp.session().media().front().name() == "audio");
+      tassert(sdp.session().media().front().port() == 49172);
+      tassert(sdp.session().media().front().multicast() == 1);
+      tassert(sdp.session().media().front().protocol() == "RTP/AVP");
+      tassert(sdp.session().media().front().getFormats().front() == "0");
 
-      tassert(sdp.session().getMedia().front().getValue("rtpmap").front() == "0 PCMU/8000");
-      tassert(sdp.session().getMedia().front().exists("fuzzy") == false);
+      tassert(sdp.session().media().front().getValues("rtpmap").front() == "0 PCMU/8000");
+      tassert(sdp.session().media().front().exists("fuzzy") == false);
       tassert_verify(2);
       
    }
@@ -119,32 +119,32 @@ main(int argc, char* argv[])
       Mime type("application", "sdp");
       SdpContents sdp(&hfv, type);
       tassert_reset();
-      tassert(sdp.session().getVersion() == 0);
-      tassert(sdp.session().getOrigin().getUser() == "CiscoSystemsSIP-GW-UserAgent");
-      tassert(sdp.session().getOrigin().getSessionId() == "3559");
-      tassert(sdp.session().getOrigin().getVersion() == "3228");
-      tassert(sdp.session().getOrigin().getAddressType() == SdpContents::IP4);
-      tassert(sdp.session().getOrigin().getAddress() == "192.168.2.122");
+      tassert(sdp.session().version() == 0);
+      tassert(sdp.session().origin().user() == "CiscoSystemsSIP-GW-UserAgent");
+      tassert(sdp.session().origin().getSessionId() == 3559);
+      tassert(sdp.session().origin().getVersion() == 3228);
+      tassert(sdp.session().origin().getAddressType() == SdpContents::IP4);
+      tassert(sdp.session().origin().getAddress() == "192.168.2.122");
 
-      tassert(sdp.session().getName() == "SIP Call");
+      tassert(sdp.session().name() == "SIP Call");
 
       tassert(sdp.session().connection().getAddressType() == SdpContents::IP4);
       tassert(sdp.session().connection().getAddress() == "192.168.2.122");
-      tassert(sdp.session().connection().getTTL() == 0);
+      tassert(sdp.session().connection().ttl() == 0);
 
       tassert(sdp.session().getTimes().front().getStart() == 0);
       tassert(sdp.session().getTimes().front().getStop() == 0);
       tassert(sdp.session().getTimes().front().getRepeats().empty());
       tassert(sdp.session().getTimezones().getAdjustments().empty());
 
-      tassert(sdp.session().getMedia().front().getName() == "audio");
-      tassert(sdp.session().getMedia().front().getPort() == 17124);
-      tassert(sdp.session().getMedia().front().getMulticast() == 1);
-      tassert(sdp.session().getMedia().front().getProtocol() == "RTP/AVP");
-      tassert(sdp.session().getMedia().front().getFormats().front() == "18");
+      tassert(sdp.session().media().front().name() == "audio");
+      tassert(sdp.session().media().front().port() == 17124);
+      tassert(sdp.session().media().front().multicast() == 1);
+      tassert(sdp.session().media().front().protocol() == "RTP/AVP");
+      tassert(sdp.session().media().front().getFormats().front() == "18");
 
-      tassert(sdp.session().getMedia().front().getValue("rtpmap").front() == "18 G729/8000");
-      tassert(sdp.session().getMedia().front().exists("fuzzy") == false);
+      tassert(sdp.session().media().front().getValues("rtpmap").front() == "18 G729/8000");
+      tassert(sdp.session().media().front().exists("fuzzy") == false);
       tassert_verify(3);
    }
    
@@ -155,7 +155,7 @@ main(int argc, char* argv[])
       Data address("192.168.2.220");
       int port = 5061;
    
-      Vocal2::Data sessionId((unsigned long) tm);
+      unsigned long sessionId((unsigned long) tm);
    
       SdpContents::Session::Origin origin("-", sessionId, sessionId, SdpContents::IP4, address);
    
@@ -211,11 +211,11 @@ main(int argc, char* argv[])
       Mime type("application", "sdp");
       SdpContents sdp(&hfv, type);
 
-      tassert(sdp.session().getVersion() == 0);
-      tassert(sdp.session().getOrigin().getUser() == "alice");
-      tassert(!sdp.session().getMedia().empty());
+      tassert(sdp.session().version() == 0);
+      tassert(sdp.session().origin().user() == "alice");
+      tassert(!sdp.session().media().empty());
       //this fails, but should probably not parse(t before c not in sdp)
-      tassert(sdp.session().getMedia().front().getValue("rtpmap").front() == "0 PCMU/8000");
+      tassert(sdp.session().media().front().getValues("rtpmap").front() == "0 PCMU/8000");
       tassert_verify(5);
    }
    tassert_report();
