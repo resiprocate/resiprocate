@@ -1,5 +1,5 @@
-#ifndef Subsystem_hxx
-#define Subsystem_hxx
+#ifndef Vocal2_Subsystem_hxx
+#define Vocal2_Subsystem_hxx
 
 #include <iostream>
 #include "sip2/util/Data.hxx"
