@@ -49,6 +49,7 @@ class SdpContents : public Contents
                public:
                   Codec() : mName(), mRate(0), mPayloadType(-1) {}
                   Codec(const Data& name, unsigned long rate, const Data& parameters = Data::Empty);
+                  Codec(const Data& name, int payloadType, int rate=8000);
                   Codec(const Codec& rhs);
                   Codec& operator=(const Codec& codec);
 
