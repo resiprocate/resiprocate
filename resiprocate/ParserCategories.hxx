@@ -296,7 +296,12 @@ class Via : public ParserCategory
    public:
       enum {isCommaTokenizing = true};
 
-      Via() : ParserCategory(), mProtocolName(),mProtocolVersion(),mTransport(),mSentHost(),mSentPort(-1) {}
+      Via() : ParserCategory(), 
+              mProtocolName(Symbols::ProtocolName),
+              mProtocolVersion(Symbols::ProtocolVersion),
+              mTransport(Symbols::UDP),
+              mSentHost(),
+              mSentPort(-1) {}
       Via(HeaderFieldValue* hfv) : ParserCategory(hfv),mProtocolName(),mProtocolVersion(),mTransport(),mSentHost(),mSentPort(-1) {}
       Via(const Via&);
       Via& operator=(const Via&);
