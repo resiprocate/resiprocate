@@ -284,8 +284,14 @@ SipMessage::getContents() const
 {
    if (mContents == 0)
    {
-      if (!exists(h_ContentType) || mContentsHfv == 0)
+      if ( !exists(h_ContentType) )
       {
+         DebugLog(<< "SipMessage::getContents: ContentType header does not exist ");
+         return 0;
+      }
+      if ( mContentsHfv == 0)
+      {
+         DebugLog(<< "SipMessage::getContents: " << header(h_ContentType) << " not known ");
          return 0;
       }
       //DebugLog(<< "SipMessage::getContents: " << header(h_ContentType));

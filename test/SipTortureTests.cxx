@@ -434,7 +434,7 @@ test5()
       tassert(message->header(h_Vias).front().param(p_branch).clientData() == "");
 
       tassert(message->header(h_ContentType).type() == "application");
-      tassert(message->header(h_ContentType).type() == "sdp");
+      tassert(message->header(h_ContentType).subType() == "sdp");
 
       // .dlb. someday the body will gack on parse
    }
