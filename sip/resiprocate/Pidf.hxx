@@ -18,6 +18,7 @@ class Pidf : public Contents
       Pidf(const Mime& contentType);
       Pidf(HeaderFieldValue* hfv, const Mime& contentType);
       Pidf(const Pidf& rhs);
+      Pidf(const Uri& entity);
       virtual ~Pidf();
 
       Pidf& operator=(const Pidf& rhs);
