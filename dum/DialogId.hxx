@@ -12,7 +12,7 @@ class DialogId
    public:
       DialogId(const SipMessage& msg );
       DialogId(const Data& callId, const Data& localTag, const Data& remoteTag );
-      DialogId(const DialogSetId id, const Data& remoteTag );
+      DialogId(const DialogSetId& id, const Data& remoteTag );
       
       bool operator==(const DialogId& rhs) const;
       bool operator!=(const DialogId& rhs) const;
@@ -20,9 +20,9 @@ class DialogId
 
       const DialogSetId& getDialogSetId() const;
 
-      const Data& getCallId() const { return getDialogSetId().getCallId(); }
-      const Data& getLocalTag() const { return getDialogSetId().getLocalTag(); }
-      const Data& getRemoteTag() const { return mRemoteTag; }
+      const Data& getCallId() const;
+      const Data& getLocalTag() const;
+      const Data& getRemoteTag() const;
 
       size_t hash() const;
 

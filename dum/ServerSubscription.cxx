@@ -1,7 +1,14 @@
-#include "ServerSubscription.hxx"
-#include "Dialog.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 
 using namespace resip;
+
+ServerSubscriptionHandle 
+ServerSubscription::getHandle()
+{
+   return ServerSubscriptionHandle(mDum, getBaseHandle().getId());
+}
 
 ServerSubscription::ServerSubscription(DialogUsageManager& dum,
                                        Dialog& dialog,
@@ -13,16 +20,6 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
 ServerSubscription::~ServerSubscription()
 {
    mDialog.mServerSubscription = 0;
-}
-
-ServerSubscription::Handle::Handle(DialogUsageManager& dum)
-   : BaseUsage::Handle(dum)
-{}
-
-ServerSubscription*
-ServerSubscription::Handle::operator->()
-{
-   return static_cast<ServerSubscription*>(get());
 }
 
 void 

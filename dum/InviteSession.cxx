@@ -51,6 +51,12 @@ InviteSession::getRemoteSdp()
    return mCurrentRemoteSdp;
 }
 
+InviteSessionHandle 
+InviteSession::getSessionHandle()
+{
+   return InviteSessionHandle(mDum, getBaseHandle().getId());
+}
+
 void
 InviteSession::dispatch(const SipMessage& msg)
 {
@@ -267,17 +273,6 @@ InviteSession::copyAuthorizations(SipMessage& request)
    }
 #endif
 }
-
-InviteSession::Handle::Handle(DialogUsageManager& dum)
-   : BaseUsage::Handle(dum)
-{}
-
-InviteSession*
-InviteSession::Handle::operator->()
-{
-   return static_cast<InviteSession*>(get());
-}
-
 
 
 void InviteSession::makeAck(const SipMessage& response2xx)

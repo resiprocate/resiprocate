@@ -1,12 +1,13 @@
-#include "resiprocate/dum/InviteSessionHandler.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/SipStack.hxx"
+#include "resiprocate/dum/ClientAuthManager.hxx"
+#include "resiprocate/dum/ClientRegistration.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Subsystem.hxx"
-#include "resiprocate/dum/ClientAuthManager.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
@@ -17,7 +18,7 @@ class Client : public ClientRegistrationHandler
    public:
       Client() : done(false) {}
 
-      virtual void onSuccess(ClientRegistration::Handle h, const SipMessage& response)
+      virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
       {
 #ifdef WIN32
          Sleep(2000);
@@ -29,7 +30,7 @@ class Client : public ClientRegistrationHandler
           done = true;
       }
 
-      virtual void onFailure(ClientRegistration::Handle, const SipMessage& response)
+      virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)
       {
           InfoLog ( << "Client::Failure: " << response );
           done = true;
@@ -43,20 +44,20 @@ class RegistrationServer : public ServerRegistrationHandler
 {
    public:
       RegistrationServer() : done(false) {}
-      virtual void onRefresh(ServerRegistration::Handle, const SipMessage& reg)=0;
+      virtual void onRefresh(ServerRegistrationHandle, const SipMessage& reg)=0;
       
       /// called when one of the contacts is removed
-      virtual void onRemoveOne(ServerRegistration::Handle, const SipMessage& reg)=0;
+      virtual void onRemoveOne(ServerRegistrationHandle, const SipMessage& reg)=0;
       
       /// Called when all the contacts are removed 
-      virtual void onRemoveAll(ServerRegistration::Handle, const SipMessage& reg)=0;
+      virtual void onRemoveAll(ServerRegistrationHandle, const SipMessage& reg)=0;
       
       /// Called when a new contact is added. This is after authentication has
       /// all sucseeded
-      virtual void onAdd(ServerRegistration::Handle, const SipMessage& reg)=0;
+      virtual void onAdd(ServerRegistrationHandle, const SipMessage& reg)=0;
 
       /// Called when an registration expires 
-      virtual void onExpired(ServerRegistration::Handle, const NameAddr& contact)=0;
+      virtual void onExpired(ServerRegistrationHandle, const NameAddr& contact)=0;
 
    private:
       bool done;

@@ -27,6 +27,12 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    mLastRequest = request;
 }
 
+ClientInviteSessionHandle 
+ClientInviteSession::getHandle()
+{
+   return ClientInviteSessionHandle(mDum, getBaseHandle().getId());
+}
+
 void
 ClientInviteSession::dispatch(const SipMessage& msg)
 {
@@ -180,7 +186,7 @@ ClientInviteSession::end()
 {
    switch (mState)
    {
-      case Unknown:
+      case Initial:
          assert(0);
          return mLastRequest;
          
@@ -432,24 +438,6 @@ ClientInviteSession::sendAck(const SipMessage& ok)
       //mDialog.setContents(mProposedLocalSdp);
    }
    mDum.send(mAck);
-}
-
-
-ClientInviteSession::Handle::Handle(DialogUsageManager& dum)
-   : BaseUsage::Handle(dum)
-{}
-
-ClientInviteSession* 
-ClientInviteSession::Handle::operator->()
-{
-   return static_cast<ClientInviteSession*>(get());
-}
-
-InviteSession::Handle 
-ClientInviteSession::getSessionHandle()
-{
-   // don't ask, don't tell
-   return (InviteSession::Handle&)mHandle;
 }
 
 
