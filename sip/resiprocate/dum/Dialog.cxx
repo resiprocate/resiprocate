@@ -28,7 +28,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
    : mDum(dum),
      mDialogSet(ds),
      mClientSubscriptions(),
-     mServerSubscription(0),
+     mServerSubscriptions(),
      mInviteSession(0),
      mClientRegistration(0),
      mServerRegistration(0),
@@ -64,6 +64,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
          case SUBSCRIBE:
          case REFER:
          case NOTIFY:
+            //!dcm! -- event header check
             mType = Subscription;
             break;
 
@@ -210,12 +211,16 @@ Dialog::~Dialog()
    {
       delete *it;
    }
+   for(std::list<ServerSubscription*>::iterator it = mServerSubscriptions.begin(); 
+       it != mServerSubscriptions.end(); it++)
+   {
+      delete *it;
+   }
    for(std::list<ClientOutOfDialogReq*>::iterator it = mClientOutOfDialogRequests.begin(); 
        it != mClientOutOfDialogRequests.end(); it++)
    {
       delete *it;
    }
-   delete mServerSubscription;
    delete mInviteSession;
    delete mClientRegistration;
    delete mServerRegistration;
@@ -295,14 +300,21 @@ Dialog::dispatch(const SipMessage& msg)
 
          case SUBSCRIBE:
          case REFER: //!jf! does this create a server subs?
-            if (mServerSubscription == 0)
+         {
+            ServerSubscription* server = findMatchingServerSub(request);
+            if (server)
             {
-               mServerSubscription = makeServerSubscription(request);
+               server->dispatch(request);
             }
-               
-            mServerSubscription->dispatch(request);
-            break;
-               
+            else
+            {
+               //some checks here?
+               server = makeServerSubscription(request);
+               mServerSubscriptions.push_back(server);
+               server->dispatch(request);
+            }
+         }
+         break;
          case NOTIFY:
             if (request.header(h_To).exists(p_tag))
             {
@@ -508,8 +520,19 @@ Dialog::dispatch(const SipMessage& msg)
    }
 }
 
-
-
+ServerSubscription* 
+Dialog::findMatchingServerSub(const SipMessage& msg)
+{
+   for (std::list<ServerSubscription*>::iterator i=mServerSubscriptions.begin(); 
+        i != mServerSubscriptions.end(); ++i)
+   {
+      if ((*i)->matches(msg))
+      {
+         return *i;
+      }
+   }
+   return 0;
+}
 
 ClientSubscription* 
 Dialog::findMatchingClientSub(const SipMessage& msg)
@@ -541,7 +564,7 @@ Dialog::findMatchingClientOutOfDialogReq(const SipMessage& msg)
 
 
 InviteSessionHandle
-Dialog::findInviteSession()
+Dialog::getInviteSession()
 {
    if (mInviteSession)
    {
@@ -549,13 +572,45 @@ Dialog::findInviteSession()
    }
    else
    {
-      throw BaseUsage::Exception("no such invite session",
-                                 __FILE__, __LINE__);
+      return InviteSessionHandle::NotValid();
    }
 }
 
 std::vector<ClientSubscriptionHandle> 
-Dialog::findClientSubscriptions()
+Dialog::findClientSubscriptions(const Data& event)
+{
+   std::vector<ClientSubscriptionHandle> handles;
+   
+   for (std::list<ClientSubscription*>::const_iterator i = mClientSubscriptions.begin();
+        i != mClientSubscriptions.end(); ++i)
+   {
+      if ( (*i)->getEventType() == event)
+      {
+         handles.push_back((*i)->getHandle());
+      }
+   }
+   return handles;
+}
+
+std::vector<ServerSubscriptionHandle> 
+Dialog::findServerSubscriptions(const Data& event)
+{
+   std::vector<ServerSubscriptionHandle> handles;
+   
+   for (std::list<ServerSubscription*>::const_iterator i = mServerSubscriptions.begin();
+        i != mServerSubscriptions.end(); ++i)
+   {
+      if ( (*i)->getEventType() == event)
+      {
+         handles.push_back((*i)->getHandle());
+      }
+   }
+   return handles;
+}
+
+
+std::vector<ClientSubscriptionHandle> 
+Dialog::getClientSubscriptions()
 {
    std::vector<ClientSubscriptionHandle> handles;
    
@@ -568,8 +623,22 @@ Dialog::findClientSubscriptions()
    return handles;
 }
 
+std::vector<ServerSubscriptionHandle> 
+Dialog::getServerSubscriptions()
+{
+   std::vector<ServerSubscriptionHandle> handles;
+   
+   for (std::list<ServerSubscription*>::const_iterator i = mServerSubscriptions.begin();
+        i != mServerSubscriptions.end(); ++i)
+   {
+      handles.push_back((*i)->getHandle());
+   }
+
+   return handles;
+}
+
 ClientRegistrationHandle 
-Dialog::findClientRegistration()
+Dialog::getClientRegistration()
 {
    if (mClientRegistration)
    {
@@ -577,13 +646,12 @@ Dialog::findClientRegistration()
    }
    else
    {
-      throw BaseUsage::Exception("no such client registration",
-                                 __FILE__, __LINE__);
+      return ClientRegistrationHandle::NotValid();
    }
 }
 
 ServerRegistrationHandle 
-Dialog::findServerRegistration()
+Dialog::getServerRegistration()
 {
    if (mServerRegistration)
    {
@@ -591,13 +659,12 @@ Dialog::findServerRegistration()
    }
    else
    {
-      throw BaseUsage::Exception("no such server registration",
-                                 __FILE__, __LINE__);
+      return ServerRegistrationHandle::NotValid();
    }
 }
 
 ClientPublicationHandle 
-Dialog::findClientPublication()
+Dialog::getClientPublication()
 {
    if (mClientPublication)
    {
@@ -605,13 +672,12 @@ Dialog::findClientPublication()
    }
    else
    {
-      throw BaseUsage::Exception("no such client publication",
-                                 __FILE__, __LINE__);
+      return ClientPublicationHandle::NotValid();      
    }
 }
 
 ServerPublicationHandle 
-Dialog::findServerPublication()
+Dialog::getServerPublication()
 {
    if (mServerPublication)
    {
@@ -619,8 +685,7 @@ Dialog::findServerPublication()
    }
    else
    {
-      throw BaseUsage::Exception("no such server publication",
-                                 __FILE__, __LINE__);
+      return ServerPublicationHandle::NotValid();      
    }
 }
 
@@ -641,7 +706,7 @@ Dialog::findClientOutOfDialog()
 #endif
 
 ServerOutOfDialogReqHandle
-Dialog::findServerOutOfDialog()
+Dialog::getServerOutOfDialog()
 {
    if (mServerOutOfDialogRequest)
    {
@@ -649,8 +714,7 @@ Dialog::findServerOutOfDialog()
    }
    else
    {
-      throw BaseUsage::Exception("no such server out of dialog",
-                                 __FILE__, __LINE__);
+      return ServerOutOfDialogReqHandle::NotValid();
    }
 }
 
@@ -864,9 +928,9 @@ void Dialog::possiblyDie()
    if (!mDestroying)
    {
       if (mClientSubscriptions.empty() &&
+          mServerSubscriptions.empty() &&
           mClientOutOfDialogRequests.empty() &&
-          !(mServerSubscription ||
-            mInviteSession ||
+          !(mInviteSession ||
             mClientRegistration ||
             mServerRegistration ||
             mClientPublication ||
