@@ -52,6 +52,19 @@ main(int arc, char** argv)
 {
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
    {
+      TR _tr("Test assignment for NameAddr");
+      NameAddr original(Data("\"Original\"<sip:orig@example.com>;tag=original"));
+      (void)original.exists(p_tag);
+      // force parse
+      NameAddr newna(Data("\"new\"<sip:new@example.com>;tag=new"));
+      (void)newna.exists(p_tag);
+      cout << "original NameAddr: ->" << original << "<-"<< endl;
+      cout << "new NameAddr     : ->" << newna << "<-" << endl;
+      original = newna;
+      cout << "original : ->" << original << "<-"<< endl;
+      assert(Data::from(original) == Data::from(newna));
+   }
+   {
       TR _tr("Test typeless parameter copy");
       Token s;
       s.value() = "value";
