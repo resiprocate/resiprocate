@@ -104,12 +104,6 @@ DialogUsageManager::~DialogUsageManager()
    //InfoLog ( << "~DialogUsageManager done" );
 }
 
-bool 
-DialogUsageManager::isForMe(const SipMessage& msg) const
-{
-   return true;   
-}
-
 void
 DialogUsageManager::addTransport( TransportType protocol,
                                   int port,
