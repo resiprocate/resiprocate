@@ -18,4 +18,6 @@ int ares_local_query(ares_channel channel, const char *name, int dnsclass,
                       int type, ares_callback callback, void *arg);
 
 
+void ares_local_process_requests();
+
 #endif
