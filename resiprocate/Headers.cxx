@@ -154,6 +154,7 @@ typedef ParserContainer<IntegerCategory> IntegerCategories;
 defineHeader(ContentLength, "Content-Length", IntegerCategory);
 defineHeader(MaxForwards, "Max-Forwards", IntegerCategory);
 defineHeader(MinExpires, "Min-Expires", IntegerCategory);
+defineHeader(RSeq, "RSeq", IntegerCategory);
 
 // !dlb! this one is not quite right -- can have (comment) after field value
 defineHeader(RetryAfter, "Retry-After", IntegerCategory);
@@ -190,6 +191,11 @@ defineHeader(Date, "Date", DateCategory);
 // WarningCategory:
 //====================
 defineMultiHeader(Warning, "Warning", WarningCategory);
+
+//====================
+// RAckCategory
+//====================
+defineHeader(RAck, "RAck", RAckCategory);
 
 defineMultiHeader(Via, "Via", Via);
 
