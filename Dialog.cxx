@@ -42,15 +42,31 @@ Dialog::makeResponse(const SipMessage& request, int code)
       assert (request.header(h_Contacts).size() == 1);
 
       SipMessage* response = Helper::makeResponse(request, code, mContact);
-      mRouteSet = request.header(h_RecordRoutes);
+      if (request.exists(h_RecordRoutes))
+      {
+         mRouteSet = request.header(h_RecordRoutes);
+      }
+
+      if (!request.exists(h_Contacts) && request.header(h_Contacts).size() != 1)
+      {
+         InfoLog (<< "Request doesn't have a contact header or more than one contact, so can't create dialog");
+         DebugLog (<< request);
+         throw Exception("Invalid or missing contact header in request", __FILE__,__LINE__);
+      }
+
       mRemoteTarget = request.header(h_Contacts).front();
       mRemoteSequence = request.header(h_CSeq).sequence();
       mRemoteEmpty = false;
       mLocalSequence = 0;
       mLocalEmpty = true;
       mCallId = request.header(h_CallId);
-      mLocalTag = response->header(h_To).param(p_tag); // from response
-      mRemoteTag = request.header(h_From).param(p_tag); 
+      assert (response->header(h_To).exists(p_tag));
+      mLocalTag = response->header(h_To).param(p_tag); // from response 
+      if (request.header(h_From).exists(p_tag))  // 2543 compat
+      {
+         mRemoteTag = request.header(h_From).param(p_tag); 
+      }
+      
       mRemoteUri = request.header(h_From);
       mLocalUri = request.header(h_To);
 
@@ -60,8 +76,6 @@ Dialog::makeResponse(const SipMessage& request, int code)
 
       mCreated = true;
 
-      //DebugLog(<< "Created dialog establishing response: " << *response);
-      DebugLog(<< "CallId: " << mCallId);
       return response;
    }
    else
@@ -78,29 +92,37 @@ Dialog::makeResponse(const SipMessage& request, int code)
 
 
 void 
-Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
+Dialog::createDialogAsUAC(const SipMessage& response)
 {
    if (!mCreated)
    {
-      assert(request.isRequest());
       assert(response.isResponse());
-      assert(request.header(h_RequestLine).getMethod() == INVITE ||
-             request.header(h_RequestLine).getMethod() == SUBSCRIBE);
-      assert (request.header(h_Contacts).size() == 1);
+
+      if ( !response.exists(h_Contacts) && response.header(h_Contacts).size() != 1)
+      {
+         InfoLog (<< "Response doesn't have a contact header or more than one contact, so can't create dialog");
+         DebugLog (<< response);
+         throw Exception("Invalid or missing contact header in message", __FILE__,__LINE__);
+      }
 
       // reverse order from response
       mRouteSet = response.header(h_RecordRoutes).reverse();
-
       mRemoteTarget = response.header(h_Contacts).front();
       mRemoteSequence = 0;
       mRemoteEmpty = true;
-      mLocalSequence = request.header(h_CSeq).sequence();
+      mLocalSequence = response.header(h_CSeq).sequence();
       mLocalEmpty = false;
-      mCallId = request.header(h_CallId);
-      mLocalTag = response.header(h_From).param(p_tag);  
-      mRemoteTag = response.header(h_To).param(p_tag); 
-      mRemoteUri = request.header(h_To);
-      mLocalUri = request.header(h_From);
+      mCallId = response.header(h_CallId);
+      if ( response.header(h_From).exists(p_tag) ) // 2543 compat
+      {
+          mLocalTag = response.header(h_From).param(p_tag);  
+      }
+      if ( response.header(h_To).exists(p_tag) )  // 2543 compat
+      {
+          mRemoteTag = response.header(h_To).param(p_tag); 
+      }
+      mRemoteUri = response.header(h_To);
+      mLocalUri = response.header(h_From);
 
       mDialogId = mCallId;
       mDialogId.param(p_toTag) = mLocalTag;
@@ -112,50 +134,17 @@ Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
 
 
 void 
-Dialog::createDialogAsUAC(const SipMessage& response)
-{
-   if (!mCreated)
-   {
-      assert(response.isResponse());
-
-      // reverse order from response
-      mRouteSet = response.header(h_RecordRoutes).reverse();
-
-      if ( response.exists(h_Contacts) )
-      {
-         mRemoteTarget = response.header(h_Contacts).front();
-      }
-      mRemoteSequence = 0;
-      mRemoteEmpty = true;
-      mLocalSequence = response.header(h_CSeq).sequence();
-      mLocalEmpty = false;
-      mCallId = response.header(h_CallId);
-      if ( response.header(h_From).exists(p_tag) )
-      {
-          mLocalTag = response.header(h_From).param(p_tag);  
-      }
-      if ( response.header(h_To).exists(p_tag) )
-      {
-          mRemoteTag = response.header(h_To).param(p_tag); 
-      }
-      mRemoteUri = response.header(h_To);
-      mLocalUri = response.header(h_From);
-
-      mDialogId = mCallId;
-      mDialogId.param(p_toTag) = mRemoteTag;
-      mDialogId.param(p_fromTag) = mLocalTag;
-
-      mCreated = true;
-   }
-}
-
-
-void 
 Dialog::targetRefreshResponse(const SipMessage& response)
 {
-   if (response.header(h_Contacts).size() == 1)
+   if (response.exists(h_Contacts) && response.header(h_Contacts).size() == 1)
    {
       mRemoteTarget = response.header(h_Contacts).front();
+   }
+   else
+   {
+      InfoLog (<< "Response doesn't have a contact header or more than one contact, so can't create dialog");
+      DebugLog (<< response);
+      throw Exception("Invalid or missing contact header in message", __FILE__,__LINE__);
    }
 }
 
@@ -182,9 +171,15 @@ Dialog::targetRefreshRequest(const SipMessage& request)
          mRemoteSequence = cseq;
       }
 
-      if (request.header(h_Contacts).size() == 1)
+      if (request.exists(h_Contacts) && request.header(h_Contacts).size() == 1)
       {
          mRemoteTarget = request.header(h_Contacts).front();
+      }
+      else
+      {
+         InfoLog (<< "Request doesn't have a contact header or more than one contact, so can't create dialog");
+         DebugLog (<< request);
+         throw Exception("Invalid or missing contact header in message", __FILE__,__LINE__);
       }
    }
    
@@ -202,6 +197,7 @@ Dialog::makeInitialRegister(const NameAddr& registrar,
    mLocalEmpty = false;
    mLocalSequence = msg->header(h_CSeq).sequence();
    mCallId = msg->header(h_CallId);
+   assert(msg->header(h_From).exists(p_tag));
    mLocalTag = msg->header(h_From).param(p_tag);  
    mRemoteUri = msg->header(h_To);
    mLocalUri = msg->header(h_From);
@@ -222,6 +218,7 @@ Dialog::makeInitialSubscribe(const NameAddr& target,
    mLocalEmpty = false;
    mLocalSequence = msg->header(h_CSeq).sequence();
    mCallId = msg->header(h_CallId);
+   assert(msg->header(h_From).exists(p_tag));
    mLocalTag = msg->header(h_From).param(p_tag);  
    mRemoteUri = msg->header(h_To);
    mLocalUri = msg->header(h_From);
@@ -240,6 +237,7 @@ Dialog::makeInitialInvite(const NameAddr& target,
    mLocalEmpty = false;
    mLocalSequence = msg->header(h_CSeq).sequence();
    mCallId = msg->header(h_CallId);
+   assert(msg->header(h_From).exists(p_tag));
    mLocalTag = msg->header(h_From).param(p_tag);  
    mRemoteUri = msg->header(h_To);
    mLocalUri = msg->header(h_From);
@@ -409,7 +407,7 @@ Dialog::makeRequest(MethodTypes method)
    request->header(h_From) = mLocalUri;
    if ( !mLocalTag.empty() )
    {
-      request->header(h_From).param(p_tag) = mLocalTag; // !jf! may not be necessary
+      request->header(h_From).param(p_tag) = mLocalTag; 
    }
    request->header(h_CallId) = mCallId;
    request->header(h_Routes) = mRouteSet;
