@@ -577,6 +577,7 @@ ParseBuffer::integer()
    return signum*num;
 }
 
+//!dcm! -- merge these, ask about length checks
 unsigned long
 ParseBuffer::unsignedInteger()
 {
@@ -606,6 +607,36 @@ ParseBuffer::unsignedInteger()
    
    return num;
 }
+
+unsigned long long
+ParseBuffer::unsignedLongLong()
+{
+   if (this->eof())
+   {
+
+      fail(__FILE__, __LINE__,"Expected a digit, got eof ");
+   }
+
+   const char* p = mPosition;
+   assert(p);
+   char c = *p;
+
+   if (!isdigit(c))
+   {
+      Data msg("Expected a digit, got: ");
+      msg += Data(mPosition, (mEnd - mPosition));
+      fail(__FILE__, __LINE__,msg);
+   }
+   
+   unsigned int num = 0;
+   while (!eof() && isdigit(*mPosition))
+   {
+      num = num*10 + (*mPosition-'0');
+      skipChar();
+   }   
+   return num;
+}
+
 
 float
 ParseBuffer::floatVal()
