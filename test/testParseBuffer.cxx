@@ -100,6 +100,26 @@ main(int argc, char** argv)
    }
 
    {
+      char buf[] = "123456789";
+      ParseBuffer pb(buf, strlen(buf));
+      pb.skipN(9);
+      assert(pb.eof());
+   }
+
+   {
+      char buf[] = "123456789";
+      ParseBuffer pb(buf, strlen(buf));
+      try
+      {
+         char foo = *pb.skipN(9);
+         (void)foo;
+         assert(0);
+      }
+      catch (ParseBuffer::Exception& e)
+      {}
+   }
+
+   {
       char buf[] = "Here is a \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
       pb.skipToChars("some");
