@@ -27,6 +27,7 @@ class TimerMessage : public Message
       }
 
       virtual Data brief() const;
+      virtual ostream& dump(ostream& strm) const;
       
    private:
       Data mTransactionId;

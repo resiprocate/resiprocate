@@ -13,7 +13,7 @@ void
 TransactionState::process(SipStack& stack)
 {
    Message* message = stack.mStateMacFifo.getNext();
-   DebugLog (<< "got message out of state machine fifo: " << message);
+   DebugLog (<< "got message out of state machine fifo: " << *message);
    
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
    TimerMessage* timer=0;
@@ -52,6 +52,7 @@ TransactionState::process(SipStack& stack)
    }
    else // new transaction
    {
+      DebugLog (<< "Create new transaction for msg " << *state);
       if (sip)
       {
          if (sip->isRequest())
@@ -282,9 +283,10 @@ TransactionState::isTranportError(Message* msg) const
    return false; // !jf!
 }
 
-ostream& 
-operator<<(ostream& strm, const TransactionState& state)
+std::ostream& 
+Vocal2::operator<<(std::ostream& strm, const Vocal2::TransactionState& state)
 {
-   strm << "Tstate[ mMach=" << mMachine <<  " mState=" 
-        << mState << " mIsRel=" << mIsReliable << endl;
+   strm << "Tstate[ mMach=" << state.mMachine <<  " mState=" 
+        << state.mState << " mIsRel=" << state.mIsReliable;
+   return strm;
 }
