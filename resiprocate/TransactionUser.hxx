@@ -13,6 +13,25 @@ class TransactionUser
    public:
       void post(Message *);
 
+
+      class MessageFilterRule
+      {
+         public:
+            bool matches();
+         private:
+            bool schemeIsInList(Data scheme);            
+            bool hostpartIsInList(Data hostpart);            
+               
+            typedef vector<Data> SchemeList;
+            SchemeList mSchemeList;
+            int mHostpartMatches // ANY, HOSTISME, DOMAINISME, or LIST
+            typedef vector<Data> HostpartList;
+            HostpartList mHostpartList;
+            typedef vector<Data> EventTypeList;
+            EventTypeList mEventTypeList;
+            bool mAnyEventType;
+            bool mAcceptWinfoTypes; // matches *.winfo  ?? do we nned this ??
+      };
    protected:
       TransactionUser();
       virtual ~TransactionUser()=0;
