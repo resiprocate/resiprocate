@@ -10,7 +10,7 @@
 #include <iostream>
 #include <memory>
 
-#include "resiprocate/Dialog.hxx"
+#include "resiprocate/DeprecatedDialog.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -97,7 +97,7 @@ main(int argc, char* argv[])
                   DebugLog(<< "Creating dialog.");
                   done[user]=true;
                
-                  Dialog dlog(from);
+                  DeprecatedDialog dlog(from);
                
                   DebugLog(<< "Creating dialog as UAC.");
                   dlog.createDialogAsUAC(*received1);

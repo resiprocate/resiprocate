@@ -18,11 +18,10 @@
 #include <memory>
 
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/Dialog.hxx"
+#include "resiprocate/DeprecatedDialog.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TuIM.hxx"
 #include "resiprocate/Contents.hxx"
-#include "resiprocate/Dialog.hxx"
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/PlainContents.hxx"
 #include "resiprocate/CpimContents.hxx"
@@ -141,7 +140,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
    NameAddr contact;
    contact.uri() = mContact;
 
-   Dialog* dialog = new Dialog( NameAddr(mContact) );
+   DeprecatedDialog* dialog = new DeprecatedDialog( NameAddr(mContact) );
  
    auto_ptr<SipMessage> msg( dialog->makeInitialMessage(NameAddr(target),NameAddr(from)) );
  
@@ -373,12 +372,12 @@ TuIM::processSubscribeRequest(SipMessage* msg)
       expires = mSubscriptionTimeSeconds;
    }
    
-   Dialog* dialog = NULL;
+   DeprecatedDialog* dialog = NULL;
 
    // see if we already have this subscription
    for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {
-      Dialog* d = i->dialog;
+      DeprecatedDialog* d = i->dialog;
       assert( d );
       
       if ( d->getCallId() == id )
@@ -396,7 +395,7 @@ TuIM::processSubscribeRequest(SipMessage* msg)
 
       Subscriber s;
       
-      s.dialog = new Dialog( NameAddr(mContact) );
+      s.dialog = new DeprecatedDialog( NameAddr(mContact) );
       dialog = s.dialog;
       
       Uri from = msg->header(h_From).uri();
@@ -822,7 +821,7 @@ TuIM::processResponse(SipMessage* msg)
    // see if it is a notify response
    for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {
-      Dialog* dialog = i->dialog;
+      DeprecatedDialog* dialog = i->dialog;
       assert( dialog );
       InfoLog( << "check subscriber id =" <<  dialog->getCallId() );
       if ( dialog->getCallId() == id  )
@@ -952,7 +951,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
 
 
 void 
-TuIM::processNotifyResponse(SipMessage* msg, Dialog& d )
+TuIM::processNotifyResponse(SipMessage* msg, DeprecatedDialog& d )
 { 
    int number = msg->header(h_StatusLine).responseCode();
    DebugLog( << "got NOTIFY response of type " << number );
@@ -1271,7 +1270,7 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
    buddy.online = false;
    buddy.status = Data::Empty;
    buddy.group = group;
-   buddy.presDialog = new Dialog( NameAddr(mContact) );
+   buddy.presDialog = new DeprecatedDialog( NameAddr(mContact) );
    assert( buddy.presDialog );
    
    mBuddies.push_back( buddy );
@@ -1305,7 +1304,7 @@ TuIM::removeBuddy( const Uri& name)
 
 
 void 
-TuIM::sendNotify(Dialog* dialog)
+TuIM::sendNotify(DeprecatedDialog* dialog)
 { 
    assert( dialog );
    
@@ -1363,7 +1362,7 @@ TuIM::setMyPresence( const bool open, const Data& status, const Data& user  )
    
    for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {
-      Dialog* dialog = i->dialog;
+      DeprecatedDialog* dialog = i->dialog;
       assert( dialog );
       
       sendNotify(dialog);
@@ -1447,7 +1446,7 @@ TuIM::addStateAgent( const Uri& uri )
 {
    StateAgent sa;
    
-   sa.dialog = new  Dialog( NameAddr(mContact) );
+   sa.dialog = new  DeprecatedDialog( NameAddr(mContact) );
    sa.uri = uri;
    
    mStateAgents.push_back( sa );
