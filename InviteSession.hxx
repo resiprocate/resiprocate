@@ -53,6 +53,9 @@ class InviteSession : public DialogUsage
       bool isConnected() const;
       bool isTerminated() const;
       bool isEarly() const;
+
+      virtual std::ostream& dump(std::ostream& strm) const;
+
       
       typedef enum
       {

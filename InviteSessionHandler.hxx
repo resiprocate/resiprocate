@@ -75,8 +75,8 @@ class InviteSessionHandler
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg)=0;
       
       /// called when some state in the Dialog changes - typically remoteURI, or
-      /// a re-invite
-      virtual void onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
+      /// a re-invite. This is no longer necessary - use onOfferRequired and onOffer
+      //virtual void onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
 
       /// called when INFO message is received 
       virtual void onInfo(InviteSessionHandle, const SipMessage& msg)=0;

@@ -146,6 +146,16 @@ InviteSession::isTerminated() const
    }
 }
 
+std::ostream& 
+InviteSession::dump(std::ostream& strm) const
+{
+   strm << "INVITE: " << mId 
+        << " " << toData(mState)
+        << " ADDR=" << myAddr() 
+        << " PEER=" << peerAddr();
+   return strm;
+}
+
 
 void
 InviteSession::provideOffer(const SdpContents& offer)
@@ -499,7 +509,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case OnInviteReliable:
          mLastSessionModification = msg;
          transition(ReceivedReinviteNoOffer);
-         handler->onDialogModified(getSessionHandle(), None, msg);
+         //handler->onDialogModified(getSessionHandle(), None, msg);
          handler->onOfferRequired(getSessionHandle(), msg);
          break;
          
@@ -507,7 +517,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case OnInviteReliableOffer:
          mLastSessionModification = msg;
          transition(ReceivedReinvite);
-         handler->onDialogModified(getSessionHandle(), Offer, msg);
+         //handler->onDialogModified(getSessionHandle(), Offer, msg);
          handler->onOffer(getSessionHandle(), msg, sdp);
          break;
          
