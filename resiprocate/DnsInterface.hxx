@@ -25,6 +25,11 @@ class Via;
 class DnsInterface
 {
    public:
+      typedef const Data (TransportArray)[Transport::MAX_TRANSPORT];
+      static TransportArray UdpOnly;
+      static TransportArray TcpAndUdp;
+      static TransportArray AllTransports; // TCP, UDP, TLS
+
       class Exception : public BaseException
       {
          public:
@@ -53,7 +58,10 @@ class DnsInterface
       virtual ~DnsInterface()=0;
       
       // set the supported set of types that a UAC wishes to use
-      void setSupportedTypes(std::set<Transport::Type>& supported);
+      void setSupportedTransports(const TransportArray& transports);
+      
+      // return if the client supports the specified service (e.g. SIP+D2T)
+      bool isSupported(const Data& service);
       
       // adds the appropriate file descriptors to the fdset to allow a
       // select/poll call to be made 
@@ -83,8 +91,7 @@ class DnsInterface
       // When complete or partial results are ready, call Handler::process()
       // For synchronous DnsInterface, set to 0
       Handler* mHandler;
-      std::set<Transport::Type> mSupportedTransports;
-      bool mSupportTLS;
+      TransportArray* mSupportedTransports;
       
 #if defined(USE_ARES)
       ares_channel mChannel;
