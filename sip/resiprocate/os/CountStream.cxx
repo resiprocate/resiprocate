@@ -6,9 +6,10 @@ static const int BuffSize(2048);
 // singleton buffer -- not really used
 static char Buffer[BuffSize];
 
-CountBuffer::CountBuffer()
-   : mCount(0)
+CountBuffer::CountBuffer(size_t& count)
+   : mCount(count)
 {
+   mCount = 0;
    setp(Buffer, Buffer+BuffSize);
 }
 
@@ -40,15 +41,17 @@ CountBuffer::overflow(int c)
    return 0;
 }
 
-CountStream::CountStream()
+CountStream::CountStream(size_t& count)
    : std::ostream(&mStreamBuf),
-     mStreamBuf()
+     mStreamBuf(count)
 {
    //init(&mStreamBuf);
 }
 
 CountStream::~CountStream()
-{}
+{
+   flush();
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
