@@ -165,12 +165,15 @@ SipMessage::brief() const
    
    if (isRequest()) 
    {
-      result += "Request: ";
+      result += "SipRequest: ";
+      MethodTypes meth = header(h_RequestLine).getMethod();
+      result += (meth != UNKNOWN) ? MethodNames[meth] : Data( "UNKONW" );
+      result += Data( " " );
       result += header(h_RequestLine).uri().getAor();
    }
    else if (isResponse())
    {
-      result += "Response: ";
+      result += "SipResponse: ";
       result += Data(header(h_StatusLine).responseCode());
    }
 
