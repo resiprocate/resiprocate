@@ -10,13 +10,13 @@ ServerPublication::getHandle()
    return ServerPublicationHandle(mDum, getBaseHandle().getId());
 }
 
-ServerPublication::ServerPublication(DialogUsageManager& dum,  Dialog& dialog, const SipMessage&)
-   : BaseUsage(dum, dialog)
+ServerPublication::ServerPublication(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage&)
+   : NonDialogUsage(dum, dialogSet)
 {}
 
 ServerPublication::~ServerPublication()
 {
-   mDialog.mServerPublication = 0;
+   mDialogSet.mServerPublication = 0;
 }
 
 void 
