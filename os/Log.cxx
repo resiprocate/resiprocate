@@ -102,7 +102,7 @@ Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm)
 #ifdef WIN32
 	strm << _descriptions[level] << DELIM
         << timestamp() << DELIM
-        << subsystem DELIM ;
+        << subsystem << DELIM ;
 #else   
      strm << _descriptions[level] << DELIM
         << timestamp() << DELIM  
