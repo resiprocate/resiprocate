@@ -823,6 +823,9 @@ Helper::addAuthorization(SipMessage& request,
 Uri
 Helper::makeUri(const Data& aor, const Data& scheme)
 {
+   assert(!aor.prefix("sip:"));
+   assert(!aor.prefix("sips:"));
+   
    Data tmp(aor.size() + scheme.size() + 1, true);
    tmp += scheme;
    tmp += Symbols::COLON;
@@ -872,7 +875,7 @@ Helper::getPortForReply(SipMessage& request)
 Uri 
 Helper::fromAor(const Data& aor, const Data& scheme)
 {
-   return Uri(scheme + Symbols::COLON + aor);
+   return makeUri(aor, scheme);
 }
 
 bool
