@@ -3,6 +3,8 @@
 
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/Handled.hxx"
+#include "resiprocate/dum/DialogId.hxx"
+
 
 #include <vector>
 
@@ -20,7 +22,7 @@ class AppDialog : public Handled
       virtual ~AppDialog();
 
       AppDialogHandle getHandle();
-      
+      DialogId getDialogId() const;
 
       //?dcm? -- further evidence that this should possbily be a dialog
       //subclass(cancel gets tricky). List vs vector?(here and in Dialog)
