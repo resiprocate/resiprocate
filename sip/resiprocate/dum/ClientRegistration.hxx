@@ -42,7 +42,7 @@ class ClientRegistration: public BaseUsage
       SipMessage& mLastRequest;
       NameAddrs mMyContacts; // Contacts that this UA is requesting 
       NameAddrs mAllContacts; // All the contacts Register knows about 
-      UInt64    mExpirationTime;
+//      UInt64    mExpirationTime;
       int mTimerSeq; // expected timer seq (all < are stale)
 
       // disabled
