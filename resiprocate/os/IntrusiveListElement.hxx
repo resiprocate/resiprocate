@@ -82,9 +82,9 @@ class IntrusiveListElement
          assert(mPrev);
          assert(mNext);
 
-         return mNext == static_cast<P>(const_cast<IntrusiveListElement<P>*>(this));
+         return static_cast<const IntrusiveListElement<P>*>(mNext) == static_cast<const IntrusiveListElement<P>*>(this);
       }
-
+      
       // .dlb. add reverse_iterator?
 
       class iterator
@@ -219,7 +219,7 @@ class IntrusiveListElement1
          assert(mPrev);
          assert(mNext);
 
-         return mNext == static_cast<P>(const_cast<IntrusiveListElement1<P>*>(this));
+         return static_cast<const IntrusiveListElement1<P>*>(mNext) == static_cast<const IntrusiveListElement1<P>*>(this);
       }
 
       // .dlb. add reverse_iterator?
@@ -356,7 +356,7 @@ class IntrusiveListElement2
          assert(mPrev);
          assert(mNext);
 
-         return mNext == static_cast<P>(const_cast<IntrusiveListElement2<P>*>(this));
+         return static_cast<const IntrusiveListElement2<P>*>(mNext) == static_cast<const IntrusiveListElement2<P>*>(this);
       }
 
       // .dlb. add reverse_iterator?
