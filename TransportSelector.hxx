@@ -67,8 +67,6 @@ class TransportSelector
       
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
-
-      friend class DnsResolver;
 };
 
 }

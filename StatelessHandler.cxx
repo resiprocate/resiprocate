@@ -6,7 +6,6 @@
 #include "resiprocate/os/DnsUtil.hxx"
 
 #include "resiprocate/TransportSelector.hxx"
-#include "resiprocate/DnsResolver.hxx"
 #include "resiprocate/DnsResult.hxx"
 #include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TransactionController.hxx"
