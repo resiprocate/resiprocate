@@ -62,7 +62,8 @@ Transport::socket(TransportType type, bool ipv4)
    
    if ( fd == INVALID_SOCKET )
    {
-      InfoLog (<< "Failed to create socket: " << strerror(errno));
+	   	int e = getErrno();
+      InfoLog (<< "Failed to create socket: " << strerror(e));
       throw Exception("Can't create TcpBaseTransport", __FILE__,__LINE__);
    }
 
@@ -114,7 +115,8 @@ Transport::bind()
    
    if ( ::bind( mFd, &mBoundInterface, sizeof(mBoundInterface)) == SOCKET_ERROR )
    {
-      if ( errno == EADDRINUSE )
+	   	int e = getErrno();
+      if ( e == EADDRINUSE )
       {
          ErrLog (<< "port " << mPort << " already in use");
          throw Exception("port already in use", __FILE__,__LINE__);
@@ -135,30 +137,30 @@ Transport::bind()
 }
 
 void
-Transport::error()
+Transport::error(int e)
 {
-   switch (errno)
+   switch (e)
    {
       case EAGAIN:
-         //InfoLog (<< "No data ready to read" << strerror(errno));
+         //InfoLog (<< "No data ready to read" << strerror(e));
          break;
       case EINTR:
-         InfoLog (<< "The call was interrupted by a signal before any data was read : " << strerror(errno));
+         InfoLog (<< "The call was interrupted by a signal before any data was read : " << strerror(e));
          break;
       case EIO:
-         InfoLog (<< "I/O error : " << strerror(errno));
+         InfoLog (<< "I/O error : " << strerror(e));
          break;
       case EBADF:
-         InfoLog (<< "fd is not a valid file descriptor or is not open for reading : " << strerror(errno));
+         InfoLog (<< "fd is not a valid file descriptor or is not open for reading : " << strerror(e));
          break;
       case EINVAL:
-         InfoLog (<< "fd is attached to an object which is unsuitable for reading : " << strerror(errno));
+         InfoLog (<< "fd is attached to an object which is unsuitable for reading : " << strerror(e));
          break;
       case EFAULT:
-         InfoLog (<< "buf is outside your accessible address space : " << strerror(errno));
+         InfoLog (<< "buf is outside your accessible address space : " << strerror(e));
          break;
       default:
-         InfoLog (<< "Some other error : " << strerror(errno));
+         InfoLog (<< "Some other error (" << e << "): " << strerror(e));
          break;
    }
 }
