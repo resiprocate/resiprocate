@@ -135,9 +135,10 @@ accept method. Finially when it wishes to end the call it calls the end
 method. If the other side ends the call, the onTerminated callback will get
 called. 
 </para>
+
+<para>
 INFO messages can be received in the dialog with the onInfo callback. Refer is
 a topic all on it's own and covered later in this document. 
-<para>
 </para>
 
 </sect1>
