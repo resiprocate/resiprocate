@@ -7,10 +7,10 @@
 namespace Vocal2
 {
 
-class SysLogStream : public ostream
+class SysLogStream : public std::ostream
 {
    public:
-      SysLogStream() : ostream (_buf = new SysLogBuf) 
+      SysLogStream() : std::ostream (_buf = new SysLogBuf) 
       {
       }
 

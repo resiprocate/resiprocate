@@ -43,21 +43,21 @@ GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, arg__, ##args__)
 #endif
 
 // do/while allows a {} block in an expression
-#define GenericLog(system__, level__, arg__, args__...)          \
-do                                                               \
-{                                                                \
-  if (Vocal2::GenericLogImpl::isLogging(level__))                 \
-  {                                                              \
-     Vocal2::Lock lock(Vocal2::Log::_mutex);              \
-     if (Vocal2::GenericLogImpl::isLogging(level__))              \
-     {                                                           \
-        Vocal2::Log::tags(level__, system__,                      \
-                          Vocal2::GenericLogImpl::Instance())     \
-          << __FILE__ << ':' << __LINE__ << DELIM                \
-                  /* eat the comma if no extra arguments */      \
-          arg__ , ##args__ << endl;                              \
-     }                                                           \
-  }                                                              \
+#define GenericLog(system__, level__, arg__, args__...)         \
+do                                                              \
+{                                                               \
+  if (Vocal2::GenericLogImpl::isLogging(level__))               \
+  {                                                             \
+     Vocal2::Lock lock(Vocal2::Log::_mutex);                    \
+     if (Vocal2::GenericLogImpl::isLogging(level__))            \
+     {                                                          \
+        Vocal2::Log::tags(level__, system__,                    \
+                          Vocal2::GenericLogImpl::Instance())   \
+          << __FILE__ << ':' << __LINE__ << DELIM               \
+                  /* eat the comma if no extra arguments */     \
+          arg__ , ##args__ << std::endl;                        \
+     }                                                          \
+  }                                                             \
 } while (0)
 
 namespace Vocal2
@@ -70,7 +70,7 @@ class GenericLogImpl : public Loki::SingletonHolder <SysLogStream,
                        public Log 
 {
    public:
-      static ostream& Instance()
+      static std::ostream& Instance()
       {
          if (Log::_type == Log::SYSLOG)
          {
@@ -83,7 +83,7 @@ class GenericLogImpl : public Loki::SingletonHolder <SysLogStream,
          }
          else
          {
-            return cout;
+            return std::cout;
          }
       }
       
