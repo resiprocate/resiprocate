@@ -24,7 +24,7 @@ class ServerInviteSession: public InviteSession
       void provisional(int statusCode);
       
       /// Rejects an INVITE with a response like 3xx,4xx,5xx, or 6xx. 
-      void reject(int statusCode);
+      virtual void reject(int statusCode);
 
 
       // Inherited methods follow
