@@ -1,6 +1,9 @@
 #ifndef SipMessage_hxx
 #define SipMessage_hxx
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include <list>
 #include <vector>
 #include <utility>
@@ -103,7 +106,7 @@ class SipMessage : public Message
                      char* start, int len);
 
 
-      void addSource(const sockaddr_in& addr);
+      void addSource(const sockaddr* addr);
       
       bool hasFixedDest() const;
       Data getFixedDest() const;
