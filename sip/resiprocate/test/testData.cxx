@@ -6,15 +6,22 @@
 using namespace Vocal2;
 using namespace std;
 
-
-
-
 // for friends
 class TestData
 {
    public:
       void main()
       {
+         {
+            Data d("012345");
+            assert(d[0] == '0');
+            assert(d[1] == '1');
+            assert(d[2] == '2');
+            assert(d[3] == '3');
+            assert(d[4] == '4');
+            assert(d[5] == '5');
+         }
+
          {
             Data *d = new Data("origin",6);
             {
