@@ -1,74 +1,94 @@
-#if !defined(RESIP_PIDF_HXX)
-#define RESIP_PIDF_HXX 
-
-#include <vector>
-
-#include "resiprocate/Contents.hxx"
+#include "HeapInstanceCounter.hxx"
+#include "resiprocate/os/Mutex.hxx"
+#include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/HeapInstanceCounter.hxx"
 
-namespace resip
+#include <assert.h>
+#include <map>
+
+using namespace std;
+using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::STATS
+
+namespace   //  unnamed namespace
 {
-
-class Pidf : public Contents
+struct InstanceCounts
 {
-   public:
-      RESIP_HeapCount(Pidf);
-      Pidf();
-      Pidf(const Mime& contentType);
-      Pidf(HeaderFieldValue* hfv, const Mime& contentType);
-      Pidf(const Pidf& rhs);
-      explicit Pidf(const Uri& entity);
-      virtual ~Pidf();
+      InstanceCounts()
+         : total(0),
+           outstanding(0)
+      {}
 
-      Pidf& operator=(const Pidf& rhs);
-      virtual Contents* clone() const;
-      static const Mime& getStaticType() ;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-      virtual void parse(ParseBuffer& pb);
-
-      void setSimpleId(const Data& id);
-      void setEntity(const Uri& entity);
-      const Uri& getEntity() const;
-      void setSimpleStatus(bool online, const Data& note = Data::Empty, 
-                           const Data& contact = Data::Empty);
-      bool getSimpleStatus(Data* note=NULL) const;
-      
-      class Tuple
-      {
-         public:
-            bool status;
-            Data id;
-            Data contact;
-            float contactPriority;
-            Data note;
-            Data timeStamp;
-            HashMap<Data, Data> attributes;
-      };
-
-      std::vector<Tuple>& getTuples();
-      const std::vector<Tuple>& getTuples() const;
-      int getNumTuples() const;
-
-      // combine tuples
-      void merge(const Pidf& other);
-
-      static bool init();   
-   
-   private:
-      Uri mEntity;
-      Data mNote;
-      std::vector<Tuple> mTuples;
+      size_t total;
+      size_t outstanding;
 };
 
-std::ostream& operator<<(std::ostream& strm, const Pidf::Tuple& tuple);
-static bool invokePidfInit = Pidf::init();
-
+// .dlb. should be using comparitor on typeinfo
+typedef	map<Data, InstanceCounts> AllocationMap;
+Mutex allocationMutex;
+AllocationMap allocationMap;
 }
 
-#endif
+#ifdef RESIP_HEAP_COUNT
+void
+HeapInstanceCounter::dump()
+{
+   Lock l(allocationMutex);
+   if (allocationMap.empty())
+   {
+      WarningLog(<< "No allocations.");
+   }
+   else
+   {
+      AllocationMap::iterator i = allocationMap.begin();
+      for (; i != allocationMap.end(); ++i)
+      {
+         if (i->second.total)
+         {
+            //abi::__cxa_demangle(typeid(obj).name(), 0, 0, &status);
+            WarningLog(<< i->first << " " << i->second.total << " > " << i->second.outstanding);
+         }
+      }
+   }
+}
+
+void* 
+HeapInstanceCounter::allocate(size_t bytes, 
+                              const type_info& ti)
+{
+   {
+      // WarningLog(<< "allocated " << ti.name());
+      Lock l(allocationMutex);
+
+      const Data name(Data::Share, ti.name(), strlen(ti.name()));
+      allocationMap[name].total += 1;
+      allocationMap[name].outstanding += 1;
+   }
+
+   void* addr = ::operator new(bytes);
+   return addr;
+}
+
+void
+HeapInstanceCounter::deallocate(void* addr, 
+                                const type_info& ti)
+{
+   {
+      // WarningLog(<< "deallocated " << ti.name());
+      Lock l(allocationMutex);
+      const Data name(Data::Share, ti.name(), strlen(ti.name()));
+      allocationMap[name].outstanding -= 1;
+   }
+   ::operator delete(addr);
+}
+
+#else // RESIP_HEAP_COUNT
+void
+HeapInstanceCounter::dump()
+{}
+
+#endif // RESIP_HEAP_COUNT
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -5,6 +5,7 @@
 #include "resiprocate/HeaderTypes.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -67,6 +68,7 @@ class HeaderBase
 class H_##_enum : public HeaderBase                             \
 {                                                               \
    public:                                                      \
+      RESIP_HeapCount(H_##_enum);                               \
       enum {Single = true};                                     \
       typedef _type Type;                                       \
       UnusedChecking(_enum);                                    \
@@ -81,6 +83,7 @@ extern H_##_enum h_##_enum
 class H_##_enum##s : public HeaderBase                          \
 {                                                               \
    public:                                                      \
+      RESIP_HeapCount(H_##_enum##s);                            \
       enum {Single = false};                                    \
       typedef ParserContainer<_type> Type;                      \
       MultiUnusedChecking(_enum);                               \
