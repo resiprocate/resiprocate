@@ -13,6 +13,9 @@ static const char* const resipDataHeaderVersion =
 #include "resiprocate/config.hxx"
 #endif
 
+#if !defined(RESIP_DATA_LOCAL_SIZE)
+#define RESIP_DATA_LOCAL_SIZE 128
+#endif
 
 class TestData;
 namespace resip
