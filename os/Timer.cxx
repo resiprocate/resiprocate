@@ -1,3 +1,6 @@
+
+#include <util/Socket.hxx>
+
 #if defined( WIN32 )
 #  include <windows.h>
 #  include <winbase.h>
@@ -11,7 +14,6 @@
 #include <util/Timer.hxx>
 #include <util/Logger.hxx>
 
-static const char version[] = "$Id: Timer.cxx,v 1.1 2002/09/25 22:24:41 jason Exp $";
 
 using namespace Vocal2;
 
