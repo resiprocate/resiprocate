@@ -78,7 +78,9 @@ class Transport : public ThreadIf
       union {
             sockaddr mBoundInterface;
             sockaddr_in mbiV4;
-            sockaddr_in6 mbiV6;
+#ifdef USE_IPV6
+			sockaddr_in6 mbiV6;
+#endif
       };
       
       Fifo<SendData> mTxFifo; // owned by the transport

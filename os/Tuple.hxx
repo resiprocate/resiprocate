@@ -72,7 +72,9 @@ class Tuple
       union {
             sockaddr mSockaddr;
             sockaddr_in m_anonv4;
-            sockaddr_in6 m_anonv6;
+#ifdef USE_IPV6
+			sockaddr_in6 m_anonv6;
+#endif
       };
       TransportType mTransportType;
 
