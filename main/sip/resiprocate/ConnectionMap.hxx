@@ -22,13 +22,12 @@ class ConnectionMap
       static const UInt64 MinLastUsed;
       // largest unused time to reclaim
       static const UInt64 MaxLastUsed;
-      enum {MaxAttempts = 7};
-
+ 
       ConnectionMap();
       ~ConnectionMap();
 
       Connection* add(const Transport::Tuple& who, Socket s);
-      Connection* get(const Transport::Tuple& who, int attempt = 1);
+      Connection* get(const Transport::Tuple& who);
       void close(const Transport::Tuple& who);
 
       // release excessively old connections
