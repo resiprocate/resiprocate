@@ -10,13 +10,29 @@
 using namespace Vocal2;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::APP
+#define VOCAL_SUBSYSTEM Subsystem::TEST
 
 int
 main(int argc, char* argv[])
 {
    Log::Level l = Log::DEBUG;
    Log::initialize(Log::COUT, l, argv[0]);
+
+   {
+      Uri tel("tel:+358-555-1234567;pOstd=pP2;isUb=1411");
+      Uri sip(Uri::fromTel(tel, "company.com"));
+
+      cerr << "!! " << Data::from(sip) << endl;
+      assert(Data::from(sip) == "sip:+358-555-1234567;isub=1411;postd=pp2@company.com;user=phone");
+   }
+
+   {
+      Uri tel("tel:+358-555-1234567;foo=bar;aaaa=baz;pOstd=pP2;isUb=1411");
+      Uri sip(Uri::fromTel(tel, "company.com"));
+
+      cerr << "!! " << Data::from(sip) << endl;
+      assert(Data::from(sip) == "sip:+358-555-1234567;isub=1411;postd=pp2;aaaa=baz;foo=bar@company.com;user=phone");
+   }
 
    {
       Uri uri("sip:fluffy@iii.ca:666");
