@@ -1,6 +1,7 @@
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/BaseCreator.hxx"
 #include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/ClientOutOfDialogReq.hxx"
@@ -173,6 +174,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 Dialog::~Dialog()
 {
    mDialogSet.mDialogs.erase(this->getId());
+   delete mAppDialog;   
 }
 
 DialogId
