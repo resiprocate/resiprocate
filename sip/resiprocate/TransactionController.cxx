@@ -3,12 +3,13 @@
 #endif
 
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/NotifierFifo.hxx"
-
+#include "resiprocate/StatisticsManager.hxx"
 
 using namespace resip;
 
@@ -25,21 +26,13 @@ TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo,
    mDiscardStrayResponses(true),
    mTUFifo(tufifo),
    mStatelessHandler(*this),
-   mStateMacFifo( asyncHandler ? new NotifierFifo<Message>(asyncHandler):  new Fifo<Message> ),
+   mStateMacFifo( asyncHandler ? new NotifierFifo<TransactionMessage>(asyncHandler):  new Fifo<TransactionMessage> ),
    mTransportSelector(multi, *mStateMacFifo, dns),
-   mTimers(*mStateMacFifo),
+   mTimers(*mStateMacFifo, mTUFifo),
    StatelessIdCounter(1),
    mShuttingDown(false)
 {
-//    if (asyncHandler)
-//    {
-//       mStateMacFifo = new NotifierFifo<Message>(asyncHandler);
-//    }
-//    else
-//    {
-//       mStateMacFifo = new Fifo<Message>();
-//    }
-//    mTransportSelector = new TransportSelector(multi, *mStateMacFifo);
+   RESIP_STATISTICS(mStatsManager = new StatisticsManager(tufifo));
 }
 
 TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, 
@@ -51,22 +44,15 @@ TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo,
    mDiscardStrayResponses(true),
    mTUFifo(tufifo),
    mStatelessHandler(*this),
-   mStateMacFifo( asyncHandler ? new NotifierFifo<Message>(asyncHandler) : new Fifo<Message> ),
+   mStateMacFifo( asyncHandler ? new NotifierFifo<TransactionMessage>(asyncHandler) : new Fifo<TransactionMessage> ),
    mTransportSelector(multi, *mStateMacFifo, dns, tSelector),
-   mTimers(*mStateMacFifo),
+   mTimers(*mStateMacFifo, mTUFifo),
    StatelessIdCounter(1),
-   mShuttingDown(false)
+   mShuttingDown(false),
+   mStatsManager(0)
 {
-//    if (asyncHandler)
-//    {
-//       mStateMacFifo = new NotifierFifo<Message>(asyncHandler);
-//    }
-//    else
-//    {
-//       mStateMacFifo = new Fifo<Message>();
-//    }
-//    mTransportSelector = new TransportSelector(multi, *mStateMacFifo, tSelector);
-}
+   RESIP_STATISTICS(mStatsManager = new StatisticsManager(tufifo));
+ }
 
 
 
@@ -77,6 +63,7 @@ TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo,
 TransactionController::~TransactionController()
 {
    delete mStateMacFifo;
+   delete mStatsManager;
 }
 
 void
@@ -90,7 +77,7 @@ void
 TransactionController::process(FdSet& fdset)
 {
    if (mShuttingDown && 
-       mTimers.empty() && 
+       //mTimers.empty() && 
        !mStateMacFifo->messageAvailable() && 
        !mTUFifo.messageAvailable() &&
        mTransportSelector.isFinished())
@@ -173,15 +160,39 @@ TransactionController::send(SipMessage* msg)
 }
 
 void
+TransactionController::post(const ApplicationMessage& message)
+{
+   assert(!mShuttingDown);
+   Message* toPost = message.clone();
+   mTUFifo.add(toPost);
+}
+
+void
+TransactionController::post(const ApplicationMessage& message,
+                            unsigned int ms)
+{
+   assert(!mShuttingDown);
+   Message* toPost = message.clone();
+   mTimers.add(Timer(ms, toPost));
+}
+
+void
 TransactionController::registerForTransactionTermination()
 {
    mRegisteredForTransactionTermination = true;
 }
 
+StatisticsManager&
+TransactionController::getStatisticsManager() const
+{
+   assert(mStatsManager);
+   return *mStatsManager;
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

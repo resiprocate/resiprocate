@@ -2,16 +2,19 @@
 #define RESIP_TRANSACTION_CONTROLLER_HXX
 
 #include "resiprocate/os/Fifo.hxx"
-#include "resiprocate/Message.hxx"
 #include "resiprocate/TransactionMap.hxx"
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/ProcessNotifier.hxx"
+#include "resiprocate/Security.hxx"
 
 namespace resip
 {
 class ExternalDns;
+class TransactionMessage;
+class ApplicationMessage;
+class StatisticsManager;
 
 class TransactionController
 {
@@ -50,6 +53,10 @@ class TransactionController
 
       void send(SipMessage* msg);
 
+      // makes the message available to the TU later
+      void post(const ApplicationMessage& message);
+      void post(const ApplicationMessage& message, unsigned int milliseconds);
+
       // Inform the TU that whenever a transaction has been terminated. 
       void registerForTransactionTermination();
 
@@ -81,7 +88,7 @@ class TransactionController
       // For stateless stacks, this has a different behavior and does not create
       // a transaction for each request and does not do any special transaction
       // processing for requests or responses
-      Fifo<Message>* mStateMacFifo;
+      Fifo<TransactionMessage>* mStateMacFifo;
 
 
       // Used to decide which transport to send a sip message on. 
@@ -91,7 +98,6 @@ class TransactionController
       TransactionMap mClientTransactionMap;
       TransactionMap mServerTransactionMap;
 
-
       // timers associated with the transactions. When a timer fires, it is
       // placed in the mStateMacFifo
       TimerQueue  mTimers;
@@ -99,6 +105,9 @@ class TransactionController
       unsigned long StatelessIdCounter;
       bool mShuttingDown;
       
+      StatisticsManager* mStatsManager;
+      StatisticsManager& getStatisticsManager() const;
+
       friend class SipStack; // for debug only
       friend class StatelessHandler;
       friend class TransactionState;
@@ -116,7 +125,7 @@ class TransactionController
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

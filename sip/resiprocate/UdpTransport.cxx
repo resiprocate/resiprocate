@@ -20,7 +20,7 @@ using namespace resip;
 
 const int UdpTransport::MaxBufferSize = 8192;
 
-UdpTransport::UdpTransport(Fifo<Message>& fifo,
+UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            int portNum,
                            const Data& pinterface, 
                            bool ipv4) 

@@ -15,6 +15,7 @@
 namespace resip
 {
 
+class TransactionMessage;
 class SipMessage;
 class SendData;
 class Connection;
@@ -24,7 +25,7 @@ class InternalTransport : public Transport
    public:
       // sendHost what to put in the Via:sent-by
       // portNum is the port to receive and/or send on
-      InternalTransport(Fifo<Message>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
+      InternalTransport(Fifo<TransactionMessage>& rxFifo, int portNum, const Data& interfaceObj, bool ipv4);
       virtual ~InternalTransport();
 
       bool isFinished() const;

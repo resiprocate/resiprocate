@@ -2,13 +2,14 @@
 #define RESIP_SIPSTACK_HXX
 
 #include <set>
-#include <iostream>
+#include <iosfwd>
 
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/ProcessNotifier.hxx"
+#include "resiprocate/Security.hxx"
 
 namespace resip 
 {
@@ -16,6 +17,7 @@ namespace resip
 class Data;
 class Message;
 class SipMessage;
+class ApplicationMessage;
 class Security;
 class Tuple;
 class Uri;
@@ -59,7 +61,7 @@ class SipStack : public ProcessNotifier::Handler
       // Used by the application to add in a new transport
       // ipInterface parameter is used to specify which ethernet interface to
       // bind to. If set to Data::Empty, bind to all interfaces 
-      void addTransport( TransportType protocol,
+      bool addTransport( TransportType protocol,
                          int port, 
                          IpVersion version=V4,
                          const Data& ipInterface = Data::Empty);
@@ -69,12 +71,15 @@ class SipStack : public ProcessNotifier::Handler
       // For default case, you can pass in domainname =
       // DnsUtil::getLocalDomainName()
       // Note the SipDomainName is often your host name not your server domainname
-      void addTlsTransport(  int port = 5061,
+      // Returns true, if the addTransport succeeded. false usually indicates
+      // the port is already in use. 
+      bool addTlsTransport(  int port = 5061,
                              const Data& keyDir = Data::Empty, 
                              const Data& privateKeyPassPhrase = Data::Empty,
                              const Data& sipDomainname = Data::Empty, 
                              IpVersion version = V4,
-                             const Data& ipInterface = Data::Empty);
+                             const Data& ipInterface = Data::Empty,
+                             SecurityTypes::SSLType sslType = SecurityTypes::TLSv1);
 
       //external transports
       void addExternalTransport(ExternalAsyncCLessTransport* transport, bool ownedByMe);
@@ -111,16 +116,17 @@ class SipStack : public ProcessNotifier::Handler
       void sendTo(const SipMessage& msg, const Uri& uri);
       void sendTo(const SipMessage& msg, const Tuple& tuple);
 
-      void postMS(const Message& message, unsigned int ms);
-
       // makes the message available to the TU later
-      void post(const Message& message,
+      void post(const ApplicationMessage& message);
+      void post(const ApplicationMessage& message,
                 unsigned int secondsLater);
+      void postMS(const ApplicationMessage& message, unsigned int ms);
 
+      // applications posting non-sip messages must use receive any.
       // caller now owns the memory. returns 0 if nothing there
       SipMessage* receive(); 
 
-      // May return TransactionTerminated* or SipMessage*
+      // May return TransactionTerminated* or SipMessage* or derived ApplicationMessage*
       Message* receiveAny(); 
       
       // build the FD set to use in a select to find out when process bust be
@@ -147,8 +153,10 @@ class SipStack : public ProcessNotifier::Handler
       // output current state of the stack - for debug
       std::ostream& dump(std::ostream& strm) const;
       
+      Security *getSecurity() const;
+   private:
       /// if this object exists, it manages advanced security featues
-      Security* security;
+      Security* mSecurity;
 
    private:
       SipStack(const SipStack& copy);
@@ -156,7 +164,6 @@ class SipStack : public ProcessNotifier::Handler
       
       // fifo used to communicate between the TU (Transaction User) and stack 
       Fifo<Message> mTUFifo;
-      TimerQueue mTUTimerQueue;
 
       // All aspects of the Transaction State Machine / DNS resolver
       TransactionController mTransactionController;

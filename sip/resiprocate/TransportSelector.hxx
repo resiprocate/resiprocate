@@ -9,10 +9,12 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/WinCompat.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/external/ExternalDns.hxx"
 
+#include "resiprocate/SecurityTypes.hxx"
 class TestTransportSelector;
 
 namespace resip
@@ -20,6 +22,7 @@ namespace resip
 
 class DnsHandler;
 class Message;
+class TransactionMessage;
 class SipMessage;
 class TlsTransport;
 class TransactionController;
@@ -36,7 +39,7 @@ class ExternalSelector
 class TransportSelector 
 {
    public:
-      TransportSelector(bool multithreaded, Fifo<Message>& fifo, 
+      TransportSelector(bool multithreaded, Fifo<TransactionMessage>& fifo, 
                         ExternalDns* dnsProvider,
                         ExternalSelector* ets = 0);
       
@@ -53,17 +56,19 @@ class TransportSelector
       //this is a factory method, so return the instance...used by the sipstack to set aliases
       Transport* addExternalTransport(ExternalAsyncCLessTransport* transport, bool ownedByMe);
 
-      void addTransport( TransportType,
+      bool addTransport( TransportType,
                          int port,
                          IpVersion version,
                          const Data& ipInterface=Data::Empty);
 
-      void addTlsTransport(const Data& domainName, 
+      bool addTlsTransport(const Data& domainName, 
                            const Data& keyDir,
                            const Data& privateKeyPassPhrase,
                            int port, 
                            IpVersion version,
-                           const Data& ipInterface=Data::Empty);
+                           const Data& ipInterface=Data::Empty,
+                           SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
+                           );
 
       DnsResult* dnsResolve(SipMessage* msg, DnsHandler* handler);
 
@@ -94,7 +99,7 @@ class TransportSelector
 
       bool mMultiThreaded;
       DnsInterface mDns;
-      Fifo<Message>& mStateMacFifo;
+      Fifo<TransactionMessage>& mStateMacFifo;
 
       // specific port and interface
       typedef HashMap<Tuple, Transport*> ExactTupleMap;
@@ -122,6 +127,7 @@ class TransportSelector
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;
       mutable Socket mSocket6;
+      WinCompat::Version mWindowsVersion;
       
       // An AF_UNSPEC addr_in for rapid unconnect
       struct sockaddr_in mUnspecified;
