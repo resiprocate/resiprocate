@@ -48,7 +48,7 @@ public:
       void setUAName( const Data& name );
       
       bool haveCerts( bool sign, const Data& encryptFor );
-      void sendPage(const Data& text, const Uri& dest, bool sign, const Data& encryptFor );
+      void sendPage(const Data& text, const Uri& dest, bool sign=false, const Data& encryptFor = Data::Empty );
 
       void process();
 
