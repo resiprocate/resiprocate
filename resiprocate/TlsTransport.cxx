@@ -117,7 +117,7 @@ TlsTransport::processListen(FdSet& fdset)
    {
       struct sockaddr_in peer;
 		
-      int peerLen=sizeof(peer);
+      socklen_t peerLen=sizeof(peer);
       Socket sock = accept( mFd, (struct sockaddr*)&peer,&peerLen);
       if ( sock == -1 )
       {
