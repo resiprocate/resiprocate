@@ -109,7 +109,7 @@ TcpTransport::processListen(FdSet& fdset)
       struct sockaddr_in peer;
 		
       socklen_t peerLen=sizeof(peer);
-      Socket s = accept( s, (struct sockaddr*)&peer,&peerLen);
+      Socket s = accept( mFd, (struct sockaddr*)&peer,&peerLen);
       if ( s == -1 )
       {
          int err = errno;
