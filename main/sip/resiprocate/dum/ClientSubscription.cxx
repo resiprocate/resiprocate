@@ -31,6 +31,32 @@ ClientSubscription::Handle::operator->()
    return static_cast<ClientSubscription*>(get());
 }
 
+void 
+ClientSubscription::process(const SipMessage& subOrNotify)
+{
+}
+
+void 
+ClientSubscription::dispatch(const SipMessage& msg)
+{
+}
+
+void 
+ClientSubscription::dispatch(const DumTimeout& timer)
+{
+}
+
+void  
+ClientSubscription::requestRefresh()
+{
+}
+
+void  
+ClientSubscription::end()
+{
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
