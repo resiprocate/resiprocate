@@ -1,20 +1,7 @@
 #!/bin/bash
-# $Id: use-autotools.sh,v 1.3 2004/02/24 01:15:44 alan Exp $
+# $Id: use-autotools.sh,v 1.4 2004/02/24 01:19:32 alan Exp $
 
 AUTOTOOLS_BRANCH=b-ah-atools
-
-cat <<EOF
-This script will prep a 'HEAD' reSIProcate checkout to
-use the autotools (new) build mechanism.
-After running this script, the working directory will
-have files related to the build process moved to the
-$AUTOTOOLS_BRANCH branch with the 'sticky-tag' set to 
-this same branch.
-
-Also, files related to the OLD build mechanism will be 
-removed.  They are only removed on this branch in CVS.
-A vanilla HEAD checkout will still contain these files.
-EOF
 # We 'remove' these files in CVS.
 
 AUTOTOOLS_ARTIFACTS="
@@ -61,6 +48,24 @@ AUTOTOOLS_REAL="Makefile.am
 
 
 if [ "$1"x == x ]; then
+
+    cat <<EOF
+This script will prep a 'HEAD' reSIProcate checkout to
+use the autotools (new) build mechanism.
+After running this script, the working directory will
+have files related to the build process moved to the
+$AUTOTOOLS_BRANCH branch with the 'sticky-tag' set to 
+this same branch.
+
+Also, files related to the OLD build mechanism will be 
+removed.  They are only removed on this branch in CVS.
+A vanilla HEAD checkout will still contain these files.
+
+Enter 'yes' to continue.
+EOF
+    read DUMMY
+    [ "${DUMMY}x" == "yesx" ] || exit -1
+
     cvs up -r ${AUTOTOOLS_BRANCH} ${AUTOTOOLS_REAL} ${AUTOTOOLS_ARTIFACTS}
     # Remove the 'old' build directory -- only if it's got a CVS dir in it.
     [ -d build/CVS ] && rm -rf build
