@@ -1,4 +1,4 @@
-struct params { char *name; Headers::Type type; };
+struct headers { char *name; Headers::Type type; };
 %%
 cseq, Headers::CSeq
 call-id, Headers::Call_ID
