@@ -2,6 +2,7 @@
 #define THREADIF_HXX
 
 #ifdef WIN32
+#  include <BaseTsd.h>
 #  include <winbase.h>
 #else
 #  include <pthread.h>
