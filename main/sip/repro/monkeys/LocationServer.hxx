@@ -1,5 +1,5 @@
-#if !defined(RESIP_CONSTANTMONKEY_REQUEST_PROCESSOR_HXX)
-#define RESIP_CONSTANTMONKEY_REQUEST_PROCESSOR_HXX 
+#if !defined(RESIP_LOCATIONSSERVER_REQUEST_PROCESSOR_HXX)
+#define RESIP_LOCATIONSERVER_REQUEST_PROCESSOR_HXX 
 #include "repro/RequestProcessor.hxx"
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
 
