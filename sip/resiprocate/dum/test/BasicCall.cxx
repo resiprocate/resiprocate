@@ -37,10 +37,12 @@ class HandlerA : public InvSessionHandler, public RegistrationHandler
 
       void onSuccess(ClientRegistration::Handle, const SipMessage& response)
       {
+         cout << "Registration worked" << endl;
       }
       
       void onFailure(ClientRegistration::Handle, const SipMessage& response)
       {
+         cout << "Registration Failed" << endl;
       }
 
 
@@ -137,12 +139,24 @@ main (int argc, char** argv)
 
    cout << " Trying to send an INVITE from A to B" << endl;
 
+
+#if 1 
+   NameAddr aor( Uri("sip:cullen@localhost:5070") );
+   SipMessage * msg = dumA.makeRegistration(aor);
+
+   // I'm ignoring the DialogSetId that gets returned here
+   send(msg); 
+#endif
+
+#if 1 
    SipMessage * msg =
      dumA.makeInvSession(new Uri("sip:localhost:5070"),
                          new SdpContents());
 
    // I'm ignoring the DialogSetId that gets returned here
    send(msg); 
+#endif
+
 
    while ( (!aIsDone) || (!bIsDone) )
    {
