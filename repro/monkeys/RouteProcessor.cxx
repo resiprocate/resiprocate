@@ -34,7 +34,7 @@ RouteProcessor::handleRequest(RequestContext& context)
   {
     assert(context.getCandidates().empty());
     context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
-    return RequestProcessor::SkipAllChains;
+    return RequestProcessor::SkipThisChain;
   }
   
   return RequestProcessor::Continue;
