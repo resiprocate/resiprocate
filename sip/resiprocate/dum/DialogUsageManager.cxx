@@ -863,7 +863,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             sendResponse(failure);
             break;
          }
-
+         
          default:
          {
             DialogSet* ds = findDialogSet(DialogSetId(request));
@@ -872,6 +872,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
                SipMessage failure;
                makeResponse(failure, request, 481);
                failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
+               InfoLog (<< "Rejected request (which was in a dialog)");
                sendResponse(failure);
             }
             else
