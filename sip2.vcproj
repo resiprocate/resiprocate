@@ -18,9 +18,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/Zm300
-
-"
+				AdditionalOptions="/Zm500"
 				Optimization="0"
 				OptimizeForProcessor="2"
 				AdditionalIncludeDirectories="C:\vocal"
@@ -68,8 +66,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/Zm300
-"
+				AdditionalOptions="/Zm300 "
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
@@ -531,9 +528,6 @@
 			</File>
 			<File
 				RelativePath="sipstack\TcpTransport.hxx">
-			</File>
-			<File
-				RelativePath="sipstack\TestTransport.hxx">
 			</File>
 			<File
 				RelativePath="util\ThreadIf.hxx">
