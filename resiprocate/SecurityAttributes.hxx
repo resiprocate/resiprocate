@@ -1,6 +1,8 @@
 #ifndef RESIP_SecurityAttributes_hxx
 #define RESIP_SecurityAttributes_hxx
 
+#include "resiprocate/os/Data.hxx"
+
 namespace resip
 {
 
@@ -16,8 +18,8 @@ enum SignatureStatus
 class SecurityAttributes
 {
    public:
-      SecurityAttributes()  {};
-      ~SecurityAttributes() {};
+      SecurityAttributes();
+      ~SecurityAttributes();      
 
       typedef enum {From, FailedIdentity, Identity} IdentityStrength;
 
