@@ -1,5 +1,10 @@
 #include "resiprocate/os/MD5Stream.hxx"
 
+// Remove warning about 'this' use in initiator list - pointer is only stored
+#if defined(WIN32)
+#pragma warning( disable : 4355 ) // using this in base member initializer list 
+#endif
+
 using namespace resip;
 
 MD5Buffer::MD5Buffer()
@@ -48,9 +53,7 @@ MD5Buffer::getHex()
 
 MD5Stream::MD5Stream()
    : std::ostream(this)
-//     mStreambuf()
 {
-   //init(&mStreambuf);
 }
 
 MD5Stream::~MD5Stream()
