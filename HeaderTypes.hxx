@@ -34,7 +34,7 @@ class Headers
       };
 
       // get enum from header name
-      static int getHeaderType(char* name, int len);
+      static Type getHeaderType(const char* name, int len);
       static bool isCommaTokenizing(Type type);
 };
 

@@ -119,7 +119,12 @@ void UdpTransport::process()
    int fromLen = sizeof(from);
    
    // !jf! how do we tell if it discarded bytes 
-   int len = recvfrom( mFd, buffer, MaxBufferSize,  0 /*flags */, (struct sockaddr*)&from, (socklen_t*)&fromLen);
+   int len = recvfrom( mFd,
+                       buffer,
+                       MaxBufferSize,
+                       0 /*flags */,
+                       (struct sockaddr*)&from,
+                       (socklen_t*)&fromLen);
    if ( len <= 0 )
    {
       int err = errno;
@@ -129,6 +134,8 @@ void UdpTransport::process()
       cerr << "Received : " << len << " bytes" << endl;
       
       SipMessage* message = new SipMessage;
+      
+      message->addSource(from);
       
       // set the received from information into the received= parameter in the via
       // save the interface information in the message
