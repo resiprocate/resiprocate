@@ -5,6 +5,9 @@
 
 #include "sip2/util/Socket.hxx"
 
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 
 using namespace Vocal2;
@@ -67,6 +70,17 @@ Vocal2::initNetwork()
 	}
 #endif
 }
+
+
+#ifndef WIN32
+int 
+Vocal2::closesocket( Socket fd )
+{
+   return close( fd );
+}
+#endif
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.29 2002/12/24 00:14:43 jason Exp $
+# $Id: Makefile,v 1.30 2002/12/31 02:50:07 fluffy Exp $
 
 USE_SSL = 1
 
@@ -8,7 +8,11 @@ include $(BUILD)/Makefile.pre
 -include ../../Makefile.opt
 
 USE_REPO=false
-PACKAGES += SIP2 SIPSTACK2 UTIL2 ARES PTHREAD
+PACKAGES += SIP2 SIPSTACK2 UTIL2 PTHREAD
+
+ifeq ($(USE_ARES),1)
+PACKAGES += ARES
+endif
 
 ifeq ($(USE_SSL),1)
 PACKAGES += OPENSSL
@@ -53,5 +57,8 @@ SRC = \
 
 #	        testNonInviteClientTx.cxx \
 #		testNameAddrParamExclusions.cxx \
+
+limpc: obj.debug.Linux.i686/limpc.o
+	g++ -o limpc obj.debug.Linux.i686/limpc.o obj.debug.Linux.i686/Register.o obj.debug.Linux.i686/Transceiver.o obj.debug.Linux.i686/Registrar.o obj.debug.Linux.i686/InviteClient.o obj.debug.Linux.i686/InviteServer.o obj.debug.Linux.i686/TestSupport.o obj.debug.Linux.i686/Resolver.o -L../../../build/../sip2/sipstack/obj.debug.Linux.i686 -L../../../build/../sip2/util/obj.debug.Linux.i686 -lsip2 -lutil2 -lpthread -lssl -lcrypto -lncurses
 
 include $(BUILD)/Makefile.post
