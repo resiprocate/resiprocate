@@ -26,7 +26,7 @@ UnknownHeaderType::UnknownHeaderType(const char* name)
       assert(false);
       throw Exception("Empty unknown header",__FILE__,__LINE__);
    }
-   assert(Headers::getType(mName.data(), mName.size()) == Headers::RESIP_UNKNOWN);
+   assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
 }
 
 UnknownHeaderType::UnknownHeaderType(const Data& name)
@@ -40,7 +40,7 @@ UnknownHeaderType::UnknownHeaderType(const Data& name)
       assert(false);
       throw Exception("Empty unknown header",__FILE__,__LINE__);
    }
-   assert(Headers::getType(mName.data(), mName.size()) == Headers::RESIP_UNKNOWN);
+   assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
 }
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -17,8 +17,8 @@
 //****************************************************************************
 
 // eventually use these macros to automate Headers.hxx, Headers.cxx+gperf
-#define UNUSED_defineHeader(_enum, _name, _type, _rfc) SAVE##_enum, _enum = RESIP_UNKNOWN, RESET##enum = SAVE##_enum-1
-#define UNUSED_defineMultiHeader(_enum, _name, _type, _rfc) SAVE##_enum, _enum = RESIP_UNKNOWN, RESET##enum = SAVE##_enum-1
+#define UNUSED_defineHeader(_enum, _name, _type, _rfc) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
+#define UNUSED_defineMultiHeader(_enum, _name, _type, _rfc) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
 #define defineHeader(_enum, _name, _type, _rfc) _enum
 #define defineMultiHeader(_enum, _name, _type, _rfc) _enum
 
@@ -32,7 +32,7 @@ class Headers
       // this set
       enum Type
       {
-         RESIP_UNKNOWN = -1,
+         UNKNOWN = -1,
          defineHeader(To, "To", NameAddr, "RFC ????"), 
          defineHeader(From, "From", NameAddr, "RFC ????"),
          defineMultiHeader(Via, "Via", Via, "RFC ????"),
@@ -72,8 +72,8 @@ class Headers
          defineMultiHeader(Require, "Require", Token, "RFC ????"),
          defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC ????"),
          defineHeader(Server, "Server", StringCategory, "RFC ????"),
-         defineHeader(SIPETag, "SIP-ETag", Token, "RESIP_PUBLISH draft"),
-         defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RESIP_PUBLISH draft"),
+         defineHeader(SIPETag, "SIP-ETag", Token, "PUBLISH draft"),
+         defineHeader(SIPIfMatch, "SIP-If-Match", Token, "PUBLISH draft"),
          defineMultiHeader(Supported, "Supported", Token, "RFC ????"),
          defineHeader(Timestamp, "Timestamp", StringCategory, "RFC ????"),
          defineMultiHeader(Unsupported, "Unsupported", Token, "RFC ????"),

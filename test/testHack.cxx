@@ -123,13 +123,13 @@ int
 main()
 {
    {
-      const Data tx0("RESIP_NOTIFY sip:terminal.example.com SIP/2.0\r\n"
+      const Data tx0("NOTIFY sip:terminal.example.com SIP/2.0\r\n"
                      "Via: SIP/2.0/TCP pres.example.com;branch=z9hG4bKMgRenTETmm\r\n"
                      "Max-Forwards: 70\r\n"
                      "From: <sip:adam-buddies@pres.example.com>;tag=zpNctbZq\r\n"
                      "To: <sip:adam@example.com>;tag=ie4hbb8t\r\n"
                      "Call-ID: cdB34qLToC@terminal.example.com\r\n"
-                     "CSeq: 997935768 RESIP_NOTIFY\r\n"
+                     "CSeq: 997935768 NOTIFY\r\n"
                      "Contact: <sip:pres.example.com>\r\n"
                      "Event: presence\r\n"
                      "Subscription-State: active;expires=7200\r\n"
@@ -193,13 +193,13 @@ main()
                      "\r\n"
                      "--50UBfW7LSCVLtggUPe5z--\r\n");
 
-      const Data txt("RESIP_NOTIFY sip:terminal.example.com SIP/2.0\r\n"
+      const Data txt("NOTIFY sip:terminal.example.com SIP/2.0\r\n"
                      "Via: SIP/2.0/TCP pres.example.com;branch=z9hG4bK4EPlfSFQK1\r\n"
                      "Max-Forwards: 70\r\n"
                      "From: <sip:adam-buddies@pres.example.com>;tag=zpNctbZq\r\n"
                      "To: <sip:adam@example.com>;tag=ie4hbb8t\r\n"
                      "Call-ID: cdB34qLToC@terminal.example.com\r\n"
-                     "CSeq: 997935769 RESIP_NOTIFY\r\n"
+                     "CSeq: 997935769 NOTIFY\r\n"
                      "Contact: <sip:pres.example.com>\r\n"
                      "Event: presence\r\n"
                      "Subscription-State: active;expires=7200\r\n"

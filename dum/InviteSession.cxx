@@ -74,7 +74,7 @@ InviteSession::modifySession()
                                   __FILE__, __LINE__);
    }
    mState = ReInviting;
-   mDialog.makeRequest(mLastRequest, RESIP_INVITE);
+   mDialog.makeRequest(mLastRequest, INVITE);
    return mLastRequest;
 }
 
@@ -170,7 +170,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       CSeqToMessageMap::iterator it = mFinalResponseMap.find(timeout.seq());
       if (it != mFinalResponseMap.end())
       {
-         // RESIP_BYE could be queued if end() is called when we are still waiting for far end RESIP_ACK to be received
+         // BYE could be queued if end() is called when we are still waiting for far end ACK to be received
          if (mQueuedBye)
          {
             mState = Terminated;
@@ -211,7 +211,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
             mState = ReInviting;
             setOffer(mCurrentLocalSdp);
             // Should likely call targetRefresh when implemented - for now only ReInvites are used
-            mDialog.makeRequest(mLastRequest, RESIP_INVITE);
+            mDialog.makeRequest(mLastRequest, INVITE); 
             if(mSessionInterval >= 90)
             {
                mLastRequest.header(h_SessionExpires).value() = mSessionInterval;
@@ -271,7 +271,7 @@ InviteSession::handleSessionTimerResponse(const SipMessage& msg)
          }
          else
          {
-            // Start Session-Expiration Timer to mSessionInterval - RESIP_BYE should be sent a minimum of 32 or SessionInterval/3 seconds before the session expires (recommended by draft-ietf-sip-session-timer-15)
+            // Start Session-Expiration Timer to mSessionInterval - BYE should be sent a minimum of 32 or SessionInterval/3 seconds before the session expires (recommended by draft-ietf-sip-session-timer-15)
             mDum.addTimer(DumTimeout::SessionExpiration, mSessionInterval - resipMin(32,mSessionInterval/3), getBaseHandle(), ++mSessionTimerSeq);
          }
       }
@@ -331,7 +331,7 @@ InviteSession::handleSessionTimerRequest(const SipMessage& request, SipMessage &
          }
          else
          {
-            // Start Session-Expiration Timer to mSessionInterval - RESIP_BYE should be sent a minimum of 32 or SessionInterval/3 seconds before the session expires (recommended by draft-ietf-sip-session-timer-15)
+            // Start Session-Expiration Timer to mSessionInterval - BYE should be sent a minimum of 32 or SessionInterval/3 seconds before the session expires (recommended by draft-ietf-sip-session-timer-15)
             mDum.addTimer(DumTimeout::SessionExpiration, mSessionInterval - resipMin(32,mSessionInterval/3), getBaseHandle(), ++mSessionTimerSeq);
          }
       }
@@ -350,7 +350,7 @@ InviteSession::dispatch(const SipMessage& msg)
    //it's written as a gerneric NIT satet machine, but method isn't checked, and
    //info is the only NIT so far. This should eventually live in Dialog, with a
    //current method to determine valid responses.
-   if (msg.header(h_CSeq).method() == RESIP_INFO)
+   if (msg.header(h_CSeq).method() == INFO)
    {
       if (msg.isRequest())
       {
@@ -383,14 +383,14 @@ InviteSession::dispatch(const SipMessage& msg)
       return;
    }         
 
-   if (msg.isRequest() && msg.header(h_RequestLine).method() == RESIP_ACK &&
+   if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK && 
        (mState == Connected || mState == ReInviting))
    {
       //quench 200 retransmissions
       mFinalResponseMap.erase(msg.header(h_CSeq).sequence());
       if (msg.header(h_CSeq).sequence() == mLastIncomingRequest.header(h_CSeq).sequence())
       {
-         // RESIP_BYE could be queued if end() is called when we are still waiting for far end RESIP_ACK to be received
+         // BYE could be queued if end() is called when we are still waiting for far end ACK to be received
          if (mQueuedBye)
          {
             mState = Terminated;
@@ -405,7 +405,7 @@ InviteSession::dispatch(const SipMessage& msg)
          {                     
             if (mOfferState == Answered)
             {
-               //SDP in invite and in RESIP_ACK.
+               //SDP in invite and in ACK.
                mDum.mInviteSessionHandler->onIllegalNegotiation(getSessionHandle(), msg);
             }
             else
@@ -422,7 +422,7 @@ InviteSession::dispatch(const SipMessage& msg)
          //temporary hack
          else if (mState != ReInviting && mOfferState != Answered)
          {
-            //no SDP in RESIP_ACK when one is required
+            //no SDP in ACK when one is required
             mDum.mInviteSessionHandler->onIllegalNegotiation(getSessionHandle(), msg);
          }
       }      
@@ -432,11 +432,11 @@ InviteSession::dispatch(const SipMessage& msg)
    {
       case Terminated:
          //!dcm! -- 481 behaviour here, should pretty much die on anything
-         //eventually 200 to RESIP_BYE could be handled further out
+         //eventually 200 to BYE could be handled further out
          if (msg.isResponse())
          {
             int code = msg.header(h_StatusLine).statusCode();
-            if ((code  == 200 && msg.header(h_CSeq).method() == RESIP_BYE) || code > 399)
+            if ((code  == 200 && msg.header(h_CSeq).method() == BYE) || code > 399)
             {
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      
                guard.destroy();
@@ -458,7 +458,7 @@ InviteSession::dispatch(const SipMessage& msg)
             switch(msg.header(h_RequestLine).method())
             {
 		       // reINVITE
-               case RESIP_INVITE:
+               case INVITE:
                {
                   if (mOfferState == Answered)
                   {
@@ -485,26 +485,26 @@ InviteSession::dispatch(const SipMessage& msg)
                   }
                }   
                break;
-               case RESIP_BYE:
+               case BYE:
                   mState = Terminated;
                   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
                   mDialog.makeResponse(mLastResponse, msg, 200);
                   send(mLastResponse);
                   break;
 
-               case RESIP_UPDATE:
+               case UPDATE:
                   assert(0);
                   break;
                   
-               case RESIP_INFO:
+               case INFO:
                   mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
                   break;                                 
-               case RESIP_REFER:
+               case REFER:
                   //handled in Dialog
                   assert(0);                  
                   break;
 
-			   case RESIP_CANCEL:
+			   case CANCEL:
 				  // A Cancel can get received in an established dialog if it crosses with our 200 response 
 				  // on the wire - it should be responsed to, but should not effect the dialog state (InviteSession).  
 				  // RFC3261 Section 9.2
@@ -513,13 +513,13 @@ InviteSession::dispatch(const SipMessage& msg)
 				  break;
                   
                default:
-                  InfoLog (<< "Ignoring request in an RESIP_INVITE dialog: " << msg.brief());
+                  InfoLog (<< "Ignoring request in an INVITE dialog: " << msg.brief());
                   break;
             }
          }
          else
          {
-            if ( msg.header(h_StatusLine).statusCode() == 200 && msg.header(h_CSeq).method() == RESIP_INVITE)
+            if ( msg.header(h_StatusLine).statusCode() == 200 && msg.header(h_CSeq).method() == INVITE)
             {
                CSeqToMessageMap::iterator it = mAckMap.find(msg.header(h_CSeq).sequence());
                if (it != mAckMap.end())
@@ -530,7 +530,7 @@ InviteSession::dispatch(const SipMessage& msg)
          }
          break;
       case ReInviting:
-         if (msg.header(h_CSeq).method() == RESIP_INVITE)
+         if (msg.header(h_CSeq).method() == INVITE)
          {
             if (msg.isResponse())
             {
@@ -548,7 +548,7 @@ InviteSession::dispatch(const SipMessage& msg)
                      //this usage other than onTerminated
                      if (mQueuedBye)
                      {
-                        send(makeAck());   // RESIP_ACK the 200 first then send RESIP_BYE
+                        send(makeAck());   // ACK the 200 first then send BYE
                         mState = Terminated;
                         mLastRequest = *mQueuedBye;
                         delete mQueuedBye;
@@ -564,7 +564,7 @@ InviteSession::dispatch(const SipMessage& msg)
                      {
                         if (offans.first == Answer)
                         {
-                           //no late media required, so just send the RESIP_ACK
+                           //no late media required, so just send the ACK
                            send(makeAck());
                         }
                         incomingSdp(msg, offans.second);
@@ -606,7 +606,7 @@ InviteSession::dispatch(const SipMessage& msg)
                   //this usage other than onTerminated
                   if (mQueuedBye)
                   {
-                     send(makeAck());   // RESIP_ACK the 200 first then send RESIP_BYE
+                     send(makeAck());   // ACK the 200 first then send BYE
                      mState = Terminated;
                      mLastRequest = *mQueuedBye;
                      delete mQueuedBye;
@@ -628,9 +628,9 @@ InviteSession::dispatch(const SipMessage& msg)
                return;
             }
          }
-         else if(msg.header(h_CSeq).method() == RESIP_BYE && msg.isRequest())
+         else if(msg.header(h_CSeq).method() == BYE && msg.isRequest())
          {
-	        // Inbound RESIP_BYE crosses with outbound REINVITE
+	        // Inbound BYE crosses with outbound REINVITE
 
 	        mState = Terminated;
 
@@ -666,7 +666,7 @@ InviteSession::makeInfo(auto_ptr<Contents> contents)
                                   __FILE__, __LINE__);
    }
    mNitState = NitProceeding;
-   mDialog.makeRequest(mLastNit, RESIP_INFO);
+   mDialog.makeRequest(mLastNit, INFO);
    mLastNit.releaseContents();   
    mLastNit.setContents(contents);
    return mLastNit;   
@@ -675,9 +675,9 @@ InviteSession::makeInfo(auto_ptr<Contents> contents)
 SipMessage& 
 InviteSession::makeRefer(const NameAddr& referTo)
 {
-   mDialog.makeRequest(mLastRequest, RESIP_REFER);
+   mDialog.makeRequest(mLastRequest, REFER);
    mLastRequest.header(h_ReferTo) = referTo;
-//   mLastRequest.header(h_ReferTo).param(p_method) = getMethodName(RESIP_INVITE);   
+//   mLastRequest.header(h_ReferTo).param(p_method) = getMethodName(INVITE);   
    return mLastRequest;   
 }
 
@@ -689,7 +689,7 @@ InviteSession::makeRefer(const NameAddr& referTo, InviteSessionHandle sessionToR
       throw UsageUseException("Attempted to make a refer w/ and invalid replacement target", __FILE__, __LINE__);
    }
    
-   mDialog.makeRequest(mLastRequest, RESIP_REFER);
+   mDialog.makeRequest(mLastRequest, REFER);
    mLastRequest.header(h_ReferTo) = referTo;
    CallId replaces;
    DialogId id = sessionToReplace->mDialog.getId();   
@@ -711,14 +711,14 @@ InviteSession::end()
          throw UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
          break;
       case Connected:
-         // Check state of 200 retrans map to see if we have recieved an RESIP_ACK or not yet
+         // Check state of 200 retrans map to see if we have recieved an ACK or not yet
          if (mFinalResponseMap.find(mLastIncomingRequest.header(h_CSeq).sequence()) != mFinalResponseMap.end())
          {
             if(!mQueuedBye)
             {
-               // No RESIP_ACK yet - send RESIP_BYE after RESIP_ACK is received
+               // No ACK yet - send BYE after ACK is received
                mQueuedBye = new SipMessage(mLastRequest);
-               mDialog.makeRequest(*mQueuedBye, RESIP_BYE);
+               mDialog.makeRequest(*mQueuedBye, BYE);
             }
             else
             {
@@ -728,7 +728,7 @@ InviteSession::end()
          else
          {
             InfoLog ( << "InviteSession::end, Connected" );  
-            mDialog.makeRequest(mLastRequest, RESIP_BYE);
+            mDialog.makeRequest(mLastRequest, BYE);
             //new transaction
             assert(mLastRequest.header(h_Vias).size() == 1);
             mState = Terminated;
@@ -739,7 +739,7 @@ InviteSession::end()
          if(!mQueuedBye)
          {
             mQueuedBye = new SipMessage(mLastRequest);
-            mDialog.makeRequest(*mQueuedBye, RESIP_BYE);
+            mDialog.makeRequest(*mQueuedBye, BYE);
          }
          else
          {
@@ -823,7 +823,7 @@ InviteSession::send(SipMessage& msg)
 {
    Destroyer::Guard guard(mDestroyer);
    //handle NITs separately
-   if (msg.header(h_CSeq).method() == RESIP_INFO)
+   if (msg.header(h_CSeq).method() == INFO)
    {
       mDum.send(msg);
       return;      
@@ -840,9 +840,9 @@ InviteSession::send(SipMessage& msg)
    {
       switch(msg.header(h_RequestLine).getMethod())
       {
-         case RESIP_INVITE:
-         case RESIP_UPDATE:
-         case RESIP_ACK:
+         case INVITE:
+         case UPDATE:
+         case ACK:
             if (mNextOfferOrAnswerSdp)
             {
                msg.setContents(mNextOfferOrAnswerSdp);
@@ -860,15 +860,15 @@ InviteSession::send(SipMessage& msg)
       int code = msg.header(h_StatusLine).statusCode();
       //!dcm! -- probably kill this object earlier, handle 200 to bye in
       //DialogUsageManager...very soon 
-      if (msg.header(h_CSeq).method() == RESIP_BYE && code == 200) //!dcm! -- not 2xx?
+      if (msg.header(h_CSeq).method() == BYE && code == 200) //!dcm! -- not 2xx?
 
       {
          mState = Terminated;
          mDum.send(msg);
-	     //mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      // This is actually called when recieving the RESIP_BYE message so that the RESIP_BYE message can be passed to onTerminated
+	     //mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      // This is actually called when recieving the BYE message so that the BYE message can be passed to onTerminated
          guard.destroy();
       }
-      else if (code >= 200 && code < 300 && msg.header(h_CSeq).method() == RESIP_INVITE)
+      else if (code >= 200 && code < 300 && msg.header(h_CSeq).method() == INVITE)
       {
          int seq = msg.header(h_CSeq).sequence();
          mCurrentRetransmit200 = Timer::T1;         
@@ -1056,7 +1056,7 @@ InviteSession::makeAck()
    assert(mAckMap.find(cseq) == mAckMap.end());
    SipMessage& ack = mAckMap[cseq];
    ack = mLastRequest;
-   mDialog.makeRequest(ack, RESIP_ACK);
+   mDialog.makeRequest(ack, ACK);
    mDum.addTimerMs(DumTimeout::CanDiscardAck, Timer::TH, getBaseHandle(), cseq);
 
    assert(ack.header(h_Vias).size() == 1);
