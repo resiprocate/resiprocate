@@ -111,17 +111,8 @@ ConnectionMap::get(const Transport::Tuple& who, int attempt)
       return 0;
    }
 
-#if 0
-#if WIN32
-   unsigned long block = 0;
-   int errNoBlock = ioctlsocket( sock, FIONBIO , &block );
-   assert( errNoBlock == 0 );
-#else
-   int flags  = fcntl( sock, F_GETFL, 0);
-   int errNoBlock = fcntl(sock, F_SETFL, flags| O_NONBLOCK );
-   assert( errNoBlock == 0 );
-#endif
-#endif   
+   makeSocketNonBlocking(sock);
+
    // succeeded, add the connection
    return add(who, sock);
 }
@@ -149,6 +140,7 @@ ConnectionMap::gc(UInt64 relThreshhold)
    {
       if (i->mLastUsed < threshhold)
       {
+         DebugLog( << "ConnectionMap::gc: " << *i);
          Connection* old = i;
          i = i->remove();
          mConnections.erase(old->mWho);
@@ -231,7 +223,7 @@ ConnectionMap::Connection::process(size_t bytesRead, Fifo<Message>& fifo)
       case NewMessage:
       {
          mPreparse.reset();
-         mMessage = new SipMessage();
+         mMessage = new SipMessage(true);
          mMessage->setSource(mWho);
       }
       case ReadingHeaders:
@@ -279,6 +271,7 @@ ConnectionMap::Connection::process(size_t bytesRead, Fifo<Message>& fifo)
             if (mBufferPos + bytesRead - mPreparse.nDiscardOffset() >= contentLength)
             {
                mMessage->setBody(mBuffer + mPreparse.nDiscardOffset(), contentLength);
+               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
                fifo.add(mMessage);
 
                int overHang = (mBufferPos + bytesRead) - (mPreparse.nDiscardOffset() + contentLength);

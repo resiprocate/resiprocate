@@ -25,7 +25,8 @@ class TransportMessage : public Message
 
       bool isFailed() const { return mFailure; }
       
-      virtual Data brief() const { return Data(mFailure); }
+      virtual Data brief() const { return "TransportMessage: " + mTransactionId + " " + (mFailure ? "failed" : "succeeded"); }
+      
       virtual std::ostream& encode(std::ostream& strm) const
       {
          strm << mTransactionId << " : " << mFailure;
