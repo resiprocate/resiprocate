@@ -120,7 +120,7 @@ Pkcs7Contents::parse(ParseBuffer& pb)
    pb.skipToEnd();
    pb.data(mText, anchor);
 
-   DebugLog("Pkcs7Contents::parsed <" << mText.escaped() << ">" );
+   DebugLog(<< "Pkcs7Contents::parsed <" << mText.escaped() << ">" );
 }
 
 

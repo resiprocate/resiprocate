@@ -171,7 +171,7 @@ TuIM::processRequest(SipMessage* msg)
       return;
    }
 
-   InfoLog( "Got request that was not handled" );
+   InfoLog(<< "Got request that was not handled" );
 }
 
 
@@ -244,7 +244,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
    Contents* contents = msg->getContents();
    if ( !contents )
    {
-      InfoLog( "Received NOTIFY message event with no contents" );
+      InfoLog(<< "Received NOTIFY message event with no contents" );
       mCallback->presenseUpdate( from, true, Data::Empty );
       return;
    }
@@ -255,7 +255,7 @@ TuIM::processNotifyRequest(SipMessage* msg)
    Pidf* body = dynamic_cast<Pidf*>(contents);
    if ( !body )
    {
-      InfoLog( "Received NOTIFY message event with no PIDF contents" );
+      InfoLog(<< "Received NOTIFY message event with no PIDF contents" );
       mCallback->presenseUpdate( from, true, Data::Empty );
       return;
    }
@@ -307,7 +307,7 @@ TuIM::processMessageRequest(SipMessage* msg)
    Contents* contents = msg->getContents();
    if ( !contents )
    {
-      InfoLog( "Received Message message with no contents" );
+      InfoLog(<< "Received Message message with no contents" );
       delete msg; msg=0;
       return;
    }
@@ -501,14 +501,14 @@ TuIM::processRegisterResponse(SipMessage* msg)
             if ( uri.getAor() == mContact.getAor() )
             {
                int e = i->param(p_expires);
-               DebugLog( "match " << uri.getAor() << " e=" << e );
+               DebugLog(<< "match " << uri.getAor() << " e=" << e );
 
                expires = e;
             }
          }
          catch ( exception* )
          {
-            InfoLog( "Bad contact in 2xx to register - skipped" );
+            InfoLog(<< "Bad contact in 2xx to register - skipped" );
          }
          
          i++;
@@ -516,7 +516,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
 
       if ( expires < 5 )
       {
-         InfoLog( << "Got very small expiers of " << expires );
+         InfoLog(<< "Got very small expiers of " << expires );
          expires = 5;
       }
 
