@@ -391,67 +391,71 @@ namespace
 
       default:
          assert(unknown_transport);
-         return unknown_transport;
+         return unknown_transport;  // !kh! just to make it compile wo/warning.
       }
    }
-}
 
-namespace
-{
-Tuple
-getFirstInterface(bool is_v4, TransportType type)
-{
-   // !kh!
-   // 1. Query local hostname.
-   char hostname[256] = "";
-   if(gethostname(hostname, sizeof(hostname)) != 0)
+   Tuple
+   getFirstInterface(bool is_v4, TransportType type)
    {
-      int e = getErrno();
-      Transport::error( e );
-      InfoLog(<< "Can't query local hostname : [" << e << "] " << strerror(e) );
-      throw Transport::Exception("Can't query local hostname", __FILE__, __LINE__);
+// !kh! both getaddrinfo() and IPv6 are supported by cygwin, yet.
+#if !defined(__CYGWIN__)
+      // !kh!
+      // 1. Query local hostname.
+      char hostname[256] = "";
+      if(gethostname(hostname, sizeof(hostname)) != 0)
+      {
+         int e = getErrno();
+         Transport::error( e );
+         InfoLog(<< "Can't query local hostname : [" << e << "] " << strerror(e) );
+         throw Transport::Exception("Can't query local hostname", __FILE__, __LINE__);
+      }
+      InfoLog(<< "Local hostname is [" << hostname << "]");
+
+      // !kh!
+      // 2. Resolve address(es) of local hostname for specified transport.
+      const bool is_dgram = isDgramTransport(type);
+      addrinfo hint;
+      memset(&hint, 0, sizeof(hint));
+      hint.ai_family    = is_v4 ? PF_INET : PF_INET6;
+      hint.ai_flags     = AI_PASSIVE;
+      hint.ai_socktype  = is_dgram ? SOCK_DGRAM : SOCK_STREAM;
+
+      addrinfo* results;
+      int ret = getaddrinfo(
+         hostname,
+         0,
+         &hint,
+         &results);
+
+      if(ret != 0)
+      {
+         Transport::error( ret ); // !kh! is this the correct sematics? ret is not errno.
+         InfoLog(<< "Can't resolve " << hostname << "'s address : [" << ret << "] " << gai_strerror(ret) );
+         throw Transport::Exception("Can't resolve hostname", __FILE__,__LINE__);
+      }
+
+      // !kh!
+      // 3. Use first address resolved if there are more than one.
+      // What should I do if there are more than one address?
+      // i.e. results->ai_next != 0.
+      Tuple source(*(results->ai_addr), type);
+      InfoLog(<< "Local address is " << source);
+      addrinfo* ai = results->ai_next;
+      for(; ai; ai = ai->ai_next)
+      {
+         Tuple addr(*(ai->ai_addr), type);
+         InfoLog(<<"Additional address " << addr);
+      }
+      freeaddrinfo(results);
+
+      return   source;
+#else
+      static const bool cygwin_not_supported = false;
+      assert(cygwin_not_supported);
+      return   Tuple();
+#endif
    }
-   InfoLog(<< "Local hostname is [" << hostname << "]");
-
-   // !kh!
-   // 2. Resolve address(es) of local hostname for specified transport.
-   const bool is_dgram = isDgramTransport(type);
-   addrinfo hint;
-   memset(&hint, 0, sizeof(hint));
-   hint.ai_family    = is_v4 ? PF_INET : PF_INET6;
-   hint.ai_flags     = AI_PASSIVE;
-   hint.ai_socktype  = is_dgram ? SOCK_DGRAM : SOCK_STREAM;
-
-   addrinfo* results;
-   int ret = getaddrinfo(
-      hostname,
-      0,
-      &hint,
-      &results);
-
-   if(ret != 0)
-   {
-      Transport::error( ret ); // !kh! is this the correct sematics? ret is not errno.
-      InfoLog(<< "Can't resolve " << hostname << "'s address : [" << ret << "] " << gai_strerror(ret) );
-      throw Transport::Exception("Can't resolve hostname", __FILE__,__LINE__);
-   }
-
-   // !kh!
-   // 3. Use first address resolved if there are more than one.
-   // What should I do if there are more than one address?
-   // i.e. results->ai_next != 0.
-   Tuple source(*(results->ai_addr), type);
-   InfoLog(<< "Local address is " << source);
-   addrinfo* ai = results->ai_next;
-   for(; ai; ai = ai->ai_next)
-   {
-      Tuple addr(*(ai->ai_addr), type);
-      InfoLog(<<"Additional address " << addr);
-   }
-   freeaddrinfo(results);
-
-   return   source;
-}
 }
 
 Tuple
@@ -483,11 +487,11 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 #endif
          {
             // !kh!
-            // This doesn't work all the time.
+            // The connected UDP technique doesn't work all the time.
             // 1. Might not work on all implementaions as stated in UNP vol.1 8.14.
             // 2. Might not work under unspecified condition on Windows,
             //    search "getsockname" in MSDN library.
-            // 3. We experience this issue on our production software.
+            // 3. We've experienced this issue on our production software.
 
             // this process will determine which interface the kernel would use to
             // send a packet to the target by making a connect call on a udp socket.
@@ -528,6 +532,8 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
                throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
             }
 
+            // !kh! test if connected UDP technique results INADDR_ANY, i.e. 0.0.0.0.
+            // if it does, assume the first avaiable interface.
             if(source.isV4())
             {
                long src = (reinterpret_cast<const sockaddr_in*>(&source.getSockaddr())->sin_addr.s_addr);
@@ -537,15 +543,22 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
                   source = getFirstInterface(true, target.getType());
                }
             }
-            else
+            else  // IPv6
             {
-#if(1)
-               static const bool ipv6_support_not_completed = false;
-               assert(ipv6_support_not_completed);
+#if defined(USE_IPV6)
+#  if defined(_MSC_VER)
+                  static const bool ipv6_support_not_completed = false;
+                  assert(ipv6_support_not_completed);
+#  else
+                  // !kh! this is compiled out on windows,
+                  // for some reason VC dosen't recognize INADDR6_ANY,
+                  // and I don't have time yet to find out why.
+                  const void * src = (&reinterpret_cast<const sockaddr_in6*>(&source.getSockaddr())->sin6_addr);
+                  if(memcmp(src, INADDR6_ANY, sizeof(INADDR6_ANY)) == 0)
+                     source = getFirstInterface(false, target.getType());
+#  endif
 #else
-               const void * src = (&reinterpret_cast<const sockaddr_in6*>(&source.getSockaddr())->sin6_addr);
-               if(memcmp(src, INADDR6_ANY, sizeof(INADDR6_ANY)) == 0)
-                  source = getFirstInterface(false, target.getType());
+               assert(0);
 #endif
             }
             //if(source.getSockaddr() ==
