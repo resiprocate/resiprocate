@@ -10,7 +10,7 @@ class AppDialogSet;
 class AppDialogSetFactory
 {
    public:
-      virtual AppDialogSet* createAppDialogSet(const DialogUsageManager&, const SipMessage&)=0;      
+      virtual AppDialogSet* createAppDialogSet(const DialogUsageManager&, const SipMessage&);      
 };
 
 }
