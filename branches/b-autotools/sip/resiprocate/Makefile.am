@@ -25,6 +25,8 @@ libresiprocate_la_SOURCES = \
 	os/RecursiveMutex.cxx \
 	os/Socket.cxx \
 	os/Subsystem.cxx \
+	os/SysLogBuf.cxx \
+	os/SysLogStream.cxx \
 	os/ThreadIf.cxx \
 	os/Timer.cxx \
 	os/Tuple.cxx \
@@ -38,7 +40,6 @@ libresiprocate_la_SOURCES = \
 	CpimContents.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
-	Dialog2.cxx \
 	DialogSet.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
@@ -67,6 +68,23 @@ libresiprocate_la_SOURCES = \
 	ParameterHash.cxx \
 	ParameterTypes.cxx \
 	ParserCategories.cxx \
+	\
+	Auth.cxx \
+        CSeqCategory.cxx \
+        CallId.cxx \
+        DateCategory.cxx \
+        ExpiresCategory.cxx \
+        GenericUri.cxx \
+        IntegerCategory.cxx \
+        Mime.cxx \
+        NameAddr.cxx \
+        RequestLine.cxx \
+        StatusLine.cxx \
+        StringCategory.cxx \
+        Token.cxx \
+        Via.cxx \
+        WarningCategory.cxx \
+	\
 	ParserCategory.cxx \
 	Pidf.cxx \
 	ParseUtil.cxx \
