@@ -1,16 +1,28 @@
-#include "ServerAuthManager.hxx"
 #include <cassert>
+
+#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
-bool 
-ServerAuthManager::handle(UserProfile& userProfile, const SipMessage& response)
+
+ServerAuthManager::ServerAuthManager(DialogUsageManager& dum):
+   nextTransactionToken(1)
 {
-   assert(0);
+}
+
+      
+// return true if request is authorized
+bool 
+ServerAuthManager::handle(std::auto_ptr<Message>& msg)
+{
    return true;
 }
+
+
 
 
 /* ====================================================================
