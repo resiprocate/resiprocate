@@ -6,7 +6,7 @@ namespace Vocal2
 class Message 
 {
    public:
-      ~Message(){}
+      virtual ~Message(){}
 };
 }
 
