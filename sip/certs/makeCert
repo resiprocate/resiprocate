@@ -8,7 +8,7 @@ elif [ $# == 2 ]; then
 else
   echo "Usage: makeCert test.example.org [days]" 
   echo "       makeCert alice@example.org [days]"
-  echo "days is how long the certifiace is valid"
+  echo "days is how long the certificate is valid"
   echo "days set to 0 generates an invalid certificate"
   exit 0
 fi
