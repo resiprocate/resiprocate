@@ -7,21 +7,30 @@
 using namespace std;
 using namespace Vocal2;
 
+HeaderFieldValue::HeaderFieldValue()
+   : next(0),
+     mParserCategory(0),
+     mField(0),
+     mFieldLength(0),
+     mMine(false)
+{}
+
 HeaderFieldValue::HeaderFieldValue(const char* field, uint fieldLength)
-  : mField(field),
-    mFieldLength(fieldLength),
+  : next(0),
     mParserCategory(0),
+    mField(field),
+    mFieldLength(fieldLength),
     mMine(false)
 {}
 
 HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
   : next(hfv.next),
+    mParserCategory(0),
     mField(0),
     mFieldLength(hfv.mFieldLength),
     mSubComponentList(hfv.mSubComponentList),
     mUnknownSubComponentList(hfv.mUnknownSubComponentList),
-    //  mParserCategory(hfv.mParserCategory->clone(this)),
-    mParserCategory(0),
+    mParserCategory(hfv.mParserCategory->clone(this)),
     mMine(true)
 {
 
