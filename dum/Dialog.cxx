@@ -182,7 +182,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 
 Dialog::~Dialog()
 {
-   mDialogSet.mDialogs.remove(this);
+   mDialogSet.mDialogs.erase(this->getId());
 }
 
 DialogId
@@ -643,5 +643,12 @@ void Dialog::possiblyDie()
    {
       delete this;
    }
+}
+
+ostream& 
+resip::operator<<(ostream& strm, const Dialog& dialog)
+{
+
+   return strm;
 }
 
