@@ -768,7 +768,7 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
       BIO_set_close(in, BIO_NOCLOSE);
       
       EVP_PKEY* privateKey=0;
-      if (PEM_read_bio_PrivateKey(in, &privateKey, 0, passPhrase) == 0)
+      if ( ( privateKey = PEM_read_bio_PrivateKey(in, NULL, 0, passPhrase)) == NULL)
       {
          ErrLog(<< "Could not read private key from <" << privateKeyPEM << ">" );
          throw Exception("Could not read private key ", __FILE__,__LINE__);
