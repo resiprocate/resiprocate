@@ -16,7 +16,7 @@ class UdpTransport : public Transport
       virtual  ~UdpTransport();
 
       virtual void send( const sockaddr_in& address, const  char* buffer, size_t length); //, TransactionId txId) ;
-      virtual void process() ;
+      virtual void process(fd_set* fdSet=NULL) ;
 
    private:
       static const size_t MaxBufferSize;

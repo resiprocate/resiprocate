@@ -11,7 +11,7 @@
 using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
-SipStack::SipStack()
+SipStack::SipStack(bool multiThreaded)
   : mExecutive(*this),
     mTransportSelector(*this),
     mTimers(mStateMacFifo)
@@ -54,7 +54,7 @@ SipStack::receive()
    }
    else
    {
-      DebugLog (<< "no message available");
+	   //DebugLog (<< "no message available");
       return 0;
    }
 }
@@ -63,9 +63,7 @@ SipStack::receive()
 void 
 SipStack::process(fd_set* fdSet)
 {
-  
-   mExecutive.process();
-  
+	mExecutive.process(fdSet);
 }
 
 
@@ -73,18 +71,8 @@ SipStack::process(fd_set* fdSet)
 int 
 SipStack::getTimeTillNextProcess()
 {
-
-   // FIX there needs to be some code here once the executive can tell
-   // us this
-   return 50;
-
+	return mExecutive.getTimeTillNextProcess();
 } 
-
-void 
-SipStack::runThread( enum ThreadFunction funcType )
-{
-  
-}
 
 
 void 
@@ -93,4 +81,5 @@ SipStack::buildFdSet( fd_set* fdSet, int* fdSetSize )
 	assert( fdSet );
 	assert( fdSetSize );
 	
+	mExecutive.buildFdSet( fdSet, fdSetSize );
 }

@@ -1,6 +1,10 @@
 #if !defined(EXECUTIVE_HXX)
 #define EXECUTIVE_HXX
 
+#include <util/Socket.hxx>
+#include <sys/types.h>
+
+
 namespace Vocal2
 {
 
@@ -11,24 +15,22 @@ class Executive
    public:
       Executive( SipStack& stack );
 
-      void process();
+      void process(fd_set* fdSet);
+
+	// build the FD set to use in a select to find out when process bust be called again
+	void buildFdSet( fd_set* fdSet, int* fdSetSize );  
+
+	/// returns time in milliseconds when process next needs to be called 
+      int getTimeTillNextProcess(); 
 
    private:
       SipStack& mStack;
 
-      //bool haveUdpThread;
-      bool processTransports(); // return true if more work to do
+      bool processTransports(fd_set* fdSet); // return true if more work to do
 
-      //bool haveTCPThread;
-      //void processTCP();
-
-      ///bool haveStateMachineThread;
       bool processStateMachine();// return true if more work to do
 
-      //bool haveTimerThread;
       bool processTimer();// return true if more work to do
-
-
 };
 
 }

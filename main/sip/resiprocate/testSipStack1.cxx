@@ -47,6 +47,8 @@ main()
 	  if ( msg )
 	  {
 		  DebugLog ( << "got message: " << *msg);
+	   
+		  msg->encode(cerr);	  
 	  }
 	  
   }
