@@ -77,7 +77,7 @@ DialogUsageManager::addHandler(MethodTypes&, OutOfDialogHandler*)
 }
 
 void
-DialogUsageManager::process(FdSet fdset)
+DialogUsageManager::process()
 {
    SipMessage* msg = mStack.receive();
    if (msg)
