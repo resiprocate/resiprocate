@@ -145,6 +145,8 @@ Contents*
 Contents::createContents(const Mime& contentType, 
                          const Data& contents)
 {
+  // !ass! why are we asserting that the Data doesn't own the buffer?
+  // !ass! HFV is an overlay -- then setting c->mIsMine to true ?? dlb Q
    assert(!contents.mMine);
    HeaderFieldValue *hfv = new HeaderFieldValue(contents.data(), contents.size());
    assert(Contents::getFactoryMap().find(contentType) != Contents::getFactoryMap().end());

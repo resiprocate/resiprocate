@@ -24,6 +24,7 @@
 #include "resiprocate/DnsResolver.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/SipStack.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/TransactionController.hxx"
 
@@ -195,8 +196,10 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
             else
             {
                WarningLog (<< "Trying to lookup a dns when scheme is not specified: " << uri);
-               //assert(0);
-               mController.mStateMacFifo.add(new DnsMessage(transactionId));
+               //assert(0); //!ass! rk thinks possibly bad non-assert
+               //!ass! message to transaction indicating no results might be
+               //!ass! more appropriate -- not this:
+               mStack.mStateMacFifo.add(new DnsMessage(transactionId));
                return;
             }
          }
@@ -309,7 +312,7 @@ DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int por
          case TRY_AGAIN:
             InfoLog ( << "try again: " << host);
             break;
-		 default:
+        default:
             ErrLog( << "DNS Resolver got error" << herrno << " looking up " << host );
             assert(0);
             break;

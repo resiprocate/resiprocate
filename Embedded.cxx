@@ -49,13 +49,12 @@ Embedded::decode(const Data& in, unsigned int& count)
    char *put = ret;
 
    count = 0;
-   while (get != end)
+   while (get < end)
    {
-      if (*get == Symbols::PERCENT[0])
+      if (*get == Symbols::PERCENT[0] && get+2 < end)
       {
          *put = fromHex(*(get+1), *(get+2));
          get += 3;
-         assert(get <= end);
       }
       else
       {

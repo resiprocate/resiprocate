@@ -33,6 +33,15 @@ class MultipartMixedContents : public Contents
       Parts& parts() {checkParsed(); return mContents;}
       const Parts& parts() const {checkParsed(); return mContents;}
 
+      class Exception : public BaseException
+      {
+        public:
+         Exception(const Data& msg, const Data& file, const int line)
+            : BaseException(msg, file, line) {}
+
+         const char* name() const { return "MultipartMixedContents::Exception"; }
+      };
+
    protected:
       void clear();
       
