@@ -1,0 +1,14 @@
+*.la
+*.lo
+.dependlibs
+.deps
+.gdb_history
+.libs
+Makefile.in
+SipTortureTests
+bin.*
+lg
+limpc
+obj.*
+test[0-9A-Z]*
+tests.out
