@@ -114,10 +114,10 @@ class SipMessage : public Message
          return *(ParserContainer<typename MultiHeader<T>::Type>*)mHeaders[T]->getParserCategory();
       }
 
-      RequestLineComponent& 
+      RequestLine& 
       header(const RequestLineType& l);
 
-      StatusLineComponent& 
+      StatusLine& 
       header(const StatusLineType& l);
       
       template <int T>
