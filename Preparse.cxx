@@ -135,7 +135,6 @@ const char *  ppStateName(Preparse::State s)
 
 
 const int X = -1;
-const char XC = -1;
 const int nOct = UCHAR_MAX + 1;
 
 
@@ -160,8 +159,8 @@ Preparse::AE ( State start,
     int dispStart = (disposition==X) ? 0 : disposition;
     int dispEnd = (disposition==X) ? nDisp : disposition+1;
    
-    int charStart = (c==X) ? 0 : (int)c;
-    int charEnd = (c==X) ? nOct : (int)(c+1);
+    int charStart = (c==X) ? 0 : c;
+    int charEnd = (c==X) ? nOct : (c+1);
 
     for(int st = stateStart ; st < stateEnd ; st++)
         for(int di = dispStart ; di < dispEnd ; di++)
@@ -260,34 +259,34 @@ Preparse::InitStatePreparseStateTable()
     // AE ( state, disp, char, newstate, work)
 
     // MUST be AE( format ) so fsm generation will work.
-    AE( NewMsg,X,XC,StartLine,actAdd); // all chars
+    AE( NewMsg,X,X,StartLine,actAdd); // all chars
     AE( NewMsg,X,CR,NewMsgCrLf,actNone); // eat CR
 
-    AE( NewMsgCrLf,X,XC,EndMsg,actBad|actDiscard );
+    AE( NewMsgCrLf,X,X,EndMsg,actBad|actDiscard );
     AE( NewMsgCrLf,X,LF,NewMsg,actDiscard); 
 
-    AE( StartLine,X,XC,StartLine,actAdd);
+    AE( StartLine,X,X,StartLine,actAdd);
     AE( StartLine,X,CR,StartLineCrLf,actNone);
 
-    AE( StartLineCrLf,X,XC,EndMsg,actBad|actDiscard);
+    AE( StartLineCrLf,X,X,EndMsg,actBad|actDiscard);
     AE( StartLineCrLf,X,LF,BuildHdr,actReset|actFline|actDiscard);
 
-    AE( BuildHdr,X,XC, BuildHdr,actAdd);
+    AE( BuildHdr,X,X, BuildHdr,actAdd);
     AE( BuildHdr,X,LWS,EWSPostHdr,actNone);
     AE( BuildHdr,X,COLON,EWSPostColon,actHdr|actReset|actDiscardKnown);
 
-    AE( EWSPostHdr,X,XC,EndMsg,actBad|actDiscard);
+    AE( EWSPostHdr,X,X,EndMsg,actBad|actDiscard);
     AE( EWSPostHdr,X,LWS,EWSPostHdr,actNone);
     AE( EWSPostHdr,X,COLON,EWSPostColon,actHdr|actReset|actDiscardKnown);
 
-    AE( EWSPostColon,X,XC,BuildData,actAdd);
+    AE( EWSPostColon,X,X,BuildData,actAdd);
     AE( EWSPostColon,X,LWS,EWSPostColon,actReset|actDiscardKnown);
     AE( EWSPostColon,X,CR,EmptyHdrCrLf,actReset|actDiscardKnown);
 
-    AE( EmptyHdrCrLf,X,XC,EndMsg,actBad|actDiscard);
+    AE( EmptyHdrCrLf,X,X,EndMsg,actBad|actDiscard);
     AE( EmptyHdrCrLf,X,LF,EmptyHdrCont,actReset|actDiscardKnown);
     
-    AE( EmptyHdrCont,X,XC,BuildHdr,actReset|actBack|actDiscard);
+    AE( EmptyHdrCont,X,X,BuildHdr,actReset|actBack|actDiscard);
     AE( EmptyHdrCont,X,LWS,EWSPostColon,actReset|actDiscardKnown);
     
     // Add edges that will ''skip'' data building and
@@ -295,19 +294,19 @@ Preparse::InitStatePreparseStateTable()
     AE( EWSPostColon,dCommaSep,LAQUOT,InAng,actAdd );
     AE( EWSPostColon,dCommaSep,QUOT,InQ,actAdd );
 
-    AE( BuildData,X,XC,BuildData,actAdd);
+    AE( BuildData,X,X,BuildData,actAdd);
     AE( BuildData,X,CR,BuildDataCrLf,actNone|actFlat);
 
-    AE( BuildDataCrLf,X,XC,EndMsg,actBad|actDiscard);
+    AE( BuildDataCrLf,X,X,EndMsg,actBad|actDiscard);
     AE( BuildDataCrLf,X,LF,CheckCont,actNone|actFlat);
 
     // (push 1st then b/u)
-    AE( CheckCont,X,XC, BuildHdr,actData|actReset|actBack|actDiscard);
+    AE( CheckCont,X,X, BuildHdr,actData|actReset|actBack|actDiscard);
     AE( CheckCont,X,LWS,BuildData,actAdd );
    
     // Check if double CRLF (end of hdrs)
     AE( CheckCont,X,CR,CheckEndHdr,actData|actReset|actDiscard);
-    AE( CheckEndHdr,X,XC,EndMsg,actBad|actDiscard);
+    AE( CheckEndHdr,X,X,EndMsg,actBad|actDiscard);
     AE( CheckEndHdr,X,LF,EndMsg,actEndHdrs|actDiscard);
 
     // Disposition sensitive edges
@@ -315,22 +314,22 @@ Preparse::InitStatePreparseStateTable()
     AE( BuildData,dCommaSep,LAQUOT,InAng,actAdd);
 
     // Angle Quotes
-    AE(InAng,X,XC,InAng,actAdd);
+    AE(InAng,X,X,InAng,actAdd);
     AE(InAng,X,RAQUOT,BuildData,actAdd);
     AE(InAng,X,QUOT,InAngQ,actAdd);
 
-    AE(InAngQ,X,XC,InAngQ,actAdd);
+    AE(InAngQ,X,X,InAngQ,actAdd);
     AE(InAngQ,X,QUOT,InAng,actAdd);
     AE(InAngQ,X,LSLASH,InAngQEsc,actAdd);
 
-    AE(InAngQEsc,X,XC,InAngQ,actAdd);
+    AE(InAngQEsc,X,X,InAngQ,actAdd);
 
     // Bare Quotes
     AE(BuildData,dCommaSep,QUOT,InQ,actAdd);
-    AE(InQ,X,XC,InQ,actAdd);
+    AE(InQ,X,X,InQ,actAdd);
     AE(InQ,X,QUOT,BuildData,actAdd);
     AE(InQ,X,LSLASH,InQEsc,actAdd);
-    AE(InQEsc,X,XC,InQ,actAdd);
+    AE(InQEsc,X,X,InQ,actAdd);
    
     // add comma transition
     AE(BuildData,dCommaSep,COMMA,EWSPostColon,actData|actReset|actDiscardKnown);
@@ -430,14 +429,16 @@ Preparse::process(SipMessage& msg,
      {
         DebugLog(<<"[->] PP::process(...)");
         // !ah! Log all the anchors etc here.
-        DebugLog(<<"mAnchorEndOff:"<<mAnchorEndOff);
-        DebugLog(<<"mAnchorBegOff:"<<mAnchorBegOff);
-        DebugLog(<<"mHeaderType:"<<mHeaderType);
-        DebugLog(<<"mHeaderOff:"<<mHeaderOff);
+        DebugLog(<<"mAnchorEndOff:"<<(void*)mAnchorEndOff);
+        DebugLog(<<"mAnchorBegOff:"<<(void*)mAnchorBegOff);
+        DebugLog(<<"mHeaderType:"<<(void*)mHeaderType);
+        DebugLog(<<"mHeaderOff:"<<(void*)mHeaderOff);
 
         DebugLog(<<"mState:"<< ppStateName(mState));
         DebugLog(<<"mStart: " << mStart);
-        DebugLog(<<"buffer: 0x"<<hex<<(unsigned long)buffer<<dec);
+        DebugLog(<<"buffer: " << (void*)buffer);
+	DebugLog(<<"length: " << length);
+	TestSupport::prettyPrint(buffer,length);
      }
 #endif
 
