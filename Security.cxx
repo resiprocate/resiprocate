@@ -10,6 +10,7 @@
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/PlainContents.hxx"
 #include "resiprocate/Security.hxx"
+#include "resiprocate/SecurityAttributes.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/BaseException.hxx"
@@ -108,13 +109,12 @@ Security::Security(const Data& directory) : mPath(directory)
 void
 Security::preload(const Data& directory)
 {
-#if 0
    FileSystem::Directory dir(directory);
    char buffer[8192];
    Data fileT(Data::Borrow, buffer, sizeof(buffer));
    for (FileSystem::Directory::iterator it = dir.begin(); it != dir.end(); ++it)
    {
-      if (it->suffix(pem))
+      if (it->postfix(pem))
       {         
          if (it->prefix(userCert))
          {
@@ -134,11 +134,10 @@ Security::preload(const Data& directory)
          }
          else if (it->prefix(rootCert))
          {
-            addRootCertPEM(getAor(*it, rootCert), readIntoData(*it));
+            addRootCertPEM(readIntoData(*it));
          }
       }
    }
-#endif
 }
 
 void 
@@ -153,12 +152,10 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 void
 Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
 {
-#if 0
    Data filename = mPath + pemTypePrefixes[type] + name + pem;
    
-   ofstream str(filename, ios::binary);
+   ofstream str(filename.c_str(), ios::binary);
    str.write(buffer.data(), buffer.size());
-#endif
 }
       
 void 
@@ -1171,7 +1168,7 @@ BaseSecurity::signAndEncrypt( const Data& senderAor, Contents* body, const Data&
 }
 
 Data
-BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in )
+BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 {
    DebugLog( << "Compute identity for " << in );
 
@@ -1248,7 +1245,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in )
 }
 
 bool
-BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Data& sigBase64 )
+BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Data& sigBase64 ) const
 {
    if (mDomainCerts.count(signerDomain) == 0)
    {
@@ -1311,30 +1308,31 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 }
 
 void 
-BaseSecurity::checkAndSetIdentity( const SipMessage& msg )
+BaseSecurity::checkAndSetIdentity( const SipMessage& msg ) const
 {
-#if 0
+   auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
+   
    try
    {
       if (checkIdentity(msg.header(h_From).uri().host(),
                         msg.getCanonicalIdentityString(),
                         msg.header(h_Identity).value()))
       {
-         msg.setIdentity(msg.header(h_From).uri().getAor());
-         msg.setIdentityStrength(SecurityAttributes::Identity);
+         sec->setIdentity(msg.header(h_From).uri().getAor());
+         sec->setIdentityStrength(SecurityAttributes::Identity);
       }
       else
       {
-         msg.setIdentity(msg.header(h_From).uri().getAor());
-         msg.setIdentityStrength(SecurityAttributes::FailedIdentity);
+         sec->setIdentity(msg.header(h_From).uri().getAor());
+         sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
       }
    }
    catch (BaseException&)
    {
-      msg.setIdentity(msg.header(h_From).uri().getAor());
-      msg.setIdentityStrength(SecurityAttributes::FailedIdentity);
+      sec->setIdentity(msg.header(h_From).uri().getAor());
+      sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
    }
-#endif
+   msg.setSecurityAttributes(sec);
 }
 
 Contents*
