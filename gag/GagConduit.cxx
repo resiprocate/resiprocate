@@ -255,13 +255,14 @@ GagConduit::registrationFailed(const resip::Uri& uri, int respNumber)
   error += respNumber;
   error = ")";
 
-  GagErrorMessage (error).serialize(cout);
+  GagLoginStatusMessage (false, respNumber, error).serialize(cout);
 }
 
 void 
 GagConduit::registrationWorked(const Uri& dest )
 {
-  // XXX
+  Data ok("Okay");
+  GagLoginStatusMessage (true, 200, ok).serialize(cout);
 }
 
 void 
