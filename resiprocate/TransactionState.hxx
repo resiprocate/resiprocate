@@ -54,6 +54,7 @@ class TransactionState
       bool isRequest(Message* msg) const;
       bool isInvite(Message* msg) const;
       bool isTimer(Message* msg) const;
+      bool isDns(Message* msg) const;
       bool isResponse(Message* msg, int lower=0, int upper=699) const;
       bool isFromTU(Message* msg) const;
       bool isFromWire(Message* msg) const;
