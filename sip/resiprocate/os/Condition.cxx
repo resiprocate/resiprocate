@@ -50,8 +50,6 @@
 
 #include <cassert>
 
-#include "resiprocate/os/Socket.hxx"
-
 #ifndef WIN32
 #include <pthread.h>
 #include <errno.h>
@@ -61,14 +59,14 @@
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Condition.hxx"
 #include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Timer.hxx"
 
 using namespace resip;
-#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
-
 
 Condition::Condition() : mId()
 {
+   //std::cerr << this << " Condition::Condition" << std::endl;
+   
 #ifdef WIN32
    mId =  CreateEvent(
       NULL, //LPSECURITY_ATTRIBUTES lpEventAttributes,
@@ -93,7 +91,7 @@ Condition::~Condition ()
 #else
    if (pthread_cond_destroy(&mId) == EBUSY)
    {
-      WarningLog (<< "Condition variable is busy");
+      //WarningLog (<< "Condition variable is busy");
       assert(0);
    }
 #endif
@@ -103,6 +101,7 @@ Condition::~Condition ()
 void
 Condition::wait (Mutex* mutex)
 {
+   //std::cerr << "Condition::wait " << mutex << std::endl;
 #ifdef WIN32 
     // FixMe: Race condition between time we get mId and when we
     // re-acquire the mutex.
@@ -162,30 +161,26 @@ Condition::wait (Mutex* mutex, int ms)
 	assert(ret != WAIT_FAILED);
 	return (ret == WAIT_OBJECT_0);
 #else
-   timeval waitTime;
-   gettimeofday( &waitTime, NULL );
-
-   waitTime.tv_sec += ms / 1000;
-   waitTime.tv_usec += (ms % 1000) * 1000;
+    UInt64 expires64 = Timer::getTimeMs() + ms;
+    timespec expiresTS;
+    expiresTS.tv_sec = expires64 / 1000;
+    expiresTS.tv_nsec = (expires64 % 1000) * 1000000L;
+    
+    assert( expiresTS.tv_nsec < 1000000000L );
+    
+    //std::cerr << "Condition::wait " << mutex << "ms=" << ms << " expire=" << expiresTS.tv_sec << " " << expiresTS.tv_nsec << std::endl;
+    int ret = pthread_cond_timedwait(&mId, mutex->getId(), &expiresTS);
    
-   timespec expiresTS;
-   
-   expiresTS.tv_sec = waitTime.tv_sec;
-   expiresTS.tv_nsec = waitTime.tv_usec * 1000;
-   
-   assert( waitTime.tv_usec < 1000000000L );
-
-   int ret = pthread_cond_timedwait(&mId, mutex->getId(), &expiresTS);
-   
-   if (ret == EINTR || ret == ETIMEDOUT)
-   {
-      return false;
-   }
-   else
-   {
-      assert( ret == 0 );
-      return true;
-   }
+    if (ret == EINTR || ret == ETIMEDOUT)
+    {
+       return false;
+    }
+    else
+    {
+       //std::cerr << this << " pthread_cond_timedwait failed " << ret << " mutex=" << mutex << std::endl;
+       assert( ret == 0 );
+       return true;
+    }
 #endif
 }
 
