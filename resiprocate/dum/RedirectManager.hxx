@@ -23,7 +23,7 @@ class DialogSet;
 class RedirectManager
 {
    public:   
-      class Ordering : public std::binary_function<NameAddr, NameAddr, bool>
+      class Ordering : public std::binary_function<const NameAddr&, const NameAddr&, bool>
       {
          public:
             virtual bool operator()(const NameAddr& lhs, const NameAddr& rhs) const;
