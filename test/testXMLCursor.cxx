@@ -183,6 +183,8 @@ main()
       assert(tree.getValue() == "christmans");
       assert(!tree.nextSibling());
    }      
+
+   cerr << "All OK" << endl;
       
    return 0;
 }
