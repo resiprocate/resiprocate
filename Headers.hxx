@@ -222,6 +222,46 @@ class Unsupported_MultiHeader : public HeaderBase
 };
 extern Unsupported_MultiHeader h_Unsupporteds;
 
+class Security_Client_MultiHeader : public HeaderBase
+{
+   public:
+      typedef Token Type;
+      virtual Headers::Type getTypeNum() const {return Headers::Security_Client;}
+      Security_Client_MultiHeader()
+      {
+         Headers::CommaTokenizing[Headers::Security_Client] = Type::isCommaTokenizing;
+         Headers::HeaderNames[Headers::Security_Client] = Symbols::Security_Client;
+      }
+};
+extern Security_Client_MultiHeader h_SecurityClients;
+
+class Security_Server_MultiHeader : public HeaderBase
+{
+   public:
+      typedef Token Type;
+      virtual Headers::Type getTypeNum() const {return Headers::Security_Server;}
+      Security_Server_MultiHeader()
+      {
+         Headers::CommaTokenizing[Headers::Security_Server] = Type::isCommaTokenizing;
+         Headers::HeaderNames[Headers::Security_Server] = Symbols::Security_Server;
+      }
+};
+extern Security_Server_MultiHeader h_SecurityServers;
+
+class Security_Verify_MultiHeader : public HeaderBase
+{
+   public:
+      typedef Token Type;
+      virtual Headers::Type getTypeNum() const {return Headers::Security_Verify;}
+      Security_Verify_MultiHeader()
+      {
+         Headers::CommaTokenizing[Headers::Security_Verify] = Type::isCommaTokenizing;
+         Headers::HeaderNames[Headers::Security_Verify] = Symbols::Security_Verify;
+      }
+};
+extern Security_Verify_MultiHeader h_SecurityVerifies;
+
+
 //====================
 // Mime
 //====================

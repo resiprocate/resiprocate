@@ -78,6 +78,9 @@ const char * const Symbols::Reply_To = "Reply-To";
 const char * const Symbols::Retry_After = "Retry-After";
 const char * const Symbols::Require = "Require";
 const char * const Symbols::Route = "Route";
+const char * const Symbols::Security_Client = "Security-Client";
+const char * const Symbols::Security_Server = "Security-Server";
+const char * const Symbols::Security_Verify = "Security-Verify";
 const char * const Symbols::Server = "Server";
 const char * const Symbols::Subject = "Subject";
 const char * const Symbols::Subscription_State = "Subscription-State";
@@ -144,6 +147,10 @@ const char * const Symbols::retryAfter = "retry-after";
 const char * const Symbols::reason = "reason";
 
 const char * const Symbols::auth = "auth";
+
+const char * const Symbols::dAlg = "d-alg";
+const char * const Symbols::dQop = "d-qop";
+const char * const Symbols::dVer = "d-ver";
 
 const int Symbols::DefaultSipPort = 5060;
 const int Symbols::SipTlsPort = 5061;
