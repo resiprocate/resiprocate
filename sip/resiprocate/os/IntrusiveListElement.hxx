@@ -52,8 +52,10 @@
 template <class P, int N=0>
 class IntrusiveListElement
 {
+public:
       // .dlb. should not be necessary -- compiler issue?
       typedef IntrusiveListElement<P,N> me;
+
    public:
       IntrusiveListElement() 
          : mNext(0),
@@ -68,12 +70,16 @@ class IntrusiveListElement
       // make this element an empty list
       static P makeList(P elem)
       {
-         assert(!elem->me::mPrev);
+#ifdef WIN32
+		  assert(0); // TODO HELP !cj! FIX 
+		  // code on other side of #else wonn't compile in windwoes 
+#else
+		  assert(!elem->me::mPrev);
          assert(!elem->me::mNext);
 
          elem->me::mPrev = elem;
          elem->me::mNext = elem;
-
+#endif
          return elem;
       }
 
@@ -102,8 +108,14 @@ class IntrusiveListElement
 
             iterator& operator++()
             {
-               mPos = mPos->me::mNext;
-               return *this;
+#ifdef WIN32
+				// !cj! FIX TODO - get an "ambigiour acces of mNext in resip::Connection on ntext line 
+				// mPos = mPos->mNext;
+				assert(0);
+#else
+				mPos = mPos->me::mNext;
+#endif
+				return *this;
             }
 
             bool operator==(const iterator& rhs)
@@ -160,11 +172,15 @@ class IntrusiveListElement
          assert(me::mPrev);
          assert(me::mNext);
 
-         elem->me::mPrev = me::mPrev;
+#ifdef WIN32
+		 assert(0); // HELP FIX TODO !cj! 
+#else
+		 elem->me::mPrev = me::mPrev;
          elem->me::mNext = static_cast<P>(this);
          
          elem->me::mPrev->me::mNext = elem;
          elem->me::mNext->me::mPrev = elem;
+#endif
       }
 
       void remove()
@@ -176,9 +192,22 @@ class IntrusiveListElement
             //
             // prev -> next
             //      <-
-            me::mNext->me::mPrev = me::mPrev;
+#ifndef WIN32
+			me::mNext->me::mPrev = me::mPrev;
             me::mPrev->me::mNext = me::mNext;
-         }
+#else
+			 // TODO FIX !cj!
+			 assert(0);
+			 // the next line does compile
+			me::mNext = 0;
+
+			// the following 4 lines will not compile - get cannon access private memeber cdeclared in calss InreusiveListElement <P,N> 
+			//me::mNext->mPrev = 0;
+			//me::mNext->me::mPrev = 0
+			//me::mNext->me::mPrev = me::mPrev;
+            //me::mPrev->me::mNext = me::mNext;
+#endif
+		 }
 
          me::mNext = 0;
          me::mPrev = 0;
