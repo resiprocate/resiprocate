@@ -62,6 +62,9 @@ class Security
 
       Security( bool tlsServer, bool useTls/*use ssl if false*/ );
       ~Security();
+  
+      // used to initialize the openssl library
+      static void initialize();
       
       /* The security stuff is for managing certificates that are used by the
        * S/MIME and TLS stuff. Filenames can be provided for all these items but
