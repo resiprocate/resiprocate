@@ -206,6 +206,7 @@ DialogSet::dispatch(const SipMessage& msg)
             assert(mServerOutOfDialogRequest == 0);
             mServerOutOfDialogRequest = makeServerOutOfDialog(request);
             mServerOutOfDialogRequest->dispatch(request);
+			return;
             break;
       }
    }
