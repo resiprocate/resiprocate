@@ -227,12 +227,6 @@ Profile::getSupportedLanguages() const
    return mSupportedLanguages;
 }
 
-Tokens
-Profile::getAllowedEvents() const
-{
-   return mAllowedEvents;
-}
-
 void 
 Profile::addAdvertisedCapability(const Headers::Type header)
 {
