@@ -17,6 +17,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransportMessage.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

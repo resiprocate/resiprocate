@@ -6,6 +6,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 
 using namespace resip;

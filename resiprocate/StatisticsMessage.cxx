@@ -1,6 +1,7 @@
 #include "resiprocate/StatisticsMessage.hxx"
 #include "resiprocate/os/Lock.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #include <string.h>
 
