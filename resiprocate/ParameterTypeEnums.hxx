@@ -23,6 +23,8 @@ class ParameterTypes
          expires,
          handling,
          tag,
+         toTag,
+         fromTag,
          duration,
          branch,
          received,
