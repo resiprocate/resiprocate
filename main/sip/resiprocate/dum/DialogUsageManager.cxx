@@ -61,19 +61,20 @@ DialogUsageManager::DialogUsageManager() :
    mStack(false),
    mStackThread(mStack),
    mDumShutdownHandler(0),
-   mDestroying(false)
+   mShutdownState(Running)
 {
    addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());   
 }
 
 DialogUsageManager::~DialogUsageManager()
 {  
-   mDestroying = true;   
-   DebugLog ( << "~DialogUsageManager" );
+   mShutdownState = Destroying;
+   InfoLog ( << "~DialogUsageManager" );
    while(!mDialogSetMap.empty())
    {
       delete mDialogSetMap.begin()->second;
    }
+   InfoLog ( << "~DialogUsageManager done" );
 }
 
 bool 
@@ -94,9 +95,23 @@ DialogUsageManager::getHostAddress()
 void 
 DialogUsageManager::shutdown()
 {
-   if (mDumShutdownHandler && !mDestroying)
+   if (mDumShutdownHandler)
    {
-      mDumShutdownHandler->onDumCanBeDeleted();      
+      switch (mShutdownState)
+      {
+         case ShutdownRequested:
+            mShutdownState = ShuttingDownStack;
+            InfoLog (<< "shutdown SipStack");
+            mStack.shutdown();
+            break;
+         case ShuttingDownStack:
+            InfoLog (<< "Finished dum shutdown");
+            mShutdownState = Shutdown;
+            mDumShutdownHandler->onDumCanBeDeleted();      
+            break;
+         default:
+            break;
+      }
    }
 }
 
@@ -105,6 +120,7 @@ void
 DialogUsageManager::shutdown(DumShutdownHandler* h, unsigned long giveUpSeconds)
 {
    mDumShutdownHandler = h;
+   mShutdownState = ShutdownRequested;
    shutdownWhenEmpty();
 }
 
@@ -112,6 +128,7 @@ void
 DialogUsageManager::shutdownIfNoUsages(DumShutdownHandler* h, unsigned long giveUpSeconds)
 {
    mDumShutdownHandler = h;
+   mShutdownState = ShutdownRequested;
    assert(0);
 }
 
@@ -120,7 +137,8 @@ DialogUsageManager::forceShutdown(DumShutdownHandler* h)
 {
    mDumShutdownHandler = h;
    //HandleManager::shutdown();  // clear out usages
-   mStack.shutdown();
+   mShutdownState = ShutdownRequested;
+   DialogUsageManager::shutdown();
 }
 
 void DialogUsageManager::setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory> factory)
@@ -609,6 +627,12 @@ DialogUsageManager::run()
 bool
 DialogUsageManager::process()
 {
+   // After a Stack ShutdownMessage has been received, don't do anything else in dum
+   if (mShutdownState == Shutdown) 
+   {
+      return false;
+   }
+   
    try 
    {
       std::auto_ptr<Message> msg( mStack.receiveAny() );
