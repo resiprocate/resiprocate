@@ -16,6 +16,7 @@ AC_DEFUN([RESIP_LIB_OPENSSL],
 	    if test x_$found_ssl != x_yes; then
 		if test -f "/usr/include/openssl/ssl.h"; then
 		    found_ssl=yes;
+		    AC_DEFINE([USE_SSL])
 		fi
 	    fi
 	    if test x_$found_ssl != x_yes; then
@@ -54,6 +55,7 @@ AC_DEFUN([RESIP_LIB_ARES],
 	    if test x_$found_ares != x_yes; then
 		if test -f "/usr/include/ares.h"; then
 		    found_ares=yes;
+		    AC_DEFINE([USE_ARES])
 		fi
 	    fi
 	    if test x_$found_ares != x_yes; then
