@@ -29,17 +29,20 @@ class ServerRegistrationHandler
       /// Called when registration is refreshed
       virtual void onRefresh(ServerRegistrationHandle, const SipMessage& reg)=0;
       
-      /// called when one of the contacts is removed
-      virtual void onRemoveOne(ServerRegistrationHandle, const SipMessage& reg)=0;
+      /// called when one or more specified contacts is removed
+      virtual void onRemove(ServerRegistrationHandle, const SipMessage& reg)=0;
       
-      /// Called when all the contacts are removed 
+      /// Called when all the contacts are removed using "Contact: *"
       virtual void onRemoveAll(ServerRegistrationHandle, const SipMessage& reg)=0;
       
-      /// Called when a new contact is added. This is after authentication has
-      /// all sucseeded
+      /** Called when one or more contacts are added. This is after 
+          authentication has all succeeded */
       virtual void onAdd(ServerRegistrationHandle, const SipMessage& reg)=0;
 
-      /// Called when an registration expires 
+      /// Called when a client queries for the list of current registrations
+      virtual void onQuery(ServerRegistrationHandle, const SipMessage& reg)=0;
+
+      /// Called when a registration expires 
       virtual void onExpired(ServerRegistrationHandle, const NameAddr& contact)=0;
 };
 
