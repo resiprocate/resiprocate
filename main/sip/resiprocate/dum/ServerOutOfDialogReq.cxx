@@ -7,8 +7,7 @@ using namespace resip;
 ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum,
                                            Dialog& dialog,
                                            const SipMessage& req)
-   : BaseUsage(dum, dialog),
-     mHandle(dum)
+   : BaseUsage(dum, dialog)
 {
    assert(false);
 }

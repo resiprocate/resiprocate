@@ -12,7 +12,6 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
                                        Dialog& dialog,
                                        SipMessage& request)
    : BaseUsage(dum, dialog),
-     mHandle(dum),
      mLastRequest(request),
      mTimerSeq(0)
 {
