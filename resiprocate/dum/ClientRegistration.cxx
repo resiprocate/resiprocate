@@ -216,7 +216,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                break;
                
             case Removing:
-               mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
+               //mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
                mDum.mClientRegistrationHandler->onRemoved(getHandle());
                if (mEndWhenDone)
                {
