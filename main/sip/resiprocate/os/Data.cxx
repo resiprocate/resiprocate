@@ -474,7 +474,7 @@ Data::operator==(const Data& rhs) const
 bool 
 Data::operator==(const char* rhs) const
 {
-   assert(rhs);
+   assert(rhs); // .dlb. not consistent with constructor
    if (strncmp(mBuf, rhs, mSize) != 0)
    {
       return false;
@@ -737,7 +737,7 @@ Data::append(const char* str, size_type len)
    if (mCapacity < mSize + len)
    {
       // .dlb. pad for future growth?
-      resize(mSize + len, true);
+      resize(((mSize + len +16)*3)/2, true);
    }
    else
    {
@@ -811,7 +811,6 @@ void
 Data::resize(size_type newCapacity, bool copy)
 {
    char *oldBuf = mBuf;
-   newCapacity += 32; // Pad this a bit to avoid too many resizings
    mBuf = new char[newCapacity+1];
    if (copy)
    {
