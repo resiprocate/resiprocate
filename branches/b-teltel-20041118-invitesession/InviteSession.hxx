@@ -181,7 +181,9 @@ class InviteSession : public DialogUsage
       void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchTerminated(const SipMessage& msg);
 
+#if 0  // !slg! Notify handled by Dialog
       void dispatchNotify(const SipMessage& msg);      
+#endif	  
       void dispatchRefer(const SipMessage& msg);      
 
       void startRetransmit200Timer();

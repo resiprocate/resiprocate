@@ -941,9 +941,11 @@ InviteSession::dispatchOthers(const SipMessage& msg)
       case INFO:
          dispatchInfo(msg);
          break;
+#if 0  // !slg! Notify handled by Dialog
       case NOTIFY:
          dispatchNotify(msg);
          break;
+#endif
       case REFER:
          dispatchRefer(msg);
          break;
@@ -959,6 +961,7 @@ InviteSession::dispatchOthers(const SipMessage& msg)
    }
 }
 
+#if 0  // !slg! Notify handled by Dialog
 void
 InviteSession::dispatchNotify(const SipMessage& msg)
 {
@@ -989,6 +992,7 @@ InviteSession::dispatchNotify(const SipMessage& msg)
       }
    }
 }
+#endif
 
 void
 InviteSession::dispatchRefer(const SipMessage& msg)

@@ -419,9 +419,40 @@ Dialog::dispatch(const SipMessage& msg)
             else
             {
                BaseCreator* creator = mDialogSet.getCreator();
-               ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
-               mClientSubscriptions.push_back(sub);
-               sub->dispatch(request);
+               if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
+                               creator->getLastRequest().header(h_RequestLine).method() == REFER))  // !slg! OOD Refer?  Click-to-Call?
+               {
+                  DebugLog (<< "Making subscription (from creator) request: " << creator->getLastRequest());
+                  ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
+                  mClientSubscriptions.push_back(sub);
+                  sub->dispatch(request);
+               }
+               else
+               {
+		           if (mInviteSession != 0 && (!msg.exists(h_Event) || msg.header(h_Event).value() == "refer"))
+                   {
+	                  DebugLog (<< "Making subscription from NOTIFY: " << msg);
+                      ClientSubscription* sub = makeClientSubscription(msg);  
+                      mClientSubscriptions.push_back(sub);
+			          ClientSubscriptionHandle client = sub->getHandle();
+				      InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+                      sub->dispatch(request);
+                      if (client.isValid())
+                      {
+                         handler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);
+                      }
+                      else
+                      {
+                         handler->onReferRejected(mInviteSession->getSessionHandle(), msg);
+                      }
+				   }
+				   else
+				   {
+                      SipMessage response;
+                      makeResponse(response, msg, 406);
+                      send(response);
+				   }
+			   }
 
 #if 0
                if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
