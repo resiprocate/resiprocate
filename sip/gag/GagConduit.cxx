@@ -13,21 +13,67 @@ GagConduit::handleMessage(GagMessage *message)
   switch (message->getMessageType())
   {
     case GagMessage::IM:
+      gaimIm(reinterpret_cast<GagImMessage *>(message));
       break;
     case GagMessage::PRESENCE:
+      gaimPresence(reinterpret_cast<GagPresenceMessage *>(message));
       break;
     case GagMessage::LOGIN:
+      gaimLogin(reinterpret_cast<GagLoginMessage *>(message));
       break;
     case GagMessage::LOGOUT:
+      gaimLogout(reinterpret_cast<GagLogoutMessage *>(message));
       break;
     case GagMessage::ADD_BUDDY:
+      gaimAddBuddy(reinterpret_cast<GagAddBuddyMessage *>(message));
       break;
     case GagMessage::REMOVE_BUDDY:
+      gaimRemoveBuddy(reinterpret_cast<GagRemoveBuddyMessage *>(message));
       break;
     case GagMessage::ERROR:
+      gaimError(reinterpret_cast<GagErrorMessage *>(message));
+      break;
+    default:
+      // XXX Yikes! What is this?
       break;
   }
 }
+
+void
+GagConduit::gaimIm(GagImMessage *)
+{
+}
+
+void
+GagConduit::gaimPresence(GagPresenceMessage *)
+{
+}
+
+void
+GagConduit::gaimLogin(GagLoginMessage *)
+{
+}
+
+void
+GagConduit::gaimLogout(GagLogoutMessage *)
+{
+}
+
+void
+GagConduit::gaimAddBuddy(GagAddBuddyMessage *)
+{
+}
+
+void
+GagConduit::gaimRemoveBuddy(GagRemoveBuddyMessage *)
+{
+}
+
+void
+GagConduit::gaimError(GagErrorMessage *)
+{
+}
+
 
 void
 GagConduit::process()
