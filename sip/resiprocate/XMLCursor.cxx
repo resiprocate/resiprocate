@@ -83,7 +83,7 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
          ParseBuffer alt(lPb);
          alt.skipToChars(Symbols::CRLF);
          lPb.skipToChars(COMMENT_START);
-         if (!lPb.eof() && (&*lPb.position() < &*alt.position()))
+         if (!lPb.eof() && (lPb.position() < alt.position()))
          {
             lPb.data(temp, anchor);
             mData += temp;
@@ -199,7 +199,7 @@ XMLCursor::parseNextRootChild()
       if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
       {
          pb.skipChar();
-         if (&*pb.position() + mTag.size() > &*pb.end())
+         if (pb.position() + mTag.size() > pb.end())
          {
             InfoLog(<< "XML: unexpected end");
             pb.fail(__FILE__, __LINE__);
@@ -509,7 +509,7 @@ XMLCursor::Node::skipToEndTag()
       if (*mPb.position() == Symbols::SLASH[0])
       {
          mPb.skipChar();
-         if (&*mPb.position() + mTag.size() > &*mPb.end())
+         if (mPb.position() + mTag.size() > mPb.end())
          {
             InfoLog(<< "XML: unexpected end");
             mPb.fail(__FILE__, __LINE__);
@@ -567,7 +567,7 @@ XMLCursor::Node::skipComments(ParseBuffer& pb)
 std::ostream&
 resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
 {
-   Data::size_type size = &*node.mPb.end() - &*node.mPb.start();
+   Data::size_type size = node.mPb.end() - node.mPb.start();
 
    static const Data::size_type showSize(35);
 
