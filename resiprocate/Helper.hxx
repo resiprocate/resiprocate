@@ -21,6 +21,15 @@ class Helper
       //to, maxforwards=70, requestLine& cseq method set, cseq sequence is 1
       static SipMessage makeRequest(Url& target, MethodTypes method);
 
+      static SipMessage makeRequest(Url& target, 
+                                    MethodTypes method,
+                                    Url& from);  //will create a tag
+                                                 //automatically
+
+      //creates to, from with tag, cseq method set, cseq sequence is 1
+      static SipMessage makeRegister(Url& proxy,
+                                     Url& aor);
+
       //should default proto-version, anything else defaulted/passed in?
       static Via makeVia(Url& source);
 
