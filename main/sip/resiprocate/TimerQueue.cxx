@@ -15,11 +15,26 @@ TimerQueue::TimerQueue(Fifo<Message>& fifo) : mFifo(fifo)
 {
 }
 
-int 
+unsigned int
 TimerQueue::msTillNextTimer()
 {
-	// !cj! need to write this code 
-	return 10;
+   if (!mTimers.empty())
+   {
+      UInt64 next = mTimers.begin()->mWhen;
+      UInt64 now = Timer::getTimeMs();
+      if (now > next) 
+      {
+         return 0;
+      }
+      else
+      {
+         return next - now;
+      }
+   }
+   else
+   {
+      return 0;
+   }
 }
 
 Timer::Id

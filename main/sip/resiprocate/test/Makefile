@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.22 2002/12/12 03:51:50 derekm Exp $
+# $Id: Makefile,v 1.23 2002/12/14 18:51:11 jason Exp $
 
 USE_SSL = 1
 
@@ -14,23 +14,24 @@ PACKAGES += OPENSSL
 endif
 
 TESTPROGRAMS =	\
-		testSpeed.cxx \
-		testPlainContents.cxx \
-		testIM.cxx \
-		testSipFrag.cxx \
-		testMessageWaiting.cxx \
-		testSdp.cxx \
 		SipTortureTests.cxx \
+		lg.cxx \
 		test1.cxx \
 		test2.cxx \
-	        testSipStack1.cxx \
-	        testSipMessage.cxx \
+		testDigestAuthentication.cxx \
+		testIM.cxx \
+		testMessageWaiting.cxx \
+		testPlainContents.cxx \
+		testSdp.cxx \
+		testSipFrag.cxx \
+		testSipMessageMemory.cxx \
+		testSpeed.cxx \
+		testTimer.cxx \
+		testTransactionFSM.cxx \
 	        testParserCategories.cxx \
 	        testPreparse.cxx \
-		testSipMessageMemory.cxx \
-		testTransactionFSM.cxx \
-		lg.cxx \
-		testDigestAuthentication.cxx \
+	        testSipMessage.cxx \
+	        testSipStack1.cxx \
 	        testTcpTransport.cxx \
 #	        testDnsResolver.cxx \
 
