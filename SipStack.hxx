@@ -139,6 +139,7 @@ class SipStack
       
       // fifo used to communicate between the TU (Transaction User) and stack 
       Fifo<Message> mTUFifo;
+      TimerQueue mTUTimerQueue;
 
       // Controls the processing of the various stack elements
       Executive mExecutive;
