@@ -235,6 +235,15 @@ Helper::computeTag(int numBytes)
    return Random::getRandomHex(4);
 }
 
+Uri
+Helper::makeUri(const Data& aor, const Data& scheme)
+{
+   Data tmp(scheme);
+   tmp += Symbols::COLON;
+   tmp += aor;
+   Uri uri(tmp);
+   return uri;
+}
 
 
 
