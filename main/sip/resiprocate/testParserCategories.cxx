@@ -624,6 +624,82 @@ main(int arc, char** argv)
       assert(s.str() == "text/html;charset=ISO-8859-4");
    }
 
+   {
+      Via via;
+      via.encode(cerr);
+      cerr << endl;
+
+      assert (via.param(p_branch).hasMagicCookie());
+      assert (via.param(p_branch).transactionId() == "1");
+      assert (via.param(p_branch).clientData().empty());
+
+      stringstream s;
+      via.encode(s);
+      assert(s.str() == "SIP/2.0/UDP ;branch=z9hG4bK-kcD23X-1-1");
+
+      via.param(p_branch).clientData() = "jason";
+      assert (via.param(p_branch).clientData() == "jason");
+      
+
+      via.param(p_branch).incrementCounter();
+      via.param(p_branch).incrementCounter();
+
+
+      stringstream s2;
+      via.encode(s2);
+      via.encode(cerr);
+      cerr << endl;
+
+      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-kcD23X-1-3-jason");
+   }
+
+   {
+      char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv);
+      
+      assert (via.param(p_branch).hasMagicCookie());
+
+      stringstream s0;
+      via.encode(s0);
+      cerr << s0.str() << endl;
+      assert(s0.str() == "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj");
+      
+      assert (via.param(p_branch).transactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
+      assert (via.param(p_branch).clientData().empty());
+      
+      stringstream s1;
+      via.encode(s1);
+      assert(s1.str() == "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj");
+      
+      via.param(p_branch).transactionId() = "jason";
+      stringstream s2;
+      via.encode(s2);
+      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bKjason");
+      assert(via.param(p_branch).transactionId() == "jason");
+   }
+   
+
+   {
+      char* viaString = "SIP/2.0/UDP ;branch=oldassbranch";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv);
+      
+      assert (!via.param(p_branch).hasMagicCookie());
+      assert (via.param(p_branch).transactionId() == "oldassbranch");
+      assert (via.param(p_branch).clientData().empty());
+      
+      stringstream s;
+      via.encode(s);
+      assert(s.str() == "SIP/2.0/UDP ;branch=oldassbranch");
+      
+      via.param(p_branch).transactionId() = "jason";
+      stringstream s2;
+      via.encode(s2);
+      assert(s2.str() == "SIP/2.0/UDP ;branch=jason");
+      assert(via.param(p_branch).transactionId() == "jason");
+   }
+   
 
 
    cerr << "\nTEST OK" << endl;
