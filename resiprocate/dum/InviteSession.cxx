@@ -57,6 +57,7 @@ InviteSession::~InviteSession()
 SipMessage& 
 InviteSession::modifySession()
 {
+   DebugLog( << "InviteSession::modifySession: " << mDialog.getId());   
    if (mNextOfferOrAnswerSdp == 0 || mState != Connected || mOfferState != Answered)
    {
       throw new UsageUseException("Must be in the connected state and have propsed an offer to call modifySession", 
@@ -91,6 +92,7 @@ InviteSession::acceptDialogModification(int statusCode)
 void
 InviteSession::setOffer(const SdpContents* sdp)
 {
+   DebugLog( << "InviteSession::setOffer: " << mDialog.getId());   
    if (mProposedRemoteSdp)
    {
       throw UsageUseException("Cannot set an offer with an oustanding remote offer", __FILE__, __LINE__);
@@ -102,6 +104,7 @@ InviteSession::setOffer(const SdpContents* sdp)
 void
 InviteSession::setAnswer(const SdpContents* sdp)
 {
+   DebugLog( << "InviteSession::setAnswer: " << mDialog.getId());   
    if (mProposedLocalSdp )
    {
       throw UsageUseException("Cannot set an answer with an oustanding offer", __FILE__, __LINE__);
@@ -228,7 +231,8 @@ InviteSession::dispatch(const SipMessage& msg)
                }
             }
          }
-         else if (mOfferState != Answered)
+         //temporary hack
+         else if (mState != ReInviting && mOfferState != Answered)
          {
             //no SDP in ACK when one is required
             mDum.mInviteSessionHandler->onIllegalNegotiation(getSessionHandle(), msg);
@@ -706,7 +710,7 @@ InviteSession::getOfferOrAnswer(const SipMessage& msg) const
    {
       static Token c100rel(Symbols::C100rel);
       if (msg.isRequest() || msg.header(h_StatusLine).responseCode() == 200 ||
-          msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(c100rel))
+          (msg.exists(h_Requires) && msg.header(h_Requires).find(c100rel)))
       {
          switch (mOfferState)
          {

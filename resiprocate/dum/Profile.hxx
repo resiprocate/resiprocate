@@ -33,6 +33,15 @@ class Profile
       
       void setDefaultFrom(const NameAddr& from);
       void setDefaultRegistrationTime(int secs);
+      
+      //overrides the value used to populate the contact
+      //?dcm? -- also change via entries? Also, dum currently uses(as a uas)
+      //the request uri of the dialog constructing request for the local contact
+      //within that dialog. A transport paramter here could also be used to
+      //force tcp vs udp vs tls?
+      void setOverrideHostAndPort(const Uri& hostPort);
+      bool hasOverrideHostAndPort() const;
+      const Uri& getOverideHostAndPort() const;      
 
       void addSupportedScheme(const Data& scheme);
       void addSupportedMethod(const MethodTypes& method);
@@ -126,12 +135,14 @@ class Profile
       bool mRportEnabled;
       bool mHasUserAgent;      
       
-      Data mUserAgent;      
+      Data mUserAgent;
+      Uri  mOverrideHostPort;
+      bool mHasOverrideHostPort;
       
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
 };
-   
+  
 std::ostream& 
 operator<<(std::ostream&, const Profile::DigestCredential& cred);
  
