@@ -18,6 +18,9 @@
 #if defined(USE_SSL)
 
 #if !defined(WIN32)
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <sys/fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
 #endif 
@@ -893,7 +896,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    // Data textData = first->getBodyData();
    Data textData = bodyData;
    Data sigData = sig->getBodyData();
-      
+
    BIO* in = BIO_new_mem_buf( (void*)sigData.c_str(),sigData.size());
    assert(in);
    InfoLog( << "ceated in BIO");
@@ -915,6 +918,15 @@ Security::uncodeSigned( MultipartSignedContents* multi,
       ErrLog( << "Problems doing decode of PKCS7 object <"
               << sigData.escaped() << ">" );
 
+#if 0 
+      // write out the sig to a file 
+      int fd = open( "/tmp/badSig", O_WRONLY | O_CREAT | O_TRUNC, 0455 );
+      assert( fd > 0 );
+      write( fd, sigData.c_str(), sigData.size() );
+      close( fd ); DebugLog( << "verify <"    << textData.escaped() << ">" );
+      InfoLog( <<"Wrote out sig to /tmp/badSig" );
+#endif
+
       while (1)
       {
          const char* file;
@@ -929,7 +941,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
          char buf[256];
          ERR_error_string_n(code,buf,sizeof(buf));
          ErrLog( << buf  );
-         InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
+         InfoLog( <<"Error code = "<< code <<" file=" << file << " line=" << line );
       }
            
       return first;
