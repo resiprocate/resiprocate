@@ -102,6 +102,16 @@ ConnectionMap::get(const Transport::Tuple& who, int attempt)
    servaddr.sin_port = htons(who.port);
    servaddr.sin_addr = who.ipv4;
 
+  
+   int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
+   if ( e == -1 ) 
+   {
+      int err = errno;
+      DebugLog( << "Error on connect to " << who << ": " << strerror(err));
+      return 0;
+   }
+
+#if 0
 #if WIN32
    unsigned long block = 0;
    int errNoBlock = ioctlsocket( sock, FIONBIO , &block );
@@ -111,15 +121,7 @@ ConnectionMap::get(const Transport::Tuple& who, int attempt)
    int errNoBlock = fcntl(sock, F_SETFL, flags| O_NONBLOCK );
    assert( errNoBlock == 0 );
 #endif
-   
-   int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
-   if ( e == -1 ) 
-   {
-      int err = errno;
-      DebugLog( << "Error on connect to " << who << ": " << strerror(err));
-      return 0;
-   }
-   
+#endif   
    // succeeded, add the connection
    return add(who, sock);
 }
