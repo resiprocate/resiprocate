@@ -222,6 +222,9 @@
 				RelativePath=".\ApplicationSip.cxx">
 			</File>
 			<File
+				RelativePath=".\AresDns.cxx">
+			</File>
+			<File
 				RelativePath=".\Auth.cxx">
 			</File>
 			<File
@@ -273,6 +276,9 @@
 				RelativePath="DnsInterface.cxx">
 			</File>
 			<File
+				RelativePath="DnsResult.cxx">
+			</File>
+			<File
 				RelativePath="os\DnsUtil.cxx">
 			</File>
 			<File
@@ -286,6 +292,9 @@
 			</File>
 			<File
 				RelativePath=".\ExternalBodyContents.cxx">
+			</File>
+			<File
+				RelativePath=".\ExternalDnsFactory.cxx">
 			</File>
 			<File
 				RelativePath=".\os\FileSystem.cxx">
@@ -589,6 +598,9 @@
 				RelativePath=".\ApplicationSip.hxx">
 			</File>
 			<File
+				RelativePath=".\AresDns.hxx">
+			</File>
+			<File
 				RelativePath=".\Auth.hxx">
 			</File>
 			<File
@@ -655,9 +667,6 @@
 				RelativePath="DnsInterface.hxx">
 			</File>
 			<File
-				RelativePath="DnsResult.cxx">
-			</File>
-			<File
 				RelativePath="DnsResult.hxx">
 			</File>
 			<File
@@ -674,6 +683,9 @@
 			</File>
 			<File
 				RelativePath=".\ExternalBodyContents.hxx">
+			</File>
+			<File
+				RelativePath=".\ExternalDnsFactory.hxx">
 			</File>
 			<File
 				RelativePath="os\Fifo.hxx">
