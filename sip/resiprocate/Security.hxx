@@ -23,8 +23,8 @@ class TlsConnection
    public:
       TlsConnection( Security* security, Socket fd, bool server=false );
       
-      int read( void* buf, int count );
-      int write( void* buf, int count );
+      int read( const void* buf, const int count );
+      int write( const void* buf, const int count );
 
       Data peerName();
       
