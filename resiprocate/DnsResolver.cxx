@@ -94,7 +94,8 @@ DnsResolver::lookup(const Data& transactionId,
                           via.param(p_rport), 
                           transport, false);
    }
-   else if (via.sentPort()) // !jf!
+   
+   if (via.sentPort())
    {
       id = lookupARecords(transactionId,
                           target, 
