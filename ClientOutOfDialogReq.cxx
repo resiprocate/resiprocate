@@ -40,7 +40,7 @@ ClientOutOfDialogReq::dispatch(const SipMessage& msg)
 {
 	assert(msg.isResponse());
     
-    if (msg.header(h_StatusLine).statusCode() < 200)
+    if (msg.header(h_StatusLine).statusCode() >= 200)
     {
        OutOfDialogHandler *handler = mDum.getOutOfDialogHandler(msg.header(h_CSeq).method());
        if(handler != NULL)
@@ -69,13 +69,14 @@ ClientOutOfDialogReq::dispatch(const SipMessage& msg)
                      << getMethodName(msg.header(h_CSeq).method()) 
                      << " method response.");   
        }
+
+       delete this;
     }
     else
     {
+       // Wait for final response
        DebugLog ( << "ClientOutOfDialogReq::dispatch - encountered provisional response" << msg.brief() );
-    }
-    
-	delete this;
+    }    
 }
 
 void 
