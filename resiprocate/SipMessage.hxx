@@ -17,7 +17,8 @@ class SipMessage
 
       SipMessage(char* buff);
       SipMessage()
-         : nIsExternal(false)
+	: nIsExternal(false),
+	  mFixedDest(false)
       {}
       
       SipMessage(const SipMessage& message);
@@ -102,6 +103,11 @@ class SipMessage
       void addHeader(int header, char* headerName, int headerLen, 
                      char* start, int len);
 
+  bool hasFixedDest();
+  Data getFixedDest();
+  void setFixedDest(const Data& dest);
+  void clearFixedDest();
+
    private:
       void copyFrom(const SipMessage& message);
       void cleanUp();
@@ -114,6 +120,11 @@ class SipMessage
       HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
       UnknownHeaders mUnknownHeaders;
+  
+  bool mHaveFixedDest;
+  Data mFixedDest;
+
+
 };
 
 }
