@@ -126,7 +126,7 @@ test1()
       tassert(message->header(h_Vias).front().exists(p_branch));
       tassert(message->header(h_Vias).front().param(p_branch).hasMagicCookie());
       tassert(message->header(h_Vias).front().param(p_branch).getTransactionId() == "kdjuw");
-      tassert(!message->exists(h_Subject));
+      tassert(message->exists(h_Subject));
       tassert(message->header(h_Subject).value().empty());
 
       tassert(message->exists(UnknownHeaderType("NewFangledHeader")));
