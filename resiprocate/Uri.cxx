@@ -396,7 +396,7 @@ Uri::operator==(const Uri& other) const
 
    OrderUnknownParameters orderUnknown;
 
-#if defined(__SUNPRO_CC)
+#if defined(__SUNPRO_CC) || defined(WIN32)
    // The Solaris Forte STL implementation does not support the
    // notion of a list.sort() function taking a BinaryPredicate.
    // The hacky workaround is to load the Parameter pointers into
