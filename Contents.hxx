@@ -43,8 +43,7 @@ class Contents : public LazyParser
       const Mime& getType() const {return mContentsType;}
 
       static Contents* createContents(const Mime& contentType, 
-                                      const char* anchor, 
-                                      ParseBuffer& pb);
+                                      const Data& contents);
 
       static std::map<Mime, ContentsFactoryBase*>& getFactoryMap();
 
