@@ -335,7 +335,7 @@ Dialog::dispatch(const SipMessage& msg)
             case INVITE:
             case CANCEL:
             case REFER: 
-               if (mInviteSession != 0)
+               if (mInviteSession == 0)
                {
                   //spurious
                   return;
