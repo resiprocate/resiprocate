@@ -13,21 +13,19 @@
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 // #define PP_DEBUG
-// #define PP_SUPER_DEBUG
-
-// Set dependancies in debug settings
-#if defined(PP_SUPER_DEBUG) && ! defined(PP_DEBUG)
-#define PP_DEBUG
-#endif
-
-#if !defined(NDEBUG) && defined(PP_DEBUG) && !defined(PP_DEBUG_HELPERS)
-#define PP_DEBUG_HELPERS
-#endif
 
 // Include required facilities for DEBUG only.
 
-#if defined(PP_DEBUG) || defined(PP_SUPER_DEBUG) || defined(PP_DEBUG_HELPERS)
+#if defined(PP_DEBUG)
 #include <iostream> // debug only !ah!
+const int ppDebug            = 0x01; // basic debug -- must be set
+const int ppDebugEdge        = 0x02;
+const int ppDebugEdgeVerbose = 0x04; // ALL edge taken
+const int ppDebugActions     = 0x08; // Actions ( not Add )
+const int ppDebugPrettyPrint = 0x10; // pp the buffers.
+
+static int ppDebugFlags = 0;
+
 #endif
 
 
@@ -42,22 +40,18 @@ Preparse::Edge *** Preparse::mTransitionTable = 0;
 // Instance of the table (static member of Preparse class).
 
 
-#if defined(PP_DEBUG_HELPERS)
 
-// These are routines (for debug only) that output data from
-// the preparse buffers. -- they are ugly, but they will not
-// be in a stable, client deployed, stack.
-// MOVED TO test/TestSupport.cxx
-#include "sip2/sipstack/test/TestSupport.hxx"
-
+#if !defined(PP_DO_INLINES)
+#include "sip2/sipstack/PreparseInlines.cxx"
 #endif
 
-#if defined (PP_DEBUG_HELPERS)
+#if defined(PP_DEBUG)
+#include "sip2/sipstack/test/TestSupport.hxx"
 
-    // DO_BIT is a tasty macro to assemble a Data that
-    // represents the bitset (s) passed inside.
-    // it does this by destructively testing
-    // the mask.
+// DO_BIT is a tasty macro to assemble a Data that
+// represents the bitset (s) passed inside.
+// it does this by destructively testing
+// the mask.
 
 #define DO_BIT(data,mask,bit)                   \
 {                                               \
@@ -135,13 +129,8 @@ const char *  ppStateName(Preparse::State s)
     }
 }
 
-
 #endif
 
-
-#if !defined(PP_DO_INLINES)
-#include "sip2/sipstack/PreparseInlines.cxx"
-#endif
 
 const int X = -1;
 const char XC = -1;
@@ -344,7 +333,13 @@ Preparse::InitStatePreparseStateTable()
     // add comma transition
     AE(BuildData,dCommaSep,COMMA,EWSPostColon,actData|actReset|actDiscardKnown);
     initialised = true;
-  
+#if defined(PP_DEBUG)
+    char *p = getenv("VOCAL_WHIZ_PP_DEBUG_MASK");
+    if (p)
+    {
+       ppDebugFlags = strtol(p,0,0);
+    }
+#endif
 }
 
 
@@ -429,27 +424,30 @@ Preparse::process(SipMessage& msg,
      assert(traversalOff < length);
      assert(buffer);
 
-#    if defined(PP_DEBUG)
-     DebugLog(<<"[->] PP::process(...)");
-     // !ah! Log all the anchors etc here.
-#    if !defined(PP_DEBUG_HELPERS)
-#     define ppStateName(x) x
-#    endif
-     DebugLog(<<"mAnchorEndOff:"<<mAnchorEndOff);
-     DebugLog(<<"mAnchorBegOff:"<<mAnchorBegOff);
-     DebugLog(<<"mHeaderType:"<<mHeaderType);
-     DebugLog(<<"mHeaderOff:"<<mHeaderOff);
+#if defined(PP_DEBUG)
+     if (ppDebugFlags & ppDebug)
+     {
+        DebugLog(<<"[->] PP::process(...)");
+        // !ah! Log all the anchors etc here.
+        DebugLog(<<"mAnchorEndOff:"<<mAnchorEndOff);
+        DebugLog(<<"mAnchorBegOff:"<<mAnchorBegOff);
+        DebugLog(<<"mHeaderType:"<<mHeaderType);
+        DebugLog(<<"mHeaderOff:"<<mHeaderOff);
 
-     DebugLog(<<"mState:"<< ppStateName(mState));
-     DebugLog(<<"mStart: " << mStart);
-     DebugLog(<<"buffer: 0x"<<hex<<(unsigned long)buffer<<dec);
-#    endif
+        DebugLog(<<"mState:"<< ppStateName(mState));
+        DebugLog(<<"mStart: " << mStart);
+        DebugLog(<<"buffer: 0x"<<hex<<(unsigned long)buffer<<dec);
+     }
+#endif
 
      if (mState == EndMsg) // restart machine if required.
      {
-#        if defined(PP_DEBUG)
+#if defined(PP_DEBUG)
+        if (ppDebugFlags & ppDebug)
+        {
           DebugLog(<<"PP Restarting");
-#        endif
+        }
+#endif
          ResetMachine();
      }
      
@@ -457,21 +455,38 @@ Preparse::process(SipMessage& msg,
      {
          Edge& edge(mTransitionTable[mState][mDisposition][buffer[traversalOff]]);
 
-#if defined(PP_DEBUG) && defined(PP_SUPER_DEBUG)
-         DebugLog( << "EDGE " << ppStateName(mState)
-                   << " (" << (int) buffer[traversalOff] << ')'
-                   << " -> " << ppStateName(edge.nextState)
-                   << ::ppWorkString(edge.workMask) );
+#if defined(PP_DEBUG)
+         // for suppressing the most common uninteresting messages
+         // unless EdgeVerbose is set
+         bool ppDebugSupress = ((mState == edge.nextState) && (~(ppDebugFlags & ppDebugEdgeVerbose)));
+         
+         if (!ppDebugSupress &&
+             (ppDebugFlags & ppDebug) &&
+             (ppDebugFlags & ppDebugEdge))
+         {
+
+               DebugLog( << "EDGE " << ppStateName(mState)
+                         << " (" << (int) buffer[traversalOff] << ')'
+                         << " -> " << ppStateName(edge.nextState)
+                         << ::ppWorkString(edge.workMask) );
+         }
 #endif      
       
          if (edge.workMask & actAdd)
          {
              mAnchorEndOff = traversalOff;
 
-#if defined(PP_DEBUG) && defined(PP_SUPER_DEBUG)
-             DebugLog( << "+++Accumulated chars '"
-                       << TestSupport::showN( &buffer[mAnchorBegOff], mAnchorEndOff-mAnchorBegOff+1)
-                       << '\'' );
+#if defined(PP_DEBUG)
+             if ((ppDebugFlags & ppDebugActions) && 
+                 (!ppDebugSupress))
+             {
+                DebugLog( << "+++Accumulated chars '"
+                          << TestSupport::showN( 
+                             &buffer[mAnchorBegOff],
+                             mAnchorEndOff-mAnchorBegOff+1)
+                          << '\'' );
+             }
+             
 #endif
 
          }
@@ -495,9 +510,13 @@ Preparse::process(SipMessage& msg,
              }
 
 #if defined(PP_DEBUG)
-             DebugLog(<<"Hdr \'"
-                      << TestSupport::showN(&buffer[mHeaderOff], mHeaderLength)
-                      << "\' Type: " << int(mHeaderType) );
+             if (ppDebugFlags & ppDebugActions)
+             {
+                DebugLog(<<"Hdr \'"
+                         << TestSupport::showN(&buffer[mHeaderOff],
+                                               mHeaderLength)
+                         << "\' Type: " << int(mHeaderType) );
+             }
 #endif
          }
 
@@ -513,9 +532,14 @@ Preparse::process(SipMessage& msg,
              mStatus = mStatus | stDataAssigned;
              
 #if defined(PP_DEBUG)
-             DebugLog(<<"DATA : \'"
-                      << TestSupport::showN(&buffer[mAnchorBegOff], mAnchorEndOff - mAnchorBegOff + 1)
-                      << "\' (offset=" << mAnchorBegOff <<")");
+             if (ppDebugFlags & ppDebugActions)
+             {
+                DebugLog(<<"DATA : \'"
+                         << TestSupport::showN(
+                            &buffer[mAnchorBegOff],
+                            mAnchorEndOff - mAnchorBegOff + 1)
+                         << "\' (offset=" << mAnchorBegOff <<")");
+             }
 #endif
          }
 
@@ -524,36 +548,49 @@ Preparse::process(SipMessage& msg,
              msg.setStartLine(&buffer[mAnchorBegOff], mAnchorEndOff - mAnchorBegOff + 1);
              mStatus |= stDataAssigned;
 #if defined(PP_DEBUG)
-             DebugLog(<<"FLINE \'"
-                      << TestSupport::showN(&buffer[mAnchorBegOff], mAnchorEndOff - mAnchorBegOff + 1)
-                      << "\'");
+             if (ppDebugFlags & ppDebugActions)
+             {
+                DebugLog(<<"FLINE \'"
+                         << TestSupport::showN(&buffer[mAnchorBegOff], mAnchorEndOff - mAnchorBegOff + 1)
+                         << "\'");
+             }
 #endif
 
          }
 
 	 if (edge.workMask & actFlat)
 	 {
-#	    if defined(PP_DEBUG)
+#if defined(PP_DEBUG)
+            if (ppDebugFlags & ppDebugActions)
+            {
 	      DebugLog(<<"FLATTEN");
-#           endif
+            }
+#endif
 	      buffer[traversalOff] = ' ';
 	 }
 
          if (edge.workMask & actBack)
          {
-#            if defined (PP_DEBUG)             
+#if defined (PP_DEBUG)             
+            if (ppDebugFlags & ppDebugActions)
+            {
               DebugLog(<<"BACK");
-#            endif
+            }
+#endif
              traversalOff--;
          }
 
 
          if (edge.workMask & actBad)
          {
-#            if defined (PP_DEBUG)             
-              DebugLog(<<"BAD");
-#            endif
+#if defined (PP_DEBUG)             
+            if (ppDebugFlags & ppDebugActions)
+            {
+               DebugLog(<<"BAD");
+            }
+#endif
              mStatus |= stPreparseError;
+
              // Note. All edges that have actBad are also transitioning to
              // EndMsg .. therefore, the FSM will stop processing...
              // (That's why there is no explicit exit from the while() construct
@@ -571,9 +608,12 @@ Preparse::process(SipMessage& msg,
              mDiscard = traversalOff;
              // clear frag state here. No longer fragmented.
              mStatus &= ~ stFragmented;
-#            if defined (PP_DEBUG)
+#if defined (PP_DEBUG)
+             if (ppDebugFlags & ppDebugActions)
+             {
                DebugLog(<<"DISCARD: mDiscard=" << mDiscard << " cur_state=" << ppStateName(mState) << ppWorkString(edge.workMask));
-#            endif            
+             }
+#endif            
          }
          else
          {
@@ -586,9 +626,12 @@ Preparse::process(SipMessage& msg,
 
          if (edge.workMask & actEndHdrs)
          {
-#            if defined(PP_DEBUG)
+#if defined(PP_DEBUG)
+            if (ppDebugFlags && ppDebugActions)
+            {
               DebugLog(<<"END_HDR");
-#            endif
+            }
+#endif
              mStatus |= stHeadersComplete;
          }
       
@@ -596,7 +639,10 @@ Preparse::process(SipMessage& msg,
          {
              mAnchorBegOff = mAnchorEndOff = traversalOff;
 #if defined(PP_DEBUG)
-             DebugLog(<<"RESET");
+            if (ppDebugFlags && ppDebugActions)
+            {
+               DebugLog(<<"RESET");
+            }
 #endif
          }
       
@@ -618,19 +664,23 @@ Preparse::process(SipMessage& msg,
      mStart -= mDiscard;
 
 #if defined(PP_DEBUG)
-     DebugLog(<<"[<-] PP::process(...)");
-     // !ah! Log all the anchors etc here.
-     DebugLog(<<"mAnchorEndOff:"<<mAnchorEndOff);
-     DebugLog(<<"mAnchorBegOff:"<<mAnchorBegOff);
-     DebugLog(<<"mHeaderType:"<<mHeaderType);
-     DebugLog(<<"mHeaderOff:"<<mHeaderOff);
-     DebugLog(<<"mState:"<<ppStateName(mState));
-     DebugLog(<<"nBytes examined " << traversalOff  );
-     DebugLog(<< "used:" << mUsed );
-     DebugLog(<< "disc:" << mDiscard);
-     DebugLog(<< "state: " << ppStateName(mState));
-     DebugLog(<< "mStatus: " << ppStatusName(mStatus));
-     DebugLog(<< "mStart: " << mStart);
+     if (ppDebugFlags && ppDebugActions)
+     {
+
+        DebugLog(<<"[<-] PP::process(...)");
+        // !ah! Log all the anchors etc here.
+        DebugLog(<<"mAnchorEndOff:"<<mAnchorEndOff);
+        DebugLog(<<"mAnchorBegOff:"<<mAnchorBegOff);
+        DebugLog(<<"mHeaderType:"<<mHeaderType);
+        DebugLog(<<"mHeaderOff:"<<mHeaderOff);
+        DebugLog(<<"mState:"<<ppStateName(mState));
+        DebugLog(<<"nBytes examined " << traversalOff  );
+        DebugLog(<< "used:" << mUsed );
+        DebugLog(<< "disc:" << mDiscard);
+        DebugLog(<< "state: " << ppStateName(mState));
+        DebugLog(<< "mStatus: " << ppStatusName(mStatus));
+        DebugLog(<< "mStart: " << mStart);
+     }
 #endif
     
      return mStatus & stPreparseError;
