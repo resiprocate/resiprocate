@@ -5,6 +5,7 @@
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/SdpContents.hxx"
+#include "sip2/sipstack/test/TestSupport.hxx"
 
 #include <iostream>
 #include <memory>
@@ -35,7 +36,7 @@ main()
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
 
-      auto_ptr<SipMessage> msg(Helper::makeMessage(txt.c_str()));
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       Contents* body = msg->getContents();
 
@@ -72,7 +73,7 @@ main()
                "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
                "a=rtpmap:0 PCMU/8000\r\n");
 
-      auto_ptr<SipMessage> msg(Helper::makeMessage(txt.c_str()));
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
       assert(!msg->header("Foobie-Blech").empty());
       assert(msg->header("Foobie-Blech").front().value() == "it is not a glass paperweight");
@@ -109,7 +110,7 @@ main()
           "Content-Length: 0\r\n"
           "\r\n");
       
-      auto_ptr<SipMessage> msg(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
       cerr << msg->header(h_Contacts).front().param(p_expires) << endl;
       assert(msg->header(h_Contacts).front().param(p_expires) == 63);
    }
@@ -130,7 +131,7 @@ main()
                     "Contact: <sip:bob@192.0.2.4>;expires=\"Sat, 01 Dec 2040 16:00:00 GMT\";foo=bar\r\n"
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message1(Helper::makeMessage(txt1));
+      auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
       cerr << message1->header(h_Contacts).front().param(p_expires) << endl;
       assert(message1->header(h_Contacts).front().param(p_expires) == 3600);
       assert(message1->header(h_Contacts).front().param("foo") == "bar");
@@ -153,7 +154,7 @@ main()
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 7200\r\n"
                     "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message1(Helper::makeMessage(txt1));
+      auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
       auto_ptr<SipMessage> r(Helper::makeResponse(*message1, 100));
       r->encode(cerr);
 
@@ -171,7 +172,7 @@ main()
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 2700\r\n"
                     "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message2(Helper::makeMessage(txt2));
+      auto_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
 
       // copy over everything
       message1->header(h_RequestLine) = message2->header(h_RequestLine);
@@ -219,7 +220,7 @@ main()
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 7200\r\n"
                     "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message1(Helper::makeMessage(txt1));
+      auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
 
       // parse it
       message1->header(h_RequestLine).getMethod();
@@ -261,7 +262,7 @@ main()
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 2700\r\n"
                     "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message2(Helper::makeMessage(txt2));
+      auto_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
 
       assert(message2->header(h_RequestLine).getMethod() == REGISTER);
       assert(message2->header(h_To).uri().user() == "speedy");
@@ -329,7 +330,7 @@ main()
                    "Contact: <sip:qoq@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       
       SipMessage copy(*message);
       copy.encode(cerr);
@@ -368,7 +369,7 @@ main()
                    "Contact: <sip:qoq@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       cerr << "Encode from unparsed: " << endl;
       message->encode(cerr);
@@ -427,7 +428,7 @@ main()
                    "Contact: <sip:bob@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       
       message->encode(cerr);
       
@@ -449,7 +450,7 @@ main()
                    "Contact: <sip:bob@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
           
       Data v = message->header(h_CallId).value();
       cerr << "Call-ID is " << v << endl;
@@ -473,7 +474,7 @@ main()
                    "Contact: <sip:bob@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       
       assert(message->getRawHeader(Headers::From));
       assert(&message->header(h_From));
@@ -502,7 +503,7 @@ main()
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: 353245\r\n\r\n");
 
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       assert(message->isRequest());
       assert(message->isResponse() == false);
@@ -563,7 +564,7 @@ main()
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: 353245\r\n\r\n");
 
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       assert(message->header(h_MaxForwards).value() == 8);
       message->getRawHeader(Headers::Max_Forwards)->getParserContainer()->encode(Headers::HeaderNames[Headers::Max_Forwards], cerr) << endl;
@@ -580,7 +581,7 @@ main()
                    "Via: SIP/2.0/UDP squamish.gloo.net:5060;branch=z9hG4bKff5c491951e40f08\r\n"
                    "Content-Length: 0\r\n\r\n");
 
-      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       assert(message->header(h_To).uri().host() == "localhost");
    }
