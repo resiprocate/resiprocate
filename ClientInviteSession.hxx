@@ -26,7 +26,11 @@ class ClientInviteSession : public InviteSession
    private:
       void redirected(const SipMessage& msg);      
 
+      // Called by the DialogSet (friend) when the app has CANCELed the request 
+      virtual void cancel();
+
       friend class Dialog;
+
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
@@ -34,6 +38,7 @@ class ClientInviteSession : public InviteSession
       void handlePrackResponse(const SipMessage& response);
       void sendPrack(const SipMessage& response);
 //      void sendAck(const SipMessage& ok);
+
 
       int lastReceivedRSeq;
       int lastExpectedRSeq;

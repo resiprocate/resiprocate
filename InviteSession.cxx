@@ -1,17 +1,19 @@
-#include "resiprocate/SdpContents.hxx"
 #include "resiprocate/MultipartMixedContents.hxx"
+#include "resiprocate/SdpContents.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
-#include "resiprocate/dum/ClientInviteSession.hxx"
-#include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/Inserter.hxx"
+
+//#include "resiprocate/dum/ServerInviteSession.hxx"
+
 
 #if defined(WIN32) && defined(_DEBUG) &&defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
 #define _CRTDBG_MAP_ALLOC
@@ -33,17 +35,8 @@ using namespace std;
 
 InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState)
    : DialogUsage(dum, dialog),
-     mState(initialState),
+     mState(Undefined),
      mNitState(NitComplete),
-     mOfferState(Nothing),
-     mCurrentLocalSdp(0),
-     mCurrentRemoteSdp(0),
-     mProposedLocalSdp(0),
-     mProposedRemoteSdp(0),
-     mNextOfferOrAnswerSdp(0),
-     mUserConnected(false),
-     mQueuedBye(0),
-     mSessionInterval(0),
      mSessionRefresherUAS(false),
      mSessionTimerSeq(0),
      mDestroyer(this),
@@ -123,6 +116,7 @@ InviteSession::provideOffer(const SdpContents& offer)
    switch (mState)
    {
       case Connected:
+      case WaitingToOffer:
          if (peerSupportsUpdateMethod())
          {
             mDialog.makeRequest(mLastSessionModification, UPDATE);
@@ -144,6 +138,12 @@ InviteSession::provideOffer(const SdpContents& offer)
          mDum.send(mLastSessionModification);
          break;
 
+      case Answered:
+         // queue the offer to be sent after the ACK is received
+         mProposedLocalSdp = offer;
+         transition(WaitingToOffer);
+         break;
+         
       default:
          WarningLog (<< "Can't provideOffer when not in Connected state");
          throw DialogUsage::Exception("Can't provide an offer", __FILE__,__LINE__);
@@ -208,9 +208,7 @@ InviteSession::end()
          break;
 
       case ReceivedUpdate:
-      //  same as ReceivedReinviteNoOffer case.
       case ReceivedReinvite:
-      //  same as ReceivedReinviteNoOffer case.
       case ReceivedReinviteNoOffer:
       {
          SipMessage response;
@@ -226,6 +224,14 @@ InviteSession::end()
          break;
       }
 
+      case WaitingToTerminate:
+         SipMessage bye;
+         mDialog.makeRequest(bye, BYE);
+         transition(Terminated);
+         InfoLog (<< "Sending " << bye.brief());
+         mDum.send(bye);
+         break;
+         
       case Terminated:
          // no-op.
          break;
@@ -250,7 +256,7 @@ InviteSession::reject(int statusCode)
       case ReceivedReinviteNoOffer:
       {
          SipMessage response;
-         mDialog.makeResponse(response, mLastSessionModification, 488);
+         mDialog.makeResponse(response, mLastSessionModification, statusCode);
          transition(Connected);
          InfoLog (<< "Sending " << response.brief());
          mDum.send(response);
@@ -351,19 +357,18 @@ InviteSession::dispatch(const SipMessage& msg)
          dispatchGlare(msg, offans);
          break;
       case ReceivedUpdate:
-         dispatchReceivedUpdate(msg, offans);
-         break;
       case ReceivedReinvite:
-         dispatchReceivedReinvite(msg, offans);
-         break;
       case ReceivedReinviteNoOffer:
-         dispatchReceivedReinviteNoOffer(msg, offans);
+         dispatchReceivedUpdateOrReinvite(msg, offans);
          break;
       case Answered:
          dispatchAnswered(msg, offans);
          break;
       case WaitingToOffer:
          dispatchWaitingToOffer(msg, offans);
+         break;
+      case WaitingToTerminate:
+         dispatchWaitingToTerminate(msg, offans);
          break;
       case Terminated:
          dispatchTerminated(msg, offans);
@@ -392,7 +397,6 @@ InviteSession::dispatch(const DumTimeout& timeout)
 
       // !jf! what is this and why do I need to call it? 
       mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle(), mInvite200);
-      
       end();
    }
    else if (timeout.type() == DumTimeout::Glare)
@@ -459,6 +463,8 @@ InviteSession::dispatchConnected(const SipMessage& msg, OfferAnswer offans )
             // a timer to clean them up after 64T1
             // might want to add a makeAck method in Dialog so we don't
             // increment CSeq unnecessarily
+
+            // !jf! Need to include the answer here. 
             SipMessage ack;
             mDialog.makeRequest(ack, ACK);
             ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
@@ -553,6 +559,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg, OfferAnswer offans )
          mCurrentRemoteSdp = *offans.second;
          mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, offans.second);
 
+         // !jf! I need to potentially include an answer in the ACK here
          SipMessage ack;
          mDialog.makeRequest(ack, ACK);
          mDum.send(ack);
@@ -605,37 +612,87 @@ InviteSession::dispatchGlare(const SipMessage& msg, OfferAnswer offans )
 }
 
 void
-InviteSession::dispatchReceivedUpdate(const SipMessage& msg, OfferAnswer offans )
+InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg, OfferAnswer offans )
 {
-   
+   MethodTypes method = msg.header(h_CSeq).method();
+   if (method == INVITE || method == UPDATE)
+   {
+      // Means that the UAC has sent us a second reINVITE or UPDATE before we
+      // responded to the first one. Bastard!
+      SipMessage response;
+      mDialog.makeResponse(response, msg, 500);
+      response.header(h_RetryAfter).value() = Random::getRandom() % 10;
+      mDum.send(response);
+   }
+   else
+   {
+      dispatchOthers(msg);
+   }      
 }
 
-void
-InviteSession::dispatchReceivedReinvite(const SipMessage& msg, OfferAnswer offans )
-{
-}
-
-void
-InviteSession::dispatchReceivedReinviteNoOffer(const SipMessage& msg, OfferAnswer offans )
-{
-}
 
 void
 InviteSession::dispatchAnswered(const SipMessage& msg, OfferAnswer offans )
 {
+   if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
+   {
+      transition(Connected);
+   }
+   else
+   {
+      dispatchOthers(msg);
+   }      
 }
 
 void
 InviteSession::dispatchWaitingToOffer(const SipMessage& msg, OfferAnswer offans )
 {
+   if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
+   {
+      provideOffer(msg, offans);
+   }
+   else
+   {
+      dispatchOthers(msg);
+   }      
+}
+
+void
+InviteSession::dispatchWaitingToTerminate(const SipMessage& msg, OfferAnswer offans )
+{
+   if (msg.isResponse() && 
+       msg.header(h_CSeq).sequence() / 200 == 1 && 
+       msg.header(h_CSeq).method() == INVITE)
+   {
+      // !jf! Need to include the answer here. 
+      SipMessage ack;
+      mDialog.makeRequest(ack, ACK);
+      ack.header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
+      mDum.send(ack);
+      transition(Terminated);
+   }
+   else if (msg.isResponse() && msg.header(h_CSeq).method() == INVITE)
+   {
+      end();
+   }
 }
 
 void
 InviteSession::dispatchTerminated(const SipMessage& msg, OfferAnswer offans )
 {
+   Destroyer::Guard guard(mDestroyer);
+   if (msg.isRequest())
+   {
+      SipMessage response;
+      mDialog.makeResponse(response, msg, 481);
+      mDum.send(response);
+      guard.destroy();
+   }
+   else 
+   {
+      guard.destroy();
+   }
 }
-
-
 
 void
 InviteSession::dispatchOthers(const SipMessage& msg)
