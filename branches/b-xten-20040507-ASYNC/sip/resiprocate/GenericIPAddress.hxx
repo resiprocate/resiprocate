@@ -6,39 +6,67 @@
 
 namespace resip
 {
-  struct GenericIPAddress
-  {
-  public:   
-    GenericIPAddress()
-    {
-    }
-    
-    GenericIPAddress(const sockaddr_in& v4) : v4Address(v4), mIsVersion4(true)
-    {
-    }
+struct GenericIPAddress
+{
+   public:   
+      GenericIPAddress()
+      {
+      }
+      
+      GenericIPAddress(const sockaddr& addr) : address(addr) 
+      {
+      }
+
+      GenericIPAddress(const sockaddr_in& v4) : v4Address(v4)
+      {
+      }
 
 #ifdef USE_IPV6
-    GenericIPAddress(const sockaddr_in6& v6) : v6Address(v6), mIsVersion4(false)
-    {
-    }
+      GenericIPAddress(const sockaddr_in6& v6) : v6Address(v6)
+      {
+      }
 #endif
-
-    socklen_t length() const;
-    bool isVersion6() const { return !mIsVersion4; }
-    bool isVersion4() const { return mIsVersion4; }
-    
-    union
-    {
-      sockaddr address;
-      sockaddr_in v4Address;
+      size_t length() const
+      {
+         if (address.sa_family == AF_INET) // v4
+         {
+            return sizeof(sockaddr_in);
+         }
 #ifdef USE_IPV6
-      sockaddr_in6 v6Address;
+         else  if (address.sa_family == AF_INET6) // v6
+         {
+            return sizeof(sockaddr_in6);
+         }
+         assert(0);
+         return 0;
 #endif
-    };
-  private:
-    bool mIsVersion4;
-  };
+	  }
+      bool isVersion4() const
+      {
+         return address.sa_family == AF_INET;
+      }
+#ifdef USE_IPV6
+      bool isVersion6() const 
+      { 
+         return address.sa_family == AF_INET6; 
+      }
+#else
+      bool isVersion6() const { return false; }
+#endif
+      union
+      {
+            sockaddr address;
+            sockaddr_in v4Address;
+#ifdef USE_IPV6
+            sockaddr_in6 v6Address;
+#endif
+      };
+   private:
+      bool mIsVersion4;
+};
+
 }
+
 
 #endif
 
