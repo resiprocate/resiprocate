@@ -62,7 +62,7 @@ Executive::processDns(FdSet& fdset)
 
 /// returns time in milliseconds when process next needs to be called 
 int 
-Executive::getTimeTillNextProcess()
+Executive::getTimeTillNextProcessMS()
 {
    if ( mStack.mStateMacFifo.size() != 0 ) 
    {
@@ -75,10 +75,10 @@ Executive::getTimeTillNextProcess()
    int ret = mStack.mTimers.msTillNextTimer();
 
 #if 1 // !cj! just keep a max of 100 for good luck - should not be needed   
-	if ( ret > 100 )
-	{
-		ret = 100;
-	}
+   if ( ret > 100 )
+   {
+      ret = 100;
+   }
 #endif
 
    return ret;
