@@ -7,6 +7,13 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/GenericContents.hxx"
 
+#if defined(WIN32) && defined(_DEBUG) &&defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif // defined(WIN32) && defined(_DEBUG)
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
@@ -26,7 +33,8 @@ Contents::Contents(HeaderFieldValue* headerFieldValue,
      mId(0),
      mDescription(0),
      mVersion(1),
-     mMinorVersion(0)
+     mMinorVersion(0),
+	 mLength(0)
 {}
 
 Contents::Contents(const Mime& contentType) 
@@ -37,7 +45,8 @@ Contents::Contents(const Mime& contentType)
      mId(0),
      mDescription(0),
      mVersion(1),
-     mMinorVersion(0)
+     mMinorVersion(0),
+	 mLength(0)
 {}
 
 Contents::Contents(const Contents& rhs) 
@@ -49,7 +58,8 @@ Contents::Contents(const Contents& rhs)
       mId(0),
       mDescription(0),
       mVersion(1),
-      mMinorVersion(0)
+      mMinorVersion(0),
+	  mLength(0)
 {
    *this = rhs;
 }
@@ -73,6 +83,7 @@ Contents::clear()
    mLanguages = 0;
    mId = 0;
    mDescription = 0;
+   mLength = 0;
 }
 
 const Data&
