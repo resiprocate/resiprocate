@@ -109,12 +109,11 @@ main(int argc, char** argv)
    UserDb userDb;
 
    Proxy proxy(stack, requestProcessors, userDb);
+
    proxy.addDomain(DnsUtil::getLocalHostName());
-
-//   proxy.addDomain(DnsUtil::getLocalHostName(), 5060);
-//   proxy.addDomain(DnsUtil::getLocalIpAddress());
-
-//   proxy.addDomain(DnsUtil::getLocalIpAddress(), 5060);
+   proxy.addDomain(DnsUtil::getLocalHostName(), 5060);
+   proxy.addDomain(DnsUtil::getLocalIpAddress());
+   proxy.addDomain(DnsUtil::getLocalIpAddress(), 5060);
   
  for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
         i != args.mDomains.end(); ++i)
