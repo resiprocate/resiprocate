@@ -13,8 +13,8 @@ class TimerMessage : public Message
    public:
       TimerMessage(Data transactionId, Timer::Type type)
          : mTransactionId(transactionId),
-           mType(type)
-      {}
+           mType(type){}
+      ~TimerMessage();
 
       virtual const Data& getTransactionId() const
       {

@@ -4,7 +4,6 @@
 
 using namespace Vocal2;
 
-
 Executive::Executive( SipStack& stack)
   : mStack(stack)
 {
@@ -51,16 +50,15 @@ Executive::processTransports()
 bool 
 Executive::processStateMachine()
 {
-  if ( mStack.mStateMacFifo.size() == 0 ) 
-    {
+   if ( mStack.mStateMacFifo.size() == 0 ) 
+   {
       return false;
-    }
-
-  TransactionState::process(mStack);
-
-  return true;
+   }
+   
+   TransactionState::process(mStack);
+   
+   return true;
 }
-
 
 bool 
 Executive::processTimer()
