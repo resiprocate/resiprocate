@@ -983,7 +983,9 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
 {
    int failureCode = 0;   
    MethodTypes method = request.header(h_RequestLine).method();
-   if (!request.exists(h_Event) || (method == NOTIFY && !request.exists(h_SubscriptionState)))
+
+//       || (method == NOTIFY && !request.exists(h_SubscriptionState)))
+   if (!request.exists(h_Event))
    {
       failureCode = 400;
    }

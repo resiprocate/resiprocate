@@ -8,6 +8,7 @@
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
+
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
@@ -150,6 +151,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
                mDum.send(mLastResponse);
                mDialog.makeResponse(mLastResponse, mLastRequest, 487);         
                mDum.send(mLastResponse);
+               guard.destroy();
             }
             else
             {
