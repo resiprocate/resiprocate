@@ -2,28 +2,36 @@
 #include "resiprocate/config.hxx"
 #endif
 
-
+#include <cassert>
 #include <limits.h>
-
-#include "resiprocate/os/Socket.hxx"
 
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/TimerMessage.hxx"
+#include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-TimerQueue::TimerQueue(Fifo<TransactionMessage>& stateMachineFifo,
-                       TimeLimitFifo<Message>& tuFifo)
-   : mStateMachineFifo(stateMachineFifo),
-     mTuFifo(tuFifo)
-{}
+TimerQueue::TimerQueue(Fifo<TransactionMessage>& fifo)
+   : mFifo(fifo)
+{
+}
+
+TimeLimitTimerQueue::TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo)
+   : mFifo(fifo)
+{
+}
+
+BaseTimerQueue::~BaseTimerQueue()
+{
+}
 
 unsigned int
-TimerQueue::msTillNextTimer()
+BaseTimerQueue::msTillNextTimer()
 {
    if (!mTimers.empty())
    {
@@ -63,25 +71,43 @@ TimerQueue::add(Timer::Type type, const Data& transactionId, unsigned long msOff
    return t.getId();
 }
 
-Timer::Id
-TimerQueue::add(const Timer& t)
+void
+TimeLimitTimerQueue::add(const Timer& timer)
 {
-   mTimers.insert(t);
-   DebugLog(<< "Adding application timer: " << t.getMessage()->brief());
-   
-   return t.getId();
+   assert(timer.getMessage());
+   DebugLog(<< "Adding application timer: " << timer.getMessage()->brief());
+   mTimers.insert(timer);
 }
 
 int
-TimerQueue::size() const
+BaseTimerQueue::size() const
 {
    return mTimers.size();
 }
 
 bool
-TimerQueue::empty() const
+BaseTimerQueue::empty() const
 {
    return mTimers.empty();
+}
+
+void
+TimeLimitTimerQueue::process()
+{
+   // get the set of timers that have fired and insert TimerMsg into the state
+   // machine fifo and application messages into the TU fifo
+
+   if (!mTimers.empty() && msTillNextTimer() == 0)
+   {
+      Timer now(0);
+      std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
+      for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
+      {
+         assert(i->getMessage());
+         mFifo.add(i->getMessage(), TimeLimitFifo<Message>::InternalElement);
+      }
+      mTimers.erase(mTimers.begin(), end);
+   }
 }
 
 void
@@ -90,45 +116,21 @@ TimerQueue::process()
    // get the set of timers that have fired and insert TimerMsg into the state
    // machine fifo and application messages into the TU fifo
 
-   Timer now(0);
-   for (std::multiset<Timer>::iterator i = mTimers.begin(); 
-        i != mTimers.upper_bound(now);)
+   if (!mTimers.empty() && msTillNextTimer() == 0)
    {
-      if (i->mType != Timer::ApplicationTimer)
+      Timer now(0);
+      std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
+      for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
       {
-         TimerMessage* t = new TimerMessage(i->mTransactionId, i->mType, i->mDuration);
-         // Leaked !ah! BUGBUG valgrind says leaked.
-         //  206884 bytes in 2270 blocks are definitely lost (...)
-         //     by 0x8178A20: operator new(unsigned)
-         //     by 0x80CDF75: resip::TimerQueue::process() (TimerQueue.cxx:63)
-         //     by 0x80F6A4B: resip::Executive::processTimer() (Executive.cxx:52)
-         
-         //DebugLog (<< Timer::toData(i->mType) << " fired (" << i->mTransactionId << ") adding to fifo");
-         mStateMachineFifo.add(t);
+         mFifo.add(new TimerMessage(i->mTransactionId, i->mType, i->mDuration));
       }
-      else 
-      {
-         //DebugLog(<< "ApplicationTimer " << *i->getMessage());
-         // application timer -- queue the payload message
-         assert(i->getMessage());
-         if (!mTuFifo.add(i->getMessage(), TimeLimitFifo<Message>::InternalElement))
-         {
-            CritLog(<< "Hard fifo limit exceeded -- probably doomed");
-         }
-      }
-      mTimers.erase(i++);
+      mTimers.erase(mTimers.begin(), end);
    }
 }
 
-void
-TimerQueue::run()
-{
-   assert(0);
-   // for the thread
-}
 
-ostream& 
-resip::operator<<(ostream& str, const TimerQueue& tq)
+std::ostream& 
+resip::operator<<(std::ostream& str, const BaseTimerQueue& tq)
 {
    str << "TimerQueue[" ;
 
