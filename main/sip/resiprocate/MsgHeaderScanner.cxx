@@ -2,7 +2,10 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include <resiprocate/MsgHeaderScanner.hxx>
+#if defined(NEW_MSG_HEADER_SCANNER)
+
+#include "resiprocate/MsgHeaderScanner.hxx"
+
 
 #include <limits.h>
 #ifdef RESIP_MSG_HEADER_SCANNER_DEBUG
@@ -933,3 +936,5 @@ main(unsigned int   numArgs,
 }
 
 #endif //!defined(RESIP_MSG_HEADER_SCANNER_DEBUG) }
+
+#endif

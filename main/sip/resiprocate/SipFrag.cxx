@@ -9,7 +9,7 @@
 #ifndef NEW_MSG_HEADER_SCANNER
 #include "resiprocate/Preparse.hxx"
 #else
-#include <resiprocate/MsgHeaderScanner.hxx>
+#include "resiprocate/MsgHeaderScanner.hxx"
 #endif
 
 using namespace resip;
