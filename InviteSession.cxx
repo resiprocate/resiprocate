@@ -858,6 +858,7 @@ InviteSession::dispatchAnswered(const SipMessage& msg)
 {
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
+      mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
       transition(Connected);
    }
    else
@@ -871,6 +872,7 @@ InviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 {
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
+      mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
       std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
       provideOffer(*sdp);
    }
