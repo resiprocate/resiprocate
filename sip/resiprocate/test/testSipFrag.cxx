@@ -27,7 +27,41 @@ main(int argc, char* argv[])
 
   Log::initialize(Log::Cout, Log::Info, argv[0]);
 
-  {
+  {  
+     Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+        "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+        "To: Bob <sip:bob@biloxi.com>\r\n"
+        "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+        "Call-ID: a84b4c76e66710\r\n"
+        "CSeq: 314159 INVITE\r\n"
+        "Max-Forwards: 70\r\n"
+        "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+        "Content-Type: message/sipfrag\r\n"
+        "Content-Length: 57\r\n"
+        "\r\n"
+        "Content-Type: text/plain\r\n"
+        "Content-Length: 11\r\n"
+        "\r\n"
+        "Hi There!");
+
+     try
+     {
+        auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+        Contents* body = msg->getContents();
+
+        assert(body != 0);
+        SipFrag* frag = dynamic_cast<SipFrag*>(body);
+        assert(frag != 0);
+        assert(frag->message().header(h_ContentType) == Mime("text", "plain"));
+        assert(frag->message().header(h_ContentLength).value() == 11);
+        assert(!(frag->message().isRequest() ||frag->message().isResponse()));
+     }
+     catch (BaseException& e)
+     {
+        assert(false);
+     }
+  }
+
      // test from RFC3420
      {
         Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
@@ -194,34 +228,7 @@ main(int argc, char* argv[])
            assert(false);
         }
      }
-
-     {
-        Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
-                 "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
-                 "To: Bob <sip:bob@biloxi.com>\r\n"
-                 "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
-                 "Call-ID: a84b4c76e66710\r\n"
-                 "CSeq: 314159 INVITE\r\n"
-                 "Max-Forwards: 70\r\n"
-                 "Contact: <sip:alice@pc33.atlanta.com>\r\n"
-                 "Content-Type: message/sipfrag\r\n"
-                 "Content-Length: 57\r\n"
-                 "\r\n"
-                 "Content-Type: text/plain\r\n"
-                 "Content-Length: 11\r\n"
-                 "\r\n"
-                 "Hi There!");
-
-        try
-        {
-           auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));        
-        }
-        catch (BaseException& e)
-        {
-           assert(false);
-        }
-     }
-  }
+  
 
   {
      // !ah! This test doesn't work with the MsgHeaderScanner -- works w/ preparser.
@@ -369,18 +376,17 @@ main(int argc, char* argv[])
       SipFrag* f2 = dynamic_cast<SipFrag*>(body);
       tassert(f2);
 
-      // There should NOT be a content length header in the sipfrag !!
-
-      // .dlb. this is an example of a more general issue. SipFrag should be
-      // parsed only by the consumer and after checking signatures.
-
       {
         Data d;
         DataStream ds(d);
         f2->encode(ds);
         ds.flush();
 
-        tassert(!d.find("Content-Length"));
+        cout << "SipFrag without contents encoded:" << endl;
+        f2->encode(cout);
+
+
+        tassert(d.find("Content-Length") == Data::npos);
 
       }
       tassert_verify(4);

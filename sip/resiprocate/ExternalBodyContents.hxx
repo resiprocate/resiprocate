@@ -1,51 +1,31 @@
-#if !defined(RESIP_SIPFRAG_HXX)
-#define RESIP_SIPFRAG_HXX 
+#ifndef RESIP_ExternalBodyContents_hxx
+#define RESIP_ExternalBodyContents_hxx
 
-#include <map>
-
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Data.hxx"
+#include "resiprocate/SipFrag.hxx"
 
 namespace resip
 {
 
-class SipMessage;
-
-// Mostly works -- 
-// Preparse insists on a start line while SIP frag may not have one.
-class SipFrag : public Contents
+class ExternalBodyContents : public SipFrag
 {
    public:
-      SipFrag(const Mime& contentsType = getStaticType());
-      SipFrag(HeaderFieldValue* hfv, const Mime& contentsType);
-      SipFrag(const Data& data, const Mime& contentsType);
-      SipFrag(const SipFrag& rhs);
-      ~SipFrag();
-      SipFrag& operator=(const SipFrag& rhs);
-
+      ExternalBodyContents();
+      ExternalBodyContents(HeaderFieldValue* hfv, const Mime& contentType);
+      ExternalBodyContents(const ExternalBodyContents& rhs);
+      ExternalBodyContents& operator=(const ExternalBodyContents& rhs);
       virtual Contents* clone() const;
 
       static const Mime& getStaticType() ;
 
-      SipMessage& message();
-      const SipMessage& message() const;
-
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-      virtual void parse(ParseBuffer& pb);
-
-      static bool init();
-
-   private:
-      bool hasStartLine(char* buffer, int size);      
-      SipMessage* mMessage;
+      static bool init();      
 };
 
-static bool invokeSipFragInit = SipFrag::init();
+static bool invokeExternalBodyContentsInit = ExternalBodyContents::init();
 
 }
 
 #endif
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -57,10 +37,10 @@ static bool invokeSipFragInit = SipFrag::init();
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this std::list of conditions and the following disclaimer.
+ *    notice, this list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this std::list of conditions and the following disclaimer in
+ *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  * 

@@ -406,7 +406,6 @@ enum { chunkTermSentinelChar = '\0' };
     }
 
 // Debug follows
-
 #if defined(RESIP_MSG_HEADER_SCANNER_DEBUG)  
 
     static void printText(const char *  text,
@@ -884,6 +883,21 @@ enum { chunkTermSentinelChar = '\0' };
         mMsg = msg;
         mState = sMsgStart;
         mPrevScanChunkNumSavedTextChars = 0;
+    }
+
+    void
+    MsgHeaderScanner::prepareForFrag(SipMessage *  msg, bool hasStartLine)
+    {
+       mMsg = msg;
+       if (hasStartLine)
+       {
+          mState = sMsgStart;
+       }
+       else
+       {
+          mState = sAfterLineBreakAfterStatusLine;
+       }
+       mPrevScanChunkNumSavedTextChars = 0;
     }
 
     MsgHeaderScanner::ScanChunkResult
