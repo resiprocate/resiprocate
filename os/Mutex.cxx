@@ -1,9 +1,16 @@
+/*
+namespace std
+{
+typedef wchar_t wint_t;
+typedef unsigned int size_t;
+}
+
+*/
 #include <cassert>
 #include <cerrno>
-
 #include "resiprocate/os/Mutex.hxx"
 
-#if defined(WIN32) 
+#if defined(WIN32)
 #  include <windows.h>
 #  include <winbase.h>
 #else
