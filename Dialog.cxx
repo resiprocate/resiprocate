@@ -1,5 +1,7 @@
-#include "Dialog.hxx"
-#include "Logger.hxx"
+#include <iostream>
+#include <sipstack/Dialog.hxx>
+#include <sipstack/Logger.hxx>
+#include <sipstack/Helper.hxx>
 
 using namespace Vocal2;
 
@@ -144,8 +146,8 @@ Dialog::targetRefreshRequest(SipMessage& request)
 SipMessage
 Dialog::makeInvite()
 {
-   SipMessage request(INVITE);
-   request.header(h_RequestLine).
+   SipMessage request;
+   request.header(h_RequestLine) = RequestLine(INVITE);
    setRequestDefaults(request);
    incrementCSeq(request);
    return request;
@@ -154,7 +156,8 @@ Dialog::makeInvite()
 SipMessage
 Dialog::makeBye()
 {
-   SipMessage request(BYE);
+   SipMessage request;
+   request.header(h_RequestLine) = RequestLine(BYE);
    setRequestDefaults(request);
    incrementCSeq(request);
    return request;
@@ -164,7 +167,8 @@ Dialog::makeBye()
 SipMessage
 Dialog::makeRefer(Url& referTo)
 {
-   SipMessage request(REFER);
+   SipMessage request;
+   request.header(h_RequestLine) = RequestLine(REFER);
    setRequestDefaults(request);
    incrementCSeq(request);
    request.header(h_ReferTo) = referTo;
@@ -175,7 +179,8 @@ Dialog::makeRefer(Url& referTo)
 SipMessage
 Dialog::makeNotify()
 {
-   SipMessage request(NOTIFY);
+   SipMessage request;
+   request.header(h_RequestLine) = RequestLine(NOTIFY);
    setRequestDefaults(request);
    return request;
 }
@@ -184,7 +189,8 @@ Dialog::makeNotify()
 SipMessage
 Dialog::makeOptions()
 {
-   SipMessage request(OPTIONS);
+   SipMessage request;
+   request.header(h_RequestLine) = RequestLine(OPTIONS);
    setRequestDefaults(request);
    incrementCSeq(request);
    return request;
@@ -193,9 +199,8 @@ Dialog::makeOptions()
 SipMessage
 Dialog::makeAck(SipMessage& original)
 {
-   assert(mRemoteTarget != 0);
-
-   SipMessage request(ACK);
+   SipMessage request;
+   request.header(h_RequestLine) = RequestLine(ACK);
    setRequestDefaults(request);
    copyCSeq(request);
    return request;
@@ -204,7 +209,8 @@ Dialog::makeAck(SipMessage& original)
 SipMessage
 Dialog::makeCancel(SipMessage& original)
 {
-   SipMessage request(CANCEL);
+   SipMessage request;
+   request.header(h_RequestLine) = RequestLine(CANCEL);
    setRequestDefaults(request);
    copyCSeq(request);
    return request;
@@ -235,11 +241,11 @@ Dialog::setRequestDefaults(SipMessage& request)
    request.header(h_From)[p_tag] = mLocalTag;
    request.header(h_CallId) = mCallId;
 
-   setRequestUri(request.header(h_RequestLine), mRemoteTarget);
+   Helper::setUri(request.header(h_RequestLine), mRemoteTarget);
    request.header(h_Routes) = mRouteSet;
-   request.header(h_Contacts).front() = _contact;
+   request.header(h_Contacts).front() = mContact;
    request.header(h_Vias).clear();
-   request.header(h_Vias).front() = _via;
+   request.header(h_Vias).front() = mVia;
    request.header(h_Vias).front()[p_branch] = Helper::computeUniqueBranch();
 }
 
@@ -268,14 +274,14 @@ Dialog::incrementCSeq(SipMessage& request)
 std::ostream&
 Vocal2::operator<<(std::ostream& strm, Dialog& d)
 {
-   strm << endl
+   strm << std::endl
         << "Dialog: [" << d.mDialogId << " " 
         << "created=" << d.mCreated 
-        << " remoteTarget=" << d.mRemoteTarget << endl
-        << "routeset=" << Inserter(d.mRouteSet) << endl
+        << " remoteTarget=" << d.mRemoteTarget << std::endl
+      //<< "routeset=" << Inserter(d.mRouteSet) << std::endl
         << "remoteSeq=" << d.mRemoteSequence << ","
         << "remote=" << d.mRemoteUri << ","
-        << "remoteTag=" << d.mRemoteTag << endl
+        << "remoteTag=" << d.mRemoteTag << std::endl
         << "localSeq=" << d.mLocalSequence << ","
         << "local=" << d.mLocalUri << ","
         << "localTag=" << d.mLocalTag 
