@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "sip2/sipstack/Security.hxx"
+#include "sip2/util/Timer.hxx"
 
 namespace Vocal2
 {
@@ -15,8 +16,10 @@ class TuIM
       class PageCallback
       {
          public:
-            virtual void receivedPage(const Data& msg, const Uri& from, 
-                                      const Data& signedBy,  Security::SignatureStatus sigStatus,
+            virtual void receivedPage(const Data& msg, 
+                                      const Uri& from, 
+                                      const Data& signedBy,  
+                                      Security::SignatureStatus sigStatus,
                                       bool wasEncryped  ) = 0; 
             virtual ~PageCallback();
       };
@@ -73,9 +76,16 @@ class TuIM
          public:
             Uri uri;
             Data group;
+            Dialog* presDialog; 
+            UInt64 mNextTimeToSubscribe;
       };
 
       vector<Buddy> mBuddy;
+
+      // registration information
+      Dialog mRegistrationDialog;
+      UInt64 mNextTimeToRegister;
+      Data   mRegistrationPassword;
 };
 
 }
