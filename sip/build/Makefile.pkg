@@ -43,19 +43,8 @@ RESIPROCATE_LIBDIRS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)
 RESIPROCATE_LIBNAME := resiprocate
 RESIPROCATE_LDFLAGS :=
 
-ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
-RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.so
-else
-RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.a
-endif
-$(RESIPROCATE_DEPENDS): 
-	cd $(ROOT)/resiprocate; $(MAKE)
-
-
-DUM_INCLUDEDIRS := $(ROOT)
 DUM_LIBDIRS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME) 
 DUM_LIBNAME := dum
-DUM_LDFLAGS :=
 
 ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
 DUM_DEPENDS := $(ROOT)/resiprocate/dum/obj.$(TARGET_NAME)/libdum.so
@@ -65,4 +54,16 @@ endif
 $(DUM_DEPENDS): 
 	cd $(ROOT)/resiprocate/dum; $(MAKE)
 
-DEFINES += USE_IPV6 USE_ARES
+
+ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
+RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.so
+else
+RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.a
+endif
+$(RESIPROCATE_DEPENDS): 
+	cd $(ROOT)/resiprocate; $(MAKE)
+
+DEFINES += USE_ARES
+ifeq ($(USE_IPV6),true)
+DEFINES += USE_IPV6
+endif
