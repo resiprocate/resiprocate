@@ -6,6 +6,7 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/BaseException.hxx"
 
 using namespace resip;
 using namespace std;
@@ -26,7 +27,16 @@ RportParameter::RportParameter(ParameterTypes::Type type,
       
       pb.skipChar(Symbols::EQUALS[0]);
       pb.skipWhitespace();
+
+      // Catch the exception gracefully to handle seeing ;rport=
+      try
+      {
       mValue = pb.integer();
+      }
+      catch(BaseException& e)
+      {
+         mHasValue = false;
+      }
    }
 }
 

@@ -91,7 +91,7 @@ SipFrag::parse(ParseBuffer& pb)
 
    mMessage = new SipMessage();
 
-   Preparse pre;
+   Preparse pre(true); // sipfrag mode
 
    pb.assertNotEof();
    const char* const_buffer = pb.position();
@@ -171,9 +171,9 @@ SipFrag::parse(ParseBuffer& pb)
    termCharArray[3] = '\n';
    char *scanTermCharPtr;
    MsgHeaderScanner::ScanChunkResult scanChunkResult =
-      msgHeaderScanner.scanChunk(buffer,
-                                 size + sentinelLength,
-                                 &scanTermCharPtr);
+       msgHeaderScanner.scanChunk(buffer,
+                                  size + sentinelLength,
+                                  &scanTermCharPtr);
    termCharArray[0] = saveTermCharArray[0];
    termCharArray[1] = saveTermCharArray[1];
    termCharArray[2] = saveTermCharArray[2];
