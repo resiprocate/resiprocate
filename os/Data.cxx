@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.19 2002/11/04 06:34:33 derekm Exp $";
+"$Id: Data.cxx,v 1.20 2002/11/04 18:36:43 bko Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -10,6 +10,7 @@ static const char* const Data_cxx_Version =
 
 using namespace Vocal2;
 using namespace std;
+
 
 const Data Data::Empty("", 0);
 
@@ -442,8 +443,9 @@ Vocal2::operator<<(ostream& strm, const Data& d)
    return strm.write(d.mBuf, d.mSize);
 }
 
+#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 size_t 
-__gnu_cxx::hash<Vocal2::Data>::operator()(const Vocal2::Data& data) const
+HASH_NAMESPACE::hash<Vocal2::Data>::operator()(const Vocal2::Data& data) const
 {
    unsigned long __h = 0; 
    const char* start = data.data(); // non-copying
@@ -454,6 +456,7 @@ __gnu_cxx::hash<Vocal2::Data>::operator()(const Vocal2::Data& data) const
    }
    return size_t(__h);
 }
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
