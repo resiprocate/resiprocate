@@ -23,10 +23,10 @@ namespace Vocal2
      private:
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
         typedef __gnu_cxx::hash_map<Data, TransactionState*> Map;
-        Map _map;
+        Map mMap;
 #else
         typedef std::map<Data, TransactionState*> Map;
-        Map _map;
+        Map mMap;
 #endif        
         typedef Map::iterator MapIterator;
         typedef Map::const_iterator MapConstIterator;
