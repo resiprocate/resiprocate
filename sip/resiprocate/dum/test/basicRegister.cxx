@@ -41,7 +41,7 @@ class Client : public ClientRegistrationHandler
 #else
          sleep(5);
 #endif
-          ClientRegistration* foo = h.get();          
+         ClientRegistration* foo = h.get();          
           h->removeAll();
           }
           else
@@ -106,14 +106,14 @@ main (int argc, char** argv)
    clientDum.setClientAuthManager(&clientAuth);
    clientDum.getProfile()->setDefaultRegistrationTime(70);
 
-   NameAddr aor("sip:101@proxy.internal.xten.net");
-   clientDum.getProfile()->setDefaultAor(aor);
+   NameAddr from("sip:101@proxy.internal.xten.net");
+   clientDum.getProfile()->setDefaultFrom(from);
 
 
 //   profile.addDigestCredential( "xten.gloo.net", "derek@xten.gloo.net", "123456" );
 //   profile.addDigestCredential( "sphone.vopr.vonage.net", "13015604286", "" );
 
-   SipMessage & regMessage = clientDum.makeRegistration(aor, new RegisterAppDialogSet(clientDum));
+   SipMessage & regMessage = clientDum.makeRegistration(from, new RegisterAppDialogSet(clientDum));
    NameAddr contact;
 //   contact.uri().user() = "13015604286";   
 //   regMessage.header(h_Contacts).push_back(contact);   
