@@ -229,7 +229,7 @@ class SipMessage : public Message
       
       // Used by the stateless interface to specify where to send a request/response
       void setDestination(const Transport::Tuple& tuple) { mDestination = tuple; }
-      const Transport::Tuple& getDestination() const { return mDestination; }
+      Transport::Tuple& getDestination() { return mDestination; }
 
       void addBuffer(char* buf);
 
@@ -259,26 +259,52 @@ class SipMessage : public Message
       // not available
       SipMessage& operator=(const SipMessage&);
 
+      // indicates this message came from the wire, set by the Transport
       bool mIsExternal;
+      
+      // raw text corresponding to each typed header (not yet parsed)
       mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
+
+      // raw text corresponding to each unknown header
       mutable UnknownHeaders mUnknownHeaders;
   
+      // !jf!
       const Transport* mTransport;
+
+      // For messages received from the wire, this indicates where it came
+      // from. Can be used to get to the Transport and/or reliable Connection
       Transport::Tuple mSource;
+
+      // Used by the TU to specify where a message is to go
       Transport::Tuple mDestination;
       
+      // Raw buffers coming from the Transport. message manages the memory
       std::vector<char*> mBufferList;
+
+      // special case for the first line of message
       mutable HeaderFieldValueList* mStartLine;
+
+      // raw text for the contents (all of them)
       mutable HeaderFieldValue* mContentsHfv;
+
+      // lazy parser for the contents
       mutable Contents* mContents;
+
+      // cached value of a hash of the transaction id for a message received
+      // from a 2543 sip element. as per rfc3261 see 17.2.3
       mutable Data mRFC2543TransactionId;
+
+      // is a request or response
       mutable bool mRequest;
       mutable bool mResponse;
 
       Data mEncoded; // to be retransmitted
       UInt64 mCreatedTime;
 
+      // used when next element is a strict router
       Uri* mTarget;
+      
+      // domain associated with this message for tls cert
       Data mTlsDomain;
 
       friend class TransportSelector;
