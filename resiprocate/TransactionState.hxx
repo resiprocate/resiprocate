@@ -4,6 +4,7 @@
 #include <iosfwd>
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/Transport.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -17,6 +18,7 @@ class TransactionController;
 class TransactionState : public DnsHandler
 {
    public:
+      RESIP_HeapCount(TransactionState);
       static void process(TransactionController& controller); 
       ~TransactionState();
      

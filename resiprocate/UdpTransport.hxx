@@ -3,6 +3,7 @@
 
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/MsgHeaderScanner.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -12,6 +13,7 @@ class TransactionMessage;
 class UdpTransport : public Transport
 {
    public:
+      RESIP_HeapCount(UdpTransport);
       // Specify which udp port to use for send and receive
       // interface can be an ip address or dns name. If it is an ip address,
       // only bind to that interface.

@@ -4,6 +4,7 @@
 #include <iosfwd>
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 namespace resip
 {
@@ -13,6 +14,7 @@ namespace resip
 class TransportMessage : public TransactionMessage
 {
    public:
+      RESIP_HeapCount(TransportMessage);
       TransportMessage(Data transactionId, bool isFailure);
 
       virtual const Data& getTransactionId() const;
