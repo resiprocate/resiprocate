@@ -1,6 +1,10 @@
 #include "resiprocate/os/FileSystem.hxx"
+#include "resiprocate/os/Logger.hxx"
 
+#include <cassert>
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 FileSystem::Directory::Directory(const Data& path)
    : mPath(path)
@@ -16,10 +20,13 @@ FileSystem::Directory::iterator::iterator() :
 
 FileSystem::Directory::iterator::iterator(const Directory& dir)
 {
+   assert(!dir.getPath().empty());   
+   InfoLog(<< "FileSystem::Directory::iterator::iterator: " << dir.getPath());   
    mNixDir = opendir( dir.getPath().c_str() );
    mDirent = readdir(mNixDir);
    if (mDirent)
    {
+      InfoLog(<< "FileSystem::Directory::iterator::iterator, first file " << mFile);   
       mFile = mDirent->d_name;
    }
 }
@@ -35,7 +42,11 @@ FileSystem::Directory::iterator::operator++()
    if (mDirent)
    {
       mDirent = readdir(mNixDir);
-      mFile = mDirent->d_name;
+      if (mDirent)
+      {
+         mFile = mDirent->d_name;
+         InfoLog(<< "FileSystem::Directory::iterator::iterator, next file " << mFile);   
+      }
    }
    return *this;
 }
@@ -75,7 +86,6 @@ FileSystem::Directory::iterator::operator->() const
 
 FileSystem::Directory::iterator::iterator() :
    mWinSearch(0)
-   mDirent(0)
 {}
 
 FileSystem::Directory::iterator::iterator(const Directory& dir)
