@@ -263,7 +263,8 @@ TuIM::processSubscribeRequest(SipMessage* msg)
       Subscriber s;
       
       s.dialog = new Dialog( NameAddr(mContact) );
-
+      dialog = s.dialog;
+      
       Uri from = msg->header(h_From).uri();
       s.aor = from.getAorNoPort();
 
@@ -272,7 +273,8 @@ TuIM::processSubscribeRequest(SipMessage* msg)
       
       mSubscribers.push_back( s );
    }
-   
+
+   assert( dialog );
    dialog->setExpirySeconds( expires );
    
    auto_ptr<SipMessage> response( dialog->makeResponse( *msg, 200 ));
@@ -284,7 +286,8 @@ TuIM::processSubscribeRequest(SipMessage* msg)
 
    sendNotify( dialog );
 
-#if 0 // do symetric subscriptions 
+#if 1
+   // do symetric subscriptions 
    // See if this person is our buddy list and if we are not subscribed to them
 
     UInt64 now = Timer::getTimeMs();
