@@ -80,8 +80,6 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
       {
          ok = SSL_connect(ssl);
       }
-      
-#if 0 
       if ( ok <= 0 )
       {
          int err = SSL_get_error(ssl,ok);
@@ -103,10 +101,48 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
                throw Transport::Exception( Data("TLS connect failed"), __FILE__, __LINE__ );   
          }
       }
-#endif
    }
    
    InfoLog( << "TLS connected" ); 
+
+#if 1  
+   InfoLog( << "TLS handshake starting" ); 
+   again = true;
+   while (again)
+   {
+      again = false;
+      ok = SSL_do_handshake(ssl);
+      
+      if ( ok <= 0 )
+      {
+         int err = SSL_get_error(ssl,ok);
+         char buf[256];
+         ERR_error_string_n(err,buf,sizeof(buf));
+         
+         switch (err)
+         {
+            case SSL_ERROR_WANT_READ:
+               DebugLog( << "TLS handshake want read" );
+               again = true;
+               break;
+            case SSL_ERROR_WANT_WRITE:
+               DebugLog( << "TLS handshake want read" );
+               again = true;
+               break;
+            default:
+               ErrLog( << "TLS handshake failed "
+                       << "ok=" << ok << " err=" << err << " " << buf );
+               
+               bio = NULL;
+               
+               throw Transport::Exception( Data("TLS handshake failed"), __FILE__, __LINE__ );   
+         }
+      }
+   }
+   
+   InfoLog( << "TLS handshake done" ); 
+#endif
+
 }
 
       
@@ -346,7 +382,8 @@ Security::getTlsCtx(bool isServer)
       return ctx;
    }
    
-   ctx=SSL_CTX_new( TLSv1_method() );
+   //   ctx=SSL_CTX_new( TLSv1_method() );
+   ctx=SSL_CTX_new(  SSLv23_method() );
    assert( ctx );
    
    if ( isServer )
