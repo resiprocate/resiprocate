@@ -40,19 +40,66 @@ class ShutdownSelf : public ThreadIf
     public:
         void thread()
         {
-            while(!isShutdown())
-            {
-            }
+           while(!waitForShutdown(4000))
+           {
+           }
         }
 };
+
+class DerivedShutsDown : public ThreadIf
+{
+   public:
+      DerivedShutsDown() {}
+      ~DerivedShutsDown()
+      {
+         shutdown();
+         join();
+      }
+         
+      void thread()
+      {
+         while(!isShutdown())
+         {
+         }
+      }
+};
+
+
 
 int main()
 {
    {
-      ShutdownSelf s;
-      s.run();
-      s.shutdown();
-      s.join();
+      DerivedShutsDown d;
+   }
+      
+   {
+      vector<DerivedShutsDown*> threads;
+      int numThreads = 20;
+      
+      for (int i=0; i < numThreads; i++)
+      {
+         threads.push_back(new DerivedShutsDown);
+         threads.back()->run();
+      }
+      sleep(1);
+      for (int i=0; i < numThreads; i++)
+      {
+         delete threads[i];
+      }
+      cerr << "finished many-thread test" << endl;
+   }
+   
+   {
+      DerivedShutsDown d;
+      d.run();
+      usleep(10000);
+   }
+   {
+      ShutdownSelf* s= new ShutdownSelf();
+      s->run();
+      usleep(10000);
+      s->shutdown();
+      delete s;
    }
    {
         Every4 e;
