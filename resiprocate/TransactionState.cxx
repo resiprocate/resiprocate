@@ -215,6 +215,7 @@ TransactionState::processDns(Message* message)
       if (next != mDnsListEnd) // not at end
       {
          mDnsListCurrent++;
+         mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementCounter();
          sendToWire(mMsgToRetransmit);
       }
       else if (mDnsState != DnsResolver::Complete)
@@ -1052,13 +1053,14 @@ TransactionState::isSentUnreliable(Message* msg) const
 
 
 void
-TransactionState::sendToWire(Message* msg) const
+TransactionState::sendToWire(Message* msg) 
 {
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
    assert(sip);
 
    if (mDnsState == DnsResolver::NotStarted)
    {
+      mDnsState = DnsResolver::Waiting;
       mStack.mTransportSelector.dnsResolve(sip);
    }
    else
