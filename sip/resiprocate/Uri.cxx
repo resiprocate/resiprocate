@@ -372,6 +372,27 @@ Uri::operator<(const Uri& other) const
    return mPort < other.mPort;
 }
 
+bool 
+Uri::GreaterQ::operator()(const Uri& lhs, const Uri& rhs) const
+{
+   if (lhs.exists(p_q) && rhs.exists(p_q))
+   {
+      return lhs.param(p_q) > rhs.param(p_q);
+   }
+
+   if (lhs.exists(p_q))
+   {
+      return lhs.param(p_q) == 1.0;
+   }
+
+   if (rhs.exists(p_q))
+   {
+      return rhs.param(p_q) != 1.0;
+   }
+
+   return false;
+}
+
 const Data
 Uri::getAorNoPort() const
 {
