@@ -4,8 +4,10 @@
 
 using namespace resip;
 
-RegistrationCreator::RegistrationCreator(DialogUsageManager& dum)
+RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, NameAddr& aor)
    : BaseCreator(dum)
 {
-   makeInitialRequest(mDum.getProfile()->getDefaultAor(), REGISTER);
+   makeInitialRequest(aor, REGISTER);
+   mLastRequest.header(h_RequestLine).uri().user() = Data::Empty;
+   mLastRequest.header(h_Expires) = dum.getProfile()->getDefaultRegistrationTime();
 }
