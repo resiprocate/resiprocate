@@ -40,37 +40,37 @@ GagConduit::handleMessage(GagMessage *message)
 }
 
 void
-GagConduit::gaimIm(GagImMessage *)
+GagConduit::gaimIm(GagImMessage *msg)
 {
 }
 
 void
-GagConduit::gaimPresence(GagPresenceMessage *)
+GagConduit::gaimPresence(GagPresenceMessage *msg)
 {
 }
 
 void
-GagConduit::gaimLogin(GagLoginMessage *)
+GagConduit::gaimLogin(GagLoginMessage *msg)
 {
 }
 
 void
-GagConduit::gaimLogout(GagLogoutMessage *)
+GagConduit::gaimLogout(GagLogoutMessage *msg)
 {
 }
 
 void
-GagConduit::gaimAddBuddy(GagAddBuddyMessage *)
+GagConduit::gaimAddBuddy(GagAddBuddyMessage *msg)
 {
 }
 
 void
-GagConduit::gaimRemoveBuddy(GagRemoveBuddyMessage *)
+GagConduit::gaimRemoveBuddy(GagRemoveBuddyMessage *msg)
 {
 }
 
 void
-GagConduit::gaimError(GagErrorMessage *)
+GagConduit::gaimError(GagErrorMessage *msg)
 {
 }
 
@@ -78,11 +78,11 @@ GagConduit::gaimError(GagErrorMessage *)
 void
 GagConduit::process()
 {
-  list<TuIM>::iterator tu;
+  map<Uri,TuIM>::iterator tu;
   tu = tuIMList.begin();
   while (tu != tuIMList.end())
   {
-    tu->process();
+    (tu->second).process();
     tu++;
   }
 }

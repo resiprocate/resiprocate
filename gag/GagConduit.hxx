@@ -1,7 +1,7 @@
 #ifndef _GAG_CONDUIT_HXX
 #define _GAG_CONDUIT_HXX
 
-#include <list>
+#include <map>
 
 #include "resiprocate/TuIM.hxx"
 #include "resiprocate/SipStack.hxx"
@@ -38,7 +38,7 @@ class GagConduit: public TuIM::Callback
 
   private:
     // Here are all of our TUs
-    list<TuIM> tuIMList;
+    map<Uri,TuIM> tuIMList;
     SipStack *sipStack;
 };
 #endif
