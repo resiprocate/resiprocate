@@ -555,8 +555,8 @@ void test7()
       tassert(message->header(h_ContentType).subType() == "sdp");
       
       DebugLog( << "start map dump" );
-      std::map<Mime, ContentsFactoryBase*>& m = Contents::getFactoryMap();
-      std::map<Mime, ContentsFactoryBase*>::iterator i;
+      HashMap<Mime, ContentsFactoryBase*>& m = Contents::getFactoryMap();
+      HashMap<Mime, ContentsFactoryBase*>::iterator i;
       i = m.begin();
       while ( i != m.end() )
       {
