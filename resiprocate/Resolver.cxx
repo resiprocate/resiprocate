@@ -167,13 +167,13 @@ Resolver::isIpAddress(const Data& data)
       return false;
    }
 }
-
+ 
 
 Data
 Resolver::getHostName()
 {
-   char buffer[256];
-   if (gethostname(buffer, sizeof(buffer) < 0))
+   char buffer[255];
+   if (gethostname(buffer, sizeof(buffer)) < 0)
    {
       InfoLog (<< "Failed gethostname() " << strerror(errno));
       return "localhost";
