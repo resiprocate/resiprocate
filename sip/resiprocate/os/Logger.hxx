@@ -70,8 +70,19 @@ do                                                                              
       _resip_result.clear();                                                                    \
       {                                                                                         \
          resip::DataStream _resip_strm(_resip_result);                                          \
-         resip::Log::tags(level_, system_, __FILE__, __LINE__, _resip_strm)                     \
-            << " | " args_;                                                                     \
+         if (!resip::Log::getExternal())                                                        \
+         {                                                                                      \
+            resip::Log::tags(level_, system_, __FILE__, __LINE__, _resip_strm)                  \
+               << " | ";                                                                        \
+         }                                                                                      \
+         _resip_strm args_;                                                                     \
+      }                                                                                         \
+      /* checking external twice is better than repeating macro args */                         \
+      if (resip::Log::getExternal())                                                            \
+      {                                                                                         \
+         (*resip::Log::getExternal())(level_, system_, resip::Log::getAppName(),                \
+                                      __FILE__, __LINE__, _resip_result);                       \
+          break;                                                                                \
       }                                                                                         \
                                                                                                 \
       resip::Lock lock(resip::Log::_mutex);                                                     \
