@@ -1,6 +1,7 @@
 #if !defined(RESIP_METHODTYPES_HXX)
 #define RESIP_METHODTYPES_HXX 
 
+#define defineMethod(_enum, _name, _rfc) _enum
 namespace resip
 {
 
@@ -8,21 +9,22 @@ class Data;
 
 typedef enum
 {
-   ACK,
-   BYE,
-   CANCEL,
-   INVITE,
-   NOTIFY,
-   OPTIONS,
-   REFER,
-   REGISTER,
-   SUBSCRIBE,
-   RESPONSE,
-   MESSAGE,
-   INFO,
-   UNKNOWN,
-   PRACK,
-   PUBLISH,
+   defineMethod(ACK, "ACK", "RFC ????"),
+   defineMethod(BYE, "BYE", "RFC ????"),
+   defineMethod(CANCEL, "CANCEL", "RFC ????"),
+   defineMethod(INVITE, "INVITE", "RFC ????"),
+   defineMethod(NOTIFY, "NOTIFY", "RFC ????"),
+   defineMethod(OPTIONS, "OPTIONS", "RFC ????"),
+   defineMethod(REFER, "REFER", "RFC ????"),
+   defineMethod(REGISTER, "REGISTER", "RFC ????"),
+   defineMethod(SUBSCRIBE, "SUBSCRIBE", "RFC ????"),
+   defineMethod(RESPONSE, "RESPONSE", "RFC ????"),
+   defineMethod(MESSAGE, "MESSAGE", "RFC ????"),
+   defineMethod(INFO, "INFO", "RFC ????"),
+   defineMethod(PRACK, "PRACK", "RFC ????"),
+   defineMethod(PUBLISH, "PUBLISH", "RFC ????"),
+
+   defineMethod(UNKNOWN, "UNKNOWN", ""),
    MAX_METHODS
 } MethodTypes;
 
@@ -35,6 +37,8 @@ MethodTypes
 getMethodType(const char* name, int len);
 
 }
+
+#undef defineMethod
 
 #endif
 
