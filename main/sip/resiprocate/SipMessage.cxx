@@ -326,7 +326,7 @@ SipMessage::header(const StatusLineType& l) const
 }
 
 HeaderFieldValueList* 
-SipMessage::ensureHeader(int type) const
+SipMessage::ensureHeader(Headers::Type type) const
 {
    HeaderFieldValueList* hfvs = mHeaders[type];
    

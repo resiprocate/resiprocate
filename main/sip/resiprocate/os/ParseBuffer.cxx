@@ -1,7 +1,15 @@
 #include <util/ParseBuffer.hxx>
 #include <assert.h>
+//#include <iostream>
+//using namespace std;
 
 using namespace Vocal2;
+
+const char* ParseBuffer::WhitespaceOrParamTerm = " \t\r\n;?";
+const char* ParseBuffer::WhitespaceOrSlash = " \t\r\n/";
+const char* ParseBuffer::WhitespaceOrSemi = " \t\r\n;";
+const char* ParseBuffer::Whitespace = " \t\r\n";
+const char* ParseBuffer::SemiColonOrColon = ";:";
 
 void
 ParseBuffer::reset(const char* pos)
@@ -11,7 +19,7 @@ ParseBuffer::reset(const char* pos)
 }
 
 const char* 
-ParseBuffer::skipNonWhiteSpace()
+ParseBuffer::skipNonWhitespace()
 {
    while (mStart < mEnd)
    {
@@ -30,7 +38,7 @@ ParseBuffer::skipNonWhiteSpace()
 }
 
 const char* 
-ParseBuffer::skipWhiteSpace()
+ParseBuffer::skipWhitespace()
 {
    while (mStart < mEnd)
    {
@@ -100,7 +108,24 @@ ParseBuffer::skipToOneOf(const char* cs)
 const char* 
 ParseBuffer::skipToEndQuote()
 {
-   // !dlb! quote escape issues
-   return skipToChar('"');
+   while (mStart < mEnd)
+   {
+      switch (*position())
+      {
+         case '\\' :
+         {
+            mStart += 2;
+            break;
+         }
+         case '"' :
+         {
+            return position();
+         }
+         default :
+         {
+            mStart++;
+         }
+      }
+   }
+   return position();
 }
-
