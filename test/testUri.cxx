@@ -20,6 +20,13 @@ main(int argc, char* argv[])
 
    {
       Uri tel("tel:+358-555-1234567;pOstd=pP2;isUb=1411");
+      assert(tel.user() == "+358-555-1234567");
+
+      assert(Data::from(tel) == "tel:+358-555-1234567;pOstd=pP2;isUb=1411");
+   }
+
+   {
+      Uri tel("tel:+358-555-1234567;pOstd=pP2;isUb=1411");
       Uri sip(Uri::fromTel(tel, "company.com"));
 
       cerr << "!! " << Data::from(sip) << endl;
