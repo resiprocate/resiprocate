@@ -28,6 +28,24 @@ main(int argc, char* argv[])
       SipStack sipStack;
       SipMessage* msg=NULL;
 
+      DebugLog ( << "Try to send a message" );
+	      
+      NameAddr dest;
+      NameAddr from;
+      NameAddr contact;
+      from.uri().scheme() = "sip";
+      from.uri().user() = "fluffy";
+      from.uri().host() = "localhost";
+      from.uri().port() = 5060;
+      from.uri().param(p_transport) == "udp";
+            
+      dest = from;
+      contact = from;
+            
+      SipMessage message = Helper::makeInvite( dest, from, contact);
+      DebugLog ( << "Sending msg:" << message );
+      sipStack.send( message );
+
       while (1)
       {
          struct timeval tv;
@@ -45,7 +63,8 @@ main(int argc, char* argv[])
          {
             InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
          }
-      
+     
+
          //DebugLog ( << "Try TO PROCESS " );
          sipStack.process(&fdSet);
 
@@ -55,29 +74,6 @@ main(int argc, char* argv[])
          {
             DebugLog ( << "got message: " << *msg);
             msg->encode(cout);	  
-         }
-
-         static int count=0;
-         if ( count++ >= 10 )
-         {   
-            DebugLog ( << "Try to send a message" );
-            count = 0;
-	      
-            NameAddr dest;
-            NameAddr from;
-            NameAddr contact;
-            from.uri().scheme() = "sip";
-            from.uri().host() = "localhost";
-            from.uri().port() = 5060;
-            from.uri().user() = "fluffy";
-            from.uri().param(p_transport) == "udp";
-	      
-            dest = from;
-            contact = from;
-         
-            SipMessage message = Helper::makeInvite( dest, from, contact);
-            DebugLog ( << "Sending msg:" << message );
-            sipStack.send( message );
          }
       }
    }
