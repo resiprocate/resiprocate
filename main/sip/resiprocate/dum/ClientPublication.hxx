@@ -23,7 +23,7 @@ class ClientPublication : public BaseUsage
             Handle(DialogUsageManager& dum);
       };
       
-      void refresh(int expiration=0);
+      void refresh(unsigned int expiration=0);
       void update(const Contents* body);
 
       virtual SipMessage& unpublish();
@@ -42,6 +42,7 @@ class ClientPublication : public BaseUsage
       
       ClientPublication::Handle mHandle;
       SipMessage& mPublish;
+      int mTimerSeq; // expected timer seq (all < are stale)
 
       // disabled
       ClientPublication(const ClientPublication&);
