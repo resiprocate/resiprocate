@@ -55,17 +55,11 @@ typedef unsigned int u_int32_t;
 #endif
 
 #ifndef WIN32
-//# include <sys/types.h>
-//# include <sys/socket.h> // for u_int32_t
-//# include <sys/select.h>
-//# include <netinet/in.h>
-//# include <arpa/inet.h>
-# include <pthread.h>
+#include <pthread.h>
 #endif
 
-#if defined (__QNX__)
+#if defined(__QNX__) || defined(__sun)
 typedef unsigned int u_int32_t;
-//typedef size_t socklen_t;
 #endif
 
 #if !defined(T_NAPTR)
