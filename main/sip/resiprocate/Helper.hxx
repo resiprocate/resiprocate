@@ -23,7 +23,6 @@ class Helper
 
       //should default proto-version, anything else defaulted/passed in?
       static Via makeVia(Url& source);
-      
 
       // copy the values from Url into rline (with sip-uri parameters?)
       static void setUri(RequestLine& rLine, Url& url);
