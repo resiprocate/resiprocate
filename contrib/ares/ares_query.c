@@ -13,8 +13,6 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_query.c,v 1.4 2003/10/28 21:43:42 adamr Exp $";
-
 #include <sys/types.h>
 
 #ifndef WIN32

@@ -13,8 +13,6 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_timeout.c,v 1.3 2003/09/14 01:08:27 fluffy Exp $";
-
 #include <sys/types.h>
 #include <time.h>
 #include "ares.h"
