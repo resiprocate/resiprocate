@@ -18,7 +18,8 @@ class Uri : public ParserCategory
 
       ~Uri();
       
-      static Uri fromTel(const Uri&, const Data& host);
+      // convert from a tel scheme to sip scheme, adds user=phone param
+      static Uri fromTel(const Uri&);
 
       Data& host() const {checkParsed(); return mHost;}
       Data& user() const {checkParsed(); return mUser;}
