@@ -20,7 +20,7 @@ using namespace resip;
 using namespace Loadgen;
 
 Transceiver::Transceiver(int port)
-   : mUdp("localhost", port, "default", mReceived)
+   : mUdp(mReceived, port)
 {
    mContactUri.host() = mUdp.hostName();
    mContactUri.port() = mUdp.port();

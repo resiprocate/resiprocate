@@ -19,7 +19,7 @@ class Resolver
       // 
       Resolver(const Uri& url);
       
-      Resolver(const Data& host, int port, Transport::Type transport);
+      Resolver(const Data& host, int port, TransportType transport);
       
       // return true if data of the form a.b.c.d
       static bool isIpAddress(const Data& data);
@@ -27,11 +27,11 @@ class Resolver
       // return the localhostname (posix: gethostname())
       static Data getHostName();
       
-      std::list<Transport::Tuple> mNextHops;
+      std::list<Tuple> mNextHops;
 
    private:
       void lookupARecords();
-      Transport::Type mTransport;
+      TransportType mTransport;
       Data mHost;
       int mPort;
 };
