@@ -1,12 +1,16 @@
 #if !defined(RESIP_HELPER_HXX)
 #define RESIP_HELPER_HXX 
 
-
-#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Symbols.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/MethodTypes.hxx"
+#include "resiprocate/os/BaseException.hxx"
 
 namespace resip
 {
+
+class SipMessage;
+class NameAddr;
 
 class UnsupportedAuthenticationScheme : public BaseException
 {
@@ -26,21 +30,11 @@ class Helper
 
       //in general content length handled automatically by SipMessage?
 
-      static SipMessage* makeInvite(const NameAddr& target,
-                                   const NameAddr& from,
-                                   const NameAddr& contact);
-
-
+      static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from);
+      static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
       static SipMessage* makeForwardedInvite(const SipMessage& invite);
-      
-      static SipMessage* makeResponse(const SipMessage& request,
-                                      int responseCode,
-                                      const Data& reason = Data::Empty);
-      
-      static SipMessage* makeResponse(const SipMessage& request,
-                                     int responseCode, 
-                                      const NameAddr& myContact, 
-                                      const Data& reason = Data::Empty);
+      static SipMessage* makeResponse(const SipMessage& request,int responseCode,const Data& reason = Data::Empty);
+      static SipMessage* makeResponse(const SipMessage& request, int responseCode, const NameAddr& myContact, const Data& reason = Data::Empty);
 
       //to, maxforwards=70, requestLine& cseq method set, cseq sequence is 1
       //static SipMessage* makeRequest(const NameAddr& target, MethodTypes method); // deprecated
@@ -54,35 +48,21 @@ class Helper
                                  const int* allowedMethods = 0,
                                  int nMethods = -1);
         
-                                   
-      static SipMessage* makeRequest(const NameAddr& target, 
-                                     const NameAddr& from,
-                                     const NameAddr& contact,
-                                     MethodTypes method);
-           
+      static SipMessage* makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method);
+      static SipMessage* makeRequest(const NameAddr& target, const NameAddr& from, MethodTypes method);
       static SipMessage* makeCancel(const SipMessage& request);
       
       //creates to, from with tag, cseq method set, cseq sequence is 1
-      static SipMessage* makeRegister(const NameAddr& to,
-                                      const NameAddr& from,
-                                      const NameAddr& contact);
-
-      static SipMessage* makeRegister(const NameAddr& to,
-                                      const Data& transport,
-                                      const NameAddr& contact);
-
-      static SipMessage* makeSubscribe(const NameAddr& target, 
-                                       const NameAddr& from,
-                                       const NameAddr& contact);
-
-      static SipMessage* makeMessage(const NameAddr& target, 
-                                     const NameAddr& from,
-                                     const NameAddr& contact);
-
-      static SipMessage* makePublish(const NameAddr& target, 
-                                     const NameAddr& from,
-                                     const NameAddr& contact);
-
+      static SipMessage* makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& contact);
+      static SipMessage* makeRegister(const NameAddr& to, const NameAddr& from);
+      static SipMessage* makeRegister(const NameAddr& to, const Data& transport, const NameAddr& contact);
+      static SipMessage* makeRegister(const NameAddr& to, const Data& transport);
+      static SipMessage* makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
+      static SipMessage* makeSubscribe(const NameAddr& target, const NameAddr& from);
+      static SipMessage* makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
+      static SipMessage* makeMessage(const NameAddr& target, const NameAddr& from);
+      static SipMessage* makePublish(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
+      static SipMessage* makePublish(const NameAddr& target, const NameAddr& from);
       static SipMessage* makeFailureAck(const SipMessage& request, const SipMessage& response);
       
       static Data computeUniqueBranch();

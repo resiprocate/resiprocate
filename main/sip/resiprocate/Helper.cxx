@@ -14,6 +14,7 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/MD5Stream.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 using namespace resip;
 
@@ -44,11 +45,22 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    return request;
 }
 
+SipMessage*
+Helper::makeRequest(const NameAddr& target, const NameAddr& from, MethodTypes method)
+{
+   NameAddr contact;
+   return makeRequest(target, from, contact, method);
+}
 
 SipMessage*
-Helper::makeRegister(const NameAddr& to,
-                     const NameAddr& from,
-                     const NameAddr& contact)
+Helper::makeRegister(const NameAddr& to, const NameAddr& from)
+{
+   NameAddr contact;
+   return makeRegister(to, from, contact);
+}
+
+SipMessage*
+Helper::makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
    RequestLine rLine(REGISTER);
@@ -79,9 +91,15 @@ Helper::makeRegister(const NameAddr& to,
 }
 
 SipMessage*
-Helper::makeRegister(const NameAddr& to,
-                     const Data& transport,
-                     const NameAddr& contact)
+Helper::makeRegister(const NameAddr& to,const Data& transport)
+{
+   NameAddr contact;
+   return makeRegister(to, transport, contact);
+   
+}
+
+SipMessage*
+Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
    RequestLine rLine(REGISTER);
@@ -113,9 +131,14 @@ Helper::makeRegister(const NameAddr& to,
 
 
 SipMessage*
-Helper::makePublish(const NameAddr& target, 
-                      const NameAddr& from,
-                      const NameAddr& contact)
+Helper::makePublish(const NameAddr& target, const NameAddr& from)
+{
+   NameAddr contact;
+   return makePublish(target, from, contact);
+}
+
+SipMessage*
+Helper::makePublish(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
    RequestLine rLine(PUBLISH);
@@ -137,11 +160,15 @@ Helper::makePublish(const NameAddr& target,
    return request;
 }
 
+SipMessage*
+Helper::makeMessage(const NameAddr& target, const NameAddr& from)
+{
+   NameAddr contact;
+   return makeMessage(target, from, contact);
+}
 
 SipMessage*
-Helper::makeMessage(const NameAddr& target, 
-                    const NameAddr& from,
-                    const NameAddr& contact)
+Helper::makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
    RequestLine rLine(MESSAGE);
@@ -165,9 +192,14 @@ Helper::makeMessage(const NameAddr& target,
 
 
 SipMessage*
-Helper::makeSubscribe(const NameAddr& target, 
-                      const NameAddr& from,
-                      const NameAddr& contact)
+Helper::makeSubscribe(const NameAddr& target, const NameAddr& from)
+{
+   NameAddr contact;
+   return makeSubscribe(target, from, contact);
+}
+
+SipMessage*
+Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
    RequestLine rLine(SUBSCRIBE);
@@ -189,6 +221,11 @@ Helper::makeSubscribe(const NameAddr& target,
    return request;
 }
 
+SipMessage*
+Helper::makeInvite(const NameAddr& target, const NameAddr& from)
+{
+   return Helper::makeRequest(target, from, INVITE);
+}
 
 SipMessage*
 Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
@@ -198,7 +235,7 @@ Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr&
 
 
 SipMessage*
-Helper::makeResponse(const SipMessage& request, int responseCode, const Data& reason)
+Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr& contact, const Data& reason)
 {
    DebugLog(<< "Helper::makeResponse(" << request.brief() << " code=" << responseCode << " reason=" << reason);
    SipMessage* response = new SipMessage;
@@ -208,8 +245,7 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
    response->header(h_CallId) = request.header(h_CallId);
    response->header(h_CSeq) = request.header(h_CSeq);
    response->header(h_Vias) = request.header(h_Vias);
-   NameAddr contact;
-   response->header(h_Contacts).push_back(contact);
+   response->header(h_Contacts).push_front(contact);
    
    // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.
    // No totag for failure responses or 100s
@@ -302,18 +338,13 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
    return response;
 }
 
-
 SipMessage*
-Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr& contact,  const Data& reason)
+Helper::makeResponse(const SipMessage& request, int responseCode, const Data& reason)
 {
-
-   SipMessage* response = Helper::makeResponse(request, responseCode, reason);
-   response->header(h_Contacts).clear();
-   response->header(h_Contacts).push_front(contact);
+   NameAddr contact;
+   SipMessage* response = Helper::makeResponse(request, responseCode, contact, reason);
    return response;
 }
-
-
 
 SipMessage*
 Helper::makeCancel(const SipMessage& request)
