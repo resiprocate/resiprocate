@@ -8,8 +8,9 @@
 
 #include <sipstack/SipStack.hxx>
 #include <sipstack/Uri.hxx>
-#include <util/Logger.hxx>
 #include <sipstack/Helper.hxx>
+#include <sipstack/Transport.hxx>
+#include <util/Logger.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -20,73 +21,73 @@ int
 main(int argc, char* argv[])
 {
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
-   DebugLog (<< "hi there");
-   
    initNetwork();
 	
-   SipStack sipStack;
-   SipMessage* msg=NULL;
-
-  while (1)
+   try
    {
-      struct timeval tv;
-      fd_set fdSet; int fdSetSize;
-      FD_ZERO(&fdSet); fdSetSize=0;
+      SipStack sipStack;
+      SipMessage* msg=NULL;
+
+      while (1)
+      {
+         struct timeval tv;
+         fd_set fdSet; int fdSetSize;
+         FD_ZERO(&fdSet); fdSetSize=0;
        
-      sipStack.buildFdSet(&fdSet,&fdSetSize);
+         sipStack.buildFdSet(&fdSet,&fdSetSize);
 	  
-      tv.tv_sec=0;
-      tv.tv_usec= 1000 * sipStack.getTimeTillNextProcess();
+         tv.tv_sec=0;
+         tv.tv_usec= 1000 * sipStack.getTimeTillNextProcess();
 	  
-      int  err = select(fdSetSize, &fdSet, NULL, NULL, &tv);
-      int e = errno;
-      if ( err == -1 )
-      {
-         // error occured
-         cerr << "Error " << e << " " << strerror(e) << " in select" << endl;
-      }
+         int  err = select(fdSetSize, &fdSet, NULL, NULL, &tv);
+         int e = errno;
+         if ( err == -1 )
+         {
+            InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
+         }
       
-      //DebugLog ( << "Try TO PROCESS " );
-      sipStack.process(&fdSet);
+         //DebugLog ( << "Try TO PROCESS " );
+         sipStack.process(&fdSet);
 
-      //DebugLog ( << "Try TO receive " );
-      msg = sipStack.receive();
-      if ( msg )
-      {
-         DebugLog ( << "got message: " << *msg);
-	   
-         msg->encode(cerr);	  
-      }
+         //DebugLog ( << "Try TO receive " );
+         msg = sipStack.receive();
+         if ( msg )
+         {
+            DebugLog ( << "got message: " << *msg);
+            msg->encode(cout);	  
+         }
 
-#if 0
-      static int count=0;
-      if ( count++ >= 10 )
-      {   
-	      DebugLog ( << "Try to send a message" );
-	      count = 0;
+         static int count=0;
+         if ( count++ >= 10 )
+         {   
+            DebugLog ( << "Try to send a message" );
+            count = 0;
 	      
-	      NameAddr dest;
-	      NameAddr from;
-	      NameAddr contact;
-	      from.uri().scheme() = Data("sip");
-	      from.uri().host() = Data("foo.com");
-	      from.uri().port() = 5060;
-	      from.uri().user() = Data("fluffy");
-	      from.uri().param(p_transport) == "udp";
+            NameAddr dest;
+            NameAddr from;
+            NameAddr contact;
+            from.uri().scheme() = "sip";
+            from.uri().host() = "localhost";
+            from.uri().port() = 5060;
+            from.uri().user() = "fluffy";
+            from.uri().param(p_transport) == "udp";
 	      
-	      dest = from;
-	      contact = from;
-	            
-	      SipMessage message = Helper::makeInvite( dest ,
-						       from,
-						       contact);
-	      
-	      sipStack.send( message );
-	      
-	       DebugLog ( << "Sent Msg" << message );
+            dest = from;
+            contact = from;
+         
+            SipMessage message = Helper::makeInvite( dest, from, contact);
+            DebugLog ( << "Sending msg:" << message );
+            sipStack.send( message );
+         }
       }
-#endif
    }
+   catch (Transport::Exception& e)
+   {
+      InfoLog (<< "Failed to create sip stack" << e);
+      exit(-1);
+   }
+   
+
 }
 
 
