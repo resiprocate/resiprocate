@@ -54,7 +54,7 @@ class ParserCategory
       Comp_Param::DType& param(const Comp_Param& paramType) const;
       Rport_Param::DType& param(const Rport_Param& paramType) const;
 
-      UnknownParameter& param(const Data& param) const;
+      Data& param(const Data& param) const;
       void remove(const Data& param); 
       bool exists(const Data& param) const;
       
