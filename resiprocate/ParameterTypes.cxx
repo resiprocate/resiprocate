@@ -28,7 +28,7 @@ Duration_Param Vocal2::p_duration;
 Branch_Param Vocal2::p_branch;
 Received_Param Vocal2::p_received;
 Mobility_Param Vocal2::p_mobility;
-Comp_Param Vocal2::p_com;
+Comp_Param Vocal2::p_comp;
 Rport_Param Vocal2::p_rport;
 
 
