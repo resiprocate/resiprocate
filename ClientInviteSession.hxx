@@ -24,7 +24,7 @@ class ClientInviteSession : public InviteSession
       virtual void provideOffer (const SdpContents& offer);
       virtual void provideAnswer (const SdpContents& answer);
       virtual void end ();
-      virtual void reject (int statusCode);
+      virtual void reject (int statusCode, WarningCategory *warning = 0);
 
       const SdpContents& getEarlyMedia() const;
       

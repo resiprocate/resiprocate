@@ -187,7 +187,7 @@ ClientInviteSession::end()
 }
 
 void
-ClientInviteSession::reject (int statusCode)
+ClientInviteSession::reject (int statusCode, WarningCategory *warning)
 {
    InfoLog (<< toData(mState) << ": reject(" << statusCode << ")");
 
@@ -200,6 +200,10 @@ ClientInviteSession::reject (int statusCode)
          SipMessage req;
          mDialog.makeRequest(req, PRACK);
          req.header(h_StatusLine).statusCode() = statusCode;
+         if(warning)
+         {
+            req.header(h_Warnings).push_back(*warning);
+         }
 
          //  Send the req and do state transition.
          mDialog.send(req);
