@@ -107,7 +107,7 @@ Data
 DnsUtil::inet_ntop(const struct in_addr& addr)
 {
 	  char str[256];
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(__CYGWIN__)
     ::inet_ntop(AF_INET, (u_int32_t*)(&addr), str, sizeof(str));
 #else
    // !cj! TODO 
@@ -121,7 +121,7 @@ Data
 DnsUtil::inet_ntop(const struct in6_addr& addr)
 {
 	 char str[256];
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(__CYGWIN__)
     ::inet_ntop(AF_INET6, (u_int32_t*)(&addr), str, sizeof(str));
 #else
 	 u_int32_t s[8];
@@ -155,7 +155,7 @@ DnsUtil::inet_ntop(const struct sockaddr& addr)
 int
 DnsUtil::inet_pton(const Data& printableIp, struct in_addr& dst)
 {
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(__CYGWIN__)
    return ::inet_pton(AF_INET, printableIp.c_str(), &dst);
 #else
    // !cj! TODO
@@ -173,7 +173,7 @@ DnsUtil::inet_pton(const Data& printableIp, struct in_addr& dst)
 int
 DnsUtil::inet_pton(const Data& printableIp, struct in6_addr& dst)
 {
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(__CYGWIN__)
    return ::inet_pton(AF_INET6, printableIp.c_str(), &dst);
 #else
    // !cj! TODO
