@@ -1099,9 +1099,9 @@ TransactionState::sendToWire(Message* msg)
 #if defined(USETESTTRANSPORT)
        // Don't do DNS with the test transports.  The resolver doesn't
        // have any concept of transports other than UDP, TCP, and TLS.
-       || ((sip->header(h_Vias).front().transport() !=
-          Transport::toData(Transport::TestReliable)) &&
-          (sip->header(h_Vias).front().transport() !=
+       && !((sip->header(h_Vias).front().transport() ==
+          Transport::toData(Transport::TestReliable)) ||
+          (sip->header(h_Vias).front().transport() ==
           Transport::toData(Transport::TestUnreliable)))
 #endif
       )
