@@ -2,9 +2,7 @@
 
 using namespace resip;
 
-ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, 
-                                         Dialog& dialog,
-                                         const SipMessage& msg)
+ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg)
    : InviteSession(dum, dialog),
      mHandle(dum)
 {
