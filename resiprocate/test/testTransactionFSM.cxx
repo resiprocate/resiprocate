@@ -111,27 +111,11 @@ processTimeouts(int arg)
     //    If yes, warn, else just continue.
 
     // First go through the "wire" data
-    TestBufType& cbuf = TestOutBuffer::instance().getBuf();
-    while (!cbuf.empty())
+    TestBufType& msgFifo = TestOutBuffer::instance().getBuf();
+    while (msgFifo.messageAvailable())
     {
-	int len = cbuf.size();
-	char *newbuf = new char[len+1];
-	for (int i = 0; i < len; i++)
-	{
-	    newbuf[i] = cbuf.front();
-	    cbuf.pop_front();
-	    // Check to see if we've hit the boundary of a message.
-	    // This will break if the message has a body.
-	    if (i >= 3 && newbuf[i-3] == *Symbols::CR
-	               && newbuf[i-2] == *Symbols::LF
-	               && newbuf[i-1] == *Symbols::CR
-	               && newbuf[i-0] == *Symbols::LF)
-	    {
-		break;
-		newbuf[i+1] = 0;
-	    }
-	}
-	message = Helper::makeMessage(newbuf);
+	Data* newMessage = msgFifo.getNext();
+	message = Helper::makeMessage(*newMessage, true);
 	for (list<WaitNode*>::iterator i = WaitQueue.begin();
 	     i != WaitQueue.end();
 	     /* don't increment */)
@@ -141,8 +125,8 @@ processTimeouts(int arg)
 		if ((*i)->mMethod == message->header(h_RequestLine).getMethod())
 		{
 		    // We matched something we expected.
-		    delete newbuf;
-		    newbuf = 0;
+		    delete newMessage;
+		    newMessage = 0;
 		    delete message;
 		    delete *i;
 		    WaitQueue.erase(i++);
@@ -159,8 +143,8 @@ processTimeouts(int arg)
 		    message->header(h_StatusLine).responseCode())
 		{
 		    // We matched something we expected.
-		    delete newbuf;
-		    newbuf = 0;
+		    delete newMessage;
+		    newMessage = 0;
 		    delete message;
 		    delete *i;
 		    WaitQueue.erase(i++);
@@ -172,10 +156,10 @@ processTimeouts(int arg)
 		}
 	    }
 	}
-	if (newbuf)
+	if (newMessage)
 	{
 	    DebugLog( << "Warning: unexpected message seen at the transport");
-	    delete newbuf;
+	    delete newMessage;
 	}
 	else
 	{
@@ -314,7 +298,7 @@ processInject()
     start = TestSpecParseBuf->position();
     now = TestSpecParseBuf->skipToOneOf("}");
     *const_cast<char*>(now) = 0;
-    DebugLog(<< "Injecting (isWireInject=" << isWireInject << "):" << start);
+    DebugLog(<< "Injecting (isWireInject=" << isWireInject << "): " << start);
     TestSpecParseBuf->skipChar();
     if (isWireInject)
     {
@@ -353,6 +337,7 @@ processExpect()
 	DebugLog(<< "Warning: error parsing test specification"); 
 	TestSpecParseBuf->skipToOneOf("}");
 	TestSpecParseBuf->skipChar();
+	delete thisWait;
 	return;
     }
 
@@ -384,6 +369,14 @@ processExpect()
 	{
 	    TestSpecParseBuf->skipToOneOf("0123456789");
 	    expireTime = TestSpecParseBuf->integer();
+	}
+	else
+	{
+	    DebugLog(<< "Warning: error parsing test specification"); 
+	    TestSpecParseBuf->skipToOneOf("}");
+	    TestSpecParseBuf->skipChar();
+	    delete thisWait;
+	    return;
 	}
 	TestSpecParseBuf->skipWhitespace();
 	start = TestSpecParseBuf->position();
@@ -497,7 +490,7 @@ main(int argc, char *argv[])
 
     client = new SipStack();
     assert(client);
-    client->addTransport(Transport::TestReliable, 5060);
+    client->addTransport(Transport::TestUnreliable, 5060);
     FdSet clientFdSet;
 
     signal(SIGALRM, processTimeouts);
