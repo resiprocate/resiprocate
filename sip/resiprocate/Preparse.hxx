@@ -18,7 +18,8 @@ namespace Vocal2
     const int actHdr   = (1 << 4);
     const int actData  = (1 << 5);
     const int actBad   = (1 << 6);
-
+  const int actEndHdrs = (1 << 7);
+  
     typedef enum {
       NewMsg = 0,
       NewMsgCrLf,
@@ -66,7 +67,8 @@ namespace Vocal2
   {
   public:
     Preparse(const char * buffer, size_t length);
-
+    Preparse();
+        
     bool process();
 
     void addBuffer(const char * buffer, size_t length);
@@ -91,7 +93,9 @@ namespace Vocal2
     const char * mAnchorBeg;		// A curious place we anchored.
 				// The location of the last actReset.
     const char * mAnchorEnd;
-      
+
+    bool mDone;
+        
   };
  
 }
