@@ -11,6 +11,7 @@
 #include "resiprocate/AsyncCLessTransport.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
