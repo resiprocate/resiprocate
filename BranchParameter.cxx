@@ -10,8 +10,9 @@ using namespace std;
 static unsigned long
 getNextTransactionCount()
 {
-   static volatile unsigned long TransactionCount=random()*2;
-   return TransactionCount+=2; // !jf! needs to be atomic
+   //static volatile unsigned long TransactionCount=random()*2;
+   static volatile unsigned long TransactionCount=1;
+   return TransactionCount++; // !jf! needs to be atomic
 }
 
 
@@ -19,36 +20,33 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
                                  ParseBuffer& pb)
    : Parameter(type), 
      mHasMagicCookie(false),
+     mIsMyBranch(false),
      mTransactionId(),
-     mCounter(1111111),
+     mCounter(0),
      mClientData()
 {
+   pb.skipChar(Symbols::EQUALS[0]);
    if (strncasecmp(pb.position(), Symbols::MagicCookie, 7) == 0)
    {
       mHasMagicCookie = true;
       pb.skipN(7);
    }
-   if (mHasMagicCookie)
+
+   if (mHasMagicCookie && (strncasecmp(pb.position(), Symbols::Vocal2Cookie, 7) == 0))
    {
+      mIsMyBranch = true;
+      pb.skipN(7);
+
       const char* anchor = pb.position();
       pb.skipToChar(Symbols::DASH[0]);
       pb.data(mTransactionId, anchor);
-
-      if (!pb.eof())
-      {
-         pb.skipChar();
-         if (isdigit(*pb.position()))
-         {
-            mCounter = pb.integer();
-            
-            if (*pb.position() == Symbols::DASH[0])
-            {
-               anchor = pb.skipChar();
-               pb.skipToEnd();
-               pb.data(mClientData, anchor);
-            }
-         }
-      }
+         
+      pb.assertNotEof();
+      pb.skipChar();
+      mCounter = pb.integer();
+      anchor = pb.skipChar(Symbols::DASH[0]);
+      pb.skipToEnd();
+      pb.data(mClientData, anchor);
    }
    else
    {
@@ -61,8 +59,9 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
 BranchParameter::BranchParameter(ParameterTypes::Type type)
    : Parameter(type),
      mHasMagicCookie(true),
+     mIsMyBranch(true),
      mTransactionId(getNextTransactionCount()),
-     mCounter(1111111),
+     mCounter(1),
      mClientData()
 {
 }
@@ -73,6 +72,7 @@ BranchParameter::operator=(const BranchParameter& other)
    if (this != &other)
    {
       mHasMagicCookie = other.mHasMagicCookie;
+      mIsMyBranch = other.mIsMyBranch;
       mTransactionId = other.mTransactionId;
       mCounter = other.mCounter;
       mClientData = other.mClientData;
@@ -93,10 +93,10 @@ BranchParameter::transactionId()
    return mTransactionId;
 }
 
-unsigned long& 
-BranchParameter::counter()
+void
+BranchParameter::incrementCounter()
 {
-   return mCounter;
+   mCounter++;
 }
 
 Data& 
@@ -115,22 +115,28 @@ BranchParameter::clone() const
 ostream& 
 BranchParameter::encode(ostream& stream) const
 {
+   stream << getName() << Symbols::EQUALS;
    if (mHasMagicCookie)
    {
       stream << Symbols::MagicCookie;
    }
-   stream << mTransactionId;
-   if (mCounter != 1111111)
+   if (mIsMyBranch)
    {
-      stream << Symbols::DASH[0];
-      stream << mCounter;
-
+      stream << Symbols::Vocal2Cookie << Symbols::DASH[0]
+             << mTransactionId
+             << Symbols::DASH[0]
+             << mCounter;
       if (! mClientData.empty())
       {
-         stream << Symbols::DASH[0];
-         stream << mClientData;
+         stream << Symbols::DASH[0]
+                << mClientData;
       }
    }
+   else
+   {
+      stream << mTransactionId;
+   }
+      
    return stream;
 }
 
