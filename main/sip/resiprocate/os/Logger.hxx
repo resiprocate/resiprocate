@@ -1,5 +1,5 @@
-#ifndef resip_Logger_hxx
-#define resip_Logger_hxx
+#if !defined(RESIP_LOGGER_HXX)
+#define RESIP_LOGGER_HXX 
 
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Log.hxx"
@@ -129,7 +129,7 @@ class GenericLogImpl :  public Log
       static std::ostream* mLogger;
 };
  
-} // namespace Vocal
+}
 
 #endif
 

@@ -1,5 +1,5 @@
-#if !defined(compat_hxx)
-#define compat_hxx
+#if !defined(RESIP_COMPAT_HXX)
+#define RESIP_COMPAT_HXX 
 
 #if defined(__INTEL_COMPILER ) && defined( __OPTIMIZE__ )
 #undef __OPTIMIZE__ // wierd intel bug with ntohs and htons macros
@@ -99,6 +99,7 @@ typedef size_t socklen_t;
 }
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
