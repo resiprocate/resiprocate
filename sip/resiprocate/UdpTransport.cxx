@@ -141,19 +141,19 @@ UdpTransport::process(FdSet& fdset)
       int err = errno;
       switch (err)
       {
-	  case WSANOTINITIALISED:
-		  assert(0);
-		  break;
+         case WSANOTINITIALISED:
+            assert(0);
+            break;
 
          case EWOULDBLOCK:
             DebugLog (<< " UdpTransport recvfrom got EWOULDBLOCK");
             break;
 
-	    case 0:
+         case 0:
             DebugLog (<< " UdpTransport recvfrom got error 0 ");
             break;
 
- 	    //case 9:
+         //case 9:
             DebugLog (<< " UdpTransport recvfrom got error 9 ");
             break;
 
