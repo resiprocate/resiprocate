@@ -6,6 +6,7 @@
 #include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/MethodTypes.hxx>
 #include <sipstack/Data.hxx>
+#include <sipstack/Symbols.hxx>
 
 // !dlb! copy constructur, assignment operator
 // firgure out the clone mess -- these clones should be blissfully ignorant
@@ -293,17 +294,15 @@ typedef ParserContainer<Via> Vias;
 //====================
 // RequestLine:
 //====================
-static Data DefaultSipVersion;
-
-class RequestLineComponent : public Url
+class RequestLine : public Url
 {
    public:
-      RequestLineComponent(MethodTypes method, const Data& sipVersion = DefaultSipVersion) : 
+      RequestLine(MethodTypes method, const Data& sipVersion = Symbols::DefaultSipVersion) : 
          Url(),
          mMethod(method),
          mSipVersion(sipVersion)
       {}
-      RequestLineComponent(HeaderFieldValue* hfv) : Url(hfv) {}
+      RequestLine(HeaderFieldValue* hfv) : Url(hfv) {}
 
       MethodTypes getMethod() {checkParsed(); return mMethod;}
       const Data& getSipVersion() {checkParsed(); return mSipVersion;}
@@ -320,11 +319,11 @@ class RequestLineComponent : public Url
 //====================
 // StatusLine:
 //====================
-class StatusLineComponent : public ParserCategory
+class StatusLine : public ParserCategory
 {
    public:
-      StatusLineComponent() : ParserCategory() {}
-      StatusLineComponent(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      StatusLine() : ParserCategory() {}
+      StatusLine(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
 
       int responseCode() {checkParsed(); return mResponseCode;}
       const Data& getSipVersion() {checkParsed(); return mSipVersion;}
