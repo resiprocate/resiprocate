@@ -531,7 +531,7 @@ Data
 Contents::getBodyData() const 
 {
    ErrLog( << "Need to implement getBodyData function for " << getType() );
-   assert(0);
+   //assert(0);
    return Data::Empty;
 }
 
