@@ -87,8 +87,10 @@ const char* Symbols::RTP_AVP = "RTP/AVP";
 const char* Symbols::Presence = "presence";
 const char* Symbols::Required = "required";
 const char* Symbols::Optional = "optional";
-const char* Symbols::C100rel = "100rel";
 
+const char* Symbols::C100rel  = "100rel";
+const char* Symbols::Replaces = "replaces";
+const char* Symbols::Timer    = "timer";
 const char* Symbols::Undefined = "UNDEFINED";
 
 const char* Symbols::Pending = "pending";
