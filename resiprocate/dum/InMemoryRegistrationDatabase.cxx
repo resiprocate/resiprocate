@@ -38,7 +38,7 @@ InMemoryRegistrationDatabase::removeAor(Uri &aor)
 InMemoryRegistrationDatabase::UriList 
 InMemoryRegistrationDatabase::getAors()
 {
-   UriList retList;   
+  RegistrationPersistenceManager:UriList retList;   
    for( database_map_t::const_iterator it = mDatabase.begin();
         it != mDatabase.end(); it++)
    {
