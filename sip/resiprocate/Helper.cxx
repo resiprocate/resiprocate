@@ -654,7 +654,7 @@ Auth makeChallengeResponseAuth(SipMessage& request,
 {
    Auth auth;
    auth.scheme() = "Digest";
-   auth.param(p_username) = username;
+   auth.param(p_username) = Data("\"") + username + Data("\"");
    assert(challenge.exists(p_realm));
    auth.param(p_realm) = challenge.param(p_realm);
    assert(challenge.exists(p_nonce));
@@ -663,6 +663,7 @@ Auth makeChallengeResponseAuth(SipMessage& request,
    {
       DataStream s(digestUri);
       s << request.header(h_RequestLine).uri();
+      //s << request.header(h_RequestLine).uri().host();
    }
    auth.param(p_uri) = digestUri;
 
