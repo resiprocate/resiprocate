@@ -192,7 +192,7 @@ XMLCursor::parseNextRootChild()
       if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
       {
          pb.skipChar();
-         if (pb.position() + mTag.size() > pb.end())
+         if ( pb.end() < pb.position() + mTag.size() )
          {
             InfoLog(<< "XML: unexpected end");
             pb.fail(__FILE__, __LINE__);
@@ -502,7 +502,7 @@ XMLCursor::Node::skipToEndTag()
       if (*mPb.position() == Symbols::SLASH[0])
       {
          mPb.skipChar();
-         if (mPb.position() + mTag.size() > mPb.end())
+         if ( mPb.end() < mPb.position() + mTag.size() )
          {
             InfoLog(<< "XML: unexpected end");
             mPb.fail(__FILE__, __LINE__);
