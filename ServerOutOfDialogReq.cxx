@@ -2,11 +2,16 @@
 #include "DialogUsageManager.hxx"
 #include "Dialog.hxx"
 
+using namespace resip;
+
 ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum,
-                                           Dialog& dialog)
+                                           Dialog& dialog,
+                                           const SipMessage& req)
    : BaseUsage(dum, dialog),
      mHandle(dum)
-{}
+{
+   assert(false);
+}
 
 ServerOutOfDialogReq::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
@@ -15,7 +20,7 @@ ServerOutOfDialogReq::Handle::Handle(DialogUsageManager& dum)
 ServerOutOfDialogReq* 
 ServerOutOfDialogReq::Handle::operator->()
 {
-   return static_cast<ServerOutOfDialogReq*>get();
+   return static_cast<ServerOutOfDialogReq*>(get());
 }
 
 /* ====================================================================
