@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.17 2002/11/26 18:03:48 davidb Exp $
+# $Id: Makefile,v 1.18 2002/11/26 21:37:13 alan Exp $
 
 USE_SSL = 1
 
@@ -39,6 +39,7 @@ SRC = \
 		Registrar.cxx \
 		InviteClient.cxx \
 		InviteServer.cxx \
+		TestSupport.cxx \
 		Resolver.cxx	
 
 #	        testNonInviteClientTx.cxx \
