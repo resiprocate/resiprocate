@@ -9,7 +9,7 @@ namespace resip
 class BaseCreator;
 
 /** @file DialogSet.hxx
- *   @todo This file is empty
+ * 
  */
 
 class DialogSet
@@ -17,15 +17,17 @@ class DialogSet
    public:
       DialogSet( const BaseCreator* );
       DialogSet( Dialog* );
-
-      voidAddDialog( Dialog* );
-      voidRemoveDialog( const Dialog* );
+      ~DialogSet();
+      
+      void addDialog( Dialog* );
+      void removeDialog(const Dialog* );
       
       DialogIdSet getDialogs() const;
+      BaseCreator* getCreator();
       
    private:
-      std::list<Dialog> dialogs;
-      BaseCreator* creator;
+      std::list<Dialog*> mDialogs;
+      BaseCreator* mCreator;
 };
  
 }
