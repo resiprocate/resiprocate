@@ -158,6 +158,32 @@ Transport::toTransport(const Data& type)
    return Unknown;
 };
 
+void
+Transport::stampReceived(SipMessage* message)
+{
+   //DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
+   // set the received= and rport= parameters in the message if necessary !jf!
+   if (message->isRequest() && !message->header(h_Vias).empty())
+   {
+      const Tuple& tuple = message->getSource();
+      
+#ifndef WIN32
+      char received[255];
+      inet_ntop(AF_INET, &tuple.ipv4.s_addr, received, sizeof(received));
+      message->header(h_Vias).front().param(p_received) = received;
+#else
+      char * buf = inet_ntoa(tuple.ipv4); // !jf! not threadsafe
+      message->header(h_Vias).front().param(p_received) = buf;
+#endif
+
+      if (message->header(h_Vias).front().exists(p_rport))
+      {
+         message->header(h_Vias).front().param(p_rport).value() = tuple.port;
+      }
+   }
+}
+
+
 Transport::Tuple::Tuple() : 
    port(0), 
    transportType(Unknown), 
