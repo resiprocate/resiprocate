@@ -32,6 +32,7 @@ class FileSystem
             {
                public:
                   iterator(const Directory& dir);
+                  iterator();
                   ~iterator();
 
                   iterator& operator++();
@@ -41,11 +42,10 @@ class FileSystem
                   const Data* operator->() const;
                private:
 #ifdef WIN32
-                  WIN32_FIND_DATA mFileData;
                   HANDLE mWinSearch;
 #else
-                  struct dirent* mDirent;
                   DIR* mNixDir;
+                  struct dirent* mDirent;
 #endif
                   Data mFile;
             };
