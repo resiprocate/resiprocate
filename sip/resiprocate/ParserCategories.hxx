@@ -67,6 +67,9 @@ class Mime : public ParserCategory
 };
 typedef ParserContainer<Mime> Mimes;
 
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType) const
+
 //====================
 // Auth:
 //====================
@@ -89,22 +92,25 @@ class Auth : public ParserCategory
 
       Data& scheme() const {checkParsed(); return mScheme;}
 
-      Algorithm_Param::DType& param(const Algorithm_Param& paramType) const;
-      Cnonce_Param::DType& param(const Cnonce_Param& paramType) const;
-      Nonce_Param::DType& param(const Nonce_Param& paramType) const;
-      Domain_Param::DType& param(const Domain_Param& paramType) const;
-      Nc_Param::DType& param(const Nc_Param& paramType) const;
-      Opaque_Param::DType& param(const Opaque_Param& paramType) const;
-      Realm_Param::DType& param(const Realm_Param& paramType) const;
-      Response_Param::DType& param(const Response_Param& paramType) const;
-      Stale_Param::DType& param(const Stale_Param& paramType) const;
-      Username_Param::DType& param(const Username_Param& paramType) const;
-      Uri_Param::DType& param(const Uri_Param& paramType) const;
+      defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
+      defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
+      defineParam(nonce, "nonce", QuotedDataParameter, "RFC ????");
+      defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
+      defineParam(nc, "nc", DataParameter, "RFC ????");
+      defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
+      defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
+      defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
+      defineParam(response, "response", QuotedDataParameter, "RFC ????");
+      defineParam(stale, "stale", DataParameter, "RFC ????");
+      defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
+      defineParam(username, "username", DataParameter, "RFC ????");
+
       Qop_Options_Param::DType& param(const Qop_Options_Param& paramType) const;
-      Qop_Param::DType& param(const Qop_Param& paramType) const;
    private:
       mutable Data mScheme;
 };
+
+#undef defineParam
 
 //====================
 // Integer:
@@ -228,12 +234,12 @@ class NameAddr : public ParserCategory
       //disallow the following parameters from being accessed in NameAddr
       //this works on gcc 3.2 so far. definitely does not work on gcc 2.95 on qnx
       using ParserCategory::param;
-      Transport_Param::DType& param(const Transport_Param& paramType) const;
-      Method_Param::DType& param(const Method_Param& paramType) const;
-      Ttl_Param::DType& param(const Ttl_Param& paramType) const;
-      Maddr_Param::DType& param(const Maddr_Param& paramType) const;
-      Lr_Param::DType& param(const Lr_Param& paramType) const;
-      Comp_Param::DType& param(const Comp_Param& paramType) const;
+      transport_Param::DType& param(const transport_Param& paramType) const;
+      method_Param::DType& param(const method_Param& paramType) const;
+      ttl_Param::DType& param(const ttl_Param& paramType) const;
+      maddr_Param::DType& param(const maddr_Param& paramType) const;
+      lr_Param::DType& param(const lr_Param& paramType) const;
+      comp_Param::DType& param(const comp_Param& paramType) const;
 #endif
 };
 typedef ParserContainer<NameAddr> NameAddrs;
