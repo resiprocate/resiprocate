@@ -11,7 +11,7 @@ class DialogUsageManager;
 class RegistrationCreator : public BaseCreator 
 {
    public:
-      RegistrationCreator(DialogUsageManager& dum);
+      RegistrationCreator(DialogUsageManager& dum, const NameAddr& aor);
 };
  
 }

@@ -5,6 +5,7 @@ namespace resip
 {
 
 class SipMessage;
+class Profile;
 
 class ClientAuthManager
 {
