@@ -18,6 +18,7 @@ class Dialog
       UsageSet   findOutOfDialogs();
       
       bool shouldMerge(const SipMessage& request);
+      void processNotify(const SipMessage& notify);
       
    private:
       std::list<BaseUsage*> mUsages;
