@@ -107,7 +107,7 @@ class ParseBuffer
       
       int integer();
 
-      unsigned long long unsignedLongLong();
+      UInt64 unsignedLongLong();
       unsigned long unsignedInteger();
       float floatVal();
       static const char* Whitespace;
