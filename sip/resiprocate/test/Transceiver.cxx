@@ -22,7 +22,7 @@ using namespace Loadgen;
 Transceiver::Transceiver(int port)
    : mUdp("localhost", port, "default", mReceived)
 {
-   mContactUri.host() = mUdp.hostname();
+   mContactUri.host() = mUdp.hostName();
    mContactUri.port() = mUdp.port();
    mContactUri.param(p_transport) = Transport::toData(mUdp.transport());
 }
@@ -85,7 +85,7 @@ Transceiver::send(const Resolver& target,
    {
       assert(!message.header(h_Vias).empty());
       message.header(h_Vias).front().transport() = Transport::toData(mUdp.transport()); 
-      message.header(h_Vias).front().sentHost() = mUdp.hostname();
+      message.header(h_Vias).front().sentHost() = mUdp.hostName();
       message.header(h_Vias).front().sentPort() = mUdp.port();
    }
    
