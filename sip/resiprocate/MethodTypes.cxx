@@ -47,13 +47,18 @@ static const unsigned int IntVal_REF = 4605266;
 static const unsigned int IntVal_REG = 4670802;
 static const unsigned int IntVal_SUB = 4347219;
 
-#ifdef WIN32
 int strncasecmp(const char* a, const char* b, int len)
 {
-		assert(0);
-		return 0;
+   for (int i = 0; i < len; i++)
+   {
+      int c = (a[i] | 0x40) - (b[i] | 0x40);
+      if (c != 0)
+      {
+         return c;
+      }
+   }
+   return 0;
 }
-#endif
 
 MethodTypes
 Vocal2::getMethodType(const Data& name)
