@@ -558,12 +558,27 @@ sippy_login(GaimAccount *account)
 
   /* send the login stuff (aor,userid,password) */
   sippy_send_command( SIMPLE_LOGIN );
-    gaim_debug(GAIM_DEBUG_INFO,"sippy","Sending aor [%s]\n",account->username);  
+
+  gaim_debug(GAIM_DEBUG_INFO,"sippy","Sending aor [%s]\n",account->username);  
   sippy_send_string( account->username );
-    gaim_debug(GAIM_DEBUG_INFO,"sippy","Sending username [%s]\n",account->username);  
+
+  gaim_debug(GAIM_DEBUG_INFO,"sippy","Sending username [%s]\n",account->username);  
   sippy_send_string( account->username );
-    gaim_debug(GAIM_DEBUG_INFO,"sippy","Sending password [%s]\n",account->password);  
+
+  gaim_debug(GAIM_DEBUG_INFO,"sippy","Sending password [%s]\n",account->password);  
   sippy_send_string( account->password );
+
+  gaim_debug(GAIM_DEBUG_INFO,"sippy",
+             "Sending register_with_service flag [%s]\n",
+             (gaim_account_get_bool(account,"register_with_service",TRUE)
+                                    ?"true":"false"));
+  sippy_send_bool(gaim_account_get_bool(account,"register_with_service",TRUE));
+
+  gaim_debug(GAIM_DEBUG_INFO,"sippy",
+             "Sending publish_to_service flag [%s]\n", 
+             (gaim_account_get_bool(account,"publish_to_service",TRUE)
+                                    ?"true":"false"));
+  sippy_send_bool(gaim_account_get_bool(account,"publish_to_service",TRUE));
 
   gc->inpa = gaim_input_add(FD_GAG_TO_GAIM,GAIM_INPUT_READ,sippy_recv_cb,gc);
 
@@ -762,7 +777,15 @@ init_plugin(GaimPlugin *plugin)
         prpl_info.protocol_options = g_list_append(prpl_info.protocol_options,
                         option);
 
+        option = gaim_account_option_bool_new(_("Register with this service"),
+                        "register_with_service", TRUE );
+        prpl_info.protocol_options = g_list_append(prpl_info.protocol_options,
+                        option);
 
+        option = gaim_account_option_bool_new(_("Publish presence to this service"),
+                        "publish_to_service", TRUE );
+        prpl_info.protocol_options = g_list_append(prpl_info.protocol_options,
+                        option);
 
 	my_protocol = plugin;
 
