@@ -1423,6 +1423,15 @@ SdpContents::Session::Medium::addAttribute(const Data& key, const Data& value)
    }
 }
 
+const list<SdpContents::Session::Connection> 
+SdpContents::Session::Medium::getConnections() const
+{
+   list<Connection> connections = const_cast<Medium*>(this)->getMediumConnections();
+   connections.push_front(mSession->connection());
+
+   return connections;
+}
+
 bool
 SdpContents::Session::Medium::exists(const Data& key) const
 {
@@ -1468,6 +1477,7 @@ SdpContents::Session::Medium::addCodec(const Codec& codec)
    codecs();
    mCodecs.push_back(codec);
 }
+
 
 const list<Codec>&
 SdpContents::Session::Medium::codecs() const
