@@ -15,6 +15,7 @@
 
 
 #include <sipstack/HeaderTypes.hxx>
+#include <sipstack/ParameterTypes.hxx>
 #include <sipstack/Message.hxx>
 #include <sipstack/ParserCategories.hxx>
 #include <sipstack/ParserContainer.hxx>
