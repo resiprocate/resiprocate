@@ -66,6 +66,7 @@ libresiprocate_la_SOURCES = \
 	ParserCategories.cxx \
 	ParserCategory.cxx \
 	Pidf.cxx \
+	ParseUtil.cxx \
 	Pkcs7Contents.cxx \
 	PlainContents.cxx \
 	Preparse.cxx \
@@ -86,6 +87,7 @@ libresiprocate_la_SOURCES = \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
 	TlsTransport.cxx \
+	TransactionController.cxx \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
@@ -143,6 +145,7 @@ resiprocate_include_HEADERS = \
 	ParserCategory.hxx \
 	ParserContainer.hxx \
 	ParserContainerBase.hxx \
+	ParseUtil.hxx \
 	Pidf.hxx \
 	Pkcs7Contents.hxx \
 	PlainContents.hxx \
@@ -168,6 +171,7 @@ resiprocate_include_HEADERS = \
 	TimerMessage.hxx \
 	TimerQueue.hxx \
 	TlsTransport.hxx \
+	TransactionController.hxx \
 	TransactionMap.hxx \
 	TransactionState.hxx \
 	TransactionTerminated.hxx \
