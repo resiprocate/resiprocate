@@ -42,23 +42,32 @@ main(int argc, char** argv)
 
    Security security(args.mCertPath);
    SipStack stack(&security);
-   if (args.mUdpPort)
+   try
    {
-      stack.addTransport(UDP, args.mUdpPort);
+      if (args.mUdpPort)
+      {
+         stack.addTransport(UDP, args.mUdpPort);
+      }
+      if (args.mTcpPort)
+      {
+         stack.addTransport(TCP, args.mTcpPort);
+      }
+      if (args.mTlsPort)
+      {
+         stack.addTransport(TLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+      }
+      if (args.mDtlsPort)
+      {
+         stack.addTransport(DTLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
+      }
    }
-   if (args.mTcpPort)
+   catch (Transport::Exception& e)
    {
-      stack.addTransport(TCP, args.mTcpPort);
+      std::cerr << "Likely a port is already in use" << endl;
+      InfoLog (<< "Caught: " << e);
+      exit(-1);
    }
-   if (args.mTlsPort)
-   {
-      stack.addTransport(TLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
-   }
-   if (args.mDtlsPort)
-   {
-      stack.addTransport(DTLS, args.mTlsPort, V4, Data::Empty, args.mTlsDomain);
-   }
-
+   
    StackThread stackThread(stack);
 
    Registrar registrar;
@@ -94,8 +103,8 @@ main(int argc, char** argv)
       
 #if 0
       // TODO - remove next forwards all to 
-      //ConstantLocationMonkey* cls = new ConstantLocationMonkey;
-      //locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
+      ConstantLocationMonkey* cls = new ConstantLocationMonkey;
+      locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
 #endif
       
       //RouteMonkey* routeMonkey = new RouteMonkey(routeDb);
@@ -103,7 +112,8 @@ main(int argc, char** argv)
       
       LocationServer* ls = new LocationServer(regData);
       locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
-      
+    
+
       requestProcessors.addProcessor(auto_ptr<RequestProcessor>(locators));
       
       if (!args.mNoChallenge)
@@ -182,8 +192,11 @@ main(int argc, char** argv)
 
    if (dum)
    {
-      auto_ptr<ServerAuthManager> uasAuth( new ReproServerAuthManager(*dum,userDb));
-      dum->setServerAuthManager(uasAuth);
+      if (!args.mNoChallenge)
+      {
+         auto_ptr<ServerAuthManager> uasAuth( new ReproServerAuthManager(*dum,userDb));
+         dum->setServerAuthManager(uasAuth);
+      }
       dum->setMessageFilterRuleList(ruleList);
       dumThread = new DumThread(*dum);
    }
