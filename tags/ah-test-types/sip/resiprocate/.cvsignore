@@ -1,0 +1,5 @@
+*.d
+a.out
+bin.*
+obj.*
+
