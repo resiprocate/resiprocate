@@ -20,7 +20,11 @@ Mutex::Mutex()
     int  rc = pthread_mutex_init(&mId,0);
     assert( rc == 0 );
 #else
-    mId = CreateMutex(NULL,FALSE,NULL);
+	// Note:  Windows Critical sections are recursive in nature and perhaps
+	//        this implementation calls for a non-recursive implementation
+	//        (since there also exists a RecursiveMutex class).  The effort
+	//        to make this non-recursive just doesn't make sense though. (SLG)
+	InitializeCriticalSection(&mId);
 #endif
 }
 
@@ -32,7 +36,7 @@ Mutex::~Mutex ()
     assert( rc != EBUSY );  // currently locked 
     assert( rc == 0 );
 #else
-    CloseHandle(mId);
+	DeleteCriticalSection(&mId);
 #endif
 }
 
@@ -46,7 +50,7 @@ Mutex::lock()
     assert( rc != EDEADLK );
     assert( rc == 0 );
 #else
-    WaitForSingleObject(mId,INFINITE);
+	EnterCriticalSection(&mId);
 #endif
 }
 
@@ -59,7 +63,7 @@ Mutex::unlock()
     assert( rc != EPERM );
     assert( rc == 0 );
 #else
-    ReleaseMutex(mId);
+	LeaveCriticalSection(&mId);
 #endif
 }
 
