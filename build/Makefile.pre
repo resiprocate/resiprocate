@@ -106,7 +106,7 @@ endif
 # you choose to override any of the above options
 ######################################################################
 
-USE_SSL=1
+USE_SSL=true
 
 #include $(BUILD)/Makefile.opt
 
