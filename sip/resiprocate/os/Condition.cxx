@@ -157,9 +157,10 @@ Condition::wait (Mutex* mutex, int ms)
 	//        keep track of a counter (see the above link for more info).  This can be
 	//        easily added in the future if required.
     mutex->unlock();
-    WaitForSingleObject(mId, ms);
+    DWORD ret = WaitForSingleObject(mId, ms);
     mutex->lock();
-    return true;
+	assert(ret != WAIT_FAILED);
+	return (ret == WAIT_OBJECT_0);
 #else
    timeval waitTime;
    gettimeofday( &waitTime, NULL );
