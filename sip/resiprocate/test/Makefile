@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.51 2003/09/14 08:27:16 jason Exp $
+# $Id: Makefile,v 1.52 2003/09/14 08:31:24 fluffy Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIPROCATE OPENSSL USE_ARES PTHREAD
+PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
 LDLIBS += -lncurses
 
 #CXXFLAGS += -I/usr/local/ssl/include
