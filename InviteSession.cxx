@@ -72,6 +72,18 @@ InviteSession::peerSupportsUpdateMethod() const
    return false;
 }
 
+const NameAddr& 
+InviteSession::myAddr() const
+{
+   return mDialog.mLocalNameAddr;   
+}
+
+const NameAddr&
+InviteSession::peerAddr() const
+{
+   return mDialog.mRemoteNameAddr;
+}
+
 bool
 InviteSession::isConnected() const
 {
@@ -422,9 +434,9 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       mCurrentRetransmit200 = 0; // stop the timer
 
-      // !jf! what is this and why do I need to call it? 
-      mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle(), mInvite200);
-      end();
+      // this is so the app can decided to ignore this. default implementation
+      // will call end next
+      mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
    }
    else if (timeout.type() == DumTimeout::Glare)
    {
@@ -573,7 +585,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          break;
 
       case OnGeneralFailure:
-         handler->onTerminated(getSessionHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          end();
          break;
          
@@ -630,7 +642,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
 
       case OnGeneralFailure:
-         handler->onTerminated(getSessionHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          end();
          break;
          
@@ -816,7 +828,7 @@ InviteSession::dispatchPrack(const SipMessage& msg)
       transition(Terminated);
 
       // !jf! should we make some other callback here
-      handler->onTerminated(getSessionHandle(), msg);
+      handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
 
       SipMessage rsp;
       mDialog.makeResponse(rsp, msg, 481);
@@ -844,7 +856,7 @@ InviteSession::dispatchCancel(const SipMessage& msg)
       transition(Terminated);
 
       // !jf! should we make some other callback here
-      handler->onTerminated(getSessionHandle(), msg);
+      handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
 
       SipMessage rsp;
       mDialog.makeResponse(rsp, msg, 200);
@@ -878,7 +890,7 @@ InviteSession::dispatchBye(const SipMessage& msg)
       mDialog.send(rsp);
 
       // !jf! should we make some other callback here
-      handler->onTerminated(getSessionHandle(), msg);
+      handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
       mDum.destroy(this);
    }
    else
