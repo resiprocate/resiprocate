@@ -14,6 +14,7 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/MD5Stream.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/compat.hxx"
 #include "resiprocate/SipMessage.hxx"
 
 using namespace resip;
