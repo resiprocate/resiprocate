@@ -22,6 +22,7 @@
 #include "sip2/sipstack/Contents.hxx"
 #include "sip2/sipstack/Pkcs7Contents.hxx"
 #include "sip2/sipstack/PlainContents.hxx"
+#include "sip2/sipstack/MultipartMixedContents.hxx"
 #include "sip2/util/Random.hxx"
 #include "sip2/util/DataStream.hxx"
 #include "sip2/util/Logger.hxx"
@@ -540,9 +541,125 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
 }
 
 
+Contents* 
+Security::sign( Contents* bodyIn )
+{
+   return multipartSign( bodyIn );
+}
+
+
+MultipartMixedContents* 
+Security::multipartSign( Contents* bodyIn )
+{
+   DebugLog( << "Doing multipartSign" );
+   assert( bodyIn );
+
+
+   // form the multipart
+   MultipartMixedContents* multi = new MultipartMixedContents;
+   
+   // add the main body to it 
+   multi->parts().push_back( bodyIn->clone() );
+   
+
+   // compute the signature 
+   
+
+   // add the signature to it 
+   multi->parts().push_back( bodyIn->clone() );
+
+   assert( multi->parts().size() == 2 );
+   
+   return multi;
+   
+#if 0
+   int flags = 0;
+   flags |= PKCS7_BINARY;
+   
+   Data bodyData;
+   oDataStream strm(bodyData);
+#if 1
+   strm << "Content-Type: " << bodyIn->getType() << Symbols::CRLF;
+   strm << Symbols::CRLF;
+#endif
+   bodyIn->encode( strm );
+   strm.flush();
+   
+   DebugLog( << "body data to sign is <" << bodyData << ">" );
+      
+   const char* p = bodyData.data();
+   int s = bodyData.size();
+   
+   BIO* in;
+   in = BIO_new_mem_buf( (void*)p,s);
+   assert(in);
+   DebugLog( << "ceated in BIO");
+    
+   BIO* out;
+   out = BIO_new(BIO_s_mem());
+   assert(out);
+   DebugLog( << "created out BIO" );
+     
+   STACK_OF(X509)* chain=NULL;
+   chain = sk_X509_new_null();
+   assert(chain);
+
+   DebugLog( << "checking" );
+   assert( publicCert );
+   assert( privateKey );
+   
+   int i = X509_check_private_key(publicCert, privateKey);
+   DebugLog( << "checked cert and key ret=" << i  );
+   
+   PKCS7* pkcs7 = PKCS7_sign( publicCert, privateKey, chain, in, flags);
+   if ( !pkcs7 )
+   {
+      ErrLog( << "Error creating PKCS7 signing object" );
+      return NULL;
+   }
+   DebugLog( << "created PKCS7 sign object " );
+
+#if 0
+   if ( SMIME_write_PKCS7(out,pkcs7,in,0) != 1 )
+   {
+      ErrLog( << "Error doind S/MIME write of signed object" );
+      return NULL;
+   }
+   DebugLog( << "created SMIME write object" );
+#else
+   i2d_PKCS7_bio(out,pkcs7);
+#endif
+   BIO_flush(out);
+   
+   char* outBuf=NULL;
+   long size = BIO_get_mem_data(out,&outBuf);
+   assert( size > 0 );
+   
+   Data outData(outBuf,size);
+  
+   InfoLog( << "Signed body size is <" << outData.size() << ">" );
+   //InfoLog( << "Signed body is <" << outData.escaped() << ">" );
+
+   Pkcs7Contents* outBody = new Pkcs7Contents( outData );
+   assert( outBody );
+
+   // !cj! change these from using unkonw paramters types 
+   outBody->header(h_ContentType).type() = "application";
+   outBody->header(h_ContentType).subType() = "pkcs7-mime";
+   outBody->header(h_ContentType).param( "smime-type" ) = "signed-data";
+   outBody->header(h_ContentType).param( "name" ) = "smime.p7s";
+   outBody->header(h_ContentDisposition).param( p_handling ) = "required";
+   outBody->header(h_ContentDisposition).param( "filename" ) = "smime.p7s";
+   outBody->header(h_ContentDisposition).value() =  "attachment" ;
+
+   return outBody;
+#endif
+
+}
+
 
 Pkcs7Contents* 
-Security::sign( Contents* bodyIn )
+Security::pkcs7Sign( Contents* bodyIn )
 {
    assert( bodyIn );
 
