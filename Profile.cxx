@@ -242,7 +242,7 @@ Profile::getDigestCredential( const Data& realm )
    DigestCredential dc;
    dc.realm = realm;
    
-   InfoLog (<< "Comparing " << realm << " to " << mDigestCredentials.begin()->realm );
+   DebugLog (<< "Comparing " << realm << " to " << mDigestCredentials.begin()->realm );
    
    DigestCredentials::const_iterator i = mDigestCredentials.find(dc);
    if (i != mDigestCredentials.end())

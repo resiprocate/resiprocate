@@ -39,7 +39,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mServerOutOfDialogRequest(0)
 {
    assert(!creator->getLastRequest().isExternal());
-   InfoLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
+   DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
 }
 
 DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) : 
@@ -62,7 +62,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    assert(request.isRequest());
    assert(request.isExternal());
    mDum.mMergedRequests.insert(mMergeKey);
-   InfoLog ( << " ************* Created DialogSet(UAS)  -- " << mId << "*************" );
+   DebugLog ( << " ************* Created DialogSet(UAS)  -- " << mId << "*************" );
 }
 
 DialogSet::~DialogSet()
@@ -90,7 +90,7 @@ DialogSet::~DialogSet()
       delete *mClientOutOfDialogRequests.begin();
    }
 
-   InfoLog ( << " ********** DialogSet::~DialogSet: " << mId << "*************" );
+   DebugLog ( << " ********** DialogSet::~DialogSet: " << mId << "*************" );
    //!dcm! -- very delicate code, change the order things go horribly wrong
 
    delete mAppDialogSet;
@@ -190,8 +190,8 @@ DialogSet::dispatch(const SipMessage& msg)
       {
          if (mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg))
          {
-            InfoLog( << "about to retransmit request with digest credentials" );
-            InfoLog( << getCreator()->getLastRequest() );
+            InfoLog( << "about to re-send request with digest credentials" );
+            DebugLog( << getCreator()->getLastRequest() );
             
             mDum.send(getCreator()->getLastRequest());
             return;                     
@@ -238,7 +238,7 @@ DialogSet::dispatch(const SipMessage& msg)
             mServerRegistration->dispatch(request);
             return;
          default: 
-            InfoLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );            
+            DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );            
             // only can be one ServerOutOfDialogReq at a time
             assert(mServerOutOfDialogRequest == 0);
             mServerOutOfDialogRequest = makeServerOutOfDialog(request);
@@ -351,7 +351,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
       }
       
-      InfoLog ( << "Creating a new Dialog from msg: " << msg);
+      DebugLog ( << "Creating a new Dialog from msg: " << msg);
 
       try
       {
@@ -379,7 +379,7 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       else
       {
-         InfoLog ( << "### Calling CreateAppDialog ### " << msg);
+         DebugLog ( << "### Calling CreateAppDialog ### " << msg);
          AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
          dialog->mAppDialog = appDialog;
          appDialog->mDialog = dialog;         
