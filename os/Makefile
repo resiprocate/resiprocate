@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.18 2002/11/11 21:46:02 jason Exp $
+# $Id: Makefile,v 1.19 2002/11/12 05:15:47 jason Exp $
 
 BUILD = ../../build
 
@@ -34,6 +34,7 @@ SRC = \
 	Log.cxx \
 	Logger.cxx \
 	Mutex.cxx \
+	RWMutex.cxx \
 	ParseBuffer.cxx \
 	RandomHex.cxx \
 	Socket.cxx \

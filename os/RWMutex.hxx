@@ -1,57 +1,5 @@
-
-
-static const char* const Lock_cxx_Version =
-    "$Id: Lock.cxx,v 1.5 2002/11/12 05:15:37 jason Exp $";
-
-#include "sip2/util/Lock.hxx"
-
-using Vocal2::Lock;
-using Vocal2::ReadLock;
-using Vocal2::WriteLock;
-using Vocal2::LockType;
-using Vocal2::Lockable;
-
-Lock::Lock(Lockable & lockable, LockType lockType)
-   : myLockable(lockable)
-{
-   switch ( lockType )
-    {
-	case VOCAL_READLOCK:
-	{
-	    myLockable.readlock();
-	    break;
-	}
-	    
-	case VOCAL_WRITELOCK:
-	{
-	    myLockable.writelock();
-	    break;
-	}
-
-    	default:
-	{
-    	    myLockable.lock();
-	    break;
-	}
-    }
-}
-
-
-Lock::~Lock()
-{
-    myLockable.unlock();
-}
-
-ReadLock::ReadLock(Lockable & lockable)
-   : Lock(lockable, VOCAL_READLOCK)
-{
-}
-
-WriteLock::WriteLock(Lockable & lockable)
-   : Lock(lockable, VOCAL_WRITELOCK)
-{
-}
-
+#if !defined(Vocal2_RWMutex_HXX)
+#define Vocal2_RWMutex_HXX
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -102,3 +50,39 @@ WriteLock::WriteLock(Lockable & lockable)
  * <http://www.vovida.org/>.
  *
  */
+
+
+static const char* const Vocal2RWMutex_hxx_Version =
+    "$Id: RWMutex.hxx,v 1.1 2002/11/12 05:15:37 jason Exp $";
+
+#include "Lockable.hxx"
+#include "Mutex.hxx"
+#include "Condition.hxx"
+
+namespace Vocal2
+{
+
+class RWMutex : public Lockable
+{
+    public:
+      RWMutex();
+      ~RWMutex();
+      void readlock();
+      void writelock();
+      void lock();
+      void unlock();
+      unsigned int readerCount() const;
+      unsigned int pendingWriterCount() const;
+      
+   private:
+      Mutex mMutex;
+      Condition mReadCondition;
+      Condition mPendingWriteCondition;
+      unsigned int mReaderCount;
+      bool mWriterHasLock;
+      unsigned int mPendingWriterCount;
+};
+
+} // namespace Vocal2
+
+#endif 
