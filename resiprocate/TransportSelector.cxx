@@ -33,9 +33,10 @@ using namespace resip;
 
 TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo) :
    mMultiThreaded(multithreaded),
-   mStateMacFifo(fifo)
+   mStateMacFifo(fifo),
+   mSocket( INVALID_SOCKET )
 {
-   mSocket = socket(AF_INET, SOCK_DGRAM, 0);
+ 
 }
 
 TransportSelector::~TransportSelector()
@@ -253,15 +254,39 @@ TransportSelector::srcAddrForDest(const Tuple& dest, bool& ok) const
      addrlen = sizeof(sockaddrBuffer.v4);
   }
 
+	if (  mSocket == INVALID_SOCKET  )
+	{
+		
+		Socket s = socket(AF_INET, SOCK_DGRAM, 0);
+		mSocket = s;
+		if (  mSocket == INVALID_SOCKET )
+		{
+				int err = getErrno();
+				switch (err)
+				{
+				case WSANOTINITIALISED:
+					ErrLog( << "Network code not intialized" );
+					break;
+				default:
+					ErrLog( << "Could not get a datagram socket to use for transport selector" );
+				}
+				
+		}
+		assert( mSocket != INVALID_SOCKET );
+	}
+
   int count = 0;
 unreach:
+  assert( mSocket != SOCKET_ERROR );
+
   int connectError = connect(mSocket,
                              &dest.getSockaddr(),
                              addrlen);
-  int connectErrno = errno;
+
   
-  if (connectError < 0)
+  if (connectError == SOCKET_ERROR )
   {
+ int connectErrno = getErrno();
     switch (connectErrno)
     {
       case EAGAIN:
