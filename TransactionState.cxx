@@ -84,7 +84,7 @@ TransactionState::process(SipStack& stack)
                
             if (sip->isExternal()) // new sip msg from transport
             {
-               if ((*sip)[RequestLine].getMethod() == INVITE)
+               if (sip->get(RequestLine).getMethod() == INVITE)
                {
                   TransactionState* state = new TransactionState(stack, ServerInvite, Proceeding);
                   stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
@@ -100,7 +100,7 @@ TransactionState::process(SipStack& stack)
             }
             else // new sip msg from the TU
             {
-               if ((*sip)[RequestLine].getMethod() == INVITE)
+               if (sip->get(RequestLine).getMethod() == INVITE)
                {
                   TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
                   stack.mTransactionMap.add(tid,state);
@@ -164,7 +164,7 @@ TransactionState::processClientNonInvite(  Message* msg )
    else if (isResponse(msg) && !isFromTU(msg)) // from the wire
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = (*sip)[StatusLine].responseCode();
+      int code = sip->get(StatusLine).getResponseCode();
       if (code >= 100 && code < 200) // 1XX
       {
          if (mState == Trying || mState == Proceeding)
@@ -258,7 +258,7 @@ TransactionState::processClientInvite(  Message* msg )
    if (isInvite(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      switch ((*sip)[RequestLine].getMethod())
+      switch (sip->get(RequestLine).getMethod())
       {
          case INVITE:
             mMsgToRetransmit = sip;
@@ -280,7 +280,7 @@ TransactionState::processClientInvite(  Message* msg )
    }
    else if (isSentIndication(msg))
    {
-      switch ((*mMsgToRetransmit)[RequestLine].getMethod())
+      switch (mMsgToRetransmit->get(RequestLine).getMethod())
       {
          case INVITE:
             if (isSentReliable(msg))
@@ -303,9 +303,9 @@ TransactionState::processClientInvite(  Message* msg )
    else if (isResponse(msg) && !isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = (*sip)[StatusLine].responseCode();
+      int code = sip->get(StatusLine).getResponseCode();
 
-      switch ((*sip)[CSeq].method())
+      switch (sip->get(CSeq).getMethod())
       {
          case INVITE:
             if (code >= 100 && code < 200) // 1XX
@@ -439,7 +439,7 @@ TransactionState::processServerNonInvite(  Message* msg )
    else if (isResponse(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = (*sip)[StatusLine].responseCode();
+      int code = sip->get(StatusLine).getResponseCode();
       if (code >= 100 && code < 200) // 1XX
       {
          if (mState == Trying || mState == Proceeding)
@@ -512,7 +512,7 @@ TransactionState::processServerInvite(  Message* msg )
    if (isRequest(msg) && !isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      switch ((*sip)[RequestLine].getMethod())
+      switch (sip->get(RequestLine).getMethod())
       {
          case INVITE:
             if (mState == Proceeding || mState == Completed)
@@ -569,9 +569,9 @@ TransactionState::processServerInvite(  Message* msg )
    else if (isResponse(msg, 100, 699) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = (*sip)[StatusLine].responseCode();
+      int code = sip->get(StatusLine).getResponseCode();
       
-      switch ((*sip)[CSeq].method())
+      switch (sip->get(CSeq).getMethod())
       {
          case INVITE:
             if (code == 100)
@@ -751,7 +751,7 @@ TransactionState::isInvite(Message* msg) const
    if (isRequest(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      return ((*sip)[RequestLine].getMethod()) == INVITE;
+      return (sip->get(RequestLine).getMethod()) == INVITE;
    }
    return false;
 }
@@ -762,7 +762,7 @@ TransactionState::isResponse(Message* msg, int lower, int upper) const
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (sip)
    {
-      int c = (*sip)[StatusLine].responseCode();
+      int c = sip->get(StatusLine).getResponseCode();
       return (c >= lower && c <= upper);
    }
    return false;
