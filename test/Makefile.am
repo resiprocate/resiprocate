@@ -36,6 +36,7 @@ check_PROGRAMS = \
 	testData \
 	testDataPerformance \
 	testDataStream \
+	testDns \
 	testDigestAuthentication \
 	testEmbedded \
 	testEmptyHeader \
@@ -78,6 +79,7 @@ testData_SOURCES = testData.cxx
 testDataPerformance_SOURCES = testDataPerformance.cxx
 testDataStream_SOURCES = testDataStream.cxx
 testDigestAuthentication_SOURCES = testDigestAuthentication.cxx
+testDns_SOURCES = testDns.cxx
 #testDnsResolver_SOURCES = testDnsResolver.cxx
 testEmbedded_SOURCES = testEmbedded.cxx
 testEmptyHeader_SOURCES = testEmptyHeader.cxx
