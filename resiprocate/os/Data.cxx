@@ -1144,7 +1144,7 @@ size_t HASH_MAP_NAMESPACE::hash<resip::Data>::operator()(const resip::Data& data
          size_t st;
          unsigned char bytes[4];
    };
-
+   st = 0; // suppresses warnings about unused st
    bytes[0] = randomPermutation[0];
    bytes[1] = randomPermutation[1];
    bytes[2] = randomPermutation[2];

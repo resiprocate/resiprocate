@@ -2,6 +2,7 @@
 
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/DataStream.hxx"
 
 using namespace resip;
 
@@ -41,8 +42,7 @@ ParseBuffer::skipChar()
 {
    if (eof())
    {
-      InfoLog(<< "skipped over eof");
-      fail(__FILE__, __LINE__);
+      fail(__FILE__, __LINE__,"skipped over eof");
    }
    return Pointer(++mPosition, eof());
 }
@@ -52,13 +52,14 @@ ParseBuffer::skipChar(char c)
 {
    if (eof())
    {
-      InfoLog(<< "skipped over eof");
-      fail(__FILE__, __LINE__);
+      fail(__FILE__, __LINE__,"skipped over eof");
    }
    if (*mPosition != c)
    {
-      InfoLog (<< "Expected '" << c << "'");
-      fail(__FILE__, __LINE__);
+      Data msg("expected '");
+      msg += c;
+      msg += "'";
+      fail(__FILE__, __LINE__,msg);
    }
    return Pointer(++mPosition, eof());
 }
@@ -71,8 +72,10 @@ ParseBuffer::skipChars(const char* cs)
    {
       if (eof() || (*match != *mPosition))
       {
-         InfoLog (<< "Expected \"" << cs << "\"");
-         fail(__FILE__, __LINE__);
+          Data msg("Expected \"");
+          msg += cs;
+          msg +=  "\"";
+         fail(__FILE__, __LINE__,msg);
       }
       match++;
       mPosition++;
@@ -88,8 +91,10 @@ ParseBuffer::skipChars(const Data& cs)
    {
       if (eof() || (*match != *mPosition))
       {
-         InfoLog (<< "Expected \"" << cs << "\"");
-         fail(__FILE__, __LINE__);
+          Data msg( "Expected \"");
+          msg += cs;
+          msg += "\"";
+         fail(__FILE__, __LINE__,msg);
       }
       match++;
       mPosition++;
@@ -408,8 +413,12 @@ ParseBuffer::skipToEndQuote(char quote)
       }
    }
 
-   InfoLog(<< "Missing '" << quote << "'");
-   fail(__FILE__,__LINE__);
+   {
+      Data msg("Missing '");
+      msg += quote;
+      msg += "'";
+      fail(__FILE__,__LINE__,msg);
+   }
    return 0;
 }
 
@@ -419,8 +428,8 @@ ParseBuffer::skipN(int count)
    mPosition += count;
    if (mPosition > mEnd)
    {
-      InfoLog(<< "skipped over eof");
-      fail(__FILE__, __LINE__);
+
+      fail(__FILE__, __LINE__, "skipped eof");
    }
    return Pointer(mPosition, eof());
 }
@@ -437,8 +446,7 @@ ParseBuffer::skipBackChar()
 {
    if (bof())
    {
-      InfoLog(<< "backed over beginning of buffer");
-      fail(__FILE__, __LINE__);
+      fail(__FILE__, __LINE__,"backed over beginning of buffer");
    }
    mPosition--;
    return mPosition;
@@ -449,9 +457,8 @@ ParseBuffer::skipBackN(int count)
 {
    mPosition -= count;
    if (bof())
-   {
-      InfoLog(<< "backed over beginning of buffer");
-      fail(__FILE__, __LINE__);
+   { 
+     fail(__FILE__, __LINE__,"backed over beginning of buffer");
    }
    return mPosition;
 }
@@ -469,13 +476,14 @@ ParseBuffer::skipBackChar(char c)
 {
    if (bof())
    {
-      InfoLog (<< "backed over beginning of buffer");
-      fail(__FILE__, __LINE__);
+      fail(__FILE__, __LINE__,"backed over beginning of buffer");
    }
    if (*(--mPosition) != c)
    {
-      InfoLog (<< "Expected '" << c << "'");
-      fail(__FILE__, __LINE__);
+       Data msg( "Expected '");
+       msg += c;
+       msg += "'";
+      fail(__FILE__, __LINE__,msg);
    }
    return mPosition;
 }
@@ -503,8 +511,7 @@ ParseBuffer::data(Data& data, const char* start) const
 {
    if (!(mBuff <= start && start <= mPosition))
    {
-      InfoLog(<< "Bad anchor position");
-      fail(__FILE__, __LINE__);
+      fail(__FILE__, __LINE__,"Bad anchor position");
    }
 
    if (data.mMine)
@@ -522,8 +529,8 @@ ParseBuffer::data(const char* start) const
 {
    if (!(mBuff <= start && start <= mPosition))
    {
-      InfoLog(<< "Bad anchor position");
-      fail(__FILE__, __LINE__);
+      
+      fail(__FILE__, __LINE__,"Bad anchor position");
    }
 
    Data data(start, mPosition - start);
@@ -535,8 +542,7 @@ ParseBuffer::integer()
 {
    if (this->eof())
    {
-      InfoLog(<< "Expected a digit, got eof ");
-      fail(__FILE__, __LINE__);
+      fail(__FILE__, __LINE__,"Expected a digit, got eof ");
    }
 
    char c = *position();
@@ -556,8 +562,9 @@ ParseBuffer::integer()
 
    if (!isdigit(c))
    {
-      InfoLog(<< "Expected a digit, got: " << Data(mPosition, (mEnd - mPosition)));
-      fail(__FILE__, __LINE__);
+       Data msg("Expected a digit, got: ");
+       msg += Data(mPosition, (mEnd - mPosition));
+      fail(__FILE__, __LINE__,msg);
    }
    
    int num = 0;
@@ -575,8 +582,8 @@ ParseBuffer::unsignedInteger()
 {
    if (this->eof())
    {
-      InfoLog(<< "Expected a digit, got eof ");
-      fail(__FILE__, __LINE__);
+
+      fail(__FILE__, __LINE__,"Expected a digit, got eof ");
    }
 
    const char* p = mPosition;
@@ -585,8 +592,9 @@ ParseBuffer::unsignedInteger()
 
    if (!isdigit(c))
    {
-      InfoLog(<< "Expected a digit, got: " << Data(mPosition, (mEnd - mPosition)));
-      fail(__FILE__, __LINE__);
+      Data msg("Expected a digit, got: ");
+      msg += Data(mPosition, (mEnd - mPosition));
+      fail(__FILE__, __LINE__,msg);
    }
    
    unsigned int num = 0;
@@ -623,9 +631,10 @@ ParseBuffer::floatVal()
    }
    catch (Exception&)
    {
-      InfoLog(<< "Expected a floating point value, got: " << Data(s, mPosition - s));
-      fail(__FILE__, __LINE__);
-      return 0.0;
+     Data msg("Expected a floating point value, got: ");
+     msg += Data(s, mPosition - s);
+     fail(__FILE__, __LINE__,msg);
+     return 0.0;
    }
 }
 
@@ -634,8 +643,8 @@ ParseBuffer::assertEof() const
 {
    if (!eof())
    {
-      InfoLog(<< "exepected eof");
-      fail(__FILE__, __LINE__);
+
+      fail(__FILE__, __LINE__,"expected eof");
    }      
 }
 
@@ -644,8 +653,7 @@ ParseBuffer::assertNotEof() const
 {
    if (eof())
    {
-      InfoLog(<< "unexepected eof");
-      fail(__FILE__, __LINE__);
+      fail(__FILE__, __LINE__,"unexpected eof");
    }      
 }
 
@@ -720,14 +728,21 @@ escapeAndAnnotate(const char* buffer,
 }
 
 void
-ParseBuffer::fail(const char* file, unsigned int line) const
+ParseBuffer::fail(const char* file, unsigned int line, const Data& detail) const
 {
-   InfoLog(<< "Parse failed, " << file << ":" << line
-           << std::endl
-           << "in context: " << mErrorContext
-           << std::endl
-           << escapeAndAnnotate(mBuff, mEnd - mBuff, mPosition));
-   throw Exception(mErrorContext, file, line);
+    Data errmsg;
+    DataStream ds(errmsg);
+    ds << file << ":" << line
+       << ", Parse failed ";
+
+    if (detail != Data::Empty) ds << detail << ' ' ;
+
+    ds << "in context: " << mErrorContext
+       << std::endl
+       << escapeAndAnnotate(mBuff, mEnd - mBuff, mPosition);
+    ds.flush();
+
+   throw Exception(errmsg, file, line);
 }
 
 const char& 
