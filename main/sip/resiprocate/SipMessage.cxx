@@ -160,7 +160,6 @@ SipMessage::setSource(const sockaddr_in& addr)
 void 
 SipMessage::setStartLine(char* st, int len)
 {
-   cerr << "SipMesage::setStartLine" << endl;
    mStartLine = new HeaderFieldValue(st, len);
    ParseBuffer pb(mStartLine->mField, mStartLine->mFieldLength);
    const char* start;
