@@ -105,9 +105,11 @@ class GenericLogImpl :  public Log
    public:
       static std::ostream& Instance();
       static bool isLogging(Log::Level level) ;
+      static unsigned int MaxLineCount;
 
    private:
       static std::ostream* mLogger;
+      static unsigned int mLineCount;
 };
  
 }
