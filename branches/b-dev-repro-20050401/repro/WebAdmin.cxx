@@ -135,7 +135,7 @@ WebAdmin::buildAddRoutePage()
 ""
 "<body bgcolor=\"#ffffff\">"
 "<p>Add Route</p>"
-"<form id=\"addRouteFrom\" method=\"get\" action=\"/input\" target=\"/input\"name=\"addRouteForm\">"
+"<form id=\"addRouteFrom\" method=\"get\" action=\"input\" name=\"addRouteForm\">"
 "<table width=\"122\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\">"
 "<tr>"
 "<td>URI</td>"
@@ -154,8 +154,8 @@ WebAdmin::buildAddRoutePage()
 "<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>"
 "</tr>"
 "</table>"
-"</form>"
 "<p><input type=\"reset\"/><input type=\"submit\" name=\"routeAdd\" value=\"Add\"/></p>"
+"</form>"
 "</body>"
 ""
 "</html>"
@@ -167,7 +167,7 @@ WebAdmin::buildAddRoutePage()
 }
 
 
-#if 1
+#if 0
 
 Data
 WebAdmin::buildAddUserPage()
@@ -222,7 +222,7 @@ WebAdmin::buildAddUserPage()
 "								</table>"
 "							</td>"
 "							<td align=\"left\" valign=\"top\" width=\"85%\">"
-"								<form id=\"addUserForm\" action=\"\" method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">"
+"								<form id=\"addUserForm\" action=\"input\" method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">"
 "									<table width=\"90%\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
 "										<tr>"
 "											<td align=\"right\" valign=\"middle\" width=\"30%\">User Name:</td>"
@@ -327,7 +327,9 @@ WebAdmin::buildAddUserPage()
 "<table width=\"64\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
 "<tr>"
 "<td>"
-"<form id=\"addUserForm\" action=\"http:/input\" target=\"now\"method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">"
+
+
+"<form id=\"addUserForm\" action=\"input\"  method=\"get\" name=\"addUserForm\" enctype=\"application/x-www-form-urlencoded\">"
 "<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
 "<tr>"
 "<td align=\"right\" valign=\"middle\">User Name:</td>"
@@ -350,11 +352,19 @@ WebAdmin::buildAddUserPage()
 "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"email\" size=\"24\"/></td>"
 "</tr>"
 "</table>"
+
+" <input type=\"reset\" value=\"Reset\"/>"
+"    <input type=\"submit\" name=\"submit\" value=\"OK\"/>"
+
+
 "</form>"
+
+
 "</td>"
 "</tr>"
 "<tr>"
-"<td><input type=\"reset\" value=\"Reset\"/><input type=\"submit\" name=\"submit\" value=\"OK\"/></td>"
+"<td>"
+"</td>"
 "</tr>"
 "</table>"
 "<hr/>"
@@ -397,7 +407,7 @@ WebAdmin::buildShowRegsPage()
 ""
 "<body bgcolor=\"#ffffff\">"
 "<h1>Registrations</h1>"
-"<form id=\"showReg\" method=\"get\" action=\"\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
+"<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
 "<button name=\"removeAllReg\" value=\"\" type=\"button\">Remove All</button>"
 ""
 "<hr/>"
@@ -449,7 +459,7 @@ WebAdmin::buildShowUsersPage()
 ""
 "<body bgcolor=\"#ffffff\">"
 "<h1>Users</h1>"
-"<form id=\"showUsers\" method=\"get\" action=\"\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">"
+"<form id=\"showUsers\" method=\"get\" action=\"input\" name=\"showUsers\" enctype=\"application/x-www-form-urlencoded\">"
 "<table width=\"196\" border=\"1\" cellspacing=\"2\" cellpadding=\"0\" align=\"left\">"
 "<tr>"
 "<td>User</td>"
@@ -500,7 +510,7 @@ WebAdmin::buildShowRoutesPage()
 ""
 "<body bgcolor=\"#ffffff\">"
 "<h1>Routes</h1>"
-"<form id=\"showReg\" method=\"get\" action=\"\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
+"<form id=\"showReg\" method=\"get\" action=\"input\" name=\"showReg\" enctype=\"application/x-www-form-urlencoded\">"
 "<button name=\"removeAllRoute\" value=\"\" type=\"button\">Remove All</button>"
 ""
 "<hr/>"
