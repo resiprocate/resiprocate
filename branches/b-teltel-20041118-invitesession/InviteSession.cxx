@@ -943,9 +943,6 @@ InviteSession::dispatchOthers(const SipMessage& msg)
       case INFO:
          dispatchInfo(msg);
          break;
-      case REFER:
-         dispatchRefer(msg);
-         break;
 	  case ACK:
 		  // Ignore duplicate ACKs from 2xx reTransmissions
 		  break;
@@ -958,37 +955,6 @@ InviteSession::dispatchOthers(const SipMessage& msg)
                      << msg);
          assert(0);
          break;
-   }
-}
-
-
-void
-InviteSession::dispatchRefer(const SipMessage& msg)
-{
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   if (msg.isRequest())
-   {
-      ServerSubscription* server = mDialog.makeServerSubscription(msg);
-      mDialog.mServerSubscriptions.push_back(server);
-      ServerSubscriptionHandle serverHandle = server->getHandle();
-      server->dispatch(msg);
-      if (serverHandle.isValid())
-      {
-         handler->onRefer(getSessionHandle(), serverHandle, msg);
-      }
-   }
-   else if (msg.isResponse())
-   {
-      int code = msg.header(h_StatusLine).statusCode();
-      if (code < 300)
-      {
-         // throw it away
-         return;
-      }
-      else
-      {
-         handler->onReferRejected(getSessionHandle(), msg);
-      }
    }
 }
 
@@ -1618,18 +1584,6 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    else if (method == UPDATE && code >= 400)
    {
       return OnUpdateRejected;
-   }
-   else if (method == REFER && code == 0)
-   {
-      return OnRefer;
-   }
-   else if (method == REFER && code / 200 == 1)
-   {
-      return On200Refer;
-   }
-   else if (method == REFER && code >= 400)
-   {
-      return OnReferRejected;
    }
    else
    {
