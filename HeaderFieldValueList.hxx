@@ -38,6 +38,11 @@ class HeaderFieldValueList
       void pop_front();
 
       HeaderFieldValue* front() {return first;}
+
+      bool moreThanOne() const
+      {
+         return first != 0 && first->next != 0;
+      }
       
       HeaderFieldValue* first;
   
