@@ -18,7 +18,7 @@ class Subsystem
       static const Subsystem BASE;
       static const Subsystem SIP;    // SIP Stack / Parser
       
-   private:
+   protected:
       Subsystem(const char* rhs) : mSubsystem(rhs) {};
       Subsystem(const Data& rhs);
       Subsystem& operator=(const Data& rhs);
@@ -27,6 +27,31 @@ class Subsystem
 
       friend std::ostream& operator<<(std::ostream& strm, const Subsystem& ss);
 };
+
+
+// in order to have subsystems in your application, subclass from this class
+/*
+#include "sip2/util/Data.hxx"
+#include "sip2/util/Subsystem.hxx"
+
+namespace MyNamespace
+{
+
+class Subsystem : public Vocal2::Subsystem
+{
+   public:
+      // Add new systems below
+      static const Subsystem SPECIAL_SUBSYSTEM;
+
+   private:
+      Subsystem(const char* rhs) : Vocal2::Subsystem(rhs) {};
+      Subsystem(const Vocal2::Data& rhs);
+      Subsystem& operator=(const Vocal2::Data& rhs);
+};
+ 
+}
+*/
+
  
 }
 
