@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.14 2002/10/31 20:52:17 jason Exp $
+# $Id: Makefile,v 1.15 2002/11/04 20:50:58 alan Exp $
 
 BUILD = ../../build
 
@@ -14,7 +14,7 @@ endif
 
 TARGET_LIBRARY = libutil2
 
-TESTPROGRAMS = testParseBuffer.cxx testData.cxx testDataPerformance.cxx 
+TESTPROGRAMS = testParseBuffer.cxx testData.cxx testDataPerformance.cxx  testCoders.cxx
 
 ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
@@ -22,6 +22,7 @@ endif
 
 
 SRC = \
+	Coders.cxx \
 	Condition.cxx \
 	Data.cxx \
 	Fifo.cxx \
