@@ -1,5 +1,6 @@
 #if defined(USE_SSL)
 
+#include <unistd.h>
 #include <sys/types.h>
 
 #include <openssl/e_os2.h>
