@@ -135,6 +135,14 @@ Pkcs7Contents::parse(ParseBuffer& pb)
    pb.skipToEnd();
    pb.data(mText, anchor);
 
+   InfoLog( << "Transfer Encoding is " << mTransferEncoding->value() );
+   if ( mTransferEncoding->value() == Data("base64") )
+   {
+      Data bin = mText.base64decode();
+      mText = bin;
+      InfoLog( << "Base64 decoded to " << mText.escaped() );
+   }
+   
    DebugLog(<< "Pkcs7Contents::parsed <" << mText.escaped() << ">" );
 }
 
