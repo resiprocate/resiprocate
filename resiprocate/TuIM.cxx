@@ -11,6 +11,8 @@
 #include "sip2/sipstack/Contents.hxx"
 #include "sip2/sipstack/ParserCategories.hxx"
 #include "sip2/sipstack/PlainContents.hxx"
+#include "sip2/sipstack/Pkcs7Contents.hxx"
+#include "sip2/sipstack/Security.hxx"
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
@@ -74,9 +76,24 @@ void TuIM::sendPage(const Data& text, const Uri& dest )
    SipMessage* msg = Helper::makeRequest(target, from, contact, MESSAGE);
    assert( msg );
 
+#if 0
    PlainContents body(text);
    msg->setContents(&body);
+#else
+   Security* sec = mStack->security;
+   assert(sec);
+    
+   PlainContents body(text);
+
+   Pkcs7Contents* sBody = sec->sign( &body );
+
+   //cerr << endl << endl << "Result encoded is -----------<";
+   //sBody->encodeParsed( cerr );
+   //cerr << ">--------------------------" << endl;
    
+   msg->setContents( sBody );
+#endif
+
    mStack->send( *msg );
 }
 
@@ -120,14 +137,53 @@ TuIM::process()
             assert( contents );
             Mime mime = contents->getType();
             DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
+
             PlainContents* body = dynamic_cast<PlainContents*>(contents);
-            assert( body );
-            const Data& text = body->text();
+            if ( body )
+            {
+               assert( body );
+               const Data& text = body->text();
+               
+               Uri from = msg->header(h_From).uri();
+               DebugLog ( << "got message from " << from );
+               
+               mPageCallback->receivedPage( text, from );
+            }
+            
+            Pkcs7Contents* sBody = dynamic_cast<Pkcs7Contents*>(contents);
+            if ( sBody )
+            {
+               assert( sBody );
+               Security* sec = mStack->security;
+               assert(sec);
 
-            Uri from = msg->header(h_From).uri();
-            DebugLog ( << "got message from " << from );
-
-            mPageCallback->receivedPage( text, from );
+               Contents* uBody = sec->uncode( sBody );
+               
+               if ( uBody )
+               {
+                  PlainContents* body = dynamic_cast<PlainContents*>(uBody);
+                  if ( body )
+                  {
+                     const Data& text = body->text();
+                     
+                     Uri from = msg->header(h_From).uri();
+                     DebugLog ( << "got message from " << from );
+                     
+                     mPageCallback->receivedPage( text, from );
+                  }
+                  else
+                  {
+                     assert(0);
+                  }
+               }
+            }
+             
+            if ( (!body) && (!sBody) )
+            {
+               ErrLog ( << "Can not hangle type " << mime.type() << "/" << mime.subType() );
+               assert(0);
+            }
+            
          }
       }
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.90 2002/11/28 21:01:03 ryker Exp $
+# $Id: Makefile,v 1.91 2002/11/30 04:30:45 fluffy Exp $
 
 BUILD = ../../build
 
@@ -71,6 +71,7 @@ SRC = \
 	SipFrag.cxx \
 	TuIM.cxx \
 	PlainContents.cxx \
+	Pkcs7Contents.cxx \
 
 
 
