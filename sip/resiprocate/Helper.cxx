@@ -1037,16 +1037,34 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
 }
 #endif
 
+Helper::ContentsSecAttrs::ContentsSecAttrs()
+{
+}
+   
 Helper::ContentsSecAttrs::ContentsSecAttrs(std::auto_ptr<Contents> contents,
                                            std::auto_ptr<SecurityAttributes> attributes)
    : mContents(contents),
      mAttributes(attributes)
-{}
+{
+}
 
 Helper::ContentsSecAttrs::ContentsSecAttrs(const ContentsSecAttrs& rhs)
    : mContents(rhs.mContents),
      mAttributes(rhs.mAttributes)
-{}
+{
+}
+
+Helper::ContentsSecAttrs& 
+Helper::ContentsSecAttrs::operator=(const ContentsSecAttrs& rhs)
+{
+   if (&rhs != this)
+   {
+      mContents = rhs.mContents;
+      mAttributes = rhs.mAttributes;
+   }
+   return *this;
+}
+
 
 Contents*
 extractFromPkcs7Recurse(Contents* tree,

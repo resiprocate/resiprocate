@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Helper.hxx"
 
 namespace resip
 {
@@ -25,15 +26,21 @@ class ServerPublication : public BaseUsage
 
       void send(SipMessage& response);      
 
+      const Data& getPublisher() const; // aor of From
+      
    protected:
       virtual ~ServerPublication();
+      void updateMatchingSubscriptions();
+
    private:
       friend class DialogUsageManager;
       ServerPublication(DialogUsageManager& dum, const Data& etag, const SipMessage& request);
+
       SipMessage mLastRequest;
       SipMessage mLastResponse;
       const Data mEtag;
       const Data mEventType;
+      Helper::ContentsSecAttrs mLastBody;
       int mTimerSeq;
       int mExpires;
 };
