@@ -88,6 +88,12 @@ DialogUsageManager::addTransport( TransportType protocol,
    return mStack->addTransport(protocol, port, version, ipInterface);
 }
 
+Security&
+DialogUsageManager::getSecurity()
+{
+   return *mStack->getSecurity();
+}
+   
 Data 
 DialogUsageManager::getHostAddress()
 {
