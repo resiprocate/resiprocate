@@ -74,6 +74,7 @@ libresiprocate_la_SOURCES = \
 	SipMessage.cxx \
 	SipSession.cxx	\
 	SipStack.cxx \
+	StatelessHandler.cxx \
 	Subscription.cxx \
 	Symbols.cxx \
 	TcpTransport.cxx \
@@ -150,6 +151,7 @@ resiprocate_include_HEADERS = \
 	SipMessageExplicit.hxx \
 	SipSession.hxx \
 	SipStack.hxx \
+	StatelessHandler.hxx \
 	Subscription.hxx \
 	Symbols.hxx \
 	TcpTransport.hxx \
