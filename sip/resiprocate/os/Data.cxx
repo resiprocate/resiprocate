@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.31 2002/11/12 17:18:37 ryker Exp $";
+"$Id: Data.cxx,v 1.32 2002/11/13 20:42:24 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -12,7 +12,6 @@ static const char* const Data_cxx_Version =
 
 using namespace Vocal2;
 using namespace std;
-
 
 const Data Data::Empty("", 0);
 
@@ -35,7 +34,8 @@ Data::Data(const char* str, int length)
 }
 
 // share memory KNOWN to be in a surrounding scope
-// wears off on modify, copy, c_str, assign
+// wears off on modify, copy, c_str, operator=, operator+=, non-const
+// operator[], append
 Data::Data(const char* str, int length, bool) 
    : mSize(length),
      mBuf(const_cast<char*>(str)),
@@ -628,6 +628,12 @@ Data::uppercase()
    return *this;
 }
 
+void
+Data::clear()
+{
+   mSize = 0;
+}
+
 int 
 Data::convertInt() const
 {
@@ -665,7 +671,6 @@ Data::convertInt() const
 
    return s*val;
 }
-
 
 double 
 Data::convertDouble() const
@@ -707,7 +712,6 @@ Data::convertDouble() const
 
    return s*val;
 }
-
 
 bool
 Vocal2::operator==(const char* s, const Data& d)
