@@ -50,9 +50,9 @@ class SipMessage;
 
 class MsgHeaderScanner
 {
-
- public:
-
+      
+  public:
+    enum { MaxNumCharsChunkOverflow = 5 };
     enum TextPropBitMaskEnum 
     {
       tpbmContainsLineBreak  = 1 << 0,     // '\r' or '\n', always paired

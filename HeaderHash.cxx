@@ -7,7 +7,6 @@
 namespace resip
 {
 using namespace std;
-using namespace resip;
 struct headers { char *name; Headers::Type type; };
 /* maximum key range = 305, duplicates = 0 */
 

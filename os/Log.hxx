@@ -26,41 +26,42 @@ class Log
    public:
       typedef enum 
       {
-         COUT = 0,
-         SYSLOG, 
-         FILE, 
-         CERR
+         Cout = 0,
+         Syslog, 
+         File, 
+         Cerr
       } Type;
       
 #ifdef WIN32 
       typedef enum 
       {
-         NONE = -1,
-         CRIT = 2,
-         ERR = 3,
-         WARNING = 4,
-         INFO = 6,
-         DEBUG = 7,
-         STACK = 8,
-         STDERR = 9,
-         BOGUS = 666
+         None = -1,
+         Crit = 2,
+         Err = 3,
+         Warning = 4,
+         Info = 6,
+         Debug = 7,
+         Stack = 8,
+         StdErr = 9,
+         Bogus = 666
       } Level;
 #else
       typedef enum 
       {
-         NONE = -1,
-         CRIT = LOG_CRIT,
-#ifdef ERR // ncurses defines a macro called ERR 
-         SIP2_ERR = LOG_ERR,
-#else
-         ERR = LOG_ERR,
-#endif
-         WARNING = LOG_WARNING,
-         INFO = LOG_INFO,
-         DEBUG = LOG_DEBUG,
-         STACK = DEBUG+1,
-         STDERR = STACK+1,
-         BOGUS = 666
+         None = -1,
+         Crit = LOG_CRIT,
+// #ifdef ERR // ncurses defines a macro called ERR 
+//          SIP2_ERR = LOG_ERR,
+// #else
+//          ERR = LOG_ERR,
+// #endif
+         Err,
+         Warning = LOG_WARNING,
+         Info = LOG_INFO,
+         Debug = LOG_DEBUG,
+         Stack = 8,
+         StdErr = 9,
+         Bogus = 666
       } Level;
 #endif
 
@@ -69,11 +70,7 @@ class Log
          public:
             ThreadSetting()
                : service(-1),
-#ifdef ERR
-                 level(SIP2_ERR)
-#else
-               level(ERR)
-#endif
+               level(Err)
             {}
 
             ThreadSetting(int serv, Level l)

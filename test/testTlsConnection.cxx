@@ -25,7 +25,7 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {  
-   Log::initialize(Log::COUT, Log::ERR, argv[0]);
+   Log::initialize(Log::Cout, Log::Err, argv[0]);
    int port = 0;
    int dest = 0;
    
@@ -35,11 +35,11 @@ main(int argc, char* argv[])
    {
       if (!strcmp(argv[i],"-vv"))
       {
-         Log::setLevel(Log::DEBUG);
+         Log::setLevel(Log::Debug);
       }
       else if (!strcmp(argv[i],"-v"))
       {
-         Log::setLevel(Log::INFO);
+         Log::setLevel(Log::Info);
       }
       else if (!strcmp(argv[i],"-port"))
       {

@@ -22,7 +22,7 @@ class UnknownParameter : public Parameter
 
       // for making a new unknown parameter 
       explicit UnknownParameter(const Data& name);
-      std::ostream& UnknownParameter::encode(std::ostream& stream) const;
+      std::ostream& encode(std::ostream& stream) const;
 
       Data& value() {return mValue;}
       const Data& value() const {return mValue;}
