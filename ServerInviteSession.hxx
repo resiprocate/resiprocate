@@ -60,12 +60,16 @@ class ServerInviteSession: public InviteSession
       
       void process(const SipMessage& msg);
 
+      virtual InviteSession::Handle getSessionHandle();
+      ClientInviteSession::Handle getHandle() {return mHandle;}
+
    private:
       friend class DialogUsageManager;
+      ServerInviteSession::Handle mHandle;
+      
       ServerInviteSession(DialogUsageManager& dum, const SipMessage& msg);
 };
 
- 
 }
 
 #endif

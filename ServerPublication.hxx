@@ -22,6 +22,10 @@ class ServerPublication : public BaseUsage
       // application may have to muck with expires or Etag
       void accept(const SipMessage& ok);
       void reject(int statusCode);
+
+   private:
+      friend class DialogUsageManager;
+      ServerPublication::Handle mHandle;
 };
 
 }

@@ -1,5 +1,9 @@
 #include "ServerOutOfDialogReq.hxx"
 
+ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum)
+   : mHandle(dum)
+{}
+
 ServerOutOfDialogReq::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
 {}
