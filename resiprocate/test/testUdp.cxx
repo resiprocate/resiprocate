@@ -64,10 +64,9 @@ main(int argc, char* argv[])
       for (int i=0; i<runs; i++)
       {
          SipMessage* m = Helper::makeInvite( target, from, from);      
-         m->header(h_Vias).front().transport() = Tuple::toData(sender->transport());
-         m->header(h_Vias).front().sentHost() = "localhost";
-         m->header(h_Vias).front().sentPort() = sender->port();
-      
+         //m->header(h_Vias).front().transport() = Tuple::toData(sender->transport());
+         //m->header(h_Vias).front().sentHost() = "localhost";
+         //m->header(h_Vias).front().sentPort() = sender->port();
          messages.push_back(m);
       }
 
@@ -123,11 +122,11 @@ main(int argc, char* argv[])
          SipMessage* received = dynamic_cast<SipMessage*>(msg);
          if (received)
          {
-            //DebugLog (<< "got: " << received->brief());
+           received->encode(cout);
             outstanding--;
          
             assert (received->header(h_RequestLine).uri().host() == "localhost");
-            assert (received->header(h_To).uri().host() == "localhost");
+            assert (received->header(h_To).uri().host() == "127.0.0.1");
             assert (received->header(h_From).uri().host() == "localhost");
             assert (!received->header(h_Vias).begin()->sentHost().empty());
             assert (received->header(h_Contacts).begin()->uri().host() == "localhost");
