@@ -1,4 +1,7 @@
-Change the names of all the parser "components" to "integerparser" or something like that
+$Id: TODO,v 1.3 2002/11/04 20:53:14 bko Exp $
+
+Change the names of all the parser "components" to "integerparser" or
+something like that
 
 Complete the pre parser stuff so that transport can do framented messages
 
@@ -6,3 +9,28 @@ Change name of HeadersTy
 
 
 Should the Via set the default transport to UDP? 
+
+need to add quote interface to DataParameter -- particularly, fetching
+a parameter should return DataParameter& rather than Data .  the
+application is responsible for passing in a quoted string if they want
+quotes.
+
+the application will never get back a quoted one.
+
+there should be a UserData which is used for anything the user might
+input.  it has the property that the stack will examine the contents
+for quotable material, e.g. if you pass in
+
+	Bob Smith
+
+it will produce either
+
+	Bob%20Smith
+
+or
+
+	"Bob Smith"
+
+depending on what's right.
+
+
