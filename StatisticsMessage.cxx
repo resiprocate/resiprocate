@@ -112,16 +112,16 @@ StatisticsMessage::Payload::Payload()
      requestsReceived(0),
      responsesReceived(0)
 {
-   bzero(responsesByCode, sizeof(responsesByCode));
-   bzero(requestsSentByMethod, sizeof(requestsSentByMethod));
-   bzero(requestsRetransmittedByMethod, sizeof(requestsRetransmittedByMethod));
-   bzero(requestsReceivedByMethod, sizeof(requestsReceivedByMethod));
-   bzero(responsesSentByMethod, sizeof(responsesSentByMethod));
-   bzero(responsesRetransmittedByMethod, sizeof(responsesRetransmittedByMethod));
-   bzero(responsesReceivedByMethod, sizeof(responsesReceivedByMethod));
-   bzero(responsesSentByMethodByCode, sizeof(responsesSentByMethodByCode));
-   bzero(responsesRetransmittedByMethodByCode, sizeof(responsesRetransmittedByMethodByCode));
-   bzero(responsesReceivedByMethodByCode, sizeof(responsesReceivedByMethodByCode));
+   memset(responsesByCode, 0, sizeof(responsesByCode));
+   memset(requestsSentByMethod, 0, sizeof(requestsSentByMethod));
+   memset(requestsRetransmittedByMethod, 0, sizeof(requestsRetransmittedByMethod));
+   memset(requestsReceivedByMethod, 0, sizeof(requestsReceivedByMethod));
+   memset(responsesSentByMethod, 0, sizeof(responsesSentByMethod));
+   memset(responsesRetransmittedByMethod, 0, sizeof(responsesRetransmittedByMethod));
+   memset(responsesReceivedByMethod, 0, sizeof(responsesReceivedByMethod));
+   memset(responsesSentByMethodByCode, 0, sizeof(responsesSentByMethodByCode));
+   memset(responsesRetransmittedByMethodByCode, 0, sizeof(responsesRetransmittedByMethodByCode));
+   memset(responsesReceivedByMethodByCode, 0, sizeof(responsesReceivedByMethodByCode));
 }
 
 StatisticsMessage::Payload&
