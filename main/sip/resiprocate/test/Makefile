@@ -18,6 +18,7 @@ TESTPROGRAMS +=
 endif
 
 TESTPROGRAMS += limpc.cxx \
+		makeSelfCert.cxx \
 		testIdentity.cxx \
 		SipTortureTests.cxx \
 		testRSP-2.cxx \
