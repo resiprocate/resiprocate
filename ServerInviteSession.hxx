@@ -29,6 +29,9 @@ class ServerInviteSession: public InviteSession
       /// sends an offer. Does not send an answer
       virtual void provideAnswer(const SdpContents& answer);
 
+      // specify early media to be sent in the provisional response
+      void provideEarly(const SdpContents& early);
+      
       /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
       virtual void end();
 
@@ -40,6 +43,8 @@ class ServerInviteSession: public InviteSession
       //this is only applicable to the UAS
       virtual void accept(int statusCode=200);
       
+      virtual void targetRefresh(const NameAddr& localUri);
+
       // Following methods are for sending requests within a dialog
       virtual void refer(const NameAddr& referTo);
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
@@ -55,6 +60,10 @@ class ServerInviteSession: public InviteSession
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
+      // utilities
+      void sendProvisional(int code);
+      void sendUpdate(const SdpContents& sdp);
+
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 
       // disabled
@@ -64,8 +73,12 @@ class ServerInviteSession: public InviteSession
       // stores the original request
       SipMessage mFirstRequest;
       
-      std::deque<SipMessage> mUnacknowledgedProvisionals; // all of them
-      SipMessage m200; // for retransmission
+      std::auto_ptr<SdpContents> mEarlyMedia;
+      SipMessage m1xx; // for 1xx retransmissions
+      unsigned long m1xxTimer;
+
+      //std::deque<SipMessage> mUnacknowledgedProvisionals; // all of them
+      //SipMessage m200; // for retransmission
 };
 
 }

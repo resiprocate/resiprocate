@@ -20,82 +20,53 @@ class ClientInviteSession : public InviteSession
 
       ClientInviteSessionHandle getHandle();
 
-    // !kh! ==========
-    public:
-        //  !kh! These comments are copy-and-paste-ed, not sure if they
-        //  are correct here.
-
-        /// Called to set the offer that will be used in the next messages that
-        /// sends and offer. Does not send an offer
-        virtual void provideOffer (const SdpContents& offer);
-
-        /// Called to set the answer that will be used in the next messages that
-        /// sends an offer. Does not send an answer
-        virtual void provideAnswer (const SdpContents& answer);
-
-        /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
-        virtual void end ();
-
-        /// Rejects an offer at the SIP level. So this can send a 488 to a
-        /// reINVITE or UPDATE
-        virtual void reject (int statusCode);
-
-        //accept a re-invite, etc.  Always 200?
-        //this is only applicable to the UAS
-        //virtual void accept (int statusCode=200);
-
-        // will resend the current sdp in an UPDATE or reINVITE
-        virtual void targetRefresh (const NameAddr& localUri);
-
-        // Following methods are for sending requests within a dialog
-        virtual void refer (const NameAddr& referTo);
-        virtual void refer (const NameAddr& referTo, InviteSessionHandle sessionToReplace);
-        virtual void info (const Contents& contents);
-        void cancel ();
-
-
-    private:
-
-        void dispatchStart (const SipMessage& msg, const SdpContents* sdp);
-        void dispatchEarly (const SipMessage& msg, const SdpContents* sdp);
-        void dispatchEarlyWithOffer (const SipMessage& msg, const SdpContents* sdp);
-        void dispatchEarlyWithAnswer (const SipMessage& msg, const SdpContents* sdp);
-        void dispatchWaitingForAnswerFromApp (const SipMessage& msg, const SdpContents* sdp);
-        void dispatchConnected (const SipMessage& msg, const SdpContents* sdp);
-        void dispatchTerminated (const SipMessage& msg, const SdpContents* sdp);
-        void dispatchSentUpdateEarly (const SipMessage& msg, const SdpContents* sdp);
-        void dispatchReceivedUpdateEarly (const SipMessage& msg, const SdpContents* sdp);
-        void dispatchPrackAnswerWait (const SipMessage& msg, const SdpContents* sdp);
-        void dispatchCanceled (const SipMessage& msg, const SdpContents* sdp);
-
-    // !kh! ==========
+   public:
+      virtual void provideOffer (const SdpContents& offer);
+      virtual void provideAnswer (const SdpContents& answer);
+      virtual void end ();
+      virtual void reject (int statusCode);
+      virtual void targetRefresh (const NameAddr& localUri);
+      virtual void refer (const NameAddr& referTo);
+      virtual void refer (const NameAddr& referTo, InviteSessionHandle sessionToReplace);
+      virtual void info (const Contents& contents);
 
    private:
-      void redirected(const SipMessage& msg);
-
-      // Called by the DialogSet (friend) when the app has CANCELed the request
-      virtual void cancel();
-
-      friend class Dialog;
-
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      void sendSipFrag(const SipMessage& response);
-      void handlePrackResponse(const SipMessage& response);
-      void sendPrack(const SipMessage& response);
-//      void sendAck(const SipMessage& ok);
+      void dispatchStart (const SipMessage& msg);
+      void dispatchEarly (const SipMessage& msg);
+      void dispatchEarlyWithOffer (const SipMessage& msg);
+      void dispatchEarlyWithAnswer (const SipMessage& msg);
+      void dispatchWaitingForAnswerFromApp (const SipMessage& msg);
+      void dispatchConnected (const SipMessage& msg);
+      void dispatchTerminated (const SipMessage& msg);
+      void dispatchSentUpdateEarly (const SipMessage& msg);
+      void dispatchReceivedUpdateEarly (const SipMessage& msg);
+      void dispatchPrackAnswerWait (const SipMessage& msg);
+      void dispatchCanceled (const SipMessage& msg);
 
+      // Called by the DialogSet (friend) when the app has CANCELed the request
+      void cancel();
 
+   private:
       int lastReceivedRSeq;
       int lastExpectedRSeq;
       int mStaleCallTimerSeq;
-
       ServerSubscriptionHandle mServerSub;
+
+#if 0
+      void redirected(const SipMessage& msg);
+      void sendSipFrag(const SipMessage& response);
+      void handlePrackResponse(const SipMessage& response);
+      void sendPrack(const SipMessage& response);
+#endif
 
       // disabled
       ClientInviteSession(const ClientInviteSession&);
       ClientInviteSession& operator=(const ClientInviteSession&);
+
+      friend class Dialog;
 };
 
 }
