@@ -380,8 +380,9 @@ DialogUsageManager::send(SipMessage& msg)
    InfoLog (<< "SEND: " << msg);
    if (msg.isRequest()) //!dcm! -- invariant?
    {
+      //this is all very scary and error-prone, as the TU has some retramissions
       if (msg.header(h_RequestLine).method() != CANCEL &&
-//          msg.header(h_RequestLine).method() != ACK && 
+          msg.header(h_RequestLine).method() != ACK && 
           msg.exists(h_Vias))
       {
          msg.header(h_Vias).front().param(p_branch).reset();
@@ -390,7 +391,7 @@ DialogUsageManager::send(SipMessage& msg)
       //copy message if processStrictRoute will modify it
       if (msg.exists(h_Routes) && 
           !msg.header(h_Routes).empty() &&
-          !msg.header(h_Routes).front().exists(p_lr))
+          !msg.header(h_Routes).front().uri().exists(p_lr))
       {
          SipMessage copyOfMessage(msg);
          Helper::processStrictRoute(copyOfMessage);
