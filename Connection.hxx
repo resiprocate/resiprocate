@@ -23,8 +23,6 @@ class Connection
 {
    public:
       Connection(const Transport::Tuple& who, Socket socket);
-      Connection();
-
       ~Connection();
             
       Socket getSocket() const {return mSocket;}
@@ -47,7 +45,10 @@ class Connection
       
       enum { ChunkSize = 2048 }; //!dcm! -- bad size, perhaps 2048-4096?
    private:
-            
+      Connection();
+      Connection(const Connection&);
+      Connection& operator=(const Connection&);
+      
       SipMessage* mMessage;
       char* mBuffer;
       size_t mBufferPos;
