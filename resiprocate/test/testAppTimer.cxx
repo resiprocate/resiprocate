@@ -47,8 +47,7 @@ main(int argc, char** argv)
    Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
    TimeLimitFifo<Message> f(0, 0);
-   Fifo<TransactionMessage> r;
-   TimerQueue timer(r, f);
+   TimeLimitTimerQueue timer(f);
 
    cerr << "Before Fifo size: " << f.size() << endl;
    assert(f.size() == 0);
