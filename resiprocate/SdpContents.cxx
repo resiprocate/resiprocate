@@ -1621,6 +1621,19 @@ SdpContents::Session::Medium::findFirstMatchingCodecs(const std::vector<Codec>& 
    return emptyCodec;
 }
 
+int
+SdpContents::Session::Medium::findTelephoneEventPayloadType() const
+{
+   for (std::vector<Codec>::const_iterator i = mCodecs.begin(); i != mCodecs.end(); i++)
+   {
+      if (i->getName() == SdpContents::Session::Codec::TelephoneEvent.getName())
+      {
+         return i->payloadType();
+      }
+   }
+   return -1;
+}
+
 Codec::Codec(const Data& name,
              unsigned long rate,
              const Data& parameters)
