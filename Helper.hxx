@@ -58,7 +58,7 @@ class Helper
 
       static AuthResult authenticateRequest(const SipMessage& request, 
                                             const Data& realm,
-                                            const Data& encodedPassword,
+                                            const Data& password,
                                             int expiresDelta = 0);
       
       // create a 407 response with Proxy-Authenticate header filled in
@@ -69,11 +69,11 @@ class Helper
       static SipMessage& addAuthorization(SipMessage& request,
                                           const SipMessage& challenge,
                                           const Data& username,
-                                          const Data& encodedPassword,
+                                          const Data& password,
                                           const Data& cnonce,
                                           unsigned int& nonceCount);
 
-      static Data makeResponseMD5(const Data& username, const Data& encodedPassword, const Data& realm, 
+      static Data makeResponseMD5(const Data& username, const Data& password, const Data& realm, 
                                   const Data& method, const Data& digestUri, const Data& nonce,
                                   const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
                                   const Data& cnonceCount = Data::Empty);
