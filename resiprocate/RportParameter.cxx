@@ -1,9 +1,12 @@
 #include "sip2/sipstack/RportParameter.hxx"
 #include "sip2/sipstack/Symbols.hxx"
 #include "sip2/util/ParseBuffer.hxx"
+#include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;
+
+#define VOCAL_SUBSYSTEM Vocal2::Subsystem::SIP
 
 RportParameter::RportParameter(ParameterTypes::Type type,
                                ParseBuffer& pb, 
@@ -46,7 +49,7 @@ RportParameter::clone() const
 ostream&
 RportParameter::encode(ostream& stream) const
 {
-   if (mHasValue)
+   if (mHasValue || mValue > 0)
    {
       return stream << getName() << Symbols::EQUALS << mValue;
    }
