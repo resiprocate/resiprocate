@@ -19,7 +19,6 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, 
      mOnNewSubscriptionCalled(mEventType == "refer"),  // don't call onNewSubscription for Refer subscriptions
      mEnded(false)
 {
-   WarningLog(<< "ClientSubscription::ClientSubscription " << request);
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
 }
 
@@ -128,7 +127,6 @@ ClientSubscription::dispatch(const SipMessage& msg)
          }
       }
 
-      WarningLog(<< "got here" << refreshInterval << " : " << mEnded);
       if (!mEnded && msg.header(h_SubscriptionState).value() == "active")
       {
          if (refreshInterval)
@@ -138,7 +136,6 @@ ClientSubscription::dispatch(const SipMessage& msg)
             DebugLog (<< "[ClientSubscription] reSUBSCRIBE in " << t);
          }
 
-         WarningLog(<< "onUpdateActive");
          handler->onUpdateActive(getHandle(), msg);
       }
       else if (!mEnded && msg.header(h_SubscriptionState).value() == "pending")
@@ -240,8 +237,8 @@ ClientSubscription::dispatch(const DumTimeout& timer)
          {
             InfoLog(<< "ClientSubscription: application retry new request");
             SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-            delete this;
             mDum.send(sub);
+            delete this;
          }
       }
       else
