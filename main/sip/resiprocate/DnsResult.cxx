@@ -428,7 +428,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
             }
 
             DebugLog (<< "Adding SRV record (no NAPTR): " << srv);
-            mSRVResults.insert(srv);
+            mSRVResults.push_back(srv);
          }
       }
 
@@ -479,6 +479,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
 #if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
          DebugLog(<< "Got all SRV responses. Priming " << Inserter(mSRVResults));
 #endif
+         sort(mSRVResults.begin(),mSRVResults.end()); // !jf! uggh
          primeResults();
       }
    }
@@ -658,20 +659,19 @@ DnsResult::retrieveSRV()
 {
    assert(!mSRVResults.empty());
 
+   DebugLog (<< "mSRVResults = " << Inserter(mSRVResults));
+   
    const SRV& srv = *mSRVResults.begin();
    if (srv.cumulativeWeight == 0)
    {
       int priority = srv.priority;
    
       mCumulativeWeight=0;
-      for (std::set<SRV>::iterator i=mSRVResults.begin(); 
+      for (std::vector<SRV>::iterator i=mSRVResults.begin(); 
            i!=mSRVResults.end() && i->priority == priority; i++)
       {
          mCumulativeWeight += i->weight;
-         SRV copy(srv);
-         copy.cumulativeWeight = mCumulativeWeight;
-         mSRVResults.erase(mSRVResults.begin());
-         mSRVResults.insert(copy);
+         i->cumulativeWeight = mCumulativeWeight;
       }
    }
    
@@ -682,7 +682,7 @@ DnsResult::retrieveSRV()
    DebugLog (<< "SRV: " << Inserter(mSRVResults));
 #endif
 
-   std::set<SRV>::iterator i;
+   std::vector<SRV>::iterator i;
    for (i=mSRVResults.begin(); i!=mSRVResults.end(); i++)
    {
       if (i->cumulativeWeight >= selected)
@@ -786,7 +786,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
          }
          
          DebugLog (<< "Inserting SRV: " << srv);
-         mSRVResults.insert(srv);
+         mSRVResults.push_back(srv);
       }
 
       return aptr + dlen;
