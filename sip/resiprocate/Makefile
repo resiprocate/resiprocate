@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.42 2002/09/25 22:25:34 jason Exp $
+# $Id: Makefile,v 1.43 2002/09/26 00:30:27 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -46,9 +46,9 @@ OSRC =   *.hxx Makefile
 #CXXFLAGS += -O5 -DNDEBUG
 CXXFLAGS += -O -g
 #CXXFLAGS += -g
-LDFLAGS  += 
+LDFLAGS  += -L$(LIB)
 CXXFLAGS += -I. -I../. -MD -Wall $(CXXDEBUG)
-LDLIBS   += -lpthread
+LDLIBS   += -lvutil -lpthread
 
 ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
@@ -64,7 +64,7 @@ OBJS = $(patsubst %.cxx,$(OBJ)/%.o,$(SRC))
 
 #define the rules
 
-all: $(OBJ) $(BIN) $(BIN)/libSipStack.a
+all: $(OBJ) $(BIN) $(LIB) $(BIN)/libSipStack.a
 
 doc: html html/HIER.html html/sipStack.html fsm.pdf
 
@@ -81,6 +81,9 @@ $(BIN):
 
 $(OBJ):
 	- mkdir $(OBJ)
+
+$(LIB):
+	- mkdir ../$(LIB)
 
 html:
 	- mkdir html
@@ -105,7 +108,7 @@ $(OBJ)/%.o: %.cxx
 
 $(BIN)/libSipStack.a: $(OBJS)
 	ar $(ARFLAGS) $@ $^
-
+	-@ ln -s $(shell pwd)/$@ ../$(LIB)
 
 
 testParameterList:  $(OBJS) $(OBJ)/testParameter.o 
