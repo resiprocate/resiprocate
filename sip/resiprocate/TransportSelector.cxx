@@ -1,14 +1,11 @@
 #include <sstream>
-#include <sipstack/TransportSelector.hxx>
+#include <sipstack/Resolver.hxx>
 #include <sipstack/SipMessage.hxx>
-#include <sipstack/UdpTransport.hxx>
 #include <sipstack/SipStack.hxx>
+#include <sipstack/TransportSelector.hxx>
+#include <sipstack/UdpTransport.hxx>
+#include <sipstack/Uri.hxx>
 #include <util/Logger.hxx>
-
-// Hack, hack, hack
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 using namespace Vocal2;
 
@@ -33,7 +30,7 @@ TransportSelector::~TransportSelector()
 
 
 void 
-TransportSelector::addTransport( Transport::TransportType protocol, 
+TransportSelector::addTransport( Transport::Type protocol, 
                                  int port,
                                  const Data& hostName,
                                  const Data& interface) 
@@ -89,37 +86,76 @@ TransportSelector::process(fd_set* fdSet)
 void 
 TransportSelector::send( SipMessage* msg )
 {
-   // do loose routing, pick the target destination
-   // do a dns lookup
-   // insert the via
-   // encode the message
-   // send it to the appropriate transport
+   // pick the target destination 
+   //   - for request route then request URI -  unless if firs entry in route is
+   //     strict router in which case use the URI
+   //   - for response look at via  
 
+   Uri target;
+   if (msg->isRequest())
+   {
+      if (msg->header(h_Routes).size() && !msg->header(h_Routes).front().exists(p_lr))
+      {
+         target = msg->header(h_Routes).front().uri();
+      }
+      else
+      {
+         target = msg->header(h_RequestLine).uri();         
+      }
+   }
+   else if (msg->isResponse())
+   {
+      assert (msg->header(h_Vias).size() >= 2);
+      const Via& via = *(++msg->header(h_Vias).begin());
+
+      // should look at via.transport()
+      target.param(p_transport) = Symbols::UDP; // !jf!
+      target.host() = via.sentHost();
+      target.port() = via.sentPort();
+      
+      if (!via.exists(p_received))
+      {
+         target.host() = via.param(p_received);
+      }
+      if (!via.exists(p_rport))
+      {
+         target.port() = via.param(p_rport);
+      }
+   }
+   else
+   {
+      assert(0);
+   }
+   
+
+   // do a dns lookup !jf!
+   // should only do this once and store in the SipMessage (or somewhere)
+   Resolver resolver(target);
+   
+   // pick the aproperate transport !jf! 
+   // clearly not right
    Transport* transport = *mTransports.begin();
-   std::cerr << "Sending message to the wire." << std::endl;
-   msg->encode(std::cerr);
-   std::cerr.flush();
 
-   // Hmmmm... we shouldn't add a Via if this is a response.
-   assert(!msg->header(h_Vias).empty());
-   msg->header(h_Vias).front().param(p_maddr) = "";
-   //msg->header(h_Vias).front().param(p_ttl) = 1;
-   msg->header(h_Vias).front().transport() = Transport::toData(transport->transport());  //cache !jf! 
-   msg->header(h_Vias).front().sentHost() = transport->hostname();
-   msg->header(h_Vias).front().sentPort() = transport->port();
+   // insert the via
+
+   if (msg->isRequest())
+   {
+      assert(!msg->header(h_Vias).empty());
+      msg->header(h_Vias).front().param(p_maddr) = "";
+      //msg->header(h_Vias).front().param(p_ttl) = 1;
+      msg->header(h_Vias).front().transport() = Transport::toData(transport->transport());  //cache !jf! 
+      msg->header(h_Vias).front().sentHost() = transport->hostname();
+      msg->header(h_Vias).front().sentPort() = transport->port();
+   }
    
    std::stringstream strm;
    msg->encode(strm);
+
+   // get next destination !jf!
+   Resolver::Tuple tuple = *resolver.mCurrent;
    
-   sockaddr_in dest;
-   dest.sin_family = PF_INET;
-   dest.sin_addr.s_addr = inet_addr("127.0.0.1");
-   dest.sin_port = htons(9999);
-   // Figure out what the heck goes in dest here.
-   transport->send(dest, strm.str().c_str(), strm.str().length());
-   
-   //mUdp->send(msg->str(), msg->size());
-   //assert(0);
+   // send it over the transport
+   transport->send(tuple.ipv4, strm.str().c_str(), strm.str().length());
 }
 
 
