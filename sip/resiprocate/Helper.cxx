@@ -30,6 +30,50 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    return request;
 }
 
+
+SipMessage*
+Helper::makeMessage(const Data& data)
+{
+   SipMessage* msg = new SipMessage();
+   int size = data.size();
+   char *buffer = new char[size];
+
+   memcopy(buffer,data.data(),size);
+   
+   PreparseState::TransportAction status = PreparseState::NONE;
+   
+   Preparse pre;
+
+   int used = 0;
+   
+   pre.process(*msg, buffer, size, len, used, status);
+   if (status == PreparseState::preparseError ||
+       status == PreparseState::fragment)
+   {
+      InfoLog(<<"Invalid SipMessage -- try Log::Debug");
+      delete msg;
+      msg = 0;
+   }
+   else
+   {
+      // no pp error
+      if (status == PreparseState::headersComplete &&
+          used < len)
+      {
+         // body is present .. add it up.
+         // NB. The Sip Message uses an overlay (again)
+         // for the body. It ALSO expects that the body
+         // will be contiguous (of course).
+         // it doesn't need a new buffer in UDP b/c there
+         // will only be one datagram per buffer. (1:1 strict)
+         
+         msg->setBody(buffer+used,len-used);
+         DebugLog(<<"added " << len-used << " byte body");
+      }
+   }
+   return msg;
+}
+
 SipMessage*
 Helper::makeRegister(const NameAddr& registrar,
                      const NameAddr& aor)
