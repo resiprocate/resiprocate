@@ -289,24 +289,29 @@ TransportSelector::dnsResolve(SipMessage* msg,
    return result;
 }
 
+// This method decides what interface a sip request will be sent on. 
+//   
 Tuple
-TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& dest) const
+TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target) const
 {
+   assert(msg->isRequest());
    assert(msg->exists(h_Vias));
    assert(!msg->header(h_Vias).empty());
    const Via& via = msg->header(h_Vias).front();
-   if (!via.sentHost().empty())
+   if (!via.sentHost().empty()) // hint provided in sent-by of via by application
    {
-      return Tuple(via.sentHost(), via.sentPort(), dest.isV4(), dest.getType());
+      return Tuple(via.sentHost(), via.sentPort(), target.isV4(), target.getType());
    }
    else
    {
+      // this process will determine which interface the kernel would use to
+      // send a packet to the target by making a connect call on a udp socket. 
       Socket tmp = INVALID_SOCKET;
-      if (dest.isV4())
+      if (target.isV4())
       {
          if (mSocket == INVALID_SOCKET)
          {
-            mSocket = Transport::socket(UDP, dest.isV4()); // may throw
+            mSocket = Transport::socket(UDP, target.isV4()); // may throw
          }
          tmp = mSocket;
       }
@@ -314,41 +319,50 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& dest) 
       {
          if (mSocket6 == INVALID_SOCKET)
          {
-            mSocket6 = Transport::socket(UDP, dest.isV4()); // may throw
+            mSocket6 = Transport::socket(UDP, target.isV4()); // may throw
          }
          tmp = mSocket6;
       }
    
-      int ret = connect(tmp,&dest.getSockaddr(), dest.length());
+      int ret = connect(tmp,&target.getSockaddr(), target.length());
       if (ret < 0)
       {
          int e = getErrno();
          Transport::error( e );
-         InfoLog(<< "Unable to route to " << dest << " : [" << e << "] " << strerror(e) );
+         InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
          throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
       }
    
-      Tuple source(dest);
+      Tuple source(target);
       socklen_t len = source.length();  
       ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
-      source.setPort(via.sentPort());
 
       if (ret < 0)
       {
          int e = getErrno();
          Transport::error(e);
-         InfoLog(<< "Can't determine name of socket " << dest << " : " << strerror(e) );
+         InfoLog(<< "Can't determine name of socket " << target << " : " << strerror(e) );
          throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
       }
 
-      DebugLog (<< "Looked up source for " << dest << " -> " << source << " sent-by=" << via.sentHost() << " sent-port=" << via.sentPort());
+      // This is the port that the request will get sent out from. By default,
+      // this value will be 0, since the Helper that creates the request will
+      // not assign it. In this case, the stack will pick an arbitrary (but
+      // appropriate) transport. If it is non-zero, it will only match
+      // transports that are bound to the specified port (and fail if none are
+      // available) 
+      source.setPort(via.sentPort());
+      
+      DebugLog (<< "Looked up source for " << target << " -> " << source << " sent-by=" << via.sentHost() << " sent-port=" << via.sentPort());
 
-      // Unconnect
-      if (dest.isV4())
+      // Unconnect. 
+      // !jf! This is necessary, but I am not sure what we can do if this
+      // fails. I'm not sure the stack can recover from this error condition. 
+      if (target.isV4())
       {
          ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
       }
-#if USE_IPV6
+#ifdef USE_IPV6
       else
       {
          ret = connect(mSocket6,(struct sockaddr*)&mUnspecified6,sizeof(mUnspecified6));
@@ -376,56 +390,68 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& dest) 
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.  
 void 
-TransportSelector::transmit(SipMessage* msg, Tuple& destination)
+TransportSelector::transmit(SipMessage* msg, Tuple& target)
 {
-   assert( &destination != 0 );
+   assert(msg);
+   
    try
    {
-      // there must be a via, use the port in the via as a hint of what
-      // port to send on
-      Tuple source = determineSourceInterface(msg, destination);
-      if (destination.transport == 0)
+      Tuple source;
+      if (msg->isRequest())
       {
-         if (destination.getType() == TLS)
+         // there must be a via, use the port in the via as a hint of what
+         // port to send on
+         source = determineSourceInterface(msg, target);
+
+         // would already be specified for ACK or CANCEL
+         if (target.transport == 0)
          {
-            destination.transport = findTlsTransport(msg->getTlsDomain());
+            if (target.getType() == TLS)
+            {
+               target.transport = findTlsTransport(msg->getTlsDomain());
+            }
+            else
+            {
+               target.transport = findTransport(source);
+            }
          }
-         else
+         
+         Via& topVia(msg->header(h_Vias).front());
+         topVia.remove(p_maddr); // !jf! why do this? 
+
+         // insert the via
+         if (topVia.transport().empty())
          {
-            destination.transport = findTransport(source);
+            topVia.transport() = Tuple::toData(target.transport->transport());
+         }
+         if (!topVia.sentHost().size())
+         {
+            msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(source);
+         }
+         if (!topVia.sentPort())
+         {
+            msg->header(h_Vias).front().sentPort() = target.transport->port();
          }
       }
-
-      if (destination.transport)
+      else if (msg->isResponse())
       {
-          //DebugLog(<<"!ah! destination transport is " << *destination.transport);
-         // insert the via
-         if (msg->isRequest())
-         {
-             assert(!msg->header(h_Vias).empty());
-             Via& topVia(msg->header(h_Vias).front());
+         // We assume that all stray responses have been discarded, so we always
+         // know the transport that the corresponding request was received on
+         // and this has been copied by TransactionState::sendToWire into target.transport
+         assert(target.transport);
+         source = target.transport->getTuple();
+      }
+      else
+      {
+         assert(0);
+      }
 
-             topVia.remove(p_maddr); // !jf! why do this? 
-
-             if (!topVia.transport().size())
-             {
-                 topVia.transport() = Tuple::toData(destination.transport->transport());
-             }
-             if (!topVia.sentHost().size())
-             {
-                msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(source);
-             }
-             if (!topVia.sentPort())
-             {
-                msg->header(h_Vias).front().sentPort() = destination.transport->port();
-             }
-         }
-
+      if (target.transport)
+      {
          // There is a contact header and it contains exactly one entry
          if (msg->exists(h_Contacts) && !msg->header(h_Contacts).empty())
          {
-            for (NameAddrs::iterator i=msg->header(h_Contacts).begin(); 
-                 i != msg->header(h_Contacts).end(); i++)
+            for (NameAddrs::iterator i=msg->header(h_Contacts).begin(); i != msg->header(h_Contacts).end(); i++)
             {
                NameAddr& contact = *i;
                // No host specified, so use the ip address and port of the
@@ -433,10 +459,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& destination)
                if (contact.uri().host().empty())
                {
                   contact.uri().host() = DnsUtil::inet_ntop(source);
-                  contact.uri().port() = destination.transport->port();
-                  if (destination.transport->transport() != UDP)
+                  contact.uri().port() = target.transport->port();
+                  if (target.transport->transport() != UDP)
                   {
-                     contact.uri().param(p_transport) = Tuple::toData(destination.transport->transport());
+                     contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
                   }
                }
             }
@@ -449,35 +475,31 @@ TransportSelector::transmit(SipMessage* msg, Tuple& destination)
          encodeStream.flush();
 
          assert(!msg->getEncoded().empty());
-         DebugLog (<< "Transmitting to " << destination << " via " << source << endl << encoded.escaped());
-         //DebugLog (<< "encoded=" << std::endl << encoded.escaped().c_str() << "EOM");
-         
-         // send it over the transport
-         destination.transport->send(destination, encoded, msg->getTransactionId());
+         DebugLog (<< "Transmitting to " << target << " via " << source << endl << encoded.escaped());
+         target.transport->send(target, encoded, msg->getTransactionId());
       }
       else
       {
-         InfoLog (<< "tid=" << msg->getTransactionId() << " failed to find a transport to " << destination);
+         InfoLog (<< "tid=" << msg->getTransactionId() << " failed to find a transport to " << target);
          mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
       }
 
    }
    catch (Transport::Exception& )
    {
-      InfoLog (<< "tid=" << msg->getTransactionId() << " no route to destination: " << destination);
+      InfoLog (<< "tid=" << msg->getTransactionId() << " no route to target: " << target);
       mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
       return;
    }
 }
 
 void
-TransportSelector::retransmit(SipMessage* msg, 
-                              Tuple& destination)
+TransportSelector::retransmit(SipMessage* msg, Tuple& target)
 {
-   assert(destination.transport);
+   assert(target.transport);
    assert(!msg->getEncoded().empty());
-   DebugLog(<<"!ah! retransmit to " << destination);
-   destination.transport->send(destination, msg->getEncoded(), msg->getTransactionId());
+   DebugLog(<<"!ah! retransmit to " << target);
+   target.transport->send(target, msg->getEncoded(), msg->getTransactionId());
 }
 
 void 

@@ -104,7 +104,6 @@ class TransactionState : public DnsHandler
 
       Tuple mSource; // used to reply to requests
       Tuple mNetSource;
-      bool mSymResponses;
 
       Data mId;
       Data mToTag; // for failure responses on ServerInviteTransaction 
