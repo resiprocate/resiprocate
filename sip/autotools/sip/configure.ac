@@ -142,6 +142,6 @@ dnl CC="$PTHREAD_CC"
 dnl Temporary hack until proper, portable pthreads detection is added.
 LIBS="$LIBS -lpthread"
 
-AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile resiprocate/dum/Makefile])
+AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile resiprocate/dum/Makefile])  
 
 AC_OUTPUT
