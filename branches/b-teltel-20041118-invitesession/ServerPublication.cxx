@@ -1,8 +1,27 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/ServerPublication.hxx"
-#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/PublicationHandler.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
+#include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/SecurityAttributes.hxx"
 
 using namespace resip;
+
+ServerPublication::ServerPublication(DialogUsageManager& dum,  
+                                     const Data& etag,
+                                     const SipMessage& msg)
+   : BaseUsage(dum),
+     mEtag(etag),
+     mEventType(msg.header(h_Event).value()),
+     mTimerSeq(0)
+{
+}
+
+ServerPublication::~ServerPublication()
+{
+   mDum.mServerPublications.erase(getEtag());
+}
 
 ServerPublicationHandle 
 ServerPublication::getHandle()
@@ -10,14 +29,61 @@ ServerPublication::getHandle()
    return ServerPublicationHandle(mDum, getBaseHandle().getId());
 }
 
-ServerPublication::ServerPublication(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage&)
-   : NonDialogUsage(dum, dialogSet)
+const Data&
+ServerPublication::getEtag() const
 {
+   return mEtag;
 }
 
-ServerPublication::~ServerPublication()
+const Data&
+ServerPublication::getDocumentKey() const
 {
-   mDialogSet.mServerPublication = 0;
+   return mDocumentKey;
+}
+
+const Data& 
+ServerPublication::getPublisher() const
+{
+   return mLastRequest.header(h_From).uri().getAor();
+}
+
+void
+ServerPublication::updateMatchingSubscriptions()
+{
+   Data key = mEventType + mLastRequest.header(h_RequestLine).uri().getAor();
+   std::pair<DialogUsageManager::ServerSubscriptions::iterator,DialogUsageManager::ServerSubscriptions::iterator> subs;
+   subs = mDum.mServerSubscriptions.equal_range(key);
+   
+   ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
+   for (DialogUsageManager::ServerSubscriptions::iterator i=subs.first; i!=subs.second; ++i)
+   {
+      handler->onPublished(i->second->getHandle(), 
+                           getHandle(), 
+                           mLastBody.mContents.get(), 
+                           mLastBody.mAttributes.get());
+   }
+   mLastBody.mContents.release();
+   mLastBody.mAttributes.release();
+}
+
+
+SipMessage& 
+ServerPublication::accept(int statusCode)
+{
+   Helper::makeResponse(mLastResponse, mLastRequest, statusCode);
+   mLastResponse.header(h_Expires).value() = mExpires;
+
+   updateMatchingSubscriptions();
+
+   return mLastResponse;   
+}
+
+SipMessage& 
+ServerPublication::reject(int statusCode)
+{
+   Helper::makeResponse(mLastResponse, mLastRequest, statusCode);
+   mLastResponse.header(h_Expires).value() = mExpires;
+   return mLastResponse;  
 }
 
 void 
@@ -29,13 +95,76 @@ ServerPublication::end()
 void 
 ServerPublication::dispatch(const SipMessage& msg)
 {
+   assert(msg.isRequest());
+   ServerPublicationHandler* handler = mDum.getServerPublicationHandler(mEventType);
+   mLastRequest = msg;
+   if (msg.exists(h_SIPIfMatch))
+   {      
+      mExpires = 3600; //bad
+      if (msg.exists(h_Expires))
+      {
+         mExpires = msg.header(h_Expires).value();
+      }
+      if (mExpires == 0)
+      {
+         handler->onRemoved(getHandle(), mEtag, msg, mExpires);
+         Helper::makeResponse(mLastResponse, mLastRequest, 200);
+         mDum.send(mLastRequest);
+         delete this;
+         return;
+      }
+      mLastBody = Helper::extractFromPkcs7(msg, mDum.getSecurity());
+      if (msg.getContents())
+      {
+         handler->onUpdate(getHandle(), mEtag, msg, 
+                           mLastBody.mContents.get(), 
+                           mLastBody.mAttributes.get(), 
+                           mExpires);
+      }
+      else
+      {
+         handler->onRefresh(getHandle(), mEtag, msg, 
+                            mLastBody.mContents.get(), 
+                            mLastBody.mAttributes.get(), 
+                            mExpires);
+      }
+   }
+   else
+   {
+      mLastBody = Helper::extractFromPkcs7(msg, mDum.getSecurity());
+      handler->onInitial(getHandle(), mEtag, msg, 
+                         mLastBody.mContents.get(), 
+                         mLastBody.mAttributes.get(), 
+                         mExpires);
+   }
 }
 
 void
 ServerPublication::dispatch(const DumTimeout& msg)
 {
+   if (msg.seq() == mTimerSeq)
+   {
+      ServerPublicationHandler* handler = mDum.getServerPublicationHandler(mEventType);
+      handler->onExpired(getHandle(), mEtag);
+      delete this;
+   }
 }
 
+void 
+ServerPublication::send(SipMessage& response)
+{
+   assert(response.isResponse());
+   response.header(h_SIPETag).value() = mEtag;
+   mDum.send(response);
+   if (response.header(h_StatusLine).statusCode() >= 300)
+   {
+      delete this;
+   }
+   else
+   {
+      mDum.addTimer(DumTimeout::Publication, response.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
+   }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
