@@ -238,7 +238,6 @@ DialogUsageManager::makeNewSession(AppDialogSet* appDs, BaseCreator* creator)
    DialogSet* ds = new DialogSet(creator, *this);
    
    appDs->mDialogSetId = ds->getId();
-   appDs->mDum = this;
    ds->mAppDialogSet = appDs;
    
    mDialogSetMap[ds->getId()] = ds;
@@ -551,7 +550,6 @@ DialogUsageManager::processRequest(const SipMessage& request)
 
                AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
                appDs->mDialogSetId = dset->getId();
-               appDs->mDum = this;
                dset->mAppDialogSet = appDs;
 
                mDialogSetMap[id] = dset;

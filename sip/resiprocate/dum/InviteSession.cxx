@@ -102,19 +102,22 @@ InviteSession::dispatch(const SipMessage& msg)
    }
 }
 
+SipMessage& 
+InviteSession::makeRefer(const H_ReferTo::Type& referTo)
+{
+}
 
 SipMessage&
 InviteSession::end()
 {
+   //!dcm! -- why wouldn't bye be based on mLastRequest
    //assert(mState == Connected);
 
-#if 0
    // no way for the application to modify the BYE yet
-   SipMessage bye;
-   mDialog.makeBye(bye);
-   copyAuthorizations(bye);
+//   SipMessage bye;
+   mDialog.makeRequest(mLastRequest, BYE);
+//   copyAuthorizations(bye);
    //mDum.send(bye);
-#endif
    return mLastRequest;
 }
 
@@ -274,9 +277,16 @@ InviteSession::copyAuthorizations(SipMessage& request)
 #endif
 }
 
-
-void InviteSession::makeAck(const SipMessage& response2xx)
+SipMessage& 
+InviteSession::targetRefresh(const NameAddr& localUri)
 {
+   assert(0);
+}
+
+void 
+InviteSession::makeAck(const SipMessage& response2xx)
+{
+   assert(0);
 }
 
 /* ====================================================================
