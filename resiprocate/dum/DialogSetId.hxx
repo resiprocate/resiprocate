@@ -4,12 +4,10 @@
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/Data.hxx"
 
-
 namespace resip
 {
 
 class SipMessage;
-class Data;
 
 class DialogSetId
 {
