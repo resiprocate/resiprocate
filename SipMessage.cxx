@@ -79,6 +79,12 @@ SipMessage::addBuffer(char* buf)
    mBufferList.push_back(buf);
 }
 
+void
+SipMessage::addSource(const sockaddr_in& addr)
+{
+   mSource = addr;
+}
+
 void 
 SipMessage::setStartLine(char* start, int len)
 {
