@@ -22,6 +22,13 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Random.hxx"
 
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif // defined(WIN32) && defined(_DEBUG)
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
@@ -663,8 +670,8 @@ TransactionState::processClientInvite(TransactionMessage* msg)
          case Timer::TimerA:
             if (mState == Calling)
             {
-               unsigned long d = timer->getDuration();
-               if (d < Timer::T2) d *= 2;
+               unsigned long d = timer->getDuration()*2;
+               //if (d < Timer::T2) d *= 2;     !slg! TimerA is supposed to double with each retransmit RFC3261 17.1.1          
 
                mController.mTimers.add(Timer::TimerA, mId, d);
                InfoLog (<< "Retransmitting INVITE: " << mMsgToRetransmit->brief());
@@ -1024,7 +1031,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             {
                StackLog (<< "TimerG fired. retransmit, and re-add TimerG");
                sendToWire(mMsgToRetransmit, true);
-               mController.mTimers.add(Timer::TimerG, mId, timer->getDuration()*2 );
+               mController.mTimers.add(Timer::TimerG, mId, resipMin(Timer::T2, timer->getDuration()*2) );  // !slg! TimerG is supposed to double - up until a max of T2 RFC3261 17.2.1
             }
             else
             {
