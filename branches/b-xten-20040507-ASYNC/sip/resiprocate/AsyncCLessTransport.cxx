@@ -31,6 +31,8 @@ AsyncCLessTransport::AsyncCLessTransport(Fifo<TransactionMessage>& rxFifo, Exter
    mTuple.setType(mTransportType);
 }
 
+
+
 AsyncCLessTransport::~AsyncCLessTransport()
 {
   if (mOwnedByMe)
@@ -130,7 +132,7 @@ AsyncCLessTransport::handleReceive(AsyncCLessReceiveResult res)
       stampReceived(message);
       mStateMachineFifo.add(message);
    }
-   catch(ParseBuffer::Exception& e)
+   catch(ParseBuffer::Exception)
    {
       DebugLog(<<"Parser fail from " << tuple);
       DebugLog(<< Data(buffer, len));

@@ -15,35 +15,85 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 
-AsyncConnection::AsyncConnection(const Tuple& who, AsyncStreamID streamID, AsyncConnectionManager& connectionManager, 
-				 bool fromAccept)
-   : mWho(who),
+AsyncConnection::AsyncConnection(const Tuple& who, AsyncID streamID, AsyncStreamTransport& tport, 
+                                 bool fromAccept)
+   : ConnectionBase(who),
      mStreamID(streamID), 
-     mAsyncConnectionManager(connectionManager),
-     mState(Connected)
+     mAsyncStreamTransport(tport),
+     mState(Connected),
+     mCurrentTid(Data::Empty)
 {
+   InfoLog(<< "AsyncConnection::AsyncConnection(accept): " << streamID);   
+   mAsyncStreamTransport.mConnectionsByDest[who] = this;
+   mAsyncStreamTransport.mConnectionsByStream[streamID] = this;
 }
 
-AsyncConnection::AsyncConnection(const Tuple& who, AsyncStreamID streamID, AsyncConnectionManager& connectionManager);
-   : mWho(who),
-     mStreamID(streamID), 
-     mAsyncConnectionManager(connectionManager),
-     mState(New)
+AsyncConnection::AsyncConnection(const Tuple& who, AsyncID streamID, AsyncStreamTransport& tport)
+: ConnectionBase(who),
+  mStreamID(streamID), 
+  mAsyncStreamTransport(tport),
+  mState(New),
+  mCurrentTid(Data::Empty)
 {
+   InfoLog(<< "AsyncConnection::AsyncConnection: " << streamID);   
+   mAsyncStreamTransport.mConnectionsByDest[who] = this;
+   mAsyncStreamTransport.mConnectionsByStream[streamID] = this;
+   mAsyncStreamTransport.mExternalTransport->connect(who.toGenericIPAddress(), streamID);   
 }
 
 AsyncConnection::~AsyncConnection()
 {
+   mAsyncStreamTransport.mExternalTransport->close(mStreamID);
+   mAsyncStreamTransport.mConnectionsByDest.erase(mWho);
+   mAsyncStreamTransport.mConnectionsByStream.erase(mStreamID);
 }
 
-void
-AsyncConnection::requestWrite(SendData* sendData)
+// void
+// AsyncConnection::requestWrite(SendData* sendData)
+// {
+// }
+
+void 
+AsyncConnection::handleConnectSuccess()
 {
+   mState = Connected;
+   while(!mQueue.empty())
+   {
+      SendData* sd = mQueue.front();
+      mQueue.pop_front();
+      unsigned char* bytes = new unsigned char[sd->data.size()];
+      
+      mCurrentTid = sd->transactionId;      
+      memcpy(bytes, sd->data.data(), sd->data.size());
+      
+      mAsyncStreamTransport.mExternalTransport->write(getAsyncStreamID(), bytes, sd->data.size());
+      delete sd;
+   }
 }
+
+void 
+AsyncConnection::write(const Tuple& dest, const Data& pdata, const Data& tid)
+{
+   mCurrentTid = tid;    
+   
+   if (mState == Connected)
+   {
+      unsigned char* bytes = new unsigned char[pdata.size()];
+      memcpy(bytes, pdata.data(), pdata.size());
+      
+      mAsyncStreamTransport.mExternalTransport->write(getAsyncStreamID(), bytes, pdata.size());
+   }
+   else
+   {
+      mQueue.push_back(new SendData(dest, pdata, tid));
+   }
+}
+
+
 
 //!dcm! -- why is the fifo passed through each time in these interfaces instead of being set at construction time?
 void 
-AsyncConnection::handleRead(char* bytes, int count, Fifo< Message >& fifo)
+AsyncConnection::handleRead(char* bytes, int count, Fifo< TransactionMessage >& fifo)
 {
    //uses the passed in buffer if the state is NewMessage(avoids allocation) otherwise
    //writes bytes into the write buffer.  Definitely room for optimization here.
@@ -57,11 +107,11 @@ AsyncConnection::handleRead(char* bytes, int count, Fifo< Message >& fifo)
       int currentInputPos = 0;  
       while(currentInputPos < count)
       {
-	 std::pair<char*, size_t> res = getWriteBuffer();
-	 int bytesToCopy = resipMin(res.second, count);
-	 preparseNewBytes(bytesToCopy, fifo);
-	 memcpy(res.first, bytes + currentInputPos, bytesToCopy);
-	 currentInputPos + count;
+         std::pair<char*, size_t> res = getWriteBuffer();
+         int bytesToCopy = resipMin((int) res.second, count);
+         preparseNewBytes(bytesToCopy, fifo);
+         memcpy(res.first, bytes + currentInputPos, bytesToCopy);
+         currentInputPos += count;
       }
       delete [] bytes;
    }
