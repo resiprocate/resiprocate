@@ -26,7 +26,6 @@
 #include <arpa/inet.h>
 #endif
 
-
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -47,36 +46,56 @@ TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo) :
 
 TransportSelector::~TransportSelector()
 {
-   while (!mTransports.empty())
+   while (!mExactTransports.empty())
    {
-      Transport* t = mTransports.begin()->second;
-      mTransports.erase(mTransports.begin()->first);
+      ExactTupleMap::const_iterator i = mExactTransports.begin();
+      Transport* t = i->second;
+      mExactTransports.erase(i->first);
+      delete t;
+   }
+
+   while (!mAnyInterfaceTransports.empty())
+   {
+      AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.begin();
+      Transport* t = i->second;
+      mAnyInterfaceTransports.erase(i->first);
       delete t;
    }
 }
 
-
 // !jf! Note that it uses ipv6 here but ipv4 in the Transport classes (ugggh!)
 void 
-TransportSelector::addTransport( TransportType protocol, 
-                                 int port,
-                                 IpVersion version,
-                                 const Data& ipInterface)
+TransportSelector::addTransport(TransportType protocol, 
+                                int port,
+                                IpVersion version,
+                                const Data& ipInterface)
 {
    assert( port >  0 );
 
    Transport* transport=0;
-   switch ( protocol )
+
+   try
    {
-      case UDP:
-         transport = new UdpTransport(mStateMacFifo, port, ipInterface, version == V4);
-         break;
-      case TCP:
-         transport = new TcpTransport(mStateMacFifo, port, ipInterface, version == V4);
-         break;
-      default:
-         assert(0);
-         break;
+      switch (protocol)
+      {
+         case UDP:
+            transport = new UdpTransport(mStateMacFifo, port, ipInterface, version == V4);
+            break;
+         case TCP:
+            transport = new TcpTransport(mStateMacFifo, port, ipInterface, version == V4);
+            break;
+         default:
+            assert(0);
+            break;
+      }
+   }
+   catch (Transport::Exception& e)
+   {
+      ErrLog(<< "Failed to create transport: " 
+             << (version == V4 ? "V4" : "V6") << " "
+             << Tuple::toData(protocol) << " " << port << " on "  
+             << (ipInterface.empty() ? "ANY" : ipInterface));
+      throw;
    }
 
    if (mMultiThreaded)
@@ -85,13 +104,23 @@ TransportSelector::addTransport( TransportType protocol,
    }
    
    Tuple key(ipInterface, port, version == V4, protocol);
-   assert(mTransports.count(key) == 0);
-   DebugLog (<< "Adding transport: " << key);
-   mTransports[key] = transport;
+   assert(mExactTransports.find(key) == mExactTransports.end() &&
+          mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
 
-   if (mDefaultTransports.count(protocol) == 0)
+   DebugLog (<< "Adding transport: " << key);
+
+   // Store the transport in the ANY interface maps if the tuple specifies ANY
+   // interface. Store the transport in the specific interface maps if the tuple
+   // specifies an interface. See TransportSelector::findTransport.
+   if (ipInterface.empty())
    {
-      mDefaultTransports[protocol] = transport;
+      mAnyInterfaceTransports[key] = transport;
+      mAnyPortAnyInterfaceTransports[key] = transport;
+   }
+   else
+   {
+      mExactTransports[key] = transport;
+      mAnyPortTransports[key] = transport;
    }
 }
 
@@ -134,8 +163,20 @@ TransportSelector::process(FdSet& fdset)
    
    if (!mMultiThreaded)
    {
-      for (std::map<Tuple,Transport*>::const_iterator i=mTransports.begin();
-           i != mTransports.end(); i++)
+      for (ExactTupleMap::const_iterator i = mExactTransports.begin();
+           i != mExactTransports.end(); i++)
+      {
+         try
+         {
+            i->second->process(fdset);
+         }
+         catch (BaseException& e)
+         {
+            InfoLog (<< "Uncaught exception: " << e);
+         }
+      }
+      for (AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.begin();
+           i != mAnyInterfaceTransports.end(); i++)
       {
          try
          {
@@ -162,20 +203,28 @@ TransportSelector::process(FdSet& fdset)
    }
 }
 
-
 bool 
 TransportSelector::hasDataToSend() const
 {   
    if (!mMultiThreaded)
    {
-      for (std::map<Tuple,Transport*>::const_iterator i=mTransports.begin();
-           i != mTransports.end(); i++)
+      for (ExactTupleMap::const_iterator i = mExactTransports.begin();
+           i != mExactTransports.end(); i++)
       {
-         if (  i->second->hasDataToSend() )
+         if (i->second->hasDataToSend())
          {
             return true;
          }
       }
+      for (AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.begin();
+           i != mAnyInterfaceTransports.end(); i++)
+      {
+         if (i->second->hasDataToSend())
+         {
+            return true;
+         }
+      }
+
       for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
            i != mTlsTransports.end(); i++)
       {
@@ -189,9 +238,9 @@ TransportSelector::hasDataToSend() const
    return false;
 }
 
-
 DnsResult*
-TransportSelector::dnsResolve( SipMessage* msg, DnsHandler* handler)
+TransportSelector::dnsResolve(SipMessage* msg, 
+                              DnsHandler* handler)
 {
    // Picking the target destination:
    //   - for request, use forced target if set
@@ -236,7 +285,8 @@ TransportSelector::dnsResolve( SipMessage* msg, DnsHandler* handler)
 }
 
 void
-TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
+TransportSelector::srcAddrForDest(const Tuple& dest, 
+                                  Tuple& source) const
 {
    Socket tmp = INVALID_SOCKET;
    if (dest.isV4())
@@ -301,7 +351,8 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.  
 void 
-TransportSelector::transmit( SipMessage* msg, Tuple& destination)
+TransportSelector::transmit(SipMessage* msg, 
+                            Tuple& destination)
 {
    assert( &destination != 0 );
    try
@@ -335,7 +386,6 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
             msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(source);
             msg->header(h_Vias).front().sentPort() = destination.transport->port();
          }
-
 
          // There is a contact header and it contains exactly one entry
          if (msg->exists(h_Contacts) && !msg->header(h_Contacts).empty())
@@ -388,31 +438,36 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
 }
 
 void
-TransportSelector::retransmit(SipMessage* msg, Tuple& destination)
+TransportSelector::retransmit(SipMessage* msg, 
+                              Tuple& destination)
 {
    assert(destination.transport);
    assert(!msg->getEncoded().empty());
    destination.transport->send(destination, msg->getEncoded(), msg->getTransactionId());
 }
 
-
 void 
-TransportSelector::buildFdSet( FdSet& fdset )
+TransportSelector::buildFdSet(FdSet& fdset)
 {
    mDns.buildFdSet(fdset);
    
    if (!mMultiThreaded)
    {
-      for (std::map<Tuple,Transport*>::const_iterator i=mTransports.begin();
-           i != mTransports.end(); i++)
+      for (ExactTupleMap::const_iterator i = mExactTransports.begin();
+           i != mExactTransports.end(); ++i)
       {
-         i->second->buildFdSet( fdset );
+         i->second->buildFdSet(fdset);
+      }
+      for (AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.begin();
+           i != mAnyInterfaceTransports.end(); ++i)
+      {
+         i->second->buildFdSet(fdset);
       }
    
       for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
-           i != mTlsTransports.end(); i++)
+           i != mTlsTransports.end(); ++i)
       {
-         (i->second)->buildFdSet( fdset );
+         (i->second)->buildFdSet(fdset);
       }
    }
 }
@@ -420,43 +475,51 @@ TransportSelector::buildFdSet( FdSet& fdset )
 Transport*
 TransportSelector::findTransport(const Tuple& search) 
 {
-   // first search for a s specific transport, then look for transport with any interface
-   DebugLog (<< "Searching for " << search << " in:");
-   DebugLog (<< Inserter(mTransports));
-   
-   std::map<Tuple, Transport*>::iterator i = mTransports.find(search);
-   if (i != mTransports.end())
+   DebugLog(<< "findTransport(" << search << ")");
+
+   // 1. search for exact match
    {
-      DebugLog (<< "Found match: " << i->second);
-      return i->second;
-   }
-   else
-   {
-      Tuple tuple(search);
-      tuple.setAny();
-      
-      DebugLog (<< "Searching for any match: " << tuple);
-      std::map<Tuple, Transport*>::iterator i = mTransports.find(tuple);
-      if (i != mTransports.end())
+      ExactTupleMap::const_iterator i = mExactTransports.find(search);
+      if (i != mExactTransports.end())
       {
-         DebugLog (<< "Found match: " << i->second);
+         DebugLog(<< "findTransport (exact) => " << i->first);
          return i->second;
       }
-      else 
+   }
+
+   // 2. search for specific port on ANY interface
+   {
+      AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.find(search);
+      if (i != mAnyInterfaceTransports.end())
       {
-         // now just find a matching transport type
-         DebugLog (<< "Searching for matching type: " << tuple);         
-         HashMap<int, Transport*>::iterator i = mDefaultTransports.find(int(tuple.getType()));
-         if (i != mDefaultTransports.end())
-         {
-            DebugLog (<< "Found match: " << i->second);
-            return i->second;
-         }
+         DebugLog(<< "findTransport (any interface) => " << i->first);
+         return i->second;
+      }
+   }
+   
+   // 3. search for ANY port on specific interface
+   {
+      AnyPortTupleMap::const_iterator i = mAnyPortTransports.find(search);
+      if (i != mAnyPortTransports.end())
+      {
+         DebugLog(<< "findTransport (any port, specific interface) => " << i->first);
+         return i->second;
+      }
+   }
+
+   // 4. search for ANY port on ANY interface
+   {
+      CerrLog(<< "Tyring AnyPortAnyInterfaceTupleMap " << mAnyPortAnyInterfaceTransports.size());
+      AnyPortAnyInterfaceTupleMap::const_iterator i = mAnyPortAnyInterfaceTransports.find(search);
+      if (i != mAnyPortAnyInterfaceTransports.end())
+      {
+         DebugLog(<< "findTransport (any port, any interface) => " << i->first);
+         return i->second;
       }
    }
 
    ErrLog(<< "Can't find matching transport " << DnsUtil::inet_ntop(search));
-   throw Transport::Exception("No matching transport found",__FILE__,__LINE__);
+   return 0;
 }
 
 Transport*

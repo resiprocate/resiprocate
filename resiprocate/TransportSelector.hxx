@@ -13,6 +13,8 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
 
+class TestTransportSelector;
+
 namespace resip
 {
 
@@ -61,8 +63,23 @@ class TransportSelector
       bool mMultiThreaded;
       DnsInterface mDns;
       Fifo<Message>& mStateMacFifo;
-      std::map<Tuple, Transport*> mTransports;
-      HashMap<int, Transport*> mDefaultTransports; // from TransportType -> Transport
+
+      // specific port and interface
+      typedef map<Tuple, Transport*> ExactTupleMap;
+      ExactTupleMap mExactTransports;
+
+      // specific port, ANY interface
+      typedef map<Tuple, Transport*, Tuple::AnyInterfaceCompare> AnyInterfaceTupleMap;
+      AnyInterfaceTupleMap mAnyInterfaceTransports;
+
+      // ANY port, specific interface
+      typedef map<Tuple, Transport*, Tuple::AnyPortCompare> AnyPortTupleMap;
+      AnyPortTupleMap mAnyPortTransports;
+
+      // ANY port, ANY interface
+      typedef map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
+      AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
+
       HashMap<Data, TlsTransport*> mTlsTransports;      // domain name -> Transport
       
       // fake socket for connect() and route table lookups
@@ -72,6 +89,8 @@ class TransportSelector
       // An AF_UNSPEC addr_in for rapid unconnect
       struct sockaddr_in mUnspecified;
       struct sockaddr_in6 mUnspecified6;
+
+      friend class TestTransportSelector;
 };
 
 }
