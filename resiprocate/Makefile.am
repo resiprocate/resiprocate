@@ -1,10 +1,11 @@
 SUBDIRS = . test
 CXX = ${DISTCC} @CXX@
+LIBTOOL = @LIBTOOL@ --tag=CXX
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I/usr/kerberos/include
 EXTRA_DIST = PreparseInlines.cxx PreparseDiagnostic.cxx resip.spec.in
 
-lib_LIBRARIES = libresiprocate.a
-libresiprocate_a_SOURCES = \
+lib_LTLIBRARIES = libresiprocate.la
+libresiprocate_la_SOURCES = \
 	os/BaseException.cxx \
 	os/Coders.cxx \
 	os/Condition.cxx \
@@ -102,6 +103,8 @@ libresiprocate_a_SOURCES = \
 	Uri.cxx \
 	XMLCursor.cxx \
 	X_msMsgsInvite.cxx
+
+libresiprocate_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 
 resiprocate_includedir=$(includedir)/resiprocate
 resiprocate_include_HEADERS = \
