@@ -30,7 +30,7 @@ ServerInviteSession::sendAnswerInAnyMessage()
 {
 }
 
-void 
+SipMessage&
 ServerInviteSession::end()
 {
 }
