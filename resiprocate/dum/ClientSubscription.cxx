@@ -1,13 +1,13 @@
-#include "resiprocate/dum/ClientSubscription.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/ClientSubscription.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/SubscriptionHandler.hxx"
 
 using namespace resip;
 
-ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& request)
-   : BaseSubscription(dum, dialog, request),
-     mLastRequest(request)
+ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
+   : BaseSubscription(dum, dialog, request)
 {
 }
 
@@ -25,7 +25,12 @@ ClientSubscription::getHandle()
 void 
 ClientSubscription::dispatch(const SipMessage& msg)
 {
-   //std::vector<ClientSubscriptionHandler*>& handler = mDum.mClientSubscriptionHandler;
+   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
+   if (!handler)
+   {
+      //!dcm! -- exception? or 4xx?
+      return;
+   }
    
    // asserts are checks the correctness of Dialog::dispatch
    if (msg.isRequest() )
@@ -38,47 +43,27 @@ ClientSubscription::dispatch(const SipMessage& msg)
       }
       if (msg.header(h_SubscriptionState).value() == "active")
       {
-         
+         handler->onUpdateActive(getHandle(), msg);
       }
       else if (msg.header(h_SubscriptionState).value() == "pending")
       {
-         
+         handler->onUpdatePending(getHandle(), msg);
       }
       else if (msg.header(h_SubscriptionState).value() == "terminated")
       {
-         
+         handler->onTerminated(getHandle(), msg);
+         delete this;
       }
       else
       {
          //do nothing for now, but extensions are legal, so...
       }
    }
-   else
-   {      
-      assert( msg.isResponse());
-      assert( (msg.header(h_CSeq).method() == SUBSCRIBE) ||  (msg.header(h_CSeq).method() == CANCEL) );
-      msg.header(h_CSeq).method() == CANCEL;
       
-   }
-   
-   // deal with NOTIFY we receive 
-   if ( msg.isRequest() && msg.header(h_RequestLine).getMethod() == NOTIFY )
-   {
-      assert(0);
-   }
-   
-   // deal with responses to SUBSCRIBE
-   if (msg.isResponse() &&  msg.header(h_CSeq).method() == SUBSCRIBE )
-   {
-      //  int code = msg.header(h_StatusLine).statusCode();
-
-   }
-   
-   // deal with responses to CANCEL
-   if (msg.isResponse() &&  msg.header(h_CSeq).method() == CANCEL )
-   {  
-      assert(0);
-   }
+ //   if (msg.header(h_CSeq).method() == CANCEL )
+//    {  
+//       //do nothing?
+//    }
 }
 
 void 

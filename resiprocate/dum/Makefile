@@ -46,6 +46,7 @@ SRC =   \
 	ServerRegistration.cxx \
 	ServerSubscription.cxx \
 	SubscriptionCreator.cxx \
+	SubscriptionState.cxx \
 	UInt64Hash.cxx \
 
 include $(BUILD)/Makefile.post
