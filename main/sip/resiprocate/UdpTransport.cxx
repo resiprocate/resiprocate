@@ -29,7 +29,8 @@ UdpTransport::UdpTransport(Fifo<Message>& fifo,
    InfoLog (<< "Creating udp transport host=" << pinterface 
             << " port=" << portNum
             << " ipv4=" << ipv4);
-   
+
+   mTuple.setType(transport());
    mFd = Transport::socket(transport(), ipv4);
    bind();
 }
@@ -141,6 +142,7 @@ UdpTransport::process(FdSet& fdset)
    // Save all the info where this message came from
    mTuple.transport = this;
    message->setSource(mTuple);   
+   DebugLog (<< "Received from: " << mTuple);
    
    // Tell the SipMessage about this datagram buffer.
    message->addBuffer(buffer);
