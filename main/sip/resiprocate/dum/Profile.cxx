@@ -12,7 +12,8 @@ Profile::Profile() :
    mDefaultRegistrationExpires(3600),
    mHasOutboundProxy(false),
    mLooseToTagMatching(false),
-   mRportEnabled(true)
+   mRportEnabled(true),
+   mHasUserAgent(false)
 {
 }
 
@@ -349,4 +350,24 @@ const bool
 Profile::rportEnabled() const
 {
    return mRportEnabled;   
+}
+
+void 
+Profile::setUserAgent( const Data& userAgent )
+{
+   mHasUserAgent = true;   
+   mUserAgent = userAgent;   
+}
+
+const Data& 
+Profile::getUserAgent() const
+{
+   assert(mHasUserAgent);
+   return mUserAgent;
+}
+ 
+bool 
+Profile::hasUserAgent() const
+{
+   return mHasUserAgent;
 }
