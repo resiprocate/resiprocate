@@ -1,6 +1,6 @@
 LIBSIP = ../build/resiprocate/libresiprocate.a
 LIBARES = ../contrib/ares/libares.a
-CFLAGS = -I ..
+CFLAGS = -I .. -g
 LDFLAGS = -lssl -lcrypto -lpthread
 
 all: gag
