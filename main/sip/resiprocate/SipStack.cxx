@@ -22,9 +22,10 @@
 #include "resiprocate/Security.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/Inserter.hxx"
-
+#include "resiprocate/StatisticsManager.hxx"
 
 #ifdef WIN32
 #pragma warning( disable : 4355 )
@@ -36,7 +37,6 @@ using namespace resip;
 
 SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) : 
    mSecurity( pSecurity ),
-   mTUTimerQueue(mTUFifo),
    mExecutive(*this),
    mTransactionController(multiThreaded, mTUFifo, stateless),
    mStrictRouting(false),
@@ -242,26 +242,28 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination)
 }
 
 void
-SipStack::post(const Message& message,
-               unsigned int secondsLater)
+SipStack::post(const ApplicationMessage& message)
 {
    assert(!mShuttingDown);
-
-   Message* toPost = message.clone();
-   mTUTimerQueue.add(Timer(1000*secondsLater, toPost));
+   mTransactionController.post(message);
 }
 
 void
-SipStack::postMS(const Message& message,
+SipStack::post(const ApplicationMessage& message,
+               unsigned int secondsLater)
+{
+   assert(!mShuttingDown);
+   mTransactionController.post(message, secondsLater*1000);
+}
+
+void
+SipStack::postMS(const ApplicationMessage& message,
                  unsigned int ms)
 {
    assert(!mShuttingDown);
-
-   Message* toPost = message.clone();
-   mTUTimerQueue.add(Timer(ms, toPost));
+   mTransactionController.post(message, ms);
 }
 
-// !dlb! could get arbitrary messages via post!
 SipMessage* 
 SipStack::receive()
 {
@@ -298,8 +300,7 @@ SipStack::receiveAny()
    // waiting message. Otherwise, return 0
    if (mTUFifo.messageAvailable())
    {
-      // we should only ever have SIP messages on the TU Fifo
-      // unless we've registered for termination messages. 
+      // application messages can flow through
       Message* msg = mTUFifo.getNext();
       SipMessage* sip=dynamic_cast<SipMessage*>(msg);
       if (sip)
@@ -318,15 +319,14 @@ void
 SipStack::process(FdSet& fdset)
 {
    mExecutive.process(fdset);
-   mTUTimerQueue.process();
+   RESIP_STATISTICS(mTransactionController.getStatisticsManager().process());
 }
 
 /// returns time in milliseconds when process next needs to be called 
 int 
 SipStack::getTimeTillNextProcessMS()
 {
-   return resipMin(mExecutive.getTimeTillNextProcessMS(),
-                   mTUTimerQueue.msTillNextTimer());
+   return mExecutive.getTimeTillNextProcessMS();
 } 
 
 void

@@ -50,7 +50,7 @@ class Connection : public ConnectionLruList, public ConnectionReadList, public C
       //bool hasDataToWrite() const;
       void requestWrite(SendData* sendData);
 
-      void performRead(int bytesRead, Fifo<Message>& fifo);
+      void performRead(int bytesRead, Fifo<TransactionMessage>& fifo);
       void performWrite();
 
       enum { ChunkSize = 2048 }; // !jf! what is the optimal size here? 

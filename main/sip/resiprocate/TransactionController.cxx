@@ -3,11 +3,12 @@
 #endif
 
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/os/Logger.hxx"
-
+#include "resiprocate/StatisticsManager.hxx"
 
 using namespace resip;
 
@@ -16,24 +17,30 @@ using namespace resip;
 #if defined(WIN32)
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
 #endif
-TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, bool stateless) : 
+TransactionController::TransactionController(bool multi, 
+                                             Fifo<Message>& tufifo, 
+                                             bool stateless) : 
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(true),
    mTUFifo(tufifo),
    mTransportSelector(multi, mStateMacFifo),
    mStatelessHandler(*this),
-   mTimers(mStateMacFifo),
+   mTimers(mStateMacFifo, mTUFifo),
    StatelessIdCounter(1),
-   mShuttingDown(false)
+   mShuttingDown(false),
+   mStatsManager(0)
 {
+   RESIP_STATISTICS(mStatsManager = new StatisticsManager(tufifo));
 }
+
 #if defined(WIN32)
 #pragma warning( default : 4355 )
 #endif
 
 TransactionController::~TransactionController()
 {
+   delete mStatsManager;
 }
 
 void
@@ -133,15 +140,39 @@ TransactionController::send(SipMessage* msg)
 }
 
 void
+TransactionController::post(const ApplicationMessage& message)
+{
+   assert(!mShuttingDown);
+   Message* toPost = message.clone();
+   mTUFifo.add(toPost);
+}
+
+void
+TransactionController::post(const ApplicationMessage& message,
+                            unsigned int ms)
+{
+   assert(!mShuttingDown);
+   Message* toPost = message.clone();
+   mTimers.add(Timer(ms, toPost));
+}
+
+void
 TransactionController::registerForTransactionTermination()
 {
    mRegisteredForTransactionTermination = true;
 }
 
+StatisticsManager&
+TransactionController::getStatisticsManager() const
+{
+   assert(mStatsManager);
+   return *mStatsManager;
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

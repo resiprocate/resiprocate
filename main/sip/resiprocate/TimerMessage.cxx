@@ -2,18 +2,36 @@
 #include "resiprocate/config.hxx"
 #endif
 
-
-
 #include <cassert>
-
 #include "resiprocate/TimerMessage.hxx"
 
 using namespace resip;
 
-TimerMessage::~TimerMessage()
+TimerMessage::TimerMessage(Data transactionId, Timer::Type type, unsigned long duration)
+   : mTransactionId(transactionId),
+     mType(type),
+     mDuration(duration) {}
+
+const Data&
+TimerMessage::getTransactionId() const
 {
+   return mTransactionId;
 }
 
+Timer::Type 
+TimerMessage::getType() const
+{
+   return mType;
+}
+
+unsigned long
+TimerMessage::getDuration() const 
+{
+   return mDuration;
+}
+
+TimerMessage::~TimerMessage()
+{}
 
 bool 
 TimerMessage::isClientTransaction() const
