@@ -1,6 +1,8 @@
-#include <sipstack/StringParameter.hxx>
 #include <sipstack/ParameterList.hxx>
+#include <sipstack/DataParameter.hxx>
+#include <sipstack/IntegerParameter.hxx>
 #include <iostream>
+#include <util/ParseBuffer.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -8,74 +10,89 @@ using namespace std;
 int main(int argc, char** argv)
 {
    ParameterList* p = new ParameterList;
-   cout << *p << endl;
-   assert(p->find(ParameterTypes::TTL) == 0);
+   cerr << *p << endl;
+   assert(p->find(ParameterTypes::ttl) == 0);
    delete p;
 
    p = new ParameterList();
-   p->insert(new StringParameter(ParameterTypes::TTL, "foo"));
-   cout << *p << endl;
-   assert(p->find(ParameterTypes::TTL)->getType() == ParameterTypes::TTL);
+   ParseBuffer f("=17");
+   p->insert(new IntegerParameter(ParameterTypes::ttl, f));
+   cerr << *p << endl;
+   assert(p->find(ParameterTypes::ttl)->getType() == ParameterTypes::ttl);
    delete p;
 
    p = new ParameterList();
-   p->insert(new StringParameter(ParameterTypes::TTL, "foo"));
-   p->insert(new StringParameter(ParameterTypes::Transport, "bar"));
-   cout << *p << endl;
-   assert(p->find(ParameterTypes::TTL)->getType() == ParameterTypes::TTL);
-   assert(p->find(ParameterTypes::Transport)->getType() == ParameterTypes::Transport);
+   ParseBuffer f1("=18");
+   p->insert(new IntegerParameter(ParameterTypes::ttl, f1));
+   ParseBuffer f2("=bar");
+   p->insert(new DataParameter(ParameterTypes::transport, f2));
+   cerr << *p << endl;
+   assert(p->find(ParameterTypes::ttl)->getType() == ParameterTypes::ttl);
+   assert(p->find(ParameterTypes::transport)->getType() == ParameterTypes::transport);
    delete p;
 
    p = new ParameterList();
-   p->insert(new StringParameter(ParameterTypes::Method, "baz"));
-   p->insert(new StringParameter(ParameterTypes::TTL, "foo"));
-   p->insert(new StringParameter(ParameterTypes::Transport, "bar"));
-   cout << *p << endl;
-   assert(p->find(ParameterTypes::TTL)->getType() == ParameterTypes::TTL);
-   assert(p->find(ParameterTypes::Transport)->getType() == ParameterTypes::Transport);
-   assert(p->find(ParameterTypes::Method)->getType() == ParameterTypes::Method);
+   ParseBuffer f3("=baz");
+   p->insert(new DataParameter(ParameterTypes::method, f3));
+   ParseBuffer f4("=7");
+   p->insert(new IntegerParameter(ParameterTypes::ttl, f4));
+   ParseBuffer f5("=bar");
+   p->insert(new IntegerParameter(ParameterTypes::transport, f5));
+   cerr << *p << endl;
+   assert(p->find(ParameterTypes::ttl)->getType() == ParameterTypes::ttl);
+   assert(p->find(ParameterTypes::transport)->getType() == ParameterTypes::transport);
+   assert(p->find(ParameterTypes::method)->getType() == ParameterTypes::method);
    delete p;
 
-   cout << "Finished Insertion Tests." << endl;
+   cerr << "Finished Insertion Tests." << endl;
    
    p = new ParameterList();
-   p->insert(new StringParameter(ParameterTypes::TTL, "foo"));
-   p->erase(ParameterTypes::TTL);
-   cout << *p << endl;
-   assert(p->find(ParameterTypes::TTL) == 0);
+   ParseBuffer f6("=5");
+   p->insert(new IntegerParameter(ParameterTypes::ttl, f6));
+   p->erase(ParameterTypes::ttl);
+   cerr << *p << endl;
+   assert(p->find(ParameterTypes::ttl) == 0);
    delete p;
 
    p = new ParameterList();
-   p->insert(new StringParameter(ParameterTypes::TTL, "foo"));
-   p->insert(new StringParameter(ParameterTypes::Transport, "bar"));
-   p->erase(ParameterTypes::TTL);
-   cout << *p << endl;
-   assert(p->find(ParameterTypes::TTL) == 0);
+   ParseBuffer f7("=8");
+   p->insert(new IntegerParameter(ParameterTypes::ttl, f7));
+   ParseBuffer f8("=bar");
+   p->insert(new DataParameter(ParameterTypes::transport, f8));
+   p->erase(ParameterTypes::ttl);
+   cerr << *p << endl;
+   assert(p->find(ParameterTypes::ttl) == 0);
    delete p;
 
    p = new ParameterList();
-   p->insert(new StringParameter(ParameterTypes::Method, "baz"));
-   p->insert(new StringParameter(ParameterTypes::TTL, "foo"));
-   p->insert(new StringParameter(ParameterTypes::Transport, "bar"));
-   p->erase(ParameterTypes::TTL);
-   cout << *p << endl;
-   assert(p->find(ParameterTypes::TTL) == 0);
+   ParseBuffer f9("=baz");
+   p->insert(new DataParameter(ParameterTypes::method, f9));
+   ParseBuffer f10("=6");
+   p->insert(new IntegerParameter(ParameterTypes::ttl, f10));
+   ParseBuffer f11("=bar");
+   p->insert(new DataParameter(ParameterTypes::transport, f11));
+   p->erase(ParameterTypes::ttl);
+   cerr << *p << endl;
+   assert(p->find(ParameterTypes::ttl) == 0);
    delete p;
 
-   cout << "Deep copy test." << endl;
+   cerr << "Deep copy test." << endl;
 
    p = new ParameterList();
-   p->insert(new StringParameter(ParameterTypes::Method, "baz"));
-   p->insert(new StringParameter(ParameterTypes::TTL, "foo"));
-   p->insert(new StringParameter(ParameterTypes::Transport, "bar"));
+   ParseBuffer f12("=baz");
+   p->insert(new DataParameter(ParameterTypes::method, f12));
+   ParseBuffer f13("=9");
+   p->insert(new IntegerParameter(ParameterTypes::ttl, f13));
+   ParseBuffer f14("=bar");
+   p->insert(new DataParameter(ParameterTypes::transport,  f14));
    
-   cout << *p << endl;
+   cerr << *p << endl;
 
    ParameterList* p2 = new ParameterList(*p);
 
    delete p;
 
-   cout << *p2 << endl;
+   cerr << *p2 << endl;
 
    delete p2;
 

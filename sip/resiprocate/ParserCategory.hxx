@@ -6,17 +6,20 @@
 
 #include <sipstack/ParameterTypes.hxx>
 
+
 namespace Vocal2
 {
 
 class HeaderFieldValue;
 class UnknownParameter;
+class ParseBuffer;
 
 class ParserCategory
 {
    public:
       ParserCategory(HeaderFieldValue* headerFieldValue)
-         : mHeaderField(headerFieldValue) 
+         : mHeaderField(headerFieldValue),
+           mIsParsed(false)
       {}
 
       ParserCategory(const ParserCategory& rhs);
@@ -59,7 +62,7 @@ class ParserCategory
          mHeaderField->remove(parameterType);
       }
       
-      void parseParameters(const char* start, unsigned int length);
+      void parseParameters(ParseBuffer& pb);
 
       bool isParsed() const
       {
@@ -92,6 +95,7 @@ class ParserCategory
 
       HeaderFieldValue* mHeaderField;
    private:
+      friend std::ostream& operator<<(std::ostream&, const ParserCategory&);
       bool mIsParsed;
 };
 
