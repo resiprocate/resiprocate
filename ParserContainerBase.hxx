@@ -2,7 +2,7 @@
 #define RESIP_PARSERCONTAINERBASE_HXX 
 
 #include "resiprocate/ParserCategory.hxx"
-#include <iostream>
+#include <iosfwd>
 #include "resiprocate/HeaderTypes.hxx"
 
 namespace resip

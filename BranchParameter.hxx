@@ -1,10 +1,11 @@
 #if !defined(RESIP_BRANCHPARAMETER_HXX)
 #define RESIP_BRANCHPARAMETER_HXX 
 
+#include <iosfwd>
+
 #include "resiprocate/Parameter.hxx"
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/os/Data.hxx"
-#include <iostream>
 
 namespace resip
 {

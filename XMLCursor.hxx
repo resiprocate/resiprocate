@@ -2,7 +2,7 @@
 #define RESIP_XMLCURSOR_HXX 
 
 #include "resiprocate/os/ParseBuffer.hxx"
-#include <iostream>
+#include <iosfwd>
 #include <list>
 #include "resiprocate/os/HashMap.hxx"
 
