@@ -28,8 +28,8 @@ class ParserContainer : public ParserContainerBase
       
       bool empty() { return (mList.first == 0); }
    
-      T& front() { return *dynamic_cast<T*>(mList.first->parserCategory); }
-      T& back() { return *dynamic_cast<T*>(mList.last->parserCategory); }
+      T& front() { return *dynamic_cast<T*>(mList.first->getParserCategory()); }
+      T& back() { return *dynamic_cast<T*>(mList.last->getParserCategory()); }
    
       void push_front(T & t) { mList.push_front(new HeaderFieldValue(t.clone())); }
       void push_back(T & t) { mList.push_front(new HeaderFieldValue(t.clone())); }
