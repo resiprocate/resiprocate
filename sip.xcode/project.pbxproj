@@ -943,6 +943,7 @@
 		};
 		D6A7A28C054CCEE800F1D5A3 = {
 			children = (
+				D6E8BE5F057C25D80044AECA,
 				D6A7A2EB054CD0EA00F1D5A3,
 				D6A7A2AC054CCFBD00F1D5A3,
 				D6A7A29F054CCF0E00F1D5A3,
@@ -4278,6 +4279,7 @@
 		D6A7A457054CD1EE00F1D5A3 = {
 			buildActionMask = 2147483647;
 			files = (
+				D6E8BE66057C26350044AECA,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4291,11 +4293,14 @@
 			);
 			buildSettings = {
 				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
-				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = YES;
+				HEADER_SEARCH_PATHS = ../..;
 				INSTALL_PATH = /usr/local/bin;
+				LIBRARY_SEARCH_PATHS = ../..;
 				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-lresiprocate -lares -lssl -lcrypto";
 				OTHER_REZFLAGS = "";
+				PREBINDING = YES;
 				PRODUCT_NAME = limp;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost";
@@ -4340,6 +4345,30 @@
 			isa = PBXTargetDependency;
 			target = D6A7A29D054CCF0E00F1D5A3;
 			targetProxy = D6C18012054CD29700491827;
+		};
+		D6E8BE5F057C25D80044AECA = {
+			children = (
+				D6E8BE64057C26140044AECA,
+			);
+			isa = PBXGroup;
+			name = Limp;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		D6E8BE64057C26140044AECA = {
+			expectedFileType = sourcecode.cpp.cpp;
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = limpc.cxx;
+			path = resiprocate/test/limpc.cxx;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		D6E8BE66057C26350044AECA = {
+			fileRef = D6E8BE64057C26140044AECA;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 	};
 	rootObject = D6A7A290054CCEE800F1D5A3;
