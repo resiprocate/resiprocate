@@ -13,7 +13,6 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
-
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 using namespace std;
@@ -40,7 +39,6 @@ UdpTransport::~UdpTransport()
    ThreadIf::shutdown();  
    join();
 }
-
 
 void 
 UdpTransport::process(FdSet& fdset)
