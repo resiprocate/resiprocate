@@ -8,23 +8,23 @@
 
 #include <signal.h>
 
+#include "resiprocate/NameAddr.hxx"
+#include "resiprocate/Pkcs8Contents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/Uri.hxx"
-#include "resiprocate/NameAddr.hxx"
-#include "resiprocate/Pkcs8Contents.hxx"
 #include "resiprocate/X509Contents.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
-#include "resiprocate/dum/ServerPublication.hxx"
 #include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/DumShutdownHandler.hxx"
 #include "resiprocate/dum/OutOfDialogHandler.hxx"
 #include "resiprocate/dum/Profile.hxx"
-#include "resiprocate/dum/RegistrationHandler.hxx"
-#include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/PublicationHandler.hxx"
-#include "resiprocate/dum/DumShutdownHandler.hxx"
+#include "resiprocate/dum/RegistrationHandler.hxx"
+#include "resiprocate/dum/ServerPublication.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
+#include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -44,44 +44,64 @@ signalHandler(int signo)
    finished = true;
 }
 
-class PublicationHandler : public ServerPublicationHandler
+// When a publish comes in, we should let any outstanding subscriptions know
+// about it. 
+
+class CertSubscriptionHandler;
+class PrivateKeySubscriptionHandler;
+
+class CertPublicationHandler : public ServerPublicationHandler
 {
    public:
-      PublicationHandler(Security& security) : mSecurity(security)
+      CertPublicationHandler(Security& security) : mSecurity(security)
       {
       }
 
-      virtual void onInitial(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, int expires)
+      virtual void onInitial(ServerPublicationHandle h, 
+                             const Data& etag, 
+                             const SipMessage& pub, 
+                             const Contents* contents,
+                             const SecurityAttributes* attrs, 
+                             int expires)
       {
-         Contents* contents=0;
          add(h, contents);
       }
 
       virtual void onExpired(ServerPublicationHandle h, const Data& etag)
       {
-         removeUserCertDER(h->getPublisher());
+         mSecurity.removeUserCert(h->getPublisher());
       }
 
-      virtual void onRefresh(ServerPublicationHandle, const Data& etag, const SipMessage& pub, int expires)
+      virtual void onRefresh(ServerPublicationHandle, 
+                             const Data& etag, 
+                             const SipMessage& pub, 
+                             const Contents* contents,
+                             const SecurityAttributes* attrs,
+                             int expires)
       {
       }
 
-      virtual void onUpdate(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, int expires)
+      virtual void onUpdate(ServerPublicationHandle h, 
+                            const Data& etag, 
+                            const SipMessage& pub, 
+                            const Contents* contents,
+                            const SecurityAttributes* attrs,
+                            int expires)
       {
-         Contents* contents=0;
          add(h, contents);
+         h->send(h->accept(200));
       }
 
-      virtual void onRemoved(ServerPublicationHandle, const Data& etag, const SipMessage& pub, int expires)
+      virtual void onRemoved(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, int expires)
       {
-         removeUserCertDER(h->getPublisher());
+         mSecurity.removeUserCert(h->getPublisher());
       }
    private:
-      void add(ServerPublicationHandle h, Contents* contents)
+      void add(ServerPublicationHandle h, const Contents* contents)
       {
-         X509Contents* x509 = dynamic_cast<X509Contents*>(contents);
+         const X509Contents* x509 = dynamic_cast<const X509Contents*>(contents);
          assert(x509);
-         addUserCertDER(h->getPublisher(), x509->getBodyData());
+         mSecurity.addUserCertDER(h->getPublisher(), x509->getBodyData());
       }
 
       Security& mSecurity;
@@ -94,38 +114,52 @@ class PrivateKeyPublicationHandler : public ServerPublicationHandler
       {
       }
 
-      virtual void onInitial(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, int expires)
+      virtual void onInitial(ServerPublicationHandle h, 
+                             const Data& etag, 
+                             const SipMessage& pub, 
+                             const Contents* contents,
+                             const SecurityAttributes* attrs, 
+                             int expires)
       {
-         Contents* contents=0;
          add(h, contents);
       }
 
       virtual void onExpired(ServerPublicationHandle h, const Data& etag)
       {
-         removeUserPrivateKeyDER(h->getPublisher());
+         mSecurity.removeUserPrivateKey(h->getPublisher());
       }
 
-      virtual void onRefresh(ServerPublicationHandle, const Data& etag, const SipMessage& pub, int expires)
+      virtual void onRefresh(ServerPublicationHandle, 
+                             const Data& etag, 
+                             const SipMessage& pub, 
+                             const Contents* contents,
+                             const SecurityAttributes* attrs,
+                             int expires)
       {
       }
 
-      virtual void onUpdate(ServerPublicationHandle, const Data& etag, const SipMessage& pub, int expires)
+      virtual void onUpdate(ServerPublicationHandle h, 
+                            const Data& etag, 
+                            const SipMessage& pub, 
+                            const Contents* contents,
+                            const SecurityAttributes* attrs,
+                            int expires)
       {
-         Contents* contents=0;
          add(h, contents);
+         h->send(h->accept(200));
       }
 
-      virtual void onRemoved(ServerPublicationHandle, const Data& etag, const SipMessage& pub, int expires)
+      virtual void onRemoved(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, int expires)
       {
-         removeUserPrivateKeyDER(h->getPublisher());
+         mSecurity.removeUserPrivateKey(h->getPublisher());
       }
 
    private:
-      void add(ServerPublicationHandle h, Contents* contents)
+      void add(ServerPublicationHandle h, const Contents* contents)
       {
-         Pkcs8Contents* pkcs8 = dynamic_cast<Pkcs8Contents*>(contents);
+         const Pkcs8Contents* pkcs8 = dynamic_cast<const Pkcs8Contents*>(contents);
          assert(pkcs8);
-         addUserPrivateKeyDER(h->getPublisher(), pkcs8->getBodyData())
+         mSecurity.addUserPrivateKeyDER(h->getPublisher(), pkcs8->getBodyData());
       }
       
       Security& mSecurity;
@@ -140,9 +174,9 @@ class CertSubscriptionHandler : public ServerSubscriptionHandler
 
       virtual void onNewSubscription(ServerSubscriptionHandle h, const SipMessage& sub)
       {
-         if (mSecurity.hasUserCert(h->getPublisher()))
+         if (mSecurity.hasUserCert(h->getDocumentKey()))
          {
-            X509Contents x509(mSecurity.getUserCertDER(h->getPublisher()));
+            X509Contents x509(mSecurity.getUserCertDER(h->getDocumentKey()));
             h->send(h->update(&x509));
          }
          else
@@ -150,6 +184,15 @@ class CertSubscriptionHandler : public ServerSubscriptionHandler
             h->reject(404);
          }
       }
+
+      virtual void onPublished(ServerSubscriptionHandle associated, 
+                               ServerPublicationHandle publication, 
+                               const Contents* contents,
+                               const SecurityAttributes* attrs)
+      {
+         associated->send(associated->update(contents));
+      }
+      
 
       virtual void onTerminated(ServerSubscriptionHandle)
       {
@@ -170,17 +213,25 @@ class PrivateKeySubscriptionHandler : public ServerSubscriptionHandler
       {
       }
 
-      virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)
+      virtual void onNewSubscription(ServerSubscriptionHandle h, const SipMessage& sub)
       {
-         if (mSecurity.hasUserCert(h->getPublisher()))
+         if (mSecurity.hasUserCert(h->getDocumentKey()))
          {
-            Pkcs8Contents pkcs(mSecurity.getUserPrivateKeyDER(h->getPublisher()));
+            Pkcs8Contents pkcs(mSecurity.getUserPrivateKeyDER(h->getDocumentKey()));
             h->send(h->update(&pkcs));
          }
          else
          {
             h->reject(404);
          }
+      }
+
+      virtual void onPublished(ServerSubscriptionHandle associated, 
+                               ServerPublicationHandle publication, 
+                               const Contents* contents,
+                               const SecurityAttributes* attrs)
+      {
+         associated->send(associated->update(contents));
       }
 
       virtual void onTerminated(ServerSubscriptionHandle)
@@ -201,10 +252,10 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
    public:
       CertServer(const resip::NameAddr& me) : 
          DialogUsageManager(),
-         mCertUpdater(getSecurity()),
-         mPrivateKeyUpdater(getSecurity()),
          mCertServer(getSecurity()),
-         mPrivateKeyServer(getSecurity())
+         mPrivateKeyServer(getSecurity()),
+         mCertUpdater(getSecurity()),
+         mPrivateKeyUpdater(getSecurity())
       {
          addTransport(UDP, 5100);
          addTransport(TCP, 5100);
@@ -265,10 +316,10 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
 
    private:
       Profile mProfile;
-      CertPublicationHandler mCertUpdater;
-      PrivateKeyPublicationHandler mPrivateKeyUpdater;
       CertSubscriptionHandler mCertServer;
       PrivateKeySubscriptionHandler mPrivateKeyServer;
+      CertPublicationHandler mCertUpdater;
+      PrivateKeyPublicationHandler mPrivateKeyUpdater;
       bool mDone;
 };
 
