@@ -4,6 +4,10 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/os/Log.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Subsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 using namespace resip;
 
@@ -14,16 +18,17 @@ class Client : public ClientRegistrationHandler
 
       virtual void onSuccess(ClientRegistration::Handle h, const SipMessage& response)
       {
-         cerr << "Client::Success: " << response << endl;
-         sleep(5);
+          InfoLog( << "Client::Success: " << endl << response );
+          sleep(5);
          h->removeAll();
          done = true;
       }
 
       virtual void onFailure(ClientRegistration::Handle, const SipMessage& response)
       {
-         cerr << "Client::Failure: " << response << endl;
+          InfoLog ( << "Client::Failure: " << response );
       }
+
       bool done;
 };
 
@@ -78,7 +83,7 @@ main (int argc, char** argv)
 
    SipMessage & regMessage = clientDum.makeRegistration(aor);
 
-   cerr << regMessage << "Generated register: " << endl << regMessage << endl;
+   InfoLog( << regMessage << "Generated register: " << endl << regMessage );
    clientDum.send( regMessage );
 
    int n = 0;
