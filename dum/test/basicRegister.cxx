@@ -55,30 +55,42 @@ class RegistrationServer : public ServerRegistrationHandler
 int 
 main (int argc, char** argv)
 {
-   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
-   
+    int level=(int)Log::DEBUG;
+    if (argc >1 ) level = atoi(argv[1]);
+
+    Log::initialize(Log::COUT, (resip::Log::Level)level, argv[0]);
+
    SipStack clientStack;
    clientStack.addTransport(UDP, 5060);
+   NameAddr aor("sip:502@jasomi.com");
 
    Client client;
    Profile* p = new Profile;
    DialogUsageManager clientDum(clientStack);
    clientDum.setProfile(p);
-
    clientDum.setClientRegistrationHandler(&client);
-   
    clientDum.getProfile()->setDefaultRegistrationTime(70);
-   SipMessage & regMessage = clientDum.makeRegistration(NameAddr("sip:502@jasomi.com"));
+   clientDum.getProfile()->setDefaultAor(aor);
+
+   SipMessage & regMessage = clientDum.makeRegistration(aor);
+
    cerr << regMessage << "Generated register: " << endl << regMessage << endl;
    clientDum.send( regMessage );
-   
-   while ( 1 )
+
+   int n = 0;
+   while ( !client.done )
+
    {
      FdSet fdset;
 
+     // Should these be buildFdSet on the DUM?
      clientStack.buildFdSet(fdset);
      int err = fdset.selectMilliSeconds(100);
      assert ( err != -1 );
-     clientStack.process(fdset);
+
+     clientDum.process(fdset);
+     if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
+
    }   
+
 }
