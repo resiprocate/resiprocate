@@ -43,7 +43,7 @@ class Transport
          TLS,
          SCTP,
          DCCP
-      } TransportType;
+      } Type;
       
       class Exception : public VException
       {
@@ -70,11 +70,11 @@ class Transport
       // These methods are used by the TransportSelector
       virtual const Data& hostname() const { return mHost; } 
       virtual int port() const { return mPort; } 
-      virtual TransportType transport() const =0 ;
+      virtual Type transport() const =0 ;
       virtual bool isReliable() const =0;
       
-      static TransportType toTransport( const Data& );
-      static Data toData( TransportType );
+      static Type toTransport( const Data& );
+      static Data toData( Type );
 
 
    protected:
