@@ -39,6 +39,7 @@ libresiprocate_la_SOURCES = \
 	Executive.cxx \
 	ExistsParameter.cxx \
 	FloatParameter.cxx \
+	GenericContents.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
 	HeaderHash.cxx \
