@@ -45,7 +45,8 @@ class InviteSessionHandler
          PeerEnded, // received a BYE or CANCEL from peer
          //Ended, // ended by the application
          GeneralFailure, // ended due to a failure
-         Cancelled
+         Cancelled,
+         SessionExpired
       } TerminatedReason;
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;
 

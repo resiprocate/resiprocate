@@ -21,11 +21,17 @@ Profile::Profile(Profile *baseProfile) :
       mHasDefaultPublicationExpires = true;
       mDefaultPublicationExpires = 3600; // 1 hour
 
+      mHasDefaultStaleCallTime = true;
+      mDefaultStaleCallTime = 3600;       // 1 hour
+
       mHasDefaultSessionExpires = true;
       mDefaultSessionExpires = 1800;      // 30 minutes
 
-      mHasDefaultStaleCallTime = true;
-      mDefaultStaleCallTime = 3600;       // 1 hour
+      mHasDefaultSessionTimerMode = true;
+      mDefaultSessionTimerMode = Profile::PreferUACRefreshes;
+
+      mHas1xxRetransmissionTime = true;
+      m1xxRetransmissionTime = 60;  // RFC3261 13.3.1 specifies this timeout should be 1 minute
 
       mHasOutboundProxy = false;
 
@@ -48,8 +54,10 @@ Profile::Profile(Profile *baseProfile) :
       mHasDefaultRegistrationExpires = false;
       mHasDefaultSubscriptionExpires = false;
       mHasDefaultPublicationExpires = false;
-      mHasDefaultSessionExpires = false;
       mHasDefaultStaleCallTime = false;
+      mHasDefaultSessionExpires = false;
+      mHasDefaultSessionTimerMode = false;
+      mHas1xxRetransmissionTime = false;
       mHasOutboundProxy = false;
 	  mHasAdvertisedCapabilities = false;
 	  mHasLooseToTagMatching = false;
@@ -118,6 +126,24 @@ Profile::getDefaultPublicationTime() const
 }
 
 void
+Profile::setDefaultStaleCallTime(int secs)
+{
+   mDefaultStaleCallTime = secs;
+   mHasDefaultStaleCallTime = true;
+}
+
+int 
+Profile::getDefaultStaleCallTime() const
+{
+   // Fall through seting (if required)
+   if(!mHasDefaultStaleCallTime && mBaseProfile)
+   {
+       return mBaseProfile->getDefaultStaleCallTime();
+   }
+   return mDefaultStaleCallTime;
+}
+
+void
 Profile::setDefaultSessionTime(int secs)
 {
    mDefaultSessionExpires = secs;
@@ -136,21 +162,39 @@ Profile::getDefaultSessionTime() const
 }
 
 void
-Profile::setDefaultStaleCallTime(int secs)
+Profile::setDefaultSessionTimerMode(Profile::SessionTimerMode mode)
 {
-   mDefaultStaleCallTime = secs;
-   mHasDefaultStaleCallTime = true;
+   mDefaultSessionTimerMode = mode;
+   mHasDefaultSessionTimerMode = true;
+}
+
+Profile::SessionTimerMode 
+Profile::getDefaultSessionTimerMode() const
+{
+   // Fall through seting (if required)
+   if(!mHasDefaultSessionTimerMode && mBaseProfile)
+   {
+       return mBaseProfile->getDefaultSessionTimerMode();
+   }
+   return mDefaultSessionTimerMode;
+}
+
+void
+Profile::set1xxRetransmissionTime(int secs)
+{
+   m1xxRetransmissionTime = secs;
+   mHas1xxRetransmissionTime = true;
 }
 
 int 
-Profile::getDefaultStaleCallTime() const
+Profile::get1xxRetransmissionTime() const
 {
    // Fall through seting (if required)
-   if(!mHasDefaultStaleCallTime && mBaseProfile)
+   if(!mHas1xxRetransmissionTime && mBaseProfile)
    {
-       return mBaseProfile->getDefaultStaleCallTime();
+       return mBaseProfile->get1xxRetransmissionTime();
    }
-   return mDefaultStaleCallTime;
+   return m1xxRetransmissionTime;
 }
 
 void 
