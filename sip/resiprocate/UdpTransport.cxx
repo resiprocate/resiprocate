@@ -79,182 +79,177 @@ UdpTransport::~UdpTransport()
 void 
 UdpTransport::process(FdSet& fdset)
 {
-	// pull buffers to send out of TxFifo
-	// receive datagrams from fd
-	// preparse and stuff into RxFifo
+   // pull buffers to send out of TxFifo
+   // receive datagrams from fd
+   // preparse and stuff into RxFifo
 
 
-	// how do we know that buffer won't get deleted on us !jf!
-	if (mTxFifo.messageAvailable())
-	{
-		std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
-		//DebugLog (<< "Sending message on udp.");
+   // how do we know that buffer won't get deleted on us !jf!
+   if (mTxFifo.messageAvailable())
+   {
+      std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
+      //DebugLog (<< "Sending message on udp.");
 
-		sockaddr_in addrin;
-		addrin.sin_addr = sendData->destination.ipv4;
-		addrin.sin_port = htons(sendData->destination.port);
-		addrin.sin_family = AF_INET;
+      sockaddr_in addrin;
+      addrin.sin_addr = sendData->destination.ipv4;
+      addrin.sin_port = htons(sendData->destination.port);
+      addrin.sin_family = AF_INET;
 
-		int count = sendto(mFd, 
-			sendData->data.data(), sendData->data.size(),  
-			0, // flags
-			(const sockaddr*)&addrin, sizeof(sockaddr_in) );
+      int count = sendto(mFd, 
+                         sendData->data.data(), sendData->data.size(),  
+                         0, // flags
+                         (const sockaddr*)&addrin, sizeof(sockaddr_in) );
 
-		if ( count == SOCKET_ERROR )
-		{
-			int err = errno;
-			DebugLog (<< strerror(err));
-			fail(sendData->transactionId);
+      if ( count == SOCKET_ERROR )
+      {
+         int err = errno;
+         DebugLog (<< strerror(err));
+         fail(sendData->transactionId);
 
-			// !jf! what to do if it fails
-			assert(0);
-		}
-		else
-		{
-			assert ( (count == int(sendData->data.size()) ) || (count == SOCKET_ERROR ) );
-			ok(sendData->transactionId);
-		}
-	}
+         // !jf! what to do if it fails
+         assert(0);
+      }
+      else
+      {
+         assert ( (count == int(sendData->data.size()) ) || (count == SOCKET_ERROR ) );
+         ok(sendData->transactionId);
+      }
+   }
 
-	struct sockaddr_in from;
+   struct sockaddr_in from;
 
-	// !jf! this may have to change - when we read a message that is too big
-	if ( !fdset.readyToRead(mFd) )
-	{
-		return;
-	}
+   // !jf! this may have to change - when we read a message that is too big
+   if ( !fdset.readyToRead(mFd) )
+   {
+      return;
+   }
 
-	//should this buffer be allocated on the stack and then copied out, as it
-	//needs to be deleted every time EWOULDBLOCK is encountered
-	char* buffer = new char[MaxBufferSize];
-	int fromLen = sizeof(from);
+   //should this buffer be allocated on the stack and then copied out, as it
+   //needs to be deleted every time EWOULDBLOCK is encountered
+   char* buffer = new char[MaxBufferSize];
+   int fromLen = sizeof(from);
 
-	// !jf! how do we tell if it discarded bytes 
-	// !ah! we use the len-1 trick :-(
+   // !jf! how do we tell if it discarded bytes 
+   // !ah! we use the len-1 trick :-(
 
-	//DebugLog( << "starting recvfrom" );
-	int len = recvfrom( mFd,
-		buffer,
-		MaxBufferSize,
-		0 /*flags */,
-		(struct sockaddr*)&from,
-		(socklen_t*)&fromLen);
-	//DebugLog( << "completed recvfrom" );
+   //DebugLog( << "starting recvfrom" );
+   int len = recvfrom( mFd,
+                       buffer,
+                       MaxBufferSize,
+                       0 /*flags */,
+                       (struct sockaddr*)&from,
+                       (socklen_t*)&fromLen);
+   //DebugLog( << "completed recvfrom" );
 
-	if ( len == SOCKET_ERROR )
-	{
-		int err = errno;
-		//cerr << "Err=" << err << " " << strerror(err) << endl;
+   if ( len == SOCKET_ERROR )
+   {
+      int err = errno;
+      switch (err)
+      {
+         case 0:
+            assert(0);
+            break;
+                 
+         case EWOULDBLOCK:
+            DebugLog (<< " UdpTransport::EWOULDBLOCK");
+            break;
 
-		switch (err)
-		{
-		case 0:
-		case EWOULDBLOCK:
-			{
-			}
-			break;
-		default:
-			{
-				ErrLog(<<"Error receiving, errno="<<err);
-			}
-			break;
-		}
-		delete[] buffer; buffer=0;
-		return;
-	}
+         default:
+            ErrLog(<<"Error receiving, errno="<<err);
+            break;
+      }
+   }
 
-	if (len == 0 )
-	{
-		delete[] buffer; buffer=0;
-		return;
-	}
+   if (len == 0 || len == SOCKET_ERROR)
+   {
+      delete[] buffer; 
+      buffer=0;
+      return;
+   }
 
-	assert( len > 0 );
+   if (len == MaxBufferSize)
+   {
+      InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
+      delete [] buffer; buffer=0;
+      return;
+   }
 
+   buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
 
-	if (len == MaxBufferSize)
-	{
-		InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
-		delete [] buffer; buffer=0;
-		return;
-	}
+   //DebugLog ( << "UDP Rcv : " << len << " b" );
+   //DebugLog ( << Data(buffer, len).escaped().c_str());
 
-	buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
+   SipMessage* message = new SipMessage(true);
 
-	//DebugLog ( << "UDP Rcv : " << len << " b" );
-	//DebugLog ( << Data(buffer, len).escaped().c_str());
+   // set the received from information into the received= parameter in the
+   // via
 
-	SipMessage* message = new SipMessage(true);
-
-	// set the received from information into the received= parameter in the
-	// via
-
-	// It is presumed that UDP Datagrams are arriving atomically and that
-	// each one is a unique SIP message
+   // It is presumed that UDP Datagrams are arriving atomically and that
+   // each one is a unique SIP message
 
 
-	// Save all the info where this message came from
-	Tuple tuple;
-	tuple.ipv4 = from.sin_addr;
-	tuple.port = ntohs(from.sin_port);
-	tuple.transport = this;
-	tuple.transportType = transport();
-	message->setSource(tuple);
+   // Save all the info where this message came from
+   Tuple tuple;
+   tuple.ipv4 = from.sin_addr;
+   tuple.port = ntohs(from.sin_port);
+   tuple.transport = this;
+   tuple.transportType = transport();
+   message->setSource(tuple);
 
-	// Tell the SipMessage about this datagram buffer.
-	message->addBuffer(buffer);
+   // Tell the SipMessage about this datagram buffer.
+   message->addBuffer(buffer);
 
-	// This is UDP, so, initialise the preparser with this
-	// buffer.
+   // This is UDP, so, initialise the preparser with this
+   // buffer.
 
-	int err = mPreparse.process(*message,buffer, len);
+   int err = mPreparse.process(*message,buffer, len);
 	
-	if (err)
-	{
-		InfoLog(<<"Preparse Rejecting datagram as unparsable / fragmented.");
-		delete message; message=0; 
-		return;
-	}
+   if (err)
+   {
+      InfoLog(<<"Preparse Rejecting datagram as unparsable / fragmented.");
+      delete message; message=0; 
+      return;
+   }
 
-	if ( !mPreparse.isHeadersComplete() )
-	{
-		InfoLog(<<"Rejecting datagram as unparsable / fragmented.");
-		delete message; message=0;
-		return;
-	}
+   if ( !mPreparse.isHeadersComplete() )
+   {
+      InfoLog(<<"Rejecting datagram as unparsable / fragmented.");
+      delete message; message=0;
+      return;
+   }
 
-	// no pp error
-	int used = mPreparse.nBytesUsed();
+   // no pp error
+   int used = mPreparse.nBytesUsed();
 
-	if (used < len)
-	{
-		// body is present .. add it up.
-		// NB. The Sip Message uses an overlay (again)
-		// for the body. It ALSO expects that the body
-		// will be contiguous (of course).
-		// it doesn't need a new buffer in UDP b/c there
-		// will only be one datagram per buffer. (1:1 strict)
+   if (used < len)
+   {
+      // body is present .. add it up.
+      // NB. The Sip Message uses an overlay (again)
+      // for the body. It ALSO expects that the body
+      // will be contiguous (of course).
+      // it doesn't need a new buffer in UDP b/c there
+      // will only be one datagram per buffer. (1:1 strict)
 
-		message->setBody(buffer+used,len-used);
-		//DebugLog(<<"added " << len-used << " byte body");
-	}
+      message->setBody(buffer+used,len-used);
+      //DebugLog(<<"added " << len-used << " byte body");
+   }
 
-	//DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
-	// set the received= and rport= parameters in the message if necessary !jf!
-	if (message->isRequest() && !message->header(h_Vias).empty())
-	{
+   //DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
+   // set the received= and rport= parameters in the message if necessary !jf!
+   if (message->isRequest() && !message->header(h_Vias).empty())
+   {
 #ifndef WIN32
-		char received[255];
-		inet_ntop(AF_INET, &tuple.ipv4.s_addr, received, sizeof(received));
-		message->header(h_Vias).front().param(p_received) = received;
+      char received[255];
+      inet_ntop(AF_INET, &tuple.ipv4.s_addr, received, sizeof(received));
+      message->header(h_Vias).front().param(p_received) = received;
 #else
-		char * buf = inet_ntoa(tuple.ipv4); // !jf! not threadsafe
-		message->header(h_Vias).front().param(p_received) = buf;
+      char * buf = inet_ntoa(tuple.ipv4); // !jf! not threadsafe
+      message->header(h_Vias).front().param(p_received) = buf;
 #endif
-		message->header(h_Vias).front().param(p_rport) = tuple.port;
-	}
+      message->header(h_Vias).front().param(p_rport) = tuple.port;
+   }
 
-	mStateMachineFifo.add(message);
+   mStateMachineFifo.add(message);
 }
 
 
