@@ -58,14 +58,14 @@ DataParameter::encode(ostream& stream) const
 {
    if (mQuoted)
    {
-      return stream << getName() << Symbols::EQUALS << Symbols::DOUBLE_QUOTE << mValue << Symbols::DOUBLE_QUOTE;
+      return stream << getName() << Symbols::EQUALS 
+                    << Symbols::DOUBLE_QUOTE << mValue << Symbols::DOUBLE_QUOTE;
    }
    else
    {
       return stream << getName() << Symbols::EQUALS << mValue;
    }
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
