@@ -165,14 +165,12 @@ Profile::addGruu(const Data& aor, const NameAddr& contact)
 bool 
 Profile::hasGruu(const Data& aor)
 {
-   assert(0);
    return false;
 }
 
 bool 
 Profile::hasGruu(const Data& aor, const Data& instance)
 {
-   assert(0);
    return false;
 }
 
