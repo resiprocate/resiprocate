@@ -1,5 +1,5 @@
-#ifndef Vocal2_ThreadIf_hxx
-#define Vocal2_ThreadIf_hxx
+#ifndef resip_ThreadIf_hxx
+#define resip_ThreadIf_hxx
 
 #include "resiprocate/os/Socket.hxx"
 
@@ -13,7 +13,7 @@
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Condition.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 /* A wrapper class to create and spawn a thread.  It is a base class.

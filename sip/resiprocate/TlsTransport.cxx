@@ -8,10 +8,10 @@
 #include "resiprocate/Preparse.hxx"
 #include "resiprocate/Security.hxx"
 
-#define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 
 const size_t TlsTransport::MaxWriteSize = 4096;
 const size_t TlsTransport::MaxReadSize = 4096;

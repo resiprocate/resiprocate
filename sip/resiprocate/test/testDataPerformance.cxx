@@ -1,7 +1,7 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Random.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 int 
 main()

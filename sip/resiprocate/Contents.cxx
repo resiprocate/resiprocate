@@ -2,12 +2,12 @@
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::CONTENTS
+#define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
 
-MIME_Id_Header Vocal2::h_Id;
-MIME_Description_Header Vocal2::h_Description;
+MIME_Id_Header resip::h_Id;
+MIME_Description_Header resip::h_Description;
 
 std::map<Mime, ContentsFactoryBase*>* Contents::FactoryMap = 0;
 

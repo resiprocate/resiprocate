@@ -8,7 +8,7 @@
 #include "resiprocate/ParserCategories.hxx"
 
 
-namespace Vocal2
+namespace resip
 {
 
 class DialogSet;

@@ -4,9 +4,9 @@
 #include <ctype.h>
 #include "resiprocate/HeaderTypes.hxx"
 
-namespace Vocal2 {
+namespace resip {
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 struct headers { char *name; Headers::Type type; };
 /* maximum key range = 504, duplicates = 0 */
 

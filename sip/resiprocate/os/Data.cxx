@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.64 2003/03/24 23:25:36 jason Exp $";
+// "$Id: Data.cxx,v 1.65 2003/03/25 06:33:48 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -10,7 +10,7 @@
 #include "resiprocate/os/vmd5.hxx"
 
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 const Data Data::Empty("", 0);
@@ -946,7 +946,7 @@ Data::find(const char* match, size_type start) const
 
 
 bool
-Vocal2::operator==(const char* s, const Data& d)
+resip::operator==(const char* s, const Data& d)
 {
    assert(s);
    return ((strncmp(s, d.data(), d.size()) == 0) &&
@@ -954,13 +954,13 @@ Vocal2::operator==(const char* s, const Data& d)
 }
 
 bool
-Vocal2::operator!=(const char* s, const Data& d)
+resip::operator!=(const char* s, const Data& d)
 {
    return !(s == d);
 }
 
 bool
-Vocal2::operator<(const char* s, const Data& d)
+resip::operator<(const char* s, const Data& d)
 {
    assert(s);
    Data::size_type l = strlen(s);
@@ -981,14 +981,14 @@ Vocal2::operator<(const char* s, const Data& d)
 }
 
 ostream& 
-Vocal2::operator<<(ostream& strm, const Data& d)
+resip::operator<<(ostream& strm, const Data& d)
 {
    return strm.write(d.mBuf, d.mSize);
 }
 
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 size_t 
-__gnu_cxx::hash<Vocal2::Data>::operator()(const Vocal2::Data& data) const
+__gnu_cxx::hash<resip::Data>::operator()(const resip::Data& data) const
 {
    unsigned long __h = 0; 
    const char* start = data.data(); // non-copying
@@ -1001,7 +1001,7 @@ __gnu_cxx::hash<Vocal2::Data>::operator()(const Vocal2::Data& data) const
 }
 #  elif  defined(__INTEL_COMPILER )
 size_t 
-std::hash_value(const Vocal2::Data& data) 
+std::hash_value(const resip::Data& data) 
 {
    unsigned long __h = 0; 
    const char* start = data.data(); // non-copying

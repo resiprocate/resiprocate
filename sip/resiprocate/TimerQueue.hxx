@@ -7,7 +7,7 @@
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Fifo.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Message;

@@ -1,13 +1,13 @@
-#if !defined(Vocal2_Lock_hxx)
-#define Vocal2_Lock_hxx
+#if !defined(resip_Lock_hxx)
+#define resip_Lock_hxx
 
-static const char* const Vocal2Lock_hxx_Version =
-"$Id: Lock.hxx,v 1.9 2003/03/24 23:25:36 jason Exp $";
+static const char* const resipLock_hxx_Version =
+"$Id: Lock.hxx,v 1.10 2003/03/25 06:33:48 jason Exp $";
 
 
 #include "resiprocate/os/Lockable.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 enum LockType
@@ -39,7 +39,7 @@ class WriteLock : public Lock
       WriteLock(Lockable &);
 };
 
-} // namespace Vocal2
+} // namespace resip
 
 
 /* ====================================================================

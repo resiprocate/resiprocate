@@ -3,8 +3,8 @@
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-using namespace Vocal2;
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+using namespace resip;
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 Executive::Executive( SipStack& stack)
   : mStack(stack)

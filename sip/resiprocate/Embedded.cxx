@@ -5,7 +5,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/Symbols.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 char fromHex(char h1, char h2)
 {

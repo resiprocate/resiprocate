@@ -15,40 +15,40 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 unsigned long 
-Vocal2::Timer::mCpuSpeedMHz = 0L;
+resip::Timer::mCpuSpeedMHz = 0L;
 
 UInt64 
-Vocal2::Timer::mBootTime=0L;
+resip::Timer::mBootTime=0L;
 
 unsigned long
-Vocal2::Timer::mTimerCount = 0L;
+resip::Timer::mTimerCount = 0L;
 
 unsigned long
-Vocal2::Timer::T1 = 500;
+resip::Timer::T1 = 500;
 
 unsigned long
-Vocal2::Timer::T2 = 8 * T1;
+resip::Timer::T2 = 8 * T1;
 
 unsigned long
-Vocal2::Timer::T4 = 10 * T1;
+resip::Timer::T4 = 10 * T1;
 
 unsigned long
-Vocal2::Timer::T100 = 80;
+resip::Timer::T100 = 80;
 
 unsigned long
-Vocal2::Timer::TD = 32000;
+resip::Timer::TD = 32000;
 
 unsigned long
-Vocal2::Timer::TC = 3*60*1000;
+resip::Timer::TC = 3*60*1000;
 
 unsigned long
-Vocal2::Timer::TS = 32000;
+resip::Timer::TS = 32000;
 
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 Data
 Timer::toData(Type timer)
@@ -341,7 +341,7 @@ Timer::getRandomFutureTimeMs( UInt64 futureMs )
 
 
 bool 
-Vocal2::operator<(const Timer& t1, const Timer& t2)
+resip::operator<(const Timer& t1, const Timer& t2)
 {
    //std::cerr << "operator(<" << t1.mWhen << ", " << t2.mWhen << ") = " << (t1.mWhen < t2.mWhen) << std::endl;
    return t1.mWhen < t2.mWhen;
@@ -349,7 +349,7 @@ Vocal2::operator<(const Timer& t1, const Timer& t2)
 
 
 std::ostream& 
-Vocal2::operator<<(std::ostream& str, const Timer& t)
+resip::operator<<(std::ostream& str, const Timer& t)
 {
    str << "Timer[id=" << t.mId << " when=" << t.mWhen << "]";
    return str;

@@ -3,9 +3,9 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 const char* ParseBuffer::ParamTerm = ";?"; // maybe include "@>,"?
 const char* ParseBuffer::Whitespace = " \t\r\n";

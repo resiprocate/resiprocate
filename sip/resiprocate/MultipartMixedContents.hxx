@@ -6,7 +6,7 @@
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Data.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Mime;

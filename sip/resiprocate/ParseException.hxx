@@ -3,7 +3,7 @@
 
 #include "resiprocate/os/BaseException.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class ParseException : public BaseException

@@ -1,7 +1,7 @@
 #include "resiprocate/UnknownParameter.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 UnknownParameter::UnknownParameter(const char* startName, 

@@ -1,6 +1,6 @@
 #include "resiprocate/Parameter.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 Parameter::Parameter(ParameterTypes::Type type)

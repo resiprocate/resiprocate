@@ -17,15 +17,15 @@
 
 
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 template<class T>
-Vocal2::Data cullenize(const T& x)
+resip::Data cullenize(const T& x)
 {
-   Vocal2::Data d;
+   resip::Data d;
    {
-      Vocal2::DataStream s(d);
+      resip::DataStream s(d);
       s << x;
    }
    return d;
@@ -228,7 +228,7 @@ LimpetImpl::logon()
 #endif
       }
    }
-   catch (Vocal2::Transport::Exception e )
+   catch (resip::Transport::Exception e )
    {
       Data foo = cullenize( e );
 
@@ -249,7 +249,7 @@ LimpetImpl::logon()
    {
       try
       {
-         Vocal2::Data dOutbound( mOutbound.ascii() );
+         resip::Data dOutbound( mOutbound.ascii() );
          Uri outbound( dOutbound );
 
          tuIM->setOutboundProxy( outbound );
@@ -274,10 +274,10 @@ LimpetImpl::logon()
 		item.sprintf("%d",i);
 		QString name = this->GetProfileString("buddyList",item,"");
 
-		Vocal2::Data dName( name );
-		Vocal2::Uri uri(dName);
+		resip::Data dName( name );
+		resip::Uri uri(dName);
 		assert( tuIM );
-		tuIM->addBuddy( uri , Vocal2::Data::Empty ); */
+		tuIM->addBuddy( uri , resip::Data::Empty ); */
    }
 
    QTimer* timer = new QTimer( theApp );
@@ -333,7 +333,7 @@ LimpetImpl::sendPage(QString text, QString destiation)
       return;
    }
 
-   Vocal2::Data foo(text);
+   resip::Data foo(text);
    Data encFor = dest.getAorNoPort();
    if (!encryp)
    {
@@ -379,7 +379,7 @@ LimpetImpl::addBuddy()
    uName += name;
 
    Uri buddy;
-   Vocal2::Data dName( uName);
+   resip::Data dName( uName);
    try 
    {
       buddy = Uri( dName );
@@ -389,9 +389,9 @@ LimpetImpl::addBuddy()
       return;
    }
 
-   this->tuIM->addBuddy(buddy, Vocal2::Data::Empty /*group*/ );
+   this->tuIM->addBuddy(buddy, resip::Data::Empty /*group*/ );
 
-   Vocal2::Data sName = cullenize(buddy);
+   resip::Data sName = cullenize(buddy);
    BuddyListWidget->insertItem( sName.c_str() );
 
 }
@@ -404,7 +404,7 @@ LimpetImpl::setStatus(bool online, QString note)
       return;
    }
    assert(this->tuIM);
-   Vocal2::Data status( note );
+   resip::Data status( note );
    this->tuIM->setMyPresense( online, status );
 }
 
@@ -469,7 +469,7 @@ bool LimpetImpl::OnInitDialog()
       //group = tree->InsertItem("Friends", TVI_ROOT, TVI_SORT);
       for ( int i=0; i<this->tuIM->getNumBuddies(); i++)
       {
-         Vocal2::Uri budy = this->tuIM->getBuddyUri(i);
+         resip::Uri budy = this->tuIM->getBuddyUri(i);
          tree->InsertItem( cullenize(budy).c_str(), group, TVI_SORT);
       }
       tree->Expand(group,TVE_EXPAND);
@@ -568,10 +568,10 @@ LimpetImpl::timerProc()
 #endif
 
 void 
-LimpetImpl::receivedPage( const Vocal2::Data& msg, 
-                          const Vocal2::Uri& from,
-                          const Vocal2::Data& signedBy,  
-                          const Vocal2::Security::SignatureStatus sigStatus,
+LimpetImpl::receivedPage( const resip::Data& msg, 
+                          const resip::Uri& from,
+                          const resip::Data& signedBy,  
+                          const resip::Security::SignatureStatus sigStatus,
                           const bool wasEncryped  )
 {
    QString res = "";
@@ -590,7 +590,7 @@ LimpetImpl::message(const QString& msg)
 }
 
 void 
-LimpetImpl::presenseUpdate(const Vocal2::Uri& uri, bool open, const Vocal2::Data& status )
+LimpetImpl::presenseUpdate(const resip::Uri& uri, bool open, const resip::Data& status )
 {
    QString res = "";
 
@@ -613,8 +613,8 @@ LimpetImpl::presenseUpdate(const Vocal2::Uri& uri, bool open, const Vocal2::Data
    for ( unsigned int index = 0; index < BuddyListWidget->count(); index++ )
    {
       QString dest = BuddyListWidget->text( index );
-      Vocal2::Data uDest( dest );
-      Vocal2::Uri u( uDest );
+      resip::Data uDest( dest );
+      resip::Uri u( uDest );
       if ( uri.getAor() == u.getAor() )
       {
          // found a match
@@ -724,7 +724,7 @@ void LimpetImpl::OnBnClickedButtonDel()
    //group = tree->InsertItem(_T("Friends"), TVI_ROOT, TVI_SORT);
    for ( int i=0; i<this->tuIM->getNumBuddies(); i++)
    {
-      Vocal2::Uri budy = this->tuIM->getBuddyUri(i);
+      resip::Uri budy = this->tuIM->getBuddyUri(i);
       QString name( _T( cullenize(budy).c_str() ) );
       //tree->InsertItem( name , group, TVI_SORT);
 
