@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.87 2002/11/26 05:27:09 fluffy Exp $
+# $Id: Makefile,v 1.88 2002/11/26 21:37:07 alan Exp $
 
 BUILD = ../../build
 
@@ -23,7 +23,7 @@ parsetest: bin.debug.Linux.i686/testParserCategories
 ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
 endif
-
+#CXXFLAGS += -DPP_DO_INLINES
 SRC = \
 	LazyParser.cxx \
 	BranchParameter.cxx \
