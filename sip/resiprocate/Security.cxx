@@ -491,7 +491,7 @@ Security::sign( Contents* bodyIn )
 {
    assert( bodyIn );
 
-   int flags;
+   int flags = 0;
    flags |= PKCS7_BINARY;
    
    Data bodyData;
