@@ -9,8 +9,6 @@
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/util/Data.hxx"
 
-#ifndef  WIN32
-
 namespace Vocal2
 {
 
@@ -483,7 +481,6 @@ std::ostream& operator<<(std::ostream& str, const SdpContents::Session::Codec& c
 
 }
 
-#endif // WIN32
 
 #endif
 
