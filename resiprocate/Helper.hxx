@@ -7,17 +7,16 @@ namespace Vocal2
 {
 class Helper
 {
-      static Contact convertNameAddrToContact(NameAddr& nameAddr);  //may go away
+      static SipMessage makeInvite(Url& target);
 
       static SipMessage makeResponse(SipMessage& request, int responseCode);
       static SipMessage makeResponse(SipMessage& request, int responseCode, NameAddr& myContact);
 
-      static void setNameAddr(RequestLineComponent& rLine, NameAddr& nameAddr);
-
-      static SipMessage makeAck(SipMessage& request, SipMessage& response);
+      // copy the values from Url into rline (with sip-uri parameters?)
+      static void setURI(RequestLineComponent& rLine, Url& url);
+      static void setURI(ResponeLineComponent& rLine, Url& url);
       
-      // copy the values from nameAddr into rline (with sip-uri parameters)
-      static void setRequestUri(RequestLineComponent& rLine, NameAddr& nameAddr);
+      static SipMessage makeAck(SipMessage& request, SipMessage& response);
 
       static Data computeUniqueBranch();
       static Data computeProxyBranch();
