@@ -206,7 +206,7 @@ TransactionState::process(TransactionController& controller)
             tu = controller.mTuSelector.selectTransactionUser(*sip);
             if (!tu)
             {
-               InfoLog (<< "Didn't find a TU for " << sip->brief());
+               //InfoLog (<< "Didn't find a TU for " << sip->brief());
 
                SipMessage* noMatch = Helper::makeResponse(*sip, 500);
                Tuple target(sip->getSource());
@@ -216,7 +216,7 @@ TransactionState::process(TransactionController& controller)
             }
             else
             {
-               InfoLog (<< "Found TU for " << sip->brief());
+               //InfoLog (<< "Found TU for " << sip->brief());
             }
          }
       }
@@ -225,7 +225,7 @@ TransactionState::process(TransactionController& controller)
          tu = sip->getTransactionUser();
          if (!tu)
          {
-            InfoLog (<< "No TU associated with " << sip->brief());
+            //InfoLog (<< "No TU associated with " << sip->brief());
          }
       }
                
