@@ -486,10 +486,12 @@ SipMessage::encode(std::ostream& str, bool isSipFrag) const
       {
          if (mContents != 0)
          {
-            CountStream cs;
-            mContents->encode(cs);
-            cs.flush();
-            str << "Content-Length: " << cs.size() << "\r\n";
+            size_t size;
+            {
+               CountStream cs(size);
+               mContents->encode(cs);
+            }
+            str << "Content-Length: " << size << "\r\n";
          }
          else if (mContentsHfv != 0)
          {
