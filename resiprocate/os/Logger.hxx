@@ -90,6 +90,7 @@ class GenericLogImpl :  public Log
          {
             if (mLogger == 0)
             {
+               std::cerr << "Creating a syslog stream" << std::endl;
                mLogger = new SysLogStream;
             }
             return *mLogger;
