@@ -66,6 +66,8 @@ class InviteSession : public DialogUsage
          Terminated // Ended. waiting to delete
       } State;
 
+      typedef std::pair<OfferAnswerType, const SdpContents*> OfferAnswer;
+
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
