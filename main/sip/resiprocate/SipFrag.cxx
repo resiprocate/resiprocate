@@ -1,6 +1,7 @@
 #include "sip2/sipstack/SipFrag.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/util/Logger.hxx"
+#include "sip2/sipstack/Preparse.hxx"
 
 using namespace Vocal2;
 using namespace std;
@@ -77,8 +78,6 @@ SipFrag::parse(ParseBuffer& pb)
 {
    DebugLog(<< "SipFrag::parse: " << pb.position());
 
-   using namespace PreparseConst;
-    
    mMessage = new SipMessage();
 
    Preparse pre;
