@@ -82,6 +82,8 @@ class Symbols
 
       static const char* Presence;
       static const char* Required;
+
+      static const char* C100rel;
 };
 
 }
