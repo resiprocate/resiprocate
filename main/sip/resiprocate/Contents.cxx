@@ -506,6 +506,8 @@ Contents::getBodyData() const
    assert(0);
    return Data::Empty;
 }
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

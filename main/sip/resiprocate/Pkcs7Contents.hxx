@@ -10,6 +10,8 @@ namespace resip
 class Pkcs7Contents : public Contents
 {
    public:
+      static const Pkcs7Contents Empty;
+
       Pkcs7Contents();
       Pkcs7Contents(const Data& text);
       Pkcs7Contents(HeaderFieldValue* hfv, const Mime& contentType);
@@ -23,7 +25,7 @@ class Pkcs7Contents : public Contents
       virtual Data getBodyData() const;
 
       //virtual 
-		  static const Mime& getStaticType() ;
+      static const Mime& getStaticType() ;
 
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
@@ -36,11 +38,12 @@ class Pkcs7Contents : public Contents
       Data mText;
 };
 
-static bool invokePkcs7ContentsInit = Pkcs7Contents::init();
 
 class Pkcs7SignedContents : public Pkcs7Contents
 {
-   public:
+   public:  
+      static const Pkcs7SignedContents Empty;
+      
       Pkcs7SignedContents();
       Pkcs7SignedContents(const Data& text);
       Pkcs7SignedContents(HeaderFieldValue* hfv, const Mime& contentType);
@@ -58,7 +61,6 @@ class Pkcs7SignedContents : public Pkcs7Contents
       static bool init();
 };
 
-static bool invokePkcs7SignedContentsInit = Pkcs7SignedContents::init();
 
 }
 

@@ -1112,8 +1112,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    assert( size >= 0 );
       
    Data outData(outBuf,size);
-      
-   DebugLog( << "uncoded body is <" << outData << ">" );
+   DebugLog( << "uncoded body is <" << outData.escaped() << ">" );
       
    return first;
 }
@@ -1254,8 +1253,7 @@ Security::decrypt( Pkcs7Contents* sBody )
    assert( size >= 0 );
    
    Data outData(outBuf,size);
-   
-   DebugLog( << "uncoded body is <" << outData << ">" );
+   DebugLog( << "uncoded body is <" << outData.escaped() << ">" );
 
    // parse out the header information and form new body.
    // !jf! this is a really crappy parser - shoudl do proper mime stuff
