@@ -55,7 +55,7 @@ GagMessage::getMessage(istream &is)
 ostream &
 GagMessage::serialize(ostream &os) const
 {
-  os.write((char *)(int)messageType, sizeof(int));
+  os.write((char *)&(int)messageType, sizeof(int));
   return os;
 }
 
@@ -64,7 +64,8 @@ GagMessage::serialize(ostream &os) const
 void
 GagMessage::serialize(ostream &os, const Data& data)
 {
-  os.write((char *)(int)data.size(), sizeof(int));
+  int size = data.size();
+  os.write((char *)&size, sizeof(int));
   os.write(data.data(), data.size());
 }
 
@@ -77,7 +78,8 @@ GagMessage::serialize(ostream &os, const Uri& uri)
 void
 GagMessage::serialize(ostream &os, const bool& flag)
 {
-  os.write((char *)((int)1), sizeof(int));
+  int size = 1;
+  os.write((char *)&size, sizeof(int));
   os.put(flag?0:1);
 }
 

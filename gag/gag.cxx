@@ -74,8 +74,17 @@ main (int argc, char **argv)
     if (fdset.readyToRead(fileno(stdin)))
     {
       GagMessage *message = GagMessage::getMessage(cin);
-      conduit.handleMessage(message);
-      delete message;
+      if (message)
+      {
+        conduit.handleMessage(message);
+        delete message;
+      }
+      else
+      {
+        Data error("Panic! Something is horribly wrong!");
+        GagErrorMessage(error).serialize(cout);
+        exit(-1);
+      }
     }
     else
     {
