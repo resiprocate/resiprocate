@@ -1,76 +1,27 @@
-#ifndef ParameterTypeEnums_hxx
-#define ParameterTypeEnums_hxx
+#ifndef QopParameter_hxx
+#define QopParameter_hxx
 
-#include "sip2/util/Data.hxx"
+#include "sip2/sipstack/ParameterTypeEnums.hxx"
+#include "sip2/sipstack/Parameter.hxx"
+#include <iostream>
 
 namespace Vocal2
 {
 
-class Parameter;
 class ParseBuffer;
 
-class ParameterTypes
+class QopParameter : public Parameter
 {
-  
    public:
-      // When you add something to this enum Type, you must add an entry to
-      // Parameter::make
-      
-      enum Type
-      {
-         transport,
-         user,
-         method,
-         ttl,
-         maddr,
-         lr,
-         q,
-         purpose,
-         expires,
-         handling,
-         tag,
-         toTag,
-         fromTag,
-         duration,
-         branch,
-         received,
-         mobility,
-
-         comp,
-         rport,
-
-         algorithm,
-         cnonce,
-         domain,
-         id,
-         nonce,
-         nc,
-         opaque,
-         realm,
-         response,
-         stale,
-         username,
-         qop,
-         uri,
-         retryAfter,
-         reason,
-         qopOptions,
-         qopFactory,
-
-         UNKNOWN,
-         MAX_PARAMETER
-      };
-
-      // convert to enum from two pointers into the HFV raw buffer
-      static Type getType(const char* start, unsigned int length);
-
-      typedef Parameter* (*Factory)(ParameterTypes::Type, ParseBuffer&);
-
-      static Factory ParameterFactories[MAX_PARAMETER];
-      static Data ParameterNames[MAX_PARAMETER];
+      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb);
+   private:
+      QopParameter();
 };
  
 }
+
+
+
 
 #endif
 

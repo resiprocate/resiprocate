@@ -40,8 +40,6 @@ class DataParameter : public Parameter
       {
       }
 
-   private:
-
       Data mValue;
       bool mQuoted;
 };

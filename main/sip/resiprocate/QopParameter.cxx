@@ -1,79 +1,35 @@
-#ifndef ParameterTypeEnums_hxx
-#define ParameterTypeEnums_hxx
+#include <cassert>
+#include "sip2/sipstack/QopParameter.hxx"
+#include "sip2/sipstack/Symbols.hxx"
+#include "sip2/util/ParseBuffer.hxx"
+#include "sip2/sipstack/ParseException.hxx"
+#include "sip2/sipstack/DataParameter.hxx"
+#include "sip2/sipstack/QuotedDataParameter.hxx"
 
-#include "sip2/util/Data.hxx"
 
-namespace Vocal2
+using namespace Vocal2;
+using namespace std;
+
+
+Parameter* 
+QopParameter::decode(ParameterTypes::Type type, ParseBuffer& pb)
 {
-
-class Parameter;
-class ParseBuffer;
-
-class ParameterTypes
-{
-  
-   public:
-      // When you add something to this enum Type, you must add an entry to
-      // Parameter::make
-      
-      enum Type
-      {
-         transport,
-         user,
-         method,
-         ttl,
-         maddr,
-         lr,
-         q,
-         purpose,
-         expires,
-         handling,
-         tag,
-         toTag,
-         fromTag,
-         duration,
-         branch,
-         received,
-         mobility,
-
-         comp,
-         rport,
-
-         algorithm,
-         cnonce,
-         domain,
-         id,
-         nonce,
-         nc,
-         opaque,
-         realm,
-         response,
-         stale,
-         username,
-         qop,
-         uri,
-         retryAfter,
-         reason,
-         qopOptions,
-         qopFactory,
-
-         UNKNOWN,
-         MAX_PARAMETER
-      };
-
-      // convert to enum from two pointers into the HFV raw buffer
-      static Type getType(const char* start, unsigned int length);
-
-      typedef Parameter* (*Factory)(ParameterTypes::Type, ParseBuffer&);
-
-      static Factory ParameterFactories[MAX_PARAMETER];
-      static Data ParameterNames[MAX_PARAMETER];
-};
- 
+   const char* anchor=pb.position();
+   pb.skipWhitespace();
+   pb.skipChar(Symbols::EQUALS[0]);
+   pb.skipWhitespace();
+   //need two types here???
+   if (*pb.position() == '"')
+   {
+      pb.reset(anchor);
+      return new QuotedDataParameter(ParameterTypes::qopOptions, pb);
+   }
+   else
+   {
+      pb.reset(anchor);
+      return new DataParameter(ParameterTypes::qop, pb);
+   }
 }
-
-#endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -109,7 +65,7 @@ class ParameterTypes
  * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
  * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, QOP, OR
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
