@@ -26,10 +26,10 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
    : NonDialogUsage(dum, dialogSet),
      mPublish(req),
      mEventType(req.header(h_Event).value()),
-     mTimerSeq(0)
+     mTimerSeq(0),
+     mDocument(mPublish.releaseContents().release())
 {
    DebugLog( << "ClientPublication::ClientPublication: " << mId);   
-   mPublish.releaseContents();   
 }
 
 ClientPublication::~ClientPublication()
@@ -92,7 +92,7 @@ ClientPublication::dispatch(const SipMessage& msg)
          {
             InfoLog(<< "SIPIfMatch failed -- republish");
             mPublish.remove(h_SIPIfMatch);
-            refresh();
+            update(mDocument);
             return;
          }         
          else if (code == 423) // interval too short
@@ -135,15 +135,17 @@ ClientPublication::refresh(unsigned int expiration)
    }
    mPublish.header(h_CSeq).sequence()++;
    mDum.send(mPublish);
-   mPublish.releaseContents();   
+   mPublish.releaseContents();
 }
 
 void
 ClientPublication::update(const Contents* body)
 {
    assert(body);
+   mDocument = body;
+   
    mPublish.header(h_CSeq).sequence()++;
-   mPublish.setContents(body);
+   mPublish.setContents(mDocument);
    refresh();
 }
 
