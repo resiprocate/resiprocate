@@ -3,6 +3,7 @@
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/MethodTypes.hxx"
 #include <cassert>
 namespace resip
 {
@@ -10,6 +11,7 @@ namespace resip
 class DialogUsageManager;
 class Dialog;
 class SipMessage;
+class NameAddr;
 
 class BaseUsage
 {
@@ -44,13 +46,22 @@ class BaseUsage
       BaseUsage(DialogUsageManager& dum, Dialog& dialog);
       virtual ~BaseUsage();
 
-      SipMessage* makeInviteSession();
-      SipMessage* makeSubscription();
-      SipMessage* makeRefer();
-      SipMessage* makePublication();
-      SipMessage* makeRegistration();
-      SipMessage* makeOutOfDialogRequest();
-
+#if 0
+      // For creating requests within a dialog
+      SipMessage& makeInvite();
+      SipMessage& makeRegister();
+      SipMessage& makeSubscribe();
+      SipMessage& makeBye();
+      SipMessage& makeRefer(const NameAddr& referTo);
+      SipMessage& makeNotify();
+      SipMessage& makeOptions();
+      SipMessage& makePublish();
+      SipMessage& makeAck(); // needs to have the corresponding INVITE 
+      SipMessage& makeCancel(); // needs to have the corresponding INVITE 
+      SipMessage& makeRequest(MethodTypes method);
+      SipMessage& makeResponse(int code);
+#endif
+      
       // to send a request on an existing dialog (made from make... methods above)
       void send(const SipMessage& request);
       
