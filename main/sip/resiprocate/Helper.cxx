@@ -162,7 +162,7 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
 
    //response->header(h_ContentLength).value() = 0;
    
-   if (request.exists(h_RecordRoutes))
+   if (responseCode >= 180 && responseCode < 300 && request.exists(h_RecordRoutes))
    {
       response->header(h_RecordRoutes) = request.header(h_RecordRoutes);
    }
