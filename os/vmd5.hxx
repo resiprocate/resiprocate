@@ -1,7 +1,7 @@
 #ifndef Vocal2_Vmd5_hxx
 #define Vocal2_Vmd5_hxx
 
-static const char* const vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.7 2002/11/11 22:05:06 jason Exp $";
+static const char* const Vocal2vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.8 2002/11/11 23:09:55 jason Exp $";
 
 /*
  * This is the header file for the MD5 message-digest algorithm.

@@ -1,8 +1,8 @@
 #ifndef BaseException_hxx
 #define BaseException_hxx
 
-static const char* const VBaseExceptionHeaderVersion =
-    "$Id: BaseException.hxx,v 1.1 2002/11/11 21:46:02 jason Exp $";
+static const char* const Vocal2BaseExceptionHeaderVersion =
+    "$Id: BaseException.hxx,v 1.2 2002/11/11 23:09:55 jason Exp $";
 
 #include <exception>
 #include <iostream>
