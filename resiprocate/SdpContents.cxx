@@ -230,8 +230,8 @@ SdpContents::Session::Origin::operator=(const Origin& rhs)
 
 
 SdpContents::Session::Origin::Origin(const Data& user,
-                                     const unsigned long long& sessionId,
-                                     const unsigned long long& version,
+                                     const UInt64& sessionId,
+                                     const UInt64& version,
                                      AddrType addr,
                                      const Data& address)
    : mUser(user),
@@ -1537,6 +1537,9 @@ SdpContents::Session::Medium::codecs() const
 vector<Codec>&
 SdpContents::Session::Medium::codecs()
 {
+#ifdef WIN32 // CJ ODO fix 
+	assert(0);
+#else 
    if (!mRtpMapDone)
    {
       // prevent recursion
@@ -1590,6 +1593,7 @@ SdpContents::Session::Medium::codecs()
       mFormats.clear();
       mAttributeHelper.clearAttribute(rtpmap);
    }
+#endif
 
    return mCodecs;
 }
@@ -1708,38 +1712,40 @@ Codec::CodecMap& Codec::getStaticCodecs()
         //
         // Build map of static codecs as defined in RFC 3551
         //
+		sStaticCodecs = new CodecMap;
+		assert(sStaticCodecs);
 
         // Audio codecs
-        sStaticCodecs.insert(make_pair(0,Codec("PCMU",0,8000)));
-        sStaticCodecs.insert(make_pair(3,Codec("GSM",3,8000)));
-        sStaticCodecs.insert(make_pair(4,Codec("G723",4,8000)));
-        sStaticCodecs.insert(make_pair(5,Codec("DVI4",5,8000)));
-        sStaticCodecs.insert(make_pair(6,Codec("DVI4",6,16000)));
-        sStaticCodecs.insert(make_pair(7,Codec("LPC",7,8000)));
-        sStaticCodecs.insert(make_pair(8,Codec("PCMA",8,8000)));
-        sStaticCodecs.insert(make_pair(9,Codec("G722",9,8000)));
-        sStaticCodecs.insert(make_pair(10,Codec("L16-2",10,44100)));
-        sStaticCodecs.insert(make_pair(11,Codec("L16-1",11,44100)));
-        sStaticCodecs.insert(make_pair(12,Codec("QCELP",12,8000)));
-        sStaticCodecs.insert(make_pair(13,Codec("CN",13,8000)));
-        sStaticCodecs.insert(make_pair(14,Codec("MPA",14,90000)));
-        sStaticCodecs.insert(make_pair(15,Codec("G728",15,8000)));
-        sStaticCodecs.insert(make_pair(16,Codec("DVI4",16,11025)));
-        sStaticCodecs.insert(make_pair(17,Codec("DVI4",17,22050)));
-        sStaticCodecs.insert(make_pair(18,Codec("G729",18,8000)));
+        sStaticCodecs->insert(make_pair(0,Codec("PCMU",0,8000)));
+        sStaticCodecs->insert(make_pair(3,Codec("GSM",3,8000)));
+        sStaticCodecs->insert(make_pair(4,Codec("G723",4,8000)));
+        sStaticCodecs->insert(make_pair(5,Codec("DVI4",5,8000)));
+        sStaticCodecs->insert(make_pair(6,Codec("DVI4",6,16000)));
+        sStaticCodecs->insert(make_pair(7,Codec("LPC",7,8000)));
+        sStaticCodecs->insert(make_pair(8,Codec("PCMA",8,8000)));
+        sStaticCodecs->insert(make_pair(9,Codec("G722",9,8000)));
+        sStaticCodecs->insert(make_pair(10,Codec("L16-2",10,44100)));
+        sStaticCodecs->insert(make_pair(11,Codec("L16-1",11,44100)));
+        sStaticCodecs->insert(make_pair(12,Codec("QCELP",12,8000)));
+        sStaticCodecs->insert(make_pair(13,Codec("CN",13,8000)));
+        sStaticCodecs->insert(make_pair(14,Codec("MPA",14,90000)));
+        sStaticCodecs->insert(make_pair(15,Codec("G728",15,8000)));
+        sStaticCodecs->insert(make_pair(16,Codec("DVI4",16,11025)));
+        sStaticCodecs->insert(make_pair(17,Codec("DVI4",17,22050)));
+        sStaticCodecs->insert(make_pair(18,Codec("G729",18,8000)));
 
         // Video or audio/video codecs
-        sStaticCodecs.insert(make_pair(25,Codec("CelB",25,90000)));
-        sStaticCodecs.insert(make_pair(26,Codec("JPEG",26,90000)));
-        sStaticCodecs.insert(make_pair(28,Codec("nv",28,90000)));
-        sStaticCodecs.insert(make_pair(31,Codec("H261",31,90000)));
-        sStaticCodecs.insert(make_pair(32,Codec("MPV",32,90000)));
-        sStaticCodecs.insert(make_pair(33,Codec("MP2T",33,90000)));
-        sStaticCodecs.insert(make_pair(34,Codec("H263",34,90000)));
+        sStaticCodecs->insert(make_pair(25,Codec("CelB",25,90000)));
+        sStaticCodecs->insert(make_pair(26,Codec("JPEG",26,90000)));
+        sStaticCodecs->insert(make_pair(28,Codec("nv",28,90000)));
+        sStaticCodecs->insert(make_pair(31,Codec("H261",31,90000)));
+        sStaticCodecs->insert(make_pair(32,Codec("MPV",32,90000)));
+        sStaticCodecs->insert(make_pair(33,Codec("MP2T",33,90000)));
+        sStaticCodecs->insert(make_pair(34,Codec("H263",34,90000)));
 
         sStaticCodecsCreated = true;
     }
-    return sStaticCodecs;
+    return *sStaticCodecs;
 }
 
 bool
@@ -1765,7 +1771,7 @@ const Codec Codec::TelephoneEvent("telephone-event", 8000);
 const Codec Codec::FrfDialedDigit("frf-dialed-event", 8000);
 
 bool Codec::sStaticCodecsCreated = false;
-Codec::CodecMap Codec::sStaticCodecs;
+Codec::CodecMap* Codec::sStaticCodecs;
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
