@@ -702,7 +702,7 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
    mDialog.makeResponse(i487, msg, 487);
    mDialog.send(i487);
 
-   handler->onTerminated(getSessionHandle());
+   handler->onTerminated(getSessionHandle(), msg);
 }
 
 void
@@ -719,7 +719,7 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
    mDialog.makeResponse(i487, msg, 487);
    mDialog.send(i487);
 
-   handler->onTerminated(getSessionHandle());
+   handler->onTerminated(getSessionHandle(), msg);
 }
 
 void
@@ -736,7 +736,7 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
    mDialog.makeResponse(i400, msg, 400);
    mDialog.send(i400);
 
-   handler->onTerminated(getSessionHandle());
+   handler->onTerminated(getSessionHandle(), msg);
 }
 
 void
