@@ -126,8 +126,8 @@ class ParserCategory : public LazyParser
       typedef std::vector<Parameter*> ParameterList; 
       mutable ParameterList mParameters;
       mutable ParameterList mUnknownParameters;
-   private:
       Headers::Type mHeaderType;
+   private:
       void clear();
       void copyParametersFrom(const ParserCategory& other);
       friend std::ostream& operator<<(std::ostream&, const ParserCategory&);
