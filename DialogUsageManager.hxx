@@ -36,18 +36,20 @@ class DialogUsageManager
 
       void addHandler(MethodTypes&, OutOfDialogHandler*);
       
-      InvSessionCreator makeInvSession(const Uri& aor, SdpContents* initial);
-      SubscriptionCreator makeSubscription(const Uri& aor, const Data& eventType);
-      SubscriptionCreator makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
-      PublicationCreator makePublication(const Uri& aor, const Data& eventType);
-      RegistrationCreator makeRegistration(const Uri& aor);
-      OutOfDialogRequestCreator makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
+      SipMessage* makeInvSession(const Uri& aor, SdpContents* initial);
+      SipMessage* makeSubscription(const Uri& aor, const Data& eventType);
+      SipMessage* makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
+      SipMessage* makePublication(const Uri& aor, const Data& eventType);
+      SipMessage* makeRegistration(const Uri& aor);
+      SipMessage* makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
 
-      InvSessionCreator makeInvSession(BaseUsage&, const Uri& aor);
-      SubscriptionCreator makeSubscription(BaseUsage&, const Uri& aor, const Data& eventType);
-      SubscriptionCreator makeRefer(BaseUsage&, const Uri& aor);
-      PublicationCreator makePublication(BaseUsage&, const Uri& aor, const Data& eventType);
-      RegistrationCreator makeRegistration(BaseUsage&, const Uri& aor);
+      SipMessage* makeInvSession(BaseUsage&, const Uri& aor);
+      SipMessage* makeSubscription(BaseUsage&, const Uri& aor, const Data& eventType);
+      SipMessage* makeRefer(BaseUsage&, const Uri& aor);
+      SipMessage* makePublication(BaseUsage&, const Uri& aor, const Data& eventType);
+      SipMessage* makeRegistration(BaseUsage&, const Uri& aor);
+      
+      DialogSetId send(SipMessage* newClientRequest);
 
       void process();
       
