@@ -11,6 +11,7 @@
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/DialogSetId.hxx"
+#include "resiprocate/os/HashMap.hxx"
 
 //8.1.3.4
 //19.1.5
@@ -66,7 +67,7 @@ class RedirectManager
             SipMessage mRequest;                        
       };      
 
-      typedef std::map<DialogSetId, TargetSet*> RedirectedRequestMap;
+      typedef HashMap<DialogSetId, TargetSet*> RedirectedRequestMap;
       RedirectedRequestMap mRedirectedRequestMap;
       Ordering mOrdering;      
 };
