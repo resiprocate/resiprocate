@@ -13,50 +13,7 @@ class Transport;
 
 class SipMessage;            // fwd decl
 
-typedef short BufferAction;
-const BufferAction NONE=0;
-const BufferAction headersComplete = (1 << 0);
-const BufferAction preparseError   = (1 << 1);
-const BufferAction dataAssigned    = (1 << 2);
-const BufferAction fragmented      = (1 << 3);
- 
 
-// typedef enum {
-//     NewMsg = 0,
-//     NewMsgCrLf,
-//     StartLine,
-//     StartLineCrLf,
-//     BuildHdr,
-//     EWSPostHdr,
-//     EWSPostColon,
-//     EmptyHdrCrLf,
-//     EmptyHdrCont,
-//     BuildData,
-//     BuildDataCrLf,
-//     CheckCont,
-//     CheckEndHdr,
-//     InQ,
-//     InQEsc,
-//     InAng,
-//     InAngQ,
-//     InAngQEsc,
-//     EndMsg,
-//     lastStateMarker
-// } State;
-
-// Our actions
-
-const int actNil     = 0;
-const int actAdd     = (1 << 0);
-const int actBack    = (1 << 1);
-const int actFline   = (1 << 2);
-const int actReset   = (1 << 3);
-const int actHdr     = (1 << 4);
-const int actData    = (1 << 5);
-const int actBad     = (1 << 6);
-const int actEndHdrs = (1 << 7);
-const int actDiscard = (1<<8);
-const int actDiscardKnown = (1<<9);
   
 typedef enum {
     dCommaSep,
@@ -73,7 +30,8 @@ const int nOct    = UCHAR_MAX+1;
 //}
 
 
- 
+
+
 
 class Preparse
 {
@@ -82,7 +40,7 @@ class Preparse
         
         Preparse();
         
-        typedef enum PreparseStateEnum 
+        typedef enum StateEnum 
         {
                 NewMsg = 0,
                 NewMsgCrLf,
@@ -105,13 +63,19 @@ class Preparse
                 EndMsg,
                 nPreparseStates
         }
-        PreparseState;
+        State;
 
+        typedef short Action;
+
+        typedef short Status;
+        
+        
         typedef struct 
         {
-                PreparseState nextState;
+                State nextState;
                 int workMask;
-        } Edge;
+        }
+        Edge;
         
         void process(SipMessage& msg,
                      const char * buffer,
@@ -119,7 +83,7 @@ class Preparse
                      size_t start,
                      size_t& used,
                      size_t& discard,
-                     BufferAction& status);
+                     Status& status);
 
         // msg -- A SipMessage for use with this data buffer.
         //        Will have HFV's installed by the pre-parser.
@@ -167,11 +131,11 @@ class Preparse
         static Edge ***mTransitionTable;
         void InitStatePreparseStateTable();
 
-        void AE( PreparseState start, int disposition, int ch,
-                 PreparseState next, int workMask);
+        void AE( State start, int disposition, int ch,
+                 State next, int workMask);
 
-        void AE( PreparseState start, int disposition, const char* charset,
-                 PreparseState next, int workMask);
+        void AE( State start, int disposition, const char* charset,
+                 State next, int workMask);
         
         void ResetMachine();
         // Reset all offsets and state vars to known initial state.
@@ -180,7 +144,7 @@ class Preparse
         // the disposition of this machine, a function
         // of the mHeader enum
       
-        PreparseState mState;
+        State mState;
         
         // State of machine.  This is manipulated
         // oddly for fragmentation; see the code.
@@ -200,6 +164,30 @@ class Preparse
         size_t mAnchorBegOff;
         size_t mAnchorEndOff;
         
+};
+
+namespace PreparseConst
+{
+const Preparse::Action actNone         = 0;
+const Preparse::Action actAdd          = (1 << 0);
+const Preparse::Action actBack         = (1 << 1);
+const Preparse::Action actFline        = (1 << 2);
+const Preparse::Action actReset        = (1 << 3);
+const Preparse::Action actHdr          = (1 << 4);
+const Preparse::Action actData         = (1 << 5);
+const Preparse::Action actBad          = (1 << 6);
+const Preparse::Action actEndHdrs      = (1 << 7);
+const Preparse::Action actDiscard      = (1 << 8);
+const Preparse::Action actDiscardKnown = (1 << 9);
+
+// --
+const Preparse::Status stNone            = 0;
+const Preparse::Status stHeadersComplete = (1 << 0);
+const Preparse::Status stPreparseError   = (1 << 1);
+const Preparse::Status stDataAssigned    = (1 << 2);
+const Preparse::Status stFragmented      = (1 << 3);
+// --
+
 };
  
 }
