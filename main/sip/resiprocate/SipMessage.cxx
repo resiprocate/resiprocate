@@ -288,6 +288,7 @@ SipMessage::getContents() const
       {
          return 0;
       }
+      //DebugLog(<< "SipMessage::getContents: " << header(h_ContentType));
       assert(Contents::getFactoryMap().find(header(h_ContentType)) != Contents::getFactoryMap().end());
       mContents = Contents::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv);
    }
