@@ -37,9 +37,10 @@ ServerInviteSession::end()
    return mLastRequest;
 }
 
-void 
+SipMessage&
 ServerInviteSession::rejectOffer(int statusCode)
 {
+   return mLastRequest;
 }
 
 void 
