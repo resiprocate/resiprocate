@@ -25,6 +25,32 @@ class DnsUtil
       };
 
       static std::list<Data> lookupARecords(const Data& host);
+
+      typedef enum 
+      {
+         Unknown = 0,
+         UDP,
+         TCP,
+         TLS,
+         SCTP,
+         DCCP,
+         MAX_TRANSPORT
+      } Type;
+
+      struct Srv
+      {
+            int priority;
+            int weight;
+            int port;
+            Data host;
+            Type transport;
+
+            bool operator<(const Srv& rhs) const
+            {
+               return priority < rhs.priority;
+            }
+      };
+      static std::list<DnsUtil::Srv> lookupSRVRecords(const Data& host);
       
       static Data getHostByAddr(const Data& ipAddress);
       static Data getLocalHostName();
@@ -32,8 +58,8 @@ class DnsUtil
       static Data getIpAddress(const struct in_addr& addr);
       static bool isIpV4Address(const Data& ipAddress);
 };
-      
-      
+
+
 }
 
 
