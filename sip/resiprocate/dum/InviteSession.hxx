@@ -36,19 +36,13 @@ class InviteSession : public BaseUsage
 
       /// Rejects an offer at the SIP level. So this can send a 487 to a
       /// reINVITE or and UPDATE
-      virtual void rejectOffer(int statusCode)=0;
+      virtual SipMessage& rejectOffer(int statusCode)=0;
       
       // If the app has called setOffer prior to targetRefresh, the reINVITE
       // will contain the proposed offer. If the peer supports UPDATE, always
       // prefer UPDATE over reINVITE (no 3-way handshake required)
       // !jf! there are more things you could update in the targetRefresh 
       SipMessage& targetRefresh(const NameAddr& localUri);
-
-      /// Returns the appropriate offer or answer for this session based on the
-      /// Offer/Answer state and the InviteSession state. Call BaseUsage::send
-      /// to send it over the wire. If the App hasn't called setOffer or
-      /// setAnswer prior to this, it will assert
-      SipMessage& getOfferOrAnswer();
 
       const SdpContents* getLocalSdp();
       const SdpContents* getRemoteSdp();
