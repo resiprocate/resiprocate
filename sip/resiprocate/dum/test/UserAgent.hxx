@@ -27,7 +27,9 @@ class UserAgent : public CommandLineParser,
       UserAgent(int argc, char** argv);
       virtual ~UserAgent();
 
-      void startRegistering();
+      void startup();
+      void shutdown();
+
       virtual void thread();
       void process();
 
