@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/DialogUsage.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/RefCountedDestroyer.hxx"
 
 namespace resip
 {
@@ -121,16 +122,21 @@ class InviteSession : public DialogUsage
       SipMessage mFinalResponse;      
       SipMessage mAck;
 
-      ~InviteSession();
+      virtual ~InviteSession();
+      
+      typedef RefCountedDestroyer<InviteSession> Destroyer;
+      Destroyer mDestroyer;
+      friend class Destroyer::Guard;      
 
    private:
       friend class Dialog;      
-      friend class DialogUsageManager;
+      friend class DialogUsageManager;      
 
       unsigned long mCurrentRetransmit200;      
       static unsigned long T1;
       static unsigned long T2;
       static unsigned long TimerH;
+
 
       // disabled
       InviteSession(const InviteSession&);
