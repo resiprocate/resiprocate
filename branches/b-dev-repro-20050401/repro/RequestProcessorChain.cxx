@@ -39,6 +39,9 @@ repro::RequestProcessorChain::addProcessor(auto_ptr<RequestProcessor> rp)
 repro::RequestProcessor::processor_action_t
 repro::RequestProcessorChain::handleRequest(RequestContext &rc)
 {
+  DebugLog(<< "Monkey handling request: " << this 
+           << "; reqcontext = " << rc);
+
   Chain::iterator i;
   processor_action_t action;
 

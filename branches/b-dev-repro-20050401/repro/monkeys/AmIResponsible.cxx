@@ -24,7 +24,8 @@ AmIResponsible::~AmIResponsible()
 RequestProcessor::processor_action_t
 AmIResponsible::handleRequest(RequestContext& context)
 {
-//  DebugLog(<< "Monkey handling request: " << this);// << "; reqcontext = " << context);
+  DebugLog(<< "Monkey handling request: " << this 
+           << "; reqcontext = " << context);
 
   resip::SipMessage& request = context.getOriginalRequest();
 
