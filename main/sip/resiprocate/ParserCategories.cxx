@@ -860,16 +860,16 @@ void
 ExpiresCategory::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
-   try
+   const char *p = pb.position();
+   if (p && isdigit(*p))
    {
-      mValue = pb.integer();
+     mValue = pb.integer();
    }
-   catch (ParseBuffer::Exception&)
+   else
    {
       mValue = 3600;
    }
    pb.skipToChar(Symbols::SEMI_COLON[0]);
-   
    parseParameters(pb);
 }
 
