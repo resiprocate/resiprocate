@@ -28,19 +28,26 @@ class RegisterAppDialogSet : public AppDialogSet
 class Client : public ClientRegistrationHandler
 {
    public:
-      Client() : done(false) {}
+      Client() : done(false), removing(true) {}
 
       virtual void onSuccess(ClientRegistrationHandle h, const SipMessage& response)
       {
+          InfoLog( << "Client::Success: " << endl << response );
+          if (removing)
+          {
+             removing = false;             
 #ifdef WIN32
          Sleep(2000);
 #else
          sleep(5);
 #endif
-          InfoLog( << "Client::Success: " << endl << response );
           ClientRegistration* foo = h.get();          
           h->removeAll();
-          done = true;
+          }
+          else
+          {             
+             done = true;
+          }          
       }
 
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)
@@ -50,6 +57,7 @@ class Client : public ClientRegistrationHandler
       }
 
       bool done;
+      bool removing;      
 };
 
 /*
@@ -71,7 +79,6 @@ class RegistrationServer : public ServerRegistrationHandler
 
       /// Called when an registration expires 
       virtual void onExpired(ServerRegistrationHandle, const NameAddr& contact)=0;
-
    private:
       bool done;
 };
@@ -80,14 +87,14 @@ class RegistrationServer : public ServerRegistrationHandler
 int 
 main (int argc, char** argv)
 {
-    int level=(int)Log::Debug;
+    int level=(int)Log::Info;
     if (argc >1 ) level = atoi(argv[1]);
 
     Log::initialize(Log::Cout, (resip::Log::Level)level, argv[0]);
 
    SipStack clientStack;
    clientStack.addTransport(UDP, 15060);
-   NameAddr aor("sip:502@jasomi.com");
+   NameAddr aor("sip:13015604286@sphone.vopr.vonage.net");
 
    Client client;
    Profile profile;   
@@ -102,8 +109,12 @@ main (int argc, char** argv)
    clientDum.getProfile()->setDefaultAor(aor);
 
    profile.addDigestCredential( "sip.jasomi.com", "502", "resiprocate" );
+//   profile.addDigestCredential( "sphone.vopr.vonage.net", "13015604286", "" );
 
    SipMessage & regMessage = clientDum.makeRegistration(aor, new RegisterAppDialogSet(clientDum));
+   NameAddr contact;
+   contact.uri().user() = "13015604286";   
+   regMessage.header(h_Contacts).push_back(contact);   
 
    InfoLog( << regMessage << "Generated register: " << endl << regMessage );
    clientDum.send( regMessage );
@@ -115,7 +126,7 @@ main (int argc, char** argv)
      FdSet fdset;
 
      // Should these be buildFdSet on the DUM?
-     clientStack.buildFdSet(fdset);
+     clientDum.buildFdSet(fdset);
      int err = fdset.selectMilliSeconds(100);
      assert ( err != -1 );
 
@@ -123,5 +134,5 @@ main (int argc, char** argv)
      if (!(n++ % 10)) cerr << "|/-\\"[(n/10)%4] << '\b';
 
    }   
-
+   return 0;
 }
