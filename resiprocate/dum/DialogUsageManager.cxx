@@ -11,6 +11,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -169,7 +170,7 @@ DialogUsageManager::process(FdSet& fdset)
    mStack.process(fdset);
    std::auto_ptr<Message> msg( mStack.receiveAny() );
    SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
-
+   if (!msg.get())  return;
    if (sipMsg)
    {
       if (sipMsg->isRequest())
@@ -214,7 +215,7 @@ DialogUsageManager::process(FdSet& fdset)
       return;
    }
 
-   ErrLog(<<"Unknown message received.");
+   ErrLog(<<"Unknown message received." << msg->brief());
    assert(0);
 }
 
@@ -403,6 +404,10 @@ void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    DialogSet& dialogs = findDialogSet(DialogSetId(response));
+
+   InfoLog(<< DialogSetId(response));
+   InfoLog(<< Inserter(mDialogSetMap));
+
    if (!dialogs.empty())
    {
       dialogs.dispatch(response);
