@@ -35,7 +35,6 @@ DnsInterface::DnsInterface(bool sync)
       char* errmem=0;
       ErrLog (<< ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
-      DebugLog( << "failed to initialize ares" );
       throw Exception("failed to initialize ares", __FILE__,__LINE__);
    }
    
