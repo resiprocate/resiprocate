@@ -27,6 +27,10 @@ class ServerRegistration: public BaseUsage
 
       /// reject a SIP registration 
       void reject(int statusCode);
+
+   private:
+      friend class DialogUsageManager;
+      ServerRegistration::Handle mHandle;
 };
  
 }
