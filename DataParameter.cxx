@@ -10,9 +10,8 @@ DataParameter::DataParameter(ParameterTypes::Type type,
      mData(startData, dataSize)
 {}
 
-DataParameter::DataParameter(ParameterTypes::Type type, const Data& data)
-   : Parameter(type), 
-     mData(data)
+DataParameter::DataParameter(ParameterTypes::Type type)
+   : Parameter(type) 
 {}
 
 Data& 

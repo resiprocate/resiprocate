@@ -130,7 +130,7 @@ Parameter* ParameterList::get(const Data& type)
       
    }
 
-   UnknownParameter* toInsert = new UnknownParameter(type, "");
+   UnknownParameter* toInsert = new UnknownParameter(type);
    insert(toInsert);
    
    return toInsert;
