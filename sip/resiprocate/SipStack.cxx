@@ -166,14 +166,6 @@ SipStack::buildFdSet(FdSet& fdset)
 }
 
 
-void 
-SipStack::setOutboundProxy( const Uri& uri )
-{
-	// !cj! !jf! TODO 
-	ErrLog( << "No support for outbound proxies yet" );
-}
-
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
