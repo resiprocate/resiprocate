@@ -126,7 +126,33 @@ Registration::handleResponse(const SipMessage& response)
       {
          mState = Active;
          mContacts = response.header(h_Contacts);
-         mTimeTillExpiration = response.header(h_Expires).value();
+         for (NameAddrs::iterator i=mContacts.begin(); i != mContacts.end(); ++i)
+         {
+            if (mContact.exists(p_Instance))
+            {
+               if (i->exists(p_Instance) && 
+                   mContact.param(p_Instance) == i->param(p_Instance) &&
+                   i->exists(p_expires))
+               {
+                  mTimeTillExpiration = i->param(p_expires);
+                  return;
+               }
+               else if (i->uri() == mContact.uri() && i->exists(p_expires))
+               {
+                  mTimeTillExpiration = i->param(p_expires);
+                  return;
+               }
+            }
+         }
+
+         if (response.exists(h_Expires))
+         {
+            mTimeTillExpiration = response.header(h_Expires).value();         
+         }
+         else
+         {
+            mTimeTillExpiration = 3600; // !jf!
+         }
       }
    }
    else
