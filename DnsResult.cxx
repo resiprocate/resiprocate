@@ -474,7 +474,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
          }
          
          DebugLog (<< "No SRV records for " << mTarget << ". Trying A records");
-         lookupARecords(mTarget);
+         lookupAAAARecords(mTarget);
       }
       else
       {
@@ -518,6 +518,10 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
        if (aptr)
        {
          Tuple tuple(aaaa,mPort,mTransport);
+         DebugLog (<< "Adding " << tuple << " to result set");
+
+         // !jf! Should this be going directly into mResults or into mARecords
+         // !jf! Check for duplicates? 
          mResults.push_back(tuple);
        }
      }
@@ -556,6 +560,9 @@ DnsResult::processHost(int status, struct hostent* result)
          in_addr addr;
          addr.s_addr = *((u_int32_t*)(*pptr));
          Tuple tuple(addr, mPort, mTransport);
+         DebugLog (<< "Adding " << tuple << " to result set");
+         // !jf! Should this be going directly into mResults or into mARecords
+         // !jf! Check for duplicates? 
          mResults.push_back(tuple);
       }
    }
@@ -604,6 +611,7 @@ DnsResult::primeResults()
 	         i!=aaaarecs.end(); i++)
          {
             Tuple tuple(*i,next.port,next.transport);
+            DebugLog (<< "Adding " << tuple << " to result set");
             mResults.push_back(tuple);
          }
 #endif
@@ -611,6 +619,7 @@ DnsResult::primeResults()
          for (std::list<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
             Tuple tuple(*i, next.port, next.transport);
+            DebugLog (<< "Adding " << tuple << " to result set");
             mResults.push_back(tuple);
          }
 #if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
@@ -804,7 +813,13 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       struct in_addr addr;
       memcpy(&addr, aptr, sizeof(struct in_addr));
       DebugLog (<< "From additional: " << key << ":" << DnsUtil::inet_ntop(addr));
-      mARecords[key].push_back(addr);
+
+      // Only add the additional records if they weren't already there from
+      // another query
+      if (mARecords.count(key) == 0)
+      {
+         mARecords[key].push_back(addr);
+      }
       return aptr + dlen;
    }
 #ifdef USE_IPV6
@@ -818,7 +833,12 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       struct in6_addr addr;
       memcpy(&addr, aptr, sizeof(struct in6_addr));
       DebugLog (<< "From additional: " << key << ":" << DnsUtil::inet_ntop(addr));
-      mAAAARecords[key].push_back(addr);
+      // Only add the additional records if they weren't already there from
+      // another query
+      if (mAAAARecords.count(key) == 0)
+      {
+         mAAAARecords[key].push_back(addr);
+      }
       return aptr + dlen;
    }
 #endif
