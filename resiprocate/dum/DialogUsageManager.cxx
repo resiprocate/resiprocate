@@ -48,26 +48,9 @@
 using namespace resip;
 using namespace std;
 
-DialogUsageManager::DialogUsageManager(Security* security, AsyncProcessHandler* handler) : 
-   mMasterProfile(0),
-   mRedirectManager(new RedirectManager()),
-   mInviteSessionHandler(0),
-   mClientRegistrationHandler(0),
-   mServerRegistrationHandler(0),
-   mRedirectHandler(0),
-   mDialogSetHandler(0),
-   mRegistrationPersistenceManager(0),
-   mClientPagerMessageHandler(0),
-   mServerPagerMessageHandler(0),
-   mAppDialogSetFactory(new AppDialogSetFactory()),
-   mStack(new SipStack(security, handler, false)),
-   mStackThread(*mStack),
-   mDumShutdownHandler(0),
-   mShutdownState(Running)
-{
-}
-
-DialogUsageManager::DialogUsageManager(std::auto_ptr<SipStack> stack) :
+DialogUsageManager::DialogUsageManager(SipStack& stack) :
+   mFifo(TransactionController::MaxTUFifoTimeDepthSecs,
+         TransactionController::MaxTUFifoSize),
    mMasterProfile(0),
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),
@@ -80,7 +63,6 @@ DialogUsageManager::DialogUsageManager(std::auto_ptr<SipStack> stack) :
    mServerPagerMessageHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
-   mStackThread(*mStack),
    mDumShutdownHandler(0),
    mShutdownState(Running)
 {
@@ -124,6 +106,12 @@ DialogUsageManager::~DialogUsageManager()
    //InfoLog ( << "~DialogUsageManager done" );
 }
 
+bool 
+DialogUsageManager::isForMe(const SipMessage& msg) const
+{
+   return true;   
+}
+
 void
 DialogUsageManager::addTransport( TransportType protocol,
                                   int port,
@@ -133,26 +121,26 @@ DialogUsageManager::addTransport( TransportType protocol,
                                   const Data& privateKeyPassPhrase,
                                   SecurityTypes::SSLType sslType)
 {
-   mStack->addTransport(protocol, port, version, ipInterface,
+   mStack.addTransport(protocol, port, version, ipInterface,
                         sipDomainname, privateKeyPassPhrase, sslType);
 }
 
 SipStack& 
 DialogUsageManager::getSipStack()
 {
-   return *mStack;
+   return mStack;
 }
 
-Security&
+Security*
 DialogUsageManager::getSecurity()
 {
-   return *mStack->getSecurity();
+   return mStack.getSecurity();
 }
 
 Data
 DialogUsageManager::getHostAddress()
 {
-    return mStack->getHostAddress();
+    return mStack.getHostAddress();
 }
 
 void
@@ -166,7 +154,7 @@ DialogUsageManager::shutdown()
             //assert(mHandleMap.empty());
             mShutdownState = ShuttingDownStack;
             InfoLog (<< "shutdown SipStack");
-            mStack->shutdown();
+            mStack.shutdown();
             break;
          case ShuttingDownStack:
             InfoLog (<< "Finished dum shutdown");
@@ -233,7 +221,7 @@ void DialogUsageManager::setMasterProfile(MasterProfile* masterProfile)
 void DialogUsageManager::setKeepAliveManager(std::auto_ptr<KeepAliveManager> manager)
 {
    mKeepAliveManager = manager;
-   mKeepAliveManager->setStack(mStack.get());
+   mKeepAliveManager->setStack(&mStack);
 }
 
 void DialogUsageManager::setRedirectManager(std::auto_ptr<RedirectManager> manager)
@@ -303,7 +291,7 @@ DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
                              BaseUsageHandle target, int cseq, int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
-   mStack->post(t, duration);
+   mStack.post(t, duration);
 }
 
 void
@@ -311,7 +299,7 @@ DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration,
                                BaseUsageHandle target, int cseq, int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
-   mStack->postMS(t, duration);
+   mStack.postMS(t, duration);
 }
 
 void
@@ -419,7 +407,7 @@ void
 DialogUsageManager::sendResponse(SipMessage& response)
 {
    assert(response.isResponse());
-   mStack->send(response);
+   mStack.send(response);
 }
 
 SipMessage&
@@ -665,11 +653,11 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, Sip
    if (userProfile.hasOutboundProxy() && !findDialog(id))
    {
       DebugLog ( << "Using outbound proxy");
-      mStack->sendTo(msg, userProfile.getOutboundProxy().uri());
+      mStack.sendTo(msg, userProfile.getOutboundProxy().uri());
    }
    else
    {
-      mStack->send(msg);
+      mStack.send(msg);
    }
 }
 
@@ -694,7 +682,7 @@ DialogUsageManager::destroy(const BaseUsage* usage)
    if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
    {
       DestroyUsage destroy(usage->mHandle);
-      mStack->post(destroy);
+      mStack.post(destroy);
    }
    else
    {
@@ -708,7 +696,7 @@ DialogUsageManager::destroy(DialogSet* dset)
    if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
    {
       DestroyUsage destroy(dset);
-      mStack->post(destroy);
+      mStack.post(destroy);
    }
    else
    {
@@ -722,7 +710,7 @@ DialogUsageManager::destroy(Dialog* d)
    if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
    {
       DestroyUsage destroy(d);
-      mStack->post(destroy);
+      mStack.post(destroy);
    }
    else
    {
@@ -733,13 +721,13 @@ DialogUsageManager::destroy(Dialog* d)
 void
 DialogUsageManager::buildFdSet(FdSet& fdset)
 {
-   mStack->buildFdSet(fdset);
+   mStack.buildFdSet(fdset);
 }
 
 int
 DialogUsageManager::getTimeTillNextProcessMS()
 {
-   return mStack->getTimeTillNextProcessMS();
+   return mStack.getTimeTillNextProcessMS();
 }
 
 Dialog*
@@ -813,12 +801,6 @@ DialogUsageManager::findInviteSession(CallId replaces)
    return make_pair(is, ErrorStatusCode);
 }
 
-void
-DialogUsageManager::run()
-{
-   mStackThread.run();
-}
-
 bool
 DialogUsageManager::process()
 {
@@ -830,7 +812,7 @@ DialogUsageManager::process()
 
    try
    {
-      std::auto_ptr<Message> msg( mStack->receiveAny() );
+      std::auto_ptr<Message> msg( mStack.receiveAny() );
       if (msg.get())
       {
          InfoLog (<< "Got: " << msg->brief());
@@ -939,18 +921,6 @@ DialogUsageManager::process()
             stats->logStats(RESIPROCATE_SUBSYSTEM, mStatsPayload);
          }
 
-         ShutdownMessage* end = dynamic_cast<ShutdownMessage*>(msg.get());
-         if (end)
-         {
-            InfoLog (<< "Shutting down stack thread");
-            mStackThread.shutdown();
-            mStackThread.join();
-            DialogUsageManager::shutdown();
-         }
-
-         // !jf! might want to do something with StatisticsMessage
-         //ErrLog(<<"Unknown message received." << msg->brief());
-         //assert(0);
          return true;
       }
    }
@@ -975,7 +945,7 @@ DialogUsageManager::processIdentityCheckResponse(const SipMessage& msg)
       }
       else
       {
-         getSecurity().checkAndSetIdentity(msg);
+         getSecurity()->checkAndSetIdentity(msg);
          processRequest(*it->second);
          delete it->second;
          mRequiresCerts.erase(it);
@@ -999,9 +969,9 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
        sipMsg->exists(h_IdentityInfo) &&
        sipMsg->exists(h_Date))
    {
-      if (getSecurity().hasDomainCert(sipMsg->header(h_From).uri().host()))
+      if (getSecurity()->hasDomainCert(sipMsg->header(h_From).uri().host()))
       {
-         getSecurity().checkAndSetIdentity(*sipMsg);
+         getSecurity()->checkAndSetIdentity(*sipMsg);
          return false;
       }
       else
@@ -1014,7 +984,7 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
             mRequiresCerts[opt->getTransactionId()] = sipMsg;
             //!dcm! -- bypassing DialogUsageManager::send to keep transactionID;
             //are there issues with outbound proxies.
-            mStack->send(*opt);
+            mStack.send(*opt);
 
             return true;
          }
@@ -1037,7 +1007,7 @@ DialogUsageManager::process(FdSet& fdset)
 {
    try
    {
-      mStack->process(fdset);
+      mStack.process(fdset);
       while(process());
    }
    catch(BaseException& e)
