@@ -364,6 +364,45 @@ addPrivateKeyPEM(
       BIO_free(in);
    }
 }
+void
+addPrivateKeyPEM(
+   BaseSecurity::PrivateKeyMap& privateKeys,
+   const Data& key,
+   const Data& privateKeyPEM)
+{
+   assert( !privateKeyPEM.empty() );
+   BaseSecurity::PrivateKeyMap::iterator where = privateKeys.find(key);
+   if (where == privateKeys.end())
+   {
+      BIO* in = BIO_new_mem_buf(const_cast<char*>(privateKeyPEM.c_str()), -1);
+
+      if ( !in )
+      {
+         ErrLog(<< "Could create BIO buffer from '" << privateKeyPEM << "'");
+         throw BaseSecurity::Exception("Could not create BIO buffer", __FILE__,__LINE__);
+      }
+
+      try
+      {
+         BIO_set_close(in, BIO_NOCLOSE);
+
+         EVP_PKEY* privateKey;
+         if (PEM_read_bio_PrivateKey(in, &privateKey, 0, 0) == 0)
+         {
+            ErrLog(<< "Could not read private key from '" << privateKeyPEM << "' using no pass phrase" );
+            throw BaseSecurity::Exception("Could not read private key ", __FILE__,__LINE__);
+         }
+
+         privateKeys.insert(std::make_pair(key, privateKey));
+      }
+      catch(...)
+      {
+         BIO_free(in);
+         throw;
+      }
+      BIO_free(in);
+   }
+}
 bool
 hasPrivateKey(
    const BaseSecurity::PrivateKeyMap& privateKeys,
@@ -376,7 +415,7 @@ hasPrivateKey(
       return   true;
 }
 Data
-getPrivateKey(
+getPrivateKeyPEM(
    const BaseSecurity::PrivateKeyMap& privateKeys,
    const BaseSecurity::PassPhraseMap& passPhrases,
    const Data& key)
@@ -402,6 +441,7 @@ getPrivateKey(
       assert(out);
       EVP_PKEY* pk = where->second;
       assert(pk);
+
       // write pk to out using key phrase p, with no cipher.
       int ret = PEM_write_bio_PrivateKey(out, pk, 0, 0, 0, 0, p);
       assert(ret == 1);
@@ -409,9 +449,47 @@ getPrivateKey(
       // get length of BIO buffer, not sure this is right.
       size_t len = BIO_ctrl_pending(out);
       assert(len > 0);
-      char* buf = new char[len];
+
       // copy content in BIO buffer to our buffer.
+      char* buf = new char[len];
       BIO_get_mem_data(out, &buf);
+
+      // hand our buffer to a Data object.
+      return   Data(Data::Take, buf, len);
+   }
+}
+Data
+getPrivateKeyPEM(
+   const BaseSecurity::PrivateKeyMap& privateKeys,
+   const Data& key)
+{
+   BaseSecurity::PrivateKeyMap::const_iterator where = privateKeys.find(key);
+   if (where == privateKeys.end())
+   {
+      ErrLog(<< "Could find private key for '" << key << "'");
+      throw BaseSecurity::Exception("Could not find private key", __FILE__,__LINE__);
+   }
+   else
+   {
+      // !kh!
+      // creates a read/write BIO buffer.
+      BIO *out = BIO_new(BIO_s_mem());
+      assert(out);
+      EVP_PKEY* pk = where->second;
+      assert(pk);
+
+      // write pk to out using key phrase p, with no cipher.
+      int ret = PEM_write_bio_PrivateKey(out, pk, 0, 0, 0, 0, 0);
+      assert(ret == 1);
+
+      // get length of BIO buffer, not sure this is right.
+      size_t len = BIO_ctrl_pending(out);
+      assert(len > 0);
+
+      // copy content in BIO buffer to our buffer.
+      char* buf = new char[len];
+      BIO_get_mem_data(out, &buf);
+
       // hand our buffer to a Data object.
       return   Data(Data::Take, buf, len);
    }
@@ -554,7 +632,8 @@ std::vector<BaseSecurity::CertificateInfo>
 BaseSecurity::getRootCertDescriptions() const
 {
    // !kh!
-   // ???
+   // need to be implemented.
+   assert(0);
    return   std::vector<CertificateInfo>();
 }
 void
@@ -595,8 +674,6 @@ BaseSecurity::addDomainCertPEM(const Data& domainName, const Data& certPEM)
 {
    addCertPEM(mDomainCerts, domainName, certPEM);
 }
-
-
 void
 BaseSecurity::addDomainCertDER(const Data& domainName, const Data& certDER)
 {
@@ -619,29 +696,26 @@ BaseSecurity::getDomainCertDER(const Data& domainName) const
 }
 
 void
-BaseSecurity::setDomainPassPhrase(const Data& domainName, const Data& passPhrase)
-{
-   setPassPhrase(mDomainPassPhrases, domainName, passPhrase);
-}
-bool
-BaseSecurity::hasDomainPassPhrase(const Data& domainName)
-{
-   return   hasPassPhrase(mDomainPassPhrases, domainName);
-}
-
-
-
-
-void
 BaseSecurity::addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM)
 {
-   addPrivateKeyPEM(mDomainPrivateKeys, mDomainPassPhrases, domainName, privateKeyPEM);
+   addPrivateKeyPEM(mDomainPrivateKeys, domainName, privateKeyPEM);
 }
 bool
 BaseSecurity::hasDomainPrivateKey(const Data& domainName) const
 {
    return   hasPrivateKey(mDomainPrivateKeys, domainName);
 }
+bool
+BaseSecurity::removeDomainPrivateKey(const Data& domainName)
+{
+   return   removePrivateKey(mDomainPrivateKeys, domainName);
+}
+Data
+BaseSecurity::getDomainPrivateKeyPEM(const Data& domainName) const
+{
+   return   getPrivateKeyPEM(mDomainPrivateKeys, domainName);
+}
+
 void
 BaseSecurity::addUserCertPEM(const Data& aor, const Data& certPEM)
 {
@@ -652,6 +726,151 @@ BaseSecurity::addUserCertDER(const Data& aor, const Data& certDER)
 {
    addCertDER(mUserCerts, aor, certDER);
 }
+bool
+BaseSecurity::hasUserCert(const Data& aor) const
+{
+   return   hasCert(mUserCerts, aor);
+}
+bool
+BaseSecurity::removeUserCert(const Data& aor)
+{
+   return   removeCert(mUserCerts, aor);
+}
+Data
+BaseSecurity::getUserCertDER(const Data& aor) const
+{
+   return   getCertDER(mUserCerts, aor);
+}
+
+void
+BaseSecurity::setUserPassPhrase(const Data& aor, const Data& passPhrase)
+{
+   assert(aor.empty());
+
+   PassPhraseMap::iterator iter = mUserPassPhrases.find(aor);
+   if(iter == mUserPassPhrases.end())
+      mUserPassPhrases.insert(std::make_pair(aor, passPhrase));
+}
+bool
+BaseSecurity::hasUserPassPhrase(const Data& aor) const
+{
+   assert(aor.empty());
+
+   PassPhraseMap::const_iterator iter = mUserPassPhrases.find(aor);
+   if(iter == mUserPassPhrases.end())
+      return   false;
+   else
+      return   true;
+}
+bool
+BaseSecurity::removeUserPassPhrase(const Data& aor)
+{
+   assert(aor.empty());
+
+   PassPhraseMap::iterator iter = mUserPassPhrases.find(aor);
+   if(iter == mUserPassPhrases.end())
+   {
+      return   false;
+   }
+   else
+   {
+      mUserPassPhrases.erase(iter);
+      return   true;
+   }
+}
+Data
+BaseSecurity::getUserPassPhrase(const Data& aor) const
+{
+   assert(aor.empty());
+
+   PassPhraseMap::const_iterator iter = mUserPassPhrases.find(aor);
+   if(iter == mUserPassPhrases.end())
+   {
+      return   iter->second;
+   }
+   else
+   {
+      return   Data::Empty;
+   }
+}
+
+void
+BaseSecurity::addUserPrivateKeyPEM(const Data& aor, const Data& cert)
+{
+   addPrivateKeyPEM(mUserPrivateKeys, mUserPassPhrases, aor, cert);
+}
+bool
+BaseSecurity::hasUserPrivateKey(const Data& aor) const
+{
+   return   hasPrivateKey(mUserPrivateKeys, aor);
+}
+bool
+BaseSecurity::removeUserPrivateKey(const Data& aor)
+{
+   return   removePrivateKey(mUserPrivateKeys, aor);
+}
+Data
+BaseSecurity::getUserPrivateKeyPEM(const Data& aor) const
+{
+   return   getPrivateKeyPEM(mUserPrivateKeys, mUserPassPhrases, aor);
+}
+
+void
+BaseSecurity::generateUserCert (const Data& aor, const Data& passPhrase)
+{
+   assert(0);
+}
+
+MultipartSignedContents*
+BaseSecurity::sign(const Data& senderAor, Contents* )
+{
+   assert(0);
+   return   0;
+}
+Pkcs7Contents*
+BaseSecurity::encrypt(Contents* , const Data& recipCertName )
+{
+   assert(0);
+   return   0;
+}
+Pkcs7Contents*
+BaseSecurity::signAndEncrypt( const Data& senderAor, Contents* , const Data& recipCertName )
+{
+   assert(0);
+   return   0;
+}
+
+Data
+BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in )
+{
+   assert(0);
+   return   Data::Empty;
+}
+bool
+BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Data& sig )
+{
+   assert(0);
+   return   false;
+}
+
+Contents*
+BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* )
+{
+   assert(0);
+   return   0;
+}
+
+Contents*
+BaseSecurity::checkSignature(
+   const Data& signerAor,
+   MultipartSignedContents*,
+   Data& signedBy,
+   SignatureStatus& sigStat )
+{
+   assert(0);
+   return   0;
+}
+
 
 
 
