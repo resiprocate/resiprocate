@@ -8,8 +8,8 @@
 #include <sys/types.h>
 #include <time.h>
 
-#include <sip2/Log.hxx>
-#include <sip2/Lock.hxx>
+#include <sipstack/Log.hxx>
+#include <sipstack/Lock.hxx>
 
 using namespace Vocal2;
 
@@ -22,7 +22,7 @@ pid_t Log::_pid=0;
 const char
 Log::_descriptions[][32] = {"EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "DEBUG_STACK", ""}; 
 
-Vocal::Threads::Mutex Log::_mutex;
+Mutex Log::_mutex;
 
 void 
 Log::initialize(Type type, Level level, const string& appName)
@@ -40,7 +40,7 @@ Log::initialize(Type type, Level level, const string& appName)
 void
 Log::setLevel(Level level)
 {
-   Vocal::Threads::Lock lock(_mutex);
+   Lock lock(_mutex);
    _level = level; 
 }
 

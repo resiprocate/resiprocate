@@ -8,8 +8,8 @@
 #include <string>
 #include <unistd.h>
 #include <syslog.h>
-#include "Subsystem.hxx"
-#include "Mutex.hxx"
+#include <sipstack/Subsystem.hxx>
+#include <sipstack/Mutex.hxx>
 
 namespace Vocal2
 {
@@ -43,7 +43,7 @@ class Log
       static Level level() { return _level; }
       static Level toLevel(const string& l);
       static string toString(Level l);
-      static Vocal::Threads::Mutex _mutex;
+      static Mutex _mutex;
 
    protected:
       static Level _level;
@@ -54,6 +54,6 @@ class Log
       static const char _descriptions[][32];
 };
 
-} // namespace Vocal
+} // namespace Vocal2
 
 #endif

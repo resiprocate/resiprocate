@@ -3,14 +3,12 @@
 #ifndef Logger_hxx
 #define Logger_hxx
 
-#include <loki/Singleton.h>
-#include <loki/Threads.h>
-//#include <loki/static_check.h>
+#include <sipstack/Singleton.h>
+#include <sipstack/Threads.h>
 
-
-#include <sip2/Log.hxx>
-#include <sip2/SysLogStream.hxx>
-#include <sip2/Lock.hxx>
+#include <sipstack/Log.hxx>
+#include <sipstack/SysLogStream.hxx>
+#include <sipstack/Lock.hxx>
 
 /**
    Defines a set of logging macros, one for each level of logging.
@@ -27,19 +25,19 @@
 // variadic to handle comma in template arguments
 #define DebugLog(arg__, args__...)                                                 \
                                          /* eat the comma if no extra arguments */ \
-GenericLog(VOCAL_SUBSYSTEM, Vocal::Log::DEBUG, arg__, ##args__)
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, arg__, ##args__)
 
 #define CritLog(arg__, args__...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal::Log::CRIT, arg__, ##args__)
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, arg__, ##args__)
 
 #define ErrLog(arg__, args__...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal::Log::ERR, arg__, ##args__)
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, arg__, ##args__)
 
 #define WarningLog(arg__, args__...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal::Log::WARNING, arg__, ##args__)
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, arg__, ##args__)
 
 #define InfoLog(arg__, args__...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal::Log::INFO, arg__, ##args__)
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, arg__, ##args__)
 
 #ifdef NO_DEBUG
 // Suppress debug loging at compile time
@@ -50,13 +48,13 @@ GenericLog(VOCAL_SUBSYSTEM, Vocal::Log::INFO, arg__, ##args__)
 #define GenericLog(system__, level__, arg__, args__...)          \
 do                                                               \
 {                                                                \
-  if (Vocal::GenericLogImpl::isLogging(level__))                 \
+  if (Vocal2::GenericLogImpl::isLogging(level__))                 \
   {                                                              \
-     Vocal::Threads::Lock lock(Vocal::Log::_mutex);              \
-     if (Vocal::GenericLogImpl::isLogging(level__))              \
+     Vocal2::Lock lock(Vocal2::Log::_mutex);              \
+     if (Vocal2::GenericLogImpl::isLogging(level__))              \
      {                                                           \
-        Vocal::Log::tags(level__, system__,                      \
-                          Vocal::GenericLogImpl::Instance())     \
+        Vocal2::Log::tags(level__, system__,                      \
+                          Vocal2::GenericLogImpl::Instance())     \
           << __FILE__ << ':' << __LINE__ << DELIM                \
                   /* eat the comma if no extra arguments */      \
           arg__ , ##args__ << endl;                              \
