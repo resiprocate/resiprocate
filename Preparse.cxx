@@ -21,14 +21,15 @@ Edge *** mTransitionTable = 0;
 
 #if !defined(NDEBUG) && defined(PP_DEBUG)
 
-string showN(const char * p, size_t l)
+Data
+showN(const char * p, size_t l)
 {
-   string s;
-   
+   Data s;
    for(unsigned int i = 0 ; i < l ; i++)
+   {
       s += p[i];
+   }
    return s;
-   
 }
 
 const char *  stateName(PreparseStateTable::State s)
@@ -57,10 +58,10 @@ const char *  stateName(PreparseStateTable::State s)
 }
 
 
-string
+Data
 workString(int m)
 {
-   string s("[");
+   Data s("[");
 
    if ( m &  actNil) s += " Nil ";
    if ( m &  actAdd) s += " Add ";
