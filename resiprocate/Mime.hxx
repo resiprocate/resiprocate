@@ -40,7 +40,6 @@ class Mime : public ParserCategory
       mutable Data mSubType;
 };
 typedef ParserContainer<Mime> Mimes;
-
  
 }
 
