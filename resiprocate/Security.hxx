@@ -26,7 +26,9 @@ class TlsConnection
       
       int read( const void* buf, const int count );
       int write( const void* buf, const int count );
-
+      bool hasDataToRead(); // has data that can be read 
+      bool isGood(); // has valid connection
+      
       Data peerName();
       
    private:

@@ -23,40 +23,28 @@ using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
-class TestPresCallback: public TuIM::PresCallback
-      {
-         public:
-            virtual void presenseUpdate(const Uri& dest, bool open, const Data& status );
-      };
+class TestCallback: public TuIM::Callback
+{
+   public:
+      virtual void presenseUpdate(const Uri& dest, bool open, const Data& status );
+      virtual void receivedPage( const Data& msg, const Uri& from ,
+                                 const Data& signedBy,  Security::SignatureStatus sigStatus,
+                                 bool wasEncryped  );
+      Uri* mDest;
+      virtual void sendPageFailed( const Uri& dest, int );
+      virtual void registrationFailed( const Uri& dest, int  );
+};
   
 
 void 
-TestPresCallback::presenseUpdate(const Uri& from, bool open, const Data& status )
+TestCallback::presenseUpdate(const Uri& from, bool open, const Data& status )
 {
    const char* stat = (open)?"online":"offline";
    cout << from << " set presence to " << stat << " " << status.c_str() << endl;
 }
 
-
-class TestPageCallback: public TuIM::PageCallback
-{
-   public:
-      virtual void receivedPage( const Data& msg, const Uri& from ,
-                                 const Data& signedBy,  Security::SignatureStatus sigStatus,
-                                 bool wasEncryped  );
-
-      Uri* mDest;
-};
-    
-class TestErrCallback: public  TuIM::ErrCallback
-{
-   public:
-      virtual void sendPageFailed( const Uri& dest );
-};
-
-
 void 
-TestPageCallback::receivedPage( const Data& msg, const Uri& from,
+TestCallback::receivedPage( const Data& msg, const Uri& from,
                                 const Data& signedBy,  Security::SignatureStatus sigStatus,
                                 bool wasEncryped  )
 {  
@@ -98,10 +86,16 @@ TestPageCallback::receivedPage( const Data& msg, const Uri& from,
 
 
 void 
-TestErrCallback::sendPageFailed( const Uri& dest )
+TestCallback::sendPageFailed( const Uri& dest, int err )
 {
-   InfoLog(<< "In TestErrCallback");  
    cerr << "Message to " << dest << " failed" << endl;
+}
+
+
+void 
+TestCallback::registrationFailed( const Uri& dest, int err )
+{
+   cerr << "Registration to " << dest << " failed" << endl;
 }
 
 
@@ -252,7 +246,7 @@ main(int argc, char* argv[])
    }
 #endif
    
-   Vocal2::Transport::Type transport = Transport::UDP;
+   Vocal2::Transport::Type transport = Transport::TLS;
 
    sipStack.addTransport(Transport::UDP, port); InfoLog("UDP on port " << port );
    sipStack.addTransport(Transport::TCP, port); InfoLog("TCP on port " << port );
@@ -272,13 +266,9 @@ main(int argc, char* argv[])
    }
 #endif
 
-   TestPageCallback pageCallback;
-   pageCallback.mDest = &dest;
+   TestCallback callback;
+   callback.mDest = &dest;
    
-   TestErrCallback errCallback;
-    
-   TestPresCallback presCallback;
-
    dest.param(p_transport) = Transport::toData( transport );
    aor.param(p_transport) = Transport::toData( transport );
 
@@ -287,7 +277,7 @@ main(int argc, char* argv[])
    contact.param(p_transport) =  aor.param(p_transport);
    contact.host() = "localhost"; // TODO - fix this 
    
-   TuIM tuIM(&sipStack,aor,contact,&pageCallback,&errCallback,&presCallback);
+   TuIM tuIM(&sipStack,aor,contact,&callback);
 
 #if 0
    tuIM.registerAor( aor, aorPassword );

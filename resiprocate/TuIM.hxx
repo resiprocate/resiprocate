@@ -17,7 +17,7 @@ class TuIM
       class Buddy;
       
 public:
-      class PageCallback
+      class Callback
       {
          public:
             virtual void receivedPage(const Data& msg, 
@@ -25,30 +25,17 @@ public:
                                       const Data& signedBy,  
                                       Security::SignatureStatus sigStatus,
                                       bool wasEncryped  ) = 0; 
-            virtual ~PageCallback();
-      };
-      
-      class ErrCallback
-      {
-         public:
-            virtual void sendPageFailed(const Uri& dest ) =0;
-            virtual ~ErrCallback();
-      };
-      
-      class PresCallback
-      {
-         public:
+            virtual void sendPageFailed(const Uri& dest, int respNumber ) =0;
+            virtual void registrationFailed(const Uri& dest, int respNumber ) =0;
             virtual void presenseUpdate(const Uri& dest, bool open, const Data& status ) =0;
-            virtual ~PresCallback();
+            virtual ~Callback();
       };
       
       TuIM(SipStack* stack, 
            const Uri& aor, 
            const Uri& contact,
-           PageCallback* pageCallback, 
-           ErrCallback* errCallback,
-           PresCallback* pressCallback);
-      
+           Callback* callback);
+            
       void sendPage(const Data& text, const Uri& dest, bool sign, const Data& encryptFor );
 
       void process();
@@ -79,9 +66,7 @@ public:
 
       void sendNotify(Dialog* dialog);
       
-      PageCallback* mPageCallback;
-      ErrCallback* mErrCallback; 
-      PresCallback* mPressCallback;
+      Callback* mCallback;
       SipStack* mStack;
       Uri mAor;
       Uri mContact;
