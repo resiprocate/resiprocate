@@ -179,7 +179,7 @@ Timer::setupTimeOffsets()
    //cerr << "diff in count is " << count << endl;
     
    UInt64 cpuSpeed64 = count / uSec;
-   cpuSpeed = unsigned long(cpuSpeed64);
+   cpuSpeed = (unsigned long)cpuSpeed64;
     
    static int speeds[] = { 0,1,25,33,60,90,100,133,150,166,200,
                            266,300,400,450,
