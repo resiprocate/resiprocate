@@ -112,10 +112,27 @@ insert(std::ostream& s, const std::set <K, C>& c)
       {
          s << ", ";
       }
-      // recurse
-#ifndef WIN32
       insert(s, *i);
+   }
+   s << "]";
+   return s;
+}
 #endif
+
+#if !defined(__INTEL_COMPILER)
+template <class K, class C>
+std::ostream&
+insert(std::ostream& s, const std::multiset <K, C>& c)
+{
+   s << "[";
+   for (typename std::multiset <K, C>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << ", ";
+      }
+      insert(s, *i);
    }
    s << "]";
    return s;
@@ -136,7 +153,6 @@ insert(std::ostream& s, const HashMap<K,V,H>& c)
       {
          s << ", ";
       }
-      // recurse
       insert(s, i->first);
       s << " -> ";
       insert(s, i->second);      
@@ -159,13 +175,10 @@ insert(std::ostream& s, const std::map <K, V, H>& c)
       {
          s << ", ";
       }
-      // recurse
-//#ifndef WIN32
 	  insert(s, i->first);
 	  static const char* arrow(" -> ");
       s << arrow;
       insert(s, i->second);  
-//#endif
    }
    s << "]";
    return s;
