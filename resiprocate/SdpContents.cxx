@@ -44,7 +44,7 @@ void skipEol(ParseBuffer& pb)
    }
 }
 
-AttributeHelper::AttributeHelper(const AttributeHelper& rhs) 
+AttributeHelper::AttributeHelper(const AttributeHelper& rhs)
    : mAttributes(rhs.mAttributes)
 {
 }
@@ -54,7 +54,7 @@ AttributeHelper::AttributeHelper()
 }
 
 AttributeHelper&
-AttributeHelper::operator=(const AttributeHelper& rhs) 
+AttributeHelper::operator=(const AttributeHelper& rhs)
 {
    if (this != &rhs)
    {
@@ -63,13 +63,13 @@ AttributeHelper::operator=(const AttributeHelper& rhs)
    return *this;
 }
 
-bool 
+bool
 AttributeHelper::exists(const Data& key) const
 {
    return mAttributes.find(key) != mAttributes.end();
 }
 
-const vector<Data>& 
+const vector<Data>&
 AttributeHelper::getValues(const Data& key) const
 {
    if (!exists(key))
@@ -80,7 +80,7 @@ AttributeHelper::getValues(const Data& key) const
    return mAttributes.find(key)->second;
 }
 
-ostream& 
+ostream&
 AttributeHelper::encode(ostream& s) const
 {
    for (HashMap< Data, vector<Data> >::const_iterator i = mAttributes.begin();
@@ -100,15 +100,15 @@ AttributeHelper::encode(ostream& s) const
    }
    return s;
 }
-      
-void 
+
+void
 AttributeHelper::parse(ParseBuffer& pb)
 {
    while (!pb.eof() && *pb.position() == 'a')
    {
       Data key;
       Data value;
-      
+
       pb.skipChar('a');
       const char* anchor = pb.skipChar(Symbols::EQUALS[0]);
       pb.skipToOneOf(Symbols::COLON, Symbols::CRLF);
@@ -119,20 +119,20 @@ AttributeHelper::parse(ParseBuffer& pb)
          pb.skipToOneOf(Symbols::CRLF);
          pb.data(value, anchor);
       }
-          
+
 	  if(!pb.eof()) skipEol(pb);
 
       mAttributes[key].push_back(value);
    }
 }
 
-void 
+void
 AttributeHelper::addAttribute(const Data& key, const Data& value)
 {
    mAttributes[key].push_back(value);
 }
 
-void 
+void
 AttributeHelper::clearAttribute(const Data& key)
 {
    mAttributes.erase(key);
@@ -147,7 +147,7 @@ SdpContents::SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes)
 {
 }
 
-SdpContents::SdpContents(const SdpContents& rhs) 
+SdpContents::SdpContents(const SdpContents& rhs)
    : Contents(rhs),
      mSession(rhs.mSession)
 {
@@ -158,7 +158,7 @@ SdpContents::~SdpContents()
 }
 
 
-SdpContents& 
+SdpContents&
 SdpContents::operator=(const SdpContents& rhs)
 {
    if (this != &rhs)
@@ -188,8 +188,8 @@ SdpContents::encodeParsed(ostream& s) const
    return s;
 }
 
-const Mime& 
-SdpContents::getStaticType() 
+const Mime&
+SdpContents::getStaticType()
 {
    static Mime type("application", "sdp");
    return type;
@@ -205,7 +205,7 @@ SdpContents::Session::Origin::Origin()
      mAddress(nullOrigin)
 {}
 
-SdpContents::Session::Origin::Origin(const Origin& rhs) 
+SdpContents::Session::Origin::Origin(const Origin& rhs)
    : mUser(rhs.mUser),
      mSessionId(rhs.mSessionId),
      mVersion(rhs.mVersion),
@@ -241,10 +241,10 @@ SdpContents::Session::Origin::Origin(const Data& user,
      mAddress(address)
 {}
 
-ostream& 
+ostream&
 SdpContents::Session::Origin::encode(ostream& s) const
 {
-   s << "o=" 
+   s << "o="
      << mUser << Symbols::SPACE[0]
      << mSessionId << Symbols::SPACE[0]
      << mVersion << Symbols::SPACE[0]
@@ -272,7 +272,7 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
    mSessionId = pb.unsignedLongLong();
-   
+
    anchor = pb.skipChar(Symbols::SPACE[0]);
    mVersion = pb.unsignedLongLong();
 
@@ -326,7 +326,7 @@ SdpContents::Session::Email::operator=(const Email& rhs)
    return *this;
 }
 
-ostream& 
+ostream&
 SdpContents::Session::Email::encode(ostream& s) const
 {
    s << "e="
@@ -336,7 +336,7 @@ SdpContents::Session::Email::encode(ostream& s) const
       s << Symbols::LPAREN[0] << mFreeText << Symbols::RPAREN[0];
    }
    s << Symbols::CRLF;
-   
+
    return s;
 }
 
@@ -383,8 +383,8 @@ void parseEorP(ParseBuffer& pb, Data& eOrp, Data& freeText)
       else
       {
          pb.reset(anchor);
-         pb.skipToOneOf(Symbols::CRLF);         
-         
+         pb.skipToOneOf(Symbols::CRLF);
+
          // mjh@isi.edu
          //            ^
          pb.data(eOrp, anchor);
@@ -433,7 +433,7 @@ SdpContents::Session::Phone::encode(ostream& s) const
       s << Symbols::LPAREN[0] << mFreeText << Symbols::RPAREN[0];
    }
    s << Symbols::CRLF;
-   
+
    return s;
 }
 
@@ -477,7 +477,7 @@ SdpContents::Session::Connection::operator=(const Connection& rhs)
    return *this;
 }
 
-ostream& 
+ostream&
 SdpContents::Session::Connection::encode(ostream& s) const
 {
    s << "c=IN "
@@ -563,7 +563,7 @@ SdpContents::Session::Bandwidth::operator=(const Bandwidth& rhs)
    return *this;
 }
 
-ostream& 
+ostream&
 SdpContents::Session::Bandwidth::encode(ostream& s) const
 {
    s << "b="
@@ -617,11 +617,11 @@ SdpContents::Session::Time::operator=(const Time& rhs)
    return *this;
 }
 
-ostream& 
+ostream&
 SdpContents::Session::Time::encode(ostream& s) const
 {
-   s << "t=" << mStart << Symbols::SPACE[0] 
-     << mStop 
+   s << "t=" << mStart << Symbols::SPACE[0]
+     << mStop
      << Symbols::CRLF;
 
    for (vector<Repeat>::const_iterator i = mRepeats.begin();
@@ -651,7 +651,7 @@ SdpContents::Session::Time::parse(ParseBuffer& pb)
    }
 }
 
-void 
+void
 SdpContents::Session::Time::addRepeat(const Repeat& repeat)
 {
    mRepeats.push_back(repeat);
@@ -706,13 +706,13 @@ parseTypedTime(ParseBuffer& pb)
    }
    return v;
 }
-   
+
 void
 SdpContents::Session::Time::Repeat::parse(ParseBuffer& pb)
 {
    pb.skipChar('r');
    pb.skipChar(Symbols::EQUALS[0]);
-   
+
    mInterval = parseTypedTime(pb);
    pb.skipChar(Symbols::SPACE[0]);
 
@@ -721,7 +721,7 @@ SdpContents::Session::Time::Repeat::parse(ParseBuffer& pb)
    while (!pb.eof() && *pb.position() != Symbols::CR[0])
    {
       pb.skipChar(Symbols::SPACE[0]);
-      
+
       mOffsets.push_back(parseTypedTime(pb));
    }
 
@@ -768,7 +768,7 @@ SdpContents::Session::Timezones::operator=(const Timezones& rhs)
    return *this;
 }
 
-ostream& 
+ostream&
 SdpContents::Session::Timezones::encode(ostream& s) const
 {
    if (!mAdjustments.empty())
@@ -786,7 +786,7 @@ SdpContents::Session::Timezones::encode(ostream& s) const
          s << i->time << Symbols::SPACE[0]
            << i->offset << 's';
       }
-      
+
       s << Symbols::CRLF;
    }
    return s;
@@ -836,7 +836,7 @@ SdpContents::Session::Encryption::Encryption(const Encryption& rhs)
    : mMethod(rhs.mMethod),
      mKey(rhs.mKey)
 {}
-  
+
 SdpContents::Session::Encryption&
 SdpContents::Session::Encryption::operator=(const Encryption& rhs)
 {
@@ -869,7 +869,7 @@ SdpContents::Session::Encryption::parse(ParseBuffer& pb)
 {
    pb.skipChar('k');
    const char* anchor = pb.skipChar(Symbols::EQUALS[0]);
-   
+
    pb.skipToChar(Symbols::COLON[0]);
    if (!pb.eof())
    {
@@ -921,7 +921,7 @@ SdpContents::Session::Session(const Session& rhs)
    *this = rhs;
 }
 
-SdpContents::Session& 
+SdpContents::Session&
 SdpContents::Session::operator=(const Session& rhs)
 {
    if (this != &rhs)
@@ -940,7 +940,7 @@ SdpContents::Session::operator=(const Session& rhs)
       mTimezones = rhs.mTimezones;
       mEncryption = rhs.mEncryption;
       mAttributeHelper = rhs.mAttributeHelper;
-      
+
       for (std::vector<Medium>::iterator i=mMedia.begin(); i != mMedia.end(); ++i)
       {
          i->setSession(this);
@@ -1028,13 +1028,13 @@ SdpContents::Session::parse(ParseBuffer& pb)
    }
 }
 
-ostream& 
+ostream&
 SdpContents::Session::encode(ostream& s) const
 {
    s << "v=" << mVersion << Symbols::CRLF;
    mOrigin.encode(s);
    s << "s=" << mName << Symbols::CRLF;
-   
+
    if (!mInformation.empty())
    {
       s << "i=" << mInformation << Symbols::CRLF;
@@ -1057,7 +1057,7 @@ SdpContents::Session::encode(ostream& s) const
    {
       i->encode(s);
    }
-   
+
    if (!mConnection.getAddress().empty())
    {
       mConnection.encode(s);
@@ -1081,7 +1081,7 @@ SdpContents::Session::encode(ostream& s) const
          i->encode(s);
       }
    }
-   
+
    mTimezones.encode(s);
 
    if (mEncryption.getMethod() != Encryption::NoEncryption)
@@ -1135,7 +1135,7 @@ void
 SdpContents::Session::addAttribute(const Data& key, const Data& value)
 {
    mAttributeHelper.addAttribute(key, value);
-   
+
    if (key == rtpmap)
    {
       for (vector<Medium>::iterator i = mMedia.begin();
@@ -1150,7 +1150,7 @@ void
 SdpContents::Session::clearAttribute(const Data& key)
 {
    mAttributeHelper.clearAttribute(key);
-   
+
    if (key == rtpmap)
    {
       for (vector<Medium>::iterator i = mMedia.begin();
@@ -1283,7 +1283,7 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
       anchor = pb.skipChar(Symbols::EQUALS[0]);
       pb.skipToOneOf(Symbols::CRLF);
       pb.data(mInformation, anchor);
-      
+
       skipEol(pb);
    }
 
@@ -1316,7 +1316,7 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
             for (int i = 0; i < num-1; i++)
             {
                addConnection(con);
-               mConnections.back().mAddress = before + Data(after+i);               
+               mConnections.back().mAddress = before + Data(after+i);
             }
          }
 
@@ -1334,11 +1334,11 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
    {
       mEncryption.parse(pb);
    }
-   
+
    mAttributeHelper.parse(pb);
 }
 
-ostream& 
+ostream&
 SdpContents::Session::Medium::encode(ostream& s) const
 {
    s << "m="
@@ -1348,7 +1348,7 @@ SdpContents::Session::Medium::encode(ostream& s) const
    {
       s << Symbols::SLASH[0] << mMulticast;
    }
-   s << Symbols::SPACE[0] 
+   s << Symbols::SPACE[0]
      << mProtocol;
 
    for (vector<Data>::const_iterator i = mFormats.begin();
@@ -1404,12 +1404,12 @@ SdpContents::Session::Medium::encode(ostream& s) const
           //    continue;
           //}
 
-         s << "a=rtpmap:" 
+         s << "a=rtpmap:"
            << i->payloadType() << Symbols::SPACE[0] << *i
            << Symbols::CRLF;
          if (!i->parameters().empty())
          {
-            s << "a=fmtp:" 
+            s << "a=fmtp:"
               << i->payloadType() << Symbols::SPACE[0] << i->parameters()
               << Symbols::CRLF;
          }
@@ -1417,11 +1417,11 @@ SdpContents::Session::Medium::encode(ostream& s) const
    }
 
    mAttributeHelper.encode(s);
-   
+
    return s;
 }
 
-void 
+void
 SdpContents::Session::Medium::addFormat(const Data& format)
 {
    mFormats.push_back(format);
@@ -1463,7 +1463,7 @@ SdpContents::Session::Medium::addAttribute(const Data& key, const Data& value)
    }
 }
 
-const vector<SdpContents::Session::Connection> 
+const vector<SdpContents::Session::Connection>
 SdpContents::Session::Medium::getConnections() const
 {
    vector<Connection> connections = const_cast<Medium*>(this)->getMediumConnections();
@@ -1603,7 +1603,7 @@ Codec::Codec(const Data& name,
      mParameters(parameters)
 {
 }
- 
+
 Codec::Codec(const Codec& rhs)
    : mName(rhs.mName),
      mRate(rhs.mRate),
@@ -1612,7 +1612,7 @@ Codec::Codec(const Codec& rhs)
 {
 }
 
-Codec::Codec(const Data& name, int payloadType, int rate) 
+Codec::Codec(const Data& name, int payloadType, int rate)
    : mName(name),
      mRate(rate),
      mPayloadType(payloadType),
@@ -1620,7 +1620,7 @@ Codec::Codec(const Data& name, int payloadType, int rate)
 {
 }
 
-Codec& 
+Codec&
 Codec::operator=(const Codec& rhs)
 {
    if (this != &rhs)
@@ -1634,7 +1634,7 @@ Codec::operator=(const Codec& rhs)
 }
 
 void
-Codec::parse(ParseBuffer& pb, 
+Codec::parse(ParseBuffer& pb,
              const SdpContents::Session::Medium& medium,
              int payloadType)
 {
@@ -1664,7 +1664,7 @@ Codec::parse(ParseBuffer& pb,
    }
 }
 
-const Data& 
+const Data&
 Codec::getName() const
 {
    return mName;
@@ -1721,8 +1721,7 @@ Codec::CodecMap& Codec::getStaticCodecs()
 bool
 resip::operator==(const Codec& lhs, const Codec& rhs)
 {
-   return (lhs.mName == rhs.mName &&
-           lhs.mRate == rhs.mRate);
+   return lhs == rhs;
 }
 
 ostream&
@@ -1734,7 +1733,7 @@ resip::operator<<(ostream& str, const Codec& codec)
    return str;
 }
 
-const Codec Codec::ULaw_8000("PCMU", 0, 8000); 
+const Codec Codec::ULaw_8000("PCMU", 0, 8000);
 const Codec Codec::ALaw_8000("PCMA", 8, 8000);
 const Codec Codec::G729_8000("G729", 18, 8000);
 // !kk! payloadType (2nd arg) should not be clock rate for these two:
@@ -1745,22 +1744,22 @@ bool Codec::sStaticCodecsCreated = false;
 Codec::CodecMap Codec::sStaticCodecs;
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this vector of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this vector of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -1770,7 +1769,7 @@ Codec::CodecMap Codec::sStaticCodecs;
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -1784,9 +1783,9 @@ Codec::CodecMap Codec::sStaticCodecs;
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
