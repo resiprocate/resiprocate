@@ -38,6 +38,7 @@ class HeaderFieldValueList
       const HeaderFieldValue* front() const {return mHeaders.front();}
       const HeaderFieldValue* back() const {return mHeaders.back();}
 
+      bool parsedEmpty() const;
    private:
       typedef std::list<HeaderFieldValue*> ListImpl;
    public:
