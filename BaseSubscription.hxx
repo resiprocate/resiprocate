@@ -16,9 +16,9 @@ class BaseSubscription: public DialogUsage
 {
    public:      
       bool matches(const SipMessage& subOrNotify);
-      const Data& getDocumentKey() { return mDocumentKey; }
-      const Data& getEventType() { return mEventType; }
-      const Data& getId() { return mSubscriptionId; }
+      const Data& getDocumentKey() const { return mDocumentKey; }
+      const Data& getEventType() const { return mEventType; }
+      const Data& getId() const { return mSubscriptionId; }
 
    protected:
       friend class Dialog;
