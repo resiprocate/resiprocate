@@ -13,7 +13,7 @@ extern "C"
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 #include "resiprocate/dns/DnsStub.hxx"
 #include "resiprocate/DnsInterface.hxx"
