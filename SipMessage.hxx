@@ -103,8 +103,8 @@ class SipMessage
       void addHeader(int header, char* headerName, int headerLen, 
                      char* start, int len);
 
-  bool hasFixedDest();
-  Data getFixedDest();
+  bool hasFixedDest() const;
+  Data getFixedDest() const;
   void setFixedDest(const Data& dest);
   void clearFixedDest();
 
