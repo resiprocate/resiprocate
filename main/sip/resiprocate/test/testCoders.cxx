@@ -1,9 +1,10 @@
 #include <iostream>
-#include "sip2/util/Coders.hxx"
-#include <sys/fcntl.h>
 #include <unistd.h>
 #include <string>
 #include <assert.h>
+
+#include "sip2/util/Coders.hxx"
+
 using namespace std;
 using namespace Vocal2;
 

@@ -1184,7 +1184,7 @@ NameAddr::parse(ParseBuffer& pb)
 ostream&
 NameAddr::encode(ostream& str) const
 {
-   bool displayName = !mDisplayName.empty();
+   //bool displayName = !mDisplayName.empty();
    str << mDisplayName << Symbols::LA_QUOTE;
    mUri.encode(str);
    str << Symbols::RA_QUOTE;
