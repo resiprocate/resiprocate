@@ -85,35 +85,18 @@ SipStack::shutdown()
 }
 
 bool
-SipStack::addTransport( TransportType protocol, 
-                        int port,
+SipStack::addTransport( TransportType protocol,
+                        int port, 
                         IpVersion version,
-                        const Data& ipInterface)
-{
-   assert(!mShuttingDown);
-   assert(protocol != TLS);
-
-   bool ret = mTransactionController.addTransport(protocol, port, version, ipInterface);
-   if (ret && !ipInterface.empty()) 
-   {
-      addAlias(ipInterface, port);
-   }
-   return ret;
-}
-
-bool
-SipStack::addTlsTransport( int port, 
-                           const Data& keyDir,
-                           const Data& privateKeyPassPhrase,
-                           const Data& domainname,
-                           IpVersion version,
-                           const Data& ipInterface,
-                           SecurityTypes::SSLType sslType)
+                        const Data& ipInterface, 
+                        const Data& sipDomainname,
+                        const Data& privateKeyPassPhrase,
+                        SecurityTypes::SSLType sslType)
 {
    assert(!mShuttingDown);
    
-   bool ret = mTransactionController.addTlsTransport(port,keyDir,privateKeyPassPhrase,
-                                                     domainname, version, ipInterface, sslType);
+   bool ret = mTransactionController.addTransport( protocol, port, version, ipInterface, 
+                                                   sipDomainname, privateKeyPassPhrase, sslType);
    if (ret && !ipInterface.empty()) 
    {
       addAlias(ipInterface, port);
@@ -121,23 +104,6 @@ SipStack::addTlsTransport( int port,
    return ret;
 }
 
-bool 
-SipStack::addTlsTransport(  int port,
-                             const Data& sipDomainname, 
-                             Security& security,
-                             IpVersion version,
-                             const Data& ipInterface
-                             )
-{
-   assert(!mShuttingDown);
-   
-   bool ret = mTransactionController.addTlsTransport(port, sipDomainname, version, ipInterface);
-   if (ret && !ipInterface.empty()) 
-   {
-      addAlias(ipInterface, port);
-   }
-   return ret;
-}
 
 void
 SipStack::addAlias(const Data& domain, int port)

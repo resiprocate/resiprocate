@@ -52,35 +52,21 @@ class SipStack
       // Used by the application to add in a new transport
       // ipInterface parameter is used to specify which ethernet interface to
       // bind to. If set to Data::Empty, bind to all interfaces 
-      // Returns true, if the addTransport succeeded. false usually indicates
-      // the port is already in use. 
-      bool addTransport( TransportType protocol,
-                         int port, 
-                         IpVersion version=V4,
-                         const Data& ipInterface = Data::Empty);
-
       // If port = 0, use DNS to lookup the port number for the specified
       // domain. Only allow messages to be sent as the specified domain. 
       // For default case, you can pass in domainname =
       // DnsUtil::getLocalDomainName()
-      // Note the SipDomainName is often your host name not your server domainname
       // Returns true, if the addTransport succeeded. false usually indicates
       // the port is already in use. 
-      bool addTlsTransport(  int port = 5061,
-                             const Data& keyDir = Data::Empty, 
-                             const Data& privateKeyPassPhrase = Data::Empty,
-                             const Data& sipDomainname = Data::Empty, 
-                             IpVersion version = V4,
-                             const Data& ipInterface = Data::Empty,
-                             SecurityTypes::SSLType  sslType = SecurityTypes::TLSv1
-                             );
-
-      bool addTlsTransport(  int port,
-                             const Data& sipDomainname, 
-                             Security& security,
-                             IpVersion version = V4,
-                             const Data& ipInterface = Data::Empty
-                             );
+      bool addTransport( TransportType protocol,
+                         int port=0, 
+                         IpVersion version=V4,
+                         const Data& ipInterface = Data::Empty, 
+                         const Data& sipDomainname = Data::Empty, // only used
+                                                                  // for TLS
+                                                                  // based stuff 
+                         const Data& privateKeyPassPhrase = Data::Empty,
+                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1 );
 
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
