@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="Windows-1252"?>
+<?xml version="1.0" encoding = "Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.10"
+	Version="7.00"
 	Name="gag"
 	ProjectGUID="{53862038-09E5-4FE1-9BDF-D482D8C735ED}"
 	Keyword="Win32Proj">
@@ -34,7 +34,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib "
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib"
 				OutputFile="$(OutDir)/gag.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -54,13 +54,7 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
 				Name="VCWebDeploymentTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -88,7 +82,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib "
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Release\resiprocate.lib $(SolutionDir)\contrib\ares\Release\ares.lib"
 				OutputFile="$(OutDir)/gag.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -109,35 +103,21 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
 				Name="VCWebDeploymentTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
-	<References>
-		<ProjectReference
-			ReferencedProjectIdentifier="{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
-			Name="ares"/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
-			Name="resiprocate"/>
-	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath="gag.cxx">
-			</File>
-			<File
 				RelativePath="GagConduit.cxx">
 			</File>
 			<File
 				RelativePath="GagMessage.cxx">
+			</File>
+			<File
+				RelativePath="gag.cxx">
 			</File>
 			<File
 				RelativePath="..\contrib\getopt\getopt.c">

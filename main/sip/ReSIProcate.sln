@@ -1,9 +1,5 @@
-Microsoft Visual Studio Solution File, Format Version 8.00
+Microsoft Visual Studio Solution File, Format Version 7.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SipIMP", "SipIMP\SipIMP.vcproj", "{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2A8BE839-6466-4001-B224-8F1C3168D04A} = {2A8BE839-6466-4001-B224-8F1C3168D04A}
-		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E} = {CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}
-	EndProjectSection
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SipIMPSetup", "SipIMPSetup\SipIMPSetup.vdproj", "{57087B26-951D-481B-A2EE-E92C127DA000}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -12,30 +8,21 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SipIMPSetup", "SipIMPSetup\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "resiprocate", "resiprocate\resiprocate.vcproj", "{2A8BE839-6466-4001-B224-8F1C3168D04A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E} = {CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "contrib\ares\ares.vcproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "limpc", "resiprocate\test\test.vcproj", "{16CD976A-5D3B-4329-88BA-A32560CDFCC5}"
-	ProjectSection(ProjectDependencies) = postProject
-		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E} = {CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}
-		{2A8BE839-6466-4001-B224-8F1C3168D04A} = {2A8BE839-6466-4001-B224-8F1C3168D04A}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gag", "gag\gag.vcproj", "{53862038-09E5-4FE1-9BDF-D482D8C735ED}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
-		Debug = Debug
-		Release = Release
-		SSL-Debug = SSL-Debug
-		SSL-Release = SSL-Release
+		ConfigName.0 = Debug
+		ConfigName.1 = Release
+		ConfigName.2 = SSL-Debug
+		ConfigName.3 = SSL-Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
 		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.Debug.ActiveCfg = Debug|Win32
@@ -46,12 +33,6 @@ Global
 		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.SSL-Debug.Build.0 = SSL-Debug|Win32
 		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.SSL-Release.ActiveCfg = SSL-Release|Win32
 		{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}.SSL-Release.Build.0 = SSL-Release|Win32
-		{57087B26-951D-481B-A2EE-E92C127DA000}.Debug.ActiveCfg = Debug
-		{57087B26-951D-481B-A2EE-E92C127DA000}.Release.ActiveCfg = Release
-		{57087B26-951D-481B-A2EE-E92C127DA000}.Release.Build.0 = Release
-		{57087B26-951D-481B-A2EE-E92C127DA000}.SSL-Debug.ActiveCfg = SSL-Debug
-		{57087B26-951D-481B-A2EE-E92C127DA000}.SSL-Release.ActiveCfg = SSL-Release
-		{57087B26-951D-481B-A2EE-E92C127DA000}.SSL-Release.Build.0 = SSL-Release
 		{2A8BE839-6466-4001-B224-8F1C3168D04A}.Debug.ActiveCfg = Debug|Win32
 		{2A8BE839-6466-4001-B224-8F1C3168D04A}.Debug.Build.0 = Debug|Win32
 		{2A8BE839-6466-4001-B224-8F1C3168D04A}.Release.ActiveCfg = Release|Win32
@@ -77,7 +58,9 @@ Global
 		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.SSL-Release.ActiveCfg = Release|Win32
 		{16CD976A-5D3B-4329-88BA-A32560CDFCC5}.SSL-Release.Build.0 = Release|Win32
 		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.Debug.ActiveCfg = Debug|Win32
+		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.Debug.Build.0 = Debug|Win32
 		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.Release.ActiveCfg = Release|Win32
+		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.Release.Build.0 = Release|Win32
 		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.SSL-Debug.ActiveCfg = Debug|Win32
 		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.SSL-Debug.Build.0 = Debug|Win32
 		{53862038-09E5-4FE1-9BDF-D482D8C735ED}.SSL-Release.ActiveCfg = Release|Win32
