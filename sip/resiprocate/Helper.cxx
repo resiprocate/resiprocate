@@ -674,7 +674,7 @@ Helper::addAuthorization(SipMessage& request,
                          const Data& cnonce,
                          unsigned int& nonceCount)
 {
-   Data nonceCountString;
+   Data nonceCountString = Data::Empty;
    
    assert(challenge.isResponse());
    assert(challenge.header(h_StatusLine).responseCode() == 401 ||
