@@ -532,7 +532,7 @@ main(int argc, char* argv[])
               << " -port sets the UDP and TCP port to listen on" << endl
               << " -tlsPort sets the port to listen for TLS on" << endl
               << " -aor sets the proxy and user name to register with" << endl
-              << " -aorPasswrod sets the password to use for registration" << endl
+              << " -aorPassword sets the password to use for registration" << endl
               << " -to sets initial location to send messages to" << endl
               << " -outbound sets the outbound proxy" << endl
               << " -add adds a budy who's presense will be monitored" << endl

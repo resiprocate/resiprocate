@@ -48,8 +48,10 @@ public:
       void process();
 
       // Registration management 
-      void registerAor( const Uri& uri, const Data& password = Data::Empty );
-
+      void registerAor( const Uri& uri, 
+                        const Data& password = Data::Empty, 
+                        int registrationTimeSeconds = 1800 );
+      
       // Buddy List management
       int getNumBuddies() const;
       const Uri getBuddyUri(const int index);
@@ -103,7 +105,11 @@ public:
       Dialog mRegistrationDialog;
       UInt64 mNextTimeToRegister;
       Data   mRegistrationPassword;
-
+      int    mLastAuthCSeq; // This is the CSeq of the last registration message
+                            // sent that included digest authorization information 
+      int    mRegistrationTimeSeconds; // this is the default time to request in
+                                       // a registration
+            
       Uri mOutboundProxy;
       Data mUAName;
 };
