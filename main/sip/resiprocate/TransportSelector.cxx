@@ -202,16 +202,15 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, const Da
 
          if (!DnsResolver::isIpAddress(v.sentHost()) && 
              destination.transport->port() == 5060)
-           {
-             DebugLog(<<"supressing port 5060 w/ symname");
-             // backward compat for 2543 and the symbolic host w/ 5060 ;
-             // being a clue for SRV (see RFC 3263 sec 4.2 par 5).
-           }
+         {
+            DebugLog(<<"supressing port 5060 w/ symname");
+            // backward compat for 2543 and the symbolic host w/ 5060 ;
+            // being a clue for SRV (see RFC 3263 sec 4.2 par 5).
+         }
          else
-           {
-             msg->header(h_Vias).front().sentPort() = 
-               destination.transport->port();
-           }
+         {
+            msg->header(h_Vias).front().sentPort() = destination.transport->port();
+         }
       }
 
       Data& encoded = msg->getEncoded();
