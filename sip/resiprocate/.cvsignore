@@ -1,9 +1,12 @@
 *-raw.cxx
 *.d
 *~
+.DS_Store
 .dependlibs
+.gdb_history
 Debug
 DnsResolver.cxx.save
+English.lproj
 ExpandedSipMessage
 JF
 ParserCategories.cxx.save
@@ -13,6 +16,7 @@ a.out
 backup
 bak
 bin.*
+build
 gmon.out
 headers-hash.c
 html
