@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <set>
-
+#include <iostream>
 #include <util/Timer.hxx>
 #include <util/Fifo.hxx>
 
@@ -22,11 +22,14 @@ class TimerQueue
       
       void process();
       void run();
-      
+
    private:
+      friend std::ostream& operator<<(std::ostream&, const TimerQueue&);
       Fifo<Message>& mFifo;
       std::multiset<Timer> mTimers;
 };
+
+std::ostream& operator<<(std::ostream&, const TimerQueue&);
  
 }
 
