@@ -16,32 +16,32 @@ class TestData
          Log::initialize(Log::COUT, Log::DEBUG, Data::Empty);
 
          {
-            Data needsEscape("Escape % me");
-            cerr << "original " << needsEscape << endl;
-            cerr << "escaped " << needsEscape.escaped() << endl;
-            cerr << "unescaped " << needsEscape.escaped().unescaped() << endl;
+            Data needsCharEncode("CharEncode % me");
+            cerr << "original " << needsCharEncode << endl;
+            cerr << "charEncoded " << needsCharEncode.charEncoded() << endl;
+            cerr << "charUnencoded " << needsCharEncode.charEncoded().charUnencoded() << endl;
 
-            assert(needsEscape.escaped().unescaped() == needsEscape);
+            assert(needsCharEncode.charEncoded().charUnencoded() == needsCharEncode);
          }
 
          {
-            Data needsEscape("Escape % me");
-            needsEscape += " \";/?:@&=+%$,/t-_.!~*'()";
-            needsEscape += char(0);
-            needsEscape += char(254);
-            needsEscape += char(17);
+            Data needsCharEncode("CharEncode % me");
+            needsCharEncode += " \";/?:@&=+%$,/t-_.!~*'()";
+            needsCharEncode += char(0);
+            needsCharEncode += char(254);
+            needsCharEncode += char(17);
 
-            cerr << needsEscape.escaped() << endl;
+            cerr << needsCharEncode.charEncoded() << endl;
 
-            assert(needsEscape.escaped().unescaped() == needsEscape);
+            assert(needsCharEncode.charEncoded().charUnencoded() == needsCharEncode);
          }
 
          {
-            Data needsNoEscape("dontescapeme");
+            Data needsNoCharEncode("dontcharEncodeme");
 
-            cerr << needsNoEscape.escaped() << endl;
+            cerr << needsNoCharEncode.charEncoded() << endl;
 
-            assert(needsNoEscape.escaped().unescaped() == needsNoEscape);            
+            assert(needsNoCharEncode.charEncoded().charUnencoded() == needsNoCharEncode);            
          }
 
          {
