@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.38 2002/11/28 01:19:00 jason Exp $";
+"$Id: Data.cxx,v 1.39 2002/11/29 18:35:42 fluffy Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -24,14 +24,26 @@ Data::Data()
 {
 }
 
+// pre-allocate capacity
+Data::Data(int capacity, bool) 
+   : mSize(0),
+     mBuf(new char[capacity + 1]),
+     mCapacity(capacity),
+     mMine(true)
+{
+   assert( capacity > 0 );
+   mBuf[0] = 0;
+}
+
 Data::Data(const char* str, int length) 
    : mSize(length),
-     mBuf(new char[mSize+1]),
-     mCapacity(mSize),
+     mBuf(new char[length+1]),
+     mCapacity(length),
      mMine(true)
 {
    assert(str);
    memcpy(mBuf, str, mSize);
+   mBuf[mSize]=0;
 }
 
 Data::Data(const unsigned char* str, int length) 
@@ -42,6 +54,7 @@ Data::Data(const unsigned char* str, int length)
 {
    assert(str);
    memcpy(mBuf, str, mSize);
+     mBuf[mSize]=0;
 }
 
 // share memory KNOWN to be in a surrounding scope
@@ -92,7 +105,7 @@ Data::~Data()
 {
    if (mMine)
    {
-      delete[] mBuf;
+      delete[] mBuf; mBuf=0;
    }
 }
 
@@ -588,16 +601,6 @@ Data::data() const
    return mBuf;
 }
 
-// pre-allocate capacity
-Data::Data(int capacity, bool) 
-   : mSize(0),
-     mBuf(new char[capacity + 1]),
-     mCapacity(capacity),
-     mMine(true)
-{
-   assert( capacity > 0 );
-   mBuf[0] = 0;
-}
 
 // generate additional capacity
 void
@@ -612,7 +615,7 @@ Data::resize(size_type newCapacity, bool copy)
    }
    if (mMine)
    {
-      delete[] oldBuf;
+      delete[] oldBuf; oldBuf=0;
    }
    mMine = true;
    mCapacity = newCapacity;
