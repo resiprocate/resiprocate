@@ -5,13 +5,10 @@
 namespace resip
 {
 
-class RegistrationCreator : public BaseCreator {
-
-  public:
-    RegistrationCreator(const NameAddrs& desiredBindings);
-
-  private:
-    NameAddrs mDesiredBindings;
+class RegistrationCreator : public BaseCreator 
+{
+   public:
+      RegistrationCreator(DialogUsageManager& dum);
 };
  
 }
