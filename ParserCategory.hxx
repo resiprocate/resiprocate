@@ -252,4 +252,5 @@ class Via : public ParserCategory
 };
 typedef ParserContainer<Via> Vias;
 
+}
 #endif

@@ -92,11 +92,12 @@ ostream& operator<<(ostream& stream, HeaderFieldValueList& hList)
    if (hList.first)
    {
       HeaderFieldValue* current = hList.first;
+      stream << "Header List: " << endl;
       do
-      {
-	 stream << current << endl;
-	 current = current->next;
-      } while (current != 0);
+	{
+	  stream << *current << endl;
+	  current = current->next;
+	} while (current != 0);
    }
    return stream;
 }

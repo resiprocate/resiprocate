@@ -28,7 +28,7 @@ class HeaderFieldValue
       bool exists(const std::string& subcomponent);
       bool exists(const SubComponent::Type type);
       
-      UnknownSubComponent* get(const std::string& type) const;
+      UnknownSubComponent* get(const std::string& type);
       
       HeaderFieldValue* next;
       friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
