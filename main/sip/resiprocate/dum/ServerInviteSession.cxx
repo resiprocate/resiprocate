@@ -39,7 +39,6 @@ ServerInviteSession::end()
    InfoLog ( << "ServerInviteSession::end" );  
    switch (mState)
    {
-      case Accepting:
       case Terminated: 
       case Connected:
          return InviteSession::end();
@@ -53,8 +52,7 @@ void
 ServerInviteSession::send(SipMessage& msg)
 {
    Destroyer::Guard guard(mDestroyer);
-   if (mState == Accepting || mState == Connected || mState == Terminated 
-       || mState == ReInviting || mState == AcceptingReInvite)
+   if (mState == Connected || mState == Terminated || mState == ReInviting)
    {
       InviteSession::send(msg);
       return;
@@ -71,10 +69,15 @@ ServerInviteSession::send(SipMessage& msg)
       }
       else if (code < 300)
       {
-         mState = Accepting;         
+         mState = Connected;         
          if (msg.header(h_CSeq).method() == INVITE)
          {
             InviteSession::send(msg);
+            if (mOfferState = Answered)
+            {
+               mUserConnected = true;            
+               mDum.mInviteSessionHandler->onConnected(getSessionHandle(), msg);
+            }
          }
          else
          {
@@ -113,8 +116,7 @@ ServerInviteSession::reject(int statusCode)
 SipMessage& 
 ServerInviteSession::accept()
 {
-   mDialog.makeResponse(mFinalResponse, mLastRequest, 200);
-   return mFinalResponse;
+   return makeFinalResponse(200);   
 }
 
 void 
