@@ -9,8 +9,10 @@ extern "C"
 #include <set>
 #include <vector>
 
+#ifndef WIN32
 #ifndef __CYGWIN__
 #include <arpa/nameser.h>
+#endif
 #endif
 
 #include "resiprocate/os/Socket.hxx"
