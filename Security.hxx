@@ -149,6 +149,9 @@ class Security
 
       static Data getPath( const Data& dir, const Data& file );
 
+      void addDomainCertDER( Data , Data ) {};
+      bool hasDomainCert( Data ) { return true; };
+      
    private:
 
       // do the ctor work
