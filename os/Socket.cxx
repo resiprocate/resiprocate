@@ -9,22 +9,30 @@
 #include <unistd.h>
 #endif
 
-
 using namespace Vocal2;
 using namespace std;
 
-void 
+bool 
 Vocal2::makeSocketNonBlocking(Socket fd)
 {
 #if WIN32
-   unsigned long noBlock = 1;
-   int errNoBlock = ioctlsocket( fd, FIONBIO , &noBlock );
-   assert( errNoBlock == 0 );
+	unsigned long noBlock = 1;
+	int errNoBlock = ioctlsocket( fd, FIONBIO , &noBlock );
+	if ( errNoBlock != 0 )
+	{
+		return false;
+	}
 #else
-   int flags  = fcntl( fd, F_GETFL, 0);
-   int errNoBlock = fcntl(fd, F_SETFL, flags | O_NONBLOCK );
-   assert( errNoBlock == 0 );
+	int flags  = fcntl( fd, F_GETFL, 0);
+	int errNoBlock = fcntl(fd, F_SETFL, flags | O_NONBLOCK );
+	if ( errNoBlock != 0 ) // !cj! I may have messed up this line 
+	{
+		return false;
+	}
 #endif
+
+
+	return true;
 }
 
    

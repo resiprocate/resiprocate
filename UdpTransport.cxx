@@ -34,6 +34,7 @@ UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, F
    if ( mFd == INVALID_SOCKET )
    {
       InfoLog (<< "Failed to open socket: " << portNum);
+	  throw Exception("Failed to open UDP port", __FILE__,__LINE__);
    }
    
    sockaddr_in addr;
@@ -52,11 +53,16 @@ UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, F
       else
       {
          ErrLog (<< "Could not bind to port: " << portNum);
-         throw Exception("Cont not use UDP port", __FILE__,__LINE__);
+         throw Exception("Could not use UDP port", __FILE__,__LINE__);
       }
    }
 
-   makeSocketNonBlocking(mFd);
+   bool ok = makeSocketNonBlocking(mFd);
+   if ( !ok )
+   {
+	    ErrLog (<< "Could not make UDP port non blocking " << portNum);
+		throw Exception("Cont not use UDP port", __FILE__,__LINE__);
+   }
 }
 
 

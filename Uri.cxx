@@ -21,7 +21,20 @@ Uri::Uri(const Data& data)
 {
    ParseBuffer pb(data.data(), data.size());
    Uri tmp;
-   tmp.parse(pb);
+
+   try
+   {
+		tmp.parse(pb);
+   }
+   catch ( std::exception* e )
+   {
+	   mScheme = Symbols::DefaultSipScheme;
+	   mHost = Data::Empty;
+	   mUser = Data::Empty;
+	   mPort = -1;
+
+	   throw e;
+   }
 
    *this = tmp;
 }
@@ -257,13 +270,22 @@ Uri::parse(ParseBuffer& pb)
    pb.skipWhitespace();
    const char* start = pb.position();
    pb.skipToChar(Symbols::COLON[0]);
-   pb.data(mScheme, start);
-   pb.skipChar();   
+
+   if ( !pb.eof() )
+   {
+		pb.data(mScheme, start);
+		pb.skipChar();   
+   }
+   else
+   {
+	   pb.reset(start);
+   }
 
    if (!(isEqualNoCase(mScheme, Symbols::Sip) || isEqualNoCase(mScheme, Symbols::Sips)))
    {
       start = pb.position();
       pb.skipToEnd();
+	  assert( start <= pb.position() );
       pb.data(mHost, start);
       return;
    }
