@@ -27,30 +27,30 @@ AmIResponsible::handleRequest(RequestContext& context)
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
 
-  resip::SipMessage& request = context.getOriginalRequest();
+   resip::SipMessage& request = context.getOriginalRequest();
 
-  assert (!request.exists(h_Routes) || 
-          request.header(h_Routes).empty());
+   assert (!request.exists(h_Routes) || 
+           request.header(h_Routes).empty());
   
-  // this if is just to be safe
-  if (!request.exists(h_Routes) || 
-      request.header(h_Routes).empty())
-  {
-    assert(context.getCandidates().empty());
-    // !RjS! - Jason - check the RURI to see if the domain is
-    // something this request is responsible for. If yes, then
-    // just return Continue. If no make this call below.
-    if (!context.getProxy().isMyDomain(request.header(h_RequestLine).uri()))
-    {
-	   // if this request is not for a domain for which the proxy is responsible,
-	   // send to the Request URI
-       context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
-	   InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());
-	   // skip the rest of the monkeys
-	   return RequestProcessor::SkipThisChain;	
-    }
-  }
-  return RequestProcessor::Continue;
+   // this if is just to be safe
+   if (!request.exists(h_Routes) || 
+       request.header(h_Routes).empty())
+   {
+      assert(context.getCandidates().empty());
+      // !RjS! - Jason - check the RURI to see if the domain is
+      // something this request is responsible for. If yes, then
+      // just return Continue. If no make this call below.
+      if (!context.getProxy().isMyDomain(request.header(h_RequestLine).uri()))
+      {
+         // if this request is not for a domain for which the proxy is responsible,
+         // send to the Request URI
+         context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
+         InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());
+         // skip the rest of the monkeys
+         return RequestProcessor::SkipThisChain;	
+      }
+   }
+   return RequestProcessor::Continue;
 }
 
 void
