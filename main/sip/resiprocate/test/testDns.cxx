@@ -1,3 +1,4 @@
+#include "resiprocate/config.hxx"
 
 #if defined (HAVE_POPT_H) 
 #include <popt.h>
