@@ -2,7 +2,18 @@
 
 using namespace resip;
 
+FileSystem::Directory::Directory(const Data& path)
+   : mPath(path)
+{
+}
+
 #ifndef WIN32
+
+FileSystem::Directory::iterator::iterator() :
+   mNixDir(0),
+   mDirent(0)
+{}
+
 FileSystem::Directory::iterator::iterator(const Directory& dir)
 {
    mNixDir = opendir( dir.getPath().c_str() );
@@ -61,6 +72,11 @@ FileSystem::Directory::iterator::operator->() const
 }
 
 #else
+
+FileSystem::Directory::iterator::iterator() :
+   mWinSearch(0)
+   mDirent(0)
+{}
 
 FileSystem::Directory::iterator::iterator(const Directory& dir)
 {
@@ -145,3 +161,15 @@ FileSystem::Directory::iterator::operator->()
 }
 
 #endif
+
+FileSystem::Directory::iterator FileSystem::Directory::begin() const
+{
+   return iterator(*this);   
+}
+
+static FileSystem::Directory::iterator staticEnd;
+
+FileSystem::Directory::iterator FileSystem::Directory::end() const
+{
+   return staticEnd;   
+}
