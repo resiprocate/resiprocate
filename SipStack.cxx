@@ -139,7 +139,7 @@ SipStack::isMyDomain(const Data& domain, int port) const
 void 
 SipStack::send(const SipMessage& msg)
 {
-   InfoLog (<< "SipStack::Send: " << msg.brief());
+   InfoLog (<< "SEND: " << msg.brief());
    
    SipMessage* toSend = new SipMessage(msg);
    toSend->setFromTU();
@@ -172,6 +172,7 @@ SipStack::receive()
       SipMessage* sip=0;
       if ((sip=dynamic_cast<SipMessage*>(msg)))
       {
+         InfoLog (<< "RECV: " << sip->brief());
          return sip;
       }
       else
@@ -201,6 +202,7 @@ SipStack::receiveAny()
       TransactionTerminated* term=0;
       if ((sip=dynamic_cast<SipMessage*>(msg)))
       {
+         InfoLog (<< "RECV: " << sip->brief());
          return sip;
       }
       else if ((term=dynamic_cast<TransactionTerminated*>(msg)))
