@@ -2,13 +2,13 @@
 #define RESIP_DUMTIMER_HXX 
 
 #include <iosfwd>
-#include "resiprocate/Message.hxx"
+#include "resiprocate/ApplicationMessage.hxx"
 #include "resiprocate/dum/Handles.hxx"
 
 namespace resip
 {
 
-class DumTimeout : public Message
+class DumTimeout : public ApplicationMessage
 {
    public:
       typedef enum
