@@ -26,11 +26,7 @@ class ParserCategory
       virtual ~ParserCategory() {}
       virtual ParserCategory* clone(HeaderFieldValue*) const = 0;
 
-      virtual std::ostream& encode(std::ostream& str) const 
-      { // !dcm!  this is just so things are compiled until all parses get written
-         assert(0);
-         return str;
-      }
+      virtual std::ostream& encode(std::ostream& str) const = 0;
 
       template <int T>
       typename ParameterType<T>::Type::Type& 
@@ -68,6 +64,9 @@ class ParserCategory
    private:
       bool mIsParsed;
 };
+
+std::ostream&
+operator<<(std::ostream&, const ParserCategory& category);
 
 }
 
