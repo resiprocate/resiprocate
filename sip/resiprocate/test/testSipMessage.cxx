@@ -25,6 +25,70 @@ main(int argc, char** argv)
    Log::initialize(Log::COUT, Log::ERR, argv[0]);
 
    {
+      Data txt("INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
+               "To: <sip:yiwen_AT_meet2talk.com@whistler.gloo.net>\r\n"
+               "From: Jason Fischl<sip:jason_AT_meet2talk.com@whistler.gloo.net>;tag=ba1aee2d\r\n"
+               "Via: SIP/2.0/UDP 192.168.2.220:5060;branch=z9hG4bK-c87542-da4d3e6a.0-1--c87542-;rport=5060;received=192.168.2.220;stid=579667358\r\n"
+               "Via: SIP/2.0/UDP 192.168.2.15:5100;branch=z9hG4bK-c87542-579667358-1--c87542-;rport=5100;received=192.168.2.15\r\n"
+               "Call-ID: 6c64b42fce01b007\r\n"
+               "CSeq: 2 INVITE\r\n"
+               "Record-Route: <sip:proxy@192.168.2.220:5060;lr>\r\n"
+               "Contact: <sip:192.168.2.15:5100>\r\n"
+               "Max-Forwards: 69\r\n"
+               "Content-Type: application/sdp\r\n"
+               "Proxy-Authorization: Digest username=jason@meet2talk.com,realm=\"whistler.gloo.net\",nonce=\"1086134832:c12a4271d885a2ac4f31635d1b2d5e70\",uri=\"sip:yiwen_AT_meet2talk.com@whistler.gloo.net\",response=\"ad9bfe6f1d205681c937ba23edec3f58\",algorithm=MD5\r\n"
+               "Content-Length: 307\r\n"
+               "\r\n"
+               "v=0\r\n"
+               "o=M2TUA 1589993278 1032390928 IN IP4 192.168.2.15\r\n"
+               "s=-\r\n"
+               "c=IN IP4 192.168.2.15\r\n"
+               "t=0 0\r\n"
+               "m=audio 9000 RTP/AVP 103 97 100 101 0 8 102\r\n"
+               "a=rtpmap:103 ISAC/16000\r\n"
+               "a=rtpmap:97 IPCMWB/16000\r\n"
+               "a=rtpmap:100 EG711U/8000\r\n"
+               "a=rtpmap:101 EG711A/8000\r\n"
+               "a=rtpmap:0 PCMU/8000\r\n"
+               "a=rtpmap:8 PCMA/8000\r\n"
+               "a=rtpmap:102 iLBC/8000\r\n");
+      
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
+      SdpContents* sdp = dynamic_cast<SdpContents*>(msg->getContents());
+
+      sdp->session().media().front();
+      
+      SdpContents osdp;
+      osdp.session().version() = 0;
+      osdp.session().name() = "-";
+      osdp.session().origin() = SdpContents::Session::Origin(Data("M2TUA"), 
+                                                             77,
+                                                             99,
+                                                             SdpContents::IP4,
+                                                             "localhost");
+      osdp.session().addTime(SdpContents::Session::Time(0,0));
+      osdp.session().connection() = 
+         SdpContents::Session::Connection(SdpContents::IP4, "localhost", 0); 
+      SdpContents::Session::Medium medium(Symbols::audio, 0, 1, Symbols::RTP_AVP);
+
+      SdpContents::Session::Codec codec("gipsCodec.plname", 1, 800);
+      medium.addCodec(codec);
+      osdp.session().addMedium(medium);
+
+      SdpContents csdp;
+      csdp = *sdp;
+      SdpContents::Session::Medium& myMedium = csdp.session().media().front();
+      cerr << myMedium.protocol() << endl;
+
+      SdpContents c2sdp;
+      c2sdp = *sdp;
+    
+
+      SdpContents::Session::Medium& myMedium2 = c2sdp.session().media().front();
+      cerr << myMedium2.protocol() << endl;
+   }
+
+   {
       Data txt1 = "SIP/2.0 407 Proxy Authentication Required\r\n"
          "To: <sip:jason_AT_meet2talk.com@beta.meet2talk.com>\r\n"
          "From: <sip:jason_AT_meet2talk.com@beta.meet2talk.com>;tag=113cba09\r\n"
