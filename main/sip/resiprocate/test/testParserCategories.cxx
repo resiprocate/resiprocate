@@ -341,7 +341,7 @@ main(int arc, char** argv)
       checkHeaderName(To);
       checkHeaderName(From);
       checkHeaderName(Via);
-      checkHeaderName(CallId);
+      checkHeaderName(CallID);
       checkHeaderName(CSeq);
       checkHeaderName(Route);
       checkHeaderName(RecordRoute);
