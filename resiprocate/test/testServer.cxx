@@ -61,7 +61,7 @@ class Server : public ThreadIf
             {
                auto_ptr<SipMessage> forDel(received);
                MethodTypes meth = received->header(h_RequestLine).getMethod();
-               ErrLog ( << "Server received: " << MethodNames[meth]);
+               ErrLog ( << "Server received: " << getMethodName(meth));
                if ( meth == INVITE )
                {
                   Data localTag = Helper::computeTag(4);

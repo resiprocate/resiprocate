@@ -1,5 +1,5 @@
 #include <iostream>
-#include "resiprocate/Message.hxx"
+#include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TimerQueue.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include <unistd.h>
@@ -18,8 +18,11 @@ isNear(int value, int reference, int epsilon=250)
 int
 main()
 {
+
    Fifo<Message> f;
-   TimerQueue timer(f);
+   Fifo<TransactionMessage> r;
+   
+   TimerQueue timer(r, f);
 
    cerr << "Before Fifo size: " << f.size() << endl;
    assert(f.size() == 0);

@@ -54,10 +54,10 @@ main(int argc, char* argv[])
 
    cout << "Performing " << runs << " runs." << endl;
    
-   Fifo<Message> txFifo;
+   Fifo<TransactionMessage> txFifo;
    UdpTransport* sender = new UdpTransport(txFifo, 5070);
 
-   Fifo<Message> rxFifo;
+   Fifo<TransactionMessage> rxFifo;
    UdpTransport* receiver = new UdpTransport(rxFifo, 5080);
 
    NameAddr target;
