@@ -121,6 +121,21 @@ const char * const Symbols::rport = "rport";
 const char * const Symbols::MagicCookie = "z9hG4bK";
 const char * const Symbols::Vocal2Cookie= "-kcD23-";
 
+const char * const Symbols::algorithm = "algorithm";
+const char * const Symbols::cnonce = "cnonce";
+const char * const Symbols::domain = "domain";
+const char * const Symbols::nonce = "nonce";
+const char * const Symbols::nc = "nc";
+const char * const Symbols::opaque = "opaque";
+const char * const Symbols::realm = "realm";
+const char * const Symbols::response = "response";
+const char * const Symbols::stale = "stale";
+const char * const Symbols::username = "username";
+const char * const Symbols::qop = "qop";
+const char * const Symbols::uri = "uri";
+const char * const Symbols::id = "id";
+const char * const Symbols::retryAfter = "retry-after";
+const char * const Symbols::reason = "reason";
 
 const int Symbols::DefaultSipPort = 5060;
 const int Symbols::SipTlsPort = 5061;
