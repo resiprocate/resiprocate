@@ -58,7 +58,11 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
    {
       DebugLog( << "Trying to form TLS connection - acting as client" );
    }
-      
+
+   // cj TODO FIX - evil hack
+//   makeSocketBlocking(fd);   
+   
+   
    assert( security );
    SSL_CTX* ctx = security->getTlsCtx(server);
    assert(ctx);
@@ -99,12 +103,59 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
                DebugLog( << "TLS connection want read" );
                again = true;
                break;
+            case SSL_ERROR_WANT_WRITE:
+               DebugLog( << "TLS connection want write" );
+               again = true;
+               break;
+            case SSL_ERROR_WANT_CONNECT:
+               DebugLog( << "TLS connection want connect" );
+               again = true;
+               break;
+#if 0
+            case SSL_ERROR_WANT_ACCEPT:
+               DebugLog( << "TLS connection want accept" );
+               again = true;
+               break;
+#endif
             default:
                ErrLog( << "TLS connection failed "
                        << "ok=" << ok << " err=" << err << " " << buf );
+
+               switch (err)
+               {
+                  case SSL_ERROR_NONE: ErrLog( <<" (SSL Error none)" ); break;
+                  case SSL_ERROR_SSL: ErrLog( <<" (SSL Error ssl)" ); break;
+                  case SSL_ERROR_WANT_READ: ErrLog( <<" (SSL Error want read)" ); break;
+                  case SSL_ERROR_WANT_WRITE: ErrLog( <<" (SSL Error want write)" ); break;
+                  case SSL_ERROR_WANT_X509_LOOKUP: ErrLog( <<" (SSL Error want x509 lookup)" ); break;
+                  case SSL_ERROR_SYSCALL: 
+                     ErrLog( <<" (SSL Error want syscall)" ); 
+                     ErrLog( <<"Error may be because trying ssl connection to tls server" ); 
+                     break;
+                  case SSL_ERROR_WANT_CONNECT: ErrLog( <<" (SSL Error want connect)" ); break;
+                  case SSL_ERROR_WANT_ACCEPT: ErrLog( <<" (SSL Error want accpet)" ); break;
+               }
                
+                     
+               while (true)
+               {
+                  const char* file;
+                  int line;
+                  
+                  unsigned long code = ERR_get_error_line(&file,&line);
+                  if ( code == 0 )
+                  {
+                     break;
+                  }
+                  
+                  char buf[256];
+                  ERR_error_string_n(code,buf,sizeof(buf));
+                  ErrLog( << buf  );
+                  DebugLog( << "Error code = " 
+                            << code << " file=" << file << " line=" << line );
+               }
+                     
                bio = NULL;
-               
                throw Transport::Exception( Data("TLS connect failed"), __FILE__, __LINE__ );   
          }
       }
@@ -163,7 +214,7 @@ TlsConnection::read( const void* buf, const int count )
    if (!bio)
    {
       DebugLog( << "Got TLS read bad bio  " );
-     return 0;
+      return 0;
    }
       
    ret = SSL_read(ssl,(char*)buf,count);
@@ -205,7 +256,7 @@ TlsConnection::write( const void* buf, const int count )
    if (!bio)
    {
       DebugLog( << "Got TLS write bad bio "  );
-     return 0;
+      return 0;
    }
         
    ret = SSL_write(ssl,(const char*)buf,count);
@@ -247,7 +298,7 @@ TlsConnection::write( const void* buf, const int count )
       }
    }
 
-    DebugLog( << "Did TLS write"  );
+   DebugLog( << "Did TLS write"  );
 
    return ret;
 }
@@ -279,9 +330,19 @@ TlsConnection::peerName()
       DebugLog( << "bad bio" );
       return Data::Empty;
    }
-      
+
+#if 1 // print session infor       
+   SSL_CIPHER *ciph;
+   
+   ciph=SSL_get_current_cipher(ssl);
+   InfoLog( << "TLS sessions set up with " 
+            <<  SSL_get_version(ssl) << " "
+            <<  SSL_CIPHER_get_version(ciph) << " "
+            <<  SSL_CIPHER_get_name(ciph) << " " );
+#endif
+
 #ifdef WIN32
-	assert(0);
+   assert(0);
 #else
    ErrLog(<< "request peer certificate" );
    X509* cert = SSL_get_peer_certificate(ssl);
@@ -366,17 +427,19 @@ Security::Security( bool tlsServer, bool useTls )
    static bool initDone=false;
    if ( !initDone )
    {
+      DebugLog( << "Setting up SSL library" );
+      
       initDone = true;
       
       SSL_library_init();
-      
-      SSL_load_error_strings();
-            
-      //OpenSSL_add_all_algorithms();
-      OpenSSL_add_all_ciphers();
-      OpenSSL_add_all_digests();
 
-      ERR_load_crypto_strings();
+//      ERR_load_crypto_strings();
+      SSL_load_error_strings();
+      
+//      OpenSSL_add_all_algorithms();
+      OpenSSL_add_ssl_algorithms();
+//      OpenSSL_add_all_ciphers();
+//      OpenSSL_add_all_digests();
 
       Random::initialize();
    }
@@ -393,18 +456,37 @@ Security::getTlsCtx(bool isServer)
    
    if ( mUseTls )
    {
-      ctxTls=SSL_CTX_new( TLSv1_method() );
+      InfoLog( << "Setting up to be a TLS v1 server" );
+
+# if 1
+    ctxTls=SSL_CTX_new( TLSv1_method() ); 
+#else
+      if ( isServer )
+      {
+         ctxTls=SSL_CTX_new( TLSv1_server_method() );
+      }
+      else
+      {
+         ctxTls=SSL_CTX_new( TLSv1_client_method() );
+      }
+#endif
    }
    else
    {
+      ErrLog( << "Warning - using SSL v2 v3 instead of TLS" );
       ctxTls=SSL_CTX_new(  SSLv23_method() );
    }
-  assert( ctxTls );
+   assert( ctxTls );
    
    if ( isServer )
    {
+      DebugLog( << "Setting up as TLS server" );
       assert( publicCert );
       assert( privateKey );
+   }
+   else
+   {
+      DebugLog( << "Setting up as TLS client" );
    }
    
    int ok;
@@ -427,6 +509,16 @@ Security::getTlsCtx(bool isServer)
    assert( certAuthorities );
    SSL_CTX_set_cert_store(ctxTls, certAuthorities);
 
+#if 1
+   // set up the cipher
+   char* cipher="RSA+SHA+AES+3DES";
+   int ret = SSL_CTX_set_cipher_list(ctxTls,cipher);
+   if ( ret == 0 )
+   {
+      ErrLog( << "Could not set any TLS ciphers");
+   }
+#endif
+
    return ctxTls;
 }
 
@@ -444,31 +536,31 @@ Security::getPath( const Data& dirPath, const Data& file )
 
    if ( path.empty() )
    {
-	   char* v = getenv("SIP");
-	   if (v)
-	   {
-		   path = Data(v);
-	   }
-	   else
-	   {  
-		   v = getenv("HOME");
-		   if ( v )
-		   {
-			   path = Data(v);
-			   path += Data("/.sip");
-		   }
-		   else
-		   {
+      char* v = getenv("SIP");
+      if (v)
+      {
+         path = Data(v);
+      }
+      else
+      {  
+         v = getenv("HOME");
+         if ( v )
+         {
+            path = Data(v);
+            path += Data("/.sip");
+         }
+         else
+         {
 #ifdef WIN32
-			   path = "C:\\certs";
+            path = "C:\\certs";
 #else
-			   ErrLog( << "Environment variobal HOME is not set" );
-			   path = "/etc/sip";
+            ErrLog( << "Environment variobal HOME is not set" );
+            path = "/etc/sip";
 #endif
-		   }
-	   }
+         }
+      }
    }
-
+   
 #ifdef WIN32
    path += Data("\\");
 #else
@@ -548,11 +640,10 @@ Security::loadMyPublicCert( const Data&  filePath )
          DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
       }
       
-
-	  Data err( "Error reading contents of public cert file " );
-	  err += filePath;
-	  throw Exception(err, __FILE__,__LINE__);
-
+      Data err( "Error reading contents of public cert file " );
+      err += filePath;
+      throw Exception(err, __FILE__,__LINE__);
+      
       return false;
    }
    
@@ -615,81 +706,81 @@ Security::loadPublicCert(  const Data& filePath )
    hSearch = FindFirstFile( searchPath.c_str(), &FileData); 
    if (hSearch == INVALID_HANDLE_VALUE) 
    { 
-	  Data err( "Error reading public cert directory " );
-	  err += filePath;
-	  throw Exception(err, __FILE__,__LINE__);
-	  return false;
+      Data err( "Error reading public cert directory " );
+      err += filePath;
+      throw Exception(err, __FILE__,__LINE__);
+      return false;
    } 
 
    bool done = false;
    while (!done) 
    { 
-	   Data name( FileData.cFileName);
-	   Data path = filePath;
-	   //path += "\\";
-	   path += name;
+      Data name( FileData.cFileName);
+      Data path = filePath;
+      //path += "\\";
+      path += name;
 
-	   if ( strchr( name.c_str(), '@' ))
-	   {
-		   FILE* fp = fopen(path.c_str(),"rb");
-		   if ( !fp )
-		   {
-			   ErrLog( << "Could not read public key from " << path );
-			   Data err( "Could not read other persons public key from " );
-			   err += path;
-			   throw Exception(err, __FILE__,__LINE__);
-		   }
-		   else
-		   {
-			   X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
-			   if (!cert)
-			   {
-				   ErrLog( << "Error reading contents of public key file " << path );
-
-      while (true)
+      if ( strchr( name.c_str(), '@' ))
       {
-         const char* file;
-         int line;
-         
-         unsigned long code = ERR_get_error_line(&file,&line);
-         if ( code == 0 )
+         FILE* fp = fopen(path.c_str(),"rb");
+         if ( !fp )
          {
-            break;
+            ErrLog( << "Could not read public key from " << path );
+            Data err( "Could not read other persons public key from " );
+            err += path;
+            throw Exception(err, __FILE__,__LINE__);
          }
+         else
+         {
+            X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
+            if (!cert)
+            {
+               ErrLog( << "Error reading contents of public key file " << path );
 
-         char buf[256];
-         ERR_error_string_n(code,buf,sizeof(buf));
-         ErrLog( << buf  );
-         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
-      }
+               while (true)
+               {
+                  const char* file;
+                  int line;
+         
+                  unsigned long code = ERR_get_error_line(&file,&line);
+                  if ( code == 0 )
+                  {
+                     break;
+                  }
+
+                  char buf[256];
+                  ERR_error_string_n(code,buf,sizeof(buf));
+                  ErrLog( << buf  );
+                  DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+               }
       
 
-				   Data err( "Error reading contents of other persons public key file " );
-				   err += path;
-				   throw Exception(err, __FILE__,__LINE__);
-			   }
-			   else
-			   {
-				   publicKeys[name] = cert;
-			   }
-		   }
+               Data err( "Error reading contents of other persons public key file " );
+               err += path;
+               throw Exception(err, __FILE__,__LINE__);
+            }
+            else
+            {
+               publicKeys[name] = cert;
+            }
+         }
 
-	   }   
+      }   
 
-	   if (!FindNextFile(hSearch, &FileData)) 
-	   {
-		   if (GetLastError() == ERROR_NO_MORE_FILES) 
-		   { 
-			   done = true;
-		   } 
-		   else 
-		   { 
-			   Data err( "Bizarre problem reading public certificate direcotyr" );
-			   err += filePath;
-			   throw Exception(err, __FILE__,__LINE__);
-			   return false;
-		   } 
-	   }
+      if (!FindNextFile(hSearch, &FileData)) 
+      {
+         if (GetLastError() == ERROR_NO_MORE_FILES) 
+         { 
+            done = true;
+         } 
+         else 
+         { 
+            Data err( "Bizarre problem reading public certificate direcotyr" );
+            err += filePath;
+            throw Exception(err, __FILE__,__LINE__);
+            return false;
+         } 
+      }
    } 
    FindClose(hSearch);
 
@@ -699,63 +790,63 @@ Security::loadPublicCert(  const Data& filePath )
 
    if (!dir )
    {
-	   ErrLog( << "Error reading public key directory  " << filePath );
-	   return false;
+      ErrLog( << "Error reading public key directory  " << filePath );
+      return false;
    }
 
    struct dirent * d = NULL;
    while (1)
    {
-	   d = readdir(dir);
-	   if ( !d )
-	   {
-		   break;
-	   }
-
-	   Data name( d->d_name );
-	   Data path = filePath;
-	   path += name;
-
-	   if ( !strchr( name.c_str(), '@' ))
-	   {
-		   DebugLog( << "skipping file " << path );
-		   continue;
-	   }
-
-	   FILE* fp = fopen(path.c_str(),"rb");
-	   if ( !fp )
-	   {
-		   ErrLog( << "Could not read public key from " << path );
-		   continue;
-	   }
-
-	   X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
-	   if (!cert)
-	   {
-		   ErrLog( << "Error reading contents of public key file " << path );
-		       while (true)
+      d = readdir(dir);
+      if ( !d )
       {
-         const char* file;
-         int line;
-         
-         unsigned long code = ERR_get_error_line(&file,&line);
-         if ( code == 0 )
-         {
-            break;
-         }
-
-         char buf[256];
-         ERR_error_string_n(code,buf,sizeof(buf));
-         ErrLog( << buf  );
-         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+         break;
       }
+
+      Data name( d->d_name );
+      Data path = filePath;
+      path += name;
+
+      if ( !strchr( name.c_str(), '@' ))
+      {
+         DebugLog( << "skipping file " << path );
+         continue;
+      }
+
+      FILE* fp = fopen(path.c_str(),"rb");
+      if ( !fp )
+      {
+         ErrLog( << "Could not read public key from " << path );
+         continue;
+      }
+
+      X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
+      if (!cert)
+      {
+         ErrLog( << "Error reading contents of public key file " << path );
+         while (true)
+         {
+            const char* file;
+            int line;
+         
+            unsigned long code = ERR_get_error_line(&file,&line);
+            if ( code == 0 )
+            {
+               break;
+            }
+
+            char buf[256];
+            ERR_error_string_n(code,buf,sizeof(buf));
+            ErrLog( << buf  );
+            DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+         }
       
-  continue;
-	   }
+         continue;
+      }
 
-	   publicKeys[name] = cert;
+      publicKeys[name] = cert;
 
-	   DebugLog( << "Loaded public key from " << name );         
+      DebugLog( << "Loaded public key from " << name );         
    }
 
    closedir( dir );
@@ -783,11 +874,11 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
    {
       ErrLog( << "Could not read private key from " << filePath );
 
-	  Data err( "Could not read private key from " );
-	  err += filePath;
-	  throw Exception(err, __FILE__,__LINE__);
+      Data err( "Could not read private key from " );
+      err += filePath;
+      throw Exception(err, __FILE__,__LINE__);
 	  
-	  return false;
+      return false;
    }
    
    //DebugLog( "password is " << password );
@@ -796,28 +887,6 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
    if (!privateKey)
    {
       ErrLog( << "Error reading contents of private key file " << filePath );
-        while (true)
-      {
-         const char* file;
-         int line;
-         
-         unsigned long code = ERR_get_error_line(&file,&line);
-         if ( code == 0 )
-         {
-            break;
-         }
-
-         char buf[256];
-         ERR_error_string_n(code,buf,sizeof(buf));
-         ErrLog( << buf  );
-         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
-      }
-      
-
-	  Data err( "Error reading contents of private key file " );
-	  err += filePath;
-	  throw Exception(err, __FILE__,__LINE__);
-
       while (true)
       {
          const char* file;
@@ -835,6 +904,11 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
          DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
       }
       
+
+      Data err( "Error reading contents of private key file " );
+      err += filePath;
+      throw Exception(err, __FILE__,__LINE__);
+
       return false;
    }
    
@@ -1166,181 +1240,181 @@ Security::uncodeSigned( MultipartSignedContents* multi,
       return first;
    }
 
-      int flags=0;
-      flags |= PKCS7_BINARY;
+   int flags=0;
+   flags |= PKCS7_BINARY;
    
-      assert( second );
-      assert( first );
+   assert( second );
+   assert( first );
       
-       Data textData = first->getBodyData();
-      Data sigData = sig->getBodyData();
+   Data textData = first->getBodyData();
+   Data sigData = sig->getBodyData();
       
-      BIO* in = BIO_new_mem_buf( (void*)sigData.c_str(),sigData.size());
-      assert(in);
-      InfoLog( << "ceated in BIO");
+   BIO* in = BIO_new_mem_buf( (void*)sigData.c_str(),sigData.size());
+   assert(in);
+   InfoLog( << "ceated in BIO");
     
-      BIO* out = BIO_new(BIO_s_mem());
-      assert(out);
-      InfoLog( << "created out BIO" );
+   BIO* out = BIO_new(BIO_s_mem());
+   assert(out);
+   InfoLog( << "created out BIO" );
 
-      DebugLog( << "verify <"    << textData.escaped() << ">" );
-      DebugLog( << "signature <" << sigData.escaped() << ">" );
-      //DebugLog( << "signature text <" << sig->text().escaped() << ">" );
+   DebugLog( << "verify <"    << textData.escaped() << ">" );
+   DebugLog( << "signature <" << sigData.escaped() << ">" );
+   //DebugLog( << "signature text <" << sig->text().escaped() << ">" );
       
-      BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.c_str(),textData.size());
-      assert(pkcs7Bio);
-      InfoLog( << "ceated pkcs BIO");
+   BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.c_str(),textData.size());
+   assert(pkcs7Bio);
+   InfoLog( << "ceated pkcs BIO");
     
-      PKCS7* pkcs7 = d2i_PKCS7_bio(in, NULL);
-      if ( !pkcs7 )
+   PKCS7* pkcs7 = d2i_PKCS7_bio(in, NULL);
+   if ( !pkcs7 )
+   {
+      ErrLog( << "Problems doing decode of PKCS7 object <"
+              << sigData.escaped() << ">" );
+
+      while (1)
       {
-         ErrLog( << "Problems doing decode of PKCS7 object <"
-                 << sigData.escaped() << ">" );
-
-         while (1)
+         const char* file;
+         int line;
+              
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
          {
-            const char* file;
-            int line;
-              
-            unsigned long code = ERR_get_error_line(&file,&line);
-            if ( code == 0 )
-            {
-               break;
-            }
-              
-            char buf[256];
-            ERR_error_string_n(code,buf,sizeof(buf));
-            ErrLog( << buf  );
-            InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
+            break;
          }
+              
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
            
-         return first;
-      }
-      BIO_flush(in);
+      return first;
+   }
+   BIO_flush(in);
    
-      int type=OBJ_obj2nid(pkcs7->type);
-      switch (type)
+   int type=OBJ_obj2nid(pkcs7->type);
+   switch (type)
+   {
+      case NID_pkcs7_signed:
+         InfoLog( << "data is pkcs7 signed" );
+         break;
+      case NID_pkcs7_signedAndEnveloped:
+         InfoLog( << "data is pkcs7 signed and enveloped" );
+         break;
+      case NID_pkcs7_enveloped:
+         InfoLog( << "data is pkcs7 enveloped" );
+         break;
+      case NID_pkcs7_data:
+         InfoLog( << "data i pkcs7 data" );
+         break;
+      case NID_pkcs7_encrypted:
+         InfoLog( << "data is pkcs7 encrypted " );
+         break;
+      case NID_pkcs7_digest:
+         InfoLog( << "data is pkcs7 digest" );
+         break;
+      default:
+         InfoLog( << "Unkown pkcs7 type" );
+         break;
+   }
+
+   STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7, NULL/*certs*/, 0/*flags*/ );
+   for (int i=0; i<sk_X509_num(signers); i++)
+   {
+      X509* x = sk_X509_value(signers,i);
+
+      STACK* emails = X509_get1_email(x);
+
+      for ( int j=0; j<sk_num(emails); j++)
       {
-         case NID_pkcs7_signed:
-            InfoLog( << "data is pkcs7 signed" );
-            break;
-         case NID_pkcs7_signedAndEnveloped:
-            InfoLog( << "data is pkcs7 signed and enveloped" );
-            break;
-         case NID_pkcs7_enveloped:
-            InfoLog( << "data is pkcs7 enveloped" );
-            break;
-         case NID_pkcs7_data:
-            InfoLog( << "data i pkcs7 data" );
-            break;
-         case NID_pkcs7_encrypted:
-            InfoLog( << "data is pkcs7 encrypted " );
-            break;
-         case NID_pkcs7_digest:
-            InfoLog( << "data is pkcs7 digest" );
-            break;
-         default:
-            InfoLog( << "Unkown pkcs7 type" );
-            break;
-      }
-
-      STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7, NULL/*certs*/, 0/*flags*/ );
-      for (int i=0; i<sk_X509_num(signers); i++)
-      {
-         X509* x = sk_X509_value(signers,i);
-
-         STACK* emails = X509_get1_email(x);
-
-         for ( int j=0; j<sk_num(emails); j++)
+         char* e = sk_value(emails,j);
+         InfoLog(<< "email field of signing cert is <" << e << ">" );
+         if ( signedBy)
          {
-            char* e = sk_value(emails,j);
-            InfoLog(<< "email field of signing cert is <" << e << ">" );
-            if ( signedBy)
-            {
-               *signedBy = Data(e);
-            }
+            *signedBy = Data(e);
          }
       }
+   }
 
-      STACK_OF(X509)* certs;
-      certs = sk_X509_new_null();
-      assert( certs );
+   STACK_OF(X509)* certs;
+   certs = sk_X509_new_null();
+   assert( certs );
    
-      //      if ( !verifySig )
+   //      if ( !verifySig )
+   {
+      flags |= PKCS7_NOVERIFY;
+   }
+   
+   assert( certAuthorities );
+   
+   switch (type)
+   {
+      case NID_pkcs7_signed:
       {
-         flags |= PKCS7_NOVERIFY;
-      }
-   
-      assert( certAuthorities );
-   
-      switch (type)
-      {
-         case NID_pkcs7_signed:
+         if ( PKCS7_verify(pkcs7, certs, certAuthorities, pkcs7Bio, out, flags ) != 1 )
          {
-            if ( PKCS7_verify(pkcs7, certs, certAuthorities, pkcs7Bio, out, flags ) != 1 )
-            {
-               ErrLog( << "Problems doing PKCS7_verify" );
+            ErrLog( << "Problems doing PKCS7_verify" );
 
-               if ( sigStatus )
-               {
-                  *sigStatus = isBad;
-               }
-
-               while (1)
-               {
-                  const char* file;
-                  int line;
-               
-                  unsigned long code = ERR_get_error_line(&file,&line);
-                  if ( code == 0 )
-                  {
-                     break;
-                  }
-               
-                  char buf[256];
-                  ERR_error_string_n(code,buf,sizeof(buf));
-                  ErrLog( << buf  );
-                  InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
-               }
-            
-               return first;
-            }
             if ( sigStatus )
             {
-               if ( flags & PKCS7_NOVERIFY )
+               *sigStatus = isBad;
+            }
+
+            while (1)
+            {
+               const char* file;
+               int line;
+               
+               unsigned long code = ERR_get_error_line(&file,&line);
+               if ( code == 0 )
                {
-                  *sigStatus = notTrusted;
+                  break;
+               }
+               
+               char buf[256];
+               ERR_error_string_n(code,buf,sizeof(buf));
+               ErrLog( << buf  );
+               InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
+            }
+            
+            return first;
+         }
+         if ( sigStatus )
+         {
+            if ( flags & PKCS7_NOVERIFY )
+            {
+               *sigStatus = notTrusted;
+            }
+            else
+            {
+               if (false) // !jf! TODO look for this cert in store
+               {
+                  *sigStatus = trusted;
                }
                else
                {
-                  if (false) // !jf! TODO look for this cert in store
-                  {
-                     *sigStatus = trusted;
-                  }
-                  else
-                  {
-                     *sigStatus = caTrusted;
-                  }
+                  *sigStatus = caTrusted;
                }
             }
          }
-         break;
-      
-         default:
-            ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
-            return NULL;
       }
+      break;
       
-      BIO_flush(out);
-      char* outBuf=NULL;
-      long size = BIO_get_mem_data(out,&outBuf);
-      assert( size >= 0 );
+      default:
+         ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
+         return NULL;
+   }
       
-      Data outData(outBuf,size);
+   BIO_flush(out);
+   char* outBuf=NULL;
+   long size = BIO_get_mem_data(out,&outBuf);
+   assert( size >= 0 );
       
-      DebugLog( << "uncodec body is <" << outData << ">" );
+   Data outData(outBuf,size);
       
-      return first;
+   DebugLog( << "uncodec body is <" << outData << ">" );
+      
+   return first;
 }
 
 
@@ -1488,45 +1562,45 @@ Security::decrypt( Pkcs7Contents* sBody )
    // !jf! this is a really crappy parser - shoudl do proper mime stuff
    ParseBuffer pb( outData.data(), outData.size() );
 
-     const char* headerStart = pb.position();
+   const char* headerStart = pb.position();
 
-      // pull out contents type only
-      pb.skipToChars("Content-Type");
-      pb.assertNotEof();
+   // pull out contents type only
+   pb.skipToChars("Content-Type");
+   pb.assertNotEof();
 
-      pb.skipToChar(Symbols::COLON[0]);
-      pb.skipChar();
-      pb.assertNotEof();
+   pb.skipToChar(Symbols::COLON[0]);
+   pb.skipChar();
+   pb.assertNotEof();
       
-      pb.skipWhitespace();
-      const char* typeStart = pb.position();
-      pb.assertNotEof();
+   pb.skipWhitespace();
+   const char* typeStart = pb.position();
+   pb.assertNotEof();
       
-      // determine contents-type header buffer
-      pb.skipToTermCRLF();
-      pb.assertNotEof();
+   // determine contents-type header buffer
+   pb.skipToTermCRLF();
+   pb.assertNotEof();
 
-      ParseBuffer subPb(typeStart, pb.position() - typeStart);
-      Mime contentType;
-      contentType.parse(subPb);
+   ParseBuffer subPb(typeStart, pb.position() - typeStart);
+   Mime contentType;
+   contentType.parse(subPb);
       
-      pb.assertNotEof();
+   pb.assertNotEof();
 
-      // determine body start
-      pb.reset(typeStart);
-      const char* bodyStart = pb.skipToChars(Symbols::CRLFCRLF);
-      pb.assertNotEof();
-      bodyStart += 4;
+   // determine body start
+   pb.reset(typeStart);
+   const char* bodyStart = pb.skipToChars(Symbols::CRLFCRLF);
+   pb.assertNotEof();
+   bodyStart += 4;
 
-      // determine contents body buffer
-      pb.skipToEnd();
-      Data tmp;
-      pb.data(tmp, bodyStart);
-      // create contents against body
-      Contents* ret = Contents::createContents(contentType, tmp);
-      // pre-parse headers
-      ParseBuffer headersPb(headerStart, bodyStart-4-headerStart);
-      ret->preParseHeaders(headersPb);
+   // determine contents body buffer
+   pb.skipToEnd();
+   Data tmp;
+   pb.data(tmp, bodyStart);
+   // create contents against body
+   Contents* ret = Contents::createContents(contentType, tmp);
+   // pre-parse headers
+   ParseBuffer headersPb(headerStart, bodyStart-4-headerStart);
+   ret->preParseHeaders(headersPb);
 
    return ret;
 }
