@@ -241,8 +241,9 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
    int ret = connect(mSocket,&dest.getSockaddr(), dest.length());
    if (ret < 0)
    {
-      Transport::error(getErrno());
-      ErrLog(<< "Unable to route to " << dest << " : [" << getErrno() << "] " << strerror(getErrno()));
+      int e = getErrno();
+      Transport::error( e );
+      ErrLog(<< "Unable to route to " << dest << " : [" << e << "] " << strerror(e) );
       throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
    }
    
@@ -250,17 +251,22 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
    ret = getsockname(mSocket,&source.getMutableSockaddr(), &len);
    if (ret < 0)
    {
-      Transport::error(getErrno());
-      ErrLog(<< "Can't determine name of socket " << dest << " : " << strerror(getErrno()));
+      int e = getErrno();
+      Transport::error(e);
+      ErrLog(<< "Can't determine name of socket " << dest << " : " << strerror(e) );
       throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
    }
 
    // Unconnect
    ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
-   if ( ret<0 && getErrno()!=EAFNOSUPPORT )
+   if ( ret<0 )
    {
-      ErrLog(<< "Can't disconnect socket :  " << strerror(getErrno()));
-      throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
+      int e =  getErrno();
+      if  ( e != EAFNOSUPPORT )
+      {
+         ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
+         throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
+      }
    }
 }
 
