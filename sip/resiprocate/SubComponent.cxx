@@ -7,21 +7,21 @@ using namespace std;
 
 string SubComponent::ParamString[] = { "unknown", "ttl", "transport", "maddr", "lr", "method", "user" };
 
-SubComponent::SubComponent(ParamType type)
+SubComponent::SubComponent(Type type)
    : next(0),
      mType(type)
 {}
 
 
-SubComponent::ParamType 
-SubComponent::getType()
+SubComponent::Type 
+SubComponent::getType() const
 {
    return mType;
 }
 
 
 const string& 
-SubComponent::getName()
+SubComponent::getName() const
 {
    return SubComponent::ParamString[mType];
 }
@@ -32,3 +32,7 @@ SubComponent::clone() const
    return new SubComponent(*this);
 }
 
+ostream& operator<<(ostream& stream, const SubComponent& comp)
+{
+   return stream << comp.getName();
+}
