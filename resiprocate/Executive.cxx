@@ -18,6 +18,7 @@ Executive::process(FdSet& fdset)
 {
    processTransports(fdset);
    processTimer();
+   processDns(fdset);
    
    while( processStateMachine() );
 }
@@ -48,10 +49,15 @@ bool
 Executive::processTimer()
 {
    mStack.mTimers.process();
-
    return false;
 }
 
+bool
+Executive::processDns(FdSet& fdset)
+{
+   mStack.mDnsResolver.process(fdset);
+   return false;
+}
 
 
 /// returns time in milliseconds when process next needs to be called 
@@ -83,6 +89,7 @@ void
 Executive::buildFdSet( FdSet& fdset)
 {
    mStack.mTransportSelector.buildFdSet( fdset );
+   mStack.mDnsResolver.buildFdSet( fdset );
 }
 
 

@@ -1,13 +1,14 @@
-# $Id: Makefile,v 1.28 2002/12/21 00:35:40 alan Exp $
+# $Id: Makefile,v 1.29 2002/12/24 00:14:43 jason Exp $
 
 USE_SSL = 1
 
 BUILD = ../../../build
 
 include $(BUILD)/Makefile.pre
+-include ../../Makefile.opt
 
 USE_REPO=false
-PACKAGES += SIP2 SIPSTACK2 UTIL2 PTHREAD
+PACKAGES += SIP2 SIPSTACK2 UTIL2 ARES PTHREAD
 
 ifeq ($(USE_SSL),1)
 PACKAGES += OPENSSL
@@ -17,11 +18,11 @@ TESTPROGRAMS =	\
 		testIM.cxx \
 		testUri.cxx \
 		SipTortureTests.cxx \
-		testTlsConnection.cxx \
 		lg.cxx \
 		test1.cxx \
 		test2.cxx \
 		testDigestAuthentication.cxx \
+		testDnsResolver.cxx \
 		testIM.cxx \
 		testLockStep.cxx \
 		testMessageWaiting.cxx \
@@ -38,7 +39,7 @@ TESTPROGRAMS =	\
 	        testSipStack1.cxx \
 	        testTcpTransport.cxx \
 		testMultipartMixedContents.cxx \
-#	        testDnsResolver.cxx \
+#		testTlsConnection.cxx \
 
 
 SRC = \
@@ -52,8 +53,5 @@ SRC = \
 
 #	        testNonInviteClientTx.cxx \
 #		testNameAddrParamExclusions.cxx \
-
--include ../../Makefile.opt
-
 
 include $(BUILD)/Makefile.post

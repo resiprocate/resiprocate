@@ -1,14 +1,15 @@
-# $Id: Makefile,v 1.99 2002/12/22 03:15:51 fluffy Exp $
+# $Id: Makefile,v 1.100 2002/12/24 00:14:43 jason Exp $
 
 BUILD = ../../build
 
 USE_SSL = 1
 
 include $(BUILD)/Makefile.pre
+-include ../Makefile.opt
 
 USE_REPO=false
 
-PACKAGES += SIP2 UTIL2 PTHREAD
+PACKAGES += SIP2 UTIL2 ARES PTHREAD
 
 ifeq ($(USE_SSL),1)
 PACKAGES += OPENSSL
@@ -20,8 +21,6 @@ TESTPROGRAMS =
 parsetest: bin.debug.Linux.i686/testParserCategories
 	./bin.debug.Linux.i686/testParserCategories
 
--include ../Makefile.opt
-
 SRC = \
 	Pidf.cxx \
 	MultipartMixedContents.cxx \
@@ -29,55 +28,54 @@ SRC = \
 	BranchParameter.cxx \
 	Connection.cxx \
 	ConnectionMap.cxx \
+	Contents.cxx \
 	DataParameter.cxx \
-	QopParameter.cxx \
-	QuotedDataParameter.cxx \
 	Dialog.cxx \
-	DnsMessage.cxx \
-	DnsMessage.cxx \
-	DnsResolver.cxx \
 	DnsResolver.cxx \
 	Executive.cxx \
 	ExistsParameter.cxx \
 	FloatParameter.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
-	Headers.cxx \
 	HeaderTypes.cxx \
+	Headers.cxx \
 	Helper.cxx \
 	IntegerParameter.cxx \
+	LazyParser.cxx \
 	Message.cxx \
+	MessageWaitingContents.cxx \
 	MethodTypes.cxx \
+	MultipartMixedContents.cxx \
 	Parameter.cxx \
 	ParameterTypes.cxx \
 	ParserCategories.cxx \
 	ParserCategory.cxx \
+	Pkcs7Contents.cxx \
+	PlainContents.cxx \
 	Preparse.cxx \
 	QopParameter.cxx \
+	QopParameter.cxx \
+	QuotedDataParameter.cxx \
 	QuotedDataParameter.cxx \
 	RportParameter.cxx \
+	SdpContents.cxx \
 	Security.cxx \
+	SipFrag.cxx \
 	SipMessage.cxx \
 	SipStack.cxx \
 	Symbols.cxx \
 	TcpTransport.cxx \
-	TlsTransport.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
+	TlsTransport.cxx \
 	TransactionMap.cxx \
 	TransactionState.cxx \
 	Transport.cxx \
 	TransportSelector.cxx \
+	TuIM.cxx \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \
-	Contents.cxx \
-	SdpContents.cxx \
-	MessageWaitingContents.cxx \
-	SipFrag.cxx \
-	TuIM.cxx \
-	PlainContents.cxx \
-	Pkcs7Contents.cxx \
 
 
 
