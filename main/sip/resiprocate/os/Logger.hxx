@@ -1,5 +1,5 @@
-#ifndef Logger_hxx
-#define Logger_hxx
+#ifndef Vocal2_Logger_hxx
+#define Vocal2_Logger_hxx
 
 #include "sip2/util/Socket.hxx"
 #include "sip2/util/Log.hxx"

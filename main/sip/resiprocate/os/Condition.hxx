@@ -1,5 +1,5 @@
-#if !defined(VOCAL_CONDITION_HXX)
-#define VOCAL_CONDITION_HXX
+#if !defined(Vocal2_Condition_hxx)
+#define Vocal2_Condition_hxx
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
