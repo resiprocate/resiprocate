@@ -19,7 +19,7 @@ class ClientSubscriptionHandler
       //subscription can be ended through a notify or a failure response.
       virtual void onTerminated(ClientSubscriptionHandle, const SipMessage& msg)=0;   
       //not sure if this has any value.
-      virtual void onNewSubscription(ClientSubscriptionHandle, const SipMessage& response)=0; 
+      virtual void onNewSubscription(ClientSubscriptionHandle, const SipMessage& notify)=0; 
 };
 
 class ServerSubscriptionHandler
