@@ -32,12 +32,12 @@ using namespace Vocal2;
 SipStack::SipStack(bool multiThreaded)
    : 
 #ifdef USE_SSL
-	security( 0 ),
+   security( 0 ),
 #endif
-		mExecutive(*this),
-     mTransportSelector(*this),
-     mTimers(mStateMacFifo),
-     mDnsResolver(*this)
+   mExecutive(*this),
+   mTransportSelector(*this),
+   mTimers(mStateMacFifo),
+   mDnsResolver(*this)
 {
    Random::initialize();
    initNetwork();
@@ -72,7 +72,7 @@ SipStack::addAlias(const Data& domain)
 }
 
 Data 
-SipStack::getHostname()
+SipStack::getHostname() const
 {
    // if you change this, please #def old version for windows 
    char hostName[1024];
@@ -155,7 +155,7 @@ SipStack::process(FdSet& fdset)
 int 
 SipStack::getTimeTillNextProcessMS()
 {
-	return mExecutive.getTimeTillNextProcessMS();
+   return mExecutive.getTimeTillNextProcessMS();
 } 
 
 
