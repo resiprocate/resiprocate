@@ -23,7 +23,7 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
   {
     if (!sipMessage.exists(h_ProxyAuthorizations))
     {
-      challengeRequest(rc);
+      challengeRequest(rc, false);
       return SkipAllChains;
     }
     else
@@ -37,12 +37,12 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
     // Handle response from user authentication database
     sipMessage = rc.getOriginalMessage();
     Helper::AuthResult result =
-      Helper::authenticateRequest(sipMessage, a1, 2);
+      Helper::authenticateRequest(sipMessage, a1, 15);
 
     switch (result)
     {
       case Failed:
-        // XXX Send 403
+        rc.sendResponse(Helper::makeResponse(sipMessage, 403));
         return SkipAllChains;
 
         // !abr! Eventually, this should just append a counter to
@@ -51,15 +51,16 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
         // then we re-challenge; otherwise, we send a 403 instead.
 
       case Authenticated:
-        // XXX Add user info to request context
+        rc.setDigestIdentity();
         return Continue;
 
       case Expired:
-        challengeRequest(rc);
+        challengeRequest(rc, true);
         return SkipAllChains;
 
       case BadlyFormed:
-        // XXX Send 403
+        rc.sendResponse(Helper::makeResponse(sipMessage, 403, 
+                        "Where on earth did you get that nonce from?"));
         return SkipAllChains;
     }
   }
@@ -68,11 +69,12 @@ DigestAuthenticator::handleRequest(repro::RequestContext &rc)
 }
 
 void
-DigestAuthenticator::challengeRequest(repro::RequestContext &rc)
+DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
+                                      bool stale)
 {
   Data realm = sipMessage.
   Helper::makeProxyChallenge();
-  rc.getProxy().sendResponse(challenge);
+  rc.sendResponse(challenge);
 }
 
 void
