@@ -1,23 +1,12 @@
-# $Id: Makefile,v 1.8 2002/09/21 16:48:34 fluffy Exp $
+# $Id: Makefile,v 1.9 2002/09/21 19:18:30 jason Exp $
 
 # must have ARCH set
 ARCH = i686
 
 PROG = sipstack
 
-SRC =	\
-	FloatSubComponent.cxx \
-	HeaderFieldValue.cxx \
-	HeaderFieldValueList.cxx \
-	HeaderTypes.cxx \
-	IntSubComponent.cxx \
-	SipMessage.cxx \
-	StringSubComponent.cxx \
-	SubComponent.cxx \
-	SubComponentList.cxx \
-	testMsg.cxx \
-	testSubComponentList.cxx \
-	UnknownSubComponent.cxx
+SRC = Condition.cxx Lock.cxx Mutex.cxx Transport.cxx UdpTransport.cxx Log.cxx  Subsystem.cxx Data.cxx 
+
 
 OSRC =   *.hxx Makefile
 
@@ -90,6 +79,9 @@ $(BIN)/libSipStack.a: $(OBJS)
 
 
 testSubComponentList:  $(OBJS) $(OBJ)/testSubComponentList.o
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+testUdp:  $(OBJS) $(OBJ)/testUdp.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 
