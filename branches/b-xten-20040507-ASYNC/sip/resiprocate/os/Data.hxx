@@ -140,7 +140,9 @@ class Data
 
       static size_t rawHash(const char* c, size_t size);
       size_t hash() const;
-      
+
+      template<class Predicate> std::ostream& escapeToStream(std::ostream& str, Predicate shouldEscape) const;            
+
    private:
       Data(const char* buffer, int length, bool); // deprecated: use // Data(ShareEnum ...)
 
@@ -148,6 +150,7 @@ class Data
       void own() const;
       void resize(size_type newSize, bool copy);
 
+      static bool isHex(char c);      
       // Trade off between in-object and heap allocation
       // Larger LocalAlloc makes for larger objects that have Data members but
       // bulk allocation/deallocation of Data  members.
@@ -161,6 +164,7 @@ class Data
       bool mMine;
       // The invariant for a Data with !mMine is mSize == mCapacity
 
+      static const bool isCharHex[256];
 
       friend bool operator==(const char* s, const Data& d);
       friend bool operator!=(const char* s, const Data& d);
@@ -174,6 +178,10 @@ class Data
 
 static bool invokeDataInit = Data::init();
 
+inline bool Data::isHex(char c)
+{
+   return isCharHex[(size_t) c];
+}
 
 inline bool isEqualNoCase(const Data& left, const Data& right)
 {
@@ -198,6 +206,45 @@ inline bool isLessThanNoCase(const Data& left, const Data& right)
    {
        return left.size() < right.size();
    }
+}
+
+template<class Predicate> std::ostream& 
+Data::escapeToStream(std::ostream& str, Predicate shouldEscape) const
+{
+   static char hex[] = "0123456789ABCDEF";
+
+   if (empty())
+   {
+      return str;
+   }
+   
+   const char* p = mBuf;
+   const char* e = mBuf + mSize;
+
+   while (p < e)
+   {
+      if (*p == '%' 
+          && e - p > 2 
+          && isHex(*(p+1)) 
+          && isHex(*(p+2)))
+      {
+         str.write(p, 3);
+         p+=3;
+      }
+      else if (shouldEscape(*p))
+      {
+         int hi = (*p & 0xF0)>>4;
+         int low = (*p & 0x0F);
+	   
+         str << '%' << hex[hi] << hex[low];
+         p++;
+      }
+      else
+      {
+         str.put(*p++);
+      }
+   }
+   return str;
 }
 
 bool operator==(const char* s, const Data& d);

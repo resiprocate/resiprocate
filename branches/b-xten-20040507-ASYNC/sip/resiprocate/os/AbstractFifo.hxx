@@ -1,9 +1,6 @@
 #if !defined(RESIP_AbstractFifo_hxx)
 #define RESIP_AbstractFifo_hxx 
 
-static const char* const resipAbstractFifo_h_Version =
-   "$Id: AbstractFifo.hxx,v 1.1 2003/09/24 18:04:09 davidb Exp $";
-
 #include <list>
 #include <errno.h>
 #include <cassert>
@@ -23,6 +20,8 @@ class AbstractFifo
    public:
       AbstractFifo(unsigned int maxSize);
       virtual ~AbstractFifo() = 0;
+
+      bool empty() const;
             
       /** Get the current size of the fifo. Note you should not use this function
        *  to determine whether a call to getNext() will block or not.
