@@ -1133,6 +1133,15 @@ TransactionState::resendToWire(Message* msg) const
    assert(sip);
 
    assert (mDnsState != DnsResolver::NotStarted);
+
+#if 1 // !cj! no idea why but I am crashing on the next assert so I am putting
+      // this in  
+   if (mDnsState == DnsResolver::Waiting)
+   {
+      return;
+   }
+#endif
+
    assert (mDnsState != DnsResolver::Waiting); // !jf! - is this bogus?
 
    mStack.mTransportSelector.send(sip, *mDnsListCurrent, true);

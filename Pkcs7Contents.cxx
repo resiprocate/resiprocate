@@ -17,6 +17,12 @@ Pkcs7Contents::Pkcs7Contents(const Data& txt)
    : mText(txt)
 {}
 
+Pkcs7Contents::Pkcs7Contents(const Data& txt, const Mime& contentsType)
+   : Contents(contentsType),
+     mText(txt)
+{
+}
+ 
 Pkcs7Contents::Pkcs7Contents(HeaderFieldValue* hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mText()
