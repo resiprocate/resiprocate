@@ -283,14 +283,14 @@ DialogSet::dispatch(const SipMessage& msg)
       const SipMessage& request = msg;
       switch (request.header(h_CSeq).method())
       {
-         case INVITE:
-         case BYE:
-         case ACK:
-         case CANCEL:  //cancel needs work
-         case SUBSCRIBE:
-         case REFER: //need to add out-of-dialog refer logic
+         case RESIP_INVITE:
+         case RESIP_BYE:
+         case RESIP_ACK:
+         case RESIP_CANCEL:  //cancel needs work
+         case RESIP_SUBSCRIBE:
+         case RESIP_REFER: //need to add out-of-dialog refer logic
             break; //dialog creating/handled by dialog
-         case NOTIFY:
+         case RESIP_NOTIFY:
             if (request.header(h_To).exists(p_tag))
             {
                break; //dialog creating/handled by dialog
@@ -305,14 +305,14 @@ DialogSet::dispatch(const SipMessage& msg)
                return;
             }
             break;                              
-         case PUBLISH:
+         case RESIP_PUBLISH:
             if (mServerPublication == 0)
             {
                mServerPublication = makeServerPublication(request);
             }
             mServerPublication->dispatch(request);
             return; 
-         case INFO:   
+         case RESIP_INFO:
             if (dialog)
             {
                break;
@@ -321,18 +321,18 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                return;
             }            
-         case REGISTER:
+         case RESIP_REGISTER:
             if (mServerRegistration == 0)
             {
                mServerRegistration = makeServerRegistration(request);
             }
             mServerRegistration->dispatch(request);
             return;
-         case MESSAGE:
+         case RESIP_MESSAGE:
             mServerPagerMessage = makeServerPagerMessage(request);
             mServerPagerMessage->dispatch(request);
             return; 
-         case UPDATE:
+         case RESIP_UPDATE:
             //not implemented
             return;            
          default: 
@@ -363,10 +363,10 @@ DialogSet::dispatch(const SipMessage& msg)
          
       switch (response.header(h_CSeq).method())
       {
-         case INVITE:
-         case SUBSCRIBE:
-         case BYE:
-         case ACK:
+         case RESIP_INVITE:
+         case RESIP_SUBSCRIBE:
+         case RESIP_BYE:
+         case RESIP_ACK:
             break; //dialog creating/handled by dialog(2543 & illegal 3261 responses)
 //             if(response.header(h_To).exists(p_tag))
 //             {
@@ -377,30 +377,30 @@ DialogSet::dispatch(const SipMessage& msg)
 //                //throw away, informational status message eventually
 //                return;               
 //             }
-         case CANCEL:
-         case REFER:  //need to add out-of-dialog refer logic
+         case RESIP_CANCEL:
+         case RESIP_REFER:  //need to add out-of-dialog refer logic
             break; //dialog creating/handled by dialog
-         case PUBLISH:
+         case RESIP_PUBLISH:
             if (mClientPublication == 0)
             {
                mClientPublication = makeClientPublication(response);
             }
             mClientPublication->dispatch(response);
             return;
-         case REGISTER:
+         case RESIP_REGISTER:
             if (mClientRegistration == 0)
             {
                mClientRegistration = makeClientRegistration(response);
             }
             mClientRegistration->dispatch(response);
             return;
-         case MESSAGE:
+         case RESIP_MESSAGE:
             if (mClientPagerMessage)
             {
                mClientPagerMessage->dispatch(response);
             }
             return;            
-         case INFO:   
+         case RESIP_INFO:
             if (dialog)
             {
                break;
@@ -409,7 +409,7 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                return;
             }            
-         case NOTIFY:
+         case RESIP_NOTIFY:
             if (dialog)
             {
                break;
@@ -432,7 +432,7 @@ DialogSet::dispatch(const SipMessage& msg)
    //usages should be cancelled?
    if (dialog == 0)
    {
-      if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
+      if (msg.isRequest() && msg.header(h_RequestLine).method() == RESIP_CANCEL)
       {
          for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
          {

@@ -66,7 +66,7 @@ SipMessage*
 Helper::makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
-   RequestLine rLine(REGISTER);
+   RequestLine rLine(RESIP_REGISTER);
 
    rLine.uri().scheme() = to.uri().scheme();
    rLine.uri().host() = to.uri().host();
@@ -79,7 +79,7 @@ Helper::makeRegister(const NameAddr& to, const NameAddr& from, const NameAddr& c
    request->header(h_To) = to;
    request->header(h_RequestLine) = rLine;
    request->header(h_MaxForwards).value() = 70;
-   request->header(h_CSeq).method() = REGISTER;
+   request->header(h_CSeq).method() = RESIP_REGISTER;
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
@@ -105,7 +105,7 @@ SipMessage*
 Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
-   RequestLine rLine(REGISTER);
+   RequestLine rLine(RESIP_REGISTER);
 
    rLine.uri().scheme() = to.uri().scheme();
    rLine.uri().host() = to.uri().host();
@@ -118,7 +118,7 @@ Helper::makeRegister(const NameAddr& to, const Data& transport, const NameAddr& 
    request->header(h_To) = to;
    request->header(h_RequestLine) = rLine;
    request->header(h_MaxForwards).value() = 70;
-   request->header(h_CSeq).method() = REGISTER;
+   request->header(h_CSeq).method() = RESIP_REGISTER;
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = to;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
@@ -144,13 +144,13 @@ SipMessage*
 Helper::makePublish(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
-   RequestLine rLine(PUBLISH);
+   RequestLine rLine(RESIP_PUBLISH);
    rLine.uri() = target.uri();
 
    request->header(h_To) = target;
    request->header(h_RequestLine) = rLine;
    request->header(h_MaxForwards).value() = 70;
-   request->header(h_CSeq).method() = PUBLISH;
+   request->header(h_CSeq).method() = RESIP_PUBLISH;
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
@@ -174,13 +174,13 @@ SipMessage*
 Helper::makeMessage(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
-   RequestLine rLine(MESSAGE);
+   RequestLine rLine(RESIP_MESSAGE);
    rLine.uri() = target.uri();
 
    request->header(h_To) = target;
    request->header(h_RequestLine) = rLine;
    request->header(h_MaxForwards).value() = 70;
-   request->header(h_CSeq).method() = MESSAGE;
+   request->header(h_CSeq).method() = RESIP_MESSAGE;
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
@@ -205,13 +205,13 @@ SipMessage*
 Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
    SipMessage* request = new SipMessage;
-   RequestLine rLine(SUBSCRIBE);
+   RequestLine rLine(RESIP_SUBSCRIBE);
    rLine.uri() = target.uri();
 
    request->header(h_To) = target;
    request->header(h_RequestLine) = rLine;
    request->header(h_MaxForwards).value() = 70;
-   request->header(h_CSeq).method() = SUBSCRIBE;
+   request->header(h_CSeq).method() = RESIP_SUBSCRIBE;
    request->header(h_CSeq).sequence() = 1;
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
@@ -227,13 +227,13 @@ Helper::makeSubscribe(const NameAddr& target, const NameAddr& from, const NameAd
 SipMessage*
 Helper::makeInvite(const NameAddr& target, const NameAddr& from)
 {
-   return Helper::makeRequest(target, from, INVITE);
+   return Helper::makeRequest(target, from, RESIP_INVITE);
 }
 
 SipMessage*
 Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
-   return Helper::makeRequest(target, from, contact, INVITE);
+   return Helper::makeRequest(target, from, contact, RESIP_INVITE);
 }
 
 
@@ -407,10 +407,10 @@ SipMessage*
 Helper::makeCancel(const SipMessage& request)
 {
    assert(request.isRequest());
-   assert(request.header(h_RequestLine).getMethod() == INVITE);
+   assert(request.header(h_RequestLine).getMethod() == RESIP_INVITE);
    SipMessage* cancel = new SipMessage;
 
-   RequestLine rLine(CANCEL, request.header(h_RequestLine).getSipVersion());
+   RequestLine rLine(RESIP_CANCEL, request.header(h_RequestLine).getSipVersion());
    rLine.uri() = request.header(h_RequestLine).uri();
    cancel->header(h_RequestLine) = rLine;
    cancel->header(h_To) = request.header(h_To);
@@ -431,7 +431,7 @@ Helper::makeCancel(const SipMessage& request)
    }
    
    cancel->header(h_CSeq) = request.header(h_CSeq);
-   cancel->header(h_CSeq).method() = CANCEL;
+   cancel->header(h_CSeq).method() = RESIP_CANCEL;
    cancel->header(h_Vias).push_back(request.header(h_Vias).front());
 
    return cancel;
@@ -447,11 +447,11 @@ SipMessage*
 Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
 {
    assert (request.header(h_Vias).size() >= 1);
-   assert (request.header(h_RequestLine).getMethod() == INVITE);
+   assert (request.header(h_RequestLine).getMethod() == RESIP_INVITE);
    
    SipMessage* ack = new SipMessage;
 
-   RequestLine rLine(ACK, request.header(h_RequestLine).getSipVersion());
+   RequestLine rLine(RESIP_ACK, request.header(h_RequestLine).getSipVersion());
    rLine.uri() = request.header(h_RequestLine).uri();
    ack->header(h_RequestLine) = rLine;
 
@@ -460,7 +460,7 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
    ack->header(h_To) = response.header(h_To); // to get to-tag
    ack->header(h_Vias).push_back(request.header(h_Vias).front());
    ack->header(h_CSeq) = request.header(h_CSeq);
-   ack->header(h_CSeq).method() = ACK;
+   ack->header(h_CSeq).method() = RESIP_ACK;
    if (request.exists(h_Routes))
    {
       ack->header(h_Routes) = request.header(h_Routes);
