@@ -201,8 +201,14 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          // See Chapter 15.3 of Stevens, Unix Network Programming Vol. 1 2nd Edition
          if (e == INVALID_SOCKET)
          {
-			 	int err = getErrno();
-            if (err != EINPROGRESS)
+			int err = getErrno();
+
+            switch (err)
+			{
+				case EINPROGRESS:
+				case EWOULDBLOCK:
+					break;
+				default:	
             {
                // !jf! this has failed
                InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
@@ -212,7 +218,8 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
                delete data;
                return;
             }
-         }
+			}
+		 }
 
          // This will add the connection to the manager
          conn = createConnection(data->destination, sock, false);
