@@ -507,91 +507,20 @@ removePrivateKey(BaseSecurity::PrivateKeyMap& privateKeys, const Data& key)
    }
    return   false;
 }
+void configSslCtx (SSL_CTX* ctx, X509_STORE* certStore)
+{
+   // associate root certs to mTlsCtx
+   int ret;
+   SSL_CTX_set_cert_store(ctx, certStore);
+   //assert(ret);
+
+   // set up the cipher
+   static char* cipher="RSA+SHA+AES+3DES";
+   ret = SSL_CTX_set_cipher_list(ctx,cipher);
+   assert(ret);
+}
 
 }  // namespace
-
-
-
-
-
-
-
-
-
-#if(0)
-SecuredTransportCtx::SecuredTransportCtx (const BaseSecurity& sec, SSLv23Tag)
-:  mCtx(0)
-{
-   ErrLog( << "Warning - using SSL v2 v3 instead of TLS" );
-   mCtx = SSL_CTX_new(SSLv23_method());
-   assert( mCtx );
-
-   assert( sec.mRootCerts );
-   SSL_CTX_set_cert_store(mCtx, sec.mRootCerts);
-
-   // set up the cipher
-   char* cipher="RSA+SHA+AES+3DES";
-   int ret = SSL_CTX_set_cipher_list(mCtx ,cipher);
-   if ( ret == 0 )
-   {
-      ErrLog( << "Could not set any ciphers");
-      assert (0);
-   }
-
-   return ctxTls;
-}
-SecuredTransportCtx::SecuredTransportCtx (const BaseSecurity& sec, SSLv23Tag, bool server)
-:  mCtx(0)
-{
-   mCtx = SSL_CTX_new(TLSv1_method());
-   assert(mCtx);
-
-   if(server == true)
-   {
-      X509Map::const_iterator iter = mDomainCerts.begin();
-      X509Map::const_iterator last = mDomainCerts.last();
-
-      for(; iter != last; ++iter)
-      {
-         if(!SSL_CTX_use_certificate(mCtx, iter->second))
-            throw Exception("SSL_CTX_use_certificate failed",
-            __FILE__,__LINE__);
-      }
-      iter = mUserCerts.begin();
-      last = mUserCerts.end();
-      for(; iter != last; ++iter)
-      {
-         if(!SSL_CTX_use_certificate(mCtx, iter->second))
-            throw Exception("SSL_CTX_use_certificate failed",
-            __FILE__,__LINE__);
-      }
-
-      if (privateKey)
-      {
-         if (!SSL_CTX_use_PrivateKey(mCtx,privateKey))
-         throw Exception("SSL_CTX_use_PrivateKey failed.",
-         __FILE__,__LINE__);
-      }
-   }
-
-   assert(sec.mRootCerts);
-   SSL_CTX_set_cert_store(mCtx, sec.mRootCerts);
-
-   // set up the cipher
-   char* cipher="RSA+SHA+AES+3DES";
-   int ret = SSL_CTX_set_cipher_list(mCtx ,cipher);
-   if ( ret == 0 )
-   {
-      ErrLog( << "Could not set any ciphers");
-      assert (0);
-   }
-
-   return ctxTls;
-}
-
-#endif
-
-
 
 
 
@@ -603,9 +532,9 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 }
 
 BaseSecurity::BaseSecurity ()
-:  mRootCerts(0),
-   mTlsCtx(0),
-   mSslCtx(0)
+:  mTlsCtx(0),
+   mSslCtx(0),
+   mRootCerts(0)
 {
 }
 BaseSecurity::~BaseSecurity ()
@@ -872,6 +801,40 @@ BaseSecurity::checkSignature(
 }
 
 
+
+
+
+
+SSL_CTX*
+BaseSecurity::getTlsCtx ()
+{
+   if (mTlsCtx == 0)
+   {
+      mTlsCtx = SSL_CTX_new( TLSv1_method() );
+      assert(mTlsCtx);
+
+      // make sure we have root certs
+      assert(mRootCerts);
+      configSslCtx(mTlsCtx, mRootCerts);
+   }
+
+   return   mTlsCtx;
+}
+SSL_CTX*
+BaseSecurity::getSslCtx ()
+{
+   if (mSslCtx == 0)
+   {
+      mSslCtx = SSL_CTX_new( SSLv23_method() );
+      assert(mSslCtx);
+
+      // make sure we have root certs
+      assert(mRootCerts);
+      configSslCtx(mSslCtx, mRootCerts);
+   }
+
+   return   mSslCtx;
+}
 
 
 #if(0)
