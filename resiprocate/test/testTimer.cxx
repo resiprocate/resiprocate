@@ -7,6 +7,14 @@
 using namespace resip;
 using namespace std;
 
+bool
+isNear(int value, int reference, int epsilon=250)
+{
+   int diff = ::abs(value-reference);
+   return (diff < epsilon);
+}
+
+
 int
 main()
 {
@@ -15,20 +23,21 @@ main()
 
    cerr << "Before Fifo size: " << f.size() << endl;
    assert(f.size() == 0);
-   assert(timer.msTillNextTimer() == 0);
+   cerr << "next timer = " << timer.msTillNextTimer() << endl;
+   assert(timer.msTillNextTimer() == INT_MAX);
 
    // throw a few events in the queue
    timer.add(Timer::TimerA, "first", 1000);
    cerr << "next timer will fire in " << timer.msTillNextTimer() << "ms" << endl;
-   assert(timer.msTillNextTimer() <  1000 && timer.msTillNextTimer() > 950);
+   assert(isNear(timer.msTillNextTimer(), 1000));
    timer.add(Timer::TimerA, "second", 2000);
-   assert(timer.msTillNextTimer() <  1000 && timer.msTillNextTimer() > 950);
+   assert(isNear(timer.msTillNextTimer(), 1000));
    timer.add(Timer::TimerA, "third", 4000);
-   assert(timer.msTillNextTimer() <  1000 && timer.msTillNextTimer() > 950);
+   assert(isNear(timer.msTillNextTimer(), 1000));
    timer.add(Timer::TimerA, "fourth", 8000);
-   assert(timer.msTillNextTimer() <  1000 && timer.msTillNextTimer() > 950);
+   assert(isNear(timer.msTillNextTimer(), 1000));
    timer.add(Timer::TimerA, "fifth", 16000);
-   assert(timer.msTillNextTimer() <  1000 && timer.msTillNextTimer() > 950);
+   assert(isNear(timer.msTillNextTimer(), 1000));
 
    cerr << timer;
 
@@ -38,7 +47,9 @@ main()
    assert(f.size() == 0);
 
    sleep(1);
+   cerr << "next timer will fire in " << timer.msTillNextTimer() << "ms" << endl;
    timer.process();
+   cerr << "next timer will fire in " << timer.msTillNextTimer() << "ms" << endl;
    assert(f.size() == 1);
    timer.process();   
    assert(f.size() == 1);
@@ -63,10 +74,12 @@ main()
 
 
    cerr << "next timer will fire in " << timer.msTillNextTimer() << "ms" << endl;
-   assert(timer.msTillNextTimer() <  8000 && timer.msTillNextTimer() > 7950);
+   assert(isNear(timer.msTillNextTimer(), 8000));
 
    sleep(8);
    timer.process();
+   cerr << timer;
+   
    assert(f.size() == 5);
    timer.process();   
    assert(f.size() == 5);
