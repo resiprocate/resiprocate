@@ -42,6 +42,8 @@ LazyParser::~LazyParser()
 LazyParser&
 LazyParser::operator=(const LazyParser& rhs)
 {
+   assert( &rhs != 0 );
+   
    if (this != &rhs)
    {
       clear();
