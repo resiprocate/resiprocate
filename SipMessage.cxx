@@ -188,7 +188,7 @@ SipMessage::make(const Data& data,
    }
 
    // no pp error
-   int used = unprocessedCharPtr - buffer;
+   unsigned int used = unprocessedCharPtr - buffer;
 
    if (used < len)
    {
