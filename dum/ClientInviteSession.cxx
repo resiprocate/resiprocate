@@ -102,7 +102,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             {
                InviteSession::incomingSdp(msg, offans.second);
             }
-            if (mOfferState == Answered)
+            if (offans.first == Answer)
             {
                //no late media required, so just send the ACK
                send(makeAck());
