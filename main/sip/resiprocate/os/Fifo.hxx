@@ -2,10 +2,10 @@
 #define RESIP_FIFO_HXX 
 
 static const char* const resipFifo_h_Version =
-   "$Id: Fifo.hxx,v 1.18 2003/09/08 22:00:05 jason Exp $";
+   "$Id: Fifo.hxx,v 1.19 2003/10/01 15:33:50 fluffy Exp $";
 
 #include <list>
-#include <errno.h>
+//#include <errno.h>
 #include <cassert>
 
 #include "resiprocate/os/Mutex.hxx"
