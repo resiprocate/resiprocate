@@ -208,7 +208,9 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
    response->header(h_CallId) = request.header(h_CallId);
    response->header(h_CSeq) = request.header(h_CSeq);
    response->header(h_Vias) = request.header(h_Vias);
-
+   NameAddr contact;
+   response->header(h_Contacts).push_back(contact);
+   
    // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.
    // No totag for failure responses or 100s
    if (!response->header(h_To).exists(p_tag) && responseCode < 300 && responseCode > 100)
