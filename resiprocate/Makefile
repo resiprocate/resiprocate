@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.52 2002/10/03 19:49:23 jason Exp $
+# $Id: Makefile,v 1.53 2002/10/04 05:35:27 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -47,6 +47,7 @@ OSRC =   *.hxx Makefile
 # optimize does not work with gcc 2.8 compiler
 #CXXFLAGS += -O5 -DNDEBUG
 CXXFLAGS += -O -g
+#CXXFLAGS += -O2 -DNDEBUG -DNO_DEBUG
 #CXXFLAGS += -g
 LDFLAGS  += -L$(LIB)
 CXXFLAGS += -I. -I../. -MD -Wall $(CXXDEBUG)

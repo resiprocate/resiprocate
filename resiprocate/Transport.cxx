@@ -67,3 +67,17 @@ Transport::shutdown()
 Transport::~Transport()
 {
 }
+
+
+void 
+Transport::buildFdSet( fd_set* fdSet, int* fdSetSize )
+{
+	assert( fdSet );
+	assert( fdSetSize );
+	
+	FD_SET(mFd,fdSet);
+	if ( mFd <= *fdSetSize )
+	{
+		*fdSetSize = mFd+1;
+	}
+}

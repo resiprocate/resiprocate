@@ -18,7 +18,7 @@ namespace Vocal2
 class SipStack
 {
    public:
-      SipStack();
+      SipStack(bool multiThreaded=false);
   
       void send(const SipMessage& msg);
 
@@ -29,19 +29,13 @@ class SipStack
       // caller now owns the memory
       SipMessage* receive(); 
       
-      void process(fd_set* fdSet);
-
-      void process();
+      void process(fd_set* fdSet=NULL);
 
 	// build the FD set to use in a select to find out when process bust be called again
 	void buildFdSet( fd_set* fdSet, int* fdSetSize );
 	
       /// returns time in milliseconds when process next needs to be called 
       int getTimeTillNextProcess(); 
-
-      enum ThreadFunction { T_Timer, T_UDP, T_StateMachine, T_TCP, };
-
-      void runThread( enum ThreadFunction funcType);
 
       Fifo<Message> mTUFifo;
       Fifo<Message> mStateMacFifo;
