@@ -13,14 +13,14 @@ using namespace Vocal2;
 
 
 void
-TuIM::PageCallback::receivedPage( Data& msg, Uri& from )
+TuIM::PageCallback::receivedPage(const Data& msg, const Uri& from )
 {
    assert(0);
 }
 
 
 void
-TuIM::ErrCallback::sendPageFailed( Uri& dest )
+TuIM::ErrCallback::sendPageFailed(const Uri& dest )
 {
    assert(0);
 }
@@ -36,14 +36,16 @@ TuIM::PageCallback::~PageCallback()
 }
 
 
-TuIM::TuIM( SipStack* stack, 
-            Uri& aor, Uri& contact,
-            PageCallback* msgCallback, ErrCallback* errCallback ):
-   mPageCallback(msgCallback),
-   mErrCallback(errCallback),
-   mStack(stack),
-   mAor(aor),
-   mContact(contact)
+TuIM::TuIM(SipStack* stack, 
+           const Uri& aor, 
+           const Uri& contact,
+           PageCallback* msgCallback, 
+           ErrCallback* errCallback)
+   : mPageCallback(msgCallback),
+     mErrCallback(errCallback),
+     mStack(stack),
+     mAor(aor),
+     mContact(contact)
 {
    assert( mStack );
    assert(mPageCallback);
@@ -51,7 +53,7 @@ TuIM::TuIM( SipStack* stack,
 }
 
       
-void TuIM::sendPage( Data& text, Uri& dest )
+void TuIM::sendPage(const Data& text, const Uri& dest )
 {
    DebugLog( << "send to <" << dest << ">" << "\n" << text );
 
@@ -67,16 +69,8 @@ void TuIM::sendPage( Data& text, Uri& dest )
    SipMessage* msg = Helper::makeRequest(target, from, contact, MESSAGE);
    assert( msg );
 
-#if 0
-   PlainContents body;
-   body.setText( text );
-   msg->setContents( &body );
-#else
-   msg->header(h_ContentType).type() = Data("text");
-   msg->header(h_ContentType).subType() = Data("plain");
-   msg->setBody( text.data(), text.size() );
-#endif
-
+   PlainContents body(text);
+   msg->setContents(&body);
    
    mStack->send( *msg );
 }
@@ -117,20 +111,13 @@ TuIM::process()
 
             delete response;
             
-#if 1
             Contents* contents = msg->getContents();
             assert( contents );
             Mime mime = contents->getType();
             DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
             PlainContents* body = dynamic_cast<PlainContents*>(contents);
             assert( body );
-            Data text = body->getText();;
-#else
-            const HeaderFieldValue* hfv = msg->getBody(); 
-            Data text = Data( hfv->mField,hfv->mFieldLength ); // !cj! UGLY -
-                                                               // must be a
-                                                               // better way
-#endif
+            const Data& text = body->text();
 
             Uri from = msg->header(h_From).uri();
             DebugLog ( << "got message from " << from );
