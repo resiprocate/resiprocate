@@ -99,7 +99,7 @@ TestReliableTransport::isReliable() const
 Transport::Type 
 TestReliableTransport::transport() const 
 { 
-   return Transport::TCP; 
+   return Transport::TestReliable; 
 }
 
 
@@ -159,7 +159,7 @@ TestUnreliableTransport::isReliable() const
 Transport::Type 
 TestUnreliableTransport::transport() const 
 { 
-   return Transport::UDP;
+   return Transport::TestUnreliable;
 }
 
 
