@@ -16,6 +16,7 @@ class Symbols
       static const Data COLON;
       static const Data DASH;
       static const Data DASHDASH;
+      static const Data DOT;
       static const Data COMMA_OR_EQUAL;
       static const Data CRLF;
       static const Data CRLFCRLF;
