@@ -60,7 +60,12 @@ BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
       {
          contact.uri() = mUserProfile.getOverrideHostAndPort();
       }
-      contact.uri().user() = mUserProfile.getDefaultFrom().uri().user();      
+      contact.uri().user() = mUserProfile.getDefaultFrom().uri().user();
+      const Data& instanceId = mUserProfile.getInstanceId();
+      if (!instanceId.empty())
+      {
+         contact.uri().param(p_Instance) = instanceId;
+      }
       mLastRequest.header(h_Contacts).push_front(contact);
    }
       
