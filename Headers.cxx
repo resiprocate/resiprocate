@@ -279,7 +279,7 @@ HeaderHash::in_word_set (register const char *str, register unsigned int len)
   static struct headers wordlist[] =
     {
       {"e", Headers::ContentEncoding},
-      {"i", Headers::Headers::CallId},
+      {"i", Headers::CallId},
       {"l", Headers::ContentLength},
       {"o", Headers::ContentType},
       {"require", Headers::Require},
