@@ -54,10 +54,13 @@ class ServerInviteSession: public InviteSession
       /// Rejects an INVITE with a response like 3xx,4xx,5xx, or 6xx. 
       void reject(int statusCode);
       
-      void process(const SipMessage& msg);
+      void handle(const SipMessage& msg);
 
       virtual InviteSession::Handle getSessionHandle();
       ServerInviteSession::Handle getHandle() {return mHandle;}
+
+      virtual void resip::BaseUsage::dispatch(const 
+                                              resip::SipMessage&)
 
    private:
       friend class DialogUsageManager;
