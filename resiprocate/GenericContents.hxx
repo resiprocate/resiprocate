@@ -7,6 +7,7 @@
 namespace resip
 {
 
+// Note: not added to ContentsFactory
 class GenericContents : public PlainContents
 {
    public:

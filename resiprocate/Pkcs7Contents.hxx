@@ -37,6 +37,8 @@ class Pkcs7Contents : public Contents
       Data mText;
 };
 
+static bool invokePkcs7ContentsInit = Pkcs7Contents::init();
+
 class Pkcs7SignedContents : public Pkcs7Contents
 {
    public:  
@@ -58,6 +60,7 @@ class Pkcs7SignedContents : public Pkcs7Contents
       static bool init();
 };
 
+static bool invokePkcs7SignedContentsInit = Pkcs7SignedContents::init();
 
 }
 

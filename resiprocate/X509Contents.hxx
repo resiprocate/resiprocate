@@ -37,6 +37,8 @@ class X509Contents : public Contents
       Data mText;
 };
 
+static bool invokeX509ContentsInit = X509Contents::init();
+
 }
 
 #endif
