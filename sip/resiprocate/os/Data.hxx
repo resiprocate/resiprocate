@@ -1,13 +1,12 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.38 2002/11/28 01:19:00 jason Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.39 2002/11/28 17:12:15 ryker Exp $";
 
 #include <iostream>
 #include <string>
 #include "sip2/util/compat.hxx"
 
-extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
 class TestData;
 namespace Vocal2
@@ -119,8 +118,20 @@ inline bool isEqualNoCase(const Data& left, const Data& right)
 inline bool isLessThanNoCase(const Data& left, const Data& right)
 {
    size_t minsize = left.size() < right.size() ? left.size() : right.size();
+   int res = strncasecmp(left.data(), right.data(), minsize);
 
-   return ( strncasecmp(left.data(), right.data(), minsize) < 0);
+   if (res < 0)
+   {
+       return true;
+   }
+   else if (res > 0)
+   {
+       return false;
+   }
+   else
+   {
+       return left.size() < right.size();
+   }
 }
 
 bool operator==(const char* s, const Data& d);
