@@ -87,19 +87,18 @@ Security::initialize( bool tlsServer, SecurityTypes::SSLType mode )
 {
    mTlsServer = tlsServer;
 
-   assert((mode & SecurityTypes::SSLv23) ^ (mode & SecurityTypes::TLSv1));
+   assert( (mode & SecurityTypes::SSLv23) ^ (mode & SecurityTypes::TLSv1) );
 
    mSSLMode = mode;
 
-   Timer::getTimeMs(); // initalize time offsets
-   Random::initialize(); // initialize 
-
    privateKey = 0;
    publicCert = 0;
+   privateIdentityKey = 0;
+   publicIdentityCert = 0;
    certAuthorities = 0;
    ctxTls = 0;
 
-   // check-lock-check TODO - this code is broken - use pthreadOnce 
+   // !cj! check-lock-check TODO - this code is broken - use pthreadOnce 
    static bool initDone = false;
    if (!initDone)
    {
@@ -113,6 +112,7 @@ Security::initialize( bool tlsServer, SecurityTypes::SSLType mode )
    }
 }
 
+
 void
 Security::initialize()
 {
@@ -122,6 +122,7 @@ Security::initialize()
    SSL_load_error_strings();
    OpenSSL_add_ssl_algorithms();
    Random::initialize();
+   Timer::getTimeMs(); // initalize time offsets
 }
 
 
@@ -266,8 +267,12 @@ Security::loadAllCerts( const Data& password, const Data& dirPath )
 {
    bool ok = true;
    ok = loadRootCerts( getPath( dirPath, Data("root.pem")) ) ? ok : false;
+
    ok = loadMyPublicCert( getPath( dirPath, Data("id.pem")) ) ? ok : false;
    ok = loadMyPrivateKey( password, getPath(dirPath,Data("id_key.pem") )) ? ok : false;
+
+   ok = loadMyPublicIdentityCert( getPath( dirPath, Data("identity.pem")) ) ? ok : false;
+   ok = loadMyPrivateIdentityKey( password, getPath(dirPath,Data("identity_key.pem") )) ? ok : false;
 
 #if 0
    if (ok)
@@ -280,7 +285,9 @@ Security::loadAllCerts( const Data& password, const Data& dirPath )
    Data pubKeyDir("public_keys");
    pubKeyDir += Symbols::pathSep;
    
-   return ok && loadPublicCert(getPath(dirPath,pubKeyDir));
+   ok = loadPublicCert(getPath(dirPath,pubKeyDir)) ? ok : false;
+
+   return ok;
 }
      
 
@@ -331,6 +338,57 @@ Security::loadMyPublicCert( const Data&  filePath )
    }
    
    InfoLog( << "Loaded my public cert from " << filePath );
+   return true;
+}
+
+
+bool 
+Security::loadMyPublicIdentityCert( const Data&  filePath )
+{
+   assert( !filePath.empty() );
+   
+   if (publicIdentityCert)
+   {
+      return true;
+   }
+   
+   FILE* fp = fopen(filePath.c_str(),"rb");
+   if ( !fp )
+   {
+      ErrLog(<< "Could not read my public identity cert from " << filePath );
+      throw Exception("Could not read public identity certificate", __FILE__,__LINE__);
+      return false;
+   }
+   
+   publicIdentityCert = PEM_read_X509(fp,0,0,0);
+   if (!publicIdentityCert)
+   {
+      ErrLog( << "Error reading contents of my public identity cert file " << filePath );
+	    
+      while (true)
+      {
+         const char* file;
+         int line;
+         
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
+
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
+      
+      ErrLog (<< "Error reading contents of my public identity cert file " << filePath );
+      throw Exception("Error reading contents of public identity cert file", __FILE__,__LINE__);
+      
+      return false;
+   }
+   
+   InfoLog( << "Loaded my public identity cert from " << filePath );
    return true;
 }
 
@@ -554,7 +612,7 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
       return false;
    }
    
-   DebugLog( << "password is " << password );
+   //DebugLog( << "password is " << password );
    
    privateKey = PEM_read_PrivateKey(fp,0,0,(void*)password.c_str());
    if (!privateKey)
@@ -583,6 +641,57 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
    InfoLog( << "Loaded private key from " << filePath );
    
    assert( privateKey );
+   return true;
+}
+
+
+bool 
+Security::loadMyPrivateIdentityKey( const Data& password, const Data&  filePath )
+{
+   assert( !filePath.empty() );
+   
+   if ( privateIdentityKey )
+   {
+      return true;
+   }
+   
+   FILE* fp = fopen(filePath.c_str(),"rb");
+   if ( !fp )
+   {
+      ErrLog( << "Could not read private identiy key from " << filePath );
+      throw Exception("Could not read private  identiy key", __FILE__,__LINE__);
+      return false;
+   }
+   
+   //DebugLog( << "password is " << password );
+   
+   privateIdentityKey = PEM_read_PrivateKey(fp,0,0,(void*)password.c_str());
+   if (!privateKey)
+   {
+      ErrLog( << "Error reading contents of private  identiy key file " << filePath );
+      while (true)
+      {
+         const char* file;
+         int line;
+         
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
+
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
+      throw Exception("Error reading contents of private  identiy key file", __FILE__,__LINE__);
+      return false;
+   }
+   
+   InfoLog( << "Loaded private  identiy key from " << filePath );
+   
+   assert( privateIdentityKey );
    return true;
 }
 
@@ -745,15 +854,52 @@ Security::setRootCerts(  const Data& certPem )
 }
 
 
-Data 
-Security::computeIdentityHash( const Data& in )
+bool
+Security::checkIdentity( const Data& in, const Data& sigBase64 )
 {
-   DebugLog( << "Compute identity has for " << in );
+   DebugLog( << "Check identity for " << in );
+     
+   Data sig = sigBase64.base64decode();
+
+   DebugLog( << "rsa sig of hash is 0x"<< sig.hex() );
+   
+   assert(SHA_DIGEST_LENGTH == 20);
+   unsigned char hashRes[SHA_DIGEST_LENGTH];
+   unsigned int hashResLen=SHA_DIGEST_LENGTH;
+
+   SHA_CTX sha;
+   SHA1_Init( &sha );
+   SHA1_Update(&sha, in.data() , in.size() );
+   SHA1_Final( hashRes, &sha );
+   
+   DebugLog( << "hash of string is 0x" <<  Data(hashRes,sizeof(hashRes)).hex() );
+
+   EVP_PKEY* pKey = X509_get_pubkey( publicIdentityCert );
+   assert( pKey );
+       
+   assert( pKey->type ==  EVP_PKEY_RSA );
+   RSA* rsa = EVP_PKEY_get1_RSA(pKey); 
+
+   int ret = RSA_verify(NID_sha1, hashRes, hashResLen,
+                        (unsigned char*)sig.data(), sig.size(),
+                        rsa);
+
+   DebugLog( << "rsa verify result is " << ret  );
+         
+   return ( ret == 1 );
+}
+
+
+Data 
+Security::computeIdentity( const Data& in )
+{
+   DebugLog( << "Compute identity for " << in );
    
    Data ret;
    
-   EVP_PKEY* pKey = privateKey; // TODO - wrong one - need TLS not smime key
-    
+   EVP_PKEY* pKey = privateIdentityKey; 
+   assert( pKey );
+       
    assert( pKey->type ==  EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey); 
 
@@ -770,7 +916,7 @@ Security::computeIdentityHash( const Data& in )
    SHA1_Update(&sha, in.data() , in.size() );
    SHA1_Final( hashRes, &sha );
    
-   DebugLog( << "hash of string is " <<  Data(hashRes,sizeof(hashRes)).hex() );
+   DebugLog( << "hash of string is 0x" <<  Data(hashRes,sizeof(hashRes)).hex() );
    
    RSA_sign(NID_sha1, hashRes, hashResLen,
             result, &resultSize,
@@ -778,9 +924,11 @@ Security::computeIdentityHash( const Data& in )
 
    ret = Data(result,resultSize);
   
-   DebugLog( << "rsa encrypt of has is "<< ret.hex() );
-   
-   return ret;
+   DebugLog( << "rsa encrypt of hash is 0x"<< ret.hex() );
+
+   Data enc = ret.base64encode();
+         
+   return enc;
 }
 
 
