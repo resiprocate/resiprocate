@@ -436,6 +436,8 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
 {
    ParseBuffer pb(uri);
    
+   DebugLog (<< "Parsing URL" << uri );
+
    const char* anchor = pb.skipChar('/');
    pb.skipToChar('?');
    Data pageName;
@@ -443,7 +445,7 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
    
    if (pb.eof())
    {
-         DebugLog (<< "got page name " << pageName );
+         DebugLog (<< "  got page name " << pageName );
    }
    else
    {
@@ -466,7 +468,7 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
               pb.skipChar('&');
            }
            
-           DebugLog (<< "key=" << key << " value=" << value );
+           DebugLog (<< "  key=" << key << " value=" << value );
       }
    }
    

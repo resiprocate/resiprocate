@@ -1,29 +1,45 @@
-#if !defined(RESIP_USER_AUTH_INFO_HXX)
-#define RESIP_USER_AUTH_INFO_HXX 
 
+#include <cassert>
+
+#include "repro/UserAuthInfo.hxx"
 #include "resiprocate/os/Data.hxx"
-#include "resiprocate/Message.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-namespace repro
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+
+UserAuthInfo::UserAuthInfo(const Data& a1, const Data& realm, const Data& user ):
+   mA1(a1),
+   mRealm(realm),
+   mUser(user)
 {
-
-class UserAuthInfo : public resip::Message
-{
-   public:
-      UserAuthInfo(const resip::Data& a1, const resip::Data& realm, const resip::Data& user );
-      
-      const resip::Data getA1() const;
-      const resip::Data getRealm() const;
-      const resip::Data getUser() const;
-   private:
-      resip::Data mA1;
-      resip::Data mRealm;
-      resip::Data mUser;
-      
-};
-
 }
-#endif
+
+      
+const Data 
+UserAuthInfo::getA1() const
+{
+   return mA1;
+}
+
+
+const Data 
+UserAuthInfo::getRealm() const
+{
+   return mRealm;
+}
+
+
+const Data 
+UserAuthInfo::getUser() const
+{
+   return mUser;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
