@@ -85,7 +85,7 @@ SipMessage::SipMessage(const SipMessage& from)
 
 SipMessage::~SipMessage()
 {
-    DebugLog (<< "Deleting SipMessage: " << brief());
+   //DebugLog (<< "Deleting SipMessage: " << brief());
    
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -196,29 +196,29 @@ SipMessage::encode(std::ostream& str) const
 
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
-      if (mHeaders[i] != 0)
+      if (i != Headers::Content_Length) // !dlb! hack...
       {
-         if (i != Headers::Content_Length) // !dlb! hack...
+         if (mHeaders[i] != 0)
          {
             mHeaders[i]->encode(Headers::HeaderNames[static_cast<Headers::Type>(i)], str);
          }
+      }
+      else
+      {
+         if (mContents != 0)
+         {
+            CountStream cs;
+            mContents->encode(cs);
+            cs.flush();
+            str << "Content-Length: " << cs.size() << "\r\n";
+         }
+         else if (mContentsHfv != 0)
+         {
+            str << "Content-Length: " << mContentsHfv->mFieldLength << "\r\n";
+         }
          else
          {
-            if (mContents != 0)
-            {
-               CountStream cs;
-               mContents->encode(cs);
-               cs.flush();
-               str << "Content-Length: " << cs.size() << "\r\n";
-            }
-	    else if (mContentsHfv != 0)
-	    {
-               str << "Content-Length: " << mContentsHfv->mFieldLength << "\r\n";
-	    }
-            else
-            {
-               str << "Content-Length: 0\r\n";
-            }
+            str << "Content-Length: 0\r\n";
          }
       }
    }
