@@ -2,24 +2,23 @@
 #define RESIP_CLIENTSUBSCRIPTION_HXX
 
 #include "BaseUsage.hxx"
+#include "DialogUsageManager.hxx"
+
 namespace resip
 {
 
 class ClientSubscription: public BaseUsage
 {
    public:
-      class Handle
+      class Handle : public DialogUsageManager::Handle
       {
-	 public:
-	    Handle(const ClientSubscription& handled);
-	    // throws if no session 
-	    InviteSession* operator->();
+         public:
+            // throws if no session 
+            ClientSubscription* operator->();
 
-	 private:
-	    DialogUsageManager& mDum;
-	    DialogId mDialogId;
-	    Data mEventType;
-	    Data mSubscriptionId;
+         private:
+            Handle(DialogUsageManager& dum);
+            friend class DialogUsageManager;
       };
       
       void end();

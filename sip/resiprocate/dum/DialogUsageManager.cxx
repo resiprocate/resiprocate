@@ -415,7 +415,6 @@ DialogUsageManager::findDialogSet( DialogSetId id )
         /**  @todo: return empty object (?) **/
     }
     return it->first();
-
 }
 
 BaseCreator&
@@ -432,13 +431,13 @@ DialogUsageManager::findCreator(DialogId id)
 }
 
 DialogUsageManager::Handle::Handle(DialogUsageManager& dum)
-{
-}
+   : mId(getNext()
+{}
 
 BaseUsage* 
 DialogUsageManager::Handle::get()
 {
-  return mDum.getUsage
+   return mDum.getUsage(*this);
 }
 
 UInt64
@@ -450,9 +449,7 @@ DialogUsageManager::Handle::getNext()
 
 BaseUsage* 
 DialogUsageManager::getUsage(const DialogUsageManager::Handle& handle)
-{
-   
-}
+{}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
