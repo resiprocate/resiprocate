@@ -24,21 +24,27 @@ MultipartMixedContents::MultipartMixedContents(HeaderFieldValue* hfv, const Mime
 {
 }
  
+
 MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs)
    : Contents(rhs),
      mContents()
 {
-   for (list<Contents*>::iterator i = mContents.begin(); 
-        i != mContents.end(); i++)
+   list<Contents*>::const_iterator j;
+   const list<Contents*>& list = rhs.parts();
+   
+   for ( j = list.begin(); 
+         j != list.end(); j++)
    {
-      mContents.push_back((*i)->clone());
+      assert( *j );
+      mContents.push_back( (*j)->clone() );
    }
 }
+
 
 void
 MultipartMixedContents::setBoundary()
 {
-   Data boundaryToken = Random::getRandomHex(50); // !cj! - is such a large number of bits (200) really neaded 
+   Data boundaryToken = Random::getRandomHex(8);
    mType.param("boundary") = boundaryToken;
 }
 
@@ -62,10 +68,11 @@ MultipartMixedContents::operator=(const MultipartMixedContents& rhs)
    if (this != &rhs)
    {
       Contents::operator=(rhs);
+
       for (list<Contents*>::iterator i = mContents.begin(); 
            i != mContents.end(); i++)
       {
-         mContents.push_back((*i)->clone());
+         mContents.push_back( (*i)->clone() );
       }
    }
    return *this;
@@ -96,6 +103,8 @@ MultipartMixedContents::encodeParsed(std::ostream& str) const
    boundary += Symbols::DASHDASH;
    boundary += boundaryToken;
 
+   assert( mContents.size() > 0 );
+   
    for (list<Contents*>::const_iterator i = mContents.begin(); 
         i != mContents.end(); i++)
    {
