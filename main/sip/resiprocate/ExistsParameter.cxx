@@ -4,7 +4,7 @@
 using namespace Vocal2;
 using namespace std;
 
-ExistsParameter::ExistsParameter(ParameterTypes::Type type, ParseBuffer& pb)
+ExistsParameter::ExistsParameter(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
    : Parameter(type),
      mValue(true)
 {}

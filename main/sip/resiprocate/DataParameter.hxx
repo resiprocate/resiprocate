@@ -17,16 +17,16 @@ class DataParameter : public Parameter
       typedef Data Type;
 
       DataParameter(ParameterTypes::Type, ParseBuffer& pb, 
-		    const char* terminators=" \t\r\n;?>");
+		    const char* terminators);
       DataParameter(ParameterTypes::Type);
 
       Data& value();            // does not return a quoted string
       bool isQuoted() const { return mQuoted; }
       void setQuoted(bool b) { mQuoted = b; }; // this parameter will be enclosed in quotes e.g. "foo"
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb)
+      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
-         return new DataParameter(type, pb);
+         return new DataParameter(type, pb, terminators);
       }
       
       virtual Parameter* clone() const;

@@ -15,9 +15,14 @@ class QuotedDataParameter : public DataParameter
 {
    public:
       QuotedDataParameter(ParameterTypes::Type, ParseBuffer& pb, 
-                          const char* terminators=" \t\r\n;?>");
+                          const char* terminators);
 
       QuotedDataParameter(ParameterTypes::Type);
+
+      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
+      {
+         return new QuotedDataParameter(type, pb, terminators);
+      }
 
       virtual Parameter* clone() const;
       
