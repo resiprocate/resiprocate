@@ -13,8 +13,8 @@ class Uri : public ParserCategory
 {
    public:
       Uri();
-      Uri(const Data& data);
       Uri(const Uri&);
+      explicit Uri(const Data& data);
 
       ~Uri();
       
