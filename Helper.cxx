@@ -31,6 +31,31 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
 }
 
 SipMessage 
+Helper::makeRegister(const NameAddr& registrar,
+                     const NameAddr& aor)
+{
+
+   SipMessage request;
+   RequestLine rLine(REGISTER);
+   rLine.uri() = registrar.uri();
+   request.header(h_To) = aor;
+   request.header(h_RequestLine) = rLine;
+   request.header(h_MaxForwards).value() = 70;
+   request.header(h_CSeq).method() = REGISTER;
+   request.header(h_CSeq).sequence() = 1;
+   request.header(h_From) = aor;
+   request.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   request.header(h_CallId).value() = Helper::computeCallId();
+   request.header(h_ContentLength).value() = 0;
+
+   Via via;
+   via.param(p_branch) = computeUniqueBranch();
+   request.header(h_Vias).push_front(via);
+   
+   return request;
+}
+
+SipMessage 
 Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
    return Helper::makeRequest(target, from, contact, INVITE);
@@ -116,7 +141,7 @@ Data
 Helper::computeCallId()
 {
    // !jf! need to include host as well (should cache it)
-   return RandomHex::get(4);
+   return RandomHex::get(16);
 }
 
 
