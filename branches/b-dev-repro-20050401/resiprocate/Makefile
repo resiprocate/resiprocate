@@ -9,9 +9,6 @@ CODE_SUBDIRS = os
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
 
-#CXXFLAGS += -I/sw/include 
-#LDFLAGS  += -L/sw/lib
-
 SRC = \
 	os/HeapInstanceCounter.cxx \
 	\
