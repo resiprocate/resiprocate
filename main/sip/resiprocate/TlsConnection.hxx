@@ -2,6 +2,8 @@
 #define TlsConnection_hxx
 
 #include "resiprocate/Connection.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
+
 #ifdef USE_SSL
 #include <openssl/ssl.h>
 #else
@@ -18,6 +20,7 @@ class Security;
 class TlsConnection : public Connection
 {
    public:
+      RESIP_HeapCount(TlsConnection);
       TlsConnection( const Tuple& who, Socket fd, Security* security, bool server=false );
       
       int read( char* buf, const int count );
