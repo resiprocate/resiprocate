@@ -41,18 +41,11 @@ AC_DEFUN([RESIP_IPV6],
 
 AC_DEFUN([RESIP_SCANNER],
 [
-        AC_MSG_CHECKING([for New Message Scanner])
-        AC_ARG_ENABLE([scanner],
-        AC_HELP_STRING([--enable-scanner], [use new message scanner]),
-        [
-                AC_DEFINE([NEW_MSG_HEADER_SCANNER],
-                          [1],
-                          [Use NewHeaderScanner instead of Preparser])
-                AC_MSG_RESULT([yes])
-        ],
-        [
-                AC_MSG_RESULT([not requested])
-        ])
+
+        AC_DEFINE([NEW_MSG_HEADER_SCANNER],
+                  [1],
+                  [Use NewHeaderScanner instead of Preparser])
+
 ])
 
 AC_DEFUN([RESIP_SCANNER_DEBUG],
@@ -69,7 +62,21 @@ AC_DEFUN([RESIP_SCANNER_DEBUG],
         ])
 ])
 
-                
+
+AC_DEFUN([RESIP_EXCEPTION_DEBUG_LOGS],
+[
+        AC_MSG_CHECKING([for exception debug logs])
+        AC_ARG_ENABLE([elog],
+                AC_HELP_STRING([--enable-elog],
+                               [enable log calls inside exceptions]),
+        [  if test "x$enableval" = "xno" ; then
+           AC_DEFINE([RESIP_NO_EXCEPTION_DEBUG_LOGS],
+                     [1],
+                     [BaseException DebugLog Disposition])
+           fi
+        ])
+])
+
 AC_DEFUN([RESIP_LIB_ARES],
 [
     AC_MSG_CHECKING([for ares])
