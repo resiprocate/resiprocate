@@ -329,6 +329,8 @@ TransactionState::processDns(Message* message)
      {
 	mDnsState = Complete;
      }
+
+     delete dns;
      return;
    }
 
