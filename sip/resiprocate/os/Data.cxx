@@ -869,6 +869,50 @@ Data::escaped() const
          }
       }
       
+      if ( !isprint(c) )
+      {
+         ret +='%';
+         
+         int hi = (c & 0xF0)>>4;
+         int low = (c & 0x0F);
+	   
+         ret += hexmap[hi];
+         ret += hexmap[low];
+      }
+      else
+      {
+         ret += c;
+      }
+   }
+
+   return ret;
+}
+
+Data 
+Data::charEncoded() const
+{ 
+   Data ret((int)floor(1.1*size()), true );  
+
+   const char* p = data();
+   for (size_type i=0; i < size(); ++i)
+   {
+      unsigned char c = *p++;
+
+      if ( c == 0x0d )
+      {
+         if ( i+1 < size() )
+         {
+            if ( *p == 0x0a )
+            {
+               // found a CRLF sequence
+               ret += c;
+               c = *p++; i++;
+               ret += c;
+               continue;
+            }
+         }
+      }
+      
       if ( !isprint(c) ||
            // rfc 3261 reserved + mark + space + tab
            strchr(" \";/?:@&=+%$,/t-_.!~*'()", c))
@@ -891,7 +935,7 @@ Data::escaped() const
 }
 
 Data
-Data::unescaped() const
+Data::charUnencoded() const
 {
    Data ret(size(), true);
 
