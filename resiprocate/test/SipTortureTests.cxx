@@ -360,7 +360,7 @@ test4()
       tassert(message->header(h_Expires).value() == 3600);
 
       // Asking for something when it doesnt exist
-      tassert(message->exists(h_ContentLength));
+      tassert(message->exists(h_ContentLength) == false);
       
       message->header(h_ContentLength).value();
 
