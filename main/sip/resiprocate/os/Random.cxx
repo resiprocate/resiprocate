@@ -1,7 +1,7 @@
 #include <cassert>
 
 #ifdef WIN32
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 #else
 #include <unistd.h>
 #include <sys/types.h>
@@ -9,11 +9,11 @@
 #include <fcntl.h>
 #endif
 
-#include "resiprocate/util/Random.hxx"
-#include "resiprocate/util/Timer.hxx"
-#include "resiprocate/util/Mutex.hxx"
-#include "resiprocate/util/Lock.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/Timer.hxx"
+#include "resiprocate/os/Mutex.hxx"
+#include "resiprocate/os/Lock.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #ifdef USE_SSL
 #  define USE_OPENSSL 1

@@ -2,7 +2,7 @@
 #include <cassert>
 #include <fcntl.h>
 
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 #ifndef WIN32
 #include <unistd.h>

@@ -1,6 +1,6 @@
-#include "resiprocate/sipstack/PlainContents.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/PlainContents.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;

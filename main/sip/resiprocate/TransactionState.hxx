@@ -2,7 +2,7 @@
 #define TRANSACTIONSTATE_HXX
 
 #include <iostream>
-#include "resiprocate/sipstack/DnsResolver.hxx"
+#include "resiprocate/DnsResolver.hxx"
 
 namespace Vocal2
 {

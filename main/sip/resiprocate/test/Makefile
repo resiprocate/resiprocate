@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.41 2003/03/24 22:42:27 jason Exp $
+# $Id: Makefile,v 1.42 2003/03/24 23:25:36 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIPROCATE SIPSTACK2 UTIL2 OPENSSL ARES PTHREAD
+PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
 LDLIBS += -lncurses
 TESTPROGRAMS =	\
 		testXMLCursor.cxx \

@@ -7,13 +7,13 @@
 #include <unistd.h>
 #endif
 
-#include "resiprocate/util/Socket.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-#include "resiprocate/sipstack/SipStack.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/sipstack/Helper.hxx"
-#include "resiprocate/sipstack/Transport.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/Transport.hxx"
 
 
 

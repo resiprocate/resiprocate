@@ -1,5 +1,5 @@
-#include "resiprocate/sipstack/ParameterTypes.hxx"
-#include "resiprocate/util/compat.hxx"
+#include "resiprocate/ParameterTypes.hxx"
+#include "resiprocate/os/compat.hxx"
 #include <iostream>
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
@@ -97,7 +97,7 @@ Qop_Factory_Param::Qop_Factory_Param()
 }
 Qop_Factory_Param Vocal2::p_qopFactory;
 
-#include "resiprocate/sipstack/ParameterHash.hxx"
+#include "resiprocate/ParameterHash.hxx"
 
 ParameterTypes::Type
 ParameterTypes::getType(const char* pname, unsigned int len)

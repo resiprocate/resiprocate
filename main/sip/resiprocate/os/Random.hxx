@@ -1,8 +1,8 @@
 #ifndef Vocal2_Random_hxx
 #define Vocal2_Random_hxx
 
-#include "resiprocate/util/Mutex.hxx"
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/os/Mutex.hxx"
+#include "resiprocate/os/Data.hxx"
 
 namespace Vocal2
 {

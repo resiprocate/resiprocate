@@ -1,8 +1,8 @@
 #if !defined(TRANSACTIONMAP_HXX)
 #define TRANSACTIONMAP_HXX
 
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/util/HashMap.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/HashMap.hxx"
 
 namespace Vocal2
 {

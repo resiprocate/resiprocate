@@ -1,10 +1,10 @@
-#include "resiprocate/sipstack/SipStack.hxx"
-#include "resiprocate/sipstack/Transport.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/sipstack/Helper.hxx"
-#include "resiprocate/sipstack/test/TestSupport.hxx"
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/Transport.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/Helper.hxx"
+#include "resiprocate/test/TestSupport.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/DataStream.hxx"
 
 using namespace Vocal2;
 using namespace std;

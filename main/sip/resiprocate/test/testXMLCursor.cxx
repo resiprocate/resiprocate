@@ -1,6 +1,6 @@
-#include "resiprocate/sipstack/XMLCursor.hxx"
-#include "resiprocate/util/DataStream.hxx"
-#include "resiprocate/util/Inserter.hxx"
+#include "resiprocate/XMLCursor.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/Inserter.hxx"
 
 #include <iostream>
 

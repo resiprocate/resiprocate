@@ -1,7 +1,7 @@
 #ifndef UnknownHeaderType_hxx
 #define UnknownHeaderType_hxx
 
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 
 namespace Vocal2
 {

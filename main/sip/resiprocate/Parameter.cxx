@@ -1,4 +1,4 @@
-#include "resiprocate/sipstack/Parameter.hxx"
+#include "resiprocate/Parameter.hxx"
 
 using namespace Vocal2;
 using namespace std;

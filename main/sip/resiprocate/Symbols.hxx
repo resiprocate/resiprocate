@@ -1,7 +1,7 @@
 #ifndef Symbols_hxx
 #define Symbols_hxx
 
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 
 namespace Vocal2
 {

@@ -2,7 +2,7 @@
 /* Command-line: gperf --enum -E -D -L C++ -t -k '*' -Z --compare-strncmp -Z HeaderHash HeaderHash.gperf  */
 #include <string.h>
 #include <ctype.h>
-#include "resiprocate/sipstack/HeaderTypes.hxx"
+#include "resiprocate/HeaderTypes.hxx"
 
 namespace Vocal2 {
 using namespace std;

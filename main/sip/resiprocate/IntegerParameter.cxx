@@ -1,6 +1,6 @@
-#include "resiprocate/sipstack/IntegerParameter.hxx"
-#include "resiprocate/sipstack/Symbols.hxx"
-#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/IntegerParameter.hxx"
+#include "resiprocate/Symbols.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 using namespace Vocal2;
 using namespace std;

@@ -1,9 +1,9 @@
 #ifndef InviteServer_hxx
 #define InviteServer_hxx
 
-#include "resiprocate/util/BaseException.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace Loadgen
 {
