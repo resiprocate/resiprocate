@@ -13,7 +13,6 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_fds.c,v 1.2 2003/09/14 00:27:24 fluffy Exp $";
 
 #include <sys/types.h>
 //#include <sys/time.h>

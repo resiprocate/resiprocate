@@ -13,7 +13,6 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_free_errmem.c,v 1.1 2003/06/05 00:30:33 ryker Exp $";
 
 #include "ares.h"
 
