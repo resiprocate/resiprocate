@@ -77,7 +77,7 @@ class TransactionState
       bool isSentIndication(Message* msg) const;
       void sendToTU(Message* msg) const;
       void sendToWire(Message* msg);
-      void resendToWire(Message* msg) const;
+      void resendToWire(Message* msg);
       SipMessage* make100(SipMessage* request) const;
       void terminateClientTransaction(const Data& tid); 
       void terminateServerTransaction(const Data& tid); 
