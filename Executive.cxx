@@ -19,7 +19,7 @@ Executive::process()
 	}
 
       if ( processStateMachine()) 
-	{
+	{x
 	  workToDo=true;
 	}
     }
@@ -29,23 +29,28 @@ Executive::process()
 bool 
 processTransports()
 {
+   mStack.mTransportSelector.process();
 }
 
 
 bool 
 processStateMachine()
 {
-  if ( mStack.mStateMacFifo.size() == ) 
+  if ( mStack.mStateMacFifo.size() == 0 ) 
     {
       return false;
     }
 
-  
-  
+  TransactionState::process();
+
+  return true;
 }
 
 
 bool 
 processTimer()
 {
+  mStack.mTimers.process();
+
+  return false;
 }
