@@ -11,7 +11,7 @@
 
 #include "sipstack/Transport.hxx"
 #include "sipstack/SipMessage.hxx"
-#include "sipstack/SendingMessage.hxx"
+#include "sipstack/TransportMessage.hxx"
 #include "sipstack/DnsMessage.hxx"
 
 using namespace Vocal2;
@@ -87,13 +87,13 @@ Transport::shutdown()
 void
 Transport::fail(const Data& tid)
 {
-   mStateMachineFifo.add(new SendingMessage(tid, SendingMessage::Failed));
+   mStateMachineFifo.add(new TransportMessage(tid, true));
 }
 
 void
 Transport::ok(const Data& tid)
 {
-   mStateMachineFifo.add(new SendingMessage(tid, SendingMessage::Succeeded));
+   mStateMachineFifo.add(new TransportMessage(tid, false));
 }
 
 
