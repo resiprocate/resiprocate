@@ -304,6 +304,9 @@ TransactionState::processDns(Message* message)
    DnsResolver::DnsMessage* dns = dynamic_cast<DnsResolver::DnsMessage*>(message);
    if (dns)
    {
+      // SRV and A/AAAA results do not appear in the same message.
+      assert(!(dns->mSrvs.size() && dns->mTuples.size()));
+
       if (dns->mSrvs.size())
       {
          // We have to do more work: recurse on SRV results.
@@ -348,7 +351,13 @@ TransactionState::processDns(Message* message)
 	    }
          }
       }
+
+      delete message;
+      return;
    }
+
+   DebugLog (<< "Some other kind of message passed to processDns()");
+   assert(0);
 }
 
 void
