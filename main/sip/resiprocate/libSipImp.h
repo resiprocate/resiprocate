@@ -20,7 +20,7 @@ extern "C"
    // send an message 
    void libSipImp_SendMessage( char* dest , char* msg );
   
-   // set your curent presense state 
+   // set your curent presence state 
    void libSipImp_SetState( int open, char* note );
 
    // subscribe to this buddy 
