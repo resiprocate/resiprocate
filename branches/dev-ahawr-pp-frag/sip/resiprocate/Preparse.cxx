@@ -85,6 +85,8 @@ const char *  stateName(PreparseState::State s)
         case BuildHdr: return "BuildHdr";
         case EWSPostHdr: return "EWSPostHdr";
         case EWSPostColon: return "EWSPostColon";
+        case EmptyHdrCrLf: return "EmptyHdrCrLf";
+        case EmptyHdrCont: return "EmptyHdrCont";
         case BuildData: return "BuildData";
         case BuildDataCrLf: return "BuildDataCrLf";
         case CheckCont: return "CheckCont";
@@ -245,20 +247,27 @@ Preparse::InitStatePreparseStateTable()
     AE( StartLine,X,XC,StartLine,actAdd);
     AE( StartLine,X,CR,StartLineCrLf,actNil);
 
-    AE( StartLineCrLf,X,XC,EndMsg,actBad |actDiscard);
-    AE( StartLineCrLf,X,LF,BuildHdr,actReset | actFline |actDiscard);
+    AE( StartLineCrLf,X,XC,EndMsg,actBad|actDiscard);
+    AE( StartLineCrLf,X,LF,BuildHdr,actReset|actFline|actDiscard);
 
     AE( BuildHdr,X,XC, BuildHdr,actAdd);
     AE( BuildHdr,X,LWS,EWSPostHdr,actNil);
     AE( BuildHdr,X,COLON,EWSPostColon,actHdr|actReset|actDiscardKnown);
-  
-    AE( EWSPostHdr,X,XC,EndMsg,actBad |actDiscard);
+
+    AE( EWSPostHdr,X,XC,EndMsg,actBad|actDiscard);
     AE( EWSPostHdr,X,LWS,EWSPostHdr,actNil);
     AE( EWSPostHdr,X,COLON,EWSPostColon,actHdr|actReset|actDiscardKnown);
 
     AE( EWSPostColon,X,XC,BuildData,actAdd);
     AE( EWSPostColon,X,LWS,EWSPostColon,actReset|actDiscardKnown);
+    AE( EWSPostColon,X,CR,EmptyHdrCrLf,actReset|actDiscardKnown);
 
+    AE(EmptyHdrCrLf,X,XC,EndMsg,actBad|actDiscard);
+    AE(EmptyHdrCrLf,X,LF,EmptyHdrCont,actReset|actDiscardKnown);
+    
+    AE(EmptyHdrCont,X,XC,BuildHdr,actReset|actBack|actDiscard|actData);
+    AE(EmptyHdrCont,X,LWS,EWSPostColon,actReset|actDiscardKnown);
+    
     // Add edges that will ''skip'' data building and
     // go straight to quoted states
     AE( EWSPostColon,dCommaSep,LAQUOT,InAng,actAdd );
@@ -267,17 +276,17 @@ Preparse::InitStatePreparseStateTable()
     AE( BuildData,X,XC,BuildData,actAdd);
     AE( BuildData,X,CR,BuildDataCrLf,actNil);
 
-    AE( BuildDataCrLf,X,XC,EndMsg,actBad |actDiscard);
+    AE( BuildDataCrLf,X,XC,EndMsg,actBad|actDiscard);
     AE( BuildDataCrLf,X,LF,CheckCont,actNil);
 
     // (push 1st then b/u)
-    AE( CheckCont,X,XC, BuildHdr,actData|actReset|actBack |actDiscard);
+    AE( CheckCont,X,XC, BuildHdr,actData|actReset|actBack|actDiscard);
     AE( CheckCont,X,LWS,BuildData,actAdd );
    
     // Check if double CRLF (end of hdrs)
-    AE( CheckCont,X,CR,CheckEndHdr,actData|actReset |actDiscard);
-    AE( CheckEndHdr,X,XC,EndMsg,actBad |actDiscard);
-    AE( CheckEndHdr,X,LF,EndMsg,actEndHdrs |actDiscard);
+    AE( CheckCont,X,CR,CheckEndHdr,actData|actReset|actDiscard);
+    AE( CheckEndHdr,X,XC,EndMsg,actBad|actDiscard);
+    AE( CheckEndHdr,X,LF,EndMsg,actEndHdrs|actDiscard);
 
     // Disposition sensitive edges
 

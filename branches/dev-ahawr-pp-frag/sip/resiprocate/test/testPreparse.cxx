@@ -28,6 +28,23 @@ CRLF
 "Sample Body" CRLF
 CRLF;
 
+const char wrappy[] = 
+"OPTIONS sip:a@b.c SIP/2.0"CRLF
+"Via:"CRLF
+"    <sip:b@c.com:5060>,"CRLF
+"    <sip:d@e.com:5060>,"CRLF
+"    <sip:f@g.com:5060>,"CRLF
+"    <sip:h@i.com:5060>,"CRLF
+"    <sip:j@k.com:5060>"CRLF
+"To    : <sip:a@b.com>"CRLF
+"From  : <sip:j@k.com>"CRLF
+"Subject : "CRLF
+"Call-ID: "CRLF
+"\txx"CRLF
+"CSeq  : "CRLF
+"        1 "CRLF
+"        OPTIONS"CRLF CRLF;
+
 const char shortMessage[] =
     "INVITE sip:alice@atlanta.com:5060 SIP/2.0" CRLF
     "From: \"Bob\" <sip:bob@baker.org:5060>;tag=first-tag" CRLF
@@ -97,6 +114,39 @@ const char shortMessage[] =
         "Expires: 7200" CRLF
         "Content-Length: 0" CRLF CRLF
         ;
+      char *tortureMsg = ("INVITE sip:called@called-company.com SIP/2.0\r\n"
+                   "TO :\n"
+                   " sip:called@called-company.com ;       tag      = 1918181833n\r\n"
+                   "From     : \"Caller Name \\\\\\\"\" <sip:caller@caller-company.com>\n"
+                   "  ;\n"
+                   "  tag = 98asjd8\r\n"
+                   "Max-Forwards: 8\r\n"
+                   "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
+                   "CSeq: 8\n"
+                   "   INVITE\r\n"
+                   "Via  : SIP  /   2.0\n" 
+                   " /UDP\n" 
+                   "    135.180.130.133;branch=z9hG4bKkdjuw\r\n" 
+                   "Subject : \r\n"
+                   "NewFangledHeader:   newfangled value\n" 
+                   " more newfangled value \r\n" 
+                   "Content-Type: application/sdp \r\n" 
+                   "v:  SIP  / 2.0  / TCP     1192.168.156.222   ;\n" 
+                   "  branch  =   9ikj8  , \n"
+                   "SIP  /    2.0   / UDP  192.168.255.111   ; hidden\r\n" 
+                   "m:\"Quoted string\\\"\\\"\"<sip:caller@caller-company.com>; newparam =\n" 
+                   "newvalue ;\n" 
+                   "secondparam = secondvalue  ; q = 0.33,\n" 
+                   "tel:4443322 \r\n"
+                   "\r\n"
+                   "v=0\r\n" 
+                   "o=mhandley 29739 7272939 IN IP4 126.5.4.3 \r\n"
+                   "s=-\r\n" 
+                   "c=IN IP4 135.180.130.88 \r\n"
+                   "t=0 0 \r\n"
+                   "m=audio 492170 RTP/AVP 0 12 \r\n"
+                   "m=video 3227 RTP/AVP 31 \r\n"
+                   "a=rtpmap:31 LPC \r\n");
 
 extern Data statusName(PreparseState::BufferAction s);
 
@@ -286,13 +336,16 @@ void doTest1()
     size_t start = 0;
     bool chunkMine = true;
 
-    size_t readQuant = 30;
+    size_t readQuant = 1;
     size_t chunkSize = readQuant;
 
     // set the ''reader'' to use the test message
 
 //    fakeResetRead(reallyShortMessage,strlen(reallyShortMessage));
-    fakeResetRead(testData,strlen(testData));
+//    fakeResetRead(testData,strlen(testData));
+//    fakeResetRead(tortureMsg,strlen(tortureMsg));
+    fakeResetRead(wrappy,strlen(wrappy));
+    
     
     // get the first chunk
 
