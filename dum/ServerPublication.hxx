@@ -1,31 +1,41 @@
 #if !defined(RESIP_SERVERPUBLICATION_HXX)
 #define RESIP_SERVERPUBLICATION_HXX
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
+#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
 
-class ServerPublication : public NonDialogUsage 
+class ServerPublication : public BaseUsage 
 {
    public:
       typedef Handle<ServerPublication> ServerPublicationHandle;
       ServerPublicationHandle getHandle();
 
-      // application may have to muck with expires or Etag
-      void accept(const SipMessage& ok);
-      void reject(int statusCode);
+      const Data& getEtag() const;
+      
+      SipMessage& accept(int statusCode = 200);
+      SipMessage& reject(int responseCode);
 
       virtual void end();
+
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
+
+      void send(SipMessage& response);      
 
    protected:
       virtual ~ServerPublication();
    private:
-      friend class DialogSet;
-      ServerPublication(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
-      
+      friend class DialogUsageManager;
+      ServerPublication(DialogUsageManager& dum, const Data& etag, const SipMessage& request);
+      SipMessage mLastRequest;
+      SipMessage mLastResponse;
+      const Data mEtag;
+      const Data mEventType;
+      int mTimerSeq;
+      int mExpires;
 };
 
 }
