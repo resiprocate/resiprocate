@@ -1,9 +1,9 @@
 
 
 static const char* const Lock_cxx_Version =
-    "$Id: Lock.cxx,v 1.3 2002/11/06 02:59:30 davidb Exp $";
+    "$Id: Lock.cxx,v 1.4 2002/11/07 03:07:27 jason Exp $";
 
-#include "util/Lock.hxx"
+#include "sip2/util/Lock.hxx"
 
 using Vocal2::Lock;
 using Vocal2::LockType;

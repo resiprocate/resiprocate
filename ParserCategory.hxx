@@ -3,11 +3,11 @@
 
 #include <iostream>
 #include <list>
-#include "util/Data.hxx"
-#include "util/ParseBuffer.hxx"
+#include "sip2/util/Data.hxx"
+#include "sip2/util/ParseBuffer.hxx"
 
-#include "sipstack/ParameterTypes.hxx"
-#include "sipstack/HeaderFieldValue.hxx"
+#include "sip2/sipstack/ParameterTypes.hxx"
+#include "sip2/sipstack/HeaderFieldValue.hxx"
 
 namespace Vocal2
 {

@@ -1,9 +1,9 @@
 
 #include <cassert>
 
-#include "util/Socket.hxx"
-#include "util/Logger.hxx"
-#include "util/ParseBuffer.hxx"
+#include "sip2/util/Socket.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/util/ParseBuffer.hxx"
 
 using namespace Vocal2;
 

@@ -1,9 +1,8 @@
 #if !defined(VOCAL_LOCKABLE_HXX)
 #define VOCAL_LOCKABLE_HXX
 
-
 static const char* const Lockable_hxx_Version =
-    "$Id: Lockable.hxx,v 1.2 2002/10/15 15:46:24 alan Exp $";
+    "$Id: Lockable.hxx,v 1.3 2002/11/07 03:07:27 jason Exp $";
 
 /** Infrastructure common to VOCAL.<br><br>
  */
@@ -17,10 +16,10 @@ class Lockable
 	
    public:
       virtual ~Lockable() {};
-      virtual void	lock() = 0;
-      virtual void	unlock() = 0;
-      virtual void	readlock() { lock(); }
-      virtual void	writelock() { lock() ; }
+      virtual void lock() = 0;
+      virtual void unlock() = 0;
+      virtual void readlock() { lock(); }
+      virtual void writelock() { lock() ; }
 };
 
 } // namespace Vocal2

@@ -1,8 +1,8 @@
 #ifndef RandomHex_HXX_
 #define RandomHex_HXX_
 
-#include "util/Mutex.hxx"
-#include "util/Data.hxx"
+#include "sip2/util/Mutex.hxx"
+#include "sip2/util/Data.hxx"
 
 namespace Vocal2
 {

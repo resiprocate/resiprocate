@@ -1,11 +1,11 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.27 2002/11/07 02:44:49 derekm Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.28 2002/11/07 03:07:27 jason Exp $";
 
 #include <iostream>
 #include <string>
-#include "util/compat.hxx"
+#include "sip2/util/compat.hxx"
 
 class TestData;
 namespace Vocal2
@@ -44,6 +44,9 @@ class Data
       Data& operator+=(const Data& rhs);
       Data& operator+=(char c);
 
+      char& operator[](size_type p);
+      char operator[](size_type p) const;
+      
       Data& append(const char* str, unsigned int len);
 
       bool empty() const { return mSize == 0; }
@@ -86,6 +89,13 @@ inline bool isEqualNoCase(const Data& left, const Data& right)
 bool operator==(const char* s, const Data& d);
 bool operator!=(const char* s, const Data& d);
 std::ostream& operator<<(std::ostream& strm, const Data& d);
+
+inline Data
+operator+(const char* c, const Data& d)
+{
+   return Data(c) + d;
+}
+
  
 }
 

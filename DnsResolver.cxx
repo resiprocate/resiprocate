@@ -17,14 +17,14 @@ typedef uint32_t u_int32_t;
 #include <errno.h>
 #include <sys/types.h>
 
-#include "util/Socket.hxx"
-#include "util/Logger.hxx"
+#include "sip2/util/Socket.hxx"
+#include "sip2/util/Logger.hxx"
 
-#include "sipstack/DnsResolver.hxx"
-#include "sipstack/DnsMessage.hxx"
-#include "sipstack/Symbols.hxx"
-#include "sipstack/ParserCategories.hxx"
-#include "sipstack/SipStack.hxx"
+#include "sip2/sipstack/DnsResolver.hxx"
+#include "sip2/sipstack/DnsMessage.hxx"
+#include "sip2/sipstack/Symbols.hxx"
+#include "sip2/sipstack/ParserCategories.hxx"
+#include "sip2/sipstack/SipStack.hxx"
 
 
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::SIP
@@ -97,8 +97,7 @@ DnsResolver::lookup(const Data& transactionId,
                           transport, false);
       removeDuplicates = true;
    }
-   
-   if (via.sentPort())
+   else if (via.sentPort()) // !jf!
    {
       id = lookupARecords(transactionId,
                           target, 

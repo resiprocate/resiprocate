@@ -1,7 +1,7 @@
 #if !defined(CODERS_HXX)
 #define CODERS_HXX
 
-#include "util/Data.hxx"
+#include "sip2/util/Data.hxx"
 
 namespace Vocal2
 {

@@ -4,10 +4,10 @@
 #include <map>
 #include <list>
 
-#include "util/Socket.hxx"
-#include "util/Timer.hxx"
-#include "sipstack/Transport.hxx"
-#include "sipstack/SipMessage.hxx"
+#include "sip2/util/Socket.hxx"
+#include "sip2/util/Timer.hxx"
+#include "sip2/sipstack/Transport.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
 
 namespace Vocal2
 {

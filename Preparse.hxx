@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <limits.h>
 
-#include "sipstack/HeaderTypes.hxx"
+#include "sip2/sipstack/HeaderTypes.hxx"
 
 namespace Vocal2
 {

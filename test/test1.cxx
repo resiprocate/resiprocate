@@ -8,13 +8,13 @@
 #include <arpa/inet.h>
 
 
-#include "sipstack/UdpTransport.hxx"
-#include "sipstack/Helper.hxx"
-#include "sipstack/SipMessage.hxx"
-#include "sipstack/Uri.hxx"
-#include "sipstack/Resolver.hxx"
-#include "util/Logger.hxx"
-#include "util/DataStream.hxx"
+#include "sip2/sipstack/UdpTransport.hxx"
+#include "sip2/sipstack/Helper.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/Uri.hxx"
+#include "sip2/sipstack/Resolver.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/util/DataStream.hxx"
 
 using namespace Vocal2;
 using namespace std;
