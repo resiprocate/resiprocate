@@ -179,8 +179,8 @@ bool Transport::Tuple::operator==(const Transport::Tuple& rhs) const
 {
    return (memcmp(&ipv4, &rhs.ipv4, sizeof(ipv4)) == 0 &&
            port == rhs.port &&
-           transportType == rhs.transportType && 
-           connection == rhs.connection);
+           transportType == rhs.transportType);
+   // !dlb! don't include connection 
 }
 
 bool Transport::Tuple::operator<(const Transport::Tuple& rhs) const
@@ -205,7 +205,7 @@ bool Transport::Tuple::operator<(const Transport::Tuple& rhs) const
    {
       return false;
    }
-   
+
    return transportType < rhs.transportType;
 }
 
@@ -239,6 +239,10 @@ Vocal2::operator<<(ostream& ostrm, const Transport::Tuple& tuple)
 size_t 
 __gnu_cxx::hash<Vocal2::Transport::Tuple>::operator()(const Vocal2::Transport::Tuple& tuple) const
 {
+   // !dlb! do not include the connection
+   Transport::Tuple& tup(const_cast<Transport::Tuple&>(tuple));
+   Connection* conn = 0;
+   std::swap(conn, tup.connection);
    // assumes POD
    unsigned long __h = 0; 
    const char* start = (const char*)&tuple;
@@ -247,6 +251,8 @@ __gnu_cxx::hash<Vocal2::Transport::Tuple>::operator()(const Vocal2::Transport::T
    {
       __h = 5*__h + *start; // .dlb. weird hash
    }
+
+   std::swap(conn, tup.connection);
    return size_t(__h);
 
 }
@@ -255,6 +261,11 @@ __gnu_cxx::hash<Vocal2::Transport::Tuple>::operator()(const Vocal2::Transport::T
 size_t 
 std::hash_value(const Vocal2::Transport::Tuple& tuple) 
 {
+   // !dlb! do not include the connection
+   Transport::Tuple& tup(const_cast<Transport::Tuple&>(tuple));
+   Connection* conn = 0;
+   std::swap(conn, tup.connection);
+
    // assumes POD
    unsigned long __h = 0; 
    const char* start = (const char*)&tuple;
@@ -263,6 +274,8 @@ std::hash_value(const Vocal2::Transport::Tuple& tuple)
    {
       __h = 5*__h + *start; // .dlb. weird hash
    }
+
+   std::swap(conn, tup.connection);
    return size_t(__h);
 }
 
