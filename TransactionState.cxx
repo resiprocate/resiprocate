@@ -44,8 +44,11 @@ TransactionState::~TransactionState()
    DebugLog (<< "Deleting TransactionState " << tid);
    mStack.mTransactionMap.remove(tid);
 
-   delete mCancelStateMachine;
-   mCancelStateMachine = 0;
+   // !rk! Design: you can't delete mCancelStateMachine because it's off
+   //      handling the CANCEL transaction!  If you do want to delete
+   //      it, then you'll have to set it free somehow, but earlier.
+   // delete mCancelStateMachine;
+   // mCancelStateMachine = 0;
    
    delete mMsgToRetransmit;
    mMsgToRetransmit = 0;
@@ -790,7 +793,8 @@ TransactionState::processServerInvite(  Message* msg )
             DebugLog (<< "Received Cancel, create Cancel transaction and process as server non-invite and send to TU");
             mCancelStateMachine = new TransactionState(mStack, ServerNonInvite, Trying);
             mStack.mTransactionMap.add(msg->getTransactionId(), mCancelStateMachine);
-            mCancelStateMachine->processServerNonInvite(msg);
+            // !rk! Copy msg so that it will still be valid for sendToTU.
+            mCancelStateMachine->processServerNonInvite(new SipMessage(msg));
             sendToTU(msg); // don't delete msg
             break;
 
