@@ -16,7 +16,7 @@ class ClientPagerMessage : public NonDialogUsage
       ClientPagerMessageHandle getHandle();
       
       //allow the user to adorn the MESSAGE message if desired
-      SipMessage& getMessageRequest();      
+      SipMessage& getMessageRequest();
       
       //send a MESSAGE
       virtual void page(std::auto_ptr<Contents> contents);
