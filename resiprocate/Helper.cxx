@@ -253,7 +253,7 @@ Helper::makeResponse(SipMessage& response,
    
    // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.
    // No totag for failure responses or 100s
-   if (!response.header(h_To).exists(p_tag) && responseCode < 300 && responseCode > 100)
+   if (!response.header(h_To).exists(p_tag) && responseCode > 100)
    {
       response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
    }
