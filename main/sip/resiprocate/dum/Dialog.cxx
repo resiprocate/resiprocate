@@ -3,6 +3,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/ClientOutOfDialogReq.hxx"
 #include "resiprocate/dum/ClientRegistration.hxx"
@@ -316,6 +317,61 @@ Dialog::dispatch(const SipMessage& msg)
    }
    else if (msg.isResponse())
    {
+      //Auth related
+      if (mDum.mClientAuthManager && !mDialogSet.mCancelled)
+      {
+         if (mDialogSet.getCreator())
+         {
+            if ( mDum.mClientAuthManager->handle( mDialogSet.getCreator()->getLastRequest(), msg))
+            {
+               InfoLog( << "about to retransmit request with digest credentials" );
+               InfoLog( << mDialogSet.getCreator()->getLastRequest() );
+               
+               mDum.send(mDialogSet.getCreator()->getLastRequest());
+               return;
+            }
+         }
+         else
+         {
+            SipMessage* lastRequest = 0;            
+            switch (msg.header(h_CSeq).method())
+            {
+               case INVITE:
+               case CANCEL:
+               case REFER: 
+                  if (mInviteSession == 0)
+                  {
+                     return;
+                  }
+                  else
+                  {
+                     lastRequest = &mInviteSession->mLastRequest;
+                  }
+                  break;               
+               case REGISTER:
+                  if (mClientRegistration == 0)
+                  {
+                     return;
+                  }
+                  else
+                  {
+                     lastRequest = &mClientRegistration->mLastRequest;
+                  }
+                  break;               
+               default:
+                  break;
+            }
+            if ( lastRequest && mDum.mClientAuthManager->handle( *lastRequest, msg ) )
+            {
+               InfoLog( << "about to retransmit request with digest credentials" );
+               InfoLog( << *lastRequest );
+               
+               mDum.send(*lastRequest);
+               return;
+            }
+         }
+      }
+      
       const SipMessage& response = msg;
       // !jf! should this only be for 2xx responses? !jf! Propose no as an
       // answer !dcm! what is he on?
@@ -402,6 +458,8 @@ Dialog::dispatch(const SipMessage& msg)
       }
    }
 }
+
+
 
 
 ClientSubscription* 
