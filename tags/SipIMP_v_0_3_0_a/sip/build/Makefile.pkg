@@ -1,0 +1,50 @@
+######################################################################
+
+# include files from other directories.  right now, this is only the
+# contrib directory, but there are a number that are there.  if we can
+# move the rules out toward the edges, it will be easier for others to
+# add elements.
+
+######################################################################
+
+ifneq ($(OSTYPE),FreeBSD)
+PTHREAD_LIBNAME := pthread
+else
+PTHREAD_LDFLAGS := -pthread
+PTHREAD_LIBNAME := c_r
+endif
+
+ifeq ($(OSTYPE),IRIX64)
+PTHREAD_LDFLAGS := 
+elif ($(OSCLASS),VXWORKS)
+PTHREAD_LDFLAGS :=
+PTHREAD_LIBNAME :=
+elif ($(OSTYPE),Linux)
+PTHREAD_LDFLAGS := #--thread
+elif ($(OSTYPE),Solaris)
+PTHREAD_LDFLAGS := --thread
+elif ($(OSTYPE),QNX)
+PTHREAD_DEFINES := USE_PTHREADS
+PTHREAD_LDFLAGS := 
+PTHREAD_LIBNAME :=
+endif
+
+OPENSSL_LIBNAME := ssl crypto
+OPENSSL_LDFLAGS :=
+
+ARES_INCLUDEDIRS := $(ROOT)/contrib/ares-1.1.1
+ARES_LIBDIRS := $(ROOT)/contrib/ares-1.1.1
+ARES_LIBNAME := ares
+
+RESIPROCATE_INCLUDEDIRS := $(ROOT)
+RESIPROCATE_LIBDIRS := $(ROOT)/resiprocate/obj.$(TARGET_NAME) 
+RESIPROCATE_LIBNAME := resiprocate
+RESIPROCATE_LDFLAGS :=
+ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
+RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.so
+else
+RESIPROCATE_DEPENDS := $(ROOT)/resiprocate/obj.$(TARGET_NAME)/libresiprocate.a
+endif
+$(RESIPROCATE_DEPENDS): 
+	cd $(ROOT)/resiprocate; $(MAKE)
+
