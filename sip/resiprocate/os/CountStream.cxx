@@ -41,10 +41,10 @@ CountBuffer::overflow(int c)
 }
 
 CountStream::CountStream()
-   : std::ostream(0),
+   : std::ostream(&mStreamBuf),
      mStreamBuf()
 {
-   init(&mStreamBuf);
+   //init(&mStreamBuf);
 }
 
 CountStream::~CountStream()
