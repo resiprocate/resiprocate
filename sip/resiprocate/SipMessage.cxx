@@ -543,7 +543,7 @@ SipMessage::getContents() const
       {
          InfoLog(<< "SipMessage::getContents: got content type ("
                  <<  header(h_ContentType) << ") that is not known, "
-                 << "returning as opague application/octet-stream);
+                 << "returning as opaque application/octet-stream");
          mContents = Contents::getFactoryMap()[OctetContents::getStaticType()]->create(mContentsHfv, OctetContents::getStaticType());
       }
       else
