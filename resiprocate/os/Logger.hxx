@@ -31,30 +31,28 @@
 
 //#define VOCAL_SUBSYSTEM Vocal2::Subsystem::NONE
 
-// variadic to handle comma in template arguments
-#define DebugLog(arg__, ...)                                                 \
-                                         /* eat the comma if no extra arguments */ \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, arg__, __VA_ARGS__ )
-
-#define CritLog(arg__, ...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, arg__, __VA_ARGS__ )
-
-#define ErrLog(arg__, ...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, arg__, __VA_ARGS__ )
-
-#define WarningLog(arg__, ...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, arg__, __VA_ARGS__ )
-
-#define InfoLog(arg__, ...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, arg__, __VA_ARGS__ )
-
 #ifdef NO_DEBUG
 // Suppress debug loging at compile time
 #define DebugLog(arg__, ...)
+#else
+#define DebugLog(arg__, ...) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, __VA_ARGS__ )
 #endif
 
+#define CritLog(arg__, ...) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, __VA_ARGS__ )
+
+#define ErrLog(arg__, ...) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, __VA_ARGS__ )
+
+#define WarningLog(arg__, ...) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, __VA_ARGS__ )
+
+#define InfoLog(arg__, ...) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, __VA_ARGS__ )
+
 // do/while allows a {} block in an expression
-#define GenericLog(system__, level__, arg__, ...)         \
+#define GenericLog(system__, level__,  ...)                     \
 do                                                              \
 {                                                               \
   if (Vocal2::GenericLogImpl::isLogging(level__))               \
@@ -65,14 +63,12 @@ do                                                              \
         Vocal2::Log::tags(level__, system__,                    \
                           Vocal2::GenericLogImpl::Instance())   \
           << __FILE__ << ':' << __LINE__ << DELIM               \
-                  /* eat the comma if no extra arguments */     \
-          arg__ , __VA_ARGS__  << std::endl;                        \
+          __VA_ARGS__  << std::endl;                            \
      }                                                          \
   }                                                             \
 } while (0)
 
 #endif
-
 
 namespace Vocal2
 {
