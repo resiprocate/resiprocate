@@ -118,9 +118,7 @@ main (int argc, char **argv)
         exit (0);
       }
     }
-    {
-      sipStack.process(fdset);
-      conduit.process();
-    }
+    sipStack.process(fdset);
+    conduit.process();
   }
 }
