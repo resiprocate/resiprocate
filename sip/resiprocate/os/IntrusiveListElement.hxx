@@ -65,14 +65,23 @@ class IntrusiveListElement
          remove();
       }
 
-      void init()
+      // make this element an empty list
+      static P makeList(P elem)
       {
-         mPrev = static_cast<P>(this);
-         mNext = static_cast<P>(this);
+         assert(!elem->me::mPrev);
+         assert(!elem->me::mNext);
+
+         elem->me::mPrev = elem;
+         elem->me::mNext = elem;
+
+         return elem;
       }
 
       bool empty() const
       {
+         assert(me::mPrev);
+         assert(me::mNext);
+
          return me::mNext == static_cast<P>(const_cast<me*>(this));
       }
 
@@ -118,11 +127,15 @@ class IntrusiveListElement
 
       iterator begin()
       {
+         assert(me::mPrev);
+         assert(me::mNext);
          return iterator(me::mNext);
       }
 
       iterator end()
       {
+         assert(me::mPrev);
+         assert(me::mNext);
          return iterator(static_cast<P>(this));
       }
 
@@ -131,6 +144,9 @@ class IntrusiveListElement
       // pushing an element onto the same list twice is undefined
       void push_front(P elem)
       {
+         assert(me::mPrev);
+         assert(me::mNext);
+
          elem->me::mNext = me::mNext;
          elem->me::mPrev = static_cast<P>(this);
          
@@ -141,6 +157,9 @@ class IntrusiveListElement
       // putting an element onto the same list twice is undefined
       void push_back(P elem)
       {
+         assert(me::mPrev);
+         assert(me::mNext);
+
          elem->me::mPrev = me::mPrev;
          elem->me::mNext = static_cast<P>(this);
          
