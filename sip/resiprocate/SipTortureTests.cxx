@@ -364,10 +364,10 @@ main()
       
       assert(message->getRawHeader(Headers::From));
       assert(&message->header(h_From));
-      assert(message->header(h_From).exists(p_tag) == false);
-      assert(message->header(h_From).exists(p_mobility) == false);
-      assert(message->header(h_From).uri().param(p_tag) == "456248");
-      assert(message->header(h_From).uri().param(p_mobility) == "hobble");
+      assert(message->header(h_From).exists(p_tag));
+      assert(message->header(h_From).exists(p_mobility));
+      assert(message->header(h_From).param(p_tag) == "456248");
+      assert(message->header(h_From).param(p_mobility) == "hobble");
 
       message->encode(cerr);
   
@@ -402,7 +402,7 @@ main()
       assert(message->exists(h_From));
       assert(message->header(h_From).uri().user() == "user");
       assert(message->header(h_From).uri().host() == "company.com");
-      assert(message->header(h_From).uri().param(p_tag) == "3411345");
+      assert(message->header(h_From).param(p_tag) == "3411345");
 
       assert(message->exists(h_MaxForwards));
       assert(message->header(h_MaxForwards).value() == 8);
@@ -533,7 +533,7 @@ main()
       assert(message->header(h_Vias).front().sentHost() == "135.180.130.133");
       assert(message->header(h_Vias).front().sentPort() == 0);
       assert(message->header(h_Vias).front().exists(p_branch));
-      assert(message->header(h_Vias).front().param(p_branch) == "9ikj8");
+      assert(message->header(h_Vias).front().param(p_branch).transactionId() == "9ikj8");
 
       assert(message->exists(h_Subject));
       assert(message->header(h_Subject).value().empty());
@@ -603,7 +603,7 @@ main()
       assert(message->header(h_Vias).front().sentHost() == "135.180.130.133");
       assert(message->header(h_Vias).front().sentPort() == 0);
       assert(message->header(h_Vias).front().exists(p_branch));
-      assert(message->header(h_Vias).front().param(p_branch) == "z9hG4bKkdjuw");
+      assert(message->header(h_Vias).front().param(p_branch).transactionId() == "z9hG4bKkdjuw");
 
    }
 
@@ -662,7 +662,7 @@ main()
       assert(message->header(h_Vias).front().sentHost() == "135.180.130.133");
       assert(message->header(h_Vias).front().sentPort() == 0);
       assert(message->header(h_Vias).front().exists(p_branch));
-      assert(message->header(h_Vias).front().param(p_branch) == "z9hG4bKkdjuw");
+      assert(message->header(h_Vias).front().param(p_branch).transactionId() == "z9hG4bKkdjuw");
 
       //TODO: Check value 
       assert(message->exists(h_ContentType));
@@ -725,7 +725,7 @@ main()
       assert(message->header(h_Vias).front().sentHost() == "135.180.130.133");
       assert(message->header(h_Vias).front().sentPort() == 0);
       assert(message->header(h_Vias).front().exists(p_branch));
-      assert(message->header(h_Vias).front().param(p_branch) == "z9hG4bKkdjuw");
+      assert(message->header(h_Vias).front().param(p_branch).transactionId() == "z9hG4bKkdjuw");
 
       assert(message->exists(h_Expires));
       /* 
