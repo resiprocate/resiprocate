@@ -70,7 +70,7 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
       for (Auths::const_iterator i = response.header(h_WWWAuthenticates).begin();  
            i != response.header(h_WWWAuthenticates).end(); ++i)                    
       {    
-         if (!handleAuthHeader(*i, it, origRequest, response, code == 407))
+         if (!handleAuthHeader(*i, it, origRequest, response, false))
          {
             it->second.state = Failed;   
             return false;
@@ -82,7 +82,7 @@ ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
       for (Auths::const_iterator i = response.header(h_ProxyAuthenticates).begin();  
            i != response.header(h_ProxyAuthenticates).end(); ++i)                    
       {    
-         if (!handleAuthHeader(*i, it, origRequest, response, code == 407))
+         if (!handleAuthHeader(*i, it, origRequest, response, true))
          {
             it->second.state = Failed;   
             return false;
