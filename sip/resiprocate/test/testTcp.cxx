@@ -63,7 +63,7 @@ main(int argc, char* argv[])
       UInt64 elapsed = Timer::getTimeMs() - startTime;
       cout <<  runs * ( 1000.0 / (float) elapsed) * ( 1000.0 / (float)Timer::getCpuSpeedMhz() ) 
            << " half calls/s/GHz  ["
-           << runs << " calls peformed in " << elapsed << " ms, a rate of " 
+           << runs << " calls performed in " << elapsed << " ms, a rate of " 
            << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
       
       InfoLog (<< "Messages created");
