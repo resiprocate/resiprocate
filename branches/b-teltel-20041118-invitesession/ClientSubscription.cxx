@@ -7,7 +7,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/SubscriptionCreator.hxx"
-
+#include "resiprocate/dum/UsageUseException.hxx"
 
 using namespace resip;
 
@@ -28,7 +28,7 @@ ClientSubscription::~ClientSubscription()
    mDialog.mClientSubscriptions.remove(this);
 }
 
-ClientSubscriptionHandle
+ClientSubscriptionHandle 
 ClientSubscription::getHandle()
 {
    return ClientSubscriptionHandle(mDum, getBaseHandle().getId());
@@ -44,16 +44,17 @@ ClientSubscription::dispatch(const SipMessage& msg)
    if (msg.isRequest() )
    {
       assert( msg.header(h_RequestLine).getMethod() == NOTIFY );
-      mDialog.makeResponse(mLastResponse, msg, 200);
-      send(mLastResponse);
+
+      //!dcm! -- heavy, should just store enough information to make response
+      mLastNotify = msg;
 
       if (!mOnNewSubscriptionCalled)
       {
          InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To));
          handler->onNewSubscription(getHandle(), msg);
          mOnNewSubscriptionCalled = true;
-      }
-      int expires = 0;
+      }         
+      int expires = 0;      
       //default to 60 seconds so non-compliant endpoints don't result in leaked usages
       if (msg.exists(h_SubscriptionState) && msg.header(h_SubscriptionState).exists(p_expires))
       {
@@ -86,6 +87,7 @@ ClientSubscription::dispatch(const SipMessage& msg)
                   }
                   else
                   {
+                     acceptUpdate();                     
                      handler->onTerminated(getHandle(), msg);
                      delete this;
                   }
@@ -93,12 +95,16 @@ ClientSubscription::dispatch(const SipMessage& msg)
             }
             else
             {
+               acceptUpdate();
                handler->onTerminated(getHandle(), msg);
                delete this;
             }
          }
          else
-         {
+         {            
+            mDialog.makeResponse(mLastResponse, msg, 400);
+            mLastResponse.header(h_StatusLine).reason() = "Missing Subscription-State header";
+            send(mLastResponse);
             handler->onTerminated(getHandle(), msg);
             delete this;
          }
@@ -144,8 +150,9 @@ ClientSubscription::dispatch(const SipMessage& msg)
       }
       else if (msg.header(h_SubscriptionState).value() == "terminated")
       {
+         acceptUpdate();
          handler->onTerminated(getHandle(), msg);
-         DebugLog (<< "[ClientSubscription] " << mLastRequest.header(h_To) << "[ClientSubscription] Terminated");
+         DebugLog (<< "[ClientSubscription] " << mLastRequest.header(h_To) << "[ClientSubscription] Terminated");                   
          delete this;
          return;
       }
@@ -215,6 +222,51 @@ ClientSubscription::end()
       mEnded = true;
       send(mLastRequest);
    }
+}
+
+void 
+ClientSubscription::acceptUpdate(int statusCode)
+{
+   mDialog.makeResponse(mLastResponse, mLastNotify, statusCode);
+   send(mLastResponse);
+}
+
+void 
+ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
+{
+   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
+   assert(handler);   
+   mDialog.makeResponse(mLastResponse, mLastNotify, statusCode);
+   if (!reasonPhrase.empty())
+   {
+      mLastResponse.header(h_StatusLine).reason() = reasonPhrase;
+   }
+   
+   send(mLastResponse);
+   switch (Helper::determineFailureMessageEffect(mLastResponse))
+   {
+      case Helper::TransactionTermination:
+      case Helper::RetryAfter:
+         break;            
+      case Helper::OptionalRetryAfter:
+      case Helper::ApplicationDependant: 
+         throw UsageUseException("Not a reasonable code to reject a NOTIFY with inside an established dialog.", 
+                                 __FILE__, __LINE__);
+         break;            
+      case Helper::DialogTermination: //?dcm? -- throw or destroy this?
+      case Helper::UsageTermination:
+         handler->onTerminated(getHandle(), mLastResponse);
+         delete this;
+         break;
+   }
+}
+
+void ClientSubscription::dialogDestroyed(const SipMessage& msg)
+{
+   ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
+   assert(handler);   
+   handler->onTerminated(getHandle(), msg);
+   delete this;   
 }
 
 std::ostream&
