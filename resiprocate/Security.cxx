@@ -49,13 +49,6 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 
-//virtual
-void
-Security::preload()
-{
-   preload(mPath);
-}
-
 static const Data rootCert("root_cert_");
 static const Data domainCert("domain_cert_");
 static const Data domainKey("domain_key_");
@@ -107,9 +100,9 @@ Security::Security(const Data& directory) : mPath(directory)
 }
 
 void
-Security::preload(const Data& directory)
+Security::preload()
 {
-   FileSystem::Directory dir(directory);
+   FileSystem::Directory dir(mPath);
    char buffer[8192];
    Data fileT(Data::Borrow, buffer, sizeof(buffer));
    for (FileSystem::Directory::iterator it = dir.begin(); it != dir.end(); ++it)
