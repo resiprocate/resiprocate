@@ -4,4 +4,5 @@ fsm.dot
 fsm.pdf
 fsm.ps
 obj.*
+testSipStack1
 testUdp
