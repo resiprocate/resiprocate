@@ -1,13 +1,13 @@
 
 #include <cstring>
 #include <cassert>
-#include <iostream>
 
-//#define USE_CURSES
+#define USE_CURSES
 
 #ifdef USE_CURSES
 #include <ncurses.h>
 #else
+#include <iostream>
 #include <cstdio>
 #include <unistd.h>
 typedef void WINDOW;
@@ -108,7 +108,8 @@ class TestCallback: public TuIM::Callback
                                  const Data& signedBy,  Security::SignatureStatus sigStatus,
                                  bool wasEncryped  );
       virtual void sendPageFailed( const Uri& dest,int respNumber );
-      virtual void registrationFailed(const Vocal2::Uri&, int respNumber);
+      virtual void registrationFailed(const Vocal2::Uri&, int respNumber); 
+      virtual void receivePageFailed(const Uri& sender);
 };
   
 
@@ -210,6 +211,19 @@ TestCallback::sendPageFailed( const Uri& target, int respNum )
    waddstr(textWin," failed (");
    waddstr(textWin,num.c_str());
    waddstr(textWin," response)\n");
+   wrefresh(textWin);
+}
+
+
+void 
+TestCallback::receivePageFailed( const Uri& target )
+{
+   //InfoLog(<< "In TestErrCallback");  
+   // cerr << "Message to " << dest << " failed" << endl;  
+
+   waddstr(textWin,"Can not understand messager from ");
+   waddstr(textWin,target.value().c_str());
+   waddstr(textWin,"\n");
    wrefresh(textWin);
 }
 
@@ -530,7 +544,7 @@ main(int argc, char* argv[])
    bool ok = sipStack.security->loadAllCerts( key );
    if ( !ok )
    {
-      ErrLog( << "Could not load the certificates" );
+      InfoLog( << "Could not load the certificates" );
    }
 #endif
    

@@ -322,8 +322,11 @@ TuIM::processMessageRequest(SipMessage* msg)
 
       contents = sec->uncode( sBody, &signedBy, &sigStat, &encrypted );
       if ( !contents )
-      {
+      { 
+         Uri from = msg->header(h_From).uri();
          InfoLog( << "Some problem decoding SMIME message");
+        
+         mCallback->receivePageFailed( from );
       }
    }
 #endif
