@@ -319,7 +319,7 @@ DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
 {
    if (mDumShutdownHandler)
    {
-      throw new DumException("Cannot create new sessions when DUM is shutting down.", __FILE__, __LINE__);
+      throw DumException("Cannot create new sessions when DUM is shutting down.", __FILE__, __LINE__);
    }
       
    if (appDs == 0)
@@ -463,7 +463,7 @@ DialogUsageManager::makePagerMessage(const NameAddr& target, const NameAddr& fro
 {
    if (!mClientPagerMessageHandler)
    {
-      throw new DumException("Cannot send MESSAGE messages without a ClientPagerMessageHandler", __FILE__, __LINE__);
+      throw DumException("Cannot send MESSAGE messages without a ClientPagerMessageHandler", __FILE__, __LINE__);
    }
    DialogSet* ds = makeUacDialogSet(new PagerMessageCreator(*this, target, from), appDs);
    ClientPagerMessage* cpm = new ClientPagerMessage(*this, *ds);

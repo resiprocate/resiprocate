@@ -70,7 +70,7 @@ InviteSession::modifySession()
    DebugLog( << "InviteSession::modifySession: " << mDialog.getId());   
    if (mNextOfferOrAnswerSdp == 0 || mState != Connected || mOfferState != Answered)
    {
-      throw new UsageUseException("Must be in the connected state and have propsed an offer to call modifySession", 
+      throw UsageUseException("Must be in the connected state and have propsed an offer to call modifySession", 
                                   __FILE__, __LINE__);
    }
    mState = ReInviting;
@@ -102,7 +102,7 @@ InviteSession::acceptDialogModification(int statusCode)
 {
    if (mNextOfferOrAnswerSdp == 0 || mState != ReInviting)
    {
-      throw new UsageUseException("Must be in the ReInviting state and have propsed an answer to call answerModifySession", 
+      throw UsageUseException("Must be in the ReInviting state and have propsed an answer to call answerModifySession", 
                                   __FILE__, __LINE__);
    }
    mState = Connected;
@@ -655,7 +655,7 @@ InviteSession::makeInfo(auto_ptr<Contents> contents)
 {
    if (mNitState == NitProceeding)
    {
-      throw new UsageUseException("Cannot start a non-invite transaction until the previous one has completed", 
+      throw UsageUseException("Cannot start a non-invite transaction until the previous one has completed", 
                                   __FILE__, __LINE__);
    }
    mNitState = NitProceeding;
@@ -679,7 +679,7 @@ InviteSession::makeRefer(const NameAddr& referTo, InviteSessionHandle sessionToR
 {
    if (!sessionToReplace.isValid())
    {
-      throw new UsageUseException("Attempted to make a refer w/ and invalid replacement target", __FILE__, __LINE__);
+      throw UsageUseException("Attempted to make a refer w/ and invalid replacement target", __FILE__, __LINE__);
    }
    
    mDialog.makeRequest(mLastRequest, REFER);
@@ -1013,7 +1013,7 @@ InviteSession::rejectDialogModification(int statusCode)
 {
    if (statusCode < 400)
    {
-      throw new UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
+      throw UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
    }
    mDialog.makeResponse(mLastResponse, mLastIncomingRequest, statusCode);
    mState = Connected;
@@ -1034,7 +1034,7 @@ InviteSession::send()
    InfoLog ( << "InviteSession::send(void)");   
    if (mOfferState == Answered || mState != Connected)
    {
-      throw new UsageUseException("Cannot call send when there it no Offer/Answer negotiation to do", __FILE__, __LINE__);
+      throw UsageUseException("Cannot call send when there it no Offer/Answer negotiation to do", __FILE__, __LINE__);
    }
    send(makeAck());
 }
