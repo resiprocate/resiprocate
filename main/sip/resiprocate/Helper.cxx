@@ -64,7 +64,7 @@ Helper::makeRegister(const NameAddr& to,
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
-   assert( request->header(h_Contacts).empty() );
+   assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_front( contact );
    
    Via via;
@@ -97,7 +97,7 @@ Helper::makeRegister(const NameAddr& to,
    request->header(h_From) = to;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
-   assert( request->header(h_Contacts).empty() );
+   assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_front( contact );
    
    Via via;
@@ -123,7 +123,7 @@ Helper::makeSubscribe(const NameAddr& target,
    request->header(h_From) = from;
    request->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request->header(h_CallId).value() = Helper::computeCallId();
-   assert( request->header(h_Contacts).empty() );
+   assert(!request->exists(h_Contacts) || request->header(h_Contacts).empty());
    request->header(h_Contacts).push_front( contact );
    Via via;
    request->header(h_Vias).push_front(via);
