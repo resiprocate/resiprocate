@@ -71,7 +71,7 @@ TcpBaseTransport::~TcpBaseTransport()
    
    //mSendRoundRobin.clear(); // clear before we delete the connections
 
-   shutdown();
+   ThreadIf::shutdown();
    join();
 }
 
