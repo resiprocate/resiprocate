@@ -198,6 +198,8 @@ bool Transport::Tuple::operator<(const Transport::Tuple& rhs) const
    return transport < rhs.transport;
 }
 
+#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+
 size_t 
 __gnu_cxx::hash<Vocal2::Transport::Tuple>::operator()(const Vocal2::Transport::Tuple& tuple) const
 {
@@ -213,6 +215,7 @@ __gnu_cxx::hash<Vocal2::Transport::Tuple>::operator()(const Vocal2::Transport::T
 
 }
 
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
