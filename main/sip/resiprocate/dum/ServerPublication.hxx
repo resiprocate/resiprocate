@@ -25,6 +25,9 @@ class ServerPublication : public BaseUsage
 
    private:
       friend class DialogUsageManager;
+      ServerPublication(DialogUsageManager& dum,
+                        Dialog& dialog);
+      
       ServerPublication::Handle mHandle;
 };
 
