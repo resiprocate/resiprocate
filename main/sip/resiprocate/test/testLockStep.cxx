@@ -15,7 +15,7 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/Dialog.hxx"
+#include "resiprocate/DeprecatedDialog.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
 
@@ -84,7 +84,7 @@ class Client : public ThreadIf
                      done = true;
                      
                      DebugLog(<< "Creating dialog.");
-                     Dialog dlog(from);
+                     DeprecatedDialog dlog(from);
                         
                      DebugLog(<< "Creating dialog as UAC.");
                      dlog.createDialogAsUAC(*received);
