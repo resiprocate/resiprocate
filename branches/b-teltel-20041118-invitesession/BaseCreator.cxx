@@ -71,7 +71,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
       const Data& instanceId = mUserProfile.getInstanceId();
       if (!instanceId.empty())
       {
-         contact.uri().param(p_Instance) = instanceId;
+         contact.param(p_Instance) = instanceId;
       }
       mLastRequest.header(h_Contacts).push_front(contact);
    }
