@@ -1,8 +1,11 @@
 #if !defined(RESIP_TU_HXX)
 #define RESIP_TU_HXX 
 
+#include <vector>
 #include "resiprocate/os/TimeLimitFifo.hxx"
+#include "resiprocate/os/Data.hxx"
 #include "resiprocate/Message.hxx"
+
 
 namespace resip
 {
@@ -22,12 +25,12 @@ class TransactionUser
             bool schemeIsInList(Data scheme);            
             bool hostpartIsInList(Data hostpart);            
                
-            typedef vector<Data> SchemeList;
+            typedef std::vector<Data> SchemeList;
             SchemeList mSchemeList;
-            int mHostpartMatches // ANY, HOSTISME, DOMAINISME, or LIST
-            typedef vector<Data> HostpartList;
+            int mHostpartMatches; // ANY, HOSTISME, DOMAINISME, or LIST
+            typedef std::vector<Data> HostpartList;
             HostpartList mHostpartList;
-            typedef vector<Data> EventTypeList;
+            typedef std::vector<Data> EventTypeList;
             EventTypeList mEventTypeList;
             bool mAnyEventType;
             bool mAcceptWinfoTypes; // matches *.winfo  ?? do we nned this ??
