@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2004/04/14 00:53:18 jason Exp $
+# $Id: Makefile,v 1.9 2004/05/10 01:12:46 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -23,6 +23,7 @@ SRC =   \
 	InviteSessionCreator.cxx \
 	InviteSession.cxx \
 	OutOfDialogReqCreator.cxx \
+	Profile.cxx \
 	PublicationCreator.cxx \
 	RegistrationCreator.cxx \
 	ServerInviteSession.cxx \
