@@ -13,6 +13,7 @@ extern "C"
 
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/BaseException.hxx"
 
 namespace resip
 {
@@ -24,6 +25,14 @@ class Via;
 class DnsInterface
 {
    public:
+      class Exception : public BaseException
+      {
+         public:
+            Exception(const Data& msg, const Data& file, const int line) : BaseException(msg,file,line){}
+            const char* name() const { return "DnsInterface::Exception"; }
+      };
+
+
       class Handler
       {
          public:
