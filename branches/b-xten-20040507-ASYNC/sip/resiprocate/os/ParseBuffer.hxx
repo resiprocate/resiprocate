@@ -109,6 +109,8 @@ class ParseBuffer
       void data(Data& data, const char* start) const;
 
       Data data(const char* start) const;
+
+      void dataUnescaped(Data& data, const char* start) const;      
       
       int integer();
 
