@@ -1,4 +1,4 @@
-/* $Id: ares_private.h,v 1.2 2003/09/14 00:27:24 fluffy Exp $ */
+/* $Id: ares_private.h,v 1.3 2003/09/14 01:08:27 fluffy Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
@@ -15,29 +15,18 @@
  * without express or implied warranty.
  */
 
-//#include <stdio.h>
 #include <sys/types.h>
-//#include <netinet/in.h>
-
-#ifdef WIN32
+#ifndef WIN32
+#include <netinet/in.h>
+#else
 #include <errno.h>
 #include <winsock2.h>
 #include <io.h>
+#endif
 
 #include <string.h>
 #include <stdio.h>
 
-#endif
-
-#if 0
-struct hostent {
-	char* h_name;
-	char **h_aliases;
-	int h_addrtype;
-	int h_length;
-	char **h_addr_list;
-};
-#endif
 
 #define	DEFAULT_TIMEOUT		5
 #define DEFAULT_TRIES		4

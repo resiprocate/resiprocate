@@ -1,4 +1,4 @@
-/* $Id: ares.h,v 1.2 2003/09/14 00:27:24 fluffy Exp $ */
+/* $Id: ares.h,v 1.3 2003/09/14 01:08:27 fluffy Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
@@ -133,6 +133,8 @@ void ares_free_hostent(struct hostent *host);
 const char *ares_strerror(int code, char **memptr);
 void ares_free_errmem(char *mem);
 
+#ifdef WIN32
+
 #define T_A             1               /* host address */
 #define T_NS            2               /* authoritative server */
 #define T_MD            3               /* mail destination */
@@ -198,6 +200,8 @@ void ares_free_errmem(char *mem);
 
 #define QUERY 0
 #define MAXLABEL 63
+
+#endif
 
 
 #endif /* ARES__H */

@@ -13,12 +13,16 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_expand_name.c,v 1.2 2003/09/14 00:27:24 fluffy Exp $";
+static const char rcsid[] = "$Id: ares_expand_name.c,v 1.3 2003/09/14 01:08:27 fluffy Exp $";
 
 #include <sys/types.h>
-//#include <netinet/in.h>
-//#include <arpa/nameser.h>
 #include <stdlib.h>
+
+#ifndef WIN32
+#include <netinet/in.h>
+#include <arpa/nameser.h>
+#endif
+
 #include "ares.h"
 
 static int name_length(const unsigned char *encoded, const unsigned char *abuf,
