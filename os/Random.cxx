@@ -39,6 +39,7 @@ Random::initialize()
 {  
    static Mutex mutex;
    Lock lock(mutex);
+
    if (!mIsInitialized)
    {
       Timer::setupTimeOffsets();
@@ -99,7 +100,6 @@ Random::initialize()
 #else
       srandom(seed);
 #endif
-
       mIsInitialized = true;
    }
 }
@@ -107,6 +107,10 @@ Random::initialize()
 int
 Random::getRandom()
 {
+   if (!mIsInitialized)
+   {
+     initialize();
+   }
    // !dlb! Lock
    assert( mIsInitialized == true );
 #ifdef WIN32
@@ -125,6 +129,10 @@ Random::getRandom()
 int
 Random::getCryptoRandom()
 {
+   if (!mIsInitialized)
+   {
+     initialize();
+   }
    assert( mIsInitialized == true );
 #if USE_OPENSSL
    int ret;
@@ -149,6 +157,10 @@ Random::getCryptoRandom()
 Data 
 Random::getRandom(unsigned int len)
 {
+   if (!mIsInitialized)
+   {
+     initialize();
+   }
    assert( mIsInitialized == true );
 
    // !dlb! unnecessary copy
@@ -179,6 +191,10 @@ Random::getRandom(unsigned int len)
 Data 
 Random::getCryptoRandom(unsigned int len)
 {
+   if (!mIsInitialized)
+   {
+     initialize();
+   }
    assert( mIsInitialized == true );
 
    char buf[512];
@@ -208,6 +224,10 @@ Random::getCryptoRandom(unsigned int len)
 Data 
 Random::getRandomHex(unsigned int len)
 {
+   if (!mIsInitialized)
+   {
+     initialize();
+   }
    assert( mIsInitialized == true );
    // !dlb! is this a reasonable assert
    // how about getRandom((len+1)/2)?
@@ -220,6 +240,10 @@ Random::getRandomHex(unsigned int len)
 Data 
 Random::getCryptoRandomHex(unsigned int len)
 {
+   if (!mIsInitialized)
+   {
+     initialize();
+   }
    assert( mIsInitialized == true );
    assert( len%2 == 0 );
 	
