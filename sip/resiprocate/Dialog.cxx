@@ -49,8 +49,11 @@ Dialog::makeResponse(const SipMessage& request, int code)
       assert (request.header(h_Contacts).size() == 1);
 
       SipMessage* response = Helper::makeResponse(request, code, mContact);
-      assert (!response->header(h_To).exists(p_tag));
-      response->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
+      // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.
+      if (!response->header(h_To).exists(p_tag))
+      {
+         response->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
+      }
       
       mRouteSet = request.header(h_RecordRoutes);
       mRemoteTarget = request.header(h_Contacts).front();
