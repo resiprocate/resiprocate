@@ -10,7 +10,7 @@ TARGET_LIBRARY = librepro
 TESTPROGRAMS = repro.cxx
 
 SRC =   \
-	Repro.cxx \
+	Proxy.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
         RequestProcessor.cxx \
