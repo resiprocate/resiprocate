@@ -57,6 +57,9 @@ using namespace resip;
 DnsResult::DnsResult(DnsInterface& interface) 
    : mInterface(interface),
      mSRVCount(0),
+     mSips(false),
+     mTransport(Transport::Unknown),
+     mPort(-1),
      mType(Pending)
 {
 }
@@ -127,6 +130,8 @@ DnsResult::destroy()
 void
 DnsResult::lookup(const Uri& uri, const Data& tid)
 {
+   DebugLog (<< "DnsResult::lookup " << uri << " : " << tid);
+   
    assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
    mTarget = uri.exists(p_maddr) ? uri.param(p_maddr) : uri.host();
    mSips = (uri.scheme() == Symbols::Sips);
@@ -299,6 +304,8 @@ DnsResult::aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen)
 void
 DnsResult::processHost(int status, struct hostent* result)
 {
+   DebugLog (<< "DnsResult::processHost() " << status);
+   
    // There can only be one A/AAAA query outstanding at a time
    if (mType == Destroyed)
    {
@@ -333,6 +340,8 @@ DnsResult::processHost(int status, struct hostent* result)
 void
 DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
 {
+   DebugLog (<< "DnsResult::processNAPTR() " << status);
+
    // There can only be one NAPTR query outstanding at a time
    if (mType == Destroyed)
    {
@@ -429,6 +438,7 @@ void
 DnsResult::processSRV(int status, unsigned char* abuf, int alen)
 {
    mSRVCount--;
+   DebugLog (<< "DnsResult::processSRV() " << mSRVCount << " status=" << status);
 
    // There could be multiple SRV queries outstanding
    if (mType == Destroyed && mSRVCount == 0)
@@ -451,9 +461,10 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
       {
          SRV srv;
          aptr = parseSRV(aptr, abuf, alen, srv);
-
+         
          if (aptr)
          {
+            srv.transport = mTransport;
             DebugLog (<< "Adding SRV record: " << srv);
             mSRVResults.insert(srv);
          }
@@ -472,10 +483,12 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
       {
          if (mSips) 
          {
+            mTransport = Transport::TCP;
             mPort = 5061;
          }
          else
          {
+            mTransport = Transport::UDP;
             mPort = 5060;
          }
          mType = Pending;
@@ -685,26 +698,43 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
 bool 
 DnsResult::NAPTR::operator<(const DnsResult::NAPTR& rhs) const
 {
-   return false;
+   if (order != rhs.order)
+   {
+      return pref < rhs.pref;
+   }
+   else
+   {
+      return order < rhs.order;
+   }
 }
-
 
 bool 
 DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
 {
-   return false;
+   return priority < rhs.priority;
 }
 
 
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::DnsResult::NAPTR& naptr)
 {
+   strm << "order=" << naptr.order
+        << " pref=" << naptr.pref
+        << " flags=" << naptr.flags
+        << " service=" << naptr.service
+        << " regex=" << naptr.regex
+        << " replacement=" << naptr.replacement;
    return strm;
 }
 
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::DnsResult::SRV& srv)
 {
+   strm << Transport::toData(srv.transport) 
+        << " p=" << srv.priority
+        << " w=" << srv.weight
+        << " port=" << srv.port
+        << " target=" << srv.target;
    return strm;
 }
 
