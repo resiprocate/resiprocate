@@ -28,6 +28,8 @@ dumpasn1
 enc64
 foo
 foo2
+foo3
+foo4
 fooMsg
 gmon.out
 headers-hash.c
