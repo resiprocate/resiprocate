@@ -202,7 +202,8 @@ TransportSelector::dnsResolve( SipMessage* msg, DnsHandler* handler)
       // If this is an ACK we need to fix the tid to reflect that
       if (msg->hasTarget())
       {
-         result = mDns.lookup(msg->getTarget(), handler);
+          DebugLog(<< "request with force target : " << msg->getTarget() );
+          result = mDns.lookup(msg->getTarget(), handler);
       }
       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
       {
@@ -218,7 +219,8 @@ TransportSelector::dnsResolve( SipMessage* msg, DnsHandler* handler)
    }
    else if (msg->isResponse())
    {
-      assert(0);
+       ErrLog(<<"unimplemented response dns");
+       assert(0);
    }
    else
    {

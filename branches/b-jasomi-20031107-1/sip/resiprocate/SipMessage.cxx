@@ -1118,6 +1118,7 @@ SipMessage::setTarget(const Uri& uri)
    {
       mTarget = new Uri(uri);
    }
+   DebugLog(<< "setTarget: " << *mTarget);
 }
 
 void
