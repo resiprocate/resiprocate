@@ -5,6 +5,8 @@
 #endif
 
 #include <sipstack/Preparse.hxx>
+#include <sipstack/HeaderTypes.hxx>
+#include <sipstack/SipMessage.hxx>
 
 using namespace Vocal2;
 
@@ -21,11 +23,10 @@ Edge *** mTransitionTable = 0;
 #include <iostream>
 ostream& showN(ostream& os, const char * p, size_t l)
 {
-   for(int i = 0 ; i < l ; i++)
+   for(unsigned int i = 0 ; i < l ; i++)
       os << p[i];
    return os;
 }
-
 
 const char *  stateName(PreparseStateTable::State s)
 {
@@ -56,18 +57,18 @@ ostream& operator<<(ostream& os, const PreparseStateTable::State s)
    return os << stateName(s);
 }
 
- ostream& outStateRange(ostream& os, int s, int e)
- {
-    if ( s == e-1)
-    {
-       os << (State)s;
-    }
-    else
-    {
-       os << "[ " << (State)s << " - " << (State)(e-1) << " ]";
-    }
-    return os ;
- }
+ostream& outStateRange(ostream& os, int s, int e)
+{
+   if ( s == e-1)
+   {
+      os << (State)s;
+   }
+   else
+   {
+      os << "[ " << (State)s << " - " << (State)(e-1) << " ]";
+   }
+   return os ;
+}
 
 //ostream& outStateRange(ostream& os, int s , int e)
 //{
@@ -133,15 +134,15 @@ ostream& outCharRange(ostream& os, int s, int e)
 
 #endif
 
-  const int X = -1;
-  const char XC = -1;
+const int X = -1;
+const char XC = -1;
 
 void
 AE ( PreparseStateTable::State start,
-    int disposition,
-    int c,
-    PreparseStateTable::State next,
-    int workMask)
+     int disposition,
+     int c,
+     PreparseStateTable::State next,
+     int workMask)
 {
 
 
@@ -154,7 +155,7 @@ AE ( PreparseStateTable::State start,
    int charStart = (c==X) ? 0 : (int)c;
    int charEnd = (c==X) ? nOct : (int)(c+1);
 
-#if defined(DEBUG)// && 0
+#if defined(DEBUG) && 0
    outStateRange(cout, stateStart, stateEnd) ;
    
    cout   << " -> "
@@ -177,10 +178,10 @@ AE ( PreparseStateTable::State start,
 
 static void
 AE (PreparseStateTable::State start,
-   int disposition,
-   const char * p,
-   PreparseStateTable::State next,
-   int workMask)
+    int disposition,
+    const char * p,
+    PreparseStateTable::State next,
+    int workMask)
 {
    const char *q = p;
    while(*q)
@@ -191,84 +192,90 @@ void
 PreparseStateTable::InitStatePreparseStateTable()
 {
      
-  mTransitionTable = new Edge**[nStates];
-  for(int i = 0 ; i < nStates ; i++)
-  {
-     mTransitionTable[i] = new Edge*[nDisp];
-     for(int j = 0 ; j < nDisp ; j++)
-     {
-	mTransitionTable[i][j] = new Edge[nOct];
-	for(int k = 0 ; k < nOct ; k ++)
-	{
-	   Edge& e(mTransitionTable[i][j][k]);
-	   e.nextState = NewMsg;
-	   e.workMask = 0;
-	}
-     }
-  }
+   static bool initialised = false;
+   
+   if (initialised) return;
 
-  // Setup the table with useful transitions.
+   mTransitionTable = new Edge**[nStates];
+   for(int i = 0 ; i < nStates ; i++)
+   {
+      mTransitionTable[i] = new Edge*[nDisp];
+      for(int j = 0 ; j < nDisp ; j++)
+      {
+         mTransitionTable[i][j] = new Edge[nOct];
+         for(int k = 0 ; k < nOct ; k ++)
+         {
+            Edge& e(mTransitionTable[i][j][k]);
+            e.nextState = NewMsg;
+            e.workMask = 0;
+         }
+      }
+   }
 
-  // AE -- add edge(s)
-  // AE ( state, disp, char, newstate, work)
+   // Setup the table with useful transitions.
+
+   // AE -- add edge(s)
+   // AE ( state, disp, char, newstate, work)
 
 
-  const int CR = (int)'\r';
-  const int LF = (int)'\n';
-  const int LAQUOT = (int)'<';
-  const int RAQUOT = (int)'>';
-  const int QUOT = (int)'\"';
-  const int COLON = (int)':';
-  const int LSLASH = (int)'\\';
+   const int CR = (int)'\r';
+   const int LF = (int)'\n';
+   const int LAQUOT = (int)'<';
+   const int RAQUOT = (int)'>';
+   const int QUOT = (int)'\"';
+   const int COLON = (int)':';
+   const int LSLASH = (int)'\\';
 
-  const char LWS[] = " \t";
-  // MUST be AE( format ) so fsm generation will work.
-  AE( NewMsg,X,XC,StartLine,actAdd); // all chars
-  AE( NewMsg,X,CR,NewMsgCrLf,actNil); // eat CR
+   const char LWS[] = " \t";
+   // MUST be AE( format ) so fsm generation will work.
+   AE( NewMsg,X,XC,StartLine,actAdd); // all chars
+   AE( NewMsg,X,CR,NewMsgCrLf,actNil); // eat CR
 
-  AE( NewMsgCrLf,X,XC,Done,actBad);
-  AE( NewMsgCrLf,X,LF,NewMsg,actNil); 
+   AE( NewMsgCrLf,X,XC,Done,actBad);
+   AE( NewMsgCrLf,X,LF,NewMsg,actNil); 
 
-  AE( StartLine,X,XC,StartLine,actAdd);
-  AE( StartLine,X,CR,StartLineCrLf,actNil);
+   AE( StartLine,X,XC,StartLine,actAdd);
+   AE( StartLine,X,CR,StartLineCrLf,actNil);
 
-  AE( StartLineCrLf,X,XC,Done,actBad);
-  AE( StartLineCrLf,X,LF,BuildHdr,actReset | actFline);
+   AE( StartLineCrLf,X,XC,Done,actBad);
+   AE( StartLineCrLf,X,LF,BuildHdr,actReset | actFline);
 
-  AE( BuildHdr,X,XC, BuildHdr,actAdd);
-  AE( BuildHdr,X,LWS,EWSPostHdr,actNil);
-  AE( BuildHdr,X,COLON,EWSPostColon,actHdr | actReset);
+   AE( BuildHdr,X,XC, BuildHdr,actAdd);
+   AE( BuildHdr,X,LWS,EWSPostHdr,actNil);
+   AE( BuildHdr,X,COLON,EWSPostColon,actHdr | actReset);
   
-  AE( EWSPostHdr,X,XC,Done,actBad);
-  AE( EWSPostHdr,X,LWS,EWSPostHdr,actNil);
-  AE( EWSPostHdr,X,COLON,EWSPostColon,actHdr | actReset);
+   AE( EWSPostHdr,X,XC,Done,actBad);
+   AE( EWSPostHdr,X,LWS,EWSPostHdr,actNil);
+   AE( EWSPostHdr,X,COLON,EWSPostColon,actHdr | actReset);
 
-  AE( EWSPostColon,X,XC,BuildData,actAdd);
-  AE( EWSPostColon,X,LWS,EWSPostColon,actReset );
+   AE( EWSPostColon,X,XC,BuildData,actAdd);
+   AE( EWSPostColon,X,LWS,EWSPostColon,actReset );
 
-  AE( BuildData,X,XC,BuildData,actAdd);
-  AE( BuildData,X,CR,BuildDataCrLf,actNil);
+   AE( BuildData,X,XC,BuildData,actAdd);
+   AE( BuildData,X,CR,BuildDataCrLf,actNil);
 
-  AE( BuildDataCrLf,X,XC,Done,actBad);
-  AE( BuildDataCrLf,X,LF,CheckCont,actNil);
-  AE( CheckCont,X,XC, BuildHdr,actData | actReset | actBack ); // (push 1st then b/u)
-  AE( CheckCont,X,LWS,BuildData,actAdd );
+   AE( BuildDataCrLf,X,XC,Done,actBad);
+   AE( BuildDataCrLf,X,LF,CheckCont,actNil);
+   AE( CheckCont,X,XC, BuildHdr,actData | actReset | actBack ); // (push 1st then b/u)
+   AE( CheckCont,X,LWS,BuildData,actAdd );
 
-  // Disposition sensitive edges
+   // Disposition sensitive edges
 
-  AE( BuildData,dCommaSep,LAQUOT,InAng,actAdd);
+   AE( BuildData,dCommaSep,LAQUOT,InAng,actAdd);
 
-  AE( InAng,X,XC,InAng,actAdd);
-  AE( InAng,X,RAQUOT,BuildData,actAdd);
-  AE( InAng,X,QUOT,InAngQ,actAdd);
+   AE( InAng,X,XC,InAng,actAdd);
+   AE( InAng,X,RAQUOT,BuildData,actAdd);
+   AE( InAng,X,QUOT,InAngQ,actAdd);
 
-  AE( InAngQ, X, XC, InAngQ, actAdd);
-  AE( InAngQ, X, QUOT, InAng, actAdd);
-  AE( InAngQ, X, LSLASH, InAngQEsc, actAdd);
+   AE( InAngQ, X, XC, InAngQ, actAdd);
+   AE( InAngQ, X, QUOT, InAng, actAdd);
+   AE( InAngQ, X, LSLASH, InAngQEsc, actAdd);
   
-  // add quotes within la/ra pairs
-  // add bare quotes from BuildData
-  // add comma transition
+   // add quotes within la/ra pairs
+   // add bare quotes from BuildData
+   // add comma transition
+   initialised = true;
+  
 }
 
 
@@ -281,7 +288,7 @@ Preparse::Preparse():
    mAnchorEnd(0),
    mDone(false)
 {
-   ;
+   InitStatePreparseStateTable();
 }
 
 Preparse::Preparse(const char * buffer, size_t length):
@@ -296,20 +303,23 @@ Preparse::Preparse(const char * buffer, size_t length):
    mAnchorEnd(buffer),
    mDone(false)
 {
-  static int initialised = 0;
-  if (!initialised)
-  {
-     initialised = 1;
-     InitStatePreparseStateTable();
-  }
-
+   InitStatePreparseStateTable();
 }
+
 void
 Preparse::addBuffer(const char * buffer, size_t length)
 {
    mBuffer = buffer;
+   mAnchorBeg = mAnchorEnd = mBuffer = buffer; // will change when wraps
+                                               // implemented !ah!
+   mHeader = 0;
+   mHeaderLength = 0;
    mLength = length;
    mPtr = buffer;
+   mDone = false;
+#if defined(DEBUG)
+   cout << "added buffer" << mBuffer << ' ' << mLength << endl;
+#endif
 }
 
 #if defined(DEBUG)
@@ -330,12 +340,12 @@ ostream& showchar(ostream& os, char c)
 bool
 Preparse::process()
 {
-   while ((mPtr - mBuffer) < mLength && !mDone)
+   while ( (static_cast<size_t>(mPtr - mBuffer)) < mLength && !mDone)
    {
       //using namespace PreparseStateTable;
       Edge& e(mTransitionTable[mState][mDisposition][*mPtr]);
       
-#if defined(DEBUG)// && 0
+#if defined(DEBUG)  && 0
       showEdge("selected edge ", mState, mDisposition, *mPtr, e);
       cout << endl;
 #endif
@@ -344,7 +354,7 @@ Preparse::process()
       if (e.workMask & actAdd)
       {
 	 mAnchorEnd = mPtr;
-#if defined(DEBUG)// && 0
+#if defined(DEBUG) && 0
 	 cout << "+++Adding char '";
 //         showchar(cout, *mPtr);
          showN(cout,mAnchorBeg, mAnchorEnd-mAnchorBeg+1);
@@ -356,15 +366,33 @@ Preparse::process()
       {
          mHeader = mAnchorBeg;
          mHeaderLength = mAnchorEnd-mAnchorBeg+1;
+         mHeaderType = Headers::getHeaderType(mHeader, mHeaderLength);
+         if ( Headers::isCommaTokenizing( mHeaderType ))
+         {
+            mDisposition = dCommaSep;
+         }
+         else
+         {
+            mDisposition = dContinuous;
+         }
+         
 #if defined(DEBUG)
          cout << "+++Found Header: \'";
          showN(cout, mHeader, mHeaderLength);
-         cout << '\'' << endl;
+         cout << "\' Type: " << mHeaderType << endl;
+         
 #endif
       }
 
       if (e.workMask & actData)
       {
+         SipMessage::addHeader(mHeaderType,
+                               mHeader,
+                               mHeaderLength,
+                               mAnchorBeg,
+                               mAnchorEnd - mAnchorBeg + 1
+            );
+                   
 #if defined(DEBUG)
          cout << "+++Data element: \'";
          showN(cout, mAnchorBeg, mAnchorEnd-mAnchorBeg+1);
@@ -406,12 +434,12 @@ Preparse::process()
       }
       
       mState = e.nextState;
-      *mPtr++;
+      mPtr++;
 
       if (e.workMask & actReset)
       {
 	 mAnchorBeg = mAnchorEnd = mPtr;
-#if defined(DEBUG)// && 0
+#if defined(DEBUG) && 0
          cout << "+++Reset anchors." << endl;
 #endif
       }
