@@ -1,9 +1,11 @@
-#include <sipstack/ParserCategories.hxx>
+#include <assert.h>
+#include <iostream>
 #include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/HeaderTypes.hxx>
-#include <assert.h>
+#include <sipstack/ParserCategories.hxx>
 #include <string.h>
-#include <iostream>
+#include <util/ParseBuffer.hxx>
+#include <sipstack/Uri.hxx>
 
 using namespace std;
 using namespace Vocal2;
@@ -28,6 +30,7 @@ main(int arc, char** argv)
    }
    
    {
+      // simple Token parse test
       char *org = "WuggaWuggaFoo";
       
       HeaderFieldValue hfv(org, strlen(org));
@@ -36,6 +39,7 @@ main(int arc, char** argv)
    }
 
    {
+      // Token + parameters parse test
       char *org = "WuggaWuggaFoo;ttl=2";
       
       HeaderFieldValue hfv(org, strlen(org));
@@ -48,7 +52,8 @@ main(int arc, char** argv)
    }
 
    {
-      char *viaString = /* Via: */ " SIP/2.0/UDP a.b.c.com:5000;ttl=3;maddr=1.2.3.4;received = foo.com";
+      // full on via parse
+      char *viaString = /* Via: */ " SIP/2.0/UDP a.b.c.com:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv);
@@ -56,6 +61,159 @@ main(int arc, char** argv)
       assert(via.sentPort() == 5000);
       assert(via.sentHost() == "a.b.c.com");
       assert(via.param(p_maddr) == "1.2.3.4");
+   }
+
+   {
+      // URI parse
+      char *uriString = "sip:bob@foo.com";
+      ParseBuffer pb(uriString);
+      Uri uri;
+      uri.parse(pb);
+      assert(uri.scheme() == "sip");
+      assert(uri.user() == "bob");
+      assert(uri.host() == "foo.com");
+      assert(uri.port() == 5060);
+   }
+
+   {
+      // URI parse
+      char *uriString = "sips:foo.com";
+      ParseBuffer pb(uriString);
+      Uri uri;
+      uri.parse(pb);
+      assert(uri.scheme() == "sips");
+      assert(uri.user() == "");
+      assert(uri.host() == "foo.com");
+      assert(uri.port() == 5060);
+   }
+
+   {
+      // URI parse
+      char *uriString = "sips:foo.com";
+      ParseBuffer pb(uriString);
+      Uri uri;
+      uri.parse(pb);
+      assert(uri.scheme() == "sips");
+      assert(uri.user() == "");
+      assert(uri.host() == "foo.com");
+      assert(uri.port() == 5060);
+   }
+
+   {
+      // URI parse
+      char *uriString = "sips:bob;param=gargle:password@foo.com";
+      ParseBuffer pb(uriString);
+      Uri uri;
+      uri.parse(pb);
+      assert(uri.scheme() == "sips");
+      assert(uri.user() == "bob;param=gargle");
+      assert(uri.password() == "password");
+      assert(uri.host() == "foo.com");
+      assert(uri.port() == 5060);
+   }
+
+   {
+      // URI parse
+      char *uriString = "sips:bob;param=gargle:password@foo.com:6000";
+      ParseBuffer pb(uriString);
+      Uri uri;
+      uri.parse(pb);
+      assert(uri.scheme() == "sips");
+      assert(uri.user() == "bob;param=gargle");
+      assert(uri.password() == "password");
+      assert(uri.host() == "foo.com");
+      assert(uri.port() == 6000);
+   }
+
+   {
+      // URI parse
+      char *uriString = "sips:bob;param=gargle:password@foo.com notHost";
+      ParseBuffer pb(uriString);
+      Uri uri;
+      uri.parse(pb);
+      assert(uri.scheme() == "sips");
+      assert(uri.user() == "bob;param=gargle");
+      assert(uri.password() == "password");
+      cerr << "Uri:" << uri.host() << endl;
+      assert(uri.host() == "foo.com");
+   }
+
+   {
+      // Request Line parse
+      char *requestLineString = "INVITE sips:bob@foo.com SIP/2.0";
+      HeaderFieldValue hfv(requestLineString, strlen(requestLineString));
+
+      RequestLine requestLine(&hfv);
+      assert(requestLine.uri().scheme() == "sips");
+      assert(requestLine.uri().user() == "bob");
+      cerr << requestLine.uri().host() << endl;
+      assert(requestLine.uri().host() == "foo.com");
+      assert(requestLine.uri().port() == 5060);
+      assert(requestLine.getMethod() == INVITE);
+      assert(requestLine.getSipVersion() == "SIP/2.0");
+   }
+   {
+      // Request Line parse
+      char *requestLineString = "INVITE sips:bob@foo.com;maddr=1.2.3.4 SIP/2.0";
+      HeaderFieldValue hfv(requestLineString, strlen(requestLineString));
+
+      RequestLine requestLine(&hfv);
+      assert(requestLine.uri().scheme() == "sips");
+      assert(requestLine.uri().user() == "bob");
+      cerr << requestLine.uri().host() << endl;
+      assert(requestLine.uri().host() == "foo.com");
+      assert(requestLine.uri().port() == 5060);
+      assert(requestLine.getMethod() == INVITE);
+      assert(requestLine.param(p_maddr) == "1.2.3.4");
+      cerr << requestLine.getSipVersion() << endl;
+      assert(requestLine.getSipVersion() == "SIP/2.0");
+   }
+   {
+      // NameAddr parse
+      char *nameAddrString = "sips:bob@foo.com";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
+   }
+   {
+      // NameAddr parse
+      char *nameAddrString = "Bob<sips:bob@foo.com>";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "Bob");
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
+   }
+   {
+      // NameAddr parse
+      char *nameAddrString = "\"Bob\"<sips:bob@foo.com>";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "\"Bob\"");
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
+   }
+   {
+      // NameAddr parse
+      char *nameAddrString = "\"Bob   \\\" asd   \"<sips:bob@foo.com>";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "\"Bob   \\\" asd   \"");
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
    }
 }
 

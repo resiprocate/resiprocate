@@ -27,7 +27,7 @@ Token::parse()
 {
    ParseBuffer buff(mHeaderField->mField, mHeaderField->mFieldLength);
    const char* startMark = buff.skipWhitespace();
-   buff.skipToOneOf(ParseBuffer::WhitespaceOrSemi);
+   buff.skipToOneOf(ParseBuffer::WhitespaceOrSemiColon);
    mValue = Data(startMark, buff.position() - startMark);
    buff.skipToChar(Symbols::SEMI_COLON[0]);
    parseParameters(buff);
@@ -413,7 +413,7 @@ Via::parse()
    if (*endMark == ':')
    {
       startMark = buff.skipChar();
-      endMark = buff.skipToOneOf(ParseBuffer::WhitespaceOrSemi);
+      endMark = buff.skipToOneOf(ParseBuffer::WhitespaceOrSemiColon);
       mSentPort = atoi(startMark);
    }
    else
@@ -483,7 +483,55 @@ NameAddr::clone() const
 void
 NameAddr::parse()
 {
-   assert(0);
+   ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength);
+   const char* start;
+   start = pb.skipWhitespace();
+   bool laQuote = false;
+   if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
+   {
+      pb.skipChar();
+      pb.skipToEndQuote();
+      pb.skipChar();
+      mDisplayName = Data(start, pb.position() - start);
+      laQuote = true;
+      pb.skipToChar(Symbols::LA_QUOTE[0]);
+      if (pb.eof())
+      {
+         throw ParseException("Expected '<'", __FILE__, __LINE__);
+      }
+      else
+      {
+         pb.skipChar();
+      }
+   }
+   else if (*pb.position() == Symbols::LA_QUOTE[0])
+   {
+      pb.skipChar();
+      laQuote = true;
+   }
+   else
+   {
+      start = pb.position();
+      pb.skipToChar(Symbols::LA_QUOTE[0]);
+      if (pb.eof())
+      {
+         pb.reset(start);
+      }
+      else
+      {
+         mDisplayName = Data(start, pb.position() - start);
+         pb.skipChar();
+      }
+   }
+   pb.skipWhitespace();
+   mUri = new Uri();
+   mUri->parse(pb);
+   parseParameters(pb);
+   if (laQuote)
+   {
+      pb.skipChar();
+      parseParameters(pb);
+   }
 }
 
 ostream&
@@ -516,8 +564,18 @@ RequestLine::clone() const
 void 
 RequestLine::parse()
 {
+   ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength);
+   const char* start;
+   start = pb.skipWhitespace();
+   pb.skipNonWhitespace();
+   mMethod = getMethodType(start, pb.position() - start);
+   pb.skipWhitespace();
    mUri = new Uri();
-   assert(0);
+   mUri->parse(pb);
+   parseParameters(pb);
+   start = pb.skipWhitespace();
+   pb.skipNonWhitespace();
+   mSipVersion = Data(start, pb.position() - start);
 }
 
 ostream&
