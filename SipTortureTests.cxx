@@ -462,7 +462,7 @@ main()
       char *txt = ("INVITE sip:called@called-company.com SIP/2.0\r\n"
                    "TO :\n"
                    " sip:called@called-company.com ;       tag      = 1918181833n\r\n"
-                   "From     : \"Caller Name \\\\\\\"\" <sip:caller@caller-company.com\n"
+                   "From     : \"Caller Name \\\\\\\"\" <sip:caller@caller-company.com>\n"
                    "  ;\n"
                    "  tag = 98asjd8\r\n"
                    "Max-Forwards: 8\r\n"
@@ -472,7 +472,7 @@ main()
                    "Via  : SIP  /   2.0\n" 
                    " /UDP\n" 
                    "    135.180.130.133;branch=z9hG4bKkdjuw\r\n" 
-                   "Subject : \r\n"
+//                   "Subject : \r\n"
                    "NewFangledHeader:   newfangled value\n" 
                    " more newfangled value \r\n" 
                    "Content-Type: application/sdp \r\n" 
@@ -501,12 +501,12 @@ main()
       assert(message->exists(h_To));
       assert(message->header(h_To).uri().user() == "called");
       assert(message->header(h_To).uri().host() == "called-company.com");
-      assert(message->header(h_To).uri().param(p_tag) == "1918181833n");
+      assert(message->header(h_To).param(p_tag) == "1918181833n");
 
       assert(message->exists(h_From));
       assert(message->header(h_From).uri().user() == "caller");
       assert(message->header(h_From).uri().host() == "caller-company.com");
-      assert(message->header(h_From).uri().param(p_tag) == "98asjd8");
+      assert(message->header(h_From).param(p_tag) == "98asjd8");
 
       assert(message->exists(h_MaxForwards));
       assert(message->header(h_MaxForwards).value() == 8);
@@ -533,14 +533,16 @@ main()
       assert(message->header(h_Vias).front().sentHost() == "135.180.130.133");
       assert(message->header(h_Vias).front().sentPort() == 0);
       assert(message->header(h_Vias).front().exists(p_branch));
-      assert(message->header(h_Vias).front().param(p_branch).transactionId() == "9ikj8");
+      assert(message->header(h_Vias).front().param(p_branch).hasMagicCookie());
+      assert(message->header(h_Vias).front().param(p_branch).transactionId() == "kdjuw");
 
       assert(message->exists(h_Subject));
+      cerr << message->header(h_Subject).value() << endl ;
       assert(message->header(h_Subject).value().empty());
 
       //TODO: Need to check the value of this header
       assert(message->exists("NewFangledHeader"));
-
+      cerr << message->header("NewFangledHeader").front().value() << endl;
       //TODO: Need to check the ContentType header value
       assert(message->exists(h_ContentType));
 
@@ -574,7 +576,7 @@ main()
       assert(message->header(h_From).uri().user() == "caller");
       assert(message->header(h_From).uri().host() == "caller-company.com");
       assert(message->header(h_From).exists(p_tag));
-      assert(message->header(h_From).uri().param(p_tag) == "242etr");
+      assert(message->header(h_From).param(p_tag) == "242etr");
 
       assert(message->exists(h_MaxForwards));
       assert(message->header(h_MaxForwards).value() == 8);
@@ -639,7 +641,7 @@ main()
       assert(!message->header(h_To).exists(p_tag));
 
       assert(message->exists(h_From));
-      assert(message->header(h_From).uri().param(p_tag) == "3234233");
+      assert(message->header(h_From).param(p_tag) == "3234233");
 
       assert(message->exists(h_CallId));
       assert(message->header(h_CallId).value() == "0ha0isndaksdj@10.0.0.1");
@@ -698,7 +700,7 @@ main()
       assert(message->header(h_From).uri().user() == "user");
       assert(message->header(h_From).uri().host() == "company.com");
       assert(message->header(h_From).exists(p_tag));
-      assert(message->header(h_From).uri().param(p_tag) == "3411345");
+      assert(message->header(h_From).param(p_tag) == "3411345");
 
       assert(message->exists(h_MaxForwards));
       assert(message->header(h_MaxForwards).value() == 8);
