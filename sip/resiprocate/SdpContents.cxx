@@ -7,6 +7,13 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Logger.hxx"
 
+#if defined(WIN32) && defined(_DEBUG) &&defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif // defined(WIN32) && defined(_DEBUG)
+
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SDP
 
 using namespace resip;
@@ -113,8 +120,8 @@ AttributeHelper::parse(ParseBuffer& pb)
          pb.skipToOneOf(Symbols::CRLF);
          pb.data(value, anchor);
       }
-            
-      skipEol(pb);
+          
+	  if(!pb.eof()) skipEol(pb);
 
       mAttributes[key].push_back(value);
    }
