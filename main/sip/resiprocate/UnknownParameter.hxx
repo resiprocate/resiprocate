@@ -18,7 +18,7 @@ class UnknownParameter : public DataParameter
       
       // for making a new unknown parameter 
       // msg->header(foo)["mynewparam"] = "bar";
-      UnknownParameter(const Data& name);
+      explicit UnknownParameter(const Data& name);
 
       virtual const Data& getName() const;
       virtual Parameter* clone() const;
