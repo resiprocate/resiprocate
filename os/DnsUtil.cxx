@@ -76,25 +76,26 @@ DnsUtil::getLocalIpAddress(const Data& myInterface)
    {
       throw Exception("No matching interface", __FILE__,__LINE__);
    }
-   else if (ifs.size() > 1)
+   
+   if (ifs.size() > 1)
    {
       assert(0);
    }
-   else
-   {
-      return ifs.front().second;
-   }
+  
+   return ifs.front().second;
 }
 
 Data
 DnsUtil::inet_ntop(const Tuple& tuple)
 {
-   if (!tuple.isV4())
+#if USE_IPV6
+	if (!tuple.isV4())
    {
       const sockaddr_in6& addr = reinterpret_cast<const sockaddr_in6&>(tuple.getSockaddr());
       return DnsUtil::inet_ntop(addr.sin6_addr);
    }
    else
+#endif
    {
       const sockaddr_in& addr = reinterpret_cast<const sockaddr_in&>(tuple.getSockaddr());
       return DnsUtil::inet_ntop(addr.sin_addr);
@@ -136,12 +137,14 @@ DnsUtil::inet_ntop(const struct in6_addr& addr)
 Data
 DnsUtil::inet_ntop(const struct sockaddr& addr)
 {
-   if (addr.sa_family == AF_INET6)
+#ifdef USE_IPV6
+	if (addr.sa_family == AF_INET6)
    {
       const struct sockaddr_in6* addr6 = reinterpret_cast<const sockaddr_in6*>(&addr);
       return DnsUtil::inet_ntop(addr6->sin6_addr);
    }
    else
+#endif
    {
       const struct sockaddr_in* addr4 = reinterpret_cast<const sockaddr_in*>(&addr);
       return DnsUtil::inet_ntop(addr4->sin_addr);
@@ -242,7 +245,8 @@ DnsUtil::isIpV6Address(const Data& ipAddress)
 Data
 DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
 {
-   struct in6_addr dst;
+#ifdef USE_IPV6
+	struct in6_addr dst;
    int res = DnsUtil::inet_pton(ipV6Address, dst);
    if (res <= 0)
    {
@@ -250,6 +254,11 @@ DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
       assert(0);
    }
    return DnsUtil::inet_ntop(dst);
+#else
+	assert(0);
+
+	return Data::Empty;
+#endif
 }
 
 bool 
