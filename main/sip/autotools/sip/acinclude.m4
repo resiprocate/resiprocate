@@ -171,6 +171,7 @@ AC_DEFUN([RESIP_SELECT_CONTENTS],
         for F in $( ls $srcdir/resiprocate/*Contents.cxx \
                 $srcdir/resiprocate/SipFrag.cxx \
                 $srcdir/resiprocate/TuIM.cxx  \
+                $srcdir/resiprocate/ApplicationSip.cxx \
                         | sed s:\.cxx:.lo:g ); do
                 resip_tcf=`basename $F`
                 resip_tcfd=`basename $resip_tcf .lo`
