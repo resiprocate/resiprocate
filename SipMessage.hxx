@@ -177,8 +177,6 @@ class SipMessage : public Message
       std::vector<char*> mBufferList;
       mutable HeaderFieldValueList* mStartLine;
       mutable HeaderFieldValueList* mBody;
-
-      Data mTransactionId;  // !jf!
       mutable Data mRFC2543TransactionId;
       mutable bool mRequest;
       mutable bool mResponse;
