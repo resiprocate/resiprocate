@@ -187,10 +187,7 @@ TransactionState::process(TransactionController& controller)
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
-                  TransactionState* state = new TransactionState(controller, Stateless, Completed, tid);
-                  state->add(state->mId);
-                  state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
-                  state->sendToWire(Helper::makeResponse(*sip, 481));
+		  controller.mTUFifo.add(Helper::makeResponse(*sip, 481));
                   delete sip;
                   return;
                }
