@@ -177,6 +177,10 @@ Transport::error(int e)
       case WSAECONNRESET : 
          DebugLog (<<"Reset ");
          break;
+
+	  case WSAEWOULDBLOCK:
+			 DebugLog (<<"Would Block ");
+         break;
 #endif
 
       default:
