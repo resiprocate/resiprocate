@@ -8,25 +8,27 @@ namespace resip
 {
 class Message;
 class TransactionUser;
+class TransactionUserMessage;
 
 class TuSelector
 {
    public:
-      TuSelector(TimeLimitFifo<Message>& fallBackFifo) :
-         mFallBackFifo(fallBackFifo)
-      {}
+      TuSelector(TimeLimitFifo<Message>& fallBackFifo);
+      
       void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
-      bool messageAvailable() const;
       unsigned int size() const;      
       bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
   
       TransactionUser* selectTransactionUser(const SipMessage& msg);
       bool haveTransactionUsers() const { return !mTuList.empty(); }
       void registerTransactionUser(TransactionUser&);
+      bool exists(TransactionUser* tu);
+
  private:
       typedef std::vector<TransactionUser*> TuList;
       TuList mTuList;
       TimeLimitFifo<Message>& mFallBackFifo;
+      bool mTuSelectorMode;
 };
 }
 
