@@ -2,6 +2,7 @@
 #define RESIP_DIALOGUSAGEMANAGER_HXX
 
 #include <vector>
+#include <set>
 
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/Headers.hxx"
@@ -20,6 +21,7 @@
 #include "resiprocate/dum/ServerRegistration.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/UInt64Hash.hxx"
+#include "resiprocate/dum/MergedRequestKey.hxx"
 
 namespace resip 
 {
@@ -130,14 +132,22 @@ class DialogUsageManager
       
    private:
       friend class Dialog;
+      friend class DialogSet;
       friend class ClientRegistration;
       friend class ClientInviteSession;
       friend class ServerInviteSession;
       friend class InviteSession;
       friend class BaseUsage::Handle;
-      friend class DialogSet;
       
       SipMessage& makeNewSession(BaseCreator* creator);
+      
+      // makes a proto response to a request
+      void makeResponse(SipMessage& response, 
+                        const SipMessage& request, 
+                        int responseCode, 
+                        const Data& reason = Data::Empty) const;
+      // May call a callback to let the app adorn
+      void sendResponse(const SipMessage& response);
 
       void addTimer(DumTimeout::Type type,
                     unsigned long duration,
@@ -182,6 +192,9 @@ class DialogUsageManager
       bool validateTo(const SipMessage& request);
       bool mergeRequest(const SipMessage& request);
 
+      typedef std::set<MergedRequestKey> MergedRequests;
+      MergedRequests mMergedRequests;
+            
       typedef HashMap<DialogSetId, DialogSet*> DialogSetMap;
       DialogSetMap mDialogSetMap;
 
