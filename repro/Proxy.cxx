@@ -50,7 +50,7 @@ Proxy::thread()
                else
                {
                   assert(mRequestContexts.count(sip->getTransactionId()) == 0);                  
-                  RequestContext* context = new RequestContext(std::auto_ptr<SipMessage>(sip), mRequestProcessorChain);
+                  RequestContext* context = new RequestContext(*this, std::auto_ptr<SipMessage>(sip), mRequestProcessorChain);
                   mRequestContexts[sip->getTransactionId()] = context;
                   context->process(std::auto_ptr<resip::Message>(msg));
                }
