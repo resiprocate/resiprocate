@@ -10,7 +10,7 @@ using namespace resip;
 %}
 struct headers { char *name; Headers::Type type; };
 %%
-i, Headers::CallId
+i, Headers::CallID
 m, Headers::Contact
 e, Headers::ContentEncoding
 l, Headers::ContentLength
@@ -58,6 +58,8 @@ reply-to, Headers::ReplyTo
 require, Headers::Require
 retry-after, Headers::RetryAfter
 server, Headers::Server
+sip-etag, Headers::SIPETag
+sip-if-match, Headers::SIPIFMatch
 supported, Headers::Supported
 timestamp, Headers::Timestamp
 unsupported, Headers::Unsupported

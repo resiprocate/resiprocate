@@ -8,6 +8,24 @@ using namespace resip;
 %}
 struct params { char *name; ParameterTypes::Type type; };
 %%
+data, ParameterTypes::data
+control, ParameterTypes::control
+mobility, ParameterTypes::mobility
+description, ParameterTypes::description
+events, ParameterTypes::events
+priority, ParameterTypes::priority
+methods, ParameterTypes::methods
+schemes, ParameterTypes::schemes
+application, ParameterTypes::application
+video, ParameterTypes::video
+language, ParameterTypes::language
+type, ParameterTypes::type
+isfocus, ParameterTypes::isFocus
+actor, ParameterTypes::actor
+text, ParameterTypes::text
+extensions, ParameterTypes::extensions
++instance, ParameterTypes::Instance
+gruu, ParameterTypes::gruu
 name, ParameterTypes::name
 transport, ParameterTypes::transport
 user, ParameterTypes::user
@@ -25,7 +43,6 @@ handling, ParameterTypes::handling
 tag, ParameterTypes::tag
 branch, ParameterTypes::branch
 received, ParameterTypes::received
-mobility, ParameterTypes::mobility
 comp, ParameterTypes::comp
 rport, ParameterTypes::rport
 algorithm, ParameterTypes::algorithm

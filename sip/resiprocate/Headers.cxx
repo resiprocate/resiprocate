@@ -83,6 +83,9 @@ defineHeader(Priority, "Priority", Token);
 defineHeader(Event, "Event", Token);
 defineHeader(SubscriptionState, "Subscription-State", Token);
 
+defineHeader(SIPETag, "SIP-ETag", Token);
+defineHeader(SIPIfMatch, "SIP-If-Match", Token);
+
 defineMultiHeader(AllowEvents, "Allow-Events", Token);
 // explicitly declare to avoid h_AllowEventss, ugh
 H_AllowEventss resip::h_AllowEvents;
