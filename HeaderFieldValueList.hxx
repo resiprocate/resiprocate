@@ -17,12 +17,12 @@ class HeaderFieldValueList
       ~HeaderFieldValueList();
       
   // insert at begining
-  void insert(HeaderFieldValue* header);
+  void push_front(HeaderFieldValue* header);
 
   // append to end
-  void append(HeaderFieldValue* header);
+  void push_back(HeaderFieldValue* header);
 
-  void deleteFirst();
+  void pop_front();
 
       HeaderFieldValue* first;
   
