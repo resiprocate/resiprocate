@@ -338,7 +338,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       {
          if (mSocket == INVALID_SOCKET)
          {
-            mSocket = Transport::socket(UDP, target.isV4()); // may throw
+            mSocket = Transport::socket(UDP, true); // may throw
          }
          tmp = mSocket;
       }
@@ -346,7 +346,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       {
          if (mSocket6 == INVALID_SOCKET)
          {
-            mSocket6 = Transport::socket(UDP, target.isV4()); // may throw
+            mSocket6 = Transport::socket(UDP, false); // may throw
          }
          tmp = mSocket6;
       }
