@@ -334,7 +334,7 @@ TuIM::processMessageRequest(SipMessage* msg)
       if ( !contents )
       { 
          Uri from = msg->header(h_From).uri();
-         Infolog( << "Some problem decoding multipart/signed message");
+         InfoLog( << "Some problem decoding multipart/signed message");
          
          mCallback->receivePageFailed( from );
          return;
