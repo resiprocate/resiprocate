@@ -1,4 +1,4 @@
-/* $Id: ares.h,v 1.3 2003/09/14 01:08:27 fluffy Exp $ */
+/* $Id: ares.h,v 1.4 2003/10/28 21:30:18 adamr Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
@@ -133,7 +133,7 @@ void ares_free_hostent(struct hostent *host);
 const char *ares_strerror(int code, char **memptr);
 void ares_free_errmem(char *mem);
 
-#ifdef WIN32
+#if defined(WIN32) || defined (__CYGWIN__)
 
 #define T_A             1               /* host address */
 #define T_NS            2               /* authoritative server */
