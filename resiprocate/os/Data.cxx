@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.57 2003/01/25 03:56:00 jason Exp $";
+// "$Id: Data.cxx,v 1.58 2003/01/26 20:54:11 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -6,6 +6,7 @@
 #include <math.h>
 
 #include "sip2/util/Data.hxx"
+#include "sip2/util/ParseBuffer.hxx"
 #include "sip2/util/vmd5.hxx"
 
 
@@ -899,6 +900,34 @@ Data::substr(size_type first, size_type count) const
    {
       assert(first + count <= mSize);
       return Data(mBuf+first, count);
+   }
+}
+
+int 
+Data::find(const Data& match, size_type start) const
+{
+   return find(match.data(), start);
+}
+
+int 
+Data::find(const char* match, size_type start) const
+{
+   if (start > mSize) 
+   {
+      return Data::npos;
+   }
+   else
+   {
+      ParseBuffer pb(mBuf+start, mSize);
+      pb.skipToChars(match);
+      if (pb.eof()) 
+      {
+         return Data::npos;
+      }
+      else
+      {
+         return pb.position() - pb.start();
+      }
    }
 }
 
