@@ -82,7 +82,6 @@ class SipMessage : public Message
       CSeq_Header::Type& header(const CSeq_Header& headerType) const;
       Call_ID_Header::Type& header(const Call_ID_Header& headerType) const;
       Authentication_Info_Header::Type& header(const Authentication_Info_Header& headerType) const;
-      Authorization_Header::Type& header(const Authorization_Header& headerType) const;
       Content_Disposition_Header::Type& header(const Content_Disposition_Header& headerType) const;
       Content_Encoding_Header::Type& header(const Content_Encoding_Header& headerType) const;
       Content_Length_Header::Type& header(const Content_Length_Header& headerType) const;
@@ -96,8 +95,6 @@ class SipMessage : public Message
       Min_Expires_Header::Type& header(const Min_Expires_Header& headerType) const;
       Organization_Header::Type& header(const Organization_Header& headerType) const;
       Priority_Header::Type& header(const Priority_Header& headerType) const;
-      Proxy_Authenticate_Header::Type& header(const Proxy_Authenticate_Header& headerType) const;
-      Proxy_Authorization_Header::Type& header(const Proxy_Authorization_Header& headerType) const;
       Refer_To_Header::Type& header(const Refer_To_Header& headerType) const;
       Referred_By_Header::Type& header(const Referred_By_Header& headerType) const;
       Replaces_Header::Type& header(const Replaces_Header& headerType) const;
@@ -108,8 +105,12 @@ class SipMessage : public Message
       Timestamp_Header::Type& header(const Timestamp_Header& headerType) const;
       To_Header::Type& header(const To_Header& headerType) const;
       User_Agent_Header::Type& header(const User_Agent_Header& headerType) const;
-      WWW_Authenticate_Header::Type& header(const WWW_Authenticate_Header& headerType) const;
       Warning_Header::Type& header(const Warning_Header& headerType) const;
+
+      ParserContainer<Authorization_MultiHeader::Type>& header(const Authorization_MultiHeader& headerType) const;
+      ParserContainer<Proxy_Authenticate_MultiHeader::Type>& header(const Proxy_Authenticate_MultiHeader& headerType) const;
+      ParserContainer<WWW_Authenticate_MultiHeader::Type>& header(const WWW_Authenticate_MultiHeader& headerType) const;
+      ParserContainer<Proxy_Authorization_MultiHeader::Type>& header(const Proxy_Authorization_MultiHeader& headerType) const;
 
       ParserContainer<Accept_MultiHeader::Type>& header(const Accept_MultiHeader& headerType) const;
       ParserContainer<Accept_Encoding_MultiHeader::Type>& header(const Accept_Encoding_MultiHeader& headerType) const;
