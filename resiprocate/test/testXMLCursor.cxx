@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#include <cassert>
+
 using namespace resip;
 using namespace std;
 
