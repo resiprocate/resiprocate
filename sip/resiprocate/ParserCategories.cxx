@@ -839,7 +839,10 @@ DateCategory::encodeParsed(std::ostream& str) const
 // WarningCategory
 //====================
 WarningCategory::WarningCategory(const WarningCategory& rhs)
-   : ParserCategory(rhs)
+   : ParserCategory(rhs),
+     mCode(rhs.mCode),
+     mHostname(rhs.mHostname),
+     mText(rhs.mText)
 {}
 
 WarningCategory&
