@@ -58,9 +58,24 @@ Executive::processTimer()
 int 
 Executive::getTimeTillNextProcess()
 {
+   if ( mStack.mStateMacFifo.size() != 0 ) 
+   {
+      return 0;
+   }
+   
    // !cj! FIX there needs to be some code here once the executive can tell
    // us this
-   return 10;
+
+   int ret = mStack.mTimers.msTillNextTimer();
+
+#if 1 // !cj! just keep a max of 100 for good luck - should not be needed   
+	if ( ret > 100 )
+	{
+		ret = 100;
+	}
+#endif
+
+   return ret;
 } 
 
 
