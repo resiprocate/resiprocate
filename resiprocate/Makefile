@@ -143,6 +143,7 @@ SRC = \
 	TuIM.cxx \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
+	Aor.cxx \
 	Uri.cxx \
 	HeaderHash.cxx \
 	ParameterHash.cxx \
