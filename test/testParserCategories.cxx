@@ -18,6 +18,22 @@ int
 main(int arc, char** argv)
 {
    {
+      cerr << "StatusLine, with reason code" << endl;
+      Data statusLineString("SIP/2.0 180 Ringing");
+      HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
+      
+      StatusLine statusLine(&hfv);
+      assert(statusLine.responseCode() == 180);
+      cerr << statusLine.reason() << endl;
+      assert(statusLine.reason() == "Ringing");
+      assert(statusLine.getSipVersion() == "SIP/2.0");
+
+      StatusLine copy(statusLine);
+      assert(copy.responseCode() == 180);
+      assert(copy.reason() == "Ringing");
+      assert(copy.getSipVersion() == "SIP/2.0");
+   }
+   {
       Uri foo;
       // valgrind complains, but the problem moves when closely observed
       assert(foo.getAor().empty());
@@ -495,7 +511,6 @@ main(int arc, char** argv)
       assert(statusLine.reason() == "");
       assert(statusLine.getSipVersion() == "SIP/2.0");
    }
-
    {
      char* authorizationString = "Digest realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
