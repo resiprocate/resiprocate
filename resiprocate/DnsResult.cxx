@@ -61,6 +61,11 @@ DnsResult::DnsResult(DnsInterface& interface)
 {
 }
 
+DnsResult::~DnsResult()
+{
+   assert(mType != Destroyed);
+}
+
 bool
 DnsResult::available() const
 {
@@ -167,7 +172,7 @@ DnsResult::lookup(const Uri& uri, const Data& tid)
             }
             mResults.push_back(tuple);
             mType = Available;
-            mInterface.mHandler->handle(); // !jf! should I call this? 
+            mInterface.mHandler->handle(this); // !jf! should I call this? 
          }
          else // port specified so we know the transport
          {
@@ -322,7 +327,7 @@ DnsResult::processHost(int status, struct hostent* result)
    }
 
    mType = Available;
-   mInterface.mHandler->handle();
+   mInterface.mHandler->handle(this);
 }
 
 void
@@ -676,6 +681,33 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       return NULL;
    }
 }
+
+bool 
+DnsResult::NAPTR::operator<(const DnsResult::NAPTR& rhs) const
+{
+   return false;
+}
+
+
+bool 
+DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
+{
+   return false;
+}
+
+
+std::ostream& 
+resip::operator<<(std::ostream& strm, const resip::DnsResult::NAPTR& naptr)
+{
+   return strm;
+}
+
+std::ostream& 
+resip::operator<<(std::ostream& strm, const resip::DnsResult::SRV& srv)
+{
+   return strm;
+}
+
 
 /* 
    Copyright (c) 2003, Jason Fischl
