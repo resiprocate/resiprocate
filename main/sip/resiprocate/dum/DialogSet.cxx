@@ -131,6 +131,10 @@ DialogSet::dispatch(const SipMessage& msg)
             
             return;
          }
+         else
+         {
+            //!dcm! -- need some sort of authorization failed thing
+         }
       }
       else
       {

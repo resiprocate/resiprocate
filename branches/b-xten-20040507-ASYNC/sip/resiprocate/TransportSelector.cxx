@@ -2,6 +2,7 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "resiprocate/AresDns.hxx"
 #include "resiprocate/AsyncCLessTransport.hxx"
 #include "resiprocate/external/AsyncTransportInterfaces.hxx"
 #include "resiprocate/NameAddr.hxx"
@@ -21,6 +22,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
 
+
 #include <sys/types.h>
 
 #ifndef WIN32
@@ -39,7 +41,7 @@ TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo,
    mStateMacFifo(fifo),
    mSocket( INVALID_SOCKET ),
    mSocket6( INVALID_SOCKET ),
-   mDns(dnsProvider)
+   mDns(dnsProvider ? dnsProvider : new AresDns())
 {
    memset(&mUnspecified, 0, sizeof(sockaddr_in));
    mUnspecified.sin_family = AF_UNSPEC;
@@ -119,6 +121,28 @@ TransportSelector::addExternalTransport(ExternalAsyncCLessTransport* externalTra
    AsyncCLessTransport* transport = new AsyncCLessTransport(mStateMacFifo, externalTransport, ownedByMe);
    InfoLog (<< "Adding transport: " << transport->getTuple());
    mExternalSelector->externalTransportAdded(transport);
+
+   Tuple key(transport->interfaceName(), transport->port(), transport->isV4(), transport->transport());
+   assert(mExactTransports.find(key) == mExactTransports.end() &&
+          mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
+
+   InfoLog (<< "Adding transport: " << key);
+
+   // Store the transport in the ANY interface maps if the tuple specifies ANY
+   // interface. Store the transport in the specific interface maps if the tuple
+   // specifies an interface. See TransportSelector::findTransport.
+   if (transport->interfaceName().empty())
+   {
+      assert(0); //!dcm!...for now. Prob okay when transports are truly generalized
+      mAnyInterfaceTransports[key] = transport;
+      mAnyPortAnyInterfaceTransports[key] = transport;
+   }
+   else
+   {
+      mExactTransports[key] = transport;
+      mAnyPortTransports[key] = transport;
+   }
+
    return transport;
 }
 
@@ -326,7 +350,6 @@ TransportSelector::dnsResolve(SipMessage* msg,
          // put this into the target, in case the send later fails, so we don't
          // lose the target
          msg->setForceTarget(msg->header(h_Routes).front().uri());
-         msg->header(h_Routes).pop_front();
          DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
          result = mDns.lookup(msg->getForceTarget(), handler);
       }
@@ -461,7 +484,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
      // !ah! know it's IP addres(es) in all cases, AND it's function of the dest.
      // (imagine a synthetic message...)
 
-      Tuple tempTuple = determineSourceInterface(msg, target);
+      
+      Tuple tempTuple = mExternalSelector->determineSourceInterface(msg, target);
+      if (tempTuple.getType() == UNKNOWN_TRANSPORT)
+      {
+         tempTuple = determineSourceInterface(msg, target);
+      }
 
       if (msg->isRequest())
       {
@@ -687,17 +715,18 @@ TransportSelector::DefaultExternalSelector::externalTransportAdded(Transport* ex
    mExternalTransports[externalTransport->transport()] = externalTransport;
 }
 
-Transport* 
-TransportSelector::DefaultExternalSelector::selectExternalTransport(SipMessage* msg, const Tuple& dest)
+Tuple 
+TransportSelector::DefaultExternalSelector::determineSourceInterface(SipMessage* msg, const Tuple& dest) const
 {
+   static Tuple notFound;
    ExternalTransportMap::const_iterator i = mExternalTransports.find(dest.getType());
    if (i != mExternalTransports.end())
    {
-      return i->second;
+      return i->second->getTuple();
    }
    else
    {
-      return 0;
+      return notFound;
    }
 }
 

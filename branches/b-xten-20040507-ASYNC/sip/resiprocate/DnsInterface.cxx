@@ -166,7 +166,7 @@ DnsInterface::handle_host(ExternalDnsHostResult res)
    mDnsProvider->freeResult(res);
 }
 
-//?dcm? -- why is there here?
+//?dcm? -- why is this here?
 DnsHandler::~DnsHandler()
 {
 }
