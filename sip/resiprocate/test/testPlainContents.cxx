@@ -8,9 +8,7 @@ int
 main()
 {
    {
-      const Data txt("Content-Type: text/plain\r\n"
-                     "\r\n"
-                     "some plain text");
+      const Data txt("some plain text");
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("text", "plain");

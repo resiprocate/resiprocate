@@ -18,12 +18,17 @@ MultipartMixedContents::MultipartMixedContents()
    setBoundary();
 }
 
+MultipartMixedContents::MultipartMixedContents(const Mime& contentsType)
+   : Contents(contentsType),
+     mContents()
+{
+}
+
 MultipartMixedContents::MultipartMixedContents(HeaderFieldValue* hfv, const Mime& contentsType)
    : Contents(hfv, contentsType),
      mContents()
 {
 }
- 
 
 MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs)
    : Contents(rhs),
@@ -39,7 +44,6 @@ MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs
       mContents.push_back( (*j)->clone() );
    }
 }
-
 
 void
 MultipartMixedContents::setBoundary()
@@ -94,20 +98,27 @@ MultipartMixedContents::getStaticType() const
 std::ostream& 
 MultipartMixedContents::encodeParsed(std::ostream& str) const
 {
-   encodeHeaders(str);
-
    const Data& boundaryToken = mType.param("boundary");
-   Data boundary(boundaryToken.size() + 4, true);
-   boundary = Symbols::CRLF;
-   boundary += Symbols::DASHDASH;
+   Data boundary(boundaryToken.size() + 2, true);
+   boundary = Symbols::DASHDASH;
    boundary += boundaryToken;
 
    assert( mContents.size() > 0 );
    
+   bool first = true;
    for (list<Contents*>::const_iterator i = mContents.begin(); 
         i != mContents.end(); i++)
    {
+      if (!first)
+      {
+         str << Symbols::CRLF;
+      }
+      else
+      {
+         first = false;
+      }
       str << boundary << Symbols::CRLF;
+      (*i)->encodeHeaders(str);
       (*i)->encode(str);
    }
 
@@ -121,8 +132,6 @@ MultipartMixedContents::encodeParsed(std::ostream& str) const
 void 
 MultipartMixedContents::parse(ParseBuffer& pb)
 {
-   parseHeaders(pb);
-
    const Data& boundaryToken = mType.param("boundary");
    
    Data boundary(boundaryToken.size() + 4, true);
@@ -170,16 +179,25 @@ MultipartMixedContents::parse(ParseBuffer& pb)
       ParseBuffer subPb(typeStart, pb.position() - typeStart);
       Mime contentType;
       contentType.parse(subPb);
-      //DebugLog( <<"got type " << contentType );
       
       pb.assertNotEof();
 
-      // determine contents buffer
+      // determine body start
+      pb.reset(typeStart);
+      const char* bodyStart = pb.skipToChars(Symbols::CRLFCRLF);
+      pb.assertNotEof();
+      bodyStart += 4;
+
+      // determine contents body buffer
       pb.skipToChars(boundary);
       pb.assertNotEof();
       Data tmp;
-      pb.data(tmp, headerStart);
+      pb.data(tmp, bodyStart);
+      // create contents against body
       mContents.push_back(createContents(contentType, tmp));
+      // pre-parse headers
+      ParseBuffer headersPb(headerStart, bodyStart-4-headerStart);
+      mContents.back()->preParseHeaders(headersPb);
 
       pb.skipN(boundary.size());
 
@@ -199,4 +217,39 @@ MultipartMixedContents::parse(ParseBuffer& pb)
 
    // replace the boundary
    setBoundary();
+}
+
+// ---------------------------------------------------
+ContentsFactory<MultipartRelatedContents> MultipartRelatedContents::Factory;
+
+MultipartRelatedContents::MultipartRelatedContents()
+   : MultipartMixedContents(getStaticType())
+{}
+
+MultipartRelatedContents::MultipartRelatedContents(HeaderFieldValue* hfv, const Mime& contentsType)
+   : MultipartMixedContents(hfv, contentsType)
+{}
+
+MultipartRelatedContents::MultipartRelatedContents(const MultipartRelatedContents& rhs)
+   : MultipartMixedContents(rhs)
+{}
+
+MultipartRelatedContents&
+MultipartRelatedContents::operator=(const MultipartRelatedContents& rhs)
+{
+   MultipartMixedContents::operator=(rhs);
+   return *this;
+}
+
+Contents* 
+MultipartRelatedContents::clone() const
+{
+   return new MultipartRelatedContents(*this);
+}
+
+const Mime& 
+MultipartRelatedContents::getStaticType() const
+{
+   static Mime type("multipart","related");
+   return type;
 }
