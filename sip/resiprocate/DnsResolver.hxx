@@ -134,7 +134,7 @@ class DnsResolver
 
    private:
 #if defined(USE_ARES)
-      static ares_channel mChannel;
+      static ares_channel* mChannel;
       static void aresCallbackHost(void *arg, int status, struct hostent* host);
       static void aresCallbackSrvTcp(void *arg, int status, unsigned char *abuf, int alen);
       static void aresCallbackSrvUdp(void *arg, int status, unsigned char *abuf, int alen);
