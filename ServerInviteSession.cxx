@@ -19,18 +19,8 @@ ServerInviteSession::setOffer(const SdpContents* offer)
 {
 }
 
-SipMessage& 
-ServerInviteSession::sendOfferInAnyMessage()
-{
-}
-
 void 
 ServerInviteSession::setAnswer(const SdpContents* answer)
-{
-}
-
-SipMessage& 
-ServerInviteSession::sendAnswerInAnyMessage()
 {
 }
 
