@@ -146,7 +146,7 @@ TcpTransport::processRead(Connection* c)
 {
    std::pair<char* const, size_t> writePair = c->getWriteBuffer();
    
-   size_t bytesToRead = min(writePair.second, TcpTransport::MaxReadSize);
+   size_t bytesToRead = vocal2Min(writePair.second, TcpTransport::MaxReadSize);
 
    int bytesRead = read(c->getSocket(), writePair.first, bytesToRead);
    DebugLog (<< "received " << bytesRead << " bytes on " << *c);
@@ -317,7 +317,7 @@ TcpTransport::processWrite(Connection* c)
    assert(!c->mOutstandingSends.empty());
    SendData* data = c->mOutstandingSends.front();
    
-   size_t bytesToWrite = min(data->data.size() - c->mSendPos, TcpTransport::MaxWriteSize);
+   size_t bytesToWrite = vocal2Min(data->data.size() - c->mSendPos, TcpTransport::MaxWriteSize);
 
    int bytesWritten = write(c->getSocket(), data->data.data() + c->mSendPos, bytesToWrite);
    int err = errno;
