@@ -48,6 +48,14 @@ InMemoryRegistrationDatabase::aorIsRegistered(Uri &aor)
   return true;
 }
 
+bool
+InMemoryRegistrationDatabase::aorExists(Uri &aor)
+{
+   // [TODO] !rwm! need a way to use the database to find out if the AOR even exists
+   
+   return true;
+}
+
 void
 InMemoryRegistrationDatabase::lockRecord(Uri &aor)
 {
