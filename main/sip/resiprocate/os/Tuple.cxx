@@ -212,7 +212,7 @@ bool Tuple::operator==(const Tuple& rhs) const
       }
       else // v6
       {
-#if USE_IPV6
+#ifdef USE_IPV6
          return (m_anonv6.sin6_port == rhs.m_anonv6.sin6_port &&
                  mTransportType == rhs.mTransportType &&
                  memcmp(&m_anonv6.sin6_addr, &rhs.m_anonv6.sin6_addr, sizeof(in6_addr)) == 0);
