@@ -95,6 +95,7 @@ main(int argc, const char** argv)
 #endif
 
    Log::initialize(logType, logLevel, argv[0]);
+   initNetwork();
 
    TestDnsHandler handler;
    TestDns dns;
@@ -110,10 +111,10 @@ main(int argc, const char** argv)
 #else
    const char** args = argv;
 #endif
-   while (args && *args != 0)
+   while (argc > 1 && args && *args != 0)
    {
        cerr << "Creating Uri" << endl;       
-       uri = Uri(*args++);
+       uri = Uri(*++args);
        cerr << "Creating DnsResult" << endl;
        
        DnsResult* res = dns.createDnsResult(&handler);
@@ -121,6 +122,7 @@ main(int argc, const char** argv)
        cerr << "Looking up" << endl;
 
        dns.lookup(res, uri);
+       argc--;
    }
 
    while (!results.empty())
@@ -128,7 +130,8 @@ main(int argc, const char** argv)
       if (results.front()->available() == DnsResult::Finished)
       {
           std::cout << bf << "Deleting results: " << *(results.front()) << ub << std::endl;
-          delete results.front();
+          //delete results.front();
+          results.front()->destroy();
           results.pop_front();
           std::cout << gf << results.size() << " remaining to resolve" << ub << std::endl;
       }
