@@ -467,7 +467,7 @@ TransactionState::processClientInvite(  Message* msg )
             mController.mTimers.add(Timer::TimerF, sip->getTransactionId(), 64*Timer::T1);
 
             // for the INVITE in case we never get a 487
-            mController.mTimers.add(Timer::TimerCleanUp, sip->getTransactionId(), 64*Timer::T1);
+            //mController.mTimers.add(Timer::TimerCleanUp, sip->getTransactionId(), 96*Timer::T1);
 
             sendToWire(sip);
             break;
