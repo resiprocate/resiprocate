@@ -16,8 +16,11 @@ class ServerInviteSession: public InviteSession
       ServerInviteSessionHandle getHandle();
 
       // send a 3xx
-      virtual void redirect(const NameAddrs& contacts, int code=302);
+      void redirect(const NameAddrs& contacts, int code=302);
 
+      // send a 1xx - provisional response
+      void provisional(int code=180);
+      
       /// Called to set the offer that will be used in the next messages that
       /// sends and offer. Does not send an offer
       virtual void provideOffer(const SdpContents& offer);
@@ -36,7 +39,7 @@ class ServerInviteSession: public InviteSession
       //accept a re-invite, etc.  Always 200?
       //this is only applicable to the UAS
       virtual void accept(int statusCode=200);
-
+      
       // Following methods are for sending requests within a dialog
       virtual void refer(const NameAddr& referTo);
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
