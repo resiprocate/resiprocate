@@ -7,14 +7,14 @@
 #include "sip2/util/ParseBuffer.hxx"
 
 #include "sip2/sipstack/ParameterTypes.hxx"
-#include "sip2/sipstack/HeaderFieldValue.hxx"
+#include "sip2/sipstack/LazyParser.hxx"
 
 namespace Vocal2
 {
 class UnknownParameter;
 class Parameter;
 
-class ParserCategory
+class ParserCategory : public LazyParser
 {
     public:
       ParserCategory(HeaderFieldValue* headerFieldValue);
@@ -24,9 +24,7 @@ class ParserCategory
       virtual ~ParserCategory();
 
       virtual ParserCategory* clone() const = 0;
-
       virtual std::ostream& encode(std::ostream& str) const = 0;
-      std::ostream& encodeFromHeaderFieldValue(std::ostream& str) const;
 
       bool exists(const ParamBase& paramType) const;
         
@@ -60,17 +58,8 @@ class ParserCategory
       void parseParameters(ParseBuffer& pb);
       std::ostream& encodeParameters(std::ostream& str) const;
 
-      bool isParsed() const {return mIsParsed;}
-      
-      virtual void parse(ParseBuffer& pb) = 0;
-
-      HeaderFieldValue& getHeaderField() { return *mHeaderField; }
-
    protected:
       ParserCategory();
-
-      // call before every access 
-      void checkParsed() const;
 
       Parameter* getParameterByEnum(int type) const;
       void removeParameterByEnum(int type);
@@ -78,17 +67,14 @@ class ParserCategory
       Parameter* getParameterByData(const Data& data) const;
       void removeParameterByData(const Data& data);
 
-      HeaderFieldValue* mHeaderField;
       typedef std::list<Parameter*> ParameterList; 
       mutable ParameterList mParameters;
       mutable ParameterList mUnknownParameters;
    private:
-      void ParserCategory::clear();
-      void ParserCategory::copyParametersFrom(const ParserCategory& other);
+      virtual void clear();
+      void copyParametersFrom(const ParserCategory& other);
       friend std::ostream& operator<<(std::ostream&, const ParserCategory&);
       friend class NameAddr;
-      bool mMine;
-      bool mIsParsed;
 };
 
 std::ostream&
