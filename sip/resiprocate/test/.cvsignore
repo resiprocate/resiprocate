@@ -15,3 +15,4 @@ obj.opt.QNX.x86pc
 spam.ps
 tassert.h
 testPP.cxx
+testSipMessage.cxx.flc
