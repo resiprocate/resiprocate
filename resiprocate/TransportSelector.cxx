@@ -11,6 +11,7 @@
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/Uri.hxx"
 
+#include "resiprocate/Security.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TcpTransport.hxx"
 #include "resiprocate/TlsTransport.hxx"
@@ -40,9 +41,10 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TransportSelector::TransportSelector(bool multithreaded, Fifo<TransactionMessage>& fifo) :
+TransportSelector::TransportSelector(bool multithreaded, Fifo<TransactionMessage>& fifo, Security* security) :
    mMultiThreaded(multithreaded),
    mStateMacFifo(fifo),
+   mSecurity(security),
    mSocket( INVALID_SOCKET ),
    mSocket6( INVALID_SOCKET ),
    mWindowsVersion(WinCompat::getVersion())
@@ -220,7 +222,6 @@ TransportSelector::addTlsTransport(const Data& domainName,
 
 bool 
 TransportSelector::addTlsTransport(const Data& domainName, 
-				   Security& security,
 				   int port, 
 				   IpVersion version,
 				   const Data& ipInterface
@@ -239,7 +240,7 @@ TransportSelector::addTlsTransport(const Data& domainName,
                                    domainName, 
                                    ipInterface,
                                    port, 
-				   security,
+                                   *mSecurity,
                                    version == V4);
    }
    catch (Transport::Exception& )
@@ -630,6 +631,26 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
          }
          
+         // See draft-ietf-sip-identity
+         if (mSecurity && msg->exists(h_Identity) && msg->header(h_Identity).value().empty())
+         {
+            if (!msg->exists(h_Date))
+            {
+               DateCategory now;
+               msg->header(h_Date) = now;
+            }
+            try
+            {
+               msg->header(h_Identity).value() = mSecurity->computeIdentity(msg->getCanonicalIdentityString());
+            }
+            catch (Security::Exception& e)
+            {
+               ErrLog (<< "Couldn't add identity header: " << e);
+               msg->remove(h_Identity);
+            }
+         }
+         
+
          Data& encoded = msg->getEncoded();
          encoded.clear();
          DataStream encodeStream(encoded);
