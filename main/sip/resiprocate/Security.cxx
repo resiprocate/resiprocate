@@ -2,6 +2,9 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include <ostream>
+#include <fstream>
+
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/Pkcs7Contents.hxx"
@@ -41,6 +44,27 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+
+static void
+dumpAsn( char* name, Data data)
+{
+#if 1 // !CJ! TODO turn off 
+   assert(name);
+   
+   if (true) // dump asn.1 stuff to debug file
+   {
+      ofstream strm(name, std::ios_base::trunc);
+      if ( !strm )
+      {
+         ErrLog( <<"Could not write to " << name );
+      }
+      else
+      {
+         strm.write( data.data() , data.size() );
+      }
+   }
+#endif
+}
 
 
 Security::Exception::Exception(const Data& msg, const Data& file, const int line) :
@@ -609,6 +633,7 @@ Security::multipartSign( Contents* bodyIn )
    strm.flush();
 
    DebugLog( << "sign the data <" << bodyData << ">" );
+   dumpAsn("resip-sign-out-data",bodyData);
 
    const char* p = bodyData.data();
    int s = bodyData.size();
@@ -649,6 +674,7 @@ Security::multipartSign( Contents* bodyIn )
    assert( size > 0 );
    
    Data outData(outBuf,size);
+   dumpAsn("resip-sign-out-sig",outData);
   
    Pkcs7Contents* sigBody = new Pkcs7Contents( outData );
    assert( sigBody );
@@ -863,6 +889,8 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    InfoLog( << Data("Encrypted body size is ") << outData.size() );
    InfoLog( << Data("Encrypted body is <") << outData.escaped() << ">" );
 
+   dumpAsn("resip-encrpt-out",outData);
+   
    Pkcs7Contents* outBody = new Pkcs7Contents( outData );
    assert( outBody );
 
@@ -917,7 +945,10 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    Data textData = bodyData;
    Data sigData = sig->getBodyData();
 
-   BIO* in = BIO_new_mem_buf( (void*)sigData.c_str(),sigData.size());
+   dumpAsn( "resip-asn-uncode-signed-text", textData );
+   dumpAsn( "resip-asn-uncode-signed-sig", sigData );
+   
+   BIO* in = BIO_new_mem_buf( (void*)sigData.data(),sigData.size());
    assert(in);
    InfoLog( << "ceated in BIO");
     
@@ -928,7 +959,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    DebugLog( << "verify <"    << textData.escaped() << ">" );
    DebugLog( << "signature <" << sigData.escaped() << ">" );
        
-   BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.c_str(),textData.size());
+   BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.data(),textData.size());
    assert(pkcs7Bio);
    InfoLog( << "ceated pkcs BIO");
     
@@ -937,15 +968,6 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    {
       ErrLog( << "Problems doing decode of PKCS7 object <"
               << sigData.escaped() << ">" );
-
-#if 0 
-      // write out the sig to a file 
-      int fd = open( "/tmp/badSig", O_WRONLY | O_CREAT | O_TRUNC, 0455 );
-      assert( fd > 0 );
-      write( fd, sigData.c_str(), sigData.size() );
-      close( fd ); DebugLog( << "verify <"    << textData.escaped() << ">" );
-      InfoLog( <<"Wrote out sig to /tmp/badSig" );
-#endif
 
       while (1)
       {
@@ -1152,6 +1174,8 @@ Security::decrypt( Pkcs7Contents* sBody )
    DebugLog( << "uncode body = <" << text.escaped() << ">" );
    DebugLog( << "uncode body size = " << text.size() );
 
+   dumpAsn("resip-asn-decrypt", text );
+   
    BIO* in = BIO_new_mem_buf( (void*)text.c_str(),text.size());
    assert(in);
    InfoLog( << "ceated in BIO");
