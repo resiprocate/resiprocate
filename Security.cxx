@@ -48,15 +48,30 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 
 Security::Security( bool tlsServer, bool useTls )
 {
+    initialize(tlsServer, useTls ? SecurityTypes::TLSv1 : SecurityTypes::SSLv23);
+}
+
+Security::Security( bool tlsServer, SecurityTypes::SSLType mode)
+{
+    initialize(tlsServer, mode);
+}
+
+void
+Security::initialize( bool tlsServer, SecurityTypes::SSLType mode ) 
+{
+   mTlsServer = tlsServer;
+
+   assert((mode & SecurityTypes::SSLv23) ^ (mode & SecurityTypes::TLSv1));
+
+   mSSLMode = mode;
+
    Timer::getTimeMs(); // initalize time offsets
    Random::initialize(); // initialize 
 
-   privateKey = NULL;
-   publicCert = NULL;
-   certAuthorities = NULL;
-   ctxTls = NULL;
-   mTlsServer = tlsServer;
-   mUseTls = useTls;
+   privateKey = 0;
+   publicCert = 0;
+   certAuthorities = 0;
+   ctxTls = 0;
 
    // check-lock-check
    static bool initDone = false;
@@ -87,18 +102,22 @@ Security::initialize()
 SSL_CTX* 
 Security::getTlsCtx(bool isServer)
 {
+    DebugLog(<<"Security::getTlsCtx() this="<<(void*)this);
    if ( ctxTls )
    {
       return ctxTls;
    }
    
-   if ( mUseTls )
+   if ( mSSLMode & SecurityTypes::TLSv1 )
    {
       InfoLog( << "Setting up to be a TLS v1 server" );
 
-# if 1
+      if (1)
+      {
     ctxTls=SSL_CTX_new( TLSv1_method() ); 
-#else
+      }
+      else
+      { // why would we do this?
       if ( isServer )
       {
          ctxTls=SSL_CTX_new( TLSv1_server_method() );
@@ -107,12 +126,16 @@ Security::getTlsCtx(bool isServer)
       {
          ctxTls=SSL_CTX_new( TLSv1_client_method() );
       }
-#endif
    }
-   else
+   }
+   else if ( mSSLMode & SecurityTypes::SSLv23 )
    {
       ErrLog( << "Warning - using SSL v2 v3 instead of TLS" );
       ctxTls=SSL_CTX_new(  SSLv23_method() );
+   }
+   else
+   {
+       throw Exception("Unknown SSL protocol mode requested",__FILE__,__LINE__);
    }
    assert( ctxTls );
    
@@ -127,20 +150,19 @@ Security::getTlsCtx(bool isServer)
       DebugLog( << "Setting up as TLS client" );
    }
    
-   int ok;
-   
    if ( mTlsServer )
    {
       if ( publicCert )
       {
-         ok = SSL_CTX_use_certificate(ctxTls, publicCert);
-         assert( ok == 1);
+          if(!SSL_CTX_use_certificate(ctxTls, publicCert))
+              throw Exception("SSL_CTX_use_certificate failed",
+                              __FILE__,__LINE__);
       }
-      
       if (privateKey)
       {
-         ok = SSL_CTX_use_PrivateKey(ctxTls,privateKey);
-         assert( ok == 1);
+          if (!SSL_CTX_use_PrivateKey(ctxTls,privateKey))
+              throw Exception("SSL_CTX_use_PrivateKey failed.",
+                              __FILE__,__LINE__);
       }
    }
    
@@ -229,15 +251,10 @@ Security::loadAllCerts( const Data& password, const Data& dirPath )
    }
 #endif
    
-#ifdef WIN32
-   Data pubKeyDir("public_keys\\");
-#else
-   Data pubKeyDir("public_keys/");
-#endif
-
-   ok = loadPublicCert( getPath(dirPath,pubKeyDir) ) ? ok : false;
+   Data pubKeyDir("public_keys");
+   pubKeyDir += Symbols::pathSep;
    
-   return ok;
+   return ok && loadPublicCert(getPath(dirPath,pubKeyDir));
 }
      
 
@@ -259,7 +276,7 @@ Security::loadMyPublicCert( const Data&  filePath )
       return false;
    }
    
-   publicCert = PEM_read_X509(fp,NULL,NULL,NULL);
+   publicCert = PEM_read_X509(fp,0,0,0);
    if (!publicCert)
    {
       ErrLog( << "Error reading contents of my public cert file " << filePath );
@@ -305,7 +322,7 @@ Security::loadRootCerts(  const Data& filePath )
    certAuthorities = X509_STORE_new();
    assert( certAuthorities );
    
-   if ( X509_STORE_load_locations(certAuthorities,filePath.c_str(),NULL) != 1 )
+   if ( X509_STORE_load_locations(certAuthorities,filePath.c_str(),0) != 1 )
    {  
       ErrLog( << "Error reading contents of root cert file " << filePath );
 
@@ -323,7 +340,7 @@ Security::loadRootCerts(  const Data& filePath )
          char buf[256];
          ERR_error_string_n(code,buf,sizeof(buf));
          ErrLog( << buf  );
-         DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
+         ErrLog( << "Error code = " << code << " file=" << file << " line=" << line );
       }
       
       throw Exception("Error reading contents of root certificate file", __FILE__,__LINE__);
@@ -371,7 +388,7 @@ Security::loadPublicCert(  const Data& filePath )
          }
          else
          {
-            X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
+            X509* cert = PEM_read_X509(fp,0,0,0);
             if (!cert)
             {
                ErrLog( << "Error reading contents of public key file " << path );
@@ -427,7 +444,7 @@ Security::loadPublicCert(  const Data& filePath )
       return false;
    }
 
-   struct dirent * d = NULL;
+   struct dirent * d = 0;
    while (1)
    {
       d = readdir(dir);
@@ -453,7 +470,7 @@ Security::loadPublicCert(  const Data& filePath )
          continue;
       }
 
-      X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
+      X509* cert = PEM_read_X509(fp,0,0,0);
       if (!cert)
       {
          ErrLog( << "Error reading contents of public key file " << path );
@@ -517,7 +534,7 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
    
    DebugLog( << "password is " << password );
    
-   privateKey = PEM_read_PrivateKey(fp,NULL,NULL,(void*)password.c_str());
+   privateKey = PEM_read_PrivateKey(fp,0,0,(void*)password.c_str());
    if (!privateKey)
    {
       ErrLog( << "Error reading contents of private key file " << filePath );
@@ -603,7 +620,7 @@ Security::multipartSign( Contents* bodyIn )
    assert(out);
    DebugLog( << "created out BIO" );
      
-   STACK_OF(X509)* chain=NULL;
+   STACK_OF(X509)* chain=0;
    chain = sk_X509_new_null();
    assert(chain);
 
@@ -618,14 +635,14 @@ Security::multipartSign( Contents* bodyIn )
    if ( !pkcs7 )
    {
       ErrLog( << "Error creating PKCS7 signature object" );
-      return NULL;
+      return 0;
    }
    DebugLog( << "created PKCS7 signature object " );
 
    i2d_PKCS7_bio(out,pkcs7);
    BIO_flush(out);
    
-   char* outBuf=NULL;
+   char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
    assert( size > 0 );
    
@@ -684,7 +701,7 @@ Security::pkcs7Sign( Contents* bodyIn )
    assert(out);
    DebugLog( << "created out BIO" );
      
-   STACK_OF(X509)* chain=NULL;
+   STACK_OF(X509)* chain=0;
    chain = sk_X509_new_null();
    assert(chain);
 
@@ -699,7 +716,7 @@ Security::pkcs7Sign( Contents* bodyIn )
    if ( !pkcs7 )
    {
       ErrLog( << "Error creating PKCS7 signing object" );
-      return NULL;
+      return 0;
    }
    DebugLog( << "created PKCS7 sign object " );
 
@@ -707,7 +724,7 @@ Security::pkcs7Sign( Contents* bodyIn )
 
    BIO_flush(out);
    
-   char* outBuf=NULL;
+   char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
    assert( size > 0 );
    
@@ -789,7 +806,7 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    DebugLog( << "created out BIO" );
 
    InfoLog( << "target cert name is " << recipCertName );
-   X509* cert = NULL;
+   X509* cert = 0;
  
    // cert = publicKeys[recipCertName]; 
    MapConstIterator i = publicKeys.find(recipCertName);
@@ -800,7 +817,7 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    else
    {
       ErrLog( << "Do not have a public key for " << recipCertName );      
-      return NULL;
+      return 0;
    }
    assert(cert);
       
@@ -826,7 +843,7 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    if ( !pkcs7 )
    {
       ErrLog( << "Error creating PKCS7 encrypt object" );
-      return NULL;
+      return 0;
    }
    DebugLog( << "created PKCS7 encrypt object " );
 
@@ -834,7 +851,7 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
 
    BIO_flush(out);
    
-   char* outBuf=NULL;
+   char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
    assert( size > 0 );
    
@@ -866,7 +883,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
 {
    if ( multi->parts().size() != 2 )
    {
-      return NULL;
+      return 0;
    }
    
    list<Contents*>::const_iterator i = multi->parts().begin();
@@ -913,7 +930,7 @@ Security::uncodeSigned( MultipartSignedContents* multi,
    assert(pkcs7Bio);
    InfoLog( << "ceated pkcs BIO");
     
-   PKCS7* pkcs7 = d2i_PKCS7_bio(in, NULL);
+   PKCS7* pkcs7 = d2i_PKCS7_bio(in, 0);
    if ( !pkcs7 )
    {
       ErrLog( << "Problems doing decode of PKCS7 object <"
@@ -1105,11 +1122,11 @@ Security::uncodeSigned( MultipartSignedContents* multi,
       
       default:
          ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
-         return NULL;
+         return 0;
    }
       
    BIO_flush(out);
-   char* outBuf=NULL;
+   char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
    assert( size >= 0 );
       
@@ -1142,7 +1159,7 @@ Security::decrypt( Pkcs7Contents* sBody )
    assert(out);
    InfoLog( << "created out BIO" );
 
-   PKCS7* pkcs7 = d2i_PKCS7_bio(in, NULL);
+   PKCS7* pkcs7 = d2i_PKCS7_bio(in, 0);
    if ( !pkcs7 )
    {
       ErrLog( << "Problems doing decode of PKCS7 object" );
@@ -1164,7 +1181,7 @@ Security::decrypt( Pkcs7Contents* sBody )
          InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
       }
            
-      return NULL;
+      return 0;
    }
    BIO_flush(in);
    
@@ -1216,7 +1233,7 @@ Security::decrypt( Pkcs7Contents* sBody )
 
          { 
             InfoLog( << "Don't have a private certifact to user for  PKCS7_decrypt" );
-            return NULL;
+            return 0;
          }
          
          if ( PKCS7_decrypt(pkcs7, privateKey, publicCert, out, flags ) != 1 )
@@ -1239,18 +1256,18 @@ Security::decrypt( Pkcs7Contents* sBody )
                InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
             }
            
-            return NULL;
+            return 0;
          }
       }
       break;
       
       default:
          ErrLog(<< "Got PKCS7 data that could not be handled type=" << type );
-         return NULL;
+         return 0;
    }
       
    BIO_flush(out);
-   char* outBuf=NULL;
+   char* outBuf=0;
    long size = BIO_get_mem_data(out,&outBuf);
    assert( size >= 0 );
    

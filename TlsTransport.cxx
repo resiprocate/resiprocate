@@ -22,10 +22,11 @@ TlsTransport::TlsTransport(Fifo<Message>& fifo,
                            const Data& interfaceObj, 
                            int portNum, 
                            const Data& keyDir, const Data& privateKeyPassPhrase,
-                           bool ipv4) : 
+                           bool ipv4,
+                           SecurityTypes::SSLType sslType) : 
    TcpBaseTransport(fifo, portNum, interfaceObj, ipv4),
    mDomain(sipDomain),
-   mSecurity(new Security(true, true))
+   mSecurity(new Security(true, sslType))
 {
    mTuple.setType(transport());
 
@@ -33,12 +34,15 @@ TlsTransport::TlsTransport(Fifo<Message>& fifo,
             << sipDomain << " interface=" << interfaceObj 
             << " port=" << portNum);
    
-   bool ok = true;
-   ok = mSecurity->loadRootCerts(  mSecurity->getPath( keyDir, "root.pem")) ? ok : false;
-   ok = mSecurity->loadMyPublicCert( mSecurity->getPath( keyDir , mDomain + "_cert.pem")) ? ok : false;
-   ok = mSecurity->loadMyPrivateKey( privateKeyPassPhrase, mSecurity->getPath( keyDir , mDomain + "_key.pem")) ? ok : false;
    
-   InfoLog( << "Listening for TLS connections on port " << portNum );
+   bool ok = mSecurity->loadRootCerts(  mSecurity->getPath( keyDir, "root.pem")) &&
+       mSecurity->loadMyPublicCert( mSecurity->getPath( keyDir , mDomain + "_cert.pem")) && 
+       mSecurity->loadMyPrivateKey( privateKeyPassPhrase, mSecurity->getPath( keyDir , mDomain + "_key.pem"));
+
+   (void)ok;
+
+   InfoLog( << "Listening for TLS connections on port " << portNum  << " ok=" << ok);
+
 }
 
 

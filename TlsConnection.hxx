@@ -24,15 +24,17 @@ class TlsConnection : public Connection
       
       Data peerName();
       
+      typedef enum State { Broken, Accepting, Connecting, Handshaking, Up } State;
+      static const char * fromState(State);
    private:
-    enum State { Broken, Accepting, Connecting, Handshaking, Up } mState;
+       State mState;
 
     State checkState();
 
-#if USE_SSL
-      SSL* ssl;
-      BIO* bio;
-#endif
+
+     SSL* mSsl;
+     BIO* mBio;
+
 };
  
 }
