@@ -8,6 +8,8 @@
 #include <vector>
 #include <utility>
 
+#include <netinet/in.h>
+
 #include <sipstack/HeaderTypes.hxx>
 #include <sipstack/Message.hxx>
 
@@ -102,12 +104,11 @@ class SipMessage : public Message
       // clone method
       
       // add HeaderFieldValue given enum, header name, pointer start, content length
-      void addHeader(int header, char* headerName, int headerLen, 
-                     char* start, int len);
+      void addHeader(int header,
+                     const char* headerName, int headerLen, 
+                     const char* start, int len);
 
-
-      void addSource(const sockaddr* addr);
-      
+      void addSource(const sockaddr_in& addr);
       bool hasFixedDest() const;
       Data getFixedDest() const;
       void setFixedDest(const Data& dest);
