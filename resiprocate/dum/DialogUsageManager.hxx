@@ -130,7 +130,7 @@ class DialogUsageManager : public HandleManager
                                   const Data& eventType, unsigned expiresSeconds, AppDialogSet* = 0);
 
       SipMessage& makeRegistration(const NameAddr& aor, AppDialogSet* = 0);
-      SipMessage& makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth, AppDialogSet* = 0);
+      SipMessage& makeOutOfDialogRequest(const Uri& aor, const MethodTypes meth, AppDialogSet* = 0);
 
       // all can be done inside of INVITE or SUBSCRIBE only; !dcm! -- now live
       // in INVITE or SUBSCRIBE only

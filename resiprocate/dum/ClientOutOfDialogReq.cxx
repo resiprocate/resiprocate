@@ -1,8 +1,14 @@
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/dum/ClientOutOfDialogReq.hxx"
+#include "resiprocate/dum/OutOfDialogHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 ClientOutOfDialogReqHandle 
 ClientOutOfDialogReq::getHandle()
@@ -13,9 +19,8 @@ ClientOutOfDialogReq::getHandle()
 ClientOutOfDialogReq::ClientOutOfDialogReq(DialogUsageManager& dum,
                                        DialogSet& dialogSet,
                                        const SipMessage& req)
-   : NonDialogUsage(dum, dialogSet)
+   : NonDialogUsage(dum, dialogSet), mRequest(req)
 {
-   assert(false);
 }
 
 ClientOutOfDialogReq::~ClientOutOfDialogReq()
@@ -26,6 +31,31 @@ ClientOutOfDialogReq::~ClientOutOfDialogReq()
 void 
 ClientOutOfDialogReq::dispatch(const SipMessage& msg)
 {
+	assert(msg.isResponse());
+
+	OutOfDialogHandler *pHandler = mDum.getOutOfDialogHandler(msg.header(h_CSeq).method());
+	if(pHandler != NULL)
+	{
+		assert(msg.header(h_StatusLine).statusCode() >= 200);  // Provional responses are only for Invite Sessions
+
+		if(msg.header(h_StatusLine).statusCode() >= 200 && msg.header(h_StatusLine).statusCode() < 300)
+		{
+			// Pass Response to Handler
+			InfoLog ( << "ClientOutOfDialogReq::dispatch - handler found for " << getMethodName(msg.header(h_CSeq).method()) << " method success response.");   
+			pHandler->onSuccess(getHandle(), msg);  
+		}
+		else
+		{
+			// Pass Response to Handler
+			InfoLog ( << "ClientOutOfDialogReq::dispatch - handler found for " << getMethodName(msg.header(h_CSeq).method()) << " method failure response.");   
+			pHandler->onFailure(getHandle(), msg);  
+		}
+	}
+	else
+	{
+	    InfoLog ( << "ClientOutOfDialogReq::dispatch - handler not found for " << getMethodName(msg.header(h_CSeq).method()) << " method response.");   
+	}
+	delete this;
 }
 
 void 
@@ -37,8 +67,7 @@ ClientOutOfDialogReq::dispatch(const DumTimeout& timer)
 bool 
 ClientOutOfDialogReq::matches(const SipMessage& msg) const
 {
-   assert(0);
-   return false;
+   return (DialogId(mRequest) == DialogId(msg));
 }
 
 
