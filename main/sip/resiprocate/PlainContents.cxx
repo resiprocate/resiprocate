@@ -79,7 +79,6 @@ void
 PlainContents::parse(ParseBuffer& pb)
 {
    //DebugLog(<< "PlainContents::parse: " << pb.position());
-
    parseHeaders(pb);
 
    const char* anchor = pb.position();
@@ -87,4 +86,12 @@ PlainContents::parse(ParseBuffer& pb)
    pb.data(mText, anchor);
 
    //DebugLog("PlainContents::parsed <" << mText << ">" );
+}
+
+
+Data
+PlainContents::getBodyData() const
+{
+   checkParsed(); 
+   return mText;
 }

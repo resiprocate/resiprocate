@@ -1,38 +1,31 @@
-#ifndef PlainContents_hxx
-#define PlainContents_hxx
+#ifndef MultipartSignedContents_hxx
+#define MultipartSignedContents_hxx
 
-#include "sip2/sipstack/Contents.hxx"
-#include "sip2/util/Data.hxx"
+
+#include "sip2/sipstack/MultipartMixedContents.hxx"
+
 
 namespace Vocal2
 {
 
-class PlainContents : public Contents
+class Mime;
+class ParseBuffer;
+
+class MultipartSignedContents : public MultipartMixedContents
 {
    public:
-      PlainContents();
-      PlainContents(const Data& text);
-      PlainContents(HeaderFieldValue* hfv, const Mime& contentType);
-      PlainContents(const Data& data, const Mime& contentType);
-      PlainContents(const PlainContents& rhs);
-      virtual ~PlainContents();
-      PlainContents& operator=(const PlainContents& rhs);
+      MultipartSignedContents();
+      MultipartSignedContents(HeaderFieldValue* hfv, const Mime& contentType);
+      MultipartSignedContents(const MultipartSignedContents& rhs);
+      virtual ~MultipartSignedContents();
+      MultipartSignedContents& operator=(const MultipartSignedContents& rhs);
 
       virtual Contents* clone() const;
 
-      virtual Data getBodyData() const;
-
       virtual const Mime& getStaticType() const;
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-      virtual void parse(ParseBuffer& pb);
-
-      Data& text() {checkParsed(); return mText;}
-      
    private:
-      static ContentsFactory<PlainContents> Factory;
-
-      Data mText;
+      static ContentsFactory<MultipartSignedContents> Factory;
 };
 
 }
