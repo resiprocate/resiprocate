@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/NonDialogUsage.hxx"
 #include "resiprocate/CSeqCategory.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
@@ -25,6 +26,7 @@ class ClientOutOfDialogReq : public NonDialogUsage
    private:
       friend class DialogSet;
       CSeqCategory mCSeq;
+	  SipMessage mRequest;
       
       // disabled
       ClientOutOfDialogReq(const ClientOutOfDialogReq&);
