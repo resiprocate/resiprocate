@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.17 2002/11/08 17:45:54 jason Exp $
+# $Id: Makefile,v 1.18 2002/11/11 21:46:02 jason Exp $
 
 BUILD = ../../build
 
@@ -40,7 +40,7 @@ SRC = \
 	Subsystem.cxx \
 	ThreadIf.cxx \
 	Timer.cxx \
-	VException.cxx \
+	BaseException.cxx \
 	vmd5.cxx \
 	DataStream.cxx \
 
