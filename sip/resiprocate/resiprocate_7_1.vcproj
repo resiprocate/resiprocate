@@ -441,6 +441,9 @@
 				RelativePath="Security.cxx">
 			</File>
 			<File
+				RelativePath=".\SecurityAttributes.cxx">
+			</File>
+			<File
 				RelativePath="SipFrag.cxx">
 			</File>
 			<File
@@ -565,9 +568,6 @@
 			</File>
 			<File
 				RelativePath=".\os\WinCompat.cxx">
-			</File>
-			<File
-				RelativePath=".\X_msMsgsInvite.cxx">
 			</File>
 			<File
 				RelativePath="XMLCursor.cxx">
