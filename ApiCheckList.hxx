@@ -2,42 +2,40 @@
 #define RESIP_APICHECKLIST_HXX
 
 
+#include "resiprocate/ApiCheck.hxx"
+
 // These types were chosen because they represent the exported stuff.
 
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/DnsResult.hxx"
-#include "resiprocate/TlsConnection.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/os/Logger.hxx"
-#include "resiprocate/TransactionController.hxx"
-#include "resiprocate/Executive.hxx"
-#include "resiprocate/Message.hxx"
-#include "resiprocate/Uri.hxx"
 
+#include "resiprocate/Connection.hxx"
+#include "resiprocate/DnsResult.hxx"
+#include "resiprocate/Headers.hxx"
+#include "resiprocate/MsgHeaderScanner.hxx"
+#include "resiprocate/TlsConnection.hxx"
+#include "resiprocate/TransportSelector.hxx"
+#include "resiprocate/UdpTransport.hxx"
+#include "resiprocate/os/Tuple.hxx"
 
 // Make an entry in the table
-#define TENT(x) { #x, sizeof(resip::x) }
+#define TENT(x,y) { #x, sizeof(resip::x), y }
 
-static ::resip::ApiCheck::ApiEntry resipApiSizeList[] =
+static ::resip::ApiCheck::ApiEntry anonymous_resipApiSizeList[] =
 {
-    TENT(SipStack),
-    TENT(DnsResult),
-    TENT(Security),
-    TENT(Connection),
-    TENT(TlsConnection),
-    TENT(TransportSelector),
-    TENT(DnsInterface),
-    TENT(DnsResult),
-    TENT(Tuple),
-    TENT(TransportType),
-    TENT(IpVersion),
-    TENT(SipMessage),
-    TENT(Uri),
-    TENT(TransactionController),
-    TENT(Executive),
-    TENT(Message),
+    // KEEP SORTED ALPHABETICALLY
+    TENT(Connection,"NEW_MSG_HEADER_SCANNER"),
+    TENT(DnsResult,"USE_IPV6"),
+    TENT(Headers,"PARTIAL_TEMPLATE_SPECIALIZATION"),
+#if defined(NEW_MSG_HEADER_SCANNER)
+    TENT(MsgHeaderScanner,"NEW_MSG_HEADER_SCANNER"),
+#endif
+    TENT(SipMessage, "PARTIAL_TEMPLATE_SPECIALIZATION"),
+    TENT(TlsConnection,"USE_SSL"),
+    TENT(TransportSelector,"USE_IPV6"),
+    TENT(Tuple,"USE_IPV6"),
+    TENT(UdpTransport,"NEW_MSG_HEADER_SCANNER"),
     {0,0}
 };
+
+static resip::ApiCheck::ApiCheck anonymous_resipApiCheckObj(anonymous_resipApiSizeList);
 
 #endif

@@ -16,7 +16,7 @@ namespace resip
 class ApiCheck
 {
     public:
-        typedef struct { const char * name; size_t sz; } ApiEntry;
+        typedef struct { const char * name; size_t sz; const char * culprits;} ApiEntry;
         ApiCheck(ApiEntry * list);
 };
 };
