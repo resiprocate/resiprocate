@@ -44,7 +44,7 @@ TransactionState::makeCancelTransaction(TransactionState* tr, Machine machine)
    TransactionState* cancel = new TransactionState(tr->mController, machine, Trying, tr->mId + "cancel");
    // !jf! don't set this since it will be set by TransactionState::processReliability()
    //cancel->mIsReliable = tr->mIsReliable;  
-   cancel->mSource = tr->mSource;
+   cancel->mResponseTarget = tr->mResponseTarget;
    cancel->mIsCancel = true;
    cancel->mTarget = tr->mTarget;
    
@@ -160,11 +160,11 @@ TransactionState::process(TransactionController& controller)
                // !rk! This might be needlessly created.  Design issue.
                TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid);
                state->mMsgToRetransmit = state->make100(sip);
-               state->mSource = state->mNetSource = sip->getSource(); // UACs source address
+               state->mResponseTarget = sip->getSource(); // UACs source address
                // since we don't want to reply to the source port unless rport present 
-               state->mSource.setPort(Helper::getPortForReply(*sip));
+               state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
                state->mState = Proceeding;
-               state->mIsReliable = state->mNetSource.transport->isReliable();
+               state->mIsReliable = state->mResponseTarget.transport->isReliable();
                state->add(tid);
                
                if (Timer::T100 == 0)
@@ -192,9 +192,9 @@ TransactionState::process(TransactionController& controller)
                   assert(matchingInvite);
                   state = TransactionState::makeCancelTransaction(matchingInvite, ServerNonInvite);
 
-                  state->mSource = sip->getSource();
+                  state->mResponseTarget = sip->getSource();
                   // since we don't want to reply to the source port unless rport present 
-                  state->mSource.setPort(Helper::getPortForReply(*sip));
+                  state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
                   state->add(tid);
                   state->processReliability(matchingInvite->mTarget.getType());
                   // !jf! don't call processServerNonInvite since it will delete
@@ -204,11 +204,11 @@ TransactionState::process(TransactionController& controller)
             else if (sip->header(h_RequestLine).getMethod() != ACK)
             {
                TransactionState* state = new TransactionState(controller, ServerNonInvite,Trying, tid);
-               state->mSource = state->mNetSource = sip->getSource();
+               state->mResponseTarget = sip->getSource();
                // since we don't want to reply to the source port unless rport present 
-               state->mSource.setPort(Helper::getPortForReply(*sip));
+               state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
                state->add(tid);
-               state->mIsReliable = state->mNetSource.transport->isReliable();
+               state->mIsReliable = state->mResponseTarget.transport->isReliable();
             }
             
 
@@ -1140,6 +1140,14 @@ TransactionState::processServerStale(  Message* msg )
       InfoLog (<< "Passing ACK directly to TU: " << sip->brief());
       sendToTU(msg);
    }
+   else if (sip && isRequest(sip) && sip->header(h_RequestLine).getMethod() == INVITE)
+   {
+      // this can happen when an upstream UAC never received the 200 and
+      // retransmits the INVITE when using unreliable transport
+      // Drop the INVITE since the 200 will get retransmitted by the downstream UAS
+      DebugLog (<< "Dropping retransmitted INVITE in stale server transaction" << sip->brief());
+      delete msg;
+   }
    else
    {
       assert(isResponse(msg));
@@ -1299,7 +1307,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
       assert(sip->exists(h_Vias));
       assert(!sip->header(h_Vias).empty());
 
-      Tuple target(mSource);
+      Tuple target(mResponseTarget);
       if (sip->header(h_Vias).front().exists(p_rport) && sip->header(h_Vias).front().param(p_rport).hasValue())
       {
          target.setPort(sip->header(h_Vias).front().param(p_rport).port());
@@ -1536,7 +1544,7 @@ resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
    }
    
    strm << (state.mIsReliable ? " reliable" : " unreliable");
-   strm << " target=" << state.mSource;
+   strm << " target=" << state.mResponseTarget;
    strm << "]";
    return strm;
 }
