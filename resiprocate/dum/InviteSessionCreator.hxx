@@ -14,6 +14,7 @@ class InviteSessionCreator : public BaseCreator
 {
    public:
       InviteSessionCreator(DialogUsageManager& dum, const Uri& aor, const SdpContents* initial);
+	  virtual ~InviteSessionCreator();
       void end();
 
       virtual void dispatch(const SipMessage& msg);
