@@ -2,7 +2,7 @@
 inject_wire
 {
 REGISTER sip:127.0.0.1 SIP/2.0
-Via: SIP/2.0/TestUnreliable 127.0.0.1:1234;branch=z9hG4bK0000
+Via: SIP/2.0/UDP 127.0.0.1:1234;branch=z9hG4bK0000
 Max-Forwards: 70
 From: sip:A@inside.com;tag=12345
 To: sip:A@inside.com
@@ -30,7 +30,7 @@ timeout=2000
 inject_tu
 {
 SIP/2.0 100 Trying
-Via: SIP/2.0/TestUnreliable 127.0.0.1:1234;branch=z9hG4bK0000
+Via: SIP/2.0/UDP 127.0.0.1:1234;branch=z9hG4bK0000
 From: sip:A@inside.com;tag=12345
 To: sip:A@inside.com
 Call-ID: 0123456789@pc.inside.com
@@ -56,7 +56,7 @@ timeout=2000
 inject_wire
 {
 REGISTER sip:127.0.0.1 SIP/2.0
-Via: SIP/2.0/TestUnreliable 127.0.0.1:1234;branch=z9hG4bK0000
+Via: SIP/2.0/UDP 127.0.0.1:1234;branch=z9hG4bK0000
 Max-Forwards: 70
 From: sip:A@inside.com;tag=12345
 To: sip:A@inside.com
@@ -83,7 +83,7 @@ timeout=2000
 inject_tu
 {
 SIP/2.0 200 OK
-Via: SIP/2.0/TestUnreliable 127.0.0.1:1234;branch=z9hG4bK0000
+Via: SIP/2.0/UDP 127.0.0.1:1234;branch=z9hG4bK0000
 From: sip:A@inside.com;tag=12345
 To: sip:A@inside.com
 Call-ID: 0123456789@pc.inside.com
