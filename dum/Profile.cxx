@@ -13,7 +13,7 @@ Profile::Profile() :
    mDefaultRegistrationExpires(3600),  // 1 hour
    mDefaultSubscriptionExpires(3600),  // 1 hour
    mDefaultSessionExpires(1800),       // 30 minutes
-   mDefaultStaleCallTime(3600),        // 1 hour
+   mDefaultStaleCallTime(180),         // 3 minutes
    mHasOutboundProxy(false),
    mLooseToTagMatching(false),
    mRportEnabled(true),
