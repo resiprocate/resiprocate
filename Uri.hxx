@@ -18,6 +18,7 @@ class Uri : public ParserCategory
       Data& host() const {checkParsed(); return mHost;}
       Data& user() const {checkParsed(); return mUser;}
       const Data& getAor() const;
+      const Data getAorNoPort() const;
       Data& scheme() const {checkParsed(); return mScheme;}
       int& port() const {checkParsed(); return mPort;}
       Data& password() const {checkParsed(); return mPassword;}
