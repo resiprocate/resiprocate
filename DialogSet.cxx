@@ -17,7 +17,6 @@
 #include "resiprocate/dum/RedirectManager.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
-#include "resiprocate/dum/ServerPublication.hxx"
 #include "resiprocate/dum/ServerRegistration.hxx"
 #include "resiprocate/os/Logger.hxx"
 
@@ -44,7 +43,6 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mClientRegistration(0),
    mServerRegistration(0),
    mClientPublication(0),
-   mServerPublication(0),
    mClientOutOfDialogRequests(),
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
@@ -68,7 +66,6 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mClientRegistration(0),
    mServerRegistration(0),
    mClientPublication(0),
-   mServerPublication(0),
    mClientOutOfDialogRequests(),
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
@@ -105,7 +102,6 @@ DialogSet::~DialogSet()
    delete mClientRegistration;
    delete mServerRegistration;
    delete mClientPublication;
-   delete mServerPublication;
    delete mServerOutOfDialogRequest;
    delete mClientPagerMessage;
    delete mServerPagerMessage;   
@@ -130,7 +126,6 @@ void DialogSet::possiblyDie()
       if(mDialogs.empty() && 
          mClientOutOfDialogRequests.empty() &&
          !(mClientPublication ||
-           mServerPublication ||
            mServerOutOfDialogRequest ||
            mClientPagerMessage ||
            mServerPagerMessage ||
@@ -295,11 +290,7 @@ DialogSet::dispatch(const SipMessage& msg)
             }
             break;                              
          case PUBLISH:
-            if (mServerPublication == 0)
-            {
-               mServerPublication = makeServerPublication(request);
-            }
-            mServerPublication->dispatch(request);
+            assert(false);
             return; 
          case INFO:   
             if (dialog)
@@ -620,20 +611,6 @@ DialogSet::getClientPublication()
    }
 }
 
-ServerPublicationHandle 
-DialogSet::getServerPublication()
-{
-   if (mServerPublication)
-   {
-      return mServerPublication->getHandle();
-   }
-   else
-   {
-      return ServerPublicationHandle::NotValid();      
-   }
-}
-
-
 ClientRegistration*
 DialogSet::makeClientRegistration(const SipMessage& response)
 {
@@ -662,12 +639,6 @@ ServerRegistration*
 DialogSet::makeServerRegistration(const SipMessage& request)
 {
    return new ServerRegistration(mDum, *this, request);
-}
-
-ServerPublication* 
-DialogSet::makeServerPublication(const SipMessage& request)
-{
-   return new ServerPublication(mDum, *this, request);
 }
 
 ServerOutOfDialogReq* 

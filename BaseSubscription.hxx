@@ -16,8 +16,10 @@ class BaseSubscription: public DialogUsage
 {
    public:      
       bool matches(const SipMessage& subOrNotify);
-      const Data& getEventType() { return mEventType; }
-      const Data& getId() { return mSubscriptionId; }
+      const Data& getDocumentKey() const { return mDocumentKey; }
+      const Data& getEventType() const { return mEventType; }
+      const Data& getId() const { return mSubscriptionId; }
+
    protected:
       friend class Dialog;
 
@@ -30,6 +32,7 @@ class BaseSubscription: public DialogUsage
       SipMessage mLastRequest;
       SipMessage mLastResponse;
       
+      Data mDocumentKey;
       Data mEventType;
       Data mSubscriptionId;
       int mTimerSeq;      
