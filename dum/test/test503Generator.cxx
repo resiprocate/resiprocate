@@ -1,24 +1,53 @@
-#include "PublicationCreator.hxx"
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
+#include <sys/types.h>
+#include <iostream>
+#include <memory>
+
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Inserter.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/Uri.hxx"
 
 using namespace resip;
+using namespace std;
 
-PublicationCreator::PublicationCreator(DialogUsageManager& dum,
-                                       const NameAddr& target, 
-                                       UserProfile& userProfile,
-                                       const Contents& body, 
-                                       const Data& eventType, 
-                                       unsigned expireSeconds )
-   : BaseCreator(dum, userProfile)
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+
+
+int
+main(int argc, char* argv[])
 {
-   makeInitialRequest(target, PUBLISH);
+   SipStack stack;
 
-   mLastRequest.header(h_Event).value() = eventType;
-   mLastRequest.setContents(&body);
-   mLastRequest.header(h_Expires).value() = expireSeconds;
+   Log::initialize(Log::Cout, Log::Info ,"test503Generator");   
+   
+   stack.addTransport(UDP, 5060);
+   stack.addTransport(TCP, 5060);
+
+   while(true)
+   {
+      FdSet fdset; 
+      stack.buildFdSet(fdset);
+      fdset.selectMilliSeconds(1000); 
+      stack.process(fdset);
+      SipMessage* msg = stack.receive();
+      if (msg && msg->isRequest())
+      {
+         SipMessage* resp = Helper::makeResponse(*msg, 503);
+         stack.send(*resp);
+         InfoLog( << "Generated 503 to: " << msg->brief());
+         delete resp;
+      }
+      delete msg;
+   }
+
 }
-
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

@@ -437,16 +437,16 @@ Dialog::dispatch(const SipMessage& msg)
 	                  DebugLog (<< "Making subscription from NOTIFY: " << msg);
                       ClientSubscription* sub = makeClientSubscription(msg);
                       mClientSubscriptions.push_back(sub);
-			          ClientSubscriptionHandle client = sub->getHandle();
-				      InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+			          ClientSubscriptionHandle client = sub->getHandle();				      
                       sub->dispatch(request);
+                      mInviteSession->mSentRefer = false;
                       if (client.isValid())
                       {
-                         handler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);
+                         mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);
                       }
                       else
                       {
-                         handler->onReferRejected(mInviteSession->getSessionHandle(), msg);
+                         mDum.mInviteSessionHandler->onReferRejected(mInviteSession->getSessionHandle(), msg);
                       }
 				   }
 				   else
@@ -538,12 +538,16 @@ Dialog::dispatch(const SipMessage& msg)
             break;       
 
 		 case REFER:
-            if (code >= 300)
+            if(mInviteSession)
             {
-   		       InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-               handler->onReferRejected(mInviteSession->getSessionHandle(), msg);
+               mInviteSession->mSentRefer = false;
+
+               if (code >= 300)
+               {
+                  mDum.mInviteSessionHandler->onReferRejected(mInviteSession->getSessionHandle(), msg);
+               }
+               // else no need for action - first Notify will cause onReferAccepted to be called
             }
-            // else no need for action - first Notify will cause onReferAccepted to be called
             break;
 
          case SUBSCRIBE:

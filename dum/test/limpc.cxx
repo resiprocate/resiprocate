@@ -7,6 +7,10 @@
 
 //#define USE_CURSES
 
+#if defined (HAVE_POPT_H) 
+#include <popt.h>
+#endif
+
 #ifdef USE_CURSES
 #include <ncurses.h>
 #else
@@ -298,17 +302,6 @@ processStdin( Uri* dest, bool sign, bool encryp )
       return true;
    }
 
-#if 0
-   char junk[6];
-   junk[0]=' ';
-   junk[1]='0'+(c/100);
-   junk[2]='0'+((c/10)%10);
-   junk[3]='0'+(c%10);
-   junk[4]=' ';
-   junk[5]=0;
-   waddstr(commandWin,junk);
-#endif
-
    if (  (c == '\a') || (c == '\b') || (c == 4 ) || (c == 0x7F) )
    {
       if ( num > 0 )
@@ -433,449 +426,40 @@ processStdin( Uri* dest, bool sign, bool encryp )
 int
 main(int argc, char* argv[])
 {
-   int r;
-   
    try
    {
-      r = myMain( argc, argv );
+      UserAgent ua(argc, argv);
+
+      InfoLog(<< argv[0] << " starting");
+      while(1)
+      {
+         ua.process();
+      }
+   }
+   catch (BaseSecurity::Exception& e)
+   {
+      WarningLog (<< "Couldn't set up security object");
+      exit(-1);
+   }
+   catch (BaseException& e)
+   {
+      ErrLog (<< "Caught: " << e);
+      exit(-1);
    }
    catch( ... )
    {
-      ErrLog( << "Got a exception passed all the way to the top of limp" );
+      ErrLog( << "Caught non-resip exception" );
       exit(-1);
    }
-   
-   return r;
-}
 
+   return 0;
+}
 
 static int
 myMain(int argc, char* argv[])
 {  
-   Log::initialize(Log::Cerr, Log::Err, argv[0]);
-   Log::setLevel(Log::Warning);
-
-   InfoLog(<<"Test Driver for IM Starting");
-    
-   int port = 5060;
-   int tlsPort = 0;
-   int dtlsPort = 0;
-   Uri aor;
-   bool haveAor=false;
-   dest = Uri("sip:nobody@example.com");
-   Data aorPassword;
-   Uri contact("sip:user@");
-   bool haveContact=false;
-   Uri outbound;
-   bool noRegister = false;
-   Data tlsDomain = Data::Empty;
-
-   int numAdd=0;
-   Data addList[100];
-   int numPub=0;
-   Data pubList[100];
-   bool encryp=false;
-   bool sign=false;
-   Data key("password");
-   bool useTls = true;
-   bool noTls = false;
-   bool noTcp = false;
-   bool prefUdp = false;
-   bool prefTls = false;
-   bool prefDtls = false;
-   bool prefTcp = false;
-   bool noUdp = false;
-   bool noV6 = false;
-   bool noV4 = false;
-   bool genUserCert = false;
-   
-   for ( int i=1; i<argc; i++)
-   {
-      if (!strcmp(argv[i],"-vv"))
-      {
-         Log::setLevel(Log::Stack);
-      }
-      else if (!strcmp(argv[i],"-v"))
-      {
-         Log::setLevel(Log::Info);
-      }
-      else if (!strcmp(argv[i],"-encrypt"))
-      {
-         encryp = true;
-      }
-      else if (!strcmp(argv[i],"-genUserCert"))
-      {
-         genUserCert = true;
-      }
-      else if (!strcmp(argv[i],"-noRegister"))
-      {
-         noRegister = true;
-      }
-      else if (!strcmp(argv[i],"-sign"))
-      {
-         sign = true;
-      }
-      else if (!strcmp(argv[i],"-tlsDomain"))
-      {
-         i++;
-         assert( i<argc );
-         tlsDomain = Data(argv[i]);
-      }
-      else if (!strcmp(argv[i],"-ssl"))
-      {
-         useTls = false;
-      }
-      else if (!strcmp(argv[i],"-noTcp"))
-      {
-         noTcp = true;
-      }
-      else if (!strcmp(argv[i],"-noTls"))
-      {
-         noTls = true;
-      }
-      else if (!strcmp(argv[i],"-noUdp"))
-      {
-         noUdp = true;
-      }
-      else if (!strcmp(argv[i],"-prefTcp"))
-      {
-         prefTcp = true;
-      }
-      else if (!strcmp(argv[i],"-prefTls"))
-      {
-         prefTls = true;
-      }
-      else if (!strcmp(argv[i],"-prefUdp"))
-      {
-         prefUdp = true;
-      }
-      else if (!strcmp(argv[i],"-noV6"))
-      {
-         noV6 = true;
-      }
-      else if (!strcmp(argv[i],"-noV4"))
-      {
-         noV4 = true;
-      }
-      else if (!strcmp(argv[i],"-port"))
-      {
-         i++;
-         assert( i<argc );
-         port = atoi( argv[i] );
-      } 
-      else if (!strcmp(argv[i],"-tlsPort"))
-      {
-         i++;
-         assert( i<argc );
-         tlsPort = atoi( argv[i] );
-      }
-      else if (!strcmp(argv[i],"-dtlsPort"))
-      {
-	 i++;
-	 assert( i<argc );
-	 dtlsPort = atoi( argv[i] );
-      }
-      else if (!strcmp(argv[i],"-aor"))
-      {
-         i++;
-         assert( i<argc );
-         try
-         {
-            aor = Uri(Data(argv[i]));
-         }
-         catch (...)
-         {
-            ErrLog( <<"AOR URI is not valid - must start with sip: ");
-            exit(-1);
-         }
-         haveAor=true;
-      } 
-      else if (!strcmp(argv[i],"-outbound"))
-      {
-         i++;
-         assert( i<argc );
-	 try
-         {
-            outbound = Uri(Data(argv[i]));
-         }
-	 catch (...)
-	 {
-	    ErrLog( <<"Outbound URI is not valid - must start with sip: ");
-	    exit(-1);
-         }
-      } 
-      else if (!strcmp(argv[i],"-contact"))
-      {
-         i++;
-         assert( i<argc );
-         try
-         {
-            contact = Uri(Data(argv[i]));
-         }
-         catch (...)
-         {
-            ErrLog( <<"Contact URI is not valid - must start with sip: ");
-            exit(-1);
-         }
-         haveContact=true;
-      } 
-      else if (!strcmp(argv[i],"-add"))
-      {
-         i++;
-         assert( i<argc );
-         addList[numAdd++] = Data(argv[i]);
-         assert( numAdd < 100 ); 
-         try
-         {
-            // CJ TODO FIX 
-            //Uri uri( Data(argv[i]) );
-         }
-         catch (...)
-         {
-            ErrLog( <<"URI in -add is not valid - must start with sip: ");
-            exit(-1);
-         }
-      } 
-      else if (!strcmp(argv[i],"-pub"))
-      {
-         i++;
-         assert( i<argc );
-         pubList[numPub++] = Data(argv[i]);
-         assert( numPub < 100 ); 
-         try
-         {
-            // CJ TODO FIX 
-            //Uri uri(Data(argv[i]));
-         }
-         catch (...)
-         {
-            ErrLog( <<"Pub URI is not valid - must start with sip: ");
-            exit(-1);
-         }
-      } 
-      else if (!strcmp(argv[i],"-aorPassword"))
-      {
-         i++;
-         assert( i<argc );
-         aorPassword = Data(argv[i]);
-      } 
-      else if (!strcmp(argv[i],"-to"))
-      {
-         i++;
-         assert( i<argc );
-         try
-         {
-            dest = Uri(Data(argv[i])); 
-         }
-         catch (...)
-         {
-            ErrLog( <<"To URI is not valid - must start with sip: ");
-            exit(-1);
-         }
-      } 
-      else if (!strcmp(argv[i],"-key"))
-      {
-         i++;
-         assert( i<argc );
-         key = Data(argv[i]);
-      } 
-      else
-      { 
-         clog <<"Bad command line opion: " << argv[i] << endl;
-         clog <<"options are: " << endl
-              << "\t [-v] [-vv] [-tls] [-port 5060] [-tlsport 5061]" << endl
-              << "\t [-aor sip:alice@example.com] [-aorPassword password]" << endl
-              << "\t [-to sip:friend@example.com] [-add sip:buddy@example.com]" << endl
-              << "\t [-sign] [-encrypt] [-key secret]" << endl
-              << "\t [-contact sip:me@example.com] " << endl
-              << "\t [-outbound \"sip:example.com;lr\"] " << endl
-              << "\t [-noRegister] " << endl
-              << "\t [-pub sip:foo.com] " << endl
-              << "\t [-tlsDomain foo.com] " << endl; 
-         clog << endl
-              << " -v is verbose" << endl
-              << " -vv is very verbose" << endl
-              << " -noV6 don't use IPv6" << endl
-              << " -noV4 don't use IPv4" << endl
-              << " -noUdp don't use UDP" << endl
-              << " -noTcp don't use TCP" << endl
-              << " -noTls don't use TLS" << endl
-              << " -prefUdp prefer UDP" << endl
-              << " -prefTcp prefer TCP" << endl
-              << " -prefTls prefer TLS" << endl
-              << " -port sets the UDP and TCP port to listen on" << endl
-              << " -tlsPort sets the port to listen for TLS on" << endl
-              << " -tlsDomain domainName - sets tls and dtls to act as tls server instead of client" << endl
-              << " -ssl - use ssl instead of tls" << endl
-              << " -aor sets the proxy and user name to register with" << endl
-              << " -aorPassword sets the password to use for registration" << endl
-              << " -noRegister causes it not to register - by default the AOR is registered" << endl
-              << " -to sets initial location to send messages to" << endl
-              << " -outbound sets the outbound proxy" << endl
-              << " -add adds a budy who's presence will be monitored" << endl
-              << " -pub adds a State Agent to send publishes too" << endl
-              << " -sign signs message you send and -encryp encrypt them " << endl
-              << "\t(You need PKI certs for this to work)" << endl
-              << " -key allows you to enter a secret used to load your private key."<< endl
-              << "  If you set the secret to - the system will querry you for it."<< endl
-              << " -contact overrides your SIP contact - can be used for NAT games" << endl
-              << "\t there can be many -add " << endl
-              << " -genUserCert - generate a new user cert" << endl
-              << " " << endl
-              << "Examples" << endl
-              << "An example command line for a user with account name alice at example.com is:" << endl
-              << "\t" << argv[0] << " -aor \"alice@example.com\" -aorPassword \"secret\"" << endl
-              << "to watch the presence of bob and charlie add" << endl
-              << "\t-add \"sip:bob@bilboxi.com\" -add \"charlie@example.com\" " << endl
-              << "If Alice was behind a NAT that had a public address of 1.2.3.4 and had forwarded" << endl
-              << "port 5070 on this NAT to the machine Alice was using, then the following " << endl
-              << "options would be added" << endl
-              << "\t-contact \"sip:alice@1.2.3.4:5070\" -port 5070" << endl
-              << "" << endl
-              << endl;
-         exit(1);
-      }
-   }
-   
-   //InfoLog( << "Using port " << port );
-  
-#ifdef USE_SSL
-   InfoLog( << "Setting up Security" );
-   Security* security=NULL;
-   try
-   {
-      char cert_dir[ 1024 ] ;
-      char *home_dir = getenv( "HOME" ) ;
-
-      cert_dir[ 0 ] = '\0' ;
-      ::strcat( cert_dir, home_dir ) ;
-      ::strcat( cert_dir, "/.sipCerts/" ) ;
-
-      security = new Security( cert_dir ) ;
-
-      //  ::free( home_dir ) ; // CJ TODO mem leak 
-   }
-   catch( ... )
-   {
-      security = NULL;
-      ErrLog( << "Got a exception setting up Security" );
-   }
-
-   SipStack sipStack( security );  
-#else
-   SipStack sipStack( false /*multihtread*/ );  
-#endif
-
-   if ( key == Data("-") )
-   {
-      clog << "Please enter password to use to load your private key: ";
-      char buf[1024];
-      cin.get(buf,1024);
-      key = Data(buf);
-      InfoLog( << "Certificate key set to <" << key << ">" );
-   }
-   
-#ifdef USE_SSL
-   try
-   {
-      Security* security = sipStack.getSecurity();
-      assert(security != 0);
-   }
-   catch( ... )
-   {
-      ErrLog( << "Got an exception creating security object " );
-   }
-
-   try
-   {
-      assert(security != 0);
-      security->preload();
-   }
-   catch( ... )
-   {
-      ErrLog( << "Got a exception pre loading certificates" );
-   }
-
-
-   if (genUserCert)
-   {
-      assert( security );
-      security->generateUserCert(aor.getAor());
-   }
-#endif
-
-   DebugLog( << "About to add the transports " );   
-   if (port!=0)
-   {
-      if ( noUdp != true )
-      {
-         if (!noV4) sipStack.addTransport(UDP, port, V4);
-#ifdef USE_IPV6
-         if (!noV6) sipStack.addTransport(UDP, port, V6);
-#endif
-      }
-      if ( noTcp != true )
-      {
-         if (!noV4) sipStack.addTransport(TCP, port, V4);
-#ifdef USE_IPV6
-         if (!noV6) sipStack.addTransport(TCP, port, V6);
-#endif
-      }
-   }
-#if USE_SSL
-   if ( tlsPort != 0 )
-   {
-      if ( noTls != true )
-      {
-         if (!noV4) 
-         {
-            sipStack.addTransport(TLS, tlsPort, V4, Data::Empty, tlsDomain );
-         }
-	 //if (!noV6) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V6);
-      }
-   }
-#if USE_DTLS
-   if ( dtlsPort != 0 )
-   {
-      if ( noTls != true )
-      {
-         if (!noV4) 
-         {
-            sipStack.addTransport(DTLS, dtlsPort, V4, Data::Empty, tlsDomain );
-         }
-      }
-   }
-#endif
-#endif
-
    DebugLog( << "Done adding the transports " );   
 
-   if (!haveContact)
-   {
-      // contact.port() = port;
-      // contact.host() = sipStack.getHostname();
-   }
-   
-   if ( haveAor )
-   {
-      if (!haveContact)
-      {
-         contact.user() = aor.user();
-#if USE_SSL
-         if ( aor.scheme() == "sips" )
-         {
-            contact.scheme() = aor.scheme();
-            //contact.port() = tlsPort;
-         }
-#endif
-      }
-   }
-   else
-   {
-      aor.port() = port;
-      aor.host() = sipStack.getHostname();
-      aor.user() = Data("user");
-   }
 
    InfoLog( << "aor is " << aor );
    InfoLog( << "contact is " << contact );
