@@ -1,5 +1,5 @@
-#if !defined(SIPSESSION_HXX)
-#define SIPSESSION_HXX
+#if !defined(RESIP_SIPSESSION_HXX)
+#define RESIP_SIPSESSION_HXX
 
 
 #include "resiprocate/os/Timer.hxx"
@@ -32,9 +32,7 @@ class SipSession
  
 }
 
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -85,5 +83,3 @@ class SipSession
  * <http://www.vovida.org/>.
  *
  */
-
-

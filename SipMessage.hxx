@@ -1,5 +1,5 @@
-#ifndef SipMessage_hxx
-#define SipMessage_hxx
+#if !defined(RESIP_SIPMESSAGE_HXX)
+#define RESIP_SIPMESSAGE_HXX 
 
 #include "resiprocate/os/Socket.hxx"
 
@@ -282,6 +282,8 @@ class SipMessage : public Message
 #undef ensureSingleHeader
 #undef ensureMultiHeader
 
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -331,5 +333,3 @@ class SipMessage : public Message
  * <http://www.vovida.org/>.
  *
  */
-
-#endif

@@ -1,5 +1,5 @@
-#if !defined(TCPTRANSPORT_HXX)
-#define TCPTRANSPORT_HXX
+#if !defined(RESIP_TCPTRANSPORT_HXX)
+#define RESIP_TCPTRANSPORT_HXX
 
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Message.hxx"
@@ -44,7 +44,6 @@ class TcpTransport : public Transport
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -1,5 +1,5 @@
-#ifndef UnknownParameter_hxx
-#define UnknownParameter_hxx
+#if !defined(RESIP_UNKNOWNPARAMETER_HXX)
+#define RESIP_UNKNOWNPARAMETER_HXX 
 
 #include "resiprocate/DataParameter.hxx"
 
@@ -32,7 +32,6 @@ class UnknownParameter : public DataParameter
 std::ostream& operator<<(std::ostream& stream, resip::UnknownParameter& comp);
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
