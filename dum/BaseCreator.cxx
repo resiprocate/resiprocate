@@ -14,8 +14,11 @@ void
 BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
 {
    RequestLine rLine(method);
-   rLine.uri() = target.uri();
+   rLine.uri().scheme() = target.uri().scheme();
+   rLine.uri().host() = target.uri().host();
+   rLine.uri().port() = target.uri().port();
    mLastRequest.header(h_RequestLine) = rLine;
+
    mLastRequest.header(h_To) = target;
    mLastRequest.header(h_MaxForwards).value() = 70;
    mLastRequest.header(h_CSeq).method() = method;
