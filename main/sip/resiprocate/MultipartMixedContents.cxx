@@ -154,9 +154,9 @@ MultipartMixedContents::parse(ParseBuffer& pb)
    {
       // skip over boudary
  
-      assert( *pb.position() == Symbols::CR[0] );
+      assert( !pb.eof() && *pb.position() == Symbols::CR[0] );
       pb.skipChar();
-      assert( *pb.position() == Symbols::LF[0] );
+      assert( !pb.eof() && *pb.position() == Symbols::LF[0] );
       pb.skipChar();
       
       pb.assertNotEof();

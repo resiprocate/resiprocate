@@ -153,7 +153,7 @@ XMLCursor::parseNextRootChild()
       ParseBuffer pb(mRoot->mPb.position(), 
                      mRoot->mPb.end() - mRoot->mPb.position());
       pb.skipChar();
-      if (*pb.position() == Symbols::SLASH[0])
+      if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
       {
          pb.skipChar();
          if (mTag.size() + pb.position() > pb.end())
@@ -300,7 +300,7 @@ XMLCursor::getAttributes() const
 
       pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::RA_QUOTE);
 
-      while (*pb.position() != Symbols::RA_QUOTE[0])
+      while (!pb.eof() && *pb.position() != Symbols::RA_QUOTE[0])
       {
          attribute.clear();
          value.clear();
@@ -395,7 +395,7 @@ XMLCursor::Node::extractTag()
    pb.assertNotEof();
    pb.data(mTag, anchor);
 
-   return *pb.position() == Symbols::SLASH[0];
+   return !pb.eof() && *pb.position() == Symbols::SLASH[0];
 }
 
 void
