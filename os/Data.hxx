@@ -161,6 +161,9 @@ class Data
 
       static size_t rawHash(const char* c, size_t size);
       size_t hash() const;
+
+      static size_t rawCaseInsensitiveHash(const char* c, size_t size);
+      size_t caseInsensitivehash() const;
       
    private:
       Data(const char* buffer, int length, bool); // deprecated: use // Data(ShareEnum ...)

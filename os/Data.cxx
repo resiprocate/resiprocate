@@ -1324,6 +1324,35 @@ Data::rawHash(const char* c, size_t size)
    return ntohl(st);
 }
 
+// use only for ascii characters!
+size_t 
+Data::rawCaseInsensitiveHash(const char* c, size_t size)
+{
+   union 
+   {
+         size_t st;
+         unsigned char bytes[4];
+   };
+   st = 0; // suppresses warnings about unused st
+   bytes[0] = randomPermutation[0];
+   bytes[1] = randomPermutation[1];
+   bytes[2] = randomPermutation[2];
+   bytes[3] = randomPermutation[3];
+
+   const char* end = c + size;
+   for ( ; c != end; ++c)
+   {
+      char cc = tolower(*c); 
+      bytes[0] = randomPermutation[cc ^ bytes[0]];
+      bytes[1] = randomPermutation[cc ^ bytes[1]];
+      bytes[2] = randomPermutation[cc ^ bytes[2]];
+      bytes[3] = randomPermutation[cc ^ bytes[3]];
+   }
+
+   // convert from network to host byte order
+   return ntohl(st);
+}
+
 // buzHash
 static size_t buzArray[256] =
 {
@@ -1467,6 +1496,12 @@ size_t
 Data::hash() const
 {
    return rawHash(this->data(), this->size());
+}
+
+size_t
+Data::caseInsensitivehash() const
+{
+   return rawCaseInsensitiveHash(this->data(), this->size());
 }
 
 #if defined(HASH_MAP_NAMESPACE)
