@@ -165,7 +165,7 @@ main(int argc, char** argv)
 {
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
-#if 0
+#if 1
    TestTransportSelector::testEmptyFail();
    TestTransportSelector::testExactFail();
    TestTransportSelector::testExact();
