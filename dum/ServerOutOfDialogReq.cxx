@@ -18,6 +18,18 @@ ServerOutOfDialogReq::~ServerOutOfDialogReq()
    mDialog.mServerOutOfDialogRequest = 0;
 }
 
+
+void 
+ServerOutOfDialogReq::dispatch(const SipMessage& msg)
+{
+}
+
+void
+ServerOutOfDialogReq::dispatch(const DumTimeout& msg)
+{
+}
+
+
 ServerOutOfDialogReq::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
 {}
