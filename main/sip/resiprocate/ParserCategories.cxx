@@ -1497,16 +1497,6 @@ Via::Via(const Via& rhs)
 {
 }
 
-Via::Via(HeaderFieldValue* hfv, Headers::Type type) 
-   : ParserCategory(hfv, type),
-     mProtocolName(Symbols::ProtocolName),
-     mProtocolVersion(Symbols::ProtocolVersion),
-     mTransport(Symbols::UDP), // !jf! 
-     mSentHost(),
-     mSentPort(-1) 
-{
-}
-
 Via&
 Via::operator=(const Via& rhs)
 {
