@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2002/09/21 19:54:38 fluffy Exp $
+# $Id: Makefile,v 1.12 2002/09/21 20:04:00 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -19,7 +19,7 @@ OSRC =   *.hxx Makefile
 CXXFLAGS += -O -g
 #CXXFLAGS += -g
 LDFLAGS  += 
-CXXFLAGS += -I. -I../. -I../../. -MD -Wall
+CXXFLAGS += -I. -I../. -I../../. -MD -Wall $(CXXDEBUG)
 LDLIBS   += 
 
 ifeq ($(ARCH),i686)
