@@ -9,6 +9,7 @@
 #endif
 
 #include <util/Fifo.hxx>
+#include <util/Socket.hxx>
 #include <sipstack/Message.hxx>
 
 namespace Vocal2
@@ -49,7 +50,7 @@ class Transport
       void shutdown();
 
    protected:
-      int mFd;
+	Socket mFd; // this is a unix file descriptor or a windows SOCKET
       int mPort;
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
