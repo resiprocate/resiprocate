@@ -8,7 +8,34 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
+repro::RequestProcessorChain::RequestProcessorChain()
+{
+}
 
+repro::RequestProcessorChain::~RequestProcessorChain()
+{
+}
+
+repro::RequestProcessor::processor_action_t
+repro::RequestProcessorChain::handleRequest(RequestContext &rc)
+{
+  chain_t::iterator i;
+  processor_action_t action;
+
+  for (i = chain.begin(); i != chain.end(); i++)
+  {
+    action = i->handleRequest(rc);
+    if (action == SKIP_ALL_CHAINS)
+    {
+      return SKIP_ALL_CHAINS;
+    }
+    if (action == SKIP_THIS_CHAIN)
+    {
+      return CONTINUE;
+    }
+  }
+  return CONTINUE;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
