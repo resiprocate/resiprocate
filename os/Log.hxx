@@ -1,8 +1,6 @@
 #if !defined(RESIP_LOG_HXX)
 #define RESIP_LOG_HXX 
 
-#define DELIM ' ' << '|' << ' '
-
 #include "resiprocate/os/Data.hxx"
 
 #ifndef WIN32
@@ -86,7 +84,8 @@ class Log
                                 const Subsystem& subsystem, 
                                 const char* file,
                                 int line,
-                                std::ostream& strm); 
+                                std::ostream& strm);
+      static Data& timestamp(Data& result);
       static Data timestamp();
       static void initialize(Type type,
                              Level level,
