@@ -1,0 +1,69 @@
+
+#include <util/Socket.hxx>
+
+#include <sipstack/Transport.hxx>
+#include <sipstack/SipMessage.hxx>
+
+using namespace Vocal2;
+
+Transport::TransportException::TransportException(const Data& msg, const Data& file, const int line)
+{
+}
+
+const char* 
+Transport::TransportException::what() const throw()
+{
+   return "TransportException";
+}
+
+
+Transport::Transport(int portNum, Fifo<Message>& rxFifo) :
+   mPort(portNum), 
+   mStateMachineFifo(rxFifo),
+   mShutdown(false)
+{
+}
+
+
+void
+Transport::run()
+{
+   while(!mShutdown)
+   {
+      fd_set fdSet; 
+      int fdSetSize;
+
+      FD_ZERO(&fdSet); 
+      fdSetSize=0;
+      FD_SET(mFd,&fdSet); 
+
+#ifdef WIN32
+	  assert(0);
+#else
+		if ( mFd+1 > fdSetSize )
+		{	
+				fdSetSize =  mFd+1; 
+		}
+#endif
+
+      int  err = select(fdSetSize, &fdSet, 0, 0, 0);
+      if (err == 0)
+      {
+         process();
+      }
+      else
+      {
+         assert(0);
+      }
+   }
+}
+
+void
+Transport::shutdown()
+{
+   mShutdown = true;
+}
+
+Transport::~Transport()
+{
+}

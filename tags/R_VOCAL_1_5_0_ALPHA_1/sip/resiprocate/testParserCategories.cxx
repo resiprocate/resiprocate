@@ -1,0 +1,252 @@
+#include <assert.h>
+#include <iostream>
+#include <sipstack/HeaderFieldValue.hxx>
+#include <sipstack/HeaderTypes.hxx>
+#include <sipstack/ParserCategories.hxx>
+#include <string.h>
+#include <util/ParseBuffer.hxx>
+#include <sipstack/Uri.hxx>
+
+using namespace std;
+using namespace Vocal2;
+
+int
+main(int arc, char** argv)
+{
+   {
+      // test header hash
+      for (int i = Headers::CSeq; i < Headers::UNKNOWN; i++)
+      {
+         assert(Headers::getType(Headers::HeaderNames[i].c_str(), Headers::HeaderNames[i].size()) == i);
+      }
+   }
+
+   {
+      // test parameter hash
+      for (int i = ParameterTypes::transport; i < ParameterTypes::UNKNOWN; i++)
+      {
+         assert(ParameterTypes::getType(ParameterTypes::ParameterNames[i].c_str(), ParameterTypes::ParameterNames[i].size()) == i);
+      }
+   }
+   
+   {
+      cerr << "simple Token parse test" << endl;
+      char *org = "WuggaWuggaFoo";
+      
+      HeaderFieldValue hfv(org, strlen(org));
+      Token tok(&hfv);
+      assert(tok.value() == org);
+   }
+
+   {
+      cerr << "Token + parameters parse test" << endl;
+      char *org = "WuggaWuggaFoo;ttl=2";
+      
+      HeaderFieldValue hfv(org, strlen(org));
+      Token tok(&hfv);
+      assert(tok.value() == "WuggaWuggaFoo");
+      assert(tok.param(p_ttl) == 2);
+   }
+
+   {
+      cerr << "full on via parse" << endl;
+      char *viaString = /* Via: */ " SIP/2.0/UDP a.b.c.com:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
+      
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv);
+      assert(via.sentPort() == 5000);
+      assert(via.sentHost() == "a.b.c.com");
+      assert(via.param(p_maddr) == "1.2.3.4");
+   }
+
+   {
+      cerr << "URI parse" << endl;
+      char *uriString = "sip:bob@foo.com";
+      ParseBuffer pb(uriString);
+      Uri uri;
+      uri.parse(pb);
+      assert(uri.scheme() == "sip");
+      assert(uri.user() == "bob");
+      assert(uri.host() == "foo.com");
+      assert(uri.port() == 5060);
+   }
+
+   {
+      cerr << "URI parse, no displayName" << endl;
+      char *uriString = "sips:foo.com";
+      ParseBuffer pb(uriString);
+      Uri uri;
+      uri.parse(pb);
+      assert(uri.scheme() == "sips");
+      assert(uri.user() == "");
+      assert(uri.host() == "foo.com");
+      assert(uri.port() == 5060);
+   }
+
+   {
+      cerr << "URI parse, parameters" << endl;
+      char *uriString = "sips:bob;param=gargle:password@foo.com";
+      ParseBuffer pb(uriString);
+      Uri uri;
+      uri.parse(pb);
+      assert(uri.scheme() == "sips");
+      assert(uri.user() == "bob;param=gargle");
+      assert(uri.password() == "password");
+      assert(uri.host() == "foo.com");
+      assert(uri.port() == 5060);
+   }
+
+   {
+      cerr << "URI parse, parameters, port" << endl;
+      char *uriString = "sips:bob;param=gargle:password@foo.com:6000";
+      ParseBuffer pb(uriString);
+      Uri uri;
+      uri.parse(pb);
+      assert(uri.scheme() == "sips");
+      assert(uri.user() == "bob;param=gargle");
+      assert(uri.password() == "password");
+      assert(uri.host() == "foo.com");
+      assert(uri.port() == 6000);
+   }
+
+   {
+      cerr << "URI parse, parameters, correct termination check" << endl;
+      char *uriString = "sips:bob;param=gargle:password@foo.com notHost";
+      ParseBuffer pb(uriString);
+      Uri uri;
+      uri.parse(pb);
+      assert(uri.scheme() == "sips");
+      assert(uri.user() == "bob;param=gargle");
+      assert(uri.password() == "password");
+      cerr << "Uri:" << uri.host() << endl;
+      assert(uri.host() == "foo.com");
+   }
+
+   {
+      cerr << "Request Line parse" << endl;
+      char *requestLineString = "INVITE sips:bob@foo.com SIP/2.0";
+      HeaderFieldValue hfv(requestLineString, strlen(requestLineString));
+
+      RequestLine requestLine(&hfv);
+      assert(requestLine.uri().scheme() == "sips");
+      assert(requestLine.uri().user() == "bob");
+      cerr << requestLine.uri().host() << endl;
+      assert(requestLine.uri().host() == "foo.com");
+      assert(requestLine.uri().port() == 5060);
+      assert(requestLine.getMethod() == INVITE);
+      assert(requestLine.getSipVersion() == "SIP/2.0");
+   }
+   {
+      cerr << "Request Line parse, parameters" << endl;
+      char *requestLineString = "INVITE sips:bob@foo.com;maddr=1.2.3.4 SIP/2.0";
+      HeaderFieldValue hfv(requestLineString, strlen(requestLineString));
+
+      RequestLine requestLine(&hfv);
+      assert(requestLine.uri().scheme() == "sips");
+      assert(requestLine.uri().user() == "bob");
+      cerr << requestLine.uri().host() << endl;
+      assert(requestLine.uri().host() == "foo.com");
+      assert(requestLine.uri().port() == 5060);
+      assert(requestLine.getMethod() == INVITE);
+      assert(requestLine.uri().param(p_maddr) == "1.2.3.4");
+      cerr << requestLine.getSipVersion() << endl;
+      assert(requestLine.getSipVersion() == "SIP/2.0");
+   }
+   {
+      cerr << "NameAddr parse" << endl;
+      char *nameAddrString = "sips:bob@foo.com";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
+   }
+   {
+      cerr << "NameAddr parse, displayName" << endl;
+      char *nameAddrString = "Bob<sips:bob@foo.com>";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "Bob");
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
+   }
+   {
+      cerr << "NameAddr parse, quoted displayname" << endl;
+      char *nameAddrString = "\"Bob\"<sips:bob@foo.com>";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "\"Bob\"");
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
+   }
+   {
+      cerr << "NameAddr parse, quoted displayname, embedded quotes" << endl;
+      char *nameAddrString = "\"Bob   \\\" asd   \"<sips:bob@foo.com>";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "\"Bob   \\\" asd   \"");
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
+   }
+   {
+      cerr << "NameAddr parse, unquoted displayname, paramterMove" << endl;
+      char *nameAddrString = "Bob<sips:bob@foo.com>;tag=456248;mobility=hobble";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "Bob");
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
+      
+      cerr << "Uri params: ";
+      nameAddr.uri().encodeParameters(cerr) << endl;
+      cerr << "Header params: ";
+      nameAddr.encodeParameters(cerr) << endl;
+
+      assert(nameAddr.uri().param(p_tag) == "456248");
+      assert(nameAddr.uri().param(p_mobility) == "hobble");
+
+      assert(nameAddr.exists(p_tag) == false);
+      assert(nameAddr.exists(p_mobility) == false);
+   }
+   {
+      cerr << "NameAddr parse, quoted displayname, parameterMove" << endl;
+      char *nameAddrString = "\"Bob\"<sips:bob@foo.com>;tag=456248;mobility=hobble";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "\"Bob\"");
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+
+      assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.uri().port() == 5060);
+      
+      cerr << "Uri params: ";
+      nameAddr.uri().encodeParameters(cerr) << endl;
+      cerr << "Header params: ";
+      nameAddr.encodeParameters(cerr) << endl;
+
+      assert(nameAddr.uri().param(p_tag) == "456248");
+      assert(nameAddr.uri().param(p_mobility) == "hobble");
+
+      assert(nameAddr.exists(p_tag) == false);
+      assert(nameAddr.exists(p_mobility) == false);
+   }
+}
+
+
