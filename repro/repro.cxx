@@ -109,7 +109,7 @@ main(int argc, char** argv)
       if (!args.mNoChallenge)
       {
          DigestAuthenticator* da = new DigestAuthenticator();
-         //requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
+         requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
       }
    }
    
@@ -119,7 +119,11 @@ main(int argc, char** argv)
    
    proxy.addDomain(DnsUtil::getLocalHostName());
    proxy.addDomain(DnsUtil::getLocalHostName(), 5060);
-#if !defined( __APPLE__ ) // fails on mac  
+
+// TODO fix next line 
+//   Data foo = DnsUtil::getLocalIpAddress();
+#if !defined( __APPLE__ ) 
+   // TODO - this fails on mac  
    proxy.addDomain(DnsUtil::getLocalIpAddress());
    proxy.addDomain(DnsUtil::getLocalIpAddress(), 5060);
 #endif

@@ -20,26 +20,39 @@ class RouteAbstractDb
       {
          public:
             //!dcm! -- cleanse
+            short mVersion;
+            
             resip::Data mMethod;
             resip::Data mEvent;
             resip::Data mMatchingPattern;
             resip::Data mRewriteExpression;
+
+            int mOrder;
       };
       
       typedef std::vector<Route> RouteList;
             
-      RouteAbstractDb() {}
-      virtual ~RouteAbstractDb() {}
+      RouteAbstractDb();
+      virtual ~RouteAbstractDb();
       
       virtual void add(const resip::Data& method,
                        const resip::Data& event,
                        const resip::Data& matchingPattern,
-                       const resip::Data& rewriteExpression)=0;
+                       const resip::Data& rewriteExpression,
+                       const int order )=0;
       
       virtual RouteList getRoutes() const=0;
-      virtual void erase(const Route& )=0;
+
+      virtual void erase(const resip::Data& method,
+                       const resip::Data& event,
+                       const resip::Data& matchingPattern )=0;
       
-      virtual resip::Uri process(const resip::Uri& ruri, const resip::Data& method, const resip::Data& event ) =0;
+      virtual resip::Uri process(const resip::Uri& ruri, 
+                                 const resip::Data& method, 
+                                 const resip::Data& event ) =0;
+   protected:
+      resip::Data serialize( const Route& route );
+      Route deSerialize( const resip::Data& data );
 };
 
  }

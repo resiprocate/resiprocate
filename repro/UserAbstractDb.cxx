@@ -34,6 +34,9 @@ UserAbstractDb::requestUserAuthInfo( const resip::Data& user,
                                      const resip::Data& transactionToken,
                                      resip::TransactionUser& transactionUser ) const
 {
+   // TODO - this shoudl put a message on a local queue then a thread should
+   // read that and then do the stuff in the rest of this fucntion
+   
    Data key = buildKey(user,realm);
    Data a1 = getUserAuthInfo(key);
     
@@ -60,6 +63,7 @@ UserAbstractDb::getUserAuthInfo( const Data& key ) const
 
 void 
 UserAbstractDb::addUser( const Data& username,
+                         const Data& domain,
                          const Data& realm,
                          const Data& password, 
                          const Data& fullName, 
@@ -75,7 +79,10 @@ UserAbstractDb::addUser( const Data& username,
       << password;
 
    UserAbstractDb::UserRecord rec;
-   rec.version = 1;
+   rec.version = 2;
+   rec.user = username;
+   rec.domain = domain;
+   rec.realm = realm;
    rec.passwordHash = a1.getHex();
    rec.name = fullName;
    rec.email = emailAddress;
@@ -103,10 +110,22 @@ UserAbstractDb::encodeUserRecord( const UserRecord& rec ) const
    short len;
    assert( sizeof(len) == 2 );
    
-   assert( rec.version == 1 );
+   assert( rec.version == 2 );
    
    assert( sizeof( rec.version) == 2 );
    s.write( (char*)(&rec.version) , sizeof( rec.version ) );
+   
+   len = rec.user.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( rec.passwordHash.data(), len );
+   
+   len = rec.domain.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( rec.passwordHash.data(), len );
+   
+   len = rec.realm.size();
+   s.write( (char*)(&len) , sizeof( len ) );
+   s.write( rec.passwordHash.data(), len );
    
    len = rec.passwordHash.size();
    s.write( (char*)(&len) , sizeof( len ) );
@@ -142,8 +161,32 @@ UserAbstractDb::decodeUserRecord( const Data& pData ) const
    s.read( (char*)(&len), sizeof(len) );
    rec.version =  len;
    
-   if (  rec.version == 1 )
+   if (  rec.version == 2 )
    {
+      {
+         s.read( (char*)(&len), sizeof(len) ); 
+         char buf[len+1];
+         s.read( buf, len );
+         Data data( buf, len );
+         rec.user = data;
+      }
+      
+      {
+         s.read( (char*)(&len), sizeof(len) ); 
+         char buf[len+1];
+         s.read( buf, len );
+         Data data( buf, len );
+         rec.domain = data;
+      }
+      
+      {
+         s.read( (char*)(&len), sizeof(len) ); 
+         char buf[len+1];
+         s.read( buf, len );
+         Data data( buf, len );
+         rec.realm = data;
+      }
+      
       {
          s.read( (char*)(&len), sizeof(len) ); 
          char buf[len+1];
