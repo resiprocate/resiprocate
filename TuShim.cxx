@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #ifndef WIN32
 
 void 

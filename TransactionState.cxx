@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsResult.hxx"
 #include "resiprocate/Helper.hxx"
