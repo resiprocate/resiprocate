@@ -11,8 +11,8 @@ class DialogState {
   public:
     DialogState(Data key,SipMessage* msg);
     const Data& key() { return mKey; }
-    const To_Header::Type& localTFHeader() {return mLocalTFHeader;}
-    const To_Header::Type& remoteTFHeader() {return mRemoteTFHeader;}
+    const H_To::Type& localTFHeader() {return mLocalTFHeader;}
+    const H_To::Type& remoteTFHeader() {return mRemoteTFHeader;}
     unsigned long & localCSeq() {return mLocalCSeq;}
     unsigned long & remoteCSeq() {return mRemoteCSeq;}
     const Data & callId() {return mCallId;}
@@ -23,8 +23,8 @@ class DialogState {
 
     //invariants
     Data mKey;
-    To_Header::Type mLocalTFHeader;
-    To_Header::Type mRemoteTFHeader;
+    H_To::Type mLocalTFHeader;
+    H_To::Type mRemoteTFHeader;
     Data mCallId;
     NameAddrs mRouteSet;
     NameAddr mMe;
