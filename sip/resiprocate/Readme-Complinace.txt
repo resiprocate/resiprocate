@@ -56,9 +56,26 @@ yes
 draft-ietf-impp-cpim-pidf-07.txt
 yes
 
-
 http://www.ietf.org/internet-drafts/draft-ietf-sip-callerprefs-07.txt
 hmm
 
 draft-message-waiting
+yes
+
+2311 - S/MIME ver 2 spec 
+yes
+
+2045 - MIME part one
+yes
+
+2046 - Mime part two
+yes
+
+2633 - S/MIME ver 3
+yes
+
+2315 - PKCS#7 
+yes
+
+1847 - Secure Multipart MIME 
 yes
