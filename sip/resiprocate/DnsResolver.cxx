@@ -87,7 +87,7 @@ determinePort(const Data& scheme, Transport::Type transport)
 static Data
 determineSrvPrefix(const Data& scheme, Transport::Type transport)
 {
-   Data prefix;
+   Data prefix(10, true);
 
    if ( isEqualNoCase(scheme, Symbols::Sips) )
    {
