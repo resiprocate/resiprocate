@@ -2,6 +2,7 @@
 #define RESIP_CLIENTSUBSCRIPTION_HXX
 
 #include "BaseUsage.hxx"
+#include "SubscriptionState.hxx"
 
 namespace resip
 {
@@ -10,7 +11,7 @@ class DialogUsageManager;
 
 class ClientSubscription: public BaseUsage
 {
-   public:
+   public:      
       class Handle : public BaseUsage::Handle
       {
          public:
@@ -30,6 +31,8 @@ class ClientSubscription: public BaseUsage
       
    private:
       friend class DialogUsageManager;
+      ClientSubscription(DialogUsageManager& dum,
+                         Dialog& dialog);
       
       Data mEventType;
       Data mSubscriptionId;

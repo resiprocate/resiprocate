@@ -13,8 +13,8 @@ namespace resip
    } SubscriptionState;
 
    typedef enum {
-     Invalid=0,
-     Deactivated,
+      //Invalid=0,
+     Deactivated=0,
      Probation,
      Rejected,
      Timeout,
