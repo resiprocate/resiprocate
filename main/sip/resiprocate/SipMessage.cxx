@@ -300,7 +300,7 @@ SipMessage::encode(std::ostream& str) const
          if (mContents != 0)
          {
             mContents->mHeadersFromMessage = true;
-
+            
             CountStream cs;
             mContents->encode(cs);
             cs.flush();
@@ -465,7 +465,7 @@ SipMessage::setContents(const Contents* contents)
    delete mContents;
    delete mContentsHfv;
    mContentsHfv = 0;
-   
+ 
    mContents = contents->clone();
 
    // copy contents headers into message

@@ -142,7 +142,8 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
    msg->setContents(body);
 
    setOutbound( *msg );
-   
+
+   DebugLog( << "About to send " << *msg );
    mStack->send( *msg );
 
    delete body;
