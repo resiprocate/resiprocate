@@ -17,6 +17,7 @@ class TransactionState
    public:
       static void process(SipStack& stack); 
       ~TransactionState();
+      void registerDnsLookup();
      
    private:
       typedef enum 
@@ -97,6 +98,7 @@ class TransactionState
       DnsState mDnsState;
       DnsResolver::TupleList mTuples;
       DnsResolver::TupleIterator mCurrent;
+      int mDnsOutstandingQueries;
       
       Transport::Tuple mSource; // used to reply to requests
       Data mId;
