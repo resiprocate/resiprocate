@@ -1,16 +1,35 @@
 #if !defined(RESIP_PROFILE_HXX)
 #define RESIP_PROFILE_HXX
 
+#include <set>
 #include "resiprocate/Headers.hxx"
+#include "resiprocate/MethodTypes.hxx"
 
 namespace resip
 {
 
 class Data;
 
+// !jf! will want to provide a default subclass of Profile that provides some
+// good defaults for the Profile
 class Profile
 {
    public:
+      Profile();
+      
+      void setDefaultAor(const NameAddr& from);
+      void setDefaultRegistrationTime(int secs);
+
+      void addSupportedScheme(const Data& scheme);
+      void addSupportedMethod(const MethodTypes& method);
+      void addSupportedOptionTags(const Token& tag);
+      void addSupportedMimeType(const Mime& mimeType);
+      void addSupportedEncoding(const Token& encoding);
+      void addSupportedLanguage(const Token& lang);
+
+      NameAddr& getDefaultAor();
+      int getDefaultRegistrationTime();
+
       bool isSchemeSupported(const Data& scheme);
       bool isMethodSupported(MethodTypes method);
       bool isMimeTypeSupported(const Mime& mimeType);
@@ -24,19 +43,7 @@ class Profile
       Mimes getSupportedMimeTypes();
       Tokens getSupportedEncodings();
       Tokens getSupportedLanguages();
-      NameAddr& getDefaultAor();
-      int getDefaultRegistrationTime();
       
-      void addSupportedScheme(const Data& scheme);
-      void addSupportedMethod(const MethodTypes& method);
-      void addSuportedOptionTags(const Token& tag);
-      void addSupportedMimeType(const Mime& mimeType);
-      void addSupportedEncoding(const Token& encoding);
-      void addSupportedLanguage(const Token& lang);
-
-      void setDefaultAor(const NameAddr& from);
-      void setDefaultRegistrationTime(int secs);
-
       void addGruu(const Data& aor, const NameAddr& contact);
       bool hasGruu(const Data& aor);
       bool hasGruu(const Data& aor, const Data& instance);
@@ -68,6 +75,16 @@ class Profile
       //@}
       
    private:
+      NameAddr mAor;
+      int mDefaultRegistrationExpires;
+      
+      std::set<Data> mSupportedSchemes;
+      std::set<MethodTypes> mSupportedMethodTypes;
+      Tokens mSupportedMethods;
+      Tokens mSupportedOptionTags;
+      Mimes mSupportedMimeTypes;
+      Tokens mSupportedEncodings;
+      Tokens mSupportedLanguages;
 };
    
 

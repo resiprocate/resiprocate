@@ -1,8 +1,8 @@
 #if !defined(RESIP_CLIENTDIALOGSET_HXX)
 #define RESIP_CLIENTDIALOGSET_HXX
 
-#include "Dialog.hxx"
-#include "DialogSetId.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/DialogSetId.hxx"
 
 namespace resip
 {
