@@ -7,6 +7,7 @@ const Subsystem Subsystem::NONE("NONE");
 const Subsystem Subsystem::BASE("BASE");
 const Subsystem Subsystem::UTIL("UTIL");
 const Subsystem Subsystem::SIP("SIP");    // SIP Stack / Parser
+const Subsystem Subsystem::APP("APP");    // application
 
 std::ostream& 
 Vocal2::operator<<(std::ostream& strm, const Subsystem& ss)
