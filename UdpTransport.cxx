@@ -143,7 +143,7 @@ UdpTransport::process(FdSet& fdset)
    // Save all the info where this message came from
    tuple.transport = this;
    message->setSource(tuple);   
-   DebugLog (<< "Received from: " << tuple);
+   //DebugLog (<< "Received from: " << tuple);
    
    // Tell the SipMessage about this datagram buffer.
    message->addBuffer(buffer);
