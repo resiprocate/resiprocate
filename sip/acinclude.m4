@@ -1,33 +1,28 @@
 AC_DEFUN([RESIP_LIB_OPENSSL],
 [
     AC_MSG_CHECKING([for OpenSSL])
-    AC_ARG_WITH([openssl],
-	AC_HELP_STRING([--with-openssl=DIR], [use the openssl crypto library]),
-	[
-	    for dir in $with_openssl /usr/local/ssl /usr/ssl /usr/local; do
-		if test -f "$dir/include/openssl/ssl.h"; then
-		    found_ssl=yes;
-		    CPPFLAGS="$CPPFLAGS -I$dir/include"
-		    LDFLAGS="$LDFLAGS -L$dir/lib"
-		    AC_DEFINE([USE_SSL],[1],[Use OpenSSL])
-		    break;
-		fi
-	    done
-	    if test x_$found_ssl != x_yes; then
-		if test -f "/usr/include/openssl/ssl.h"; then
-		    found_ssl=yes;
-		    AC_DEFINE([USE_SSL],[1],[Use OpenSSL])
-		fi
-	    fi
-	    if test x_$found_ssl != x_yes; then
-		AC_MSG_ERROR([not found])
-	    else
-		LIBS="$LIBS -lssl -lcrypto"
-		AC_MSG_RESULT([yes])
-	    fi
-	],
-	[ AC_MSG_RESULT([not requested])
-	])
+
+    for dir in $with_openssl /usr/local/ssl /usr/ssl /usr/local; do
+	if test -f "$dir/include/openssl/ssl.h"; then
+	    found_ssl=yes;
+	    CPPFLAGS="$CPPFLAGS -I$dir/include"
+	    LDFLAGS="$LDFLAGS -L$dir/lib"
+	    AC_DEFINE([USE_SSL],[1],[Use OpenSSL])
+	    break;
+	fi
+    done
+    if test x_$found_ssl != x_yes; then
+	if test -f "/usr/include/openssl/ssl.h"; then
+	    found_ssl=yes;
+	    AC_DEFINE([USE_SSL],[1],[Use OpenSSL])
+	fi
+    fi
+    if test x_$found_ssl != x_yes; then
+	AC_MSG_ERROR([not found])
+    else
+	LIBS="$LIBS -lssl -lcrypto"
+	AC_MSG_RESULT([yes])
+    fi
 ])
 
 AC_DEFUN([RESIP_IPV6],
@@ -77,50 +72,44 @@ AC_DEFUN([RESIP_SCANNER_DEBUG],
                 
 AC_DEFUN([RESIP_LIB_ARES],
 [
-dnl    AC_MSG_CHECKING([for ares])
-    AC_ARG_WITH([ares],
-	AC_HELP_STRING([--with-ares=DIR], [use the ares resolver library]),
-	[
-	    for dir in $with_ares \
-                        `pwd`/contrib/ares \
-                        `pwd`/../contrib/ares \
-			`pwd`/../../contrib/ares \
-                        /usr/local; do
-		AC_MSG_CHECKING([for ares in $dir])
-		if test -f "$dir/include/ares.h"; then
-		    found_ares=yes;
-		    CPPFLAGS="$CPPFLAGS -I$dir/include"
-		    LDFLAGS="$LDFLAGS -L$dir/lib"
-		    AC_DEFINE([USE_ARES],[1],[Select ARES Resolver])
-	            AC_MSG_RESULT([ yes ])
-		    break;
-		fi
-		if test -f "$dir/ares.h"; then
-		    found_ares=yes;
-		    CPPFLAGS="$CPPFLAGS -I$dir"
-		    LDFLAGS="$LDFLAGS -L$dir"
-		    AC_DEFINE([USE_ARES],[1],[Select ARES Resolver])
-	            AC_MSG_RESULT([ yes ])
-		    break;
-		fi
-		AC_MSG_RESULT([no])
-	    done
-	    if test x_$found_ares != x_yes; then
-		AC_MSG_CHECKING([for ares in /usr/include])
-		if test -f "/usr/include/ares.h"; then
-		    found_ares=yes;
-		    AC_DEFINE([USE_ARES],[1],[Select ARES Resolver])
-	            AC_MSG_RESULT([ yes ])
-		fi
-	    fi
-	    if test x_$found_ares != x_yes; then
-		AC_MSG_ERROR([not found])
-	    else
-		LIBS="$LIBS -lares"
-	    fi
-	],
-	[ AC_MSG_RESULT([not requested])
-	])
+    AC_MSG_CHECKING([for ares])
+    for dir in $with_ares \
+                 `pwd`/contrib/ares \
+                 `pwd`/../contrib/ares \
+		 `pwd`/../../contrib/ares \
+                 /usr/local; do
+	AC_MSG_CHECKING([for ares in $dir])
+	if test -f "$dir/include/ares.h"; then
+	    found_ares=yes;
+	    CPPFLAGS="$CPPFLAGS -I$dir/include"
+	    LDFLAGS="$LDFLAGS -L$dir/lib"
+	    AC_DEFINE([USE_ARES],[1],[Select ARES Resolver])
+            AC_MSG_RESULT([ yes ])
+	    break;
+	fi
+	if test -f "$dir/ares.h"; then
+	    found_ares=yes;
+	    CPPFLAGS="$CPPFLAGS -I$dir"
+	    LDFLAGS="$LDFLAGS -L$dir"
+	    AC_DEFINE([USE_ARES],[1],[Select ARES Resolver])
+            AC_MSG_RESULT([ yes ])
+	    break;
+	fi
+	AC_MSG_RESULT([no])
+    done
+    if test x_$found_ares != x_yes; then
+	AC_MSG_CHECKING([for ares in /usr/include])
+	if test -f "/usr/include/ares.h"; then
+	    found_ares=yes;
+	    AC_DEFINE([USE_ARES],[1],[Select ARES Resolver])
+            AC_MSG_RESULT([ yes ])
+	fi
+    fi
+    if test x_$found_ares != x_yes; then
+	AC_MSG_ERROR([not found])
+    else
+	LIBS="$LIBS -lares"
+    fi
 ])
 
 AC_DEFUN([RESIP_PROG_DISTCC],
