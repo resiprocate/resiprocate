@@ -30,7 +30,7 @@ class Security;
 class TransportSelector 
 {
    public:
-      TransportSelector(bool multithreaded, Fifo<TransactionMessage>& fifo);
+      TransportSelector(bool multithreaded, Fifo<TransactionMessage>& fifo, Security* security);
       virtual ~TransportSelector();
       bool hasDataToSend() const;
       
@@ -54,7 +54,6 @@ class TransportSelector
                            SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
                            );
       bool addTlsTransport(const Data& domainName, 
-			   Security& security,
                            int port, 
                            IpVersion version,
                            const Data& ipInterface=Data::Empty
@@ -80,6 +79,7 @@ class TransportSelector
       bool mMultiThreaded;
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
+      Security* mSecurity;// for computing identity header
 
       // specific port and interface
       typedef std::map<Tuple, Transport*> ExactTupleMap;
