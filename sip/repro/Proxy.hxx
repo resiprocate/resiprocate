@@ -25,8 +25,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       virtual ~Proxy();
 
       virtual bool isMyDomain(resip::Uri& uri) const;
-      virtual bool isForMe(const resip::SipMessage& msg) const = 0;
-      virtual void postToTransactionUser(const resip::Message& msg)=0;
+      virtual bool isForMe(const resip::SipMessage& msg) const ;
+      virtual bool isShutDown() const ;
       virtual void thread();
       
       UserDB &getUserDb();
