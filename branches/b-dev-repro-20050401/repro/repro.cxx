@@ -106,14 +106,15 @@ main(int argc, char** argv)
       ConstantLocationMonkey* cls = new ConstantLocationMonkey;
       locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
 #endif
-      
-      //RouteMonkey* routeMonkey = new RouteMonkey(routeDb);
-      //locators->addProcessor(std::auto_ptr<RequestProcessor>(routeMonkey));
-      
+     
+#if 0 
+      RouteMonkey* routeMonkey = new RouteMonkey(routeDb);
+      locators->addProcessor(std::auto_ptr<RequestProcessor>(routeMonkey));
+#endif
+ 
       LocationServer* ls = new LocationServer(regData);
       locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
-    
-
+ 
       requestProcessors.addProcessor(auto_ptr<RequestProcessor>(locators));
       
       if (!args.mNoChallenge)

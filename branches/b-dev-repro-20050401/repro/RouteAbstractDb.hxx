@@ -4,11 +4,8 @@
 #include <vector>
 
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/Uri.hxx"
 
-namespace resip
-{
-class Uri;
-}
 
 namespace repro
 {
@@ -31,7 +28,8 @@ class RouteAbstractDb
       };
       
       typedef std::vector<Route> RouteList;
-            
+      typedef std::vector<resip::Uri> UriList;
+   
       RouteAbstractDb();
       virtual ~RouteAbstractDb();
       
@@ -47,9 +45,9 @@ class RouteAbstractDb
                        const resip::Data& event,
                        const resip::Data& matchingPattern )=0;
       
-      virtual resip::Uri process(const resip::Uri& ruri, 
-                                 const resip::Data& method, 
-                                 const resip::Data& event ) =0;
+      virtual UriList process(const resip::Uri& ruri, 
+                              const resip::Data& method, 
+                              const resip::Data& event ) =0;
    protected:
       resip::Data serialize( const Route& route );
       Route deSerialize( const resip::Data& data );

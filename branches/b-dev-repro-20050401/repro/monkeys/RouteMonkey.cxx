@@ -31,17 +31,26 @@ RouteMonkey::handleRequest(RequestContext& context)
    DebugLog(<< "Monkey handling request: " << *this 
             << "; reqcontext = " << context);
    
-   
    SipMessage& msg = context.getOriginalRequest();
    
-   NameAddr name(mDb.process( msg.header(h_RequestLine).uri(), 
-                              getMethodName(msg.header(h_RequestLine).method()),
-                              msg.exists(h_Event) ? 
-                              msg.header(h_Event).value() : 
-                              Data::Empty));
+   Uri ruri(msg.header(h_RequestLine).uri());
+   Data method(getMethodName(msg.header(h_RequestLine).method()));
+   Data event;
+   if ( msg.exists(h_Event) )
+   {
+      event = msg.header(h_Event).value() ;
+   }
    
-   context.addTarget(name);
+   RouteAbstractDb::UriList targets(mDb.process( ruri,
+                                                 method,
+                                                 event));
    
+   for ( RouteAbstractDb::UriList::const_iterator i = targets.begin();
+         i != targets.end(); i++ )
+   {
+      InfoLog(<< "Adding target " << *i );
+      context.addTarget(NameAddr(*i));
+   }
    
    return RequestProcessor::Continue;
 }
