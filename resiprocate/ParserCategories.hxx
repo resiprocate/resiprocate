@@ -6,13 +6,14 @@
 #include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/MethodTypes.hxx>
 #include <sipstack/Symbols.hxx>
+#include <sipstack/Uri.hxx>
 #include <util/Data.hxx>
+
 
 namespace Vocal2
 {
 
 class HeaderFieldValueList;
-class Uri;
 
 //====================
 // Token:
@@ -162,14 +163,12 @@ class NameAddr : public ParserCategory
       NameAddr() : 
          ParserCategory(),
          mAllContacts(false),
-         mUri(0),
          mDisplayName()
       {}
 
       NameAddr(HeaderFieldValue* hfv)
          : ParserCategory(hfv), 
            mAllContacts(false),
-           mUri(0),
            mDisplayName()
       {}
 
@@ -191,7 +190,7 @@ class NameAddr : public ParserCategory
       
    protected:
       bool mAllContacts;
-      mutable Uri* mUri;
+      mutable Uri mUri;
       mutable Data mDisplayName;
 };
 typedef ParserContainer<NameAddr> NameAddrs;
@@ -337,15 +336,13 @@ class RequestLine : public ParserCategory
 {
    public:
       RequestLine(MethodTypes method, const Data& sipVersion = Symbols::DefaultSipVersion)
-         : mUri(0),
-           mMethod(method),
+         : mMethod(method),
            mUnknownMethodName(),
            mSipVersion(sipVersion)
       {}
 
       RequestLine(HeaderFieldValue* hfv) 
          : ParserCategory(hfv),
-           mUri(0),
            mMethod(UNKNOWN),
            mUnknownMethodName(MethodNames[UNKNOWN]),
            mSipVersion(Symbols::DefaultSipVersion)
@@ -367,7 +364,7 @@ class RequestLine : public ParserCategory
       virtual std::ostream& encode(std::ostream& str) const;
 
    private:
-      mutable Uri* mUri;
+      mutable Uri mUri;
       mutable MethodTypes mMethod;
       mutable Data mUnknownMethodName;
       mutable Data mSipVersion;
