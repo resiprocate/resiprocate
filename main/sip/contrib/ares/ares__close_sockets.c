@@ -14,8 +14,9 @@
  */
 
 #include <stdlib.h>
+#ifndef WIN32
 #include <unistd.h>
-
+#endif
 
 #include "ares.h"
 #include "ares_private.h"
