@@ -7,6 +7,12 @@
 
 using namespace Vocal2;
 
+SipStack::SipStack()
+  : mExecutive(*this)
+{
+
+}
+
 void 
 SipStack::send(SipMessage* msg)
 {
