@@ -242,51 +242,54 @@ Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr&
 }
 
 
-SipMessage*
-Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr& contact, const Data& reason)
+void
+Helper::makeResponse(SipMessage& response, 
+                     const SipMessage& request, 
+                     int responseCode, 
+                     const NameAddr& myContact, 
+                     const Data& reason)
 {
    DebugLog(<< "Helper::makeResponse(" << request.brief() << " code=" << responseCode << " reason=" << reason);
-   SipMessage* response = new SipMessage;
-   response->header(h_StatusLine).responseCode() = responseCode;
-   response->header(h_From) = request.header(h_From);
-   response->header(h_To) = request.header(h_To);
-   response->header(h_CallId) = request.header(h_CallId);
-   response->header(h_CSeq) = request.header(h_CSeq);
-   response->header(h_Vias) = request.header(h_Vias);
-   response->header(h_Contacts).push_front(contact);
+   response.header(h_StatusLine).responseCode() = responseCode;
+   response.header(h_From) = request.header(h_From);
+   response.header(h_To) = request.header(h_To);
+   response.header(h_CallId) = request.header(h_CallId);
+   response.header(h_CSeq) = request.header(h_CSeq);
+   response.header(h_Vias) = request.header(h_Vias);
+   response.header(h_Contacts).push_front(myContact);
    
    // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.
    // No totag for failure responses or 100s
-   if (!response->header(h_To).exists(p_tag) && responseCode < 300 && responseCode > 100)
+   if (!response.header(h_To).exists(p_tag) && responseCode < 300 && responseCode > 100)
    {
-      response->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
+      response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
    }
 
-   response->setRFC2543TransactionId(request.getRFC2543TransactionId());
+   response.setRFC2543TransactionId(request.getRFC2543TransactionId());
 
-   //response->header(h_ContentLength).value() = 0;
+   //response.header(h_ContentLength).value() = 0;
    
    if (responseCode >= 180 && responseCode < 300 && request.exists(h_RecordRoutes))
    {
-      response->header(h_RecordRoutes) = request.header(h_RecordRoutes);
+      response.header(h_RecordRoutes) = request.header(h_RecordRoutes);
    }
 
    if (request.isExternal())
    {
-       response->setFromTU();
+       response.setFromTU();
    }
    else
    {
-       response->setFromExternal();
+       response.setFromExternal();
    }
 
    if (reason.size())
    {
-      response->header(h_StatusLine).reason() = reason;
+      response.header(h_StatusLine).reason() = reason;
    }
    else
    {
-      Data &reason(response->header(h_StatusLine).reason());
+      Data &reason(response.header(h_StatusLine).reason());
       switch (responseCode)
       {
          case 100: reason = "Trying"; break;
@@ -343,7 +346,23 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr
          case 606: reason = "Not Acceptable"; break;
       }
    }
+}
 
+void
+Helper::makeResponse(SipMessage& response, 
+                     const SipMessage& request, 
+                     int responseCode, 
+                     const Data& reason)
+{
+   NameAddr contact;
+   Helper::makeResponse(response, request, responseCode, contact, reason);
+}
+
+SipMessage*
+Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr& contact, const Data& reason)
+{
+   SipMessage* response = new SipMessage;
+   makeResponse(*response, request, responseCode, contact, reason);
    return response;
 }
 
