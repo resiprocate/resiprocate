@@ -1,6 +1,7 @@
 #ifndef RESIP_TransactionMessage_hxx
 #define RESIP_TransactionMessage_hxx
 
+#include <cassert>
 #include "resiprocate/Message.hxx"
 
 namespace resip
