@@ -76,10 +76,12 @@ namespace Vocal2
     const char * mBuffer;	// the char buffer
     size_t mLength;		// 
 
-    PreparseStateTable::Disposition mDisposition;	// the disposition of this machine, a function
+    PreparseStateTable::Disposition mDisposition;
+				// the disposition of this machine, a function
 				// of the mHeader enum
       
-    PreparseStateTable::State mState;                // the state of the machine we are in
+    PreparseStateTable::State mState;
+				// the state of the machine we are in
 
     const char * mPtr;		// the current traversal pointer
       
