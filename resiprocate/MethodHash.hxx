@@ -1,5 +1,7 @@
 #if !defined(METHODSHASH_HXX)
 #define METHODSHASH_HXX
+namespace Vocal2 
+{
 
 
 struct methods { char *name; MethodTypes type; };
@@ -14,5 +16,6 @@ public:
 };
 // NOTE the cxx file for this class is AUTO GENERATED. DO NOT EDIT IT.
 // This file should match it. BUT THIS FILE IS MANUALLY GENERATED.
+}
 
 #endif
