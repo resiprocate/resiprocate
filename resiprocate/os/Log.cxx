@@ -189,8 +189,8 @@ Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm)
 Data
 Log::timestamp() 
 {
-   const unsigned int DATEBUF_SIZE=256;
-   char datebuf[DATEBUF_SIZE];
+   char datebuf[256];
+   const unsigned int datebufSize = sizeof(datebuf)/sizeof(*datebuf);
    
 #ifdef WIN32 
  int result = 1; 
@@ -214,7 +214,7 @@ Log::timestamp()
           the Epoch, which is exactly the argument gettimeofday needs. */
        const time_t timeInSeconds = (time_t) tv.tv_sec;
        strftime (datebuf,
-                 DATEBUF_SIZE,
+                 datebufSize,
                  "%Y%m%d-%H%M%S", /* guaranteed to fit in 256 chars,
                                      hence don't check return code */
                  localtime (&timeInSeconds));
@@ -225,9 +225,9 @@ Log::timestamp()
       measure to the nearest millisecond. */
    sprintf(msbuf, ".%3.3ld", long(tv.tv_usec / 1000));
    
-   int datebufCharsRemaining = DATEBUF_SIZE - strlen (datebuf);
+   int datebufCharsRemaining = datebufSize - strlen (datebuf);
    strncat (datebuf, msbuf, datebufCharsRemaining - 1);
-   datebuf[DATEBUF_SIZE - 1] = '\0'; /* Just in case strncat truncated msbuf,
+   datebuf[datebufSize - 1] = '\0'; /* Just in case strncat truncated msbuf,
                                         thereby leaving its last character at
                                         the end, instead of a null terminator */
 
