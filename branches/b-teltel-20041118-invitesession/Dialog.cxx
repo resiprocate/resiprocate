@@ -240,8 +240,14 @@ Dialog::cancel()
 void
 Dialog::end()
 {
-   assert(mType == Invitation);
-   mInviteSession->end();
+   if (mInviteSession)
+   {
+      mInviteSession->end();
+   }
+   else
+   {
+      //!dcm! -- end subscriptions
+   }
 }
 
 void
