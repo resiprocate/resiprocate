@@ -24,7 +24,7 @@ typedef enum
    defineMethod(PRACK, "PRACK", "RFC 3262"),
    defineMethod(PUBLISH, "PUBLISH", "RFC draft"),
    defineMethod(SERVICE, "SERVICE", "!RFC"),
-   //defineMethod(UPDATE, "UPDATE", "RFC 3311"), // don't forget to fix hashes!
+   defineMethod(UPDATE, "UPDATE", "RFC 3311"),
 
    defineMethod(UNKNOWN, "UNKNOWN", ""),
    MAX_METHODS
