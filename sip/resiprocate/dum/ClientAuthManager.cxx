@@ -88,6 +88,11 @@ bool ClientAuthManager::handleAuthHeader(const Auth& auth, SipMessage& origReque
    unsigned int nonceCount=0;                               
    InfoLog (<< "Adding authorization: " << credential.user);
    
+   origRequest.remove(h_ProxyAuthorizations);
+   origRequest.remove(h_Authorizations);  
+
+   InfoLog (<< "Cleared existing Authorizations: " << origRequest);
+
    Helper::addAuthorization(origRequest,response,           
                             credential.user,credential.password, 
                             cnonce,nonceCount);

@@ -10,7 +10,8 @@ using namespace resip;
 
 Profile::Profile() : 
    mDefaultRegistrationExpires(3600),
-   mHasOutboundProxy(false)   
+   mHasOutboundProxy(false),
+   mLooseToTagMatching(true)   
 {
 }
 
@@ -284,8 +285,7 @@ Profile::DigestCredential::DigestCredential() :
    user(Data::Empty),
    password(Data::Empty)
 {
-}
-   
+}  
 
 bool
 Profile::DigestCredential::operator<(const DigestCredential& rhs) const
@@ -311,4 +311,16 @@ Profile::DigestCredential::operator<<(std::ostream& strm) const
         << " aor=" << aor
         << " user=" << user ;
    return strm;
+}
+
+bool& 
+Profile::looseToTagMatching()
+{
+   return mLooseToTagMatching;
+}
+
+const bool 
+Profile::looseToTagMatching() const
+{
+   return mLooseToTagMatching;
 }
