@@ -64,7 +64,7 @@ UdpTransport::process(FdSet& fdset)
       
       if ( count == SOCKET_ERROR )
       {
-		  int e = getErrno();
+         int e = getErrno();
          InfoLog (<< strerror(e));
          InfoLog (<< "Failed sending to " << sendData->destination);
          fail(sendData->transactionId);
@@ -102,51 +102,8 @@ UdpTransport::process(FdSet& fdset)
                        &from, &fromLen);
    if ( len == SOCKET_ERROR )
    {
-	    int err = getErrno();
-
-      switch (err)
-      {
-         case WSANOTINITIALISED:
-			       DebugLog (<< " Winsock netwrok code not initalize");
-            assert(0);
-            break;
-
-         case EWOULDBLOCK:
-            DebugLog (<< " UdpTransport recvfrom got EWOULDBLOCK");
-            break;
-
-         case 0: // ERROR_SUCCESS
-            DebugLog (<< " UdpTransport recvfrom got error 0 ");
-            break;
-
-         case 2: // ERROR_FILE_NOT_FOUND
-            DebugLog (<< " UdpTransport recvfrom got error 2 ");
-            break;
-
-#ifdef WIN32
-//case WSANOTINITIALISED: DebugLog (<<"A successful WSAStartup call must occur before using this function. "); break ;
-case WSAENETDOWN: DebugLog (<<" The network subsystem has failed.  "); break;
-case WSAEFAULT: DebugLog (<<" The buf or from parameters are not part of the user address space, or the fromlen parameter is too small to accommodate the peer address.  "); break;
-case WSAEINTR: DebugLog (<<" The (blocking) call was canceled through WSACancelBlockingCall.  "); break;
-case WSAEINPROGRESS: DebugLog (<<" A blocking Windows Sockets 1.1 call is in progress, or the service provider is still processing a callback function.  "); break;
-case WSAEINVAL: DebugLog (<<" The socket has not been bound with bind, or an unknown flag was specified, or MSG_OOB was specified for a socket with SO_OOBINLINE enabled, or (for byte stream-style sockets only) len was zero or negative.  "); break;
-case WSAEISCONN : DebugLog (<<"The socket is connected. This function is not permitted with a connected socket, whether the socket is connection-oriented or connectionless.  "); break;
-case WSAENETRESET: DebugLog (<<" The connection has been broken due to the keep-alive activity detecting a failure while the operation was in progress.  "); break;
-case WSAENOTSOCK : DebugLog (<<"The descriptor is not a socket.  "); break;
-case WSAEOPNOTSUPP: DebugLog (<<" MSG_OOB was specified, but the socket is not stream-style such as type SOCK_STREAM, OOB data is not supported in the communication domain associated with this socket, or the socket is unidirectional and supports only send operations.  "); break;
-case WSAESHUTDOWN : DebugLog (<<"The socket has been shut down; it is not possible to recvfrom on a socket after shutdown has been invoked with how set to SD_RECEIVE or SD_BOTH.  "); break;
-//case WSAEWOULDBLOCK : DebugLog (<<"The socket is marked as nonblocking and the recvfrom operation would block.  "); break;
-case WSAEMSGSIZE: DebugLog (<<" The message was too large to fit into the specified buffer and was truncated.  "); break;
-case WSAETIMEDOUT: DebugLog (<<" The connection has been dropped, because of a network failure or because the system on the other end went down without notice.  "); break;
-case WSAECONNRESET : DebugLog (<<"Reset "); break;
-#endif
-
-         default:
-            ErrLog(<<"Error receiving, errno="<<err << " " << strerror(err) );
-            break;
-      }
+      error(getErrno());
    }
-   //DebugLog( << "completed recvfrom" );
 
    if (len == 0 || len == SOCKET_ERROR)
    {
