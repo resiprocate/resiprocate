@@ -174,7 +174,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 Dialog::~Dialog()
 {
    mDialogSet.mDialogs.erase(this->getId());
-   delete mAppDialog;   
+   delete mAppDialog;
+   mDialogSet.possiblyDie();
 }
 
 DialogId

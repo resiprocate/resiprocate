@@ -35,6 +35,8 @@ class DialogSet
       friend class BaseUsage;
       friend class DialogUsageManager;      
       
+      void possiblyDie();
+
       Dialog* findDialog(const SipMessage& msg);
       Dialog* findDialog(const DialogId id);
 
@@ -46,6 +48,12 @@ class DialogSet
       DialogUsageManager& mDum;
       AppDialogSet* mAppDialogSet;
       bool mCancelled;
+
+      //inelegant, but destruction can happen both automatically and forced by
+      //the user.  Extremely single threaded.
+      bool mDestroying;
+                       
+
 };
  
 }

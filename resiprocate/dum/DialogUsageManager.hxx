@@ -38,6 +38,7 @@ class Dialog;
 class InviteSessionCreator;
 
 class AppDialogSetFactory;
+class DumShutdownHandler;
 
 class DialogUsageManager : public HandleManager
 {
@@ -57,6 +58,7 @@ class DialogUsageManager : public HandleManager
       DialogUsageManager(SipStack& stack);
       virtual ~DialogUsageManager();
       
+      void shutdown(DumShutdownHandler*);
 
       void setAppDialogSetFactory(AppDialogSetFactory*);
 
@@ -198,6 +200,8 @@ class DialogUsageManager : public HandleManager
       bool validateTo(const SipMessage& request);
       bool mergeRequest(const SipMessage& request);
 
+      void removeDialogSet(const DialogSetId& );      
+
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
             
@@ -222,6 +226,7 @@ class DialogUsageManager : public HandleManager
       AppDialogSetFactory* mAppDialogSetFactory;
 
       SipStack& mStack;
+      DumShutdownHandler* mDumShutdownHandler;       
 };
 
 }
