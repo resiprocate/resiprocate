@@ -61,8 +61,11 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    Via via;
    mLastRequest.header(h_Vias).push_front(via);
 
-   mLastRequest.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
-   mLastRequest.header(h_Accepts) = mDum.getProfile()->getSupportedMimeTypes();
-   
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::Allow)) mLastRequest.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::Accept)) mLastRequest.header(h_Accepts) = mDum.getProfile()->getSupportedMimeTypes();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::AcceptEncoding)) mLastRequest.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::AcceptLanguage)) mLastRequest.header(h_AcceptLanguages) = mDum.getProfile()->getSupportedLanguages();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::Supported)) mLastRequest.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
+
    DebugLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
 }
