@@ -48,7 +48,7 @@ SipStack::SipStack(bool multiThreaded, Security* security)
 #ifdef USE_SSL
    if ( !security )
    {
-      security = new Security( true );
+      security = new Security( true, true );
    }
 #endif
 
