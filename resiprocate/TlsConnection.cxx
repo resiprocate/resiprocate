@@ -20,7 +20,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security, bool server )
+TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security, bool server ) : Connection(tuple, fd)
 {
    DebugLog (<< "Creating TLS connection " << tuple << " on " << fd);
 
