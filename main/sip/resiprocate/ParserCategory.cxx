@@ -93,7 +93,7 @@ ParserCategory::~ParserCategory()
 {
 }
 
-#ifndef WIN32
+
 Data&
 ParserCategory::param(const UnknownParameterType& param) const
 {
@@ -106,7 +106,7 @@ ParserCategory::param(const UnknownParameterType& param) const
    }
    return static_cast<UnknownParameter*>(p)->value();
 }
-#endif
+
 
 bool
 ParserCategory::exists(const ParamBase& paramType) const
