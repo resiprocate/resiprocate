@@ -4,25 +4,14 @@
 static const char* const resipFifo_h_Version =
    "$Id: Fifo.hxx,v 1.19 2003/10/01 15:33:50 fluffy Exp $";
 
-#include <deque>
-//#include <errno.h>
 #include <cassert>
+#include "resiprocate/os/AbstractFifo.hxx"
 
-#include "resiprocate/os/Mutex.hxx"
-#include "resiprocate/os/Condition.hxx"
-#include "resiprocate/os/Lock.hxx"
-
-
-/** Infrastructure common to VOCAL.
- */
 namespace resip
 {
 
-/** First in first out list interface, with the added functionality of 
- *  being able to handle timed entries.
- */
 template < class Msg >
-class Fifo
+class Fifo : public AbstractFifo
 {
    public:
       Fifo();
@@ -38,29 +27,15 @@ class Fifo
        *  prior to calling getNext.
        */
       Msg* getNext();
-      
-      /** Get the current size of the fifo. Note you should not use this function
-       *  to determine whether a call to getNext() will block or not.
-       *  Use messageAvailable() instead.
-       */
-      unsigned int size() const;
 
-      /** Returns true if a message is available.
-       */
-      bool messageAvailable() const;
-
-   protected:
-      typedef std::deque < Msg* > MessageContainer;
-      MessageContainer mFifo;
-      unsigned long mSize;
-      
-      mutable Mutex mMutex;
-      Condition mCondition;
+   private:
+      Fifo(const Fifo& rhs);
+      Fifo& operator=(const Fifo& rhs);
 };
 
 
 template <class Msg>
-Fifo<Msg>::Fifo() : mSize(0)
+Fifo<Msg>::Fifo() : AbstractFifo(0)
 {
 }
 
@@ -70,9 +45,11 @@ Fifo<Msg>::~Fifo()
    Lock lock(mMutex); (void)lock;
    while ( ! mFifo.empty() )
    {
-      delete mFifo.front();
+      Msg* msg = static_cast<Msg*>(mFifo.front());
       mFifo.pop_front();
+      delete msg;
    }
+   assert(mFifo.empty());
    mSize = 0UL -1;
 }
 
@@ -91,41 +68,7 @@ template <class Msg>
 Msg*
 Fifo<Msg> ::getNext()
 {
-   Lock lock(mMutex); (void)lock;
-
-   // Wait while there are messages available.
-   //
-   while ( mFifo.empty() )
-   {
-      mCondition.wait(&mMutex);
-   }
-
-   // Return the first message on the fifo.
-   //
-   Msg* firstMessage = mFifo.front();
-   mFifo.pop_front();
-   assert( mSize != 0 );
-   mSize--;
-   return ( firstMessage );
-}
-
-
-template <class Msg>
-unsigned int
-Fifo<Msg> ::size() const
-{
-   Lock lock(mMutex); (void)lock;
-   return mSize; 
-}
-
-
-template <class Msg>
-bool
-Fifo<Msg>::messageAvailable() const
-{
-   Lock lock(mMutex); (void)lock;
-   assert (mSize != 0UL-1 );
-   return ( !mFifo.empty() );
+   return static_cast<Msg*>(AbstractFifo::getNext());
 }
 
 } // namespace resip
