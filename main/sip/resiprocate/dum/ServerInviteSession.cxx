@@ -1,9 +1,9 @@
 #include "ServerInviteSession.hxx"
 
 ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, const SipMessage& msg)
-   : InviteSession(dum)
+   : InviteSession(dum),
+     mHandle(dum)
 {
-   
 }
 
 void 

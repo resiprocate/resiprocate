@@ -26,14 +26,6 @@ InviteSession::Handle::Handle(DialogUsageManager& dum)
    : mDum(dum)
 {}
 
-InviteSession::Handle::Handle(ClientInviteSession::Handle& handle)
-   : BaseUsage::Handle(handle)
-{}
-
-InviteSession::Handle::Handle(ServerInviteSession::Handle& handle)
-   : BaseUsage::Handle(handle)
-{}
-
 InviteSession*
 InviteSession::Handle::operator->()
 {

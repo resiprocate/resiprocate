@@ -8,6 +8,8 @@
 
 #include "BaseUsage.hxx"
 #include "InviteSession.hxx"
+#include "ClientInviteSession.hxx"
+#include "ServerInviteSession.hxx"
 #include "ClientSubscription.hxx"
 #include "ServerSubscription.hxx"
 #include "ClientRegistration.hxx"
@@ -16,6 +18,7 @@
 #include "ClientPublication.hxx"
 #include "ServerOutOfDialogReq.hxx"
 #include "ClientOutOfDialogReq.hxx"
+#include "resiprocate/Headers.hxx"
 
 namespace resip 
 {
@@ -87,7 +90,7 @@ class DialogUsageManager
       void cancel(DialogIdSet invSessionId);
       DialogSetId send(SipMessage* newClientRequest);
 
-      void process();
+      void process(FdSet& fdset);
       
       DialogIdSet findAllDialogs();
       UsageSet    findAllUsages();
@@ -133,6 +136,8 @@ class DialogUsageManager
       DialogSet& findDialogSet(DialogSetId id);
       
       BaseCreator& findCreator(DialogId id);
+
+      void prepareInitialRequest(SipMessage& request);
       
       HashMap<DialogSetId, DialogSet > mDialogSetMap;
 

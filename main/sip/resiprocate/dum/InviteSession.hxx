@@ -17,9 +17,6 @@ class InviteSession : public BaseUsage
             // throws if no session 
             InviteSession* operator->();
 
-            Handle(InviteClientSession::Handle);
-            Handle(ServerClientSession::Handle);
-
          protected:
             Handle(DialogUsageManager& dum);
       };
