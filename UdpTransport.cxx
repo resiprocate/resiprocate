@@ -50,9 +50,7 @@ UdpTransport::process(FdSet& fdset)
    // receive datagrams from fd
    // preparse and stuff into RxFifo
 
-
-   // how do we know that buffer won't get deleted on us !jf!
-   if (mTxFifo.messageAvailable())
+   if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd))
    {
       std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
       //DebugLog (<< "Sent: " <<  sendData->data);
@@ -71,7 +69,7 @@ UdpTransport::process(FdSet& fdset)
       {
          int e = getErrno();
          error(e);
-         InfoLog (<< "Failed sending to " << sendData->destination);
+         InfoLog (<< "Failed (" << e << ") sending to " << sendData->destination);
          fail(sendData->transactionId);
       }
       else
@@ -85,116 +83,114 @@ UdpTransport::process(FdSet& fdset)
    }
    
    // !jf! this may have to change - when we read a message that is too big
-   if ( !fdset.readyToRead(mFd) )
+   if ( fdset.readyToRead(mFd) )
    {
-      return;
-   }
+      //should this buffer be allocated on the stack and then copied out, as it
+      //needs to be deleted every time EWOULDBLOCK is encountered
+      // .dlb. can we determine the size of the buffer before we allocate?
+      // something about MSG_PEEK|MSG_TRUNC in Stevens..
+      // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
+      // adjust the UDP buffer as well...
+      char* buffer = new char[MaxBufferSize + 5];
 
-   //should this buffer be allocated on the stack and then copied out, as it
-   //needs to be deleted every time EWOULDBLOCK is encountered
-   // .dlb. can we determine the size of the buffer before we allocate?
-   // something about MSG_PEEK|MSG_TRUNC in Stevens..
-   // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
-   // adjust the UDP buffer as well...
-   char* buffer = new char[MaxBufferSize + 5];
-
-   // !jf! how do we tell if it discarded bytes 
-   // !ah! we use the len-1 trick :-(
-   Tuple tuple(mTuple);
-   socklen_t slen = tuple.length();
-   int len = recvfrom( mFd,
-                       buffer,
-                       MaxBufferSize,
-                       0 /*flags */,
-                       &tuple.getMutableSockaddr(), 
-                       &slen);
-   if ( len == SOCKET_ERROR )
-   {
-      int err = getErrno();
-      if ( err != EWOULDBLOCK  )
+      // !jf! how do we tell if it discarded bytes 
+      // !ah! we use the len-1 trick :-(
+      Tuple tuple(mTuple);
+      socklen_t slen = tuple.length();
+      int len = recvfrom( mFd,
+                          buffer,
+                          MaxBufferSize,
+                          0 /*flags */,
+                          &tuple.getMutableSockaddr(), 
+                          &slen);
+      if ( len == SOCKET_ERROR )
       {
-         error( err );
+         int err = getErrno();
+         if ( err != EWOULDBLOCK  )
+         {
+            error( err );
+         }
       }
-   }
 
-   if (len == 0 || len == SOCKET_ERROR)
-   {
-      delete[] buffer; 
-      buffer=0;
-      return;
-   }
+      if (len == 0 || len == SOCKET_ERROR)
+      {
+         delete[] buffer; 
+         buffer=0;
+         return;
+      }
 
-   if (len+1 >= MaxBufferSize)
-   {
-      InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
-      delete [] buffer; buffer=0;
-      return;
-   }
-   buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
+      if (len+1 >= MaxBufferSize)
+      {
+         InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
+         delete [] buffer; buffer=0;
+         return;
+      }
+      buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
 
-   //DebugLog ( << "UDP Rcv : " << len << " b" );
-   //DebugLog ( << Data(buffer, len).escaped().c_str());
+      //DebugLog ( << "UDP Rcv : " << len << " b" );
+      //DebugLog ( << Data(buffer, len).escaped().c_str());
 
-   SipMessage* message = new SipMessage(this);
+      SipMessage* message = new SipMessage(this);
 
-   // set the received from information into the received= parameter in the
-   // via
+      // set the received from information into the received= parameter in the
+      // via
 
-   // It is presumed that UDP Datagrams are arriving atomically and that
-   // each one is a unique SIP message
+      // It is presumed that UDP Datagrams are arriving atomically and that
+      // each one is a unique SIP message
 
 
-   // Save all the info where this message came from
-   tuple.transport = this;
-   message->setSource(tuple);   
-   //DebugLog (<< "Received from: " << tuple);
+      // Save all the info where this message came from
+      tuple.transport = this;
+      message->setSource(tuple);   
+      //DebugLog (<< "Received from: " << tuple);
    
-   // Tell the SipMessage about this datagram buffer.
-   message->addBuffer(buffer);
+      // Tell the SipMessage about this datagram buffer.
+      message->addBuffer(buffer);
 
 
-   mMsgHeaderScanner.prepareForMessage(message);
+      mMsgHeaderScanner.prepareForMessage(message);
 
-   char *unprocessedCharPtr;
-   if (mMsgHeaderScanner.scanChunk(buffer,
-                                   len,
-                                   &unprocessedCharPtr) !=
-                                                      MsgHeaderScanner::scrEnd)
-   {
-      DebugLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
-      DebugLog(<< Data(buffer, len));
-      delete message; 
-      message=0; 
-      return;
+      char *unprocessedCharPtr;
+      if (mMsgHeaderScanner.scanChunk(buffer,
+                                      len,
+                                      &unprocessedCharPtr) !=
+          MsgHeaderScanner::scrEnd)
+      {
+         DebugLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
+         DebugLog(<< Data(buffer, len));
+         delete message; 
+         message=0; 
+         return;
+      }
+
+      // no pp error
+      int used = unprocessedCharPtr - buffer;
+
+      if (used < len)
+      {
+         // body is present .. add it up.
+         // NB. The Sip Message uses an overlay (again)
+         // for the body. It ALSO expects that the body
+         // will be contiguous (of course).
+         // it doesn't need a new buffer in UDP b/c there
+         // will only be one datagram per buffer. (1:1 strict)
+
+         message->setBody(buffer+used,len-used);
+         //DebugLog(<<"added " << len-used << " byte body");
+      }
+
+      if (!basicCheck(*message))
+      {
+         delete message; // cannot use it, so, punt on it...
+         // basicCheck queued any response required
+         message = 0;
+         return;
+      }
+
+      stampReceived(message);
+
+      mStateMachineFifo.add(message);
    }
-
-   // no pp error
-   int used = unprocessedCharPtr - buffer;
-
-   if (used < len)
-   {
-      // body is present .. add it up.
-      // NB. The Sip Message uses an overlay (again)
-      // for the body. It ALSO expects that the body
-      // will be contiguous (of course).
-      // it doesn't need a new buffer in UDP b/c there
-      // will only be one datagram per buffer. (1:1 strict)
-
-      message->setBody(buffer+used,len-used);
-      //DebugLog(<<"added " << len-used << " byte body");
-   }
-
-   if (!basicCheck(*message))
-   {
-     delete message; // cannot use it, so, punt on it...
-                     // basicCheck queued any response required
-     message = 0;
-     return;
-   }
-
-   stampReceived(message);
-
-   mStateMachineFifo.add(message);
 }
 
 
@@ -203,10 +199,10 @@ UdpTransport::buildFdSet( FdSet& fdset )
 {
    fdset.setRead(mFd);
     
-   //if (mTxFifo.messageAvailable())
-   //{
-   //  fdset.setWrite(mFd);
-   //}
+   if (mTxFifo.messageAvailable())
+   {
+     fdset.setWrite(mFd);
+   }
 }
 
 /* ====================================================================
