@@ -433,6 +433,29 @@ class Via : public ParserCategory
       mutable int mSentPort;
 };
 typedef ParserContainer<Via> Vias;
+
+//====================
+// ExpiresCategory:
+//====================
+class ExpiresCategory : public ParserCategory
+{
+   public:
+      enum {isCommaTokenizing = false};
+
+      ExpiresCategory() : ParserCategory(), mValue(0) {}
+      ExpiresCategory(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue(0) {}
+      ExpiresCategory(const ExpiresCategory&);
+      ExpiresCategory& operator=(const ExpiresCategory&);
+
+      virtual void parse(ParseBuffer& pb);
+      virtual std::ostream& encode(std::ostream& str) const;
+      virtual ParserCategory* clone() const;
+
+      int& value() const {checkParsed(); return mValue;}
+
+   private:
+      mutable int mValue;
+};
  
 //====================
 // RequestLine:
