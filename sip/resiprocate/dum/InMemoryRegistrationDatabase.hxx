@@ -24,6 +24,9 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
     virtual void removeAor(Uri &aor);
     virtual bool aorIsRegistered(Uri &aor);
 
+    virtual void lockRecord(Uri &aor);
+    virtual void unlockRecord(Uri &aor);
+
     virtual update_status_t updateContact(Uri &aor, Uri &contact, time_t expires);
     virtual void removeContact(Uri &aor, Uri &contact);
 
