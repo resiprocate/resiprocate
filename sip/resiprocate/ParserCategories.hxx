@@ -182,6 +182,12 @@ class NameAddr : public ParserCategory
            mDisplayName()
       {}
 
+      NameAddr(const Data& unparsed)
+         : ParserCategory(unparsed),
+           mAllContacts(false),
+           mDisplayName()
+      {}
+
       NameAddr(const NameAddr&);
       NameAddr& operator=(const NameAddr&);
       NameAddr(const Uri&);
