@@ -751,7 +751,7 @@ Helper::getSentPort(SipMessage& request)
    }
    else
    {
-      port = request.getSource().port;
+      port = request.getSource().getPort();
    }
    assert(port != -1);
    return port;

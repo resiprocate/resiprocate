@@ -38,7 +38,7 @@ class DnsUtil
 
       static int inet_pton(const Data& printableIp, struct in_addr& dst);
       static int inet_pton(const Data& printableIp, struct in6_addr& dst);
-
+      
       static bool isIpAddress(const Data& ipAddress);
       static bool isIpV4Address(const Data& ipAddress);
       static bool isIpV6Address(const Data& ipAddress);
