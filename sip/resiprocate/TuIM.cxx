@@ -139,6 +139,9 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
 #endif
 
    msg->setContents(body);
+
+   setOutbound( *msg );
+   
    mStack->send( *msg );
 
    delete body;
@@ -428,6 +431,8 @@ TuIM::processRegisterResponse(SipMessage* msg)
       
       InfoLog( << *reg );
       
+      setOutbound( *msg );
+
       mStack->send( *reg );
 
       return;
@@ -544,6 +549,7 @@ TuIM::process()
          auto_ptr<SipMessage> msg( mRegistrationDialog.makeRegister() );
          int expires = 11*60; // time in seconds 
          msg->header(h_Expires).value() = expires;
+         setOutbound( *msg );
          mStack->send( *msg );
       }
       mNextTimeToRegister = Timer::getRandomFutureTimeMs( 10*60*1000 /*10 minutes*/ );
@@ -566,6 +572,8 @@ TuIM::process()
             msg->header(h_Event).value() = Data("presence");;
             msg->header(h_Accepts).push_back( Mime( "application","cpim-pidf+xml") );
             msg->header(h_Expires).value() = expires;
+
+            setOutbound( *msg );
 
             mStack->send( *msg );
          }
@@ -611,6 +619,8 @@ TuIM::registerAor( const Uri& uri, const Data& password )
    
    mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
    
+   setOutbound( *msg );
+
    mStack->send( *msg );
 }
 
@@ -671,7 +681,7 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
    mBuddy.push_back( b );
 
    // subscribe to this budy 
-   auto_ptr<SipMessage> msg( b.presDialog->makeInitialSubscribe(NameAddr(b.uri),NameAddr(b.uri)) );
+   auto_ptr<SipMessage> msg( b.presDialog->makeInitialSubscribe(NameAddr(b.uri),NameAddr(mAor)) );
 
    int expires = 7*60; // time in seconds 
    
@@ -681,6 +691,8 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
    
    b.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( expires*1000 /*5 minutes*/ );
    
+   setOutbound( *msg );
+
    mStack->send( *msg );
 }
 
@@ -727,6 +739,8 @@ TuIM::sendNotify(Dialog* dialog)
 
    notify->setContents( pidf );
    
+   setOutbound( *notify );
+
    mStack->send( *notify );
 }
 
@@ -746,14 +760,43 @@ TuIM::setMyPresense( const bool open, const Data& status )
    }
 }
 
+
 void 
 TuIM::setOutboundProxy( const Uri& uri )
 {
-	// !cj! !jf! TODO 
-	ErrLog( << "No support for outbound proxies yet" );
+   InfoLog( << "Set outbound proxy to " << uri );
+   mOutboundProxy = uri;
+}
+
+  
+void 
+TuIM::setUANameProxy( const Data& name )
+{
+   DebugLog( << "Set User Agent Name to " << name );
+   mUAName = name;
 }
 
 
+void 
+TuIM::setOutbound( SipMessage& msg )
+{
+   if ( msg.isResponse() )
+   {
+      return;
+   }
+
+   if ( !mOutboundProxy.host().empty() )
+   {
+      NameAddr proxy( mOutboundProxy );
+      msg.header(h_Routes).push_front( proxy );
+   }
+   
+   if ( !mUAName.empty() )
+   {
+      DebugLog( << "UserAgent name=" << mUAName  );
+      msg.header(h_UserAgent).value() = mUAName;
+   }
+}
 
 
 /* ====================================================================
