@@ -64,7 +64,7 @@ SipFrag::clone() const
 }
 
 const Mime& 
-SipFrag::getType() const
+SipFrag::getStaticType() const
 {
    static Mime type("message", "sipfrag");
    return type;
