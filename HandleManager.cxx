@@ -72,7 +72,7 @@ HandleManager::remove(Handled::Id id)
    }
    else
    {
-      InfoLog (<< "Waiting for usages to be deleted (" << mHandleMap.size() << ")");
+      DebugLog (<< "Waiting for usages to be deleted (" << mHandleMap.size() << ")");
    }
 }
 
