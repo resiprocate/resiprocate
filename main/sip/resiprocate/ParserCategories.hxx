@@ -28,7 +28,7 @@ class Token : public ParserCategory
 
       Data& value() const {checkParsed(); return mValue;}
 
-      virtual void parse(); // remember to call parseParameters()
+      virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
@@ -52,7 +52,7 @@ class Mime : public ParserCategory
       Data& type() const { return mType; }
       Data& subType() const { return mSubType; }
          
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
    private:
@@ -73,7 +73,7 @@ class Auth : public ParserCategory
       Auth(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       Auth(const Auth&);
 
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual std::ostream& encode(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 };
@@ -90,7 +90,7 @@ class IntegerCategory : public ParserCategory
       IntegerCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       IntegerCategory(const IntegerCategory&);
 
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual std::ostream& encode(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
@@ -114,7 +114,7 @@ class StringCategory : public ParserCategory
       StringCategory(const StringCategory&);
       StringCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
 
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual std::ostream& encode(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
@@ -137,7 +137,7 @@ class GenericURI : public ParserCategory
       GenericURI(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       GenericURI(const GenericURI&);
 
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
@@ -174,7 +174,7 @@ class NameAddr : public ParserCategory
       Data& displayName() const {checkParsed(); return mDisplayName;}
       void setAllContacts() { mAllContacts = true;}
       
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
@@ -201,7 +201,7 @@ class CallId : public ParserCategory
       
       Data& value() const {checkParsed(); return mValue;}
 
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
@@ -225,7 +225,7 @@ class CSeqCategory : public ParserCategory
       MethodTypes& method() const {checkParsed(); return mMethod;}
       int& sequence() const {checkParsed(); return mSequence;}
 
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
@@ -248,7 +248,7 @@ class DateCategory : public ParserCategory
 
       Data& value() const {checkParsed(); return mValue;}
 
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
@@ -268,7 +268,7 @@ class WarningCategory : public ParserCategory
       WarningCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       WarningCategory(const WarningCategory&);
 
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 };
@@ -291,7 +291,7 @@ class Via : public ParserCategory
       Data& sentHost() const {checkParsed(); return mSentHost;}
       int& sentPort() const {checkParsed(); return mSentPort;}
 
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
@@ -324,7 +324,7 @@ class RequestLine : public ParserCategory
       MethodTypes getMethod() const {checkParsed(); return mMethod;}
       const Data& getSipVersion() const {checkParsed(); return mSipVersion;}
 
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
@@ -348,7 +348,7 @@ class StatusLine : public ParserCategory
       const Data& getSipVersion() const {checkParsed(); return mSipVersion;}
       Data& reason() const {checkParsed(); return mReason;}
 
-      virtual void parse();
+      virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 

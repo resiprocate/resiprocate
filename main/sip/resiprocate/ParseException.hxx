@@ -1,18 +1,17 @@
-#ifndef PARSEEXCEPTION_HXX
-#define PARSEEXCEPTION_HXX
+#ifndef ParseException_hxx
+#define ParseException_hxx
 
-#include <exception>
+#include <util/VException.hxx>
 
 namespace Vocal2
 {
 
-class Data;
-
-class ParseException : public std::exception
+class ParseException : public VException
 {
    public:
-      ParseException(const Data& msg, const Data& file, const int line) {}
-      virtual const char* what() const throw() { return 0; }
+      ParseException(const Data& msg, const Data& file, const int line)
+         : VException(msg, file, line) {}
+      Data getName() const { return "ParseException"; }
 };
  
 }

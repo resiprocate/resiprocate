@@ -137,7 +137,6 @@ class SipMessage : public Message
 
    private:
       void copyFrom(const SipMessage& message);
-      void cleanUp();
       HeaderFieldValueList* ensureHeader(Headers::Type type) const;
 
       // not available

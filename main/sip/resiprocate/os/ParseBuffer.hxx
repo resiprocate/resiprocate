@@ -2,6 +2,7 @@
 #define ParseBuffer_hxx
 #include <string.h>
 #include <util/Data.hxx>
+#include <util/VException.hxx>
 
 namespace Vocal2
 {
@@ -24,6 +25,15 @@ class ParseBuffer
            mEnd(tmpData.c_str() + tmpData.size())
       {}
 
+      class Exception : public VException
+      {
+         public:
+            Exception(const Data& msg, const Data& file, const int line)
+               : VException(msg, file, line) {}
+
+            Data getName() const { return "ParseBuffer::Exception"; }
+      };
+      
       // allow the buffer to be rolled back
       void reset(const char* pos);
 
@@ -32,21 +42,19 @@ class ParseBuffer
       const char* end() { return mEnd; }
 
       const char* skipChar() { return ++mStart; }
+      const char* skipChar(char c);
       const char* skipNonWhitespace();
       const char* skipWhitespace();
       const char* skipToChar(char c);
       const char* skipToOneOf(const char* cs);
-      const char* skipToEndQuote();
+      const char* skipToOneOf(const char* cs1, const char* cs2);
 
-      static const char* WhitespaceOrParamTerm;
-      static const char* WhitespaceOrSlash;
-      static const char* WhitespaceOrSemiColon;
-      static const char* WhitespaceOrColonOrSemiColon;
-      static const char* WhitespaceOrSemiColonOrRAQuote;
-      static const char* WhitespaceOrColonOrSemiColonOrRAQuote;
+      const char* skipToEndQuote(char quote = '"');
+      //create a data from start to the current position
+      Data data(const char* start) const { return Data(start, mStart - start); }
+
       static const char* Whitespace;
-      static const char* SemiColonOrColon;
-      static const char* ColonOrAtSign;
+      static const char* ParamTerm;
    private:
       Data tmpData;
       
