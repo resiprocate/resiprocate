@@ -76,7 +76,14 @@ readIntoData(const Data& filename)
    
    ifstream is;
    is.open(filename.c_str(), ios::binary );
-   assert(is.is_open()); // TODO should thorw not assert 
+   if ( !is.is_open() )
+   {
+      ErrLog( << "Could not open file " << filename << " for read");
+      throw BaseSecurity::Exception("Could not read file ", 
+                                    __FILE__,__LINE__);
+   }
+   
+   assert(is.is_open());
    
    // get length of file:
    is.seekg (0, ios::end);
@@ -161,30 +168,31 @@ Security::preload()
       }
 
       Data name( d->d_name );
-
+      Data fileName = mPath+name;
+      
       if (name.postfix(pem))
       {
-         InfoLog( << "Going to read file " << mPath + name );
+         InfoLog( << "Going to read file " << fileName );
          
          if (name.prefix(userCert))
          {
-            addUserCertPEM(getAor(name, userCert), readIntoData(mPath + name));
+            addUserCertPEM(getAor(name, userCert), readIntoData(fileName));
          }
          else if (name.prefix(userKey))
          {
-            addUserPrivateKeyPEM(getAor(name, userKey), readIntoData(mPath + name));
+            addUserPrivateKeyPEM(getAor(name, userKey), readIntoData(fileName));
          }
          else if (name.prefix(domainCert))
          {
-            addDomainCertPEM(getAor(name, domainCert), readIntoData(mPath + name));
+            addDomainCertPEM(getAor(name, domainCert), readIntoData(fileName));
          }
          else if (name.prefix(domainKey))
          {
-            addDomainPrivateKeyPEM(getAor(name, domainKey), readIntoData(mPath + name));
+            addDomainPrivateKeyPEM(getAor(name, domainKey), readIntoData(fileName));
          }
          else if (name.prefix(rootCert))
          {
-            addRootCertPEM(readIntoData(mPath + name));
+            addRootCertPEM(readIntoData(fileName));
          }
       }
    }
@@ -548,25 +556,34 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
    PrivateKeyMap& privateKeys = (type == DomainPrivateKey ? 
                                  mDomainPrivateKeys : mUserPrivateKeys);
 
-   privateKeys.insert(std::make_pair(name, pKey));
+   // make a copy of the the key 
+   assert( EVP_PKEY_type(pKey->type) == EVP_PKEY_RSA );
+   RSA* rsa = EVP_PKEY_get1_RSA(pKey);
+   assert( rsa );
+   EVP_PKEY* nKey = EVP_PKEY_new();
+   assert( nKey );
+   EVP_PKEY_set1_RSA(nKey, rsa);
    
-   // figure out a passPhrase to encrypt with 
-   char* kstr=NULL;
-   int klen=0;
-   if (type != DomainPrivateKey)
-   {
-      PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
-      if(iter != mUserPassPhrases.end())
-      {
-         Data passPhrase = iter->second;
-         
-         kstr = (char*)passPhrase.c_str(); // TODO !cj! mem leak 
-         klen = passPhrase.size();
-      }
-   }
-
+   privateKeys.insert(std::make_pair(name, nKey));
+      
+#if 0 // CJ TODO FIX - for some reason doing write when load a key 
    if (write)
    {
+      // figure out a passPhrase to encrypt with 
+      char* kstr=NULL;
+      int klen=0;
+      if (type != DomainPrivateKey)
+      {
+         PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
+         if(iter != mUserPassPhrases.end())
+         {
+            Data passPhrase = iter->second;
+            
+            kstr = (char*)passPhrase.c_str(); // TODO !cj! mem leak 
+            klen = passPhrase.size();
+         }
+      }
+
       BIO *bio = BIO_new(BIO_s_mem());
       assert(bio);
       try
@@ -603,6 +620,8 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
       }
       BIO_free(bio);
    }
+#endif
+
 }
 
 
@@ -682,7 +701,7 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
    char* passPhrase = 0;
    try
    {
-      if (type != DomainPrivateKey)
+      if (type == UserPrivateKey)
       {
          PassPhraseMap::const_iterator iter = mUserPassPhrases.find(name);
          if(iter != mUserPassPhrases.end())
@@ -692,7 +711,7 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
       }
       BIO_set_close(in, BIO_NOCLOSE);
       
-      EVP_PKEY* privateKey;
+      EVP_PKEY* privateKey=0;
       if (PEM_read_bio_PrivateKey(in, &privateKey, 0, passPhrase) == 0)
       {
          ErrLog(<< "Could not read private key from '" << endl 
@@ -1546,6 +1565,13 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
    EVP_PKEY* pKey = mDomainPrivateKeys[signerDomain];
    assert( pKey );
+ 
+   if ( pKey->type !=  EVP_PKEY_RSA )
+   {
+      ErrLog( << "Private key (type=" << pKey->type <<"for " 
+              << signerDomain << " is not of type RSA" );
+      throw Exception("No RSA private key when computing identity",__FILE__,__LINE__);
+   }
 
    assert( pKey->type ==  EVP_PKEY_RSA );
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
@@ -2020,8 +2046,20 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
 
    if ( *signedBy == Data::Empty )
    {
+#if 1 // CJ TODO FIX 
+      // THIS IS ALL WRONG 
+      *signedBy == Data("kumiko@example.net");
+      
+      if (mUserCerts.count( *signedBy))
+      {
+         X509* cert = mUserCerts[ *signedBy ];
+         assert(cert);
+         sk_X509_push(certs, cert);
+      }
+#else
       assert(0);
       // need to add back in code that adds all certs when sender unkonwn
+#endif
    }
    else
    {
@@ -2204,7 +2242,7 @@ BaseSecurity::getSslCtx ()
 void
 BaseSecurity::dumpAsn( char* name, Data data)
 {
-#if 0 // !CJ! TODO turn off
+#if 1 // !CJ! TODO turn off
    assert(name);
 
    if (true) // dump asn.1 stuff to debug file
