@@ -181,7 +181,7 @@ SipMessage::make(const Data& data,  bool isExternal)
    char *unprocessedCharPtr;
    if (msgHeaderScanner.scanChunk(buffer, len, &unprocessedCharPtr) != MsgHeaderScanner::scrEnd)
    {
-      InfoLog(<<"Preparse Rejecting buffer as unparsable / fragmented.");
+      DebugLog(<<"Scanner rejecting buffer as unparsable / fragmented.");
       DebugLog(<< data);
       delete msg; 
       msg = 0; 
