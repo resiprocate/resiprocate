@@ -5,10 +5,10 @@
 
 using namespace resip;
 
-ClientSubscription::ClientSubscription(DialogUsageManager& dum,
-                                       Dialog& dialog)
+ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& request)
    : BaseUsage(dum, dialog),
-     mHandle(dum)
+     mHandle(dum),
+     mLastRequest(request)
 {
 }
 
