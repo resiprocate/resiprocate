@@ -591,7 +591,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
      if(timeout.seq() == mSessionTimerSeq)
       {
-         if(isConnected())  // !slg! this check isn't 100% safe - ie. provideOffer will throw if in some states - ie. SentReInvite, etc.
+         if(mState == Connected)  // Note:  If not connected then we must be issueing a reinvite/update or receiving one - in either case the session timer stuff will get reset/renegotiated - thus just ignore this referesh
          {
             // Note:  If UPDATE is supported then UPDATE request should probably not contain an SDP, since it is not changing - changes are required for this (and to the QueuedUpdate state)
             provideOffer(*mCurrentLocalSdp);
