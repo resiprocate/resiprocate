@@ -1,4 +1,5 @@
 #include <string.h>
+#include <iomanip>
 
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/Uri.hxx"
@@ -8,7 +9,6 @@
 #include "sip2/util/Timer.hxx"
 #include "sip2/util/DataStream.hxx"
 #include "sip2/util/MD5Stream.hxx"
-#include <iomanip>
 
 using namespace Vocal2;
 
