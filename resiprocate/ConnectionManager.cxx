@@ -41,21 +41,13 @@ ConnectionManager::ConnectionManager() :
 
 ConnectionManager::~ConnectionManager()
 {
-
-#if 0 
-	// !cj! - the code in here call stuff that seems broken and corrupts memory ...
-
-	// !jf! - ( cullen put this here) is the next 3 lines of code right ????
-   while (!mReadHead->empty()) 
+   while (!mAddrMap.empty())
    {
-	   Connection* discard = *(mReadHead->begin());
-	   delete discard;
+      delete mAddrMap.begin()->second;
    }
-
-     assert(mReadHead->empty());
+   assert(mReadHead->empty());
    assert(mWriteHead->empty());
    assert(mLRUHead->empty());
-#endif
 }
 
 Connection*
