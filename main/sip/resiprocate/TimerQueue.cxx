@@ -1,4 +1,6 @@
 
+#include <limits.h>
+
 #include "sip2/util/Socket.hxx"
 
 #include "sip2/sipstack/TimerQueue.hxx"
@@ -29,13 +31,13 @@ TimerQueue::msTillNextTimer()
       else
       {
          UInt64 ret64 = next - now;
-		 int ret = int(ret64);
-		 return ret;
+         int ret = int(ret64);
+         return ret;
       }
    }
    else
    {
-      return 0;
+      return INT_MAX;
    }
 }
 

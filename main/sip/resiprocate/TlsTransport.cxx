@@ -108,7 +108,9 @@ TlsTransport::buildFdSet( FdSet& fdset)
         it != mConnectionMap.mConnections.end(); it++)
    {
       fdset.setRead(it->second->getSocket());
-      fdset.setWrite(it->second->getSocket());
+
+      // !cj! TODO only should add this if ther is data to write
+      // fdset.setWrite(it->second->getSocket());
    }
    fdset.setRead(mFd);
       
