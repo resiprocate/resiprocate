@@ -1,4 +1,4 @@
-# $Id: Makefile.tools,v 1.1 2003/03/24 22:09:53 jason Exp $
+# $Id: Makefile.tools,v 1.2 2003/03/25 03:18:22 jason Exp $
 
 ######################################################################
 #                     Default tool names/locations
@@ -28,8 +28,8 @@
 
 
 ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
-CC		= $(DISTCC) gcc
-CXX		= $(DISTCC) g++
+CC		= $(CC) gcc
+CXX		= $(CXX) g++
 MKSHLIB		= $(CC) -fPIC -shared 
 DEP		= $(CXX) 
 LINKER		= $(CXX) 
