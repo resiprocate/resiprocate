@@ -90,10 +90,10 @@ SipStack::addTransport( Transport::Type protocol,
 }
 
 void 
-SipStack::addTlsTransport( const Data& domainname,
+SipStack::addTlsTransport( int port, 
                            const Data& keyDir,
                            const Data& privateKeyPassPhrase,
-                           int port, 
+                           const Data& domainname,
                            const Data& hostName,
                            const Data& nic) 
 {
