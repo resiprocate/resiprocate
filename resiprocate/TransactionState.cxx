@@ -1,6 +1,7 @@
  
 #include "sip2/util/Socket.hxx"
 #include "sip2/util/Logger.hxx"
+#include "sip2/util/MD5Stream.hxx"
 #include "sip2/sipstack/TransactionState.hxx"
 #include "sip2/sipstack/TransportSelector.hxx"      
 #include "sip2/sipstack/SipStack.hxx"
@@ -25,7 +26,8 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
    mCancelStateMachine(0),
    mMsgToRetransmit(0),
    mDnsQueryId(0),
-   mDnsState(DnsResolver::NotStarted)
+   mDnsState(DnsResolver::NotStarted),
+   mRFC2543ResponseUpdated(true)
 {
 }
 
@@ -71,7 +73,7 @@ TransactionState::process(SipStack& stack)
       tid += "ACK"; // to make it unique from the invite transaction
    }
 
-   DebugLog (<< "got message out of state machine fifo: tid=" << tid << message->brief());
+   DebugLog (<< "got message out of state machine fifo: tid=" << tid << " " << message->brief());
    
    TransactionState* state = stack.mTransactionMap.find(tid);
    if (state) // found transaction for sip msg
@@ -117,6 +119,13 @@ TransactionState::process(SipStack& stack)
                TransactionState* state = new TransactionState(stack, ServerInvite, Trying);
                // !rk! This might be needlessly created.  Design issue.
                state->mMsgToRetransmit = state->make100(sip);
+
+               if( sip->header(h_Vias).front().exists(p_branch) && 
+                   sip->header(h_Vias).front().param(p_branch).hasMagicCookie() )
+               {
+                  state->mRFC2543ResponseUpdated = false;
+               }
+               
                stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
                stack.mTransactionMap.add(tid,state);
             }
@@ -859,6 +868,20 @@ TransactionState::processServerInvite(  Message* msg )
       switch (sip->header(h_CSeq).method())
       {
          case INVITE:
+            // When the response comes back from the server, the Transaction
+            // needs to add a new entry to the TransactionMap that includes the
+            // totag 
+            // DO NOT REMOVE THIS!
+            if (code > 100)
+            {
+               if (!mRFC2543ResponseUpdated)
+               {
+                  // !jf! need to have a way to clean up the old one (back pointer)
+                  mStack.mTransactionMap.add(sip->updateRFC2543TransactionId(), this);
+                  mRFC2543ResponseUpdated = true;
+               }
+            }
+            
             if (code == 100)
             {
                if (mState == Trying || mState == Proceeding)
