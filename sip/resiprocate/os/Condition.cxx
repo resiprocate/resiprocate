@@ -57,7 +57,7 @@
 using namespace Vocal2;
 
 
-Condition::Condition()
+Condition::Condition() : mId()
 {
 #ifdef WIN32
 	mId =  CreateEvent(
