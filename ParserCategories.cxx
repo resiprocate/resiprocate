@@ -178,34 +178,22 @@ StringComponent::encode(std::ostream& str) const
 }
 
 //====================
-// NameAddr:
+// Url:
 //====================
 ParserCategory *
-URI::clone(HeaderFieldValue*) const
+Url::clone(HeaderFieldValue*) const
 {
   assert(0);
 }
 
 void
-NameAddrBase::parse()
+Url::parse()
 {
    assert(0);
 }
 
 ostream&
-NameAddrBase::encode(ostream& str) const
-{
-   assert(0);
-}
-
-void
-NameAddr::parse()
-{
-   assert(0);
-}
-
-ostream&
-NameAddr::encode(ostream& str) const
+Url::encode(ostream& str) const
 {
    assert(0);
 }
