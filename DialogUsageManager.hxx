@@ -194,6 +194,8 @@ class DialogUsageManager
       SipStack& mStack;
 
       friend class ClientRegistration;
+      friend class ClientInviteSession;
+      friend class ServerInviteSession;
 };
 
 }

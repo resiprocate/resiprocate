@@ -1,14 +1,17 @@
-#include "InviteSession.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/InviteSession.hxx"
 
 using namespace resip;
 
 InviteSession::InviteSession(DialogUsageManager& dum,
                              Dialog& dialog)
    : BaseUsage(dum, dialog),
-     mLocalSdp(0),
-     mRemoteSdp(0),
-     mMyNextOffer(0),
-     mPendingReceivedOffer(0),
+     mCurrentLocalSdp(0),
+     mCurrentRemoteSdp(0),
+     mProposedLocalSdp(0),
+     mProposedRemoteSdp(0),
      mState(Unknown)
 {
 }
@@ -16,13 +19,13 @@ InviteSession::InviteSession(DialogUsageManager& dum,
 const SdpContents* 
 InviteSession::getLocalSdp()
 {
-   return mLocalSdp;
+   return mCurrentLocalSdp;
 }
 
 const SdpContents* 
 InviteSession::getRemoteSdp()
 {
-   return mRemoteSdp;
+   return mCurrentRemoteSdp;
 }
 
 void
@@ -40,6 +43,7 @@ InviteSession::end()
 void
 InviteSession::copyAuthorizations(SipMessage& request)
 {
+#if 0
    if (mLastRequest.exists(h_ProxyAuthorizations))
    {
       // should make the next auth (change nextNonce)
@@ -50,6 +54,7 @@ InviteSession::copyAuthorizations(SipMessage& request)
       // should make the next auth (change nextNonce)
       request.header(h_ProxyAuthorizations) = mLastRequest.header(h_ProxyAuthorizations);
    }
+#endif
 }
 
 InviteSession::Handle::Handle(DialogUsageManager& dum)
