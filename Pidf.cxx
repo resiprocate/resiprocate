@@ -154,6 +154,7 @@ Pidf::parse(ParseBuffer& pb)
    if (!pb.eof() )
    {
       const char* startNote = pb.skipChar();
+      pb.skipToChars("</note");
       pb.data(mTuple[0].note, startNote);
       DebugLog ( << "found a note of" << mTuple[0].note);
    }
