@@ -36,6 +36,8 @@ class ParserCategory
          return ((typename ParameterType<T>::Type&)mHeaderField->getParameter((typename ParameterTypes::Type)T)).value();
       }
       
+      void parseParameters(const char* start);
+
       bool isParsed() const
       {
          return mIsParsed;
