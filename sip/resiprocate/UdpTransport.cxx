@@ -205,12 +205,12 @@ UdpTransport::process(FdSet& fdset)
       size_t discard = 0;
       
 
-      PreparseState::BufferAction status = PreparseState::NONE;
+      BufferAction status = NONE;
       
       mPreparse.process(*message,buffer, len, 0, used, discard, status);
       
 
-      if (status & ( ~PreparseState::headersComplete ))
+      if (status & ( ~headersComplete ))
       {
          InfoLog(<<"Rejecting datagram as unparsable / fragmented.");
          delete message; 
@@ -218,7 +218,7 @@ UdpTransport::process(FdSet& fdset)
       else
       {
           // no pp error
-          if (used < len)
+          if (used < len) // !ah! fix this warning
           {
               // body is present .. add it up.
               // NB. The Sip Message uses an overlay (again)
