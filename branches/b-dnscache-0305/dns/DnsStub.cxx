@@ -9,7 +9,11 @@ extern "C"
 #include <set>
 #include <vector>
 
-#include "resiprocate/os/socket.hxx"
+#ifndef __CYGWIN__
+#include <arpa/nameser.h>
+#endif
+
+#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Data.hxx"
