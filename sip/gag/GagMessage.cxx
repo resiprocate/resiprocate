@@ -1,4 +1,7 @@
 #include "GagMessage.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::APP
 
 // Yeah, this is kind of ugly, but I can't think of
 // a good pattern for this off the top of my head.
@@ -8,6 +11,8 @@ GagMessage::getMessage(istream &is)
 {
   int type;
   is.get((char *)type, sizeof(type));
+
+  DebugLog ( << "Reading message of type " << type);
 
   switch (type)
   {
