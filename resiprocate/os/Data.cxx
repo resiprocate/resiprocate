@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.58 2003/01/26 20:54:11 jason Exp $";
+// "$Id: Data.cxx,v 1.59 2003/01/31 23:41:29 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -976,6 +976,19 @@ Vocal2::operator<<(ostream& strm, const Data& d)
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 size_t 
 __gnu_cxx::hash<Vocal2::Data>::operator()(const Vocal2::Data& data) const
+{
+   unsigned long __h = 0; 
+   const char* start = data.data(); // non-copying
+   const char* end = start + data.size();
+   for ( ; start != end; ++start)
+   {
+      __h = 5*__h + *start; // .dlb. weird hash
+   }
+   return size_t(__h);
+}
+#  elif  defined(__INTEL_COMPILER )
+size_t 
+std::hash_value(const Vocal2::Data& data) 
 {
    unsigned long __h = 0; 
    const char* start = data.data(); // non-copying

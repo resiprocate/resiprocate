@@ -273,6 +273,22 @@ __gnu_cxx::hash<Vocal2::Transport::Tuple>::operator()(const Vocal2::Transport::T
 
 }
 
+#elif  defined(__INTEL_COMPILER )
+size_t 
+std::hash_value(const Vocal2::Transport::Tuple& tuple) 
+{
+   // assumes POD
+   unsigned long __h = 0; 
+   const char* start = (const char*)&tuple;
+   const char* end = start + sizeof(tuple);
+   for ( ; start != end; ++start)
+   {
+      __h = 5*__h + *start; // .dlb. weird hash
+   }
+   return size_t(__h);
+}
+
+
 #endif
 
 /* ====================================================================
