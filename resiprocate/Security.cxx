@@ -1857,7 +1857,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    }
    else
    {
-      *sigStat = isBad;
+      *sigStat = SignatureIsBad;
       InfoLog(<< "No valid signers of this messages" );
       return first;
    }
@@ -1900,7 +1900,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
 
             if ( sigStat )
             {
-               *sigStat = isBad;
+               *sigStat = SignatureIsBad;
             }
 
             while (1)
@@ -1927,19 +1927,19 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
             if ( flags & PKCS7_NOVERIFY )
             {
                DebugLog( << "Signature is notTrusted" );
-               *sigStat = notTrusted;
+               *sigStat = SignatureNotTrusted;
             }
             else
             {
                if (false) // !jf! TODO look for this cert in store
                {
                   DebugLog( << "Signature is trusted" );
-                  *sigStat = trusted;
+                  *sigStat = SignatureTrusted;
                }
                else
                {
                   DebugLog( << "Signature is caTrusted" );
-                  *sigStat = caTrusted;
+                  *sigStat = SignatureCATrusted;
                }
             }
          }

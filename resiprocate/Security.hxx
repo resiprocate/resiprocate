@@ -8,6 +8,7 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/SecurityTypes.hxx"
+#include "resiprocate/SecurityAttributes.hxx"
 
 #if defined(USE_SSL)
 #include <openssl/ssl.h>
@@ -119,16 +120,7 @@ class BaseSecurity
 
       // returns NULL if it fails
       Contents* decrypt( const Data& decryptorAor, Pkcs7Contents* );
-
-      enum SignatureStatus
-      {
-         none, // there is no signature
-         isBad,
-         trusted, // It is signed with trusted signature
-         caTrusted, // signature is new and is signed by a root we trust
-         notTrusted // signature is new and is not signed by a CA we
-      };
-
+      
       // returns NULL if fails. returns the data that was originally signed
       Contents* checkSignature( MultipartSignedContents*, Data* signedBy, SignatureStatus* sigStat );
 
