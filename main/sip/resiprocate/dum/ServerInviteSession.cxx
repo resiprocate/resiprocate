@@ -63,6 +63,16 @@ ServerInviteSession::handle(const SipMessage& msg)
 {
 }
 
+void 
+ServerInviteSession::dispatch(const SipMessage& msg)
+{
+}
+
+void 
+ServerInviteSession::dispatch(const DumTimeout& timer)
+{
+}
+
 ServerInviteSession::Handle::Handle(DialogUsageManager& dum)
    : InviteSession::Handle(dum)
 {}
