@@ -1,4 +1,5 @@
 *~
+.DS_Store
 .dependlibs
 Assert.cxx
 Assert.hxx
