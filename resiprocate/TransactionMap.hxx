@@ -11,6 +11,8 @@ namespace Vocal2
   class TransactionMap 
   {
      public:
+        ~TransactionMap();
+        
         TransactionState* find( const Data& transactionId ) const;
         void add( const Data& transactionId, TransactionState* state  );
         void remove( const Data& transactionId );
