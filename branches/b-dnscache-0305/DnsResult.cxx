@@ -37,6 +37,9 @@ extern "C"
 
 #include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsInterface.hxx"
+
+#include "resiprocate/QueryTypes.hxx"
+#include "resiprocate/DnsStub.hxx"
 #include "resiprocate/DnsResult.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
@@ -49,8 +52,9 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
-DnsResult::DnsResult(DnsInterface& interfaceObj, DnsHandler* handler) 
-   : mInterface(interfaceObj),
+DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, DnsHandler* handler) 
+   : mDns(dns),
+     mInterface(interfaceObj),
      mHandler(handler),
      mSRVCount(0),
      mSips(false),
@@ -153,7 +157,7 @@ DnsResult::lookup(const Uri& uri)
       else if (uri.port() != 0)
       {
          mPort = uri.port();
-         lookupAAAARecords(mTarget); // for current target and port         
+         lookupHost(mTarget); // for current target and port
       }
       else 
       { 
@@ -169,7 +173,7 @@ DnsResult::lookup(const Uri& uri)
                   return;
                }
                mSRVCount++;
-               lookupSRV("_sips._udp." + mTarget);
+               mDns.lookup<RR_SRV, DnsResultSink>("_sips._udp." + mTarget, this);
             }
             else
             {
@@ -180,7 +184,7 @@ DnsResult::lookup(const Uri& uri)
                   return;
                }
                mSRVCount++;
-               lookupSRV("_sips._tcp." + mTarget);
+               mDns.lookup<RR_SRV, DnsResultSink>("_sips._tcp." + mTarget, this);
             }
          }
          else
@@ -197,14 +201,15 @@ DnsResult::lookup(const Uri& uri)
                case TLS: //deprecated, mean TLS over TCP
                case TCP:
                   mSRVCount++;
-                  lookupSRV("_sip._tcp." + mTarget);
+                  mDns.lookup<RR_SRV, DnsResultSink>("_sip._tcp." + mTarget, this);
                   break;
                case SCTP:
                case DCCP:
                case UDP:
                default: //fall through to UDP for unimplemented & unknown
                   mSRVCount++;
-                  lookupSRV("_sip._udp." + mTarget);
+                  //lookupSRV("_sip._udp." + mTarget);
+                  mDns.lookup<RR_SRV, DnsResultSink>("_sip._udp." + mTarget, this);
             }
          }
       }
@@ -234,14 +239,25 @@ DnsResult::lookup(const Uri& uri)
          else // port specified so we know the transport
          {
             mPort = uri.port();
-            lookupAAAARecords(mTarget); // for current target and port         
+            lookupHost(mTarget);
          }
       }
       else // do NAPTR
       {
-         lookupNAPTR(); // for current target
+         mDns.lookup<RR_NAPTR, DnsResultSink>(mTarget, this); // for current target
       }
    }
+}
+
+void DnsResult::lookupHost(const Data& target)
+{
+#if defined(USE_IPV6)
+   DebugLog(<< "Doing host (AAAA) lookup: " << target);
+   mPassHostFromAAAAtoA = target; // hackage
+   mDns.lookup<RR_AAAA, DnsResultSink>(target, this);   
+#else // !USE_IPV6
+   mDns.lookup<RR_A, DnsResultSink>(target, this);
+#endif
 }
 
 int
@@ -324,6 +340,7 @@ DnsResult::processNAPTR(int status, const unsigned char* abuf, int alen)
    // a callback into this object
    if (mType == Destroyed)
    {
+
       destroy();
       return;
    }
@@ -790,7 +807,8 @@ DnsResult::primeResults()
          mPort = next.port;
          mTransport = next.transport;
          StackLog (<< "No A or AAAA record for " << next.target << " in additional records");
-         lookupAAAARecords(next.target);
+         //lookupAAAARecords(next.target);         
+         lookupHost(next.target);
          // don't call primeResults since we need to wait for the response to
          // AAAA/A query first
       }
@@ -1186,7 +1204,6 @@ DnsResult::parseAAAA(const unsigned char *aptr,
 }
 #endif
 
-
 const unsigned char *
 DnsResult::parseCNAME(const unsigned char *aptr,
                    const unsigned char *abuf, 
@@ -1322,7 +1339,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       naptr.service = Data(p+1, len);
 
       p += len + 1;
-      len = *p;
+      len = *p; 
       if (p + len + 1 > aptr + dlen)
       {
          StackLog (<< "Failed parse of RR");
@@ -1415,6 +1432,302 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
       }
    }
    return false;
+}
+
+void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
+{
+   StackLog (<< "Received A result for: " << mTarget);
+   StackLog (<< "DnsResult::onDnsResult() " << result.status);
+   
+   // This function assumes that the A query that caused this callback
+   // is the _only_ outstanding DNS query that might result in a
+   // callback into this function
+   if ( mType == Destroyed )
+   {
+      destroy();
+      return;
+   }
+
+   if (result.status == 0)
+   {
+      for (vector<DnsHostRecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
+      {
+         in_addr addr;
+         addr.s_addr = (*it).addr().s_addr;
+         Tuple tuple(addr, mPort, mTransport, mTarget);
+         StackLog (<< "Adding " << tuple << " to result set");
+         mResults.push_back(tuple);
+      }
+   }
+   else
+   {
+      StackLog (<< "Failed async A query: " << result.msg);
+   }
+
+   if (mSRVCount == 0)
+   {
+      bool changed = (mType == Pending);
+      if (mResults.empty())
+      {
+#ifdef WIN32_SYNCRONOUS_RESOLUTION_ON_ARES_FAILURE
+         // Try Windows Name Resolution (not asyncronous)
+         WSAQUERYSET QuerySet = { 0 };
+	     GUID guidServiceTypeUDP = SVCID_UDP(mPort);
+	     GUID guidServiceTypeTCP = SVCID_TCP(mPort);
+         HANDLE hQuery;
+         QuerySet.dwSize = sizeof(WSAQUERYSET);
+         QuerySet.lpServiceClassId = mTransport == UDP ? &guidServiceTypeUDP : &guidServiceTypeTCP;
+         QuerySet.dwNameSpace = NS_ALL;
+         QuerySet.lpszServiceInstanceName = (char *)mTarget.c_str();
+         if(WSALookupServiceBegin(&QuerySet, LUP_RETURN_ADDR, &hQuery) == 0)
+         {
+             DWORD dwQuerySize = 256;   // Starting size
+             int iRet = 0;
+             bool fDone = false;
+             LPWSAQUERYSET pQueryResult = (LPWSAQUERYSET) new char[dwQuerySize];
+             while(iRet == 0 && pQueryResult)
+             {
+                iRet = WSALookupServiceNext(hQuery, 0, &dwQuerySize, pQueryResult);
+                if(pQueryResult && iRet == -1 && GetLastError() == WSAEFAULT)
+                {
+                   delete [] pQueryResult;
+                   pQueryResult = (LPWSAQUERYSET) new char[dwQuerySize]; // Re-allocate new size
+                   iRet = WSALookupServiceNext(hQuery, 0, &dwQuerySize, pQueryResult);
+                }
+                if(pQueryResult && iRet == 0)
+                {
+                   for(DWORD i = 0; i < pQueryResult->dwNumberOfCsAddrs; i++)
+                   {
+     	              SOCKADDR_IN *pSockAddrIn = (SOCKADDR_IN *)pQueryResult->lpcsaBuffer[i].RemoteAddr.lpSockaddr;
+                      Tuple tuple(pSockAddrIn->sin_addr, mPort, mTransport, mTarget);
+                      StackLog (<< "Adding (WIN) " << tuple << " to result set");
+                      mResults.push_back(tuple);
+                      mType = Available;
+                   }
+                }
+             }
+             delete [] pQueryResult;
+             WSALookupServiceEnd(hQuery);
+         }
+         if(mResults.empty())
+         {
+            mType = Finished; 
+         }
+#else
+         mType = Finished; 
+#endif
+      }
+      else 
+      {
+         mType = Available;
+      }
+      if (changed) mHandler->handle(this);
+   }
+}
+
+void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
+{
+   StackLog (<< "Received AAAA result for: " << mTarget);
+#ifdef USE_IPV6
+   StackLog (<< "DnsResult::onDnsResult() " << result.status);
+   // This function assumes that the AAAA query that caused this callback
+   // is the _only_ outstanding DNS query that might result in a
+   // callback into this function
+   if ( mType == Destroyed )
+   {
+      destroy();
+      return;
+   }
+   if (result.status == 0)
+   {
+      for (vector<DnsAAAARecord>::iterator it; it = result.records.begin(); it != result.records.end(); ++it)
+      {
+         Tuple tuple((*it).v6Address(), mPort, mTransport, mTarget);
+         mResults.push_back(tuple);
+      }
+   }
+   else
+   {
+      StackLog (<< "Failed async dns query: " << result.msg);
+   }
+   mDns.lookup<RR_A, DnsResultSink>(mPassHostFromAAAAtoA, this);
+#else
+	assert(0);
+#endif
+}
+
+void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
+{
+   StackLog (<< "Received SRV result for: " << mTarget);
+   assert(mSRVCount>=0);
+   mSRVCount--;
+   StackLog (<< "DnsResult::onDnsResult() " << mSRVCount << " status=" << result.status);
+
+   // There could be multiple SRV queries outstanding, but there will be no
+   // other DNS queries outstanding that might cause a callback into this
+   // object.
+   if (mType == Destroyed && mSRVCount == 0)
+   {
+      destroy();
+      return;
+   }
+
+   if (result.status == 0)
+   {
+      for (vector<DnsSrvRecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
+      {
+         SRV srv;
+         srv.key = (*it).name();
+         srv.priority = (*it).priority();
+         srv.weight = (*it).weight();
+         srv.port = (*it).port();
+         srv.target = (*it).target();
+         if (srv.key.find("_udp") != Data::npos)
+         {
+            srv.transport = UDP;
+         }
+         else if (srv.key.find("_tcp") != Data::npos)
+         {
+            srv.transport = TCP;
+         }
+         else if (srv.key.find("_sips._tcp") != Data::npos)
+         {
+            srv.transport = TLS;
+         }
+         mSRVResults.push_back(srv);
+      }
+   }
+   else
+   {
+      StackLog (<< "SRV lookup failed: " << result.status);
+   }
+
+   // no outstanding queries 
+   if (mSRVCount == 0) 
+   {
+      if (mSRVResults.empty())
+      {
+         if (mTransport == UNKNOWN_TRANSPORT)
+         {
+            if (mSips)
+            {
+               mTransport = TLS;
+               mPort = 5061;
+            }
+            else
+            {
+               mTransport = UDP;
+               mPort = 5060;
+            }
+         }
+         else
+         {
+            mPort = getDefaultPort(mTransport, 0);
+         }
+         
+         StackLog (<< "No SRV records for " << mTarget << ". Trying A records");
+         lookupHost(mTarget);
+      }
+      else
+      {
+         std::sort(mSRVResults.begin(),mSRVResults.end()); // !jf! uggh
+         primeResults();
+      }
+   }
+}
+
+void DnsResult::onDnsResult(const DNSResult<DnsNaptrRecord>& result)
+{
+   StackLog (<< "Received NAPTR result for: " << mTarget);
+   StackLog (<< "DnsResult::onDnsResult() " << result.status);
+
+   // This function assumes that the NAPTR query that caused this
+   // callback is the ONLY outstanding query that might cause
+   // a callback into this object
+   if (mType == Destroyed)
+   {
+
+      destroy();
+      return;
+   }
+
+   bool bFail = false;
+   if (result.status == 0)
+   {
+      for (vector<DnsNaptrRecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
+      {
+         NAPTR naptr;
+         naptr.key = (*it).name();
+         naptr.flags = (*it).flags();
+         naptr.order = (*it).order();
+         naptr.pref = (*it).preference();
+         naptr.regex = (*it).regexp();
+         naptr.replacement = (*it).replacement();
+         naptr.service = (*it).service();
+
+         StackLog (<< "Adding NAPTR record: " << naptr);
+         if ( mSips && naptr.service.find("SIPS") == 0)
+         {
+            if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
+            {
+               mPreferredNAPTR = naptr;
+               StackLog (<< "Picked preferred: " << mPreferredNAPTR);
+            }
+         }
+         else if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
+         {
+            mPreferredNAPTR = naptr;
+            StackLog (<< "Picked preferred: " << mPreferredNAPTR);
+         }
+      }
+
+      // This means that dns / NAPTR is misconfigured for this client 
+      if (mPreferredNAPTR.key.empty())
+      {
+         StackLog (<< "No NAPTR records that are supported by this client");
+         mType = Finished;
+         mHandler->handle(this);
+         return;
+      }
+
+      if (result.records.size() == 0) // didn't find any NAPTR records
+      {
+         StackLog (<< "There are no NAPTR records so do an SRV lookup instead");
+         bFail = true;
+      }
+      else
+      {
+         mType = Pending;
+         mSRVCount++;
+         mDns.lookup<RR_SRV, DnsResultSink>(mPreferredNAPTR.replacement, this);
+      }
+   }
+   else
+   {
+      StackLog (<< "NAPTR lookup failed: " << result.msg);
+      bFail = true;
+   }
+
+   if (bFail)
+   {
+      if (mSips)
+      {
+         mSRVCount++;
+         mDns.lookup<RR_SRV, DnsResultSink>("_sips._tcp." + mTarget, this);
+      }
+      else
+      {
+         // For now, don't add _sips._tcp in this case. 
+         mSRVCount+=2;         
+         mDns.lookup<RR_SRV, DnsResultSink>("_sip._tcp." + mTarget, this);
+         mDns.lookup<RR_SRV, DnsResultSink>("_sip._udp." + mTarget, this);
+      }
+      StackLog (<< "Doing SRV queries " << mSRVCount << " for " << mTarget);
+   }
+}
+
+void DnsResult::onDnsResult(const DNSResult<DnsCnameRecord>& result)
+{
 }
 
 std::ostream& 
