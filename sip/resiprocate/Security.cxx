@@ -48,7 +48,7 @@ using namespace std;
 static void
 dumpAsn( char* name, Data data)
 {
-#if 1 // !CJ! TODO turn off 
+#if 0 // !CJ! TODO turn off 
    assert(name);
    
    if (true) // dump asn.1 stuff to debug file
