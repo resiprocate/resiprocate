@@ -49,14 +49,18 @@ class TransactionState
 
    private:
       bool isRequest(Message* msg) const;
+      bool isInvite(Message* msg) const;
       bool isTimer(Message* msg) const;
       bool isResponse(Message* msg, int lower=0, int upper=699) const;
       bool isFromTU(Message* msg) const;
       bool isTranportError(Message* msg) const;
+      bool isSentReliable(Message* msg) const;
+      bool isSentUnreliable(Message* msg) const;
       bool isSentIndication(Message* msg) const;
       void sendToTU(Message* msg) const;
       void sendToWire(Message* msg) const;
       SipMessage* make100(SipMessage* request) const;
+      SipMessage* makeAck(SipMessage* response) const;
       
       SipStack& mStack;
       Machine mMachine;
