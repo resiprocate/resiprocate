@@ -523,7 +523,9 @@ DialogUsageManager::send(SipMessage& msg)
 void 
 DialogUsageManager::sendUsingOutboundIfAppropriate(SipMessage& msg)
 {
-   if (getProfile()->hasOutboundProxy())
+   //a little inefficient, branch parameter might be better
+   DialogId id(msg);
+   if (getProfile()->hasOutboundProxy() && !findDialog(id))
    {
       DebugLog ( << "Using outbound proxy");
       mStack.sendTo(msg, getProfile()->getOutboundProxy().uri());         
