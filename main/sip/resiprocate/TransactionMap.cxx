@@ -9,8 +9,8 @@ using namespace Vocal2;
 TransactionState* 
 TransactionMap::find( const Data& tid ) const
 {
-   MapConstIterator i = _map.find(tid);
-   if (i != _map.end())
+   MapConstIterator i = mMap.find(tid);
+   if (i != mMap.end())
    {
       return i->second;
    }
@@ -23,31 +23,31 @@ TransactionMap::find( const Data& tid ) const
 void 
 TransactionMap::add(const Data& tid, TransactionState* state  )
 {
-   MapIterator i = _map.find(tid);
-   if (i != _map.end())
+   MapIterator i = mMap.find(tid);
+   if (i != mMap.end())
    {
       DebugLog (<< "Trying to replace an existing transaction id with a new state: " << tid);
       
       delete i->second;
-      _map.erase(i);
+      mMap.erase(i);
 
-      _map[tid] = state;
+      mMap[tid] = state;
    }
    else
    {
-      _map[tid] = state;
+      mMap[tid] = state;
    }
 }
  
 void 
 TransactionMap::remove(const Data& tid )
 {
-   MapIterator i = _map.find(tid);
-   if (i != _map.end())
+   MapIterator i = mMap.find(tid);
+   if (i != mMap.end())
    {
       // don't delete it here, the TransactionState deletes itself and removes
       // itself from the map
-      _map.erase(i);
+      mMap.erase(i);
    }
    else
    {
