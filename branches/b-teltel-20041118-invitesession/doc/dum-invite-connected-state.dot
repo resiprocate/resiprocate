@@ -8,32 +8,32 @@ digraph UAC {
         rankdir=LR;
         node [shape = box];
 
-        Connected -> Updating [ label = "dum::provideOffer/send::UPDATE" ];
-        Updating -> Connected [ label = "on200U/app::onAnswer" ];
-        Updating -> Connected [ label = "on4XXU/app::onOfferRejected" ];
-        Updating -> Terminated [ label = "onGeneralFailure/app::onTerminated" ];
-        Updating -> Terminated [ label = "dum::end/app::onTerminated" ];
+        Connected -> SentUpdate [ label = "dum::provideOffer/send::UPDATE" ];
+        SentUpdate -> Connected [ label = "on200U/app::onAnswer" ];
+        SentUpdate -> Connected [ label = "on4XXU/app::onOfferRejected" ];
+        SentUpdate -> Terminated [ label = "onGeneralFailure/app::onTerminated" ];
+        SentUpdate -> Terminated [ label = "dum::end/app::onTerminated" ];
 
-        Connected -> Reinviting [ label = "dum::provideOffer/send::INVITE" ]; // UPDATE not supported
-        Reinviting -> Connected [ label = "on200I/app::onAnswer,send::ACK" ];
-        Reinviting -> Connected [ label = "on4XXI/app::onOfferRejected" ];
-        Reinviting -> Terminated [ label = "onGeneralFailure/app::onTerminated" ];
-        Reinviting -> WaitingToTerminate [ label = "dum::end" ]; 
+        Connected -> SentReinvite [ label = "dum::provideOffer/send::INVITE" ]; // UPDATE not supported
+        SentReinvite -> Connected [ label = "on200I/app::onAnswer,send::ACK" ];
+        SentReinvite -> Connected [ label = "on4XXI/app::onOfferRejected" ];
+        SentReinvite -> Terminated [ label = "onGeneralFailure/app::onTerminated" ];
+        SentReinvite -> WaitingToTerminate [ label = "dum::end" ];
 
-        Connected -> UpdatePending [ label = "onUPDATE/app::onOffer" ];
-        UpdatePending -> Connected [ label = "dum::provideAnswer/send::200U" ];
-        UpdatePending -> Connected [ label = "dum::reject/send::488U" ];
-        UpdatePending -> Terminated [ label = "dum::end/send::488U,send::BYE" ];
+        Connected -> ReceivedUpdate [ label = "onUPDATE/app::onOffer" ];
+        ReceivedUpdate -> Connected [ label = "dum::provideAnswer/send::200U" ];
+        ReceivedUpdate -> Connected [ label = "dum::reject/send::488U" ];
+        ReceivedUpdate -> Terminated [ label = "dum::end/send::488U,send::BYE" ];
 
-        Connected -> ReinvitePending [ label = "onINVITE/app::onOffer" ];
-        ReinvitePending -> Connected [ label = "dum::provideAnswer/send::200I" ];
-        ReinvitePending -> Connected [ label = "dum::reject/send::488U" ];
-        ReinvitePending -> Terminated [ label = "dum::end/send::488I,send::BYE" ];
+        Connected -> ReceivedReinvite [ label = "onINVITE/app::onOffer" ];
+        ReceivedReinvite -> Connected [ label = "dum::provideAnswer/send::200I" ];
+        ReceivedReinvite -> Connected [ label = "dum::reject/send::488U" ];
+        ReceivedReinvite -> Terminated [ label = "dum::end/send::488I,send::BYE" ];
 
-        Connected -> ReinvitePendingNoOffer [ label = "onINVITE/app::onDialogModified" ];
-        ReinvitePendingNoOffer -> Connected [ label = "dum::provideOffer/send::200-offer" ];
-        ReinvitePendingNoOffer -> Connected [ label = "dum::reject/send::488I" ];
-        ReinvitePendingNoOffer -> Terminated [ label = "dum::end/send::488I,send::BYE" ];
+        Connected -> ReceivedReinviteNoOffer [ label = "onINVITE/app::onDialogModified" ];
+        ReceivedReinviteNoOffer -> Connected [ label = "dum::provideOffer/send::200-offer" ];
+        ReceivedReinviteNoOffer -> Connected [ label = "dum::reject/send::488I" ];
+        ReceivedReinviteNoOffer -> Terminated [ label = "dum::end/send::488I,send::BYE" ];
 
         Connected -> Connected [ label = "onCANCEL/send::200C" ]; // is this right?
 
