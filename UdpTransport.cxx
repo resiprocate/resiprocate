@@ -130,7 +130,7 @@ void UdpTransport::process()
                        (socklen_t*)&fromLen);
    if ( len <= 0 )
    {
-      int err = errno;
+      //int err = errno;
    }
    else if (len > 0)
    {
