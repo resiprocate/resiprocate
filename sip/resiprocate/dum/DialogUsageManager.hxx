@@ -26,6 +26,7 @@ namespace resip
 {
 
 class SipStack;
+class FdSet;
 class Profile;
 class RedirectManager;
 class ClientAuthManager;
@@ -113,19 +114,30 @@ class DialogUsageManager
       ServerOutOfDialogReq::Handle findServerOutOfDialog(DialogId id);
       
    private:
+      friend class Dialog;
+      
       SipMessage& makeNewSession(BaseCreator* creator);
 
-      // !dlb! interfaces certainly incomplete...
-      ClientInviteSession* createClientInviteSession();
-      ServerInviteSession* createServerInviteSession(const SipMessage& msg);
-      ClientSubscription* createClientSubscription();
-      ServerSubscription* createServerSubscription(const SipMessage& msg);
-      ClientRegistration* createClientRegistration(const SipMessage& msg);
-      ServerRegistration* createServerRegistration(const SipMessage& msg);
-      ClientPublication* createClientPublication(const SipMessage& msg);
-      ServerPublication* createServerPublication(const SipMessage& msg);
-      ClientOutOfDialogReq* createClientOutOfDialog(const SipMessage& msg);
-      ServerOutOfDialogReq* createServerOutOfDialog(const SipMessage& msg);
+      ClientInviteSession* makeClientInviteSession(Dialog& dialog,
+                                                   const SipMessage& msg);
+      ServerInviteSession* makeServerInviteSession(Dialog& dialog,
+                                                   const SipMessage& msg);
+      ClientSubscription* makeClientSubscription(Dialog& dialog,
+                                                 const SipMessage& msg);
+      ServerSubscription* makeServerSubscription(Dialog& dialog,
+                                                 const SipMessage& msg);
+      ClientRegistration* makeClientRegistration(Dialog& dialog,
+                                                 const SipMessage& msg);
+      ServerRegistration* makeServerRegistration(Dialog& dialog,
+                                                 const SipMessage& msg);
+      ClientPublication* makeClientPublication(Dialog& dialog,
+                                               const SipMessage& msg);
+      ServerPublication* makeServerPublication(Dialog& dialog,
+                                               const SipMessage& msg);
+      ClientOutOfDialogReq* makeClientOutOfDialog(Dialog& dialog,
+                                                  const SipMessage& msg);
+      ServerOutOfDialogReq* makeServerOutOfDialog(Dialog& dialog,
+                                                  const SipMessage& msg);
 
       // delete the usage, remove from usage handle map
       void destroyUsage(BaseUsage* usage);

@@ -2,6 +2,7 @@
 #define RESIP_SERVERSUBSCRIPTION_HXX
 
 #include "BaseUsage.hxx"
+#include "SubscriptionState.hxx"
 
 namespace resip
 {
@@ -18,11 +19,9 @@ class ServerSubscription : public BaseUsage
             ServerSubscription* operator->();
          private:
             Handle(DialogUsageManager& dum);
-            friend class DialogUsageManager;
+            friend class ServerSubscription;
       };
       
-      ServerSubscription(DialogUsageManager& dum, const SipMessage& req);
-
       typedef enum
       {
          Rejected,
@@ -40,12 +39,22 @@ class ServerSubscription : public BaseUsage
       void reject(int responseCode);
       
       void setCurrentEventDocument(const Contents* document);
-      void setSubscriptionState(SubscriptionState state,Reason reason);
+      void setSubscriptionState(SubscriptionState state, Reason reason);
+
+      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
 
    private:
       friend class DialogUsageManager;
+      ServerSubscription(DialogUsageManager& dum, 
+                         Dialog& dialog,
+                         const SipMessage& req);
+
 
       ServerSubscription::Handle mHandle;
+
+      // disabled
+      ServerSubscription(const ServerSubscription&);
+      ServerSubscription& operator=(const ServerSubscription&);
 };
  
 }

@@ -1,13 +1,19 @@
 #include "BaseUsage.hxx"
+#include "Dialog.hxx"
+#include "DialogUsageManager.hxx"
+
+using namespace resip;
 
 BaseUsage::~BaseUsage()
 {}
 
+#if 0
 SipMessage* 
 BaseUsage::makeInviteSession()
 {
    return mDialog.makeInviteSession();
 }
+#endif
 
 SipMessage* 
 BaseUsage::makeSubscription()
@@ -39,13 +45,13 @@ BaseUsage::makeOutOfDialogRequest()
    return mDialog.makeOutOfDialogRequest();
 }
 
-BaseUsage::Handle(DialogUsageManager& dum)
-   : mDum(dum),
+BaseUsage::Handle::Handle(DialogUsageManager& dum)
+   : mDum(&dum),
      mId(getNext())
 {}
 
 BaseUsage::Handle::Id
-getNext()
+BaseUsage::Handle::getNext()
 {
    static BaseUsage::Handle::Id id = 1;
 

@@ -15,13 +15,15 @@ class ServerPublication : public BaseUsage
             // throws if no session 
             ServerPublication* operator->();
          private:
-            friend class DialogUsageManager;
+            friend class ServerPublication;
             Handle(DialogUsageManager& dum);
       };
 
       // application may have to muck with expires or Etag
       void accept(const SipMessage& ok);
       void reject(int statusCode);
+
+      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
 
    private:
       friend class DialogUsageManager;

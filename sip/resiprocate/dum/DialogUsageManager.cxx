@@ -450,12 +450,13 @@ DialogUsageManager::getUsage(const BaseUsage::Handle& handle)
 }
 
 ServerInviteSession*
-DialogUsageManager::createServerInviteSession(const SipMessage& request)
+DialogUsageManager::makeServerInviteSession(Dialog& dialog,
+                                            const SipMessage& request)
 {
-   ServerInviteSession* usage = new ServerInviteSession(this, request);
+   ServerInviteSession* usage = new ServerInviteSession(*this, dialog, request);
    
-   assert(mUsage.find(usage->mHandle.mId) == mUsage.end());
-   mUsage[usage->mHandle.mId] = usage;
+   assert(mUsageMap.find(usage->getBaseHandle().mId) == mUsageMap.end());
+   mUsageMap[usage->getBaseHandle().mId] = usage;
 
    return usage;
 }
@@ -463,8 +464,8 @@ DialogUsageManager::createServerInviteSession(const SipMessage& request)
 void
 DialogUsageManager::destroyUsage(BaseUsage* usage)
 {
-   UsageHandleMap::iterator i = mUsageMap.find(usage->mHandle.mId);
-   if (i =! mUsageMap.end())
+   UsageHandleMap::iterator i = mUsageMap.find(usage->getBaseHandle().mId);
+   if (i != mUsageMap.end())
    {
       delete i->second;
       mUsageMap.erase(i);
