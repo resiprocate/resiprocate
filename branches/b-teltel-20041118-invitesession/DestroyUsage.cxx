@@ -51,21 +51,26 @@ DestroyUsage::clone() const
 Data
 DestroyUsage::brief() const
 {
+   Data buffer;
+   DataStream strm(buffer);
+   
    if (mDialogSet)
    {
       static Data d("DestroyDialogSet");
-      return d;
+      strm << d << " " << mDialogSet->getId();
    }
    else if (mDialog)
    {
       static Data d("DestroyDialog");
-      return d;
+      strm << d << " " << mDialog->getId();
    }
    else
    {
       static Data d("DestroyUsage");
-      return d;
+      strm << d << " " << *mHandle;
    }
+   strm.flush();
+   return buffer;
 }
 
 std::ostream& 

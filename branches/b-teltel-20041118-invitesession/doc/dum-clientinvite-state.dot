@@ -115,7 +115,7 @@ digraph UAC {
     Canceled -> Finished                        [ label = "onTimer" ];
     Canceled -> Finished                        [ label = "onGeneralFailure" ];
     Canceled -> Finished                        [ label = "on4xxC" ];
-    Canceled -> Terminated                      [ label = "on200I/send::BYE" ];
+    Canceled -> Terminated                      [ label = "on200I/send::ACK,send::BYE" ];
     Canceled -> Terminated                      [ label = "onRedirect/app::onRedirected" ];
     Canceled -> Assert                          [ label = "dum::cancel/assert" ];
     Canceled -> Assert                          [ label = "dum::end/assert" ];
