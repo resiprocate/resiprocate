@@ -2,15 +2,19 @@
 #define RESIP_REGISTRAR_HXX 
 
 #include "resiprocate/dum/RegistrationHandler.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
 
 namespace repro
 {
 
-class Registrar: public resip::ServerRegistrationHandler
+class Registrar: public resip::ServerRegistrationHandler, public resip::ThreadIf
 {
    public:
+      Registrar(const SipStack& stack, InMemoryRegistrationDatabase& db);
       virtual ~Registrar();
-     
+      virtual void thread();
+      
       virtual void onRefresh(resip::ServerRegistrationHandle,
                              const resip::SipMessage& reg);
 
@@ -26,6 +30,10 @@ class Registrar: public resip::ServerRegistrationHandler
       virtual void onQuery(resip::ServerRegistrationHandle,
                            const resip::SipMessage& reg);
 
+   private:
+      DialogUsageManager mDum;
+      MasterProfile mProfile;
+      InMemoryRegistrationDatabase& mDb;
 };
 }
 #endif

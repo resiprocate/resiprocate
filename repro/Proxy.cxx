@@ -24,6 +24,18 @@ Proxy::~Proxy()
    join();
 }
 
+bool 
+Proxy::isForMe(const SipMessage& msg) const
+{
+   return true;
+}
+
+void 
+Proxy::postToTransactionUser(const Message& msg)
+{
+   //mFifo.add(msg, TimeLimitFifo<Message>::EnforceTimeDepth);
+}
+
 UserDB &
 Proxy::getUserDb()
 {
@@ -97,7 +109,7 @@ Proxy::thread()
 }
 
 bool
-Proxy::isMyDomain(resip::Uri &uri)
+Proxy::isMyDomain(resip::Uri& uri) const
 {
    return mStack.isMyDomain(uri.host(),uri.port());
 }
