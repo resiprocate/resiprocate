@@ -1,6 +1,7 @@
 #ifndef RESIP_ApplicationMessage_hxx
 #define RESIP_ApplicationMessage_hxx 
 
+#include "assert.h"
 #include "resiprocate/Message.hxx"
 
 namespace resip
