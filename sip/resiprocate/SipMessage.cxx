@@ -195,7 +195,7 @@ SipMessage::operator[](const Data& headerName)
       if (i->first == headerName)
       {
          HeaderFieldValueList* hfvs = i->second;
-         if (!i->second->first->isParsed())
+         if (i->second->first != 0 && !i->second->first->isParsed())
          {
             HeaderFieldValue* it = hfvs->first;
             while (it != 0)
@@ -209,11 +209,8 @@ SipMessage::operator[](const Data& headerName)
       }
    }
    
-   // create the list with a new component
+   // create the list empty
    HeaderFieldValueList* hfvs = new HeaderFieldValueList;
-   HeaderFieldValue* hfv = new HeaderFieldValue;
-   hfv->mParserCategory = new StringComponent(*hfv);
-   hfvs->push_back(hfv);
    hfvs->setParserContainer(new StringComponents(*hfvs));
    mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(headerName, hfvs));
    return (StringComponents&)*hfvs->getParserCategory();
