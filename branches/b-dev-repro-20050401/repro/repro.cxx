@@ -110,6 +110,9 @@ main(int argc, char** argv)
      dum.setMasterProfile(&profile);
    }
 
+   //ServerAuthManager uasAuth;
+   //dum.setClientAuthManager(&uasAuth);
+
    /* Make it all go */
    stackThread.run();
    proxy.run();
