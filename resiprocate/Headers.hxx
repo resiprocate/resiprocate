@@ -183,6 +183,7 @@ defineHeader(InReplyTo, "In-Reply-To", CallId);
 //====================
 // Auth:
 //====================
+typedef ParserContainer<Auth> Auths;
 defineHeader(AuthenticationInfo, "Authentication-Info", Auth);
 defineMultiHeader(Authorization, "Authorization", Auth);
 defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth);
