@@ -8,7 +8,8 @@
 using namespace Vocal2;
 
 SipStack::SipStack()
-  : mExecutive(*this)
+  : mExecutive(*this),
+    mTransportSelector(5060)
 {
 
 }
