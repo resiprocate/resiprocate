@@ -1,4 +1,4 @@
-#include "sip2/sipstack/PlainContents.hxx"
+#include "resiprocate/sipstack/PlainContents.hxx"
 #include <iostream>
 
 using namespace Vocal2;

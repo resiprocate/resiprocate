@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include "sip2/sipstack/Security.hxx"
-#include "sip2/util/Timer.hxx"
+#include "resiprocate/sipstack/Security.hxx"
+#include "resiprocate/util/Timer.hxx"
 
 namespace Vocal2
 {

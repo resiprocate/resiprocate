@@ -1,7 +1,7 @@
 
-#include "sip2/util/Logger.hxx"
-#include "sip2/util/Data.hxx"
-#include "sip2/util/ThreadIf.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/util/ThreadIf.hxx"
 
 using namespace Vocal2;
 using namespace std;

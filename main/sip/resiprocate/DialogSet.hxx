@@ -3,9 +3,9 @@
 
 #include <map>
 
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Data.hxx"
 
-//#include "sip2/sipstack/Dialog2.hxx"
+//#include "resiprocate/sipstack/Dialog2.hxx"
 namespace Vocal2
 {
 class Dialog2;

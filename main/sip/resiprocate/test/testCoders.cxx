@@ -3,8 +3,8 @@
 #include <cassert>
 #include <memory>
 
-#include "sip2/util/compat.hxx"
-#include "sip2/util/Coders.hxx"
+#include "resiprocate/util/compat.hxx"
+#include "resiprocate/util/Coders.hxx"
 #include <iostream>
 
 #ifdef __FreeBSD__

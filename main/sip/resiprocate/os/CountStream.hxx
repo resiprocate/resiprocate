@@ -2,7 +2,7 @@
 #define Vocal2_CountStream_hxx
 
 #include <iostream>
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Data.hxx"
 
 // !dlb! Much more efficient to implement ostream::operator<<
 namespace Vocal2

@@ -1,6 +1,6 @@
-#include "sip2/sipstack/test/TestSupport.hxx"
-#include "sip2/util/Data.hxx"
-#include "sip2/sipstack/Preparse.hxx"
+#include "resiprocate/sipstack/test/TestSupport.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/sipstack/Preparse.hxx"
 
 #include <iostream>
 #include <iomanip>
