@@ -43,16 +43,16 @@ class Profile
       bool hasOverrideHostAndPort() const;
       const Uri& getOverideHostAndPort() const;      
 
+      NameAddr& getDefaultFrom();
+      int getDefaultRegistrationTime();
+      int getDefaultSubscriptionTime();
+
       void addSupportedScheme(const Data& scheme);
       void addSupportedMethod(const MethodTypes& method);
       void addSupportedOptionTags(const Token& tag);
       void addSupportedMimeType(const Mime& mimeType);
       void addSupportedEncoding(const Token& encoding);
       void addSupportedLanguage(const Token& lang);
-
-      NameAddr& getDefaultFrom();
-      int getDefaultRegistrationTime();
-      int getDefaultSubscriptionTime();
 
       bool isSchemeSupported(const Data& scheme);
       bool isMethodSupported(MethodTypes method);
@@ -67,7 +67,16 @@ class Profile
       Mimes getSupportedMimeTypes();
       Tokens getSupportedEncodings();
       Tokens getSupportedLanguages();
-      
+
+	  //enable/disable sending of Allow/Supported/Accept/Accept-Language/Accept-Encoding headers 
+	  //on initial outbound requests (ie. Initial INVITE, REGSISTER, etc.) and Invite 200 responses
+	  //Note:  Default is to advertise Headers::Type::Accept and Headers::Type::Supported, use clearAdvertisedCapabilities to remove these
+	  //       Currently implemented header values are: Headers::Type::Accept, Headers::Type::Allow, 
+	  //       Headers::Type::AcceptEncoding, Headers::Type::AcceptLanguage, Headers::Type::Supported
+	  void addAdvertisedCapability(const Headers::Type header);
+      bool isAdvertisedCapability(const Headers::Type header);
+	  void clearAdvertisedCapabilities();
+
       void addGruu(const Data& aor, const NameAddr& contact);
       bool hasGruu(const Data& aor);
       bool hasGruu(const Data& aor, const Data& instance);
@@ -106,10 +115,11 @@ class Profile
       bool& looseToTagMatching();      
       const bool looseToTagMatching() const;      
 
-      //enable/disable rport for requests. rport is enabled by feault
+      //enable/disable rport for requests. rport is enabled by default
       bool& rportEnabled();      
       const bool rportEnabled() const;      
 
+	  //if set then UserAgent header is added to outbound messages
       void setUserAgent( const Data& userAgent );
       const Data& getUserAgent() const;
       bool hasUserAgent() const;
@@ -128,6 +138,7 @@ class Profile
       Mimes mSupportedMimeTypes;
       Tokens mSupportedEncodings;
       Tokens mSupportedLanguages;
+	  std::set<Headers::Type> mAdvertisedCapabilities;
 
       DigestCredentialHandler* mDigestCredentialHandler;
 
