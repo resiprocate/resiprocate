@@ -40,31 +40,42 @@ class SipStack
 
       // Used by the application to add in a new transport
       // by default, you will get UDP and TCP on 5060 (for now)
+      // hostname parameter is used to specify the host portion of the uri that
+      // describes this sip element (proxy or ua)
+      // nic is used to specify an ethernet interface by name. e.g. eth0
       void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
 
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
       void addAlias(const Data& domain);
       
-      // return true if domain is handled by this stack
+      // return true if domain is handled by this stack. convenience for
+      // Transaction Users. 
       bool isMyDomain(const Data& domain) const;
       
-	  // get one of the names for this host 
-	  Data getHostname();
+      // get one of the names for this host (calls through to gethostbyname) and
+      // is not threadsafe
+      Data getHostname() const;
 
-	  ///
+      /// interface for the TU to send a message. makes a copy of the
+      /// SipMessage. Caller is responsible for deleting the memory and may do
+      /// so as soon as it returns. Loose Routing processing as per RFC3261 must
+      /// be done before calling send by the TU. See Helper::processStrictRoute
       void send(const SipMessage& msg);
 
       // this is only if you want to send to a destination not in the route. You
       // probably don't want to use it. 
       void sendTo(const SipMessage& msg, const Uri& uri);
 
-      // caller now owns the memory
-      // returns 0 if nothing there
+      // caller now owns the memory. returns 0 if nothing there
       SipMessage* receive(); 
       
-      // should call buildFdSet before calling process
-      // !jf! what should this do if fdSet = 0? 
+      // build the FD set to use in a select to find out when process bust be
+      // called again. This must be called prior to calling process. 
+      void buildFdSet(FdSet& fdset);
+	
+      // should call buildFdSet before calling process. This allows the
+      // executive to give processing time to stack components. 
       void process(FdSet& fdset);
 
       // build the FD set to use in a select to find out when process bust be called again
@@ -79,28 +90,49 @@ class SipStack
 #endif
 
 private:
-	friend class DnsResolver;
-	friend class Executive;
-	friend class TransportSelector;
-	friend class TransactionState;
-	friend class TestDnsResolver;
-	friend class TestFSM;
-		
-			
+      // fifo used to communicate between the TU (Transaction User) and stack 
       Fifo<Message> mTUFifo;
+
+      // fifo used to communicate to the transaction state machine within the
+      // stack. Not for external use by the application. May contain, sip
+      // messages (requests and responses), timers (used by state machines),
+      // asynchronous dns responses, transport errors from the underlying
+      // transports, etc. 
       Fifo<Message> mStateMacFifo;
 
+      // Controls the processing of the various stack elements
       Executive mExecutive;
+
+      // Used to decide which transport to send a sip message on. 
       TransportSelector mTransportSelector;
+
+      // stores all of the transactions that are currently active in this stack 
       TransactionMap mTransactionMap;
+
+      // timers associated with the transactions. When a timer fires, it is
+      // placed in the mStateMacFifo
       TimerQueue  mTimers;
 
+      // Used to make dns queries by the
+      // TransactionState/TransportSelector. Provides an async mechanism for
+      // communicating dns responses back to the Transaction. 
       DnsResolver mDnsResolver;
       
+      // If true, indicate to the Transaction to ignore responses for which
+      // there is no transaction. 
+      // !jf! Probably should transmit stray responses statelessly. see RFC3261
       bool mDiscardStrayResponses;
 
-      // store all domains that this stack is responsible for
+      // store all domains that this stack is responsible for. Controlled by
+      // addAlias and addTransport interfaces and checks can be made with isMyDomain()
       std::set<Data> mDomains;
+
+      friend class DnsResolver;
+      friend class Executive;
+      friend class TransportSelector;
+      friend class TransactionState;
+      friend class TestDnsResolver;
+      friend class TestFSM;
 };
  
 }
