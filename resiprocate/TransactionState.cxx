@@ -4,17 +4,19 @@
 
 #include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/DnsResult.hxx"
-#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
+#include "resiprocate/StatisticsManager.hxx"
 #include "resiprocate/TimerMessage.hxx"
 #include "resiprocate/TransactionController.hxx"
+#include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/TransactionTerminated.hxx"
 #include "resiprocate/TransportMessage.hxx"
 #include "resiprocate/TransportSelector.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/MD5Stream.hxx"
 #include "resiprocate/os/Socket.hxx"
@@ -75,16 +77,21 @@ TransactionState::~TransactionState()
 void
 TransactionState::process(TransactionController& controller)
 {
-   Message* message = controller.mStateMacFifo.getNext();
-   assert(message);
+   Message* msg = controller.mStateMacFifo.getNext();
+   assert(msg);
 
+   TransactionMessage* message = dynamic_cast<TransactionMessage*>(msg);
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
+
+   RESIP_STATISTICS(sip && sip->isExternal() && controller.getStatisticsManager().received(sip));
+
    if (sip && sip->isExternal() && sip->header(h_Vias).empty())
    {
       InfoLog(<< "TransactionState::process dropping message with no Via: " << sip->brief());
       delete sip;
       return;
    }
+
    Data tid = message->getTransactionId();
 
    // This ensures that CANCEL requests form unique transactions
@@ -310,7 +317,7 @@ TransactionState::process(TransactionController& controller)
 
 
 void
-TransactionState::processStateless(Message* message)
+TransactionState::processStateless(TransactionMessage* message)
 {
    // for ACK messages from the TU, there is no transaction, send it directly
    // to the wire // rfc3261 17.1 Client Transaction
@@ -354,7 +361,7 @@ TransactionState::processStateless(Message* message)
 }
 
 void
-TransactionState::processClientNonInvite(  Message* msg )
+TransactionState::processClientNonInvite(TransactionMessage* msg)
 { 
    StackLog (<< "TransactionState::processClientNonInvite: " << msg->brief());
 
@@ -489,9 +496,8 @@ TransactionState::processClientNonInvite(  Message* msg )
    }
 }
 
-
 void
-TransactionState::processClientInvite(  Message* msg )
+TransactionState::processClientInvite(TransactionMessage* msg)
 {
    StackLog(<< "TransactionState::processClientInvite: " << msg->brief() << " " << *this);
    if (isRequest(msg) && isFromTU(msg))
@@ -701,7 +707,7 @@ TransactionState::processClientInvite(  Message* msg )
 
 
 void
-TransactionState::processServerNonInvite(  Message* msg )
+TransactionState::processServerNonInvite(TransactionMessage* msg)
 {
    StackLog (<< "TransactionState::processServerNonInvite: " << msg->brief());
 
@@ -809,7 +815,7 @@ TransactionState::processServerNonInvite(  Message* msg )
 
 
 void
-TransactionState::processServerInvite(  Message* msg )
+TransactionState::processServerInvite(TransactionMessage* msg)
 {
    StackLog (<< "TransactionState::processServerInvite: " << msg->brief());
    if (isRequest(msg) && isFromWire(msg))
@@ -1069,11 +1075,10 @@ TransactionState::processServerInvite(  Message* msg )
 
 
 void
-TransactionState::processClientStale(  Message* msg )
+TransactionState::processClientStale(TransactionMessage* msg)
 {
    StackLog (<< "TransactionState::processClientStale: " << msg->brief());
 
-   //SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (isTimer(msg))
    {
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
@@ -1113,7 +1118,7 @@ TransactionState::processClientStale(  Message* msg )
 }
 
 void
-TransactionState::processServerStale(  Message* msg )
+TransactionState::processServerStale(TransactionMessage* msg)
 {
    StackLog (<< "TransactionState::processServerStale: " << msg->brief());
 
@@ -1358,9 +1363,9 @@ simpleTupleForUri(const Uri& uri)
 }
 
 void
-TransactionState::sendToWire(Message* msg, bool resend) 
+TransactionState::sendToWire(TransactionMessage* msg, bool resend) 
 {
-   SipMessage* sip=dynamic_cast<SipMessage*>(msg);
+   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
 
    if (!sip)
    {
@@ -1433,12 +1438,14 @@ TransactionState::sendToWire(Message* msg, bool resend)
          mController.mTransportSelector.transmit(sip, mTarget);
       }
    }
+
+   RESIP_STATISTICS(mController.getStatisticsManager().sent(sip, resend));
 }
 
 void
-TransactionState::sendToTU(Message* msg) const
+TransactionState::sendToTU(TransactionMessage* msg) const
 {
-   SipMessage* sip=dynamic_cast<SipMessage*>(msg);
+   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    StackLog(<< "Send to TU: " << *msg);
    assert(sip);
    mController.mTUFifo.add(sip);
@@ -1478,14 +1485,14 @@ TransactionState::erase(const Data& tid)
 
 
 bool
-TransactionState::isRequest(Message* msg) const
+TransactionState::isRequest(TransactionMessage* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);   
    return sip && sip->isRequest();
 }
 
 bool
-TransactionState::isInvite(Message* msg) const
+TransactionState::isInvite(TransactionMessage* msg) const
 {
    if (isRequest(msg))
    {
@@ -1496,7 +1503,7 @@ TransactionState::isInvite(Message* msg) const
 }
 
 bool
-TransactionState::isResponse(Message* msg, int lower, int upper) const
+TransactionState::isResponse(TransactionMessage* msg, int lower, int upper) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (sip && sip->isResponse())
@@ -1508,27 +1515,27 @@ TransactionState::isResponse(Message* msg, int lower, int upper) const
 }
 
 bool
-TransactionState::isTimer(Message* msg) const
+TransactionState::isTimer(TransactionMessage* msg) const
 {
    return dynamic_cast<TimerMessage*>(msg) != 0;
 }
 
 bool
-TransactionState::isFromTU(Message* msg) const
+TransactionState::isFromTU(TransactionMessage* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    return sip && !sip->isExternal();
 }
 
 bool
-TransactionState::isFromWire(Message* msg) const
+TransactionState::isFromWire(TransactionMessage* msg) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    return sip && sip->isExternal();
 }
 
 bool
-TransactionState::isTransportError(Message* msg) const
+TransactionState::isTransportError(TransactionMessage* msg) const
 {
    TransportMessage* t = dynamic_cast<TransportMessage*>(msg);
    return (t && t->isFailed());

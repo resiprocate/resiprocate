@@ -18,8 +18,7 @@ using namespace resip;
 const size_t TcpBaseTransport::MaxWriteSize = 4096;
 const size_t TcpBaseTransport::MaxReadSize = 4096;
 
-
-TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, 
+TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum, 
                                    const Data& pinterface, bool ipv4)
    : Transport(fifo, portNum, pinterface, ipv4)
 {
