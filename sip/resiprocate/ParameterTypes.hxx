@@ -1,13 +1,13 @@
 #ifndef ParameterTypes_hxx
 #define ParameterTypes_hxx
 
-#include <sipstack/BranchParameter.hxx>
-#include <sipstack/DataParameter.hxx>
-#include <sipstack/IntegerParameter.hxx>
-#include <sipstack/FloatParameter.hxx>
-#include <sipstack/ExistsParameter.hxx>
-#include <sipstack/ParameterTypeEnums.hxx>
-#include <sipstack/Symbols.hxx>
+#include "sipstack/BranchParameter.hxx"
+#include "sipstack/DataParameter.hxx"
+#include "sipstack/IntegerParameter.hxx"
+#include "sipstack/FloatParameter.hxx"
+#include "sipstack/ExistsParameter.hxx"
+#include "sipstack/ParameterTypeEnums.hxx"
+#include "sipstack/Symbols.hxx"
 
 namespace Vocal2
 {

@@ -1,6 +1,6 @@
 
 
-#include <util/Socket.hxx>
+#include "util/Socket.hxx"
 
 #include <sys/types.h>
 
@@ -14,13 +14,13 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include <sipstack/Symbols.hxx>
-#include <sipstack/Resolver.hxx>
-#include <sipstack/Uri.hxx>
+#include "sipstack/Symbols.hxx"
+#include "sipstack/Resolver.hxx"
+#include "sipstack/Uri.hxx"
 
-#include <util/Data.hxx>
-#include <util/Logger.hxx>
-#include <util/ParseBuffer.hxx>
+#include "util/Data.hxx"
+#include "util/Logger.hxx"
+#include "util/ParseBuffer.hxx"
 
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::SIP
 

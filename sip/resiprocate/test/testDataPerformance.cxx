@@ -1,5 +1,5 @@
-#include <util/DataStream.hxx>
-#include <util/RandomHex.hxx>
+#include "util/DataStream.hxx"
+#include "util/RandomHex.hxx"
 
 using namespace Vocal2;
 

@@ -1,16 +1,16 @@
-#include <sipstack/Resolver.hxx>
-#include <sipstack/SipMessage.hxx>
-#include <sipstack/SipStack.hxx>
-#include <sipstack/TransportSelector.hxx>
-#include <sipstack/UdpTransport.hxx>
-#include <sipstack/TestTransport.hxx>
-#include <sipstack/Uri.hxx>
-#include <sipstack/SendingMessage.hxx>
-#include <sipstack/ParserCategories.hxx>
+#include "sipstack/Resolver.hxx"
+#include "sipstack/SipMessage.hxx"
+#include "sipstack/SipStack.hxx"
+#include "sipstack/TransportSelector.hxx"
+#include "sipstack/UdpTransport.hxx"
+#include "sipstack/TestTransport.hxx"
+#include "sipstack/Uri.hxx"
+#include "sipstack/SendingMessage.hxx"
+#include "sipstack/ParserCategories.hxx"
 
-#include <util/DataStream.hxx>
-#include <util/Logger.hxx>
-#include <util/Socket.hxx>
+#include "util/DataStream.hxx"
+#include "util/Logger.hxx"
+#include "util/Socket.hxx"
 
 
 #include <sys/types.h>

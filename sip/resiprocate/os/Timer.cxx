@@ -1,5 +1,5 @@
 
-#include <util/Socket.hxx>
+#include "util/Socket.hxx"
 
 #if defined( WIN32 )
 #  include <windows.h>
@@ -11,8 +11,8 @@
 
 #include <cassert>
 #include <iostream>
-#include <util/Timer.hxx>
-#include <util/Logger.hxx>
+#include "util/Timer.hxx"
+#include "util/Logger.hxx"
 
 using namespace Vocal2;
 

@@ -1,7 +1,7 @@
 #ifndef DnsMessage_hxx
 #define DnsMessage_hxx
 
-#include <sipstack/DnsResolver.hxx>
+#include "sipstack/DnsResolver.hxx"
 
 
 namespace Vocal2 

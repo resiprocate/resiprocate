@@ -6,10 +6,10 @@
 
 #include <cassert>
 #include <iostream>
-#include <util/ThreadIf.hxx>
-#include <util/Mutex.hxx>
-#include <util/Lock.hxx>
-#include <util/Socket.hxx>
+#include "util/ThreadIf.hxx"
+#include "util/Mutex.hxx"
+#include "util/Lock.hxx"
+#include "util/Socket.hxx"
 
 
 

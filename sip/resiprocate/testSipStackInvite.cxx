@@ -1,7 +1,7 @@
-#include <sipstack/SipStack.hxx>
-#include <sipstack/Transport.hxx>
-#include <sipstack/Uri.hxx>
-#include <util/Logger.hxx>
+#include "sipstack/SipStack.hxx"
+#include "sipstack/Transport.hxx"
+#include "sipstack/Uri.hxx"
+#include "util/Logger.hxx"
 
 #include "sipstack/Helper.hxx"
 #include "util/DataStream.hxx"

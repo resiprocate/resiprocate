@@ -1,7 +1,7 @@
 #ifndef VMD5_H
 #define VMD5_H
 
-static const char* const vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.2 2002/10/31 01:08:59 jason Exp $";
+static const char* const vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.3 2002/11/06 02:59:30 davidb Exp $";
 
 /*
  * This is the header file for the MD5 message-digest algorithm.
@@ -24,7 +24,7 @@ static const char* const vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.2 2002/10/31 01:
  *  - Ian Jackson <ijackson@nyx.cs.du.edu>.
  * Still in the public domain.
  */
-#include <util/compat.hxx>
+#include "util/compat.hxx"
 
 namespace Vocal2
 {
