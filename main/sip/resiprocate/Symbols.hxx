@@ -12,6 +12,7 @@ class Symbols
 
       static const char * const AT_SIGN;
       static const char * const COLON;
+      static const char * const DASH;
       static const char * const COMMA_OR_EQUAL;
       static const char * const CRLF;
       static const char * const CR;
@@ -117,6 +118,7 @@ class Symbols
       static const char * const mobility;
       static const char * const comp;
       static const char * const rport;
+      static const char * const MagicCookie;
 
       static const int DefaultSipPort;
       static const int SipTlsPort;
