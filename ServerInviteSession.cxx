@@ -339,7 +339,7 @@ void
 ServerInviteSession::accept(int code)
 {
    InfoLog (<< toData(mState) << ": accept(" << code << ")");
-   // !slg!?InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   //!slg!? InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    switch (mState)
    {
       case UAS_Offer:
@@ -582,6 +582,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          SipMessage bye;
          mDialog.makeRequest(bye, BYE);
          mDialog.send(bye);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);  // !slg!
          break;
       }
       
@@ -761,6 +762,7 @@ ServerInviteSession::targetRefresh (const NameAddr& localUri)
    throw UsageUseException("Can't refresh before Connected", __FILE__, __LINE__);
 }
 
+/* !slg if these are here, then you cannot use refer at all in a ServerInviteSession
 void 
 ServerInviteSession::refer(const NameAddr& referTo)
 {
@@ -776,6 +778,7 @@ ServerInviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionT
    assert(0);
    throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
 }
+*/
 
 void 
 ServerInviteSession::info(const Contents& contents)
@@ -805,6 +808,7 @@ ServerInviteSession::sendAccept(int code, std::auto_ptr<SdpContents> sdp)
    {
       setSdp(mInvite200, *sdp);
    }
+
    // make timer::2xx
    // make timer::NoAck
    mDialog.send(mInvite200);
