@@ -606,12 +606,43 @@ DialogUsageManager::findInviteSession(DialogId id)
 pair<InviteSessionHandle, int> 
 DialogUsageManager::findInviteSession(CallId replaces)
 {
-   //486/481 decision making logic where?  App may not wish to keep track of
+   //486/481/603 decision making logic where?  App may not wish to keep track of
    //invitesession state
-   return make_pair(findInviteSession(DialogId(replaces.value(), 
+   // !slg! Logic is here for now.
+   InviteSessionHandle is = findInviteSession(DialogId(replaces.value(), 
                                                replaces.param(p_toTag), 
-                                               replaces.param(p_fromTag))),
-                    481);
+                                               replaces.param(p_fromTag)));
+   int ErrorStatusCode = 481; // Call/Transaction Does Not Exist
+
+   // If we matched a session - Do RFC3891 Section 3 Processing
+   if(!(is == InviteSessionHandle::NotValid()))
+   {
+      // Note some missing checks are:
+      // 1.  If the Replaces header field matches more than one dialog, the UA must act as 
+      //     if no match was found
+      // 2.  Verify that the initiator of the new Invite is authorized
+      if(is->mState == InviteSession::Terminated || is->mState == InviteSession::Cancelled)
+      {
+         ErrorStatusCode = 603; // Declined
+         is = InviteSessionHandle::NotValid();
+      }
+      else if(is->mState == InviteSession::Connected || is->mState == InviteSession::ReInviting) // Confirmed dialog
+      {
+         // Check if early-only flag is present in replaces header
+         if(replaces.exists(p_earlyOnly))
+         {
+            ErrorStatusCode = 486; // Busy Here
+            is = InviteSessionHandle::NotValid();
+         }
+      } 
+      else if(is->mState != InviteSession::Early)  
+      {
+         // replaces can't be used on early dialogs that were not initiated by this UA - ie. InviteSession::Proceeding state
+         ErrorStatusCode = 481; // Call/Transaction Does Not Exist
+         is = InviteSessionHandle::NotValid();
+      }
+   }
+   return make_pair(is, ErrorStatusCode);
 }
 
 bool
