@@ -260,8 +260,6 @@ class DialogUsageManager : public HandleManager
 
       bool checkEventPackage(const SipMessage& request);
 
-      bool mSoftCheck(const SipMessage& request);      
-
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
             
