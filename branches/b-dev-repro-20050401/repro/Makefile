@@ -24,6 +24,7 @@ SRC =   \
 	monkeys/LocationServer.cxx \
 	Proxy.cxx \
 	UserDb.cxx \
+	UserAuthInfo.cxx \
 	WebAdmin.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
