@@ -109,7 +109,7 @@ Pidf::encodeParsed(std::ostream& str) const
    str       << "           entity=\"pres:"<<mEntity<<"\">" << Symbols::CRLF;;
    for( unsigned int i=0; i<mTuple.size(); i++)
    {
-      Data status( (char*)( (mTuple[i].status)?"open":"close" ) );
+      Data status( (char*)( (mTuple[i].status)?"open":"closed" ) );
       str    << "  <tuple id=\""<<mTuple[i].id<<"\">" << Symbols::CRLF;;
       str    << "     <status><basic>"<<status<<"</basic></status>" << Symbols::CRLF;;
       if ( !mTuple[i].contact.empty() )
@@ -143,10 +143,10 @@ Pidf::parse(ParseBuffer& pb)
    mTuple[0].status = true;
    mTuple[0].note = Data::Empty;
 
-   const char* close = pb.skipToChars("close");
+   const char* close = pb.skipToChars("closed");
    if ( close != pb.end() )
    {
-      DebugLog ( << "found a close" );
+      DebugLog ( << "found a closed" );
       mTuple[0].status = false;
    }
 
