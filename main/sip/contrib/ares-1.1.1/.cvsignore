@@ -1,12 +1,4 @@
 Makefile
-Makefile
-adig
 adig
 ahost
-ahost
-config.cache
-config.cache
-config.log
-config.log
-config.status
-config.status
+config.*
