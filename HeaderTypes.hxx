@@ -1,10 +1,10 @@
 #ifndef MessageApi_hxx
 #define MessageApi_hxx
 
-#include <sip2/sipstack/support.hxx>
-#include <sip2/sipstack/ParseCategory.hxx>
+#include <sip2/sipstack/supported.hxx>
+#include <sip2/sipstack/ParserCategories.hxx>
 
-namespace Vocal2;
+namespace Vocal2
 {
 
 class Headers
@@ -27,10 +27,10 @@ class Headers
        MIME_Version, Organization, Priority, Proxy_Authenticate, 
        Proxy_Authorization, Proxy_Require, Record_Route, Reply_To, 
        Require, Retry_After, Server, Supported, Timestamp, 
-       Unsupported, User_Agent, Warning, WWW_Authenticate 
+       Unsupported, User_Agent, Warning, WWW_Authenticate,
 
        MAX_HEADERS,
-       UNKOWN
+       UNKNOWN
       };
 
       // get enum from header name
@@ -42,7 +42,7 @@ template <int T>
 class Header
 {
    public:
-      // typedef Mime Type;
+      typedef int Type;
 };
 
 // generate types from header enums
@@ -53,12 +53,12 @@ class HeaderTypeHolder
       HeaderTypeHolder() {}
       int getValue() {return T;}
 
-      static Header<T>::Type* createParserCategory()
+      static typename Header<T>::Type* createParserCategory()
       {
          return new typename Header<T>::Type();
       }
 
-      static Header<T>::Type* createParserCategory(HeaderFieldValueList& hfvs)
+      static typename Header<T>::Type* createParserCategory(HeaderFieldValueList& hfvs)
       {
          Header<T> header;
          if (header.isMulti())
@@ -122,13 +122,13 @@ class Header<Headers::Accept_Encoding>
 };
 Header<Headers::Accept_Encoding> Accept_Encoding;
 
-class Header<Headers::Accept_Lenguage>
+class Header<Headers::Accept_Language>
 {
    public:
       typedef Tokens Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Accept_Lenguage> Accept_Lenguage;
+Header<Headers::Accept_Language> Accept_Language;
 
 class Header<Headers::Allow>
 {
@@ -189,21 +189,21 @@ class Header<Headers::Accept>
 };
 Header<Headers::Accept> Accept;
 
-class Header<Headers::ContentType>
+class Header<Headers::Content_Type>
 {
    public:
       typedef Mime Type;
       bool isMulti() {return false;}
 };
-Header<Headers::ContentType> ContentType;
+Header<Headers::Content_Type> Content_Type;
 
 //====================
-// GenericUris:
+// GenericURIs:
 //====================
 class Header<Headers::Alert_Info>
 {
    public:
-      typedef GenericUris Type;
+      typedef GenericURIs Type;
       bool isMulti() {return true;}
 };
 Header<Headers::Alert_Info> Alert_Info;
@@ -211,7 +211,7 @@ Header<Headers::Alert_Info> Alert_Info;
 class Header<Headers::Error_Info>
 {
    public:
-      typedef GenericUris Type;
+      typedef GenericURIs Type;
       bool isMulti() {return true;}
 };
 Header<Headers::Error_Info> Error_Info;
@@ -219,13 +219,13 @@ Header<Headers::Error_Info> Error_Info;
 //====================
 // NameAddrs:
 //====================
-class Header<Headers::RecordRoute>
+class Header<Headers::Record_Route>
 {
    public:
       typedef NameAddr Type;
       bool isMulti() {return true;}
 };
-Header<Headers::RecordRoute> RecordRoute;
+Header<Headers::Record_Route> Record_Route;
 
 class Header<Headers::Route>
 {
@@ -355,13 +355,13 @@ Header<Headers::Retry_After> Retry_After;
 //====================
 // CallId:
 //====================
-class Header<Headers::Call_Id>
+class Header<Headers::Call_ID>
 {
    public:
       typedef CallId Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Call_Id> Call_Id;
+Header<Headers::Call_ID> Call_ID;
 
 //====================
 // CallId:
@@ -420,13 +420,13 @@ Header<Headers::WWW_Authenticate> WWW_Authenticate;
 //====================
 // CSeqComponent:
 //====================
-class Header<Headers::Cseq>
+class Header<Headers::CSeq>
 {
    public:
       typedef CSeqComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Cseq> Cseq;
+Header<Headers::CSeq> CSeq;
 
 //====================
 // DateComponent:
@@ -453,7 +453,7 @@ Header<Headers::Warning> Warning;
 //====================
 // Via
 //====================
-class Header<Headers::Warning>
+class Header<Headers::Via>
 {
    public:
       typedef Vias Type;

@@ -15,18 +15,31 @@ class HeaderFieldValueList
       HeaderFieldValueList(const HeaderFieldValueList& other);
       
       ~HeaderFieldValueList();
+
+      HeaderFieldValueList* clone() const;
+
+      void
+      setParserCategory(ParserCategory* parser)
+      {
+         mParserCategory = parser;
+      }
       
-  // insert at begining
-  void push_front(HeaderFieldValue* header);
+      ParserCategory&
+      getParserCategory();
+      
+      // insert at begining
+      void push_front(HeaderFieldValue* header);
 
-  // append to end
-  void push_back(HeaderFieldValue* header);
+      // append to end
+      void push_back(HeaderFieldValue* header);
 
-  void pop_front();
+      void pop_front();
 
       HeaderFieldValue* first;
   
-  HeaderFieldValue* last;
+      HeaderFieldValue* last;
+
+      ParserCategory* mParserCategory;
 };
 
 }

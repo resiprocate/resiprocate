@@ -14,6 +14,7 @@ class UnknownSubComponent;
 class HeaderFieldValue
 {
    public:
+      HeaderFieldValue();
       HeaderFieldValue(const char* field, unsigned int fieldLength);
       HeaderFieldValue(const HeaderFieldValue& hfv);
       HeaderFieldValue(ParserCategory* parserCategory);
@@ -31,14 +32,20 @@ class HeaderFieldValue
       UnknownSubComponent* get(const std::string& type);
       
       HeaderFieldValue* next;
+
+      ParserCategory& getParserCategory()
+      {
+         return *mParserCategory;
+      }
+      
       friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
 
+      ParserCategory* mParserCategory;
    private:
       const char* mField;
       const unsigned int mFieldLength;
       SubComponentList mSubComponentList;
       SubComponentList mUnknownSubComponentList;
-      ParserCategory* mParserCategory;
       bool mMine;
 };
 

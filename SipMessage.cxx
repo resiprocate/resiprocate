@@ -1,10 +1,13 @@
 #include <sip2/sipstack/SipMessage.hxx>
 #include <sip2/sipstack/HeaderFieldValue.hxx>
+#include <sip2/sipstack/HeaderFieldValueList.hxx>
 
 using namespace Vocal2;
+using namespace std;
 
-SipMessage::SipMessage(string* buff)
-   : nIsExternal(true)
+SipMessage::SipMessage(char* buff)
+   : mBuff(buff),
+     nIsExternal(true)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -40,7 +43,8 @@ SipMessage::~SipMessage()
 void
 SipMessage::cleanUp()
 {
-   delete [] buff;
+   delete [] mBuff;
+   
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
       delete mHeaders[i];
@@ -54,7 +58,7 @@ SipMessage::cleanUp()
 }
 
 void
-copyFrom(const SipMessage& from)
+SipMessage::copyFrom(const SipMessage& from)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -68,55 +72,65 @@ copyFrom(const SipMessage& from)
       }
    }
 
-   for (UnknownHeaders::iterator i = from.mUnknownHeaders.begin();
+   for (UnknownHeaders::const_iterator i = from.mUnknownHeaders.begin();
         i != from.mUnknownHeaders.end(); i++)
    {
-      mUnknownHeaders.push_back(pair<string, HeaderFieldValue*>(i->first,
-                                                                i->second->clone()));
+      mUnknownHeaders.push_back(pair<string, HeaderFieldValueList*>(i->first,
+                                                                    i->second->clone()));
    }
 }
 
 // unknown header interface
-StringComponent& 
-SipMessage::operator[](const string& symbol)
+Unknowns& 
+SipMessage::operator[](const string& headerName)
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
-      if (strncasecmp(i->first.c_str(), headerName, headerLen) == 0)
+      if (i->first == headerName)
       {
-         if (!i->second->isParsed())
+         HeaderFieldValueList* hfvs = i->second;
+         if (!i->second->first->isParsed())
          {
-            // will need to deadbeaf the first component on remove, sigh
-            unknown->setComponent(new UnknownComponent(unknown));
+            HeaderFieldValue* it = hfvs->first;
+            while (it != 0)
+            {
+               it->mParserCategory = new Unknown(*it);
+            }
+            
+            hfvs->setParserCategory(new Unknowns(*hfvs));
          }
-         return unknown->getComponent();
+         return (Unknowns&)hfvs->getParserCategory();
       }
    }
    
-   // not in the unknowns, add it
-   HeaderFieldValue* unknown = new HeaderFieldValue(new UnknownComponent(unknown));
-   mUnknownHeaders.push_back(pair<string, HeaderFieldValue*>(symbol, unknown));
-   return unknown->getComponent();
+   // create the list with a new component
+   HeaderFieldValueList* hfvs = new HeaderFieldValueList;
+   HeaderFieldValue* hfv = new HeaderFieldValue;
+   hfv->mParserCategory = new Unknown(*hfv);
+   hfvs->push_back(hfv);
+   hfvs->setParserCategory(new Unknowns(*hfvs));
+   mUnknownHeaders.push_back(pair<string, HeaderFieldValueList*>(headerName, hfvs));
+   return (Unknowns&)hfvs->getParserCategory();
 }
 
 void
-SipMessage::remove(const string& symbol)
+SipMessage::remove(const string& headerName)
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
    {
-      if (strncasecmp(i->first.c_str(), headerName, headerLen) == 0)
+      if (i->first == headerName)
       {
          delete i->second;
-         mUnknownHeaders.remove(i);
+         mUnknownHeaders.erase(i);
          return;
       }
    }
 }
 
 void
-SipMessage::appendHeader(int header, char* headerName, int headerLen, 
+SipMessage::addHeader(int header, char* headerName, int headerLen, 
                          char* start, int len)
 {
    HeaderFieldValue* newHeader = new HeaderFieldValue(start, len);
@@ -147,7 +161,7 @@ SipMessage::appendHeader(int header, char* headerName, int headerLen,
       }
       // didn't find it, add an entry
       HeaderFieldValueList *hfvs = new HeaderFieldValueList();
-      hfv->push_back(newHeader);
+      hfvs->push_back(newHeader);
       mUnknownHeaders.push_back(pair<string, HeaderFieldValueList*>(string(headerName, headerLen),
                                                                     hfvs));
    }
