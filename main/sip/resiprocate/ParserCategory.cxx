@@ -53,14 +53,14 @@ bool
 ParserCategory::exists(const Data& param) const
 {
    checkParsed();
-   mHeaderField->exists(param);
+   return mHeaderField->exists(param);
 }
 
 void
-ParserCategory::parseParameters(const char* pos)
+ParserCategory::parseParameters(const char* pos, unsigned int length)
 {
    // nice to be able to not bother parsing past the end
-   mHeaderField->parseParameters(pos);
+   mHeaderField->parseParameters(pos, length);
 }
 
 std::ostream&

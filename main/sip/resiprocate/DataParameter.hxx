@@ -17,12 +17,16 @@ class DataParameter : public Parameter
       DataParameter(ParameterTypes::Type, const char* startData, unsigned int dataSize);
       DataParameter(ParameterTypes::Type);
       
-      Data& value();
+      Data& value();            // does not return a quoted string
+      bool isQuoted() const { return mQuoted; }
+      void setQuoted(bool b) { mQuoted = b; }; // this parameter will be enclosed in quotes e.g. "foo"
+
       virtual Parameter* clone() const;
       virtual std::ostream& encode(std::ostream& stream) const;
       
    private:
       Data mData;
+      bool mQuoted;
 };
  
 }
