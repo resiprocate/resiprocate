@@ -40,7 +40,14 @@ class TransactionController
                             const Data& domainname,
                             IpVersion version,
                             const Data& ipInterface,
-                            SecurityTypes::SSLType sslType = SecurityTypes::TLSv1);
+                            SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
+                            );
+      bool addTlsTransport( int port, 
+			    const Data& domainname,
+			    Security& security,
+			    IpVersion version,
+			    const Data& ipInterface
+	                    );
       bool isTUOverloaded() const;
       
       void send(SipMessage* msg);

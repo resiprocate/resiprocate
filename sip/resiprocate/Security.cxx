@@ -240,7 +240,7 @@ Security::getPath( const Data& dirPath, const Data& file )
 #ifdef WIN32
             path = "C:\\certs";
 #else
-            ErrLog( << "Environment variobal HOME is not set" );
+            ErrLog( << "Environment variable HOME is not set" );
             path = "/etc/sip";
 #endif
          }
@@ -340,12 +340,8 @@ Security::loadRootCerts(  const Data& filePath )
 { 
    assert( !filePath.empty() );
    
-   if (certAuthorities)
-   {
-      return true;
-   }
-   
-   certAuthorities = X509_STORE_new();
+   if (certAuthorities == 0)
+       certAuthorities = X509_STORE_new();
    assert( certAuthorities );
    
    if ( X509_STORE_load_locations(certAuthorities,filePath.c_str(),0) != 1 )
@@ -584,9 +580,167 @@ Security::loadMyPrivateKey( const Data& password, const Data&  filePath )
       return false;
    }
    
-   InfoLog( << "Loaded private key from << " << filePath );
+   InfoLog( << "Loaded private key from " << filePath );
    
    assert( privateKey );
+   return true;
+}
+
+
+// ------------------------------------------------------------
+// OpenSSL certificate loading from PEM strings
+//
+
+// derived from openssl/crypto/x509/by_file.c : X509_load_cert_crl_file
+//
+static int 
+pemstring_cert_crl(X509_LOOKUP *lu, const char *certPem)
+{
+	BIO* in = BIO_new_mem_buf(const_cast<char*>(certPem), -1);
+
+	if(!in) {
+		X509err(X509_F_X509_LOAD_CERT_CRL_FILE,ERR_R_SYS_LIB);
+		return 0;
+	}
+	BIO_set_close(in, BIO_NOCLOSE);
+	STACK_OF(X509_INFO)* inf = PEM_X509_INFO_read_bio(in, NULL, NULL, NULL);
+	BIO_free(in);
+	if(!inf) {
+		X509err(X509_F_X509_LOAD_CERT_CRL_FILE,ERR_R_PEM_LIB);
+		return 0;
+	}
+
+	int count = 0;
+	for(int i = 0; i < sk_X509_INFO_num(inf); i++) {
+		X509_INFO* itmp = sk_X509_INFO_value(inf, i);
+		if(itmp->x509) {
+			X509_STORE_add_cert(lu->store_ctx, itmp->x509);
+			count++;
+		} else if(itmp->crl) {
+			X509_STORE_add_crl(lu->store_ctx, itmp->crl);
+			count++;
+		}
+	}
+	sk_X509_INFO_pop_free(inf, X509_INFO_free);
+	return count;
+}
+
+static int
+pemstring_ctrl(X509_LOOKUP *lu, int cmd, const char *argp, long argl,
+	     char **ret)
+{
+    int ok = 0;
+
+    switch (cmd)
+    {
+	case X509_L_FILE_LOAD:
+	    ok = (pemstring_cert_crl(lu,argp) != 0);
+	    break;
+    }
+    return ok;
+}
+
+// ----------- END of OpenSSL support section ---------------
+
+bool 
+Security::setMyPublicCert( const Data&  certPem )
+{
+   assert( !certPem.empty() );
+   
+   if (publicCert)
+   {
+      return true;
+   }
+   
+   BIO* in = BIO_new_mem_buf(const_cast<char*>(certPem.c_str()), -1);
+
+   if ( !in )
+   {
+      ErrLog(<< "Could not read my public cert from " << certPem );
+      throw Exception("Could not read public certificate", __FILE__,__LINE__);
+      return false;
+   }
+   BIO_set_close(in, BIO_NOCLOSE);
+   
+   publicCert = PEM_read_bio_X509(in,0,0,0);
+   BIO_free(in);
+
+   if (!publicCert)
+   {
+      ErrLog( << "Error reading my public cert from " << certPem );
+      throw Exception("Error reading public cert", __FILE__,__LINE__);
+      
+      return false;
+   }
+   
+   return true;
+}
+
+bool 
+Security::setMyPrivateKey( const Data& password, const Data& keyPem )
+{
+   assert( !keyPem.empty() );
+   
+   if ( privateKey )
+   {
+      return true;
+   }
+   
+   BIO* in = BIO_new_mem_buf(const_cast<char*>(keyPem.c_str()), -1);
+
+   if ( !in )
+   {
+      ErrLog(<< "Could not read my private key from " << keyPem );
+      throw Exception("Could not read private key", __FILE__,__LINE__);
+      return false;
+   }
+   BIO_set_close(in, BIO_NOCLOSE);
+   
+   DebugLog( << "password is " << password );
+   
+   privateKey = PEM_read_bio_PrivateKey(in,0,0,(void*)password.c_str());
+   BIO_free(in);
+
+   if (!privateKey)
+   {
+      ErrLog( << "Error reading my private key from " << keyPem );
+      throw Exception("Could not read private key", __FILE__,__LINE__);
+      return false;
+   }
+
+   return true;
+}
+
+bool 
+Security::setRootCerts(  const Data& certPem )
+{ 
+   assert( !certPem.empty() );
+   
+   if (certAuthorities == 0)
+       certAuthorities = X509_STORE_new();
+
+   assert( certAuthorities );
+
+   static X509_LOOKUP_METHOD x509_pemstring_lookup=
+	{
+	"Load cert from PEM string into cache",
+	NULL,		/* new */
+	NULL,		/* free */
+	NULL, 		/* init */
+	NULL,		/* shutdown */
+	pemstring_ctrl,	/* ctrl */
+	NULL,		/* get_by_subject */
+	NULL,		/* get_by_issuer_serial */
+	NULL,		/* get_by_fingerprint */
+	NULL,		/* get_by_alias */
+	};
+
+   X509_LOOKUP* lookup = X509_STORE_add_lookup(certAuthorities, &x509_pemstring_lookup);
+   if (lookup == NULL) 
+       return false;		// cleanup store?
+
+   X509_LOOKUP_ctrl(lookup, X509_L_FILE_LOAD, certPem.c_str(), 0, 0);
+
    return true;
 }
 
