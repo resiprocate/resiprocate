@@ -108,18 +108,19 @@ X_msMsgsInvite::parse(ParseBuffer& pb)
 
       if (attribute == "Port")
       {
-	 mPort = pb.integer();
+         mPort = pb.integer();
       }
       else if (attribute == "IP-Address")
       {
-	 pb.skipToChars(Symbols::CRLF);
-	 pb.data(mHost, anchor);
+         pb.skipToChars(Symbols::CRLF);
+         pb.data(mHost, anchor);
       }
       else
       {
-	 pb.skipToChars(Symbols::CRLF);
-	 pb.data(value, anchor);
-	 mAttributes.push_back(make_pair(attribute, value));
+         pb.skipToChars(Symbols::CRLF);
+         pb.data(value, anchor);
+         mAttributes.push_back(make_pair(attribute, value));
       }
+      pb.skipWhitespace();
    }
 }
