@@ -7,20 +7,19 @@ namespace resip
 class InviteSessionCreator : public BaseCreator
 {
    public:
-      InviteSessionCreator(const Uri& aor, SdpContents* initial);
+      InviteSessionCreator(const Uri& aor, const SdpContents* initial);
       void end();
       
    private:
       typedef enum
       {
+         Initialized,
          Trying, 
          Proceeding
       } State;
       
       State mState;
-
-      SdpContents* initialOffer;
-      
+      SdpContents* mInitialOffer;
 };
 
 }
