@@ -1,4 +1,3 @@
-#include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/DumTimeout.hxx"
@@ -27,6 +26,16 @@ ServerInviteSession::getHandle()
 }
 
 void 
+ServerInviteSession::dispatch(const SipMessage& msg)
+{
+}
+
+void 
+ServerInviteSession::dispatch(const DumTimeout& msg)
+{
+}
+
+void 
 ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 {
    Destroyer::Guard guard(mDestroyer);
@@ -49,9 +58,30 @@ ServerInviteSession::provisional(int code)
 {
    switch (mState)
    {
-      case UAS_NoOfferReliable:
+      case UAS_Offer:
+         transition(UAS_Early);
+         sendProvisional(code);
          break;
+         
+      case UAS_Early:
+         transition(UAS_Early);
+         sendProvisional(code);
+         break;
+         
+      case UAS_NoOffer:
+         transition(UAS_EarlyNoOffer);
+         sendProvisional(code);
+         break;
+         
+      case UAS_EarlyNoOffer:
+         transition(UAS_EarlyNoOffer);
+         sendProvisional(code);
+         break;         
+
+      case UAS_NoOfferReliable:
       case UAS_EarlyReliable:
+         // TBD
+         assert(0);
          break;
          
       case UAS_Accepted:
@@ -65,12 +95,17 @@ ServerInviteSession::provisional(int code)
       case UAS_Start:
       case UAS_WaitingToHangup:
       case UAS_WaitingToTerminate:
+      default:
          assert(0);
          break;
-      default:
-         InviteSession::provideOffer(offer);
-         break;
    }
+}
+
+void
+ServerInviteSession::provideEarly(const SdpContents& early)
+{
+   // queue early media
+   mEarlyMedia = InviteSession::makeSdp(early);
 }
 
 void 
@@ -78,9 +113,18 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
 {
    switch (mState)
    {
+      case UAS_NoOffer:
+      case UAS_EarlyNoOffer:
       case UAS_NoOfferReliable:
+         // queue offer
+         mProposedLocalSdp = InviteSession::makeSdp(offer);
          break;
+
       case UAS_EarlyReliable:
+         // queue offer
+         mProposedLocalSdp = InviteSession::makeSdp(offer);
+         sendUpdate(offer);
+         transition(UAS_SentUpdate);
          break;
          
       case UAS_Accepted:
@@ -107,19 +151,34 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
 {
    switch (mState)
    {
-      case UAS_Start:
+      case UAS_Offer:
+      case UAS_Early:
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
          break;
+         
       case UAS_OfferReliable: 
-         break;
-      case UAS_ReceivedUpdate:
+         // send1XX-answer, timer::1xx
+         transition(UAS_FirstEarlyReliable);
          break;
 
+      case UAS_ReceivedUpdate:
+         // send::200U-answer
+         transition(UAS_EarlyReliable);
+         break;
+         
+      case UAS_ReceivedUpdateWaitingAnswer:
+         // send::2XXU-answer
+         // send::2XXI
+         transition(Connected);
+         break;
+
+      case UAS_Start:
       case UAS_Accepted:
       case UAS_EarlyReliable:
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_NoOfferReliable:
-      case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdate:
       case UAS_SentUpdateAccepted:
       case UAS_WaitingToHangup:
@@ -213,19 +272,37 @@ ServerInviteSession::accept(int code)
 {
    switch (mState)
    {
+      case UAS_Early:
+         // send::2xx-answer
+         // timer::2xx
+         // timer::NoAck
+         transition(UAS_Accepted);
+         break;
+
+      case UAS_EarlyNoOffer:
+         // send::2xx-offer
+         // timer::2xx
+         // timer::NoAck
+         transition(UAS_Accepted);
+         break;
+         
       case UAS_FirstEarlyReliable:
-         mDialog.makeResponse(mInvite200, mFirstRequest, code);// queue 2xx
+         // queue 2xx
+         // waiting for PRACK
+         mDialog.makeResponse(mInvite200, mFirstRequest, code);
          transition(UAS_Accepted);
          break;
          
       case UAS_EarlyReliable:
-         mDialog.makeResponse(mInvite200, mFirstRequest, code);// send 2xx
+         mDialog.makeResponse(mInvite200, mFirstRequest, code);
+         mDum.send(mInvite200);
          startRetransmitTimer(); // 2xx timer
          transition(Connected);
          break;
 
       case UAS_SentUpdate:
-         mDialog.makeResponse(mInvite200, mFirstRequest, code);// send 2xx
+         mDialog.makeResponse(mInvite200, mFirstRequest, code);
+         mDum.send(mInvite200);
          startRetransmitTimer(); // 2xx timer
          transition(UAS_SentUpdateAccepted);
          break;
@@ -248,6 +325,14 @@ ServerInviteSession::accept(int code)
          assert(0);
          break;
    }
+}
+
+void
+ServerInviteSession::targetRefresh (const NameAddr& localUri)
+{
+   WarningLog (<< "Can't refresh before Connected");
+   assert(0);
+   throw UsageUseException("Can't refresh before Connected", __FILE__, __LINE__);
 }
 
 void 
@@ -274,15 +359,33 @@ ServerInviteSession::info(const Contents& contents)
    throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
 }
 
-void 
-ServerInviteSession::dispatch(const SipMessage& msg)
+void
+ServerInviteSession::sendProvisional(int code)
 {
+   mDialog.makeResponse(mFirstRequest, m1xx, code);
+   if (mEarlyMedia.get())
+   {
+      setSdp(m1xx, *mEarlyMedia);
+   }
+   mDum.send(m1xx);
 }
 
-void 
-ServerInviteSession::dispatch(const DumTimeout& msg)
+void
+ServerInviteSession::sendUpdate(const SdpContents& sdp)
 {
+   if (peerSupportsUpdateMethod())
+   {
+      SipMessage update;
+      mDialog.makeRequest(update, UPDATE);
+      InviteSession::setSdp(update, sdp);
+      mDum.send(update);
+   }
+   else
+   {
+      throw UsageUseException("Can't send UPDATE to peer", __FILE__, __LINE__);
+   }
 }
+
 
 //////////////////////////////////////////
 // OLD code follows
