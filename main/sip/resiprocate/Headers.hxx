@@ -42,17 +42,17 @@ class TypeIf<false>
 #define UnusedChecking(_enum)                                           \
       typedef TypeIf<Headers::_enum != Headers::UNKNOWN> TypeIfT;       \
       typedef TypeIfT::Resolve<Type> Resolver;                          \
-      typedef Resolver::Type UnknownReturn;
+      typedef Resolver::Type UnknownReturn
 
 #define MultiUnusedChecking(_enum)                                              \
       typedef TypeIf<Headers::_enum != Headers::UNKNOWN> TypeIfT;               \
       typedef TypeIfT::Resolve< ParserContainer<Type> > Resolver;               \
-      typedef Resolver::Type UnknownReturn;
+      typedef Resolver::Type UnknownReturn
 
 #else
 
-#define UnusedChecking(_enum)
-#define MultiUnusedChecking(_enum)
+#define UnusedChecking(_enum) typedef int _dummy
+#define MultiUnusedChecking(_enum) typedef int _dummy
 
 #endif
 
@@ -93,7 +93,19 @@ extern _enum##_MultiHeader h_##_enum##s
 //====================
 typedef ParserContainer<Token> Tokens;
 
-defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ????");
+class ContentDisposition_Header : public HeaderBase                        \
+{                                                               \
+   public:                                                      \
+      enum {Single = true};                                     \
+      typedef Token Type;                                       \
+      UnusedChecking(ContentDisposition);                                    \
+      static Type& knownReturn(ParserContainerBase* container); \
+      virtual Headers::Type getTypeNum() const;                 \
+      ContentDisposition_Header();                                         \
+};                                                              \
+extern ContentDisposition_Header h_ContentDisposition;
+
+//defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ????");
 defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ????");
 defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ????");
 defineHeader(MIMEVersion, "Mime-Version", Token, "RFC ????");
