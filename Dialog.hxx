@@ -2,16 +2,16 @@
 #define RESIP_CLIENTDIALOG_HXX
 
 #include <vector>
-#include "DialogId.hxx"
-#include "InviteSession.hxx"
-#include "ClientSubscription.hxx"
-#include "ServerSubscription.hxx"
-#include "ClientRegistration.hxx"
-#include "ServerRegistration.hxx"
-#include "ServerPublication.hxx"
-#include "ClientPublication.hxx"
-#include "ServerOutOfDialogReq.hxx"
-#include "ClientOutOfDialogReq.hxx"
+#include "resiprocate/dum/DialogId.hxx"
+#include "resiprocate/dum/InviteSession.hxx"
+#include "resiprocate/dum/ClientSubscription.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
+#include "resiprocate/dum/ClientRegistration.hxx"
+#include "resiprocate/dum/ServerRegistration.hxx"
+#include "resiprocate/dum/ServerPublication.hxx"
+#include "resiprocate/dum/ClientPublication.hxx"
+#include "resiprocate/dum/ServerOutOfDialogReq.hxx"
+#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
 #include "resiprocate/ParserCategories.hxx"
 
 namespace resip
@@ -43,13 +43,8 @@ class Dialog
       void makeInvite(SipMessage& proto);
       void makeAck(SipMessage& proto);
       void makePrack(SipMessage& proto);
+      void makeMethod(SipMessage& proto, MethodTypes method);
       
-      //SipMessage* makeSubscription();
-      //SipMessage* makeRefer();
-      //SipMessage* makePublication();
-      //SipMessage* makeRegistration();
-      //SipMessage* makeOutOfDialogRequest();
-
       std::vector<ClientSubscription::Handle> findClientSubscriptions();
       ServerSubscription::Handle findServerSubscription();
       InviteSession::Handle findInviteSession();

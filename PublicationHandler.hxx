@@ -1,8 +1,13 @@
 #if !defined(RESIP_REGISTRATIONHANDLER_HXX)
 #define RESIP_REGISTRATIONHANDLER_HXX
 
+#include "resiprocate/dum/ClientPublication.hxx"
+#include "resiprocate/dum/ServerPublication.hxx"
+
 namespace resip
 {
+
+class SipMessage;
 
 class PublicationHandler
 {

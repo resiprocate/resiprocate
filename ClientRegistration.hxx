@@ -1,7 +1,7 @@
 #if !defined(RESIP_CLIENTREGISTRATION_HXX)
 #define RESIP_CLIENTREGISTRATION_HXX
 
-#include "BaseUsage.hxx"
+#include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/ParserCategories.hxx"
 
 namespace resip
