@@ -6,6 +6,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/Message.hxx"
 
@@ -19,40 +20,6 @@ class Connection;
 class Transport
 {
    public:
-      typedef enum 
-      {
-         Unknown = 0,
-         UDP,
-         TCP,
-         TLS,
-         SCTP,
-         DCCP,
-         MAX_TRANSPORT
-      } Type;
-
-      // WARNING!!
-      // When you change this structure, make sure to update the hash function,
-      // operator== and operator< to be consistent with the new structure. For
-      // instance, the Connection* and Transport* change value in the Tuple over
-      // its lifetime so they must not be included in the hash or comparisons. 
-      class Tuple
-      {
-         public:
-            Tuple();
-            Tuple(struct in_addr pipv4,
-                  int pport,
-                  Transport::Type ptype);
-            
-            bool operator<(const Tuple& rhs) const;
-            bool operator==(const Tuple& rhs) const;
-            
-            struct in_addr ipv4;
-            int port;
-            Transport::Type transportType;
-            Transport* transport;
-            Connection* connection;
-      };
-      
       class Exception : public BaseException
       {
          public:
@@ -60,11 +27,9 @@ class Transport
             const char* name() const { return "TransportException"; }
       };
       
-      // sendHost is localhost (may be a dns name referring to this sip element)
+      // sendHost what to put in the Via:sent-by
       // portNum is the port to receive and/or send on
-      Transport(const Data& sendHost, int portNum, const Data& nic, Fifo<Message>& rxFifo);
-      // !ah! need to think about type for
-      // interface specification here.
+      Transport(Fifo<Message>& rxFifo, int portNum, const Data& interface, bool ipv4);
       
       virtual ~Transport();
       
@@ -83,12 +48,12 @@ class Transport
       virtual const Data& interfaceName() const { return mInterface; } 
       virtual const Data& ipAddress() const { return mIpAddress; } 
       virtual int port() const { return mPort; } 
-      virtual Type transport() const =0 ;
+      virtual TransportType transport() const =0 ;
       virtual bool isReliable() const =0;
       virtual const Data& tlsDomain() const { return Data::Empty; }
       
-      static Type toTransport( const Data& );
-      static const Data& toData( Type );
+      static TransportType toTransport( const Data& );
+      static const Data& toData( TransportType );
 
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
@@ -96,6 +61,7 @@ class Transport
       bool hasDataToSend() const;
       
    protected:
+      bool mV4;
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Data mHost;
       int mPort;
@@ -109,45 +75,20 @@ class Transport
       bool mShutdown ;
 };
 
-std::ostream& operator<<(std::ostream& strm, const Transport::Tuple& tuple);
-
 class SendData
 {
    public:
-      SendData(const Transport::Tuple& dest, const Data& pdata, const Data& tid): 
+      SendData(const Tuple& dest, const Data& pdata, const Data& tid): 
          destination(dest),
          data(pdata),
          transactionId(tid) 
       {}
-      Transport::Tuple destination;
+      Tuple destination;
       const Data data;
       const Data transactionId;
 };
 
 }
-
-
-#if  defined(__INTEL_COMPILER )
-
-namespace std
-{
-size_t hash_value(const resip::Transport::Tuple& tuple);
-}
-
-#elif defined(HASH_MAP_NAMESPACE)
-#include <ext/hash_map>
-
-namespace __gnu_cxx
-{
-
-struct hash<resip::Transport::Tuple>
-{
-      size_t operator()(const resip::Transport::Tuple& addrPort) const;
-};
- 
-}
-
-#endif // hash stuff
 
 #endif
 

@@ -49,7 +49,7 @@ ConnectionMap::touch(Connection* connection)
 }
 
 Connection*
-ConnectionMap::add(Transport::Tuple& who, Socket socket)
+ConnectionMap::add(Tuple& who, Socket socket)
 {
    DebugLog (<< "Adding " << who);
    assert(mConnections.count(who) == 0);
@@ -67,7 +67,7 @@ ConnectionMap::add(Transport::Tuple& who, Socket socket)
 }
 
 Connection*
-ConnectionMap::get(const Transport::Tuple& who)
+ConnectionMap::get(const Tuple& who)
 {
    Map::const_iterator i = mConnections.find(who);
    if (i != mConnections.end())
@@ -78,7 +78,7 @@ ConnectionMap::get(const Transport::Tuple& who)
 }
 
 void
-ConnectionMap::close(const Transport::Tuple& who)
+ConnectionMap::close(const Tuple& who)
 {
    DebugLog (<< "Closing " << who);
    

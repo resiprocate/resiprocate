@@ -33,7 +33,7 @@ class TransportSelector
       void process(FdSet& fdset);
       void buildFdSet(FdSet& fdset);
      
-      void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
+      void addTransport( TransportType, int port, const Data& hostName="", const Data& nic="");
       void addTlsTransport(const Data& domainName, 
                            const Data& keyDir, const Data& privateKeyPassPhrase,
                            int port, 
@@ -43,14 +43,14 @@ class TransportSelector
       // this will result in msg->resolve() being called to either
       // kick off dns resolution or to pick the next tuple , will cause the
       // message to be encoded and via updated
-      void transmit( SipMessage* msg, Transport::Tuple& destination );
+      void transmit( SipMessage* msg, Tuple& destination );
       
       // just resend to the same transport as last time
-      void retransmit(SipMessage* msg, Transport::Tuple& destination );
+      void retransmit(SipMessage* msg, Tuple& destination );
       
    private:
-      Transport* findTransport(const Transport::Type type) const;
-      Transport* findTransport(const Transport::Tuple& tuple) const;
+      Transport* findTransport(const TransportType type) const;
+      Transport* findTransport(const Tuple& tuple) const;
       Transport* findTlsTransport(const Data& domain);
 
       DnsInterface mDns;

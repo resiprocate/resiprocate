@@ -224,12 +224,12 @@ class SipMessage : public Message
 
       // Returns the source tuple that the message was received from
       // only makes sense for messages received from the wire
-      void setSource(const Transport::Tuple& tuple) { mSource = tuple; }
-      const Transport::Tuple& getSource() const { return mSource; }
+      void setSource(const Tuple& tuple) { mSource = tuple; }
+      const Tuple& getSource() const { return mSource; }
       
       // Used by the stateless interface to specify where to send a request/response
-      void setDestination(const Transport::Tuple& tuple) { mDestination = tuple; }
-      Transport::Tuple& getDestination() { return mDestination; }
+      void setDestination(const Tuple& tuple) { mDestination = tuple; }
+      Tuple& getDestination() { return mDestination; }
 
       void addBuffer(char* buf);
 
@@ -273,10 +273,10 @@ class SipMessage : public Message
 
       // For messages received from the wire, this indicates where it came
       // from. Can be used to get to the Transport and/or reliable Connection
-      Transport::Tuple mSource;
+      Tuple mSource;
 
       // Used by the TU to specify where a message is to go
-      Transport::Tuple mDestination;
+      Tuple mDestination;
       
       // Raw buffers coming from the Transport. message manages the memory
       std::vector<char*> mBufferList;

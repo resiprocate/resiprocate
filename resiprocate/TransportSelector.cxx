@@ -48,7 +48,7 @@ TransportSelector::~TransportSelector()
 
 
 void 
-TransportSelector::addTransport( Transport::Type protocol, 
+TransportSelector::addTransport( TransportType protocol, 
                                  int port,
                                  const Data& hostName,
                                  const Data& nic) 
@@ -64,11 +64,11 @@ TransportSelector::addTransport( Transport::Type protocol,
    Transport* transport=0;
    switch ( protocol )
    {
-      case Transport::UDP:
-         transport = new UdpTransport(hostname, port, nic, mStateMacFifo);
+      case UDP:
+         transport = new UdpTransport(mStateMacFifo, port, hostname, true);
          break;
-      case Transport::TCP:
-         transport = new TcpTransport(hostname, port, nic, mStateMacFifo);
+      case TCP:
+         transport = new TcpTransport(mStateMacFifo, port, hostname, true);
          break;
       default:
          assert(0);
@@ -94,30 +94,14 @@ TransportSelector::addTlsTransport(const Data& domainName,
    {
 	   hostname = DnsUtil::getLocalHostName();
    }
-   if (port == 0)
-   {
-      std::list<DnsUtil::Srv> records = DnsUtil::lookupSRVRecords(domainName);
-      for (std::list<DnsUtil::Srv>::iterator i=records.begin(); i!=records.end(); i++)
-      {
-         if (i->transport == DnsUtil::TLS)
-         {
-            TlsTransport* transport = new TlsTransport(domainName, 
-                                                       hostname, i->port, 
-                                                       keyDir, privateKeyPassPhrase,
-                                                       nic, mStateMacFifo);
-            mTlsTransports[domainName] = transport;
-            break;
-         }
-      }
-   }
-   else
-   {
-      TlsTransport* transport = new TlsTransport(domainName, 
-                                                 hostname, port, 
-                                                 keyDir, privateKeyPassPhrase,
-                                                 nic, mStateMacFifo);      
-      mTlsTransports[domainName] = transport;
-   }
+   assert (port != 0);
+   // if port == 0, do an SRV lookup and use the ports from there
+   TlsTransport* transport = new TlsTransport(mStateMacFifo, 
+                                              domainName, 
+                                              hostname, port, 
+                                              keyDir, privateKeyPassPhrase,
+                                              true); // ipv4
+   mTlsTransports[domainName] = transport;
    
 #else
    CritLog (<< "TLS not supported in this stack. Maybe you don't have openssl");
@@ -227,13 +211,13 @@ TransportSelector::dnsResolve( SipMessage* msg, DnsHandler* handler)
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.  
 void 
-TransportSelector::transmit( SipMessage* msg, Transport::Tuple& destination)
+TransportSelector::transmit( SipMessage* msg, Tuple& destination)
 {
    assert( &destination != 0 );
 
    if (destination.transport == 0)
    {
-      if (destination.transportType == Transport::TLS)
+      if (destination.transportType == TLS)
       {
          destination.transport = findTlsTransport(msg->getTlsDomain());
       }
@@ -259,7 +243,7 @@ TransportSelector::transmit( SipMessage* msg, Transport::Tuple& destination)
          assert(!msg->header(h_Vias).empty());
          msg->header(h_Vias).front().remove(p_maddr);
          //msg->header(h_Vias).front().param(p_ttl) = 1;
-         msg->header(h_Vias).front().transport() = Transport::toData(destination.transport->transport());  //cache !jf! 
+         msg->header(h_Vias).front().transport() = Tuple::toData(destination.transport->transport());  //cache !jf! 
 
          if (msg->header(h_Vias).front().sentHost().empty())
          {
@@ -300,7 +284,7 @@ TransportSelector::transmit( SipMessage* msg, Transport::Tuple& destination)
 }
 
 void
-TransportSelector::retransmit(SipMessage* msg, Transport::Tuple& destination)
+TransportSelector::retransmit(SipMessage* msg, Tuple& destination)
 {
    assert(destination.transport);
    assert(!msg->getEncoded().empty());
@@ -327,13 +311,13 @@ TransportSelector::buildFdSet( FdSet& fdset )
 }
 
 Transport*
-TransportSelector::findTransport(const Transport::Tuple& tuple) const
+TransportSelector::findTransport(const Tuple& tuple) const
 {
     return findTransport(tuple.transportType);
 }
 
 Transport*
-TransportSelector::findTransport(const Transport::Type type) const
+TransportSelector::findTransport(const TransportType type) const
 {
    // !jf! not done yet
    for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)

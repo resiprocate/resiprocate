@@ -37,11 +37,11 @@ Resolver::Resolver(const Uri& uri) :
       {
          if (uri.scheme() == Symbols::Sip)
          {
-            mTransport = Transport::UDP;
+            mTransport = UDP;
          }
          else if (uri.scheme() == Symbols::Sips)
          {
-            mTransport = Transport::TCP;
+            mTransport = TCP;
          }
       }
       else // not numeric
@@ -50,17 +50,17 @@ Resolver::Resolver(const Uri& uri) :
          {
             if (uri.scheme() == Symbols::Sip)
             {
-               mTransport = Transport::UDP;
+               mTransport = UDP;
             }
             else if (uri.scheme() == Symbols::Sips)
             {
-               mTransport = Transport::TCP;
+               mTransport = TCP;
             }
          }
          else // NAPTR query - yuck! 
          {
             // Rohan, step up to the plate buddy.
-            mTransport = Transport::UDP; // !jf! not done yet
+            mTransport = UDP; // !jf! not done yet
          }
       }
    }
@@ -85,7 +85,7 @@ Resolver::Resolver(const Uri& uri) :
    }
    else
    {
-      Transport::Tuple tuple;
+      Tuple tuple;
       if (inet_pton(AF_INET, mHost.c_str(), &tuple.ipv4.s_addr) <= 0)
       {
          DebugLog( << "inet_pton failed to parse address: " << mHost << " " << strerror(errno));
@@ -100,7 +100,7 @@ Resolver::Resolver(const Uri& uri) :
 }
 
 
-Resolver::Resolver(const Data& host, int port, Transport::Type transport) 
+Resolver::Resolver(const Data& host, int port, TransportType transport) 
    :  mTransport(transport),
       mHost(host),
       mPort(port)
@@ -126,7 +126,7 @@ Resolver::Resolver(const Data& host, int port, Transport::Type transport)
    }
    else
    {
-      Transport::Tuple tuple;
+      Tuple tuple;
       if (inet_pton(AF_INET, mHost.c_str(), &tuple.ipv4.s_addr) <= 0)
       {
          DebugLog( << "inet_pton failed to parse address: " << mHost << " " << strerror(errno));
@@ -190,7 +190,7 @@ Resolver::lookupARecords()
       char str[256];
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
-         Transport::Tuple tuple;
+         Tuple tuple;
          tuple.ipv4.s_addr = *((u_int32_t*)(*pptr));
          tuple.port = mPort;
          tuple.transportType = mTransport;

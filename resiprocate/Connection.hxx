@@ -22,7 +22,7 @@ class TlsConnection;
 class Connection
 {
    public:
-      Connection(const Transport::Tuple& who, Socket socket);
+      Connection(const Tuple& who, Socket socket);
       ~Connection();
             
       Socket getSocket() const {return mSocket;}
@@ -35,7 +35,7 @@ class Connection
       Connection* mYounger;
       Connection* mOlder;
 
-      Transport::Tuple mWho;
+      Tuple mWho;
 
       Data::size_type mSendPos;     //position in current message being sent
       std::list<SendData*> mOutstandingSends;

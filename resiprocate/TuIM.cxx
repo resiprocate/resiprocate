@@ -51,7 +51,7 @@ TuIM::TuIM(SipStack* stack,
      mNextTimeToRegister(0),
      mRegistrationPassword( Data::Empty ),
      mLastAuthCSeq(-1),
-     mDefaultProtocol( Transport::Unknown )
+     mDefaultProtocol( UNKNOWN_TRANSPORT )
 {
    assert( mStack );
    assert(mCallback);
@@ -904,19 +904,19 @@ TuIM::setOutbound( SipMessage& msg )
       msg.header(h_UserAgent).value() = mUAName;
    }
 
-   if ( mDefaultProtocol != Transport::Unknown )
+   if ( mDefaultProtocol != UNKNOWN_TRANSPORT )
    {
       if ( ! msg.header(h_RequestLine).uri().exists(p_transport) )
       {
          switch ( mDefaultProtocol )
          {
-            case Transport::UDP:
+            case UDP:
                msg.header(h_RequestLine).uri().param(p_transport) = Symbols::UDP;
                break;
-            case Transport::TCP:
+            case TCP:
                msg.header(h_RequestLine).uri().param(p_transport) = Symbols::TCP;
                break;
-            case Transport::TLS:
+            case TLS:
                msg.header(h_RequestLine).uri().param(p_transport) = Symbols::TLS;
                break;
             default:
@@ -928,7 +928,7 @@ TuIM::setOutbound( SipMessage& msg )
 
 
 void 
-TuIM::setDefaultProtocol( Transport::Type protocol )
+TuIM::setDefaultProtocol( TransportType protocol )
 {
    mDefaultProtocol = protocol;
 }
