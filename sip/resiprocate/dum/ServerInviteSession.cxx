@@ -41,6 +41,7 @@ ServerInviteSession::end()
    {
       case Terminated: 
       case Connected:
+      case ReInviting:
          return InviteSession::end();
          break;
       default:
