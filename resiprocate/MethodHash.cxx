@@ -30,6 +30,9 @@
 
 #include <string.h>
 #include <ctype.h>
+#if defined( WIN32 )
+#include <map> // Bring in something from std namespace so "using namespace std;" below works.
+#endif
 #include "resiprocate/MethodTypes.hxx"
 
 namespace resip
