@@ -1,10 +1,12 @@
 %{
 #include <string.h>
 #include <ctype.h>
-#include "sip2/sipstack/HeaderTypes.hxx"
-namespace Vocal2 {
+#include "resiprocate/HeaderTypes.hxx"
+
+namespace resip
+{
 using namespace std;
-using namespace Vocal2;
+using namespace resip;
 %}
 struct headers { char *name; Headers::Type type; };
 %%
@@ -85,4 +87,3 @@ security-server, Headers::SecurityServer
 security-verify, Headers::SecurityVerify
 %%
 }
-
