@@ -36,7 +36,7 @@ class SipMessage : public Message
 
       explicit SipMessage(const Transport* fromWire = 0);
       SipMessage(const SipMessage& message);
-
+      
       // returns the transaction id from the branch or if 2543, the computed hash
       virtual const Data& getTransactionId() const;
 
@@ -44,6 +44,8 @@ class SipMessage : public Message
       void setRFC2543TransactionId(const Data& tid);
       
       virtual ~SipMessage();
+
+      static SipMessage* make(const Data& buffer, bool isExternal = false);
 
       class Exception : public BaseException
       {

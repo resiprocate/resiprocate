@@ -40,13 +40,16 @@ struct CharInfo {
   MsgHeaderScanner::TextPropBitMask  textPropBitMask;
 };
 
-static CharInfo charInfoArray[UCHAR_MAX] = { {ccOther, 0} };
+static CharInfo charInfoArray[UCHAR_MAX];
 
 static
 void
 initCharInfoArray()
 {
-  // Init categories.
+  for(unsigned int charIndex = 0; charIndex <= UCHAR_MAX; ++charIndex) {
+    charInfoArray[charIndex].category        = ccOther;
+    charInfoArray[charIndex].textPropBitMask = 0;
+  }//for
   for(const char *charPtr = "abcdefghijklmnopqrstuvwxyz"
                             "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.!%*_+`'~";
       *charPtr;
@@ -139,7 +142,7 @@ enum TransitionActionEnum {
   taTermValue,              // The current character terminates a value.
   taStartText,              // The current character starts a text unit.
                             //     (The status line, a field name, or a value.)
-  taEndHeader,              // The current character terminates the header.
+  taEndHeader,              // The current character _ends_ the header.
   taChunkTermSentinel,      // Either the current character terminates the
                             //    current chunk or it is an ordinary character.
   taError                   // The input is erroneous.
@@ -303,6 +306,7 @@ initStateMachine()
                  ccCarriageReturn,
                  taNone,
                  sHalfLineBreakAtMsgStart);
+  specTransition(sMsgStart, ccLineFeed, taError, sMsgStart);
   specHalfLineBreakState(sHalfLineBreakAtMsgStart, sMsgStart);
   specDefaultTransition(sScanStatusLine, taNone, sScanStatusLine);
   specTransition(sScanStatusLine,
@@ -400,19 +404,21 @@ printText(const char *  text,
           unsigned int  textLength)
 {
   const char *charPtr = text;
-  for (int counter = 0; counter < textLength; ++charPtr, ++counter) {
+  for (unsigned int counter = 0; counter < textLength; ++charPtr, ++counter) {
     char c = *charPtr;
-    if (c == '\r') {
-      printf("\\r");
-    } else if (c == '\n') {
-      printf("\\n");
-    } else if (c == '\t') {
-      printf("\\t");
-    } else if (c == '\0') {
-      printf("\\0");
-    } else {
-      putchar(c);
-    }
+    switch (c) {
+      case '\\': printf("\\\\");
+                 break;
+      case '\r': printf("\\r");
+                 break;
+      case '\n': printf("\\n");
+                 break;
+      case '\t': printf("\\t");
+                 break;
+      case '\0': printf("\\0");
+                 break;
+      default:   putchar(c);
+    }//switch
   }//for
 }
 
@@ -591,7 +597,7 @@ void
 lookupMsgHeaderFieldInfo(
             char *                             fieldName,               //inout
             unsigned int                       *fieldNameLength,        //inout
-            MsgHeaderScanner::TextPropBitMask  fieldNameTextPropBitmask,
+            MsgHeaderScanner::TextPropBitMask  fieldNameTextPropBitMask,
             int                                *fieldKind,              //out
             bool                               *isMultiValueAllowed)    //out
 {
@@ -633,7 +639,7 @@ processMsgHeaderFieldNameAndValue(
                       unsigned int                       fieldNameLength,
                       char *                             valueText,
                       unsigned int                       valueTextLength,
-                      MsgHeaderScanner::TextPropBitMask  valueTextPropBitmask)
+                      MsgHeaderScanner::TextPropBitMask  valueTextPropBitMask)
 {
   printText(fieldName, fieldNameLength);
   printf(": [[[[");
@@ -654,11 +660,11 @@ void
 lookupMsgHeaderFieldInfo(
             char *                             fieldName,               //inout
             unsigned int                       *fieldNameLength,        //inout
-            MsgHeaderScanner::TextPropBitMask  fieldNameTextPropBitmask,
+            MsgHeaderScanner::TextPropBitMask  fieldNameTextPropBitMask,
             int                                *fieldKind,              //out
             bool                               *isMultiValueAllowed)    //out
 {
-  //.jacob. Don't ignore fieldNameTextPropBitmask.
+  //.jacob. Don't ignore fieldNameTextPropBitMask.
   *fieldKind = Headers::getType(fieldName, *fieldNameLength);
   *isMultiValueAllowed =
       Headers::isCommaTokenizing(static_cast<Headers::Type>(*fieldKind));
@@ -676,7 +682,7 @@ processMsgHeaderStatusLine(
                        unsigned int                       lineTextLength,
                        MsgHeaderScanner::TextPropBitMask  lineTextPropBitMask)
 {
-  //.jacob. Don't ignore valueTextPropBitmask.
+  //.jacob. Don't ignore valueTextPropBitMask, and don't always return true.
   msg->setStartLine(lineText, lineTextLength);
   return true;
 }
@@ -706,9 +712,9 @@ processMsgHeaderFieldNameAndValue(
                       unsigned int                       fieldNameLength,
                       char *                             valueText,
                       unsigned int                       valueTextLength,
-                      MsgHeaderScanner::TextPropBitMask  valueTextPropBitmask)
+                      MsgHeaderScanner::TextPropBitMask  valueTextPropBitMask)
 {
-  //.jacob. Don't ignore valueTextPropBitmask.
+  //.jacob. Don't ignore valueTextPropBitMask, particularly for '\r' & '\n'.
   msg->addHeader(static_cast<Headers::Type>(fieldKind),
                  fieldName,
                  fieldNameLength,

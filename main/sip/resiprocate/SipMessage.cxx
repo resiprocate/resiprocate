@@ -12,6 +12,12 @@
 #include "resiprocate/os/Coders.hxx"
 #include "resiprocate/os/Random.hxx"
 
+#ifndef NEW_MSG_HEADER_SCANNER
+#include "Preparse.hxx"
+#else
+#include "MsgHeaderScanner.hxx"
+#endif
+
 using namespace resip;
 using namespace std;
 
@@ -120,6 +126,85 @@ SipMessage::~SipMessage()
    delete mContents;
    delete mContentsHfv;
    delete mTarget;
+}
+
+SipMessage*
+SipMessage::make(const Data& data, 
+                 bool isExternal)
+{
+   Transport* external = (Transport*)(0xFFFF);
+   SipMessage* msg = new SipMessage(isExternal ? external : 0);
+
+   size_t len = data.size();
+   char *buffer = new char[len + 5];
+
+   msg->addBuffer(buffer);
+
+   memcpy(buffer,data.data(), len);
+
+#ifndef NEW_MSG_HEADER_SCANNER // {
+
+   using namespace PreparseConst;
+   Preparse pre;
+
+   if (pre.process(*msg, buffer, len) || pre.isFragmented())
+   {
+      cerr << "Preparser failed: isfrag=" << pre.isFragmented() << " buff=" << buffer;
+      
+      delete msg;
+      msg = 0;
+   }
+   else
+   {
+       size_t used = pre.nBytesUsed();
+       assert(pre.nBytesUsed() == pre.nDiscardOffset());
+       
+       // no pp error
+       if (pre.isHeadersComplete() &&
+           used < len)
+      {
+         // body is present .. add it up.
+         // NB. The Sip Message uses an overlay (again)
+         // for the body. It ALSO expects that the body
+         // will be contiguous (of course).
+         msg->setBody(buffer+used, len-used);
+      }
+   }
+   return msg;
+
+#else //defined (NEW_MSG_HEADER_SCANNER) } {
+   MsgHeaderScanner msgHeaderScanner;
+
+   msgHeaderScanner.prepareForMessage(msg);
+
+   char *unprocessedCharPtr;
+   if (msgHeaderScanner.scanChunk(buffer, len, &unprocessedCharPtr) != MsgHeaderScanner::scrEnd)
+   {
+      InfoLog(<<"Preparse Rejecting buffer as unparsable / fragmented.");
+      DebugLog(<< data);
+      delete msg; 
+      msg = 0; 
+      return 0;
+   }
+
+   // no pp error
+   int used = unprocessedCharPtr - buffer;
+
+   if (used < len)
+   {
+      // body is present .. add it up.
+      // NB. The Sip Message uses an overlay (again)
+      // for the body. It ALSO expects that the body
+      // will be contiguous (of course).
+      // it doesn't need a new buffer in UDP b/c there
+      // will only be one datagram per buffer. (1:1 strict)
+
+      msg->setBody(buffer+used,len-used);
+      //DebugLog(<<"added " << len-used << " byte body");
+   }
+
+   return msg;
+#endif //defined (NEW_MSG_HEADER_SCANNER) }
 }
 
 const Data& 
