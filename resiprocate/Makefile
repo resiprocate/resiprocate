@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.47 2002/09/27 02:49:32 alan Exp $
+# $Id: Makefile,v 1.48 2002/09/27 13:48:25 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -67,7 +67,7 @@ OBJS = $(patsubst %.cxx,$(OBJ)/%.o,$(SRC))
 
 #define the rules
 
-all: $(OBJ) $(BIN) $(LIB) $(BIN)/libSipStack.a
+all:  $(OBJ) $(BIN) $(LIB) $(BIN)/libSipStack.a
 
 doc: html html/HIER.html html/sipStack.html fsm.pdf
 
@@ -104,28 +104,46 @@ $(OBJ)/%.o: %.cxx
 	@sed -e "s/^$(@F)/$(@D)\/$(@F)/" < $(@:.o=_tmp.d) > $(@:.o=.d)
 	@rm  $(@:.o=_tmp.d)
 
+$(OBJ)/%.d: %.cxx
+	$(CXX) $(CXXFLAGS) -c -o $(@:.d=.o) $<
+	@[ -f $(@F) ] && mv $(@F) $(@:.d=_tmp.d) || \
+		mv $(@) $(@:.d=_tmp.d)
+	@sed -e "s/^$(@F:.d=.o)/$(@D)\/$(@F:.d=.o)/" < $(@:.d=_tmp.d) > $(@)
+	@rm  $(@:.d=_tmp.d)
 
 %.S: %.cxx
 	$(CXX) $(CXXFLAGS)  -fverbose-asm -g -Wa,-ahln -c \
 		-o /tmp/cjJunk.o $< > $@
 
-$(BIN)/libSipStack.a: $(OBJS)
+$(BIN)/libSipStack.a: $(OBJS) 
+	@$(MAKE) $(^:.o=.d)
+	@$(MAKE) $(^)
 	ar $(ARFLAGS) $@ $^
-	-@ ln -s $(shell pwd)/$@ $(LIB)
+	@- ln -s $(shell pwd)/$@ $(LIB)
 
 testParameterList:  $(OBJS) $(OBJ)/testParameter.o 
+	@$(MAKE) $(^:.o=.d)
+	@$(MAKE) $(^)
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testUdp:  $(OBJS) $(OBJ)/testUdp.o
+	@$(MAKE) $(^:.o=.d)
+	@$(MAKE) $(^)
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testPreparse: $(OBJ)/Preparse.o $(OBJ)/testPreparse.o
+	@$(MAKE) $(^:.o=.d)
+	@$(MAKE) $(^)
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testSipStack1:  $(OBJS) $(OBJ)/testSipStack1.o
+	@$(MAKE) $(^:.o=.d)
+	@$(MAKE) $(^)
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testSipMessage:  $(OBJS) $(OBJ)/testSipMessage.o
+	@$(MAKE) $(^:.o=.d)
+	@$(MAKE) $(^)
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 test%: $(OBJ)/test%.o $(OBJS)
@@ -135,6 +153,8 @@ headers-hash.c: headers.gperf Makefile
 	gperf -L ANSI-C -t -k '3,$$' $< > $@
 
 convertStringToInt:  $(OBJS) $(OBJ)/convertStringToInt.o
+	@$(MAKE) $(^:.o=.d)
+	@$(MAKE) $(^)
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
 
 testMutable:  $(OBJS) $(OBJ)/testMutable.o
