@@ -12,6 +12,7 @@
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/StackThread.hxx"
 
 namespace resip 
 {
@@ -153,6 +154,7 @@ class DialogUsageManager : public HandleManager
       void send(SipMessage& request); 
       
       void buildFdSet(FdSet& fdset);
+      void process(bool useSeparateThread=true);
       void process(FdSet& fdset);
 
       /// returns time in milliseconds when process next needs to be called 
@@ -268,6 +270,7 @@ class DialogUsageManager : public HandleManager
       AppDialogSetFactory* mAppDialogSetFactory;
 
       SipStack& mStack;
+      StackThread mStackThread;
       DumShutdownHandler* mDumShutdownHandler;       
       bool mDestroying;
 };
