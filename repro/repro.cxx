@@ -51,6 +51,7 @@ main(int argc, char** argv)
       if (args.mTcpPort)
       {
          stack.addTransport(TCP, args.mTcpPort);
+         stack.addTransport(TCP, args.mTcpPort-1);
       }
       if (args.mTlsPort)
       {

@@ -36,7 +36,8 @@ class ResponseContext
       {
          Trying,
          Proceeding,
-         WaitingToCancel
+         WaitingToCancel,
+         Terminated
       } Status;
 
       struct Branch
@@ -65,7 +66,9 @@ class ResponseContext
       void processPendingTargets();
       void sendRequest(const resip::SipMessage& request);
       void cancelClientTransaction(const Branch& branch);
+      void terminateClientTransaction(const resip::Data& transactionId);
       void cancelProceedingClientTransactions();
+      bool areAllTransactionsTerminated();
       // return true if the transaction was found
       bool removeClientTransaction(const resip::Data& transactionId); 
       int getPriority(const resip::SipMessage& msg);
