@@ -1,43 +1,120 @@
-#if !defined(RESIP_UDPTRANSPORT_HXX)
-#define RESIP_UDPTRANSPORT_HXX
+#if !defined(RESIP_DTLSTRANSPORT_HXX)
+#define RESIP_DTLSTRANSPORT_HXX
 
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/MsgHeaderScanner.hxx"
+#ifdef USE_DTLS
+
+#ifndef RESIP_UDPTRANSPORT_HXX
+#include "resiprocate/UdpTransport.hxx"
+#endif
+
+#ifndef RESIP_TIMERQUEUE_HXX
+#include "resiprocate/TimerQueue.hxx"
+#endif
+
+#ifndef RESIP_HEAPINSTANCECOUNTER_HXX
 #include "resiprocate/os/HeapInstanceCounter.hxx"
+#endif
+
+#ifndef RESIP_HASHMAP_HXX
+#include "resiprocate/os/HashMap.hxx"
+#endif
+
+#include <map>
+
+
+#ifdef USE_DTLS
+#include <openssl/ssl.h>
+#else
+typedef void BIO;
+typedef void SSL;
+#endif
 
 namespace resip
 {
 
+class Security;
 class TransactionMessage;
+class UdpTransport;
+class DtlsMessage;
 
-class UdpTransport : public Transport
+class DtlsTransport : public UdpTransport
 {
+      struct addr_hash
+      {
+            size_t operator()( const struct sockaddr_in sock ) const
+            {
+               return sock.sin_addr.s_addr ;
+            }
+
+      } ;
+
+      struct addr_cmp
+      { 
+         bool operator()(const struct sockaddr_in s1, 
+                    const struct sockaddr_in s2) const
+         {
+            if ( ( s1.sin_addr.s_addr == s2.sin_addr.s_addr ) &&
+                 ( s1.sin_port == s2.sin_port) )
+               return 1 ;
+            else
+               return 0 ;
+         }
+      } ;
+
    public:
-      RESIP_HeapCount(UdpTransport);
+      RESIP_HeapCount(DtlsTransport);
       // Specify which udp port to use for send and receive
       // interface can be an ip address or dns name. If it is an ip address,
       // only bind to that interface.
-      UdpTransport(Fifo<TransactionMessage>& fifo,
-                   int portNum,
-                   IpVersion version,
-                   const Data& interfaceObj);
-      virtual  ~UdpTransport();
+      DtlsTransport(Fifo<TransactionMessage>& fifo,
+                    int portNum,
+                    IpVersion version,
+                    const Data& interfaceObj,
+                    Security& security,
+                    const Data& sipDomain);
+      virtual  ~DtlsTransport();
 
       void process(FdSet& fdset);
       bool isReliable() const { return false; }
-      TransportType transport() const { return UDP; }
+      TransportType transport() const { return DTLS; }
       virtual void buildFdSet( FdSet& fdset);
       virtual int maxFileDescriptors() const { return 1; }
 
-      static const int MaxBufferSize = 8192;
+      static const unsigned long DtlsReceiveTimeout = 250000 ;
 
    private:
-      MsgHeaderScanner mMsgHeaderScanner;
+
+      typedef HashMap<struct sockaddr_in, 
+                      SSL*, 
+                      DtlsTransport::addr_hash, 
+                      DtlsTransport::addr_cmp> DtlsConnectionMap ;
+
+      SSL_CTX             *mClientCtx ;
+      SSL_CTX             *mServerCtx ;
+      MsgHeaderScanner    mMsgHeaderScanner;
+      static const int    MaxBufferSize;
+      Fifo<DtlsMessage>   mHandshakePending ;
+      DtlsTimerQueue      mTimer ;
+      Security*           mSecurity ;
+      Data                mDomain ;
+      DtlsConnectionMap   mDtlsConnections ;  /* IP addr/port -> transport */
+      unsigned char       mDummyBuf[ 4 ] ;
+      BIO*                mDummyBio ;
+
+      void _read( FdSet& fdset ) ;
+      void _write( FdSet& fdset ) ;
+      void _doHandshake() ;
+      void _cleanupConnectionState( SSL *ssl, struct sockaddr_in peer ) ;
+
+      void _mapDebug( const char *where, const char *action, SSL *ssl ) ;
+      void _printSock( const struct sockaddr_in *sock ) ;
 };
 
 }
 
-#endif
+#endif /* USE_DTLS */
+
+#endif /* ! RESIP_DTLSTRANSPORT_HXX */
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

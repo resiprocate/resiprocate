@@ -70,6 +70,7 @@ void mvvline(...) {};
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 #endif
 
 #include "resiprocate/os/Socket.hxx"
@@ -463,7 +464,8 @@ myMain(int argc, char* argv[])
    InfoLog(<<"Test Driver for IM Starting");
     
    int port = 5060;
-   int tlsPort = 5061;
+   int tlsPort = 0;
+   int dtlsPort = 0;
    Uri aor;
    bool haveAor=false;
    dest = Uri("sip:nobody@example.com");
@@ -473,7 +475,8 @@ myMain(int argc, char* argv[])
    Uri outbound;
    bool noRegister = false;
    bool tlsServer=false;
-   
+   bool dtlsServer=false;
+
    int numAdd=0;
    Data addList[100];
    int numPub=0;
@@ -486,6 +489,7 @@ myMain(int argc, char* argv[])
    bool noTcp = false;
    bool prefUdp = false;
    bool prefTls = false;
+   bool prefDtls = false;
    bool prefTcp = false;
    bool noUdp = false;
    bool noV6 = false;
@@ -522,6 +526,10 @@ myMain(int argc, char* argv[])
       else if (!strcmp(argv[i],"-tlsServer"))
       {
          tlsServer = true;
+      }
+      else if (!strcmp(argv[i],"-dtlsServer"))
+      {
+          dtlsServer = true;
       }
       else if (!strcmp(argv[i],"-ssl"))
       {
@@ -570,7 +578,13 @@ myMain(int argc, char* argv[])
          i++;
          assert( i<argc );
          tlsPort = atoi( argv[i] );
-      } 
+      }
+      else if (!strcmp(argv[i],"-dtlsPort"))
+      {
+          i++;
+          assert( i<argc );
+          dtlsPort = atoi( argv[i] );
+      }
       else if (!strcmp(argv[i],"-aor"))
       {
          i++;
@@ -701,6 +715,7 @@ myMain(int argc, char* argv[])
               << " -port sets the UDP and TCP port to listen on" << endl
               << " -tlsPort sets the port to listen for TLS on" << endl
               << " -tlsServer - sets to act as tls server instead of  client" << endl
+              << " -dtlsServer - sets to act as dtls server instead of client" << endl
               << " -ssl - use ssl instead of tls" << endl
               << " -aor sets the proxy and user name to register with" << endl
               << " -aorPassword sets the password to use for registration" << endl
@@ -738,7 +753,16 @@ myMain(int argc, char* argv[])
    Security* security=NULL;
    try
    {
-      security = new Security("/Users/fluffy/.sipCerts/");
+      char cert_dir[ 1024 ] ;
+      char *home_dir = getenv( "HOME" ) ;
+
+      cert_dir[ 0 ] = '\0' ;
+      ::strcat( cert_dir, home_dir ) ;
+      ::strcat( cert_dir, "/.sipCerts/" ) ;
+
+      security = new Security( cert_dir ) ;
+
+      ::free( home_dir ) ;
    }
    catch( ... )
    {
@@ -770,7 +794,6 @@ myMain(int argc, char* argv[])
       ErrLog( << "Got an exception creating security object " );
    }
 
-#if 0 // TODO fix this 
    try
    {
       assert(security != 0);
@@ -780,7 +803,7 @@ myMain(int argc, char* argv[])
    {
       ErrLog( << "Got a exception pre loading certificates" );
    }
-#endif 
+
 
     if (genUserCert)
    {
@@ -814,12 +837,17 @@ myMain(int argc, char* argv[])
       {
          if (!noV4) 
          {
-            sipStack.addTransport(TLS, tlsPort, V4, Data::Empty);
+            sipStack.addTransport(TLS, tlsPort, V4, Data::Empty, Data( "test" ) );
          }
    //if (!noV6) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V6);
       }
    }
 #endif
+#if USE_DTLS
+   if ( dtlsPort != 0 )
+      sipStack.addTransport(DTLS, dtlsPort, V4, Data::Empty, Data( "test" ) );
+#endif
+
    DebugLog( << "Done adding the transports " );   
 
    if (!haveContact)
@@ -874,6 +902,10 @@ myMain(int argc, char* argv[])
    if ( prefTls )
    {
       tuIM->setDefaultProtocol( TLS );
+   }
+   if ( prefDtls )
+   {
+      tuIM->setDefaultProtocol( DTLS );
    }
 
    if ( haveAor )
