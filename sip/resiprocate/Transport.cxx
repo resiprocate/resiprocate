@@ -1,4 +1,7 @@
 #include <iostream>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include <util/Logger.hxx>
 #include <util/Socket.hxx>
@@ -128,10 +131,6 @@ Transport::toData(Transport::Type type)
          return"SCTP";
       case DCCP:
          return "DCCP";
-      case TestReliable:
-         return "TestReliable";
-      case TestUnreliable:
-         return "TestUnreliable";
       case Unknown:
       default:
          assert(0);
@@ -223,6 +222,24 @@ bool Transport::Tuple::operator<(const Transport::Tuple& rhs) const
    
    return transport < rhs.transport;
 }
+
+std::ostream&
+Vocal2::operator<<(ostream& ostrm, const Transport::Tuple& tuple)
+{
+   char str[128];
+
+   ostrm << "[ " << inet_ntop(AF_INET, &tuple.ipv4.s_addr, str, sizeof(str))
+         << " , " 
+         << tuple.port
+         << " , "
+         << Transport::toData(tuple.transportType) 
+         << " , "
+         << tuple.transport 
+         << " ]";
+
+   return ostrm;
+}
+
 
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 
