@@ -17,6 +17,7 @@ class GagMessage
       // GAIM <-> GAG
       IM                 = 0x00,
       PRESENCE           = 0x01,
+      HELLO              = 0x02,
   
       // GAIM --> GAG
       LOGIN              = 0x40,
@@ -92,6 +93,19 @@ class GagPresenceMessage : public GagMessage
     Uri aor;
     bool available;
     Data status;
+};
+
+class GagHelloMessage : public GagMessage
+{
+  public:
+    GagHelloMessage(bool _ok) : ok(_ok) { messageType=HELLO; }
+    GagHelloMessage(istream &is) { messageType=HELLO; parse (is); }
+    virtual ostream &serialize(ostream &os) const;
+    virtual void parse(istream &is);
+
+    bool getOk() {return ok;}
+  private:
+    bool ok;
 };
 
 class GagLoginMessage : public GagMessage

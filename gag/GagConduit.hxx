@@ -18,6 +18,7 @@ class GagConduit: public TuIM::Callback
     // Methods to handle commands from GAIM
     void gaimIm(GagImMessage *);
     void gaimPresence(GagPresenceMessage *);
+    void gaimHello(GagHelloMessage *);
     void gaimLogin(GagLoginMessage *);
     void gaimLogout(GagLogoutMessage *);
     void gaimAddBuddy(GagAddBuddyMessage *);
