@@ -61,11 +61,9 @@ Dialog::createDialogAsUAS(SipMessage& request, SipMessage& response)
       mLocalUri = request.header(h_To);
       mCreated = true;
 
-      mDialogId = mCallId.value();
-      mDialogId += ";to-tag=";
-      mDialogId += mRemoteTag;
-      mDialogId += ";from-tag=";
-      mDialogId += mLocalTag;
+      mDialogId.value() = mCallId.value();
+      mDialogId[p_toTag] = mRemoteTag;
+      mDialogId[p_fromTag] = mLocalTag;
    }
 }
 
@@ -95,11 +93,9 @@ Dialog::createDialogAsUAC(SipMessage& request, SipMessage& response)
       mLocalUri = request.header(h_From);
       mCreated = true;
       
-      mDialogId = mCallId.value();
-      mDialogId += ";to-tag=";
-      mDialogId += mRemoteTag;
-      mDialogId += ";from-tag=";
-      mDialogId += mLocalTag;
+      mDialogId.value() = mCallId.value();
+      mDialogId[p_toTag] = mRemoteTag;
+      mDialogId[p_fromTag] = mLocalTag;
    }
 }
 
