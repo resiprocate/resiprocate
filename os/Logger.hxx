@@ -44,6 +44,7 @@ class RecursiveLogLock
       RecursiveLogLock(resip::Log::Level level);
       ~RecursiveLogLock();
    private:
+      const bool isDebug;
       // no object semantics
       RecursiveLogLock(const RecursiveLogLock &);
       const RecursiveLogLock & operator=(const RecursiveLogLock &);
