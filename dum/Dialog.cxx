@@ -16,6 +16,13 @@
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#ifdef _DEBUG
+   #define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif // _DEBUG
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
@@ -228,7 +235,7 @@ Dialog::cancel()
 {
    if (mInviteSession)
    {
-      mInviteSession->end();
+      mInviteSession->send(mInviteSession->end());
    }
    else
    {
