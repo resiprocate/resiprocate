@@ -117,6 +117,12 @@ ResponseContext::processPendingTargets()
             rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
          }
          
+         const Data& sentTransport = request.header(h_Vias).front().transport();
+         if (sentTransport != Symbols::UDP)
+         {
+            rt.uri().param(p_transport) = sentTransport;
+         }
+
          rt.uri().host() = DnsUtil::getLocalHostName();
          rt.uri().param(p_lr);
          request.header(h_RecordRoutes).push_back(rt);
