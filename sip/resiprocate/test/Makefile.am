@@ -6,7 +6,6 @@ libtestsupport_a_SOURCES = \
 	InviteServer.cxx \
 	Register.cxx \
 	Registrar.cxx \
-	Resolver.cxx \
 	TestSupport.cxx 
 
 noinst_HEADERS = \
@@ -53,7 +52,6 @@ check_PROGRAMS = \
 	testSipMessage \
 	testSipMessageMemory \
 	testSpeed \
-	testTcpTransport \
 	testThreadIf \
 	testTimer \
 	testTransactionFSM \
@@ -102,7 +100,6 @@ testSipMessage_SOURCES = testSipMessage.cxx
 testSource_SOURCES = testSource.cxx
 testSpeed_SOURCES = testSpeed.cxx
 testStack_SOURCES = testStack.cxx
-testTcpTransport_SOURCES = testTcpTransport.cxx
 testTcp_SOURCES = testTcp.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
 testTimer_SOURCES = testTimer.cxx

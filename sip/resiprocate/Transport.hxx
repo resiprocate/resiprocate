@@ -75,7 +75,11 @@ class Transport : public ThreadIf
       int mPort;
       Data mInterface;
 
-      sockaddr mBoundInterface;
+      union {
+            sockaddr mBoundInterface;
+            sockaddr_in mbiV4;
+            sockaddr_in6 mbiV6;
+      };
       
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in

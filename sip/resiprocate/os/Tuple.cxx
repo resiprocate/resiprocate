@@ -193,9 +193,9 @@ bool Tuple::operator<(const Tuple& rhs) const
    }
    else if (mSockaddr.sa_family == AF_INET && rhs.mSockaddr.sa_family == AF_INET)
    {
-      sockaddr_in* addr1 = (sockaddr_in*)&mSockaddr;
-      sockaddr_in* addr2 = (sockaddr_in*)&rhs.mSockaddr;
-      int c=memcmp(&addr1->sin_addr, &addr2->sin_addr, sizeof(in_addr));
+      int c=memcmp(&m_anonv4.sin_addr,
+                   &rhs.m_anonv4.sin_addr,
+                   sizeof(in_addr));
 
       if (c < 0)
       {
@@ -205,7 +205,7 @@ bool Tuple::operator<(const Tuple& rhs) const
       {
          return false;
       }
-      else if (addr1->sin_port < addr2->sin_port)
+      else if (m_anonv4.sin_port < rhs.m_anonv4.sin_port)
       {
          return true;
       }
@@ -215,11 +215,12 @@ bool Tuple::operator<(const Tuple& rhs) const
       }
    }
 #ifdef USE_IPV6
-   else if (mSockaddr.sa_family == AF_INET6 && rhs.mSockaddr.sa_family == AF_INET6)
+   else if (mSockaddr.sa_family == AF_INET6 &&
+            rhs.mSockaddr.sa_family == AF_INET6)
    {
-      sockaddr_in6* addr1 = (sockaddr_in6*)&mSockaddr;
-      sockaddr_in6* addr2 = (sockaddr_in6*)&rhs.mSockaddr;
-      int c = memcmp(&addr1->sin6_addr, &addr2->sin6_addr, sizeof(in6_addr));
+      int c = memcmp(&m_anonv6.sin6_addr,
+                     &rhs.m_anonv6.sin6_addr,
+                     sizeof(in6_addr));
       if (c < 0)
       {
          return true;
@@ -228,7 +229,7 @@ bool Tuple::operator<(const Tuple& rhs) const
       {
          return false;
       }
-      else if (addr1->sin6_port < addr2->sin6_port)
+      else if (m_anonv6.sin6_port < rhs.m_anonv6.sin6_port)
       {
          return true;
       }
@@ -237,11 +238,13 @@ bool Tuple::operator<(const Tuple& rhs) const
          return false;
       }
    }
-   else if (mSockaddr.sa_family == AF_INET6 && rhs.mSockaddr.sa_family == AF_INET)
+   else if (mSockaddr.sa_family == AF_INET6 &&
+            rhs.mSockaddr.sa_family == AF_INET)
    {
       return true;
    }
-   else if (mSockaddr.sa_family == AF_INET && rhs.mSockaddr.sa_family == AF_INET6)
+   else if (mSockaddr.sa_family == AF_INET &&
+            rhs.mSockaddr.sa_family == AF_INET6)
    {
       return false;
    }
@@ -273,16 +276,20 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 #ifdef USE_IPV6
     if (tuple.mSockaddr.sa_family == AF_INET6)
     {
-       sockaddr_in6* addr = (sockaddr_in6*)&tuple.mSockaddr;
-       ostrm << inet_ntop(AF_INET6, &(addr->sin6_addr), str, sizeof(str));       
-       ostrm << ":" << ntohs(addr->sin6_port);
+       sockaddr_in6* addr =  &tuple.m_anonv6;
+       ostrm << inet_ntop(AF_INET6, 
+                          &(tuple.m_anonv6.sin6_addr),
+                          str,
+                          sizeof(str));       
+       ostrm << ":" << ntohs(tuple.m_anonv6.sin6_port);
     }
     else
 #endif
     {
-       sockaddr_in* addr = (sockaddr_in*)&tuple.mSockaddr;
-       ostrm << inet_ntop(AF_INET, &(addr->sin_addr), str, sizeof(str));
-       ostrm << ":" << ntohs(addr->sin_port);
+       ostrm << inet_ntop(AF_INET,
+                          &(tuple.m_anonv4.sin_addr),
+                          str, sizeof(str));
+       ostrm << ":" << ntohs(tuple.m_anonv4.sin_port);
     }
 #endif	
 	
@@ -304,16 +311,24 @@ size_t
 __gnu_cxx::hash<resip::Tuple>::operator()(const resip::Tuple& tuple) const
 {
    // !dlb! do not include the connection
-   const sockaddr& sockaddr = tuple.getSockaddr();
-   if (sockaddr.sa_family == AF_INET6)
+   const sockaddr& theSockaddr = tuple.getSockaddr();
+   if (theSockaddr.sa_family == AF_INET6)
    {
-      const sockaddr_in6& addr = reinterpret_cast<const sockaddr_in6&>(sockaddr);
-      return size_t(addr.sin6_addr.s6_addr + 5*addr.sin6_port + 25*tuple.getType());
+      const sockaddr_in6& in6 =
+         reinterpret_cast<const sockaddr_in6&>(theSockaddr);
+
+      return size_t(in6.sin6_addr.s6_addr +
+                    5*in6.sin6_port +
+                    25*tuple.getType());
    }
    else
    {
-      const sockaddr_in& addr = reinterpret_cast<const sockaddr_in&>(sockaddr);
-      return size_t(addr.sin_addr.s_addr + 5*addr.sin_port + 25*tuple.getType());
+      const sockaddr_in& in4 =
+         reinterpret_cast<const sockaddr_in&>(theSockaddr);
+         
+      return size_t(in4.sin_addr.s_addr +
+                    5*in4.sin_port +
+                    25*tuple.getType());
    }
 }
 
