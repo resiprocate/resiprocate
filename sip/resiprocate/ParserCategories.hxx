@@ -80,6 +80,13 @@ class Auth : public ParserCategory
       virtual void parse(ParseBuffer& pb);
       virtual std::ostream& encode(std::ostream& str) const;
       virtual ParserCategory* clone() const;
+
+      void parseAuthParameters(ParseBuffer& pb);
+      std::ostream& encodeAuthParameters(std::ostream& str) const;
+
+      Data& scheme();
+   private:
+      mutable Data mScheme;
 };
 
 //====================
