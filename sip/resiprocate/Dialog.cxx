@@ -240,17 +240,18 @@ Dialog::makeAck(const SipMessage& original)
 {
    SipMessage* request=makeRequest(ACK);
    copyCSeq(*request);
-   
+
+   // !dcm! should we copy the authorizations? 
    // !jf! will this do the right thing if these headers weren't in original 
    // we should be able to store this stuff in the Dialog and not need to pass
    // in the original
-   if (original.exists(h_ProxyAuthorization))
+   if (original.exists(h_ProxyAuthorizations))
    {
-      request->header(h_ProxyAuthorization) = original.header(h_ProxyAuthorization);
+      request->header(h_ProxyAuthorizations) = original.header(h_ProxyAuthorizations);
    }
-   if (original.exists(h_Authorization))
+   if (original.exists(h_Authorizations))
    {    
-      request->header(h_Authorization) = original.header(h_Authorization);
+      request->header(h_Authorizations) = original.header(h_Authorizations);
    }
    request->header(h_CSeq).sequence() = original.header(h_CSeq).sequence();
    return request;
