@@ -632,7 +632,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          // !kh!
          // should not assert here for peer sent us garbage.
          //assert(0);
-         WarningLog (<< "Got garbage : " << msg);
+         WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
 }
@@ -722,7 +722,10 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          break;
 
       default:
-         assert(0);
+         // !kh!
+         // should not assert here for peer sent us garbage.
+         //assert(0);
+         WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
 }
@@ -764,7 +767,11 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
       }
 
       default:
-         assert(0);
+         // !kh!
+         // should not assert here for peer sent us garbage.
+         //assert(0);
+         WarningLog (<< "Don't know what this is : " << msg);
+         break;
          break;
    }
 
@@ -811,7 +818,10 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
          break;
 
       default:
-         assert(0);
+         // !kh!
+         // should not assert here for peer sent us garbage.
+         //assert(0);
+         WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
 }
@@ -874,7 +884,10 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
          break;
 
       default:
-         assert(0);
+         // !kh!
+         // should not assert here for peer sent us garbage.
+         //assert(0);
+         WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
 }
@@ -952,7 +965,10 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          break;
 
       default:
-         assert(0);
+         // !kh!
+         // should not assert here for peer sent us garbage.
+         //assert(0);
+         WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
 }
@@ -1016,7 +1032,10 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          break;
 
       default:
-         assert(0);
+         // !kh!
+         // should not assert here for peer sent us garbage.
+         //assert(0);
+         WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
 }
