@@ -22,9 +22,9 @@
 
 using namespace resip;
 
-ClientInviteSession::ClientInviteSession(DialogUsageManager& dum, 
+ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          Dialog& dialog,
-                                         const SipMessage& request, 
+                                         const SipMessage& request,
                                          const SdpContents* initialOffer,
                                          ServerSubscriptionHandle serverSub) :
    InviteSession(dum, dialog, Initial),
@@ -39,14 +39,259 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
       sendSdp(static_cast<SdpContents*>(initialOffer->clone()));
    }
    mLastRequest = request;
-   mLastRequest.releaseContents();   
+   mLastRequest.releaseContents();
 }
 
-ClientInviteSessionHandle 
+ClientInviteSessionHandle
 ClientInviteSession::getHandle()
 {
    return ClientInviteSessionHandle(mDum, getBaseHandle().getId());
 }
+
+// !kh! ================
+
+namespace   //  unnamed namespace
+{
+    //  !kh!
+    //  local (a.k.a. static) functions
+
+    bool is1xx (int statusCode)
+    {
+        return  (statusCode / 100 == 1);
+    }
+    bool is2xx (int statusCode)
+    {
+        return  (statusCode / 200 == 1);
+    }
+
+}   //  unnamed namespace
+
+#if(0)
+
+    switch(mState)
+    {
+        case UAC_Start:
+            break;
+        case UAC_Early:
+            break;
+        case UAC_EarlyWithOffer:
+            break;
+        case UAC_EarlyWithAnswer:
+            break;
+        case UAC_WaitingForAnswerFromApp:
+            break;
+        case UAC_Terminated:
+            break;
+        case UAC_SentUpdateEarly:
+            break;
+        case UAC_ReceivedUpdateEarly:
+            break;
+        case UAC_PrackAnswerWait:
+            break;
+        case UAC_Canceled:
+            break;
+        default:
+            break;
+    }
+
+#endif
+
+void
+ClientInviteSession::provideOffer (const SdpContents& offer)
+{
+    switch(mState)
+    {
+        case UAC_EarlyWithAnswer:
+        {
+            //  Creates an UPDATE request with application supplied offer and
+            //  session timer.
+            SipMessage req;
+            mDialog.makeRequest(req, UPDATE);
+            InviteSession::setSdp(req, offer);
+            req.header(h_SessionExpires).value() = mSessionInterval;
+            req.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
+
+            //  Remember last seesion modification.
+            mLastSessionModification = req;
+            mLastSessionModification.header(h_SessionExpires).value() = mSessionInterval;
+            mLastSessionModification.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
+
+            //  Remember proposed local SDP.
+            mProposedLocalSdp = offer;
+
+            //  Send the req and do state transition.
+            mDum.send(req);
+            transition(UAC_SentUpdateEarly);
+            break;
+        }
+
+        case UAC_Start:
+        case UAC_Early:
+        case UAC_EarlyWithOffer:
+        //case UAC_EarlyWithAnswer:
+        case UAC_WaitingForAnswerFromApp:
+        case UAC_Terminated:
+        case UAC_SentUpdateEarly:
+        case UAC_ReceivedUpdateEarly:
+        case UAC_PrackAnswerWait:
+        case UAC_Canceled:
+            assert(0);
+            break;
+
+        default:
+            InviteSession::provideOffer(offer);
+            break;
+    }
+}
+void
+ClientInviteSession::provideAnswer (const SdpContents& answer)
+{
+    switch(mState)
+    {
+        case UAC_EarlyWithAnswer:
+        {
+            //  Creates an UPDATE request with application supplied offer and
+            //  session timer.
+            SipMessage req;
+            mDialog.makeRequest(req, UPDATE);
+            InviteSession::setSdp(req, offer);
+            req.header(h_SessionExpires).value() = mSessionInterval;
+            req.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
+
+            //  Remember last seesion modification.
+            mLastSessionModification = req;
+            mLastSessionModification.header(h_SessionExpires).value() = mSessionInterval;
+            mLastSessionModification.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
+
+            //  Remember proposed local SDP.
+            mProposedLocalSdp = offer;
+
+            //  Send the req and do state transition.
+            mDum.send(req);
+            transition(UAC_SentUpdateEarly);
+            break;
+        }
+
+        case UAC_Start:
+        case UAC_Early:
+        case UAC_EarlyWithOffer:
+        //case UAC_EarlyWithAnswer:
+        case UAC_WaitingForAnswerFromApp:
+        case UAC_Terminated:
+        case UAC_SentUpdateEarly:
+        case UAC_ReceivedUpdateEarly:
+        case UAC_PrackAnswerWait:
+        case UAC_Canceled:
+            assert(0);
+            break;
+
+        default:
+            InviteSession::provideOffer(offer);
+            break;
+    }
+}
+void
+ClientInviteSession::end()
+{
+}
+void
+ClientInviteSession::reject (int statusCode)
+{
+}
+void
+ClientInviteSession::targetRefresh (const NameAddr& localUri)
+{
+}
+void
+ClientInviteSession::refer  (const NameAddr& referTo)
+{
+}
+void
+ClientInviteSession::refer  (const NameAddr& referTo, InviteSessionHandle sessionToReplace)
+{
+}
+void
+ClientInviteSession::info  (const Contents& contents)
+{
+}
+void
+ClientInviteSession::cancel  ()
+{
+}
+
+
+void
+ClientInviteSession::dispatchStart (const SipMessage& msg, const SdpContents* sdp)
+{
+    if (msg.isRequest())
+    {
+        mDum.mInviteSessionHandler->onInfoFailure(getSessionHandle(), msg);
+        return;
+    }
+
+    int         code = msg.header(h_StatusLine).statusCode();
+    MethodType  method = msg.header(h_CSeq).method();
+
+    if (is1xx(code) && method == INVITE)
+    {
+        mDum.mInviteSessionHandler->onNewSession(getSessionHandle(), msg, sdp);
+        mDum.mInviteSessionHandler->onProvisional(getSessionHandle(), msg, sdp);
+        mDum.mInviteSessionHandler->onAnswer(getSessionHandle(), msg, sdp);
+    }
+
+}
+void
+ClientInviteSession::dispatchEarly (const SipMessage& msg, const SdpContents* sdp)
+{
+}
+void
+ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg, const SdpContents* sdp)
+{
+}
+void
+ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg, const SdpContents* sdp)
+{
+}
+void
+ClientInviteSession::dispatchWaitingForAnswerFromApp (const SipMessage& msg, const SdpContents* sdp)
+{
+}
+void
+ClientInviteSession::dispatchConnected (const SipMessage& msg, const SdpContents* sdp)
+{
+}
+void
+ClientInviteSession::dispatchTerminated (const SipMessage& msg, const SdpContents* sdp)
+{
+}
+void
+ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg, const SdpContents* sdp)
+{
+}
+void
+ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg, const SdpContents* sdp)
+{
+}
+void
+ClientInviteSession::dispatchPrackAnswerWait (const SipMessage& msg, const SdpContents* sdp)
+{
+}
+void
+ClientInviteSession::dispatchCanceled (const SipMessage& msg, const SdpContents* sdp)
+{
+}
+
+void
+ClientInviteSession::dispatch(const SipMessage& msg)
+{
+    switch(mState
+    {
+    case:
+
+    }
+}
+
+// !kh! ================
 
 void
 ClientInviteSession::dispatch(const SipMessage& msg)
@@ -54,7 +299,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
    Destroyer::Guard guard(mDestroyer);
    std::pair<OfferAnswerType, const SdpContents*> offans;
    offans = InviteSession::getOfferOrAnswer(msg);
-   
+
    // !jf! consider UPDATE method
 
    switch(mState)
@@ -70,16 +315,16 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             mState = Proceeding;
             mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
          }
-         
+
          if (code < 300)
          {
             mDum.mInviteSessionHandler->onNewSession(getHandle(), None, msg);
          }
-         
+
          if (code < 200 && code > 100)
          {
             mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
-            
+
             if (offans.first != None)
             {
                InviteSession::incomingSdp(msg, offans.second);
@@ -91,7 +336,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          }
          else if (code < 300)
          {
-            sendSipFrag(msg);            
+            sendSipFrag(msg);
             ++mStaleCallTimerSeq;  // call is not stale - increment timer Seq - so that when timer expires nothing happens
 
             // Handle any Session Timer headers in response
@@ -99,9 +344,9 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 
             mState = Connected;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
-            mUserConnected = true;            
+            mUserConnected = true;
             mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
-            
+
             if (offans.first == Answer)
             {
                //no late media required, so just send the ACK
@@ -114,13 +359,13 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          }
          else if (code >= 300)
          {
-            sendSipFrag(msg);            
+            sendSipFrag(msg);
             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
             guard.destroy();
          }
          break;
       }
-      
+
       case Proceeding:
       case Early:
       {
@@ -135,7 +380,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
                mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(), ++mStaleCallTimerSeq);
                mState = Early;
                mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
-            
+
                if (offans.first != None)
                {
                   InviteSession::incomingSdp(msg, offans.second);
@@ -147,16 +392,16 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             }
             else if (code < 300)
             {
-               sendSipFrag(msg);            
+               sendSipFrag(msg);
                ++mStaleCallTimerSeq;  // call is not stale - increment timer Seq - so that when timer expires nothing happens
                mState = Connected;
 
                // Handle any Session Timer headers in response
                handleSessionTimerResponse(msg);
 
-               mUserConnected = true;            
+               mUserConnected = true;
                mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
-            
+
                if (offans.first != None)
                {
                   InviteSession::incomingSdp(msg, offans.second);
@@ -169,7 +414,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             }
             else if (code >= 300)
             {
-               sendSipFrag(msg);            
+               sendSipFrag(msg);
                mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
                guard.destroy();
             }
@@ -185,12 +430,12 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             if (code / 100 == 2 && msg.header(h_CSeq).method() == INVITE)
             {
                //!dcm! -- ack the crossover 200?
-               mState = Connected;               
+               mState = Connected;
                end();
             }
             else if (code >= 300 && msg.header(h_CSeq).method() == INVITE)
             {
-               sendSipFrag(msg);            
+               sendSipFrag(msg);
 	           mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
                guard.destroy();
             }
@@ -206,7 +451,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
          guard.destroy();
          break;
-         
+
       default:
          InviteSession::dispatch(msg);
          break;
@@ -224,11 +469,11 @@ ClientInviteSession::dispatch(const DumTimeout& timeout)
    }
    else
    {
-      InviteSession::dispatch(timeout);      
+      InviteSession::dispatch(timeout);
    }
 }
 
-void 
+void
 ClientInviteSession::sendSipFrag(const SipMessage& response)
 {
    if (mServerSub.isValid())
@@ -245,7 +490,7 @@ ClientInviteSession::sendSipFrag(const SipMessage& response)
       {
          mServerSub->send(mServerSub->update(&contents));
       }
-   }   
+   }
 }
 
 void
@@ -267,8 +512,8 @@ ClientInviteSession::send(SipMessage& msg)
          contents.message().header(h_StatusLine).reason() = "Request Cancelled";
          //will be cloned...ServerSub may not have the most efficient API possible
          mServerSub->end(NoResource, &contents);
-      }   
-   }   
+      }
+   }
    else
    {
       //!dcm! -- strawman, no knowledge of prack, so just ack(handled in
@@ -277,7 +522,7 @@ ClientInviteSession::send(SipMessage& msg)
       {
          assert(0);
       }
-      assert(msg.isRequest());    //!dcm! -- is this correct?   
+      assert(msg.isRequest());    //!dcm! -- is this correct?
       mLastRequest = msg;
       mDum.send(msg);
    }
@@ -300,28 +545,28 @@ ClientInviteSession::end()
             mState = Terminated;
             InfoLog ( << "ClientInviteSession::end, Early(forking). " << mLastRequest.brief());
             send(mLastRequest);
-         }         
+         }
       case Initial:
-         // !jf! Should the CANCEL really be sent in the dialog? 
+         // !jf! Should the CANCEL really be sent in the dialog?
          mDialog.makeCancel(mLastRequest);
          //!dcm! -- it could be argued that this(and similar) should happen in send so users
          //can't toast themselves
          mState = Cancelled;
-         InfoLog ( << "ClientInviteSession::end, Early/Initial). " << mLastRequest.brief());        
+         InfoLog ( << "ClientInviteSession::end, Early/Initial). " << mLastRequest.brief());
          send(mLastRequest);
          break;
 
-      case Terminated: 
+      case Terminated:
       case Connected:
       case ReInviting:
-         InfoLog ( << "ClientInviteSession::end, Terminated/Connected/ReInviting)" );        
+         InfoLog ( << "ClientInviteSession::end, Terminated/Connected/ReInviting)" );
          InviteSession::end();
          break;
       case Cancelled: //user error
-         InfoLog ( << "ClientInviteSession::end, Cannot end a session that has already been cancelled.)" );        
+         InfoLog ( << "ClientInviteSession::end, Cannot end a session that has already been cancelled.)" );
          throw UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
       default:
-         InfoLog ( << "ClientInviteSession::end, Progammer error)" );        
+         InfoLog ( << "ClientInviteSession::end, Progammer error)" );
          assert(false);//throw UsageUseException("Progammer error", __FILE__, __LINE__);
    }
 }
@@ -344,18 +589,18 @@ void
 ClientInviteSession::sendPrack(const SipMessage& response)
 {
    assert(response.isResponse());
-   assert(response.header(h_StatusLine).statusCode() > 100 && 
+   assert(response.header(h_StatusLine).statusCode() > 100 &&
           response.header(h_StatusLine).statusCode() < 200);
-   
+
    SipMessage prack;
    mDialog.makeRequest(prack, PRACK);
-   
+
    if (mProposedRemoteSdp)
    {
       assert(mProposedLocalSdp);
       // send an answer
       prack.setContents(mProposedLocalSdp);
-      
+
    }
    else if (mProposedLocalSdp)
    {
@@ -366,7 +611,7 @@ ClientInviteSession::sendPrack(const SipMessage& response)
    {
       // no sdp
    }
-   
+
    // much later!!! the deep rathole ....
    // if there is a pending offer or answer, will include it in the PRACK body
    assert(0);
@@ -375,7 +620,7 @@ ClientInviteSession::sendPrack(const SipMessage& response)
 void
 ClientInviteSession::handlePrackResponse(const SipMessage& response)
 {
-   // more PRACK goodness 
+   // more PRACK goodness
    assert(0);
 }
 
@@ -384,8 +629,8 @@ void ClientInviteSession::redirected(const SipMessage& msg)
    if (mState == Initial || mState == Early || mState == Proceeding)
    {
       mDum.mInviteSessionHandler->onRedirected(getHandle(), msg);
-      delete this;      
-   }     
+      delete this;
+   }
 }
 
 #if 0 //?dcm? --PRACKISH dispatch, or just cruft?
@@ -394,7 +639,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 // {
 //    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 //    assert(handler);
-   
+
 //    if (msg.isRequest())
 //    {
 //       InviteSession::dispatch(msg);
@@ -406,38 +651,38 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //       {
 //          case INVITE:
 //             break;
-            
+
 //          case PRACK:
 //             handlePrackResponse(msg);
 //             return;
-            
+
 //          case CANCEL:
 //             if (msg.header(h_StatusLine).statusCode() >= 400)
 //             {
 //                mState = Terminated;
 //                end(); // cleanup the mess
 //             }
-//             return;            
-            
+//             return;
+
 //          default:
 //             InviteSession::dispatch(msg);
 //             return;
 //       }
 //    }
-   
+
 //    int code = msg.header(h_StatusLine).statusCode();
 //    if (code < 300 && mState == Initial)
 //    {
 //       //handler->onNewSession(getHandle(), msg);
 //    }
-         
+
 //    if (code < 200) // 1XX
 //    {
 //       if (mState == Initial || mState == Early)
 //       {
 //          mState = Early;
 //          //handler->onEarly(getHandle(), msg);
-            
+
 //          SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
 //          bool reliable = msg.header(h_Supporteds).find(Token(Symbols::C100rel));
 //          if (sdp)
@@ -480,7 +725,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //    {
 //       if (mState == Cancelled)
 //       {
-//          //sendAck(the200);  
+//          //sendAck(the200);
 //          end();
 //          return;
 //       }
@@ -493,10 +738,10 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //             mDum.send(mAck);
 //             return;
 //          }
-         
+
 //          //mReceived2xx = true;
 //          handler->onConnected(getHandle(), msg);
-            
+
 //          SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
 //          if (sdp)
 //          {
@@ -505,7 +750,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //                mCurrentRemoteSdp = static_cast<SdpContents*>(sdp->clone());
 //                mCurrentLocalSdp = mProposedLocalSdp;
 //                mProposedLocalSdp = 0;
-                  
+
 //                //handler->onAnswer(getHandle(), msg);
 //             }
 //             else  // got an offer
@@ -559,23 +804,23 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 
 
 /* ====================================================================
-* The Vovida Software License, Version 1.0 
- * 
+* The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
 
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -585,7 +830,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -599,9 +844,9 @@ void ClientInviteSession::redirected(const SipMessage& msg)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
