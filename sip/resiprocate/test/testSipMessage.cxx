@@ -22,37 +22,34 @@ int
 main(int argc, char** argv)
 {
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
-   
+
    {
-      char* txt = ("SIP/2.0 407 Proxy Authentication Required\r\n"
-                   "To: <sip:902@kelowna.gloo.net>\r\n"
-                   "From: <sip:902@kelowna.gloo.net>\r\n"
-                   "Via: SIP/2.0/UDP 192.168.2.231:5060;received=192.168.2.231\r\n"
-                   "Call-ID: 0003e362-fc960037-582db4a2-79d8d7b6@192.168.2.231\r\n"
-                   "CSeq: 101 REGISTER\r\n"
-                   "Proxy-Authenticate: Digest nonce=\"1048037597:07345f4a3aa2ec622218a201fe85672f\",algorithm=MD5,realm=\"kelowna.gloo.net\"\r\n"
+      // Test just in time parsing with comparison: NameAddr;
+      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+                   "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
+                   "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1-c87542-;stid=489573115\r\n"
+                   "Call-ID: 643f2f06\r\n"
+                   "CSeq: 1 INVITE\r\n"
+                   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+                   "Contact: <sip:ext103@192.168.2.220:5068;transport=UDP>\r\n"
+                   "Max-Forwards: 69\r\n"
+                   "Accept: foo/bar\r\n"
+                   "Content-Type: bar/foo\r\n"
+                   "Content-Encoding: foo\r\n"
+                   "Content-Disposition: bar\r\n"
                    "Content-Length: 0\r\n"
                    "\r\n");
-      auto_ptr<SipMessage> challenge(TestSupport::makeMessage(txt));
-      cerr << *challenge << endl;
-      
-      SipMessage request;
-      request.header(h_RequestLine).uri() = Uri("sip:kelowna.gloo.net");
-      //Proxy-Authorization: Digest username="david@kelowna.gloo.net",realm="kelowna.gloo.net",uri="sip:kelowna.gloo.net",response="b3e5738382b5ca8898863f42ec3d136c",nonce="1048037597:07345f4a3aa2ec622218a201fe85672f",algorithm=MD5
 
-      
-      unsigned int c=0;
-      Data david("david@kelowna.gloo.net");
-      Data passwd("david");
-      Helper::addAuthorization(request, *challenge, david, passwd, Data::Empty, c);
-      
-      cerr << request << endl;
-      return 0;
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+
+      assert(message->header(h_ContentDisposition) < message->header(h_ContentEncoding));
+      assert(message->header(h_ContentType) < message->header(h_Accepts).front());
+      assert(message->header(h_To) < message->header(h_From));
    }
    
-
    {
-      // Proxy-Authorization does not allow comma joied headers
+      // Proxy-Authorization does not allow comma joined headers
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
@@ -1140,6 +1137,7 @@ main(int argc, char** argv)
                "Call-ID: a84b4c76e66710\r\n"
                "CSeq: 314159 INVITE\r\n"
                "Max-Forwards: 70\r\n"
+               "Accepts: \r\n"
                "Foobie-Blech: \r\n"
                "Contact: <sip:alice@pc33.atlanta.com>\r\n"
                "Content-Type: application/sdp\r\n"
@@ -1155,9 +1153,11 @@ main(int argc, char** argv)
 
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
 
-      assert(!msg->header(UnknownHeaderType("Foobie-Blech")).empty());
-      assert(msg->header(UnknownHeaderType("Foobie-Blech")).front().value() == "");
-      msg->encode(cerr);
+      assert(msg->exists(h_Accepts));
+      assert(msg->header(h_Accepts).empty());
+      
+      assert(msg->exists(UnknownHeaderType("Foobie-Blech")));
+      assert(msg->header(UnknownHeaderType("Foobie-Blech")).empty());
    }
 
    cerr << "\nTEST OK" << endl;
