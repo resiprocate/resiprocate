@@ -20,7 +20,7 @@ class Subscription;
 
 class Dialog2
 {
-public:
+   public:
       Dialog2( DialogSet* dialogSet );
       
       Subscription* findSubscription( Data eventType, Data eventID );
@@ -31,7 +31,7 @@ public:
       void processNonStateRequest(SipMessage* msg);  
       void processNonStateResponse(SipMessage* msg);  
       
-private:
+   private:
       const DialogSet* mDialogSet;
       
       SipSession* mSipSession;
