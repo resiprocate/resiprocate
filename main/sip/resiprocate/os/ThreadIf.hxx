@@ -68,28 +68,19 @@ class ThreadIf
       */
       virtual void thread() = 0;
 
-  private:
-#if 0
-	  // TODO is this really needed ?
-	pthread_t selfId() const;
-#endif
-
-   private:
-
+   protected:
 #ifdef WIN32
-    HANDLE mThread;
-    DWORD mId;
+      HANDLE mThread;
+      DWORD mId;
 #else
-    pthread_t mId;
+      pthread_t mId;
 #endif
       
-   private:
-
       bool mShutdown;
-
       mutable Mutex mShutdownMutex;
       mutable Condition mShutdownCondition;
 
+   private:
       // Suppress copying
       ThreadIf(const ThreadIf &);
       const ThreadIf & operator=(const ThreadIf &);
