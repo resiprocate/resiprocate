@@ -2,7 +2,7 @@
 #define RESIP_FIFO_HXX 
 
 static const char* const resipFifo_h_Version =
-   "$Id: Fifo.hxx,v 1.17 2003/09/06 04:38:15 fluffy Exp $";
+   "$Id: Fifo.hxx,v 1.18 2003/09/08 22:00:05 jason Exp $";
 
 #include <list>
 #include <errno.h>
@@ -11,7 +11,6 @@ static const char* const resipFifo_h_Version =
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Condition.hxx"
 #include "resiprocate/os/Lock.hxx"
-#include "resiprocate/os/Inserter.hxx"
 
 
 /** Infrastructure common to VOCAL.
