@@ -39,7 +39,7 @@ repro::RequestProcessorChain::addProcessor(auto_ptr<RequestProcessor> rp)
 repro::RequestProcessor::processor_action_t
 repro::RequestProcessorChain::handleRequest(RequestContext &rc)
 {
-  DebugLog(<< "Monkey handling request: " << this 
+  DebugLog(<< "Monkey handling request: " << *this 
            << "; reqcontext = " << rc);
 
   Chain::iterator i;
@@ -56,25 +56,31 @@ repro::RequestProcessorChain::handleRequest(RequestContext &rc)
 
   for (; i != chain.end(); i++)
   {
+    DebugLog(<< "Chain invoking monkey: " << **i);
+
     action = (**i).handleRequest(rc);
 
     if (action == SkipAllChains)
     {
+      DebugLog(<< "Monkey aborted all chains: " << **i);
       return SkipAllChains;
     }
 
     if (action == WaitingForEvent)
     {
+      DebugLog(<< "Monkey waiting for async response: " << **i);
       rc.pushChainIterator(i);
       return WaitingForEvent;
     }
 
     if (action == SkipThisChain)
     {
+      DebugLog(<< "Monkey skipping current chain: " << **i);
       return Continue;
     }
 
   }
+  DebugLog(<< "Monkey done processing: " << **i);
   return Continue;
 }
 
