@@ -199,3 +199,9 @@ nobase_include_HEADERS = \
 	XMLCursor.hxx \
 	XPidf.hxx \
 	supported.hxx
+SUFFIXES = .gperf .cxx
+GPERFFLAGS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
+.gperf.cxx:
+	gperf $(GPERFFLAGS) -Z $* $< | \
+	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
+	sed -e 's/^\([ 	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' > $@
