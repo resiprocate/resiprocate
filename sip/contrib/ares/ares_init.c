@@ -13,7 +13,7 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_init.c,v 1.6 2003/10/28 21:43:42 adamr Exp $";
+static const char rcsid[] = "$Id: ares_init.c,v 1.7 2003/10/29 16:47:31 alan Exp $";
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -309,9 +309,9 @@ static int init_by_defaults(ares_channel channel)
   if (channel->ndots == -1)
     channel->ndots = 1;
   if (channel->udp_port == -1)
-    channel->udp_port = htons(NAMESERVER_PORT);
+    channel->udp_port = htons(NS_DEFAULTPORT);
   if (channel->tcp_port == -1)
-    channel->tcp_port = htons(NAMESERVER_PORT);
+    channel->tcp_port = htons(NS_DEFAULTPORT);
 
   if (channel->nservers == -1)
     {
