@@ -3,6 +3,7 @@
 #endif
 
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/DnsResolver.hxx"
@@ -67,12 +68,9 @@ StatelessHandler::process()
             assert(sip->isResponse());
             DebugLog (<< "Processing response from TU: " << msg->brief());
             const Via& via = sip->header(h_Vias).front();
+
             Tuple destination;
-#ifdef WIN32
-			assert(0); // !CJ! TODO 
-#else
-			inet_pton(AF_INET, via.param(p_received).c_str(), &destination.ipv4);
-#endif
+            DnsUtil::inet_pton(via.param(p_received), destination.ipv4);
 			if (via.exists(p_rport) && via.param(p_rport).hasValue())
             {
                destination.port = via.param(p_rport).port();
