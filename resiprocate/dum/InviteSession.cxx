@@ -5,7 +5,8 @@ InviteSession::InviteSession(DialogUsageManager& dum) :
    mLocalSdp(0),
    mRemoteSdp(0),
    mMyNextOffer(0),
-   mPendingReceivedOffer(0)
+   mPendingReceivedOffer(0),
+   mHandle(dum)
 {
 }
 

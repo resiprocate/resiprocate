@@ -33,6 +33,9 @@ class ClientRegistration: public BaseUsage
       const NameAddrs& allContacts();
       
    private:
+      friend class DialogUsageManager;
+      
+      ClientRegistration::Handle mHandle;
       NameAddrs mMyContacts;
       NameAddrs mAllContacts;
       UInt64    mExpirationTime;
