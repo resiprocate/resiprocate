@@ -235,7 +235,19 @@ Dialog::getId() const
 void
 Dialog::cancel()
 {
-   mInviteSession->end();
+   if (mInviteSession)
+   {
+      mInviteSession->end();
+   }
+   else
+   {
+      if (mDialogSet.getCreator())
+      {
+         makeRequest(mDialogSet.getCreator()->getLastRequest(), CANCEL);
+         mDum.send(mDialogSet.getCreator()->getLastRequest());
+         delete this;
+      }
+   }
 }
 
 void
@@ -741,6 +753,8 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
    else
    {
       Helper::makeResponse(response, request, code, mLocalContact);
+      response.header(h_To).param(p_tag) = mId.getLocalTag();
+
    }
    InfoLog ( << "Dialog::makeResponse: " << response);   
 }

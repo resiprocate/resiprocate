@@ -45,10 +45,6 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
 DialogUsageManager::~DialogUsageManager()
 {  
    DebugLog ( << "~DialogUsageManager" );
-   // !jf! iterate through dialogsets and dispose, this will cause them to be
-   // removed from HandleManager on destruction
-   // !dcm! -- figure out what this means when coherent
-
    while(!mDialogSetMap.empty())
    {
       delete mDialogSetMap.begin()->second;
@@ -612,6 +608,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             {
                DialogSet* dset =  new DialogSet(request, *this);
 
+               DebugLog ( << "*********** Calling AppDialogSetFactory *************"  );
                AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
                appDs->mDialogSetId = dset->getId();
                dset->mAppDialogSet = appDs;
@@ -689,18 +686,20 @@ void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    InfoLog ( << "DialogUsageManager::processResponse: " << response);
-   
-   DialogSet* ds = findDialogSet(DialogSetId(response));
+   if (response.header(h_StatusLine).statusCode() > 100)
+   {
+      DialogSet* ds = findDialogSet(DialogSetId(response));
   
-   if (ds)
-   {
-      InfoLog ( << "DialogUsageManager::processResponse: " << response.brief());
-      ds->dispatch(response);
-   }
-   else
-   {
-      InfoLog (<< "Throwing away stray response: " << response.brief());
-   }
+      if (ds)
+      {
+         InfoLog ( << "DialogUsageManager::processResponse: " << response.brief());
+         ds->dispatch(response);
+      }
+      else
+      {
+         InfoLog (<< "Throwing away stray response: " << response.brief());
+      }
+   }   
 }
  
 DialogSet*
@@ -734,7 +733,8 @@ DialogUsageManager::findCreator(const DialogId& id)
    }
 }
 
-void DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
+void 
+DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
 {
    InfoLog ( << "************* Removing DialogSet ***************" ); 
    InfoLog ( << "Before: " << Inserter(mDialogSetMap) );
@@ -746,7 +746,6 @@ void DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
       delete this;      
    }
 }
-
 
 
 
