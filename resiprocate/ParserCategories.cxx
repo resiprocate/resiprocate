@@ -1032,7 +1032,7 @@ CallId::operator=(const CallId& rhs)
 bool
 CallId::operator==(const CallId& rhs) const
 {
-   return mValue == rhs.mValue;
+   return value() == rhs.value();
 }
 
 ParserCategory *
@@ -1184,18 +1184,9 @@ ostream&
 NameAddr::encode(ostream& str) const
 {
    bool displayName = !mDisplayName.empty();
-    
-   if (displayName)
-   {
-      str << mDisplayName << Symbols::LA_QUOTE;
-   }
-
+   str << mDisplayName << Symbols::LA_QUOTE;
    mUri.encode(str);
-
-   if (displayName)
-   {
-      str << Symbols::RA_QUOTE;
-   }
+   str << Symbols::RA_QUOTE;
    
    encodeParameters(str);
    return str;
