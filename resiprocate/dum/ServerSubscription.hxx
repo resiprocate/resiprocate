@@ -2,6 +2,7 @@
 #define RESIP_SERVERSUBSCRIPTION_HXX
 
 #include "BaseUsage.hxx"
+#include "DialogUsageManager.hxx"
 
 namespace resip
 {
@@ -9,16 +10,14 @@ namespace resip
 class ServerSubscription : public BaseUsage 
 {
    public:
-      class Handle
+      class Handle : public DialogUsageManager::Handle
       {
-	 public:
-	    Handle(const ServerSubscription& handled);
-	    // throws if no session 
-	    ServerSubscription* operator->();
-
-	 private:
-	    DialogUsageManager& mDum;
-	    DialogId mDialogId;
+         public:
+            // throws if no session 
+            ServerSubscription* operator->();
+         private:
+            Handle(DialogUsageManager& dum);
+            friend class DialogUsageManager;
       };
       
       ServerSubscription(DialogUsageManager& dum, const SipMessage& req);
