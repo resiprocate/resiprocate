@@ -11,18 +11,19 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/DataStream.hxx"
 
-#include "resiprocate/Executive.hxx"
-#include "resiprocate/TransportSelector.hxx"
-#include "resiprocate/TransactionMap.hxx"
-#include "resiprocate/TimerQueue.hxx"
+#include "resiprocate/ApplicationSip.hxx"
 #include "resiprocate/Dialog.hxx"
 #include "resiprocate/DnsResolver.hxx"
-#include "resiprocate/SdpContents.hxx"
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TransactionTerminated.hxx"
-#include "resiprocate/SipFrag.hxx"
-#include "resiprocate/ApplicationSip.hxx"
+#include "resiprocate/Executive.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/SdpContents.hxx"
+#include "resiprocate/ShutdownMessage.hxx"
+#include "resiprocate/SipFrag.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/TimerQueue.hxx"
+#include "resiprocate/TransactionMap.hxx"
+#include "resiprocate/TransactionTerminated.hxx"
+#include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/UnknownParameterType.hxx"
 
 namespace resip
@@ -46,6 +47,11 @@ class SipStack
    public:
       SipStack(bool multiThreaded=false, Security* security=0);
       ~SipStack();
+
+      // inform the transaction state machine processor that it should not
+      // create any new transactions and to perform an orderly shutdown. When
+      // the transactions are all terminated, return a ShutdownMessage to the TU
+      void shutdown();
       
       // Used by the application to add in a new transport
       // by default, you will get UDP and TCP on 5060 (for now)
@@ -152,6 +158,7 @@ private:
 
       bool mRegisteredForTransactionTermination;
       bool mStrictRouting;
+      bool mShuttingDown;
       
       friend class DnsResolver;
       friend class Executive;
