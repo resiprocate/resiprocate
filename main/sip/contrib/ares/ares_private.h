@@ -1,4 +1,4 @@
-/* $Id: ares_private.h,v 1.3 2003/09/14 01:08:27 fluffy Exp $ */
+/* $Id: ares_private.h,v 1.4 2003/09/14 01:13:34 fluffy Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
@@ -132,5 +132,8 @@ void ares__close_sockets(struct server_state *server);
 int ares__get_hostent(FILE *fp, struct hostent **host);
 int ares__read_line(FILE *fp, char **buf, int *bufsize);
 
+#ifdef WIN32
 #define strcasecmp(a,b) stricmp(a,b)
 #define strcasencmp(a,b,n) strnicmp(a,b,n)
+#endif
+
