@@ -22,8 +22,8 @@
 				AdditionalOptions="/Zm300
 "
 				Optimization="0"
-				AdditionalIncludeDirectories="c:\sip"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				AdditionalIncludeDirectories="c:\sip;C:\sip\contrib\ares"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -64,8 +64,8 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="c:\sip"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				AdditionalIncludeDirectories="c:\sip;C:\sip\contrib\ares"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_ARES"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="TRUE"
@@ -104,8 +104,8 @@
 				AdditionalOptions="/Zm300
 "
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\sip;C:\openssl\inc32"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_SSL"
+				AdditionalIncludeDirectories="C:\sip;C:\openssl\inc32;C:\sip\contrib\ares"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_SSL;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -146,8 +146,8 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="c:\sip;C:\openssl\inc32"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_SSL"
+				AdditionalIncludeDirectories="c:\sip;C:\openssl\inc32;C:\sip\contrib\ares"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_SSL;USE_ARES"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="TRUE"
@@ -223,9 +223,6 @@
 			</File>
 			<File
 				RelativePath="DnsInterface.cxx">
-			</File>
-			<File
-				RelativePath="DnsResolver.cxx">
 			</File>
 			<File
 				RelativePath="os\DnsUtil.cxx">
@@ -316,6 +313,12 @@
 			</File>
 			<File
 				RelativePath="os\ParseBuffer.cxx">
+			</File>
+			<File
+				RelativePath="ParseUtil.cxx">
+			</File>
+			<File
+				RelativePath="ParseUtil.hxx">
 			</File>
 			<File
 				RelativePath="ParserCategories.cxx">
@@ -414,6 +417,9 @@
 				RelativePath="TlsTransport.cxx">
 			</File>
 			<File
+				RelativePath="TransactionController.cxx">
+			</File>
+			<File
 				RelativePath="TransactionMap.cxx">
 			</File>
 			<File
@@ -430,6 +436,12 @@
 			</File>
 			<File
 				RelativePath="TuShim.cxx">
+			</File>
+			<File
+				RelativePath="os\Tuple.cxx">
+			</File>
+			<File
+				RelativePath="os\Tuple.hxx">
 			</File>
 			<File
 				RelativePath="UdpTransport.cxx">
@@ -505,7 +517,7 @@
 				RelativePath="DnsInterface.hxx">
 			</File>
 			<File
-				RelativePath="DnsResolver.hxx">
+				RelativePath="DnsResult.cxx">
 			</File>
 			<File
 				RelativePath="DnsResult.hxx">
@@ -725,6 +737,9 @@
 			</File>
 			<File
 				RelativePath="TlsTransport.hxx">
+			</File>
+			<File
+				RelativePath="TransactionController.hxx">
 			</File>
 			<File
 				RelativePath="TransactionMap.hxx">
