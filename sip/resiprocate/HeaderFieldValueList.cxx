@@ -39,7 +39,7 @@ HeaderFieldValueList::~HeaderFieldValueList()
    }
 }
 
-void HeaderFieldValueList::insert(HeaderFieldValue* header)
+void HeaderFieldValueList::push_front(HeaderFieldValue* header)
 {
   // if either is zero, then we don't have an element, this is first
   if (last == 0)
@@ -52,7 +52,7 @@ void HeaderFieldValueList::insert(HeaderFieldValue* header)
 
 }
 
-void HeaderFieldValueList::append(HeaderFieldValue* header)
+void HeaderFieldValueList::push_back(HeaderFieldValue* header)
 {
   if (last == 0)
     {
@@ -68,7 +68,7 @@ void HeaderFieldValueList::append(HeaderFieldValue* header)
 }
 
 
-void HeaderFieldValueList::deleteFirst()
+void HeaderFieldValueList::pop_front()
 {
 
   if (first == last)
