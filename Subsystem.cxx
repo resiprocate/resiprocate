@@ -1,5 +1,3 @@
-// Copyright 2002 Cathay Networks, Inc. 
-
 #include <sipstack/Subsystem.hxx>
 
 using namespace Vocal2;

@@ -1,6 +1,3 @@
-// Copyright 2002 Cathay Networks, Inc. 
-
-
 #ifndef SysLogBuf_hxx
 #define SysLogBuf_hxx
 
