@@ -111,7 +111,7 @@ find . -name ${ATCF} -exec cp /dev/null {} \;
 # Remove conflicting files -- and add to ignore list.
 for F in ${AUTOTOOLS_CONFLICTS} ${AUTOTOOLS_USED}; do
     for E in echo "" ; do
-        ${E} rm ${F}
+        [ -e "${F}" ] && ${E} rm ${F}
     done
     Fd=$(dirname ${F})
     Fb=$(basename ${F})
