@@ -1,61 +1,53 @@
-#if !defined(RESIP_MULTIPARTMIXEDCONTENTS_HXX)
-#define RESIP_MULTIPARTMIXEDCONTENTS_HXX 
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
 
-#include <list>
+#include "resiprocate/MultipartRelatedContents.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-#include "resiprocate/Contents.hxx"
-#include "resiprocate/os/Data.hxx"
+using namespace resip;
 
-namespace resip
+#define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
+
+bool 
+MultipartRelatedContents::init()
 {
-
-class Mime;
-class ParseBuffer;
-
-class MultipartMixedContents : public Contents
-{
-   public:
-      MultipartMixedContents();
-      explicit MultipartMixedContents(const Mime& contentType);
-      MultipartMixedContents(HeaderFieldValue* hfv, const Mime& contentType);
-      MultipartMixedContents(const MultipartMixedContents& rhs);
-      virtual ~MultipartMixedContents();
-      MultipartMixedContents& operator=(const MultipartMixedContents& rhs);
-      virtual Contents* clone() const;
-
-      static const Mime& getStaticType() ;
-
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
-      virtual void parse(ParseBuffer& pb);
-
-      typedef list<Contents*> Parts;
-      Parts& parts() {checkParsed(); return mContents;}
-      const Parts& parts() const {checkParsed(); return mContents;}
-
-      class Exception : public BaseException
-      {
-        public:
-         Exception(const Data& msg, const Data& file, const int line)
-            : BaseException(msg, file, line) {}
-
-         const char* name() const { return "MultipartMixedContents::Exception"; }
-      };
-      
-      static bool init();
-      
-   protected:
-      void clear();
-      
-   private:
-      void setBoundary();
-      std::list<Contents*> mContents;
-};
-
-static bool invokeMultipartMixedContentsInit = MultipartMixedContents::init();
-
+   static ContentsFactory<MultipartRelatedContents> factory;
+   (void)factory;
+   return true;
 }
 
-#endif
+MultipartRelatedContents::MultipartRelatedContents()
+   : MultipartMixedContents(getStaticType())
+{}
+
+MultipartRelatedContents::MultipartRelatedContents(HeaderFieldValue* hfv, const Mime& contentsType)
+   : MultipartMixedContents(hfv, contentsType)
+{}
+
+MultipartRelatedContents::MultipartRelatedContents(const MultipartRelatedContents& rhs)
+   : MultipartMixedContents(rhs)
+{}
+
+MultipartRelatedContents&
+MultipartRelatedContents::operator=(const MultipartRelatedContents& rhs)
+{
+   MultipartMixedContents::operator=(rhs);
+   return *this;
+}
+
+Contents* 
+MultipartRelatedContents::clone() const
+{
+   return new MultipartRelatedContents(*this);
+}
+
+const Mime& 
+MultipartRelatedContents::getStaticType() 
+{
+   static Mime type("multipart","related");
+   return type;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
