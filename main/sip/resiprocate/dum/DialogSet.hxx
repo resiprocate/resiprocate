@@ -17,7 +17,7 @@ class DialogSet
    public:
       DialogSet( const BaseCreator* );
       DialogSet( Dialog* );
-      ~DialogSet();
+      virtual ~DialogSet();
       
       DialogSetId getId();
       
@@ -35,6 +35,7 @@ class DialogSet
    private:
       std::list<Dialog*> mDialogs;
       BaseCreator* mCreator;
+      DialogSetId mId;
 };
  
 }
