@@ -17,8 +17,8 @@ fi
 echo +++ Running aclocal && \
 aclocal && \
 echo +++ Running libtoolize && \
-(glibtoolize --copy --force --automake 2> /dev/null || \
- libtoolize --copy --force --automake ) && \
+(glibtoolize --copy --force 2> /dev/null || \
+ libtoolize --copy --force  ) && \
 echo +++ Running autoheader && \
 autoheader && \
 echo +++ Running automake  && \
