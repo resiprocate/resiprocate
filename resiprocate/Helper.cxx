@@ -558,7 +558,21 @@ Helper::makeUri(const Data& aor, const Data& scheme)
    return uri;
 }
 
-
+void
+Helper::processStrictRoute(SipMessage& request)
+{
+   if (request.header(h_Routes).size() &&
+       !request.header(h_Routes).front().exists(p_lr))
+   {
+      // The next hop is a strict router.  Move the next hop into the
+      // Request-URI and move the ultimate destination to the end of the
+      // route list.  Force the message target to be the next hop router.
+      request.header(h_Routes).push_back(NameAddr(request.header(h_RequestLine).uri()));
+      request.header(h_RequestLine).uri() = request.header(h_Routes).front().uri();
+      request.header(h_Routes).pop_front();
+      request.setTarget(request.header(h_RequestLine).uri());
+   }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -19,6 +19,7 @@
 #include "sip2/sipstack/ParserCategories.hxx"
 #include "sip2/sipstack/ParserContainer.hxx"
 #include "sip2/sipstack/Transport.hxx"
+#include "sip2/sipstack/Uri.hxx"
 #include "sip2/util/BaseException.hxx"
 #include "sip2/util/Timer.hxx"
 
@@ -181,7 +182,11 @@ class SipMessage : public Message
       Data& getEncoded();
 
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
-      
+
+      // deal with a notion of an "out-of-band" forced target for SIP routing
+      void setTarget(const Uri& uri);
+      const Uri& getTarget() const;
+      bool hasTarget() const;
       
    private:
       void copyFrom(const SipMessage& message);
@@ -212,6 +217,8 @@ class SipMessage : public Message
 
       Data mEncoded; // to be retransmitted
       UInt64 mCreatedTime;
+
+      Uri* mTarget;
 
       friend class TransportSelector;
 };
