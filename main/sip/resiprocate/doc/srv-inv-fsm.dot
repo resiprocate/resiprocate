@@ -1,7 +1,7 @@
 digraph moonshine_ua_fsm {
 //	rankdir=LR
-	size="8,10"
-//	ratio=0.8 // !ah! might be off
+//	size="10,8"
+	ratio=0.8 // !ah! might be off
 //	rotate=90
 	compound=true
 	fontsize=18
@@ -78,8 +78,15 @@ digraph moonshine_ua_fsm {
 
         pTxError -> DELETE
 
-        PROCEEDING -> COMPLETED
+        PROCEEDING -> pCOMPLETED
+        [ constraint=false ]
+
+        pCOMPLETED -> COMPLETED
+
+        pCOMPLETED
         [
+                shape=plaintext
+                fontsize=8
                 label="got(300-699):\nsnd(response)"
         ]
 
@@ -108,6 +115,8 @@ digraph moonshine_ua_fsm {
                 fontsize=8
         ]
 
+        TRYING -> pCOMPLETED
+        
         TRYING -> pSTALE
 //        [ constraint = false ]
 
@@ -148,7 +157,7 @@ digraph moonshine_ua_fsm {
         [
          shape=plaintext
          fontsize=6
-         label="Server INVITE FSM\n$Id: srv-inv-fsm.dot,v 1.2 2002/09/22 21:35:29 fluffy Exp $ $Name:  $" 
+         label="Server INVITE FSM\n$Id: srv-inv-fsm.dot,v 1.3 2002/09/22 22:04:13 fluffy Exp $ $Name:  $" 
         ]
         
 
