@@ -83,6 +83,7 @@ class TransactionController
 
       unsigned long StatelessIdCounter;
 
+      friend class SipStack; // for debug only
       friend class StatelessHandler;
       friend class TransactionState;
       friend class TransportSelector;
