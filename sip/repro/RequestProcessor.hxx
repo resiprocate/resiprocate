@@ -14,6 +14,7 @@ namespace repro
       typedef enum
       {
         Continue,
+        WaitingForEvent,
         SkipThisChain,
         SkipAllChains
       }
