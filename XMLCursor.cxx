@@ -234,13 +234,13 @@ XMLCursor::parseNextRootChild()
 bool
 XMLCursor::nextSibling()
 {
-   DebugLog(<< "XMLCursor::nextSibling" << *this->mCursor << " " << *this->mCursor->mParent);
-
    if (atRoot())
    {
+      DebugLog(<< "XMLCursor::nextSibling" << *this->mCursor << " <<root>>");
       return false;
    }
 
+   DebugLog(<< "XMLCursor::nextSibling" << *this->mCursor << " " << *this->mCursor->mParent);
    if (mCursor->mParent == mRoot)
    {
       parseNextRootChild();
@@ -464,6 +464,7 @@ XMLCursor::Node::skipToEndTag()
    if (*(mPb.position()-1) == Symbols::SLASH[0])
    {
       mPb.skipChar();
+      mPb = ParseBuffer(mPb.start(), mPb.position() - mPb.start());
       return;
    }
 
@@ -535,8 +536,7 @@ XMLCursor::Node::skipToEndTag()
       Node* child = new Node(mPb);
       addChild(child);
       child->skipToEndTag();
-      //mPb.reset(child->mPb.end());
-      mPb.reset(child->mPb.position());
+      mPb.reset(child->mPb.end());
       XMLCursor::decodeName(child->mTag);
       DebugLog(<< mTag << "(" << child->mTag << ")");
     }
