@@ -1,5 +1,13 @@
+
 #include <iostream>
+
+#if defined (HAVE_POPT_H) 
 #include <popt.h>
+#else
+#ifndef WIN32
+#warning "will not work very well without libpopt"
+#endif
+#endif
 
 #include "resiprocate/TcpTransport.hxx"
 #include "resiprocate/Helper.hxx"
@@ -24,6 +32,7 @@ main(int argc, char* argv[])
    int window = 10;
    int seltime = 100;
 
+#if defined(HAVE_POPT_H)
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
@@ -36,6 +45,9 @@ main(int argc, char* argv[])
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
    poptGetNextOpt(context);
+   poptFreeContext(context);
+#endif
+
    Log::initialize(logType, logLevel, argv[0]);
    
    cout << "Performing " << runs << " runs." << endl;
@@ -144,6 +156,5 @@ main(int argc, char* argv[])
         << runs << " calls peformed in " << elapsed << " ms, a rate of " 
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
 
-   poptFreeContext(context);
    return 0;
 }
