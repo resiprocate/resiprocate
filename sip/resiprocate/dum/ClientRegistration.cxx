@@ -4,7 +4,7 @@
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/dum/MasterProfile.hxx"
+#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
@@ -43,7 +43,7 @@ ClientRegistration::~ClientRegistration()
 void 
 ClientRegistration::addBinding(const NameAddr& contact)
 {
-   addBinding(contact, mDialogSet.getIdentity()->getDefaultRegistrationTime());
+   addBinding(contact, mDum.getProfile()->getDefaultRegistrationTime());
 }
 
 void 
@@ -185,7 +185,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
       }
       else if (code < 300) // success
       {
-         //Profile* profile = mDum.getMasterProfile();
+         //Profile* profile = mDum.getProfile();
          
          // !jf! consider what to do if no contacts
          // !ah! take list of ctcs and push into mMy or mOther as required.
