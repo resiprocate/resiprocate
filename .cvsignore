@@ -1,4 +1,15 @@
+HeaderFieldValue.d
+HeaderFieldValueList.d
+HeaderTypes.d
+IntSubComponent.d
+SipMessage.d
+StringSubComponent.d
+SubComponent.d
+SubComponentList.d
+UnknownSubComponent.d
 bin.i686
 obj.i686
 testMsg
+testMsg.d
 testParameterList
+testSubComponentList.d
