@@ -1,6 +1,8 @@
 #ifndef ParserContainerBase_hxx
 #define ParserContainerBase_hxx
 
+#include <cassert>
+
 #include <sipstack/ParserCategory.hxx>
 
 namespace Vocal2

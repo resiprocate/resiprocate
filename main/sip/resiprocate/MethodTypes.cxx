@@ -1,4 +1,5 @@
 #include <string.h>
+#include <cstdio>
 
 #include <sipstack/MethodTypes.hxx>
 #include <sipstack/Symbols.hxx>

@@ -3,7 +3,10 @@
 
 #include <sipstack/Data.hxx>
 #include <exception>
+
+#ifndef WIN32
 #include <netinet/in.h>
+#endif
 
 #include <sipstack/Fifo.hxx>
 #include <sipstack/Message.hxx>

@@ -49,15 +49,19 @@
  */
 
 static const char* const Mutex_cxx_Version =
-    "$Id: Mutex.cxx,v 1.2 2002/09/21 20:15:50 dabryan Exp $";
+    "$Id: Mutex.cxx,v 1.3 2002/09/25 04:30:17 fluffy Exp $";
 
 #include <cassert>
 #include <cerrno>
 
 #include <sipstack/Mutex.hxx>
+#ifndef WIN32
 #include <sipstack/vthread.hxx>
+#endif
 
 using Vocal2::Mutex;
+
+#ifndef WIN32 // TODO FIX
 
 Mutex::Mutex()
 {
@@ -99,4 +103,5 @@ Mutex::getId() const
     return ( &myId );
 }
 
+#endif
 
