@@ -10,10 +10,30 @@ namespace resip
 
 class ServerInvSession: public BaseUsage
 {
-  public:
-    class Handle
-    {
-    };
+   public:
+      class Handle
+      {
+      };
+      
+      void rejectOffer(int statusCode);
+      void setOffer(SdpContents* offer);
+      void sendOfferInAnyMessage();
+      void setAnswer(SdpContents* answer);
+      void sendAnswerInAnyMessage();
+      void accept();
+      void provisional(int statusCode);
+      void reject(int statusCode);
+      void end();
+      
+      const SdpContents* getLocalSdp();
+      const SdpContents* getRemoteSdp();
+      
+   private:
+      SdpContents* mLocalSdp;
+      SdpContents* mRemoteSdp;
+      SdpContents* mMyNextOffer;
+      SdpContents* mPendingReceivedOffer;
+      
 };
 
  

@@ -7,21 +7,27 @@ namespace resip
 class ClientInvSession : public BaseUsage
 {
    public:
-      
       class Handle
       {
       };
 
-      void offer(SdpContents* offer);
-      void answer(SdpContents* answer);
+      void rejectOffer(int statusCode);
+      void setOffer(SdpContents* offer);
+      void sendOfferInAnyMessage();
+      void setAnswer(SdpContents* answer);
+      void sendAnswerInAnyMessage();
+      void start();
       void end();
+      
+      const SdpContents* getLocalSdp();
+      const SdpContents* getRemoteSdp();
       
    private:
       SdpContents* mLocalSdp;
       SdpContents* mRemoteSdp;
-      SdpContents* mOutstandingOffer;
+      SdpContents* mMyNextOffer;
+      SdpContents* mPendingReceivedOffer;
 };
-
  
 }
 

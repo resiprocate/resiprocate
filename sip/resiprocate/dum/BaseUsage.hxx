@@ -6,6 +6,10 @@ namespace resip
 class BaseUsage
 {
    public:
+      class Exception : BaseException
+      {
+      };
+
       BaseUsage(DialogUsageManager& dum);
       
       DialogUsageManager& dum();

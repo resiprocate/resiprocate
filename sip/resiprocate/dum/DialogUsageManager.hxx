@@ -62,9 +62,14 @@ class DialogUsageManager
       UsageSet   findOutOfDialogs( DialogId id );
       
    private:
+      bool validateRequest(const SipMessage& request);
+      bool validateTo(const SipMessage& request);
+      bool mergeRequest(const SipMessage& request);
+      
       Dialog&    findOrCreateDialog(SipMessage* msg);
       Dialog&    findDialog(DialogId id);
       DialogSet& findDialogSet( DialogSetId id );
+
       
       BaseCreator& findCreator(DialogId id);
       
