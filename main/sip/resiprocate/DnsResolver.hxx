@@ -10,6 +10,7 @@
 extern "C"
 {
 #include <ares.h>
+#include <ares_dns.h>
 }
 #endif
 
@@ -31,6 +32,20 @@ class DnsResolver
       typedef std::list<Transport::Tuple> TupleList;
       typedef std::list<Transport::Tuple>::const_iterator TupleIterator;
 
+      struct Srv
+      {
+            int priority;
+            int weight;
+            int port;
+            Data host;
+            Transport::Type transport;
+
+            bool operator<(const Srv& rhs) const
+               { return priority < rhs.priority; }
+      };
+      typedef std::set<DnsResolver::Srv> SrvSet;
+      typedef std::set<DnsResolver::Srv>::const_iterator SrvIterator;
+
       class DnsMessage : public Message
       {
          public:
@@ -41,6 +56,7 @@ class DnsResolver
             
             Data mTransactionId;
             TupleList mTuples;
+            SrvSet mSrvs;
       };
       
       class Exception : public BaseException
@@ -85,8 +101,8 @@ class DnsResolver
       //void stop(const Data& tid);
 
    private:
-      static void aresCallback(void *arg, int status, unsigned char *abuf, int alen);
-      static void aresCallback2(void *arg, int status, struct hostent* host);
+      static void aresCallbackHost(void *arg, int status, struct hostent* host);
+      static void aresCallbackSrv(void *arg, int status, unsigned char *abuf, int alen);
 
       SipStack& mStack;
 #if defined(USE_ARES)
