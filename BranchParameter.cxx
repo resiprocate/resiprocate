@@ -2,6 +2,7 @@
 #include "sip2/sipstack/BranchParameter.hxx"
 #include "sip2/sipstack/Symbols.hxx"
 #include "sip2/util/ParseBuffer.hxx"
+#include "sip2/util/Random.hxx"
 #include "sip2/sipstack/ParseException.hxx"
 
 using namespace Vocal2;
@@ -11,8 +12,13 @@ static unsigned long
 getNextTransactionCount()
 {
    //static volatile unsigned long TransactionCount=random()*2;
-   static volatile unsigned long TransactionCount=1;
-   return TransactionCount++; // !jf! needs to be atomic
+   static volatile unsigned long transactionCount=0;
+   if ( transactionCount == 0 )
+   { 
+      transactionCount = 0x3FFFffff & Random::getRandom();
+      transactionCount -= (transactionCount%10000);
+   }
+   return ++transactionCount; // !jf! needs to be atomic
 }
 
 
@@ -35,7 +41,7 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
    if (mHasMagicCookie && (strncasecmp(pb.position(), Symbols::Vocal2Cookie, 7) == 0))
    {
       mIsMyBranch = true;
-      pb.skipN(7);
+      pb.skipN(8);
 
       const char* anchor = pb.position();
       pb.skipToChar(Symbols::DASH[0]);
