@@ -69,7 +69,7 @@ void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
 
   /* See if our local pseudo-domain has any results. */
   /* Querying this only on timeouts is OK (is not high-performance) */
-  ares_local_process_requests();
+  //ares_local_process_requests();
 }
 
 /* If any TCP sockets select true for writing, write out queued data
