@@ -11,11 +11,14 @@
 #include "sip2/util/Logger.hxx"
 
 
+
+#ifdef WIN32
+#pragma warning( disable : 4355 )
+#endif
+
 using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
-
-#pragma warning( disable : 4355 )
 
 SipStack::SipStack(bool multiThreaded)
   : mExecutive(*this),
