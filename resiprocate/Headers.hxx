@@ -71,10 +71,38 @@ class Priority_Header : public HeaderBase
 };
 extern Priority_Header h_Priority;
 
+class Event_Header : public HeaderBase
+{
+   public:
+      typedef Token Type;
+      virtual Headers::Type getTypeNum() const {return Headers::Event;}
+      Event_Header()
+      {
+         Headers::CommaTokenizing[Headers::Event] = Type::isCommaTokenizing;
+         Headers::HeaderNames[Headers::Event] = Symbols::Event;
+      }
+};
+extern Event_Header h_Event;
+
+
+
 //====================
 // Tokens:
 //====================
 typedef ParserContainer<Token> Tokens;
+
+class Allow_Events_MultiHeader : public HeaderBase
+{
+   public:
+      typedef Token Type;
+      virtual Headers::Type getTypeNum() const {return Headers::Allow_Events;}
+      Allow_Events_MultiHeader()
+      {
+         Headers::CommaTokenizing[Headers::Allow_Events] = Type::isCommaTokenizing;
+         Headers::HeaderNames[Headers::Allow_Events] = Symbols::Allow_Events;
+      }
+};
+extern Allow_Events_MultiHeader h_AllowEvents;
 
 class Accept_Encoding_MultiHeader : public HeaderBase
 {

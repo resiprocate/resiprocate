@@ -61,6 +61,8 @@ class Headers
          Referred_By,
          Authorization, 
          Replaces,
+         Event,
+         Allow_Events,
          Content_Length, 
          UNKNOWN,
          MAX_HEADERS = UNKNOWN,
