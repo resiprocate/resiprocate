@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <iostream>
+#include <memory>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
