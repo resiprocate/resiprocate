@@ -302,6 +302,16 @@ SipStack::post(const Message& message,
    mTUTimerQueue.add(Timer(1000*secondsLater, toPost));
 }
 
+void
+SipStack::postMS(const Message& message,
+                 unsigned int ms)
+{
+   assert(!mShuttingDown);
+
+   Message* toPost = message.clone();
+   mTUTimerQueue.add(Timer(ms, toPost));
+}
+
 // !dlb! could get arbitrary messages via post!
 SipMessage* 
 SipStack::receive()
