@@ -10,6 +10,9 @@ namespace resip
 
 class Dialog 
 {
+   public:
+   private:
+      std::list<BaseUsage*> mUsages;
 };
  
 }
