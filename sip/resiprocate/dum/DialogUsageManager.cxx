@@ -197,14 +197,6 @@ DialogUsageManager::process(FdSet& fdset)
       }
       else if (sipMsg->isResponse())
       {
-         if (mClientAuthManager)
-         {
-            if (mClientAuthManager->handle(*sipMsg) )
-            {
-               return;
-            }
-         }
-         
          processResponse(*sipMsg);
       }
       return;
