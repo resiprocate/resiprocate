@@ -20,14 +20,14 @@ namespace resip
 class Message;
 class TlsConnection;
 
-class Connection : public IntrusiveListElement<Connection*>, 
-                   public IntrusiveListElement1<Connection*>,
-                   public IntrusiveListElement2<Connection*>
-{
-      typedef IntrusiveListElement<Connection*> lruList;
-      typedef IntrusiveListElement1<Connection*> readList;
-      typedef IntrusiveListElement2<Connection*> writeList;
+class Connection;
 
+typedef IntrusiveListElement<Connection*> ConnectionLruList;
+typedef IntrusiveListElement1<Connection*> ConnectionReadList;
+typedef IntrusiveListElement2<Connection*> ConnectionWriteList;
+
+class Connection : public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
+{
       friend class ConnectionManager;
       friend std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
 
