@@ -201,17 +201,31 @@ Dialog::makeAck(const SipMessage& original)
    request.header(h_RequestLine) = RequestLine(ACK);
    setRequestDefaults(request);
    copyCSeq(request);
+
+   // !jf! will this do the right thing if these headers weren't in original 
+   request.header(h_ProxyAuthorization) = original.header(h_ProxyAuthorization);
+   request.header(h_Authorization) = original.header(h_Authorization);
+
    return request;
 }
 
 SipMessage
-Dialog::makeCancel(const SipMessage& original)
+Dialog::makeCancel(const SipMessage& request)
 {
-   SipMessage request;
-   request.header(h_RequestLine) = RequestLine(CANCEL);
-   setRequestDefaults(request);
-   copyCSeq(request);
-   return request;
+   assert (request.header(h_Vias).size() >= 1);
+   assert (request.header(h_RequestLine).getMethod() == INVITE);
+   
+   SipMessage cancel;
+   cancel.header(h_RequestLine) = request.header(h_RequestLine);
+   cancel.header(h_CallId) = request.header(h_CallId);
+   cancel.header(h_To) = request.header(h_To); 
+   cancel.header(h_From) = request.header(h_From);
+   cancel.header(h_CSeq) = request.header(h_CSeq);
+   cancel.header(h_CSeq).method() = CANCEL;
+   cancel.header(h_Vias).push_back(request.header(h_Vias).front());
+   cancel.header(h_Routes) = request.header(h_Routes);
+   
+   return cancel;
 }
 
 void
