@@ -70,6 +70,13 @@ Contents::clear()
    mDescription = 0;
 }
 
+const Data&
+Contents::errorContext() const
+{
+   static const Data context("Contents");
+   return context;
+}
+
 Contents& 
 Contents::operator=(const Contents& rhs) 
 {
