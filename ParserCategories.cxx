@@ -282,10 +282,53 @@ DateCategory::operator=(const DateCategory& rhs)
    }
    return *this;
 }
+
+
+
+
 void
 DateCategory::parse(ParseBuffer& pb)
 {
-   mValue = Data(getHeaderField().mField, getHeaderField().mFieldLength);
+   // Mon, 04 Nov 2002 17:34:15 GMT
+
+   const char* anchor = pb.skipWhitespace();
+
+   pb.skipToChar(",");
+   Data dayOfWeek;
+   pb.data(dayOfWeek, anchor);
+   mDayOfWeek = DateCategory::DayOfWeek(dayOfWeek);
+
+   pb.skipChar(",");
+
+   pb.skipWhitespace();
+
+   mDayOfMonth = pb.int();
+
+   anchor = pb.skipWhitespace();
+   pb.skipNonWhitespace();
+
+   Data month;
+   pb.data(month, anchor);
+   mMonth = DateCategory::Month(month);
+
+   pb.skipWhitespace();
+   mYear = pb.int();
+
+   pb.skipWhitespace();
+
+   mHour = pb.int();
+   pb.skipChar(":");
+   mMin = pb.int();
+   pb.skipChar(":");
+   mSec = pb.int();
+
+   pb.skipWhitespace();
+   pb.skipChar("G");
+   pb.skipChar("M");
+   pb.skipChar("T");
+
+   pb.skipWhitespace();
+   pb.assertEof();
 }
 
 ParserCategory* 
@@ -294,10 +337,30 @@ DateCategory::clone() const
    return new DateCategory(*this);
 }
 
+static void pad2(const int x, std::ostream& str)
+{
+   str << ( (x < 10) ? Symbols::ZERO[0] : Symbols::Empty[0] );
+}
+
 std::ostream& 
 DateCategory::encode(std::ostream& str) const
 {
-   str << mValue;
+   str << DateCategory::DayOfWeekData[mDayOfWeek] // Mon
+       << Symbols::COMMA[0] << Symbols::SPACE[0];
+   
+   pad2(mDayOfMonth, str);  //  04
+
+   str << mDayOfMonth << Symbols::SPACE[0]
+       << DateCategory::MonthData[mMonth] << Symbols::SPACE[0] // Nov
+       << mYear << Symbols::SPACE[0] // 2002
+      ;
+   pad2(mHour, str);
+   str << Symbols::COLON[0];
+   pad2(mMin, str);
+   str << Symbols::COLON[0];
+   pad2(mSec, str);
+   str << " GMT";
+
    return str;
 }
 
