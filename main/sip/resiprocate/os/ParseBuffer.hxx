@@ -53,6 +53,7 @@ class ParseBuffer
       const char* skipToChars(const Data& cs); // ?dlb? case sensitivity arg?
       const char* skipToOneOf(const char* cs);
       const char* skipToOneOf(const char* cs1, const char* cs2);
+      const char* skipToOneOf(const Data& cs);
       const char* skipToOneOf(const Data& cs1, const Data& cs2);
       const char* skipToEndQuote(char quote = '"');
       const char* skipN(int count);
