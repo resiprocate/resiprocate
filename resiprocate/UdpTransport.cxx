@@ -1,6 +1,3 @@
-
-#include <util/Socket.hxx>
-
 #ifndef WIN32
 #include <errno.h>
 #include <fcntl.h>
@@ -11,15 +8,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-
 #endif
 
+#include <memory>
 #include <util/Data.hxx>
+#include <util/Socket.hxx>
+#include <util/Logger.hxx>
+#include <util/Socket.hxx>
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/Preparse.hxx>
-#include <util/Logger.hxx>
-#include <util/Socket.hxx>
+
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 

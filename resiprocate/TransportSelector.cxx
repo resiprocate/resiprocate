@@ -1,4 +1,3 @@
-#include <sstream>
 #include <sipstack/Resolver.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/SipStack.hxx>
@@ -148,14 +147,13 @@ TransportSelector::send( SipMessage* msg )
       msg->header(h_Vias).front().sentPort() = transport->port();
    }
    
-   std::stringstream strm;
-   msg->encode(strm);
+   Data encoded = msg->encode();
 
    // get next destination !jf!
    Resolver::Tuple tuple = *resolver.mCurrent;
    
    // send it over the transport
-   transport->send(&tuple.ipv4, strm.str().c_str(), strm.str().length());
+   transport->send(&tuple.ipv4, encoded.c_str(), encoded.size());
 }
 
 
