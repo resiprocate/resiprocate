@@ -31,7 +31,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
    else
    {
       const char* pos = pb.position();
-      static const char* WhitespaceOrParamTerm = " \t\r\n;?";
+      static const char* WhitespaceOrParamTerm = " \t\r\n;?>";
       pb.skipToOneOf(WhitespaceOrParamTerm);
       pb.data(mValue, pos);
    }

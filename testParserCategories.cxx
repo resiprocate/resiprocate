@@ -208,12 +208,11 @@ main(int arc, char** argv)
       nameAddr.uri().encodeParameters(cerr) << endl;
       cerr << "Header params: ";
       nameAddr.encodeParameters(cerr) << endl;
+      assert(nameAddr.param(p_tag) == "456248");
+      assert(nameAddr.param(p_mobility) == "hobble");
 
-      assert(nameAddr.uri().param(p_tag) == "456248");
-      assert(nameAddr.uri().param(p_mobility) == "hobble");
-
-      assert(nameAddr.exists(p_tag) == false);
-      assert(nameAddr.exists(p_mobility) == false);
+      assert(nameAddr.uri().exists(p_tag) == false);
+      assert(nameAddr.uri().exists(p_mobility) == false);
    }
    {
       cerr << "NameAddr parse, quoted displayname, parameterMove" << endl;
@@ -232,6 +231,28 @@ main(int arc, char** argv)
       cerr << "Header params: ";
       nameAddr.encodeParameters(cerr) << endl;
 
+      assert(nameAddr.param(p_tag) == "456248");
+      assert(nameAddr.param(p_mobility) == "hobble");
+
+      assert(nameAddr.uri().exists(p_tag) == false);
+      assert(nameAddr.uri().exists(p_mobility) == false);
+   }
+   {
+      cerr << "NameAddr parse, unquoted displayname, paramterMove" << endl;
+      char *nameAddrString = "Bob<sips:bob@foo.com;tag=456248;mobility=hobble>";
+      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+
+      NameAddr nameAddr(&hfv);
+      assert(nameAddr.displayName() == "Bob");
+      assert(nameAddr.uri().scheme() == "sips");
+      assert(nameAddr.uri().user() == "bob");
+
+      assert(nameAddr.uri().host() == "foo.com");
+      
+      cerr << "Uri params: ";
+      nameAddr.uri().encodeParameters(cerr) << endl;
+      cerr << "Header params: ";
+      nameAddr.encodeParameters(cerr) << endl;
       assert(nameAddr.uri().param(p_tag) == "456248");
       assert(nameAddr.uri().param(p_mobility) == "hobble");
 
@@ -280,7 +301,7 @@ main(int arc, char** argv)
       assert(statusLine.reason() == "");
       assert(statusLine.getSipVersion() == "SIP/2.0");
    }
-   
+   cerr << "\nTEST OK" << endl;
 }
 
 
