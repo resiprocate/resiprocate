@@ -27,6 +27,14 @@ SipMessage::SipMessage(const SipMessage& message)
    }
 }
 
+const Data& 
+SipMessage::getTransactionId() const
+{
+   // !jf! lookup the transactionId the first time and cache it
+   return mTransactionId;
+}
+
+
 SipMessage*
 SipMessage::clone() const
 {
