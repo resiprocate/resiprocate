@@ -15,6 +15,7 @@
 #include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/DefaultServerReferHandler.hxx"
+#include "resiprocate/dum/DestroyUsage.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/DumException.hxx"
@@ -313,7 +314,6 @@ DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
    {
       appDs = new AppDialogSet(*this);
    }
-   prepareInitialRequest(creator->getLastRequest());
    DialogSet* ds = new DialogSet(creator, *this);
    
    appDs->mDialogSetId = ds->getId();
@@ -551,17 +551,6 @@ DialogUsageManager::destroy(const BaseUsage* usage)
 {
    DestroyUsage destroy(usage->mHandle);
    mStack->post(destroy);
-}
-
-
-// !jf! maybe this should just be a handler that the application can provide
-// (one or more of) to futz with the request before it goes out
-void
-DialogUsageManager::prepareInitialRequest(SipMessage& request)
-{
-   // !jf! 
-   //request.header(h_Supporteds) = mProfile->getSupportedOptionTags();
-   //request.header(h_Allows) = mProfile->getAllowedMethods();
 }
 
 void 
