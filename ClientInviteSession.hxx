@@ -16,7 +16,7 @@ class ClientInviteSession : public InviteSession
             // throws if no session 
             ClientInviteSession* operator->();
          private:
-            friend class DialogUsageManager;
+            friend class ClientInviteSession;
             Handle(DialogUsageManager& dum);
       };
 
@@ -44,6 +44,7 @@ class ClientInviteSession : public InviteSession
       /// reINVITE or and UPDATE
       virtual void rejectOffer(int statusCode);
 
+      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       virtual InviteSession::Handle getSessionHandle();
       ClientInviteSession::Handle getHandle() {return mHandle;}
          
@@ -54,6 +55,10 @@ class ClientInviteSession : public InviteSession
                           const SipMessage& msg);
       
       ClientInviteSession::Handle mHandle;
+
+      // disabled
+      ClientInviteSession(const ClientInviteSession&);
+      ClientInviteSession& operator=(const ClientInviteSession&);
 };
  
 }

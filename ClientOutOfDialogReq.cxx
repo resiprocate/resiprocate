@@ -2,11 +2,16 @@
 #include "DialogUsageManager.hxx"
 #include "Dialog.hxx"
 
+using namespace resip;
+
 ClientRegistration::ClientRegistration(DialogUsageManager& dum,
-                                       Dialog& dialog)
+                                       Dialog& dialog,
+                                       const SipMessage& req)
    : BaseUsage(dum, dialog),
      mHandle(dum)
-{}
+{
+   assert(false);
+}
 
 ClientRegistration::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)
@@ -15,7 +20,7 @@ ClientRegistration::Handle::Handle(DialogUsageManager& dum)
 ClientRegistration* 
 ClientRegistration::Handle::operator->()
 {
-   return static_cast<ClientRegistration*>get();
+   return static_cast<ClientRegistration*>(get());
 }
 
 /* ====================================================================

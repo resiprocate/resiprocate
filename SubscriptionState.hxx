@@ -1,5 +1,5 @@
-#ifndef SUBSCRIPTIONSTATE_HXX
-#define SUSBCRIPTIONSTATE_HXX
+#ifndef RESIP_SubscriptionState_hxx
+#define RESIP_SubscriptionState_hxx
 
 namespace resip
 {

@@ -2,6 +2,8 @@
 #include "DialogUsageManager.hxx"
 #include "Dialog.hxx"
 
+using namespace resip;
+
 ServerRegistration::ServerRegistration(DialogUsageManager& dum,
                                        Dialog& dialog)
    : BaseUsage(dum, dialog),
@@ -15,7 +17,7 @@ ServerRegistration::Handle::Handle(DialogUsageManager& dum)
 ServerRegistration* 
 ServerRegistration::Handle::operator->()
 {
-   return static_cast<ServerRegistration*>get();
+   return static_cast<ServerRegistration*>(get());
 }
 
 /* ====================================================================
@@ -68,5 +70,3 @@ ServerRegistration::Handle::operator->()
  * <http://www.vovida.org/>.
  *
  */
-
-<
