@@ -1,5 +1,5 @@
-#if !defined(VOCAL_MUTEX_HXX)
-#define VOCAL_MUTEX_HXX
+#if !defined(Vocal2_Mutex_hxx)
+#define Vocal2_Mutex_hxx
 
 #ifdef WIN32
 #include <windows.h>

@@ -1,5 +1,5 @@
-#if !defined(VOCAL_FIFOBASE_H)
-#define VOCAL_FIFOBASE_H
+#if !defined(Vocal2_Fifobase_hxx)
+#define Vocal2_Fifobase_hxx
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -53,7 +53,7 @@
 
 
 static const char* const Fifo_h_Version =
-"$Id: Fifo.hxx,v 1.7 2002/11/07 03:07:27 jason Exp $";
+"$Id: Fifo.hxx,v 1.8 2002/11/11 22:05:06 jason Exp $";
 
 #include "sip2/util/Mutex.hxx"
 #include "sip2/util/Condition.hxx"
