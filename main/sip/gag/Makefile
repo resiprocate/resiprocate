@@ -6,7 +6,7 @@ LDFLAGS = -lssl -lcrypto -lpthread
 all: gag
 
 gag: gag.o GagMessage.o GagConduit.o $(LIBSIP) $(LIBARES)
-	$(CXX) -o $@ $(LDFLAGS) $^
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 %.o: %.cxx
 	$(CXX) -c $(CFLAGS) -o $@ $<
