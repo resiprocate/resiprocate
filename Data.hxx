@@ -2,7 +2,7 @@
 #define STRINGDATA_H_
 
 static const char* const DataHeaderVersion =
-"$Id: Data.hxx,v 1.3 2002/09/21 19:51:19 dabryan Exp $";
+"$Id: Data.hxx,v 1.4 2002/09/21 20:15:50 dabryan Exp $";
 
 //Authors: Sunitha Kumar, Cullen Jennings
 
@@ -146,7 +146,7 @@ using namespace std;
 namespace std
 {
 #endif
-struct hash<string>
+struct hash<Data>
 {
 size_t operator()(const string& __s) const
 {

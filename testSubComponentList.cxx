@@ -1,7 +1,7 @@
 
 
-#include <sip2/sipstack/StringSubComponent.hxx>
-#include <sip2/sipstack/SubComponentList.hxx>
+#include <sipstack/StringSubComponent.hxx>
+#include <sipstack/SubComponentList.hxx>
 #include <iostream>
 
 using namespace Vocal2;

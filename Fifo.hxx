@@ -53,11 +53,11 @@
 
 
 static const char* const Fifo_h_Version =
-    "$Id: Fifo.hxx,v 1.1 2002/09/21 05:57:28 jason Exp $";
+    "$Id: Fifo.hxx,v 1.2 2002/09/21 20:15:50 dabryan Exp $";
 
-#include <sip2/sipstack/Mutex.hxx>
-#include <sip2/sipstack/Condition.hxx>
-#include <sip2/sipstack/Lock.hxx>
+#include <sipstack/Mutex.hxx>
+#include <sipstack/Condition.hxx>
+#include <sipstack/Lock.hxx>
 #include <list>
 
 
@@ -113,7 +113,7 @@ class Fifo
 };
 
 
-#include <sip2/sipstack/Fifo.cc>
+#include <sipstack/Fifo.cc>
 
 
 } // namespace Vocal2

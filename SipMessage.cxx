@@ -1,6 +1,6 @@
-#include <sip2/sipstack/SipMessage.hxx>
-#include <sip2/sipstack/HeaderFieldValue.hxx>
-#include <sip2/sipstack/HeaderFieldValueList.hxx>
+#include <sipstack/SipMessage.hxx>
+#include <sipstack/HeaderFieldValue.hxx>
+#include <sipstack/HeaderFieldValueList.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -75,14 +75,14 @@ SipMessage::copyFrom(const SipMessage& from)
    for (UnknownHeaders::const_iterator i = from.mUnknownHeaders.begin();
         i != from.mUnknownHeaders.end(); i++)
    {
-      mUnknownHeaders.push_back(pair<string, HeaderFieldValueList*>(i->first,
+      mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(i->first,
                                                                     i->second->clone()));
    }
 }
 
 // unknown header interface
 Unknowns& 
-SipMessage::operator[](const string& headerName)
+SipMessage::operator[](const Data& headerName)
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
@@ -110,12 +110,12 @@ SipMessage::operator[](const string& headerName)
    hfv->mParserCategory = new Unknown(*hfv);
    hfvs->push_back(hfv);
    hfvs->setParserCategory(new Unknowns(*hfvs));
-   mUnknownHeaders.push_back(pair<string, HeaderFieldValueList*>(headerName, hfvs));
+   mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(headerName, hfvs));
    return (Unknowns&)hfvs->getParserCategory();
 }
 
 void
-SipMessage::remove(const string& headerName)
+SipMessage::remove(const Data& headerName)
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
@@ -162,7 +162,7 @@ SipMessage::addHeader(int header, char* headerName, int headerLen,
       // didn't find it, add an entry
       HeaderFieldValueList *hfvs = new HeaderFieldValueList();
       hfvs->push_back(newHeader);
-      mUnknownHeaders.push_back(pair<string, HeaderFieldValueList*>(string(headerName, headerLen),
+      mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(Data(headerName, headerLen),
                                                                     hfvs));
    }
 }
