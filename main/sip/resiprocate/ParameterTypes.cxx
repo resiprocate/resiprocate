@@ -9,7 +9,7 @@ using namespace std;
 using namespace Vocal2;
 
 ParameterTypes::Factory ParameterTypes::ParameterFactories[ParameterTypes::MAX_PARAMETER] = {0};
-Data ParameterTypes::ParameterNames[ParameterTypes::MAX_PARAMETER] = {""};
+Data ParameterTypes::ParameterNames[ParameterTypes::MAX_PARAMETER] = {"PARAMETER?"};
 
 Transport_Param Vocal2::p_transport;
 User_Param Vocal2::p_user;
@@ -56,7 +56,7 @@ inline
 #endif
 #endif
 static unsigned int
-hash (register const char *str, register unsigned int len)
+p_hash (register const char *str, register unsigned int len)
 {
   static unsigned char asso_values[] =
     {
@@ -118,7 +118,7 @@ hash (register const char *str, register unsigned int len)
 __inline
 #endif
 struct params *
-in_word_set (register const char *str, register unsigned int len)
+p_in_word_set (register const char *str, register unsigned int len)
 {
   static struct params wordlist[] =
     {
@@ -156,7 +156,7 @@ in_word_set (register const char *str, register unsigned int len)
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = hash (str, len);
+      register int key = p_hash (str, len);
 
       if (key <= MAX_HASH_VALUE && key >= 0)
         {
@@ -173,7 +173,7 @@ ParameterTypes::Type
 ParameterTypes::getType(const char* name, unsigned int len)
 {
    struct params* p;
-   p = in_word_set(name, len);
+   p = p_in_word_set(name, len);
    return p ? p->type : ParameterTypes::UNKNOWN;
 }
 

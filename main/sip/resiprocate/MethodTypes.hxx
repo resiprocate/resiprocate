@@ -18,6 +18,8 @@ typedef enum
    REGISTER,
    SUBSCRIBE,
    RESPONSE,
+   MESSAGE,
+   INFO,
    UNKNOWN,
    MAX_METHODS
 } MethodTypes;
