@@ -14,31 +14,32 @@
 using Vocal2::Mutex;
 
 #ifdef WIN32 
+// !cj! need to write windows mutec stuff 
 	namespace Vocal2
 {
 
 Mutex::Mutex()
 {
-   assert(0);
+   //assert(0); 
 }
 
 
 Mutex::~Mutex ()
 {
-   assert(0);
+   //assert(0);
 }
 
 
 void
 Mutex::lock()
 {
-  assert(0); 
+  //assert(0); 
 }
 
 void
 Mutex::unlock()
 {
-   assert(0); 
+   //assert(0); 
 }
 
 }
