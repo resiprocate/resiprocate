@@ -837,12 +837,12 @@ void test15()
    CritLog( << "2.15 Interesting bodies");
    
    char* txt = (
-    "NOTIFY sip:fluffy@212.157.205.40 SIP/2.0\r\n"
+    "RESIP_NOTIFY sip:fluffy@212.157.205.40 SIP/2.0\r\n"
     "Via: SIP/2.0/TCP 212.157.205.198:5060;branch=z9hG4bK2367411811584019109\r\n"
     "To: sip:fluffy@212.157.205.40\r\n"
     "From: sip:ntt2@h1.ntt2.sipit.net;tag=727823805122397238\r\n"
     "Max-Forwards: 70\r\n"
-    "CSeq: 1 NOTIFY\r\n"
+    "CSeq: 1 RESIP_NOTIFY\r\n"
     "Call-ID: 28067261571992032320\r\n"
     "Contact: sip:ntt2@212.157.205.198:5060\r\n"
     "Content-Length: 1929\r\n"
@@ -861,7 +861,7 @@ void test15()
     "\r\n"
     "To: sip:fluffy@212.157.205.40\r\n"
     "From: sip:ntt2@h1.ntt2.sipit.net;tag=727823805122397238\r\n"
-    "CSeq: 1 NOTIFY\r\n"
+    "CSeq: 1 RESIP_NOTIFY\r\n"
     "Call-ID: 28067261571992032320\r\n"
     "Contact: sip:ntt2@212.157.205.198:5060\r\n"
     "Event: presence\r\n"

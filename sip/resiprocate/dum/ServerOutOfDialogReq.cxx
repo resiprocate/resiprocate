@@ -54,8 +54,8 @@ ServerOutOfDialogReq::dispatch(const SipMessage& msg)
 	{
 		if(msg.header(h_CSeq).method() == RESIP_OPTIONS)
 		{
-           DebugLog ( << "ServerOutOfDialogReq::dispatch - handler not found for OPTIONS - sending autoresponse.");   
-			// If no handler exists for OPTIONS then handle internally
+           DebugLog ( << "ServerOutOfDialogReq::dispatch - handler not found for RESIP_OPTIONS - sending autoresponse.");   
+			// If no handler exists for RESIP_OPTIONS then handle internally
 			mRequest = msg; 
 			mDum.send(answerOptions());
 			delete this;

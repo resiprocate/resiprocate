@@ -97,14 +97,14 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                }
                else
                {
-                  InfoLog(<< "Got an RESIP_INVITE or SUBSCRIBE with invalid scheme");
+                  InfoLog(<< "Got an RESIP_INVITE or RESIP_SUBSCRIBE with invalid scheme");
                   DebugLog(<< request);
                   throw Exception("Invalid scheme in request", __FILE__, __LINE__);
                }
             }
             else
             {
-               InfoLog (<< "Got an RESIP_INVITE or SUBSCRIBE that doesn't have exactly one contact");
+               InfoLog (<< "Got an RESIP_INVITE or RESIP_SUBSCRIBE that doesn't have exactly one contact");
                DebugLog (<< request);
                throw Exception("Too many (or no contact) contacts in request", __FILE__, __LINE__);
             }
@@ -172,14 +172,14 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                   }
                   else
                   {
-                     InfoLog (<< "Got an RESIP_INVITE or SUBSCRIBE with invalid scheme");
+                     InfoLog (<< "Got an RESIP_INVITE or RESIP_SUBSCRIBE with invalid scheme");
                      DebugLog (<< response);
                      throw Exception("Bad scheme in contact in response", __FILE__, __LINE__);
                   }
                }
                else
                {
-                  InfoLog (<< "Got an RESIP_INVITE or SUBSCRIBE that doesn't have exactly one contact");
+                  InfoLog (<< "Got an RESIP_INVITE or RESIP_SUBSCRIBE that doesn't have exactly one contact");
                   DebugLog (<< response);
                   throw Exception("Too many contacts (or no contact) in response", __FILE__, __LINE__);
                }
