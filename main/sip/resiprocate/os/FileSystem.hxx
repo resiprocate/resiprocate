@@ -9,6 +9,8 @@
 #include <sys/fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
+#else
+#include "resiprocate/os/Socket.hxx"
 #endif
 
 
