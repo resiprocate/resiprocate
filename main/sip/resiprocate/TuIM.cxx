@@ -5,6 +5,8 @@
 #include "sip2/util/Socket.hxx"
 
 #include "sip2/sipstack/SipStack.hxx"
+#include "sip2/sipstack/Dialog.hxx"
+
 #include "sip2/util/Data.hxx"
 #include "sip2/util/Logger.hxx"
 #include "sip2/util/Random.hxx"
