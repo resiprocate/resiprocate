@@ -2,7 +2,7 @@
 #define Contents_hxx
 
 #include "sip2/sipstack/LazyParser.hxx"
-#include "sip2/sipstack/ParserCategories.hxx"
+#include "sip2/sipstack/ParserCategories.hxx" // .dlb. Mime
 #include "sip2/util/Data.hxx"
 #include <map>
 
@@ -14,12 +14,13 @@ namespace Vocal2
 
 class Contents;
 class HeaderFieldValue;
-class Mime;
+class ParameterList;
 
 class ContentsFactoryBase
 {
    public:
-      virtual Contents* create(HeaderFieldValue* hfv) const = 0;
+      virtual Contents* create(HeaderFieldValue* hfv, 
+                               const Mime& contentType) const = 0;
       virtual Contents* convert(Contents* c) const = 0;
 };
       
@@ -27,7 +28,8 @@ class ContentsFactoryBase
 class Contents : public LazyParser
 {
    public:
-      Contents(HeaderFieldValue* headerFieldValue);
+      // pass Mime instance for parameters
+      Contents(HeaderFieldValue* headerFieldValue, const Mime& contentsType);
       Contents(const Contents& rhs);
       virtual ~Contents();
       Contents& operator=(const Contents& rhs);
@@ -42,6 +44,7 @@ class Contents : public LazyParser
 
    protected:
       Contents();
+      Mime mContentsType;
 
    private:
       static std::map<Mime, ContentsFactoryBase*>* FactoryMap;
@@ -54,14 +57,15 @@ class ContentsFactory : public ContentsFactoryBase
       ContentsFactory()
       {
          HeaderFieldValue hfv;
-         T tmp(&hfv);
+         T tmp;
          Contents::getFactoryMap()[tmp.getType()] = this;
          cerr << "Registered factory for type: " << tmp.getType() << endl;
       }
       
-      virtual Contents* create(HeaderFieldValue* hfv) const
+      // pass Mime instance for parameters
+      virtual Contents* create(HeaderFieldValue* hfv, const Mime& contentType) const
       {
-         return new T(hfv);
+         return new T(hfv, contentType);
       }
 
       virtual Contents* convert(Contents* c) const

@@ -8,8 +8,10 @@ Contents::Contents()
    : LazyParser()
 {}
 
-Contents::Contents(HeaderFieldValue* headerFieldValue) 
-   : LazyParser(headerFieldValue) 
+Contents::Contents(HeaderFieldValue* headerFieldValue,
+                   const Mime& contentType) 
+   : LazyParser(headerFieldValue),
+     mContentsType(contentType)
 {}
 
 Contents::Contents(const Contents& rhs) 
@@ -22,7 +24,9 @@ Contents::~Contents()
 Contents& 
 Contents::operator=(const Contents& rhs) 
 {
-   LazyParser::operator=(rhs); return *this;
+   LazyParser::operator=(rhs); 
+   mContentsType = rhs.mContentsType;
+   return *this;
 }
 
 std::map<Mime, ContentsFactoryBase*>& 
