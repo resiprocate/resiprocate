@@ -626,24 +626,6 @@ DialogUsageManager::findInviteSession(CallId replaces)
    return make_pair(is, ErrorStatusCode);
 }
 
-void microsoftPreprocess(SipMessage& request)
-{
-   MethodTypes meth = request.header(h_RequestLine).getMethod();
-   
-   if (meth == SUBSCRIBE || meth == NOTIFY || meth == PUBLISH)
-   {
-      if (!request.exists(h_SubscriptionState))
-      {
-         request.header(h_SubscriptionState).value() = "active";
-      }      
-      if (!request.exists(h_Event))
-      {
-         SipMessage& ncRequest = const_cast<SipMessage&> (request);
-         ncRequest.header(h_Event).value() = "presence";
-      }
-   }
-}
-
 void
 DialogUsageManager::run()
 {
@@ -714,7 +696,6 @@ DialogUsageManager::process()
                   }
                }
                //!dcm! -- make this generic and pluggable
-               microsoftPreprocess(*sipMsg);               
                processRequest(*sipMsg);
             }
             else if (sipMsg->isResponse())
