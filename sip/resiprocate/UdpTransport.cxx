@@ -77,7 +77,9 @@ UdpTransport::~UdpTransport()
 }
 
 void 
-UdpTransport::send( const sockaddr_in& dest, const  char* buffer, const size_t length) //, TransactionId txId)
+UdpTransport::send( const sockaddr_in& dest,
+                    const  char* buffer,
+                    const size_t length) //, TransactionId txId)
 {
    SendData* data = new SendData;
    data->destination = dest;
@@ -134,9 +136,11 @@ void UdpTransport::process()
       
       SipMessage* message = new SipMessage;
       
+      // set the received from information into the received= parameter in the
+      // via
       message->addSource(from);
       
-      // set the received from information into the received= parameter in the via
+
       // save the interface information in the message
       // preparse the message
       // stuff the message in the 
