@@ -227,7 +227,9 @@ Profile::disableGruu()
 void 
 Profile::addDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password)
 {
-   mDigestCredentials.insert(DigestCredential(aor, realm, user, password));
+   DigestCredential cred(aor, realm, user, password);
+   DebugLog (<< "Adding credential: " << cred);
+   mDigestCredentials.insert(cred);
 }
      
 Profile::DigestCredentialHandler* 
@@ -242,8 +244,6 @@ Profile::getDigestCredential( const Data& realm )
    DigestCredential dc;
    dc.realm = realm;
    
-   DebugLog (<< "Comparing " << realm << " to " << mDigestCredentials.begin()->realm );
-   
    DigestCredentials::const_iterator i = mDigestCredentials.find(dc);
    if (i != mDigestCredentials.end())
    {
@@ -257,7 +257,8 @@ Profile::getDigestCredential( const Data& realm )
 const Profile::DigestCredential&
 Profile::getDigestCredential( const SipMessage& challenge )
 {
-   InfoLog (<< "Using From header(effective realm: " <<  challenge.header(h_From).uri().host() << " ) to find credential");   
+   DebugLog (<< Inserter(mDigestCredentials));
+   InfoLog (<< "Using From header: " <<  challenge.header(h_From).uri().getAor() << " to find credential");   
    const Data& aor = challenge.header(h_From).uri().getAor();
    for (DigestCredentials::const_iterator it = mDigestCredentials.begin(); 
         it != mDigestCredentials.end(); it++)
@@ -267,6 +268,8 @@ Profile::getDigestCredential( const SipMessage& challenge )
          return *it;
       }
    }
+
+   // !jf! why not just throw here? 
    static const DigestCredential empty;
    return empty;
 }
@@ -305,11 +308,11 @@ Profile::DigestCredential::operator<(const DigestCredential& rhs) const
 }
 
 std::ostream&
-Profile::DigestCredential::operator<<(std::ostream& strm) const
+resip::operator<<(std::ostream& strm, const Profile::DigestCredential& cred)
 {
-   strm << "realm=" << realm 
-        << " aor=" << aor
-        << " user=" << user ;
+   strm << "realm=" << cred.realm 
+        << " aor=" << cred.aor
+        << " user=" << cred.user ;
    return strm;
 }
 
