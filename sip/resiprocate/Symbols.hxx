@@ -90,6 +90,8 @@ class Symbols
       static const char* Optional;
 
       static const char* C100rel;
+      static const char* Replaces;
+      static const char* Timer;
       static const char* Undefined;
 
       static const char* Pending;
