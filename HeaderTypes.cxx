@@ -73,17 +73,16 @@ Headers::Type& Vocal2::operator++(Headers::Type& t)
    return t;
 }
 
-
 /* ANSI-C code produced by gperf version 2.7.2 */
-/* Command-line: gperf -L ANSI-C -t -k '*' headers.gperf  */
+/* Command-line: gperf -L ANSI-C -t -k '3,$' headers.gperf  */
 struct params { char *name; Headers::Type type; };
 
 #define TOTAL_KEYWORDS 48
 #define MIN_WORD_LENGTH 2
 #define MAX_WORD_LENGTH 19
 #define MIN_HASH_VALUE 2
-#define MAX_HASH_VALUE 162
-/* maximum key range = 161, duplicates = 0 */
+#define MAX_HASH_VALUE 96
+/* maximum key range = 95, duplicates = 0 */
 
 #ifdef __GNUC__
 __inline
@@ -97,79 +96,44 @@ hash (register const char *str, register unsigned int len)
 {
   static unsigned char asso_values[] =
     {
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163,   0, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163,   0,   0,   0,   5,   0,
-       60,   0,   0,   0,  15, 163,  30,  30,   0,   0,
-        0,  35,   0,   0,   0,   0,  25,  30,  25,  15,
-        0, 163, 163, 163, 163,  15, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163, 163, 163, 163, 163,
-      163, 163, 163, 163, 163, 163
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 20, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97,  0, 20,  0,
+      25,  0,  0, 25,  0, 25, 97, 97,  0, 30,
+      30,  0, 20, 16, 45, 46, 20, 20, 97,  0,
+      10,  0, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
+      97, 97, 97, 97, 97, 97
     };
   register int hval = len;
 
   switch (hval)
     {
       default:
-      case 19:
-        hval += asso_values[(unsigned char)str[18] & 0xDF ];
-      case 18:
-        hval += asso_values[(unsigned char)str[17] & 0xDF ];
-      case 17:
-        hval += asso_values[(unsigned char)str[16] & 0xDF ];
-      case 16:
-        hval += asso_values[(unsigned char)str[15] & 0xDF ];
-      case 15:
-        hval += asso_values[(unsigned char)str[14] & 0xDF ];
-      case 14:
-        hval += asso_values[(unsigned char)str[13] & 0xDF ];
-      case 13:
-        hval += asso_values[(unsigned char)str[12] & 0xDF ];
-      case 12:
-        hval += asso_values[(unsigned char)str[11] & 0xDF ];
-      case 11:
-        hval += asso_values[(unsigned char)str[10] & 0xDF ];
-      case 10:
-        hval += asso_values[(unsigned char)str[9] & 0xDF ];
-      case 9:
-        hval += asso_values[(unsigned char)str[8] & 0xDF ];
-      case 8:
-        hval += asso_values[(unsigned char)str[7] & 0xDF ];
-      case 7:
-        hval += asso_values[(unsigned char)str[6] & 0xDF ];
-      case 6:
-        hval += asso_values[(unsigned char)str[5] & 0xDF ];
-      case 5:
-        hval += asso_values[(unsigned char)str[4] & 0xDF ];
-      case 4:
-        hval += asso_values[(unsigned char)str[3] & 0xDF ];
       case 3:
-        hval += asso_values[(unsigned char)str[2] & 0xDF ];
+        hval += asso_values[tolower((unsigned char)str[2])];
       case 2:
-        hval += asso_values[(unsigned char)str[1] & 0xDF ];
-      case 1:
-        hval += asso_values[(unsigned char)str[0] & 0xDF ];
         break;
     }
-  return hval;
+  return hval + asso_values[tolower((unsigned char)str[len - 1])];
 }
 
 #ifdef __GNUC__
@@ -181,83 +145,78 @@ in_word_set (register const char *str, register unsigned int len)
   static struct params wordlist[] =
     {
       {""}, {""},
-      {"TO", Headers::To},
+      {"to", Headers::To},
+      {"via", Headers::Via},
+      {""},
+      {"allow", Headers::Allow},
       {""}, {""},
-      {"ROUTE", Headers::Route},
-      {"ACCEPT", Headers::Accept},
-      {"CONTACT", Headers::Contact},
+      {"refer-to",Headers::Refer_To},
+      {"call-info", Headers::Call_Info},
+      {"alert-info",Headers::Alert_Info},
+      {"referred-by",Headers::Referred_By},
+      {"record-route", Headers::Record_Route},
+      {"proxy-require", Headers::Proxy_Require},
       {""},
-      {"DATE", Headers::Date},
-      {"USER-AGENT", Headers::User_Agent},
+      {"accept-language", Headers::Accept_Language},
+      {"www-authenticate",Headers::WWW_Authenticate},
       {""},
-      {"ORGANIZATION", Headers::Organization},
-      {"AUTHORIZATION", Headers::Authorization},
-      {"SUPPORTED", Headers::Supported},
+      {"proxy-authenticate", Headers::Proxy_Authenticate},
       {""},
-      {"UNSUPPORTED", Headers::Unsupported},
-      {"RECORD-ROUTE", Headers::Record_Route},
-      {"SUBSCRIPTION-STATE",Headers::Subscription_State},
-      {""},
-      {"ACCEPT-ENCODING", Headers::Accept_Encoding},
-      {"CONTENT-ENCODING", Headers::Content_Encoding},
-      {"SUBJECT", Headers::Subject},
-      {"PRIORITY", Headers::Priority},
-      {"CONTENT-DISPOSITION", Headers::Content_Disposition},
+      {"cseq", Headers::CSeq},
       {""}, {""},
-      {"CONTENT-TYPE", Headers::Content_Type},
-      {"VIA", Headers::Via},
-      {""}, {""},
-      {"SERVER", Headers::Server},
-      {"EXPIRES", Headers::Expires},
+      {"require", Headers::Require},
+      {"date", Headers::Date},
+      {"route", Headers::Route},
+      {"accept", Headers::Accept},
+      {""},
+      {"reply-to", Headers::Reply_To},
+      {""},
+      {"user-agent", Headers::User_Agent},
+      {"in-reply-to", Headers::In_Reply_To},
+      {"call-id", Headers::Call_ID},
+      {"priority", Headers::Priority},
+      {"from", Headers::From},
+      {""}, {""}, {""},
+      {"subscription-state",Headers::Subscription_State},
+      {"authentication-info", Headers::Authentication_Info},
+      {"accept-encoding", Headers::Accept_Encoding},
+      {""},
+      {"content-type", Headers::Content_Type},
+      {""},
+      {"content-length", Headers::Content_Length},
+      {""},
+      {"content-language", Headers::Content_Language},
+      {"subject", Headers::Subject},
+      {""},
+      {"proxy-authorization", Headers::Proxy_Authorization},
       {""}, {""}, {""}, {""},
-      {"WARNING", Headers::Warning},
-      {"REPLACES",Headers::Replaces},
-      {"CSEQ", Headers::CSeq},
-      {""}, {""},
-      {"REQUIRE", Headers::Require},
+      {"supported", Headers::Supported},
+      {"error-info", Headers::Error_Info},
       {""},
-      {"CONTENT-LENGTH", Headers::Content_Length},
-      {"ACCEPT-LANGUAGE", Headers::Accept_Language},
-      {"CONTENT-LANGUAGE", Headers::Content_Language},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"REPLY-TO", Headers::Reply_To},
+      {"contact", Headers::Contact},
+      {""},
+      {"timestamp", Headers::Timestamp},
+      {""}, {""}, {""},
+      {"authorization", Headers::Authorization},
+      {""}, {""}, {""},
+      {"organization", Headers::Organization},
+      {"max-forwards", Headers::Max_Forwards},
+      {""}, {""},
+      {"content-encoding", Headers::Content_Encoding},
+      {"mime-version", Headers::MIME_Version},
+      {"expires", Headers::Expires},
+      {"replaces",Headers::Replaces},
+      {""},
+      {"retry-after", Headers::Retry_After},
+      {"warning", Headers::Warning},
+      {""},
+      {"content-disposition", Headers::Content_Disposition},
+      {""}, {""},
+      {"unsupported", Headers::Unsupported},
       {""}, {""}, {""}, {""},
-      {"PROXY-AUTHENTICATE", Headers::Proxy_Authenticate},
-      {"PROXY-AUTHORIZATION", Headers::Proxy_Authorization},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"MIN-EXPIRES", Headers::Min_Expires},
-      {""},
-      {"REFER-TO",Headers::Refer_To},
-      {"TIMESTAMP", Headers::Timestamp},
-      {"ERROR-INFO", Headers::Error_Info},
-      {"IN-REPLY_TO", Headers::In_Reply_To},
-      {"CALL-ID", Headers::Call_ID},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"AUTHENTICATION-INFO", Headers::Authentication_Info},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"RETRY-AFTER", Headers::Retry_After},
-      {""},
-      {"PROXY-REQUIRE", Headers::Proxy_Require},
-      {""}, {""},
-      {"REFERRED-BY",Headers::Referred_By},
-      {""}, {""},
-      {"FROM", Headers::From},
-      {"ALLOW", Headers::Allow},
-      {""},
-      {"MIME-VERSION", Headers::MIME_Version},
-      {""}, {""},
-      {"ALERT-INFO",Headers::Alert_Info},
-      {""}, {""}, {""}, {""}, {""},
-      {"WWW-AUTHENTICATE",Headers::WWW_Authenticate},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""},
-      {"CALL-INFO", Headers::Call_Info},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""},
-      {"MAX-FORWARDS", Headers::Max_Forwards}
+      {"min-expires", Headers::Min_Expires},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {"server", Headers::Server}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -268,19 +227,17 @@ in_word_set (register const char *str, register unsigned int len)
         {
           register const char *s = wordlist[key].name;
 
-          if (( (*str) & 0xDF) == *s && !strcasecmp (str + 1, s + 1))
+          if (tolower(*str) == *s && !strcasecmp (str + 1, s + 1))
             return &wordlist[key];
         }
     }
   return 0;
 }
 
-
-
 // to generate the perfect hash:
 // gperf -L ANSI-C -t -k '*' headers.gperf > bar
-// also needed to bitwise and all char comparisons with 0xDF to force to
-// uppercase. All names in headers.gperf must be uppercased
+// also needed to call tolower() on instances of the source string
+// chars. Also change strcmp to strcasecmp
 // will NOT work for non alpha chars 
 // 
 Headers::Type
