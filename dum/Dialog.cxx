@@ -430,7 +430,6 @@ Dialog::dispatch(const SipMessage& msg)
             case CANCEL:
             case REFER: 
             case BYE:
-            case INFO:
                if (mInviteSession == 0)
                {
                   //spurious
@@ -441,6 +440,19 @@ Dialog::dispatch(const SipMessage& msg)
                   lastRequest = &mInviteSession->mLastRequest;
                }
                break;               
+            case INFO:
+            {
+               if (mInviteSession == 0)
+               {
+                  //spurious
+                  return;
+               }
+               else
+               {
+                  lastRequest = &mInviteSession->mLastNit;
+               }
+               break;               
+            }
             default:
                break;
          }
