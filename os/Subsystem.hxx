@@ -15,6 +15,7 @@ class Subsystem
       static const Subsystem BASE;
       static const Subsystem CONTENTS;
       static const Subsystem DNS;
+      static const Subsystem DUM;
       static const Subsystem NONE; // default subsystem
       static const Subsystem PRESENCE; 
       static const Subsystem SDP;
