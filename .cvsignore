@@ -1,6 +1,7 @@
 *.d
 .dependlibs
 ExpandedSipMessage
+ParserCategories.cxx.save
 a.out
 backup
 bak
