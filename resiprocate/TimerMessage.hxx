@@ -25,6 +25,8 @@ class TimerMessage : public Message
       {
          return mType;
       }
+
+      virtual Data brief() const;
       
    private:
       Data mTransactionId;
