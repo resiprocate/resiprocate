@@ -166,6 +166,11 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       
       // this will check by connectionId first, then by address
       Connection* conn = mConnectionManager.findConnection(data->destination);
+      if ( conn )
+      {
+         assert( conn->transport() );
+      }
+      
       //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
       
       // There is no connection yet, so make a client connection
@@ -201,29 +206,31 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          // See Chapter 15.3 of Stevens, Unix Network Programming Vol. 1 2nd Edition
          if (e == INVALID_SOCKET)
          {
-			int err = getErrno();
-
+            int err = getErrno();
+            
             switch (err)
-			{
-				case EINPROGRESS:
-				case EWOULDBLOCK:
-					break;
-				default:	
             {
-               // !jf! this has failed
-               InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
-               fdset.clear(sock);
-               close(sock);
-               fail(data->transactionId);
-               delete data;
-               return;
+               case EINPROGRESS:
+               case EWOULDBLOCK:
+                  break;
+               default:	
+               {
+                  // !jf! this has failed
+                  InfoLog( << "Error on TCP connect to " <<  data->destination << ": " << strerror(err));
+                  fdset.clear(sock);
+                  close(sock);
+                  fail(data->transactionId);
+                  delete data;
+                  return;
+               }
             }
-			}
-		 }
-
+         }
+         
          // This will add the connection to the manager
          conn = createConnection(data->destination, sock, false);
          assert(conn);
+         assert( conn->transport() );
+
          data->destination.transport = this;
          data->destination.connectionId = conn->getId(); // !jf!
       }
@@ -236,6 +243,8 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       }
       else // have a connection
       {
+         assert( conn->transport() );
+         
          conn->requestWrite(data);
       }
    }
