@@ -172,7 +172,40 @@ TuShim::processResponse(SipMessage* msg)
          if (remoteTag == dialog.getTag())
          {
             // we found the dialog exactly
-            // find out the appropriate state machine and send to it
+            // find out the appropriate state machine and send to it 
+            switch ( msg.hdr(h_CSeq).method()) {
+               case INVITE :
+               case CANCEL :
+               case BYE :
+               case PRACK :
+               case UPDATE :
+               case INFO :
+                  dialog.getSession().processResponse(msg);
+                  break;
+               case REFER :
+               case SUBSCRIBE : 
+               case NOTIFY :
+                  sub = dialog.findSubscription( msg.hdr(h_Event).value(),
+                                          msg.hdr(h_Event).param(p_id) );
+                  if (sub != 0)
+                  {
+                     sub.processResponse(msg);
+                  }
+                  // else ignore
+                  break;
+               case REGISTER : 
+                  dialog.getRegistration().processResponse(msg);
+                  break;
+               case MESSAGE :
+               case PUBLISH :
+               case OPTIONS :
+                  dialog.processNonDialogResponse(msg);
+                  break;
+               case ACK :
+                  // should never get a response to an ACK
+               default :
+                  // ignore
+            }
          }
          else  // found the dialog but the remoteTag isn't set yet
          {
@@ -185,29 +218,70 @@ TuShim::processResponse(SipMessage* msg)
                case REFER :
                case SUBSCRIBE :
                   // find apropos subscription, send there
+                  sub = findSubscription( msg.hdr(h_Event).value(),
+                                          msg.hdr(h_Event).param(p_id) );
+                  if (sub != 0)
+                  {
+                     dialog.setTag( remoteTag );
+                     dialog.setRemoteCSeq( msg.hdr(h_CSeq).sequence() );
+                     sub.processResponse(msg);
+                  }
+                  // else ignore
                   break;
                case REGISTER :
-                  // find apropos registration, send there
+                  dialog.setTag(remoteTag);
+                  dialog.setRemoteCSeq( msg.hdr(h_CSeq).sequence() );
+                  dialog.getRegistration().processResponse(msg);
                   break;
                default :
                   // ignore bogus/stray response
             }
          }
       }
-      else // foudn dialogSet but not the specific dialog
+      else // found dialogSet but not the specific dialog
       {
          if (msg.hdr(h_CSeq).method() == INVITE)
          {
-            //find the session and send it there
+            // must have forked and received multiple dialog-creating responses
+            // verify that the state of other state machines is consistent with this
+            // if everything is good, create a new dialog and session state machine
+
+            session = set.firstDialog().getSession();
+            if (session != 0)
+            {
+               switch (session.getState() ) {
+                  case EarlyState :
+                     createDialog(msg);
+                     break;
+                  case ConfirmedState :
+                     if (msg.responseCode >= 200 && msg.responseCode < 299)
+                     {
+                        createDialog(msg);
+                     }
+                     // else ignore
+                     break;
+                  default :
+                     // ignore
+               }
+            }
+            else // no session for this dialog!
+            {
+               // ignore
+            }
          }
-         else
+         else  // no dialog for this non-INVITE response
          {
             // ignore
          }
       }
+      else // didn't find dialogSet
+      {
+         // very bad, ignore
+      }
    }
-   else // didn't find dialogSet
+   else // didn't find dialogSet, completely stray response
    {
-      // very bad, ignore
+      // ignore
    }
+   delete msg;
 }
