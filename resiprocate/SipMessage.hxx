@@ -47,43 +47,58 @@ class SipMessage : public Message
 
       Data brief() const ;
 
+      template <int T>
+      bool
+      exists(const Header<T>& headerType)
+      {
+         return mHeaders[T] != 0;
+      }
+
       // known header interface
       template <int T>
       typename Header<T>::Type& 
       operator[](const Header<T>& headerType)
       {
-         HeaderTypeHolder<T> parserFactory;
-
-         HeaderFieldValueList* hfvs = mHeaders[parserFactory.getValue()];
+         HeaderFieldValueList* hfvs = mHeaders[T];
          // empty?
-         if (mHeaders[parserFactory.getValue()] == 0)
+         if (hfvs == 0)
          {
             // create the list with a new component
             hfvs = new HeaderFieldValueList;
-            HeaderFieldValue* hfv = new HeaderFieldValue;
-            hfv->mParserCategory = parserFactory.createParserCategory(*hfv);
-            hfvs->push_back(hfv);
-            if (headerType.isMulti())
+            if (Header<T>::isMulti)
             {
-               hfvs->setParserContainer((ParserContainerBase*)parserFactory.createParserContainer(*hfvs));
+               // create an empty parser container
+               hfvs->setParserContainer(new ParserContainer<typename Header<T>::Type>(*hfvs));
             }
-            mHeaders[parserFactory.getValue()] = hfvs;
+            else
+            {
+               // asked for a single, create it on the fly
+               HeaderFieldValue* hfv = new HeaderFieldValue;
+               hfvs->push_back(hfv);
+            }
+            
+            mHeaders[T] = hfvs;
          }
                   
          // already parsed?
          if (!hfvs->front()->isParsed())
          {
-            if (headerType.isMulti())
+            if (Header<T>::isMulti)
             {
-               hfvs->setParserContainer((ParserContainerBase*)parserFactory.createParserContainer(*hfvs));
+               // create the child parsers
+               hfvs->setParserContainer(new ParserContainer<typename Header<T>::Type>(*hfvs));
             }
             else
             {
-               hfvs->front()->setParserCategory(parserFactory.createParserCategory(*hfvs->front()));
+               hfvs->front()->setParserCategory(new typename Header<T>::Type(*hfvs->front()));
+               if (hfvs->moreThanOne())
+               {
+                  // WarningLog(<< "Single content header appears multiple times!");
+               }
             }
          }
 
-         return *(typename Header<T>::Type*)mHeaders[parserFactory.getValue()]->getParserCategory();
+         return *(typename Header<T>::Type*)mHeaders[T]->getParserCategory();
       }
 
       RequestLineComponent& 
