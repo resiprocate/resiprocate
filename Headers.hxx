@@ -604,57 +604,57 @@ class Authentication_Info_Header : public HeaderBase
 };
 extern Authentication_Info_Header h_AuthenticationInfo;
 
-class Authorization_Header : public HeaderBase
+class Authorization_MultiHeader : public HeaderBase
 {
    public:
       typedef Auth Type;
       virtual Headers::Type getTypeNum() const {return Headers::Authorization;}
-      Authorization_Header()
+      Authorization_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Authorization] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Authorization] = Symbols::Authorization;
       }
 };
-extern Authorization_Header h_Authorization;
+extern Authorization_MultiHeader h_Authorizations;
 
-class Proxy_Authenticate_Header : public HeaderBase
+class Proxy_Authenticate_MultiHeader : public HeaderBase
 {
    public:
       typedef Auth Type;
       virtual Headers::Type getTypeNum() const {return Headers::Proxy_Authenticate;}
-      Proxy_Authenticate_Header()
+      Proxy_Authenticate_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Proxy_Authenticate] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Proxy_Authenticate] = Symbols::Proxy_Authenticate;
       }
 };
-extern Proxy_Authenticate_Header h_ProxyAuthenticate;
+extern Proxy_Authenticate_MultiHeader h_ProxyAuthenticates;
 
-class Proxy_Authorization_Header : public HeaderBase
+class Proxy_Authorization_MultiHeader : public HeaderBase
 {
    public:
       typedef Auth Type;
       virtual Headers::Type getTypeNum() const {return Headers::Proxy_Authorization;}
-      Proxy_Authorization_Header()
+      Proxy_Authorization_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Proxy_Authorization] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::Proxy_Authorization] = Symbols::Proxy_Authorization;
       }
 };
-extern Proxy_Authorization_Header h_ProxyAuthorization;
+extern Proxy_Authorization_MultiHeader h_ProxyAuthorizations;
 
-class WWW_Authenticate_Header : public HeaderBase
+class WWW_Authenticate_MultiHeader : public HeaderBase
 {
    public:
       typedef Auth Type;
       virtual Headers::Type getTypeNum() const {return Headers::WWW_Authenticate;}
-      WWW_Authenticate_Header()
+      WWW_Authenticate_MultiHeader()
       {
          Headers::CommaTokenizing[Headers::WWW_Authenticate] = Type::isCommaTokenizing;
          Headers::HeaderNames[Headers::WWW_Authenticate] = Symbols::WWW_Authenticate;
       }
 };
-extern WWW_Authenticate_Header h_WWWAuthenticate;
+extern WWW_Authenticate_MultiHeader h_WWWAuthenticates;
 
 //====================
 // CSeqCategory:
