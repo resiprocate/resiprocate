@@ -29,7 +29,7 @@ class ClientSubscription: public BaseUsage
       virtual void end();
 
       bool matches(const SipMessage& subOrNotify);
-      void process(const SipMessage& subOrNotify);
+      //void process(const SipMessage& subOrNotify);
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
