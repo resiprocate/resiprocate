@@ -47,7 +47,14 @@ Pidf::~Pidf()
 {
 }
 
-const Data& 
+void 
+Pidf::setEntity(const Uri& entity)
+{
+   checkParsed();
+   mEntity = entity;
+}
+
+const Uri& 
 Pidf::getEntity() const
 { 
    checkParsed();
@@ -109,30 +116,30 @@ Pidf::encodeParsed(std::ostream& str) const
 
    str << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << Symbols::CRLF;
    str << "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"" << Symbols::CRLF;
-   str << "          entity=\"pres:" << mEntity << "\">"  <<  Symbols::CRLF;
+   str << "          entity=\"" << mEntity << "\">"  <<  Symbols::CRLF;
    for (vector<Tuple>::const_iterator i = mTuples.begin(); i != mTuples.end(); ++i)
    {
       Data status( (char*)( (i->status)?"open":"closed" ) );
       str << "  <tuple id=\"" << i->id << "\" ";
 
       XMLCursor::encode(str, i->attributes);
-      str << ">" << Symbols::CRLF;;
-      str << "     <status><basic>" << status << "</basic></status>" << Symbols::CRLF;;
+      str << ">" << Symbols::CRLF;
+      str << "     <status><basic>" << status << "</basic></status>" << Symbols::CRLF;
       if ( !i->contact.empty() )
       {
-         str << "     <contact priority=\"" << i->contactPriority << "\">" << "sip:" << i->contact << "</contact>" << Symbols::CRLF;;
+         str << "     <contact priority=\"" << i->contactPriority << "\">" << "sip:" << i->contact << "</contact>" << Symbols::CRLF;
       }
       if ( !i->timeStamp.empty() )
       {
-         str << "     <timestamp>" << i->timeStamp << "</timestamp>" << Symbols::CRLF;;
+         str << "     <timestamp>" << i->timeStamp << "</timestamp>" << Symbols::CRLF;
       }
       if ( !i->note.empty() )
       {
-         str << "     <note>" << i->note << "</note>" << Symbols::CRLF;;
+         str << "     <note>" << i->note << "</note>" << Symbols::CRLF;
       }
-      str << "  </tuple>" << Symbols::CRLF;;
+      str << "  </tuple>" << Symbols::CRLF;
    }
-   str << "</presence>" << Symbols::CRLF;;
+   str << "</presence>" << Symbols::CRLF;
    
    return str;
 }
@@ -140,7 +147,7 @@ Pidf::encodeParsed(std::ostream& str) const
 void 
 Pidf::parse(ParseBuffer& pb)
 {
-   DebugLog(<< "Pidf::parse(" << Data(pb.start(), int(pb.end()-pb.start())));
+   DebugLog(<< "Pidf::parse(" << Data(pb.start(), int(pb.end()-pb.start())) << ") ");
 
    XMLCursor xml(pb);
 
@@ -149,7 +156,7 @@ Pidf::parse(ParseBuffer& pb)
       XMLCursor::AttributeMap::const_iterator i = xml.getAttributes().find("entity");
       if (i != xml.getAttributes().end())
       {
-         mEntity = i->second;
+         mEntity = Uri(i->second);
       }
       else
       {
@@ -242,49 +249,10 @@ Pidf::parse(ParseBuffer& pb)
    }
 }
 
-#ifdef OLD
-void 
-Pidf::parse(ParseBuffer& pb)
-{
-   const char* anchor = pb.position();
-
-   Tuple t;
-   
-   mTuples.push_back( t );
-   mTuples[0].status = true;
-   mTuples[0].note = Data::Empty;
-
-   const char* close = pb.skipToChars("closed");
-   if ( close != pb.end() )
-   {
-      DebugLog ( << "found a closed" );
-      mTuples[0].status = false;
-   }
-
-   pb.reset(anchor);
-   const char* open = pb.skipToChars("open");
-   if ( open != pb.end() )
-   {
-      DebugLog ( << "found an open" );
-      mTuples[0].status = true;
-   }
-
-   pb.reset(anchor);
-   pb.skipToChars("<note");
-   pb.skipToChars(">");
-   if (!pb.eof() )
-   {
-      const char* startNote = pb.skipChar();
-      pb.skipToChars("</note");
-      pb.data(mTuples[0].note, startNote);
-      DebugLog ( << "found a note of" << mTuples[0].note);
-   }
-}
-#endif // OLD
-
 void 
 Pidf::setSimpleId(const Data& id)
 {
+   checkParsed();
    if (mTuples.empty())
    {
       Tuple t;
@@ -296,6 +264,7 @@ Pidf::setSimpleId(const Data& id)
 void 
 Pidf::setSimpleStatus( bool online, const Data& note, const Data& contact )
 {
+   checkParsed();
    if (mTuples.empty())
    {
       Tuple t;
@@ -326,11 +295,14 @@ Pidf::getSimpleStatus(Data* note) const
    return false;
 }
 
+// !dlb! deal with non-unique tuples?
 void 
 Pidf::merge(const Pidf& other)
 {
-   vector<Tuple> tuples = getTuples();
+   vector<Tuple>& tuples = getTuples();
    tuples.reserve(tuples.size() + other.getTuples().size());
+
+   setEntity(other.mEntity);
 
    for (vector<Tuple>::const_iterator i = other.getTuples().begin();
         i != other.getTuples().end(); ++i)
