@@ -221,6 +221,7 @@ class DialogUsageManager : public HandleManager
       ServerRegistrationHandler* mServerRegistrationHandler;      
 
       ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
+      ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
       
       std::map<Data, ClientSubscriptionHandler*> mClientSubscriptionHandlers;
       std::map<Data, ServerSubscriptionHandler*> mServerSubscriptionHandlers;
