@@ -3,6 +3,7 @@
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/TimerMessage.hxx>
 #include <sipstack/MethodTypes.hxx>
+#include <sipstack/Helper.hxx>
 #include <util/Logger.hxx>
 
 using namespace Vocal2;
@@ -64,7 +65,7 @@ TransactionState::process(SipStack& stack)
             state->processServerNonInvite(message);
             break;
          case ServerInvite:
-            state->processClientInvite(message);
+            state->processServerInvite(message);
             break;
          case Stale:
             state->processStale(message);
@@ -87,12 +88,16 @@ TransactionState::process(SipStack& stack)
                DebugLog (<< "Create new transaction for inbound msg ");
                if (sip->header(h_RequestLine).getMethod() == INVITE)
                {
+                   DebugLog(<<" adding T100 timer (INV)");
                   TransactionState* state = new TransactionState(stack, ServerInvite, Proceeding);
+		  // !rk! This might be needlessly created.  Design issue.
+		  state->mMsgToRetransmit = state->make100(sip);
                   stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
                   stack.mTransactionMap.add(tid,state);
                }
                else 
                {
+                   DebugLog(<<"Adding non-INVITE transaction state");
                   TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
                   stack.mTransactionMap.add(tid,state);
                }
@@ -126,6 +131,7 @@ TransactionState::process(SipStack& stack)
             else
             {
                // forward this statelessly
+                DebugLog(<<"forward this statelessly -- UNIMP");
                assert(0);
             }
          }
@@ -523,8 +529,11 @@ TransactionState::processServerInvite(  Message* msg )
             if (mState == Proceeding || mState == Completed)
             {
                DebugLog (<< "Received invite from wire - forwarding to TU state=" << mState);
-               mMsgToRetransmit = make100(sip); // for when TimerTrying fires
-               sendToTU(msg); // don't delete
+	       if (!mMsgToRetransmit)
+	       {
+	          mMsgToRetransmit = make100(sip); // for when TimerTrying fires
+               }
+	       sendToTU(msg); // don't delete
             }
             else
             {
@@ -705,7 +714,7 @@ TransactionState::processServerInvite(  Message* msg )
             break;
             
          case Timer::TimerTrying:
-            if (mState == Trying)
+            if (mState == Proceeding)
             {
                DebugLog (<< "TimerTrying fired. Send a 100");
                sendToWire(mMsgToRetransmit); // will get deleted when this is deleted
@@ -713,7 +722,7 @@ TransactionState::processServerInvite(  Message* msg )
             }
             else
             {
-               DebugLog (<< "TimerTrying fired. Not in Trying state. Ignoring");
+               DebugLog (<< "TimerTrying fired. Not in Proceeding state. Ignoring");
                delete msg;
             }
             break;
@@ -831,15 +840,16 @@ TransactionState::sendToTU(Message* msg) const
 SipMessage*
 TransactionState::make100(SipMessage* request) const
 {
-   SipMessage* response = 0;
-   // make sure request is a request and build it !jf!
-   return response;
+   SipMessage* sip=new SipMessage(Helper::makeResponse(request, 100));
+   return sip;
 }
 
 SipMessage*
 TransactionState::makeAck(SipMessage* response) const
 {
    SipMessage* ack = 0;
+   assert(0);
+   // NOTREACHED
    return ack;
 }
 
