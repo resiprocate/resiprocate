@@ -15,14 +15,11 @@ namespace Vocal2
 {
 
 class Transport;
-
 class SipMessage;            // fwd decl
 
 class Preparse
 {
-    public:
-
-        
+    public:        
         Preparse();
         
         typedef enum StateEnum 
@@ -58,6 +55,7 @@ class Preparse
                 int workMask;
         }
         Edge;
+
         typedef enum
         {
             dContinuous = 0,
