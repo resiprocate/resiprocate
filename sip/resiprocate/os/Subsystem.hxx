@@ -23,6 +23,7 @@ class Subsystem
       static const Subsystem TRANSACTION;
       static const Subsystem TRANSPORT;
       static const Subsystem STATS;
+      static const Subsystem REPRO;
       
       const Data& getSubsystem() const;
 
