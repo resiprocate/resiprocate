@@ -1345,7 +1345,7 @@ NameAddr::parse(ParseBuffer& pb)
       mUri.parse(pb);
       if (laQuote)
       {
-         pb.skipChar('>');
+         pb.skipChar(Symbols::RA_QUOTE[0]);
          pb.skipWhitespace();
          parseParameters(pb);
       }
