@@ -140,6 +140,7 @@ void
 SipStack::send(const SipMessage& msg)
 {
    InfoLog (<< "SEND: " << msg.brief());
+   DebugLog (<< msg);
    
    SipMessage* toSend = new SipMessage(msg);
    toSend->setFromTU();
@@ -203,6 +204,7 @@ SipStack::receiveAny()
       if ((sip=dynamic_cast<SipMessage*>(msg)))
       {
          InfoLog (<< "RECV: " << sip->brief());
+         DebugLog (<< *sip);
          return sip;
       }
       else if ((term=dynamic_cast<TransactionTerminated*>(msg)))
@@ -239,6 +241,7 @@ SipStack::getTimeTillNextProcessMS()
 void
 SipStack::registerForTransactionTermination()
 {
+   InfoLog (<< "Register for transaction termination events in TU");
    mRegisteredForTransactionTermination = true;
 }
 
