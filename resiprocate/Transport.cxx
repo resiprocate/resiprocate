@@ -20,7 +20,6 @@ Transport::Transport(int portNum, Fifo<Message>& rxFifo) :
 {
 }
 
-
 void
 Transport::run()
 {

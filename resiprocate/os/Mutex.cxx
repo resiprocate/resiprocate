@@ -63,7 +63,37 @@
 
 using Vocal2::Mutex;
 
-#ifndef WIN32 // TODO FIX
+#ifdef WIN32 
+	namespace Vocal2
+{
+
+Mutex::Mutex()
+{
+   assert(0);
+}
+
+
+Mutex::~Mutex ()
+{
+   assert(0);
+}
+
+
+void
+Mutex::lock()
+{
+  assert(0); 
+}
+
+void
+Mutex::unlock()
+{
+   assert(0); 
+}
+
+}
+
+#else
 
 namespace Vocal2
 {
