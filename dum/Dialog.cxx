@@ -615,3 +615,10 @@ Dialog::setRemoteTarget(const NameAddr& remoteTarget)
    mRemoteTarget = remoteTarget;
 }
 
+bool 
+Dialog::shouldMerge(const SipMessage& request) const
+{
+   return false;
+}
+
+

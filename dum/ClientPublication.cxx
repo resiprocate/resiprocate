@@ -31,6 +31,18 @@ ClientPublication::Handle::operator->()
    return static_cast<ClientPublication*>(get());
 }
 
+void 
+ClientPublication::dispatch(const SipMessage& msg)
+{
+}
+
+void 
+ClientPublication::dispatch(const DumTimeout& timer)
+{
+}
+
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

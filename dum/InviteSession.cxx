@@ -214,6 +214,10 @@ InviteSession::Handle::operator->()
    return static_cast<InviteSession*>(get());
 }
 
+void InviteSession::makeAck(const SipMessage& response2xx)
+{
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
