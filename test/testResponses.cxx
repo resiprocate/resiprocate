@@ -104,7 +104,9 @@ main(int argc, char* argv[])
            if (received->isRequest())
            {
              SipMessage* resp = Helper::makeResponse(*received, 606);
-             resp->header(h_Warning).text() = "Simple test reply from "__FILE__" driver.";
+             WarningCategory warn;
+             warn.text() = "Simple test reply from "__FILE__" driver.";
+             resp->header(h_Warnings).push_back(warn);
              stack->send(*resp);
              needToProcessSend = true;
            }
