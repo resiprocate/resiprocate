@@ -84,7 +84,7 @@ TransactionState::process(SipStack& stack)
                
             if (sip->isExternal()) // new sip msg from transport
             {
-               if (sip->header(h_Request_Line).getMethod() == INVITE)
+               if (sip->header(h_RequestLine).getMethod() == INVITE)
                {
                   TransactionState* state = new TransactionState(stack, ServerInvite, Proceeding);
                   stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
@@ -100,7 +100,7 @@ TransactionState::process(SipStack& stack)
             }
             else // new sip msg from the TU
             {
-               if (sip->header(h_Request_Line).getMethod() == INVITE)
+               if (sip->header(h_RequestLine).getMethod() == INVITE)
                {
                   TransactionState* state = new TransactionState(stack, ClientInvite, Calling);
                   stack.mTransactionMap.add(tid,state);
@@ -164,7 +164,7 @@ TransactionState::processClientNonInvite(  Message* msg )
    else if (isResponse(msg) && !isFromTU(msg)) // from the wire
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->header(h_Status_Line).responseCode();
+      int code = sip->header(h_StatusLine).responseCode();
       if (code >= 100 && code < 200) // 1XX
       {
          if (mState == Trying || mState == Proceeding)
@@ -258,7 +258,7 @@ TransactionState::processClientInvite(  Message* msg )
    if (isInvite(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      switch (sip->header(h_Request_Line).getMethod())
+      switch (sip->header(h_RequestLine).getMethod())
       {
          case INVITE:
             mMsgToRetransmit = sip;
@@ -280,7 +280,7 @@ TransactionState::processClientInvite(  Message* msg )
    }
    else if (isSentIndication(msg))
    {
-      switch (mMsgToRetransmit->header(h_Request_Line).getMethod())
+      switch (mMsgToRetransmit->header(h_RequestLine).getMethod())
       {
          case INVITE:
             if (isSentReliable(msg))
@@ -303,7 +303,7 @@ TransactionState::processClientInvite(  Message* msg )
    else if (isResponse(msg) && !isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->header(h_Status_Line).responseCode();
+      int code = sip->header(h_StatusLine).responseCode();
       switch (sip->header(h_CSeq).method())
       {
          case INVITE:
@@ -438,7 +438,7 @@ TransactionState::processServerNonInvite(  Message* msg )
    else if (isResponse(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->header(h_Status_Line).responseCode();
+      int code = sip->header(h_StatusLine).responseCode();
       if (code >= 100 && code < 200) // 1XX
       {
          if (mState == Trying || mState == Proceeding)
@@ -511,7 +511,7 @@ TransactionState::processServerInvite(  Message* msg )
    if (isRequest(msg) && !isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      switch (sip->header(h_Request_Line).getMethod())
+      switch (sip->header(h_RequestLine).getMethod())
       {
          case INVITE:
             if (mState == Proceeding || mState == Completed)
@@ -568,7 +568,7 @@ TransactionState::processServerInvite(  Message* msg )
    else if (isResponse(msg, 100, 699) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->header(h_Status_Line).responseCode();
+      int code = sip->header(h_StatusLine).responseCode();
       switch (sip->header(h_CSeq).method())
       {
          case INVITE:
@@ -749,7 +749,7 @@ TransactionState::isInvite(Message* msg) const
    if (isRequest(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      return (sip->header(h_Request_Line).getMethod()) == INVITE;
+      return (sip->header(h_RequestLine).getMethod()) == INVITE;
    }
    return false;
 }
@@ -760,7 +760,7 @@ TransactionState::isResponse(Message* msg, int lower, int upper) const
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (sip)
    {
-      int c = sip->header(h_Status_Line).responseCode();
+      int c = sip->header(h_StatusLine).responseCode();
       return (c >= lower && c <= upper);
    }
    return false;
