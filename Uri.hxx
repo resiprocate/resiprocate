@@ -7,6 +7,7 @@
 
 namespace Vocal2
 {
+class SipMessage;
 
 class Uri : public ParserCategory
 {
@@ -14,6 +15,8 @@ class Uri : public ParserCategory
       Uri();
       Uri(const Data& data);
       Uri(const Uri&);
+
+      ~Uri();
       
       Data& host() const {checkParsed(); return mHost;}
       Data& user() const {checkParsed(); return mUser;}
@@ -24,13 +27,17 @@ class Uri : public ParserCategory
       Data& scheme() const {checkParsed(); return mScheme;}
       int& port() const {checkParsed(); return mPort;}
       Data& password() const {checkParsed(); return mPassword;}
+
+      bool hasEmbedded() const;
+      SipMessage& embedded() const;
       
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       
-      // parse the headers into this as SipMessage -- called from parse
-      void parseEmbeddedHeaders();
+      // parse the headers into this as SipMessage
+      void parseEmbeddedHeaders(ParseBuffer& pb);
+      std::ostream& encodeEmbeddedHeaders(std::ostream& str) const;
 
       Uri& operator=(const Uri& rhs);
       bool operator==(const Uri& other) const;
@@ -49,6 +56,10 @@ class Uri : public ParserCategory
       mutable Data mOldHost;
       mutable Data mOldUser;
       mutable int mOldPort;
+
+   private:
+      Data mEmbeddedHeadersText;
+      SipMessage* mEmbeddedHeaders;
 };
  
 }

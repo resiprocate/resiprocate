@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.101 2002/12/31 06:04:02 fluffy Exp $
+# $Id: Makefile,v 1.102 2003/01/07 06:27:22 davidb Exp $
 
 BUILD = ../../build
 
@@ -25,6 +25,7 @@ parsetest: bin.debug.Linux.i686/testParserCategories
 	./bin.debug.Linux.i686/testParserCategories
 
 SRC = \
+	Embedded.cxx \
 	Pidf.cxx \
 	MultipartMixedContents.cxx \
 	LazyParser.cxx \
