@@ -32,7 +32,7 @@ class BaseUsage
       class Handle
       {
          public:
-            typedef UInt64 Id;
+            typedef unsigned long Id; // make this a UInt64, fix the hash
          protected:
             Handle(DialogUsageManager& dum);
 
@@ -45,7 +45,7 @@ class BaseUsage
             Id mId;
             friend class DialogUsageManager;
             friend class Dialog;
-            static UInt64 getNext();
+            static Id getNext();
       };
 
       // to send a request on an existing dialog (made from make... methods above)
