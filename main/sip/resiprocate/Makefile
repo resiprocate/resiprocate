@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.32 2002/09/22 07:54:39 jason Exp $
+# $Id: Makefile,v 1.33 2002/09/22 16:11:10 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -32,6 +32,7 @@ SRC =	\
 	TimerMessage.cxx \
 	TimerQueue.cxx \
 	TransactionState.cxx \
+	TransactionMap.cxx \
 	Transport.cxx \
 	TransportSelector.cxx \
 	UdpTransport.cxx \

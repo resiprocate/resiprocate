@@ -302,3 +302,16 @@ SipMessage::clearFixedDest()
   mHaveFixedDest = false;
 }
 
+
+RequestLineComponent& 
+SipMessage::operator[](const RequestLineType& l)
+{
+   assert(0);
+}
+
+
+StatusLineComponent& 
+SipMessage::operator[](const StatusLineType& l)
+{
+   assert(0);
+}
