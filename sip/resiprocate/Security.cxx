@@ -1530,10 +1530,9 @@ BaseSecurity::decrypt( const Data& decryptorAor, Pkcs7Contents* contents)
 }
 
 Contents*
-BaseSecurity::checkSignature(const Data& signerAor,
-                             MultipartSignedContents* multi,
-                             Data& signedBy,
-                             SignatureStatus& sigStat )
+BaseSecurity::checkSignature(MultipartSignedContents* multi,
+                             Data* signedBy,
+                             SignatureStatus* sigStat )
 {
    if ( multi->parts().size() != 2 )
    {
@@ -1648,13 +1647,21 @@ BaseSecurity::checkSignature(const Data& signerAor,
    certs = sk_X509_new_null();
    assert( certs );
 
-   if (mUserCerts.count(signerAor))
+   if ( *signedBy == Data::Empty )
    {
-      X509* cert = mUserCerts[signerAor];
-      assert(cert);
-      sk_X509_push(certs, cert);
+      assert(0);
+      // need to add back in code that adds all certs when sender unkonwn
    }
-
+   else
+   {
+      if (mUserCerts.count( *signedBy))
+      {
+         X509* cert = mUserCerts[ *signedBy ];
+         assert(cert);
+         sk_X509_push(certs, cert);
+      }
+   }
+   
    //flags |= PKCS7_NOINTERN;
    //flags |= PKCS7_NOVERIFY;
    //flags |= PKCS7_NOSIGS;
@@ -1686,7 +1693,7 @@ BaseSecurity::checkSignature(const Data& signerAor,
                   Uri n(name);
                   if ( n.scheme() == "sip" )
                   {
-                     signedBy = name;
+                     *signedBy = name;
                      InfoLog(<< "choose <" << name << "> signature" );
                  }
                }
@@ -1701,7 +1708,7 @@ BaseSecurity::checkSignature(const Data& signerAor,
    }
    else
    {
-      sigStat = isBad;
+      *sigStat = isBad;
       InfoLog(<< "No valid signers of this messages" );
       return first;
    }
@@ -1744,7 +1751,7 @@ BaseSecurity::checkSignature(const Data& signerAor,
 
             if ( sigStat )
             {
-               sigStat = isBad;
+               *sigStat = isBad;
             }
 
             while (1)
@@ -1771,19 +1778,19 @@ BaseSecurity::checkSignature(const Data& signerAor,
             if ( flags & PKCS7_NOVERIFY )
             {
                DebugLog( << "Signature is notTrusted" );
-               sigStat = notTrusted;
+               *sigStat = notTrusted;
             }
             else
             {
                if (false) // !jf! TODO look for this cert in store
                {
                   DebugLog( << "Signature is trusted" );
-                  sigStat = trusted;
+                  *sigStat = trusted;
                }
                else
                {
                   DebugLog( << "Signature is caTrusted" );
-                  sigStat = caTrusted;
+                  *sigStat = caTrusted;
                }
             }
          }
