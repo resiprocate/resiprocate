@@ -8,6 +8,8 @@
 #include <list>
 #include <vector>
 #include <deque>
+#include <cassert>
+
 #include "HashMap.hxx"
 #include "resiprocate/os/compat.hxx"
 
@@ -241,7 +243,12 @@ template <class T>
 std::ostream&
 operator<<(std::ostream& s, const InserterClass<T>& inserter)
 {
+#ifdef WIN32
+	assert(0); // CJ - really need to fix this
+	return s;
+#else
    return insert(s, inserter._t);
+#endif
 }
 
 /// Templatized function to construct an instance of InserterClass for a
