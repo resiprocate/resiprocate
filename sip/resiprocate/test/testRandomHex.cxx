@@ -3,7 +3,7 @@
 #include <set>
 
 #include "sip2/util/Data.hxx"
-#include "sip2/util/RandomHex.hxx"
+#include "sip2/util/Random.hxx"
 
 using namespace std;
 using namespace Vocal2;
@@ -19,6 +19,9 @@ int main(int argc, char** argv)
    int runs = atoi(argv[1]);
    int length = atoi(argv[2]);
 
+   Random::initialize();
+   
+
    if (runs <= 0 || length <= 0)
    {
       cerr << "usage: testRandomHex number_of_tries string_length" << endl
@@ -32,14 +35,28 @@ int main(int argc, char** argv)
    
    for (int i = 0; i < runs; i++)
    {
-      Data foo = RandomHex::get(length);
-//      cerr << foo << endl;
+      Data foo = Random::getRandomHex(length);
+      cerr << foo << endl;
       if (randomDatas.insert(foo).second == false)
       {
          cerr << "RandomHex produced a duplicate" << length << "byte string after " << i << " runs. " << endl;
          exit(-1);
       }
    }
+
+   cerr << endl << "Now doing crypto random" << endl;
+   
+   for (int i = 0; i < runs; i++)
+   {
+      Data foo = Random::getCryptoRandomHex(length);
+      cerr << foo << endl;
+      if (randomDatas.insert(foo).second == false)
+      {
+         cerr << "RandomHex produced a duplicate" << length << "byte string after " << i << " runs. " << endl;
+         exit(-1);
+      }
+   }
+
    cerr << "Success." << endl;
 }
 
