@@ -369,12 +369,7 @@ Uri::getAor() const
       mOldHost = mHost;
       mOldUser = mUser;
       mOldPort = mPort;
-
-#if defined(VOCAL2_AOR_HAS_SCHEME) // !jf! lame
-      mAor = mScheme + Symbols::COLON;
-#else
       mAor.clear();
-#endif
       
       // mAor.reserve(mUser.size() + mHost.size() + 10); !dlb!
       if (mUser.empty())
@@ -384,8 +379,11 @@ Uri::getAor() const
       else
       {
          mAor += mUser;
-         mAor += Symbols::AT_SIGN;
-         mAor += mHost;
+         if (!mHost.empty())
+         {
+            mAor += Symbols::AT_SIGN;
+            mAor += mHost;
+         }
       }
 
       if (mPort != 0)
@@ -393,12 +391,6 @@ Uri::getAor() const
          mAor += Symbols::COLON;
          mAor += Data(mPort);
       }
-#if defined(VOCAL2_AOR_HAS_SCHEME)
-      else
-      {
-         mAor += Data(Symbols::COLON) + Data(5060);
-      }
-#endif
    }
    return mAor;
 }
@@ -419,12 +411,12 @@ Uri::parse(ParseBuffer& pb)
    if (isEqualNoCase(mScheme, Symbols::Tel))
    {
       const char* anchor = pb.position();
-      pb.skipToOneOf(";>");
+      pb.skipToOneOf(ParseBuffer::Whitespace, ";>");
       pb.data(mUser, anchor);
       if (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0])
       {
          anchor = pb.skipChar();
-         pb.skipToChar(Symbols::RA_QUOTE[0]);
+         pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::RA_QUOTE);
          pb.data(mUserParameters, anchor);
       }
       return;
