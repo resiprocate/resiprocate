@@ -66,7 +66,7 @@
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::APP
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 #define PORT 5060
 
 
