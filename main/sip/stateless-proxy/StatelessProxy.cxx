@@ -239,7 +239,7 @@ StatelessProxy::handleResponse(SipMessage* response)
                response->header(h_Vias).pop_front();
                assert(!response->header(h_Vias).empty());
                
-               static Data unknown("RESIP_UNKNOWN");
+               static Data unknown("UNKNOWN");
                response->setRFC2543TransactionId(unknown);
             
                DebugLog (<< "Proxying response: " << response->brief());

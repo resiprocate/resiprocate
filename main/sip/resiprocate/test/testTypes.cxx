@@ -11,7 +11,7 @@ using namespace std;
 void A()
 {
    for(Headers::Type t = Headers::CSeq;
-       t < Headers::RESIP_UNKNOWN;
+       t < Headers::UNKNOWN;
        ++t)
    {
       DebugLog(<< "A: "<< t << ":'" << Headers::getHeaderName(t) << "'");
@@ -21,7 +21,7 @@ void A()
 void B()
 {
    for(int t = Headers::CSeq;
-       t < Headers::RESIP_UNKNOWN;
+       t < Headers::UNKNOWN;
        ++t)
    {
       DebugLog(<<"B: "<< t << ":'" << Headers::getHeaderName(t) << "'");

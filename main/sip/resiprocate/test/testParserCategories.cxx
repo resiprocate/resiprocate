@@ -333,7 +333,7 @@ main(int arc, char** argv)
       Data stringString("Lame Agent");
       HeaderFieldValue hfv(stringString.data(), stringString.size());
       
-      StringCategory str(&hfv, Headers::RESIP_UNKNOWN);
+      StringCategory str(&hfv, Headers::UNKNOWN);
       assert(str.value() == stringString);
 
       Data buff;
@@ -364,7 +364,7 @@ main(int arc, char** argv)
       Data statusLineString("SIP/2.0 180 Ringing");
       HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
       
-      StatusLine statusLine(&hfv, Headers::RESIP_UNKNOWN);
+      StatusLine statusLine(&hfv, Headers::UNKNOWN);
       assert(statusLine.responseCode() == 180);
       cerr << statusLine.reason() << endl;
       assert(statusLine.reason() == "Ringing");
@@ -547,7 +547,7 @@ main(int arc, char** argv)
       char *org = "WuggaWuggaFoo";
       
       HeaderFieldValue hfv(org, strlen(org));
-      Token tok(&hfv, Headers::RESIP_UNKNOWN);
+      Token tok(&hfv, Headers::UNKNOWN);
       assert(tok.value() == org);
    }
 
@@ -556,7 +556,7 @@ main(int arc, char** argv)
       char *org = "WuggaWuggaFoo;ttl=2";
       
       HeaderFieldValue hfv(org, strlen(org));
-      Token tok(&hfv, Headers::RESIP_UNKNOWN);
+      Token tok(&hfv, Headers::UNKNOWN);
       assert(tok.value() == "WuggaWuggaFoo");
       assert(tok.param(p_ttl) == 2);
    }
@@ -574,7 +574,7 @@ main(int arc, char** argv)
       char *viaString = /* Via: */ " SIP/2.0/UDP a.b.c.com:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::RESIP_UNKNOWN);
+      Via via(&hfv, Headers::UNKNOWN);
       assert(via.sentPort() == 5000);
       assert(via.sentHost() == "a.b.c.com");
       assert(via.param(p_maddr) == "1.2.3.4");
@@ -586,7 +586,7 @@ main(int arc, char** argv)
       char *viaString = /* Via: */ " SIP/2.0/UDP [5f1b:df00:ce3e:e200:20:800:2b37:6426]:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::RESIP_UNKNOWN);
+      Via via(&hfv, Headers::UNKNOWN);
       assert(via.sentPort() == 5000);
       assert(via.sentHost() == "5f1b:df00:ce3e:e200:20:800:2b37:6426");
       assert(via.param(p_maddr) == "1.2.3.4");
@@ -700,8 +700,8 @@ main(int arc, char** argv)
       assert(uA == uC);
    }
    {
-      Data uriStringA = "sip:biloxi.com;transport=tcp;method=RESIP_REGISTER";
-      Data uriStringB = "sip:biloxi.com;method=RESIP_REGISTER;transport=tcp";
+      Data uriStringA = "sip:biloxi.com;transport=tcp;method=REGISTER";
+      Data uriStringB = "sip:biloxi.com;method=REGISTER;transport=tcp";
 
       ParseBuffer pa(uriStringA.data(), uriStringA.size());
       ParseBuffer pb(uriStringB.data(), uriStringB.size());
@@ -802,39 +802,39 @@ main(int arc, char** argv)
 
    {
       TR _tr( "Request Line parse");
-      Data requestLineString("RESIP_INVITE sips:bob@foo.com SIP/2.0");
+      Data requestLineString("INVITE sips:bob@foo.com SIP/2.0");
       HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
 
-      RequestLine requestLine(&hfv, Headers::RESIP_UNKNOWN);
+      RequestLine requestLine(&hfv, Headers::UNKNOWN);
       assert(requestLine.uri().scheme() == "sips");
       assert(requestLine.uri().user() == "bob");
       cerr << requestLine.uri().host() << endl;
       assert(requestLine.uri().host() == "foo.com");
-      assert(requestLine.getMethod() == RESIP_INVITE);
+      assert(requestLine.getMethod() == INVITE);
       assert(requestLine.getSipVersion() == "SIP/2.0");
    }
    {
       TR _tr( "Request Line parse tel");
-      Data requestLineString("RESIP_INVITE tel:4153331212 SIP/2.0");
+      Data requestLineString("INVITE tel:4153331212 SIP/2.0");
       HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
 
-      RequestLine requestLine(&hfv, Headers::RESIP_UNKNOWN);
+      RequestLine requestLine(&hfv, Headers::UNKNOWN);
       assert(requestLine.uri().scheme() == "tel");
       assert(requestLine.uri().user() == "4153331212");
-      assert(requestLine.getMethod() == RESIP_INVITE);
+      assert(requestLine.getMethod() == INVITE);
       assert(requestLine.getSipVersion() == "SIP/2.0");
    }
    {
       TR _tr( "Request Line parse, parameters");
-      Data requestLineString("RESIP_INVITE sips:bob@foo.com;maddr=1.2.3.4 SIP/2.0");
+      Data requestLineString("INVITE sips:bob@foo.com;maddr=1.2.3.4 SIP/2.0");
       HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
 
-      RequestLine requestLine(&hfv, Headers::RESIP_UNKNOWN);
+      RequestLine requestLine(&hfv, Headers::UNKNOWN);
       assert(requestLine.uri().scheme() == "sips");
       assert(requestLine.uri().user() == "bob");
       cerr << requestLine.uri().host() << endl;
       assert(requestLine.uri().host() == "foo.com");
-      assert(requestLine.getMethod() == RESIP_INVITE);
+      assert(requestLine.getMethod() == INVITE);
       assert(requestLine.uri().param(p_maddr) == "1.2.3.4");
       cerr << requestLine.getSipVersion() << endl;
       assert(requestLine.getSipVersion() == "SIP/2.0");
@@ -844,7 +844,7 @@ main(int arc, char** argv)
       Data nameAddrString("sips:bob@foo.com");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::RESIP_UNKNOWN);
+      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
@@ -854,7 +854,7 @@ main(int arc, char** argv)
       Data nameAddrString("Bob<sips:bob@foo.com>");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::RESIP_UNKNOWN);
+      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
@@ -865,7 +865,7 @@ main(int arc, char** argv)
       Data nameAddrString = "\"Bob\"<sips:bob@foo.com>";
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::RESIP_UNKNOWN);
+      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "\"Bob\"");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
@@ -876,7 +876,7 @@ main(int arc, char** argv)
       Data nameAddrString("\"Bob   \\\" asd   \"<sips:bob@foo.com>");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::RESIP_UNKNOWN);
+      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "\"Bob   \\\" asd   \"");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
@@ -887,7 +887,7 @@ main(int arc, char** argv)
       Data nameAddrString("Bob<sips:bob@foo.com>;tag=456248;mobility=\"hobble\"");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::RESIP_UNKNOWN);
+      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
@@ -909,7 +909,7 @@ main(int arc, char** argv)
       Data nameAddrString("\"Bob\"<sips:bob@foo.com>;tag=456248;mobility=\"hobble\"");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::RESIP_UNKNOWN);
+      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "\"Bob\"");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
@@ -932,7 +932,7 @@ main(int arc, char** argv)
       Data nameAddrString("Bob<sips:bob@foo.com;tag=456248;mobility=\"hobble\">");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::RESIP_UNKNOWN);
+      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
@@ -954,7 +954,7 @@ main(int arc, char** argv)
       Data nameAddrString("Bob<sips:bob@foo.com;mobility=\"hobb;le\";tag=\"true;false\">");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
-      NameAddr nameAddr(&hfv, Headers::RESIP_UNKNOWN);
+      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "Bob");
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
@@ -976,7 +976,7 @@ main(int arc, char** argv)
       Data nameAddrString("sip:101@localhost:5080;transport=UDP");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
       
-      NameAddr nameAddr(&hfv, Headers::RESIP_UNKNOWN);
+      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "");
       assert(nameAddr.uri().scheme() == "sip");
       assert(nameAddr.uri().user() == "101");
@@ -986,7 +986,7 @@ main(int arc, char** argv)
       Data nameAddrString("sip:localhost:5070");
       HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
       
-      NameAddr nameAddr(&hfv, Headers::RESIP_UNKNOWN);
+      NameAddr nameAddr(&hfv, Headers::UNKNOWN);
       assert(nameAddr.displayName() == "");
       assert(nameAddr.uri().scheme() == "sip");
       assert(nameAddr.uri().host() == "localhost");
@@ -998,7 +998,7 @@ main(int arc, char** argv)
       Data statusLineString("SIP/2.0 100 ");
       HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
       
-      StatusLine statusLine(&hfv, Headers::RESIP_UNKNOWN);
+      StatusLine statusLine(&hfv, Headers::UNKNOWN);
       assert(statusLine.responseCode() == 100);
       assert(statusLine.reason() == "");
       assert(statusLine.getSipVersion() == "SIP/2.0");
@@ -1008,7 +1008,7 @@ main(int arc, char** argv)
       Data statusLineString("SIP/2.0 100");
       HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
       
-      StatusLine statusLine(&hfv, Headers::RESIP_UNKNOWN);
+      StatusLine statusLine(&hfv, Headers::UNKNOWN);
       assert(statusLine.responseCode() == 100);
       assert(statusLine.reason() == "");
       assert(statusLine.getSipVersion() == "SIP/2.0");
@@ -1018,7 +1018,7 @@ main(int arc, char** argv)
       char* authorizationString = "Digest realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
       
-      Auth auth(&hfv, Headers::RESIP_UNKNOWN);
+      Auth auth(&hfv, Headers::UNKNOWN);
 
       cerr << "Auth scheme: " <<  auth.scheme() << endl;
       assert(auth.scheme() == "Digest");
@@ -1043,7 +1043,7 @@ main(int arc, char** argv)
       char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
       
-      Auth auth(&hfv, Headers::RESIP_UNKNOWN);
+      Auth auth(&hfv, Headers::UNKNOWN);
 
       cerr << "Auth scheme: " <<  auth.scheme() << endl;
       assert(auth.scheme() == "");
@@ -1100,7 +1100,7 @@ main(int arc, char** argv)
       char* genericString = "<http://www.google.com>;purpose=icon;fake=true";
       HeaderFieldValue hfv(genericString, strlen(genericString));
 
-      GenericURI generic(&hfv, Headers::RESIP_UNKNOWN);
+      GenericURI generic(&hfv, Headers::UNKNOWN);
 
       assert(generic.uri() == "http://www.google.com");
       cerr << generic.param(p_purpose) << endl;
@@ -1120,7 +1120,7 @@ main(int arc, char** argv)
       char *dateString = "Mon, 04 Nov 2002 17:34:15 GMT";
       HeaderFieldValue hfv(dateString, strlen(dateString));
       
-      DateCategory date(&hfv, Headers::RESIP_UNKNOWN);
+      DateCategory date(&hfv, Headers::UNKNOWN);
 
       assert(date.dayOfWeek() == Mon);
       assert(date.dayOfMonth() == 04);
@@ -1155,7 +1155,7 @@ main(int arc, char** argv)
       char *dateString = "  Sun  , 14    Jan 2222 07:04:05   GMT    ";
       HeaderFieldValue hfv(dateString, strlen(dateString));
       
-      DateCategory date(&hfv, Headers::RESIP_UNKNOWN);
+      DateCategory date(&hfv, Headers::UNKNOWN);
 
       assert(date.dayOfWeek() == Sun);
       assert(date.dayOfMonth() == 14);
@@ -1177,7 +1177,7 @@ main(int arc, char** argv)
       char* mimeString = "application/sdp";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
-      Mime mime(&hfv, Headers::RESIP_UNKNOWN);
+      Mime mime(&hfv, Headers::UNKNOWN);
 
       assert(mime.type() == "application");
       assert(mime.subType() == "sdp");
@@ -1193,7 +1193,7 @@ main(int arc, char** argv)
       char* mimeString = "text/html ; charset=ISO-8859-4";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
-      Mime mime(&hfv, Headers::RESIP_UNKNOWN);
+      Mime mime(&hfv, Headers::UNKNOWN);
 
       assert(mime.type() == "text");
       assert(mime.subType() == "html");
@@ -1210,7 +1210,7 @@ main(int arc, char** argv)
       char* mimeString = "    text   /     html        ;  charset=ISO-8859-4";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
-      Mime mime(&hfv, Headers::RESIP_UNKNOWN);
+      Mime mime(&hfv, Headers::UNKNOWN);
 
       assert(mime.type() == "text");
       assert(mime.subType() == "html");
@@ -1236,7 +1236,7 @@ main(int arc, char** argv)
       
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::RESIP_UNKNOWN);
+      Via via(&hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
 
@@ -1263,7 +1263,7 @@ main(int arc, char** argv)
       TR _tr("Via 3");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::RESIP_UNKNOWN);
+      Via via(&hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -1274,7 +1274,7 @@ main(int arc, char** argv)
       TR _tr("Via 4");
       char* viaString = "SIP/2.0/UDP ;branch=oldassbranch";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::RESIP_UNKNOWN);
+      Via via(&hfv, Headers::UNKNOWN);
       
       assert (!via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "oldassbranch");
@@ -1294,7 +1294,7 @@ main(int arc, char** argv)
       TR _tr("Via 5 assignment with unknown parameter");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;stid=abcd.2";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::RESIP_UNKNOWN);
+      Via via(&hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -1311,7 +1311,7 @@ main(int arc, char** argv)
       TR _tr("Via 6 parse with known parameter");
       char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1--c87542-;ttl=4\r\n";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::RESIP_UNKNOWN);
+      Via via(&hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "ec1e.0");
@@ -1323,7 +1323,7 @@ main(int arc, char** argv)
       TR _tr("Via 7 parse with unknown parameter");
       char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1--c87542-;stid=489573115\r\n";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::RESIP_UNKNOWN);
+      Via via(&hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "ec1e.0");
@@ -1506,7 +1506,7 @@ main(int arc, char** argv)
       TR _tr("Branch testing 1");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::RESIP_UNKNOWN);
+      Via via(&hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -1523,7 +1523,7 @@ main(int arc, char** argv)
       TR _tr("Branch testing 2");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::RESIP_UNKNOWN);
+      Via via(&hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -1536,7 +1536,7 @@ main(int arc, char** argv)
       TR _tr("Branch testing 3");
       char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport=100";
       HeaderFieldValue hfv(viaString, strlen(viaString));
-      Via via(&hfv, Headers::RESIP_UNKNOWN);
+      Via via(&hfv, Headers::UNKNOWN);
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -1571,7 +1571,7 @@ main(int arc, char** argv)
       char *org = "digest;d-alg=md5";
       
       HeaderFieldValue hfv(org, strlen(org));
-      Token tok(&hfv, Headers::RESIP_UNKNOWN);
+      Token tok(&hfv, Headers::UNKNOWN);
       assert(tok.value() == "digest");
       assert(tok.param(p_dAlg) == "md5");
    }
@@ -1581,7 +1581,7 @@ main(int arc, char** argv)
       char *org = "digest;d-qop=verify";
       
       HeaderFieldValue hfv(org, strlen(org));
-      Token tok(&hfv, Headers::RESIP_UNKNOWN);
+      Token tok(&hfv, Headers::UNKNOWN);
       assert(tok.value() == "digest");
       assert(tok.param(p_dQop) == "verify");
    }
@@ -1591,7 +1591,7 @@ main(int arc, char** argv)
       char *org = "digest;d-ver=\"0000000000000000000000000000abcd\"";
       
       HeaderFieldValue hfv(org, strlen(org));
-      Token tok(&hfv, Headers::RESIP_UNKNOWN);
+      Token tok(&hfv, Headers::UNKNOWN);
       assert(tok.value() == "digest");
       assert(tok.param(p_dVer) == "0000000000000000000000000000abcd");
    }

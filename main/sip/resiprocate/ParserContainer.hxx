@@ -24,12 +24,12 @@ class ParserContainer : public ParserContainerBase
       typedef ptrdiff_t difference_type;
 
       ParserContainer()
-         : ParserContainerBase(Headers::RESIP_UNKNOWN)
+         : ParserContainerBase(Headers::UNKNOWN)
       {}
       
       // private to SipMessage
       ParserContainer(HeaderFieldValueList* hfvs,
-                      Headers::Type type = Headers::RESIP_UNKNOWN)
+                      Headers::Type type = Headers::UNKNOWN)
          : ParserContainerBase(type)
       {
          for (HeaderFieldValueList::iterator i = hfvs->begin();

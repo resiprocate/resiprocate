@@ -11,7 +11,7 @@ PublicationCreator::PublicationCreator(DialogUsageManager& dum,
                                        unsigned expireSeconds )
    : BaseCreator(dum)
 {
-   makeInitialRequest(target, from, RESIP_PUBLISH);
+   makeInitialRequest(target, from, PUBLISH);
 
    mLastRequest.header(h_Event).value() = eventType;
    mLastRequest.setContents(&body);
