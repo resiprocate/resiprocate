@@ -201,10 +201,13 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       
    }
    mDialogSet.addDialog(this);
+   DebugLog ( <<"Dialog::Dialog " << mId);
 }
 
 Dialog::~Dialog()
 {
+   DebugLog ( <<"Dialog::~Dialog() ");
+   
    mDestroying = true;
    //does removing an elemnt from a list invalidate iterators?
    for(std::list<ClientSubscription*>::iterator it = mClientSubscriptions.begin(); 
