@@ -358,6 +358,7 @@ Data
 SipMessage::brief() const
 {
    Data result(128, true);
+
    static const Data request("SipRequest: ");
    static const Data response("SipResponse: ");
    static const Data tid(" tid=");
@@ -365,12 +366,28 @@ SipMessage::brief() const
    static const Data slash(" / ");
    static const Data wire(" from(wire)");
    static const Data tu(" from(tu)");
+
+   // !dlb! should be checked earlier 
+   if (!exists(h_CSeq) ||
+       !exists(h_Vias))
+   {
+      result = "MALFORMED; missing CSeq";
+      return result;
+   }
    
    if (isRequest()) 
    {
       result += request;
       MethodTypes meth = header(h_RequestLine).getMethod();
-      result += MethodNames[meth];
+      if (meth != UNKNOWN)
+      {
+         result += MethodNames[meth];
+      }
+      else
+      {
+         result += header(h_RequestLine).unknownMethodName();
+      }
+      
       result += Symbols::SPACE;
       result += header(h_RequestLine).uri().getAor();
    }
@@ -382,7 +399,15 @@ SipMessage::brief() const
    result += tid;
    result += getTransactionId();
    result += cseq;
-   result += MethodNames[header(h_CSeq).method()];
+   if (header(h_CSeq).method() != UNKNOWN)
+   {
+      result += MethodNames[header(h_CSeq).method()];
+   }
+   else
+   {
+      result += header(h_CSeq).unknownMethodName();
+   }
+   
    result += slash;
    result += Data(header(h_CSeq).sequence());
    result += mIsExternal ? wire : tu;
