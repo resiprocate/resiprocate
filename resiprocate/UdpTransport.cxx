@@ -201,7 +201,7 @@ UdpTransport::process(FdSet& fdset)
       mPreparse.process(*message,buffer, len, 0, used, discard, status);
       
 
-      if (status & ( ~PreparseConst::stHeadersComplete ))
+      if (!(status & PreparseConst::stHeadersComplete))
       {
          InfoLog(<<"Rejecting datagram as unparsable / fragmented.");
          delete message; 
