@@ -9,18 +9,33 @@ class ClientPublication;
 class ServerPublication;
 class SipMessage;
 
-class PublicationHandler
+class ClientPublicationHandler
 {
    public:
+      /// Called when the publication succeeds or each time it is sucessfully
+      /// refreshed. 
       virtual void onSuccess(ClientPublicationHandle, const SipMessage& status)=0;
-      virtual void onStaleUpdate(ClientPublicationHandle, const SipMessage& status)=0;
+
+      //publication was successfully removed
+      virtual void onRemove(ClientPublicationHandle, const SipMessage& status)=0;
+
+      //call on failure. The usage will be destroyed.  Note that this may not
+      //necessarily be 4xx...a malformed 200, etc. could also reach here.      
       virtual void onFailure(ClientPublicationHandle, const SipMessage& status)=0;
-      
+
+      // ?dcm? -- when should this be called
+      virtual void onStaleUpdate(ClientPublicationHandle, const SipMessage& status)
+      {}
+};
+
+class ServerPublicationHandler
+{
+   public:
       virtual void onInitial(ServerPublicationHandle, const SipMessage& pub)=0;
       virtual void onExpired(ServerPublicationHandle)=0;
       virtual void onRefresh(ServerPublicationHandle, int expires)=0;
       virtual void onUpdate(ServerPublicationHandle, const SipMessage& pub)=0;
-      virtual void onRemoved(ServerPublicationHandle);
+      virtual void onRemoved(ServerPublicationHandle)=0;
 };
  
 }

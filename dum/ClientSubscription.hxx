@@ -22,14 +22,13 @@ class ClientSubscription: public BaseSubscription
       void requestRefresh();
       virtual void end();
 
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-
    protected:
       virtual ~ClientSubscription();
-
    private:
       friend class Dialog;
+
+      virtual void dispatch(const SipMessage& msg);
+      virtual void dispatch(const DumTimeout& timer);
       
 //       const Contents* mCurrentEventDocument;//!dcm! -- unused?
 //       UInt64 mExpirationTime;
