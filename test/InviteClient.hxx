@@ -13,18 +13,18 @@ class Transceiver;
 class InviteClient
 {
    public:
-      InviteClient(Transceiver& tranceiver, const Vocal2::Uri& proxy, 
+      InviteClient(Transceiver& tranceiver, const resip::Uri& proxy, 
                    int firstExtension, int lastExtension, 
                    int numInvites = 0);
       void go();
 
-      class Exception : public Vocal2::BaseException
+      class Exception : public resip::BaseException
       {
          public:
-            Exception(const Vocal2::Data& msg,
-                      const Vocal2::Data& file,
+            Exception(const resip::Data& msg,
+                      const resip::Data& file,
                       const int line) 
-               : Vocal2::BaseException(msg, file, line) 
+               : resip::BaseException(msg, file, line) 
             {}
 
             ~Exception() throw() {}
@@ -35,10 +35,10 @@ class InviteClient
             }
       };
    private:
-      Vocal2::SipMessage* waitForResponse(int responseCode,
+      resip::SipMessage* waitForResponse(int responseCode,
                                           int waitMs);
       Transceiver& mTransceiver;
-      Vocal2::Uri mProxy;
+      resip::Uri mProxy;
       int mFirstExtension;
       int mLastExtension;
       int mNumInvites;

@@ -1,6 +1,6 @@
 #include "resiprocate/Symbols.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 const Data Symbols::DefaultSipVersion = "SIP/2.0";
 const Data Symbols::DefaultSipScheme = "sip";
@@ -54,7 +54,7 @@ const Data Symbols::Postd = "postd=";
 const Data Symbols::auth = "auth";
 
 const char * const Symbols::MagicCookie = "z9hG4bK";
-const char * const Symbols::Vocal2Cookie= "-c87542-";
+const char * const Symbols::resipCookie= "-c87542-";
 
 const int Symbols::DefaultSipPort = 5060;
 const int Symbols::SipTlsPort = 5061;

@@ -62,10 +62,10 @@ void mvvline(...) {};
 #include "resiprocate/Security.hxx"
 
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 
 static WINDOW* commandWin=0;
@@ -107,7 +107,7 @@ class TestCallback: public TuIM::Callback
                                  const Data& signedBy,  Security::SignatureStatus sigStatus,
                                  bool wasEncryped  );
       virtual void sendPageFailed( const Uri& dest,int respNumber );
-      virtual void registrationFailed(const Vocal2::Uri&, int respNumber); 
+      virtual void registrationFailed(const resip::Uri&, int respNumber); 
       virtual void registrationWorked(const Uri& dest );
       virtual void receivePageFailed(const Uri& sender);
 };
@@ -229,7 +229,7 @@ TestCallback::receivePageFailed( const Uri& target )
 
 
 void 
-TestCallback::registrationFailed(const Vocal2::Uri& target, int respNum )
+TestCallback::registrationFailed(const resip::Uri& target, int respNum )
 {
    Data num(respNum);
    
@@ -243,7 +243,7 @@ TestCallback::registrationFailed(const Vocal2::Uri& target, int respNum )
   
                               
 void 
-TestCallback::registrationWorked(const Vocal2::Uri& target)
+TestCallback::registrationWorked(const resip::Uri& target)
 {
    waddstr(textWin,"Registration to ");
    waddstr(textWin, Data::from(target).c_str());

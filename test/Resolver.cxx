@@ -22,9 +22,9 @@
 
 #include "Resolver.hxx"
 
-#define VOCAL_SUBSYSTEM Vocal2::Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
-using namespace Vocal2;
+using namespace resip;
 
 Resolver::Resolver(const Uri& uri) : 
    mHost(uri.host()),

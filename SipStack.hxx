@@ -21,7 +21,7 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/UnknownParameterType.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Data;

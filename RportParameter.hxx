@@ -6,7 +6,7 @@
 #include "resiprocate/ParameterTypeEnums.hxx"
 #include "resiprocate/Parameter.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class ParseBuffer;

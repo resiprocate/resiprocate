@@ -7,10 +7,10 @@
 
 #include "resiprocate/os/Logger.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 static unsigned long
 getNextTransactionCount()
@@ -51,9 +51,9 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
    if (mHasMagicCookie &&
        (end - anchor > 2*8) &&
        // look for prefix cookie
-       (strncasecmp(anchor, Symbols::Vocal2Cookie, 8) == 0) &&
+       (strncasecmp(anchor, Symbols::resipCookie, 8) == 0) &&
        // look for postfix cookie
-       (strncasecmp(end - 8, Symbols::Vocal2Cookie, 8) == 0))
+       (strncasecmp(end - 8, Symbols::resipCookie, 8) == 0))
    {
       mIsMyBranch = true;
       anchor += 8;
@@ -160,11 +160,11 @@ BranchParameter::encode(ostream& stream) const
    }
    if (mIsMyBranch)
    {
-      stream << Symbols::Vocal2Cookie 
+      stream << Symbols::resipCookie 
              << mTransactionId 
              << Symbols::DASH[0]
              << mTransportSeq
-             << Symbols::Vocal2Cookie;
+             << Symbols::resipCookie;
    }
    else
    {

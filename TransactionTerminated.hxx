@@ -4,7 +4,7 @@
 
 #include "Message.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class TransactionTerminated : public Message

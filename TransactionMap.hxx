@@ -4,7 +4,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/HashMap.hxx"
 
-namespace Vocal2
+namespace resip
 {
   class TransactionState;
 

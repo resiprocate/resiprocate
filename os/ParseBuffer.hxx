@@ -1,9 +1,9 @@
-#ifndef Vocal2_ParseBuffer_hxx
-#define Vocal2_ParseBuffer_hxx
+#ifndef resip_ParseBuffer_hxx
+#define resip_ParseBuffer_hxx
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/BaseException.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class ParseBuffer
@@ -28,11 +28,11 @@ class ParseBuffer
 
       ParseBuffer(const ParseBuffer& other);
 
-      class Exception : public Vocal2::BaseException
+      class Exception : public resip::BaseException
       {
          public:
             Exception(const Data& msg, const Data& file, const int line)
-               : Vocal2::BaseException(msg, file, line) {}
+               : resip::BaseException(msg, file, line) {}
             
             const char* name() const { return "ParseBuffer::Exception"; }
       };

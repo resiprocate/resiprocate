@@ -4,10 +4,10 @@
 //#include "resiprocate/EncodingContext.hxx"
 #include "resiprocate/os/Random.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::CONTENTS
+#define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
 
 ContentsFactory<MultipartSignedContents> MultipartSignedContents::Factory;
 

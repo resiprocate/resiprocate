@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-namespace Vocal2
+namespace resip
 {
 
 class ParserCategory;

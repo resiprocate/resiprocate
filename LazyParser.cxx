@@ -6,7 +6,7 @@
 #include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/Headers.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 LazyParser::LazyParser(HeaderFieldValue* headerFieldValue)
    : mHeaderField(headerFieldValue),
@@ -100,7 +100,7 @@ LazyParser::encode(std::ostream& str) const
 }
 
 std::ostream&
-Vocal2::operator<<(std::ostream& s, const LazyParser& lp)
+resip::operator<<(std::ostream& s, const LazyParser& lp)
 {
    lp.encode(s);
    return s; 

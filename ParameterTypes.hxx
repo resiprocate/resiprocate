@@ -23,7 +23,7 @@
    };                                                           \
    extern _enum##_Param p_##_enum
 
-namespace Vocal2
+namespace resip
 {
 
    class ParamBase

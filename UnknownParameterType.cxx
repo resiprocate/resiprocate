@@ -5,7 +5,7 @@
 #include <string.h>
 #include "resiprocate/os/ParseBuffer.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 UnknownParameterType::UnknownParameterType(const char* name)
 {

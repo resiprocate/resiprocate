@@ -5,7 +5,7 @@
 #include "resiprocate/Message.hxx"
 #include "resiprocate/os/Data.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 // This message is used to indicate that the TransportSelector has sent a sip

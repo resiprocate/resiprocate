@@ -1,10 +1,10 @@
 #include "resiprocate/ApplicationSip.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 ContentsFactory<ApplicationSip> ApplicationSip::Factory;
 

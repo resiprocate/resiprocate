@@ -3,9 +3,9 @@
 
 #include "resiprocate/os/Data.hxx"
 
-static const char* const Vocal2CodersHeaderVersion = "$Id: Coders.hxx,v 1.7 2003/03/24 23:25:36 jason Exp $";
+static const char* const resipCodersHeaderVersion = "$Id: Coders.hxx,v 1.8 2003/03/25 06:33:48 jason Exp $";
 
-namespace Vocal2
+namespace resip
 {
 
 

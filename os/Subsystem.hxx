@@ -1,10 +1,10 @@
-#ifndef Vocal2_Subsystem_hxx
-#define Vocal2_Subsystem_hxx
+#ifndef resip_Subsystem_hxx
+#define resip_Subsystem_hxx
 
 #include <iostream>
 #include "resiprocate/os/Data.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Subsystem 
@@ -41,16 +41,16 @@ class Subsystem
 namespace MyNamespace
 {
 
-class Subsystem : public Vocal2::Subsystem
+class Subsystem : public resip::Subsystem
 {
    public:
       // Add new systems below
       static const Subsystem SPECIAL_SUBSYSTEM;
 
    private:
-      Subsystem(const char* rhs) : Vocal2::Subsystem(rhs) {};
-      Subsystem(const Vocal2::Data& rhs);
-      Subsystem& operator=(const Vocal2::Data& rhs);
+      Subsystem(const char* rhs) : resip::Subsystem(rhs) {};
+      Subsystem(const resip::Data& rhs);
+      Subsystem& operator=(const resip::Data& rhs);
 };
  
 }
