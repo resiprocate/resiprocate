@@ -1,4 +1,4 @@
-# $Id: Makefile.all,v 1.1 2003/03/24 22:09:53 jason Exp $
+# $Id: Makefile.all,v 1.2 2003/03/25 03:18:22 jason Exp $
 
 # The license applies to all software incorporated in the "Vovida
 # Open Communication Application Library" except for those portions
@@ -199,12 +199,4 @@ endif
 # set the environment 
 
 ROOT = $(BUILD)/..
-
 TOOLS = $(ROOT)/build
-
-PATH := $(shell pwd)/$(ROOT)/tools:$(PATH)
-
-# this variable is set to the default path to install to if no one
-# else overrides it via configure.
-
-INSTALL_PATH_DEFAULT = /usr/local/vocal
