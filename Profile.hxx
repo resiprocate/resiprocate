@@ -1,5 +1,8 @@
+#if !defined(RESIP_PROFILE_HXX)
+#define RESIP_PROFILE_HXX
 
-
+namespace resip
+{
 
 class Profile
 {
@@ -29,4 +32,7 @@ class Profile
 };
    
 
-    
+ 
+}
+
+#endif
