@@ -30,19 +30,19 @@ class MIME_Header
 {
 };
 
-class MIME_Id_Header : public MIME_Header
+class MIME_ContentID_Header : public MIME_Header
 {
    public:
       typedef Token Type;
 };
-extern MIME_Id_Header h_Id;
+extern MIME_ContentID_Header h_ContentID;
 
-class MIME_Description_Header : public MIME_Header
+class MIME_ContentDescription_Header : public MIME_Header
 {
    public:
       typedef StringCategory Type;
 };
-extern MIME_Description_Header h_Description;
+extern MIME_ContentDescription_Header h_ContentDescription;
       
 // Common type for all body contents
 class Contents : public LazyParser
@@ -83,8 +83,8 @@ class Contents : public LazyParser
       ParserContainer<ContentLanguage_MultiHeader::Type>& header(const ContentLanguage_MultiHeader& headerType) const;
 
       // MIME specific header types
-      MIME_Id_Header::Type& header(const MIME_Id_Header& headerType) const;
-      MIME_Description_Header::Type& header(const MIME_Description_Header& headerType) const;
+      MIME_ContentID_Header::Type& header(const MIME_ContentID_Header& headerType) const;
+      MIME_ContentDescription_Header::Type& header(const MIME_ContentDescription_Header& headerType) const;
 
       int& verion() {return mVersion;}
       int& minorVersion() {return mMinorVersion;}

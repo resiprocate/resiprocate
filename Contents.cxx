@@ -11,8 +11,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
 
-MIME_Id_Header resip::h_Id;
-MIME_Description_Header resip::h_Description;
+MIME_ContentID_Header resip::h_ContentID;
+MIME_ContentDescription_Header resip::h_ContentDescription;
 
 std::map<Mime, ContentsFactoryBase*>* Contents::FactoryMap = 0;
 
@@ -196,12 +196,12 @@ Contents::exists(const HeaderBase& headerType) const
 bool
 Contents::exists(const MIME_Header& type) const
 {
-   if (&type == &h_Id)
+   if (&type == &h_ContentID)
    {
       return mId != 0;
    }
    
-   if (&type == &h_Description)
+   if (&type == &h_ContentDescription)
    {
       return mDescription != 0;
    }
@@ -241,14 +241,14 @@ Contents::remove(const HeaderBase& headerType)
 void
 Contents::remove(const MIME_Header& type)
 {
-   if (&type == &h_Id)
+   if (&type == &h_ContentID)
    {
       delete mId;
       mId = 0;
       return;
    }
     
-   if (&type == &h_Description)
+   if (&type == &h_ContentDescription)
    {
       delete mDescription;
       mDescription = 0;
@@ -297,24 +297,24 @@ Contents::header(const ContentLanguage_MultiHeader& headerType) const
    return *mLanguages;
 }
 
-MIME_Description_Header::Type&
-Contents::header(const MIME_Description_Header& headerType) const
+MIME_ContentDescription_Header::Type&
+Contents::header(const MIME_ContentDescription_Header& headerType) const
 {
    checkParsed();
    if (mDescription == 0)
    {
-      mDescription = new MIME_Description_Header::Type;
+      mDescription = new MIME_ContentDescription_Header::Type;
    }
    return *mDescription;
 }
 
-MIME_Id_Header::Type&
-Contents::header(const MIME_Id_Header& headerType) const
+MIME_ContentID_Header::Type&
+Contents::header(const MIME_ContentID_Header& headerType) const
 {
    checkParsed();
    if (mId == 0)
    {
-      mId = new MIME_Id_Header::Type;
+      mId = new MIME_ContentID_Header::Type;
    }
    return *mId;
 }
