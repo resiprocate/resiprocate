@@ -28,7 +28,8 @@ class Log
       {
          COUT = 0,
          SYSLOG, 
-         FILE
+         FILE, 
+         CERR
       } Type;
       
 #ifdef WIN32 
