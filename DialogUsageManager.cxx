@@ -602,7 +602,7 @@ DialogUsageManager::findInviteSession(CallId replaces)
                     481);
 }
 
-void
+bool
 DialogUsageManager::process(bool separateThread)
 {
    if (separateThread)
@@ -618,13 +618,16 @@ DialogUsageManager::process(bool separateThread)
    try 
    {
       std::auto_ptr<Message> msg( mStack.receiveAny() );
-      SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
-      if (!msg.get())  return;
-      if (sipMsg)
+      if (msg.get()) 
       {
-         DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());      
-         if (sipMsg->isRequest())
+         InfoLog (<< "Got: " << msg->brief());
+         
+         SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
+         if (sipMsg)
          {
+            DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());      
+            if (sipMsg->isRequest())
+            {
 
 //          if( !validateRequest(*sipMsg) )
 //          {
@@ -636,61 +639,63 @@ DialogUsageManager::process(bool separateThread)
 //             DebugLog (<< "Failed to validation " << *sipMsg);
 //             return;
 //          }
-            if (sipMsg->header(h_From).exists(p_tag))
-            {
-               if (mergeRequest(*sipMsg) )
+               if (sipMsg->header(h_From).exists(p_tag))
                {
-                  InfoLog (<< "Merged request: " << *sipMsg);
-                  return;
+                  if (mergeRequest(*sipMsg) )
+                  {
+                     InfoLog (<< "Merged request: " << *sipMsg);
+                     return true;
+                  }
                }
-            }
          
-            if ( mServerAuthManager.get() )
-            { 
-               if ( mServerAuthManager->handle(*sipMsg) )
-               {
-                  return;
+               if ( mServerAuthManager.get() )
+               { 
+                  if ( mServerAuthManager->handle(*sipMsg) )
+                  {
+                     return true;
+                  }
                }
+               processRequest(*sipMsg);
             }
-            processRequest(*sipMsg);
+            else if (sipMsg->isResponse())
+            {
+               processResponse(*sipMsg);
+            }
+            return true;
          }
-         else if (sipMsg->isResponse())
-         {
-            processResponse(*sipMsg);
-         }
-         return;
-      }
 
-      DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
-      if (dumMsg )
-      {
-         if ( !dumMsg->getBaseUsage().isValid())
+         DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
+         if (dumMsg )
          {
-            return;
+            if ( !dumMsg->getBaseUsage().isValid())
+            {
+               return true;
+            }
+      
+            dumMsg->getBaseUsage()->dispatch(*dumMsg);
+            return true;
+         }
+
+         StatisticsMessage* stats = dynamic_cast<StatisticsMessage*>(msg.get());
+         if (stats)
+         {
+            static StatisticsMessage::Payload payload;
+            stats->loadOut(payload);
+            stats->logStats(RESIPROCATE_SUBSYSTEM, payload);
          }
       
-         dumMsg->getBaseUsage()->dispatch(*dumMsg);
-         return;
+         // !jf! might want to do something with StatisticsMessage
+         //ErrLog(<<"Unknown message received." << msg->brief());
+         //assert(0);
+         return true;
       }
-
-      StatisticsMessage* stats = dynamic_cast<StatisticsMessage*>(msg.get());
-      if (stats)
-      {
-         static StatisticsMessage::Payload payload;
-         stats->loadOut(payload);
-         stats->logStats(RESIPROCATE_SUBSYSTEM, payload);
-      }
-      
-      // !jf! might want to do something with StatisticsMessage
-      //ErrLog(<<"Unknown message received." << msg->brief());
-      //assert(0);
    }
    catch(BaseException& e)
    {
       //unparseable, bad 403 w/ 2543 trans it from FWD, etc
 	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
    }
-   
+   return false;
 }
 
 void
