@@ -85,6 +85,10 @@ const char* Symbols::C100rel = "100rel";
 
 const char* Symbols::Undefined = "UNDEFINED";
 
+const char* Symbols::Pending = "pending";
+const char* Symbols::Active = "active";
+const char* Symbols::Terminated = "terminated";
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
