@@ -602,7 +602,6 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                   // transaction MUST generate an ACK request, even if the transport is
                   // reliable
                   SipMessage* invite = mMsgToRetransmit;
-                  delete mMsgToRetransmit;
                   mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
                   delete invite;
                   
