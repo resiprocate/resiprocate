@@ -52,7 +52,7 @@ DialogId::DialogId(const Data& callId, const Data& localTag, const Data& remoteT
 {
 }
 
-DialogId::DialogId(const DialogSetId id, const Data& remoteTag) :
+DialogId::DialogId(const DialogSetId& id, const Data& remoteTag) :
    mDialogSetId(id),
    mRemoteTag(remoteTag)
 {
@@ -88,6 +88,24 @@ const DialogSetId&
 DialogId::getDialogSetId() const
 {
    return mDialogSetId;
+}
+
+const Data& 
+DialogId::getCallId() const 
+{
+   return getDialogSetId().getCallId(); 
+}
+
+const Data& 
+DialogId::getLocalTag() const 
+{
+   return getDialogSetId().getLocalTag(); 
+}
+
+const Data& 
+DialogId::getRemoteTag() const 
+{
+   return mRemoteTag; 
 }
 
 size_t DialogId::hash() const 

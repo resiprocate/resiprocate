@@ -14,6 +14,7 @@ class BaseCreator
       BaseCreator(DialogUsageManager& dum);
       virtual ~BaseCreator();
       SipMessage& getLastRequest();
+      const SipMessage& getLastRequest() const;
       virtual void dispatch(const SipMessage& msg);
       
    protected:

@@ -1,8 +1,14 @@
-#include "ServerRegistration.hxx"
-#include "DialogUsageManager.hxx"
-#include "Dialog.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/ServerRegistration.hxx"
+#include "resiprocate/dum/Dialog.hxx"
 
 using namespace resip;
+
+ServerRegistrationHandle 
+ServerRegistration::getHandle()
+{
+   return ServerRegistrationHandle(mDum, getBaseHandle().getId());
+}
 
 ServerRegistration::ServerRegistration(DialogUsageManager& dum,  Dialog& dialog, const SipMessage& request)
    : BaseUsage(dum, dialog)
@@ -26,16 +32,6 @@ ServerRegistration::dispatch(const SipMessage& msg)
 void
 ServerRegistration::dispatch(const DumTimeout& msg)
 {
-}
-
-ServerRegistration::Handle::Handle(DialogUsageManager& dum)
-   : BaseUsage::Handle(dum)
-{}
-
-ServerRegistration* 
-ServerRegistration::Handle::operator->()
-{
-   return static_cast<ServerRegistration*>(get());
 }
 
 /* ====================================================================

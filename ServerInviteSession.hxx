@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/InviteSession.hxx"
 #include "resiprocate/SipMessage.hxx"
+
 #include <deque>
 
 namespace resip
@@ -11,15 +12,8 @@ namespace resip
 class ServerInviteSession: public InviteSession
 {
    public:
-      class Handle : public InviteSession::Handle
-      {
-         public:
-            // throws if no session 
-            ServerInviteSession* operator->();
-         private:
-            friend class ServerInviteSession;
-            Handle(DialogUsageManager& dum);
-      };
+      typedef Handle<ServerInviteSession> ServerInviteSessionHandle;
+      ServerInviteSessionHandle getHandle();
 
       /// Moves the state of the call to connected and sends a 200
       void accept();
@@ -60,9 +54,6 @@ class ServerInviteSession: public InviteSession
       virtual SipMessage& rejectOffer(int statusCode);
       
       void handle(const SipMessage& msg);
-
-      virtual InviteSession::Handle getSessionHandle();
-      ServerInviteSession::Handle& getHandle() { return reinterpret_cast<ServerInviteSession::Handle&> (mHandle); }
 
       void dispatch(const SipMessage& msg);
       void dispatch(const DumTimeout& timer);

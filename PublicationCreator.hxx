@@ -7,10 +7,7 @@ namespace resip
 {
 
 class Uri;
-
-/** @file PublicationCreator.hxx
- *
- */
+class Contents;
 
 class PublicationCreator: public BaseCreator
 {
