@@ -7,6 +7,10 @@
 using namespace resip;
 
 std::ostream* GenericLogImpl::mLogger=0;
+unsigned int GenericLogImpl::mLineCount=0;
+unsigned int GenericLogImpl::MaxLineCount = 0; // no limit by default
+
+
 
 #ifndef WIN32
 static pthread_t currentThread;
@@ -62,25 +66,28 @@ GenericLogImpl::Instance()
          return std::cout;
                
       case Log::File:
-         if (mLogger == 0)
+         if (mLogger == 0 || (MaxLineCount && mLineCount > MaxLineCount))
          {
             std::cerr << "Creating a file logger" << std::endl;
             if (Log::_logFileName != "")
             {
-               mLogger = new std::ofstream(_logFileName.c_str(), std::ios_base::out|std::ios_base::app);
+               mLogger = new std::ofstream(_logFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
+               mLineCount = 0;
             }
             else
             {
-               mLogger = new std::ofstream("resiprocate.log", std::ios_base::out|std::ios_base::app);
+               mLogger = new std::ofstream("resiprocate.log", std::ios_base::out | std::ios_base::trunc);
+               mLineCount = 0;
             }
          }
+         mLineCount++;
          return *mLogger;
       default:
          assert(0);
          return std::cout;
    }
 }
-      
+
 bool 
 GenericLogImpl::isLogging(Log::Level level) 
 {
