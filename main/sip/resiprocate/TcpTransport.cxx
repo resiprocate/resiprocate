@@ -91,7 +91,7 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
 TcpTransport::~TcpTransport()
 {
 //   ::shutdown(mFd, SHUT_RDWR);
-   ::close(mFd);
+   closesocket(mFd);
 }
 
 void 
