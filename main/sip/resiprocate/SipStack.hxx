@@ -1,36 +1,51 @@
+#if !defined(SIPSTACK_HXX)
+#define SIPSTACK_HXX
+
+#include <sipstack/Fifo.hxx>
+
+namespace Vocal2
+{
+
+class SipMessage;
 
 class SipStack
 {
-public:
-    void send( Messagee msg , String dest=default );
+   public:
+      void send(SipMessage* msg);
 
-    Message* receive();
+      // this is only if you want to send to a destination not in the route. You
+      // probably don't want to use it. 
+      void send(SipMessage* msg, const Data& dest="default" );
+      
+      SipMessage* receive();
 
-    void process();
+      void process();
 
-    /// returns time in milliseconds when process next needs to be called 
-    int getTimeTillNextProcess(); 
+      /// returns time in milliseconds when process next needs to be called 
+      int getTimeTillNextProcess(); 
 
-    enum ThreadFunction { Timer, UDP, StateMachine, TCP, };
+      enum ThreadFunction { Timer, UDP, StateMachine, TCP, };
 
-    void runThread( ThreadFunction );
+      void runThread( ThreadFunction );
 
 
-private:
+   private:
 
-    Executive mExecutive;
+      Executive mExecutive;
+      TransportSelector mTransportSelector;
 
-    TransactionMap mTransactionMap;
+      TransactionMap mTransactionMap;
 
-    TransportSelector mTransportSelector;
+      TransportDirectory mTransportDirector;
 
-    Fifo mRxFifo;
+      Fifo<SipMessage> mRxFifo;
+      
+      Fifo<SipMessage> mTUFifo;
 
-    Fifo mTUFifo;
+      Fifo<SipMessage> mStateMacFifo;
 
-    Fifo mStateMacFifo;
-
-    Timer mTimers;
-
+      Timer mTimers;
 };
+ 
+}
 

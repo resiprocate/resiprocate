@@ -1,7 +1,7 @@
 #ifndef SUBCOMPONENTLIST_HXX
 #define SUBCOMPONENTLIST_HXX
 
-#include <ostream>
+#include <iostream>
 #include <sip2/sipstack/SubComponent.hxx>
 #include <sip2/sipstack/UnknownSubComponent.hxx>
 
