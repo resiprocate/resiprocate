@@ -14,6 +14,10 @@ Contents::Contents(HeaderFieldValue* headerFieldValue,
      mContentsType(contentType)
 {}
 
+Contents::Contents( const Mime& contentType) 
+   : mContentsType(contentType)
+{}
+
 Contents::Contents(const Contents& rhs) 
    : LazyParser(rhs) 
 {}

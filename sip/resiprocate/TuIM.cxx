@@ -76,22 +76,42 @@ void TuIM::sendPage(const Data& text, const Uri& dest )
    SipMessage* msg = Helper::makeRequest(target, from, contact, MESSAGE);
    assert( msg );
 
-#if 0
+   // !cj! huge memory leaks here - need to free the bodies 
+
+#if 0 // plain 
    PlainContents body(text);
    msg->setContents(&body);
-#else
+#endif
+
+#if 0 // sign
    Security* sec = mStack->security;
    assert(sec);
     
    PlainContents body(text);
-
    Pkcs7Contents* sBody = sec->sign( &body );
-
-   //cerr << endl << endl << "Result encoded is -----------<";
-   //sBody->encodeParsed( cerr );
-   //cerr << ">--------------------------" << endl;
-   
+    
    msg->setContents( sBody );
+#endif
+
+#if 1 // encrypt
+   Security* sec = mStack->security;
+   assert(sec);
+    
+   PlainContents body(text);
+   Pkcs7Contents* eBody = sec->encrypt( &body , dest.getAor());
+   
+   msg->setContents( eBody );
+#endif
+
+#if 0  // sign and encrypt 
+   Security* sec = mStack->security;
+   assert(sec);
+    
+   PlainContents body(text);
+   Pkcs7Contents* sBody = sec->sign( &body );
+   Pkcs7Contents* fBody = sec->encrypt( sBody , dest.getAor());
+   
+   msg->setContents( fBody );
 #endif
 
    mStack->send( *msg );
@@ -138,18 +158,8 @@ TuIM::process()
             Mime mime = contents->getType();
             DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
 
-            PlainContents* body = dynamic_cast<PlainContents*>(contents);
-            if ( body )
-            {
-               assert( body );
-               const Data& text = body->text();
-               
-               Uri from = msg->header(h_From).uri();
-               DebugLog ( << "got message from " << from );
-               
-               mPageCallback->receivedPage( text, from );
-            }
-            
+            Data signedBy;
+         
             Pkcs7Contents* sBody = dynamic_cast<Pkcs7Contents*>(contents);
             if ( sBody )
             {
@@ -157,33 +167,32 @@ TuIM::process()
                Security* sec = mStack->security;
                assert(sec);
 
-               Contents* uBody = sec->uncode( sBody );
-               
-               if ( uBody )
+               contents = sec->uncode( sBody, &signedBy );
+               if ( !contents )
                {
-                  PlainContents* body = dynamic_cast<PlainContents*>(uBody);
-                  if ( body )
-                  {
-                     const Data& text = body->text();
-                     
-                     Uri from = msg->header(h_From).uri();
-                     DebugLog ( << "got message from " << from );
-                     
-                     mPageCallback->receivedPage( text, from );
-                  }
-                  else
-                  {
-                     assert(0);
-                  }
+                  ErrLog( << "Some problem decoding SMIME message");
                }
             }
-             
-            if ( (!body) && (!sBody) )
-            {
-               ErrLog ( << "Can not hangle type " << mime.type() << "/" << mime.subType() );
-               assert(0);
-            }
             
+            if ( contents )
+            {
+               PlainContents* body = dynamic_cast<PlainContents*>(contents);
+               if ( body )
+               {
+                  assert( body );
+                  const Data& text = body->text();
+                  
+                  Uri from = msg->header(h_From).uri();
+                  DebugLog ( << "got message from " << from );
+                  
+                  mPageCallback->receivedPage( text, from );
+               }
+               else
+               {
+                  ErrLog ( << "Can not hangle type " << contents->getType() );
+                  assert(0);
+               }
+            }
          }
       }
 
