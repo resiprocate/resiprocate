@@ -169,7 +169,7 @@ Condition::broadcast()
 #ifdef WIN32
    assert(0);
 #else
-   return ( (void)pthread_cond_broadcast(&mId) );
+   pthread_cond_broadcast(&mId);
 #endif
 }
 

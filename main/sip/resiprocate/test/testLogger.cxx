@@ -35,7 +35,7 @@ class LogThread : public ThreadIf
 int
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, Log::INFO, argv[0]);
+   Log::initialize(Log::SYSLOG, Log::INFO, argv[0]);
 
    DebugLog(<<"This should not appear.");
    InfoLog(<<"This should appear.");

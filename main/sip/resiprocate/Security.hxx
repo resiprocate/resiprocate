@@ -117,7 +117,7 @@ class Security
          isBad,
          trusted, // It is signed with trusted signature 
          caTrusted, // signature is new and is signed by a root we trust 
-         notTrusted, // signature is new and is not signed by a CA we
+         notTrusted // signature is new and is not signed by a CA we
       };
 
       struct CertificateInfo 

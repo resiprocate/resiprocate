@@ -26,7 +26,7 @@ class Transport
          TCP,
          TLS,
          SCTP,
-         DCCP,
+         DCCP
       } Type;
 
       class Tuple

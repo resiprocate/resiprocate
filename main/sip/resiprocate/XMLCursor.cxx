@@ -7,10 +7,9 @@ using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::CONTENTS
 
+static char BANG[] = "!";
+static char HYPHEN[] = "-";
 //http://www.w3.org/TR/1998/REC-xml-19980210
-
-static char* BANG = "!";
-static char* HYPHEN = "-";
 static const Data COMMENT_START("<!--");
 static const Data COMMENT_END("-->");
 
