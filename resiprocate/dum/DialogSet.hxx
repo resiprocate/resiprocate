@@ -44,6 +44,7 @@ class DialogSet
    private:
       friend class Dialog;
       friend class DialogUsage;
+      friend class ClientInviteSession;
       friend class NonDialogUsage;
       friend class DialogUsageManager;      
       friend class ClientRegistration;

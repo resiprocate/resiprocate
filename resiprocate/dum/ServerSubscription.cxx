@@ -113,6 +113,11 @@ ServerSubscription::dispatch(const SipMessage& msg)
          {
             makeNotifyExpires();
             handler->onExpiredByClient(getHandle(), msg, mLastNotify);
+
+            mDialog.makeResponse(mLastResponse, mLastRequest, 200);
+            mLastResponse.header(h_Expires).value() = mExpires;
+            send(mLastResponse);            
+
             send(end(Timeout));
             return;
          }
@@ -153,6 +158,15 @@ ServerSubscription::makeNotify()
 {
    mDialog.makeRequest(mLastNotify, NOTIFY);
    mLastNotify.header(h_SubscriptionState).value() = getSubscriptionStateString(mSubscriptionState);
+   if (mSubscriptionState == Terminated)
+   {
+      mLastNotify.header(h_SubscriptionState).remove(p_expires);      
+   }
+   else
+   {
+      mLastNotify.header(h_SubscriptionState).param(p_expires) = mExpires;
+   }
+   
    mLastNotify.header(h_Event).value() = mEventType;   
    if (!mSubscriptionId.empty())
    {
