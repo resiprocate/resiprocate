@@ -25,14 +25,14 @@ typedef enum
    Timeout,
    Giveup,
    NoResource
-} Reason;
+} TerminateReason;
 
 
 const Data&
-resip::getSubscriptionStateString(SubscriptionState state);
+getSubscriptionStateString(SubscriptionState state);
 
 const Data&
-resip::getSubscriptionStateReasonString(Reason state);
+getTerminateReasonString(TerminateReason state);
 
 
 }
