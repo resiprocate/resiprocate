@@ -60,15 +60,15 @@ SipStack::addTransport( Transport::Type protocol,
    mTransportSelector.addTransport(protocol, port, hostName, nic);
    if (!hostName.empty()) 
    {
-      addAlias(hostName);
+      addAlias(hostName, port);
    }
 }
 
 void
-SipStack::addAlias(const Data& domain)
+SipStack::addAlias(const Data& domain, int port)
 {
-   InfoLog (<< "Adding domain alias: " << domain);
-   mDomains.insert(domain);
+   InfoLog (<< "Adding domain alias: " << domain << ":" << port);
+   mDomains.insert(domain + Data(":") + Data(port));
 }
 
 Data 
@@ -95,9 +95,9 @@ SipStack::getHostname()
 }
 
 bool 
-SipStack::isMyDomain(const Data& domain) const
+SipStack::isMyDomain(const Data& domain, int port) const
 {
-   return (mDomains.count(domain) != 0);
+   return (mDomains.count(domain + Data(":") + Data(port)) != 0);
 }
 
 
