@@ -1,22 +1,25 @@
 #if defined(HAVE_CONFIG_H)
 #include "resiprocate/config.hxx"
 #endif
+
 #if defined (HAVE_POPT_H) || 1
 #include <popt.h>
 #else
 #warning "will not work very well without libpopt"
 #endif
+
 #include <sys/types.h>
 #include <iostream>
 #include <memory>
 
 #include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Inserter.hxx"
+#include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Dialog.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/Uri.hxx"
-#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
 using namespace std;
@@ -35,6 +38,8 @@ main(int argc, char* argv[])
    int runs = 100;
    int window = 10;
    int seltime = 100;
+   int v6 = 0;
+   
 #if defined(HAVE_POPT_H) || 1
    struct poptOption table[] = {
       {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
@@ -42,8 +47,9 @@ main(int argc, char* argv[])
       {"num-runs",    'r', POPT_ARG_INT,    &runs,      0, "number of calls in test", 0},
       {"window-size", 'w', POPT_ARG_INT,    &window,    0, "number of registrations in test", 0},
       {"select-time", 's', POPT_ARG_INT,    &seltime,   0, "number of runs in test", 0},
-      {"protocol",    'p', POPT_ARG_STRING, &proto,   0, "number of runs in test", 0},
-      {"bind",        'b', POPT_ARG_STRING, &bindAddr, 0, "interface address to bind to",0},
+      {"protocol",    'p', POPT_ARG_STRING, &proto,     0, "number of runs in test", 0},
+      {"bind",        'b', POPT_ARG_STRING, &bindAddr,  0, "interface address to bind to",0},
+      {"v6",          '6', POPT_ARG_NONE,   &v6     ,   0, "ipv6", 0},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -52,26 +58,25 @@ main(int argc, char* argv[])
    poptGetNextOpt(context);
 #endif
    Log::initialize(logType, logLevel, argv[0]);
-   
    cout << "Performing " << runs << " runs." << endl;
 
+   IpVersion version = (v6 ? V6 : V4);
    SipStack receiver;
    SipStack sender;
-
-   sender.addTransport(UDP, 5060); // !ah! just for debugging TransportSelector
-   sender.addTransport(TCP, 5060);
+   sender.addTransport(UDP, 5060, version); // !ah! just for debugging TransportSelector
+   sender.addTransport(TCP, 5060, version);
    if (bindAddr)
    {
-      sender.addTransport(UDP, 5070,false,bindAddr);
-      sender.addTransport(TCP, 5070,false,bindAddr);
+      sender.addTransport(UDP, 5070,version,bindAddr);
+      sender.addTransport(TCP, 5070,version,bindAddr);
    }
    else
    {
-      sender.addTransport(UDP, 5070);
-      sender.addTransport(TCP, 5070);
+      sender.addTransport(UDP, 5070, version);
+      sender.addTransport(TCP, 5070, version);
    }
-   receiver.addTransport(UDP, 5080);
-   receiver.addTransport(TCP, 5080);
+   receiver.addTransport(UDP, 5080, version);
+   receiver.addTransport(TCP, 5080, version);
 
 
    NameAddr target;
@@ -97,6 +102,7 @@ main(int argc, char* argv[])
       while (sent < runs && outstanding < window)
       {
          DebugLog (<< "Sending " << count << " / " << runs << " (" << outstanding << ")");
+         target.uri().port() = 5080; // +(sent%window);
          SipMessage* next = Helper::makeRegister( target, from, from);
          next->header(h_Vias).front().sentPort() = 5070;
          sender.send(*next);
