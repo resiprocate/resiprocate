@@ -2,6 +2,14 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#if defined(USE_ARES)
+extern "C"
+{
+#include "ares.h"
+#include "ares_dns.h"
+}
+#endif
+
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Logger.hxx"
 

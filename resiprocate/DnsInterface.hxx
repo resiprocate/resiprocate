@@ -8,8 +8,7 @@
 #if defined(USE_ARES)
 extern "C"
 {
-#include "ares.h"
-#include "ares_dns.h"
+struct ares_channeldata;
 }
 #endif
 
@@ -91,7 +90,7 @@ class DnsInterface
       TransportArray* mSupportedTransports;
       
 #if defined(USE_ARES)
-      ares_channel mChannel;
+	  struct ares_channeldata* mChannel;
 #endif
 
       friend class DnsResult;
