@@ -222,6 +222,18 @@ DnsUtil::isIpV4Address(const Data& ipAddress)
    }
 }
 
+bool 
+DnsUtil::isIpV6Address(const Data& ipAddress)
+{
+   return false;
+}
+
+bool 
+DnsUtil::isIpAddress(const Data& ipAddress)
+{
+   return isIpV4Address(ipAddress) || isIpV6Address(ipAddress);
+}
+
 
 Data
 DnsUtil::getIpAddress(const struct in_addr& addr)
