@@ -314,7 +314,7 @@ class SipMessage : public Message
       // used when next element is a strict router OR 
       // client forces next hop OOB
       Uri* mForceTarget;
-      
+
       // domain associated with this message for tls cert
       Data mTlsDomain;
 

@@ -1118,7 +1118,7 @@ SipMessage::setForceTarget(const Uri& uri)
    {
       mForceTarget = new Uri(uri);
    }
-   DebugLog(<< "setTarget: " << *mForceTarget);
+   DebugLog(<< "!ah! setTarget: " << *mForceTarget);
 }
 
 void
