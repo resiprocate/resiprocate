@@ -21,6 +21,12 @@ AppDialogSet::getHandle()
    return AppDialogSetHandle(mHam, mId);
 }
 
+void
+AppDialogSet::destroy()
+{
+   delete this;
+}
+
 void 
 AppDialogSet::cancel()
 {
