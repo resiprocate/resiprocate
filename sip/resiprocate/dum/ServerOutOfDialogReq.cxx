@@ -1,8 +1,15 @@
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
+#include "resiprocate/dum/OutOfDialogHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 ServerOutOfDialogReqHandle 
 ServerOutOfDialogReq::getHandle()
@@ -16,7 +23,7 @@ ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum,
                                            const SipMessage& req)
    : NonDialogUsage(dum, dialogSet)
 {
-   assert(false);
+
 }
 
 ServerOutOfDialogReq::~ServerOutOfDialogReq()
@@ -28,12 +35,84 @@ ServerOutOfDialogReq::~ServerOutOfDialogReq()
 void 
 ServerOutOfDialogReq::dispatch(const SipMessage& msg)
 {
+	assert(msg.isRequest());
+
+	OutOfDialogHandler *pHandler = mDum.getOutOfDialogHandler(msg.header(h_CSeq).method());
+	if(pHandler != NULL)
+	{
+		// Let handler deal with message
+		mRequest = msg; 
+	    InfoLog ( << "ServerOutOfDialogReq::dispatch - handler found for " << getMethodName(msg.header(h_CSeq).method()) << " method.");   
+		pHandler->onReceivedRequest(getHandle(), msg);  // Wait for application to send response
+	}
+	else
+	{
+		if(msg.header(h_CSeq).method() == OPTIONS)
+		{
+		    InfoLog ( << "ServerOutOfDialogReq::dispatch - handler not found for OPTIONS - sending autoresponse.");   
+			// If no handler exists for OPTIONS then handle internally
+			mRequest = msg; 
+			mDum.send(answerOptions());
+			delete this;
+		}
+		else
+		{
+		    InfoLog ( << "ServerOutOfDialogReq::dispatch - handler not found for " << getMethodName(msg.header(h_CSeq).method()) << " method - sending 405.");   
+			// No handler found for out of dialog request - return a 405
+			mDum.makeResponse(mResponse, msg, 405);
+			mDum.send(mResponse);
+			delete this;
+		}
+	}
 }
 
 void
 ServerOutOfDialogReq::dispatch(const DumTimeout& msg)
 {
 }
+
+SipMessage& 
+ServerOutOfDialogReq::answerOptions(bool fIncludeAllows)
+{
+	mDum.makeResponse(mResponse, mRequest, 200);
+
+	// Add in Allow, Accept, Accept-Encoding, Accept-Language, and Supported Headers from Profile
+	Profile *pProfile = mDum.getProfile();
+
+	// Add Allows (if required)
+	mResponse.header(h_Allows).clear();
+	if(fIncludeAllows)
+	{
+		mResponse.header(h_Allows) = pProfile->getAllowedMethods();
+	}
+
+	// Add Accept Header
+	mResponse.header(h_Accepts).clear();
+	mResponse.header(h_Accepts) = pProfile->getSupportedMimeTypes();
+
+	// Add Accept-Encoding Header
+	mResponse.header(h_AcceptEncodings).clear();
+	mResponse.header(h_AcceptEncodings) = pProfile->getSupportedEncodings();
+
+	// Add Accept-Language Header
+	mResponse.header(h_AcceptLanguages).clear();
+	mResponse.header(h_AcceptLanguages) = pProfile->getSupportedLanguages();
+
+	// Add Supported Header
+	mResponse.header(h_Supporteds).clear();
+	mResponse.header(h_Supporteds) = pProfile->getSupportedOptionTags();
+
+	return mResponse;
+}
+
+
+void 
+ServerOutOfDialogReq::send(SipMessage& response)
+{
+	mDum.send(response);
+	delete this;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
