@@ -53,6 +53,24 @@ extern "C"
    }
 }
 
+void
+Log::initialize(const char* typed, const char* leveld, const Data& appName)
+{
+   Type type = Log::COUT;
+   if (typed)
+   {
+      if (typed == "cout" || typed == "COUT") type = Log::COUT;
+      else if (typed == "cerr" || typed == "CERR") type = Log::CERR;
+      else type = Log::SYSLOG;
+   }
+   
+   Level level = Log::INFO;
+   if (leveld)
+   {
+      level = toLevel(leveld);
+   }
+   Log::initialize(type, level, appName);
+}
 
 void 
 Log::initialize(Type type, Level level, const Data& appName)
