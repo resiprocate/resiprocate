@@ -22,7 +22,10 @@
 
 #include <string.h>		/* for memcpy() */
 #include <sys/types.h>		/* for stupid systems */
+
+#ifndef WIN32
 #include <netinet/in.h>		/* for ntohl() */
+#endif
 
 #include <util/vmd5.hxx>
 
