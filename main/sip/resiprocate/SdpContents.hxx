@@ -58,8 +58,8 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
-                  const int& getSessionId() const {return mSessionId;}
-                  const int& getVersion() const {return mVersion;}
+                  const unsigned long& getSessionId() const {return mSessionId;}
+                  const unsigned long& getVersion() const {return mVersion;}
                   const Data& user() const {return mUser;}
                   Data& user() {return mUser;}
                   AddrType getAddressType() const {return mAddrType;}
@@ -69,8 +69,8 @@ class SdpContents : public Contents
                   Origin();
 
                   Data mUser;
-                  int mSessionId;
-                  int mVersion;
+                  unsigned long mSessionId;
+                  unsigned long mVersion;
                   AddrType mAddrType;
                   Data mAddress;
 
@@ -129,7 +129,7 @@ class SdpContents : public Contents
                public:
                   Connection(AddrType addType,
                              const Data& address,
-                             unsigned int ttl = 0);
+                             unsigned long ttl = 0);
                   Connection(const Connection& rhs);
                   Connection& operator=(const Connection& rhs);
                   
@@ -139,15 +139,15 @@ class SdpContents : public Contents
                   AddrType getAddressType() const {return mAddrType;}
                   const Data& getAddress() const {return mAddress;}
                   void setAddress(const Data& host, AddrType type = IP4);
-                  unsigned int ttl() const {return mTTL;}
-                  unsigned int& ttl() {return mTTL;}
+                  unsigned long ttl() const {return mTTL;}
+                  unsigned long& ttl() {return mTTL;}
 
                private:
                   Connection();
 
                   AddrType mAddrType;
                   Data mAddress;
-                  unsigned int mTTL;
+                  unsigned long mTTL;
 
                   friend class Session;
                   friend class Medium;
@@ -157,7 +157,7 @@ class SdpContents : public Contents
             {
                public:
                   Bandwidth(const Data& modifier,
-                            unsigned int kbPerSecond);
+                            unsigned long kbPerSecond);
                   Bandwidth(const Bandwidth& rhs);
                   Bandwidth& operator=(const Bandwidth& rhs);
                   
@@ -166,13 +166,13 @@ class SdpContents : public Contents
 
                   const Data& modifier() const {return mModifier;}
                   Data modifier() {return mModifier;}
-                  unsigned int kbPerSecond() const {return mKbPerSecond;}
-                  unsigned int& kbPerSecond() {return mKbPerSecond;}
+                  unsigned long kbPerSecond() const {return mKbPerSecond;}
+                  unsigned long& kbPerSecond() {return mKbPerSecond;}
 
                private:
                   Bandwidth() {}
                   Data mModifier;
-                  unsigned int mKbPerSecond;
+                  unsigned long mKbPerSecond;
 
                   friend class Session;
                   friend class Medium;
@@ -181,8 +181,8 @@ class SdpContents : public Contents
             class Time
             {
                public:
-                  Time(unsigned int start,
-                       unsigned int stop);
+                  Time(unsigned long start,
+                       unsigned long stop);
                   Time(const Time& rhs);
                   Time& operator=(const Time& rhs);
                   
@@ -192,20 +192,20 @@ class SdpContents : public Contents
                   class Repeat
                   {
                      public:
-                        Repeat(unsigned int interval,
-                               unsigned int duration,
+                        Repeat(unsigned long interval,
+                               unsigned long duration,
                                std::list<int> offsets);
                         void parse(ParseBuffer& pb);
                         std::ostream& encode(std::ostream&) const;
 
-                        unsigned int getInterval() const {return mInterval;}
-                        unsigned int getDuration() const {return mDuration;}
+                        unsigned long getInterval() const {return mInterval;}
+                        unsigned long getDuration() const {return mDuration;}
                         const std::list<int> getOffsets() const {return mOffsets;}
                         
                      private:
                         Repeat() {}
-                        unsigned int mInterval;
-                        unsigned int mDuration;
+                        unsigned long mInterval;
+                        unsigned long mDuration;
                         std::list<int> mOffsets;
 
                         friend class Time;
@@ -213,14 +213,14 @@ class SdpContents : public Contents
 
                   void addRepeat(const Repeat& repeat);
 
-                  unsigned int getStart() const {return mStart;}
-                  unsigned int getStop() const {return mStop;}
+                  unsigned long getStart() const {return mStart;}
+                  unsigned long getStop() const {return mStop;}
                   const std::list<Repeat>& getRepeats() const {return mRepeats;}
 
                private:
                   Time() {}
-                  unsigned int mStart;
-                  unsigned int mStop;
+                  unsigned long mStart;
+                  unsigned long mStop;
                   std::list<Repeat> mRepeats;
 
                   friend class Session;
@@ -232,12 +232,12 @@ class SdpContents : public Contents
                   class Adjustment
                   {
                      public:
-                        Adjustment(unsigned int time,
+                        Adjustment(unsigned long time,
                                    int offset);
                         Adjustment(const Adjustment& rhs);
                         Adjustment& operator=(const Adjustment& rhs);
                         
-                        unsigned int time;
+                        unsigned long time;
                         int offset;
                   };
 
@@ -282,8 +282,8 @@ class SdpContents : public Contents
                   Medium();
                   Medium(const Medium& rhs);
                   Medium(const Data& name,
-                         unsigned int port,
-                         unsigned int multicast,
+                         unsigned long port,
+                         unsigned long multicast,
                          const Data& protocol);
                   Medium& operator=(const Medium& rhs);
                   
@@ -301,9 +301,9 @@ class SdpContents : public Contents
                   Data name() {return mName;}
 
                   int port() const {return mPort;}
-                  unsigned int& port() {return mPort;}
+                  unsigned long& port() {return mPort;}
                   int multicast() const {return mMulticast;}
-                  unsigned int& multicast() {return mMulticast;}
+                  unsigned long& multicast() {return mMulticast;}
                   const Data& protocol() const {return mProtocol;}
                   Data protocol() {return mProtocol;}
 
@@ -331,8 +331,8 @@ class SdpContents : public Contents
                   Session* mSession;
 
                   Data mName;
-                  unsigned int mPort;
-                  unsigned int mMulticast;
+                  unsigned long mPort;
+                  unsigned long mMulticast;
                   Data mProtocol;
                   mutable std::list<Data> mFormats;
                   mutable list<Codec> mCodecs;
@@ -427,7 +427,6 @@ class SdpContents : public Contents
 
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
-      //virtual 
       static const Mime& getStaticType() ;
    private:
       
@@ -439,7 +438,7 @@ class Codec
 {
    public:
       Codec() : mName(), mRate(0), mPayloadType(-1) {}
-      Codec(const Data& name, unsigned int rate, const Data& parameters = Data::Empty);
+      Codec(const Data& name, unsigned long rate, const Data& parameters = Data::Empty);
       Codec(const Codec& rhs);
       Codec& operator=(const Codec& codec);
 
@@ -464,7 +463,7 @@ class Codec
 
    private:
       Data mName;
-      unsigned int mRate;
+      unsigned long mRate;
       int mPayloadType;
       Data mParameters;
 
