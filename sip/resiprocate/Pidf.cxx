@@ -60,6 +60,13 @@ Pidf::getTuples()
    return mTuples;
 }
 
+const std::vector<Pidf::Tuple>&
+Pidf::getTuples() const
+{
+   checkParsed();
+   return mTuples;
+}
+
 int
 Pidf::getNumTuples() const
 {
