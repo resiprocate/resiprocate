@@ -120,6 +120,7 @@ XMLCursor::skipProlog(ParseBuffer& pb)
    // !dlb! much more complicated than this.. can contain comments
    pb.skipToChars(QUESTION_RA_QUOTE);
    pb.skipN(2);
+   pb.skipWhitespace();
 }
 
 void
@@ -205,7 +206,7 @@ XMLCursor::parseNextRootChild()
 bool
 XMLCursor::nextSibling()
 {
-   DebugLog(<< "XMLCursor::nextSibling" << this->mCursor << " " << this->mCursor->mParent);
+   DebugLog(<< "XMLCursor::nextSibling" << *this->mCursor << " " << *this->mCursor->mParent);
 
    if (atRoot())
    {
@@ -292,7 +293,7 @@ XMLCursor::getTag() const
 //<foo/>
 //<foo attr = 'value'   attr="value">
 //<foo attr = 'value'   attr="value" >
-const std::map<Data, Data>&
+const XMLCursor::AttributeMap&
 XMLCursor::getAttributes() const
 {
    mAttributes.clear();
@@ -374,7 +375,7 @@ XMLCursor::Node::Node(const ParseBuffer& pb)
      mIsLeaf(false)
 {
    mPb.assertNotEof();
-   DebugLog(<< "XMLCursor::Node::Node" << this << "[" << Data(mPb.position(), mPb.end() - mPb.start()) << "]");
+   DebugLog(<< "XMLCursor::Node::Node" << *this);
 }
 
 XMLCursor::Node::~Node()
@@ -520,6 +521,25 @@ XMLCursor::Node::skipComments(ParseBuffer& pb)
       pb.skipToChars(COMMENT_END);
       pb.assertNotEof();
    }
+}
+
+static const int showSize(35);
+std::ostream&
+resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
+{
+   str << &node << "[" 
+       << Data(node.mPb.start(), 
+               min(showSize, node.mPb.end() - node.mPb.start()))
+        << "]" << ((node.mPb.end() - node.mPb.start() < showSize) ? "" : "...");
+
+   return str;
+}
+
+std::ostream&
+resip::operator<<(std::ostream& str, const XMLCursor& cursor)
+{
+   str << "XMLCursor " << *cursor.mCursor;
+   return str;
 }
 
 #endif // WIN32
