@@ -3,7 +3,7 @@
 #include "GagConduit.hxx"
 
 GagConduit::GagConduit(SipStack &stack, int _udpPort)
-  : sipStack(&stack), udpPort(_udpPort)
+  : sipStack(&stack), udpPort(_udpPort), running(true)
 {
   // Nothing interesting to do here
 }
@@ -34,6 +34,9 @@ GagConduit::handleMessage(GagMessage *message)
     case GagMessage::REMOVE_BUDDY:
       gaimRemoveBuddy(reinterpret_cast<GagRemoveBuddyMessage *>(message));
       break;
+    case GagMessage::SHUTDOWN:
+      gaimShutdown(reinterpret_cast<GagShutdownMessage *>(message));
+      break;
     case GagMessage::ERROR:
       gaimError(reinterpret_cast<GagErrorMessage *>(message));
       break;
@@ -43,8 +46,25 @@ GagConduit::handleMessage(GagMessage *message)
   }
 }
 
-// XXX ADD A DESTRUCTOR to clean up TUs!!!
 
+GagConduit::~GagConduit()
+{
+  removeAllUsers();
+}
+
+void
+GagConduit::removeAllUsers()
+{
+  // Shut down all logged in users
+  map<Uri,TuIM *>::iterator tu;
+  tu = tuIM.begin();
+  while (tu != tuIM.end())
+  {
+    delete(tu->second);
+    tuIM.erase(tu);
+    tu++;
+  }
+}
 
 map<Uri,TuIM *>::iterator
 GagConduit::getTu(Uri &aor)
@@ -158,6 +178,13 @@ GagConduit::gaimRemoveBuddy(GagRemoveBuddyMessage *msg)
   if (tu == tuIM.end()) return;
 
   tu->second->removeBuddy(*them);
+}
+
+void
+GagConduit::gaimShutdown(GagShutdownMessage *msg)
+{
+  running = false;
+  removeAllUsers();
 }
 
 void
