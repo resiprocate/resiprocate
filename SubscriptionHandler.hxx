@@ -13,6 +13,8 @@ class ClientSubscriptionHandler
 {
   public:
       virtual void onRefreshRejected(ClientSubscriptionHandle, const SipMessage& rejection)=0;
+
+      //Client must call acceptUpdate or rejectUpdate for any onUpdateFoo
       virtual void onUpdatePending(ClientSubscriptionHandle, const SipMessage& notify)=0;
       virtual void onUpdateActive(ClientSubscriptionHandle, const SipMessage& notify)=0;
       //unknown Subscription-State value
@@ -34,12 +36,15 @@ class ServerSubscriptionHandler
                                const Contents* contents,
                                const SecurityAttributes* attrs);
 
+      virtual void onNotifyRejected(ServerSubscriptionHandle, const SipMessage& msg);      
+
       //called when this usage is destroyed for any reason. One of the following
       //three methods will always be called before this, but this is the only
       //method that MUST be implemented by a handler
       virtual void onTerminated(ServerSubscriptionHandle)=0;
 
-      //will be called when a NOTIFY is not delivered
+      //will be called when a NOTIFY is not delivered(with a usage terminating
+      //statusCode), or the Dialog is destroyed
       virtual void onError(ServerSubscriptionHandle, const SipMessage& msg);      
 
       //app can synchronously decorate terminating NOTIFY messages. The only

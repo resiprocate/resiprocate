@@ -17,7 +17,12 @@ class ClientSubscription: public BaseSubscription
 
       typedef Handle<ClientSubscription> ClientSubscriptionHandle;
       ClientSubscriptionHandle getHandle();
-
+      
+      //.dcm. no adornment for ease of use, can add if there is a use case
+      
+      void acceptUpdate(int statusCode = 200);
+      void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
+      
       void requestRefresh();
       virtual void end();
 
@@ -25,12 +30,14 @@ class ClientSubscription: public BaseSubscription
 
    protected:
       virtual ~ClientSubscription();
+      virtual void dialogDestroyed(const SipMessage& msg);      
    private:
       friend class Dialog;
       friend class InviteSession;      
 
       bool mOnNewSubscriptionCalled;      
       bool mEnded;
+      SipMessage mLastNotify;
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
       
