@@ -88,9 +88,9 @@ DialogUsageManager::makeNewSession(BaseCreator* creator)
 }
 
 SipMessage&
-DialogUsageManager::makeInviteSession(const Uri& target)
+DialogUsageManager::makeInviteSession(const Uri& target, const SdpContents* initialOffer)
 {
-   return makeNewSession(new InviteSessionCreator(target, 0));
+   return makeNewSession(new InviteSessionCreator(target, initialOffer));
 }
 
 SipMessage&
