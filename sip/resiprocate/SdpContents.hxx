@@ -354,6 +354,10 @@ class SdpContents : public Contents
                     const Origin& origin,
                     const Data& name);
 
+            Session() : mVersion(0) {}
+            Session(const Session& rhs);
+            Session& operator=(const Session& rhs);
+
             void parse(ParseBuffer& pb);
             std::ostream& encode(std::ostream&) const;
 
@@ -389,11 +393,7 @@ class SdpContents : public Contents
             bool exists(const Data& key) const;
             const list<Data>& getValues(const Data& key) const;
 
-         private:
-            Session() : mVersion(0) {}
-            Session(const Session& rhs);
-            Session& operator=(const Session& rhs);
-            
+         private:            
             int mVersion;
             Origin mOrigin;
             Data mName;
