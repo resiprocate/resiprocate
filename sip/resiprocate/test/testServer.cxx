@@ -108,7 +108,7 @@ main(int argc, char* argv[])
    SipStack stack;
 
 
-   Transport::Type protocol;
+   Transport::Type protocol = Transport::UDP;
    if (strcasecmp(argv[3], "UDP") == 0)
    {
       protocol = Transport::UDP;

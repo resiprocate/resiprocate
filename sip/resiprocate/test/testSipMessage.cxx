@@ -768,7 +768,7 @@ main()
       assert(message->header(h_Vias).front().sentPort() == 0);
 
       assert(message->exists(h_Expires));
-      assert(message->header(h_Expires).value() = 353245);
+      assert(message->header(h_Expires).value() == 353245);
 
       cerr << "Headers::Expires enum = " << h_Expires.getTypeNum() << endl;
       
