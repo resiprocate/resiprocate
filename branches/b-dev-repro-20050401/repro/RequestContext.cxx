@@ -6,6 +6,7 @@
 
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/TransactionTerminated.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -45,12 +46,16 @@ void
 RequestContext::process(resip::TransactionTerminated& msg)
 {
    InfoLog (<< "RequestContext::process(TransactionTerminated) " << *this);
-   mTransactionCount--;
-   if (mTransactionCount == 0)
+   if (mResponseContext.removeClientTransaction(msg.getTransactionId()))
    {
-      delete this;
+      mTransactionCount--;
+      if (mTransactionCount == 0)
+      {
+         delete this;
+      }
    }
 }
+
 
 void
 RequestContext::process(std::auto_ptr<resip::Message> msg)

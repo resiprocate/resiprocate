@@ -110,12 +110,12 @@ Proxy::thread()
                   {
                      // This is a new request, so create a Request Context for it
                      InfoLog (<< "New RequestContext tid=" << sip->getTransactionId() << " : " << sip->brief());
-                     InfoLog (<< Inserter(mServerRequestContexts));
                      
                      assert(mServerRequestContexts.count(sip->getTransactionId()) == 0);                  
                      RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
                      InfoLog (<< "Inserting new RequestContext tid=" << sip->getTransactionId() << " -> " << *context);
                      mServerRequestContexts[sip->getTransactionId()] = context;
+                     DebugLog (<< "RequestContexts: " << Inserter(mServerRequestContexts));
                      context->process(std::auto_ptr<resip::Message>(msg));
                   }
                }
