@@ -102,7 +102,7 @@ class Profile
 
 	  Profile *mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
-   
+
 }
 
 #endif
