@@ -12,8 +12,8 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-   Log::Level l = Log::DEBUG;
-   Log::initialize(Log::COUT, l, argv[0]);
+   Log::Level l = Log::Debug;
+   Log::initialize(Log::Cout, l, argv[0]);
    
    {
       Data addr("1:1");

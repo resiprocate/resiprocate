@@ -917,24 +917,24 @@ void test15()
 int
 main(int argc, char*argv[])
 {
-    Log::Level l = Log::DEBUG;
+    Log::Level l = Log::Debug;
     
     if (argc > 1)
     {
         switch(*argv[1])
         {
-            case 'd': l = Log::DEBUG;
+            case 'd': l = Log::Debug;
                 break;
-            case 'i': l = Log::INFO;
+            case 'i': l = Log::Info;
                 break;
-            case 's': l = Log::STACK;
+            case 's': l = Log::Stack;
                 break;
-            case 'c': l = Log::CRIT;
+            case 'c': l = Log::Crit;
                 break;
         }
     }
     
-    Log::initialize(Log::COUT, l, argv[0]);
+    Log::initialize(Log::Cout, l, argv[0]);
     CritLog(<<"Test Driver Starting");
     tassert_init(14);
     test1();

@@ -171,7 +171,7 @@ class Server : public ThreadIf
 int
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::ERR, argv[0]);
+   Log::initialize(Log::Cout, argc > 1 ? Log::toLevel(argv[1]) :  Log::Err, argv[0]);
    Log::toLevel( Data("DEBUG") );
 
    SipStack stack1;

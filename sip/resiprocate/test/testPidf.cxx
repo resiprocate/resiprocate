@@ -10,7 +10,7 @@ using namespace std;
 int
 main(int argc, char** argv)
 {
-   //Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   //Log::initialize(Log::Cout, Log::Debug, argv[0]);
    
    {
       // http://www.imppwg.org/ml-archive/IMPP-WG/200204/msg00094.html
