@@ -8,6 +8,28 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
+Registrar::Registrar(SipStack& stack, InMemoryRegistrationDatabase& db) : 
+   mDum(stack),
+   mDb(db)
+{
+   mProfile.clearSupportedMethods();
+   mProfile.addSupportedMethod(resip::REGISTER);
+
+   mDum.setServerRegistrationHandler(this);
+   mDum.setRegistrationPersistenceManager(mDb);
+   mDum.setMasterProfile(&mProfile);
+}
+
+void
+Registrar::thread()
+{
+   // !jf! should really block on condition in the fifo
+   while(!waitForShutdown(10))
+   {
+      process();
+   }
+}
+
 void 
 Registrar::onRefresh(resip::ServerRegistrationHandle sr,
                      const resip::SipMessage& reg)
