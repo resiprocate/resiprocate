@@ -250,9 +250,35 @@ Dialog::end()
 }
 
 void
+Dialog::handleTargetRefresh(const SipMessage& msg)
+{
+   switch(msg.header(h_CSeq).method())
+   {
+      case INVITE:
+      case UPDATE:
+         if (msg.isRequest() || (msg.isResponse() && msg.header(h_StatusLine).statusCode()/100 == 2))
+         {
+            //?dcm? modify local target; 12.2.2 of 3261 implies that the remote
+            //target is immediately modified.  Should we wait until a 2xx class
+            //reponse is sent to a re-invite(easy when all send requests go
+            //through Dialog)
+            if (msg.exists(h_Contacts))
+            {
+               //.dcm. replace or check then replace
+               mRemoteTarget = msg.header(h_Contacts).front();
+            }
+         }
+         break;
+      default:
+         return;
+   }
+}
+
+void
 Dialog::dispatch(const SipMessage& msg)
 {
    DebugLog ( << "Dialog::dispatch: " << msg.brief());
+   handleTargetRefresh(msg);
    if (msg.isRequest())
    {
       const SipMessage& request = msg;
@@ -334,7 +360,7 @@ Dialog::dispatch(const SipMessage& msg)
             {
                InfoLog (<< "Received an in dialog refer in a non-invite dialog: " << request.brief());
                SipMessage failure;
-               makeResponse(failure, request, 405);
+               makeResponse(failure, request, 603);
                mDum.sendResponse(failure);
                return;
             }
@@ -1047,7 +1073,7 @@ resip::operator<<(ostream& strm, const Dialog& dialog)
 void 
 Dialog::forked(const SipMessage& msg)
 {
-   assert(msg.isResponse() && msg.header(h_StatusLine).statusCode() < 200);
+   assert(msg.isResponse() && msg.header(h_StatusLine).statusCode() < 300);
 
    ClientInviteSession* uac = dynamic_cast<ClientInviteSession*>(mInviteSession);
    if (uac)
@@ -1065,3 +1091,4 @@ Dialog::cancel()
       uac->cancel();
    }
 }
+
