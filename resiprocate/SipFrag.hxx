@@ -1,5 +1,5 @@
-#ifndef SipFrag_hxx
-#define SipFrag_hxx
+#if !defined(RESIP_SIPFRAG_HXX)
+#define RESIP_SIPFRAG_HXX 
 
 #include <map>
 

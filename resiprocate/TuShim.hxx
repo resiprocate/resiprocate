@@ -1,5 +1,5 @@
-#if !defined(TUSHIM_HXX)
-#define TUSHIM_HXX
+#if !defined(RESIP_TUSHIM_HXX)
+#define RESIP_TUSHIM_HXX
 
 #include <map>
 
@@ -33,9 +33,7 @@ class TuShim
  
 }
 
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -86,6 +84,3 @@ class TuShim
  * <http://www.vovida.org/>.
  *
  */
-
-
-

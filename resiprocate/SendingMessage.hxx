@@ -1,5 +1,5 @@
-#ifndef SendingMessage_hxx
-#define SendingMessage_hxx
+#if !defined(RESIP_SENDINGMESSAGE_HXX)
+#define RESIP_SENDINGMESSAGE_HXX 
 
 #include <iostream>
 #include "resiprocate/Message.hxx"
@@ -51,9 +51,7 @@ class SendingMessage : public Message
 
 }
 
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

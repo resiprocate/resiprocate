@@ -1,5 +1,5 @@
-#if !defined(TRANSACTIONSTATE_HXX)
-#define TRANSACTIONSTATE_HXX
+#if !defined(RESIP_TRANSACTIONSTATE_HXX)
+#define RESIP_TRANSACTIONSTATE_HXX
 
 #include <iostream>
 #include "resiprocate/DnsResolver.hxx"
@@ -119,7 +119,6 @@ class TransactionState
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

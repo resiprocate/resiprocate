@@ -1,5 +1,5 @@
-#if !defined(TLSTRANSPORT_HXX)
-#define TLSTRANSPORT_HXX
+#if !defined(RESIP_TLSTRANSPORT_HXX)
+#define RESIP_TLSTRANSPORT_HXX
 
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Message.hxx"
@@ -52,7 +52,6 @@ class TlsTransport : public Transport
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -1,5 +1,5 @@
-#if !defined(TimerQueue_HXX)
-#define TimerQueue_HXX
+#if !defined(RESIP_TIMERQUEUE_HXX)
+#define RESIP_TIMERQUEUE_HXX 
 
 #include <vector>
 #include <set>
@@ -38,7 +38,6 @@ std::ostream& operator<<(std::ostream&, const TimerQueue&);
 }
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
