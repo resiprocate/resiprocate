@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "resiprocate/Uri.hxx"
+#include "resiprocate/NameAddr.hxx"
 
 namespace resip
 {
@@ -33,16 +34,23 @@ class RequestContext
       
       void setDigestIdentity (const resip::Data&);
       const resip::Data& getDigestIdentity() const;
+
+      void addTarget(const resip::NameAddr& target);
+      std::vector<resip::NameAddr>& getCandidates();
       
    private:
       std::auto_ptr<resip::SipMessage> mOriginalRequest;
       std::auto_ptr<resip::Message> mCurrentEvent;
       RequestProcessorChain& mRequestProcessorChain;
       resip::Data mDigestIdentity;
-      std::vector<resip::Uri> mTargetSet;
+      std::vector<resip::NameAddr> mCandidateTargets;
       int mTransactionCount;
+
+      friend class ResponseContext;
 };
+
 }
+
 #endif
 
 /* ====================================================================

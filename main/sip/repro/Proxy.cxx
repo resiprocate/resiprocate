@@ -40,10 +40,20 @@ Proxy::thread()
          {
             if (sip->isRequest())
             {
-               assert (mRequestContexts.count(sip->getTransactionId()) == 0);
-               RequestContext* context = new RequestContext(std::auto_ptr<SipMessage>(sip), mRequestProcessorChain);
-               mRequestContexts[sip->getTransactionId()] = context;
-               context->process(std::auto_ptr<resip::Message>(msg));
+               // !jf! handle ACK specially (to 200) here
+               if (sip->header(h_RequestLine).method() == CANCEL)
+               {
+                  HashMap<Data,RequestContext*>::iterator i = mRequestContexts.find(sip->getTransactionId());
+                  assert (i != mRequestContexts.end());
+                  i->second->process(std::auto_ptr<resip::Message>(msg));
+               }
+               else
+               {
+                  assert(mRequestContexts.count(sip->getTransactionId()) == 0);                  
+                  RequestContext* context = new RequestContext(std::auto_ptr<SipMessage>(sip), mRequestProcessorChain);
+                  mRequestContexts[sip->getTransactionId()] = context;
+                  context->process(std::auto_ptr<resip::Message>(msg));
+               }
             }
             else if (sip->isResponse())
             {
@@ -60,6 +70,10 @@ Proxy::thread()
             if (i != mRequestContexts.end())
             {
                i->second->process(std::auto_ptr<Message>(msg));
+            }
+            else
+            {
+               //InfoLog (<< "No matching request context...ignoring " << *msg);
             }
          }
          else if (term)
