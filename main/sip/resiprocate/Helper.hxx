@@ -34,14 +34,8 @@ class Helper
       template<typename T>
       static T aBitSmallerThan(T secs)
       {
-         if (secs < 38)
-         {
-            return  secs - 2;
-         }
-         else
-         {
-            return resipMax(T(32), resipMin(secs - T(32), 9*secs/10));
-         }
+         assert(secs > 10);
+         return resipMin(secs-5, 9*secs/10);
       }
       
       //in general content length handled automatically by SipMessage?
