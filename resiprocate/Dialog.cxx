@@ -179,6 +179,10 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
 
       mCreated = true;
    }
+   else
+   {
+      targetRefreshResponse(msg);
+   }
 }
 
 void 
