@@ -371,7 +371,8 @@ Transport::stampReceived(SipMessage* message)
          message->header(h_Vias).front().param(p_rport).port() = tuple.getPort();
       }
    }
-   DebugLog (<< "incoming from: " << message->getSource() << endl << *message);
+   DebugLog (<< "incoming from: " << message->getSource());
+   StackLog (<< endl << *message);
 }
 
 
