@@ -25,9 +25,8 @@ class ClientInviteSession : public InviteSession
       virtual SipMessage& rejectOffer(int statusCode);
 
    public:
-      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       virtual InviteSession::Handle getSessionHandle();
-      ClientInviteSession::Handle getHandle() {return mHandle;}
+      ClientInviteSession::Handle& getHandle() { return static_cast<ClientInviteSession::Handle&>(mHandle); }
          
    private:
       friend class Dialog;
@@ -56,8 +55,6 @@ class ClientInviteSession : public InviteSession
       } State;
       State mState;
 
-      ClientInviteSession::Handle mHandle;
-      
       int lastReceivedRSeq;
       int lastExpectedRSeq;
       int mStaleCallTimerSeq;
