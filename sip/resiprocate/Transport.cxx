@@ -39,8 +39,7 @@ Transport::run()
       fdSetSize = std::max( mFd+1, fdSetSize );
 
       int  err = select(fdSetSize, &fdSet, 0, 0, 0);
-      int e = errno;
-      if (e == 0)
+      if (err == 0)
       {
          process();
       }
