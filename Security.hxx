@@ -173,7 +173,6 @@ class BaseSecurity
       
 };
 
-
 class Security : public BaseSecurity
 {
    public:
@@ -188,6 +187,7 @@ class Security : public BaseSecurity
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;
       virtual void onRemovePEM(const Data& name, PEMType type) const;
+
    private:
       Data mPath;
 };
