@@ -374,7 +374,8 @@ main(int arc, char** argv)
       Uri& uri = to.uri();
 
       assert(uri.scheme() == "sips");
-      assert(uri.user() == "bob;param=gargle");
+      assert(uri.user() == "bob");
+      assert(uri.userParameters() == "param=gargle");
       assert(uri.password() == "password");
       assert(uri.host() == "foo.com");
    }
@@ -389,7 +390,8 @@ main(int arc, char** argv)
       Uri& uri = to.uri();
 
       assert(uri.scheme() == "sips");
-      assert(uri.user() == "bob;param=gargle");
+      assert(uri.user() == "bob");
+      assert(uri.userParameters() == "param=gargle");
       assert(uri.password() == "password");
       assert(uri.host() == "foo.com");
       assert(uri.port() == 6000);
@@ -405,7 +407,8 @@ main(int arc, char** argv)
       Uri& uri = to.uri();
 
       assert(uri.scheme() == "sips");
-      assert(uri.user() == "bob;param=gargle");
+      assert(uri.user() == "bob");
+      assert(uri.userParameters() == "param=gargle");
       assert(uri.password() == "password");
       cerr << "Uri:" << uri.host() << endl;
       assert(uri.host() == "foo.com");
