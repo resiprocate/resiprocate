@@ -10,12 +10,13 @@ class SipMessage;
 
 class TransactionUser
 {
+   public:
+      void post(Message *);
+
    protected:
       TransactionUser();
       virtual ~TransactionUser()=0;
-
       virtual bool isForMe(const SipMessage& msg) const=0;
-      virtual bool isShutDown() const=0;
       
       TimeLimitFifo<Message> mFifo;
 

@@ -48,6 +48,7 @@ SipStack::SipStack(Security* pSecurity,
 #else
    mSecurity(0),
 #endif
+   mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
    mAppTimers(mTuSelector),
@@ -55,7 +56,6 @@ SipStack::SipStack(Security* pSecurity,
    mTransactionController(*this),
    mStrictRouting(false),
    mShuttingDown(false),
-   mAsyncProcessHandler(handler),
    mTuSelector(mTUFifo)
 {
    Timer::getTimeMs(); // initalize time offsets
