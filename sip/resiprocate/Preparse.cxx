@@ -8,10 +8,20 @@
 #include "sip2/util/Socket.hxx"
 
 #define PP_DEBUG
-#define DEBUG_HELPERS
-// #define SUPER_DEBUG
+#define PP_SUPER_DEBUG
 
-#if defined(PP_DEBUG) || defined(SUPER_DEBUG) || defined(DEBUG_HELPERS)
+// Set dependancies in debug settings
+#if defined(PP_SUPER_DEBUG) && ! defined(PP_DEBUG)
+#define PP_DEBUG
+#endif
+
+#if !defined(NDEBUG) && defined(PP_DEBUG) && !defined(DEBUG_HELPERS)
+#define PP_DEBUG_HELPERS
+#endif
+
+// Include required facilities for DEBUG only.
+
+#if defined(PP_DEBUG) || defined(PP_SUPER_DEBUG) || defined(PP_DEBUG_HELPERS)
 #include <iostream> // debug only !ah!
 #endif
 
@@ -24,16 +34,16 @@ using namespace std;
 //  AE(int start, int disposition, const char *p, int next, int workMask);
 //  AE(int start, int disposition, int ch, int next, int workMask);
 
-using namespace Vocal2::PreparseState;
+// using namespace Vocal2::PreparseState;
 
-Edge *** Preparse::mTransitionTable = 0;
+Preparse::Edge *** Preparse::mTransitionTable = 0;
+// Instance of the table (static member of Preparse class).
 
 
-#if !defined(NDEBUG) && defined(PP_DEBUG)
-#if !defined(DEBUG_HELPERS)
-#define DEBUG_HELPERS
-#endif
-
+#if defined(PP_DEBUG_HELPERS)
+// These are routines (for debug only) that output data from
+// the preparse buffers. -- they are ugly, but they will not
+// be in a stable, client deployed, stack.
 
 Data
 showN(const char * p, size_t l)
@@ -45,100 +55,108 @@ showN(const char * p, size_t l)
     }
     return s;
 }
+
 #endif
 
-#if defined (DEBUG_HELPERS)
+#if defined (PP_DEBUG_HELPERS)
 
-Data statusName(PreparseState::BufferAction s)
-{
-    Data d;
+    // DO_BIT is a tasty macro to assemble a Data that
+    // represents the bitset (s) passed inside.
+    // it does this by destructively testing
+    // the mask.
 
-    d += '[';
-#define DO_SPC(b) {s&= ~b;if(s)d+=' ';}
-#define DO_BIT(b) {if(s&b){d+=#b;DO_SPC(b);}}
-
-    if (!s)
-        d+="NONE";
-    else
-    {
-        DO_BIT(fragmented);
-        DO_BIT(dataAssigned);
-        DO_BIT(preparseError);
-        DO_BIT(headersComplete);
-    }
-
-    d += ']';
-
-    return d;
-
-
+#define DO_BIT(data,mask,bit)                   \
+{                                               \
+    if (mask & bit)                             \
+    {                                           \
+        data += #bit;    /* add name */         \
+        mask &= ~bit;    /* clear bit */        \
+        if (mask)        /* if more */          \
+            data += ' '; /* add space */        \
+    }                                           \
 }
 
-const char *  stateName(PreparseState::State s)
+Data statusName(::BufferAction s)
+{
+    Data d;
+    d += '[';
+    DO_BIT(d,s,NONE);
+    DO_BIT(d,s,fragmented);
+    DO_BIT(d,s,dataAssigned);
+    DO_BIT(d,s,preparseError);
+    DO_BIT(d,s,headersComplete);
+    d += ']';
+    return d;
+}
+
+const char *  stateName(Preparse::PreparseState s)
 {
     switch (s)
     {
-        case NewMsg: return "NewMsg";
-        case NewMsgCrLf: return "NewMsgCrLf";
-        case StartLine: return "StartLine";
-        case StartLineCrLf: return "StartLineCrLf";
-        case BuildHdr: return "BuildHdr";
-        case EWSPostHdr: return "EWSPostHdr";
-        case EWSPostColon: return "EWSPostColon";
-        case EmptyHdrCrLf: return "EmptyHdrCrLf";
-        case EmptyHdrCont: return "EmptyHdrCont";
-        case BuildData: return "BuildData";
-        case BuildDataCrLf: return "BuildDataCrLf";
-        case CheckCont: return "CheckCont";
-        case CheckEndHdr: return "CheckEndHdr";
-        case InQ: return "InQ";
-        case InQEsc: return "InQEsc";
-        case InAng: return "InAng";
-        case InAngQ: return "InAngQ";
-        case InAngQEsc: return "InAngQEsc";
-        case EndMsg: return "EndMsg";
+        case Preparse::NewMsg: return "NewMsg";
+        case Preparse::NewMsgCrLf: return "NewMsgCrLf";
+        case Preparse::StartLine: return "StartLine";
+        case Preparse::StartLineCrLf: return "StartLineCrLf";
+        case Preparse::BuildHdr: return "BuildHdr";
+        case Preparse::EWSPostHdr: return "EWSPostHdr";
+        case Preparse::EWSPostColon: return "EWSPostColon";
+        case Preparse::EmptyHdrCrLf: return "EmptyHdrCrLf";
+        case Preparse::EmptyHdrCont: return "EmptyHdrCont";
+        case Preparse::BuildData: return "BuildData";
+        case Preparse::BuildDataCrLf: return "BuildDataCrLf";
+        case Preparse::CheckCont: return "CheckCont";
+        case Preparse::CheckEndHdr: return "CheckEndHdr";
+        case Preparse::InQ: return "InQ";
+        case Preparse::InQEsc: return "InQEsc";
+        case Preparse::InAng: return "InAng";
+        case Preparse::InAngQ: return "InAngQ";
+        case Preparse::InAngQEsc: return "InAngQEsc";
+        case Preparse::EndMsg: return "EndMsg";
         default: assert(0);
-            
     }
 }
 
 
+// return a descriptive data for the edge work
+// coded in 'm'.
 Data
 workString(int m)
 {
-    Data s("[");
-
-    if ( m &  actNil) s += " Nil ";
-    if ( m &  actAdd) s += " Add ";
-    if ( m &  actBack) s += " Back ";
-    if ( m &  actFline) s += " Fline ";
-    if ( m &  actReset) s += " Reset ";
-    if ( m &  actHdr) s += " Hdr ";
-    if ( m &  actData) s += " Data ";
-    if ( m &  actBad) s += " Bad ";
-    if ( m & actEndHdrs) s += " EndHdrs ";
-    if ( m & actDiscard ) s += " Discard ";
-    if ( m & actDiscardKnown ) s += " DiscardKnown ";
-    s += ']';
-    return s;
+    Data d("[");
+    DO_BIT(d,m,actNil);
+    DO_BIT(d,m,actAdd);
+    DO_BIT(d,m,actBack);
+    DO_BIT(d,m,actFline);
+    DO_BIT(d,m,actReset);
+    DO_BIT(d,m,actHdr);
+    DO_BIT(d,m,actData);
+    DO_BIT(d,m,actBad);
+    DO_BIT(d,m,actEndHdrs);
+    DO_BIT(d,m,actDiscard);
+    DO_BIT(d,m,actDiscardKnown);
+    d += ']';
+    return d;
 }
 #endif
 
 const int X = -1;
 const char XC = -1;
 
+
+
 void
-Preparse::AE ( PreparseState::State start,
+Preparse::AE ( PreparseState start,
      int disposition,
      int c,
-     PreparseState::State next,
+     PreparseState next,
      int workMask)
 {
    // for loops below and this code implements the
    // X -- don't care notation for the AE(...) calls.
+   
 
     int stateStart = (start==X) ? 0 : start;
-    int stateEnd = (start==X) ? nStates : start+1;
+    int stateEnd = (start==X) ? nPreparseStates : start+1;
 
     int dispStart = (disposition==X) ? 0 : disposition;
     int dispEnd = (disposition==X) ? nDisp : disposition+1;
@@ -157,10 +175,10 @@ Preparse::AE ( PreparseState::State start,
 }
 
 void
-Preparse::AE (PreparseState::State start,
+Preparse::AE (PreparseState start,
     int disposition,
     const char * p,
-    PreparseState::State next,
+    PreparseState next,
     int workMask)
 {
     const char *q = p;
@@ -181,8 +199,8 @@ Preparse::InitStatePreparseStateTable()
 
     if (initialised) return;
 
-    mTransitionTable = new Edge**[nStates];
-    for(int i = 0 ; i < nStates ; i++)
+    mTransitionTable = new Edge**[nPreparseStates];
+    for(int i = 0 ; i < nPreparseStates ; i++)
     {
         mTransitionTable[i] = new Edge*[nDisp];
         for(int j = 0 ; j < nDisp ; j++)
@@ -200,7 +218,11 @@ Preparse::InitStatePreparseStateTable()
     // Assert that the Symbols package is as we expect.
     // Better than redefining symbols here.
     // This is only done once at initialisation.
-
+    // This will catch any variance that we don't expect.
+    // -- It's a good thing to crash here. Figure out 
+    //    what changed in Symbols:: and update as required.
+    //    (Analyse the impact on the Preparse FSM).
+    //
     assert(Symbols::CR && strlen(Symbols::CR) == 1);
     assert(Symbols::LF && strlen(Symbols::LF) == 1);
     assert(Symbols::LA_QUOTE && strlen(Symbols::LA_QUOTE) == 1);
@@ -398,7 +420,7 @@ Preparse::process(SipMessage& msg,
                   size_t start,
                   size_t& used,
                   size_t& discard,
-                  PreparseState::BufferAction& status)
+                  BufferAction& status)
 {
      status = NONE;
      
@@ -421,7 +443,12 @@ Preparse::process(SipMessage& msg,
      DebugLog(<<"mAnchorBegOff:"<<mAnchorBegOff);
      DebugLog(<<"mHeaderType:"<<mHeaderType);
      DebugLog(<<"mHeaderOff:"<<mHeaderOff);
-     DebugLog(<<"mState:"<<stateName(mState));
+
+#if !defined(DEBUG_HELPERS)
+#define stateName(x) x
+#endif
+     DebugLog(<<"mState:"<< stateName(mState));
+
      DebugLog(<<"buffer: 0x"<<hex<<(unsigned long)buffer<<dec);
 
      if (mState == EndMsg) // restart machine if required.
@@ -434,10 +461,10 @@ Preparse::process(SipMessage& msg,
      {
          Edge& edge(mTransitionTable[mState][mDisposition][buffer[traversalOff]]);
 
-#if defined(PP_DEBUG) && defined(SUPER_DEBUG)
-         DebugLog( << "EDGE " << ::stateName(mState)
+#if defined(PP_DEBUG) && defined(PP_SUPER_DEBUG)
+         DebugLog( << "EDGE " << stateName(mState)
                    << " (" << (int) buffer[traversalOff] << ')'
-                   << " -> " << ::stateName(edge.nextState)
+                   << " -> " << stateName(edge.nextState)
                    << ::workString(edge.workMask) );
 #endif      
       
@@ -445,7 +472,7 @@ Preparse::process(SipMessage& msg,
          {
              mAnchorEndOff = traversalOff;
 
-#if defined(PP_DEBUG) && defined(SUPER_DEBUG)
+#if defined(PP_DEBUG) && defined(PP_SUPER_DEBUG)
              DebugLog( << "+++Adding char '"
                        << showN( &buffer[mAnchorBegOff], mAnchorEndOff-mAnchorBegOff+1)
                        << '\'' );
@@ -519,7 +546,7 @@ Preparse::process(SipMessage& msg,
          if (edge.workMask & actBad)
          {
              DebugLog(<<"BAD");
-             status |= PreparseState::preparseError;
+             status |= preparseError;
          }
          else
          {
@@ -554,7 +581,7 @@ Preparse::process(SipMessage& msg,
 #if defined(PP_DEBUG)
              DebugLog(<<"END_HDR");
 #endif
-             status |= PreparseState::headersComplete;
+             status |= headersComplete;
          }
       
          if (edge.workMask & actReset) // Leave this AFTER the tp++ (above)
