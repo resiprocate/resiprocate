@@ -1,5 +1,6 @@
 #include <sipstack/ParserCategories.hxx>
 #include <iostream>
+#include <cassert>
 
 
 using namespace Vocal2;
