@@ -52,7 +52,7 @@ class SipMessage
             hfvs->push_back(hfv);
             if (parserFactory.isMulti())
             {
-               hfvs->setParserCategory(parserFactory.createParserCategory(newList));
+               hfvs->setParserContainer(parserFactory.createParserCategory(newList));
             }
             mHeaders[parserFactory.getValue()] = hfvs;
          }
@@ -62,7 +62,7 @@ class SipMessage
          {
             if (parserFactory.isMulti())
             {
-               hfvs->setParserCategory(parserFactory.createParserCategory(*hfvs));
+               hfvs->setParserContainer(parserFactory.createParserCategory(*hfvs));
                HeaderFieldValue* it = hfvs->first;
                while (it != 0)
                {
