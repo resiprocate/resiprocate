@@ -1,49 +1,47 @@
-#if !defined(RESIP_PROXY_HXX)
-#define RESIP_PROXY_HXX 
-
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TransactionUser.hxx"
-#include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
-#include "repro/RequestContext.hxx"
-
-namespace resip
-{
-class SipStack;
-}
-
-namespace repro
-{
-
-class RequestProcessorChain;
-
-class Proxy : public resip::TransactionUser, public resip::ThreadIf
-{
-   public:
-      Proxy(resip::SipStack&, RequestProcessorChain&);
-      virtual ~Proxy();
-      
-      virtual void thread();
-      
-      virtual bool isMyDomain(resip::Uri& uri);
-      
-   private:
-      static RequestProcessorChain mRequestProcessorChain;
-      resip::SipStack& mStack;
-      
-      /// the sip stack will hand events up to the proxy through this fifo
-      resip::Fifo<resip::Message> mFifo; 
-      
-      /** a map from transaction id to RequestContext. Store the server
-          transaction and client transactions in this map. The
-          TransactionTerminated events from the stack will be passed to the
-          RequestContext
-      */
-      HashMap<resip::Data, RequestContext*> mRequestContexts;
-      
-};
-}
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
 #endif
+
+#include "repro/Registrar.hxx"
+
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+void 
+Registrar::onRefresh(resip::ServerRegistrationHandle sr,
+                     const resip::SipMessage& reg)
+{
+  sr->accept();
+}
+
+void 
+Registrar::onRemove(resip::ServerRegistrationHandle sr,
+                    const resip::SipMessage& reg)
+{
+  sr->accept();
+}
+      
+void 
+Registrar::onRemoveAll(resip::ServerRegistrationHandle sr,
+                       const resip::SipMessage& reg)
+{
+  sr->accept();
+}
+      
+void 
+Registrar::onAdd(resip::ServerRegistrationHandle sr,
+                 const resip::SipMessage& reg)
+{
+  sr->accept();
+}
+      
+void 
+Registrar::onQuery(resip::ServerRegistrationHandle sr,
+                   const resip::SipMessage& reg)
+{
+  sr->accept();
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

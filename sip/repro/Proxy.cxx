@@ -14,7 +14,8 @@ using namespace std;
 
 RequestProcessorChain Proxy::mRequestProcessorChain;
 
-Proxy::Proxy(SipStack& stack) : mStack(stack)
+Proxy::Proxy(SipStack& stack, RequestProcessorChain& requestProcessors) 
+            : mStack(stack) : mRequestProcessorChain(requestProcessors)
 {
 }
 
