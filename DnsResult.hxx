@@ -4,6 +4,7 @@
 #include <iostream>
 #include <set>
 #include <list>
+#include <vector>
 #include <map>
 
 #include "resiprocate/os/Tuple.hxx"
@@ -184,8 +185,8 @@ class DnsResult
       int mCumulativeWeight; // for current priority
 
       // All SRV records sorted in order of preference
-      std::set<SRV> mSRVResults;
-
+      std::vector<SRV> mSRVResults;
+      
       // All cached A records associated with this query/queries
 	  typedef std::list<struct in_addr> InAddrList;
       std::map<Data,InAddrList > mARecords;
