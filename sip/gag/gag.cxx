@@ -37,7 +37,15 @@ void shutdown (SipStack *stack)
       fdset.selectMilliSeconds(1000); 
       stack->process(fdset);
       Message* msg = stack->receiveAny();
-      DebugLog(<<"SHUTDOWN ATE: " << msg->brief() );
+ 
+      if (msg) 
+      {
+        DebugLog(<<"SHUTDOWN ATE: " << msg->brief() );
+      }
+      else
+      {
+        DebugLog(<<"SHUTDOWN Waiting");
+      }
       done = dynamic_cast<ShutdownMessage*>(msg) != 0;
   }
   return;
