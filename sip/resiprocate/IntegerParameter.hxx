@@ -10,6 +10,8 @@ namespace Vocal2
 class IntegerParameter : public Parameter
 {
    public:
+      typedef int Type;
+      
       IntegerParameter(ParameterTypes::Type, const char* startData, unsigned int dataSize);
       IntegerParameter(ParameterTypes::Type type, int value);
 
