@@ -1,8 +1,8 @@
-#ifndef VEXCEPTION_HXX
-#define VEXCEPTION_HXX
+#ifndef BaseException_hxx
+#define BaseException_hxx
 
-static const char* const VExceptionHeaderVersion =
-    "$Id: VException.hxx,v 1.4 2002/11/07 03:07:27 jason Exp $";
+static const char* const VBaseExceptionHeaderVersion =
+    "$Id: BaseException.hxx,v 1.1 2002/11/11 21:46:02 jason Exp $";
 
 #include <exception>
 #include <iostream>
@@ -12,22 +12,22 @@ static const char* const VExceptionHeaderVersion =
 namespace Vocal2
 {
 
-class VException : public std::exception
+class BaseException : public std::exception
 {
    public:
       virtual const char* name() const=0;
       
    protected:
-      VException( const Vocal2::Data& msg,
+      BaseException( const Vocal2::Data& msg,
                   const Vocal2::Data& file,
                   const int line);
-      ~VException() throw();
+      ~BaseException() throw();
       
       Vocal2::Data message;
       Vocal2::Data fileName;
       int lineNumber;
 
-      friend std::ostream& operator<<(std::ostream& strm, const VException& e);
+      friend std::ostream& operator<<(std::ostream& strm, const BaseException& e);
 };
  
 }
