@@ -30,6 +30,11 @@ class Transport
          MAX_TRANSPORT
       } Type;
 
+      // WARNING!!
+      // When you change this structure, make sure to update the hash function,
+      // operator== and operator< to be consistent with the new structure. For
+      // instance, the Connection* and Transport* change value in the Tuple over
+      // its lifetime so they must not be included in the hash or comparisons. 
       class Tuple
       {
          public:
