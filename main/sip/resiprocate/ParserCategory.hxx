@@ -25,9 +25,6 @@ class ParserCategory
 
       ParserCategory(const ParserCategory& rhs);
 
-      //!dcm! -- will need to add different type of clones to HeaderFieldValue
-      //in order to write copy constructor
-
       virtual ~ParserCategory();
 
       // called by HeaderFieldValue::clone()
@@ -36,54 +33,48 @@ class ParserCategory
 
       virtual std::ostream& encode(std::ostream& str) const = 0;
 
-#ifndef WIN32
-      template <typename ParameterTypes::Type T>
-      typename ParameterType<T>::Type::Type& 
-      param(const ParameterType<T>& parameterType) const
+      bool exists(const ParamBase& paramType) const
       {
          checkParsed();
-         typename ParameterType<T>::Type* p = dynamic_cast<typename ParameterType<T>::Type*>(getParameterByEnum(T));
-         if (!p)
-         {
-            p = new typename ParameterType<T>::Type(T);
-            mParameters.push_back(p);
-         }
-         return p->value();
-      }
-#endif
-
-      template <ParameterTypes::Type T>
-      bool
-      exists(const ParameterType<T>& parameterType) const
-      {
-         checkParsed();
-         return getParameterByEnum(T);
+         return getParameterByEnum(paramType.getTypeNum());
       }
 
-      //not necessary to call exists before remove(removing nothing is allowed)      
-      template <typename ParameterTypes::Type T>
-      void
-      remove(const ParameterType<T>& parameterType)
+      // removing non-present parameter is allowed      
+      void remove(const ParamBase& paramType)
       {
          checkParsed();
-         removeParameterByEnum(T);
+         removeParameterByEnum(paramType.getTypeNum());
       }
+
+      Transport_Param::Type::Type& param(const Transport_Param& paramType) const;
+      User_Param::Type::Type& param(const User_Param& paramType) const;
+      Method_Param::Type::Type& param(const Method_Param& paramType) const;
+      Ttl_Param::Type::Type& param(const Ttl_Param& paramType) const;
+      Maddr_Param::Type::Type& param(const Maddr_Param& paramType) const;
+      Lr_Param::Type::Type& param(const Lr_Param& paramType) const;
+      Q_Param::Type::Type& param(const Q_Param& paramType) const;
+      Purpose_Param::Type::Type& param(const Purpose_Param& paramType) const;
+      Expires_Param::Type::Type& param(const Expires_Param& paramType) const;
+      Handling_Param::Type::Type& param(const Handling_Param& paramType) const;
+      Tag_Param::Type::Type& param(const Tag_Param& paramType) const;
+      ToTag_Param::Type::Type& param(const ToTag_Param& paramType) const;
+      FromTag_Param::Type::Type& param(const FromTag_Param& paramType) const;
+      Duration_Param::Type::Type& param(const Duration_Param& paramType) const;
+      Branch_Param::Type::Type& param(const Branch_Param& paramType) const;
+      Received_Param::Type::Type& param(const Received_Param& paramType) const;
+      Comp_Param::Type::Type& param(const Comp_Param& paramType) const;
+      Rport_Param::Type::Type& param(const Rport_Param& paramType) const;
+      
+      UnknownParameter& param(const Data& param) const;
+      void remove(const Data& param); 
+      bool exists(const Data& param) const;
       
       void parseParameters(ParseBuffer& pb);
       void encodeParameters(std::ostream& str) const;
 
-      bool isParsed() const
-      {
-         return mIsParsed;
-      }
+      bool isParsed() const {return mIsParsed;}
       
       virtual void parse(ParseBuffer& pb) = 0;
-
-      UnknownParameter& param(const Data& param) const;
-
-      void remove(const Data& param); 
-      bool exists(const Data& param) const;
-      
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
    protected:
@@ -102,8 +93,8 @@ class ParserCategory
          }
       }
 
-      Parameter* getParameterByEnum(ParameterTypes::Type type) const;
-      void removeParameterByEnum(ParameterTypes::Type type);
+      Parameter* getParameterByEnum(int type) const;
+      void removeParameterByEnum(int type);
 
       Parameter* getParameterByData(const Data& data) const;
       void removeParameterByData(const Data& data);
