@@ -36,7 +36,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib Iphlpapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Debug\resiprocate.lib $(SolutionDir)\contrib\ares\Debug\ares.lib $(SolutionDir)\resiprocate\dum\Debug\dum.lib Iphlpapi.lib"
 				OutputFile="$(OutDir)/basicRegister.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -93,7 +93,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Release\resiprocate.lib $(SolutionDir)\contrib\ares\Release\ares.lib Iphlpapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib $(SolutionDir)\resiprocate\Release\resiprocate.lib $(SolutionDir)\contrib\ares\Release\ares.lib $(SolutionDir)\resiprocate\dum\Release\dum.lib Iphlpapi.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
