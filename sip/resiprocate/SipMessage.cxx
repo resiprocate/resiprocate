@@ -18,12 +18,38 @@ SipMessage::SipMessage()
    // pre-parse headers?
 }
 
-SipMessage::SipMessage(const SipMessage& message)
+SipMessage::SipMessage(const SipMessage& from)
 {
-   if (this != &message)
+   if (this != &from)
    {
-      cleanUp();
-      copyFrom(message);
+      if (from.hasFixedDest())
+      {
+         mHaveFixedDest = true;
+         mFixedDest = from.getFixedDest();
+      }
+  
+      for (int i = 0; i < Headers::MAX_HEADERS; i++)
+      {
+         if (mHeaders[i] != 0)
+         {
+            mHeaders[i] = from.mHeaders[i]->clone();
+         }
+         else
+         {
+            mHeaders[i] = 0;
+         }
+      }
+  
+      for (UnknownHeaders::const_iterator i = from.mUnknownHeaders.begin();
+           i != from.mUnknownHeaders.end(); i++)
+      {
+         mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(i->first,
+                                                                     i->second->clone()));
+      }
+      if (from.mStartLine != 0)
+      {
+         mStartLine = from.mStartLine->clone();
+      }
    }
 }
 
@@ -32,16 +58,6 @@ SipMessage::getTransactionId() const
 {
    // !jf! lookup the transactionId the first time and cache it
    return mTransactionId;
-}
-
-
-SipMessage*
-SipMessage::clone() const
-{
-   // no message buffer
-   SipMessage* newMessage = new SipMessage();
-   newMessage->copyFrom(*this);
-   return newMessage;
 }
 
 bool
@@ -66,13 +82,6 @@ SipMessage::brief() const
 }
 
 std::ostream& 
-SipMessage::dump(std::ostream& str) const
-{
-   return encode(str);
-}
-
-
-std::ostream& 
 SipMessage::encode(std::ostream& str) const
 {
    if (mStartLine != 0)
@@ -84,7 +93,7 @@ SipMessage::encode(std::ostream& str) const
    {
       if (mHeaders[i] !=0)
       {
-         ParserCategory* parser = mHeaders[i]->getParserCategory();
+         ParserContainerBase* parser = mHeaders[i]->getParserContainer();
          if (parser != 0)
          {
             parser->encode(str);
@@ -159,39 +168,6 @@ SipMessage::cleanUp()
    }
 }
 
-void
-SipMessage::copyFrom(const SipMessage& from)
-{
-  if (from.hasFixedDest())
-  {
-     mHaveFixedDest = true;
-     mFixedDest = from.getFixedDest();
-  }
-  
-  for (int i = 0; i < Headers::MAX_HEADERS; i++)
-  {
-     if (mHeaders[i] != 0)
-     {
-        mHeaders[i] = from.mHeaders[i]->clone();
-      }
-     else
-     {
-        mHeaders[i] = 0;
-     }
-  }
-  
-  for (UnknownHeaders::const_iterator i = from.mUnknownHeaders.begin();
-       i != from.mUnknownHeaders.end(); i++)
-  {
-     mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(i->first,
-                                                                 i->second->clone()));
-  }
-  if (from.mStartLine != 0)
-  {
-     mStartLine = from.mStartLine->clone();
-  }
-}
-
 // unknown header interface
 StringComponents& 
 SipMessage::header(const Data& headerName)
@@ -212,7 +188,7 @@ SipMessage::header(const Data& headerName)
             
             hfvs->setParserContainer(new StringComponents(hfvs));
          }
-         return (StringComponents&)*hfvs->getParserCategory();
+         return *dynamic_cast<StringComponents*>(hfvs->getParserContainer());
       }
    }
    
@@ -220,7 +196,7 @@ SipMessage::header(const Data& headerName)
    HeaderFieldValueList* hfvs = new HeaderFieldValueList;
    hfvs->setParserContainer(new StringComponents(hfvs));
    mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(headerName, hfvs));
-   return (StringComponents&)*hfvs->getParserCategory();
+   return *dynamic_cast<StringComponents*>(hfvs->getParserContainer());
 }
 
 void
@@ -272,7 +248,7 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
       HeaderFieldValueList *hfvs = new HeaderFieldValueList();
       hfvs->push_back(newHeader);
       mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(Data(headerName, headerLen),
-                                                                    hfvs));
+                                                                  hfvs));
    }
 }
 
@@ -310,9 +286,6 @@ SipMessage::clearFixedDest()
 RequestLine& 
 SipMessage::header(const RequestLineType& l)
 {
-   //assert(0); // CJ TODO - Cullen wrote this and I have no clue if it is even
-   // close to right
-
    if (mStartLine == 0 )
    { 
       mStartLine = new HeaderFieldValue;
@@ -328,9 +301,6 @@ SipMessage::header(const RequestLineType& l)
 StatusLine& 
 SipMessage::header(const StatusLineType& l)
 {
-   //assert(0); // CJ TODO - Cullen wrote this and I have no clue if it is even
-   // close to right
-
    if (mStartLine == 0 )
    { 
       mStartLine = new HeaderFieldValue;
