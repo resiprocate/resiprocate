@@ -1,5 +1,5 @@
 (cd contrib/ares ; ./configure && make) 
-rm -rf build configure.ac 
+rm -rf build configure.in 
 autoreconf
 autoreconf
 export PATH=/usr/local/bin:$PATH
