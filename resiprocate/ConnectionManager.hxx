@@ -1,11 +1,7 @@
 #if !defined(RESIP_ConnectionMgr_hxx)
 #define RESIP_ConnectionMgr_hxx 
 
-#include <memory>
-#include <list>
-
 #include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Connection.hxx"
 
 namespace resip
