@@ -13,28 +13,40 @@ namespace Vocal2
 class SendingMessage : public Message
 {
    public:
-      SendingMessage(Data transactionId, bool isReliable)
-         : mTransactionId(transactionId),
-           mIsReliable(isReliable)
+      typedef enum
+      {
+         Reliable,
+         Unreliable,
+         Failed,
+         Succeeded
+      } Type;
+      
+      SendingMessage(Data transactionId, Type type) : 
+         mTransactionId(transactionId), 
+         mType(type) 
       {}
-      ~SendingMessage();
 
+      SendingMessage(Data transactionId, bool isReliable) :
+         mTransactionId(transactionId), 
+         mType(isReliable ? Reliable : Unreliable) 
+      {}
+      
       virtual const Data& getTransactionId() const
       {
          return mTransactionId;
       }
 
-      bool isReliable() const
-      {
-         return mIsReliable;
-      }
+      bool isReliable() const { return mType == Reliable; }
+      bool isUnreliable()  const { return mType == Unreliable; }
+      bool isFailed() const { return mType == Failed; }
+      bool isSucceeded() const { return mType == Succeeded; }
       
       virtual Data brief() const;
       virtual std::ostream& encode(std::ostream& strm) const;
       
    private:
       Data mTransactionId;
-      bool mIsReliable;
+      Type mType;
 };
 
 }
