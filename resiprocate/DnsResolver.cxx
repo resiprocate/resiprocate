@@ -50,7 +50,7 @@ determinePort(const Data& scheme, Transport::Type transport)
    }
 }
 
-DnsResolver::Id
+void
 DnsResolver::lookup(const Data& transactionId,
                     const Via& via)
 {
@@ -108,11 +108,10 @@ DnsResolver::lookup(const Data& transactionId,
       id->tupleList.sort();
       id->tupleList.unique();
    }
-   return id;
 }
 
 
-DnsResolver::Id 
+void
 DnsResolver::lookup(const Data& transactionId, const Uri& uri)
 {
    Data& target = uri.exists(p_maddr) ? uri.param(p_maddr) : uri.host();
@@ -140,11 +139,12 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
          {
             Entry* entry = new Entry(transactionId);
             mStack.mStateMacFifo.add(
-               new DnsMessage(transactionId, 
+               new DnsMessage(entry, 
+                              transactionId, 
                               entry->tupleList.begin(), 
                               entry->tupleList.end(), 
                               true));
-            return entry;
+            return;
          }
       }
       else
@@ -162,10 +162,7 @@ DnsResolver::lookup(const Data& transactionId, const Uri& uri)
       port = determinePort(uri.scheme(), transport);
    }
          
-   return lookupARecords(transactionId,
-                         target,
-                         port,
-                         transport, true);         
+   lookupARecords(transactionId, target, port, transport, true);         
 }
  
 
@@ -234,12 +231,11 @@ DnsResolver::lookupARecords(const Data& transactionId,
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
          Transport::Tuple tuple;
-         memset(&tuple.ipv4, 0, sizeof(tuple.ipv4));
-         tuple.ipv4.sin_family = AF_INET; //result->h_addrtype;
-         tuple.ipv4.sin_port = htons(port);
-         tuple.ipv4.sin_addr.s_addr = *((u_int32_t*)(*pptr));
+         tuple.ipv4.s_addr = *((u_int32_t*)(*pptr));
          tuple.port = port;
-         tuple.transport = transport;
+         tuple.transportType = transport;
+         tuple.transport = 0;
+         
          entry->tupleList.push_back(tuple);
          if (first)
          {
@@ -248,13 +244,11 @@ DnsResolver::lookupARecords(const Data& transactionId,
             first = false;
          }
          
-         assert(entry->tupleList.back().ipv4.sin_addr.s_addr == tuple.ipv4.sin_addr.s_addr);
 #ifndef WIN32
-         DebugLog (<< inet_ntop(result->h_addrtype, &tuple.ipv4.sin_addr.s_addr, str, sizeof(str)) << ":" << port);
+         DebugLog (<< inet_ntop(result->h_addrtype, &tuple.ipv4.s_addr, str, sizeof(str)) << ":" << port);
 #endif
-
       }
-      mStack.mStateMacFifo.add(new DnsMessage(transactionId, start, entry->tupleList.end(), complete));
+      mStack.mStateMacFifo.add(new DnsMessage(entry, transactionId, start, entry->tupleList.end(), complete));
       return entry;
    }
    return 0;
