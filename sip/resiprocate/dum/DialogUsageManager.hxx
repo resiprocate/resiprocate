@@ -66,6 +66,8 @@ class DialogUsageManager
       Dialog&    findDialog(DialogId id);
       DialogSet& findDialogSet( DialogSetId id );
       
+      BaseCreator& findCreator(DialogId id);
+      
       HashMap<DialogSetId, DialogSet > mDialogSetMap;
 
       Profile* mProfile;
