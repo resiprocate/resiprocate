@@ -98,6 +98,47 @@ Resolver::Resolver(const Uri& uri) :
    
 }
 
+
+Resolver::Resolver(const Data& host, int port, Transport::Type transport) 
+   :  mTransport(transport),
+      mHost(host),
+      mPort(port)
+{
+   bool isNumeric = isIpAddress(mHost);
+   if (!isNumeric)
+   {
+      if (1) // !jf! uri.portSpecified())
+      {
+         lookupARecords();
+         // do an A or AAAA DNS lookup
+         
+      }
+      else
+      {
+         // do SRV lookup on result of NAPTR lookup
+         
+         // if no NAPTR lookup, do SRV lookup on _sips for sips and _sip for sip
+         
+         // if no result on SRV lookup, do an A or AAAA lookup
+         
+      }
+   }
+   else
+   {
+      Transport::Tuple tuple;
+      if (inet_pton(AF_INET, mHost.c_str(), &tuple.ipv4.s_addr) <= 0)
+      {
+         DebugLog( << "inet_pton failed to parse address: " << mHost << " " << strerror(errno));
+         assert(0);
+      }
+      tuple.port = mPort;
+      tuple.transportType = mTransport;
+      
+      mNextHops.push_back(tuple);
+   }
+}
+
+
 void
 Resolver::lookupARecords()
 {
