@@ -37,7 +37,8 @@ SipStack::SipStack(bool multiThreaded)
    mExecutive(*this),
    mTransportSelector(*this),
    mTimers(mStateMacFifo),
-   mDnsResolver(*this)
+   mDnsResolver(*this),
+   mRegisteredForTransactionTermination(false)
 {
    Random::initialize();
    initNetwork();
@@ -122,7 +123,8 @@ SipStack::getHostAddress()
 bool 
 SipStack::isMyDomain(const Data& domain, int port) const
 {
-   return (mDomains.count(domain + Data(":") + Data(port)) != 0);
+   return (mDomains.count(domain + Data(":") + 
+                          Data(port == 0 ? Symbols::DefaultSipPort : port)) != 0);
 }
 
 
@@ -157,10 +159,50 @@ SipStack::receive()
    if (mTUFifo.messageAvailable())
    {
       // we should only ever have SIP messages on the TU Fifo
-      Message *tmpMsg = mTUFifo.getNext();
-      SipMessage *sipMsg = dynamic_cast<SipMessage*>(tmpMsg);
-      assert (sipMsg);
-      return sipMsg;
+      // unless we've registered for termination messages. 
+      Message* msg = mTUFifo.getNext();
+      SipMessage* sip=0;
+      if ((sip=dynamic_cast<SipMessage*>(msg)))
+      {
+         return sip;
+      }
+      else
+      {
+         assert(0);
+         return 0;
+      }
+   }
+   else
+   {
+      return 0;
+   }
+}
+
+Message*
+SipStack::receiveAny()
+{
+   // Check to see if a message is available and if it is return the 
+   // waiting message. Otherwise, return 0
+   if (mTUFifo.messageAvailable())
+   {
+      // we should only ever have SIP messages on the TU Fifo
+      // unless we've registered for termination messages. 
+      Message* msg = mTUFifo.getNext();
+      SipMessage* sip=0;
+      TransactionTerminated* term=0;
+      if ((sip=dynamic_cast<SipMessage*>(msg)))
+      {
+         return sip;
+      }
+      else if ((term=dynamic_cast<TransactionTerminated*>(msg)))
+      {
+         return term;
+      }
+      else
+      {
+         assert(0);
+         return 0;
+      }
    }
    else
    {
@@ -183,6 +225,11 @@ SipStack::getTimeTillNextProcessMS()
    return mExecutive.getTimeTillNextProcessMS();
 } 
 
+void
+SipStack::registerForTransactionTermination()
+{
+   mRegisteredForTransactionTermination = true;
+}
 
 void 
 SipStack::buildFdSet(FdSet& fdset)
