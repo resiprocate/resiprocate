@@ -23,7 +23,7 @@ rm -f ${ADDR}.p12
 case ${ADDR} in
 *:*) ALTNAME="URI:${ADDR}" ;;
 *@*) ALTNAME="URI:sip:${ADDR},URI:im:${ADDR},URI:pres:${ADDR}" ;;
-*)   ALTNAME="URI:sip:${ADDR}" ;;
+*)   ALTNAME="DNS:${ADDR}" ;;
 esac
 
 rm -f demoCA/index.txt
