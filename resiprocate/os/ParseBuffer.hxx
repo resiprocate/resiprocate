@@ -10,9 +10,9 @@ namespace Vocal2
 class ParseBuffer
 {
    public:
-      ParseBuffer(const char* buff,
-                  unsigned int len)
-         : mBuff(buff),
+      ParseBuffer(const char* buff, unsigned int len)
+         : tmpData(),
+           mBuff(buff),
            mStart(buff),
            mEnd(buff+len)
       {}
@@ -56,6 +56,9 @@ class ParseBuffer
       static const char* Whitespace;
       static const char* ParamTerm;
    private:
+      ParseBuffer(const ParseBuffer& other);
+      ParseBuffer& operator=(const ParseBuffer& other);
+      
       Data tmpData;
       
       const char* mBuff;
