@@ -68,7 +68,7 @@ TransactionController::process(FdSet& fdset)
    if (mShuttingDown && 
        //mTimers.empty() && 
        !mStateMacFifo.messageAvailable() && // !dcm! -- see below 
-       !mTuSelector.messageAvailable() &&
+       !mStack.mTUFifo.messageAvailable() &&
        mTransportSelector.isFinished())
 // !dcm! -- why would one wait for the Tu's fifo to be empty before delivering a
 // shutdown message?

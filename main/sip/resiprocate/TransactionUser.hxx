@@ -2,6 +2,7 @@
 #define RESIP_TU_HXX 
 
 #include "resiprocate/os/TimeLimitFifo.hxx"
+#include "resiprocate/os/Data.hxx"
 #include "resiprocate/Message.hxx"
 
 namespace resip
