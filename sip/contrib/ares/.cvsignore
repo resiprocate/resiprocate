@@ -1,4 +1,7 @@
 Makefile
 adig
 ahost
-config.*
+config.cache
+config.guess
+config.log
+config.status
