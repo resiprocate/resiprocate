@@ -18,6 +18,9 @@
 #include "sip2/util/Mutex.hxx"
 #include <iostream>
 
+#ifdef ERR
+#undef ERR
+#endif
 
 namespace Vocal2
 {
@@ -33,18 +36,6 @@ class Log
       }Type;
       
       
-#if WIN32
-  typedef enum 
-      {
-         CRIT = 1,
-         ERR = 2,
-         WARNING = 3,
-         INFO = 4,
-         DEBUG = 5,
-         DEBUG_STACK = 8,
-		 BOGUS = 666
-      }Level;
-#else
       typedef enum 
       {
          CRIT = LOG_CRIT,
@@ -55,7 +46,6 @@ class Log
          DEBUG_STACK = 8,
 		 BOGUS = 666
       }Level;
-#endif
 
       class ThreadSetting
       {
