@@ -15,6 +15,7 @@
 #include "sip2/sipstack/DnsResolver.hxx"
 #include "sip2/sipstack/SdpContents.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/SipFrag.hxx"
 #include "sip2/sipstack/Helper.hxx"
 
 namespace Vocal2
