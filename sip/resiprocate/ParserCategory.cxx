@@ -15,16 +15,13 @@ ParserCategory::ParserCategory()
 {}
 
 ParserCategory::ParserCategory(const ParserCategory& rhs)
-   : mIsParsed(rhs.mIsParsed),
+   : mHeaderField(0),
+     mIsParsed(rhs.mIsParsed),
      mMine(true)
 {
-   if (rhs.mHeaderField)
+   if (rhs.mHeaderField && !mIsParsed)
    {
-      mHeaderField = new HeaderFieldValue(*rhs.mHeaderField, this);
-   }
-   else
-   {
-      mHeaderField = 0;
+      mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
    }
 }
 
@@ -40,7 +37,7 @@ ParserCategory::operator=(const ParserCategory& rhs)
       }
       if (!mIsParsed)
       {
-         mHeaderField = new HeaderFieldValue(*rhs.mHeaderField, this);
+         mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
          mMine = true;
       }
       else
@@ -92,7 +89,7 @@ ostream&
 ParserCategory::encodeFromHeaderFieldValue(ostream& str) const
 {
    assert(mHeaderField);
-   str.write(mHeaderField->mField, mHeaderField->mFieldLength);
+   mHeaderField->encode(str);
    return str;
 }
 
