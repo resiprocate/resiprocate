@@ -31,7 +31,14 @@ class SipMessage : public Message
    public:
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
 
-      explicit SipMessage(bool fromWire=false);
+      class FromWireType
+      {
+            friend class SipMessage;
+      };
+      static const FromWireType *FromWire;
+      static const FromWireType *NotFromWire;
+
+      explicit SipMessage(const FromWireType* fromWire = SipMessage::NotFromWire);
       
       SipMessage(const SipMessage& message);
 
