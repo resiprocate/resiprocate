@@ -32,6 +32,8 @@ class DialogSet
       
       BaseCreator* getCreator();
       
+      static const DialogSet Empty;
+
    private:
       std::list<Dialog*> mDialogs;
       BaseCreator* mCreator;
