@@ -138,6 +138,8 @@ const char * const Symbols::id = "id";
 const char * const Symbols::retryAfter = "retry-after";
 const char * const Symbols::reason = "reason";
 
+const char * const Symbols::auth = "auth";
+
 const int Symbols::DefaultSipPort = 5060;
 const int Symbols::SipTlsPort = 5061;
 const int Symbols::DefaultSipsPort = 5061;
