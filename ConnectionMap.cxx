@@ -67,7 +67,7 @@ ConnectionMap::add(const Transport::Tuple& who, Socket socket)
    mConnections[who] = connection;
    touch(connection);
 
-   DebugLog(<< "ConnectionMap::add: " << who << " fd: " << socket);
+   DebugLog(<< "ConnectionMap::add: " << who << " fd: " << int(socket) );
       
    return connection;
 }

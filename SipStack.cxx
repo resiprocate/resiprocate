@@ -1,8 +1,11 @@
 
+
+#ifndef WIN32
 #include <unistd.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
 
 #include "sip2/util/Socket.hxx"
 #include "sip2/util/Fifo.hxx"
