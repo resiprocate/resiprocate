@@ -1509,7 +1509,14 @@ SdpContents::Session::Medium::codecs()
             int format = pb.integer();
             // pass to codec constructor for parsing
             // pass this for other codec attributes
-            mRtpMap[format].parse(pb, *this, format);
+            try
+            {
+               mRtpMap[format].parse(pb, *this, format);
+            }
+            catch (ParseBuffer::Exception &e)
+            {
+               mRtpMap.erase(format);
+            }
          }
 
          for (list<Data>::const_iterator i = mFormats.begin();
