@@ -64,6 +64,9 @@ class InviteSessionHandler
       /// called when an REFER messages is received 
       virtual void onRefer(InviteSessionHandle, const SipMessage& msg)=0;
 
+      /// called when an REFER message receives a failure response 
+      virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg)=0;
+
       virtual void onReInvite(InviteSessionHandle, const SipMessage& msg)=0;
 
 };
