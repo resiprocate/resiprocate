@@ -361,6 +361,15 @@ class WarningCategory : public ParserCategory
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
+
+      int& code();
+      Data& hostname();
+      Data& text();
+
+   private:
+      mutable int mCode;
+      mutable Data mHostname;
+      mutable Data mText;
 };
 
 //====================
