@@ -93,19 +93,7 @@ extern _enum##_MultiHeader h_##_enum##s
 //====================
 typedef ParserContainer<Token> Tokens;
 
-class ContentDisposition_Header : public HeaderBase                        \
-{                                                               \
-   public:                                                      \
-      enum {Single = true};                                     \
-      typedef Token Type;                                       \
-      UnusedChecking(ContentDisposition);                                    \
-      static Type& knownReturn(ParserContainerBase* container); \
-      virtual Headers::Type getTypeNum() const;                 \
-      ContentDisposition_Header();                                         \
-};                                                              \
-extern ContentDisposition_Header h_ContentDisposition;
-
-//defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ????");
+defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ????");
 defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ????");
 defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ????");
 defineHeader(MIMEVersion, "Mime-Version", Token, "RFC ????");
