@@ -307,7 +307,8 @@ SipStack::receive()
       }
       else
       {
-         assert(0);
+         // assert(0); // !CJ! removed the assert - happens 1 minute after
+         // stack starts up
          delete msg;
          return 0;
       }
