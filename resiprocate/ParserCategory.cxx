@@ -301,13 +301,16 @@ void
 ParserCategory::removeParameterByEnum(ParameterTypes::Type type)
 {
    for (ParameterList::iterator it = mParameters.begin();
-        it != mParameters.end(); it++)
+        it != mParameters.end();)
    {
       if ((*it)->getType() == type)
       {
          delete *it;
-         mParameters.erase(it);
-         return;
+         it = mParameters.erase(it);
+      }
+      else
+      {
+         ++it;
       }
    }
 }
@@ -330,13 +333,16 @@ void
 ParserCategory::removeParameterByData(const Data& data)
 {
    for (ParameterList::iterator it = mUnknownParameters.begin();
-        it != mUnknownParameters.end(); it++)
+        it != mUnknownParameters.end();)
    {
       if ((*it)->getName() == data)
       {
          delete *it;
-         mParameters.erase(it);
-         return;
+         it = mUnknownParameters.erase(it);
+      }
+      else
+      {
+         ++it;
       }
    }
 }
