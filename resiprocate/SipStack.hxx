@@ -22,7 +22,7 @@ private:
 
     TransactionMap mTransactionMap;
 
-    TransportDirectory mTransportDirector;
+    TransportSelector mTransportSelector;
 
     Fifo mRxFifo;
 
@@ -30,7 +30,7 @@ private:
 
     Fifo mStateMacFifo;
 
-    TimerWheel mTimers;
+    Timer mTimers;
 
 };
 
