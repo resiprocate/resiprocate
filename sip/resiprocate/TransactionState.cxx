@@ -1033,7 +1033,7 @@ TransactionState::processServerInvite(  Message* msg )
 	       break;
 	    }
             mCancelStateMachine->processServerNonInvite(new SipMessage(*sip));
-            sendToTU(msg); // don't delete
+            //sendToTU(msg); // don't delete
             break;
             
          default:
