@@ -780,12 +780,16 @@ myMain(int argc, char* argv[])
       if ( noUdp != true )
       {
          if (!noV4) sipStack.addTransport(UDP, port, V4);
+#ifdef USE_IPV6
          if (!noV6) sipStack.addTransport(UDP, port, V6);
+#endif
       }
       if ( noTcp != true )
       {
          if (!noV4) sipStack.addTransport(TCP, port, V4);
+#ifdef USE_IPV6
          if (!noV6) sipStack.addTransport(TCP, port, V6);
+#endif
       }
    }
 #if USE_SSL
