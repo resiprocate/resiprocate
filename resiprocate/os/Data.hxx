@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.39 2002/11/28 17:12:15 ryker Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.40 2002/11/30 20:56:15 fluffy Exp $";
 
 #include <iostream>
 #include <string>
@@ -80,6 +80,10 @@ class Data
 
       // return a HEX representation of binary data
       Data hex() const;
+	
+      // return a representation with any non pritable chracters escaped - very
+      // slow only use for debug stuff 
+      Data escaped() const;
 	
       // resize to zero without changing capacity
       void clear();

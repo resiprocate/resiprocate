@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.39 2002/11/29 18:35:42 fluffy Exp $";
+"$Id: Data.cxx,v 1.40 2002/11/30 20:56:15 fluffy Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -41,9 +41,13 @@ Data::Data(const char* str, int length)
      mCapacity(length),
      mMine(true)
 {
-   assert(str);
-   memcpy(mBuf, str, mSize);
-   mBuf[mSize]=0;
+   assert( length >= 0 );
+   if ( length > 0 )
+   {
+      assert(str);
+      memcpy(mBuf, str, mSize);
+      mBuf[mSize]=0;
+   }
 }
 
 Data::Data(const unsigned char* str, int length) 
@@ -637,6 +641,48 @@ Data::md5() const
 }
 
 
+Data 
+Data::escaped() const
+{ 
+   Data ret( 2*size(), true );  
+
+   static char map[] = "0123456789ABCDEF";
+
+   const char* p = data();
+   for (unsigned int i=0; i < size(); i++)
+   {
+      unsigned char c = *p++;
+
+      switch (c)
+      {
+         case 0x08: // H Tab
+         case 0x0A: // LF
+         case 0x0d: // CR
+         {
+             ret += Data( &c , 1 );
+             continue;
+         }
+      }
+      
+      if ( iscntrl(c) || (c>=0x7F) )
+      {
+         ret += Data("%");  
+         
+         int hi = (c & 0xF0)>>4;
+         int low = (c & 0x0F);
+	   
+         ret += map[hi];
+         ret += map[low];
+         continue;
+      }
+
+      ret += Data( &c , 1 );
+   }
+
+   return ret;
+}
+
+
 Data
 Data::hex() const
 {
@@ -775,7 +821,7 @@ Data::substr(size_type first, size_type count) const
    assert(first <= mSize);
    assert(first >= 0);
 
-   if (count == Data::npos)
+   if ( (int)count == Data::npos)
    {
       return Data(mBuf+first, mSize-first);
    }
