@@ -6,7 +6,7 @@ using namespace Vocal2;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 
-Dialog::Dialog(Contact& localContact) 
+Dialog::Dialog(Url& localContact) 
    : mVia(),
      mContact(localContact),
      mCreated(false),
@@ -42,18 +42,18 @@ Dialog::createDialogAsUAS(SipMessage& request, SipMessage& response)
    {
       assert(request.isRequest());
       assert(response.isResponse());
-      assert(request.header(h_Request_Line).getMethod() == INVITE ||
-             request.header(h_Request_Line).getMethod() == SUBSCRIBE);
+      assert(request.header(h_RequestLine).getMethod() == INVITE ||
+             request.header(h_RequestLine).getMethod() == SUBSCRIBE);
       assert (request.header(h_Contacts).size() == 1);
 
-      mRouteSet = request.header(h_Record_Routes);
+      mRouteSet = request.header(h_RecordRoutes);
       mRemoteTarget = request.header(h_Contacts).front();
       mRemoteSequence = request.header(h_CSeq).sequence();
       mRemoteEmpty = false;
       mLocalSequence = 0;
       mLocalEmpty = true;
-      mCallId = request.header(h_Call_ID);
-      mLocalTag = response.get(h_To)[p_tag]; // from response
+      mCallId = request.header(h_CallId);
+      mLocalTag = response.header(h_To)[p_tag]; // from response
       mRemoteTag = request.header(h_From)[p_tag]; 
       mRemoteUri = request.header(h_From);
       mLocalUri = request.header(h_To);
@@ -74,21 +74,21 @@ Dialog::createDialogAsUAC(SipMessage& request, SipMessage& response)
    {
       assert(request.isRequest());
       assert(response.isResponse());
-      assert(request.header(h_Request_Line).getMethod() == INVITE ||
-             request.header(h_Request_Line).getMethod() == SUBSCRIBE);
+      assert(request.header(h_RequestLine).getMethod() == INVITE ||
+             request.header(h_RequestLine).getMethod() == SUBSCRIBE);
       assert (request.header(h_Contacts).size() == 1);
 
       // reverse order from response
-      mRouteSet = response.get(h_Record_Routes).reverse();
+      mRouteSet = response.header(h_RecordRoutes).reverse();
       
-      mRemoteTarget = response.get(h_Contacts).front();
+      mRemoteTarget = response.header(h_Contacts).front();
       mRemoteSequence = 0;
       mRemoteEmpty = true;
       mLocalSequence = request.header(h_CSeq).sequence();
       mLocalEmpty = false;
-      mCallId = request.header(h_Call_ID);
-      mLocalTag = response.get(h_From)[p_tag];  
-      mRemoteTag = response.get(h_To)[p_tag]; 
+      mCallId = request.header(h_CallId);
+      mLocalTag = response.header(h_From)[p_tag];  
+      mRemoteTag = response.header(h_To)[p_tag]; 
       mRemoteUri = request.header(h_To);
       mLocalUri = request.header(h_From);
       mCreated = true;
@@ -104,17 +104,17 @@ Dialog::createDialogAsUAC(SipMessage& request, SipMessage& response)
 void 
 Dialog::targetRefreshResponse(SipMessage& response)
 {
-   if (response.get(h_Contacts).size() == 1)
+   if (response.header(h_Contacts).size() == 1)
    {
-      mRemoteTarget = response.get(h_Contacts).front();
+      mRemoteTarget = response.header(h_Contacts).front();
    }
 }
 
 int 
 Dialog::targetRefreshRequest(SipMessage& request)
 {
-   assert (request.header(h_Request_Line).getMethod() != CANCEL);
-   if (request.header(h_Request_Line).getMethod() != ACK)
+   assert (request.header(h_RequestLine).getMethod() != CANCEL);
+   if (request.header(h_RequestLine).getMethod() != ACK)
    {
       unsigned long cseq = request.header(h_CSeq).sequence();
    
@@ -145,7 +145,7 @@ SipMessage
 Dialog::makeInvite()
 {
    SipMessage request(INVITE);
-   request.header(h_Request_Line).
+   request.header(h_RequestLine).
    setRequestDefaults(request);
    incrementCSeq(request);
    return request;
@@ -162,13 +162,13 @@ Dialog::makeBye()
 
 
 SipMessage
-Dialog::makeRefer(NameAddr& referTo)
+Dialog::makeRefer(Url& referTo)
 {
    SipMessage request(REFER);
    setRequestDefaults(request);
    incrementCSeq(request);
-   request.header(h_Refer_To) = referTo;
-   request.header(h_Referred_By) = mLocalUri;
+   request.header(h_ReferTo) = referTo;
+   request.header(h_ReferredBy) = mLocalUri;
    return request;
 }
 
@@ -233,9 +233,9 @@ Dialog::setRequestDefaults(SipMessage& request)
    request.header(h_To)[p_tag] = mRemoteTag;
    request.header(h_From) = mLocalUri;
    request.header(h_From)[p_tag] = mLocalTag;
-   request.header(h_Call_ID) = mCallId;
+   request.header(h_CallId) = mCallId;
 
-   setRequestUri(request.header(h_Request_Line), mRemoteTarget);
+   setRequestUri(request.header(h_RequestLine), mRemoteTarget);
    request.header(h_Routes) = mRouteSet;
    request.header(h_Contacts).front() = _contact;
    request.header(h_Vias).clear();
