@@ -22,7 +22,7 @@ class Token : public ParserCategory
    public:
       enum {isCommaTokenizing = false};
 
-      Token(): ParserCategory() {}
+      Token(): ParserCategory(), mValue() {}
       Token(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       Token(const Token&);
 
@@ -45,8 +45,8 @@ class Mime : public ParserCategory
    public:
       enum {isCommaTokenizing = true};
 
-      Mime() : ParserCategory() {}
-      Mime(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      Mime() : ParserCategory(), mType(), mSubType() {}
+      Mime(HeaderFieldValue* hfv) : ParserCategory(hfv), mType(), mSubType() {}
       Mime(const Mime&);
       
       Data& type() const { return mType; }
@@ -86,8 +86,8 @@ class IntegerCategory : public ParserCategory
    public:
       enum {isCommaTokenizing = false};
 
-      IntegerCategory() : ParserCategory() {}
-      IntegerCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      IntegerCategory() : ParserCategory(), mValue(0), mComment() {}
+      IntegerCategory(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue(0), mComment() {}
       IntegerCategory(const IntegerCategory&);
 
       virtual void parse(ParseBuffer& pb);
@@ -110,9 +110,9 @@ class StringCategory : public ParserCategory
    public:
       enum {isCommaTokenizing = false};
       
-      StringCategory() : ParserCategory() {}
+      StringCategory() : ParserCategory(), mValue() {}
       StringCategory(const StringCategory&);
-      StringCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      StringCategory(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue() {}
 
       virtual void parse(ParseBuffer& pb);
       virtual std::ostream& encode(std::ostream& str) const;
@@ -156,13 +156,15 @@ class NameAddr : public ParserCategory
       NameAddr() : 
          ParserCategory(),
          mAllContacts(false),
-         mUri(0)
+         mUri(0),
+         mDisplayName()
       {}
 
       NameAddr(HeaderFieldValue* hfv)
          : ParserCategory(hfv), 
            mAllContacts(false),
-           mUri(0)
+           mUri(0),
+           mDisplayName()
       {}
 
       NameAddr(const NameAddr&);
@@ -195,8 +197,8 @@ class CallId : public ParserCategory
    public:
       enum {isCommaTokenizing = false};
 
-      CallId() : ParserCategory() {}
-      CallId(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      CallId() : ParserCategory(), mValue() {}
+      CallId(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue() {}
       CallId(const CallId&);
       
       Data& value() const {checkParsed(); return mValue;}
@@ -218,8 +220,8 @@ class CSeqCategory : public ParserCategory
    public:
       enum {isCommaTokenizing = false};
       
-      CSeqCategory() : ParserCategory() {}
-      CSeqCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      CSeqCategory() : ParserCategory(), mMethod(UNKNOWN), mSequence(-1) {}
+      CSeqCategory(HeaderFieldValue* hfv) : ParserCategory(hfv), mMethod(UNKNOWN), mSequence(-1) {}
       CSeqCategory(const CSeqCategory&);
 
       MethodTypes& method() const {checkParsed(); return mMethod;}
@@ -242,8 +244,8 @@ class DateCategory : public ParserCategory
    public:
       enum {isCommaTokenizing = false};
 
-      DateCategory() : ParserCategory() {}
-      DateCategory(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      DateCategory() : ParserCategory(), mValue() {}
+      DateCategory(HeaderFieldValue* hfv) : ParserCategory(hfv), mValue() {}
       DateCategory(const DateCategory&);
 
       Data& value() const {checkParsed(); return mValue;}
@@ -281,8 +283,8 @@ class Via : public ParserCategory
    public:
       enum {isCommaTokenizing = true};
 
-      Via() : ParserCategory() {}
-      Via(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      Via() : ParserCategory(), mProtocolName(),mProtocolVersion(),mTransport(),mSentHost(),mSentPort(-1) {}
+      Via(HeaderFieldValue* hfv) : ParserCategory(hfv),mProtocolName(),mProtocolVersion(),mTransport(),mSentHost(),mSentPort(-1) {}
       Via(const Via&);
 
       Data& protocolName() const {checkParsed(); return mProtocolName;}
@@ -315,7 +317,7 @@ class RequestLine : public ParserCategory
            mMethod(method),
            mSipVersion(sipVersion)
       {}
-      RequestLine(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      RequestLine(HeaderFieldValue* hfv) : ParserCategory(hfv), mUri(0), mMethod(UNKNOWN), mSipVersion() {}
       RequestLine(const RequestLine&);
 
       virtual ~RequestLine();
@@ -341,7 +343,7 @@ class StatusLine : public ParserCategory
 {
    public:
       StatusLine() : ParserCategory() {}
-      StatusLine(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      StatusLine(HeaderFieldValue* hfv) : ParserCategory(hfv), mResponseCode(-1), mSipVersion(), mReason() {}
       StatusLine(const StatusLine&);
 
       int& responseCode() const {checkParsed(); return mResponseCode;}

@@ -1,11 +1,11 @@
-
+#include <util/Logger.hxx>
 #include <util/ParseBuffer.hxx>
 #include <cassert>
 
-//#include <iostream>
-//using namespace std;
 
 using namespace Vocal2;
+
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 const char* ParseBuffer::ParamTerm = ";?";
 const char* ParseBuffer::Whitespace = " \t\r\n";
@@ -22,7 +22,8 @@ ParseBuffer::skipChar(char c)
 {
    if (*position() != c)
    {
-      throw Exception("Expected '" + Data(1, c) + "'", __FILE__, __LINE__);
+      DebugLog (<< "Expected " << c );
+      throw Exception("parse error", __FILE__, __LINE__);
    }
    return ++mStart;
 }
@@ -152,5 +153,6 @@ ParseBuffer::skipToEndQuote(char quote)
       }
    }
 
-   throw Exception("Missing '" + Data(1, quote) + "'", __FILE__, __LINE__);
+   DebugLog (<< "Missing '" << quote);
+   throw Exception("Missing quote", __FILE__,__LINE__);
 }

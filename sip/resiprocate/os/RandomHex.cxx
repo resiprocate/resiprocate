@@ -32,10 +32,7 @@ RandomHex::get(unsigned int len)
    int ret = rand();
    assert (ret == 1);
    
-   Data result;
-   result = convertToHex(buffer, len);
-   
-   return result;
+   return convertToHex(buffer, len);
 #else
    unsigned char buffer[len];
    int ret = RAND_bytes(buffer, len);
