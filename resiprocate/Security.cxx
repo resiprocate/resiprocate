@@ -1,3 +1,7 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #if defined(USE_SSL)
 
 #ifndef WIN32

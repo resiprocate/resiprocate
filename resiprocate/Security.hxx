@@ -1,5 +1,9 @@
-#if !defined(SECURITY_HXX)
-#define SECURITY_HXX
+#if !defined(RESIP_SECURITY_HXX)
+#define RESIP_SECURITY_HXX
+
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
 
 #include <map>
 
