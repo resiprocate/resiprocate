@@ -5,7 +5,7 @@
 #include "resiprocate/Message.hxx"
 #include "resiprocate/ApplicationMessage.hxx"
 
-namespace repro
+namespace resip
 {
 
 class UserAuthInfo : public resip::ApplicationMessage
@@ -14,10 +14,10 @@ class UserAuthInfo : public resip::ApplicationMessage
       UserAuthInfo( const resip::Data& user,
                     const resip::Data& realm,
                     const resip::Data& a1,
-                    const resip::Data& transactionId);
+                    const resip::Data& transactionToken);
       ~UserAuthInfo();
       
-      const resip::Data& getTransactionId() const;
+      const resip::Data& getTransactionToken() const;
       const resip::Data& getA1() const;
       const resip::Data& getRealm() const;
       const resip::Data& getUser() const;
@@ -27,7 +27,7 @@ class UserAuthInfo : public resip::ApplicationMessage
       virtual std::ostream& encode(std::ostream& strm) const;
 
    private:
-      resip::Data mTransactionId;
+      resip::Data mTransactionToken;
       resip::Data mA1;
       resip::Data mRealm;
       resip::Data mUser;
