@@ -35,6 +35,7 @@ SRC =   \
 	HandleException.cxx \
 	HandleManager.cxx \
 	Handled.cxx \
+	InMemoryRegistrationDatabase.cxx \
 	InviteSession.cxx \
 	InviteSessionCreator.cxx \
 	InviteSessionHandler.cxx \
