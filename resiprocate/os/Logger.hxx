@@ -64,6 +64,7 @@ do                                                              \
 // JF
 #if ( (__GNUC__ < 3) )
 
+#if !defined (__SUNPRO_CC)
 
 // variadic to handle comma in template arguments
 #define DebugLog(arg__, args__...)                                                 \
@@ -105,6 +106,7 @@ do                                                              \
   }                                                             \
 } while (0)
 
+#endif
 
 #else
 
