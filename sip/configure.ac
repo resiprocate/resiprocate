@@ -5,7 +5,7 @@ AC_PREREQ(2.57)
 AC_INIT([resiprocate], [0.3], [resiprocate-devel@lists.sourceforge.net])
 AM_INIT_AUTOMAKE([1.7.5 nostdinc foreign])
 
-AC_REVISION($Id: configure.ac,v 1.4 2003/06/17 04:16:10 rjsparks Exp $)
+AC_REVISION($Id: configure.ac,v 1.5 2003/06/19 00:20:01 ryker Exp $)
 
 AM_MAINTAINER_MODE
 
@@ -25,5 +25,8 @@ RESIP_LIB_OPENSSL
 RESIP_LIB_ARES
 RESIP_PROG_DISTCC
 
-AC_CONFIG_FILES([Makefile resiprocate/Makefile])
+dnl Temporary hack until proper, portable pthreads detection is added.
+LIBS="$LIBS -lpthread"
+
+AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile])
 AC_OUTPUT
