@@ -5,6 +5,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/Symbols.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 // GPERF generated external routines
 #include "resiprocate/HeaderHash.hxx"
@@ -42,6 +43,15 @@ Headers::getHeaderName(int type)
 #define defineHeader(_enum, _name, _type)                                                                               \
 Headers::Type                                                                                                           \
 H_##_enum::getTypeNum() const {return Headers::_enum;}                                                                  \
+                                                                                                                        \
+void H_##_enum::merge(SipMessage& target, const SipMessage& embedded)                                                   \
+{                                                                                                                       \
+   if (embedded.exists(*this))                                                                                          \
+   {                                                                                                                    \
+      target.header(*this) = embedded.header(*this);                                                                    \
+   }                                                                                                                    \
+}                                                                                                                       \
+                                                                                                                        \
 H_##_enum::H_##_enum()                                                                                                  \
 {                                                                                                                       \
    Headers::CommaTokenizing[Headers::_enum+1] = bool(Type::commaHandling & ParserCategory::CommasAllowedOutputMulti);   \
@@ -57,9 +67,18 @@ H_##_enum::knownReturn(ParserContainerBase* container)                          
                                                                                                                         \
 H_##_enum resip::h_##_enum
 
-#define defineMultiHeader(_enum, _name, _type)                                                                                          \
-Headers::Type                                                                                                                           \
+#define defineMultiHeader(_enum, _name, _type)                                                                                         \
+   Headers::Type                                                                                                                        \
 H_##_enum##s::getTypeNum() const {return Headers::_enum;}                                                                               \
+                                                                                                                                        \
+void H_##_enum##s::merge(SipMessage& target, const SipMessage& embedded)                                                                \
+{                                                                                                                                       \
+   if (embedded.exists(*this))                                                                                                          \
+   {                                                                                                                                    \
+      target.header(*this).append(embedded.header(*this));                                                                              \
+   }                                                                                                                                    \
+}                                                                                                                                       \
+                                                                                                                                        \
 H_##_enum##s::H_##_enum##s()                                                                                                            \
 {                                                                                                                                       \
    Headers::CommaTokenizing[Headers::_enum+1] = bool(Type::value_type::commaHandling & ParserCategory::CommasAllowedOutputMulti);       \
@@ -68,7 +87,7 @@ H_##_enum##s::H_##_enum##s()                                                    
 }                                                                                                                                       \
                                                                                                                                         \
 ParserContainer<_type>&                                                                                                                 \
-H_##_enum##s::knownReturn(ParserContainerBase* container)                                                                                \
+H_##_enum##s::knownReturn(ParserContainerBase* container)                                                                               \
 {                                                                                                                                       \
    return *dynamic_cast<ParserContainer<_type>*>(container);                                                                            \
 }                                                                                                                                       \

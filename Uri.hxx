@@ -43,7 +43,9 @@ class Uri : public ParserCategory
       bool hasEmbedded() const;
       SipMessage& embedded();
       const SipMessage& embedded() const;
-      
+
+      void removeEmbedded();
+
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
       virtual std::ostream& encodeParsed(std::ostream& str) const;
