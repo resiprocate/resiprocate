@@ -63,11 +63,11 @@ Uri::parse(ParseBuffer& pb)
       }
       mHost = Data(start, pb.position() - start);
       pb.skipToOneOf(ParseBuffer::Whitespace, ":;>");
-      if (*pb.position() == ':')
+      if (!pb.eof() && *pb.position() == ':')
       {
          start = pb.skipChar();
          pb.skipToOneOf(ParseBuffer::Whitespace, ";>");
-         mPort = atoi(start);
+         mPort = pb.integer();
       }
       else
       {

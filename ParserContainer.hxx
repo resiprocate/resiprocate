@@ -3,6 +3,8 @@
 
 #include <sipstack/HeaderFieldValueList.hxx>
 #include <sipstack/ParserContainerBase.hxx>
+#include <sipstack/Symbols.hxx>
+#include <cassert>
 #include <list>
 
 namespace Vocal2
@@ -12,10 +14,16 @@ template<class T>
 class ParserContainer : public ParserContainerBase
 {
    public:
-      ParserContainer() {}
+      ParserContainer()
+         : ParserContainerBase(Headers::UNKNOWN)
+      {
+         assert(0);
+      }
       
       // private to SipMessage
-      ParserContainer(HeaderFieldValueList* hfvs)
+      ParserContainer(HeaderFieldValueList* hfvs,
+                      Headers::Type type = Headers::UNKNOWN)
+         : ParserContainerBase(type)
       {
          for (HeaderFieldValueList::iterator i = hfvs->begin();
               i != hfvs->end(); i++)
@@ -25,7 +33,9 @@ class ParserContainer : public ParserContainerBase
       }
 
       ParserContainer(const ParserContainer& other)
+         : ParserContainerBase(other)
       {
+         assert(0);
          for (typename std::list<T>::const_iterator i = other.mParsers.begin(); 
               i != other.mParsers.end(); i++)
          {
@@ -35,6 +45,7 @@ class ParserContainer : public ParserContainerBase
       
       ParserContainer& operator=(const ParserContainer& other)
       {
+         assert(0);
          if (this != &other)
          {
             mParsers.clear();
@@ -47,7 +58,7 @@ class ParserContainer : public ParserContainerBase
          return *this;
       }
       
-      bool empty() const { return mList->empty(); }
+      bool empty() const { return mParsers.empty(); }
       int size() const { return mParsers.size(); }
       void clear() {mParsers.clear();}
       
@@ -83,6 +94,8 @@ class ParserContainer : public ParserContainerBase
          {
             if (i->isParsed())
             {
+               assert(mType >= 0 && mType < Headers::UNKNOWN);
+               str << Headers::HeaderNames[mType] << Symbols::COLON << Symbols::SPACE;
                i->encode(str);
             }
             else

@@ -19,7 +19,7 @@ typedef enum
    SUBSCRIBE,
    RESPONSE,
    UNKNOWN,
-   MAX_METHODS
+   MAX_METHODS = UNKNOWN
 } MethodTypes;
 
 extern Data MethodNames[MAX_METHODS];

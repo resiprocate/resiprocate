@@ -317,7 +317,14 @@ class RequestLine : public ParserCategory
            mMethod(method),
            mSipVersion(sipVersion)
       {}
-      RequestLine(HeaderFieldValue* hfv) : ParserCategory(hfv), mUri(0), mMethod(UNKNOWN), mSipVersion() {}
+
+      RequestLine(HeaderFieldValue* hfv) 
+         : ParserCategory(hfv),
+           mUri(0),
+           mMethod(UNKNOWN),
+           mSipVersion(Symbols::DefaultSipVersion)
+      {}
+      
       RequestLine(const RequestLine&);
 
       virtual ~RequestLine();
