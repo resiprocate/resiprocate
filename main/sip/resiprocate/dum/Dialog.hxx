@@ -88,6 +88,8 @@ class Dialog
       ServerInviteSession*  makeServerInviteSession(const SipMessage& msg);
       ServerSubscription* makeServerSubscription(const SipMessage& msg);
 
+      //matches using tid of response
+      bool matches(const SipMessage& msg);      
 
       DialogUsageManager& mDum;
       DialogSet& mDialogSet;

@@ -13,7 +13,8 @@ Profile::Profile() :
    mHasOutboundProxy(false),
    mLooseToTagMatching(false),
    mRportEnabled(true),
-   mHasUserAgent(false)
+   mHasUserAgent(false),
+   mHasOverrideHostPort(true)
 {
 }
 
@@ -371,3 +372,23 @@ Profile::hasUserAgent() const
 {
    return mHasUserAgent;
 }
+
+bool 
+Profile::hasOverrideHostAndPort() const
+{
+   return mHasOverrideHostPort;
+}
+
+void 
+Profile::setOverrideHostAndPort(const Uri& hostPort)
+{
+   mHasOverrideHostPort = true;   
+   mOverrideHostPort = hostPort;   
+}
+
+const Uri& 
+Profile::getOverideHostAndPort() const
+{
+   return mOverrideHostPort;
+}
+   
