@@ -60,6 +60,8 @@ UdpTransport::UdpTransport(const Data& sendhost, int portNum, const Data& nic, F
 
 UdpTransport::~UdpTransport()
 {
+   DebugLog (<< "Closing " << mFd);
+   close(mFd);
 }
 
 
