@@ -37,10 +37,10 @@ class ParserCategory
       operator[](const ParameterType<T>& parameterType) const
       {
          checkParsed();
-         return ((typename ParameterType<T>::Type&)mHeaderField->getParameter((typename ParameterTypes::Type)T)).value();
+         return mHeaderField->getParameter(parameterType).value();
       }
       
-      void parseParameters(unsigned int start);
+      void parseParameters(const char* start);
 
       bool isParsed() const
       {

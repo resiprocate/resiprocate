@@ -12,7 +12,7 @@ class UnknownParameter : public DataParameter
       UnknownParameter(const char* startName, unsigned int nameSize,
                        const char* startData, unsigned int dataSize);
       
-      UnknownParameter(const Data& name, const Data& data);
+      UnknownParameter(const Data& name);
       
       virtual const Data& getName();
       virtual Parameter* clone() const;
