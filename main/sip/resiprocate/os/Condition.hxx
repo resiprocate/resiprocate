@@ -8,11 +8,14 @@
 #  include <pthread.h>
 #endif
 
+// !kh!
+// Attempt to resolve POSIX behaviour conformance for win32 build.
+//#define RESIP_WIN32_CONDITION_POSIX_CONFORMANCE
 
 namespace resip
 {
 
-	class Mutex;
+class Mutex;
 
 class Condition
 {
@@ -20,10 +23,15 @@ class Condition
       Condition();
       virtual ~Condition();
 
-      void wait (Mutex* mutex);
+      void wait (Mutex& mtx);
+      /** returns true if the condition was woken up by activity, false if timeout.
+       *  or interrupt.
+       */
+      bool wait (Mutex& mutex, int ms);
 
-      //returns true if the condition was woken up by activity, false if timeout
-      //or interrupt
+      // !kh!
+      //  deprecate these?
+      void wait (Mutex* mutex);
       bool wait (Mutex* mutex, int ms);
 
       /** Signal one waiting thread.
