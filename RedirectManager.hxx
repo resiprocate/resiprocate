@@ -34,6 +34,8 @@ class RedirectManager
       //deafult is by q-value, no q-value last
       void setOrdering(const Ordering& order);      
       
+      void removeDialogSet(DialogSetId id);
+      
       //based on follows 8.1.3.4 of 3261. Overload to interject user decisions
       //or to process 301, 305 or 380 reponses.
 //      virtual void onRedirect(AppDialogSetHandle, const SipMessage& response);
@@ -45,7 +47,6 @@ class RedirectManager
       {
          public:
             TargetSet(const SipMessage& request, const Ordering& order) :
-               mTargetSet(order),
                mTargetQueue(order),
                mRequest(request)
             {}
@@ -54,7 +55,7 @@ class RedirectManager
             //pass in the message stored in the creator
             bool makeNextRequest(SipMessage& request);
          protected:
-            typedef std::set<NameAddr, Ordering> EncounteredTargetSet;      
+            typedef std::set<NameAddr> EncounteredTargetSet;      
             typedef std::priority_queue<NameAddr, std::vector<NameAddr>, Ordering> TargetQueue;
 
             EncounteredTargetSet mTargetSet;
