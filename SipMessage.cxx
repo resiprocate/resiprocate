@@ -5,6 +5,10 @@
 using namespace Vocal2;
 using namespace std;
 
+#ifndef USE_METHOD_TEMPLATE
+#include <sipstack/SipMessageExplicit.cxx>
+#endif
+
 SipMessage::SipMessage()
    : mIsExternal(true),
      mFixedDest(false),

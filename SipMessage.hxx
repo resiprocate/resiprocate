@@ -52,6 +52,8 @@ class SipMessage : public Message
 
       Data brief() const ;
 
+#define USE_METHOD_TEMPLATE
+#ifdef USE_METHOD_TEMPLATE
       template <int T>
       bool
       exists(const Header<T>& headerType) const
@@ -112,19 +114,21 @@ class SipMessage : public Message
          return *dynamic_cast<ParserContainer<typename MultiHeader<T>::Type>*>(mHeaders[T]->getParserContainer());
       }
 
-      RequestLine& 
-      header(const RequestLineType& l) const;
-
-      StatusLine& 
-      header(const StatusLineType& l) const;
-      
       template <int T>
       void remove(const Header<T>& headerType)
       {
          delete mHeaders[T];
          mHeaders[T] = 0;
       }
+#else
+#include <sipstack/SipMessageExplicit.hxx>
+#endif
+      RequestLine& 
+      header(const RequestLineType& l) const;
 
+      StatusLine& 
+      header(const StatusLineType& l) const;
+      
       // note: removeFirst/removeLast through the component 
 
       // unknown header interface
