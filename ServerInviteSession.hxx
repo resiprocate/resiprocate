@@ -29,9 +29,6 @@ class ServerInviteSession: public InviteSession
       /// sends an offer. Does not send an answer
       virtual void provideAnswer(const SdpContents& answer);
 
-      // specify early media to be sent in the provisional response
-      void provideEarly(const SdpContents& early);
-      
       /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
       virtual void end();
 
@@ -61,11 +58,8 @@ class ServerInviteSession: public InviteSession
       virtual void dispatch(const DumTimeout& timer);
 
       void dispatchStart(const SipMessage& msg);
-      void dispatchOffer(const SipMessage& msg);
-      void dispatchEarly(const SipMessage& msg);
+      void dispatchOfferOrEarly(const SipMessage& msg);
       void dispatchAccepted(const SipMessage& msg);
-      void dispatchNoOffer(const SipMessage& msg);
-      void dispatchEarlyNoOffer(const SipMessage& msg);
       void dispatchAcceptedWaitingAnswer(const SipMessage& msg);
       void dispatchOfferReliable(const SipMessage& msg);
       void dispatchNoOfferReliable(const SipMessage& msg);
@@ -79,6 +73,10 @@ class ServerInviteSession: public InviteSession
       void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchWaitingToHangup(const SipMessage& msg);
 
+      void dispatchCancel(const SipMessage& msg);
+      void dispatchBye(const SipMessage& msg);
+      void dispatchUnknown(const SipMessage& msg);
+
       // utilities
       void sendProvisional(int code);
       void sendUpdate(const SdpContents& sdp);
@@ -91,10 +89,7 @@ class ServerInviteSession: public InviteSession
 
       // stores the original request
       SipMessage mFirstRequest;
-      
-      std::auto_ptr<SdpContents> mEarlyMedia;
       SipMessage m1xx; // for 1xx retransmissions
-      unsigned long m1xxTimer;
 
       //std::deque<SipMessage> mUnacknowledgedProvisionals; // all of them
       //SipMessage m200; // for retransmission

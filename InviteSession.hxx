@@ -86,12 +86,18 @@ class InviteSession : public DialogUsage
          UAC_Canceled,
 
          UAS_Start,
-         UAS_Offer, // 
-         UAS_Early, //
-         UAS_Accepted, //
-         UAS_NoOffer, //
-         UAS_EarlyNoOffer, //
-         UAS_AcceptedWaitingAnswer, //
+         UAS_Offer, 
+         UAS_OfferProvidedAnswer,
+         UAS_EarlyOffer,
+         UAS_EarlyProvidedAnswer, 
+
+         UAS_NoOffer, 
+         UAS_ProvidedOffer, 
+         UAS_EarlyNoOffer, 
+         UAS_EarlyProvidedOffer, 
+         UAS_Accepted, 
+
+         UAS_AcceptedWaitingAnswer, 
          UAS_OfferReliable,
          UAS_NoOfferReliable,
          UAS_FirstSentOfferReliable,
@@ -103,7 +109,6 @@ class InviteSession : public DialogUsage
          UAS_ReceivedUpdateWaitingAnswer,
          UAS_WaitingToTerminate,
          UAS_WaitingToHangup
-
       } State;
 
       typedef enum
