@@ -2,7 +2,6 @@
 #define RESIP_PLAINCONTENTS_HXX 
 
 #include "resiprocate/Contents.hxx"
-#include "resiprocate/os/Data.hxx"
 
 namespace resip
 {
