@@ -1,5 +1,8 @@
 #include <sipstack/ParameterTypes.hxx>
 
+#include <iostream>
+using namespace std;
+
 using namespace Vocal2;
 
 ParameterTypes::Factory ParameterTypes::ParameterFactories[MAX_PARAMETER] = {0};
@@ -106,7 +109,7 @@ __inline
 struct params *
 in_word_set (register const char *str, register unsigned int len)
 {
-  static struct params wordlist[] =
+  static struct params pwordlist[] =
     {
       {""},
       {"q",ParameterTypes::q},
@@ -138,24 +141,35 @@ in_word_set (register const char *str, register unsigned int len)
       {"received",ParameterTypes::received}
     };
 
+  // stupid search for now...
+  for (unsigned int i = 0; i < sizeof(pwordlist)/sizeof(pwordlist[0]); i++)
+  {
+     cerr << "trying: " << pwordlist[i].name << endl;
+     if (!strncasecmp(pwordlist[i].name, str, len))
+     {
+        return &pwordlist[i];
+     }
+  }
+  return 0;
+  
+  cerr << "[";
+  cerr.write(str, len);
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
       register int key = hash (str, len);
+      cerr << "] = " << key << endl;
 
       if (key <= MAX_HASH_VALUE && key >= 0)
         {
-          register const char *s = wordlist[key].name;
+          register const char *s = pwordlist[key].name;
 
           if (*str == *s && !strcmp (str + 1, s + 1))
-            return &wordlist[key];
+            return &pwordlist[key];
         }
     }
   return 0;
 }
 
-
-// no wierd massaging of output of gperf required
-// gperf -L ANSI-C -t -k '*' parameters.gperf
 ParameterTypes::Type
 ParameterTypes::getType(const char* name, unsigned int len)
 {

@@ -8,6 +8,7 @@ ExistsParameter::ExistsParameter(ParameterTypes::Type type, ParseBuffer& pb)
    : Parameter(type),
      mValue(true)
 {
+   pb.skipToOneOf(";?");
 }
 
 ExistsParameter::ExistsParameter(ParameterTypes::Type type)

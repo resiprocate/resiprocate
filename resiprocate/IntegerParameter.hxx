@@ -14,9 +14,9 @@ class IntegerParameter : public Parameter
 {
    public:
       typedef int Type;
-      
+
       IntegerParameter(ParameterTypes::Type, ParseBuffer& pb);
-      IntegerParameter(ParameterTypes::Type type, int value);
+      IntegerParameter(ParameterTypes::Type type, int value = -666999666);
       
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb)
       {

@@ -1,17 +1,18 @@
 #ifndef HeaderFieldValue_hxx
 #define HeaderFieldValue_hxx
 
-#include <iostream>
 #include <sipstack/ParameterList.hxx>
 #include <sipstack/ParseException.hxx>
 #include <sipstack/ParameterTypes.hxx>
 
+#include <iostream>
 
 namespace Vocal2
 {
 
 class ParserCategory;
 class UnknownParameter;
+class ParseBuffer;
 
 class HeaderFieldValue
 {
@@ -29,7 +30,9 @@ class HeaderFieldValue
       template <typename ParameterTypes::Type T>
       typename ParameterType<T>::Type& getParameter(const ParameterType<T>& type)
       {
-         Parameter* p = mParameterList.find(T);
+         std::cerr << "Trying to find parameter: " << T << " in list " << mParameterList << std::endl;
+         Parameter* p = mParameterList.find((ParameterTypes::Type)T);
+         std::cerr << p << std::endl;
          if (p == 0)
          {
             mParameterList.insert(p = new typename ParameterType<T>::Type(ParameterTypes::Type(T)));
@@ -42,21 +45,21 @@ class HeaderFieldValue
       template <typename ParameterTypes::Type T>
       bool exists(const ParameterType<T> type)
       {
-         return mParameterList.find(T);
+         return mParameterList.find((ParameterTypes::Type)T);
       }
 
       template <typename ParameterTypes::Type T>
       void 
       remove(const ParameterType<T> type)
       {
-         mParameterList.erase(T);
+         mParameterList.erase((ParameterTypes::Type)T);
       }
 
       ParameterList& getParameters();
 
       ParameterList& getUnknownParameters();
 
-      void parseParameters(const char* startPos, unsigned int length);
+      void parseParameters(ParseBuffer& pb);
 
       UnknownParameter* get(const Data& type);
 
