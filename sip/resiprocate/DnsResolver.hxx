@@ -2,9 +2,9 @@
 #define DnsResolver_hxx
 
 #include <list>
-#include <util/HashMap.hxx>
 
 #include <sipstack/Transport.hxx>
+#include <util/HashMap.hxx>
 
 namespace Vocal2
 {
@@ -42,7 +42,9 @@ class DnsResolver
       Id lookup(const Data& transactionId, const Uri& url);
       Id lookup(const Data& transactionId, const Via& via);
 
-      Id lookupARecords(const Data& transactionId, const Data& host, int port, Transport::Type transport, bool complete);
+      Id lookupARecords(const Data& transactionId, const Data& host, int port, 
+                        Transport::Type transport, bool complete,
+                        Id id = 0);
 
       static bool isIpAddress(const Data& data);
       
