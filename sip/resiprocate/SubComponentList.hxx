@@ -19,10 +19,9 @@ public:
   ~SubComponentList();
   
   void insert(SubComponent* param);
-  
-  SubComponent* find(SubComponent::Type type) const;
   void erase(SubComponent::Type type);
   
+  SubComponent* find(SubComponent::Type type) const;
   SubComponent* find(const Data& type) const;
   
   // find just sees if it is there and returns 0 if not.

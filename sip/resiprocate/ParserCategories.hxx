@@ -53,7 +53,7 @@ class Mime : public ParserCategory
       virtual ParserCategory* clone(HeaderFieldValue*) const;
       virtual std::ostream& encode(std::ostream& str) const;
    private:
-      Data mtype;
+      Data mType;
       Data mSubType;
 };
 typedef ParserContainer<Mime> Mimes;

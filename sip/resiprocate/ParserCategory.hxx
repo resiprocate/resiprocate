@@ -2,7 +2,9 @@
 #define ParserCategory_hxx
 
 #include <sipstack/Data.hxx>
+#include <sipstack/ParameterTypes.hxx>
 #include <iostream>
+
 
 namespace Vocal2
 {
@@ -13,31 +15,41 @@ class UnknownParameter;
 class ParserCategory
 {
    public:
+      
       ParserCategory(HeaderFieldValue* headerFieldValue)
-         : mHeaderField(headerFieldValue),
-           mIsParsed(false)
+         : mHeaderField(headerFieldValue) 
       {}
 
-      virtual ~ParserCategory() {}
+      //!dcm! -- will need to add different type of clones to HeaderFieldValue
+      //in order to write copy constructor
 
-      virtual void parse() = 0;
+      virtual ~ParserCategory() {}
       virtual ParserCategory* clone(HeaderFieldValue*) const = 0;
-      virtual std::ostream& encode(std::ostream& str) const = 0;
+
+      virtual std::ostream& encode(std::ostream& str) const 
+      { // !dcm!  this is just so things are compiled until all parses get written
+         assert(0);
+         return str;
+      }
+
+      template <int T>
+      typename ParameterType<T>::Type& 
+      operator[](const ParameterType<T>& parameterType)
+      {
+      }
       
       bool isParsed() const
       {
          return mIsParsed;
       }
-
-      void parseParameters(const char* start);
+      
+      virtual void parse() = 0;
 
       UnknownParameter& operator[](const Data& param);
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
    protected:
-      ParserCategory()
-         : mHeaderField(0),
-           mIsParsed(true)
+      ParserCategory() 
       {}
 
       // call before every access 
