@@ -625,58 +625,24 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
    
    //InfoLog( << "uncodec body is <" << outData << ">" );
 
-#if 1
    // parse out the header information and form new body.
    // !cj! this is a really crappy parser - shoudl do proper mime stuff
    ParseBuffer pb( outData.data(), outData.size() );
    pb.skipToChar(Symbols::COLON[0]);
    pb.skipChar();
-   const char* anchor1 = pb.skipWhitespace();
-   const char* anchor2 = pb.skipToChar('/');
-   Data mimeType( anchor1, anchor2-anchor1 );
-   anchor2++;
-   const char* anchor3 = pb.skipNonWhitespace();
-   Data mimeSubtype( anchor2, anchor3-anchor2 );
    
-   InfoLog( << "got type as <" << mimeType << "> and subtype as <" << mimeSubtype << ">" );
+   Mime mime;
+   mime.parse(pb);
 
-   char* ss = (char*)pb.position();
-   while (true)
-   {
-      if (!strncmp(ss,Symbols::CRLFCRLF,4))
-      {
-         ss += 4;
-         break;
-      }
-      if ( pb.eof() )
-      {
-         ErrLog( << "Bad data in encoded PKCS7 body");
-         return NULL;
-      }
-
-      ss=(char*)pb.skipChar();
-  }
-      
-   Data newBody( ss , pb.skipToEnd()-ss );
-   //InfoLog( << "body data <" << newBody.escaped() << ">" );
-
-   Mime mime(mimeType,mimeSubtype);
-   
+   const char* anchor = pb.skipToChars(Symbols::CRLFCRLF);
    if ( Contents::getFactoryMap().find(mime) == Contents::getFactoryMap().end())
    {
       ErrLog( << "Don't know how to deal with MIME type " << mime );
       return NULL;
    }
    
-   Contents* outBody = Contents::getFactoryMap()[mime]->create(newBody,mime);
-#else
-   Contents* outBody = new Pkcs7Contents( outData );
-#endif
-
-   return outBody;  
+   return Contents::createContents(mime, anchor, pb);
 }
-
-     
 
 #endif
 
