@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.4 2002/09/23 00:09:24 fluffy Exp $
+# $Id: Makefile,v 1.5 2002/09/29 00:47:20 alan Exp $
 #
 NEATO=neato
 DOT=dot
@@ -12,13 +12,24 @@ PDFFILES=$(patsubst %, $(OUTDIR)/%.pdf, $(FSMS))
 SVGFILES=$(patsubst %, $(OUTDIR)/%.svg, $(FSMS))
 PNGFILES=$(patsubst %, $(OUTDIR)/%.png, $(FSMS))
 
-FILES=$(PSFILES) $(PDFFILES) $(SVGFILES) $(PNGFILES)
+DOCBOOKTARGETS=design-overview.html
+XSLP=xsltproc
+XSLPOPT=--xinclude 
+HTMLSHEET=htmlcss.xsl
+
+FILES=$(PSFILES) $(PDFFILES) $(SVGFILES) $(PNGFILES) $(DOCBOOKTARGETS)
 
 
 
 .phony:
 
 all: $(FILES)
+
+%.html: $(HTMLSHEET) %.xml
+	$(XSLP) $(XSLPOPT) -o $@ $^
+
+#design-overview.html: $(HTMLSHEET) design-overview.xml
+#	$(XSLP) $(XSLPOPT) -o $@ $^
 
 $(OUTDIR):
 	-mkdir $@
