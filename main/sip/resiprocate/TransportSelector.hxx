@@ -19,7 +19,7 @@ namespace resip
 
 class DnsResolver;
 class SipMessage;
-class UdpTransport;
+class TlsTransport;
 class SipStack;
 
 class TransportSelector
@@ -33,6 +33,10 @@ class TransportSelector
       void buildFdSet(FdSet& fdset);
      
       void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
+      void addTlsTransport(const Data& domainName, 
+                           const Data& keyDir, const Data& privateKeyPassPhrase,
+                           int port, 
+                           const Data& hostName="", const Data& nic="");
       void dnsResolve(SipMessage* msg, const Data& tid);
 
       // this will result in msg->resolve() being called to either
@@ -46,10 +50,14 @@ class TransportSelector
    private:
       Transport* findTransport(const Transport::Type type) const;
       Transport* findTransport(const Transport::Tuple& tuple) const;
+      Transport* findTlsTransport(const Data& domain) const;
 
       SipStack& mStack;
       std::vector<Transport*> mTransports;
 
+      // map from domain name to transport
+      HashMap<Data, TlsTransport*> mTlsTransports;
+      
       friend class DnsResolver;
 };
 
