@@ -13,7 +13,7 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_parse_a_reply.c,v 1.2 2003/09/14 00:27:24 fluffy Exp $";
+static const char rcsid[] = "$Id: ares_parse_a_reply.c,v 1.3 2003/09/14 00:38:41 fluffy Exp $";
 
 #include <sys/types.h>
 //#include <sys/socket.h>
@@ -81,7 +81,7 @@ int ares_parse_a_reply(const unsigned char *abuf, int alen,
   naliases = 0;
 
   /* Examine each answer resource record (RR) in turn. */
-  for (i = 0; i < ancount; i++)
+  for (i = 0; i < (int)ancount; i++)
     {
       /* Decode the RR up to the data field. */
       status = ares_expand_name(aptr, abuf, alen, &rr_name, &len);
