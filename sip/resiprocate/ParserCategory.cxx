@@ -134,24 +134,33 @@ ParserCategory::exists(const Data& param) const
 void
 ParserCategory::parseParameters(ParseBuffer& pb)
 {
-   pb.skipWhitespace();
-   while (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0])
+   while (!pb.eof() )
    {
-      // extract the key
-      pb.skipChar();
-      const char* keyStart = pb.skipWhitespace();
-      const char* keyEnd = pb.skipToOneOf(" \t\r\n;=?>");  //!dlb! @ here?
-      ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
-      if (type == ParameterTypes::UNKNOWN)
+      const char* start = pb.position();
+      pb.skipWhitespace();
+
+      if (  (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0]) )
       {
-         mUnknownParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb));
+         // extract the key
+         pb.skipChar();
+         const char* keyStart = pb.skipWhitespace();
+         const char* keyEnd = pb.skipToOneOf(" \t\r\n;=?>");  //!dlb! @ here?
+         ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
+         if (type == ParameterTypes::UNKNOWN)
+         {
+            mUnknownParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb));
+         }
+         else
+         {
+            // invoke the particular factory
+            mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n;?>"));
+         }
       }
       else
       {
-         // invoke the particular factory
-         mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n;?>"));
+         pb.reset(start);
+         return;
       }
-      pb.skipWhitespace();
    }
 }      
 
