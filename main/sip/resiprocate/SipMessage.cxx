@@ -501,6 +501,14 @@ SipMessage::getContents() const
          return 0;
       }
       DebugLog(<< "SipMessage::getContents: " << header(h_ContentType));
+
+      if ( Contents::getFactoryMap().find(header(h_ContentType)) == Contents::getFactoryMap().end() )
+      {
+         InfoLog(<< "SipMessage::getContents: got content type ("
+                 <<  header(h_ContentType) << ") that is not known");
+         return 0;
+      }
+      
       assert(Contents::getFactoryMap().find(header(h_ContentType)) != Contents::getFactoryMap().end());
       mContents = Contents::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv, header(h_ContentType));
       // copy contents headers into the contents

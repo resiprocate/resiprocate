@@ -22,7 +22,7 @@
 #include "sip2/sipstack/Contents.hxx"
 #include "sip2/sipstack/Pkcs7Contents.hxx"
 #include "sip2/sipstack/PlainContents.hxx"
-#include "sip2/sipstack/MultipartMixedContents.hxx"
+#include "sip2/sipstack/MultipartSignedContents.hxx"
 #include "sip2/util/Random.hxx"
 #include "sip2/util/DataStream.hxx"
 #include "sip2/util/Logger.hxx"
@@ -548,15 +548,14 @@ Security::sign( Contents* bodyIn )
 }
 
 
-MultipartMixedContents* 
+MultipartSignedContents* 
 Security::multipartSign( Contents* bodyIn )
 {
    DebugLog( << "Doing multipartSign" );
    assert( bodyIn );
 
-
    // form the multipart
-   MultipartMixedContents* multi = new MultipartMixedContents;
+   MultipartSignedContents* multi = new MultipartSignedContents;
    multi->header(h_ContentType).param( "micalg" ) = "sha1";
    multi->header(h_ContentType).param( "protocol" ) = "application/pkcs7-signature";
    multi->header(h_ContentType).type() = "multipart";
@@ -571,17 +570,15 @@ Security::multipartSign( Contents* bodyIn )
    int flags = 0;
    flags |= PKCS7_BINARY;
    flags |= PKCS7_DETACHED;
-#if 1
+#if 0
    flags |= PKCS7_NOCERTS; // should remove 
 #endif
 
-   Data bodyData;
-   oDataStream strm(bodyData);
-   bodyIn->encode( strm );
-   strm.flush();
+   Data bodyData = bodyIn->getBodyData();
    const char* p = bodyData.data();
    int s = bodyData.size();
    BIO* in;
+   DebugLog( << "sign <" << bodyData.data() << ">" );
    in = BIO_new_mem_buf( (void*)p,s);
    assert(in);
    DebugLog( << "ceated in BIO");
@@ -897,6 +894,217 @@ Security::uncode( Pkcs7Contents* sBody, Data* signedBy, SignatureStatus* sigStat
    }
    
    return outBody;
+}
+
+
+Contents* 
+Security::uncodeSigned( MultipartSignedContents* multi,       
+                        Data* signedBy, 
+                        SignatureStatus* sigStatus )
+{
+   if ( multi->parts().size() != 2 )
+   {
+      return NULL;
+   }
+   
+   list<Contents*>::const_iterator i = multi->parts().begin();
+   Contents* first = *i;
+   
+   i++;
+   assert( i != multi->parts().end() );
+   
+   Contents* second = *i;
+   Pkcs7SignedContents* sig = dynamic_cast<Pkcs7SignedContents*>( second );
+   if ( !sig )
+   {
+      InfoLog( << "Don't know how to deal with signature of type" << second->getType() );
+      return first;
+   }
+
+
+      int flags=0;
+      flags |= PKCS7_BINARY;
+   
+      // for now, assume that this is only a singed plain message
+      assert( second );
+ 
+     PlainContents* text = dynamic_cast<PlainContents*>( first );
+      
+      if (!text)
+      {
+         InfoLog( << "Can only check signature of text/plain" << second->getType() );
+         return first;
+      }
+      
+      const char* p = sig->text().c_str();
+      int   s = sig->text().size();
+      BIO* in;
+      in = BIO_new_mem_buf( (void*)p,s);
+      assert(in);
+      InfoLog( << "ceated in BIO");
+    
+      BIO* out;
+      out = BIO_new(BIO_s_mem());
+      assert(out);
+      InfoLog( << "created out BIO" );
+
+      DebugLog( << "verify <" << text->text() << ">" );
+      
+      BIO* pkcs7Bio = BIO_new_mem_buf( (void*) text->text().c_str(),text->text().size());
+      assert(pkcs7Bio);
+      InfoLog( << "ceated pkcs BIO");
+    
+      PKCS7* pkcs7 = d2i_PKCS7_bio(in, NULL);
+      if ( !pkcs7 )
+      {
+         ErrLog( << "Problems doing decode of PKCS7 object <"
+                 << sig->text().escaped() << ">" );
+
+         while (1)
+         {
+            const char* file;
+            int line;
+              
+            unsigned long code = ERR_get_error_line(&file,&line);
+            if ( code == 0 )
+            {
+               break;
+            }
+              
+            char buf[256];
+            ERR_error_string_n(code,buf,sizeof(buf));
+            ErrLog( << buf  );
+            InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
+         }
+           
+         return first;
+      }
+      BIO_flush(in);
+   
+      int type=OBJ_obj2nid(pkcs7->type);
+      switch (type)
+      {
+         case NID_pkcs7_signed:
+            InfoLog( << "data is pkcs7 signed" );
+            break;
+         case NID_pkcs7_signedAndEnveloped:
+            InfoLog( << "data is pkcs7 signed and enveloped" );
+            break;
+         case NID_pkcs7_enveloped:
+            InfoLog( << "data is pkcs7 enveloped" );
+            break;
+         case NID_pkcs7_data:
+            InfoLog( << "data i pkcs7 data" );
+            break;
+         case NID_pkcs7_encrypted:
+            InfoLog( << "data is pkcs7 encrypted " );
+            break;
+         case NID_pkcs7_digest:
+            InfoLog( << "data is pkcs7 digest" );
+            break;
+         default:
+            InfoLog( << "Unkown pkcs7 type" );
+            break;
+      }
+
+      STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7, NULL/*certs*/, 0/*flags*/ );
+      for (int i=0; i<sk_X509_num(signers); i++)
+      {
+         X509* x = sk_X509_value(signers,i);
+
+         STACK* emails = X509_get1_email(x);
+
+         for ( int j=0; j<sk_num(emails); j++)
+         {
+            char* e = sk_value(emails,j);
+            InfoLog("email field of signing cert is <" << e << ">" );
+            if ( signedBy)
+            {
+               *signedBy = Data(e);
+            }
+         }
+      }
+
+      STACK_OF(X509)* certs;
+      certs = sk_X509_new_null();
+      assert( certs );
+   
+//      if ( !verifySig )
+      {
+         flags |= PKCS7_NOVERIFY;
+      }
+   
+      assert( certAuthorities );
+   
+      switch (type)
+      {
+         case NID_pkcs7_signed:
+         {
+            if ( PKCS7_verify(pkcs7, certs, certAuthorities, pkcs7Bio, out, flags ) != 1 )
+            {
+               ErrLog( << "Problems doing PKCS7_verify" );
+
+               if ( sigStatus )
+               {
+                  *sigStatus = isBad;
+               }
+
+               while (1)
+               {
+                  const char* file;
+                  int line;
+               
+                  unsigned long code = ERR_get_error_line(&file,&line);
+                  if ( code == 0 )
+                  {
+                     break;
+                  }
+               
+                  char buf[256];
+                  ERR_error_string_n(code,buf,sizeof(buf));
+                  ErrLog( << buf  );
+                  InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
+               }
+            
+               return first;
+            }
+            if ( sigStatus )
+            {
+               if ( flags & PKCS7_NOVERIFY )
+               {
+                  *sigStatus = notTrusted;
+               }
+               else
+               {
+                  if (false) // !jf! TODO look for this cert in store
+                  {
+                     *sigStatus = trusted;
+                  }
+                  else
+                  {
+                     *sigStatus = caTrusted;
+                  }
+               }
+            }
+         }
+         break;
+      
+         default:
+            ErrLog("Got PKCS7 data that could not be handled type=" << type );
+            return NULL;
+      }
+      
+      BIO_flush(out);
+      char* outBuf=NULL;
+      long size = BIO_get_mem_data(out,&outBuf);
+      assert( size >= 0 );
+      
+      Data outData(outBuf,size);
+      
+      DebugLog( << "uncodec body is <" << outData << ">" );
+      
+   
+   return first;
 }
 
 
