@@ -500,9 +500,16 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
 {
   int s;
   struct sockaddr_in sin;
+#ifdef HAS_IPV6
+  struct sockaddr_in6 sin6;
+#endif
 
   /* Acquire a socket. */
+#ifdef HAS_IPV6
+  s = socket(server->family, SOCK_STREAM, 0);
+#else
   s = socket(AF_INET, SOCK_STREAM, 0);
+#endif
   if (s == -1)
     return -1;
 
@@ -532,23 +539,59 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
     }
 }
 #endif
-  /* Connect to the server. */
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr = server->addr;
-  sin.sin_port = channel->tcp_port;
-  if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1
-      && errno != 
+
 #ifdef WIN32
-	  WSAEINPROGRESS
+#define PORTABLE_INPROGRESS_ERR WSAEINPROGRESS
 #else
-	  EINPROGRESS
+#define PORTABLE_INPROGRESS_ERR EINPROGRESS
 #endif
-	  )
+
+  /* Connect to the server. */
+#ifdef HAS_IPV6
+  if (server->family == AF_INET6)
+  {
+    memset(&sin6, 0, sizeof(sin6));
+    sin6.sin6_family = AF_INET6;
+    sin6.sin6_addr = server->addr6;
+    sin6.sin6_port = channel->tcp_port;
+    sin6.sin6_flowinfo = 0;
+    sin6.sin6_scope_id = 0;
+    // do i need to explicitly set the length?
+
+    if (connect(s, (const struct sockaddr *) &sin6 , sizeof(sin6)) == -1
+           && errno != PORTABLE_INPROGRESS_ERR)
     {
       close(s);
       return -1;
     }
+  }
+  else // IPv4 DNS server
+  {
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_addr = server->addr;
+    sin.sin_port = channel->tcp_port;
+
+    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1
+           && errno != PORTABLE_INPROGRESS_ERR)
+    {
+      close(s);
+      return -1;
+    }
+  }
+#else
+  memset(&sin, 0, sizeof(sin));
+  sin.sin_family = AF_INET;
+  sin.sin_addr = server->addr;
+  sin.sin_port = channel->tcp_port;
+
+  if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1
+         && errno != PORTABLE_INPROGRESS_ERR)
+  {
+    close(s);
+    return -1;
+  }
+#endif
 
   server->tcp_socket = s;
   return 0;
