@@ -7,6 +7,7 @@
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
 

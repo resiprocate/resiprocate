@@ -2,10 +2,11 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "resiprocate/MsgHeaderScanner.hxx"
 #include "resiprocate/SipFrag.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
-#include "resiprocate/MsgHeaderScanner.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 
 using namespace resip;
 using namespace std;

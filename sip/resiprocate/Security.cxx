@@ -14,6 +14,8 @@
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Timer.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
+
 
 #if defined(USE_SSL)
 
