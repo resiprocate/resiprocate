@@ -21,6 +21,10 @@ class ClientPagerMessage : public NonDialogUsage
       SipMessage& getMessageRequest();
 
       //send a MESSAGE
+      //!kh!
+      //queues the message if there is one sent but not yet received a response
+      //for it.
+      //asserts if contents->get() is NULL.
       virtual void page(std::auto_ptr<Contents> contents);
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
