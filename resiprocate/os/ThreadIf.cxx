@@ -61,7 +61,7 @@ ThreadIf::run()
       0, //DWORD dwCreationFlags,                     // creation flags
       &mId// LPDWORD lpThreadId                         // pointer to receive thread ID
       );
-   assert( thread != NULL );
+   assert( mThread != 0 );
 #else
    // spawn the thread
    if ( int retval = pthread_create( &mId, 0, threadWrapper, this) )

@@ -17,9 +17,12 @@
 #include <sys/poll.h>
 #endif
 #ifdef RESIP_POLL_IMPL_SELECT
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
+#define WIN32
+# include <winsock2.h>
+#else
+# include <sys/time.h>
+# include <sys/types.h>
+# include <unistd.h>
 #endif
 #ifdef RESIP_POLL_EXTERN
 #include <map>

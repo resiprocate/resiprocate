@@ -58,7 +58,6 @@ Data::Data(const char* str, int length)
                : LocalAlloc),
      mMine(mSize > LocalAlloc)
 {
-   assert( mSize >= 0 );
    memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize > 0)
    {
@@ -78,7 +77,6 @@ Data::Data(const unsigned char* str, int length)
                : LocalAlloc),
      mMine(mSize > LocalAlloc)
 {
-   assert( mSize >= 0 );
    memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize > 0)
    {
