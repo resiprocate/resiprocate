@@ -4,6 +4,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/DumTimeout.hxx"
+#include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
@@ -155,18 +156,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          }
          break;
        }
-         
-      case Connected:
-         InviteSession::dispatch(msg);
-         break;
-         
-      case Terminated:
-         if (msg.isResponse() && msg.header(h_StatusLine).statusCode() == 200 && msg.header(h_CSeq).method() == BYE)
-         {
-            delete this;
-         }
-         break;
-      }
+   }
 }
 
 void
@@ -190,6 +180,7 @@ ClientInviteSession::send(const SipMessage& msg)
        msg.isResponse() && msg.header(h_StatusLine).statusCode() == 200)       
    {
       mState = Terminated;
+      delete this;
    }
    InviteSession::send(msg);
 }
@@ -199,32 +190,24 @@ ClientInviteSession::end()
 {
    switch (mState)
    {
-      case Initial:
-         assert(0);
-         return mLastRequest;
-         
       case Early:
          // is it legal to cancel a specific fork/dialog. 
          // if so, this is the place to do it
-         assert(0);
+      case Initial:
+         mDialog.makeCancel(mLastRequest);
+         //!dcm! -- it could be argued that this(and similar) should happen in send so users
+         //can't toast themselves
+         mState = Cancelled;
          return mLastRequest;
-         
+         break;
+      case Terminated: 
       case Connected:
          return InviteSession::end();
          break;
-         
-      case Terminated:
-         // do nothing
-         assert(0);
-         return mLastRequest;         
-
-      case Cancelled:
-         // !jf! 
-         assert(0);
-         return mLastRequest;         
-         
+      case Cancelled: //user error
+         throw new UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
       default:
-         return mLastRequest;
+         assert(0); //states should be exhausted
    }
 }
 
@@ -234,7 +217,61 @@ ClientInviteSession::rejectOffer(int statusCode)
    return mLastRequest;
 }
 
-#if 0
+void
+ClientInviteSession::sendAck(const SipMessage& ok)
+{
+   makeAck(ok);
+   if (mProposedLocalSdp)
+   {
+      // !jf! ?
+      //mDialog.setContents(mProposedLocalSdp);
+   }
+   mDum.send(mAck);
+}
+
+//below here be the prack
+void
+ClientInviteSession::sendPrack(const SipMessage& response)
+{
+   assert(response.isResponse());
+   assert(response.header(h_StatusLine).statusCode() > 100 && 
+          response.header(h_StatusLine).statusCode() < 200);
+   
+   SipMessage prack;
+   mDialog.makeRequest(prack, PRACK);
+   
+   if (mProposedRemoteSdp)
+   {
+      assert(mProposedLocalSdp);
+      // send an answer
+      prack.setContents(mProposedLocalSdp);
+      
+   }
+   else if (mProposedLocalSdp)
+   {
+      // send a counter-offer
+      prack.setContents(mProposedRemoteSdp);
+   }
+   else
+   {
+      // no sdp
+   }
+   
+   // much later!!! the deep rathole ....
+   // if there is a pending offer or answer, will include it in the PRACK body
+   assert(0);
+
+   
+}
+
+void
+ClientInviteSession::handlePrackResponse(const SipMessage& response)
+{
+   // more PRACK goodness 
+   assert(0);
+}
+
+#if 0 //?dcm? --PRACKISH dispatch, or just cruft?
 void
 ClientInviteSession::dispatch(const SipMessage& msg)
 {
@@ -393,6 +430,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
       {
          mState = Terminated;
          handler->onTerminated(getSessionHandle(), msg);
+         delete this;
       }
    }
    else // 3xx
@@ -402,62 +440,9 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 }
 #endif
 
-void
-ClientInviteSession::sendPrack(const SipMessage& response)
-{
-   assert(response.isResponse());
-   assert(response.header(h_StatusLine).statusCode() > 100 && 
-          response.header(h_StatusLine).statusCode() < 200);
-   
-   SipMessage prack;
-   mDialog.makeRequest(prack, PRACK);
-   
-   if (mProposedRemoteSdp)
-   {
-      assert(mProposedLocalSdp);
-      // send an answer
-      prack.setContents(mProposedLocalSdp);
-      
-   }
-   else if (mProposedLocalSdp)
-   {
-      // send a counter-offer
-      prack.setContents(mProposedRemoteSdp);
-   }
-   else
-   {
-      // no sdp
-   }
-   
-   // much later!!! the deep rathole ....
-   // if there is a pending offer or answer, will include it in the PRACK body
-   assert(0);
-
-   
-}
-
-void
-ClientInviteSession::handlePrackResponse(const SipMessage& response)
-{
-   // more PRACK goodness 
-   assert(0);
-}
-
-void
-ClientInviteSession::sendAck(const SipMessage& ok)
-{
-   makeAck(ok);
-   if (mProposedLocalSdp)
-   {
-      // !jf! ?
-      //mDialog.setContents(mProposedLocalSdp);
-   }
-   mDum.send(mAck);
-}
-
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
+* The Vovida Software License, Version 1.0 
  * 
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
