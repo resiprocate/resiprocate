@@ -1,4 +1,4 @@
-/* $Id: ares.h,v 1.5 2003/10/30 18:15:25 adamr Exp $ */
+/* $Id: ares.h,v 1.6 2003/10/30 18:19:01 adamr Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
@@ -194,7 +194,10 @@ void ares_free_errmem(char *mem);
 #define REFUSED 5
 
 #define PACKETSZ 512 
+
+#ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 256
+#endif
 
 #define NS_DEFAULTPORT 53 
 #define NAMESERVER_PORT NS_DEFAULTPORT 
