@@ -121,7 +121,7 @@ TuIM::haveCerts( bool sign, const Data& encryptFor )
 
 void 
 TuIM::sendPage(const Data& text, const Uri& dest, 
-                    const bool sign, const Data& encryptFor)
+               const bool sign, const Data& encryptFor)
 {
    if ( text.empty() )
    {
@@ -203,9 +203,8 @@ TuIM::sendPage(const Data& text, const Uri& dest,
 
    msg->setContents(body);
 
-#if 1
+   if (1)       // Compute the identity header.
    {
-      // Compute the identity header.
       Security* sec = mStack->getSecurity();
       assert(sec);
       
@@ -217,7 +216,6 @@ TuIM::sendPage(const Data& text, const Uri& dest,
 
       msg->header(h_Identity).value() = res;
    }
-#endif
    
    setOutbound( *msg );
    //ErrLog( "About to send " << *msg );
