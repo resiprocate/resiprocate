@@ -11,24 +11,24 @@ using namespace Vocal2;
 ParameterTypes::Factory ParameterTypes::ParameterFactories[ParameterTypes::MAX_PARAMETER] = {0};
 Data ParameterTypes::ParameterNames[ParameterTypes::MAX_PARAMETER] = {""};
 
-ParameterType<ParameterTypes::transport> Vocal2::p_transport;
-ParameterType<ParameterTypes::user> Vocal2::p_user;
-ParameterType<ParameterTypes::method> Vocal2::p_method;
-ParameterType<ParameterTypes::ttl> Vocal2::p_ttl;
-ParameterType<ParameterTypes::maddr> Vocal2::p_maddr;
-ParameterType<ParameterTypes::lr> Vocal2::p_lr;
-ParameterType<ParameterTypes::q> Vocal2::p_q;
-ParameterType<ParameterTypes::purpose> Vocal2::p_purpose;
-ParameterType<ParameterTypes::expires> Vocal2::p_expires;
-ParameterType<ParameterTypes::handling> Vocal2::p_handling;
-ParameterType<ParameterTypes::tag> Vocal2::p_tag;
-ParameterType<ParameterTypes::toTag> Vocal2::p_toTag;
-ParameterType<ParameterTypes::fromTag> Vocal2::p_fromTag;
-ParameterType<ParameterTypes::duration> Vocal2::p_duration;
-ParameterType<ParameterTypes::branch> Vocal2::p_branch;
-ParameterType<ParameterTypes::received> Vocal2::p_received;
-ParameterType<ParameterTypes::comp> Vocal2::p_com;
-ParameterType<ParameterTypes::rport> Vocal2::p_rport;
+Transport_Param Vocal2::p_transport;
+User_Param Vocal2::p_user;
+Method_Param Vocal2::p_method;
+Ttl_Param Vocal2::p_ttl;
+Maddr_Param Vocal2::p_maddr;
+Lr_Param Vocal2::p_lr;
+Q_Param Vocal2::p_q;
+Purpose_Param Vocal2::p_purpose;
+Expires_Param Vocal2::p_expires;
+Handling_Param Vocal2::p_handling;
+Tag_Param Vocal2::p_tag;
+ToTag_Param Vocal2::p_toTag;
+FromTag_Param Vocal2::p_fromTag;
+Duration_Param Vocal2::p_duration;
+Branch_Param Vocal2::p_branch;
+Received_Param Vocal2::p_received;
+Comp_Param Vocal2::p_com;
+Rport_Param Vocal2::p_rport;
 
 ///// Massaging required:
 ///// 1. use not 0x20 as bit mask in character comparisons

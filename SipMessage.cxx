@@ -1,5 +1,4 @@
 #include <sipstack/SipMessage.hxx>
-#include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/HeaderFieldValueList.hxx>
 
 using namespace Vocal2;
@@ -7,11 +6,6 @@ using namespace std;
 
 int strcasecmp(const char*, const char*);
 int strncasecmp(const char*, const char*, int len);
-
-
-#ifndef USE_METHOD_TEMPLATE
-#include <sipstack/SipMessageExplicit.cxx>
-#endif
 
 SipMessage::SipMessage()
    : mIsExternal(true),
@@ -23,8 +17,6 @@ SipMessage::SipMessage()
    {
       mHeaders[i] = 0;
    }
-
-   // pre-parse headers?
 }
 
 SipMessage::SipMessage(const SipMessage& from)
@@ -111,9 +103,9 @@ SipMessage::isRequest() const
 bool
 SipMessage::isResponse() const
 {
+   // !dlb! not necessarily -- malformed messages are are neither
    return !isRequest();
 }
-
 
 Data
 SipMessage::brief() const
@@ -263,20 +255,17 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
    }
 }
 
-
 bool
 SipMessage::hasFixedDest() const
 {
   return mHaveFixedDest;
 }
 
-
 Data
 SipMessage::getFixedDest() const
 {
   return mFixedDest;
 }
-
 
 void
 SipMessage::setFixedDest(const Data& dest)
@@ -285,14 +274,12 @@ SipMessage::setFixedDest(const Data& dest)
   mHaveFixedDest = true;
 }
 
-
 void
 SipMessage::clearFixedDest()
 {
   mFixedDest = "";
   mHaveFixedDest = false;
 }
-
 
 RequestLine& 
 SipMessage::header(const RequestLineType& l) const
@@ -307,7 +294,6 @@ SipMessage::header(const RequestLineType& l) const
    
    return *parser;
 }
-
 
 StatusLine& 
 SipMessage::header(const StatusLineType& l) const
@@ -339,3 +325,552 @@ SipMessage::ensureHeader(Headers::Type type) const
    }
    return hfvs;
 }
+
+// type safe header accessors
+bool    
+SipMessage::exists(const HeaderBase& headerType) const 
+{
+   return mHeaders[headerType.getTypeNum()] != 0;
+};
+
+void
+SipMessage::remove(const HeaderBase& headerType)
+{
+   delete mHeaders[headerType.getTypeNum()]; 
+   mHeaders[headerType.getTypeNum()] = 0; 
+};
+
+CSeq_Header::Type&
+SipMessage::header(const CSeq_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new CSeq_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<CSeq_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Call_ID_Header::Type&
+SipMessage::header(const Call_ID_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Call_ID_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Call_ID_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Authentication_Info_Header::Type&
+SipMessage::header(const Authentication_Info_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Authentication_Info_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Authentication_Info_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Authorization_Header::Type&
+SipMessage::header(const Authorization_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Authorization_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Authorization_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Content_Disposition_Header::Type&
+SipMessage::header(const Content_Disposition_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Content_Disposition_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Content_Disposition_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Content_Encoding_Header::Type&
+SipMessage::header(const Content_Encoding_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Content_Encoding_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Content_Encoding_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Content_Length_Header::Type&
+SipMessage::header(const Content_Length_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Content_Length_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Content_Length_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Content_Type_Header::Type&
+SipMessage::header(const Content_Type_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Content_Type_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Content_Type_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Date_Header::Type&
+SipMessage::header(const Date_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Date_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Date_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Expires_Header::Type&
+SipMessage::header(const Expires_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Expires_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Expires_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+From_Header::Type&
+SipMessage::header(const From_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new From_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<From_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+In_Reply_To_Header::Type&
+SipMessage::header(const In_Reply_To_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new In_Reply_To_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<In_Reply_To_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+MIME_Version_Header::Type&
+SipMessage::header(const MIME_Version_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new MIME_Version_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<MIME_Version_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Max_Forwards_Header::Type&
+SipMessage::header(const Max_Forwards_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Max_Forwards_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Max_Forwards_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Min_Expires_Header::Type&
+SipMessage::header(const Min_Expires_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Min_Expires_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Min_Expires_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Organization_Header::Type&
+SipMessage::header(const Organization_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Organization_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Organization_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Priority_Header::Type&
+SipMessage::header(const Priority_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Priority_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Priority_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Proxy_Authenticate_Header::Type&
+SipMessage::header(const Proxy_Authenticate_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Proxy_Authenticate_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Proxy_Authenticate_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Proxy_Authorization_Header::Type&
+SipMessage::header(const Proxy_Authorization_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Proxy_Authorization_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Proxy_Authorization_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Refer_To_Header::Type&
+SipMessage::header(const Refer_To_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Refer_To_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Refer_To_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Referred_By_Header::Type&
+SipMessage::header(const Referred_By_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Referred_By_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Referred_By_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Replaces_Header::Type&
+SipMessage::header(const Replaces_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Replaces_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Replaces_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Reply_To_Header::Type&
+SipMessage::header(const Reply_To_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Reply_To_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Reply_To_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Retry_After_Header::Type&
+SipMessage::header(const Retry_After_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Retry_After_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Retry_After_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Server_Header::Type&
+SipMessage::header(const Server_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Server_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Server_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Subject_Header::Type&
+SipMessage::header(const Subject_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Subject_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Subject_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Timestamp_Header::Type&
+SipMessage::header(const Timestamp_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Timestamp_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Timestamp_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+To_Header::Type&
+SipMessage::header(const To_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new To_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<To_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+User_Agent_Header::Type&
+SipMessage::header(const User_Agent_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new User_Agent_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<User_Agent_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+WWW_Authenticate_Header::Type&
+SipMessage::header(const WWW_Authenticate_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new WWW_Authenticate_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<WWW_Authenticate_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+Warning_Header::Type&
+SipMessage::header(const Warning_Header& headerType) const
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->front()->setParserCategory(new Warning_Header::Type(hfvs->front()));
+   }
+   return *dynamic_cast<Warning_Header::Type*>(hfvs->first->getParserCategory());
+};
+
+ParserContainer<Accept_MultiHeader::Type>&
+SipMessage::header(const Accept_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Accept_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Accept_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Accept_Encoding_MultiHeader::Type>&
+SipMessage::header(const Accept_Encoding_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Accept_Encoding_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Accept_Encoding_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Accept_Language_MultiHeader::Type>&
+SipMessage::header(const Accept_Language_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Accept_Language_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Accept_Language_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Alert_Info_MultiHeader::Type>&
+SipMessage::header(const Alert_Info_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Alert_Info_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Alert_Info_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Allow_MultiHeader::Type>&
+SipMessage::header(const Allow_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Allow_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Allow_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Call_Info_MultiHeader::Type>&
+SipMessage::header(const Call_Info_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Call_Info_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Call_Info_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Contact_MultiHeader::Type>&
+SipMessage::header(const Contact_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Contact_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Contact_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Content_Language_MultiHeader::Type>&
+SipMessage::header(const Content_Language_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Content_Language_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Content_Language_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Error_Info_MultiHeader::Type>&
+SipMessage::header(const Error_Info_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Error_Info_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Error_Info_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Proxy_Require_MultiHeader::Type>&
+SipMessage::header(const Proxy_Require_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Proxy_Require_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Proxy_Require_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Record_Route_MultiHeader::Type>&
+SipMessage::header(const Record_Route_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Record_Route_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Record_Route_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Require_MultiHeader::Type>&
+SipMessage::header(const Require_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Require_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Require_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Route_MultiHeader::Type>&
+SipMessage::header(const Route_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Route_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Route_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Subscription_State_MultiHeader::Type>&
+SipMessage::header(const Subscription_State_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Subscription_State_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Subscription_State_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Supported_MultiHeader::Type>&
+SipMessage::header(const Supported_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Supported_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Supported_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Unsupported_MultiHeader::Type>&
+SipMessage::header(const Unsupported_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Unsupported_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Unsupported_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+ParserContainer<Via_MultiHeader::Type>&
+SipMessage::header(const Via_MultiHeader& headerType) const 
+{
+   HeaderFieldValueList* hfvs = ensureHeader(headerType.getTypeNum());
+   if (!hfvs->front()->isParsed())
+   {
+      hfvs->setParserContainer(new ParserContainer<Via_MultiHeader::Type>(hfvs));
+   }
+   return *dynamic_cast<ParserContainer<Via_MultiHeader::Type>*>(hfvs->getParserContainer());
+};
+
+const HeaderFieldValueList*
+SipMessage::getRawHeader(Headers::Type headerType) const
+{
+   return mHeaders[headerType];
+}
+

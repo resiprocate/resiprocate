@@ -20,9 +20,9 @@ FloatParameter::FloatParameter(ParameterTypes::Type type,
    mValue = atof(pb.position());
 }
 
-FloatParameter::FloatParameter(ParameterTypes::Type type, float value)
+FloatParameter::FloatParameter(ParameterTypes::Type type)
    : Parameter(type),
-     mValue(value)
+     mValue(0.0)
 {}
       
 float& FloatParameter::value()
