@@ -765,7 +765,27 @@ Helper::fromAor(const Data& aor, const Data& scheme)
    return Uri(scheme + Symbols::COLON + aor);
 }
 
+bool
+Helper::validateMessage(const SipMessage& message)
+{
+   if (!message.exists(h_To) || 
+       !message.exists(h_From) || 
+       !message.exists(h_CSeq) || 
+       !message.exists(h_CallId) || 
+       !message.exists(h_Vias) ||
+       message.header(h_Vias).empty())
+   {
+      InfoLog(<< "Missing mandatory header fields (To, From, CSeq, Call-Id or Via)");
+      DebugLog(<< message);
+      return false;
+   }
+   else
+   {
+      return true;
+   }
+}
 
+      
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
