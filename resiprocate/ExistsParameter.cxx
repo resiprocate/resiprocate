@@ -1,12 +1,14 @@
 #include <sipstack/ExistsParameter.hxx>
+#include <util/ParseBuffer.hxx>
 
 using namespace Vocal2;
 using namespace std;
 
-ExistsParameter::ExistsParameter(ParameterTypes::Type type, const char* startData, unsigned int dataSize)
+ExistsParameter::ExistsParameter(ParameterTypes::Type type, ParseBuffer& pb)
    : Parameter(type),
      mValue(true)
-{}
+{
+}
 
 ExistsParameter::ExistsParameter(ParameterTypes::Type type)
    : Parameter(type),
