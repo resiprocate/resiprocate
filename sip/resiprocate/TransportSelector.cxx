@@ -95,7 +95,7 @@ TransportSelector::isFinished() const
 
 
 // !jf! Note that it uses ipv6 here but ipv4 in the Transport classes (ugggh!)
-void 
+bool
 TransportSelector::addTransport(TransportType protocol, 
                                 int port,
                                 IpVersion version,
@@ -126,7 +126,7 @@ TransportSelector::addTransport(TransportType protocol,
              << (version == V4 ? "V4" : "V6") << " "
              << Tuple::toData(protocol) << " " << port << " on "  
              << (ipInterface.empty() ? "ANY" : ipInterface));
-      throw;
+      return false;
    }
 
    if (mMultiThreaded)
@@ -153,12 +153,13 @@ TransportSelector::addTransport(TransportType protocol,
       mExactTransports[key] = transport;
       mAnyPortTransports[key] = transport;
    }
+   return true;
 }
 
-void 
+bool
 TransportSelector::addTlsTransport(const Data& domainName, 
                                    const Data& keyDir,
-				   const Data& privateKeyPassPhrase,
+                                   const Data& privateKeyPassPhrase,
                                    int port,
                                    IpVersion version,
                                    const Data& ipInterface)
@@ -168,23 +169,39 @@ TransportSelector::addTlsTransport(const Data& domainName,
    assert(mTlsTransports.count(domainName) == 0);
 
    assert (port != 0);
-   // if port == 0, do an SRV lookup and use the ports from there
-   TlsTransport* transport = new TlsTransport(mStateMacFifo, 
-                                              domainName, 
-                                              ipInterface, port, 
-                                              keyDir, privateKeyPassPhrase,
-                                              version == V4); 
+   TlsTransport* transport = 0;
+   try
+   {
+      // if port == 0, do an SRV lookup and use the ports from there
+      transport = new TlsTransport(mStateMacFifo, 
+                                   domainName, 
+                                   ipInterface, port, 
+                                   keyDir, privateKeyPassPhrase,
+                                   version == V4); 
+   }
+   catch (Transport::Exception& )
+   {
+      ErrLog(<< "Failed to create TLS transport: " 
+             << (version == V4 ? "V4" : "V6") << " port "
+             << port << " on "  
+             << (ipInterface.empty() ? "ANY" : ipInterface));
+      return false;
+   }
+
    if (mMultiThreaded)
    {
       transport->run();
    }
 
    mTlsTransports[domainName] = transport;
+   return true;
    
 #else
    CritLog (<< "TLS not supported in this stack. Maybe you don't have openssl");
    assert(0);
+   return false;
 #endif
+
 }
 
 void 
