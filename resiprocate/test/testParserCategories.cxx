@@ -52,12 +52,36 @@ int
 main(int arc, char** argv)
 {
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
-   
+
    {
+      TR _tr("Test tel aor canonicalization");
+      Data data("tel:+14156268178;pOstd=pP2;isUb=1411");
+      
+      Uri original(data);
+      cerr << original.getAor() << endl;
+      
+      assert(original.getAor() == "+14156268178");
+   }
+
+   {
+      TR _tr("Test aor canonicalization");
+      Data data("sip:User@kElOwNa.GlOo.NeT:5666");
+      Data data1("sip:User@KeLoWnA.gLoO.nEt:5666");
+      
+      Uri original(data);
+      Uri original1(data1);
+      
+      assert(original.getAor() == original1.getAor());
+   }
+
+   {
+      TR _tr("Test tel NameAddr");
       NameAddr n1("<tel:98267168>");
       cerr << n1.uri().user() << endl;
    }
+
    {
+      TR _tr("Test empty NameAddr");
       NameAddr n1;
       NameAddr n2;
       assert (!(n1 < n2));
