@@ -35,6 +35,7 @@ class Symbols
       static const Data ZERO;
       static const Data LPAREN;
       static const Data RPAREN;
+      static const Data PERIOD;
       
       static const Data ProtocolName;
       static const Data ProtocolVersion;
