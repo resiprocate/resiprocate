@@ -61,7 +61,7 @@ class ServerPublicationHandler
                              const SipMessage& pub,
                              int expires)=0;
 
-      const resip::Mimes& getSupportedMimeTypes() const;
+      const Mimes& getSupportedMimeTypes() const;
 };
 
 }
