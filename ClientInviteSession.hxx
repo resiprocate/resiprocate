@@ -21,9 +21,6 @@ class ClientInviteSession : public InviteSession
             Handle(DialogUsageManager& dum);
       };
 
-      virtual void setOffer(const SdpContents* offer);
-      virtual void setAnswer(const SdpContents* answer);
-
       virtual SipMessage& end();
       virtual SipMessage& rejectOffer(int statusCode);
 
