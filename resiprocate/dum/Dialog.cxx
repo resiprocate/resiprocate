@@ -151,12 +151,61 @@ Dialog::dispatch(const SipMessage& msg)
                break;
 
             case SUBSCRIBE:
+            case REFER: //!jf! does this create a server subs?
+               usage = mDum.createServerSubscription(msg);
+               break;
                
+            case NOTIFY:
+               usage = mDum.createClientSubscription(msg);
+               break;
                
+            case PUBLISH:
+               usage = mDum.createServerPublication(msg);
+               break;
+               
+            case REGISTER:
+               usage = mDum.createServerRegistration(msg);
+               break;
+               
+            default:
+               usage = mDum.createServerOutOfDialog(msg);
+               break;
          }
       }
       else if (msg.isResponse())
       {
+         // !jf! should this only be for 2xx responses?
+         switch (msg.header(h_CSeq).method())
+         {
+            case INVITE:  
+               usage = mDum.createClientInviteSession(msg);
+               break;
+               
+            case ACK:
+            case CANCEL:
+               break;
+               
+            case SUBSCRIBE:
+            case REFER: //!jf! does this create a server subs?
+               usage = mDum.createClientSubscription(msg);
+               break;
+               
+            case NOTIFY:
+               usage = mDum.createClientSubscription(msg);
+               break;
+               
+            case PUBLISH:
+               usage = mDum.createClientPublication(msg);
+               break;
+               
+            case REGISTER:
+               usage = mDum.createClientRegistration(msg);
+               break;
+               
+            default:
+               usage = mDum.createClientOutOfDialog(msg);
+               break;
+         }
       }
       
       BaseUsage* usage = mCreator->makeUsage(msg);
