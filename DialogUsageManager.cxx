@@ -78,6 +78,14 @@ DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
 }
 
 void 
+DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration, 
+                             resip::BaseUsage::Handle& target, int cseq, int rseq)
+{
+   DumTimeout t(type, duration, target, cseq, rseq);
+   mStack.post(t, duration);
+}
+
+void 
 DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler* handler)
 {
 }
@@ -219,7 +227,7 @@ void
 DialogUsageManager::process(FdSet& fdset)
 {
    mStack.process(fdset);
-   Message* msg = mStack.receive();
+   Message* msg = mStack.receiveAny();
    SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
 
    if (sipMsg)
@@ -487,8 +495,6 @@ DialogUsageManager::findDialogSet(const DialogSetId& id)
     return *it->second;
 }
 
-//!dcm! -- kill
-#if 0
 BaseCreator*
 DialogUsageManager::findCreator(const DialogId& id)
 {
@@ -497,7 +503,6 @@ DialogUsageManager::findCreator(const DialogId& id)
    BaseCreator* creator = dialogSet.getCreator();
    return creator;
 }
-#endif
 
 bool
 DialogUsageManager::isValid(const BaseUsage::Handle& handle)
