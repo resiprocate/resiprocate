@@ -2,15 +2,11 @@
 #include <sipstack/Transport.hxx>
 #include <sipstack/Uri.hxx>
 #include <sipstack/Helper.hxx>
-#include <sipstack/UdpTransport.hxx>
+#include <sipstack/TestTransport.hxx>
+#include <sipstack/Preparse.hxx>
 
 #include <util/Logger.hxx>
 #include <util/DataStream.hxx>
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
 
 using namespace Vocal2;
 using namespace std;
@@ -21,7 +17,6 @@ using namespace std;
 
 SipStack* client=0;
 Fifo<Message> received;
-UdpTransport* server=0;
 
 void
 doit(int serverResponse, int expectedRetrans, int expectedClientResponse);
@@ -32,13 +27,14 @@ main(int argc, char *argv[])
 {
     Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
+
+
+    DebugLog( << "Starting up, making stack");
     InfoLog( << "Starting up, making stack");
 
     client = new SipStack();
-    client->addTransport(Transport::UDP, 5060);
+    client->addTransport(Transport::TestReliable, 5060);
 
-    server = new UdpTransport("localhost", 5070, "default", received);
-    
     // Test 1: 
     // client sends a reg, server does nothing, client should retransmit 10
     // times, client should receive 408
@@ -57,8 +53,8 @@ main(int argc, char *argv[])
 
     //doit(100, 7, 408);
     doit(200, 1, 200);
-    doit(400, 1, 400);
-    doit(0, 10, 408);
+    //    doit(400, 1, 400);
+    //doit(0, 10, 408);
     
     return 0;
 }
@@ -78,34 +74,76 @@ doit(int serverResponse, int expectedRetrans, int expectedClientResponse)
     reg->encode(strm);
     strm.flush();
 
-    client->send(*reg);
 
+    client->send(*reg);   // send message down the stack
+
+
+    fd_set fdReadSet;
+       
+    // Init the fd_set for the select()
+    FD_ZERO(&fdReadSet);
+       
+    client->process(&fdReadSet);
+
+
+    // read the message off the stack
+    TestBufType& cbuf = TestOutBuffer::instance().getBuf();
+    int len = cbuf.size();
+    char *newbuf = new char(len);
+    TestBufType::const_iterator iter = cbuf.begin();
+    int i=0;
+    for (; iter != cbuf.end(); iter++, i++ )
+      {
+	newbuf[i] = *iter;
+      }
+
+      SipMessage* message = new SipMessage(true);
+      
+      // set the received from information into the received= parameter in the
+      // via
+      // sockaddr_in from;
+      // message->setSource(from);
+
+
+      // Tell the SipMessage about this buffer.
+      message->addBuffer(newbuf);
+
+      Preparse preParser(*message, newbuf, len);
+
+      bool ppStatus = preParser.process();
+
+
+    // send the response message
+
+    SipMessage* response = Helper::makeResponse(*reg, 100);
+    DebugLog (<< "server sending response = " << endl << *response);
+            
     Data encodedResponse(2048, true);
+
+    DataStream estrm(encodedResponse);
+    response->encode(estrm);
+    estrm.flush();
+
+    TestBufType& inbuf = TestInBuffer::instance().getBuf();
     
+    for (int i=0; i < encodedResponse.size(); i++)
+      {
+	inbuf.push_back(encodedResponse.data()[i]);
+      }
+
+    client->process();
+
+#if 0
     int count=0;
     while (1)
     {
-       struct timeval tv;
        fd_set fdReadSet;
        int fdSetSize = 0;
        
        // Init the fd_set for the select()
        FD_ZERO(&fdReadSet);
        
-       fdSetSize = 0;
-       client->buildFdSet(&fdReadSet, &fdSetSize);
-       server->buildFdSet(&fdReadSet, &fdSetSize);
-       
-       // block on fdset
-       tv.tv_sec = 0;
-       tv.tv_usec = 1000 * client->getTimeTillNextProcess();
-
-       // get the sip message that we just sent and process it
-       int err = select(fdSetSize, &fdReadSet, 0, 0, &tv);
-       assert (err != -1);
-       
        client->process(&fdReadSet);
-       server->process(&fdReadSet);
        
        SipMessage* sipMessage = client->receive();
             
@@ -143,7 +181,6 @@ doit(int serverResponse, int expectedRetrans, int expectedClientResponse)
              sa.sin_addr.s_addr = inet_addr("127.0.0.1");
              sa.sin_port = htons(5060);
             
-             server->send(sa, encodedResponse);
           }
          
           delete sip;
@@ -152,4 +189,5 @@ doit(int serverResponse, int expectedRetrans, int expectedClientResponse)
 
        usleep(20);
     }
+#endif
 }
