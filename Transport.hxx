@@ -37,7 +37,9 @@ class Transport
          TCP,
          TLS,
          SCTP,
-         DCCP
+         DCCP,
+	 TestReliable,
+	 TestUnreliable
       } Type;
 
       class Tuple
