@@ -22,9 +22,9 @@ HandleManager::~HandleManager()
    // handle deference regardless.
    if (!mHandleMap.empty())
    {
-      StackLog ( << "&&&&&& HandleManager::~HandleManager " );
-      StackLog ( << Inserter(mHandleMap) );   
-      throw HandleException("Deleting handlemanager that still has Handled objects", __FILE__, __LINE__);
+      DebugLog ( << "&&&&&& HandleManager::~HandleManager " );
+      DebugLog ( << Inserter(mHandleMap) );   
+      //throw HandleException("Deleting handlemanager that still has Handled objects", __FILE__, __LINE__);
    }
 }
 
