@@ -463,8 +463,9 @@ Helper::computeTag(int numBytes)
    return Random::getRandomHex(4);
 }
 
-//this should not be in source, it should be configurable !dcm!
-static Data privateKey("lw4j5owG9A");
+// !jf! this should be settable by the application in case a group of apps
+// (e.g. proxies) want to share the same secret
+static Data privateKey(Random::getRandomHex(1));
 
 Data
 Helper::makeNonce(const SipMessage& request, const Data& timestamp)
