@@ -13,6 +13,18 @@ class TestData
       void main()
       {
          {
+            Data v("some text");
+            assert(v.prefix("some"));
+            assert(v.prefix("some "));
+            assert(!v.prefix("ome "));
+
+            assert(v.prefix(Data::Empty));
+            assert(v.prefix("some text"));
+            assert(v.prefix(v));
+            assert(!v.prefix("some text "));
+         }
+
+         {
             Data transport("transport");
             assert(isEqualNoCase(transport, "transport"));
          }
@@ -28,7 +40,7 @@ class TestData
             assert(d1.find("a") == Data::npos);
             assert(d1.find("0123456789") == 0);
             assert(d1.find("0123456789a") == Data::npos);
-            
+
             Data d2;
             assert(d2.find("0") == Data::npos);            
             assert(d2.find("abc") == Data::npos);
