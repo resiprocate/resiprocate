@@ -17,6 +17,7 @@ class Dialog;
 class DialogUsageManager;
 class AppDialogSet;
 class ClientOutOfDialogReq;
+class UserProfile;
 
 class DialogSet
 {
@@ -29,6 +30,9 @@ class DialogSet
       void addDialog(Dialog*);
       bool empty() const;
       BaseCreator* getCreator();
+
+      UserProfile* getUserProfile();
+      void setUserProfile(UserProfile *userProfile);
 
       void cancel();
       void dispatch(const SipMessage& msg);
@@ -92,6 +96,7 @@ class DialogSet
 
       ClientPagerMessage* mClientPagerMessage;
       ServerPagerMessage* mServerPagerMessage;
+      UserProfile* mUserProfile;
 };
  
 }

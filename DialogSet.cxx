@@ -13,7 +13,7 @@
 #include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/DialogSetHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/RedirectManager.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
@@ -46,8 +46,10 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mClientOutOfDialogRequests(),
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
-   mServerPagerMessage(0)
+   mServerPagerMessage(0),
+   mUserProfile(0)
 {
+   setUserProfile(&creator->getUserProfile());
    assert(!creator->getLastRequest().isExternal());
    DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
 }
@@ -68,8 +70,8 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mClientOutOfDialogRequests(),
    mServerOutOfDialogRequest(0),
    mClientPagerMessage(0),
-   mServerPagerMessage(0)
-
+   mServerPagerMessage(0),
+   mUserProfile(0)
 {
    assert(request.isRequest());
    assert(request.isExternal());
@@ -152,6 +154,27 @@ DialogSet::getCreator()
    return mCreator;
 }
 
+UserProfile* 
+DialogSet::getUserProfile()
+{
+   if(mUserProfile)
+   {
+      return mUserProfile;
+   }
+   else
+   {
+      // If no UserProfile set then use UserProfile of the MasterProfile
+      return mDum.getMasterProfile();
+   }
+}
+ 
+void 
+DialogSet::setUserProfile(UserProfile *userProfile)
+{
+   assert(!mUserProfile);
+   mUserProfile = userProfile;
+}
+
 Dialog* 
 DialogSet::findDialog(const SipMessage& msg)
 {
@@ -165,7 +188,7 @@ DialogSet::findDialog(const SipMessage& msg)
    else if (msg.exists(h_Contacts) && 
             msg.header(h_Contacts).size() == 1 
             && msg.isResponse() 
-            && mDum.getProfile()->looseToTagMatching()
+            && getUserProfile()->getLooseToTagMatching()
             && msg.header(h_To).exists(p_tag))     
    {
       //match by contact
@@ -210,7 +233,7 @@ DialogSet::dispatch(const SipMessage& msg)
       {
          if (mDum.mClientAuthManager.get())
          {
-            if (mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg))
+            if (mDum.mClientAuthManager->handle( *getUserProfile(), getCreator()->getLastRequest(), msg))
             {
                DebugLog( << "about to re-send request with digest credentials" );
                StackLog( << getCreator()->getLastRequest() );

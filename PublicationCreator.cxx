@@ -5,13 +5,13 @@ using namespace resip;
 
 PublicationCreator::PublicationCreator(DialogUsageManager& dum,
                                        const NameAddr& target, 
-                                       const NameAddr& from,
+                                       UserProfile& userProfile,
                                        const Contents& body, 
                                        const Data& eventType, 
                                        unsigned expireSeconds )
-   : BaseCreator(dum)
+   : BaseCreator(dum, userProfile)
 {
-   makeInitialRequest(target, from, PUBLISH);
+   makeInitialRequest(target, PUBLISH);
 
    mLastRequest.header(h_Event).value() = eventType;
    mLastRequest.setContents(&body);
