@@ -26,7 +26,7 @@ class ConnectionMap
       ConnectionMap();
       ~ConnectionMap();
 
-      Connection* add(const Transport::Tuple& who, Socket s);
+      Connection* add(Transport::Tuple& who, Socket s);
       Connection* get(const Transport::Tuple& who);
       void close(const Transport::Tuple& who);
 
