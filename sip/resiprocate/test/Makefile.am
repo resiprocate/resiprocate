@@ -61,6 +61,7 @@ check_PROGRAMS = \
 	testStack \
 	testTcp \
 	testThreadIf \
+	testTime \
 	testTimer \
 	testTransactionFSM \
 	testUdp \
@@ -113,6 +114,7 @@ testSpeed_SOURCES = testSpeed.cxx
 testStack_SOURCES = testStack.cxx
 testTcp_SOURCES = testTcp.cxx
 testThreadIf_SOURCES = testThreadIf.cxx
+testTime_SOURCES = testTime.cxx
 testTimer_SOURCES = testTimer.cxx
 testTransactionFSM_SOURCES = testTransactionFSM.cxx
 testUdp_SOURCES = testUdp.cxx
