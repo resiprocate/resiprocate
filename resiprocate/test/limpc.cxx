@@ -964,9 +964,23 @@ myMain(int argc, char* argv[])
       }
        
       // //DebugLog ( << "Try TO PROCESS " );
-      sipStack.process(fdset);
-       
-      tuIM->process();       
+      try
+      {
+         sipStack.process(fdset);
+      }
+      catch (...)
+      {
+         ErrLog( << "Got a exception from sipStack::process" );
+      }
+      
+      try
+      {
+         tuIM->process();       
+      }
+      catch (...)
+      {
+         ErrLog( << "Got a exception passed from TuIM::process" );
+      }
    }
 
    return 0;
