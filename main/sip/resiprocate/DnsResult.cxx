@@ -60,7 +60,23 @@ DnsResult::DnsResult(DnsInterface& interfaceObj, DnsHandler* handler)
 DnsResult::~DnsResult()
 {
    DebugLog (<< "DnsResult::~DnsResult() " << *this);
-   assert(mType != Destroyed);
+   assert(mType != Pending);
+}
+
+void
+DnsResult::destroy()
+{
+   assert(this);
+   DebugLog (<< "DnsResult::destroy() " << *this);
+   
+   if (mType == Pending)
+   {
+      mType = Destroyed;
+   }
+   else
+   {
+      delete this;
+   }
 }
 
 DnsResult::Type
@@ -93,22 +109,6 @@ DnsResult::next()
    mResults.pop_front();
    DebugLog (<< "Returning next dns entry: " << next);
    return next;
-}
-
-void
-DnsResult::destroy()
-{
-   assert(this);
-   DebugLog (<< "DnsResult::destroy() " << *this);
-   
-   if (mType == Pending)
-   {
-      mType = Destroyed;
-   }
-   else
-   {
-      delete this;
-   }
 }
 
 void
