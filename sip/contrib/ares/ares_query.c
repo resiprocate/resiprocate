@@ -26,6 +26,7 @@
 #include "ares.h"
 #include "ares_dns.h"
 #include "ares_private.h"
+#include "ares_local.h"
 
 struct qquery {
   ares_callback callback;
@@ -40,6 +41,13 @@ void ares_query(ares_channel channel, const char *name, int dnsclass,
   struct qquery *qquery;
   unsigned char *qbuf;
   int qlen, rd, status;
+
+  /* See if query can be handled by local pseudo-domain DNS */
+  if (ares_local_query(channel, name, dnsclass, type, callback, arg) != 0)
+  {
+      /* printf("ares_query: query for %s was handled locally\n",name); */
+      return;
+  }
 
   /* Compose the query. */
   rd = !(channel->flags & ARES_FLAG_NORECURSE);
