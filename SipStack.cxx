@@ -66,7 +66,14 @@ void
 SipStack::shutdown()
 {
    InfoLog (<< "Shutting down stack " << this);
-   mShuttingDown = true;
+
+   static Mutex shutDownMutex;
+   {
+      Lock lock(shutDownMutex);
+      assert(!mShuttingDown);
+      mShuttingDown = true;
+   }
+
    mTransactionController.shutdown();
 }
 
