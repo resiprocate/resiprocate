@@ -61,8 +61,29 @@ static const char *try_option(const char *p, const char *q, const char *opt);
 static int ip_addr(const char *s, int len, struct in_addr *addr);
 static void natural_mask(struct apattern *pat);
 
+#ifdef WIN32
+char w32hostspath[256];
+#endif
+
 int ares_init(ares_channel *channelptr)
 {
+#ifdef WIN32
+  HKEY hKey;  
+  char hostpath[256];
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+  {
+      DWORD dwSize = sizeof(hostpath);
+      if(RegQueryValueEx(hKey, "DatabasePath", 0, 0, (LPBYTE)&hostpath, &dwSize) == ERROR_SUCCESS)
+      {
+         hostpath[dwSize] = '\0';
+         ExpandEnvironmentStrings(hostpath, w32hostspath, sizeof(w32hostspath));
+         if(strlen(w32hostspath) < sizeof(w32hostspath) - 6) 
+         {
+            strcat(w32hostspath, "\\hosts");
+         }
+      }
+  }
+#endif
   return ares_init_options(channelptr, NULL, 0);
 }
 
