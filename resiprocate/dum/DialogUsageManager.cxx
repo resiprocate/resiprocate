@@ -846,7 +846,7 @@ DialogUsageManager::process(FdSet& fdset)
    try 
    {
       mStack->process(fdset);
-      process();
+      while(process());
    }
    catch(BaseException& e)
    {
