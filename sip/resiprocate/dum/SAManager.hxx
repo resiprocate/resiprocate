@@ -12,7 +12,7 @@ class SAManager
       SAManager(SipStack& stack);
       ~SAManager();
       
-      void setProfile(Profile* profile);
+      void setProfile(const Profile& profile);
 
       void setManager(RedirectManager* redirect);
       void setManager(ClientAuthManager* client);
