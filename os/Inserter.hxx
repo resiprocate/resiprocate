@@ -72,14 +72,14 @@ insert(std::ostream& s, const std::set <K, C>& c)
 }
 
 
-#if defined(HASH_MAP_IS_MAP)
-// hash_map
+// HashMap
+#if defined(HASH_MAP_NAMESPACE)
 template <class K, class V, class H>
 std::ostream&
-insert(std::ostream& s, const hash_map<K,V,H>& c)
+insert(std::ostream& s, const HashMap<K,V,H>& c)
 {
    s << "[";
-   for (typename hash_map<K,V,H>::const_iterator i = c.begin();
+   for (typename HashMap<K,V,H>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 

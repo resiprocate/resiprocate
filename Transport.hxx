@@ -116,7 +116,15 @@ class SendData
 
 }
 
-#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+
+#if  defined(__INTEL_COMPILER )
+
+namespace std
+{
+size_t hash_value(const Vocal2::Transport::Tuple& tuple);
+}
+
+#elif defined(HASH_MAP_NAMESPACE)
 #include <ext/hash_map>
 
 namespace __gnu_cxx
@@ -129,7 +137,8 @@ struct hash<Vocal2::Transport::Tuple>
  
 }
 
-#endif // __GNUC__
+#endif // hash stuff
+
 #endif
 
 
