@@ -1,7 +1,7 @@
 #if !defined(RESIP_LAZYPARSER_HXX)
 #define RESIP_LAZYPARSER_HXX 
 
-#include <iostream>
+#include <iosfwd>
 
 namespace resip
 {

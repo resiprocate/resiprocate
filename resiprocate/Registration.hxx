@@ -4,14 +4,13 @@
 #include <time.h>
 #include <memory>
 #include "resiprocate/os/Timer.hxx"
-#include "resiprocate/Uri.hxx"
-#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/NameAddr.hxx"
 
 namespace resip
 {
 
 class SipMessage;
-
+class CallID;
 
 class Registration 
 {

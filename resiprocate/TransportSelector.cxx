@@ -2,7 +2,9 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include "resiprocate/ParserCategories.hxx"
+#include "resiprocate/NameAddr.hxx"
+#include "resiprocate/Uri.hxx"
+
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TcpTransport.hxx"
 #include "resiprocate/TlsTransport.hxx"

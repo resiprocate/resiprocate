@@ -1,13 +1,12 @@
 #if !defined(RESIP_SIPMESSAGE_HXX)
 #define RESIP_SIPMESSAGE_HXX 
 
-#include "resiprocate/os/Socket.hxx"
-
 #include <sys/types.h>
 
 #ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #endif
 
 #include <list>
@@ -15,20 +14,18 @@
 #include <utility>
 #include <memory> 
 
+#include "resiprocate/Contents.hxx"
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/Message.hxx"
-#include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/ParserContainer.hxx"
+#include "resiprocate/ParserCategories.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Timer.hxx"
-#include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Timer.hxx"
 
-#if !defined(WIN32)
-#include <pthread.h>
-#endif 
 
 namespace resip
 {
