@@ -1,40 +1,41 @@
-#if !defined(RESIP_WEBADMIN_HXX)
-#define RESIP_WEBADMIN_HXX 
+#if !defined(REPRO_HTTPBASE_HXX)
+#define REPRO_HTTPBASE_HXX 
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Tuple.hxx"
 
-#include "repro/UserAbstractDb.hxx"
 #include "repro/HttpBase.hxx"
 
 namespace repro
 {
+class HttpConnection;
 
-class WebAdmin: public HttpBase
+class HttpBase
 {
-   public:
-      WebAdmin( UserAbstractDb& db,
-                int port=5080, 
-                resip::IpVersion version=resip::V4);
+      friend class HttpConnection;
       
+   public:
+      HttpBase( int port, resip::IpVersion version);
+      virtual ~HttpBase();
+      
+      void buildFdSet(resip::FdSet& fdset);
+      void process(resip::FdSet& fdset);
+
    protected:
-      virtual void buildPage( const resip::Data& uri, int pageNumber );
+      virtual void buildPage( const resip::Data& uri, int pageNumber )=0;
+      void setPage( const resip::Data& page, int pageNumber );
+      
+   private:
+      static const int MaxConnections = 10;
+      
+      resip::Socket mFd;
+      int nextConnection;
+      resip::Tuple mTuple;
 
-   private: 
-      resip::Data buildDefaultPage();
-
-      resip::Data buildAddRoutePage();
-      resip::Data buildAddUserPage();
-      resip::Data buildShowRegsPage();
-      resip::Data buildShowRoutesPage();
-      resip::Data buildShowUsersPage();
-
-      UserAbstractDb& mDb;
+      HttpConnection* mConnection[MaxConnections];
 };
-
-
 
 }
 
