@@ -45,6 +45,12 @@ RouteProcessor::handleRequest(RequestContext& context)
  
 }
 
+void
+RouteProcessor::dump(std::ostream &os) const
+{
+  os << "RouteProcessor monkey" << std::endl;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

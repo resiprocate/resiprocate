@@ -12,6 +12,7 @@ namespace repro
       virtual ~RouteProcessor();
 
       virtual processor_action_t handleRequest(RequestContext &);
+      virtual void dump(std::ostream &os) const;
   };
 }
 #endif
