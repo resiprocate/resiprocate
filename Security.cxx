@@ -42,7 +42,16 @@ Security::Exception::Exception(const Data& msg, const Data& file, const int line
 TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
 {
    ssl = NULL;
-   
+
+   if (server)
+   {
+      DebugLog( << "Trying to from TLS connection - acting as server" );
+   }
+   else
+   {
+      DebugLog( << "Trying to form TLS connection - acting as client" );
+   }
+      
    assert( security );
    SSL_CTX* ctx = security->getTlsCtx(server);
    assert(ctx);
@@ -70,9 +79,16 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
       char buf[256];
       ERR_error_string_n(err,buf,sizeof(buf));
       
-      ErrLog( << "ssl connection failed with server=" << server << " err=" << err << " " << buf );
+      ErrLog( << "TLS connection failed "
+              << " err=" << err << " " << buf );
       
       bio = NULL;
+
+      throw Transport::Exception( Data("TLS connect failed"), __FILE__, __LINE__ );   
+   }
+   else
+   {
+      DebugLog( << "TLS connected" ); 
    }
 }
 
@@ -80,7 +96,7 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
 int 
 TlsConnection::read( const void* buf, const int count )
 {
-   assert( ssl );
+   assert( ssl ); 
    assert( buf );
    int ret;
 
@@ -172,6 +188,8 @@ TlsConnection::write( const void* buf, const int count )
          break;
       }
    }
+
+    DebugLog( << "Did TLS write"  );
 
    return ret;
 }
@@ -501,11 +519,10 @@ Security::loadRootCerts(  const Data& filePath )
          DebugLog( << "Error code = " << code << " file=" << file << " line=" << line );
       }
       
-
-	  Data err( "Error reading contents of root cert file  " );
-	  err += filePath;
-	  throw Exception(err, __FILE__,__LINE__);
-	  return false;
+      Data err( "Error reading contents of root cert file  " );
+      err += filePath;
+      throw Exception(err, __FILE__,__LINE__);
+      return false;
    }
    
    InfoLog( << "Loaded public CAs from " << filePath );
