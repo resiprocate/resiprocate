@@ -1,9 +1,4 @@
 #include "resiprocate/AresDns.hxx"
-#include "resiprocate/os/WinLeakCheck.hxx"
-
-#if !defined(WIN32)
-#include <arpa/nameser.h>
-#endif
 
 extern "C"
 {
@@ -66,7 +61,6 @@ AresDns::getHandler(void* arg)
 {
    Payload* p = reinterpret_cast<Payload*>(arg);
    ExternalDnsHandler *thisp = reinterpret_cast<ExternalDnsHandler*>(p->first);
-   delete p;
    return thisp;
 }
 
@@ -75,7 +69,6 @@ AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
 {
    Payload* p = reinterpret_cast<Payload*>(arg);
    void* userArg = reinterpret_cast<void*>(p->second);
-   delete p;
    
    if (status != ARES_SUCCESS)
    {
@@ -93,7 +86,6 @@ AresDns::aresHostCallback(void *arg, int status, struct hostent* result)
    Payload* p = reinterpret_cast<Payload*>(arg);
    ExternalDnsHandler *thisp = reinterpret_cast<ExternalDnsHandler*>(p->first);
    void* userArg = reinterpret_cast<void*>(p->second);
-   delete p;
 
    if (status != ARES_SUCCESS)
    {
