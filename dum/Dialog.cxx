@@ -252,12 +252,12 @@ Dialog::cancel()
          }
          else
          {
-            throw new UsageUseException("Can only CANCEL an INVITE", __FILE__, __LINE__);
+            throw UsageUseException("Can only CANCEL an INVITE", __FILE__, __LINE__);
          }
       }
       else
       {
-         throw new UsageUseException("Attempting to cancel UAS dialogSet", __FILE__, __LINE__);
+         throw UsageUseException("Attempting to cancel UAS dialogSet", __FILE__, __LINE__);
       }
    }
 }
