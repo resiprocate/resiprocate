@@ -210,7 +210,7 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
                }
             }
          }
-#else // defined(NEW_MSG_HEADER_SCANNER) } {
+#else // !defined(NEW_MSG_HEADER_SCANNER) } {
          if (mPreparse.process(*mMessage, mBuffer, mBufferPos + bytesRead) != 0)
          {
             WarningLog(<< "Discarding preparse!");
@@ -316,7 +316,7 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
             mBufferSize = ChunkSize;
             mState = ReadingHeaders;
          }
-#endif // defined(!NEW_MSG_HEADER_SCANNER) }
+#endif // !defined(NEW_MSG_HEADER_SCANNER) }
          break;
       }
       case PartialBody:
