@@ -52,10 +52,10 @@
  */
 
 #ifdef WIN32
-#  include <windows.h>
-#  include <winbase.h>
+#include <windows.h>
+#include <winbase.h>
 #else
-#  include <pthread.h>
+#include <pthread.h>
 #endif
 
 #include <util/Lockable.hxx>
@@ -80,8 +80,7 @@ class Mutex : public Lockable
       HANDLE mId;
 #else
       mutable  pthread_mutex_t mId;
-
-      pthread_mutex_t   *   getId() const;
+      pthread_mutex_t* getId() const;
 #endif
 };
 
