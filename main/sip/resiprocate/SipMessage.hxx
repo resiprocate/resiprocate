@@ -140,6 +140,8 @@ class SipMessage : public Message
       // transport interface
       void setStartLine(const char* start, int len); 
       void setBody(const char* start, int len); 
+
+      const HeaderFieldValue* getBody() const; 
       
       // add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,

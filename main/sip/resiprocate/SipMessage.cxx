@@ -229,6 +229,13 @@ SipMessage::setBody(const char* start, int len)
    mBody->push_back(new HeaderFieldValue(start, len));
 }
 
+// !rk! temporary hack until richer body support is added
+const HeaderFieldValue*
+SipMessage::getBody() const
+{
+   return mBody->front();
+}
+
 // unknown header interface
 StringCategories& 
 SipMessage::header(const Data& headerName) const
