@@ -1,8 +1,8 @@
 #if !defined(RESIP_SERVERSUBSCRIPTION_HXX)
 #define RESIP_SERVERSUBSCRIPTION_HXX
 
-#include "BaseUsage.hxx"
-#include "SubscriptionState.hxx"
+#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/dum/SubscriptionState.hxx"
 
 namespace resip
 {
