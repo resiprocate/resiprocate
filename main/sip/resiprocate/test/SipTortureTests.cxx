@@ -561,6 +561,179 @@ void test7()
 }
 
 
+void test8()
+{
+   CritLog( << "2.8   Unknown Method with CSeq Error ");
+   
+   char *txt = ("NEWMETHOD sip:user@comapny.com SIP/2.0\r\n"
+                "To: sip:j.user@company.com\r\n"
+                "From: sip:caller@university.edu;tag=23411413\r\n"
+                "Max-Forwards: 3\r\n"
+                "Call-ID: 0ha0isndaksdj@10.0.1.1\r\n"
+                "CSeq: 8 INVITE\r\n"
+                "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
+                "Content-Type: application/sdp\r\n"
+                "\r\n"
+                "v=0\r\n"
+                "o=mhandley 29739 7272939 IN IP4 126.5.4.3\r\n"
+                "s=-\r\n"
+                "c=IN IP4 135.180.130.88\r\n"
+                "t=0 0\r\n"
+                "m=audio 492170 RTP/AVP 0 12\r\n"
+                "m=video 3227 RTP/AVP 31\r\n"
+                "a=rtpmap:31 LPC\r\n");
+
+   auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+   tassert_reset();
+   tassert(message->isRequest());
+   tassert(!message->isResponse());
+
+   tassert(message->header(h_RequestLine).getMethod() == UNKNOWN);
+   tassert(message->header(h_RequestLine).unknownMethodName() == "NEWMETHOD");
+   tassert(message->header(h_CSeq).method() == INVITE);
+   tassert(message->header(h_CSeq).method() != message->header(h_RequestLine).getMethod());
+   tassert_verify(8);
+}
+
+void test9()
+{
+   CritLog( << "2.9    REGISTER with Unknown Authorization Scheme" );
+   
+   char* txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+                "To: sip:j.user@company.com\r\n"
+                "From: sip:j.user@company.com;tag=87321hj23128\r\n"
+                "Max-Forwards: 8\r\n"
+                "Call-ID: 0ha0isndaksdj@10.0.1.1\r\n"
+                "CSeq: 8 REGISTER\r\n"
+                "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
+                "Authorization: Super-PGP ajsohdaosdh0asyhdaind08yasdknasd09asidhas0d8\r\n\r\n");
+   try
+   {
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      tassert_reset();
+      tassert(message->isRequest());
+      tassert(!message->isResponse());
+
+      tassert(message->header(h_RequestLine).getMethod() == REGISTER);
+      tassert(message->header(h_Authorizations).front().scheme() == "Super-PGP");
+      tassert_verify(9);
+   }
+   catch(BaseException& e)
+   {
+      tassert(0);
+   }
+}
+
+
+void test10()
+{
+   CritLog( << "2.10 Multiple SIP Request in a Single Message");
+   
+   char* txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+                "To: sip:j.user@company.com\r\n"
+                "From: sip:j.user@company.com;tag=43251j3j324\r\n"
+                "Max-Forwards: 8\r\n"
+                "Call-ID: 0ha0isndaksdj@10.0.2.2\r\n"
+                "Contact: sip:j.user@host.company.com\r\n"
+                "CSeq: 8 REGISTER\r\n"
+                "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
+                "Content-Length: 0\r\n\r\n"
+                "INVITE sip:joe@company.com SIP/2.0\r\n"
+                "To: sip:joe@company.com\r\n"
+                "From: sip:caller@university.edu;tag=141334\r\n"
+                "Max-Forwards: 8\r\n"
+                "Call-ID: 0ha0isnda977644900765@10.0.0.1\r\n"
+                "CSeq: 8 INVITE\r\n"
+                "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
+                "Content-Type: application/sdp\r\n"
+                "\r\n"
+                "v=0\r\n"
+                "o=mhandley 29739 7272939 IN IP4 126.5.4.3\r\n"
+                "s=-\r\n"
+                "c=IN IP4 135.180.130.88\r\n"
+                "t=0 0\r\n"
+                "m=audio 492170 RTP/AVP 0 12\r\n"
+                "m =video 3227 RTP/AVP 31\r\n"
+                "a=rtpmap:31 LPC\r\n"
+                "\r\n");
+   tassert_reset();
+   try
+   {
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      tassert(0);
+   }
+   catch (ParseException& e)
+   {
+   }
+   
+   tassert_verify(10);
+}
+
+void test11()
+{
+   CritLog( << "2.11 INVITE missing Required Headers");
+
+   char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
+                "CSeq: 0 INVITE\r\n"
+                "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
+                "Content-Type: application/sdp\r\n"
+                "\r\n"
+                "v=0\r\n"
+                "o=mhandley 29739 7272939 IN IP4 126.5.4.3\r\n"
+                "s=-\r\n"
+                "c=IN IP4 135.180.130.88\r\n"
+                "t=0 0\r\n"
+                "m=audio 492170 RTP/AVP 0 12\r\n"
+                "m=video 3227 RTP/AVP 31\r\n"
+                "a=rtpmap:31 LPC\r\n"
+                "\r\n");
+   auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+   tassert_reset();
+   tassert(message->isRequest());
+   tassert(!message->isResponse());
+
+   tassert(!message->exists(h_CallId));
+   tassert(!message->exists(h_From));
+   tassert(!message->exists(h_To));
+   tassert_verify(11);
+}
+
+void test12()
+{
+   CritLog( << "2.12 INVITE with Duplicate Required Headers");
+   
+   char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
+                "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
+                "Max-Forwards: 70\r\n"
+                "CSeq: 0 INVITE\r\n"
+                "Call-ID: 98asdh@10.1.1.1\r\n"
+                "Call-ID: 98asdh@10.1.1.2\r\n"
+                "From: sip:caller@university.edu;tag=3413415\r\n"
+                "From: sip:caller@organization.org\r\n"
+                "To: sip:user@company.com\r\n"
+                "Content-Type: application/sdp\r\n"
+                "\r\n"
+                "v=0\r\n"
+                "o=mhandley 29739 7272939 IN IP4 126.5.4.3\r\n"
+                "s=-\r\n"
+                "c=IN IP4 135.180.130.88\r\n"
+                "t=0 0\r\n"
+                "m=audio 492170 RTP/AVP 0 12\r\n"
+                "m=video 3227 RTP/AVP 31\r\n"
+                "a=rtpmap:31 LPC\r\n"
+                "\r\n");
+   
+   tassert_reset();
+   try
+   {
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      tassert(0);
+   }
+   catch (ParseException& e)
+   {
+   }
+   tassert_verify(12);
+}
 
 
 int
@@ -585,7 +758,7 @@ main(int argc, char*argv[])
     
     Log::initialize(Log::COUT, l, argv[0]);
     CritLog(<<"Test Driver Starting");
-    tassert_init(7);
+    tassert_init(11);
     test1();
     test2();
     test3();
@@ -593,6 +766,10 @@ main(int argc, char*argv[])
     test5();
     test6();
     test7();
+    test8();
+    test9();
+    test10();
+    test11();
     tassert_report();
 
  CritLog(<<"Test Driver Done");
