@@ -262,30 +262,35 @@ SipMessage::isResponse() const
 Data
 SipMessage::brief() const
 {
-   Data result;
+   Data result(128, true);
+   static const Data request("SipRequest: ");
+   static const Data response("SipResponse: ");
+   static const Data tid(" tid=");
+   static const Data cseq(" cseq=");
+   static const Data slash(" / ");
+   static const Data wire(" from(wire)");
+   static const Data tu(" from(tu)");
    
    if (isRequest()) 
    {
-      result += "SipRequest: ";
+      result += request;
       MethodTypes meth = header(h_RequestLine).getMethod();
-      result += (meth != UNKNOWN) ? MethodNames[meth] : Data( "UNKNOWN" );
-      result += Data( " " );
+      result += MethodNames[meth];
+      result += Symbols::SPACE;
       result += header(h_RequestLine).uri().getAor();
-      result += Data( " tid=" );
-      result += getTransactionId();
    }
    else if (isResponse())
    {
-      result += "SipResponse: ";
+      result += response;
       result += Data(header(h_StatusLine).responseCode());
-      result += Data( " tid=" );
-      result += getTransactionId();
    }
-   result += " cseq=";
+   result += tid;
+   result += getTransactionId();
+   result += cseq;
    result += MethodNames[header(h_CSeq).method()];
-   result += " / ";
+   result += slash;
    result += Data(header(h_CSeq).sequence());
-   result += mIsExternal ? " from(wire)" : " from(TU)";
+   result += mIsExternal ? wire : tu;
    
    return result;
 }
