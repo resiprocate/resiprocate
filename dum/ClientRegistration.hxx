@@ -49,11 +49,11 @@ class ClientRegistration: public BaseUsage
       
       ClientRegistration::Handle mHandle;
       SipMessage& mLastRequest;
-      NameAddrs mMyContacts;
-      NameAddrs mOtherContacts;
+      NameAddrs mMyContacts; // Contacts that this UA is requesting 
+      NameAddrs mAllContacts; // All the contacts Register knows about 
       UInt64    mExpirationTime;
-
       int mTimerSeq; // expected timer seq (all < are stale)
+
       // disabled
       ClientRegistration(const ClientRegistration&);
       ClientRegistration& operator=(const ClientRegistration&);
