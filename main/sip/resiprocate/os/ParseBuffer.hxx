@@ -41,6 +41,8 @@ class ParseBuffer
       const char* skipChars(const Data& cs);
       const char* skipNonWhitespace();
       const char* skipWhitespace();
+      const char* skipLWS();
+      const char* skipToTermCRLF();
       const char* skipToChar(char c);
       const char* skipToChars(const char* cs);
       const char* skipToChars(const Data& cs); // ?dlb? case sensitivity arg?

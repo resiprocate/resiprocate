@@ -120,6 +120,76 @@ ParseBuffer::skipWhitespace()
    return position();
 }
 
+// "SIP header field values can be folded onto multiple lines if the
+//  continuation line begins with a space or horizontal tab"
+const char* 
+ParseBuffer::skipLWS()
+{
+   enum State {WS, CR, LF};
+   State state = WS;
+   while (mTraversalPtr < mEnd)
+   {
+      switch (*mTraversalPtr++)
+      {
+         case ' ' :
+         case '\t' : 
+         {
+            state = WS;
+            break;
+         }
+         case '\r' : 
+         {
+            state = CR;
+            break;
+         }
+         case '\n' : 
+         {
+            if (state == CR)
+            {
+               state = LF;
+            }
+            else
+            {
+               state = WS;
+            }
+            break;
+         }
+         default : 
+         {
+            // terminating CRLF not skipped
+            if (state == LF)
+            {
+               mTraversalPtr -= 3;
+            }
+            else
+            {
+               mTraversalPtr--;
+            }
+            return mTraversalPtr;
+         }
+      }
+   }
+   return mTraversalPtr;
+}
+
+const char*
+ParseBuffer::skipToTermCRLF()
+{
+   while (true)
+   {
+      static Data CRLF("\r\n");
+      skipToChars(CRLF);
+      mTraversalPtr += 2;
+      if (*mTraversalPtr != ' ' &&
+          *mTraversalPtr != '\t')
+      {
+         mTraversalPtr -= 2;
+         break;
+      }
+   }
+   return mTraversalPtr;
+}
+
 const char* 
 ParseBuffer::skipToChar(char c)
 {
