@@ -62,7 +62,7 @@ main(int arc, char** argv)
    {
       cerr << "URI parse" << endl;
       char *uriString = "sip:bob@foo.com";
-      ParseBuffer pb(uriString);
+      ParseBuffer pb(uriString, strlen(uriString));
       Uri uri;
       uri.parse(pb);
       assert(uri.scheme() == "sip");
@@ -74,7 +74,7 @@ main(int arc, char** argv)
    {
       cerr << "URI parse, no displayName" << endl;
       char *uriString = "sips:foo.com";
-      ParseBuffer pb(uriString);
+      ParseBuffer pb(uriString, strlen(uriString));
       Uri uri;
       uri.parse(pb);
       assert(uri.scheme() == "sips");
@@ -86,7 +86,7 @@ main(int arc, char** argv)
    {
       cerr << "URI parse, parameters" << endl;
       char *uriString = "sips:bob;param=gargle:password@foo.com";
-      ParseBuffer pb(uriString);
+      ParseBuffer pb(uriString, strlen(uriString));
       Uri uri;
       uri.parse(pb);
       assert(uri.scheme() == "sips");
@@ -99,7 +99,7 @@ main(int arc, char** argv)
    {
       cerr << "URI parse, parameters, port" << endl;
       char *uriString = "sips:bob;param=gargle:password@foo.com:6000";
-      ParseBuffer pb(uriString);
+      ParseBuffer pb(uriString, strlen(uriString));
       Uri uri;
       uri.parse(pb);
       assert(uri.scheme() == "sips");
@@ -112,7 +112,7 @@ main(int arc, char** argv)
    {
       cerr << "URI parse, parameters, correct termination check" << endl;
       char *uriString = "sips:bob;param=gargle:password@foo.com notHost";
-      ParseBuffer pb(uriString);
+      ParseBuffer pb(uriString, strlen(uriString));
       Uri uri;
       uri.parse(pb);
       assert(uri.scheme() == "sips");

@@ -70,19 +70,12 @@ ParserCategory::~ParserCategory()
 void
 ParserCategory::checkParsed() const
 {
-   // !dlb! thread safety?
    if (!mIsParsed)
    {
       ParserCategory* ncThis = const_cast<ParserCategory*>(this);
       ncThis->mIsParsed = true;
       ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength);
       ncThis->parse(pb);
-
-      if (mMine)
-      {
-         delete mHeaderField;
-         ncThis->mHeaderField = 0;
-      }
    }
 }
 
@@ -131,9 +124,7 @@ ParserCategory::parseParameters(ParseBuffer& pb)
       // extract the key
       const char* keyStart = pb.skipChar();
       const char* keyEnd = pb.skipToOneOf(" \t\r\n;=?>");  //!dlb! @ here?
-      
-      ParameterTypes::Type type = ParameterTypes::getType(keyStart, int((keyEnd - keyStart)) );
-
+      ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
       if (type == ParameterTypes::UNKNOWN)
       {
          mParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb));

@@ -10,19 +10,11 @@ namespace Vocal2
 class ParseBuffer
 {
    public:
+      // does NOT OWN the buffer memory
       ParseBuffer(const char* buff, unsigned int len)
-         : tmpData(),
-           mBuff(buff),
+         : mBuff(buff),
            mStart(buff),
            mEnd(buff+len)
-      {}
-
-      // for test
-      explicit ParseBuffer(const char* b)
-         : tmpData(b),
-           mBuff(tmpData.c_str()),
-           mStart(tmpData.c_str()),
-           mEnd(tmpData.c_str() + tmpData.size())
       {}
 
       class Exception : public VException
@@ -50,8 +42,8 @@ class ParseBuffer
       const char* skipToOneOf(const char* cs1, const char* cs2);
 
       const char* skipToEndQuote(char quote = '"');
-      //create a data from start to the current position
-      Data data(const char* start) const { return Data(start, int(mStart - start) ); }
+      // make the passed in data share memory with the buffer
+      void data(Data& data, const char* start) const;
       int integer();
       float floatVal();
       static const char* Whitespace;
@@ -59,8 +51,6 @@ class ParseBuffer
    private:
       ParseBuffer(const ParseBuffer& other);
       ParseBuffer& operator=(const ParseBuffer& other);
-      
-      Data tmpData;
       
       const char* mBuff;
       const char* mStart;

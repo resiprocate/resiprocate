@@ -156,6 +156,19 @@ ParseBuffer::skipToEndQuote(char quote)
    throw Exception("Missing quote", __FILE__,__LINE__);
 }
 
+void
+ParseBuffer::data(Data& data, const char* start) const
+{
+   if (data.mMine)
+   {
+      delete[] data.mBuf;
+   }
+   data.mSize = (unsigned int)(mStart - start);
+   data.mBuf = const_cast<char*>(start);
+   data.mCapacity = data.mSize;
+   data.mMine = false;
+}
+
 int
 ParseBuffer::integer()
 {

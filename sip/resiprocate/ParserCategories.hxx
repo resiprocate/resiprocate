@@ -234,6 +234,7 @@ class CSeqCategory : public ParserCategory
       CSeqCategory& operator=(const CSeqCategory&);
 
       MethodTypes& method() const {checkParsed(); return mMethod;}
+      Data& unknownMethodName() const {checkParsed(); return mUnknownMethodName;}
       int& sequence() const {checkParsed(); return mSequence;}
 
       virtual void parse(ParseBuffer& pb);
@@ -242,6 +243,7 @@ class CSeqCategory : public ParserCategory
 
    private:
       mutable MethodTypes mMethod;
+      mutable Data mUnknownMethodName;
       mutable int mSequence;
 };
 
@@ -327,6 +329,7 @@ class RequestLine : public ParserCategory
       RequestLine(MethodTypes method, const Data& sipVersion = Symbols::DefaultSipVersion)
          : mUri(0),
            mMethod(method),
+           mUnknownMethodName(),
            mSipVersion(sipVersion)
       {}
 
@@ -334,6 +337,7 @@ class RequestLine : public ParserCategory
          : ParserCategory(hfv),
            mUri(0),
            mMethod(UNKNOWN),
+           mUnknownMethodName(MethodNames[UNKNOWN]),
            mSipVersion(Symbols::DefaultSipVersion)
       {}
       
@@ -345,6 +349,7 @@ class RequestLine : public ParserCategory
       Uri& uri() const;
       
       MethodTypes getMethod() const {checkParsed(); return mMethod;}
+      Data& unknownMethodName() const {checkParsed(); return mUnknownMethodName;}
       const Data& getSipVersion() const {checkParsed(); return mSipVersion;}
 
       virtual void parse(ParseBuffer& pb);
@@ -354,6 +359,7 @@ class RequestLine : public ParserCategory
    private:
       mutable Uri* mUri;
       mutable MethodTypes mMethod;
+      mutable Data mUnknownMethodName;
       mutable Data mSipVersion;
 };
 

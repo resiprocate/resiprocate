@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2002/10/02 23:08:16 jason Exp $
+# $Id: Makefile,v 1.10 2002/10/13 06:02:36 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -105,6 +105,11 @@ $(BIN)/libutil2.a: $(OBJS)
 # OK THE REST OF THE FILE IS OK TO MODIFY
 
 testParseBuffer:  $(OBJS) $(OBJ)/testParseBuffer.o 
+	@$(MAKE) $(^:.o=.d)
+	@$(MAKE) $(^)
+	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
+
+testData:  $(OBJS) $(OBJ)/testData.o 
 	@$(MAKE) $(^:.o=.d)
 	@$(MAKE) $(^)
 	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
