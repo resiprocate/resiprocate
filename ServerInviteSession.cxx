@@ -622,7 +622,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          mDialog.makeResponse(p200, msg, 200);
          mDialog.send(p200);
          
-         mDum.makeResponse(mInvite200, msg, 200);
+         mDum.makeResponse(mInvite200, mFirstRequest, 200);
          startRetransmitTimer(); // make 2xx timer
          mDialog.send(mInvite200);  
          
@@ -704,7 +704,7 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
    mDialog.send(c200);
 
    SipMessage i487;
-   mDialog.makeResponse(i487, msg, 487);
+   mDialog.makeResponse(i487, mFirstRequest, 487);
    mDialog.send(i487);
 
    handler->onTerminated(getSessionHandle(), msg);
@@ -721,7 +721,7 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
    mDialog.send(b200);
 
    SipMessage i487;
-   mDialog.makeResponse(i487, msg, 487);
+   mDialog.makeResponse(i487, mFirstRequest, 487);
    mDialog.send(i487);
 
    handler->onTerminated(getSessionHandle(), msg);
@@ -738,7 +738,7 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
    mDialog.send(r481);
    
    SipMessage i400;
-   mDialog.makeResponse(i400, msg, 400);
+   mDialog.makeResponse(i400, mFirstRequest, 400);
    mDialog.send(i400);
 
    handler->onTerminated(getSessionHandle(), msg);
