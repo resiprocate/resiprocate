@@ -200,7 +200,7 @@ main (int argc, char** argv)
       return -1;
    }
  
-   Log::initialize(Log::Cout, Log::Info, argv[0]);
+   Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
    vector<string> inputFiles;
    for (int i = 1; i < argc; i++)
@@ -241,29 +241,29 @@ main (int argc, char** argv)
       int err = fdset.selectMilliSeconds(100);
       assert ( err != -1 );
       dum.process(fdset);
-
-        char c;
-        char str[256];
-        if (!cin.eof())
-        {
-           c=cin.get();
-           if ( c == 'n' || c == 'q') 
-           {
-              if (c == 'q')
-              {
-                 break;
-              }
-              else
-              {
-                 subServerHandler.sendNextNotify();
-              }
-           }
-           else
-           {
-              cin >> str;
-              cout << " You have entered [" << str << "] enter n to send the next notify or q to quit " << endl;
-           }
-        }
+      
+//         char c;
+//         char str[256];
+//         if (!cin.eof())
+//         {
+//            c=cin.get();
+//            if ( c == 'n' || c == 'q') 
+//            {
+//               if (c == 'q')
+//               {
+//                  break;
+//               }
+//               else
+//               {
+//                  subServerHandler.sendNextNotify();
+//               }
+//            }
+//            else
+//            {
+//               cin >> str;
+//               cout << " You have entered [" << str << "] enter n to send the next notify or q to quit " << endl;
+//            }
+//         }
    }
    
    return 0;
