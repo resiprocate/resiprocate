@@ -21,6 +21,7 @@
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/FileSystem.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 
 #if defined(USE_SSL)

@@ -9,6 +9,7 @@
 #include "resiprocate/ParseException.hxx"
 #include "resiprocate/DataParameter.hxx"
 #include "resiprocate/QuotedDataParameter.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 
 using namespace resip;

@@ -5,6 +5,7 @@
 #include "resiprocate/XMLCursor.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 //#ifndef   `WIN32 // !cj! TODO FIX 
 #if 1 

@@ -11,6 +11,7 @@
 #include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 
 

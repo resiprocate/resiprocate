@@ -7,6 +7,7 @@
 #include "resiprocate/os/Logger.hxx"
 //#include "resiprocate/EncodingContext.hxx"
 #include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
