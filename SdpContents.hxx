@@ -1,13 +1,14 @@
 #if !defined(RESIP_SDPCONTENTS_HXX)
 #define RESIP_SDPCONTENTS_HXX 
 
+#include <vector>
 #include <list>
-#include <map>
 #include <iosfwd>
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/HashMap.hxx"
 
 namespace resip
 {
@@ -17,18 +18,18 @@ class SdpContents;
 class AttributeHelper
 {
    public:
-      AttributeHelper() {}
+      AttributeHelper();
       AttributeHelper(const AttributeHelper& rhs);
       AttributeHelper& operator=(const AttributeHelper& rhs);
       
       bool exists(const Data& key) const;
-      const list<Data>& getValues(const Data& key) const;
+      const vector<Data>& getValues(const Data& key) const;
       ostream& encode(ostream& s) const;
       void parse(ParseBuffer& pb);
       void addAttribute(const Data& key, const Data& value = Data::Empty);
       void clearAttribute(const Data& key);
    private:
-      std::map< Data, std::list<Data> > mAttributes;
+      HashMap< Data, std::vector<Data> > mAttributes;
 };
 
 class SdpContents : public Contents
@@ -72,7 +73,7 @@ class SdpContents : public Contents
                   static const Codec TelephoneEvent;
                   static const Codec FrfDialedDigit;
 
-                  typedef map<int, Codec> CodecMap;
+                  typedef HashMap<int, Codec> CodecMap;
                   // "static" payload types as defined in RFC 3551.
                   // Maps payload type (number) to Codec definition.
                   static CodecMap& getStaticCodecs();
@@ -243,19 +244,19 @@ class SdpContents : public Contents
                      public:
                         Repeat(unsigned long interval,
                                unsigned long duration,
-                               std::list<int> offsets);
+                               std::vector<int> offsets);
                         void parse(ParseBuffer& pb);
                         std::ostream& encode(std::ostream&) const;
 
                         unsigned long getInterval() const {return mInterval;}
                         unsigned long getDuration() const {return mDuration;}
-                        const std::list<int> getOffsets() const {return mOffsets;}
+                        const std::vector<int> getOffsets() const {return mOffsets;}
                         
                      private:
                         Repeat() {}
                         unsigned long mInterval;
                         unsigned long mDuration;
-                        std::list<int> mOffsets;
+                        std::vector<int> mOffsets;
 
                         friend class Time;
                   };
@@ -264,13 +265,13 @@ class SdpContents : public Contents
 
                   unsigned long getStart() const {return mStart;}
                   unsigned long getStop() const {return mStop;}
-                  const std::list<Repeat>& getRepeats() const {return mRepeats;}
+                  const std::vector<Repeat>& getRepeats() const {return mRepeats;}
 
                private:
                   Time() {}
                   unsigned long mStart;
                   unsigned long mStop;
-                  std::list<Repeat> mRepeats;
+                  std::vector<Repeat> mRepeats;
 
                   friend class Session;
             };
@@ -298,9 +299,9 @@ class SdpContents : public Contents
                   std::ostream& encode(std::ostream&) const;
 
                   void addAdjustment(const Adjustment& adjusment);
-                  const std::list<Adjustment>& getAdjustments() const {return mAdjustments; }
+                  const std::vector<Adjustment>& getAdjustments() const {return mAdjustments; }
                private:
-                  std::list<Adjustment> mAdjustments;
+                  std::vector<Adjustment> mAdjustments;
             };
 
             class Encryption
@@ -361,26 +362,26 @@ class SdpContents : public Contents
                   Data& protocol() {return mProtocol;}
 
                   // preferred codec/format interface
-                  const std::list<Codec>& codecs() const;
-                  std::list<Codec>& codecs();
+                  const std::vector<Codec>& codecs() const;
+                  std::vector<Codec>& codecs();
                   void clearCodecs();
                   void addCodec(const Codec& codec);
 
-                  const std::list<Data>& getFormats() const {return mFormats;}
+                  const std::vector<Data>& getFormats() const {return mFormats;}
                   const Data& information() const {return mInformation;}
                   Data& information() {return mInformation;}
-                  const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
-                  std::list<Bandwidth>& bandwidths() {return mBandwidths;}
+                  const std::vector<Bandwidth>& bandwidths() const {return mBandwidths;}
+                  std::vector<Bandwidth>& bandwidths() {return mBandwidths;}
 
                   // from session if empty
-                  const std::list<Connection> getConnections() const;
+                  const std::vector<Connection> getConnections() const;
                   // does not include session connections
-                  std::list<Connection>& getMediumConnections() {return mConnections;}
+                  std::vector<Connection>& getMediumConnections() {return mConnections;}
                   const Encryption& getEncryption() const {return mEncryption;}
                   const Encryption& encryption() const {return mEncryption;}
                   Encryption& encryption() {return mEncryption;}
                   bool exists(const Data& key) const;
-                  const list<Data>& getValues(const Data& key) const;
+                  const vector<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
 
                private:
@@ -391,17 +392,17 @@ class SdpContents : public Contents
                   unsigned long mPort;
                   unsigned long mMulticast;
                   Data mProtocol;
-                  mutable std::list<Data> mFormats;
-                  mutable list<Codec> mCodecs;
+                  mutable std::vector<Data> mFormats;
+                  mutable vector<Codec> mCodecs;
                   Data mTransport;
                   Data mInformation;
-                  std::list<Connection> mConnections;
-                  std::list<Bandwidth> mBandwidths;
+                  std::vector<Connection> mConnections;
+                  std::vector<Bandwidth> mBandwidths;
                   Encryption mEncryption;
                   mutable AttributeHelper mAttributeHelper;
 
                   mutable bool mRtpMapDone;
-                  typedef map<int, Codec> RtpMap;
+                  typedef HashMap<int, Codec> RtpMap;
                   mutable RtpMap mRtpMap;
 
                   friend class Session;
@@ -428,20 +429,20 @@ class SdpContents : public Contents
             Data& information() {return mInformation;}
             const Uri& uri() const {return mUri;}
             Uri& uri() {return mUri;}
-            const std::list<Email>& getEmails() const {return mEmails;}
-            const std::list<Phone>& getPhones() const {return mPhones;}
+            const std::vector<Email>& getEmails() const {return mEmails;}
+            const std::vector<Phone>& getPhones() const {return mPhones;}
             const Connection& connection() const {return mConnection;}
             Connection& connection() {return mConnection;} // !dlb! optional?
             bool isConnection() { return mConnection.mAddress != Data::Empty; }
-            const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
-            std::list<Bandwidth>& bandwidths() {return mBandwidths;}
-            const std::list<Time>& getTimes() const {return mTimes;}
+            const std::vector<Bandwidth>& bandwidths() const {return mBandwidths;}
+            std::vector<Bandwidth>& bandwidths() {return mBandwidths;}
+            const std::vector<Time>& getTimes() const {return mTimes;}
             const Timezones& getTimezones() const {return mTimezones;}
             const Encryption& getEncryption() const {return mEncryption;}
             const Encryption& encryption() const {return mEncryption;}
            Encryption& encryption() {return mEncryption;}
-            const std::list<Medium>& media() const {return mMedia;}
-            std::list<Medium>& media() {return mMedia;}
+            const std::vector<Medium>& media() const {return mMedia;}
+            std::vector<Medium>& media() {return mMedia;}
             
             void addEmail(const Email& email);
             void addPhone(const Phone& phone);
@@ -451,22 +452,22 @@ class SdpContents : public Contents
             void clearAttribute(const Data& key);
             void addAttribute(const Data& key, const Data& value = Data::Empty);
             bool exists(const Data& key) const;
-            const list<Data>& getValues(const Data& key) const;
+            const vector<Data>& getValues(const Data& key) const;
 
          private:            
             int mVersion;
             Origin mOrigin;
             Data mName;
-            std::list<Medium> mMedia;
+            std::vector<Medium> mMedia;
 
             // applies to all Media where unspecified
             Data mInformation;
             Uri mUri;            
-            std::list<Email> mEmails;
-            std::list<Phone> mPhones;
+            std::vector<Email> mEmails;
+            std::vector<Phone> mPhones;
             Connection mConnection;
-            std::list<Bandwidth> mBandwidths;
-            std::list<Time> mTimes;
+            std::vector<Bandwidth> mBandwidths;
+            std::vector<Time> mTimes;
             Timezones mTimezones;
             Encryption mEncryption;
             AttributeHelper mAttributeHelper;
@@ -476,6 +477,8 @@ class SdpContents : public Contents
 
       SdpContents();
       SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes);
+      ~SdpContents();
+      
       SdpContents(const SdpContents& rhs);
       SdpContents& operator=(const SdpContents& rhs);
 
@@ -518,10 +521,10 @@ std::ostream& operator<<(std::ostream& str, const SdpContents::Session::Codec& c
  * are met:
  * 
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this std::list of conditions and the following disclaimer.
+ *    notice, this std::vector of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this std::list of conditions and the following disclaimer in
+ *    notice, this std::vector of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
  * 

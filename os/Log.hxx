@@ -11,11 +11,11 @@
 #include <pthread.h>
 #endif
 
-#include <map>
 #include <set>
 
 #include "resiprocate/os/Subsystem.hxx"
 #include "resiprocate/os/Mutex.hxx"
+#include "resiprocate/os/HashMap.hxx"
 #include <iostream>
 
 namespace resip
@@ -134,11 +134,11 @@ class Log
       static int _pid;
 #endif
       static const char _descriptions[][32];
-      static std::map<int, Level> _serviceToLevel;
+      static HashMap<int, Level> _serviceToLevel;
 
 #ifndef WIN32
-      static std::map<pthread_t, std::pair<ThreadSetting, bool> > _threadToLevel;
-      static std::map<int, std::set<pthread_t> > _serviceToThreads;
+      static HashMap<pthread_t, std::pair<ThreadSetting, bool> > _threadToLevel;
+      static HashMap<int, std::set<pthread_t> > _serviceToThreads;
       static pthread_key_t _levelKey;
 #endif
 };
