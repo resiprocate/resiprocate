@@ -81,10 +81,9 @@ TuIM::TuIM(SipStack* stack,
    assert(mPidf);
    
    mPidf->setSimpleId( Random::getRandomHex(4) );  
-   mPidf->setEntity( mAor.getAor() );  
+   mPidf->setEntity(mAor);  
    mPidf->setSimpleStatus( true, Data::Empty, mContact.getAor() );
 }
-
 
 bool
 TuIM::haveCerts( bool sign, const Data& encryptFor )
@@ -115,7 +114,6 @@ TuIM::haveCerts( bool sign, const Data& encryptFor )
 #endif
    return true;
 }
-
 
 void TuIM::sendPage(const Data& text, const Uri& dest, 
                     const bool sign, const Data& encryptFor)
