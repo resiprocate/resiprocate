@@ -15,8 +15,8 @@ class TestReliableTransport : public Transport
       TestReliableTransport(const Data& sendHost, int portNum, const Data& nic, Fifo<Message>& rxFifo);
       ~TestReliableTransport();
     
-      void process(fd_set* fdSet=NULL);
-      void buildFdSet( fd_set* fdSet, int* fdSetSize );
+      void process(FdSet& fdset);
+      void buildFdSet(FdSet& fdset);
     
       bool isReliable() const;
       Type transport() const;
@@ -29,8 +29,8 @@ class TestUnreliableTransport : public Transport
       TestUnreliableTransport(const Data& sendHost, int portNum, const Data& nic, Fifo<Message>& rxFifo);
       ~TestUnreliableTransport();
     
-      void process(fd_set* fdSet=NULL);
-      void buildFdSet( fd_set* fdSet, int* fdSetSize );
+      void process(FdSet& fdset);
+      void buildFdSet(FdSet& fdset);
     
       bool isReliable() const;
       Type transport() const;

@@ -16,22 +16,22 @@ class TcpTransport : public Transport
       TcpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo);
       virtual  ~TcpTransport();
 
-      void process(fd_set* fdSet=NULL) ;
+      void process(FdSet& fdset);
+      void buildFdSet( FdSet& fdset);
       bool isReliable() const { return true; }
       Transport::Type transport() const { return TCP; }
 
-      virtual void buildFdSet( fd_set* fdSet, int* fdSetSize );
 
    private:
-      void processAllWrites(fd_set* fdset);
-      void processAllReads(fd_set* fdset);
+      void processAllWrites(FdSet& fdset);
+      void processAllReads(FdSet& fdset);
 
       bool processWrite(ConnectionMap::Connection* c);
-      bool sendFromRoundRobin(fd_set* fdset);
+      bool sendFromRoundRobin(FdSet& fdset);
 
       bool processRead(ConnectionMap::Connection* c);
 
-      void processListen(fd_set* fdSet);
+      void processListen(FdSet& fdSet);
 
       static const int MaxBufferSize;
       ConnectionMap mConnectionMap;
