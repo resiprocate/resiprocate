@@ -136,11 +136,20 @@ class GenericURI : public ParserCategory
 };
 typedef ParserContainer<GenericURI> GenericURIs;
 
+//====================
+// Url:
+//====================
 class Url : public ParserCategory
 {
    public:
-      Url() : ParserCategory() {}
-      Url(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      Url() : 
+         ParserCategory(),
+         mAllContacts(false)
+      {}
+      Url(HeaderFieldValue* hfv)
+         : ParserCategory(hfv), 
+           mAllContacts(false)
+      {}
 
       Data& host() {checkParsed(); return mHost;}
       Data& user() {checkParsed(); return mUser;}
@@ -149,10 +158,15 @@ class Url : public ParserCategory
       Data& scheme() {checkParsed(); return mScheme;}
       int& port() {checkParsed(); return mPort;}
       Data& password() {checkParsed(); return mPassword;}
+
+      void setAllContacts() { mAllContacts = true;}
       
+      virtual void parse();
       virtual ParserCategory* clone(HeaderFieldValue*) const;
+      virtual std::ostream& encode(std::ostream& str) const;
 
    protected:
+      bool mAllContacts;
       Data mScheme;
       Data mHost;
       Data mUser;
