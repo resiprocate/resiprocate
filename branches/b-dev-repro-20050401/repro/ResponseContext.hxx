@@ -1,6 +1,7 @@
 #if !defined(RESIP_RESPONSE_CONTEXT_HXX)
 #define RESIP_RESPONSE_CONTEXT_HXX 
 
+#include <iosfwd>
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/NameAddr.hxx"
 
@@ -81,7 +82,11 @@ class ResponseContext
       bool mSecure;
 
       friend class RequestContext;
+      friend std::ostream& operator<<(std::ostream& strm, const repro::ResponseContext& rc);
 };
+
+std::ostream&
+operator<<(std::ostream& strm, const repro::ResponseContext& rc);
 
 }
 #endif

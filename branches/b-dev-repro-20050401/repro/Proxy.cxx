@@ -69,7 +69,6 @@ Proxy::thread()
                if (sip->exists(h_MaxForwards) && sip->header(h_MaxForwards).value() <= 0)
                {
 			      // [TODO] !rwm! If the request is an OPTIONS, send an appropropriate response
-				  			   
                   std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
                   mStack.send(*response, this);
                   break;

@@ -2,9 +2,15 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include <iostream>
+
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;
@@ -24,17 +30,19 @@ RequestContext::RequestContext(Proxy& proxy,
 
 RequestContext::~RequestContext()
 {
-  if (mOriginalRequest!=mCurrentEvent)
-  {
-     delete mOriginalRequest;
-  }
-  delete mCurrentEvent;
+   DebugLog (<< "RequestContext::~RequestContext() " << *this);
+   if (mOriginalRequest!=mCurrentEvent)
+   {
+      delete mOriginalRequest;
+   }
+   delete mCurrentEvent;
 }
 
 
 void
 RequestContext::process(resip::TransactionTerminated& msg)
 {
+   DebugLog (<< "RequestContext::process(TransactionTerminated) " << *this);
    mTransactionCount--;
    if (mTransactionCount == 0)
    {
@@ -45,6 +53,9 @@ RequestContext::process(resip::TransactionTerminated& msg)
 void
 RequestContext::process(std::auto_ptr<resip::Message> msg)
 {
+   DebugLog (<< "RequestContext::process(Message) " << *this);
+
+   delete mCurrentEvent;
    mCurrentEvent = msg.release();
    SipMessage* sip = dynamic_cast<SipMessage*>(mCurrentEvent);
    if (!mOriginalRequest) 
@@ -159,18 +170,18 @@ RequestContext::fixStrictRouterDamage()
 {
    if (mOriginalRequest->header(h_RequestLine).uri().exists(p_lr))
    {
-     if (    mOriginalRequest->exists(h_Routes)
-         && !mOriginalRequest->header(h_Routes).empty())
-     {
-        mOriginalRequest->header(h_RequestLine).uri()=
-           mOriginalRequest->header(h_Routes).back().uri();
-        mOriginalRequest->header(h_Routes).pop_back();
-     }
-     else
-     {
-       //!RjS! When we wire this class for logging, here's a
-       //      place to log a warning
-     }
+      if (    mOriginalRequest->exists(h_Routes)
+              && !mOriginalRequest->header(h_Routes).empty())
+      {
+         mOriginalRequest->header(h_RequestLine).uri()=
+            mOriginalRequest->header(h_Routes).back().uri();
+         mOriginalRequest->header(h_Routes).pop_back();
+      }
+      else
+      {
+         //!RjS! When we wire this class for logging, here's a
+         //      place to log a warning
+      }
    }
 }
 
@@ -178,41 +189,55 @@ RequestContext::fixStrictRouterDamage()
 void
 RequestContext::removeTopRouteIfSelf()
 {
-  if (    mOriginalRequest->exists(h_Routes)
-      && !mOriginalRequest->header(h_Routes).empty()
-      &&  mProxy.isMyDomain(mOriginalRequest->header(h_Routes).front().uri()) 
-     )
-  {
-     mOriginalRequest->header(h_Routes).pop_front();
-  }
+   if (    mOriginalRequest->exists(h_Routes)
+           && !mOriginalRequest->header(h_Routes).empty()
+           &&  mProxy.isMyDomain(mOriginalRequest->header(h_Routes).front().uri()) 
+      )
+   {
+      mOriginalRequest->header(h_Routes).pop_front();
+   }
 
 }
 
 void
 RequestContext::pushChainIterator(RequestProcessorChain::Chain::iterator& i)
 {
-  mChainIteratorStack.push_back(i);
+   mChainIteratorStack.push_back(i);
 }
 
 RequestProcessorChain::Chain::iterator
 RequestContext::popChainIterator()
 {
-  RequestProcessorChain::Chain::iterator i;
-  i = mChainIteratorStack.back();
-  mChainIteratorStack.pop_back();
-  return i;
+   RequestProcessorChain::Chain::iterator i;
+   i = mChainIteratorStack.back();
+   mChainIteratorStack.pop_back();
+   return i;
 }
 
 bool
 RequestContext::chainIteratorStackIsEmpty()
 {
-  return mChainIteratorStack.empty();
+   return mChainIteratorStack.empty();
 }
 
 Proxy& 
 RequestContext::getProxy()
 {
    return mProxy;
+}
+
+std::ostream&
+repro::operator<<(std::ostream& strm, const RequestContext& rc)
+{
+   strm << "RequestContext: "
+        << " identity=" << rc.mDigestIdentity
+        << " candidates=" << Inserter(rc.mCandidateTargets)
+        << " count=" << rc.mTransactionCount
+        << " final=" << rc.mHaveSentFinalResponse;
+
+   if (rc.mOriginalRequest) strm << " original=" << rc.mOriginalRequest->brief();
+   if (rc.mCurrentEvent) strm << " current=" << rc.mCurrentEvent->brief();
+   return strm;
 }
 
 
