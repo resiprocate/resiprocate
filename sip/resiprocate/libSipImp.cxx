@@ -104,8 +104,6 @@ libSipImp_Init()
    //InfoLog( << "Using port " << port );
 
 #ifdef USE_SSL
- 
-      
    Security*  security = new Security( tlsServer, useTls ); // !cj! mem leak 
    SipStack* sipStack = new SipStack( false /*multihtread*/, security );  
 
@@ -116,7 +114,7 @@ libSipImp_Init()
       InfoLog( << "Could not load the certificates" );
    }
 #else 
-   SipStack sipStack( false /*multihtread*/ );  
+   SipStack* sipStack = new SipStack( false /*multihtread*/ );  
 #endif
    
    if (port!=0)
