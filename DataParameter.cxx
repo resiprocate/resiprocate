@@ -48,12 +48,6 @@ DataParameter::DataParameter(ParameterTypes::Type type)
 {
 }
 
-Data& 
-DataParameter::value()
-{
-   return mValue;
-}
-
 Parameter* 
 DataParameter::clone() const
 {

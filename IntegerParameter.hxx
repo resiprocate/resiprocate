@@ -23,11 +23,14 @@ class IntegerParameter : public Parameter
          return new IntegerParameter(type, pb, terminators);
       }
 
-      Type& value();
       virtual std::ostream& encode(std::ostream& stream) const;
 
       virtual Parameter* clone() const;
    private:
+      friend class ParserCategory;
+      friend class Uri;
+      Type& value() {return mValue;}
+
       int mValue;
 };
  
