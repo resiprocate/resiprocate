@@ -65,6 +65,34 @@ TransportSelector::~TransportSelector()
    }
 }
 
+void
+TransportSelector::shutdown()
+{
+   for (ExactTupleMap::iterator i=mExactTransports.begin(); i!=mExactTransports.end(); ++i)
+   {
+      i->second->shutdown();
+   }
+   for (AnyInterfaceTupleMap::iterator i=mAnyInterfaceTransports.begin(); i!=mAnyInterfaceTransports.end(); ++i)
+   {
+      i->second->shutdown();
+   }
+}
+
+bool
+TransportSelector::isFinished() const
+{
+   for (ExactTupleMap::const_iterator i=mExactTransports.begin(); i!=mExactTransports.end(); ++i)
+   {
+      if (!i->second->isFinished()) return false;
+   }
+   for (AnyInterfaceTupleMap::const_iterator i=mAnyInterfaceTransports.begin(); i!=mAnyInterfaceTransports.end(); ++i)
+   {
+      if (!i->second->isFinished()) return false;
+   }
+   return true;
+}
+
+
 // !jf! Note that it uses ipv6 here but ipv4 in the Transport classes (ugggh!)
 void 
 TransportSelector::addTransport(TransportType protocol, 
