@@ -17,11 +17,11 @@ LDLIBS += -lpopt
 TESTPROGRAMS +=
 endif
 
-TESTPROGRAMS += testRSP-2.cxx \
+TESTPROGRAMS += limpc.cxx \
+		testRSP-2.cxx \
 		testSrv \
 		testPidf.cxx \
 		testPksc7.cxx \
-		limpc.cxx \
 		testCorruption.cxx \
 		testMem.cxx \
 		testRlmi.cxx \
@@ -74,5 +74,7 @@ TESTPROGRAMS += testRSP-2.cxx \
 
 SRC = 		TestSupport.cxx
 
+dumpasn1: dumpasn1.c
+	gcc -o dumpasn1 dumpasn1.c
 
 include $(BUILD)/Makefile.post
