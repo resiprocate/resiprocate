@@ -377,6 +377,7 @@ SipMessage::brief() const
    static const Data  request("SipReq:  ");
    static const Data response("SipResp: ");
    static const Data tid(" tid=");
+   static const Data contact(" contact=");
    static const Data cseq(" cseq=");
    static const Data slash(" / ");
    static const Data wire(" from(wire)");
@@ -435,6 +436,12 @@ SipMessage::brief() const
    else
    {
       result += header(h_CSeq).unknownMethodName();
+   }
+
+   if (exists(h_Contacts) && !header(h_Contacts).empty())
+   {
+      result += contact;
+      result += header(h_Contacts).front().uri().getAor();
    }
    
    result += slash;
