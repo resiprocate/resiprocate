@@ -355,6 +355,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       else
       {
          // This will fill in mResults based on the DNS result
+         std::sort(mSRVResults.begin(),mSRVResults.end()); // !jf! uggh
          primeResults();
       }
    }
@@ -478,9 +479,6 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
       }
       else
       {
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
-         DebugLog(<< "Got all SRV responses. Priming " << Inserter(mSRVResults));
-#endif
          std::sort(mSRVResults.begin(),mSRVResults.end()); // !jf! uggh
          primeResults();
       }
@@ -591,6 +589,10 @@ DnsResult::processHost(int status, struct hostent* result)
 void
 DnsResult::primeResults()
 {
+#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
+   DebugLog(<< "Priming " << Inserter(mSRVResults));
+#endif
+
    //assert(mType != Pending);
    //assert(mType != Finished);
    assert(mResults.empty());
@@ -664,6 +666,7 @@ DnsResult::primeResults()
    assert(mType == Finished || (mType == Available && !mResults.empty()));
 }
 
+// implement the selection algorithm from rfc2782 (SRV records)
 DnsResult::SRV 
 DnsResult::retrieveSRV()
 {
@@ -696,10 +699,16 @@ DnsResult::retrieveSRV()
       }
    }
    
+   if (i == mSRVResults.end())
+   {
+      InfoLog (<< "SRV Results problem selected=" << selected << " cum=" << mCumulativeWeight);
+      InfoLog (<< "SRV: " << Inserter(mSRVResults));
+   }
    assert(i != mSRVResults.end());
    SRV next = *i;
+   mCumulativeWeight -= next.cumulativeWeight;
    mSRVResults.erase(i);
-
+   
 #if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
    DebugLog (<< "SRV: " << Inserter(mSRVResults));
 #endif
@@ -1157,7 +1166,7 @@ DnsResult::NAPTR::operator<(const DnsResult::NAPTR& rhs) const
    return false;
 }
 
-DnsResult::SRV::SRV() : cumulativeWeight(0)
+DnsResult::SRV::SRV() : priority(0), weight(0), cumulativeWeight(0), port(0)
 {
 }
 
@@ -1195,7 +1204,9 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::DnsResult& result)
 {
-   strm << "target=" << result.mTarget << ":" << result.mPort << " (" << Tuple::toData(result.mTransport) << ")";
+#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
+   strm << result.mTarget << " --> " << Inserter(result.mResults);
+#endif
    return strm;
 }
 
