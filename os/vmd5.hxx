@@ -2,7 +2,7 @@
 #define RESIP_VMD5_HXX 
 
 static const char* const resipvmd5HeaderVersion =
-   "$Id: vmd5.hxx,v 1.12 2003/06/02 20:52:32 ryker Exp $";
+   "$Id: vmd5.hxx,v 1.13 2003/06/02 21:14:36 ryker Exp $";
 
 /*
  * This is the header file for the MD5 message-digest algorithm.
@@ -25,16 +25,6 @@ static const char* const resipvmd5HeaderVersion =
  *  - Ian Jackson <ijackson@nyx.cs.du.edu>.
  * Still in the public domain.
  */
-
-#if defined(__sparc)
-#include <inttypes.h>
-
-/* typedef unsigned char u_int8_t; */
-typedef uint8_t u_int8_t;
-typedef uint16_t u_int16_t;
-typedef uint32_t u_int32_t;
-
-#endif
 
 #include "resiprocate/os/compat.hxx"
 
