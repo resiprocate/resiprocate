@@ -38,6 +38,7 @@ SipStack::SipStack(bool multiThreaded)
    mTransportSelector(*this),
    mTimers(mStateMacFifo),
    mDnsResolver(*this),
+   mDiscardStrayResponses(false),
    mRegisteredForTransactionTermination(false),
    mStrictRouting(false)
 {
@@ -176,6 +177,7 @@ SipStack::receive()
       else
       {
          assert(0);
+	 delete msg;
          return 0;
       }
    }
