@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.41 2002/11/30 23:04:20 fluffy Exp $";
+// "$Id: Data.cxx,v 1.42 2002/12/01 05:06:17 fluffy Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -30,7 +30,7 @@ Data::Data(int capacity, bool)
      mCapacity(capacity),
      mMine(true)
 {
-   assert( capacity > 0 );
+   assert( capacity >= 0 );
    mBuf[0] = 0;
 }
 
