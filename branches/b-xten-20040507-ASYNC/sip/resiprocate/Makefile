@@ -70,10 +70,8 @@ SRC = \
 	Connection.cxx \
 	Contents.cxx \
 	DataParameter.cxx \
-	Dialog.cxx \
 	DnsInterface.cxx \
 	DnsResult.cxx \
-	Executive.cxx \
 	ExistsParameter.cxx \
 	FloatParameter.cxx \
 	HeaderFieldValue.cxx \

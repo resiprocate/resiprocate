@@ -17,7 +17,7 @@ class AresDns : public ExternalDns
 {
    public:
       AresDns() {}
-      ~AresDns();
+      virtual ~AresDns();
 
       virtual int init(); 
       void lookupARecords(const char* target, ExternalDnsHandler* handler, void* userData);
