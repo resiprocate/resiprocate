@@ -1,8 +1,8 @@
-#if !defined(resip_Lockable_hxx)
-#define resip_Lockable_hxx
+#if !defined(RESIP_LOCKABLE_HXX)
+#define RESIP_LOCKABLE_HXX 
 
 static const char* const resip_Lockable_hxx_Version =
-    "$Id: Lockable.hxx,v 1.6 2003/03/25 06:33:48 jason Exp $";
+   "$Id: Lockable.hxx,v 1.7 2003/06/02 20:52:32 ryker Exp $";
 
 /** Infrastructure common to VOCAL.<br><br>
  */
@@ -22,8 +22,9 @@ class Lockable
       virtual void writelock() { lock() ; }
 };
 
-} // namespace resip
+}
 
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -74,5 +75,3 @@ class Lockable
  * <http://www.vovida.org/>.
  *
  */
-
-#endif // !defined(VOCAL__LOCKABLE_HXX)
