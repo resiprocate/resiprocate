@@ -15,6 +15,13 @@ TimerQueue::TimerQueue(Fifo<Message>& fifo) : mFifo(fifo)
 {
 }
 
+int 
+TimerQueue::msTillNextTimer()
+{
+	// !cj! need to write this code 
+	return 10;
+}
+
 Timer::Id
 TimerQueue::add(Timer::Type type, const Data& transactionId, unsigned long msOffset)
 {

@@ -120,8 +120,16 @@ main(int argc, char* argv[])
                   DebugLog(<< "Sending ack: << *ack");
                   stack1.send(*ack);
                
-                  stack1.process(fdset);
-               
+#if 0
+                    FdSet fdset;
+      stack1.buildFdSet(fdset);
+      stack2.buildFdSet(fdset);
+      int err = fdset.select(0);
+      assert (err != -1);
+	  
+	  stack1.process(fdset);
+#endif
+
                   DebugLog(<< "Sending bye: << *bye");
                   stack1.send(*bye);  
                }
@@ -154,9 +162,16 @@ main(int argc, char* argv[])
             //msg180->header(h_To).uri().param(p_tag) = localTag;
             stack2.send( *msg180);
             
-            stack2.process(fdset); // !cj! seems to be a bug that cuases this to be
+#if 0
+           FdSet fdset;
+      stack1.buildFdSet(fdset);
+      stack2.buildFdSet(fdset);
+      int err = fdset.select(0);
+      assert (err != -1);
+	  stack2.process(fdset); // !cj! seems to be a bug that cuases this to be
             // needed 
-            
+#endif
+
             auto_ptr<SipMessage> msg200(Helper::makeResponse(*received2, 200, dest, "OK"));
             //msg200->header(h_To).uri().param(p_tag) = localTag;
             stack2.send(*msg200);
