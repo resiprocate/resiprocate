@@ -299,6 +299,8 @@ SipMessage::encode(std::ostream& str) const
       {
          if (mContents != 0)
          {
+            mContents->mHeadersFromMessage = true;
+
             CountStream cs;
             mContents->encode(cs);
             cs.flush();
@@ -384,7 +386,17 @@ SipMessage::setContents(const Contents* contents)
    mContentsHfv = 0;
    
    mContents = contents->clone();
+
+   // copy contents headers into message
    header(h_ContentType) = contents->getType();
+   if (mContents->exists(h_ContentDisposition))
+   {
+      header(h_ContentDisposition) = mContents->header(h_ContentDisposition);
+   }
+   if (mContents->exists(h_ContentLanguages))
+   {
+      header(h_ContentLanguages) = mContents->header(h_ContentLanguages);
+   }
 }
 
 Contents*
@@ -392,19 +404,25 @@ SipMessage::getContents() const
 {
    if (mContents == 0)
    {
-      if ( !exists(h_ContentType) )
+      if (!exists(h_ContentType))
       {
-         DebugLog(<< "SipMessage::getContents: ContentType header does not exist ");
+         DebugLog(<< "SipMessage::getContents: ContentType header does not exist");
          return 0;
       }
-      if ( mContentsHfv == 0)
-      {
-         DebugLog(<< "SipMessage::getContents: " << header(h_ContentType) << " not known ");
-         return 0;
-      }
-//      DebugLog(<< "SipMessage::getContents: " << header(h_ContentType));
+      DebugLog(<< "SipMessage::getContents: " << header(h_ContentType));
       assert(Contents::getFactoryMap().find(header(h_ContentType)) != Contents::getFactoryMap().end());
       mContents = Contents::getFactoryMap()[header(h_ContentType)]->create(mContentsHfv, header(h_ContentType));
+      // copy contents headers into the contents
+      if (exists(h_ContentDisposition))
+      {
+         mContents->header(h_ContentDisposition) = header(h_ContentDisposition);
+      }
+      if (exists(h_ContentLanguages))
+      {
+         mContents->header(h_ContentLanguages) = header(h_ContentLanguages);
+      }
+      // contents' headers from message
+      mContents->mHeadersFromMessage = true;
    }
    return mContents;
 }

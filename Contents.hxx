@@ -2,12 +2,12 @@
 #define Contents_hxx
 
 #include "sip2/sipstack/LazyParser.hxx"
-#include "sip2/sipstack/ParserCategories.hxx" // .dlb. Mime
+#include "sip2/sipstack/ParserCategories.hxx" // .dlb. Mime, Token, StringCategory
 #include "sip2/sipstack/Headers.hxx"
 #include "sip2/util/Data.hxx"
 #include <map>
-
 #include <iostream>
+
 using namespace std;
 
 namespace Vocal2
@@ -24,12 +24,39 @@ class ContentsFactoryBase
                                const Mime& contentType) const = 0;
       virtual Contents* convert(Contents* c) const = 0;
 };
+
+// MIME header types
+class MIME_Header
+{
+};
+
+class MIME_Transfer_Encoding_Header : public MIME_Header
+{
+   public:
+      typedef Token Type;
+};
+extern MIME_Transfer_Encoding_Header h_Transfer_Encoding;
+
+class MIME_Id_Header : public MIME_Header
+{
+   public:
+      typedef Token Type;
+};
+extern MIME_Id_Header h_Id;
+
+class MIME_Description_Header : public MIME_Header
+{
+   public:
+      typedef StringCategory Type;
+};
+extern MIME_Description_Header h_Description;
       
 // Common type for all body contents
 class Contents : public LazyParser
 {
    public:
       // pass Mime instance for parameters
+
       Contents(HeaderFieldValue* headerFieldValue, const Mime& contentsType);
       Contents(const Mime& contentsType);
       Contents(const Contents& rhs);
@@ -44,30 +71,51 @@ class Contents : public LazyParser
 
       virtual Contents* clone() const = 0;
       virtual const Mime& getStaticType() const = 0;
-      const Mime& getType() const {return mContentsType;}
+      const Mime& getType() const {return mType;}
 
       static Contents* createContents(const Mime& contentType, 
                                       const Data& contents);
 
-
       bool exists(const HeaderBase& headerType) const;
       void remove(const HeaderBase& headerType);
 
+      bool exists(const MIME_Header& headerType) const;
+      void remove(const MIME_Header& headerType);
+
+      // shared header types
       Content_Type_Header::Type& header(const Content_Type_Header& headerType) const;
       Content_Disposition_Header::Type& header(const Content_Disposition_Header& headerType) const;
-      Content_Encoding_Header::Type& header(const Content_Encoding_Header& headerType) const;
       ParserContainer<Content_Language_MultiHeader::Type>& header(const Content_Language_MultiHeader& headerType) const;
+
+      // MIME specific header types
+      MIME_Transfer_Encoding_Header::Type& header(const MIME_Transfer_Encoding_Header& headerType) const;
+      MIME_Id_Header::Type& header(const MIME_Id_Header& headerType) const;
+      MIME_Description_Header::Type& header(const MIME_Description_Header& headerType) const;
+
+      int& verion() {return mVersion;}
+      int& minorVersion() {return mMinorVersion;}
 
       static std::map<Mime, ContentsFactoryBase*>& getFactoryMap();
 
    protected:
-      mutable Mime mContentsType;
+      virtual void clear();
+
+      // MIME version? version & minorVersion as ints?
+      mutable Mime mType;
       mutable Content_Disposition_Header::Type *mDisposition;
-      mutable Content_Encoding_Header::Type *mEncoding;
+      mutable Token *mTransferEncoding;      
       mutable ParserContainer<Content_Language_MultiHeader::Type> *mLanguages;
+      mutable Token *mId;
+      mutable StringCategory *mDescription;
+
+      mutable int mVersion;
+      mutable int mMinorVersion;
 
    private:
       static std::map<Mime, ContentsFactoryBase*>* FactoryMap;
+
+      friend class SipMessage;
+      bool mHeadersFromMessage;
 };
 
 template<class T>
