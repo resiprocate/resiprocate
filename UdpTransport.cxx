@@ -29,8 +29,7 @@
 using namespace std;
 using namespace Vocal2;
 
-const unsigned long
-UdpTransport::MaxBufferSize = 64000;
+const unsigned long UdpTransport::MaxBufferSize = 8192;
 
 UdpTransport::UdpTransport(int portNum, Fifo<Message>& fifo) : 
    Transport(portNum, fifo)
@@ -39,7 +38,7 @@ UdpTransport::UdpTransport(int portNum, Fifo<Message>& fifo) :
 
    if ( mFd < 0 )
    {
-      //InfoLog (<< "Failed to open socket: " << portNum);
+      InfoLog (<< "Failed to open socket: " << portNum);
    }
    
    sockaddr_in addr;
@@ -52,11 +51,11 @@ UdpTransport::UdpTransport(int portNum, Fifo<Message>& fifo) :
       int err = errno;
       if ( err == EADDRINUSE )
       {
-         //InfoLog (<< "Address already in use");
+         InfoLog (<< "Address already in use");
       }
       else
       {
-         //InfoLog (<< "Could not bind to port: " << portNum);
+         InfoLog (<< "Could not bind to port: " << portNum);
       }
       
       throw TransportException("Address already in use", __FILE__,__LINE__);
@@ -108,18 +107,21 @@ void UdpTransport::process()
    {
       SendData* data = mTxFifo.getNext();
       DebugLog (<< "Sending message on udp");
-      unsigned int count = ::sendto(mFd, data->buffer, data->length, 0, (const sockaddr*)&data->destination, sizeof(data->destination));
+      unsigned int count = ::sendto(mFd, data->buffer, data->length, 0,
+                                    (const sockaddr*)&data->destination, 
+                                    sizeof(data->destination));
    
       if ( count < 0 )
       {
-         //DebugLog (<< strerror(errno));
+         DebugLog (<< strerror(errno));
          // !jf! what to do if it fails
          assert(0);
       }
 
       assert (count == data->length || count < 0);
    }
-#define UDP_SHORT   
+
+// #define UDP_SHORT   
 
    struct sockaddr_in from;
 
@@ -128,6 +130,7 @@ void UdpTransport::process()
    // !ah! debug is just to always return a sample message
 
    // !jf! this may have to change - when we read a message that is too big
+   
    char* buffer = new char[MaxBufferSize];
    int fromLen = sizeof(from);
    
@@ -140,6 +143,8 @@ void UdpTransport::process()
                        0 /*flags */,
                        (struct sockaddr*)&from,
                        (socklen_t*)&fromLen);
+
+      
 #else
 
 #define CRLF "\r\n"
@@ -169,29 +174,58 @@ void UdpTransport::process()
 
    if ( len <= 0 )
    {
-      //int err = errno;
+      int err = errno;
    }
    else if (len > 0)
    {
-      //cerr << "Received : " << len << " bytes" << endl;
+      if (len == MaxBufferSize)
+      {
+         InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
+         InfoLog(<<"Possibly truncated");
+      }
+      DebugLog( << "UDP Rcv : " << len << " b" );
       
       SipMessage* message = new SipMessage;
       
       // set the received from information into the received= parameter in the
       // via
+
+      // It is presumed that UDP Datagrams are arriving atomically and that
+      // each one is a unique SIP message
+
       message->addSource(from);
+      
+      // Tell the SipMessage about this datagram buffer.
       message->addBuffer(buffer);
 
-      Preparse preParser(*message,buffer,len);
-      
-      preParser.process();
+      Preparse preParser(message, buffer, len);
+
+      ppStatus = preParser.process();
       // this won't work if UDPs are fragd !ah!
-      // save the interface information in the message
-      // preparse the message
-      // stuff the message in the 
+
+      if (!ppStatus)
+      {
+         // ppStatus will be false ONLY when the DATAGRAM did not
+         // contain a Preparsable byte-stream. In the UDP transport,
+         // this is an error. 
+
+         // OTHER TRANSPORTS will have to handle fragmentation when
+         // this condition is set.
+         // determine that there is a fragment that needs to be done
+         // alloc buffer to hold remainder and next network fragment
+         // as per !cj! ideas on anti-frag.
+         // need interface to Preparser that can detect frags remaining. !ah!
+         // ?? think about this design.
+
+         InfoLog(<<"Rejecting datagram as unparsable.");
+         delete message;
+      }
+      else
+      {
       
-      DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message);
-      mStateMachineFifo.add(message);
+         DebugLog (<< "adding new SipMessage to state machine's Fifo: "
+                   << message);
+         mStateMachineFifo.add(message);
+      }
    }
 }
-
