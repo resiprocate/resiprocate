@@ -88,13 +88,13 @@ size_t DialogSetId::hash() const
     return mCallId.hash() ^ mTag.hash();
 }
 
-#if 0
+
 std::ostream&
-operator<<(std::ostream& os, DialogSetId& id)
+resip::operator<<(std::ostream& os, const DialogSetId& id)
 {
     return os << id.mCallId << '-' << id.mTag ;
 }
-#endif
+
 #if defined(HASH_MAP_NAMESPACE)
 size_t HASH_MAP_NAMESPACE::hash<resip::DialogSetId>::operator()(const resip::DialogSetId& id) const
 {
