@@ -35,11 +35,6 @@ ExistsParameter::ExistsParameter(ParameterTypes::Type type)
      mValue(true)
 {}
       
-bool& ExistsParameter::value()
-{
-   return mValue;
-}
-
 Parameter* 
 ExistsParameter::clone() const
 {
