@@ -316,65 +316,86 @@ static int init_by_defaults(ares_channel channel)
   if (channel->nservers == -1)
     {
 #ifdef WIN32
-   /*
-    * Way of getting nameservers that should work on all Windows from 98 on.
-    * To use, include IPHlpAPI.lib as a linker dependency.
-    */
-   FIXED_INFO * FixedInfo;
-   ULONG    ulOutBufLen;
-   DWORD    dwRetVal;
-   IP_ADDR_STRING * pIPAddr;
-		int num;
+     /*
+      * Way of getting nameservers that should work on all Windows from 98 on.
+      * To use, include IPHlpAPI.lib as a linker dependency.
+      */
+      FIXED_INFO *     FixedInfo;
+      ULONG            ulOutBufLen;
+      DWORD            dwRetVal;
+      IP_ADDR_STRING * pIPAddr;
+	  HANDLE           hLib;
+	  int num;
+	  DWORD (WINAPI *GetNetworkParams)(FIXED_INFO*, DWORD*); 
 
-   //printf("ARES: figuring out DNS servers\n");
+	  hLib = LoadLibrary("iphlpapi.dll");
+	  if(!hLib)
+	  {
+		  return ARES_ENOTIMP;
+	  }
 
-   FixedInfo = (FIXED_INFO *) GlobalAlloc( GPTR, sizeof( FIXED_INFO ) );
-   ulOutBufLen = sizeof( FIXED_INFO );
+	  (void*)GetNetworkParams = GetProcAddress(hLib, "GetNetworkParams");
+	  if(!GetNetworkParams)
+	  {
+		  FreeLibrary(hLib);
+		  return ARES_ENOTIMP;
+	  }
+      //printf("ARES: figuring out DNS servers\n");
+      FixedInfo = (FIXED_INFO *) GlobalAlloc( GPTR, sizeof( FIXED_INFO ) );
+      ulOutBufLen = sizeof( FIXED_INFO );
 
-   if( ERROR_BUFFER_OVERFLOW == GetNetworkParams( FixedInfo, &ulOutBufLen ) ) {
-      GlobalFree( FixedInfo );
-      FixedInfo = (FIXED_INFO *)GlobalAlloc( GPTR, ulOutBufLen );
-   }
+      if( ERROR_BUFFER_OVERFLOW == (*GetNetworkParams)( FixedInfo, &ulOutBufLen ) ) 
+	  {
+        GlobalFree( FixedInfo );
+        FixedInfo = (FIXED_INFO *)GlobalAlloc( GPTR, ulOutBufLen );
+      }
 
-   if ( dwRetVal = GetNetworkParams( FixedInfo, &ulOutBufLen ) )
-   {
-        //printf("ARES: couldn't get network params\n");
-        return ARES_ENODATA;
-   }
-   else
-   {
-       /**
-      printf( "Host Name: %s\n", FixedInfo -> HostName );
-      printf( "Domain Name: %s\n", FixedInfo -> DomainName );
-      
-      printf( "DNS Servers:\n" );
-      printf( "\t%s\n", FixedInfo -> DnsServerList.IpAddress.String );
-      **/
-
-      // Count how many nameserver entries we have and allocate memory for them.
-      num = 0;
-      pIPAddr = &FixedInfo->DnsServerList;     
-      while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
+      if ( dwRetVal = (*GetNetworkParams)( FixedInfo, &ulOutBufLen ) )
       {
+        //printf("ARES: couldn't get network params\n");
+        GlobalFree( FixedInfo );
+  	    FreeLibrary(hLib);
+        return ARES_ENODATA;
+      }
+      else
+      {
+       /**
+        printf( "Host Name: %s\n", FixedInfo -> HostName );
+        printf( "Domain Name: %s\n", FixedInfo -> DomainName );
+        printf( "DNS Servers:\n" );
+        printf( "\t%s\n", FixedInfo -> DnsServerList.IpAddress.String );
+        **/
+
+        // Count how many nameserver entries we have and allocate memory for them.
+        num = 0;
+        pIPAddr = &FixedInfo->DnsServerList;     
+        while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
+        {
           num++;
           pIPAddr = pIPAddr ->Next;
-      }
-      channel->servers = malloc( (num) * sizeof(struct server_state));
+        }
+        channel->servers = malloc( (num) * sizeof(struct server_state));
 		if (!channel->servers)
 		{
+	        GlobalFree( FixedInfo );
+ 		    FreeLibrary(hLib);
 			return ARES_ENOMEM;
 		}
 
 		channel->nservers = 0;
-      pIPAddr = &FixedInfo->DnsServerList;   
-      while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
+        pIPAddr = &FixedInfo->DnsServerList;   
+        while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
 		{
           // printf( "ARES: %s\n", pIPAddr ->IpAddress.String );
-	  channel->servers[ channel->nservers++ ].addr.s_addr = inet_addr(pIPAddr ->IpAddress.String);
+	      channel->servers[ channel->nservers++ ].addr.s_addr = inet_addr(pIPAddr ->IpAddress.String);
           pIPAddr = pIPAddr ->Next;
-      }
-      //printf("ARES: got all %d nameservers\n",num);
-		}
+        }
+        //printf("ARES: got all %d nameservers\n",num);
+
+        GlobalFree( FixedInfo );
+	    FreeLibrary(hLib);
+
+	  }
 #else
 
 		/* If nobody specified servers, try a local named. */
