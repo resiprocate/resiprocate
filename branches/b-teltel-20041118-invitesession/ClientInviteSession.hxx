@@ -50,6 +50,8 @@ class ClientInviteSession : public InviteSession
       void cancel();
 
    private:
+      std::auto_ptr<SdpContents> mEarlyMedia;
+      
       int lastReceivedRSeq;
       int lastExpectedRSeq;
       int mStaleCallTimerSeq;

@@ -110,6 +110,33 @@ class InviteSession : public DialogUsage
 
       typedef enum
       {
+         OnRedirect, // 3xx
+         OnGeneralFailure, // 481 or 408
+         On1xx,
+         On1xxEarly,
+         On1xxOffer,
+         On1xxAnswer,
+         On2xx,
+         On2xxOffer,
+         On2xxAnswer,
+         On489Invite,
+         OnInviteFailure,
+         OnAck,
+         OnAckAnswer,
+         OnCancel,
+         On200Cancel,
+         OnCancelFailure, 
+         OnUpdate,
+         OnUpdateRejected,
+         On489Update,
+         On200Update,
+         OnPrack,
+         On200Prack,
+         Unknown
+      } Event;
+
+      typedef enum
+      {
          NitComplete,
          NitProceeding
       } NitState;
@@ -145,6 +172,8 @@ class InviteSession : public DialogUsage
       static std::auto_ptr<SdpContents> makeSdp(const SdpContents& sdp);
       static void setSdp(SipMessage& msg, const SdpContents& sdp);
 
+      Event toEvent(const SipMessage& msg, const SdpContents* sdp);
+      
       State mState;
       NitState mNitState;
 
