@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.12 2002/11/24 07:48:36 fluffy Exp $
+# $Id: Makefile,v 1.13 2002/11/25 19:26:41 davidb Exp $
 
 USE_SSL = 1
 
@@ -14,6 +14,8 @@ PACKAGES += OPENSSL
 endif
 
 TESTPROGRAMS =	testIM.cxx \
+		testMessageWaiting.cxx \
+		testSdp.cxx \
 		SipTortureTests.cxx \
 		test1.cxx \
 		test2.cxx \

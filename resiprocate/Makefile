@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.83 2002/11/25 00:41:43 fluffy Exp $
+# $Id: Makefile,v 1.84 2002/11/25 19:26:41 davidb Exp $
 
 BUILD = ../../build
 
@@ -25,6 +25,7 @@ CXXFLAGS += -mcpu=i686 -march=i686
 endif
 
 SRC = \
+	LazyParser.cxx \
 	BranchParameter.cxx \
 	ConnectionMap.cxx \
 	DataParameter.cxx \
@@ -63,6 +64,9 @@ SRC = \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \
+	Contents.cxx \
+	SdpContents.cxx \
+	MessageWaitingContents.cxx \
 
 
 include $(BUILD)/Makefile.post
