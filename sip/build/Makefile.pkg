@@ -1,0 +1,56 @@
+######################################################################
+
+# include files from other directories.  right now, this is only the
+# contrib directory, but there are a number that are there.  if we can
+# move the rules out toward the edges, it will be easier for others to
+# add elements.
+
+######################################################################
+
+ifneq ($(OSTYPE),FreeBSD)
+PTHREAD_LIBNAME := pthread
+else
+PTHREAD_LDFLAGS := -pthread
+PTHREAD_LIBNAME := c_r
+endif
+
+ifeq ($(OSTYPE),IRIX64)
+PTHREAD_LDFLAGS := 
+elif ($(OSCLASS),VXWORKS)
+PTHREAD_LDFLAGS :=
+PTHREAD_LIBNAME :=
+elif ($(OSTYPE),Linux)
+PTHREAD_LDFLAGS := #--thread
+elif ($(OSTYPE),Solaris)
+PTHREAD_LDFLAGS := --thread
+elif ($(OSTYPE),QNX)
+PTHREAD_DEFINES := USE_PTHREADS
+PTHREAD_LDFLAGS := 
+PTHREAD_LIBNAME :=
+endif
+
+
+
+OPENSSL_LIBNAME := ssl crypto
+OPENSSL_LDFLAGS :=
+
+SIP2_INCLUDEDIRS := $(ROOT)/..
+
+SIPSTACK2_INCLUDEDIRS := $(ROOT)/sip2
+SIPSTACK2_LIBDIRS := $(ROOT)/sip2/sipstack/obj.$(TARGET_NAME) 
+SIPSTACK2_LIBNAME := sip2
+SIPSTACK2_LDFLAGS :=
+SIPSTACK2_DEPENDS := $(ROOT)/sip2/sipstack/obj.$(TARGET_NAME)/libsip2.a
+
+$(SIPSTACK2_DEPENDS):
+	cd $(ROOT)/sip2/sipstack;$(MAKE)
+
+
+UTIL2_INCLUDEDIRS := $(ROOT)/sip2
+UTIL2_LIBDIRS := $(ROOT)/sip2/util/obj.$(TARGET_NAME) 
+UTIL2_LIBNAME := util2
+UTIL2_LDFLAGS :=
+UTIL2_DEPENDS := $(ROOT)/sip2/util/obj.$(TARGET_NAME)/libutil2.a
+
+$(UTIL2_DEPENDS):
+	cd $(ROOT)/sip2/util;$(MAKE)

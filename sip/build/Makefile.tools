@@ -1,0 +1,207 @@
+# $Id: Makefile.tools,v 1.1 2003/03/24 22:09:53 jason Exp $
+
+######################################################################
+#                     Default tool names/locations
+######################################################################
+
+# this makefile defines what tools are named (and possibly where they
+# are located) for different toolchains.
+
+# possible values for VOCAL_TOOLCHAIN_TYPE are
+
+#     gnu      -- the gcc compiler
+#     gnu3      -- the gcc 3.0 compiler, when named gcc3
+#     armcross   -- the ARM crosscompiler for 
+#     sunpro   -- Sun's Forte C++ compiler
+#     intel   --  intel's icc compiler for linux
+#     msgnu    -- Microsoft's Visual C++ compiler , but using GNU make
+#                 instead of project files.
+
+# This is for when you have a different toolchain (e.g. different
+# compiler, different linker) that you need to add special arguments
+# for.  There are some architectural flags here, but try to keep them
+# elsewhere if they apply to ALL compilers for a platform
+# (e.g. big-endianness vs. little-endianness).
+
+
+##############################  GNU toolchain  ##############################
+
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
+CC		= $(DISTCC) gcc
+CXX		= $(DISTCC) g++
+MKSHLIB		= $(CC) -fPIC -shared 
+DEP		= $(CXX) 
+LINKER		= $(CXX) 
+RANLIB		= ranlib
+AR		= ar
+ARFLAGS		= rv
+DFLAGS		= -MM
+DMANGLE		=
+INSTALL		= install
+HAS_REPO        = true
+LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
+CFLAGS		+= -Wall -fPIC
+CXXFLAGS	+= -Wall -fPIC -Wno-deprecated
+DFLAG_INTEGRATED = -MMD
+REPO_FLAG       = -frepo -fPIC
+DEBUG_FLAG	= -ggdb
+COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
+ifneq  ($(OSTYPE),Darwin)
+LD_STATIC       = -Wl,-Bstatic
+LD_DYNAMIC      = -Wl,-Bdynamic
+else
+endif
+MAKE_SEPARATE_DEPENDENCY = 1
+ifeq ($(OSTYPE),Linux)
+#    LDLIBS_LAST    += -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
+endif
+
+endif
+
+##############################  INTEL COMPILER toolchain  ##############################
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),intel)
+AR              = ar
+ARFLAGS         = rv
+CC              = /opt/intel/compiler70/ia32/bin/icc
+CXX             = /opt/intel/compiler70/ia32/bin/icc
+DEP             = /opt/intel/compiler70/ia32/bin/icc -E
+DFLAGS          = -M
+DMANGLE         =
+INSTALL         = install
+LINKER          = /opt/intel/compiler70/ia32/bin/icc
+LNDIR           = $(shell pwd)/$(ROOT)/build/lndir.sh
+
+CFLAGS          += -w1
+CXXFLAGS        += -w1
+
+DEBUG_FLAG      = -g
+LDLIBS_LAST    += -Wl, -Wl,-Bdynamic
+RANLIB		= ranlib
+
+COMPILE_SMALL_FLAG = -Os -fno-inline
+
+endif
+
+####################################### GNU 3.0 toolChain ############################
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu3)
+CC		= gcc3 
+CXX		= g++3 
+MKSHLIB		= $(CC) -fPIC -shared 
+DEP		= $(CXX) 
+LINKER		= $(CXX)
+AR		= ar
+ARFLAGS		= rv
+DFLAGS		= -MM
+DMANGLE		=
+INSTALL		= install
+LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
+CFLAGS		+= -Wall -fPIC
+CXXFLAGS	+= -Wall -fPIC
+DFLAG_INTEGRATED = -MMD
+HAS_REPO        = true
+DEBUG_FLAG	= -g
+REPO_FLAG       = -frepo -fPIC
+COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
+LD_STATIC       = -Wl,-Bstatic
+LD_DYNAMIC      = -Wl,-Bdynamic
+MAKE_SEPARATE_DEPENDENCY = 1
+RANLIB		= ranlib
+
+ifeq ($(OSTYPE),Linux)
+    LDLIBS_LAST    += -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
+endif
+
+endif
+
+
+####################################### GNU ARM cross-compiler for ipaq linux and sharp zaurus ############################
+
+
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),armcross)
+ifndef VOCAL_CROSS_ROOT
+VOCAL_CROSS_ROOT = /skiff/local/bin
+endif
+CC		= $(VOCAL_CROSS_ROOT)/arm-linux-gcc
+CXX		= $(VOCAL_CROSS_ROOT)/arm-linux-g++
+MKSHLIB		= $(CC) -fPIC -shared 
+DEP		= $(CXX) 
+LINKER		= $(CXX) 
+AR		= $(VOCAL_CROSS_ROOT)/arm-linux-ar
+ARFLAGS		= rv
+DFLAGS		= -MM
+DMANGLE		=
+INSTALL		= install
+HAS_REPO        = true
+LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
+CFLAGS		+= -Wall -fPIC
+CXXFLAGS	+= -Wall -fPIC
+REPO_FLAG       = -frepo -fPIC
+DEBUG_FLAG	= -g
+COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
+LD_STATIC       = -Wl,-Bstatic
+LD_DYNAMIC      = -Wl,-Bdynamic
+ARCH		= arm
+CONFIGURE_ARGS	= --target=arm-linux --host=i686-linux
+DFLAG_INTEGRATED = -MMD
+RANLIB		= $(VOCAL_CROSS_ROOT)/arm-linux-ranlib
+
+Z = $(shell $(CC) -v 2>&1 | perl -ne 'if(/version ([0-9\.]+)/ && ($$1 eq "2.96" || int($$1) > 2) ) {print "1\n";}')
+ifneq ($(Z),1)
+MAKE_SEPARATE_DEPENDENCY = 1
+endif
+endif
+
+##############################  SunPro toolchain ##############################
+
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),sunpro)
+
+AR		= CC -xar -o
+ARFLAGS		=
+CC		= cc
+CXX		= CC
+DEP		= CC -xM
+DMANGLE		= | perl $(TOOLS)/hacksol | grep -v /opt/SUNWspro
+DFLAGS		= 
+INSTALL		= install
+LINKER		= CC
+LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
+RANLIB		= ranlib
+
+DEBUG_FLAG	= -g
+
+MAKE_SEPARATE_DEPENDENCY = 1
+
+LD_STATIC       = -Bstatic
+LD_DYNAMIC      = -Bdynamic
+
+endif
+
+
+############################## microsoft toolchain ##############################
+
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),msgnu)
+
+AR		= CC -xar -o
+ARFLAGS		=
+CC		= CL.EXE -I "C:/Program Files/Microsoft Visual Studio/VC98/Include" -I "C:/Program Files/Microsoft Visual Studio/VC98/Include" -I "../contrib/win32/mingw/include" -GX -TC -DWIN32 -DVOCAL_TOOLCHAIN_MSGNU -I "../contrib/win32/regex"
+CXX		= CL.EXE -I "C:/Program Files/Microsoft Visual Studio/VC98/Include" -I "C:/Program Files/Microsoft Visual Studio/VC98/Include" -I "../contrib/win32/mingw/include" -GX -TP -DWIN32 -DVOCAL_TOOLCHAIN_MSGNU -I "../contrib/win32/regex"
+DEP		= g++ -E
+DMANGLE		= 
+DFLAGS		= -M
+INSTALL		= install
+LINKER		= CC
+LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
+
+DEBUG_FLAG	= -Zi
+
+LD_STATIC       = -Bstatic
+LD_DYNAMIC      = -Bdynamic
+RANLIB		= ranlib
+
+endif
