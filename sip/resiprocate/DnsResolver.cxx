@@ -1,23 +1,22 @@
+
 #ifndef WIN32
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
+
 #if defined(__sparc)
 #include <inttypes.h>
-
 /* typedef unsigned char u_int8_t; */
 typedef uint8_t u_int8_t;
 typedef uint16_t u_int16_t;
 typedef uint32_t u_int32_t;
-
 #endif
 
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
 
-#include <netdb.h>
 #include "util/Socket.hxx"
 #include "util/Logger.hxx"
 
@@ -182,31 +181,37 @@ DnsResolver::lookupARecords(const Data& transactionId,
 {
    struct hostent hostbuf; 
    struct hostent* result=0;
-
+   int ret=1;
    int herrno=0;
    char buffer[8192];
+
 #ifdef __QNX__
    result = gethostbyname_r (host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno);
    if (result == 0)
    {
-#else
+#endif
 
 #ifdef WIN32
 	assert(0); // !cj! 
-	int ret = -1;
-#else
-#if !defined(__SUNPRO_CC)
+	ret = -1;
+	if (0)
+	{
+#endif
+
+#if defined(__SUNPRO_CC)
+ result = gethostbyname_r (host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno);
+  if (result == 0) 
+  {
+#endif
+
+#if defined(__linux__)
    int ret = gethostbyname_r (host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
    assert (ret != ERANGE);
 
    if (ret != 0)
    {
-#else
-  result = gethostbyname_r (host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno);
-  if (result == 0) {
 #endif
-#endif
-#endif
+
       switch (herrno)
       {
          case HOST_NOT_FOUND:
@@ -262,6 +267,7 @@ DnsResolver::lookupARecords(const Data& transactionId,
 #ifndef WIN32
          DebugLog (<< inet_ntop(result->h_addrtype, &tuple.ipv4.s_addr, str, sizeof(str)) << ":" << port);
 #endif
+
       }
       mStack.mStateMacFifo.add(new DnsMessage(entry, transactionId, start, entry->tupleList.end(), complete));
       return entry;
