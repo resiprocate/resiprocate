@@ -2,7 +2,9 @@
 #if defined(WIN32)
 #include <stdio.h>
 #include <tchar.h>
-#include <Windows.h>
+#include <time.h>
+//from Random.cxx
+#include "resiprocate/os/Socket.hxx"
 #endif
 
 #include <cassert>
