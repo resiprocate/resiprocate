@@ -345,7 +345,8 @@ NameAddr::mustQuoteDisplayName() const
          const char* start;
          start = pb.skipWhitespace();
          pb.skipNonWhitespace();
-         for (const char* c = start; c < pb.position(); c++)
+		 const char* end = pb.position();
+         for (const char* c = start; c < end; c++)
          {
             if ( (*c >= 'a' && *c <= 'z') ||
                  (*c >= 'A' && *c <= 'Z') ||

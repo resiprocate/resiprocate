@@ -196,7 +196,9 @@ XMLCursor::parseNextRootChild()
          pb.skipChar();
          // CodeWarrior isn't helpful enough to pick the "obvious" operator definition
          // so we add volatile here so CW is completely unconfused what to do.
-         if ( pb.end() < (const volatile char*)pb.position() + mTag.size() )
+		 // second note - MSVC 7.0 won't compile the volatile - tried the following to fix
+		 const char* end = pb.position();
+         if ( pb.end() < end + mTag.size() )
          {
             InfoLog(<< "XML: unexpected end");
             pb.fail(__FILE__, __LINE__);
@@ -536,7 +538,9 @@ XMLCursor::Node::skipToEndTag()
          mPb.skipChar();
          // CodeWarrior isn't helpful enough to pick the "obvious" operator definition
          // so we add volatile here so CW is completely unconfused what to do.
-         if ( mPb.end() < (const volatile char*)mPb.position() + mTag.size() )
+		 // second note - MSVC 7.0 won't compile the volatile - tried the following to fix
+		 const char* end = mPb.position();
+         if ( mPb.end() < end + mTag.size() )
          {
             InfoLog(<< "XML: unexpected end");
             mPb.fail(__FILE__, __LINE__);
