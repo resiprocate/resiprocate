@@ -13,7 +13,10 @@ MasterProfile::MasterProfile() :
    mValidateAcceptEnabled(true)
 {
    // Default settings
-   addSupportedMimeType(Mime("application", "sdp"));
+   addSupportedMimeType(INVITE, Mime("application", "sdp"));
+   addSupportedMimeType(OPTIONS, Mime("application", "sdp"));
+   addSupportedMimeType(PRACK, Mime("application", "sdp"));
+   addSupportedMimeType(UPDATE, Mime("application", "sdp"));
    addSupportedLanguage(Token("en"));
    addSupportedMethod(INVITE);
    addSupportedMethod(ACK);
@@ -102,21 +105,27 @@ MasterProfile::clearSupportedOptionTags()
 }
 
 void 
-MasterProfile::addSupportedMimeType(const Mime& mimeType)
+MasterProfile::addSupportedMimeType(const MethodTypes& method, const Mime& mimeType)
 {
-   mSupportedMimeTypes.push_back(mimeType);
+   mSupportedMimeTypes[method].push_back(mimeType);
 }
 
 bool 
-MasterProfile::isMimeTypeSupported(const Mime& mimeType) const
+MasterProfile::isMimeTypeSupported(const MethodTypes& method, const Mime& mimeType)
 {
-   return mSupportedMimeTypes.find(mimeType);
+   return mSupportedMimeTypes[method].find(mimeType);
 }
 
 Mimes 
-MasterProfile::getSupportedMimeTypes() const
+MasterProfile::getSupportedMimeTypes(const MethodTypes& method)
 {
-   return mSupportedMimeTypes;
+   return mSupportedMimeTypes[method];
+}
+
+void 
+MasterProfile::clearSupportedMimeTypes(const MethodTypes& method)
+{
+   mSupportedMimeTypes[method].clear();
 }
 
 void 

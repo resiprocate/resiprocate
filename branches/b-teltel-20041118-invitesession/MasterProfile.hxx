@@ -16,33 +16,41 @@ class MasterProfile : public UserProfile
 {
    public:  
       
-	  MasterProfile();  // Creates an Indentity/Profile with no BaseProfile - this is the root of all profiles
+       // Creates an Indentity/Profile with no BaseProfile - this is the root of all profiles
+       MasterProfile();  
       
-      virtual void addSupportedScheme(const Data& scheme);          // Default is "sip"
+      // Default is "sip"
+      virtual void addSupportedScheme(const Data& scheme);          
       virtual bool isSchemeSupported(const Data& scheme) const;
       virtual void clearSupportedSchemes(void);
 
-      virtual void addSupportedMethod(const MethodTypes& method);   // Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE
+      // Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE
+      virtual void addSupportedMethod(const MethodTypes& method);   
       virtual bool isMethodSupported(MethodTypes method) const;
       virtual Tokens getAllowedMethods() const;
       virtual void clearSupportedMethods(void);
 
-      virtual void addSupportedOptionTag(const Token& tag);        // Default is none
+      // Default is none
+      virtual void addSupportedOptionTag(const Token& tag);        
       virtual Tokens getUnsupportedOptionsTags(const Tokens& requires); // Returns list of unsupported option tags
       virtual Tokens getSupportedOptionTags() const;
       virtual void clearSupportedOptionTags(void);
 
-      virtual void addSupportedMimeType(const Mime& mimeType);      // Default is application/sdp
-      virtual bool isMimeTypeSupported(const Mime& mimeType) const;
-      virtual Mimes getSupportedMimeTypes() const;
-      virtual void clearSupportedMimeTypes(void);
+      // Default is application/sdp for INVITE, OPTIONS, PRACK and UPDATE Methods
+      virtual void addSupportedMimeType(const MethodTypes& method, const Mime& mimeType);      
+      virtual bool isMimeTypeSupported(const MethodTypes& method, const Mime& mimeType);
+      virtual Mimes getSupportedMimeTypes(const MethodTypes& method);
+      virtual void clearSupportedMimeTypes(const MethodTypes& method);
+      virtual void clearSupportedMimeTypes(void);  // Clear for all Methods
 
-      virtual void addSupportedEncoding(const Token& encoding);     // Default is no encoding
+      // Default is no encoding
+      virtual void addSupportedEncoding(const Token& encoding);     
       virtual bool isContentEncodingSupported(const Token& contentEncoding) const;
       virtual Tokens getSupportedEncodings() const;
       virtual void clearSupportedEncodings(void);
 
-      virtual void addSupportedLanguage(const Token& lang);         // Default is all - if nothing is set, then all are allowed
+      // Default is all - if nothing is set, then all are allowed
+      virtual void addSupportedLanguage(const Token& lang);         
       virtual bool isLanguageSupported(const Tokens& lang) const;
       virtual Tokens getSupportedLanguages() const;
       virtual void clearSupportedLanguages(void);
@@ -64,7 +72,7 @@ class MasterProfile : public UserProfile
       std::set<MethodTypes> mSupportedMethodTypes;
       Tokens mSupportedMethods;
       Tokens mSupportedOptionTags;
-      Mimes mSupportedMimeTypes;
+      std::map<MethodTypes, Mimes> mSupportedMimeTypes;
       Tokens mSupportedEncodings;
       Tokens mSupportedLanguages;
 

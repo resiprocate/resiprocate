@@ -753,31 +753,33 @@ DialogUsageManager::process()
             DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());      
             if (sipMsg->isRequest())
             {
+               // Validate Request URI
                if( !validateRequestURI(*sipMsg) )
                {
                   DebugLog (<< "Failed RequestURI validation " << *sipMsg);
                   return true;
                }
-               if( !validateRequiredOptions(*sipMsg) )
+
+               // Continue validation on all requests, except ACK and CANCEL
+               if(sipMsg->header(h_RequestLine).method() != ACK || 
+                  sipMsg->header(h_RequestLine).method() != CANCEL)
                {
-                  DebugLog (<< "Failed required options validation " << *sipMsg);
-                  return true;
+                  if( !validateRequiredOptions(*sipMsg) )
+                  {
+                     DebugLog (<< "Failed required options validation " << *sipMsg);
+                     return true;
+                  }
+                  if( getMasterProfile()->validateContentEnabled() && !validateContent(*sipMsg) )
+                  {
+                     DebugLog (<< "Failed content validation " << *sipMsg);
+                     return true;
+                  }
+                  if( getMasterProfile()->validateAcceptEnabled() && !validateAccept(*sipMsg) )
+                  {
+                     DebugLog (<< "Failed accept validation " << *sipMsg);
+                     return true;
+                  }
                }
-               if( getMasterProfile()->validateContentEnabled() && !validateContent(*sipMsg) )
-               {
-                  DebugLog (<< "Failed content validation " << *sipMsg);
-                  return true;
-               }
-               if( getMasterProfile()->validateAcceptEnabled() && !validateAccept(*sipMsg) )
-               {
-                  DebugLog (<< "Failed accept validation " << *sipMsg);
-                  return true;
-               }
-//             if ( !validateTo(*sipMsg) )
-//             {
-//                DebugLog (<< "Failed to validation " << *sipMsg);
-//                return true;
-//             }
                if (sipMsg->header(h_From).exists(p_tag))
                {
                   if (mergeRequest(*sipMsg) )
@@ -1013,13 +1015,13 @@ DialogUsageManager::validateContent(const SipMessage& request)
 	     request.header(h_ContentDisposition).exists(p_handling) && 
 	     isEqualNoCase(request.header(h_ContentDisposition).param(p_handling), Symbols::Optional)))
    {
-	  if (request.exists(h_ContentType) && !getMasterProfile()->isMimeTypeSupported(request.header(h_ContentType)))
+	  if (request.exists(h_ContentType) && !getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), request.header(h_ContentType)))
       {
          InfoLog (<< "Received an unsupported mime type: " << request.header(h_ContentType) << " for " << request.brief());
 
          SipMessage failure;
          makeResponse(failure, request, 415);
-         failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes();
+         failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(request.header(h_RequestLine).method());
          sendResponse(failure);
 
          return false;
@@ -1056,49 +1058,45 @@ DialogUsageManager::validateContent(const SipMessage& request)
 bool
 DialogUsageManager::validateAccept(const SipMessage& request)
 {   
+   MethodTypes method = request.header(h_RequestLine).method();
    // checks for Accept to comply with SFTF test case 216
    if(request.exists(h_Accepts))
    {
       for (Mimes::const_iterator i = request.header(h_Accepts).begin();
            i != request.header(h_Accepts).end(); i++)
       {
-	     if (!getMasterProfile()->isMimeTypeSupported(*i))
+	     if (!getMasterProfile()->isMimeTypeSupported(method, *i))
          {
             InfoLog (<< "Received an unsupported mime type in accept header: " << request.brief());
 
             SipMessage failure;
             makeResponse(failure, request, 406);
-            failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes();
+            failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(method);
             sendResponse(failure);
 
             return false;
          }
       }
    }
-   else // If no Accept header then application/sdp should be assumed
+   // If no Accept header then application/sdp should be assumed for certain methods
+   else if(method == INVITE ||
+           method == OPTIONS ||
+           method == PRACK ||
+           method == UPDATE)
    {
-	  if (!getMasterProfile()->isMimeTypeSupported(Mime("application", "sdp")))
+	  if (!getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), Mime("application", "sdp")))
       {
          InfoLog (<< "Received an unsupported default mime type application/sdp for accept header: " << request.brief());
 
          SipMessage failure;
          makeResponse(failure, request, 406);
-         failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes();
+         failure.header(h_Accepts) = getMasterProfile()->getSupportedMimeTypes(request.header(h_RequestLine).method());
          sendResponse(failure);
 
          return false;
       }
    }
          
-   return true;
-}
-
-bool
-DialogUsageManager::validateTo(const SipMessage& request)
-{
-   // !jf! check that the request is targeted at me!
-   // will require support in profile
-   // This should check the Request-Uri (not the To)
    return true;
 }
 
