@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.67 2003/04/30 15:53:04 alan Exp $";
+// "$Id: Data.cxx,v 1.68 2003/06/17 23:17:45 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -23,7 +23,6 @@ Data::initializeHack()
    static char buffer[1];
    return buffer;
 }
-
 
 Data::Data() 
    : mSize(0),
@@ -396,7 +395,7 @@ Data::operator==(const char* rhs) const
 bool
 Data::operator<(const Data& rhs) const
 {
-	int res = strncmp(mBuf, rhs.mBuf, resipMin(mSize, rhs.mSize));
+   int res = strncmp(mBuf, rhs.mBuf, resipMin(mSize, rhs.mSize));
 
    if (res < 0)
    {
@@ -410,6 +409,12 @@ Data::operator<(const Data& rhs) const
    {
       return (mSize < rhs.mSize);
    }
+}
+
+bool
+Data::operator<=(const Data& rhs) const
+{
+   return !(*this > rhs);
 }
 
 bool
@@ -434,15 +439,33 @@ Data::operator<(const char* rhs) const
 }
 
 bool
+Data::operator<=(const char* rhs) const
+{
+   return !(*this > rhs);
+}
+
+bool
 Data::operator>(const Data& rhs) const
 {
    return rhs < *this;
 }
 
 bool
+Data::operator>=(const Data& rhs) const
+{
+   return !(*this < rhs);
+}
+
+bool
 Data::operator>(const char* rhs) const
 {
    return rhs < *this;
+}
+
+bool
+Data::operator>=(const char* rhs) const
+{
+   return !(*this < rhs);
 }
 
 Data& 
@@ -508,7 +531,6 @@ Data::operator+=(const Data& data)
    }
    memmove(mBuf + mSize, data.mBuf, data.mSize);
    mSize += data.mSize;
-   mCapacity = mSize;
    mBuf[mSize] = 0;
 
    return *this;
@@ -563,7 +585,6 @@ Data::operator+=(char c)
    mBuf[mSize] = c;
    mSize += 1;
    mBuf[mSize] = 0;
-   mCapacity = mSize;
 
    return *this;
 }
@@ -654,7 +675,6 @@ Data::append(const char* str, size_type len)
    memmove(mBuf + mSize, str, len);
    mSize += len;
    mBuf[mSize] = 0;
-   mCapacity = mSize;
 
    return *this;
 }
