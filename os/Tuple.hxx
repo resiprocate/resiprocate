@@ -6,7 +6,14 @@
 #endif
 
 #include "resiprocate/os/HashMap.hxx"
+
+#include "resiprocate/os/compat.hxx"
+
+#ifdef WIN32
+
+#else
 #include <netinet/in.h>
+#endif
 
 namespace resip
 {
@@ -36,10 +43,12 @@ class Tuple
 {
    public:
       Tuple();
-      Tuple(const in6_addr& pipv6,
+#ifdef USE_IPV6
+	  Tuple(const in6_addr& pipv6,
             int pport,
             TransportType ptype);
-      Tuple(const in_addr& pipv4,
+#endif
+	  Tuple(const in_addr& pipv4,
             int pport,
             TransportType ptype);
       
@@ -50,7 +59,9 @@ class Tuple
       
       bool v6;
       struct in_addr ipv4;
+#ifdef USE_IPV6
       struct in6_addr ipv6;
+#endif
 
       int port;
       TransportType transportType;

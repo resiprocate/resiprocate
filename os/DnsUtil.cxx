@@ -67,27 +67,33 @@ DnsUtil::getLocalDomainName()
 Data
 DnsUtil::inet_ntop(const struct in_addr& addr)
 {
+	  char str[256];
 #if !defined(WIN32)
-   char str[256];
-   ::inet_ntop(AF_INET, (u_int32_t*)(&addr), str, sizeof(str));
-   return Data(str);
+    ::inet_ntop(AF_INET, (u_int32_t*)(&addr), str, sizeof(str));
 #else
    // !cj! TODO 
-   assert(0);
+	u_int32_t i = *((u_int32_t*)(&addr));
+	sprintf(str,"%d.%d.%d.%d\0",(i>>24)&0xFF,(i>>16)&0xFF,(i>>8)&0xFF,(i)&0xFF);
 #endif
+	return Data(str);
 }
 
 Data
 DnsUtil::inet_ntop(const struct in6_addr& addr)
 {
+	 char str[256];
 #if !defined(WIN32)
-   char str[256];
-   ::inet_ntop(AF_INET6, (u_int32_t*)(&addr), str, sizeof(str));
-   return Data(str);
+    ::inet_ntop(AF_INET6, (u_int32_t*)(&addr), str, sizeof(str));
 #else
-   // !cj! TODO 
-   assert(0);
+	 u_int32_t s[8];
+	 u_int32_t* p = (u_int32_t*)(&addr);
+	 for (int i=0;i<8;i++)
+	 {
+		 s[i] = *(p++);
+	 }
+	 sprintf(str,"%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x",s[7],s[6],s[5],s[4],s[3],s[2],s[1],s[0]);
 #endif
+	   return Data(str);
 }
 
 int
