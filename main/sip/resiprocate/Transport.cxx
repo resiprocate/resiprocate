@@ -17,7 +17,7 @@ Transport::TransportException::what() const throw()
 }
 
 
-Transport::Transport(int portNum, Fifo<SipMessage>& rxFifo) :
+Transport::Transport(int portNum, Fifo<Message>& rxFifo) :
    mPort(portNum), 
    mRxFifo(rxFifo),
    mShutdown(false)

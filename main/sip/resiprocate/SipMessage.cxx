@@ -7,7 +7,8 @@ using namespace std;
 
 SipMessage::SipMessage()
    : nIsExternal(true),
-     mFixedDest(false)
+     mFixedDest(false),
+     mStartLine(0)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -46,6 +47,12 @@ SipMessage::addBuffer(char* buf)
    mBufferList.push_back(buf);
 }
 
+void 
+SipMessage::setStartLine(char* start, int len)
+{
+   mStartLine = new HeaderFieldValue(start, len);
+}
+
 void
 SipMessage::cleanUp()
 {
@@ -65,35 +72,44 @@ SipMessage::cleanUp()
    {
       delete [] *i;
    }
+   
+   if (mStartLine != 0)
+   {
+      delete mStartLine;
+   }
 }
 
 void
 SipMessage::copyFrom(const SipMessage& from)
 {
-  if(from.hasFixedDest())
-    {
-      mHaveFixedDest = true;
-      mFixedDest = from.getFixedDest();
-    }
-
-   for (int i = 0; i < Headers::MAX_HEADERS; i++)
-   {
-      if (mHeaders[i] != 0)
-      {
-         mHeaders[i] = from.mHeaders[i]->clone();
+  if (from.hasFixedDest())
+  {
+     mHaveFixedDest = true;
+     mFixedDest = from.getFixedDest();
+  }
+  
+  for (int i = 0; i < Headers::MAX_HEADERS; i++)
+  {
+     if (mHeaders[i] != 0)
+     {
+        mHeaders[i] = from.mHeaders[i]->clone();
       }
-      else
-      {
-         mHeaders[i] = 0;
-      }
-   }
-
-   for (UnknownHeaders::const_iterator i = from.mUnknownHeaders.begin();
-        i != from.mUnknownHeaders.end(); i++)
-   {
-      mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(i->first,
-                                                                    i->second->clone()));
-   }
+     else
+     {
+        mHeaders[i] = 0;
+     }
+  }
+  
+  for (UnknownHeaders::const_iterator i = from.mUnknownHeaders.begin();
+       i != from.mUnknownHeaders.end(); i++)
+  {
+     mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(i->first,
+                                                                 i->second->clone()));
+  }
+  if (from.mStartLine != 0)
+  {
+     mStartLine = from.mStartLine->clone();
+  }
 }
 
 // unknown header interface

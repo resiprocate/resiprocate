@@ -49,7 +49,7 @@ class Transport
       int mFd;
       int mPort;
       Fifo<SendData> mTxFifo; // owned by the transport
-      Fifo<SipMessage>& mRxFifo; // passed in
+      Fifo<Message>& mRxFifo; // passed in
 
    private:
 
