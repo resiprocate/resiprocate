@@ -11,7 +11,7 @@ main()
   SipStack sipStack;
   SipMessage* msg=NULL;
 
-  while (1)
+ while (1)
   {
     sipStack.process();
 
