@@ -10,6 +10,8 @@ namespace Vocal2
 class PlainContents : public Contents
 {
    public:
+      static const PlainContents Empty;
+
       PlainContents();
       PlainContents(const Data& text);
       PlainContents(HeaderFieldValue* hfv, const Mime& contentType);
