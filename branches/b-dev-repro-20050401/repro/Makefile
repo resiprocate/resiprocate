@@ -25,11 +25,13 @@ SRC =   \
 	monkeys/LocationServer.cxx \
 	monkeys/ConstantLocationMonkey.cxx \
 	CommandLineParser.cxx \
+	ReproServerAuthManager.cxx \
 	Proxy.cxx \
 	Registrar.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
 	UserDb.cxx \
+	UserAbstractDb.cxx \
 	WebAdmin.cxx \
 	WebAdminThread.cxx \
         RequestProcessor.cxx \
