@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.10"
+	Version="7.0"
 	Name="ares"
 	ProjectGUID="{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
 	RootNamespace="ares"
