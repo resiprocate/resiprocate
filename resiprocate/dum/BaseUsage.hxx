@@ -14,12 +14,15 @@ class BaseUsage
 
       BaseUsage(DialogUsageManager& dum);
 
-      SipMessage* makeInviteSession(const Uri& target);
-      SipMessage* makeSubscription(const Uri& aor, const Data& eventType);
-      SipMessage* makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
-      SipMessage* makePublication(const Uri& aor, const Data& eventType);
-      SipMessage* makeRegistration(const Uri& aor);
-      SipMessage* makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
+      SipMessage* makeInviteSession();
+      SipMessage* makeSubscription();
+      SipMessage* makeRefer();
+      SipMessage* makePublication();
+      SipMessage* makeRegistration();
+      SipMessage* makeOutOfDialogRequest();
+
+      // to send a request on an existing dialog (made from make... methods above)
+      void send(const SipMessage& request);
       
       DialogUsageManager& dum();
       Dialog& dialog();

@@ -1,5 +1,10 @@
 #include "ClientInviteSession.hxx"
 
+ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, const SipMessage& msg) 
+   : InviteSession(dum)
+{
+}
+
 void 
 ClientInviteSession::setOffer(SdpContents* offer)
 {
