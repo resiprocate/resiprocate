@@ -37,6 +37,13 @@ int logsInCall()
    return 17;
 }
 
+
+int debugLogsInCall()
+{
+   DebugLog(<< "Got here?");
+   return 17;
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -91,7 +98,16 @@ main(int argc, char* argv[])
    service2a.join();
    service2b.join();
 
-   cerr << "All OK -- will assert or lock next" << endl;
+   Log::setLevel(Log::DEBUG);
+   InfoLog(<< "Recursive debug: " << debugLogsInCall());
+   DebugLog(<< "Recursive non-debug OK: " << logsInCall());
+
+#ifdef NO_DEBUG
+   cerr << "All OK -- will deadlock next" << endl;
+#else
+   cerr << "All OK -- will assert next" << endl;
+#endif
+
    // this will assert except on WIN32 where it will deadlock
-   InfoLog(<< "Assert or deadlock: " << logsInCall());
+   InfoLog(<< "Recursive non-debug NOT OK: " << logsInCall());
 }
