@@ -235,7 +235,7 @@ class PrivateKeySubscriptionHandler : public ServerSubscriptionHandler
 
       virtual void onNewSubscription(ServerSubscriptionHandle h, const SipMessage& sub)
       {
-         if (h->getDocumentKey() != h->getPublisher())
+         if (h->getDocumentKey() != h->getSubscriber())
          {
             h->send(h->accept(403)); // !jf! is this the correct code? 
          }
@@ -284,8 +284,7 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
       {
          addTransport(UDP, 5100);
          addTransport(TCP, 5100);
-         addTransport(TLS, 5101, 
-         // addTlsTransport
+         addTransport(TLS, 5101, V4, Data::Empty, me.uri().host(), Data::Empty);
          
          mProfile.clearSupportedMethods();
          mProfile.addSupportedMethod(PUBLISH);
