@@ -33,7 +33,7 @@ AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 AC_DISABLE_STATIC
 
-AC_REVISION($Id: configure.ac,v 1.13 2003/09/14 23:25:15 alan Exp $)
+AC_REVISION($Id: configure.ac,v 1.14 2003/09/15 04:08:49 alan Exp $)
 
 
 AM_MAINTAINER_MODE
@@ -41,19 +41,68 @@ AM_MAINTAINER_MODE
 AC_LANG(C++)
 
 AC_PROG_CXX
+
+AC_MSG_CHECKING([ for GNU warning flags])
+
+if test "${GXX}"x = yesx; then
+        CXXFLAGS="${CXXFLAGS} -Wall -Wno-deprecated"
+        CFLAGS="${CFLAGS} -Wall -Wno-deprecated"
+        AC_MSG_RESULT([yes])
+else
+        AC_MSG_RESULT([no])
+fi
+
+
+
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 
-AC_CHECK_HEADERS([sys/sockio.h sys/int_types.h netinet/in.h])
+AC_CHECK_HEADERS([sys/sockio.h sys/int_types.h netinet/in.h sys/socket.h])
 
-AC_CHECK_STRUCT_FOR([#include <sys/stat.h>], stat, st_atime, HAVE_ST_ATIME, )
+AC_CHECK_STRUCT_FOR([
+#include <sys/stat.h>
+        ],
+         stat,
+         st_atime,
+        [HAVE_ST_ATIME], )
+
+
+dnl This is ugly, because I'm not an autoconf guru, but it works.
+dnl Check for the type of socklen_t.
+dnl Still thinking about how to incorporate the results into the code.
+
 AC_CHECK_TYPE(socklen_t,
          AC_DEFINE([HAVE_SOCKLEN_T],[1],[ Has socklen_t ]), 
         [],
-        [ #include <sys/socket.h> ]
+        [
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+]
         )
 
+dnl Check for BSD socklen_t if we couldn't do it before.
+
+if test $ac_cv_type_socklen_t = no; then
+        unset ac_cv_type_socklen_t
+        AC_CHECK_TYPE(socklen_t,
+        AC_DEFINE([_BSD_SOCKLEN_T_],[int], [Needs BSD socklen_t]),
+        [],
+        [
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+# define _BSD_SOCKLEN_T_ int
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif        
+        ]
+        )
+fi
 
 RESIP_LIB_OPENSSL
 RESIP_LIB_ARES
@@ -76,7 +125,7 @@ dnl AC_MSG_RESULT([Pthreads flags are : $PTHREAD_LIBS])
 
 dnl LIBS="$PTHREAD_LIBS $LIBS"
 dnl CFLAGS="-Wall -Wnodeprecated $CFLAGS $PTHREAD_CFLAGS"
-dnl CXXFLAGS="-Wall -Wno-deprecated $CXXFLAGS"
+
 dnl CC="$PTHREAD_CC"
 
 dnl Temporary hack until proper, portable pthreads detection is added.
