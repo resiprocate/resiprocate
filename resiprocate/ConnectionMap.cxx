@@ -1,7 +1,24 @@
 #include <sipstack/ConnectionMap.hxx>
+#include <util/Socket.hxx>
+
+#ifndef WIN32
+#include <errno.h>
+#include <fcntl.h>
+#include <iostream>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#endif
+
+using namespace Vocal2;
+
+const UInt64 ConnectionMap::MinLastUsed = 10*1000;
+const UInt64 ConnectionMap::MaxLastUsed = 10*60*60*1000;
 
 ConnectionMap::ConnectionMap()
-   : mLastUsed(Timer::getTimeMs())
 {
    mPreYoungest.mOlder = &mPostOldest;
    mPostOldest.mYounger = &mPreYoungest;
@@ -13,9 +30,20 @@ ConnectionMap::touch(Connection* connection)
    connection->mLastUsed = Timer::getTimeMs();
 
    connection->remove();
-   connection->mOlder = mPreYoungest->mOlder;
+   connection->mOlder = mPreYoungest.mOlder;
    connection->mYounger = &mPreYoungest;
-   mPreYoungest->mOlder = connection;
+   mPreYoungest.mOlder = connection;
+}
+
+ConnectionMap::Connection*
+ConnectionMap::add(Transport::Tuple who, Socket socket)
+{
+   assert(mConnections.find(who) == mConnections.end());
+
+   Connection* connection = new Connection(who, socket);
+   mConnections[who] = connection;
+   touch(connection);
+   return connection;
 }
 
 ConnectionMap::Connection*
@@ -28,52 +56,43 @@ ConnectionMap::get(Transport::Tuple who, int attempt)
    }
    
    // attempt to open
-   socket = open( AF_INET, SOCK_STREAM, 0 );
-   if ( socket == -1 )
+   int sock = socket( AF_INET, SOCK_STREAM, 0 );
+   if ( sock == -1 )
    {
-      // could not get a socket
-      assert(0);
-      // !cj! look at the erros and decide which return what 
+      if (attempt > ConnectionMap::MaxAttempts)
+      {
+         return 0;
+      }
+
+      // !dlb! does the file descriptor become available immediately?
+      gc(ConnectionMap::MinLastUsed);
+      return get(who, attempt+1);
    }
    
-   struct scokaddr_in servaddr;
+   struct sockaddr_in servaddr;
    
    memset( &servaddr, sizeof(servaddr), 0 );
    servaddr.sin_family = AF_INET;
    servaddr.sin_port = who.port;
-   servaddr.sin_addr = who.addr;
+   servaddr.sin_addr = who.ipv4.sin_addr;
    
-   Socket e = connect( socket, (struct sockaddr *)servaddr, sizeof(servaddr) );
+   Socket e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
    if ( e == -1 ) 
    {
-      int err = errno;
-      assert( 0 );
       // !cj! do error printouets 
-   }
-   
-   if (socket)
-   {
-      // succeeded, add the connection
-      Connection* connection = new Connection(socket);
-      mConnections[who] = connection;
-      touch(connection);
-      return connection;
-   }
-
-   if (attempt > ConnectionMap::MaxAttempts)
-   {
+      int err = errno;
       return 0;
    }
-
-   // !dlb! does the file descriptor become available immediately?
-   gc(Connection::MinLastUsed);
-   return get(who, attempt+1);
+   
+   // succeeded, add the connection
+   return add(who, sock);
 }
 
+void
 ConnectionMap::close(Transport::Tuple who)
 {
-   Map::const_iterator i = mConnections.find(who);
-   if (i != mConnections,end())
+   Map::iterator i = mConnections.find(who);
+   if (i != mConnections.end())
    {
       i->second->remove();
       mConnections.erase(i);
@@ -81,6 +100,7 @@ ConnectionMap::close(Transport::Tuple who)
    }
 }
 
+void
 ConnectionMap::gc(UInt64 relThreshhold)
 {
    UInt64 threshhold = Timer::getTimeMs() - relThreshhold;
@@ -91,9 +111,9 @@ ConnectionMap::gc(UInt64 relThreshhold)
    {
       if (i->mLastUsed < threshhold)
       {
-         Connection old = i;
+         Connection* old = i;
          i = i->remove();
-         mConnections.erase(i->mWho);
+         mConnections.erase(old->mWho);
          delete old;
       }
       else
@@ -113,8 +133,8 @@ ConnectionMap::Connection::Connection()
 
 ConnectionMap::Connection::Connection(Transport::Tuple who,
                                       Socket socket)
-   : mSocket(socket),
-     mWho(who),
+   : mWho(who),
+     mSocket(socket),
      mLastUsed(Timer::getTimeMs()),
      mYounger(0),
      mOlder(0)
@@ -124,11 +144,11 @@ ConnectionMap::Connection::Connection(Transport::Tuple who,
 ConnectionMap::Connection::~Connection()
 {
    remove();
-   close(mSocket);
+   shutdown(mSocket,2);
 }
 
 ConnectionMap::Connection* 
-ConnectionMap::ConnectionMap::remove();
+ConnectionMap::Connection::remove()
 {
    Connection* next = mYounger;
 
