@@ -504,7 +504,7 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
       if (mCurrentRetransmit1xx && m1xx.header(h_CSeq).sequence() == timeout.seq())  // If timer isn't stopped and this timer is for last 1xx sent, then resend
       {
          mDialog.send(m1xx);
-         mDum.addTimerMs(DumTimeout::Retransmit1xx, mCurrentRetransmit1xx, getBaseHandle(), timeout.seq());
+		 startRetransmit1xxTimer();
       }
    }
    else
@@ -810,8 +810,11 @@ ServerInviteSession::startRetransmit1xxTimer()
 {
    // RFC3261 13.3.1 says the UAS must send a non-100 provisional response every minute, to handle the possiblity of lost provisional responses
    mCurrentRetransmit1xx = mDialog.mDialogSet.getUserProfile()->get1xxRetransmissionTime();  
-   int seq = m1xx.header(h_CSeq).sequence();
-   mDum.addTimer(DumTimeout::Retransmit1xx, mCurrentRetransmit1xx, getBaseHandle(), seq);
+   if(mCurrentRetransmit1xx > 0)
+   {	
+      int seq = m1xx.header(h_CSeq).sequence();
+      mDum.addTimer(DumTimeout::Retransmit1xx, mCurrentRetransmit1xx, getBaseHandle(), seq);
+   }
 }
 
 void
