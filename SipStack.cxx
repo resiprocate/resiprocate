@@ -94,6 +94,31 @@ SipStack::getHostname()
    return retHost;
 }
 
+
+Data 
+SipStack::getHostAddress()
+{
+   // if you change this, please #def old version for windows 
+   char hostName[1024];
+   int err =  gethostname( hostName, sizeof(hostName) );
+   assert( err == 0 );
+   
+   struct hostent* hostEnt = gethostbyname( hostName );
+   assert( hostEnt );
+   
+   struct in_addr* addr = (struct in_addr*) hostEnt->h_addr_list[0];
+   assert( addr );
+   
+   // if you change this, please #def old version for windows 
+   char* addrA = inet_ntoa( *addr );
+   Data ret(addrA);
+
+   //Data retHost( hostEnt->h_name );
+      
+   return ret;
+}
+
+
 bool 
 SipStack::isMyDomain(const Data& domain, int port) const
 {
