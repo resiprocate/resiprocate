@@ -11,36 +11,38 @@ class Dialog
 {
    public:
       // pass in a contact for this location e.g. "sip:local@domain:5060"
-      Dialog(Url& localContact);
+      Dialog(const Url& localContact);
       
       // This happens when a dialog gets created on a UAS when a 
       // provisional (1xx) response or 2xx is sent back by the UAS
-      void createDialogAsUAS(SipMessage& request, SipMessage& response);
+      void createDialogAsUAS(const SipMessage& request, const SipMessage& response);
       
       // This happens when a dialog gets created on a UAC when 
       // a UAC receives a response that creates a dialog
-      void createDialogAsUAC(SipMessage& request, SipMessage& response);
+      void createDialogAsUAC(const SipMessage& request, const SipMessage& response);
 
       // Called when a 2xx response is received in an existing dialog
       // Replace the _remoteTarget with uri from Contact header in response
-      void targetRefreshResponse(SipMessage& response);
+      void targetRefreshResponse(const SipMessage& response);
 
       // Called when a request is received in an existing dialog
       // return status code of response to generate - 0 if ok
-      int targetRefreshRequest(SipMessage& request);
+      int targetRefreshRequest(const SipMessage& request);
 
-      StringComponent& dialogId() { return mDialogId; }
+      const CallId& dialogId() const { return mDialogId; }
       const Data& getLocalTag() const { return mLocalTag; }
       const Url& getRemoteTarget() const { return mRemoteTarget; }
+      const CallId& getCallId() const { return mCallId; }
+      
 
       // For creating requests within a dialog
       SipMessage makeInvite();
       SipMessage makeBye();
-      SipMessage makeRefer(Url& referTo);
+      SipMessage makeRefer(const Url& referTo);
       SipMessage makeNotify();
       SipMessage makeOptions();
-      SipMessage makeAck(SipMessage& request);
-      SipMessage makeCancel(SipMessage& request);
+      SipMessage makeAck(const SipMessage& request);
+      SipMessage makeCancel(const SipMessage& request);
       
       // resets to an empty dialog with no state
       void clear();
@@ -66,7 +68,7 @@ class Dialog
       Data mRemoteTag;
       Url mRemoteUri;
       Url mLocalUri;
-      StringComponent mDialogId;
+      CallId mDialogId;
 
       friend std::ostream& operator<<(std::ostream& strm, Dialog& d);
 };

@@ -170,7 +170,7 @@ SipMessage::cleanUp()
 
 // unknown header interface
 StringComponents& 
-SipMessage::header(const Data& headerName)
+SipMessage::header(const Data& headerName) const
 {
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
         i != mUnknownHeaders.end(); i++)
@@ -284,7 +284,7 @@ SipMessage::clearFixedDest()
 
 
 RequestLine& 
-SipMessage::header(const RequestLineType& l)
+SipMessage::header(const RequestLineType& l) const
 {
    if (mStartLine == 0 )
    { 
@@ -299,7 +299,7 @@ SipMessage::header(const RequestLineType& l)
 
 
 StatusLine& 
-SipMessage::header(const StatusLineType& l)
+SipMessage::header(const StatusLineType& l) const
 {
    if (mStartLine == 0 )
    { 
