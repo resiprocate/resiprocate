@@ -12,8 +12,8 @@ using namespace std;
 int strcasecmp(const char*, const char*);
 int strncasecmp(const char*, const char*, int len);
 
-SipMessage::SipMessage()
-   : mIsExternal(true),
+SipMessage::SipMessage(bool fromWire)
+   : mIsExternal(fromWire),
      mHaveFixedDest(false),
      mFixedDest(),
      mStartLine(0),
