@@ -91,20 +91,22 @@ TuIM::TuIM(SipStack* stack,
 bool
 TuIM::haveCerts( bool sign, const Data& encryptFor )
 {
+   assert(0);
+
 #if defined( USE_SSL )
    Security* sec = mStack->getSecurity();
    assert(sec);
    
    if ( sign )
    {    
-      if ( !sec->haveCert() )
+      if ( !sec->hasUserPrivateKey(mAor.getAor()) )
       {
          return false;
       }
    } 
    if ( !encryptFor.empty() )
    {
-      if ( !sec->havePublicKey( encryptFor ) )
+      if ( !sec->hasUserCert( encryptFor ) )
       {
          return false;
       }
@@ -186,7 +188,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
     
       Contents* old = body;
       old->header(h_ContentTransferEncoding) = msg->header(h_ContentTransferEncoding);
-      body = sec->sign( old );
+      body = sec->sign( mAor.getAor(), old );
       delete old;
 
       if ( !body )
@@ -205,16 +207,16 @@ TuIM::sendPage(const Data& text, const Uri& dest,
 
    if (1)       // Compute the identity header.
    {
-      Security* sec = mStack->getSecurity();
-      assert(sec);
+      //Security* sec = mStack->getSecurity();
+      //assert(sec);
       
       DateCategory now;
       msg->header(h_Date) = now;
       
-      Data token = msg->getCanonicalIdentityString();
-      Data res = sec->computeIdentity( token );
+      //Data token = msg->getCanonicalIdentityString();
+      //Data res = sec->computeIdentity( token );
 
-      msg->header(h_Identity).value() = res;
+      msg->header(h_Identity).value() = Data::Empty;
    }
    
    setOutbound( *msg );
@@ -284,7 +286,7 @@ TuIM::processSipFrag(SipMessage* msg)
       Security* sec = mStack->getSecurity();
       assert(sec);
       
-      contents = sec->uncodeSigned( mBody, &signedBy, &sigStat );
+      contents = sec->checkSignature( mBody, &signedBy, &sigStat );
       
       if ( !contents )
       { 
@@ -598,7 +600,7 @@ TuIM::processMessageRequest(SipMessage* msg)
       Security* sec = mStack->getSecurity();
       assert(sec);
       
-      contents = sec->uncodeSigned( mBody, &signedBy, &sigStat );
+      contents = sec->checkSignature( mBody, &signedBy, &sigStat );
       
       //ErrLog("Signed by " << signedBy << " stat = " << sigStat );
       
@@ -619,7 +621,7 @@ TuIM::processMessageRequest(SipMessage* msg)
       Security* sec = mStack->getSecurity();
       assert(sec);
 
-      contents = sec->decrypt( sBody );
+      contents = sec->decrypt( mAor.getAor(), sBody );
 
       if ( !contents )
       { 
@@ -640,7 +642,7 @@ TuIM::processMessageRequest(SipMessage* msg)
       Security* sec = mStack->getSecurity();
       assert(sec);
 
-      contents = sec->decrypt( eBody );
+      contents = sec->decrypt( mAor.getAor(), eBody );
 
       if ( !contents )
       { 
