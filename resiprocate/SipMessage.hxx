@@ -48,15 +48,8 @@ class SipMessage : public Message
       // returns the transaction id from the branch or if 2543, the computed hash
       virtual const Data& getTransactionId() const;
 
-      // returns the server transaction id (not including client sequence) or if
-      // 2543, the computed hash 
-      virtual const Data& getServerTransactionId() const;
-
-      // extract the server transaction id from the client transaction id
-      static Data& serverIdFromClientTransactionId(Data& serverTransIdOut, const Data& clientTransId);
-
-      // copies the 2543 tid from request into this
-      void copyRFC2543TransactionId(const SipMessage& request);
+      const Data& getRFC2543TransactionId() const;;
+      void setRFC2543TransactionId(const Data& tid);
       
       virtual ~SipMessage();
 
