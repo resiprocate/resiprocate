@@ -268,7 +268,7 @@ WarningCategory::encode(std::ostream& str) const
 //====================
 IntegerCategory::IntegerCategory(const IntegerCategory& rhs)
    : ParserCategory(rhs),
-     mValue(0)
+     mValue(rhs.mValue)
 {}
 
 IntegerCategory&
@@ -456,9 +456,9 @@ Via::parse(ParseBuffer& pb)
    pb.skipToOneOf(";:");
    if (*pb.position() == ':')
    {
-      startMark = pb.skipChar();
-      pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
+      startMark = pb.skipChar(':');
       mSentPort = pb.integer();
+      pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
    }
    else
    {
@@ -481,7 +481,8 @@ Via::encode(ostream& str) const
 // CallId:
 //====================
 CallId::CallId(const CallId& rhs)
-   : ParserCategory(rhs)
+   : ParserCategory(rhs),
+     mValue(rhs.mValue)
 {}
 
 CallId&

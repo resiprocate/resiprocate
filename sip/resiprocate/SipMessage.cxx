@@ -122,7 +122,6 @@ SipMessage::encode(std::ostream& str) const
    if (mStartLine != 0)
    {
       mStartLine->encode(Headers::NONE, str);
-      str << Symbols::CRLF;
    }
    
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
@@ -137,6 +136,7 @@ SipMessage::encode(std::ostream& str) const
    {
       mBody->encode(Headers::NONE, str);
    }
+   str << endl;
    
    return str;
 }
