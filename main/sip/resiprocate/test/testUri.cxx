@@ -19,6 +19,45 @@ main(int argc, char* argv[])
    Log::Level l = Log::DEBUG;
    Log::initialize(Log::CERR, l, argv[0]);
 
+   // !dlb! doesn't pass
+   if (false)
+   {
+      // test repeating of known parameters
+
+      // not clear this is legal, moral, etc.
+      Uri uri1("sip:alice@example.com;user=phone;user=sploonge");
+      Uri uri2("sip:alice@example.com;user=sploonge;user=phone");
+
+      assert(uri1 == uri2);
+   }
+
+   {
+      // test repeating of unknown parameters
+      Uri modem("modem:+3585551234567;type=v32b%3F7e1;type=v110");
+      UnknownParameterType p_type("type");
+
+      assert(modem.exists(p_type));
+
+      cerr << "!! " << modem.param(p_type) << endl;
+      assert(modem.param(p_type) == "v32b%3F7e1");
+
+      Data res;
+      {
+         DataStream str(res);
+         str << modem;
+      }
+      assert(res == "modem:+3585551234567;type=v32b%3F7e1;type=v110");
+   }
+
+   {
+      // test comparing Uris with repeating unknown parameters
+      Uri modem1("modem:+3585551234567;type=v32b%3F7e1;type=v110");
+      Uri modem2("modem:+3585551234567;type=v110;type=v32b%3F7e1");
+
+      // parameter order is canonicalized for comparison
+      assert(modem1 == modem2);
+   }
+
    {
       // Test order irrelevance of known parameters
       Uri sip1("sip:user@domain;ttl=15;method=foo");
