@@ -52,8 +52,8 @@ Register::go()
          aor.uri().user() = Data(i);
          contact.uri().user() = Data(i);
          
-         auto_ptr<SipMessage> registration(Helper::makeRegister(registrand, aor));
-         registration->header(h_Contacts).push_back(contact);
+         auto_ptr<SipMessage> registration(Helper::makeRegister(registrand, aor, contact) );
+         //registration->header(h_Contacts).push_back(contact);
          
          mTransceiver.send(target, *registration);
          
