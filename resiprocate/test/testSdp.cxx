@@ -263,7 +263,36 @@ main(int argc, char* argv[])
       tassert(sdp.session().media().front().getValues("rtpmap").front() == "0 PCMU/8000");
       tassert_verify(5);
    }
+
    tassert_report();
+
+   {
+      Data txt("v=0\r\n"
+               "o=ray.zibman 846934093 1 IN IP4 66.152.249.120\r\n"
+               "s=phone-call\r\n"
+               "c=IN IP4 66.152.249.120\r\n"
+               "b=CT 1000\r\n" // should be CT:1000
+               "t=0 0\r\n"
+               "m=audio 12002 RTP/AVP 0 101\r\n"
+               "a=rtpmap:0 PCMU/8000\r\n"
+               "a=rtpmap:101 telephone-event/8000\r\n"
+               "a=fmtp:101 0-16\r\n");
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "sdp");
+      SdpContents sdp(&hfv, type);
+
+      try
+      {
+         assert(sdp.session().media().front().codecs().size() == 2);
+         assert(false);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         // bad bandwidth
+      }
+   }
+
    return 0;   
 }
 
