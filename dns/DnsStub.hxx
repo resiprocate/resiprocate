@@ -165,9 +165,9 @@ class DnsStub
                {
                   std::vector<typename QueryType::Type> Empty;
                   notifyUser(status, Empty);
+                  mReQuery = 0;
                   mStub.removeQuery(this);
                   delete this;
-                  mReQuery = 0;
                   return;
                }
 
