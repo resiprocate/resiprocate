@@ -40,7 +40,7 @@ class Uri;
 class SipStack
 {
    public:
-      SipStack(bool multiThreaded=false);
+      SipStack(bool multiThreaded=false, Security* security=0);
       ~SipStack();
       
       // Used by the application to add in a new transport
