@@ -233,7 +233,11 @@ Dialog::makeCancel(const SipMessage& request)
    assert (request.header(h_RequestLine).getMethod() == INVITE);
    
    SipMessage* cancel = new SipMessage;
-   cancel->header(h_RequestLine) = request.header(h_RequestLine);
+   
+   RequestLine rLine(CANCEL, request.header(h_RequestLine).getSipVersion());
+   rLine.uri() = request.header(h_RequestLine).uri();
+   cancel->header(h_RequestLine) = rLine;
+
    cancel->header(h_CallId) = request.header(h_CallId);
    cancel->header(h_To) = request.header(h_To); 
    cancel->header(h_From) = request.header(h_From);
