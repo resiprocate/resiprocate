@@ -363,6 +363,7 @@ DialogUsageManager::process(FdSet& fdset)
    if (!msg.get())  return;
    if (sipMsg)
    {
+      InfoLog ( << "DialogUsageManager::process: " << sipMsg->brief());      
       if (sipMsg->isRequest())
       {
          if( !validateRequest(*sipMsg) )
@@ -521,6 +522,8 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
 void
 DialogUsageManager::processRequest(const SipMessage& request)
 {
+   InfoLog ( << "DialogUsageManager::processRequest: " << request.brief());
+   
    assert(mAppDialogSetFactory);
    if (!request.header(h_To).exists(p_tag))
    {
@@ -639,14 +642,10 @@ void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    DialogSet* ds = findDialogSet(DialogSetId(response));
-
-   InfoLog( << "Dum processing response for dailog set " 
-            << DialogSetId(response) 
-            << " with map " 
-            << Inserter(mDialogSetMap));
-
+  
    if (ds)
    {
+      InfoLog ( << "DialogUsageManager::processResponse: " << response.brief());
       ds->dispatch(response);
    }
    else

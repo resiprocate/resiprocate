@@ -135,7 +135,8 @@ DialogSet::dispatch(const SipMessage& msg)
       else
       {
          assert(0);
-         // need to get the last message from the usage some how 
+         //need to get the last message from the usage some how
+         // !dcm! --  based on method type in cseq?  
       }
    }
 
