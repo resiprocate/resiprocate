@@ -953,7 +953,7 @@ Data::charEncoded() const
       
       if ( !isprint(c) ||
            // rfc 3261 reserved + mark + space + tab
-           strchr(" \";/?:@&=+%$,/t-_.!~*'()", c))
+           strchr(" \";/?:@&=+%$,\t-_.!~*'()", c))
       {
          ret +='%';
          
