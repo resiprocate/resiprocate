@@ -318,7 +318,7 @@ TransportSelector::dnsResolve(SipMessage* msg,
          // put this into the target, in case the send later fails, so we don't
          // lose the target
          msg->setForceTarget(msg->header(h_Routes).front().uri());
-         msg->header(h_Routes).pop_front();
+         //msg->header(h_Routes).pop_front();
          DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
          result = mDns.lookup(msg->getForceTarget(), handler);
       }
