@@ -60,14 +60,7 @@ EXISTS(Replaces);
       Header<Headers::_T>::Type&                                                                                \
       SipMessage::header(const Header<Headers::_T>& headerType) const                                           \
       {                                                                                                         \
-         HeaderFieldValueList* hfvs = mHeaders[Headers::_T];                                                    \
-         if (hfvs == 0)                                                                                         \
-         {                                                                                                      \
-            hfvs = new HeaderFieldValueList;                                                                    \
-            HeaderFieldValue* hfv = new HeaderFieldValue;                                                       \
-            hfvs->push_back(hfv);                                                                               \
-            mHeaders[Headers::_T] = hfvs;                                                                       \
-         }                                                                                                      \
+         HeaderFieldValueList* hfvs = ensureHeader(Headers::_T);                                                \
                                                                                                                 \
          if (!hfvs->front()->isParsed())                                                                        \
          {                                                                                                      \
@@ -117,13 +110,7 @@ HEADER(Warning);
       ParserContainer<MultiHeader<Headers::_T>::Type>&                                                                          \
       SipMessage::header(const MultiHeader<Headers::_T>& headerType) const                                                      \
       {                                                                                                                         \
-         HeaderFieldValueList* hfvs = mHeaders[Headers::_T];                                                                    \
-         if (hfvs == 0)                                                                                                         \
-         {                                                                                                                      \
-            hfvs = new HeaderFieldValueList;                                                                                    \
-            hfvs->setParserContainer(new ParserContainer<MultiHeader<Headers::_T>::Type>(hfvs));                                \
-            mHeaders[Headers::_T] = hfvs;                                                                                       \
-         }                                                                                                                      \
+         HeaderFieldValueList* hfvs = ensureHeader(Headers::_T);                                                                \
                                                                                                                                 \
          if (!hfvs->front()->isParsed())                                                                                        \
          {                                                                                                                      \
