@@ -15,9 +15,10 @@ using namespace resip;
 #define defineMethod(_enum, _name, _rfc) _name
 
 // !dlb! this file will be subsumed by MethodHash.cxx on auto-generate
-// move into MethodHash.cxx -- generated from MethodTypes.hxx
+// move into MethodHash.cxx -- generated from MethodTypes.hxx -- !ah! indeed, yuck!
 Data resip::MethodNames[MAX_METHODS] = 
 {
+   defineMethod(UNKNOWN, "UNKNOWN", ""),
    defineMethod(ACK, "ACK", "RFC ????"),
    defineMethod(BYE, "BYE", "RFC ????"),
    defineMethod(CANCEL, "CANCEL", "RFC ????"),
@@ -33,7 +34,7 @@ Data resip::MethodNames[MAX_METHODS] =
    defineMethod(PRACK, "PRACK", "RFC ????"),
    defineMethod(PUBLISH, "PUBLISH", "RFC ????"),
    defineMethod(SERVICE, "SERVICE", "!RFC"),
-   defineMethod(UNKNOWN, "UNKNOWN", ""),
+   defineMethod(UPDATE,"UPDATE", "RFC ????")
 };
 
 #include "MethodHash.hxx"
