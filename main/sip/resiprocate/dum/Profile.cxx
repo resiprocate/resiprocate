@@ -36,7 +36,7 @@ void
 Profile::addSupportedMethod(const MethodTypes& method)
 {
    mSupportedMethodTypes.insert(method);
-   mSupportedMethods.push_back(Token(MethodNames[method]));
+   mSupportedMethods.push_back(Token(getMethodName(method)));
 }
 
 void 
