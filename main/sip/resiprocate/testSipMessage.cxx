@@ -44,8 +44,8 @@ main()
       while (parse1.process());
 
 
-      SipMessage r = Helper::makeResponse(message1, 100);
-      r.encode(cerr);
+      auto_ptr<SipMessage> r = auto_ptr<SipMessage>(Helper::makeResponse(message1, 100));
+      r->encode(cerr);
 
       char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfirst\r\n"
