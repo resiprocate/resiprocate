@@ -395,7 +395,10 @@ Dialog::makeCancel(const SipMessage& request)
    cancel->header(h_CSeq) = request.header(h_CSeq);
    cancel->header(h_CSeq).method() = CANCEL;
    cancel->header(h_Vias).push_back(request.header(h_Vias).front());
-   cancel->header(h_Routes) = request.header(h_Routes);
+   if (request.exists(h_Routes))
+   {
+      cancel->header(h_Routes) = request.header(h_Routes);
+   }
    
    return cancel;
 }
