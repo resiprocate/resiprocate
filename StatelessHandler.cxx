@@ -70,7 +70,7 @@ StatelessHandler::process()
             int port = via.sentPort();
             if (sip->hasForceTarget())
             {
-                assert(("Unimplemented",0));
+               assert( /*Unimplemented*/ 0 );
             }
             else
             {
