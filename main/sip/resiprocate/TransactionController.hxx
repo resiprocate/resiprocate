@@ -15,7 +15,7 @@ namespace resip
 class TransactionController
 {
    public:
-      TransactionController(Fifo<Message>& tufifo, bool stateless=false);
+      TransactionController(bool multithreaded, Fifo<Message>& tufifo, bool stateless=false);
       ~TransactionController();
 
       void process(FdSet& fdset);
@@ -46,6 +46,7 @@ class TransactionController
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
       
+      bool mMultiThreaded;
       bool mStateless;
       bool mRegisteredForTransactionTermination;
       
