@@ -13,35 +13,31 @@ class UnknownSubComponent;
 class ParserCategory
 {
    public:
-      
       ParserCategory(HeaderFieldValue* headerFieldValue)
-         : mHeaderField(headerFieldValue) 
+         : mHeaderField(headerFieldValue),
+           mIsParsed(false)
       {}
 
-      //!dcm! -- will need to add different type of clones to HeaderFieldValue
-      //in order to write copy constructor
-
       virtual ~ParserCategory() {}
-      virtual ParserCategory* clone(HeaderFieldValue*) const = 0;
 
-      virtual std::ostream& encode(std::ostream& str) const 
-      { // !dcm!  this is just so things are compiled until all parses get written
-         assert(0);
-         return str;
-      }
+      virtual void parse() = 0;
+      virtual ParserCategory* clone(HeaderFieldValue*) const = 0;
+      virtual std::ostream& encode(std::ostream& str) const = 0;
       
       bool isParsed() const
       {
          return mIsParsed;
       }
-      
-      virtual void parse() = 0;
+
+      void parseParameters(const char* start);
 
       UnknownSubComponent& operator[](const Data& param);
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
    protected:
-      ParserCategory() 
+      ParserCategory()
+         : mHeaderField(0),
+           mIsParsed(true)
       {}
 
       // call before every access 
