@@ -1,4 +1,4 @@
-# $Id: Makefile.osarch,v 1.10 2003/10/23 16:45:39 fluffy Exp $
+# $Id: Makefile.osarch,v 1.11 2004/02/07 20:52:29 jason Exp $
 
 ######################################################################
 
@@ -62,29 +62,16 @@ ifeq ($(OSTYPE),SunOS)
     CFLAGS   += -DSUNXIL_WARNING_DISABLE -DHAVE_POPT_H -I/opt/sfw/include
     CXXFLAGS += -DSUNXIL_WARNING_DISABLE -DHAVE_POPT_H -I/opt/sfw/include
     LDFLAGS  += -L/opt/sfw/lib
-    INSTALL_PATH_DEFAULT = /opt/vocal
 
     ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
-
         CXXFLAGS += -D_REENTRANT
         CFLAGS   += -D_REENTRANT
-        LDLIBS_LAST_PURE   += -lnsl -lsocket -nodefaultlibs -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic -lc -lgcc -lm
         LDLIBS_LAST   += -R/usr/local/lib -lnsl -lsocket
-
     else
-
         CXXFLAGS += -D_REENTRANT -mt -D_RWSTD_MULTI_THREAD -dalign -xarch=v8plus
         CFLAGS   += -D_REENTRANT -xarch=v8plus
         LDFLAGS  +=  -DTHREAD=MULTI -mt  -dalign -xarch=v8plus -L/opt/SUNWspro/WS6/lib/rw7 -L/opt/SUNWspro/WS6/lib/ 
-        LDLIBS_LAST_PURE   += -lnsl -lsocket -lm
         LDLIBS_LAST   += -lrwtool -liostream -lnsl -lsocket -lCstd
-
-        ifeq ($(USE_VARARG_HACK),1)
-            CFLAGS+= -DVARARG_HACK
-            CXXFLAGS+= -DVARARG_HACK
-            FILEPP = $(HOME)/filepp-1.2.0/filepp
-        endif
-
     endif
 
 endif
@@ -125,10 +112,10 @@ endif
 # set up general compilation options
 
 LDFLAGS  += 
-CXXFLAGS += -DUSE_PTHREADS
-CFLAGS   += -DUSE_PTHREADS
+CXXFLAGS += 
+CFLAGS   += 
 LDLIBS   +=
-INCDIRS  += $(BUILD)
+INCDIRS  += 
 
 
 
@@ -235,17 +222,13 @@ CC=sh-wrs-vxworks-gcc
 AR=sh-wrs-vxworks-ar
 LD=sh-wrs-vxworks-ld
 CROSS_COMPILE=1
-
 DEFINES += BSD43_COMPATIBLE
-
 CXXFLAGS += 
 CFLAGS   += 
 LDFLAGS  += -L/usr/local/lib/gcc-lib/sh-wrs-vxworks/2.95.1/m2
 LDLIBS_LAST   +=  -lstdc++ -lgcc
-
 OSCLASS = VXWORKS
 
-USE_LEAKTRACE=
 endif
 
 OS_ARCH  := $(OSTYPE).$(ARCH)
