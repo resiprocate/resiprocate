@@ -9,7 +9,7 @@ using namespace Vocal2;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 
-Dialog::Dialog(const Url& localContact) 
+Dialog::Dialog(const NameAddr& localContact) 
    : mVia(),
      mContact(localContact),
      mCreated(false),
@@ -29,7 +29,7 @@ Dialog::Dialog(const Url& localContact)
    //DebugLog (<< "Creating a dialog: " << localContact << " " << this);
    mVia.sentHost() = localContact.uri().host();
    mVia.sentPort() = localContact.uri().port();
-   mVia.transport() = localContact.uri()[p_transport];
+   mVia.transport() = localContact.uri().param(p_transport);
 #if 0
    if (mVia.transport().size() == 0)
    {
@@ -57,15 +57,15 @@ Dialog::createDialogAsUAS(const SipMessage& request, const SipMessage& response)
       mLocalSequence = 0;
       mLocalEmpty = true;
       mCallId = request.header(h_CallId);
-      mLocalTag = response.header(h_To)[p_tag]; // from response
-      mRemoteTag = request.header(h_From)[p_tag]; 
+      mLocalTag = response.header(h_To).param(p_tag); // from response
+      mRemoteTag = request.header(h_From).param(p_tag); 
       mRemoteUri = request.header(h_From);
       mLocalUri = request.header(h_To);
       mCreated = true;
 
       mDialogId.value() = mCallId.value();
-      mDialogId[p_toTag] = mRemoteTag;
-      mDialogId[p_fromTag] = mLocalTag;
+      mDialogId.param(p_toTag) = mRemoteTag;
+      mDialogId.param(p_fromTag) = mLocalTag;
    }
 }
 
@@ -89,15 +89,15 @@ Dialog::createDialogAsUAC(const SipMessage& request, const SipMessage& response)
       mLocalSequence = request.header(h_CSeq).sequence();
       mLocalEmpty = false;
       mCallId = request.header(h_CallId);
-      mLocalTag = response.header(h_From)[p_tag];  
-      mRemoteTag = response.header(h_To)[p_tag]; 
+      mLocalTag = response.header(h_From).param(p_tag);  
+      mRemoteTag = response.header(h_To).param(p_tag); 
       mRemoteUri = request.header(h_To);
       mLocalUri = request.header(h_From);
       mCreated = true;
       
       mDialogId.value() = mCallId.value();
-      mDialogId[p_toTag] = mRemoteTag;
-      mDialogId[p_fromTag] = mLocalTag;
+      mDialogId.param(p_toTag) = mRemoteTag;
+      mDialogId.param(p_fromTag) = mLocalTag;
    }
 }
 
@@ -163,7 +163,7 @@ Dialog::makeBye()
 
 
 SipMessage
-Dialog::makeRefer(const Url& referTo)
+Dialog::makeRefer(const NameAddr& referTo)
 {
    SipMessage request;
    request.header(h_RequestLine) = RequestLine(REFER);
@@ -234,9 +234,9 @@ Dialog::setRequestDefaults(SipMessage& request)
 {
    assert(mCreated);
    request.header(h_To) = mRemoteUri;
-   request.header(h_To)[p_tag] = mRemoteTag;
+   request.header(h_To).param(p_tag) = mRemoteTag;
    request.header(h_From) = mLocalUri;
-   request.header(h_From)[p_tag] = mLocalTag;
+   request.header(h_From).param(p_tag) = mLocalTag;
    request.header(h_CallId) = mCallId;
 
    Helper::setUri(request.header(h_RequestLine), mRemoteTarget);
@@ -244,7 +244,7 @@ Dialog::setRequestDefaults(SipMessage& request)
    request.header(h_Contacts).front() = mContact;
    request.header(h_Vias).clear();
    request.header(h_Vias).front() = mVia;
-   request.header(h_Vias).front()[p_branch] = Helper::computeUniqueBranch();
+   request.header(h_Vias).front().param(p_branch) = Helper::computeUniqueBranch();
 }
 
 void
