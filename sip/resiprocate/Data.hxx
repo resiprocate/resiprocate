@@ -2,7 +2,7 @@
 #define STRINGDATA_H_
 
 static const char* const DataHeaderVersion =
-"$Id: Data.hxx,v 1.1 2002/09/21 19:19:00 jason Exp $";
+"$Id: Data.hxx,v 1.2 2002/09/21 19:25:25 jason Exp $";
 
 //Authors: Sunitha Kumar, Cullen Jennings
 
@@ -19,119 +19,120 @@ static const char SPACE[] = " ";
 
 class Data : public string
 {
+      
+   public:
+      Data( );
+      Data( const char* str );
+      Data( const char* buffer, int length );
+      Data( const Data& data );
+      Data( const string& str);
+      Data( const int value);
 
-    public:
-        Data( );
-        Data( const char* str );
-        Data( const char* buffer, int length );
-        Data( const Data& data );
-        Data( const string& str);
-        Data( const int value);
+      //Data& operator=(const Data& data);
 
-        Data& operator=(const Data& data);
-
-        // getData returns a NUL terminated (e.g. a C string) buffer
-        const char* logData() const { return c_str(); }
-        //const char* getData(char* buf, int len) const;
-        //const char* getData(LocalScopeAllocator& lo) const;
-        //const char* getDataBuf() const; // not null terminated
+      // getData returns a NUL terminated (e.g. a C string) buffer
+      const char* logData() const { return c_str(); }
+      //const char* getData(char* buf, int len) const;
+      //const char* getData(LocalScopeAllocator& lo) const;
+      //const char* getDataBuf() const; // not null terminated
         
-        //char getChar( int i ) const;  //return the i'th char of string.
-        //void setchar( int i, char c );  //write to the i'th char of string.
+      //char getChar( int i ) const;  //return the i'th char of string.
+      //void setchar( int i, char c );  //write to the i'th char of string.
 
-        int length() const { return size(); }
+      int length() const { return size(); }
 
-        //string convertString() const;
-        int convertInt() const;
+      //string convertString() const;
+      int convertInt() const;
 
-        // match
-        int match(const Data& match,
-                  Data* data,
-                  bool replace = false,
-                  const Data& replaceWith = "");
+      // match
+      int match(const Data& match,
+                Data* data,
+                bool replace = false,
+                const Data& replaceWith = "");
         
-        // removes spaces before and after a string.
-        void removeSpaces();
+      // removes spaces before and after a string.
+      void removeSpaces();
 
-        //expand requird for expandin headers
-        void expand(const Data& startFrom, 
-		    const Data& findstr, 
-		    const Data& replstr, 
-		    const Data& delimiter);
+      //expand requird for expandin headers
+      void expand(const Data& startFrom, 
+                  const Data& findstr, 
+                  const Data& replstr, 
+                  const Data& delimiter);
 
-        /** returns a substring of this object
-            @param first      the first character to be part of the substring
-            @param last       the last character of the substring, or -1 to 
-            mean the last character overall
-            thus, x.substring(0, -1) == x.
-        */
-        Data substring(int first, int last) const;
+      /** returns a substring of this object
+          @param first      the first character to be part of the substring
+          @param last       the last character of the substring, or -1 to 
+          mean the last character overall
+          thus, x.substring(0, -1) == x.
+      */
+      Data substring(int first, int last) const;
 
 
-        // do a case-insensitive match
-        friend bool isEqualNoCase( const Data& left, const Data& right ) ;
+      // do a case-insensitive match
+      friend bool isEqualNoCase( const Data& left, const Data& right ) ;
 
-        //
-        void deepCopy (const Data& src, char ** bufPtr = 0, int *bufLenPtr = 0);
+      //
+      void deepCopy (const Data& src, char ** bufPtr = 0, int *bufLenPtr = 0);
 
-        //
-        int find( const Data& match, int start = 0 );
+      //
+      int find( const Data& match, int start = 0 );
 
-	// convert this Data to lower case
-	void lowercase();
+      // convert this Data to lower case
+      void lowercase();
 
-	// convert this Data to upper case
-	void uppercase();
+      // convert this Data to upper case
+      void uppercase();
 
-	/* 
-           match (and eat) the first contiguous block composed of the
-           characters in match, which is outside of double quotes <">
-           and angle brackets "<" and ">". Returned is the data
-           before the matched characters.  If no characters match,
-           return the empty Data.  If matchFail is set to a bool ptr,
-           the bool *matchFail will be set to true if the match
-           fails, and false otherwise.
+      /* 
+         match (and eat) the first contiguous block composed of the
+         characters in match, which is outside of double quotes <">
+         and angle brackets "<" and ">". Returned is the data
+         before the matched characters.  If no characters match,
+         return the empty Data.  If matchFail is set to a bool ptr,
+         the bool *matchFail will be set to true if the match
+         fails, and false otherwise.
 
-           This is designed for use in separating a list of
-           parameters at the commas (e.g. Contact:)
-	*/
-	Data parseOutsideQuotes(const char* match, 
-                                bool useQuote,
-                                bool useAngle,
-                                bool* matchFail = 0 );
+         This is designed for use in separating a list of
+         parameters at the commas (e.g. Contact:)
+      */
+      Data parseOutsideQuotes(const char* match, 
+                              bool useQuote,
+                              bool useAngle,
+                              bool* matchFail = 0 );
         
-	/* 
-           match (and eat) the first contiguous block composed of the
-           characters in match. Returned is the data before the
-           matched characters.  If no characters match, return the
-           empty Data.  If matchFail is set to a bool ptr, the bool
-           *matchFail will be set to true if the match fails, and
-           false otherwise.
-	*/
-	Data parse(const char* match, bool* matchFail = 0 );
+      /* 
+         match (and eat) the first contiguous block composed of the
+         characters in match. Returned is the data before the
+         matched characters.  If no characters match, return the
+         empty Data.  If matchFail is set to a bool ptr, the bool
+         *matchFail will be set to true if the match fails, and
+         false otherwise.
+      */
+      Data parse(const char* match, bool* matchFail = 0 );
 
-	/* match (and eat) any one of the characters in match.  If
-           matchedChar points to a char, it will be set to the
-           matching character, or \0 if not matched to anything.
-           Returns characters before the match, or the empty string
-           if no characters match.
-	*/
-	Data matchChar(const char* match, char* matchedChar = 0);
+      /* match (and eat) any one of the characters in match.  If
+         matchedChar points to a char, it will be set to the
+         matching character, or \0 if not matched to anything.
+         Returns characters before the match, or the empty string
+         if no characters match.
+      */
+      Data matchChar(const char* match, char* matchedChar = 0);
 
-	/* get the next line in the text, delimited by \r\n or \n .
-           Differs from parse("\r\n", matchFail) in that if there is
-           a blank line (which has the contiguous text \r\n\r\n),
-           parse will merely skip the empty line, while getLine will
-           return the empty line as an empty Data.
-	*/
-	Data getLine(bool* matchFail = 0 );
+      /* get the next line in the text, delimited by \r\n or \n .
+         Differs from parse("\r\n", matchFail) in that if there is
+         a blank line (which has the contiguous text \r\n\r\n),
+         parse will merely skip the empty line, while getLine will
+         return the empty line as an empty Data.
+      */
+      Data getLine(bool* matchFail = 0 );
 
-        // remove leading white space.
-        void removeLWS();
+      // remove leading white space.
+      void removeLWS();
 };
 
-
+ 
 }
+
 
 
 
@@ -139,16 +140,18 @@ class Data : public string
 #if ( (__GNUC_MINOR__ >= 1) )
 using namespace __gnu_cxx;
 namespace __gnu_cxx
+{
 #else
 using namespace std;
 namespace std
+{
 #endif
 struct hash<string>
 {
-      size_t operator()(const string& __s) const
-      {
-         return __stl_hash_string(__s.c_str());
-      }
+size_t operator()(const string& __s) const
+{
+   return __stl_hash_string(__s.c_str());
+}
 };
 
 struct hash<Data>
@@ -156,8 +159,9 @@ struct hash<Data>
       size_t operator()(const Data& __s) const
       {
          return __stl_hash_string(__s.logData());
-      }
-};
+}
+
+} // namespace
 #endif
 
 #endif
