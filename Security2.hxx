@@ -130,7 +130,8 @@ class BaseSecurity
       typedef std::map<Data,Data>      PassPhraseMap;
 
    private:
-      friend class SecuredTransportCtx;
+      SSL_CTX*       mTlsCtx;
+      SSL_CTX*       mSslCtx;
 
       // root cert list
       X509_STORE*    mRootCerts;
@@ -142,11 +143,10 @@ class BaseSecurity
       PassPhraseMap  mUserPassPhrases;
       PrivateKeyMap  mUserPrivateKeys;
 
+      //===========================
+      friend class SecuredTransportCtx;
       SSL_CTX*       getTlsCtx ();
       SSL_CTX*       getSslCtx ();
-
-      SSL_CTX*       mTlsCtx;
-      SSL_CTX*       mSslCtx;
 };
 
 
