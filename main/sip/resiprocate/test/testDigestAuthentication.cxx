@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string.h>
 #include <unistd.h>
+#include <memory>
 
 #include "sip2/sipstack/HeaderFieldValue.hxx"
 #include "sip2/sipstack/HeaderTypes.hxx"
