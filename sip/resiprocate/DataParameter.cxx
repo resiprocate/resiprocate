@@ -17,18 +17,18 @@ DataParameter::DataParameter(ParameterTypes::Type type,
    pb.skipWhitespace();
    pb.skipChar(Symbols::EQUALS[0]);
    pb.skipWhitespace(); // .dlb. space allowed only before "
-   if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
+   if (!pb.eof() && *pb.position() == Symbols::DOUBLE_QUOTE[0])
    {
       setQuoted(true);
       pb.skipChar();
-      const char* pos = pb.position();
+      const char* pos = pb.position(); // !ah! unsafe for broken message
       pb.skipToEndQuote();
       pb.data(mValue, pos);
       pb.skipChar();
    }
    else
    {
-      const char* pos = pb.position();
+      const char* pos = pb.position(); // unsafe for broken message !ah!
       pb.skipToOneOf(terminators);
       pb.data(mValue, pos);
    }
