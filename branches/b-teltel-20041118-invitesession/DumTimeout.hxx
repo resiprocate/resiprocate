@@ -16,6 +16,7 @@ class DumTimeout : public ApplicationMessage
          SessionExpiration,
          SessionRefresh,
          Registration,
+         RegistrationRetry,
          Provisional1,
          Provisional2,
          Publication,
