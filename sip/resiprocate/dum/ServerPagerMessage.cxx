@@ -1,47 +1,82 @@
-#if !defined(RESIP_SERVEROUTOFDIALOGREQ_HXX)
-#define RESIP_SERVEROUTOFDIALOGREQ_HXX
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/MethodTypes.hxx"
+#include "resiprocate/dum/ServerPagerMessage.hxx"
+#include "resiprocate/dum/OutOfDialogHandler.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/PagerMessageHandler.hxx"
+#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/os/Logger.hxx"
 
-#include "resiprocate/dum/NonDialogUsage.hxx"
+using namespace resip;
 
-namespace resip
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+ServerPagerMessageHandle 
+ServerPagerMessage::getHandle()
 {
-
-class ServerOutOfDialogReq : public NonDialogUsage
-{
-   public:
-      typedef Handle<ServerOutOfDialogReq> ServerOutOfDialogReqHandle;
-      ServerOutOfDialogReqHandle getHandle();
-
-      SipMessage& accept(int statusCode = 200);
-      SipMessage& reject(int statusCode);
-
-      virtual void dispatch(const SipMessage& msg);
-      virtual void dispatch(const DumTimeout& timer);
-
-	  // Return Options response based on current Profile settings - application may need to add SDP Contents before
-	  // sending and/or change the status code.
-	  // Set fIncludeAllows to false if this is a proxy server (RFC3261 section 11.2)
-      virtual SipMessage& answerOptions(bool fIncludeAllows=true);
-	  virtual void send(SipMessage& msg);
-
-   protected:
-      virtual ~ServerOutOfDialogReq();
-
-   private:
-      friend class DialogSet;
-      ServerOutOfDialogReq(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& req);
-      
-      SipMessage mRequest;
-	  SipMessage mResponse;
-
-      // disabled
-      ServerOutOfDialogReq(const ServerOutOfDialogReq&);
-      ServerOutOfDialogReq& operator=(const ServerOutOfDialogReq&);
-};
- 
+   return ServerPagerMessageHandle(mDum, getBaseHandle().getId());
 }
 
-#endif
+ServerPagerMessage::ServerPagerMessage(DialogUsageManager& dum,
+                                       DialogSet& dialogSet,
+                                       const SipMessage& req) : 
+   NonDialogUsage(dum, dialogSet),
+   mRequest(req)
+{
+}
+
+ServerPagerMessage::~ServerPagerMessage()
+{
+   mDialogSet.mServerPagerMessage = 0;
+}
+
+void 
+ServerPagerMessage::dispatch(const SipMessage& msg)
+{
+	assert(msg.isRequest());
+    ServerPagerMessageHandler* handler = mDum.mServerPagerMessageHandler;
+    
+    //?dcm? check in DialogUsageManager
+    if (!handler)
+    {
+       mDum.makeResponse(mResponse, msg, 405);
+       mDum.send(mResponse);
+       delete this;
+       return;
+    }
+    handler->onMessageArrived(getHandle(), msg);
+}
+
+void
+ServerPagerMessage::dispatch(const DumTimeout& msg)
+{
+}
+
+void 
+ServerPagerMessage::send(SipMessage& response)
+{
+   assert(response.isResponse());
+   mDum.send(response);
+   delete this;
+}
+
+SipMessage& 
+ServerPagerMessage::accept(int statusCode)
+{   
+   //!dcm! -- should any responses include a contact?
+   mDum.makeResponse(mResponse, mRequest, statusCode);
+   return mResponse;
+}
+
+SipMessage& 
+ServerPagerMessage::reject(int statusCode)
+{
+   //!dcm! -- should any responses include a contact?
+   mDum.makeResponse(mResponse, mRequest, statusCode);
+   return mResponse;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

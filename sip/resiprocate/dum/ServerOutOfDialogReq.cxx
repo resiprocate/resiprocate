@@ -31,7 +31,6 @@ ServerOutOfDialogReq::~ServerOutOfDialogReq()
    mDialogSet.mServerOutOfDialogRequest = 0;
 }
 
-
 void 
 ServerOutOfDialogReq::dispatch(const SipMessage& msg)
 {
@@ -84,55 +83,51 @@ ServerOutOfDialogReq::answerOptions(bool fIncludeAllows)
 	mResponse.header(h_Allows).clear();
 
 	if(fIncludeAllows)
-
 	{
-
 		mResponse.header(h_Allows) = pProfile->getAllowedMethods();
-
 	}
 
-
-
 	// Add Accept Header
-
 	mResponse.header(h_Accepts).clear();
-
 	mResponse.header(h_Accepts) = pProfile->getSupportedMimeTypes();
 
-
-
 	// Add Accept-Encoding Header
-
 	mResponse.header(h_AcceptEncodings).clear();
-
 	mResponse.header(h_AcceptEncodings) = pProfile->getSupportedEncodings();
 
-
-
 	// Add Accept-Language Header
-
 	mResponse.header(h_AcceptLanguages).clear();
-
 	mResponse.header(h_AcceptLanguages) = pProfile->getSupportedLanguages();
 
-
-
 	// Add Supported Header
-
 	mResponse.header(h_Supporteds).clear();
-
 	mResponse.header(h_Supporteds) = pProfile->getSupportedOptionTags();
-
 
 	return mResponse;
 }
 
-
 void 
 ServerOutOfDialogReq::send(SipMessage& response)
 {
-	mDum.send(response);
-	delete this;
+   assert(response.isResponse());
+   mDum.send(response);
+   delete this;
+}
+
+SipMessage& 
+ServerOutOfDialogReq::accept(int statusCode)
+{   
+   //!dcm! -- should any responses should include a contact?
+   mDum.makeResponse(mResponse, mRequest, statusCode);
+   return mResponse;
+}
+
+SipMessage& 
+ServerOutOfDialogReq::reject(int statusCode)
+{
+   //!dcm! -- should any responses should include a contact?
+   mDum.makeResponse(mResponse, mRequest, statusCode);
+   return mResponse;
 }
 
 
