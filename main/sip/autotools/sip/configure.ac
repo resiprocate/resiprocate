@@ -147,6 +147,9 @@ dnl CFLAGS="-Wall -Wnodeprecated $CFLAGS $PTHREAD_CFLAGS"
 
 dnl CC="$PTHREAD_CC"
 
+dnl Temporary hack for kerberos on Red Hat 9 Linux
+CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
+                                                                                
 dnl Temporary hack until proper, portable pthreads detection is added.
 LIBS="$LIBS -lpthread"
 
