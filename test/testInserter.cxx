@@ -39,13 +39,13 @@ struct Foo
 
       int count;
       Data value;
-
-      ostream& operator<<(ostream& str) const
-      {
-	 str << "Foo[" << count << " " << value << "]";
-	 return str;
-      }
 };
+
+ostream& operator<<(ostream& str, const Foo& foo)
+{
+   str << "Foo[" << foo.count << " " << foo.value << "]";
+   return str;
+}
 
 int
 main(int argc, char** argv)
