@@ -78,11 +78,15 @@ class Symbols
       static const char * const expires;
       static const char * const handling;
       static const char * const tag;
+      static const char * const toTag;
+      static const char * const fromTag;
       static const char * const duration;
       static const char * const branch;
       static const char * const received;
       static const char * const comp;
       static const char * const rport;
+
+      static const int DefaultSipPort;
 };
 
 }
