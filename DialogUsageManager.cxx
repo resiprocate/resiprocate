@@ -400,8 +400,9 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
 
    //could pass dummy target, then apply merge rules from 19.1.5...or
    //makeNewSession would use rules from 19.1.5
-   inv.header(h_From) = serverSub->mDialog.mLocalNameAddr;
-   inv.header(h_From).remove(p_tag);   
+   NameAddr from = serverSub->mDialog.mLocalNameAddr;
+   from.param(p_tag) = inv.header(h_From).param(p_tag);  // Maintain From Tag generated in BaseCreator
+   inv.header(h_From) = from;
 
    if (refer.exists(h_ReferredBy))
    {
