@@ -1,5 +1,6 @@
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/ClientInviteSession.hxx"
@@ -12,13 +13,15 @@
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
 #include "resiprocate/dum/OutOfDialogHandler.hxx"
+#include "resiprocate/dum/AppDialog.hxx"
+#include "resiprocate/dum/AppDialogSet.hxx"
+#include "resiprocate/dum/AppDialogSetFactory.hxx"
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 
 #include <sstream>
 #include <time.h>
-//#include <windows.h>
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
@@ -33,35 +36,51 @@ void sleepSeconds(unsigned int seconds)
 #endif
 }
 
-
-void generateSdpSession(SdpContents& mMySdpOffer)
+/////////////////////////////////////////////////////////////////////////////////
+//
+// Classes that provide the mapping between Application Data and DUM 
+// dialogs/dialogsets
+//  										
+// The DUM layer creates an AppDialog/AppDialogSet object for inbound/outbound
+// SIP Request that results in Dialog creation.
+//  										
+/////////////////////////////////////////////////////////////////////////////////
+class testAppDialog : public AppDialog
 {
-   Data myIP = "192.168.0.155";
-   
-   mMySdpOffer.session().version() = 0;
-   mMySdpOffer.session().name() = "-";
-   mMySdpOffer.session().origin() = SdpContents::Session::Origin(Data("dum"),Random::getRandom(), 
-                                                                 Random::getRandom(), 
-                                                                 SdpContents::IP4,
-                                                                 myIP);
-   mMySdpOffer.session().addTime(SdpContents::Session::Time(0,0));
-   mMySdpOffer.session().connection() =
-      SdpContents::Session::Connection(SdpContents::IP4, myIP, 0);
-   SdpContents::Session::Medium medium(Symbols::audio, 0, 1, Symbols::RTP_AVP);
-   SdpContents::Session::Codec codec("PCMU", 3, 8000);
-   medium.addCodec(codec);
-   mMySdpOffer.session().addMedium(medium);
-   mMySdpOffer.session().origin().setAddress(myIP);
-   mMySdpOffer.session().connection().setAddress(myIP);
-   static int port = 9000;
-   mMySdpOffer.session().media().front().port() = port++; // should be a random
-}
+public:
+   testAppDialog(HandleManager& ham, Data &SampleAppData) : AppDialog(ham), mSampleAppData(SampleAppData)
+   {  cout << mSampleAppData << ": testAppDialog: created." << endl;  }
+   virtual ~testAppDialog() 
+   { cout << mSampleAppData << ": testAppDialog: destroyed." << endl; }
+   Data mSampleAppData;
+};
+
+class testAppDialogSet : public AppDialogSet
+{
+public:
+   testAppDialogSet(DialogUsageManager& dum, Data SampleAppData) : AppDialogSet(dum), mSampleAppData(SampleAppData)
+   {  cout << mSampleAppData << ": testAppDialogSet: created." << endl;  }
+   virtual ~testAppDialogSet() 
+   {  cout << mSampleAppData << ": testAppDialogSet: destroyed." << endl;  }
+   virtual AppDialog* createAppDialog(const SipMessage& msg) 
+   {  return new testAppDialog(mDum, mSampleAppData);  }
+   Data mSampleAppData;
+};
+
+class testAppDialogSetFactory : public AppDialogSetFactory
+{
+public:
+   virtual AppDialogSet* createAppDialogSet(DialogUsageManager& dum, const SipMessage& msg) 
+   {  return new testAppDialogSet(dum, Data("UAS") + Data("(") + getMethodName(msg.header(h_RequestLine).getMethod()) + Data(")"));  }
+   // For a UAS the testAppDialogSet will be created by DUM using this function.  If you want to set 
+   // Application Data, then one approach is to wait for onNewSession(ServerInviteSessionHandle ...) 
+   // to be called, then use the ServerInviteSessionHandle to get at the AppDialogSet or AppDialog,
+   // then cast to your derived class and set the desired application data.
+};
 
 
-
-
-//default, Debug outputs
-class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegistrationHandler
+// Generic InviteSessionHandler
+class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegistrationHandler, public OutOfDialogHandler
 {
    public:
       Data name;
@@ -70,7 +89,6 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       
       TestInviteSessionHandler(const Data& n) : name(n), registered(false) 
       {
-         InfoLog(  << "TestInviteSessionHandler::TestInviteSessionHandler(" << name << ")");         
       }
 
       virtual ~TestInviteSessionHandler()
@@ -81,142 +99,141 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       {         
          registerHandle = h;   
          assert(registerHandle.isValid());         
-         {
-            stringstream s;
-            s << "Handle created: " << &h;
-            //OutputDebugString(s.str().c_str());
-         }
-         InfoLog( << "###Register::onSuccess: ###" << name << endl);
+         cout << name << ": ClientRegistration-onSuccess - " << response.brief() << endl;
          registered = true;
       }
 
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& msg)
       {
-         InfoLog( << "###Register::onFailure: ###" << name << endl);
-         assert(0);
+         cout << name << ": ClientRegistration-onFailure - " << msg.brief() << endl;
+         throw;  // Ungracefully end
       }
 
       virtual void onRemoved(ClientRegistrationHandle)
       {
-         InfoLog(  << "TestInviteSessionHandler::onRemoved(" << name << ")");
+          cout << name << ": ClientRegistration-onRemoved" << endl;
       }
 
-      /// called when an initial INVITE arrives 
       virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
-         assert(0);         
-         InfoLog(  << "TestInviteSessionHandler::onNewSession(" << name << ")  "  << msg.brief());
+         cout << name << ": ClientInviteSession-onNewSession - " << msg.brief() << endl;
       }
       
       virtual void onNewSession(ServerInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
-         assert(0);         
-         InfoLog(  << "TestInviteSessionHandler::onNewSession " << msg.brief());
-      }
-      virtual void onFailure(ClientInviteSessionHandle, const SipMessage& msg)
-      {
-         InfoLog(  << "TestInviteSessionHandler::onFailure " << msg.brief());
-      }
-      
-      virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage& msg, const SdpContents*)
-      {
-         InfoLog(  << "TestInviteSessionHandler::onEarlyMedia " << msg.brief());
+         cout << name << ": ServerInviteSession-onNewSession - " << msg.brief() << endl;
       }
 
+      virtual void onFailure(ClientInviteSessionHandle, const SipMessage& msg)
+      {
+         cout << name << ": ClientInviteSession-onFailure - " << msg.brief() << endl;
+      }
+      
       virtual void onProvisional(ClientInviteSessionHandle, const SipMessage& msg)
       {
-         InfoLog(  << "TestInviteSessionHandler::onProvisional " << msg.brief());
+         cout << name << ": ClientInviteSession-onProvisional - " << msg.brief() << endl;
       }
 
       virtual void onConnected(ClientInviteSessionHandle, const SipMessage& msg)
       {
-         InfoLog(  << "TestInviteSessionHandler::onConnected(Uac)" << msg.brief());
-      }
-
-      virtual void onConnected(InviteSessionHandle, const SipMessage& msg)
-      {
-         InfoLog(  << "TestInviteSessionHandler::onConnected(Uas) " << msg.brief());
+         cout << name << ": ClientInviteSession-onConnected - " << msg.brief() << endl;
       }
 
       virtual void onStaleCallTimeout(ClientInviteSessionHandle)
       {
-         InfoLog(  << "TestInviteSessionHandler::onStaleCallTimeout" );
+         cout << name << ": ClientInviteSession-onStaleCallTimeout" << endl;
+      }
+
+      virtual void onConnected(InviteSessionHandle, const SipMessage& msg)
+      {
+         cout << name << ": InviteSession-onConnected - " << msg.brief() << endl;
       }
 
       virtual void onRedirected(ClientInviteSessionHandle, const SipMessage& msg)
       {
-         InfoLog(  << "TestInviteSessionHandler::onRedirected " << msg.brief());
+         cout << name << ": ClientInviteSession-onRedirected - " << msg.brief() << endl;
       }
 
       virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)
       {
-         assert(0);         
-         InfoLog(  << "TestInviteSessionHandler::onTerminated " << msg.brief());
+         cout << name << ": InviteSession-onTerminated - " << msg.brief() << endl;
+         assert(0); // This is overrideen in UAS and UAC specific handlers
       }
 
-//       virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg)
-//       {
-//          InfoLog(  << "TestInviteSessionHandler::onReadyToSend " << msg.brief());
-//       }
-
-      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)
+      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents*sdp)
       {
-         assert(0);
-         InfoLog(  << "TestInviteSessionHandler::onAnswer" << msg.brief());
+         cout << name << ": InviteSession-onAnswer(SDP)" << endl;
+         //sdp->encode(cout);
       }
 
-      virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents*)      
+      virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents*sdp)      
       {
-         assert(0);
-         InfoLog(  << "TestInviteSessionHandler::onOffer " << msg.brief());
+         cout << name << ": InviteSession-onOffer(SDP)" << endl;
+         //sdp->encode(cout);
       }
-      
+
+      virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage& msg, const SdpContents*sdp)
+      {
+         cout << name << ": InviteSession-onEarlyMedia(SDP)" << endl;
+         //sdp->encode(cout);
+      }
+
       virtual void onOfferRequired(InviteSessionHandle, const SipMessage& msg)
       {
-         InfoLog(  << "TestInviteSessionHandler::onOfferRequired " << msg.brief());
+         cout << name << ": InviteSession-onOfferRequired - " << msg.brief() << endl;
       }
 
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg)
       {
-         InfoLog(  << "TestInviteSessionHandler::onOfferRejected " << msg.brief());
+         cout << name << ": InviteSession-onOfferRejected - " << msg.brief() << endl;
       }
 
       virtual void onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
-         InfoLog(  << "TestInviteSessionHandler::onDialogModified " << msg.brief());
+         cout << name << ": InviteSession-onDialogModified - " << msg.brief() << endl;
       }
 
       virtual void onInfo(InviteSessionHandle, const SipMessage& msg)
       {
-         InfoLog(  << "TestInviteSessionHandler::onInfo" << msg.brief());
+         cout << name << ": InviteSession-onInfo - " << msg.brief() << endl;
       }
 
       virtual void onRefer(InviteSessionHandle, ServerSubscriptionHandle, const SipMessage& msg)
       {
-         InfoLog(  << "TestInviteSessionHandler::onRefer " << msg.brief());
+         cout << name << ": InviteSession-onRefer - " << msg.brief() << endl;
       }
 
-      virtual void onReInvite(InviteSessionHandle, const SipMessage& msg)
-      {
-         InfoLog(  << "TestInviteSessionHandler::onReInvite " << msg.brief());
-      }
-
-      /// called when an REFER message receives a failure response 
       virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg)
       {
-         InfoLog(  << "TestInviteSessionHandler::onReferRejected " << msg.brief());
+         cout << name << ": InviteSession-onReferRejected - " << msg.brief() << endl;
       }
 
       virtual void onInfoSuccess(InviteSessionHandle, const SipMessage& msg)
       {
-         InfoLog(  << "TestInviteSessionHandler::onInfoSuccess " << msg.brief());
+         cout << name << ": InviteSession-onInfoSuccess - " << msg.brief() << endl;
       }
 
       virtual void onInfoFailure(InviteSessionHandle, const SipMessage& msg)
       {
-         InfoLog(  << "TestInviteSessionHandler::onInfoFailure " << msg.brief());
+         cout << name << ": InviteSession-onInfoFailure - " << msg.brief() << endl;
       }
 
+      // Out-of-Dialog Callbacks
+      virtual void onSuccess(ClientOutOfDialogReqHandle, const SipMessage& successResponse)
+      {
+          cout << name << ": ClientOutOfDialogReq-onSuccess - " << successResponse.brief() << endl;
+      }
+      virtual void onFailure(ClientOutOfDialogReqHandle, const SipMessage& errorResponse)
+      {
+          cout << name << ": ClientOutOfDialogReq-onFailure - " << errorResponse.brief() << endl;
+      }
+      virtual void onReceivedRequest(ServerOutOfDialogReqHandle ood, const SipMessage& request)
+      {
+          cout << name << ": ServerOutOfDialogReq-onReceivedRequest - " << request.brief() << endl;
+          // Add SDP to response here if required
+          cout << name << ": Sending 200 response to OPTIONS." << endl;
+          ood->send(ood->answerOptions());
+      }
 };
 
 class TestUac : public TestInviteSessionHandler
@@ -257,30 +274,9 @@ class TestUac : public TestInviteSessionHandler
          delete sdp;
       }
 
-      virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
-      {
-         InfoLog(  << "TestUac::onNewSession(" << name << ")  "  << msg.brief());
-      }
-
-      virtual void onProvisional(ClientInviteSessionHandle, const SipMessage& msg)
-      {
-         InfoLog ( << "TestUac::onProvisional" << msg.brief());
-      }      
-
-      virtual void onConnected(ClientInviteSessionHandle cis, const SipMessage& msg)
-      {
-         InfoLog ( << "###TestUac::onConnected###" << msg.brief());
-      }
-
-      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)
-      {
-         InfoLog(  << "###TestUac::onAnswer###" << msg);
-      }
-
-
       virtual void onTerminated(InviteSessionHandle is, const SipMessage& msg)
       {
-         InfoLog ( << "###TestUac::onTerminated###" << msg.brief());
+         cout << name << ": InviteSession-onTerminated - " << msg.brief() << endl;
          done = true;
       }
 };
@@ -309,7 +305,7 @@ class TestUas : public TestInviteSessionHandler
                         "s=X-Lite\r\n"
                         "c=IN IP4 192.168.2.15\r\n"
                         "t=0 0\r\n"
-                        "m=audio 8000 RTP/AVP 8 3 98 97 101\r\n"
+                        "m=audio 8001 RTP/AVP 8 3 98 97 101\r\n"
                         "a=rtpmap:8 pcma/8000\r\n"
                         "a=rtpmap:3 gsm/8000\r\n"
                         "a=rtpmap:98 iLBC\r\n"
@@ -330,26 +326,23 @@ class TestUas : public TestInviteSessionHandler
       virtual void 
       onNewSession(ServerInviteSessionHandle sis, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
-         InfoLog(  << "###TestUas::onNewSession### " << msg.brief());
+         cout << name << ": ServerInviteSession-onNewSession - " << msg.brief() << endl;
+         cout << name << ": Sending 180 response." << endl;
          mSis = sis;         
          sis->send(sis->provisional(180));
       }
 
-      virtual void onFailure(ClientRegistrationHandle, const SipMessage& msg)
-      {
-         InfoLog( << "TestUas(Register)::onFailure: " << endl << msg );
-         throw;
-      }
-
       virtual void onTerminated(InviteSessionHandle is, const SipMessage& msg)
       {
-         InfoLog ( << "###TestUas::onTerminated###" << msg.brief());
+         cout << name << ": InviteSession-onTerminated - " << msg.brief() << endl;
          done = true;
       }
 
-      virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents*)      
+      virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents* sdp)      
       {
-         InfoLog ( << "###TestUas::onOffer###" << msg.brief());
+         cout << name << ": InviteSession-onOffer(SDP)" << endl;
+         //sdp->encode(cout);
+         cout << name << ": Sending 200 response with SDP answer." << endl;
          is->setAnswer(sdp);
          mSis->send(mSis->accept());
          *pHangupAt = time(NULL) + 5;
@@ -361,7 +354,7 @@ class TestUas : public TestInviteSessionHandler
       {
          if (mSis.isValid())
          {
-            InfoLog ( << "TestUas::hangup" );
+            cout << name << ": Sending BYE." << endl;
             mSis->send(mSis->end());
          }
       }
@@ -372,37 +365,14 @@ class TestUas : public TestInviteSessionHandler
 class TestShutdownHandler : public DumShutdownHandler
 {
    public:
-      TestShutdownHandler()
-         : dumShutDown(false)
-      {
-      }
+      TestShutdownHandler(const Data& n) : name(n), dumShutDown(false) { }
       bool dumShutDown;
+      Data name;
       virtual void onDumCanBeDeleted() 
       {
-         InfoLog ( << "TestShutdownHandler::onDumCanBeDeleted" );         
+         cout << name << ": onDumCanBeDeleted." << endl;
          dumShutDown = true;
       }
-};
-
-class TestOutOfDialogHandler : public OutOfDialogHandler
-{
-   public:      
-	// Out-of-Dialog Callbacks
-    virtual void onSuccess(ClientOutOfDialogReqHandle, const SipMessage& successResponse)
-	{
-		InfoLog ( << "TestOutOfDialogHandler::onSuccess-ClientOutOfDialogReq: " << successResponse.brief());
-	}
-	virtual void onFailure(ClientOutOfDialogReqHandle, const SipMessage& errorResponse)
-	{
-		InfoLog ( << "TestOutOfDialogHandler::onFailure-ClientOutOfDialogReq: " << errorResponse.brief());
-	}
-    virtual void onReceivedRequest(ServerOutOfDialogReqHandle ood, const SipMessage& request)
-	{
-		InfoLog ( << "TestOutOfDialogHandler::onReceivedRequest-ServerOutOfDialogReq: " << request.brief());
-		// Add SDP to response here if required
-		ood->send(ood->answerOptions());
-		//ood->send(ood->answerOptions(false));  // fIncludeAllows = false for proxy servers
-	}
 };
 
 
@@ -410,13 +380,8 @@ class TestOutOfDialogHandler : public OutOfDialogHandler
 int 
 main (int argc, char** argv)
 {
-//    int level=(int)Log::Info;
-//    if (argc >1 ) level = atoi(argv[1]);
-   
-//    Log::initialize(Log::Cout, (resip::Log::Level)level, argv[0]);
-
-    Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
-
+   Log::initialize(Log::Cout, resip::Log::Warning, argv[0]);
+   //Log::initialize(Log::Cout, resip::Log::Info, argv[0]);
 
    //set up UAC
    SipStack stackUac;
@@ -431,15 +396,15 @@ main (int argc, char** argv)
    TestUac uac;
    dumUac->setInviteSessionHandler(&uac);
    dumUac->setClientRegistrationHandler(&uac);
+   dumUac->addOutOfDialogHandler(OPTIONS, &uac);
 
-   TestOutOfDialogHandler uac_ood;
-   dumUac->addOutOfDialogHandler(OPTIONS, &uac_ood);
+   auto_ptr<testAppDialogSetFactory> uac_dsf(new testAppDialogSetFactory);
+   dumUac->setAppDialogSetFactory(uac_dsf);
 
 #if !defined(NO_REGISTRATION)
    //your aor, credentials, etc here
    NameAddr uacAor("sip:101@foo.net");
    dumUac->getProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
-//   dumUac->getProfile()->setOutboundProxy(Uri("sip:64.125.66.33:9090"));    
    dumUac->getProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
 #else
    NameAddr uacAor("sip:UAC@127.0.0.1:12005");
@@ -447,15 +412,6 @@ main (int argc, char** argv)
 
    dumUac->getProfile()->setDefaultFrom(uacAor);
    dumUac->getProfile()->setDefaultRegistrationTime(70);
-   dumUac->getProfile()->addSupportedLanguage(Token("en"));
-   dumUac->getProfile()->addSupportedMimeType(Mime("application", "sdp"));
-   dumUac->getProfile()->addSupportedMethod(INVITE);
-   dumUac->getProfile()->addSupportedMethod(ACK);
-   dumUac->getProfile()->addSupportedMethod(CANCEL);
-   dumUac->getProfile()->addSupportedMethod(OPTIONS);
-   dumUac->getProfile()->addSupportedMethod(BYE);
-   dumUac->getProfile()->addSupportedMethod(REGISTER);
-   //dumUac->getProfile()->addSupportedOptionTags();  
 
    //set up UAS
    SipStack stackUas;
@@ -471,7 +427,6 @@ main (int argc, char** argv)
    //your aor, credentials, etc here
    NameAddr uasAor("sip:105@foo.net");
    dumUas->getProfile()->addDigestCredential( "foo.net", "derek@foo.net", "pass6" );
-//   dumUas->getProfile()->setOutboundProxy(Uri("sip:64.125.66.33:9090"));    
    dumUas->getProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
 #else
    NameAddr uasAor("sip:UAS@127.0.0.1:12010");
@@ -479,36 +434,25 @@ main (int argc, char** argv)
 
    dumUas->getProfile()->setDefaultRegistrationTime(70);
    dumUas->getProfile()->setDefaultFrom(uasAor);
-   dumUas->getProfile()->addSupportedLanguage(Token("en"));
-   dumUas->getProfile()->addSupportedMimeType(Mime("application", "sdp"));
-   dumUas->getProfile()->addSupportedMethod(INVITE);
-   dumUas->getProfile()->addSupportedMethod(ACK);
-   dumUas->getProfile()->addSupportedMethod(CANCEL);
-   dumUas->getProfile()->addSupportedMethod(OPTIONS);
-   dumUas->getProfile()->addSupportedMethod(BYE);
-   dumUas->getProfile()->addSupportedMethod(REGISTER);
-   //dumUas->getProfile()->addSupportedOptionTags();  
 
    time_t bHangupAt = 0;
    TestUas uas(&bHangupAt);
    dumUas->setClientRegistrationHandler(&uas);
    dumUas->setInviteSessionHandler(&uas);
+   dumUas->addOutOfDialogHandler(OPTIONS, &uas);
 
-   TestOutOfDialogHandler uas_ood;
-   dumUas->addOutOfDialogHandler(OPTIONS, &uas_ood);
+   auto_ptr<testAppDialogSetFactory> uas_dsf(new testAppDialogSetFactory);
+   dumUas->setAppDialogSetFactory(uas_dsf);
 
 #if !defined(NO_REGISTRATION)
-//   NameAddr contact;
-//   contact.uri().user() = "13015604286";   
-//   regMessage.header(h_Contacts).push_back(contact);   
    {
-      SipMessage& regMessage = dumUas->makeRegistration(uasAor);
-      InfoLog( << regMessage << "Generated register for Uas: " << endl << regMessage );
+      SipMessage& regMessage = dumUas->makeRegistration(uasAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
+      cout << "Sending register for Uas: " << endl << regMessage << endl;
       dumUas->send(regMessage);
    }
    {
-      SipMessage& regMessage = dumUac->makeRegistration(uacAor);
-      InfoLog( << regMessage << "Generated register for Uac: " << endl << regMessage );
+      SipMessage& regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
+      cout << "Sending register for Uac: " << endl << regMessage << endl;
       dumUac->send(regMessage);
    }
 #else
@@ -520,8 +464,8 @@ main (int argc, char** argv)
    bool stoppedRegistering = false;
    bool startedCallFlow = false;
    bool hungup = false;   
-   TestShutdownHandler uasShutdownHandler;   
-   TestShutdownHandler uacShutdownHandler;   
+   TestShutdownHandler uasShutdownHandler("UAS");   
+   TestShutdownHandler uacShutdownHandler("UAC");   
 
    while (!(uasShutdownHandler.dumShutDown && uacShutdownHandler.dumShutDown))
    {
@@ -545,20 +489,24 @@ main (int argc, char** argv)
      if (!(uas.done && uac.done))
      {
         if (uas.registered && uac.registered && !startedCallFlow)
+        {
            if (!startedCallFlow)
            {
               startedCallFlow = true;
 #if !defined(NO_REGISTRATION)
-              InfoLog( << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " );        
+              cout << "!!!!!!!!!!!!!!!! Registered !!!!!!!!!!!!!!!! " << endl;
 #endif
 
-              InfoLog( << "#### Sending Options Request ####");
-			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, uacAor, OPTIONS));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
+              // Kick off call flow by sending an OPTIONS request then an INVITE request from the UAC to the UAS
+              cout << "UAC: Sending Options Request to UAS." << endl;
+			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, uacAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
 
-              InfoLog( << "#### Sending Invite ####");
-              dumUac->send(dumUac->makeInviteSession(uasAor, uacAor, uac.sdp));
+              cout << "UAC: Sending Invite Request to UAS." << endl;
+              dumUac->send(dumUac->makeInviteSession(uasAor, uacAor, uac.sdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
            }
+        }
 
+        // Check if we should hangup yet
         if (bHangupAt!=0)
         {
            if (time(NULL)>bHangupAt && !hungup)
@@ -583,8 +531,49 @@ main (int argc, char** argv)
         }
      }
    }
+
    // OK to delete DUM objects now
    delete dumUac; 
    delete dumUas;
-   InfoLog ( << "!!!!!!!!!!!!!!!!!! Somewhat successful !!!!!!!!!! " );
+
+   // Gracefully shutdown UAC and UAS stack
+   stackUac.shutdown();
+   stackUas.shutdown();
+   bool fUACStackShutdown = false;
+   bool fUASStackShutdown = false;
+   while(!fUACStackShutdown || !fUASStackShutdown)
+   {
+      if(!fUACStackShutdown)
+      {
+         FdSet fdset; 
+	     stackUac.buildFdSet(fdset);
+	     fdset.selectMilliSeconds(50); 
+	     stackUac.process(fdset);      
+	     Message *msg = stackUac.receiveAny();
+ 	     ShutdownMessage *shutdown = NULL;
+         if((shutdown=dynamic_cast<ShutdownMessage*>(msg)))
+	     {
+            fUACStackShutdown = true;
+            cout << "UAC: stack shutdown." << endl;
+	     }
+	     delete msg;
+      }
+      if(!fUASStackShutdown)
+      {
+         FdSet fdset; 
+	     stackUas.buildFdSet(fdset);
+	     fdset.selectMilliSeconds(50); 
+	     stackUas.process(fdset);      
+	     Message *msg = stackUas.receiveAny();
+ 	     ShutdownMessage *shutdown = NULL;
+         if((shutdown=dynamic_cast<ShutdownMessage*>(msg)))
+	     {
+            fUASStackShutdown = true;
+            cout << "UAS: stack shutdown." << endl;
+	     }
+	     delete msg;
+      }
+   }
+
+   cout << "!!!!!!!!!!!!!!!!!! Successful !!!!!!!!!! " << endl;
 }
