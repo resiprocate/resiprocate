@@ -21,6 +21,7 @@ Proxy::Proxy(SipStack& stack, RequestProcessorChain& requestProcessors,
              UserDb &userDb) 
    : mStack(stack), mRequestProcessorChain(requestProcessors), mUserDb(userDb)
 {
+   mStack.registerForTransactionTermination();
 }
 
 Proxy::~Proxy()
@@ -46,125 +47,141 @@ Proxy::thread()
 {
    InfoLog (<< "Proxy::thread start");
 
-   while (1)
+   while (!isShutdown())
    {
       Message* msg=0;
       //DebugLog (<< "TransactionUser::postToTransactionUser " << " &=" << &mFifo << " size=" << mFifo.size());
 
-      if ((msg = mFifo.getNext(100)) != 0)
+      try
       {
-         DebugLog (<< "Got: " << *msg);
-         
-         SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-         ApplicationMessage* app = dynamic_cast<ApplicationMessage*>(msg);
-         TransactionTerminated* term = dynamic_cast<TransactionTerminated*>(msg);
-         
-         if (sip)
+         if ((msg = mFifo.getNext(100)) != 0)
          {
-            if (sip->isRequest())
+            DebugLog (<< "Got: " << *msg);
+         
+            SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+            ApplicationMessage* app = dynamic_cast<ApplicationMessage*>(msg);
+            TransactionTerminated* term = dynamic_cast<TransactionTerminated*>(msg);
+         
+            if (sip)
             {
-			   // [TODO] !rwm! need to verify that the request has required headers
-			   // (To, From, Call-ID, CSeq)  Via is already checked by stack.  
-			   // See RFC 3261 Section 16.3 Step 1
-			   
-			   // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
-			   
-               if (sip->exists(h_MaxForwards) && sip->header(h_MaxForwards).value() <= 0)
+               if (sip->isRequest())
                {
-			      // [TODO] !rwm! If the request is an OPTIONS, send an appropropriate response
-                  std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
-                  mStack.send(*response, this);
-                  break;
-               }
+                  // [TODO] !rwm! need to verify that the request has required headers
+                  // (To, From, Call-ID, CSeq)  Via is already checked by stack.  
+                  // See RFC 3261 Section 16.3 Step 1
+			   
+                  // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
+			   
+                  if (sip->exists(h_MaxForwards) && sip->header(h_MaxForwards).value() <= 0)
+                  {
+                     // [TODO] !rwm! If the request is an OPTIONS, send an appropropriate response
+                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
+                     mStack.send(*response, this);
+                     break;
+                  }
 
-			   // [TODO] !rwm! Need to check Proxy-Require header field values
+                  // [TODO] !rwm! Need to check Proxy-Require header field values
                
-               if (sip->header(h_RequestLine).method() == CANCEL)
-               {
-                  HashMap<Data,RequestContext*>::iterator i = mRequestContexts.find(sip->getTransactionId());
+                  if (sip->header(h_RequestLine).method() == CANCEL)
+                  {
+                     HashMap<Data,RequestContext*>::iterator i = mRequestContexts.find(sip->getTransactionId());
 
-				  // [TODO] !rwm! this should not be an assert.  log and ignore instead.
+                     // [TODO] !rwm! this should not be an assert.  log and ignore instead.
+                     assert (i != mRequestContexts.end());
+                     i->second->process(std::auto_ptr<resip::Message>(msg));
+                  }
+                  else if (sip->header(h_RequestLine).method() == ACK)
+                  {
+                     // ACK needs to create its own RequestContext based on a
+                     // unique transaction id. 
+                     static Data ack("ack");
+                     Data tid = sip->getTransactionId() + ack;
+                     assert (mRequestContexts.count(tid) == 0);
+                  
+                     RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
+                     mRequestContexts[tid] = context;
+
+                     // The stack will send TransactionTerminated messages for
+                     // client and server transaction which will clean up this
+                     // RequestContext 
+                     context->process(std::auto_ptr<resip::Message>(msg));
+                  }
+                  else
+                  {
+                     // This is a new request, so create a Request Context for it
+                     assert(mRequestContexts.count(sip->getTransactionId()) == 0);                  
+                     RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
+                     InfoLog (<< "Inserting new RequestContext " << sip->getTransactionId() << " -> " << *context);
+                     mRequestContexts[sip->getTransactionId()] = context;
+                     context->process(std::auto_ptr<resip::Message>(msg));
+                  }
+               }
+               else if (sip->isResponse())
+               {
+                  InfoLog (<< "Looking up RequestContext " << sip->getTransactionId());
+               
+                  // is there a problem with a stray 200
+                  HashMap<Data,RequestContext*>::iterator i = mRequestContexts.find(sip->getTransactionId());
                   assert (i != mRequestContexts.end());
                   i->second->process(std::auto_ptr<resip::Message>(msg));
+                  // [TODO] !rwm! who throws stray responses away?  does the stack do this?
                }
-               else if (sip->header(h_RequestLine).method() == ACK)
+            }
+            else if (app)
+            {
+               HashMap<Data,RequestContext*>::iterator i=mRequestContexts.find(app->getTransactionId());
+               // the underlying RequestContext may not exist
+               if (i != mRequestContexts.end())
                {
-                  // ACK needs to create its own RequestContext based on a
-                  // unique transaction id. 
-                  static Data ack("ack");
-                  Data tid = sip->getTransactionId() + ack;
-                  assert (mRequestContexts.count(tid) == 0);
-                  
-                  RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
-                  mRequestContexts[tid] = context;
-
-                  // The stack will send TransactionTerminated messages for
-                  // client and server transaction which will clean up this
-                  // RequestContext 
-                  context->process(std::auto_ptr<resip::Message>(msg));
+                  i->second->process(std::auto_ptr<Message>(msg));
                }
                else
                {
-				  // This is a new request, so create a Request Context for it
-                  assert(mRequestContexts.count(sip->getTransactionId()) == 0);                  
-                  RequestContext* context = new RequestContext(*this, mRequestProcessorChain);
-                  mRequestContexts[sip->getTransactionId()] = context;
-                  context->process(std::auto_ptr<resip::Message>(msg));
+                  //InfoLog (<< "No matching request context...ignoring " << *msg);
+                  // [TODO] !rwm! do we need to delete the app event message?
                }
             }
-            else if (sip->isResponse())
+            else if (term)
             {
-               // is there a problem with a stray 200
-               HashMap<Data,RequestContext*>::iterator i = mRequestContexts.find(sip->getTransactionId());
-               assert (i != mRequestContexts.end());
-               i->second->process(std::auto_ptr<resip::Message>(msg));
-			   // [TODO] !rwm! who throws stray responses away?  does the stack do this?
+               HashMap<Data,RequestContext*>::iterator i=mRequestContexts.find(term->getTransactionId());
+               if (i != mRequestContexts.end())
+               {
+                  i->second->process(*term);
+                  mRequestContexts.erase(i);
+               }
             }
          }
-         else if (app)
-         {
-            HashMap<Data,RequestContext*>::iterator i=mRequestContexts.find(app->getTransactionId());
-            // the underlying RequestContext may not exist
-            if (i != mRequestContexts.end())
-            {
-               i->second->process(std::auto_ptr<Message>(msg));
-            }
-            else
-            {
-               //InfoLog (<< "No matching request context...ignoring " << *msg);
-			   // [TODO] !rwm! do we need to delete the app event message?
-            }
-         }
-         else if (term)
-         {
-            HashMap<Data,RequestContext*>::iterator i=mRequestContexts.find(term->getTransactionId());
-            if (i != mRequestContexts.end())
-            {
-               i->second->process(*term);
-               mRequestContexts.erase(i);
-            }
-         }
+      }
+      catch (BaseException& e)
+      {
+         WarningLog (<< "Caught: " << e);
+      }
+      catch (...)
+      {
+         WarningLog (<< "Caught unknown exception");
       }
    }
    InfoLog (<< "Proxy::thread exit");
 }
 
 void
-Proxy::addDomain(const resip::Uri& uri) 
-{
-   mStack.addAlias(uri.host(), uri.port());
-}
-
-bool
-Proxy::isMyDomain(const resip::Uri& uri) const
-{
-   return mStack.isMyDomain(uri.host(),uri.port());
-}
-
-void
 Proxy::send(const SipMessage& msg) 
 {
    mStack.send(msg, this);
+}
+
+void
+Proxy::addClientTransaction(const Data& transactionId, RequestContext* rc)
+{
+   assert(mRequestContexts.count(transactionId) == 0);
+   mRequestContexts[transactionId] = rc;
+}
+
+const Data& 
+Proxy::name() const
+{
+   static Data n("Proxy");
+   return n;
 }
 
 
