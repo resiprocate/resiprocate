@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.56 2003/01/25 03:35:25 jason Exp $";
+// "$Id: Data.cxx,v 1.57 2003/01/25 03:56:00 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -80,6 +80,15 @@ Data::Data(const char* str)
 {
    assert(str);
    memcpy(mBuf, str, mSize+1);
+}
+
+Data::Data(const string& str) : 
+   mSize(str.size()),
+   mBuf(new char[mSize + 1]),
+   mCapacity(mSize),
+   mMine(true)
+{
+   memcpy(mBuf, str.c_str(), mSize + 1);
 }
 
 Data::Data(const Data& data) 
