@@ -7,7 +7,7 @@ intver() {
     expr $i \* 10000 + 100 \* $t + $h
 }
 
-echo +++ Looking for a version of aclocal >= 1.7.5
+echo '+++ Looking for a version of aclocal >= 1.7.5'
 irep=$(intver aclocal)
 if [ $irep -lt 10705 ]; then
     echo --- aclocal not new enough: expecting 1.75 or greater.
