@@ -168,7 +168,6 @@ class Helper
                              std::auto_ptr<SecurityAttributes> attributes);
             ContentsSecAttrs(const ContentsSecAttrs& rhs);
             ContentsSecAttrs& operator=(const ContentsSecAttrs& rhs);
-            
             mutable std::auto_ptr<Contents> mContents;
             mutable std::auto_ptr<SecurityAttributes> mAttributes;
       };

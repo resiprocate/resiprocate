@@ -266,6 +266,9 @@ class DialogUsageManager : public HandleManager
 
       bool checkEventPackage(const SipMessage& request);
 
+      bool queueForIdentityCheck(std::auto_ptr<Message> msg);
+      bool processIdentityCheckResponse(const SipMessage& msg);
+
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
             
@@ -314,7 +317,8 @@ class DialogUsageManager : public HandleManager
       // from ETag -> ServerPublication
       typedef std::map<Data, ServerPublication*> ServerPublications;
       ServerPublications mServerPublications;
-
+      typedef std::map<Data, SipMessage*> RequiresCerts;
+      RequiresCerts mRequiresCerts;      
       // from Event-Type+document-aor -> ServerSubscription
       // Managed by ServerSubscription
       typedef std::multimap<Data, ServerSubscription*> ServerSubscriptions;
