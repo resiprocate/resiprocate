@@ -203,6 +203,9 @@ class SipMessage : public Message
       defineMultiHeader(Unsupported);
       defineMultiHeader(Via);
 
+      defineHeader(RSeq);
+      defineHeader(RAck);
+
 #endif // METHOD_TEMPLATES
 
       // unknown header interface

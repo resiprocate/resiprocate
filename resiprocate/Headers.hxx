@@ -171,6 +171,7 @@ typedef ParserContainer<IntegerCategory> IntegerCategories;
 defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC ????");
 defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC ????");
 defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC ????");
+defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
 defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC ????");
@@ -216,6 +217,11 @@ defineMultiHeader(Warning, "Warning", WarningCategory, "RFC ????");
 //====================
 typedef ParserContainer<Via> Vias;
 defineMultiHeader(Via, "Via", Via, "RFC ????");
+
+//====================
+// RAckCategory
+//====================
+defineHeader(RAck, "RAck", RAckCategory, "RFC 3261");
 
 class RequestLineType {};
 extern RequestLineType h_RequestLine;

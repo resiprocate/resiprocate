@@ -87,6 +87,8 @@ class Headers
          defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC ????"),
          defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC ????"),
          defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC ????"),
+	 defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261"),
+	 defineHeader(RAck, "RAck", RAckCategory, "RFC 3261"),
          defineHeader(ContentLength, "Content-Length", Token, "RFC ????"),
 
          MAX_HEADERS,

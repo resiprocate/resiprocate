@@ -1100,6 +1100,8 @@ defineMultiHeader(Route);
 defineMultiHeader(Supported);
 defineMultiHeader(Unsupported);
 defineMultiHeader(Via);
+defineHeader(RSeq);
+defineHeader(RAck);
 #endif
 
 const HeaderFieldValueList*
