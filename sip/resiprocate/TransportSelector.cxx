@@ -319,44 +319,45 @@ TransportSelector::hasDataToSend() const
    
    return false;
 }
+//!jf! the problem here is that DnsResult is returned after looking
+//mDns.lookup() but this can result in a synchronous call to handle() which
+//assumes that dnsresult has been assigned to the TransactionState
+//!dcm! -- now 2-phase to fix this  
+DnsResult* 
+TransportSelector::createDnsResult(DnsHandler* handler)
+{
+   return mDns.createDnsResult(handler);
+}
 
-DnsResult*
-TransportSelector::dnsResolve(SipMessage* msg, 
-                              DnsHandler* handler)
+void
+TransportSelector::dnsResolve(DnsResult* result, 
+                              SipMessage* msg)
 {
    // Picking the target destination:
    //   - for request, use forced target if set
    //     otherwise use loose routing behaviour (route or, if none, request-uri)
    //   - for response, use forced target if set, otherwise look at via  
 
-   //!jf! the problem here is that DnsResult is returned after looking
-   //mDns.lookup() but this can result in a synchronous call to handle() which
-   //assumes that dnsresult has been assigned to the TransactionState
-   DnsResult* result=0;
    if (msg->isRequest())
    {
       // If this is an ACK we need to fix the tid to reflect that
       if (msg->hasForceTarget())
       {
           //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
-         result = mDns.createDnsResult(handler);
-         mDns.lookup(result, msg->getForceTarget());
+         mDns.lookup(result, msg->getForceTarget());         
       }
       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
       {
          // put this into the target, in case the send later fails, so we don't
          // lose the target
          msg->setForceTarget(msg->header(h_Routes).front().uri());
-         //msg->header(h_Routes).pop_front();
          DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
-         result = mDns.createDnsResult(handler);         
-         mDns.lookup(result, msg->getForceTarget());
+         mDns.lookup(result, msg->getForceTarget());         
       }
       else
       {
-         DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri() << " " << msg->brief());
-         result = mDns.createDnsResult(handler);
-         mDns.lookup(result, msg->header(h_RequestLine).uri());
+         DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri());
+         mDns.lookup(result, msg->header(h_RequestLine).uri());         
       }
    }
    else if (msg->isResponse())
@@ -368,9 +369,6 @@ TransportSelector::dnsResolve(SipMessage* msg,
    {
       assert(0);
    }
-
-   assert(result);
-   return result;
 }
 
 Tuple
