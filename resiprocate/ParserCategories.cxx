@@ -6,7 +6,7 @@
 #include <cassert>
 #include <iostream>
 #include <time.h>
-#include <errno.h>
+//#include <errno.h>
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -424,7 +424,8 @@ DateCategory::DateCategory()
    time(&now);
    if (now == ((time_t)-1))
    {
-      DebugLog (<< "Failed to get time: " << strerror(errno));
+	 int e = getErrno();
+      DebugLog (<< "Failed to get time: " << strerror(e));
       return;
    }
    
@@ -433,14 +434,16 @@ DateCategory::DateCategory()
    struct tm *gmtp = gmtime(&now);
    if (gmtp == 0)
    {
-      DebugLog (<< "Failed to convert to gmt: " << strerror(errno));
+	    int e = getErrno();
+      DebugLog (<< "Failed to convert to gmt: " << strerror(e));
       return;
    }
    memcpy(&gmt,gmtp,sizeof(gmt));
 #else
   if (gmtime_r(&now, &gmt) == 0)
    {
-      DebugLog (<< "Failed to convert to gmt: " << strerror(errno));
+	    int e = getErrno();
+      DebugLog (<< "Failed to convert to gmt: " << strerror(e));
       return;
    }
 #endif

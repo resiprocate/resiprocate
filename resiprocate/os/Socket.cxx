@@ -103,14 +103,21 @@ resip::initNetwork()
 }
 
 
-#if !defined(WIN32)
+#if defined(WIN32)
 int 
-resip::closesocket( Socket fd )
+resip::closeSocket( Socket fd )
+{
+   return closesocket(fd);
+}
+#else
+int 
+resip::closeSocket( Socket fd )
 {
    int ret = ::shutdown(fd, SHUT_RDWR);
    if (ret < 0)
    {
-      InfoLog (<< "Failed to shutdown socket " << fd << " : " << strerror(errno));
+		e = getErrno();
+      InfoLog (<< "Failed to shutdown socket " << fd << " : " << strerror(e));
    }
    return ret;
 }
