@@ -16,6 +16,7 @@
 #include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/DumShutdownHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
+#include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/PublicationCreator.hxx"
 #include "resiprocate/dum/RegistrationCreator.hxx"
@@ -215,7 +216,15 @@ void
 DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSubscriptionHandler* handler)
 {
    assert(handler);
-   assert(mServerSubscriptionHandlers.count(eventType) == 0);
+   //default do-nothing server side refer handler can be replaced
+   if (eventType == "refer")
+   {
+      delete mServerSubscriptionHandlers[eventType];      
+   }
+   else
+   {
+      assert(mServerSubscriptionHandlers.count(eventType) == 0);
+   }
    mServerSubscriptionHandlers[eventType] = handler;
 }
 
@@ -580,6 +589,15 @@ DialogUsageManager::processRequest(const SipMessage& request)
             DialogSet* ds = findDialogSet(DialogSetId(request));
             if (ds == 0)
             {
+               //!dcm! -- temporary hack...do a map by TID?
+               for (DialogSetMap::iterator it = mDialogSetMap.begin(); it != mDialogSetMap.end(); it++)
+               {
+                  if (it->second->getId().getCallId() == request.header(h_CallID).value())
+                  {
+                     it->second->dispatch(request);
+                     return;
+                  }
+               }
                InfoLog (<< "Received a CANCEL on a non-existent transaction ");
                SipMessage failure;
                makeResponse(failure, request, 481);
@@ -587,7 +605,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             }
             else
             {
-               ds->cancel();
+               ds->dispatch(request);
             }
             break;
          }
@@ -686,7 +704,7 @@ void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    InfoLog ( << "DialogUsageManager::processResponse: " << response);
-   if (response.header(h_StatusLine).statusCode() > 100)
+   if (response.header(h_StatusLine).statusCode() > 100 && response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
   
@@ -747,20 +765,34 @@ DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
    }
 }
 
-
 ClientSubscriptionHandler* 
 DialogUsageManager::getClientSubscriptionHandler(const Data& eventType)
 {
-   map<Data, ClientSubscriptionHandler*>::iterator it = mClientSubscriptionHandlers.find(eventType);
-   if (it == mClientSubscriptionHandlers.end())
+   map<Data, ClientSubscriptionHandler*>::iterator res = mClientSubscriptionHandlers.find(eventType);
+   if (res != mClientSubscriptionHandlers.end())
    {
-      return 0;
+      return res->second;
    }
    else
    {
-      return it->second;
+      return 0;
    }
 }
+
+ServerSubscriptionHandler* 
+DialogUsageManager::getServerSubscriptionHandler(const Data& eventType)
+{
+   map<Data, ServerSubscriptionHandler*>::iterator res = mServerSubscriptionHandlers.find(eventType);
+   if (res != mServerSubscriptionHandlers.end())
+   {
+      return res->second;
+   }
+   else
+   {
+      return 0;
+   }
+}
+
 
 
 /* ====================================================================
