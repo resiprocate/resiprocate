@@ -7,7 +7,7 @@
 #include "resiprocate/os/BaseException.hxx"
 
 #if defined(USE_SSL)
-#define PERL5
+//#define PERL5 // !cj! why's this here ?
 #include <openssl/ssl.h>
 #else
 // to ensure compilation and object size invariance.
