@@ -17,19 +17,18 @@ RedirectManager::handle(DialogSet& dSet, SipMessage& origRequest, const SipMessa
    assert( response.isResponse() );
    assert( origRequest.isRequest() );
 
-   RedirectHandler* handler = dSet.mDum.getRedirectHandler();   
-
-   int code = response.header(h_StatusLine).statusCode();
-   DialogSetId id(origRequest);   
-   RedirectedRequestMap::iterator it = mRedirectedRequestMap.find(id);
-
    //380, 305 fall through to the application
+   int code = response.header(h_StatusLine).statusCode();
    if (code < 300 || code == 380 || code == 305)
    {
       return false;
    }
    else if (code >= 300 && code < 400)
    {
+      RedirectHandler* handler = dSet.mDum.getRedirectHandler();   
+      DialogSetId id(origRequest);   
+      RedirectedRequestMap::iterator it = mRedirectedRequestMap.find(id);
+
       if (it == mRedirectedRequestMap.end())
       {
          DebugLog( << "RedirectManager::handle: new TargetSet: " << id);         
