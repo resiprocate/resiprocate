@@ -1089,14 +1089,30 @@ TransactionState::sendToWire(Message* msg)
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
    assert(sip);
 
-   if (mDnsState == DnsResolver::NotStarted)
+   if (mDnsState == DnsResolver::NotStarted
+#if defined(USETESTTRANSPORT)
+       // Don't do DNS with the test transports.  The resolver doesn't
+       // have any concept of transports other than UDP, TCP, and TLS.
+       || ((sip->header(h_Vias).front().transport() !=
+          Transport::toData(Transport::TestReliable)) &&
+          (sip->header(h_Vias).front().transport() !=
+          Transport::toData(Transport::TestUnreliable)))
+#endif
+      )
    {
       mDnsState = DnsResolver::Waiting;
       mStack.mTransportSelector.dnsResolve(sip);
    }
    else
    {
+#if defined(USETESTTRANSPORT)
+      Transport::Tuple fakeTuple;
+      fakeTuple.transportType =
+	 Transport::toTransport(sip->header(h_Vias).front().transport());
+      mStack.mTransportSelector.send(sip, fakeTuple);
+#else
       mStack.mTransportSelector.send(sip, *mDnsListCurrent);
+#endif
    }
 }
 
