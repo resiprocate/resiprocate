@@ -7,7 +7,13 @@
 using namespace resip;
 using namespace std;
 
-ContentsFactory<MessageWaitingContents> MessageWaitingContents::Factory;
+bool
+MessageWaitingContents::init()
+{
+   static ContentsFactory<MessageWaitingContents> factory;
+   (void)factory;
+   return true;
+}
 
 resip::MessageWaitingContents::AccountHeader resip::mw_account;
 const char* MessageHeaders[MW_MAX] = {"voice-message", 
@@ -52,7 +58,7 @@ MessageWaitingContents::MessageWaitingContents(const Data& data, const Mime& con
 }
 
 MessageWaitingContents::MessageWaitingContents(const MessageWaitingContents& rhs)
-   : Contents(getStaticType()),
+   : Contents(rhs),
      mHasMessages(rhs.mHasMessages),
      mAccountUri(rhs.mAccountUri ? new Uri(*rhs.mAccountUri) : 0),
      mExtensions(rhs.mExtensions)
