@@ -4,7 +4,7 @@
 #if !defined(__SUNPRO_CC)
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 #include <ext/hash_map>
-#elif define ( defined(__INTEL_COMPILER) )
+#elif defined( defined(__INTEL_COMPILER) )
 #include <map>
 #else
 #include <map>
