@@ -76,6 +76,7 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
       Data routeEvent;
       Data routeDestination; // name suck - this should be route rewrite
                              // expression 
+      int routeOrder;
       
       while ( !pb.eof() )
       {
@@ -137,17 +138,26 @@ WebAdmin::buildPage( const Data& uri, int pageNumber )
            {
                routeDestination = value;
            }
+           if ( key == Data("routeOrder") )
+           {
+              routeOrder = value.convertInt();
+           }
            
       }
 
       if ( !user.empty() )
       {
-         mUserDb.addUser(user,realm,password,name,email);
+         if ( realm.empty() )
+         {
+            realm = domain;
+         }
+         
+         mUserDb.addUser(user,domain,realm,password,name,email);
       }
 
       if ( !routeDestination.empty() )
       {
-         mRouteDb.add(routeMethod ,routeEvent ,routeUri, routeDestination );
+         mRouteDb.add(routeMethod ,routeEvent ,routeUri, routeDestination, routeOrder );
       }
    }
    
@@ -194,14 +204,22 @@ WebAdmin::buildAddRoutePage()
          "<td>Method</td>"
          "<td><input type=\"text\" name=\"routeMethod\" size=\"24\"/></td>"
          "</tr>"
+
          "<tr>"
          "<td>Event</td>"
          "<td><input type=\"text\" name=\"routeEvent\" size=\"24\"/></td>"
          "</tr>"
+
          "<tr>"
          "<td>Destination</td>"
          "<td><input type=\"text\" name=\"routeDestination\" size=\"24\"/></td>"
          "</tr>"
+
+         "<tr>"
+         "<td>Order</td>"
+         "<td><input type=\"text\" name=\"routeOrder\" size=\"4\"/></td>"
+         "</tr>"
+
          "</table>"
          "<p><input type=\"reset\"/><input type=\"submit\" name=\"routeAdd\" value=\"Add\"/></p>"
          "</form>"
@@ -286,14 +304,22 @@ WebAdmin::buildAddUserPage()
          "<td align=\"right\" valign=\"middle\">User Name:</td>"
          "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"user\" size=\"24\"/></td>"
          "</tr>"
+
          "<tr>"
          "<td align=\"right\" valign=\"middle\" >Realm:</td>"
          "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"realm\" size=\"24\"/></td>"
          "</tr>"
+
+         "<tr>"
+         "<td align=\"right\" valign=\"middle\" >Domain:</td>"
+         "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"domain\" size=\"24\"/></td>"
+         "</tr>"
+
          "<tr>"
          "<td align=\"right\" valign=\"middle\" >Password:</td>"
          "<td align=\"left\" valign=\"middle\"><input type=\"password\" name=\"password\" size=\"24\"/></td>"
          "</tr>"
+
          "<tr>"
          "<td align=\"right\" valign=\"middle\" >Full Name:</td>"
          "<td align=\"left\" valign=\"middle\"><input type=\"text\" name=\"name\" size=\"24\"/></td>"
@@ -515,18 +541,26 @@ WebAdmin::buildShowRoutesPage()
          "<td>Method</td>"
          "<td>Event</td>"
          "<td>Destination</td>"
+         "<td>Order</td>"
          "<td><button name=\"removeRoute\" type=\"button\">Remove</button></td>"
-         "</tr>"
-/*
-  "<tr>"
-  "<td>f*.com</td>"
-  "<td>INVITE</td>"
-  "<td>*</td>"
-  "<td>b.com</td>"
-  "<td><input type=\"checkbox\" name=\"removeRoute\" value=\"3\"/></td>"
-  "</tr>"
-*/
-         "</table>"
+         "</tr>";
+      
+      RouteAbstractDb::RouteList routes = mRouteDb.getRoutes();
+      for ( RouteAbstractDb::RouteList::const_iterator i = routes.begin();
+            i != routes.end();
+            i++ )
+      {
+         s <<  "<tr>"
+            "<td>" << i->mMatchingPattern << "</td>"
+            "<td>" << i->mMethod << "</td>"
+            "<td>" << i->mEvent << "</td>"
+            "<td>" << i->mRewriteExpression << "</td>"
+            "<td>" << i->mOrder << "</td>"
+            "<td><input type=\"checkbox\" name=\"removeRoute\" value=\"" << "TODO" << "\"/></td>"
+            "</tr>";
+      }
+      
+      s << "</table>"
          "</form>"
          "</body>"
          ""

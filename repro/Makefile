@@ -31,6 +31,7 @@ SRC =   \
 	UserDb.cxx \
 	UserAbstractDb.cxx \
 	RouteDbMemory.cxx \
+	RouteAbstractDb.cxx \
 	WebAdminThread.cxx \
         RequestProcessor.cxx \
         RequestProcessorChain.cxx
