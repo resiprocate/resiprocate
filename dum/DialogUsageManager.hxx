@@ -155,7 +155,6 @@ class DialogUsageManager : public HandleManager
       ServerPublicationHandle findServerPublication(DialogId id);
       std::vector<ClientOutOfDialogReqHandle> findClientOutOfDialog(DialogId id);
       ServerOutOfDialogReqHandle findServerOutOfDialog(DialogId id);
-      
    private:
       friend class Dialog;
       friend class DialogSet;
