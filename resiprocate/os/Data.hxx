@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.48 2003/01/05 18:59:58 davidb Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.49 2003/01/15 20:54:12 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -27,6 +27,7 @@ class Data
       explicit Data(const std::string& str);
       explicit Data(int value);
       explicit Data(unsigned long value);
+      explicit Data(unsigned int value);
       explicit Data(double value, int precision = 4);
       explicit Data(bool value);
       explicit Data(char c);
