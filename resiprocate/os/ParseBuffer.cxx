@@ -457,15 +457,19 @@ ParseBuffer::floatVal()
    const char* s = position();
    try
    {
+      float mant = 0.0;
       int num = integer();
-      // !dlb! a little too fussy -- can't parse "1 "
-      skipChar('.');
-      const char* pos = position();
-      float mant = float(integer());
-      int s = position() - pos;
-      while (s--)
+
+      if (*position() == '.')
       {
-         mant /= 10.0;
+	  skipChar('.');
+	  const char* pos = position();
+	  mant = float(integer());
+	  int s = position() - pos;
+	  while (s--)
+	  {
+	     mant /= 10.0;
+	  }
       }
       return num + mant;
    }
