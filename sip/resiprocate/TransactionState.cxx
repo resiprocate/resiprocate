@@ -8,7 +8,8 @@
 #include "sipstack/TimerMessage.hxx"
 #include "sipstack/MethodTypes.hxx"
 #include "sipstack/Helper.hxx"
-#include "sipstack/SendingMessage.hxx"
+#include "sipstack/TransportMessage.hxx"
+#include "sipstack/ReliabilityMessage.hxx"
 #include "sipstack/DnsMessage.hxx"
 #include "util/Logger.hxx"
 
@@ -90,7 +91,6 @@ TransactionState::process(SipStack& stack)
          default:
             assert(0);
       }
-      state->processDns(message); // handle the DnsMessage*    
    }
    else // new transaction
    {
@@ -178,26 +178,32 @@ TransactionState::process(SipStack& stack)
 }
 
 void
-TransactionState::processAck(Message* msg)
+TransactionState::processAck(Message* message)
 {
+   DebugLog (<< "TransactionState::processAck: " << message->brief());
+
    // for ACK messages from the TU, there is no transaction, send it directly
    // to the wire // rfc3261 17.1 Client Transaction
-   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-   SendingMessage* sending = dynamic_cast<SendingMessage*>(msg);
+   SipMessage* sip = dynamic_cast<SipMessage*>(message);
+   TransportMessage* result = dynamic_cast<TransportMessage*>(message);
 
    if (sip)
    {
       assert(sip->header(h_RequestLine).getMethod() == ACK);
       sendToWire(sip);
    }
-   else if (sending && (sending->isFailed() || sending->isSucceeded()))
+   else if (result)
    {
-      delete this;
-      delete msg;
+      processDns(message); // handle the DnsMessage*    
+      delete message;
+      if (result->isFailed())
+      {
+         delete this;
+      }
    }
    else
    {
-      delete msg;
+      delete message;
    }
 }
 
@@ -207,6 +213,8 @@ TransactionState::processAck(Message* msg)
 void
 TransactionState::processDns(Message* message)
 {
+   DebugLog (<< "TransactionState::processDns: " << message->brief());
+   
    // handle Sending::Failed messages here
    if (isTransportError(message))
    {
@@ -278,6 +286,8 @@ TransactionState::processDns(Message* message)
 void
 TransactionState::processClientNonInvite(  Message* msg )
 { 
+   DebugLog (<< "TransactionState::processClientNonInvite: " << msg->brief());
+
    if (isRequest(msg) && !isInvite(msg) && isFromTU(msg))
    {
       DebugLog (<< "received new non-invite request");
@@ -611,6 +621,8 @@ TransactionState::processClientInvite(  Message* msg )
 void
 TransactionState::processServerNonInvite(  Message* msg )
 {
+   DebugLog (<< "TransactionState::processServerNonInvite: " << msg->brief());
+
    if (isRequest(msg) && !isInvite(msg) && isFromWire(msg)) // from the wire
    {
       if (mState == Trying)
@@ -694,6 +706,7 @@ TransactionState::processServerNonInvite(  Message* msg )
 void
 TransactionState::processServerInvite(  Message* msg )
 {
+   DebugLog (<< "TransactionState::processServerInvite: " << msg->brief());
    if (isRequest(msg) && isFromWire(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
@@ -939,6 +952,8 @@ TransactionState::processServerInvite(  Message* msg )
 void
 TransactionState::processStale(  Message* msg )
 {
+   DebugLog (<< "TransactionState::processStale: " << msg->brief());
+
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if ( sip->header(h_RequestLine).getMethod() == ACK ||
 	isResponse(msg, 200, 299 ) )
@@ -1030,29 +1045,28 @@ TransactionState::isFromWire(Message* msg) const
 bool
 TransactionState::isTransportError(Message* msg) const
 {
-   SendingMessage* sending = dynamic_cast<SendingMessage*>(msg);
-   return (sending && sending->isFailed());
+   TransportMessage* t = dynamic_cast<TransportMessage*>(msg);
+   return (t && t->isFailed());
 }
 
 bool
 TransactionState::isReliabilityIndication(Message* msg) const
 {
-   SendingMessage* sending = dynamic_cast<SendingMessage*>(msg);
-   return (sending && (sending->isReliable() || sending->isUnreliable()));
+   return dynamic_cast<ReliabilityMessage*>(msg);
 }
 
 bool
 TransactionState::isSentReliable(Message* msg) const
 {
-   SendingMessage* sending = dynamic_cast<SendingMessage*>(msg);
-   return (sending && sending->isReliable());
+   ReliabilityMessage* r = dynamic_cast<ReliabilityMessage*>(msg);
+   return (r && r->isReliable());
 }
 
 bool
 TransactionState::isSentUnreliable(Message* msg) const
 {
-   SendingMessage* sending = dynamic_cast<SendingMessage*>(msg);
-   return (sending && sending->isUnreliable());
+   ReliabilityMessage* r = dynamic_cast<ReliabilityMessage*>(msg);
+   return (r && !r->isReliable());
 }
 
 
