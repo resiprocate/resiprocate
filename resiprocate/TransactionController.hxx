@@ -82,7 +82,8 @@ class TransactionController
       TimerQueue  mTimers;
 
       unsigned long StatelessIdCounter;
-
+      bool mShuttingDown;
+      
       friend class SipStack; // for debug only
       friend class StatelessHandler;
       friend class TransactionState;
