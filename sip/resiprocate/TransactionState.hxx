@@ -14,6 +14,7 @@ class TransactionState
 {
    public:
       static void process(SipStack& stack); 
+      ~TransactionState();
      
    private:
       typedef enum 
@@ -37,15 +38,12 @@ class TransactionState
       } State;
 
       TransactionState(SipStack& stack, Machine m, State s);
-      ~TransactionState();
       
       void processClientNonInvite(  Message* msg );
       void processClientInvite(  Message* msg );
       void processServerNonInvite(  Message* msg );
       void processServerInvite(  Message* msg );
       void processStale(  Message* msg );
-      
-      
 
    private:
       bool isRequest(Message* msg) const;
