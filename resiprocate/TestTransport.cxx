@@ -1,3 +1,5 @@
+#if defined(USETESTTRANSPORT)
+
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -8,7 +10,6 @@
 #include "sip2/util/Logger.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/Helper.hxx"
-
 #include "sip2/sipstack/TestTransport.hxx"
 
 
@@ -18,31 +19,28 @@ using namespace std;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 void 
-Vocal2::sendToWire(const Data& data)  // put data on wire to go to stack
+Vocal2::sendToWire(const Data& data) // put data on wire to go to stack
 {
    TestInBuffer::instance().getBuf().add(new Data(data));
 }
 
-
 void 
-Vocal2::getFromWire(Data& data)       // get data off wire that has come from stack
+Vocal2::getFromWire(Data& data) // get data off wire that has come from stack
 {
    data = *TestOutBuffer::instance().getBuf().getNext();
 }
 
 void 
-Vocal2::stackSendToWire(const Data& data)  // put data from stack onto wire
+Vocal2::stackSendToWire(const Data& data) // put data from stack onto wire
 {
    TestOutBuffer::instance().getBuf().add(new Data(data));
 }
 
-
 void 
-Vocal2::stackGetFromWire(Data& data)       // get data from wire to go to stack
+Vocal2::stackGetFromWire(Data& data) // get data from wire to go to stack
 {
    data = *TestInBuffer::instance().getBuf().getNext();
 }
-
 
 TestReliableTransport::TestReliableTransport(const Data& sendHost, int portNum, const Data& nic, Fifo<Message>& rxFifo)
    : Transport(sendHost, portNum, nic, rxFifo)
@@ -52,8 +50,6 @@ TestReliableTransport::TestReliableTransport(const Data& sendHost, int portNum, 
 TestReliableTransport::~TestReliableTransport()
 {
 }
-    
-
 
 void 
 TestReliableTransport::process(FdSet& fdSet)
@@ -61,7 +57,6 @@ TestReliableTransport::process(FdSet& fdSet)
    // pull buffers to send out of TxFifo
    // receive datagrams from fd
    // preparse and stuff into RxFifo
-
    
    if (mTxFifo.messageAvailable())
    {
@@ -70,7 +65,6 @@ TestReliableTransport::process(FdSet& fdSet)
 
       stackSendToWire(data->data.data());
    }
-
 
    if ( TestInBuffer::instance().getBuf().messageAvailable() )
    {
@@ -103,7 +97,6 @@ TestReliableTransport::transport() const
 }
 
 
-
 TestUnreliableTransport::TestUnreliableTransport(const Data& sendHost, int portNum, const Data& nic, Fifo<Message>& rxFifo)
    : Transport(sendHost, portNum, nic, rxFifo)
 {
@@ -113,8 +106,6 @@ TestUnreliableTransport::~TestUnreliableTransport()
 {
 }
     
-
-
 void 
 TestUnreliableTransport::process(FdSet& fdset)
 {
@@ -122,7 +113,6 @@ TestUnreliableTransport::process(FdSet& fdset)
    // receive datagrams from fd
    // preparse and stuff into RxFifo
 
-   
    if (mTxFifo.messageAvailable())
    {
       std::auto_ptr<SendData> data = std::auto_ptr<SendData>(mTxFifo.getNext());
@@ -130,7 +120,6 @@ TestUnreliableTransport::process(FdSet& fdset)
 
       stackSendToWire(data->data.data());
    }
-
 
    if ( TestInBuffer::instance().getBuf().messageAvailable() )
    {
@@ -162,17 +151,12 @@ TestUnreliableTransport::transport() const
    return Transport::TestUnreliable;
 }
 
-
-
-
-
 TestInBuffer* TestInBuffer::mInstance = 0;
 TestOutBuffer* TestOutBuffer::mInstance = 0;
 
 TestInBuffer::TestInBuffer()
 {
 }
-
 
 TestInBuffer&
 TestInBuffer::instance()
@@ -183,11 +167,9 @@ TestInBuffer::instance()
    return *mInstance;
 }
 
-
 TestOutBuffer::TestOutBuffer()
 {
 }
-
 
 TestOutBuffer&
 TestOutBuffer::instance()
@@ -197,3 +179,5 @@ TestOutBuffer::instance()
 
    return *mInstance;
 }
+
+#endif
