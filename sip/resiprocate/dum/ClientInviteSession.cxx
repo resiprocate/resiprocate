@@ -26,6 +26,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
       sendSdp(static_cast<SdpContents*>(initialOffer->clone()));
    }
    mLastRequest = request;
+   mLastRequest.releaseContents();   
 }
 
 ClientInviteSessionHandle 
