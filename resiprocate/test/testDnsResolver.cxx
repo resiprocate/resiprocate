@@ -37,7 +37,7 @@ TestDnsResolver::test()
    uri.host() = "www.cisco.com";
    uri.port() = 1588;
     
-   stack.mDnsResolver.lookup(transactionId, uri);
+   stack.mTransactionController.mDnsResolver.lookup(transactionId, uri);
    
    Via via;
    via.sentHost() = "sj-wall-1.cisco.com";
@@ -46,18 +46,18 @@ TestDnsResolver::test()
    //via.param(p_received) = "localhost";
    //via.param(p_rport) = 1066;
       
-   stack.mDnsResolver.lookup(transactionId, via);
+   stack.mTransactionController.mDnsResolver.lookup(transactionId, via);
 
 
    while (1)
    {
       FdSet fdset;
-      stack.mDnsResolver.buildFdSet(fdset);
+      stack.mTransactionController.mDnsResolver.buildFdSet(fdset);
       int err = fdset.selectMilliSeconds(1);
       assert (err != -1);
       
-      stack.mDnsResolver.process(fdset);
-      DnsResolver::DnsMessage* myMsg = dynamic_cast<DnsResolver::DnsMessage*>(stack.mStateMacFifo.getNext());
+      stack.mTransactionController.mDnsResolver.process(fdset);
+      DnsResolver::DnsMessage* myMsg = dynamic_cast<DnsResolver::DnsMessage*>(stack.mTransactionController.mStateMacFifo.getNext());
       assert(myMsg);
    
       for (DnsResolver::TupleIterator ti = myMsg->mTuples.begin();

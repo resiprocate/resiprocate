@@ -75,22 +75,22 @@ using namespace std;
 
 namespace resip 
 {
-	class TestFSM  // this class is a friend of the SipStack and can directly access private stuff
-	{
-	public:
-		static void addMessage(SipStack* stack,SipMessage* message)
-		{
-			stack->mStateMacFifo.add(message);
-		}
-	};
+class TestFSM  // this class is a friend of the SipStack and can directly access private stuff
+{
+   public:
+      static void addMessage(SipStack* stack,SipMessage* message)
+      {
+         stack->mTransactionController.mStateMacFifo.add(message);
+      }
+};
 }
 
 typedef struct {
-    struct timeval mExpiry;
-    bool mIsRequest;
-    bool mIsTransport;
-    int mResponseCode;
-    MethodTypes mMethod;
+      struct timeval mExpiry;
+      bool mIsRequest;
+      bool mIsTransport;
+      int mResponseCode;
+      MethodTypes mMethod;
 } WaitNode;
 
 // --------------------------------------------------
@@ -550,7 +550,7 @@ main(int argc, char *argv[])
 
     client = new SipStack();
     assert(client);
-    client->addTransport(Transport::UDP, PORT);
+    client->addTransport(UDP, PORT);
 
     signal(SIGALRM, processTimeouts);
 
