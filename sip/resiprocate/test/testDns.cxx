@@ -55,7 +55,7 @@ class TestDns : public DnsInterface, public ThreadIf
 using namespace resip;
 
 int 
-main(int argc, char* argv[])
+main(int argc, const char** argv)
 {
    char* logType = 0;
    char* logLevel = 0;
