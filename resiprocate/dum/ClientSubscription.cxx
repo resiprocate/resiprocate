@@ -17,6 +17,12 @@ ClientSubscription::~ClientSubscription()
    mDialog.mClientSubscriptions.remove(this);
 }
 
+ClientSubscriptionHandle 
+ClientSubscription::getHandle()
+{
+   return ClientSubscriptionHandle(mDum, getBaseHandle().getId());
+}
+
 bool
 ClientSubscription::matches(const SipMessage& subOrNotify)
 {
@@ -24,16 +30,6 @@ ClientSubscription::matches(const SipMessage& subOrNotify)
            subOrNotify.header(h_Event).value() == mEventType && 
            ( !subOrNotify.header(h_Event).exists(p_id) || 
              subOrNotify.header(h_Event).param(p_id) == mSubscriptionId));
-}
-
-ClientSubscription::Handle::Handle(DialogUsageManager& dum)
-   : BaseUsage::Handle(dum)
-{}
-
-ClientSubscription*
-ClientSubscription::Handle::operator->()
-{
-   return static_cast<ClientSubscription*>(get());
 }
 
 void 

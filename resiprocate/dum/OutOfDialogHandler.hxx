@@ -1,5 +1,8 @@
+#if !defined(RESIP_OutOfDialogHandler_hxx)
+#define RESIP_OutOfDialogHandler_hxx
 
-
+namespace resip
+{
 
 /** @file OutOfDialogHandler.hxx
  *   @todo This file is empty
@@ -15,3 +18,7 @@ class OutOfDialogHandler
       // Server Handlers
       virtual void onReceivedRequest(ServerOutOfDialogReq::Handle, const SipMessage& request)=0;
 };
+ 
+}
+
+#endif

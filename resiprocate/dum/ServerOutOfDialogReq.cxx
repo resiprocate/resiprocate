@@ -4,6 +4,13 @@
 
 using namespace resip;
 
+ServerOutOfDialogReqHandle 
+ServerOutOfDialogReq::getHandle()
+{
+   return ServerOutOfDialogReqHandle(mDum, getBaseHandle().getId());
+}
+
+
 ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum,
                                            Dialog& dialog,
                                            const SipMessage& req)
@@ -26,17 +33,6 @@ ServerOutOfDialogReq::dispatch(const SipMessage& msg)
 void
 ServerOutOfDialogReq::dispatch(const DumTimeout& msg)
 {
-}
-
-
-ServerOutOfDialogReq::Handle::Handle(DialogUsageManager& dum)
-   : BaseUsage::Handle(dum)
-{}
-
-ServerOutOfDialogReq* 
-ServerOutOfDialogReq::Handle::operator->()
-{
-   return static_cast<ServerOutOfDialogReq*>(get());
 }
 
 /* ====================================================================

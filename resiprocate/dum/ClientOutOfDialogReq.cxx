@@ -4,6 +4,12 @@
 
 using namespace resip;
 
+ClientOutOfDialogReqHandle 
+ClientOutOfDialogReq::getHandle()
+{
+   return ClientOutOfDialogReqHandle(mDum, getBaseHandle().getId());
+}
+
 ClientOutOfDialogReq::ClientOutOfDialogReq(DialogUsageManager& dum,
                                        Dialog& dialog,
                                        const SipMessage& req)
@@ -15,16 +21,6 @@ ClientOutOfDialogReq::ClientOutOfDialogReq(DialogUsageManager& dum,
 ClientOutOfDialogReq::~ClientOutOfDialogReq()
 {
    mDialog.mClientOutOfDialogRequests.remove(this);
-}
-
-ClientOutOfDialogReq::Handle::Handle(DialogUsageManager& dum)
-   : BaseUsage::Handle(dum)
-{}
-
-ClientOutOfDialogReq* 
-ClientOutOfDialogReq::Handle::operator->()
-{
-   return static_cast<ClientOutOfDialogReq*>(get());
 }
 
 void 
