@@ -30,12 +30,13 @@ class PlainContents : public Contents
       virtual void parse(ParseBuffer& pb);
 
       Data& text() {checkParsed(); return mText;}
-      
-   private:
-      static ContentsFactory<PlainContents> Factory;
 
+      static bool init();
+   private:
       Data mText;
 };
+
+static bool invokePlainContentsInit = PlainContents::init();
 
 }
 

@@ -17,7 +17,13 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-ContentsFactory<SipFrag> SipFrag::Factory;
+bool
+SipFrag::init()
+{
+   static ContentsFactory<SipFrag> factory;
+   (void)factory;
+   return true;
+}
 
 SipFrag::SipFrag(const Mime& contentsType)
    : Contents(contentsType),

@@ -29,13 +29,14 @@ class Pkcs7Contents : public Contents
       virtual void parse(ParseBuffer& pb);
 
       //Data& text() {checkParsed(); return mText;}
+
+      static bool init();
       
    private:
-      static ContentsFactory<Pkcs7Contents> Factory;
-
       Data mText;
 };
 
+static bool invokePkcs7ContentsInit = Pkcs7Contents::init();
 
 class Pkcs7SignedContents : public Pkcs7Contents
 {
@@ -54,9 +55,10 @@ class Pkcs7SignedContents : public Pkcs7Contents
       static const Mime& getStaticType() ;
       virtual Contents* clone() const;
 
-   private:
-      static ContentsFactory<Pkcs7SignedContents> Factory;
+      static bool init();
 };
+
+static bool invokePkcs7SignedContentsInit = Pkcs7SignedContents::init();
 
 }
 
