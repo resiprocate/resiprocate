@@ -10,6 +10,7 @@ class UnknownHeaderType
 {
    public:
       explicit UnknownHeaderType(const char* unknownHeaderName);
+      explicit UnknownHeaderType(const Data& unknownHeaderName);
 
       const Data& getName() const {return mName;}
 

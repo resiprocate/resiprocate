@@ -17,3 +17,13 @@ UnknownHeaderType::UnknownHeaderType(const char* name)
    assert(!mName.empty());
    assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
 }
+
+UnknownHeaderType::UnknownHeaderType(const Data& name)
+{
+   ParseBuffer pb(name);
+   const char* anchor = pb.skipWhitespace();
+   pb.skipNonWhitespace();
+   mName = pb.data(anchor);
+   assert(!mName.empty());
+   assert(Headers::getType(mName.data(), mName.size()) == Headers::UNKNOWN);
+}
