@@ -27,7 +27,9 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    DebugLog (<< "Creating TLS connection " << tuple << " on " << fd);
 
    mSsl = NULL;
-
+   mPeerName = Data::Empty;
+   mBio= NULL;
+  
    if (server)
    {
       DebugLog( << "Trying to form TLS connection - acting as server" );
@@ -52,7 +54,10 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    mState = server ? Accepting : Connecting;
 
    if (checkState() == Broken)
-       throw Transport::Exception( Data("TLS setup failed"), __FILE__, __LINE__ );
+   {
+      throw Transport::Exception( Data("TLS setup failed"), __FILE__, __LINE__ );
+   }
+   
 }
 
 
@@ -206,7 +211,7 @@ TlsConnection::checkState()
    InfoLog( << "TLS handshake done" ); 
    mState = Up;
    
-   peerName(); // force peer name to get checked and perhaps cert loaded
+   computePeerName(); // force peer name to get checked and perhaps cert loaded
    
    return mState;
 }
@@ -372,96 +377,49 @@ TlsConnection::isGood() // has data that can be read
 
 
 Data 
-TlsConnection::peerName()
+TlsConnection::getPeerName()
+{
+   return mPeerName;
+}
+
+
+void
+TlsConnection::computePeerName()
 {
    assert(mSsl);
-   Data ret = Data::Empty;
-
+   
    if (checkState() != Up)
-       return Data::Empty;
+   {
+      return;
+   }
 
    if (!mBio)
    {
-      DebugLog( << "bad bio" );
-      return Data::Empty;
+      ErrLog( << "bad bio" );
+      return;
    }
 
-#if 1 // print session infor       
+   // print session infor       
    SSL_CIPHER *ciph;
-   
    ciph=SSL_get_current_cipher(mSsl);
    InfoLog( << "TLS sessions set up with " 
             <<  SSL_get_version(mSsl) << " "
             <<  SSL_CIPHER_get_version(ciph) << " "
             <<  SSL_CIPHER_get_name(ciph) << " " );
-#endif
 
-#ifdef WIN32
-   assert(0);
-#else
-   ErrLog(<< "request peer certificate" );
+   // get the certificate if other side has one 
    X509* cert = SSL_get_peer_certificate(mSsl);
    if ( !cert )
    {
-      ErrLog(<< "No peer certifiace in TLS connection" );
-      return ret;
+      DebugLog(<< "No peer certifiace in TLS connection" );
+      return;
    }
-   ErrLog(<< "Got peer certificate" );
 
    // TODO - check that this certificate is valid 
 
-   // TODO - add the certificate to the Security store
-   
+   // look at the Common Name to fine the peerName of the cert 
    X509_NAME* subject = X509_get_subject_name(cert);
    assert(subject);
-   
-   // TODO - need to fix up log levels 
-#if 1
-   GENERAL_NAMES* gens;
-   gens = (GENERAL_NAMES*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
-   
-   for(int i = 0; i < sk_GENERAL_NAME_num(gens); i++)
-   {  
-      GENERAL_NAME* gen = sk_GENERAL_NAME_value(gens, i);
-
-      ErrLog(<< "subjectAltName of signing cert contains type <" << gen->type << ">" );
-
-      if (gen->type == GEN_DNS)
-      {
-            ErrLog(<< "subjectAltName of signing cert has DNS type" );
-      }
-          
-      if (gen->type == GEN_EMAIL)
-      {
-            ErrLog(<< "subjectAltName of signing cert has EMAIL type" );
-      }
-          
-      if(gen->type == GEN_URI) 
-      {
-         ASN1_IA5STRING* uri = gen->d.uniformResourceIdentifier;
-         int l = uri->length;
-         unsigned char* dat = uri->data;
-         Data name(dat,l);
-         ErrLog(<< "subjectAltName of signing cert contains <" << name << ">" );
-         
-         try
-         {
-            Uri n(name);
-            if ( n.scheme() == "sip" )
-            {
-               ErrLog(<< "Subject AltName has " << name  );
-            }
-         }
-         catch (...)
-         {
-         }
-      }
-   }
-   
-   sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
-#endif
-  
-#if 0
    int i =-1;
    while( true )
    {
@@ -480,27 +438,16 @@ TlsConnection::peerName()
       int t = M_ASN1_STRING_type(s);
       int l = M_ASN1_STRING_length(s);
       unsigned char* d = M_ASN1_STRING_data(s);
+      Data name(d,l);
+      DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
+      assert( name.size() == (unsigned)l );
       
-      ErrLog( << "got string type=" << t << " len="<<l );
-      ErrLog( << "data=<" << d << ">" );
-
-      ret = Data(d);
-   }
-   
-   STACK* sk = X509_get1_email(cert);
-   if (sk)
-   {
-      ErrLog( << "Got an email" );
+      DebugLog( << "Found commeon name in cert of " << name );
       
-      for( int i=0; i<sk_num(sk); i++ )
-      {
-         char* v = sk_value(sk,i);
-         ErrLog( << "Got an email value of " << v );
-
-         ret = Data(v);
-      }
+      mPeerName = name;
    }
-   
+
+#if 0  // junk code to print certificates extentions for debugging 
    int numExt = X509_get_ext_count(cert);
    ErrLog(<< "Got peer certificate with " << numExt << " extentions" );
 
@@ -511,19 +458,60 @@ TlsConnection::peerName()
       
       const char* str = OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
       assert(str);
-      ErrLog(<< "Got certificate extention" << str );
+      DebugLog(<< "Got certificate extention" << str );
 
       if  ( OBJ_obj2nid(X509_EXTENSION_get_object(ext)) == NID_subject_alt_name )
       {   
-         ErrLog(<< "Got subjectAltName extention" );
-         
+         DebugLog(<< "Got subjectAltName extention" );
       }
    }
 #endif 
 
+   // Look at the SubjectAltName, and if found, set as peerName
+   GENERAL_NAMES* gens;
+   gens = (GENERAL_NAMES*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+   for(int i = 0; i < sk_GENERAL_NAME_num(gens); i++)
+   {  
+      GENERAL_NAME* gen = sk_GENERAL_NAME_value(gens, i);
+
+      DebugLog(<< "subjectAltName of cert contains type <" << gen->type << ">" );
+
+      if (gen->type == GEN_DNS)
+      {
+         ASN1_IA5STRING* uri = gen->d.uniformResourceIdentifier;
+         int l = uri->length;
+         unsigned char* dat = uri->data;
+         Data name(dat,l);
+         InfoLog(<< "subjectAltName of TLS seesion cert contains <" << name << ">" );
+         
+         mPeerName = name;
+      }
+          
+      if (gen->type == GEN_EMAIL)
+      {
+            DebugLog(<< "subjectAltName of cert has EMAIL type" );
+      }
+          
+      if(gen->type == GEN_URI) 
+      {
+           DebugLog(<< "subjectAltName of cert has GEN_URI type" );
+      }
+   }
+   sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+
+   // add the certificate to the Security store
+#if 0 // TODO !cj! TURN THIS ON 
+   assert( mPeerName != Data::Empty );
+   if ( !security->hasDomainCert( mPeerName ) )
+   {
+      char* buf = NULL;
+      int len = i2d_X509( cert, &buf );
+      Data derCert( buf, len );
+      security->addDomainCertDER(mPeerName,derCert);
+      free buf; buf=NULL;
+   }
+#endif
 
    X509_free(cert); cert=NULL;
-#endif
-   return ret;
 }
 
