@@ -103,7 +103,7 @@ DialogUsageManager::~DialogUsageManager()
    //InfoLog ( << "~DialogUsageManager done" );
 }
 
-bool
+void
 DialogUsageManager::addTransport( TransportType protocol,
                                   int port,
                                   IpVersion version,
@@ -112,8 +112,8 @@ DialogUsageManager::addTransport( TransportType protocol,
                                   const Data& privateKeyPassPhrase,
                                   SecurityTypes::SSLType sslType)
 {
-   return mStack->addTransport(protocol, port, version, ipInterface,
-                               sipDomainname, privateKeyPassPhrase, sslType);
+   mStack->addTransport(protocol, port, version, ipInterface,
+                        sipDomainname, privateKeyPassPhrase, sslType);
 }
 
 Security&
