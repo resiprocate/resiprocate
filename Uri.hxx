@@ -47,6 +47,12 @@ class Uri : public ParserCategory
       bool operator==(const Uri& other) const;
       bool operator!=(const Uri& other) const;
       bool operator<(const Uri& other) const;
+
+      class GreaterQ
+      {
+         public:
+            bool operator()(const Uri& lhs, const Uri& rhs) const;
+      };
       
    protected:
       mutable Data mScheme;
