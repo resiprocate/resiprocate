@@ -598,6 +598,25 @@ Helper::processStrictRoute(SipMessage& request)
    }
 }
 
+int
+Helper::getSentPort(SipMessage& request)
+{
+   assert(request.isRequest());
+   
+   int port = -1;
+   if (!request.header(h_Vias).front().exists(p_rport))
+   {
+      port = request.header(h_Vias).front().sentPort();
+      if (port == 0) 
+      {
+         port = Symbols::DefaultSipPort;
+      }
+   }
+   return port;
+}
+
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
