@@ -26,6 +26,7 @@ SRC =   \
 	UserDb.cxx \
 	UserAuthInfo.cxx \
 	WebAdmin.cxx \
+	WebAdminThread.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
         RequestProcessor.cxx \

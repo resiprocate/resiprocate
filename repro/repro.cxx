@@ -12,6 +12,8 @@
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/UserDb.hxx"
 #include "repro/Registrar.hxx"
+#include "repro/WebAdmin.hxx"
+#include "repro/WebAdminThread.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
@@ -48,6 +50,9 @@ main(int argc, char** argv)
    requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(ls));
 
    UserDb userDb;
+   WebAdmin admin(userDb);
+   WebAdminThread adminThread(admin);
+   
    Proxy proxy(stack, requestProcessors, userDb);
 
    /* Initialize a registrar */
@@ -57,9 +62,12 @@ main(int argc, char** argv)
    stackThread.run();
    proxy.run();
    registrar.run();
+   adminThread.run();
+   
    registrar.join();
    proxy.join();
    stackThread.join();
+   adminThread.join();
    
    // shutdown the stack now...
 }
