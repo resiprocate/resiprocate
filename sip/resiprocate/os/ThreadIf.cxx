@@ -2,7 +2,9 @@
 #if defined(WIN32)
 #include <stdio.h>
 #include <tchar.h>
-#include <Windows.h>
+#include <time.h>
+//from Random.cxx
+#include "resiprocate/os/Socket.hxx"
 #endif
 
 #include <cassert>
@@ -25,7 +27,7 @@ threadWrapper( void* threadParm )
    ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
    
    assert( t );
-#if define(WIN32)
+#if defined(WIN32)
    srand(unsigned(time(0)) ^ unsigned(GetCurrentThreadId()) ^ unsigned(GetCurrentProcessId()));
 #endif
    t->thread();
