@@ -193,7 +193,9 @@ XMLCursor::parseNextRootChild()
       if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
       {
          pb.skipChar();
-         if ( pb.end() < pb.position() + mTag.size() )
+         // CodeWarrior isn't helpful enough to pick the "obvious" operator definition
+         // so we add volatile here so CW is completely unconfused what to do.
+         if ( pb.end() < (const volatile char*)pb.position() + mTag.size() )
          {
             InfoLog(<< "XML: unexpected end");
             pb.fail(__FILE__, __LINE__);
@@ -531,7 +533,9 @@ XMLCursor::Node::skipToEndTag()
       if (*mPb.position() == Symbols::SLASH[0])
       {
          mPb.skipChar();
-         if ( mPb.end() < mPb.position() + mTag.size() )
+         // CodeWarrior isn't helpful enough to pick the "obvious" operator definition
+         // so we add volatile here so CW is completely unconfused what to do.
+         if ( mPb.end() < (const volatile char*)mPb.position() + mTag.size() )
          {
             InfoLog(<< "XML: unexpected end");
             mPb.fail(__FILE__, __LINE__);

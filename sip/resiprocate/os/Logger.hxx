@@ -20,27 +20,27 @@
 
 // unconditionally output to cerr -- easily change back and forth
 #define CerrLog(args_)                                                          \
-  resip::Log::tags(resip::Log::STDERR, RESIPROCATE_SUBSYSTEM, std::cerr)           \
+  resip::Log::tags(resip::Log::StdErr, RESIPROCATE_SUBSYSTEM, std::cerr)           \
           << __FILE__ << ':' << __LINE__ << DELIM                               \
           args_ << std::endl;
 
 #define StackLog(args_)                                                         \
-GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::STACK, args_)
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Stack, args_)
 
 #define DebugLog(args_) \
-GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::DEBUG, args_)
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Debug, args_)
 
 #define InfoLog(args_) \
-GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::INFO, args_)
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Info, args_)
 
 #define WarningLog(args_) \
-GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::WARNING, args_)
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Warning, args_)
 
 #define ErrLog(args_) \
-GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::ERR, args_)
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Err, args_)
 
 #define CritLog(args_) \
-GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::CRIT, args_)
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Crit, args_)
 
 #define CHECK_RECURSIVE_LOG
 class AssertOnRecursiveLock
