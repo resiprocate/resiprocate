@@ -33,6 +33,7 @@ MultipartMixedContents::MultipartMixedContents(const Mime& contentsType)
    : Contents(contentsType),
      mContents()
 {
+   setBoundary();
 }
 
 MultipartMixedContents::MultipartMixedContents(HeaderFieldValue* hfv, const Mime& contentsType)
