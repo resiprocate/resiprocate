@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <openssl/rand.h>
 #include <util/RandomHex.hxx>
 #include <util/Lock.hxx>
