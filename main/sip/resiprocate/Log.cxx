@@ -1,6 +1,6 @@
 #include <cassert>
 #include <iostream>
-#include <string.h>
+#include <sipstack/Data.hxx>
 #include <stdio.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -14,8 +14,8 @@ using namespace std;
 
 Log::Level Log::_level = Log::DEBUG;
 Log::Type Log::_type = COUT;
-string Log::_appName;
-string Log::_hostname;
+Data Log::_appName;
+Data Log::_hostname;
 pid_t Log::_pid=0;
 
 const char
@@ -24,7 +24,7 @@ Log::_descriptions[][32] = {"EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE"
 Mutex Log::_mutex;
 
 void 
-Log::initialize(Type type, Level level, const string& appName)
+Log::initialize(Type type, Level level, const Data& appName)
 {
    _type = type;
    _level = level;
@@ -43,25 +43,25 @@ Log::setLevel(Level level)
    _level = level; 
 }
 
-string
+Data
 Log::toString(Level l)
 {
-   return string("LOG_") + _descriptions[l];
+   return Data("LOG_") + _descriptions[l];
 }
 
 Log::Level
-Log::toLevel(const string& l)
+Log::toLevel(const Data& l)
 {
-   string pri = l;
+   Data pri = l;
    if (pri.find("LOG_", 0) == 0)
    {
       pri.erase(0, 4);
    }
    
    int i=0;
-   while (string(_descriptions[i]).length())
+   while (Data(_descriptions[i]).length())
    {
-      if (pri == string(_descriptions[i])) 
+      if (pri == Data(_descriptions[i])) 
       {
          return Level(i);
       }
@@ -86,7 +86,7 @@ Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm)
    return strm;
 }
 
-string
+Data
 Log::timestamp() 
 {
    const unsigned int DATEBUF_SIZE=256;

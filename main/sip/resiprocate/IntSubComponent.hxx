@@ -1,7 +1,7 @@
 #ifndef IntSubComponent_hxx
 #define IntSubComponent_hxx
 
-#include <sip2/sipstack/SubComponent.hxx>
+#include <sipstack/SubComponent.hxx>
 #include <iostream>
 
 namespace Vocal2
@@ -16,7 +16,7 @@ class IntSubComponent : public SubComponent
       virtual SubComponent* clone() const;
    private:
       int mValue;
-      std::string mData;
+      Data mData;
 };
  
 std::ostream& Vocal2::operator<<(std::ostream& stream, Vocal2::IntSubComponent& comp);

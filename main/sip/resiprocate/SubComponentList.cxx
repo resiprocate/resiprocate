@@ -1,4 +1,4 @@
-#include <sip2/sipstack/SubComponentList.hxx>
+#include <sipstack/SubComponentList.hxx>
 
 
 using namespace Vocal2;
@@ -93,7 +93,7 @@ void SubComponentList::erase(SubComponent::Type type)
    }	 
 }
 
-SubComponent* SubComponentList::find(const string& type) const
+SubComponent* SubComponentList::find(const Data& type) const
 {
    if (first)
    {
@@ -113,7 +113,7 @@ SubComponent* SubComponentList::find(const string& type) const
 }
 
 
-SubComponent* SubComponentList::get(const string& type)
+SubComponent* SubComponentList::get(const Data& type)
 {
    if (first)
    {
@@ -138,7 +138,7 @@ SubComponent* SubComponentList::get(const string& type)
 }
 
 
-void SubComponentList::erase(const string& type)
+void SubComponentList::erase(const Data& type)
 {
    if(first)
    {

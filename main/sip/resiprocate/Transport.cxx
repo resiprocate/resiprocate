@@ -6,7 +6,7 @@
 using namespace Vocal2;
 
 
-Transport::TransportException::TransportException(const std::string& msg, const std::string& file, const int line)
+Transport::TransportException::TransportException(const Data& msg, const Data& file, const int line)
 {
 }
 

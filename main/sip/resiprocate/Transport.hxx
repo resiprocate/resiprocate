@@ -1,11 +1,11 @@
 #if !defined(TRANSPORT_HXX)
 #define TRANSPORT_HXX
 
-#include <string>
+#include <sipstack/Data.hxx>
 #include <exception>
 #include <netinet/in.h>
 
-#include <sip2/sipstack/Fifo.hxx>
+#include <sipstack/Fifo.hxx>
 
 namespace Vocal2
 {
@@ -26,7 +26,7 @@ class Transport
       class TransportException : public std::exception
       {
          public:
-            TransportException(const std::string& msg, const std::string& file, const int line);
+            TransportException(const Data& msg, const Data& file, const int line);
             virtual const char* what() const throw();
       };
 

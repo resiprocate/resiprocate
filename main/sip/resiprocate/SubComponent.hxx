@@ -1,7 +1,7 @@
 #ifndef SUBCOMPONENT_HXX
 #define SUBCOMPONENT_HXX
 
-#include <string>
+#include <sipstack/Data.hxx>
 #include <iostream>
 
 namespace Vocal2
@@ -19,13 +19,13 @@ class SubComponent
       
       Type getType() const;
 
-      virtual const std::string& getName() const;
+      virtual const Data& getName() const;
 
       virtual SubComponent* clone() const;
 
       SubComponent* next;
    private:
-      static std::string  ParamString[];
+      static Data  ParamString[];
       Type mType;
 
 };

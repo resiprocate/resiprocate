@@ -1,8 +1,8 @@
 #ifndef UnknownSubComponent_hxx
 #define UnknownSubComponent_hxx
 
-#include <sip2/sipstack/StringSubComponent.hxx>
-#include <string>
+#include <sipstack/StringSubComponent.hxx>
+#include <sipstack/Data.hxx>
 
 namespace Vocal2
 {
@@ -13,12 +13,12 @@ class UnknownSubComponent : public StringSubComponent
       UnknownSubComponent(const char* startName, unsigned int nameSize,
                        const char* startData, unsigned int dataSize);
       
-      UnknownSubComponent(const std::string& name, const std::string& data);
+      UnknownSubComponent(const Data& name, const Data& data);
       
-      virtual const std::string& getName();
+      virtual const Data& getName();
       virtual SubComponent* clone() const;
    private:
-      std::string mName;
+      Data mName;
 };
 
 }
