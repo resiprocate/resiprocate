@@ -17,7 +17,8 @@ namespace Vocal2
 // do a case-insensitive match
 inline bool isEqualNoCase(const Data& left, const Data& right)
 {
-   return (strcasecmp(left.c_str(), right.c_str()) == 0);
+   return ( (left.size() == right.size()) &&
+            (strncasecmp(left.data(), right.data(), left.size()) == 0) );
 }
  
 }
