@@ -93,9 +93,8 @@ void DialogUsageManager::shutdown(DumShutdownHandler* h)
 }
 
 
-void DialogUsageManager::setAppDialogSetFactory(AppDialogSetFactory* factory)
+void DialogUsageManager::setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory> factory)
 {
-   delete mAppDialogSetFactory;   
    mAppDialogSetFactory = factory;
 }
 
@@ -185,9 +184,8 @@ void DialogUsageManager::setProfile(Profile* profile)
    mProfile = profile;
 }
 
-void DialogUsageManager::setRedirectManager(RedirectManager* manager)
+void DialogUsageManager::setRedirectManager(std::auto_ptr<RedirectManager> manager)
 {
-   delete mRedirectManager;
    mRedirectManager = manager;
 }
 
@@ -628,17 +626,31 @@ DialogUsageManager::process(bool separateThread)
             DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());      
             if (sipMsg->isRequest())
             {
-
-//          if( !validateRequest(*sipMsg) )
-//          {
-//             DebugLog (<< "Failed request validation " << *sipMsg);
-//             return;
-//          }
-//          if ( !validateTo(*sipMsg) )
-//          {
-//             DebugLog (<< "Failed to validation " << *sipMsg);
-//             return;
-//          }
+               if( !validateRequestURI(*sipMsg) )
+               {
+                  DebugLog (<< "Failed RequestURI validation " << *sipMsg);
+                  return true;
+               }
+               if( !validateRequiredOptions(*sipMsg) )
+               {
+                  DebugLog (<< "Failed required options validation " << *sipMsg);
+                  return true;
+               }
+               if( mProfile->validateContentEnabled() && !validateContent(*sipMsg) )
+               {
+                  DebugLog (<< "Failed content validation " << *sipMsg);
+                  return true;
+               }
+               if( mProfile->validateAcceptEnabled() && !validateAccept(*sipMsg) )
+               {
+                  DebugLog (<< "Failed accept validation " << *sipMsg);
+                  return true;
+               }
+//             if ( !validateTo(*sipMsg) )
+//             {
+//                DebugLog (<< "Failed to validation " << *sipMsg);
+//                return true;
+//             }
                if (sipMsg->header(h_From).exists(p_tag))
                {
                   if (mergeRequest(*sipMsg) )
@@ -713,17 +725,12 @@ DialogUsageManager::process(FdSet& fdset)
    }
 }
 
+
 bool
-DialogUsageManager::validateRequest(const SipMessage& request)
+DialogUsageManager::validateRequestURI(const SipMessage& request)
 {
-   if (!mProfile->isSchemeSupported(request.header(h_RequestLine).uri().scheme()))
-   {
-      InfoLog (<< "Received an unsupported scheme: " << request.brief());
-      SipMessage failure;
-      makeResponse(failure, request, 416);
-      sendResponse(failure);
-   }
-   else if (!mProfile->isMethodSupported(request.header(h_RequestLine).getMethod()))
+   // RFC3261 - 8.2.1
+   if (!mProfile->isMethodSupported(request.header(h_RequestLine).getMethod()))
    {
       InfoLog (<< "Received an unsupported method: " << request.brief());
 
@@ -734,12 +741,34 @@ DialogUsageManager::validateRequest(const SipMessage& request)
 
       return false;
    }
-   else
+
+   // RFC3261 - 8.2.2
+   if (!mProfile->isSchemeSupported(request.header(h_RequestLine).uri().scheme()))
    {
-      Tokens unsupported = mProfile->isSupported(request.header(h_Requires));
-      if (!unsupported.empty())
-      {
-         InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
+      InfoLog (<< "Received an unsupported scheme: " << request.brief());
+      SipMessage failure;
+      makeResponse(failure, request, 416);
+      sendResponse(failure);
+
+	  return false;
+   }
+            
+   return true;
+}
+
+
+bool
+DialogUsageManager::validateRequiredOptions(const SipMessage& request)
+{   
+   // RFC 2162 - 8.2.2
+   if(request.exists(h_Requires) &&                 // Don't check requires if method is ACK or CANCEL
+      (request.header(h_RequestLine).getMethod() != ACK ||
+       request.header(h_RequestLine).getMethod() != CANCEL)) 
+   {
+      Tokens unsupported = mProfile->getUnsupportedOptionsTags(request.header(h_Requires));
+	  if (!unsupported.empty())
+	  {
+	     InfoLog (<< "Received an unsupported option tag(s): " << request.brief());
 
          SipMessage failure;
          makeResponse(failure, request, 420);
@@ -747,47 +776,100 @@ DialogUsageManager::validateRequest(const SipMessage& request)
          sendResponse(failure);
 
          return false;
-      }
-      else if (request.exists(h_ContentDisposition))
+	  }
+   }
+
+   return true;
+}
+
+bool
+DialogUsageManager::validateContent(const SipMessage& request)
+{   
+   // RFC3261 - 8.2.3
+   // Don't need to validate content headers if they are specified as optional in the content-disposition
+   if (!(request.exists(h_ContentDisposition) && 
+	     request.header(h_ContentDisposition).exists(p_handling) && 
+	     isEqualNoCase(request.header(h_ContentDisposition).param(p_handling), Symbols::Optional)))
+   {
+	  if (request.exists(h_ContentType) && !mProfile->isMimeTypeSupported(request.header(h_ContentType)))
       {
-         if (request.header(h_ContentDisposition).exists(p_handling) && 
-             isEqualNoCase(request.header(h_ContentDisposition).param(p_handling), Symbols::Required))
+         InfoLog (<< "Received an unsupported mime type: " << request.brief());
+
+         SipMessage failure;
+         makeResponse(failure, request, 415);
+         failure.header(h_Accepts) = mProfile->getSupportedMimeTypes();
+         sendResponse(failure);
+
+         return false;
+      }
+      
+	  if (request.exists(h_ContentEncoding) && !mProfile->isContentEncodingSupported(request.header(h_ContentEncoding)))
+      {
+         InfoLog (<< "Received an unsupported mime type: " << request.brief());
+         SipMessage failure;
+         makeResponse(failure, request, 415);
+         failure.header(h_AcceptEncodings) = mProfile->getSupportedEncodings();
+         sendResponse(failure);
+
+         return false;
+      }
+      
+      if (mProfile->validateContentLanguageEnabled() &&
+          request.exists(h_ContentLanguages) && !mProfile->isLanguageSupported(request.header(h_ContentLanguages)))
+      {
+         InfoLog (<< "Received an unsupported language: " << request.brief());
+
+         SipMessage failure;
+         makeResponse(failure, request, 415);
+         failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
+         sendResponse(failure);
+
+         return false;
+      }
+   }
+
+   return true;
+}
+
+bool
+DialogUsageManager::validateAccept(const SipMessage& request)
+{   
+   // checks for Accept to comply with SFTF test case 216
+   if(request.exists(h_Accepts))
+   {
+      for (Mimes::const_iterator i = request.header(h_Accepts).begin();
+           i != request.header(h_Accepts).end(); i++)
+      {
+	     if (!mProfile->isMimeTypeSupported(*i))
          {
-            if (!mProfile->isMimeTypeSupported(request.header(h_ContentType)))
-            {
-               InfoLog (<< "Received an unsupported mime type: " << request.brief());
+            InfoLog (<< "Received an unsupported mime type in accept header: " << request.brief());
 
-               SipMessage failure;
-               makeResponse(failure, request, 415);
-               failure.header(h_Accepts) = mProfile->getSupportedMimeTypes();
-               sendResponse(failure);
+            SipMessage failure;
+            makeResponse(failure, request, 406);
+            failure.header(h_Accepts) = mProfile->getSupportedMimeTypes();
+            sendResponse(failure);
 
-               return false;
-            }
-            else if (!mProfile->isContentEncodingSupported(request.header(h_ContentEncoding)))
-            {
-               InfoLog (<< "Received an unsupported mime type: " << request.brief());
-               SipMessage failure;
-               makeResponse(failure, request, 415);
-               failure.header(h_AcceptEncodings) = mProfile->getSupportedEncodings();
-               sendResponse(failure);
-            }
-            else if (!mProfile->isLanguageSupported(request.header(h_ContentLanguages)))
-            {
-               InfoLog (<< "Received an unsupported language: " << request.brief());
-
-               SipMessage failure;
-               makeResponse(failure, request, 415);
-               failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
-               sendResponse(failure);
-            }
+            return false;
          }
+      }
+   }
+   else // If no Accept header then application/sdp should be assumed
+   {
+	  if (!mProfile->isMimeTypeSupported(Mime("application", "sdp")))
+      {
+         InfoLog (<< "Received an unsupported default mime type application/sdp for accept header: " << request.brief());
+
+         SipMessage failure;
+         makeResponse(failure, request, 406);
+         failure.header(h_Accepts) = mProfile->getSupportedMimeTypes();
+         sendResponse(failure);
+
+         return false;
       }
    }
          
    return true;
 }
-
 
 bool
 DialogUsageManager::validateTo(const SipMessage& request)
@@ -824,7 +906,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
 {
    DebugLog ( << "DialogUsageManager::processRequest: " << request.brief());
    
-   assert(mAppDialogSetFactory);
+   assert(mAppDialogSetFactory.get());
    if (!request.header(h_To).exists(p_tag))
    {
       switch (request.header(h_RequestLine).getMethod())
@@ -1077,7 +1159,7 @@ DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
    DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap.erase(dsId);
    DebugLog ( << "After: " << Inserter(mDialogSetMap) );
-   if (mRedirectManager)
+   if (mRedirectManager.get())
    {
       mRedirectManager->removeDialogSet(dsId);
    }   
