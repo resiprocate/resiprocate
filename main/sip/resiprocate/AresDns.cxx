@@ -10,6 +10,9 @@ extern "C"
 #error Must have ARES
 #endif
 
+#if !defined(WIN32)
+#include <arpa/nameser.h>
+#endif
 
 using namespace resip;
 
