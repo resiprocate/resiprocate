@@ -207,10 +207,10 @@ SipMessage::operator[](const Data& headerName)
             HeaderFieldValue* it = hfvs->first;
             while (it != 0)
             {
-               it->mParserCategory = new StringComponent(*it);
+               it->mParserCategory = new StringComponent(it);
             }
             
-            hfvs->setParserContainer(new StringComponents(*hfvs));
+            hfvs->setParserContainer(new StringComponents(hfvs));
          }
          return (StringComponents&)*hfvs->getParserCategory();
       }
@@ -218,7 +218,7 @@ SipMessage::operator[](const Data& headerName)
    
    // create the list empty
    HeaderFieldValueList* hfvs = new HeaderFieldValueList;
-   hfvs->setParserContainer(new StringComponents(*hfvs));
+   hfvs->setParserContainer(new StringComponents(hfvs));
    mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(headerName, hfvs));
    return (StringComponents&)*hfvs->getParserCategory();
 }
@@ -318,7 +318,7 @@ SipMessage::operator[](const RequestLineType& l)
       mStartLine = new HeaderFieldValue;
    }
    
-   RequestLineComponent* parser = new RequestLineComponent(*mStartLine);
+   RequestLineComponent* parser = new RequestLineComponent(mStartLine);
    mStartLine->mParserCategory = parser;
    
    return *parser;
@@ -336,7 +336,7 @@ SipMessage::operator[](const StatusLineType& l)
       mStartLine = new HeaderFieldValue;
    }
    
-   StatusLineComponent* parser = new StatusLineComponent(*mStartLine);
+   StatusLineComponent* parser = new StatusLineComponent(mStartLine);
    mStartLine->mParserCategory = parser;
    
    return *parser;
