@@ -20,7 +20,7 @@ using namespace resip;
 
 using namespace std;
 
-#define RESIPROCATE_SYSTEM Subsystem::App
+#define RESIPROCATE_SUBSYSTEM Subsystem::APP
 
 int
 main (int argc, char **argv)
@@ -75,6 +75,7 @@ main (int argc, char **argv)
 
     if (fdset.readyToRead(fileno(stdin)))
     {
+      DebugLog ( << "stdin is ready to read" );
       GagMessage *message = GagMessage::getMessage(cin);
       if (message)
       {
