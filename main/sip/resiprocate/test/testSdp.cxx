@@ -1,4 +1,4 @@
-#include "sip2/sipstack/SdpBody.hxx"
+#include "sip2/sipstack/SdpContents.hxx"
 #include "sip2/sipstack/HeaderFieldValue.hxx"
 #include <iostream>
 
@@ -18,7 +18,7 @@ main()
                "a=rtpmap:0 PCMU/8000\r\n");
 
       HeaderFieldValue hfv(txt.data(), txt.size());
-      SdpBody sdp(&hfv);
+      SdpContents sdp(&hfv);
 
       assert(sdp.getSession().getVersion() == 0);
       assert(sdp.getSession().getOrigin().getUser() == "alice");
@@ -40,18 +40,18 @@ main()
             );
 
       HeaderFieldValue hfv(txt, strlen(txt));
-      SdpBody sdp(&hfv);
+      SdpContents sdp(&hfv);
       
       assert(sdp.getSession().getVersion() == 0);
       assert(sdp.getSession().getOrigin().getUser() == "UserA");
       assert(sdp.getSession().getOrigin().getSessionId() == "2890844526");
       assert(sdp.getSession().getOrigin().getVersion() == "2890844527");
-      assert(sdp.getSession().getOrigin().getAddressType() == SdpBody::IP4);
+      assert(sdp.getSession().getOrigin().getAddressType() == SdpContents::IP4);
       assert(sdp.getSession().getOrigin().getAddress() == "here.com");
 
       assert(sdp.getSession().getName() == "Session SDP");
 
-      assert(sdp.getSession().getConnection().getAddressType() == SdpBody::IP4);
+      assert(sdp.getSession().getConnection().getAddressType() == SdpContents::IP4);
       assert(sdp.getSession().getConnection().getAddress() == "pc33.atlanta.com");
       assert(sdp.getSession().getConnection().getTTL() == 0);
 
@@ -62,7 +62,7 @@ main()
 
       assert(sdp.getSession().getMedia().front().getName() == "audio");
       assert(sdp.getSession().getMedia().front().getPort() == 49172);
-      assert(sdp.getSession().getMedia().front().getMulicast() == 1);
+      assert(sdp.getSession().getMedia().front().getMulticast() == 1);
       assert(sdp.getSession().getMedia().front().getProtocol() == "RTP/AVP");
       assert(sdp.getSession().getMedia().front().getFormats().front() == "0");
 
@@ -80,18 +80,18 @@ main()
                          "a=rtpmap:18 G729/8000\r\n");
 
       HeaderFieldValue hfv(txt, strlen(txt));
-      SdpBody sdp(&hfv);
+      SdpContents sdp(&hfv);
       
       assert(sdp.getSession().getVersion() == 0);
       assert(sdp.getSession().getOrigin().getUser() == "CiscoSystemsSIP-GW-UserAgent");
       assert(sdp.getSession().getOrigin().getSessionId() == "3559");
       assert(sdp.getSession().getOrigin().getVersion() == "3228");
-      assert(sdp.getSession().getOrigin().getAddressType() == SdpBody::IP4);
+      assert(sdp.getSession().getOrigin().getAddressType() == SdpContents::IP4);
       assert(sdp.getSession().getOrigin().getAddress() == "192.168.2.122");
 
       assert(sdp.getSession().getName() == "SIP Call");
 
-      assert(sdp.getSession().getConnection().getAddressType() == SdpBody::IP4);
+      assert(sdp.getSession().getConnection().getAddressType() == SdpContents::IP4);
       assert(sdp.getSession().getConnection().getAddress() == "192.168.2.122");
       assert(sdp.getSession().getConnection().getTTL() == 0);
 
@@ -102,7 +102,7 @@ main()
 
       assert(sdp.getSession().getMedia().front().getName() == "audio");
       assert(sdp.getSession().getMedia().front().getPort() == 17124);
-      assert(sdp.getSession().getMedia().front().getMulicast() == 1);
+      assert(sdp.getSession().getMedia().front().getMulticast() == 1);
       assert(sdp.getSession().getMedia().front().getProtocol() == "RTP/AVP");
       assert(sdp.getSession().getMedia().front().getFormats().front() == "18");
 
@@ -123,7 +123,7 @@ main()
                "a=rtpmap:0 PCMU/8000\r\n");
 
       HeaderFieldValue hfv(txt.data(), txt.size());
-      SdpBody sdp(&hfv);
+      SdpContents sdp(&hfv);
 
       assert(sdp.getSession().getVersion() == 0);
       assert(sdp.getSession().getOrigin().getUser() == "alice");
