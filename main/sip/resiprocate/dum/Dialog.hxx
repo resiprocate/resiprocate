@@ -3,7 +3,8 @@
 
 #include <vector>
 #include "resiprocate/dum/DialogId.hxx"
-#include "resiprocate/dum/InviteSession.hxx"
+#include "resiprocate/dum/ClientInviteSession.hxx"
+#include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/ClientRegistration.hxx"
@@ -40,10 +41,6 @@ class Dialog
       
       DialogId getId() const;
       
-//      void makeBye(SipMessage& proto);
-//     void makeInvite(SipMessage& proto);
-//      void makeAck(SipMessage& proto);
-//      void makePrack(SipMessage& proto);
       void makeRequest(SipMessage& request, MethodTypes method);
       void makeResponse(const SipMessage& request, SipMessage& response, int responseCode);
 
@@ -83,6 +80,19 @@ class Dialog
 
       ClientOutOfDialogReq* findMatchingClientOutOfDialogReq(const SipMessage& msg);
       ClientSubscription* findMatchingClientSub(const SipMessage& msg);
+
+      void addUsage(BaseUsage* usage);
+      ClientInviteSession* makeClientInviteSession(const SipMessage& msg);
+      ClientSubscription* makeClientSubscription(const SipMessage& msg);
+      ClientRegistration* makeClientRegistration(const SipMessage& msg);
+      ClientPublication* makeClientPublication( const SipMessage& msg);
+      ClientOutOfDialogReq* makeClientOutOfDialogReq(const SipMessage& msg);
+      
+      ServerInviteSession*  makeServerInviteSession(const SipMessage& msg);
+      ServerSubscription* makeServerSubscription(const SipMessage& msg);
+      ServerRegistration* makeServerRegistration(const SipMessage& msg);
+      ServerPublication* makeServerPublication(const SipMessage& msg);
+      ServerOutOfDialogReq* makeServerOutOfDialog(const SipMessage& msg);
 
       DialogId mId;  
       DialogUsageManager& mDum;

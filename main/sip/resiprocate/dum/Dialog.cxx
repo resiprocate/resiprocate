@@ -1,12 +1,12 @@
-#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/InviteSessionCreator.hxx"
 #include "resiprocate/os/Logger.hxx"
-
-#include "BaseCreator.hxx"
-#include "Dialog.hxx"
-#include "DialogUsageManager.hxx"
-#include "ClientOutOfDialogReq.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -202,7 +202,7 @@ Dialog::dispatch(const SipMessage& msg)
          case INVITE:  // new INVITE
             if (mInviteSession == 0)
             {
-               mInviteSession = mDum.makeServerInviteSession(*this, request);
+               mInviteSession = makeServerInviteSession(request);
             }
             mInviteSession->dispatch(request);
             break;
@@ -224,7 +224,7 @@ Dialog::dispatch(const SipMessage& msg)
          case REFER: //!jf! does this create a server subs?
             if (mServerSubscription == 0)
             {
-               mServerSubscription = mDum.makeServerSubscription(*this, request);
+               mServerSubscription = makeServerSubscription(request);
             }
                
             mServerSubscription->dispatch(request);
@@ -243,7 +243,7 @@ Dialog::dispatch(const SipMessage& msg)
                   BaseCreator* creator = mDum.findCreator(mId);
                   if (creator)
                   {
-                     ClientSubscription* sub = mDum.makeClientSubscription(*this, request);
+                     ClientSubscription* sub = makeClientSubscription(request);
                      mClientSubscriptions.push_back(sub);
                      sub->dispatch(request);
                   }
@@ -258,7 +258,7 @@ Dialog::dispatch(const SipMessage& msg)
             else // no to tag - unsolicited notify
             {
                assert(mServerOutOfDialogRequest == 0);
-               mServerOutOfDialogRequest = mDum.makeServerOutOfDialog(*this, request);
+               mServerOutOfDialogRequest = makeServerOutOfDialog(request);
                mServerOutOfDialogRequest->dispatch(request);
             }
             break;
@@ -266,7 +266,7 @@ Dialog::dispatch(const SipMessage& msg)
          case PUBLISH:
             if (mServerPublication == 0)
             {
-               mServerPublication = mDum.makeServerPublication(*this, request);
+               mServerPublication = makeServerPublication(request);
             }
             mServerPublication->dispatch(request);
             break;
@@ -274,7 +274,7 @@ Dialog::dispatch(const SipMessage& msg)
          case REGISTER:
             if (mServerRegistration == 0)
             {
-               mServerRegistration = mDum.makeServerRegistration(*this, request);
+               mServerRegistration = makeServerRegistration(request);
             }
             mServerRegistration->dispatch(request);
             break;
@@ -282,7 +282,7 @@ Dialog::dispatch(const SipMessage& msg)
          default: 
             // only can be one ServerOutOfDialogReq at a time
             assert(mServerOutOfDialogRequest == 0);
-            mServerOutOfDialogRequest = mDum.makeServerOutOfDialog(*this, request);
+            mServerOutOfDialogRequest = makeServerOutOfDialog(request);
             mServerOutOfDialogRequest->dispatch(request);
             break;
       }
@@ -290,20 +290,21 @@ Dialog::dispatch(const SipMessage& msg)
    else if (msg.isResponse())
    {
       const SipMessage& response = msg;
-      // !jf! should this only be for 2xx responses?
+      // !jf! should this only be for 2xx responses? !jf! Propose no as an
+      // answer !dcm! what is he on?
       switch (response.header(h_CSeq).method())
       {
          case INVITE:
             if (mInviteSession == 0)
             {
-               BaseCreator* creator = mDum.findCreator(mId);
-               assert (creator);
-               creator->dispatch(response);
-               if (response.header(h_StatusLine).statusCode() != 100)
-               {
-                  mInviteSession = mDum.makeClientInviteSession(*this, response);
-                  mInviteSession->dispatch(response);
-               }
+               // #if!jf! don't think creator needs a dispatch
+               //BaseCreator* creator = mDum.findCreator(mId);
+               //assert (creator); // stray responses have been rejected already 
+               //creator->dispatch(response); 
+               // #endif!jf! 
+               
+               mInviteSession = makeClientInviteSession(response);
+               mInviteSession->dispatch(response);
             }
             else
             {
@@ -330,7 +331,7 @@ Dialog::dispatch(const SipMessage& msg)
             }
             else
             {
-               ClientSubscription* sub = mDum.makeClientSubscription(*this, response);
+               ClientSubscription* sub = makeClientSubscription(response);
                mClientSubscriptions.push_back(sub);
                sub->dispatch(response);
             }
@@ -340,7 +341,7 @@ Dialog::dispatch(const SipMessage& msg)
          case PUBLISH:
             if (mClientPublication == 0)
             {
-               mClientPublication = mDum.makeClientPublication(*this, response);
+               mClientPublication = makeClientPublication(response);
             }
             mClientPublication->dispatch(response);
             break;
@@ -348,7 +349,7 @@ Dialog::dispatch(const SipMessage& msg)
          case REGISTER:
             if (mClientRegistration == 0)
             {
-               mClientRegistration = mDum.makeClientRegistration(*this, response);
+               mClientRegistration = makeClientRegistration(response);
             }
             mClientRegistration->dispatch(response);
             break;
@@ -363,7 +364,7 @@ Dialog::dispatch(const SipMessage& msg)
             ClientOutOfDialogReq* req = findMatchingClientOutOfDialogReq(response);
             if (req == 0)
             {
-               req = mDum.makeClientOutOfDialogReq(*this, response);
+               req = makeClientOutOfDialogReq(response);
                mClientOutOfDialogRequests.push_back(req);
             }
             req->dispatch(response);
@@ -606,9 +607,104 @@ Dialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
    }
 }
 
+
+ClientInviteSession*
+Dialog::makeClientInviteSession(const SipMessage& response)
+{
+   InviteSessionCreator* creator = dynamic_cast<InviteSessionCreator*>(mDialogSet.getCreator());
+   assert(creator); // !jf! this maybe can assert by evil UAS
+   
+   ClientInviteSession* usage = new ClientInviteSession(mDum, *this, creator->getLastRequest(), creator->getInitialOffer());
+   mDum.addUsage(usage);
+   return usage;
+}
+
+ClientRegistration*
+Dialog::makeClientRegistration(const SipMessage& response)
+{
+   BaseCreator* creator = mDialogSet.getCreator();
+   assert(creator);
+   ClientRegistration* usage = new ClientRegistration(mDum, *this, creator->getLastRequest());
+   mDum.addUsage(usage);
+   return usage;
+}
+
+ClientPublication*
+Dialog::makeClientPublication(const SipMessage& response)
+{
+   BaseCreator* creator = mDialogSet.getCreator();
+   assert(creator);
+   ClientPublication* usage = new ClientPublication(mDum, *this, creator->getLastRequest());
+   mDum.addUsage(usage);
+   return usage;
+}
+
+ClientSubscription*
+Dialog::makeClientSubscription(const SipMessage& response)
+{
+   BaseCreator* creator = mDialogSet.getCreator();
+   assert(creator);
+   ClientSubscription* sub = new ClientSubscription(mDum, *this, creator->getLastRequest());
+   mDum.addUsage(sub);
+   return sub;
+}
+
+ClientOutOfDialogReq*
+Dialog::makeClientOutOfDialogReq(const SipMessage& response)
+{
+   BaseCreator* creator = mDialogSet.getCreator();
+   assert(creator);
+   ClientOutOfDialogReq* usage = new ClientOutOfDialogReq(mDum, *this, creator->getLastRequest());
+   mDum.addUsage(usage);
+   return usage;
+}
+
+#if 0
+ServerInviteSession*
+Dialog::makeServerInviteSession(const SipMessage& request)
+{
+   ServerInviteSession* usage = new ServerInviteSession(mDum, *this, request);
+   mDum.addUsage(usage);
+   return usage;
+}
+#endif
+
+ServerSubscription* 
+Dialog::makeServerSubscription(const SipMessage& request)
+{
+   ServerSubscription* usage = new ServerSubscription(mDum, *this, request);
+   mDum.addUsage(usage);
+   return usage;
+}
+
+ServerRegistration* 
+Dialog::makeServerRegistration(const SipMessage& request)
+{
+   ServerRegistration* usage = new ServerRegistration(mDum, *this, request);
+   mDum.addUsage(usage);
+   return usage;
+}
+
+ServerPublication* 
+Dialog::makeServerPublication(const SipMessage& request)
+{
+   ServerPublication* usage = new ServerPublication(mDum, *this, request);
+   mDum.addUsage(usage);
+   return usage;
+}
+
+ServerOutOfDialogReq* 
+Dialog::makeServerOutOfDialog(const SipMessage& request)
+{
+   ServerOutOfDialogReq* usage = new ServerOutOfDialogReq(mDum, *this, request);
+   mDum.addUsage(usage);
+   return usage;
+}
+
 Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
    : BaseException(msg, file, line)
-{}
+{
+}
 
 void
 Dialog::update(const SipMessage& msg)

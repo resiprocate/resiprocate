@@ -35,7 +35,7 @@ class ClientPublication : public BaseUsage
    protected:
       virtual ~ClientPublication();
    private:
-      friend class DialogUsageManager;
+      friend class Dialog;
       ClientPublication(DialogUsageManager& dum, 
                         Dialog& dialog,
                         SipMessage& pub);
