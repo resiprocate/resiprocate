@@ -15,12 +15,15 @@ HeaderFieldValue::HeaderFieldValue(const char* field, uint fieldLength)
 {}
 
 HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
-  : mField(0),
+  :     next(hfv.next),
+	mField(0),
     mFieldLength(0),
     mSubComponentList(hfv.mSubComponentList),
     mUnknownSubComponentList(hfv.mUnknownSubComponentList),
-    mParserCategory(hfv.mParserCategory->clone(this)),
+    //  mParserCategory(hfv.mParserCategory->clone(this)),
+    mParserCategory(0),
     mMine(true)
+    
 {
 
   // if this isn't parsed, chunk and copy the block of memory
@@ -32,7 +35,7 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
       memcpy(const_cast<char*>(mField), hfv.mField, mFieldLength);
     }
   
-  // if it is, the above will end up with null unparsed fields and valid 
+// if it is, the above will end up with null unparsed fields and valid 
   // param lists
   
 }
