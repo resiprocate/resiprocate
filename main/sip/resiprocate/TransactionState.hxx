@@ -1,0 +1,8 @@
+
+class TransactionState
+{
+public:
+
+private:
+
+};
