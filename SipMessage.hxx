@@ -1,7 +1,6 @@
 #ifndef SipMessage_hxx
 #define SipMessage_hxx
 
-#include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -43,7 +42,9 @@ class SipMessage : public Message
 
       void addBuffer(char* buf);
 
+      virtual std::ostream& dump(std::ostream& strm) const;
       std::ostream& encode(std::ostream& str) const;
+
 
       Data brief() const ;
 
@@ -141,8 +142,6 @@ class SipMessage : public Message
       void setFixedDest(const Data& dest);
       void clearFixedDest();
 
-      virtual ostream& dump(ostream& strm) const;
-
 
    private:
       void copyFrom(const SipMessage& message);
@@ -167,6 +166,7 @@ class SipMessage : public Message
 
       Data mTransactionId;  // !jf!
 };
+
 
 }
 
