@@ -85,8 +85,19 @@ class InviteSession : public BaseUsage
       SipMessage mAck;
    protected:
       ~InviteSession();
-   private:
       friend class DialogUsageManager;
+
+      typedef enum
+      {
+         Initial,  // No session setup yet
+         Early,    
+         Proceeding,
+         Accepting, 
+         Cancelled,
+         Connected,
+         Terminated
+      } State;
+      State mState;
       
       // disabled
       InviteSession(const InviteSession&);
