@@ -226,34 +226,24 @@ Profile::getDigestHandler()
    return mDigestCredentialHandler;
 }
 
-const Data& 
-Profile::getDigestPassword( const Data& realm, const Data& user )
+const Profile::DigestCredential&
+Profile::getDigestCredential( const Data& realm )
 {
    DigestCredential dc;
    dc.realm = realm;
-   dc.user = user;
    
    DigestCredentials::const_iterator i = mDigestCredentials.find(dc);
    if (i != mDigestCredentials.end())
    {
-      return i->password;
+      return *i;
    }
    
-   return Data::Empty;
+   static const DigestCredential empty;
+   return empty;
 }
 
 bool
 Profile::DigestCredential::operator<(const DigestCredential& rhs) const
 {
-   if (realm < rhs.realm)
-   {
-      return true;
-   }
-
-   if (realm > rhs.realm)
-   {
-      return false;
-   }
-   
-   return user < rhs.user;
+   return (realm < rhs.realm);
 }
