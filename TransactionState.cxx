@@ -1,3 +1,6 @@
+
+#include "util/Socket.hxx"
+
 #include "sipstack/TransactionState.hxx"
 #include "sipstack/TransportSelector.hxx"      
 #include "sipstack/SipStack.hxx"
