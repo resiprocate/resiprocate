@@ -48,8 +48,8 @@ main(int argc, char** argv)
    LocationServer* ls = new LocationServer(regData);
    requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(ls));
 
-   UserDB userDB;
-   Proxy proxy(stack, requestProcessors, userDB);
+   UserDb userDb;
+   Proxy proxy(stack, requestProcessors, userDb);
 
    /* Initialize a registrar */
    Registrar registrar(stack, regData);
