@@ -3,6 +3,7 @@
 #include "resiprocate/Security.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/StackThread.hxx"
+#include "resiprocate/MessageFilterRule.hxx"
 #include "resiprocate/dum/DumThread.hxx"
 #include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
 
@@ -119,6 +120,18 @@ main(int argc, char** argv)
      auto_ptr<ServerAuthManager> uasAuth( new ReproServerAuthManager(*dum,userDb));
      dum->setServerAuthManager(uasAuth);
      stack.registerTransactionUser(*dum);
+
+     // Install rules so that the registrar only gets REGISTERs
+     resip::MessageFilterRuleList ruleList;
+     resip::MessageFilterRule::MethodList methodList;
+     methodList.push_back(resip::REGISTER);
+     ruleList.push_back(
+        MessageFilterRule(resip::MessageFilterRule::SchemeList(),
+                          resip::MessageFilterRule::Any,
+                          methodList)
+     );
+     dum->setMessageFilterRuleList(ruleList);
+
    }
    stack.registerTransactionUser(proxy);
    
