@@ -182,7 +182,7 @@ DnsResolver::lookupARecords(const Data& transactionId,
    assert (ret != ERANGE);
 #elif defined(WIN32)
    result = gethostbyname( host.c_str() );
-   herrono = h_error;
+   herrno = WSAGetLastError();
 #elif defined(__QNX__) || defined(__SUNPRO_CC)
    result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
 #else
