@@ -277,7 +277,7 @@ Dialog::updateRequest(SipMessage& request)
       request.header(h_CallId) = mCallId;
       request.header(h_Routes) = mRouteSet;
       request.header(h_Contacts).clear();
-      request.header(h_Contacts).push_front(mContact);
+      request.header(h_Contacts).push_back(mContact);
       copyCSeq(request);
       incrementCSeq(request);
 
@@ -286,7 +286,7 @@ Dialog::updateRequest(SipMessage& request)
       Via via;
       via.param(p_branch); // will create the branch
       request.header(h_Vias).clear();
-      request.header(h_Vias).push_front(via);
+      request.header(h_Vias).push_back(via);
 
       request.clearForceTarget();
       Helper::processStrictRoute(request);
@@ -646,7 +646,7 @@ Dialog::makeRequestInternal(MethodTypes method)
    }
    request->header(h_CallId) = mCallId;
    request->header(h_Routes) = mRouteSet;
-   request->header(h_Contacts).push_front(mContact);
+   request->header(h_Contacts).push_back(mContact);
    request->header(h_CSeq).method() = method;
    copyCSeq(*request);
    request->header(h_MaxForwards).value() = 70;
