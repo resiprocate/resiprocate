@@ -28,6 +28,7 @@ libresiprocate_la_SOURCES = \
 	os/Timer.cxx \
 	os/Tuple.cxx \
 	os/vmd5.cxx \
+	ApiCheck.cxx \
 	ApplicationSip.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
