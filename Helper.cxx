@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <iomanip>
+#include <algorithm>
 
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/Uri.hxx"
@@ -20,6 +21,13 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 const int Helper::tagSize = 4;
+
+int 
+Helper::aBitSmallerThan(unsigned long value)
+{
+   return std::max(Timer::TS, std::min(value - Timer::TS, 9*value/10));
+}
+
 
 SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
