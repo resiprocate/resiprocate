@@ -256,18 +256,18 @@ TransportSelector::dnsResolve(SipMessage* msg,
    if (msg->isRequest())
    {
       // If this is an ACK we need to fix the tid to reflect that
-      if (msg->hasTarget())
+      if (msg->hasForceTarget())
       {
-         DebugLog (<< "Looking up dns entries (with target) for " << msg->getTarget());
-         result = mDns.lookup(msg->getTarget(), handler);
+          //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
+          result = mDns.lookup(msg->getForceTarget(), handler);
       }
       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
       {
          // put this into the target, in case the send later fails, so we don't
          // lose the target
-         msg->setTarget(msg->header(h_Routes).front().uri());
-         DebugLog (<< "Looking up dns entries (from route) for " << msg->getTarget());
-         result = mDns.lookup(msg->getTarget(), handler);
+         msg->setForceTarget(msg->header(h_Routes).front().uri());
+         DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
+         result = mDns.lookup(msg->getForceTarget(), handler);
       }
       else
       {
@@ -395,17 +395,30 @@ TransportSelector::transmit(SipMessage* msg, Tuple& destination)
             destination.transport = findTransport(source);
          }
       }
-      
+
       if (destination.transport)
       {
+          //DebugLog(<<"!ah! destination transport is " << *destination.transport);
          // insert the via
          if (msg->isRequest())
          {
-            assert(!msg->header(h_Vias).empty());
-            msg->header(h_Vias).front().remove(p_maddr); // !jf! why do this? 
-            msg->header(h_Vias).front().transport() = Tuple::toData(destination.transport->transport());  //cache !jf! 
-            msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(source);
-            msg->header(h_Vias).front().sentPort() = destination.transport->port();
+             assert(!msg->header(h_Vias).empty());
+             Via& topVia(msg->header(h_Vias).front());
+
+             topVia.remove(p_maddr); // !jf! why do this? 
+
+             if (!topVia.transport().size())
+             {
+                 topVia.transport() = Tuple::toData(destination.transport->transport());
+             }
+             if (!topVia.sentHost().size())
+             {
+                msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(source);
+             }
+             if (!topVia.sentPort())
+             {
+                msg->header(h_Vias).front().sentPort() = destination.transport->port();
+             }
          }
 
          // There is a contact header and it contains exactly one entry
@@ -429,7 +442,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& destination)
             }
          }
          
-         DebugLog (<< "Transmitting " << *msg << " to " << destination << " via " << source);
+         DebugLog (<< "!ah! Transmitting " << *msg << " to " << destination << " !ah! via " << source);
 
          Data& encoded = msg->getEncoded();
          encoded.clear();
@@ -464,6 +477,7 @@ TransportSelector::retransmit(SipMessage* msg,
 {
    assert(destination.transport);
    assert(!msg->getEncoded().empty());
+   DebugLog(<<"!ah! retransmit to " << destination);
    destination.transport->send(destination, msg->getEncoded(), msg->getTransactionId());
 }
 
@@ -550,6 +564,7 @@ TransportSelector::findTransport(const Tuple& search)
    //DebugLog (<< "Any interface / Any port: " << Inserter(mAnyPortAnyInterfaceTransports));
    
    WarningLog(<< "Can't find matching transport " << search);
+   assert(0);
    
    return 0;
 }

@@ -39,7 +39,7 @@ class TransactionController
 
       // Inform the TU that whenever a transaction has been terminated. 
       void registerForTransactionTermination();
-      
+
    private:
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
