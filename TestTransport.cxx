@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iterator>
+#include <memory>
 
 #include "util/Data.hxx"
 #include "util/DataStream.hxx"
