@@ -31,7 +31,6 @@ main(int argc, char* argv[])
       assert(Data::from(tel) == "tel:+358-555-1234567;pOstd=pP2;isUb=1411");
    }
 
-#if 0
    {
       Uri tel("tel:+358-555-1234567;pOstd=pP2;isUb=1411");
       Uri sip(Uri::fromTel(tel, "company.com"));
@@ -47,7 +46,53 @@ main(int argc, char* argv[])
       cerr << "!! " << Data::from(sip) << endl;
       assert(Data::from(sip) == "sip:+358-555-1234567;isub=1411;postd=pp2;aaaa=baz;foo=bar@company.com;user=phone");
    }
-#endif
+   
+   {
+      Uri tel("tel:+358-555-1234567;postd=pp22");
+      Uri sip(Uri::fromTel(tel, "foo.com"));
+      assert(Data::from(sip) == "sip:+358-555-1234567;postd=pp22@foo.com;user=phone");
+   }
+   {
+      Uri tel1("tel:+358-555-1234567;postd=pp22");
+      Uri tel2("tel:+358-555-1234567;POSTD=PP22");
+      cerr << "tel1=" << tel1 << " user=" << tel1.user() << endl;
+      cerr << "tel2=" << tel2 << " user=" << tel2.user() << endl;
+      assert (tel1 == tel2);
+   }
+   {
+      Uri tel1("sip:+358-555-1234567;postd=pp22@foo.com;user=phone");
+      Uri tel2("sip:+358-555-1234567;POSTD=PP22@foo.com;user=phone");
+      assert (tel1 != tel2);
+   }
+   {
+      Uri tel1("tel:+358-555-1234567;postd=pp22;isub=1411");
+      Uri tel2("tel:+358-555-1234567;isub=1411;postd=pp22");
+      // requires us to parse the user parameters
+      //assert (tel1 == tel2);
+   }
+   {
+      Uri tel1("sip:+358-555-1234567;postd=pp22;isub=1411@foo.com;user=phone");
+      Uri tel2("sip:+358-555-1234567;isub=1411;postd=pp22@foo.com;user=phone");
+      assert (tel1 != tel2);
+   }
+   {
+      Uri tel1("tel:+358-555-1234567;postd=pp22");
+      Uri tel2("tel:+358-555-1234567;POSTD=PP22");
+      Uri sip1(Uri::fromTel(tel1, "foo.com"));
+      Uri sip2(Uri::fromTel(tel2, "foo.com"));
+      assert (sip1 == sip2);
+      assert (Data::from(sip1) == "sip:+358-555-1234567;postd=pp22@foo.com;user=phone");
+      assert (Data::from(sip2) == "sip:+358-555-1234567;postd=pp22@foo.com;user=phone");
+   }
+   {
+      Uri tel1("tel:+358-555-1234567;tsp=a.b;phone-context=5");
+      Uri tel2("tel:+358-555-1234567;phone-context=5;tsp=a.b");
+      Uri sip1(Uri::fromTel(tel1, "foo.com"));
+      Uri sip2(Uri::fromTel(tel2, "foo.com"));
+      assert (sip1 == sip2);
+      assert (Data::from(sip1) == "sip:+358-555-1234567;phone-context=5;tsp=a.b@foo.com;user=phone");
+      assert (Data::from(sip2) == "sip:+358-555-1234567;phone-context=5;tsp=a.b@foo.com;user=phone");
+   }
 
    {
       Uri uri("sip:fluffy@iii.ca:666");
@@ -107,8 +152,7 @@ main(int argc, char* argv[])
  
    {
       Uri uri("sip:fluffy;x-utag=foo@iii.ca");
-      assert(uri.user() == "fluffy");
-      assert(uri.userParameters() == "x-utag=foo");
+      assert(uri.user() == "fluffy;x-utag=foo");
       assert(uri.host() == "iii.ca");
 
       Data out(Data::from(uri));
@@ -117,8 +161,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("sip:fluffy;x-utag=foo:password@iii.ca");
-      assert(uri.user() == "fluffy");
-      assert(uri.userParameters() == "x-utag=foo");
+      assert(uri.user() == "fluffy;x-utag=foo");
       assert(uri.host() == "iii.ca");
       assert(uri.password() == "password");
 
@@ -165,14 +208,15 @@ main(int argc, char* argv[])
 
    {
       Uri uri("sip:;:@");
-      assert(uri.user() == "");
+      cerr << "uri.user() = " << uri.user() << endl;
+      assert(uri.user() == ";");
       assert(uri.userParameters() == "");
       assert(uri.host() == "");
       assert(uri.password() == "");
 
       Data out(Data::from(uri));
       cerr << "!! " << out << endl;
-      assert(out == "sip:");
+      assert(out == "sip:;");
    }
 
    {
