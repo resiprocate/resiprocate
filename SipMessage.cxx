@@ -11,7 +11,9 @@ SipMessage::SipMessage()
    : mIsExternal(true),
      mFixedDest(false),
      mStartLine(0),
-     mBody(0)
+     mBody(0),
+     mRequest(false),
+     mResponse(false)
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -20,11 +22,10 @@ SipMessage::SipMessage()
 }
 
 SipMessage::SipMessage(const SipMessage& from)
-#ifdef WIN32
 // TODO - I have no idea if this should be true or false 
-: mIsExternal(false)
-#else
-#endif
+   : mIsExternal(false),
+     mRequest(from.mRequest),
+     mResponse(from.mResponse)
 {
    if (this != &from)
    {
@@ -96,15 +97,13 @@ SipMessage::getTransactionId() const
 bool
 SipMessage::isRequest() const
 {
-   //assert(0); // !jf!
-   return true;
+   return mRequest;
 }
 
 bool
 SipMessage::isResponse() const
 {
-   // !dlb! not necessarily -- malformed messages are are neither
-   return !isRequest();
+   return mResponse;
 }
 
 Data
@@ -159,9 +158,34 @@ SipMessage::setSource(const sockaddr_in& addr)
 }
 
 void 
-SipMessage::setStartLine(char* start, int len)
+SipMessage::setStartLine(char* st, int len)
 {
-   mStartLine = new HeaderFieldValue(start, len);
+   cerr << "SipMesage::setStartLine" << endl;
+   mStartLine = new HeaderFieldValue(st, len);
+   ParseBuffer pb(mStartLine->mField, mStartLine->mFieldLength);
+   const char* start;
+   start = pb.skipWhitespace();
+   pb.skipNonWhitespace();
+   MethodTypes method = getMethodType(start, pb.position() - start);
+   if (method == UNKNOWN) //probably a status line
+   {
+      start = pb.skipChar(Symbols::SPACE[0]);
+      pb.skipNonWhitespace();
+      if ((pb.position() - start) == 3)
+      {
+         StatusLine* parser = new StatusLine(mStartLine);
+         mStartLine->mParserCategory = parser;
+         //!dcm! should invoke the statusline parser here once it does limited validation
+         mResponse = true;
+      }
+   }
+   if (!mResponse)
+   {
+      RequestLine* parser = new RequestLine(mStartLine);
+      mStartLine->mParserCategory = parser;
+      //!dcm! should invoke the responseline parser here once it does limited validation
+      mRequest = true;
+   }
 }
 
 void 
@@ -284,29 +308,35 @@ SipMessage::clearFixedDest()
 RequestLine& 
 SipMessage::header(const RequestLineType& l) const
 {
+   if (isResponse())
+   {
+      throw Exception("Tried to retrieve a RequestLine from a Response", __FILE__, __LINE__);
+   }
    if (mStartLine == 0 )
    { 
       mStartLine = new HeaderFieldValue;
+      RequestLine* parser = new RequestLine(mStartLine);
+      mStartLine->mParserCategory = parser;
+      mRequest = true;
    }
-   
-   RequestLine* parser = new RequestLine(mStartLine);
-   mStartLine->mParserCategory = parser;
-   
-   return *parser;
+   return *dynamic_cast<RequestLine*>(mStartLine->mParserCategory);
 }
 
 StatusLine& 
 SipMessage::header(const StatusLineType& l) const
 {
+   if (isRequest())
+   {
+      throw Exception("Tried to retrieve a StatusLine from a Request", __FILE__, __LINE__);
+   }
    if (mStartLine == 0 )
    { 
       mStartLine = new HeaderFieldValue;
+      StatusLine* parser = new StatusLine(mStartLine);
+      mStartLine->mParserCategory = parser;
+      mResponse = true;
    }
-   
-   StatusLine* parser = new StatusLine(mStartLine);
-   mStartLine->mParserCategory = parser;
-   
-   return *parser;
+   return *dynamic_cast<StatusLine*>(mStartLine->mParserCategory);
 }
 
 HeaderFieldValueList* 
