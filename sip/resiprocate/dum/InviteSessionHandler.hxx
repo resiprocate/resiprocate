@@ -41,7 +41,7 @@ class InviteSessionHandler
       /// after getting a BYE, Cancel, or 4xx,5xx,6xx response
       virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)=0;
 
-      // called to allow app to adorn a message. default is to send immediately
+      // called to all'ow app to adorn a message. default is to send immediately
       virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg);
 
       /** called when an SDP answer is received - has nothing to do with user
@@ -61,8 +61,11 @@ class InviteSessionHandler
       /// called when INFO message is received 
       virtual void onInfo(InviteSessionHandle, const SipMessage& msg)=0;
 
-      /// called when an REFER messages is received 
-      virtual void onRefer(InviteSessionHandle, const SipMessage& msg)=0;
+      /// called when an REFER messages is received.  The refer is accepted of
+      /// rejected using the server subscription. If the offer is accepted,
+      /// DialogUsageManager::makeInviteSessionFromRefer can be used to create an
+      /// InviteSession that will send notify messages using the ServerSubscription
+      virtual void onRefer(InviteSessionHandle, ServerSubscriptionHandle, const SipMessage& msg)=0;
 
       /// called when an REFER message receives a failure response 
       virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg)=0;

@@ -13,6 +13,7 @@
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -231,9 +232,24 @@ Dialog::cancel()
    }
    else
    {
-      makeRequest(mDialogSet.getCreator()->getLastRequest(), CANCEL);
-      mDum.send(mDialogSet.getCreator()->getLastRequest());
-      delete this;
+      if (mDialogSet.getCreator())
+      {
+         SipMessage& request = mDialogSet.getCreator()->getLastRequest();
+         if (request.header(h_RequestLine).method() == INVITE)
+         {
+            makeCancel(request);
+            mDum.send(request);
+            delete this;
+         }
+         else
+         {
+            throw new UsageUseException("Can only CANCEL an INVITE", __FILE__, __LINE__);
+         }
+      }
+      else
+      {
+         throw new UsageUseException("Attempting to cancel UAS dialogSet", __FILE__, __LINE__);
+      }
    }
 }
 
@@ -278,7 +294,6 @@ Dialog::dispatch(const SipMessage& msg)
             }
             break;
          case SUBSCRIBE:
-         case REFER: //!jf! does this create a server subs?
          {
             ServerSubscription* server = findMatchingServerSub(request);
             if (server)
@@ -287,9 +302,56 @@ Dialog::dispatch(const SipMessage& msg)
             }
             else
             {
-               server = makeServerSubscription(request);
-               mServerSubscriptions.push_back(server);
-               server->dispatch(request);
+               if (request.header(h_Event).value() == "refer")
+               {
+                  InfoLog (<< "Received a subscribe to a non-existent refer subscription: " << request.brief());
+                  SipMessage failure;
+                  makeResponse(failure, request, 403);
+                  mDum.sendResponse(failure);
+                  return;
+               }
+               else
+               {
+                  server = makeServerSubscription(request);
+                  mServerSubscriptions.push_back(server);
+                  server->dispatch(request);
+               }
+            }
+            mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), server->getHandle(), msg);
+         }
+         break;
+         case REFER:
+         {
+            if (mInviteSession == 0)
+            {
+               InfoLog (<< "Received an in dialog refer in a non-invite dialog: " << request.brief());
+               SipMessage failure;
+               makeResponse(failure, request, 405);
+               mDum.sendResponse(failure);
+               return;
+            }
+            else if  (!request.exists(h_ReferTo))
+            {
+               InfoLog (<< "Received refer w/out a Refer-To: " << request.brief());
+               SipMessage failure;
+               makeResponse(failure, request, 400);
+               mDum.sendResponse(failure);
+               return;
+            }
+            else
+            {
+               ServerSubscription* server = findMatchingServerSub(request);
+               if (server)
+               {
+                  server->dispatch(request);
+               }
+               else
+               {
+                  server = makeServerSubscription(request);
+                  mServerSubscriptions.push_back(server);
+                  server->dispatch(request);
+               }
+               mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), server->getHandle(), msg);    
             }
          }
          break;
@@ -438,9 +500,19 @@ Dialog::dispatch(const SipMessage& msg)
             }
          }
          break;
-        default:
-           assert(0);
-           return;
+         case NOTIFY:
+         {
+            //only dispatch if there is a matching server subscription. DUM does
+            //not handle responses to out-of-dialog NOTIFY messages
+            ServerSubscription* server = findMatchingServerSub(response);
+            if (server)
+            {
+               server->dispatch(response);
+            }
+         }
+         default:
+            assert(0);
+            return;
       }
    }
 }
@@ -669,7 +741,8 @@ Dialog::makeClientInviteSession(const SipMessage& response)
    InviteSessionCreator* creator = dynamic_cast<InviteSessionCreator*>(mDialogSet.getCreator());
    assert(creator); // !jf! this maybe can assert by evil UAS
    //return mDum.createAppClientInviteSession(*this, *creator);
-   return new ClientInviteSession(mDum, *this, creator->getLastRequest(), creator->getInitialOffer());
+   return new ClientInviteSession(mDum, *this, creator->getLastRequest(), 
+                                  creator->getInitialOffer(), creator->getServerSubscription());
 }
 
 

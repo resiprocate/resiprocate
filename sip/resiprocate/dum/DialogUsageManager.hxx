@@ -62,10 +62,8 @@ class DialogUsageManager : public HandleManager
 
       void setAppDialogSetFactory(AppDialogSetFactory*);
 
-      // !dcm! -- factory not inhereitance.  virtual AppDialogSet* createAppDialogSet(const SipMessage&);
-      // no real reson other than this is the only method that would be overloaded
+//should be in AppDialog and AppDialogSet
 #if 0
-      virtual AppDialog* createAppDialog();
       virtual ClientRegistration* createAppClientRegistration(Dialog& dialog, BaseCreator& creator);
       virtual ClientInviteSession* createAppClientInviteSession(Dialog& dialog, const InviteSessionCreator& creator);
       virtual ClientSubscription* createAppClientSubscription(Dialog& dialog, BaseCreator& creator);
@@ -118,6 +116,12 @@ class DialogUsageManager : public HandleManager
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
       SipMessage& makeInviteSession(const Uri& target, const SdpContents* initialOffer, AppDialogSet* = 0);
+      
+      //will send a Notify(100)...currently can be decorated through the
+      //OnReadyToSend callback.  Probably will change it's own callback/handler soon
+      SipMessage& makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
+                                             const SdpContents* initialOffer, AppDialogSet* = 0);
+      
       SipMessage& makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* = 0);
       //unsolicited refer
       SipMessage& makeRefer(const Uri& aor, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
@@ -145,6 +149,8 @@ class DialogUsageManager : public HandleManager
       int getTimeTillNextProcessMS(); 
 
       InviteSessionHandle findInviteSession(DialogId id);
+      InviteSessionHandle findInviteSession(CallId replaces);
+
       std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogId id);
       std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id);
       std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id, const Data& eventType, const Data& subId);
@@ -196,7 +202,7 @@ class DialogUsageManager : public HandleManager
                       int altseq=-1);
 
       Dialog& findOrCreateDialog(const SipMessage* msg);
-      Dialog& findDialog(const DialogId& id);
+      Dialog* findDialog(const DialogId& id);
       DialogSet* findDialogSet(const DialogSetId& id);
       
       // return 0, if no matching BaseCreator
