@@ -42,7 +42,9 @@ class Transport
             const char* name() const { return "TransportException"; }
       };
       
-      Transport(int portNum, Fifo<Message>& rxFifo);
+      // sendHost is localhost (may be a dns name referring to this sip element)
+      // portNum is the port to receive and/or send on
+      Transport(const Data& sendHost, int portNum, Fifo<Message>& rxFifo);
       // !ah! need to think about type for
       // interface specification here.
       
@@ -52,14 +54,19 @@ class Transport
 
       virtual void process(fd_set* fdSet=NULL) = 0 ;
 	
-	virtual void buildFdSet( fd_set* fdSet, int* fdSetSize );
+      virtual void buildFdSet( fd_set* fdSet, int* fdSetSize );
 
       void run();               // will not return.
       
       void shutdown();
 
+      virtual const Data& host() const { return mHost; } 
+      virtual int port() const { return mPort; } 
+      virtual const Data transport()=0;
+      
    protected:
-	Socket mFd; // this is a unix file descriptor or a windows SOCKET
+      Socket mFd; // this is a unix file descriptor or a windows SOCKET
+      Data mHost;
       int mPort;
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
