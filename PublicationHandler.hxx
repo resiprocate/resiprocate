@@ -54,6 +54,8 @@ class ServerPublicationHandler
                              const Data& etag, 
                              const SipMessage& pub,
                              int expires)=0;
+
+      const Mimes& getSupportedMimeTypes() const;      
 };
  
 }
