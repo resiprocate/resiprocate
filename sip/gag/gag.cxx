@@ -115,6 +115,7 @@ main (int argc, char **argv)
       else
       {
         Data error("Panic! Something is horribly wrong!");
+        DebugLog ( << "Received unexpected series of bytes from Gaim" );
         GagErrorMessage(error).serialize(cout);
         conduit.removeAllUsers();
         shutdown(&sipStack);
