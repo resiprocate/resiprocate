@@ -62,7 +62,7 @@ test1()
       
 
       tassert_reset();
-      tassert(msg)
+      tassert(msg);
 
       auto_ptr<SipMessage> message(msg);
 
