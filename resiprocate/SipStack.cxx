@@ -21,6 +21,7 @@ SipStack::SipStack(bool multiThreaded)
     mTimers(mStateMacFifo),
     mDnsResolver(*this)
 {
+	  initNetwork();
    //addTransport(Transport::UDP, 5060);
    //addTransport(Transport::TCP, 5060); // !jf!
 }
