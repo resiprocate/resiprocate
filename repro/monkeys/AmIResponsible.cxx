@@ -42,7 +42,12 @@ AmIResponsible::handleRequest(RequestContext& context)
     // just return Continue. If no make this call below.
     if (!context.getProxy().isMyDomain(request.header(h_RequestLine).uri()))
     {
+	   // if this request is not for a domain for which the proxy is responsible,
+	   // send to the Request URI
        context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
+	   
+	   // skip the rest of the monkeys
+	   return RequestProcessor::SkipThisChain;	
     }
   }
   return RequestProcessor::Continue;

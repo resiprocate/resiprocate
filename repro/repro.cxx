@@ -11,6 +11,7 @@
 #include "repro/Proxy.hxx"
 #include "repro/RequestProcessorChain.hxx"
 #include "repro/monkeys/RouteProcessor.hxx"
+#include "repro/monkeys/AmIResponsible.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/monkeys/ConstantLocationMonkey.hxx"
@@ -73,6 +74,13 @@ main(int argc, char** argv)
   
      RouteProcessor* rp = new RouteProcessor();
      locators->addProcessor(std::auto_ptr<RequestProcessor>(rp));
+	 
+	 AmIResponsible* isme = new AmIResponsible();
+	 locators->addProcessor(std::auto_ptr<AmIResponsible>(isme));
+	 
+	 // [TODO] !rwm! put Gruu monkey here
+	 
+	 // [TODO] !rwm! put Tel URI monkey here 
   
      LocationServer* ls = new LocationServer(regData);
      locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
