@@ -13,20 +13,24 @@
 #define RESIP_POLL_EXTERN
 
 #include <vector>
+
 #ifdef RESIP_POLL_IMPL_POLL
 #include <sys/poll.h>
 #endif
+
 #ifdef RESIP_POLL_IMPL_SELECT
+
 #ifdef WIN32
 # include <winsock2.h>
-#else
+#else  // !WIN32
 # include <sys/time.h>
 # include <sys/types.h>
 # include <unistd.h>
-#endif
+#endif // WIN32
+
 #ifdef RESIP_POLL_EXTERN
 #include <map>
-#endif
+#endif // RESI
 
 namespace resip {
 
@@ -220,6 +224,8 @@ class Poll {
 ///////////////////////////////////////////////////////////////////////////////
 
 } // namespace resip
+
+#endif
 
 #endif //!defined(RESIP_POLL_HXX)
 
