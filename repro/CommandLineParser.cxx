@@ -26,8 +26,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int noV6 = false;
    char* domains = 0;
    char* certPath = "~/.sipCerts";
-   int noChallenge = true;
+   int noChallenge = false;
    int noRegistrar = false;
+   int certServer = false;
    char* reqChainName = "default";
 
 #ifdef HAVE_POPT_H
@@ -43,6 +44,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-v4",   '4',   POPT_ARG_NONE, &noV4, 0, "disable IPV4", 0},
       {"disable-auth",  0,   POPT_ARG_NONE, &noChallenge, 0, "disable DIGEST challenges", 0},
       {"disable-reg",  0,   POPT_ARG_NONE, &noRegistrar, 0, "disable registrar", 0},
+      {"enable-cert-server",  0,   POPT_ARG_NONE, &certServer, 0, "run a cert server", 0},
       {"domains",     'd',  POPT_ARG_STRING, &domains,  0, "specify domains that this proxy is authorative", "example.com,foo.com"},
       {"cert-path",   'c',   POPT_ARG_STRING, &certPath,  0, "path for certificates (default: ~/.sipCerts)", 0},
       {"reqChainName",   0,   POPT_ARG_STRING, &reqChainName,  0, "name of request chain (default: default)", 0},
@@ -67,6 +69,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mCertPath = certPath;
    mNoChallenge = noChallenge;
    mNoRegistrar = noRegistrar;
+   mCertServer = certServer;
    mRequestProcessorChainName=reqChainName;
 }
 
