@@ -560,6 +560,10 @@ void
 TransportSelector::retransmit(SipMessage* msg, Tuple& target)
 {
    assert(target.transport);
+
+   // !jf! The previous call to transmit may have blocked or failed (It seems to
+   // block in windows when the network is disconnected - don't know why just
+   // yet.
    if(!msg->getEncoded().empty())
    {
       //DebugLog(<<"!ah! retransmit to " << target);
