@@ -18,8 +18,7 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-Proxy::Proxy(SipStack& stack, RequestProcessorChain& requestProcessors,
-             UserDb &userDb) 
+Proxy::Proxy(SipStack& stack, RequestProcessorChain& requestProcessors, UserDb &userDb) 
    : mStack(stack), mRequestProcessorChain(requestProcessors), mUserDb(userDb)
 {
    mStack.registerForTransactionTermination();
@@ -126,8 +125,15 @@ Proxy::thread()
                
                   // is there a problem with a stray 200
                   HashMap<Data,RequestContext*>::iterator i = mClientRequestContexts.find(sip->getTransactionId());
-                  assert (i != mClientRequestContexts.end());
-                  i->second->process(std::auto_ptr<resip::Message>(msg));
+                  if (i != mClientRequestContexts.end())
+                  {
+                     i->second->process(std::auto_ptr<resip::Message>(msg));
+                  }
+                  else
+                  {
+                     InfoLog (<< "Unmatched response (stray?) : " << endl << *msg);
+                  }
+                  
                   // [TODO] !rwm! who throws stray responses away?  does the stack do this?
                }
             }

@@ -28,28 +28,28 @@ RouteMonkey::~RouteMonkey()
 RequestProcessor::processor_action_t
 RouteMonkey::handleRequest(RequestContext& context)
 {
-  DebugLog(<< "Monkey handling request: " << *this 
-           << "; reqcontext = " << context);
-
-
-  SipMessage& msg = context.getOriginalRequest();
-
-  NameAddr name(mDb.process( msg.header(h_RequestLine).uri(), 
-                             getMethodName(msg.header(h_RequestLine).method()),
-                             msg.exists(h_Event) ? 
-                             msg.header(h_Event).value() : 
-                             Data::Empty));
-  
-  context.addTarget(name);
-     
-
-    return RequestProcessor::Continue;
+   DebugLog(<< "Monkey handling request: " << *this 
+            << "; reqcontext = " << context);
+   
+   
+   SipMessage& msg = context.getOriginalRequest();
+   
+   NameAddr name(mDb.process( msg.header(h_RequestLine).uri(), 
+                              getMethodName(msg.header(h_RequestLine).method()),
+                              msg.exists(h_Event) ? 
+                              msg.header(h_Event).value() : 
+                              Data::Empty));
+   
+   context.addTarget(name);
+   
+   
+   return RequestProcessor::Continue;
 }
 
 void
 RouteMonkey::dump(std::ostream &os) const
 {
-  os << "Route Monkey" << std::endl;
+   os << "Route Monkey" << std::endl;
 }
 
 

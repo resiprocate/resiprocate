@@ -10,19 +10,21 @@
 
 #include "repro/CommandLineParser.hxx"
 #include "repro/Proxy.hxx"
+#include "repro/Registrar.hxx"
+#include "repro/ReproServerAuthManager.hxx"
+#include "repro/ReproServerAuthManager.hxx"
 #include "repro/RequestProcessorChain.hxx"
-#include "repro/monkeys/RouteProcessor.hxx"
-#include "repro/monkeys/AmIResponsible.hxx"
-#include "repro/monkeys/DigestAuthenticator.hxx"
-#include "repro/monkeys/LocationServer.hxx"
-#include "repro/monkeys/ConstantLocationMonkey.hxx"
-#include "repro/monkeys/RouteMonkey.hxx"
 #include "repro/RouteDbMemory.hxx"
 #include "repro/UserDb.hxx"
-#include "repro/Registrar.hxx"
 #include "repro/WebAdmin.hxx"
 #include "repro/WebAdminThread.hxx"
-#include "repro/ReproServerAuthManager.hxx"
+#include "repro/monkeys/AmIResponsible.hxx"
+#include "repro/monkeys/ConstantLocationMonkey.hxx"
+#include "repro/monkeys/DigestAuthenticator.hxx"
+#include "repro/monkeys/LocationServer.hxx"
+#include "repro/monkeys/RouteMonkey.hxx"
+#include "repro/monkeys/RouteProcessor.hxx"
+#include "repro/stateAgents/CertServer.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
@@ -96,8 +98,8 @@ main(int argc, char** argv)
       //locators->addProcessor(std::auto_ptr<RequestProcessor>(cls));
 #endif
       
-      RouteMonkey* routeMonkey = new RouteMonkey(routeDb);
-      locators->addProcessor(std::auto_ptr<RequestProcessor>(routeMonkey));
+      //RouteMonkey* routeMonkey = new RouteMonkey(routeDb);
+      //locators->addProcessor(std::auto_ptr<RequestProcessor>(routeMonkey));
       
       LocationServer* ls = new LocationServer(regData);
       locators->addProcessor(std::auto_ptr<RequestProcessor>(ls));
@@ -134,39 +136,55 @@ main(int argc, char** argv)
 
    profile.clearSupportedMethods();
    profile.addSupportedMethod(resip::REGISTER);
-
+   profile.addSupportedScheme(Symbols::Sips);
+   
    DialogUsageManager* dum = 0;
    DumThread* dumThread = 0;
-   
+   CertServer* certServer = 0;
+
+   resip::MessageFilterRuleList ruleList;
+   if (!args.mNoRegistrar || args.mCertServer)
+   {
+      dum = new DialogUsageManager(stack);
+      dum->setMasterProfile(&profile);
+   }
+
    if (!args.mNoRegistrar)
    {   
-      /* Initialize a registrar */
-      dum = new DialogUsageManager(stack);
-      
+      assert(dum);
       dum->setServerRegistrationHandler(&registrar);
       dum->setRegistrationPersistenceManager(&regData);
-      dum->setMasterProfile(&profile);
-      
-      dumThread = new DumThread(*dum);
 
-     auto_ptr<ServerAuthManager> uasAuth( new ReproServerAuthManager(*dum,userDb));
-     dum->setServerAuthManager(uasAuth);
-     //stack.registerTransactionUser(*dum);
-
-     // Install rules so that the registrar only gets REGISTERs
-     resip::MessageFilterRuleList ruleList;
-     resip::MessageFilterRule::MethodList methodList;
-     methodList.push_back(resip::REGISTER);
-     ruleList.push_back(
-        MessageFilterRule(resip::MessageFilterRule::SchemeList(),
-                          resip::MessageFilterRule::Any,
-                          methodList)
-     );
-     dum->setMessageFilterRuleList(ruleList);
-
+      // Install rules so that the registrar only gets REGISTERs
+      resip::MessageFilterRule::MethodList methodList;
+      methodList.push_back(resip::REGISTER);
+      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
+                                           resip::MessageFilterRule::Any,
+                                           methodList) );
    }
-   stack.registerTransactionUser(proxy);
    
+   if (args.mCertServer)
+   {
+      certServer = new CertServer(*dum);
+
+      // Install rules so that the registrar only gets REGISTERs
+      resip::MessageFilterRule::MethodList methodList;
+      methodList.push_back(resip::SUBSCRIBE);
+      methodList.push_back(resip::PUBLISH);
+      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
+                                           resip::MessageFilterRule::Any,
+                                           methodList) );
+   }
+
+   if (dum)
+   {
+      auto_ptr<ServerAuthManager> uasAuth( new ReproServerAuthManager(*dum,userDb));
+      dum->setServerAuthManager(uasAuth);
+      dum->setMessageFilterRuleList(ruleList);
+      dumThread = new DumThread(*dum);
+   }
+
+   stack.registerTransactionUser(proxy);
 
    /* Make it all go */
    stackThread.run();
