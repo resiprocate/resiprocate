@@ -67,7 +67,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
       }
 
       case UAS_Accepted:
-	  case UAS_WaitingToOffer:
+      case UAS_WaitingToOffer:
       case UAS_WaitingToHangup:
       case UAS_WaitingToTerminate:
       case UAS_SentUpdateAccepted:
@@ -122,7 +122,7 @@ ServerInviteSession::provisional(int code)
          
       case UAS_EarlyProvidedAnswer:
       case UAS_Accepted:
-	  case UAS_WaitingToOffer:
+      case UAS_WaitingToOffer:
       case UAS_FirstEarlyReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_OfferReliable: 
@@ -173,7 +173,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
          mProposedLocalSdp = InviteSession::makeSdp(offer);
          break;
 
-	  case UAS_WaitingToOffer:
+      case UAS_WaitingToOffer:
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
       case UAS_FirstEarlyReliable:
@@ -233,7 +233,7 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          break;
 
       case UAS_Accepted:
-	  case UAS_WaitingToOffer:
+      case UAS_WaitingToOffer:
       case UAS_EarlyNoOffer:
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
@@ -292,7 +292,7 @@ ServerInviteSession::end()
          break;
 
       case UAS_Accepted:
-	  case UAS_WaitingToOffer:
+      case UAS_WaitingToOffer:
          if(mCurrentRetransmit200)  // If retransmit200 timer is active then ACK is not received yet - wait for it
          {
             transition(UAS_WaitingToHangup);
@@ -360,7 +360,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       }
 
       case UAS_Accepted:
-	  case UAS_WaitingToOffer:
+      case UAS_WaitingToOffer:
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdateAccepted:
       case UAS_Start:
@@ -402,7 +402,7 @@ ServerInviteSession::accept(int code)
          break;
          
       case UAS_Accepted:
-	  case UAS_WaitingToOffer:
+      case UAS_WaitingToOffer:
          assert(0);  // Already Accepted
          break;
          
@@ -622,7 +622,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       
       case OnCancel:
       {
-	     // Cancel and 200 crossed
+         // Cancel and 200 crossed
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
          mDialog.send(c200);
@@ -631,12 +631,12 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
 
       case OnBye:
       {
-	     transition(Terminated);
+         transition(Terminated);
          SipMessage b200;
          mDialog.makeResponse(b200, msg, 200);
          mDialog.send(b200);
-		 handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
-		 mDum.destroy(this);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+         mDum.destroy(this);
          break;
       }
         
@@ -679,7 +679,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       
       case OnCancel:
       {
-	     // Cancel and 200 crossed
+         // Cancel and 200 crossed
          SipMessage c200;
          mDialog.makeResponse(c200, msg, 200);
          mDialog.send(c200);
@@ -688,12 +688,12 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
 
       case OnBye:
       {
-	     transition(Terminated);
+         transition(Terminated);
          SipMessage b200;
          mDialog.makeResponse(b200, msg, 200);
          mDialog.send(b200);
-		 handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
-		 mDum.destroy(this);
+    	 handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+    	 mDum.destroy(this);
          break;
       }
               
