@@ -18,7 +18,9 @@
 #include "resiprocate/Security.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
 
+//#ifndef WIN32
 #include "contrib/getopt/getopt.h"
+//#endif
 
 // GAG headers
 #include "GagMessage.hxx"
@@ -60,7 +62,7 @@ void shutdown (SipStack *stack)
 
 void init_loopback()
 {
-  int s;
+  Socket s;
   int status;
   struct sockaddr_in them;
 
@@ -69,7 +71,11 @@ void init_loopback()
   memset((void *)&them, 0, sizeof(them));
   them.sin_family = AF_INET;
   them.sin_port = 0xBEEF;
+#ifdef WIN32
+  them.sin_addr.s_addr = htonl(0x100007f);
+#else
   inet_aton("127.0.0.1", &(them.sin_addr));
+#endif
 
   s = socket(PF_INET, SOCK_STREAM, 0);
   assert(s > 0);
@@ -84,9 +90,9 @@ void init_loopback()
   // Hijack stdin and stdout  
   close (0);
   close (1);
-  status = dup2(s, 0);
+  status = dup2( (int)s, 0);
   assert(status >= 0);
-  status = dup2(s, 1);
+  status = dup2( (int)s, 1);
   assert(status >= 0);
 }
 
@@ -115,6 +121,7 @@ main (int argc, char **argv)
 
   // Read commandline options
 
+//#ifndef WIN32
   while	((c = getopt(argc, argv, "l")) != -1)
   {
     switch (c) {
@@ -124,6 +131,7 @@ main (int argc, char **argv)
         getoptError = true;
     }
   }
+//#endif
 
   if (useLoopback)
   {
