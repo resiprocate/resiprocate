@@ -1,3 +1,5 @@
+#include <popt.h>
+
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/DnsInterface.hxx"
@@ -55,7 +57,20 @@ using namespace resip;
 int 
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   char* logType = 0;
+   char* logLevel = 0;
+
+   struct poptOption table[] = {
+      {"log-type",    'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
+      {"log-level",   'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
+      POPT_AUTOHELP
+      { NULL, 0, 0, NULL, 0 }
+   };
+   
+   poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
+   poptGetNextOpt(context);
+   Log::initialize(logType, logLevel, argv[0]);
+
    TestDnsHandler handler;
    TestDns dns;
    dns.run();
@@ -65,9 +80,10 @@ main(int argc, char* argv[])
    uri.host() = "cathaynetworks.com";
 
    std::list<DnsResult*> results;
-   for (int i=1; i<argc; i++)
+   const char** args = poptGetArgs(context);
+   while (args && *args != 0)
    {
-      uri.host() = argv[i];
+      uri.host() = *args++;
       results.push_back(dns.lookup(uri, &handler));
    }
 
