@@ -12,42 +12,33 @@ class ParseBuffer
    public:
       // does NOT OWN the buffer memory
       ParseBuffer(const char* buff, unsigned int len, 
-                  const Data& errorContext = Data::Empty)
-         : mBuff(buff),
-           mPosition(buff),
-           mEnd(buff+len),
-           mErrorContext(errorContext)
-      {}
+                  const Data& errorContext = Data::Empty);
 
       explicit ParseBuffer(const Data& data,
-                           const Data& errorContext = Data::Empty)
-         : mBuff(data.data()),
-           mPosition(mBuff),
-           mEnd(mBuff + data.size()),
-           mErrorContext(errorContext)
-      {}
+                           const Data& errorContext = Data::Empty);
 
       ParseBuffer(const ParseBuffer& other);
 
       class Exception : public resip::BaseException
       {
          public:
-            Exception(const Data& msg, const Data& file, const int line)
-               : resip::BaseException(msg, file, line) {}
+            Exception(const Data& msg, const Data& context, const Data& file, const int line);
+            ~Exception() throw();
+            const char* name() const;
+            const Data& getContext() const;
             
-            const char* name() const { return "ParseBuffer::Exception"; }
+         private:
+            Data mContext;
       };
 
    private:
       class Pointer
       {
          public:
-            Pointer(const char* position,
-                    bool atEof)
-               : mPosition(position),
-                 mIsValid(!atEof)
-            {}
-            
+            Pointer(const ParseBuffer& pb,
+                    const char* position,
+                    bool atEof);
+
             operator const char*() const
             {
                return mPosition;
@@ -55,12 +46,14 @@ class ParseBuffer
 
             const char& operator*() const;
          private:
+            const ParseBuffer& mPb;
             const char* mPosition;
             const bool mIsValid;
             static const Data msg;
       };
 
    public:
+      const Data& getContext() const;
       
       // allow the buffer to be rolled back
       ParseBuffer& operator=(const ParseBuffer& other);
@@ -71,9 +64,9 @@ class ParseBuffer
       // begin end
       bool eof() const { return mPosition >= mEnd;}
       bool bof() const { return mPosition <= mBuff;}
-      Pointer start() const { return Pointer(mBuff, eof()); }
-      Pointer position() const { return Pointer(mPosition, eof()); }
-      Pointer end() const { return Pointer(mEnd, true); }
+      Pointer start() const { return Pointer(*this, mBuff, eof()); }
+      Pointer position() const { return Pointer(*this, mPosition, eof()); }
+      Pointer end() const { return Pointer(*this, mEnd, true); }
 
       Pointer skipChar();
       Pointer skipChar(char c);
