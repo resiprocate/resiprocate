@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.71 2003/07/16 20:59:32 davidb Exp $";
+// "$Id: Data.cxx,v 1.72 2003/08/13 20:34:39 davidb Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -81,6 +81,32 @@ Data::Data(const char* str, int length, bool)
 {
    assert(str);
 }
+
+Data::Data(ShareEnum, const char* buffer, int length)
+   : mSize(length),
+     mBuf(const_cast<char*>(buffer)),
+     mCapacity(mSize),
+     mMine(false)
+{
+   assert(buffer);
+}
+
+Data::Data(ShareEnum, const char* buffer)
+   : mSize(strlen(buffer)),
+     mBuf(const_cast<char*>(buffer)),
+     mCapacity(mSize),
+     mMine(false)
+{
+   assert(buffer);
+}
+
+Data::Data(ShareEnum, const Data& staticData)
+   : mSize(staticData.mSize),
+     mBuf(staticData.mBuf),
+     mCapacity(mSize),
+     mMine(false)
+{}
+//=============================================================================
 
 Data::Data(const char* str) 
    : mSize(str ? strlen(str) : 0),
@@ -176,8 +202,6 @@ Data::Data(int val)
       mBuf[0] = '-';
    }
 }
-
-// new functions
 
 Data::Data(double value, int precision)
    : mSize(0), 
@@ -365,8 +389,6 @@ Data::Data(bool value)
       mCapacity = 5;
    }
 }
-
-// end new functions
 
 bool 
 Data::operator==(const Data& rhs) const
