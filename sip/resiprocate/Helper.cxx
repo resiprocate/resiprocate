@@ -329,7 +329,7 @@ Helper::makeResponse(SipMessage& response,
    }
    else
    {
-      Data& reason(response.header(h_StatusLine).reason());
+      Data &reason(response.header(h_StatusLine).reason());
       switch (responseCode)
       {
          case 100: reason = "Trying"; break;
