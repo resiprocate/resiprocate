@@ -2,13 +2,17 @@
 #define SipMessage_hxx
 
 #include <sys/types.h>
+
+#ifndef WIN32
 #include <sys/socket.h>
+#include <netinet/in.h>
+#endif
 
 #include <list>
 #include <vector>
 #include <utility>
 
-#include <netinet/in.h>
+
 
 #include <sipstack/HeaderTypes.hxx>
 #include <sipstack/Message.hxx>
@@ -165,8 +169,10 @@ class SipMessage : public Message
       bool mHaveFixedDest;
       Data mFixedDest;
       
+#ifndef WIN32 // CJ TODO FIX 
       sockaddr_in mSource;
-      
+#endif
+
       std::vector<char*> mBufferList;
       HeaderFieldValue* mStartLine;
       HeaderFieldValue* mBody;
