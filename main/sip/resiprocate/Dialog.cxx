@@ -292,7 +292,7 @@ Dialog::makeInitialInvite(const NameAddr& target,
 SipMessage*
 Dialog::makeInvite()
 {
-   SipMessage* request = makeRequest(INVITE);
+   SipMessage* request = makeRequestInternal(INVITE);
    incrementCSeq(*request);
    DebugLog(<< "Dialog::makeInvite: " << *request);
    return request;
@@ -302,7 +302,7 @@ Dialog::makeInvite()
 SipMessage*
 Dialog::makeRegister()
 {
-   SipMessage* request = makeRequest(REGISTER);
+   SipMessage* request = makeRequestInternal(REGISTER);
    incrementCSeq(*request);
    DebugLog(<< "Dialog::makeRegister: " << *request);
    return request;
@@ -312,7 +312,7 @@ Dialog::makeRegister()
 SipMessage*
 Dialog::makeSubscribe()
 {
-   SipMessage* request = makeRequest(SUBSCRIBE);
+   SipMessage* request = makeRequestInternal(SUBSCRIBE);
    incrementCSeq(*request);
    DebugLog(<< "Dialog::makeSubscribe: " << *request);
    return request;
@@ -321,7 +321,7 @@ Dialog::makeSubscribe()
 SipMessage*
 Dialog::makeBye()
 {
-   SipMessage* request = makeRequest(BYE);
+   SipMessage* request = makeRequestInternal(BYE);
    incrementCSeq(*request);
 
    return request;
@@ -331,7 +331,7 @@ Dialog::makeBye()
 SipMessage*
 Dialog::makeRefer(const NameAddr& referTo)
 {
-   SipMessage* request = makeRequest(REFER);
+   SipMessage* request = makeRequestInternal(REFER);
    request->header(h_ReferTo) = referTo;
    request->header(h_ReferredBy) = mLocalUri;
    incrementCSeq(*request);
@@ -341,7 +341,7 @@ Dialog::makeRefer(const NameAddr& referTo)
 SipMessage*
 Dialog::makeNotify()
 {
-   SipMessage* request = makeRequest(NOTIFY);
+   SipMessage* request = makeRequestInternal(NOTIFY);
    incrementCSeq(*request);
    return request;
 }
@@ -350,7 +350,18 @@ Dialog::makeNotify()
 SipMessage*
 Dialog::makeOptions()
 {
-   SipMessage* request = makeRequest(OPTIONS);
+   SipMessage* request = makeRequestInternal(OPTIONS);
+   incrementCSeq(*request);
+   return request;
+}
+
+SipMessage*
+Dialog::makeRequest(resip::MethodTypes method)
+{
+   assert(method != ACK);
+   assert(method != CANCEL);
+   
+   SipMessage* request = makeRequestInternal(method);
    incrementCSeq(*request);
    return request;
 }
@@ -358,7 +369,7 @@ Dialog::makeOptions()
 SipMessage*
 Dialog::makeAck(const SipMessage& original)
 {
-   SipMessage* request = makeRequest(ACK);
+   SipMessage* request = makeRequestInternal(ACK);
    copyCSeq(*request);
 
    // !dcm! should we copy the authorizations? 
@@ -403,6 +414,7 @@ Dialog::makeCancel(const SipMessage& request)
    return cancel;
 }
 
+
 CallId 
 Dialog::makeReplaces()
 {
@@ -428,7 +440,7 @@ Dialog::clear()
 }
 
 SipMessage*
-Dialog::makeRequest(MethodTypes method)
+Dialog::makeRequestInternal(MethodTypes method)
 {
    assert(mCreated);
    SipMessage* request = new SipMessage;
