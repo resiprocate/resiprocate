@@ -91,7 +91,6 @@ DialogSet::getCreator()
 void
 DialogSet::dispatch(const SipMessage& msg)
 {
-#if 0
    assert(msg.isRequest() || msg.isResponse());
    Dialog* dialog = findDialog(msg);
    if (dialog == 0)
@@ -100,7 +99,6 @@ DialogSet::dispatch(const SipMessage& msg)
       this->addDialog(dialog);
    }
    dialog->dispatch(msg);
-#endif
 }
 
 bool
