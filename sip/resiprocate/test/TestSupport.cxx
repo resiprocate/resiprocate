@@ -154,6 +154,8 @@ TestSupport::makeMessage(const Data& data, bool isExternal )
 
    if (pre.process(*msg, buffer, size) || pre.isFragmented())
    {
+      cerr << "Preparser failed: isfrag=" << pre.isFragmented() << " buff=" << buffer;
+      
       delete msg;
       msg = 0;
    }
