@@ -42,7 +42,7 @@ class Log
          INFO = 6,
          DEBUG = 7,
          STACK = 8,
-         OUT = 9,
+         STDERR = 9,
          BOGUS = 666
       } Level;
 #else
