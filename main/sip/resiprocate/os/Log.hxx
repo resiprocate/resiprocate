@@ -70,7 +70,7 @@ class Log
 #ifdef ERR
                  level(SIP2_ERR)
 #else
-                 level(ERR)
+               level(ERR)
 #endif
             {}
 
