@@ -7,12 +7,12 @@
 
 #include "resource.h"		// main symbols
 
-#include "sip2/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 //#include "sip2/util/Logger.hxx"
 
-#include "sip2/sipstack/SipStack.hxx"
+#include "resiprocate/SipStack.hxx"
 //#include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/TuIM.hxx"
+#include "resiprocate/TuIM.hxx"
 #include "buddydlg.h"
 //#include "sip2/sipstack/Security.hxx"
 
@@ -33,8 +33,8 @@ public:
 	DECLARE_MESSAGE_MAP()
 
 public:
-	Vocal2::TuIM* tuIM;
-	Vocal2::SipStack* sipStack;
+	resip::TuIM* tuIM;
+	resip::SipStack* sipStack;
 
 private:
 	void imInit();
