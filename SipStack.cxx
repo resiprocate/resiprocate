@@ -1,15 +1,15 @@
 
 #include "sip2/util/Socket.hxx"
-
+#include "sip2/util/Fifo.hxx"
+#include "sip2/util/Data.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/util/Random.hxx"
 
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/sipstack/Executive.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/Message.hxx"
-#include "sip2/util/Fifo.hxx"
-#include "sip2/util/Data.hxx"
-#include "sip2/util/Logger.hxx"
-#include "sip2/util/Random.hxx"
+#include "sip2/sipstack/Security.hxx"
 
 
 
@@ -22,13 +22,18 @@ using namespace Vocal2;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 SipStack::SipStack(bool multiThreaded)
-  : mExecutive(*this),
-    mTransportSelector(*this),
-    mTimers(mStateMacFifo),
-    mDnsResolver(*this)
+   : security( 0 ),
+     mExecutive(*this),
+     mTransportSelector(*this),
+     mTimers(mStateMacFifo),
+     mDnsResolver(*this)
 {
    Random::initialize();
    initNetwork();
+
+#ifdef USE_SSL
+   security = new Security;
+#endif
 
    //addTransport(Transport::UDP, 5060);
    //addTransport(Transport::TCP, 5060); // !jf!
