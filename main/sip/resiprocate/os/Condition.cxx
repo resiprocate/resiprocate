@@ -238,8 +238,15 @@ Condition::wait (Mutex* mutex)
 }
 
 bool
-Condition::wait (Mutex& mutex, unsigned int ms)
+Condition::wait(Mutex& mutex, 
+                unsigned int ms)
 {
+   if (ms == 0)
+   {
+      wait(mutex);
+      return true;
+   }
+
 #ifdef WIN32
 #   ifdef RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
     this->enterWait();
