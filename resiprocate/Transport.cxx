@@ -8,10 +8,10 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransportMessage.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
-#define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 const Data Transport::transportNames[Transport::MAX_TRANSPORT] =
  {
@@ -210,7 +210,7 @@ bool Transport::Tuple::operator<(const Transport::Tuple& rhs) const
 }
 
 std::ostream&
-Vocal2::operator<<(ostream& ostrm, const Transport::Tuple& tuple)
+resip::operator<<(ostream& ostrm, const Transport::Tuple& tuple)
 {
 	ostrm << "[ " ;
 
@@ -237,7 +237,7 @@ Vocal2::operator<<(ostream& ostrm, const Transport::Tuple& tuple)
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 
 size_t 
-__gnu_cxx::hash<Vocal2::Transport::Tuple>::operator()(const Vocal2::Transport::Tuple& tuple) const
+__gnu_cxx::hash<resip::Transport::Tuple>::operator()(const resip::Transport::Tuple& tuple) const
 {
    // !dlb! do not include the connection
    Transport::Tuple& tup(const_cast<Transport::Tuple&>(tuple));
@@ -259,7 +259,7 @@ __gnu_cxx::hash<Vocal2::Transport::Tuple>::operator()(const Vocal2::Transport::T
 
 #elif  defined(__INTEL_COMPILER )
 size_t 
-std::hash_value(const Vocal2::Transport::Tuple& tuple) 
+std::hash_value(const resip::Transport::Tuple& tuple) 
 {
    // !dlb! do not include the connection
    Transport::Tuple& tup(const_cast<Transport::Tuple&>(tuple));

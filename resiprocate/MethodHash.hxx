@@ -1,6 +1,6 @@
 #if !defined(METHODSHASH_HXX)
 #define METHODSHASH_HXX
-namespace Vocal2 
+namespace resip 
 {
 
 

@@ -1,8 +1,8 @@
 #if !defined(PARAMETERHASH_HXX)
 #define PARAMETERHASH_HXX
-namespace Vocal2 
+namespace resip 
 {
-using namespace Vocal2;
+using namespace resip;
 
 struct params { char *name; ParameterTypes::Type type; };
 /* maximum key range = 494, duplicates = 0 */

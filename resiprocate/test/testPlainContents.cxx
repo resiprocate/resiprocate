@@ -1,7 +1,7 @@
 #include "resiprocate/PlainContents.hxx"
 #include <iostream>
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 int

@@ -6,8 +6,7 @@
 #include <vector>
 #include <cassert>
 
-using namespace Vocal2;
-
+using namespace resip;
 using namespace std;
 
 class Every4 : public ThreadIf

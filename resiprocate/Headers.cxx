@@ -11,7 +11,7 @@ using namespace std;
 //int strcasecmp(const char*, const char*);
 //int strncasecmp(const char*, const char*, int len);
 
-using namespace Vocal2;
+using namespace resip;
 
 Data Headers::HeaderNames[MAX_HEADERS+1];
 bool Headers::CommaTokenizing[] = {false};
@@ -43,7 +43,7 @@ _enum##_Header::knownReturn(ParserContainerBase* container)                     
    return dynamic_cast<ParserContainer<_type>*>(container)->front();            \
 }                                                                               \
                                                                                 \
-_enum##_Header Vocal2::h_##_enum
+_enum##_Header resip::h_##_enum
 
 #define defineMultiHeader(_enum, _name, _type)                                  \
 Headers::Type                                                                   \
@@ -60,7 +60,7 @@ _enum##_MultiHeader::knownReturn(ParserContainerBase* container)                
    return *dynamic_cast<ParserContainer<_type>*>(container);                    \
 }                                                                               \
                                                                                 \
-_enum##_MultiHeader Vocal2::h_##_enum##s
+_enum##_MultiHeader resip::h_##_enum##s
 
 defineHeader(ContentDisposition, "Content-Disposition", Token);
 defineHeader(ContentEncoding, "Content-Encoding", Token);
@@ -70,7 +70,7 @@ defineHeader(Priority, "Priority", Token);
 defineHeader(Event, "Event", Token);
 defineMultiHeader(AllowEvents, "Allow-Events", Token);
 // explicitly declare to avoid h_AllowEventss, ugh
-AllowEvents_MultiHeader Vocal2::h_AllowEvents;
+AllowEvents_MultiHeader resip::h_AllowEvents;
 
 defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token);
 defineMultiHeader(AcceptLanguage, "Accept-Language", Token);
@@ -85,7 +85,7 @@ defineMultiHeader(SecurityClient, "Security-Client", Token);
 defineMultiHeader(SecurityServer, "Security-Server", Token);
 defineMultiHeader(SecurityVerify, "Security-Verify", Token);
 // explicitly declare to avoid h_SecurityVerifys, ugh
-SecurityVerify_MultiHeader Vocal2::h_SecurityVerifies;
+SecurityVerify_MultiHeader resip::h_SecurityVerifies;
 
 //====================
 // Mime
@@ -175,8 +175,8 @@ defineHeader(Warning, "Warning", WarningCategory);
 
 defineMultiHeader(Via, "Via", Via);
 
-RequestLineType Vocal2::h_RequestLine;
-StatusLineType Vocal2::h_StatusLine;
+RequestLineType resip::h_RequestLine;
+StatusLineType resip::h_StatusLine;
 
 Headers::Type
 Headers::getType(const char* name, int len)

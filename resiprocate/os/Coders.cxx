@@ -4,7 +4,7 @@
 #include "compat.hxx"
 #include "resiprocate/os/Coders.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 using namespace std;

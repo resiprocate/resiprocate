@@ -1,6 +1,6 @@
 #include "resiprocate/TimerMessage.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
 TimerMessage::~TimerMessage()
 {

@@ -11,10 +11,10 @@
 
 #include <ctype.h>
 
-using namespace Vocal2;
+using namespace resip;
 using namespace  std;
 
-#define VOCAL_SUBSYSTEM Subsystem::APP
+#define RESIPROCATE_SUBSYSTEM Subsystem::APP
 
 #define CRLF "\r\n"
 

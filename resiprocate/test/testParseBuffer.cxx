@@ -3,9 +3,9 @@
 #include <assert.h>
 #include "resiprocate/os/Logger.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::TEST
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
 int
 main(int argc, char** argv)

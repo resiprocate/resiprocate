@@ -14,9 +14,9 @@
 #include "resiprocate/DnsResolver.hxx"
 
 
-using namespace Vocal2;
+using namespace resip;
 
-#define VOCAL_SUBSYSTEM Subsystem::TRANSACTION
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 unsigned long TransactionState::StatelessIdCounter = 1;
 
@@ -1347,7 +1347,7 @@ TransactionState::terminateServerTransaction(const Data& tid)
 
 
 std::ostream& 
-Vocal2::operator<<(std::ostream& strm, const Vocal2::TransactionState& state)
+resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
 {
    strm << "Tstate[ mMach=";
    switch (state.mMachine)

@@ -4,7 +4,7 @@
 #include "resiprocate/os/Fifo.hxx"
 #include <unistd.h>
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 int

@@ -2,7 +2,7 @@
 #include "resiprocate/os/DataStream.hxx"
 
 std::ostream& 
-Vocal2::operator<<(std::ostream& strm, const Vocal2::Message& msg)
+resip::operator<<(std::ostream& strm, const resip::Message& msg)
 {
    Data encoded;
 

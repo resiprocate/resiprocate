@@ -8,11 +8,11 @@
 #include <unistd.h>
 #endif
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 bool 
-Vocal2::makeSocketNonBlocking(Socket fd)
+resip::makeSocketNonBlocking(Socket fd)
 {
 #if WIN32
 	unsigned long noBlock = 1;
@@ -37,7 +37,7 @@ Vocal2::makeSocketNonBlocking(Socket fd)
    
 
 void
-Vocal2::initNetwork()
+resip::initNetwork()
 {
 #ifdef WIN32 
 	bool doneInit=false;
@@ -81,7 +81,7 @@ Vocal2::initNetwork()
 
 #ifndef WIN32
 int 
-Vocal2::closesocket( Socket fd )
+resip::closesocket( Socket fd )
 {
    return close( fd );
 }

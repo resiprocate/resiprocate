@@ -1,5 +1,5 @@
-#ifndef Vocal2_Logger_hxx
-#define Vocal2_Logger_hxx
+#ifndef resip_Logger_hxx
+#define resip_Logger_hxx
 
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Log.hxx"
@@ -11,31 +11,31 @@
 
    Example:
 #include Logger.hxx
-#define VOCAL_SUBSYSTEM Vocal2::Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
    ...
    DebugLog(<< "hi there " << mix << 4 << types);  // note leading << and no endl
 */
 
 // unconditionally output to cerr -- easily change back and forth
 #define CerrLog(args_)                                                          \
-  Vocal2::Log::tags(Vocal2::Log::DEBUG_STACK, VOCAL_SUBSYSTEM, std::cerr)       \
+  resip::Log::tags(resip::Log::DEBUG_STACK, RESIPROCATE_SUBSYSTEM, std::cerr)       \
           << __FILE__ << ':' << __LINE__ << DELIM                               \
           args_ << std::endl;
 
 #define DebugLog(args_) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, args_)
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::DEBUG, args_)
 
 #define CritLog(args_) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, args_)
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::CRIT, args_)
 
 #define ErrLog(args_) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, args_)
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::ERR, args_)
 
 #define WarningLog(args_) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, args_)
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::WARNING, args_)
 
 #define InfoLog(args_) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, args_)
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::INFO, args_)
 
 #define CHECK_RECURSIVE_LOG
 class AssertOnRecursiveLock
@@ -54,31 +54,31 @@ class AssertOnRecursiveLock
 #define GenericLog(system_, level_, args_)                                      \
 do                                                                              \
 {                                                                               \
-   const Vocal2::Log::ThreadSetting* setting = Vocal2::Log::getThreadSetting(); \
+   const resip::Log::ThreadSetting* setting = resip::Log::getThreadSetting(); \
    if (setting)                                                                 \
    {                                                                            \
       if (level_ <= setting->level)                                             \
       {                                                                         \
          AssertOnRecursiveLock check;                                           \
-         Vocal2::Lock lock(Vocal2::Log::_mutex);                                \
+         resip::Lock lock(resip::Log::_mutex);                                \
          check.set();                                                           \
-         Vocal2::Log::tags(level_, system_,                                     \
-                           Vocal2::GenericLogImpl::Instance())                  \
+         resip::Log::tags(level_, system_,                                     \
+                           resip::GenericLogImpl::Instance())                  \
                               << __FILE__ << ':' << __LINE__ << DELIM           \
             args_ << std::endl;                                                 \
       }                                                                         \
    }                                                                            \
    else                                                                         \
    {                                                                            \
-      if (Vocal2::GenericLogImpl::isLogging(level_))                            \
+      if (resip::GenericLogImpl::isLogging(level_))                            \
       {                                                                         \
          AssertOnRecursiveLock check;                                           \
-         Vocal2::Lock lock(Vocal2::Log::_mutex);                                \
+         resip::Lock lock(resip::Log::_mutex);                                \
          check.set();                                                           \
-         if (Vocal2::GenericLogImpl::isLogging(level_))                         \
+         if (resip::GenericLogImpl::isLogging(level_))                         \
          {                                                                      \
-            Vocal2::Log::tags(level_, system_,                                  \
-                              Vocal2::GenericLogImpl::Instance())               \
+            resip::Log::tags(level_, system_,                                  \
+                              resip::GenericLogImpl::Instance())               \
                                  << __FILE__ << ':' << __LINE__ << DELIM        \
                args_ << std::endl;                                              \
          }                                                                      \
@@ -92,7 +92,7 @@ do                                                                              
 #define DebugLog(args_)
 #endif
 
-namespace Vocal2
+namespace resip
 {
 
 class GenericLogImpl :  public Log 

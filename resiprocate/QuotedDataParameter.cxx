@@ -4,7 +4,7 @@
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/ParseException.hxx"
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 QuotedDataParameter::QuotedDataParameter(ParameterTypes::Type type,

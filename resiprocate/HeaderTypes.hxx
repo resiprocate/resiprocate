@@ -10,7 +10,7 @@
 #define single(_enum, _category) _enum
 #define multi(_enum, _category) _enum
 
-namespace Vocal2
+namespace resip
 {
 
 class Headers

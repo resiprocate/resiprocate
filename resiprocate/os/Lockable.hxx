@@ -1,12 +1,12 @@
-#if !defined(Vocal2_Lockable_hxx)
-#define Vocal2_Lockable_hxx
+#if !defined(resip_Lockable_hxx)
+#define resip_Lockable_hxx
 
-static const char* const Vocal2_Lockable_hxx_Version =
-    "$Id: Lockable.hxx,v 1.5 2002/11/11 23:09:55 jason Exp $";
+static const char* const resip_Lockable_hxx_Version =
+    "$Id: Lockable.hxx,v 1.6 2003/03/25 06:33:48 jason Exp $";
 
 /** Infrastructure common to VOCAL.<br><br>
  */
-namespace Vocal2
+namespace resip
 {
 
 class Lockable
@@ -22,7 +22,7 @@ class Lockable
       virtual void writelock() { lock() ; }
 };
 
-} // namespace Vocal2
+} // namespace resip
 
 
 /* ====================================================================

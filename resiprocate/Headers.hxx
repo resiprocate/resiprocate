@@ -7,7 +7,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/HeaderTypes.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 //#define PARTIAL_TEMPLATE_SPECIALIZATION

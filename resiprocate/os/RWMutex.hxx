@@ -1,5 +1,5 @@
-#if !defined(Vocal2_RWMutex_HXX)
-#define Vocal2_RWMutex_HXX
+#if !defined(resip_RWMutex_HXX)
+#define resip_RWMutex_HXX
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -52,14 +52,14 @@
  */
 
 
-static const char* const Vocal2RWMutex_hxx_Version =
-    "$Id: RWMutex.hxx,v 1.1 2002/11/12 05:15:37 jason Exp $";
+static const char* const resipRWMutex_hxx_Version =
+    "$Id: RWMutex.hxx,v 1.2 2003/03/25 06:33:48 jason Exp $";
 
 #include "Lockable.hxx"
 #include "Mutex.hxx"
 #include "Condition.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class RWMutex : public Lockable
@@ -83,6 +83,6 @@ class RWMutex : public Lockable
       unsigned int mPendingWriterCount;
 };
 
-} // namespace Vocal2
+} // namespace resip
 
 #endif 

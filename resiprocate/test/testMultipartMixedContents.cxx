@@ -5,7 +5,7 @@
 #include "resiprocate/os/ParseBuffer.hxx"
 #include <iostream>
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 int

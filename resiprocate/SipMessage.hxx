@@ -23,7 +23,7 @@
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Timer.hxx"
 
-namespace Vocal2
+namespace resip
 {
 
 class Contents;

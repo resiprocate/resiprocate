@@ -1,15 +1,15 @@
 
 
 static const char* const Lock_cxx_Version =
-    "$Id: Lock.cxx,v 1.7 2003/03/24 23:25:36 jason Exp $";
+    "$Id: Lock.cxx,v 1.8 2003/03/25 06:33:48 jason Exp $";
 
 #include "resiprocate/os/Lock.hxx"
 
-using Vocal2::Lock;
-using Vocal2::ReadLock;
-using Vocal2::WriteLock;
-using Vocal2::LockType;
-using Vocal2::Lockable;
+using resip::Lock;
+using resip::ReadLock;
+using resip::WriteLock;
+using resip::LockType;
+using resip::Lockable;
 
 Lock::Lock(Lockable & lockable, LockType lockType)
    : myLockable(lockable)

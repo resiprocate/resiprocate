@@ -13,7 +13,7 @@
 
 
 
-using namespace Vocal2;
+using namespace resip;
 
 extern "C"
 {

@@ -1,7 +1,7 @@
 #ifndef MethodTypes_hxx
 #define MethodTypes_hxx
 
-namespace Vocal2
+namespace resip
 {
 
 class Data;
