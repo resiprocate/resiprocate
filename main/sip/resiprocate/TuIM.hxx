@@ -37,7 +37,10 @@ public:
            const Uri& aor, 
            const Uri& contact,
            Callback* callback);
-            
+
+      ///
+      void setOutboundProxy( const Uri& uri );
+      
       bool haveCerts( bool sign, const Data& encryptFor );
       void sendPage(const Data& text, const Uri& dest, bool sign, const Data& encryptFor );
 
