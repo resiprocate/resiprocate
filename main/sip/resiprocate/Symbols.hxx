@@ -23,8 +23,10 @@ class Symbols
       static const char * const SEMI_COLON;
       static const char * const SEMI_OR_EQUAL;
       static const char * const SLASH;
+      static const char * const B_SLASH;
       static const char * const SPACE;
-
+      static const char * const COMMA;
+      
       static const char * const Sip;
       static const char * const Sips;
 

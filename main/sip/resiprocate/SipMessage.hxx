@@ -128,8 +128,9 @@ class SipMessage : public Message
       const UnknownHeaders& getRawUnknownHeaders() const {return mUnknownHeaders;}
 
       // transport interface
-      void setStartLine(char* start, int len); 
-      void setBody(char* start, int len); 
+      void setStartLine(const char* start, int len); 
+      void setBody(const char* start, int len); 
+
       
       // add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,
