@@ -54,9 +54,12 @@ InviteSession::~InviteSession()
 void 
 InviteSession::dialogDestroyed(const SipMessage& msg)
 {
+   assert(0);
+   
    // !jf! Is this correct? Merged from main...
-   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);   
-   delete this;   
+   // !jf! what reason - guessed for now?
+   //mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, msg);   
+   //delete this;   
 }
 
 const SdpContents&
