@@ -72,10 +72,11 @@ namespace resip
 void
 initNetwork();
 
+#ifndef WIN32
 typedef int Socket;
 static const Socket INVALID_SOCKET = -1;
 static const int SOCKET_ERROR = -1;
-
+#endif
 
 bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
@@ -128,6 +129,12 @@ class FdSet
          assert( fd < FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
          FD_SET(fd, &write);
          size = ( int(fd+1) > size) ? int(fd+1) : size;
+      }
+      
+      void clear(Socket fd)
+      {
+         FD_CLR(fd, &read);
+         FD_CLR(fd, &write);
       }
       
       void reset()

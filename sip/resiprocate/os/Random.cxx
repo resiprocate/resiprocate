@@ -96,7 +96,7 @@ Random::initialize()
 
       if (fd != -1 )
       {
-         closesocket(fd);
+         ::close(fd);
       }
 
 #ifdef WIN32

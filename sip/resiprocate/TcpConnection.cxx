@@ -13,7 +13,7 @@ using namespace resip;
 
 TcpConnection::TcpConnection(const Tuple& who, Socket fd) : Connection(who, fd)
 {
-   InfoLog (<< "Creating TCP connection " << who << " on " << fd);
+   DebugLog (<< "Creating TCP connection " << who << " on " << fd);
 }
 
 int 
@@ -32,7 +32,7 @@ TcpConnection::read( char* buf, int count )
       switch (errno)
       {
          case EAGAIN:
-            //InfoLog (<< "No data ready to read");
+            InfoLog (<< "No data ready to read");
             return 0;
          case EINTR:
             InfoLog (<< "The call was interrupted by a signal before any data was read.");
@@ -56,7 +56,11 @@ TcpConnection::read( char* buf, int count )
 
       InfoLog (<< "Failed read on " << mSocket << " " << strerror(errno));
    }
-
+   else if (bytesRead == 0)
+   {
+      InfoLog (<< "Connection closed by remote " << *this);
+      return INVALID_SOCKET;
+   }
    return bytesRead;
 }
 

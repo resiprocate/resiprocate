@@ -69,15 +69,36 @@ DnsUtil::getLocalDomainName()
 }
 
 Data
+DnsUtil::getLocalIpAddress(const Data& myInterface)
+{
+   std::list<std::pair<Data,Data> > ifs = DnsUtil::getInterfaces(myInterface);
+   if (ifs.empty())
+   {
+      throw Exception("No matching interface", __FILE__,__LINE__);
+   }
+   
+   if (ifs.size() > 1)
+   {
+      assert(0);
+   }
+  
+   return ifs.front().second;
+}
+
+Data
 DnsUtil::inet_ntop(const Tuple& tuple)
 {
-   if (tuple.v6)
+#if USE_IPV6
+	if (!tuple.isV4())
    {
-      return DnsUtil::inet_ntop(tuple.ipv6);
+      const sockaddr_in6& addr = reinterpret_cast<const sockaddr_in6&>(tuple.getSockaddr());
+      return DnsUtil::inet_ntop(addr.sin6_addr);
    }
    else
+#endif
    {
-      return DnsUtil::inet_ntop(tuple.ipv4);
+      const sockaddr_in& addr = reinterpret_cast<const sockaddr_in&>(tuple.getSockaddr());
+      return DnsUtil::inet_ntop(addr.sin_addr);
    }
 }
 
@@ -116,12 +137,14 @@ DnsUtil::inet_ntop(const struct in6_addr& addr)
 Data
 DnsUtil::inet_ntop(const struct sockaddr& addr)
 {
-   if (addr.sa_family == AF_INET6)
+#ifdef USE_IPV6
+	if (addr.sa_family == AF_INET6)
    {
       const struct sockaddr_in6* addr6 = reinterpret_cast<const sockaddr_in6*>(&addr);
       return DnsUtil::inet_ntop(addr6->sin6_addr);
    }
    else
+#endif
    {
       const struct sockaddr_in* addr4 = reinterpret_cast<const sockaddr_in*>(&addr);
       return DnsUtil::inet_ntop(addr4->sin_addr);
@@ -222,7 +245,8 @@ DnsUtil::isIpV6Address(const Data& ipAddress)
 Data
 DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
 {
-   struct in6_addr dst;
+#ifdef USE_IPV6
+	struct in6_addr dst;
    int res = DnsUtil::inet_pton(ipV6Address, dst);
    if (res <= 0)
    {
@@ -230,6 +254,11 @@ DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
       assert(0);
    }
    return DnsUtil::inet_ntop(dst);
+#else
+	assert(0);
+
+	return Data::Empty;
+#endif
 }
 
 bool 
@@ -240,7 +269,7 @@ DnsUtil::isIpAddress(const Data& ipAddress)
 
 
 std::list<std::pair<Data,Data> > 
-DnsUtil::getInterfaces()
+DnsUtil::getInterfaces(const Data& matching)
 {
    std::list<std::pair<Data,Data> > results;
    
@@ -277,13 +306,12 @@ DnsUtil::getInterfaces()
       e = ioctl(s,SIOCGIFADDR,&ifr2);
 
       struct sockaddr a = ifr2.ifr_addr;
-      struct sockaddr_in* addr = (struct sockaddr_in*) &a;
-      
-      char str[256];
-      ::inet_ntop(AF_INET, (u_int32_t*)(&addr->sin_addr.s_addr), str, sizeof(str));
-      DebugLog (<< "Considering: " << name << " -> " << str);
-      
-      results.push_back(std::make_pair(name, str));
+      Data ip = DnsUtil::inet_ntop(a);
+      DebugLog (<< "Considering: " << name << " -> " << ip << " flags=" << ifr2.ifr_flags);
+      if (matching == Data::Empty || matching == name)
+      {
+         results.push_back(std::make_pair(name, ip));
+      }
    }
 #else // !WIN32
    assert(0);

@@ -29,7 +29,8 @@ class DnsUtil
 
       static Data getLocalHostName();
       static Data getLocalDomainName();
-      
+      static Data getLocalIpAddress(const Data& defaultInterface="eth0");
+
       // wrappers for the not so ubiquitous inet_pton, inet_ntop (e.g. WIN32)
       static Data inet_ntop(const struct in_addr& addr);
       static Data inet_ntop(const struct in6_addr& addr);
@@ -38,13 +39,13 @@ class DnsUtil
 
       static int inet_pton(const Data& printableIp, struct in_addr& dst);
       static int inet_pton(const Data& printableIp, struct in6_addr& dst);
-
+      
       static bool isIpAddress(const Data& ipAddress);
       static bool isIpV4Address(const Data& ipAddress);
       static bool isIpV6Address(const Data& ipAddress);
 
       // returns pair of interface name, ip address
-      static std::list<std::pair<Data,Data> > getInterfaces();
+      static std::list<std::pair<Data,Data> > getInterfaces(const Data& matchingInterface=Data::Empty);
 
       // XXXX:0:0:0:YYYY:192.168.2.233 => XXXX::::YYYY:192.168.2.233
       // so string (case) comparison will work

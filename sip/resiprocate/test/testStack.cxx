@@ -28,8 +28,8 @@ main(int argc, char* argv[])
 {
    char* logType = 0;
    char* logLevel = 0;
-   int runs = 100;
-   int window = 10;
+   int runs = 10000;
+   int window = 100;
    int seltime = 100;
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {

@@ -75,6 +75,7 @@ DnsResult::DnsResult(DnsInterface& interfaceObj, DnsHandler* handler)
 
 DnsResult::~DnsResult()
 {
+   DebugLog (<< "DnsResult::~DnsResult() " << *this);
    assert(mType != Destroyed);
 }
 
@@ -142,17 +143,11 @@ DnsResult::lookup(const Uri& uri)
 
       if (isNumeric) // IP address specified
       {
-         Tuple tuple;
-         tuple.transportType = mTransport;
-         tuple.transport = 0;
-		 DnsUtil::inet_pton( mTarget, tuple.ipv4); // !jf! - check return 
          mPort = getDefaultPort(mTransport, uri.port());
-         tuple.port = mPort;
-
+         Tuple tuple(mTarget, mPort, mTransport);
          DebugLog (<< "Found immediate result: " << tuple);
          mResults.push_back(tuple);
          mType = Available;
-         //mHandler->handle(this); // !jf! should I call this? 
       }
       else if (uri.port() != 0)
       {
@@ -175,17 +170,11 @@ DnsResult::lookup(const Uri& uri)
 
          if (isNumeric) // IP address specified
          {
-            Tuple tuple;
-            tuple.transportType = mTransport;
-            tuple.transport = 0;
-			DnsUtil::inet_pton( mTarget, tuple.ipv4 ); // !jf! check return 
-
             mPort = getDefaultPort(mTransport, uri.port());
-            tuple.port = mPort;
-
+            Tuple tuple(mTarget, mPort, mTransport);
             mResults.push_back(tuple);
             mType = Available;
-            //mHandler->handle(this); // !jf! should I call this? 
+            DebugLog (<< "Numeric result so return immediately: " << tuple);
          }
          else // port specified so we know the transport
          {
@@ -595,6 +584,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
 void
 DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
 {
+#ifdef USE_IPV6
    DebugLog (<< "DnsResult::processAAAA() " << status);
    // This function assumes that the AAAA query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
@@ -635,6 +625,9 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
 #endif
    }
    lookupARecords(mPassHostFromAAAAtoA);
+#else
+	assert(0);
+#endif
 }
 
 void
@@ -654,13 +647,11 @@ DnsResult::processHost(int status, struct hostent* result)
    if (status == ARES_SUCCESS)
    {
       DebugLog (<< "DNS A lookup canonical name: " << result->h_name);
-      Tuple tuple;
-      tuple.port = mPort;
-      tuple.transportType = mTransport;
-      tuple.transport = 0;
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
-         tuple.ipv4.s_addr = *((u_int32_t*)(*pptr));
+         in_addr addr;
+         addr.s_addr = *((u_int32_t*)(*pptr));
+         Tuple tuple(addr, mPort, mTransport);
          mResults.push_back(tuple);
       }
    }
@@ -704,8 +695,13 @@ DnsResult::primeResults()
       SRV next = retrieveSRV();
       DebugLog (<< "Primed with SRV=" << next);
       
-      if ( mARecords.count(next.target) + mAAAARecords.count(next.target) )
+      if ( mARecords.count(next.target) 
+#ifdef USE_IPV6 
+			+ mAAAARecords.count(next.target)
+#endif
+			)
       {
+#ifdef USE_IPV6 
          std::list<struct in6_addr>& aaaarecs = mAAAARecords[next.target];
          for (std::list<struct in6_addr>::const_iterator i=aaaarecs.begin();
 	         i!=aaaarecs.end(); i++)
@@ -713,14 +709,11 @@ DnsResult::primeResults()
             Tuple tuple(*i,next.port,next.transport);
             mResults.push_back(tuple);
          }
+#endif
          std::list<struct in_addr>& arecs = mARecords[next.target];
          for (std::list<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
-            Tuple tuple;
-            tuple.port = next.port;
-            tuple.transportType = next.transport;
-            tuple.transport = 0;
-            tuple.ipv4 = *i;
+            Tuple tuple(*i, next.port, next.transport);
             mResults.push_back(tuple);
          }
 #ifndef WIN32
@@ -919,6 +912,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       mARecords[key].push_back(addr);
       return aptr + dlen;
    }
+#ifdef USE_IPV6
    else if (type == T_AAAA)
    {
       if (dlen != 16) // The RR is 128 bits of ipv6 address
@@ -932,6 +926,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       mAAAARecords[key].push_back(addr);
       return aptr + dlen;
    }
+#endif
    else // just skip it (we don't care :)
    {
       //DebugLog (<< "Skipping: " << key);
@@ -1049,6 +1044,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
 }
       
 
+#ifdef USE_IPV6
 // adapted from the adig.c example in ares
 const unsigned char* 
 DnsResult::parseAAAA(const unsigned char *aptr,
@@ -1094,6 +1090,7 @@ DnsResult::parseAAAA(const unsigned char *aptr,
    free(name);
 
    // Display the RR data.  Don't touch aptr. 
+
    if (type == T_AAAA)
    {
       // The RR data is 128 bits of ipv6 address in network byte
@@ -1102,11 +1099,14 @@ DnsResult::parseAAAA(const unsigned char *aptr,
       return aptr + dlen;
    }
    else
+
    {
       DebugLog (<< "Failed parse of RR");
       return NULL;
    }
 }
+#endif
+
 
 // adapted from the adig.c example in ares
 const unsigned char* 
@@ -1280,7 +1280,7 @@ DnsResult::SRV::operator<(const DnsResult::SRV& rhs) const
 std::ostream& 
 resip::operator<<(std::ostream& strm, const resip::DnsResult& result)
 {
-   strm << "target=" << result.mTarget;
+   strm << "target=" << result.mTarget << ":" << result.mPort << " (" << Tuple::toData(result.mTransport) << ")";
    return strm;
 }
 

@@ -3,6 +3,7 @@
 #include <fcntl.h>
 
 #include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #ifndef WIN32
 #include <unistd.h>
@@ -10,6 +11,8 @@
 
 using namespace resip;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::UTIL
 
 bool 
 resip::makeSocketNonBlocking(Socket fd)
@@ -103,7 +106,12 @@ resip::initNetwork()
 int 
 resip::closesocket( Socket fd )
 {
-   return close( fd );
+   int ret = ::shutdown(fd, SHUT_RDWR);
+   if (ret < 0)
+   {
+      InfoLog (<< "Failed to shutdown socket " << fd << " : " << strerror(errno));
+   }
+   return ret;
 }
 #endif
 
