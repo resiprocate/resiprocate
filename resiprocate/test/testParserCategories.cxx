@@ -54,6 +54,31 @@ main(int arc, char** argv)
    Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
 
    {
+      TR _tr("Test iterator errase in ParserCategories");
+
+      NameAddrs nameAddrs;
+
+      nameAddrs.push_back(NameAddr(Uri("sip:first@first.com")));
+      nameAddrs.push_back(NameAddr(Uri("sip:second@second.com")));
+      nameAddrs.push_back(NameAddr(Uri("sip:third@third.com")));
+      nameAddrs.push_back(NameAddr(Uri("sip:fourth@fourth.com")));
+
+      assert(nameAddrs.size() == 4);
+
+      NameAddrs::iterator i = nameAddrs.begin();
+      ++i;
+
+      nameAddrs.erase(i);
+
+      assert(nameAddrs.size() == 3);
+
+      nameAddrs.erase(nameAddrs.begin());
+      assert(nameAddrs.size() == 2);
+
+      assert(nameAddrs.begin()->uri().user() == "third");
+   }
+
+   {
       TR _tr("Test remove parameters that appear multiple times");
       Uri uri1("sip:a@b;type=1;maddr=local;type=2;maddr=remote;type=3;maddr=other");
       Uri uri2(uri1);
@@ -374,6 +399,8 @@ main(int arc, char** argv)
       checkHeaderName(Require);
       checkHeaderName(RetryAfter);
       checkHeaderName(Server);
+      checkHeaderName(SIPETag);
+      checkHeaderName(SIPIfMatch);
       checkHeaderName(Supported);
       checkHeaderName(Timestamp);
       checkHeaderName(Unsupported);
