@@ -19,7 +19,9 @@ class Dialog
       BaseUsage& findRegistration();
       BaseUsage& findPublication();
       UsageSet   findOutOfDialogs();
-
+      
+      bool shouldMerge(const SipMessage& request);
+      
    private:
       std::list<BaseUsage*> mUsages;
       DialogId mid;  

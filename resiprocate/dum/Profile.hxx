@@ -15,17 +15,23 @@ class Profile
       bool isSchemeSupported(const Data& scheme);
       bool isMethodSupported(MethodTypes method);
       bool isMimeTypeSupported(const Mime& mimeType);
+      bool isContentEncodingSupported(const Token& contentEncoding);
+      bool isLanguageSupported(const Tokens& lang);
       
       // return the list of unsupported tokens from set of requires tokens
       Tokens isSupported(Token& requires);
       Tokens getAllowedMethods();
       Mimes getSupportedMimeTypes();
+      Tokens getSupportedEncodings();
+      Tokens getSupportedLanguages();
       
       void addSupportedScheme(const Data& scheme);
       void addSupportedMethod(const MethodTypes& method);
       void addSuportedOptionTags(const Token& tag);
       void addSupportedMimeType(const Mime& mimeType);
-
+      void addSupportedEncoding(const Token& encoding);
+      void addSupportedLanguage(const Token& lang);
+      
       void setOutboundProxy( const Data& uri );
 
 
