@@ -21,6 +21,9 @@ class TransactionUser
 
       void addDomain(const Data& domain);
       void addDomain(const Data& domain, int port);      
+
+      void setMessageFilterRuleList(MessageFilterRuleList &rules);
+
    protected:
       TransactionUser();
       TransactionUser(MessageFilterRuleList &rules);
