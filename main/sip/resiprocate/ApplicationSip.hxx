@@ -6,6 +6,10 @@
 namespace Vocal2
 {
 
+// Note: Applications may need to explicitly mention this type to induce static
+// registration. Applications that mention only SipFrag may not be able to
+// determine the content instance for content-type: application/sip
+
 // map content-type application/sip to the same parser as message/sip
 // some Cisco gateways send NOTIFY with content-type application/sip
 class ApplicationSip : public SipFrag
