@@ -654,7 +654,7 @@ Data::operator+=(char c)
 char& 
 Data::operator[](size_type p)
 {
-    assert(p < mCapacity);
+    assert(p < mSize);
     own();
     return mBuf[p];
 }
@@ -778,7 +778,6 @@ const char*
 Data::c_str() const
 {
    own();
-   mBuf[mSize] = 0;
    return mBuf;
 }
 

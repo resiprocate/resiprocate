@@ -33,7 +33,7 @@ AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 dnl AC_DISABLE_STATIC
 
-AC_REVISION($Id: configure.ac,v 1.17.2.1 2003/11/08 01:26:21 alan Exp $)
+AC_REVISION($Id: configure.ac,v 1.17.2.2 2003/11/25 00:40:46 alan Exp $)
 
 
 AM_MAINTAINER_MODE
@@ -105,6 +105,7 @@ if test $ac_cv_type_socklen_t = no; then
         )
 fi
 
+RESIP_OBJ_LOCAL_DATA
 RESIP_LIB_OPENSSL
 RESIP_LIB_ARES
 RESIP_PROG_DISTCC
