@@ -194,11 +194,11 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, const Da
 
          if (msg->header(h_Vias).front().sentHost().empty())
          {
-#           if 1 // select if we use an IP address of FQDN in via 
+#if 1 // select if we use an IP address of FQDN in via 
              msg->header(h_Vias).front().sentHost() = destination.transport->hostName(); // use hostname 
-#           else
+#else
              msg->header(h_Vias).front().sentHost() = destination.transport->interfaceName(); // use IP address 
-#           endif
+#endif
          }
 
          const Via &v(msg->header(h_Vias).front());
