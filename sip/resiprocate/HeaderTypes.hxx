@@ -32,6 +32,7 @@ class Headers
          Subscription_State,
 
          Refer_To,
+         Referred_By,
 
          UNKNOWN,
          MAX_HEADERS
@@ -249,6 +250,13 @@ class Header<Headers::Refer_To>
       typedef NameAddrOrAddrSpec Type;
 };
 extern Header<Headers::Refer_To> h_Refer_To;
+
+class Header<Headers::Referred_By>
+{
+   public:
+      typedef NameAddrOrAddrSpec Type;
+};
+extern Header<Headers::Referred_By> h_Referred_By;
 
 //====================
 //String:
