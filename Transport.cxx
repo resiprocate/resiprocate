@@ -214,21 +214,25 @@ bool Transport::Tuple::operator<(const Transport::Tuple& rhs) const
 std::ostream&
 Vocal2::operator<<(ostream& ostrm, const Transport::Tuple& tuple)
 {
-   char str[128];
+	ostrm << "[ " ;
 
-   ostrm << "[ " 
-#ifndef WIN32 //  !cj!
-	   << inet_ntop(AF_INET, &tuple.ipv4.s_addr, str, sizeof(str))
+#if defined(WIN32) 
+	ostrm   << inet_ntoa(tuple.ipv4);
+	
+#else	
+	char str[128];
+	ostrm << inet_ntop(AF_INET, &tuple.ipv4.s_addr, str, sizeof(str));
 #endif	
-         << " , " 
-         << tuple.port
-         << " , "
-         << Transport::toData(tuple.transportType) 
-         << " , "
-         << tuple.transport 
-         << " ]";
-
-   return ostrm;
+	
+	ostrm  << " , " 
+	       << tuple.port
+	       << " , "
+	       << Transport::toData(tuple.transportType) 
+	       << " , "
+	       << tuple.transport 
+	       << " ]";
+	
+	return ostrm;
 }
 
 
