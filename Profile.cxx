@@ -18,6 +18,9 @@ Profile::Profile(Profile *baseProfile) :
       mHasDefaultSubscriptionExpires = true;
       mDefaultSubscriptionExpires = 3600; // 1 hour
 
+      mHasDefaultPublicationExpires = true;
+      mDefaultPublicationExpires = 3600; // 1 hour
+
       mHasDefaultSessionExpires = true;
       mDefaultSessionExpires = 1800;      // 30 minutes
 
@@ -44,6 +47,7 @@ Profile::Profile(Profile *baseProfile) :
    {
       mHasDefaultRegistrationExpires = false;
       mHasDefaultSubscriptionExpires = false;
+      mHasDefaultPublicationExpires = false;
       mHasDefaultSessionExpires = false;
       mHasDefaultStaleCallTime = false;
       mHasOutboundProxy = false;
@@ -93,6 +97,24 @@ Profile::getDefaultSubscriptionTime() const
        return mBaseProfile->getDefaultSubscriptionTime();
    }
    return mDefaultSubscriptionExpires;
+}
+
+void
+Profile::setDefaultPublicationTime(int secs)
+{
+   mDefaultPublicationExpires = secs;
+   mHasDefaultPublicationExpires = true;
+}
+
+int 
+Profile::getDefaultPublicationTime() const
+{
+   // Fall through seting (if required)
+   if(!mHasDefaultPublicationExpires && mBaseProfile)
+   {
+       return mBaseProfile->getDefaultPublicationTime();
+   }
+   return mDefaultPublicationExpires;
 }
 
 void
