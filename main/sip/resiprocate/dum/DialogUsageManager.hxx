@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <set>
+#include <map>
 
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/Headers.hxx"
@@ -197,11 +198,11 @@ class DialogUsageManager
       ClientRegistrationHandler* mClientRegistrationHandler;
       ServerRegistrationHandler* mServerRegistrationHandler;      
 
-      std::vector<ClientSubscriptionHandler*> mClientSubscriptionHandler;
-      std::vector<ServerSubscriptionHandler*> mServerSubscriptionHandler;
-      std::vector<ClientPublicationHandler*> mClientPublicationHandler;
-      std::vector<ServerPublicationHandler*> mServerPublicationHandler;
-      OutOfDialogHandler* mOutOfDialogHandler;
+      std::map<Data, ClientSubscriptionHandler*> mClientSubscriptionHandler;
+      std::map<Data, ServerSubscriptionHandler*> mServerSubscriptionHandler;
+      std::map<Data, ClientPublicationHandler*> mClientPublicationHandler;
+      std::map<Data, ServerPublicationHandler*> mServerPublicationHandler;
+      std::map<MethodTypes, OutOfDialogHandler*> mOutOfDialogHandler;
 
       SipStack& mStack;
 };
