@@ -270,7 +270,9 @@ ClientRegistration::dispatch(const SipMessage& msg)
 void
 ClientRegistration::dispatch(const DumTimeout& timer)
 {
-   if (timer.seq() == mTimerSeq)
+   // If you happen to be Adding/Updating when the timer goes off, you should just ignore
+   // it since a new timer will get added when the 2xx is received. 
+   if (timer.seq() == mTimerSeq && mState == Registered)
    {
       if (!mMyContacts.empty())
       {
