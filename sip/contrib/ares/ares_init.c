@@ -373,30 +373,40 @@ static int init_by_defaults(ares_channel channel)
           num++;
           pIPAddr = pIPAddr ->Next;
         }
-        channel->servers = malloc( (num) * sizeof(struct server_state));
-		if (!channel->servers)
-		{
-	        GlobalFree( FixedInfo );
- 		    FreeLibrary(hLib);
-			return ARES_ENOMEM;
-		}
+        if(num>0)
+        {
+           channel->servers = malloc( (num) * sizeof(struct server_state));
+		   if (!channel->servers)
+		   {
+	           GlobalFree( FixedInfo );
+ 		       FreeLibrary(hLib);
+			   return ARES_ENOMEM;
+		   }
 
-		channel->nservers = 0;
-        pIPAddr = &FixedInfo->DnsServerList;   
-        while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
-		{
-          // printf( "ARES: %s\n", pIPAddr ->IpAddress.String );
-	      channel->servers[ channel->nservers++ ].addr.s_addr = inet_addr(pIPAddr ->IpAddress.String);
-          pIPAddr = pIPAddr ->Next;
+		   channel->nservers = 0;
+           pIPAddr = &FixedInfo->DnsServerList;   
+           while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
+		   {
+             // printf( "ARES: %s\n", pIPAddr ->IpAddress.String );
+	         channel->servers[ channel->nservers++ ].addr.s_addr = inet_addr(pIPAddr ->IpAddress.String);
+             pIPAddr = pIPAddr ->Next;
+           }
+           //printf("ARES: got all %d nameservers\n",num);
         }
-        //printf("ARES: got all %d nameservers\n",num);
+        else
+        {
+  		   /* If no specified servers, try a local named. */
+		   channel->servers = malloc(sizeof(struct server_state));
+		   if (!channel->servers)
+              return ARES_ENOMEM;
+		   channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+		   channel->nservers = 1;
+        }
 
         GlobalFree( FixedInfo );
 	    FreeLibrary(hLib);
-
 	  }
 #else
-
 		/* If nobody specified servers, try a local named. */
 		channel->servers = malloc(sizeof(struct server_state));
 		if (!channel->servers)
