@@ -5,7 +5,6 @@
 #include "sip2/sipstack/ConnectionMap.hxx"
 #include "sip2/util/Fifo.hxx"
 #include "sip2/sipstack/Preparse.hxx"
-#include "sip2/sipstack/Helper.hxx"
 
 
 using namespace Vocal2;
