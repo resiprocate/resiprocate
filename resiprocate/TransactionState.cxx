@@ -20,8 +20,57 @@ Vocal2::TransactionState::process(SipStack& stack)
    
    if (sip)
    {
-      if (stack.mTransactionMap.find(message->getTransactionId()))
+      Data& tid = message->getTransactionId();
+      TransactionState* state = stack.mTransactionMap.find(tid);
+      if (state)
       {
+      }
+      else // new transaction
+      {
+         if (sip->isRequest())
+         {
+            // create a new state object and insert in the TransactionMap
+
+            if (sip->isExternal())
+            {
+               if (sip[RequestLine].getMethod() == INVITE)
+               {
+                  TransactionState* state = new TransactionState(ServerInvite, Proceeding);
+                  stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100)
+                  stack.mTransactionMap.add(tid,state);
+               }
+               else 
+               {
+                  TransactionState* state = new TransactionState(ServerNonInvite,Trying);
+                  stack.mTransactionMap.add(tid,state);
+               }
+               stack.mTUFifo.add(sip);
+            }
+            else
+            {
+               if (sip[RequestLine].getMethod() == INVITE)
+               {
+                  TransactionState* state = new TransactionState(ClientInvite, Calling);
+                  stack.mTimers.add(Timer::TimerB, tid, 64*Timer::T1 );
+                  stack.mTransactionMap.add(tid,state);
+               }
+               else 
+               {
+                  TransactionState* state = new TransactionState(ClientNonInvite, Trying);
+                  stack.mTimers.add(Timer::TimerF, tid, 64*Timer::T1 );
+                  stack.mTransactionMap.add(tid,state);
+               }
+               stack.mTransportSelector.send(sip);
+            }
+         }
+         else if (sip->isResponse())
+         {
+            
+         }
+         else
+         {
+            assert(0);
+         }
       }
    }
    
