@@ -27,12 +27,9 @@ void
 TransactionState::process(TransactionController& controller)
 {
    Message* message = controller.mStateMacFifo.getNext();
-   if (!message)
-   {
-      CritLog(<<"no messages to work on, internal error.");
-      assert(message);
-      return;
-   }
+
+   assert(message);
+
 
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
 
@@ -74,16 +71,7 @@ TransactionState::process(TransactionController& controller)
             break;
          case ClientInvite:
             // ACK from TU will be Stateless
-            if (!
-                (!(state->isFromTU(sip) &&
-                  sip->isRequest() &&
-                  sip->header(h_RequestLine).getMethod() == ACK)))
-            {
-               CritLog(<<"internal error state machine out of sync");
-               assert(false);
-               delete sip;
-               return;
-            }
+            assert (!(state->isFromTU(sip) &&  sip->isRequest() && sip->header(h_RequestLine).getMethod() == ACK));
             state->processClientInvite(message);
             break;
          case ServerNonInvite:
@@ -228,12 +216,7 @@ TransactionState::makeCancelTransaction(TransactionState* tr, Machine machine)
 
 TransactionState::~TransactionState()
 {
-   if ( mState == Bogus )
-   {
-      CritLog(<<"dtor state is bogus.");
-      assert(mState != Bogus);
-      return;
-   }
+   assert(mState != Bogus);
 
    if (mDnsResult)
    {
@@ -312,12 +295,8 @@ TransactionState::processClientNonInvite(  Message* msg )
 { 
    DebugLog (<< "TransactionState::processClientNonInvite: " << msg->brief());
 
-   if (isInvite(msg))
-   {
-      CritLog(<<"internal error processClientNonInvite fed Invite");
-      assert(!isInvite(msg));
-      return;
-   }
+   assert(!isInvite(msg));
+
    if (isRequest(msg) && isFromTU(msg))
    {
       //DebugLog (<< "received new non-invite request");
@@ -562,12 +541,8 @@ TransactionState::processClientInvite(  Message* msg )
                   delete invite;
                   
                   // want to use the same transport as was selected for Invite
-                  if (mTarget.getType() == UNKNOWN_TRANSPORT)
-                  {
-                     CritLog(<<"internal transport target error");
-                     assert(mTarget.getType() != UNKNOWN_TRANSPORT);
-                     return;
-                  }
+                  assert(mTarget.getType() != UNKNOWN_TRANSPORT);
+
                   sendToWire(mMsgToRetransmit);
                   sendToTU(msg); // don't delete msg
                   terminateClientTransaction(mId);
@@ -596,12 +571,7 @@ TransactionState::processClientInvite(  Message* msg )
                      // are received while in the "Completed" state MUST
                      // cause the ACK to be re-passed to the transport
                      // layer for retransmission.
-                     if (mMsgToRetransmit->header(h_RequestLine).getMethod() != ACK)
-                     {
-                        CritLog(<<"internal error, expecting retrans to be ACK");
-                        assert (mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK);
-                        return;
-                     }
+                     assert (mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK);
                      sendToWire(mMsgToRetransmit, true);
                   }
                   else
@@ -1371,12 +1341,8 @@ TransactionState::sendToWire(Message* msg, bool resend)
       else
       {
          mDnsResult = mController.mTransportSelector.dnsResolve(sip, this);
-         if (!mDnsResult )
-         {
-            CritLog(<<"internal DNS resolution error");
-            assert(mDnsResult);
-            return;
-         }
+         assert(mDnsResult); // !ah! is this really an assertion or an error?
+
          // do it now, if there is an immediate result
          if (mDnsResult->available() == DnsResult::Available)
          {
