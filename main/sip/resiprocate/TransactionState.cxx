@@ -443,7 +443,7 @@ TransactionState::processClientInvite(  Message* msg )
             }
             if (!mCancelStateMachine)
             {
-               if (mTarget.transportType == UNKNOWN)
+               if (mTarget.transportType == UNKNOWN_TRANSPORT)
                {
                   InfoLog (<< "Cancelling INVITE before it is sent " << *this);
 
@@ -533,7 +533,7 @@ TransactionState::processClientInvite(  Message* msg )
                   delete invite;
                   
                   // want to use the same transport as was selected for Invite
-                  assert(mTarget.transportType != UNKNOWN);
+                  assert(mTarget.transportType != UNKNOWN_TRANSPORT);
                   sendToWire(mMsgToRetransmit);
                   sendToTU(msg); // don't delete msg
                   terminateClientTransaction(mId);
@@ -1172,7 +1172,7 @@ TransactionState::handle(DnsResult* result)
    // got a DNS response, so send the current message
    DebugLog (<< *this << " got DNS result: " << *result);
 
-   if (mTarget.transportType == UNKNOWN) 
+   if (mTarget.transportType == UNKNOWN_TRANSPORT) 
    {
       assert(mDnsResult);
       switch (mDnsResult->available())
@@ -1335,7 +1335,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
    }
    else // reuse the last dns tuple
    {
-      assert(mTarget.transportType != UNKNOWN);
+      assert(mTarget.transportType != UNKNOWN_TRANSPORT);
       if (resend)
       {
          mController.mTransportSelector.retransmit(sip, mTarget);
