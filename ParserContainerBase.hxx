@@ -14,7 +14,8 @@ class HeaderFieldValueList;
 class ParserContainerBase
 {
    public:
-      virtual ParserContainerBase* clone(HeaderFieldValueList*) const = 0;
+      virtual ~ParserContainerBase() {}
+      virtual ParserContainerBase* clone() const = 0;
       virtual std::ostream& encode(std::ostream& str) const = 0;
 };
  

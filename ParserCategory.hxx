@@ -32,6 +32,7 @@ class ParserCategory
       virtual ParserCategory* clone() const = 0;
 
       virtual std::ostream& encode(std::ostream& str) const = 0;
+      std::ostream& encodeFromHeaderFieldValue(std::ostream& str) const;
 
       bool exists(const ParamBase& paramType) const
       {
