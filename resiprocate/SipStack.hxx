@@ -58,6 +58,10 @@ class SipStack
       // is not threadsafe
       static Data getHostname();
 
+	  // get one of the IP address for this host (calls through to gethostbyname) and
+      // is not threadsafe
+      static Data getHostAddress();
+
       /// interface for the TU to send a message. makes a copy of the
       /// SipMessage. Caller is responsible for deleting the memory and may do
       /// so as soon as it returns. Loose Routing processing as per RFC3261 must
