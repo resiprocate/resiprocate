@@ -119,16 +119,10 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
       case UAC_Answered:
       {
          transition(Connected);
-
-         SipMessage ack;
-         mDialog.makeRequest(ack, ACK);
-         InviteSession::setSdp(ack, answer);
-
+         sendAck(&answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
-
-         mLastSessionModification = ack;
-         mDialog.send(ack);
+         // mLastSessionModification = ack;  // !slg! is this needed?
          break;
       }
 
@@ -165,10 +159,9 @@ ClientInviteSession::end()
       case UAC_SentAnswer:
       case UAC_Cancelled: // !jf! possibly incorrect to always BYE in UAC_Cancelled
       {
+         sendBye();
          transition(Terminated);
-         SipMessage bye;
-         mDialog.makeRequest(bye, BYE);
-         mDialog.send(bye);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
          break;
       }
 
@@ -368,10 +361,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
   catch (BaseException& e)
   {
      WarningLog (<< "Caught: " << e);
-     end();
-     InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-     handler->onTerminated(getSessionHandle(),
-                           InviteSessionHandler::GeneralFailure);
+     mDum.mInviteSessionHandler->onFailure(getHandle(), msg);
+     end(); 
   }
 }
 
@@ -388,8 +379,8 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
             mDialog.makeResponse(response, mInvite, 487);
             sendSipFrag(response);
          }
-         InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled);
+         transition(Terminated);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled);
          mDum.destroy(this);
       }
    }
@@ -397,15 +388,14 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
    {
       if(timer.seq() == mStaleCallTimerSeq)
       {
-         InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-         handler->onStaleCallTimeout(getHandle());
+         mDum.mInviteSessionHandler->onStaleCallTimeout(getHandle());
          end();
       }
    }
    else if (timer.type() == DumTimeout::WaitingForForked2xx)
    {
-      InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-      handler->onForkDestroyed(getHandle());
+      transition(Terminated);
+      mDum.mInviteSessionHandler->onForkDestroyed(getHandle());
       mDum.destroy(this);
    }
    else
@@ -435,7 +425,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    // must match
    if (msg.header(h_CSeq).sequence() != mInvite.header(h_CSeq).sequence())
    {
-      InfoLog (<< "CSeq doesn't match invite" << msg.brief());
+      InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
       handler->onFailure(getHandle(), msg);
       end();
    }
@@ -443,7 +433,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    {
       if (!msg.exists(h_RSeq))
       {
-         InfoLog (<< "No RSeq in 1xx " << msg.brief());
+         InfoLog (<< "Failure:  No RSeq in 1xx: " << msg.brief());
          handler->onFailure(getHandle(), msg);
          end();
       }
@@ -532,7 +522,7 @@ ClientInviteSession::sendPrack(const SdpContents& sdp)
    InviteSession::setSdp(prack, sdp);
 
    //  Remember last session modification.
-   mLastSessionModification = prack;
+   // mLastSessionModification = prack; // !slg! is this needed?
 
    mDialog.send(prack);
 }
@@ -572,14 +562,6 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
    InviteSession::Event event = toEvent(msg, sdp.get());
    switch (event)
    {
-      case OnRedirect:
-         //handleRedirect(msg);  // !slg! Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
-         transition(Terminated);
-         handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-         mDum.destroy(this);
-         break;
-
       case On1xx:
          transition(UAC_Early);
          handler->onNewSession(getHandle(), None, msg);
@@ -620,11 +602,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On2xxAnswer:
          transition(Connected);
-         {
-            SipMessage ack;
-            mDialog.makeRequest(ack, ACK);
-            mDialog.send(ack);
-         }
+         sendAck();
          handleFinalResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -635,23 +613,19 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On2xx:
       {
+         sendAck();
+         sendBye();
+         InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
-
-         SipMessage ack;
-         mDialog.makeRequest(ack, ACK);
-         mDialog.send(ack);
-
-         SipMessage bye;
-         mDialog.makeRequest(bye, BYE);
-         mDialog.send(bye);
-
          handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          break;
       }
 
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure      
       case OnInviteFailure:
       case OnGeneralFailure:
+         InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
@@ -711,11 +685,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On2xxAnswer:
          transition(Connected);
-         {
-            SipMessage ack;
-            mDialog.makeRequest(ack, ACK);
-            mDialog.send(ack);
-         }
+         sendAck();
          handleFinalResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -725,31 +695,20 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On2xx:
       {
-         transition(Terminated);
-
-         SipMessage ack;
-         mDialog.makeRequest(ack, ACK);
-         mDialog.send(ack);
-
-         SipMessage bye;
-         mDialog.makeRequest(bye, BYE);
-         mDialog.send(bye);
-
-         handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
-         break;
-      }
-
-      case OnRedirect:
-         //handleRedirect(msg);  // !slg! Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
+         sendAck();
+         sendBye();
+         InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-         mDum.destroy(this);
          break;
+      }
 
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure      
       case OnInviteFailure:
       case OnGeneralFailure:
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
@@ -790,10 +749,9 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
 
       case OnGeneralFailure:
       {
-         SipMessage bye;
-         mDialog.makeRequest(bye, BYE);
-         mDialog.send(bye);
-
+         sendBye();
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
@@ -825,30 +783,19 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
 
       case On2xx:
       case On2xxAnswer:
-         transition(Terminated);
-         handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
-         {
-            SipMessage ack;
-            mDialog.makeRequest(ack, ACK);
-            mDialog.send(ack);
-
-            SipMessage bye;
-            mDialog.makeRequest(bye, BYE);
-            mDialog.send(bye);
-         }
-         break;
-
-      case OnRedirect:
-         //handleRedirect(msg);  // !slg! Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
+         sendAck();
+         sendBye();
+         InfoLog (<< "Failure:  no answer sent: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-         mDum.destroy(this);
          break;
 
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure      
       case OnInviteFailure:
       case OnGeneralFailure:
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
@@ -877,11 +824,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
 
       case On2xx:
          transition(Connected);
-         {
-            SipMessage ack;
-            mDialog.makeRequest(ack, ACK);
-            mDialog.send(ack);
-         }
+         sendAck();
          handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
          break;
@@ -890,18 +833,12 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case On2xxOffer:
       case On1xxAnswer:
       case On1xxOffer:
+         sendAck();
+         sendBye();
+         InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
-         {
-            SipMessage ack;
-            mDialog.makeRequest(ack, ACK);
-            mDialog.send(ack);
-
-            SipMessage bye;
-            mDialog.makeRequest(bye, BYE);
-            mDialog.send(bye);
-         }
          handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          break;
 
       case On1xx:
@@ -909,16 +846,11 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
          sendPrackIfNeeded(msg);
          break;
 
-      case OnRedirect:
-         //handleRedirect(msg);  // !slg! Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
-         transition(Terminated);
-         handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-         mDum.destroy(this);
-         break;
-
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
       case OnInviteFailure:
       case OnGeneralFailure:
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
@@ -958,9 +890,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On2xx:
          transition(SentUpdate);
          {
-            SipMessage ack;
-            mDialog.makeRequest(ack, ACK);
-            mDialog.send(ack);
+            sendAck();
 
             SipMessage update;
             mDialog.makeRequest(update, UPDATE);
@@ -975,18 +905,12 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On2xxOffer:
       case On1xxAnswer:
       case On1xxOffer:
+         sendAck();
+         sendBye();
+         InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
-         {
-            SipMessage ack;
-            mDialog.makeRequest(ack, ACK);
-            mDialog.send(ack);
-
-            SipMessage bye;
-            mDialog.makeRequest(bye, BYE);
-            mDialog.send(bye);
-         }
          handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          break;
 
       case On1xx:
@@ -994,16 +918,11 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          sendPrackIfNeeded(msg);
          break;
 
-      case OnRedirect:
-         //handleRedirect(msg);  // !slg! Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
-         transition(Terminated);
-         handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-         mDum.destroy(this);
-         break;
-
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
       case OnInviteFailure:
       case OnGeneralFailure:
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
@@ -1035,29 +954,19 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 
       case On2xx:
          transition(Connected);
-         {
-            SipMessage ack;
-            mDialog.makeRequest(ack, ACK);
-            mDialog.send(ack);
-         }
+         sendAck();
          handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
          break;
 
       case On2xxAnswer:
       case On2xxOffer:
+         sendAck();
+         sendBye();
+         InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
-         {
-            SipMessage ack;
-            mDialog.makeRequest(ack, ACK);
-            mDialog.send(ack);
-
-            SipMessage bye;
-            mDialog.makeRequest(bye, BYE);
-            mDialog.send(bye);
-         }
          handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          break;
 
       case OnUpdate:
@@ -1065,16 +974,11 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
 
-      case OnRedirect:
-         //handleRedirect(msg);  // !slg! Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
-         transition(Terminated);
-         handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-         mDum.destroy(this);
-         break;
-
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
       case OnInviteFailure:
       case OnGeneralFailure:
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
@@ -1119,6 +1023,7 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
       case OnCancelFailure:
       case On487Invite:
       case OnRedirect:
+         transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled, &msg);
          mDum.destroy(this);
          break;
@@ -1128,13 +1033,11 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
       case On2xxAnswer:
       {
          // this is the 2xx crossing the CANCEL case
-         SipMessage ack;
-         mDialog.makeRequest(ack, ACK);
-         mDialog.send(ack);
-
+         sendAck();
+         sendBye();
+         transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled, &msg);
          mCancelledTimerSeq++;
-         end();
          break;
       }
 
