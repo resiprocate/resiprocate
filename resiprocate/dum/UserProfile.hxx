@@ -59,8 +59,13 @@ class UserProfile : public Profile
       
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
+
+      friend std::ostream& operator<<(std::ostream&, const UserProfile& profile);
 };
   
+std::ostream& 
+operator<<(std::ostream&, const UserProfile& profile);
+
 std::ostream& 
 operator<<(std::ostream&, const UserProfile::DigestCredential& cred);
  
