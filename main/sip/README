@@ -1,17 +1,34 @@
-To build this project (not on Windows - ask Fluffy about Windows)
+The reSIProcate SIP Stack
+=========================
 
-You might need to run autoconf, but probably not
+    Please see the file INSTALL for generic install instructions.
+This file contains additional information about configuring the
+reSIProcate build.  For information on compiling reSIProcate for the
+Microsoft Windows platform, please see the file README.windows.
 
-To get a list of the accepted options, 
-% ./configure --help
+External Dependencies
+=====================
 
-For shared libraries and use of distcc (for compiling across a cluster)
-% ./configure --with-distcc --with-shared-libs
+    The reSIProcate stack can be configured to use the ares
+asynchronous DNS resolver which provides advanced DNS query features
+and scalability.  The ares resolver is packaged in the contrib/ares
+directory and can be installed using a standard `./configure; make;
+make install' process prior to building reSIProcate.
 
-The default is to build static libs with no use of distcc
+Special ./configure Options
+===========================
 
+    Most of the standard GNU configuration options are provided by
+the configure program.  `cd' to the directory containing the package's
+source code and type `./configure --help' for a complete list.
+In addition, you may wish to add:
 
-The default is to build with full debugging turned on. 
-To build optimized, with optimization level 2, -O2: 
+  1. --with-ares[=DIR] to instruct the build to use the ares
+     asynchronous resolver as described above.  This is recommended.
 
-% make CODE_OPTIMIZE=2
+  2. --with-openssl[=DIR] to instruct the build to include support
+     for SSL.  This activates TLS support in reSIProcate.
+
+  3. --enable-distcc[=DIR] to instruct the build to compile files
+     in parallel with the distcc program.
+     
