@@ -29,11 +29,15 @@ Data Log::_hostname;
 	pid_t Log::_pid=0;
 #endif
 
-pthread_key_t Log::_levelKey;
+
 volatile short Log::touchCount = 0;
 
+#ifndef WIN32
+pthread_key_t Log::_levelKey;
 map<pthread_t, std::pair<Log::ThreadSetting, bool> > Log::_threadToLevel;
 map<int, std::set<pthread_t> > Log::_serviceToThreads;
+#endif
+
 map<int, Log::Level> Log::_serviceToLevel;
 
 const char
@@ -63,7 +67,10 @@ Log::initialize(Type type, Level level, const Data& appName)
 #else
    _pid = getpid();
 #endif
+
+#ifndef WIN32
    pthread_key_create(&Log::_levelKey, freeThreadSetting);
+#endif
 }
 
 void
@@ -175,6 +182,10 @@ Log::Level
 Log::getServiceLevel(int service)
 {
    Lock lock(_mutex);
+#ifdef WIN32
+	assert(0);
+	return BOGUS;
+#else
    map<int, Level>::iterator res = Log::_serviceToLevel.find(service);
    if(res == Log::_serviceToLevel.end())
    {
@@ -184,12 +195,16 @@ Log::getServiceLevel(int service)
       return ERR;
    }
    return res->second;
+#endif
 }
    
 const Log::ThreadSetting*
 Log::getThreadSetting()
 {
-   ThreadSetting* setting = static_cast<ThreadSetting*>(pthread_getspecific(Log::_levelKey));
+#ifdef WIN32
+	return 0;
+#else
+	ThreadSetting* setting = static_cast<ThreadSetting*>(pthread_getspecific(Log::_levelKey));
    if (setting == 0)
    {
       return 0;
@@ -211,6 +226,7 @@ Log::getThreadSetting()
       }
    }
    return setting;
+#endif
 }
 
 void 
@@ -228,6 +244,9 @@ Log::setThreadSetting(int serv, Log::Level l)
 void 
 Log::setThreadSetting(ThreadSetting info)
 {
+#ifdef WIN32
+	assert(0);
+#else
    //cerr << "Log::setThreadSetting: " << "service: " << info.service << " level " << toString(info.level) << " for " << pthread_self() << endl;
    pthread_t thread = pthread_self();
    pthread_setspecific(_levelKey, (void *) new ThreadSetting(info));
@@ -243,6 +262,7 @@ Log::setThreadSetting(ThreadSetting info)
    Log::_threadToLevel[thread].first = info;
    Log::_threadToLevel[thread].second = false;
    Log::_serviceToThreads[info.service].insert(thread);
+#endif
 }
    
 void 
@@ -250,6 +270,9 @@ Log::setServiceLevel(int service, Level l)
 {
    Lock lock(_mutex);
    Log::_serviceToLevel[service] = l;
+#ifdef WIN32
+	assert(0);
+#else
    set<pthread_t>& threads = Log::_serviceToThreads[service];
    for (set<pthread_t>::iterator i = threads.begin(); i != threads.end(); i++)
    {
@@ -257,6 +280,7 @@ Log::setServiceLevel(int service, Level l)
       Log::_threadToLevel[*i].second = true;
    }
    Log::touchCount += threads.size();
+#endif
 //   cerr << "**Log::setServiceLevel:touchCount: " << Log::touchCount << "**" << endl;
 }
 
