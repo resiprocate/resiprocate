@@ -65,13 +65,13 @@ ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const r
 int
 ResponseContext::getPriority(const resip::SipMessage& msg)
 {
-    int responseCode = msg.header(h_StatusLine).statusCode();
-    int p = 0;  // "p" is the relative priority of the response
+   int responseCode = msg.header(h_StatusLine).statusCode();
+   int p = 0;  // "p" is the relative priority of the response
 
 	assert(responseCode >= 300 && responseCode <= 599);
 	if (responseCode <= 399)  // 3xx response
 	{ 
-		return (5);  // response priority is 5
+		return 5;  // response priority is 5
 	}
 	if (responseCode >= 500)
 	{
@@ -82,113 +82,101 @@ ResponseContext::getPriority(const resip::SipMessage& msg)
 			case 580:	// below (with the 4xx responses)
 				break;
 			default:
-				return (42); // response priority of other 5xx is 42
+				return 42; // response priority of other 5xx is 42
 		}
 	}
 
 	switch(responseCode)
 	{
 		// Easy to Repair Responses: 412, 484, 422, 423, 407, 401, 300..399, 402
-		
 		case 412:		// Publish ETag was stale
-			p = 1;
-			break;
+           return 1;
 		case 484:		// overlap dialing
-			p = 2;
-			break;
+           return 2;
 		case 422:		// Session-Timer duration too long
 		case 423:		// Expires too short
-			p = 3;
-			break;
+           return 3;
 		case 407:		// Proxy-Auth
 		case 401:		// UA Digest challenge
-			p = 4;
-			break;
+           return 4;
 			
 		// 3xx responses have p = 5
-		
 		case 402:		// Payment required
-			p = 6;
-			break;
-		
-		// Responses used for negotiation: 493, 429, 420, 406, 415, 488
+           return 6;
 
+		// Responses used for negotiation: 493, 429, 420, 406, 415, 488
 		case 493:		// Undecipherable, try again unencrypted 
-			p = 10;
-			break;
+           return 10;
+
 		case 420:		// Required Extension not supported, try again without
-			p = 12;
-			break;
+           return 12;
+
 		case 406:		// Not Acceptable
 		case 415:		// Unsupported Media Type
 		case 488:		// Not Acceptable Here
-			p = 13;
-			break;
+           return 13;
 			
 		// Possibly useful for negotiation, but less likely: 421, 416, 417, 494, 580, 485, 405, 501, 413, 414
 		
 		case 416:		// Unsupported scheme
 		case 417:		// Unknown Resource-Priority
-			p = 20;
-			break;
+           return 20;
+
 		case 405:		// Method not allowed (both used for negotiating REFER, PUBLISH, etc..
 		case 501:		// Usually used when the method is not OK
-			p = 21;
-			break;
+           return 21;
+
 		case 580:		// Preconditions failure
-			p = 22;
-			break;
+           return 22;
+
 		case 485:		// Ambiguous userpart.  A bit better than 404?
-			p = 23;
-			break;
+           return 23;
+
 		case 428:		// Use Identity header
 		case 429:		// Provide Referrer Identity 
 		case 494:		// Use the sec-agree mechanism
-			p = 24;
-			break;
+           return 24;
+
 		case 413:		// Request too big
 		case 414:		// URI too big
-			p = 25;
-			break;
+           return 25;
+
 		case 421:		// An extension required by the server was not in the Supported header
-			p = 26;
-			break;
+           return 26;
 		
 		// The request isn't repairable, but at least we can try to provide some 
 		// useful information: 486, 480, 410, 404, 403, 487
 		
 		case 486:		// Busy Here
-			p = 30;
-			break;
+           return 30;
+
 		case 480:		// Temporarily unavailable
-			p = 31;
-			break;
+           return 31;
+
 		case 410:		// Gone
-			p = 32;
-			break;
+           return 32;
+
 		case 436:		// Bad Identity-Info 
 		case 437:		// Unsupported Certificate
-			p = 33;
-			break;
+           return 33;
+
 		case 403:		// Forbidden
-			p = 34;
-			break;
+           return 34;
+
 		case 404:		// Not Found
-			p = 35;
-			break;
+           return 35;
+
 		case 487:		// Some branches were cancelled, if the UAC sent a CANCEL this is good news
-			p = 36;
-			break;
+           return 36;
 
 		// We are hosed: 503, 483, 482, 481, other 5xx, 400, 491, 408  // totally useless
 
 		case 503:	// bad news, but maybe we got a 
-			p = 40;
-			break;
+           return 40;
+
 		case 483:	// loops, encountered
 		case 482:
-			p = 41;
-			break;
+           return 41;
 			
 		// other 5xx   p = 42
 
@@ -199,13 +187,12 @@ ResponseContext::getPriority(const resip::SipMessage& msg)
 		// default:
 		
 		case 408:	// very, very bad  (even worse than the remaining 4xx responses)
-			p = 49;
-			break;
+           return 49;
 		
 		default:
-			p = 43;
+           return 43;
 	}
-   return (p);
+    return p;
 }
 
 

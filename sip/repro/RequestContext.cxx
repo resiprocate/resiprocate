@@ -3,19 +3,26 @@
 #endif
 
 #include "resiprocate/SipMessage.hxx"
-#include "RequestContext.hxx"
+#include "repro/RequestContext.hxx"
 
 using namespace resip;
 using namespace repro;
 using namespace std;
 
-RequestContext::RequestContext(std::auto_ptr<resip::SipMessage> sipMsg, 
+RequestContext::RequestContext(Proxy& proxy, 
+                               std::auto_ptr<resip::SipMessage> sipMsg, 
                                RequestProcessorChain& chain) : 
    mOriginalRequest(sipMsg),
    mRequestProcessorChain(chain),
-   mTransactionCount(1)
+   mTransactionCount(1),
+   mProxy(proxy)
 {
 }
+
+RequestContext::~RequestContext()
+{
+}
+
 
 void
 RequestContext::process(resip::TransactionTerminated& msg)
