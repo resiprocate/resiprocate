@@ -1,11 +1,11 @@
 #if !defined(RESIP_LOGGER_HXX)
 #define RESIP_LOGGER_HXX 
 
-#include <fstream>
+#include <iosfwd>
 
-#include "resiprocate/os/Socket.hxx"
+//#include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Log.hxx"
-#include "resiprocate/os/SysLogStream.hxx"
+//#include "resiprocate/os/SysLogStream.hxx"
 #include "resiprocate/os/Lock.hxx"
 
 /**
@@ -104,48 +104,8 @@ namespace resip
 class GenericLogImpl :  public Log 
 {
    public:
-      static std::ostream& Instance()
-      {
-         switch (Log::_type)
-         {
-            case Log::SYSLOG:
-               if (mLogger == 0)
-               {
-                  std::cerr << "Creating a syslog stream" << std::endl;
-                  mLogger = new SysLogStream;
-               }
-               return *mLogger;
-               
-            case Log::CERR:
-               return std::cerr;
-               
-            case Log::COUT:
-               return std::cout;
-               
-            case Log::FILE:
-               if (mLogger == 0)
-               {
-                  std::cerr << "Creating a file logger" << std::endl;
-				  if (Log::_logFileName != "")
-				  {
-                     mLogger = new std::ofstream(_logFileName.c_str(), std::ios_base::out|std::ios_base::app);
-				  }
-				  else
-				  {
-                     mLogger = new std::ofstream("resiprocate.log", std::ios_base::out|std::ios_base::app);
-				  }
-               }
-               return *mLogger;
-            default:
-               assert(0);
-               return std::cout;
-         }
-      }
-      
-      static bool isLogging(Log::Level level) 
-      {
-         return (level <= Log::_level);
-      }
+      static std::ostream& Instance();
+      static bool isLogging(Log::Level level) ;
 
    private:
       static std::ostream* mLogger;
