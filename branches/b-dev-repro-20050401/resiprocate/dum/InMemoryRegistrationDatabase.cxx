@@ -12,10 +12,10 @@ InMemoryRegistrationDatabase::~InMemoryRegistrationDatabase()
 
 void 
 InMemoryRegistrationDatabase::addAor(Uri &aor,
-    RegistrationPersistenceManager::contact_list_t contacts)
+    RegistrationPersistenceManager::ContactPairList contacts)
 {
   Lock g(mDatabaseMutex);
-  mDatabase[aor] = new contact_list_t(contacts);
+  mDatabase[aor] = new ContactPairList(contacts);
 }
 
 void 
@@ -33,6 +33,20 @@ InMemoryRegistrationDatabase::removeAor(Uri &aor)
     i->second = 0;
   }
 }
+
+
+InMemoryRegistrationDatabase::UriList 
+InMemoryRegistrationDatabase::getAors()
+{
+   UriList retList;   
+   for( database_map_t::const_iterator it = mDatabase.begin();
+        it != mDatabase.end(); it++)
+   {
+      retList.push_back(it->first);
+   }
+   return retList;
+}
+
 
 bool 
 InMemoryRegistrationDatabase::aorIsRegistered(Uri &aor)
@@ -101,7 +115,7 @@ InMemoryRegistrationDatabase::unlockRecord(Uri &aor)
 RegistrationPersistenceManager::update_status_t 
 InMemoryRegistrationDatabase::updateContact(Uri &aor, Uri &contact, time_t expires)
 {
-  contact_list_t *contactList = 0;
+  ContactPairList *contactList = 0;
 
   {
     Lock g(mDatabaseMutex);
@@ -110,7 +124,7 @@ InMemoryRegistrationDatabase::updateContact(Uri &aor, Uri &contact, time_t expir
     i = mDatabase.find(aor);
     if (i == mDatabase.end() || i->second == 0)
     {
-      contactList = new contact_list_t();
+      contactList = new ContactPairList();
       mDatabase[aor] = contactList;
     }
     else
@@ -122,7 +136,7 @@ InMemoryRegistrationDatabase::updateContact(Uri &aor, Uri &contact, time_t expir
 
   assert(contactList);
 
-  contact_list_t::iterator j;
+  ContactPairList::iterator j;
 
   // See if the contact is already present. We use URI matching rules here.
   for (j = contactList->begin(); j != contactList->end(); j++)
@@ -143,7 +157,7 @@ InMemoryRegistrationDatabase::updateContact(Uri &aor, Uri &contact, time_t expir
 void 
 InMemoryRegistrationDatabase::removeContact(Uri &aor, Uri &contact)
 {
-  contact_list_t *contactList = 0;
+  ContactPairList *contactList = 0;
 
   {
     Lock g(mDatabaseMutex);
@@ -157,7 +171,7 @@ InMemoryRegistrationDatabase::removeContact(Uri &aor, Uri &contact)
     contactList = i->second;
   }
 
-  contact_list_t::iterator j;
+  ContactPairList::iterator j;
 
   // See if the contact is present. We use URI matching rules here.
   for (j = contactList->begin(); j != contactList->end(); j++)
@@ -174,7 +188,7 @@ InMemoryRegistrationDatabase::removeContact(Uri &aor, Uri &contact)
   }
 }
 
-RegistrationPersistenceManager::contact_list_t
+RegistrationPersistenceManager::ContactPairList
 InMemoryRegistrationDatabase::getContacts(Uri &aor)
 {
   Lock g(mDatabaseMutex);
@@ -183,7 +197,7 @@ InMemoryRegistrationDatabase::getContacts(Uri &aor)
   i = mDatabase.find(aor);
   if (i == mDatabase.end() || i->second == 0)
   {
-    return contact_list_t();
+    return ContactPairList();
   }
   return *(i->second);
 }
