@@ -10,86 +10,69 @@
 #  include <pthread.h>
 #endif
 
-
-using resip::Mutex;
-
-#ifdef WIN32 
-// !cj! need to write windows mutec stuff 
-	namespace resip
-{
-
-Mutex::Mutex()
-{
-   //assert(0); 
-}
-
-
-Mutex::~Mutex ()
-{
-   //assert(0);
-}
-
-
-void
-Mutex::lock()
-{
-  //assert(0); 
-}
-
-void
-Mutex::unlock()
-{
-   //assert(0); 
-}
-
-}
-
-#else
-
 namespace resip
 {
 
+#include <stdio.h>
 Mutex::Mutex()
 {
+#ifndef WIN32
     int  rc = pthread_mutex_init(&mId,0);
     assert( rc == 0 );
+#else
+    mId = CreateMutex(NULL,FALSE,NULL);
+#endif
 }
 
 
 Mutex::~Mutex ()
 {
+#ifndef WIN32
     int  rc = pthread_mutex_destroy(&mId);
     assert( rc != EBUSY );  // currently locked 
     assert( rc == 0 );
+#else
+    CloseHandle(mId);
+#endif
 }
 
 
 void
 Mutex::lock()
 {
+#ifndef WIN32
     int  rc = pthread_mutex_lock(&mId);
     assert( rc != EINVAL );
     assert( rc != EDEADLK );
     assert( rc == 0 );
+#else
+    WaitForSingleObject(mId,INFINITE);
+#endif
 }
 
 void
 Mutex::unlock()
 {
+#ifndef WIN32
     int  rc = pthread_mutex_unlock(&mId);
     assert( rc != EINVAL );
     assert( rc != EPERM );
     assert( rc == 0 );
+#else
+    ReleaseMutex(mId);
+#endif
 }
 
+#ifndef WIN32
 pthread_mutex_t*
 Mutex::getId() const
 {
     return ( &mId );
 }
+#endif
+
 }
 
-#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
