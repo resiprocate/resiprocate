@@ -1,5 +1,4 @@
 #include "sip2/sipstack/PlainContents.hxx"
-#include "sip2/sipstack/HeaderFieldValue.hxx"
 #include <iostream>
 
 using namespace Vocal2;
@@ -9,7 +8,7 @@ int
 main()
 {
    {
-      const Data txt("some plain text\r\n");
+      const Data txt("some plain text");
 
       HeaderFieldValue hfv(txt.data(), txt.size());
       Mime type("text", "plain");
