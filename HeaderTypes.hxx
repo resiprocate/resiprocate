@@ -12,6 +12,9 @@ class Headers
    public:
       // put headers that you want to appear early in the message early in
       // this set
+
+      // !dlb! until automated, must ensure that this set is consistent with
+      // Headers.hxx and gperf in Headers.cxx
       enum Type
       {
          To, 
