@@ -25,9 +25,10 @@ public:
                                       const Data& signedBy,  
                                       Security::SignatureStatus sigStatus,
                                       bool wasEncryped  ) = 0; 
-            virtual void sendPageFailed(const Uri& dest, int respNumber ) =0;
-            virtual void registrationFailed(const Uri& dest, int respNumber ) =0;
-            virtual void presenseUpdate(const Uri& dest, bool open, const Data& status ) =0;
+            virtual void sendPageFailed(const Uri& dest, int respNumber ) {};
+            virtual void receivePageFailed(const Uri& sender) {};
+            virtual void registrationFailed(const Uri& dest, int respNumber ) {};
+            virtual void presenseUpdate(const Uri& dest, bool open, const Data& status ) {};
             virtual ~Callback();
       };
       
