@@ -77,9 +77,9 @@ Executive::getTimeTillNextProcessMS()
    int ret = mStack.mTimers.msTillNextTimer();
 
 #if 1 // !cj! just keep a max of 500ms for good luck - should not be needed   
-   if ( ret > 500 )
+   if ( ret > 1 )
    {
-      ret = 500;
+      ret = 1;
    }
 #endif
 
