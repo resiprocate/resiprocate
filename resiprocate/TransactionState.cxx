@@ -14,7 +14,7 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
    mStack(stack),
    mMachine(m), 
    mState(s),
-   mIsReliable(false), // !jf!
+   mIsReliable(false), // !jf! 
    mCancelStateMachine(0),
    mMsgToRetransmit(0)
 {
@@ -175,6 +175,7 @@ TransactionState::processClientNonInvite(  Message* msg )
    else if (isSentUnreliable(msg))
    {
       // state might affect this !jf!
+      // should we set mIsReliable = false here !jf!
       mStack.mTimers.add(Timer::TimerE1, msg->getTransactionId(), Timer::T1 );
       delete msg;
    }
@@ -250,8 +251,8 @@ TransactionState::processClientNonInvite(  Message* msg )
             break;
 
          case Timer::TimerF:
-            // Need to clone, since this is about to be deleted !jf!
-            sendToTU(new SipMessage(*mMsgToRetransmit)); // don't delete
+            // !jf! is this correct
+            sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
             delete this;
             break;
 
@@ -350,7 +351,7 @@ TransactionState::processClientInvite(  Message* msg )
                if (mIsReliable)
                {
                   SipMessage* invite = mMsgToRetransmit;
-                  mMsgToRetransmit = Helper::makeFailureAck(invite, sip);
+                  mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
                   delete invite;
                   
                   sendToWire(mMsgToRetransmit); 
@@ -364,7 +365,7 @@ TransactionState::processClientInvite(  Message* msg )
                      mState = Completed;
                      SipMessage* invite = mMsgToRetransmit;
                      mStack.mTimers.add(Timer::TimerD, msg->getTransactionId(), Timer::TD );
-                     mMsgToRetransmit = Helper::makeFailureAck(invite, sip);
+                     mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
                      delete invite;
                      sendToWire(mMsgToRetransmit); 
                      sendToTU(msg); // don't delete msg
@@ -852,7 +853,7 @@ TransactionState::sendToTU(Message* msg) const
 SipMessage*
 TransactionState::make100(SipMessage* request) const
 {
-   SipMessage* sip=new SipMessage(Helper::makeResponse(*request, 100));
+   SipMessage* sip=Helper::makeResponse(*request, 100);
    return sip;
 }
 
