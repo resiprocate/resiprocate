@@ -43,6 +43,8 @@ class SipMessage : public Message
 
       explicit SipMessage(const Transport* fromWire = 0);
       SipMessage(const SipMessage& message);
+
+      virtual Message* clone() const;
       
       // returns the transaction id from the branch or if 2543, the computed hash
       virtual const Data& getTransactionId() const;
