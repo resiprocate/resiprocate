@@ -10,7 +10,7 @@ class Message
 {
    public:
       virtual ~Message(){}
-      virtual Data& getTransactionId() const=0;
+      virtual const Data& getTransactionId() const=0;
 };
 
 }
