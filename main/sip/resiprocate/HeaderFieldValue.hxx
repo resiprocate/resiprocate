@@ -25,6 +25,7 @@ class HeaderFieldValue
 
       HeaderFieldValue* clone() const;
 
+#ifndef WIN32
       template <typename ParameterTypes::Type T>
       typename ParameterType<T>::Type& getParameter(const ParameterType<T>& type)
       {
@@ -36,6 +37,7 @@ class HeaderFieldValue
          assert(p);
          return *(dynamic_cast<typename ParameterType<T>::Type*>(p));
       }
+#endif
 
       template <typename ParameterTypes::Type T>
       bool exists(const ParameterType<T> type)

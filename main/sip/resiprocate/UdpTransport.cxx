@@ -1,11 +1,7 @@
-#ifdef WIN32
 
-#include <winsock2.h>
-#include <stdlib.h>
-#include <io.h>
+#include <util/Socket.hxx>
 
-#else
-
+#ifndef WIN32
 #include <errno.h>
 #include <fcntl.h>
 #include <iostream>
@@ -14,11 +10,9 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-#include <util/Data.hxx>
-
 #endif
 
+#include <util/Data.hxx>
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/Preparse.hxx>
@@ -87,7 +81,7 @@ UdpTransport::send( const sockaddr_in& dest,
                     const  char* buffer,
                     const size_t length) //, TransactionId txId)
 {
-   SendData* data = new SendData;
+   SendData* data = new  SendData;
    data->destination = dest;
    data->buffer = buffer;
    data->length = length;
@@ -114,7 +108,7 @@ UdpTransport::process()
       DebugLog (<< "Sending message on udp");
       int count = sendto(mFd, data->buffer, data->length, 0,
                                     (const sockaddr*)&data->destination, 
-                                    sizeof(data->destination));
+                                    sizeof(data->destination) );
    
       if ( count == SOCKET_ERROR )
       {
@@ -131,9 +125,7 @@ UdpTransport::process()
    struct sockaddr_in from;
 
 #if !defined(UDP_SHORT)
-
    // !ah! debug is just to always return a sample message
-
    // !jf! this may have to change - when we read a message that is too big
    
    char* buffer = new char[MaxBufferSize];
@@ -201,8 +193,9 @@ UdpTransport::process()
       // It is presumed that UDP Datagrams are arriving atomically and that
       // each one is a unique SIP message
 
-      message->addSource(from);
-      
+
+      message->setSource(from);
+
       // Tell the SipMessage about this datagram buffer.
       message->addBuffer(buffer);
 

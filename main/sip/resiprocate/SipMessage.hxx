@@ -1,6 +1,8 @@
 #ifndef SipMessage_hxx
 #define SipMessage_hxx
 
+#include <util/Socket.hxx>
+
 #include <sys/types.h>
 
 #ifndef WIN32
@@ -61,6 +63,7 @@ class SipMessage : public Message
          return mHeaders[T] != 0;
       }
 
+#ifndef WIN32
       template <int T>
       typename Header<T>::Type& 
       header(const Header<T>& headerType) const
@@ -79,7 +82,9 @@ class SipMessage : public Message
 
          return *dynamic_cast<typename Header<T>::Type*>(mHeaders[T]->first->getParserCategory());
       }
+#endif
 
+#ifndef WIN32
       template <int T>
       ParserContainer<typename MultiHeader<T>::Type>& 
       header(const MultiHeader<T>& headerType) const
@@ -95,6 +100,7 @@ class SipMessage : public Message
 
          return *dynamic_cast<ParserContainer<typename MultiHeader<T>::Type>*>(mHeaders[T]->getParserContainer());
       }
+#endif
 
       template <int T>
       void remove(const Header<T>& headerType)
@@ -126,7 +132,9 @@ class SipMessage : public Message
                      const char* headerName, int headerLen, 
                      const char* start, int len);
 
-      void addSource(const sockaddr_in& addr);
+
+      void setSource(const sockaddr_in& addr);
+
       bool hasFixedDest() const;
       Data getFixedDest() const;
       void setFixedDest(const Data& dest);
@@ -148,9 +156,7 @@ class SipMessage : public Message
       bool mHaveFixedDest;
       Data mFixedDest;
 
-#ifndef WIN32 // CJ TODO FIX 
       sockaddr_in mSource;
-#endif
 
       std::vector<char*> mBufferList;
       mutable HeaderFieldValue* mStartLine;

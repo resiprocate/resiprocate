@@ -65,6 +65,9 @@ using Vocal2::Mutex;
 
 #ifndef WIN32 // TODO FIX
 
+namespace Vocal2
+{
+
 Mutex::Mutex()
 {
     int  rc = pthread_mutex_init(&mId,0);
@@ -102,6 +105,7 @@ pthread_mutex_t*
 Mutex::getId() const
 {
     return ( &mId );
+}
 }
 
 #endif

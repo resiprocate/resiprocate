@@ -1,4 +1,8 @@
-#include <stdio.h>
+
+//#include <stdio.h>
+#include <cassert>
+#include <cstdlib>
+
 //#include <openssl/rand.h>
 #include <util/RandomHex.hxx>
 
@@ -12,7 +16,7 @@ RandomHex::initialize()
 #if 1
    // TODO FIX 
    unsigned int seed = 1;
-   srandom(seed);
+   srand(seed);
 #else
     assert(RAND_status() == 1);
 #endif
@@ -22,8 +26,9 @@ Data
 RandomHex::get(unsigned int len)
 {
 #if 1
-   unsigned char buffer[len];
-   int ret = random();
+	assert( len <= 16 );
+   unsigned char buffer[16];
+   int ret = rand();
    assert (ret == 1);
    
    Data result;
