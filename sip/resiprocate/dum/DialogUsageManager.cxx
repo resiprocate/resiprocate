@@ -205,29 +205,42 @@ void
 DialogUsageManager::process(FdSet& fdset)
 {
    mStack.process(fdset);
-   SipMessage* msg = mStack.receive();
-   if (msg)
+   Message* msg = mStack.receive();
+   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
+
+   if (sipMsg)
    {
-      if (msg->isRequest())
+      if (sipMsg->isRequest())
       {
-         if (validateRequest(*msg) && 
-             validateTo(*msg) && 
-             !mergeRequest(*msg) &&
-             mServerAuthManager && mServerAuthManager->handle(*msg))
+         if (validateRequest(*sipMsg) && 
+             validateTo(*sipMsg) && 
+             !mergeRequest(*sipMsg) &&
+             mServerAuthManager && mServerAuthManager->handle(*sipMsg))
          {
-            processRequest(*msg);
+            processRequest(*sipMsg);
          }
       }
-      else if (msg->isResponse())
+      else if (sipMsg->isResponse())
       {
-         if (mClientAuthManager && mClientAuthManager->handle(*msg))
+         if (mClientAuthManager && mClientAuthManager->handle(*sipMsg))
          {
-            processResponse(*msg);
+            processResponse(*sipMsg);
          }
       }
+      delete sipMsg;
+      return;
    }
 
-   delete msg;
+   DumTimer* dumMsg = dynamic_cast<DumTimer*>(msg);
+   if (dumMsg && dumMsg->baseUsage().isValid())
+   {
+       dumMsg->baseUsage()->dispatch(*dumMsg);
+       delete dumMsg;
+       return;
+   }
+
+   ErrLog(<<"Unknown message received.");
+   assert(0);
 }
 
 bool
