@@ -10,6 +10,7 @@
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/Uri.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
 
 struct hostent;
 
@@ -21,6 +22,7 @@ class DnsHandler;
 class DnsResult
 {
    public:
+      RESIP_HeapCount(DnsResult);
       DnsResult(DnsInterface& interfaceObj, DnsHandler* handler);
       ~DnsResult();
 

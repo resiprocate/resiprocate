@@ -3,6 +3,8 @@
 
 #include "resiprocate/TcpBaseTransport.hxx"
 #include "resiprocate/SecurityTypes.hxx"
+#include "resiprocate/os/HeapInstanceCounter.hxx"
+
 namespace resip
 {
 
@@ -14,6 +16,7 @@ class Security;
 class TlsTransport : public TcpBaseTransport
 {
    public:
+      RESIP_HeapCount(TlsTransport);
       TlsTransport(Fifo<TransactionMessage>& fifo, 
                    const Data& sipDomain, 
                    const Data& interfaceObj, 
