@@ -21,7 +21,7 @@
 
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/SipMessage.hxx>
-
+#include <sipstack/Preparse.hxx>
 
 using namespace std;
 using namespace Vocal2;
@@ -120,6 +120,8 @@ void UdpTransport::process()
    int fromLen = sizeof(from);
    
    // !jf! how do we tell if it discarded bytes 
+   // !ah! we use the len-1 trick :-(
+
    int len = recvfrom( mFd,
                        buffer,
                        MaxBufferSize,
@@ -139,8 +141,12 @@ void UdpTransport::process()
       // set the received from information into the received= parameter in the
       // via
       message->addSource(from);
-      
+      message->addBuffer(buffer);
 
+      Preparse preParser(*message,buffer,len);
+      
+      preParser.process();
+      
       // save the interface information in the message
       // preparse the message
       // stuff the message in the 
