@@ -38,3 +38,27 @@ openssl smime -verify -in bar.msg -signer fluffy.pem -CAfile root.pem
 -- Generating a self signed cert and key -- 
 openssl genrsa -out id_key.pem 512
 openssl req -x509 -new  -key id_key.pem -days 180 -out id.pem
+
+
+--- Generating a cert for TLS use --- 
+openssl req -new -out server.csr
+- when asked for common name - enter domainname 
+- don't use abreviation for state - ie use California not CA
+openssl rsa -in privkey.pem -out server.key
+
+This server.csr file can be used to get a free test certificate from Thawte or verisign. Put
+result back form the CA in server.crt
+
+Can read the cert with 
+openssl x509 -in server.crt -text -noout
+
+Can read the request with 
+openssl req -in server.csr -text -noout
+
+Convert certificate in DER to PRM 
+openssl x509 -in root_der.crt -inform DER -out root.pem
+
+
+
+
+
