@@ -26,32 +26,33 @@ int main(int argc, char* argv[])
    EVP_PKEY *privkey = NULL;
    X509 *selfcert = NULL;
    BUF_MEM *bptr = NULL;
-
-   // initilization:  are these needed?
-//   CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
-//   bio_err=BIO_new_fp(stderr, BIO_NOCLOSE);
-
  
    Log::initialize(Log::Cerr, Log::Err, argv[0]);
    Log::setLevel(Log::Debug);
    SSL_library_init();
    SSL_load_error_strings();
-   OpenSSL_add_ssl_algorithms();
+   OpenSSL_add_all_algorithms();
+   //OpenSSL_add_ssl_algorithms() is insufficient here...
+
+   // make sure that necessary algorithms exist:
+   assert(EVP_des_ede3_cbc());
+
    Random::initialize();
 
    rsa = RSA_generate_key(1024, RSA_F4, NULL, NULL);
    assert(rsa);    // couldn't make key pair
    
+   // TODO: remove this once we've tested this
+   stat = PEM_write_RSAPrivateKey( stdout, rsa, NULL, NULL, 0, NULL, NULL); // Write this out for debugging
+      
    privkey = EVP_PKEY_new();
    assert(privkey);
-   
    stat = EVP_PKEY_set1_RSA(privkey, rsa);
    assert(stat);
 
    selfcert = X509_new();
    assert(selfcert);
    stat = makeSelfCert(&selfcert, privkey);
-   DebugLog ( << "makeSelfCert returned: " << stat );
    assert(stat);   // couldn't make cert
    
    unsigned char* buffer = NULL;     
@@ -61,7 +62,10 @@ int main(int argc, char* argv[])
    Data derData((char *) buffer, len);
    X509Contents *certpart = new X509Contents( derData );
    assert(certpart);
-    
+   
+//  TDOD: remove later, just useful for debugging
+//   stat = PEM_write_PKCS8PrivateKey( stdout, privkey, NULL, NULL, 0, NULL, NULL);
+	  
    // make an in-memory BIO        [ see  BIO_s_mem(3) ]
    BIO *mbio = BIO_new(BIO_s_mem());
    assert(mbio);
@@ -71,16 +75,13 @@ int main(int argc, char* argv[])
       (char *) passphrase.data(), passphrase.size(), NULL, NULL);
    assert(stat);
 
-   // dump the BIO into a Contents
+   // dump the BIO into a Contents and free the BIO
    BIO_get_mem_ptr(mbio, &bptr);
-   Data test(bptr->data, bptr->length);
-   
-   DebugLog( << "Here is the private key unencoded (length " << bptr->length << "bytes): \n" << test );
-   
-   Pkcs8Contents *keypart = new Pkcs8Contents(test);
+   Pkcs8Contents *keypart = new Pkcs8Contents(Data(bptr->data, bptr->length));
    assert(keypart);
    BIO_free(mbio);
 
+   // make the multipart body
    MultipartMixedContents *certsbody = new MultipartMixedContents;
    certsbody->parts().push_back(certpart);
    certsbody->parts().push_back(keypart);
@@ -99,7 +100,6 @@ int makeSelfCert(X509 **cert, EVP_PKEY *privkey)   // should include a Uri type 
 {
   int stat;
   int serial;
-  long err2;
   assert(sizeof(int)==4);
   const long duration = 60*60*24*30;   // make cert valid for 30 days
   X509* selfcert = NULL;
@@ -124,11 +124,8 @@ int makeSelfCert(X509 **cert, EVP_PKEY *privkey)   // should include a Uri type 
   ASN1_INTEGER_set(X509_get_serialNumber(selfcert),serial);
 
   stat = X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_UTF8, (unsigned char *) domain.data(), domain.size(), -1, 0);
-  err2 = ERR_get_error();
-  DebugLog ( << "SSL Error: " << err2 );
   assert(stat);
   stat = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_UTF8, (unsigned char *) userAtDomain.data(), userAtDomain.size(), -1, 0);
-  DebugLog ( << "SSL Error: " << err2 );
   assert(stat);
   
   stat = X509_set_issuer_name(selfcert, subject);
@@ -143,6 +140,9 @@ int makeSelfCert(X509 **cert, EVP_PKEY *privkey)   // should include a Uri type 
   assert(stat);
 
   // need to fiddle with this to make this work with lists of IA5 URIs and UTF8
+  // using GENERAL_NAMES seems like a promissing approach
+  // (search for GENERAL_NAMES in Security.cxx)
+  //
   //ext = X509V3_EXT_conf_nid( NULL , NULL , NID_subject_alt_name, subjectAltNameStr.cstr() );
   //X509_add_ext( selfcert, ext, -1);
   //X509_EXTENSION_free(ext);
