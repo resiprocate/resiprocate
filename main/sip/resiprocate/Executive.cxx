@@ -1,3 +1,5 @@
+uses namespace Vocal2;
+
 
 void
 Executive::process()
@@ -27,7 +29,7 @@ Executive::process()
 
  
 bool 
-processTransports()
+processTransports() 
 {
    mStack.mTransportSelector.process();
 }
