@@ -379,8 +379,9 @@ Uri::getAor() const
       mOldUser = mUser;
       mOldPort = mPort;
       mAor.clear();
-      
-      // mAor.reserve(mUser.size() + mHost.size() + 10); !dlb!
+
+      //                                         @:10000
+      mAor.reserve(mUser.size() + mHost.size() + 10);
       if (mOldUser.empty())
       {
          mAor += mOldHost;
