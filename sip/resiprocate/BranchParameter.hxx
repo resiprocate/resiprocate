@@ -23,6 +23,7 @@ class BranchParameter : public Parameter
       Data& transactionId();
       void incrementCounter();
       Data& clientData();
+      Type& value() {return *this;}
 
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {

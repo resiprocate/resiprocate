@@ -611,7 +611,7 @@ main()
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       assert(message->header(h_MaxForwards).value() == 8);
-      message->getRawHeader(Headers::Max_Forwards)->getParserContainer()->encode(Headers::HeaderNames[Headers::Max_Forwards], cerr) << endl;
+      message->getRawHeader(Headers::MaxForwards)->getParserContainer()->encode(Headers::HeaderNames[Headers::MaxForwards], cerr) << endl;
    }
 
    {

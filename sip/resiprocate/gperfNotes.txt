@@ -13,7 +13,8 @@
 //      |  |            |  |      |  |      |
 % gperf -g -Z ParamHash -E -L C++ -t -k '*' -D parametersA.gperf
 
-// replace
-str[\([0-9]+\)] => tolower(str[\1])
-*str == *s => tolower(*str) == *s
-!strcmp => !strcasecmp
+// replace-regexp
+str\[\([0-9]+\)\] => tolower(str[\1])
+\*str == \*s => tolower(\*str) == \*s
+//replace-not-regexp
+!strcmp (str + 1, s + 1) => !strncasecmp (str + 1, s + 1, len-1)

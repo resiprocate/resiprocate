@@ -6,7 +6,6 @@ using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
-MIME_Transfer_Encoding_Header Vocal2::h_Transfer_Encoding;
 MIME_Id_Header Vocal2::h_Id;
 MIME_Description_Header Vocal2::h_Description;
 
@@ -79,15 +78,15 @@ Contents::operator=(const Contents& rhs)
       mType = rhs.mType;
       if (rhs.mDisposition)
       {
-         mDisposition = new Content_Disposition_Header::Type(*rhs.mDisposition);
+         mDisposition = new ContentDisposition_Header::Type(*rhs.mDisposition);
       }
       if (rhs.mTransferEncoding)
       {
-         mTransferEncoding = new Token(*rhs.mTransferEncoding);
+         mTransferEncoding = new StringCategory(*rhs.mTransferEncoding);
       }
       if (rhs.mLanguages)
       {
-         mLanguages = new ParserContainer<Content_Language_MultiHeader::Type>(*rhs.mLanguages);
+         mLanguages = new ParserContainer<ContentLanguage_MultiHeader::Type>(*rhs.mLanguages);
       }
       if (rhs.mId)
       {
@@ -140,15 +139,19 @@ Contents::exists(const HeaderBase& headerType) const
    checkParsed();
    switch (headerType.getTypeNum())
    {
-      case Headers::Content_Type :
+      case Headers::ContentType :
       {
          return true;
       }
-      case Headers::Content_Disposition :
+      case Headers::ContentDisposition :
       {
          return mDisposition != 0;
       }
-      case Headers::Content_Language :
+      case Headers::ContentTransferEncoding :
+      {
+         return mTransferEncoding != 0;
+      }
+      case Headers::ContentLanguage :
       {
          return mLanguages != 0;
       }
@@ -159,11 +162,6 @@ Contents::exists(const HeaderBase& headerType) const
 bool
 Contents::exists(const MIME_Header& type) const
 {
-   if (&type == &h_Transfer_Encoding)
-   {
-      return mTransferEncoding != 0;
-   }
-
    if (&type == &h_Id)
    {
       return mId != 0;
@@ -183,16 +181,22 @@ Contents::remove(const HeaderBase& headerType)
 {
    switch (headerType.getTypeNum())
    {
-      case Headers::Content_Disposition :
+      case Headers::ContentDisposition :
       {
          delete mDisposition;
          mDisposition = 0;
          break;
       }
-      case Headers::Content_Language :
+      case Headers::ContentLanguage :
       {
          delete mLanguages;
          mLanguages = 0;
+         break;
+      }
+      case Headers::ContentTransferEncoding :
+      {
+         delete mTransferEncoding;
+         mTransferEncoding = 0;
          break;
       }
       default :
@@ -203,13 +207,6 @@ Contents::remove(const HeaderBase& headerType)
 void
 Contents::remove(const MIME_Header& type)
 {
-   if (&type == &h_Transfer_Encoding)
-   {
-      delete mTransferEncoding;
-      mTransferEncoding = 0;
-      return;
-   }
-
    if (&type == &h_Id)
    {
       delete mId;
@@ -227,43 +224,43 @@ Contents::remove(const MIME_Header& type)
    assert(false);
 }
 
-Content_Type_Header::Type&
-Contents::header(const Content_Type_Header& headerType) const
+ContentType_Header::Type&
+Contents::header(const ContentType_Header& headerType) const
 {
    return mType;
 }
 
-Content_Disposition_Header::Type&
-Contents::header(const Content_Disposition_Header& headerType) const
+ContentDisposition_Header::Type&
+Contents::header(const ContentDisposition_Header& headerType) const
 {
    checkParsed();
    if (mDisposition == 0)
    {
-      mDisposition = new Content_Disposition_Header::Type;
+      mDisposition = new ContentDisposition_Header::Type;
    }
    return *mDisposition;
 }
 
-ParserContainer<Content_Language_MultiHeader::Type>&
-Contents::header(const Content_Language_MultiHeader& headerType) const 
-{
-   checkParsed();
-   if (mLanguages == 0)
-   {
-      mLanguages = new ParserContainer<Content_Language_MultiHeader::Type>;
-   }
-   return *mLanguages;
-}
-
-MIME_Transfer_Encoding_Header::Type&
-Contents::header(const MIME_Transfer_Encoding_Header& headerType) const
+ContentTransferEncoding_Header::Type&
+Contents::header(const ContentTransferEncoding_Header& headerType) const
 {
    checkParsed();
    if (mTransferEncoding == 0)
    {
-      mTransferEncoding = new MIME_Transfer_Encoding_Header::Type;
+      mTransferEncoding = new ContentTransferEncoding_Header::Type;
    }
    return *mTransferEncoding;
+}
+
+ParserContainer<ContentLanguage_MultiHeader::Type>&
+Contents::header(const ContentLanguage_MultiHeader& headerType) const 
+{
+   checkParsed();
+   if (mLanguages == 0)
+   {
+      mLanguages = new ParserContainer<ContentLanguage_MultiHeader::Type>;
+   }
+   return *mLanguages;
 }
 
 MIME_Description_Header::Type&
@@ -313,29 +310,35 @@ Contents::preParseHeaders(ParseBuffer& pb)
 
       switch (type)
       {
-         case Headers::Content_Type :
+         case Headers::ContentType :
          {
             // already set
             break;
          }
-         case Headers::Content_Disposition :
+         case Headers::ContentDisposition :
          {
-            mDisposition = new Content_Disposition_Header::Type;
+            mDisposition = new ContentDisposition_Header::Type;
             mDisposition->parse(subPb);
             break;
          }
+         case Headers::ContentTransferEncoding :
+         {
+            mTransferEncoding = new ContentTransferEncoding_Header::Type;
+            mTransferEncoding->parse(subPb);
+            break;
+         }
          // !dlb! not sure this ever happens?
-         case Headers::Content_Language :
+         case Headers::ContentLanguage :
          {
             if (mLanguages == 0)
             {
-               mLanguages = new ParserContainer<Content_Language_MultiHeader::Type>;
+               mLanguages = new ParserContainer<ContentLanguage_MultiHeader::Type>;
             }
 
             subPb.skipWhitespace();
             while (*subPb.position() != Symbols::COMMA[0])
             {
-               Content_Language_MultiHeader::Type tmp;
+               ContentLanguage_MultiHeader::Type tmp;
                header(h_ContentLanguages).push_back(tmp);
                header(h_ContentLanguages).back().parse(subPb);
                subPb.skipLWS();
@@ -345,7 +348,7 @@ Contents::preParseHeaders(ParseBuffer& pb)
          {
             if (isEqualNoCase(headerName, "Content-Transfer-Encoding"))
             {
-               mTransferEncoding = new Token();
+               mTransferEncoding = new StringCategory();
                mTransferEncoding->parse(subPb);
             }
             else if (isEqualNoCase(headerName, "Content-Description"))
@@ -417,11 +420,19 @@ Contents::encodeHeaders(ostream& str) const
       str << Symbols::CRLF;
    }
 
+   if (exists(h_ContentTransferEncoding))
+   {
+      str <<  "Content-Transfer-Encoding" << Symbols::COLON[0] << Symbols::SPACE[0];
+
+      header(h_ContentTransferEncoding).encode(str);
+      str << Symbols::CRLF;
+   }
+
    if (exists(h_ContentLanguages))
    {
       str <<  "Content-Languages" << Symbols::COLON[0] << Symbols::SPACE[0];
       
-      for (ParserContainer<Content_Language_MultiHeader::Type>::iterator 
+      for (ParserContainer<ContentLanguage_MultiHeader::Type>::iterator 
               i = header(h_ContentLanguages).begin();
            i != header(h_ContentLanguages).end(); i++)
       {
