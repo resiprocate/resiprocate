@@ -291,8 +291,16 @@ class DialogUsageManager : public HandleManager
 
       SipStack mStack;
       StackThread mStackThread;
-      DumShutdownHandler* mDumShutdownHandler;       
-      bool mDestroying;
+      DumShutdownHandler* mDumShutdownHandler;
+      typedef enum 
+      {
+         Running,
+         ShutdownRequested,
+         ShuttingDownStack,
+         Shutdown,
+         Destroying
+      } ShutdownState;
+      ShutdownState mShutdownState;
 };
 
 }
