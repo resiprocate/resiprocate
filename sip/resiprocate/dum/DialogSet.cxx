@@ -1,9 +1,9 @@
+#include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/BaseCreator.hxx"
-#include "resiprocate/dum/DialogSet.hxx"
+#include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-#include "DialogUsageManager.hxx"
-#include "ClientAuthManager.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -17,6 +17,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mCreator(creator),
    mId(creator->getLastRequest()),
    mDum(dum),
+   mAppDialogSet(0),
    mCancelled(false)
 {
    assert(!creator->getLastRequest().isExternal());
@@ -28,6 +29,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mCreator(NULL),
    mId(request),
    mDum(dum),
+   mAppDialogSet(0),
    mCancelled(false)
 {
    assert(request.isRequest());
@@ -46,7 +48,8 @@ DialogSet::~DialogSet()
    for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
    {
       delete it->second;
-   }   
+   } 
+   delete mAppDialogSet;
 }
 
 DialogSetId
@@ -90,6 +93,8 @@ DialogSet::dispatch(const SipMessage& msg)
       // !jf! This could throw due to bad header in msg, should we catch and rethrow
       // !jf! if this threw, should we check to delete the DialogSet? 
       dialog = new Dialog(mDum, msg, *this);
+      AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
+      dialog->mAppDialog = appDialog;
       if (mCancelled)
       {
          dialog->cancel();
