@@ -432,8 +432,8 @@ DialogUsageManager::send(SipMessage& msg)
       }      
          
       //this is all very scary and error-prone, as the TU has some retramissions
-      if (msg.header(h_RequestLine).method() != RESIP_CANCEL &&
-          msg.header(h_RequestLine).method() != RESIP_ACK &&
+      if (msg.header(h_RequestLine).method() != CANCEL &&
+          msg.header(h_RequestLine).method() != ACK && 
           msg.exists(h_Vias))
       {
          msg.header(h_Vias).front().param(p_branch).reset();
@@ -444,7 +444,7 @@ DialogUsageManager::send(SipMessage& msg)
          msg.header(h_Vias).front().remove(p_rport);
       }
       
-      if (mClientAuthManager.get() && msg.header(h_RequestLine).method() != RESIP_ACK)
+      if (mClientAuthManager.get() && msg.header(h_RequestLine).method() != ACK)
       {
          mClientAuthManager->addAuthentication(msg);
       }
@@ -759,9 +759,9 @@ bool
 DialogUsageManager::validateRequiredOptions(const SipMessage& request)
 {   
    // RFC 2162 - 8.2.2
-   if(request.exists(h_Requires) &&                 // Don't check requires if method is RESIP_ACK or CANCEL
-      (request.header(h_RequestLine).getMethod() != RESIP_ACK ||
-       request.header(h_RequestLine).getMethod() != RESIP_CANCEL))
+   if(request.exists(h_Requires) &&                 // Don't check requires if method is ACK or CANCEL
+      (request.header(h_RequestLine).getMethod() != ACK ||
+       request.header(h_RequestLine).getMethod() != CANCEL)) 
    {
       Tokens unsupported = mProfile->getUnsupportedOptionsTags(request.header(h_Requires));
 	  if (!unsupported.empty())
@@ -909,15 +909,15 @@ DialogUsageManager::processRequest(const SipMessage& request)
    {
       switch (request.header(h_RequestLine).getMethod())
       {
-         case RESIP_ACK:
+         case ACK:
             DebugLog (<< "Discarding request: " << request.brief());
             break;
                         
-         case RESIP_PRACK:
-         case RESIP_BYE:
-         case RESIP_UPDATE:
+         case PRACK:
+         case BYE:
+         case UPDATE:
             //case INFO: // !rm! in an ideal world
-            //case RESIP_NOTIFY: // !rm! in an ideal world
+            //case NOTIFY: // !rm! in an ideal world
          {
             SipMessage failure;
             makeResponse(failure, request, 481);
@@ -925,7 +925,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             sendResponse(failure);
             break;
          }
-         case RESIP_CANCEL:
+         case CANCEL:
          {
             // find the appropropriate ServerInvSession
             DialogSet* ds = findDialogSet(DialogSetId(request));
@@ -952,19 +952,19 @@ DialogUsageManager::processRequest(const SipMessage& request)
             break;
          }
 
-         case RESIP_SUBSCRIBE:
-         case RESIP_PUBLISH:
-         case RESIP_NOTIFY : // handle unsolicited (illegal) NOTIFYs
+         case SUBSCRIBE:
+         case PUBLISH:
+         case NOTIFY : // handle unsolicited (illegal) NOTIFYs
             if (!checkEventPackage(request))
             {
                InfoLog (<< "Rejecting request (unsupported package) " << request.brief());
                return;
             }
-         case RESIP_INVITE:   // new RESIP_INVITE
-         case RESIP_REFER:    // out-of-dialog REFER
-         case RESIP_INFO :    // handle non-dialog (illegal) INFOs
-         case RESIP_OPTIONS : // handle non-dialog RESIP_OPTIONS
-         case RESIP_MESSAGE :
+         case INVITE:   // new INVITE
+         case REFER:    // out-of-dialog REFER
+         case INFO :    // handle non-dialog (illegal) INFOs
+         case OPTIONS : // handle non-dialog OPTIONS
+         case MESSAGE :
          {
             {
                DialogSetId id(request);
@@ -1005,7 +1005,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
             
             break;
          }
-         case RESIP_REGISTER:
+         case REGISTER:
          {
                SipMessage failure;
                makeResponse(failure, request, 405);
@@ -1013,11 +1013,11 @@ DialogUsageManager::processRequest(const SipMessage& request)
                sendResponse(failure);
          }
          break;         
-         case RESIP_RESPONSE:
-         case RESIP_SERVICE:
+         case RESPONSE:
+         case SERVICE:
             assert(false);
             break;
-         case RESIP_UNKNOWN:
+         case UNKNOWN:
          case MAX_METHODS:
             assert(false);
             break;
@@ -1027,7 +1027,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
    {
       switch (request.header(h_RequestLine).getMethod())
       {
-         case RESIP_REGISTER:
+         case REGISTER:
          {
             SipMessage failure;
             makeResponse(failure, request, 400, "rjs says, Go to hell");
@@ -1061,7 +1061,7 @@ void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    DebugLog ( << "DialogUsageManager::processResponse: " << response);
-   if (/*response.header(h_StatusLine).statusCode() > 100 && */response.header(h_CSeq).method() != RESIP_CANCEL)
+   if (/*response.header(h_StatusLine).statusCode() > 100 && */response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
   
@@ -1083,7 +1083,7 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
    int failureCode = 0;   
    MethodTypes method = request.header(h_RequestLine).method();
 
-//       || (method == RESIP_NOTIFY && !request.exists(h_SubscriptionState)))
+//       || (method == NOTIFY && !request.exists(h_SubscriptionState)))
    if (!request.exists(h_Event))
    {
       failureCode = 400;
@@ -1092,19 +1092,19 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
    {
       switch(method)
       {
-         case RESIP_SUBSCRIBE:
+         case SUBSCRIBE:
             if (!getServerSubscriptionHandler(request.header(h_Event).value()))
             {
                failureCode = 489;
             }
             break;
-         case RESIP_NOTIFY:
+         case NOTIFY:
             if (!getClientSubscriptionHandler(request.header(h_Event).value()))
             {
                failureCode = 489;
             }
             break;
-         case RESIP_PUBLISH:
+         case PUBLISH:
             assert(0);
          default:
             assert(0);

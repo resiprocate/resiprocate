@@ -14,7 +14,7 @@ class SipMessage;
 class InviteSessionHandler
 {
    public:
-      /// called when an initial RESIP_INVITE or the intial response to an outoing invite  
+      /// called when an initial INVITE or the intial response to an outoing invite  
       virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
       virtual void onNewSession(ServerInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
 
@@ -38,7 +38,7 @@ class InviteSessionHandler
       virtual void onStaleCallTimeout(ClientInviteSessionHandle)=0;
 
       /// called when an dialog enters the terminated state - this can happen
-      /// after getting a RESIP_BYE, Cancel, or 4xx,5xx,6xx response
+      /// after getting a BYE, Cancel, or 4xx,5xx,6xx response
       virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)=0;
 
       /// called when a 3xx with valid targets is encountered in an early dialog     
@@ -63,7 +63,7 @@ class InviteSessionHandler
       //requires an SDP offer from the user
       virtual void onOfferRequired(InviteSessionHandle, const SipMessage& msg)=0;      
       
-      /// called if an offer in a UPDATE or re-RESIP_INVITE was rejected - not real
+      /// called if an offer in a UPDATE or re-INVITE was rejected - not real
       /// useful 
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg)=0;
       
@@ -87,7 +87,7 @@ class InviteSessionHandler
       /// called when an REFER message receives a failure response 
       virtual void onReferRejected(InviteSessionHandle, const SipMessage& msg)=0;
 
-      //default behaviour is to send a RESIP_BYE to end the dialog, msg is the 
+      //default behaviour is to send a BYE to end the dialog, msg is the 
       //2xx that was being retransmitted
       virtual void onAckNotReceived(InviteSessionHandle, const SipMessage& msg);
 
