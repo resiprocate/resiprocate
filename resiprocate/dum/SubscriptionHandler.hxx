@@ -26,7 +26,7 @@ class ServerSubscriptionHandler
 {
   public:   
       virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;
-      virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub)=0;
+      virtual void onRefresh(ServerSubscriptionHandle, const SipMessage& sub);
 
       //called when this usage is destroyed for any reason. One of the following
       //three methods will always be called before this, but this is the only
@@ -41,6 +41,10 @@ class ServerSubscriptionHandler
       //explicity end a subscription with an Expires header of 0.
       virtual void onExpiredByClient(ServerSubscriptionHandle, const SipMessage& sub, SipMessage& notify);
       virtual void onExpired(ServerSubscriptionHandle, SipMessage& notify);
+
+      virtual bool hasDefaultExpires() const;
+      virtual int getDefaultExpires() const;
+      
 };
  
 }
