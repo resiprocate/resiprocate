@@ -70,6 +70,7 @@ Pidf::getTuples() const
 int
 Pidf::getNumTuples() const
 {
+   checkParsed();
    return mTuples.size();
 }
 
