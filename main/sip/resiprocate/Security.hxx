@@ -109,6 +109,8 @@ class Security
       Pkcs7Contents* encrypt( Contents* , const Data& recipCertName );
       Pkcs7Contents* signAndEncrypt( Contents* , const Data& recipCertName );
       
+      Data computeIdentityHash( const Data& in );
+      
       /* stuff to receive messages */
       enum SignatureStatus 
       {
