@@ -158,6 +158,13 @@ RequestContext::chainIteratorStackIsEmpty()
   return mChainIteratorStack.empty();
 }
 
+Proxy& 
+RequestContext::getProxy()
+{
+   return mProxy;
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
