@@ -62,7 +62,7 @@ class ClientInviteSession : public InviteSession
       std::auto_ptr<SdpContents> mEarlyMedia;
       void startCancelTimer();
 
-      SipMessage mInvite; // the original INVITE request received
+      SipMessage mInvite; // the original INVITE sent
       int mLastReceivedRSeq;
       //int lastExpectedRSeq; // !jf! why do I care? 
       int mStaleCallTimerSeq;

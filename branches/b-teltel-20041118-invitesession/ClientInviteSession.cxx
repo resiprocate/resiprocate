@@ -957,6 +957,7 @@ ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
 void
 ClientInviteSession::dispatchCanceled (const SipMessage& msg)
 {
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    const SdpContents* sdp = InviteSession::getSdp(msg);
 
    switch (toEvent(msg, sdp))
@@ -965,6 +966,7 @@ ClientInviteSession::dispatchCanceled (const SipMessage& msg)
       case OnCancelFailure:
       case On487Invite:
       case OnRedirect:
+         handler->onTerminated(getSessionHandle(), msg);
          mDum.destroy(this);
          break;
          
