@@ -9,6 +9,7 @@
 #include <openssl/pem.h>
 #include <openssl/pkcs7.h>
 #include <openssl/x509v3.h>
+#include <openssl/ssl.h>
 
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/sipstack/Security.hxx"
@@ -25,18 +26,200 @@ using namespace Vocal2;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 
+TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
+{
+   ssl = NULL;
+   
+   assert( security );
+   SSL_CTX* ctx = security->getTlsCtx();
+   assert(ctx);
+   
+   ssl = SSL_new(ctx);
+   assert(ssl);
+   
+   bio = BIO_new_socket(fd,0/*close flag*/);
+   assert( bio );
+   
+   SSL_set_bio( ssl, bio, bio );
+
+   int ok=0;
+   if (server)
+   {
+      ok = SSL_accept(ssl);
+   }
+   else
+   {
+      ok = SSL_connect(ssl);
+   }
+   if ( ok != 1 )
+   {
+      int err = SSL_get_error(ssl,ok);
+      ErrLog( << "ssl connection failed with err= " << err );
+      assert(0);
+   }
+}
+
+      
+int 
+TlsConnection::read( void* buf, int count )
+{
+   assert( ssl );
+   assert( buf );
+   int ret;
+   
+   ret = SSL_read(ssl,buf,count);
+   if (ret < 0 )
+   {
+      int err = SSL_get_error(ssl,ret);
+      switch (err)
+      {
+         case SSL_ERROR_WANT_READ:
+         case SSL_ERROR_WANT_WRITE:
+         case SSL_ERROR_NONE:
+         {
+            DebugLog( << "Got TLS read got codition of " << err  );
+            return 0;
+         }
+         break;
+         default:
+         {
+            ErrLog( << "Got TLS read error " << err  );
+            return 0;
+         }
+         break;
+      }
+   }
+
+   return ret;
+}
+
+
+int 
+TlsConnection::write( void* buf, int count )
+{
+   assert( ssl );
+   assert( buf );
+   int ret;
+   
+   ret = SSL_write(ssl,buf,count);
+   if (ret < 0 )
+   {
+      int err = SSL_get_error(ssl,ret);
+      switch (err)
+      {
+         case SSL_ERROR_WANT_READ:
+         case SSL_ERROR_WANT_WRITE:
+         case SSL_ERROR_NONE:
+         {
+            DebugLog( << "Got TLS write got codition of " << err  );
+            return 0;
+         }
+         break;
+         default:
+         {
+            ErrLog( << "Got TLS write error " << err  );
+            return 0;
+         }
+         break;
+      }
+   }
+
+   return ret;
+}
+
+
+Data 
+TlsConnection::peerName()
+{
+   assert(ssl);
+   Data ret = Data::Empty;
+
+   ErrLog("request peer certificate" );
+   X509* cert = SSL_get_peer_certificate(ssl);
+   if ( !cert )
+   {
+      ErrLog("No peer certifiace in TLS connection" );
+      return ret;
+   }
+   ErrLog("Got peer certificate" );
+
+   X509_NAME* subject = X509_get_subject_name(cert);
+   assert(subject);
+   
+   int i =-1;
+   while( true )
+   {
+      i = X509_NAME_get_index_by_NID(subject, NID_commonName,i);
+      if ( i == -1 )
+      {
+         break;
+      }
+      assert( i != -1 );
+      X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
+      assert( entry );
+      
+      ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
+      assert( s );
+      
+      int t = M_ASN1_STRING_type(s);
+      int l = M_ASN1_STRING_length(s);
+      unsigned char* d = M_ASN1_STRING_data(s);
+      
+      ErrLog( << "got string type=" << t << " len="<<l );
+      ErrLog( << "data=<" << d << ">" );
+
+      ret = Data(d);
+   }
+   
+   STACK* sk = X509_get1_email(cert);
+   if (sk)
+   {
+      ErrLog( << "Got an email" );
+      
+      for( int i=0; i<sk_num(sk); i++ )
+      {
+         char* v = sk_value(sk,i);
+         ErrLog( << "Got an email value of " << v );
+
+         ret = Data(v);
+      }
+   }
+   
+   int numExt = X509_get_ext_count(cert);
+   ErrLog("Got peer certificate with " << numExt << " extentions" );
+
+   for ( int i=0; i<numExt; i++ )
+   {
+      X509_EXTENSION* ext = X509_get_ext(cert,i);
+      assert( ext );
+      
+      const char* str = OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
+      assert(str);
+      
+      ErrLog("Got certificate extention" << str );
+   }
+   
+   X509_free(cert); cert=NULL;
+   return ret;
+}
+
 
 Security::Security()
 {
    privateKey = NULL;
    publicCert = NULL;
    certAuthorities = NULL;
+   ctx = NULL;
    
    static bool initDone=false;
    if ( !initDone )
    {
       initDone = true;
       
+      SSL_library_init();
+      
+      SSL_load_error_strings();
+            
       //OpenSSL_add_all_algorithms();
       OpenSSL_add_all_ciphers();
       OpenSSL_add_all_digests();
@@ -45,6 +228,33 @@ Security::Security()
 
       Random::initialize();
    }
+}
+
+
+SSL_CTX* 
+Security::getTlsCtx()
+{
+   if ( ctx )
+   {
+      return ctx;
+   }
+   
+   ctx=SSL_CTX_new( TLSv1_method() );
+   assert( ctx );
+   
+   int ok;
+   assert( publicCert );
+   ok = SSL_CTX_use_certificate(ctx, publicCert);
+   assert( ok == 1);
+   
+   assert( privateKey );
+   ok = SSL_CTX_use_PrivateKey(ctx,privateKey);
+   assert( ok == 1);
+   
+   assert( certAuthorities );
+   SSL_CTX_set_cert_store(ctx, certAuthorities);
+
+   return ctx;
 }
 
 
@@ -70,17 +280,17 @@ Security::getPath( const Data& dirPath, const Data& file )
       }
       else
       {  
-          v = getenv("HOME");
-          if ( v )
-          {
-             path = Data(v);
-             path += Data("/.sip");
-          }
-          else
-          {
-             ErrLog( << "Environment variobal HOME is not set" );
-             path = "/etc/sip";
-          }
+         v = getenv("HOME");
+         if ( v )
+         {
+            path = Data(v);
+            path += Data("/.sip");
+         }
+         else
+         {
+            ErrLog( << "Environment variobal HOME is not set" );
+            path = "/etc/sip";
+         }
       }
 #endif
    }
@@ -110,6 +320,8 @@ Security::loadAllCerts( const Data& password, const Data&  dirPath )
    ok = loadMyPrivateKey( password, getPath(dirPath,Data("id_key.pem") )) ? ok : false;
    ok = loadPublicCert( getPath( dirPath, Data("public_keys/")) ) ? ok : false;
 
+   getTlsCtx();
+   
    return ok;
 }
      
@@ -191,24 +403,24 @@ Security::loadPublicCert(  const Data& filePath )
          continue;
       }
       
-         FILE* fp = fopen(path.c_str(),"r");
-         if ( !fp )
-         {
-            ErrLog( << "Could not read public key from " << path );
-            continue;
-         }
+      FILE* fp = fopen(path.c_str(),"r");
+      if ( !fp )
+      {
+         ErrLog( << "Could not read public key from " << path );
+         continue;
+      }
    
-         X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
-         if (!cert)
-         {
-            ErrLog( << "Error reading contents of public key file " << path );
-            continue;
-         }
+      X509* cert = PEM_read_X509(fp,NULL,NULL,NULL);
+      if (!cert)
+      {
+         ErrLog( << "Error reading contents of public key file " << path );
+         continue;
+      }
    
-         publicKeys[name] = cert;
+      publicKeys[name] = cert;
          
-         DebugLog( << "Loaded public key from " << name );         
-    }
+      DebugLog( << "Loaded public key from " << name );         
+   }
    
    closedir( dir );
    
@@ -315,10 +527,10 @@ Security::sign( Contents* bodyIn )
    PKCS7* pkcs7 = PKCS7_sign( publicCert, privateKey, chain, in, flags);
    if ( !pkcs7 )
    {
-       ErrLog( << "Error creating PKCS7 signing object" );
+      ErrLog( << "Error creating PKCS7 signing object" );
       return NULL;
    }
-    DebugLog( << "created PKCS7 sign object " );
+   DebugLog( << "created PKCS7 sign object " );
 
 #if 0
    if ( SMIME_write_PKCS7(out,pkcs7,in,0) != 1 )
@@ -402,7 +614,10 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    assert( cert );
    sk_X509_push(certs, cert);
    
-   EVP_CIPHER* cipher = EVP_des_ede3_cbc();
+   EVP_CIPHER* cipher =   (EVP_CIPHER*) EVP_des_ede3_cbc();
+//   const EVP_CIPHER* cipher = EVP_des_ede3_cbc(); // !jf! - should really use
+//   this one
+
    //const EVP_CIPHER* cipher = EVP_aes_128_cbc();
    //const EVP_CIPHER* cipher = EVP_enc_null();
    assert( cipher );
@@ -410,10 +625,10 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    PKCS7* pkcs7 = PKCS7_encrypt( certs, in, cipher, flags);
    if ( !pkcs7 )
    {
-       ErrLog( << "Error creating PKCS7 encrypt object" );
+      ErrLog( << "Error creating PKCS7 encrypt object" );
       return NULL;
    }
-    DebugLog( << "created PKCS7 encrypt object " );
+   DebugLog( << "created PKCS7 encrypt object " );
 
 #if 0
    if ( SMIME_write_PKCS7(out,pkcs7,in,0) != 1 )
@@ -533,21 +748,21 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
       ErrLog( << "Problems doing decode of PKCS7 object" );
 
       while (1)
-           {
-              const char* file;
-              int line;
+      {
+         const char* file;
+         int line;
               
-              unsigned long code = ERR_get_error_line(&file,&line);
-              if ( code == 0 )
-              {
-                 break;
-              }
+         unsigned long code = ERR_get_error_line(&file,&line);
+         if ( code == 0 )
+         {
+            break;
+         }
               
-              char buf[256];
-              ERR_error_string_n(code,buf,sizeof(buf));
-              ErrLog( << buf  );
-              InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
-           }
+         char buf[256];
+         ERR_error_string_n(code,buf,sizeof(buf));
+         ErrLog( << buf  );
+         InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
+      }
            
       return NULL;
    }
@@ -611,42 +826,42 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
    
    switch (type)
    {
-     case NID_pkcs7_signedAndEnveloped:
-     {
-        assert(0);
-     }
-     break;
+      case NID_pkcs7_signedAndEnveloped:
+      {
+         assert(0);
+      }
+      break;
      
-     case NID_pkcs7_enveloped:
-     {
-        if ( PKCS7_decrypt(pkcs7, privateKey, publicCert, out, flags ) != 1 )
-        {
-           ErrLog( << "Problems doing PKCS7_decrypt" );
-           while (1)
-           {
-              const char* file;
-              int line;
+      case NID_pkcs7_enveloped:
+      {
+         if ( PKCS7_decrypt(pkcs7, privateKey, publicCert, out, flags ) != 1 )
+         {
+            ErrLog( << "Problems doing PKCS7_decrypt" );
+            while (1)
+            {
+               const char* file;
+               int line;
               
-              unsigned long code = ERR_get_error_line(&file,&line);
-              if ( code == 0 )
-              {
-                 break;
-              }
+               unsigned long code = ERR_get_error_line(&file,&line);
+               if ( code == 0 )
+               {
+                  break;
+               }
               
-              char buf[256];
-              ERR_error_string_n(code,buf,sizeof(buf));
-              ErrLog( << buf  );
-              InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
-           }
+               char buf[256];
+               ERR_error_string_n(code,buf,sizeof(buf));
+               ErrLog( << buf  );
+               InfoLog( << "Error code = " << code << " file=" << file << " line=" << line );
+            }
            
-           return NULL;
-        }
-        if ( encrypted )
-        {
-           *encrypted = true;
-        }
-     }
-     break;
+            return NULL;
+         }
+         if ( encrypted )
+         {
+            *encrypted = true;
+         }
+      }
+      break;
       
       case NID_pkcs7_signed:
       {
@@ -686,7 +901,7 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
             }
             else
             {
-               if (false) // !cj! TODO look for this cert in store
+               if (false) // !jf! TODO look for this cert in store
                {
                   *sigStatus = trusted;
                }
@@ -714,7 +929,7 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
    DebugLog( << "uncodec body is <" << outData << ">" );
 
    // parse out the header information and form new body.
-   // !cj! this is a really crappy parser - shoudl do proper mime stuff
+   // !jf! this is a really crappy parser - shoudl do proper mime stuff
    ParseBuffer pb( outData.data(), outData.size() );
 
    //const char* start = pb.position();
@@ -746,10 +961,10 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
    //InfoLog( << "uncodec data is <" << Data(anchor,pb.position()-anchor) << ">" );
    //InfoLog( << "uncodec data szie is <" << pb.position()-anchor << ">" );
   
-  Contents* ret = Contents::createContents(mime, anchor, pb);
-  assert( ret );
+   Contents* ret = Contents::createContents(mime, anchor, pb);
+   assert( ret );
    
-  //InfoLog( << "uncode return type is " << ret->getType() );
+   //InfoLog( << "uncode return type is " << ret->getType() );
  
  
    return ret;
@@ -758,5 +973,51 @@ Security::uncodeSingle( Pkcs7Contents* sBody, bool verifySig,
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0  *  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved. *  * Redistribution and use in source and binary forms, with or without * modification, are permitted provided that the following conditions * are met: *  * 1. Redistributions of source code must retain the above copyright *    notice, this list of conditions and the following disclaimer. *  * 2. Redistributions in binary form must reproduce the above copyright *    notice, this list of conditions and the following disclaimer in *    the documentation and/or other materials provided with the *    distribution. *  * 3. The names "VOCAL", "Vovida Open Communication Application Library", *    and "Vovida Open Communication Application Library (VOCAL)" must *    not be used to endorse or promote products derived from this *    software without prior written permission. For written *    permission, please contact vocal@vovida.org. * * 4. Products derived from this software may not be called "VOCAL", nor *    may "VOCAL" appear in their name, without prior written *    permission of Vovida Networks, Inc. *  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL, * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH * DAMAGE. *  * ==================================================================== *  * This software consists of voluntary contributions made by Vovida * Networks, Inc. and many individuals on behalf of Vovida Networks, * Inc.  For more information on Vovida Networks, Inc., please see * <http://www.vovida.org/>. *
+ * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 
+ * 3. The names "VOCAL", "Vovida Open Communication Application Library",
+ *    and "Vovida Open Communication Application Library (VOCAL)" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact vocal@vovida.org.
+ *
+ * 4. Products derived from this software may not be called "VOCAL", nor
+ *    may "VOCAL" appear in their name, without prior written
+ *    permission of Vovida Networks, Inc.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+ * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+ * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+ * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
  */
