@@ -172,11 +172,6 @@ class SipMessage : public Message
       
       void addBuffer(char* buf);
 
-      bool hasFixedDest() const;
-      Data getFixedDest() const;
-      void setFixedDest(const Data& dest);
-      void clearFixedDest();
-
       // returns the encoded buffer which was encoded by resolve()
       // should only be called by the TransportSelector
       Data& getEncoded();
@@ -185,8 +180,10 @@ class SipMessage : public Message
 
       // deal with a notion of an "out-of-band" forced target for SIP routing
       void setTarget(const Uri& uri);
+      void clearTarget();
       const Uri& getTarget() const;
       bool hasTarget() const;
+
       
    private:
       void copyFrom(const SipMessage& message);
@@ -200,9 +197,6 @@ class SipMessage : public Message
       mutable HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
       mutable UnknownHeaders mUnknownHeaders;
   
-      bool mHaveFixedDest;
-      Data mFixedDest;
-
       Transport::Tuple mSource;
       Transport::Tuple mDestination;
 
