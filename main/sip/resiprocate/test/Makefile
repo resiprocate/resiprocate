@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.46 2003/05/05 01:39:29 fluffy Exp $
+# $Id: Makefile,v 1.47 2003/08/13 16:45:25 fluffy Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -7,7 +7,8 @@ PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
 LDLIBS += -lncurses
 
 #CXXFLAGS += -I/usr/local/ssl/include
-#LDFLAGS  += -L/usr/local/ssl/lib
+#LDFLAGS  += -L/usr/local/ssl/lib 
+#LDLIBS   += /usr/local/ssl/lib/libssl.a /usr/local/ssl/lib/libcrypto.a 
 
 TESTPROGRAMS =	limpc.cxx \
 		testParseBuffer.cxx \
