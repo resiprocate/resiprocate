@@ -319,9 +319,45 @@ TuIM::processRegisterRequest(SipMessage* msg)
 {
    assert( msg->header(h_RequestLine).getMethod() == REGISTER );
    CallId id = msg->header(h_CallId);
-   
+
+   int expires = msg->header(h_Expires).value();
+   if ( expires == 0 ) 
+   { 
+      expires = 3600;
+   } 
+
    SipMessage* response = Helper::makeResponse( *msg, 200 );
+
+   // the Contacts from the default Helper are wrong for a Registration
+   response->remove(h_Contacts);
    
+   if ( msg->exists(h_Contacts) )
+   {
+      ParserContainer<NameAddr> &providedContacts(msg->header(h_Contacts));
+
+      int multipleContacts = providedContacts.size();
+
+      DebugLog ( << multipleContacts << " contacts were in received message." );   
+
+      ParserContainer<NameAddr>::iterator i(providedContacts.begin());
+      for ( ; i != providedContacts.end() ; ++ i) {
+         if ( i->isAllContacts() && multipleContacts )  // oops, multiple Contacts and one is "*"
+         {
+            delete response;  // do I need to do this?
+            response = Helper::makeResponse( *msg, 400 );
+            mStack->send( *response );
+            delete response;
+            return;
+         }
+         if ( !i->exists(p_expires) )  // add expires params where they don't exist
+         {
+            i->param(p_expires) = expires;
+         }
+         response->header(h_Contacts).push_back(*i);   // copy each Contact into response
+      }
+   }
+   // else the REGISTER is a query, just send the message with no Contacts
+
    mStack->send( *response );
 
    delete response;
