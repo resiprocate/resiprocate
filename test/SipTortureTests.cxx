@@ -447,6 +447,37 @@ test5()
       tassert_verify(5);
       // .dlb. someday the body will gack on parse
    }
+
+void test6()
+{
+
+	
+	char msgData[] = "00aa";
+
+	assert( sizeof(msgData)%2 ==  1 );
+	
+	Data txt;
+
+	for( int i=0; i<(sizeof(msgData)-1); i+=2 )
+	{
+		char num[] = "0x00";
+
+		num[2] = msgData[i];
+		num[3] = msgData[i+1];
+
+		int n=0;
+		sscanf(num,"%x",&n);
+		unsigned char c(n);
+
+		txt += c;
+	}
+
+	//DebugLog( << "test is:" << txt );
+
+   //auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      //tassert_reset();
+}
+
 int
 main(int argc, char*argv[])
 {
@@ -475,7 +506,10 @@ main(int argc, char*argv[])
     test3();
     test4();
     test5();
+	//test6();
     tassert_report();
+
+ CritLog(<<"Test Driver Done");
 }
 
 /* ====================================================================
