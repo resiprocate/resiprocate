@@ -1,4 +1,5 @@
 
+#include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/HeaderTypes.hxx"
 
