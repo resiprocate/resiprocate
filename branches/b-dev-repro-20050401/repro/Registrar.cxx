@@ -21,6 +21,11 @@ Registrar::Registrar(SipStack& stack, InMemoryRegistrationDatabase& db) :
    mDum.setMasterProfile(&mProfile);
 }
 
+Registrar::~Registrar()
+{
+}
+
+
 void
 Registrar::thread()
 {
