@@ -40,6 +40,7 @@ class Symbols
       static const char* AMPERSAND;
       static const char* PERCENT;
       static const char* STAR;
+      static const char* UNDERSCORE;
 
       static const char* ProtocolName;
       static const char* ProtocolVersion;
@@ -47,6 +48,10 @@ class Symbols
       static const char* TCP;
       static const char* TLS;
       static const char* SCTP;
+      static const char* SRVUDP;
+      static const char* SRVTCP;
+      static const char* SRVTLS;
+      static const char* SRVSCTP;
       
       static const char* Sip;
       static const char* Sips;
