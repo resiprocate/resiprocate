@@ -59,6 +59,56 @@ TransactionUser::isForMe(const SipMessage& msg) const
    return false;
 }
 
+bool
+MessageFilterRule::matches(const SipMessage&) const
+{
+   return false;
+}
+
+bool 
+TransactionUser::isMyDomain(const Uri& uri) const
+{
+   for (DomainList::const_iterator it = mDomainList.begin(); 
+        it != mDomainList.end(); it++)
+   {
+      if(uri.host() == it->host() && uri.port() == it->port())
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+bool 
+TransactionUser::isMyDomain(const Data& domain) const
+{
+   for (DomainList::const_iterator it = mDomainList.begin(); 
+        it != mDomainList.end(); it++)
+   {
+      if(domain == it->host())
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+void TransactionUser::addDomain(const Data& domain)
+{
+   Uri u;
+   u.host() = domain;
+   mDomainList.push_back(u);
+}
+
+void TransactionUser::addDomain(const Data& domain, int port)
+{
+   Uri u;
+   u.host() = domain;
+   u.port() = port;
+   mDomainList.push_back(u);
+}      
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
