@@ -1,4 +1,4 @@
-$Id: TODO,v 1.6 2002/11/06 00:33:36 alan Exp $
+$Id: TODO,v 1.7 2002/11/08 17:41:26 jason Exp $
 
 Change the names of all the parser "components" to "integerparser" or
 something like that
@@ -43,3 +43,6 @@ Make Symbols Data
 
 Convert Data to unsigned char interface.
 
+Add correct const semantics to parserCategories
+explicity disallow paramaters or declare parameter accessors where they can be used
+If we proper const parameter retrieval we should probably throw if the user tries to retrieve a parameter that doesn't exist.

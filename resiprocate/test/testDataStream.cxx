@@ -20,6 +20,19 @@ int main()
       cerr << "!! <" << d << ">" << endl;
       ds.flush();
       assert(d == "Here is some stuff foo17 c -157\n");
+      assert((int) strlen(d.c_str()) == d.size());
+   }
+   {
+      Data d(500, true);
+      DataStream ds(d);
+
+      Data foo("foo");
+
+      ds << "Here is some stuff " << foo << 17 << ' ' << 'c' << ' ' << -157 << endl;
+      cerr << "!! <" << d << ">" << endl;
+      ds.flush();
+      assert(d == "Here is some stuff foo17 c -157\n");
+      assert((int) strlen(d.c_str()) == d.size());
    }
 
    {
