@@ -245,6 +245,15 @@ ParseBuffer::assertEof()
    }      
 }
 
+void
+ParseBuffer::assertNotEof()
+{
+   if (eof())
+   {
+      throw Exception("Expected not eof", __FILE__, __LINE__);
+   }      
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
