@@ -16,6 +16,7 @@ class MultipartMixedContents : public Contents
 {
    public:
       MultipartMixedContents();
+      explicit MultipartMixedContents(const Mime& contentType);
       MultipartMixedContents(HeaderFieldValue* hfv, const Mime& contentType);
       MultipartMixedContents(const MultipartMixedContents& rhs);
       virtual ~MultipartMixedContents();
@@ -27,9 +28,9 @@ class MultipartMixedContents : public Contents
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
 
-      // !dlb! full on container interface
-      list<Contents*>& parts() {checkParsed(); return mContents;}
-      const list<Contents*>& parts() const {checkParsed(); return mContents;}
+      typedef list<Contents*> Parts;
+      Parts& parts() {checkParsed(); return mContents;}
+      const Parts& parts() const {checkParsed(); return mContents;}
 
    protected:
       virtual void clear();
@@ -39,6 +40,21 @@ class MultipartMixedContents : public Contents
       void setBoundary();
 
       std::list<Contents*> mContents;
+};
+
+class MultipartRelatedContents : public MultipartMixedContents
+{
+   public:
+      MultipartRelatedContents();
+      MultipartRelatedContents(HeaderFieldValue* hfv, const Mime& contentType);
+      MultipartRelatedContents(const MultipartRelatedContents& rhs);
+      MultipartRelatedContents& operator=(const MultipartRelatedContents& rhs);
+      virtual Contents* clone() const;
+
+      virtual const Mime& getStaticType() const;
+      
+   private:
+      static ContentsFactory<MultipartRelatedContents> Factory;
 };
 
 }
