@@ -13,7 +13,7 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: adig.c,v 1.1 2003/06/05 00:30:32 ryker Exp $";
+static const char rcsid[] = "$Id: adig.c,v 1.2 2003/06/05 00:35:26 ryker Exp $";
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -95,6 +95,7 @@ static const struct nv types[] = {
   { "AXFR",	T_AXFR },
   { "MAILB",	T_MAILB },
   { "MAILA",	T_MAILA },
+  { "NAPTR",	T_NAPTR },
   { "ANY",	T_ANY }
 };
 static const int ntypes = sizeof(types) / sizeof(types[0]);
@@ -290,18 +291,18 @@ static void callback(void *arg, int status, unsigned char *abuf, int alen)
     return;
 
   /* Parse the answer header. */
-  id = DNS_HEADER_QID(abuf);
-  qr = DNS_HEADER_QR(abuf);
-  opcode = DNS_HEADER_OPCODE(abuf);
-  aa = DNS_HEADER_AA(abuf);
-  tc = DNS_HEADER_TC(abuf);
-  rd = DNS_HEADER_RD(abuf);
-  ra = DNS_HEADER_RA(abuf);
-  rcode = DNS_HEADER_RCODE(abuf);
-  qdcount = DNS_HEADER_QDCOUNT(abuf);
-  ancount = DNS_HEADER_ANCOUNT(abuf);
-  nscount = DNS_HEADER_NSCOUNT(abuf);
-  arcount = DNS_HEADER_ARCOUNT(abuf);
+  id = DNS_HEADER_QID(abuf);             /* query identification number */
+  qr = DNS_HEADER_QR(abuf);              /* query response */
+  opcode = DNS_HEADER_OPCODE(abuf);      /* opcode */
+  aa = DNS_HEADER_AA(abuf);              /* authoritative answer */
+  tc = DNS_HEADER_TC(abuf);              /* truncation */
+  rd = DNS_HEADER_RD(abuf);              /* recursion desired */
+  ra = DNS_HEADER_RA(abuf);              /* recursion available */
+  rcode = DNS_HEADER_RCODE(abuf);        /* response code */
+  qdcount = DNS_HEADER_QDCOUNT(abuf);    /* question count */
+  ancount = DNS_HEADER_ANCOUNT(abuf);    /* answer record count */
+  nscount = DNS_HEADER_NSCOUNT(abuf);    /* name server record count */
+  arcount = DNS_HEADER_ARCOUNT(abuf);    /* additional record count */
 
   /* Display the answer header. */
   printf("id: %d\n", id);
@@ -565,6 +566,38 @@ static const unsigned char *display_rr(const unsigned char *aptr,
       free(name);
       break;
       
+    case T_NAPTR:
+      /* The RR data is two two-byte numbers representing the
+       * order and preference, followed by three character strings
+       * representing flags, services, a regex, and a domain name.
+       */
+
+      printf("\t%d", DNS__16BIT(aptr));
+      printf(" %d", DNS__16BIT(aptr + 2));
+
+      p = aptr + 4;
+      len = *p;
+      if (p + len + 1 > aptr + dlen)
+        return NULL;
+      printf(" %.*s", len, p + 1);
+      p += len + 1;
+      len = *p;
+      if (p + len + 1 > aptr + dlen)
+        return NULL;
+      printf(" %.*s", len, p + 1);
+      p += len + 1;
+      len = *p;
+      if (p + len + 1 > aptr + dlen)
+        return NULL;
+      printf(" %.*s", len, p + 1);
+      p += len + 1;
+      status = ares_expand_name(p, abuf, alen, &name, &len);
+      if (status != ARES_SUCCESS)
+        return NULL;
+      printf("\t%s.", name);
+      free(name);
+      break;
+
     default:
       printf("\t[Unknown RR; cannot parse]");
     }
