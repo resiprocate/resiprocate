@@ -83,17 +83,22 @@ DialogSetId::operator>(const DialogSetId& rhs) const
    return mTag > rhs.mTag;
 }
 
+size_t DialogSetId::hash() const
+{
+    return mCallId.hash() ^ mTag.hash();
+}
+
 #if defined(HASH_MAP_NAMESPACE)
 size_t HASH_MAP_NAMESPACE::hash<resip::DialogSetId>::operator()(const resip::DialogSetId& id) const
 {
-   return id.mCallId.hash() ^ id.mTag.hash();
+    return id.hash();
 }
 #endif
 
 #if defined(__INTEL_COMPILER)
 size_t std::hash_value(const resip::DialogSetId& id)
 {
-   return mCallId.hash() ^ mTag.hash();
+    return id.hash();
 }
 #endif
 
