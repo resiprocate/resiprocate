@@ -51,6 +51,8 @@ class ConnectionManager
       
       AddrMap mAddrMap;
       IdMap mIdMap;
+
+      /*
       std::list<Connection*> mWriteSet;
       std::list<Connection*>::iterator mWriteMark;
 
@@ -60,7 +62,20 @@ class ConnectionManager
       // least recently used
       Connection mPreYoungest;
       Connection mPostOldest;
+      */
+
+      Connection::writeList* mWriteHead;
+      Connection::writeList::iterator mWriteIter;
+
+      Connection::readList* mReadHead;
+      Connection::readList::iterator mReadIter;
+
+      Connection::lruList* mLRUHead;
+
       ConnectionId mConnectionIdGenerator;
+
+      // reset iterators if they've been invalidated
+      void checkIterators();
 
       friend class TcpBaseTransport;
 };
