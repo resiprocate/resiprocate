@@ -7,10 +7,7 @@ using namespace Vocal2;
 const int Helper::tagSize = 4;
 
 SipMessage 
-Helper::makeRequest(const NameAddr& target, 
-                    const NameAddr& from,
-                    const NameAddr& contact,
-                    MethodTypes method)
+Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method, bool fromProxy)
 {
    SipMessage request;
    RequestLine rLine(method);
@@ -24,15 +21,18 @@ Helper::makeRequest(const NameAddr& target,
    request.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request.header(h_Contacts).push_front(contact);
    request.header(h_CallId).value() = Helper::computeCallId();
+   
+   Via via;
+   via.param(p_branch) = fromProxy ? computeProxyBranch(request) : computeUniqueBranch();
+   request.header(h_Vias).push_front(via);
+   
    return request;
 }
 
 SipMessage 
-Helper::makeInvite(const NameAddr& target,
-                   const NameAddr& from,
-                   const NameAddr& contact)
+Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact, bool fromProxy)
 {
-   return Helper::makeRequest(target, from, contact, INVITE);
+   return Helper::makeRequest(target, from, contact, INVITE, fromProxy);
 }
 
 SipMessage 
@@ -75,8 +75,7 @@ Helper::makeRequest(const NameAddr& target, MethodTypes method)
 }
 
 
-
-
+// !jf! needs to do something different for ACK made by TU vs Transaction
 SipMessage 
 Helper::makeAck(const SipMessage& request, const SipMessage& response)
 {
@@ -85,21 +84,36 @@ Helper::makeAck(const SipMessage& request, const SipMessage& response)
    return junk;
 }
 
-
 Data 
 Helper::computeUniqueBranch()
 {
-   assert(0);  
-   Data junk;
-   return junk;
+   Data result("z9hG4bK"); // magic cookie per rfc2543bis-09    
+   result += RandomHex::get(4);
+   return result;
 }
 
 Data 
-Helper::computeProxyBranch()
+Helper::computeProxyBranch(const SipMessage& request)
 {
-   assert(0);
-    Data junk;
-   return junk;
+   Data value;
+   // see 16.6 item 8
+   value += request.header(h_To).param(p_tag);
+   value += request.header(h_From).param(p_tag);
+   value += request.header(h_CallId).value();
+   value += request.header(h_RequestLine).uri().getAor();
+   value += Data(request.header(h_CSeq).sequence());
+   assert(!request.header(h_Vias).empty());
+   // !jf! may need to encode the entire via instead of just the branch
+   value += request.header(h_Vias).front().param(p_branch); 
+   //value += request.header(h_ProxyRequires);
+   //value += request.header(h_ProxyAuthorization);
+   
+   Data result("z9hG4bK"); // magic cookie per rfc2543bis-09    
+   result += value.md5();
+   result += ".";
+   result += RandomHex::get(4);
+   
+   return result;
 }
 
 Data
