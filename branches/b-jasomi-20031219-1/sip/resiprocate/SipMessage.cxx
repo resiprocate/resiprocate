@@ -1111,14 +1111,12 @@ SipMessage::setForceTarget(const Uri& uri)
 {
    if (mForceTarget)
    {
-      DebugLog(<< "SipMessage::setForceTarget: replacing forced target");
       *mForceTarget = uri;
    }
    else
    {
       mForceTarget = new Uri(uri);
    }
-   DebugLog(<< "!ah! setTarget: " << *mForceTarget);
 }
 
 void
