@@ -7,14 +7,20 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/Logger.hxx"
 
-
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SDP
 
 using namespace resip;
 using namespace std;
 
-ContentsFactory<SdpContents> SdpContents::Factory;
 const SdpContents SdpContents::Empty;
+
+bool
+SdpContents::init()
+{
+   static ContentsFactory<SdpContents> factory;
+   (void)factory;
+   return true;
+}
 
 const char* NetworkType[] = {"???", "IP4", "IP6"};
 
@@ -60,14 +66,11 @@ AttributeHelper::exists(const Data& key) const
 const list<Data>& 
 AttributeHelper::getValues(const Data& key) const
 {
-
-   static  list<Data>* errorList;
-
    if (!exists(key))
    {
-      if (!errorList) errorList = new list<Data>; // !ass! might need to be static non-ptr
       assert(false);
-      return *errorList;
+      static const list<Data> errorList;
+      return errorList;
    }
    return mAttributes.find(key)->second;
 }
@@ -1466,9 +1469,8 @@ SdpContents::Session::Medium::getValues(const Data& key) const
    if (!mSession)
    {
       assert(false);
-      static list<Data>* errorList = 0;
-      if (!errorList) errorList = new list<Data>;
-      return *errorList;
+      static list<Data> errorList;
+      return errorList;
    }
    return mSession->getValues(key);
 }

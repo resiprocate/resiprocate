@@ -31,12 +31,13 @@ class OctetContents : public Contents
       virtual void parse(ParseBuffer& pb);
 
       Data& octets() {checkParsed(); return mOctets;}
-      
-   private:
-      static ContentsFactory<OctetContents> Factory;
 
+      static bool init();
+   private:
       Data mOctets;
 };
+
+static bool invokeOctetContentsInit = OctetContents::init();
 
 }
 
