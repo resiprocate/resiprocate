@@ -21,6 +21,12 @@ BaseCreator::getLastRequest()
    return mLastRequest;
 }
 
+const SipMessage& 
+BaseCreator::getLastRequest() const
+{
+   return mLastRequest;
+}
+
 void
 BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
 {

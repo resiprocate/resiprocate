@@ -1,7 +1,7 @@
 #if !defined(RESIP_PROFILE_HXX)
 #define RESIP_PROFILE_HXX
 
-#include <ostream>
+#include <iosfwd>
 #include <set>
 #include "resiprocate/Headers.hxx"
 #include "resiprocate/MethodTypes.hxx"

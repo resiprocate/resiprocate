@@ -1,61 +1,61 @@
-#include "BaseUsage.hxx"
-#include "Dialog.hxx"
-#include "DialogUsageManager.hxx"
+#include "resiprocate/dum/AppDialog.hxx"
+#include "resiprocate/dum/AppDialogSet.hxx"
+#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/DialogSet.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
+BaseUsage::Exception::Exception(const Data& msg,const Data& file,int line)
+   : BaseException(msg, file, line)
+{
+}
+
+const char*
+BaseUsage::Exception::name() const
+{
+   return "BaseUsage::Exception";
+}
+
 BaseUsage::BaseUsage(DialogUsageManager& dum, Dialog& dialog) :
+   Handled(dum),
    mDum(dum),
    mDialog(dialog),
-   mHandle(dum)
+   mHandle(dum, mId)
 {
 }
 
 BaseUsage::~BaseUsage()
 {
-   DebugLog (<< "BaseUsage::~BaseUsage() " << getBaseHandle().mId);
-   mDum.mUsageMap.erase(getBaseHandle().mId);
    mDialog.possiblyDie();
 }
 
-// connected to BaseUsage in DialogManager on make...
-BaseUsage::Handle::Handle(DialogUsageManager& dum)  : 
-   mId(getNext()),
-   mDum(&dum)
-{}
-
-bool
-BaseUsage::Handle::isValid() const
+AppDialogSetHandle 
+BaseUsage::getAppDialogSet()
 {
-   return mDum->isValid(*this);
+   return mDialog.mDialogSet.mAppDialogSet->getHandle();
 }
 
-BaseUsage*
-BaseUsage::Handle::get()
+AppDialogHandle 
+BaseUsage::getAppDialog()
 {
-   return mDum->getUsage(*this);
+   return mDialog.mAppDialog->getHandle();
 }
 
-BaseUsage::Handle::Id
-BaseUsage::Handle::getNext()
-{
-   static BaseUsage::Handle::Id id = 1;
-
-   return ++id;
-}
 void
 BaseUsage::send(const SipMessage& msg)
 {
     mDum.send(msg);
 }
 
-BaseUsage* 
-BaseUsage::Handle::operator->()
+BaseUsageHandle 
+BaseUsage::getBaseHandle()
 {
-   return get();
+   return mHandle;
 }
 
 /* ====================================================================

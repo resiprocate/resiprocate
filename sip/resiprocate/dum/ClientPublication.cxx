@@ -1,15 +1,23 @@
 #include <cassert>
-#include "ClientPublication.hxx"
-#include "Dialog.hxx"
-#include <cassert>
-#include "DumTimeout.hxx"
+
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/dum/ClientPublication.hxx"
+#include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/DumTimeout.hxx"
 #include "resiprocate/os/Logger.hxx"
+
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
+
+ClientPublicationHandle 
+ClientPublication::getHandle()
+{
+   return ClientPublicationHandle(mDum, getBaseHandle().getId());
+}
 
 ClientPublication::ClientPublication(DialogUsageManager& dum,
                                      Dialog& dialog,
@@ -30,16 +38,6 @@ ClientPublication::unpublish()
    return mPublish;
 }
 
-ClientPublication::Handle::Handle(DialogUsageManager& dum)
-   : BaseUsage::Handle(dum)
-{}
-
-ClientPublication* 
-ClientPublication::Handle::operator->()
-{
-   return static_cast<ClientPublication*>(get());
-}
-
 void 
 ClientPublication::dispatch(const SipMessage& msg)
 {
@@ -56,7 +54,7 @@ ClientPublication::dispatch(const SipMessage& msg)
       
       mDum.addTimer(DumTimeout::Publication, 
                     Helper::aBitSmallerThan(mPublish.header(h_Expires).value()), 
-                    getHandle(),
+                    getBaseHandle(),
                     ++mTimerSeq);
    }
    else
