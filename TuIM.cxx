@@ -230,9 +230,9 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    Dialog* dialog = NULL;
 
    // see if we already have this subscription
-   for ( unsigned int i=0; i< mSubscribers.size(); i++)
+   for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {
-      Dialog* d = mSubscribers[i];
+      Dialog* d = *i;
       assert( d );
       
       if ( d->getCallId() == id )
@@ -270,15 +270,15 @@ TuIM::processSubscribeRequest(SipMessage* msg)
     UInt64 now = Timer::getTimeMs();
     Uri from = msg->header(h_From).uri();
 
-    for ( int i=0; i<getNumBuddies(); i++)
+    for ( BuddyIterator i=mBuddy.begin(); i != mBuddy.end(); i++)
     {
-       Data buddyAor = mBuddy[i].uri.getAor();
+       Data buddyAor = i->uri.getAor();
        
-       if ( ! (mBuddy[i].presDialog->isCreated()) )
+       if ( ! (i->presDialog->isCreated()) )
        {
-          if (  from.getAor() == mBuddy[i].uri.getAor() )
+          if (  from.getAor() == i->uri.getAor() )
           {
-             mBuddy[i].mNextTimeToSubscribe = now;
+             i->mNextTimeToSubscribe = now;
           }
        }
     }
@@ -337,20 +337,20 @@ TuIM::processNotifyRequest(SipMessage* msg)
    bool changed = true;
 
    // update if found in budy list 
-   for ( int i=0; i<getNumBuddies();i++)
+   for ( BuddyIterator i=mBuddy.begin(); i != mBuddy.end(); i++)
    {
-      Uri u = getBuddyUri(i);
+      Uri u = i->uri; // getBuddyUri(i);
       
       if ( u.getAor() == from.getAor() )
       {
-         if ( (mBuddy[i].status == note) &&
-              (mBuddy[i].online == open) )
+         if ( (i->status == note) &&
+              (i->online == open) )
          {
             changed = false;
          }
          
-         mBuddy[i].status = note;
-         mBuddy[i].online = open;
+         i->status = note;
+         i->online = open;
       }
    }
    
@@ -482,9 +482,9 @@ TuIM::processResponse(SipMessage* msg)
    }
    
    // see if it is a subscribe response 
-   for ( int i=0; i<getNumBuddies(); i++)
+   for ( BuddyIterator i=mBuddy.begin(); i != mBuddy.end(); i++)
    {
-      Buddy& buddy = mBuddy[i];
+      Buddy& buddy = *i;
       assert(  buddy.presDialog );
       if ( buddy.presDialog->getCallId() == id  )
       {
@@ -648,18 +648,18 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
       
       bool changed = true;
       
-      for ( int i=0; i<getNumBuddies();i++)
+      for ( BuddyIterator i=mBuddy.begin(); i != mBuddy.end(); i++)
       {
-         Uri u = getBuddyUri(i);
+         Uri u = i->uri; // getBuddyUri(i);
          
          if ( u.getAor() == to.getAor() )
          {
-            if (  mBuddy[i].online == false )
+            if (  i->online == false )
             {  
                changed = false;
             }
             
-            mBuddy[i].online = false;
+            i->online = false;
          }
       }
 
@@ -695,12 +695,14 @@ TuIM::process()
    }
    
    // check if any subscribes need refresh
-   for ( int i=0; i<getNumBuddies(); i++)
+   for ( BuddyIterator i=mBuddy.begin(); i != mBuddy.end(); i++)
    {
-      if (  now > mBuddy[i].mNextTimeToSubscribe )
+      if (  now > i->mNextTimeToSubscribe )
       {
-         Buddy& buddy = mBuddy[i];
-         mBuddy[i].mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( mSubscriptionTimeSeconds*1000 );
+         Buddy& buddy = *i;
+         
+         buddy.mNextTimeToSubscribe 
+                    = Timer::getRandomFutureTimeMs( mSubscriptionTimeSeconds*1000 );
          
          assert(  buddy.presDialog );
          if ( buddy.presDialog->isCreated() )
@@ -718,7 +720,7 @@ TuIM::process()
          else
          {
             // person was not available last time - try to subscribe now
-            subscribeBuddy( mBuddy[i] );
+            subscribeBuddy( buddy );
          }
       }
    }
@@ -902,9 +904,9 @@ TuIM::setMyPresence( const bool open, const Data& status )
    assert( mPidf );
    mPidf->setSimpleStatus( open, status, mContact.getAor() );
    
-   for ( unsigned int i=0; i< mSubscribers.size(); i++)
+   for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
    {
-      Dialog* dialog = mSubscribers[i];
+      Dialog* dialog = *i;
       assert( dialog );
       
       sendNotify(dialog);
