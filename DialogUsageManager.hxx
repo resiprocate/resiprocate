@@ -110,6 +110,8 @@ class DialogUsageManager
       ServerOutOfDialogReq::Handle findServerOutOfDialog(DialogId id);
       
    private:
+      SipMessage& makeNewSession(BaseCreator* creator);
+
       // !dlb! interfaces certainly incomplete...
       ClientInviteSession* createClientInviteSession();
       ServerInviteSession* createServerInviteSession(const SipMessage& msg);
