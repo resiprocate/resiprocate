@@ -6,7 +6,7 @@
 using namespace Vocal2;
 
 void
-TransactionState::process(SipStack& stack)
+Vocal2::TransactionState::process(SipStack& stack)
 {
    Message* message = stack.mStateMacFifo.getNext();
    
@@ -26,3 +26,9 @@ TransactionState::process(SipStack& stack)
    }
    
 }
+
+void
+TransactionState::process( Message* msg )
+{
+}
+
