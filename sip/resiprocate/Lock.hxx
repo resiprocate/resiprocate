@@ -53,10 +53,10 @@
 
 
 static const char* const Lock_hxx_Version =
-    "$Id: Lock.hxx,v 1.1 2002/09/21 05:57:28 jason Exp $";
+    "$Id: Lock.hxx,v 1.2 2002/09/21 20:15:50 dabryan Exp $";
 
 
-#include <sip2/sipstack/Lockable.hxx>
+#include <sipstack/Lockable.hxx>
 
 namespace Vocal2
 {

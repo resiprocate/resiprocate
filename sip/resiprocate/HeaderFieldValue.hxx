@@ -1,8 +1,8 @@
 #ifndef HeaderFieldValue_hxx
 #define HeaderFieldValue_hxx
 
-#include <sip2/sipstack/SubComponentList.hxx>
-#include <sip2/sipstack/ParseException.hxx>
+#include <sipstack/SubComponentList.hxx>
+#include <sipstack/ParseException.hxx>
 
 
 namespace Vocal2
@@ -26,10 +26,10 @@ class HeaderFieldValue
       SubComponentList& getUnknownSubComponents();
       bool isParsed() const;
 
-      bool exists(const std::string& subcomponent);
+      bool exists(const Data& subcomponent);
       bool exists(const SubComponent::Type type);
       
-      UnknownSubComponent* get(const std::string& type);
+      UnknownSubComponent* get(const Data& type);
       
       HeaderFieldValue* next;
 

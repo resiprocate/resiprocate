@@ -2,8 +2,8 @@
 #define SUBCOMPONENTLIST_HXX
 
 #include <iostream>
-#include <sip2/sipstack/SubComponent.hxx>
-#include <sip2/sipstack/UnknownSubComponent.hxx>
+#include <sipstack/SubComponent.hxx>
+#include <sipstack/UnknownSubComponent.hxx>
 
 namespace Vocal2
 {
@@ -23,13 +23,13 @@ public:
   SubComponent* find(SubComponent::Type type) const;
   void erase(SubComponent::Type type);
   
-  SubComponent* find(const std::string& type) const;
+  SubComponent* find(const Data& type) const;
   
   // find just sees if it is there and returns 0 if not.
   
   // get creates an unknownSubComponent with an empty value 
-  SubComponent* get(const std::string& type);
-  void erase(const std::string& type);
+  SubComponent* get(const Data& type);
+  void erase(const Data& type);
   
   SubComponent* first;
   

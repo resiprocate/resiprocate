@@ -1,4 +1,4 @@
-#include <sip2/sipstack/UnknownSubComponent.hxx>
+#include <sipstack/UnknownSubComponent.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -11,14 +11,14 @@ UnknownSubComponent::UnknownSubComponent(const char* startName, unsigned int nam
 }
 
 
-UnknownSubComponent::UnknownSubComponent(const string& name, const string& data)
+UnknownSubComponent::UnknownSubComponent(const Data& name, const Data& data)
    : StringSubComponent(SubComponent::Unknown, data),
      mName(name)
 {
 }
 
 
-const string& 
+const Data& 
 UnknownSubComponent::getName()
 {
    return mName;

@@ -1,7 +1,7 @@
 #if defined(DEBUG)
 #include <iostream.h> // debug only !ah!
 #include <ctype.h> // debug only !ah!
-#include <string>
+#include <sipstack/Data.hxx>
 #endif
 
 #include <sipstack/Preparse.hxx>

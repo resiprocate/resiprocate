@@ -1,11 +1,11 @@
-#include <sip2/sipstack/SubComponent.hxx>
+#include <sipstack/SubComponent.hxx>
 
 
 using namespace Vocal2;
 using namespace std;
 
 
-string SubComponent::ParamString[] = { "unknown", "ttl", "transport", "maddr", "lr", "method", "user" };
+Data SubComponent::ParamString[] = { "unknown", "ttl", "transport", "maddr", "lr", "method", "user" };
 
 SubComponent::SubComponent(Type type)
    : next(0),
@@ -20,7 +20,7 @@ SubComponent::getType() const
 }
 
 
-const string& 
+const Data& 
 SubComponent::getName() const
 {
    return SubComponent::ParamString[mType];
