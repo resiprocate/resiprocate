@@ -1072,7 +1072,7 @@ extractFromPkcs7Recurse(Contents* tree,
                         Security& security)
 {
    assert(0);
-#if 0 // TODO take out when we have security2
+#if 1 // TODO take out when we have security2
    Pkcs7Contents* pk;
    if ((pk = dynamic_cast<Pkcs7Contents*>(tree)))
    {
