@@ -120,7 +120,8 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
    response->header(h_Vias) = request.header(h_Vias);
 
    // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.
-   if (!response->header(h_To).exists(p_tag))
+   // No totag for failure responses or 100s
+   if (!response->header(h_To).exists(p_tag) && responseCode < 300 && responseCode > 100)
    {
       response->header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
    }
@@ -357,6 +358,8 @@ Helper::authenticateRequest(const SipMessage& request,
                             const Data& password,
                             int expiresDelta)
 {
+   //DebugLog (<< "Authenticating: realm=" << realm << " password=" << password << " expires=" << expiresDelta);
+   
    const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
    for (ParserContainer<Auth>::const_iterator i = auths.begin();
         i != auths.end(); i++)
@@ -418,6 +421,7 @@ Helper::authenticateRequest(const SipMessage& request,
             }
             else
             {
+               InfoLog (<< "Unsupported qop=" << i->param(p_qop));
                return Failed;
             }
          }
@@ -436,6 +440,7 @@ Helper::authenticateRequest(const SipMessage& request,
          }
       }
    }
+   DebugLog (<< "No authentication headers. Failing request.");
    return Failed;
 }
 
@@ -621,6 +626,11 @@ Helper::getSentPort(SipMessage& request)
          port = Symbols::DefaultSipPort;
       }
    }
+   else
+   {
+      port = request.getSource().port;
+   }
+   assert(port != -1);
    return port;
 }
 
