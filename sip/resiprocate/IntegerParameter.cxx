@@ -22,7 +22,7 @@ IntegerParameter::IntegerParameter(ParameterTypes::Type type,
       {
          mValue = pb.integer();
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseBuffer::Exception& /*e*/)
       {
          mValue = 3600;
          pb.skipToOneOf(ParseBuffer::ParamTerm);
