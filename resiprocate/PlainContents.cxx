@@ -11,6 +11,10 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+const PlainContents PlainContents::Empty;
+static bool invokePlainContentsInit = PlainContents::init();
+
+
 bool
 PlainContents::init()
 {
@@ -19,7 +23,6 @@ PlainContents::init()
    return true;
 }
 
-const PlainContents PlainContents::Empty;
 
 PlainContents::PlainContents()
    : Contents(getStaticType()),

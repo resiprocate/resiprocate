@@ -583,8 +583,8 @@ TuIM::processMessageRequest(SipMessage* msg)
          return;
       } 
    }
-
-   Pkcs7Contents* sBody = dynamic_cast<Pkcs7Contents*>(contents);
+  
+   Pkcs7SignedContents* sBody = dynamic_cast<Pkcs7SignedContents*>(contents);
    if ( sBody )
    {
       assert( sBody );
@@ -592,6 +592,27 @@ TuIM::processMessageRequest(SipMessage* msg)
       assert(sec);
 
       contents = sec->decrypt( sBody );
+
+      if ( !contents )
+      { 
+         Uri from = msg->header(h_From).uri();
+         InfoLog( << "Some problem decoding signed SMIME message");
+        
+         mCallback->receivePageFailed( from );
+         return;
+      }
+
+      encrypted=true;
+   }
+
+   Pkcs7Contents* eBody = dynamic_cast<Pkcs7Contents*>(contents);
+   if ( eBody )
+   {
+      assert( eBody );
+      Security* sec = mStack->security;
+      assert(sec);
+
+      contents = sec->decrypt( eBody );
 
       if ( !contents )
       { 
