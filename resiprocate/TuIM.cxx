@@ -110,7 +110,8 @@ TuIM::haveCerts( bool sign, const Data& encryptFor )
 }
 
 
-void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& encryptFor)
+void TuIM::sendPage(const Data& text, const Uri& dest, 
+                    const bool sign, const Data& encryptFor)
 {
    if ( text.empty() )
    {
@@ -127,11 +128,21 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
 
    NameAddr contact;
    contact.uri() = mContact;
-      
-   SipMessage* msg = Helper::makeRequest(target, from, contact, MESSAGE);
-   assert( msg );
+
+   Dialog* dialog = new Dialog( NameAddr(mContact) );
  
-   Contents* body = new PlainContents(text);
+   auto_ptr<SipMessage> msg( dialog->makeInitialMessage(NameAddr(target),NameAddr(from)) );
+ 
+   Page page;
+   page.text = text;
+   page.uri = dest;
+   page.sign = sign;
+   page.encryptFor = encryptFor;
+   page.dialog = dialog;
+   
+   mPages.push_back(page);
+   
+   Contents* body = ( new PlainContents(text) );
    
 #if defined( USE_SSL )
    if ( !encryptFor.empty() )
@@ -474,9 +485,12 @@ TuIM::processResponse(SipMessage* msg)
    Data v1 = id.value();
    Data v2 = regId.value();
 
+   InfoLog( << "want id =" << id );
+
    if ( id == regId )
    {
-      DebugLog ( << "matched the reg dialog" <<  mRegistrationDialog.getCallId() << " = " << id  );
+      InfoLog ( << "matched the reg dialog" 
+                 <<  mRegistrationDialog.getCallId() << " = " << id  );
       processRegisterResponse( msg );
       return;
    }
@@ -486,24 +500,57 @@ TuIM::processResponse(SipMessage* msg)
    {
       Buddy& buddy = *i;
       assert(  buddy.presDialog );
+      InfoLog( << "check buddy id =" <<  buddy.presDialog->getCallId() );
       if ( buddy.presDialog->getCallId() == id  )
       {
-         DebugLog ( << "matched the sub dialog" );
+         DebugLog ( << "matched the subscribe dialog" );
          processSubscribeResponse( msg, buddy );
          return;
       }
    }
    
-   // likely is a response for some IM thing 
-   int number = msg->header(h_StatusLine).responseCode();
-   DebugLog ( << "got response of type " << number );
-   
-   if ( number >= 300 )
+   // see if it is a publish response
+   for ( StateAgentIterator i=mStateAgents.begin(); i != mStateAgents.end(); i++)
    {
-      Uri dest = msg->header(h_To).uri();
-      assert( mCallback );
-      mCallback->sendPageFailed( dest,number );
+      assert( i->dialog );
+      InfoLog( << "check publish id =" <<  i->dialog->getCallId() );
+      if ( i->dialog->getCallId() == id  )
+      {
+         DebugLog ( << "matched the publish dialog" );
+         processPublishResponse( msg, *i );
+         return;
+      }
    }
+   
+   // see if it is a notify response
+   for ( SubscriberIterator i=mSubscribers.begin(); i != mSubscribers.end(); i++)
+   {
+      Dialog* dialog = *i;
+      assert( dialog );
+      InfoLog( << "check subscriber id =" <<  dialog->getCallId() );
+      if ( dialog->getCallId() == id  )
+      {
+         DebugLog ( << "matched the notify dialog" );
+         processNotifyResponse( msg, *dialog );
+         return;
+      }
+   }
+   
+   // see if it is a page response
+   for ( PageIterator i=mPages.begin(); i != mPages.end(); i++)
+   {
+      assert( i->dialog ); 
+      InfoLog( << "check page id =" <<  i->dialog->getCallId() );
+      if ( i->dialog->getCallId() == id  )
+      {
+         DebugLog ( << "matched the MESSAGE dialog" );
+         processPageResponse( msg, *i );
+         return;
+      }
+   }
+  
+   int number = msg->header(h_StatusLine).responseCode();
+   InfoLog( << "got response that DID NOT MATCH of type " << number );
 }
 
 
@@ -603,6 +650,59 @@ TuIM::processRegisterResponse(SipMessage* msg)
       mCallback->registrationWorked( to );
 
       return;
+   }
+}
+
+
+void 
+TuIM::processNotifyResponse(SipMessage* msg, Dialog& d )
+{ 
+   int number = msg->header(h_StatusLine).responseCode();
+   DebugLog( << "got NOTIFY response of type " << number );
+   
+   if ( number >= 300 )
+   {
+   }
+}
+
+
+void 
+TuIM::processPublishResponse(SipMessage* msg, StateAgent& sa )
+{ 
+   int number = msg->header(h_StatusLine).responseCode();
+   DebugLog( << "got PUBLISH response of type " << number );
+   
+   if ( number >= 300 )
+   {
+   }
+}
+
+
+void 
+TuIM::processPageResponse(SipMessage* msg, Page& page )
+{
+   int number = msg->header(h_StatusLine).responseCode();
+   DebugLog( << "got MESSAGE response of type " << number );
+   
+   if ( number >= 300 )
+   {
+      Uri dest = msg->header(h_To).uri();
+      assert( mCallback );
+      mCallback->sendPageFailed( dest,number );
+   }
+
+   if ( number >= 200 )
+   { 
+      // got a final response for notify - can remove this dialog information
+      CallId id = msg->header(h_CallId);
+
+      for( PageIterator i=mPages.begin(); i != mPages.end(); i++ )
+      {
+         if ( i->dialog->getCallId() == id )
+         {
+            i = mPages.erase( i );
+         }
+      }
    }
 }
 
@@ -879,22 +979,22 @@ TuIM::sendNotify(Dialog* dialog)
 { 
    assert( dialog );
    
-   auto_ptr<SipMessage> notify( dialog->makeNotify() );
+   auto_ptr<SipMessage> msg( dialog->makeNotify() );
 
    Pidf* pidf = new Pidf( *mPidf );
 
-   notify->header(h_Event).value() = "presence";
+   msg->header(h_Event).value() = "presence";
 
    Token state;
    state.value() = Data("active");
    state.param(p_expires) = dialog->getExpirySeconds(); 
-   notify->header(h_SubscriptionStates).push_front(state);
+   msg->header(h_SubscriptionStates).push_front(state);
 
-   notify->setContents( pidf );
+   msg->setContents( pidf );
    
-   setOutbound( *notify );
+   setOutbound( *msg );
 
-   mStack->send( *notify );
+   mStack->send( *msg );
 }
 
 
