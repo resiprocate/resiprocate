@@ -1,6 +1,7 @@
 #include "resiprocate/XMLCursor.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Inserter.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #include <iostream>
 
@@ -18,6 +19,8 @@ using namespace std;
 int
 main()
 {
+   //Log::initialize(Log::COUT, Log::DEBUG, "testXMLCursor");
+
    // test assume that whitespace is not significant
    //   may eventually be controlled by the document/element
    // see http://www.w3.org/TR/1998/REC-xml-19980210#sec-white-space
@@ -48,12 +51,12 @@ main()
 
    {
       cerr << "test childless root" << endl;
-      Data contents("<?xml version=\"1.0\"?>\n"
+      Data contents("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                     "<foo>       </foo>");
       XMLCursor xmlc(ParseBuffer(contents.data(), contents.size()));
       
       assert(xmlc.getTag() == "foo");
-      cerr << "valeu: |" << xmlc.getValue() << "|" << endl;
+      cerr << "value: |" << xmlc.getValue() << "|" << endl;
       assert(xmlc.getValue().empty());
       assert(xmlc.getAttributes().empty());
       assert(xmlc.atRoot());
@@ -198,7 +201,39 @@ main()
       assert(tree.getTag().empty());
       assert(tree.getValue() == "christmas");
       assert(!tree.nextSibling());
-   }      
+   }
+
+   {
+      cerr << "test CRLF canonicalization" << endl;
+
+      Data contents("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
+                    "<list xmlns=\"urn:ietf:params:xml:ns:rmli\"\r\n"
+                    "      uri=\"sip:adam-friends@pres.example.com\" version=\"2\"\r\n"
+                    "      name=\"Buddy List at COM\" fullState=\"false\">\r\n"
+                    "  <resource uri=\"sip:ed@example.net\" name=\"Ed at NET\">\r\n"
+                    "    <instance id=\"sdlkmeopdf\" state=\"pending\"/>\r\n"
+                    "  </resource>\r\n"
+                    "  <resource uri=\"sip:adam-friends@example.org\"\r\n"
+                    "            name=\"My Friends at ORG\">\r\n"
+                    "    <instance id=\"cmpqweitlp\" state=\"active\"\r\n"
+                    "              cid=\"1KQhyE@pres.example.com\"/>\r\n"
+                    "  </resource>\r\n"
+                    "</list>");
+
+      XMLCursor tree(ParseBuffer(contents.data(), contents.size()));
+
+      cerr << "root tag = |" << tree.getTag() << "|" << endl;
+      assert(tree.getTag() == "list");
+      tree.firstChild();
+      do
+      {
+         cerr << tree.getTag() << endl;
+      }
+      while (tree.nextSibling());
+
+
+      assert(tree.getTag() == "resource");
+   }
 
    cerr << "All OK" << endl;
       
