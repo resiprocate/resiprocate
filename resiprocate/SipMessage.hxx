@@ -95,7 +95,7 @@ class SipMessage : public Message
 #ifdef PARTIAL_TEMPLATE_SPECIALIZATION
 
       template <class T>
-      typename T::UnknownReturn::Type&
+      typename T::UnknownReturn&
       SipMessage::header(const T& headerType) const
       {
          HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), T::Single);
