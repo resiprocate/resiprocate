@@ -122,7 +122,7 @@ UdpTransport::process(FdSet& fdset)
    // !jf! how do we tell if it discarded bytes 
    // !ah! we use the len-1 trick :-(
 
-   DebugLog( << "starting recvfrom" );
+   //DebugLog( << "starting recvfrom" );
    int len = recvfrom( mFd,
                        buffer,
                        MaxBufferSize,
@@ -155,7 +155,7 @@ UdpTransport::process(FdSet& fdset)
             break;
       }
    }
-   DebugLog( << "completed recvfrom" );
+   //DebugLog( << "completed recvfrom" );
 
    if (len == 0 || len == SOCKET_ERROR)
    {
