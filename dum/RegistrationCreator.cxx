@@ -1,8 +1,11 @@
-#include "RegistrationCreator.hxx"
-#include "DialogUsageManager.hxx"
-#include "Profile.hxx"
+#include "resiprocate/dum/RegistrationCreator.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, const NameAddr& aor)
    : BaseCreator(dum)
