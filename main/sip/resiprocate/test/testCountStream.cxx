@@ -8,8 +8,22 @@ using namespace std;
 
 int main()
 {
+   size_t count;
    {
-      CountStream cs;
+      {
+         CountStream cs(count);
+         
+         Data foo("foo");
+         
+         cs << "Here is some stuff " << foo << 17 << ' ' << 'c' << ' ' << -157 << endl;
+         cs.flush();
+         assert(cs.size() == strlen("Here is some stuff foo17 c -157\n"));
+      }
+      assert(count == strlen("Here is some stuff foo17 c -157\n"));
+   }
+
+   {
+      CountStream cs(count);
 
       Data foo("foo");
 
@@ -19,17 +33,7 @@ int main()
    }
 
    {
-      CountStream cs;
-
-      Data foo("foo");
-
-      cs << "Here is some stuff " << foo << 17 << ' ' << 'c' << ' ' << -157 << endl;
-      cs.flush();
-      assert(cs.size() == strlen("Here is some stuff foo17 c -157\n"));
-   }
-
-   {
-      CountStream cs;
+      CountStream cs(count);
       
       for (int i = 0; i < 200; i++)
       {
