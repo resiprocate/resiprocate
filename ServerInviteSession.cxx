@@ -28,6 +28,7 @@ ServerInviteSession::getHandle()
 void 
 ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 {
+   InfoLog (<< toData(mState) << ": redirect(" << code << ")"); // -> " << contacts);
    Destroyer::Guard guard(mDestroyer);
 
    switch (mState)
@@ -79,6 +80,8 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 void 
 ServerInviteSession::provisional(int code)
 {
+   InfoLog (<< toData(mState) << ": provisional(" << code << ")");
+
    switch (mState)
    {
       case UAS_Offer:
@@ -136,6 +139,7 @@ ServerInviteSession::provisional(int code)
 void 
 ServerInviteSession::provideOffer(const SdpContents& offer)
 {
+   InfoLog (<< toData(mState) << ": provideOffer");
    switch (mState)
    {
       case UAS_NoOffer:
@@ -186,6 +190,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer)
 void 
 ServerInviteSession::provideAnswer(const SdpContents& answer)
 {
+   InfoLog (<< toData(mState) << ": provideAnswer");
    switch (mState)
    {
       case UAS_Offer:
@@ -243,6 +248,7 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
 void 
 ServerInviteSession::end()
 {
+   InfoLog (<< toData(mState) << ": end");
    switch (mState)
    {
       case UAS_EarlyNoOffer:
@@ -284,6 +290,7 @@ ServerInviteSession::end()
 void 
 ServerInviteSession::reject(int code)
 {
+   InfoLog (<< toData(mState) << ": reject(" << code << ")");
    Destroyer::Guard guard(mDestroyer);
 
    switch (mState)
@@ -333,6 +340,7 @@ ServerInviteSession::reject(int code)
 void 
 ServerInviteSession::accept(int code)
 {
+   InfoLog (<< toData(mState) << ": accept(" << code << ")");
    switch (mState)
    {
       case UAS_Offer:
