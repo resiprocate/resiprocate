@@ -11,10 +11,11 @@
 #include "resiprocate/os/Logger.hxx"
 
 #include "resiprocate/SipStack.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/Transport.hxx"
-
+#include "resiprocate/ParserCategories.hxx"
 
 
 using namespace resip;
