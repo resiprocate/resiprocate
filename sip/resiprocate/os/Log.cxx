@@ -14,6 +14,7 @@
 
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Lock.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

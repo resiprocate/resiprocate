@@ -7,13 +7,7 @@
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/vmd5.hxx"
 #include "resiprocate/os/Coders.hxx"
-
-#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
-#endif 
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
