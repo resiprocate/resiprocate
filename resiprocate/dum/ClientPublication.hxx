@@ -8,7 +8,7 @@ namespace resip
  *   @todo This file is empty
  */
 
-class ClientPublication: public BaseSession {
+class ClientPublication: public BaseUsage {
 };
  
 }

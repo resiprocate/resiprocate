@@ -4,7 +4,7 @@
 namespace resip
 {
 
-class ClientInvSession : public BaseSession
+class ClientInvSession : public BaseUsage
 {
    public:
       void offer(SdpContents* offer);
