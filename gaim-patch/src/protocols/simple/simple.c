@@ -221,8 +221,15 @@ sippy_recv_cb(gpointer data, gint source, GaimInputCondition condition)
         gaim_debug(GAIM_DEBUG_INFO,"sippy","got a LOGIN_STATUS status=%d msg=%s\n",sipCode,buf);
 	if (gaim_connection_get_state(gc) != GAIM_CONNECTED)
 	{
-          gaim_connection_update_progress(gc,_("Connecting"),1,2);
-          gaim_connection_set_state(gc, GAIM_CONNECTED);
+          if (success)
+          {
+            gaim_connection_update_progress(gc,_("Connecting"),1,2);
+            gaim_connection_set_state(gc, GAIM_CONNECTED);
+          }
+          else
+          {
+            gaim_connection_error(gc, _(buf));
+          }
 	}
      }
      break;
