@@ -79,7 +79,7 @@ Transport::buildFdSet( fd_set* fdSet, int* fdSetSize )
    assert( fdSetSize );
 	
    FD_SET(mFd,fdSet);
-   if ( mFd <= (unsigned int)(*fdSetSize) )
+   if ( mFd+1 > (unsigned int)(*fdSetSize) )
    {
       *fdSetSize = mFd+1;
    }
