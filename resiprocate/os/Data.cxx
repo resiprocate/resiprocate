@@ -1169,7 +1169,7 @@ Data::find(const char* match, size_type start) const
       }
       else
       {
-         return pb.position() - pb.start();
+         return pb.position() - pb.start() + start;
       }
    }
 }

@@ -14,7 +14,7 @@ class TestData
       int main()
       {
          Log::initialize(Log::Cout, Log::Debug, Data::Empty);
-
+         
          {
             Data needsCharEncode("CharEncode % me");
             cerr << "original " << needsCharEncode << endl;
@@ -441,8 +441,15 @@ class TestData
          }
          {
             Data d1("abcdefghi");
+            assert(d1.find("def") == 3);
+            assert(d1.find("def", 3) == 3);
             assert (d1.substr(d1.find("def"), 3) == "def");
             cerr << "substr = " << d1.substr(5,4) << endl;
+         }
+         {
+            Data d1("http://123456/123");
+            assert(d1.find("/") == 5);
+            assert(d1.find("/", 7) == 13);
          }
          {
             Data d1("0");
