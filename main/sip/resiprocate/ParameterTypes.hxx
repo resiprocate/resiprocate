@@ -150,6 +150,30 @@ class ParameterType<ParameterTypes::tag>
 };
 extern ParameterType<ParameterTypes::tag> p_tag;
 
+class ParameterType<ParameterTypes::toTag>
+{
+   public:
+      typedef DataParameter Type;
+
+      ParameterType()
+      {
+         ParameterTypes::ParameterNames[ParameterTypes::toTag] = Symbols::toTag;
+      }
+};
+extern ParameterType<ParameterTypes::tag> p_toTag;
+
+class ParameterType<ParameterTypes::fromTag>
+{
+   public:
+      typedef DataParameter Type;
+
+      ParameterType()
+      {
+         ParameterTypes::ParameterNames[ParameterTypes::fromTag] = Symbols::fromTag;
+      }
+};
+extern ParameterType<ParameterTypes::tag> p_fromTag;
+
 class ParameterType<ParameterTypes::duration>
 {
    public:
