@@ -1,11 +1,12 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.52 2003/01/25 03:35:25 jason Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.53 2003/01/25 03:56:00 jason Exp $";
 
-#include <iostream>
 #include "sip2/util/compat.hxx"
 #include "sip2/util/DataStream.hxx"
+#include <iostream>
+#include <string>
 
 class TestData;
 namespace Vocal2
@@ -23,6 +24,7 @@ class Data
       Data(const char* buffer, int length);
       Data(const unsigned char* buffer, int length);
       Data(const Data& data);
+      explicit Data(const std::string& str);
       explicit Data(int value);
       explicit Data(unsigned long value);
       explicit Data(unsigned int value);
