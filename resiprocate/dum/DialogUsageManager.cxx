@@ -104,6 +104,13 @@ DialogUsageManager::~DialogUsageManager()
    //InfoLog ( << "~DialogUsageManager done" );
 }
 
+const Data& 
+DialogUsageManager::name() const
+{
+   static Data n("DialogUsageManager");
+   return n;
+}
+
 void
 DialogUsageManager::addTransport( TransportType protocol,
                                   int port,

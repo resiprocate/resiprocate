@@ -46,8 +46,11 @@ class TransactionState : public DnsHandler
          Bogus
       } State;
 
-      TransactionState(TransactionController& controller, Machine m, State s, 
-                       const Data& tid, TransactionUser* tu);
+      TransactionState(TransactionController& controller, 
+                       Machine m, 
+                       State s, 
+                       const Data& tid, 
+                       TransactionUser* tu=0);
       
       void handle(DnsResult*);
 
