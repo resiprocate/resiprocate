@@ -25,8 +25,9 @@ class Uri;
 class SipStack
 {
    public:
-      // If multithreaded=true, run transports, timerqueue, transaction and dns
-      // in separate threads
+      // If multithreaded=true, run each transports in separate threads. The
+      // main stack thread still runs the dns, timers, transaction and
+      // transportSelector in it. 
       // Set stateless=true, if you want to use the stack for a stateless proxy
       // (no transactions)
       SipStack(bool multiThreaded=false, Security* security=0, bool stateless=false);
