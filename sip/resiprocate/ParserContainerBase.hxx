@@ -13,7 +13,7 @@ class HeaderFieldValueList;
 class ParserContainerBase
 {
    public:
-      ParserContainerBase(Headers::Type type = Headers::UNKNOWN)
+      ParserContainerBase(Headers::Type type = Headers::RESIP_UNKNOWN)
          : mType(type)
       {}
       ParserContainerBase(const ParserContainerBase& rhs)

@@ -103,9 +103,9 @@ class Dialog
       //invariants
       typedef enum // need to add
       {
-         Invitation,   // INVITE dialog
+         Invitation,   // RESIP_INVITE dialog
          Subscription, // Created by a SUBSCRIBE / NOTIFY / REFER
-         Fake          // Not really a dialog (e.g. created by a REGISTER)
+         Fake          // Not really a dialog (e.g. created by a RESIP_REGISTER)
       } DialogType;
       
       DialogType mType; // !jf! is this necessary?

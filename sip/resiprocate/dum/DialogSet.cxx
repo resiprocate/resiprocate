@@ -193,7 +193,7 @@ DialogSet::findDialog(const SipMessage& msg)
          if (it->second->mRemoteTarget.uri() == msg.header(h_Contacts).front().uri())
          {
             //!dcm! in the vonage case, the to tag should be updated to match the fake
-            //vonage tag introduced in the 200 which is also used for the BYE.
+            //vonage tag introduced in the 200 which is also used for the RESIP_BYE.
             //find out how deep this rabbit hole goes, may just have a pugabble
             //filter api that can be added for dialog matching if things get any
             //more specific--this is the VonageKludgeFilter
@@ -262,7 +262,7 @@ DialogSet::dispatch(const SipMessage& msg)
                
                if (!mDialogs.empty())
                {
-                  //a dialog is refusing this 3xx(only implemented for INVITE,
+                  //a dialog is refusing this 3xx(only implemented for RESIP_INVITE,
                   //Subscribe dialogs always refuse as they don't have an early state)
                   return; //(toss 3xx)                  
                }

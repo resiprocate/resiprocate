@@ -489,8 +489,8 @@ main(int argc, char* argv[])
    }
 
    {
-      Uri sip1("sip:biloxi.com;transport=tcp;method=REGISTER?to=sip:bob%40biloxi.com");
-      Uri sip2("sip:biloxi.com;method=REGISTER;transport=tcp?to=sip:bob%40biloxi.com");
+      Uri sip1("sip:biloxi.com;transport=tcp;method=RESIP_REGISTER?to=sip:bob%40biloxi.com");
+      Uri sip2("sip:biloxi.com;method=RESIP_REGISTER;transport=tcp?to=sip:bob%40biloxi.com");
 
       assert(sip1 == sip2);
       assert(sip2 == sip1);
