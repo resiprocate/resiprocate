@@ -136,7 +136,7 @@ TlsTransport::processListen(FdSet& fdset)
       who.transportType = Transport::TLS;
       who.transport = this;
       
-      ConnectionMap::Connection* con = mConnectionMap.add(who, sock);
+      Connection* con = mConnectionMap.add(who, sock);
       assert( con );
       //  con->mTlsConnection = tls;
 
@@ -146,7 +146,7 @@ TlsTransport::processListen(FdSet& fdset)
 }
 
 bool
-TlsTransport::processRead(ConnectionMap::Connection* c)
+TlsTransport::processRead(Connection* c)
 {
    std::pair<char* const, size_t> writePair = c->getWriteBuffer();
    size_t bytesToRead = min(writePair.second, TlsTransport::MaxReadSize);
@@ -181,7 +181,7 @@ TlsTransport::processAllReads(FdSet& fdset)
 {
    if (!mConnectionMap.mConnections.empty())
    {
-      for (ConnectionMap::Connection* c = mConnectionMap.mPostOldest.mYounger;
+      for (Connection* c = mConnectionMap.mPostOldest.mYounger;
            c != &mConnectionMap.mPreYoungest; c = c->mYounger)
       {
 // !jf! - TODO - likely need to call the tlsConnection-.isReady stuff 
@@ -210,7 +210,7 @@ TlsTransport::processAllWrites( FdSet& fdset )
       SendData* data = mTxFifo.getNext();
       const Transport::Tuple& who = data->destination;
       
-      ConnectionMap::Connection* conn = mConnectionMap.get(who);
+      Connection* conn = mConnectionMap.get(who);
       
       if ( !conn )
       {
@@ -249,13 +249,13 @@ TlsTransport::processAllWrites( FdSet& fdset )
          else
          {
 #if 0
-            if (attempt > ConnectionMap::MaxAttempts)
+            if (attempt > MaxAttempts)
             {
                return 0;
             }
             
             // !dlb! does the file descriptor become available immediately?
-            gc(ConnectionMap::MinLastUsed);
+            gc(MinLastUsed);
             return get(who, attempt+1);
 #endif
          }
@@ -325,7 +325,7 @@ TlsTransport::sendFromRoundRobin(FdSet& fdset)
 }
 
 bool
-TlsTransport::processWrite(ConnectionMap::Connection* c)
+TlsTransport::processWrite(Connection* c)
 {
    assert(!c->mOutstandingSends.empty());
    SendData* data = c->mOutstandingSends.front();
