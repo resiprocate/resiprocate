@@ -166,8 +166,12 @@ Timer::getSystemTicks()
 #else  
 #  if defined(__GNUC__) && ( defined(__i686__) || defined(__i386__) )
    asm("rdtsc" : "=A" (tick));
-#  else
+#else
+#if defined (__SUNPRO_CC)	
+   tick = gethrtime();//This is Not expensive Under solaris 8 & above but systemcall in solaris7
+#else
    tick = cjGetSystemTimeOfDay();
+#endif
 #  endif
 #endif
    return tick;
