@@ -140,14 +140,12 @@ AresDns::process(fd_set& read, fd_set& write)
 char* 
 AresDns::errorMessage(long errorCode)
 {
-   char* errmem=0;
-   ares_strerror(errorCode, &errmem);
+   const char* aresMsg = ares_strerror(errorCode);
 
-   int len = strlen(errmem);
+   int len = strlen(aresMsg);
    char* errorString = new char[len];
 
-   strncpy(errorString, errmem, len);
-   ares_free_errmem(errmem);
+   strncpy(errorString, aresMsg, len);
    return errorString;
 }
 
