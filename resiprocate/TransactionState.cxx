@@ -599,10 +599,10 @@ TransactionState::processClientInvite(  Message* msg )
             break;
 
          case Timer::TimerB:
-            // inform TU 
+            // !rk! is this right?
+            sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));
             delete msg;
             delete this;
-            assert(0);
             break;
 
          case Timer::TimerD:
@@ -615,6 +615,10 @@ TransactionState::processClientInvite(  Message* msg )
             mCancelStateMachine->processClientNonInvite(msg);
             break;
       }
+   }
+   else if (isDns(msg))
+   {
+      processDns(msg);
    }
 }
 
