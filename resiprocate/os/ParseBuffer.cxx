@@ -169,6 +169,13 @@ ParseBuffer::data(Data& data, const char* start) const
    data.mMine = false;
 }
 
+Data
+ParseBuffer::data(const char* start) const
+{
+   Data data(start, mStart - start);
+   return data;
+}
+
 int
 ParseBuffer::integer()
 {
