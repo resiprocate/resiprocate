@@ -26,7 +26,9 @@ class Parameter
       virtual bool isQuoted() const { return false; } // only on DataParameter
       virtual void setQuoted(bool b) { }; // only on DataParameter
 
-	  Parameter* next;
+   protected:
+      Parameter(const Parameter& other) : mType(other.mType) {};
+      Parameter& operator=(const Parameter& other); // don't define
 
    private:
       ParameterTypes::Type mType;
