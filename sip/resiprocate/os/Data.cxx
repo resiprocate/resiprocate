@@ -12,7 +12,7 @@ using namespace resip;
 using namespace std;
 
 const Data Data::Empty("", 0);
-const int Data::npos = INT_MAX;
+const Data::size_type Data::npos = UINT_MAX;
 
 bool
 Data::init()
@@ -1021,7 +1021,7 @@ Data
 Data::substr(size_type first, size_type count) const
 {
    assert(first <= mSize);
-   if ( (int)count == Data::npos)
+   if ( count == Data::npos)
    {
       return Data(mBuf+first, mSize-first);
    }
@@ -1032,13 +1032,13 @@ Data::substr(size_type first, size_type count) const
    }
 }
 
-int 
+Data::size_type
 Data::find(const Data& match, size_type start) const
 {
    return find(match.data(), start);
 }
 
-int 
+Data::size_type
 Data::find(const char* match, size_type start) const
 {
    if (start > mSize) 
