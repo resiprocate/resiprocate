@@ -1,5 +1,6 @@
 
-class SubscribeHandler {
+class SubscribeHandler 
+{
 
   public:
       virtual void onSubscribe(ServerSubscription::Handle sub, SipMessage& msg);
