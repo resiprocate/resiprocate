@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2002/09/28 16:41:18 fluffy Exp $
+# $Id: Makefile,v 1.8 2002/09/30 20:53:41 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -13,6 +13,7 @@ SRC =	\
 	Log.cxx \
 	Logger.cxx \
 	Mutex.cxx \
+	ParseBuffer.cxx \
 	RandomHex.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
@@ -100,3 +101,9 @@ $(BIN)/libutil2.a: $(OBJS)
 
 -include $(OBJ)/*.d
 
+# OK THE REST OF THE FILE IS OK TO MODIFY
+
+testParseBuffer:  $(OBJS) $(OBJ)/testParseBuffer.o 
+	@$(MAKE) $(^:.o=.d)
+	@$(MAKE) $(^)
+	$(CXX) $(LDFLAGS) -o $(BIN)/$@ $^ $(LDLIBS)
