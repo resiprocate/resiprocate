@@ -28,7 +28,7 @@ class Registration
       void setExpiration(int secs);
 
       // returns time (in secs) when REGISTER should be refreshed
-      UInt64 getTimeToRefresh() const;
+      time_t getTimeToRefresh() const;
       const CallID& getCallID() const;
       bool isRegistered() const;
       
