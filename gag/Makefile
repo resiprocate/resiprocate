@@ -18,6 +18,10 @@ show.%:
 clean:
 	$(RM) *.o gag .*.d
 
+# This is very crude
+install: gag
+	cp $^ /usr/local/bin
+
 # Fast and sloppy dependencies
 DEPS := $(patsubst %.cxx, .%.d, $(wildcard *.cxx))
 -include $(DEPS)
