@@ -1,14 +1,14 @@
-#if !defined(RESIP_INVITEHANDLER_HXX)
-#define RESIP_INVITEHANDLER_HXX
+#if !defined(RESIP_INVSESSIONHANDLER_HXX)
+#define RESIP_INVSESSIONHANDLER_HXX
 
-/** @file InviteHandler.hxx
+/** @file InvSessionHandler.hxx
  *  
  */
 
 namespace resip
 {
 
-class InviteHandler
+class InvSessionHandler
 {
    public:
       virtual void onDialogModified(ClientInvSession&, const SipMessage& msg)=0;
