@@ -86,48 +86,57 @@ AsyncCLessTransport::handleReceive(AsyncCLessReceiveResult res)
    // Tell the SipMessage about this datagram buffer.
    message->addBuffer(buffer);
 
-
-   mMsgHeaderScanner.prepareForMessage(message);
-
-   char *unprocessedCharPtr;
-   if (mMsgHeaderScanner.scanChunk(buffer,
-                                   len,
-                                   &unprocessedCharPtr) !=
-                                                      MsgHeaderScanner::scrEnd)
+   try
    {
-      DebugLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
+      mMsgHeaderScanner.prepareForMessage(message);
+      
+      char *unprocessedCharPtr;
+      if (mMsgHeaderScanner.scanChunk(buffer,
+                                      len,
+                                      &unprocessedCharPtr) !=
+          MsgHeaderScanner::scrEnd)
+      {
+         DebugLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
+         DebugLog(<< Data(buffer, len));
+         delete message; 
+         message=0; 
+         return;
+      }
+      
+      // no pp error
+      int used = unprocessedCharPtr - buffer;
+      
+      if (used < len)
+      {
+         // body is present .. add it up.
+         // NB. The Sip Message uses an overlay (again)
+         // for the body. It ALSO expects that the body
+         // will be contiguous (of course).
+         // it doesn't need a new buffer in UDP b/c there
+         // will only be one datagram per buffer. (1:1 strict)
+         
+         message->setBody(buffer+used,len-used);
+         //DebugLog(<<"added " << len-used << " byte body");
+      }
+      
+      if (!basicCheck(*message))
+      {
+         delete message; // cannot use it, so, punt on it...
+         // basicCheck queued any response required
+         message = 0;
+         return;
+      }
+      stampReceived(message);
+      mStateMachineFifo.add(message);
+   }
+   catch(ParseBuffer::Exception& e)
+   {
+      DebugLog(<<"Parser fail from " << tuple);
       DebugLog(<< Data(buffer, len));
       delete message; 
       message=0; 
       return;
    }
-
-   // no pp error
-   int used = unprocessedCharPtr - buffer;
-
-   if (used < len)
-   {
-      // body is present .. add it up.
-      // NB. The Sip Message uses an overlay (again)
-      // for the body. It ALSO expects that the body
-      // will be contiguous (of course).
-      // it doesn't need a new buffer in UDP b/c there
-      // will only be one datagram per buffer. (1:1 strict)
-
-      message->setBody(buffer+used,len-used);
-      //DebugLog(<<"added " << len-used << " byte body");
-   }
-
-   if (!basicCheck(*message))
-   {
-     delete message; // cannot use it, so, punt on it...
-                     // basicCheck queued any response required
-     message = 0;
-     return;
-   }
-
-   stampReceived(message);
-   mStateMachineFifo.add(message);
 }
 
 
