@@ -54,7 +54,10 @@ class ParserCategory : public LazyParser
       
       void parseParameters(ParseBuffer& pb);
       std::ostream& encodeParameters(std::ostream& str) const;
-
+      
+      // used to compare 2 parameter lists for equality in an order independent way
+      Data commutativeParameterHash() const;
+      
    protected:
       ParserCategory();
 
