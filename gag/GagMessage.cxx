@@ -8,55 +8,58 @@
 // a good pattern for this off the top of my head.
 
 GagMessage *
-GagMessage::getMessage(istream &is)
+GagMessage::getMessage(int in_fd)
 {
   int type;
 
-  is.read((char *)&type, sizeof(type));
+  if (GagMessage::readAll(in_fd,(char *)&type, sizeof(type)) < 0 )
+  { 
+    return NULL; 
+  }
 
   DebugLog ( << "Reading message of type " << type);
 
   switch (type)
   {
     case IM:
-        return new GagImMessage(is);
+        return new GagImMessage(in_fd);
       break;
 
     case PRESENCE:
-        return new GagPresenceMessage(is);
+        return new GagPresenceMessage(in_fd);
       break;
 
     case HELLO:
-        return new GagHelloMessage(is);
+        return new GagHelloMessage(in_fd);
       break;
 
     case LOGIN:
-        return new GagLoginMessage(is);
+        return new GagLoginMessage(in_fd);
       break;
 
     case LOGOUT:
-        return new GagLogoutMessage(is);
+        return new GagLogoutMessage(in_fd);
       break;
 
     case ADD_BUDDY:
-        return new GagAddBuddyMessage(is);
+        return new GagAddBuddyMessage(in_fd);
       break;
 
     case REMOVE_BUDDY:
-        return new GagRemoveBuddyMessage(is);
+        return new GagRemoveBuddyMessage(in_fd);
       break;
 
    case SHUTDOWN:
-        return new GagShutdownMessage(is);
+        return new GagShutdownMessage(in_fd);
       break;
 
     // Technically, we shouldn't get these. But, oh well.
     case GAG_ERROR:
-        return new GagErrorMessage(is);
+        return new GagErrorMessage(in_fd);
       break;
 
     case LOGIN_STATUS:
-        return new GagLoginStatusMessage(is);
+        return new GagLoginStatusMessage(in_fd);
       break;
 
     default:
@@ -110,30 +113,42 @@ GagMessage::serialize(ostream &os, const int& value)
 }
 
 bool
-GagMessage::parse(istream &is, Data &data)
+GagMessage::parse(int in_fd, Data &data)
 {
   int size;
   char *temp;
 
-  is.read((char *)&size, sizeof(size));
+  if ( GagMessage::readAll(in_fd,(char *)&size, sizeof(size)) < 0 )
+  { 
+    return (false); 
+  }
   temp=(char *)malloc(size);
   if (!temp) return (false);
-  is.read(temp, size);
+  if ( GagMessage::readAll(in_fd,temp, size) < 0 )
+  {
+    return (false);
+  }
   data = Data(temp, size);
   free(temp);
   return true;
 }
 
 bool
-GagMessage::parse(istream &is, Uri &uri)
+GagMessage::parse(int in_fd, Uri &uri)
 {
   int size;
   char *temp;
 
-  is.read((char *)&size, sizeof(size));
+  if (GagMessage::readAll(in_fd,(char *)&size, sizeof(size)) < 0 )
+  {
+    return (false);
+  }
   temp=(char *)malloc(size);
   if (!temp) return (false);
-  is.read(temp, size);
+  if (GagMessage::readAll(in_fd,temp, size) < 0 )
+  {
+    return (false);
+  }
   DebugLog ( << "Parsing URI from GAIM: " << Data(temp,size));
   uri = Uri(Data(temp,size));
   free(temp);
@@ -141,42 +156,80 @@ GagMessage::parse(istream &is, Uri &uri)
 }
 
 bool
-GagMessage::parse(istream &is, bool &flag)
+GagMessage::parse(int in_fd, bool &flag)
 {
   int size;
   char *temp;
 
-  is.read((char *)&size, sizeof(size));
+  if (GagMessage::readAll(in_fd,(char *)&size, sizeof(size)) < 0 )
+  {
+     return (false);
+  }
   temp=(char *)malloc(size);
   if (!temp) return (false);
-  is.read(temp, size);
+  if ( GagMessage::readAll(in_fd,temp, size) < 0 )
+  {
+    return (false);
+  }
   flag = (temp[0]?true:false);
   free(temp);
   return true;
 }
 
 bool
-GagMessage::parse(istream &is, int &value)
+GagMessage::parse(int in_fd, int &value)
 {
   int size;
   char *temp;
 
-  is.read((char *)&size, sizeof(size));
+  if ( GagMessage::readAll(in_fd,(char *)&size, sizeof(size)) < 0 )
+  {
+    return (false);
+  }
   temp=(char *)malloc(size);
   if (!temp) return (false);
-  is.read(temp, size);
+  if ( GagMessage::readAll(in_fd,temp, size) < 0 )
+  {
+    return (false);
+  }
   value = *(reinterpret_cast<int *>(temp));
   free(temp);
   return true;
 }
 
+
+ssize_t
+GagMessage::readAll(int fd, char* target, size_t length)
+{
+
+  DebugLog ( << "Attempting to read " << length << " bytes from peer");
+
+  size_t remaining = length;
+  size_t offset = 0;
+  while (remaining)
+  {
+    size_t readSize = read(fd,target+offset,remaining);
+
+    DebugLog ( << "  Read " << length << " bytes");
+
+    if ( readSize == -1 )
+    {
+       DebugLog ( << "  Which is, of course, erroneous");
+       return -1;
+    }
+    remaining -= readSize;
+    offset += readSize;
+  }
+  return length;
+}
+
 void
-GagImMessage::parse(istream &is)
+GagImMessage::parse(int in_fd)
 {
   valid = false;
-  if (!GagMessage::parse(is, to)) return;
-  if (!GagMessage::parse(is, from)) return;
-  if (!GagMessage::parse(is, im)) return;
+  if (!GagMessage::parse(in_fd, to)) return;
+  if (!GagMessage::parse(in_fd, from)) return;
+  if (!GagMessage::parse(in_fd, im)) return;
   DebugLog ( << "Got IM from Gaim [from = '" << from 
              << "' to = '" << to << "' im = '" << im << "']");
   valid = true;
@@ -197,12 +250,12 @@ GagImMessage::serialize(ostream &os) const
 }
 
 void
-GagPresenceMessage::parse(istream &is)
+GagPresenceMessage::parse(int in_fd)
 {
   valid = false;
-  if (!GagMessage::parse(is, aor)) return;
-  if (!GagMessage::parse(is, available)) return;
-  if (!GagMessage::parse(is, status)) return;
+  if (!GagMessage::parse(in_fd, aor)) return;
+  if (!GagMessage::parse(in_fd, available)) return;
+  if (!GagMessage::parse(in_fd, status)) return;
   DebugLog ( << "Got presence from Gaim [aor = '" << aor 
              << "' available = '" << (available ? "true" : "false")
              << "' status = '" << status << "']");
@@ -225,10 +278,10 @@ GagPresenceMessage::serialize(ostream &os) const
 }
 
 void
-GagHelloMessage::parse(istream &is)
+GagHelloMessage::parse(int in_fd)
 {
   valid = false;
-  if (!GagMessage::parse(is, ok)) return;
+  if (!GagMessage::parse(in_fd, ok)) return;
   DebugLog ( << "Got hello from Gaim [ ok = '" << (ok?"true":"false") << "']");
   valid = true;
 }
@@ -246,12 +299,12 @@ GagHelloMessage::serialize(ostream &os) const
 }
 
 void
-GagLoginMessage::parse(istream &is)
+GagLoginMessage::parse(int in_fd)
 {
   valid = false;
-  if (!GagMessage::parse(is, aor)) return;
-  if (!GagMessage::parse(is, userid)) return;
-  if (!GagMessage::parse(is, password)) return;
+  if (!GagMessage::parse(in_fd, aor)) return;
+  if (!GagMessage::parse(in_fd, userid)) return;
+  if (!GagMessage::parse(in_fd, password)) return;
   DebugLog ( << "Got login from Gaim [aor = '" << aor 
              << "' userid = '" << userid 
              << "' password = '" << password << "']");
@@ -274,10 +327,10 @@ GagLoginMessage::serialize(ostream &os) const
 }
 
 void
-GagLogoutMessage::parse(istream &is)
+GagLogoutMessage::parse(int in_fd)
 {
   valid = false;
-  if (!GagMessage::parse(is, aor)) return;
+  if (!GagMessage::parse(in_fd, aor)) return;
   DebugLog ( << "Got logout from Gaim [aor = '" << aor << "']");
   valid = true;
 }
@@ -293,11 +346,11 @@ GagLogoutMessage::serialize(ostream &os) const
 }
 
 void
-GagAddBuddyMessage::parse(istream &is)
+GagAddBuddyMessage::parse(int in_fd)
 {
   valid = false;
-  if (!GagMessage::parse(is, us)) return;
-  if (!GagMessage::parse(is, them)) return;
+  if (!GagMessage::parse(in_fd, us)) return;
+  if (!GagMessage::parse(in_fd, them)) return;
   DebugLog ( << "Got addbuddy from Gaim [them = '" << them 
              << "' us = '" << us << "']");
   valid = true;
@@ -317,11 +370,11 @@ GagAddBuddyMessage::serialize(ostream &os) const
 
 
 void
-GagRemoveBuddyMessage::parse(istream &is)
+GagRemoveBuddyMessage::parse(int in_fd)
 {
   valid = false;
-  if (!GagMessage::parse(is, us)) return;
-  if (!GagMessage::parse(is, them)) return;
+  if (!GagMessage::parse(in_fd, us)) return;
+  if (!GagMessage::parse(in_fd, them)) return;
   DebugLog ( << "Got removebuddy from Gaim [them = '" << them 
              << "' us = '" << us << "']");
   valid = true;
@@ -340,10 +393,10 @@ GagRemoveBuddyMessage::serialize(ostream &os) const
 }
 
 void
-GagErrorMessage::parse(istream &is)
+GagErrorMessage::parse(int in_fd)
 {
   valid = false;
-  if (!GagMessage::parse(is, message)) return;
+  if (!GagMessage::parse(in_fd, message)) return;
   DebugLog ( << "Got error from Gaim [message = '" << message << "']");
   valid = true;
 }
@@ -359,12 +412,12 @@ GagErrorMessage::serialize(ostream &os) const
 }
 
 void
-GagLoginStatusMessage::parse(istream &is)
+GagLoginStatusMessage::parse(int in_fd)
 {
   valid = false;
-  if (!GagMessage::parse(is, success)) return;
-  if (!GagMessage::parse(is, sipCode)) return;
-  if (!GagMessage::parse(is, message)) return;
+  if (!GagMessage::parse(in_fd, success)) return;
+  if (!GagMessage::parse(in_fd, sipCode)) return;
+  if (!GagMessage::parse(in_fd, message)) return;
   DebugLog ( << "Got loginstatus from Gaim [success = '" 
              << (success ? "true":"false")
              << "' sipcode = '" << sipCode

@@ -171,6 +171,8 @@ main (int argc, char **argv)
   int time;
   int err;
 
+#if 0
+  // candidate for deletion
 #ifndef WIN32
   // Make stdin nonblocking
   fcntl(0, F_SETFL, O_NONBLOCK);
@@ -178,6 +180,7 @@ main (int argc, char **argv)
     unsigned long noBlock = 1;
 	int errNoBlock = ioctlsocket( 0, FIONBIO , &noBlock );
 	assert( errNoBlock == 0 );
+#endif
 #endif
 
   while (1)
@@ -218,53 +221,32 @@ main (int argc, char **argv)
 
     if (fdset.readyToRead(fileno(stdin)))
     {
-      stringstream input;
-      char buffer[256];
-      int len;
 
       DebugLog ( << "stdin is ready to read" );
 
-      do
+      GagMessage *message = GagMessage::getMessage(fileno(stdin));
+
+      if (message)
       {
-        len = read(0, buffer, sizeof(buffer));
-        DebugLog ( << "Read " << len << " bytes from stdin");
-        input.write(buffer, len);
+        conduit.handleMessage(message);
+        delete message;
       }
-      while (len == sizeof(buffer));
-
-      while (input.rdbuf()->in_avail())
+      else
       {
-        GagMessage *message = GagMessage::getMessage(input);
-
-        if (message)
-        {
-          conduit.handleMessage(message);
-          delete message;
-        }
-        else
-        {
-          Data error("Panic! Something is horribly wrong!");
-          DebugLog ( << "Received unexpected series of bytes from Gaim" );
-          GagErrorMessage(error).serialize(cout);
-          conduit.removeAllUsers();
-          shutdown(&sipStack);
-          exit(-1);
-        }
-        if (!conduit.isRunning())
-        {
-          shutdown(&sipStack);
-          exit (0);
-        }
-        sipStack.process(fdset);
-        conduit.process();
+        Data error("Panic! Something is horribly wrong!");
+        DebugLog ( << "Received unexpected series of bytes from Gaim" );
+        GagErrorMessage(error).serialize(cout);
+        conduit.removeAllUsers();
+        shutdown(&sipStack);
+        exit(-1);
       }
-
-      if (len == -1)
+      if (!conduit.isRunning())
       {
-        DebugLog ( << "It would appear that our parent is gone");
         shutdown(&sipStack);
         exit (0);
       }
+      sipStack.process(fdset);
+      conduit.process();
 
     }
     else
