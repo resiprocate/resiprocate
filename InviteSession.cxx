@@ -1,7 +1,6 @@
 #include "resiprocate/MultipartMixedContents.hxx"
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
@@ -15,6 +14,7 @@
 #include "resiprocate/os/compat.hxx"
 
 //#include "resiprocate/dum/ServerInviteSession.hxx"
+//#include "resiprocate/dum/ClientInviteSession.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32)
@@ -825,6 +825,27 @@ InviteSession::toData(State state)
          return "InviteSession::WaitingToTerminate";
       case Terminated:
          return "InviteSession::Terminated";
+
+      case UAC_Start:
+         return "UAC_Start";
+      case UAC_Early:
+         return "UAC_Early";
+      case UAC_EarlyWithOffer:
+         return "UAC_EarlyWithOffer";
+      case UAC_EarlyWithAnswer:
+         return "UAC_EarlyWithAnswer";
+      case UAC_WaitingForAnswerFromApp:
+         return "UAC_WaitingForAnswerFromApp";
+      case UAC_Terminated:
+         return "UAC_Terminated";
+      case UAC_SentUpdateEarly:
+         return "UAC_SentUpdateEarly";
+      case UAC_ReceivedUpdateEarly:
+         return "UAC_ReceivedUpdateEarly";
+      case UAC_PrackAnswerWait:
+         return "UAC_PrackAnswerWait";
+      case UAC_Canceled:
+         return "UAC_Canceled";
 
       case UAS_Start:
          return "UAS_Start";

@@ -45,6 +45,35 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 }
 
 void 
+ServerInviteSession::provisional(int code)
+{
+   switch (mState)
+   {
+      case UAS_NoOfferReliable:
+         break;
+      case UAS_EarlyReliable:
+         break;
+         
+      case UAS_Accepted:
+      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentOfferReliable:
+      case UAS_OfferReliable: 
+      case UAS_ReceivedUpdate:
+      case UAS_ReceivedUpdateWaitingAnswer:
+      case UAS_SentUpdate:
+      case UAS_SentUpdateAccepted:
+      case UAS_Start:
+      case UAS_WaitingToHangup:
+      case UAS_WaitingToTerminate:
+         assert(0);
+         break;
+      default:
+         InviteSession::provideOffer(offer);
+         break;
+   }
+}
+
+void 
 ServerInviteSession::provideOffer(const SdpContents& offer)
 {
    switch (mState)
@@ -185,22 +214,24 @@ ServerInviteSession::accept(int code)
    switch (mState)
    {
       case UAS_FirstEarlyReliable:
-         // queue 2xx
+         mDialog.makeResponse(mInvite200, mFirstRequest, code);// queue 2xx
          transition(UAS_Accepted);
          break;
          
       case UAS_EarlyReliable:
-         // send 2xx
-         // 2xx timer
+         mDialog.makeResponse(mInvite200, mFirstRequest, code);// send 2xx
+         startRetransmitTimer(); // 2xx timer
          transition(Connected);
          break;
 
       case UAS_SentUpdate:
-         // send 2xxI
+         mDialog.makeResponse(mInvite200, mFirstRequest, code);// send 2xx
+         startRetransmitTimer(); // 2xx timer
          transition(UAS_SentUpdateAccepted);
          break;
 
       case UAS_ReceivedUpdate:
+         mDialog.makeResponse(mInvite200, mFirstRequest, code);// queue 2xx
          transition(UAS_ReceivedUpdateWaitingAnswer);
          break;
          
