@@ -30,6 +30,9 @@ const Data Symbols::ZERO = "0";
 const Data Symbols::LPAREN = "(";
 const Data Symbols::RPAREN = ")";
 const Data Symbols::PERIOD = ".";
+const Data Symbols::QUESTION = "?";
+const Data Symbols::AMPERSAND = "&";
+const Data Symbols::PERCENT = "%";
 
 const Data Symbols::ProtocolName = "SIP";
 const Data Symbols::ProtocolVersion = "2.0";
