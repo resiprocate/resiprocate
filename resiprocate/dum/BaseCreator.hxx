@@ -15,7 +15,6 @@ class BaseCreator
       virtual ~BaseCreator();
       SipMessage& getLastRequest();
       const SipMessage& getLastRequest() const;
-      virtual void dispatch(const SipMessage& msg);
       
    protected:
       void makeInitialRequest(const NameAddr& target, const NameAddr& from, MethodTypes method);

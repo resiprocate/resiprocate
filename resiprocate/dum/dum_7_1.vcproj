@@ -135,6 +135,9 @@
 				RelativePath=".\ClientOutOfDialogReq.cxx">
 			</File>
 			<File
+				RelativePath=".\ClientPagerMessage.cxx">
+			</File>
+			<File
 				RelativePath=".\ClientPublication.cxx">
 			</File>
 			<File
@@ -198,6 +201,9 @@
 				RelativePath=".\OutOfDialogReqCreator.cxx">
 			</File>
 			<File
+				RelativePath=".\PagerMessageCreator.cxx">
+			</File>
+			<File
 				RelativePath=".\Profile.cxx">
 			</File>
 			<File
@@ -217,6 +223,9 @@
 			</File>
 			<File
 				RelativePath=".\ServerOutOfDialogReq.cxx">
+			</File>
+			<File
+				RelativePath=".\ServerPagerMessage.cxx">
 			</File>
 			<File
 				RelativePath=".\ServerPublication.cxx">
@@ -270,6 +279,9 @@
 			</File>
 			<File
 				RelativePath=".\ClientOutOfDialogReq.hxx">
+			</File>
+			<File
+				RelativePath=".\ClientPagerMessage.hxx">
 			</File>
 			<File
 				RelativePath=".\ClientPublication.hxx">
@@ -335,6 +347,9 @@
 				RelativePath=".\OutOfDialogReqCreator.hxx">
 			</File>
 			<File
+				RelativePath=".\PagerMessageCreator.hxx">
+			</File>
+			<File
 				RelativePath=".\Profile.hxx">
 			</File>
 			<File
@@ -363,6 +378,9 @@
 			</File>
 			<File
 				RelativePath=".\ServerOutOfDialogReq.hxx">
+			</File>
+			<File
+				RelativePath=".\ServerPagerMessage.hxx">
 			</File>
 			<File
 				RelativePath=".\ServerPublication.hxx">
