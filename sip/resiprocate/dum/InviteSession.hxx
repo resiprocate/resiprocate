@@ -105,6 +105,7 @@ class InviteSession : public DialogUsage
          Connected,
          Terminated,
          ReInviting,
+         Forked
       } State;
 
       State mState;

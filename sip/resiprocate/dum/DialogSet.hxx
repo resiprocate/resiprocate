@@ -31,7 +31,7 @@ class DialogSet
       bool empty() const;
       BaseCreator* getCreator();
 
-      void cancel();
+      void end();
       void dispatch(const SipMessage& msg);
       
       ClientRegistrationHandle getClientRegistration();
@@ -55,7 +55,20 @@ class DialogSet
       friend class ClientPagerMessage;
       friend class ServerPagerMessage;
       
+      typedef enum
+      {
+         Initial,  // No session setup yet
+         WaitingToEnd,
+         ReceivedProvisional,
+         Established,
+         Terminating
+      } State;
+
+      State mState;
+
       void possiblyDie();
+
+      bool handledByAuthOrRedirect(const SipMessage& msg);
 
       Dialog* findDialog(const SipMessage& msg);
       Dialog* findDialog(const DialogId id);
@@ -78,8 +91,6 @@ class DialogSet
       DialogSetId mId;
       DialogUsageManager& mDum;
       AppDialogSet* mAppDialogSet;
-      bool mCancelled;
-      bool mReceivedProvisional;      
 
       //inelegant, but destruction can happen both automatically and forced by
       //the user.  Extremely single threaded.
