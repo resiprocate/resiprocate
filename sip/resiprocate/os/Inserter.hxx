@@ -7,6 +7,7 @@
 #include <set>
 #include <list>
 #include <vector>
+#include <deque>
 #include "HashMap.hxx"
 #include "resiprocate/os/compat.hxx"
 
@@ -67,6 +68,25 @@ insert(std::ostream& s, const std::vector <T>& c)
 {
    s << "[";
    for (typename std::vector <T>::const_iterator i = c.begin();
+        i != c.end(); i++) 
+   {
+      if (i != c.begin()) 
+      {
+         s << ", ";
+      }
+      // recurse
+      insert(s, *i);
+   }
+   s << "]";
+   return s;
+}
+
+template <class T>
+std::ostream&
+insert(std::ostream& s, const std::deque<T>& c)
+{
+   s << "[";
+   for (typename std::deque <T>::const_iterator i = c.begin();
         i != c.end(); i++) 
    {
       if (i != c.begin()) 
