@@ -357,6 +357,13 @@ Uri::getAorNoPort() const
    return aor;
 }
 
+// .dlb. alternatively:
+// derive Aor from Data. No additional data members. Provide comparison and hash
+// function. cast return value to Aor. Note: don't make ~Data virtual.
+//
+// alternative another:
+// don't canonicalize; provide aorCompare(const Data&, const Data&) and 
+// unsigned aorHash(const Data&)
 const Data&
 Uri::getAor() const
 {
@@ -367,22 +374,24 @@ Uri::getAor() const
        mOldPort != mPort)
    {
       mOldHost = mHost;
+      // canonicalize host
+      mOldHost.lowercase();
       mOldUser = mUser;
       mOldPort = mPort;
       mAor.clear();
       
       // mAor.reserve(mUser.size() + mHost.size() + 10); !dlb!
-      if (mUser.empty())
+      if (mOldUser.empty())
       {
-         mAor += mHost;
+         mAor += mOldHost;
       }
       else
       {
-         mAor += mUser;
-         if (!mHost.empty())
+         mAor += mOldUser;
+         if (!mOldHost.empty())
          {
             mAor += Symbols::AT_SIGN;
-            mAor += mHost;
+            mAor += mOldHost;
          }
       }
 
