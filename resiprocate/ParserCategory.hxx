@@ -2,6 +2,7 @@
 #define ParserCategory_hxx
 
 #include <sipstack/Data.hxx>
+#include <ostream>
 
 namespace Vocal2
 {
@@ -15,6 +16,12 @@ class ParserCategory
       virtual ~ParserCategory() {}
       virtual ParserCategory* clone(HeaderFieldValue*) const = 0;
 
+      virtual std::ostream& encode(std::ostream& str) const 
+      {
+         assert(0);
+         return str;
+      }
+
    protected:
       // call before every access 
       void checkParsed()
@@ -26,6 +33,7 @@ class ParserCategory
          }
       }
       virtual void parse() = 0;
+      
 
       HeaderFieldValue* mHeaderField;
    private:

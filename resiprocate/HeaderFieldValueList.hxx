@@ -41,6 +41,7 @@ class HeaderFieldValueList
   
       HeaderFieldValue* last;
 
+      std::ostream& encode(std::ostream& str) const;
    private:
       ParserContainerBase* mParserContainer;
 };

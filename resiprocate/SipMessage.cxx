@@ -266,3 +266,8 @@ SipMessage::clearFixedDest()
   mFixedDest = "";
   mHaveFixedDest = false;
 }
+
+
+void 
+SipMessage::addSource(const sockaddr_in& addr)
+{}
