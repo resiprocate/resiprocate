@@ -13,4 +13,5 @@ std::ostream&
 DnsMessage::encode(std::ostream& strm) const
 {
    strm << brief();
+   return strm;
 }
