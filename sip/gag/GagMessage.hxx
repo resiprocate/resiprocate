@@ -27,7 +27,7 @@ class GagMessage
     } command_t;
 
   public:
-    static GagMessage *createMessage(istream &is);
+    static GagMessage *getMessage(istream &is);
     bool isValid() {return valid;}
     virtual ostream &serialize(ostream &os) const = 0;
 
