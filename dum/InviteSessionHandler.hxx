@@ -28,7 +28,6 @@ class InviteSessionHandler
       virtual void onProvisional(ClientInviteSessionHandle, const SipMessage&)=0;
 
       /// called when a dialog initiated as a UAC enters the connected state
-      /// (after getting a 200 , user MUST send an ACK using ackConnection()
       virtual void onConnected(ClientInviteSessionHandle, const SipMessage& msg)=0;
 
       // called when a dialog initiated as a UAS enters the connected state
