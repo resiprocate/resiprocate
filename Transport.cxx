@@ -212,35 +212,28 @@ bool Transport::Tuple::operator==(const Transport::Tuple& rhs) const
 
 bool Transport::Tuple::operator<(const Transport::Tuple& rhs) const
 {
-   if (connection && rhs.connection)
+   int c = memcmp(&ipv4, &rhs.ipv4, sizeof(ipv4));
+   if (c < 0)
    {
-      return connection < rhs.connection;
+      return true;
    }
-   else
+   
+   if (c > 0)
    {
-      int c = memcmp(&ipv4, &rhs.ipv4, sizeof(ipv4));
-      if (c < 0)
-      {
-         return true;
-      }
-   
-      if (c > 0)
-      {
-         return false;
-      }
-   
-      if (port < rhs.port)
-      {
-         return true;
-      }
-   
-      if (port > rhs.port)
-      {
-         return false;
-      }
-   
-      return transportType < rhs.transportType;
+      return false;
    }
+   
+   if (port < rhs.port)
+   {
+      return true;
+   }
+   
+   if (port > rhs.port)
+   {
+      return false;
+   }
+   
+   return transportType < rhs.transportType;
 }
 
 std::ostream&
