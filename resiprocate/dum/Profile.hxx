@@ -37,8 +37,9 @@ class Profile
       void setDefaultAor(const NameAddr& from);
       void setDefaultRegistrationTime(int secs);
 
-      void addGruu(const Data& aor, const NameAddr& contact, const NameAddr& gruu);
+      void addGruu(const Data& aor, const NameAddr& contact);
       bool hasGruu(const Data& aor);
+      bool hasGruu(const Data& aor, const Data& instance);
       NameAddr& getGruu(const Data& aor);
       NameAddr& getGruu(const Data& aor, const NameAddr& contact);
       

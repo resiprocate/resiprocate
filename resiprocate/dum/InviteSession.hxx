@@ -54,11 +54,21 @@ class InviteSession : public BaseUsage
 
    protected:
       InviteSession(DialogUsageManager& dum, Dialog& dialog);
-      SdpContents* mLocalSdp;
-      SdpContents* mRemoteSdp;
-      SdpContents* mMyNextOffer;
-      SdpContents* mPendingReceivedOffer;
+      SdpContents* mCurrentLocalSdp;
+      SdpContents* mCurrentRemoteSdp;
+      SdpContents* mProposedLocalSdp;
+      SdpContents* mProposedRemoteSdp;
 
+      typedef enum
+      {
+         Unknown,
+         Early,
+         Cancelled,
+         Connected,
+         Terminated
+      } State;
+      State mState;
+         
    private:
       friend class DialogUsageManager;
       
