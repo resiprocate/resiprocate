@@ -1,38 +1,14 @@
-#if !defined(RESIP_CLIENTPUBLICATION_HXX)
-#define RESIP_CLIENTPUBLICATION_HXX
+#include "ServerPublication.hxx"
 
-#include "BaseUsage.hxx"
+ServerPublication::Handle::Handle(DialogUsageManager& dum)
+   : DialogUsageManager::Handle(dum)
+{}
 
-namespace resip
+ServerPublication* 
+ClientRegistration::Handle::operator->()
 {
-
-/** @file ClientPublication.hxx
- *   @todo This file is empty
- */
-
-class ClientPublication : public BaseUsage 
-{
-   public:
-      class Handle : public BaseUsage::Handle
-      {
-         public:
-            // throws if no session 
-            ClientPublication* operator->();
-         private:
-            friend class DialogUsageManager;
-            Handle(DialogUsageManager& dum);
-      };
-      
-      ClientPublication(DialogUsageManager& dum, const SipMessage& pub);
-      
-      void refresh(int expiration=0);
-      void update(const Contents* body);
-      void end();
-};
- 
+   return static_cast<ClientRegistration*>get();
 }
-
-#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

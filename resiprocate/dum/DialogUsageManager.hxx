@@ -4,7 +4,18 @@
 #include <list>
 
 #include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/sam/DialogSet.hxx"
+#include "DialogSet.hxx"
+
+#include "BaseUsage.hxx"
+#include "InviteSession.hxx"
+#include "ClientSubscription.hxx"
+#include "ServerSubscription.hxx"
+#include "ClientRegistration.hxx"
+#include "ServerRegistration.hxx"
+#include "ServerPublication.hxx"
+#include "ClientPublication.hxx"
+#include "ServerOutOfDialogReq.hxx"
+#include "ClientOutOfDialogReq.hxx"
 
 namespace resip 
 {
@@ -28,14 +39,14 @@ class DialogUsageManager
    public:
       class Exception : public BaseException
       {
-	 public:
-	    Exception(const Data& msg,
-		      const Data& file,
-		      int line)
-	       : BaseException(msg, file, line)
-	    {}
-
-	    virtual const char* name() const {return "DialogUsageManager::Exception";}
+         public:
+            Exception(const Data& msg,
+                      const Data& file,
+                      int line)
+               : BaseException(msg, file, line)
+            {}
+            
+            virtual const char* name() const {return "DialogUsageManager::Exception";}
       };
       
       DialogUsageManager(SipStack& stack);
@@ -81,7 +92,7 @@ class DialogUsageManager
       DialogIdSet findAllDialogs();
       UsageSet    findAllUsages();
       
-      InviteSession::Handle& findInviteSession(DialogId id);
+      InviteSession::Handle findInviteSession(DialogId id);
       std::list<ClientSubscription::Handle>& findClientSubscriptions(DialogId id);
       ServerSubscription::Handle findServerSubscription(DialogId id);
       ClientRegistration::Handle findClientRegistration(DialogId id);
@@ -90,26 +101,11 @@ class DialogUsageManager
       ServerPublication::Handle findServerPublication(DialogId id);
       ClientOutOfDialogReq::Handle findClientOutOfDialog(DialogId id);
       ServerOutOfDialogReq::Handle findServerOutOfDialog(DialogId id);
-
-      class Handle
-      {
-         public:
-            typedef UInt64 Id;
-         protected:
-            Handle(DialogUsageManager& dum);
-            BaseUsage* get();
-            Id mId;
-         private:
-            DialogUsageManager& mDum;
-            friend class DialogUsageManager;
-            static UInt64 getNext();
-      };
       
    private:
-      // creates a specific usage, adds to usage map, returns specific type
-      // handle with id...
+      // !dlb! interfaces certainly incomplete...
       ClientInviteSession::Handle createClientInviteSession();
-      ServerInviteSession::Handle createServerInviteSession();
+      ServerInviteSession::Handle createServerInviteSession(const SipMessage& msg);
       ClientSubscription::Handle createClientSubscription();
       ServerSubscription::Handle createServerSubscription(const SipMessage& msg);
       ClientRegistration::Handle createClientRegistration();
@@ -119,11 +115,14 @@ class DialogUsageManager
       ClientOutOfDialogReq::Handle createClientOutOfDialog();
       ServerOutOfDialogReq::Handle createServerOutOfDialog();
 
-      typedef HashMap<Handle::Id, BaseUsage*> UsageMap;
-      UsageMap mUsages;
+      // delete the usage, remove from usage handle map
+      void destroyUsage(BaseUsage::Handle handle);
+
+      typedef HashMap<BaseUsage::Handle::Id, BaseUsage*> UsageHandleMap;
+      UsageHandleMap mUsageMap;
 	  
-      // throws Exception if can't find
-      BaseUsage* getUsage(const Handle& handle);
+      // throws if not found
+      BaseUsage* getUsage(const BaseUsage::Handle& handle);
 
       bool validateRequest(const SipMessage& request);
       bool validateTo(const SipMessage& request);
