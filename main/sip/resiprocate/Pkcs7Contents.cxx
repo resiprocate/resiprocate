@@ -8,10 +8,15 @@ using namespace std;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 ContentsFactory<Pkcs7Contents> Pkcs7Contents::Factory;
+ContentsFactory<Pkcs7SignedContents> Pkcs7SignedContents::Factory;
 
 Pkcs7Contents::Pkcs7Contents()
    : Contents(getStaticType()),
      mText()
+{}
+
+
+Pkcs7SignedContents::Pkcs7SignedContents()
 {}
 
 Pkcs7Contents::Pkcs7Contents(const Data& txt)
@@ -31,13 +36,27 @@ Pkcs7Contents::Pkcs7Contents(HeaderFieldValue* hfv, const Mime& contentsType)
 {
 }
  
+Pkcs7SignedContents::Pkcs7SignedContents(HeaderFieldValue* hfv, const Mime& contentsType)
+   : Pkcs7Contents(hfv, contentsType)
+{
+}
+ 
 Pkcs7Contents::Pkcs7Contents(const Pkcs7Contents& rhs)
    : Contents(rhs),
      mText(rhs.mText)
 {
 }
 
+Pkcs7SignedContents::Pkcs7SignedContents(const Pkcs7SignedContents& rhs)
+   : Pkcs7Contents(rhs)
+{
+}
+
 Pkcs7Contents::~Pkcs7Contents()
+{
+}
+
+Pkcs7SignedContents::~Pkcs7SignedContents()
 {
 }
 
@@ -58,12 +77,27 @@ Pkcs7Contents::clone() const
    return new Pkcs7Contents(*this);
 }
 
+Contents* 
+Pkcs7SignedContents::clone() const
+{
+   return new Pkcs7SignedContents(*this);
+}
+
 const Mime& 
 Pkcs7Contents::getStaticType() const
 {
-   static Mime type("application","pkcs7");
+   static Mime type("application","pkcs7-mime");
    return type;
 }
+
+
+const Mime& 
+Pkcs7SignedContents::getStaticType() const
+{
+   static Mime type("application","pkcs7-signature");
+   return type;
+}
+
 
 std::ostream& 
 Pkcs7Contents::encodeParsed(std::ostream& str) const

@@ -33,6 +33,28 @@ class Pkcs7Contents : public Contents
       Data mText;
 };
 
+
+class Pkcs7SignedContents : public Pkcs7Contents
+{
+   public:
+      Pkcs7SignedContents();
+      Pkcs7SignedContents(const Data& text);
+      Pkcs7SignedContents(HeaderFieldValue* hfv, const Mime& contentType);
+      Pkcs7SignedContents(const Data& data, const Mime& contentType);
+      Pkcs7SignedContents(const Pkcs7SignedContents& rhs);
+
+      virtual ~Pkcs7SignedContents();
+
+      Pkcs7SignedContents& operator=(const Pkcs7SignedContents& rhs);
+
+      virtual const Mime& getStaticType() const;
+      virtual Contents* clone() const;
+
+   private:
+      static ContentsFactory<Pkcs7SignedContents> Factory;
+};
+
+
 }
 
 #endif
