@@ -712,6 +712,8 @@ SipMessage::header(const UnknownHeaderType& headerName) const
    }
    // missing extension header
    assert(false);
+
+   return *(StringCategories*)0;
 }
 
 StringCategories& 
