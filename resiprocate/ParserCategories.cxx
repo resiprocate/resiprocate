@@ -178,7 +178,6 @@ Auth::Auth(const Auth& rhs)
    }
 }
 
-
 Auth&
 Auth::operator=(const Auth& rhs)
 {
@@ -189,7 +188,6 @@ Auth::operator=(const Auth& rhs)
    }
    return *this;
 }
-
 
 void
 Auth::parse(ParseBuffer& pb)

@@ -26,6 +26,40 @@ class ParseBuffer
             
             const char* name() const { return "ParseBuffer::Exception"; }
       };
+
+   private:
+      class Pointer
+      {
+         public:
+            Pointer(const char* position,
+                    bool atEof)
+               : mPosition(position),
+                 mIsValid(!atEof)
+            {}
+            
+            operator const char*() const
+            {
+               return mPosition;
+            }
+
+            char operator*() const
+            {
+               if (mIsValid)
+               {
+                  return *mPosition;
+               }
+               else
+               {
+                  throw ParseBuffer::Exception(msg, __FILE__, __LINE__);
+               }
+            }
+         private:
+            const char* mPosition;
+            const bool mIsValid;
+            static const Data msg;
+      };
+
+   public:
       
       // allow the buffer to be rolled back
       ParseBuffer& operator=(const ParseBuffer& other);
@@ -36,28 +70,28 @@ class ParseBuffer
       // begin end
       bool eof() const { return mPosition >= mEnd;}
       bool bof() const { return mPosition <= mBuff;}
-      const char* start() const { return mBuff; }
-      const char* position() const { return mPosition; }
-      const char* end() const { return mEnd; }
+      Pointer start() const { return Pointer(mBuff, eof()); }
+      Pointer position() const { return Pointer(mPosition, eof()); }
+      Pointer end() const { return Pointer(mEnd, true); }
 
-      const char* skipChar();
-      const char* skipChar(char c);
-      const char* skipChars(const char* cs);
-      const char* skipChars(const Data& cs);
-      const char* skipNonWhitespace();
-      const char* skipWhitespace();
-      const char* skipLWS();
-      const char* skipToTermCRLF();
-      const char* skipToChar(char c);
-      const char* skipToChars(const char* cs);
-      const char* skipToChars(const Data& cs); // ?dlb? case sensitivity arg?
-      const char* skipToOneOf(const char* cs);
-      const char* skipToOneOf(const char* cs1, const char* cs2);
-      const char* skipToOneOf(const Data& cs);
-      const char* skipToOneOf(const Data& cs1, const Data& cs2);
+      Pointer skipChar();
+      Pointer skipChar(char c);
+      Pointer skipChars(const char* cs);
+      Pointer skipChars(const Data& cs);
+      Pointer skipNonWhitespace();
+      Pointer skipWhitespace();
+      Pointer skipLWS();
+      Pointer skipToTermCRLF();
+      Pointer skipToChar(char c);
+      Pointer skipToChars(const char* cs);
+      Pointer skipToChars(const Data& cs); // ?dlb? case sensitivity arg?
+      Pointer skipToOneOf(const char* cs);
+      Pointer skipToOneOf(const char* cs1, const char* cs2);
+      Pointer skipToOneOf(const Data& cs);
+      Pointer skipToOneOf(const Data& cs1, const Data& cs2);
       const char* skipToEndQuote(char quote = '"');
-      const char* skipN(int count);
-      const char* skipToEnd();
+      Pointer skipN(int count);
+      Pointer skipToEnd();
 
       // inverse of skipChar() -- end up at char not before it
       const char* skipBackChar();

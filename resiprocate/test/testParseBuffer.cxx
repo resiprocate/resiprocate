@@ -1,12 +1,84 @@
 #include "sip2/util/ParseBuffer.hxx"
 #include <string.h>
 #include <assert.h>
+#include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
 
+#define VOCAL_SUBSYSTEM Subsystem::TEST
+
 int
-main(int arc, char** argv)
+main(int argc, char** argv)
 {
+   Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::INFO, argv[0]);
+
+   {
+      std::cerr << "!! Test position" << std::endl;
+      char buf[] = "Here is a buffer with some stuff.";
+      ParseBuffer pb(buf, strlen(buf));
+      
+      pb.skipToChars("buff");
+      const char p = *pb.position();
+
+      pb.skipToEnd();
+
+      do
+      {
+         try
+         {
+            const char p = *pb.position();
+            assert(false);
+         }
+         catch (BaseException& e)
+         {
+            break;
+         }
+      } while (false);
+   }
+
+   {
+      std::cerr << "!! Test fail one line" << std::endl;
+      
+      char buf[] = "Here is a \t buffer with some stuff.";
+      ParseBuffer pb(buf, strlen(buf));
+
+      do
+      {
+         try
+         {
+            pb.skipChars("Here isn't a");
+         }
+         catch (ParseBuffer::Exception& e)
+         {
+            break;
+         }
+         assert(0);
+      } while (false);
+   }
+
+   {
+      std::cerr << "!! Test fail multiline" << std::endl;
+      
+      char buf[] = "Here is a \r\n buffer with \r\nsome stuff.";
+      ParseBuffer pb(buf, strlen(buf));
+
+      do
+      {
+         try
+         {
+            pb.skipToChars("buff");
+            pb.skipChars("buff");
+            pb.skipChar('g');
+         }
+         catch (ParseBuffer::Exception& e)
+         {
+            break;
+         }
+         assert(0);
+      } while (false);
+   }
+   return 0;
+
    {
       char buf[] = "Content-Languages: English, \r\n French  , \r\n\t LISP   \r \n \n\r \r\n\r\n";
       ParseBuffer pb(buf, strlen(buf));
@@ -82,7 +154,7 @@ main(int arc, char** argv)
       char buf[] = "Here is a \t buffer with some stuff.";
       ParseBuffer pb(buf, strlen(buf));
 
-      while (0)
+      do
       {
          try
          {
@@ -93,14 +165,14 @@ main(int arc, char** argv)
             break;
          }
          assert(0);
-      }
+      } while (false);
    }
 
    {
       char buf[] = "Here is a buf.";
       ParseBuffer pb(buf, strlen(buf));
 
-      while (0)
+      do
       {
          try
          {
@@ -112,7 +184,7 @@ main(int arc, char** argv)
             break;
          }
          assert(0);
-      }
+      } while (false);
    }
    
    {
