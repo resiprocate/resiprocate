@@ -26,7 +26,8 @@ class ParserContainer : public ParserContainerBase
    
       ParserContainer& operator=(const ParserContainer& other);
       
-      bool empty() { return (mList.first == 0); }
+      bool empty() const { return (mList.first == 0); }
+      void clear();
    
       T& front() { return *dynamic_cast<T*>(mList.first->getParserCategory()); }
       T& back() { return *dynamic_cast<T*>(mList.last->getParserCategory()); }
