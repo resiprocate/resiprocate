@@ -490,6 +490,8 @@ myMain(int argc, char* argv[])
    bool noTls = false;
    bool noTcp = false;
    bool noUdp = false;
+   bool noV6 = false;
+   bool noV4 = false;
    
    for ( int i=1; i<argc; i++)
    {
@@ -532,6 +534,14 @@ myMain(int argc, char* argv[])
       else if (!strcmp(argv[i],"-noUdp"))
       {
          noUdp = true;
+      }
+      else if (!strcmp(argv[i],"-noV6"))
+      {
+         noV6 = true;
+      }
+      else if (!strcmp(argv[i],"-noV4"))
+      {
+         noV4 = true;
       }
       else if (!strcmp(argv[i],"-port"))
       {
@@ -612,6 +622,8 @@ myMain(int argc, char* argv[])
          clog << endl
               << " -v is verbose" << endl
               << " -vv is very verbose" << endl
+              << " -noV6 don't use IPv6" << endl
+              << " -noV4 don't use IPv4" << endl
               << " -noUdp don't use TCP" << endl
               << " -noTcp don't use TCP" << endl
               << " -noTls don't use TLS" << endl
@@ -681,11 +693,13 @@ myMain(int argc, char* argv[])
    {
       if ( noUdp != true )
       {
-         sipStack.addTransport(UDP, port);
+         if (!noV4) sipStack.addTransport(UDP, port, V4);
+         if (!noV6) sipStack.addTransport(UDP, port, V6);
       }
       if ( noTcp != true )
       {
-         sipStack.addTransport(TCP, port);
+         if (!noV4) sipStack.addTransport(TCP, port, V4);
+         if (!noV6) sipStack.addTransport(TCP, port, V6);
       }
    }
 #if USE_SSL
@@ -693,7 +707,8 @@ myMain(int argc, char* argv[])
    {
       if ( noTls != true )
       {
-         sipStack.addTlsTransport(tlsPort);
+          if (!noV4) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V4);
+          //if (!noV6) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V6);
       }
    }
 #endif
