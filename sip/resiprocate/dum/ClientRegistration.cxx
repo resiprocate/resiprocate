@@ -89,7 +89,7 @@ ClientRegistration::requestRefresh()
    mDum.send(mLastRequest);
    mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
    unsigned long t = Helper::aBitSmallerThan((unsigned long)(mLastRequest.header(h_Expires).value()));
-   mDum.addTimer(DumTimeout::Registration, t,  mLastRequest.header(h_CSeq).sequence());
+   mDum.addTimer(DumTimeout::Registration, t, getHandle(), mLastRequest.header(h_CSeq).sequence());
 }
 
 const NameAddrs& 
@@ -155,6 +155,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // make timers to re-register
          mDum.addTimer(DumTimeout::Registration, 
                        Helper::aBitSmallerThan(mLastRequest.header(h_Expires).value()), 
+                       getHandle(),
                        mLastRequest.header(h_CSeq).sequence());
       }
 
