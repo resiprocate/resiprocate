@@ -39,6 +39,23 @@ class ParserCategory
          checkParsed();
          return mHeaderField->getParameter(parameterType).value();
       }
+
+      template <int T>
+      bool
+      exists(const ParameterType<T>& parameterType) const
+      {
+         checkParsed();
+         hHeaderField->exists(parameterType);
+      }
+
+      //not necessary to call exists before remove(removing nothing is allowed)      
+      template <int T>
+      void
+      remove(const ParameterType<T>& parameterType)
+      {
+         checkParsed();
+         hHeaderField->remove(parameterType);
+      }
       
       void parseParameters(const char* start);
 
@@ -50,6 +67,10 @@ class ParserCategory
       virtual void parse() = 0;
 
       UnknownParameter& operator[](const Data& param) const;
+
+      void remove(const Data& param); 
+      bool exists(const Data& param) const;
+      
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
    protected:

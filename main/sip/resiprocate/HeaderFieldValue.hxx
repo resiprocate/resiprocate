@@ -49,6 +49,12 @@ class HeaderFieldValue
       bool exists(const Data& parameter);
 
       bool exists(const ParameterTypes::Type type);
+
+      //shouldn't complain if parameter doesn't exists, otherwise there will be
+      //two list walks
+      void remove(const ParameterTypes::Type type);
+      void remove(const Data& parameter);
+      
       
       bool isParsed() const;
 
