@@ -7,7 +7,7 @@ using namespace Vocal2;
 const int Helper::tagSize = 4;
 
 SipMessage 
-Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method, bool fromProxy)
+Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
 {
    SipMessage request;
    RequestLine rLine(method);
@@ -21,18 +21,19 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    request.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request.header(h_Contacts).push_front(contact);
    request.header(h_CallId).value() = Helper::computeCallId();
+   request.header(h_ContentLength).value() = 0;
    
    Via via;
-   via.param(p_branch) = fromProxy ? computeProxyBranch(request) : computeUniqueBranch();
+   via.param(p_branch) = computeUniqueBranch();
    request.header(h_Vias).push_front(via);
    
    return request;
 }
 
 SipMessage 
-Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact, bool fromProxy)
+Helper::makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact)
 {
-   return Helper::makeRequest(target, from, contact, INVITE, fromProxy);
+   return Helper::makeRequest(target, from, contact, INVITE);
 }
 
 SipMessage 
@@ -45,6 +46,7 @@ Helper::makeResponse(const SipMessage& request, int responseCode)
    response.header(h_CallId) = request.header(h_CallId);
    response.header(h_CSeq) = request.header(h_CSeq);
    response.header(h_Vias) = request.header(h_Vias);
+   response.header(h_ContentLength).value() = 0;
 
    if (responseCode > 100 && responseCode < 500)
    {
@@ -75,14 +77,31 @@ Helper::makeRequest(const NameAddr& target, MethodTypes method)
 }
 
 
-// !jf! needs to do something different for ACK made by TU vs Transaction
-SipMessage 
-Helper::makeAck(const SipMessage& request, const SipMessage& response)
+// This interface should be used by the stack (TransactionState) to create an
+// AckMsg to a failure response
+// See RFC3261 section 17.1.1.3
+// Note that the branch in this ACK needs to be the 
+// For TU generated ACK, see Dialog::makeAck(...)
+SipMessage*
+Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
 {
-   assert(0);   
-   SipMessage junk;
-   return junk;
+   assert (request.header(h_Vias).size() >= 1);
+   assert (request.header(h_RequestLine).getMethod() == INVITE);
+   
+   SipMessage* ack = new SipMessage;
+   ack->header(h_CallId) = request.header(h_CallId);
+   ack->header(h_From) = request.header(h_From);
+   ack->header(h_RequestLine) = request.header(h_RequestLine);
+   ack->header(h_To) = response.header(h_To); // to get to-tag
+   ack->header(h_Vias).push_back(request.header(h_Vias).front());
+   ack->header(h_CSeq) = request.header(h_CSeq);
+   ack->header(h_CSeq).method() = ACK;
+   ack->header(h_Routes) = request.header(h_Routes);
+   ack->header(h_ContentLength).value() = 0;
+   
+   return ack;
 }
+
 
 Data 
 Helper::computeUniqueBranch()
@@ -92,29 +111,6 @@ Helper::computeUniqueBranch()
    return result;
 }
 
-Data 
-Helper::computeProxyBranch(const SipMessage& request)
-{
-   Data value;
-   // see 16.6 item 8
-   value += request.header(h_To).param(p_tag);
-   value += request.header(h_From).param(p_tag);
-   value += request.header(h_CallId).value();
-   value += request.header(h_RequestLine).uri().getAor();
-   value += Data(request.header(h_CSeq).sequence());
-   assert(!request.header(h_Vias).empty());
-   // !jf! may need to encode the entire via instead of just the branch
-   value += request.header(h_Vias).front().param(p_branch); 
-   //value += request.header(h_ProxyRequires);
-   //value += request.header(h_ProxyAuthorization);
-   
-   Data result("z9hG4bK"); // magic cookie per rfc2543bis-09    
-   result += value.md5();
-   result += ".";
-   result += RandomHex::get(4);
-   
-   return result;
-}
 
 Data
 Helper::computeCallId()
