@@ -124,6 +124,8 @@ UdpTransport::process(FdSet& fdset)
       return;
    }
 
+   //should this buffer be allocated on the stack and then copied out, as it
+   //needs to be deleted every time EWOULDBLOCK is encountered
    char* buffer = new char[MaxBufferSize];
    int fromLen = sizeof(from);
    
@@ -139,22 +141,22 @@ UdpTransport::process(FdSet& fdset)
 
    if ( len == SOCKET_ERROR )
    {
-	   int err = errno;
-	   //cerr << "Err=" << err << " " << strerror(err) << endl;
-	   
-	   switch (err)
-	   {
-		   case EWOULDBLOCK:
-		   {
-		   }
-		   break;
-		   default:
-		   {
-			   ErrLog(<<"Error receiving, errno="<<err);
-		   }
-		   break;
-	   }
-	   
+      int err = errno;
+      //cerr << "Err=" << err << " " << strerror(err) << endl;
+      
+      switch (err)
+      {
+         case EWOULDBLOCK:
+         {
+         }
+         break;
+         default:
+         {
+            ErrLog(<<"Error receiving, errno="<<err);
+         }
+         break;
+      }
+      delete[] buffer;
    }
    else if (len > 0)
    {
