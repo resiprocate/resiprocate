@@ -292,7 +292,7 @@ TransportSelector::process(FdSet& fdset)
          }
       }
 
-      for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
+      for (std::map<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
            i != mTlsTransports.end(); i++)
       {
          try
@@ -329,7 +329,7 @@ TransportSelector::hasDataToSend() const
          }
       }
 
-      for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
+      for (std::map<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
            i != mTlsTransports.end(); i++)
       {
          if ( (i->second)->hasDataToSend() )
@@ -692,7 +692,7 @@ TransportSelector::buildFdSet(FdSet& fdset)
          i->second->buildFdSet(fdset);
       }
    
-      for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
+      for (std::map<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
            i != mTlsTransports.end(); ++i)
       {
          (i->second)->buildFdSet(fdset);
