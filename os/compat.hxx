@@ -99,6 +99,12 @@ typedef size_t socklen_t;
 
 #endif
 
+#if defined( WIN32 )
+typedef unsigned __int64 UInt64;
+#else
+typedef unsigned long long UInt64;
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
