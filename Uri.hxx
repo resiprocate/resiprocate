@@ -7,12 +7,11 @@
 namespace Vocal2
 {
 
-class Uri : public ParserCategory, public SipMessage
+class Uri : public ParserCategory
 {
    public:
       Uri() : 
-         ParserCategory(),
-         SipMessage()
+         ParserCategory()
       {}
 
       Uri(const Uri&);
