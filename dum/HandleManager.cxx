@@ -58,7 +58,7 @@ HandleManager::getHandled(Handled::Id id) const
    HandleMap::const_iterator i = mHandleMap.find(id);
    if (i == mHandleMap.end())
    {
-      StackLog (<< "Reference to stale handle: " << id);
+      InfoLog (<< "Reference to stale handle: " << id);
       throw HandleException("Stale handle", __FILE__, __LINE__);
    }
    else
