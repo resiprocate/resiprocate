@@ -202,7 +202,7 @@ void
 Transport::send( const Tuple& dest, const Data& d, const Data& tid)
 {
    SendData* data = new SendData(dest, d, tid);
-   assert(dest.port != -1);
+   assert(dest.getPort() != -1);
    DebugLog (<< "Adding message to tx buffer to: " << dest); // << " " << d.escaped());
    mTxFifo.add(data); // !jf!
 }
@@ -218,9 +218,17 @@ Transport::stampReceived(SipMessage* message)
       message->header(h_Vias).front().param(p_received) = DnsUtil::inet_ntop(tuple);
       if (message->header(h_Vias).front().exists(p_rport))
       {
-         message->header(h_Vias).front().param(p_rport).port() = tuple.port;
+         message->header(h_Vias).front().param(p_rport).port() = tuple.getPort();
       }
    }
+}
+
+bool 
+Transport::operator==(const Transport& rhs) const
+{
+   return ( ( mV4 == rhs.mV4) &&
+            ( mPort == rhs.mPort) &&
+            ( memcmp(&mBoundInterface,&rhs.mBoundInterface,sizeof(mBoundInterface)) == 0) );
 }
 
 /* ====================================================================
