@@ -31,7 +31,7 @@ class ExternalSelector
    public:
       virtual Transport* selectExternalTransport(SipMessage* msg, const Tuple& dest) = 0;
       virtual void externalTransportAdded(Transport* externalTransport) = 0;
-      virtual ~ExternalSelector() = 0;      
+      virtual ~ExternalSelector() {};      
 };
 
 class TransportSelector 
