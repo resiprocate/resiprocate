@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.31 2002/11/11 23:09:55 jason Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.32 2002/11/12 05:16:39 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -23,6 +23,10 @@ class Data
       Data(const Data& data);
       Data(const std::string& str);
       explicit Data(int value);
+      explicit Data(unsigned long value);
+      explicit Data(double value, int precision = 4);
+      explicit Data(bool value);
+      explicit Data(char c);
       
       ~Data();
 
@@ -61,6 +65,9 @@ class Data
       //covert this data(in place) to lower/upper case
       Data& lowercase();
       Data& uppercase();
+      
+      int convertInt() const;
+      double convertDouble() const;
       
    private:
       friend class TestData;
