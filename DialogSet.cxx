@@ -543,6 +543,7 @@ DialogSet::cancel()
       //unify makeCancel w/ Dialog makeCancel, verify both
       //exception to cancel UAS DialogSet?
 
+      InfoLog (<< "Canceling " << mId);
       auto_ptr<SipMessage> cancel(Helper::makeCancel(getCreator()->getLastRequest()));         
       mDum.send(*cancel);
 
