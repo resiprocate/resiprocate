@@ -2,9 +2,9 @@
 #define TRANSPORT_HXX
 
 #include <exception>
-#include <sys/select.h>
 
 #ifndef WIN32
+#include <sys/select.h>
 #include <netinet/in.h>
 #endif
 

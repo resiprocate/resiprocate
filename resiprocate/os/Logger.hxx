@@ -10,26 +10,26 @@
 
 #ifdef NO_DEBUG
 // Suppress debug loging at compile time
-#define DebugLog(...)
+#define DebugLog(__VA_ARGS__)
 #else
-#define DebugLog(...) \
-GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, ...)
+#define DebugLog(__VA_ARGS__) \
+GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::DEBUG, __VA_ARGS__)
 #endif
 
-#define CritLog(...) \
+#define CritLog(__VA_ARGS__) \
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::CRIT, __VA_ARGS__)
 
-#define ErrLog(...) \
+#define ErrLog(__VA_ARGS__) \
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::ERR, __VA_ARGS__)
 
-#define WarningLog(...) \
+#define WarningLog(__VA_ARGS__) \
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::WARNING, __VA_ARGS__)
 
-#define InfoLog(...) \
+#define InfoLog(__VA_ARGS__) \
 GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, __VA_ARGS__)
 
 // do/while allows a {} block in an expression
-#define GenericLog(system__, level__,  ...)                     \
+#define GenericLog(system__, level__,  __VA_ARGS__ )                     \
 do                                                              \
 {                                                               \
   if (Vocal2::GenericLogImpl::isLogging(level__))               \
