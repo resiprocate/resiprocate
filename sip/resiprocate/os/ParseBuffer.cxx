@@ -524,12 +524,109 @@ ParseBuffer::data(Data& data, const char* start) const
    data.mMine = false;
 }
 
+static const unsigned char isHex[256] = 
+{
+// 0   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //0
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //1
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //2
+   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  //3
+   0,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //4
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //5
+   0,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //6
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //8
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //9
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //a
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //b
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //c
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //d
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  //e
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   //f
+
+};
+
+static const unsigned char hexToByte[128] = 
+{
+ // 0   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k', //0
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k', //1
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k', //2
+   0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  'k','k','k','k','k','k', //3
+   'k',0xA,0xB,0xC,0xD,0xE,0xF,'k','k','k','k','k','k','k','k','k', //4
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k', //5
+   'k',0xA,0xB,0xC,0xD,0xE,0xF,'k','k','k','k','k','k','k','k','k', //6
+   'k','k','k','k','k','k','k','k','k','k','k','k','k','k','k','k'  //7
+};
+
+void
+ParseBuffer::dataUnescaped(Data& data, const char* start) const
+{
+   if (!(mBuff <= start && start <= mPosition))
+   {
+      fail(__FILE__, __LINE__,"Bad anchor position");
+   }
+
+   if (data.mMine)
+   {
+      delete[] data.mBuf;
+   }
+   data.mSize = (unsigned int)(mPosition - start);
+   data.mBuf = new char[data.mSize + 1];
+   data.mCapacity = data.mSize;
+   data.mMine = true;
+
+   char* target = data.mBuf;
+   const char* current = start;   
+   while(current < mPosition)
+   {
+      if (*current == '%')
+      {
+         current++;
+         if (mPosition - current < 2)
+         {
+            fail(__FILE__, __LINE__,"Illegal escaping");
+         }
+         const char high = *current;
+         const char low = *(current + 1);         
+         if (isHex[(size_t)high] && isHex[(size_t)low])
+         {
+            unsigned char escaped = 0;            
+            assert(hexToByte[(size_t)high] != 'k');
+            assert(hexToByte[(size_t)low] != 'k');
+            escaped = hexToByte[(size_t)high] << 4 | hexToByte[(size_t)low];
+            if (escaped > 31 && escaped != 127 && escaped != 58)
+            {
+               *target++ = escaped;
+               current+= 2;
+            }
+            else
+            {
+               *target++ = '%';
+               *target++ = high;
+               *target++ = low;               
+               current += 2;
+            }
+         }
+         else
+         {
+            fail(__FILE__, __LINE__,"Illegal escaping, not hex");
+         }
+      }
+      else
+      {
+         *target++ = *current++;
+      }
+   }
+   *target = 0;
+   data.mSize = target - data.mBuf;   
+}
+
 Data
 ParseBuffer::data(const char* start) const
 {
    if (!(mBuff <= start && start <= mPosition))
    {
-      
+     
       fail(__FILE__, __LINE__,"Bad anchor position");
    }
 
