@@ -130,6 +130,7 @@ SipStack::getHostname()
       // this can fail when there is no name server 
       // !cj! - need to decided what error to return 
       ErrLog( << "gethostbyname failed - name server is probably down" );
+        return Data("localhost");
    }
    assert( hostEnt );
    
