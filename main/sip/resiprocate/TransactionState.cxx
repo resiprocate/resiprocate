@@ -234,7 +234,7 @@ TransactionState::process(TransactionController& controller)
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from TU) CANCEL to uac");
-                  sendToTu(Helper::makeResponse(*sip,481));
+                  controller.mTUFifo.add(Helper::makeResponse(*sip,481));
                   delete sip;
                }
                else if (matchingInvite->mState == Calling) // CANCEL before 1xx received
@@ -249,8 +249,8 @@ TransactionState::process(TransactionController& controller)
                   // The CANCEL was received before the INVITE was sent
                   // This can happen in odd cases. Too common to assert.
                   // Be graceful.
-                  sendToTU(Helper::makeResponse(*sip, 200));
-                  sendToTU(Helper::makeResponse(matchingInvite->mMsgToRetransmit, 487));
+                  controller.mTUFifo.add(Helper::makeResponse(*sip, 200));
+                  matchingInvite->sendToTU(Helper::makeResponse(*matchingInvite->mMsgToRetransmit, 487));
 
                   delete matchingInvite;
                   delete sip;
