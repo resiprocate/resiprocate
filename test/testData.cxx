@@ -1,4 +1,5 @@
 #include "sip2/util/Data.hxx"
+#include "sip2/util/DataStream.hxx"
 #include "assert.h"
 #include <string>
 #include <iostream>
@@ -12,6 +13,95 @@ class TestData
    public:
       void main()
       {
+         {
+            Data d1("0");
+            Data d2("0");
+            d1 ^= d2;
+            cerr << d1.hex() << endl;
+            assert(d1.size() == 1);
+            assert(d1[0] == 0);
+
+            d1 = "0";
+            d1 ^= Data();
+            cerr << d1.hex() << endl;
+            assert(d1.size() == 1);
+            assert(d1[0] == '0');
+
+            d1 = Data();
+            d1 ^= Data("0");
+            cerr << d1.hex() << endl;
+            assert(d1.size() == 1);
+            assert(d1[0] == '0');
+
+            d1 = Data();
+            d1 ^= Data();
+            cerr << d1.hex() << endl;
+            assert(d1.size() == 0);
+
+
+            d1 = "01234";
+            d1 ^= Data("01234");
+            cerr << d1.hex() << endl;
+            assert(d1.size() == 5);
+            assert(d1[0] == 0);
+            assert(d1[4] == 0);
+
+            d1 = "012";
+            d1 ^= Data("01234");
+            cerr << d1.hex() << endl;
+            assert(d1.size() == 5);
+            assert(d1[0] == 0);
+            assert(d1[1] == 0);
+            assert(d1[2] == 0);
+            assert(d1[3] == '3');
+            assert(d1[4] == '4');
+
+            d1 ^= Data("01234");
+            cerr << d1.hex() << endl;
+            assert(d1[0] == '0');
+            assert(d1[1] == '1');
+            assert(d1[2] == '2');
+            assert(d1[3] == 0);
+            assert(d1[4] == 0);
+
+            d1 = Data(100, true);
+            d1 ^= Data("0");
+            cerr << d1.hex() << endl;
+
+
+            Data buffer;
+            Data working;
+            DataStream strm(buffer);
+
+            buffer.clear();
+            strm << "user=phone";
+            strm.flush();
+            working ^= buffer;
+
+            buffer.clear();
+            strm << "maddr=192.168.1.1";
+            strm.flush();
+            working ^= buffer;
+
+
+            Data result = working;
+            working.clear();
+
+            buffer.clear();
+            strm << "maddr=192.168.1.1";
+            strm.flush();
+            working ^= buffer;
+
+            buffer.clear();
+            strm << "user=phone";
+            strm.flush();
+            working ^= buffer;
+
+            assert(result == working);
+         }
+
+
+         
          {
             Data d("012345");
             assert(d[0] == '0');
