@@ -307,14 +307,19 @@ unreach:
                      sockaddrBuffer.v4.sin_port,
                      dest.getType());
         break;
+#ifdef USE_IPV6
      case AF_INET6:
         return Tuple(sockaddrBuffer.v6.sin6_addr,
                      sockaddrBuffer.v6.sin6_port,
                      dest.getType());
         break;
+#endif
      default:
         assert(0);
   }
+
+	assert(0);
+	return Tuple(0,0,UNKNOWN_TRANSPORT);
 }
 
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
