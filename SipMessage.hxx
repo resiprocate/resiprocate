@@ -120,6 +120,10 @@ class SipMessage : public Message
       User_Agent_Header::Type& header(const User_Agent_Header& headerType) const;
       Warning_Header::Type& header(const Warning_Header& headerType) const;
 
+      ParserContainer<Security_Client_MultiHeader::Type>& header(const Security_Client_MultiHeader& headerType) const;
+      ParserContainer<Security_Server_MultiHeader::Type>& header(const Security_Server_MultiHeader& headerType) const;
+      ParserContainer<Security_Verify_MultiHeader::Type>& header(const Security_Verify_MultiHeader& headerType) const;
+
       ParserContainer<Authorization_MultiHeader::Type>& header(const Authorization_MultiHeader& headerType) const;
       ParserContainer<Proxy_Authenticate_MultiHeader::Type>& header(const Proxy_Authenticate_MultiHeader& headerType) const;
       ParserContainer<WWW_Authenticate_MultiHeader::Type>& header(const WWW_Authenticate_MultiHeader& headerType) const;

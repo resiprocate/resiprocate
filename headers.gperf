@@ -61,3 +61,6 @@ referred-by,Headers::Referred_By
 replaces,Headers::Replaces
 response-key, Headers::UNKNOWN
 rseq, Headers::UNKNOWN
+security-client, Headers::Security_Client
+security-server, Headers::Security_Server
+security-verify, Headers::Security_Verify

@@ -30,7 +30,10 @@ realm, ParameterTypes::realm
 response, ParameterTypes::response
 stale, ParameterTypes::stale
 username, ParameterTypes::username
-qop, ParameterTypes::qop
+qop, ParameterTypes::qopFactory
 uri, ParameterTypes::uri
 retry-after, ParameterTypes::retryAfter
 reason, ParameterTypes::reason
+d-alg, ParameterTypes::dAlg
+d-qop, ParameterTypes::dQop
+d-ver, ParameterTypes::dVer

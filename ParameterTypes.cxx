@@ -50,6 +50,10 @@ Qop_Options_Param Vocal2::p_qopOptions;
 Qop_Param Vocal2::p_qop;
 Qop_Factory_Param Vocal2::p_qopFactory;
 
+Digest_Algorithm_Param Vocal2::p_dAlg;
+Digest_Qop_Param Vocal2::p_dQop;
+Digest_Verify_Param Vocal2::p_dVer;
+
 // to generate the perfect hash:
 // call tolower() on instances of the source string
 // change strcmp to strncasecmp and pass len-1
@@ -58,12 +62,12 @@ Qop_Factory_Param Vocal2::p_qopFactory;
 /* Command-line: gperf -L ANSI-C -t -k '*' parameters.gperf  */
 struct params { char *name; ParameterTypes::Type type; };
 
-#define TOTAL_KEYWORDS 34
+#define TOTAL_KEYWORDS 37
 #define MIN_WORD_LENGTH 1
 #define MAX_WORD_LENGTH 11
-#define MIN_HASH_VALUE 5
-#define MAX_HASH_VALUE 108
-/* maximum key range = 104, duplicates = 0 */
+#define MIN_HASH_VALUE 2
+#define MAX_HASH_VALUE 101
+/* maximum key range = 100, duplicates = 0 */
 
 #ifdef __GNUC__
 __inline
@@ -77,32 +81,32 @@ p_hash (register const char *str, register unsigned int len)
 {
   static unsigned char asso_values[] =
     {
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109,   0, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109,   0,  25,  15,
-       20,   0,  35,  10,   5,   0, 109, 109,  45,  30,
-        0,   0,   0,  40,   0,   0,   0,  30,  20, 109,
-        5,   0, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109, 109, 109, 109, 109,
-      109, 109, 109, 109, 109, 109
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102,   0, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102,   0,  25,  35,
+        0,   0,  40,  10,   5,   0, 102, 102,  30,  20,
+        0,   0,   0,  55,   0,   0,   0,  40,  45, 102,
+        5,   0, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102, 102, 102, 102, 102,
+      102, 102, 102, 102, 102, 102
     };
   register int hval = len;
 
@@ -144,7 +148,9 @@ p_in_word_set (register const char *str, register unsigned int len)
 {
   static struct params wordlist[] =
     {
-      {""}, {""}, {""}, {""}, {""},
+      {""}, {""},
+      {"id", ParameterTypes::id},
+      {""}, {""},
       {"rport", ParameterTypes::rport},
       {"reason", ParameterTypes::reason},
       {""},
@@ -155,53 +161,55 @@ p_in_word_set (register const char *str, register unsigned int len)
       {"tag", ParameterTypes::tag},
       {""}, {""},
       {"to-tag", ParameterTypes::toTag},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {"maddr", ParameterTypes::maddr},
+      {"domain", ParameterTypes::domain},
+      {""}, {""}, {""}, {""},
+      {"method", ParameterTypes::method},
+      {"lr", ParameterTypes::lr},
+      {"ttl", ParameterTypes::ttl},
+      {""},
+      {"stale", ParameterTypes::stale},
+      {""},
       {"nc", ParameterTypes::nc},
       {""}, {""},
       {"nonce", ParameterTypes::nonce},
-      {""},
-      {"id", ParameterTypes::id},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
+      {""}, {""},
       {"uri", ParameterTypes::uri},
       {"user", ParameterTypes::user},
+      {"d-alg", ParameterTypes::dAlg},
       {""},
-      {"cnonce", ParameterTypes::cnonce},
       {"purpose", ParameterTypes::purpose},
-      {""}, {""}, {""},
+      {"duration", ParameterTypes::duration},
+      {""},
+      {"d-ver", ParameterTypes::dVer},
+      {"retry-after", ParameterTypes::retryAfter},
+      {""},
+      {"handling", ParameterTypes::handling},
+      {""},
+      {"realm", ParameterTypes::realm},
       {"q", ParameterTypes::q},
       {""},
       {"qop", ParameterTypes::qopFactory},
-      {""}, {""},
-      {"retry-after", ParameterTypes::retryAfter},
-      {"lr", ParameterTypes::lr},
-      {"ttl", ParameterTypes::ttl},
       {"comp", ParameterTypes::comp},
-      {"stale", ParameterTypes::stale},
-      {"branch", ParameterTypes::branch},
-      {""}, {""}, {""}, {""},
-      {"domain", ParameterTypes::domain},
-      {""},
-      {"duration", ParameterTypes::duration},
-      {""}, {""},
-      {"method", ParameterTypes::method},
-      {""},
-      {"received", ParameterTypes::received},
-      {""}, {""}, {""}, {""},
+      {"d-qop", ParameterTypes::dQop},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {"username", ParameterTypes::username},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"maddr", ParameterTypes::maddr},
-      {"opaque", ParameterTypes::opaque},
-      {""}, {""}, {""},
-      {"realm", ParameterTypes::realm},
       {""}, {""},
+      {"branch", ParameterTypes::branch},
+      {""}, {""},
+      {"algorithm", ParameterTypes::algorithm},
+      {""},
+      {"cnonce", ParameterTypes::cnonce},
+      {""},
       {"from-tag", ParameterTypes::fromTag},
       {""}, {""}, {""}, {""},
-      {"handling", ParameterTypes::handling},
+      {"mobility", ParameterTypes::mobility},
+      {""}, {""}, {""}, {""},
+      {"received", ParameterTypes::received},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-      {"algorithm", ParameterTypes::algorithm},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"mobility", ParameterTypes::mobility}
+      {""}, {""}, {""},
+      {"opaque", ParameterTypes::opaque}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -218,7 +226,6 @@ p_in_word_set (register const char *str, register unsigned int len)
     }
   return 0;
 }
-
 
 ParameterTypes::Type
 ParameterTypes::getType(const char* name, unsigned int len)
