@@ -118,7 +118,7 @@ main(int argc, char** argv)
          foo.encode(str);
       }
       cerr << buf << endl;
-      assert(buf == "sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK-c87542-fobbieBletch-c87542-0-1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK-c87542-bletchieFoo-c87542-0-1&CSeq=4178%20ACK");
+      assert(buf == "sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK-c87542-fobbieBletch-1-c87542-&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK-c87542-bletchieFoo-1-c87542-&CSeq=4178%20ACK");
    }
 
    {
@@ -163,7 +163,7 @@ main(int argc, char** argv)
    {
       cerr << "Parse Uri with multiple headers" << endl;
       
-      Data nad("sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK-c87542-fobbieBletch-c87542-0-1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK-c87542-bletchieFoo-c87542-0-1&CSeq=4178%20ACK");
+      Data nad("sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK-c87542-fobbieBletch-c87542-1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK-c87542-bletchieFoo-c87542-1&CSeq=4178%20ACK");
       NameAddr na(nad);
 
       assert(na.uri().hasEmbedded());
