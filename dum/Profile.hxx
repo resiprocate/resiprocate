@@ -66,8 +66,6 @@ class Profile
       NameAddr& getGruu(const Data& aor);
       NameAddr& getGruu(const Data& aor, const NameAddr& contact);
       
-      const NameAddr& getDefaultAor() const;
-
       void setOutboundProxy( const Uri& uri );
       const NameAddr& getOutboundProxy() const;
       bool hasOutboundProxy() const;
@@ -97,6 +95,10 @@ class Profile
       const DigestCredential& getDigestCredential( const Data& realm );
       const DigestCredential& getDigestCredential( const SipMessage& challenge );      
 
+      //defaults to false, turn on for VONAGE
+      bool& looseToTagMatching();      
+      const bool looseToTagMatching() const;      
+
    private:
       NameAddr mDefaultFrom;
       int mDefaultRegistrationExpires;
@@ -113,6 +115,8 @@ class Profile
       Tokens mSupportedLanguages;
 
       DigestCredentialHandler* mDigestCredentialHandler;
+
+      bool mLooseToTagMatching;
       
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;

@@ -5,24 +5,24 @@ using namespace resip;
 
 Data SubscriptionStates[] = 
 {
-   "Invalid",
-   "Init",
-   "Pending",
-   "Active",
-   "Waiting",
-   "Terminated",
-   "Unknown"
+   "invalid",
+   "init",
+   "pending",
+   "active",
+   "waiting",
+   "terminated",
+   "unknown"
 };
 
 Data TerminateReasons[] = 
 {
-   "Deactivated",
-   "Probation",
-   "Rejected",
-   "Timeout",
-   "Giveup",
-   "NoResource",
-   "Unknown"
+   "deactivated",
+   "probation",
+   "rejected",
+   "timeout",
+   "giveup",
+   "noResource",
+   "unknown"
 };
 
 const Data&
