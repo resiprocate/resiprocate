@@ -69,9 +69,9 @@ InviteSession::modifySession()
 SipMessage& 
 InviteSession::makeFinalResponse(int code)
 {
-   int cseq = mLastRequest.header(h_CSeq).sequence();
+   int cseq = mLastIncomingRequest.header(h_CSeq).sequence();
    SipMessage& finalResponse = mFinalResponseMap[cseq];
-   mDialog.makeResponse(finalResponse, mLastRequest, 200);
+   mDialog.makeResponse(finalResponse, mLastIncomingRequest, 200);
    return finalResponse;
 }
 
@@ -268,7 +268,7 @@ InviteSession::dispatch(const SipMessage& msg)
                   {
                      mState = ReInviting;
                      mDialog.update(msg);
-                     mLastRequest = msg; // !slg!
+                     mLastIncomingRequest = msg;
                      mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
                      if (offans.first != None)
                      {
@@ -428,6 +428,7 @@ InviteSession::makeRefer(const NameAddr& referTo)
 {
    mDialog.makeRequest(mLastRequest, REFER);
    mLastRequest.header(h_ReferTo) = referTo;
+//   mLastRequest.header(h_ReferTo).param(p_method) = getMethodName(INVITE);   
    return mLastRequest;   
 }
 
@@ -722,7 +723,7 @@ InviteSession::rejectOffer(int statusCode)
       throw new UsageUseException("Must reject with a 4xx", __FILE__, __LINE__);
    }
    //sdp state change here--go to initial state?
-   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
+   mDialog.makeResponse(mLastResponse, mLastIncomingRequest, statusCode);
    return mLastResponse;
 }
 

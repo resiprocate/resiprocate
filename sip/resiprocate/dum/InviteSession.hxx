@@ -127,6 +127,7 @@ class InviteSession : public DialogUsage
       SdpContents* mNextOfferOrAnswerSdp;
 
       SipMessage mLastRequest;
+      SipMessage mLastIncomingRequest;
       SipMessage mLastResponse;
       SipMessage mLastNit;      
 

@@ -460,6 +460,11 @@ DialogUsageManager::send(SipMessage& msg)
    DebugLog (<< "SEND: " << msg);
    if (msg.isRequest())
    {
+      if (getProfile()->hasUserAgent())
+      {
+         msg.header(h_UserAgent).value() = getProfile()->getUserAgent();
+      }      
+         
       //this is all very scary and error-prone, as the TU has some retramissions
       if (msg.header(h_RequestLine).method() != CANCEL &&
           msg.header(h_RequestLine).method() != ACK && 
