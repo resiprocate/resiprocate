@@ -8,15 +8,15 @@
 #include "ConfigDlg.h"
 #include "AddDlg.h"
 
-#include "sip2/util/DataStream.hxx"
-#include "sip2/util/Data.hxx"
-#include "sip2/sipstack/Uri.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/Uri.hxx"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-using namespace Vocal2;
+using namespace resip;
 
 //#define VOCAL_SUBSYSTEM Subsystem::SIP
 
@@ -149,7 +149,7 @@ BOOL BuddyDlg::OnInitDialog()
 		//group = tree->InsertItem(_T("Friends"), TVI_ROOT, TVI_SORT);
 		for ( int i=0; i<theApp.tuIM->getNumBuddies(); i++)
 		{
-			Vocal2::Uri budy = theApp.tuIM->getBuddyUri(i);
+			resip::Uri budy = theApp.tuIM->getBuddyUri(i);
 			tree->InsertItem( Data::from(budy).c_str(), group, TVI_SORT);
 		}
 		tree->Expand(group,TVE_EXPAND);
@@ -290,10 +290,10 @@ BuddyDlg::timerProc()
 
 
 void 
-BuddyDlg::receivedPage( const Vocal2::Data& msg, 
-					   const Vocal2::Uri& from,
-					   const Vocal2::Data& signedBy,  
-					   const Vocal2::Security::SignatureStatus sigStatus,
+BuddyDlg::receivedPage( const resip::Data& msg, 
+					   const resip::Uri& from,
+					   const resip::Data& signedBy,  
+					   const resip::Security::SignatureStatus sigStatus,
 					   const bool wasEncryped  )
 {
 	CString res = _T("");
@@ -312,7 +312,7 @@ BuddyDlg::message(const CString& msg)
 }
 
 void 
-BuddyDlg::presenseUpdate(const Vocal2::Uri& uri, bool open, const Vocal2::Data& status )
+BuddyDlg::presenseUpdate(const resip::Uri& uri, bool open, const resip::Data& status )
 {
 	CString res = _T("");
 
@@ -346,8 +346,8 @@ BuddyDlg::presenseUpdate(const Vocal2::Uri& uri, bool open, const Vocal2::Data& 
 			while (sub != NULL)
 			{
 				CString dest = tree->GetItemText(sub);
-				Vocal2::Data uDest( dest );
-				Vocal2::Uri u( uDest );
+				resip::Data uDest( dest );
+				resip::Uri u( uDest );
 				if ( uri.getAor() == u.getAor() )
 				{
 					// found a match 
@@ -360,8 +360,8 @@ BuddyDlg::presenseUpdate(const Vocal2::Uri& uri, bool open, const Vocal2::Data& 
 		}
 
 		CString dest = tree->GetItemText(item);
-		Vocal2::Data uDest( dest );
-		Vocal2::Uri u( uDest );
+		resip::Data uDest( dest );
+		resip::Uri u( uDest );
 		if ( uri.getAor() == u.getAor() )
 		{
 			// found a match 
@@ -507,7 +507,7 @@ void BuddyDlg::OnBnClickedButtonDel()
 	//group = tree->InsertItem(_T("Friends"), TVI_ROOT, TVI_SORT);
 	for ( int i=0; i<theApp.tuIM->getNumBuddies(); i++)
 	{
-		Vocal2::Uri budy = theApp.tuIM->getBuddyUri(i);
+		resip::Uri budy = theApp.tuIM->getBuddyUri(i);
 		CString name( _T( Data::from(budy).c_str() ) );
 		//tree->InsertItem( name , group, TVI_SORT);
 

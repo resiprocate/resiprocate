@@ -2,16 +2,16 @@
 #include "stdafx.h"
 
 
-#include "sip2/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 //#include "sip2/util/Logger.hxx"
 
-#include "sip2/sipstack/SipStack.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/TuIM.hxx"
-#include "sip2/sipstack/Security.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/TuIM.hxx"
+#include "resiprocate/Security.hxx"
 
 
-using namespace Vocal2;
+using namespace resip;
 using namespace std;
 
 
@@ -249,7 +249,7 @@ SipImpApp::imInit()
 			contact = Uri( Data( mContact ) );
 			haveContact = true;
 		}
-		catch ( Vocal2::BaseException )
+		catch ( resip::BaseException& )
 		{
 		}
 	}
@@ -300,8 +300,8 @@ SipImpApp::imInit()
 	assert( sipStack->security );
 	try
 	{
-		Vocal2::Data key( mKey );
-		Vocal2::Data path(mCertPath);
+		resip::Data key( mKey );
+		resip::Data path(mCertPath);
 
 		bool okSec = sipStack->security->loadAllCerts( key , path  );
 		if ( !okSec )
@@ -310,7 +310,7 @@ SipImpApp::imInit()
 			assert( 0 );
 		}
 	}
-	catch ( Vocal2::Security::Exception e )
+	catch ( resip::Security::Exception e )
 	{
 		Data error = Data::from( e );
 		const char* problem = error.c_str();
@@ -332,7 +332,7 @@ SipImpApp::imInit()
 #endif
 		}
 	}
-	catch (Vocal2::BaseException* e )
+	catch (resip::BaseException* e )
 	{
 		Data foo = Data::from( *e );
 		tuIM = NULL;
@@ -351,12 +351,12 @@ SipImpApp::imInit()
 	{
 		try
 		{
-			Vocal2::Data dOutbound( mOutbound );
+			resip::Data dOutbound( mOutbound );
 			Uri outbound( dOutbound );
 
 			tuIM->setOutboundProxy( outbound );
 		}
-		catch ( Vocal2::BaseException  )
+		catch ( resip::BaseException&  )
 		{	
 		}
 	}
@@ -375,10 +375,10 @@ SipImpApp::imInit()
 		item.Format("%d",i);
 		CString name = this->GetProfileString("buddyList",item,"");
 
-		Vocal2::Data dName( name );
-		Vocal2::Uri uri(dName);
+		resip::Data dName( name );
+		resip::Uri uri(dName);
 		assert( tuIM );
-		tuIM->addBuddy( uri , Vocal2::Data::Empty );
+		tuIM->addBuddy( uri , resip::Data::Empty );
 	}
 }
 
@@ -425,12 +425,12 @@ SipImpApp::sendPage(CString text, CString destiation)
 	{
 		dest = Uri(d);
 	}
-	catch ( Vocal2::BaseException )
+	catch ( resip::BaseException& )
 	{
 		return;
 	}
 
-	Vocal2::Data foo(text);
+	resip::Data foo(text);
 	Data encFor = dest.getAorNoPort();
 	if (!encryp)
 	{
@@ -480,20 +480,20 @@ SipImpApp::addBuddy(CString name)
 	uName += name;
 
 	Uri buddy;
-	Vocal2::Data dName( uName);
+	resip::Data dName( uName);
 	try 
 	{
 		buddy = Uri( dName );
 	}
-	catch ( Vocal2::BaseException )
+	catch ( resip::BaseException& )
 	{
 		return CString(_T(""));
 	}
 
-	theApp.tuIM->addBuddy(buddy, Vocal2::Data::Empty /*group*/ );
+	theApp.tuIM->addBuddy(buddy, resip::Data::Empty /*group*/ );
 
 	assert( dlg );
-	Vocal2::Data sName = Data::from(buddy);
+	resip::Data sName = Data::from(buddy);
 	dlg->addBuddy( sName.c_str() );
 
 	return CString( sName.c_str() );
@@ -507,7 +507,7 @@ SipImpApp::setStatus(bool online, CString note)
 		return;
 	}
 	assert(theApp.tuIM);
-	Vocal2::Data status( note );
+	resip::Data status( note );
 	theApp.tuIM->setMyPresense( online, status );
 }
 
