@@ -129,6 +129,29 @@ main(int arc, char** argv)
       pb.skipNonWhitespace();
       assert(*pb.position() == ' ');
    }
+
+   {
+      char buf[] = "    \t buffer with some stuff.";
+      ParseBuffer pb(buf, strlen(buf));   
+
+      pb.reset(pb.end());
+      pb.skipBackToChar('s');
+      pb.skipBackChar();
+      pb.skipBackToChar('s');
+      pb.skipBackChar('s');
+
+      assert(Data(pb.position(), 4) == "some");
+   }
+
+   {
+      char buf[] = "buffer with some stuff.";
+      ParseBuffer pb(buf, strlen(buf));   
+
+      pb.reset(pb.end());
+      pb.skipBackToChar('q');
+      assert(pb.bof());
+      pb.skipChar('b');
+   }
    
    {
       char buf[] = "    \t buffer with some stuff.";
