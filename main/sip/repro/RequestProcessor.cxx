@@ -2,7 +2,8 @@
 #include "resiprocate/config.hxx"
 #endif
 
-#include <RequestProcessor.hxx>
+#include "resiprocate/SipMessage.hxx"
+#include "RequestProcessor.hxx"
 
 using namespace resip;
 using namespace repro;
