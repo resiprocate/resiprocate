@@ -3,6 +3,7 @@
 #endif
 
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/ShutdownMessage.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/TransactionState.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -23,7 +24,8 @@ TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, 
    mTransportSelector(multi, mStateMacFifo),
    mStatelessHandler(*this),
    mTimers(mStateMacFifo),
-   StatelessIdCounter(1)
+   StatelessIdCounter(1),
+   mShuttingDown(false)
 {
 }
 #if defined(WIN32)
@@ -34,22 +36,39 @@ TransactionController::~TransactionController()
 {
 }
 
+void
+TransactionController::shutdown()
+{
+   mShuttingDown = true;
+   mTransportSelector.shutdown();
+}
 
 void
 TransactionController::process(FdSet& fdset)
 {
-   mTransportSelector.process(fdset);
-   mTimers.process();
-
-   while (mStateMacFifo.messageAvailable())
+   if (mShuttingDown && 
+       mTimers.empty() && 
+       !mStateMacFifo.messageAvailable() && 
+       !mTUFifo.messageAvailable() &&
+       mTransportSelector.isFinished())
    {
-      if (mStateless)
+      mTUFifo.add(new ShutdownMessage);
+   }
+   else
+   {
+      mTransportSelector.process(fdset);
+      mTimers.process();
+
+      while (mStateMacFifo.messageAvailable())
       {
-         mStatelessHandler.process();
-      }
-      else
-      {
-         TransactionState::process(*this);
+         if (mStateless)
+         {
+            mStatelessHandler.process();
+         }
+         else
+         {
+            TransactionState::process(*this);
+         }
       }
    }
 }

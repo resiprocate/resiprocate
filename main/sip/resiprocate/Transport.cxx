@@ -35,7 +35,8 @@ Transport::Transport(Fifo<Message>& rxFifo,
    mFd(-1),
    mInterface(intfc),
    mTuple(intfc, portNum, ipv4),
-   mStateMachineFifo(rxFifo)
+   mStateMachineFifo(rxFifo),
+   mShuttingDown(false)
 {
 }
 
@@ -47,6 +48,19 @@ Transport::~Transport()
       closeSocket(mFd);
    }
    mFd = -2;
+}
+
+bool
+Transport::isFinished() const
+{
+   return !mTxFifo.messageAvailable();
+}
+
+void
+Transport::shutdown()
+{
+   // !jf! should use the fifo to pass this in
+   mShuttingDown = true;
 }
 
 Socket
@@ -293,8 +307,10 @@ Transport::thread()
 void
 Transport::fail(const Data& tid)
 {
-  if (!tid.empty())
-    mStateMachineFifo.add(new TransportMessage(tid, true));
+   if (!tid.empty())
+   {
+      mStateMachineFifo.add(new TransportMessage(tid, true));
+   }
 }
 
 bool 
@@ -314,37 +330,18 @@ Transport::send( const Tuple& dest, const Data& d, const Data& tid)
 }
 
 SendData*
-Transport::makeFailedBasicCheckResponse(const SipMessage& msg,
-                                        int responseCode,
-                                        const char * warning)
+Transport::makeFailedResponse(const SipMessage& msg,
+                              int responseCode,
+                              const char * warning)
 {
   if (msg.isResponse()) return 0;
 
   const Tuple& dest = msg.getSource();
 
-
-  std::auto_ptr<SipMessage> errMsg(new SipMessage);
-
-  errMsg->header(h_StatusLine).responseCode() = responseCode;
-  errMsg->header(h_From) = msg.header(h_From);
-  errMsg->header(h_To) = msg.header(h_To);
-  errMsg->header(h_CallId) = msg.header(h_CallId);
-  errMsg->header(h_CSeq) = msg.header(h_CSeq);
-  errMsg->header(h_StatusLine).reason() = "Bad Request";
-  WarningCategory warn;
-  warn.code() = responseCode;
-  warn.hostname() = DnsUtil::getLocalHostName(); // !ah! hostname should be from transport.
-  warn.text() = Data(warning ?
-                     warning :
-                     "Original request had no Vias.");
-  errMsg->header(h_Warnings).push_back(warn);
-  Via v;
-  v.sentPort() = dest.getPort();
-  v.sentHost() = DnsUtil::inet_ntop(dest);
-  errMsg->header(h_Vias).push_front(v);
-  // synthetic Via:
-
-
+  std::auto_ptr<SipMessage> errMsg(Helper::makeResponse(msg, 
+                                                        responseCode, 
+                                                        warning ? warning : "Original request had no Vias"));
+  
   // make send data here w/ blank tid and blast it out.
   // encode message
   Data encoded;
@@ -352,13 +349,7 @@ Transport::makeFailedBasicCheckResponse(const SipMessage& msg,
   DataStream encodeStream(encoded);
   errMsg->encode(encodeStream);
   encodeStream.flush();
-
-  if (encoded.empty()) 
-  {
-    ErrLog(<<"Unable to encode failed response." << errMsg->brief());
-    assert(0);
-    return 0;
-  }
+  assert(!encoded.empty());
 
   InfoLog(<<"Sending response directly to " << dest << " : " << errMsg->brief() );
   SendData * sd = new SendData( dest, encoded, Data::Empty );
@@ -396,18 +387,20 @@ Transport::basicCheck(const SipMessage& msg)
          {
             // this is VERY low-level b/c we don't have a transaction...
             // here we make a response to warn the offending party.
-            SendData * sd = makeFailedBasicCheckResponse(msg);
-            
-            if (sd)
-            {
-               mTxFifo.add(sd);
-            }
-            else
-            {
-               ErrLog(<<"Unable to make SendData for bad message response.");
-            }
+            SendData * sd = makeFailedResponse(msg);
+            assert(sd);
+            mTxFifo.add(sd);
          }
          return false;
+      }
+      else if (mShuttingDown && msg.isRequest())
+      {
+         InfoLog (<< "Server has been shutdown, reject message with 503");
+         // this is VERY low-level b/c we don't have a transaction...
+         // here we make a response to warn the offending party.
+         SendData * sd = makeFailedResponse(msg, 503, "Server has been shutdown");
+         assert(sd);
+         mTxFifo.add(sd);
       }
    }
    return true;
