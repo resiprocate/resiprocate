@@ -1,0 +1,115 @@
+From ryker@ryker.org Thu Jun  5 19:06:43 2003
+Received: from sc8-sf-list2.sourceforge.net (lists.sourceforge.net [66.35.250.206])
+	by yyc.jasomi.com (8.12.9/8.12.6) with ESMTP id h5616giT027755
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO);
+	Thu, 5 Jun 2003 19:06:43 -0600 (MDT)
+Received: from sc8-sf-list1-b.sourceforge.net ([10.3.1.13] helo=sc8-sf-list1.sourceforge.net)
+	by sc8-sf-list2.sourceforge.net with esmtp (Exim 3.31-VA-mm2 #1 (Debian))
+	id 19O5pG-0001XS-00; Thu, 05 Jun 2003 18:15:26 -0700
+Received: from h68-147-4-22.cg.shawcable.net ([68.147.4.22] helo=wilde.ryker.org)
+	by sc8-sf-list1.sourceforge.net with esmtp 
+	(Cipher TLSv1:DES-CBC3-SHA:168) (Exim 3.31-VA-mm2 #1 (Debian))
+	id 19O5oB-0004uY-00
+	for <resiprocate-devel@lists.sourceforge.net>; Thu, 05 Jun 2003 18:14:20 -0700
+Received: from wilde.ryker.org (localhost.ryker.org [127.0.0.1])
+	by wilde.ryker.org (8.12.9/8.12.4) with ESMTP id h561Dvre005007;
+	Thu, 5 Jun 2003 19:13:57 -0600
+Received: (from ryker@localhost)
+	by wilde.ryker.org (8.12.9/8.12.9/Submit) id h561Dv0a005006;
+	Thu, 5 Jun 2003 19:13:57 -0600
+X-Authentication-Warning: wilde.ryker.org: ryker set sender to ryker@ryker.org using -f
+From: Ryan Kereliuk <ryker@ryker.org>
+To: resiprocate-devel@lists.sourceforge.net
+Message-ID: <20030606011357.GA4978@ryker.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Subject: [Resiprocate-devel] autoconfiscation
+Sender: resiprocate-devel-admin@lists.sourceforge.net
+Errors-To: resiprocate-devel-admin@lists.sourceforge.net
+X-BeenThere: resiprocate-devel@lists.sourceforge.net
+X-Mailman-Version: 2.0.9-sf.net
+Precedence: bulk
+List-Help: <mailto:resiprocate-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:resiprocate-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/resiprocate-devel>,
+	<mailto:resiprocate-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Id: <resiprocate-devel.lists.sourceforge.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/resiprocate-devel>,
+	<mailto:resiprocate-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=resiprocate-devel>
+Date: Thu, 5 Jun 2003 19:13:57 -0600
+
+Most of the action items described in my last email, "Brain Dump", have
+been implemented.  Until the generated build files are checked in you
+have to generate them after checkout.  It is like this so the old build
+system can still work until we flip the switch.  Here's how to try it:
+
+1.  Make sure you have the latest autotools installed.  This means
+    autoconf-2.57, automake-1.7.5, and libtool-1.5.  They are a download
+    from ftp.gnu.org and ./configure, make, make install away if they're
+    not on your system already.
+
+2.  Run aclocal (packaged with automake-1.7.5).
+3.  Run automake.
+4.  Run autoconf.
+
+    These three steps go away when we check in the generated files.
+    Please be careful about the versions of these things.
+
+5.  Run ./configure.  The regular options you are used to when
+    building GNU packages are available.  In addition you can add
+    --enable-distcc, --with-openssl[=DIR], and --with-ares[=DIR].
+    Shared libraries are now built by default although you can disable
+    this behaviour with with --disabled-shared.
+
+    When requested, OpenSSL and ares will be detected if they are
+    already built and installed in any of the probable places.  If you
+    want to direct the build to look elsewhere, add =DIR arguments.
+    It is best if these are an absolute paths.
+
+    Note that this configure setup allows you to separate your source and
+    build trees, and have potentially many differently configured build
+    trees all sharing the same source tree.  To use a distinct build
+    directory simply go there and run the configure script (e.g. from
+    directory /tmp/build-debug run ../sip/configure if your source tree
+    starts at /tmp/sip).
+
+6.  Run make.  Any make will do, it's doesn't need to be GNU make anymore.
+    Look in resiprocate/.libs to find the library results.
+
+7.  Run make install.  This will install the libraries in $prefix/lib
+    and the headers under $prefix/include/resiprocate.  You can
+    specify the prefix at ./configure time or install time (e.g. make
+    prefix=/tmp/installed-test-debug-build install).
+
+8.  Optionally you can do a make dist to build a tarball suitable for
+    distribution.  The tarball can be downloaded and installed with a
+    simple ./configure, make, make install process.
+
+Please try this system and let me know how it works for you.  I've tested
+the build system and everything compiles on:
+
+- Linux/i386 + GNU toolchain
+- Linux/i386 + Intel toolchain
+- Linux/PPC + GNU toolchain
+- Solaris/SPARC + GNU toolchain
+- Solaris/SPARC + Forte toolchain
+- MacOSX/PPC + GNU toolchain
+- OpenBSD/i386 + GNU toolchain
+
+With the exception of the first line, *ALL* of these combinations needed
+changes to the source to get working.  There is more we can do in the
+portability department but I'd like to leave that until we flip the
+switch and adopt an autoconfiscated build system (because it is a nice
+framework for building portable software).
+
+I am keen to roll a new package for the SourceForge download page.
+The one that is currently available there is embarrassing.
+
+Still TODO: fix a couple of compiler warnings, test on QNX/HP-UX/IRIX,
+get the resiprocate/test directory working under this system, unify the
+tests so they can be automagically run, setup daily builds on different
+platforms/toolchains, similarly daily tests, add gperf stuff to build
+system, roll SourceForge package.
+
