@@ -133,6 +133,9 @@
 				RelativePath="util\Condition.cxx">
 			</File>
 			<File
+				RelativePath="sipstack\Connection.cxx">
+			</File>
+			<File
 				RelativePath="sipstack\ConnectionMap.cxx">
 			</File>
 			<File
@@ -232,6 +235,9 @@
 				RelativePath="sipstack\ParserCategory.cxx">
 			</File>
 			<File
+				RelativePath="sipstack\Pidf.cxx">
+			</File>
+			<File
 				RelativePath="sipstack\Pkcs7Contents.cxx">
 			</File>
 			<File
@@ -251,6 +257,9 @@
 			</File>
 			<File
 				RelativePath="sipstack\ReliabilityMessage.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\RportParameter.cxx">
 			</File>
 			<File
 				RelativePath="sipstack\SdpContents.cxx">
@@ -345,6 +354,9 @@
 			</File>
 			<File
 				RelativePath="util\Condition.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\Connection.hxx">
 			</File>
 			<File
 				RelativePath="sipstack\ConnectionMap.hxx">
@@ -470,6 +482,9 @@
 				RelativePath="sipstack\ParserContainerBase.hxx">
 			</File>
 			<File
+				RelativePath="sipstack\Pidf.hxx">
+			</File>
+			<File
 				RelativePath="sipstack\PlainContents.hxx">
 			</File>
 			<File
@@ -489,6 +504,9 @@
 			</File>
 			<File
 				RelativePath="sipstack\Resolver.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\RportParameter.hxx">
 			</File>
 			<File
 				RelativePath="sipstack\SSL.hxx">

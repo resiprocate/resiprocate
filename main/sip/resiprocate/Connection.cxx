@@ -1,7 +1,13 @@
+
 #include <algorithm>
+
+#include "sip2/util/Socket.hxx"
+
+#if 0
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#endif
 
 #include "sip2/sipstack/Connection.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
@@ -112,7 +118,11 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
          {
             mMessage->addBuffer(mBuffer);
             int overHang = mBufferPos + bytesRead - mPreparse.nDiscardOffset();
-            size_t size = std::max((size_t)(overHang*3/2), (size_t)Connection::ChunkSize);
+			size_t size = overHang*3/2;
+			   if ( size < Connection::ChunkSize )
+			   {
+				   size = Connection::ChunkSize;
+			   }
             char* newBuffer = new char[size];
          
             memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset(), overHang);
@@ -135,7 +145,11 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
                fifo.add(mMessage);
 
                int overHang = (mBufferPos + bytesRead) - (mPreparse.nDiscardOffset() + contentLength);
-               size_t size = std::max((size_t)(overHang*3/2), (size_t)Connection::ChunkSize);
+               size_t size = overHang*3/2;
+			   if ( size < Connection::ChunkSize )
+			   {
+				   size = Connection::ChunkSize;
+			   }
                char* newBuffer = new char[size];
                memcpy(newBuffer, mBuffer + mPreparse.nDiscardOffset() + contentLength, overHang);
                mBuffer = newBuffer;
