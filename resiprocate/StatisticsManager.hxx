@@ -11,7 +11,7 @@
 
 namespace resip
 {
-
+class SipStack;
 class SipMessage;
 class TransactionController;
 
@@ -31,8 +31,7 @@ class StatisticsManager : public StatisticsMessage::Payload
          StatsMemUsed
       } Measurement;
       
-      StatisticsManager(TransactionController& transactionController,
-                        unsigned long intervalSecs=60);
+      StatisticsManager(SipStack& stack, unsigned long intervalSecs=60);
 
       void process();
       // not stricly thread-safe; needs to be called through the fifo somehow
@@ -45,7 +44,7 @@ class StatisticsManager : public StatisticsMessage::Payload
 
       void poll(); // force an update
 
-      TransactionController& mTransactionController;
+      SipStack& mStack;
       UInt64 mInterval;
       UInt64 mNextPoll;
 };
