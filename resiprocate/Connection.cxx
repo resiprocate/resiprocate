@@ -99,6 +99,7 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
       {
          if (mPreparse.process(*mMessage, mBuffer, mBufferPos + bytesRead) != 0)
          {
+            WarningLog(<< "Discarding preparse!");
             delete mBuffer;
             mBuffer = 0;
             delete mMessage;
@@ -185,7 +186,12 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
          }
          else
          {
-            assert(0);
+            //DebugLog(<< "Data assigned, not fragmented, not complete");
+            mMessage->addBuffer(mBuffer);
+            mBuffer = new char[ChunkSize];
+            mBufferPos = 0;
+            mBufferSize = ChunkSize;
+            mState = ReadingHeaders;
          }
          break;
       }
