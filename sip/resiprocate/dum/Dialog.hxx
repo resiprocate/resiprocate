@@ -60,7 +60,8 @@ class Dialog
       void processNotify(const SipMessage& notify);
       
    private:
-      
+      BaseUsage* findUsage(const SipMessage& msg);
+
       std::vector<ClientSubscription*> mClientSubscriptions;
       ServerSubscription* mServerSubscription;
       InviteSession* mInviteSession;
