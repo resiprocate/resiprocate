@@ -178,6 +178,8 @@ defineHeader(RSeq, "RSeq", IntegerCategory);
 // !dlb! this one is not quite right -- can have (comment) after field value
 defineHeader(RetryAfter, "Retry-After", IntegerCategory);
 defineHeader(Expires, "Expires", ExpiresCategory);
+defineHeader(SessionExpires, "Session-Expires", ExpiresCategory);
+defineHeader(MinSE, "Min-SE", ExpiresCategory);
 
 //====================
 // CallId:

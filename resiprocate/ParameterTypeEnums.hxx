@@ -19,8 +19,6 @@ class ParameterTypes
       // !dlb! until automated, must ensure that this set is consistent with
       // gperf in ParameterTypes.cxx and ParameterTypes.hxx
       // Also needs to be in ParserCategory.hxx/cxx
-      // May need to add filters to ParserCategories.hxx : NameAddr if the
-      // parameter is explicitly excluded from being in the NameAddr parameters
       enum Type
       {
          UNKNOWN = -1,
@@ -94,6 +92,8 @@ class ParameterTypes
          defineParam(uri, "uri", QuotedDataParameter, "RFC ????"),
          defineParam(user, "user", DataParameter, "RFC ????"),
          defineParam(username, "username", DataParameter, "RFC ????"),
+         defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891"),
+         defineParam(refresher, "refresher", DataParameter, "Session Timer Draft"),
 
          // NOTE: Do not copy these elsewhere, they are special case
          // !dlb! please insert an explanation of why (above)

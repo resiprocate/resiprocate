@@ -44,6 +44,8 @@ class Headers
          defineHeader(Subject, "Subject", StringCategory, "RFC ????"),
          defineHeader(Expires, "Expires", ExpiresCategory, "RFC ????"),
          defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC ????"),
+         defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "Session Timer draft"),
+         defineHeader(MinSE, "Min-SE", ExpiresCategory, "Session Timer draft"),
          defineMultiHeader(Accept, "Accept", Mime, "RFC ????"),
          defineMultiHeader(AcceptEncoding, "Accept-Encoding", AcceptEncoding, "RFC ????"),
          defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC ????"),
