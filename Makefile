@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2002/09/20 23:16:12 fluffy Exp $
+# $Id: Makefile,v 1.3 2002/09/21 00:56:56 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -7,9 +7,12 @@ PROG = sipstack
 
 SRC = \
 	Parameter.cxx \
-	PrameterList.cxx
+	ParameterList.cxx \
+	StringParameter.cxx \
+	UnknownParameter.cxx 
 
 OSRC =   *.hxx Makefile
+
 
 #CXXFLAGS += -pg
 #LDFLAGS  += -pg
@@ -51,6 +54,8 @@ CXXFLAGS += -I/usr/X11R6/include
 LDFLAGS  += -L/usr/X11R6/lib
 LDLIBS   += -lXpm -lXext 
 endif
+
+CXXFLAGS += -I../../.
 
 # OK THE REST OF THE FILE IS NOT REALLY MEANT TO BE MODIFIED
 OBJ = obj.$(ARCH)
@@ -110,8 +115,10 @@ $(BIN)/$(PROG).pure: $(OBJ)/Gesture.o $(OBJS)
 $(BIN)/libSipStack.a: $(OBJS)
 	ar $(ARFLAGS) $@ $^
 
-testMsg: $(OBJ)/testMsg.o
+
+testParameterList:  $(OBJS) $(OBJ)/testParameterList.o
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
 
 
 
