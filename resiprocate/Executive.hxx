@@ -29,11 +29,6 @@ class Executive
 
    private:
       SipStack& mStack;
-
-      bool processTransports(FdSet& fdset); // return true if more work to do
-      bool processDns(FdSet& fdset);// return true if more work to do
-      bool processStateMachine();// return true if more work to do
-      bool processTimer();// return true if more work to do
 };
 
 }

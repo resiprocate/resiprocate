@@ -400,7 +400,6 @@ TcpTransport::processWrite(Connection* c)
       c->mOutstandingSends.pop_front();
       DebugLog (<< "mOutstandingSends.size() " << c->mOutstandingSends.size());
       c->mSendPos = 0;
-      ok(data->transactionId);
       delete data;
    }
    mConnectionMap.touch(c);

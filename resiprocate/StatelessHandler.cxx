@@ -1,33 +1,31 @@
 #include "resiprocate/os/Logger.hxx"
 
-#include "resiprocate/SipStack.hxx"
-#include "resiprocate/StatelessHandler.hxx"
-#include "resiprocate/Helper.hxx"
-#include "resiprocate/TransportMessage.hxx"
-#include "resiprocate/ReliabilityMessage.hxx"
+#include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/DnsResolver.hxx"
+#include "resiprocate/DnsResult.hxx"
+#include "resiprocate/StatelessHandler.hxx"
+#include "resiprocate/TransactionController.hxx"
+#include "resiprocate/TransportMessage.hxx"
+
 
 
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-StatelessHandler::StatelessHandler(SipStack& stack) :
-   mStack(stack),
-   mTid(1)
+StatelessHandler::StatelessHandler(TransactionController& c) : mController(c)
 {
 }
 
 void 
 StatelessHandler::process()
 {
-   Message* msg = mStack.mStateMacFifo.getNext();
+   Message* msg = mController.mStateMacFifo.getNext();
    assert(msg);
 
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-   DnsResolver::DnsMessage* dns=dynamic_cast<DnsResolver::DnsMessage*>(msg);
    TransportMessage* transport = dynamic_cast<TransportMessage*>(msg);
-
+   
    if (sip)
    {
       if (sip->header(h_Vias).empty())
@@ -44,21 +42,20 @@ StatelessHandler::process()
             Via& via = sip->header(h_Vias).front();
             // this is here so that we will reuse the tcp connection
             via.param(p_rport).port() = sip->getSource().port;
-            mStack.mTUFifo.add(sip);
+            mController.mTUFifo.add(sip);
          }
          else if (sip->isRequest())
          {
             if (sip->getDestination().transport)
             {
                DebugLog (<< "Processing request from TU : " << msg->brief());
-               mStack.mTransportSelector.send(sip, sip->getDestination(), Data::Empty); // results not used
+               mController.mTransportSelector.transmit(sip, sip->getDestination()); // results not used
             }
             else
             {
                DebugLog (<< "Processing request from TU : " << msg->brief());
-               mTid++;
-               mMap[Data(mTid)] = sip;
-               mStack.mTransportSelector.dnsResolve(sip, Data(mTid));
+               StatelessMessage* stateless = new StatelessMessage(mController.mTransportSelector, sip);
+               mController.mTransportSelector.dnsResolve(sip, stateless);
             }
          }
          else // no dns for sip responses
@@ -82,19 +79,9 @@ StatelessHandler::process()
             }
             destination.transportType = Transport::toTransport(via.transport());
             
-            mStack.mTransportSelector.send(sip, destination, Data::Empty); // results not used
+            mController.mTransportSelector.transmit(sip, destination); // results not used
          }
       }
-   }
-   // !jf! for now, wait until all results are back before sending anything
-   else if (dns)
-   {
-      DebugLog (<< "Processing DNS result: " << msg->brief());
-      //assert(dns->isFinal);
-      Transport::Tuple tuple = *dns->mTuples.begin();
-      MapIterator i = mMap.find(dns->getTransactionId());
-      assert (i != mMap.end());
-      mStack.mTransportSelector.send(i->second, tuple, dns->getTransactionId());
    }
    else if (transport)
    {
@@ -102,22 +89,7 @@ StatelessHandler::process()
       
       if (transport->isFailed())
       {
-         // !jf! should move on to next dns result. For now, give up :(
-         MapIterator i = mMap.find(transport->getTransactionId());
-         if (i != mMap.end())
-         {
-            delete i->second;
-            mMap.erase(i);
-         }
-      }
-      else
-      {
-         MapIterator i = mMap.find(transport->getTransactionId());
-         if (i != mMap.end())
-         {
-            delete i->second;
-            mMap.erase(i);
-         }
+         InfoLog (<< "Not yet supported");
       }
    }
    else
@@ -126,3 +98,20 @@ StatelessHandler::process()
    }
 }
 
+
+StatelessMessage::StatelessMessage(TransportSelector& selector, SipMessage* msg) : mSelector(selector), mMsg(msg)
+{
+}
+
+void 
+StatelessMessage::handle(DnsResult* result)
+{
+   if (result->available() == DnsResult::Available)
+   {
+      Transport::Tuple next = result->next();
+      mSelector.transmit(mMsg, next);
+   }
+
+   delete this;
+   result->destroy();
+}
