@@ -43,7 +43,8 @@ Resolver::Resolver(const Data& host, int port, Transport::Type transport) :
 }
 
 Resolver::Resolver(const Uri& uri) : 
-   mHost(uri.host())
+   mHost(uri.host()),
+   mPort(uri.port() ? uri.port() : 5060)
 {
    bool isNumeric = isIpAddress(mHost);
    if (!uri.exists(p_transport) )
@@ -138,12 +139,17 @@ Resolver::lookupARecords()
       char str[256];
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
-         DebugLog (<< inet_ntop(result->h_addrtype, *pptr, str, sizeof(str)));
          Resolver::Tuple tuple;
-         tuple.ipv4 = *((struct sockaddr_in*)(*pptr));
+         bzero((char *) &tuple.ipv4, sizeof(tuple.ipv4));
+         tuple.ipv4.sin_family = AF_INET; //result->h_addrtype;
+         tuple.ipv4.sin_port = htons(mPort);
+         tuple.ipv4.sin_addr.s_addr = *((u_int32_t*)(*pptr));
          tuple.port = mPort;
          tuple.transport = mTransport;
          mNextHops.push_back(tuple);
+
+         assert(mNextHops.back().ipv4.sin_addr.s_addr == tuple.ipv4.sin_addr.s_addr);
+         DebugLog (<< inet_ntop(result->h_addrtype, &tuple.ipv4.sin_addr.s_addr, str, sizeof(str)));
       }
       mCurrent = mNextHops.begin();
    }
