@@ -2,7 +2,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <iostream>
-#include <sstream>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -26,7 +25,7 @@ int
 main(int argc, char* argv[])
 {
    Log::initialize(Log::COUT, Log::INFO, argv[0]);
-
+   
    Fifo<Message> received;
    
    UdpTransport* udp = new UdpTransport("localhost", 5070, "default", received);
@@ -55,7 +54,7 @@ main(int argc, char* argv[])
    
    struct timeval tv;
    
-   for (int i=0; i<1000; i++)
+   for (int i=0; i<500000; i++)
    {
       udp->send(&resolver.mCurrent->ipv4, encoded.c_str(), encoded.size()); 
       
