@@ -56,12 +56,12 @@ Random::initialize()
 
          if ( s != sizeof(seed) )
          {
-            ErrLog( << "System is short of randomness" );
+//            ErrLog( << "System is short of randomness" );
          }
       }
       else
       {
-         ErrLog( << "Could not open /dev/random" );
+//         ErrLog( << "Could not open /dev/random" );
       }
 #endif
 
@@ -81,7 +81,7 @@ Random::initialize()
 
          if ( s != sizeof(buf) )
          {
-            ErrLog( << "System is short of randomness" );
+//            ErrLog( << "System is short of randomness" );
          }
          
          RAND_add(buf,sizeof(buf),double(s*8));
