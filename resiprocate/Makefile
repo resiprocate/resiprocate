@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.85 2002/11/25 20:14:02 davidb Exp $
+# $Id: Makefile,v 1.86 2002/11/26 02:28:20 davidb Exp $
 
 BUILD = ../../build
 
@@ -66,6 +66,7 @@ SRC = \
 	Contents.cxx \
 	SdpContents.cxx \
 	MessageWaitingContents.cxx \
+	SipFrag.cxx \
 #	TuIM.cxx \
 
 
