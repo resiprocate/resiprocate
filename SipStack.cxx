@@ -113,7 +113,7 @@ SipStack::addAlias(const Data& domain, int port)
 {
    DebugLog (<< "Adding domain alias: " << domain << ":" << port);
    assert(!mShuttingDown);
-   mDomains.insert(domain + Data(":") + Data(port));
+   mDomains.insert(domain + ":" + Data(port));
 }
 
 Data 
@@ -130,7 +130,7 @@ SipStack::getHostname()
       // this can fail when there is no name server 
       // !cj! - need to decided what error to return 
       ErrLog( << "gethostbyname failed - name server is probably down" );
-        return Data("localhost");
+      return "localhost";
    }
    assert( hostEnt );
    
@@ -174,10 +174,23 @@ SipStack::getHostAddress()
 bool 
 SipStack::isMyDomain(const Data& domain, int port) const
 {
-   return (mDomains.count(domain + Data(":") + 
+   return (mDomains.count(domain + ":" + 
                           Data(port == 0 ? Symbols::DefaultSipPort : port)) != 0);
 }
 
+const Uri&
+SipStack::getUri() const
+{
+   if (mDomains.empty())
+   {
+      CritLog(<< "There are no associated transports");
+      throw Exception("No associated transports", __FILE__, __LINE__);
+   }
+
+   static Uri myUri("sip:" + *mDomains.begin());
+
+   return myUri;
+}
 
 void 
 SipStack::send(const SipMessage& msg)

@@ -7,8 +7,9 @@
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/Executive.hxx"
 #include "resiprocate/TransactionController.hxx"
+#include "resiprocate/os/BaseException.hxx"
 
-namespace resip
+namespace resip 
 {
 
 class Data;
@@ -34,6 +35,15 @@ class SipStack
       // create any new transactions and to perform an orderly shutdown. When
       // the transactions are all terminated, return a ShutdownMessage to the TU
       void shutdown();
+
+      class Exception : public BaseException
+      {
+         public:
+            Exception(const Data& msg, const Data& file, const int line)
+               : BaseException(msg, file, line) {}
+
+            const char* name() const { return "SipStack::Exception"; }
+      };
       
       // Used by the application to add in a new transport
       // ipInterface parameter is used to specify which ethernet interface to
@@ -57,6 +67,7 @@ class SipStack
 
       // used to add an alias for this sip element. e.g. foobar.com and boo.com
       // are both handled by this proxy. 
+      // not threadsafe
       void addAlias(const Data& domain, int port);
       
       // return true if domain is handled by this stack. convenience for
@@ -67,9 +78,13 @@ class SipStack
       // is not threadsafe
       static Data getHostname();
 
-	  // get one of the IP address for this host (calls through to gethostbyname) and
+      // get one of the IP address for this host (calls through to gethostbyname) and
       // is not threadsafe
       static Data getHostAddress();
+
+      // get one of the Uris for this host
+      // not threadsafe
+      const Uri& getUri() const;
 
       // interface for the TU to send a message. makes a copy of the
       // SipMessage. Caller is responsible for deleting the memory and may do
