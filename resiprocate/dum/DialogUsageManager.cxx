@@ -397,9 +397,17 @@ DialogUsageManager::makeSubscription(const NameAddr& target, const NameAddr& fro
 }
 
 SipMessage&
-DialogUsageManager::makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, int subscriptionTime, AppDialogSet* appDs)
+DialogUsageManager::makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, 
+                                     int subscriptionTime, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, from, eventType, subscriptionTime), appDs);
+}
+
+SipMessage&
+DialogUsageManager::makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, 
+                                     int subscriptionTime, int refreshInterval, AppDialogSet* appDs)
+{
+   return makeNewSession(new SubscriptionCreator(*this, target, from, eventType, subscriptionTime, refreshInterval), appDs);
 }
 
 SipMessage& 
@@ -618,6 +626,24 @@ DialogUsageManager::findInviteSession(CallId replaces)
    return make_pair(is, ErrorStatusCode);
 }
 
+void microsoftPreprocess(SipMessage& request)
+{
+   MethodTypes meth = request.header(h_RequestLine).getMethod();
+   
+   if (meth == SUBSCRIBE || meth == NOTIFY || meth == PUBLISH)
+   {
+      if (!request.exists(h_SubscriptionState))
+      {
+         request.header(h_SubscriptionState).value() = "active";
+      }      
+      if (!request.exists(h_Event))
+      {
+         SipMessage& ncRequest = const_cast<SipMessage&> (request);
+         ncRequest.header(h_Event).value() = "presence";
+      }
+   }
+}
+
 void
 DialogUsageManager::run()
 {
@@ -687,6 +713,8 @@ DialogUsageManager::process()
                      return true;
                   }
                }
+               //!dcm! -- make this generic and pluggable
+               microsoftPreprocess(*sipMsg);               
                processRequest(*sipMsg);
             }
             else if (sipMsg->isResponse())
@@ -929,13 +957,20 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
    return false;
 }
 
+bool 
+DialogUsageManager::mSoftCheck(const SipMessage& request)
+{
+   return request.header(h_RequestLine).method() == MESSAGE && !findDialogSet(DialogSetId(request));   
+}
+
 void
 DialogUsageManager::processRequest(const SipMessage& request)
 {
    DebugLog ( << "DialogUsageManager::processRequest: " << request.brief());
    
    assert(mAppDialogSetFactory.get());
-   if (!request.header(h_To).exists(p_tag))
+   //!dcm! -- fix to use findDialog
+   if (!request.header(h_To).exists(p_tag) || mSoftCheck(request))
    {
       switch (request.header(h_RequestLine).getMethod())
       {
@@ -984,12 +1019,12 @@ DialogUsageManager::processRequest(const SipMessage& request)
 
          case SUBSCRIBE:
          case PUBLISH:
-         case NOTIFY : // handle unsolicited (illegal) NOTIFYs
             if (!checkEventPackage(request))
             {
                InfoLog (<< "Rejecting request (unsupported package) " << request.brief());
                return;
             }
+         case NOTIFY : // handle unsolicited (illegal) NOTIFYs
          case INVITE:   // new INVITE
          case REFER:    // out-of-dialog REFER
          case INFO :    // handle non-dialog (illegal) INFOs
@@ -1114,8 +1149,9 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
    MethodTypes method = request.header(h_RequestLine).method();
 
 //       || (method == NOTIFY && !request.exists(h_SubscriptionState)))
+
    if (!request.exists(h_Event))
-   {
+   {      
       failureCode = 400;
    }
    else 
