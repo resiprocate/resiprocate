@@ -330,7 +330,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 {
    if (mState == Initial || mState == Early || mState == Proceeding)
    {
-      mDum.mInviteSessionHandler->onRedirected(getSessionHandle(), msg);
+      mDum.mInviteSessionHandler->onRedirected(getHandle(), msg);
       delete this;      
    }     
 }

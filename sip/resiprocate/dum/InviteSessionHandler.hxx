@@ -47,7 +47,7 @@ class InviteSessionHandler
       /// Basically an onTermintated that conveys more information.
       /// checking for 3xx respones in onTerminated will not work as there may
       /// be no valid targets.
-      virtual void onRedirected(InviteSessionHandle, const SipMessage& msg)=0;
+      virtual void onRedirected(ClientInviteSessionHandle, const SipMessage& msg)=0;
 
       // called to allow app to adorn a message. default is to send immediately
       virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg);
