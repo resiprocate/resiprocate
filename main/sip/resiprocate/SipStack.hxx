@@ -1,5 +1,9 @@
-#if !defined(SIPSTACK_HXX)
-#define SIPSTACK_HXX
+#if !defined(RESIP_SIPSTACK_HXX)
+#define RESIP_SIPSTACK_HXX
+
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
 
 #include <set>
 
