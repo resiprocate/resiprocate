@@ -296,7 +296,7 @@ Profile::isAdvertisedCapability(const Headers::Type header) const
 void 
 Profile::clearAdvertisedCapabilities(void)
 {
-   // !slg! do we set mHasAdvertisedCapabilities = false and allow fall through?  For now we assume that clearing means to not advertised any headers
+   // !slg! do we set mHasAdvertisedCapabilities = false and allow fall through?  For now we assume that clearing means to not advertise any headers
    mHasAdvertisedCapabilities = true;
    return mAdvertisedCapabilities.clear();
 }
