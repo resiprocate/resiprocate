@@ -1,4 +1,4 @@
-#ifndef RESIP_POLL_HXX
+#if !defined(RESIP_POLL_HXX)
 #define RESIP_POLL_HXX
 
 // One of the following macros must be defined:
@@ -15,21 +15,21 @@
 #include <vector>
 
 #ifdef RESIP_POLL_IMPL_POLL
-#include <sys/poll.h>
+#  include <sys/poll.h>
 #endif
 
 #ifdef RESIP_POLL_IMPL_SELECT
-
-#ifdef WIN32
-# include <winsock2.h>
-#else  // !WIN32
-# include <sys/time.h>
-# include <sys/types.h>
-# include <unistd.h>
-#endif // WIN32
+# ifdef WIN32
+#  include <winsock2.h>
+# else
+#  include <sys/time.h>
+#  include <sys/types.h>
+#  include <unistd.h>
+# endif // WIN32
+#endif // RESIP_POLL_IMPL_SELECT
 
 #ifdef RESIP_POLL_EXTERN
-#include <map>
+# include <map>
 #endif // RESI
 
 namespace resip {
@@ -63,7 +63,7 @@ class Poll {
                fdsbmWritable       = 0x0004, // (POLLOUT)
                fdsbmError          = 0x0008, // (POLLERR)
                fdsbmAll            = Poll::FDEntry::fdsbmReadable |
-               Poll::FDEntry::fdsbmWritable | 
+               Poll::FDEntry::fdsbmWritable |
                Poll::FDEntry::fdsbmError
             };
             typedef StateBitMask FDStateBitMask;
@@ -79,7 +79,7 @@ class Poll {
             int
             compare(const Poll::FDEntry * leftFDEntry,
                     const Poll::FDEntry * rightFDEntry);
-        
+
             // Fields:
             Poll *                       _poll;
             int/*FD*/                    _fd;
@@ -225,27 +225,25 @@ class Poll {
 
 } // namespace resip
 
-#endif
-
 #endif //!defined(RESIP_POLL_HXX)
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -255,7 +253,7 @@ class Poll {
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -270,3 +268,5 @@ class Poll {
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  */
+
+
