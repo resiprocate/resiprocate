@@ -1,11 +1,17 @@
+2003-07-28  Wensong Zhang  <wensong@purplecomm.com>
+
+	* Security.cxx: re-ordered the header files.
+
+	* Security.hxx: tidy up openssl header files.
+
 2002-11-11    <alan@jasomi.com>
 
 	* tassert.h : Added useful macros for test drivers.
 		(See SipTortureTests.cxx for examples)
-	
+
 	* test/testSipStack1.cxx (main): Added arguments for controlling
 	log level.
-	
+
 	*  test/testPreparse.cxx(doTest1):  Added test cases for fragmentation.
 
 	* test/SipTortureTests.cxx (main):  Removed generic SipMessage
@@ -31,20 +37,20 @@
 
 	* Preparse.cxx (InitStatePreparseStateTable): Migrated to Symbols
 	constants and added asserts for unexpected char* cases.
-	
+
 
 2002-09-26  Alan Hawrylyshen  <alan@jasomi.com>
 
-	* headers.gperf (Repository): 
+	* headers.gperf (Repository):
 		Downcased everything. Fixed up some missing / mis-spelled
 		Header::Type entries.
 
-	* Symbols.cxx (Repository): 
+	* Symbols.cxx (Repository):
 		Fixed up Litteral text (STRING) for:
 			Subscription_State
 			Refer_To
 			Referred_By
-			
+
 
 	* Makefile (Repository): Added rule for headers-hash.c.
 		Builds hash function from headers.gperf.
@@ -52,5 +58,3 @@
 
 	* HeaderTypes.hxx (Repository): Fixed up Timestamp and
 		Call-Info fields to return correct STRING represenatation.
-
-
