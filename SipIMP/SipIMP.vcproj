@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding = "Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="7.10"
 	Name="SipIMP"
 	ProjectGUID="{2A0BFA5B-1586-4B45-9676-48FAA023E4CD}"
 	Keyword="MFCProj">
@@ -21,7 +21,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Zm300"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\sip"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)/contrib/ares&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -38,7 +38,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib C:\sip\resiprocate\Debug\sipstack.lib C:\sip\contrib\ares\Debug\ares.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib"
 				OutputFile="$(OutDir)/sipimp.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
@@ -63,7 +63,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -119,7 +125,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="SSL-Release|Win32"
@@ -176,7 +188,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="SSL-Debug|Win32"
@@ -234,9 +252,23 @@ copy C:\openssl-0.9.7\out32dll.dbg\ssleay32.dll  $(TargetDir)
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+			Name="ares"/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
+			Name="resiprocate"/>
+	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
@@ -289,6 +321,12 @@ copy C:\openssl-0.9.7\out32dll.dbg\ssleay32.dll  $(TargetDir)
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;jpg;jpeg;jpe;manifest">
 			<File
+				RelativePath="res\offline.bmp">
+			</File>
+			<File
+				RelativePath="res\online.bmp">
+			</File>
+			<File
 				RelativePath="res\SipIMP.ico">
 			</File>
 			<File
@@ -299,12 +337,6 @@ copy C:\openssl-0.9.7\out32dll.dbg\ssleay32.dll  $(TargetDir)
 			</File>
 			<File
 				RelativePath="res\SipIMP.rc2">
-			</File>
-			<File
-				RelativePath="res\offline.bmp">
-			</File>
-			<File
-				RelativePath="res\online.bmp">
 			</File>
 		</Filter>
 	</Files>
