@@ -36,6 +36,7 @@ public:
            const Uri& contact,
            Callback* callback);
             
+      bool haveCerts( bool sign, const Data& encryptFor );
       void sendPage(const Data& text, const Uri& dest, bool sign, const Data& encryptFor );
 
       void process();
@@ -70,7 +71,7 @@ public:
       SipStack* mStack;
       Uri mAor;
       Uri mContact;
-      Data mPassword;
+      //Data mPassword;
 
       // people I subscibe too 
       class Buddy
