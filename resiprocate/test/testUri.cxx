@@ -164,6 +164,20 @@ main(int argc, char* argv[])
       Uri uri("tel:+1 (408) 555-1212");
       assert(uri.scheme() == "tel");
    }
-                
+   // Tests for user-less uris (was broken accidentally v1.44 Uri.cxx)
+   {
+     Data original("sip:1.2.3.4:5060");
+     Data encoded;
+     Uri uri(original);
+
+     DataStream ds(encoded);
+     uri.encode(ds);
+     ds.flush();
+     cout << "!! original data: " << original << endl;
+     cout << "!! original uri : " << uri << endl;
+     cout << "!! encoded  data: " << encoded << endl;
+
+     assert( encoded == original );
+   }
    cerr << endl << "All OK" << endl;
 }
