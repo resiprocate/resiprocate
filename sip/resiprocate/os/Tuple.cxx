@@ -62,7 +62,7 @@ Tuple::Tuple(const GenericIPAddress& genericAddress, TransportType type,
 
 Tuple::Tuple(const Data& printableAddr, 
              int port,
-             bool ipv4, 
+             IpVersion ipVer,
              TransportType type,
              const Data& targetDomain) :
    transport(0),
@@ -70,7 +70,7 @@ Tuple::Tuple(const Data& printableAddr,
    mTransportType(type),
    mTargetDomain(targetDomain)
 {
-   if (ipv4)
+   if (ipVer == V4)
    {
       memset(&m_anonv4, 0, sizeof(m_anonv4));
       m_anonv4.sin_family = AF_INET;
@@ -258,6 +258,12 @@ bool
 Tuple::isV4() const
 {
    return mSockaddr.sa_family == AF_INET;
+}
+
+IpVersion 
+Tuple::ipVersion() const
+{
+   return mSockaddr.sa_family == AF_INET ? V4 : V6;
 }
 
 socklen_t

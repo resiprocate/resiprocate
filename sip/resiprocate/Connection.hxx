@@ -1,19 +1,9 @@
 #if !defined(RESIP_CONNECTION_HXX)
 #define RESIP_CONNECTION_HXX 
 
-/**
-!dlb!
-Relationship between buffer allocation and parsing is broken.
-
-If the read returns with a few bytes, a new buffer is allocated in performRead.
-
-performRead should handle allocation, read, and parsing. it should be the only
-public read accessor in Connection. read should be protected.
-
-*/
-
 #include <list>
 
+#include "resiprocate/ConnectionBase.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Timer.hxx"
@@ -33,14 +23,15 @@ typedef IntrusiveListElement<Connection*> ConnectionLruList;
 typedef IntrusiveListElement1<Connection*> ConnectionReadList;
 typedef IntrusiveListElement2<Connection*> ConnectionWriteList;
 
-class Connection : public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
+class Connection : public ConnectionBase, public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
 {
       friend class ConnectionManager;
       friend std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
 
    public:
       Connection(const Tuple& who, Socket socket);
-
+      virtual ~Connection();
+      
       ConnectionId getId() const;
       Socket getSocket() const {return mSocket;}
 
@@ -50,25 +41,22 @@ class Connection : public ConnectionLruList, public ConnectionReadList, public C
       //bool hasDataToWrite() const;
       void requestWrite(SendData* sendData);
 
-      void performRead(int bytesRead, Fifo<TransactionMessage>& fifo);
       void performWrite();
 
-      enum { ChunkSize = 2048 }; // !jf! what is the optimal size here? 
-      
-      // pure virtual, but need concrete Connection
-      virtual int read(char* buffer, const int count) { return 0; }
-      virtual int write(const char* buffer, const int count) { return 0; }
-      
-      Transport* transport();
+      int Connection::read(Fifo<TransactionMessage>& fifo);
 
+      // pure virtual, but need concrete Connection
+      Transport* transport();
    protected:
+      virtual int read(char* /* buffer */, const int /* count */) { return 0; }
+      virtual int write(const char* /* buffer */, const int /* count */) { return 0; }
+
       Connection();
-      virtual ~Connection();
+
       Socket mSocket;
 
    private:
       ConnectionManager& getConnectionManager() const;
-      std::pair<char*, size_t> getWriteBuffer();
 
       void remove(); // called by ConnectionManager
 
@@ -76,29 +64,6 @@ class Connection : public ConnectionLruList, public ConnectionReadList, public C
       Connection(const Connection&);
       Connection& operator=(const Connection&);
 
-      Tuple mWho;
-      // position in current message being sent
-      Data::size_type mSendPos;
-      std::list<SendData*> mOutstandingSends; // !jacob! intrusive queue?
-
-      SipMessage* mMessage;
-      char* mBuffer;
-      size_t mBufferPos;
-      size_t mBufferSize;
-
-      enum State
-      {
-         NewMessage = 0,
-         ReadingHeaders,
-         PartialBody,
-         MAX
-      };
-
-      static char connectionStates[MAX][32];
-      UInt64 mLastUsed;
-      State mState;
-      MsgHeaderScanner mMsgHeaderScanner;
-      friend class TcpBaseTransport;
 };
 
 std::ostream& 

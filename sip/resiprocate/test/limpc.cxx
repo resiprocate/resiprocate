@@ -767,7 +767,7 @@ myMain(int argc, char* argv[])
       ErrLog( << "Got a exception setting up Security" );
    }
 
-   SipStack sipStack( false /*multihtread*/, security );  
+   SipStack sipStack( security );  
 #else
    SipStack sipStack( false /*multihtread*/ );  
 #endif

@@ -20,9 +20,9 @@ const size_t TcpBaseTransport::MaxReadSize = 4096;
 
 TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum, IpVersion version,
                                    const Data& pinterface)
-   : Transport(fifo, portNum, version, pinterface)
+   : InternalTransport(fifo, portNum, version, pinterface)
 {
-   mFd = Transport::socket(TCP, version==V4);
+   mFd = InternalTransport::socket(TCP, version);
    //DebugLog (<< "Opening TCP " << mFd << " : " << this);
    
 #if !defined(WIN32)
@@ -50,7 +50,7 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum, 
       InfoLog (<< "Failed listen " << strerror(e));
       error(e);
       // !cj! deal with errors
-      throw Exception("Address already in use", __FILE__,__LINE__);
+	  throw Transport::Exception("Address already in use", __FILE__,__LINE__);
    }
 }
 
@@ -68,11 +68,10 @@ TcpBaseTransport::~TcpBaseTransport()
       fail(data->transactionId);
       delete data;
    }
-   
-   //mSendRoundRobin.clear(); // clear before we delete the connections
-
-   ThreadIf::shutdown();
+   DebugLog (<< "Shutting down " << mTuple);
+   ThreadIf::shutdown();  
    join();
+   //mSendRoundRobin.clear(); // clear before we delete the connections
 }
 
 void
@@ -143,30 +142,14 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
       {
          DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection);
          fdset.clear(currConnection->getSocket());
-         assert(!fdset.readyToRead(currConnection->getSocket()));
-         
-         std::pair<char*, size_t> writePair = currConnection->getWriteBuffer();
-         size_t bytesToRead = resipMin(writePair.second, 
-                                       static_cast<size_t>(Connection::ChunkSize));
-         
-         assert(bytesToRead > 0);
-         int bytesRead = currConnection->read(writePair.first, bytesToRead);
 
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection 
-                   << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
-         if (bytesRead == -1)
+         int bytesRead = currConnection->read(mStateMachineFifo);
+         DebugLog (<< "TcpBaseTransport::processSomeReads() " 
+                   << *currConnection << " read=" << bytesRead);            
+         if (bytesRead < 0)
          {
             DebugLog (<< "Closing connection bytesRead=" << bytesRead);
-            delete writePair.first;
             delete currConnection;
-         }
-         else if (bytesRead > 0) 
-         {
-            currConnection->performRead(bytesRead, mStateMachineFifo);
-         }
-         else if ( bytesRead != 0 )
-         {
-            assert(0);
          }
       }
       else if (fdset.hasException(currConnection->getSocket()))
@@ -202,7 +185,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       if (conn == 0)
       {
          // attempt to open
-         Socket sock = Transport::socket( TCP, isV4());
+         Socket sock = InternalTransport::socket( TCP, ipVersion());
          fdset.clear(sock);
          
          if ( sock == INVALID_SOCKET ) // no socket found - try to free one up and try again
@@ -212,7 +195,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
             error(e);
             mConnectionManager.gc(ConnectionManager::MinLastUsed); // free one up
 
-            sock = Transport::socket( TCP, isV4());
+            sock = InternalTransport::socket( TCP, ipVersion());
             if ( sock == INVALID_SOCKET )
             {
                int e = getErrno();
