@@ -702,7 +702,9 @@ DnsResult::retrieveSRV()
    if (i == mSRVResults.end())
    {
       InfoLog (<< "SRV Results problem selected=" << selected << " cum=" << mCumulativeWeight);
-      InfoLog (<< "SRV: " << Inserter(mSRVResults));
+#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
+      InfoLog (<< "SRV: " << Inserter(mSRVResults) ); // !cj! does not work in windows 
+#endif
    }
    assert(i != mSRVResults.end());
    SRV next = *i;
