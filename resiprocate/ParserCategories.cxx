@@ -180,7 +180,7 @@ Auth::parse(ParseBuffer& pb)
 
    if (*pb.position() == Symbols::EQUALS[0])
    {
-      // Authoentication-Info only
+      // Authentication-Info only
       // back up, and then parse
       pb.reset(start);
       parseAuthParameters(pb);
@@ -981,6 +981,13 @@ CallId::operator=(const CallId& rhs)
    }
    return *this;
 }
+
+bool
+CallId::operator==(const CallId& rhs) const
+{
+   return mValue == rhs.mValue;
+}
+
 ParserCategory *
 CallId::clone() const
 {
