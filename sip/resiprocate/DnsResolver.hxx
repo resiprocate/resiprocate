@@ -45,11 +45,11 @@ class DnsResolver
             int port;
             Data host;
             Transport::Type transport;
-
+            
             bool operator<(const Srv& rhs) const
             {
-	       return priority < rhs.priority;
-	    }
+               return priority < rhs.priority;
+            }
       };
       typedef std::set<DnsResolver::Srv> SrvSet;
       typedef std::set<DnsResolver::Srv>::const_iterator SrvIterator;
