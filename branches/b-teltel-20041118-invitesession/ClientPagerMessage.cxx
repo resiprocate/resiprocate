@@ -104,6 +104,7 @@ ClientPagerMessage::getMessageRequest()
 void
 ClientPagerMessage::page(std::auto_ptr<Contents> contents)
 {
+   assert(contents.get() != 0);
    mMsgQueue.push_back(contents.get());
    contents.release();
 
@@ -149,15 +150,17 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
     else
     {
        SipMessage errResponse;
-       MsgQueue::const_iterator msg;
-       for(msg = mMsgQueue.begin(); msg != mMsgQueue.end(); ++msg)
+       MsgQueue::iterator contents;
+       for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
        {
-           WarningLog ( << "Paging failed" << *msg );
+           Contents* p = *contents;
+           WarningLog ( << "Paging failed" << *p );
            Helper::makeResponse(errResponse, mRequest, code);
-           handler->onFailure(getHandle(), errResponse);
+           handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
+           *contents = 0;
        }
 
-       this->clearMsgQueued();
+       mMsgQueue.clear();
     }
 }
 /*
