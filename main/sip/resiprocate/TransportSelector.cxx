@@ -560,9 +560,11 @@ void
 TransportSelector::retransmit(SipMessage* msg, Tuple& target)
 {
    assert(target.transport);
-   assert(!msg->getEncoded().empty());
-   //DebugLog(<<"!ah! retransmit to " << target);
-   target.transport->send(target, msg->getEncoded(), msg->getTransactionId());
+   if(!msg->getEncoded().empty())
+   {
+      //DebugLog(<<"!ah! retransmit to " << target);
+      target.transport->send(target, msg->getEncoded(), msg->getTransactionId());
+   }
 }
 
 void 
