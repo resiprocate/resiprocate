@@ -39,6 +39,16 @@ typedef unsigned long int u_int32_t;
 typedef long int ssize_t;
 #endif
 
+#if defined(TARGET_OS_MAC) /* TARGET_OS_MAC #defined in OS X SDK, "TargetConditionals.h" */
+#include <netdb.h>
+#include <arpa/nameser_compat.h>
+#ifdef __MWERKS__ /* this is a <limits.h> bug filed with Apple, Radar# 3657629. */
+#ifndef __SCHAR_MAX__ 
+#define __SCHAR_MAX__ 127
+#endif
+#endif
+#endif
+
 #if defined(__SUNPRO_CC)
 #if defined(_TIME_T)
  using std::time_t;

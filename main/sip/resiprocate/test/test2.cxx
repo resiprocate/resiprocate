@@ -28,7 +28,7 @@ main(int argc, char* argv[])
 {
 	 // initNetwork();
 
-   Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::INFO, argv[0]);
+   Log::initialize(Log::Cout, argc > 1 ? Log::toLevel(argv[1]) :  Log::Info, argv[0]);
    
    SipStack stack1;
    SipStack stack2;
