@@ -5,24 +5,13 @@
 #include <set>
 #include <map>
 
-#include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/Headers.hxx"
-#include "resiprocate/dum/BaseUsage.hxx"
-#include "resiprocate/dum/ClientInviteSession.hxx"
-#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
-#include "resiprocate/dum/ClientPublication.hxx"
-#include "resiprocate/dum/ClientRegistration.hxx"
-#include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/DumTimeout.hxx"
-#include "resiprocate/dum/InviteSession.hxx"
-#include "resiprocate/dum/ServerInviteSession.hxx"
-#include "resiprocate/dum/ServerOutOfDialogReq.hxx"
-#include "resiprocate/dum/ServerPublication.hxx"
-#include "resiprocate/dum/ServerRegistration.hxx"
-#include "resiprocate/dum/ServerSubscription.hxx"
-#include "resiprocate/dum/UInt64Hash.hxx"
+#include "resiprocate/dum/HandleManager.hxx"
+#include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
+#include "resiprocate/os/BaseException.hxx"
 
 namespace resip 
 {
@@ -33,6 +22,9 @@ class Profile;
 class RedirectManager;
 class ClientAuthManager;
 class ServerAuthManager;
+class Uri;
+class SdpContents;
+
 class ClientRegistrationHandler;
 class ServerRegistrationHandler;
 class InviteSessionHandler;
@@ -42,7 +34,10 @@ class ClientPublicationHandler;
 class ServerPublicationHandler;
 class OutOfDialogHandler;
 
-class DialogUsageManager
+class Dialog;
+class InviteSessionCreator;
+
+class DialogUsageManager : public HandleManager
 {
    public:
       class Exception : public BaseException
@@ -58,8 +53,26 @@ class DialogUsageManager
       };
       
       DialogUsageManager(SipStack& stack);
-      ~DialogUsageManager();
+      virtual ~DialogUsageManager();
       
+
+#if 0
+      virtual AppDialogSet* createAppDialogSet();
+      virtual AppDialog* createAppDialog();
+
+      virtual ClientRegistration* createAppClientRegistration(Dialog& dialog, BaseCreator& creator);
+      virtual ClientInviteSession* createAppClientInviteSession(Dialog& dialog, const InviteSessionCreator& creator);
+      virtual ClientSubscription* createAppClientSubscription(Dialog& dialog, BaseCreator& creator);
+      virtual ClientPublication* createAppClientPublication(Dialog& dialog, BaseCreator& creator);
+      virtual ClientOutOfDialogReq* createAppClientOutOfDialogRequest(Dialog& dialog, BaseCreator& creator);
+
+      virtual ServerOutOfDialogReq* createAppServerOutOfDialogRequest();
+      virtual ServerSubscription* createAppServerSubscription();
+      virtual ServerInviteSession* createAppServerInviteSession();
+      virtual ServerRegistration* createAppServerRegistration();
+      virtual ServerPublication* createAppServerPublication();
+#endif
+
       void setProfile(Profile* profile);
       Profile* getProfile();
       
@@ -116,31 +129,35 @@ class DialogUsageManager
       
       void process(FdSet& fdset);
       
-//!dcm!--kill      DialogIdSet findAllDialogs();
-//!dcm!--kill      UsageSet findAllUsages();
-      
-      InviteSession::Handle findInviteSession(DialogId id);
-      std::vector<ClientSubscription::Handle> findClientSubscriptions(DialogId id);
-      std::vector<ClientSubscription::Handle> findClientSubscriptions(DialogSetId id);
-      std::vector<ClientSubscription::Handle> findClientSubscriptions(DialogSetId id, const Data& eventType, const Data& subId);
-      ServerSubscription::Handle findServerSubscription(DialogId id);
-      ClientRegistration::Handle findClientRegistration(DialogId id);
-      ServerRegistration::Handle findServerRegistration(DialogId id);
-      ClientPublication::Handle findClientPublication(DialogId id);
-      ServerPublication::Handle findServerPublication(DialogId id);
-      std::vector<ClientOutOfDialogReq::Handle> findClientOutOfDialog(DialogId id);
-      ServerOutOfDialogReq::Handle findServerOutOfDialog(DialogId id);
+      InviteSessionHandle findInviteSession(DialogId id);
+      std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogId id);
+      std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id);
+      std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id, const Data& eventType, const Data& subId);
+      ServerSubscriptionHandle findServerSubscription(DialogId id);
+      ClientRegistrationHandle findClientRegistration(DialogId id);
+      ServerRegistrationHandle findServerRegistration(DialogId id);
+      ClientPublicationHandle findClientPublication(DialogId id);
+      ServerPublicationHandle findServerPublication(DialogId id);
+      std::vector<ClientOutOfDialogReqHandle> findClientOutOfDialog(DialogId id);
+      ServerOutOfDialogReqHandle findServerOutOfDialog(DialogId id);
       
    private:
       friend class Dialog;
       friend class DialogSet;
-      friend class ClientRegistration;
+
       friend class ClientInviteSession;
-      friend class ServerInviteSession;
-      friend class InviteSession;
+      friend class ClientOutOfDialogReq;
       friend class ClientPublication;
-      friend class BaseUsage;      
-      friend class BaseUsage::Handle;
+      friend class ClientRegistration;
+      friend class ClientSubscription;
+      friend class InviteSession;
+      friend class ServerInviteSession;
+      friend class ServerOutOfDialogReq;
+      friend class ServerPublication;
+      friend class ServerRegistration;
+      friend class ServerSubscription;
+      friend class BaseUsage;
+
       
       SipMessage& makeNewSession(BaseCreator* creator);
       
@@ -154,22 +171,10 @@ class DialogUsageManager
 
       void addTimer(DumTimeout::Type type,
                     unsigned long duration,
-                    resip::BaseUsage::Handle target, 
+                    BaseUsageHandle target, 
                     int seq, 
                     int altseq=-1);
 
-      void addUsage(BaseUsage* usage);
-
-      // delete the usage, remove from usage handle map
-      void destroyUsage(BaseUsage* usage);
-
-      typedef HashMap<BaseUsage::Handle::Id, BaseUsage*> UsageHandleMap;
-      UsageHandleMap mUsageMap;
-	  
-      bool isValid(const BaseUsage::Handle& handle);
-      // throws if not found
-      BaseUsage* getUsage(const BaseUsage::Handle& handle);
-      
       Dialog& findOrCreateDialog(const SipMessage* msg);
       Dialog& findDialog(const DialogId& id);
       DialogSet* findDialogSet(const DialogSetId& id);

@@ -1,40 +1,27 @@
 #if !defined(RESIP_CLIENTINVITESESSION_HXX)
 #define RESIP_CLIENTINVITESESSION_HXX
 
-#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
 
 namespace resip
 {
+class SipMessage;
 class SdpContents;
 
 class ClientInviteSession : public InviteSession
 {
    public:
-      class Handle : public BaseUsage::Handle
-      {
-         public:
-            // throws if no session 
-            ClientInviteSession* operator->();
-         private:
-            friend class ClientInviteSession;
-            Handle(DialogUsageManager& dum);
-      };
-
-      virtual SipMessage& end();
-      virtual SipMessage& rejectOffer(int statusCode);
-
-   public:
-      virtual InviteSession::Handle getSessionHandle();
-      ClientInviteSession::Handle& getHandle() { return static_cast<ClientInviteSession::Handle&>(mHandle); }
-         
-   private:
-      friend class Dialog;
       ClientInviteSession(DialogUsageManager& dum,
                           Dialog& dialog,
                           const SipMessage& request,
                           const SdpContents* initialOffer);
 
+      ClientInviteSessionHandle getHandle();
+
+      virtual SipMessage& end();
+      virtual SipMessage& rejectOffer(int statusCode);
+         
+   private:
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
       virtual void send(const SipMessage& msg);
@@ -62,6 +49,8 @@ class ClientInviteSession : public InviteSession
       // disabled
       ClientInviteSession(const ClientInviteSession&);
       ClientInviteSession& operator=(const ClientInviteSession&);
+
+      friend class Dialog;
 };
  
 }

@@ -8,6 +8,12 @@
 
 using namespace resip;
 
+ClientRegistrationHandle 
+ClientRegistration::getHandle()
+{
+   return ClientRegistrationHandle(mDum, getBaseHandle().getId());
+}
+
 ClientRegistration::ClientRegistration(DialogUsageManager& dum,
                                        Dialog& dialog,
                                        SipMessage& request)
@@ -94,7 +100,7 @@ ClientRegistration::requestRefresh()
    mDum.send(mLastRequest);
    mLastRequest.header(h_Expires).value() = mDum.getProfile()->getDefaultRegistrationTime();
    unsigned long t = Helper::aBitSmallerThan((unsigned long)(mLastRequest.header(h_Expires).value()));
-   mDum.addTimer(DumTimeout::Registration, t, getHandle(), ++mTimerSeq);
+   mDum.addTimer(DumTimeout::Registration, t, getBaseHandle(), ++mTimerSeq);
 }
 
 const NameAddrs& 
@@ -159,7 +165,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // make timers to re-register
          mDum.addTimer(DumTimeout::Registration, 
                        Helper::aBitSmallerThan(mLastRequest.header(h_Expires).value()), 
-                       getHandle(),
+                       getBaseHandle(),
                        ++mTimerSeq);
          
       }
@@ -195,17 +201,6 @@ ClientRegistration::dispatch(const DumTimeout& timer)
             requestRefresh();
         }
     }
-}
-
-ClientRegistration::Handle::Handle(DialogUsageManager& dum)
-   : BaseUsage::Handle(dum)
-{
-}
-
-ClientRegistration* 
-ClientRegistration::Handle::operator->()
-{
-   return static_cast<ClientRegistration*>(get());
 }
 
 /* ====================================================================
