@@ -275,6 +275,8 @@ Calculated digest == 575a9ecd3a6f1989a978748217b24a25
       assert(challenge->exists(h_ProxyAuthenticates));
       assert(challenge->header(h_ProxyAuthenticates).size() == 1);
       assert(challenge->header(h_ProxyAuthenticates).front().exists(p_qopOptions));
+      assert(challenge->header(h_ProxyAuthenticates).front().param(p_algorithm) == "MD5");
+      assert(challenge->header(h_ProxyAuthenticates).front().scheme() == "Digest");
 
       Data username = "bob";
       Data password = "secret";
