@@ -351,16 +351,20 @@ BaseSecurity::hasCert (PEMType type, const Data& key, bool read) const
    return   true;
 }
 bool
-BaseSecurity::removeCert (PEMType type, const Data& key)
+BaseSecurity::removeCert (PEMType type, const Data& key, bool remove)
 {
    assert( !key.empty() );
    X509Map& certs = (type == DomainCert ? mDomainCerts : mUserCerts);
 
    X509Map::iterator iter = certs.find(key);
-   if (iter == certs.end())
+   if (iter != certs.end())
    {
       X509_free(iter->second);
       certs.erase(iter);
+
+      if (remove)
+         onRemovePEM(key, type);
+
       return   true;
    }
    return   false;
@@ -549,7 +553,7 @@ BaseSecurity::getPrivateKeyPEM(
    return   Data(Data::Take, buf, len);
 }
 bool
-BaseSecurity::removePrivateKey(PEMType type, const Data& key)
+BaseSecurity::removePrivateKey(PEMType type, const Data& key, bool remove)
 {
    assert( !key.empty() );
 
@@ -557,10 +561,12 @@ BaseSecurity::removePrivateKey(PEMType type, const Data& key)
 
    assert( !key.empty() );
    PrivateKeyMap::iterator iter = privateKeys.find(key);
-   if (iter == privateKeys.end())
+   if (iter != privateKeys.end())
    {
       EVP_PKEY_free(iter->second);
       privateKeys.erase(iter);
+
+      onRemovePEM(key, type);
       return   true;
    }
    return   false;
@@ -583,7 +589,45 @@ BaseSecurity::BaseSecurity ()
 }
 BaseSecurity::~BaseSecurity ()
 {
-   // cleanup SSL_CTXs
+   {
+      // cleanup certificates
+      X509Map::iterator iter = mDomainCerts.begin();
+      for (; iter != mDomainCerts.end(); ++iter)
+      {
+         X509_free(iter->second);
+         mDomainCerts.erase(iter);
+      }
+      iter = mUserCerts.begin();
+      for (; iter != mUserCerts.end(); ++iter)
+      {
+         X509_free(iter->second);
+         mUserCerts.erase(iter);
+      }
+   }
+   {
+      // cleanup private keys
+      PrivateKeyMap::iterator iter = mDomainPrivateKeys.begin();
+      for (; iter != mDomainPrivateKeys.end(); ++iter)
+      {
+         EVP_PKEY_free(iter->second);
+         mDomainPrivateKeys.erase(iter);
+      }
+      iter = mUserPrivateKeys.begin();
+      for (; iter != mUserPrivateKeys.end(); ++iter)
+      {
+         EVP_PKEY_free(iter->second);
+         mUserPrivateKeys.erase(iter);
+      }
+   }
+   {
+      // cleanup root certs
+      X509_STORE_free(mRootCerts);
+   }
+   {
+      // cleanup SSL_CTXes
+      SSL_CTX_free(mTlsCtx);
+      SSL_CTX_free(mSslCtx);
+   }
 }
 void
 BaseSecurity::initialize ()
@@ -660,7 +704,7 @@ BaseSecurity::hasDomainCert(const Data& domainName) const
 bool
 BaseSecurity::removeDomainCert(const Data& domainName)
 {
-   return   removeCert(DomainCert, domainName);
+   return   removeCert(DomainCert, domainName, true);
 }
 Data
 BaseSecurity::getDomainCertDER(const Data& domainName) const
@@ -681,7 +725,7 @@ BaseSecurity::hasDomainPrivateKey(const Data& domainName) const
 bool
 BaseSecurity::removeDomainPrivateKey(const Data& domainName)
 {
-   return   removePrivateKey(DomainPrivateKey, domainName);
+   return   removePrivateKey(DomainPrivateKey, domainName, true);
 }
 Data
 BaseSecurity::getDomainPrivateKeyPEM(const Data& domainName) const
@@ -707,7 +751,7 @@ BaseSecurity::hasUserCert(const Data& aor) const
 bool
 BaseSecurity::removeUserCert(const Data& aor)
 {
-   return   removeCert(UserCert, aor);
+   return   removeCert(UserCert, aor, true);
 }
 Data
 BaseSecurity::getUserCertDER(const Data& aor) const
@@ -780,7 +824,7 @@ BaseSecurity::hasUserPrivateKey(const Data& aor) const
 bool
 BaseSecurity::removeUserPrivateKey(const Data& aor)
 {
-   return   removePrivateKey(UserPrivateKey, aor);
+   return   removePrivateKey(UserPrivateKey, aor, true);
 }
 Data
 BaseSecurity::getUserPrivateKeyPEM(const Data& aor) const
