@@ -76,7 +76,7 @@ DnsInterface::lookupSRV(const Data& target, DnsResult* dres)
 Data 
 DnsInterface::errorMessage(int status)
 {
-   return Data(mDnsProvider->errorMessage(status));
+   return Data(Data::Take, mDnsProvider->errorMessage(status));
 }
 
 void 
