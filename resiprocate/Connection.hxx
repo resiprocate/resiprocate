@@ -43,7 +43,7 @@ class Connection : public ConnectionLruList, public ConnectionReadList, public C
       void performRead(int bytesRead, Fifo<Message>& fifo);
       void performWrite();
 
-      enum { ChunkSize = 2048 }; //!dcm! -- bad size, perhaps 2048-4096?
+      enum { ChunkSize = 2048 }; // !jf! what is the optimal size here? 
       
       // pure virtual, but need concrete Connection
       virtual int read(char* buffer, const int count) { return 0; }
