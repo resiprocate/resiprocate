@@ -104,6 +104,11 @@ main(int argc, char* argv[])
       }
    }
 
+#if defined(__SUNPRO_CC)
+   typedef IntrusiveListElement<FooFoo*> read;
+   typedef IntrusiveListElement1<FooFoo*> write;
+#endif
+
    //=============================================================================
    // Read version
    //=============================================================================
