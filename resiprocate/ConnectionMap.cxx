@@ -46,11 +46,12 @@ ConnectionMap::touch(Connection* connection)
 }
 
 Connection*
-ConnectionMap::add(const Transport::Tuple& who, Socket socket)
+ConnectionMap::add(Transport::Tuple& who, Socket socket)
 {
    assert(mConnections.find(who) == mConnections.end());
 
    Connection* connection = new Connection(who, socket);
+   who.connection = connection;
    mConnections[who] = connection;
    touch(connection);
 
