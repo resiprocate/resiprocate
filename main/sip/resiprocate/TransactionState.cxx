@@ -34,7 +34,7 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mDnsResult(0),
    mId(id)
 {
-   DebugLog (<< "Creating new TransactionState: " << *this);
+   StackLog (<< "Creating new TransactionState: " << *this);
 }
 
 
@@ -64,7 +64,7 @@ TransactionState::~TransactionState()
       mDnsResult->destroy();
    }
 
-   DebugLog (<< "Deleting TransactionState " << mId << " : " << this);
+   //StackLog (<< "Deleting TransactionState " << mId << " : " << this);
    erase(mId);
    
    delete mMsgToRetransmit;
@@ -116,7 +116,7 @@ TransactionState::process(TransactionController& controller)
 
    if (state) // found transaction for sip msg
    {
-      DebugLog (<< "Found matching transaction for " << message->brief() << " -> " << *state);
+      StackLog (<< "Found matching transaction for " << message->brief() << " -> " << *state);
 
       switch (state->mMachine)
       {
@@ -151,7 +151,7 @@ TransactionState::process(TransactionController& controller)
    }
    else if (sip)  // new transaction
    {
-      DebugLog (<< "No matching transaction for " << sip->brief());
+      StackLog (<< "No matching transaction for " << sip->brief());
       
       if (sip->isRequest())
       {
@@ -177,7 +177,7 @@ TransactionState::process(TransactionController& controller)
                }
                else
                {
-                  //DebugLog(<<" adding T100 timer (INV)");
+                  //StackLog(<<" adding T100 timer (INV)");
                   controller.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
                }
             }
@@ -209,7 +209,7 @@ TransactionState::process(TransactionController& controller)
             
 
             // Incoming ACK just gets passed to the TU
-            //DebugLog(<< "Adding incoming message to TU fifo " << tid);
+            //StackLog(<< "Adding incoming message to TU fifo " << tid);
             controller.mTUFifo.add(sip);
          }
          else // new sip msg from the TU
@@ -240,8 +240,8 @@ TransactionState::process(TransactionController& controller)
                else if (matchingInvite->mState == Calling) // CANCEL before 1xx received
                {
                   WarningLog(<< "You can't CANCEL a request until a provisional has been received");
-                  DebugLog (<< *matchingInvite);
-                  DebugLog (<< *sip);
+                  StackLog (<< *matchingInvite);
+                  StackLog (<< *sip);
 
                   // if no INVITE had been sent out yet. -- i.e. dns result not
                   // processed yet 
@@ -290,7 +290,7 @@ TransactionState::process(TransactionController& controller)
          }
          else
          {
-            DebugLog (<< "forwarding stateless response: " << sip->brief());
+            StackLog (<< "forwarding stateless response: " << sip->brief());
             TransactionState* state = new TransactionState(controller, Stateless, Calling, Data(controller.StatelessIdCounter++));
             state->add(state->mId);
             state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
@@ -299,12 +299,12 @@ TransactionState::process(TransactionController& controller)
       }
       else // wasn't a request or a response
       {
-         //DebugLog (<< "discarding unknown message: " << sip->brief());
+         //StackLog (<< "discarding unknown message: " << sip->brief());
       }
    } 
    else // timer or other non-sip msg
    {
-      //DebugLog (<< "discarding non-sip message: " << message->brief());
+      //StackLog (<< "discarding non-sip message: " << message->brief());
       delete message;
    }
 }
@@ -316,7 +316,7 @@ TransactionState::processStateless(Message* message)
    // for ACK messages from the TU, there is no transaction, send it directly
    // to the wire // rfc3261 17.1 Client Transaction
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
-   DebugLog (<< "TransactionState::processStateless: " << message->brief());
+   StackLog (<< "TransactionState::processStateless: " << message->brief());
    
    // !jf! There is a leak for Stateless transactions associated with ACK to 200
    if (isFromTU(message))
@@ -328,7 +328,7 @@ TransactionState::processStateless(Message* message)
    else if (isFromWire(message))
    {
       InfoLog (<< "Received message from wire on a stateless transaction");
-      DebugLog (<< *message);
+      StackLog (<< *message);
       //assert(0);
       sendToTU(sip);
    }
@@ -357,13 +357,13 @@ TransactionState::processStateless(Message* message)
 void
 TransactionState::processClientNonInvite(  Message* msg )
 { 
-   DebugLog (<< "TransactionState::processClientNonInvite: " << msg->brief());
+   StackLog (<< "TransactionState::processClientNonInvite: " << msg->brief());
 
    assert(!isInvite(msg));
 
    if (isRequest(msg) && isFromTU(msg))
    {
-      //DebugLog (<< "received new non-invite request");
+      //StackLog (<< "received new non-invite request");
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       mMsgToRetransmit = sip;
       mController.mTimers.add(Timer::TimerF, mId, 64*Timer::T1 );
@@ -371,7 +371,7 @@ TransactionState::processClientNonInvite(  Message* msg )
    }
    else if (isResponse(msg) && isFromWire(msg)) // from the wire
    {
-      //DebugLog (<< "received response from wire");
+      //StackLog (<< "received response from wire");
 
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       int code = sip->header(h_StatusLine).responseCode();
@@ -410,7 +410,7 @@ TransactionState::processClientNonInvite(  Message* msg )
    }
    else if (isTimer(msg))
    {
-      //DebugLog (<< "received timer in client non-invite transaction");
+      //StackLog (<< "received timer in client non-invite transaction");
 
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       switch (timer->getType())
@@ -421,7 +421,7 @@ TransactionState::processClientNonInvite(  Message* msg )
                unsigned long d = timer->getDuration();
                if (d < Timer::T2) d *= 2;
                mController.mTimers.add(Timer::TimerE1, mId, d);
-               DebugLog (<< "Retransmitting: " << mMsgToRetransmit->brief());
+               StackLog (<< "Retransmitting: " << mMsgToRetransmit->brief());
                sendToWire(mMsgToRetransmit, true);
                delete msg;
             }
@@ -436,7 +436,7 @@ TransactionState::processClientNonInvite(  Message* msg )
             if (mState == Proceeding)
             {
                mController.mTimers.add(Timer::TimerE2, mId, Timer::T2);
-               DebugLog (<< "Retransmitting: " << mMsgToRetransmit->brief());
+               StackLog (<< "Retransmitting: " << mMsgToRetransmit->brief());
                sendToWire(mMsgToRetransmit, true);
                delete msg;
             }
@@ -474,7 +474,7 @@ TransactionState::processClientNonInvite(  Message* msg )
    }
    else
    {
-      //DebugLog (<< "TransactionState::processClientNonInvite: message unhandled");
+      //StackLog (<< "TransactionState::processClientNonInvite: message unhandled");
       delete msg;
    }
 }
@@ -483,7 +483,7 @@ TransactionState::processClientNonInvite(  Message* msg )
 void
 TransactionState::processClientInvite(  Message* msg )
 {
-   DebugLog(<< "TransactionState::processClientInvite: " << msg->brief() << " " << *this);
+   StackLog(<< "TransactionState::processClientInvite: " << msg->brief() << " " << *this);
    if (isRequest(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
@@ -545,8 +545,8 @@ TransactionState::processClientInvite(  Message* msg )
                sendToTU(sip); // don't delete msg
                terminateClientTransaction(mId);
                mMachine = ClientStale;
-               DebugLog (<< "Received 2xx on client invite transaction");
-               DebugLog (<< *this);
+               StackLog (<< "Received 2xx on client invite transaction");
+               StackLog (<< *this);
                mController.mTimers.add(Timer::TimerStaleClient, mId, Timer::TS );
             }
             else if (code >= 300)
@@ -625,7 +625,7 @@ TransactionState::processClientInvite(  Message* msg )
          Cancellation of Timers for Re-transmissions here */
 
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
-      DebugLog (<< "timer fired: " << *timer);
+      StackLog (<< "timer fired: " << *timer);
       
       switch (timer->getType())
       {
@@ -660,7 +660,7 @@ TransactionState::processClientInvite(  Message* msg )
 
          case Timer::TimerCleanUp:
             // !ah! Cancelled Invite Cleanup Timer fired.
-            DebugLog (<< "Timer::TimerCleanUp: " << *this << endl << *mMsgToRetransmit);
+            StackLog (<< "Timer::TimerCleanUp: " << *this << endl << *mMsgToRetransmit);
             if (mState == Proceeding)
             {
                assert(mMsgToRetransmit && mMsgToRetransmit->header(h_RequestLine).getMethod() == INVITE);
@@ -684,7 +684,7 @@ TransactionState::processClientInvite(  Message* msg )
    }
    else
    {
-      //DebugLog ( << "TransactionState::processClientInvite: message unhandled");
+      //StackLog ( << "TransactionState::processClientInvite: message unhandled");
       delete msg;
    }
 }
@@ -693,7 +693,7 @@ TransactionState::processClientInvite(  Message* msg )
 void
 TransactionState::processServerNonInvite(  Message* msg )
 {
-   DebugLog (<< "TransactionState::processServerNonInvite: " << msg->brief());
+   StackLog (<< "TransactionState::processServerNonInvite: " << msg->brief());
 
    if (isRequest(msg) && !isInvite(msg) && isFromWire(msg)) // from the wire
    {
@@ -792,7 +792,7 @@ TransactionState::processServerNonInvite(  Message* msg )
    }
    else
    {
-      //DebugLog (<< "TransactionState::processServerNonInvite: message unhandled");
+      //StackLog (<< "TransactionState::processServerNonInvite: message unhandled");
       delete msg;
    }
 }
@@ -801,7 +801,7 @@ TransactionState::processServerNonInvite(  Message* msg )
 void
 TransactionState::processServerInvite(  Message* msg )
 {
-   DebugLog (<< "TransactionState::processServerInvite: " << msg->brief());
+   StackLog (<< "TransactionState::processServerInvite: " << msg->brief());
    if (isRequest(msg) && isFromWire(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
@@ -816,7 +816,7 @@ TransactionState::processServerInvite(  Message* msg )
                  respond with a 100 Trying _or_ the last provisional response
                  passed from the TU for this transaction.
                */
-               //DebugLog (<< "Received invite from wire - forwarding to TU state=" << mState);
+               //StackLog (<< "Received invite from wire - forwarding to TU state=" << mState);
                if (!mMsgToRetransmit)
                {
                   mMsgToRetransmit = make100(sip); // for when TimerTrying fires
@@ -826,7 +826,7 @@ TransactionState::processServerInvite(  Message* msg )
             }
             else
             {
-               //DebugLog (<< "Received invite from wire - ignoring state=" << mState);
+               //StackLog (<< "Received invite from wire - ignoring state=" << mState);
                delete msg;
             }
             break;
@@ -841,14 +841,14 @@ TransactionState::processServerInvite(  Message* msg )
             {
                if (mIsReliable)
                {
-                  //DebugLog (<< "Received ACK in Completed (reliable) - delete transaction");
+                  //StackLog (<< "Received ACK in Completed (reliable) - delete transaction");
                   terminateServerTransaction(mId);
                   delete this; 
                   delete msg;
                }
                else
                {
-                  //DebugLog (<< "Received ACK in Completed (unreliable) - confirmed, start Timer I");
+                  //StackLog (<< "Received ACK in Completed (unreliable) - confirmed, start Timer I");
                   mState = Confirmed;
                   mController.mTimers.add(Timer::TimerI, mId, Timer::T4 );
                   delete msg;
@@ -856,7 +856,7 @@ TransactionState::processServerInvite(  Message* msg )
             }
             else
             {
-               //DebugLog (<< "Ignore ACK not in Completed state");
+               //StackLog (<< "Ignore ACK not in Completed state");
                delete msg;
             }
             break;
@@ -866,7 +866,7 @@ TransactionState::processServerInvite(  Message* msg )
             break;
 
          default:
-            //DebugLog (<< "Received unexpected request. Ignoring message");
+            //StackLog (<< "Received unexpected request. Ignoring message");
             delete msg;
             break;
       }
@@ -882,7 +882,7 @@ TransactionState::processServerInvite(  Message* msg )
             {
                if (mState == Trying || mState == Proceeding)
                {
-                  //DebugLog (<< "Received 100 in Trying or Proceeding. Send over wire");
+                  //StackLog (<< "Received 100 in Trying or Proceeding. Send over wire");
                   delete mMsgToRetransmit; // may be replacing the 100
                   mMsgToRetransmit = sip;
                   mState = Proceeding;
@@ -890,7 +890,7 @@ TransactionState::processServerInvite(  Message* msg )
                }
                else
                {
-                  //DebugLog (<< "Ignoring 100 - not in Trying or Proceeding.");
+                  //StackLog (<< "Ignoring 100 - not in Trying or Proceeding.");
                   delete msg;
                }
             }
@@ -898,7 +898,7 @@ TransactionState::processServerInvite(  Message* msg )
             {
                if (mState == Trying || mState == Proceeding)
                {
-                  //DebugLog (<< "Received 1xx in Trying or Proceeding. Send over wire");
+                  //StackLog (<< "Received 1xx in Trying or Proceeding. Send over wire");
                   delete mMsgToRetransmit; // may be replacing the 100
                   mMsgToRetransmit = sip;
                   mState = Proceeding;
@@ -906,7 +906,7 @@ TransactionState::processServerInvite(  Message* msg )
                }
                else
                {
-                  //DebugLog (<< "Received 100 when not in Trying State. Ignoring");
+                  //StackLog (<< "Received 100 when not in Trying State. Ignoring");
                   delete msg;
                }
             }
@@ -914,8 +914,8 @@ TransactionState::processServerInvite(  Message* msg )
             {
                if (mState == Trying || mState == Proceeding)
                {
-                  DebugLog (<< "Received 2xx when in Trying or Proceeding State of server invite transaction");
-                  DebugLog (<< *this);
+                  StackLog (<< "Received 2xx when in Trying or Proceeding State of server invite transaction");
+                  StackLog (<< *this);
                   sendToWire(msg);
                   
                   // Keep the StaleServer transaction around, so we can keep the
@@ -926,7 +926,7 @@ TransactionState::processServerInvite(  Message* msg )
                }
                else
                {
-                  //DebugLog (<< "Received 2xx when not in Trying or Proceeding State. Ignoring");
+                  //StackLog (<< "Received 2xx when not in Trying or Proceeding State. Ignoring");
                   delete msg;
                }
             }
@@ -944,7 +944,7 @@ TransactionState::processServerInvite(  Message* msg )
 
                if (mState == Trying || mState == Proceeding)
                {
-                  DebugLog (<< "Received failed response in Trying or Proceeding. Start Timer H, move to completed." << *this);
+                  StackLog (<< "Received failed response in Trying or Proceeding. Start Timer H, move to completed." << *this);
                   delete mMsgToRetransmit; 
                   mMsgToRetransmit = sip; 
                   mState = Completed;
@@ -961,13 +961,13 @@ TransactionState::processServerInvite(  Message* msg )
                }
                else
                {
-                  //DebugLog (<< "Received Final response when not in Trying or Proceeding State. Ignoring");
+                  //StackLog (<< "Received Final response when not in Trying or Proceeding State. Ignoring");
                   delete msg;
                }
             }
             else
             {
-               //DebugLog (<< "Received Invalid response line. Ignoring");
+               //StackLog (<< "Received Invalid response line. Ignoring");
                delete msg;
             }
             break;
@@ -977,7 +977,7 @@ TransactionState::processServerInvite(  Message* msg )
             break;
             
          default:
-            //DebugLog (<< "Received response to non invite or cancel. Ignoring");
+            //StackLog (<< "Received response to non invite or cancel. Ignoring");
             delete msg;
             break;
       }
@@ -990,7 +990,7 @@ TransactionState::processServerInvite(  Message* msg )
          case Timer::TimerG:
             if (mState == Completed)
             {
-               DebugLog (<< "TimerG fired. retransmit, and re-add TimerG");
+               StackLog (<< "TimerG fired. retransmit, and re-add TimerG");
                sendToWire(mMsgToRetransmit, true);
                mController.mTimers.add(Timer::TimerG, mId, timer->getDuration()*2 );
             }
@@ -1025,14 +1025,14 @@ TransactionState::processServerInvite(  Message* msg )
          case Timer::TimerTrying:
             if (mState == Trying)
             {
-               //DebugLog (<< "TimerTrying fired. Send a 100");
+               //StackLog (<< "TimerTrying fired. Send a 100");
                sendToWire(mMsgToRetransmit); // will get deleted when this is deleted
                mState = Proceeding;
                delete msg;
             }
             else
             {
-               //DebugLog (<< "TimerTrying fired. Not in Trying state. Ignoring");
+               //StackLog (<< "TimerTrying fired. Not in Trying state. Ignoring");
                delete msg;
             }
             break;
@@ -1051,7 +1051,7 @@ TransactionState::processServerInvite(  Message* msg )
    }
    else
    {
-      //DebugLog (<< "TransactionState::processServerInvite: message unhandled");
+      //StackLog (<< "TransactionState::processServerInvite: message unhandled");
       delete msg;
    }
 }
@@ -1060,7 +1060,7 @@ TransactionState::processServerInvite(  Message* msg )
 void
 TransactionState::processClientStale(  Message* msg )
 {
-   DebugLog (<< "TransactionState::processClientStale: " << msg->brief());
+   StackLog (<< "TransactionState::processClientStale: " << msg->brief());
 
    //SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (isTimer(msg))
@@ -1079,7 +1079,7 @@ TransactionState::processClientStale(  Message* msg )
    else if (isTransportError(msg))
    {
       WarningLog (<< "Got a transport error in Stale Client state");
-      DebugLog (<< *this);
+      StackLog (<< *this);
       processTransportFailure();
       delete msg;
    }
@@ -1095,7 +1095,7 @@ TransactionState::processClientStale(  Message* msg )
          // might have received some other response because a downstream UAS is
          // misbehaving. For instance, sending a 487/INVITE after already
          // sending a 200/INVITE. In this case, discard the response
-         DebugLog (<< "Discarding extra response: " << *msg);
+         StackLog (<< "Discarding extra response: " << *msg);
          delete msg;
       }
    }
@@ -1104,7 +1104,7 @@ TransactionState::processClientStale(  Message* msg )
 void
 TransactionState::processServerStale(  Message* msg )
 {
-   DebugLog (<< "TransactionState::processServerStale: " << msg->brief());
+   StackLog (<< "TransactionState::processServerStale: " << msg->brief());
 
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (isTimer(msg))
@@ -1123,7 +1123,7 @@ TransactionState::processServerStale(  Message* msg )
    else if (isTransportError(msg))
    {
       WarningLog (<< "Got a transport error in Stale Server state");
-      DebugLog (<< *this);
+      StackLog (<< *this);
       processTransportFailure();
       delete msg;
    }
@@ -1140,7 +1140,7 @@ TransactionState::processServerStale(  Message* msg )
       // this can happen when an upstream UAC never received the 200 and
       // retransmits the INVITE when using unreliable transport
       // Drop the INVITE since the 200 will get retransmitted by the downstream UAS
-      DebugLog (<< "Dropping retransmitted INVITE in stale server transaction" << sip->brief());
+      StackLog (<< "Dropping retransmitted INVITE in stale server transaction" << sip->brief());
       delete msg;
    }
    else
@@ -1171,7 +1171,7 @@ TransactionState::processTransportFailure()
    if (mMsgToRetransmit->isRequest() && mMsgToRetransmit->header(h_RequestLine).getMethod() == CANCEL)
    {
       WarningLog (<< "Failed to deliver a CANCEL request");
-      DebugLog (<< *this);
+      StackLog (<< *this);
       assert(mIsCancel);
 
       // In the case of a client-initiated CANCEL, we don't want to
@@ -1214,7 +1214,7 @@ void
 TransactionState::handle(DnsResult* result)
 {
    // got a DNS response, so send the current message
-   DebugLog (<< *this << " got DNS result: " << *result);
+   StackLog (<< *this << " got DNS result: " << *result);
 
    if (mTarget.getType() == UNKNOWN_TRANSPORT) 
    {
@@ -1257,7 +1257,7 @@ TransactionState::processReliability(TransportType type)
          if (mIsReliable)
          {
             mIsReliable = false;
-            DebugLog (<< "Unreliable transport: " << *this);
+            StackLog (<< "Unreliable transport: " << *this);
             switch (mMachine)
             {
                case ClientNonInvite:
@@ -1348,16 +1348,16 @@ TransactionState::sendToWire(Message* msg, bool resend)
       {
          target = simpleTupleForUri(sip->getForceTarget());
          target.transport = mResponseTarget.transport;
-         DebugLog(<<"!ah! response with force target going to : "<<target);
+         StackLog(<<"!ah! response with force target going to : "<<target);
       }
       else if (sip->header(h_Vias).front().exists(p_rport) && sip->header(h_Vias).front().param(p_rport).hasValue())
       {
          target.setPort(sip->header(h_Vias).front().param(p_rport).port());
-         DebugLog(<< "rport present in response, sending to " << target);
+         StackLog(<< "rport present in response, sending to " << target);
       }
       else
       {
-         DebugLog(<<"sending to : " << target);
+         StackLog(<<"sending to : " << target);
       }
 
       if (resend)
@@ -1375,7 +1375,7 @@ TransactionState::sendToWire(Message* msg, bool resend)
    }
    else if (mDnsResult == 0 && !mIsCancel) // no dns query yet
    {
-      DebugLog (<< "sendToWire with no dns result: " << *this);
+      StackLog (<< "sendToWire with no dns result: " << *this);
       assert(sip->isRequest());
       assert(!mIsCancel);
       mDnsResult = mController.mTransportSelector.dnsResolve(sip, this);
@@ -1406,7 +1406,7 @@ void
 TransactionState::sendToTU(Message* msg) const
 {
    SipMessage* sip=dynamic_cast<SipMessage*>(msg);
-   DebugLog(<< "Send to TU: " << *msg);
+   StackLog(<< "Send to TU: " << *msg);
    assert(sip);
    mController.mTUFifo.add(sip);
 }
@@ -1516,7 +1516,7 @@ TransactionState::terminateClientTransaction(const Data& tid)
    mState = Terminated;
    if (mController.mRegisteredForTransactionTermination)
    {
-      //DebugLog (<< "Terminate client transaction " << tid);
+      //StackLog (<< "Terminate client transaction " << tid);
       mController.mTUFifo.add(new TransactionTerminated(tid, true));
    }
 }
@@ -1527,7 +1527,7 @@ TransactionState::terminateServerTransaction(const Data& tid)
    mState = Terminated;
    if (mController.mRegisteredForTransactionTermination)
    {
-      //DebugLog (<< "Terminate server transaction " << tid);
+      //StackLog (<< "Terminate server transaction " << tid);
       mController.mTUFifo.add(new TransactionTerminated(tid, false));
    }
 }

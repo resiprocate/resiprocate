@@ -107,7 +107,7 @@ DnsResult::next()
    assert(available() == Available);
    Tuple next = mResults.front();
    mResults.pop_front();
-   DebugLog (<< "Returning next dns entry: " << next);
+   StackLog (<< "Returning next dns entry: " << next);
    return next;
 }
 
@@ -244,7 +244,7 @@ void
 DnsResult::aresHostCallback(void *arg, int status, struct hostent* result)
 {
    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   DebugLog (<< "Received A result for: " << thisp->mTarget);
+   StackLog (<< "Received A result for: " << thisp->mTarget);
    thisp->processHost(status, result);
 }
 
@@ -252,7 +252,7 @@ void
 DnsResult::aresNAPTRCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   DebugLog (<< "Received NAPTR result for: " << thisp->mTarget);
+   StackLog (<< "Received NAPTR result for: " << thisp->mTarget);
    thisp->processNAPTR(status, abuf, alen);
 }
 
@@ -261,7 +261,7 @@ void
 DnsResult::aresSRVCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   DebugLog (<< "Received SRV result for: " << thisp->mTarget);
+   StackLog (<< "Received SRV result for: " << thisp->mTarget);
    thisp->processSRV(status, abuf, alen);
 }
 
@@ -269,14 +269,14 @@ void
 DnsResult::aresAAAACallback(void *arg, int status, unsigned char *abuf, int alen)
 {
    DnsResult *thisp = reinterpret_cast<DnsResult*>(arg);
-   DebugLog (<< "Received AAAA result for: " << thisp->mTarget);
+   StackLog (<< "Received AAAA result for: " << thisp->mTarget);
    thisp->processAAAA(status, abuf, alen);
 }
 
 void
 DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
 {
-   DebugLog (<< "DnsResult::processNAPTR() " << status);
+   StackLog (<< "DnsResult::processNAPTR() " << status);
 
    // This function assumes that the NAPTR query that caused this
    // callback is the ONLY outstanding query that might cause
@@ -304,19 +304,19 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
          
          if (aptr)
          {
-            DebugLog (<< "Adding NAPTR record: " << naptr);
+            StackLog (<< "Adding NAPTR record: " << naptr);
             if (mSips && naptr.service.find("SIPS") == 0)
             {
                if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
                {
                   mPreferredNAPTR = naptr;
-                  DebugLog (<< "Picked preferred: " << mPreferredNAPTR);
+                  StackLog (<< "Picked preferred: " << mPreferredNAPTR);
                }
             }
             else if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
             {
                mPreferredNAPTR = naptr;
-               DebugLog (<< "Picked preferred: " << mPreferredNAPTR);
+               StackLog (<< "Picked preferred: " << mPreferredNAPTR);
             }
          }
       }
@@ -324,14 +324,14 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       // This means that dns / NAPTR is misconfigured for this client 
       if (mPreferredNAPTR.key.empty())
       {
-         DebugLog (<< "No NAPTR records that are supported by this client");
+         StackLog (<< "No NAPTR records that are supported by this client");
          mType = Finished;
          mHandler->handle(this);
          return;
       }
 
       int nscount = DNS_HEADER_NSCOUNT(abuf);    /* name server record count */
-      DebugLog (<< "Found " << nscount << " nameserver records");
+      StackLog (<< "Found " << nscount << " nameserver records");
       for (int i = 0; i < nscount && aptr; i++)
       {
          // this will ignore NS records
@@ -339,7 +339,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       }
 
       int arcount = DNS_HEADER_ARCOUNT(abuf);    /* additional record count */
-      DebugLog (<< "Found " << arcount << " additional records");
+      StackLog (<< "Found " << arcount << " additional records");
       for (int i = 0; i < arcount && aptr; i++)
       {
          // this will store any related SRV and A records
@@ -349,7 +349,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
 
       if (ancount == 0) // didn't find any NAPTR records
       {
-         DebugLog (<< "There are no NAPTR records so do an SRV lookup instead");
+         StackLog (<< "There are no NAPTR records so do an SRV lookup instead");
          goto NAPTRFail; // same as if no NAPTR records
       }
       else if (mSRVResults.empty())
@@ -359,7 +359,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
          assert(mSRVCount == 0);
          assert(!mPreferredNAPTR.replacement.empty());
 
-         DebugLog (<< "No SRV record for " << mPreferredNAPTR.replacement << " in additional section");
+         StackLog (<< "No SRV record for " << mPreferredNAPTR.replacement << " in additional section");
          mType = Pending;
          mSRVCount++;
          lookupSRV(mPreferredNAPTR.replacement);
@@ -375,7 +375,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
    {
       {
          char* errmem=0;
-         DebugLog (<< "NAPTR lookup failed: " << ares_strerror(status, &errmem));
+         StackLog (<< "NAPTR lookup failed: " << ares_strerror(status, &errmem));
          ares_free_errmem(errmem);
       }
       
@@ -395,7 +395,7 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
          lookupSRV("_sip._udp." + mTarget);
          mSRVCount++;
       }
-      DebugLog (<< "Doing SRV query " << mSRVCount << " for " << mTarget);
+      StackLog (<< "Doing SRV query " << mSRVCount << " for " << mTarget);
    }
 }
 
@@ -404,7 +404,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
 {
    assert(mSRVCount>=0);
    mSRVCount--;
-   DebugLog (<< "DnsResult::processSRV() " << mSRVCount << " status=" << status);
+   StackLog (<< "DnsResult::processSRV() " << mSRVCount << " status=" << status);
 
    // There could be multiple SRV queries outstanding, but there will be no
    // other DNS queries outstanding that might cause a callback into this
@@ -446,17 +446,17 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
             }
             else
             {
-               DebugLog (<< "Skipping SRV " << srv.key);
+               StackLog (<< "Skipping SRV " << srv.key);
                continue;
             }
 
-            DebugLog (<< "Adding SRV record (no NAPTR): " << srv);
+            StackLog (<< "Adding SRV record (no NAPTR): " << srv);
             mSRVResults.push_back(srv);
          }
       }
 
       int nscount = DNS_HEADER_NSCOUNT(abuf);    /* name server record count */
-      DebugLog (<< "Found " << nscount << " nameserver records");
+      StackLog (<< "Found " << nscount << " nameserver records");
       for (int i = 0; i < nscount && aptr; i++)
       {
          // this will ignore NS records
@@ -464,7 +464,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
       }
       
       int arcount = DNS_HEADER_ARCOUNT(abuf);    /* additional record count */
-      DebugLog (<< "Found " << arcount << " additional records");
+      StackLog (<< "Found " << arcount << " additional records");
       for (int i = 0; i < arcount && aptr; i++)
       {
          // this will store any related A records
@@ -474,7 +474,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
    else
    {
       char* errmem=0;
-      DebugLog (<< "SRV lookup failed: " << ares_strerror(status, &errmem));
+      StackLog (<< "SRV lookup failed: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
    }
 
@@ -494,7 +494,7 @@ DnsResult::processSRV(int status, unsigned char* abuf, int alen)
             mPort = 5060;
          }
          
-         DebugLog (<< "No SRV records for " << mTarget << ". Trying A records");
+         StackLog (<< "No SRV records for " << mTarget << ". Trying A records");
          lookupAAAARecords(mTarget);
       }
       else
@@ -509,7 +509,7 @@ void
 DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
 {
 #ifdef USE_IPV6
-   DebugLog (<< "DnsResult::processAAAA() " << status);
+   StackLog (<< "DnsResult::processAAAA() " << status);
    // This function assumes that the AAAA query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
    // callback into this function
@@ -536,7 +536,7 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
        if (aptr)
        {
          Tuple tuple(aaaa,mPort,mTransport);
-         DebugLog (<< "Adding " << tuple << " to result set");
+         StackLog (<< "Adding " << tuple << " to result set");
 
          // !jf! Should this be going directly into mResults or into mARecords
          // !jf! Check for duplicates? 
@@ -547,7 +547,7 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
    else
    {
       char* errmem=0;
-      DebugLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
+      StackLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
    }
    lookupARecords(mPassHostFromAAAAtoA);
@@ -559,7 +559,7 @@ DnsResult::processAAAA(int status, unsigned char* abuf, int alen)
 void
 DnsResult::processHost(int status, struct hostent* result)
 {
-   DebugLog (<< "DnsResult::processHost() " << status);
+   StackLog (<< "DnsResult::processHost() " << status);
    
    // This function assumes that the A query that caused this callback
    // is the _only_ outstanding DNS query that might result in a
@@ -572,13 +572,13 @@ DnsResult::processHost(int status, struct hostent* result)
 
    if (status == ARES_SUCCESS)
    {
-      DebugLog (<< "DNS A lookup canonical name: " << result->h_name);
+      StackLog (<< "DNS A lookup canonical name: " << result->h_name);
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
          in_addr addr;
          addr.s_addr = *((u_int32_t*)(*pptr));
          Tuple tuple(addr, mPort, mTransport);
-         DebugLog (<< "Adding " << tuple << " to result set");
+         StackLog (<< "Adding " << tuple << " to result set");
          // !jf! Should this be going directly into mResults or into mARecords
          // !jf! Check for duplicates? 
          mResults.push_back(tuple);
@@ -587,7 +587,7 @@ DnsResult::processHost(int status, struct hostent* result)
    else
    {
       char* errmem=0;
-      DebugLog (<< "Failed async A query: " << ares_strerror(status, &errmem));
+      StackLog (<< "Failed async A query: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
    }
 
@@ -610,7 +610,7 @@ void
 DnsResult::primeResults()
 {
 #if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
-   DebugLog(<< "Priming " << Inserter(mSRVResults));
+   StackLog(<< "Priming " << Inserter(mSRVResults));
 #endif
 
    //assert(mType != Pending);
@@ -620,7 +620,7 @@ DnsResult::primeResults()
    if (!mSRVResults.empty())
    {
       SRV next = retrieveSRV();
-      DebugLog (<< "Primed with SRV=" << next);
+      StackLog (<< "Primed with SRV=" << next);
       if ( mARecords.count(next.target) 
 #ifdef USE_IPV6 
            + mAAAARecords.count(next.target)
@@ -633,7 +633,7 @@ DnsResult::primeResults()
 	         i!=aaaarecs.end(); i++)
          {
             Tuple tuple(*i,next.port,next.transport);
-            DebugLog (<< "Adding " << tuple << " to result set");
+            StackLog (<< "Adding " << tuple << " to result set");
             mResults.push_back(tuple);
          }
 #endif
@@ -641,11 +641,11 @@ DnsResult::primeResults()
          for (std::list<struct in_addr>::const_iterator i=arecs.begin(); i!=arecs.end(); i++)
          {
             Tuple tuple(*i, next.port, next.transport);
-            DebugLog (<< "Adding " << tuple << " to result set");
+            StackLog (<< "Adding " << tuple << " to result set");
             mResults.push_back(tuple);
          }
 #if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
-         DebugLog (<< "Try: " << Inserter(mResults));
+         StackLog (<< "Try: " << Inserter(mResults));
 #endif
 
 
@@ -671,7 +671,7 @@ DnsResult::primeResults()
          mType = Pending;
          mPort = next.port;
          mTransport = next.transport;
-         DebugLog (<< "No A or AAAA record for " << next.target << " in additional records");
+         StackLog (<< "No A or AAAA record for " << next.target << " in additional records");
          lookupAAAARecords(next.target);
          // don't call primeResults since we need to wait for the response to
          // AAAA/A query first
@@ -712,7 +712,7 @@ DnsResult::retrieveSRV()
    
    int selected = Random::getRandom() % (mCumulativeWeight+1);
 
-   DebugLog (<< "cumulative weight = " << mCumulativeWeight << " selected=" << selected);
+   StackLog (<< "cumulative weight = " << mCumulativeWeight << " selected=" << selected);
 
    std::vector<SRV>::iterator i;
    for (i=mSRVResults.begin(); i!=mSRVResults.end(); i++)
@@ -736,7 +736,7 @@ DnsResult::retrieveSRV()
    mSRVResults.erase(i);
    
 #if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined(__INTEL_COMPILER)
-   DebugLog (<< "SRV: " << Inserter(mSRVResults));
+   StackLog (<< "SRV: " << Inserter(mSRVResults));
 #endif
 
    return next;
@@ -757,7 +757,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -767,7 +767,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
     */
    if (aptr + RRFIXEDSZ > abuf + alen)
    {
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       free(name);
       return NULL;
    }
@@ -779,7 +779,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
    aptr += RRFIXEDSZ;
    if (aptr + dlen > abuf + alen)
    {
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       free(name);
       return NULL;
    }
@@ -825,11 +825,11 @@ DnsResult::parseAdditional(const unsigned char *aptr,
          }
          else
          {
-            DebugLog (<< "Skipping SRV " << srv.key);
+            StackLog (<< "Skipping SRV " << srv.key);
             return aptr + dlen;
          }
          
-         DebugLog (<< "Inserting SRV: " << srv);
+         StackLog (<< "Inserting SRV: " << srv);
          mSRVResults.push_back(srv);
       }
 
@@ -841,13 +841,13 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       // The RR data is a four-byte Internet address. 
       if (dlen != 4)
       {
-         DebugLog (<< "Failed parse of RR");
+         StackLog (<< "Failed parse of RR");
          return NULL;
       }
 
       struct in_addr addr;
       memcpy(&addr, aptr, sizeof(struct in_addr));
-      DebugLog (<< "From additional: " << key << ":" << DnsUtil::inet_ntop(addr));
+      StackLog (<< "From additional: " << key << ":" << DnsUtil::inet_ntop(addr));
 
       // Only add the additional records if they weren't already there from
       // another query
@@ -862,12 +862,12 @@ DnsResult::parseAdditional(const unsigned char *aptr,
    {
       if (dlen != 16) // The RR is 128 bits of ipv6 address
       {
-         DebugLog (<< "Failed parse of RR");
+         StackLog (<< "Failed parse of RR");
          return NULL;
       }
       struct in6_addr addr;
       memcpy(&addr, aptr, sizeof(struct in6_addr));
-      DebugLog (<< "From additional: " << key << ":" << DnsUtil::inet_ntop(addr));
+      StackLog (<< "From additional: " << key << ":" << DnsUtil::inet_ntop(addr));
       // Only add the additional records if they weren't already there from
       // another query
       if (mAAAARecords.count(key) == 0)
@@ -879,7 +879,7 @@ DnsResult::parseAdditional(const unsigned char *aptr,
 #endif
    else // just skip it (we don't care :)
    {
-      //DebugLog (<< "Skipping: " << key);
+      //StackLog (<< "Skipping: " << key);
       return aptr + dlen;
    }
 }
@@ -898,7 +898,7 @@ DnsResult::skipDNSQuestion(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -908,7 +908,7 @@ DnsResult::skipDNSQuestion(const unsigned char *aptr,
    if (aptr + QFIXEDSZ > abuf + alen)
    {
       free(name);
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
 
@@ -936,7 +936,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -947,7 +947,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
    if (aptr + RRFIXEDSZ > abuf + alen)
    {
       free(name);
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
   
@@ -959,7 +959,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
    if (aptr + dlen > abuf + alen)
    {
       free(name);
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
    Data key = name;
@@ -977,7 +977,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
       status = ares_expand_name(aptr + 6, abuf, alen, &name, &len);
       if (status != ARES_SUCCESS)
       {
-         DebugLog (<< "Failed parse of RR");
+         StackLog (<< "Failed parse of RR");
          return NULL;
       }
       srv.target = name;
@@ -988,7 +988,7 @@ DnsResult::parseSRV(const unsigned char *aptr,
    }
    else
    {
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
 }
@@ -1010,7 +1010,7 @@ DnsResult::parseAAAA(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -1021,7 +1021,7 @@ DnsResult::parseAAAA(const unsigned char *aptr,
    if (aptr + RRFIXEDSZ > abuf + alen)
    {
       free(name);
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
   
@@ -1033,7 +1033,7 @@ DnsResult::parseAAAA(const unsigned char *aptr,
    if (aptr + dlen > abuf + alen)
    {
       free(name);
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
    Data key = name;
@@ -1051,7 +1051,7 @@ DnsResult::parseAAAA(const unsigned char *aptr,
    else
 
    {
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
 }
@@ -1074,7 +1074,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (status != ARES_SUCCESS)
    {
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
    aptr += len;
@@ -1084,7 +1084,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
    if (aptr + RRFIXEDSZ > abuf + alen)
    {
       free(name);
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
   
@@ -1096,7 +1096,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
    if (aptr + dlen > abuf + alen)
    {
       free(name);
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
 
@@ -1117,7 +1117,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       len = *p;
       if (p + len + 1 > aptr + dlen)
       {
-         DebugLog (<< "Failed parse of RR");
+         StackLog (<< "Failed parse of RR");
          return NULL;
       }
       naptr.flags = Data(p+1, len);
@@ -1126,7 +1126,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       len = *p;
       if (p + len + 1 > aptr + dlen)
       {
-         DebugLog (<< "Failed parse of RR");
+         StackLog (<< "Failed parse of RR");
          return NULL;
       }
       naptr.service = Data(p+1, len);
@@ -1135,7 +1135,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       len = *p;
       if (p + len + 1 > aptr + dlen)
       {
-         DebugLog (<< "Failed parse of RR");
+         StackLog (<< "Failed parse of RR");
          return NULL;
       }
       naptr.regex = Data(p+1, len);
@@ -1144,7 +1144,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
       status = ares_expand_name(p, abuf, alen, &name, &len);
       if (status != ARES_SUCCESS)
       {
-         DebugLog (<< "Failed parse of RR");
+         StackLog (<< "Failed parse of RR");
          return NULL;
       }
       naptr.replacement = name;
@@ -1154,7 +1154,7 @@ DnsResult::parseNAPTR(const unsigned char *aptr,
    }
    else
    {
-      DebugLog (<< "Failed parse of RR");
+      StackLog (<< "Failed parse of RR");
       return NULL;
    }
 }
