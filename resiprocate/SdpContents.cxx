@@ -391,7 +391,7 @@ SdpContents::Session::Bandwidth::parse(ParseBuffer& pb)
    pb.skipChar('b');
    const char* anchor = pb.skipChar(Symbols::EQUALS[0]);
    
-   pb.skipChar(Symbols::COLON[0]);
+   pb.skipToChar(Symbols::COLON[0]);
    pb.data(mModifier, anchor);
 
    anchor = pb.skipChar(Symbols::COLON[0]);
