@@ -1,6 +1,6 @@
-#include "ServerOutOfDialogReq.hxx"
-#include "DialogUsageManager.hxx"
-#include "Dialog.hxx"
+#include "resiprocate/dum/ServerOutOfDialogReq.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/Dialog.hxx"
 
 using namespace resip;
 
