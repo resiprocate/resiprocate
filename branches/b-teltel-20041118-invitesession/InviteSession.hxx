@@ -83,7 +83,8 @@ class InviteSession : public DialogUsage
          UAC_SentUpdateEarly,
          UAC_SentUpdateConnected,
          UAC_ReceivedUpdateEarly,
-         UAC_PrackAnswerWait,
+         UAC_SentAnswer,
+         UAC_QueuedUpdate,
          UAC_Canceled,
 
          UAS_Start,
@@ -254,6 +255,7 @@ class InviteSession : public DialogUsage
       // Utility methods for handling particular methods
       void dispatchOthers(const SipMessage& msg);
       void dispatchUnhandledInvite(const SipMessage& msg);
+      void dispatchPrack(const SipMessage& msg);
       void dispatchCancel(const SipMessage& msg);
       void dispatchBye(const SipMessage& msg);
       void dispatchInfo(const SipMessage& msg);
