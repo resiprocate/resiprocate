@@ -102,6 +102,7 @@ class Contents : public LazyParser
       mutable ParserContainer<ContentLanguage_MultiHeader::Type> *mLanguages;
       mutable Token *mId;
       mutable StringCategory *mDescription;
+      mutable StringCategory *mLength;
 
       mutable int mVersion;
       mutable int mMinorVersion;
