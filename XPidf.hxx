@@ -50,13 +50,16 @@ class XPidf : public Contents
             Data note;
       };
 
+      static bool init();
+
    private:
       void clear();
-      static ContentsFactory<XPidf> Factory;
-
+ 
       Data mPresentity;
       vector<Tuple> mAtoms;
 };
+
+static bool invokeXPidfInit = XPidf::init();
 
 }
 

@@ -479,12 +479,15 @@ class SdpContents : public Contents
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
       static const Mime& getStaticType() ;
+
+      static bool init();
+
    private:
       SdpContents(const Data& data, const Mime& contentTypes);
-      
       Session mSession;
-      static ContentsFactory<SdpContents> Factory;
 };
+
+static bool invokeSdpContentsInit = SdpContents::init();
 
 typedef SdpContents::Session::Codec Codec;
 

@@ -29,14 +29,17 @@ class X_msMsgsInvite : public Contents
 
       typedef std::list< std::pair<Data, Data> > Attributes;
       Attributes& attributtes() {return mAttributes;}
-      
+ 
+      static bool init();
+     
    private:
-      static ContentsFactory<X_msMsgsInvite> Factory;
-
+ 
       mutable Attributes mAttributes;
       mutable int mPort;
       mutable Data mHost;
 };
+
+static bool invokeX_msMsgsInviteInit = X_msMsgsInvite::init();
 
 }
 

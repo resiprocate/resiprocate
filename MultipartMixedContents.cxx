@@ -13,7 +13,13 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
 
-ContentsFactory<MultipartMixedContents> MultipartMixedContents::Factory;
+bool 
+MultipartMixedContents::init()
+{
+   static ContentsFactory<MultipartMixedContents> factory;
+   (void)factory;
+   return true;
+}
 
 MultipartMixedContents::MultipartMixedContents()
    : Contents(getStaticType()),
@@ -233,7 +239,13 @@ MultipartMixedContents::parse(ParseBuffer& pb)
 }
 
 // ---------------------------------------------------
-ContentsFactory<MultipartRelatedContents> MultipartRelatedContents::Factory;
+bool 
+MultipartRelatedContents::init()
+{
+   static ContentsFactory<MultipartRelatedContents> factory;
+   (void)factory;
+   return true;
+}
 
 MultipartRelatedContents::MultipartRelatedContents()
    : MultipartMixedContents(getStaticType())

@@ -24,9 +24,10 @@ class MultipartSignedContents : public MultipartMixedContents
 
       static const Mime& getStaticType();
 
-   private:
-      static ContentsFactory<MultipartSignedContents> Factory;
+      static bool init();
 };
+
+static bool invokeMultipartSignedContentsInit = MultipartSignedContents::init();
 
 }
 

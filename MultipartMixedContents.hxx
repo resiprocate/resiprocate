@@ -41,16 +41,18 @@ class MultipartMixedContents : public Contents
 
          const char* name() const { return "MultipartMixedContents::Exception"; }
       };
-
+      
+      static bool init();
+      
    protected:
       void clear();
       
    private:
-      static ContentsFactory<MultipartMixedContents> Factory;
       void setBoundary();
-
       std::list<Contents*> mContents;
 };
+
+static bool invokeMultipartMixedContentsInit = MultipartMixedContents::init();
 
 class MultipartRelatedContents : public MultipartMixedContents
 {
@@ -61,12 +63,12 @@ class MultipartRelatedContents : public MultipartMixedContents
       MultipartRelatedContents& operator=(const MultipartRelatedContents& rhs);
       virtual Contents* clone() const;
 
-      //virtual 
-		  static const Mime& getStaticType() ;
-      
-   private:
-      static ContentsFactory<MultipartRelatedContents> Factory;
+      static const Mime& getStaticType() ;
+
+      static bool init();      
 };
+
+static bool invokeMultipartRelatedContentsInit = MultipartRelatedContents::init();
 
 }
 

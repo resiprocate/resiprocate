@@ -11,9 +11,15 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-
-ContentsFactory<OctetContents> OctetContents::Factory;
 const OctetContents OctetContents::Empty;
+
+bool
+OctetContents::init()
+{
+   static ContentsFactory<OctetContents> factory;
+   (void)factory;
+   return true;
+}
 
 OctetContents::OctetContents()
    : Contents(getStaticType()),
