@@ -45,6 +45,7 @@ TestPageCallback::receivedPage( Data& msg, Uri& from )
 
    if ( mDest && ( *mDest != from) )
    {
+      // ?dlb? would this work: *mDest = from; mDest->scheme() = SIP;
       Data f("sip:");
       f += from.getAor();
       f += Data(":");
