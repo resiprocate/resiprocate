@@ -53,7 +53,14 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
       pb.skipN(8);
 
       const char* anchor = pb.position();
-      pb.skipToChar(Symbols::DOT[0]);
+      // rfc3261cookie-sip2cookie-tid.clientseq1.clientseq2-transportseq-clientdata
+      //                          ^                        ^
+      pb.skipToChar(Symbols::DASH[0]);
+      pb.skipBackToChar(Symbols::DOT[0]);
+      pb.skipBackChar();
+      // rfc3261cookie-sip2cookie-tid.clientseq1.clientseq2-transportseq-clientdata
+      //                          ^             ^
+      
       pb.data(mTransactionId, anchor);
 
       pb.skipChar();
