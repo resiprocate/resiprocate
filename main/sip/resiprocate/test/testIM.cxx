@@ -31,9 +31,10 @@ class TestPresCallback: public TuIM::PresCallback
   
 
 void 
-TestPresCallback::presenseUpdate(const Uri& dest, bool open, const Data& status )
+TestPresCallback::presenseUpdate(const Uri& from, bool open, const Data& status )
 {
-	assert(0);
+   const char* stat = (open)?"online":"offline";
+   cout << from << " set presence to " << stat << " " << status.c_str() << endl;
 }
 
 
@@ -126,6 +127,20 @@ processStdin(  TuIM& tuIM, Uri* dest )
       buf[num-1] = 0;
       *dest = Uri(Data(buf+3));
       cerr << "Set destination to <" << *dest << ">";
+   }
+   else if ( (num>4) && (!strncmp("add:",buf,4)) )
+   {
+      buf[num-1] = 0;
+      Uri uri(Data(buf+4));
+      cerr << "Subscribing to buddy <" << uri << ">";
+      tuIM.addBuddy( uri, Data::Empty );
+   }
+   else if ( (num>3) && (!strncmp("go:",buf,3)) )
+   {
+      buf[num-1] = 0;
+      Data stat(buf+3);
+      cerr << "setting presence status to  <" << stat << ">";
+      tuIM.setMyPresense( !stat.empty(), stat );
    }
    else if ( (num==2) && (!strncmp(".",buf,1)) )
    {
@@ -273,7 +288,9 @@ main(int argc, char* argv[])
    
    TuIM tuIM(&sipStack,aor,contact,&pageCallback,&errCallback,&presCallback);
 
+#if 0
    tuIM.registerAor( aor, aorPassword );
+#endif
 
    //Vocal2::makeSocketNonBlocking( fileno(stdin) );
 
@@ -288,14 +305,14 @@ main(int argc, char* argv[])
       if ( err == -1 )
       {
          int e = errno;
-		 switch (e)
-		 {
-		 case 0:
-			 break;
-		 default:
-			InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
-			break;
-			}
+         switch (e)
+         {
+            case 0:
+               break;
+            default:
+               InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
+               break;
+         }
       }
       //InfoLog(<< "Select returned");
        
