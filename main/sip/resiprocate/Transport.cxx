@@ -379,7 +379,7 @@ Transport::stampReceived(SipMessage* message)
          message->header(h_Vias).front().param(p_rport).port() = tuple.getPort();
       }
    }
-   DebugLog (<< "!ah! adding new SipMessage from " << message->getSource() << " to state machine's Fifo: " << message->brief());
+   DebugLog (<< "incoming from: " << message->getSource() << endl << *message);
 }
 
 
