@@ -56,10 +56,10 @@ main(int argc, char* argv[])
    cout << "Performing " << runs << " runs." << endl;
    
    Fifo<TransactionMessage> txFifo;
-   TcpTransport* sender = new TcpTransport(txFifo, 5070, Data::Empty);
+   TcpTransport* sender = new TcpTransport(txFifo, 5070, V4, Data::Empty);
 
    Fifo<TransactionMessage> rxFifo;
-   TcpTransport* receiver = new TcpTransport(rxFifo, 5080, Data::Empty);
+   TcpTransport* receiver = new TcpTransport(rxFifo, 5080, V4, Data::Empty);
    
    NameAddr target;
    target.uri().scheme() = "sip";
