@@ -18,7 +18,8 @@ ParserCategory::ParserCategory(HeaderFieldValue* headerFieldValue)
       mParameters(),
       mUnknownParameters(),
       mMine(false),
-      mIsParsed(false)
+      mIsParsed(mHeaderField->mField == 0) //although this has a hfv it is
+                                           //parsed, as the hfv has no content
 {
 }
 
