@@ -22,7 +22,6 @@ FloatParameter::FloatParameter(ParameterTypes::Type type,
    pb.skipWhitespace();
    if (!pb.eof() && *pb.position() != '=')
    {
-      DebugLog( << "parameter constructor expected '='" );
       throw ParseException("parameter constructor expected '='", __FILE__, __LINE__);
    }
    pb.skipChar();
