@@ -723,16 +723,61 @@ int ssl3_get_client_hello(SSL *s)
 		{
 		/* cookie stuff */
 		cookie_len = *(p++);
+
+        if ( (SSL_get_options(s) & SSL_OP_COOKIE_EXCHANGE) &&
+            s->d1->send_cookie == 0)
+            {
+            /* HelloVerifyMessage has already been sent */
+            if ( cookie_len != s->d1->cookie_len)
+                {
+                al = SSL_AD_HANDSHAKE_FAILURE;
+                SSLerr(SSL_F_SSL3_GET_CLIENT_HELLO, SSL_R_COOKIE_MISMATCH);
+                goto f_err;
+                }
+            }
+
+        /* 
+         * The ClientHello may contain a cookie even if the
+         * HelloVerify message has not been sent--make sure that it
+         * does not cause an overflow.
+         */
 		if ( cookie_len > sizeof(s->d1->rcvd_cookie))
 			{
 			/* too much data */
-			al=SSL_AD_DECODE_ERROR;
-			SSLerr(SSL_F_SSL3_GET_CLIENT_HELLO,SSL_R_LENGTH_MISMATCH);
+            al = SSL_AD_DECODE_ERROR;
+			SSLerr(SSL_F_SSL3_GET_CLIENT_HELLO, SSL_R_COOKIE_MISMATCH);
 			goto f_err;
 			}
-		memcpy(s->d1->rcvd_cookie, p, cookie_len);
-		p += cookie_len;
-        /* XDTLS:  verify the cookie here */
+
+        /* verify the cookie if appropriate option is set. */
+        if ( (SSL_get_options(s) & SSL_OP_COOKIE_EXCHANGE) &&
+            cookie_len > 0)
+            {
+            memcpy(s->d1->rcvd_cookie, p, cookie_len);
+
+            if ( s->d1->default_verify_cookie_callback != NULL)
+                {
+                if ( s->d1->default_verify_cookie_callback(s, s->d1->rcvd_cookie,
+                    cookie_len) == 0)
+                    {
+                    al=SSL_AD_HANDSHAKE_FAILURE;
+                    SSLerr(SSL_F_SSL3_GET_CLIENT_HELLO, 
+                        SSL_R_COOKIE_MISMATCH);
+                    goto f_err;
+                    }
+                /* else cookie verification succeeded */
+                }
+            else if ( memcmp(s->d1->rcvd_cookie, s->d1->cookie, 
+                          s->d1->cookie_len) != 0) /* default verification */
+                {
+                    al=SSL_AD_HANDSHAKE_FAILURE;
+                    SSLerr(SSL_F_SSL3_GET_CLIENT_HELLO, 
+                        SSL_R_COOKIE_MISMATCH);
+                    goto f_err;
+                }
+            }
+
+        p += cookie_len;
 		}
 
 	n2s(p,i);

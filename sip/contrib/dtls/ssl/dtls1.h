@@ -115,6 +115,7 @@ struct hm_header_st
 	unsigned short seq;
 	unsigned long frag_off;
 	unsigned long frag_len;
+    unsigned int is_ccs;
 	};
 
 struct ccs_header_st
@@ -202,10 +203,14 @@ typedef struct dtls1_state_st
 	unsigned int handshake_fragment_len;
 
 	unsigned int retransmitting;
-/*
-	unsigned long message_length;
-	unsigned long frag_off;
-*/
+
+    /* callbacks */
+
+    /* zero return indicates failure */
+    int (*default_gen_cookie_callback)(SSL* s, unsigned char *cookie, 
+        int *len);
+    int (*default_verify_cookie_callback)(SSL *s, unsigned char *cookie, 
+        int len);
 
 	} DTLS1_STATE;
 
@@ -217,6 +222,7 @@ typedef struct dtls1_record_data_st
 	SSL3_RECORD    rrec;
 	} DTLS1_RECORD_DATA;
 
+#if 0
 typedef struct dtls1_message_buffer_st
 	{
 	unsigned char *data;
@@ -225,6 +231,7 @@ typedef struct dtls1_message_buffer_st
 	unsigned short seq_num;
 	unsigned int ccs;  /* set when the message is CCS */
 	} dtls1_message_buffer;
+#endif
 
 /* client methods */
 int dtls1_client_hello(SSL *s);

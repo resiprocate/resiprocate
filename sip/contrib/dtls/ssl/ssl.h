@@ -490,6 +490,11 @@ typedef struct ssl_session_st
  *             This used to be 0x000FFFFFL before 0.9.7. */
 #define SSL_OP_ALL					0x00000FFFL
 
+/* DTLS options */
+#define SSL_OP_NO_QUERY_MTU                 0x00001000L
+/* Turn on Cookie Exchange (on relevant for servers) */
+#define SSL_OP_COOKIE_EXCHANGE              0x00002000L
+
 /* As server, disallow session resumption on renegotiation */
 #define SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION	0x00010000L
 /* If set, always create a new key when using tmp_dh parameters */
@@ -516,8 +521,6 @@ typedef struct ssl_session_st
 #define SSL_OP_PKCS1_CHECK_2				0x10000000L
 #define SSL_OP_NETSCAPE_CA_DN_BUG			0x20000000L
 #define SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG		0x40000000L
-
-#define SSL_OP_NO_QUERY_MTU                 0x80000000L
 
 /* Allow SSL_write(..., n) to return r with 0 < r < n (i.e. report success
  * when just a single record has been written): */
@@ -1870,6 +1873,7 @@ void ERR_load_SSL_strings(void);
 #define SSL_R_X509_VERIFICATION_SETUP_PROBLEMS		 269
 
 #define SSL_R_READ_TIMEOUT_EXPIRED              2001
+#define SSL_R_COOKIE_MISMATCH                   2002
 
 #ifdef  __cplusplus
 }
