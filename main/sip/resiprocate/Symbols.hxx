@@ -70,6 +70,10 @@ class Symbols
       static const Data SrvSips;
       static const Data SrvUdp;
       static const Data SrvTcp;
+      static const Data NaptrSip;
+      static const Data NaptrSips;
+      static const Data NaptrUdp;
+      static const Data NaptrTcp;
 
       static const Data audio;
       static const Data RTP_AVP;
