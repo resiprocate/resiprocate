@@ -1,6 +1,8 @@
 #ifndef MultipartMixedContents_hxx
 #define MultipartMixedContents_hxx
 
+#include <list>
+
 #include "sip2/sipstack/Contents.hxx"
 #include "sip2/util/Data.hxx"
 
@@ -18,7 +20,6 @@ class MultipartMixedContents : public Contents
       MultipartMixedContents(const MultipartMixedContents& rhs);
       virtual ~MultipartMixedContents();
       MultipartMixedContents& operator=(const MultipartMixedContents& rhs);
-
       virtual Contents* clone() const;
 
       virtual const Mime& getStaticType() const;

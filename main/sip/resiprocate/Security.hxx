@@ -17,6 +17,7 @@ namespace Vocal2
 class Contents;
 class Pkcs7Contents;
 class Security;
+class MultipartMixedContents;
 
 
 class TlsConnection
@@ -95,7 +96,9 @@ class Security
        *  This is pertty straight forwartd - use ONE of the functions below to
        *  form a new body. */
       bool haveCert();
-      Pkcs7Contents* sign( Contents* );
+      Contents* sign( Contents* );
+      Pkcs7Contents* pkcs7Sign( Contents* );
+      MultipartMixedContents* multipartSign( Contents* );
       bool havePublicKey( const Data& recipCertName );
       Pkcs7Contents* encrypt( Contents* , const Data& recipCertName );
       Pkcs7Contents* signAndEncrypt( Contents* , const Data& recipCertName );
