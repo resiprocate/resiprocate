@@ -12,7 +12,13 @@
 #else
 #include <iostream>
 #include <cstdio>
+
+#ifdef WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
+
 typedef void WINDOW;
 
 #ifndef __APPLE__
@@ -27,6 +33,10 @@ WINDOW* newwin(...) { return NULL; };
 void waddstr(WINDOW*, const char* text) { std::clog << text; };
 char getch()
 {
+#if 0
+	assert(0);
+	return 0;
+#else
    char buf[1];
    int r = read(fileno(stdin),&buf,1);
    if ( r ==1 )
@@ -34,6 +44,7 @@ char getch()
       return buf[0];
    }
    return 0;
+#endif
 };
 void werase(WINDOW*) {};
 void wrefresh(...) {};
@@ -70,6 +81,7 @@ void mvvline(...) {};
 
 
 using namespace resip;
+
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
@@ -595,9 +607,14 @@ main(int argc, char* argv[])
    }
    
    //InfoLog( << "Using port " << port );
-   
+  
+#ifdef USE_SSL
    Security security( tlsServer, useTls );
-   SipStack sipStack( false /*multihtread*/, &security );  
+      SipStack sipStack( false /*multihtread*/, &security );  
+#else
+      SipStack sipStack( false /*multihtread*/ );  
+#endif
+
 
    if ( key == Data("-") )
    {
@@ -693,7 +710,8 @@ main(int argc, char* argv[])
    intrflush(stdscr, FALSE);
    keypad(stdscr, TRUE);
 
-   int rows,cols;
+   int rows=0;
+   int cols=0;
    getmaxyx(stdscr,rows,cols);		/* get the number of rows and columns */
         
    commandWin = newwin(2,cols,rows-2,0);
