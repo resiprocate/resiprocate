@@ -23,6 +23,7 @@ class HeaderFieldValue
       ~HeaderFieldValue();
 
       HeaderFieldValue* clone() const;
+      Parameter& getParameter(ParameterTypes::Type type);
       ParameterList& getParameters();
       ParameterList& getUnknownParameters();
       bool isParsed() const;

@@ -33,9 +33,11 @@ class ParserCategory
       }
 
       template <int T>
-      typename ParameterType<T>::Type& 
+      typename ParameterType<T>::Type::Type& 
       operator[](const ParameterType<T>& parameterType)
       {
+         checkParsed();
+         return ((typename ParameterType<T>::Type&)mHeaderField->getParameter((typename ParameterTypes::Type)T)).value();
       }
       
       bool isParsed() const
