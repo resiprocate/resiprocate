@@ -3,6 +3,7 @@
 #endif
 
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Helper.hxx"
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/RequestContext.hxx"
 
@@ -48,7 +49,7 @@ LocationServer::handleRequest(RequestContext& context)
 	    // make 480, send, dispose of memory
 		resip::SipMessage response;
 		Helper::makeResponse(response, context.getOriginalRequest(), 480); 
-		RequestContext::sendResponse(response);
+		context.sendResponse(response);
 	    return RequestProcessor::SkipThisChain;
 	 }
 	 else
@@ -63,7 +64,7 @@ LocationServer::handleRequest(RequestContext& context)
 	  // make 404, send, dispose of memory 
 	  resip::SipMessage response;
 	  Helper::makeResponse(response, context.getOriginalRequest(), 404); 
-	  RequestContext::sendResponse(response);
+	  context.sendResponse(response);
 	  return RequestProcessor::SkipThisChain;
    }
 }
