@@ -6,6 +6,7 @@
 
 #include "resiprocate/DateCategory.hxx"
 #include "resiprocate/ParseUtil.hxx"
+#include "resiprocate/Transport.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
@@ -64,6 +65,7 @@ DateCategory::DateCategory()
    {
       int e = getErrno();
       DebugLog (<< "Failed to get time: " << strerror(e));
+      Transport::error(e);
       return;
    }
    
@@ -73,17 +75,19 @@ DateCategory::DateCategory()
    if (gmtp == 0)
    {
 	    int e = getErrno();
-      DebugLog (<< "Failed to convert to gmt: " << strerror(e));
-      return;
+        DebugLog (<< "Failed to convert to gmt: " << strerror(e));
+        error(e);
+        return;
    }
    memcpy(&gmt,gmtp,sizeof(gmt));
 #else
   if (gmtime_r(&now, &gmt) == 0)
-   {
-	    int e = getErrno();
-      DebugLog (<< "Failed to convert to gmt: " << strerror(e));
-      return;
-   }
+  {
+     int e = getErrno();
+     DebugLog (<< "Failed to convert to gmt: " << strerror(e));
+     Transport::error(e);
+     return;
+  }
 #endif
 
    mDayOfWeek = static_cast<DayOfWeek>(gmt.tm_wday);
