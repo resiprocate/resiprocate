@@ -700,13 +700,14 @@ void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
    DebugLog(<< "nonceCount is now: [" << nonceCountString << "]");
 }
 
-Auth makeChallengeResponseAuth(SipMessage& request,
-                               const Data& username,
-                               const Data& password,
-                               const Auth& challenge,
-                               const Data& cnonce,
-                               unsigned int& nonceCount,
-                               Data& nonceCountString)
+Auth 
+Helper::makeChallengeResponseAuth(SipMessage& request,
+                                  const Data& username,
+                                  const Data& password,
+                                  const Auth& challenge,
+                                  const Data& cnonce,
+                                  unsigned int& nonceCount,
+                                  Data& nonceCountString)
 {
    Auth auth;
    auth.scheme() = "Digest";
