@@ -25,7 +25,7 @@ threadWrapper( void* threadParm )
    ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
    
    assert( t );
-#if define(WIN32)
+#if defined(WIN32)
    srand(unsigned(time(0)) ^ unsigned(GetCurrentThreadId()) ^ unsigned(GetCurrentProcessId()));
 #endif
    t->thread();
