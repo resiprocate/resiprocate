@@ -103,7 +103,7 @@ main()
 
    {
       cerr << "test contentless child" << endl;
-      Data contents("<?xml version=\"1.0\"?><foo><child></child></foo>");
+      Data contents("<?xml version=\"1.0\"?>    <foo><child></child></foo>");
       XMLCursor xmlc(ParseBuffer(contents.data(), contents.size()));
       
       assert(xmlc.getTag() == "foo");
@@ -163,7 +163,7 @@ main()
    {
       cerr << "test leafy tree" << endl;
       Data contents("<?xml version=\"1.0\"?>  <root>Pie<P1 attribute = \"value\">I<A1>wish</A1>I<A2>could</A2>recollect</P1>pi"
-                    "<P2>eureka<B1>cried</B1>the<B2>great</B2>professor</P2>christmans</root> ");
+                    "<P2>eureka<B1>cried</B1>the<B2>great</B2>professor</P2>christmas</root> ");
       XMLCursor tree(ParseBuffer(contents.data(), contents.size()));
 
       assert(tree.firstChild());
@@ -180,7 +180,7 @@ main()
       assert(tree.getTag() == "P2");
       assert(tree.nextSibling());
       assert(tree.getTag().empty());
-      assert(tree.getValue() == "christmans");
+      assert(tree.getValue() == "christmas");
       assert(!tree.nextSibling());
    }      
 
