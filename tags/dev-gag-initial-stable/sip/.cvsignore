@@ -1,0 +1,12 @@
+*.ncb
+*.suo
+.DS_Store
+.make_prefs
+Makefile.in
+autom4te*.cache
+config.log
+config.status
+lib.debug.Linux.i686
+lib.opt.Linux.i686
+lib.prof.Linux.i686
+libtool
