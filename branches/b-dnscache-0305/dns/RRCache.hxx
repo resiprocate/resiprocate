@@ -43,7 +43,7 @@ class RRCache : public RRCacheBase
       {
 
          RRList<T>* key = new RRList<T>(keyIn);         
-         RRSet::iterator lb = mRRSet.lower_bound(key);
+         typename RRSet::iterator lb = mRRSet.lower_bound(key);
          if (lb != mRRSet.end() &&
              !(mRRSet.key_comp()(key, *lb)))
          {
@@ -62,7 +62,7 @@ class RRCache : public RRCacheBase
       {
          RRList<T>* key = new RRList<T>(target);
          
-         RRSet::iterator it = mRRSet.find(key);
+         typename RRSet::iterator it = mRRSet.find(key);
          if (it == mRRSet.end())
          {
             return Empty;
@@ -102,7 +102,7 @@ class RRCache : public RRCacheBase
 
       void clean()
       {
-         for (set<RRList<T>*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); it++)
+         for (typename set<RRList<T>*, CompareT>::iterator it = mRRSet.begin(); it != mRRSet.end(); it++)
          {
             delete *it;
          }
