@@ -243,7 +243,7 @@ DialogSet::dispatch(const SipMessage& msg)
          //!dcm! -- need to protect against 3xx highjacking a dialogset which
          //has a fully established dialog. also could case strange behaviour
          //by sending 401/407 at the wrong time.
-         if (mDum.mRedirectManager)
+         if (mDum.mRedirectManager.get())
          {
             if (mDum.mRedirectManager->handle(*this, getCreator()->getLastRequest(), msg))
             {
