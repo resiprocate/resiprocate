@@ -2,31 +2,65 @@
 #define RESIP_REGISTRATION_HXX
 
 
+#include <memory>
 #include "resiprocate/os/Timer.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/ParserCategories.hxx"
+
 namespace resip
 {
 
 class SipMessage;
 
 
-class Registration
+class Registration 
 {
    public: 
-      void processRequest(SipMessage* msg);  
-      void processResponse(SipMessage* msg);
+      // Register a binding from aor to default contact
+      Registration(const Uri& aor);
+
+      // Register a binding from aor to specified contact
+      Registration(const Uri& aor, const Uri& contact);
+
+      // Register a binding from aor to specified contact as third party from
+      Registration(const Uri& from, const Uri& aor, const Uri& contact);
+
+      void setExpiration(int secs);
+
+      // returns time (in secs) when REGISTER should be refreshed
+      UInt64 getTimeToRefresh() const;
+      const CallID& getCallID() const;
+      bool isRegistered() const;
+      
+      // Returns the current register request
+      SipMessage& getRegistration();
+
+      // Will increment CSeq and return an updated register request
+      SipMessage& refreshRegistration();
+
+      // Will modify the register request to unregister
+      SipMessage& unregister();
+      
+      void handleResponse(const SipMessage& response);
       
    private:  
+      NameAddr mAor;
+      NameAddr mContact;
+      NameAddr mFrom;
+      
       UInt64 mTimeTillExpiration;
       
       typedef enum 
       {
          Invalid=0,
-         Init,
-         Acitve,
+         Initialized,
+         Active,
          Terminated
       } State;
       
       State mState;
+      std::auto_ptr<SipMessage> mRegister;
+      NameAddrs mContacts;
 };
  
 }
