@@ -2,10 +2,19 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/ClientOutOfDialogReq.hxx"
+#include "resiprocate/dum/ClientRegistration.hxx"
+#include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
+#include "resiprocate/dum/ServerInviteSession.hxx"
+#include "resiprocate/dum/ServerOutOfDialogReq.hxx"
+#include "resiprocate/dum/ServerRegistration.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
+#include "resiprocate/dum/ClientPublication.hxx"
+#include "resiprocate/dum/ServerPublication.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -394,7 +403,7 @@ Dialog::findMatchingClientOutOfDialogReq(const SipMessage& msg)
 }
 
 
-InviteSession::Handle
+InviteSessionHandle
 Dialog::findInviteSession()
 {
    if (mInviteSession)
@@ -408,10 +417,10 @@ Dialog::findInviteSession()
    }
 }
 
-std::vector<ClientSubscription::Handle> 
+std::vector<ClientSubscriptionHandle> 
 Dialog::findClientSubscriptions()
 {
-   std::vector<ClientSubscription::Handle> handles;
+   std::vector<ClientSubscriptionHandle> handles;
    
    for (std::list<ClientSubscription*>::const_iterator i = mClientSubscriptions.begin();
         i != mClientSubscriptions.end(); ++i)
@@ -422,7 +431,7 @@ Dialog::findClientSubscriptions()
    return handles;
 }
 
-ClientRegistration::Handle 
+ClientRegistrationHandle 
 Dialog::findClientRegistration()
 {
    if (mClientRegistration)
@@ -436,7 +445,7 @@ Dialog::findClientRegistration()
    }
 }
 
-ServerRegistration::Handle 
+ServerRegistrationHandle 
 Dialog::findServerRegistration()
 {
    if (mServerRegistration)
@@ -450,7 +459,7 @@ Dialog::findServerRegistration()
    }
 }
 
-ClientPublication::Handle 
+ClientPublicationHandle 
 Dialog::findClientPublication()
 {
    if (mClientPublication)
@@ -464,7 +473,7 @@ Dialog::findClientPublication()
    }
 }
 
-ServerPublication::Handle 
+ServerPublicationHandle 
 Dialog::findServerPublication()
 {
    if (mServerPublication)
@@ -479,7 +488,7 @@ Dialog::findServerPublication()
 }
 
 #if 0
-ClientOutOfDialogReq::Handle 
+ClientOutOfDialogReqHandle 
 Dialog::findClientOutOfDialog()
 {
    if (mClientOutOfDialogRequests)
@@ -494,7 +503,7 @@ Dialog::findClientOutOfDialog()
 }
 #endif
 
-ServerOutOfDialogReq::Handle
+ServerOutOfDialogReqHandle
 Dialog::findServerOutOfDialog()
 {
    if (mServerOutOfDialogRequest)
@@ -603,10 +612,8 @@ Dialog::makeClientInviteSession(const SipMessage& response)
 {
    InviteSessionCreator* creator = dynamic_cast<InviteSessionCreator*>(mDialogSet.getCreator());
    assert(creator); // !jf! this maybe can assert by evil UAS
-   
-   ClientInviteSession* usage = new ClientInviteSession(mDum, *this, creator->getLastRequest(), creator->getInitialOffer());
-   mDum.addUsage(usage);
-   return usage;
+   //return mDum.createAppClientInviteSession(*this, *creator);
+   return new ClientInviteSession(mDum, *this, creator->getLastRequest(), creator->getInitialOffer());
 }
 
 ClientRegistration*
@@ -614,9 +621,7 @@ Dialog::makeClientRegistration(const SipMessage& response)
 {
    BaseCreator* creator = mDialogSet.getCreator();
    assert(creator);
-   ClientRegistration* usage = new ClientRegistration(mDum, *this, creator->getLastRequest());
-   mDum.addUsage(usage);
-   return usage;
+   return new ClientRegistration(mDum, *this, creator->getLastRequest());
 }
 
 ClientPublication*
@@ -624,9 +629,7 @@ Dialog::makeClientPublication(const SipMessage& response)
 {
    BaseCreator* creator = mDialogSet.getCreator();
    assert(creator);
-   ClientPublication* usage = new ClientPublication(mDum, *this, creator->getLastRequest());
-   mDum.addUsage(usage);
-   return usage;
+   return new ClientPublication(mDum, *this, creator->getLastRequest());
 }
 
 ClientSubscription*
@@ -634,9 +637,7 @@ Dialog::makeClientSubscription(const SipMessage& response)
 {
    BaseCreator* creator = mDialogSet.getCreator();
    assert(creator);
-   ClientSubscription* sub = new ClientSubscription(mDum, *this, creator->getLastRequest());
-   mDum.addUsage(sub);
-   return sub;
+   return new ClientSubscription(mDum, *this, creator->getLastRequest());
 }
 
 ClientOutOfDialogReq*
@@ -644,49 +645,37 @@ Dialog::makeClientOutOfDialogReq(const SipMessage& response)
 {
    BaseCreator* creator = mDialogSet.getCreator();
    assert(creator);
-   ClientOutOfDialogReq* usage = new ClientOutOfDialogReq(mDum, *this, creator->getLastRequest());
-   mDum.addUsage(usage);
-   return usage;
+   return new ClientOutOfDialogReq(mDum, *this, creator->getLastRequest());
 }
 
 ServerInviteSession*
 Dialog::makeServerInviteSession(const SipMessage& request)
 {
-   ServerInviteSession* usage = new ServerInviteSession(mDum, *this, request);
-   mDum.addUsage(usage);
-   return usage;
+   return new ServerInviteSession(mDum, *this, request);
 }
 
 ServerSubscription* 
 Dialog::makeServerSubscription(const SipMessage& request)
 {
-   ServerSubscription* usage = new ServerSubscription(mDum, *this, request);
-   mDum.addUsage(usage);
-   return usage;
+   return new ServerSubscription(mDum, *this, request);
 }
 
 ServerRegistration* 
 Dialog::makeServerRegistration(const SipMessage& request)
 {
-   ServerRegistration* usage = new ServerRegistration(mDum, *this, request);
-   mDum.addUsage(usage);
-   return usage;
+   return new ServerRegistration(mDum, *this, request);
 }
 
 ServerPublication* 
 Dialog::makeServerPublication(const SipMessage& request)
 {
-   ServerPublication* usage = new ServerPublication(mDum, *this, request);
-   mDum.addUsage(usage);
-   return usage;
+   return new ServerPublication(mDum, *this, request);
 }
 
 ServerOutOfDialogReq* 
 Dialog::makeServerOutOfDialog(const SipMessage& request)
 {
-   ServerOutOfDialogReq* usage = new ServerOutOfDialogReq(mDum, *this, request);
-   mDum.addUsage(usage);
-   return usage;
+   return new ServerOutOfDialogReq(mDum, *this, request);
 }
 
 Dialog::Exception::Exception(const Data& msg, const Data& file, int line)

@@ -14,18 +14,11 @@ class DialogUsageManager;
 class ClientSubscription: public BaseUsage
 {
    public:      
-      class Handle : public BaseUsage::Handle
-      {
-         public:
-            // throws if no session 
-            ClientSubscription* operator->();
+      ClientSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& request);
 
-         private:
-            Handle(DialogUsageManager& dum);
-            friend class ClientSubscription;
-      };
-      
-      
+      typedef Handle<ClientSubscription> ClientSubscriptionHandle;
+      ClientSubscriptionHandle getHandle();
+
       void requestRefresh();
       virtual void end();
 
@@ -35,13 +28,11 @@ class ClientSubscription: public BaseUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      ClientSubscription::Handle& getHandle() { return reinterpret_cast<ClientSubscription::Handle&>(mHandle); }
-
    protected:
       virtual ~ClientSubscription();
+
    private:
       friend class Dialog;
-      ClientSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& request);
       
       Data mEventType;
       Data mSubscriptionId;

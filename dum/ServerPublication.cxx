@@ -1,6 +1,14 @@
-#include "ServerPublication.hxx"
-#include "Dialog.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/ServerPublication.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+
 using namespace resip;
+
+ServerPublicationHandle 
+ServerPublication::getHandle()
+{
+   return ServerPublicationHandle(mDum, getBaseHandle().getId());
+}
 
 ServerPublication::ServerPublication(DialogUsageManager& dum,  Dialog& dialog, const SipMessage&)
    : BaseUsage(dum, dialog)
@@ -26,15 +34,6 @@ ServerPublication::dispatch(const DumTimeout& msg)
 {
 }
 
-ServerPublication::Handle::Handle(DialogUsageManager& dum)
-   : BaseUsage::Handle(dum)
-{}
-
-ServerPublication* 
-ServerPublication::Handle::operator->()
-{
-   return static_cast<ServerPublication*>(get());
-}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -1,6 +1,8 @@
 #if !defined(RESIP_CLIENTDIALOGSET_HXX)
 #define RESIP_CLIENTDIALOGSET_HXX
 
+#include <map>
+
 #include "resiprocate/dum/DialogId.hxx"
 #include "resiprocate/dum/DialogSetId.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
@@ -11,10 +13,7 @@ namespace resip
 class BaseCreator;
 class Dialog;
 class DialogUsageManager;
-
-/** @file DialogSet.hxx
- * 
- */
+class AppDialogSet;
 
 class DialogSet
 {
@@ -33,6 +32,8 @@ class DialogSet
       
    private:
       friend class Dialog;
+      friend class BaseUsage;
+      
       Dialog* findDialog(const SipMessage& msg);
       Dialog* findDialog(const DialogId id);
 
@@ -43,6 +44,7 @@ class DialogSet
       DialogSetId mId;
       DialogUsageManager& mDum;
       bool mCancelled;
+      AppDialogSet* mAppDialogSet;
 };
  
 }
