@@ -3,19 +3,9 @@
 #include <string.h>
 #include <ctype.h>
 #include "sip2/sipstack/MethodTypes.hxx"
+#include "sip2/sipstack/MethodHash.hxx"
 
 using namespace Vocal2;
-
-struct methods { char *name; MethodTypes type; };
-/* maximum key range = 16, duplicates = 0 */
-
-class MethodHash
-{
-private:
-  static inline unsigned int hash (const char *str, unsigned int len);
-public:
-  static struct methods *in_word_set (const char *str, unsigned int len);
-};
 
 inline unsigned int
 MethodHash::hash (register const char *str, register unsigned int len)
