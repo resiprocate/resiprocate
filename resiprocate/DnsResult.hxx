@@ -18,7 +18,7 @@ class DnsHandler;
 class DnsResult
 {
    public:
-      DnsResult(DnsInterface& interface, DnsHandler* handler);
+      DnsResult(DnsInterface& interfaceObj, DnsHandler* handler);
       ~DnsResult();
 
       typedef enum
