@@ -321,7 +321,9 @@ TransactionState::processStateless(Message* message)
    }
    else if (isFromWire(message))
    {
-      assert(0);
+      InfoLog (<< "Received message from wire on a stateless transaction");
+      DebugLog (<< *message);
+      //assert(0);
       sendToTU(sip);
    }
    else if (isTransportError(message))
