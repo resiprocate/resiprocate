@@ -28,8 +28,6 @@
 #error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
 #endif
 
-#line 1 "MethodHash.gperf"
-
 #include <string.h>
 #include <ctype.h>
 #include "resiprocate/MethodTypes.hxx"
@@ -38,7 +36,6 @@ namespace resip
 {
 using namespace std;
 using namespace resip;
-#line 11 "MethodHash.gperf"
 struct methods { char *name; MethodTypes type; };
 /* maximum key range = 31, duplicates = 0 */
 
@@ -131,37 +128,21 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
 
   static struct methods wordlist[] =
     {
-#line 26 "MethodHash.gperf"
       {"INFO", INFO},
-#line 21 "MethodHash.gperf"
       {"REFER", REFER},
-#line 16 "MethodHash.gperf"
       {"INVITE", INVITE},
-#line 18 "MethodHash.gperf"
       {"OPTIONS", OPTIONS},
-#line 24 "MethodHash.gperf"
       {"RESPONSE", RESPONSE},
-#line 17 "MethodHash.gperf"
       {"NOTIFY", NOTIFY},
-#line 27 "MethodHash.gperf"
       {"SERVICE", SERVICE},
-#line 13 "MethodHash.gperf"
       {"ACK", ACK},
-#line 19 "MethodHash.gperf"
       {"PRACK", PRACK},
-#line 28 "MethodHash.gperf"
       {"UPDATE", UPDATE},
-#line 20 "MethodHash.gperf"
       {"PUBLISH", PUBLISH},
-#line 14 "MethodHash.gperf"
       {"BYE", BYE},
-#line 15 "MethodHash.gperf"
       {"CANCEL", CANCEL},
-#line 22 "MethodHash.gperf"
       {"REGISTER", REGISTER},
-#line 25 "MethodHash.gperf"
       {"MESSAGE", MESSAGE},
-#line 23 "MethodHash.gperf"
       {"SUBSCRIBE", SUBSCRIBE}
     };
 
@@ -191,6 +172,5 @@ MethodHash::in_word_set (register const char *str, register unsigned int len)
     }
   return 0;
 }
-#line 29 "MethodHash.gperf"
 
 }
