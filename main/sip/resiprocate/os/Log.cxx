@@ -18,8 +18,8 @@
 using namespace resip;
 using namespace std;
 
-Log::Level Log::_level = Log::DEBUG;
-Log::Type Log::_type = COUT;
+Log::Level Log::_level = Log::Debug;
+Log::Type Log::_type = Cout;
 Data Log::_appName;
 Data Log::_hostname;
 Data Log::_logFileName;
@@ -63,13 +63,13 @@ Log::initialize(const char* typed, const char* leveld, const char* appName, cons
 void
 Log::initialize(const Data& typed, const Data& leveld, const Data& appName, const char *logFileName)
 {
-   Type type = Log::COUT;
-   if (isEqualNoCase(typed, "cout")) type = Log::COUT;
-   else if (isEqualNoCase(typed, "cerr")) type = Log::CERR;
-   else if (isEqualNoCase(typed, "file")) type = Log::FILE;
-   else type = Log::SYSLOG;
+   Type type = Log::Cout;
+   if (isEqualNoCase(typed, "cout")) type = Log::Cout;
+   else if (isEqualNoCase(typed, "cerr")) type = Log::Cerr;
+   else if (isEqualNoCase(typed, "file")) type = Log::File;
+   else type = Log::Syslog;
    
-   Level level = Log::INFO;
+   Level level = Log::Info;
    level = toLevel(leveld);
 
    Log::initialize(type, level, appName, logFileName);
@@ -145,7 +145,7 @@ Log::toLevel(const Data& l)
    }
 
    cerr << "Choosing Debug level since string was not understood: " << l << endl;
-   return Log::DEBUG;
+   return Log::Debug;
 }
 
 Log::Type
@@ -153,19 +153,19 @@ Log::toType(const Data& arg)
 {
    if (arg == "cout" || arg == "COUT")
    {
-      return Log::COUT;
+      return Log::Cout;
    }
    else if (arg == "cerr" || arg == "CERR")
    {
-      return Log::CERR;
+      return Log::Cerr;
    }
    else if (arg == "file" || arg == "FILE")
    {
-      return Log::FILE;
+      return Log::File;
    }
    else
    {
-      return Log::SYSLOG;
+      return Log::Syslog;
    }
 }
 
@@ -258,15 +258,15 @@ Log::getServiceLevel(int service)
    Lock lock(_mutex);
 #ifdef WIN32
 	assert(0);
-	return BOGUS;
+	return Bogus;
 #else
    map<int, Level>::iterator res = Log::_serviceToLevel.find(service);
    if(res == Log::_serviceToLevel.end())
    {
       //!dcm! -- should perhaps throw an exception here, instead of setting a
       //default level of LOG_ERROR, but nobody uses this yet
-      Log::_serviceToLevel[service] = ERR;
-      return ERR;
+      Log::_serviceToLevel[service] = Err;
+      return Err;
    }
    return res->second;
 #endif

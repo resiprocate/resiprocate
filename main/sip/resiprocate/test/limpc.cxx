@@ -458,11 +458,11 @@ static int
 myMain(int argc, char* argv[])
 {  
 #ifdef ERR // ncurses defines a macro called ERR 
-   Log::initialize(Log::COUT, Log::SIP2_ERR, argv[0]);
+   Log::initialize(Log::Cout, Log::SIP2_ERR, argv[0]);
    Log::setLevel(Log::SIP2_ERR);
 #else
-   Log::initialize(Log::COUT, Log::ERR, argv[0]);
-   Log::setLevel(Log::ERR);
+   Log::initialize(Log::Cout, Log::Err, argv[0]);
+   Log::setLevel(Log::Err);
 #endif  
 
    InfoLog(<<"Test Driver for IM Starting");
@@ -500,11 +500,11 @@ myMain(int argc, char* argv[])
    {
       if (!strcmp(argv[i],"-vv"))
       {
-         Log::setLevel(Log::STACK);
+         Log::setLevel(Log::Stack);
       }
       else if (!strcmp(argv[i],"-v"))
       {
-         Log::setLevel(Log::INFO);
+         Log::setLevel(Log::Info);
       }
       else if (!strcmp(argv[i],"-encrypt"))
       {

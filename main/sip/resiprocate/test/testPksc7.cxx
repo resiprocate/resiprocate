@@ -12,7 +12,7 @@ using namespace std;
 int
 main(int argc, char** argv)
 {
-   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+   Log::initialize(Log::Cout, Log::Debug, argv[0]);
 
    {
       const Data txt("To: <sip:fluffy@h1.cisco1.sipit.net:5060>\r\n"

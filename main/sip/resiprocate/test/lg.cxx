@@ -26,7 +26,7 @@ void usage()
 int 
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, Log::INFO, argv[0]);
+   Log::initialize(Log::Cout, Log::Info, argv[0]);
  
    if (!(argc == 3 || argc == 6 || argc == 7))
    {
