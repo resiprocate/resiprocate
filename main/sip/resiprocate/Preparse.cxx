@@ -1,3 +1,7 @@
+
+
+
+
 #include <util/Socket.hxx>
 #include <iostream> // debug only !ah!
 #include <util/Data.hxx>
@@ -21,14 +25,15 @@ using namespace Vocal2::PreparseState;
 
 Edge *** mTransitionTable = 0;
 
-#define PP_DEBUG
-#define SUPER_DEBUG
-#define DEBUG_HELPERS
+// #define PP_DEBUG
+// #define SUPER_DEBUG
+// #define DEBUG_HELPERS
 
 #if !defined(NDEBUG) && defined(PP_DEBUG)
 #if !defined(DEBUG_HELPERS)
 #define DEBUG_HELPERS
 #endif
+
 
 Data
 showN(const char * p, size_t l)
@@ -111,7 +116,9 @@ AE ( PreparseState::State start,
      PreparseState::State next,
      int workMask)
 {
-    // change back to <0 iff it will work !ah!
+   // for loops below and this code implements the
+   // X -- don't care notation for the AE(...) calls.
+
     int stateStart = (start==X) ? 0 : start;
     int stateEnd = (start==X) ? nStates : start+1;
 
@@ -401,9 +408,7 @@ Preparse::process(SipMessage& msg,
                           anchorEnd - anchorBeg + 1
                 );
 #if defined(PP_DEBUG)
-            DebugLog(<<"DATA "
-                     << Headers::HeaderNames[headerType]
-                     << ": \'"
+            DebugLog(<<"DATA : \'"
                      << showN(anchorBeg, anchorEnd - anchorBeg + 1)
                      << "\'");
 #endif
@@ -469,10 +474,12 @@ Preparse::process(SipMessage& msg,
     
     assert(used > 0);
 
+#if defined(PP_DEBUG)
     DebugLog(<<"nBytes examined " << traversalPtr - buffer  );
     DebugLog(<< "used:" << used );
     DebugLog(<< "state: " << stateName(mState));
     DebugLog(<< "status: " << statusName(status));
+#endif
     
     return ;
 
