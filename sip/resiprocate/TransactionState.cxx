@@ -786,7 +786,7 @@ bool
 TransactionState::isResponse(Message* msg, int lower, int upper) const
 {
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-   if (sip)
+   if (sip && sip->isResponse())
    {
       int c = sip->header(h_StatusLine).responseCode();
       return (c >= lower && c <= upper);
@@ -861,8 +861,9 @@ TransactionState::make100(SipMessage* request) const
 std::ostream& 
 Vocal2::operator<<(std::ostream& strm, const Vocal2::TransactionState& state)
 {
-   strm << "Tstate[ mMach=" << state.mMachine <<  " mState=" 
-        << state.mState << " mIsRel=" << state.mIsReliable;
+   strm << "Tstate[ mMach=" << state.mMachine 
+        <<  " mState="  << state.mState 
+        << " mIsRel=" << state.mIsReliable;
    return strm;
 }
 
