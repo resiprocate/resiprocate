@@ -60,6 +60,11 @@ class Symbols
       static const int DefaultSipPort;
       static const int SipTlsPort;
       static const int DefaultSipsPort;
+
+      static const Data SrvSip;
+      static const Data SrvSips;
+      static const Data SrvUdp;
+      static const Data SrvTcp;
 };
 
 }
