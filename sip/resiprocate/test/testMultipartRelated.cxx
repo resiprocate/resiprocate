@@ -108,7 +108,7 @@ main()
                      "--50UBfW7LSCVLtggUPe5z\r\n"
                      "Content-Transfer-Encoding: binary\r\n"
                      "Content-ID: <bUZBsM@pres.example.com>\r\n"
-                     "Content-Type: application/cpim-pidf+xml;charset=\"UTF-8\"\r\n"
+                     "Content-Type: application/pidf+xml;charset=\"UTF-8\"\r\n"
                      "\r\n"
                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
                      "<presence xmlns=\"urn:ietf:params:xml:ns:cpim-pidf\"\r\n"
