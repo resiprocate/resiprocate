@@ -252,7 +252,7 @@ Auth::parseAuthParameters(ParseBuffer& pb)
          mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n,"));
       }
       pb.skipWhitespace();
-      if (!pb.eof() && *pb.position() != Symbols::COMMA[0])
+      if (pb.eof() || *pb.position() != Symbols::COMMA[0])
       {
 	 break;
       }
