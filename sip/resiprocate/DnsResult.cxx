@@ -213,9 +213,6 @@ DnsResult::getDefaultPort(TransportType transport, int port)
    {
       return port;
    }
-
-	assert(0);
-	return 0;
 }
 
 
