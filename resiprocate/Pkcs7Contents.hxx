@@ -24,7 +24,6 @@ class Pkcs7Contents : public Contents
 
       virtual Data getBodyData() const;
 
-      //virtual 
       static const Mime& getStaticType() ;
 
       virtual std::ostream& encodeParsed(std::ostream& str) const;
@@ -37,7 +36,6 @@ class Pkcs7Contents : public Contents
    private:
       Data mText;
 };
-
 
 class Pkcs7SignedContents : public Pkcs7Contents
 {
@@ -54,7 +52,6 @@ class Pkcs7SignedContents : public Pkcs7Contents
 
       Pkcs7SignedContents& operator=(const Pkcs7SignedContents& rhs);
 
-      //virtual 
       static const Mime& getStaticType() ;
       virtual Contents* clone() const;
 
