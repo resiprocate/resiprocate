@@ -20,29 +20,6 @@ using namespace std;
 int HttpConnection::nextPageNumber=1;
 
 
-#if 0
-int
-main(int argc, char* argv[])
-{
-   Log::initialize(Log::Cerr, Log::Err, argv[0]);
-   Log::setLevel(Log::Debug);
-
-   WebAdmin web( 5080 );
-   
-   while (1)
-   {
-      FdSet fdset; 
-     
-      web.buildFdSet(fdset);
-      fdset.selectMilliSeconds( 10*1000 );
-
-      web.process(fdset);
-   }
-   
-}
-#endif
-
-
 HttpBase::~HttpBase()
 {
    close(mFd); mFd=0;
@@ -54,7 +31,6 @@ HttpBase::~HttpBase()
       }
    }
 }
-
 
 
 HttpBase::HttpBase( int port, IpVersion ipVer):
@@ -249,7 +225,8 @@ HttpConnection::process(FdSet& fdset)
       int errNum = 0;
       int errNumSize = sizeof(errNum);
       getsockopt(mSock,SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
-      InfoLog (<< "Exception reading from socket " << mSock << " code: " << errNum << "; closing connection");
+      InfoLog (<< "Exception reading from socket " 
+               << mSock << " code: " << errNum << "; closing connection");
       return false;
    }
    
@@ -381,7 +358,8 @@ HttpConnection::tryParse()
    pb.data( uri, start );
  
    DebugLog (<< "parse found URI " << uri );
-  
+   mParsedRequest = true;
+      
    mHttpBase.buildPage(uri,mPageNumber);
 }
 
@@ -406,6 +384,7 @@ HttpConnection::processSomeWrites()
    {
       int e = getErrno();
       InfoLog (<< "HttpConnection failed write on " << mSock << " " << strerror(e));
+
       return false;
    }
    
@@ -413,6 +392,8 @@ HttpConnection::processSomeWrites()
    {
       DebugLog (<< "Wrote it all" );
       mTxBuffer = Data::Empty;
+
+      return false; // return false causes connection to close and clean up
    }
    else
    {
@@ -425,8 +406,9 @@ HttpConnection::processSomeWrites()
 }
 
 
-WebAdmin::WebAdmin( int port, IpVersion version):
-   HttpBase( port, version )
+WebAdmin::WebAdmin(  UserAbstractDb& db, int port, IpVersion version):
+   HttpBase( port, version ),
+   mDb(db)
 {
 }
 
@@ -550,7 +532,7 @@ WebAdmin::buildUserPage()
 "										</tr>"
 "									</table>"
 "									<input type=\"reset\" value=\"Reset\"/>"
-"								<input type=\"submit\" name=\"submit\" value=\"OK\"/>"
+"								<input type=\"submit\" name=\"submit\" value=\"Add\"/>"
 "								</form>"
 "								</td>"
 "						</tr>"

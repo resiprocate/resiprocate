@@ -1,92 +1,33 @@
-#if !defined(RESIP_WEBADMIN_HXX)
-#define RESIP_WEBADMIN_HXX 
+#ifndef REPRO_WebAdminThread__hxx
+#define REPRO_WebAdminThread__hxx
 
-#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/os/Socket.hxx"
-#include "resiprocate/os/TransportType.hxx"
-#include "resiprocate/os/Tuple.hxx"
-#include "repro/UserDb.hxx"
 
 namespace repro
 {
-class HttpConnection;
 
-class HttpBase
+class WebAdmin;
+
+class WebAdminThread : public resip::ThreadIf
 {
-      friend class HttpConnection;
-      
    public:
-      HttpBase( int port, resip::IpVersion version);
-      virtual ~HttpBase();
-      
-      void buildFdSet(resip::FdSet& fdset);
-      void process(resip::FdSet& fdset);
+      WebAdminThread(WebAdmin& web);
+
+      virtual void thread();
 
    protected:
-      virtual void buildPage( const resip::Data& uri, int pageNumber )=0;
-      void setPage( const resip::Data& page, int pageNumber );
-      
-   private:
-      static const int MaxConnections = 10;
-      
-      resip::Socket mFd;
-      int nextConnection;
-      resip::Tuple mTuple;
-
-      HttpConnection* mConnection[MaxConnections];
-};
-
-
-class HttpConnection
-{
-      friend class HttpBase;
-      
-   public:
-      HttpConnection( HttpBase& webAdmin, resip::Socket pSock );
-      ~HttpConnection();
-      
-      void buildFdSet(resip::FdSet& fdset);
-      bool process(resip::FdSet& fdset);
-
-      void setPage(const resip::Data& page);
+      //  virtual void buildFdSet(FdSet& fdset);
+      //  virtual unsigned int getTimeTillNextProcessMS() const;
 
    private:
-      bool processSomeReads();
-      bool processSomeWrites();
-      void tryParse();
-            
-      HttpBase& mHttpBase;
-      const int mPageNumber;
-      static int nextPageNumber;
-            
-      resip::Socket mSock;
-      resip::Data mRxBuffer;
-      resip::Data mTxBuffer;
-      bool mParsedRequest;
+      WebAdmin& mWeb;
 };
-
-
-class WebAdmin: public HttpBase
-{
-   public:
-      WebAdmin( UserAbstractDb& db,
-                int port=5080, 
-                resip::IpVersion version=resip::V4);
-      
-   protected:
-      virtual void buildPage( const resip::Data& uri, int pageNumber );
-
-   private: 
-      resip::Data buildUserPage();
-
-      UserAbstractDb& mDb;
-};
-
-
 
 }
 
-#endif  
+#endif
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
