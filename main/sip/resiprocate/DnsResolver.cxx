@@ -371,6 +371,9 @@ DnsResolver::aresCallbackHost(void *arg, int status, struct hostent* result)
       char* errmem=0;
       InfoLog (<< "Failed async dns query: " << ares_strerror(status, &errmem));
       ares_free_errmem(errmem);
+
+      // !rk! don't know if this is right but better send back an empty tuple
+      dns->isFinal = true;
    }
    else
    {
@@ -727,7 +730,7 @@ DnsResolver::DnsMessage::brief() const
 { 
    Data result;
    DataStream strm(result);
-   strm << "DnsMessage: tid=" << mTransactionId;
+   strm << "DnsMessage: " << mTransactionId << " ntuples=" << mTuples.size();
    // could output the tuples
    strm.flush();
    return result;
