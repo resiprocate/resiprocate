@@ -693,6 +693,17 @@ main(int arc, char** argv)
       assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bKjason");
       assert(via.param(p_branch).transactionId() == "jason");
    }
+
+   {
+      char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv);
+      
+      assert (via.param(p_branch).hasMagicCookie());
+      assert (via.param(p_branch).transactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
+      assert (via.param(p_branch).clientData().empty());
+      assert (via.param(p_ttl) == 70);
+   }
    
 
    {
