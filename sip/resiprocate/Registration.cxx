@@ -102,6 +102,7 @@ Registration::unregister()
    }
    mRegister->header(h_CSeq).sequence()++;
    mRegister->header(h_Contacts).front().param(p_expires) = 0;
+   mRegister->remove(h_Expires);
    mState = Terminating;
 
    //InfoLog (<< "Unregister: " << *mRegister);
