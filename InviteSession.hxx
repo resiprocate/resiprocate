@@ -23,6 +23,10 @@ class InviteSession : public BaseUsage
       /// sends and offer. Does not send an answer
       virtual void setAnswer(const SdpContents* answer);
 
+      /// Completes the three way handshake.  In some circumstances(not re-invite), setAnswer
+      /// must have been called or else this will throw(3261 13.2.1)
+      virtual SipMessage& ackConnection();
+
       /// Makes the dialog end. Depending on the current state, this might
       /// results in BYE or CANCEL being sent.
       virtual SipMessage& end();
@@ -109,6 +113,7 @@ class InviteSession : public BaseUsage
       ~InviteSession();
 
    private:
+      friend class Dialog;      
       friend class DialogUsageManager;
       
       // disabled

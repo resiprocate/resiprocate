@@ -48,6 +48,11 @@ DialogUsageManager::~DialogUsageManager()
    // !jf! iterate through dialogsets and dispose, this will cause them to be
    // removed from HandleManager on destruction
    // !dcm! -- figure out what this means when coherent
+
+   while(!mDialogSetMap.empty())
+   {
+      delete mDialogSetMap.begin()->second;
+   }
    if (mDumShutdownHandler)
    {
       mDumShutdownHandler->dumDestroyed();
