@@ -923,6 +923,7 @@ TransactionState::processServerInvite(  Message* msg )
                   terminateServerTransaction(mId);
                   mMachine = ServerStale;
                   mController.mTimers.add(Timer::TimerStaleServer, mId, Timer::TS );
+		  delete msg;
                }
                else
                {

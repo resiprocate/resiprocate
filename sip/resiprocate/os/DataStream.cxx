@@ -64,10 +64,10 @@ DataBuffer::overflow(int c)
 }
 
 iDataStream::iDataStream(Data& str)
-   : std::istream(0),
+   : std::istream(&mStreambuf),
      mStreambuf(str)
 {
-   init(&mStreambuf);
+//   init(&mStreambuf);
 }
 
 iDataStream::~iDataStream()
@@ -75,10 +75,10 @@ iDataStream::~iDataStream()
 }
 
 oDataStream::oDataStream(Data& str)
-   : std::ostream(0),
+   : std::ostream(&mStreambuf),
      mStreambuf(str)
 {
-   init(&mStreambuf);
+//   init(&mStreambuf);
 }
 
 oDataStream::~oDataStream()
@@ -87,10 +87,10 @@ oDataStream::~oDataStream()
 }
 
 DataStream::DataStream(Data& str)
-   : std::iostream(0),
+   : std::iostream(&mStreambuf),
      mStreambuf(str)
 {
-   init(&mStreambuf);
+//   init(&mStreambuf);
 }
 
 DataStream::~DataStream()
