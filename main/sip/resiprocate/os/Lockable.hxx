@@ -1,6 +1,31 @@
 #if !defined(VOCAL_LOCKABLE_HXX)
 #define VOCAL_LOCKABLE_HXX
 
+
+static const char* const Lockable_hxx_Version =
+    "$Id: Lockable.hxx,v 1.2 2002/10/15 15:46:24 alan Exp $";
+
+/** Infrastructure common to VOCAL.<br><br>
+ */
+namespace Vocal2
+{
+
+class Lockable
+{
+   protected:
+      Lockable() {};
+	
+   public:
+      virtual ~Lockable() {};
+      virtual void	lock() = 0;
+      virtual void	unlock() = 0;
+      virtual void	readlock() { lock(); }
+      virtual void	writelock() { lock() ; }
+};
+
+} // namespace Vocal2
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -50,30 +75,5 @@
  * <http://www.vovida.org/>.
  *
  */
-
-
-static const char* const Lockable_hxx_Version =
-    "$Id: Lockable.hxx,v 1.1 2002/09/25 22:24:41 jason Exp $";
-
-/** Infrastructure common to VOCAL.<br><br>
- */
-namespace Vocal2
-{
-
-class Lockable
-{
-   protected:
-      Lockable() {};
-	
-   public:
-      virtual ~Lockable() {};
-      virtual void	lock() = 0;
-      virtual void	unlock() = 0;
-      virtual void	readlock() { lock(); }
-      virtual void	writelock() { lock() ; }
-};
-
-} // namespace Vocal2
-
 
 #endif // !defined(VOCAL__LOCKABLE_HXX)
