@@ -150,7 +150,8 @@ class Dialog
       CallId mCallId;
       Data mLocalTag;
       Data mRemoteTag;
-
+      CallId mDialogId;
+      
       NameAddr mRemoteUri;
       NameAddr mLocalUri;
 
