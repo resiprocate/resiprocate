@@ -6,6 +6,7 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/vmd5.hxx"
+#include "resiprocate/os/Coders.hxx"
 
 
 using namespace resip;
@@ -1289,6 +1290,9 @@ size_t std::hash_value(const resip::Data& data)
 Data 
 Data::base64decode() const
 {
+#if 0
+   return Base64Coder::decode( *this );
+#else
    static char base64Lookup[128] = 
    {
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 
@@ -1363,6 +1367,14 @@ Data::base64decode() const
    }
 
    return bin;
+#endif
+}
+
+
+Data 
+Data::base64encode() const
+{
+   return Base64Coder::encode( *this );
 }
 
 
