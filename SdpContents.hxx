@@ -1,5 +1,5 @@
 #if !defined(RESIP_SDPCONTENTS_HXX)
-#define RESIP_SDPCONTENTS_HXX 
+#define RESIP_SDPCONTENTS_HXX
 
 #include <vector>
 #include <list>
@@ -23,7 +23,7 @@ class AttributeHelper
       AttributeHelper();
       AttributeHelper(const AttributeHelper& rhs);
       AttributeHelper& operator=(const AttributeHelper& rhs);
-      
+
       bool exists(const Data& key) const;
       const std::vector<Data>& getValues(const Data& key) const;
       std::ostream& encode(std::ostream& s) const;
@@ -40,10 +40,10 @@ class SdpContents : public Contents
       RESIP_HeapCount(SdpContents);
       typedef enum {IP4=1, IP6} AddrType;
       static const SdpContents Empty;
-      
+
       class Session;
 
-      class Session 
+      class Session
       {
          public:
             class Medium;
@@ -57,8 +57,8 @@ class SdpContents : public Contents
                   Codec(const Codec& rhs);
                   Codec& operator=(const Codec& codec);
 
-                  void parse(ParseBuffer& pb, 
-                             const SdpContents::Session::Medium& medium, 
+                  void parse(ParseBuffer& pb,
+                             const SdpContents::Session::Medium& medium,
                              int payLoadType);
 
                   const Data& getName() const;
@@ -81,6 +81,13 @@ class SdpContents : public Contents
                   // Maps payload type (number) to Codec definition.
                   static CodecMap& getStaticCodecs();
 
+                  friend bool operator==(const Codec&, const Codec&);
+
+                  bool operator==(const Codec& rhs)
+                  {
+                     return (mName == rhs.mName && mRate == rhs.mRate);
+                  }
+
                private:
                   Data mName;
                   unsigned long mRate;
@@ -89,7 +96,6 @@ class SdpContents : public Contents
 
                   static CodecMap sStaticCodecs;
                   static bool sStaticCodecsCreated;
-                  friend bool operator==(const Codec&, const Codec&);
                   friend std::ostream& operator<<(std::ostream&, const Codec&);
             };
 
@@ -185,7 +191,7 @@ class SdpContents : public Contents
                              unsigned long ttl = 0);
                   Connection(const Connection& rhs);
                   Connection& operator=(const Connection& rhs);
-                  
+
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
@@ -213,7 +219,7 @@ class SdpContents : public Contents
                             unsigned long kbPerSecond);
                   Bandwidth(const Bandwidth& rhs);
                   Bandwidth& operator=(const Bandwidth& rhs);
-                  
+
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
@@ -238,7 +244,7 @@ class SdpContents : public Contents
                        unsigned long stop);
                   Time(const Time& rhs);
                   Time& operator=(const Time& rhs);
-                  
+
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
@@ -254,7 +260,7 @@ class SdpContents : public Contents
                         unsigned long getInterval() const {return mInterval;}
                         unsigned long getDuration() const {return mDuration;}
                         const std::vector<int> getOffsets() const {return mOffsets;}
-                        
+
                      private:
                         Repeat() {}
                         unsigned long mInterval;
@@ -289,7 +295,7 @@ class SdpContents : public Contents
                                    int offset);
                         Adjustment(const Adjustment& rhs);
                         Adjustment& operator=(const Adjustment& rhs);
-                        
+
                         unsigned long time;
                         int offset;
                   };
@@ -297,7 +303,7 @@ class SdpContents : public Contents
                   Timezones();
                   Timezones(const Timezones& rhs);
                   Timezones& operator=(const Timezones& rhs);
-                  
+
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
@@ -315,8 +321,8 @@ class SdpContents : public Contents
                              const Data& key);
                   Encryption(const Encryption& rhs);
                   Encryption& operator=(const Encryption& rhs);
-                  
-                  
+
+
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
 
@@ -343,10 +349,10 @@ class SdpContents : public Contents
                          unsigned long multicast,
                          const Data& protocol);
                   Medium& operator=(const Medium& rhs);
-                  
+
                   void parse(ParseBuffer& pb);
                   std::ostream& encode(std::ostream&) const;
-                  
+
                   void addFormat(const Data& format);
                   void setConnection(const Connection& connection);
                   void addConnection(const Connection& connection);
@@ -443,21 +449,22 @@ class SdpContents : public Contents
             const Timezones& getTimezones() const {return mTimezones;}
             const Encryption& getEncryption() const {return mEncryption;}
             const Encryption& encryption() const {return mEncryption;}
-           Encryption& encryption() {return mEncryption;}
+            Encryption& encryption() {return mEncryption;}
             const std::vector<Medium>& media() const {return mMedia;}
             std::vector<Medium>& media() {return mMedia;}
-            
+
             void addEmail(const Email& email);
             void addPhone(const Phone& phone);
             void addBandwidth(const Bandwidth& bandwidth);
             void addTime(const Time& t);
             void addMedium(const Medium& medium);
+            void clearMedium() {  mMedia.clear(); }
             void clearAttribute(const Data& key);
             void addAttribute(const Data& key, const Data& value = Data::Empty);
             bool exists(const Data& key) const;
             const std::vector<Data>& getValues(const Data& key) const;
 
-         private:            
+         private:
             int mVersion;
             Origin mOrigin;
             Data mName;
@@ -465,7 +472,7 @@ class SdpContents : public Contents
 
             // applies to all Media where unspecified
             Data mInformation;
-            Uri mUri;            
+            Uri mUri;
             std::vector<Email> mEmails;
             std::vector<Phone> mPhones;
             Connection mConnection;
@@ -481,7 +488,7 @@ class SdpContents : public Contents
       SdpContents();
       SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes);
       ~SdpContents();
-      
+
       SdpContents(const SdpContents& rhs);
       SdpContents& operator=(const SdpContents& rhs);
 
@@ -505,7 +512,7 @@ static bool invokeSdpContentsInit = SdpContents::init();
 
 typedef SdpContents::Session::Codec Codec;
 
-bool operator==(const SdpContents::Session::Codec& lhs, 
+bool operator==(const SdpContents::Session::Codec& lhs,
                 const SdpContents::Session::Codec& rhs);
 
 std::ostream& operator<<(std::ostream& str, const SdpContents::Session::Codec& codec);
@@ -515,22 +522,22 @@ std::ostream& operator<<(std::ostream& str, const SdpContents::Session::Codec& c
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this std::vector of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this std::vector of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -540,7 +547,7 @@ std::ostream& operator<<(std::ostream& str, const SdpContents::Session::Codec& c
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -554,9 +561,9 @@ std::ostream& operator<<(std::ostream& str, const SdpContents::Session::Codec& c
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
