@@ -61,6 +61,12 @@ TimerQueue::add(Timer::Type type, const Data& transactionId, unsigned long msOff
    return t.getId();
 }
 
+int
+TimerQueue::size() const
+{
+   return mTimers.size();
+}
+
 void
 TimerQueue::process()
 {
