@@ -343,17 +343,21 @@ TransportSelector::findTransport(const Transport::Type type) const
 Transport*
 TransportSelector::findTlsTransport(const Data& domainname) 
 {
+   DebugLog (<< "Searching for TLS transport for domain='" << domainname << "'");
    // If no domainname specified and there is only 1 TLS transport, use it. 
    if (domainname == Data::Empty && mTlsTransports.size() == 1)
    {
+      DebugLog (<< "Found default TLS transport for domain=" << mTlsTransports.begin()->first);
       return mTlsTransports.begin()->second;
    }
    else if (mTlsTransports.count(domainname))
    {
+      DebugLog (<< "Found TLS transport for domain=" << mTlsTransports.begin()->first);
       return mTlsTransports[domainname];
    }
    else  // don't know which one to use
    {
+      DebugLog (<< "No TLS transport found");
       return 0;
    }
 }
