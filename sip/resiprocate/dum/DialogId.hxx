@@ -20,6 +20,10 @@ class DialogId
 
       const DialogSetId& getDialogSetId() const;
 
+      const Data& getCallId() const { return getDialogSetId().getCallId(); }
+      const Data& getLocalTag() const { return getDialogSetId().getLocalTag(); }
+      const Data& getRemoteTag() const { return mRemoteTag; }
+
       size_t hash() const;
 
 #if defined(HASH_MAP_NAMESPACE)
