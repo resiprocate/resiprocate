@@ -252,22 +252,23 @@ main(int argc, char* argv[])
    }
 #endif
    
-    Vocal2::Transport::Type transport = Transport::UDP;
+   Vocal2::Transport::Type transport = Transport::UDP;
 
-   sipStack.addTransport(Transport::UDP, port);
-   sipStack.addTransport(Transport::TCP, port);
+   sipStack.addTransport(Transport::UDP, port); InfoLog("UDP on port " << port );
+   sipStack.addTransport(Transport::TCP, port); InfoLog("TCP on port " << port );
+
 #if USE_SSL
    if ( port == 5060 )
    {
        if ( tlsPort == 0 )
        {
            tlsPort = 5061;
-           
        }
    }
    if ( tlsPort != 0 )
    {
-       sipStack.addTransport(Transport::TLS, tlsPort);
+      InfoLog("TLS on port " << tlsPort );
+      sipStack.addTransport(Transport::TLS, tlsPort);
    }
 #endif
 
