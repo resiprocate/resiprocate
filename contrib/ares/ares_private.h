@@ -54,7 +54,6 @@ struct server_state {
   // define address and family contructs for IPv6
   u_int8_t family;
   struct in6_addr addr6;
-  
 #endif
   struct in_addr addr;
   int udp_socket;
