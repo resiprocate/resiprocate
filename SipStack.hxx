@@ -15,6 +15,7 @@
 #include "sip2/sipstack/DnsResolver.hxx"
 #include "sip2/sipstack/SdpContents.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/TransactionTerminated.hxx"
 #include "sip2/sipstack/SipFrag.hxx"
 #include "sip2/sipstack/Helper.hxx"
 
@@ -62,10 +63,10 @@ class SipStack
       // is not threadsafe
       static Data getHostAddress();
 
-      /// interface for the TU to send a message. makes a copy of the
-      /// SipMessage. Caller is responsible for deleting the memory and may do
-      /// so as soon as it returns. Loose Routing processing as per RFC3261 must
-      /// be done before calling send by the TU. See Helper::processStrictRoute
+      // interface for the TU to send a message. makes a copy of the
+      // SipMessage. Caller is responsible for deleting the memory and may do
+      // so as soon as it returns. Loose Routing processing as per RFC3261 must
+      // be done before calling send by the TU. See Helper::processStrictRoute
       void send(const SipMessage& msg);
 
       // this is only if you want to send to a destination not in the route. You
@@ -74,6 +75,9 @@ class SipStack
 
       // caller now owns the memory. returns 0 if nothing there
       SipMessage* receive(); 
+
+      // May return TransactionTerminated* or SipMessage*
+      Message* receiveAny(); 
       
       // build the FD set to use in a select to find out when process bust be
       // called again. This must be called prior to calling process. 
@@ -86,6 +90,9 @@ class SipStack
       /// returns time in milliseconds when process next needs to be called 
       int getTimeTillNextProcessMS(); 
 
+      // Inform the TU that whenever a transaction has been terminated. 
+      void registerForTransactionTermination();
+      
 #ifdef USE_SSL
       /// if this object exists, it manages advanced security featues
       Security* security;
@@ -128,6 +135,8 @@ private:
       // store all domains that this stack is responsible for. Controlled by
       // addAlias and addTransport interfaces and checks can be made with isMyDomain()
       std::set<Data> mDomains;
+
+      bool mRegisteredForTransactionTermination;
 
       friend class DnsResolver;
       friend class Executive;

@@ -45,9 +45,18 @@ class SipMessage : public Message
       
       SipMessage(const SipMessage& message);
 
+      // returns the transaction id from the branch or if 2543, the computed hash
       virtual const Data& getTransactionId() const;
+
+      // returns the server transaction id (not including client sequence) or if
+      // 2543, the computed hash 
+      virtual const Data& getServerTransactionId() const;
+
+      // extract the server transaction id from the client transaction id
+      static Data& serverIdFromClientTransactionId(Data& serverTransIdOut, const Data& clientTransId);
+
+      // copies the 2543 tid from request into this
       void copyRFC2543TransactionId(const SipMessage& request);
-      const Data& updateRFC2543TransactionId();
       
       virtual ~SipMessage();
 
@@ -208,9 +217,10 @@ class SipMessage : public Message
       void clearTarget();
       const Uri& getTarget() const;
       bool hasTarget() const;
-
       
    private:
+      void compute2543TransactionHash() const;
+      
       void copyFrom(const SipMessage& message);
       HeaderFieldValueList* ensureHeaders(Headers::Type type, bool single) const;
 
@@ -236,7 +246,7 @@ class SipMessage : public Message
       UInt64 mCreatedTime;
 
       Uri* mTarget;
-
+      
       friend class TransportSelector;
 };
 
