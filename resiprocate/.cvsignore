@@ -1,9 +1,15 @@
 
 *.d
+ExpandedSipMessage
+MarshalOpInvite.cxx
+MassagedSipMessage
 a.out
+backup
 bin.*
 headers-hash.c
 html
 obj.*
+parameters.cxx
 testSipStack1
 testUdp
+tmp

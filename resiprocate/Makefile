@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.53 2002/10/04 05:35:27 fluffy Exp $
+# $Id: Makefile,v 1.54 2002/10/05 02:22:46 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -13,7 +13,7 @@ SRC =	\
 	FloatParameter.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
-	HeaderTypes.cxx \
+	Headers.cxx \
 	Helper.cxx \
 	IntegerParameter.cxx \
 	Message.cxx \
@@ -46,9 +46,9 @@ OSRC =   *.hxx Makefile
 #CXXFLAGS += -Weffc++
 # optimize does not work with gcc 2.8 compiler
 #CXXFLAGS += -O5 -DNDEBUG
-CXXFLAGS += -O -g
+#CXXFLAGS += -O -g
 #CXXFLAGS += -O2 -DNDEBUG -DNO_DEBUG
-#CXXFLAGS += -g
+CXXFLAGS += -g
 LDFLAGS  += -L$(LIB)
 CXXFLAGS += -I. -I../. -MD -Wall $(CXXDEBUG)
 LDLIBS   += -lutil2 -lpthread

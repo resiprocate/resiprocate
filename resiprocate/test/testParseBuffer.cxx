@@ -53,5 +53,24 @@ main(int arc, char** argv)
       pb.skipChar();
       assert(*pb.position() == 'Z');
    }
+   
+   {
+      char *buf = "17 ";
+      Vocal2::ParseBuffer pb(buf, strlen(buf));   
+      assert(pb.integer() == 17);
+   }
+   
+   {
+      char *buf = "17";
+      Vocal2::ParseBuffer pb(buf, strlen(buf));   
+      assert(pb.integer() == 17);
+   }
+
+   {
+      char *buf = "17.71";
+      Vocal2::ParseBuffer pb(buf, strlen(buf));   
+      float val = pb.floatVal();
+      assert(val > 17.70 && val < 17.72);
+   }
 }
 
