@@ -95,7 +95,6 @@ typedef ParserContainer<Token> Tokens;
 
 defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ????");
 defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ????");
-defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ????");
 defineHeader(MIMEVersion, "Mime-Version", Token, "RFC ????");
 defineHeader(Priority, "Priority", Token, "RFC ????");
 defineHeader(Event, "Event", Token, "RFC 3265");
@@ -149,10 +148,11 @@ defineHeader(ReferTo, "Refer-To", NameAddr, "RFC ????");
 defineHeader(ReferredBy, "Referred-By", NameAddr, "RFC ????");
 
 //====================
-// String:
+// StringCategory:
 //====================
 typedef ParserContainer<StringCategory> StringCategories;
 
+defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ????");
 defineHeader(Organization, "Organization", StringCategory, "RFC ????");
 defineHeader(Server, "Server", StringCategory, "RFC ????");
 defineHeader(Subject, "Subject", StringCategory, "RFC ????");
@@ -160,7 +160,7 @@ defineHeader(UserAgent, "User-Agent", StringCategory, "RFC ????");
 defineHeader(Timestamp, "Timestamp", StringCategory, "RFC ????");
 
 //====================
-// Integer:
+// IntegerCategory:
 //====================
 typedef ParserContainer<IntegerCategory> IntegerCategories;
 
@@ -203,7 +203,7 @@ defineHeader(Date, "Date", DateCategory, "RFC ????");
 //====================
 // WarningCategory:
 //====================
-defineHeader(Warning, "Warning", WarningCategory, "RFC ????");
+defineMultiHeader(Warning, "Warning", WarningCategory, "RFC ????");
 
 //====================
 // Via
