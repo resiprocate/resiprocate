@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.42 2002/12/01 05:06:17 fluffy Exp $";
+// "$Id: Data.cxx,v 1.43 2002/12/02 23:41:18 derekm Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -639,16 +639,15 @@ Data::md5() const
    return ret;
 }
 
+static char map[] = "0123456789ABCDEF";
 
 Data 
 Data::escaped() const
 { 
-   Data ret( 2*size(), true );  
-
-   static char map[] = "0123456789ABCDEF";
+   Data ret(size(), true );  
 
    const char* p = data();
-   for (unsigned int i=0; i < size(); i++)
+   for (size_type i=0; i < size(); i++)
    {
       unsigned char c = *p++;
 
@@ -658,14 +657,14 @@ Data::escaped() const
          case 0x0A: // LF
          case 0x0d: // CR
          {
-             ret += Data( &c , 1 );
-             continue;
+            ret += c;
+            continue;
          }
       }
       
       if ( iscntrl(c) || (c>=0x7F) )
       {
-         ret += Data("%");  
+         ret +='%';
          
          int hi = (c & 0xF0)>>4;
          int low = (c & 0x0F);
@@ -675,35 +674,31 @@ Data::escaped() const
          continue;
       }
 
-      ret += Data( &c , 1 );
+      ret += c;
    }
 
    return ret;
 }
 
-
 Data
 Data::hex() const
 {
-    Data ret( 2*size(), true );
+   Data ret( 2*size(), true );
 
-    static char map[] = "0123456789ABCDEF";
-    
    char* p = mBuf;
    for (size_type i=0; i < mSize; i++)
    {
-	   unsigned char temp = *p++;
+      unsigned char temp = *p++;
 	   
-	   int hi = (temp & 0xf0)>>4;
-	   int low = (temp & 0xf);
-	   
-	   ret += map[hi];
-	   ret += map[low];
-    }
-
-    return ret;
+      int hi = (temp & 0xf0)>>4;
+      int low = (temp & 0xf);
+      
+      ret += map[hi];
+      ret += map[low];
+   }
+   
+   return ret;
 }
-
 
 Data&
 Data::lowercase()
