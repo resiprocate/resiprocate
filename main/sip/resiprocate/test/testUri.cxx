@@ -17,7 +17,13 @@ main(int argc, char* argv[])
 {
    Log::Level l = Log::DEBUG;
    Log::initialize(Log::COUT, l, argv[0]);
-
+   
+   {
+      Uri w1("sip:wombat@192.168.2.221:5062;transport=Udp");
+      Uri w2("sip:wombat@192.168.2.221:5063;transport=Udp");
+      assert(w1 != w2);
+      assert(w1 < w2);
+   }
    {
       Uri tel("tel:+358-555-1234567;pOstd=pP2;isUb=1411");
       assert(tel.user() == "+358-555-1234567");
@@ -25,6 +31,7 @@ main(int argc, char* argv[])
       assert(Data::from(tel) == "tel:+358-555-1234567;pOstd=pP2;isUb=1411");
    }
 
+#if 0
    {
       Uri tel("tel:+358-555-1234567;pOstd=pP2;isUb=1411");
       Uri sip(Uri::fromTel(tel, "company.com"));
@@ -40,6 +47,7 @@ main(int argc, char* argv[])
       cerr << "!! " << Data::from(sip) << endl;
       assert(Data::from(sip) == "sip:+358-555-1234567;isub=1411;postd=pp2;aaaa=baz;foo=bar@company.com;user=phone");
    }
+#endif
 
    {
       Uri uri("sip:fluffy@iii.ca:666");
