@@ -25,7 +25,7 @@ using namespace std;
 
 DnsResolver::DnsResolver(SipStack& stack) : mStack(stack)
 {
-#if defined(__linux__)
+#if defined(USE_ARES)
    int status=0;
    if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
    {
@@ -40,7 +40,7 @@ DnsResolver::DnsResolver(SipStack& stack) : mStack(stack)
 
 DnsResolver::~DnsResolver()
 {
-#if defined(__linux__)
+#if defined(USE_ARES)
    ares_destroy(mChannel);
 #endif
 }
@@ -48,7 +48,7 @@ DnsResolver::~DnsResolver()
 void
 DnsResolver::buildFdSet(FdSet& fdset)
 {
-#if defined(__linux__)
+#if defined(USE_ARES)
    fdset.size = ares_fds(mChannel, &fdset.read, &fdset.write);
 #endif
 }
@@ -56,7 +56,7 @@ DnsResolver::buildFdSet(FdSet& fdset)
 void
 DnsResolver::process(FdSet& fdset)
 {
-#if defined(__linux__)
+#if defined(USE_ARES)
    ares_process(mChannel, &fdset.read, &fdset.write);
 #endif
 }
@@ -177,7 +177,7 @@ void
 DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int port,  Transport::Type transport)
 
 {
-#if defined(__linux__)
+#if defined(USE_ARES)
    //ares_query(mChannel, host.c_str(), C_IN, T_A, DnsResolver::aresCallback, transactionId.data());
    Request* request = new Request(mStack, transactionId, host, port, transport);
    ares_gethostbyname(mChannel, host.c_str(), AF_INET, DnsResolver::aresCallback2, request);
@@ -186,7 +186,12 @@ DnsResolver::lookupARecords(const Data& transactionId, const Data& host, int por
    int ret=0;
    int herrno=0;
 
-#if defined(WIN32) 
+#if defined(__linux__)
+   struct hostent hostbuf; 
+   char buffer[8192];
+   ret = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
+   assert (ret != ERANGE);
+#elif defined(WIN32) 
    result = gethostbyname( host.c_str() );
    herrno = WSAGetLastError();
 #elif defined( __MACH__ )
@@ -268,7 +273,7 @@ DnsResolver::isIpAddress(const Data& data)
 void 
 DnsResolver::aresCallback2(void *arg, int status, struct hostent* result)
 {
-#if defined(__linux__)
+#if defined(USE_ARES)
    std::auto_ptr<Request> request(reinterpret_cast<Request*>(arg));
 
    DebugLog (<< "Received dns update: " << request->tid);
@@ -301,7 +306,7 @@ DnsResolver::aresCallback2(void *arg, int status, struct hostent* result)
 void 
 DnsResolver::aresCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
-#if defined(__linux__)
+#if defined(USE_ARES)
    std::auto_ptr<Request> request(reinterpret_cast<Request*>(arg));
 #if 0
    DebugLog (<< "Received dns update: " << request->tid << " for " << request->host);

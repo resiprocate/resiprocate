@@ -1,8 +1,12 @@
 #ifndef DnsResolver_hxx
 #define DnsResolver_hxx
 
-#include <list>
 #if defined(__linux__)
+//# define USE_ARES
+#endif
+
+#include <list>
+#if defined(USE_ARES)
 extern "C"
 {
 #include <ares.h>
@@ -85,7 +89,7 @@ class DnsResolver
       static void aresCallback2(void *arg, int status, struct hostent* host);
 
       SipStack& mStack;
-#if defined(__linux__)
+#if defined(USE_ARES)
       ares_channel mChannel;
 #endif
 };
