@@ -3,6 +3,18 @@
 
 #include "resiprocate/os/Data.hxx"
 
+//****************************************************************************
+//
+// !dlb! until automated, must ensure that this set is consistent with
+//
+// Headers.hxx
+// HeaderHash.gperf
+// Headers.cxx
+// SipMessage.hxx
+// SipMessage.cxx
+//
+//****************************************************************************
+
 // eventually use these macros to automate Headers.hxx, Headers.cxx+gperf
 #define UNUSED_defineHeader(_enum, _name, _type, _rfc) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
 #define UNUSED_defineMultiHeader(_enum, _name, _type, _rfc) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
@@ -17,9 +29,6 @@ class Headers
    public:
       // put headers that you want to appear early in the message early in
       // this set
-
-      // !dlb! until automated, must ensure that this set is consistent with
-      // Headers.hxx and gperf in Headers.cxx
       enum Type
       {
          UNKNOWN = -1,
