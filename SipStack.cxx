@@ -77,7 +77,7 @@ SipStack::shutdown()
    mTransactionController.shutdown();
 }
 
-void 
+bool
 SipStack::addTransport( TransportType protocol, 
                         int port,
                         IpVersion version,
@@ -86,14 +86,15 @@ SipStack::addTransport( TransportType protocol,
    assert(!mShuttingDown);
    assert(protocol != TLS);
 
-   mTransactionController.addTransport(protocol, port, version, ipInterface);
-   if (!ipInterface.empty()) 
+   bool ret = mTransactionController.addTransport(protocol, port, version, ipInterface);
+   if (ret && !ipInterface.empty()) 
    {
       addAlias(ipInterface, port);
    }
+   return ret;
 }
 
-void 
+bool
 SipStack::addTlsTransport( int port, 
                            const Data& keyDir,
                            const Data& privateKeyPassPhrase,
@@ -103,18 +104,12 @@ SipStack::addTlsTransport( int port,
 {
    assert(!mShuttingDown);
    
-   try
+   bool ret = mTransactionController.addTlsTransport(port,keyDir,privateKeyPassPhrase, domainname, version, ipInterface);
+   if (ret && !ipInterface.empty()) 
    {
-      mTransactionController.addTlsTransport(port,keyDir,privateKeyPassPhrase, domainname, version, ipInterface);
-      if (!ipInterface.empty()) 
-      {
-         addAlias(ipInterface, port);
-      }
+      addAlias(ipInterface, port);
    }
-   catch(BaseException& e)
-   {
-      InfoLog (<< "Caught: " << e);
-   }
+   return ret;
 }
 
 void
