@@ -36,10 +36,10 @@ class InviteSession : public DialogUsage
 
       /// Rejects an offer at the SIP level. So this can send a 487 !dcm! --
       /// should be 488? to a reinvite INVITE or an UPDATE
-      virtual SipMessage& rejectOffer(int statusCode);
+      virtual SipMessage& rejectDialogModification(int statusCode);
       
       //accept a re-invite, etc.  Always 200?
-      virtual SipMessage& acceptOffer(int statusCode = 200);
+      virtual SipMessage& acceptDialogModification(int statusCode = 200);
 
       
       // If the app has called setOffer prior to targetRefresh, the reINVITE

@@ -56,7 +56,7 @@ InviteSession::~InviteSession()
 SipMessage& 
 InviteSession::modifySession()
 {
-   if (mNextOfferOrAnswerSdp == 0 || mState != Connected)
+   if (mNextOfferOrAnswerSdp == 0 || mState != Connected || mOfferState != Answered)
    {
       throw new UsageUseException("Must be in the connected state and have propsed an offer to call modifySession", 
                                   __FILE__, __LINE__);
@@ -76,7 +76,7 @@ InviteSession::makeFinalResponse(int code)
 }
 
 SipMessage& 
-InviteSession::acceptOffer(int statusCode)
+InviteSession::acceptDialogModification(int statusCode)
 {
    if (mNextOfferOrAnswerSdp == 0 || mState != ReInviting)
    {
@@ -207,29 +207,32 @@ InviteSession::dispatch(const SipMessage& msg)
    {
       //quench 200 retransmissions
       mFinalResponseMap.erase(msg.header(h_CSeq).sequence());
-      if (offans.first != None)
-      {                     
-         if (mOfferState == Answered)
-         {
-            //SDP in invite and in ACK.
-            mDum.mInviteSessionHandler->onIllegalNegotiation(getSessionHandle(), msg);
-         }
-         else
-         {
-            //delaying onConnected until late SDP
-            InviteSession::incomingSdp(msg, offans.second);
-            if (!mUserConnected)
+      if (msg.header(h_CSeq).sequence() == mLastIncomingRequest.header(h_CSeq).sequence())
+      {
+         if (offans.first != None)
+         {                     
+            if (mOfferState == Answered)
             {
-               mUserConnected = true;
-               mDum.mInviteSessionHandler->onConnected(getSessionHandle(), msg);
+               //SDP in invite and in ACK.
+               mDum.mInviteSessionHandler->onIllegalNegotiation(getSessionHandle(), msg);
+            }
+            else
+            {
+               //delaying onConnected until late SDP
+               InviteSession::incomingSdp(msg, offans.second);
+               if (!mUserConnected)
+               {
+                  mUserConnected = true;
+                  mDum.mInviteSessionHandler->onConnected(getSessionHandle(), msg);
+               }
             }
          }
-      }
-      else if (mOfferState != Answered)
-      {
-         //no SDP in ACK when one is required
-         mDum.mInviteSessionHandler->onIllegalNegotiation(getSessionHandle(), msg);
-      }
+         else if (mOfferState != Answered)
+         {
+            //no SDP in ACK when one is required
+            mDum.mInviteSessionHandler->onIllegalNegotiation(getSessionHandle(), msg);
+         }
+      }      
    } 
 
    switch(mState)
@@ -269,11 +272,15 @@ InviteSession::dispatch(const SipMessage& msg)
                      mState = ReInviting;
                      mDialog.update(msg);
                      mLastIncomingRequest = msg;
-                     mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
+                     mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), offans.first, msg);
                      if (offans.first != None)
                      {
                         incomingSdp(msg, offans.second);
                      }
+                     else
+                     {
+                        mDum.mInviteSessionHandler->onOfferRequired(getSessionHandle(), msg);                        
+                     }                                             
                   }
                   else
                   {
@@ -336,7 +343,6 @@ InviteSession::dispatch(const SipMessage& msg)
                   if (msg.header(h_CSeq).sequence() == mLastRequest.header(h_CSeq).sequence())
                   {
                      mState = Connected;
-                     send(makeAck());
                      //user has called end, so no more callbacks relating to
                      //this usage other than onTerminated
                      if (mQueuedBye)
@@ -350,6 +356,11 @@ InviteSession::dispatch(const SipMessage& msg)
                      if (offans.first != None)
                      {
                         incomingSdp(msg, offans.second);
+                        if (offans.first == Answer)
+                        {
+                           //no late media required, so just send the ACK
+                           send(makeAck());
+                        }
                      }
                      else
                      {
@@ -383,6 +394,8 @@ InviteSession::dispatch(const SipMessage& msg)
                      send(mLastRequest);
                      return;
                   }
+                  //reset the sdp state machine
+                  incomingSdp(msg, 0);
                   mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
                }
             }
@@ -542,7 +555,7 @@ InviteSession::incomingSdp(const SipMessage& msg, const SdpContents* sdp)
             mProposedLocalSdp = 0;
             mProposedRemoteSdp = 0;
             // !jf! is this right? 
-            mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
+//            mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
          }
          break;
    }
@@ -565,6 +578,7 @@ InviteSession::send(SipMessage& msg)
       {
          case INVITE:
          case UPDATE:
+         case ACK:
             if (mNextOfferOrAnswerSdp)
             {
                msg.setContents(mNextOfferOrAnswerSdp);
@@ -716,7 +730,7 @@ InviteSession::getOfferOrAnswer(const SipMessage& msg) const
 }
 
 SipMessage& 
-InviteSession::rejectOffer(int statusCode)
+InviteSession::rejectDialogModification(int statusCode)
 {
    if (statusCode < 400)
    {
@@ -758,12 +772,12 @@ InviteSession::makeAck()
 
    assert(ack.header(h_Vias).size() == 1);
 
-   if (mNextOfferOrAnswerSdp)
-   {
-      ack.setContents(mNextOfferOrAnswerSdp);
-      sendSdp(mNextOfferOrAnswerSdp);
-      mNextOfferOrAnswerSdp = 0;
-   }
+//    if (mNextOfferOrAnswerSdp)
+//    {
+//       ack.setContents(mNextOfferOrAnswerSdp);
+//       sendSdp(mNextOfferOrAnswerSdp);
+//       mNextOfferOrAnswerSdp = 0;
+//    }
    return ack;
 }
 

@@ -58,13 +58,18 @@ class InviteSessionHandler
 
       /// called when an SDP offer is received - must send an answer soon after this
       virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)=0;      
+
+      //called when an Invite w/out SDP is sent, or any other context which
+      //requires an SDP offer from the user
+      virtual void onOfferRequired(InviteSessionHandle, const SipMessage& msg)=0;      
       
       /// called if an offer in a UPDATE or re-INVITE was rejected - not real
       /// useful 
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg)=0;
       
-      /// called when some state in the Dialog changes - typically remoteURI
-      virtual void onDialogModified(InviteSessionHandle, const SipMessage& msg)=0;
+      /// called when some state in the Dialog changes - typically remoteURI, or
+      /// a re-invite
+      virtual void onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
 
       /// called when INFO message is received 
       virtual void onInfo(InviteSessionHandle, const SipMessage& msg)=0;
