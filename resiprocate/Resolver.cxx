@@ -1,12 +1,17 @@
+
 #ifndef WIN32
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#else
+
 #endif
 
 #include <sys/types.h>
 #include <stdio.h>
 #include <errno.h>
+
+#include "util/Socket.hxx"
 
 #include "sipstack/Symbols.hxx"
 #include "sipstack/Resolver.hxx"
