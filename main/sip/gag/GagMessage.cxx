@@ -50,7 +50,7 @@ GagMessage::getMessage(istream &is)
       break;
 
     // Technically, we shouldn't get these. But, oh well.
-    case ERROR:
+    case GAG_ERROR:
         return new GagErrorMessage(is);
       break;
 
@@ -81,9 +81,9 @@ GagMessage::serialize(ostream &os) const
 void
 GagMessage::serialize(ostream &os, const Data& data)
 {
-  int size = data.size();
+  int size = int(data.size());
   os.write(reinterpret_cast<char *>(&size), sizeof(int));
-  os.write(data.data(), data.size());
+  os.write(data.data(), int(data.size()) );
 }
 
 void
