@@ -16,7 +16,18 @@ class Data;
 class Profile
 {
    public:  
-      struct DigestCredential;
+      
+      struct DigestCredential
+      {
+            DigestCredential();
+            DigestCredential(const Data& r, const Data& u, const Data& p);
+            Data realm;
+            Data user;
+            Data password;
+
+            bool operator<(const DigestCredential& rhs) const;
+            std::ostream& operator<<(std::ostream&) const;
+      };
       
       Profile();
       
@@ -101,15 +112,6 @@ class Profile
 
       DigestCredentialHandler* mDigestCredentialHandler;
       
-      struct DigestCredential
-      {
-            Data realm;
-            Data user;
-            Data password;
-
-            bool operator<(const DigestCredential& rhs) const;
-            std::ostream& operator<<(std::ostream&) const;
-      };
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
 };
