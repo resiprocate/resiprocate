@@ -1,4 +1,7 @@
+
+#if HAVE_POPT_H
 #include <popt.h>
+#endif
 
 #include "CommandLineParser.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -23,10 +26,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int noV6 = false;
    char* domains = 0;
    char* certPath = "~/.sipCerts";
-   int noChallenge = false;
+   int noChallenge = true;
    int noRegistrar = false;
    char* reqChainName = "default";
 
+#ifdef HAVE_POPT_H
    struct poptOption table[] = {
       {"log-type",     'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",    'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
@@ -48,6 +52,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
    poptGetNextOpt(context);
+#endif
 
    mLogType = logType;
    mLogLevel = logLevel;
