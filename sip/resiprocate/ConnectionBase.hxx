@@ -37,7 +37,6 @@ class ConnectionBase
       ConnectionBase(const Tuple& who);
       ConnectionId getId() const;
 
-      virtual void requestWrite(SendData* sendData)=0;
       Transport* transport();
 
       Tuple& who() { return mWho; }

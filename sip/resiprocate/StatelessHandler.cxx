@@ -60,7 +60,8 @@ StatelessHandler::process()
             {
                DebugLog (<< "Processing request from TU : " << msg->brief());
                StatelessMessage* stateless = new StatelessMessage(mController.transportSelector(), sip);
-               mController.transportSelector().dnsResolve(sip, stateless);
+               DnsResult* result = mController.transportSelector().createDnsResult(stateless);
+               mController.transportSelector().dnsResolve(result, sip);
             }
          }
          else // no dns for sip responses

@@ -31,8 +31,6 @@ class InternalTransport : public Transport
       bool isFinished() const;
       bool hasDataToSend() const;
 
-      virtual bool requiresProcess() { return true; }
-      
       // shared by UDP, TCP, and TLS
       static Socket socket(TransportType type, bool ipv4);
       void bind();      
