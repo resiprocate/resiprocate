@@ -7,7 +7,7 @@ namespace resip
 class DumShutdownHandler
 {
    public:
-      virtual void dumDestroyed()=0;
+      virtual void onDumDestroyed()=0;
 };
 
 }

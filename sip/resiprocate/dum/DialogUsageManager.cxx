@@ -8,6 +8,7 @@
 #include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/DumException.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
 #include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/ClientPublication.hxx"
@@ -52,13 +53,14 @@ DialogUsageManager::~DialogUsageManager()
    }
    if (mDumShutdownHandler)
    {
-      mDumShutdownHandler->dumDestroyed();
+      mDumShutdownHandler->onDumDestroyed();
    }
 }
 
 void DialogUsageManager::shutdown(DumShutdownHandler* h)
 {
    mDumShutdownHandler = h;
+   shutdownWhenEmpty();
 }
 
 
@@ -205,6 +207,14 @@ DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
 }
 
 void 
+DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration, 
+                               BaseUsageHandle target, int cseq, int rseq)
+{
+   DumTimeout t(type, duration, target, cseq, rseq);
+   mStack.postMS(t, duration);
+}
+
+void 
 DialogUsageManager::addClientSubscriptionHandler(const Data& eventType, ClientSubscriptionHandler* handler)
 {
    assert(handler);
@@ -255,6 +265,11 @@ DialogUsageManager::addOutOfDialogHandler(MethodTypes& type, OutOfDialogHandler*
 SipMessage& 
 DialogUsageManager::makeNewSession(BaseCreator* creator, AppDialogSet* appDs)
 {
+   if (mDumShutdownHandler)
+   {
+      throw new DumException("Cannot create new sessions when DUM is shutting down.", __FILE__, __LINE__);
+   }
+      
    InfoLog (<< "DialogUsageManager::makeNewSession" );   
    if (appDs == 0)
    {
@@ -302,7 +317,7 @@ DialogUsageManager::makeInviteSession(const Uri& target, const SdpContents* init
 }
 
 SipMessage&
-DialogUsageManager::makeSubscription(const Uri& aor, const NameAddr& target, const Data& eventType, AppDialogSet* appDs)
+DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, eventType), appDs);
 }
@@ -330,9 +345,14 @@ DialogUsageManager::send(SipMessage& msg)
    InfoLog (<< "SEND: " << msg.brief());
    if (msg.isRequest()) //!dcm! -- invariant?
    {
+      if (msg.header(h_RequestLine).method() != CANCEL && msg.exists(h_Vias))
+      {
+         msg.header(h_Vias).front().param(p_branch).reset();
+      }
+
       //will have no affect unless a strict route is sent
       Helper::processStrictRoute(msg);
-
+      
       if (getProfile()->hasOutboundProxy())
       {
          DebugLog ( << "Using outbound proxy");
@@ -622,11 +642,19 @@ DialogUsageManager::processRequest(const SipMessage& request)
          {
             {
                DialogSetId id(request);
-            //cryptographically dangerous
+               //cryptographically dangerous
                assert(mDialogSetMap.find(id) == mDialogSetMap.end()); 
             }
-            try
+            if (mDumShutdownHandler)
             {
+               SipMessage forbidden;
+               makeResponse(forbidden, request, 403);
+               forbidden.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
+               sendResponse(forbidden);
+               return;
+            }
+            try
+            {               
                DialogSet* dset =  new DialogSet(request, *this);
 
                DebugLog ( << "*********** Calling AppDialogSetFactory *************"  );
@@ -707,7 +735,7 @@ void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    InfoLog ( << "DialogUsageManager::processResponse: " << response);
-   if (response.header(h_StatusLine).statusCode() > 100 && response.header(h_CSeq).method() != CANCEL)
+   if (response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
   
@@ -803,11 +831,6 @@ DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
    InfoLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap.erase(dsId);
    InfoLog ( << "After: " << Inserter(mDialogSetMap) );
-
-   if (mDialogSetMap.empty() && mDumShutdownHandler)
-   {
-      delete this;      
-   }
 }
 
 ClientSubscriptionHandler* 

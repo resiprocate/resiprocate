@@ -14,7 +14,7 @@ class ClientSubscriptionHandler
       virtual void onUpdatePending(ClientSubscriptionHandle, const SipMessage& notify)=0;
       virtual void onUpdateActive(ClientSubscriptionHandle, const SipMessage& notify)=0;
       //unknown Subscription-State value
-      virtual void onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify);      
+      virtual void onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify)=0;      
 
       //subscription can be ended through a notify or a failure response.
       virtual void onTerminated(ClientSubscriptionHandle, const SipMessage& msg)=0;   
