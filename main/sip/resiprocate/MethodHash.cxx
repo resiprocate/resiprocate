@@ -3,8 +3,11 @@
 #include <string.h>
 #include <ctype.h>
 #include "sip2/sipstack/MethodTypes.hxx"
+
+//using namespace std;
+
 namespace Vocal2 {
-using namespace std;
+
 using namespace Vocal2;
 struct methods { char *name; MethodTypes type; };
 /* maximum key range = 16, duplicates = 0 */
