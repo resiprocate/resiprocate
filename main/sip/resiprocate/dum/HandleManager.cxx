@@ -40,8 +40,12 @@ void HandleManager::shutdownWhenEmpty()
    mShuttingDown = true;
    if (mHandleMap.empty())
    {
-      delete this;
+      shutdown();      
    }
+}
+
+void HandleManager::shutdown()
+{
 }
 
 void
@@ -52,7 +56,7 @@ HandleManager::remove(Handled::Id id)
    mHandleMap.erase(i);
    if (mShuttingDown && mHandleMap.empty())
    {
-      delete this;
+      shutdown();      
    }
 }
 
