@@ -821,7 +821,7 @@ void test14()
       Vocal2::ParserContainer<Vocal2::NameAddr>::iterator i =  msg->header(h_Contacts).begin();
       while ( i != msg->header(h_Contacts).end() )
       {
-         DebugLog( "i=" << *i  );
+         DebugLog(<< "i=" << *i  );
          i++;
       }
    }
