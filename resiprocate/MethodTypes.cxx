@@ -16,9 +16,11 @@ using namespace resip;
 
 // !dlb! this file will be subsumed by MethodHash.cxx on auto-generate
 // move into MethodHash.cxx -- generated from MethodTypes.hxx -- !ah! indeed, yuck!
-Data resip::MethodNames[MAX_METHODS] = 
+namespace resip{
+
+Data MethodNames[] = 
 {
-   defineMethod(UNKNOWN, "UNKNOWN", ""),
+   defineMethod(UNKNOWN, "UNKNOWN", "NA"),
    defineMethod(ACK, "ACK", "RFC ????"),
    defineMethod(BYE, "BYE", "RFC ????"),
    defineMethod(CANCEL, "CANCEL", "RFC ????"),
@@ -36,8 +38,16 @@ Data resip::MethodNames[MAX_METHODS] =
    defineMethod(SERVICE, "SERVICE", "!RFC"),
    defineMethod(UPDATE,"UPDATE", "RFC ????")
 };
-
+}
 #include "MethodHash.hxx"
+
+const Data&
+resip::getMethodName(MethodTypes t) 
+{
+    if (t < UNKNOWN ||  t >= MAX_METHODS) 
+        t=UNKNOWN;
+    return MethodNames[t];
+}
 
 MethodTypes
 resip::getMethodType(const Data& name)
