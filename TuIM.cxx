@@ -400,6 +400,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
    int number = msg->header(h_StatusLine).responseCode();
    Uri to = msg->header(h_To).uri();
    InfoLog ( << "register of " << to << " got response " << number );   
+	int cSeq = msg->header(h_CSeq).sequence();
 
    if ( number<200 )
    {
@@ -411,7 +412,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
       mRegistrationDialog.createDialogAsUAC( *msg );
    }
    
-   if ( (number == 401) || (number == 407) )
+   if ( ((number == 401) || (number == 407)) && (cSeq==1) )
    {
       SipMessage* reg = mRegistrationDialog.makeRegister();
       
