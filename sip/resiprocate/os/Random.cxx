@@ -1,9 +1,14 @@
 
 #include <cassert>
+
+#ifdef WIN32
+#include "sip2/util/Socket.hxx"
+#else
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#endif
 
 #include "sip2/util/Random.hxx"
 #include "sip2/util/Timer.hxx"
@@ -38,7 +43,11 @@ Random::initialize()
       //throwing away first 32 bits
       unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
 
-      int fd = open("/dev/random",O_RDONLY);
+#ifdef WIN32
+	Socket fd = -1;
+	// !cj! need to find a better way - use pentium random commands?
+#else
+	  int fd = open("/dev/random",O_RDONLY);
       if ( fd != -1 )
       {
          int s = read( fd,&seed,sizeof(seed) );
@@ -52,7 +61,7 @@ Random::initialize()
       {
             ErrLog( << "Could not open /dev/random" );
       }
-      
+#endif
 
 #if USE_OPENSSL
       if (fd == -1 )
@@ -78,8 +87,11 @@ Random::initialize()
       }
 #endif
 
-      close(fd);
-      
+	  if (fd != -1 )
+	  {
+		close(fd);
+	  }
+
       DebugLog( << "Initializing random with seed=" << seed );
       
 #ifdef WIN32
@@ -87,7 +99,6 @@ Random::initialize()
 #else
       srandom(seed);
 #endif
-
 
       mIsInitialized = true;
    }
@@ -99,7 +110,13 @@ Random::getRandom()
 {
    assert( mIsInitialized == true );
 #ifdef WIN32
-   return rand();
+   assert( RAND_MAX == 0x7fff );
+   int r1 = rand();
+   int r2 = rand();
+
+   int ret = (r1<<16) + r2;
+
+   return ret;
 #else
    return random(); 
 #endif
@@ -135,28 +152,26 @@ Data
 Random::getRandom(unsigned int len)
 {
    assert( mIsInitialized == true );
-   Data ret( len, true );
-	
-   int data;
-   char* p;
-   int num=0;
-   int count = len;
+
+   char buf[512];
+   assert( len <= sizeof(buf) );
+
+   char* p=buf;
+   unsigned int count=0;
    
-   while ( count > 0 )
+   while ( count < len )
    {
-      if ( num == 0 )
-      {
-         num = 4;
-         p = reinterpret_cast<char*>( &data );
-         data = Random::getRandom();
-         assert( sizeof(int) == 4);
-      }
+			int data = Random::getRandom();
+
+			assert(sizeof(int) == 4 );
+            char* d = reinterpret_cast<char*>( &data );
 		
-      ret += *p;
-      p++;
-      num--;
-      count--;
+			memcpy(p,d,sizeof(int));
+			p += sizeof(int);
+			count += sizeof(int);
    }
+
+   Data ret(buf,len);
 
    assert( ret.size() == len );
    return ret;
@@ -168,28 +183,26 @@ Data
 Random::getCryptoRandom(unsigned int len)
 {
    assert( mIsInitialized == true );
-   Data ret( len, true );
-	
-   int data;
-   char* p;
-   int num=0;
-   int count = len;
+
+   char buf[512];
+   assert( len <= sizeof(buf) );
+
+   char* p=buf;
+   unsigned int count=0;
    
-   while ( count > 0 )
+   while ( count < len )
    {
-      if ( num == 0 )
-      {
-         num = 4;
-         p = reinterpret_cast<char*>( &data );
-         data = Random::getCryptoRandom();
-         assert( sizeof(int) == 4);
-      }
+     
+			int data = Random::getCryptoRandom();
+			assert(sizeof(int) == 4 );
+         char* d = reinterpret_cast<char*>( &data );
 		
-      ret += *p;
-      p++;
-      num--;
-      count--;
+			memcpy(p,d,sizeof(int));
+			p += sizeof(int);
+			count += sizeof(int);
    }
+
+   Data ret(buf,len);
 
    assert( ret.size() == len );
    return ret;
