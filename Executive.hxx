@@ -19,10 +19,10 @@ class Executive
       Executive( SipStack& stack );
       virtual ~Executive() {};
       
-      void process(fd_set* fdSet);
+      void process(FdSet& fdset);
       
       // build the FD set to use in a select to find out when process bust be called again
-      void buildFdSet( fd_set* fdSet, int* fdSetSize );  
+      void buildFdSet(FdSet& fdset);
       
       /// returns time in milliseconds when process next needs to be called 
       int getTimeTillNextProcess(); 
@@ -30,7 +30,7 @@ class Executive
    private:
       SipStack& mStack;
 
-      bool processTransports(fd_set* fdSet); // return true if more work to do
+      bool processTransports(FdSet& fdset); // return true if more work to do
       bool processStateMachine();// return true if more work to do
       bool processTimer();// return true if more work to do
 };

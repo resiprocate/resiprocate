@@ -19,7 +19,7 @@ class UdpTransport : public Transport
 
       virtual  ~UdpTransport();
 
-      void process(fd_set* fdSet=NULL) ;
+      void process(FdSet& fdset);
       bool isReliable() const { return false; }
       Transport::Type transport() const { return UDP; }
 
