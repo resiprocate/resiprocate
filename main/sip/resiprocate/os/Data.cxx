@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.9 2002/10/19 16:23:22 fluffy Exp $";
+"$Id: Data.cxx,v 1.10 2002/10/19 17:11:29 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -172,13 +172,13 @@ Data::operator<(const Data& rhs) const
    switch (strncmp(mBuf, rhs.mBuf, min(mSize, rhs.mSize)))
    {
       case 1:
-		  {
+      {
          return true;
-		  }
+      }
       case -1:
-		  {
+      {
          return false;
-		  }
+      }
       case 0:
       {
          return (mSize < rhs.mSize);
