@@ -315,3 +315,20 @@ SipMessage::header(const StatusLineType& l) const
    
    return *parser;
 }
+
+HeaderFieldValueList* 
+SipMessage::ensureHeader(int type) const
+{
+   HeaderFieldValueList* hfvs = mHeaders[type];
+   
+   // empty?
+   if (hfvs == 0)
+   {
+      // create the list with a new component
+      hfvs = new HeaderFieldValueList;
+      HeaderFieldValue* hfv = new HeaderFieldValue;
+      hfvs->push_back(hfv);
+      mHeaders[type] = hfvs;
+   }
+   return hfvs;
+}

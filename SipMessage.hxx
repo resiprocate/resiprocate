@@ -65,17 +65,8 @@ class SipMessage : public Message
       typename Header<T>::Type& 
       header(const Header<T>& headerType) const
       {
-         HeaderFieldValueList* hfvs = mHeaders[T];
-         // empty?
-         if (hfvs == 0)
-         {
-            // create the list with a new component
-            hfvs = new HeaderFieldValueList;
-            HeaderFieldValue* hfv = new HeaderFieldValue;
-            hfvs->push_back(hfv);
-            mHeaders[T] = hfvs;
-         }
-                  
+         HeaderFieldValueList* hfvs = ensureHeader(T);
+
          // already parsed?
          if (!hfvs->front()->isParsed())
          {
@@ -93,17 +84,8 @@ class SipMessage : public Message
       ParserContainer<typename MultiHeader<T>::Type>& 
       header(const MultiHeader<T>& headerType) const
       {
-         HeaderFieldValueList* hfvs = mHeaders[T];
-         // empty?
-         if (hfvs == 0)
-         {
-            // create the list with a new component
-            hfvs = new HeaderFieldValueList;
-            // create an empty parser container
-            hfvs->setParserContainer(new ParserContainer<typename MultiHeader<T>::Type>(hfvs));
-            mHeaders[T] = hfvs;
-         }
-                  
+         HeaderFieldValueList *hfvs = ensureHeader(T);
+         
          // already parsed?
          if (!hfvs->front()->isParsed())
          {
@@ -150,10 +132,10 @@ class SipMessage : public Message
       void setFixedDest(const Data& dest);
       void clearFixedDest();
 
-
    private:
       void copyFrom(const SipMessage& message);
       void cleanUp();
+      HeaderFieldValueList* ensureHeader(int type) const;
 
       // not available
       SipMessage& operator=(const SipMessage&);
