@@ -103,8 +103,10 @@ SipFrag::parse(ParseBuffer& pb)
    // need another interface to preparse?
    // !ah! removed size check .. process() cannot process more
    // than size bytes of the message.
-   if (pre.process(*mMessage, buffer, size))
+   int ppstat = 0;
+   if ((ppstat = pre.process(*mMessage, buffer, size)))
    {
+     ErrLog(<<"SipFrag Preparse error status: " << ppstat);
      pb.fail(__FILE__, __LINE__);
    }
    else 
