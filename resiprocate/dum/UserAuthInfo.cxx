@@ -6,7 +6,6 @@
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
-using namespace repro;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
