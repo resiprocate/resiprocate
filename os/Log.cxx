@@ -134,6 +134,10 @@ Log::toType(const Data& arg)
    {
       return Log::CERR;
    }
+   else if (arg == "file" || arg == "FILE")
+   {
+      return Log::FILE;
+   }
    else
    {
       return Log::SYSLOG;
