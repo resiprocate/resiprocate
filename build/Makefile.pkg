@@ -7,7 +7,7 @@
 
 ######################################################################
 
-ifeq ($(VOCAL_BUILD_SHARED_LIBS),yes)
+ifeq ($(BUILD_SHARED_LIBS),yes)
 LIBSUFFIX := so
 else
 LIBSUFFIX := a
@@ -71,3 +71,6 @@ ifeq ($(USE_IPV6),true)
 DEFINES += USE_IPV6
 endif
 
+ifeq ($(USE_POPT),true)
+DEFINES += HAVE_POPT_H
+endif

@@ -35,8 +35,8 @@ ifeq ($(ARCH),i386)
 	CXXFLAGS += -march=i386
 endif
 
-	CXXFLAGS += -D_REENTRANT -DHAVE_POPT_H
-	CFLAGS   += -D_REENTRANT -DHAVE_POPT_H
+	CXXFLAGS += -D_REENTRANT 
+	CFLAGS   += -D_REENTRANT 
 	DISTCC   = distcc 
 	CCACHE   = ccache
         LDFLAGS  += -lpopt 
@@ -153,7 +153,7 @@ VOCAL_COMPILE_TYPE := small
 endif
 
 ifdef LIB_DYNAMIC
-VOCAL_BUILD_SHARED_LIBS := yes
+BUILD_SHARED_LIBS := yes
 endif
 
 TARGET_TYPE := $(VOCAL_COMPILE_TYPE)
