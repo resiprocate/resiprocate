@@ -116,6 +116,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 void  
 ClientSubscription::requestRefresh()
 {
+   mDialog.makeRequest(mLastRequest, SUBSCRIBE);
    mLastRequest.header(h_CSeq).sequence()++;
    
    //!dcm! -- need a mechanism to retrieve this for the event package...part of
