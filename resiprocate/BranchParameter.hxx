@@ -14,7 +14,8 @@ class ParseBuffer;
 
 // BranchParameter of the form: 
 // rfc3261cookie-sip2cookie-tid.clientseq-transportseq-clientdata
-
+// rfc3261cookie-sip2cookie-tid.clientseq-transportseq-clientdata
+//                             ^ repeat ^ -- part of tid except for last .clientseq-
 class BranchParameter : public Parameter
 {
    public:
