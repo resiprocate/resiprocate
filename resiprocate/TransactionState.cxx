@@ -125,9 +125,10 @@ TransactionState::process(SipStack& stack)
                
          if (sip->isExternal()) // new sip msg from transport
          {
-            DebugLog (<< "Create new transaction for inbound msg " << tid);
             if (sip->header(h_RequestLine).getMethod() == INVITE)
             {
+               DebugLog (<< "Create new INVITE transaction for inbound msg " << sip->brief());
+
                // !rk! This might be needlessly created.  Design issue.
                TransactionState* state = new TransactionState(stack, ServerInvite, Trying);
                state->mMsgToRetransmit = state->make100(sip);
@@ -153,7 +154,7 @@ TransactionState::process(SipStack& stack)
             }
             else 
             {
-               DebugLog(<<"Adding non-INVITE transaction state " << tid);
+               DebugLog(<<"Adding non-INVITE transaction state " << sip->brief());
                TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
                state->mSource = sip->getSource();
                // since we don't want to reply to the source port unless rport present 
