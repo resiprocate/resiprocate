@@ -164,8 +164,8 @@ class SipMessage : public Message
 
       // !dlb! hack out with pre-data pointer in buffer for intrusive list?
       std::vector<char*> mBufferList;
-      mutable HeaderFieldValue* mStartLine;
-      mutable HeaderFieldValue* mBody;
+      mutable HeaderFieldValueList* mStartLine;
+      mutable HeaderFieldValueList* mBody;
 
       Data mTransactionId;  // !jf!
       mutable bool mRequest;
