@@ -130,7 +130,7 @@ TransactionState::process(SipStack& stack)
          else // wasn't a request or a response
          {
             DebugLog (<< "discarding unknown message: " << sip->brief());
-         }
+	 }
       } 
       else // timer or other non-sip msg
       {
