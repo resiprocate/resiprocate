@@ -122,11 +122,11 @@ class Dialog
 
       UInt64 expireyTimeAbsoluteMs;
       
-      friend std::ostream& operator<<(std::ostream& strm, Dialog& d);
+      friend std::ostream& operator<<(std::ostream&, const Dialog&);
 };
 
 std::ostream&
-operator<<(std::ostream& strm, Dialog& d);
+operator<<(std::ostream& strm, const Dialog& d);
  
 } // namespace Cathay
 
