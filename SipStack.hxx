@@ -5,24 +5,25 @@
 #include <iosfwd>
 
 #include "resiprocate/os/TimeLimitFifo.hxx"
+#include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/Executive.hxx"
 #include "resiprocate/TransactionController.hxx"
 #include "resiprocate/Security.hxx"
+#include "resiprocate/StatisticsManager.hxx"
 
 namespace resip 
 {
 
+class ApplicationMessage;
 class Data;
 class Message;
-class SipMessage;
-class ApplicationMessage;
-class Executive;
 class Security;
+class SipMessage;
+class StatisticsManager;
 class Tuple;
 class Uri;
-	
+
 class SipStack
 {
    public:
@@ -115,8 +116,7 @@ class SipStack
 
       // makes the message available to the TU later
       void post(const ApplicationMessage& message);
-      void post(const ApplicationMessage& message,
-                unsigned int secondsLater);
+      void post(const ApplicationMessage& message, unsigned int secondsLater);
       void postMS(const ApplicationMessage& message, unsigned int ms);
 
       // Return true if the stack has new messages for the TU
@@ -148,7 +148,7 @@ class SipStack
       void enableStrictRouting(bool strict=true) { mStrictRouting = strict; }
       bool isStrictRouting() const { return mStrictRouting; }
 
-      void setStatisticsInterval(unsigned long seconds) const;
+      void setStatisticsInterval(unsigned long seconds);
 
       // output current state of the stack - for debug
       std::ostream& dump(std::ostream& strm) const;
@@ -164,8 +164,13 @@ class SipStack
       // fifo used to communicate between the TU (Transaction User) and stack 
       TimeLimitFifo<Message> mTUFifo;
 
-      // Controls the processing of the various stack elements
-      Executive mExecutive;
+      // timers associated with the application. When a timer fires, it is
+      // placed in the mTUFifo
+      mutable Mutex mAppTimerMutex;
+      TimeLimitTimerQueue  mAppTimers;
+      
+      // Track stack statistics
+      StatisticsManager mStatsManager;
 
       // All aspects of the Transaction State Machine / DNS resolver
       TransactionController mTransactionController;
@@ -176,12 +181,13 @@ class SipStack
 
       bool mStrictRouting;
       bool mShuttingDown;
-      
-      friend class TransactionState;
-      friend class StatelessHandler;
+
       friend class Executive;
+      friend class StatelessHandler;
+      friend class StatisticsManager;
       friend class TestDnsResolver;
       friend class TestFSM;
+      friend class TransactionState;
 };
 
 std::ostream& operator<<(std::ostream& strm, const SipStack& stack);

@@ -6,16 +6,16 @@
 #include "resiprocate/StatisticsManager.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransactionController.hxx"
+#include "resiprocate/SipStack.hxx"
 
 using namespace resip;
 using std::vector;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-StatisticsManager::StatisticsManager(TransactionController& transController,
-                                     unsigned long intervalSecs) 
+StatisticsManager::StatisticsManager(SipStack& stack, unsigned long intervalSecs) 
    : StatisticsMessage::Payload(),
-     mTransactionController(transController),
+     mStack(stack),
      mInterval(intervalSecs*1000),
      mNextPoll(Timer::getTimeMs() + mInterval)
 {}
@@ -30,18 +30,18 @@ void
 StatisticsManager::poll()
 {
    // get snapshot data now..
-   tuFifoSize = mTransactionController.getTuFifoSize();
-   transportFifoSizeSum = mTransactionController.sumTransportFifoSizes();
-   transactionFifoSize = mTransactionController.getTransactionFifoSize();
-   activeTimers = mTransactionController.getTimerQueueSize();
-   activeClientTransactions = mTransactionController.getNumClientTransactions();
-   activeServerTransactions = mTransactionController.getNumServerTransactions();   
+   tuFifoSize = mStack.mTransactionController.getTuFifoSize();
+   transportFifoSizeSum = mStack.mTransactionController.sumTransportFifoSizes();
+   transactionFifoSize = mStack.mTransactionController.getTransactionFifoSize();
+   activeTimers = mStack.mTransactionController.getTimerQueueSize();
+   activeClientTransactions = mStack.mTransactionController.getNumClientTransactions();
+   activeServerTransactions = mStack.mTransactionController.getNumServerTransactions();   
 
    static StatisticsMessage::AtomicPayload appStats;
    appStats.loadIn(*this);
 
    // let the app do what it wants with it
-   mTransactionController.post(StatisticsMessage(appStats));
+   mStack.post(StatisticsMessage(appStats));
 }
 
 void 
