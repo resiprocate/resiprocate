@@ -297,10 +297,13 @@ TlsTransport::processAllWrites( FdSet& fdset )
                   InfoLog( << "Failed to form new TLS client connection" );
                   if (tls)
                   {
-                     delete tls; tls=0;
+                     delete tls; 
+                     tls=0;
                   }
+                  return; 
                }
                
+               assert(tls);
                Data peer = tls->peerName();
                InfoLog( << " TLS Connection to " << peer << " formed" );
                
@@ -318,7 +321,6 @@ TlsTransport::processAllWrites( FdSet& fdset )
                   
                   InfoLog( << "Added TLS client connection " << int(conn) );
                }
-               
             }
          }
       }
