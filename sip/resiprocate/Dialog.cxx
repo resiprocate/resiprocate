@@ -282,6 +282,8 @@ Dialog::updateRequest(SipMessage& request)
       via.param(p_branch); // will create the branch
       request.header(h_Vias).clear();
       request.header(h_Vias).push_front(via);
+      
+      Helper::processStrictRoute(request);
    }
    else
    {
@@ -580,6 +582,7 @@ Dialog::makeCancel(const SipMessage& request)
    {
       cancel->header(h_Routes) = request.header(h_Routes);
    }
+   Helper::processStrictRoute(*cancel);
    
    return cancel;
 }
@@ -648,6 +651,7 @@ Dialog::makeRequestInternal(MethodTypes method)
    request->header(h_Vias).push_front(via);
 
    //DebugLog(<<"contact after copy: " <<     request->header(h_Contacts).front());
+   Helper::processStrictRoute(*request);
    return request;
 }
 
