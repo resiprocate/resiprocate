@@ -2,6 +2,7 @@
 #include <cassert>
 #include <iostream>
 #include <time.h>
+#include <errno.h>
 
 #include "sip2/util/Data.hxx"
 #include "sip2/util/Logger.hxx"
