@@ -3,6 +3,7 @@
 #endif
 
 #include "resiprocate/GenericContents.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 

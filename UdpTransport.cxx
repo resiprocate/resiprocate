@@ -11,6 +11,7 @@
 #include "resiprocate/UdpTransport.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Helper.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
