@@ -45,9 +45,17 @@ GagMessage::getMessage(istream &is)
         return new GagRemoveBuddyMessage(is);
       break;
 
+   case SHUTDOWN:
+        return new GagShutdownMessage(is);
+      break;
+
     // Technically, we shouldn't get these. But, oh well.
     case ERROR:
         return new GagErrorMessage(is);
+      break;
+
+    case LOGIN_STATUS:
+        return new GagLoginStatusMessage(is);
       break;
 
     default:
