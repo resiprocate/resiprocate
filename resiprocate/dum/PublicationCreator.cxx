@@ -4,13 +4,14 @@
 using namespace resip;
 
 PublicationCreator::PublicationCreator(DialogUsageManager& dum,
-                                       const Uri& targetDocument, 
+                                       const Uri& target, 
+                                       const NameAddr& from,
                                        const Contents& body, 
                                        const Data& eventType, 
                                        unsigned expireSeconds )
    : BaseCreator(dum)
 {
-   makeInitialRequest(NameAddr(targetDocument), PUBLISH);
+   makeInitialRequest(NameAddr(target), from, PUBLISH);
 
    mLastRequest.header(h_Event).value() = eventType;
    mLastRequest.setContents(&body);
