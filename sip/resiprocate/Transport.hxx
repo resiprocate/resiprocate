@@ -47,12 +47,15 @@ class Transport : public ThreadIf
       void fail(const Data& tid); // called when transport failed
       
       // These methods are used by the TransportSelector
-      virtual const Data& interfaceName() const { return mInterface; } 
-      virtual int port() const { return mPort; } 
+      const Data& interfaceName() const { return mInterface; } 
+      int port() const { return mPort; } 
+      bool isV4() const { return mV4; }
+
+      const Data& tlsDomain() const { return Data::Empty; }
+      const sockaddr& boundInterface() const { return mBoundInterface; }
+
       virtual TransportType transport() const =0 ;
       virtual bool isReliable() const =0;
-      virtual const Data& tlsDomain() const { return Data::Empty; }
-      const sockaddr& boundInterface() const { return mBoundInterface; }
       
       static TransportType toTransport( const Data& );
       static const Data& toData( TransportType );
@@ -61,13 +64,19 @@ class Transport : public ThreadIf
       static void stampReceived(SipMessage* request);
 
       bool hasDataToSend() const;
+
+      // also used by the TransportSelector. 
+      // requires that the two transports be 
+      bool operator==(const Transport& rhs) const;
       
    protected:
       bool mV4;
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       int mPort;
       Data mInterface;
+
       sockaddr mBoundInterface;
+      
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
 
