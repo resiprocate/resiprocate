@@ -41,6 +41,7 @@ class TransactionController
                             IpVersion version,
                             const Data& ipInterface,
                             SecurityTypes::SSLType sslType = SecurityTypes::TLSv1);
+      bool isTUOverloaded() const;
       
       void send(SipMessage* msg);
 
