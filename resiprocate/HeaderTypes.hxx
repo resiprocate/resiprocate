@@ -298,7 +298,7 @@ class MultiHeader<Headers::Call_Info>
       MultiHeader()
       {
          Headers::CommaTokenizing[Headers::Call_Info] = Type::isCommaTokenizing;
-         Headers::HeaderNames[Headers::Call_Info] = Symbols::Alert_Info;
+         Headers::HeaderNames[Headers::Call_Info] = Symbols::Call_Info;
       }
 };
 extern MultiHeader<Headers::Call_Info> h_CallInfos;
@@ -484,7 +484,7 @@ class Header<Headers::Timestamp>
       Header()
       {
          Headers::CommaTokenizing[Headers::Timestamp] = Type::isCommaTokenizing;
-         Headers::HeaderNames[Headers::Timestamp] = Symbols::Content_Type;
+         Headers::HeaderNames[Headers::Timestamp] = Symbols::Timestamp;
       }
 };
 extern Header<Headers::Timestamp> h_Timestamp;
