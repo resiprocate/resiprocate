@@ -7,8 +7,6 @@ intver() {
     expr $i \* 10000 + 100 \* $t + $h
 }
 
-echo +++ Removing old build files.
-rm -rf build configure.in  Makefile
 echo +++ Looking for a version of aclocal >= 1.7.5
 irep=$(intver aclocal)
 if [ $irep -lt 10705 ]; then
