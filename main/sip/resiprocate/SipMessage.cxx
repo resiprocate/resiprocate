@@ -42,62 +42,18 @@ SipMessage::SipMessage(const Transport* fromWire)
 }
 
 SipMessage::SipMessage(const SipMessage& from)
-   : mIsExternal(from.mIsExternal),
-     mTransport(from.mTransport),
-     mSource(from.mSource),
-     mDestination(from.mDestination),
-     mStartLine(0),
+   : mStartLine(0),
      mContentsHfv(0),
      mContents(0),
-     mRFC2543TransactionId(from.mRFC2543TransactionId),
-     mRequest(from.mRequest),
-     mResponse(from.mResponse),
      mCreatedTime(Timer::getTimeMicroSec()),
-     mForceTarget(0),
-     mTlsDomain(from.mTlsDomain)
+     mForceTarget(0)
 {
-   if (this != &from)
+   for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
-      for (int i = 0; i < Headers::MAX_HEADERS; i++)
-      {
-         if (from.mHeaders[i] != 0)
-         {
-            mHeaders[i] = new HeaderFieldValueList(*from.mHeaders[i]);
-         }
-         else
-         {
-            mHeaders[i] = 0;
-         }
-      }
-  
-      for (UnknownHeaders::const_iterator i = from.mUnknownHeaders.begin();
-           i != from.mUnknownHeaders.end(); i++)
-      {
-         mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(
-                                      i->first,
-                                      new HeaderFieldValueList(*i->second)));
-      }
-      if (from.mStartLine != 0)
-      {
-         mStartLine = new HeaderFieldValueList(*from.mStartLine); 
-      }
-      if (from.mContents != 0)
-      {
-         mContents = from.mContents->clone();
-      }
-      else if (from.mContentsHfv != 0)
-      {
-         mContentsHfv = new HeaderFieldValue(*from.mContentsHfv);
-      }
-      else
-      {
-         // no body to copy
-      }
-      if (from.mForceTarget != 0)
-      {
-         mForceTarget = new Uri(*from.mForceTarget);
-      }
+      mHeaders[i] = 0;
    }
+
+   *this = from;
 }
 
 Message*
@@ -106,11 +62,82 @@ SipMessage::clone() const
    return new SipMessage(*this);
 }
 
+SipMessage& 
+SipMessage::operator=(const SipMessage& rhs)
+{
+   if (this != &rhs)
+   {
+      this->cleanUp();
+
+      mIsExternal = rhs.mIsExternal;
+      mTransport = rhs.mTransport;
+      mSource = rhs.mSource;
+      mDestination = rhs.mDestination;
+      mStartLine = 0;
+      mContentsHfv = 0;
+      mContents = 0;
+      mRFC2543TransactionId = rhs.mRFC2543TransactionId;
+      mRequest = rhs.mRequest;
+      mResponse = rhs.mResponse;
+      mForceTarget = 0;
+      mTlsDomain = rhs.mTlsDomain;
+      
+      for (int i = 0; i < Headers::MAX_HEADERS; i++)
+      {
+         if (rhs.mHeaders[i] != 0)
+         {
+            mHeaders[i] = new HeaderFieldValueList(*rhs.mHeaders[i]);
+         }
+         else
+         {
+            mHeaders[i] = 0;
+         }
+      }
+  
+      for (UnknownHeaders::const_iterator i = rhs.mUnknownHeaders.begin();
+           i != rhs.mUnknownHeaders.end(); i++)
+      {
+         mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(
+                                      i->first,
+                                      new HeaderFieldValueList(*i->second)));
+      }
+      if (rhs.mStartLine != 0)
+      {
+         mStartLine = new HeaderFieldValueList(*rhs.mStartLine); 
+      }
+      if (rhs.mContents != 0)
+      {
+         mContents = rhs.mContents->clone();
+      }
+      else if (rhs.mContentsHfv != 0)
+      {
+         mContentsHfv = new HeaderFieldValue(*rhs.mContentsHfv);
+      }
+      else
+      {
+         // no body to copy
+      }
+      if (rhs.mForceTarget != 0)
+      {
+         mForceTarget = new Uri(*rhs.mForceTarget);
+      }
+   }
+
+   return *this;
+}
+
 SipMessage::~SipMessage()
+{
+   cleanUp();
+}
+
+void
+SipMessage::cleanUp()
 {
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
       delete mHeaders[i];
+      mHeaders[i] = 0;
    }
 
    for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
@@ -118,17 +145,23 @@ SipMessage::~SipMessage()
    {
       delete i->second;
    }
+   mUnknownHeaders.clear();
    
    for (vector<char*>::iterator i = mBufferList.begin();
         i != mBufferList.end(); i++)
    {
       delete [] *i;
    }
+   mBufferList.clear();
 
    delete mStartLine;
+   mStartLine = 0;
    delete mContents;
+   mContents = 0;
    delete mContentsHfv;
+   mContentsHfv = 0;
    delete mForceTarget;
+   mForceTarget = 0;
 }
 
 SipMessage*
