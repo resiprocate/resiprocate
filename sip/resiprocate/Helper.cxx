@@ -789,17 +789,20 @@ Helper::processStrictRoute(SipMessage& request)
       request.header(h_Routes).push_back(NameAddr(request.header(h_RequestLine).uri()));
       request.header(h_RequestLine).uri() = request.header(h_Routes).front().uri();
       request.header(h_Routes).pop_front();
-      request.setTarget(request.header(h_RequestLine).uri());
+      request.setForceTarget(request.header(h_RequestLine).uri());
    }
 }
 
 int
-Helper::getSentPort(SipMessage& request)
+Helper::getSentPort(SipMessage& request, bool sym)
 {
    assert(request.isRequest());
-   
    int port = -1;
-   if (!request.header(h_Vias).front().exists(p_rport))
+   if (sym || request.header(h_Vias).front().exists(p_rport))
+   {
+       port = request.getSource().getPort();
+   }
+   else
    {
       port = request.header(h_Vias).front().sentPort();
       if (port <= 0 || port > 65535) 
@@ -807,11 +810,10 @@ Helper::getSentPort(SipMessage& request)
          port = Symbols::DefaultSipPort;
       }
    }
-   else
-   {
-      port = request.getSource().getPort();
-   }
    assert(port != -1);
+
+   DebugLog(<<"getSentPort(): sym=" << (sym?'t':'f') << " returning: " << port);
+
    return port;
 }
 

@@ -9,9 +9,9 @@
 
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/DnsInterface.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Transport.hxx"
-#include "resiprocate/DnsInterface.hxx"
 
 class TestTransportSelector;
 
