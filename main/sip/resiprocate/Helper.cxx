@@ -5,9 +5,9 @@ using namespace Vocal2;
 const int Helper::tagSize = 4;
 
 SipMessage 
-Helper::makeRequest(const Url& target, 
-                    const Url& from,
-                    const Url& contact,
+Helper::makeRequest(const NameAddr& target, 
+                    const NameAddr& from,
+                    const NameAddr& contact,
                     MethodTypes method)
 {
    SipMessage request;
@@ -19,16 +19,16 @@ Helper::makeRequest(const Url& target,
    request.header(h_CSeq).method() = method;
    request.header(h_CSeq).sequence() = 1;
    request.header(h_From) = from;
-   request.header(h_From)[p_tag] = Helper::computeTag(Helper::tagSize);
+   request.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    request.header(h_Contacts).push_front(contact);
    request.header(h_CallId).value() = Helper::computeCallId();
    return request;
 }
 
 SipMessage 
-Helper::makeInvite(const Url& target,
-                   const Url& from,
-                   const Url& contact)
+Helper::makeInvite(const NameAddr& target,
+                   const NameAddr& from,
+                   const NameAddr& contact)
 {
    return Helper::makeRequest(target, from, contact, INVITE);
 }
@@ -48,14 +48,14 @@ Helper::makeResponse(const SipMessage& request, int responseCode)
    {
       if (!response.header(h_To).exists(p_tag))
       {
-         response.header(h_To)[p_tag] = Helper::computeTag(Helper::tagSize);
+         response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
       }
    }
    return response;
 }
 
 SipMessage 
-Helper::makeResponse(const SipMessage& request, int responseCode, const Url& contact)
+Helper::makeResponse(const SipMessage& request, int responseCode, const NameAddr& contact)
 {
    SipMessage response = Helper::makeResponse(request, responseCode);
    response.header(h_Contacts).push_front(contact);
@@ -65,7 +65,7 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Url& con
 
 //to, requestLine& cseq method set
 SipMessage 
-Helper::makeRequest(const Url& target, MethodTypes method)
+Helper::makeRequest(const NameAddr& target, MethodTypes method)
 {
    assert(0);
 }
@@ -73,13 +73,13 @@ Helper::makeRequest(const Url& target, MethodTypes method)
 
 // copy the values from Url into rline (with sip-uri parameters?)
 void 
-Helper::setUri(RequestLine& rLine, const Url& url)
+Helper::setUri(RequestLine& rLine, const NameAddr& url)
 {
    assert(0);
 }
 
 void 
-Helper::setUri(StatusLine& rLine, const Url& url)
+Helper::setUri(StatusLine& rLine, const NameAddr& url)
 {
    assert(0);
 }

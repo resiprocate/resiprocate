@@ -11,7 +11,7 @@ class Dialog
 {
    public:
       // pass in a contact for this location e.g. "sip:local@domain:5060"
-      Dialog(const Url& localContact);
+      Dialog(const NameAddr& localContact);
       
       // This happens when a dialog gets created on a UAS when a 
       // provisional (1xx) response or 2xx is sent back by the UAS
@@ -31,14 +31,14 @@ class Dialog
 
       const CallId& dialogId() const { return mDialogId; }
       const Data& getLocalTag() const { return mLocalTag; }
-      const Url& getRemoteTarget() const { return mRemoteTarget; }
+      const NameAddr& getRemoteTarget() const { return mRemoteTarget; }
       const CallId& getCallId() const { return mCallId; }
       
 
       // For creating requests within a dialog
       SipMessage makeInvite();
       SipMessage makeBye();
-      SipMessage makeRefer(const Url& referTo);
+      SipMessage makeRefer(const NameAddr& referTo);
       SipMessage makeNotify();
       SipMessage makeOptions();
       SipMessage makeAck(const SipMessage& request);
@@ -53,12 +53,12 @@ class Dialog
       void copyCSeq(SipMessage& request);
 
       Via mVia;          // for this UA
-      Url mContact;  // for this UA
+      NameAddr mContact;  // for this UA
 
       // Dialog State
       bool mCreated;
-      Urls mRouteSet;
-      Url mRemoteTarget;
+      NameAddrs mRouteSet;
+      NameAddr mRemoteTarget;
       unsigned long mRemoteSequence;
       bool mRemoteEmpty;
       unsigned long mLocalSequence;
@@ -66,8 +66,8 @@ class Dialog
       CallId mCallId;
       Data mLocalTag;
       Data mRemoteTag;
-      Url mRemoteUri;
-      Url mLocalUri;
+      NameAddr mRemoteUri;
+      NameAddr mLocalUri;
       CallId mDialogId;
 
       friend std::ostream& operator<<(std::ostream& strm, Dialog& d);
