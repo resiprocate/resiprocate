@@ -6,17 +6,21 @@ namespace Vocal2
 {
 enum MethodTypes
 {
-   INVITE,
    ACK,
    BYE,
    CANCEL,
-   REGISTER,
-   SUBSCRIBE,
+   INVITE,
+   NOTIFY,
    OPTIONS,
    REFER,
-   NOTIFY
+   REGISTER,
+   SUBSCRIBE,
+   UNKNOWN
 };
- 
+
+MethodTypes
+getMethodType(const char* name, int len);
+
 }
 
 
