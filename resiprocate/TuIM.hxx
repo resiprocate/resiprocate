@@ -9,6 +9,8 @@
 namespace Vocal2
 {
 
+class Pidf;
+
 class TuIM
 {
    public:
@@ -73,6 +75,8 @@ class TuIM
       void processRegisterResponse(SipMessage* msg);
       void processSubscribeResponse(SipMessage* msg, Buddy& buddy );
 
+      void sendNotify(Dialog* dialog);
+      
       PageCallback* mPageCallback;
       ErrCallback* mErrCallback; 
       PresCallback* mPressCallback;
@@ -81,6 +85,7 @@ class TuIM
       Uri mContact;
       Data mPassword;
 
+      // people I subscibe too 
       class Buddy
       {
          public:
@@ -89,11 +94,12 @@ class TuIM
             Dialog* presDialog; 
             UInt64 mNextTimeToSubscribe;
       };
-
       vector<Buddy> mBuddy;
 
+      // people who subscribe to me 
       vector<Dialog*> mSubscribers;
-
+      Pidf* mPidf;
+      
       // registration information
       Dialog mRegistrationDialog;
       UInt64 mNextTimeToRegister;
