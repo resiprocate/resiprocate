@@ -10,10 +10,7 @@
 namespace Vocal2
 {
 
-class Message 
-{
-};
-
+class SipMessage;
 
 class Transport
 {
@@ -33,7 +30,7 @@ class Transport
             virtual const char* what() const throw();
       };
 
-      Transport(in_port_t portNum, Fifo<Message>& rxFifo);
+      Transport(in_port_t portNum, Fifo<SipMessage>& rxFifo);
       // !ah! need to think about type for
       // interface specification here.
       
@@ -51,7 +48,7 @@ class Transport
       int mFd;
       in_port_t mPort;
       Fifo<SendData> mTxFifo; // owned by the transport
-      Fifo<Message>& mRxFifo; // passed in
+      Fifo<SipMessage>& mRxFifo; // passed in
 
    private:
 
