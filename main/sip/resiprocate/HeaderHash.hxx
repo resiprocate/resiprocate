@@ -1,5 +1,5 @@
-#if !defined(HEADERHASH_HXX)
-#define HEADERHASH_HXX
+#if !defined(RESIP_HEADERHASH_HXX)
+#define RESIP_HEADERHASH_HXX
 namespace resip 
 {
 
