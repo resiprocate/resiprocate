@@ -97,40 +97,81 @@ Dialog::makeResponse(const SipMessage& request, int code)
 
 
 void 
-Dialog::createDialogAsUAC(const SipMessage& response)
+Dialog::createDialogAsUAC(const SipMessage& msg)
 {
    if (!mCreated)
    {
-      assert(response.isResponse());
+      if(msg.isResponse())
+      {
+         const SipMessage& response = msg;
+         if ( !response.exists(h_Contacts) && response.header(h_Contacts).size() != 1)
+         {
+            InfoLog (<< "Response doesn't have a contact header or more than one contact, so can't create dialog");
+            DebugLog (<< response);
+            throw Exception("Invalid or missing contact header in message", __FILE__,__LINE__);
+         }
 
-      if ( !response.exists(h_Contacts) && response.header(h_Contacts).size() != 1)
+         // reverse order from response
+         if (response.exists(h_RecordRoutes))
+         {
+            mRouteSet = response.header(h_RecordRoutes).reverse();
+         }
+         mRemoteTarget = response.header(h_Contacts).front();
+         mRemoteSequence = 0;
+         mRemoteEmpty = true;
+         mLocalSequence = response.header(h_CSeq).sequence();
+         mLocalEmpty = false;
+         mCallId = response.header(h_CallId);
+         if ( response.header(h_From).exists(p_tag) ) // 2543 compat
+         {
+            mLocalTag = response.header(h_From).param(p_tag);  
+         }
+         if ( response.header(h_To).exists(p_tag) )  // 2543 compat
+         {
+            mRemoteTag = response.header(h_To).param(p_tag); 
+         }
+         mRemoteUri = response.header(h_To);
+         mLocalUri = response.header(h_From);
+
+         mDialogId = mCallId;
+         mDialogId.param(p_toTag) = mLocalTag;
+         mDialogId.param(p_fromTag) = mRemoteTag;
+
+         mCreated = true;
+      }
+   }
+   else if (msg.isRequest() && msg.header(h_CSeq).method() == NOTIFY)
+   {
+      const SipMessage& notify = msg;
+      if (notify.exists(h_RecordRoutes))
       {
-         InfoLog (<< "Response doesn't have a contact header or more than one contact, so can't create dialog");
-         DebugLog (<< response);
-         throw Exception("Invalid or missing contact header in message", __FILE__,__LINE__);
+         mRouteSet = notify.header(h_RecordRoutes);
+      }
+      
+      if (!notify.exists(h_Contacts) && notify.header(h_Contacts).size() != 1)
+      {
+         InfoLog (<< "Notify doesn't have a contact header or more than one contact, so can't create dialog");
+         DebugLog (<< notify);
+         throw Exception("Invalid or missing contact header in notify", __FILE__,__LINE__);
       }
 
-      // reverse order from response
-      if (response.exists(h_RecordRoutes))
+      mRemoteTarget = notify.header(h_Contacts).front();
+      mRemoteSequence = notify.header(h_CSeq).sequence();
+      mRemoteEmpty = false;
+      mLocalSequence = 0;
+      mLocalEmpty = true;
+      mCallId = notify.header(h_CallId);
+      if (notify.header(h_To).exists(p_tag))
       {
-         mRouteSet = response.header(h_RecordRoutes).reverse();
+         mLocalTag = notify.header(h_To).param(p_tag); 
       }
-      mRemoteTarget = response.header(h_Contacts).front();
-      mRemoteSequence = 0;
-      mRemoteEmpty = true;
-      mLocalSequence = response.header(h_CSeq).sequence();
-      mLocalEmpty = false;
-      mCallId = response.header(h_CallId);
-      if ( response.header(h_From).exists(p_tag) ) // 2543 compat
+      if (notify.header(h_From).exists(p_tag))  // 2543 compat
       {
-          mLocalTag = response.header(h_From).param(p_tag);  
+         mRemoteTag = notify.header(h_From).param(p_tag); 
       }
-      if ( response.header(h_To).exists(p_tag) )  // 2543 compat
-      {
-          mRemoteTag = response.header(h_To).param(p_tag); 
-      }
-      mRemoteUri = response.header(h_To);
-      mLocalUri = response.header(h_From);
+      
+      mRemoteUri = notify.header(h_From);
+      mLocalUri = notify.header(h_To);
 
       mDialogId = mCallId;
       mDialogId.param(p_toTag) = mLocalTag;
@@ -538,6 +579,24 @@ resip::operator<<(std::ostream& strm, const Dialog& d)
    return strm;
 }
   
+Data 
+Dialog::dialogId(const SipMessage& msg)
+{
+   CallID id(msg.header(h_CallId));
+   if (msg.isRequest() && msg.isExternal() ||
+       msg.isResponse() && !msg.isExternal())
+   {
+      id.param(p_toTag) = msg.header(h_To).param(p_tag);
+      id.param(p_fromTag) = msg.header(h_From).param(p_tag);
+   }
+   else
+   {
+      id.param(p_toTag) = msg.header(h_From).param(p_tag);
+      id.param(p_fromTag) = msg.header(h_To).param(p_tag);
+   }
+   return Data::from(id);
+}
+
  
 const Data 
 Dialog::dialogId() const
