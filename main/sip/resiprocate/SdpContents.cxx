@@ -1,3 +1,6 @@
+
+
+
 #include "sip2/sipstack/SdpContents.hxx"
 #include "sip2/util/ParseBuffer.hxx"
 #include "sip2/sipstack/Symbols.hxx"
@@ -735,7 +738,7 @@ SdpContents::Session::encode(ostream& s) const
 
    mTimezones.encode(s);
 
-   if (mEncryption.mMethod)
+   if (mEncryption.getMethod())
    {
       mEncryption.encode(s);
    }
@@ -983,7 +986,7 @@ SdpContents::Session::Medium::encode(ostream& s) const
       i->encode(s);
    }
 
-   if (mEncryption.mMethod)
+   if (mEncryption.getMethod())
    {
       mEncryption.encode(s);
    }
