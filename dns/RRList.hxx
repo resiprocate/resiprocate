@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/IntrusiveListElement.hxx"
@@ -34,7 +35,7 @@ class RRList : public IntrusiveListElement<RRList<T>*>
       void update(Iter begin, Iter end)
       {
          mRecords.clear();
-         mAbsoluteExpiry = ULLONG_MAX;
+         mAbsoluteExpiry = ULONG_MAX;
          for (Iter it = begin; it != end; it++)
          {            
             mRecords.push_back(T(*it));

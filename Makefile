@@ -5,7 +5,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE ARES PTHREAD OPENSSL
 
-CODE_SUBDIRS = os
+CODE_SUBDIRS = os dns
 TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =
 
@@ -151,7 +151,17 @@ SRC = \
 	Uri.cxx \
 	X509Contents.cxx \
 	XMLCursor.cxx \
-	KeepAliveMessage.cxx
+	KeepAliveMessage.cxx \
+	\
+	\
+	dns/DnsAAAARecord.cxx \
+	dns/DnsCnameRecord.cxx \
+	dns/DnsHostRecord.cxx \
+	dns/DnsNaptrRecord.cxx \
+	dns/DnsSrvRecord.cxx \
+	dns/DnsStub.cxx \
+	dns/QueryTypes.cxx \
+	dns/RROverlay.cxx \
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp

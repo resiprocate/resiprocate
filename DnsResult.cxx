@@ -53,8 +53,8 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, DnsHandler* handler) 
-   : mDns(dns),
-     mInterface(interfaceObj),
+   : mInterface(interfaceObj),
+     mDns(dns),
      mHandler(handler),
      mSRVCount(0),
      mSips(false),
@@ -1531,6 +1531,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
    }
 }
 
+#ifdef USE_IPV6
 void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 {
    StackLog (<< "Received AAAA result for: " << mTarget);
@@ -1561,6 +1562,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 	assert(0);
 #endif
 }
+#endif
 
 void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
 {
