@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.77 2002/11/07 23:42:09 ryker Exp $
+# $Id: Makefile,v 1.78 2002/11/08 18:46:31 ryker Exp $
 
 BUILD = ../../build
 
@@ -21,6 +21,7 @@ ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
 endif
 
+CXXFLAGS += -DUSETESTTRANSPORT
 
 SRC = \
 	BranchParameter.cxx \
