@@ -105,10 +105,8 @@ class SipStack
       void enableStrictRouting(bool strict=true) { mStrictRouting = strict; }
       bool isStrictRouting() const { return mStrictRouting; }
       
-#ifdef USE_SSL
       /// if this object exists, it manages advanced security featues
       Security* security;
-#endif
 
 private:
       SipStack(const SipStack& copy);
