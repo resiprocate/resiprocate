@@ -1,5 +1,5 @@
-#ifndef MessageApi_hxx
-#define MessageApi_hxx
+#ifndef HeaderTypes_hxx
+#define HeaderTypes_hxx
 
 #include <sipstack/supported.hxx>
 #include <sipstack/ParserCategories.hxx>
@@ -87,7 +87,7 @@ class Header<Headers::Content_Disposition>
       typedef Token Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Content_Disposition> Content_Disposition;
+extern Header<Headers::Content_Disposition> Content_Disposition;
 
 class Header<Headers::Content_Encoding>
 {
@@ -95,7 +95,7 @@ class Header<Headers::Content_Encoding>
       typedef Token Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Content_Encoding> Content_Encoding;
+extern Header<Headers::Content_Encoding> Content_Encoding;
 
 class Header<Headers::MIME_Version>
 {
@@ -103,7 +103,7 @@ class Header<Headers::MIME_Version>
       typedef Token Type;
       bool isMulti() {return false;}
 };
-Header<Headers::MIME_Version> MIME_Version;
+extern Header<Headers::MIME_Version> MIME_Version;
 
 class Header<Headers::Priority>
 {
@@ -111,7 +111,7 @@ class Header<Headers::Priority>
       typedef Token Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Priority> Priority;
+extern Header<Headers::Priority> Priority;
 
 //====================
 // Tokens:
@@ -122,7 +122,7 @@ class Header<Headers::Accept_Encoding>
       typedef Tokens Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Accept_Encoding> Accept_Encoding;
+extern Header<Headers::Accept_Encoding> Accept_Encoding;
 
 class Header<Headers::Accept_Language>
 {
@@ -130,7 +130,7 @@ class Header<Headers::Accept_Language>
       typedef Tokens Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Accept_Language> Accept_Language;
+extern Header<Headers::Accept_Language> Accept_Language;
 
 class Header<Headers::Allow>
 {
@@ -138,7 +138,7 @@ class Header<Headers::Allow>
       typedef Tokens Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Allow> Allow;
+extern Header<Headers::Allow> Allow;
 
 class Header<Headers::Content_Language>
 {
@@ -146,7 +146,7 @@ class Header<Headers::Content_Language>
       typedef Tokens Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Content_Language> Content_Language;
+extern Header<Headers::Content_Language> Content_Language;
 
 class Header<Headers::Proxy_Require>
 {
@@ -154,7 +154,7 @@ class Header<Headers::Proxy_Require>
       typedef Tokens Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Proxy_Require> Proxy_Require;
+extern Header<Headers::Proxy_Require> Proxy_Require;
 
 class Header<Headers::Require>
 {
@@ -162,7 +162,7 @@ class Header<Headers::Require>
       typedef Tokens Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Require> Require;
+extern Header<Headers::Require> Require;
 
 class Header<Headers::Supported>
 {
@@ -170,7 +170,7 @@ class Header<Headers::Supported>
       typedef Tokens Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Supported> Supported;
+extern Header<Headers::Supported> Supported;
 
 class Header<Headers::Unsupported>
 {
@@ -178,7 +178,7 @@ class Header<Headers::Unsupported>
       typedef Tokens Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Unsupported> Unsupported;
+extern Header<Headers::Unsupported> Unsupported;
 
 //====================
 // Mime
@@ -189,7 +189,7 @@ class Header<Headers::Accept>
       typedef Mimes Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Accept> Accept;
+extern Header<Headers::Accept> Accept;
 
 class Header<Headers::Content_Type>
 {
@@ -197,7 +197,7 @@ class Header<Headers::Content_Type>
       typedef Mime Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Content_Type> Content_Type;
+extern Header<Headers::Content_Type> Content_Type;
 
 //====================
 // GenericURIs:
@@ -208,7 +208,7 @@ class Header<Headers::Alert_Info>
       typedef GenericURIs Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Alert_Info> Alert_Info;
+extern Header<Headers::Alert_Info> Alert_Info;
 
 class Header<Headers::Error_Info>
 {
@@ -216,7 +216,7 @@ class Header<Headers::Error_Info>
       typedef GenericURIs Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Error_Info> Error_Info;
+extern Header<Headers::Error_Info> Error_Info;
 
 //====================
 // NameAddrs:
@@ -227,7 +227,7 @@ class Header<Headers::Record_Route>
       typedef NameAddr Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Record_Route> Record_Route;
+extern Header<Headers::Record_Route> Record_Route;
 
 class Header<Headers::Route>
 {
@@ -235,7 +235,7 @@ class Header<Headers::Route>
       typedef NameAddr Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Route> Route;
+extern Header<Headers::Route> Route;
 
 //====================
 // Contact:
@@ -246,7 +246,7 @@ class Header<Headers::Contact>
       typedef Contacts Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Contact> Contact;
+extern Header<Headers::Contact> Contact;
 
 //====================
 // NameAddrOrAddrSpec:
@@ -257,7 +257,7 @@ class Header<Headers::From>
       typedef NameAddrOrAddrSpec Type;
       bool isMulti() {return false;}
 };
-Header<Headers::From> From;
+extern Header<Headers::From> From;
 
 class Header<Headers::Reply_To>
 {
@@ -265,7 +265,7 @@ class Header<Headers::Reply_To>
       typedef NameAddrOrAddrSpec Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Reply_To> Reply_To;
+extern Header<Headers::Reply_To> Reply_To;
 
 class Header<Headers::To>
 {
@@ -273,7 +273,7 @@ class Header<Headers::To>
       typedef NameAddrOrAddrSpec Type;
       bool isMulti() {return false;}
 };
-Header<Headers::To> To;
+extern Header<Headers::To> To;
 
 //====================
 //String:
@@ -284,7 +284,7 @@ class Header<Headers::Organization>
       typedef StringComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Organization> Organization;
+extern Header<Headers::Organization> Organization;
 
 class Header<Headers::Server>
 {
@@ -292,7 +292,7 @@ class Header<Headers::Server>
       typedef StringComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Server> Server;
+extern Header<Headers::Server> Server;
 
 class Header<Headers::Subject>
 {
@@ -300,7 +300,7 @@ class Header<Headers::Subject>
       typedef StringComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Subject> Subject;
+extern Header<Headers::Subject> Subject;
 
 class Header<Headers::User_Agent>
 {
@@ -308,7 +308,7 @@ class Header<Headers::User_Agent>
       typedef StringComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::User_Agent> User_Agent;
+extern Header<Headers::User_Agent> User_Agent;
 
 //====================
 // Integer:
@@ -319,7 +319,7 @@ class Header<Headers::Content_Length>
       typedef IntegerComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Content_Length> Content_Length;
+extern Header<Headers::Content_Length> Content_Length;
 
 class Header<Headers::Expires>
 {
@@ -327,7 +327,7 @@ class Header<Headers::Expires>
       typedef IntegerComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Expires> Expires;
+extern Header<Headers::Expires> Expires;
 
 class Header<Headers::Max_Forwards>
 {
@@ -335,7 +335,7 @@ class Header<Headers::Max_Forwards>
       typedef IntegerComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Max_Forwards> Max_Forwards;
+extern Header<Headers::Max_Forwards> Max_Forwards;
 
 class Header<Headers::Min_Expires>
 {
@@ -343,7 +343,7 @@ class Header<Headers::Min_Expires>
       typedef IntegerComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Min_Expires> Min_Expires;
+extern Header<Headers::Min_Expires> Min_Expires;
 
 // !dlb! this one is not quite right -- can have (comment) after field value
 class Header<Headers::Retry_After>
@@ -352,7 +352,7 @@ class Header<Headers::Retry_After>
       typedef IntegerComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Retry_After> Retry_After;
+extern Header<Headers::Retry_After> Retry_After;
 
 //====================
 // CallId:
@@ -363,7 +363,7 @@ class Header<Headers::Call_ID>
       typedef CallId Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Call_ID> Call_ID;
+extern Header<Headers::Call_ID> Call_ID;
 
 //====================
 // CallIds:
@@ -374,7 +374,7 @@ class Header<Headers::In_Reply_To>
       typedef CallIds Type;
       bool isMulti() {return false;}
 };
-Header<Headers::In_Reply_To> In_Reply_To;
+extern Header<Headers::In_Reply_To> In_Reply_To;
 
 //====================
 // Auth:
@@ -385,7 +385,7 @@ class Header<Headers::Authentication_Info>
       typedef Auth Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Authentication_Info> Authentication_Info;
+extern Header<Headers::Authentication_Info> Authentication_Info;
 
 class Header<Headers::Authorization>
 {
@@ -393,7 +393,7 @@ class Header<Headers::Authorization>
       typedef Auth Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Authorization> Authorization;
+extern Header<Headers::Authorization> Authorization;
 
 class Header<Headers::Proxy_Authenticate>
 {
@@ -401,7 +401,7 @@ class Header<Headers::Proxy_Authenticate>
       typedef Auth Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Proxy_Authenticate> Proxy_Authenticate;
+extern Header<Headers::Proxy_Authenticate> Proxy_Authenticate;
 
 class Header<Headers::Proxy_Authorization>
 {
@@ -409,7 +409,7 @@ class Header<Headers::Proxy_Authorization>
       typedef Auth Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Proxy_Authorization> Proxy_Authorization;
+extern Header<Headers::Proxy_Authorization> Proxy_Authorization;
 
 class Header<Headers::WWW_Authenticate>
 {
@@ -417,7 +417,7 @@ class Header<Headers::WWW_Authenticate>
       typedef Auth Type;
       bool isMulti() {return false;}
 };
-Header<Headers::WWW_Authenticate> WWW_Authenticate;
+extern Header<Headers::WWW_Authenticate> WWW_Authenticate;
 
 //====================
 // CSeqComponent:
@@ -428,7 +428,7 @@ class Header<Headers::CSeq>
       typedef CSeqComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::CSeq> CSeq;
+extern Header<Headers::CSeq> CSeq;
 
 //====================
 // DateComponent:
@@ -439,7 +439,7 @@ class Header<Headers::Date>
       typedef DateComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Date> Date;
+extern Header<Headers::Date> Date;
 
 //====================
 // WarningComponent:
@@ -450,7 +450,7 @@ class Header<Headers::Warning>
       typedef WarningComponent Type;
       bool isMulti() {return false;}
 };
-Header<Headers::Warning> Warning;
+extern Header<Headers::Warning> Warning;
 
 //====================
 // Via
@@ -461,14 +461,13 @@ class Header<Headers::Via>
       typedef Vias Type;
       bool isMulti() {return true;}
 };
-Header<Headers::Via> Via;
+extern Header<Headers::Via> Via;
 
 class RequestLineType {};
-RequestLineType RequestLine;
+extern RequestLineType RequestLine;
 
 class StatusLineType {};
-StatusLineType StatusLine;
-
+extern StatusLineType StatusLine;
 
 }
 #endif
