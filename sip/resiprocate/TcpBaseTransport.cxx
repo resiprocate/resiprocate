@@ -133,7 +133,7 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
       if ( fdset.readyToRead(currConnection->getSocket()) || currConnection->hasDataToRead() )
       {
          //DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection);
-         //fdset.clear(currConnection->getSocket());
+         fdset.clear(currConnection->getSocket());
          std::pair<char*, size_t> writePair = currConnection->getWriteBuffer();
          size_t bytesToRead = resipMin(writePair.second, 
                                        static_cast<size_t>(Connection::ChunkSize));
