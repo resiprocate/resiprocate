@@ -21,6 +21,8 @@ class ClientSubscription: public BaseSubscription
       void requestRefresh();
       virtual void end();
 
+      virtual std::ostream& dump(std::ostream& strm) const;
+
    protected:
       virtual ~ClientSubscription();
    private:

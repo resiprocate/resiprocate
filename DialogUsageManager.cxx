@@ -1133,6 +1133,16 @@ DialogUsageManager::processRequest(const SipMessage& request)
 {
    DebugLog ( << "DialogUsageManager::processRequest: " << request.brief());
 
+   if (mShutdownState != Running)
+   {
+      InfoLog (<< "Ignoring a request since we are shutting down " << request.brief());
+
+      SipMessage failure;
+      makeResponse(failure, request, 480, "UAS is shutting down");
+      sendResponse(failure);
+      return;
+   }
+   
    if (request.header(h_RequestLine).method() == PUBLISH)
    {
       processPublish(request);
@@ -1298,6 +1308,13 @@ void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    DebugLog ( << "DialogUsageManager::processResponse: " << response);
+
+   if (mShutdownState != Running)
+   {
+      InfoLog (<< "Ignoring a response since we are shutting down " << response.brief());
+      return;
+   }
+
    if (/*response.header(h_StatusLine).statusCode() > 100 && */response.header(h_CSeq).method() != CANCEL)
    {
       DialogSet* ds = findDialogSet(DialogSetId(response));
