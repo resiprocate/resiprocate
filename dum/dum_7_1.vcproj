@@ -21,11 +21,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../../&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;USE_ARES"
 				MinimalRebuild="FALSE"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -112,6 +112,9 @@
 			</File>
 			<File
 				RelativePath=".\AppDialogSet.cxx">
+			</File>
+			<File
+				RelativePath=".\AppDialogSetFactory.cxx">
 			</File>
 			<File
 				RelativePath=".\BaseCreator.cxx">
@@ -225,6 +228,9 @@
 			</File>
 			<File
 				RelativePath=".\AppDialogSet.hxx">
+			</File>
+			<File
+				RelativePath=".\AppDialogSetFactory.hxx">
 			</File>
 			<File
 				RelativePath=".\BaseCreator.hxx">

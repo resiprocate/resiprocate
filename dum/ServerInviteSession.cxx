@@ -108,7 +108,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
          case Initial:
             assert(msg.header(h_RequestLine).method() == INVITE);
             mState = Proceeding;
-            mDum.mInviteSessionHandler->onNewSession(getHandle(), msg);
+            mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
             
             if (offans.first == Offer)
             {
