@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.20 2002/11/04 18:36:43 bko Exp $";
+"$Id: Data.cxx,v 1.21 2002/11/04 19:46:18 derekm Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -445,7 +445,7 @@ Vocal2::operator<<(ostream& strm, const Data& d)
 
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 size_t 
-HASH_NAMESPACE::hash<Vocal2::Data>::operator()(const Vocal2::Data& data) const
+__gnu_cxx::hash<Vocal2::Data>::operator()(const Vocal2::Data& data) const
 {
    unsigned long __h = 0; 
    const char* start = data.data(); // non-copying
