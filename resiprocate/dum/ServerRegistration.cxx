@@ -38,6 +38,7 @@ ServerRegistration::accept(SipMessage& ok)
   RegistrationPersistenceManager::contact_list_t contacts;
   RegistrationPersistenceManager::contact_list_t::iterator i;
   contacts = database->getContacts(mAor);
+  database->unlockRecord(mAor);
 
   time_t now;
   time(&now);
@@ -73,6 +74,7 @@ ServerRegistration::reject(int statusCode)
   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
   database->removeAor(mAor);
   database->addAor(mAor, mOriginalContacts);
+  database->unlockRecord(mAor);
 
   SipMessage failure;
   mDum.makeResponse(failure, mRequest, statusCode);
@@ -98,6 +100,9 @@ ServerRegistration::dispatch(const SipMessage& msg)
     }
 
     mAor = msg.header(h_To).uri();
+
+    database->lockRecord(mAor);
+
     int globalExpires = msg.header(h_Expires).value();
 
     if (globalExpires == 0)
