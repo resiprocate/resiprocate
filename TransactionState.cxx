@@ -126,15 +126,15 @@ TransactionState::process(TransactionController& controller)
    if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
    else state = controller.mServerTransactionMap.find(tid);
    
-   // this code makes sure that an ACK to a 200 is going to create a new
-   // stateless transaction. In an ACK to a failure response, the mToTag will
+   // this code makes sure that an RESIP_ACK to a 200 is going to create a new
+   // stateless transaction. In an RESIP_ACK to a failure response, the mToTag will
    // have been set in the ServerTransaction as the 4xx passes through so it
    // will match. 
    if (state && sip && sip->isRequest() && sip->header(h_RequestLine).getMethod() == RESIP_ACK)
    {
       if (sip->header(h_To).exists(p_tag) && sip->header(h_To).param(p_tag) != state->mToTag)
       {
-         // Must have received an ACK to a 200;
+         // Must have received an RESIP_ACK to a 200;
          tid += "ack";
          if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
          else state = controller.mServerTransactionMap.find(tid);
@@ -152,7 +152,7 @@ TransactionState::process(TransactionController& controller)
             state->processClientNonInvite(message);
             break;
          case ClientInvite:
-            // ACK from TU will be Stateless
+            // RESIP_ACK from TU will be Stateless
             assert (!(state->isFromTU(sip) &&  sip->isRequest() && sip->header(h_RequestLine).getMethod() == RESIP_ACK));
             state->processClientInvite(message);
             break;
@@ -214,7 +214,7 @@ TransactionState::process(TransactionController& controller)
                TransactionState* matchingInvite = controller.mServerTransactionMap.find(sip->getTransactionId());
                if (matchingInvite == 0)
                {
-                  InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
+                  InfoLog (<< "No matching RESIP_INVITE for incoming (from wire) CANCEL to uas");
                   TransactionState::sendToTU(controller, Helper::makeResponse(*sip, 481));
                   delete sip;
                   return;
@@ -236,7 +236,7 @@ TransactionState::process(TransactionController& controller)
             }
             
 
-            // Incoming ACK just gets passed to the TU
+            // Incoming RESIP_ACK just gets passed to the TU
             //StackLog(<< "Adding incoming message to TU fifo " << tid);
             TransactionState::sendToTU(controller, sip);
          }
@@ -261,7 +261,7 @@ TransactionState::process(TransactionController& controller)
                TransactionState* matchingInvite = controller.mClientTransactionMap.find(sip->getTransactionId());
                if (matchingInvite == 0)
                {
-                  InfoLog (<< "No matching INVITE for incoming (from TU) CANCEL to uac");
+                  InfoLog (<< "No matching RESIP_INVITE for incoming (from TU) CANCEL to uac");
                   TransactionState::sendToTU(controller, Helper::makeResponse(*sip,481));
                   delete sip;
                }
@@ -271,10 +271,10 @@ TransactionState::process(TransactionController& controller)
                   StackLog (<< *matchingInvite);
                   StackLog (<< *sip);
 
-                  // if no INVITE had been sent out yet. -- i.e. dns result not
+                  // if no RESIP_INVITE had been sent out yet. -- i.e. dns result not
                   // processed yet 
 
-                  // The CANCEL was received before the INVITE was sent
+                  // The CANCEL was received before the RESIP_INVITE was sent
                   // This can happen in odd cases. Too common to assert.
                   // Be graceful.
                   TransactionState::sendToTU(controller, Helper::makeResponse(*sip, 200));
@@ -286,7 +286,7 @@ TransactionState::process(TransactionController& controller)
                }
                else if (matchingInvite->mState == Completed)
                {
-                  // A final response was already seen for this INVITE transaction
+                  // A final response was already seen for this RESIP_INVITE transaction
                   matchingInvite->sendToTU(Helper::makeResponse(*sip, 200));
                   delete sip;
                }
@@ -297,7 +297,7 @@ TransactionState::process(TransactionController& controller)
                   state->processReliability(matchingInvite->mTarget.getType());
                   state->processClientNonInvite(sip);
                   
-                  // for the INVITE in case we never get a 487
+                  // for the RESIP_INVITE in case we never get a 487
                   matchingInvite->mController.mTimers.add(Timer::TimerCleanUp, sip->getTransactionId(), 128*Timer::T1);
                }
             }
@@ -341,12 +341,12 @@ TransactionState::process(TransactionController& controller)
 void
 TransactionState::processStateless(TransactionMessage* message)
 {
-   // for ACK messages from the TU, there is no transaction, send it directly
+   // for RESIP_ACK messages from the TU, there is no transaction, send it directly
    // to the wire // rfc3261 17.1 Client Transaction
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
    StackLog (<< "TransactionState::processStateless: " << message->brief());
    
-   // !jf! There is a leak for Stateless transactions associated with ACK to 200
+   // !jf! There is a leak for Stateless transactions associated with RESIP_ACK to 200
    if (isFromTU(message))
    {
       delete mMsgToRetransmit;
@@ -527,7 +527,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       switch (sip->header(h_RequestLine).getMethod())
       {
-         // Received INVITE request from TU="Transaction User", Start Timer B which controls
+         // Received RESIP_INVITE request from TU="Transaction User", Start Timer B which controls
          // transaction timeouts. 
          case RESIP_INVITE:
             delete mMsgToRetransmit; 
@@ -595,7 +595,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                if (mIsReliable)
                {
                   // Stack MUST pass the received response up to the TU, and the client
-                  // transaction MUST generate an ACK request, even if the transport is
+                  // transaction MUST generate an RESIP_ACK request, even if the transport is
                   // reliable
                   SipMessage* invite = mMsgToRetransmit;
                   mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
@@ -614,9 +614,9 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                   if (mState == Calling || mState == Proceeding)
                   {
                      // MUST pass the received response up to the TU, and the client
-                     // transaction MUST generate an ACK request, even if the transport is
+                     // transaction MUST generate an RESIP_ACK request, even if the transport is
                      // reliable, if transport is Unreliable then Fire the Timer D which 
-                     // take care of re-Transmission of ACK 
+                     // take care of re-Transmission of RESIP_ACK 
                      mState = Completed;
                      mController.mTimers.add(Timer::TimerD, mId, Timer::TD );
                      SipMessage* ack;
@@ -630,7 +630,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                   {
                      // Any retransmissions of the final response that
                      // are received while in the "Completed" state MUST
-                     // cause the ACK to be re-passed to the transport
+                     // cause the RESIP_ACK to be re-passed to the transport
                      // layer for retransmission.
                      assert (mMsgToRetransmit->header(h_RequestLine).getMethod() == RESIP_ACK);
                      sendToWire(mMsgToRetransmit, true);
@@ -674,7 +674,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                //if (d < Timer::T2) d *= 2;     !slg! TimerA is supposed to double with each retransmit RFC3261 17.1.1          
 
                mController.mTimers.add(Timer::TimerA, mId, d);
-               InfoLog (<< "Retransmitting INVITE: " << mMsgToRetransmit->brief());
+               InfoLog (<< "Retransmitting RESIP_INVITE: " << mMsgToRetransmit->brief());
                sendToWire(mMsgToRetransmit, true);
             }
             delete msg;
@@ -871,7 +871,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             
          case RESIP_ACK:
             /*
-              If an ACK is received while the server transaction is in the
+              If an RESIP_ACK is received while the server transaction is in the
               "Completed" state, the server transaction MUST transition to the
               "Confirmed" state.
             */
@@ -879,14 +879,14 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             {
                if (mIsReliable)
                {
-                  //StackLog (<< "Received ACK in Completed (reliable) - delete transaction");
+                  //StackLog (<< "Received RESIP_ACK in Completed (reliable) - delete transaction");
                   terminateServerTransaction(mId);
                   delete this; 
                   delete msg;
                }
                else
                {
-                  //StackLog (<< "Received ACK in Completed (unreliable) - confirmed, start Timer I");
+                  //StackLog (<< "Received RESIP_ACK in Completed (unreliable) - confirmed, start Timer I");
                   mState = Confirmed;
                   mController.mTimers.add(Timer::TimerI, mId, Timer::T4 );
                   delete msg;
@@ -894,7 +894,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             }
             else
             {
-               //StackLog (<< "Ignore ACK not in Completed state");
+               //StackLog (<< "Ignore RESIP_ACK not in Completed state");
                delete msg;
             }
             break;
@@ -1041,10 +1041,10 @@ TransactionState::processServerInvite(TransactionMessage* msg)
 
             /*
               If timer H fires while in the "Completed" state, it implies that the
-              ACK was never received.  In this case, the server transaction MUST
+              RESIP_ACK was never received.  In this case, the server transaction MUST
               transition to the "Terminated" state, and MUST indicate to the TU
               that a transaction failure has occurred. WHY we need to inform TU
-              for Failure cases ACK ? do we really need to do this ???       
+              for Failure cases RESIP_ACK ? do we really need to do this ???       
 
               !jf! this used to re-add TimerH if there was an associated CANCEL
               transaction. Don't know why. 
@@ -1053,7 +1053,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
          case Timer::TimerI:
             if (timer->getType() == Timer::TimerH)
             {
-               InfoLog (<< "No ACK was received on a server transaction (Timer H)");
+               InfoLog (<< "No RESIP_ACK was received on a server transaction (Timer H)");
             }
             terminateServerTransaction(mId);
             delete this;
@@ -1131,8 +1131,8 @@ TransactionState::processClientStale(TransactionMessage* msg)
       else
       {
          // might have received some other response because a downstream UAS is
-         // misbehaving. For instance, sending a 487/INVITE after already
-         // sending a 200/INVITE. In this case, discard the response
+         // misbehaving. For instance, sending a 487/RESIP_INVITE after already
+         // sending a 200/RESIP_INVITE. In this case, discard the response
          StackLog (<< "Discarding extra response: " << *msg);
          delete msg;
       }
@@ -1167,18 +1167,18 @@ TransactionState::processServerStale(TransactionMessage* msg)
    }
    else if (sip && isRequest(sip) && sip->header(h_RequestLine).getMethod() == RESIP_ACK)
    {
-      // this can happen when an upstream UAC sends an ACK with no to-tag when
+      // this can happen when an upstream UAC sends an RESIP_ACK with no to-tag when
       // it should
       assert(isFromWire(msg));
-      InfoLog (<< "Passing ACK directly to TU: " << sip->brief());
+      InfoLog (<< "Passing RESIP_ACK directly to TU: " << sip->brief());
       sendToTU(msg);
    }
    else if (sip && isRequest(sip) && sip->header(h_RequestLine).getMethod() == RESIP_INVITE)
    {
       // this can happen when an upstream UAC never received the 200 and
-      // retransmits the INVITE when using unreliable transport
-      // Drop the INVITE since the 200 will get retransmitted by the downstream UAS
-      StackLog (<< "Dropping retransmitted INVITE in stale server transaction" << sip->brief());
+      // retransmits the RESIP_INVITE when using unreliable transport
+      // Drop the RESIP_INVITE since the 200 will get retransmitted by the downstream UAS
+      StackLog (<< "Dropping retransmitted RESIP_INVITE in stale server transaction" << sip->brief());
       delete msg;
    }
    else if (isResponse(msg) && isFromTU(msg))
@@ -1229,12 +1229,12 @@ TransactionState::processTransportFailure()
 
       // In the case of a client-initiated CANCEL, we don't want to
       // try other transports in the case of transport error as the
-      // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
+      // CANCEL MUST be sent to the same IP/PORT as the orig. RESIP_INVITE.
       SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
       WarningCategory warning;
       warning.hostname() = DnsUtil::getLocalHostName();
       warning.code() = 499;
-      warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
+      warning.text() = "Failed to deliver CANCEL using the same transport as the RESIP_INVITE was used";
       response->header(h_Warnings).push_back(warning);
       
       sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));

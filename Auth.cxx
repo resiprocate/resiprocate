@@ -110,7 +110,7 @@ Auth::parseAuthParameters(ParseBuffer& pb)
       const char* keyStart = pb.position();
       const char* keyEnd = pb.skipToOneOf(" \t\r\n=");
       ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
-      if (type == ParameterTypes::UNKNOWN)
+      if (type == ParameterTypes::RESIP_UNKNOWN)
       {
          mUnknownParameters.push_back(new UnknownParameter(keyStart, 
                                                            int((keyEnd - keyStart)), pb, 

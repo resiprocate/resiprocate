@@ -144,7 +144,7 @@ main(int argc, char* argv[])
       if (request)
       {
          assert(request->isRequest());
-         assert(request->header(h_RequestLine).getMethod() == REGISTER);
+         assert(request->header(h_RequestLine).getMethod() == RESIP_REGISTER);
 
          SipMessage* response = Helper::makeResponse(*request, 200);
          receiver.send(*response);
@@ -156,7 +156,7 @@ main(int argc, char* argv[])
       if (response)
       {
          assert(response->isResponse());
-         assert(response->header(h_CSeq).method() == REGISTER);
+         assert(response->header(h_CSeq).method() == RESIP_REGISTER);
          outstanding--;
          count++;
          delete response;

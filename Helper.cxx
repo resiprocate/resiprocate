@@ -277,7 +277,7 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_Warnings).push_back(warn);
    }
 
-   // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.   
+   // Only generate a To: tag if one doesn't exist.  Think Re-RESIP_INVITE.   
    // No totag for failure responses or 100s   
    if (!response.header(h_To).exists(p_tag) && responseCode > 100)   
    {   
@@ -441,8 +441,8 @@ Helper::makeCancel(const SipMessage& request)
 // This interface should be used by the stack (TransactionState) to create an
 // AckMsg to a failure response
 // See RFC3261 section 17.1.1.3
-// Note that the branch in this ACK needs to be the 
-// For TU generated ACK, see Dialog::makeAck(...)
+// Note that the branch in this RESIP_ACK needs to be the 
+// For TU generated RESIP_ACK, see Dialog::makeAck(...)
 SipMessage*
 Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
 {
@@ -672,7 +672,7 @@ Helper::make405(const SipMessage& request,
     if (len < 0)
     {
         int upperBound = static_cast<int>(MAX_METHODS);
-	// The UNKNOWN method name marks the end of the enum
+	// The RESIP_UNKNOWN method name marks the end of the enum
         
         for (int i = 0 ; i < upperBound; i ++)
         {

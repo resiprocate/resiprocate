@@ -48,7 +48,7 @@ main(int argc, char* argv[])
 
    Data in("sip:alice@atlanta.example.com"
            ":a84b4c76e66710"
-           ":314159 INVITE"
+           ":314159 RESIP_INVITE"
            ":Thu, 21 Feb 2002 13:02:03 GMT"
            ":sip:alice@pc33.atlanta.example.com"
            ":v=0\r\n"
