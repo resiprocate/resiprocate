@@ -1071,8 +1071,7 @@ extractFromPkcs7Recurse(Contents* tree,
                         SecurityAttributes* attributes,
                         Security& security)
 {
-   assert(0);
-#if 1 // TODO take out when we have security2
+#if defined(USE_SSL)
    Pkcs7Contents* pk;
    if ((pk = dynamic_cast<Pkcs7Contents*>(tree)))
    {
