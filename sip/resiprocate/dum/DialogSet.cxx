@@ -9,11 +9,12 @@ DialogSet::DialogSet(const BaseCreator *creator) :
 {
 }
 
-DialogSet::DialogSet(Dialog* dialog) :
-    mDialogs(),
-    mCreator(NULL)
+DialogSet::DialogSet(const SipMessage& request)
+   mDialogs(),
+   mCreator(NULL),
+   mId(request)
 {
-    mDialogs.push_back(dialog);
+   assert(request.isRequest());
 }
 
 DialogSet::~DialogSet()
@@ -23,13 +24,13 @@ DialogSet::~DialogSet()
 DialogSetId
 Dialogset::getId()
 {
-    return mId;
+   return mId;
 }
 
 void
 DialogSet::addDialog(Dialog *dialog)
 {
-    mDialogs.push_back(dialog);
+   mDialogs.push_back(dialog);
 }
 
 void 
@@ -97,3 +98,27 @@ DialogSet::getCreator()
     return mCreator;
 }
     
+void
+DialogSet::dispatch(const SipMessage& msg)
+{
+   if (msg.isRequest())
+   {
+   }
+   else if (msg.isResponse())
+   {
+      Dialog* dialog = findDialog(msg);
+      if (dialog == 0)
+      {
+         Dialog* dialog = new Dialog(mDum, msg);
+         mDialogs.push_back(dialog);
+      }
+      else
+      {
+         dialog->dispatch(msg);
+      }
+   }
+   else
+   {
+      assert(0);
+   }
+}
