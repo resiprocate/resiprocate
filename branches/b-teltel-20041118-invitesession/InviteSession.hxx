@@ -183,7 +183,7 @@ class InviteSession : public DialogUsage
       void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchTerminated(const SipMessage& msg);
 
-      void startRetransmitTimer();
+      void startRetransmit200Timer();
       void start491Timer();
 
       void handleSessionTimerResponse(const SipMessage& msg);
