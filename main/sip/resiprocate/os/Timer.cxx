@@ -166,12 +166,21 @@ Timer::getSystemTicks()
 #else  
 #  if defined(__linux__) && ( defined(__i686__) || defined(__i386__) )
    asm("rdtsc" : "=A" (tick));
-#else
-#if defined (__SUNPRO_CC)	
+#  else
+#    if defined (__SUNPRO_CC)	
    tick = gethrtime();//This is Not expensive Under solaris 8 & above but systemcall in solaris7
-#else
+#    else
+#      if defined (__MACH__)
+   struct timeval now;
+   gettimeofday( &now , NULL );
+   //assert( now );
+   tick = now.tv_sec;
+   tick *= 1000000;
+   tick += now.tv_usec;
+#      else
    tick = cjGetSystemTimeOfDay();
-#endif
+#      endif
+#    endif
 #  endif
 #endif
    return tick;
@@ -245,9 +254,12 @@ Timer::setupTimeOffsets()
       }
       i++;
    }
+#if __MACH__
+   cpuSpeed = 1;
+#else
    assert( index != 0 );
    cpuSpeed = 0;
-    
+
    // if it is faster than know processors ....
    if ( (index == i-1) && (diff>50) )
    {
@@ -257,6 +269,7 @@ Timer::setupTimeOffsets()
    {
       cpuSpeed = speeds[index];
    }
+#endif
     
    now = getSystemTime();
    nowTick = getSystemTicks();

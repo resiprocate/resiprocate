@@ -12,6 +12,7 @@
 #ifdef WIN32
 typedef unsigned int u_int32_t;
 #else
+#include <sys/types.h>
 #include <sys/socket.h> // for u_int32_t
 #endif
 
