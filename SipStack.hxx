@@ -92,6 +92,11 @@ class SipStack
 
       // Inform the TU that whenever a transaction has been terminated. 
       void registerForTransactionTermination();
+
+      // Allow the application to specify strict routing behavior, by default
+      // loose routing policy is used. 
+      void enableStrictRouting(bool strict=true) { mStrictRouting = strict; }
+      bool isStrictRouting() const { return mStrictRouting; }
       
 #ifdef USE_SSL
       /// if this object exists, it manages advanced security featues
@@ -99,6 +104,9 @@ class SipStack
 #endif
 
 private:
+      SipStack(const SipStack& copy);
+      SipStack& operator=(const SipStack& rhs);
+      
       // fifo used to communicate between the TU (Transaction User) and stack 
       Fifo<Message> mTUFifo;
 
@@ -137,7 +145,8 @@ private:
       std::set<Data> mDomains;
 
       bool mRegisteredForTransactionTermination;
-
+      bool mStrictRouting;
+      
       friend class DnsResolver;
       friend class Executive;
       friend class TransportSelector;

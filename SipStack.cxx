@@ -38,7 +38,8 @@ SipStack::SipStack(bool multiThreaded)
    mTransportSelector(*this),
    mTimers(mStateMacFifo),
    mDnsResolver(*this),
-   mRegisteredForTransactionTermination(false)
+   mRegisteredForTransactionTermination(false),
+   mStrictRouting(false)
 {
    Random::initialize();
    initNetwork();
