@@ -98,11 +98,10 @@ SipMessage::~SipMessage()
 const Data& 
 SipMessage::getTransactionId() const
 {
-   assert (!header(h_Vias).empty());
-   assert (header(h_Vias).front().exists(p_branch));
-   assert (!header(h_Vias).front().param(p_branch).transactionId().empty());
-   if( header(h_Vias).front().param(p_branch).hasMagicCookie() )
+    assert (!header(h_Vias).empty());
+   if( header(h_Vias).front().exists(p_branch) && header(h_Vias).front().param(p_branch).hasMagicCookie() )
    {
+       assert (!header(h_Vias).front().param(p_branch).transactionId().empty());
        return header(h_Vias).front().param(p_branch).transactionId();
    }
    else
