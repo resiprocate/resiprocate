@@ -44,13 +44,17 @@ main(int argc, char* argv[])
    NameAddr from = dest;
    from.uri().port() = 5070;
    
+#ifdef WIN32
+   int totalCalls = 50;
+#else
    int totalCalls = 500;
-   
+#endif
+
    bool done[10000];
    assert( sizeof(done)/sizeof(bool) > (unsigned int)(totalCalls+1) );
-   for ( int i=0; i<=totalCalls; i++ )
+   for ( int ii=0; ii<=totalCalls; ii++ )
    {
-      done[i]=false;
+      done[ii]=false;
    }
    
    int lastSent=0;

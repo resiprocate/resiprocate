@@ -139,6 +139,12 @@
 				RelativePath="sipstack\ConnectionMap.cxx">
 			</File>
 			<File
+				RelativePath="sipstack\Contents.cxx">
+			</File>
+			<File
+				RelativePath="util\CountStream.cxx">
+			</File>
+			<File
 				RelativePath="util\Data.cxx">
 			</File>
 			<File
@@ -181,6 +187,9 @@
 				RelativePath="sipstack\IntegerParameter.cxx">
 			</File>
 			<File
+				RelativePath="sipstack\LazyParser.cxx">
+			</File>
+			<File
 				RelativePath="util\Lock.cxx">
 			</File>
 			<File
@@ -191,6 +200,9 @@
 			</File>
 			<File
 				RelativePath="sipstack\Message.cxx">
+			</File>
+			<File
+				RelativePath="sipstack\MessageWaitingContents.cxx">
 			</File>
 			<File
 				RelativePath="sipstack\MethodTypes.cxx">
@@ -214,22 +226,40 @@
 				RelativePath="sipstack\ParserCategory.cxx">
 			</File>
 			<File
+				RelativePath="sipstack\PlainContents.cxx">
+			</File>
+			<File
 				RelativePath="sipstack\Preparse.cxx">
 			</File>
 			<File
-				RelativePath="util\RandomHex.cxx">
+				RelativePath="sipstack\QopParameter.cxx">
+			</File>
+			<File
+				RelativePath="sipstack\QuotedDataParameter.cxx">
+			</File>
+			<File
+				RelativePath="util\Random.cxx">
+			</File>
+			<File
+				RelativePath="sipstack\ReliabilityMessage.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\SdpContents.cxx">
+			</File>
+			<File
+				RelativePath="sipstack\Security.cxx">
 			</File>
 			<File
 				RelativePath="sipstack\SendingMessage.cxx">
+			</File>
+			<File
+				RelativePath="sipstack\SipFrag.cxx">
 			</File>
 			<File
 				RelativePath="sipstack\SipMessage.cxx">
 			</File>
 			<File
 				RelativePath="sipstack\SipStack.cxx">
-			</File>
-			<File
-				RelativePath="sipstack\test\SipTortureTests.cxx">
 			</File>
 			<File
 				RelativePath="util\Socket.cxx">
@@ -239,6 +269,9 @@
 			</File>
 			<File
 				RelativePath="sipstack\Symbols.cxx">
+			</File>
+			<File
+				RelativePath="sipstack\TcpTransport.cxx">
 			</File>
 			<File
 				RelativePath="util\ThreadIf.cxx">
@@ -265,6 +298,9 @@
 				RelativePath="sipstack\TransportSelector.cxx">
 			</File>
 			<File
+				RelativePath="sipstack\TuIM.cxx">
+			</File>
+			<File
 				RelativePath="sipstack\UdpTransport.cxx">
 			</File>
 			<File
@@ -272,6 +308,9 @@
 			</File>
 			<File
 				RelativePath="sipstack\Uri.cxx">
+			</File>
+			<File
+				RelativePath="sipstack\test\testSpeed.cxx">
 			</File>
 			<File
 				RelativePath="util\vmd5.cxx">
@@ -297,6 +336,12 @@
 			</File>
 			<File
 				RelativePath="sipstack\ConnectionMap.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\Contents.hxx">
+			</File>
+			<File
+				RelativePath="util\CountStream.hxx">
 			</File>
 			<File
 				RelativePath="util\Data.hxx">
@@ -353,6 +398,9 @@
 				RelativePath="sipstack\IntegerParameter.hxx">
 			</File>
 			<File
+				RelativePath="sipstack\LazyParser.hxx">
+			</File>
+			<File
 				RelativePath="util\Lock.hxx">
 			</File>
 			<File
@@ -366,6 +414,9 @@
 			</File>
 			<File
 				RelativePath="sipstack\Message.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\MessageWaitingContents.hxx">
 			</File>
 			<File
 				RelativePath="sipstack\MethodTypes.hxx">
@@ -401,7 +452,19 @@
 				RelativePath="sipstack\ParserContainerBase.hxx">
 			</File>
 			<File
+				RelativePath="sipstack\PlainContents.hxx">
+			</File>
+			<File
 				RelativePath="sipstack\Preparse.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\QopParameter.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\QuotedDataParameter.hxx">
+			</File>
+			<File
+				RelativePath="util\Random.hxx">
 			</File>
 			<File
 				RelativePath="util\RandomHex.hxx">
@@ -413,7 +476,16 @@
 				RelativePath="sipstack\SSL.hxx">
 			</File>
 			<File
+				RelativePath="sipstack\SdpContents.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\Security.hxx">
+			</File>
+			<File
 				RelativePath="sipstack\SendingMessage.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\SipFrag.hxx">
 			</File>
 			<File
 				RelativePath="sipstack\SipMessage.hxx">
@@ -467,7 +539,13 @@
 				RelativePath="sipstack\Transport.hxx">
 			</File>
 			<File
+				RelativePath="sipstack\TransportMessage.hxx">
+			</File>
+			<File
 				RelativePath="sipstack\TransportSelector.hxx">
+			</File>
+			<File
+				RelativePath="sipstack\TuIM.hxx">
 			</File>
 			<File
 				RelativePath="sipstack\UdpTransport.hxx">
