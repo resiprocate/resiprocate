@@ -238,6 +238,20 @@ SipMessage::header(const Data& headerName) const
    return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
 }
 
+bool
+SipMessage::exists(const Data& symbol) const
+{
+   for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
+        i != mUnknownHeaders.end(); i++)
+   {
+      if (i->first == symbol)
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
 void
 SipMessage::remove(const Data& headerName)
 {

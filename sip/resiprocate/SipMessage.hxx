@@ -124,7 +124,7 @@ class SipMessage : public Message
       
       // unknown header interface
       StringCategories& header(const Data& symbol) const;
-
+      bool exists(const Data& symbol) const;
       void remove(const Data& symbol);
 
       // typeless header interface
