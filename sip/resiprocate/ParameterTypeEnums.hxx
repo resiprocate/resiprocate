@@ -95,6 +95,15 @@ class ParameterTypes
          defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891"),
          defineParam(refresher, "refresher", DataParameter, "Session Timer Draft"),
 
+         defineParam(profileType, "profile-type", DataParameter, "draft-ietf-sipping-config-framework"),
+         defineParam(vendor, "vendor", DataParameter, "draft-ietf-sipping-config-framework"),
+         defineParam(model, "model", DataParameter, "draft-ietf-sipping-config-framework"),
+         defineParam(version, "version", DataParameter, "draft-ietf-sipping-config-framework"),
+         defineParam(effectiveBy, "effective-by", IntegerParameter, "draft-ietf-sipping-config-framework"),
+         defineParam(document, "document", DataParameter, "draft-ietf-sipping-config-framework"),
+         defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework"),
+         defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework"),
+
          // NOTE: Do not copy these elsewhere, they are special case
          // !dlb! please insert an explanation of why (above)
          defineParam(qop, "qopFactory", SPECIAL, "RFC 3261"),

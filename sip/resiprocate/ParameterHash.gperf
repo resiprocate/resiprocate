@@ -80,5 +80,13 @@ mode, ParameterTypes::mode
 server, ParameterTypes::server
 charset, ParameterTypes::charset
 access-type, ParameterTypes::accessType
+profile-type, ParameterTypes::profileType
+vendor, ParameterTypes::vendor
+model, ParameterTypes::model
+version, ParameterTypes::version
+effective-by, ParameterTypes::effectiveBy
+document, ParameterTypes::document
+app-id, ParameterTypes::appId
+network-user, ParameterTypes::networkUser
 %%
 }
