@@ -14,7 +14,7 @@
 #endif
 
 #include <cassert>
-//#include <iostream>
+
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -248,10 +248,10 @@ Timer::setupTimeOffsets()
    assert( uSec >= 100*1000 );
    if (  uSec >= 500*1000 )
    {
-       InfoLog( << "now is " << now  );
-       InfoLog( << "start is " << start  );
-       InfoLog( << "diff in uSec is " << uSec );
-       InfoLog( << "diff in count is " << count ); 
+       ErrLog( << "now is " << now  );
+       ErrLog( << "start is " << start  );
+       ErrLog( << "diff in uSec is " << uSec );
+       ErrLog( << "diff in count is " << count ); 
    }
    assert( uSec < 2*1000*1000 );
    assert( count > 100 );
@@ -290,7 +290,6 @@ Timer::setupTimeOffsets()
    // link with -framework AppKit 
    //Gestalt (gestaltProcClkSpeed, &s );
    cpuSpeed = s;
-   
 #else
    assert( index != 0 );
    cpuSpeed = 0;
@@ -311,6 +310,8 @@ Timer::setupTimeOffsets()
     
    mBootTime = now - nowTick/cpuSpeed;
    mCpuSpeedMHz = cpuSpeed;
+
+   InfoLog( << "CPU Speed is " << mCpuSpeedMHz << " MHz " );
 }
 
 
