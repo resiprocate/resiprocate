@@ -178,7 +178,6 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
                }
                else
                {
-                 Transport::stampReceived(mMessage);
                  DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
                  fifo.add(mMessage);
                }
@@ -268,7 +267,6 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
                else
                {
                  DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-                 Transport::stampReceived(mMessage);
                  fifo.add(mMessage);
                }
 
@@ -334,8 +332,6 @@ Connection::performRead(int bytesRead, Fifo<Message>& fifo)
             else
             {
               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-
-              Transport::stampReceived(mMessage);
               fifo.add(mMessage);
             }
             mState = NewMessage;
