@@ -1,4 +1,7 @@
+#if defined(HAVE_CONFIG_H)
 #include "resiprocate/config.hxx"
+#endif
+
 #include "resiprocate/TuIM.hxx"
 #include "GagMessage.hxx"
 #include "GagConduit.hxx"
