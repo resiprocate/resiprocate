@@ -35,8 +35,7 @@ class ClientSubscription: public BaseUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
-      ClientSubscription::Handle getHandle() {return mHandle;}
+      ClientSubscription::Handle& getHandle() { return reinterpret_cast<ClientSubscription::Handle&>(mHandle); }
 
    protected:
       virtual ~ClientSubscription();
@@ -49,7 +48,6 @@ class ClientSubscription: public BaseUsage
       SubscriptionState mSubState;
       const Contents* mCurrentEventDocument;
       UInt64 mExpirationTime;
-      ClientSubscription::Handle mHandle;
       SipMessage& mLastRequest;
 
       // disabled

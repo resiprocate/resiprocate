@@ -61,16 +61,14 @@ class ServerInviteSession: public InviteSession
       
       void handle(const SipMessage& msg);
 
-      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       virtual InviteSession::Handle getSessionHandle();
-      ServerInviteSession::Handle getHandle() {return mHandle;}
+      ServerInviteSession::Handle& getHandle() { return reinterpret_cast<ServerInviteSession::Handle&> (mHandle); }
 
       void dispatch(const SipMessage& msg);
       void dispatch(const DumTimeout& timer);
 
    private:
       friend class Dialog;
-      ServerInviteSession::Handle mHandle;
       
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 

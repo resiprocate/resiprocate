@@ -40,9 +40,10 @@ class BaseUsage
             // throws if not found
             BaseUsage* get();
             BaseUsage* operator->();
-         private:
-            DialogUsageManager* mDum;
             Id mId;
+         private:
+            friend class BaseUsage;            
+            DialogUsageManager* mDum;
             friend class DialogUsageManager;
             friend class Dialog;
             static Id getNext();
@@ -56,13 +57,13 @@ class BaseUsage
       
       virtual void dispatch(const SipMessage& msg) = 0;
       virtual void dispatch(const DumTimeout& timer) = 0;
-      virtual BaseUsage::Handle getBaseHandle() = 0;
-
+      BaseUsage::Handle getBaseHandle() { return mHandle; }
    protected:
       friend class DialogUsageManager;
       BaseUsage(DialogUsageManager& dum, Dialog& dialog);
       virtual ~BaseUsage();
 
+      BaseUsage::Handle mHandle;
       DialogUsageManager& mDum;
       Dialog& mDialog;
 };
