@@ -7,18 +7,24 @@ using namespace std;
 DataParameter::DataParameter(ParameterTypes::Type type,
                              const char* startData, unsigned int dataSize)
    : Parameter(type), 
-     mData(startData, dataSize)
-{}
+     mData(startData, dataSize),
+     mQuoted(false)
+{
+   assert(0);
+}
 
 DataParameter::DataParameter(ParameterTypes::Type type)
-   : Parameter(type) 
-{}
+   : Parameter(type),
+     mQuoted(false)
+{
+}
 
 Data& 
 DataParameter::value()
 {
    return mData;
 }
+
 
 Parameter* 
 DataParameter::clone() const
@@ -29,5 +35,12 @@ DataParameter::clone() const
 ostream& 
 DataParameter::encode(ostream& stream) const
 {
-   return stream << getName() << Symbols::EQUALS << mData;
+   if (mQuoted)
+   {
+      return stream << getName() << Symbols::EQUALS << Symbols::DOUBLE_QUOTE << mData << Symbols::DOUBLE_QUOTE;
+   }
+   else
+   {
+      return stream << getName() << Symbols::EQUALS << mData;
+   }
 }
