@@ -105,6 +105,9 @@
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
+			<File
+				RelativePath="sip2.rc">
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"
@@ -131,10 +134,16 @@
 					RelativePath="util\Lock.cxx">
 				</File>
 				<File
+					RelativePath="util\Log.cxx">
+				</File>
+				<File
 					RelativePath="util\Logger.cxx">
 				</File>
 				<File
 					RelativePath="util\Mutex.cxx">
+				</File>
+				<File
+					RelativePath="util\ParseBuffer.cxx">
 				</File>
 				<File
 					RelativePath="util\RandomHex.cxx">
@@ -144,6 +153,15 @@
 				</File>
 				<File
 					RelativePath="util\Subsystem.cxx">
+				</File>
+				<File
+					RelativePath="util\ThreadIf.cxx">
+				</File>
+				<File
+					RelativePath="util\Timer.cxx">
+				</File>
+				<File
+					RelativePath="util\VException.cxx">
 				</File>
 			</Filter>
 			<Filter
@@ -234,9 +252,6 @@
 					RelativePath="sipstack\convertStringToInt.cxx">
 				</File>
 				<File
-					RelativePath="sipstack\junk.cxx">
-				</File>
-				<File
 					RelativePath="sipstack\testSipStack1.cxx">
 				</File>
 			</Filter>
@@ -244,6 +259,9 @@
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
+			<File
+				RelativePath="resource.h">
+			</File>
 			<Filter
 				Name="Util"
 				Filter="">
