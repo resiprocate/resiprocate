@@ -331,7 +331,8 @@ ClientRegistration::dispatch(const SipMessage& msg)
 
          // Retry if Profile setting is set
          if(mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime() > 0 &&
-            (mState == Adding || mState == Refreshing))
+            (mState == Adding || mState == Refreshing) &&
+            !mEndWhenDone)
          {
              unsigned int retryInterval = mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime();
              if(msg.exists(h_RetryAfter))
