@@ -3,15 +3,10 @@
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += DUM RESIPROCATE OPENSSL ARES DB42 PTHREAD
+PACKAGES += DUM RESIPROCATE OPENSSL ARES DB42 PTHREAD POPT
 
 CODE_SUBDIRS = monkeys
 TARGET_LIBRARY = librepro
-
-CXXFLAGS += -I/sw/include
-LDFLAGS  += -L/sw/lib 
-LDLIBS   += -ldb-4.2 -lpopt
-
 
 TESTPROGRAMS = \
 	repro.cxx \
