@@ -40,6 +40,9 @@ OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
 OPENSSL_INCLUDEDIRS := /usr/local/ssl/include /usr/kerberos/include/
 OPENSSL_LIBDIRS := /usr/local/ssl/lib
+else
+OPENSSL_LDLIBS_LAST := $(ROOT)/contrib/dtls/libssl.a $(ROOT)/contrib/dtls/libcrypto.a
+OPENSSL_INCLUDEDIRS := $(ROOT)/contrib/dtls/include
 endif
 
 ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
