@@ -1,16 +1,15 @@
-
-
-#include <util/Socket.hxx>
-
-
 #include <sipstack/Resolver.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/SipStack.hxx>
 #include <sipstack/TransportSelector.hxx>
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/Uri.hxx>
+#include <sipstack/SendingMessage.hxx>
+
 #include <util/DataStream.hxx>
 #include <util/Logger.hxx>
+#include <util/Socket.hxx>
+
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -99,75 +98,39 @@ TransportSelector::send( SipMessage* msg )
    //     strict router in which case use the URI
    //   - for response look at via  
 
-   Uri target;
-   if (msg->isRequest())
-   {
-      if (msg->header(h_Routes).size() && !msg->header(h_Routes).front().exists(p_lr))
-      {
-         target = msg->header(h_Routes).front().uri();
-      }
-      else
-      {
-         target = msg->header(h_RequestLine).uri();         
-      }
-   }
-   else if (msg->isResponse())
-   {
-      assert (!msg->header(h_Vias).empty());
-      const Via& via = msg->header(h_Vias).front();
-      
-      // should look at via.transport()
-      target.param(p_transport) = Symbols::UDP; // !jf!
-      target.host() = via.sentHost();
-      target.port() = via.sentPort();
-      
-      if (via.exists(p_received))
-      {
-         target.host() = via.param(p_received);
-      }
-      if (via.exists(p_rport))
-      {
-         target.port() = via.param(p_rport);
-      }
-   }
-   else
-   {
-      assert(0);
-   }
-   
-
-   // do a dns lookup !jf!
-   // should only do this once and store in the SipMessage (or somewhere)
-   Resolver resolver(target);
-   
-   // pick the aproperate transport !jf! 
-   // clearly not right
+   Resolver::Tuple tuple = msg->resolve();
    Transport* transport = *mTransports.begin();
 
    // insert the via
-
    if (msg->isRequest())
    {
       assert(!msg->header(h_Vias).empty());
-      msg->header(h_Vias).front().param(p_maddr) = "";
+      msg->header(h_Vias).front().remove(p_maddr);
       //msg->header(h_Vias).front().param(p_ttl) = 1;
       msg->header(h_Vias).front().transport() = Transport::toData(transport->transport());  //cache !jf! 
       msg->header(h_Vias).front().sentHost() = transport->hostname();
       msg->header(h_Vias).front().sentPort() = transport->port();
    }
-   
-   Data* encoded = new Data(2048, true);
-   DataStream encodeStream(*encoded);
+
+   Data& encoded = msg->getEncoded();
+   DataStream encodeStream(encoded);
    msg->encode(encodeStream);
    encodeStream.flush();
+
+   DebugLog (<< "encoded=" << encoded.c_str());
    
-   DebugLog (<< "encoded=" << encoded->data());
-   
-   // get next destination !jf!
-   Resolver::Tuple tuple = *resolver.mCurrent;
    
    // send it over the transport
    transport->send(tuple.ipv4, encoded);
+   mStack.mStateMacFifo.add(new SendingMessage(msg->getTransactionId(), transport->isReliable()));
+}
+
+void
+TransportSelector::retransmit(SipMessage* msg)
+{
+   Transport* transport = *mTransports.begin();
+   assert(transport);
+   transport->send(msg->tuple().ipv4, msg->getEncoded());
 }
 
 
