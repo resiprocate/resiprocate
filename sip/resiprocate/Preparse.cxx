@@ -19,8 +19,7 @@ using namespace Vocal2::PreparseStateTable;
 
 Edge *** mTransitionTable = 0;
 
-
-#if !defined(NDEBUG) && defined(DEBUG)
+#if !defined(NDEBUG) && defined(PP_DEBUG)
 
 string showN(const char * p, size_t l)
 {
@@ -210,6 +209,11 @@ PreparseStateTable::InitStatePreparseStateTable()
    AE( EWSPostColon,X,XC,BuildData,actAdd);
    AE( EWSPostColon,X,LWS,EWSPostColon,actReset );
 
+   // Add edges that will ''skip'' data building and
+   // go straight to quoted states
+   AE( EWSPostColon,dCommaSep,LAQUOT,InAng,actAdd );
+   AE( EWSPostColon,dCommaSep,QUOT,InQ,actAdd );
+
    AE( BuildData,X,XC,BuildData,actAdd);
    AE( BuildData,X,CR,BuildDataCrLf,actNil);
 
@@ -296,12 +300,12 @@ Preparse::addBuffer(const char * buffer, size_t length)
    mLength = length;
    mPtr = buffer;
    mDone = false;
-#if defined(DEBUG)
+#if defined(PP_DEBUG)
    DebugLog( << "added buffer" << mBuffer << ' ' << mLength );
 #endif
 }
 
-#if defined(DEBUG)
+#if defined(PP_DEBUG)
 #include <ctype.h>
 
 ostream& showchar(ostream& os, char c)
@@ -325,7 +329,7 @@ Preparse::process()
       //using namespace PreparseStateTable;
       Edge& e(mTransitionTable[mState][mDisposition][*mPtr]);
 
-#if defined(DEBUG) && defined(SUPER_DEBUG)
+#if defined(PP_DEBUG) && defined(SUPER_DEBUG)
       DebugLog( << "EDGE " << ::stateName(mState)
                 << " (" << (int) *mPtr << ')'
                 << " -> " << ::stateName(e.nextState)
@@ -335,7 +339,7 @@ Preparse::process()
       if (e.workMask & actAdd)
       {
 	 mAnchorEnd = mPtr;
-#if defined(DEBUG) && defined(SUPER_DEBUG)
+#if defined(PP_DEBUG) && defined(SUPER_DEBUG)
          DebugLog( << "+++Adding char '"
                    << showN( mAnchorBeg, mAnchorEnd-mAnchorBeg+1)
                    << '\'' );
@@ -357,7 +361,7 @@ Preparse::process()
          {
             mDisposition = dContinuous;
          }
-#if defined(DEBUG)
+#if defined(PP_DEBUG)
          DebugLog(<<"Hdr \'"
                   << showN(mHeader, mHeaderLength)
                   << "\' Type: " << int(mHeaderType) );
@@ -372,7 +376,7 @@ Preparse::process()
                                mAnchorBeg,
                                mAnchorEnd - mAnchorBeg + 1
             );
-#if defined(DEBUG)
+#if defined(PP_DEBUG)
          DebugLog(<<"DATA "
                   << Headers::HeaderNames[mHeaderType]
                   << ": \'"
@@ -383,7 +387,7 @@ Preparse::process()
 
       if (e.workMask & actFline) // first line complete.
       {
-#if defined(DEBUG)
+#if defined(PP_DEBUG)
          DebugLog(<<"FLINE \'"
                   << showN(mAnchorBeg, mAnchorEnd - mAnchorBeg + 1)
                   << "\'");
@@ -404,7 +408,7 @@ Preparse::process()
 
       if (e.workMask & actEndHdrs)
       {
-#if defined(DEBUG)
+#if defined(PP_DEBUG)
          DebugLog(<<"END_HDR");
 #endif
          mDone = true;
@@ -416,7 +420,7 @@ Preparse::process()
       if (e.workMask & actReset)
       {
 	 mAnchorBeg = mAnchorEnd = mPtr;
-#if defined(DEBUG)
+#if defined(PP_DEBUG)
          DebugLog(<<"RESET");
 #endif
       }
