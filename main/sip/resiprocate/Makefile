@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.79 2002/11/11 22:37:21 kdc Exp $
+# $Id: Makefile,v 1.80 2002/11/14 18:48:40 jason Exp $
 
 BUILD = ../../build
 
@@ -43,7 +43,6 @@ SRC = \
 	ParserCategory.cxx \
 	ParserCategories.cxx \
 	Preparse.cxx \
-	Resolver.cxx \
 	DnsResolver.cxx \
 	SipMessage.cxx \
 	DnsMessage.cxx \
