@@ -1,5 +1,3 @@
-/* $Id: ares_private.h,v 1.5 2003/09/14 04:26:45 fluffy Exp $ */
-
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
  * Permission to use, copy, modify, and distribute this
@@ -137,6 +135,8 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now);
 void ares__close_sockets(struct server_state *server);
 int ares__get_hostent(FILE *fp, struct hostent **host);
 int ares__read_line(FILE *fp, char **buf, int *bufsize);
+
+void ares__kill_socket(int s);
 
 #ifdef WIN32
 #define strcasecmp(a,b) stricmp(a,b)

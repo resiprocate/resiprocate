@@ -44,12 +44,12 @@ void ares__close_sockets(struct server_state *server)
   /* Close the TCP and UDP sockets. */
   if (server->tcp_socket != -1)
     {
-      close(server->tcp_socket);
+      ares__kill_socket(server->tcp_socket);
       server->tcp_socket = -1;
     }
   if (server->udp_socket != -1)
     {
-      close(server->udp_socket);
+      ares__kill_socket(server->udp_socket);
       server->udp_socket = -1;
     }
 }
