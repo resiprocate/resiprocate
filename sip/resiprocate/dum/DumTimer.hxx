@@ -9,7 +9,7 @@ namespace resip
 {
 class Data;
 
-class DumTimer : public Message
+class DumTimeout : public Message
 {
    public:
       typedef enum
@@ -22,8 +22,8 @@ class DumTimer : public Message
          Retransmit200
       } Type;
 
-      DumTimer(Type type, unsigned long duration, resip::BaseUsage::Handle& target,  int seq, int aseq = -1);
-      ~DumTimer();
+      DumTimeout(Type type, unsigned long duration, resip::BaseUsage::Handle& target,  int seq, int aseq = -1);
+      ~DumTimeout();
       
       Type type() const;
       int seq() const;

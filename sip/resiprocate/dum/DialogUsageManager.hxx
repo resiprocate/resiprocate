@@ -12,7 +12,7 @@
 #include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/DialogSet.hxx"
-#include "resiprocate/dum/DumTimer.hxx"
+#include "resiprocate/dum/DumTimeout.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ServerOutOfDialogReq.hxx"
@@ -136,7 +136,7 @@ class DialogUsageManager
       friend class BaseUsage::Handle;
 
       SipMessage& makeNewSession(BaseCreator* creator);
-      void addTimer(DumTimer::Type type, unsigned long duration, int cseq, int rseq=-1);
+      void addTimer(DumTimeout::Type type, unsigned long duration, int cseq, int rseq=-1);
 
       ClientInviteSession* makeClientInviteSession(Dialog& dialog,const SipMessage& msg);
       ClientSubscription* makeClientSubscription(Dialog& dialog,const SipMessage& msg);
