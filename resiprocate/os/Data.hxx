@@ -1,7 +1,7 @@
 #ifndef Data_hxx
 #define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.22 2002/11/02 19:31:54 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.23 2002/11/04 06:34:33 derekm Exp $";
 
 #include <iostream>
 #include <string>
@@ -34,9 +34,9 @@ class Data
       Data& operator=(const Data& data);
       Data& operator=(const char* str);
 
-      Data operator+(const Data& rhs);
-      Data operator+(const char* str);
-      Data operator+(char c);
+      Data operator+(const Data& rhs) const;
+      Data operator+(const char* str) const;
+      Data operator+(char c) const;
 
       Data& operator+=(const char* str);
       Data& operator+=(const Data& rhs);

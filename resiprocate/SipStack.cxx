@@ -15,7 +15,8 @@ using namespace Vocal2;
 SipStack::SipStack(bool multiThreaded)
   : mExecutive(*this),
     mTransportSelector(*this),
-    mTimers(mStateMacFifo)
+    mTimers(mStateMacFifo),
+    mDnsResolver(*this)
 {
    //addTransport(Transport::UDP, 5060);
    //addTransport(Transport::TCP, 5060); // !jf!
