@@ -151,7 +151,24 @@ main(int argc, char** argv)
 
       n->encodeParsed(cerr);
    }
-
+   {
+      resip::Pidf pidf;
+      resip::Uri aor("sip:jason@example.com");
+      pidf.setEntity(aor);
+   
+      resip::Pidf::Tuple tuple;
+      tuple.status = true;
+      tuple.id = "test id";
+      tuple.contact = Data::from(aor);
+      tuple.contactPriority = 0.0;
+      tuple.note = "Away";
+      tuple.attributes["displayname"] = "displayName";
+      tuple.attributes["status"] = "1";
+      
+      pidf.getTuples().push_back(tuple);
+      std::cerr  << Data::from(pidf) << std::endl;
+   }
+   
 
    cerr << "All OK" << endl;
    return 0;

@@ -66,7 +66,7 @@ int
 main(int argc, const char** argv)
 {
    char* logType = 0;
-   char* logLevel = 0;
+   char* logLevel = "INFO";
 
 #if defined(HAVE_POPT_H)
   struct poptOption table[] = {
