@@ -2,6 +2,7 @@
 #include "sip2/util/ParseBuffer.hxx"
 #include "sip2/sipstack/Symbols.hxx"
 #include "sip2/sipstack/UnknownParameter.hxx"
+#include "sip2/sipstack/ParserCategories.hxx" // !dlb! just NameAddr
 
 using namespace Vocal2;
 
@@ -10,6 +11,17 @@ Uri::Uri()
      mScheme(Symbols::DefaultSipScheme),
      mPort(0)
 {}
+
+Uri::Uri(const Data& data)
+   : ParserCategory(), 
+     mScheme(Symbols::DefaultSipScheme),
+     mPort(0)
+{
+   ParseBuffer pb(data.data(), data.size());
+   Uri tmp;
+   tmp.parse(pb);
+   *this = tmp;
+}
 
 Uri::Uri(const Uri& rhs)
    : ParserCategory(rhs),
