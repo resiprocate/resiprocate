@@ -3,6 +3,7 @@
 
 #include <sipstack/Transport.hxx>
 #include <sipstack/Message.hxx>
+#include <sipstack/ConnectionMap.hxx>
 
 namespace Vocal2
 {
@@ -21,6 +22,7 @@ class TcpTransport : public Transport
 
    private:
       static const int MaxBufferSize;
+      static ConnectionMap mConnectionMap;
 };
  
 }
