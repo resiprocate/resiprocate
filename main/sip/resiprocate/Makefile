@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.27 2002/09/22 06:26:46 fluffy Exp $
+# $Id: Makefile,v 1.28 2002/09/22 06:39:19 fluffy Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -29,8 +29,7 @@ SRC =	Condition.cxx \
 	UdpTransport.cxx \
 	Timer.cxx \
 	TimerQueue.cxx \
-
-#	Transport.cxx 
+	Transport.cxx
 
 
 
@@ -100,9 +99,10 @@ fsm.dot: Preparse.cxx dot.awk
 
 $(OBJ)/%.o: %.cxx
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
-	- cat $(@F:.o=.d) $(@:.o=.d) >  $(@:.o=_tmp.d)
-	sed -e "s/^$(@F)/$(@D)\/$(@F)/" < $(@:.o=_tmp.d) > $(@:.o=.d)
-	- rm  $(@F:.o=.d)  $(@:.o=_tmp.d)
+	[ -f $(@F:.o=.d) ] && mv $(@F:.o=.d) $(@:.o=_tmp.d) || \
+		mv $(@:.o=.d) $(@:.o=_tmp.d)
+	@sed -e "s/^$(@F)/$(@D)\/$(@F)/" < $(@:.o=_tmp.d) > $(@:.o=.d)
+	rm  $(@:.o=_tmp.d)
 
 
 %.S: %.cxx
