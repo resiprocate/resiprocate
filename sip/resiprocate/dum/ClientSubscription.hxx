@@ -14,7 +14,7 @@ class DialogUsageManager;
 class ClientSubscription: public BaseSubscription
 {
    public:      
-      ClientSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& request);
+      ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
 
       typedef Handle<ClientSubscription> ClientSubscriptionHandle;
       ClientSubscriptionHandle getHandle();
@@ -34,7 +34,6 @@ class ClientSubscription: public BaseSubscription
       SubscriptionState mSubState;
       const Contents* mCurrentEventDocument;//!dcm! -- unused?
       UInt64 mExpirationTime;
-      SipMessage& mLastRequest;
 
       // disabled
       ClientSubscription(const ClientSubscription&);
