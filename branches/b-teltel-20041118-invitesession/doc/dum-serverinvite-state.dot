@@ -4,19 +4,69 @@
 //  names start with lower case are actions
 //  names start with on are events
 
-digraph UAC {
+digraph UAS {
   rankdir=LR;
   node [shape = box];
 
-  Start -> OfferReliable                                [ label = "onInviteOfferReliable/app::onOffer" ];
-  Start -> NoOfferReliable                              [ label = "onInviteNoOfferReliable" ];
-  Start -> Terminated                                   [ label = "dum::end/send::4XXI" ];
+  Start -> Offer                                        [ label = "onInvite-offer/app::onOffer" ];
+  Start -> NoOffer                                      [ label = "onInvite" ];
+  Start -> OfferReliable                                [ label = "onInvite-offer-rel/app::onOffer" ];
+  Start -> NoOfferReliable                              [ label = "onInvite-rel" ];
+
+  Offer -> Offer                                        [ label = "dum::provideEarly/queue::early" ];
+  Offer -> Offer                                        [ label = "dum::provideAnswer/queue::answer" ];
+  Offer -> Early                                        [ label = "dum::provisional/send::1xx,timer::1xx" ]; // include early-media
+  Offer -> Terminated                                   [ label = "dum::end/send::4XXI" ];
+  Offer -> Terminated                                   [ label = "dum::reject/send::4XXI" ];
+
+  Early -> Early                                        [ label = "onTimer1xx/resend::1xx" ];
+  Early -> Early                                        [ label = "dum::provisional/send::1xx,timer::1xx" ];
+  Early -> Early                                        [ label = "dum::provideEarly/queue::early" ];
+  Early -> Early                                        [ label = "dum::provideAnswer/queue::answer" ];
+  Early -> Accepted                                     [ label = "dum::accept/send::2xx-answer,timer::2xx, timer::NoAck" ];
+  Early -> Terminated                                   [ label = "onCancel/send::200C,send::487I" ];
+  Early -> Terminated                                   [ label = "onBye/send::200B,send::487I" ];
+  Early -> Terminated                                   [ label = "dum::end/send::4XXI" ];
+  Early -> Terminated                                   [ label = "dum::reject/send::4XXI" ];
+
+  Accepted -> Connected                                 [ label = "onACK" ];
+  Accepted -> Accepted                                  [ label = "onCANCEL/send::200C" ]; 
+  Accepted -> Accepted                                  [ label = "onPRACK/send::2XXP,send::2XXI" ];
+  Accepted -> Accepted                                  [ label = "onTimer2xx/resend::2XXI" ];
+  Accepted -> Terminated                                [ label = "onTimerNoACK/send::BYE" ];
+  Accepted -> WaitingToHangup                           [ label = "dum::end" ];
+  // reject is not allowed once accepted
+
+  NoOffer -> NoOffer                                    [ label = "dum::provideEarly/queue::early" ];
+  NoOffer -> NoOffer                                    [ label = "dum::provideOffer/queue::offer" ];
+  NoOffer -> EarlyNoOffer                               [ label = "dum::provisional/send::1xx,timer::1xx" ]; // include early-media
+  NoOffer -> Terminated                                 [ label = "dum::end/send::4XXI" ];
+  NoOffer -> Terminated                                 [ label = "dum::reject/send::4XXI" ];
+
+  EarlyNoOffer -> EarlyNoOffer                          [ label = "onTimer1xx/resend::1xx" ];
+  EarlyNoOffer -> EarlyNoOffer                          [ label = "dum::provisional/send::1xx,timer::1xx" ];
+  EarlyNoOffer -> EarlyNoOffer                          [ label = "dum::provideEarly/queue::early" ];
+  EarlyNoOffer -> EarlyNoOffer                          [ label = "dum::provideOffer/queue::offer" ];
+  EarlyNoOffer -> Accepted                              [ label = "dum::accept/send::2xx-offer,timer::2xx, timer::NoAck" ];
+  EarlyNoOffer -> Terminated                            [ label = "onCancel/send::200C,send::487I" ];
+  EarlyNoOffer -> Terminated                            [ label = "onBye/send::200B,send::487I" ];
+  EarlyNoOffer -> Terminated                            [ label = "dum::end/send::4XXI" ];
+  EarlyNoOffer -> Terminated                            [ label = "dum::reject/send::4XXI" ];
+
+  AcceptedWaitingAnswer -> Connected                    [ label = "onACK-answer/onAnswer" ];
+  AcceptedWaitingAnswer -> AcceptedWaitingAnswer        [ label = "onCANCEL/send::200C" ]; 
+  AcceptedWaitingAnswer -> AcceptedWaitingAnswer        [ label = "onPRACK/send::2XXP,send::2XXI-offer" ];
+  AcceptedWaitingAnswer -> Terminated                   [ label = "onTimer2xx/resend::2XXI" ];
+  AcceptedWaitingAnswer -> Terminated                   [ label = "onTimerNoACK/send::BYE" ];
+  AcceptedWaitingAnswer -> WaitingToHangup              [ label = "dum::end" ];
+  // reject is not allowed once accepted
 
   OfferReliable -> FirstEarlyReliable                   [ label = "dum::provideAnswer/send::1xx-answer,timer::1xx" ];
   OfferReliable -> Terminated                           [ label = "dum::end/send::4XXI" ];
   OfferReliable -> Terminated                           [ label = "dum::reject/send::4XXI" ];
 
-  NoOfferReliable -> FirstSentOfferReliable             [ label = "dum::provideOffer/send::1xx-offer,timer::1xx" ];
+  NoOfferReliable -> NoOfferReliable                    [ label = "dum::provideOffer/queue::offer" ];
+  NoOfferReliable -> FirstSentOfferReliable             [ label = "dum::provisional/send::1xx-offer,timer::1xx" ];
   NoOfferReliable -> Terminated                         [ label = "dum::reject/send::4XXI" ];
 
   FirstSentOfferReliable -> FirstSentOfferReliable      [ label = "onTimer/resend::1xx" ];
@@ -29,11 +79,6 @@ digraph UAC {
   FirstEarlyReliable -> EarlyReliable                   [ label = "onPRACK/200P" ];
   FirstEarlyReliable -> WaitingToTerminate              [ label = "dum::end" ];
   FirstEarlyReliable -> Terminated                      [ label = "dum::reject/send::4XXI" ]; // wait for PRACK/200?
-
-  Accepted -> Connected                                 [ label = "onPRACK/send::2XXP,send::2XXI" ];
-  Accepted -> Terminated                                [ label = "dum::end/send::4XXI" ];
-  Accepted -> WaitingToHangup                           [ label = "dum::end" ];
-  // reject is not allowed once accepted
 
   EarlyReliable -> EarlyReliable                        [ label = "onPRACK/send::200P" ];
   EarlyReliable -> EarlyReliable                        [ label = "dum::provisional/send::1xx,timer::1xx" ];
@@ -54,7 +99,7 @@ digraph UAC {
   SentUpdateAccepted -> WaitingToHangup                 [ label = "dum::end" ];
   // reject is not allowed once accepted
 
-  ReceivedUpdate -> ReceivedUpdateWaitingAnswer         [ label = "dum::accept" ];
+  ReceivedUpdate -> ReceivedUpdateWaitingAnswer         [ label = "dum::accept/queue::2xx" ];
   ReceivedUpdate -> EarlyReliable                       [ label = "dum::provideAnswer/send::200U" ];
   ReceivedUpdate -> Terminated                          [ label = "dum::end/send::488U,send::4XXI" ];
   ReceivedUpdate -> Terminated                          [ label = "dum::reject/send::488U,send::4XXI" ]; 
@@ -71,5 +116,6 @@ digraph UAC {
   // reject is not allowed once accepted
 
   WaitingToHangup -> Terminated                         [ label = "onPRACK/send::BYE" ];
+  WaitingToHangup -> Terminated                         [ label = "onACK/send::BYE" ];
   // reject is not allowed once accepted
 }
