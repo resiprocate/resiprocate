@@ -1,5 +1,10 @@
+#include <string.h>
+
+
 #include <sipstack/Helper.hxx>
 #include <sipstack/Uri.hxx>
+#include <sipstack/Preparse.hxx>
+
 #include <util/RandomHex.hxx>
 
 using namespace Vocal2;
@@ -30,7 +35,7 @@ Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr
    return request;
 }
 
-
+// MOVEME !ah! this goes in a test_support package
 SipMessage*
 Helper::makeMessage(const Data& data)
 {
@@ -38,7 +43,7 @@ Helper::makeMessage(const Data& data)
    int size = data.size();
    char *buffer = new char[size];
 
-   memcopy(buffer,data.data(),size);
+   memcpy(buffer,data.data(),size);
    
    PreparseState::TransportAction status = PreparseState::NONE;
    
@@ -46,11 +51,10 @@ Helper::makeMessage(const Data& data)
 
    int used = 0;
    
-   pre.process(*msg, buffer, size, len, used, status);
+   pre.process(*msg, buffer, size, used, status);
    if (status == PreparseState::preparseError ||
        status == PreparseState::fragment)
    {
-      InfoLog(<<"Invalid SipMessage -- try Log::Debug");
       delete msg;
       msg = 0;
    }
@@ -58,7 +62,7 @@ Helper::makeMessage(const Data& data)
    {
       // no pp error
       if (status == PreparseState::headersComplete &&
-          used < len)
+          used < size)
       {
          // body is present .. add it up.
          // NB. The Sip Message uses an overlay (again)
@@ -67,8 +71,7 @@ Helper::makeMessage(const Data& data)
          // it doesn't need a new buffer in UDP b/c there
          // will only be one datagram per buffer. (1:1 strict)
          
-         msg->setBody(buffer+used,len-used);
-         DebugLog(<<"added " << len-used << " byte body");
+         msg->setBody(buffer+used,size-used);
       }
    }
    return msg;
