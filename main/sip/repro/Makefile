@@ -5,6 +5,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
 
+CODE_SUBDIRS = monkeys
 TARGET_LIBRARY = librepro
 
 
@@ -18,6 +19,9 @@ LDLIBS   += -ldb-4.2
 
 
 SRC =   \
+        monkeys/DigestAuthenticator.cxx \
+	monkeys/RouteProcessor.cxx \
+	monkeys/LocationServer.cxx \
 	Proxy.cxx \
 	UserDb.cxx \
 	WebAdmin.cxx \
@@ -29,3 +33,5 @@ SRC =   \
 
 
 include $(BUILD)/Makefile.post
+
+
