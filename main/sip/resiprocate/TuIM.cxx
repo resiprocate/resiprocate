@@ -50,7 +50,8 @@ TuIM::TuIM(SipStack* stack,
      mRegistrationDialog(NameAddr(contact)),
      mNextTimeToRegister(0),
      mRegistrationPassword( Data::Empty ),
-     mLastAuthCSeq(-1)
+     mLastAuthCSeq(-1),
+     mDefaultProtocol( Transport::Unknown )
 {
    assert( mStack );
    assert(mCallback);
@@ -492,8 +493,8 @@ TuIM::processRegisterResponse(SipMessage* msg)
    {
       SipMessage* reg = mRegistrationDialog.makeRegister();
       
-      const Data cnonce;
-      unsigned int nonceCount;
+      const Data cnonce = Data::Empty;
+      unsigned int nonceCount=0;
        
       Helper::addAuthorization(*reg,*msg,mAor.user(),mRegistrationPassword,cnonce,nonceCount);
 
@@ -506,7 +507,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
 
       InfoLog( << *reg );
       
-      setOutbound( *msg );
+      setOutbound( *reg );
 
       mStack->send( *reg );
 
@@ -902,6 +903,34 @@ TuIM::setOutbound( SipMessage& msg )
       DebugLog( << "UserAgent name=" << mUAName  );
       msg.header(h_UserAgent).value() = mUAName;
    }
+
+   if ( mDefaultProtocol != Transport::Unknown )
+   {
+      if ( ! msg.header(h_RequestLine).uri().exists(p_transport) )
+      {
+         switch ( mDefaultProtocol )
+         {
+            case Transport::UDP:
+               msg.header(h_RequestLine).uri().param(p_transport) = Symbols::UDP;
+               break;
+            case Transport::TCP:
+               msg.header(h_RequestLine).uri().param(p_transport) = Symbols::TCP;
+               break;
+            case Transport::TLS:
+               msg.header(h_RequestLine).uri().param(p_transport) = Symbols::TLS;
+               break;
+            default:
+               assert(0);
+         }
+      }
+   }
+}
+
+
+void 
+TuIM::setDefaultProtocol( Transport::Type protocol )
+{
+   mDefaultProtocol = protocol;
 }
 
 

@@ -513,7 +513,6 @@ main(int argc, char* argv[])
          i++;
          assert( i<argc );
          outbound = Uri(Data(argv[i]));
-         haveAor=true;
       } 
       else if (!strcmp(argv[i],"-contact"))
       {
@@ -667,6 +666,15 @@ main(int argc, char* argv[])
    if ( !outbound.host().empty() )
    {
       tuIM->setOutboundProxy( outbound );
+   }
+   
+   if ( tcp )
+   {
+      tuIM->setDefaultProtocol( Transport::TCP );
+   }
+   if ( tls )
+   {
+      tuIM->setDefaultProtocol( Transport::TLS );
    }
    
    if ( haveAor )
