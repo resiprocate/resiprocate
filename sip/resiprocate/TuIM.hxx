@@ -81,6 +81,8 @@ public:
       void authorizeSubscription( const Data& user );
       
    private:
+      void processSipFrag(SipMessage* msg);
+      
       void processRequest(SipMessage* msg);
       void processMessageRequest(SipMessage* msg);
       void processSubscribeRequest(SipMessage* msg);
