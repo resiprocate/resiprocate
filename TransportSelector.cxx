@@ -32,7 +32,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo) :
+TransportSelector::TransportSelector(bool multithreaded, Fifo<TransactionMessage>& fifo) :
    mMultiThreaded(multithreaded),
    mStateMacFifo(fifo),
    mSocket( INVALID_SOCKET ),

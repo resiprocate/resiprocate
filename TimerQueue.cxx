@@ -16,9 +16,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-TimerQueue::TimerQueue(Fifo<Message>& fifo) : mFifo(fifo)
-{
-}
+TimerQueue::TimerQueue(Fifo<TransactionMessage>& stateMachineFifo,
+                       Fifo<Message>& tuFifo)
+   : mStateMachineFifo(stateMachineFifo),
+     mTuFifo(tuFifo)
+{}
 
 unsigned int
 TimerQueue::msTillNextTimer()
@@ -85,7 +87,8 @@ TimerQueue::empty() const
 void
 TimerQueue::process()
 {
-   // get the set of timers that have fired and insert TimerMsg into the fifo
+   // get the set of timers that have fired and insert TimerMsg into the state
+   // machine fifo and application messages into the TU fifo
 
    Timer now(0);
    for (std::multiset<Timer>::iterator i = mTimers.begin(); 
@@ -101,14 +104,14 @@ TimerQueue::process()
          //     by 0x80F6A4B: resip::Executive::processTimer() (Executive.cxx:52)
          
          //DebugLog (<< Timer::toData(i->mType) << " fired (" << i->mTransactionId << ") adding to fifo");
-         mFifo.add(t);
+         mStateMachineFifo.add(t);
       }
       else 
       {
          //DebugLog(<< "ApplicationTimer " << *i->getMessage());
          // application timer -- queue the payload message
          assert(i->getMessage());
-         mFifo.add(i->getMessage());
+         mTuFifo.add(i->getMessage());
       }
       mTimers.erase(i++);
    }
@@ -140,7 +143,7 @@ resip::operator<<(ostream& str, const TimerQueue& tq)
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2004 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

@@ -298,7 +298,6 @@ Pidf::getSimpleStatus(Data* note) const
    return false;
 }
 
-// !dlb! set<Tuple> ?
 void 
 Pidf::merge(const Pidf& other)
 {
