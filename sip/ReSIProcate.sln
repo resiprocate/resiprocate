@@ -3,7 +3,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SipIMP", "SipIMP\SipIMP.vcp
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SipIMPSetup", "SipIMPSetup\SipIMPSetup.vdproj", "{57087B26-951D-481B-A2EE-E92C127DA000}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sipstack", "resiprocate\sipstack.vcproj", "{2A8BE839-6466-4001-B224-8F1C3168D04A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "resiprocate", "resiprocate\resiprocate.vcproj", "{2A8BE839-6466-4001-B224-8F1C3168D04A}"
 EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
