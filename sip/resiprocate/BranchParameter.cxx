@@ -11,6 +11,8 @@ using namespace std;
 static unsigned long
 getNextTransactionCount()
 {
+		assert( sizeof(long) >= 4 );
+#if 0 
    //static volatile unsigned long TransactionCount=random()*2;
    static volatile unsigned long transactionCount=0;
    if ( transactionCount == 0 )
@@ -19,6 +21,9 @@ getNextTransactionCount()
       transactionCount -= (transactionCount%10000);
    }
    return ++transactionCount; // !jf! needs to be atomic
+#else
+	return ( 0x3FFFffff & Random::getRandom() );
+#endif
 }
 
 
