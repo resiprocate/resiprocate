@@ -817,8 +817,10 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       
       if (mServerAuthManager.get())
       {
-         if (mServerAuthManager->handle(msg))
+         if ( !mServerAuthManager->handle(msg) )
          {
+            InfoLog(<< "ServerAuth ate message" );
+            
             return true;
          }
       }
