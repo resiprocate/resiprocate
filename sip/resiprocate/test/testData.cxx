@@ -423,4 +423,5 @@ main()
 {
    TestData td;
    td.main();
+   return 0;
 }

@@ -16,6 +16,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 #define CRLF "\r\n"
+
 int
 main(int argc, char** argv)
 {
@@ -62,5 +63,4 @@ main(int argc, char** argv)
      tassert_report();
      return 0;
    }
-   
 }
