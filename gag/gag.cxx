@@ -4,8 +4,11 @@
 
 #include <list>
 #include <errno.h>
+
+#ifndef WIN32
 #include <unistd.h>
 #include <sys/types.h>
+#endif
 
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -57,22 +60,35 @@ int
 main (int argc, char **argv)
 {
   // Defaults (override with commandline options)
+#ifdef WIN32
+  int tcpPort = 6000;
+  int udpPort = 6000;
+  int tlsTcpPort = 6001;
+#else
   int tcpPort = 6000 + getuid() * 2;
   int udpPort = 6000 + getuid() * 2;
   int tlsTcpPort = 6001 + getuid() * 2;
   pid_t parent = getppid();
+#endif
+
 
   bool tlsServer = false;
 
   Log::initialize(Log::FILE, Log::DEBUG, argv[0]);
 
+#ifdef USE_SSL
   // Get the SIP stack up and running
   Security security (tlsServer, true);
   SipStack sipStack (false, &security);
+#else
+  SipStack sipStack (false);
+#endif
 
   sipStack.addTransport(UDP, udpPort);
   sipStack.addTransport(TCP, tcpPort);
+#ifdef USE_SSL
   sipStack.addTlsTransport(tlsTcpPort);
+#endif
 
   GagConduit conduit(sipStack, udpPort);
 
@@ -106,13 +122,15 @@ main (int argc, char **argv)
       GagErrorMessage(error).serialize(cout);
     }
 
-    // !ah! not portable to windows -- works for now.
+#ifndef WIN32
+	// !ah! not portable to windows -- works for now.
     if (getppid() != parent)
     {
       ErrLog(<<"Unsupervised child -- crying, exiting.");
       shutdown(&sipStack);
       exit(-1);
     }
+#endif
 
     if (fdset.readyToRead(fileno(stdin)))
     {
