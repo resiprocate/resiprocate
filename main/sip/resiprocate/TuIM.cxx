@@ -277,7 +277,7 @@ TuIM::processSipFrag(SipMessage* msg)
    DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
 
    Data signedBy;
-   Security::SignatureStatus sigStat = Security::none;
+   SignatureStatus sigStat = SignatureNone;
 
 #if defined( USE_SSL )
    MultipartSignedContents* mBody = dynamic_cast<MultipartSignedContents*>(contents);
@@ -590,7 +590,7 @@ TuIM::processMessageRequest(SipMessage* msg)
    DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
 
    Data signedBy;
-   Security::SignatureStatus sigStat = Security::none;
+   SignatureStatus sigStat = SignatureNone;
    bool encrypted=false;
 
 #if defined( USE_SSL )

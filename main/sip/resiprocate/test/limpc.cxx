@@ -124,7 +124,7 @@ class TestCallback: public TuIM::Callback
    public:
       virtual void presenceUpdate(const Uri& dest, bool open, const Data& status );
       virtual void receivedPage( const Data& msg, const Uri& from ,
-                                 const Data& signedBy,  Security::SignatureStatus sigStatus,
+                                 const Data& signedBy,  SignatureStatus sigStatus,
                                  bool wasEncryped  );
       virtual void sendPageFailed( const Uri& dest,int respNumber );
       virtual void registrationFailed(const resip::Uri&, int respNumber); 
@@ -154,7 +154,7 @@ TestCallback::presenceUpdate(const Uri& from, bool open, const Data& status )
 
 void 
 TestCallback::receivedPage( const Data& msg, const Uri& from,
-                            const Data& signedBy,  Security::SignatureStatus sigStatus,
+                            const Data& signedBy,  SignatureStatus sigStatus,
                             bool wasEncryped  )
 {  
    //DebugLog(<< "In TestPageCallback");
@@ -184,25 +184,25 @@ TestCallback::receivedPage( const Data& msg, const Uri& from,
    }
    switch ( sigStatus )
    {
-      case  Security::isBad:
+      case  SignatureIsBad:
          //cout << " -bad signature- ";
          waddstr(textWin,"bad signature");
       break;
-      case  Security::none:
+      case  SignatureNone:
          //cout << " -no signature- ";
          waddstr(textWin,"no signature");
          break;
-      case  Security::trusted:
+      case  SignatureTrusted:
          //cout << " <signed  " << signedBy << " > ";
          waddstr(textWin,"signed ");
          waddstr(textWin,signedBy.c_str());
          break;
-      case  Security::caTrusted:
+      case  SignatureCATrusted:
          //cout << " <ca signed  " << signedBy << " > ";
          waddstr(textWin,"ca signed " );
          waddstr(textWin,signedBy.c_str());
          break;
-      case  Security::notTrusted:
+      case  SignatureNotTrusted:
          //cout << " <signed  " << signedBy << " NOT TRUSTED > ";
          waddstr(textWin,"untrusted signature ");
          waddstr(textWin,signedBy.c_str());

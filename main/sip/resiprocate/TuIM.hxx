@@ -4,7 +4,7 @@
 #include <list>
 
 #include "resiprocate/Dialog.hxx"
-#include "resiprocate/Security.hxx"
+#include "resiprocate/SecurityTypes.hxx"
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/os/Timer.hxx"
@@ -29,7 +29,7 @@ public:
             virtual void receivedPage(const Data& msg, 
                                       const Uri& from, 
                                       const Data& signedBy,  
-                                      Security::SignatureStatus sigStatus,
+                                      SignatureStatus sigStatus,
                                       bool wasEncryped  ) = 0; 
             virtual void sendPageFailed(const Uri& dest, int respNumber ) =0;
             virtual void receivePageFailed(const Uri& sender) =0;
