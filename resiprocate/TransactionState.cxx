@@ -285,6 +285,7 @@ TransactionState::processDns(Message* message)
       
       if (mCurrent != mTuples.end()) // not at end
       {
+         DebugLog (<< "Try sending request to a different dns result");
          mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
          sendToWire(mMsgToRetransmit);
       }
@@ -297,7 +298,7 @@ TransactionState::processDns(Message* message)
             sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503));
          }
          
-         DebugLog (<< "Failed to send a request to any tuples");
+         DebugLog (<< "Failed to send a request to any tuples. Send 503");
          delete this;
       }
 
@@ -414,6 +415,7 @@ TransactionState::processClientNonInvite(  Message* msg )
                unsigned long d = timer->getDuration();
                if (d < Timer::T2) d *= 2;
                mStack.mTimers.add(Timer::TimerE1, msg->getTransactionId(), d);
+               DebugLog (<< "Retransmitting: " << mMsgToRetransmit->brief());
                resendToWire(mMsgToRetransmit);
                delete msg;
             }
@@ -428,6 +430,7 @@ TransactionState::processClientNonInvite(  Message* msg )
             if (mState == Proceeding)
             {
                mStack.mTimers.add(Timer::TimerE2, msg->getTransactionId(), Timer::T2);
+               DebugLog (<< "Retransmitting: " << mMsgToRetransmit->brief());
                resendToWire(mMsgToRetransmit);
                delete msg;
             }
@@ -687,6 +690,7 @@ TransactionState::processClientInvite(  Message* msg )
                if (d < Timer::T2) d *= 2;
 
                mStack.mTimers.add(Timer::TimerA, msg->getTransactionId(), d);
+               DebugLog (<< "Retransmitting: " << mMsgToRetransmit->brief());
                resendToWire(mMsgToRetransmit);
             }
             delete msg;
