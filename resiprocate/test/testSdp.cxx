@@ -37,6 +37,27 @@ main(int argc, char* argv[])
     CritLog(<<"Test Driver Starting");
 
     {
+       Data txt("v=0\r\n"
+                "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
+                "s=X-Lite\r\n"
+                "c=IN IP4 192.168.2.15\r\n"
+                "t=0 0\r\n"
+                "m=audio 8000 RTP/AVP 8 3 98 97 101\r\n"
+                "a=rtpmap:8 pcma/8000\r\n"
+                "a=rtpmap:3 gsm/8000\r\n"
+                "a=rtpmap:98 iLBC\r\n"
+                "a=rtpmap:97 speex/8000\r\n"
+                "a=rtpmap:101 telephone-event/8000\r\n"
+                "a=fmtp:101 0-15\r\n");
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "sdp");
+      SdpContents sdp(&hfv, type);
+
+      assert(sdp.session().media().front().codecs().size() == 4);
+    }
+
+    {
       Data txt("v=0\r\n"
                "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
                "s=-\r\n"
