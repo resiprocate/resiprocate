@@ -35,6 +35,12 @@ ServerPublication::getEtag() const
    return mEtag;
 }
 
+const Data&
+ServerPublication::getDocumentKey() const
+{
+   return mDocumentKey;
+}
+
 const Data& 
 ServerPublication::getPublisher() const
 {
