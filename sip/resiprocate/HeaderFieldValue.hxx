@@ -49,7 +49,7 @@ class HeaderFieldValue
       HeaderFieldValue(const HeaderFieldValue&);
       HeaderFieldValue& operator=(const HeaderFieldValue&);
       
-      bool mMine;
+      const bool mMine;
 
       friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
 };
