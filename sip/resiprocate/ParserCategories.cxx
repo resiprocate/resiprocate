@@ -62,8 +62,7 @@ Mime::Mime(const Mime& rhs)
    : ParserCategory(rhs),
      mType(rhs.mType),
      mSubType(rhs.mSubType)
-{
-}
+{}
 
 Mime&
 Mime::operator=(const Mime& rhs)
@@ -236,8 +235,7 @@ DateCategory::encode(std::ostream& str) const
 //====================
 WarningCategory::WarningCategory(const WarningCategory& rhs)
    : ParserCategory(rhs)
-{
-}
+{}
 
 WarningCategory&
 WarningCategory::operator=(const WarningCategory& rhs)
@@ -407,9 +405,8 @@ Via::Via(const Via& rhs)
      mProtocolVersion(rhs.mProtocolVersion),
      mTransport(rhs.mTransport),
      mSentHost(rhs.mSentHost),
-     mSentPort(rhs.mSentPort) // !jf!
-{
-}
+     mSentPort(rhs.mSentPort)
+{}
 
 Via&
 Via::operator=(const Via& rhs)
@@ -515,7 +512,7 @@ CallId::parse(ParseBuffer& pb)
    const char* start = pb.skipWhitespace();
    pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
    pb.data(mValue, start);
-   
+
    parseParameters(pb);
 }
 
@@ -533,10 +530,9 @@ CallId::encode(ostream& str) const
 NameAddr::NameAddr(const NameAddr& rhs)
    : ParserCategory(rhs),
      mAllContacts(rhs.mAllContacts),
-     mUri(rhs.mUri == 0 ? 0 : new Uri(*rhs.mUri)),
+     mUri(rhs.mUri),
      mDisplayName(rhs.mDisplayName)
-{
-}
+{}
 
 NameAddr&
 NameAddr::operator=(const NameAddr& rhs)
@@ -544,25 +540,15 @@ NameAddr::operator=(const NameAddr& rhs)
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
-      delete mUri;
-      if (rhs.mUri != 0)
-      {
-         mUri = new Uri(*rhs.mUri);
-      }
-      else
-      {
-         mUri = 0;
-      }
       mAllContacts = rhs.mAllContacts;
       mDisplayName = rhs.mDisplayName;
+      mUri = rhs.mUri;
    }
    return *this;
 }
 
 NameAddr::~NameAddr()
-{
-   delete mUri;
-}
+{}
 
 ParserCategory *
 NameAddr::clone() const
@@ -574,11 +560,7 @@ Uri&
 NameAddr::uri() const 
 {
    checkParsed(); 
-   if (mUri == 0)
-   {
-      mUri = new Uri();
-   }
-   return *mUri;
+   return mUri;
 }
 
 void
@@ -625,11 +607,10 @@ NameAddr::parse(ParseBuffer& pb)
       }
    }
    pb.skipWhitespace();
-   mUri = new Uri();
-   mUri->parse(pb);
+   mUri.parse(pb);
    if (laQuote)
    {
-      mUri->parseParameters(pb);
+      mUri.parseParameters(pb);
       pb.skipChar('>');
       pb.skipWhitespace();
    }
@@ -643,7 +624,7 @@ NameAddr::parse(ParseBuffer& pb)
          case ParameterTypes::tag:
          case ParameterTypes::q: 
          {
-            mUri->mParameters.push_back(*it);
+            mUri.mParameters.push_back(*it);
             it = mParameters.erase(it);
             break;
          }
@@ -665,8 +646,7 @@ NameAddr::encode(ostream& str) const
       str << mDisplayName << Symbols::LA_QUOTE;
    }
 
-   assert(mUri != 0); 
-   mUri->encode(str);
+   mUri.encode(str);
 
    if (displayName)
    {
@@ -682,7 +662,7 @@ NameAddr::encode(ostream& str) const
 //====================
 RequestLine::RequestLine(const RequestLine& rhs)
    : ParserCategory(rhs),
-     mUri(rhs.mUri ? new Uri(*rhs.mUri) : 0),
+     mUri(rhs.mUri),
      mMethod(rhs.mMethod),
      mUnknownMethodName(rhs.mUnknownMethodName),
      mSipVersion(rhs.mSipVersion)
@@ -694,15 +674,7 @@ RequestLine::operator=(const RequestLine& rhs)
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
-      delete mUri;
-      if (rhs.mUri != 0)
-      {
-         mUri = new Uri(*rhs.mUri);
-      }
-      else
-      {
-         mUri = 0;
-      }
+      mUri = rhs.mUri;
       mMethod = rhs.mMethod;
       mUnknownMethodName = rhs.mUnknownMethodName;
       mSipVersion = rhs.mSipVersion;
@@ -711,9 +683,7 @@ RequestLine::operator=(const RequestLine& rhs)
 }
 
 RequestLine::~RequestLine()
-{
-   delete mUri;
-}
+{}
 
 ParserCategory *
 RequestLine::clone() const
@@ -725,11 +695,7 @@ Uri&
 RequestLine::uri() const 
 {
    checkParsed(); 
-   if (mUri == 0)
-   {
-      mUri = new Uri();
-   }
-   return *mUri;
+   return mUri;
 }
 
 void 
@@ -744,9 +710,8 @@ RequestLine::parse(ParseBuffer& pb)
       pb.data(mUnknownMethodName, start);
    }
    pb.skipWhitespace();
-   mUri = new Uri();
-   mUri->parse(pb);
-   mUri->parseParameters(pb);
+   mUri.parse(pb);
+   mUri.parseParameters(pb);
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
    pb.data(mSipVersion, start);
@@ -756,7 +721,7 @@ ostream&
 RequestLine::encode(ostream& str) const
 {
    str << (mMethod != UNKNOWN ? MethodNames[mMethod] : mUnknownMethodName) << Symbols::SPACE;
-   mUri->encode(str);
+   mUri.encode(str);
    str << Symbols::SPACE << mSipVersion;
    return str;
 }
