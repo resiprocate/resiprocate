@@ -231,8 +231,20 @@ Helper::makeCancel(const SipMessage& request)
    cancel->header(h_To) = request.header(h_To);
    cancel->header(h_From) = request.header(h_From);
    cancel->header(h_CallId) = request.header(h_CallId);
-   cancel->header(h_ProxyAuthorizations) = request.header(h_ProxyAuthorizations);
-   cancel->header(h_Routes) = request.header(h_Routes);
+   if (request.exists(h_ProxyAuthorizations))
+   {
+      cancel->header(h_ProxyAuthorizations) = request.header(h_ProxyAuthorizations);
+   }
+   if (request.exists(h_Authorizations))
+   {
+      cancel->header(h_Authorizations) = request.header(h_Authorizations);
+   }
+   
+   if (request.exists(h_Routes))
+   {
+      cancel->header(h_Routes) = request.header(h_Routes);
+   }
+   
    cancel->header(h_CSeq) = request.header(h_CSeq);
    cancel->header(h_CSeq).method() = CANCEL;
    cancel->header(h_Vias).push_back(request.header(h_Vias).front());
@@ -264,7 +276,10 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
    ack->header(h_Vias).push_back(request.header(h_Vias).front());
    ack->header(h_CSeq) = request.header(h_CSeq);
    ack->header(h_CSeq).method() = ACK;
-   ack->header(h_Routes) = request.header(h_Routes);
+   if (request.exists(h_Routes))
+   {
+      ack->header(h_Routes) = request.header(h_Routes);
+   }
    
    return ack;
 }
@@ -352,6 +367,8 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
    return r.getHex();
 }
 
+// !jf! note that this only authenticates a ProxyAuthenticate header, need to
+// add support for WWWAuthenticate as well!!
 Helper::AuthResult
 Helper::authenticateRequest(const SipMessage& request, 
                             const Data& realm,
@@ -360,83 +377,85 @@ Helper::authenticateRequest(const SipMessage& request,
 {
    //DebugLog (<< "Authenticating: realm=" << realm << " password=" << password << " expires=" << expiresDelta);
    
-   const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
-   for (ParserContainer<Auth>::const_iterator i = auths.begin();
-        i != auths.end(); i++)
+   if (request.exists(h_ProxyAuthorizations))
    {
-      if (i->param(p_realm) == realm)
+      const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
+      for (ParserContainer<Auth>::const_iterator i = auths.begin(); i != auths.end(); i++)
       {
-         ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
-         if (!pb.eof() && !isdigit(*pb.position()))
+         if (i->param(p_realm) == realm)
          {
-            DebugLog(<< "Invalid nonce; expected timestamp.");
-            return Failed;
-         }
-         const char* anchor = pb.position();
-         pb.skipToChar(Symbols::COLON[0]);
-
-         if (pb.eof())
-         {
-            DebugLog(<< "Invalid nonce; expected timestamp terminator.");
-            return Failed;
-         }
-
-         Data then;
-         pb.data(then, anchor);
-         if (expiresDelta > 0)
-         {
-            int now = (int)(Timer::getTimeMs()/1000);
-            if (then.convertInt() + expiresDelta < now)
+            ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
+            if (!pb.eof() && !isdigit(*pb.position()))
             {
-               DebugLog(<< "Nonce has expired.");
-               return Expired;
+               DebugLog(<< "Invalid nonce; expected timestamp.");
+               return Failed;
             }
-         }
-         if (i->param(p_nonce) != makeNonce(request, then))
-         {
-            InfoLog(<< "Not my nonce.");
-            return Failed;
-         }
-         
-         if (i->exists(p_qop))
-         {
-            if (i->param(p_qop) == Symbols::auth)
+            const char* anchor = pb.position();
+            pb.skipToChar(Symbols::COLON[0]);
+
+            if (pb.eof())
             {
-               if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
-                                                           password,
-                                                           realm, 
-                                                           MethodNames[request.header(h_RequestLine).getMethod()],
-                                                           i->param(p_uri),
-                                                           i->param(p_nonce),
-                                                           i->param(p_qop),
-                                                           i->param(p_cnonce),
-                                                           i->param(p_nc)))
+               DebugLog(<< "Invalid nonce; expected timestamp terminator.");
+               return Failed;
+            }
+
+            Data then;
+            pb.data(then, anchor);
+            if (expiresDelta > 0)
+            {
+               int now = (int)(Timer::getTimeMs()/1000);
+               if (then.convertInt() + expiresDelta < now)
                {
-                  return Authenticated;
+                  DebugLog(<< "Nonce has expired.");
+                  return Expired;
+               }
+            }
+            if (i->param(p_nonce) != makeNonce(request, then))
+            {
+               InfoLog(<< "Not my nonce.");
+               return Failed;
+            }
+         
+            if (i->exists(p_qop))
+            {
+               if (i->param(p_qop) == Symbols::auth)
+               {
+                  if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
+                                                              password,
+                                                              realm, 
+                                                              MethodNames[request.header(h_RequestLine).getMethod()],
+                                                              i->param(p_uri),
+                                                              i->param(p_nonce),
+                                                              i->param(p_qop),
+                                                              i->param(p_cnonce),
+                                                              i->param(p_nc)))
+                  {
+                     return Authenticated;
+                  }
+                  else
+                  {
+                     return Failed;
+                  }
                }
                else
                {
+                  InfoLog (<< "Unsupported qop=" << i->param(p_qop));
                   return Failed;
                }
             }
+            else if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
+                                                             password,
+                                                             realm, 
+                                                             MethodNames[request.header(h_RequestLine).getMethod()],
+                                                             i->param(p_uri),
+                                                             i->param(p_nonce)))
+            {
+               return Authenticated;
+            }
             else
             {
-               InfoLog (<< "Unsupported qop=" << i->param(p_qop));
                return Failed;
             }
-         }
-         else if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
-                                                          password,
-                                                          realm, 
-                                                          MethodNames[request.header(h_RequestLine).getMethod()],
-                                                          i->param(p_uri),
-                                                          i->param(p_nonce)))
-         {
-            return Authenticated;
-         }
-         else
-         {
-            return Failed;
          }
       }
    }
@@ -565,6 +584,7 @@ Helper::addAuthorization(SipMessage& request,
    assert(challenge.header(h_StatusLine).responseCode() == 401 ||
           challenge.header(h_StatusLine).responseCode() == 407);
 
+   if (challenge.exists(h_ProxyAuthenticates))
    {
       const ParserContainer<Auth>& auths = challenge.header(h_ProxyAuthenticates);
       for (ParserContainer<Auth>::const_iterator i = auths.begin();
@@ -574,6 +594,7 @@ Helper::addAuthorization(SipMessage& request,
                                                                                     cnonce, nonceCount, nonceCountString));
       }
    }
+   if (challenge.exists(h_WWWAuthenticates))
    {
       const ParserContainer<Auth>& auths = challenge.header(h_WWWAuthenticates);
       for (ParserContainer<Auth>::const_iterator i = auths.begin();
@@ -599,7 +620,8 @@ Helper::makeUri(const Data& aor, const Data& scheme)
 void
 Helper::processStrictRoute(SipMessage& request)
 {
-   if (request.header(h_Routes).size() &&
+   if (request.exists(h_Routes) && 
+       !request.header(h_Routes).empty() &&
        !request.header(h_Routes).front().exists(p_lr))
    {
       // The next hop is a strict router.  Move the next hop into the
