@@ -15,7 +15,6 @@ using namespace Vocal2;
 TransportSelector::TransportSelector(SipStack& stack) :
    mStack(stack)
 {
-   addTransport(Transport::UDP, 5060);
 }
 
 TransportSelector::~TransportSelector()
