@@ -51,6 +51,9 @@ class Dialog
       // return status code of response to generate - 0 if ok
       int targetRefreshRequest(const SipMessage& request);
 
+      // given a template of a request, update the relevant fields based on this
+      void updateRequest(SipMessage& msg);
+      
       bool isCreated() const { return mCreated; };
       
       static Data dialogId(const SipMessage& msg);
