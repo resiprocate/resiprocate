@@ -67,7 +67,7 @@ TimerQueue::process()
       //     by 0x80CDF75: Vocal2::TimerQueue::process() (TimerQueue.cxx:63)
       //     by 0x80F6A4B: Vocal2::Executive::processTimer() (Executive.cxx:52)
 
-      DebugLog (<< Timer::toData(i->mType) << " fired (" << i->mTransactionId << ") adding to fifo");
+      //DebugLog (<< Timer::toData(i->mType) << " fired (" << i->mTransactionId << ") adding to fifo");
       mFifo.add(t);
       mTimers.erase(i++);
    }

@@ -69,12 +69,10 @@ TransactionState::process(SipStack& stack)
    Message* message = stack.mStateMacFifo.getNext();
    assert(message);
 
-   DebugLog (<< "TransactionState::process: " << *message);
-   
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
    Data tid = message->getTransactionId();
 
-   DebugLog (<< "got message out of state machine fifo: tid='" << tid << "' " << message->brief());
+   DebugLog (<< "TransactionState::process: tid='" << tid << "' " << message->brief());
    
    TransactionState* state = stack.mTransactionMap.find(tid);
 
@@ -93,7 +91,7 @@ TransactionState::process(SipStack& stack)
 
    if (state) // found transaction for sip msg
    {
-      DebugLog (<< "Found transaction for tid=" << tid << " " << *state);
+      DebugLog (<< "Found matching transaction for tid=" << tid << " " << *state);
       
       switch (state->mMachine)
       {
@@ -269,7 +267,7 @@ TransactionState::processStateless(Message* message)
 void
 TransactionState::processDns(Message* message)
 {
-   DebugLog (<< "TransactionState::processDns: " << message->brief());
+   DebugLog (<< "TransactionState::processDns: dns message" << *message);
       
    // handle Sending::Failed messages here
    if (isTransportError(message))
@@ -305,7 +303,6 @@ TransactionState::processDns(Message* message)
    DnsResolver::DnsMessage* dns = dynamic_cast<DnsResolver::DnsMessage*>(message);
    if (dns)
    {
-     DebugLog (<< "TransactionState::processDns: dns message" << *message);
      if (dns->mTuples.size())
      {
 	if (mCurrent == mTuples.end())
@@ -829,7 +826,7 @@ TransactionState::processServerNonInvite(  Message* msg )
    }
    else
    {
-      DebugLog (<< "TransactionState::processServerNonInvite: message unhandled");
+      //DebugLog (<< "TransactionState::processServerNonInvite: message unhandled");
       delete msg;
    }
 }
