@@ -13,7 +13,7 @@
 namespace Vocal2
 {
 
-template <int T>
+template <typename ParameterTypes::Type T>
 class ParameterType
 {
 };
@@ -172,7 +172,7 @@ class ParameterType<ParameterTypes::toTag>
          ParameterTypes::ParameterNames[ParameterTypes::toTag] = Symbols::toTag;
       }
 };
-extern ParameterType<ParameterTypes::tag> p_toTag;
+extern ParameterType<ParameterTypes::toTag> p_toTag;
 
 class ParameterType<ParameterTypes::fromTag>
 {
@@ -185,7 +185,7 @@ class ParameterType<ParameterTypes::fromTag>
          ParameterTypes::ParameterNames[ParameterTypes::fromTag] = Symbols::fromTag;
       }
 };
-extern ParameterType<ParameterTypes::tag> p_fromTag;
+extern ParameterType<ParameterTypes::fromTag> p_fromTag;
 
 class ParameterType<ParameterTypes::duration>
 {

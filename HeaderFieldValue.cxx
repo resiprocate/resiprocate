@@ -162,7 +162,6 @@ HeaderFieldValue::encode(ostream& str) const
       return mParserCategory->encode(str);
    }
    str.write(mField, mFieldLength);
-   str << endl;
    return str;
 }
 
