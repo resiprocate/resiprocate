@@ -33,6 +33,7 @@ SRC =   \
 	DialogUsage.cxx \
 	DialogUsageManager.cxx \
 	DumProcessHandler.cxx \
+	DumThread.cxx \
 	DumTimeout.cxx \
 	HandleException.cxx \
 	HandleManager.cxx \
