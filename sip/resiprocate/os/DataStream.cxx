@@ -71,7 +71,6 @@ iDataStream::iDataStream(Data& str)
 
 iDataStream::~iDataStream()
 {
-   // empty
 }
 
 oDataStream::oDataStream(Data& str)
@@ -83,7 +82,7 @@ oDataStream::oDataStream(Data& str)
 
 oDataStream::~oDataStream()
 {
-// empty
+   flush();
 }
 
 DataStream::DataStream(Data& str)
@@ -95,4 +94,5 @@ DataStream::DataStream(Data& str)
 
 DataStream::~DataStream()
 {
+   flush();
 }
