@@ -5,14 +5,15 @@
 
 using namespace resip;
 
-InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum, 
-                                           const NameAddr& target, 
-                                           UserProfile& userProfile,                                           
-                                           const SdpContents* initial, 
+InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
+                                           const NameAddr& target,
+                                           UserProfile& userProfile,
+                                           const SdpContents* initial,
                                            ServerSubscriptionHandle serverSub)
    : BaseCreator(dum, userProfile),
      mState(Initialized),
-     mServerSub(serverSub)
+     mServerSub(serverSub),
+     mInitialOffer(0)
 {
    makeInitialRequest(target, INVITE);
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
@@ -48,7 +49,7 @@ InviteSessionCreator::dispatch(const SipMessage& msg)
    // with a single invite request
 }
 
-const SdpContents* 
+const SdpContents*
 InviteSessionCreator::getInitialOffer() const
 {
    return mInitialOffer;
