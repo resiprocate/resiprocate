@@ -90,8 +90,8 @@ do                                                                              
 } while (0)
 
 #ifdef NO_DEBUG
-#undef DebugLog
 // Suppress debug logging at compile time
+#undef DebugLog
 #define DebugLog(args_)
 #undef StackLog(args_)
 #define StackLog(args_)
