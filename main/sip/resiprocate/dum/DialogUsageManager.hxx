@@ -51,16 +51,17 @@ class DialogUsageManager
       DialogIdSet findAllDialogs();
       UsageSet    findAllUsages();
       
-      UsageSet findInvSessions( DialogId id );
-      UsageSet findSubscriptions( DialogId id );
-      UsageSet findRegistrations( DialogId id );
-      UsageSet findPublications( DialogId id );
-      UsageSet findOutOfDialogs( DialogId id );
+      BaseUsage& findInvSession( DialogId id );
+      UsageSet   findSubscriptions( DialogId id );
+      BaseUsage& findRegistration( DialogId id );
+      BaseUsage& findPublication( DialogId id );
+      UsageSet   findOutOfDialogs( DialogId id );
       
    private:
-      Dialog& findOrCreateDialog(SipMessage* msg);
-      Dialog& findDialog(DialogId id);
-
+      Dialog&    findOrCreateDialog(SipMessage* msg);
+      Dialog&    findDialog(DialogId id);
+      DialogSet& findDialogSet( DialogSetId id );
+      
       HashMap<DialogSetId, DialogSet > mDialogSetMap;
 
       Profile* mProfile;
