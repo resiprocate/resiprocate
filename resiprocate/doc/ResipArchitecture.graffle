@@ -1145,7 +1145,7 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\qc
 
-\f0\fs18 \cf0 TU FIFO}</string>
+\f0\fs16 \cf0 Trans FIFO}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -1200,7 +1200,7 @@
 				<key>Font</key>
 				<string>Helvetica</string>
 				<key>Size</key>
-				<real>9</real>
+				<real>8</real>
 			</dict>
 			<key>ID</key>
 			<integer>131</integer>
@@ -1242,7 +1242,7 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\qc
 
-\f0\fs18 \cf0 TU FIFO}</string>
+\f0\fs16 \cf0 Trans FIFO}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -1297,7 +1297,7 @@
 				<key>Font</key>
 				<string>Helvetica</string>
 				<key>Size</key>
-				<real>9</real>
+				<real>8</real>
 			</dict>
 			<key>ID</key>
 			<integer>129</integer>
@@ -1339,7 +1339,7 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\qc
 
-\f0\fs18 \cf0 TU FIFO}</string>
+\f0\fs16 \cf0 Trans FIFO}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -2531,7 +2531,7 @@ Object}</string>
 	YWw+CgkJCQkJPC9hcnJheT4KCQkJCQk8a2V5PmNvbS5hcHBsZS5wcmludC50aWNrZXQu
 	Y2xpZW50PC9rZXk+CgkJCQkJPHN0cmluZz5jb20uYXBwbGUucHJpbnRpbmdtYW5hZ2Vy
 	PC9zdHJpbmc+CgkJCQkJPGtleT5jb20uYXBwbGUucHJpbnQudGlja2V0Lm1vZERhdGU8
-	L2tleT4KCQkJCQk8ZGF0ZT4yMDA1LTAyLTA0VDA1OjM3OjI2WjwvZGF0ZT4KCQkJCQk8
+	L2tleT4KCQkJCQk8ZGF0ZT4yMDA1LTAyLTE4VDE3OjU4OjA1WjwvZGF0ZT4KCQkJCQk8
 	a2V5PmNvbS5hcHBsZS5wcmludC50aWNrZXQuc3RhdGVGbGFnPC9rZXk+CgkJCQkJPGlu
 	dGVnZXI+MDwvaW50ZWdlcj4KCQkJCTwvZGljdD4KCQkJPC9hcnJheT4KCQk8L2RpY3Q+
 	CgkJPGtleT5jb20uYXBwbGUucHJpbnQuUGFnZUZvcm1hdC5QTUFkanVzdGVkUGFwZXJS
@@ -2545,7 +2545,7 @@ Object}</string>
 	YXk+CgkJCQkJPGtleT5jb20uYXBwbGUucHJpbnQudGlja2V0LmNsaWVudDwva2V5PgoJ
 	CQkJCTxzdHJpbmc+Y29tLmFwcGxlLnByaW50aW5nbWFuYWdlcjwvc3RyaW5nPgoJCQkJ
 	CTxrZXk+Y29tLmFwcGxlLnByaW50LnRpY2tldC5tb2REYXRlPC9rZXk+CgkJCQkJPGRh
-	dGU+MjAwNS0wMi0wNFQwNTozNzoyNlo8L2RhdGU+CgkJCQkJPGtleT5jb20uYXBwbGUu
+	dGU+MjAwNS0wMi0xOFQxNzo1ODowNVo8L2RhdGU+CgkJCQkJPGtleT5jb20uYXBwbGUu
 	cHJpbnQudGlja2V0LnN0YXRlRmxhZzwva2V5PgoJCQkJCTxpbnRlZ2VyPjA8L2ludGVn
 	ZXI+CgkJCQk8L2RpY3Q+CgkJCTwvYXJyYXk+CgkJPC9kaWN0PgoJCTxrZXk+Y29tLmFw
 	cGxlLnByaW50LlBhcGVySW5mby5QTVBhcGVyTmFtZTwva2V5PgoJCTxkaWN0PgoJCQk8
@@ -2611,12 +2611,12 @@ Object}</string>
 	ZGljdD4KPC9wbGlzdD4KhpKEmZkPTlNQcmludEFsbFBhZ2VzhpKgkoSZmQtOU1BhcGVy
 	TmFtZYaShJmZBkxldHRlcoaShJmZFU5TSG9yaXpvbmFsUGFnaW5hdGlvboaShKGbopcA
 	hpKEmZkWTlNIb3Jpem9udGFsbHlDZW50ZXJlZIaSppKEmZkJTlNQcmludGVyhpKEhIQJ
-	TlNQcmludGVyAJSShJmZDTE5Mi4xNjguMi4yNTCGhpKEmZkITlNDb3BpZXOGkoShm6KX
-	AYaShJmZD05TU2NhbGluZ0ZhY3RvcoaShKGbhIQBZqEBhpKEmZkNTlNSaWdodE1hcmdp
-	boaShKGbuKEAhpKEmZkOTlNCb3R0b21NYXJnaW6GkoShm7ihAIaShJmZDE5TTGVmdE1h
-	cmdpboaShKGbuKEAhpKEmZkLTlNUb3BNYXJnaW6GkoShm7ihAIaShJmZCk5TTGFzdFBh
-	Z2WGkoShm6KXgn////+GkoSZmQtOU0ZpcnN0UGFnZYaShKGbopcBhpKEmZkNTlNPcmll
-	bnRhdGlvboaShKGbopcAhoaG
+	TlNQcmludGVyAJSShJmZFGJyb3RoZXItMS5qYXNvbWkuY29thoaShJmZCE5TQ29waWVz
+	hpKEoZuilwGGkoSZmQ9OU1NjYWxpbmdGYWN0b3KGkoShm4SEAWahAYaShJmZDU5TUmln
+	aHRNYXJnaW6GkoShm7ihAIaShJmZDk5TQm90dG9tTWFyZ2luhpKEoZu4oQCGkoSZmQxO
+	U0xlZnRNYXJnaW6GkoShm7ihAIaShJmZC05TVG9wTWFyZ2luhpKEoZu4oQCGkoSZmQpO
+	U0xhc3RQYWdlhpKEoZuil4J/////hpKEmZkLTlNGaXJzdFBhZ2WGkoShm6KXAYaShJmZ
+	DU5TT3JpZW50YXRpb26GkoShm6KXAIaGhg==
 	</data>
 	<key>ReadOnly</key>
 	<string>NO</string>
@@ -2639,7 +2639,7 @@ Object}</string>
 		<key>CurrentSheet</key>
 		<string>0</string>
 		<key>Frame</key>
-		<string>{{276, 46}, {591, 832}}</string>
+		<string>{{465, 79}, {591, 832}}</string>
 		<key>ShowRuler</key>
 		<false/>
 		<key>ShowStatusBar</key>
