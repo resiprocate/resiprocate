@@ -412,8 +412,8 @@ Helper::authenticateRequest(const SipMessage& request,
                             const Data& password,
                             int expiresDelta)
 {
-   DebugLog(<< "Authenticating: realm=" << realm << " password=" << password << " expires=" << expiresDelta);
-   DebugLog(<< request);
+   DebugLog(<< "Authenticating: realm=" << realm << " expires=" << expiresDelta);
+   //DebugLog(<< request);
    
    if (request.exists(h_ProxyAuthorizations))
    {
