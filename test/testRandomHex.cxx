@@ -2,8 +2,8 @@
 #include <iostream>
 #include <set>
 
-#include "sip2/util/Data.hxx"
-#include "sip2/util/Random.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/util/Random.hxx"
 
 using namespace std;
 using namespace Vocal2;

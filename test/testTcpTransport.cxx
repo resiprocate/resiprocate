@@ -1,15 +1,15 @@
 #include <iostream>
 
-#include "sip2/sipstack/TcpTransport.hxx"
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/ConnectionMap.hxx"
-#include "sip2/util/Fifo.hxx"
-#include "sip2/sipstack/Preparse.hxx"
-#include "sip2/sipstack/TransportMessage.hxx"
-#include "sip2/util/DataStream.hxx"
-#include "sip2/util/Log.hxx"
-#include "sip2/sipstack/test/TestSupport.hxx"
-#include "sip2/sipstack/test/Resolver.hxx"
+#include "resiprocate/sipstack/TcpTransport.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/ConnectionMap.hxx"
+#include "resiprocate/util/Fifo.hxx"
+#include "resiprocate/sipstack/Preparse.hxx"
+#include "resiprocate/sipstack/TransportMessage.hxx"
+#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/util/Log.hxx"
+#include "resiprocate/sipstack/test/TestSupport.hxx"
+#include "resiprocate/sipstack/test/Resolver.hxx"
 
 #include <signal.h>
 

@@ -1,12 +1,12 @@
 
 #include <cassert>
 
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Data.hxx"
 
-#include "sip2/sipstack/Dialog2.hxx"
-#include "sip2/sipstack/Subscription.hxx"
-#include "sip2/sipstack/SipSession.hxx"
-#include "sip2/sipstack/Registration.hxx"
+#include "resiprocate/sipstack/Dialog2.hxx"
+#include "resiprocate/sipstack/Subscription.hxx"
+#include "resiprocate/sipstack/SipSession.hxx"
+#include "resiprocate/sipstack/Registration.hxx"
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 

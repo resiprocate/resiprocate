@@ -1,10 +1,10 @@
 
 #include <cassert>
 
-#include "sip2/sipstack/HeaderFieldValue.hxx"
-#include "sip2/sipstack/HeaderFieldValueList.hxx"
-#include "sip2/sipstack/ParserContainerBase.hxx"
-#include "sip2/sipstack/Embedded.hxx"
+#include "resiprocate/sipstack/HeaderFieldValue.hxx"
+#include "resiprocate/sipstack/HeaderFieldValueList.hxx"
+#include "resiprocate/sipstack/ParserContainerBase.hxx"
+#include "resiprocate/sipstack/Embedded.hxx"
 
 using namespace Vocal2;
 

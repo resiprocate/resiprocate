@@ -5,15 +5,15 @@
 #include <unistd.h>
 #include <memory>
 
-#include "sip2/sipstack/HeaderFieldValue.hxx"
-#include "sip2/sipstack/HeaderTypes.hxx"
-#include "sip2/sipstack/ParserCategories.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/Helper.hxx"
-#include "sip2/sipstack/test/TestSupport.hxx"
-#include "sip2/util/Timer.hxx"
-#include "sip2/util/DataStream.hxx"
-#include "sip2/util/MD5Stream.hxx"
+#include "resiprocate/sipstack/HeaderFieldValue.hxx"
+#include "resiprocate/sipstack/HeaderTypes.hxx"
+#include "resiprocate/sipstack/ParserCategories.hxx"
+#include "resiprocate/sipstack/Uri.hxx"
+#include "resiprocate/sipstack/Helper.hxx"
+#include "resiprocate/sipstack/test/TestSupport.hxx"
+#include "resiprocate/util/Timer.hxx"
+#include "resiprocate/util/DataStream.hxx"
+#include "resiprocate/util/MD5Stream.hxx"
 #include "digcalc.hxx"
 
 using namespace std;

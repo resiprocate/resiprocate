@@ -1,8 +1,8 @@
-#include "sip2/sipstack/MultipartMixedContents.hxx"
-#include "sip2/sipstack/PlainContents.hxx"
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/test/TestSupport.hxx"
-#include "sip2/util/ParseBuffer.hxx"
+#include "resiprocate/sipstack/MultipartMixedContents.hxx"
+#include "resiprocate/sipstack/PlainContents.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/test/TestSupport.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
 #include <iostream>
 
 using namespace Vocal2;

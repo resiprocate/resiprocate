@@ -1,6 +1,6 @@
-#include "sip2/util/Logger.hxx"
-#include "sip2/sipstack/TransactionMap.hxx"
-#include "sip2/sipstack/TransactionState.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/sipstack/TransactionMap.hxx"
+#include "resiprocate/sipstack/TransactionState.hxx"
 
 using namespace Vocal2;
 

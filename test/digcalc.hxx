@@ -2,11 +2,10 @@
 #define digcalc_hxx
 
 
-#include "sip2/util/vmd5.hxx"
-#include <global.h>
+#include "resiprocate/util/vmd5.hxx"
 #include <string.h>
 #include <iostream>
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Data.hxx"
 
 #define HASHLEN 16
 typedef char HASH[HASHLEN];

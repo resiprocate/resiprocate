@@ -3,7 +3,7 @@
 
 #include <cassert>
 #include <string.h>
-#include "sip2/util/ParseBuffer.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
 
 using namespace Vocal2;
 

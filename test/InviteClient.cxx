@@ -1,12 +1,12 @@
 #include <memory>
 
-#include "sip2/util/Logger.hxx"
-#include "sip2/util/Timer.hxx"
+#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/util/Timer.hxx"
 
-#include "sip2/sipstack/SipMessage.hxx"
-#include "sip2/sipstack/Helper.hxx"
+#include "resiprocate/sipstack/SipMessage.hxx"
+#include "resiprocate/sipstack/Helper.hxx"
 #include "Resolver.hxx"
-#include "sip2/sipstack/Dialog.hxx"
+#include "resiprocate/sipstack/Dialog.hxx"
 
 #include "InviteClient.hxx"
 #include "Transceiver.hxx"

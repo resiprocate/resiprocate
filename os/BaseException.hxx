@@ -2,12 +2,12 @@
 #define BaseException_hxx
 
 static const char* const Vocal2BaseExceptionHeaderVersion =
-    "$Id: BaseException.hxx,v 1.6 2003/03/17 17:49:51 davidb Exp $";
+    "$Id: BaseException.hxx,v 1.7 2003/03/24 22:42:27 jason Exp $";
 
 #include <exception>
 #include <iostream>
 
-#include "sip2/util/Data.hxx"
+#include "resiprocate/util/Data.hxx"
 
 namespace Vocal2
 {

@@ -1,6 +1,6 @@
 #include <iostream.h>
 
-#include "sip2/sipstack/Preparse.hxx"
+#include "resiprocate/sipstack/Preparse.hxx"
 
 #define CRLF "\r\n"
 

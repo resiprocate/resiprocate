@@ -3,11 +3,11 @@
 
 #include <exception>
 
-#include "sip2/util/Data.hxx"
-#include "sip2/util/Fifo.hxx"
-#include "sip2/util/Socket.hxx"
-#include "sip2/util/BaseException.hxx"
-#include "sip2/sipstack/Message.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/util/Fifo.hxx"
+#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/util/BaseException.hxx"
+#include "resiprocate/sipstack/Message.hxx"
 
 namespace Vocal2
 {

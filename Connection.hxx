@@ -3,11 +3,11 @@
 
 #include <list>
 
-#include "sip2/util/Fifo.hxx"
-#include "sip2/util/Socket.hxx"
-#include "sip2/util/Timer.hxx"
-#include "sip2/sipstack/Transport.hxx"
-#include "sip2/sipstack/Preparse.hxx"
+#include "resiprocate/util/Fifo.hxx"
+#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/util/Timer.hxx"
+#include "resiprocate/sipstack/Transport.hxx"
+#include "resiprocate/sipstack/Preparse.hxx"
 
 namespace Vocal2
 {

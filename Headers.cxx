@@ -1,9 +1,9 @@
-#include "sip2/util/Data.hxx"
-#include "sip2/sipstack/Headers.hxx"
-#include "sip2/sipstack/Symbols.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/sipstack/Headers.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
 
 // GPERF generated external routines
-#include "sip2/sipstack/HeaderHash.hxx"
+#include "resiprocate/sipstack/HeaderHash.hxx"
 
 #include <iostream>
 using namespace std;

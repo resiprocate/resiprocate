@@ -1,11 +1,11 @@
 #ifndef Headers_hxx
 #define Headers_hxx
 
-#include "sip2/sipstack/supported.hxx"
-#include "sip2/sipstack/ParserCategories.hxx"
-#include "sip2/sipstack/Symbols.hxx"
-#include "sip2/util/Data.hxx"
-#include "sip2/sipstack/HeaderTypes.hxx"
+#include "resiprocate/sipstack/supported.hxx"
+#include "resiprocate/sipstack/ParserCategories.hxx"
+#include "resiprocate/sipstack/Symbols.hxx"
+#include "resiprocate/util/Data.hxx"
+#include "resiprocate/sipstack/HeaderTypes.hxx"
 
 namespace Vocal2
 {

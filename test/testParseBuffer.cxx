@@ -1,7 +1,7 @@
-#include "sip2/util/ParseBuffer.hxx"
+#include "resiprocate/util/ParseBuffer.hxx"
 #include <string.h>
 #include <assert.h>
-#include "sip2/util/Logger.hxx"
+#include "resiprocate/util/Logger.hxx"
 
 using namespace Vocal2;
 
