@@ -59,7 +59,8 @@ class SipMessage : public Message
       bool isResponse() const;
 
       virtual std::ostream& encode(std::ostream& str) const;
-
+      virtual const Data& encode();
+      
       Data brief() const;
 
       bool exists(const HeaderBase& headerType) const;
@@ -174,6 +175,8 @@ class SipMessage : public Message
       Data mTransactionId;  // !jf!
       mutable bool mRequest;
       mutable bool mResponse;
+
+      Data mEncoded;
 };
 
 
