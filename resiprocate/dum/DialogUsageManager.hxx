@@ -133,11 +133,11 @@ class DialogUsageManager
       friend class ClientRegistration;
       friend class ClientInviteSession;
       friend class ServerInviteSession;
+      friend class InviteSession;
       friend class BaseUsage::Handle;
 
       SipMessage& makeNewSession(BaseCreator* creator);
-      void addTimer(DumTimeout::Type type, unsigned long duration, resip::BaseUsage::Handle& target, 
-                    int cseq, int rseq=-1);
+      void addTimer(DumTimeout::Type type, unsigned long duration, resip::BaseUsage::Handle target, int cseq, int rseq=-1);
 
       ClientInviteSession* makeClientInviteSession(Dialog& dialog,const SipMessage& msg);
       ClientSubscription* makeClientSubscription(Dialog& dialog,const SipMessage& msg);
