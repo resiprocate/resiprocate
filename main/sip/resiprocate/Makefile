@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.126 2003/09/13 19:57:06 jason Exp $
+# $Id: Makefile,v 1.127 2003/09/14 01:41:13 davidb Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -108,6 +108,7 @@ SRC = \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \
+	ParseUtil.cxx \
 	HeaderHash.cxx \
 	ParameterHash.cxx \
 	MethodHash.cxx
