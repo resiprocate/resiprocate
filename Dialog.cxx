@@ -786,6 +786,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    {
       assert(request.exists(h_Vias));
    }
+
    //don't increment CSeq for ACK or CANCEL
    if (method != ACK && method != CANCEL)
    {
@@ -801,6 +802,22 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       request.remove(h_Requires);
       request.remove(h_ProxyRequires);
       request.remove(h_Supporteds);
+   }
+
+   // If method is INVITE then advertise required headers
+   if(method == INVITE)
+   {
+      if(mDum.getProfile()->isAdvertisedCapability(Headers::Allow)) request.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
+      if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) request.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
+      if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) request.header(h_AcceptLanguages) = mDum.getProfile()->getSupportedLanguages();
+      if(mDum.getProfile()->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
+   }
+
+   // Remove Session Timer headers for all requests except INVITE and UPDATE
+   if(method != INVITE && method != UPDATE)
+   {
+      request.remove(h_SessionExpires);
+      request.remove(h_MinSE);
    }
    DebugLog ( << "Dialog::makeRequest: " << request );
 }
