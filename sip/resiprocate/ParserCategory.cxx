@@ -373,7 +373,12 @@ ParserCategory::param(const _enum##_Param& paramType) const                     
    checkParsed();                                                                                       \
    _enum##_Param::Type* p =                                                                             \
       static_cast<_enum##_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));                    \
-   assert(p);                                                                                           \
+   if (!p)                                                                                              \
+   {                                                                                                    \
+      InfoLog(<< "Missing parameter " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);       \
+      DebugLog(<< *this);                                                                               \
+      throw Exception("Missing parameter", __FILE__, __LINE__);                                         \
+   }                                                                                                    \
    return p->value();                                                                                   \
 }
 
