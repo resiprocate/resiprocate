@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2002/11/14 18:48:40 jason Exp $
+# $Id: Makefile,v 1.10 2002/11/15 03:56:32 derekm Exp $
 
 BUILD = ../../../build
 
@@ -21,7 +21,16 @@ TESTPROGRAMS =	SipTortureTests.cxx \
 	        testPreparse.cxx \
 		testSipMessageMemory.cxx \
 	        testTcpTransport.cxx \
-		testTransactionFSM.cxx 
+		testTransactionFSM.cxx \
+		lg.cxx
+
+SRC = \
+		Register.cxx \
+		Transceiver.cxx \
+		Registrar.cxx \
+		InviteClient.cxx \
+		InviteServer.cxx \
+		Resolver.cxx	
 
 #	        testNonInviteClientTx.cxx \
 #		testNameAddrParamExclusions.cxx \
@@ -30,7 +39,5 @@ ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
 endif
 
-
-SRC = Resolver.cxx 
 
 include $(BUILD)/Makefile.post
