@@ -6,6 +6,7 @@
 #ifdef USE_SSL
 #include <openssl/evp.h>
 #include <openssl/x509.h>
+#include <openssl/ssl.h>
 #endif
 
 
@@ -14,9 +15,31 @@ namespace Vocal2
  
 class Contents;
 class Pkcs7Contents;
+class Security;
+
+
+class TlsConnection
+{
+   public:
+      TlsConnection( Security* security, Socket fd, bool server=false );
+      
+      int read( void* buf, int count );
+      int write( void* buf, int count );
+
+      Data peerName();
+      
+   private:
+#ifdef USE_SSL  
+      SSL* ssl;
+      BIO* bio;
+#endif
+};
+
 
 class Security
 {
+      friend class TlsConnection;
+      
    public:
       Security( );
       ~Security();
@@ -43,8 +66,8 @@ class Security
       bool loadMyPublicCert(  const Data& filePath );
       bool loadMyPrivateKey(  const Data& password,  const Data& filePath );
       bool createMyKey( const Data& password, 
-                         const Data& filePathPrivateKey=Data::Empty,
-                         const Data& filePathPublicKey=Data::Empty );
+                        const Data& filePathPrivateKey=Data::Empty,
+                        const Data& filePathPublicKey=Data::Empty );
 
       bool loadPublicCert(  const Data& filePath=Data::Empty );
       bool savePublicCert( const Data& certName,  const Data& filePath=Data::Empty );
@@ -73,7 +96,8 @@ class Security
       Pkcs7Contents* signAndEncrypt( Contents* , const Data& recipCertName );
       
       /* stuff to receive messages */
-      enum SignatureStatus {
+      enum SignatureStatus 
+      {
          none, // there is no signature 
          isBad,
          trusted, // It is signed with trusted signature 
@@ -90,11 +114,11 @@ class Security
       };
       CertificateInfo getCertificateInfo( Pkcs7Contents* );
       void addCertificate( Pkcs7Contents*  ); // Just puts cert in trust list but does
-                                     // not save on disk for future
-                                     // sessions. You almost allways don't want
-                                     // to use this but should use addAndAve
+      // not save on disk for future
+      // sessions. You almost allways don't want
+      // to use this but should use addAndAve
       void addAndSaveCertificate( Pkcs7Contents*, const Data& filePath=Data::Empty ); // add cert and
-                                                                // saves on disk
+      // saves on disk
 
       Contents* uncode( Pkcs7Contents*,       
                         Data* signedBy, SignatureStatus* sigStat, bool* encryped ); // returns NULL if fails 
@@ -105,6 +129,8 @@ class Security
                
       Data getPath( const Data& dir, const Data& file );
 #ifdef USE_SSL   
+      SSL_CTX* getTlsCtx();
+      
       // map of name to certificates
       typedef std::map<Data,X509*> Map;
       typedef Map::iterator MapIterator;
@@ -119,15 +145,65 @@ class Security
       
       // my private key 
       EVP_PKEY* privateKey;
+
+      // SSL Context 
+      SSL_CTX* ctx;
 #endif	
 };
-
-
+ 
 }
+
 
 #endif
 
-
 /* ====================================================================
- * The Vovida Software License, Version 1.0  *  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved. *  * Redistribution and use in source and binary forms, with or without * modification, are permitted provided that the following conditions * are met: *  * 1. Redistributions of source code must retain the above copyright *    notice, this list of conditions and the following disclaimer. *  * 2. Redistributions in binary form must reproduce the above copyright *    notice, this list of conditions and the following disclaimer in *    the documentation and/or other materials provided with the *    distribution. *  * 3. The names "VOCAL", "Vovida Open Communication Application Library", *    and "Vovida Open Communication Application Library (VOCAL)" must *    not be used to endorse or promote products derived from this *    software without prior written permission. For written *    permission, please contact vocal@vovida.org. * * 4. Products derived from this software may not be called "VOCAL", nor *    may "VOCAL" appear in their name, without prior written *    permission of Vovida Networks, Inc. *  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL, * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH * DAMAGE. *  * ==================================================================== *  * This software consists of voluntary contributions made by Vovida * Networks, Inc. and many individuals on behalf of Vovida Networks, * Inc.  For more information on Vovida Networks, Inc., please see * <http://www.vovida.org/>. *
+ * The Vovida Software License, Version 1.0 
+ * 
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 
+ * 3. The names "VOCAL", "Vovida Open Communication Application Library",
+ *    and "Vovida Open Communication Application Library (VOCAL)" must
+ *    not be used to endorse or promote products derived from this
+ *    software without prior written permission. For written
+ *    permission, please contact vocal@vovida.org.
+ *
+ * 4. Products derived from this software may not be called "VOCAL", nor
+ *    may "VOCAL" appear in their name, without prior written
+ *    permission of Vovida Networks, Inc.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+ * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+ * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+ * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
  */
+
+
