@@ -46,7 +46,7 @@ digraph UAS {
 
   //////////////////////////////////////////
   // UAS - no offer in INVITE
-  Start -> NoOffer                                      [ label = "onInvite" ];
+  Start -> NoOffer                                      [ label = "onInvite/app::onOfferRequired" ];
 
   NoOffer -> ProvidedOffer                              [ label = "dum::provideOffer/store::offer" ];
   NoOffer -> EarlyNoOffer                               [ label = "dum::provisional/send::1xx,timer::1xx" ]; // include early-media
@@ -57,7 +57,7 @@ digraph UAS {
   NoOffer -> Terminated                                 [ label = "onBye/app::onTerminated,send::200B,send::487I,dum::destroy" ]; 
 
   ProvidedOffer -> EarlyProvidedOffer                   [ label = "dum::provisional/send::1xx-early,timer::1xx" ]; 
-  ProvidedOffer -> Accepted                             [ label = "dum::accept/send::2XXI-offer,timer::2xx,timer::NoAck" ];
+  ProvidedOffer -> AcceptedWaitingAnswer                [ label = "dum::accept/send::2XXI-offer,timer::2xx,timer::NoAck" ];
   ProvidedOffer -> Terminated                           [ label = "dum::end/send::4XXI,dum::destroy" ];
   ProvidedOffer -> Terminated                           [ label = "dum::reject/send::4XXI,dum::destroy" ];
   ProvidedOffer -> Terminated                           [ label = "onCancel/app::onTerminated,send::200C,send::487I,dum::destroy" ]; 
@@ -89,9 +89,8 @@ digraph UAS {
 
 
   Start -> OfferReliable                                [ label = "onInvite-offer-rel/app::onOffer" ];
-  Start -> NoOfferReliable                              [ label = "onInvite-rel" ];
+  Start -> NoOfferReliable                              [ label = "onInvite-rel/app::onOfferRequired" ];
 
-  // this doesn't attach from anything
   AcceptedWaitingAnswer -> Connected                    [ label = "onACK-answer/onAnswer" ];
   AcceptedWaitingAnswer -> AcceptedWaitingAnswer        [ label = "onCANCEL/send::200C" ]; 
   AcceptedWaitingAnswer -> AcceptedWaitingAnswer        [ label = "onPRACK/send::2XXP,send::2XXI-offer" ];
