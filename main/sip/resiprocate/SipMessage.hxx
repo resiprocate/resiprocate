@@ -32,6 +32,7 @@ namespace resip
 
 class Contents;
 class UnknownHeaderType;
+class SecurityAttributes;
 
 class SipMessage : public TransactionMessage
 {
@@ -341,6 +342,8 @@ class SipMessage : public TransactionMessage
 
       // domain associated with this message for tls cert
       Data mTlsDomain;
+
+      SecurityAttributes* mSecurityAttributes;
 
       friend class TransportSelector;
 };

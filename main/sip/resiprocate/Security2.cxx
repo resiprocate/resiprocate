@@ -641,10 +641,115 @@ BaseSecurity::initialize ()
    Timer::getTimeMs(); // initalize time offsets
 }
 //virtual
-void
-BaseSecurity::preload ()
+
+Security::preload()
 {
+   preload(getPath());
 }
+
+static const Data pem(".pem");
+static const Data userCert("user_cert_");
+static const Data userKey("user_key_");
+static const Data domainCert("domain_cert_");
+static const Data domainKey("domain_key_");
+static const Data rootCert("root_cert_");
+
+static const Data[] pemTypePrefixes =
+{
+   rootCert,
+   domainCert,
+   domainPrivateKey,
+   userCert,
+   userPrivateKey
+};
+
+Data
+readIntoData(const Data& filename)
+{
+  ifstream is;
+  is.open(filename.c_str(), ios::binary );
+  assert(is.is_open());
+  
+  // get length of file:
+  is.seekg (0, ios::end);
+  int length = is.tellg();
+  is.seekg (0, ios::beg);
+
+  buffer = new char [length];
+
+  // read data as a block:
+  is.read (buffer,length);
+
+  Data target(Data::Take, buffer, length);
+
+  is.close();
+
+  return target;
+}
+
+Data
+getAor(const Data& filename,
+       const Data& prefix)
+{
+   return filename.substr(prefix.size(), filename.size() - prefix.size() - pem.size());
+}
+
+void
+Security::preload(const Data& directory)
+{
+   FileSystem::Directory dir(directory);
+   char buffer(8192);
+   Data fileT(Data::Borrow, buffer, sizeof(buffer));
+   for (FileSystem::Directory::iterator it == dir.begin(); it != dir.end(); it++)
+   {
+      if (it->suffix(pem))
+      {         
+         if (it->prefix(userCert))
+         {
+            addUserCertPEM(getAor(*it, userCert), readIntoData(*it));
+         }
+         else if (it->prefix(userKey))
+         {
+            addUserPrivateKeyPEM(getAor(*it, userKey), readIntoData(*it));
+         }
+         else if (it->prefix(domainCert))
+         {
+            addDomainPrivateKeyPEM(getAor(*it, domainCert), readIntoData(*it));
+         }
+         else if (it->prefix(domainKey))
+         {
+            addDomainPrivateKeyPEM(getAor(*it, domainKey), readIntoData(*it));
+         }
+         else if (it->prefix(rootCert))
+         {
+            addRootCertPEM(getAor(*it, rootCert), readIntoData(*it));
+         }
+      }
+   }
+}
+
+void 
+Security::onReadPEM(const Data& name, 
+                    PEMType type, 
+                    Data& buffer)
+{
+   Data filename = getPath() + pemTypePrefixes[type] + name + pem;
+
+   // .dlb. extra copy
+   buffer = readIntoData(filename);
+}
+
+void
+Security::onWritePEM(const Data& name, 
+                     PEMType type, 
+                     const Data& buffer)
+{
+   Data filename = getPath() + pemTypePrefixes[type] + name + pem;
+
+   ofstream str(filename, ofstream::binary);
+   str.write(buffer.data(), buffer.size();
+}
+
 std::vector<BaseSecurity::CertificateInfo>
 BaseSecurity::getRootCertDescriptions() const
 {
@@ -1181,6 +1286,31 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    dumpAsn("identity-out-hash", computedHash );
 
    return ret;
+}
+
+void 
+Security::checkAndSetIdentity( const SipMessage& msg )
+{
+   try
+   {
+      if (checkIdentity(msg.header(h_From).uri().host(),
+                        msg.getCanonicalIdentityString(),
+                        msg.header(h_Identity).value()))
+      {
+         sec->setIdentity(msg.header(h_From).uri().getAor());
+         sec->setIdentityStrength(SecurityAttributes::Identity);
+      }
+      else
+      {
+         sec->setIdentity(msg.header(h_From).uri().getAor());
+         sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
+      }
+   }
+   catch (BaseException&)
+   {
+      sec->setIdentity(msg.header(h_From).uri().getAor());
+      sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
+   }
 }
 
 Contents*
