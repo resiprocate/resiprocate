@@ -15,7 +15,7 @@
 #include <util/Data.hxx>
 #include <util/Socket.hxx>
 #include <util/Logger.hxx>
-#include <sipstack/UdpTransport.hxx>
+#include <sipstack/TcpTransport.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/Preparse.hxx>
 
@@ -25,7 +25,7 @@
 using namespace std;
 using namespace Vocal2;
 
-const int TcpTransport::MaxBufferSize = 8192;
+const int TcpTransport::MaxBufferSize = 1024;
 
 
 TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo) : 
@@ -75,9 +75,9 @@ TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, F
    int e = listen( mFd , /* qued requests */ 64 );
    if (e != 0 )
    {
-	   int err = errno;
-	   // !cj! deal with errors
-	   assert(0);
+      //int err = errno;
+      // !cj! deal with errors
+      assert(0);
    }
 }
 
@@ -88,6 +88,26 @@ TcpTransport::~TcpTransport()
 
 
 void 
+TcpTransport::buildFdSet( fd_set* fdSet, int* fdSetSize )
+{
+   int maxFd = -1;
+   for (ConnectionMap::Map::iterator it = mConnectionMap.mConnections.begin();
+        it != mConnectionMap.mConnections.end(); it++)
+   {
+      int fd = it->second->getSocket();
+      if (fd > maxFd)
+      {
+         maxFd = fd;
+      }
+      FD_SET(fd, fdSet);
+   }
+   if ((maxFd + 1) > *fdSetSize)
+   {
+      *fdSetSize = maxFd + 1;
+   }
+}
+
+void 
 TcpTransport::processListen(fd_set* fdSet)
 {
    assert( mFd );
@@ -96,169 +116,193 @@ TcpTransport::processListen(fd_set* fdSet)
    {
       struct sockaddr_in peer;
 		
-      Socket s = accept( s, (struct addr*)peer,sozeof(peer));
+      socklen_t peerLen=sizeof(peer);
+      Socket s = accept( s, (struct sockaddr*)&peer,&peerLen);
       if ( s == -1 )
       {
          int err = errno;
          // !cj!
          assert(0);
       }
-		
-      int peerPort = peer.sin_port;
-      struct in_addr addr = peer.sin_port;
 
       Transport::Tuple who;
-      who.ipv4 = peer;
-      who.port = peerPort;
-      who.transport =, Transport::TCP);
+      who.ipv4 = peer.sin_addr;
+      who.port = ntohs(peer.sin_port);
+      who.transportType = Transport::TCP;
+      who.transport = this;
       mConnectionMap.add(who, s);
    }
+}
+
+
+bool
+TcpTransport::processRead(ConnectionMap::Connection* c)
+{
+   c->allocateBuffer(MaxBufferSize);
+   int bytesRead = read(c->getSocket(), c->mBuffer + c->mBytesRead, c->mBufferSize - c->mBytesRead);
+   if (bytesRead < 0)
+   {
+      //socket cleanup code
+      return false;
+   }   
+
+   if(c->process(bytesRead, mStateMachineFifo, mPreparse, MaxBufferSize))
+   {
+      // socket cleanup code
+      return false;
+      
+   }
+   mConnectionMap.touch(c);
+   return true;
+}
+
+
+
+void
+TcpTransport::processAllReads(fd_set* fdset)
+
+{
+   if (mConnectionMap.mConnections.empty())
+   {
+      return;
+   }
+   
+
+   for (ConnectionMap::Connection * c = mConnectionMap.mPostOldest.mYounger;
+        c != &mConnectionMap.mPreYoungest; c = c->mYounger)
+   {
+      if (FD_ISSET(c->getSocket(), fdset))
+      {
+         if (processRead(c))
+         {
+            return;
+         }
+         else
+         {
+            mConnectionMap.close(c->mWho);
+            return;
+         }
+      }
+   }
+}
+
+
+void
+TcpTransport::processAllWrites( fd_set* fdset )
+{
+   // how do we know that buffer won't get deleted on us !jf!
+
+   //!dcm! have completely punted on backpressure tracking
+   while(true)
+   {
+      if (mTxFifo.messageAvailable())
+      {
+         SendData* data = mTxFifo.getNext();
+         ConnectionMap::Connection* conn = mConnectionMap.get(data->destination);
+         
+         if (conn == 0)
+         {
+            //notify ppl that transaction is dead
+            delete data;
+            return;
+         }
+         if (conn->mOutstandingSends.empty())
+         {
+            mSendRoundRobin.push_back(conn);
+            conn->mSendPos = 0;
+         }
+         conn->mOutstandingSends.push_back(data);
+      }
+      
+      if (sendFromRoundRobin(fdset))
+      {
+         return;
+      }
+   }
+}         
+
+bool 
+TcpTransport::sendFromRoundRobin(fd_set* fdset)
+{
+   if (mSendRoundRobin.empty())
+   {
+      return true;
+   }
+
+   ConnectionList::iterator rrPos = mSendPos;
+   do
+   {
+      if (mSendPos == mSendRoundRobin.end())
+      {
+         mSendPos = mSendRoundRobin.begin();
+      }
+      if (FD_ISSET((*mSendPos)->getSocket(), fdset))
+      {
+         if (processWrite(*mSendPos))
+         {
+            if ((*mSendPos)->mOutstandingSends.empty())
+            {
+               mConnectionMap.close((*mSendPos)->mWho);
+               mSendPos = mSendRoundRobin.erase(mSendPos);
+            }
+            else
+            {
+               mSendPos++;
+            }
+            return true;
+         }
+         else
+         {
+            mConnectionMap.close((*mSendPos)->mWho);
+            mSendPos = mSendRoundRobin.erase(mSendPos);
+            return true;
+         }
+      }
+      else
+      {
+         mSendPos++;
+      }
+   } while(mSendPos != rrPos);
+   return false;
+}
+
+bool
+TcpTransport::processWrite(ConnectionMap::Connection* c)
+{
+   assert(!c->mOutstandingSends.empty());
+   SendData* data = c->mOutstandingSends.front();
+   
+   int bytesToWrite = data->data.size() - c->mSendPos;
+   int bytesWritten = write(c->getSocket(), data->data.data() + c->mSendPos, bytesToWrite);
+
+   if (bytesWritten < 0)
+   {
+      //send error(senddata will have transactionid), or if at start of new
+      //message, try to open again !dcm!
+      mConnectionMap.close(data->destination);
+      //touch if things work on retry
+      return false; //or true if you are not dead(retry connection if applicable)
+   }
+   else if (bytesWritten < bytesToWrite)
+   {
+      c->mSendPos += bytesWritten;
+   }
+   else
+   {
+      delete data;
+      c->mOutstandingSends.pop_front();
+      c->mSendPos = 0;
+   }
+   mConnectionMap.touch(c);
+   return true;
 }
 
 void 
 TcpTransport::process(fd_set* fdSet)
 {
-	
-   // pull buffers to send out of TxFifo
-   // pull buffers to send out of TxFifo
-   // receive datagrams from fd
-   // preparse and stuff into RxFifo
-
-   
-   // how do we know that buffer won't get deleted on us !jf!
-   if (mTxFifo.messageAvailable())
-   {
-      std::auto_ptr<SendData> data = std::auto_ptr<SendData>(mTxFifo.getNext());
-      DebugLog (<< "Sending message on udp");
-
-      const sockaddr_in* addrin = &data->destination;
-      const sockaddr* addr = (const sockaddr*) addrin;
-
-      int count = sendto(mFd, 
-                         data->data->data(), data->data->size(),  // !jf! ugghhh
-                         0, // flags
-                         addr, sizeof(sockaddr_in) );
-   
-      if ( count == SOCKET_ERROR )
-      {
-         int err = errno;
-         DebugLog (<< strerror(err));
-         // !jf! what to do if it fails
-         assert(0);
-      }
-
-      assert ( (count == int(data->data->size()) ) || (count == SOCKET_ERROR ) );
-   }
-
-   struct sockaddr_in from;
-
-   // !ah! debug is just to always return a sample message
-   // !jf! this may have to change - when we read a message that is too big
-   
-   if ( !FD_ISSET(mFd, fdSet ) )
-   {
-	   return;
-   }
-
-   char* buffer = new char[MaxBufferSize];
-   int fromLen = sizeof(from);
-   
-   // !jf! how do we tell if it discarded bytes 
-   // !ah! we use the len-1 trick :-(
-
-#if (! defined (__QNX__) )
-   int len = recvfrom( mFd,
-                       buffer,
-                       MaxBufferSize,
-                       0 /*flags */,
-                       (struct sockaddr*)&from,
-                       (socklen_t*)&fromLen);
-#else
-   int len = recvfrom( mFd,
-                       buffer,
-                       MaxBufferSize,
-                       0 /*flags */,
-                       (struct sockaddr*)&from,
-                       (size_t*)&fromLen);
-#endif
-
-
-   if ( len == SOCKET_ERROR )
-   {
-	   int err = errno;
-	   //cerr << "Err=" << err << " " << strerror(err) << endl;
-	   
-	   switch (err)
-	   {
-		   case EWOULDBLOCK:
-		   {
-		   }
-		   break;
-		   default:
-		   {
-			   ErrLog(<<"Error receiving, errno="<<err);
-		   }
-		   break;
-	   }
-	   
-   }
-   else if (len > 0)
-   {
-	   // TODO - the next line is really really gross
-      //unsigned long len = static_cast<unsigned long>(len);
-      
-      if (len == MaxBufferSize)
-      {
-         InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
-         InfoLog(<<"Possibly truncated");
-      }
-      DebugLog( << "UDP Rcv : " << len << " b" );
-      
-      SipMessage* message = new SipMessage(true);
-      
-      // set the received from information into the received= parameter in the
-      // via
-
-      // It is presumed that UDP Datagrams are arriving atomically and that
-      // each one is a unique SIP message
-
-
-      message->setSource(from);
-
-      // Tell the SipMessage about this datagram buffer.
-      message->addBuffer(buffer);
-
-      Preparse preParser(*message, buffer, len);
-
-      bool ppStatus = preParser.process();
-      // this won't work if UDPs are fragd !ah!
-
-      if (ppStatus)
-      {
-         // ppStatus will be false ONLY when the DATAGRAM did not
-         // contain a Preparsable byte-stream. In the UDP transport,
-         // this is an error. 
-
-         // OTHER TRANSPORTS will have to handle fragmentation when
-         // this condition is set.
-         // determine that there is a fragment that needs to be done
-         // alloc buffer to hold remainder and next network fragment
-         // as per !cj! ideas on anti-frag.
-         // need nic to Preparser that can detect frags remaining. !ah!
-         // ?? think about this design.
-
-         InfoLog(<<"Rejecting datagram as unparsable.");
-         delete message;
-      }
-      else
-      {
-      
-         DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
-
-         // set the received= and rport= parameters in the message if necessary !jf!
-         mStateMachineFifo.add(message);
-      }
-   }
+   processAllWrites(fdSet);
+   processListen(fdSet);
+   processAllReads(fdSet);
 }
 
 
