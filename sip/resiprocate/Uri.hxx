@@ -22,10 +22,9 @@ class Uri : public ParserCategory
       int& port() const {checkParsed(); return mPort;}
       Data& password() const {checkParsed(); return mPassword;}
       
-      void parse(ParseBuffer& pb);
-      virtual void parse() { assert(0); }
+      virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
 
       // parse the headers into this as SipMessage -- called from parse
       void parseEmbeddedHeaders();

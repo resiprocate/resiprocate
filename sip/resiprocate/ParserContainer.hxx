@@ -125,14 +125,9 @@ class ParserContainer : public ParserContainerBase
             {
                str << headerName << Symbols::COLON << Symbols::SPACE;
             }
-            if ((*i)->isParsed())
-            {
-               (*i)->encode(str);
-            }
-            else
-            {
-               (*i)->encodeFromHeaderFieldValue(str);
-            }
+
+            (*i)->encode(str);
+
             str << Symbols::CRLF;
          }
          return str;

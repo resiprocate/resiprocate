@@ -32,7 +32,7 @@ class Token : public ParserCategory
 
       virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
 
    private:
       mutable Data mValue;
@@ -60,7 +60,7 @@ class Mime : public ParserCategory
          
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
    private:
       mutable Data mType;
       mutable Data mSubType;
@@ -81,7 +81,7 @@ class Auth : public ParserCategory
       Auth& operator=(const Auth&);
 
       virtual void parse(ParseBuffer& pb);
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
       void parseAuthParameters(ParseBuffer& pb);
@@ -106,7 +106,7 @@ class IntegerCategory : public ParserCategory
       IntegerCategory& operator=(const IntegerCategory&);
 
       virtual void parse(ParseBuffer& pb);
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
       int& value() const {checkParsed(); return mValue;}
@@ -131,7 +131,7 @@ class StringCategory : public ParserCategory
       StringCategory& operator=(const StringCategory&);
 
       virtual void parse(ParseBuffer& pb);
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
       Data& value() const {checkParsed(); return mValue;}
@@ -156,7 +156,7 @@ class GenericURI : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
 
       Data& uri();
 
@@ -199,7 +199,7 @@ class NameAddr : public ParserCategory
       
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
 
       bool operator<(const NameAddr& other) const;
 
@@ -241,7 +241,7 @@ class CallId : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
 
    private:
       mutable Data mValue;
@@ -267,7 +267,7 @@ class CSeqCategory : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
 
    private:
       mutable MethodTypes mMethod;
@@ -340,7 +340,7 @@ class DateCategory : public ParserCategory
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
 
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
       
       static DayOfWeek DayOfWeekFromData(const Data&);
       static Month MonthFromData(const Data&);
@@ -378,7 +378,7 @@ class WarningCategory : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
 
       int& code();
       Data& hostname();
@@ -426,7 +426,7 @@ class Via : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
 
    private:
       mutable Data mProtocolName;
@@ -451,7 +451,7 @@ class ExpiresCategory : public ParserCategory
       ExpiresCategory& operator=(const ExpiresCategory&);
 
       virtual void parse(ParseBuffer& pb);
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
       int& value() const {checkParsed(); return mValue;}
@@ -492,7 +492,7 @@ class RequestLine : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
 
    private:
       mutable Uri mUri;
@@ -518,7 +518,7 @@ class StatusLine : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
 
    private:
       mutable int mResponseCode;
