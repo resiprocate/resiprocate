@@ -10,6 +10,9 @@
 #include "sip2/util/ParseBuffer.hxx"
 #include "sip2/util/DataStream.hxx"
 
+#include "sip2/sipstack/Headers.hxx"
+
+
 
 using namespace std;
 using namespace Vocal2;
@@ -38,11 +41,13 @@ main(int arc, char** argv)
       // valgrind complains, but the problem moves when closely observed
       assert(foo.getAor().empty());
    }
-   
+
    {
       // test header hash
       for (int i = Headers::CSeq; i < Headers::UNKNOWN; i++)
       {
+		  Data hdr = Headers::HeaderNames[i];
+
          assert(Headers::getType(Headers::HeaderNames[i].c_str(), Headers::HeaderNames[i].size()) == i);
       }
    }

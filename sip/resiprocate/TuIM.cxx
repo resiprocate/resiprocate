@@ -140,6 +140,13 @@ TuIM::process()
             delete response;
             
             Contents* contents = msg->getContents();
+			if ( !contents )
+			{
+				ErrLog( "Receiveed Message message with no contents" );
+				delete msg; msg=0;
+				return;
+			}
+
             assert( contents );
             Mime mime = contents->getType();
             DebugLog ( << "got body of type  " << mime.type() << "/" << mime.subType() );
