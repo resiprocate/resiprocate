@@ -2,8 +2,7 @@
 #include "Dialog.hxx"
 using namespace resip;
 
-ServerPublication::ServerPublication(DialogUsageManager& dum,
-                                     Dialog& dialog)
+ServerPublication::ServerPublication(DialogUsageManager& dum,  Dialog& dialog, const SipMessage&)
    : BaseUsage(dum, dialog),
      mHandle(dum)
 {}

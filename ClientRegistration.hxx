@@ -40,7 +40,7 @@ class ClientRegistration: public BaseUsage
    protected:
       virtual ~ClientRegistration();
    private:
-      friend class DialogUsageManager;
+      friend class Dialog;
       ClientRegistration(DialogUsageManager& dum,
                          Dialog& dialog,
                          SipMessage& req);
