@@ -2,7 +2,7 @@
 #include <cstring>
 #include <cassert>
 
-#define USE_CURSES
+//#define USE_CURSES
 
 #ifdef USE_CURSES
 #include <ncurses.h>
