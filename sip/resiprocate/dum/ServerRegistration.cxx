@@ -112,8 +112,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
     {
       globalExpires = msg.header(h_Expires).value();
     }
-
-    if (globalExpires == 0)
+    else
     {
       globalExpires = 3600;
     }
