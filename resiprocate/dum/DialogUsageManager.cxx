@@ -74,14 +74,14 @@ DialogUsageManager::~DialogUsageManager()
    mShutdownState = Destroying;
    //InfoLog ( << "~DialogUsageManager" );
 
-   #if(0)
+#if(0)
    // !kh!
    DialogSetMap::iterator dialogSet = mDialogSetMap.begin();
    for (; dialogSet != mDialogSetMap.end(); ++dialogSet)
    {
       delete dialogSet->second;
    }
-   #endif
+#endif
    if(!mDialogSetMap.empty())
    {
       InfoLog(<< "DialogUsageManager::mDialogSetMap has " << mDialogSetMap.size() << " DialogSets");
@@ -122,7 +122,7 @@ DialogUsageManager::addTransport( TransportType protocol,
                                   SecurityTypes::SSLType sslType)
 {
    mStack.addTransport(protocol, port, version, ipInterface,
-                        sipDomainname, privateKeyPassPhrase, sslType);
+                       sipDomainname, privateKeyPassPhrase, sslType);
 }
 
 SipStack& 
@@ -140,7 +140,7 @@ DialogUsageManager::getSecurity()
 Data
 DialogUsageManager::getHostAddress()
 {
-    return mStack.getHostAddress();
+   return mStack.getHostAddress();
 }
 
 void
@@ -556,13 +556,13 @@ DialogUsageManager::makePublication(const NameAddr& targetDocument,
 SipMessage&
 DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, UserProfile& userProfile, const MethodTypes meth, AppDialogSet* appDs)
 {
-	return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, userProfile), appDs);
+   return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, userProfile), appDs);
 }
 
 SipMessage&
 DialogUsageManager::makeOutOfDialogRequest(const NameAddr& target, const MethodTypes meth, AppDialogSet* appDs)
 {
-	return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, *getMasterProfile()), appDs);
+   return makeNewSession(new OutOfDialogReqCreator(*this, meth, target, *getMasterProfile()), appDs);
 }
 
 ClientPagerMessageHandle
@@ -766,8 +766,8 @@ DialogUsageManager::findInviteSession(CallId replaces)
    //invitesession state
    // !slg! Logic is here for now.
    InviteSessionHandle is = findInviteSession(DialogId(replaces.value(),
-                                               replaces.param(p_toTag),
-                                               replaces.param(p_fromTag)));
+                                                       replaces.param(p_toTag),
+                                                       replaces.param(p_fromTag)));
    int ErrorStatusCode = 481; // Call/Transaction Does Not Exist
 
    // If we matched a session - Do RFC3891 Section 3 Processing
@@ -802,8 +802,9 @@ DialogUsageManager::findInviteSession(CallId replaces)
 }
 
 bool
-DialogUsageManager::process()
+DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
 {
+   //!dcm! -- probably completely wrong
    // After a Stack ShutdownMessage has been received, don't do anything else in dum
    if (mShutdownState == Shutdown)
    {
@@ -812,118 +813,116 @@ DialogUsageManager::process()
 
    try
    {
+      InfoLog (<< "Got: " << msg->brief());
+
       std::auto_ptr<Message> msg(mFifo.messageAvailable() ? mFifo.getNext() : 0);
       
-      if (msg.get())
+      if (mServerAuthManager.get())
       {
-         InfoLog (<< "Got: " << msg->brief());
-
-         SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
-         if (sipMsg)
+         if (mServerAuthManager->handle(msg))
          {
-            DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());
-            if (sipMsg->isRequest())
-            {
-               // Validate Request URI
-               if( !validateRequestURI(*sipMsg) )
-               {
-                  DebugLog (<< "Failed RequestURI validation " << *sipMsg);
-                  return true;
-               }
-
-               // Continue validation on all requests, except ACK and CANCEL
-               if(sipMsg->header(h_RequestLine).method() != ACK &&
-                  sipMsg->header(h_RequestLine).method() != CANCEL)
-               {
-                  if( !validateRequiredOptions(*sipMsg) )
-                  {
-                     DebugLog (<< "Failed required options validation " << *sipMsg);
-                     return true;
-                  }
-                  if( getMasterProfile()->validateContentEnabled() && !validateContent(*sipMsg) )
-                  {
-                     DebugLog (<< "Failed content validation " << *sipMsg);
-                     return true;
-                  }
-                  if( getMasterProfile()->validateAcceptEnabled() && !validateAccept(*sipMsg) )
-                  {
-                     DebugLog (<< "Failed accept validation " << *sipMsg);
-                     return true;
-                  }
-               }
-               if (sipMsg->header(h_From).exists(p_tag))
-               {
-                  if (mergeRequest(*sipMsg) )
-                  {
-                     InfoLog (<< "Merged request: " << *sipMsg);
-                     return true;
-                  }
-               }
-
-               if ( mServerAuthManager.get() )
-               {
-                  if ( mServerAuthManager->handle(*getMasterProfile() /* !slg! ?? */, *sipMsg) )
-                  {
-                     return true;
-                  }
-               }
-               if (queueForIdentityCheck(sipMsg))
-               {
-                  msg.release();
-               }
-               else
-               {
-                  processRequest(*sipMsg);
-               }
-            }
-            else if (sipMsg->isResponse())
-            {
-               if (!processIdentityCheckResponse(*sipMsg))
-               {
-                  processResponse(*sipMsg);
-               }
-            }
             return true;
          }
-
-         DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
-         if (destroyUsage)
+      }
+      
+      SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
+      if (sipMsg)
+      {
+         DebugLog ( << "DialogUsageManager::process: " << sipMsg->brief());
+         if (sipMsg->isRequest())
          {
-            destroyUsage->destroy();
-            return true;
-         }
-
-         DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
-         if (dumMsg)
-         {
-            if (!dumMsg->getBaseUsage().isValid())
+            // Validate Request URI
+            if( !validateRequestURI(*sipMsg) )
             {
+               DebugLog (<< "Failed RequestURI validation " << *sipMsg);
                return true;
             }
 
-            dumMsg->getBaseUsage()->dispatch(*dumMsg);
-            return true;
-         }
-
-         KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
-         if (keepAliveMsg)
-         {
-            if (mKeepAliveManager.get())
+            // Continue validation on all requests, except ACK and CANCEL
+            if(sipMsg->header(h_RequestLine).method() != ACK &&
+               sipMsg->header(h_RequestLine).method() != CANCEL)
             {
-               mKeepAliveManager->process(*keepAliveMsg);
+               if( !validateRequiredOptions(*sipMsg) )
+               {
+                  DebugLog (<< "Failed required options validation " << *sipMsg);
+                  return true;
+               }
+               if( getMasterProfile()->validateContentEnabled() && !validateContent(*sipMsg) )
+               {
+                  DebugLog (<< "Failed content validation " << *sipMsg);
+                  return true;
+               }
+               if( getMasterProfile()->validateAcceptEnabled() && !validateAccept(*sipMsg) )
+               {
+                  DebugLog (<< "Failed accept validation " << *sipMsg);
+                  return true;
+               }
             }
-            return true;
-         }
+            if (sipMsg->header(h_From).exists(p_tag))
+            {
+               if (mergeRequest(*sipMsg) )
+               {
+                  InfoLog (<< "Merged request: " << *sipMsg);
+                  return true;
+               }
+            }
 
-         StatisticsMessage* stats = dynamic_cast<StatisticsMessage*>(msg.get());
-         if (stats)
+            if (queueForIdentityCheck(sipMsg))
+            {
+               msg.release();
+            }
+            else
+            {
+               processRequest(*sipMsg);
+            }
+         }
+         else if (sipMsg->isResponse())
          {
-            stats->loadOut(mStatsPayload);
-            stats->logStats(RESIPROCATE_SUBSYSTEM, mStatsPayload);
+            if (!processIdentityCheckResponse(*sipMsg))
+            {
+               processResponse(*sipMsg);
+            }
          }
-
          return true;
       }
+
+      DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
+      if (destroyUsage)
+      {
+         destroyUsage->destroy();
+         return true;
+      }
+
+      DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
+      if (dumMsg)
+      {
+         if (!dumMsg->getBaseUsage().isValid())
+         {
+            return true;
+         }
+
+         dumMsg->getBaseUsage()->dispatch(*dumMsg);
+         return true;
+      }
+
+      KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
+      if (keepAliveMsg)
+      {
+         if (mKeepAliveManager.get())
+         {
+            mKeepAliveManager->process(*keepAliveMsg);
+         }
+         return true;
+      }
+
+      StatisticsMessage* stats = dynamic_cast<StatisticsMessage*>(msg.get());
+      if (stats)
+      {
+         stats->loadOut(mStatsPayload);
+         stats->logStats(RESIPROCATE_SUBSYSTEM, mStatsPayload);
+      }
+
+      return true;
    }
    catch(BaseException& e)
    {
@@ -1001,6 +1000,19 @@ DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
    sec->setIdentityStrength(SecurityAttributes::From);
    sipMsg->setSecurityAttributes(sec);
    return false;
+}
+
+bool 
+DialogUsageManager::process()
+{
+   if (mFifo.messageAvailable())
+   {
+      return internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+   }
+   else
+   {
+      return false;
+   }
 }
 
 void
@@ -1148,13 +1160,13 @@ DialogUsageManager::validateAccept(const SipMessage& request)
    {
 	  if (getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), Mime("application", "sdp")))
       {
-          return true;
+         return true;
       }
    }
    else
    {
-       // Other method without an Accept Header
-       return true;
+      // Other method without an Accept Header
+      return true;
    }
 
    InfoLog (<< "Received unsupported mime types in accept header: " << request.brief());
@@ -1474,14 +1486,14 @@ DialogUsageManager::findDialogSet(const DialogSetId& id)
    DebugLog ( << Inserter(mDialogSetMap) );
    DialogSetMap::const_iterator it = mDialogSetMap.find(id);
 
-    if (it == mDialogSetMap.end())
-    {
-       return 0;
-    }
-    else
-    {
-       return it->second;
-    }
+   if (it == mDialogSetMap.end())
+   {
+      return 0;
+   }
+   else
+   {
+      return it->second;
+   }
 }
 
 BaseCreator*
