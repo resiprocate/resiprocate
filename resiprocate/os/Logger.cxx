@@ -1,10 +1,42 @@
 #include "sip2/util/Logger.hxx"
+#include "sip2/util/ThreadIf.hxx"
 
 using namespace Vocal2;
 
 std::ostream* 
 GenericLogImpl::mLogger=0;
 
+static pthread_t currentThread;
+
+AssertOnRecursiveLock::AssertOnRecursiveLock()
+{
+#ifdef CHECK_RECURSIVE_LOG
+#ifdef WIN32
+#else
+   // should be atomic
+   assert(currentThread != ThreadIf::selfId());
+#endif
+#endif
+}
+
+void
+AssertOnRecursiveLock::set()
+{
+#ifdef CHECK_RECURSIVE_LOG
+#ifdef WIN32
+#else
+   currentThread = ThreadIf::selfId();
+#endif
+#endif
+}
+
+AssertOnRecursiveLock::~AssertOnRecursiveLock()
+{
+#ifdef WIN32
+#else
+   currentThread = 0;
+#endif
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
