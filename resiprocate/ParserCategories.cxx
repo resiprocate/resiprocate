@@ -1069,6 +1069,18 @@ NameAddr::NameAddr(const NameAddr& rhs)
      mDisplayName(rhs.mDisplayName)
 {}
 
+NameAddr::NameAddr(const Data& unparsed)
+   : ParserCategory(),
+     mAllContacts(false),
+     mDisplayName()
+{
+   HeaderFieldValue hfv(unparsed.data(), unparsed.size());
+   NameAddr tmp(&hfv);
+   // force a parse
+   tmp.checkParsed();
+   *this = tmp;
+}
+
 NameAddr::~NameAddr()
 {}
 
