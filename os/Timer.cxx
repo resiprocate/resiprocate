@@ -258,8 +258,6 @@ Timer::setupTimeOffsets()
       cpuSpeed = speeds[index];
    }
     
-   DebugLog (<< "Computed cpu speed is " << cpuSpeed << " MHz ");
-
    now = getSystemTime();
    nowTick = getSystemTicks();
     
