@@ -106,6 +106,8 @@ class SipStack
       void post(const Message& message,
                 unsigned int secondsLater);
 
+      void postMS(const Message& message, unsigned int ms);
+
       // caller now owns the memory. returns 0 if nothing there
       SipMessage* receive(); 
 
