@@ -298,6 +298,9 @@ TlsTransport::processAllWrites( FdSet& fdset )
                   }
                }
                
+               Data peer = tls->peerName();
+               InfoLog( << " TLS Connection to " << peer << " formed" );
+               
                if ( tls )
                {
                   
