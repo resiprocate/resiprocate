@@ -1,5 +1,9 @@
 2003-08-08  Wensong Zhang  <wensong@purplecomm.com>
 
+	* acinclude.m4: fixed not to add -I/usr/include into CPPFLAGS and
+	not to add -L/usr/lib into LDFLAGS, which avoid a lot of compiling
+	warnings.
+
 	* configure.in: most stuff of configure.ac is merged in the
 	configure.in. configure.ac should be of no use now.
 
