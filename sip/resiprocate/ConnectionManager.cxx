@@ -20,17 +20,21 @@ const UInt64
 ConnectionManager::MaxLastUsed = 1000;
 
 ConnectionManager::ConnectionManager() : 
-   mWriteMark(mWriteSet.end()),
-   mReadMark(mReadSet.end()),
+   mWriteHead(Connection::writeList::makeList(new Connection)),
+   mWriteIter(mWriteHead->begin()),
+   mReadHead(Connection::readList::makeList(new Connection)),
+   mReadIter(mReadHead->begin()),
+   mLRUHead(Connection::lruList::makeList(new Connection)),
    mConnectionIdGenerator(1) 
 {
-   mPreYoungest.mOlder = &mPostOldest;
-   mPostOldest.mYounger = &mPreYoungest;
 }
 
 ConnectionManager::~ConnectionManager()
 {
    for (Connection* c = getNextRead(); c != 0; delete c );
+   delete mWriteHead;
+   delete mReadHead;
+   delete mLRUHead;
 }
 
 Connection*
@@ -59,66 +63,77 @@ ConnectionManager::findConnection(const Tuple& addr)
 Connection*
 ConnectionManager::getNextRead()
 {
-   if (mReadSet.empty())
+   if (mReadHead->empty())
    {
       return 0;
    }
    else 
    {
-      if (++mReadMark == mReadSet.end())
+      if (mReadIter == mReadHead->end())
       {
-         mReadMark = mReadSet.begin();
+         mReadIter = mReadHead->begin();
       }
-      return *mReadMark;
+
+      Connection* ret = *mReadIter;
+      ++mReadIter;
+      return ret;
    }
 }
 
 Connection*
 ConnectionManager::getNextWrite()
 {
-   if (mWriteSet.empty())
+   if (mWriteHead->empty())
    {
       return 0;
    }
    else 
    {
-      if (++mWriteMark == mWriteSet.end())
+      if (mWriteIter == mWriteHead->end())
       {
-         mWriteMark = mWriteSet.begin();
+         mWriteIter = mWriteHead->begin();
       }
-      return *mWriteMark;
+
+      Connection* ret = *mWriteIter;
+      ++mWriteIter;
+      return ret;
    }
 }
 
 void
-ConnectionManager::buildFdSet( FdSet& fdset)
+ConnectionManager::buildFdSet(FdSet& fdset)
 {
-   for (std::list<Connection*>::iterator i=mReadSet.begin(); i!=mReadSet.end(); i++)
+   for (Connection::readList::iterator i = mReadHead->begin(); 
+        i != mReadHead->end(); ++i)
    {
       fdset.setRead((*i)->getSocket());
    }
 
-   for (std::list<Connection*>::iterator i=mWriteSet.begin(); i!=mWriteSet.end(); i++)
+   for (Connection::writeList::iterator i = mWriteHead->begin(); 
+        i != mWriteHead->end(); ++i)
    {
       fdset.setWrite((*i)->getSocket());
    }
 }
 
-
 void
 ConnectionManager::addToWritable(Connection* conn)
 {
-   mWriteSet.push_back(conn);
+   mWriteHead->push_back(conn);
 }
 
 void
 ConnectionManager::removeFromWritable()
 {
-   assert(!mWriteSet.empty());
-   mWriteMark = mWriteSet.erase(mWriteMark);
-   if (!mWriteSet.empty() && mWriteMark == mWriteSet.end())
+   assert(!mWriteHead->empty());
+   Connection* current = *mWriteIter;
+   ++mWriteIter;
+
+   current->writeList::remove();
+
+   if (mWriteIter == mWriteHead->end())
    {
-      mWriteMark = mWriteSet.begin();
+      mWriteIter = mWriteHead->begin();
    }
 }
 
@@ -130,35 +145,22 @@ ConnectionManager::addConnection(Connection* connection)
    
    mAddrMap[connection->mWho] = connection;
    mIdMap[connection->mWho.connectionId] = connection;
-   mReadSet.push_back(connection);
-   
-   // add to least recently used
-   connection->mOlder = mPreYoungest.mOlder;
-   mPreYoungest.mOlder->mYounger = connection;
-   connection->mYounger = &mPreYoungest;
-   mPreYoungest.mOlder = connection;
+
+   mReadHead->push_back(connection);
+   mLRUHead->push_back(connection);
 }
 
 void
 ConnectionManager::removeConnection(Connection* connection)
 {
    DebugLog (<< "ConnectionManager::removeConnection()");
-   
-   connection->mYounger->mOlder = connection->mOlder;
-   connection->mOlder->mYounger = connection->mYounger;
 
-   assert(!mReadSet.empty());
-   mReadSet.remove(connection);
-   mWriteSet.remove(connection);
-   if (!mReadSet.empty())
-   {
-      mReadMark = mReadSet.begin();
-   }
+   assert(!mReadHead->empty());
+   connection->readList::remove();
+   connection->writeList::remove();
+   connection->lruList::remove();
 
-   if (!mWriteSet.empty())
-   {
-      mWriteMark = mWriteSet.begin();
-   }
+   checkIterators();
 }
 
 // release excessively old connections (free up file descriptors)
@@ -166,34 +168,46 @@ void
 ConnectionManager::gc(UInt64 relThreshhold)
 {
    UInt64 threshhold = Timer::getTimeMs() - relThreshhold;
+   InfoLog(<< "recycling connections older than " << relThreshhold/1000.0 << " seconds");
 
-   // start with the oldest
-   while (true)
+   for (Connection::lruList::iterator i = mLRUHead->begin();
+        i != mLRUHead->end();)
    {
-      Connection* i = mPostOldest.mYounger;
-      if ((i != &mPreYoungest) && (i->mLastUsed < threshhold))
+      if ((*i)->mLastUsed < threshhold)
       {
-         delete i;
+         Connection* discard = *i;
+         InfoLog(<< "recycling connection: " << discard << " " << discard->getSocket());
+         // iterate before removing
+         ++i;
+         delete discard;
       }
       else
       {
          break;
       }
    }
+
+   checkIterators();
 }
 
 // move to youngest
 void
 ConnectionManager::touch(Connection* connection)
 {
-   connection->mLastUsed = Timer::getTimeMs();
-
-   connection->mOlder->mYounger = connection->mYounger;
-   connection->mYounger->mOlder = connection->mOlder;
-
-   connection->mOlder = mPreYoungest.mOlder;
-   mPreYoungest.mOlder->mYounger = connection;
-   connection->mYounger = &mPreYoungest;
-   mPreYoungest.mOlder = connection;
+   connection->lruList::remove();
+   mLRUHead->push_back(connection);
 }
 
+void
+ConnectionManager::checkIterators()
+{
+   if (mReadIter != mReadHead->end())
+   {
+      mReadIter = mReadHead->begin();
+   }
+
+   if (mWriteIter != mWriteHead->end())
+   {
+      mWriteIter = mWriteHead->begin();
+   }
+}
