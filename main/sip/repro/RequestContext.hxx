@@ -21,16 +21,22 @@ class RequestContext
       ~RequestContext();
 
       void process(resip::TransactionTerminated& msg);
-      void process(resip::Message& msg);
+      void process(std::auto_ptr<resip::Message> msg);
       
+      /// Returns the SipMessage associated with the server transaction
       resip::SipMessage& getOriginalRequest();
       const resip::SipMessage& getOriginalRequest() const;
 
+      /// Returns the event that we are currently working on
+      resip::Message* getCurrentEvent();
+      const resip::Message* getCurrentEvent() const;
+      
       void setDigestIdentity (const resip::Data&);
       const resip::Data& getDigestIdentity() const;
       
    private:
       std::auto_ptr<resip::SipMessage> mOriginalRequest;
+      std::auto_ptr<resip::Message> mCurrentEvent;
       RequestProcessorChain& mRequestProcessorChain;
       resip::Data mDigestIdentity;
       std::vector<resip::Uri> mTargetSet;
