@@ -55,10 +55,10 @@ main(int argc, char* argv[])
    cout << "Performing " << runs << " runs." << endl;
    
    Fifo<TransactionMessage> txFifo;
-   UdpTransport* sender = new UdpTransport(txFifo, 5070);
+   UdpTransport* sender = new UdpTransport(txFifo, 5070, V4, Data::Empty);
 
    Fifo<TransactionMessage> rxFifo;
-   UdpTransport* receiver = new UdpTransport(rxFifo, 5080);
+   UdpTransport* receiver = new UdpTransport(rxFifo, 5080, V4, Data::Empty);
 
    NameAddr target;
    target.uri().scheme() = "sip";
