@@ -265,6 +265,13 @@ ClientInviteSession::startCancelTimer()
 }
 
 void
+ClientInviteSession::startStaleCallTimer()
+{
+   InfoLog (<< toData(mState) << ": startStaleCallTimer");
+   mDum.addTimer(DumTimeout::StaleCall, mDialog.mDialogSet.getUserProfile()->getDefaultStaleCallTime(), getBaseHandle(), ++mStaleCallTimerSeq);
+}
+
+void
 ClientInviteSession::sendSipFrag(const SipMessage& msg)
 {
    if (mServerSub.isValid())
@@ -363,6 +370,15 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
          mDum.destroy(this);
       }
    }
+   else if (timer.type() == DumTimeout::StaleCall)
+   {
+      if(timer.seq() == mStaleCallTimerSeq)
+      {
+         InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+         handler->onStaleCallTimeout(getHandle());
+         end();
+      }
+   }
    else
    {
       InviteSession::dispatch(timer);
@@ -410,6 +426,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
          int rseq = msg.header(h_RSeq).value();
          if ( (mLastReceivedRSeq == -1) || (rseq == mLastReceivedRSeq+1))
          {
+            startStaleCallTimer();
             mLastReceivedRSeq = rseq;
             InfoLog (<< "Got a reliable 1xx with rseq = " << rseq);
             handler->onProvisional(getHandle(), msg);
@@ -422,8 +439,21 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    }
    else
    {
+      startStaleCallTimer();
       handler->onProvisional(getHandle(), msg);
    }
+}
+
+void
+ClientInviteSession::handleFinalResponse(const SipMessage& msg)
+{
+   assert(msg.isResponse());
+   assert(msg.header(h_StatusLine).statusCode() >= 200);
+   assert(msg.header(h_StatusLine).statusCode() < 300);
+
+   handleSessionTimerResponse(msg);
+   storePeerCapabilities(msg);
+   ++mStaleCallTimerSeq;  // disable stale call timer
 }
 
 void
@@ -521,7 +551,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case On1xx:
          transition(UAC_Early);
          handler->onNewSession(getHandle(), None, msg);
-         handler->onProvisional(getHandle(), msg);
+         handleProvisional(msg);
          break;
 
       case On1xxEarly:
@@ -530,7 +560,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          transition(UAC_Early);
          mEarlyMedia = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), None, msg);
-         handler->onProvisional(getHandle(), msg);
+         handleProvisional(msg);
          handler->onEarlyMedia(getHandle(), msg, *sdp);
          break;
 
@@ -548,8 +578,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On2xxOffer:
          transition(UAC_Answered);
-         handleSessionTimerResponse(msg);
-         storePeerCapabilities(msg);
+         handleFinalResponse(msg);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
@@ -564,8 +593,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
             mDialog.makeRequest(ack, ACK);
             mDialog.send(ack);
          }
-         handleSessionTimerResponse(msg);
-         storePeerCapabilities(msg);
+         handleFinalResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Answer, msg);
@@ -614,12 +642,12 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
    {
       case On1xx:
          transition(UAC_Early);
-         handler->onProvisional(getHandle(), msg);
+         handleProvisional(msg);
          break;
 
       case On1xxEarly: // only unreliable
          transition(UAC_Early);
-         handler->onProvisional(getHandle(), msg);
+         handleProvisional(msg);
          mEarlyMedia = InviteSession::makeSdp(*sdp);
          handler->onEarlyMedia(getHandle(), msg, *sdp);
          break;
@@ -637,8 +665,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case On2xxOffer:
          transition(UAC_Answered);
-         handleSessionTimerResponse(msg);
-         storePeerCapabilities(msg);
+         handleFinalResponse(msg);
 
          assert(mProposedLocalSdp.get() == 0);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -654,8 +681,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
             mDialog.makeRequest(ack, ACK);
             mDialog.send(ack);
          }
-         handleSessionTimerResponse(msg);
-         storePeerCapabilities(msg);
+         handleFinalResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, *sdp);
@@ -804,8 +830,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
             mDialog.makeRequest(ack, ACK);
             mDialog.send(ack);
          }
-         handleSessionTimerResponse(msg);
-         storePeerCapabilities(msg);
+         handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
          break;
 
@@ -883,8 +908,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
             InviteSession::setSdp(update, *mProposedLocalSdp);
             mDialog.send(update);
          }
-         handleSessionTimerResponse(msg);
-         storePeerCapabilities(msg);
+         handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
          break;
 
@@ -939,7 +963,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
    switch (toEvent(msg, sdp.get()))
    {
       case On1xx:
-         handler->onProvisional(getHandle(), msg);
+         handleProvisional(msg);
          sendPrackIfNeeded(msg);
          break;
 
@@ -950,8 +974,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
             mDialog.makeRequest(ack, ACK);
             mDialog.send(ack);
          }
-         handleSessionTimerResponse(msg);
-         storePeerCapabilities(msg);
+         handleFinalResponse(msg);
          handler->onConnected(getHandle(), msg);
          break;
 
