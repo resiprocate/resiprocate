@@ -6,7 +6,7 @@
 #include <sipstack/TransactionMap.hxx>
 // #include <sipstack/TransportDirector.hxx>
 #include <sipstack/Fifo.hxx>
-#include <sipstack/Timer.hxx>
+#include <sipstack/TimerQueue.hxx>
 
 namespace Vocal2
 {

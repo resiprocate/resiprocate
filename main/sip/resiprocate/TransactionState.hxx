@@ -6,10 +6,14 @@ namespace Vocal2
 
 class TransactionState
 {
-   public:
-      void process(); 
+public:
+
+  TransactionState();
+
+  static void process(); 
+
 };
- 
+
 }
 
 #endif
