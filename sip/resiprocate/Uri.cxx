@@ -522,18 +522,25 @@ const Data
 Uri::getAorNoPort() const
 {
    checkParsed();
-       
-   Data aor(mUser.size() + mHost.size() + 1);
+   getAor();
+
+   Data aor;
+   aor.reserve(mUser.size() + mCanonicalHost.size() + 2 /* for @ */ );
+   
    if (mUser.empty())
    {
-      aor = mCanonicalHost;
+      aor += mCanonicalHost;
    }
    else
    {
       aor += mUser;
-      aor += Symbols::AT_SIGN;
-      aor += mCanonicalHost;
-   }   
+      if (!mCanonicalHost.empty())
+      {
+         aor += Symbols::AT_SIGN;
+         aor += mCanonicalHost;
+      }
+   }
+   
    return aor;
 }
 
