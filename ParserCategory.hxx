@@ -30,6 +30,8 @@ class ParserCategory : public LazyParser
       bool exists(const ParamBase& paramType) const;
       void remove(const ParamBase& paramType);
 
+#define TEMPLATE_METHODS
+#ifdef TEMPLATE_METHODS
       template <class T> 
       typename T::DType& param(const T& paramType) const
       {
@@ -43,7 +45,7 @@ class ParserCategory : public LazyParser
          return p->value();
       }
 
-#ifdef NO_TEMPLATE_METHODS
+#else
       Transport_Param::DType& param(const Transport_Param& paramType) const;
       User_Param::DType& param(const User_Param& paramType) const;
       Method_Param::DType& param(const Method_Param& paramType) const;
