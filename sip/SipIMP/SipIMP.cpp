@@ -300,7 +300,10 @@ SipImpApp::imInit()
 	assert( sipStack->security );
 	try
 	{
-		bool okSec = sipStack->security->loadAllCerts( Vocal2::Data( mKey ), Data(mCertPath) );
+		Vocal2::Data key( mKey );
+		Vocal2::Data path(mCertPath);
+
+		bool okSec = sipStack->security->loadAllCerts( key , path  );
 		if ( !okSec )
 		{
 			//ErrLog( << "Could not load the certificates" );
