@@ -81,6 +81,7 @@ class Symbols
       static const char* RTP_AVP;
 
       static const char* Presence;
+      static const char* Required;
 };
 
 }
