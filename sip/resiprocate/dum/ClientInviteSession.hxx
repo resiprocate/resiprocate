@@ -52,10 +52,16 @@ class ClientInviteSession : public InviteSession
       friend class DialogUsageManager;
       ClientInviteSession(DialogUsageManager& dum,
                           Dialog& dialog,
-                          const SipMessage& msg);
+                          const SipMessage& request,
+                          const SdpContents* initialOffer);
+      void dispatch(const SipMessage& msg);
+      
       
       ClientInviteSession::Handle mHandle;
-
+      SipMessage& mLastRequest;
+      bool mReceived2xx;
+      SipMessage mAck;
+      
       // disabled
       ClientInviteSession(const ClientInviteSession&);
       ClientInviteSession& operator=(const ClientInviteSession&);
