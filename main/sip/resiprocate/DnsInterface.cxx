@@ -6,6 +6,7 @@
 #include "resiprocate/os/Logger.hxx"
 
 #include "resiprocate/DnsInterface.hxx"
+#include "resiprocate/DnsHandler.hxx"
 #include "resiprocate/DnsResult.hxx"
 
 using namespace resip;
@@ -33,27 +34,10 @@ const Data DnsInterface::AllTransports[] =
    Data::Empty
 };
 
-DnsInterface::DnsInterface() 
-   : mHandler(0),
-     mSupportedTransports(&TcpAndUdp)
+DnsInterface::DnsInterface(bool sync)
+   : mSupportedTransports(&TcpAndUdp)
 {
-#if defined(USE_ARES)
-   int status=0;
-   if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
-   {
-      ErrLog (<< "Failed to initialize async dns library (ares)");
-      char* errmem=0;
-      ErrLog (<< ares_strerror(status, &errmem));
-      ares_free_errmem(errmem);
-      throw Exception("failed to initialize ares", __FILE__,__LINE__);
-   }
-#endif
-}
-
-DnsInterface::DnsInterface(DnsInterface::Handler* handler)
-   : mHandler(handler),
-     mSupportedTransports(&TcpAndUdp)
-{
+   assert(sync == false);
 #if defined(USE_ARES)
    int status=0;
    if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
@@ -112,21 +96,24 @@ DnsInterface::process(FdSet& fdset)
 
 
 DnsResult*
-DnsInterface::lookup(const Uri& uri, const Data& transactionId)
+DnsInterface::lookup(const Uri& uri, DnsHandler* handler)
 {
-   DnsResult* result = new DnsResult(*this);
-   result->lookup(uri, transactionId);
+   DnsResult* result = new DnsResult(*this, handler);
+   result->lookup(uri);
    return result;
 }
 
 DnsResult* 
-DnsInterface::lookup(const Via& via, const Data& transactionId)
+DnsInterface::lookup(const Via& via, DnsHandler* handler)
 {
    assert(0);
    //DnsResult* result = new DnsResult(*this);
    return NULL;
 }
 
+DnsHandler::~DnsHandler()
+{
+}
 
 /* 
    Copyright (c) 2003, Jason Fischl
