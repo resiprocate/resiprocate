@@ -13,12 +13,12 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: ares_expand_name.c,v 1.3 2003/09/14 01:08:27 fluffy Exp $";
+static const char rcsid[] = "$Id: ares_expand_name.c,v 1.4 2003/10/28 21:43:42 adamr Exp $";
 
 #include <sys/types.h>
 #include <stdlib.h>
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__CYGWIN__)
 #include <netinet/in.h>
 #include <arpa/nameser.h>
 #endif
