@@ -455,6 +455,28 @@ Dialog::dispatch(const SipMessage& msg)
                {
                   lastRequest = &mInviteSession->mLastRequest;
                }
+               break;
+            case SUBSCRIBE:  //doesn't handle multiple usages
+               if (mClientSubscriptions.empty())
+               {
+                  //spurious
+                  return;
+               }
+               else
+               {
+                  lastRequest = &mClientSubscriptions.front()->mLastRequest;
+               }
+               break; 
+            case NOTIFY: //doesn't handle multiple usages
+               if (mServerSubscriptions.empty())
+               {
+                  //spurious
+                  return;
+               }
+               else
+               {
+                  lastRequest = &mServerSubscriptions.front()->mLastNotify;
+               }
                break;               
             case INFO:
             {
@@ -479,6 +501,10 @@ Dialog::dispatch(const SipMessage& msg)
             mLocalCSeq++;            
             mDum.send(*lastRequest);
             return;
+         }
+         else
+         {            
+            InfoLog( << "Not handling challenge: " << msg);
          }
       }
       
