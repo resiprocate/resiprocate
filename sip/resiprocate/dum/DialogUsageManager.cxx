@@ -542,7 +542,7 @@ DialogUsageManager::cancel(DialogSetId setid)
    }
    else
    {
-      ds->cancel();
+      ds->end();
    }
 }
 
