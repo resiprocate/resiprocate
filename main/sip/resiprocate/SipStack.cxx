@@ -19,23 +19,20 @@ SipStack::SipStack()
 }
 
 void 
-SipStack::send(SipMessage* msg)
+SipStack::send(const SipMessage& msg)
 {
-  SipMessage* toSend = msg->clone();
-  mStateMacFifo.add(toSend);
-  
+   SipMessage* toSend = msg.clone();
+   mStateMacFifo.add(toSend);
 }
 
 // this is only if you want to send to a destination not in the route. You
 // probably don't want to use it. 
 void 
-SipStack::send(SipMessage* msg, const Data& dest)
+SipStack::send(const SipMessage& msg, const Data& dest)
 {
-
-  SipMessage* toSend = msg->clone();
-  toSend->setFixedDest(dest);
-  mStateMacFifo.add(toSend);
-  
+   SipMessage* toSend = msg.clone();
+   toSend->setFixedDest(dest);
+   mStateMacFifo.add(toSend);
 }
 
 
@@ -66,7 +63,7 @@ void
 SipStack::process()
 {
   
-  mExecutive.process();
+   mExecutive.process();
   
 }
 
@@ -76,9 +73,9 @@ int
 SipStack::getTimeTillNextProcess()
 {
 
-  // FIX there needs to be some code here once the executive can tell
-  // us this
-  return 0;
+   // FIX there needs to be some code here once the executive can tell
+   // us this
+   return 0;
 
 } 
 
@@ -86,9 +83,5 @@ void
 SipStack::runThread( enum ThreadFunction funcType )
 {
   
-  
-  
 }
-
-
 
