@@ -137,7 +137,7 @@ main()
       }
    }
 
-   cerr << "All OK" << endl;
+   cerr << endl << "All OK" << endl;
    return 0;
 }
 
