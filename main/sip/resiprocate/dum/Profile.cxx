@@ -3,6 +3,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/HeaderTypes.hxx"
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -16,8 +17,8 @@ Profile::Profile() :
    mHasUserAgent(false),
    mHasOverrideHostPort(true)
 {
-   addAdvertisedCapability(Headers::Type::Accept);  
-   addAdvertisedCapability(Headers::Type::Supported);  
+   addAdvertisedCapability(Headers::Accept);  
+   addAdvertisedCapability(Headers::Supported);  
 }
 
 void
@@ -173,11 +174,11 @@ Profile::getSupportedLanguages()
 void 
 Profile::addAdvertisedCapability(const Headers::Type header)
 {
-   assert(header == Headers::Type::Accept ||
-	      header == Headers::Type::Allow ||
-		  header == Headers::Type::AcceptEncoding ||
-		  header == Headers::Type::AcceptLanguage ||
-		  header == Headers::Type::Supported);
+   assert(header == Headers::Accept ||
+	      header == Headers::Allow ||
+		  header == Headers::AcceptEncoding ||
+		  header == Headers::AcceptLanguage ||
+		  header == Headers::Supported);
 
    mAdvertisedCapabilities.insert(header);
 }

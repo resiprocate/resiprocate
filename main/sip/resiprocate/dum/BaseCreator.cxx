@@ -1,8 +1,8 @@
-#include "DialogUsageManager.hxx"
-#include "Profile.hxx"
-#include "BaseCreator.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/BaseCreator.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -61,11 +61,11 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    Via via;
    mLastRequest.header(h_Vias).push_front(via);
 
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::Allow)) mLastRequest.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::Accept)) mLastRequest.header(h_Accepts) = mDum.getProfile()->getSupportedMimeTypes();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::AcceptEncoding)) mLastRequest.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::AcceptLanguage)) mLastRequest.header(h_AcceptLanguages) = mDum.getProfile()->getSupportedLanguages();
-   if(mDum.getProfile()->isAdvertisedCapability(Headers::Type::Supported)) mLastRequest.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Allow)) mLastRequest.header(h_Allows) = mDum.getProfile()->getAllowedMethods();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Accept)) mLastRequest.header(h_Accepts) = mDum.getProfile()->getSupportedMimeTypes();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) mLastRequest.header(h_AcceptEncodings) = mDum.getProfile()->getSupportedEncodings();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) mLastRequest.header(h_AcceptLanguages) = mDum.getProfile()->getSupportedLanguages();
+   if(mDum.getProfile()->isAdvertisedCapability(Headers::Supported)) mLastRequest.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
 
    DebugLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
 }
