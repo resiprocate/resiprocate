@@ -49,7 +49,7 @@ main(int argc, char *argv[])
     InfoLog( << "Starting up, making stack");
 
     SipStack *theStack = new SipStack();
-    theStack->addTransport(Transport::UDP, 5060);
+    theStack->addTransport(UDP, 5060);
 
     int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
