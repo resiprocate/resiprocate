@@ -22,8 +22,6 @@ Connection::Connection()
    : mSocket(-1), // bogus
      mWho(),
      mSendPos(0),
-     mYounger(0),
-     mOlder(0),
      mMessage(0),
      mBuffer(0),
      mBufferPos(0),
@@ -37,8 +35,6 @@ Connection::Connection(const Tuple& who, Socket socket)
    : mSocket(socket), 
      mWho(who),
      mSendPos(0),
-     mYounger(0),
-     mOlder(0),
      mMessage(0),
      mBuffer(0),
      mBufferPos(0),
@@ -53,10 +49,6 @@ Connection::~Connection()
 {
    if (mSocket != -1) // bogus Connections
    {
-      //DebugLog (<< "Shutting down connection " << mSocket);
-   
-      //shutdown(mSocket, SD_BOTH );
-
       while (!mOutstandingSends.empty())
       {
          SendData* sendData = mOutstandingSends.front();
@@ -65,12 +57,10 @@ Connection::~Connection()
          mOutstandingSends.pop_front();
       }
    
+      //DebugLog (<< "Shutting down connection " << mSocket);
       closesocket(mSocket);
 
       getConnectionManager().removeConnection(this);
-
-      mYounger = 0;
-      mOlder = 0;
    }
 }
 
