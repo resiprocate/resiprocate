@@ -106,6 +106,7 @@ class InviteSession : public DialogUsage
          UAS_EarlyNoOffer, 
          UAS_EarlyProvidedOffer, 
          UAS_Accepted, 
+         UAS_WaitingToOffer, 
 
          UAS_AcceptedWaitingAnswer, 
          UAS_OfferReliable,
@@ -154,6 +155,9 @@ class InviteSession : public DialogUsage
          On200Update,
          OnPrack, // UAS
          On200Prack, // UAC
+		 OnRefer,
+		 On200Refer,
+		 OnReferRejected,
          Unknown
       } Event;
 
@@ -180,10 +184,6 @@ class InviteSession : public DialogUsage
       void dispatchWaitingToOffer(const SipMessage& msg);
       void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchTerminated(const SipMessage& msg);
-
-#if 0  // !slg! Notify handled by Dialog
-      void dispatchNotify(const SipMessage& msg);      
-#endif	  
       void dispatchRefer(const SipMessage& msg);      
 
       void startRetransmit200Timer();

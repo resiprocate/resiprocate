@@ -63,7 +63,7 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
          mDialog.makeRequest(req, UPDATE);
          InviteSession::setSdp(req, offer);
 
-         //  Remember last seesion modification.
+         //  Remember last session modification.
          mLastSessionModification = req;
 
          //  Remember proposed local SDP.
@@ -120,12 +120,12 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
       {
          transition(Connected);
 
-         mCurrentRemoteSdp = mProposedRemoteSdp;
-         mCurrentLocalSdp = InviteSession::makeSdp(answer);
-
          SipMessage ack;
          mDialog.makeRequest(ack, ACK);
          InviteSession::setSdp(ack, answer);
+
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
 
          mLastSessionModification = ack;
          mDialog.send(ack);
