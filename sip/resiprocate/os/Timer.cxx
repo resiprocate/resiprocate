@@ -91,6 +91,8 @@ Timer::toData(Type timer)
          return "Timer StaleClient";
       case TimerStaleServer:
          return "Timer StaleServer";
+      case TimerStateless:
+         return "Timer Stateless";
       case TimerCleanUp:
          return "Timer Cleanup";
       default:
