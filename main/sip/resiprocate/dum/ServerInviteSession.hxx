@@ -1,34 +1,38 @@
-#if !defined(RESIP_SERVERINVSESSION_HXX)
-#define RESIP_SERVERINVSESSION_HXX
+#if !defined(RESIP_SERVERINVITESESSION_HXX)
+#define RESIP_SERVERINVITESESSION_HXX
 
 namespace resip
 {
 
-class ServerInvSession: public BaseUsage
+class ServerInviteSession: public InviteSession
 {
    public:
-      class Handle
-      {
-      };
-       
-      ServerInvSession(DialogUsageManager& dum, const SipMessage& msg);
-      
+      ServerInviteSession(DialogUsageManager& dum, const SipMessage& msg);
+
       /// Called to set the offer that will be used in the next messages that
       /// sends and offer. Does not send an offer 
-      void setOffer(SdpContents* offer);
-
+      virtual void setOffer(SdpContents* offer);
+      
       /// Sends an offer in whatever messages is approperate to send one at
       /// this point in the dialog. Must call setOffer before this.
-      void sendOfferInAnyMessage();
+      virtual void sendOfferInAnyMessage();
       
       /// Called to set the answer that will be used in the next messages that
       /// sends and offer. Does not send an answer
-      void setAnswer(SdpContents* answer);
-      
+      virtual void setAnswer(SdpContents* answer);
+
       /// Sends an offer in whatever messages is approperate to send one at
       /// this point in the dialog. Must call setAnswer before this. 
-      void sendAnswerInAnyMessage();
-      
+      virtual void sendAnswerInAnyMessage();
+
+      /// Makes the dialog end. Depending ont eh current state, this might
+      /// results in BYE or CANCEL being sent.
+      virtual void end();
+
+      /// Rejects an offer at the SIP level. So this can send a 487 to a
+      /// reINVITE or and UPDATE
+      virtual void rejectOffer(int statusCode);
+
       /// Moves the state of the call to connected and sends a 200
       void accept();
       
@@ -44,21 +48,7 @@ class ServerInvSession: public BaseUsage
       /// reINVITE or and UPDATE
       void rejectOffer(int statusCode);
       
-      /// Makes the dialog end. Depending ont eh current state, this might
-      /// results in BYE or CANCEL being sent.
-      void end();
-      
-      const SdpContents* getLocalSdp();
-      const SdpContents* getRemoteSdp();
-      
       void process(const SipMessage& msg);
-
-   private:
-      SdpContents* mLocalSdp;
-      SdpContents* mRemoteSdp;
-      SdpContents* mMyNextOffer;
-      SdpContents* mPendingReceivedOffer;
-      
 };
 
  
