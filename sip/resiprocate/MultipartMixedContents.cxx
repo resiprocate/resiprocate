@@ -49,7 +49,7 @@ void
 MultipartMixedContents::setBoundary()
 {
    Data boundaryToken = Random::getRandomHex(8);
-   mType.param("boundary") = boundaryToken;
+   mType.param(p_boundary) = boundaryToken;
 }
 
 void
@@ -98,7 +98,7 @@ MultipartMixedContents::getStaticType() const
 std::ostream& 
 MultipartMixedContents::encodeParsed(std::ostream& str) const
 {
-   const Data& boundaryToken = mType.param("boundary");
+   const Data& boundaryToken = mType.param(p_boundary);
    Data boundary(boundaryToken.size() + 2, true);
    boundary = Symbols::DASHDASH;
    boundary += boundaryToken;
@@ -132,7 +132,7 @@ MultipartMixedContents::encodeParsed(std::ostream& str) const
 void 
 MultipartMixedContents::parse(ParseBuffer& pb)
 {
-   const Data& boundaryToken = mType.param("boundary");
+   const Data& boundaryToken = mType.param(p_boundary);
    
    Data boundary(boundaryToken.size() + 4, true);
    boundary += Symbols::CRLF;
