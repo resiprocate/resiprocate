@@ -3,6 +3,7 @@
 
 #include "sip2/sipstack/LazyParser.hxx"
 #include "sip2/sipstack/ParserCategories.hxx" // .dlb. Mime
+#include "sip2/sipstack/Headers.hxx"
 #include "sip2/util/Data.hxx"
 #include <map>
 
@@ -35,6 +36,9 @@ class Contents : public LazyParser
       virtual ~Contents();
       Contents& operator=(const Contents& rhs);
 
+      void parseHeaders(ParseBuffer& pb);
+      std::ostream& encodeHeaders(std::ostream& str) const;
+
       virtual Contents* getContents() {return this;}
       Contents* getContents(const Mime&);
 
@@ -45,10 +49,22 @@ class Contents : public LazyParser
       static Contents* createContents(const Mime& contentType, 
                                       const Data& contents);
 
+
+      bool exists(const HeaderBase& headerType) const;
+      void remove(const HeaderBase& headerType);
+
+      Content_Type_Header::Type& header(const Content_Type_Header& headerType) const;
+      Content_Disposition_Header::Type& header(const Content_Disposition_Header& headerType) const;
+      Content_Encoding_Header::Type& header(const Content_Encoding_Header& headerType) const;
+      ParserContainer<Content_Language_MultiHeader::Type>& header(const Content_Language_MultiHeader& headerType) const;
+
       static std::map<Mime, ContentsFactoryBase*>& getFactoryMap();
 
    protected:
-      Mime mContentsType;
+      mutable Mime mContentsType;
+      mutable Content_Disposition_Header::Type *mDisposition;
+      mutable Content_Encoding_Header::Type *mEncoding;
+      mutable ParserContainer<Content_Language_MultiHeader::Type> *mLanguages;
 
    private:
       static std::map<Mime, ContentsFactoryBase*>* FactoryMap;
