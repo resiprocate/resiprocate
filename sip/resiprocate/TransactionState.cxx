@@ -186,8 +186,8 @@ TransactionState::process(TransactionController& controller)
                TransactionState* matchingInvite = controller.mServerTransactionMap.find(sip->getTransactionId());
                if (matchingInvite == 0)
                {
-                  InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
-                  controller.mTUFifo.add(Helper::makeResponse(*sip, 481));
+                  InfoLog (<< "No matching INVITE for incoming (wire) CANCEL sending 481");
+                  state->sendToWire(Helper::makeResponse(*sip,481));
                   delete sip;
                   return;
                }
