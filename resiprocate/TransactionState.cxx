@@ -613,10 +613,12 @@ TransactionState::processClientInvite(  Message* msg )
             break;
 
          case Timer::TimerB:
-            // !rk! is this right?
-            sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+	    if (mState == Calling)
+	    {
+		sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+		delete this;
+	    }
             delete msg;
-            delete this;
             break;
 
          case Timer::TimerD:
