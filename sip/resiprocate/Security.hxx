@@ -26,7 +26,7 @@ class Contents;
 class Pkcs7Contents;
 class Security;
 class MultipartSignedContents;
-
+class SipMessage;
 
 class BaseSecurity
 {
@@ -53,7 +53,8 @@ class BaseSecurity
          UserPrivateKey
       } PEMType;
 
-      virtual void preload();
+      virtual void preload()=0;
+
       // name refers to the domainname or username which could be converted to a
       // filename by convention
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const =0;
@@ -171,9 +172,13 @@ class Security : public BaseSecurity
    public:
       Security( const Data& pathToCerts );
 
+      virtual void preload();
       virtual void preload(const Data& directory);
-      virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const=0;
-      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const=0;
+      virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
+      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;
+      virtual void onRemovePEM(const Data& name, PEMType type) const;
+   private:
+      Data mPath;
 };
 
 }
