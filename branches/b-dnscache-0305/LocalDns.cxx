@@ -103,6 +103,7 @@ void LocalDns::message(const char* file, unsigned char* buf, int& len)
    len = 0;
    ifstream fs;
    fs.open(file, ios_base::binary | ios_base::in);
+   assert(fs.is_open());
    
    unsigned char* p = buf;
    
