@@ -1,8 +1,8 @@
 #ifndef MessageApi_hxx
 #define MessageApi_hxx
 
-#include <sip2/sipstack/supported.hxx>
-#include <sip2/sipstack/ParserCategories.hxx>
+#include <sipstack/supported.hxx>
+#include <sipstack/ParserCategories.hxx>
 
 namespace Vocal2
 {

@@ -1,7 +1,7 @@
 #ifndef HostSpecification_hxx
 #define HostSpecification_hxx
 
-#include <string>
+#include <sipstack/Data.hxx>
 
 namespace Vocal2
 {
@@ -9,14 +9,14 @@ namespace Vocal2
 class HostSpecification
 {
    public:
-      HostSpecification(string hostPort);
-      HostSpecification(string host, int port);
+      HostSpecification(Data hostPort);
+      HostSpecification(Data host, int port);
       
-      const string& getHost() const;
-      const string& getAddressString() const;
+      const Data& getHost() const;
+      const Data& getAddressString() const;
       int getPort() const;
    private:
-      string mHost;
+      Data mHost;
       int mPort;
 };
 

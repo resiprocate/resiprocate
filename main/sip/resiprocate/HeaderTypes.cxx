@@ -1,6 +1,6 @@
-#include <string.h>
-#include <sip2/sipstack/HeaderTypes.hxx>
-#include <sip2/sipstack/Symbols.hxx>
+#include <sipstack/Data.hxx>
+#include <sipstack/HeaderTypes.hxx>
+#include <sipstack/Symbols.hxx>
 
 using namespace Vocal2;
 
