@@ -58,7 +58,7 @@ class TestData
 
          {
             char *txt = "here is some text";
-            Data notOwner(txt, strlen(txt), true);
+            Data notOwner(Data::Share, txt, strlen(txt));
             assert(!notOwner.mMine);
             
             notOwner += " more text";
@@ -68,7 +68,7 @@ class TestData
 
          {
             char *txt = "here is some text";
-            Data notOwner(txt, strlen(txt), true);
+            Data notOwner(Data::Share, txt, strlen(txt));
             assert(!notOwner.mMine);
             
             notOwner += '!';
@@ -78,7 +78,7 @@ class TestData
 
          {
             char *txt = "here is some text";
-            Data notOwner(txt, strlen(txt), true);
+            Data notOwner(Data::Share, txt, strlen(txt));
             assert(!notOwner.mMine);
             
             notOwner += Data(" more text");
@@ -367,19 +367,19 @@ class TestData
 
          {
             const char * c("asdfasfdsadf");
-            Data d(c, 4, true); //share memory
+            Data d(Data::Share, c, 4);
             assert(d < c);
          }
 
          {
             const char * c("asdfasfdsadf");
-            Data d(c, strlen(c), true); // share memory
+            Data d(Data::Share, c, strlen(c));
             assert(!(d < c));
          }
 
          {
             const char * c("asdfasfdsadf");
-            Data d(c, strlen(c), true); // share memory
+            Data d(Data::Share, c, strlen(c));
             assert(!(d < c));
             Data c1(d); // copy, null terminate
             assert(!(d < c1));
@@ -445,19 +445,19 @@ class TestData
 
          {
             const char * c("asdfasfdsadf");
-            Data d(c, 4, true); //share memory
+            Data d(Data::Share, c, 4);
             assert(d <= c);
          }
 
          {
             const char * c("asdfasfdsadf");
-            Data d(c, strlen(c), true); // share memory
+            Data d(Data::Share, c, strlen(c));
             assert(d <= c);
          }
 
          {
             const char * c("asdfasfdsadf");
-            Data d(c, strlen(c), true); // share memory
+            Data d(Data::Share, c, strlen(c));
             assert(d <= c);
             Data c1(d); // copy, null terminate
             assert(d <= c1);
@@ -554,8 +554,8 @@ class TestData
          {
             char s[] = "userB@whistler.gloo.net:6062\r\nCo\031";
             char o[] = "S";
-            Data d(s, strlen(s), false);
-            Data c(o, strlen(o), false);
+            Data d(Data::Share, s, strlen(s));
+            Data c(Data::Share, o, strlen(o));
             
             d = c;
             assert(c == "S");
@@ -572,5 +572,7 @@ main()
 {
    TestData td;
    td.main();
+
+   cerr << sizeof(Data) << endl;
    return 0;
 }
