@@ -24,6 +24,8 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
                                      DialogSet& dialogSet,
                                      SipMessage& req)
    : NonDialogUsage(dum, dialogSet),
+     mWaitingForResponse(false),
+     mPendingPublish(false),
      mPublish(req),
      mEventType(req.header(h_Event).value()),
      mTimerSeq(0),
@@ -65,7 +67,11 @@ ClientPublication::dispatch(const SipMessage& msg)
       {
          return;
       }
-      else if (code < 300)
+
+      assert(code >= 200);
+      mWaitingForResponse = false;
+
+      if (code < 300)
       {
          if (mPublish.header(h_Expires).value() == 0)
          {
@@ -86,6 +92,7 @@ ClientPublication::dispatch(const SipMessage& msg)
          {
             handler->onFailure(getHandle(), msg);
             delete this;
+            return;
          }
       }
       else
@@ -108,13 +115,21 @@ ClientPublication::dispatch(const SipMessage& msg)
             {
                handler->onFailure(getHandle(), msg);
                delete this;
+               return;
             }
          }
          else
          {
             handler->onFailure(getHandle(), msg);
             delete this;
+            return;
          }
+      }
+
+      if (mPendingPublish)
+      {
+         InfoLog (<< "Sending pending PUBLISH: " << mPublish.brief());
+         send(mPublish);
       }
    }
 }
@@ -136,7 +151,7 @@ ClientPublication::refresh(unsigned int expiration)
       expiration = mPublish.header(h_Expires).value();
    }
    mPublish.header(h_CSeq).sequence()++;
-   mDum.send(mPublish);
+   send(mPublish);
    mPublish.releaseContents();
 }
 
@@ -154,6 +169,21 @@ ClientPublication::update(const Contents* body)
    mPublish.header(h_CSeq).sequence()++;
    mPublish.setContents(mDocument);
    refresh();
+}
+
+void 
+ClientPublication::send(SipMessage& request)
+{
+   if (mWaitingForResponse)
+   {
+      mPendingPublish = true;
+   }
+   else
+   {
+      mDum.send(request);
+      mWaitingForResponse = true;
+      mPendingPublish = false;
+   }
 }
 
 std::ostream& 
