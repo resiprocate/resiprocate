@@ -11,7 +11,6 @@ namespace resip
 class ServerRegistration: public NonDialogUsage 
 {
    public:
-      typedef Handle<ServerRegistration> ServerRegistrationHandle;
       ServerRegistrationHandle getHandle();
       
       /// accept a SIP registration with a specific response
