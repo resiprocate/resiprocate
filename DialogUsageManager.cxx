@@ -30,6 +30,13 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/SipFrag.hxx"
 
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif // defined(WIN32) && defined(_DEBUG)
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
@@ -261,11 +268,11 @@ DialogUsageManager::addServerPublicationHandler(const Data& eventType, ServerPub
 }
 
 void 
-DialogUsageManager::addOutOfDialogHandler(MethodTypes& type, OutOfDialogHandler* handler)
+DialogUsageManager::addOutOfDialogHandler(MethodTypes type, OutOfDialogHandler* handler)
 {
    assert(handler);
-   assert(mOutOfDialogHandler.count(type) == 0);
-   mOutOfDialogHandler[type] = handler;
+   assert(mOutOfDialogHandlers.count(type) == 0);
+   mOutOfDialogHandlers[type] = handler;
 }
 
 SipMessage& 
@@ -730,9 +737,10 @@ DialogUsageManager::processRequest(const SipMessage& request)
             {
                return;
             }
-         case INVITE:  // new INVITE
-         case REFER: // out-of-dialog REFER
-         case INFO :   // handle non-dialog (illegal) INFOs
+         case INVITE:   // new INVITE
+         case REFER:    // out-of-dialog REFER
+         case INFO :    // handle non-dialog (illegal) INFOs
+         case OPTIONS : // handle non-dialog OPTIONS
          {
             {
                DialogSetId id(request);
@@ -775,7 +783,6 @@ DialogUsageManager::processRequest(const SipMessage& request)
          }
          case REGISTER:
          case MESSAGE :
-         case OPTIONS :
          {
                SipMessage failure;
                makeResponse(failure, request, 405);
@@ -974,6 +981,20 @@ DialogUsageManager::getServerPublicationHandler(const Data& eventType)
 {
    map<Data, ServerPublicationHandler*>::iterator res = mServerPublicationHandlers.find(eventType);
    if (res != mServerPublicationHandlers.end())
+   {
+      return res->second;
+   }
+   else
+   {
+      return 0;
+   }
+}
+
+OutOfDialogHandler*   
+DialogUsageManager::getOutOfDialogHandler(const MethodTypes type)
+{
+   map<MethodTypes, OutOfDialogHandler*>::iterator res = mOutOfDialogHandlers.find(type);
+   if (res != mOutOfDialogHandlers.end())
    {
       return res->second;
    }

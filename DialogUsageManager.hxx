@@ -109,7 +109,7 @@ class DialogUsageManager : public HandleManager
       void addServerSubscriptionHandler(const Data& eventType, ServerSubscriptionHandler*);
       void addServerPublicationHandler(const Data& eventType, ServerPublicationHandler*);
       
-      void addOutOfDialogHandler(MethodTypes&, OutOfDialogHandler*);
+      void addOutOfDialogHandler(MethodTypes, OutOfDialogHandler*);
       
       // The message is owned by the underlying datastructure and may go away in
       // the future. If the caller wants to keep it, it should make a copy. The
@@ -242,12 +242,15 @@ class DialogUsageManager : public HandleManager
 
       ClientSubscriptionHandler* getClientSubscriptionHandler(const Data& eventType);
       ServerSubscriptionHandler* getServerSubscriptionHandler(const Data& eventType);
-      
+
+	  OutOfDialogHandler* getOutOfDialogHandler(const MethodTypes type);
+
+
       std::map<Data, ClientSubscriptionHandler*> mClientSubscriptionHandlers;
       std::map<Data, ServerSubscriptionHandler*> mServerSubscriptionHandlers;
       std::map<Data, ClientPublicationHandler*> mClientPublicationHandlers;
       std::map<Data, ServerPublicationHandler*> mServerPublicationHandlers;
-      std::map<MethodTypes, OutOfDialogHandler*> mOutOfDialogHandler;
+      std::map<MethodTypes, OutOfDialogHandler*> mOutOfDialogHandlers;
 
       AppDialogSetFactory* mAppDialogSetFactory;
 
