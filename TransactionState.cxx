@@ -234,7 +234,7 @@ TransactionState::processClientNonInvite(  Message* msg )
 
          case Timer::TimerF:
             // Need to clone, since this is about to be deleted !jf!
-            sendToTU(mMsgToRetransmit->clone()); // don't delete
+            sendToTU(new SipMessage(*mMsgToRetransmit)); // don't delete
             delete this;
             break;
 

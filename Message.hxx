@@ -13,7 +13,7 @@ class Message
       virtual ~Message(){}
       virtual const Data& getTransactionId() const=0;
       virtual Data brief() const=0;
-      virtual std::ostream& dump(std::ostream& strm) const=0;
+      virtual std::ostream& encode(std::ostream& strm) const=0;
 };
 
 std::ostream& 

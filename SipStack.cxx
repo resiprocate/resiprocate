@@ -21,7 +21,7 @@ SipStack::SipStack()
 void 
 SipStack::send(const SipMessage& msg)
 {
-   SipMessage* toSend = msg.clone();
+   SipMessage* toSend = new SipMessage(msg);
    mStateMacFifo.add(toSend);
 }
 
@@ -30,7 +30,7 @@ SipStack::send(const SipMessage& msg)
 void 
 SipStack::send(const SipMessage& msg, const Data& dest)
 {
-   SipMessage* toSend = msg.clone();
+   SipMessage* toSend = new SipMessage(msg);
    toSend->setFixedDest(dest);
    mStateMacFifo.add(toSend);
 }
