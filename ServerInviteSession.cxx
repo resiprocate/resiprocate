@@ -3,6 +3,7 @@
 #include "resiprocate/dum/DumTimeout.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/compat.hxx"
@@ -761,9 +762,10 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
 void 
 ServerInviteSession::startRetransmit1xxTimer()
 {
-   mCurrentRetransmit1xx = 60*1000;  // !slg! RFC3261 13.3.1 says the UAS must send a non-100 provisional response every minute, to handle the possiblity of lost provisional responses
+   // RFC3261 13.3.1 says the UAS must send a non-100 provisional response every minute, to handle the possiblity of lost provisional responses
+   mCurrentRetransmit1xx = mDialog.mDialogSet.getUserProfile()->get1xxRetransmissionTime();  
    int seq = m1xx.header(h_CSeq).sequence();
-   mDum.addTimerMs(DumTimeout::Retransmit1xx, mCurrentRetransmit1xx, getBaseHandle(), seq);
+   mDum.addTimer(DumTimeout::Retransmit1xx, mCurrentRetransmit1xx, getBaseHandle(), seq);
 }
 
 void

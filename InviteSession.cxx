@@ -569,6 +569,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       if(timeout.seq() == mSessionTimerSeq)
       {
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::SessionExpired);
          end();  // end expired session
       }
    }
@@ -1149,35 +1150,50 @@ InviteSession::handleSessionTimerResponse(const SipMessage& msg)
    // If session timers are locally supported then handle response 
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer))) 
    { 
+      Profile::SessionTimerMode mode = mDialog.mDialogSet.getUserProfile()->getDefaultSessionTimerMode();
       bool fUAS = dynamic_cast<ServerInviteSession*>(this) != NULL; 
-      // Process Session Timer headers 
-      if(msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::Timer))) 
+
+      // Set Defaults
+      mSessionInterval = mDialog.mDialogSet.getUserProfile()->getDefaultSessionTime();  // Used only if response didn't request a time 
+      switch(mDialog.mDialogSet.getUserProfile()->getDefaultSessionTimerMode())
+      {
+      case Profile::PreferLocalRefreshes:
+         mSessionRefresherUAS = fUAS;   // Default refresher is Local
+         break;
+      case Profile::PreferRemoteRefreshes:
+         mSessionRefresherUAS = !fUAS;  // Default refresher is Remote
+         break;
+      case Profile::PreferUACRefreshes:
+         mSessionRefresherUAS = false;  // Default refresher is UAC
+         break;
+      case Profile::PreferUASRefreshes:
+         mSessionRefresherUAS = true;   // Default refresher is UAS
+         break;
+      }
+
+      if(msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::Timer))
+         && !msg.exists(h_SessionExpires)) 
       { 
-         if(msg.exists(h_SessionExpires)) 
-         { 
-            mSessionInterval = msg.header(h_SessionExpires).value(); 
-            mSessionRefresherUAS = fUAS;  // Default to us as refresher 
-            if(msg.header(h_SessionExpires).exists(p_refresher)) 
-            { 
-                mSessionRefresherUAS = (msg.header(h_SessionExpires).param(p_refresher) == Data("uas")); 
-            } 
-         } 
-         else 
-         { 
-            // If no Session Expires in response then session timer is to be 'turned off' 
-            mSessionInterval = 0; 
-         } 
+         // If no Session Expires in response and Requires header is present then session timer is to be 'turned off' 
+         mSessionInterval = 0; 
       } 
-      else if(msg.exists(h_SessionExpires))  // If UAS decides to be the refresher - then he MAY not set the Requires header to timer 
+      // Process Session Timer headers 
+      else if(msg.exists(h_SessionExpires)) 
       { 
          mSessionInterval = msg.header(h_SessionExpires).value(); 
-         mSessionRefresherUAS = fUAS;  // Default to us as refresher 
          if(msg.header(h_SessionExpires).exists(p_refresher)) 
          { 
+             // Remote end specified refresher preference
              mSessionRefresherUAS = (msg.header(h_SessionExpires).param(p_refresher) == Data("uas")); 
          } 
-      } 
-      // Note:  If no Requires or Session-Expires, then UAS does not support Session Timers - we are free to use our settings 
+      }
+      else
+      {
+         // Note:  If no Requires or Session-Expires, then UAS does not support Session Timers 
+         // - we are free to use our SessionInterval settings (set above as a default)
+         // If far end doesn't support then refresher must be local
+         mSessionRefresherUAS = fUAS;
+      }
 
       if(mSessionInterval >= 90)  // 90 is the absolute minimum 
       { 
@@ -1210,8 +1226,22 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
    { 
       bool fUAS = dynamic_cast<ServerInviteSession*>(this) != NULL; 
      
-      mSessionInterval = mDialog.mDialogSet.getUserProfile()->getDefaultSessionTime();  // Used only if UAC doesn't request a time 
-      mSessionRefresherUAS = fUAS;  // Default to us as refresher
+      mSessionInterval = mDialog.mDialogSet.getUserProfile()->getDefaultSessionTime();  // Used only if remote doesn't request a time 
+      switch(mDialog.mDialogSet.getUserProfile()->getDefaultSessionTimerMode())
+      {
+      case Profile::PreferLocalRefreshes:
+         mSessionRefresherUAS = fUAS;   // Default refresher is Local
+         break;
+      case Profile::PreferRemoteRefreshes:
+         mSessionRefresherUAS = !fUAS;  // Default refresher is Remote
+         break;
+      case Profile::PreferUACRefreshes:
+         mSessionRefresherUAS = false;  // Default refresher is UAC
+         break;
+      case Profile::PreferUASRefreshes:
+         mSessionRefresherUAS = true;   // Default refresher is UAS
+         break;
+      }
     
       // Check if far-end supports 
       bool farEndSupportsTimer = false; 
@@ -1220,17 +1250,21 @@ InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage&
          farEndSupportsTimer = true; 
          if(request.exists(h_SessionExpires)) 
          { 
-            // Use Session Interval requested by UAC - if none then use local settings 
+            // Use Session Interval requested by remote - if none then use local settings 
             mSessionInterval = request.header(h_SessionExpires).value(); 
-            mSessionRefresherUAS = fUAS;  // Default to us as refresher 
             if(request.header(h_SessionExpires).exists(p_refresher)) 
             { 
                 mSessionRefresherUAS = (request.header(h_SessionExpires).param(p_refresher) == Data("uas")); 
             } 
          } 
       } 
+      else
+      {
+         // If far end doesn't support then refresher must be local
+         mSessionRefresherUAS = fUAS;
+      }
    
-      // Add Session-Expires if required 
+      // Add Session-Expires to response if required 
       if(mSessionInterval >= 90) 
       { 
          if(farEndSupportsTimer) 
