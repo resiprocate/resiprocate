@@ -37,7 +37,7 @@ TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo) :
    mStateMacFifo(fifo),
    mSocket( INVALID_SOCKET )
 {
- 
+  mUnspecified.sin_family = AF_UNSPEC;
 }
 
 TransportSelector::~TransportSelector()
@@ -241,7 +241,7 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
    if (ret < 0)
    {
       Transport::error(getErrno());
-      ErrLog(<< "Unable to route to " << dest << " : " << strerror(getErrno()));
+      ErrLog(<< "Unable to route to " << dest << " : [" << getErrno() << "] " << strerror(getErrno()));
       throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
    }
    
@@ -252,6 +252,14 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
       Transport::error(getErrno());
       ErrLog(<< "Can't determine name of socket " << dest << " : " << strerror(getErrno()));
       throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+   }
+
+   // Unconnect
+   ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
+   if ( ret<0 && getErrno()!=EAFNOSUPPORT )
+   {
+      ErrLog(<< "Can't disconnect socket :  " << strerror(getErrno()));
+      throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
    }
 }
 
