@@ -2,6 +2,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <glib.h>
+
 #include "internal.h"
 
 
@@ -57,6 +59,36 @@ static int gagtogaim[2];
 
 static int gaginitialized = 0;
 
+static int
+isAccountNameUnsafe(char *accountName)
+{
+   /* There's an open-ended minefield to be explored here.
+    * This is just a first attempt to keep gaim and gag
+    * from blowing apart because some user typed in
+    * "bad stuff (tm)".
+    */
+
+   if (g_strrstr(accountName,"<")!=NULL) {return 1;}
+   if (g_strrstr(accountName,">")!=NULL) {return 1;}
+   if (g_strrstr(accountName," ")!=NULL) {return 1;}
+   if (g_strrstr(accountName,":")!=NULL)
+   {
+    if (
+        ! (    g_str_has_prefix(accountName,"sip:")
+            || g_str_has_prefix(accountName,"sips:")
+          )
+       ) return 1;
+   }
+   return 0; 
+}
+
+char *
+buildSIPURI(char *accountName)
+{
+  if (g_str_has_prefix(accountName,"sip:")) {return g_strdup(accountName);}
+  if (g_str_has_prefix(accountName,"sips:")) {return g_strdup(accountName);}
+  return g_strconcat("sip:",accountName,NULL);
+}
 
 static void 
 sippy_get_string( char* buf, int bufSize )
@@ -540,6 +572,8 @@ simple_friend_cache_free(gpointer gp)
 static void
 sippy_login(GaimAccount *account)
 {
+  char *sipAccountURI = NULL;
+
   GaimConnection *gc = gaim_account_get_connection(account);
 
   if (gaim_connection_get_state(gc) == GAIM_CONNECTED)
@@ -547,6 +581,21 @@ sippy_login(GaimAccount *account)
     gaim_debug(GAIM_DEBUG_INFO,"sippy","Somebody's trying to login to something that's already connected - ignoring the request\n");  
     return;
   }
+
+  /* 
+   * Do a safety check on the account name
+   */
+
+
+  if (isAccountNameUnsafe(account->username))
+  {
+    gaim_connection_error(gc,
+       _("Login not attempted - The account name is unacceptable"));
+    g_free(sipAccountURI);
+    return;
+  }
+  
+  sipAccountURI = buildSIPURI(account->username);
 
   struct simple_connection_cache *sc_cache;
   
@@ -584,6 +633,7 @@ sippy_login(GaimAccount *account)
   {
     gaim_connection_error(gc,
        _("Unable to start the SIP engine - SIP engine not found"));
+    g_free(sipAccountURI);
     return;
   }
 
@@ -592,9 +642,12 @@ sippy_login(GaimAccount *account)
   /* send the login stuff (aor,userid,password) */
   sippy_send_command( SIMPLE_LOGIN );
 
-  gaim_debug(GAIM_DEBUG_INFO,"sippy","Sending aor [%s]\n",account->username);  
-  sippy_send_string( account->username );
+  gaim_debug(GAIM_DEBUG_INFO,"sippy","Sending aor [%s]\n",sipAccountURI);
+  sippy_send_string( sipAccountURI );
 
+
+  /* This assumes the digest username is always equal 
+   *  to the user part of the AOR */
   gaim_debug(GAIM_DEBUG_INFO,"sippy","Sending username [%s]\n",account->username);  
   sippy_send_string( account->username );
 
@@ -626,6 +679,8 @@ sippy_login(GaimAccount *account)
   }
   gaim_debug(GAIM_DEBUG_INFO,"sippy","Adding gag's simple gaim_input\n");  
   gc->inpa = gaim_input_add(FD_GAG_TO_GAIM,GAIM_INPUT_READ,sippy_recv_cb,gc);
+
+  g_free(sipAccountURI);
 
 }
 
@@ -693,10 +748,14 @@ simple_tooltip_text(GaimBuddy *b)
   return simple_status_text(b);
 }
 
+
 static GaimPluginProtocolInfo prpl_info =
 {
         4,			/* API version number */
-	0,			/* GaimProtocolOptions */
+
+				/* GaimProtocolOptions */
+	OPT_PROTO_PASSWORD_OPTIONAL,
+
 	NULL,			/* user_splits */
 	NULL,			/* protocol_options */
  	sippy_list_icon, 	/* list_icon */
@@ -795,6 +854,7 @@ init_plugin(GaimPlugin *plugin)
         prpl_info.user_splits = g_list_append(prpl_info.user_splits, split);
 */
 
+/*
         option = gaim_account_option_string_new(_("Display Name"),
                         "display_name", NULL);
         prpl_info.protocol_options = g_list_append(prpl_info.protocol_options,
@@ -818,6 +878,7 @@ init_plugin(GaimPlugin *plugin)
         option = gaim_account_option_int_new(_("Port"), "port", 5060);
         prpl_info.protocol_options = g_list_append(prpl_info.protocol_options,
                         option);
+*/
 
         option = gaim_account_option_bool_new(_("Register with this service"),
                         "register_with_service", TRUE );
