@@ -16,15 +16,15 @@ class ServerInviteSession: public InviteSession
       ServerInviteSessionHandle getHandle();
 
       /// Moves the state of the call to connected and sends a 200
-      void accept();
+      SipMessage& accept();
       
       /// Sends an provisional response (a 1xx but not 100). This may contain an
       /// offer or answer depending on if setOffer or setAnswer was called
       /// before this.
-      void provisional(int statusCode);
+      SipMessage& provisional(int statusCode);
       
       /// Rejects an INVITE with a response like 3xx,4xx,5xx, or 6xx. 
-      virtual void reject(int statusCode);
+      virtual SipMessage& reject(int statusCode);
 
 
       // Inherited methods follow
@@ -35,7 +35,7 @@ class ServerInviteSession: public InviteSession
       
       /// Sends an offer in whatever messages is approperate to send one at
       /// this point in the dialog. Must call setOffer before this.
-      virtual void sendOfferInAnyMessage();
+      virtual SipMessage& sendOfferInAnyMessage();
       
       /// Called to set the answer that will be used in the next messages that
       /// sends and offer. Does not send an answer
@@ -43,7 +43,7 @@ class ServerInviteSession: public InviteSession
 
       /// Sends an offer in whatever messages is approperate to send one at
       /// this point in the dialog. Must call setAnswer before this. 
-      virtual void sendAnswerInAnyMessage();
+      virtual SipMessage& sendAnswerInAnyMessage();
 
       /// Makes the dialog end. Depending ont eh current state, this might
       /// results in BYE or CANCEL being sent.
@@ -53,8 +53,6 @@ class ServerInviteSession: public InviteSession
       /// reINVITE or and UPDATE
       virtual SipMessage& rejectOffer(int statusCode);
       
-      void handle(const SipMessage& msg);
-
       void dispatch(const SipMessage& msg);
       void dispatch(const DumTimeout& timer);
 

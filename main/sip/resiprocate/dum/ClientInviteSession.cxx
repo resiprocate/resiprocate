@@ -49,13 +49,13 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          int code = msg.header(h_StatusLine).statusCode();
          if (code == 100)
          {
-            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), mStaleCallTimerSeq);
+            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
             mState = Proceeding;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), None, msg);
          }
          else if (code < 200)
          {
-            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), mStaleCallTimerSeq);
+            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
             mState = Early;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
             mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
@@ -71,7 +71,10 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          }
          else if (code < 300)
          {
-            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), mStaleCallTimerSeq);
+            //!dcm! -- pretty sure the following timer was bogus
+//            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
+            ++mStaleCallTimerSeq;  //unifies timer handling logic
+            
             mState = Connected;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
             mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
@@ -115,7 +118,9 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          }
          else if (code < 300)
          {
-            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), mStaleCallTimerSeq);
+            //!dcm! -- pretty sure the following timer was bogus
+//            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
+            ++mStaleCallTimerSeq;  //unifies timer handling logic
             mState = Connected;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
             mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
@@ -149,7 +154,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             }
          }
          break;
-      }
+       }
          
       case Connected:
          InviteSession::dispatch(msg);
@@ -167,7 +172,15 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 void
 ClientInviteSession::dispatch(const DumTimeout& timeout)
 {
-   
+   if (timeout.type() == DumTimeout::StaleCall 
+       && timeout.seq() == mStaleCallTimerSeq)
+   {
+      mDum.mInviteSessionHandler->onStaleCallTimeout(getHandle());
+   }
+   else
+   {
+      assert(0); //!dcm! -- will there ever a different timer from StaleCall?
+   }
 }
 
 void
@@ -357,7 +370,9 @@ ClientInviteSession::dispatch(const SipMessage& msg)
                return;
             }
             else if (mCurrentLocalSdp == 0 && mProposedRemoteSdp == 0)
-            {
+            {        Transport::error( e );
+         InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
+         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
                // Got a 2xx with no offer (sent an INVITE with no offer,
                // unreliable provisionals)
                end();
