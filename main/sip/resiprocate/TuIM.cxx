@@ -301,7 +301,10 @@ TuIM::processSubscribeRequest(SipMessage* msg)
        {
           if (  from.getAor() == i->uri.getAor() )
           {
-             i->mNextTimeToSubscribe = now;
+	    if ( from.getAor() != mAor.getAor() )
+	    {
+              i->mNextTimeToSubscribe = now;
+	    }
           }
        }
     }
