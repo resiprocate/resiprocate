@@ -45,7 +45,7 @@ main()
       while (parse1.process());
 
 
-      auto_ptr<SipMessage> r = auto_ptr<SipMessage>(Helper::makeResponse(message1, 100));
+      auto_ptr<SipMessage> r(Helper::makeResponse(message1, 100));
       r->encode(cerr);
 
       char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
