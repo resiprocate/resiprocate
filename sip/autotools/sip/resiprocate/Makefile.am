@@ -44,7 +44,6 @@ libresiprocate_la_SOURCES = \
 	DnsInterface.cxx \
 	DnsResult.cxx \
 	Embedded.cxx \
-	Executive.cxx \
 	ExistsParameter.cxx \
 	FloatParameter.cxx \
 	HeaderFieldValue.cxx \
@@ -158,7 +157,6 @@ resiprocate_include_HEADERS = \
 	DnsResult.hxx \
 	DnsHandler.hxx \
 	Embedded.hxx \
-	Executive.hxx \
 	ExistsParameter.hxx \
 	ExpiresCategory.hxx \
 	FloatParameter.hxx \
