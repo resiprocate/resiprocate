@@ -1,3 +1,4 @@
+#include <cassert>
 #include "ClientPublication.hxx"
 
 using namespace resip;
