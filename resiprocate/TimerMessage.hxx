@@ -7,6 +7,7 @@
 
 namespace Vocal2
 {
+
 class TimerMessage : public Message
 {
    public:
@@ -14,7 +15,9 @@ class TimerMessage : public Message
          : mTransactionId(transactionId),
            mType(type)
       {}
-      
+
+      virtual Data getTransactionId() const;
+
    private:
       Data mTransactionId;
       Timer::Type mType;
