@@ -278,9 +278,18 @@ Uri::operator==(const Uri& other) const
    // an STL set which does support an ordering function.
 
    typedef std::set<Parameter*, OrderUnknownParameters> ParameterSet;
+   ParameterSet unA, unB;
 
-   ParameterSet unA(mUnknownParameters.begin(), mUnknownParameters.end());
-   ParameterSet unB(other.mUnknownParameters.begin(), other.mUnknownParameters.end());
+   for (ParameterList::iterator i = mUnknownParameters.begin();
+        i != mUnknownParameters.end(); i++)
+   {
+      unA.insert(*i);
+   }
+   for (ParameterList::iterator i = other.mUnknownParameters.begin();
+        i != other.mUnknownParameters.end(); i++)
+   {
+      unB.insert(*i);
+   }
 
    ParameterSet::iterator a = unA.begin();
    ParameterSet::iterator b = unB.begin();
