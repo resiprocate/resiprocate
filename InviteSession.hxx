@@ -44,8 +44,8 @@ class InviteSession : public DialogUsage
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
       virtual void info(const Contents& contents);
 
-      const SdpContents* getLocalSdp() const;
-      const SdpContents* getRemoteSdp() const;
+      const SdpContents& getLocalSdp() const;
+      const SdpContents& getRemoteSdp() const;
       bool peerSupportsUpdateMethod() const;
 
       typedef enum
@@ -70,6 +70,7 @@ class InviteSession : public DialogUsage
          ReceivedReinviteNoOffer, // Received a reINVITE with no offer
          Answered,
          WaitingToOffer,
+         WaitingToTerminate,
          Terminated // Ended. waiting to delete
       } State;
 
@@ -79,7 +80,7 @@ class InviteSession : public DialogUsage
          NitProceeding
       } NitState;
 
-      typedef std::pair<OfferAnswerType, const SdpContents*> OfferAnswer;
+      //typedef std::pair<OfferAnswerType, const SdpContents*> OfferAnswer;
 
       InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState);
       virtual ~InviteSession();
@@ -88,20 +89,23 @@ class InviteSession : public DialogUsage
       virtual void dispatch(const DumTimeout& timer);
 
       // Utility methods (one for each State)
-      void dispatchConnected(const SipMessage& msg, OfferAnswer offans);
-      void dispatchSentUpdate(const SipMessage& msg, OfferAnswer offans);
-      void dispatchSentUpdateGlare(const SipMessage& msg, OfferAnswer offans);
-      void dispatchSentReinvite(const SipMessage& msg, OfferAnswer offans);
-      void dispatchSentReinviteGlare(const SipMessage& msg, OfferAnswer offans);
-      void dispatchReceivedUpdateOrReinvite(const SipMessage& msg, OfferAnswer offans);
-      void dispatchReceivedReinviteNoOffer(const SipMessage& msg, OfferAnswer offans);
-      void dispatchAnswered(const SipMessage& msg, OfferAnswer offans);
-      void dispatchWaitingToOffer(const SipMessage& msg, OfferAnswer offans);
-      void dispatchWaitingToTerminate(const SipMessage& msg, OfferAnswer offans);
-      void dispatchTerminated(const SipMessage& msg, OfferAnswer offans);
+      void dispatchConnected(const SipMessage& msg, const SdpContents* sdp);
+      void dispatchSentUpdate(const SipMessage& msg, const SdpContents* sdp);
+      void dispatchSentReinvite(const SipMessage& msg, const SdpContents* sdp);
+      void dispatchGlare(const SipMessage& msg);
+      void dispatchReceivedUpdateOrReinvite(const SipMessage& msg);
+      void dispatchAnswered(const SipMessage& msg);
+      void dispatchWaitingToOffer(const SipMessage& msg, const SdpContents* sdp);
+      void dispatchWaitingToTerminate(const SipMessage& msg);
+      void dispatchTerminated(const SipMessage& msg);
 
+      static Data toData(State state);
+      void transition(State target);
       InviteSessionHandle getSessionHandle();
 
+      static const SdpContents* getSdp(const SipMessage& msg);
+      static void setSdp(SipMessage& msg, const SdpContents& sdp);
+      
       State mState;
       NitState mNitState;
 
@@ -177,6 +181,7 @@ class InviteSession : public DialogUsage
       void dispatchInfo(const SipMessage& msg);
 
       void startRetransmitTimer();
+      void start491Timer();
 };
 
 }
