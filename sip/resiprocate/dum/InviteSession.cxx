@@ -7,6 +7,7 @@
 #include "resiprocate/dum/Profile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Timer.hxx"
 
 #if defined(WIN32) && defined(_DEBUG) &&defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
 #define _CRTDBG_MAP_ALLOC
@@ -19,19 +20,12 @@
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
-
-unsigned long
-InviteSession::T1 = 500;
-
-unsigned long
-InviteSession::T2 = 8 * T1;
-
-unsigned long
-InviteSession::TimerH = 64 * T1;
+using namespace std;
 
 InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState)
    : DialogUsage(dum, dialog),
      mState(initialState),
+     mNitState(NitComplete),
      mOfferState(Nothing),
      mCurrentLocalSdp(0),
      mCurrentRemoteSdp(0),
@@ -39,7 +33,8 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State init
      mProposedRemoteSdp(0),
      mNextOfferOrAnswerSdp(0),
      mDestroyer(this),
-     mCurrentRetransmit200(0)
+     mCurrentRetransmit200(Timer::T1),
+     mUserConnected(false)
 {
    DebugLog ( << "^^^ InviteSession::InviteSession " << this);   
    assert(mDum.mInviteSessionHandler);
@@ -69,6 +64,14 @@ InviteSession::modifySession()
    return mLastRequest;
 }
 
+SipMessage& 
+InviteSession::makeFinalResponse(int code)
+{
+   int cseq = mLastRequest.header(h_CSeq).sequence();
+   SipMessage& finalResponse = mFinalResponseMap[cseq];
+   mDialog.makeResponse(finalResponse, mLastRequest, 200);
+   return finalResponse;
+}
 
 SipMessage& 
 InviteSession::acceptOffer(int statusCode)
@@ -78,9 +81,8 @@ InviteSession::acceptOffer(int statusCode)
       throw new UsageUseException("Must be in the ReInviting state and have propsed an answer to call answerModifySession", 
                                   __FILE__, __LINE__);
    }
-   mState = AcceptingReInvite;
-   mDialog.makeResponse(mFinalResponse, mLastRequest, statusCode);
-   return mFinalResponse;
+   mState = Connected;
+   return makeFinalResponse(statusCode);
 } 
 
 void
@@ -123,21 +125,33 @@ InviteSession::getSessionHandle()
    return InviteSessionHandle(mDum, getBaseHandle().getId());
 }
 
-
 void
 InviteSession::dispatch(const DumTimeout& timeout)
 {
    Destroyer::Guard guard(mDestroyer);
-   if (timeout.type() == DumTimeout::Retransmit200 && (mState == Accepting || mState == AcceptingReInvite ))
+   if (timeout.type() == DumTimeout::Retransmit200)
    {
-      mDum.send(mFinalResponse);      
-      mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(T2, mCurrentRetransmit200*2), getBaseHandle(),  0);
+      CSeqToMessageMap::iterator it = mFinalResponseMap.find(timeout.seq());
+      if (it != mFinalResponseMap.end())
+      {
+         mDum.send(it->second);
+         mCurrentRetransmit200 *= 2;
+         mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(Timer::T2, mCurrentRetransmit200), getBaseHandle(),  timeout.seq());
+      }
    }
-   else if (timeout.type() == DumTimeout::WaitForAck && mState != Connected)
+   else if (timeout.type() == DumTimeout::WaitForAck)
    {
-      mDialog.makeResponse(mLastResponse, mLastRequest, 408);
-      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), mLastResponse);      
-      guard.destroy();      
+      CSeqToMessageMap::iterator it = mFinalResponseMap.find(timeout.seq());
+      if (it != mFinalResponseMap.end())
+      {
+         mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle(), it->second);
+         mFinalResponseMap.erase(it);
+      }
+   }
+   else if (timeout.type() == DumTimeout::CanDiscardAck)
+   {
+      assert(mAckMap.find(timeout.seq()) != mFinalResponseMap.end());
+      mAckMap.erase(timeout.seq());
    }
 }
 
@@ -147,6 +161,71 @@ InviteSession::dispatch(const SipMessage& msg)
    Destroyer::Guard guard(mDestroyer);
    std::pair<OfferAnswerType, const SdpContents*> offans;
    offans = InviteSession::getOfferOrAnswer(msg);
+   
+   //ugly. non-invite-transactions(nit) don't interact with the invite
+   //transaction state machine(for now we have a separate INFO state machine)
+   //it's written as a gerneric NIT satet machine, but method isn't checked, and
+   //info is the only NIT so far. This should eventually live in Dialog, with a
+   //current method to determine valid responses.
+   if (msg.header(h_CSeq).method() == INFO)
+   {
+      if (msg.isRequest())
+      {
+         mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
+      }
+      else
+      {
+         if (mNitState == NitProceeding)
+         {            
+            int code = msg.header(h_StatusLine).statusCode();            
+            if (code < 200)
+            {
+               //ignore
+            }
+            else if (code < 300)
+            {
+               mNitState = NitComplete;
+               mDum.mInviteSessionHandler->onInfoSuccess(getSessionHandle(), msg);
+            }
+            else
+            {
+               mNitState = NitComplete;
+               mDum.mInviteSessionHandler->onInfoFailure(getSessionHandle(), msg);
+            }
+         }
+      }      
+      return;
+   }         
+
+   if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK && 
+       (mState == Connected || mState == ReInviting))
+   {
+      //quench 200 retransmissions
+      mFinalResponseMap.erase(msg.header(h_CSeq).sequence());
+      if (offans.first != None)
+      {                     
+         if (mOfferState == Answered)
+         {
+            //SDP in invite and in ACK.
+            mDum.mInviteSessionHandler->onIllegalNegotiation(getSessionHandle(), msg);
+         }
+         else
+         {
+            //delaying onConnected until late SDP
+            InviteSession::incomingSdp(msg, offans.second);
+            if (!mUserConnected)
+            {
+               mUserConnected = true;
+               mDum.mInviteSessionHandler->onConnected(getSessionHandle(), msg);
+            }
+         }
+      }
+      else if (mOfferState != Answered)
+      {
+         //no SDP in ACK when one is required
+         mDum.mInviteSessionHandler->onIllegalNegotiation(getSessionHandle(), msg);
+      }
+   } 
 
    switch(mState)
    {
@@ -179,16 +258,28 @@ InviteSession::dispatch(const SipMessage& msg)
             {
 		       // reINVITE
                case INVITE:
-                  mState = ReInviting;
-                  mDialog.update(msg);
-				  mLastRequest = msg; // !slg!
-                  mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
-                  if (offans.first != None)
+               {
+                  if (mOfferState == Answered)
                   {
-                     incomingSdp(msg, offans.second);
+                     mState = ReInviting;
+                     mDialog.update(msg);
+                     mLastRequest = msg; // !slg!
+                     mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
+                     if (offans.first != None)
+                     {
+                        incomingSdp(msg, offans.second);
+                     }
                   }
-                  break;
-
+                  else
+                  {
+                     //4??
+                     SipMessage failure;
+                     mDialog.makeResponse(failure, msg, 491);
+                     InfoLog (<< "Sending 491 - overlapping Invite transactions");
+                     mDum.sendResponse(failure);
+                  }
+               }   
+               break;
                case BYE:
                   mState = Terminated;
                   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
@@ -202,8 +293,7 @@ InviteSession::dispatch(const SipMessage& msg)
                   
                case INFO:
                   mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
-                  break;
-                  
+                  break;                                 
                case REFER:
                   //handled in Dialog
                   assert(0);                  
@@ -216,36 +306,68 @@ InviteSession::dispatch(const SipMessage& msg)
          }
          else
          {
-            //!dcm! -- need to change this logic for when we don't have an ACK yet
-            if ( msg.header(h_StatusLine).statusCode() == 200)
+            if ( msg.header(h_StatusLine).statusCode() == 200 && msg.header(h_CSeq).method() == INVITE)
             {
-               //retransmist ack
-               mDum.send(mAck);
+               CSeqToMessageMap::iterator it = mAckMap.find(msg.header(h_CSeq).sequence());
+               if (it != mAckMap.end())
+               {
+                  send(it->second);
+               }
             }
          }
          break;
       case ReInviting:
-         if (msg.isResponse() && msg.header(h_CSeq).method() == INVITE)
+         if (msg.header(h_CSeq).method() == INVITE)
          {
-            int code = msg.header(h_StatusLine).statusCode();
-            if (code >=200 && code < 300)
+            if (msg.isResponse())
             {
-               mState = Connected;
-               send(ackConnection());
-               if (offans.first != None)
+               int code = msg.header(h_StatusLine).statusCode();
+               if (code < 200)
                {
-                  incomingSdp(msg, offans.second);
+                  //ignore
+               }                   
+               else if (code < 300)
+               {
+                  if (msg.header(h_CSeq).sequence() == mLastRequest.header(h_CSeq).sequence())
+                  {
+                     mState = Connected;
+                     send(makeAck());
+                     if (offans.first != None)
+                     {
+                        incomingSdp(msg, offans.second);
+                     }
+                     else
+                     {
+                        if (mOfferState != Answered)
+                        {
+                           //reset the sdp state machine
+                           incomingSdp(msg, 0);
+                           mDum.mInviteSessionHandler->onIllegalNegotiation(getSessionHandle(), msg);
+                        }
+                     }
+                  }
+                  else //200 retransmission that overlaps with this Invite transaction
+                  {
+                     CSeqToMessageMap::iterator it = mAckMap.find(msg.header(h_CSeq).sequence());
+                     if (it != mAckMap.end())
+                     {
+                        send(it->second);
+                     }
+                  }
                }
                else
                {
-                  //reset the sdp state machine
-                  incomingSdp(msg, 0);
+                  mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
+                  mState = Connected;               
                }
             }
             else
             {
-               mDum.mInviteSessionHandler->onOfferRejected(getSessionHandle(), msg);
-               mState = Connected;               
+               SipMessage failure;
+               mDialog.makeResponse(failure, msg, 491);
+               InfoLog (<< "Sending 491 - overlapping Invite transactions");
+               mDum.sendResponse(failure);
+               return;
             }
          }
          else
@@ -254,47 +376,26 @@ InviteSession::dispatch(const SipMessage& msg)
             return;            
          }
          break;
-      case Accepting:
-         if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
-         {
-            mState = Connected;
-            mDum.mInviteSessionHandler->onConnected(getSessionHandle(), msg);
-            if (offans.first != None)
-            {
-               InviteSession::incomingSdp(msg, offans.second);
-            }
-         }
-         else
-         {
-            ErrLog ( << "Spurious message sent to UAS " << msg );            
-            return;            
-         }
-         break;         
-      case AcceptingReInvite:
-         if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
-         {
-            mState = Connected;            
-            //this shouldn't happen, but it may be allowed(DUM API doesn't
-            //support this for re-invite)
-            if (offans.first != None)
-            {
-               InviteSession::incomingSdp(msg, offans.second);
-            }
-         }
-         else
-         {
-            ErrLog ( << "Spurious message sent to UAS " << msg );            
-            return;            
-         }
-         break;         
-
-                  
       default:
          DebugLog ( << "Throwing away strange message: " << msg );
          //throw message away
 //         assert(0);  //all other cases should be handled in base classes
 
    }
+}
+
+SipMessage& 
+InviteSession::makeInfo(auto_ptr<Contents> contents)
+{
+   if (mNitState == NitProceeding)
+   {
+      throw new UsageUseException("Cannot start a non-invite transaction until the previous one has completed", 
+                                  __FILE__, __LINE__);
+   }
+   mNitState = NitProceeding;
+   mDialog.makeRequest(mLastNit, INFO);
+   mLastRequest.setContents(contents);
+   return mLastNit;   
 }
 
 SipMessage& 
@@ -335,8 +436,7 @@ InviteSession::end()
          throw UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
          break;
       case Connected:
-      case Accepting:
-         InfoLog ( << "InviteSession::end, connected or Accepting" );  
+         InfoLog ( << "InviteSession::end, Connected" );  
          mDialog.makeRequest(mLastRequest, BYE);
          //new transaction
          assert(mLastRequest.header(h_Vias).size() == 1);
@@ -465,10 +565,10 @@ InviteSession::send(SipMessage& msg)
       }
       else if (code >= 200 && code < 300 && msg.header(h_CSeq).method() == INVITE)
       {
-         assert(&msg == &mFinalResponse);
-         mCurrentRetransmit200 = T1;         
-         mDum.addTimerMs(DumTimeout::Retransmit200, mCurrentRetransmit200, getBaseHandle(),  0);
-         mDum.addTimerMs(DumTimeout::WaitForAck, TimerH, getBaseHandle(),  0);
+         int seq = msg.header(h_CSeq).sequence();
+         mCurrentRetransmit200 = Timer::T1;         
+         mDum.addTimerMs(DumTimeout::Retransmit200, mCurrentRetransmit200, getBaseHandle(), seq);
+         mDum.addTimerMs(DumTimeout::WaitForAck, Timer::TH, getBaseHandle(), seq);
             
          //!dcm! -- this should be mFinalResponse...maybe assign here in
          //case the user wants to be very strange
@@ -579,25 +679,14 @@ InviteSession::getOfferOrAnswer(const SipMessage& msg) const
                break;
          }
       }
+      else if (msg.isResponse() && 
+               msg.header(h_StatusLine).responseCode() < 200 && 
+               msg.header(h_StatusLine).responseCode() >= 180)
+      {
+         ret.second = contents;
+      }
    }
    return ret;
-}
-
-void
-InviteSession::copyAuthorizations(SipMessage& request)
-{
-#if 0
-   if (mLastRequest.exists(h_ProxyAuthorizations))
-   {
-      // should make the next auth (change nextNonce)
-      request.header(h_ProxyAuthorizations) = mLastRequest.header(h_ProxyAuthorizations);
-   }
-   if (mLastRequest.exists(h_ProxyAuthorizations))
-   {
-      // should make the next auth (change nextNonce)
-      request.header(h_ProxyAuthorizations) = mLastRequest.header(h_ProxyAuthorizations);
-   }
-#endif
 }
 
 SipMessage& 
@@ -619,33 +708,37 @@ InviteSession::targetRefresh(const NameAddr& localUri)
    return mLastRequest;
 }
 
-SipMessage& 
-InviteSession::ackConnection()
+void
+InviteSession::send()
 {
-   //if not a reinvite, and a pending offer exists, throw
-   makeAck();
-   //new transaction
-   assert(mAck.header(h_Vias).size() == 1);
-//   mAck.header(h_Vias).front().param(p_branch).reset();
-   return mAck;
+   if (mOfferState == Answered)
+   {
+      throw new UsageUseException("Cannot call send when there it no Offer/Answer negotiation to do", __FILE__, __LINE__);
+   }
+   send(makeAck());
 }
 
-void 
+SipMessage& 
 InviteSession::makeAck()
 {
-   mAck = mLastRequest;
+   InfoLog ( << "InviteSession::makeAck" );
 
-   InfoLog ( << "InviteSession::makeAck:before: " << mAck );   
+   int cseq = mLastRequest.header(h_CSeq).sequence();
+   assert(mAckMap.find(cseq) == mAckMap.end());
+   SipMessage& ack = mAckMap[cseq];
+   ack = mLastRequest;
+   mDialog.makeRequest(ack, ACK);
+   mDum.addTimerMs(DumTimeout::CanDiscardAck, Timer::TH, getBaseHandle(), cseq);
 
-   mDialog.makeRequest(mAck, ACK);
+   assert(ack.header(h_Vias).size() == 1);
+
    if (mNextOfferOrAnswerSdp)
    {
-      mAck.setContents(mNextOfferOrAnswerSdp);
+      ack.setContents(mNextOfferOrAnswerSdp);
       sendSdp(mNextOfferOrAnswerSdp);
       mNextOfferOrAnswerSdp = 0;
    }
-
-   InfoLog ( << "InviteSession::makeAck:after: " << mAck );   
+   return ack;
 }
 
 /* ====================================================================
