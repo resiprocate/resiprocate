@@ -31,8 +31,7 @@ class ServerOutOfDialogReq : public BaseUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
-      ServerOutOfDialogReq::Handle getHandle() {return mHandle;}
+      ServerOutOfDialogReq::Handle& getHandle() { return static_cast<ServerOutOfDialogReq::Handle&>(mHandle); }
 
    protected:
       virtual ~ServerOutOfDialogReq();
@@ -41,7 +40,6 @@ class ServerOutOfDialogReq : public BaseUsage
       friend class Dialog;
       ServerOutOfDialogReq(DialogUsageManager& dum,  Dialog& dialog, const SipMessage& req);
       
-      ServerOutOfDialogReq::Handle mHandle;
 
       // disabled
       ServerOutOfDialogReq(const ServerOutOfDialogReq&);

@@ -27,15 +27,13 @@ class ServerPublication : public BaseUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
-      ServerPublication::Handle getHandle() {return mHandle;}
+      ServerPublication::Handle& getHandle() { return reinterpret_cast<ServerPublication::Handle&>(mHandle); }
    protected:
       virtual ~ServerPublication();
    private:
       friend class Dialog;
       ServerPublication(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
       
-      ServerPublication::Handle mHandle;
 };
 
 }
