@@ -4,6 +4,8 @@
 
 using namespace Vocal2;
 
+Data Headers::HeaderNames[MAX_HEADERS] = {};
+
 bool
 Headers::isCommaTokenizing(Type type)
 {

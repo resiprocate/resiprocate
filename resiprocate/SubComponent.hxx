@@ -11,9 +11,6 @@ namespace Vocal2
 class SubComponent
 {
    public:
-
-      enum Type{ Unknown, TTL, Transport, Maddr, LR, Method, User };
-      
       SubComponent(Type type);
       virtual ~SubComponent() {}
       
