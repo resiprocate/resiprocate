@@ -17,6 +17,10 @@
 #define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
 #endif // defined(WIN32) && defined(_DEBUG)
 
+// Remove warning about 'this' use in initiator list - pointer is only stored
+#if defined(WIN32)
+#pragma warning( disable : 4355 ) // using this in base member initializer list 
+#endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
