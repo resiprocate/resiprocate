@@ -58,14 +58,13 @@ Uri::~Uri()
 
 // RFC 3261 19.1.6
 Uri
-Uri::fromTel(const Uri& tel, const Data& host)
+Uri::fromTel(const Uri& tel)
 {
    assert(tel.scheme() == Symbols::Tel);
 
    Uri u;
    u.scheme() = Symbols::Sip;
    u.user() = tel.user();
-   u.host() = host;
    u.param(p_user) = Symbols::Phone;
 
    // need to sort the user parameters
