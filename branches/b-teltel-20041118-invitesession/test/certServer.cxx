@@ -19,7 +19,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/DumShutdownHandler.hxx"
 #include "resiprocate/dum/OutOfDialogHandler.hxx"
-#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/PublicationHandler.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/dum/ServerPublication.hxx"
@@ -191,7 +191,7 @@ class CertSubscriptionHandler : public ServerSubscriptionHandler
          {
             // !jf! really need to do this async. send neutral state in the meantime,
             // blah blah blah
-            mSecurity.generateUserCert(h->getDocumentKey(), Data::Empty);
+            mSecurity.generateUserCert(h->getDocumentKey());
          }
 
          if (mSecurity.hasUserCert(h->getDocumentKey()))
@@ -296,7 +296,7 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
          mProfile.addSupportedMimeType(X509Contents::getStaticType());
          
          mProfile.setDefaultFrom(me);
-         setProfile(&mProfile);
+         setMasterProfile(&mProfile);
 
          addServerSubscriptionHandler(Symbols::Credential, &mPrivateKeyServer);
          addServerSubscriptionHandler(Symbols::Certificate, &mCertServer);
@@ -341,7 +341,7 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
       }
 
    private:
-      Profile mProfile;
+      MasterProfile mProfile;
       CertSubscriptionHandler mCertServer;
       PrivateKeySubscriptionHandler mPrivateKeyServer;
       CertPublicationHandler mCertUpdater;
