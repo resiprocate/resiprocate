@@ -186,7 +186,7 @@ Preparse::InitStatePreparseStateTable()
     
     AE( EmptyHdrCont,X,X,BuildHdr,actReset|actBack|actDiscard|actEmptyHdr);
     AE( EmptyHdrCont,X,LWS,EWSPostColon,actReset|actDiscardKnown);
-    AE( EmptyHdrCont,X,CR, CheckEndHdr, actData|actReset|actDiscard|actEmptyHdr);
+    AE( EmptyHdrCont,X,CR, CheckEndHdr, actReset|actDiscard|actEmptyHdr);
     
     // Add edges that will ''skip'' data building and
     // go straight to quoted states
