@@ -6,12 +6,40 @@ namespace Vocal2
 
 class TransactionState
 {
-public:
+   public:
+      
+      TransactionState();
+      
+      static void process(); 
 
-  TransactionState();
+      void process( SipMessage* msg );
+     
+      
+   private:
 
-  static void process(); 
-
+      enum Machine 
+      {
+         ClientNonInvite,
+         ClientInvite,
+         ServerNonInvite,
+         ServerInvite,
+         Stale
+      }
+      Machine mMachine;
+      
+      enum State
+      {
+         Calling,
+         Trying,
+         Proceeding,
+         Completed,
+         Terminated
+      }
+      State mState;
+            
+      TransactionState cancelStateMachine;
+      SipMessage* msgToRetransmit;
+      
 };
 
 }
