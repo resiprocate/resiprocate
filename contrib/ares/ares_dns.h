@@ -1,5 +1,3 @@
-/* $Id: ares_dns.h,v 1.2 2004/05/19 20:27:41 ken Exp $ */
-
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
  * Permission to use, copy, modify, and distribute this
