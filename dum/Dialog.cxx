@@ -791,6 +791,17 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    {
       request.header(h_CSeq).sequence() = ++mLocalCSeq;
    }
+   else
+   {
+      // ACK and cancel have a minimal header set
+      request.remove(h_Accepts);
+      request.remove(h_AcceptEncodings);
+      request.remove(h_AcceptLanguages);
+      request.remove(h_Allows);
+      request.remove(h_Requires);
+      request.remove(h_ProxyRequires);
+      request.remove(h_Supporteds);
+   }
    DebugLog ( << "Dialog::makeRequest: " << request );
 }
 
@@ -800,8 +811,13 @@ Dialog::makeCancel(SipMessage& request)
    //minimal for cancel
    request.header(h_RequestLine).method() = CANCEL;   
    request.header(h_CSeq).method() = CANCEL;
+   request.remove(h_Accepts);
+   request.remove(h_AcceptEncodings);
+   request.remove(h_AcceptLanguages);
+   request.remove(h_Allows);
    request.remove(h_Requires);
    request.remove(h_ProxyRequires);
+   request.remove(h_Supporteds);
    assert(request.exists(h_Vias));
 
    //not sure of these
