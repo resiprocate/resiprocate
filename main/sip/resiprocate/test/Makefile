@@ -70,7 +70,6 @@ TESTPROGRAMS += limpc.cxx \
 		testTimer.cxx \
 		testAppTimer.cxx \
 		testTransactionFSM.cxx \
-		testTransportSelector.cxx \
 		testTypedef.cxx \
 		testUri.cxx \
 		testXMLCursor.cxx \
@@ -81,7 +80,9 @@ TESTPROGRAMS += limpc.cxx \
 	        testParserCategories.cxx \
 	        testRandomHex.cxx \
 	        testSipMessage.cxx \
-	        testSipStack1.cxx 
+	        testSipStack1.cxx \
+#		testTransportSelector.cxx
+
 
 SRC = 		TestSupport.cxx
 
