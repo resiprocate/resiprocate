@@ -1,5 +1,6 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/os/RecursiveMutex.hxx"
 
 using namespace resip;
 
@@ -9,37 +10,21 @@ GenericLogImpl::mLogger=0;
 struct LogState
 {
       LogState()
-         : id(0),
-           count(0)
+         : isDebug(true)
       {}
 
-      Mutex mutex;
-      ThreadIf::Id id;
+      RecursiveMutex mutex;
       bool isDebug;
-      int count;
 };
 
 static LogState logState;
 
 bool
-checkAndSetLogState(Log::Level level)
+checkAndSetLogState(bool isDebug)
 {
-   Lock lock(logState.mutex);
+   logState.mutex.lock();
 
-   // first lock
-   if (logState.count == 0 ||
-       logState.id != ThreadIf::selfId())
-   {
-      Log::_mutex.lock();
-      logState.id = ThreadIf::selfId();
-      logState.isDebug = (level >= Log::DEBUG);
-      logState.count = 1;
-      return true;
-   }
-
-   // recursive lock
-   logState.count++;
-   if (level >= Log::DEBUG)
+   if (isDebug)
    {
       // nested debug logs permitted
       return true;
@@ -61,10 +46,11 @@ checkAndSetLogState(Log::Level level)
 }
 
 RecursiveLogLock::RecursiveLogLock(Log::Level level)
+   : isDebug(level >= Log::DEBUG)
 {
 #ifdef WIN32
 #else
-   assert(checkAndSetLogState(level));
+   assert(checkAndSetLogState(isDebug));
 #endif
 }
 
@@ -72,16 +58,13 @@ RecursiveLogLock::~RecursiveLogLock()
 {
 #ifdef WIN32
 #else
-   Lock lock(logState.mutex);
-
-   assert(logState.count);
-
-   logState.count--;
-
-   if (logState.count == 0)
+   // backtrack the log debug state
+   if (!isDebug)
    {
-      Log::_mutex.unlock();
+      logState.isDebug = true;
    }
+   logState.mutex.unlock();
+
 #endif
 }
 

@@ -2,6 +2,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/os/Timer.hxx"
 
 using namespace resip;
 using namespace std;
@@ -48,10 +49,11 @@ int
 main(int argc, char* argv[])
 {
    Log::initialize(Log::SYSLOG, Log::INFO, argv[0]);
+   //Log::initialize(Log::COUT, Log::INFO, argv[0]);
 
    DebugLog(<<"This should not appear.");
    InfoLog(<<"This should appear.");
-   
+
    LogThread service1a("service1----A", Log::ThreadSetting(1, Log::DEBUG));
    LogThread service1b("service1-------B", Log::ThreadSetting(1, Log::DEBUG));
    LogThread service1c("service1---------C", Log::ThreadSetting(1, Log::DEBUG));
@@ -62,8 +64,8 @@ main(int argc, char* argv[])
    service1a.run();
    service1b.run();
    service1c.run();
-//   service2a.run();
-//   service2b.run();
+   service2a.run();
+   service2b.run();
 
    sleep(2);
 
@@ -99,15 +101,37 @@ main(int argc, char* argv[])
    service2b.join();
 
    Log::setLevel(Log::DEBUG);
+
+   if (false)
+   {
+      UInt64 start = Timer::getTimeMs();
+      for (int i = 0; i < 10000; i++)
+      {
+         InfoLog(<< "string");
+      }
+      cerr << "Info Took: " << Timer::getTimeMs() - start << endl;
+   }
+
+   if (false)
+   {
+      UInt64 start = Timer::getTimeMs();
+      for (int i = 0; i < 10000; i++)
+      {
+         DebugLog(<< "string");
+      }
+      cerr << "Debug Took: " << Timer::getTimeMs() - start << endl;
+   }
+
    InfoLog(<< "Recursive debug: " << debugLogsInCall());
    DebugLog(<< "Recursive non-debug OK: " << logsInCall());
 
 #ifdef NO_DEBUG
    cerr << "All OK -- will deadlock next" << endl;
 #else
-   cerr << "All OK -- will assert next" << endl;
+   cerr << "All OK -- will assert next (linux)" << endl;
 #endif
 
    // this will assert except on WIN32 where it will deadlock
    InfoLog(<< "Recursive non-debug NOT OK: " << logsInCall());
 }
+
