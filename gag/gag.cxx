@@ -1,6 +1,4 @@
-#if defined(HAVE_CONFIG_HXX)
 #include "resiprocate/config.hxx"
-#endif
 
 #include <list>
 #include <errno.h>
@@ -19,6 +17,8 @@
 #include "resiprocate/TuIM.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
+#include "resiprocate/ApiCheck.hxx"
+#include "resiprocate/ApiCheckList.hxx"
 
 #include "contrib/getopt/getopt.h"
 
@@ -120,6 +120,10 @@ main (int argc, char **argv)
 
   Log::initialize(Log::FILE, Log::DEBUG, argv[0]);
 
+  {
+    volatile ApiCheck api(resipApiSizeList); 
+  }
+
   // Read commandline options
 
   while	((c = getopt(argc, argv, "l")) != -1)
@@ -150,8 +154,12 @@ main (int argc, char **argv)
   SipStack sipStack (false);
 #endif
 
-  sipStack.addTransport(UDP, udpPort);
-  sipStack.addTransport(TCP, tcpPort);
+  sipStack.addTransport(UDP, udpPort );
+  sipStack.addTransport(TCP, tcpPort );
+/*
+  sipStack.addTransport(UDP, udpPort+2,V6 );
+  sipStack.addTransport(TCP, tcpPort+2,V6 );
+*/
 #ifdef USE_SSL
   sipStack.addTlsTransport(tlsTcpPort);
 #endif

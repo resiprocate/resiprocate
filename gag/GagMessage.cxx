@@ -1,3 +1,4 @@
+#include "resiprocate/config.hxx"
 #include "GagMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 
