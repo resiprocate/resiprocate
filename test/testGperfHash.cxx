@@ -58,18 +58,10 @@ testMethodHash(bool verbose)
   if (verbose)
     cerr << "Test method hashing" << endl;
 
-  int nMethodNames = sizeof(MethodNames) / sizeof(Data);
-  if (nMethodNames != MAX_METHODS)
-  {
-    if (verbose)
-      cerr << "Mismatch: " << nMethodNames << " method names vs. "
-	   << MAX_METHODS << " method types" << endl;
-    gotErrors = true;
-  } 
-  else
+
     for (int mt = 0; mt < MAX_METHODS; mt++)
     {
-      const Data& mName = MethodNames[mt];
+        const Data& mName = getMethodName(static_cast<MethodTypes>(mt));
 //    cout << "Checking " << mName << endl;
       MethodTypes mt1 = getMethodType(mName);
       if (mt != mt1)

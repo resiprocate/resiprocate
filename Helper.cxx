@@ -581,7 +581,7 @@ Helper::authenticateRequest(const SipMessage& request,
                   if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
                                                               password,
                                                               realm, 
-                                                              MethodNames[request.header(h_RequestLine).getMethod()],
+                                                              getMethodName(request.header(h_RequestLine).getMethod()),
                                                               i->param(p_uri),
                                                               i->param(p_nonce),
                                                               i->param(p_qop),
@@ -604,7 +604,7 @@ Helper::authenticateRequest(const SipMessage& request,
             else if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
                                                              password,
                                                              realm, 
-                                                             MethodNames[request.header(h_RequestLine).getMethod()],
+                                                             getMethodName(request.header(h_RequestLine).getMethod()),
                                                              i->param(p_uri),
                                                              i->param(p_nonce)))
             {
@@ -635,7 +635,7 @@ Helper::make405(const SipMessage& request,
 
     if (len < 0)
     {
-        int upperBound = static_cast<int>(UNKNOWN);
+        int upperBound = static_cast<int>(MAX_METHODS);
 	// The UNKNOWN method name marks the end of the enum
         
         for (int i = 0 ; i < upperBound; i ++)
@@ -645,7 +645,7 @@ Helper::make405(const SipMessage& request,
             assert( i - last <= 1);
             //MethodTypes type = static_cast<MethodTypes>(i);
             Token t;
-            t.value() = MethodNames[i];
+            t.value() = getMethodName(static_cast<resip::MethodTypes>(i));
             resp->header(h_Allows).push_back(t);
             last = i;
         }
@@ -656,7 +656,7 @@ Helper::make405(const SipMessage& request,
         for ( int i = 0 ; i < len ; i++)
         {
             Token t;
-            t.value() = MethodNames[allowedMethods[i]];
+            t.value() = getMethodName(static_cast<resip::MethodTypes>(allowedMethods[i]));
             resp->header(h_Allows).push_back(t);
         }
     }
@@ -744,7 +744,7 @@ Auth makeChallengeResponseAuth(SipMessage& request,
       auth.param(p_response) = Helper::makeResponseMD5(username, 
                                                        password,
                                                        challenge.param(p_realm), 
-                                                       MethodNames[request.header(h_RequestLine).getMethod()], 
+                                                       getMethodName(request.header(h_RequestLine).getMethod()), 
                                                        digestUri, 
                                                        challenge.param(p_nonce),
                                                        Symbols::auth,
@@ -760,7 +760,7 @@ Auth makeChallengeResponseAuth(SipMessage& request,
       auth.param(p_response) = Helper::makeResponseMD5(username, 
                                                        password,
                                                        challenge.param(p_realm), 
-                                                       MethodNames[request.header(h_RequestLine).getMethod()], 
+                                                       getMethodName(request.header(h_RequestLine).getMethod()),
                                                        digestUri, 
                                                        challenge.param(p_nonce));
    }

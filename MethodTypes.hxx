@@ -9,7 +9,7 @@ class Data;
 
 typedef enum
 {
-   UNKNOWN=-1,
+   defineMethod(UNKNOWN, "UNKNOWN", "NA"),
    defineMethod(ACK, "ACK", " RFC 3261"),
    defineMethod(BYE, "BYE", "RFC 3261"),
    defineMethod(CANCEL, "CANCEL", "RFC 3261"),
@@ -29,13 +29,16 @@ typedef enum
    MAX_METHODS
 } MethodTypes;
 
-extern Data MethodNames[MAX_METHODS];
+// extern Data MethodNames[]; // !ah! Do not touch. want a name, call getMethodName()
 
 MethodTypes
 getMethodType(const Data& name);
 
 MethodTypes
 getMethodType(const char* name, int len);
+
+const Data&
+getMethodName(MethodTypes t);
 
 }
 
