@@ -18,10 +18,10 @@ class TestDnsHandler : public DnsHandler
          switch (result->available())
          {
             case DnsResult::Available:
-               InfoLog (<< result->next());
+               std::cout << result->next() << std::endl;
                break;
             case DnsResult::Finished:
-               InfoLog (<< "No more dns results");
+               std::cout << "No more dns results" << std::endl;
                break;
             default:
                break;
@@ -55,7 +55,7 @@ using namespace resip;
 int 
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, Log::INFO, argv[0]);
+   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
    TestDnsHandler handler;
    TestDns dns;
    dns.run();
