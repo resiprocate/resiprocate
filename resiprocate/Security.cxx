@@ -68,25 +68,27 @@ static const Data pemTypePrefixes[] =
 Data
 readIntoData(const Data& filename)
 {
-  ifstream is;
-  is.open(filename.c_str(), ios::binary );
-  assert(is.is_open());
-
-  // get length of file:
-  is.seekg (0, ios::end);
-  int length = is.tellg();
-  is.seekg (0, ios::beg);
-
-  char* buffer = new char [length];
-
-  // read data as a block:
-  is.read (buffer,length);
-
-  Data target(Data::Take, buffer, length);
-
-  is.close();
-
-  return target;
+   DebugLog( << "Trying to read file " << filename );
+   
+   ifstream is;
+   is.open(filename.c_str(), ios::binary );
+   assert(is.is_open()); // TODO should thorw not assert 
+   
+   // get length of file:
+   is.seekg (0, ios::end);
+   int length = is.tellg();
+   is.seekg (0, ios::beg);
+   
+   char* buffer = new char [length];
+   
+   // read data as a block:
+   is.read (buffer,length);
+   
+   Data target(Data::Take, buffer, length);
+   
+   is.close();
+   
+   return target;
 }
 
 Data
@@ -157,23 +159,23 @@ Security::preload()
       {
          if (name.prefix(userCert))
          {
-            addUserCertPEM(getAor(name, userCert), readIntoData(name));
+            addUserCertPEM(getAor(name, userCert), readIntoData(mPath + name));
          }
          else if (name.prefix(userKey))
          {
-            addUserPrivateKeyPEM(getAor(name, userKey), readIntoData(name));
+            addUserPrivateKeyPEM(getAor(name, userKey), readIntoData(mPath + name));
          }
          else if (name.prefix(domainCert))
          {
-            addDomainPrivateKeyPEM(getAor(name, domainCert), readIntoData(name));
+            addDomainPrivateKeyPEM(getAor(name, domainCert), readIntoData(mPath + name));
          }
          else if (name.prefix(domainKey))
          {
-            addDomainPrivateKeyPEM(getAor(name, domainKey), readIntoData(name));
+            addDomainPrivateKeyPEM(getAor(name, domainKey), readIntoData(mPath + name));
          }
          else if (name.prefix(rootCert))
          {
-            addRootCertPEM(readIntoData(name));
+            addRootCertPEM(readIntoData(mPath + name));
          }
       }
    }
