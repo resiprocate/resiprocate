@@ -3,12 +3,12 @@
 using namespace Vocal2;
 
 DataBuffer::DataBuffer(Data& str)
-   : _str(str)
+   : mStr(str)
 {
-   char* gbuf = const_cast<char*>(_str.mBuf);
-   setg(gbuf, gbuf, gbuf+_str.size());
+   char* gbuf = const_cast<char*>(mStr.mBuf);
+   setg(gbuf, gbuf, gbuf+mStr.size());
    // expose the excess capacity as the put buffer
-   setp(gbuf+_str.mSize, gbuf+_str.mCapacity);
+   setp(gbuf+mStr.mSize, gbuf+mStr.mCapacity);
 }
 
 DataBuffer::~DataBuffer()
@@ -22,12 +22,12 @@ DataBuffer::sync()
    if (len > 0) 
    {
       size_t pos = gptr() - eback();  // remember the get position
-      _str.mSize += len;
-      char* gbuf = const_cast<char*>(_str.data());
+      mStr.mSize += len;
+      char* gbuf = const_cast<char*>(mStr.data());
       // reset the get buffer
-      setg(gbuf, gbuf+pos, gbuf+_str.size()); 
+      setg(gbuf, gbuf+pos, gbuf+mStr.size()); 
       // reset the put buffer
-      setp(gbuf + _str.mSize, gbuf + _str.mCapacity);
+      setp(gbuf + mStr.mSize, gbuf + mStr.mCapacity);
    }
    return 0;
 }
@@ -42,20 +42,20 @@ DataBuffer::overflow(int c)
       size_t pos = gptr() - eback();  // remember the get position
 
       // update the length
-      _str.mSize += len;
+      mStr.mSize += len;
 
       // resize the underlying Data and reset the input buffer
-      _str.resize(((_str.mCapacity+16)*3)/2, true);
+      mStr.resize(((mStr.mCapacity+16)*3)/2, true);
 
-      char* gbuf = const_cast<char*>(_str.mBuf);
+      char* gbuf = const_cast<char*>(mStr.mBuf);
       // reset the get buffer
-      setg(gbuf, gbuf+pos, gbuf+_str.mSize); 
+      setg(gbuf, gbuf+pos, gbuf+mStr.mSize); 
       // reset the put buffer
-      setp(gbuf + _str.mSize, gbuf + _str.mCapacity);
+      setp(gbuf + mStr.mSize, gbuf + mStr.mCapacity);
    }
    if (c != -1) 
    {
-      _str.mBuf[_str.mSize] = c;
+      mStr.mBuf[mStr.mSize] = c;
       pbump(1);
       return c;
    }
@@ -64,9 +64,9 @@ DataBuffer::overflow(int c)
 
 iDataStream::iDataStream(Data& str)
    : std::istream(0),
-     _streambuf(str)
+     mStreambuf(str)
 {
-   init(&_streambuf);
+   init(&mStreambuf);
 }
 
 iDataStream::~iDataStream()
@@ -76,9 +76,9 @@ iDataStream::~iDataStream()
 
 oDataStream::oDataStream(Data& str)
    : std::ostream(0),
-     _streambuf(str)
+     mStreambuf(str)
 {
-   init(&_streambuf);
+   init(&mStreambuf);
 }
 
 oDataStream::~oDataStream()
@@ -88,9 +88,9 @@ oDataStream::~oDataStream()
 
 DataStream::DataStream(Data& str)
    : std::iostream(0),
-     _streambuf(str)
+     mStreambuf(str)
 {
-   init(&_streambuf);
+   init(&mStreambuf);
 }
 
 DataStream::~DataStream()
