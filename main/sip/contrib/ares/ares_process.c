@@ -291,7 +291,8 @@ static void read_udp_packets(ares_channel channel, fd_set *read_fds,
 		switch (err)
 		{
 			case WSAEWOULDBLOCK: 
-				continue;
+               FD_CLR(server->udp_socket, read_fds);
+               continue;
 			case WSAECONNABORTED:
 				break;
 			case WSAECONNRESET: // got an ICMP error on a previous send 
@@ -610,7 +611,15 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 
   /* Acquire a socket. */
   s = socket(server->family, SOCK_DGRAM, 0);
-
+#ifdef WIN32
+  {
+     unsigned long noBlock = 1;
+     int errNoBlock = ioctlsocket( s, FIONBIO , &noBlock );
+     if ( errNoBlock != 0 )
+     {
+        return -1;
+     }
+#endif
   if (s == -1)
     return -1;
 
