@@ -2,6 +2,11 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#if !defined(WIN32)
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#endif
+
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/Uri.hxx"
 
@@ -16,27 +21,23 @@
 
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/WinCompat.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
 
 #include <sys/types.h>
 
-#ifndef WIN32
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#endif
-
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
-
 
 TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo) :
    mMultiThreaded(multithreaded),
    mStateMacFifo(fifo),
    mSocket( INVALID_SOCKET ),
-   mSocket6( INVALID_SOCKET )
+   mSocket6( INVALID_SOCKET ),
+   mWindowsVersion(WinCompat::getVersion())
 {
    memset(&mUnspecified, 0, sizeof(sockaddr_in));
    mUnspecified.sin_family = AF_UNSPEC;
@@ -336,8 +337,6 @@ TransportSelector::dnsResolve(SipMessage* msg,
    return result;
 }
 
-// This method decides what interface a sip request will be sent on. 
-//   
 Tuple
 TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target) const
 {
@@ -351,45 +350,89 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    }
    else
    {
-      // this process will determine which interface the kernel would use to
-      // send a packet to the target by making a connect call on a udp socket. 
-      Socket tmp = INVALID_SOCKET;
-      if (target.isV4())
-      {
-         if (mSocket == INVALID_SOCKET)
-         {
-            mSocket = Transport::socket(UDP, true); // may throw
-         }
-         tmp = mSocket;
-      }
-      else
-      {
-         if (mSocket6 == INVALID_SOCKET)
-         {
-            mSocket6 = Transport::socket(UDP, false); // may throw
-         }
-         tmp = mSocket6;
-      }
-   
-      int ret = connect(tmp,&target.getSockaddr(), target.length());
-      if (ret < 0)
-      {
-         int e = getErrno();
-         Transport::error( e );
-         InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
-         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-      }
-   
       Tuple source(target);
-      socklen_t len = source.length();  
-      ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
-
-      if (ret < 0)
+      switch (mWindowsVersion)
       {
-         int e = getErrno();
-         Transport::error(e);
-         InfoLog(<< "Can't determine name of socket " << target << " : " << strerror(e) );
-         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+         case WinCompat::Windows98:
+         case WinCompat::Windows98SE:
+         case WinCompat::Windows95:
+         case WinCompat::WindowsME:
+         case WinCompat::WindowsUnknown:
+            // will not work on ipv6
+            source = WinCompat::determineSourceInterface(target);
+            break;
+            
+         default:
+            
+            // this process will determine which interface the kernel would use to
+            // send a packet to the target by making a connect call on a udp socket. 
+            Socket tmp = INVALID_SOCKET;
+            if (target.isV4())
+            {
+               if (mSocket == INVALID_SOCKET)
+               {
+                  mSocket = Transport::socket(UDP, true); // may throw
+               }
+               tmp = mSocket;
+            }
+            else
+            {
+               if (mSocket6 == INVALID_SOCKET)
+               {
+                  mSocket6 = Transport::socket(UDP, false); // may throw
+               }
+               tmp = mSocket6;
+            }
+   
+            int ret = connect(tmp,&target.getSockaddr(), target.length());
+            if (ret < 0)
+            {
+               int e = getErrno();
+               Transport::error( e );
+               InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
+               throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+            }
+   
+            socklen_t len = source.length();  
+            ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
+            if (ret < 0)
+            {
+               int e = getErrno();
+               Transport::error(e);
+               InfoLog(<< "Can't determine name of socket " << target << " : " << strerror(e) );
+               throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+            }
+
+            // Unconnect. 
+            // !jf! This is necessary, but I am not sure what we can do if this
+            // fails. I'm not sure the stack can recover from this error condition. 
+            if (target.isV4())
+            {
+               ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
+            }
+#ifdef USE_IPV6
+            else
+            {
+               ret = connect(mSocket6,(struct sockaddr*)&mUnspecified6,sizeof(mUnspecified6));
+            }
+#else
+            else
+            {
+               assert(0);
+            }
+#endif
+   
+            if ( ret<0 )
+            {
+               int e =  getErrno();
+               if  ( e != EAFNOSUPPORT )
+               {
+                  ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
+                  throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
+               }
+            }
+
+            break;
       }
 
       // This is the port that the request will get sent out from. By default,
@@ -400,39 +443,16 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       // available) 
       source.setPort(via.sentPort());
       
-      DebugLog (<< "Looked up source for " << target << " -> " << source << " sent-by=" << via.sentHost() << " sent-port=" << via.sentPort());
+     
+      DebugLog (<< "Looked up source for destination: " << target 
+                << " -> " << source 
+                << " sent-by=" << via.sentHost() 
+                << " sent-port=" << via.sentPort());
 
-      // Unconnect. 
-      // !jf! This is necessary, but I am not sure what we can do if this
-      // fails. I'm not sure the stack can recover from this error condition. 
-      if (target.isV4())
-      {
-         ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
-      }
-#ifdef USE_IPV6
-      else
-      {
-         ret = connect(mSocket6,(struct sockaddr*)&mUnspecified6,sizeof(mUnspecified6));
-      }
-#else
-      else
-      {
-         assert(0);
-      }
-#endif
-   
-      if ( ret<0 )
-      {
-         int e =  getErrno();
-         if  ( e != EAFNOSUPPORT )
-         {
-            ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
-            throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
-         }
-      }
       return source;
    }
 }
+
 
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
 // but there are some const issues.  
