@@ -23,21 +23,6 @@ using namespace resip;
 
 const int Helper::tagSize = 4;
 
-static unsigned long minSecs = 32;
-
-unsigned long
-Helper::aBitSmallerThan(unsigned long secs)
-{
-   return resipMax(minSecs, resipMin(secs - 32, 9*secs/10));
-}
-
-time_t
-Helper::aBitSmallerThan(time_t secs)
-{
-   return resipMax(time_t(minSecs), resipMin(secs - 32, 9*secs/10));
-}
-
-
 SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
 {
