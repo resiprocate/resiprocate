@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.6 2002/11/14 01:50:55 alan Exp $
+# $Id: Makefile,v 1.7 2002/12/23 18:04:07 alan Exp $
 #
 NEATO=neato
 DOT=dot
@@ -55,6 +55,16 @@ $(OUTDIR)/%.png: %.neato
 	$(NEATO) -Tpng -o$@ $<
 $(OUTDIR)/%.svg: %.neato Makefile $(OUTDIR)
 	$(NEATO) -Tsvg -o$@ $<
+
+# Old style diagrams
+%.ps.dot: %.dot
+	ln -s $(@:.ps.dot=.dot) $@
+
+%.png.dot: %.dot
+	ln -s $(@:.png.dot=.dot) $@
+
+%.svg.dot: %.dot
+	ln -s $(@:.svg.dot=.dot) $@
 
 # Code autogen
 %.ps.dot: ../%.cxx fsm-dot.awk Makefile
