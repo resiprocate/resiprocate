@@ -1,4 +1,4 @@
-$Id: TODO,v 1.12 2003/01/15 02:30:22 davidb Exp $
+$Id: TODO,v 1.13 2003/01/24 02:45:15 jason Exp $
 
 Change the names of all the parser "components" to "integerparser" or
 something like that
@@ -62,3 +62,5 @@ break up ParserCategories
 Socket => FdSet, as FdSet is a class and socket isn't
 
 Data::data() => Data::buffer()
+
+Change BaseException::~BaseException to be pure virtual - cullen has changed this for a windows problem temporarily
