@@ -276,7 +276,8 @@ InviteSession::end()
 
    // Notify the application right away that the session is kaput but let dum
    // worry about the cleanup issues
-   //mDum.mInviteSessionHandler->onTerminated(getSessionHandle());
+   //InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   //handler->onTerminated(getSessionHandle());
 }
 
 void
@@ -521,6 +522,9 @@ InviteSession::dispatchConnected(const SipMessage& msg)
             assert(0);
          break;
 
+      case OnAck:
+         break;
+         
       default:
          dispatchOthers(msg);
          break;
@@ -769,7 +773,11 @@ InviteSession::dispatchOthers(const SipMessage& msg)
       case REFER:
       default:
          // handled in Dialog
-         WarningLog (<< "DUM delivered a REFER to the InviteSession " << endl << msg);
+         WarningLog (<< "DUM delivered a " 
+                     << msg.header(h_CSeq).unknownMethodName() 
+                     << " to the InviteSession " 
+                     << endl 
+                     << msg);
          assert(0);
          break;
    }

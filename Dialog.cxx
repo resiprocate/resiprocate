@@ -40,6 +40,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalContact(),
      mLocalCSeq(0),
      mRemoteCSeq(0),
+     mAckId(0),
      mRemoteTarget(),
      mLocalNameAddr(),
      mRemoteNameAddr(),
@@ -133,6 +134,9 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       {
          case INVITE:
             mType = Invitation;
+
+            // store the original CSeq for ACK
+            mAckId = msg.header(h_CSeq).sequence(); 
             break;
             
          case SUBSCRIBE:
@@ -244,6 +248,8 @@ Dialog::cancel()
 void
 Dialog::dispatch(const SipMessage& msg)
 {
+   // !jf! Should be checking for messages with out of order CSeq and rejecting
+
    DebugLog ( << "Dialog::dispatch: " << msg.brief());
    if (msg.isRequest())
    {
@@ -417,6 +423,14 @@ Dialog::dispatch(const SipMessage& msg)
          {
             InfoLog( << "about to re-send request with digest credentials" );
             InfoLog( << r->second );
+
+            assert (r->second.isRequest());
+            if (r->second.header(h_RequestLine).method() == ACK)
+            {
+               // store the CSeq for ACK
+               mAckId = mLocalCSeq;
+            }
+
             mLocalCSeq++;
             send(r->second);
          }
@@ -759,6 +773,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       request.remove(h_Requires);
       request.remove(h_ProxyRequires);
       request.remove(h_Supporteds);
+      request.header(h_CSeq).sequence() = mAckId;
    }
 
    // If method is INVITE then advertise required headers
