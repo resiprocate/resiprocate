@@ -86,19 +86,20 @@ HttpConnection::process(FdSet& fdset)
 
 
 void 
-HttpConnection::setPage(const Data& page)
+HttpConnection::setPage(const Data& ppage)
 {
+   Data page(ppage);
    if ( page.empty() )
    {
       mTxBuffer += "HTTP/1.0 301 Moved Permanently"; mTxBuffer += Symbols::CRLF;
       mTxBuffer += "Location: http:/index.html"; mTxBuffer += Symbols::CRLF;
 
-      page = Data ( "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
-                    "<html><head>"
-                    "<title>301 Moved Permanently</title>"
-                    "</head><body>"
-                    "<h1>Moved</h1>"
-                    "</body></html>" );
+      page = ("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">"
+              "<html><head>"
+              "<title>301 Moved Permanently</title>"
+              "</head><body>"
+              "<h1>Moved</h1>"
+              "</body></html>" );
       
    }
    else
