@@ -4,7 +4,7 @@
 #include <sipstack/TimerQueue.hxx>
 #include <sipstack/TimerMessage.hxx>
 #include <util/Logger.hxx>
-#include <util/Inserter.hxx>
+//#include <util/Inserter.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -55,7 +55,16 @@ TimerQueue::run()
 ostream& 
 Vocal2::operator<<(ostream& str, const TimerQueue& tq)
 {
-   str << "TimerQueue[" << Inserter(tq.mTimers) << "]" << endl;
+   str << "TimerQueue[" ;
+
+    for (std::multiset<Timer>::const_iterator i = tq.mTimers.begin(); 
+        i != tq.mTimers.end();
+		i++)
+   {
+      str << *i << " " ;
+   }
+
+   str << "]" << endl;
    return str;
 }
 

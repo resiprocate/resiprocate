@@ -4,6 +4,7 @@
 #include <util/compat.hxx>
 #include <util/ParseBuffer.hxx>
 #include <iostream>
+#include <cassert>
 
 using namespace Vocal2;
 using namespace std;
@@ -118,7 +119,8 @@ bool
 ParserCategory::exists(const Data& param) const
 {
    checkParsed();
-   return getParameterByData(param);
+   bool ret = ( getParameterByData(param) != NULL );
+   return ret;
 }
 
 void
@@ -130,11 +132,11 @@ ParserCategory::parseParameters(ParseBuffer& pb)
       const char* keyStart = pb.skipChar();
       const char* keyEnd = pb.skipToOneOf(" \t\r\n;=?>");  //!dlb! @ here?
       
-      ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
+      ParameterTypes::Type type = ParameterTypes::getType(keyStart, int((keyEnd - keyStart)) );
 
       if (type == ParameterTypes::UNKNOWN)
       {
-         mParameters.push_back(new UnknownParameter(keyStart, (keyEnd - keyStart), pb));
+         mParameters.push_back(new UnknownParameter(keyStart, int((keyEnd - keyStart)), pb));
       }
       else
       {
@@ -228,7 +230,7 @@ ParserCategory::removeParameterByData(const Data& data)
    }
 }
 
-Transport_Param::Type::Type& 
+Transport_Param::DType& 
 ParserCategory::param(const Transport_Param& paramType) const
 {
    checkParsed();
@@ -241,7 +243,7 @@ ParserCategory::param(const Transport_Param& paramType) const
    return p->value();
 }
 
-User_Param::Type::Type& 
+User_Param::DType& 
 ParserCategory::param(const User_Param& paramType) const
 {
    checkParsed();
@@ -254,7 +256,7 @@ ParserCategory::param(const User_Param& paramType) const
    return p->value();
 }
 
-Method_Param::Type::Type& 
+Method_Param::DType& 
 ParserCategory::param(const Method_Param& paramType) const
 {
    checkParsed();
@@ -267,7 +269,7 @@ ParserCategory::param(const Method_Param& paramType) const
    return p->value();
 }
 
-Ttl_Param::Type::Type& 
+Ttl_Param::DType& 
 ParserCategory::param(const Ttl_Param& paramType) const
 {
    checkParsed();
@@ -280,7 +282,7 @@ ParserCategory::param(const Ttl_Param& paramType) const
    return p->value();
 }
 
-Maddr_Param::Type::Type& 
+Maddr_Param::DType& 
 ParserCategory::param(const Maddr_Param& paramType) const
 {
    checkParsed();
@@ -293,7 +295,7 @@ ParserCategory::param(const Maddr_Param& paramType) const
    return p->value();
 }
 
-Lr_Param::Type::Type& 
+Lr_Param::DType& 
 ParserCategory::param(const Lr_Param& paramType) const
 {
    checkParsed();
@@ -306,7 +308,7 @@ ParserCategory::param(const Lr_Param& paramType) const
    return p->value();
 }
 
-Q_Param::Type::Type& 
+Q_Param::DType& 
 ParserCategory::param(const Q_Param& paramType) const
 {
    checkParsed();
@@ -319,7 +321,7 @@ ParserCategory::param(const Q_Param& paramType) const
    return p->value();
 }
 
-Purpose_Param::Type::Type& 
+Purpose_Param::DType& 
 ParserCategory::param(const Purpose_Param& paramType) const
 {
    checkParsed();
@@ -332,7 +334,7 @@ ParserCategory::param(const Purpose_Param& paramType) const
    return p->value();
 }
 
-Expires_Param::Type::Type& 
+Expires_Param::DType& 
 ParserCategory::param(const Expires_Param& paramType) const
 {
    checkParsed();
@@ -345,7 +347,7 @@ ParserCategory::param(const Expires_Param& paramType) const
    return p->value();
 }
 
-Handling_Param::Type::Type& 
+Handling_Param::DType& 
 ParserCategory::param(const Handling_Param& paramType) const
 {
    checkParsed();
@@ -358,7 +360,7 @@ ParserCategory::param(const Handling_Param& paramType) const
    return p->value();
 }
 
-Tag_Param::Type::Type& 
+Tag_Param::DType& 
 ParserCategory::param(const Tag_Param& paramType) const
 {
    checkParsed();
@@ -371,7 +373,7 @@ ParserCategory::param(const Tag_Param& paramType) const
    return p->value();
 }
 
-ToTag_Param::Type::Type& 
+ToTag_Param::DType& 
 ParserCategory::param(const ToTag_Param& paramType) const
 {
    checkParsed();
@@ -384,7 +386,7 @@ ParserCategory::param(const ToTag_Param& paramType) const
    return p->value();
 }
 
-FromTag_Param::Type::Type& 
+FromTag_Param::DType& 
 ParserCategory::param(const FromTag_Param& paramType) const
 {
    checkParsed();
@@ -397,7 +399,7 @@ ParserCategory::param(const FromTag_Param& paramType) const
    return p->value();
 }
 
-Duration_Param::Type::Type& 
+Duration_Param::DType& 
 ParserCategory::param(const Duration_Param& paramType) const
 {
    checkParsed();
@@ -410,7 +412,7 @@ ParserCategory::param(const Duration_Param& paramType) const
    return p->value();
 }
 
-Branch_Param::Type::Type& 
+Branch_Param::DType& 
 ParserCategory::param(const Branch_Param& paramType) const
 {
    checkParsed();
@@ -423,7 +425,7 @@ ParserCategory::param(const Branch_Param& paramType) const
    return p->value();
 }
 
-Received_Param::Type::Type& 
+Received_Param::DType& 
 ParserCategory::param(const Received_Param& paramType) const
 {
    checkParsed();
@@ -436,7 +438,7 @@ ParserCategory::param(const Received_Param& paramType) const
    return p->value();
 }
 
-Mobility_Param::Type::Type& 
+Mobility_Param::DType& 
 ParserCategory::param(const Mobility_Param& paramType) const
 {
    checkParsed();
@@ -449,7 +451,7 @@ ParserCategory::param(const Mobility_Param& paramType) const
    return p->value();
 }
 
-Comp_Param::Type::Type& 
+Comp_Param::DType& 
 ParserCategory::param(const Comp_Param& paramType) const
 {
    checkParsed();
@@ -462,7 +464,7 @@ ParserCategory::param(const Comp_Param& paramType) const
    return p->value();
 }
 
-Rport_Param::Type::Type& 
+Rport_Param::DType& 
 ParserCategory::param(const Rport_Param& paramType) const
 {
    checkParsed();

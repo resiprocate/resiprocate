@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.4 2002/10/06 20:59:21 jason Exp $";
+"$Id: Data.cxx,v 1.5 2002/10/13 03:37:21 fluffy Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -54,6 +54,12 @@ bool
 Data::operator==(const std::string& rhs) const
 {
    return mRep == rhs;
+}
+
+bool 
+Data::operator<(const Data& rhs) const
+{
+   return mRep < rhs.mRep;
 }
 
 
