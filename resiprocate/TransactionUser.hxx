@@ -1,6 +1,7 @@
 #if !defined(RESIP_TU_HXX)
 #define RESIP_TU_HXX 
 
+#include <iosfwd>
 #include <vector>
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include "resiprocate/os/Data.hxx"
@@ -22,6 +23,8 @@ class TransactionUser
       void addDomain(const Data& domain);
       void addDomain(const Data& domain, int port);      
 
+      virtual const Data& name() const=0;
+      virtual std::ostream& encode(std::ostream& strm) const;
       void setMessageFilterRuleList(MessageFilterRuleList &rules);
 
    protected:
@@ -45,6 +48,9 @@ class TransactionUser
 
       MessageFilterRuleList mRuleList;
 };
+
+std::ostream& 
+operator<<(std::ostream& strm, const TransactionUser& tu);
 
 }
 

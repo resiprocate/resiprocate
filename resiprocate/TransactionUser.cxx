@@ -110,12 +110,25 @@ void TransactionUser::addDomain(const Data& domain, int port)
    mDomainList.push_back(u);
 } 
 
+std::ostream& 
+TransactionUser::encode(std::ostream& strm) const
+{
+   strm << "TU: " << name() << " size=" << mFifo.size();
+   return strm;
+}
+
 void
 TransactionUser::setMessageFilterRuleList(MessageFilterRuleList &rules)
 {
    mRuleList = rules;
 }
 
+std::ostream& 
+resip::operator<<(std::ostream& strm, const resip::TransactionUser& tu)
+{
+   tu.encode(strm);
+   return strm;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

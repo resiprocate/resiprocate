@@ -17,6 +17,7 @@
 #include "resiprocate/TransportMessage.hxx"
 #include "resiprocate/TransactionUserMessage.hxx"
 #include "resiprocate/TransportSelector.hxx"
+#include "resiprocate/TransactionUser.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/MD5Stream.hxx"
@@ -39,7 +40,7 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mMsgToRetransmit(0),
    mDnsResult(0),
    mId(id),
-   mTransactionUser(0)
+   mTransactionUser(tu)
 {
    StackLog (<< "Creating new TransactionState: " << *this);
 }
@@ -1531,7 +1532,15 @@ TransactionState::sendToTU(TransactionMessage* msg) const
 void
 TransactionState::sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg) 
 {
-   DebugLog(<< "Send to TU: " << *msg);
+   if (!tu)
+   {
+      DebugLog(<< "Send to default TU: " << *msg);
+   }
+   else
+   {
+      DebugLog (<< "Send to TU: " << *tu << " " << *msg);
+   }
+   
    msg->setTransactionUser(tu);   
    controller.mTuSelector.add(msg, TimeLimitFifo<Message>::InternalElement);
 }
@@ -1713,6 +1722,7 @@ resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
    
    strm << (state.mIsReliable ? " reliable" : " unreliable");
    strm << " target=" << state.mResponseTarget;
+   if (state.mTransactionUser) strm << " tu=" << *state.mTransactionUser;
    strm << "]";
    return strm;
 }
