@@ -58,8 +58,8 @@ class Log
          WARNING = LOG_WARNING,
          INFO = LOG_INFO,
          DEBUG = LOG_DEBUG,
-         STACK = 8,
-         STDERR = 9,
+         STACK = DEBUG+1,
+         STDERR = STACK+1,
          BOGUS = 666
       } Level;
 #endif
