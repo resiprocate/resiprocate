@@ -1,4 +1,3 @@
-
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Connection.hxx"
@@ -90,15 +89,22 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
    {
       case NewMessage:
       {
-         mPreparse.reset();
          assert(mWho.transport);
          mMessage = new SipMessage(mWho.transport);
+
          DebugLog(<< "Connection::process setting source " << mWho);
          mMessage->setSource(mWho);
          mMessage->setTlsDomain(mWho.transport->tlsDomain());
+#ifndef NEW_MSG_HEADER_SCANNER
+         mPreparse.reset();
+#else
+         mMsgHeaderScanner.prepareForMessage(mMessage);
+#endif
+         // Fall through to the next case.
       }
       case ReadingHeaders:
       {
+#ifndef NEW_MSG_HEADER_SCANNER // {
          if (mPreparse.process(*mMessage, mBuffer, mBufferPos + bytesRead) != 0)
          {
             WarningLog(<< "Discarding preparse!");
@@ -108,7 +114,7 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
             mMessage = 0;
             return false;
          }
-         if (!mPreparse.isDataAssigned())
+         else if (!mPreparse.isDataAssigned())
          {
             mBufferPos += bytesRead;
             if (mBufferPos == mBufferSize)
@@ -195,6 +201,109 @@ Connection::process(size_t bytesRead, Fifo<Message>& fifo)
             mBufferSize = ChunkSize;
             mState = ReadingHeaders;
          }
+#else // defined(NEW_MSG_HEADER_SCANNER) } {
+         unsigned int chunkLength = mBufferPos + bytesRead;
+         char *unprocessedCharPtr;
+         MsgHeaderScanner::ScanChunkResult scanChunkResult =
+             mMsgHeaderScanner.scanChunk(mBuffer,
+                                         chunkLength,
+                                         &unprocessedCharPtr);
+         if (scanChunkResult == MsgHeaderScanner::scrError)
+         {
+            //.jacob. Not a terribly informative warning.
+            WarningLog(<< "Discarding preparse!");
+            delete mBuffer;
+            mBuffer = 0;
+            delete mMessage;
+            mMessage = 0;
+            //.jacob. Shouldn't the state also be set here?
+            return false;
+         }
+         mMessage->addBuffer(mBuffer);
+         unsigned int numUnprocessedChars =
+             (mBuffer + chunkLength) - unprocessedCharPtr;
+         if (scanChunkResult == MsgHeaderScanner::scrNextChunk)
+         {
+            // Message header is incomplete...
+            if (numUnprocessedChars == 0)
+            {
+               // ...but the chunk is completely processed.
+               //.jacob. I've discarded the "assigned" concept.
+               //DebugLog(<< "Data assigned, not fragmented, not complete");
+               mBuffer = new char[ChunkSize];
+               mBufferPos = 0;
+               mBufferSize = ChunkSize;
+            }
+            else
+            {
+               // ...but some of the chunk must be shifted into the next one.
+               size_t size = numUnprocessedChars*3/2;
+               if ( size < Connection::ChunkSize )
+               {
+                  size = Connection::ChunkSize;
+               }
+               char* newBuffer = new char[size];
+               memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
+               mBuffer = newBuffer;
+               mBufferPos = numUnprocessedChars;
+               mBufferSize = size;
+            }
+            mState = ReadingHeaders;
+         }
+         else
+         {         
+             // The message header is complete.
+            size_t contentLength = mMessage->header(h_ContentLength).value();
+            
+            if (numUnprocessedChars < contentLength)
+            {
+               // The message body is incomplete.
+               char* newBuffer = new char[contentLength];
+               memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
+               mBufferPos = numUnprocessedChars;
+               mBufferSize = contentLength;
+               mBuffer = newBuffer;
+            
+               mState = PartialBody;
+            }
+            else
+            {
+               // The message body is complete.
+               mMessage->setBody(unprocessedCharPtr, contentLength);
+               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+               
+               Transport::stampReceived(mMessage);
+               fifo.add(mMessage);
+
+               int overHang = numUnprocessedChars - contentLength;
+
+               mState = NewMessage;
+               if (overHang > 0) 
+               {
+                  // The next message has been partially read.
+                  size_t size = overHang*3/2;
+                  if ( size < Connection::ChunkSize )
+                  {
+                     size = Connection::ChunkSize;
+                  }
+                  char* newBuffer = new char[size];
+                  memcpy(newBuffer,
+                         unprocessedCharPtr + contentLength,
+                         overHang);
+                  mBuffer = newBuffer;
+                  mBufferPos = 0;
+                  mBufferSize = size;
+                  
+                  DebugLog (<< "Extra bytes after message: " << overHang);
+                  DebugLog (<< Data(mBuffer, overHang));
+                  
+                  //!jacob! This recursion may cause stack overflow.
+                  // Better to goto the beginning of the function.
+                  process(overHang, fifo);
+               }
+            }
+         }
+#endif // defined(NEW_MSG_HEADER_SCANNER) }
          break;
       }
       case PartialBody:
