@@ -1721,7 +1721,7 @@ Codec::CodecMap& Codec::getStaticCodecs()
 bool
 resip::operator==(const Codec& lhs, const Codec& rhs)
 {
-   return lhs == rhs;
+   return (lhs.mName == rhs.mName && lhs.mRate == rhs.mRate);
 }
 
 ostream&
