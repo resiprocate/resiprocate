@@ -64,6 +64,10 @@ const Data Symbols::SrvSip = "_sip";
 const Data Symbols::SrvSips = "_sips";
 const Data Symbols::SrvUdp = "_udp";
 const Data Symbols::SrvTcp = "_tcp";
+const Data Symbols::NaptrSip = "SIP";
+const Data Symbols::NaptrSips = "SIPS";
+const Data Symbols::NaptrUdp = "D2U";
+const Data Symbols::NaptrTcp = "D2T";
 
 const Data Symbols::audio = "audio";
 const Data Symbols::RTP_AVP = "RTP/AVP";
