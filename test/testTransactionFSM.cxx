@@ -62,7 +62,6 @@
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/Symbols.hxx"
-#include "sip2/sipstack/TestTransport.hxx"
 #include "sip2/sipstack/Transport.hxx"
 
 using namespace Vocal2;

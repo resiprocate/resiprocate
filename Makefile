@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.78 2002/11/08 18:46:31 ryker Exp $
+# $Id: Makefile,v 1.79 2002/11/11 22:37:21 kdc Exp $
 
 BUILD = ../../build
 
@@ -20,8 +20,6 @@ parsetest: bin.debug.Linux.i686/testParserCategories
 ifeq ($(ARCH),i686)
 CXXFLAGS += -mcpu=i686 -march=i686
 endif
-
-CXXFLAGS += -DUSETESTTRANSPORT
 
 SRC = \
 	BranchParameter.cxx \
@@ -51,7 +49,6 @@ SRC = \
 	DnsMessage.cxx \
 	SipStack.cxx \
 	Symbols.cxx \
-	TestTransport.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
 	TransactionMap.cxx \
