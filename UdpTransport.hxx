@@ -12,12 +12,13 @@ class SipMessage;
 class UdpTransport : public Transport
 {
    public:
-      UdpTransport(const Data& host, int portNum, Fifo<Message>& fifo);
+      UdpTransport(const Data& sendhost, int portNum, const Data& interface, Fifo<Message>& fifo);
       virtual  ~UdpTransport();
 
-      virtual void send( const sockaddr_in& address, const  char* buffer, size_t length); //, TransactionId txId) ;
-      virtual void process(fd_set* fdSet=NULL) ;
-      const Data transport() { return "udp"; }
+      void send( const sockaddr_in& address, const  char* buffer, size_t length); //, TransactionId txId) ;
+      void process(fd_set* fdSet=NULL) ;
+      bool isReliable() const { return false; }
+      TransportType transport() const { return UDP; }
 
    private:
       static const size_t MaxBufferSize;
