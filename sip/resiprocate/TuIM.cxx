@@ -171,6 +171,11 @@ TuIM::processRequest(SipMessage* msg)
       processSubscribeRequest(msg);
       return;
    }
+   if ( msg->header(h_RequestLine).getMethod() == REGISTER )
+   {
+      processRegisterRequest(msg);
+      return;
+   }
    if ( msg->header(h_RequestLine).getMethod() == NOTIFY )
    {
       processNotifyRequest(msg);
@@ -236,6 +241,21 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    mStack->send( *response );
 
    sendNotify( dialog );
+}
+
+
+void 
+TuIM::processRegisterRequest(SipMessage* msg)
+{
+   assert( msg->header(h_RequestLine).getMethod() == REGISTER );
+   CallId id = msg->header(h_CallId);
+   
+   SipMessage* response = Helper::makeResponse( *msg, 200 );
+   
+   mStack->send( *response );
+
+   delete response;
+   
 }
 
 

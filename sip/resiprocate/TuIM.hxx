@@ -1,5 +1,5 @@
-#if !defined(UDPTRANSPORT_HXX)
-#define UDPTRANSPORT_HXX
+#if !defined(TUIM_HXX)
+#define TUIM_HXX
 
 #include <vector>
 
@@ -67,6 +67,7 @@ public:
       void processRequest(SipMessage* msg);
       void processMessageRequest(SipMessage* msg);
       void processSubscribeRequest(SipMessage* msg);
+      void processRegisterRequest(SipMessage* msg);
       void processNotifyRequest(SipMessage* msg);
 
       void processResponse(SipMessage* msg);
