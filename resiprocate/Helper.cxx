@@ -841,7 +841,7 @@ Helper::processStrictRoute(SipMessage& request)
 {
    if (request.exists(h_Routes) && 
        !request.header(h_Routes).empty() &&
-       !request.header(h_Routes).front().uri().exists(p_lr))
+       !request.header(h_Routes).front().exists(p_lr))
    {
       // The next hop is a strict router.  Move the next hop into the
       // Request-URI and move the ultimate destination to the end of the
@@ -935,15 +935,15 @@ Helper::gruuUserPart(const Data& instanceId,
                                          sep.size() + 1 
                                          + aor.size() ) % 8))
                                % 8));
-   unsigned char out[token.size()];
+   auto_ptr <unsigned char> out(new unsigned char[token.size()]);
    BF_cbc_encrypt((const unsigned char*)token.data(),
-                  out,
+                  out.get(),
                   token.size(),
                   &fish,
                   ivec, 
                   BF_ENCRYPT);
 
-   return GRUU + Base64Coder::encode(Data(out, token.size()));
+   return GRUU + Base64Coder::encode(Data(out.get(), token.size()));
 }
 
 std::pair<Data,Data> 
@@ -975,14 +975,14 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
 
    const Data decoded = Base64Coder::decode(gruu);
 
-   unsigned char out[gruuUserPart.size()+1];
+   auto_ptr <unsigned char> out(new unsigned char[gruuUserPart.size()+1]);
    BF_cbc_encrypt((const unsigned char*)decoded.data(),
-                  out,
+                  out.get(),
                   decoded.size(),
                   &fish,
                   ivec, 
                   BF_DECRYPT);
-   const Data pair(out, decoded.size());
+   const Data pair(out.get(), decoded.size());
 
    Data::size_type pos = pair.find(sep);
    if (pos == Data::npos)
