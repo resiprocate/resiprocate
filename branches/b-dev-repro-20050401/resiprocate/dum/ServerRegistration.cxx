@@ -40,8 +40,8 @@ ServerRegistration::accept(SipMessage& ok)
   
   // Add all registered contacts to the message.
   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-  RegistrationPersistenceManager::contact_list_t contacts;
-  RegistrationPersistenceManager::contact_list_t::iterator i;
+  RegistrationPersistenceManager::ContactPairList contacts;
+  RegistrationPersistenceManager::ContactPairList::iterator i;
   contacts = database->getContacts(mAor);
   database->unlockRecord(mAor);
 
@@ -96,14 +96,18 @@ ServerRegistration::reject(int statusCode)
 void 
 ServerRegistration::dispatch(const SipMessage& msg)
 {
-    assert(msg.isRequest());
-    ServerRegistrationHandler* handler = mDum.mServerRegistrationHandler;
-    RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+   DebugLog( << "got a registration" );
+   
+   assert(msg.isRequest());
+   ServerRegistrationHandler* handler = mDum.mServerRegistrationHandler;
+   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
 
     enum {ADD, REMOVE, REFRESH} operation = REFRESH;
 
     if (!handler || !database)
     {
+       DebugLog( << "No handler or DB - sending 405" );
+       
        SipMessage failure;
        mDum.makeResponse(failure, msg, 405);
        mDum.send(failure);

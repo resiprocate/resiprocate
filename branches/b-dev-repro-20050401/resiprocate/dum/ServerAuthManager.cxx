@@ -2,7 +2,7 @@
 
 #include "resiprocate/dum/ServerAuthManager.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-
+#include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -21,13 +21,59 @@ ServerAuthManager::~ServerAuthManager()
 
       
       
-// return true if request is authorized
+// return true if request has been consumed 
 bool 
 ServerAuthManager::handle(std::auto_ptr<Message>& msg)
 {
-   // TODO - need to deal this this 
+   InfoLog( << "trying to do auth" );
 
-   return true;
+#if 0   
+   // TODO - need to deal this this 
+   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
+
+   if (sipMsg)
+   {
+      if (sipMsg->isResponse())
+      {
+         return false;
+      }
+      else
+      {
+         if (sipMsg->exists(h_ProxyAuthorizations))
+         {
+            try
+            {
+               for(Auths::const_iterator it = sipMsg->header(h_ProxyAuthorizations).begin();
+                   it  != sipMsg->header(h_ProxyAuthorizations).end(); it++)
+               {
+                  if (mDum.isMyDomain(it->param(p_realm))
+                  {
+                     requestCredential(it->param(p_user),
+                                       it->param(p_realm), 
+                                       sipMsg->getTransactionId());
+                     mMessages[sipMsg->getTransactionId()] = sipMessage;
+                  }
+                      
+                  
+                  
+
+                  SipMessage* challenge = Helper::makeProxyChallenge(*sipMsg, 
+                                                                     it->p,
+                                                                     bool useAuth = true,
+                                                                     bool stale = false);
+
+                  Auth 
+                     Helper::makeChallengeResponseAuth(*sipMsg,
+                                                       const Data& username,
+                                                       const Data& password,
+                                                       const Auth& challenge,
+                                                       const Data& cnonce,
+                                                       unsigned int& nonceCount,
+                                                       Data& nonceCountString)
+
+#endif
+
+   return false;
 }
 
 

@@ -10,8 +10,9 @@ namespace resip
 class RegistrationPersistenceManager
 {
   public:
-    typedef std::pair<Uri,time_t> contact_t;
-    typedef std::list<contact_t> contact_list_t;
+    typedef std::pair<Uri,time_t> ContactPair;
+    typedef std::list<ContactPair> ContactPairList;
+    typedef std::list<Uri> UriList;
 
     typedef enum
     {
@@ -22,13 +23,15 @@ class RegistrationPersistenceManager
     RegistrationPersistenceManager() {}
     virtual ~RegistrationPersistenceManager() {}
 
-    virtual void addAor(Uri &aor, contact_list_t contacts = contact_list_t()) = 0;
+    virtual void addAor(Uri &aor, ContactPairList contacts = ContactPairList()) = 0;
     virtual void removeAor(Uri &aor) = 0;
     virtual bool aorIsRegistered(Uri &aor) = 0;
-	virtual bool aorExists(Uri &aor) = 0;
+      virtual bool aorExists(Uri &aor) = 0;
 
     virtual void lockRecord(Uri &aor) = 0;
     virtual void unlockRecord(Uri &aor) = 0;
+
+     virtual UriList getAors() = 0;
 
     /**
       @param expires Absolute time of expiration, measured in seconds
@@ -38,7 +41,7 @@ class RegistrationPersistenceManager
 
     virtual void removeContact(Uri &aor, Uri &contact) = 0;
 
-    virtual contact_list_t getContacts(Uri &aor) = 0;
+    virtual ContactPairList getContacts(Uri &aor) = 0;
   private:
 };
 
