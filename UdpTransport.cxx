@@ -88,8 +88,8 @@ UdpTransport::process(FdSet& fdset)
    if (mTxFifo.messageAvailable())
    {
       std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
-      DebugLog (<< "Sending message on udp");
-
+      DebugLog (<< "Sending message on udp.");
+      
       sockaddr_in addrin;
       addrin.sin_addr = sendData->destination.ipv4;
       addrin.sin_port = htons(sendData->destination.port);
@@ -227,7 +227,7 @@ UdpTransport::process(FdSet& fdset)
          if (message->isRequest() && !message->header(h_Vias).empty())
          {
             char received[255];
-#if 0
+#if 1
 			// inet_ntop function does not exist in some OS
             inet_ntop(AF_INET, &tuple.ipv4.s_addr, received, sizeof(received));
 #else
