@@ -2,6 +2,18 @@
 #include "resiprocate/config.hxx"
 #endif
 
+/* TODO list for this file ....
+   handle 302 in message
+   handle 302 in subscribe
+   subscribe to other buddy when they subscribe to you
+   sort out how contact is formed 
+   keep track of ourstanding message dialogs 
+   add a publish sending dialogs 
+   send options to register, see if do publish, if so use 
+
+   suppport loading destination certificates from server 
+*/
+
 #include <cassert>
 #include <memory>
 
@@ -129,7 +141,7 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
 
       if ( !body )
       {
-          mCallback->sendPageFailed( dest, -2 );
+         mCallback->sendPageFailed( dest, -2 );
          return;
       }
    }
@@ -145,7 +157,7 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
 
       if ( !body )
       {
-          mCallback->sendPageFailed( dest, -1 );
+         mCallback->sendPageFailed( dest, -1 );
          return;
       }
    }
@@ -564,7 +576,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
 
       mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
       
-	     mCallback->registrationWorked( to );
+      mCallback->registrationWorked( to );
 
       return;
    }
@@ -632,7 +644,7 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
          mCallback->presenceUpdate( to, false, Data::Empty );
       }
       
-      // try to contact this buddy agian in 10 minutes 
+      // try to contact this buddy again in 10 minutes 
       buddy.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 10*60*1000 );
    }
 }
@@ -807,24 +819,24 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
 void 
 TuIM::removeBuddy( const Uri& name)
 {
-	TuIM::BuddyIterator i;
+   TuIM::BuddyIterator i;
 	
-	i = mBuddy.begin();	
-	while ( i != mBuddy.end() )
-	{
-		Uri u = i->uri;
+   i = mBuddy.begin();	
+   while ( i != mBuddy.end() )
+   {
+      Uri u = i->uri;
 
-		if ( u.getAor() == name.getAor() )
-		{
-			// remove this buddy 
-			// !cj! - should unsubscribe 
-			i = mBuddy.erase(i);
-		}
-		else
-		{
-			i++;
-		}
-	}
+      if ( u.getAor() == name.getAor() )
+      {
+         // remove this buddy 
+         // !cj! - should unsubscribe 
+         i = mBuddy.erase(i);
+      }
+      else
+      {
+         i++;
+      }
+   }
 }
 
 
