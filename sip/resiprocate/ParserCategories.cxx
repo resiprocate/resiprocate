@@ -91,7 +91,7 @@ CSeqComponent::encode(std::ostream& str) const
 {
   // NEED TO FIX THIS!!!
   // method needs to print out a string, not the enum type
-  str << mMethod << " " << mCSeq;
+  str << int(mMethod) << " " << mCSeq;
   return str;
 }
 
