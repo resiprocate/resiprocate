@@ -10,6 +10,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/UdpTransport.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Helper.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -213,6 +214,14 @@ UdpTransport::process(FdSet& fdset)
 
       message->setBody(buffer+used,len-used);
       //DebugLog(<<"added " << len-used << " byte body");
+   }
+
+   if (!basicCheck(*message))
+   {
+     delete message; // cannot use it, so, punt on it...
+                     // basicCheck queued any response required
+     message = 0;
+     return;
    }
 
    stampReceived(message);
