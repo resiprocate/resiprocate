@@ -17,8 +17,10 @@ class ParserContainerBase : public ParserCategory
          return 0;
       }
       
-      virtual void parse() {}
-      virtual ParserContainerBase* clone(HeaderFieldValueList& hfvs) const = 0;
+      virtual void parse() {assert(0);}
+      
+      virtual ParserContainerBase* clone(HeaderFieldValueList* hfvs) const = 0;
+      virtual std::ostream& encode(std::ostream& str) const { assert(0); return str;}
 };
  
 }
