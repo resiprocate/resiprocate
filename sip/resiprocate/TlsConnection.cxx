@@ -130,6 +130,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
                }
                      
                bio = NULL;
+         DebugLog( << "bad" );
                throw Transport::Exception( Data("TLS connect failed"), __FILE__, __LINE__ );   
          }
       }
@@ -167,6 +168,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
                
                bio = NULL;
                
+         DebugLog( << "bad" );
                throw Transport::Exception( Data("TLS handshake failed"), __FILE__, __LINE__ );   
          }
       }
