@@ -111,6 +111,7 @@ size_t hash_value(const resip::Tuple& tuple);
 namespace __gnu_cxx
 {
 
+template<>
 struct hash<resip::Tuple>
 {
       size_t operator()(const resip::Tuple& addrPort) const;
