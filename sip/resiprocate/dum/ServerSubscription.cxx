@@ -89,7 +89,7 @@ ServerSubscription::send(SipMessage& msg)
    if (msg.isResponse())
    {
       int code = msg.header(h_StatusLine).statusCode();
-      if (code < 100)
+      if (code < 200)
       {
          mDum.send(msg);
       }
@@ -99,6 +99,7 @@ ServerSubscription::send(SipMessage& msg)
          {
             mDum.addTimer(DumTimeout::Subscription, msg.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
             mDum.send(msg);
+            mState = Established;            
          }
          else
          {
@@ -114,22 +115,16 @@ ServerSubscription::send(SipMessage& msg)
       }
       else
       {
-         switch (Helper::determineFailureMessageEffect(mLastResponse))
+         if (shouldDestroyAfterSendingFailure(msg))
          {
-            case Helper::TransactionTermination:
-            case Helper::RetryAfter:
-               break;
-               
-            case Helper::OptionalRetryAfter:
-            case Helper::ApplicationDependant: 
-               throw UsageUseException("Not a reasonable code to reject a SUBSCIRBE(refresh) inside a dialog.", 
-                                       __FILE__, __LINE__);
-               break;            
-            case Helper::DialogTermination: //?dcm? -- throw or destroy this?
-            case Helper::UsageTermination:
-               handler->onTerminated(getHandle());
-               delete this;
-               break;
+            mDum.send(msg);
+            handler->onTerminated(getHandle());
+            delete this;
+            return;
+         }
+         else
+         {
+            mDum.send(msg);
          }
       }
    }
@@ -141,6 +136,41 @@ ServerSubscription::send(SipMessage& msg)
       {
          handler->onTerminated(getHandle());
          delete this;
+      }
+   }
+}
+
+bool 
+ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
+{
+   int code = msg.header(h_StatusLine).statusCode();
+   switch(mState)
+   {
+      case Initial:
+         return true;
+      case Terminated: //terminated state not using in ServerSubscription
+         assert(0);
+         return true;
+      case Established:
+      {
+         if (code == 405)
+         {
+            return true;
+         }
+         switch (Helper::determineFailureMessageEffect(mLastResponse))
+         {
+            case Helper::TransactionTermination:
+            case Helper::RetryAfter:
+               break;
+            case Helper::OptionalRetryAfter:
+            case Helper::ApplicationDependant: 
+               throw UsageUseException("Not a reasonable code to reject a SUBSCIRBE(refresh) inside a dialog.", 
+                                       __FILE__, __LINE__);
+               break;            
+            case Helper::DialogTermination: //?dcm? -- throw or destroy this?
+            case Helper::UsageTermination:
+               return true;
+         }
       }
    }
 }
