@@ -167,16 +167,40 @@ Uri::operator!=(const Uri& other) const
    return !(*this == other);
 }
 
+bool
+Uri::operator<(const Uri& other) const
+{
+   if (mUser < other.mUser)
+   {
+      return true;
+   }
+
+   if (mUser > other.mUser)
+   {
+      return false;
+   }
+
+   if (mHost < other.mHost)
+   {
+      return true;
+   }
+
+   if (mHost > other.mHost)
+   {
+      return false;
+   }
+
+   return mPort < other.mPort;
+}
+
 const Data&
 Uri::getAor() const
 {
    // did anything change?
-   if (mOldScheme != mScheme ||
-       mOldHost != mHost ||
+   if (mOldHost != mHost ||
        mOldUser != mUser ||
        mOldPort != mPort)
    {
-      mOldScheme = mScheme;
       mOldHost = mHost;
       mOldUser = mUser;
       mOldPort = mPort;
