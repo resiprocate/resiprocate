@@ -21,7 +21,7 @@ class HeaderFieldValueList;
 class Token : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = true};
+      enum {commaHandling = InOut};
 
       Token() : ParserCategory(), mValue() {}
       Token(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type), mValue() {}
@@ -45,7 +45,7 @@ typedef ParserContainer<Token> Tokens;
 class Mime : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = true};
+      enum {commaHandling = InOut};
 
       Mime() : ParserCategory(), mType(), mSubType() {};
       Mime(const Data& type, const Data& subType);
@@ -80,7 +80,7 @@ typedef ParserContainer<Mime> Mimes;
 class Auth : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = false};
+      enum {commaHandling = None};
 
       Auth() : ParserCategory() {}
       Auth(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type) {}
@@ -122,7 +122,7 @@ class Auth : public ParserCategory
 class IntegerCategory : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = false};
+      enum {commaHandling = None};
 
       IntegerCategory() : ParserCategory(), mValue(0), mComment() {}
       IntegerCategory(HeaderFieldValue* hfv, Headers::Type type)
@@ -151,8 +151,9 @@ class IntegerCategory : public ParserCategory
 class StringCategory : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = false};
-      
+      enum {commaHandling = None};
+
+      explicit StringCategory(const Data& value);
       StringCategory() : ParserCategory(), mValue() {}
       StringCategory(HeaderFieldValue* hfv, Headers::Type type)
          : ParserCategory(hfv, type),
@@ -178,7 +179,7 @@ typedef ParserContainer<StringCategory> StringCategories;
 class GenericURI : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = false};
+      enum {commaHandling = None};
 
       GenericURI() : ParserCategory() {}
       GenericURI(HeaderFieldValue* hfv, Headers::Type type) : ParserCategory(hfv, type) {}
@@ -202,7 +203,7 @@ typedef ParserContainer<GenericURI> GenericURIs;
 class NameAddr : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = true};
+      enum {commaHandling = In};
 
       NameAddr() : 
          ParserCategory(),
@@ -262,7 +263,7 @@ typedef ParserContainer<NameAddr> NameAddrs;
 class CallId : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = false};
+      enum {commaHandling = None};
 
       CallId() : ParserCategory(), mValue() {}
       CallId(HeaderFieldValue* hfv, 
@@ -290,7 +291,7 @@ typedef ParserContainer<CallId> CallIds;
 class CSeqCategory : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = false};
+      enum {commaHandling = None};
       
       CSeqCategory();
       CSeqCategory(HeaderFieldValue* hfv, Headers::Type type)
@@ -348,7 +349,7 @@ enum Month {
 class DateCategory : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = false};
+      enum {commaHandling = None};
 
       DateCategory();
 
@@ -398,7 +399,7 @@ class DateCategory : public ParserCategory
 class WarningCategory : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = true};
+      enum {commaHandling = InOut};
 
       WarningCategory() : ParserCategory() {}
       WarningCategory(HeaderFieldValue* hfv, Headers::Type type)
@@ -427,7 +428,7 @@ class WarningCategory : public ParserCategory
 class Via : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = true};
+      enum {commaHandling = In};
 
       Via() 
          : ParserCategory(), 
@@ -476,7 +477,7 @@ typedef ParserContainer<Via> Vias;
 class ExpiresCategory : public ParserCategory
 {
    public:
-      enum {isCommaTokenizing = false};
+      enum {commaHandling = None};
 
       ExpiresCategory() : ParserCategory(), mValue(0) {}
       ExpiresCategory(HeaderFieldValue* hfv, Headers::Type type)
