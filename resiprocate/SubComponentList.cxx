@@ -166,7 +166,7 @@ void SubComponentList::erase(const string& type)
    }	 
 }
 
-ostream& operator<<(ostream& stream, SubComponentList& pList)
+ostream& Vocal2::operator<<(ostream& stream, SubComponentList& pList)
 {
    if (pList.first)
    {
