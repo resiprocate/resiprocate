@@ -20,7 +20,7 @@ int main()
       cerr << "!! <" << d << ">" << endl;
       ds.flush();
       assert(d == "Here is some stuff foo17 c -157\n");
-      assert((int) strlen(d.c_str()) == d.size());
+      assert(strlen(d.c_str()) == d.size());
    }
    {
       Data d(500, true);
@@ -32,7 +32,7 @@ int main()
       cerr << "!! <" << d << ">" << endl;
       ds.flush();
       assert(d == "Here is some stuff foo17 c -157\n");
-      assert((int) strlen(d.c_str()) == d.size());
+      assert(strlen(d.c_str()) == d.size());
    }
 
    {
