@@ -39,7 +39,8 @@ class SipStack
 {
    public:
       SipStack(bool multiThreaded=false);
-
+      ~SipStack();
+      
       // Used by the application to add in a new transport
       // by default, you will get UDP and TCP on 5060 (for now)
       // hostname parameter is used to specify the host portion of the uri that

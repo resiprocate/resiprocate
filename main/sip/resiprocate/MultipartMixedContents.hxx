@@ -34,7 +34,7 @@ class MultipartMixedContents : public Contents
       const Parts& parts() const {checkParsed(); return mContents;}
 
    protected:
-      virtual void clear();
+      void clear();
       
    private:
       static ContentsFactory<MultipartMixedContents> Factory;
