@@ -104,88 +104,68 @@ ClientPagerMessage::getMessageRequest()
 void
 ClientPagerMessage::page(std::auto_ptr<Contents> contents)
 {
-   assert(contents.get() != 0);
-   mMsgQueue.push_back(contents.get());
-   contents.release();
+    assert(contents.get() != 0);
 
-   this->pageMsgQueued();
+    bool do_page = mMsgQueue.empty();
+    mMsgQueue.push_back(contents.get());
+    contents.release();
+    if(do_page)
+    {
+     this->pageFirstMsgQueued();
+    }
 }
-/*
-{
-   if (mInTransaction)
-   {
-      throw UsageUseException("Cannot send a MESSAGE until the previous MESSAGE transaction has completed",
-                                  __FILE__, __LINE__);
-   }
-   mRequest.header(h_CSeq).sequence()++;
-   mInTransaction = true;
-   mRequest.setContents(contents);
-   DebugLog(<< "ClientPagerMessage::page: " << mRequest);
-   mDum.send(mRequest);
-}
-*/
-
 
 void
 ClientPagerMessage::dispatch(const SipMessage& msg)
 {
 	assert(msg.isResponse());
+
     ClientPagerMessageHandler* handler = mDum.mClientPagerMessageHandler;
     assert(handler);
+
     int code = msg.header(h_StatusLine).statusCode();
 
     DebugLog ( << "ClientPagerMessageReq::dispatch(msg)" << msg.brief() );
-    assert(mMsgQueue.empty() == false);
-    if (code < 200)
     {
-       DebugLog ( << "ClientPagerMessageReq::dispatch - encountered provisional response" << msg.brief() );
-    }
-    else if (code < 300)
-    {
-       delete mMsgQueue.front();
-       mMsgQueue.pop_front();
-       this->pageMsgQueued();
-       handler->onSuccess(getHandle(), msg);
-    }
-    else
-    {
-       SipMessage errResponse;
-       MsgQueue::iterator contents;
-       for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
-       {
-           Contents* p = *contents;
-           WarningLog ( << "Paging failed" << *p );
-           Helper::makeResponse(errResponse, mRequest, code);
-           handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
-           *contents = 0;
-       }
+        assert(mMsgQueue.empty() == false);
+        if (code < 200)
+        {
+           DebugLog ( << "ClientPagerMessageReq::dispatch - encountered provisional response" << msg.brief() );
+        }
+        else if (code < 300)
+        {
+           if(mMsgQueue.size() != 1)
+           {
+              // kenho
+              int breakPoint = 0;
+           }
+           if(mMsgQueue.empty() == false)
+           {
+               delete mMsgQueue.front();
+               mMsgQueue.pop_front();
+               if(mMsgQueue.empty() == false)
+                  this->pageFirstMsgQueued();
 
-       mMsgQueue.clear();
+               handler->onSuccess(getHandle(), msg);
+           }
+        }
+        else
+        {
+           SipMessage errResponse;
+           MsgQueue::iterator contents;
+           for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
+           {
+               Contents* p = *contents;
+               WarningLog ( << "Paging failed" << *p );
+               Helper::makeResponse(errResponse, mRequest, code);
+               handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
+               *contents = 0;
+           }
+
+           mMsgQueue.clear();
+        }
     }
 }
-/*
-{
-	assert(msg.isResponse());
-    ClientPagerMessageHandler* handler = mDum.mClientPagerMessageHandler;
-    assert(handler);
-    int code = msg.header(h_StatusLine).statusCode();
-
-    if (code < 200)
-    {
-       DebugLog ( << "ClientPagerMessageReq::dispatch - encountered provisional response" << msg.brief() );
-    }
-    else if (code < 300)
-    {
-       handler->onSuccess(getHandle(), msg);
-       mInTransaction = false;
-    }
-    else
-    {
-       handler->onFailure(getHandle(), msg);
-       mInTransaction = false;
-    }
-}
-*/
 void
 ClientPagerMessage::dispatch(const DumTimeout& timer)
 {
@@ -204,16 +184,13 @@ ClientPagerMessage::msgQueued () const
 }
 
 void
-ClientPagerMessage::pageMsgQueued ()
+ClientPagerMessage::pageFirstMsgQueued ()
 {
-   if(mMsgQueue.size() == 1)
-   {
-       mRequest.header(h_CSeq).sequence()++;
-       mRequest.setContents(mMsgQueue.front());
-       DebugLog(<< "ClientPagerMessage::page: " << mRequest);
-       mDum.send(mRequest);
-       return;
-   }
+   assert(mMsgQueue.empty() == false);
+   mRequest.header(h_CSeq).sequence()++;
+   mRequest.setContents(mMsgQueue.front());
+   DebugLog(<< "ClientPagerMessage::pageFirstMsgQueued: " << mRequest);
+   mDum.send(mRequest);
 }
 
 void
