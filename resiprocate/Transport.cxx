@@ -1,7 +1,10 @@
 #include <iostream>
 #include <sys/types.h>
+
+#ifndef WIN32
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#endif
 
 #include "util/Logger.hxx"
 #include "util/Socket.hxx"
@@ -110,7 +113,7 @@ Transport::buildFdSet( fd_set* fdSet, int* fdSetSize )
    assert( fdSetSize );
 	
    FD_SET(mFd,fdSet);
-   if ( mFd+1 > (*fdSetSize) )
+   if ( int(mFd+1) > (*fdSetSize) )
    {
       *fdSetSize = mFd+1;
    }
@@ -228,7 +231,10 @@ Vocal2::operator<<(ostream& ostrm, const Transport::Tuple& tuple)
 {
    char str[128];
 
-   ostrm << "[ " << inet_ntop(AF_INET, &tuple.ipv4.s_addr, str, sizeof(str))
+   ostrm << "[ " 
+#ifndef WIN32 //  !cj!
+	   << inet_ntop(AF_INET, &tuple.ipv4.s_addr, str, sizeof(str))
+#endif	
          << " , " 
          << tuple.port
          << " , "

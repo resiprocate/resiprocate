@@ -1,5 +1,6 @@
 
 
+#include "util/Socket.hxx"
 #include "util/Data.hxx"
 #include "sipstack/DnsMessage.hxx"
 

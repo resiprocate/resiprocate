@@ -22,12 +22,15 @@ purpose.
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
+
+#ifnef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <fcntl.h>
 #include <signal.h>
+#endif
 
 #include <openssl/ssl.h>
 
