@@ -1,9 +1,6 @@
 #if !defined(RESIP_DATA_HXX)
 #define RESIP_DATA_HXX 
 
-static const char* const resipDataHeaderVersion =
-   "$Id: Data.hxx,v 1.78 2004/05/19 02:11:36 davidb Exp $";
-
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include <iostream>
