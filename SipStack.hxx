@@ -148,6 +148,8 @@ class SipStack
       void enableStrictRouting(bool strict=true) { mStrictRouting = strict; }
       bool isStrictRouting() const { return mStrictRouting; }
 
+      void setStatisticsInterval(unsigned long seconds) const;
+
       // output current state of the stack - for debug
       std::ostream& dump(std::ostream& strm) const;
       
