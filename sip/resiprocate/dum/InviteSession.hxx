@@ -24,11 +24,11 @@ class InviteSession : public BaseUsage
 
       /// Called to set the offer that will be used in the next messages that
       /// sends and offer. Does not send an offer 
-      virtual void setOffer(const SdpContents* offer)=0;
+      virtual void setOffer(const SdpContents* offer);
       
       /// Called to set the answer that will be used in the next messages that
       /// sends and offer. Does not send an answer
-      virtual void setAnswer(const SdpContents* answer)=0;
+      virtual void setAnswer(const SdpContents* answer);
 
       /// Makes the dialog end. Depending on the current state, this might
       /// results in BYE or CANCEL being sent.
