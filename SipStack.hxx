@@ -1,6 +1,8 @@
 #if !defined(SIPSTACK_HXX)
 #define SIPSTACK_HXX
 
+#include <set>
+
 #include "sip2/util/Fifo.hxx"
 #include "sip2/util/Socket.hxx"
 
@@ -35,7 +37,14 @@ class SipStack
       // Used by the application to add in a new transport
       // by default, you will get UDP and TCP on 5060 (for now)
       void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
-  
+
+      // used to add an alias for this sip element. e.g. foobar.com and boo.com
+      // are both handled by this proxy. 
+      void addAlias(const Data& domain);
+      
+      // return true if domain is handled by this stack
+      bool isMyDomain(const Data& domain) const;
+      
       void send(const SipMessage& msg);
 
       // this is only if you want to send to a destination not in the route. You
@@ -81,7 +90,9 @@ private:
       DnsResolver mDnsResolver;
       
       bool mDiscardStrayResponses;
-      
+
+      // store all domains that this stack is responsible for
+      std::set<Data> mDomains;
 };
  
 }
