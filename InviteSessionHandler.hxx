@@ -38,8 +38,9 @@ class InviteSessionHandler
       virtual void onStaleCallTimeout(ClientInviteSessionHandle)=0;
 
       /// called when an dialog enters the terminated state - this can happen
-      /// after getting a BYE, Cancel, or 4xx,5xx,6xx response
-      virtual void onTerminated(InviteSessionHandle, const SipMessage& msg)=0;
+      /// after getting a BYE, Cancel, or 4xx,5xx,6xx response - or the session
+      /// times out
+      virtual void onTerminated(InviteSessionHandle)=0; //, const SipMessage& msg)=0;
 
       /// called when a 3xx with valid targets is encountered in an early dialog     
       /// This is different then getting a 3xx in onTerminated, as another

@@ -64,18 +64,20 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          //!dcm! -- really can't do this assert, prob. kill dialog(erroneous
          //request) and send a 4xx, but which 4xx?
          assert(msg.isResponse());
-         int code = msg.header(h_StatusLine).statusCode();         
-         if (code == 100)
+         int code = msg.header(h_StatusLine).statusCode();
+         if (code < 200)
          {
-            mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
             mState = Proceeding;
+            mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
+         }
+         
+         if (code < 300)
+         {
             mDum.mInviteSessionHandler->onNewSession(getHandle(), None, msg);
          }
-         else if (code < 200)
+         
+         if (code < 200 && code > 100)
          {
-            mDum.addTimer(DumTimeout::StaleCall, mDum.getProfile()->getDefaultStaleCallTime(), getBaseHandle(),  ++mStaleCallTimerSeq);
-            mState = Early;
-            mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
             mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
             
             if (offans.first != None)
@@ -195,8 +197,19 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          }
          break;
       }
+      case Terminated:
+         // this likely means that a UAC sent a CANCEL but the UAS already sent
+         // a 200 to the INVITE, so when the 200 is received, immediately BYE
+         // !jf! can this happen with a request? What do I do?
+         assert (msg.isResponse());
+
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
+         guard.destroy();
+         break;
+         
       default:
          InviteSession::dispatch(msg);
+         break;
    }
 }
 
@@ -204,8 +217,7 @@ void
 ClientInviteSession::dispatch(const DumTimeout& timeout)
 {
    Destroyer::Guard guard(mDestroyer);
-    if (timeout.type() == DumTimeout::StaleCall 
-       && timeout.seq() == mStaleCallTimerSeq)
+   if (timeout.type() == DumTimeout::StaleCall && timeout.seq() == mStaleCallTimerSeq)
    {
       mDum.mInviteSessionHandler->onStaleCallTimeout(getHandle());
       end();  // Terminate call
@@ -244,10 +256,8 @@ ClientInviteSession::send(SipMessage& msg)
    if (mState == Connected || mState == Terminated || mState == ReInviting)
    {
       InviteSession::send(msg);
-      return;
    }
-
-   if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
+   else if (msg.isRequest() && msg.header(h_RequestLine).method() == CANCEL)
    {
       mDum.send(msg);
       if (mServerSub.isValid())
@@ -258,20 +268,19 @@ ClientInviteSession::send(SipMessage& msg)
          //will be cloned...ServerSub may not have the most efficient API possible
          mServerSub->end(NoResource, &contents);
       }   
-      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
-      guard.destroy();
-      return;
    }   
-
-   //!dcm! -- strawman, no knowledge of prack, so just ack(handled in
-   //InviteSession) and Invite(already done) for now complain bitterly
-   if (mNextOfferOrAnswerSdp)
+   else
    {
-      assert(0);
+      //!dcm! -- strawman, no knowledge of prack, so just ack(handled in
+      //InviteSession) and Invite(already done) for now complain bitterly
+      if (mNextOfferOrAnswerSdp)
+      {
+         assert(0);
+      }
+      assert(msg.isRequest());    //!dcm! -- is this correct?   
+      mLastRequest = msg;
+      mDum.send(msg);
    }
-   assert(msg.isRequest());    //!dcm! -- is this correct?   
-   mLastRequest = msg;
-   mDum.send(msg);
 }
 
 void
@@ -281,23 +290,27 @@ ClientInviteSession::end()
    {
       case Early:
          //if there is no fork, CANCEL, if there is a fork send a BYE
+         // !jf! this doesn't sound right to me. If the dialogs are early, send
+         // a CANCEL??
          if (mDialog.mDialogSet.mDialogs.size() > 1)
          {
-            InfoLog ( << "ClientInviteSession::end, Early(forking)" );        
             mDialog.makeRequest(mLastRequest, BYE);
             assert(mLastRequest.header(h_Vias).size() == 1);
             mLastRequest.header(h_Vias).front().param(p_branch).reset();
             mState = Terminated;
+            InfoLog ( << "ClientInviteSession::end, Early(forking). " << mLastRequest.brief());
             send(mLastRequest);
          }         
       case Initial:
-         InfoLog ( << "ClientInviteSession::end, Early/Initial)" );        
+         // !jf! Should the CANCEL really be sent in the dialog? 
          mDialog.makeCancel(mLastRequest);
          //!dcm! -- it could be argued that this(and similar) should happen in send so users
          //can't toast themselves
          mState = Cancelled;
+         InfoLog ( << "ClientInviteSession::end, Early/Initial). " << mLastRequest.brief());        
          send(mLastRequest);
          break;
+
       case Terminated: 
       case Connected:
       case ReInviting:
