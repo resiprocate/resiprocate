@@ -3,7 +3,7 @@
 #endif
 
 #include <iostream>
-#include "resiprocate/Dialog.hxx"
+#include "resiprocate/DeprecatedDialog.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/NameAddr.hxx"
@@ -16,7 +16,7 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 
-Dialog::Dialog(const NameAddr& localContact) 
+DeprecatedDialog::DeprecatedDialog(const NameAddr& localContact) 
    : mContact(localContact),
      mCreated(false),
      mEarly(false),
@@ -35,7 +35,7 @@ Dialog::Dialog(const NameAddr& localContact)
 }
 
 SipMessage*
-Dialog::makeResponse(const SipMessage& request, int code)
+DeprecatedDialog::makeResponse(const SipMessage& request, int code)
 {
    assert( code >= 100 );
    
@@ -102,7 +102,7 @@ Dialog::makeResponse(const SipMessage& request, int code)
 
 
 void 
-Dialog::createDialogAsUAC(const SipMessage& msg)
+DeprecatedDialog::createDialogAsUAC(const SipMessage& msg)
 {
    if (!mCreated)
    {
@@ -211,7 +211,7 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
 }
 
 void 
-Dialog::targetRefreshResponse(const SipMessage& response)
+DeprecatedDialog::targetRefreshResponse(const SipMessage& response)
 {
    if (response.exists(h_Contacts) && response.header(h_Contacts).size() == 1)
    {
@@ -220,7 +220,7 @@ Dialog::targetRefreshResponse(const SipMessage& response)
 }
 
 int 
-Dialog::targetRefreshRequest(const SipMessage& request)
+DeprecatedDialog::targetRefreshRequest(const SipMessage& request)
 {
    assert (request.header(h_RequestLine).getMethod() != CANCEL);
    if (request.header(h_RequestLine).getMethod() != ACK)
@@ -258,7 +258,7 @@ Dialog::targetRefreshRequest(const SipMessage& request)
 }
 
 void
-Dialog::updateRequest(SipMessage& request)
+DeprecatedDialog::updateRequest(SipMessage& request)
 {
    assert (request.isRequest());
    if (mCreated)
@@ -298,7 +298,7 @@ Dialog::updateRequest(SipMessage& request)
 }
 
 void
-Dialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
+DeprecatedDialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
 {
    assert(request.isRequest());
    if ( (!mCreated) && (code < 300) && (code > 100) )
@@ -359,7 +359,7 @@ Dialog::makeResponse(const SipMessage& request, SipMessage& response, int code)
 
 
 SipMessage* 
-Dialog::makeInitialRegister(const NameAddr& registrar, const NameAddr& aor)
+DeprecatedDialog::makeInitialRegister(const NameAddr& registrar, const NameAddr& aor)
 {
    SipMessage* msg = Helper::makeRegister( registrar, aor, mContact );
    assert( msg );
@@ -381,7 +381,7 @@ Dialog::makeInitialRegister(const NameAddr& registrar, const NameAddr& aor)
 
 
 SipMessage* 
-Dialog::makeInitialSubscribe(const NameAddr& target, const NameAddr& from)
+DeprecatedDialog::makeInitialSubscribe(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makeSubscribe( target, from, mContact );
    assert( msg );
@@ -400,7 +400,7 @@ Dialog::makeInitialSubscribe(const NameAddr& target, const NameAddr& from)
 
 
 SipMessage* 
-Dialog::makeInitialPublish(const NameAddr& target, const NameAddr& from)
+DeprecatedDialog::makeInitialPublish(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makePublish( target, from, mContact );
    assert( msg );
@@ -419,7 +419,7 @@ Dialog::makeInitialPublish(const NameAddr& target, const NameAddr& from)
 
 
 SipMessage* 
-Dialog::makeInitialMessage(const NameAddr& target, const NameAddr& from)
+DeprecatedDialog::makeInitialMessage(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makeMessage( target, from, mContact );
    assert( msg );
@@ -438,7 +438,7 @@ Dialog::makeInitialMessage(const NameAddr& target, const NameAddr& from)
 
 
 SipMessage* 
-Dialog::makeInitialInvite(const NameAddr& target, const NameAddr& from)
+DeprecatedDialog::makeInitialInvite(const NameAddr& target, const NameAddr& from)
 {
    SipMessage* msg = Helper::makeInvite( target, from, mContact );
    assert( msg );
@@ -457,36 +457,36 @@ Dialog::makeInitialInvite(const NameAddr& target, const NameAddr& from)
 
 
 SipMessage*
-Dialog::makeInvite()
+DeprecatedDialog::makeInvite()
 {
    SipMessage* request = makeRequestInternal(INVITE);
    incrementCSeq(*request);
-   DebugLog(<< "Dialog::makeInvite: " << *request);
+   DebugLog(<< "DeprecatedDialog::makeInvite: " << *request);
    return request;
 }
 
 
 SipMessage*
-Dialog::makeRegister()
+DeprecatedDialog::makeRegister()
 {
    SipMessage* request = makeRequestInternal(REGISTER);
    incrementCSeq(*request);
-   DebugLog(<< "Dialog::makeRegister: " << *request);
+   DebugLog(<< "DeprecatedDialog::makeRegister: " << *request);
    return request;
 }
 
 
 SipMessage*
-Dialog::makeSubscribe()
+DeprecatedDialog::makeSubscribe()
 {
    SipMessage* request = makeRequestInternal(SUBSCRIBE);
    incrementCSeq(*request);
-   DebugLog(<< "Dialog::makeSubscribe: " << *request);
+   DebugLog(<< "DeprecatedDialog::makeSubscribe: " << *request);
    return request;
 }
 
 SipMessage*
-Dialog::makeBye()
+DeprecatedDialog::makeBye()
 {
    SipMessage* request = makeRequestInternal(BYE);
    incrementCSeq(*request);
@@ -496,7 +496,7 @@ Dialog::makeBye()
 
 
 SipMessage*
-Dialog::makeRefer(const NameAddr& referTo)
+DeprecatedDialog::makeRefer(const NameAddr& referTo)
 {
    SipMessage* request = makeRequestInternal(REFER);
    request->header(h_ReferTo) = referTo;
@@ -506,7 +506,7 @@ Dialog::makeRefer(const NameAddr& referTo)
 }
 
 SipMessage*
-Dialog::makeNotify()
+DeprecatedDialog::makeNotify()
 {
    SipMessage* request = makeRequestInternal(NOTIFY);
    incrementCSeq(*request);
@@ -515,7 +515,7 @@ Dialog::makeNotify()
 
 
 SipMessage*
-Dialog::makeOptions()
+DeprecatedDialog::makeOptions()
 {
    SipMessage* request = makeRequestInternal(OPTIONS);
    incrementCSeq(*request);
@@ -523,7 +523,7 @@ Dialog::makeOptions()
 }
 
 SipMessage*
-Dialog::makePublish()
+DeprecatedDialog::makePublish()
 {
    SipMessage* request = makeRequestInternal(PUBLISH);
    incrementCSeq(*request);
@@ -531,7 +531,7 @@ Dialog::makePublish()
 }
 
 SipMessage*
-Dialog::makeRequest(resip::MethodTypes method)
+DeprecatedDialog::makeRequest(resip::MethodTypes method)
 {
    assert(method != ACK);
    assert(method != CANCEL);
@@ -542,14 +542,14 @@ Dialog::makeRequest(resip::MethodTypes method)
 }
 
 SipMessage*
-Dialog::makeAck(const SipMessage& original)
+DeprecatedDialog::makeAck(const SipMessage& original)
 {
    SipMessage* request = makeRequestInternal(ACK);
    copyCSeq(*request);
 
    // !dcm! should we copy the authorizations? 
    // !jf! will this do the right thing if these headers weren't in original 
-   // we should be able to store this stuff in the Dialog and not need to pass
+   // we should be able to store this stuff in the DeprecatedDialog and not need to pass
    // in the original
    if (original.exists(h_ProxyAuthorizations))
    {
@@ -564,7 +564,7 @@ Dialog::makeAck(const SipMessage& original)
 }
 
 SipMessage*
-Dialog::makeAck()
+DeprecatedDialog::makeAck()
 {
    SipMessage* request = makeRequestInternal(ACK);
    copyCSeq(*request);
@@ -572,7 +572,7 @@ Dialog::makeAck()
 }
 
 SipMessage*
-Dialog::makeCancel(const SipMessage& request)
+DeprecatedDialog::makeCancel(const SipMessage& request)
 {
    assert (request.header(h_Vias).size() >= 1);
    assert (request.header(h_RequestLine).getMethod() == INVITE);
@@ -594,13 +594,13 @@ Dialog::makeCancel(const SipMessage& request)
 
 
 CallId 
-Dialog::makeReplaces()
+DeprecatedDialog::makeReplaces()
 {
    return mDialogId;
 }
 
 void
-Dialog::clear()
+DeprecatedDialog::clear()
 {
    mCreated = false;
    mEarly = false;
@@ -619,7 +619,7 @@ Dialog::clear()
 }
 
 SipMessage*
-Dialog::makeRequestInternal(MethodTypes method)
+DeprecatedDialog::makeRequestInternal(MethodTypes method)
 {
    SipMessage* request = new SipMessage;
    RequestLine rLine(method);
@@ -661,7 +661,7 @@ Dialog::makeRequestInternal(MethodTypes method)
 }
 
 void
-Dialog::copyCSeq(SipMessage& request)
+DeprecatedDialog::copyCSeq(SipMessage& request)
 {
    if (mLocalEmpty)
    {
@@ -672,7 +672,7 @@ Dialog::copyCSeq(SipMessage& request)
 }
 
 void
-Dialog::incrementCSeq(SipMessage& request)
+DeprecatedDialog::incrementCSeq(SipMessage& request)
 {
    if (mLocalEmpty)
    {
@@ -684,9 +684,9 @@ Dialog::incrementCSeq(SipMessage& request)
 }
 
 std::ostream&
-resip::operator<<(std::ostream& strm, const Dialog& d)
+resip::operator<<(std::ostream& strm, const DeprecatedDialog& d)
 {
-   strm << "Dialog: [" << d.dialogId() 
+   strm << "DeprecatedDialog: [" << d.dialogId() 
         << " created=" << d.mCreated 
         << ",remoteTarget=" << d.mRemoteTarget 
 //        << "routeset=" << Inserter(d.mRouteSet) << std::endl
@@ -701,7 +701,7 @@ resip::operator<<(std::ostream& strm, const Dialog& d)
 }
   
 Data 
-Dialog::dialogId(const SipMessage& msg)
+DeprecatedDialog::dialogId(const SipMessage& msg)
 {
    CallID id(msg.header(h_CallId));
    if (msg.isRequest() && msg.isExternal() ||
@@ -732,21 +732,21 @@ Dialog::dialogId(const SipMessage& msg)
 
  
 const Data 
-Dialog::dialogId() const
+DeprecatedDialog::dialogId() const
 {
    return Data::from(mDialogId);
 }
 
 
 void 
-Dialog::setExpirySeconds( int secondsInFuture )
+DeprecatedDialog::setExpirySeconds( int secondsInFuture )
 { 
    expireyTimeAbsoluteMs = Timer::getTimeMs() + 1000*secondsInFuture;
 }
 
 
 int  
-Dialog::getExpirySeconds()
+DeprecatedDialog::getExpirySeconds()
 {
 	// !cj! TODO - may be bugs here when result is negative 
    UInt64 delta = ( expireyTimeAbsoluteMs - Timer::getTimeMs() )/1000;
