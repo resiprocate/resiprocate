@@ -179,9 +179,7 @@ ClientInviteSession::dispatch(const DumTimeout& timeout)
    }
    else
    {
-      assert(0); //
-                 //
-                 //!dcm! -- will there ever a different timer from StaleCall? -- yes, retrans.
+      InviteSession::dispatch(timeout);      
    }
 }
 

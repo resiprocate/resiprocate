@@ -136,11 +136,14 @@ class DialogUsageManager : public HandleManager
 //       SipMessage& makeOutOfDialogRequest(DialogId, const Uri& aor, const MethodTypes& meth);
       
       void cancel(DialogSetId invSessionId);
-      void send(const SipMessage& request); 
+      void send(SipMessage& request); 
       
       void buildFdSet(FdSet& fdset);
       void process(FdSet& fdset);
-      
+
+      /// returns time in milliseconds when process next needs to be called 
+      int getTimeTillNextProcessMS(); 
+
       InviteSessionHandle findInviteSession(DialogId id);
       std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogId id);
       std::vector<ClientSubscriptionHandle> findClientSubscriptions(DialogSetId id);
@@ -179,7 +182,7 @@ class DialogUsageManager : public HandleManager
                         int responseCode, 
                         const Data& reason = Data::Empty) const;
       // May call a callback to let the app adorn
-      void sendResponse(const SipMessage& response);
+      void sendResponse(SipMessage& response);
 
       void addTimer(DumTimeout::Type type,
                     unsigned long duration,
