@@ -1,13 +1,20 @@
 
-#include <unistd.h>
+#include "resiprocate/os/Socket.hxx"
+
 #include <sys/types.h>
+
+#ifndef WIN32
+#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <netinet/in.h>
-
-
+#else
+#include <winsock2.h>
+#include <stdlib.h>
+#include <io.h>
+#endif
 
 #include <iostream>
 
@@ -48,6 +55,9 @@ Transport::Transport(const Data& sendhost, int portNum, const Data& nic, Fifo<Me
 {
    if (!mInterface.empty())
    {
+#ifdef WIN32
+	   assert(0); // !cj! TODO 
+#else
       struct ifconf ifc;
    
       int s = socket( AF_INET, SOCK_DGRAM, 0 );
@@ -93,6 +103,7 @@ Transport::Transport(const Data& sendhost, int portNum, const Data& nic, Fifo<Me
             break;
          }
       }
+#endif
    }
 }
 
