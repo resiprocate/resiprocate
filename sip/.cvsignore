@@ -13,3 +13,15 @@ lib.opt.Linux.i686
 lib.prof.Linux.i686
 libtool
 resiprocate-old-junk
+configure
+Makefile.in
+depcomp
+config.guess
+ltmain.sh
+config.sub
+mkinstalldirs
+bld
+autom4te.cache
+missing
+aclocal.m4
+install-sh
