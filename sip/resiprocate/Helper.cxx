@@ -76,13 +76,6 @@ Helper::makeResponse(const SipMessage& request, int responseCode, const Data& re
    response->header(h_Vias) = request.header(h_Vias);
    response->header(h_ContentLength).value() = 0;
 
-   if (responseCode > 100 && responseCode < 500)
-   {
-      if (!response->header(h_To).uri().exists(p_tag))
-      {
-         response->header(h_To).uri().param(p_tag) = Helper::computeTag(Helper::tagSize);
-      }
-   }
    return response;
 }
 
