@@ -8,6 +8,15 @@
 namespace resip
 {
 
+class UnsupportedAuthenticationScheme : public BaseException
+{
+   public:
+      UnsupportedAuthenticationScheme(const Data& msg, const Data& file, const int line)
+         : BaseException(msg, file, line) {}
+      
+      const char* name() const { return "UnsupportedAuthenticationScheme"; }
+};
+
 class Helper
 {
    public:
