@@ -116,6 +116,14 @@ class Helper
                                           const Data& cnonce,
                                           unsigned int& nonceCount);
 
+      static Auth makeChallengeResponseAuth(SipMessage& request,
+                                            const Data& username,
+                                            const Data& password,
+                                            const Auth& challenge,
+                                            const Data& cnonce,
+                                            unsigned int& nonceCount,
+                                            Data& nonceCountString);      
+
       static Data makeResponseMD5(const Data& username, const Data& password, const Data& realm, 
                                   const Data& method, const Data& digestUri, const Data& nonce,
                                   const Data& qop = Data::Empty, const Data& cnonce = Data::Empty, 
