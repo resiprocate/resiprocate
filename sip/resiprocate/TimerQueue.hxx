@@ -1,9 +1,9 @@
 #if !defined(RESIP_TIMERQUEUE_HXX)
 #define RESIP_TIMERQUEUE_HXX 
 
-#include <vector>
 #include <set>
 #include <iosfwd>
+#include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/os/Fifo.hxx"
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include "resiprocate/os/Timer.hxx"
@@ -18,34 +18,48 @@ namespace resip
 class Message;
 class TransactionMessage;
 
-class TimerQueue
+class BaseTimerQueue
 {
    public:
-      TimerQueue(Fifo<TransactionMessage>& stateMachineFifo,
-                 TimeLimitFifo<Message>& tuFifo);
-
-      Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
-      Timer::Id add(const Timer& timer);
-      
-      void process();
-      void run();
+      virtual ~BaseTimerQueue()=0;
+      virtual void process()=0;
       int size() const;
       bool empty() const;
       
       // returns ms until the next timer will fire, returns 0 if timers occur in
       // the past and returs INT_MAX if there are no timers 
       unsigned int msTillNextTimer();
-
-   private:
-      friend std::ostream& operator<<(std::ostream&, const TimerQueue&);
-      Fifo<TransactionMessage>& mStateMachineFifo;
-      TimeLimitFifo<Message>& mTuFifo;
-
+      
+   protected:
+      friend std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
       std::multiset<Timer> mTimers;
 };
 
-std::ostream& operator<<(std::ostream&, const TimerQueue&);
- 
+class TimeLimitTimerQueue : public BaseTimerQueue
+{
+   public:
+      TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo);
+      void add(const Timer& timer);
+      virtual void process();
+      
+   private:
+      TimeLimitFifo<Message>& mFifo;
+};
+
+
+class TimerQueue : public BaseTimerQueue
+{
+   public:
+      TimerQueue(Fifo<TransactionMessage>& fifo);
+      Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
+      virtual void process();
+      
+   private:
+      Fifo<TransactionMessage>& mFifo;
+};
+
+std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
+
 }
 
 #endif

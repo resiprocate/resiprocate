@@ -17,7 +17,6 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Timer.hxx"
 
-#include "resiprocate/Executive.hxx"
 #include "resiprocate/Message.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/ShutdownMessage.hxx"
@@ -39,8 +38,9 @@ SipStack::SipStack(bool multiThreaded, Security* pSecurity, bool stateless) :
    mSecurity( pSecurity ),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
-   mExecutive(*this),
-   mTransactionController(multiThreaded, mTUFifo, stateless),
+   mAppTimers(mTUFifo),
+   mStatsManager(*this),
+   mTransactionController(multiThreaded, mTUFifo, mStatsManager, stateless),
    mStrictRouting(false),
    mShuttingDown(false)   
 {
@@ -266,23 +266,24 @@ void
 SipStack::post(const ApplicationMessage& message)
 {
    assert(!mShuttingDown);
-   mTransactionController.post(message);
+   Message* toPost = message.clone();
+   mTUFifo.add(toPost, TimeLimitFifo<Message>::InternalElement);
 }
 
 void
-SipStack::post(const ApplicationMessage& message,
-               unsigned int secondsLater)
+SipStack::post(const ApplicationMessage& message,  unsigned int secondsLater)
 {
    assert(!mShuttingDown);
-   mTransactionController.post(message, secondsLater*1000);
+   postMS(message, secondsLater*1000);
 }
 
 void
-SipStack::postMS(const ApplicationMessage& message,
-                 unsigned int ms)
+SipStack::postMS(const ApplicationMessage& message, unsigned int ms)
 {
    assert(!mShuttingDown);
-   mTransactionController.post(message, ms);
+   Message* toPost = message.clone();
+   Lock lock(mAppTimerMutex);
+   mAppTimers.add(Timer(ms, toPost));
 }
 
 bool
@@ -346,15 +347,20 @@ SipStack::receiveAny()
 void 
 SipStack::process(FdSet& fdset)
 {
-   RESIP_STATISTICS(mTransactionController.getStatisticsManager().process());
-   mExecutive.process(fdset);
+   RESIP_STATISTICS(mStatsManager.process());
+   mTransactionController.process(fdset);
+
+   Lock lock(mAppTimerMutex);
+   mAppTimers.process();
 }
 
 /// returns time in milliseconds when process next needs to be called 
 int 
 SipStack::getTimeTillNextProcessMS()
 {
-   return mExecutive.getTimeTillNextProcessMS();
+   Lock lock(mAppTimerMutex);
+   return resipMin(mTransactionController.getTimeTillNextProcessMS(),
+                   mAppTimers.msTillNextTimer());
 } 
 
 void
@@ -366,7 +372,7 @@ SipStack::registerForTransactionTermination()
 void 
 SipStack::buildFdSet(FdSet& fdset)
 {
-   mExecutive.buildFdSet( fdset );
+   mTransactionController.buildFdSet(fdset);
 }
 
 Security*
@@ -375,21 +381,24 @@ SipStack::getSecurity() const
     return mSecurity;
 }
 
+
 void
-SipStack::setStatisticsInterval(unsigned long seconds) const
+SipStack::setStatisticsInterval(unsigned long seconds)
 {
-   mTransactionController.setStatisticsInterval(seconds);
+   mStatsManager.setInterval(seconds);
 }
 
 std::ostream& 
 SipStack::dump(std::ostream& strm)  const
 {
+   Lock lock(mAppTimerMutex);
    strm << "SipStack: " << (this->mStrictRouting ? "strict router " : "loose router ")
         << endl
         << "domains: " << Inserter(this->mDomains)
         << endl
         << " TUFifo size=" << this->mTUFifo.size() << endl
         << " Timers size=" << this->mTransactionController.mTimers.size() << endl
+        << " AppTimers size=" << this->mAppTimers.size() << endl
         << " ServerTransactionMap size=" << this->mTransactionController.mServerTransactionMap.size() << endl
         << " ClientTransactionMap size=" << this->mTransactionController.mClientTransactionMap.size() << endl
         << " Exact Transports=" << Inserter(this->mTransactionController.mTransportSelector.mExactTransports) << endl

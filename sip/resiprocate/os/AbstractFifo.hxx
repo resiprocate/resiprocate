@@ -4,9 +4,7 @@
 static const char* const resipAbstractFifo_h_Version =
    "$Id: AbstractFifo.hxx,v 1.1 2003/09/24 18:04:09 davidb Exp $";
 
-#include <list>
-#include <errno.h>
-#include <cassert>
+#include <deque>
 
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Condition.hxx"
@@ -37,9 +35,6 @@ class AbstractFifo
       bool messageAvailable() const;
 
    protected:
-      // Add a message to the fifo.
-      bool add(void* obj);
-
       /** Returns the first message available. It will wait if no
        *  messages are available. If a signal interrupts the wait,
        *  it will retry the wait. Signals can therefore not be caught
@@ -50,8 +45,7 @@ class AbstractFifo
 
       enum {NoSize = 0UL -1};
 
-      typedef std::list<void*> MessageContainer;
-      MessageContainer mFifo;
+      std::deque<void*> mFifo;
       unsigned long mSize;
       unsigned long mMaxSize;
       
