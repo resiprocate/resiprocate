@@ -41,9 +41,9 @@ Rlmi* findRlmi(const MultipartMixedContents* mp)
          for (MultipartMixedContents::Parts::const_iterator i = mp->parts().begin();
               i != mp->parts().end(); ++i)
          {
-	    if ((*i)->exists(h_Id))
+	    if ((*i)->exists(h_ContentID))
 	    {
-	      if ((*i)->header(h_Id).value()==start)
+	      if ((*i)->header(h_ContentID).value()==start)
 	      {
                 Rlmi *rlmi;
 	        if ( (rlmi=dynamic_cast<Rlmi*>(*i))) return rlmi;
@@ -69,6 +69,7 @@ void interpretRlmi(Rlmi *rlmi)
 
   cerr << "Attempting to use this XMLCursor " << endl;
 
+  cerr << "getTag() returns" << xmlc.getTag() << endl;
   assert(xmlc.getTag()=="list");
   assert(xmlc.getAttributes().find("uri")!=xmlc.getAttributes().end());
   cout << "Found a list for " <<  (*(xmlc.getAttributes().find("uri"))).second << endl;
