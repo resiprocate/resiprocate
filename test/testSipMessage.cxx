@@ -35,21 +35,28 @@ main(int argc, char** argv)
         "To:  <sip:RjS@127.0.0.1:5060>" CRLF
         CRLF
         );
+     TestSupport::prettyPrint(txt,strlen(txt));
+
      auto_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
      assert(response->exists(h_AllowEvents));
      assert(response->header(h_AllowEvents).size() == 0);
      assert(response->header(h_AllowEvents).front().value().empty());
      
      char * txt2 =(              
+
+     
+
         "SIP/2.0 489 Bad Event" CRLF
         "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1-c87542-" CRLF
         "CSeq: 1 SUBSCRIBE" CRLF
         "Call-ID:  f354ce714fb8a95c" CRLF
         "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
         "To:  <sip:RjS@127.0.0.1:5060>" CRLF
-        "Allow-Events: " CRLF
+        "Allow-Events:" CRLF
         CRLF
         );
+     TestSupport::prettyPrint(txt2,strlen(txt2));
+
      SipMessage * r2 = TestSupport::makeMessage(txt2,true);
      assert(r2->exists(h_AllowEvents) );
      assert(r2->header(h_AllowEvents).size() == 0);
