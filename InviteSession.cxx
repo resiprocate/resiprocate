@@ -12,16 +12,9 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Random.hxx"
+#include "resiprocate/os/compat.hxx"
 
 //#include "resiprocate/dum/ServerInviteSession.hxx"
-
-
-#if defined(WIN32) && defined(_DEBUG) &&defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#define new   new( _NORMAL_BLOCK, __FILE__, __LINE__)
-#endif // defined(WIN32) && defined(_DEBUG)
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32)
@@ -34,7 +27,7 @@
 using namespace resip;
 using namespace std;
 
-InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState)
+InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
    : DialogUsage(dum, dialog),
      mState(Undefined),
      mNitState(NitComplete),
@@ -342,6 +335,7 @@ InviteSession::dispatch(const SipMessage& msg)
          dispatchTerminated(msg);
          break;
       case Undefined:
+      default:
          assert(0);
          break;
    }
@@ -831,6 +825,34 @@ InviteSession::toData(State state)
          return "InviteSession::WaitingToTerminate";
       case Terminated:
          return "InviteSession::Terminated";
+
+      case UAS_Start:
+         return "UAS_Start";
+      case UAS_OfferReliable:
+         return "UAS_OfferReliable";
+      case UAS_NoOfferReliable:
+         return "UAS_NoOfferReliable";
+      case UAS_FirstSentOfferReliable:
+         return "UAS_FirstSentOfferReliable";
+      case UAS_FirstEarlyReliable:
+         return "UAS_FirstEarlyReliable";
+      case UAS_Accepted:
+         return "UAS_Accepted";
+      case UAS_EarlyReliable:
+         return "UAS_EarlyReliable";
+      case UAS_SentUpdate:
+         return "UAS_SentUpdate";
+      case UAS_SentUpdateAccepted:
+         return "UAS_SentUpdateAccepted";
+      case UAS_ReceivedUpdate:
+         return "UAS_ReceivedUpdate";
+      case UAS_ReceivedUpdateWaitingAnswer:
+         return "UAS_ReceivedUpdateWaitingAnswer";
+      case UAS_WaitingToTerminate:
+         return "UAS_WaitingToTerminate";
+      case UAS_WaitingToHangup:
+         return "UAS_WaitingToHangup";
+
       default:
          assert(0);
          return "Undefined";
