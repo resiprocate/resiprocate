@@ -9,7 +9,10 @@
 #include <sys/types.h>
 #include <iostream>
 #include <memory>
+
+#if defined (HAVE_POPT_H) 
 #include <popt.h>
+#endif
 
 #include "resiprocate/os/Log.hxx"
 #include "StatelessProxy.hxx"
@@ -25,6 +28,7 @@ main(int argc, char* argv[])
    int targetPort=5060;
    char* logType=0;
    char* logLevel=0;
+#if defined (HAVE_POPT_H) 
    struct poptOption table[] = {
       {"host", 'h', POPT_ARG_STRING,  &proxyHost, 0, "this hostname", 0},
       {"port", 'p', POPT_ARG_INT,  &proxyPort, 0, "port to listen on", 0},
@@ -37,13 +41,17 @@ main(int argc, char* argv[])
    };
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
    poptGetNextOpt(context);
+#endif
+
    Log::initialize(Log::toType(logType), Log::toLevel(logLevel), argv[0]);
 
    resip::StatelessProxy proxy(proxyHost, proxyPort, targetHost, targetPort);
    proxy.run();
    proxy.join();
    
+#if defined (HAVE_POPT_H) 
    poptFreeContext(context);
+#endif
 
    return 0;
 }
