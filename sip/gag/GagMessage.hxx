@@ -63,6 +63,10 @@ class GagImMessage : public GagMessage
 
     virtual ostream &serialize(ostream &os) const;
     virtual void parse(istream &is);
+
+    Uri *getFromPtr() {return &from;}
+    Uri *getToPtr() {return &to;}
+    Data *getImPtr() {return &im;}
   private:
     Uri from;
     Uri to;
@@ -80,6 +84,10 @@ class GagPresenceMessage : public GagMessage
 
     virtual ostream &serialize(ostream &os) const;
     virtual void parse(istream &is);
+
+    Uri *getAorPtr() {return &aor;}
+    bool getAvailable() {return available;}
+    Data *getStatusPtr() {return &status;}
   private:
     Uri aor;
     bool available;
