@@ -695,7 +695,7 @@ simple_tooltip_text(GaimBuddy *b)
 
 static GaimPluginProtocolInfo prpl_info =
 {
-        2,			/* API version number */
+        4,			/* API version number */
 	0,			/* GaimProtocolOptions */
 	NULL,			/* user_splits */
 	NULL,			/* protocol_options */
@@ -704,7 +704,6 @@ static GaimPluginProtocolInfo prpl_info =
 	simple_status_text,	/* status_text */
 	simple_tooltip_text,	/* tooltip_text */
 	NULL,			/* away_states */
-	NULL,			/* actions */
 	NULL,			/* buddy_menu */
 	NULL,			/* chat_info */
 	sippy_login,		/* login */
@@ -714,9 +713,6 @@ static GaimPluginProtocolInfo prpl_info =
 	NULL,			/* send_typing */
 	NULL,			/* get_info */
 	sippy_set_presence, 	/* set_away */
-	NULL,			/* set_dir */
-	NULL,			/* get_dir */
-	NULL,			/* dir_search */
 	NULL,			/* set_idle */
 	NULL, 			/* change_passwd */ 
 	sippy_add_buddy, 	/* add_buddy */
@@ -751,13 +747,13 @@ static GaimPluginProtocolInfo prpl_info =
         NULL,			/* set_chat_topic */
         NULL,			/* find_blist_chat */
         NULL,			/* roomlist_get_list */
-        NULL,			/* roomlist_expand_category */
-        NULL			/* chat_menu */
+        NULL,                   /* roomlist_cancel */
+        NULL			/* roomlist_expand_category */
 };
 
 static GaimPluginInfo info =
 {
-	3,                                                /**< api_version    */
+	4,                                                /**< api_version    */
 	GAIM_PLUGIN_PROTOCOL,                             /**< type           */
 	NULL,                                             /**< ui_requirement */
 	0,                                                /**< flags          */
@@ -765,7 +761,7 @@ static GaimPluginInfo info =
 	GAIM_PRIORITY_DEFAULT,                            /**< priority       */
 
 	"prpl-simple",                                    /**< id             */
-	"SIP/SIMPLE",                                    /**< name           */
+	"SIP/SIMPLE",                                     /**< name           */
 	VERSION,                                          /**< version        */
 	                                                  /**  summary        */
 	N_("SIP/SIMPLE Protocol Plugin"),
@@ -780,7 +776,8 @@ static GaimPluginInfo info =
 
 	NULL,                                             /**< ui_info        */
 	&prpl_info,                                       /**< extra_info     */
-        NULL						  /**< prefs_info     */
+        NULL,						  /**< prefs_info     */
+        NULL                                              /**< actions */
 };
 
 static void
