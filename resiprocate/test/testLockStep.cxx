@@ -60,7 +60,7 @@ class Client : public ThreadIf
          {
             FdSet fdset;
             mStack.buildFdSet(fdset);
-            int err = fdset.select(5000);
+            int err = fdset.selectMiliSeconds(5000);
             assert (err != -1);
             mStack.process(fdset);
             
@@ -129,7 +129,7 @@ class Server : public ThreadIf
          {
             FdSet fdset;
             mStack.buildFdSet(fdset);
-            int err = fdset.select(5000);
+            int err = fdset.selectMiliSeconds(5000);
             assert (err != -1);
             mStack.process(fdset);
             
