@@ -146,11 +146,32 @@ resip::Data
 DigestAuthenticator::getRealm(RequestContext &rc)
 {
   Data realm;
+
+  Proxy &proxy = rc.getProxy();
   Message *message = rc.getCurrentEvent();
   SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
   assert(sipMessage);
 
-  return realm;
+  // (1) Check Preferred Identity
+  if (sipMessage->exists(h_PPreferredIdentities))
+  {
+    // !abr! Add this when we get a chance
+  }
+
+  // (2) Check From domain
+  if (proxy.isMyDomain(sipMessage->header(h_From).uri()))
+  {
+    return sipMessage->header(h_From).uri().host();
+  }
+
+  // (3) Check Top Route Header
+  if (sipMessage->exists(h_Routes))
+  {
+    // !abr! Add this when we get a chance
+  }
+
+  // (4) Punt: Use Request URI
+  return sipMessage->header(h_RequestLine).uri().host();
 }
 
 
