@@ -2,8 +2,11 @@
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/SipStack.hxx>
+#include <util/Logger.hxx>
 
 using namespace Vocal2;
+
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 
 TransportSelector::TransportSelector(SipStack& stack) :
@@ -15,7 +18,14 @@ TransportSelector::TransportSelector(SipStack& stack) :
 void 
 TransportSelector::process(fd_set* fdSet)
 {
-  mUdp->process(fdSet);
+   try
+   {
+      mUdp->process(fdSet);
+   }
+   catch (VException& e)
+   {
+      InfoLog (<< "Uncaught exception: " << e);
+   }
 }
 
 void 
