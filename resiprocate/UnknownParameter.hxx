@@ -1,30 +1,41 @@
 #if !defined(RESIP_UNKNOWNPARAMETER_HXX)
 #define RESIP_UNKNOWNPARAMETER_HXX 
 
-#include "resiprocate/DataParameter.hxx"
+#include <iostream>
+#include "resiprocate/Parameter.hxx"
 
 namespace resip
 {
 
 class ParseBuffer;
 
-class UnknownParameter : public DataParameter
+class UnknownParameter : public Parameter
 {
    public:
       UnknownParameter(const char* startName, 
-		       unsigned int nameSize,
+                       unsigned int nameSize,
                        ParseBuffer& pb, 
-		       const char* terminators=" \t\r\n;?>");
+                       const char* terminators);
       
-      // for making a new unknown parameter 
-      // msg->header(foo)["mynewparam"] = "bar";
-      explicit UnknownParameter(const Data& name);
+      // empty value indicates exists style (e.g. ;unknown;...)
+      UnknownParameter(ParameterTypes::Type type, const Data& value);
 
+      // for making a new unknown parameter 
+      explicit UnknownParameter(const Data& name);
+      std::ostream& UnknownParameter::encode(std::ostream& stream) const;
+
+      Data& value() {return mValue;}
+      bool hasValue() {return !mValue.empty() || mIsQuoted;}
+      bool isQuoted() const { return mIsQuoted; }
+      void setQuoted(bool b) { mIsQuoted = b; }; // this parameter will be enclosed in quotes e.g. "foo"
+         
       virtual const Data& getName() const;
       virtual Parameter* clone() const;
 
    private:
       Data mName;
+      Data mValue;
+      bool mIsQuoted;
 };
 
 }
