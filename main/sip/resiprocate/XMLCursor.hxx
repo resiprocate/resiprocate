@@ -121,7 +121,7 @@ public:
             // return true if <foo/>
             bool extractTag();
             void skipToEndTag();
-            static void skipComments(ParseBuffer& pb);
+            static const char* skipComments(ParseBuffer& pb);
 
             ParseBuffer mPb;
             Node* mParent;

@@ -62,37 +62,30 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
    skipProlog(lPb);
    const char* start = lPb.position();
 
-   bool needsPreparse;
    lPb.skipToChars(COMMENT_START);
-   needsPreparse = !lPb.eof();
-   lPb.reset(lPb.start());
-   // !dlb! CR are supposed to be changed to LF
-   lPb.skipToChars(Symbols::CRLF);
-   needsPreparse |= !lPb.eof();
-
-   if (needsPreparse)
+   if (!lPb.eof())
    {
-      DebugLog(<< "removing comments and cannonicalzing endlines");
+      DebugLog(<< "removing comments");
       lPb.reset(start);
       mData.reserve(lPb.end() - lPb.start());
 
       const char* anchor = lPb.position();
-      Data temp;
-      while (!lPb.eof())
       {
-         ParseBuffer alt(lPb);
-         alt.skipToChars(Symbols::CRLF);
-         lPb.skipToChars(COMMENT_START);
-         if (!lPb.eof() && (lPb.position() < alt.position()))
+         DataStream str(mData);
+         Data temp;
+         while (true)
          {
-            lPb.data(temp, anchor);
-            mData += temp;
-            Node::skipComments(lPb);
-         }
-         else
-         {
-            lPb.reset(alt.position()+2);
-            mData += Symbols::LF[0];
+            lPb.skipToChars(COMMENT_START);
+            if (!lPb.eof())
+            {
+               lPb.data(temp, anchor);
+               str << temp;
+               anchor = Node::skipComments(lPb);
+            }
+            else
+            {
+               break;
+            }
          }
       }
       mRoot = new Node(ParseBuffer(mData.data(), mData.size()));
@@ -462,10 +455,9 @@ XMLCursor::Node::addChild(Node* child)
 void
 XMLCursor::Node::skipToEndTag()
 {
-
-   DebugLog(<< "XMLCursor::Node::skipToEndTag(" << Data(mPb.position(), mPb.end() - mPb.position()) << ")");
-
    extractTag();
+   DebugLog(<< "XMLCursor::Node::skipToEndTag(" <<  mTag << ")");
+   //DebugLog(<< "XMLCursor::Node::skipToEndTag(" << Data(mPb.position(), mPb.end() - mPb.position()) << ")");
 
    //<foo />
    mPb.skipToChar(Symbols::RA_QUOTE[0]);
@@ -543,14 +535,15 @@ XMLCursor::Node::skipToEndTag()
       Node* child = new Node(mPb);
       addChild(child);
       child->skipToEndTag();
-      mPb.reset(child->mPb.end());
+      //mPb.reset(child->mPb.end());
+      mPb.reset(child->mPb.position());
       XMLCursor::decodeName(child->mTag);
       DebugLog(<< mTag << "(" << child->mTag << ")");
-   }
+    }
 }
 
 //<!-- declarations for <head> & <body> -->
-void
+const char*
 XMLCursor::Node::skipComments(ParseBuffer& pb)
 {
    while (*pb.position() == Symbols::LA_QUOTE[0] &&
@@ -561,8 +554,9 @@ XMLCursor::Node::skipComments(ParseBuffer& pb)
       pb.skipToChars(COMMENT_END);
       pb.assertNotEof();
    }
-}
 
+   return pb.position();
+}
 
 std::ostream&
 resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
