@@ -26,6 +26,7 @@ endif
 
 TESTPROGRAMS += test503Generator.cxx \
 		limpc.cxx \
+		testConnectionBase.cxx \
 		SipTortureTests.cxx \
 		testRSP-2.cxx \
 		testPidf.cxx \
@@ -82,6 +83,7 @@ TESTPROGRAMS += test503Generator.cxx \
 	        testRandomHex.cxx \
 	        testSipMessage.cxx \
 	        testSipStack1.cxx \
+	        test503Generator.cxx \
 #		testTransportSelector.cxx
 
 

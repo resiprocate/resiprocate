@@ -59,6 +59,10 @@ SipStack::SipStack(Security* pSecurity,
    Timer::getTimeMs(); // initalize time offsets
    Random::initialize();
    initNetwork();
+   if (pSecurity)
+   {
+      pSecurity->preload();
+   }
 
    assert(!mShuttingDown);
 }
@@ -291,7 +295,9 @@ SipStack::sendTo(const SipMessage& msg, const Tuple& destination)
    assert(!mShuttingDown);
    assert(destination.transport);
    
-   SipMessage* toSend = new SipMessage(msg);
+   //SipMessage* toSend = new SipMessage(msg);
+   SipMessage* toSend = dynamic_cast<SipMessage*>(msg.clone());
+
    toSend->setDestination(destination);
    toSend->setFromTU();
 

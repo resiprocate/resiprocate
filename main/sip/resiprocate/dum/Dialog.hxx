@@ -11,6 +11,7 @@
 #include "resiprocate/MethodTypes.hxx"
 #include "resiprocate/NameAddr.hxx"
 #include "resiprocate/CallId.hxx"
+#include "resiprocate/dum/NetworkAssociation.hxx"
 
 namespace resip
 {
@@ -111,6 +112,8 @@ class Dialog
       std::list<ClientSubscription*> mClientSubscriptions;
       std::list<ServerSubscription*> mServerSubscriptions;
       InviteSession* mInviteSession;
+
+      NetworkAssociation mNetworkAssociation;
 
       //invariants
       typedef enum // need to add
