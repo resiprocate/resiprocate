@@ -12,12 +12,12 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 
-TransactionController::TransactionController(Fifo<Message>& tufifo, bool stateless) : 
+TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, bool stateless) : 
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
    mDiscardStrayResponses(false),
    mTUFifo(tufifo),
-   mTransportSelector(mStateMacFifo),
+   mTransportSelector(multi, mStateMacFifo),
    mStatelessHandler(*this),
    mTimers(mStateMacFifo),
    StatelessIdCounter(1)

@@ -130,6 +130,7 @@ UdpTransport::process(FdSet& fdset)
    if (mTxFifo.messageAvailable())
    {
       std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
+      //DebugLog (<< "Sent: " <<  sendData->data);
       //DebugLog (<< "Sending message on udp.");
 
       assert( &(*sendData) );
