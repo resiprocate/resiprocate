@@ -52,7 +52,7 @@
  */
 
 
-static const char* const Vocal2Fifo_h_Version = "$Id: Fifo.hxx,v 1.9 2002/11/11 23:09:55 jason Exp $";
+static const char* const Vocal2Fifo_h_Version = "$Id: Fifo.hxx,v 1.10 2003/02/01 01:14:43 jason Exp $";
 
 #include "sip2/util/Mutex.hxx"
 #include "sip2/util/Condition.hxx"
@@ -116,6 +116,13 @@ Fifo<Msg>::Fifo() : mSize(0)
 template <class Msg>
 Fifo<Msg>::~Fifo()
 {
+   Lock lock(mMutex); (void)lock;
+   while ( ! mFifo.empty() )
+   {
+      delete mFifo.front();
+      mFifo.pop_front();
+   }
+   mSize = -1;
 }
 
 template <class Msg>
