@@ -183,7 +183,7 @@ UdpTransport::process(FdSet& fdset)
    //DebugLog ( << "UDP Rcv : " << len << " b" );
    //DebugLog ( << Data(buffer, len).escaped().c_str());
 
-   SipMessage* message = new SipMessage(SipMessage::FromWire);
+   SipMessage* message = new SipMessage(this);
 
    // set the received from information into the received= parameter in the
    // via

@@ -80,10 +80,37 @@ SipStack::addTransport( Transport::Type protocol,
                         const Data& nic) 
 {
    assert(!mShuttingDown);
+   assert(protocol != Transport::TLS);
+   
    mTransportSelector.addTransport(protocol, port, hostName, nic);
    if (!hostName.empty()) 
    {
       addAlias(hostName, port);
+   }
+}
+
+void 
+SipStack::addTlsTransport( const Data& domainname,
+                           const Data& keyDir,
+                           const Data& privateKeyPassPhrase,
+                           int port, 
+                           const Data& hostName,
+                           const Data& nic) 
+{
+   assert(!mShuttingDown);
+   
+   try
+   {
+      mTransportSelector.addTlsTransport(domainname, keyDir, privateKeyPassPhrase, port, hostName, nic);
+
+      if (!hostName.empty()) 
+      {
+         addAlias(hostName, port);
+      }
+   }
+   catch(BaseException& e)
+   {
+      InfoLog (<< "Caught: " << e);
    }
 }
 
