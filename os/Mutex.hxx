@@ -1,6 +1,44 @@
 #if !defined(VOCAL_MUTEX_HXX)
 #define VOCAL_MUTEX_HXX
 
+#ifdef WIN32
+#include <windows.h>
+#include <winbase.h>
+#else
+#include <pthread.h>
+#endif
+
+#include <util/Lockable.hxx>
+
+
+namespace Vocal2
+{
+class Condition;
+	
+class Mutex : public Lockable
+{
+      friend class Condition;
+	
+   public:
+      Mutex();
+      virtual ~Mutex();
+      virtual void    lock();
+      virtual void    unlock();
+
+   private:
+#ifdef WIN32   
+      HANDLE mId;
+#else
+      mutable  pthread_mutex_t mId;
+      pthread_mutex_t* getId() const;
+#endif
+};
+
+} // namespace Vocal2
+
+
+#endif // !defined(VOCAL_MUTEX_HXX)
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -50,41 +88,3 @@
  * <http://www.vovida.org/>.
  *
  */
-
-#ifdef WIN32
-#include <windows.h>
-#include <winbase.h>
-#else
-#include <pthread.h>
-#endif
-
-#include <util/Lockable.hxx>
-
-
-namespace Vocal2
-{
-class Condition;
-	
-class Mutex : public Lockable
-{
-      friend class Condition;
-	
-   public:
-      Mutex();
-      virtual ~Mutex();
-      virtual void    lock();
-      virtual void    unlock();
-
-   private:
-#ifdef WIN32   
-      HANDLE mId;
-#else
-      mutable  pthread_mutex_t mId;
-      pthread_mutex_t* getId() const;
-#endif
-};
-
-} // namespace Vocal2
-
-
-#endif // !defined(VOCAL_MUTEX_HXX)

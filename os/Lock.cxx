@@ -1,3 +1,46 @@
+
+
+static const char* const Lock_cxx_Version =
+    "$Id: Lock.cxx,v 1.2 2002/10/15 15:46:24 alan Exp $";
+
+#include <util/Lock.hxx>
+
+using Vocal2::Lock;
+using Vocal2::LockType;
+using Vocal2::Lockable;
+
+Lock::Lock(Lockable & lockable, LockType lockType)
+   : myLockable(lockable)
+{
+   switch ( lockType )
+    {
+	case VOCAL_READLOCK:
+	{
+	    myLockable.readlock();
+	    break;
+	}
+	    
+	case VOCAL_WRITELOCK:
+	{
+	    myLockable.writelock();
+	    break;
+	}
+
+    	default:
+	{
+    	    myLockable.lock();
+	    break;
+	}
+    }
+}
+
+
+Lock::~Lock()
+{
+    myLockable.unlock();
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -47,46 +90,3 @@
  * <http://www.vovida.org/>.
  *
  */
-
-
-static const char* const Lock_cxx_Version =
-    "$Id: Lock.cxx,v 1.1 2002/09/25 22:24:41 jason Exp $";
-
-#include <util/Lock.hxx>
-
-using Vocal2::Lock;
-using Vocal2::LockType;
-using Vocal2::Lockable;
-
-Lock::Lock(Lockable & lockable, LockType lockType)
-   : myLockable(lockable)
-{
-   switch ( lockType )
-    {
-	case VOCAL_READLOCK:
-	{
-	    myLockable.readlock();
-	    break;
-	}
-	    
-	case VOCAL_WRITELOCK:
-	{
-	    myLockable.writelock();
-	    break;
-	}
-
-    	default:
-	{
-    	    myLockable.lock();
-	    break;
-	}
-    }
-}
-
-
-Lock::~Lock()
-{
-    myLockable.unlock();
-}
-
-
