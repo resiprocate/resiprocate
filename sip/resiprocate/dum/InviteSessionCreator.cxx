@@ -16,3 +16,9 @@ InviteSessionCreator::end()
 {
    assert(0);
 }
+
+void
+InviteSessionCreator::dispatch(const SipMessage& msg)
+{
+   
+}
