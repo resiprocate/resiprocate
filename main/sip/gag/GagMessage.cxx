@@ -145,6 +145,29 @@ GagImMessage::serialize(ostream &os) const
   GagMessage::serialize(os, to);
   GagMessage::serialize(os, from);
   GagMessage::serialize(os, im);
+  os.flush();
+
+  return os;
+}
+
+void
+GagPresenceMessage::parse(istream &is)
+{
+  valid = false;
+  if (!GagMessage::parse(is, aor)) return;
+  if (!GagMessage::parse(is, available)) return;
+  if (!GagMessage::parse(is, status)) return;
+  valid = true;
+}
+
+ostream &
+GagPresenceMessage::serialize(ostream &os) const
+{
+  GagMessage::serialize(os);
+  GagMessage::serialize(os, aor);
+  GagMessage::serialize(os, available);
+  GagMessage::serialize(os, status);
+  os.flush();
 
   return os;
 }
@@ -168,27 +191,6 @@ GagHelloMessage::serialize(ostream &os) const
 }
 
 void
-GagPresenceMessage::parse(istream &is)
-{
-  valid = false;
-  if (!GagMessage::parse(is, aor)) return;
-  if (!GagMessage::parse(is, available)) return;
-  if (!GagMessage::parse(is, status)) return;
-  valid = true;
-}
-
-ostream &
-GagPresenceMessage::serialize(ostream &os) const
-{
-  GagMessage::serialize(os);
-  GagMessage::serialize(os, aor);
-  GagMessage::serialize(os, available);
-  GagMessage::serialize(os, status);
-
-  return os;
-}
-
-void
 GagLoginMessage::parse(istream &is)
 {
   valid = false;
@@ -205,6 +207,7 @@ GagLoginMessage::serialize(ostream &os) const
   GagMessage::serialize(os, aor);
   GagMessage::serialize(os, userid);
   GagMessage::serialize(os, password);
+  os.flush();
 
   return os;
 }
@@ -222,6 +225,7 @@ GagLogoutMessage::serialize(ostream &os) const
 {
   GagMessage::serialize(os);
   GagMessage::serialize(os, aor);
+  os.flush();
   return os;
 }
 
@@ -240,6 +244,7 @@ GagAddBuddyMessage::serialize(ostream &os) const
   GagMessage::serialize(os);
   GagMessage::serialize(os, us);
   GagMessage::serialize(os, them);
+  os.flush();
   return os;
 }
 
@@ -259,6 +264,7 @@ GagRemoveBuddyMessage::serialize(ostream &os) const
   GagMessage::serialize(os);
   GagMessage::serialize(os, us);
   GagMessage::serialize(os, them);
+  os.flush();
   return os;
 }
 
@@ -276,5 +282,6 @@ GagErrorMessage::serialize(ostream &os) const
 {
   GagMessage::serialize(os);
   GagMessage::serialize(os, message);
+  os.flush();
   return os;
 }
