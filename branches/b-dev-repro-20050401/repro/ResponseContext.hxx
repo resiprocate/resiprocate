@@ -43,17 +43,23 @@ class ResponseContext
       };
 
 
+   private:
+      // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
 
-      /// Called by RequestContext after every event other than a response
-      void processEvent();
+      // call this after the monkey chain runs on an event
       void processCandidates();
-      void processPendingTargets();
-      
-   private:
-      void sendRequest(const resip::SipMessage& request);
+
+      // call this from RequestContext when a CANCEL comes in 
       void processCancel(const resip::SipMessage& request);
+
+      // call this from RequestContext after the lemur chain for any response 
       void processResponse(resip::SipMessage& response);
+
+   private:
+      // These methods are really private
+      void processPendingTargets();
+      void sendRequest(const resip::SipMessage& request);
       void cancelClientTransaction(const Branch& branch);
       void cancelProceedingClientTransactions();
       void removeClientTransaction(const resip::SipMessage& response);
