@@ -1,4 +1,3 @@
-
 #include <cassert>
 
 #ifdef WIN32
@@ -32,22 +31,25 @@ using namespace Vocal2;
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
 bool Random::mIsInitialized = false;
-Mutex Random::mMutex;
+Random::Init Random::initer;
 
 void
 Random::initialize()
 {  
-   Lock lock(mMutex);
-   if ( !mIsInitialized )
+   static Mutex mutex;
+   Lock lock(mutex);
+   if (!mIsInitialized)
    {
+      Timer::setupTimeOffsets();
+      
       //throwing away first 32 bits
       unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
 
 #ifdef WIN32
-	Socket fd = -1;
-	// !cj! need to find a better way - use pentium random commands?
+      Socket fd = -1;
+      // !cj! need to find a better way - use pentium random commands?
 #else
-	  int fd = open("/dev/random",O_RDONLY);
+      int fd = open("/dev/random",O_RDONLY);
       if ( fd != -1 )
       {
          int s = read( fd,&seed,sizeof(seed) );
@@ -59,7 +61,7 @@ Random::initialize()
       }
       else
       {
-            ErrLog( << "Could not open /dev/random" );
+         ErrLog( << "Could not open /dev/random" );
       }
 #endif
 
@@ -82,18 +84,15 @@ Random::initialize()
             ErrLog( << "System is short of randomness" );
          }
          
-         DebugLog( << "Initializing OpenSSL with " << s*8 << " bits of randomness"  );
          RAND_add(buf,sizeof(buf),double(s*8));
       }
 #endif
 
-	  if (fd != -1 )
-	  {
-		close(fd);
-	  }
+      if (fd != -1 )
+      {
+         close(fd);
+      }
 
-      DebugLog( << "Initializing random with seed=" << seed );
-      
 #ifdef WIN32
       srand(seed);
 #else
@@ -103,7 +102,6 @@ Random::initialize()
       mIsInitialized = true;
    }
 }
-
 
 int
 Random::getRandom()
@@ -121,7 +119,6 @@ Random::getRandom()
    return random(); 
 #endif
 }
-
 
 int
 Random::getCryptoRandom()
@@ -147,7 +144,6 @@ Random::getCryptoRandom()
 #endif
 }
 
-
 Data 
 Random::getRandom(unsigned int len)
 {
@@ -161,14 +157,14 @@ Random::getRandom(unsigned int len)
    
    while ( count < len )
    {
-			int data = Random::getRandom();
+      int data = Random::getRandom();
 
-			assert(sizeof(int) == 4 );
-            char* d = reinterpret_cast<char*>( &data );
+      assert(sizeof(int) == 4 );
+      char* d = reinterpret_cast<char*>( &data );
 		
-			memcpy(p,d,sizeof(int));
-			p += sizeof(int);
-			count += sizeof(int);
+      memcpy(p,d,sizeof(int));
+      p += sizeof(int);
+      count += sizeof(int);
    }
 
    Data ret(buf,len);
@@ -176,8 +172,6 @@ Random::getRandom(unsigned int len)
    assert( ret.size() == len );
    return ret;
 }
-
-
 
 Data 
 Random::getCryptoRandom(unsigned int len)
@@ -193,13 +187,13 @@ Random::getCryptoRandom(unsigned int len)
    while ( count < len )
    {
      
-			int data = Random::getCryptoRandom();
-			assert(sizeof(int) == 4 );
-         char* d = reinterpret_cast<char*>( &data );
+      int data = Random::getCryptoRandom();
+      assert(sizeof(int) == 4 );
+      char* d = reinterpret_cast<char*>( &data );
 		
-			memcpy(p,d,sizeof(int));
-			p += sizeof(int);
-			count += sizeof(int);
+      memcpy(p,d,sizeof(int));
+      p += sizeof(int);
+      count += sizeof(int);
    }
 
    Data ret(buf,len);
@@ -208,12 +202,9 @@ Random::getCryptoRandom(unsigned int len)
    return ret;
 }
 
-
 Data 
 Random::getRandomHex(unsigned int len)
 {
-   if (!mIsInitialized) initialize(); // !cj! - should remove 
-   
    assert( mIsInitialized == true );
    assert( len%2 == 0 );
 	
@@ -221,21 +212,15 @@ Random::getRandomHex(unsigned int len)
    return rand.hex();
 }
 
-
 Data 
 Random::getCryptoRandomHex(unsigned int len)
 {
-   if (!mIsInitialized) initialize(); // !cj! - should remove 
-
    assert( mIsInitialized == true );
    assert( len%2 == 0 );
 	
    Data rand = Random::getCryptoRandom(len/2);
    return rand.hex();
 }
-
-
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
