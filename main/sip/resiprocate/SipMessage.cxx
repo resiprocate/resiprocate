@@ -1,8 +1,8 @@
-#include "sipstack/SipMessage.hxx"
-#include "sipstack/HeaderFieldValueList.hxx"
-#include "util/Logger.hxx"
-#include "util/compat.hxx"
-#include "util/vmd5.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/HeaderFieldValueList.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/util/compat.hxx"
+#include "sip2/util/vmd5.hxx"
 
 using namespace Vocal2;
 using namespace std;

@@ -2,14 +2,14 @@
 #include <iterator>
 #include <memory>
 
-#include "util/Data.hxx"
-#include "util/DataStream.hxx"
-#include "util/Socket.hxx"
-#include "util/Logger.hxx"
-#include "sipstack/SipMessage.hxx"
-#include "sipstack/Helper.hxx"
+#include "sip2/util/Data.hxx"
+#include "sip2/util/DataStream.hxx"
+#include "sip2/util/Socket.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/Helper.hxx"
 
-#include "sipstack/TestTransport.hxx"
+#include "sip2/sipstack/TestTransport.hxx"
 
 
 using namespace Vocal2;

@@ -6,13 +6,13 @@
 #include <arpa/inet.h>
 #endif
 
-#include "util/Logger.hxx"
-#include "util/Socket.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/util/Socket.hxx"
 
-#include "sipstack/Transport.hxx"
-#include "sipstack/SipMessage.hxx"
-#include "sipstack/TransportMessage.hxx"
-#include "sipstack/DnsMessage.hxx"
+#include "sip2/sipstack/Transport.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/TransportMessage.hxx"
+#include "sip2/sipstack/DnsMessage.hxx"
 
 using namespace Vocal2;
 using namespace std;

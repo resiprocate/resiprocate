@@ -2,7 +2,7 @@
 #define DataStream_hxx
 
 #include <iostream>
-#include "util/Data.hxx"
+#include "sip2/util/Data.hxx"
 
 namespace Vocal2
 {

@@ -1,17 +1,17 @@
 
-#include "util/Socket.hxx"
+#include "sip2/util/Socket.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/sipstack/TransactionState.hxx"
+#include "sip2/sipstack/TransportSelector.hxx"      
+#include "sip2/sipstack/SipStack.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/TimerMessage.hxx"
+#include "sip2/sipstack/MethodTypes.hxx"
+#include "sip2/sipstack/Helper.hxx"
+#include "sip2/sipstack/TransportMessage.hxx"
+#include "sip2/sipstack/ReliabilityMessage.hxx"
+#include "sip2/sipstack/DnsMessage.hxx"
 
-#include "sipstack/TransactionState.hxx"
-#include "sipstack/TransportSelector.hxx"      
-#include "sipstack/SipStack.hxx"
-#include "sipstack/SipMessage.hxx"
-#include "sipstack/TimerMessage.hxx"
-#include "sipstack/MethodTypes.hxx"
-#include "sipstack/Helper.hxx"
-#include "sipstack/TransportMessage.hxx"
-#include "sipstack/ReliabilityMessage.hxx"
-#include "sipstack/DnsMessage.hxx"
-#include "util/Logger.hxx"
 
 using namespace Vocal2;
 

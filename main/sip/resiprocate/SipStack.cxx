@@ -1,14 +1,14 @@
 
-#include "util/Socket.hxx"
+#include "sip2/util/Socket.hxx"
 
 
-#include "sipstack/SipStack.hxx"
-#include "sipstack/Executive.hxx"
-#include "sipstack/SipMessage.hxx"
-#include "sipstack/Message.hxx"
-#include "util/Fifo.hxx"
-#include "util/Data.hxx"
-#include "util/Logger.hxx"
+#include "sip2/sipstack/SipStack.hxx"
+#include "sip2/sipstack/Executive.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/Message.hxx"
+#include "sip2/util/Fifo.hxx"
+#include "sip2/util/Data.hxx"
+#include "sip2/util/Logger.hxx"
 
 
 using namespace Vocal2;

@@ -1,9 +1,9 @@
 #if !defined(TESTTRANSPORT_HXX)
 #define TESTTRANSPORT_HXX
 
-#include "sipstack/Transport.hxx"
-#include "sipstack/Message.hxx"
-#include "sipstack/Circular.hxx"
+#include "sip2/sipstack/Transport.hxx"
+#include "sip2/sipstack/Message.hxx"
+#include "sip2/sipstack/Circular.hxx"
 
 namespace Vocal2
 {

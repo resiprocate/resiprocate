@@ -1,5 +1,5 @@
 
-#include "util/Socket.hxx"
+#include "sip2/util/Socket.hxx"
 
 #if defined( WIN32 )
 #  include <windows.h>
@@ -11,8 +11,8 @@
 
 #include <cassert>
 #include <iostream>
-#include "util/Timer.hxx"
-#include "util/Logger.hxx"
+#include "sip2/util/Timer.hxx"
+#include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
 
@@ -230,7 +230,7 @@ Timer::setupTimeOffsets()
                            700,733,750,800,850,866,900,933,950,1000,
                            1100,1200,1266,1400,1500,1600,1700,1800,1900,
                            2000,2100,2200,2266,2400,2500,2533,2600,2666,2800,
-						   3000,3200,3600,3733,4000,4266,-1 };
+                           3000,3200,3600,3733,4000,4266,-1 };
    int diff=cpuSpeed;
    int index = 0;
    int i=1;

@@ -1,11 +1,11 @@
 #include <string.h>
 
 
-#include "sipstack/Helper.hxx"
-#include "sipstack/Uri.hxx"
-#include "sipstack/Preparse.hxx"
+#include "sip2/sipstack/Helper.hxx"
+#include "sip2/sipstack/Uri.hxx"
+#include "sip2/sipstack/Preparse.hxx"
 
-#include "util/RandomHex.hxx"
+#include "sip2/util/RandomHex.hxx"
 
 using namespace Vocal2;
 
