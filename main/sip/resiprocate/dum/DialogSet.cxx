@@ -14,6 +14,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mId(creator->getLastRequest()),
    mDum(dum)
 {
+   assert(!creator->getLastRequest().isExternal());
 }
 
 DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) : 
@@ -23,6 +24,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mDum(dum)
 {
    assert(request.isRequest());
+   assert(request.isExternal());
 }
 
 DialogSet::~DialogSet()
