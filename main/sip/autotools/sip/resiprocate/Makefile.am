@@ -142,12 +142,16 @@ libresiprocate_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 resiprocate_includedir=$(includedir)/resiprocate
 resiprocate_include_HEADERS = \
     ApplicationSip.hxx \
+	Auth.hxx \
 	BranchParameter.hxx \
+	CSeqCategory.hxx \
+	CallId.hxx \
 	Connection.hxx \
 	ConnectionManager.hxx \
 	Contents.hxx \
 	CpimContents.hxx \
 	DataParameter.hxx \
+	DateCategory.hxx \
 	Dialog.hxx \
 	Dialog2.hxx \
 	DialogSet.hxx \
@@ -157,23 +161,28 @@ resiprocate_include_HEADERS = \
 	Embedded.hxx \
 	Executive.hxx \
 	ExistsParameter.hxx \
+	ExpiresCategory.hxx \
 	FloatParameter.hxx \
 	GenericContents.hxx \
+	GenericUri.hxx \
 	HeaderFieldValue.hxx \
 	HeaderFieldValueList.hxx \
 	HeaderHash.hxx \
 	HeaderTypes.hxx \
 	Headers.hxx \
 	Helper.hxx \
+	IntegerCategory.hxx \
 	IntegerParameter.hxx \
 	LazyParser.hxx \
 	Message.hxx \
 	MessageWaitingContents.hxx \
 	MethodHash.hxx \
 	MethodTypes.hxx \
+	Mime.hxx \
 	MsgHeaderScanner.hxx \
 	MultipartMixedContents.hxx \
 	MultipartSignedContents.hxx \
+	NameAddr.hxx \
 	OctetContents.hxx \
 	Parameter.hxx \
 	ParameterHash.hxx \
@@ -190,7 +199,9 @@ resiprocate_include_HEADERS = \
 	PlainContents.hxx \
 	QopParameter.hxx \
 	QuotedDataParameter.hxx \
+	RAckCategory.hxx \
 	Registration.hxx \
+	RequestLine.hxx \
 	Rlmi.hxx \
 	RportParameter.hxx \
 	SdpContents.hxx \
@@ -202,6 +213,8 @@ resiprocate_include_HEADERS = \
 	SipSession.hxx \
 	SipStack.hxx \
 	StatelessHandler.hxx \
+	StatusLine.hxx \
+	StringCategory.hxx \
 	Subscription.hxx \
 	Symbols.hxx \
 	TcpTransport.hxx \
@@ -211,6 +224,7 @@ resiprocate_include_HEADERS = \
 	TimerQueue.hxx \
 	TlsConnection.hxx \
 	TlsTransport.hxx \
+	Token.hxx \
 	TransactionController.hxx \
 	TransactionMap.hxx \
 	TransactionState.hxx \
@@ -226,6 +240,8 @@ resiprocate_include_HEADERS = \
 	UnknownParameter.hxx \
 	UnknownParameterType.hxx \
 	Uri.hxx \
+	Via.hxx \
+	WarningCategory.hxx \
 	XMLCursor.hxx \
 	X_msMsgsInvite.hxx \
 	config.hxx
@@ -260,6 +276,7 @@ resiprocate_os_include_HEADERS = \
 	os/SysLogStream.hxx \
 	os/ThreadIf.hxx \
 	os/Timer.hxx \
+	os/TransportType.hxx \
 	os/Tuple.hxx \
 	os/compat.hxx \
 	os/vmd5.hxx \
