@@ -36,7 +36,7 @@ class Profile
 
       void setDefaultAor(const NameAddr& from);
       void setOutboundProxy( const Data& uri );
-
+      void disableGruu();
 
       /// The following functions deal with getting digest credentals 
       //@{ 

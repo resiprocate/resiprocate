@@ -6,12 +6,11 @@ namespace resip
 
 class RegistrationHandler
 {
-   /** onRegister is invoked when the DUM receives a register request. The
-    *  response to that request will be handed to the ServerRegistration
-    *  asynchronously.
-    */
-   void onRegister(ServerRegistration::Handle serverRegistration,
-                   SipMessage& msg);
+   public:
+      virtual void onRefresh(ServerRegistration::Handle, const SipMessage& reg);
+      virtual void onRemoveOne(ServerRegistration::Handle, const SipMessage& reg);
+      virtual void onRemoveAll(ServerRegistration::Handle, const SipMessage& reg);
+      virtual void onAdd(ServerRegistration::Handle, const SipMessage& reg);
 };
 
 }
