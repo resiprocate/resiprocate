@@ -37,7 +37,6 @@ Transport::Transport(Fifo<Message>& rxFifo,
    mTuple(intfc, portNum, ipv4),
    mStateMachineFifo(rxFifo)
 {
-   //mTuple.type = transport();
 }
 
 Transport::~Transport()
