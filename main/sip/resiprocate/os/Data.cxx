@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.11 2002/10/21 22:50:17 jason Exp $";
+"$Id: Data.cxx,v 1.12 2002/10/30 18:46:18 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -210,7 +210,8 @@ Data::operator=(const Data& data)
       }
       
       mSize = data.mSize;
-      memcpy(mBuf, data.mBuf, mSize);
+      // could overlap!
+      memmove(mBuf, data.mBuf, mSize);
       mBuf[mSize] = 0;
       mMine = false;
    }
@@ -248,7 +249,7 @@ Data::operator+=(const Data& data)
          mMine = true;
       }
    }
-   memcpy(mBuf + mSize, data.mBuf, data.mSize);
+   memmove(mBuf + mSize, data.mBuf, data.mSize);
    mSize += data.mSize;
    mCapacity = mSize;
    mBuf[mSize] = 0;
@@ -274,7 +275,8 @@ Data::operator=(const char* str)
    }
       
    mSize = l;
-   memcpy(mBuf, str, mSize+1);
+   // could conceivably overlap
+   memmove(mBuf, str, mSize+1);
    mMine = false;
 
    return *this;
@@ -312,7 +314,8 @@ Data::operator+=(const char* str)
          mMine = true;
       }
    }
-   memcpy(mBuf + mSize, str, l + 1);
+   // could conceivably overlap
+   memmove(mBuf + mSize, str, l + 1);
    mSize += l;
    mCapacity = mSize;
 
