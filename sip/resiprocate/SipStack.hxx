@@ -13,6 +13,7 @@
 #include "sip2/sipstack/TimerQueue.hxx"
 #include "sip2/sipstack/Dialog.hxx"
 #include "sip2/sipstack/DnsResolver.hxx"
+#include "sip2/sipstack/SdpContents.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/Helper.hxx"
 
