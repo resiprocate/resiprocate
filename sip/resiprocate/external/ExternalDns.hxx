@@ -3,6 +3,8 @@
 
 #include "resiprocate/external/AsyncID.hxx"
 
+struct hostent;
+
 namespace resip
 {
 class ExternalDnsHandler;
