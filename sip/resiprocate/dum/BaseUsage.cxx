@@ -39,6 +39,13 @@ BaseUsage::Handle::getNext()
    return ++id;
 }
 
+BaseUsage* 
+BaseUsage::Handle::operator->()
+{
+   return get();
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

@@ -15,7 +15,7 @@
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="4"
-			UseOfMFC="2"
+			UseOfMFC="0"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
@@ -213,6 +213,9 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
+				RelativePath=".\os\AbstractFifo.cxx">
+			</File>
+			<File
 				RelativePath=".\ApiCheck.cxx">
 			</File>
 			<File
@@ -262,9 +265,6 @@
 			</File>
 			<File
 				RelativePath=".\DateCategory.cxx">
-			</File>
-			<File
-				RelativePath="Dialog.cxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.cxx">
@@ -348,6 +348,9 @@
 				RelativePath=".\Mime.cxx">
 			</File>
 			<File
+				RelativePath=".\MsgHeaderScanner.cxx">
+			</File>
+			<File
 				RelativePath="MultipartMixedContents.cxx">
 			</File>
 			<File
@@ -397,6 +400,9 @@
 			</File>
 			<File
 				RelativePath="QuotedDataParameter.cxx">
+			</File>
+			<File
+				RelativePath=".\RAckCategory.cxx">
 			</File>
 			<File
 				RelativePath="os\Random.cxx">
@@ -451,6 +457,12 @@
 			</File>
 			<File
 				RelativePath="Symbols.cxx">
+			</File>
+			<File
+				RelativePath=".\os\SysLogBuf.cxx">
+			</File>
+			<File
+				RelativePath=".\os\SysLogStream.cxx">
 			</File>
 			<File
 				RelativePath="TcpBaseTransport.cxx">
@@ -587,12 +599,6 @@
 			</File>
 			<File
 				RelativePath=".\DateCategory.hxx">
-			</File>
-			<File
-				RelativePath="Dialog.hxx">
-			</File>
-			<File
-				RelativePath="DialogSet.hxx">
 			</File>
 			<File
 				RelativePath="DnsInterface.hxx">
@@ -757,6 +763,9 @@
 				RelativePath="QuotedDataParameter.hxx">
 			</File>
 			<File
+				RelativePath=".\RAckCategory.hxx">
+			</File>
+			<File
 				RelativePath="os\Random.hxx">
 			</File>
 			<File
@@ -887,9 +896,6 @@
 			</File>
 			<File
 				RelativePath="os\Tuple.hxx">
-			</File>
-			<File
-				RelativePath="TuShim.hxx">
 			</File>
 			<File
 				RelativePath="TuUa.hxx">
