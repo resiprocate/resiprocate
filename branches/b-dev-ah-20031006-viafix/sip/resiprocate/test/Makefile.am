@@ -1,5 +1,5 @@
 CXX = ${DISTCC} @CXX@
-LDFLAGS += -lpopt
+AM_LDFLAGS = -lpopt
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
 noinst_LIBRARIES = libtestsupport.a
 libtestsupport_a_SOURCES = \
@@ -42,6 +42,7 @@ check_PROGRAMS = \
 	testLogger \
 	testMessageWaiting \
 	testMultipartMixedContents \
+	testMsgHeaderDiagram \
 	testParseBuffer \
 	testParserCategories \
 	testPlainContents \
@@ -108,5 +109,5 @@ testTransactionFSM_SOURCES = testTransactionFSM.cxx
 testUdp_SOURCES = testUdp.cxx
 testUri_SOURCES = testUri.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
-
+testMsgHeaderDiagram_SOURCES = testMsgHeaderDiagram.cxx
 

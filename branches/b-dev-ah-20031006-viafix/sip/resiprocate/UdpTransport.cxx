@@ -219,6 +219,7 @@ UdpTransport::process(FdSet& fdset)
    if (!basicCheck(*message))
    {
      delete message; // cannot use it, so, punt on it...
+                     // basicCheck queued any response required
      message = 0;
      return;
    }
