@@ -11,7 +11,7 @@ using namespace resip;
 Profile::Profile() : 
    mDefaultRegistrationExpires(3600),
    mHasOutboundProxy(false),
-   mLooseToTagMatching(true)   
+   mLooseToTagMatching(false)   
 {
 }
 
@@ -264,6 +264,15 @@ Profile::getDigestCredential( const SipMessage& challenge )
         it != mDigestCredentials.end(); it++)
    {
       if (it->aor == aor)
+      {
+         return *it;
+      }
+   }
+   const Data& user = challenge.header(h_From).uri().user();
+   for (DigestCredentials::const_iterator it = mDigestCredentials.begin(); 
+        it != mDigestCredentials.end(); it++)
+   {
+      if (it->user == user)
       {
          return *it;
       }
