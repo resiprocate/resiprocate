@@ -47,7 +47,7 @@ BaseUsage::getAppDialog()
 }
 
 void
-BaseUsage::send(const SipMessage& msg)
+BaseUsage::send(SipMessage& msg)
 {
     mDum.send(msg);
 }

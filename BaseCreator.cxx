@@ -55,22 +55,14 @@ BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
       contact.uri().user() = mDum.getProfile()->getDefaultAor().uri().user();      
       mLastRequest.header(h_Contacts).push_front(contact);
    }
-   
-   
+      
    Via via;
    mLastRequest.header(h_Vias).push_front(via);
 
    mLastRequest.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
    mLastRequest.header(h_Accepts) = mDum.getProfile()->getSupportedMimeTypes();
-
-   if (mDum.getProfile()->hasOutboundProxy())
-   {
-      DebugLog ( << "Assigning route");
-      assert(mLastRequest.header(h_Routes).empty());
-      mLastRequest.header(h_Routes).push_back(mDum.getProfile()->getOutboundProxy());
-   }
    
-   DebugLog ( << "BaseCreator::makeInitialRequest" << mLastRequest );
+   InfoLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
 }
 
 void
