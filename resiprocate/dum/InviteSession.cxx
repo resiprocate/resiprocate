@@ -198,7 +198,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
       {
           if(mState != Terminated)
           {
-             send(end());  // end expired session
+             end();  // end expired session
           }
       }
    }
@@ -701,7 +701,7 @@ InviteSession::makeRefer(const NameAddr& referTo, InviteSessionHandle sessionToR
    return mLastRequest;
 }
 
-SipMessage&
+void
 InviteSession::end()
 {
    InfoLog ( << "InviteSession::end, state: " << mState);  
@@ -719,7 +719,6 @@ InviteSession::end()
                // No ACK yet - send BYE after ACK is received
                mQueuedBye = new SipMessage(mLastRequest);
                mDialog.makeRequest(*mQueuedBye, BYE);
-               return *mQueuedBye;
             }
             else
             {
@@ -732,9 +731,8 @@ InviteSession::end()
             mDialog.makeRequest(mLastRequest, BYE);
             //new transaction
             assert(mLastRequest.header(h_Vias).size() == 1);
-//          mLastRequest.header(h_Vias).front().param(p_branch).reset();
             mState = Terminated;
-            return mLastRequest;
+            send(mLastRequest);
          }
          break;
       case ReInviting:
@@ -742,7 +740,6 @@ InviteSession::end()
          {
             mQueuedBye = new SipMessage(mLastRequest);
             mDialog.makeRequest(*mQueuedBye, BYE);
-            return *mQueuedBye;
          }
          else
          {
@@ -752,7 +749,6 @@ InviteSession::end()
       default:
          assert(0); // out of states
    }
-   throw UsageUseException("Programmer error", __FILE__, __LINE__); //make VC++ happy
 }
 
 // If sdp==0, it means the last offer failed

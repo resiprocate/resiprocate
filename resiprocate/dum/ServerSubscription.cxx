@@ -118,7 +118,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
             mLastResponse.header(h_Expires).value() = mExpires;
             send(mLastResponse);            
 
-            send(end(Timeout));
+            end(Timeout);
             return;
          }
          if (mSubscriptionState == Invalid)
@@ -175,7 +175,7 @@ ServerSubscription::makeNotify()
 }
 
 
-SipMessage& 
+void
 ServerSubscription::end(TerminateReason reason, const Contents* document)
 {
    mSubscriptionState = Terminated;
@@ -185,7 +185,13 @@ ServerSubscription::end(TerminateReason reason, const Contents* document)
    {
       mLastNotify.setContents(document);
    }
-   return mLastNotify;
+   send(mLastNotify);
+}
+
+void
+ServerSubscription::end()
+{
+   end(Timeout);
 }
 
 void
