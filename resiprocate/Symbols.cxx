@@ -39,6 +39,7 @@ const char* Symbols::QUESTION = "?";
 const char* Symbols::AMPERSAND = "&";
 const char* Symbols::PERCENT = "%";
 const char* Symbols::STAR ="*";
+const char* Symbols::UNDERSCORE ="_";
 
 const char* Symbols::ProtocolName = "SIP";
 const char* Symbols::ProtocolVersion = "2.0";
@@ -46,6 +47,10 @@ const char* Symbols::UDP = "UDP";
 const char* Symbols::TCP = "TCP";
 const char* Symbols::TLS = "TLS";
 const char* Symbols::SCTP = "SCTP";
+const char* Symbols::SRVUDP = "_udp.";
+const char* Symbols::SRVTCP = "_tcp.";
+const char* Symbols::SRVTLS = "_tls.";
+const char* Symbols::SRVSCTP = "_sctp.";
 
 const char* Symbols::Sip = "sip";
 const char* Symbols::Sips = "sips";
