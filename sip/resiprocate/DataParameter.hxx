@@ -11,6 +11,8 @@ namespace Vocal2
 class DataParameter : public Parameter
 {
    public:
+      typedef Data Type;
+      
       DataParameter(ParameterTypes::Type, const char* startData, unsigned int dataSize);
       DataParameter(ParameterTypes::Type, const Data& data);
       
