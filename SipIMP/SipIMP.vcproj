@@ -22,7 +22,7 @@
 				AdditionalOptions="/Zm300"
 				Optimization="0"
 				AdditionalIncludeDirectories="C:\sip"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -94,7 +94,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib "
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib C:\sip\resiprocate\Release\sipstack.lib C:\sip\contrib\ares\Release\ares.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
