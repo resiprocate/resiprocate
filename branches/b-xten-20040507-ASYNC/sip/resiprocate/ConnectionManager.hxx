@@ -19,7 +19,6 @@ class ConnectionManager
       ConnectionManager();
       ~ConnectionManager();
 
-      // !jf! May want to add an interface that returns a Connection* given a Tuple
       Connection* findConnection(const Tuple& tuple);
 
       // Return 0 if nothing to do
