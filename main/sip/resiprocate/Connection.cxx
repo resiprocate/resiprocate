@@ -344,7 +344,7 @@ Connection::performWrite()
    DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
    Data::size_type bytesWritten = write(data.data() + mSendPos,data.size() - mSendPos);
 
-   if (bytesWritten == INVALID_SOCKET)
+   if (bytesWritten == -1)
    {
       //fail(data.transactionId);
       delete this;

@@ -23,6 +23,7 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data&
    : Transport(fifo, portNum, pinterface, ipv4)
 {
    mFd = Transport::socket(TCP, ipv4);
+   InfoLog (<< "Opening TCP " << mFd << " : " << this);
    
 #if !defined(WIN32)
    int on = 1;
@@ -53,13 +54,20 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data&
 
 TcpBaseTransport::~TcpBaseTransport()
 {
-   DebugLog (<< "Shutting down TCP Transport " << mFd << " " << this);   //!rm!
+   InfoLog (<< "Shutting down TCP Transport " << mFd << " " << this);   //!rm!
    
    //::shutdown(mFd, SHUT_RDWR);
    closesocket(mFd);
 
    // !jf! this is not right. should drain the sends before 
-   while (mTxFifo.messageAvailable()) mTxFifo.getNext();
+   while (mTxFifo.messageAvailable()) 
+   {
+      SendData* data = mTxFifo.getNext();
+      InfoLog (<< "Throwing away queued data for " << data->destination);
+      
+      fail(data->transactionId);
+      delete data;
+   }
    
    //mSendRoundRobin.clear(); // clear before we delete the connections
 }
@@ -83,8 +91,7 @@ TcpBaseTransport::processListen(FdSet& fdset)
       if ( sock == -1 )
       {
          // !jf! this can not be ready in some cases 
-         
-         InfoLog( << "Error on accept: " << mFd << " : " << " : " << this << " " << strerror(errno));
+         Transport::error();
          return;
       }
       makeSocketNonBlocking(sock);
