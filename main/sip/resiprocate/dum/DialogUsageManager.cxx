@@ -709,12 +709,14 @@ DialogUsageManager::process()
                      return true;
                   }
                }
-#if defined(USE_SSL)
-               if (!queueForIdentityCheck(msg))
+               if (queueForIdentityCheck(sipMsg))
+               {
+                  msg.release();                  
+               }
+               else
                {
                   processRequest(*sipMsg);
                }
-#endif
             }
             else if (sipMsg->isResponse())
             {
@@ -798,10 +800,8 @@ DialogUsageManager::processIdentityCheckResponse(const SipMessage& msg)
 }
 
 bool
-DialogUsageManager::queueForIdentityCheck(std::auto_ptr<Message> msg)
+DialogUsageManager::queueForIdentityCheck(SipMessage* sipMsg)
 {
-   SipMessage& sipMsg = *dynamic_cast<SipMessage*>(msg.get());
-
 #if defined(USE_SSL)
    if (sipMsg.exists(h_Identity) && 
        sipMsg.exists(h_IdentityInfo) && 
@@ -819,8 +819,7 @@ DialogUsageManager::queueForIdentityCheck(std::auto_ptr<Message> msg)
             Uri certTarget(sipMsg.header(h_IdentityInfo).uri());
             //?dcm? -- IdentityInfo must use TLS
             SipMessage* opt = Helper::makeRequest(NameAddr(certTarget), sipMsg.header(h_From), OPTIONS);
-            mRequiresCerts[opt->getTransactionId()] = &sipMsg;
-            msg.release();
+            mRequiresCerts[opt->getTransactionId()] = sipMsg;
             //!dcm! -- bypassing DialogUsageManager::send to keep transactionID;
             //are there issues with outbound proxies.
             mStack->send(*opt);
@@ -835,9 +834,9 @@ DialogUsageManager::queueForIdentityCheck(std::auto_ptr<Message> msg)
 #endif
 
    std::auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
-   sec->setIdentity(sipMsg.header(h_From).uri().getAor());
+   sec->setIdentity(sipMsg->header(h_From).uri().getAor());
    sec->setIdentityStrength(SecurityAttributes::From);
-   sipMsg.setSecurityAttributes(sec);
+   sipMsg->setSecurityAttributes(sec);
    return false;
 }
           
