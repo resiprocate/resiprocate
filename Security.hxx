@@ -52,7 +52,7 @@ class Security
             const char* name() const { return "SecurityException"; }
       };
 
-      Security( bool tlsServer );
+      Security( bool tlsServer, bool useTls/*use ssl if false*/ );
       ~Security();
       
       /* The security stuff is for managing certificates that are used by the
@@ -166,6 +166,7 @@ class Security
       SSL_CTX* ctxTls;
 
       bool mTlsServer;
+      bool mUseTls;
 #endif	
 };
  
