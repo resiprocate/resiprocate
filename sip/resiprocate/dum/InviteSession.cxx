@@ -1,6 +1,7 @@
 #include "InviteSession.hxx"
 
-InviteSession::InviteSession() : 
+InviteSession::InviteSession(DialogUsageManager& dum) : 
+   mDum(dum),
    mLocalSdp(0),
    mRemoteSdp(0),
    mMyNextOffer(0),
