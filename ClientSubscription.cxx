@@ -159,13 +159,10 @@ ClientSubscription::dispatch(const SipMessage& msg)
       // to ignore this case
       if (msg.header(h_StatusLine).statusCode() == 481)
       {
-         mLastRequest.header(h_CallId).value() = Helper::computeCallId();
-         mLastRequest.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
-         Via via;
-         mLastRequest.header(h_Vias).clear();
-         mLastRequest.header(h_Vias).push_front(via);
-         InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) " << mLastRequest.header(h_To).uri().getAor());
-         mDum.send(mLastRequest);
+         InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) " 
+                  << mDialog.mRemoteTarget);
+         SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType());
+         mDum.send(sub);
          
          delete this;
          return;
