@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.34 2002/11/16 02:53:54 derekm Exp $";
+"$Id: Data.cxx,v 1.35 2002/11/19 02:44:12 derekm Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -34,7 +34,7 @@ Data::Data(const char* str, int length)
 }
 
 // share memory KNOWN to be in a surrounding scope
-// wears off on modify, copy, c_str, operator=, operator+=, non-const
+// wears off on, c_str, operator=, operator+=, non-const
 // operator[], append
 Data::Data(const char* str, int length, bool) 
    : mSize(length),
@@ -321,6 +321,7 @@ Data::operator==(const char* rhs) const
    }
 }
 
+/*
 bool 
 Data::operator==(const std::string& rhs) const
 {
@@ -330,6 +331,7 @@ Data::operator==(const std::string& rhs) const
    }
    return strncmp(mBuf, rhs.c_str(), mSize) == 0;
 }
+*/
 
 bool
 Data::operator<(const Data& rhs) const
@@ -351,7 +353,33 @@ Data::operator<(const Data& rhs) const
 }
 
 bool
+Data::operator<(const char* rhs) const
+{
+   size_type l = strlen(rhs);
+   int res = strncmp(mBuf, rhs, min(mSize, l));
+
+   if (res < 0)
+   {
+      return true;
+   }
+   else if (res > 0)
+   {
+      return false;
+   }
+   else
+   {
+      return (mSize < l);
+   }
+}
+
+bool
 Data::operator>(const Data& rhs) const
+{
+   return rhs < *this;
+}
+
+bool
+Data::operator>(const char* rhs) const
 {
    return rhs < *this;
 }
@@ -719,13 +747,34 @@ Data::convertDouble() const
 bool
 Vocal2::operator==(const char* s, const Data& d)
 {
-   return d == s;
+   return ((strncmp(s, d.data(), d.size()) == 0) &&
+           strlen(s) == d.size() );
 }
 
 bool
 Vocal2::operator!=(const char* s, const Data& d)
 {
-   return d != s;
+   return !(s == d);
+}
+
+bool
+Vocal2::operator<(const char* s, const Data& d)
+{
+   Data::size_type l = strlen(s);
+   int res = strncmp(s, d.data(), min(d.size(), l));
+
+   if (res < 0)
+   {
+      return true;
+   }
+   else if (res > 0)
+   {
+      return false;
+   }
+   else
+   {
+      return (l < d.size());
+   }
 }
 
 ostream& 

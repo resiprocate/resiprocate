@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.33 2002/11/13 20:42:24 davidb Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.34 2002/11/19 02:44:12 derekm Exp $";
 
 #include <iostream>
 #include <string>
@@ -21,7 +21,7 @@ class Data
       Data(const char* str);
       Data(const char* buffer, int length);
       Data(const Data& data);
-      Data(const std::string& str);
+      explicit Data(const std::string& str);
       explicit Data(int value);
       explicit Data(unsigned long value);
       explicit Data(double value, int precision = 4);
@@ -31,11 +31,17 @@ class Data
       ~Data();
 
       bool operator==(const Data& rhs) const;
-      bool operator!=(const Data& rhs) const { return !(*this == rhs); }
       bool operator==(const char* rhs) const;
-      bool operator==(const std::string& rhs) const;
+      //bool operator==(const std::string& rhs) const;
+
+      bool operator!=(const Data& rhs) const { return !(*this == rhs); }
+      bool operator!=(const char* rhs) const { return !(*this == rhs); }
+      //bool operator!=(const std::string& rhs) const { return !(*this == rhs); }
+
       bool operator<(const Data& rhs) const;
+      bool operator<(const char* rhs) const;
       bool operator>(const Data& rhs) const;
+      bool operator>(const char* rhs) const;
 
       Data& operator=(const Data& data);
       Data& operator=(const char* str);
@@ -100,6 +106,8 @@ inline bool isEqualNoCase(const Data& left, const Data& right)
 
 bool operator==(const char* s, const Data& d);
 bool operator!=(const char* s, const Data& d);
+bool operator<(const char* s, const Data& d);
+
 std::ostream& operator<<(std::ostream& strm, const Data& d);
 
 inline Data
