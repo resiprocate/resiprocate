@@ -808,7 +808,7 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
 // if you think you need to change the following few lines, please email fluffy
 // the value of OPENSSL_VERSION_NUMBER ( in opensslv.h ) and the signature of
 // PKCS_encrypt found ( in pkcs7.h ) and the OS you are using  
-#if (  OPENSSL_VERSION_NUMBER > 0x009060afL )
+#if (  OPENSSL_VERSION_NUMBER > 0x009060bfL )
    const EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
 #else  
    EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
