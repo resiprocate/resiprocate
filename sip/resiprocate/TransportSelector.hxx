@@ -1,6 +1,16 @@
+#if !defined(TRANSPORTSELECTOR_HXX)
+#define TRANSPORTSELECTOR_HXX
 
-class TransportSelector
+#include <sipstack/Data.hxx>
+
+namespace Vocal2
 {
+
+  class SipMessage;
+  class UdpTransport;
+  
+  class TransportSelector
+  {
 
 public:
   void process();
@@ -14,3 +24,8 @@ private:
   UdpTransport* udp;
 
 };
+
+
+}
+
+#endif
