@@ -57,6 +57,7 @@ class TransportSelector
       
       unsigned int sumTransportFifoSizes() const;
 
+      unsigned int getTimeTillNextProcessMS();
       Fifo<TransactionMessage>& stateMacFifo() { return mStateMacFifo; }
    private:
       Transport* findTransport(const Tuple& src);
