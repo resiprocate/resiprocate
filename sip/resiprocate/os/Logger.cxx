@@ -3,7 +3,7 @@
 using namespace Vocal2;
 
 std::ostream* 
-GenericLogImpl::mLogger=&std::cout;
+GenericLogImpl::mLogger=0;
 
 
 /* ====================================================================
