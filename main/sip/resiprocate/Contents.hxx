@@ -69,7 +69,7 @@ class Contents : public LazyParser
       Contents* getContents(const Mime&);
 
       virtual Data getBodyData() const;
-      
+
       virtual Contents* clone() const = 0;
       const Mime& getType() const {return mType;}
 
