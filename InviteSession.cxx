@@ -6,6 +6,8 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
+#include "resiprocate/dum/ClientSubscription.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
@@ -920,6 +922,8 @@ InviteSession::dispatchOthers(const SipMessage& msg)
          //dispatchNotify(msg);
          break;
       case REFER:
+         dispatchRefer(msg);       
+         break;         
       default:
          // handled in Dialog
          WarningLog (<< "DUM delivered a " 
@@ -931,6 +935,84 @@ InviteSession::dispatchOthers(const SipMessage& msg)
          break;
    }
 }
+
+void 
+InviteSession::dispatchRefer(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   if (msg.isRequest())
+   {
+      switch (msg.header(h_CSeq).method())
+      {
+         case NOTIFY:
+            if (!msg.exists(h_Event) || msg.header(h_Event).value() == "refer")
+            {
+               
+               DebugLog (<< "Making subscription from refer: " << msg);
+               ClientSubscription* sub = mDialog.makeClientSubscription(msg);
+               mDialog.mClientSubscriptions.push_back(sub);
+               ClientSubscriptionHandle client = sub->getHandle();
+               sub->dispatch(msg);
+               if (client.isValid())
+               {
+                  handler->onReferAccepted(getSessionHandle(), client, msg);
+               }
+               else
+               {
+                  handler->onReferRejected(getSessionHandle(), msg);
+               }
+            }
+            else
+            {
+               SipMessage response;
+               mDialog.makeResponse(response, msg, 406);
+               mDialog.send(response);
+            }
+            break;
+         case REFER:
+         {
+            ServerSubscription* server = mDialog.makeServerSubscription(msg);
+            mDialog.mServerSubscriptions.push_back(server);
+            ServerSubscriptionHandle serverHandle = server->getHandle();
+            server->dispatch(msg);
+            if (serverHandle.isValid())
+            {
+               handler->onRefer(getSessionHandle(), serverHandle, msg);
+            }
+         }
+            break;
+         default:
+            assert(0);            
+      }
+   }
+   else if (msg.isResponse())
+   {
+      switch (msg.header(h_CSeq).method())
+      {
+         case NOTIFY:
+            break;
+         case REFER:
+         {
+            int code = msg.header(h_StatusLine).statusCode();
+            if (code < 300)
+            {
+               // throw it away
+               return;
+            }            
+            else
+            {
+               handler->onReferRejected(getSessionHandle(), msg);
+            }
+         }
+         break;
+         default:
+            assert(0);            
+      }
+   }
+}
+
+
+
 
 void
 InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
