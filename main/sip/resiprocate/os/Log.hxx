@@ -31,8 +31,19 @@ class Log
          FILE
       }Type;
       
-      
+#ifdef WIN32 
       typedef enum 
+      {
+         CRIT = 1,
+         ERR = 2,
+         WARNING = 3,
+         INFO = 4,
+         DEBUG = 5,
+         DEBUG_STACK = 8,
+		 BOGUS = 666
+      }Level;
+#else
+	       typedef enum 
       {
          CRIT = LOG_CRIT,
 #ifdef ERR // ncurses defines a macro called ERR 
@@ -46,6 +57,7 @@ class Log
          DEBUG_STACK = 8,
 		 BOGUS = 666
       }Level;
+#endif
 
       class ThreadSetting
       {
