@@ -1,19 +1,13 @@
 #if !defined(RESIP_DNSINTERFACE_HXX)
 #define RESIP_DNSINTERFACE_HXX 
 
-#if defined(USE_ARES)
-extern "C"
-{
-struct ares_channeldata;
-}
-#endif
-
 #include <set>
 
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/external/ExternalDns.hxx"
 
 namespace resip
 {
@@ -22,9 +16,9 @@ class DnsResult;
 class TransactionState;
 class Uri;
 class Via;
-   
+class ExternalDns;
 // 
-class DnsInterface
+class DnsInterface : public ExternalDnsHandler
 {
    public:
       class Exception : public BaseException
@@ -38,10 +32,18 @@ class DnsInterface
       // be queued for later processing. It is critical that the consumer of the
       // DnsResult be in the same thread that is processing the async results
       // since there is no locking on the DnsResult
-      // Will throw DnsInterface::Exception if ares fails to initialize
-      DnsInterface(bool synchronous=false);
+      // Will throw DnsInterface::Exception if the Dns provider fails to initialize
+      DnsInterface();
+
       virtual ~DnsInterface();
+
+      void lookupARecords(const Data& target, DnsResult* dres);
+      void lookupAAAARecords(const Data& target, DnsResult* dres);
+      void lookupNAPTR(const Data& target, DnsResult* dres);
+      void lookupSRV(const Data& target, DnsResult* dres);
       
+      Data errorMessage(int status);
+
       // set the supported set of types that a UAC wishes to use
       void addTransportType(TransportType type);
       
@@ -69,16 +71,25 @@ class DnsInterface
       // continue to ask the DnsResult to return more tuples. If the tuples for
       // the current transport are exhausted, move on to the next preferred
       // transport (if there is one)
-      DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
-      DnsResult* lookup(const Via& via, DnsHandler* handler=0);
-      
+
+      DnsResult* createDnsResult(DnsHandler* handler=0);
+      void lookup(DnsResult* res, const Uri& uri);
+
+//      DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
+//      DnsResult* lookup(const Via& via, DnsHandler* handler=0);
+
+      //callbacks for mDnsProvider
+      virtual void handle_NAPTR(ExternalDnsRawResult res);
+      virtual void handle_SRV(ExternalDnsRawResult res);
+      virtual void handle_AAAA(ExternalDnsRawResult res);
+      virtual void handle_host(ExternalDnsHostResult res);
+
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
       DnsHandler* mHandler;
       std::set<Data> mSupportedTransports;
-	  struct ares_channeldata* mChannel;
-
+      ExternalDns* mDnsProvider;
       friend class DnsResult;
 };
 

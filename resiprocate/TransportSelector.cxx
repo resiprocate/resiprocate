@@ -339,7 +339,8 @@ TransportSelector::dnsResolve(SipMessage* msg,
       if (msg->hasForceTarget())
       {
           //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
-          result = mDns.lookup(msg->getForceTarget(), handler);
+         result = mDns.createDnsResult(handler);
+         mDns.lookup(result, msg->getForceTarget());
       }
       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
       {
@@ -348,12 +349,14 @@ TransportSelector::dnsResolve(SipMessage* msg,
          msg->setForceTarget(msg->header(h_Routes).front().uri());
          //msg->header(h_Routes).pop_front();
          DebugLog (<< "Looking up dns entries (from route) for " << msg->getForceTarget());
-         result = mDns.lookup(msg->getForceTarget(), handler);
+         result = mDns.createDnsResult(handler);         
+         mDns.lookup(result, msg->getForceTarget());
       }
       else
       {
          DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri() << " " << msg->brief());
-         result = mDns.lookup(msg->header(h_RequestLine).uri(), handler);
+         result = mDns.createDnsResult(handler);
+         mDns.lookup(result, msg->header(h_RequestLine).uri());
       }
    }
    else if (msg->isResponse())
