@@ -101,7 +101,6 @@ namespace Vocal2
          Headers::Type mHeaderType; // the enum for the currently
                                 // active header
          
-
          const char * mAnchorBeg;		// A curious place we anchored.
          // The location of the last actReset.
          const char * mAnchorEnd;
