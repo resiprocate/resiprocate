@@ -1,7 +1,6 @@
+#include <cassert>
 #include <util/Logger.hxx>
 #include <util/ParseBuffer.hxx>
-#include <cassert>
-
 
 using namespace Vocal2;
 
@@ -155,4 +154,47 @@ ParseBuffer::skipToEndQuote(char quote)
 
    DebugLog (<< "Missing '" << quote);
    throw Exception("Missing quote", __FILE__,__LINE__);
+}
+
+int
+ParseBuffer::integer()
+{
+   if (!isdigit(*position()))
+   {
+      DebugLog(<< "Expected a digit, got: " << Data(position(), (mEnd - position())));
+      throw Exception("Expected a digit", __FILE__, __LINE__);
+   }
+   
+   int num = 0;
+   while (!eof() && isdigit(*position()))
+   {
+      num = num*10 + (*position()-'0');
+      skipChar();
+   }
+   
+   return num;
+}
+
+float
+ParseBuffer::floatVal()
+{
+   const char* s = position();
+   try
+   {
+      int num = integer();
+      skipChar('.');
+      const char* pos = position();
+      float mant = integer();
+      int s = position() - pos;
+      while (s--)
+      {
+         mant /= 10.0;
+      }
+      return num + mant;
+   }
+   catch (Exception& e)
+   {
+      DebugLog(<< "Expected a floating point value, got: " << Data(s, position() - s));
+      throw Exception("Expected a floating point value", __FILE__, __LINE__);
+   }
 }
