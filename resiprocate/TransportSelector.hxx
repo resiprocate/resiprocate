@@ -28,7 +28,6 @@ class TransportSelector
       // this eventually will have to allow for construction and management
       // of n of these guys
       UdpTransport* mUdp;
-      Fifo<Message> mRxFifo;
       int mPortNum;
 };
 
