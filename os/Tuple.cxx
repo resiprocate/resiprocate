@@ -19,6 +19,7 @@
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/Transport.hxx"
 
 using namespace resip;
 
@@ -174,6 +175,18 @@ Tuple::getPort() const
    return -1;
 }
 
+bool
+Tuple::isAnyInterface() const
+{
+   if (isV4())
+   {
+      return m_anonv4.sin_addr.s_addr == htonl(INADDR_ANY); 
+   }
+   else
+   {
+      return memcmp(&m_anonv6.sin6_addr, &in6addr_any, sizeof(in6_addr)) == 0;
+   }
+}
 
 bool 
 Tuple::isV4() const
@@ -309,33 +322,34 @@ Tuple::operator<(const Tuple& rhs) const
 std::ostream&
 resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 {
-	ostrm << "[ " ;
-
+   ostrm << "[ " ;
+   
 #ifdef USE_IPV6
-    if (tuple.mSockaddr.sa_family == AF_INET6)
-    {
-       ostrm << "V6 " << DnsUtil::inet_ntop(tuple.m_anonv6.sin6_addr) << " port=" << tuple.getPort();
-    }
-    else
+   if (tuple.mSockaddr.sa_family == AF_INET6)
+   {
+      ostrm << "V6 " << DnsUtil::inet_ntop(tuple.m_anonv6.sin6_addr) << " port=" << tuple.getPort();
+   }
+   else
 #endif
-     if (tuple.mSockaddr.sa_family == AF_INET)
-	 {
-        ostrm << "V4 " << DnsUtil::inet_ntop(tuple.m_anonv4.sin_addr) << ":" << tuple.getPort();
-     }
-	 else
-	 {
-		 assert(0);
-	 }
+   if (tuple.mSockaddr.sa_family == AF_INET)
+   {
+      ostrm << "V4 " << DnsUtil::inet_ntop(tuple.m_anonv4.sin_addr) << ":" << tuple.getPort();
+   }
+   else
+   {
+      assert(0);
+   }
 
-	ostrm  << " , " 
-	       << Tuple::toData(tuple.mTransportType) 
-	       << " ,transport="
-	       << tuple.transport 
-           << " ,connectionId=" 
-           << tuple.connectionId
-	       << " ]";
-	
-	return ostrm;
+   ostrm  << " " 
+          << Tuple::toData(tuple.mTransportType);
+   if (tuple.transport)
+   {
+      ostrm << " received on: " << *tuple.transport;
+   }
+   ostrm << " connectionId=" << tuple.connectionId
+         << " ]";
+   
+   return ostrm;
 }
 
 
