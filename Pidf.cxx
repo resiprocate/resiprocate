@@ -326,6 +326,19 @@ Pidf::getSimpleStatus(Data* note) const
    return false;
 }
 
+void 
+Pidf::merge(const Pidf& other)
+{
+   vector<Tuple> tuples = getTuples();
+   tuples.reserve(tuples.size() + other.getTuples().size());
+
+   for (vector<Tuple>::const_iterator i = other.getTuples().begin();
+        i != other.getTuples().end(); ++i)
+   {
+      tuples.push_back(*i);
+   }
+}
+
 std::ostream& 
 resip::operator<<(std::ostream& strm, const Pidf::Tuple& tuple)
 {
