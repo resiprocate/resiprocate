@@ -176,17 +176,16 @@ SipMessage::addHeader(int header, char* headerName, int headerLen,
 
 
 bool
-SipMessage::hasFixedDest()
+SipMessage::hasFixedDest() const
 {
   return mHaveFixedDest;
 }
 
 
 Data
-SipMessage::getFixedDest()
+SipMessage::getFixedDest() const
 {
   return mFixedDest;
-  mHaveFixedDest = true;
 }
 
 
