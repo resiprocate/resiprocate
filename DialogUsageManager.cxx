@@ -1,5 +1,8 @@
 #include "resiprocate/SipStack.hxx"
 #include "DialogUsageManager.hxx"
+#include "resiprocate/Helper.hxx"
+#include "Profile.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 using namespace resip;
 
@@ -45,7 +48,7 @@ DialogUsageManager::setServerRegistrationHandler(ServerRegistrationHandler* hand
 }
 
 void 
-DialogUsageManager::setHandler(InvSessionHandler* handler)
+DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
 {
    mInviteSessionHandler = handler;
 }
@@ -78,7 +81,7 @@ DialogUsageManager::addHandler(MethodTypes&, OutOfDialogHandler*)
 SipMessage* 
 DialogUsageManager::makeInviteSession(const Uri& target)
 {
-   SipMessage* invite = Helper::makeInvite(target, mProfile->getDefaultAor());
+   SipMessage* invite = Helper::makeInvite(NameAddr(target), mProfile->getDefaultAor());
    prepareInitialRequest(*invite);
    return invite;
 }
@@ -93,6 +96,7 @@ DialogUsageManager::makeInviteSession(DialogId id, const Uri& target)
    return dialog.makeInviteSession(target);
 }
 
+#if 0
 SipMessage* 
 DialogUsageManager::makeSubscription(const Uri& aor, const Data& eventType)
 {
@@ -127,7 +131,7 @@ DialogUsageManager::makeOutOfDialogRequest(const Uri& aor, const MethodTypes& me
    Dialog& dialog = findDialog(id); // could throw
    return dialog.makeOutOfDialogRequest(aor, meth);
 }
-
+#endif
 
 void
 DialogUsageManager::prepareInitialRequest(SipMessage& request)

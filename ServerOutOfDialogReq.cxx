@@ -1,7 +1,11 @@
 #include "ServerOutOfDialogReq.hxx"
+#include "DialogUsageManager.hxx"
+#include "Dialog.hxx"
 
-ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum)
-   : mHandle(dum)
+ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum,
+                                           Dialog& dialog)
+   : BaseUsage(dum, dialog),
+     mHandle(dum)
 {}
 
 ServerOutOfDialogReq::Handle::Handle(DialogUsageManager& dum)
