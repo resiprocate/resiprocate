@@ -362,17 +362,20 @@ Dialog::dispatch(const SipMessage& msg)
             else
             {
                ServerSubscription* server = findMatchingServerSub(request);
+               ServerSubscriptionHandle serverHandle;
                if (server)
                {
+                  serverHandle = server->getHandle();
                   server->dispatch(request);
                }
                else
                {
                   server = makeServerSubscription(request);
                   mServerSubscriptions.push_back(server);
+                  serverHandle = server->getHandle();
                   server->dispatch(request);
                }
-               mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), server->getHandle(), msg);    
+               mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), serverHandle, msg);    
             }
          }
          break;
