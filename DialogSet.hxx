@@ -3,6 +3,7 @@
 
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogSetId.hxx"
+#include "resiprocate/dum/MergedRequestKey.hxx"
 
 namespace resip
 {
@@ -36,14 +37,13 @@ class DialogSet
 
       void cancel(const SipMessage& cancelMsg);
       void dispatch(const SipMessage& msg);
-
-      bool mergeRequest(const SipMessage& request);
-
+      
    private:
       friend class Dialog;
       Dialog* findDialog(const SipMessage& msg);
       Dialog* findDialog(const DialogId id);
 
+      MergedRequestKey mMergeKey;
       std::list<Dialog*> mDialogs;
       BaseCreator* mCreator;
       DialogSetId mId;

@@ -27,6 +27,7 @@ SRC =   \
 	InviteSession.cxx \
 	InviteSessionCreator.cxx \
 	InviteSessionHandler.cxx \
+	MergedRequestKey.cxx \
 	OutOfDialogReqCreator.cxx \
 	Profile.cxx \
 	PublicationCreator.cxx \
