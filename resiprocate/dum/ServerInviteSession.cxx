@@ -1,10 +1,17 @@
-#include "ServerInviteSession.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/ServerInviteSession.hxx"
 
 using namespace resip;
 
 ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg)
    : InviteSession(dum, dialog)
 {
+}
+
+ServerInviteSessionHandle 
+ServerInviteSession::getHandle()
+{
+   return ServerInviteSessionHandle(mDum, getBaseHandle().getId());
 }
 
 void 
@@ -70,22 +77,6 @@ ServerInviteSession::dispatch(const DumTimeout& timer)
 {
 }
 
-ServerInviteSession::Handle::Handle(DialogUsageManager& dum)
-   : InviteSession::Handle(dum)
-{}
-
-ServerInviteSession* 
-ServerInviteSession::Handle::operator->()
-{
-   return static_cast<ServerInviteSession*>(get());
-}
-
-InviteSession::Handle 
-ServerInviteSession::getSessionHandle()
-{
-   // don't ask, don't tell
-   return (InviteSession::Handle&)mHandle;
-}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
