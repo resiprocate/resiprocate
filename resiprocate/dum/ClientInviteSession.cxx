@@ -273,8 +273,16 @@ ClientInviteSession::end()
    switch (mState)
    {
       case Early:
-         // is it legal to cancel a specific fork/dialog. 
-         // if so, this is the place to do it
+         //if there is no fork, CANCEL, if there is a fork send a BYE
+         if (mDialog.mDialogSet.mDialogs.size() > 1)
+         {
+            InfoLog ( << "ClientInviteSession::end, Early(forking)" );        
+            mDialog.makeRequest(mLastRequest, BYE);
+            assert(mLastRequest.header(h_Vias).size() == 1);
+            mLastRequest.header(h_Vias).front().param(p_branch).reset();
+            mState = Terminated;
+            return mLastRequest;
+         }         
       case Initial:
          mDialog.makeCancel(mLastRequest);
          //!dcm! -- it could be argued that this(and similar) should happen in send so users
