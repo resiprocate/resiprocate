@@ -2,7 +2,7 @@
 #define DnsResolver_hxx
 
 #if defined(__linux__)
-//# define USE_ARES
+# define USE_ARES
 #endif
 
 #include <list>
