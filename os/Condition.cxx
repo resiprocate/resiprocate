@@ -65,25 +65,23 @@
 #include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
-
-
 #define VOCAL_SUBSYSTEM Subsystem::TEST
 
 
 Condition::Condition() : mId()
 {
 #ifdef WIN32
-	mId =  CreateEvent(
-		NULL, //LPSECURITY_ATTRIBUTES lpEventAttributes,
-		// pointer to security attributes
-		FALSE, // BOOL bManualReset,  // flag for manual-reset event
-		FALSE, //BOOL bInitialState, // flag for initial state
-		NULL //LPCTSTR lpName      // pointer to event-object name
-		);
-	assert(mId);
+   mId =  CreateEvent(
+      NULL, //LPSECURITY_ATTRIBUTES lpEventAttributes,
+      // pointer to security attributes
+      FALSE, // BOOL bManualReset,  // flag for manual-reset event
+      FALSE, //BOOL bInitialState, // flag for initial state
+      NULL //LPCTSTR lpName      // pointer to event-object name
+      );
+   assert(mId);
 #else
-    int  rc =  pthread_cond_init(&mId,0);
-    assert( rc == 0 );
+   int  rc =  pthread_cond_init(&mId,0);
+   assert( rc == 0 );
 #endif
 }
 
@@ -91,11 +89,14 @@ Condition::Condition() : mId()
 Condition::~Condition ()
 {
 #ifdef WIN32
-	BOOL ok = CloseHandle(mId);
-	assert( ok );
+   BOOL ok = CloseHandle(mId);
+   assert( ok );
 #else
-    int  rc = pthread_cond_destroy(&mId);
-    assert( rc == 0 );
+   if (pthread_cond_destroy(&mId) == EBUSY)
+   {
+      WarningLog (<< "Condition variable is busy");
+      assert(0);
+   }
 #endif
 }
 
@@ -103,9 +104,8 @@ Condition::~Condition ()
 void
 Condition::wait (Mutex* mutex)
 {
-//   DebugLog("In conditions infinite wait.");
 #ifdef WIN32 
-	WaitForSingleObject(mId,INFINITE);
+   WaitForSingleObject(mId,INFINITE);
 #else
    int ret = pthread_cond_wait(&mId, mutex->getId());
    assert( ret == 0 );
@@ -120,7 +120,6 @@ Condition::wait (Mutex* mutex, int ms)
 
    return true;
 #else
-//   DebugLog("In conditions timed wait.");
    timeval waitTime;
    gettimeofday( &waitTime, NULL );
 
@@ -134,12 +133,8 @@ Condition::wait (Mutex* mutex, int ms)
    
    assert( waitTime.tv_usec < 1000000000L );
 
-//   DebugLog("Waiting on condition for " << ms << " ms");
-
    int ret = pthread_cond_timedwait(&mId, mutex->getId(), &expiresTS);
    
-//   DebugLog(<< "Error was: " << strerror(ret));
-
    if (ret == EINTR || ret == ETIMEDOUT)
    {
       return false;
@@ -156,14 +151,14 @@ void
 Condition::signal ()
 {
 #ifdef WIN32
-	BOOL ret = SetEvent(
-		mId // HANDLE hEvent   // handle to event object
-		);
-	assert(ret);
+   BOOL ret = SetEvent(
+      mId // HANDLE hEvent   // handle to event object
+      );
+   assert(ret);
 	
 #else
-    int ret = pthread_cond_signal(&mId);
-    assert( ret == 0);
+   int ret = pthread_cond_signal(&mId);
+   assert( ret == 0);
 #endif
 }
 
@@ -183,6 +178,6 @@ Condition::broadcast()
 const vcondition_t*
 Condition::getId () const
 {
-    return ( &myId );
+   return ( &myId );
 }
 #endif
