@@ -1,0 +1,50 @@
+struct params { char *name; Headers::Type type; };
+%%
+CSEQ, Headers::CSeq
+CALL-ID, Headers::Call_ID
+CONTACT, Headers::Contact
+CONTENT-LENGTH, Headers::Content_Length
+EXPIRES, Headers::Expires
+FROM, Headers::From
+MAX-FORWARDS, Headers::Max_Forwards
+ROUTE, Headers::Route
+SUBJECT, Headers::Subject
+TO, Headers::To
+VIA, Headers::Via
+ACCEPT, Headers::Accept
+ACCEPT-ENCODING, Headers::Accept_Encoding
+ACCEPT-LANGUAGE, Headers::Accept_Language
+ALERT-INFO,Headers::Alert_Info
+ALLOW, Headers::Allow
+AUTHENTICATION-INFO, Headers::Authentication_Info
+CALL-INFO, Headers::Call_Info
+CONTENT-DISPOSITION, Headers::Content_Disposition
+CONTENT-ENCODING, Headers::Content_Encoding
+CONTENT-LANGUAGE, Headers::Content_Language
+CONTENT-TYPE, Headers::Content_Type
+DATE, Headers::Date
+ERROR-INFO, Headers::Error_Info
+IN-REPLY_TO, Headers::In-Reply_To
+MIN-EXPIRES, Headers::Min_Expires
+MIME-VERSION, Headers::MIME_Version
+ORGANIZATION, Headers::Organization
+PRIORITY, Headers::Priority
+PROXY-AUTHENTICATE, Headers::Proxy_Authenticate
+PROXY-AUTHORIZATION, Headers::Proxy_Authorization
+PROXY-REQUIRE, Headers::Proxy_Require
+RECORD-ROUTE, Headers::Record_Route
+REPLY-TO, Headers::Reply_To
+REQUIRE, Headers::Require
+RETRY-AFTER, Headers::Retry_After
+SERVER, Headers::Server
+SUPPORTED, Headers::Supported
+TIMESTAMP, Headers::Timestamp
+UNSUPPORTED, Headers::Unsupported
+USER-AGENT, Headers::User_Agent
+WARNING, Headers::Warning
+WWW-AUTHENTICATE,Headers::WWW_Authenticate
+SUBSCRIPTION-STATE,Headers::Subscription_State
+REFER-TO,Headers::Refer_To
+REFERRED-BY,Headers::Referred_By
+AUTHORIZATION, Headers::Authorization
+REPLACES,Headers::Replaces
