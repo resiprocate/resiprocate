@@ -35,28 +35,32 @@ class Security
        */
 
       /* load function return true if they worked, false otherwise */
-      bool loadAllCerts( const Data& password, char* directoryPath=NULL );
-      bool loadRootCerts( char* filePath=NULL );
+      bool loadAllCerts( const Data& password,  const Data& dirPath=Data::Empty );
+      bool loadRootCerts(  const Data& filePath );
 
-      bool loadMyPublicCert( char* filePath=NULL );
-      bool loadMyPrivateKey(  const Data& password, char* filePath=NULL );
+      bool loadMyPublicCert(  const Data& filePath );
+      bool loadMyPrivateKey(  const Data& password,  const Data& filePath );
       bool createMyKey( const Data& password, 
-                        char* filePathPublicCert=NULL, char* filePathPrivateKey=NULL  );
+                         const Data& filePathPrivateKey=Data::Empty,
+                         const Data& filePathPublicKey=Data::Empty );
 
-      bool loadPublicCert( char* filePath=NULL );
-      bool savePublicCert( const Data& certName, char* filePath=NULL );
+      bool loadPublicCert(  const Data& filePath=Data::Empty );
+      bool savePublicCert( const Data& certName,  const Data& filePath=Data::Empty );
       
       /* stuff for importing certificates from other formats */
-      bool importPkcs12Info( char* filePathForP12orPFX , const Data& password, 
-                             char* filePathPublicCert=NULL, char* filePathPrivateKey=NULL  );
-      bool importPkcs7Info(  char* filePathForP7c, char* filePathCert=NULL);
+      bool importPkcs12Info( const Data& filePathForP12orPFX , const Data& password, 
+                             const Data& filePathPublicCert=Data::Empty, 
+                             const Data& filePathPrivateKey=Data::Empty  );
+      bool importPkcs7Info(  const Data& filePathForP7c, 
+                             const Data& filePathCert=Data::Empty);
 
       /* stuff for exporting certificates to other formats */
-      bool exportPkcs12Info( char* filePathForP12orPFX , const Data& password, 
-                             char* filePathPublicCert=NULL, char* filePathPrivateKey=NULL  );
-      bool exportMyPkcs7Info(  char* filePathForP7c );
-      bool exportPkcs7Info(  char* filePathForP7c, char* filePathCert=NULL );
-      bool exportPkcs7Info(  char* filePathForP7c, const Data& recipCertName );
+      bool exportPkcs12Info( const Data& filePathForP12orPFX , const Data& password, 
+                             const Data& filePathPublicCert=Data::Empty, 
+                             const Data& filePathPrivateKey=Data::Empty  );
+      bool exportMyPkcs7Info(  const Data&  filePathForP7c );
+      bool exportPkcs7Info(  const Data& filePathForP7c, 
+                             const Data& recipCertName );
 
       
       /* stuff to build messages 
@@ -101,15 +105,18 @@ class Security
                                      // not save on disk for future
                                      // sessions. You almost allways don't want
                                      // to use this but should use addAndAve
-      void addAndSaveCertificate( Pkcs7Contents*, char* filePath=NULL ); // add cert and
+      void addAndSaveCertificate( Pkcs7Contents*, const Data& filePath=Data::Empty ); // add cert and
                                                                 // saves on disk
       Contents* uncode( Pkcs7Contents* ); // returns NULL if fails 
                
 
    private:
+      Data getPath( const Data& dir, const Data& file );
+      
       // need a map of certName to certificates
 
-      // need a root cert list 
+      // root cert list 
+      X509_STORE* certAuthorities;
 
       // my public cert
       X509* publicCert;

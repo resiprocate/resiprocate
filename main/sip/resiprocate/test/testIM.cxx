@@ -110,13 +110,14 @@ processStdin(  TuIM& tuIM, Uri* dest )
 int
 main(int argc, char* argv[])
 {  
-   Log::initialize(Log::COUT, Log::CRIT, argv[0]);
-   CritLog(<<"Test Driver for IM Starting");
+   Log::initialize(Log::COUT, Log::ERR, argv[0]);
+   
+   InfoLog(<<"Test Driver for IM Starting");
     
-   CritLog( << "\nType a line like\nto:sip:fluffy@localhost:5060\n"
+   InfoLog( << "\nType a line like\nto:sip:fluffy@localhost:5060\n"
             "to control the destination of your messages. "
             "A line with a singe period on it ends the program\n" );
-      
+   
    int port = 5060;
    Uri aor("sip:aor@localhost" );
    Uri dest("sip:you@localhost:5060");
@@ -165,6 +166,10 @@ main(int argc, char* argv[])
    //sipStack.security = new Security;
    
    bool ok = sipStack.security->loadAllCerts( Data("password") );
+   if ( !ok )
+   {
+      ErrLog( << "Could not load the certificates" );
+   }
    assert( ok );
    
    
