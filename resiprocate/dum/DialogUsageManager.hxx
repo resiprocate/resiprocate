@@ -258,7 +258,7 @@ class DialogUsageManager : public HandleManager
       void sendUsingOutboundIfAppropriate(UserProfile& userProfile, SipMessage& msg);      
 
       void addTimer(DumTimeout::Type type,
-                    unsigned long duration,
+                    unsigned long durationSeconds,
                     BaseUsageHandle target, 
                     int seq, 
                     int altseq=-1);
