@@ -1,4 +1,7 @@
 
+#include <cassert>
+
+
 #ifdef WIN32
 #include "sip2/util/Socket.hxx"
 #endif
@@ -40,19 +43,27 @@ TuIM::TuIM(SipStack* stack,
            const Uri& aor, 
            const Uri& contact,
            PageCallback* msgCallback, 
-           ErrCallback* errCallback)
+           ErrCallback* errCallback,
+		   PresCallback* pressCallback)
    : mPageCallback(msgCallback),
      mErrCallback(errCallback),
+	 mPressCallback(pressCallback),
      mStack(stack),
      mAor(aor),
-     mContact(contact)
+     mContact(contact),
+	 mPassword( Data::Empty )
 {
    assert( mStack );
    assert(mPageCallback);
    assert(mErrCallback);
 }
 
-      
+
+TuIM::PresCallback::~PresCallback()
+{
+}
+
+
 void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& encryptFor)
 {
    DebugLog( << "send to <" << dest << ">" << "\n" << text );
@@ -183,6 +194,7 @@ TuIM::process()
                   Uri from = msg->header(h_From).uri();
                   DebugLog ( << "got message from " << from );
                   
+				  assert( mPageCallback );
                   mPageCallback->receivedPage( text, from, signedBy, sigStat, encrypted );
                }
                else
@@ -196,6 +208,52 @@ TuIM::process()
 
       delete msg;
    }
+}
+
+void 
+TuIM::registerAor( const Uri& uri, const Data& password )
+{
+	assert(0);
+}
+
+
+const int 
+TuIM::getNumBudies()
+{
+	assert(0);
+	return 0;
+}
+
+const Uri 
+TuIM::getBuddyUri(const int index)
+{
+	assert(0);
+	return Uri("bad:bad@bad");
+}
+
+const Data 
+TuIM::getBuddyGroup(const int index)
+{
+	assert(0);
+	return Data::Empty;
+}
+
+void 
+TuIM::addBuddy( const Uri& uri, const Data& group )
+{
+	assert(0);
+}
+
+void 
+TuIM::removeBudy( const Uri& name)
+{
+	assert(0);
+}
+
+void 
+TuIM::setMyPresense( const bool open, const Data& status )
+{
+	assert(0);
 }
 
 
