@@ -1345,6 +1345,9 @@ NameAddr::parse(ParseBuffer& pb)
    if (!pb.eof() && *pb.position() == Symbols::STAR[0])
    {
       mAllContacts = true;
+      pb.skipChar(Symbols::STAR[0]);
+      pb.skipWhitespace();
+      // now fall through to parse header parameters
    }
    else
    {
@@ -1391,7 +1394,7 @@ NameAddr::parse(ParseBuffer& pb)
       {
          pb.skipChar(Symbols::RA_QUOTE[0]);
          pb.skipWhitespace();
-         parseParameters(pb);
+         // now fall through to parse header parameters
       }
       else
       {
@@ -1419,11 +1422,11 @@ NameAddr::parse(ParseBuffer& pb)
                   it++;
                }
             }
+            // fall through to parse any parameters left which are not Uri parameters
          }
-         // parse parameters following Uri's embedded headers
-         parseParameters(pb);
       }
    }
+   parseParameters(pb);
 }
 
 ostream&
@@ -1439,8 +1442,8 @@ NameAddr::encodeParsed(ostream& str) const
      str << mDisplayName << Symbols::LA_QUOTE;
      mUri.encodeParsed(str);
      str << Symbols::RA_QUOTE;
-     encodeParameters(str);
   }
+  encodeParameters(str);
   return str;
 }
 
