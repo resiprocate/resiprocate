@@ -14,6 +14,11 @@ class ServerOutOfDialogReq : public BaseUsage
     class Handle
     {
     };
+
+    // !rm! do we need this?:    void accept(void);
+    void accept(const SipMessage& ok);
+    void reject(int statusCode);
+    void reject(const SipMessage& response);
 };
  
 }
