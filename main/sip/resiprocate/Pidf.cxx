@@ -124,7 +124,7 @@ Pidf::encodeParsed(std::ostream& str) const
    str << "          entity=\"" << mEntity << "\">"  <<  Symbols::CRLF;
    for (vector<Tuple>::const_iterator i = mTuples.begin(); i != mTuples.end(); ++i)
    {
-      Data status( (char*)( (i->status)?"open":"closed" ) );
+      Data status( (char*)( (i->status) ? "open" : "closed" ) );
       str << "  <tuple id=\"" << i->id << "\" ";
 
       XMLCursor::encode(str, i->attributes);
@@ -132,7 +132,7 @@ Pidf::encodeParsed(std::ostream& str) const
       str << "     <status><basic>" << status << "</basic></status>" << Symbols::CRLF;
       if ( !i->contact.empty() )
       {
-         str << "     <contact priority=\"" << i->contactPriority << "\">" << "sip:" << i->contact << "</contact>" << Symbols::CRLF;
+         str << "     <contact priority=\"" << i->contactPriority << "\">" << i->contact << "</contact>" << Symbols::CRLF;
       }
       if ( !i->timeStamp.empty() )
       {
