@@ -2,6 +2,8 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#include "Repro.hxx"
+
 using namespace resip;
 using namespace repro;
 using namespace std;
