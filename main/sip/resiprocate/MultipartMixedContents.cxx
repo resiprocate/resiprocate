@@ -10,7 +10,8 @@ using namespace std;
 ContentsFactory<MultipartMixedContents> MultipartMixedContents::Factory;
 
 MultipartMixedContents::MultipartMixedContents()
-   : mContents()
+   : Contents(getStaticType()),
+     mContents()
 {}
 
 MultipartMixedContents::MultipartMixedContents(HeaderFieldValue* hfv, const Mime& contentsType)
