@@ -406,12 +406,15 @@ DnsResult::processNAPTR(int status, unsigned char* abuf, int alen)
       // queries for each supported protocol
      NAPTRFail:
       {
-         lookupSRV(mSrvKey + Symbols::SRVTCP + mTarget);
+         if (!mSips) 
+         {
+            mSRVCount++;
+         }
          mSRVCount++;
+         lookupSRV(mSrvKey + Symbols::SRVTCP + mTarget);
          if (!mSips) 
          {
             lookupSRV(mSrvKey + Symbols::SRVUDP + mTarget);
-            mSRVCount++;
          }
       }
       StackLog (<< "Doing SRV queries " << mSRVCount << " for " << mTarget);
