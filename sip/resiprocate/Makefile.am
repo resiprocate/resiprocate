@@ -1,7 +1,7 @@
 SUBDIRS = test
 CXX = ${DISTCC} @CXX@
 LIBTOOL = @LIBTOOL@ --tag=CXX
-INCLUDES = -I$(top_srcdir) -I$(top_builddir)
+INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I/usr/kerberos/include
 EXTRA_DIST = PreparseInlines.cxx PreparseDiagnostic.cxx config.hxx
 lib_LTLIBRARIES = libresiprocate.la
 libresiprocate_la_SOURCES = \
