@@ -55,6 +55,8 @@ class TransactionController
       unsigned int getTuFifoSize() const;
       unsigned int sumTransportFifoSizes() const;
       unsigned int getTransactionFifoSize() const;
+      unsigned int getNumClientTransactions() const;
+      unsigned int getNumServerTransactions() const;
       unsigned int getTimerQueueSize() const;
 
    private:
