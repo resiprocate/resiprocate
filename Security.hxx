@@ -154,9 +154,9 @@ class Security
                               Data* signedBy, 
                               SignatureStatus* sigStat ); // returns NULL if fails 
 
-   private:
       Data getPath( const Data& dir, const Data& file );
 
+   private:
 
       SSL_CTX* getTlsCtx(bool isServer);
       
