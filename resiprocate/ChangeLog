@@ -1,3 +1,16 @@
+2002-11-11    <alan@jasomi.com>
+
+	* tassert.h : Added useful macros for test drivers.
+		(See SipTortureTests.cxx for examples)
+	
+	* test/testSipStack1.cxx (main): Added arguments for controlling
+	log level.
+	
+	*  test/testPreparse.cxx(doTest1):  Added test cases for fragmentation.
+
+	* test/SipTortureTests.cxx (main):  Removed generic SipMessage
+	test cases and added lots of stuff to the Torture test.
+
 2002-10-25    <alan@jasomi.com>
 
 	* SipMessage.hxx (class SipMessage): Moved preparser client declaration.
