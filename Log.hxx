@@ -1,5 +1,3 @@
-// Copyright 2002 Cathay Networks, Inc. 
-
 #ifndef Log_hxx
 #define Log_hxx
 
