@@ -5,8 +5,8 @@
 #include <iostream>
 #include <netinet/in.h>
 #include <stdlib.h>
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #endif
@@ -128,7 +128,7 @@ UdpTransport::process(FdSet& fdset)
                        MaxBufferSize,
                        0 /*flags */,
                        (struct sockaddr*)&from,
-                       (socklen_t*)&fromLen);
+                       &fromLen);
    if ( len == SOCKET_ERROR )
    {
       int err = errno;
