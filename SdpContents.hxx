@@ -93,8 +93,8 @@ class SdpContents : public Contents
             {
                public:
                   Origin(const Data& user,
-                         const int& sessionId,
-                         const int& version,
+                         const unsigned long long& sessionId,
+                         const unsigned long long& version,
                          AddrType addr,
                          const Data& address);
                   Origin(const Origin& rhs);
