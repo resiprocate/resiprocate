@@ -1,12 +1,10 @@
-#if !defined(RESIP_REQUEST_CONTEXT_HXX)
-#define RESIP_REQUEST_CONTEXT_HXX 
+#if !defined(RESIP_REQUEST_PROCESSOR_CHAIN_HXX)
+#define RESIP_REQUEST_PROCESSOR_CHAIN_HXX 
 
 namespace repro
 {
-  class RequestContext
+  class RequestProcessorChain
   {
-    private:
-      
   };
 }
 #endif

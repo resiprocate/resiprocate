@@ -1,15 +1,14 @@
-#if !defined(RESIP_REQUEST_CONTEXT_HXX)
-#define RESIP_REQUEST_CONTEXT_HXX 
-
-namespace repro
-{
-  class RequestContext
-  {
-    private:
-      
-  };
-}
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
 #endif
+
+#include "RequestProcessorChain.hxx"
+
+using namespace resip;
+using namespace repro;
+using namespace std;
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -5,6 +5,20 @@ namespace repro
 {
   class RequestProcessor
   {
+    public:
+      RequestProcessor();
+      virtual ~RequestProcessor();
+
+
+      typedef enum
+      {
+        GO_TO_THE_NEXT_PROCESSOR,
+        SKIP_THIS_CHAIN,
+        SKIP_ALL_CHAINS
+      }
+      processor_action_t;
+
+      virtual processor_action_t handleRequest(RequestContext &);
   };
 }
 #endif
