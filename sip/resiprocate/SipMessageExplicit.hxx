@@ -86,6 +86,7 @@ class SipMessage
       HEADER(Retry_After);
       HEADER(Server);
       HEADER(Subject);
+      HEADER(Subscription_State);
       HEADER(Timestamp);
       HEADER(To);
       HEADER(User_Agent);
@@ -108,7 +109,6 @@ class SipMessage
       MULTI_HEADER(Record_Route);
       MULTI_HEADER(Require);
       MULTI_HEADER(Route);
-      MULTI_HEADER(Subscription_State);
       MULTI_HEADER(Supported);
       MULTI_HEADER(Unsupported);
       MULTI_HEADER(Via);

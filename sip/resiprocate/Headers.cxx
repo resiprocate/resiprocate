@@ -81,6 +81,8 @@ defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategor
 defineHeader(MIMEVersion, "Mime-Version", Token);
 defineHeader(Priority, "Priority", Token);
 defineHeader(Event, "Event", Token);
+defineHeader(SubscriptionState, "Subscription-State", Token);
+
 defineMultiHeader(AllowEvents, "Allow-Events", Token);
 // explicitly declare to avoid h_AllowEventss, ugh
 H_AllowEventss resip::h_AllowEvents;
@@ -92,7 +94,6 @@ defineMultiHeader(ContentLanguage, "Content-Language", Token);
 defineMultiHeader(ProxyRequire, "Proxy-Require", Token);
 defineMultiHeader(Require, "Require", Token);
 defineMultiHeader(Supported, "Supported", Token);
-defineMultiHeader(SubscriptionState, "Subscription-State", Token);
 defineMultiHeader(Unsupported, "Unsupported", Token);
 defineMultiHeader(SecurityClient, "Security-Client", Token);
 defineMultiHeader(SecurityServer, "Security-Server", Token);
