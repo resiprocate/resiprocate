@@ -71,7 +71,9 @@ class BaseSecurity
             Data validFrom;
             Data validTo;
       };
-      std::vector<CertificateInfo> getRootCertDescriptions() const;
+
+        typedef std::vector<CertificateInfo> CertificateInfoContainer;
+        CertificateInfoContainer getRootCertDescriptions() const;
 
       // All of these guys can throw SecurityException
 
