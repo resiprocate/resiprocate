@@ -1,4 +1,4 @@
-# $Id: Makefile.tools,v 1.5 2003/04/20 18:09:22 fluffy Exp $
+# $Id: Makefile.tools,v 1.6 2003/10/01 18:36:44 jason Exp $
 
 ######################################################################
 #                     Default tool names/locations
@@ -52,10 +52,10 @@ CFLAGS		+= -Wall -fPIC
 CXXFLAGS	+= -Wall -fPIC -Wno-deprecated
 DFLAG_INTEGRATED = -MMD
 REPO_FLAG       = -frepo -fPIC
-DEBUG_FLAG	= -g
+DEBUG_FLAG	= -g -O2
 COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
 ifneq  ($(OSTYPE),Darwin)
-DEBUG_FLAG	= -ggdb
+DEBUG_FLAG	= -ggdb -O2
 LD_STATIC       = -Wl,-Bstatic
 LD_DYNAMIC      = -Wl,-Bdynamic
 else
