@@ -4,9 +4,12 @@
 #include <sipstack/Executive.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/Message.hxx>
+#include <sipstack/Logger.hxx>
+
 
 using namespace Vocal2;
 
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 SipStack::SipStack()
   : mExecutive(*this),
     mTransportSelector(*this),
@@ -43,13 +46,19 @@ SipStack::receive()
    // waiting message. Otherwise, return 0
    if (mTUFifo.messageAvailable())
    {
+      DebugLog (<< "message available");
+      
       // we should only ever have SIP messages on the TU Fifo
       Message *tmpMsg = mTUFifo.getNext();
       SipMessage *sipMsg = dynamic_cast<SipMessage*>(tmpMsg);
       assert (sipMsg);
       return sipMsg;
    }
-   return 0;
+   else
+   {
+      DebugLog (<< "no message available");
+      return 0;
+   }
 }
 
 
