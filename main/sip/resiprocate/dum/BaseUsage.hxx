@@ -44,6 +44,7 @@ class BaseUsage
             DialogUsageManager* mDum;
             Id mId;
             friend class DialogUsageManager;
+            friend class Dialog;
             static UInt64 getNext();
       };
 
