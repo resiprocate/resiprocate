@@ -1,7 +1,7 @@
 #if !defined(RESIP_CLIENTDIALOGSET_HXX)
 #define RESIP_CLIENTDIALOGSET_HXX
 
-#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/DialogId.hxx"
 #include "resiprocate/dum/DialogSetId.hxx"
 #include "resiprocate/dum/MergedRequestKey.hxx"
 
@@ -9,6 +9,7 @@ namespace resip
 {
 
 class BaseCreator;
+class Dialog;
 class DialogUsageManager;
 
 /** @file DialogSet.hxx
@@ -23,16 +24,8 @@ class DialogSet
       virtual ~DialogSet();
       
       DialogSetId getId();
-      
       void addDialog(Dialog*);
-      
-//!dcm! -- kill      DialogIdSet getDialogs() const;
       bool empty() const;
-
-//!dcm! -- kill
-//      Dialog* findDialog(const DialogId id);
-//      Dialog* findDialog(const Data& otherTag);
-      
       BaseCreator* getCreator();
 
       void cancel(const SipMessage& cancelMsg);
@@ -44,7 +37,8 @@ class DialogSet
       Dialog* findDialog(const DialogId id);
 
       MergedRequestKey mMergeKey;
-      std::list<Dialog*> mDialogs;
+      typedef std::map<DialogId,Dialog*> DialogMap;
+      DialogMap mDialogs;
       BaseCreator* mCreator;
       DialogSetId mId;
       DialogUsageManager& mDum;

@@ -1,17 +1,17 @@
-#include "ClientAuthManager.hxx"
-#include "DialogUsageManager.hxx"
-#include "InviteSessionCreator.hxx"
-#include "Profile.hxx"
-#include "PublicationCreator.hxx"
-#include "RegistrationCreator.hxx"
-#include "ServerAuthManager.hxx"
-#include "SubscriptionCreator.hxx"
-
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
-#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/dum/ClientAuthManager.hxx"
+#include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/DialogUsageManager.hxx"
+#include "resiprocate/dum/InviteSessionCreator.hxx"
+#include "resiprocate/dum/Profile.hxx"
+#include "resiprocate/dum/PublicationCreator.hxx"
+#include "resiprocate/dum/RegistrationCreator.hxx"
+#include "resiprocate/dum/ServerAuthManager.hxx"
+#include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/os/Inserter.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
