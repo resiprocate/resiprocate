@@ -86,7 +86,7 @@ TransactionState::process(SipStack& stack)
       if (sip->header(h_To).exists(p_tag) && sip->header(h_To).param(p_tag) != state->mToTag)
       {
          DebugLog (<< "Must have received an ACK to a 200");
-         state = 0; // will be sent statelessly
+         state = 0; // will be sent statelessly, if from TU
       }
    }
 
@@ -147,6 +147,10 @@ TransactionState::process(SipStack& stack)
                   stack.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
                }
             }
+            else if (sip->header(h_RequestLine).getMethod() == ACK)
+            {
+               // !jf! no transaction need be created here
+            }
             else 
             {
                DebugLog(<<"Adding non-INVITE transaction state " << tid);
@@ -156,6 +160,7 @@ TransactionState::process(SipStack& stack)
                state->mSource.port = Helper::getSentPort(*sip);
                stack.mTransactionMap.add(tid,state);
             }
+
             // Incoming ACK just gets passed to the TU
             DebugLog(<< "Adding incoming message to TU fifo " << tid);
             stack.mTUFifo.add(sip);
@@ -1218,7 +1223,8 @@ TransactionState::isSentUnreliable(Message* msg) const
 const Data&
 TransactionState::tid(SipMessage* sip) const
 {
-   return mId.empty() ? sip->getTransactionId() : mId;
+   assert((mMachine == Stateless && !mId.empty()) || sip);
+   return (mId.empty() && sip) ? sip->getTransactionId() : mId;
 }
 
 void
