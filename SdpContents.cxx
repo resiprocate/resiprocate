@@ -26,7 +26,7 @@ SdpContents::parse(ParseBuffer& pb)
 }
 
 ostream&
-SdpContents::encode(ostream& s) const
+SdpContents::encodeParsed(ostream& s) const
 {
    mSession.encode(s);
    return s;

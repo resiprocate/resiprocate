@@ -306,7 +306,7 @@ Uri::clone() const
 }
  
 std::ostream& 
-Uri::encode(std::ostream& str) const
+Uri::encodeParsed(std::ostream& str) const
 {
    str << mScheme << Symbols::COLON; 
    if (!mUser.empty())

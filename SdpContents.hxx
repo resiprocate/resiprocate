@@ -224,13 +224,6 @@ class SdpContents : public Contents
                   friend class Session::Medium;
             };
 
-            Session(int version,
-                    const Origin& origin,
-                    const Data& name);
-
-            void parse(ParseBuffer& pb);
-            std::ostream& encode(std::ostream&) const;
-
             class Medium
             {
                public:
@@ -281,6 +274,13 @@ class SdpContents : public Contents
 
                   friend class Session;
             };
+
+            Session(int version,
+                    const Origin& origin,
+                    const Data& name);
+
+            void parse(ParseBuffer& pb);
+            std::ostream& encode(std::ostream&) const;
 
             int getVersion() const {return mVersion;}
             const Origin& getOrigin() const {return mOrigin;}
@@ -333,7 +333,7 @@ class SdpContents : public Contents
 
       const Session& getSession() {checkParsed(); return mSession;}
 
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
       virtual const Mime& getType() const;
    private:
