@@ -73,6 +73,9 @@ class ServerInviteSession: public InviteSession
       // disabled
       ServerInviteSession(const ServerInviteSession&);
       ServerInviteSession& operator=(const ServerInviteSession&);
+
+      std::deque<SipMessage> mUnacknowledgedProvisionals; // all of them
+      SipMessage m200; // for retransmission
 };
 
 }
