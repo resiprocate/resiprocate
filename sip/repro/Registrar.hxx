@@ -1,46 +1,31 @@
-#if !defined(RESIP_PROXY_HXX)
-#define RESIP_PROXY_HXX 
+#if !defined(RESIP_REGISTRAR_HXX)
+#define RESIP_REGISTRAR_HXX 
 
-#include "resiprocate/SipMessage.hxx"
-#include "resiprocate/TransactionUser.hxx"
-#include "resiprocate/os/HashMap.hxx"
-#include "resiprocate/os/ThreadIf.hxx"
-#include "repro/RequestContext.hxx"
-
-namespace resip
-{
-class SipStack;
-}
+#include "resiprocate/dum/RegistrationHandler.hxx"
 
 namespace repro
 {
 
-class RequestProcessorChain;
-
-class Proxy : public resip::TransactionUser, public resip::ThreadIf
+class Registrar: public resip::ServerRegistrationHandler
 {
    public:
-      Proxy(resip::SipStack&, RequestProcessorChain&);
-      virtual ~Proxy();
+      virtual ~Registrar();
+     
+      virtual void onRefresh(resip::ServerRegistrationHandle,
+                             const resip::SipMessage& reg);
+
+      virtual void onRemove(resip::ServerRegistrationHandle,
+                            const resip::SipMessage& reg);
       
-      virtual void thread();
+      virtual void onRemoveAll(resip::ServerRegistrationHandle,
+                               const resip::SipMessage& reg);
       
-      virtual bool isMyDomain(resip::Uri& uri);
+      virtual void onAdd(resip::ServerRegistrationHandle,
+                         const resip::SipMessage& reg);
       
-   private:
-      static RequestProcessorChain mRequestProcessorChain;
-      resip::SipStack& mStack;
-      
-      /// the sip stack will hand events up to the proxy through this fifo
-      resip::Fifo<resip::Message> mFifo; 
-      
-      /** a map from transaction id to RequestContext. Store the server
-          transaction and client transactions in this map. The
-          TransactionTerminated events from the stack will be passed to the
-          RequestContext
-      */
-      HashMap<resip::Data, RequestContext*> mRequestContexts;
-      
+      virtual void onQuery(resip::ServerRegistrationHandle,
+                           const resip::SipMessage& reg);
+
 };
 }
 #endif
