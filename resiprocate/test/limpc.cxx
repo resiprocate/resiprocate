@@ -33,10 +33,6 @@ WINDOW* newwin(...) { return NULL; };
 void waddstr(WINDOW*, const char* text) { std::clog << text; };
 char getch()
 {
-#if 0
-	assert(0);
-	return 0;
-#else
    char buf[1];
    int r = read(fileno(stdin),&buf,1);
    if ( r ==1 )
@@ -44,8 +40,8 @@ char getch()
       return buf[0];
    }
    return 0;
-#endif
 };
+
 void werase(WINDOW*) {};
 void wrefresh(...) {};
 void mvhline(...) {};
@@ -83,11 +79,9 @@ void mvvline(...) {};
 static int myMain(int argc, char* argv[]);
 
 using namespace resip;
-
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
 
 static WINDOW* commandWin=0;
 static WINDOW* textWin=0;
@@ -99,24 +93,24 @@ static Uri   dest;
 void 
 displayPres()
 {
-      werase(statusWin);
+   werase(statusWin);
 
-      for( int i=0; i<tuIM->getNumBuddies();i++)
-      {
-         Uri uri = tuIM->getBuddyUri(i);
-         Data status;
-         bool online = tuIM->getBuddyStatus(i,&status);
-         const char* stat = (online)?"online":"offline";
+   for( int i=0; i<tuIM->getNumBuddies();i++)
+   {
+      Uri uri = tuIM->getBuddyUri(i);
+      Data status;
+      bool online = tuIM->getBuddyStatus(i,&status);
+      const char* stat = (online)?"online":"offline";
          
-         waddstr(statusWin,uri.getAor().c_str());
-         waddstr(statusWin," ");
-         waddstr(statusWin,stat);
-         waddstr(statusWin," ");
-         waddstr(statusWin,status.c_str());
-         waddstr(statusWin,"\n");
-      }
+      waddstr(statusWin,uri.getAor().c_str());
+      waddstr(statusWin," ");
+      waddstr(statusWin,stat);
+      waddstr(statusWin," ");
+      waddstr(statusWin,status.c_str());
+      waddstr(statusWin,"\n");
+   }
 
-     wrefresh(statusWin);  
+   wrefresh(statusWin);  
 }
 
 
@@ -188,7 +182,7 @@ TestCallback::receivedPage( const Data& msg, const Uri& from,
       case  SignatureIsBad:
          //cout << " -bad signature- ";
          waddstr(textWin,"bad signature");
-      break;
+	 break;
       case  SignatureNone:
          //cout << " -no signature- ";
          waddstr(textWin,"no signature");
@@ -297,7 +291,7 @@ processStdin( Uri* dest, bool sign, bool encryp )
       werase(commandWin);
       waddstr(commandWin,buf);
 
-     wrefresh(textWin);
+      wrefresh(textWin);
       wrefresh(statusWin);
       wrefresh(commandWin);
 
@@ -577,9 +571,9 @@ myMain(int argc, char* argv[])
       }
       else if (!strcmp(argv[i],"-dtlsPort"))
       {
-          i++;
-          assert( i<argc );
-          dtlsPort = atoi( argv[i] );
+	 i++;
+	 assert( i<argc );
+	 dtlsPort = atoi( argv[i] );
       }
       else if (!strcmp(argv[i],"-aor"))
       {
@@ -600,14 +594,14 @@ myMain(int argc, char* argv[])
       {
          i++;
          assert( i<argc );
-          try
+	 try
          {
             outbound = Uri(Data(argv[i]));
          }
-          catch (...)
-          {
-             ErrLog( <<"Outbound URI is not valid - must start with sip: ");
-             exit(-1);
+	 catch (...)
+	 {
+	    ErrLog( <<"Outbound URI is not valid - must start with sip: ");
+	    exit(-1);
          }
       } 
       else if (!strcmp(argv[i],"-contact"))
@@ -803,7 +797,7 @@ myMain(int argc, char* argv[])
    }
 
 
-    if (genUserCert)
+   if (genUserCert)
    {
       assert( security );
       security->generateUserCert(aor.getAor());
@@ -837,13 +831,13 @@ myMain(int argc, char* argv[])
          {
             sipStack.addTransport(TLS, tlsPort, V4, Data::Empty, tlsDomain );
          }
-   //if (!noV6) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V6);
+	 //if (!noV6) sipStack.addTlsTransport(tlsPort,Data::Empty,Data::Empty,Data::Empty,V6);
       }
    }
 #if USE_DTLS
    if ( dtlsPort != 0 )
    {
-     if ( noTls != true )
+      if ( noTls != true )
       {
          if (!noV4) 
          {
@@ -961,7 +955,7 @@ myMain(int argc, char* argv[])
       tuIM->addStateAgent( uri );
    }
 
-  displayPres();
+   displayPres();
  
    waddstr(textWin,"Use -help on the command line to view options\n");
    waddstr(textWin,"To set where your messages will get sent type\n");
