@@ -1,5 +1,5 @@
 #include "ServerPublication.hxx"
-
+#include "Dialog.hxx"
 using namespace resip;
 
 ServerPublication::ServerPublication(DialogUsageManager& dum,
@@ -7,6 +7,11 @@ ServerPublication::ServerPublication(DialogUsageManager& dum,
    : BaseUsage(dum, dialog),
      mHandle(dum)
 {}
+
+ServerPublication::~ServerPublication()
+{
+   mDialog.mServerPublication = 0;
+}
 
 ServerPublication::Handle::Handle(DialogUsageManager& dum)
    : BaseUsage::Handle(dum)

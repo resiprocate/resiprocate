@@ -11,7 +11,9 @@ BaseUsage::BaseUsage(DialogUsageManager& dum, Dialog& dialog) :
 }
 
 BaseUsage::~BaseUsage()
-{}
+{
+   mDialog.possiblyDie();
+}
 
 // connected to BaseUsage in DialogManager on make...
 BaseUsage::Handle::Handle(DialogUsageManager& dum)
