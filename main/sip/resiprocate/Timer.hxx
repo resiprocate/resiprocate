@@ -30,7 +30,9 @@ class Timer
          TimerH,
          TimerI,
          TimerJ,
-         TimerK
+         TimerK,
+         TimerTrying,
+         TimerStale
       } Type;
       
       Timer(unsigned long ms, Type type, const Data& transactionId);
@@ -44,6 +46,13 @@ class Timer
       static void setupTimeOffsets(); // initialize
       static UInt64 getTimeMicroSec(); // get a 64 bit time
       static UInt64 getTimeMs(); // in ms
+
+      static const unsigned long T1;
+      static const unsigned long T2;
+      static const unsigned long T4;
+      static const unsigned long T100;
+      static const unsigned long TC;
+      static const unsigned long TD;
       
    private:
       static UInt64 getSystemTime();
