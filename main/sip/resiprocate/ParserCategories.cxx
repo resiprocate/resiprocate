@@ -1137,6 +1137,20 @@ GenericURI::encodeParsed(std::ostream& str) const
 //====================
 // Via:
 //====================
+
+Via::Via()  
+   : ParserCategory(), 
+     mProtocolName(Symbols::ProtocolName),
+     mProtocolVersion(Symbols::ProtocolVersion),
+     mTransport(Symbols::Undefined),
+     mSentHost(),
+     mSentPort(0) 
+{
+   // insert a branch in all Vias (default constructor)
+   this->param(p_branch);
+   this->param(p_rport); // add the rport parameter by default as per rfc 3581
+}
+
 Via::Via(const Via& rhs)
    : ParserCategory(rhs),
      mProtocolName(rhs.mProtocolName),
@@ -1144,7 +1158,18 @@ Via::Via(const Via& rhs)
      mTransport(rhs.mTransport),
      mSentHost(rhs.mSentHost),
      mSentPort(rhs.mSentPort)
-{}
+{
+}
+
+Via::Via(HeaderFieldValue* hfv, Headers::Type type) 
+   : ParserCategory(hfv, type),
+     mProtocolName(Symbols::ProtocolName),
+     mProtocolVersion(Symbols::ProtocolVersion),
+     mTransport(Symbols::UDP), // !jf! 
+     mSentHost(),
+     mSentPort(-1) 
+{
+}
 
 Via&
 Via::operator=(const Via& rhs)
@@ -1182,9 +1207,12 @@ Via::parse(ParseBuffer& pb)
    pb.skipToChar('/');
    pb.skipChar();
    startMark = pb.skipWhitespace();
-   pb.skipNonWhitespace();
-   pb.data(mTransport, startMark);
 
+   // !jf! this should really be skipTokenChar() since for instance, if the
+   // protocol token is missing it will read the rest of the Via into this field
+   pb.skipNonWhitespace(); 
+   pb.data(mTransport, startMark);
+   
    startMark = pb.skipWhitespace();
    if (*startMark == '[')
    {

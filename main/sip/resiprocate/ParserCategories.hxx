@@ -438,26 +438,8 @@ class Via : public ParserCategory
    public:
       enum {commaHandling = CommasAllowedOutputMulti};
 
-      Via() 
-         : ParserCategory(), 
-           mProtocolName(Symbols::ProtocolName),
-           mProtocolVersion(Symbols::ProtocolVersion),
-           mTransport(),
-           mSentHost(),
-           mSentPort(0) 
-      {
-         // insert a branch in all Vias (default constructor)
-         this->param(p_branch);
-         this->param(p_rport); // add the rport parameter by default as per rfc 3581
-      }
-
-      Via(HeaderFieldValue* hfv, Headers::Type type) 
-         : ParserCategory(hfv, type),
-           mProtocolName(Symbols::ProtocolName),
-           mProtocolVersion(Symbols::ProtocolVersion),
-           mTransport(Symbols::UDP), // !jf! 
-           mSentHost(),
-           mSentPort(-1) {}
+      Via();
+      Via(HeaderFieldValue* hfv, Headers::Type type);
       Via(const Via&);
       Via& operator=(const Via&);
 
