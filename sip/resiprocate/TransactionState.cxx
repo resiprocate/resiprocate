@@ -388,18 +388,18 @@ TransactionState::processClientNonInvite(  Message* msg )
       mStack.mTimers.add(Timer::TimerF, msg->getTransactionId(), 64*Timer::T1 );
       sendToWire(sip);  // don't delete
    }
-   else if (isSentReliable(msg))
-   {
-      //DebugLog (<< "received sent reliably message");
-      // ignore
-      delete msg;
-   } 
    else if (isSentUnreliable(msg))
    {
       //DebugLog (<< "received sent unreliably message");
       // state might affect this !jf!
       // should we set mIsReliable = false here !jf!
       mStack.mTimers.add(Timer::TimerE1, msg->getTransactionId(), Timer::T1 );
+      mIsReliable = false;
+      delete msg;
+   }
+   else if (isSentReliable(msg))
+   {
+      mIsReliable = true;
       delete msg;
    }
    else if (isResponse(msg) && isFromWire(msg)) // from the wire
@@ -597,7 +597,6 @@ TransactionState::processClientInvite(  Message* msg )
          */
          case INVITE:
             mStack.mTimers.add(Timer::TimerA, msg->getTransactionId(), Timer::T1 );
-            delete msg;
             break;
             
          case CANCEL:
@@ -605,17 +604,16 @@ TransactionState::processClientInvite(  Message* msg )
             {
                mCancelStateMachine->processClientNonInvite(msg);
             }
-            else
-            {
-               delete msg;
-            }
             // !jf! memory mgmt? 
             break;
-            
-         default:
-            delete msg;
-            break;
       }
+      mIsReliable = false;
+      delete msg;
+   }
+   else if (isSentReliable(msg))
+   {
+      mIsReliable = true;
+      delete msg;
    }
    else if (isResponse(msg) && isFromWire(msg))
    {
@@ -836,6 +834,16 @@ TransactionState::processServerNonInvite(  Message* msg )
                   << " state=" << *this);
          assert(0);
       }
+   }
+   else if (isSentUnreliable(msg))
+   {
+      mIsReliable = false;
+      delete msg;
+   }
+   else if (isSentReliable(msg))
+   {
+      mIsReliable = true;
+      delete msg;
    }
    else if (isResponse(msg) && isFromTU(msg))
    {
@@ -1116,6 +1124,16 @@ TransactionState::processServerInvite(  Message* msg )
             delete msg;
             break;
       }
+   }
+   else if (isSentUnreliable(msg))
+   {
+      mIsReliable = false;
+      delete msg;
+   }
+   else if (isSentReliable(msg))
+   {
+      mIsReliable = true;
+      delete msg;
    }
    else if (isTimer(msg))
    {
