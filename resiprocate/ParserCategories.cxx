@@ -1333,6 +1333,13 @@ NameAddr::NameAddr(const Data& unparsed)
    *this = tmp;
 }
 
+NameAddr::NameAddr(const Uri& uri)
+   : ParserCategory(),
+     mAllContacts(false),
+     mUri(uri),
+     mDisplayName()
+{}
+
 NameAddr::~NameAddr()
 {}
 
