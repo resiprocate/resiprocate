@@ -35,14 +35,14 @@ class TransportSelector
      
       void addTransport( TransportType,
                          int port,
-                         const Data& hostName="",
-                         const Data& nic="");
-
+                         bool ipv6,
+                         const Data& ipInterface);
       void addTlsTransport(const Data& domainName, 
                            const Data& keyDir,
                            const Data& privateKeyPassPhrase,
                            int port, 
-                           const Data& hostName="", const Data& nic="");
+                           bool ipv6,
+                           const Data& ipInterface);
 
       DnsResult* dnsResolve(SipMessage* msg, DnsHandler* handler);
 
