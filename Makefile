@@ -10,6 +10,6 @@ tests: resiprocate
 	cd resiprocate/test; $(MAKE)
 
 ares:
-	cd contrib/ares-1.1.1; ./configure; $(MAKE)
+	cd contrib/ares; ./configure; $(MAKE)
 
 contrib: ares
