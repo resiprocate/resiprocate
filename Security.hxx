@@ -163,6 +163,7 @@ class BaseSecurity
       bool hasPrivateKey (PEMType type, const Data& key, bool read) const;
       bool removePrivateKey (PEMType type, const Data& key, bool remove);
       Data getPrivateKeyPEM (PEMType type, const Data& key, bool read) const;
+      Data getPrivateKeyDER (PEMType type, const Data& key, bool read) const;
 
       //===========================
       friend class TlsConnection;
