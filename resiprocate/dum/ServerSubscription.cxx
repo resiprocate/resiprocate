@@ -16,10 +16,9 @@ ServerSubscription::ServerSubscription(DialogUsageManager& dum,
                                        Dialog& dialog,
                                        const SipMessage& req)
    : BaseSubscription(dum, dialog, req),
-     mSubscriptionState(Invalid),
-     mLastRequest(req),
      mExpires(60)
 {
+   mLastRequest = req;
 }
 
 ServerSubscription::~ServerSubscription()
@@ -48,7 +47,7 @@ ServerSubscription::send(SipMessage& msg)
       {
          if(msg.exists(h_Expires))
          {
-            mDum.addTimer(DumTimeout::Subscription, msg.header(h_Expires).value(), getBaseHandle(),  0);
+            mDum.addTimer(DumTimeout::Subscription, msg.header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
             mDum.send(msg);
          }
          else
@@ -70,12 +69,6 @@ ServerSubscription::send(SipMessage& msg)
    }
 }
 
-SubscriptionState 
-ServerSubscription::getSubscriptionState()
-{
-   return mSubscriptionState;
-}
-
 void 
 ServerSubscription::setSubscriptionState(SubscriptionState state)
 {
@@ -90,7 +83,7 @@ ServerSubscription::dispatch(const SipMessage& msg)
 
    if (msg.isRequest())
    {
-      //!dcm! -- need to have a mechansim to retrieve default & acceptable
+      //!dcm! -- need to have a mechanism to retrieve default & acceptable
       //expiration times for an event package--part of handler API?
       if (msg.exists(h_Expires))
       {         
@@ -102,6 +95,29 @@ ServerSubscription::dispatch(const SipMessage& msg)
             send(mLastNotify);
             return;
          }
+         if (mSubscriptionState == Invalid)
+         {
+            //!dcm! -- should initial state be pending?
+            mSubscriptionState = Init;
+            handler->onNewSubscription(getHandle(), msg);            
+         }
+         else
+         {
+            handler->onRefresh(getHandle(), msg);            
+         }
+      }
+   }
+   else
+   {
+      int code = msg.header(h_StatusLine).statusCode();
+      if (code == 200 && mSubscriptionState == Terminated)
+      {
+         handler->onTerminated(getHandle());
+      }
+      else if (code > 399)
+      {
+         handler->onError(getHandle(), msg);
+         handler->onTerminated(getHandle());
       }
    }
 }
@@ -119,11 +135,14 @@ void
 ServerSubscription::dispatch(const DumTimeout& timeout)
 {
    assert(timeout.type() == DumTimeout::Subscription);
-   ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
-   assert(handler);
-   makeNotifyExpires();
-   handler->onExpired(getHandle(), mLastNotify);
-   send(mLastNotify);
+   if (timeout.seq() == mTimerSeq)
+   {
+      ServerSubscriptionHandler* handler = mDum.getServerSubscriptionHandler(mEventType);
+      assert(handler);
+      makeNotifyExpires();
+      handler->onExpired(getHandle(), mLastNotify);
+      send(mLastNotify);
+   }
 }
 
 SipMessage& 

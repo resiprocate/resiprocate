@@ -610,12 +610,16 @@ DialogUsageManager::processRequest(const SipMessage& request)
             break;
          }
 
-         case INVITE:  // new INVITE
          case SUBSCRIBE:
-         case REFER: // out-of-dialog REFER
          case PUBLISH:
-         case INFO :   // handle non-dialog (illegal) INFOs
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
+            if (!checkEventPackage(request))
+            {
+               return;
+            }
+         case INVITE:  // new INVITE
+         case REFER: // out-of-dialog REFER
+         case INFO :   // handle non-dialog (illegal) INFOs
          {
             {
                DialogSetId id(request);
@@ -718,6 +722,46 @@ DialogUsageManager::processResponse(const SipMessage& response)
          InfoLog (<< "Throwing away stray response: " << response.brief());
       }
    }   
+}
+
+bool 
+DialogUsageManager::checkEventPackage(const SipMessage& request)
+{
+   int failureCode = 0;   
+   MethodTypes method = request.header(h_RequestLine).method();
+   if (!request.exists(h_Event) || (method == NOTIFY && !request.exists(h_SubscriptionState)))
+   {
+      failureCode = 400;
+   }
+   else 
+   {
+      switch(method)
+      {
+         case SUBSCRIBE:
+            if (getServerSubscriptionHandler(request.header(h_Event).value()))
+            {
+               failureCode = 489;
+            }
+            break;
+         case NOTIFY:
+            if (getClientSubscriptionHandler(request.header(h_Event).value()))
+            {
+               failureCode = 489;
+            }
+            break;
+         case PUBLISH:
+            assert(0);
+      }
+   }
+   
+   if (failureCode > 0)
+   {
+      SipMessage response;
+      makeResponse(response, request, failureCode);
+      send(response);
+      return false;
+   }
+   return true;   
 }
  
 DialogSet*

@@ -309,7 +309,6 @@ Dialog::dispatch(const SipMessage& msg)
             }
             else
             {
-               //some checks here?
                server = makeServerSubscription(request);
                mServerSubscriptions.push_back(server);
                server->dispatch(request);
