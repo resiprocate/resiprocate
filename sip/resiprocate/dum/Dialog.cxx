@@ -385,10 +385,18 @@ Dialog::dispatch(const SipMessage& msg)
             else
             {
                BaseCreator* creator = mDialogSet.getCreator();
-               if (creator)
+               if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
+                               creator->getLastRequest().header(h_RequestLine).method() == REFER))
                {
-                  InfoLog (<< "Making subscription from NOTIFY: " << creator->getLastRequest());
-                  ClientSubscription* sub = makeClientSubscription(request);
+                  InfoLog (<< "Making subscription from creator: " << creator->getLastRequest());
+                  ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
+                  mClientSubscriptions.push_back(sub);
+                  sub->dispatch(request);
+               }
+               else if (mInviteSession->mLastRequest.header(h_RequestLine).method() == REFER)
+               {
+                  InfoLog (<< "Making subscription from refer: " << mInviteSession->mLastRequest);
+                  ClientSubscription* sub = makeClientSubscription(mInviteSession->mLastRequest);
                   mClientSubscriptions.push_back(sub);
                   sub->dispatch(request);
                }
@@ -524,26 +532,50 @@ Dialog::dispatch(const SipMessage& msg)
                   //!dcm! -- can't subscribe in an existing Dialog, this is all 
                   //a bit of a hack.
                   BaseCreator* creator = mDialogSet.getCreator();
-                  assert(creator);
-                  assert(creator->getLastRequest().exists(h_Event));
-                  ClientSubscriptionHandler* handler = 
-                     mDum.getClientSubscriptionHandler(creator->getLastRequest().header(h_Event).value());
-                  assert(handler);
-                  handler->onTerminated(ClientSubscriptionHandle::NotValid(), response);
-                  possiblyDie();
+                  if (!creator || !creator->getLastRequest().exists(h_Event))
+                  {
+                     return;
+                  }
+                  else
+                  {
+                     ClientSubscriptionHandler* handler = 
+                        mDum.getClientSubscriptionHandler(creator->getLastRequest().header(h_Event).value());
+                     if (handler)
+                     {
+                        handler->onTerminated(ClientSubscriptionHandle::NotValid(), response);
+                        possiblyDie();
+                     }
+                  }
                }
             }
          }
          break;
          case NOTIFY:
          {
-            //only dispatch if there is a matching server subscription. DUM does
-            //not handle responses to out-of-dialog NOTIFY messages
-            ServerSubscription* server = findMatchingServerSub(response);
-            if (server)
+            //2xx responses are treated as retransmission quenchers(handled by
+            //the stack). Failures are dispatched to all ServerSubsscriptions,
+            //which may not be correct.
+
+            int code = msg.header(h_StatusLine).statusCode();
+            if (code >= 300)
             {
-               server->dispatch(response);
+               //!dcm! -- ick, write guard
+               mDestroying = true;               
+               for (list<ServerSubscription*>::iterator it = mServerSubscriptions.begin();
+                    it != mServerSubscriptions.end(); )
+               {
+                  ServerSubscription* s = *it;
+                  it++;
+                  s->dispatch(msg);
+               }
+               mDestroying = false;
+               possiblyDie();
             }
+//             ServerSubscription* server = findMatchingServerSub(response);
+//             if (server)
+//             {
+//                server->dispatch(response);
+//             }
          }
          break;         
          default:
@@ -793,7 +825,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
    }
    else
    {
-      Helper::makeResponse(response, request, code, mLocalContact);
+      Helper::makeResponse(response, request, code);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
 
    }
