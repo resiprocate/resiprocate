@@ -374,7 +374,7 @@ TransportSelector::dnsResolve(SipMessage* msg,
       }
       else
       {
-         DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri());
+         DebugLog (<< "Looking up dns entries for " << msg->header(h_RequestLine).uri() << " " << msg->brief());
          result = mDns.lookup(msg->header(h_RequestLine).uri(), handler);
       }
    }
@@ -614,7 +614,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          assert(!msg->getEncoded().empty());
          DebugLog (<< "Transmitting to " << target
-		   << " via " << source << endl << encoded.escaped());
+		   << " via " << source 
+                   << encoded.escaped());
          target.transport->send(target, encoded, msg->getTransactionId());
       }
       else
