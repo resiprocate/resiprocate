@@ -731,7 +731,7 @@ myMain(int argc, char* argv[])
    Security* security=NULL;
    try
    {
-      security = new Security;
+      security = new Security("/Users/fluffy/.sipCerts/");
    }
    catch( ... )
    {
