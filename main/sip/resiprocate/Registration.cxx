@@ -38,6 +38,7 @@ Registration::Registration(const Uri& from, const Uri& aor, const Uri& contact)
      mTimeTillExpiration(3600),
      mState(Initialized)
 {
+   //mContact.param(p_Instance) = ;
 }
 
 void
