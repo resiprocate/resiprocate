@@ -198,9 +198,9 @@ void UdpTransport::process()
       // Tell the SipMessage about this datagram buffer.
       message->addBuffer(buffer);
 
-      Preparse preParser(message, buffer, len);
+      Preparse preParser(*message, buffer, len);
 
-      ppStatus = preParser.process();
+      bool ppStatus = preParser.process();
       // this won't work if UDPs are fragd !ah!
 
       if (!ppStatus)

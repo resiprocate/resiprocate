@@ -164,7 +164,7 @@ TransactionState::processClientNonInvite(  Message* msg )
    else if (isResponse(msg) && !isFromTU(msg)) // from the wire
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->get(StatusLine).getResponseCode();
+      int code = sip->get(StatusLine).responseCode();
       if (code >= 100 && code < 200) // 1XX
       {
          if (mState == Trying || mState == Proceeding)
@@ -303,9 +303,8 @@ TransactionState::processClientInvite(  Message* msg )
    else if (isResponse(msg) && !isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->get(StatusLine).getResponseCode();
-
-      switch (sip->get(CSeq).getMethod())
+      int code = sip->get(StatusLine).responseCode();
+      switch (sip->get(CSeq).method())
       {
          case INVITE:
             if (code >= 100 && code < 200) // 1XX
@@ -439,7 +438,7 @@ TransactionState::processServerNonInvite(  Message* msg )
    else if (isResponse(msg) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->get(StatusLine).getResponseCode();
+      int code = sip->get(StatusLine).responseCode();
       if (code >= 100 && code < 200) // 1XX
       {
          if (mState == Trying || mState == Proceeding)
@@ -569,9 +568,8 @@ TransactionState::processServerInvite(  Message* msg )
    else if (isResponse(msg, 100, 699) && isFromTU(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      int code = sip->get(StatusLine).getResponseCode();
-      
-      switch (sip->get(CSeq).getMethod())
+      int code = sip->get(StatusLine).responseCode();
+      switch (sip->get(CSeq).method())
       {
          case INVITE:
             if (code == 100)
@@ -762,7 +760,7 @@ TransactionState::isResponse(Message* msg, int lower, int upper) const
    SipMessage* sip = dynamic_cast<SipMessage*>(msg);
    if (sip)
    {
-      int c = sip->get(StatusLine).getResponseCode();
+      int c = sip->get(StatusLine).responseCode();
       return (c >= lower && c <= upper);
    }
    return false;
