@@ -53,7 +53,7 @@
 
 
 static const char* const Fifo_h_Version =
-    "$Id: Fifo.hxx,v 1.4 2002/10/01 14:53:42 fluffy Exp $";
+"$Id: Fifo.hxx,v 1.5 2002/10/22 15:47:08 jason Exp $";
 
 #include <util/Mutex.hxx>
 #include <util/Condition.hxx>
@@ -99,17 +99,18 @@ class Fifo
        */
       bool messageAvailable() const;
 
-protected:
+   protected:
       typedef std::list < Msg* > MessageContainer;
       MessageContainer mFifo;
-
+      unsigned long mSize;
+      
       mutable Mutex mMutex;
       Condition mCondition;
 };
 
 
 template <class Msg>
-Fifo<Msg>::Fifo()
+Fifo<Msg>::Fifo() : mSize(0)
 {
 }
 
@@ -122,9 +123,10 @@ template <class Msg>
 void
 Fifo<Msg>::add(Msg* msg)
 {
-	Lock lock(mMutex); (void)lock;
-	mFifo.push_back(msg);
-	mCondition.signal();
+   Lock lock(mMutex); (void)lock;
+   mFifo.push_back(msg);
+   mSize++;
+   mCondition.signal();
 }
 
 
@@ -132,21 +134,22 @@ template <class Msg>
 Msg*
 Fifo<Msg> ::getNext()
 {
-    Lock lock(mMutex); (void)lock;
+   Lock lock(mMutex); (void)lock;
 
-    // Wait while there are messages available.
-    //
-    while ( mFifo.size() == 0 )
-    {
-	    mCondition.wait(&mMutex);
-    }
+   // Wait while there are messages available.
+   //
+   while ( mFifo.empty() )
+   {
+      mCondition.wait(&mMutex);
+   }
 
-    // Return the first message on the fifo.
-    //
-    Msg* firstMessage = mFifo.front();
-    mFifo.pop_front();
+   // Return the first message on the fifo.
+   //
+   Msg* firstMessage = mFifo.front();
+   mFifo.pop_front();
+   mSize--;
 
-    return ( firstMessage );
+   return ( firstMessage );
 }
 
 
@@ -154,10 +157,8 @@ template <class Msg>
 unsigned int
 Fifo<Msg> ::size() const
 {
-    Lock lock(mMutex); (void)lock;
-
-	unsigned int ret = mFifo.size();
-    return ret; 
+   Lock lock(mMutex); (void)lock;
+   return mSize; 
 }
 
 
@@ -165,9 +166,9 @@ template <class Msg>
 bool
 Fifo<Msg>::messageAvailable() const
 {
-    Lock lock(mMutex); (void)lock;
-    
-    return ( mFifo.size() > 0 );
+   Lock lock(mMutex); (void)lock;
+   
+   return ( !mFifo.empty() );
 }
 
 } // namespace Vocal2
