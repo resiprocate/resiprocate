@@ -59,12 +59,6 @@ TransactionUser::isForMe(const SipMessage& msg) const
    return false;
 }
 
-bool
-MessageFilterRule::matches(const SipMessage&) const
-{
-   return false;
-}
-
 bool 
 TransactionUser::isMyDomain(const Uri& uri) const
 {
