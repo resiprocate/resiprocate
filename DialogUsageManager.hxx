@@ -72,6 +72,9 @@ class DialogUsageManager : public HandleManager
       void shutdownIfNoUsages(DumShutdownHandler*, unsigned long giveUpSeconds=0);
       void forceShutdown(DumShutdownHandler*);
 
+      //factory method to construct built-in transports.  A Transport::Exception
+      //will be thrown if the transport couldn't be added, usually because the
+      //port was already bound. 
       void addTransport( TransportType protocol,
                          int port=0, 
                          IpVersion version=V4,
