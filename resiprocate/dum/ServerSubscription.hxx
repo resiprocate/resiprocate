@@ -6,18 +6,17 @@ namespace resip
 
 class ServerSubscription: public BaseUsage 
 {
-  public:
-    class Handle
-    {
-    };
+   public:
+      class Handle
+      {
+      };
+      
+      ServerSubscription(DialogUsageManager& dum, const SipMessage& req);
     
-    void sendResponse(SipMessage& msg);
-
-    void sendNotify(SipMessage& msg);
-
-    void setCurrentEventDocument(const Contents* document);
-    void setSubscriptionState(SubscriptionState state,Reason reason);
-
+      void sendResponse(SipMessage& msg);
+      void sendNotify(SipMessage& msg);
+      void setCurrentEventDocument(const Contents* document);
+      void setSubscriptionState(SubscriptionState state,Reason reason);
 };
  
 }

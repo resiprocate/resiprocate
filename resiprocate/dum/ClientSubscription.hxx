@@ -6,19 +6,21 @@ namespace resip
 
 class ClientSubscription: public BaseUsage
 {
-  public:
-    class Handle
-    {
-    };
-
-  void refreshNow();
-
-  private:
-
-   SubscriptionState mSubState;
-   Contents   mCurrentEventDocument;
-   UInt64     mExpirationTime;
-
+   public:
+      class Handle
+      {
+      };
+      
+      void refreshNow();
+      bool matches(const SipMessage& subOrNotify);
+      void process(const SipMessage& subOrNotify);
+      
+   private:
+      Data mEventType;
+      Data mSubscriptionId;
+      SubscriptionState mSubState;
+      const Contents* mCurrentEventDocument;
+      UInt64 mExpirationTime;
 };
  
 }
