@@ -1,18 +1,17 @@
 #ifndef ParserContainer_hxx
 #define ParserContainer_hxx
 
-#include <sip2/sipstack/HeaderFieldValue.hxx>
-#include <sip2/sipstack/SubComponentList.hxx>
-
+#include <sip2/sipstack/HeaderFieldValueList.hxx>
+#include <sip2/sipstack/ParserCategory.hxx>
 
 namespace Vocal2
 {
 
 template<class T>
-class ParserContainer
+class ParserContainer : public ParserCategory
 {
    public:
-      ParserContainer(SubComponentList& list)
+      ParserContainer(HeaderFieldValueList& list)
          : mList(list)
       {}
    
@@ -67,8 +66,24 @@ class ParserContainer
       Iterator begin() { return Iterator(mList.first); }
       Iterator end() { return Iterator(0); }
       typedef Iterator iterator;
+
+      virtual ParserCategory* clone(HeaderFieldValue*) const 
+      {
+         assert(0);
+         return 0;
+      }
+      
+      ParserCategory* clone(HeaderFieldValueList& hfvs)
+      {
+         return new ParserContainer(hfvs);
+      }
+      
+      virtual void parse() {}
+
+   protected:
+      virtual void parser() {}
    private:
-      SubComponentList& mList;
+      HeaderFieldValueList& mList;
 };
  
 }

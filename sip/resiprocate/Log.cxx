@@ -10,6 +10,7 @@
 #include <sipstack/Lock.hxx>
 
 using namespace Vocal2;
+using namespace std;
 
 Log::Level Log::_level = Log::DEBUG;
 Log::Type Log::_type = COUT;
