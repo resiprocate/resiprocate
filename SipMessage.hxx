@@ -142,6 +142,7 @@ class SipMessage : public Message
       void setBody(const char* start, int len); 
 
       const HeaderFieldValue* getBody() const; 
+      void updateContentLength();
       
       // add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,
