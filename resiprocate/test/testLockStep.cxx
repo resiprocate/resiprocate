@@ -181,7 +181,7 @@ main(int argc, char* argv[])
    stack2.addTransport(TCP, 5080);
 
    Client client(stack1);
-   Server server(stack2);
+   ::Server server(stack2);
    
    client.run();
    server.run();
