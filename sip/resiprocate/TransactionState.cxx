@@ -1285,6 +1285,47 @@ TransactionState::processReliability(TransportType type)
    }
 }
 
+// !ah! only used one place, so leaving it here instead of making a helper.
+// !ah! broken out for clarity -- only used for forceTargets.
+// Expects that host portion is IP address notation.
+
+static const Tuple
+simpleTupleForUri(const Uri& uri)
+{
+   const Data& host = uri.host();
+   int port = uri.port();
+
+   resip::TransportType transport = UNKNOWN_TRANSPORT;
+ 
+  if (uri.exists(p_transport))
+   {
+      transport = Tuple::toTransport(uri.param(p_transport));
+   }
+
+   if (transport == UNKNOWN_TRANSPORT)
+   {
+      transport = UDP;
+   }
+   if (port == 0)
+   {
+      switch(transport)
+      {
+         case TLS:
+            port = 5061;
+            break;
+         case UDP:
+         case TCP:
+         default:
+            port = 5060;
+            break;
+         // !ah! SCTP?
+
+      }
+   }
+
+   return Tuple(host,port,transport);
+}
+
 void
 TransactionState::sendToWire(Message* msg, bool resend) 
 {
@@ -1305,7 +1346,13 @@ TransactionState::sendToWire(Message* msg, bool resend)
       assert(!sip->header(h_Vias).empty());
 
       Tuple target(mResponseTarget);
-      if (sip->header(h_Vias).front().exists(p_rport) && sip->header(h_Vias).front().param(p_rport).hasValue())
+      if (sip->hasForceTarget())
+      {
+         target = simpleTupleForUri(sip->getForceTarget());
+         target.transport = mResponseTarget.transport;
+         DebugLog(<<"!ah! response with force target going to : "<<target);
+      }
+      else if (sip->header(h_Vias).front().exists(p_rport) && sip->header(h_Vias).front().param(p_rport).hasValue())
       {
          target.setPort(sip->header(h_Vias).front().param(p_rport).port());
          DebugLog(<< "rport present in response, sending to " << target);
@@ -1546,46 +1593,6 @@ resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
    return strm;
 }
 
-// !ah! only used one place, so leaving it here instead of making a helper.
-// !ah! broken out for clarity -- only used for forceTargets.
-// Expects that host portion is IP address notation.
-
-static const Tuple
-simpleTupleForUri(const Uri& uri)
-{
-   const Data& host = uri.host();
-   int port = uri.port();
-
-   resip::TransportType transport = UNKNOWN_TRANSPORT;
- 
-  if (uri.exists(p_transport))
-   {
-      transport = Tuple::toTransport(uri.param(p_transport));
-   }
-
-   if (transport == UNKNOWN_TRANSPORT)
-   {
-      transport = UDP;
-   }
-   if (port == 0)
-   {
-      switch(transport)
-      {
-         case TLS:
-            port = 5061;
-            break;
-         case UDP:
-         case TCP:
-         default:
-            port = 5060;
-            break;
-         // !ah! SCTP?
-
-      }
-   }
-
-   return Tuple(host,port,transport);
-}
 
 /* Local Variables: */
 /* c-file-style: "ellemtel" */
