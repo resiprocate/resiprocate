@@ -950,6 +950,135 @@ InviteSession::setSdp(SipMessage& msg, const SdpContents& sdp)
    msg.setContents(&sdp);
 }
 
+InviteSession::Event
+InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
+{
+   MethodTypes method = msg.header(h_CSeq).method();
+   int code = msg.isResponse() ? msg.header(h_StatusLine).statusCode() : 0;
+   bool reliable = InviteSession::isReliable(msg);
+   bool sentOffer = mProposedLocalSdp.get();
+   
+   if (code == 481 || code == 408)
+   {
+      return OnGeneralFailure;
+   }
+   else if (code >= 300 && code <= 399)
+   {
+      return OnRedirect;
+   }
+   else if (method == INVITE && code > 100 && code < 200)
+   {
+      if (reliable)
+      {
+         if (sdp)
+         {
+            if (sentOffer)
+            {
+               return On1xxAnswer;
+            }
+            else
+            {
+               return On1xxOffer;
+            }
+         }
+         else
+         {
+            return On1xx;
+         }
+      }
+      else
+      {
+         if (sdp)
+         {
+            return On1xxEarly;
+         }
+         else
+         {
+            return On1xx;
+         }
+      }
+   }
+   else if (method == INVITE && code >= 200 && code < 300)
+   {
+      if (sdp)
+      {
+         if (sentOffer)
+         {
+            return On2xxAnswer;
+         }
+         else
+         {
+            return On2xxOffer;
+         }
+      }
+      else
+      {
+         return On2xx;
+      }
+   }
+   else if (method == INVITE && code == 489)
+   {
+      return On489Invite;
+   }
+   else if (method == INVITE && code >= 400)
+   {
+      return OnInviteFailure;
+   }
+   else if (method == ACK)
+   {
+      if (sdp)
+      {
+         return OnAckAnswer;
+      }
+      else
+      {
+         return OnAck;
+      }
+   }
+   else if (method == CANCEL && code == 0)
+   {
+      return OnCancel;
+   }
+   else if (method == CANCEL && code / 200 == 1)
+   {
+      return On200Cancel;
+   }
+   else if (method == CANCEL && code >= 400)
+   {
+      return OnCancelFailure;
+   }
+   else if (method == PRACK && code == 0)
+   {
+      return OnPrack;
+   }
+   else if (method == PRACK && code / 200 == 1)
+   {
+      return On200Prack;
+   }
+   else if (method == UPDATE && code == 0)
+   {
+      return OnUpdate;
+   }
+   else if (method == UPDATE && code / 200 == 1)
+   {
+      return On200Update;
+   }
+   else if (method == UPDATE && code == 489)
+   {
+      return On489Update;
+   }
+   else if (method == UPDATE && code >= 400)
+   {
+      return OnUpdateRejected;
+   }
+   else
+   {
+      assert(0);
+   }
+}
+
+
+
 
 #if 0
 //////////////////////////////////////////

@@ -338,72 +338,83 @@ void
 ClientInviteSession::dispatchStart (const SipMessage& msg)
 {
    assert(msg.isResponse());
-   int code = msg.header(h_StatusLine).statusCode();
-   assert(code > 100);
+   assert(msg.header(h_StatusLine).statusCode() > 100);
    assert(msg.header(h_CSeq).method() == INVITE);
 
-
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   if (code >= 400)
-   {
-      handler->onFailure(getHandle(), msg);
-   }
-   if (code >= 300)
-   {
-      handler->onRedirected(getHandle(), msg);
-   }
-   else
-   {
-      const SdpContents* sdp = InviteSession::getSdp(msg);
-      bool reliable = InviteSession::isReliable(msg);
-      bool sentOffer = mProposedLocalSdp.get();
+   const SdpContents* sdp = InviteSession::getSdp(msg);
 
-      if (code < 200 && !sdp) // on1xx
-      {
+   switch (toEvent(msg, sdp))
+   {
+      case OnRedirect:
+         handler->onRedirected(getHandle(), msg);
+         break;
+         
+      case On1xx:
          handler->onNewSession(getHandle(), None, msg);
          handler->onProvisional(getHandle(), msg);
          transition(UAC_Early);
-      }
-      else if (code < 200 && !sentOffer && reliable && sdp) // on1xx-offer
-      {
+         break;
+         
+      case On1xxEarly:
+         handler->onNewSession(getHandle(), None, msg);
+         handler->onProvisional(getHandle(), msg);
+         mEarlyMedia = InviteSession::makeSdp(*sdp);
+         handler->onEarlyMedia(getHandle(), msg, sdp);
+         transition(UAC_Early);
+         break;
+         
+      case On1xxOffer:
          handler->onNewSession(getHandle(), Offer, msg);
          handler->onProvisional(getHandle(), msg);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onOffer(getSessionHandle(), msg, sdp);
          transition(UAC_EarlyWithOffer);
-      }
-      else if (code < 200 && sentOffer && reliable && sdp) // on1xx-answer
-      {
+         break;
+         
+      case On1xxAnswer:
          handler->onNewSession(getHandle(), Answer, msg);
          handler->onProvisional(getHandle(), msg);
+         mCurrentLocalSdp = mProposedLocalSdp;
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, sdp);
 
          // send PRACK
-         SipMessage prack;
-         mDialog.makeRequest(prack, PRACK);
-         mDum.send(prack);
+         {
+            SipMessage prack;
+            mDialog.makeRequest(prack, PRACK);
+            mDum.send(prack);
+         }
 
          transition(UAC_EarlyWithAnswer);
-      }
-      else if (code >= 200 && !sentOffer && sdp) // on2xx-offer
-      {
+         break;
+         
+      case On2xxOffer:
          handler->onNewSession(getHandle(), Offer, msg);
+         assert(mProposedLocalSdp.get() == 0);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onOffer(getSessionHandle(), msg, sdp);
          handler->onConnected(getHandle(), msg);
          transition(UAC_WaitingForAnswerFromApp);
-      }
-      else if (code >= 200 && sentOffer && sdp) // on2xx-answer
-      {
+         break;
+         
+      case On2xxAnswer:
          handler->onNewSession(getHandle(), Answer, msg);
+         mCurrentLocalSdp = mProposedLocalSdp;
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, sdp);
          handler->onConnected(getHandle(), msg);
-
-         SipMessage ack;
-         mDialog.makeRequest(ack, ACK);
-         mDum.send(ack);
+         
+         {
+            SipMessage ack;
+            mDialog.makeRequest(ack, ACK);
+            mDum.send(ack);
+         }
 
          transition(Connected);
-      }
-      else // UAS is confused
+         break;
+         
+      case On2xx:
       {
          SipMessage ack;
          mDialog.makeRequest(ack, ACK);
@@ -415,7 +426,17 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
          handler->onFailure(getHandle(), msg);
          transition(Terminated);
+         break;
       }
+
+      case OnInviteFailure:
+      case OnGeneralFailure:
+         handler->onFailure(getHandle(), msg);
+         break;
+         
+      default:
+         assert(0);
+         break;
    }
 }
 void
