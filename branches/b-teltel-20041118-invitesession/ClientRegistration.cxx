@@ -218,8 +218,7 @@ ClientRegistration::end()
 std::ostream& 
 ClientRegistration::dump(std::ostream& strm) const
 {
-   //std::copy(mMyContacts.begin(), mMyContacts.end(), std::ostream_iterator<NameAddr>(strm, ","));
-   strm << "ClientRegistration contacts="; // << resip::Inserter(mMyContacts);
+   strm << "ClientRegistration " << mLastRequest.header(h_From).uri();
    return strm;
 }
 
@@ -284,6 +283,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             case Removing:
                //mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
                mDum.mClientRegistrationHandler->onRemoved(getHandle());
+               InfoLog (<< "Finished removing registration " << *this << " mEndWhenDone=" << mEndWhenDone);
                if (mEndWhenDone)
                {
                   // !kh!

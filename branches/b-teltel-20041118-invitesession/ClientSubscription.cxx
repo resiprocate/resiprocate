@@ -196,6 +196,13 @@ ClientSubscription::end()
    send(mLastRequest);
 }
 
+std::ostream& 
+ClientSubscription::dump(std::ostream& strm) const
+{
+   strm << "ClientSubscription " << mLastRequest.header(h_From).uri();
+   return strm;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
