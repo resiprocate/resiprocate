@@ -21,7 +21,7 @@ using namespace resip;
 H_ContentID resip::h_ContentID;
 H_ContentDescription resip::h_ContentDescription;
 
-std::map<Mime, ContentsFactoryBase*>* Contents::FactoryMap = 0;
+HashMap<Mime, ContentsFactoryBase*>* Contents::FactoryMap = 0;
 
 Contents::Contents(HeaderFieldValue* headerFieldValue,
                    const Mime& contentType) 
@@ -133,12 +133,12 @@ Contents::operator=(const Contents& rhs)
    return *this;
 }
 
-std::map<Mime, ContentsFactoryBase*>& 
+HashMap<Mime, ContentsFactoryBase*>& 
 Contents::getFactoryMap()
 {
    if (Contents::FactoryMap == 0)
    {
-      Contents::FactoryMap = new std::map<Mime, ContentsFactoryBase*>();
+      Contents::FactoryMap = new HashMap<Mime, ContentsFactoryBase*>();
    }
    return *Contents::FactoryMap;
 }
