@@ -47,8 +47,8 @@ MD5Buffer::getHex()
 }
 
 MD5Stream::MD5Stream()
-   : std::ostream(&mStreambuf),
-     mStreambuf()
+   : std::ostream(this)
+//     mStreambuf()
 {
    //init(&mStreambuf);
 }
@@ -60,7 +60,8 @@ Data
 MD5Stream::getHex()
 {
    flush();
-   return mStreambuf.getHex();
+   return MD5Buffer::getHex();
+   //return mStreambuf.getHex();
 }
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -10,7 +10,7 @@ class SysLogBuf : public std::streambuf
 {
    public:
       SysLogBuf();
-      ~SysLogBuf();
+      virtual ~SysLogBuf();
       
       int sync ();
       int overflow (int ch);
