@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.18 2002/09/22 01:01:53 fluffy Exp $
+# $Id: Makefile,v 1.19 2002/09/22 01:07:46 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -28,6 +28,7 @@ SRC =	Condition.cxx \
 	UnknownSubComponent.cxx \
 	Timer.cxx \
 	TimerQueue.cxx \
+	TransactionMap.cxx \
 
 #	Executive.cxx \
 #	Preparse.cxx \
