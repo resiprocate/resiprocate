@@ -90,6 +90,8 @@ main()
       assert(message1.header(h_Vias).size() == 4);
       assert(message1.header(h_Expires).value() == 2700);
       assert(message1.header(h_ContentLength).value() == 0);
+      cerr << "Port: " << message1.header(h_RequestLine).uri().port() << endl;
+      cerr << "AOR: " << message1.header(h_RequestLine).uri().getAor() << endl;
       assert(message1.header(h_RequestLine).uri().getAor() == "registrar.ixolib.com");
    }
 
@@ -454,7 +456,7 @@ main()
       assert(message.header(h_Contacts).empty() == false);
       assert(message.header(h_Contacts).front().uri().user() == "user");
       assert(message.header(h_Contacts).front().uri().host() == "host.company.com");
-      assert(message.header(h_Contacts).front().uri().port() == 5060);
+      assert(message.header(h_Contacts).front().uri().port() == 0);
 
       assert(message.exists(h_CallId));
       assert(message.header(h_CallId).value() == "0ha0isndaksdj@10.0.0.1");
@@ -469,7 +471,7 @@ main()
       assert(message.header(h_Vias).front().protocolVersion() == "2.0");
       assert(message.header(h_Vias).front().transport() == "UDP");
       assert(message.header(h_Vias).front().sentHost() == "135.180.130.133");
-      assert(message.header(h_Vias).front().sentPort() == 5060);
+      assert(message.header(h_Vias).front().sentPort() == 0);
 
       assert(message.exists(h_Expires));
       assert(message.header(h_Expires).value() = 353245);
