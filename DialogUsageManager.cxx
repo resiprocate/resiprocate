@@ -458,17 +458,13 @@ DialogUsageManager::findDialogSet(const DialogSetId& id)
     return *it->second;
 }
 
-BaseCreator&
+BaseCreator*
 DialogUsageManager::findCreator(const DialogId& id)
 {
    const DialogSetId& setId = id.getDialogSetId();
    DialogSet& dialogSet = findDialogSet(setId);
    BaseCreator* creator = dialogSet.getCreator();
-   if (creator == NULL)
-   {
-      /** @todo; return empty object (?) */
-   }
-   return *creator;
+   return creator;
 }
 
 BaseUsage* 
