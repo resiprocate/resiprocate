@@ -13,9 +13,9 @@ TransportSelector::TransportSelector(SipStack& stack) :
 }
 
 void 
-TransportSelector::process()
+TransportSelector::process(fd_set* fdSet)
 {
-  mUdp->process();
+  mUdp->process(fdSet);
 }
 
 void 
@@ -23,6 +23,13 @@ TransportSelector::send( SipMessage* msg )
 {
    //mUdp->send(msg);
    assert(0);
+}
+
+
+void 
+TransportSelector::buildFdSet( fd_set* fdSet, int* fdSetSize )
+{
+	mUdp->buildFdSet( fdSet, fdSetSize );
 }
 
 
