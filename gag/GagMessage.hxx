@@ -27,7 +27,7 @@ class GagMessage
       SHUTDOWN           = 0x44,
 
       // GAG --> GAIM
-      ERROR              = 0x80,
+      GAG_ERROR              = 0x80,
       LOGIN_STATUS       = 0x81
 
     } command_t;
@@ -194,8 +194,8 @@ class GagErrorMessage : public GagMessage
 {
   public:
     GagErrorMessage(const Data &_message) : message(_message)
-      {messageType=ERROR;}
-    GagErrorMessage(istream &is) {messageType=ERROR; parse(is);}
+      {messageType= GAG_ERROR;}
+    GagErrorMessage(istream &is) {messageType= GAG_ERROR; parse(is);}
 
     virtual ostream &serialize(ostream &os) const;
     virtual void parse(istream &is);
