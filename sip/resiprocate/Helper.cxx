@@ -497,7 +497,8 @@ Data
 Helper::computeCallId()
 {
    // !jf! need to include host as well (should cache it)
-   return Random::getRandomHex(8);
+   static Data hostname = Symbols::AT_SIGN + DnsUtil::getLocalHostName();
+   return Random::getRandomHex(8) + hostname;
 }
 
 
