@@ -199,7 +199,7 @@ main(int argc, char* argv[])
          assert( i<argc );
          dest = Uri(Data(argv[i]));
 
-         dest.param(p_transport) = "tcp";
+         dest.param(p_transport) = "tls";
          
          cout << "Destination is " << dest << endl;
          
@@ -227,7 +227,8 @@ main(int argc, char* argv[])
 #endif
    
 //   sipStack.addTransport(Transport::UDP, port);
-   sipStack.addTransport(Transport::TCP, port);
+//   sipStack.addTransport(Transport::TCP, port);
+   sipStack.addTransport(Transport::TLS, port);
 
    TestPageCallback pageCallback;
    pageCallback.mDest = &dest;
@@ -240,9 +241,9 @@ main(int argc, char* argv[])
    
    Uri contact("sip:me-contact@localhost");
    contact.port() = port;
-   contact.param(p_transport) = "tcp";
-   dest.param(p_transport) = "tcp";
-   aor.param(p_transport) = "tcp";
+   contact.param(p_transport) = "tls";
+   dest.param(p_transport) = "tls";
+   aor.param(p_transport) = "tls";
 
    TuIM tuIM(&sipStack,aor,contact,&pageCallback,&errCallback,&presCallback);
     
