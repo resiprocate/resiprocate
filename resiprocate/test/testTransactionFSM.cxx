@@ -30,6 +30,7 @@
 // expectation for the duration of the timeout specified.  When you
 // really want to sit and wait for a message, insert a delay clause.
 
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -46,8 +47,8 @@
 #include <string>
 
 #include "sip2/util/Data.hxx"
-#include "sip2/util/Logger.hxx"
 #include "sip2/util/DataStream.hxx"
+#include "sip2/util/Logger.hxx"
 #include "sip2/util/Socket.hxx"
 
 #include "sip2/sipstack/Helper.hxx"
@@ -67,7 +68,7 @@ using namespace std;
 // --------------------------------------------------
 
 typedef struct {
-    time_t mExpiry;
+    struct timeval mExpiry;
     bool mIsRequest;
     bool mIsTransport;
     int mResponseCode;
@@ -93,10 +94,13 @@ exitusage()
 void
 processTimeouts(int arg)
 {
-    assert(!WaitQueue.empty());
+    if (WaitQueue.empty())
+    {
+	return;
+    }
     SipMessage* message = 0;
 
-#if defined(CRAP) || 1
+#if defined(UGLY) || 1
     // This should:
     // 1. Take all messages from the "wire" and "tu" fifos
     // 2. For each message, look through the WaitQueue and see
@@ -116,12 +120,21 @@ processTimeouts(int arg)
 	{
 	    newbuf[i] = cbuf.front();
 	    cbuf.pop_front();
+	    // Check to see if we've hit the boundary of a message.
+	    // This will break if the message has a body.
+	    if (i >= 3 && newbuf[i-3] == *Symbols::CR
+	               && newbuf[i-2] == *Symbols::LF
+	               && newbuf[i-1] == *Symbols::CR
+	               && newbuf[i-0] == *Symbols::LF)
+	    {
+		break;
+		newbuf[i+1] = 0;
+	    }
 	}
-	newbuf[len] = 0;
 	message = Helper::makeMessage(newbuf);
 	for (list<WaitNode*>::iterator i = WaitQueue.begin();
 	     i != WaitQueue.end();
-	     i++)
+	     /* don't increment */)
 	{
 	    if ((*i)->mIsRequest && message->isRequest())
 	    {
@@ -131,8 +144,13 @@ processTimeouts(int arg)
 		    delete newbuf;
 		    newbuf = 0;
 		    delete message;
-		    WaitQueue.erase(i);
+		    delete *i;
+		    WaitQueue.erase(i++);
 		    break;
+		}
+		else
+		{
+		    ++i;
 		}
 	    }
 	    else if (!(*i)->mIsRequest && message->isResponse())
@@ -144,15 +162,24 @@ processTimeouts(int arg)
 		    delete newbuf;
 		    newbuf = 0;
 		    delete message;
-		    WaitQueue.erase(i);
+		    delete *i;
+		    WaitQueue.erase(i++);
 		    break;
+		}
+		else
+		{
+		    ++i;
 		}
 	    }
 	}
 	if (newbuf)
 	{
-	    cerr << "Warning: unexpected message seen on the wire." << endl;
+	    DebugLog( << "Warning: unexpected message seen at the transport");
 	    delete newbuf;
+	}
+	else
+	{
+	    cerr << "Success: expected message seen on the wire." << endl;
 	}
     }
 
@@ -161,7 +188,7 @@ processTimeouts(int arg)
     {
 	for (list<WaitNode*>::iterator i = WaitQueue.begin();
 	     i != WaitQueue.end();
-	     i++)
+	     /* don't increment */)
 	{
 	    if ((*i)->mIsRequest && message->isRequest())
 	    {
@@ -171,8 +198,13 @@ processTimeouts(int arg)
 		    // We matched something we expected.
 		    delete message;
 		    message = 0;
-		    WaitQueue.erase(i);
+		    delete *i;
+		    WaitQueue.erase(i++);
 		    break;
+		}
+		else
+		{
+		    ++i;
 		}
 	    }
 	    else if (!(*i)->mIsRequest && message->isResponse())
@@ -183,36 +215,69 @@ processTimeouts(int arg)
 		    // We matched something we expected.
 		    delete message;
 		    message = 0;
-		    WaitQueue.erase(i);
+		    delete *i;
+		    WaitQueue.erase(i++);
 		    break;
 		}
+		else
+		{
+		    ++i;
+		}
+	    }
+	    else
+	    {
+		++i;
 	    }
 	}
 	if (message)
 	{
-	    cerr << "Warning: unexpected message seen at TU." << endl;
+	    DebugLog( << "Warning: unexpected message seen at the TU");
 	    delete message;
+	}
+	else
+	{
+	    cerr << "Success: expected message seen at TU." << endl;
 	}
     }
 
-    // Check to see if some expect clauses have timed out
     for (list<WaitNode*>::iterator i = WaitQueue.begin();
 	 i != WaitQueue.end();
-	 i++)
+	 /* don't increment */)
     {
-	if ((*i)->mExpiry < time(NULL))
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	if ((*i)->mExpiry.tv_sec < tv.tv_sec ||
+	   ((*i)->mExpiry.tv_sec == tv.tv_sec &&
+	    (*i)->mExpiry.tv_usec < tv.tv_usec))
 	{
-	    cerr << "Error: timeout waiting for ";
 	    if ((*i)->mIsRequest)
 	    {
-		cerr << "mMethod " << (*i)->mMethod << endl;
+		DebugLog(<< "Error: timeout waiting for "
+		         << MethodNames[(*i)->mMethod] << " method");
 	    }
 	    else
 	    {
-		cerr << "mResponseCode " << (*i)->mResponseCode << endl;
+		DebugLog(<< "Error: timeout waiting for "
+		         << (*i)->mResponseCode << " status code");
 	    }
-	    WaitQueue.erase(i);
+	    delete *i;
+	    WaitQueue.erase(i++);
 	}
+	/*
+	else
+	{
+	    cerr << "Still waiting for: ";
+	    if ((*i)->mIsRequest)
+	    {
+		cerr << MethodNames[(*i)->mMethod] << " method" << endl;
+	    }
+	    else
+	    {
+		cerr << (*i)->mResponseCode << " status code" << endl;
+	    }
+	    ++i;
+	}
+	*/
     }
 #endif
 
@@ -234,6 +299,13 @@ processInject()
     {
 	isWireInject = false;
     }
+    else
+    {
+	DebugLog(<< "Warning: error parsing test specification.");
+	TestSpecParseBuf->skipToOneOf("}");
+	TestSpecParseBuf->skipChar();
+	return;
+    }
 
     TestSpecParseBuf->skipToOneOf("{");
     TestSpecParseBuf->skipChar();
@@ -242,15 +314,18 @@ processInject()
     start = TestSpecParseBuf->position();
     now = TestSpecParseBuf->skipToOneOf("}");
     *const_cast<char*>(now) = 0;
-    cerr << "-> Injecting " << endl << start;
+    DebugLog(<< "Injecting (isWireInject=" << isWireInject << "):" << start);
     TestSpecParseBuf->skipChar();
-    SipMessage* message = Helper::makeMessage(start);
     if (isWireInject)
     {
+	// sendToWire() is a helper function for TestTransport stuff.
+	// sendToWire(start);
+	SipMessage* message = Helper::makeMessage(start, true);
 	client->mStateMacFifo.add(message);
     }
     else
     {
+	SipMessage* message = Helper::makeMessage(start, false);
 	client->send(*message);
     }
 }
@@ -260,6 +335,7 @@ processExpect()
 {
     const char* start = TestSpecParseBuf->position();
     const char* now;
+    unsigned int expireTime = 1;
     WaitNode* thisWait = new WaitNode;
     assert(thisWait);
     thisWait->mResponseCode = 0;
@@ -271,6 +347,13 @@ processExpect()
     else if (!strncasecmp(start, "expect_tu", strlen("expect_tu")))
     {
 	thisWait->mIsTransport = false;
+    }
+    else
+    {
+	DebugLog(<< "Warning: error parsing test specification"); 
+	TestSpecParseBuf->skipToOneOf("}");
+	TestSpecParseBuf->skipChar();
+	return;
     }
 
     TestSpecParseBuf->skipToOneOf("{");
@@ -300,24 +383,29 @@ processExpect()
 	else if (!strncasecmp(start, "timeout", strlen("timeout")))
 	{
 	    TestSpecParseBuf->skipToOneOf("0123456789");
-	    thisWait->mExpiry = TestSpecParseBuf->integer() + time(NULL);
+	    expireTime = TestSpecParseBuf->integer();
 	}
 	TestSpecParseBuf->skipWhitespace();
 	start = TestSpecParseBuf->position();
     }
 
+    assert(thisWait);
     WaitQueue.push_front(thisWait);
-    // alarm(thisWait->mExpiry <= 0 ? 1 : thisWait->mExpiry);
+    gettimeofday(&thisWait->mExpiry, NULL);
+    thisWait->mExpiry.tv_sec += expireTime;
+    alarm(expireTime);
+
 
     TestSpecParseBuf->skipToOneOf("}");
     TestSpecParseBuf->skipChar();
 
-    // For debugging purposes...
+    /*
     cerr << "-> Expecting " << endl;
     cerr << "   mIsTransport = " << (thisWait->mIsTransport == true) << endl;
     cerr << "   mIsRequest = " << (thisWait->mIsRequest == true) << endl;
     cerr << "   mResponseCode = " << (thisWait->mResponseCode) << endl;
-    cerr << "   mExpiry = " << (thisWait->mExpiry) << endl;
+    cerr << "   mExpiry = " << (thisWait->mExpiry.tv_sec) << endl;
+    */
 }
 
 void
@@ -330,6 +418,8 @@ processDelays()
     TestSpecParseBuf->skipToOneOf("0123456789");
     int sleepLength = TestSpecParseBuf->integer();
 
+    DebugLog( << "Pausing for " << sleepLength << " seconds");
+
     // We sleep this way to avoid conflict with SIGALRM from alarm().
     struct timespec ts, remainder;
     ts.tv_sec = sleepLength;
@@ -341,16 +431,15 @@ processDelays()
 
     TestSpecParseBuf->skipToOneOf("}");
     TestSpecParseBuf->skipChar();
-    cerr << "-> Delaying " << sleepLength << endl;
 }
 
-int
+bool
 processClause()
 {
     TestSpecParseBuf->skipWhitespace();
 
     // Look for 'i'/'e'/'d' for inject... or expect... or delay respectively.
-    const char* now = TestSpecParseBuf->skipToOneOf("ied");
+    const char* now = TestSpecParseBuf->skipToOneOf("ied#");
     switch (*now)
     {
     case 'i':
@@ -362,8 +451,12 @@ processClause()
     case 'd':
 	processDelays();
 	break;
+    case '#':
+	TestSpecParseBuf->skipToOneOf("\n");
+	TestSpecParseBuf->skipChar();
+	break;
     default:
-	cerr << "Warning: error parsing test specification." << endl;
+	DebugLog(<< "Warning: error parsing test specification");
 	TestSpecParseBuf->skipToOneOf("}");
 	TestSpecParseBuf->skipChar();
     }
@@ -414,9 +507,11 @@ main(int argc, char *argv[])
 	client->process(clientFdSet);
     }
 
+    // Catch any remaining events.
+    processTimeouts(0);
     if (!WaitQueue.empty())
     {
-	cerr << "Warning: ending with expect clauses outstanding." << endl;
+	DebugLog( << "Warning: ending with expect clauses outstanding"); 
     }
 
     return 0;
