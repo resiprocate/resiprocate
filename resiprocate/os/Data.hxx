@@ -124,6 +124,7 @@ class Data
       // slow only use for debug stuff 
       Data escaped() const;
 
+      /// encodes with %hex for special characters
       Data charEncoded() const;
       Data charUnencoded() const;
 	
@@ -143,7 +144,11 @@ class Data
 
       static bool init();
 
+      /// return base64 decode as specified in RFC 3548
       Data base64decode() const;
+
+      /// return base64 encode as specified in RFC 3548
+      Data base64encode() const;
 
       static size_t rawHash(const char* c, size_t size);
       size_t hash() const;
