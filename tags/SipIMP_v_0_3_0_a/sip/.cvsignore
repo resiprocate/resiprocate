@@ -1,0 +1,8 @@
+.make_prefs
+autom4te-2.53.cache
+config.log
+config.status
+lib.debug.Linux.i686
+lib.opt.Linux.i686
+*.ncb
+*.suo

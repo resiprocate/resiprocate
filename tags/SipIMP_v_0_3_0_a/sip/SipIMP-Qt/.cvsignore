@@ -1,0 +1,11 @@
+.dependlibs
+Limpet.cxx
+Limpet.hxx
+SetupDlg.cxx
+SetupDlg.hxx
+bin.debug.Linux.i686
+moc_Limpet.cxx
+moc_LimpetImpl.cxx
+moc_SetupDlg.cxx
+moc_SetupDlgImpl.cxx
+obj.debug.Linux.i686

@@ -1,0 +1,17 @@
+To build this project (not on Windows - ask Fluffy about Windows)
+
+You might need to run autoconf, but probably not
+
+To get a list of the accepted options, 
+% ./configure --help
+
+For shared libraries and use of distcc (for compiling across a cluster)
+% ./configure --with-distcc --with-shared-libs
+
+The default is to build static libs with no use of distcc
+
+
+The default is to build with full debugging turned on. 
+To build optimized, with optimization level 2, -O2: 
+
+% make CODE_OPTIMIZE=2
