@@ -11,8 +11,12 @@
 #include <cstdio>
 #include <unistd.h>
 typedef void WINDOW;
+
+#ifndef __APPLE__
 bool TRUE=true;
 bool FALSE=false;
+#endif
+
 char ACS_HLINE=1;
 char ACS_VLINE=2;
 WINDOW* stdscr=0;
