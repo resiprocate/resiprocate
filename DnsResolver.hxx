@@ -36,7 +36,8 @@ class DnsResolver
          NotStarted,
          Waiting,
          PartiallyComplete,
-         Complete
+         Complete,
+         NoLookupRequired // used for sending responses
       } State;
       
       typedef Entry* Id;
