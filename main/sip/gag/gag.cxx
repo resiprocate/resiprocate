@@ -11,6 +11,7 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/TuIM.hxx"
 #include "resiprocate/Security.hxx"
+#include "resiprocate/ShutdownMessage.hxx"
 
 // GAG headers
 #include "GagMessage.hxx"
@@ -24,12 +25,21 @@ using namespace std;
 
 void shutdown (SipStack *stack)
 {
+  if (!stack) return;
   // Wait for all transactions to complete
-  FdSet fdset; 
-  stack.buildFdSet(fdset);
-  fdset.selectMilliSeconds(seltime); 
-  stack.process(fdset);
-  Message* msg = receiver.receiveAny();
+  bool done = false;
+  while (!done)
+  {
+      FdSet fdset; 
+      stack->buildFdSet(fdset);
+      fdset.selectMilliSeconds(1000); 
+      stack->process(fdset);
+      Message* msg = stack->receiveAny();
+      DebugLog(<<"SHUTDOWN ATE: " << msg->brief() );
+      done = dynamic_cast<ShutdownMessage*>(msg) != 0;
+  }
+  return;
+  
 }
 
 int
