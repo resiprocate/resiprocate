@@ -279,7 +279,8 @@ PreparseStateTable::InitStatePreparseStateTable()
 }
 
 
-Preparse::Preparse():
+Preparse::Preparse(SipMessage& sipMsg):
+   mSipMessage(sipMsg),
    mBuffer(0), mLength(0), 
    mDisposition(dContinuous),
    mState(PreparseStateTable::NewMsg),
@@ -291,7 +292,8 @@ Preparse::Preparse():
    InitStatePreparseStateTable();
 }
 
-Preparse::Preparse(const char * buffer, size_t length):
+Preparse::Preparse(SipMessage& sipMsg, const char * buffer, size_t length):
+   mSipMessage(sipMsg),
    mBuffer(buffer),
    mLength(length), 
    mDisposition(dContinuous),
@@ -386,7 +388,7 @@ Preparse::process()
 
       if (e.workMask & actData)
       {
-         SipMessage::addHeader(mHeaderType,
+         mSipMessage.addHeader(mHeaderType,
                                mHeader,
                                mHeaderLength,
                                mAnchorBeg,
