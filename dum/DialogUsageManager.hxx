@@ -65,7 +65,7 @@ class DialogUsageManager : public HandleManager
       
       void shutdown(DumShutdownHandler*);
 
-      void setAppDialogSetFactory(AppDialogSetFactory*);
+      void setAppDialogSetFactory(std::auto_ptr<AppDialogSetFactory>);
 
 //should be in AppDialog and AppDialogSet
 #if 0
@@ -88,9 +88,9 @@ class DialogUsageManager : public HandleManager
       //optional handler to track the progress of DialogSets
       void setDialogSetHandler(DialogSetHandler* handler);
 
-      //There is a default RedirectManager.  Setting one will cause the old one
-      //to be delete. The RedirectManager is deleted when the DUM is destroyed,
-      void setRedirectManager(RedirectManager* redirect);
+      //There is a default RedirectManager.  Setting one may cause the old one
+      //to be deleted. 
+      void setRedirectManager(std::auto_ptr<RedirectManager> redirect);
 
       //informational, so a RedirectHandler is not required
       void setRedirectHandler(RedirectHandler* handler);      
@@ -238,7 +238,10 @@ class DialogUsageManager : public HandleManager
       void prepareInitialRequest(SipMessage& request);
       void processRequest(const SipMessage& request);
       void processResponse(const SipMessage& response);
-      bool validateRequest(const SipMessage& request);
+      bool validateRequestURI(const SipMessage& request);
+      bool validateRequiredOptions(const SipMessage& request);
+      bool validateContent(const SipMessage& request);
+      bool validateAccept(const SipMessage& request);
       bool validateTo(const SipMessage& request);
       bool mergeRequest(const SipMessage& request);
 
@@ -253,7 +256,7 @@ class DialogUsageManager : public HandleManager
       DialogSetMap mDialogSetMap;
 
       Profile* mProfile;
-      RedirectManager* mRedirectManager;
+      std::auto_ptr<RedirectManager>   mRedirectManager;
       std::auto_ptr<ClientAuthManager> mClientAuthManager;
       std::auto_ptr<ServerAuthManager> mServerAuthManager;  
     
@@ -275,7 +278,7 @@ class DialogUsageManager : public HandleManager
       ClientPagerMessageHandler* mClientPagerMessageHandler;
       ServerPagerMessageHandler* mServerPagerMessageHandler;
 
-      AppDialogSetFactory* mAppDialogSetFactory;
+      std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
 
       SipStack& mStack;
       StackThread mStackThread;

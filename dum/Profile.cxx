@@ -14,11 +14,23 @@ Profile::Profile() :
    mHasOutboundProxy(false),
    mLooseToTagMatching(false),
    mRportEnabled(true),
+   mValidateContentEnabled(true),
+   mValidateContentLanguageEnabled(false),
+   mValidateAcceptEnabled(true),
    mHasUserAgent(false),
    mHasOverrideHostPort(true)
 {
-   addAdvertisedCapability(Headers::Accept);  
+   // Default settings
+   addAdvertisedCapability(Headers::Allow);  
    addAdvertisedCapability(Headers::Supported);  
+   addSupportedMimeType(Mime("application", "sdp"));
+   addSupportedLanguage(Token("en"));
+   addSupportedMethod(INVITE);
+   addSupportedMethod(ACK);
+   addSupportedMethod(CANCEL);
+   addSupportedMethod(OPTIONS);
+   addSupportedMethod(BYE);
+   addSupportedScheme(Symbols::Sip);  
 }
 
 void
@@ -47,7 +59,7 @@ Profile::addSupportedMethod(const MethodTypes& method)
 }
 
 void 
-Profile::addSupportedOptionTags(const Token& tag)
+Profile::addSupportedOptionTag(const Token& tag)
 {
    mSupportedOptionTags.push_back(tag);
 }
@@ -68,6 +80,43 @@ void
 Profile::addSupportedLanguage(const Token& lang)
 {
    mSupportedLanguages.push_back(lang);
+}
+
+void 
+Profile::clearSupportedSchemes()
+{
+   mSupportedSchemes.clear();
+}
+
+void 
+Profile::clearSupportedMethods()
+{
+   mSupportedMethodTypes.clear();
+   mSupportedMethods.clear();
+}
+
+void 
+Profile::clearSupportedOptionTags()
+{
+   mSupportedOptionTags.clear();
+}
+
+void 
+Profile::clearSupportedMimeTypes()
+{
+   mSupportedMimeTypes.clear();
+}
+
+void 
+Profile::clearSupportedEncodings()
+{
+   mSupportedEncodings.clear();
+}
+
+void 
+Profile::clearSupportedLanguages()
+{
+   mSupportedLanguages.clear();
 }
 
 NameAddr& 
@@ -126,7 +175,7 @@ Profile::isLanguageSupported(const Tokens& langs)
 }
 
 Tokens 
-Profile::isSupported(const Tokens& requiresOptionTags)
+Profile::getUnsupportedOptionsTags(const Tokens& requiresOptionTags)
 {
    Tokens tokens;
    for (Tokens::const_iterator i=requiresOptionTags.begin(); i != requiresOptionTags.end(); ++i)
@@ -174,8 +223,7 @@ Profile::getSupportedLanguages()
 void 
 Profile::addAdvertisedCapability(const Headers::Type header)
 {
-   assert(header == Headers::Accept ||
-	      header == Headers::Allow ||
+   assert(header == Headers::Allow ||
 		  header == Headers::AcceptEncoding ||
 		  header == Headers::AcceptLanguage ||
 		  header == Headers::Supported);
@@ -378,6 +426,42 @@ const bool
 Profile::rportEnabled() const
 {
    return mRportEnabled;   
+}
+
+bool& 
+Profile::validateContentEnabled()
+{
+   return mValidateContentEnabled;   
+}
+
+const bool 
+Profile::validateContentEnabled() const
+{
+   return mValidateContentEnabled;   
+}
+
+bool& 
+Profile::validateContentLanguageEnabled()
+{
+   return mValidateContentLanguageEnabled;   
+}
+
+const bool 
+Profile::validateContentLanguageEnabled() const
+{
+   return mValidateContentLanguageEnabled;   
+}
+
+bool& 
+Profile::validateAcceptEnabled()
+{
+   return mValidateContentEnabled;   
+}
+
+const bool 
+Profile::validateAcceptEnabled() const
+{
+   return mValidateContentEnabled;   
 }
 
 void 
