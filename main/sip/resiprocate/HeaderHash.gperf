@@ -15,6 +15,7 @@ l, Headers::ContentLength
 c, Headers::ContentType
 f, Headers::From
 s, Headers::Subject
+k, Headers::Supported
 t, Headers::To
 v, Headers::Via
 cseq, Headers::CSeq
