@@ -59,6 +59,7 @@ DialogUsageManager::DialogUsageManager(std::auto_ptr<SipStack> stack) :
    mServerRegistrationHandler(0),
    mRedirectHandler(0),
    mDialogSetHandler(0),
+   mRegistrationPersistenceManager(0),
    mClientPagerMessageHandler(0),
    mServerPagerMessageHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
@@ -224,6 +225,14 @@ DialogUsageManager::setInviteSessionHandler(InviteSessionHandler* handler)
    assert(!mInviteSessionHandler);
    mInviteSessionHandler = handler;
 }
+
+void
+DialogUsageManager::setRegistrationPersistenceManager(RegistrationPersistenceManager* manager)
+{
+   assert(!mRegistrationPersistenceManager);
+   mRegistrationPersistenceManager = manager;
+}
+
 
 void 
 DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration, 

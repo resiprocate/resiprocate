@@ -1,10 +1,10 @@
-#if !defined(RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX)
-#define RESIP_REGISTRATIONPERSISTENCEMANAGER_HXX
+#if !defined(RESIP_SUBSCRIPTIONPERSISTENCEMANAGER_HXX)
+#define RESIP_SUBSCRIPTIONPERSISTENCEMANAGER_HXX
 
 namespace resip
 {
 
-class RegistrationPersistenceManager
+class SubscriptionPersistenceManager
 {
 };
 
