@@ -1,10 +1,13 @@
 #if !defined(RESIP_REPRO_HXX)
 #define RESIP_REPRO_HXX 
 
+#include "RequestProcessor.hxx"
+
 namespace repro
 {
-  class Repro
+  class Repro /* : public Tu */
   {
+    public:
   };
 }
 #endif
