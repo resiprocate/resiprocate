@@ -55,6 +55,12 @@ extern "C"
 }
 
 void
+Log::initialize(const char* typed, const char* leveld, const char* appName, const char *logFileName)
+{
+   Log::initialize(Data(typed), Data(leveld), Data(appName), logFileName);
+}
+
+void
 Log::initialize(const Data& typed, const Data& leveld, const Data& appName, const char *logFileName)
 {
    Type type = Log::COUT;
