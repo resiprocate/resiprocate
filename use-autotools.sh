@@ -21,13 +21,14 @@ AUTOTOOLS_CONFLICTS="
 # These files are source files in autotools/* parallel tree.
 
 # Need to add resiprocate/dum/Makefile.am resiprocate/dum/test/Makefile.am
-
 AUTOTOOLS_USED="Makefile.am
                 resiprocate/Makefile.am 
                 resiprocate/test/Makefile.am 
+                resiprocate/dum/Makefile.am
                 configure.ac 
                 acinclude.m4
                 autogen.sh
+
             "
 
 AUTOTOOLS_ARTIFACTS="config.guess
@@ -37,8 +38,16 @@ AUTOTOOLS_ARTIFACTS="config.guess
                      acinclude.m4
                      "
                      
-                     
-
+makeLink () {
+    RD=$( echo ${1} | sed 's:[^/]*:..:g;s:^\.\.:.:g' )/autotools/sip/${1}
+    echo Making link for $1 RD=${RD}
+    [ -e $(dirname ${1})/${RD} ] || echo missing ${RD}
+    if [ -h ${1} ]; then
+        echo "${1}: already exists!" >&2
+    else
+        ln -s ${RD} ${1} || echo "${1}: error making link." >&2
+    fi
+}
 
 
 if [ "$1"x != x ]; then
@@ -99,7 +108,7 @@ ATCF=.autotools-conflicts-list
 # Reset the conflicts list
 find . -name ${ATCF} -exec cp /dev/null {} \;
 
-# Remove conflicting files.
+# Remove conflicting files -- and add to ignore list.
 for F in ${AUTOTOOLS_CONFLICTS} ${AUTOTOOLS_USED}; do
     for E in echo "" ; do
         ${E} rm ${F}
@@ -109,23 +118,21 @@ for F in ${AUTOTOOLS_CONFLICTS} ${AUTOTOOLS_USED}; do
     echo ${Fb} >> ${Fd}/${ATCF}
 done
 
+
+# Make links to autotools files as needed.
 for B in ${AUTOTOOLS_USED}; do
-    F=autotools/sip/${B}
-    if [ -e ${F} ]; then
-        for E in echo "" ; do
-            ${E} ln -s ${F} ${B}
-        done
-    else
-        echo ${F}: file not found.
-    fi
+        makeLink "${B}"
 done
 
+
+# Add artifacts (toplevel only) to ignore list.
 for F in ${ATCF} ${AUTOTOOLS_ARTIFACTS}; do
     echo ${F} >> ${ATCF}
 done
 
+# Propset so autotools stuff is ignored for now.
 for D in $( find . -name ${ATCF} -print ) ;do
-    ( cd $(dirname $D) ; pwd ; \
+    ( cd $(dirname $D) ; pwd ; echo ${ATCF} >> ${ATCF} ; \
         cat .cvsignore ${ATCF} > /tmp/$$.atcf ;\
         svn propset svn:ignore -F /tmp/$$.atcf . ;\
         rm /tmp/$$.atcf)

@@ -865,6 +865,11 @@ DnsResult::parseAdditional(const unsigned char *aptr,
       return aptr + dlen;
    }
 #endif
+   else if (type == T_CNAME)
+   {
+       StackLog( << "key=" << key << " skipping additional CNAME " << dlen << " bytes");
+       return aptr + dlen;
+   }
    else // just skip it (we don't care :)
    {
       //StackLog (<< "Skipping: " << key);
@@ -1036,11 +1041,16 @@ DnsResult::parseAAAA(const unsigned char *aptr,
       memcpy(aaaa, aptr, sizeof(in6_addr));
       return aptr + dlen;
    }
+   if (type == T_CNAME)
+   {
+       StackLog( << "key=" << key << " skipping additional CNAME " << dlen << " bytes");
+       return aptr + dlen;
+   }
    else
 
    {
       StackLog (<< "Failed parse of RR");
-      return NULL;
+      return 0;
    }
 }
 #endif
