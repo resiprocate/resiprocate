@@ -4,6 +4,7 @@
 	Version="7.10"
 	Name="resip_test"
 	ProjectGUID="{16CD976A-5D3B-4329-88BA-A32560CDFCC5}"
+	RootNamespace="resip_test"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -129,7 +130,7 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath="..\dum\test\BasicCall.cxx">
+				RelativePath=".\testDns.cxx">
 			</File>
 		</Filter>
 		<Filter
