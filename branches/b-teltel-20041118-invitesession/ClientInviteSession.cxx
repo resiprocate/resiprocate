@@ -770,8 +770,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          // !kh!
          // should not assert here for peer sent us garbage.
          //assert(0);
-         WarningLog (<< "Don't know what this is : " << msg);
-         break;
+         WarningLog (<< "Don't know what this is : " << msg);         
          break;
    }
 

@@ -19,7 +19,8 @@ class ClientRegistrationHandler
       // Called when all of my bindings have been removed
       virtual void onRemoved(ClientRegistrationHandle) = 0;
       
-      /// Called if registration fails, usage will be destroyed
+      /// Called if registration fails, usage will be destroyed (unless a 
+	  /// Registration retry interval is enabled in the Profile)
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)=0;
 };
 
