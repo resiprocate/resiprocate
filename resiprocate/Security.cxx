@@ -140,7 +140,6 @@ Security::getTlsCtx(bool isServer)
    assert( certAuthorities );
    SSL_CTX_set_cert_store(ctxTls, certAuthorities);
 
-#if 1
    // set up the cipher
    char* cipher="RSA+SHA+AES+3DES";
    int ret = SSL_CTX_set_cipher_list(ctxTls,cipher);
@@ -148,7 +147,6 @@ Security::getTlsCtx(bool isServer)
    {
       ErrLog( << "Could not set any TLS ciphers");
    }
-#endif
 
    return ctxTls;
 }
@@ -594,7 +592,7 @@ Security::multipartSign( Contents* bodyIn )
    int flags = 0;
    flags |= PKCS7_BINARY;
    flags |= PKCS7_DETACHED;
-#if 0
+#if 0 // TODO !cj!
    flags |= PKCS7_NOCERTS; // should remove 
 #endif
 
@@ -674,7 +672,10 @@ Security::pkcs7Sign( Contents* bodyIn )
 
    int flags = 0;
    flags |= PKCS7_BINARY;
-   
+#if 0 // TODO !cj!
+   flags |= PKCS7_NOCERTS; // should remove 
+#endif
+  
    Data bodyData;
    oDataStream strm(bodyData);
    bodyIn->encodeHeaders(strm);
@@ -775,6 +776,9 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    
    int flags = 0 ;  
    flags |= PKCS7_BINARY;
+#if 0 // TODO !cj!
+   flags |= PKCS7_NOCERTS; // should remove 
+#endif
    
    Data bodyData;
    oDataStream strm(bodyData);
@@ -819,8 +823,10 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    assert( cert );
    sk_X509_push(certs, cert);
 
-#if (  OPENSSL_VERSION_NUMBER >= 0x0090605fL ) // may be earlier versions that
-                                               // need const here 
+// if you think you need to change the following few lines, please email fluffy
+// the value of OPENSSL_VERSION_NUMBER ( in opensslv.h ) and the signature of
+// PKCS_encrypt found ( in pkcs7.h ) and the OS you are using  
+#if (  OPENSSL_VERSION_NUMBER > 0x0090605fL )
    const EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
 #else  
    EVP_CIPHER* cipher =  EVP_des_ede3_cbc();
@@ -829,8 +835,7 @@ Security::encrypt( Contents* bodyIn, const Data& recipCertName )
    //const EVP_CIPHER* cipher = EVP_enc_null();
    assert( cipher );
    
-   PKCS7* pkcs7 = 
-     PKCS7_encrypt( certs, in, cipher, flags);
+   PKCS7* pkcs7 = PKCS7_encrypt( certs, in, cipher, flags);
    if ( !pkcs7 )
    {
       ErrLog( << "Error creating PKCS7 encrypt object" );
