@@ -1,6 +1,8 @@
 #include "resiprocate/SipStack.hxx"
 #include "DialogUsageManager.hxx"
 
+using namespace resip;
+
 DialogUsageManager::DialogUsageManager(SipStack& stack) 
    : mStack(stack)
 {
