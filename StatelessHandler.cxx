@@ -46,7 +46,7 @@ StatelessHandler::process()
             DebugLog (<< "Processing sip from wire: " << msg->brief());
             Via& via = sip->header(h_Vias).front();
             // this is here so that we will reuse the tcp connection
-            via.param(p_rport).port() = sip->getSource().port;
+            via.param(p_rport).port() = sip->getSource().getPort();
             mController.mTUFifo.add(sip);
          }
          else if (sip->isRequest())
@@ -68,19 +68,12 @@ StatelessHandler::process()
             assert(sip->isResponse());
             DebugLog (<< "Processing response from TU: " << msg->brief());
             const Via& via = sip->header(h_Vias).front();
-
-            Tuple destination;
-            DnsUtil::inet_pton(via.param(p_received), destination.ipv4);
+            int port = via.sentPort();
 			if (via.exists(p_rport) && via.param(p_rport).hasValue())
             {
-               destination.port = via.param(p_rport).port();
+               port = via.param(p_rport).port();
             }
-            else
-            {
-               destination.port = via.sentPort();
-            }
-            destination.transportType = Tuple::toTransport(via.transport());
-            
+            Tuple destination(via.param(p_received), port, Tuple::toTransport(via.transport()));
             mController.mTransportSelector.transmit(sip, destination); // results not used
          }
       }
