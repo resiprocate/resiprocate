@@ -82,7 +82,7 @@ DialogUsageManager::~DialogUsageManager()
    InfoLog ( << "~DialogUsageManager done" );
 }
 
-bool 
+void
 DialogUsageManager::addTransport( TransportType protocol,
                                   int port, 
                                   IpVersion version,
