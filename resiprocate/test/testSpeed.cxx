@@ -26,7 +26,6 @@ int
 main(int argc, char* argv[])
 {
    Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::ERR, argv[0]);
-   Log::toLevel( Data("DEBUG") );
 
    SipStack stack1;
    SipStack stack2;
