@@ -448,7 +448,9 @@ Contents::preParseHeaders(ParseBuffer& pb)
    catch (ParseBuffer::Exception & /* e */)
    {
       ErrLog( << "Some problem parsing contents" );
+#if 0 // TODO CJ REMOVE this if 0 and make this throw
       throw;
+#endif
    }
 }
 
@@ -513,6 +515,12 @@ Contents::encodeHeaders(ostream& str) const
           << *mDescription
           << Symbols::CRLF;
    }
+
+#if 1
+    str << "Content-Length" << Symbols::COLON[0] << Symbols::SPACE[0]
+        << getBodyData().size()
+        << Symbols::CRLF;
+#endif
 
    str << Symbols::CRLF;
    return str;

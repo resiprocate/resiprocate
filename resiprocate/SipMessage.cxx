@@ -375,6 +375,7 @@ SipMessage::brief() const
    static const Data tu(" from(tu)");
 
    // !dlb! should be checked earlier 
+#if 0
    if (!exists(h_CSeq))
    {
       result = "MALFORMED; missing CSeq";
@@ -385,6 +386,7 @@ SipMessage::brief() const
       result = "MALFORMED; missing Call-Id";
       return result;
    }
+#endif
    
    if (isRequest()) 
    {
