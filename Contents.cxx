@@ -337,7 +337,7 @@ Contents::preParseHeaders(ParseBuffer& pb)
             }
 
             subPb.skipWhitespace();
-            while (*subPb.position() != Symbols::COMMA[0])
+            while (!subPb.eof() && *subPb.position() != Symbols::COMMA[0])
             {
                ContentLanguage_MultiHeader::Type tmp;
                header(h_ContentLanguages).push_back(tmp);
@@ -365,21 +365,21 @@ Contents::preParseHeaders(ParseBuffer& pb)
             else if (isEqualNoCase(headerName, "MIME-Version"))
             {
                subPb.skipWhitespace();
-               if (*subPb.position() == Symbols::LPAREN[0])
+               if (!subPb.eof() && *subPb.position() == Symbols::LPAREN[0])
                {
                   subPb.skipToEndQuote(Symbols::RPAREN[0]);
                   subPb.skipChar(Symbols::RPAREN[0]);
                }
                mVersion = subPb.integer();
 
-               if (*subPb.position() == Symbols::LPAREN[0])
+               if (!subPb.eof() && *subPb.position() == Symbols::LPAREN[0])
                {
                   subPb.skipToEndQuote(Symbols::RPAREN[0]);
                   subPb.skipChar(Symbols::RPAREN[0]);
                }
                subPb.skipChar(Symbols::PERIOD[0]);
                
-               if (*subPb.position() == Symbols::LPAREN[0])
+               if (!subPb.eof() && *subPb.position() == Symbols::LPAREN[0])
                {
                   subPb.skipToEndQuote(Symbols::RPAREN[0]);
                   subPb.skipChar(Symbols::RPAREN[0]);
