@@ -1,7 +1,7 @@
 #ifndef VMD5_H
 #define VMD5_H
 
-static const char* const vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.3 2002/11/06 02:59:30 davidb Exp $";
+static const char* const vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.4 2002/11/06 23:31:49 veer Exp $";
 
 /*
  * This is the header file for the MD5 message-digest algorithm.
@@ -24,6 +24,16 @@ static const char* const vmd5HeaderVersion = "$Id: vmd5.hxx,v 1.3 2002/11/06 02:
  *  - Ian Jackson <ijackson@nyx.cs.du.edu>.
  * Still in the public domain.
  */
+#if defined(__sparc)
+#include <inttypes.h>
+
+/* typedef unsigned char u_int8_t; */
+typedef uint8_t u_int8_t;
+typedef uint16_t u_int16_t;
+typedef uint32_t u_int32_t;
+
+#endif
+
 #include "util/compat.hxx"
 
 namespace Vocal2
