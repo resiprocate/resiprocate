@@ -135,7 +135,6 @@ class Dialog
       void incrementCSeq(SipMessage& request);
       void copyCSeq(SipMessage& request);
 
-      Via mVia;          // for this UA
       NameAddr mContact;  // for this UA
 
       // Dialog State
