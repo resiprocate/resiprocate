@@ -17,7 +17,7 @@ using namespace resip;
 TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, bool stateless) : 
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
-   mDiscardStrayResponses(false),
+   mDiscardStrayResponses(true),
    mTUFifo(tufifo),
    mTransportSelector(multi, mStateMacFifo),
    mStatelessHandler(*this),
