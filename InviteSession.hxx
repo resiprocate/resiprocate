@@ -31,8 +31,6 @@ class InviteSession : public BaseUsage
       /// results in BYE or CANCEL being sent.
       virtual SipMessage& end();
 
-      virtual SipMessage& reInvite(const SdpContents* offer);
-
       /// Rejects an offer at the SIP level. So this can send a 487 !dcm! --
       /// should be 488? to a reinvite INVITE or an UPDATE
       virtual SipMessage& rejectOffer(int statusCode);
@@ -41,6 +39,8 @@ class InviteSession : public BaseUsage
       // will contain the proposed offer. If the peer supports UPDATE, always
       // prefer UPDATE over reINVITE (no 3-way handshake required)
       // !jf! there are more things you could update in the targetRefresh 
+      //!dcm! -- the UPDATE rfc states that re-invite should be preferred on 
+      // established dialogs, in case user approval is required.
       virtual SipMessage& targetRefresh(const NameAddr& localUri);
 
       // confusing wrong signature, should maybe just same NameAddr
