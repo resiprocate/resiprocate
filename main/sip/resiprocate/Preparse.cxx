@@ -156,7 +156,9 @@ PreparseStateTable::InitStatePreparseStateTable()
    const int QUOT = (int)'\"';
    const int COLON = (int)':';
    const int LSLASH = (int)'\\';
+   const int COMMA = (int)',';
    const char LWS[] = " \t";
+
 
    // MUST be AE( format ) so fsm generation will work.
    AE( NewMsg,X,XC,StartLine,actAdd); // all chars
