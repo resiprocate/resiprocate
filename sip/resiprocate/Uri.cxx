@@ -50,13 +50,15 @@ Uri::operator=(const Uri& rhs)
 class OrderUnknownParameters
 {
    public:
-	  OrderUnknownParameters() {};
+	  OrderUnknownParameters() { notUsed=false; };
 	  ~OrderUnknownParameters() {};
 
       bool operator()(const Parameter* p1, const Parameter* p2) const
       {
          return dynamic_cast<const UnknownParameter*>(p1)->getName() < dynamic_cast<const UnknownParameter*>(p2)->getName();
       }
+private:
+	bool notUsed;
 };
 
 bool 
