@@ -43,7 +43,7 @@ public:
 
       ///
       void setOutboundProxy( const Uri& uri );
-      void setDefaultProtocol( Transport::Type protocol );
+      void setDefaultProtocol( TransportType protocol );
       void setUAName( const Data& name );
       
       bool haveCerts( bool sign, const Data& encryptFor );
@@ -117,7 +117,7 @@ public:
             
       Uri mOutboundProxy;
       Data mUAName;
-      Transport::Type mDefaultProtocol;
+      TransportType mDefaultProtocol;
 
 };
 

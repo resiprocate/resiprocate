@@ -18,16 +18,18 @@ class SipMessage;
 class UdpTransport : public Transport
 {
    public:
-      UdpTransport(const Data& sendhost,
+      // Specify which udp port to use for send and receive
+      // interface can be an ip address or dns name. If it is an ip address,
+      // only bind to that interface.
+      UdpTransport(Fifo<Message>& fifo,
                    int portNum,
-                   const Data& nic,
-                   Fifo<Message>& fifo);
-
+                   const Data& interface=Data::Empty, 
+                   bool ipv4=true);
       virtual  ~UdpTransport();
 
       void process(FdSet& fdset);
       bool isReliable() const { return false; }
-      Transport::Type transport() const { return UDP; }
+      TransportType transport() const { return UDP; }
       virtual void buildFdSet( FdSet& fdset);
 
    private:

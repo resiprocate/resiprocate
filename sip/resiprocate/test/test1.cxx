@@ -55,7 +55,7 @@ main(int argc, char* argv[])
       auto_ptr<SipMessage> message = auto_ptr<SipMessage>(Helper::makeInvite( dest, from, from));
       Resolver resolver(dest.uri());
       
-      Transport::Type t = udp->transport();
+      TransportType t = udp->transport();
       Data foo = Transport::toData(t); 
       message->header(h_Vias).front().transport() = foo;
       message->header(h_Vias).front().sentHost() = udp->hostName();

@@ -53,7 +53,7 @@ class TransactionState : public DnsHandler
       void processStale(  Message* msg );
       void processTransportFailure();
       void processNoDnsResults();
-      void processReliability(Transport::Type type);
+      void processReliability(TransportType type);
       
       void add(const Data& tid);
       void erase(const Data& tid);
@@ -99,9 +99,9 @@ class TransactionState : public DnsHandler
 
       // current selection from the DnsResult. e.g. it is important to send the
       // CANCEL to exactly the same tuple as the original INVITE went to. 
-      Transport::Tuple mTarget; 
+      Tuple mTarget; 
 
-      Transport::Tuple mSource; // used to reply to requests
+      Tuple mSource; // used to reply to requests
       Data mId;
       Data mToTag; // for failure responses on ServerInviteTransaction 
       
