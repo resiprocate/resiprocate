@@ -4,13 +4,16 @@ EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		ConfigName.0 = Debug
-		ConfigName.1 = Release
+		ConfigName.1 = DebugSSL
+		ConfigName.2 = Release
 	EndGlobalSection
 	GlobalSection(ProjectDependencies) = postSolution
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
 		{075CF21A-D474-4FBB-9625-7068FFD4894B}.Debug.ActiveCfg = Debug|Win32
 		{075CF21A-D474-4FBB-9625-7068FFD4894B}.Debug.Build.0 = Debug|Win32
+		{075CF21A-D474-4FBB-9625-7068FFD4894B}.DebugSSL.ActiveCfg = DebugSSL|Win32
+		{075CF21A-D474-4FBB-9625-7068FFD4894B}.DebugSSL.Build.0 = DebugSSL|Win32
 		{075CF21A-D474-4FBB-9625-7068FFD4894B}.Release.ActiveCfg = Release|Win32
 		{075CF21A-D474-4FBB-9625-7068FFD4894B}.Release.Build.0 = Release|Win32
 	EndGlobalSection
