@@ -63,6 +63,27 @@ SipStack::addAlias(const Data& domain)
    mDomains.insert(domain);
 }
 
+Data 
+SipStack::getHostname()
+{
+	// if you change this, please #def old version for windows 
+	char hostName[1024];
+	int err =  gethostname( hostName, sizeof(hostName) );
+	assert( err == 0 );
+
+	struct hostent* hostEnt = gethostbyname( hostName );
+	assert( hostEnt );
+
+	struct in_addr* addr = (struct in_addr*) hostEnt->h_addr;
+	assert( addr );
+
+	// if you change this, please #def old version for windows 
+	char* addrA = inet_ntoa( *addr );
+	Data ret(addrA);
+
+	return ret;
+}
+
 bool 
 SipStack::isMyDomain(const Data& domain) const
 {

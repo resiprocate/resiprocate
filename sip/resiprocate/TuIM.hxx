@@ -13,9 +13,10 @@ class Pidf;
 
 class TuIM
 {
-   public:
+   private:
       class Buddy;
       
+public:
       class PageCallback
       {
          public:
