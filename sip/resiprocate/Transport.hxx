@@ -73,7 +73,8 @@ class Transport
       void ok(const Data& tid); // called when the transport succeeds
       
       // These methods are used by the TransportSelector
-      virtual const Data& hostname() const { return mHost; } 
+      virtual const Data& hostName() const { return mHost; } 
+      virtual const Data& interfaceName() const { return mInterface; } 
       virtual int port() const { return mPort; } 
       virtual Type transport() const =0 ;
       virtual bool isReliable() const =0;
