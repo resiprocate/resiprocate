@@ -116,9 +116,8 @@ class ContentsFactory : public ContentsFactoryBase
    public:
       ContentsFactory()
       {
-         HeaderFieldValue hfv;
-         //T tmp;
-		 Contents::getFactoryMap()[T::getStaticType()] = this;
+	 HeaderFieldValue hfv;
+	 Contents::getFactoryMap()[T::getStaticType()] = this;
       }
       
       // pass Mime instance for parameters

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.121 2003/05/05 00:25:39 fluffy Exp $
+# $Id: Makefile,v 1.122 2003/07/28 10:45:03 davidb Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -36,6 +36,8 @@ SRC = \
 	os/ThreadIf.cxx \
 	os/Timer.cxx \
 	os/vmd5.cxx \
+	X_msMsgsInvite.cxx \
+	GenericContents.cxx \
 	SipSession.cxx	\
 	Registration.cxx \
 	Subscription.cxx \
