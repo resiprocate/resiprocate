@@ -42,11 +42,15 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
       pb.data(mTransactionId, anchor);
          
       pb.assertNotEof();
-      pb.skipChar();
+      pb.skipChar(Symbols::DASH[0]);
       mCounter = pb.integer();
-      anchor = pb.skipChar(Symbols::DASH[0]);
-      pb.skipToEnd();
-      pb.data(mClientData, anchor);
+
+      if (!pb.eof() && *pb.position() == Symbols::DASH[0])
+      {
+         anchor = pb.skipChar(Symbols::DASH[0]);
+         pb.skipToEnd();
+         pb.data(mClientData, anchor);
+      }
    }
    else
    {
@@ -122,7 +126,7 @@ BranchParameter::encode(ostream& stream) const
    }
    if (mIsMyBranch)
    {
-      stream << Symbols::Vocal2Cookie << Symbols::DASH[0]
+      stream << Symbols::Vocal2Cookie 
              << mTransactionId
              << Symbols::DASH[0]
              << mCounter;
