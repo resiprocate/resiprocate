@@ -1,6 +1,11 @@
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/HeaderFieldValueList.hxx>
 
+#if defined(DEBUG) && defined(DEBUG_MEMORY)
+#include <util/Logger.hxx>
+#define VOCAL_SUBSYSTEM Subsystem::SIP
+#endif
+
 using namespace Vocal2;
 using namespace std;
 
@@ -52,8 +57,9 @@ SipMessage::SipMessage(const SipMessage& from)
       for (UnknownHeaders::const_iterator i = from.mUnknownHeaders.begin();
            i != from.mUnknownHeaders.end(); i++)
       {
-         mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(i->first,
-                                                                     new HeaderFieldValueList(*i->second)));
+         mUnknownHeaders.push_back(pair<Data, HeaderFieldValueList*>(
+                                      i->first,
+                                      new HeaderFieldValueList(*i->second)));
       }
       if (from.mStartLine != 0)
       {
@@ -947,6 +953,40 @@ SipMessage::setRawHeader(const HeaderFieldValueList* hfvs, Headers::Type headerT
    }
 }
 
+#if defined(DEBUG) && defined(DEBUG_MEMORY)
+namespace Vocal2
+{
+
+void*
+operator new(size_t size)
+{
+   void * p = std::operator new(size);
+   DebugLog(<<"operator new | " << hex << p << " | "
+            << dec << size);
+   if (size == 60)
+   {
+      3;
+   }
+   
+   return p;
+   
+}
+
+void operator delete(void* p)
+{
+   DebugLog(<<"operator delete | " << hex << p << dec);
+   return std::operator delete( p );
+}
+
+void operator delete[](void* p)
+{
+   DebugLog(<<"operator delete [] | " << hex << p << dec);
+   return std::operator delete[] ( p );
+}
+
+ 
+}
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
