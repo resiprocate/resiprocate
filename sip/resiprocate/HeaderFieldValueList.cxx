@@ -1,6 +1,6 @@
+#include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/HeaderFieldValueList.hxx>
 #include <sipstack/ParserContainerBase.hxx>
-#include <sipstack/HeaderFieldValue.hxx>
 
 using namespace Vocal2;
 
@@ -14,8 +14,9 @@ HeaderFieldValueList::~HeaderFieldValueList()
 }
 
 HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
+   : mParserContainer(0)
 {
-   if (mParserContainer != 0)
+   if (rhs.mParserContainer != 0)
    {
       mParserContainer = rhs.mParserContainer->clone();
    }
@@ -28,6 +29,28 @@ HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
    }
 }
 
+std::ostream&
+HeaderFieldValueList::encode(Headers::Type headerType, std::ostream& str)
+{
+   if (getParserContainer() != 0)
+   {
+      getParserContainer()->encode(str);
+   }
+   else
+   {
+      for (HeaderFieldValueList::const_iterator j = begin();
+           j != end(); j++)
+      {
+         if (headerType != Headers::NONE)
+         {
+            str << Headers::HeaderNames[headerType] << Symbols::COLON << Symbols::SPACE;
+         }
+         (*j)->encode(str);
+         str << Symbols::CRLF;
+      }
+   }
+   return str;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

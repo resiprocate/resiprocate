@@ -23,6 +23,8 @@ SipMessage::SipMessage()
 
 SipMessage::SipMessage(const SipMessage& from)
    : mIsExternal(from.mRequest),
+     mStartLine(0),
+     mBody(0),
      mRequest(from.mRequest),
      mResponse(from.mResponse)
 {
@@ -36,7 +38,6 @@ SipMessage::SipMessage(const SipMessage& from)
   
       for (int i = 0; i < Headers::MAX_HEADERS; i++)
       {
-         delete mHeaders[i];
          if (from.mHeaders[i] != 0)
          {
             mHeaders[i] = new HeaderFieldValueList(*from.mHeaders[i]);
@@ -55,12 +56,11 @@ SipMessage::SipMessage(const SipMessage& from)
       }
       if (from.mStartLine != 0)
       {
-         mStartLine = new HeaderFieldValue(*from.mStartLine, 0); // !dlb! needs to be stored in a container
-
+         mStartLine = new HeaderFieldValueList(*from.mStartLine); 
       }
       if (from.mBody != 0)
       {
-         mBody = new HeaderFieldValue(*from.mBody, 0); // !jf!
+         mBody = new HeaderFieldValueList(*from.mBody);
       }
    }
 }
@@ -84,19 +84,8 @@ SipMessage::~SipMessage()
       delete [] *i;
    }
 
-   // no ParserContainer for startLine
-   if (mStartLine != 0)
-   {
-      delete mStartLine->mParserCategory;
-      delete mStartLine;
-   }
-
-   // no ParserContainer for body
-   if (mBody != 0)
-   {
-      delete mBody->mParserCategory;
-      delete mBody;
-   }
+   delete mStartLine;
+   delete mBody;
 }
 
 const Data& 
@@ -132,7 +121,7 @@ SipMessage::encode(std::ostream& str) const
    // !dlb! calculate content-length -- ask body
    if (mStartLine != 0)
    {
-      mStartLine->encode(str);
+      mStartLine->encode(Headers::NONE, str);
       str << Symbols::CRLF;
    }
    
@@ -140,26 +129,13 @@ SipMessage::encode(std::ostream& str) const
    {
       if (mHeaders[i] !=0)
       {
-         if (mHeaders[i]->getParserContainer() != 0)
-         {
-            mHeaders[i]->getParserContainer()->encode(str);
-         }
-         else
-         {
-            for (HeaderFieldValueList::const_iterator j = mHeaders[i]->begin();
-                 j != mHeaders[i]->end(); j++)
-            {
-               str << Headers::HeaderNames[i] << Symbols::COLON << Symbols::SPACE;
-               (*j)->encode(str);
-               str << Symbols::CRLF;
-            }
-         }
+         mHeaders[i]->encode((Headers::Type)i, str);
       }
    }
    
    if (mBody != 0)
    {
-      mBody->encode(str);
+      mBody->encode(Headers::NONE, str);
    }
    
    return str;
@@ -180,8 +156,9 @@ SipMessage::setSource(const sockaddr_in& addr)
 void 
 SipMessage::setStartLine(const char* st, int len)
 {
-   mStartLine = new HeaderFieldValue(st, len);
-   ParseBuffer pb(mStartLine->mField, mStartLine->mFieldLength);
+   mStartLine = new HeaderFieldValueList;
+   mStartLine-> push_back(new HeaderFieldValue(st, len));
+   ParseBuffer pb(st, len);
    const char* start;
    start = pb.skipWhitespace();
    pb.skipNonWhitespace();
@@ -192,16 +169,14 @@ SipMessage::setStartLine(const char* st, int len)
       pb.skipNonWhitespace();
       if ((pb.position() - start) == 3)
       {
-         StatusLine* parser = new StatusLine(mStartLine);
-         mStartLine->mParserCategory = parser;
+         mStartLine->setParserContainer(new ParserContainer<StatusLine>(mStartLine, Headers::NONE));
          //!dcm! should invoke the statusline parser here once it does limited validation
          mResponse = true;
       }
    }
    if (!mResponse)
    {
-      RequestLine* parser = new RequestLine(mStartLine);
-      mStartLine->mParserCategory = parser;
+      mStartLine->setParserContainer(new ParserContainer<RequestLine>(mStartLine, Headers::NONE));
       //!dcm! should invoke the responseline parser here once it does limited validation
       mRequest = true;
    }
@@ -210,7 +185,8 @@ SipMessage::setStartLine(const char* st, int len)
 void 
 SipMessage::setBody(const char* start, int len)
 {
-   mBody = new HeaderFieldValue(start, len);
+   mBody = new HeaderFieldValueList;
+   mBody->push_back(new HeaderFieldValue(start, len));
 }
 
 // unknown header interface
@@ -232,7 +208,7 @@ SipMessage::header(const Data& headerName) const
                (*j)->mParserCategory = new StringCategory(*j);
             }
             
-            hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs));
+            hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs, Headers::NONE));
          }
          return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
       }
@@ -240,7 +216,7 @@ SipMessage::header(const Data& headerName) const
    
    // create the list empty
    HeaderFieldValueList* hfvs = new HeaderFieldValueList;
-   hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs));
+   hfvs->setParserContainer(new ParserContainer<StringCategory>(hfvs, Headers::NONE));
    mUnknownHeaders.push_back(make_pair(headerName, hfvs));
    return *dynamic_cast<ParserContainer<StringCategory>*>(hfvs->getParserContainer());
 }
@@ -270,7 +246,7 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
    {
       if (mHeaders[header] == 0)
       {
-         mHeaders[header] = new HeaderFieldValueList();
+         mHeaders[header] = new HeaderFieldValueList;
          mHeaders[header]->push_back(newHeader);
       }
       else
@@ -333,12 +309,12 @@ SipMessage::header(const RequestLineType& l) const
    }
    if (mStartLine == 0 )
    { 
-      mStartLine = new HeaderFieldValue;
-      RequestLine* parser = new RequestLine(mStartLine);
-      mStartLine->mParserCategory = parser;
+      mStartLine = new HeaderFieldValueList;
+      mStartLine->push_back(new HeaderFieldValue);
+      mStartLine->setParserContainer(new ParserContainer<RequestLine>(mStartLine, Headers::NONE));
       mRequest = true;
    }
-   return *dynamic_cast<RequestLine*>(mStartLine->mParserCategory);
+   return dynamic_cast<ParserContainer<RequestLine>*>(mStartLine->getParserContainer())->front();
 }
 
 StatusLine& 
@@ -350,12 +326,12 @@ SipMessage::header(const StatusLineType& l) const
    }
    if (mStartLine == 0 )
    { 
-      mStartLine = new HeaderFieldValue;
-      StatusLine* parser = new StatusLine(mStartLine);
-      mStartLine->mParserCategory = parser;
+      mStartLine = new HeaderFieldValueList;
+      mStartLine->push_back(new HeaderFieldValue);
+      mStartLine->setParserContainer(new ParserContainer<StatusLine>(mStartLine, Headers::NONE));
       mResponse = true;
    }
-   return *dynamic_cast<StatusLine*>(mStartLine->mParserCategory);
+   return dynamic_cast<ParserContainer<StatusLine>*>(mStartLine->getParserContainer())->front();
 }
 
 HeaderFieldValueList* 
