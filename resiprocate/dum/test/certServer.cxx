@@ -89,7 +89,6 @@ class CertPublicationHandler : public ServerPublicationHandler
                             int expires)
       {
          add(h, contents);
-         h->send(h->accept(200));
       }
 
       virtual void onRemoved(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, int expires)
@@ -99,9 +98,17 @@ class CertPublicationHandler : public ServerPublicationHandler
    private:
       void add(ServerPublicationHandle h, const Contents* contents)
       {
-         const X509Contents* x509 = dynamic_cast<const X509Contents*>(contents);
-         assert(x509);
-         mSecurity.addUserCertDER(h->getPublisher(), x509->getBodyData());
+         if (h->getDocumentKey() == h->getPublisher())
+         {
+            const X509Contents* x509 = dynamic_cast<const X509Contents*>(contents);
+            assert(x509);
+            mSecurity.addUserCertDER(h->getPublisher(), x509->getBodyData());
+            h->send(h->accept(200));
+         }
+         else
+         {
+            h->send(h->accept(403)); // !jf! is this the correct code? 
+         }
       }
 
       Security& mSecurity;
@@ -146,7 +153,6 @@ class PrivateKeyPublicationHandler : public ServerPublicationHandler
                             int expires)
       {
          add(h, contents);
-         h->send(h->accept(200));
       }
 
       virtual void onRemoved(ServerPublicationHandle h, const Data& etag, const SipMessage& pub, int expires)
@@ -157,9 +163,16 @@ class PrivateKeyPublicationHandler : public ServerPublicationHandler
    private:
       void add(ServerPublicationHandle h, const Contents* contents)
       {
-         const Pkcs8Contents* pkcs8 = dynamic_cast<const Pkcs8Contents*>(contents);
-         assert(pkcs8);
-         mSecurity.addUserPrivateKeyDER(h->getPublisher(), pkcs8->getBodyData());
+         if (h->getDocumentKey() == h->getPublisher())
+         {
+            const Pkcs8Contents* pkcs8 = dynamic_cast<const Pkcs8Contents*>(contents);
+            assert(pkcs8);
+            mSecurity.addUserPrivateKeyDER(h->getPublisher(), pkcs8->getBodyData());
+         }
+         else
+         {
+            h->send(h->accept(403)); // !jf! is this the correct code? 
+         }
       }
       
       Security& mSecurity;
@@ -174,6 +187,13 @@ class CertSubscriptionHandler : public ServerSubscriptionHandler
 
       virtual void onNewSubscription(ServerSubscriptionHandle h, const SipMessage& sub)
       {
+         if (!mSecurity.hasUserCert(h->getDocumentKey()))
+         {
+            // !jf! really need to do this async. send neutral state in the meantime,
+            // blah blah blah
+            mSecurity.generateUserCert(h->getDocumentKey(), Data::Empty);
+         }
+
          if (mSecurity.hasUserCert(h->getDocumentKey()))
          {
             X509Contents x509(mSecurity.getUserCertDER(h->getDocumentKey()));
@@ -215,7 +235,11 @@ class PrivateKeySubscriptionHandler : public ServerSubscriptionHandler
 
       virtual void onNewSubscription(ServerSubscriptionHandle h, const SipMessage& sub)
       {
-         if (mSecurity.hasUserCert(h->getDocumentKey()))
+         if (h->getDocumentKey() != h->getPublisher())
+         {
+            h->send(h->accept(403)); // !jf! is this the correct code? 
+         }
+         else if (mSecurity.hasUserCert(h->getDocumentKey()))
          {
             Pkcs8Contents pkcs(mSecurity.getUserPrivateKeyDER(h->getDocumentKey()));
             h->send(h->update(&pkcs));
@@ -241,6 +265,7 @@ class PrivateKeySubscriptionHandler : public ServerSubscriptionHandler
       virtual void onError(ServerSubscriptionHandle, const SipMessage& msg)
       {
       }
+
    private:
       Security& mSecurity;
 };
@@ -259,6 +284,7 @@ class CertServer : public OutOfDialogHandler,  public DialogUsageManager
       {
          addTransport(UDP, 5100);
          addTransport(TCP, 5100);
+         addTransport(TLS, 5101, 
          // addTlsTransport
          
          mProfile.clearSupportedMethods();
