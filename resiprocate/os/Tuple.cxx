@@ -20,6 +20,7 @@
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Transport.hxx"
+#include "resiprocate/GenericIPAddress.hxx"
 
 using namespace resip;
 
@@ -34,6 +35,30 @@ Tuple::Tuple() :
    memset(addr4, 0, sizeof(sockaddr_in));
    mSockaddr.sa_family = AF_INET;
 }
+
+Tuple::Tuple(const GenericIPAddress& genericAddress, TransportType type, 
+             const Data& targetDomain) : 
+   transport(0),
+   connectionId(0),
+   mTransportType(type),
+   mTargetDomain(targetDomain)
+{
+  if (genericAddress.isVersion4())
+  {
+     m_anonv4 = genericAddress.v4Address;
+  }
+  else
+#ifdef USE_IPV6
+  {
+     m_anonv6 = genericAddress.v6Address;
+  }
+#else
+  {
+     assert(0);
+  }
+#endif
+}
+
 
 Tuple::Tuple(const Data& printableAddr, 
              int port,
@@ -68,11 +93,11 @@ Tuple::Tuple(const Data& printableAddr,
       m_anonv6.sin6_port = htons(port);
       if (printableAddr.empty())
       {
-         DnsUtil::inet_pton( printableAddr, m_anonv6.sin6_addr);
+         m_anonv6.sin6_addr = in6addr_any;
       }
       else
       {
-         m_anonv6.sin6_addr = in6addr_any;
+         DnsUtil::inet_pton( printableAddr, m_anonv6.sin6_addr);
       }
 #else
 	  assert(0);
@@ -152,7 +177,30 @@ Tuple::Tuple(const struct sockaddr& addr,
    mTargetDomain(targetDomain)
 {
 }
-   
+
+Data 
+Tuple::presentationFormat() const
+{
+#ifdef USE_IPV6
+   if (isV4())
+   {
+      return DnsUtil::inet_ntop(*this);
+   }
+   else if (IN6_IS_ADDR_V4MAPPED(&m_anonv6.sin6_addr))
+   {
+      return DnsUtil::inet_ntop(*(reinterpret_cast<const in_addr*>(
+                                 (reinterpret_cast<const unsigned char*>(&m_anonv6.sin6_addr) + 12))));
+   }
+   else
+   {
+      return DnsUtil::inet_ntop(*this);
+   }
+#else
+      return DnsUtil::inet_ntop(*this);
+#endif
+
+}
+
 void
 Tuple::setPort(int port)
 {
@@ -563,6 +611,26 @@ Tuple::AnyPortCompare::operator()(const Tuple& lhs,
 #endif
 
    return false;
+}
+
+GenericIPAddress 
+Tuple::toGenericIPAddress() const
+{
+   if (isV4())
+   {
+      return GenericIPAddress(m_anonv4);
+   }
+   else
+#ifdef USE_IPV6
+  {
+      return GenericIPAddress(m_anonv6);
+  }
+#else
+  {
+     assert(0);
+     return m_anonv4; //bogus
+  }
+#endif
 }
 
 bool

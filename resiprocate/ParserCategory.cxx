@@ -161,6 +161,25 @@ ParserCategory::exists(const UnknownParameterType& param) const
    return getParameterByData(param.getName()) != NULL;
 }
 
+void 
+ParserCategory::removeParametersExcept(const ParameterTypeSet& set)
+{
+   checkParsed();
+   for (ParameterList::iterator it = mParameters.begin();
+        it != mParameters.end();)
+   {
+      if (set.find((*it)->getType()) == set.end())
+      {
+         delete *it;
+         it = mParameters.erase(it);
+      }
+      else
+      {
+         ++it;
+      }
+   }
+}
+
 void
 ParserCategory::parseParameters(ParseBuffer& pb)
 {

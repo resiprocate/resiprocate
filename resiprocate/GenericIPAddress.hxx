@@ -1,72 +1,75 @@
-#if !defined(RESIP_NAME_ADDR_HXX)
-#define RESIP_NAME_ADDR_HXX
+#if !defined(RESIP_GENERIC_IP_ADDRESS_HXX)
+#define RESIP_GENERIC_IP_ADDRESS_HXX
 
-#include <iosfwd>
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/ParserCategory.hxx"
-#include "resiprocate/ParserContainer.hxx"
-#include "resiprocate/Uri.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 namespace resip
 {
-
-//====================
-// NameAddr:
-//====================
-class NameAddr : public ParserCategory
+struct GenericIPAddress
 {
-   public:
-      enum {commaHandling = CommasAllowedOutputMulti};
-
-      NameAddr();
-      NameAddr(HeaderFieldValue* hfv, Headers::Type type);
-      explicit NameAddr(const Uri&);
-      explicit NameAddr(const Data& unparsed);
-
-      NameAddr(const NameAddr&);
-      NameAddr& operator=(const NameAddr&);
-
-      virtual ~NameAddr();
+   public:   
+      GenericIPAddress()
+      {
+      }
       
-      Uri& uri();
-      const Uri& uri() const;
-      Data& displayName();
-      const Data& displayName() const;
-      bool isAllContacts() const;
-      void setAllContacts();
-      
-      virtual void parse(ParseBuffer& pb);
-      virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      GenericIPAddress(const sockaddr& addr) : address(addr) 
+      {
+      }
 
-      bool operator<(const NameAddr& other) const;
+      GenericIPAddress(const sockaddr_in& v4) : v4Address(v4)
+      {
+      }
 
-      bool mustQuoteDisplayName() const;      
-   protected:
-      bool mAllContacts;
-      mutable Uri mUri;
-      mutable Data mDisplayName;
-
-   private:
-#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) && (__GNUC_MINOR__ <= 3) )
-      //disallow the following parameters from being accessed in NameAddr
-      //this works on gcc 3.2 so far. definitely does not work on gcc 2.95 on
-      //qnx
-      // as well as on gcc 3.4.0 and 3.4.1
-      using ParserCategory::param;
-      transport_Param::DType& param(const transport_Param& paramType) const;
-      method_Param::DType& param(const method_Param& paramType) const;
-      ttl_Param::DType& param(const ttl_Param& paramType) const;
-      maddr_Param::DType& param(const maddr_Param& paramType) const;
-      lr_Param::DType& param(const lr_Param& paramType) const;
-      comp_Param::DType& param(const comp_Param& paramType) const;
+#ifdef USE_IPV6
+      GenericIPAddress(const sockaddr_in6& v6) : v6Address(v6)
+      {
+      }
 #endif
+      size_t length() const
+      {
+         if (address.sa_family == AF_INET) // v4
+         {
+            return sizeof(sockaddr_in);
+         }
+#ifdef USE_IPV6
+         else  if (address.sa_family == AF_INET6) // v6
+         {
+            return sizeof(sockaddr_in6);
+         }
+         assert(0);
+         return 0;
+#endif
+	  }
+      bool isVersion4() const
+      {
+         return address.sa_family == AF_INET;
+      }
+#ifdef USE_IPV6
+      bool isVersion6() const 
+      { 
+         return address.sa_family == AF_INET6; 
+      }
+#else
+      bool isVersion6() const { return false; }
+#endif
+      union
+      {
+            sockaddr address;
+            sockaddr_in v4Address;
+#ifdef USE_IPV6
+            sockaddr_in6 v6Address;
+#endif
+      };
+   private:
+      bool mIsVersion4;
 };
-typedef ParserContainer<NameAddr> NameAddrs;
- 
+
 }
 
+
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
