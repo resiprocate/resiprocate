@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.29 2002/11/08 17:53:49 jason Exp $";
+"$Id: Data.cxx,v 1.30 2002/11/12 05:16:39 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -117,6 +117,162 @@ Data::Data(int val)
       mBuf[0] = '-';
    }
 }
+
+// new functions
+
+Data::Data(double value, int precision)
+   : mSize(0), 
+     mBuf(0),
+     mCapacity(0), 
+     mMine(true)
+{
+   assert(precision < 10);
+
+   double v = value;
+   bool neg = (value < 0.0);
+   
+   if (neg)
+   {
+      v = -v;
+   }
+
+   Data m((unsigned long)v);
+
+   // remainder
+   v = v - floor(v);
+
+   int p = precision;
+   while (p--)
+   {
+      v *= 10;
+   }
+
+   int dec = (int)floor(v+0.5);
+
+   Data d;
+
+   if (dec == 0)
+   {
+      d = "0";
+   }
+   else
+   {
+      d.resize(precision, false);
+      d.mBuf[precision] = 0;
+      p = precision;
+      // neglect trailing zeros
+      bool significant = false;
+      while (p--)
+      {
+         if (dec % 10 || significant)
+         {
+            significant = true;
+            d.mSize++;
+            d.mBuf[p] = '0' + (dec % 10);
+         }
+         else
+         {
+            d.mBuf[p] = 0;
+         }
+         
+         dec /= 10;
+      }
+   }
+
+   if (neg)
+   {
+      resize(m.size() + d.size() + 2, false);
+      mBuf[0] = '-';
+      memcpy(mBuf+1, m.mBuf, m.size());
+      mBuf[1+m.size()] = '.';
+      memcpy(mBuf+1+m.size()+1, d.mBuf, d.size()+1);
+      mSize = m.size() + d.size() + 2;
+   }
+   else
+   {
+      resize(m.size() + d.size() + 1, false);
+      memcpy(mBuf, m.mBuf, m.size());
+      mBuf[m.size()] = '.';
+      memcpy(mBuf+m.size()+1, d.mBuf, d.size()+1);
+      mSize = m.size() + d.size() + 1;
+   }
+}
+
+Data::Data(unsigned long value)
+   : mSize(0), 
+     mBuf(0),
+     mCapacity(0)
+{
+   if (value == 0)
+   {
+      mBuf = new char[2];
+      mBuf[0] = '0';
+      mBuf[1] = 0;
+      mSize = 1;
+      return;
+   }
+
+   int c = 0;
+   unsigned long v = value;
+   while (v /= 10)
+   {
+      c++;
+   }
+
+   mSize = c+1;
+   mCapacity = c+1;
+   mBuf = new char[c+2];
+   mBuf[c+1] = 0;
+   
+   v = value;
+   while (v)
+   {
+      mBuf[c--] = '0' + v%10;
+      v /= 10;
+   }
+}
+
+Data::Data(char c)
+   : mSize(1), 
+     mBuf(0),
+     mCapacity(mSize)
+{
+   mBuf = new char[2];
+   mBuf[0] = c;
+   mBuf[1] = 0;
+}
+
+Data::Data(bool value)
+   : mSize(0), 
+     mBuf(0),
+     mCapacity(0)
+{
+   static char* truec = "true";
+   static char* falsec = "false";
+
+   if (value)
+   {
+      mBuf = new char[5];
+      mSize = 4;
+      mCapacity = 4;
+      memcpy(mBuf, truec, 5);
+   }
+   else
+   {
+      mBuf = new char[6];
+      mSize = 5;
+      mCapacity = 5;
+      memcpy(mBuf, falsec, 6);
+   }
+}
+
+
+// end new functions
+
+
+
+
+
 
 Data::Data(const Data& data) 
    : mSize(data.mSize),
@@ -469,6 +625,86 @@ Data::uppercase()
       p++;
    }
    return *this;
+}
+
+int 
+Data::convertInt() const
+{
+   int val = 0;
+   char* p = mBuf;
+   int l = mSize;
+   int s = 1;
+
+   while (isspace(*p++))
+   {
+      l--;
+   }
+   p--;
+   
+   if (*p == '-')
+   {
+      s = -1;
+      p++;
+      l--;
+   }
+   
+   while (l--)
+   {
+      char c = *p++;
+      if ((c >= '0') && (c <= '9'))
+      {
+         val *= 10;
+         val += c - '0';
+      }
+      else
+      {
+         return s*val;
+      }
+   }
+
+   return s*val;
+}
+
+
+double 
+Data::convertDouble() const
+{
+   long val = 0;
+   char* p = mBuf;
+   int s = 1;
+
+   while (isspace(*p++));
+   p--;
+   
+   if (*p == '-')
+   {
+      s = -1;
+      p++;
+   }
+   
+   while (isdigit(*p))
+   {
+      val *= 10;
+      val += *p - '0';
+      p++;
+   }
+
+   if (*p == '.')
+   {
+      p++;
+      long d = 0;
+      double div = 1.0;
+      while (isdigit(*p))
+      {
+         d *= 10;
+         d += *p - '0';
+         div *= 10;
+         p++;
+      }
+      return s*(val + d/div);
+   }
+
+   return s*val;
 }
 
 
