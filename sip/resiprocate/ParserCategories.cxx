@@ -387,12 +387,13 @@ Via::parse()
    endMark = buff.skipToOneOf(ParseBuffer::WhitespaceOrSlash);
    mProtocolName = Data(startMark, endMark - startMark);
    buff.skipToChar('/');
-   
+   buff.skipChar();
    startMark = buff.skipWhitespace();
    endMark = buff.skipToOneOf(ParseBuffer::WhitespaceOrSlash);
    mProtocolVersion = Data(startMark, endMark - startMark);
 
    buff.skipToChar('/');
+   buff.skipChar();
    startMark = buff.skipWhitespace();
    endMark = buff.skipNonWhitespace();
    mTransport = Data(startMark, endMark - startMark);
@@ -415,6 +416,10 @@ Via::parse()
       endMark = buff.skipToOneOf(ParseBuffer::WhitespaceOrSemi);
       mSentPort = atoi(startMark);
    }
+   else
+   {
+      mSentPort = Symbols::DefaultSipPort;
+   }
    if (*endMark == Symbols::SEMI_COLON[0])
    {
       parseParameters(buff);
@@ -424,7 +429,9 @@ Via::parse()
 ostream&
 Via::encode(ostream& str) const
 {
-   assert(0);
+   str << mProtocolName << Symbols::SLASH << mProtocolVersion << Symbols::SLASH << mTransport 
+       << Symbols::SPACE << mSentHost << Symbols::COLON << mSentPort;
+   encodeParameters(str);
    return str;
 }
 

@@ -30,12 +30,10 @@ class HeaderFieldValue
       template <typename ParameterTypes::Type T>
       typename ParameterType<T>::Type& getParameter(const ParameterType<T>& type)
       {
-         std::cerr << "Trying to find parameter: " << T << " in list " << mParameterList << std::endl;
-         Parameter* p = mParameterList.find((ParameterTypes::Type)T);
-         std::cerr << p << std::endl;
+         Parameter* p = mParameterList.find(T);
          if (p == 0)
          {
-            mParameterList.insert(p = new typename ParameterType<T>::Type(ParameterTypes::Type(T)));
+            mParameterList.insert(p = new typename ParameterType<T>::Type(T));
          }
          assert(p);
          return *(dynamic_cast<typename ParameterType<T>::Type*>(p));
@@ -45,14 +43,14 @@ class HeaderFieldValue
       template <typename ParameterTypes::Type T>
       bool exists(const ParameterType<T> type)
       {
-         return mParameterList.find((ParameterTypes::Type)T);
+         return mParameterList.find(T);
       }
 
       template <typename ParameterTypes::Type T>
       void 
       remove(const ParameterType<T> type)
       {
-         mParameterList.erase((ParameterTypes::Type)T);
+         mParameterList.erase(T);
       }
 
       ParameterList& getParameters();
@@ -60,6 +58,11 @@ class HeaderFieldValue
       ParameterList& getUnknownParameters();
 
       void parseParameters(ParseBuffer& pb);
+
+      void encodeParameters(std::ostream& str)
+      {
+         mParameterList.encode(str);
+      }
 
       UnknownParameter* get(const Data& type);
 

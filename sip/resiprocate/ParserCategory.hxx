@@ -36,7 +36,7 @@ class ParserCategory
       virtual std::ostream& encode(std::ostream& str) const = 0;
 
 #ifndef WIN32
-      template <int T>
+      template <typename ParameterTypes::Type T>
       typename ParameterType<T>::Type::Type& 
       param(const ParameterType<T>& parameterType) const
       {
@@ -45,7 +45,7 @@ class ParserCategory
       }
 #endif
 
-      template <int T>
+      template <ParameterTypes::Type T>
       bool
       exists(const ParameterType<T>& parameterType) const
       {
@@ -54,7 +54,7 @@ class ParserCategory
       }
 
       //not necessary to call exists before remove(removing nothing is allowed)      
-      template <int T>
+      template <typename ParameterTypes::Type T>
       void
       remove(const ParameterType<T>& parameterType)
       {
@@ -63,6 +63,7 @@ class ParserCategory
       }
       
       void parseParameters(ParseBuffer& pb);
+      void encodeParameters(std::ostream& str) const;
 
       bool isParsed() const
       {

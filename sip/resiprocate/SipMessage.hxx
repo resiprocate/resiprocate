@@ -52,7 +52,7 @@ class SipMessage : public Message
 
 #define USE_METHOD_TEMPLATE
 #ifdef USE_METHOD_TEMPLATE
-      template <int T>
+      template <typename Headers::Type T>
       bool
       exists(const Header<T>& headerType) const
       {
@@ -60,7 +60,7 @@ class SipMessage : public Message
       }
 
 #ifndef WIN32
-      template <int T>
+      template <typename Headers::Type T>
       typename Header<T>::Type& 
       header(const Header<T>& headerType) const
       {
@@ -81,7 +81,7 @@ class SipMessage : public Message
 #endif
 
 #ifndef WIN32
-      template <int T>
+      template <typename Headers::Type T>
       ParserContainer<typename MultiHeader<T>::Type>& 
       header(const MultiHeader<T>& headerType) const
       {
@@ -98,7 +98,7 @@ class SipMessage : public Message
       }
 #endif
 
-      template <int T>
+      template <typename Headers::Type T>
       void remove(const Header<T>& headerType)
       {
          delete mHeaders[T];
@@ -139,7 +139,7 @@ class SipMessage : public Message
    private:
       void copyFrom(const SipMessage& message);
       void cleanUp();
-      HeaderFieldValueList* ensureHeader(int type) const;
+      HeaderFieldValueList* ensureHeader(Headers::Type type) const;
 
       // not available
       SipMessage& operator=(const SipMessage&);
