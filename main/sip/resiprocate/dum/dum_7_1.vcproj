@@ -198,10 +198,19 @@
 				RelativePath=".\InviteSessionHandler.cxx">
 			</File>
 			<File
+				RelativePath=".\KeepAliveManager.cxx">
+			</File>
+			<File
+				RelativePath=".\KeepAliveTimeout.cxx">
+			</File>
+			<File
 				RelativePath=".\MasterProfile.cxx">
 			</File>
 			<File
 				RelativePath=".\MergedRequestKey.cxx">
+			</File>
+			<File
+				RelativePath=".\NetworkAssociation.cxx">
 			</File>
 			<File
 				RelativePath=".\NonDialogUsage.cxx">
@@ -368,10 +377,19 @@
 				RelativePath=".\InviteSessionHandler.hxx">
 			</File>
 			<File
+				RelativePath=".\KeepAliveManager.hxx">
+			</File>
+			<File
+				RelativePath=".\KeepAliveTimeout.hxx">
+			</File>
+			<File
 				RelativePath=".\MasterProfile.hxx">
 			</File>
 			<File
 				RelativePath=".\MergedRequestKey.hxx">
+			</File>
+			<File
+				RelativePath=".\NetworkAssociation.hxx">
 			</File>
 			<File
 				RelativePath=".\NonDialogUsage.hxx">

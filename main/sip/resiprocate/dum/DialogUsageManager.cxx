@@ -40,6 +40,8 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/dum/KeepAliveManager.hxx"
+#include "resiprocate/dum/KeepAliveTimeout.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -201,6 +203,12 @@ void DialogUsageManager::setMasterProfile(MasterProfile* masterProfile)
 {
    assert(!mMasterProfile);
    mMasterProfile = masterProfile;
+}
+
+void DialogUsageManager::setKeepAliveManager(std::auto_ptr<KeepAliveManager> manager)
+{
+   mKeepAliveManager = manager;
+   mKeepAliveManager->setStack(mStack.get());
 }
 
 void DialogUsageManager::setRedirectManager(std::auto_ptr<RedirectManager> manager)
@@ -886,6 +894,16 @@ DialogUsageManager::process()
             }
 
             dumMsg->getBaseUsage()->dispatch(*dumMsg);
+            return true;
+         }
+
+         KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
+         if (keepAliveMsg)
+         {
+            if (mKeepAliveManager.get())
+            {
+               mKeepAliveManager->process(*keepAliveMsg);
+            }
             return true;
          }
 

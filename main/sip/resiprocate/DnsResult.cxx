@@ -18,6 +18,9 @@
 #else
 #include <Winsock2.h>
 #include <svcguid.h>
+#ifdef USE_IPV6
+#include <ws2tcpip.h>
+#endif
 #endif
 
 #if defined(USE_ARES)
