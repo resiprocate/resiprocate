@@ -55,6 +55,10 @@ const int Symbols::DefaultSipPort = 5060;
 const int Symbols::SipTlsPort = 5061;
 const int Symbols::DefaultSipsPort = 5061;
 
+const Data Symbols::SrvSip = "_sip";
+const Data Symbols::SrvSips = "_sips";
+const Data Symbols::SrvUdp = "_udp";
+const Data Symbols::SrvTcp = "_tcp";
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
