@@ -28,8 +28,8 @@ class InviteSession : public DialogUsage
       /** Similar to provideOffer - called to set the answer to be signalled to
           the peer. May result in message being sent synchronously depending on
           the state. */
-      virtual void provideAnswer(const SdpContents& answer);
-
+      virtual void provideAnswer(const SdpContents& answer)
+;
       /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
       virtual void end();
 
@@ -60,6 +60,13 @@ class InviteSession : public DialogUsage
       
       virtual std::ostream& dump(std::ostream& strm) const;
       InviteSessionHandle getSessionHandle();
+
+      typedef enum
+      {
+         None, // means no Offer or Answer (may have SDP)
+         Offer,
+         Answer
+      } OfferAnswerType;
 
    protected:
 
