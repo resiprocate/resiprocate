@@ -40,12 +40,12 @@ class TypeIf<false>
 };
 
 #define UnusedChecking(_enum)                                           \
-      typedef TypeIf<Headers::_enum != Headers::UNKNOWN> TypeIfT;       \
+      typedef TypeIf<Headers::_enum != Headers::RESIP_UNKNOWN> TypeIfT;       \
       typedef TypeIfT::Resolve<Type> Resolver;                          \
       typedef Resolver::Type UnknownReturn
 
 #define MultiUnusedChecking(_enum)                                              \
-      typedef TypeIf<Headers::_enum != Headers::UNKNOWN> TypeIfT;               \
+      typedef TypeIf<Headers::_enum != Headers::RESIP_UNKNOWN> TypeIfT;               \
       typedef TypeIfT::Resolve< ParserContainer<Type> > Resolver;               \
       typedef Resolver::Type UnknownReturn
 

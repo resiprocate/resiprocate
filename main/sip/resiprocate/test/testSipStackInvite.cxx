@@ -17,25 +17,25 @@ using namespace std;
 #define CRLF "\r\n"
 
 char *registerMessage = 
-"REGISTER sip:test.com SIP/2.0" CRLF
+"RESIP_REGISTER sip:test.com SIP/2.0" CRLF
 "Via: SIP/2.0/UDP client.test.com:5060;branch=z9hG4bK-kcD23" CRLF
 "Max-Forwards: 70" CRLF
 "From: Me <sip:user@test.com>;tag=62e0154b" CRLF
 "To: You <sip:you@other.com>" CRLF
 "Call-ID: b7e6fb02f0e8413d" CRLF
-"CSeq: 1 REGISTER" CRLF
+"CSeq: 1 RESIP_REGISTER" CRLF
 "Contact: <sip:me@123.123.123.123>" CRLF
 "Content-Length: 0" CRLF CRLF;
 
 
 char *inviteMessage =
-"INVITE sip:B@127.0.0.1 SIP/2.0" CRLF
+"RESIP_INVITE sip:B@127.0.0.1 SIP/2.0" CRLF
 "Via: SIP/2.0/UDP 127.0.0.1:5060;branch=z9hG4bK0000" CRLF
 "Max-Forwards: 70" CRLF
 "From: A <sip:A@127.0.0.1>;tag=12345" CRLF
 "To: B <sip:B@127.0.0.1>" CRLF
 "Call-ID: 0123456789@127.0.0.1" CRLF
-"CSeq: 1 INVITE" CRLF
+"CSeq: 1 RESIP_INVITE" CRLF
 "Contact: <sip:A@127.0.0.1>" CRLF
 "Content-Length: 0" CRLF CRLF;
 

@@ -248,27 +248,27 @@ SipMessage::compute2543TransactionHash() const
    assert (mRFC2543TransactionId.empty());
    
    /*  From rfc3261, 17.2.3
-       The INVITE request matches a transaction if the Request-URI, To tag,
+       The RESIP_INVITE request matches a transaction if the Request-URI, To tag,
        From tag, Call-ID, CSeq, and top Via header field match those of the
-       INVITE request which created the transaction.  In this case, the
-       INVITE is a retransmission of the original one that created the
+       RESIP_INVITE request which created the transaction.  In this case, the
+       RESIP_INVITE is a retransmission of the original one that created the
        transaction.  
 
-       The ACK request matches a transaction if the Request-URI, From tag,
+       The RESIP_ACK request matches a transaction if the Request-URI, From tag,
        Call-ID, CSeq number (not the method), and top Via header field match
-       those of the INVITE request which created the transaction, and the To
-       tag of the ACK matches the To tag of the response sent by the server
+       those of the RESIP_INVITE request which created the transaction, and the To
+       tag of the RESIP_ACK matches the To tag of the response sent by the server
        transaction.  
 
        Matching is done based on the matching rules defined for each of those
-       header fields.  Inclusion of the tag in the To header field in the ACK
-       matching process helps disambiguate ACK for 2xx from ACK for other
+       header fields.  Inclusion of the tag in the To header field in the RESIP_ACK
+       matching process helps disambiguate RESIP_ACK for 2xx from RESIP_ACK for other
        responses at a proxy, which may have forwarded both responses (This
        can occur in unusual conditions.  Specifically, when a proxy forked a
        request, and then crashes, the responses may be delivered to another
        proxy, which might end up forwarding multiple responses upstream).  An
-       ACK request that matches an INVITE transaction matched by a previous
-       ACK is considered a retransmission of that previous ACK.
+       RESIP_ACK request that matches an RESIP_INVITE transaction matched by a previous
+       RESIP_ACK is considered a retransmission of that previous RESIP_ACK.
 
        For all other request methods, a request is matched to a transaction
        if the Request-URI, To tag, From tag, Call-ID, CSeq (including the
@@ -858,7 +858,7 @@ void
 SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLen, 
                       const char* start, int len)
 {
-   if (header != Headers::UNKNOWN)
+   if (header != Headers::RESIP_UNKNOWN)
    {
       if (mHeaders[header] == 0)
       {

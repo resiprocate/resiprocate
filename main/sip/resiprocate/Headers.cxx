@@ -228,7 +228,7 @@ Headers::getType(const char* name, int len)
 {
    struct headers* p;
    p = HeaderHash::in_word_set(name, len);
-   return p ? Headers::Type(p->type) : Headers::UNKNOWN;
+   return p ? Headers::Type(p->type) : Headers::RESIP_UNKNOWN;
 }
 
 

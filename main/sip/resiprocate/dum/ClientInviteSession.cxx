@@ -102,7 +102,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             
             if (offans.first == Answer)
             {
-               //no late media required, so just send the ACK
+               //no late media required, so just send the RESIP_ACK
                send(makeAck());
             }
             if (offans.first != None)
@@ -161,7 +161,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
                }
                if (mOfferState == Answered)
                {
-                  //no late media required, so just send the ACK
+                  //no late media required, so just send the RESIP_ACK
                   send(makeAck());
                }
             }
@@ -280,7 +280,7 @@ ClientInviteSession::end()
    switch (mState)
    {
       case Early:
-         //if there is no fork, CANCEL, if there is a fork send a BYE
+         //if there is no fork, CANCEL, if there is a fork send a RESIP_BYE
          if (mDialog.mDialogSet.mDialogs.size() > 1)
          {
             InfoLog ( << "ClientInviteSession::end, Early(forking)" );        
@@ -391,7 +391,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //    {
 //       switch (msg.header(h_CSeq).method())
 //       {
-//          case INVITE:
+//          case RESIP_INVITE:
 //             break;
             
 //          case PRACK:
@@ -475,7 +475,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //       {
 //          mState = Connected;
 //          // !jf!
-//          //if (mReceived2xx) // retransmit ACK
+//          //if (mReceived2xx) // retransmit RESIP_ACK
 //          {
 //             mDum.send(mAck);
 //             return;
@@ -505,7 +505,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //          {
 //             if (mProposedLocalSdp)
 //             {
-//                // Got a 2xx with no answer (sent an INVITE with an offer,
+//                // Got a 2xx with no answer (sent an RESIP_INVITE with an offer,
 //                // unreliable provisionals)
 //                end();
 //                return;
@@ -514,7 +514,7 @@ void ClientInviteSession::redirected(const SipMessage& msg)
 //             {        Transport::error( e );
 //                InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
 //                throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
-//                // Got a 2xx with no offer (sent an INVITE with no offer,
+//                // Got a 2xx with no offer (sent an RESIP_INVITE with no offer,
 //                // unreliable provisionals)
 //                end();
 //                return;
