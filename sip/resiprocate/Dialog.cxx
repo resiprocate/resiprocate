@@ -238,8 +238,7 @@ Dialog::setRequestDefaults(SipMessage& request)
    request.header(h_From) = mLocalUri;
    request.header(h_From).param(p_tag) = mLocalTag;
    request.header(h_CallId) = mCallId;
-
-   Helper::setUri(request.header(h_RequestLine), mRemoteTarget);
+   request.header(h_RequestLine).uri() = mRemoteTarget.uri();
    request.header(h_Routes) = mRouteSet;
    request.header(h_Contacts).front() = mContact;
    request.header(h_Vias).clear();
