@@ -6,13 +6,13 @@ namespace resip
 class BaseUsage
 {
    public:
-      BaseUsage(SAManager& sam);
+      BaseUsage(DialogUsageManager& dum);
       
-      SAManager& sam();
+      DialogUsageManager& dum();
       Dialog& dialog();
       
    private:
-      SAManager& mSAM;
+      DialogUsageManager& mDUM;
       DialogImpl& mDialog;
 };
  
