@@ -233,7 +233,7 @@ main(int arc, char** argv)
    }
    {
       TR _tr("Test typeless parameter copy");
-      Token s;
+      Token s = Token("jason");
       s.value() = "value";
       s.param(p_expires) = 17;
       s.param(p_lr);
