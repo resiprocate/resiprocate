@@ -8,6 +8,7 @@
 
 namespace resip
 {
+class SipMessage;
 
 //#define PARTIAL_TEMPLATE_SPECIALIZATION
 #ifdef PARTIAL_TEMPLATE_SPECIALIZATION
@@ -59,6 +60,7 @@ class HeaderBase
 {
    public:
       virtual Headers::Type getTypeNum() const = 0;
+      virtual void merge(SipMessage&, const SipMessage&)=0;
 };
 
 #define defineHeader(_enum, _name, _type, _rfc)                 \
@@ -70,6 +72,7 @@ class H_##_enum : public HeaderBase                             \
       UnusedChecking(_enum);                                    \
       static Type& knownReturn(ParserContainerBase* container); \
       virtual Headers::Type getTypeNum() const;                 \
+      virtual void merge(SipMessage&, const SipMessage&);       \
       H_##_enum();                                              \
 };                                                              \
 extern H_##_enum h_##_enum
@@ -83,6 +86,7 @@ class H_##_enum##s : public HeaderBase                          \
       MultiUnusedChecking(_enum);                               \
       static Type& knownReturn(ParserContainerBase* container); \
       virtual Headers::Type getTypeNum() const;                 \
+      virtual void merge(SipMessage&, const SipMessage&);       \
       H_##_enum##s();                                           \
 };                                                              \
 extern H_##_enum##s h_##_enum##s
