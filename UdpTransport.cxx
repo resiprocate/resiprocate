@@ -201,8 +201,8 @@ UdpTransport::process(FdSet& fdset)
       // buffer.
 
 
-      bool error = false;
-      bool complete = false;
+      //bool error = false;
+      //bool complete = false;
       
       int used = 0;
 
