@@ -79,10 +79,10 @@ ostream&
 AttributeHelper::encode(ostream& s) const
 {
    for (map< Data, list<Data> >::const_iterator i = mAttributes.begin();
-        i != mAttributes.end(); i++)
+        i != mAttributes.end(); ++i)
    {
       for (list<Data>::const_iterator j = i->second.begin();
-           j != i->second.end(); j++)
+           j != i->second.end(); ++j)
       {
          s << "a="
            << i->first;
@@ -619,7 +619,7 @@ SdpContents::Session::Time::encode(ostream& s) const
      << Symbols::CRLF;
 
    for (list<Repeat>::const_iterator i = mRepeats.begin();
-        i != mRepeats.end(); i++)
+        i != mRepeats.end(); ++i)
    {
       i->encode(s);
    }
@@ -666,7 +666,7 @@ SdpContents::Session::Time::Repeat::encode(ostream& s) const
      << mInterval << Symbols::SPACE[0]
      << mDuration << 's';
    for (list<int>::const_iterator i = mOffsets.begin();
-        i != mOffsets.end(); i++)
+        i != mOffsets.end(); ++i)
    {
       s << Symbols::SPACE[0] << *i << 's';
    }
@@ -770,7 +770,7 @@ SdpContents::Session::Timezones::encode(ostream& s) const
       s << "z=";
       bool first = true;
       for (list<Adjustment>::const_iterator i = mAdjustments.begin();
-           i != mAdjustments.end(); i++)
+           i != mAdjustments.end(); ++i)
       {
          if (!first)
          {
@@ -935,7 +935,7 @@ SdpContents::Session::operator=(const Session& rhs)
       mEncryption = rhs.mEncryption;
       mAttributeHelper = rhs.mAttributeHelper;
       
-      for (std::list<Medium>::iterator i=mMedia.begin(); i != mMedia.end(); i++)
+      for (std::list<Medium>::iterator i=mMedia.begin(); i != mMedia.end(); ++i)
       {
          i->setSession(this);
       }
@@ -1041,13 +1041,13 @@ SdpContents::Session::encode(ostream& s) const
    }
 
    for (list<Email>::const_iterator i = mEmails.begin();
-        i != mEmails.end(); i++)
+        i != mEmails.end(); ++i)
    {
       i->encode(s);
    }
 
    for (list<Phone>::const_iterator i = mPhones.begin();
-        i != mPhones.end(); i++)
+        i != mPhones.end(); ++i)
    {
       i->encode(s);
    }
@@ -1058,7 +1058,7 @@ SdpContents::Session::encode(ostream& s) const
    }
 
    for (list<Bandwidth>::const_iterator i = mBandwidths.begin();
-        i != mBandwidths.end(); i++)
+        i != mBandwidths.end(); ++i)
    {
       i->encode(s);
    }
@@ -1070,7 +1070,7 @@ SdpContents::Session::encode(ostream& s) const
    else
    {
       for (list<Time>::const_iterator i = mTimes.begin();
-           i != mTimes.end(); i++)
+           i != mTimes.end(); ++i)
       {
          i->encode(s);
       }
@@ -1086,7 +1086,7 @@ SdpContents::Session::encode(ostream& s) const
    mAttributeHelper.encode(s);
 
    for (list<Medium>::const_iterator i = mMedia.begin();
-        i != mMedia.end(); i++)
+        i != mMedia.end(); ++i)
    {
       i->encode(s);
    }
@@ -1133,7 +1133,7 @@ SdpContents::Session::addAttribute(const Data& key, const Data& value)
    if (key == rtpmap)
    {
       for (list<Medium>::iterator i = mMedia.begin();
-           i != mMedia.end(); i++)
+           i != mMedia.end(); ++i)
       {
          i->mRtpMapDone = false;
       }
@@ -1148,7 +1148,7 @@ SdpContents::Session::clearAttribute(const Data& key)
    if (key == rtpmap)
    {
       for (list<Medium>::iterator i = mMedia.begin();
-           i != mMedia.end(); i++)
+           i != mMedia.end(); ++i)
       {
          i->mRtpMapDone = false;
       }
@@ -1346,7 +1346,7 @@ SdpContents::Session::Medium::encode(ostream& s) const
      << mProtocol;
 
    for (list<Data>::const_iterator i = mFormats.begin();
-        i != mFormats.end(); i++)
+        i != mFormats.end(); ++i)
    {
       s << Symbols::SPACE[0] << *i;
    }
@@ -1354,7 +1354,7 @@ SdpContents::Session::Medium::encode(ostream& s) const
    if (!mCodecs.empty())
    {
       for (list<Codec>::const_iterator i = mCodecs.begin();
-           i != mCodecs.end(); i++)
+           i != mCodecs.end(); ++i)
       {
          s << Symbols::SPACE[0] << i->payloadType();
       }
@@ -1368,13 +1368,13 @@ SdpContents::Session::Medium::encode(ostream& s) const
    }
 
    for (list<Connection>::const_iterator i = mConnections.begin();
-        i != mConnections.end(); i++)
+        i != mConnections.end(); ++i)
    {
       i->encode(s);
    }
 
    for (list<Bandwidth>::const_iterator i = mBandwidths.begin();
-        i != mBandwidths.end(); i++)
+        i != mBandwidths.end(); ++i)
    {
       i->encode(s);
    }
@@ -1388,7 +1388,7 @@ SdpContents::Session::Medium::encode(ostream& s) const
    {
       // add codecs to information and attributes
       for (list<Codec>::const_iterator i = mCodecs.begin();
-           i != mCodecs.end(); i++)
+           i != mCodecs.end(); ++i)
       {
          s << "a=rtpmap:" 
            << i->payloadType() << Symbols::SPACE[0] << *i
@@ -1527,7 +1527,7 @@ SdpContents::Session::Medium::codecs()
       if (exists(rtpmap))
       {
          for (list<Data>::const_iterator i = getValues(rtpmap).begin();
-              i != getValues(rtpmap).end(); i++)
+              i != getValues(rtpmap).end(); ++i)
          {
             DebugLog(<< "SdpContents::Session::Medium::getCodec(" << *i << ")");
             ParseBuffer pb(i->data(), i->size());
@@ -1545,7 +1545,7 @@ SdpContents::Session::Medium::codecs()
          }
 
          for (list<Data>::const_iterator i = mFormats.begin();
-              i != mFormats.end(); i++)
+              i != mFormats.end(); ++i)
          {
             int mapKey = i->convertInt();
             RtpMap::const_iterator ri = mRtpMap.find(mapKey);
@@ -1620,7 +1620,7 @@ Codec::parse(ParseBuffer& pb,
    if (medium.exists(fmtp))
    {
       for (list<Data>::const_iterator i = medium.getValues(fmtp).begin();
-           i != medium.getValues(fmtp).end(); i++)
+           i != medium.getValues(fmtp).end(); ++i)
       {
          ParseBuffer pb(i->data(), i->size());
          int payload = pb.integer();
