@@ -15,8 +15,8 @@ extern "C"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Inserter.hxx"
 
-#include "DnsStub.hxx"
-#include "DnsInterface.hxx"
+#include "resiprocate/dns/DnsStub.hxx"
+#include "resiprocate/DnsInterface.hxx"
 
 using namespace resip;
 using namespace std;
