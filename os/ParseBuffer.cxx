@@ -684,9 +684,9 @@ escapeAndAnnotate(const char* buffer,
          {
             if (!doneAt && p >= position)
             {
-               ret += '\n';
+               ret += "[CRLF]\n";
                ret += spaces((unsigned int)(position - lastReturn));
-               ret += "^\n";
+               ret += "^[CRLF]\n";
                doneAt = true;
             }
             else
