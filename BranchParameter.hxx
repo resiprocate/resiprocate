@@ -12,7 +12,8 @@ namespace resip
 class ParseBuffer;
 
 // BranchParameter of the form: 
-// rfc3261cookie-sip2cookie-tid-transportseq-sip2cookie
+// rfc3261cookie-sip2cookie-tid-transportseq-clientdata-sip2cookie
+// Notably, the tid MAY contain dashes by the clientdata MUST NOT.
 //
 class BranchParameter : public Parameter
 {
@@ -34,6 +35,9 @@ class BranchParameter : public Parameter
       // pseudo-random tid if none specified, zero sequences either way
       void reset(const Data& transactionId = Data::Empty);
 
+      // access the client specific portion of the branch - not part of tid
+      Data& clientData();
+
       Type& value() {return *this;}
       const Type& value() const {return *this;}
 
@@ -47,12 +51,14 @@ class BranchParameter : public Parameter
 
       BranchParameter(const BranchParameter& other);
       BranchParameter& operator=(const BranchParameter& other);
-         
+      bool operator==(const BranchParameter& other);
+
    private:
       bool mHasMagicCookie;
       bool mIsMyBranch;
       Data mTransactionId;
       unsigned long mTransportSeq;
+      Data mClientData;
 };
  
 }
