@@ -1,9 +1,10 @@
 #if !defined(TESTTRANSPORT_HXX)
 #define TESTTRANSPORT_HXX
 
+#include "sip2/util/Data.hxx"
+#include "sip2/util/Fifo.hxx"
 #include "sip2/sipstack/Transport.hxx"
 #include "sip2/sipstack/Message.hxx"
-#include "sip2/sipstack/Circular.hxx"
 
 namespace Vocal2
 {
@@ -39,7 +40,7 @@ class TestUnreliableTransport : public Transport
 
 // singleton classes for input and output buffers
 
-typedef Circular TestBufType;
+typedef Fifo<Data> TestBufType;
 
 
 class TestInBuffer
