@@ -1,7 +1,7 @@
 #if !defined(RESIP_CLIENTDIALOG_HXX)
 #define RESIP_CLIENTDIALOG_HXX
 
-#include <list>
+#include <vector>
 #include "DialogId.hxx"
 #include "InviteSession.hxx"
 #include "ClientSubscription.hxx"
@@ -45,22 +45,32 @@ class Dialog
       SipMessage* makeRegistration();
       SipMessage* makeOutOfDialogRequest();
 
-      InviteSession::Handle& findInviteSession();
-      std::list<ClientSubscription::Handle>& findClientSubscriptions();
-      ServerSubscription::Handle& findServerSubscription();
-      ClientRegistration::Handle& findClientRegistration();
-      ServerRegistration::Handle& findServerRegistration();
-      std::list<ClientPublication::Handle>& findClientPublication();
-      ServerPublication::Handle& findServerPublication();
-      ClientOutOfDialogReq::Handle& findClientOutOfDialog();
-      ServerOutOfDialogReq::Handle& findServerOutOfDialog();
-     
+      std::vector<ClientSubscription::Handle> findClientSubscriptions();
+      ServerSubscription::Handle findServerSubscription();
+      InviteSession::Handle findInviteSession();
+      ClientRegistration::Handle findClientRegistration();
+      ServerRegistration::Handle findServerRegistration();
+      ClientPublication::Handle findClientPublication();
+      ServerPublication::Handle findServerPublication();
+      ClientOutOfDialogReq::Handle findClientOutOfDialog();
+      ServerOutOfDialogReq::Handle findServerOutOfDialog();
+      
       void dispatch(const SipMessage& msg);
       bool shouldMerge(const SipMessage& request);
       void processNotify(const SipMessage& notify);
       
    private:
-      std::list<BaseUsage*> mUsages;
+      
+      std::vector<ClientSubscription*> mClientSubscriptions;
+      ServerSubscription* mServerSubscription;
+      InviteSession* mInviteSession;
+      ClientRegistration* mClientRegistration;
+      ServerRegistration* mServerRegistration;
+      ClientPublication* mClientPublication;
+      ServerPublication* mServerPublication;
+      ClientOutOfDialogReq* mClientOutOfDialogReq;
+      ServerOutOfDialogReq* mServerOutOfDialogReq;
+
       DialogId mId;  
       DialogUsageManager& mDum;
 
