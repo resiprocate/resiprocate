@@ -113,7 +113,8 @@ const Data&
 SipMessage::getTransactionId() const
 {
     assert (!header(h_Vias).empty());
-   if( header(h_Vias).front().exists(p_branch) && header(h_Vias).front().param(p_branch).hasMagicCookie() )
+   if( header(h_Vias).front().exists(p_branch) 
+       && header(h_Vias).front().param(p_branch).hasMagicCookie() )
    {
        assert (!header(h_Vias).front().param(p_branch).transactionId().empty());
        return header(h_Vias).front().param(p_branch).transactionId();
@@ -124,13 +125,16 @@ SipMessage::getTransactionId() const
        {
            Data key = header(h_CallId).value().lowercase() +
                       Data( header(h_CSeq).sequence() );
-	   if (header(h_From).exists(p_tag)) {
+	   if (header(h_From).exists(p_tag)) 
+           {
                       key += header(h_From).param(p_tag).lowercase();
 	   }
-	   if (header(h_Vias).front().exists(p_branch)) {
+	   if (header(h_Vias).front().exists(p_branch)) 
+           {
                       key += header(h_Vias).front().param(p_branch).transactionId().lowercase();
 	   }
 
+           // !cj! - this is a really slow hash to use - why not use a faster one
            MD5Context context;
            MD5Init( &context );
            MD5Update( &context,
