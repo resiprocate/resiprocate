@@ -1,5 +1,5 @@
-#ifndef MD5Stream_hxx
-#define MD5Stream_hxx
+#if !defined(RESIP_MD5STREAM_HXX)
+#define RESIP_MD5STREAM_HXX 
 
 #include <iostream>
 #include "resiprocate/os/Data.hxx"
@@ -33,6 +33,5 @@ class MD5Stream : public std::ostream
 };
 
 }
-
 
 #endif

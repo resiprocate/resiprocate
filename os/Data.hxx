@@ -1,7 +1,8 @@
-#if !defined(resip_Data_hxx)
-#define resip_Data_hxx
+#if !defined(RESIP_DATA_HXX)
+#define RESIP_DATA_HXX 
 
-static const char* const resipDataHeaderVersion = "$Id: Data.hxx,v 1.64 2003/04/30 15:53:04 alan Exp $";
+static const char* const resipDataHeaderVersion =
+   "$Id: Data.hxx,v 1.65 2003/06/02 20:52:32 ryker Exp $";
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -252,4 +253,3 @@ struct hash<resip::Data>
  * <http://www.vovida.org/>.
  *
  */
-

@@ -1,5 +1,57 @@
-#if !defined(resip_Condition_hxx)
-#define resip_Condition_hxx
+#if !defined(RESIP_CONDITION_HXX)
+#define RESIP_CONDITION_HXX 
+
+#if defined(WIN32) 
+#  include <windows.h>
+#  include <winbase.h>
+#else
+#  include <pthread.h>
+#endif
+
+
+namespace resip
+{
+
+	class Mutex;
+	
+class Condition
+{
+   public:
+      Condition();
+      virtual ~Condition();
+
+      void wait (Mutex* mutex);
+
+      //returns true if the condition was woken up by activity, false if timeout
+      //or interrupt
+      bool wait (Mutex* mutex, int ms);
+
+      /** Signal one waiting thread.
+       *  Returns 0, if successful, or an errorcode.
+       */
+      void signal();
+
+      /** Signal all waiting threads.
+       *  Returns 0, if successful, or an errorcode.
+       */
+      void broadcast();
+
+      /** Returns the operating system dependent unique id of the condition.
+       */
+      //const vcondition_t* getId() const;
+
+   private:
+
+#ifdef WIN32
+	HANDLE mId;
+#else
+	mutable  pthread_cond_t mId;
+#endif
+};
+
+}
+
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -50,56 +102,3 @@
  * <http://www.vovida.org/>.
  *
  */
-
-#if defined(WIN32) 
-#  include <windows.h>
-#  include <winbase.h>
-#else
-#  include <pthread.h>
-#endif
-
-
-namespace resip
-{
-
-	class Mutex;
-	
-class Condition
-{
-   public:
-      Condition();
-      virtual ~Condition();
-
-      void wait (Mutex* mutex);
-
-      //returns true if the condition was woken up by activity, false if timeout
-      //or interrupt
-      bool wait (Mutex* mutex, int ms);
-
-      /** Signal one waiting thread.
-       *  Returns 0, if successful, or an errorcode.
-       */
-      void signal();
-
-      /** Signal all waiting threads.
-       *  Returns 0, if successful, or an errorcode.
-       */
-      void broadcast();
-
-      /** Returns the operating system dependent unique id of the condition.
-       */
-      //const vcondition_t* getId() const;
-
-   private:
-
-#ifdef WIN32
-	HANDLE mId;
-#else
-	mutable  pthread_cond_t mId;
-#endif
-};
-
-} // namespace resip
-
-
-#endif // !defined(VOCAL_CONDITION_HXX)
