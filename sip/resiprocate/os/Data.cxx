@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.13 2002/10/30 20:30:28 jason Exp $";
+"$Id: Data.cxx,v 1.14 2002/10/30 20:30:48 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -372,9 +372,10 @@ Data
 Data::md5() const
 {
    MD5Context context;
-   unsigned char digest[16];
-   
+   MD5Init(&context);
    MD5Update(&context, reinterpret_cast < unsigned const char* > (mBuf), mSize);
+
+   unsigned char digest[16];
    MD5Final(digest, &context);
    return RandomHex::convertToHex(digest, 16);
 }
