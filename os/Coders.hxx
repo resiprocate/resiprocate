@@ -1,10 +1,7 @@
-#if !defined(_J_CODERS_HXX)
-#define _J_CODERS_HXX
+#if !defined(CODERS_HXX)
+#define CODERS_HXX
 
-#include <string>
-
-
-// DO NOT INCLUDE THIS FILE DIRECTLY. INCLUDE jutil.hxx INSTEAD.
+#include <util/Data.hxx>
 
 namespace Vocal2
 {
@@ -13,19 +10,16 @@ namespace Vocal2
 class Base64Coder
 {
         
-    public:
-        /// Return a C++ sting representing the data of length length.
-        static std::string encode(const unsigned char* data, int length);
-        
-        /// decode the sourceString and place in data, write no more than
-        //  length bytes. Return nbytes or < 0 for error.
-        static int decode(const std::string& sourceString,unsigned char *data, int length);
+   public:
+      // encoded data is 4/3 rds length of input
+      static Data encode(const Data&);
+      
+      // decoded data is 3/4s length of coded
+      static Data decode(const Data&);
 
     private:
         static unsigned char toBits(unsigned char c);
         static unsigned char codeChar[];
-        
-        
         
 };
 };

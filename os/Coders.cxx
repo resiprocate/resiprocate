@@ -13,44 +13,46 @@ unsigned char Base64Coder::codeChar[] =
 
 
 
-string Base64Coder::encode(const unsigned char* data, int length)
+
+Data Base64Coder::encode(const Data& data)
 {
-    string rv;
-    
-    for(int index=0;index<length;index+=3)
-    {
-        unsigned char codeBits = (data[index] & 0xfc)>>2;
+   int srcLength = data.size();
+   Data rv(srcLength*4/3,false);
+
+   const char * p = static_cast<const char *>( data.data() );
+
+   for(int index=0;index<srcLength;index+=3)
+   {
+      unsigned char codeBits = (p[index] & 0xfc)>>2;
         
         assert(codeBits < 64);
         rv += codeChar[codeBits]; // c0 output
         
-
-
         // do second codeBits
-        codeBits = ((data[index]&0x3)<<4);
-        if (index+1 < length)
+        codeBits = ((p[index]&0x3)<<4);
+        if (index+1 < srcLength)
         {
-            codeBits |= ((data[index+1]&0xf0)>>4);
+            codeBits |= ((p[index+1]&0xf0)>>4);
         }
         assert(codeBits < 64);
         rv += codeChar[codeBits]; // c1 output
         
-        if (index+1 >= length) break; // encoded d0 only
+        if (index+1 >= srcLength) break; // encoded d0 only
         
 
         // do third codeBits
-        codeBits = ((data[index+1]&0xf)<<2);
-        if (index+2 < length)
+        codeBits = ((p[index+1]&0xf)<<2);
+        if (index+2 < srcLength)
         {
-            codeBits |= ((data[index+2]&0xc0)>>6);
+            codeBits |= ((p[index+2]&0xc0)>>6);
         }
         assert(codeBits < 64);
         rv += codeChar[codeBits]; // c2 output
         
-        if (index+2 >= length) break; // encoded d0 d1 only
+        if (index+2 >= srcLength) break; // encoded d0 d1 only
         
         // do fourth codeBits
-        codeBits = ((data[index+2]&0x3f));
+        codeBits = ((p[index+2]&0x3f));
         assert(codeBits < 64);
         rv += codeChar[codeBits]; // c3 output
         
@@ -69,48 +71,48 @@ unsigned char Base64Coder::toBits(unsigned char c)
     return 0;
 }
 
-int Base64Coder::decode(const string& source, unsigned char* data, int length)
+Data Base64Coder::decode(const Data& source)
 {
-    int c = 0;
-    int srcLen = source.length();
-    if (length < (srcLen*3)/4)
-    {
-        // diag in CVS
-        return -1;
-    }
-    
-    unsigned int out = 0;
-    for( int index = 0 ; index < srcLen ; index+=4)
-    {
-        if (index+1 >= srcLen) break;
+   int srcLen = source.size();
+
+   Data output((srcLen*3)/4,true);
+
+   const char * p = static_cast<const char *>(source.data());
+
+   int c = 0;
+
+   unsigned int out = 0;
+   for( int index = 0 ; index < srcLen ; index+=4)
+   {
+      if (index+1 >= srcLen) break;
+      
+      unsigned char c0 = toBits(p[index]);
+      unsigned char c1 = toBits(p[index+1]);
         
-        unsigned char c0 = toBits(source[index]);
-        unsigned char c1 = toBits(source[index+1]);
+      output += 
+         (c0 << 2) | 
+         ((c1 & 0x30) >> 4) ;
+      
+      // done d0
+      
+      if (index + 2 >= srcLen) break; // no data for d1
         
-        data[out++] = 
-            (c0 << 2) | 
-            ((c1 & 0x30) >> 4) ;
+      unsigned char c2 = toBits(p[index+2]);
         
-        // done d0
+      output += 
+         ((c1 & 0xf) << 4 ) | 
+         ((c2 & 0x3c) >> 2);
         
-        if (index + 2 >= srcLen) break; // no data for d1
-        
-        unsigned char c2 = toBits(source[index+2]);
-        
-        data[out++] = 
-            ((c1 & 0xf) << 4 ) | 
-            ((c2 & 0x3c) >> 2);
-        
-        // done d1
-        
-        if (index + 3 >= srcLen) break; // no data for d2
-        
-        unsigned char c3 = toBits(source[index+3]);
-        
-        data[out++] = ((c2&0x3) << 6) | c3;
-        // done d2
-    }
-    return out;
+      // done d1
+      
+      if (index + 3 >= srcLen) break; // no data for d2
+      
+      unsigned char c3 = toBits(p[index+3]);
+      
+      output += ((c2&0x3) << 6) | c3;
+      // done d2
+   }
+   return output;
 }
 
  
