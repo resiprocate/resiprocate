@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.108 2003/02/20 20:33:52 fluffy Exp $
+# $Id: Makefile,v 1.109 2003/02/28 23:34:22 fluffy Exp $
 
 BUILD = ../../build
 
@@ -105,7 +105,7 @@ GPERFVER="GNU gperf 2.7.2"
 	@[ "$$(gperf -v )" == $(GPERFVER) ] || \
 		(echo Bogus gperf need:;\
 		 echo $(GPERFVER), have: ; gperf -v ; false)
-	gperf $(GPERFOPTS) -Z $* $< > $@
+	gperf $(GPERFOPTS) -Z $(*:%-raw=%) $< > $@
 
 # Exceptions (case sensitive)
 MethodHash.cxx: MethodHash-raw.cxx

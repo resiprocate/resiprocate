@@ -12,7 +12,7 @@ i, Headers::CallId
 m, Headers::Contact
 e, Headers::ContentEncoding
 l, Headers::ContentLength
-o, Headers::ContentType
+c, Headers::ContentType
 f, Headers::From
 s, Headers::Subject
 t, Headers::To
