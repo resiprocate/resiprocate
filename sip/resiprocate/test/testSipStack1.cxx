@@ -25,7 +25,27 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+    Log::Level l = Log::DEBUG;
+    
+    if (argc > 1)
+    {
+        switch(*argv[1])
+        {
+            case 'd': l = Log::DEBUG;
+                break;
+            case 'i': l = Log::INFO;
+                break;
+            case 's': l = Log::DEBUG_STACK;
+                break;
+            case 'c': l = Log::CRIT;
+                break;
+        }
+        
+    }
+    
+    Log::initialize(Log::COUT, l, argv[0]);
+    CritLog(<<"Test Driver Starting");
+
    initNetwork();
 	
    try
@@ -33,7 +53,7 @@ main(int argc, char* argv[])
       SipStack sipStack;
       SipMessage* msg=NULL;
 
-      DebugLog ( << "Try to send a message" );
+      InfoLog ( << "Try to send a message" );
 	      
       NameAddr dest;
       NameAddr from;
