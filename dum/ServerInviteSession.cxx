@@ -131,6 +131,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       switch(mState)
       {
          case Initial:
+            mLastIncomingRequest.releaseContents();  //!dcm! -- not sure, but seems right
             assert(msg.header(h_RequestLine).method() == INVITE);
             mState = Proceeding;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
@@ -143,7 +144,10 @@ ServerInviteSession::dispatch(const SipMessage& msg)
             {
                InviteSession::incomingSdp(msg, offans.second);
             }
-            mLastIncomingRequest.releaseContents();  //!dcm! -- not sure, but seems right
+            else
+            {
+               mDum.mInviteSessionHandler->onOfferRequired(getSessionHandle(), msg);
+            }
             break;            
          case Proceeding:
             // !jf! consider UPDATE method
