@@ -1024,7 +1024,23 @@ Data::convertDouble() const
 bool
 Data::prefix(const Data& pre) const
 {
+   if (pre.size() > size())
+   {
+      return false;
+   }
+
    return strncmp(data(), pre.data(), pre.size()) == 0;
+}
+
+bool
+Data::postfix(const Data& post) const
+{
+   if (post.size() > size())
+   {
+      return false;
+   }
+
+   return strncmp(data() + (size()-post.size()), post.data(), post.size()) == 0;
 }
 
 Data 
