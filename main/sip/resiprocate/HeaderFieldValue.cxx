@@ -1,8 +1,9 @@
 #include <iostream>
 
-#include <sipstack/UnknownSubComponent.hxx>
+#include <sipstack/UnknownParameter.hxx>
 #include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/ParserCategory.hxx>
+#include <sipstack/Symbols.hxx>
 
 using namespace std;
 using namespace Vocal2;
@@ -28,8 +29,8 @@ HeaderFieldValue::HeaderFieldValue(const HeaderFieldValue& hfv)
     mParserCategory(hfv.mParserCategory->clone(this)),
     mField(0),
     mFieldLength(hfv.mFieldLength),
-    mSubComponentList(hfv.mSubComponentList),
-    mUnknownSubComponentList(hfv.mUnknownSubComponentList),
+    mParameterList(hfv.mParameterList),
+    mUnknownParameterList(hfv.mUnknownParameterList),
     mMine(true)
 {
 
@@ -63,16 +64,16 @@ HeaderFieldValue::clone() const
   return new HeaderFieldValue(*this);
 }
 
-SubComponentList& 
-HeaderFieldValue::getSubComponents()
+ParameterList& 
+HeaderFieldValue::getParameters()
 {
-  return mSubComponentList;
+  return mParameterList;
 }
 
-SubComponentList& 
-HeaderFieldValue::getUnknownSubComponents()
+ParameterList& 
+HeaderFieldValue::getUnknownParameters()
 {
-  return mSubComponentList;
+  return mParameterList;
 }
 
 bool 
@@ -86,10 +87,10 @@ bool
 HeaderFieldValue::exists(const Data& subcomponent)
 {
   
-  SubComponent* exists = mUnknownSubComponentList.find(subcomponent);
+  Parameter* exists = mUnknownParameterList.find(subcomponent);
   if (!exists)
     {
-      exists = mSubComponentList.find(subcomponent);
+      exists = mParameterList.find(subcomponent);
       if (exists)
 	{
 	  ParseException except;
@@ -101,17 +102,17 @@ HeaderFieldValue::exists(const Data& subcomponent)
 
 
 bool 
-HeaderFieldValue::exists(const SubComponent::Type type)
+HeaderFieldValue::exists(const ParameterTypes::Type type)
 {
   
-  return mSubComponentList.find(type);
+  return mParameterList.find(type);
   
 }
 
-UnknownSubComponent* 
+UnknownParameter* 
 HeaderFieldValue::get(const Data& type)
 {
-  return dynamic_cast<UnknownSubComponent*>(mUnknownSubComponentList.get(type));
+  return dynamic_cast<UnknownParameter*>(mUnknownParameterList.get(type));
 }
 
 ostream& 
@@ -128,15 +129,17 @@ HeaderFieldValue::encode(ostream& str) const
 
 ostream& Vocal2::operator<<(ostream& stream, HeaderFieldValue& hfv)
 {
-  if (hfv.isParsed())
-    {
-      stream << hfv.mSubComponentList << " : " << hfv.mUnknownSubComponentList;
-    }
-  else
-    {
+   if (hfv.isParsed())
+   {
+      hfv.mParameterList.encode(stream);
+      stream << Symbols::SPACE << Symbols::COLON << Symbols::SPACE;
+      hfv.mUnknownParameterList.encode(stream);
+   }
+   else
+   {
       stream << Data(hfv.mField, hfv.mFieldLength);
-    }
-  return stream;
+   }
+   return stream;
 }
 
 

@@ -3,6 +3,8 @@
 
 #include <sipstack/supported.hxx>
 #include <sipstack/ParserCategories.hxx>
+#include <sipstack/Data.hxx>
+#include <sipstack/Symbols.hxx>
 
 namespace Vocal2
 {
@@ -33,6 +35,7 @@ class Headers
       };
 
       static bool CommaTokenizing[MAX_HEADERS];
+      static Data HeaderNames[MAX_HEADERS];
 
       // get enum from header name
       static Type getHeaderType(const char* name, int len);
@@ -60,7 +63,7 @@ class Header<Headers::Content_Disposition>
       Header()
       {
          Headers::CommaTokenizing[Headers::Content_Disposition] = Type::isCommaTokenizing;
-         //HeaderStrings[Headers::Content_Disposition] = Symbols::Content_Disposition;
+         Headers::HeaderNames[Headers::Content_Disposition] = Symbols::Content_Disposition;
       }
 };
 extern Header<Headers::Content_Disposition> h_Content_Disposition;
