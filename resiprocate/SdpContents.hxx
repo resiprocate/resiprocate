@@ -64,6 +64,7 @@ class SdpContents : public Contents
                   Data& user() {return mUser;}
                   AddrType getAddressType() const {return mAddrType;}
                   const Data& getAddress() const {return mAddress;}
+                  void setAddress(const Data& host, AddrType type = IP4);
 
                private:
                   Origin();
