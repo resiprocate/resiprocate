@@ -23,7 +23,8 @@ class Uri : public ParserCategory
       int& port() const {checkParsed(); return mPort;}
       Data& password() const {checkParsed(); return mPassword;}
 
-      virtual void parse();
+      void parse(ParseBuffer& pb);
+      virtual void parse() { assert(0); }
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
