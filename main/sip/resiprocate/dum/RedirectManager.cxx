@@ -82,7 +82,7 @@ RedirectManager::TargetSet::addTargets(const SipMessage& msg)
    {         
       for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); it != msg.header(h_Contacts).end(); it++)
       {         
-         if (mTargetSet.find(*it) != mTargetSet.end())
+         if (mTargetSet.find(*it) == mTargetSet.end())
          {
             mTargetSet.insert(*it);
             mTargetQueue.push(*it);
