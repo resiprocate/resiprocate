@@ -258,7 +258,7 @@ TransactionState::processStateless(Message* message)
       if (mMsgToRetransmit)
       {
          assert(!mMsgToRetransmit->getTransactionId().empty());
-         terminateClientTransaction(mMsgToRetransmit->getTransactionId());
+         //terminateServerTransaction(mMsgToRetransmit->getTransactionId());
       }
       
       delete message;
@@ -547,10 +547,7 @@ TransactionState::processClientInvite(  Message* msg )
             (Timer A controls request retransmissions) 
          */
          case INVITE:
-            if (isSentReliable(msg))
-            {
-               mStack.mTimers.add(Timer::TimerA, msg->getTransactionId(), Timer::T1 );
-            }
+            mStack.mTimers.add(Timer::TimerA, msg->getTransactionId(), Timer::T1 );
             delete msg;
             break;
             
@@ -1365,7 +1362,7 @@ TransactionState::terminateClientTransaction(const Data& tid)
    mState = Terminated;
    if (mStack.mRegisteredForTransactionTermination)
    {
-      DebugLog (<< "Terminate transaction " << tid);
+      DebugLog (<< "Terminate client transaction " << tid);
       mStack.mTUFifo.add(new TransactionTerminated(tid, true));
    }
 }
@@ -1376,7 +1373,7 @@ TransactionState::terminateServerTransaction(const Data& tid)
    mState = Terminated;
    if (mStack.mRegisteredForTransactionTermination)
    {
-      DebugLog (<< "Terminate transaction " << tid);
+      DebugLog (<< "Terminate server transaction " << tid);
       mStack.mTUFifo.add(new TransactionTerminated(tid, false));
    }
 }
