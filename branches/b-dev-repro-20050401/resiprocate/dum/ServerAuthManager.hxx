@@ -26,7 +26,7 @@ class ServerAuthManager
       // this call back should async cause a post of UserAuthInfo
       virtual void requestCredential(const Data& user, 
                                      const Data& realm, 
-                                     const int transactionToken ) = 0;
+                                     const Data& transactionToken ) = 0;
       
    private:
       int nextTransactionToken;
