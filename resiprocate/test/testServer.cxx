@@ -137,4 +137,5 @@ main(int argc, char* argv[])
    
    server.run();
    server.join();
+   return 0;
 }
