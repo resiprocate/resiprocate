@@ -18,9 +18,11 @@ class ClientPagerMessage : public NonDialogUsage
       ClientPagerMessageHandle getHandle();
 
       //allow the user to adorn the MESSAGE message if desired
+      //!kh!
+      //I don't know how this would interact with the queuing mechanism.
+      //Will come back to re-visit this in the future.
       SipMessage& getMessageRequest();
 
-      //send a MESSAGE
       //!kh!
       //queues the message if there is one sent but not yet received a response
       //for it.
@@ -43,13 +45,12 @@ class ClientPagerMessage : public NonDialogUsage
 
       typedef std::deque<Contents*> MsgQueue;
       MsgQueue                      mMsgQueue;
-      //bool mInTransaction;
 
       // disabled
       ClientPagerMessage(const ClientPagerMessage&);
       ClientPagerMessage& operator=(const ClientPagerMessage&);
 
-      void pageMsgQueued ();
+      void pageFirstMsgQueued ();
       void clearMsgQueued ();
 };
 
