@@ -1,15 +1,15 @@
 #include <memory>
-#include <util/Data.hxx>
-#include <util/DataStream.hxx>
-#include <util/Socket.hxx>
-#include <util/Logger.hxx>
-#include <sipstack/SipMessage.hxx>
-#include <sipstack/Preparse.hxx>
-
-
-#include <sipstack/TestTransport.hxx>
 #include <iostream>
 #include <iterator>
+
+#include <sipstack/Helper.hxx>
+#include <sipstack/Preparse.hxx>
+#include <sipstack/SipMessage.hxx>
+#include <sipstack/TestTransport.hxx>
+#include <util/Data.hxx>
+#include <util/DataStream.hxx>
+#include <util/Logger.hxx>
+#include <util/Socket.hxx>
 
 using namespace Vocal2;
 using namespace std;
@@ -66,47 +66,18 @@ TestReliableTransport::process(fd_set* fdSet)
 	  buffer[i] = *iter;
 	}
 
-      SipMessage* message = new SipMessage(true);
+      SipMessage* message = Helper::makeMessage(buffer);
+      delete [] buffer;
       
       // set the received from information into the received= parameter in the
       // via
       // sockaddr_in from;
       // message->setSource(from);
 
-
-      // Tell the SipMessage about this buffer.
-      message->addBuffer(buffer);
-
-      Preparse preParser(*message, buffer, len);
-
-      bool ppStatus = preParser.process();
-      // this won't work if UDPs are fragd !ah!
-
-      if (ppStatus)
-      {
-         // ppStatus will be false ONLY when the DATAGRAM did not
-         // contain a Preparsable byte-stream. In the UDP transport,
-         // this is an error. 
-
-         // OTHER TRANSPORTS will have to handle fragmentation when
-         // this condition is set.
-         // determine that there is a fragment that needs to be done
-         // alloc buffer to hold remainder and next network fragment
-         // as per !cj! ideas on anti-frag.
-         // need nic to Preparser that can detect frags remaining. !ah!
-         // ?? think about this design.
-
-         InfoLog(<<"Rejecting test message as unparsable.");
-         delete message;
-      }
-      else
-      {
+      DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
       
-         DebugLog (<< "adding new SipMessage to state machine's Fifo: " << message->brief());
-
-         // set the received= and rport= parameters in the message if necessary !jf!
-         mStateMachineFifo.add(message);
-      }
+      // set the received= and rport= parameters in the message if necessary !jf!
+      mStateMachineFifo.add(message);
    }
 }
 
