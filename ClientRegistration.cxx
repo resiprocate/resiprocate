@@ -12,7 +12,7 @@
 
 using namespace resip;
 
-ClientRegistrationHandle 
+ClientRegistrationHandle
 ClientRegistration::getHandle()
 {
    return ClientRegistrationHandle(mDum, getBaseHandle().getId());
@@ -41,7 +41,7 @@ ClientRegistration::~ClientRegistration()
    mDialogSet.mClientRegistration = 0;
 }
 
-void 
+void
 ClientRegistration::addBinding(const NameAddr& contact)
 {
    addBinding(contact, mDialogSet.getUserProfile()->getDefaultRegistrationTime());
@@ -70,7 +70,7 @@ ClientRegistration::tryModification(ClientRegistration::State state)
    return mLastRequest;
 }
 
-void 
+void
 ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
 {
    SipMessage& next = tryModification(Adding);
@@ -87,7 +87,7 @@ ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
    }
 }
 
-void 
+void
 ClientRegistration::removeBinding(const NameAddr& contact)
 {
    if (mState == Removing)
@@ -102,25 +102,25 @@ ClientRegistration::removeBinding(const NameAddr& contact)
       if (i->uri() == contact.uri())
       {
          mMyContacts.erase(i);
-         
+
          next.header(h_Contacts) = mMyContacts;
          next.header(h_Expires).value() = 0;
          next.header(h_CSeq).sequence()++;
-         
+
          if (mQueuedState == None)
          {
             mDum.send(next);
          }
-         
+
          return;
       }
    }
 
-   // !jf! What state are we left in now? 
+   // !jf! What state are we left in now?
    throw Exception("No such binding", __FILE__, __LINE__);
 }
 
-void 
+void
 ClientRegistration::removeAll(bool stopRegisteringWhenDone)
 {
    if (mState == Removing)
@@ -132,7 +132,7 @@ ClientRegistration::removeAll(bool stopRegisteringWhenDone)
 
    mAllContacts.clear();
    mMyContacts.clear();
-   
+
    NameAddr all;
    all.setAllContacts();
    next.header(h_Contacts).clear();
@@ -140,14 +140,14 @@ ClientRegistration::removeAll(bool stopRegisteringWhenDone)
    next.header(h_Expires).value() = 0;
    next.header(h_CSeq).sequence()++;
    mEndWhenDone = stopRegisteringWhenDone;
-   
+
    if (mQueuedState == None)
    {
       mDum.send(next);
    }
 }
 
-void 
+void
 ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 {
    InfoLog (<< "Removing binding");
@@ -180,25 +180,25 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 void ClientRegistration::stopRegistering()
 {
    //timers aren't a concern, as DUM checks for Handle validity before firing.
-   delete this;     
+   delete this;
 }
 
-void 
+void
 ClientRegistration::requestRefresh()
 {
    assert (mState == Registered);
-   mState = Refreshing; 
+   mState = Refreshing;
    mLastRequest.header(h_CSeq).sequence()++;
    mDum.send(mLastRequest);
 }
 
-const NameAddrs& 
+const NameAddrs&
 ClientRegistration::myContacts()
 {
    return mMyContacts;
 }
 
-const NameAddrs& 
+const NameAddrs&
 ClientRegistration::allContacts()
 {
    return mAllContacts;
@@ -211,7 +211,7 @@ ClientRegistration::end()
 }
 
 
-void 
+void
 ClientRegistration::dispatch(const SipMessage& msg)
 {
    try
@@ -227,17 +227,17 @@ ClientRegistration::dispatch(const SipMessage& msg)
       else if (code < 300) // success
       {
          //Profile* profile = mDum.getMasterProfile();
-         
+
          // !jf! consider what to do if no contacts
          // !ah! take list of ctcs and push into mMy or mOther as required.
-         
+
          if (msg.exists(h_Contacts))
          {
             mAllContacts = msg.header(h_Contacts);
 
             // make timers to re-register
-            int expiry = INT_MAX;            
-            for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); 
+            int expiry = INT_MAX;
+            for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin();
                  it != msg.header(h_Contacts).end(); it++)
             {
                if(it->exists(p_expires))
@@ -254,13 +254,13 @@ ClientRegistration::dispatch(const SipMessage& msg)
             }
             if (expiry != INT_MAX)
             {
-               mDum.addTimer(DumTimeout::Registration, 
+               mDum.addTimer(DumTimeout::Registration,
                              Helper::aBitSmallerThan(expiry),
                              getBaseHandle(),
                              ++mTimerSeq);
             }
          }
-         
+
          switch (mState)
          {
             case Querying:
@@ -268,13 +268,18 @@ ClientRegistration::dispatch(const SipMessage& msg)
                mState = Registered;
                mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
                break;
-               
+
             case Removing:
                //mDum.mClientRegistrationHandler->onSuccess(getHandle(), msg);
                mDum.mClientRegistrationHandler->onRemoved(getHandle());
                if (mEndWhenDone)
                {
+                  // !kh!
+                  // stopRegistering() deletes 'this'
+                  // furthur processing makes no sense
+                  //assert(mQueuedState == None);
                   stopRegistering();
+                  return;
                }
                break;
 
@@ -300,9 +305,9 @@ ClientRegistration::dispatch(const SipMessage& msg)
       {
          if (code == 423) // interval too short
          {
-            // maximum 1 day 
+            // maximum 1 day
             // !ah! why max check? -- profile?
-            if (msg.exists(h_MinExpires) && msg.header(h_MinExpires).value()  < 86400) 
+            if (msg.exists(h_MinExpires) && msg.header(h_MinExpires).value()  < 86400)
             {
                mLastRequest.header(h_Expires).value() = msg.header(h_MinExpires).value();
                mLastRequest.header(h_CSeq).sequence()++;
@@ -313,7 +318,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
 
          // assume that if a failure occurred, the bindings are gone
-         if (mEndWhenDone) 
+         if (mEndWhenDone)
          {
             mDum.mClientRegistrationHandler->onRemoved(getHandle());
          }
@@ -332,7 +337,7 @@ void
 ClientRegistration::dispatch(const DumTimeout& timer)
 {
    // If you happen to be Adding/Updating when the timer goes off, you should just ignore
-   // it since a new timer will get added when the 2xx is received. 
+   // it since a new timer will get added when the 2xx is received.
    if (timer.seq() == mTimerSeq && mState == Registered)
    {
       if (!mMyContacts.empty())
@@ -343,23 +348,23 @@ ClientRegistration::dispatch(const DumTimeout& timer)
 }
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
 
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -369,7 +374,7 @@ ClientRegistration::dispatch(const DumTimeout& timer)
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -383,9 +388,9 @@ ClientRegistration::dispatch(const DumTimeout& timer)
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
