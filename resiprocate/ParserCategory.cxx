@@ -12,7 +12,7 @@ using namespace std;
 ParserCategory::ParserCategory()
    : mHeaderField(0),
      mMine(true),
-     mIsParsed(false) // !rk! changed from true
+     mIsParsed(true)
 {}
 
 ParserCategory::ParserCategory(const ParserCategory& rhs)
