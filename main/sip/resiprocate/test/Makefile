@@ -1,17 +1,24 @@
-# $Id: Makefile,v 1.57 2003/09/30 19:31:55 jason Exp $
+# $Id: Makefile,v 1.58 2003/10/05 04:47:50 fluffy Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
-LDLIBS += -lncurses -lpopt
+LDLIBS += -lncurses
 
+POPT = 1
+
+ifeq ($(POPT),1)
 CXXFLAGS += -I/opt/sfw/include
 LDFLAGS  += -L/opt/sfw/lib
 LDLIBS   += -lpopt
 
-TESTPROGRAMS =	testTcp.cxx testUdp.cxx testStack.cxx \
-		testTypedef.cxx \
+TESTPROGRAMS += testTcp.cxx \
+		testUdp.cxx \
+		testStack.cxx 
+endif
+
+TESTPROGRAMS +=	testTypedef.cxx \
 		testIntrusiveList.cxx \
 		testSelect.cxx \
 		limpc.cxx \
