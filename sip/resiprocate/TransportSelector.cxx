@@ -408,17 +408,8 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       Tuple source(target);
       switch (mWindowsVersion)
       {
-         case WinCompat::Windows98:
-         case WinCompat::Windows98SE:
-         case WinCompat::Windows95:
-         case WinCompat::WindowsME:
-         case WinCompat::WindowsUnknown:
-            // will not work on ipv6
-            source = WinCompat::determineSourceInterface(target);
-            break;
-            
-         default:
-            
+         case WinCompat::NotWindows:
+         {
             // this process will determine which interface the kernel would use to
             // send a packet to the target by making a connect call on a udp socket. 
             Socket tmp = INVALID_SOCKET;
@@ -447,7 +438,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
                InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
                throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
             }
-   
+            
             socklen_t len = source.length();  
             ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
             if (ret < 0)
@@ -487,7 +478,12 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
                   throw Transport::Exception("Can't disconnect socket", __FILE__,__LINE__);
                }
             }
+            break;
+         }
 
+         default:
+            // will not work on ipv6
+            source = WinCompat::determineSourceInterface(target);
             break;
       }
 
@@ -506,6 +502,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
                 << " sent-port=" << via.sentPort());
 
       return source;
+           
    }
 }
 
