@@ -752,7 +752,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          send(response);
          break;
       }
-      
+
       case On1xx:
       case On1xxEarly:
          // !slg! Some UA's send a 100 response to a ReInvite - just ignore it
@@ -1526,7 +1526,7 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
          }
       }
    }
-   else if (method == INVITE && code > 100 && code < 200)
+   else if (method == INVITE && code > 100 && code < 200)   // !kh! 100 is handled by transaction layer.
    {
       if (reliable)
       {
