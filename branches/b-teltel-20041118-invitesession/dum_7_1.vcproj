@@ -150,6 +150,9 @@
 				RelativePath=".\DefaultServerReferHandler.cxx">
 			</File>
 			<File
+				RelativePath=".\DestroyUsage.cxx">
+			</File>
+			<File
 				RelativePath=".\Dialog.cxx">
 			</File>
 			<File
@@ -299,6 +302,12 @@
 				RelativePath=".\ClientSubscription.hxx">
 			</File>
 			<File
+				RelativePath=".\DefaultServerReferHandler.hxx">
+			</File>
+			<File
+				RelativePath=".\DestroyUsage.hxx">
+			</File>
+			<File
 				RelativePath=".\Dialog.hxx">
 			</File>
 			<File
@@ -306,6 +315,9 @@
 			</File>
 			<File
 				RelativePath=".\DialogSet.hxx">
+			</File>
+			<File
+				RelativePath=".\DialogSetHandler.hxx">
 			</File>
 			<File
 				RelativePath=".\DialogSetId.hxx">
@@ -317,7 +329,13 @@
 				RelativePath=".\DialogUsageManager.hxx">
 			</File>
 			<File
-				RelativePath=".\DumTimer.hxx">
+				RelativePath=".\DumException.hxx">
+			</File>
+			<File
+				RelativePath=".\DumShutdownHandler.hxx">
+			</File>
+			<File
+				RelativePath=".\DumTimeout.hxx">
 			</File>
 			<File
 				RelativePath=".\Handle.hxx">
@@ -330,6 +348,9 @@
 			</File>
 			<File
 				RelativePath=".\HandleManager.hxx">
+			</File>
+			<File
+				RelativePath=".\Handles.hxx">
 			</File>
 			<File
 				RelativePath=".\InviteSession.hxx">
@@ -359,6 +380,9 @@
 				RelativePath=".\PagerMessageCreator.hxx">
 			</File>
 			<File
+				RelativePath=".\PagerMessageHandler.hxx">
+			</File>
+			<File
 				RelativePath=".\Profile.hxx">
 			</File>
 			<File
@@ -368,7 +392,13 @@
 				RelativePath=".\PublicationHandler.hxx">
 			</File>
 			<File
+				RelativePath=".\RedirectHandler.hxx">
+			</File>
+			<File
 				RelativePath=".\RedirectManager.hxx">
+			</File>
+			<File
+				RelativePath=".\RefCountedDestroyer.hxx">
 			</File>
 			<File
 				RelativePath=".\RegistrationCreator.hxx">
@@ -419,6 +449,9 @@
 				RelativePath=".\UsageSet.hxx">
 			</File>
 			<File
+				RelativePath=".\UsageUseException.hxx">
+			</File>
+			<File
 				RelativePath=".\UserProfile.hxx">
 			</File>
 		</Filter>
@@ -427,9 +460,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
 		</Filter>
-		<File
-			RelativePath=".\ReadMe.txt">
-		</File>
 	</Files>
 	<Globals>
 	</Globals>
