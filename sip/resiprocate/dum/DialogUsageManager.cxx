@@ -452,8 +452,10 @@ DialogUsageManager::processResponse(const SipMessage& response)
 {
    DialogSet& dialogs = findDialogSet(DialogSetId(response));
 
-   InfoLog(<< DialogSetId(response));
-   InfoLog(<< Inserter(mDialogSetMap));
+   InfoLog( << "Dum processing response for dailog set " 
+            << DialogSetId(response) 
+            << " with map " 
+            << Inserter(mDialogSetMap));
 
    if (!dialogs.empty())
    {
