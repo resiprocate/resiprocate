@@ -12,9 +12,10 @@ namespace Vocal2
 class TimerMessage : public Message
 {
    public:
-      TimerMessage(Data transactionId, Timer::Type type)
+      TimerMessage(Data transactionId, Timer::Type type, unsigned long duration)
          : mTransactionId(transactionId),
-           mType(type){}
+           mType(type),
+           mDuration(duration) {}
       ~TimerMessage();
 
       virtual const Data& getTransactionId() const
@@ -22,10 +23,16 @@ class TimerMessage : public Message
          return mTransactionId;
       }
 
-      Timer::Type getType()
+      Timer::Type getType() const
       {
          return mType;
       }
+
+      unsigned long getDuration() const 
+      {
+         return mDuration;
+      }
+      
 
       virtual Data brief() const;
       virtual std::ostream& dump(std::ostream& strm) const;
@@ -33,6 +40,7 @@ class TimerMessage : public Message
    private:
       Data mTransactionId;
       Timer::Type mType;
+      unsigned long mDuration;
 };
 
 }
