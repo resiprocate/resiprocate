@@ -23,6 +23,9 @@ class ClientOutOfDialogReq : public BaseUsage
             Handle(DialogUsageManager& dum);
       };
 
+      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
+      ClientOutOfDialogReq::Handle getHandle() {return mHandle;}
+
    private:
       friend class DialogUsageManager;
       ClientOutOfDialogReq(DialogUsageManager& dum,

@@ -160,6 +160,73 @@ Dialog::getId() const
    return mId;
 }
 
+// !dlb! merge this stub in
+#if 0
+void
+Dialog::dispatch(const SipMessage& msg)
+{
+   if (msg.isRequest())
+   {
+      switch (request.header(h_RequestLine).getMethod())
+      {
+         // a NOTIFY is the only request that can
+         // create a full dialog (when the 2xx from the
+         // SUBSCRIBE arrives *after* the NOTIFY
+         case NOTIFY : 
+            processNotify(msg);
+            break;
+
+         case REFER: 
+            // !jf! wierdo
+            // affects an InvSession and a ServerSubscription 
+            break;
+
+         case SUBSCRIBE:
+            processSubscribe(msg);
+            break;
+
+         case CANCEL: 
+            // should only occur when canceling a re-INVITE
+         case INVITE:  
+            // should only occur for a re-INVITE
+         case ACK:
+         case PRACK:
+         case BYE:
+         case UPDATE:
+         case INFO: 
+            processInviteRelated(msg);
+            break;
+         
+         case REGISTER:
+         {
+            assert(0); // already handled
+            break;
+         }
+      
+         case PUBLISH:
+            assert(0);
+            break;                       
+
+         case MESSAGE:
+         case OPTIONS:
+            assert(0);
+            break;
+         
+         default:
+            assert(0);
+            break;
+      }
+   }
+   else if (msg.isResponse())
+   {
+      
+   }
+   else
+   {
+      assert(0);
+   }
+}
+#endif
 
 void
 Dialog::dispatch(const SipMessage& msg)
@@ -335,7 +402,7 @@ Dialog::findClientRegistration()
    }
    else
    {
-      throw BaseUsage::Exception("no such client registration session",
+      throw BaseUsage::Exception("no such client registration",
                                  __FILE__, __LINE__);
    }
 }
@@ -349,95 +416,68 @@ Dialog::findServerRegistration()
    }
    else
    {
-      throw BaseUsage::Exception("no such server registration session",
+      throw BaseUsage::Exception("no such server registration",
                                  __FILE__, __LINE__);
    }
 }
 
-
-UsageSet 
-Dialog::findOutOfDialogs()
+ClientPublication::Handle 
+Dialog::findClientPublication()
 {
-    std::list<BaseUsage*>::iterator it = mUsages.begin();
-    BaseUsage *usage;
-    UsageSet usageSet;
-    while (it != mUsages.end())
-    {
-        usage = it.next();
-        if ((dynamic_cast<ClientOutOfDialogReq*>(usage) != null) ||
-            (dynamic_cast<ServerOutOfDialogReq*>(usage) != null))
-        {
-            usageSet.push_back(*usage);
-        }
-    }
-    return usageSet:
-}
-
-void
-Dialog::dispatch(const SipMessage& msg)
-{
-   if (msg.isRequest())
+   if (mClientPublication)
    {
-      switch (request.header(h_RequestLine).getMethod())
-      {
-         // a NOTIFY is the only request that can
-         // create a full dialog (when the 2xx from the
-         // SUBSCRIBE arrives *after* the NOTIFY
-         case NOTIFY : 
-            processNotify(msg);
-            break;
-
-         case REFER: 
-            // !jf! wierdo
-            // affects an InvSession and a ServerSubscription 
-            break;
-
-         case SUBSCRIBE:
-            processSubscribe(msg);
-            break;
-
-         case CANCEL: 
-            // should only occur when canceling a re-INVITE
-         case INVITE:  
-            // should only occur for a re-INVITE
-         case ACK:
-         case PRACK:
-         case BYE:
-         case UPDATE:
-         case INFO: 
-            processInviteRelated(msg);
-            break;
-         
-         case REGISTER:
-         {
-            assert(0); // already handled
-            break;
-         }
-      
-         case PUBLISH:
-            assert(0);
-            break;                       
-
-         case MESSAGE:
-         case OPTIONS:
-            assert(0);
-            break;
-         
-         default:
-            assert(0);
-            break;
-      }
-   }
-   else if (msg.isResponse())
-   {
-      
+      return mClientPublication->getHandle();
    }
    else
    {
-      assert(0);
+      throw BaseUsage::Exception("no such client publication",
+                                 __FILE__, __LINE__);
    }
 }
 
+ServerPublication::Handle 
+Dialog::findServerPublication()
+{
+   if (mServerPublication)
+   {
+      return mServerPublication->getHandle();
+   }
+   else
+   {
+      throw BaseUsage::Exception("no such server publication",
+                                 __FILE__, __LINE__);
+   }
+}
+
+ClientOutOfDialogReq::Handle 
+Dialog::findClientOutOfDialog()
+{
+   if (mClientOutOfDialogReq)
+   {
+      return mClientOutOfDialogReq->getHandle();
+   }
+   else
+   {
+      throw BaseUsage::Exception("no such client out of dialog",
+                                 __FILE__, __LINE__);
+   }
+}
+
+ServerOutOfDialogReq::Handle
+Dialog::findServerOutOfDialog()
+{
+   if (mServerOutOfDialogReq)
+   {
+      return mServerOutOfDialogReq->getHandle();
+   }
+   else
+   {
+      throw BaseUsage::Exception("no such server out of dialog",
+                                 __FILE__, __LINE__);
+   }
+}
+
+#if 0
 void
 Dialog::processNotify(const SipMessage& notify)
 {
@@ -502,6 +542,7 @@ Dialog::processInviteRelated(const SipMessage& msg)
       }
    }
 }
+#endif
 
 Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
    : BaseException(msg, file, line)
