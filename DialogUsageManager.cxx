@@ -765,6 +765,7 @@ DialogUsageManager::process()
 bool 
 DialogUsageManager::processIdentityCheckResponse(const SipMessage& msg)
 {
+#if defined(USE_SSL)
    if (msg.header(h_CSeq).method() == OPTIONS)
    {
       RequiresCerts::iterator it = mRequiresCerts.find(msg.getTransactionId());
@@ -785,6 +786,9 @@ DialogUsageManager::processIdentityCheckResponse(const SipMessage& msg)
    {
       return false;
    }
+#else
+   return false;
+#endif
 }
 
 bool
@@ -792,6 +796,7 @@ DialogUsageManager::queueForIdentityCheck(std::auto_ptr<Message> msg)
 {
    SipMessage& sipMsg = *dynamic_cast<SipMessage*>(msg.get());
 
+#if defined(USE_SSL)
    if (sipMsg.exists(h_Identity) && 
        sipMsg.exists(h_IdentityInfo) && 
        sipMsg.exists(h_Date))
@@ -817,13 +822,16 @@ DialogUsageManager::queueForIdentityCheck(std::auto_ptr<Message> msg)
             return true;            
          }
          catch (BaseException&)
-         {}
+         {
+         }
       }
    }
+#endif
 
-   SecurityAttributes* sec = new SecurityAttributes();
+   std::auto_ptr<SecurityAttributes> sec(new SecurityAttributes);
    sec->setIdentity(sipMsg.header(h_From).uri().getAor());
    sec->setIdentityStrength(SecurityAttributes::From);
+   sipMsg.setSecurityAttributes(sec);
    return false;
 }
           
