@@ -60,6 +60,8 @@ main (int argc, char **argv)
   int tcpPort = 6000 + getuid() * 2;
   int udpPort = 6000 + getuid() * 2;
   int tlsTcpPort = 6001 + getuid() * 2;
+  pid_t parent = getppid();
+
   bool tlsServer = false;
 
   Log::initialize(Log::FILE, Log::DEBUG, argv[0]);
@@ -102,6 +104,14 @@ main (int argc, char **argv)
       error += strerror(errno);
 
       GagErrorMessage(error).serialize(cout);
+    }
+
+    // !ah! not portable to windows -- works for now.
+    if (getppid() != parent)
+    {
+      ErrLog(<<"Unsupervised child -- crying, exiting.");
+      shutdown(&sipStack);
+      exit(-1);
     }
 
     if (fdset.readyToRead(fileno(stdin)))
