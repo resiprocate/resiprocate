@@ -30,19 +30,19 @@ class MIME_Header
 {
 };
 
-class MIME_ContentID_Header : public MIME_Header
+class H_ContentID : public MIME_Header
 {
    public:
       typedef Token Type;
 };
-extern MIME_ContentID_Header h_ContentID;
+extern H_ContentID h_ContentID;
 
-class MIME_ContentDescription_Header : public MIME_Header
+class H_ContentDescription : public MIME_Header
 {
    public:
       typedef StringCategory Type;
 };
-extern MIME_ContentDescription_Header h_ContentDescription;
+extern H_ContentDescription h_ContentDescription;
       
 // Common type for all body contents
 class Contents : public LazyParser
@@ -59,7 +59,9 @@ class Contents : public LazyParser
       void preParseHeaders(ParseBuffer& pb);
       std::ostream& encodeHeaders(std::ostream& str) const;
 
+      // access to wrapped contents (signed, encrypted)
       virtual Contents* getContents() {return this;}
+
       Contents* getContents(const Mime&);
 
       virtual Data getBodyData() const;
@@ -77,14 +79,14 @@ class Contents : public LazyParser
       void remove(const MIME_Header& headerType);
 
       // shared header types
-      ContentType_Header::Type& header(const ContentType_Header& headerType) const;
-      ContentDisposition_Header::Type& header(const ContentDisposition_Header& headerType) const;
-      ContentTransferEncoding_Header::Type& header(const ContentTransferEncoding_Header& headerType) const;
-      ParserContainer<ContentLanguage_MultiHeader::Type>& header(const ContentLanguage_MultiHeader& headerType) const;
+      H_ContentType::Type& header(const H_ContentType& headerType) const;
+      H_ContentDisposition::Type& header(const H_ContentDisposition& headerType) const;
+      H_ContentTransferEncoding::Type& header(const H_ContentTransferEncoding& headerType) const;
+      H_ContentLanguages::Type& header(const H_ContentLanguages& headerType) const;
 
       // MIME specific header types
-      MIME_ContentID_Header::Type& header(const MIME_ContentID_Header& headerType) const;
-      MIME_ContentDescription_Header::Type& header(const MIME_ContentDescription_Header& headerType) const;
+      H_ContentID::Type& header(const H_ContentID& headerType) const;
+      H_ContentDescription::Type& header(const H_ContentDescription& headerType) const;
 
       int& verion() {return mVersion;}
       int& minorVersion() {return mMinorVersion;}
@@ -95,13 +97,12 @@ class Contents : public LazyParser
       void clear();
       virtual const Data& errorContext() const;
 
-      // MIME version? version & minorVersion as ints?
       mutable Mime mType;
-      mutable ContentDisposition_Header::Type *mDisposition;
-      mutable StringCategory *mTransferEncoding;      
-      mutable ParserContainer<ContentLanguage_MultiHeader::Type> *mLanguages;
+      mutable H_ContentDisposition::Type *mDisposition;
+      mutable H_ContentTransferEncoding::Type *mTransferEncoding;      
+      mutable H_ContentLanguages::Type *mLanguages;
       mutable Token *mId;
-      mutable StringCategory *mDescription;
+      mutable H_ContentDescription::Type *mDescription;
       mutable StringCategory *mLength;
 
       mutable int mVersion;
