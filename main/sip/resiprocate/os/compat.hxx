@@ -17,7 +17,8 @@ typedef unsigned int u_int32_t;
 
 #if defined (__QNX__)
 
-typedef size_t socklen_t;
+typedef unsigned int u_int32_t;
+//typedef size_t socklen_t;
 
 #endif
 
