@@ -73,6 +73,70 @@ InviteSession::peerSupportsUpdateMethod() const
    return false;
 }
 
+bool
+InviteSession::isConnected() const
+{
+   switch (mState)
+   {
+      case Connected:
+      case SentUpdate:
+      case SentUpdateGlare:
+      case SentReinvite:
+      case SentReinviteGlare:
+      case ReceivedUpdate:
+      case ReceivedReinvite:
+      case ReceivedReinviteNoOffer:
+      case Answered:
+      case WaitingToOffer:
+         return true;
+
+      default:
+         return false;
+   }
+}
+
+bool
+InviteSession::isEarly() const
+{
+   switch (mState)
+   {
+      case UAC_Start:
+      case UAC_Early:
+      case UAC_EarlyWithOffer:
+      case UAC_EarlyWithAnswer:
+         //case UAC_Answered:
+         //case UAC_Terminated:
+      case UAC_SentUpdateEarly:
+      case UAC_SentUpdateConnected:
+      case UAC_ReceivedUpdateEarly:
+         //case UAC_SentAnswer:
+      case UAC_QueuedUpdate:
+         return true;
+
+      default:
+         return false;
+   }
+}
+
+
+bool
+InviteSession::isTerminated() const
+{
+   switch (mState)
+   {
+      case Terminated:
+      case WaitingToTerminate:
+      case UAC_Canceled:
+      case UAC_Terminated:
+      case UAS_WaitingToTerminate:
+      case UAS_WaitingToHangup:
+         return true;
+      default:
+         return false;
+   }
+}
+
+
 void
 InviteSession::provideOffer(const SdpContents& offer)
 {

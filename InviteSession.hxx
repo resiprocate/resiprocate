@@ -49,6 +49,10 @@ class InviteSession : public DialogUsage
       const SdpContents& getRemoteSdp() const;
       bool peerSupportsUpdateMethod() const;
 
+      bool isConnected() const;
+      bool isTerminated() const;
+      bool isEarly() const;
+      
       typedef enum
       {
          None, // means no Offer or Answer (may have SDP)
@@ -195,6 +199,8 @@ class InviteSession : public DialogUsage
 
       SipMessage mLastSessionModification; // UPDATE or reINVITE
       SipMessage mInvite200; // 200 OK for reINVITE for retransmissions
+      SipMessage mRefer;
+      
       unsigned long mCurrentRetransmit200;
 
       // Session Timer settings
