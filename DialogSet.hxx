@@ -16,7 +16,7 @@ class BaseCreator;
 class DialogSet
 {
    public:
-      DialogSet(const BaseCreator*);
+      DialogSet(BaseCreator*);
       DialogSet(const SipMessage& request);
       virtual ~DialogSet();
       
@@ -32,7 +32,7 @@ class DialogSet
       Dialog* findDialog(const Data& otherTag);
       Dialog* findDialog(SipMessage& msg);
       
-      BaseCreator* getCreator() const;
+      BaseCreator* getCreator();
 
       void cancel(const SipMessage& cancelMsg);
       void dispatch(const SipMessage& msg);
