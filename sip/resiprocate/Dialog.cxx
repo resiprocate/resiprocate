@@ -108,19 +108,31 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
       if(msg.isResponse())
       {
          const SipMessage& response = msg;
-         if ( !response.exists(h_Contacts) && response.header(h_Contacts).size() != 1)
-         {
-            InfoLog (<< "Response doesn't have a contact header or more than one contact, so can't create dialog");
-            DebugLog (<< response);
-            throw Exception("Invalid or missing contact header in message", __FILE__,__LINE__);
-         }
 
+         int code = response.header(h_StatusLine).statusCode();
+         mEarly = (code > 100 && code < 200);
+         
+         if (code >= 200 && code < 300)
+         {
+            if (!response.exists(h_Contacts) || response.header(h_Contacts).size() != 1)
+            {
+               InfoLog (<< "Response doesn't have a contact header or more than one contact, so can't create dialog");
+               DebugLog (<< response);
+               throw Exception("Invalid or missing contact header in message", __FILE__,__LINE__);
+            }
+         }
+         
          // reverse order from response
          if (response.exists(h_RecordRoutes))
          {
             mRouteSet = response.header(h_RecordRoutes).reverse();
          }
-         mRemoteTarget = response.header(h_Contacts).front();
+         
+         if (response.exists(h_Contacts) && !response.header(h_Contacts).empty())
+         {
+            mRemoteTarget = response.header(h_Contacts).front();
+         }
+         
          mRemoteSequence = 0;
          mRemoteEmpty = true;
          mLocalSequence = response.header(h_CSeq).sequence();
@@ -142,8 +154,6 @@ Dialog::createDialogAsUAC(const SipMessage& msg)
          mDialogId.param(p_fromTag) = mRemoteTag;
 
          mCreated = true;
-         mEarly = (response.header(h_StatusLine).statusCode() > 100 &&
-                   response.header(h_StatusLine).statusCode() < 200);
       }
       else if (msg.isRequest() && msg.header(h_CSeq).method() == NOTIFY)
       {
@@ -205,14 +215,6 @@ Dialog::targetRefreshResponse(const SipMessage& response)
    if (response.exists(h_Contacts) && response.header(h_Contacts).size() == 1)
    {
       mRemoteTarget = response.header(h_Contacts).front();
-   }
-   else
-   {
-      int size = response.header(h_Contacts).size();
-      
-      InfoLog (<< "Response must have 1 contact when it has: " << size );
-      DebugLog (<< response);
-      throw Exception("Invalid or missing contact header in message", __FILE__,__LINE__);
    }
 }
 
@@ -707,13 +709,25 @@ Dialog::dialogId(const SipMessage& msg)
    if (msg.isRequest() && msg.isExternal() ||
        msg.isResponse() && !msg.isExternal())
    {
-      id.param(p_toTag) = msg.header(h_To).param(p_tag);
-      id.param(p_fromTag) = msg.header(h_From).param(p_tag);
+      if (msg.header(h_To).exists(p_tag))
+      {
+         id.param(p_toTag) = msg.header(h_To).param(p_tag);
+      }
+      if (msg.header(h_From).exists(p_tag))
+      {
+         id.param(p_fromTag) = msg.header(h_From).param(p_tag);
+      }
    }
    else
    {
-      id.param(p_toTag) = msg.header(h_From).param(p_tag);
-      id.param(p_fromTag) = msg.header(h_To).param(p_tag);
+      if (msg.header(h_From).exists(p_tag))
+      {
+         id.param(p_toTag) = msg.header(h_From).param(p_tag);
+      }
+      if (msg.header(h_To).exists(p_tag))
+      {
+         id.param(p_fromTag) = msg.header(h_To).param(p_tag);
+      }
    }
    return Data::from(id);
 }
