@@ -758,7 +758,7 @@ InviteSession::dispatchInfo(const SipMessage& msg)
       InfoLog (<< "Received " << msg.brief());
       SipMessage response;
       mDialog.makeResponse(response, msg, 200);
-      send(response);
+      mDum.send(response);
       mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
    }
    else
@@ -830,14 +830,22 @@ InviteSession::toData(State state)
          return "UAC_Start";
       case UAS_Offer:
          return "UAS_Offer";
-      case UAS_Early:
-         return "UAS_Early";
-      case UAS_Accepted:
-         return "UAS_Accepted";
+      case UAS_OfferProvidedAnswer:
+         return "UAS_OfferProvidedAnswer";
+      case UAS_EarlyOffer:
+         return "UAS_EarlyOffer";
+      case UAS_EarlyProvidedAnswer:
+         return "UAS_EarlyProvidedAnswer";
       case UAS_NoOffer:
          return "UAS_NoOffer";
+      case UAS_ProvidedOffer:
+         return "UAS_ProvidedOffer";
       case UAS_EarlyNoOffer:
          return "UAS_EarlyNoOffer";
+      case UAS_EarlyProvidedOffer:
+         return "UAS_EarlyProvidedOffer";
+      case UAS_Accepted:
+         return "UAS_Accepted";
       case UAS_AcceptedWaitingAnswer:
          return "UAS_AcceptedWaitingAnswer";
       case UAC_Early:
@@ -883,11 +891,9 @@ InviteSession::toData(State state)
          return "UAS_WaitingToTerminate";
       case UAS_WaitingToHangup:
          return "UAS_WaitingToHangup";
-
-      default:
-         assert(0);
-         return "Undefined";
    }
+   assert(0);
+   return "Undefined";
 }
 
 
@@ -1136,7 +1142,7 @@ InviteSession::dispatch(const SipMessage& msg)
       {
          SipMessage response;
          mDialog.makeResponse(response, msg, 200);
-         send(response);
+         mDum.send(response);
          mDum.mInviteSessionHandler->onInfo(getSessionHandle(), msg);
       }
       else
@@ -1175,7 +1181,7 @@ InviteSession::dispatch(const SipMessage& msg)
             mLastRequest = *mQueuedBye;
             delete mQueuedBye;
             mQueuedBye = 0;
-            send(mLastRequest);
+            mDum.send(mLastRequest);
             return;
          }
 
