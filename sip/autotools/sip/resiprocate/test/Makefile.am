@@ -22,6 +22,7 @@ noinst_HEADERS = \
 
 LDADD = libtestsupport.a ../libresiprocate.la
 check_PROGRAMS = \
+	testThreads \
 	testSrv \
 	SipTortureTests \
 	testGperfHash \
