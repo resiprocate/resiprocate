@@ -459,20 +459,10 @@ DialogSet::dispatch(const SipMessage& msg)
          }
          else
          {
-            //!dcm! no forking for now, think about onSessionTerminated call(vs
-            // forking) also think about 3xx after early dialog(ugh)--is this possible?
-            //so, short term appropach, dispatch this failur to all existing
-            //usages, return, if no usage allow one to be created.
-            if (!mDialogs.empty())
-            {
-               for(DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); )
-               {
-                  Dialog* d = it->second;
-                  it++;
-                  d->dispatch(msg);         
-               }
-               return;
-            }
+            // Got a failure response to a request to create a dialog(s). Should
+            // make callback on the AppDialogSet here. 
+            InfoLog (<< "Got failure response to a request that doesn't match a dialog " << msg.brief());
+            return;
          }
       }
       
