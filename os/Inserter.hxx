@@ -72,6 +72,7 @@ insert(std::ostream& s, const std::set <K, C>& c)
 }
 
 
+#if defined(HASH_MAP_IS_MAP)
 // hash_map
 template <class K, class V, class H>
 std::ostream&
@@ -93,6 +94,7 @@ insert(std::ostream& s, const hash_map<K,V,H>& c)
    s << "]";
    return s;
 }
+#endif
 
 // map
 template <class K, class V, class H>
