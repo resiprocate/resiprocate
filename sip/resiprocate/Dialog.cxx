@@ -272,7 +272,7 @@ Dialog::makeRequest(MethodTypes method)
    request->header(h_Contacts).push_front(mContact);
 
    Via via;
-   via.param(p_branch) = Helper::computeUniqueBranch();
+   via.param(p_branch); // will create the branch
    request->header(h_Vias).push_front(via);
 
    return request;

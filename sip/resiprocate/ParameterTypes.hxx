@@ -1,6 +1,7 @@
 #ifndef ParameterTypes_hxx
 #define ParameterTypes_hxx
 
+#include <sipstack/BranchParameter.hxx>
 #include <sipstack/DataParameter.hxx>
 #include <sipstack/IntegerParameter.hxx>
 #include <sipstack/FloatParameter.hxx>
@@ -216,8 +217,8 @@ extern Duration_Param p_duration;
 class Branch_Param : public ParamBase
 {
    public:
-      typedef DataParameter Type;
-	  typedef DataParameter::Type DType;
+      typedef BranchParameter Type;
+      typedef BranchParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::branch;}
       Branch_Param()
       {
