@@ -1,0 +1,67 @@
+# this is our autoconf generator.  in reality, autoconf does much less
+# work than in a "traditional" make system.  This is a feature, not a bug.
+
+AC_INIT(build/Makefile.pre)dnl
+
+AC_PREFIX_DEFAULT(default)
+
+AC_PATH_PROG(GNU_MAKE, make, '', $PATH:/usr/bin:/usr/local/bin)dnl
+
+# allow alternate toolchains
+
+AC_ARG_WITH(toolchain, [
+Build options:
+  --with-toolchain=gnu		  use alternate toolchain to compile.],
+	[VOCAL_USE_TOOLCHAIN=$with_toolchain],
+	[VOCAL_USE_TOOLCHAIN=default])
+AC_SUBST(VOCAL_USE_TOOLCHAIN)dnl
+
+# allow alternate toolchain root
+
+AC_ARG_WITH(template-repository, [
+  --with-template-repository	  use a template repository with gcc.],
+	[VOCAL_USE_GCC_REPO=true],
+	[VOCAL_USE_GCC_REPO=false])
+AC_SUBST(VOCAL_USE_GCC_REPO)dnl
+
+
+AC_ARG_WITH(builddir, [
+Toolchain options:
+  --with-builddir=/path/to/builddir      build in a local directory],
+	[echo USE_BUILDDIR=$with_builddir > .make_prefs])
+
+AC_ARG_WITH(crossroot, [
+  --with-crossroot=/path/to/bin   root directory for alternate toolchain
+                                  (only active for toolchain=armcross)],
+	[VOCAL_CROSS_ROOT=$with_crossroot],
+	[VOCAL_CROSS_ROOT=default])
+AC_SUBST(VOCAL_CROSS_ROOT)dnl
+
+
+AC_ARG_WITH(ar, [
+  --with-ar=/usr/local/bin/ar     path to GNU ar],
+	[VOCAL_AR_PATH=$with_ar])
+
+AC_SUBST(VOCAL_AR_PATH)dnl
+
+AC_ARG_WITH(shared-libs, [
+  --with-shared-libs              don't build with shared libraries],
+	[VOCAL_BUILD_SHARED_LIBS=$with_shared_libs],
+	[VOCAL_BUILD_SHARED_LIBS=no])
+AC_SUBST(VOCAL_BUILD_SHARED_LIBS)dnl
+
+AC_ARG_WITH(openssl, [
+  --with-openssl                  include TLS support via OpenSSL],
+	[VOCAL_USE_OPENSSL=true],
+	[VOCAL_USE_OPENSSL=false])
+AC_SUBST(VOCAL_USE_OPENSSL)dnl
+
+AC_ARG_WITH(distcc, [
+  --with-distcc                  use distributed compilation tool distcc],
+	[USE_DISTCC=true],
+	[USE_DISTCC=false])
+AC_SUBST(USE_DISTCC)dnl
+
+# vocalconfig.h is NOT to be generated via AC_CONFIG_HEADER(S) but by
+# AC_OUTPUT.
+AC_OUTPUT(build/Makefile.conf)dnl
