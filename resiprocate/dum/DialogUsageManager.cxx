@@ -3,6 +3,7 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/AppDialogSet.hxx"
+#include "resiprocate/dum/AppDialogSetFactory.hxx"
 #include "resiprocate/dum/BaseUsage.hxx"
 #include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
@@ -34,6 +35,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
    mServerRegistrationHandler(0),
+   mAppDialogSetFactory(0),
    mStack(stack)
 {
 }
@@ -43,6 +45,13 @@ DialogUsageManager::~DialogUsageManager()
    DebugLog ( << "~DialogUsageManager" );
    // !jf! iterate through dialogsets and dispose, this will cause them to be
    // removed from HandleManager on destruction
+}
+
+
+void DialogUsageManager::setAppDialogSetFactory(AppDialogSetFactory* factory)
+{
+   assert(mAppDialogSetFactory = 0);
+   mAppDialogSetFactory = factory;
 }
 
 #if 0
@@ -222,10 +231,16 @@ DialogUsageManager::addOutOfDialogHandler(MethodTypes& type, OutOfDialogHandler*
 }
 
 SipMessage& 
-DialogUsageManager::makeNewSession(BaseCreator* creator)
+DialogUsageManager::makeNewSession(AppDialogSet* appDs, BaseCreator* creator)
 {
+   
    prepareInitialRequest(creator->getLastRequest());
    DialogSet* ds = new DialogSet(creator, *this);
+   
+   appDs->mDialogSetId = ds->getId();
+   appDs->mDum = this;
+   ds->mAppDialogSet = appDs;
+   
    mDialogSetMap[ds->getId()] = ds;
 
    DebugLog (<< "RegistrationCreator: " << creator->getLastRequest());
@@ -252,30 +267,31 @@ DialogUsageManager::sendResponse(const SipMessage& response)
    
 
 SipMessage&
-DialogUsageManager::makeInviteSession(const Uri& target, const SdpContents* initialOffer)
+DialogUsageManager::makeInviteSession(AppDialogSet* appDs, const Uri& target, const SdpContents* initialOffer)
 {
-   return makeNewSession(new InviteSessionCreator(*this, target, initialOffer));
+   return makeNewSession(appDs, new InviteSessionCreator(*this, target, initialOffer));
 }
 
 SipMessage&
-DialogUsageManager::makeSubscription(const Uri& aor, const NameAddr& target,const Data& eventType)
+DialogUsageManager::makeSubscription(AppDialogSet* appDs, const Uri& aor, const NameAddr& target,const Data& eventType)
 {
-   return makeNewSession(new SubscriptionCreator(*this, target, eventType));
+   return makeNewSession(appDs, new SubscriptionCreator(*this, target, eventType));
 }
 
 SipMessage& 
-DialogUsageManager::makeRegistration(const NameAddr& aor)
+DialogUsageManager::makeRegistration(AppDialogSet* appDs, const NameAddr& aor)
 {
-   return makeNewSession(new RegistrationCreator(*this, aor)); 
+   return makeNewSession(appDs, new RegistrationCreator(*this, aor)); 
 }
 
 SipMessage& 
-DialogUsageManager::makePublication(const Uri& targetDocument,  
+DialogUsageManager::makePublication(AppDialogSet* appDs, 
+                                    const Uri& targetDocument,  
                                     const Contents& body, 
                                     const Data& eventType, 
                                     unsigned expiresSeconds )
 { 
-   return makeNewSession(new PublicationCreator(*this, targetDocument, body, eventType, expiresSeconds)); 
+   return makeNewSession(appDs, new PublicationCreator(*this, targetDocument, body, eventType, expiresSeconds)); 
 }
 
 
@@ -478,6 +494,7 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
 void
 DialogUsageManager::processRequest(const SipMessage& request)
 {
+   assert(mAppDialogSetFactory);
    if (!request.header(h_To).exists(p_tag))
    {
       switch (request.header(h_RequestLine).getMethod())
@@ -531,6 +548,12 @@ DialogUsageManager::processRequest(const SipMessage& request)
             try
             {
                DialogSet* dset =  new DialogSet(request, *this);
+
+               AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
+               appDs->mDialogSetId = dset->getId();
+               appDs->mDum = this;
+               dset->mAppDialogSet = appDs;
+
                mDialogSetMap[id] = dset;
                dset->dispatch(request);
             }
