@@ -9,8 +9,9 @@
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 
-#define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType) const
+#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
+      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
+      _enum##_Param::DType& param(const _enum##_Param& paramType)
 
 namespace resip
 {
