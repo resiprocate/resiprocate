@@ -2,6 +2,8 @@
 #define RESIP_TUPLE_HXX
 
 #include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Socket.hxx"
+
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/os/TransportType.hxx"
 
