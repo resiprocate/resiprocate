@@ -25,6 +25,7 @@ noinst_HEADERS = \
 
 LDADD = libtestsupport.la ../libresiprocate.la
 check_PROGRAMS = \
+	testSource \
 	SipTortureTests \
 	lg \
 	test1 \
@@ -69,6 +70,7 @@ check_PROGRAMS = \
 TESTS = $(check_PROGRAMS)
 SipTortureTests_SOURCES = SipTortureTests.cxx
 lg_SOURCES = lg.cxx
+testSource_SOURCES = testSource.cxx
 test1_SOURCES = test1.cxx
 test2_SOURCES = test2.cxx
 testApplicationSip_SOURCES = testApplicationSip.cxx
