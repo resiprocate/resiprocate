@@ -15,7 +15,7 @@ class DialogId
       DialogId(const Data& callId, const Data& senderRequestFromTag, const Data& otherTag );
       DialogId(const DialogSetId id, const Data& otherTag );
       
-      DialogSetId getDialogSetId() const;
+      const DialogSetId& getDialogSetId() const;
       
    private:
       Data& mId;

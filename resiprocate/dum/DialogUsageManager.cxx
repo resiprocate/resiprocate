@@ -340,10 +340,18 @@ DialogUsageManager::processRequest(const SipMessage& request)
          case NOTIFY : // handle unsolicited (illegal) NOTIFYs
          {
             DialogSetId id(request);
-            assert(mDialogSetMap.count(id) == 0);
+            assert(mDialogSetMap.find(id) == mDialogSetMap.end());
             mDialogSetMap[id] = new DialogSet(request);
             break;
          }
+         case RESPONSE:
+         case SERVICE:
+            assert(false);
+            break;
+         case UNKNOWN:
+         case MAX_METHODS:
+            assert(false);
+            break;
       }
    }
    else // in a specific dialog
@@ -370,7 +378,7 @@ void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
    DialogSet& dialogs = findDialogSet(DialogSetId(response));
-   if (dialogs != DialogSet::Empty)
+   if (!dialogs.empty())
    {
       dialogs.dispatch(response);
    }
@@ -382,49 +390,48 @@ DialogUsageManager::processResponse(const SipMessage& response)
 
 
 Dialog&  
-DialogUsageManager::findDialog(DialogId id)
+DialogUsageManager::findDialog(const DialogId& id)
 {
 
-    HashMap<DialogSetId, DialogSet>::const_iterator it;
-
     DialogSetId setId = id.getDialogSetId();
-    if ((it = mDialogSetMap.find(setId)) == mDialogSetMap.end())
+    DialogSetMap::const_iterator it = mDialogSetMap.find(setId);
+    
+    if (it == mDialogSetMap.end())
     {
         /**  @todo: return empty object (?) */
     }
-    DialogSet dialogSet = it->second();
-    Dialog dialog;
-    if ((dialog = dialogSet.find(id)) == NULL)
+    DialogSet* dialogSet = it->second;
+    Dialog* dialog = dialogSet->findDialog(id);
+    if (!dialog)
     {
         /**  @todo: return empty object (?) */
     }
     return *dialog;
-    
 }
  
 DialogSet&
-DialogUsageManager::findDialogSet( DialogSetId id )
+DialogUsageManager::findDialogSet(const DialogSetId& id)
 {
-    HashMap<DialogSetId, DialogSet>::const_iterator it;
+   DialogSetMap::const_iterator it = mDialogSetMap.find(id);
 
-    if ((it = mDialogSetMap.find(id)) == mDialogSetMap.end())
+    if (it == mDialogSetMap.end())
     {
         /**  @todo: return empty object (?) **/
     }
-    return it->first();
+    return *it->second;
 }
 
 BaseCreator&
-DialogUsageManager::findCreator(DialogId id)
+DialogUsageManager::findCreator(const DialogId& id)
 {
-    DialogSetId setId = id.getDialogSetId();
-    DialogSet dialogSet = findDialogSet(setId);
-    BaseCreator creator = dialogset.getCreator();
-    if (creator == NULL)
-    {
-        /** @todo; return empty object (?) */
-    }
-    return (*creator);
+   const DialogSetId& setId = id.getDialogSetId();
+   const DialogSet& dialogSet = findDialogSet(setId);
+   BaseCreator* creator = dialogSet.getCreator();
+   if (creator == NULL)
+   {
+      /** @todo; return empty object (?) */
+   }
+   return *creator;
 }
 
 BaseUsage* 
@@ -442,15 +449,15 @@ DialogUsageManager::getUsage(const BaseUsage::Handle& handle)
    }
 }
 
-ServerInviteSession::Handle 
-DialogUsageManager::createServerInviteSession()
+ServerInviteSession*
+DialogUsageManager::createServerInviteSession(const SipMessage& request)
 {
-   BaseUsage* usage = new ServerInviteSession();
+   ServerInviteSession* usage = new ServerInviteSession(this, request);
    
    assert(mUsage.find(usage->mHandle.mId) == mUsage.end());
    mUsage[usage->mHandle.mId] = usage;
 
-   return usage->mHandle;
+   return usage;
 }
 
 void

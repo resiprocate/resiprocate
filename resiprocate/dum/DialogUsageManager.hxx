@@ -20,6 +20,8 @@
 #include "ClientOutOfDialogReq.hxx"
 #include "resiprocate/Headers.hxx"
 
+#include "UInt64Hash.hxx"
+
 namespace resip 
 {
 
@@ -134,11 +136,11 @@ class DialogUsageManager
       // throws if not found
       BaseUsage* getUsage(const BaseUsage::Handle& handle);
       
-      Dialog& findOrCreateDialog(SipMessage* msg);
-      Dialog& findDialog(DialogId id);
-      DialogSet& findDialogSet(DialogSetId id);
+      Dialog& findOrCreateDialog(const SipMessage* msg);
+      Dialog& findDialog(const DialogId& id);
+      DialogSet& findDialogSet(const DialogSetId& id);
       
-      BaseCreator& findCreator(DialogId id);
+      BaseCreator& findCreator(const DialogId& id);
 
       void prepareInitialRequest(SipMessage& request);
       void processRequest(const SipMessage& request);
@@ -146,8 +148,9 @@ class DialogUsageManager
       bool validateRequest(const SipMessage& request);
       bool validateTo(const SipMessage& request);
       bool mergeRequest(const SipMessage& request);
-      
-      HashMap<DialogSetId, DialogSet* > mDialogSetMap;
+
+      typedef HashMap<DialogSetId, DialogSet*> DialogSetMap;
+      DialogSetMap mDialogSetMap;
 
       Profile* mProfile;
       RedirectManager* mRedirectManager;
