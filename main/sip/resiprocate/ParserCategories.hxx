@@ -47,10 +47,13 @@ class Mime : public ParserCategory
    public:
       enum {isCommaTokenizing = true};
 
-      Mime() : ParserCategory(), mType(), mSubType() {}
+      Mime() : ParserCategory(), mType(), mSubType() {};
+      Mime(const Data& type, const Data& subType);
+
       Mime(HeaderFieldValue* hfv) : ParserCategory(hfv), mType(), mSubType() {}
       Mime(const Mime&);
       Mime& operator=(const Mime&);
+      bool operator<(const Mime& rhs) const;
       
       Data& type();
       Data& subType();

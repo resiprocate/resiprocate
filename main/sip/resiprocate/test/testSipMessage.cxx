@@ -4,6 +4,7 @@
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/Helper.hxx"
+#include "sip2/sipstack/SdpBody.hxx"
 
 #include <iostream>
 #include <memory>
@@ -15,11 +16,49 @@ int
 main()
 {
    {
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+               "To: Bob <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: a84b4c76e66710\r\n"
+               "CSeq: 314159 INVITE\r\n"
+               "Max-Forwards: 70\r\n"
+               "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+               "Content-Type: application/sdp\r\n"
+               "Content-Length: 150\r\n"
+               "\r\n"
+               "v=0\r\n"
+               "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
+               "s=-\r\n"
+               "c=IN IP4 pc33.atlanta.com\r\n"
+               "t=0 0\r\n"
+               "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
+               "a=rtpmap:0 PCMU/8000\r\n");
+
+      auto_ptr<SipMessage> msg(Helper::makeMessage(txt.c_str()));
+      
+      Body* body = msg->getBody();
+
+      assert(body != 0);
+      SdpBody* sdp = dynamic_cast<SdpBody*>(body);
+      assert(sdp != 0);
+
+      assert(sdp->getSession().getVersion() == 0);
+      assert(sdp->getSession().getOrigin().getUser() == "alice");
+      assert(!sdp->getSession().getMedia().empty());
+      assert(sdp->getSession().getMedia().front().getValue("rtpmap") == "0 PCMU/8000");
+
+      msg->encode(cerr);
+   }
+
+   return 0;
+
+   {
       char* b = "shared buffer";
       HeaderFieldValue h1(b, strlen(b));
       HeaderFieldValue h2(h1);
    }
-   
+
    {
       char *txt = 
          ("SIP/2.0 200\r\n"
