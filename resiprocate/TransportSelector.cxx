@@ -35,9 +35,14 @@ using namespace resip;
 TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo) :
    mMultiThreaded(multithreaded),
    mStateMacFifo(fifo),
-   mSocket( INVALID_SOCKET )
+   mSocket( INVALID_SOCKET ),
+   mSocket6( INVALID_SOCKET )
 {
-  mUnspecified.sin_family = AF_UNSPEC;
+   memset(&mUnspecified, 0, sizeof(sockaddr_in));
+   mUnspecified.sin_family = AF_UNSPEC;
+
+   memset(&mUnspecified6, 0, sizeof(sockaddr_in6));
+   mUnspecified6.sin6_family = AF_UNSPEC;
 }
 
 TransportSelector::~TransportSelector()
@@ -233,12 +238,25 @@ TransportSelector::dnsResolve( SipMessage* msg, DnsHandler* handler)
 void
 TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
 {
-   if (mSocket == INVALID_SOCKET)
+   Socket tmp = INVALID_SOCKET;
+   if (dest.isV4())
    {
-      mSocket = Transport::socket(UDP, dest.isV4()); // may throw
+      if (mSocket == INVALID_SOCKET)
+      {
+         mSocket = Transport::socket(UDP, dest.isV4()); // may throw
+      }
+      tmp = mSocket;
+   }
+   else
+   {
+      if (mSocket6 == INVALID_SOCKET)
+      {
+         mSocket6 = Transport::socket(UDP, dest.isV4()); // may throw
+      }
+      tmp = mSocket6;
    }
    
-   int ret = connect(mSocket,&dest.getSockaddr(), dest.length());
+   int ret = connect(tmp,&dest.getSockaddr(), dest.length());
    if (ret < 0)
    {
       int e = getErrno();
@@ -248,7 +266,7 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
    }
    
    socklen_t len = source.length();  
-   ret = getsockname(mSocket,&source.getMutableSockaddr(), &len);
+   ret = getsockname(tmp,&source.getMutableSockaddr(), &len);
    if (ret < 0)
    {
       int e = getErrno();
@@ -258,7 +276,15 @@ TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
    }
 
    // Unconnect
-   ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
+   if (dest.isV4())
+   {
+      ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
+   }
+   else
+   {
+      ret = connect(mSocket6,(struct sockaddr*)&mUnspecified6,sizeof(mUnspecified6));
+   }
+   
    if ( ret<0 )
    {
       int e =  getErrno();
