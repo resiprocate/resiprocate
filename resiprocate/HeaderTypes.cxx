@@ -453,5 +453,5 @@ Header<Headers::Date> Date;
 Header<Headers::Warning> Warning;
 Header<Headers::Via> Via;
 
-RequestLineType RequestLine;
-StatusLineType StatusLine;
+Vocal2::RequestLineType Vocal2::RequestLine;
+Vocal2::StatusLineType Vocal2::StatusLine;

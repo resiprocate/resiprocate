@@ -35,7 +35,7 @@ class SipMessage : public Message
 
       bool isExternal() const
       {
-         return nIsExternal;
+         return mIsExternal;
       }
 
       bool isRequest() const;
@@ -45,7 +45,7 @@ class SipMessage : public Message
 
       std::ostream& encode(std::ostream& str) const;
 
-      Data brief() const;
+      Data brief() const ;
 
       // known header interface
       template <int T>
@@ -134,7 +134,7 @@ class SipMessage : public Message
       // not available
       SipMessage& operator=(const SipMessage&);
 
-      const bool nIsExternal;
+      const bool mIsExternal;
       HeaderFieldValueList* mHeaders[Headers::MAX_HEADERS];
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
       UnknownHeaders mUnknownHeaders;

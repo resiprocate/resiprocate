@@ -7,8 +7,9 @@ main()
 {
    SipMessage message;
    
-   //ParserCategory& foo = message[StatusLine];
-   //ParserCategory& foo = message[RequestLine];
+   //StatusLineComponent& foo = message[StatusLine];
+   RequestLineComponent& bar = message[RequestLine];
+   cerr << bar.getMethod() << endl;
    
-   ParserCategory& foo = message[To];
+   //ParserCategory& foo = message[To];
 }
