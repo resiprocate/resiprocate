@@ -13,7 +13,14 @@ class ParserContainer : public ParserContainerBase
    public:
       ParserContainer(HeaderFieldValueList& list)
          : mList(list)
-      {}
+      {
+         HeaderFieldValue* it = mList.front();
+         while (it != 0)
+         {
+            it->setParserCategory(new T(*it));
+            it = it->next;
+         }
+      }
    
       T& front() { return *dynamic_cast<T*>(mList.first->parserCategory); }
       T& back() { return *dynamic_cast<T*>(mList.last->parserCategory); }

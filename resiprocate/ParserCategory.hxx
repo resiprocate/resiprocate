@@ -18,6 +18,8 @@ class ParserCategory
          : mHeaderField(headerFieldValue) 
       {}
 
+      ParserCategory(const ParserCategory& other);
+
       virtual ~ParserCategory() {}
       virtual ParserCategory* clone(HeaderFieldValue*) const = 0;
 
