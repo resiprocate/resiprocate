@@ -122,7 +122,7 @@ BranchParameter::operator=(const BranchParameter& other)
       mIsMyBranch = other.mIsMyBranch;
       mTransactionId = other.mTransactionId;
       mTransportSeq = other.mTransportSeq;
-      mClientData = other.mClientData;  
+      mClientData = other.mClientData;
    }
    return *this;
 }
@@ -162,6 +162,12 @@ BranchParameter::incrementTransportSequence()
 
 Data&
 BranchParameter::clientData()
+{
+    return mClientData;
+}
+
+const Data&
+BranchParameter::clientData() const
 {
     return mClientData;
 }
