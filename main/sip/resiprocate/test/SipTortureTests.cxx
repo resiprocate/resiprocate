@@ -729,6 +729,47 @@ void test12()
 }
 
 
+void test13()
+{
+   CritLog( << "2.13 INVITE with lots of header types");
+   
+   char* txt = ("INVITE sip:user@company.com SIP/2.0\r\n"
+                "User-Agent: Lame Agent\r\n"
+                "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
+                "Max-Forwards: 70\r\n"
+                "CSeq: 0 INVITE\r\n"
+                "Call-ID: 98asdh@10.1.1.2\r\n"
+                "From: sip:caller@university.edu;tag=3413415\r\n"
+                "From: sip:caller@organization.org\r\n"
+                "To: sip:user@company.com\r\n"
+                "Content-Type: application/sdp\r\n"
+                "\r\n"
+                "v=0\r\n"
+                "o=mhandley 29739 7272939 IN IP4 126.5.4.3\r\n"
+                "s=-\r\n"
+                "c=IN IP4 135.180.130.88\r\n"
+                "t=0 0\r\n"
+                "m=audio 492170 RTP/AVP 0 12\r\n"
+                "m=video 3227 RTP/AVP 31\r\n"
+                "a=rtpmap:31 LPC\r\n"
+                "\r\n");
+   
+   tassert_reset();
+   try
+   {
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+
+       tassert(message->header(h_UserAgent).value() == "Lame Agent"); 
+       message->header(h_UserAgent).value() == "Foo";
+       tassert(message->header(h_UserAgent).value() == "Foo"); 
+   }
+   catch (ParseException& e)
+   {
+   }
+   tassert_verify(13);
+}
+
+
 int
 main(int argc, char*argv[])
 {
@@ -751,18 +792,22 @@ main(int argc, char*argv[])
     
     Log::initialize(Log::COUT, l, argv[0]);
     CritLog(<<"Test Driver Starting");
-    tassert_init(11);
+    tassert_init(13);
     test1();
     test2();
     test3();
     test4();
     test5();
     test6();
-    test7();
     test8();
     test9();
     test10();
     test11();
+    test12();
+    test13();
+
+    test7(); // moved this becuase it is fialing 
+
     tassert_report();
 
  CritLog(<<"Test Driver Done");

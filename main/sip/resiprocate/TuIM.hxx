@@ -40,6 +40,7 @@ public:
 
       ///
       void setOutboundProxy( const Uri& uri );
+      void setUANameProxy( const Data& name );
       
       bool haveCerts( bool sign, const Data& encryptFor );
       void sendPage(const Data& text, const Uri& dest, bool sign, const Data& encryptFor );
@@ -72,6 +73,8 @@ public:
 
       void sendNotify(Dialog* dialog);
       
+      void setOutbound( SipMessage& msg );
+      
       Callback* mCallback;
       SipStack* mStack;
       Uri mAor;
@@ -100,6 +103,9 @@ public:
       Dialog mRegistrationDialog;
       UInt64 mNextTimeToRegister;
       Data   mRegistrationPassword;
+
+      Uri mOutboundProxy;
+      Data mUAName;
 };
 
 }
