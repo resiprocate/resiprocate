@@ -622,7 +622,8 @@ myMain(int argc, char* argv[])
          assert( numAdd < 100 ); 
          try
          {
-            Uri uri(Data(argv[i]));
+            // CJ TODO FIX 
+            //Uri uri( Data(argv[i]) );
          }
          catch (...)
          {
@@ -638,7 +639,8 @@ myMain(int argc, char* argv[])
          assert( numPub < 100 ); 
          try
          {
-            Uri uri(Data(argv[i]));
+            // CJ TODO FIX 
+            //Uri uri(Data(argv[i]));
          }
          catch (...)
          {
