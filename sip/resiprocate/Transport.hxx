@@ -60,6 +60,12 @@ class Transport : public ThreadIf
       static TransportType toTransport( const Data& );
       static const Data& toData( TransportType );
 
+    // Perform basic sanity checks on message. Return false
+    // if there is a problem eg) no Vias. --SIDE EFFECT--
+    // This will queue a response if it CAN for a via-less 
+    // request. Response will go straight into the TxFifo
+    bool basicCheck(const SipMessage& msg);
+
       // mark the received= and rport parameters if necessary
       static void stampReceived(SipMessage* request);
 
@@ -78,7 +84,8 @@ class Transport : public ThreadIf
       Fifo<Message>& mStateMachineFifo; // passed in
 
    private:
-      static const Data transportNames[MAX_TRANSPORT];
+    static const Data transportNames[MAX_TRANSPORT];
+    
 };
 
 class SendData
