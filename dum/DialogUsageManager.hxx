@@ -49,7 +49,7 @@ class DialogUsageManager
       PublicationCreator makePublication(BaseUsage&, const Uri& aor, const Data& eventType);
       RegistrationCreator makeRegistration(BaseUsage&, const Uri& aor);
 
-      void process(FdSet fdset);
+      void process();
       
       DialogIdSet findAllDialogs();
       UsageSet    findAllUsages();
