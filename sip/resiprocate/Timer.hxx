@@ -19,14 +19,14 @@ class Timer
       typedef unsigned long Id;
       typedef enum 
       {
-         TimerA,
+         TimerA, // doubling
          TimerB,
          TimerC,
          TimerD,
-         TimerE1,
-         TimerE2,
+         TimerE1,// doubling
+         TimerE2,// doubling
          TimerF,
-         TimerG,
+         TimerG, // doubling
          TimerH,
          TimerI,
          TimerJ,
@@ -42,7 +42,8 @@ class Timer
       
       // returns the unique identifier
       Id getId() const { return mId; }
-      
+      Type getType() const { return mType; }
+
       static void setupTimeOffsets(); // initialize
       static UInt64 getTimeMicroSec(); // get a 64 bit time
       static UInt64 getTimeMs(); // in ms
@@ -53,6 +54,7 @@ class Timer
       static const unsigned long T100;
       static const unsigned long TC;
       static const unsigned long TD;
+      static const unsigned long TS;
       
    private:
       static UInt64 getSystemTime();
@@ -62,7 +64,8 @@ class Timer
       Id mId;
       Type mType;
       Data mTransactionId;
-      
+      unsigned long mDuration;
+
       static unsigned long mCpuSpeedMHz;
       static UInt64 mBootTime;
       static unsigned long mTimerCount;
