@@ -2,12 +2,27 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+namespace Vocal2
+{
+	
+class TestDnsResolver
+{
+public:
+	static void test();
+};
+ 
+}
+
 #include "sipstack/SipStack.hxx"
 #include "sipstack/DnsMessage.hxx"
 
 using namespace Vocal2;
 
-int main()
+
+
+
+void
+TestDnsResolver::test()
 {
    SipStack stack;
    DnsMessage* myMsg;
@@ -48,4 +63,16 @@ int main()
    {
       std::cerr << "--> Driver result: " << *ti << std::endl;
    }
+
 }
+
+
+int 
+main()
+{
+	TestDnsResolver::test();
+
+	return 0;
+}
+
+

@@ -73,6 +73,18 @@ using namespace std;
 
 // --------------------------------------------------
 
+namespace Vocal2 
+{
+	class TestFSM  // this class is a friend of the SipStack and can directly access private stuff
+	{
+	public:
+		static void addMessage(SipStack* stack,SipMessage* message)
+		{
+			stack->mStateMacFifo.add(message);
+		}
+	};
+}
+
 typedef struct {
     struct timeval mExpiry;
     bool mIsRequest;
@@ -343,7 +355,9 @@ processInject()
 	// sendToWire(start);
 	SipMessage* message = Helper::makeMessage(start, true);
 	assert(message);
-	client->mStateMacFifo.add(message);
+
+	TestFSM::addMessage(client,message); //  does a client->mStateMacFifo.add(message);
+	
     }
     else
     {

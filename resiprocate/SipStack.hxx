@@ -18,7 +18,14 @@ namespace Vocal2
   class Data;
   class Message;
   class SipMessage;
-
+	class DnsResolver;
+	class Executive;
+	class TransportSelector;
+	class TransactionState;
+	class TestDnsResolver;
+	class TestFSM;
+	
+	
 class SipStack
 {
    public:
@@ -48,6 +55,15 @@ class SipStack
       /// returns time in milliseconds when process next needs to be called 
       int getTimeTillNextProcess(); 
 
+private:
+	friend class DnsResolver;
+	friend class Executive;
+	friend class TransportSelector;
+	friend class TransactionState;
+	friend class TestDnsResolver;
+	friend class TestFSM;
+		
+			
       Fifo<Message> mTUFifo;
       Fifo<Message> mStateMacFifo;
 
