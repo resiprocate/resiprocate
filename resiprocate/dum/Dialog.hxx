@@ -6,7 +6,7 @@ namespace resip
 
 /** @file Dialog.hxx
  *   @todo This file is empty
- */
+xf */
 
 class Dialog 
 {
@@ -22,6 +22,8 @@ class Dialog
 
    private:
       std::list<BaseUsage*> mUsages;
+      DialogId mid;  
+
 };
  
 }
