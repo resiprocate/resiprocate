@@ -1,3 +1,5 @@
+#include <iostream.h>
+
 #include <sipstack/Preparse.hxx>
 
 #define CRLF "\r\n"
@@ -15,7 +17,7 @@ main()
     "From: \"J Rosenberg \\\\\\\"\"<sip:jdrosen@lucent.com:5060>;tag=98asjd8" CRLF
     "To: <sip:vivekg@chair.dnrc.bell-labs.com:5060>;tag=1a1b1f1H33n" CRLF
     "Call-ID: 0ha0isndaksdj@10.1.1.1" CRLF
-    "CSeq: 8 INVITE"
+    "CSeq: 8 INVITE" CRLF
     "Contact: \"Quoted string \\\"\\\"\" <sip:jdrosen@bell-labs.com:5060>" CRLF
       "Contact: tel:4443322" CRLF
     "Content-Type: application/sdp" CRLF
@@ -31,6 +33,8 @@ main()
     "a=rtpmap:31 LPC/8000" CRLF
     CRLF;
 
+
+  cout << testmsg << endl;
 
    Preparse p(testmsg, sizeof(testmsg)/sizeof(*testmsg));
 

@@ -153,7 +153,7 @@ AE ( PreparseStateTable::State start,
    int charStart = (c==X) ? 0 : (int)c;
    int charEnd = (c==X) ? nOct : (int)(c+1);
 
-#if defined(DEBUG)
+#if defined(DEBUG) && 0
    outStateRange(cout, stateStart, stateEnd) ;
    
    cout   << " -> "
@@ -251,7 +251,7 @@ PreparseStateTable::InitStatePreparseStateTable()
 
   AE( BuildDataCrLf,X,XC,Done,actBad);
   AE( BuildDataCrLf,X,LF,CheckCont,actNil);
-  AE( CheckCont,X,XC, BuildHdr,actData | actBack ); // (push 1st then b/u)
+  AE( CheckCont,X,XC, BuildHdr,actData | actReset | actBack ); // (push 1st then b/u)
   AE( CheckCont,X,LWS,BuildData,actAdd );
 
   // Disposition sensitive edges
@@ -260,11 +260,15 @@ PreparseStateTable::InitStatePreparseStateTable()
 
   AE( InAng,X,XC,InAng,actAdd);
   AE( InAng,X,RAQUOT,BuildData,actAdd);
+  AE( InAng,X,QUOT,InAngQ,actAdd);
 
+  AE( InAngQ, X, XC, InAngQ, actAdd);
+  AE( InAngQ, X, QUOT, InAng, actAdd);
+  AE( InAngQ, X, LSLASH, InAngQEsc, actAdd);
+  
   // add quotes within la/ra pairs
   // add bare quotes from BuildData
   // add comma transition
-
 }
 
 
@@ -302,34 +306,67 @@ Preparse::process()
       using namespace PreparseStateTable;
       Edge& e(mTransitionTable[mState][mDisposition][*mPtr]);
       
+#if defined(DEBUG) && 0
       showEdge("selected edge ", mState, mDisposition, *mPtr, e);
       cout << endl;
+#endif
       
       
       if (e.workMask & actAdd)
       {
-	 cout << "Adding char ";
-         showchar(cout, *mPtr);
-         cout << endl;
 	 mAnchorEnd = mPtr;
+#if defined(DEBUG) && 0
+	 cout << "+++Adding char '";
+//         showchar(cout, *mPtr);
+         showN(cout,mAnchorBeg, mAnchorEnd-mAnchorBeg+1);
+         cout << '\'' << endl;
+#endif
       }
-      if (e.workMask & actBack)
+
+      if (e.workMask & actHdr)
       {
-         mPtr--;
+         mHeader = mAnchorBeg;
+         mHeaderLength = mAnchorEnd-mAnchorBeg+1;
+#if defined(DEBUG)
+         cout << "+++Found Header: \'";
+         showN(cout, mHeader, mHeaderLength);
+         cout << '\'' << endl;
+#endif
+      }
+
+      if (e.workMask & actData)
+      {
+         cout << "+++Data element: \'";
+         showN(cout, mAnchorBeg, mAnchorEnd-mAnchorBeg+1);
+         cout << '\'' << endl;
+         
       }
       if (e.workMask & actFline)
       {
+#if defined(DEBUG)
 	 cout << "FirstLine(" ;
-         showN(cout, mAnchorBeg, mPtr-mAnchorBeg);
+         showN(cout, mAnchorBeg, mAnchorEnd-mAnchorBeg+1);
          cout << ")" << endl;
+#endif
       }
-
-      if (e.workMask & actReset)
+      if (e.workMask & actBack)
       {
-	 mAnchorBeg = mAnchorEnd = mPtr;
+#if defined(DEBUG)
+         cout << "+++Backing up " << endl;
+#endif
+         mPtr--;
       }
 
       mState = e.nextState;
       *mPtr++;
+
+      if (e.workMask & actReset)
+      {
+	 mAnchorBeg = mAnchorEnd = mPtr;
+#if defined(DEBUG) && 0
+         cout << "+++Reset anchors." << endl;
+#endif
+      }
+
    }
 }
