@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #endif
 
 #include "resiprocate/NameAddr.hxx"
@@ -408,7 +409,7 @@ getFirstInterface(bool is_v4, TransportType type)
       int e = getErrno();
       Transport::error( e );
       InfoLog(<< "Can't query local hostname : [" << e << "] " << strerror(e) );
-      throw Transport::Exception("Can't query local hostname", __FILE__,__LINE__);
+      throw Transport::Exception("Can't query local hostname", __FILE__, __LINE__);
    }
    InfoLog(<< "Local hostname is [" << hostname << "]");
 
