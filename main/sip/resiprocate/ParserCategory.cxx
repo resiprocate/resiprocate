@@ -34,7 +34,11 @@ ParserCategory::ParserCategory(const ParserCategory& rhs)
      mMine(true),
      mIsParsed(rhs.mIsParsed)
 {
-   if (rhs.mHeaderField && !mIsParsed)
+   if (mIsParsed)
+   {
+      copyParametersFrom(rhs);
+   }
+   else if (rhs.mHeaderField)
    {
       mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
    }
@@ -45,40 +49,66 @@ ParserCategory::operator=(const ParserCategory& rhs)
 {
    if (this != &rhs)
    {
+      clear();
       mIsParsed = rhs.mIsParsed;
       if (mMine)
       {
          delete mHeaderField;
       }
-      if (!rhs.mIsParsed)
+      if (rhs.mIsParsed)
       {
-         mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
-         mMine = true;
+         copyParametersFrom(rhs);
+         mHeaderField = 0;
+         mMine = false;
       }
       else
       {
-         mHeaderField = 0;
+         mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
+         mMine = true;
       }
    }
    return *this;
 }
 
-ParserCategory::~ParserCategory()
+void
+ParserCategory::clear()
 {
    for (ParameterList::iterator it = mParameters.begin();
         it != mParameters.end(); it++)
    {
       delete *it;
    }
+   mParameters.clear();
    for (ParameterList::iterator it = mUnknownParameters.begin();
         it != mUnknownParameters.end(); it++)
    {
       delete *it;
    }   
+   mUnknownParameters.clear();
    if (mMine)
    {
       delete mHeaderField;
    }
+}
+
+void 
+ParserCategory::copyParametersFrom(const ParserCategory& other)
+{
+   for (ParameterList::iterator it = other.mParameters.begin();
+        it != other.mParameters.end(); it++)
+   {
+      mParameters.push_back((*it)->clone());
+   }
+   for (ParameterList::iterator it = other.mUnknownParameters.begin();
+        it != other.mUnknownParameters.end(); it++)
+   {
+      mUnknownParameters.push_back((*it)->clone());
+   }
+}
+
+ParserCategory::~ParserCategory()
+{
+   clear();
 }
 
 void
