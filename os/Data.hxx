@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.34 2002/11/19 02:44:12 derekm Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.35 2002/11/23 22:06:27 fluffy Exp $";
 
 #include <iostream>
 #include <string>
@@ -20,6 +20,7 @@ class Data
       Data(int capacity, bool);
       Data(const char* str);
       Data(const char* buffer, int length);
+      Data(const unsigned char* buffer, int length);
       Data(const Data& data);
       explicit Data(const std::string& str);
       explicit Data(int value);
@@ -29,7 +30,7 @@ class Data
       explicit Data(char c);
       
       ~Data();
-
+	
       bool operator==(const Data& rhs) const;
       bool operator==(const char* rhs) const;
       //bool operator==(const std::string& rhs) const;
@@ -75,6 +76,9 @@ class Data
       Data& lowercase();
       Data& uppercase();
 
+	// return a HEX representation of binary data
+	Data hex() const;
+	
       // resize to zero without changing capacity
       void clear();
       int convertInt() const;
