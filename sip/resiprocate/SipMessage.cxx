@@ -37,6 +37,10 @@ SipMessage::SipMessage(const FromWireType* fromWire)
 
 SipMessage::SipMessage(const SipMessage& from)
    : mIsExternal(from.mIsExternal),
+     mHaveFixedDest(from.mHaveFixedDest),
+     mFixedDest(from.mFixedDest),
+     mSource(from.mSource),
+     mDestination(from.mDestination),
      mStartLine(0),
      mContentsHfv(0),
      mContents(0),
@@ -267,6 +271,8 @@ SipMessage::brief() const
       result += Data(header(h_StatusLine).responseCode());
    }
    result += " cseq=";
+   result += MethodNames[header(h_CSeq).method()];
+   result += " / ";
    result += Data(header(h_CSeq).sequence());
    result += mIsExternal ? " from(wire)" : " from(TU)";
    
