@@ -48,7 +48,7 @@ class TestDnsHandler : public DnsHandler
 class TestDns : public DnsInterface, public ThreadIf
 {
    public:
-      TestDns() : DnsInterface(false)
+      TestDns()
       {
           addTransportType(TCP);
           addTransportType(UDP);
@@ -97,6 +97,8 @@ main(int argc, const char** argv)
    
    Uri uri;
 
+   cerr << "Starting" << endl;
+   
    std::list<DnsResult*> results;
 #if defined(HAVE_POPT_H)
    const char** args = poptGetArgs(context);
@@ -105,8 +107,15 @@ main(int argc, const char** argv)
 #endif
    while (args && *args != 0)
    {
+       cerr << "Creating Uri" << endl;       
        uri = Uri(*args++);
-       results.push_back(dns.lookup(uri, &handler));
+       cerr << "Creating DnsResult" << endl;
+       
+       DnsResult* res = dns.createDnsResult(&handler);
+       results.push_back(res);
+       cerr << "Looking up" << endl;
+
+       dns.lookup(res, uri);
    }
 
    while (!results.empty())
