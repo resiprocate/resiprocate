@@ -183,7 +183,8 @@ ClientRegistration::dispatch(const SipMessage& msg)
             return;
          }
       }
-      mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);      
+      mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
+      delete this;
    }
 }
 

@@ -1,14 +1,19 @@
 #include "PublicationCreator.hxx"
+#include "resiprocate/SipMessage.hxx"
 
 using namespace resip;
 
-PublicationCreator::PublicationCreator(DialogUsageManager& dum, const Uri& aor)
+PublicationCreator::PublicationCreator(DialogUsageManager& dum,
+                                       const Uri& targetDocument, 
+                                       const Contents& body, 
+                                       const Data& eventType, 
+                                       unsigned expireSeconds )
    : BaseCreator(dum)
 {
-   makeInitialRequest(NameAddr(aor), PUBLISH);
+   makeInitialRequest(NameAddr(targetDocument), PUBLISH);
+
+   mLastRequest.header(h_Event).value() = eventType;
+   mLastRequest.setContents(&body);
+   mLastRequest.header(h_Expires).value() = expireSeconds;
 }
 
-void
-PublicationCreator::dispatch(SipMessage& msg)
-{
-}
