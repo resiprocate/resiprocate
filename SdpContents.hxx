@@ -9,6 +9,8 @@
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/util/Data.hxx"
 
+#ifndef  WIN32
+
 namespace Vocal2
 {
 
@@ -477,6 +479,8 @@ bool operator==(const Codec& lhs, const Codec& rhs);
 std::ostream& operator<<(std::ostream& str, const Codec& codec);
 
 }
+
+#endif // WIN32
 
 #endif
 
