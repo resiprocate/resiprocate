@@ -129,7 +129,13 @@ SRC = \
 	HeaderHash.cxx \
 	ParameterHash.cxx \
 	ApiCheck.cxx \
-	MethodHash.cxx
+	MethodHash.cxx \
+	\
+	\
+	AresDns.cxx \
+	InternalTransport.cxx \
+	ConnectionBase.cxx \
+	AsyncCLessTransport.cxx
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
