@@ -6,8 +6,6 @@
 
 namespace resip
 {
-using namespace std;
-using namespace resip;
 struct methods { char *name; MethodTypes type; };
 /* maximum key range = 20, duplicates = 0 */
 
