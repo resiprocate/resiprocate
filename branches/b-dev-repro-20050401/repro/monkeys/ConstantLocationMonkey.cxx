@@ -24,6 +24,12 @@ ConstantLocationMonkey::handleRequest(RequestContext& context)
   return RequestProcessor::Continue;
 }
 
+void
+ConstantLocationMonkey::dump(std::ostream &os) const
+{
+  os << "ConstantLocation Monkey" << std::endl;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

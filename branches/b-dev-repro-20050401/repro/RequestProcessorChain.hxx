@@ -18,6 +18,7 @@ class RequestProcessorChain : public RequestProcessor
       virtual processor_action_t handleRequest(RequestContext &);
 
       typedef std::vector<RequestProcessor*> Chain;
+      virtual void dump(std::ostream &os) const;
 
    private:
       Chain chain;
