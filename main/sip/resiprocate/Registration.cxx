@@ -8,6 +8,7 @@
 #include "resiprocate/Registration.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
@@ -67,10 +68,12 @@ Registration::getRegistration()
 SipMessage&
 Registration::refreshRegistration() 
 {
-   //assert(mState == Active);
    mRegister->header(h_CSeq).sequence()++;
    mRegister->header(h_Vias).front().param(p_branch).reset();
-   mState = Refreshing;
+   if (mState != Terminating)
+   {
+      mState = Refreshing;
+   }
    return *mRegister;
 }
 
@@ -83,18 +86,18 @@ Registration::unregister()
       mRegister->header(h_Vias).front().param(p_branch).reset();
    }
    mRegister->header(h_CSeq).sequence()++;
-   mRegister->header(h_Contacts).clear();
-   NameAddr wildcard;
-   wildcard.setAllContacts();
-   mRegister->header(h_Contacts).push_front(wildcard);
-   mRegister->header(h_Expires).value() = 0;
+   mRegister->header(h_Contacts).front().param(p_expires) = 0;
    mState = Terminating;
+
+   //InfoLog (<< "Unregister: " << *mRegister);
    return *mRegister;
 }
 
 void
 Registration::handleResponse(const SipMessage& response)
 {
+   //InfoLog (<< "Registration::handleResponse: " << mState << " -> " << response);
+
    assert(response.isResponse());
    if (response.header(h_StatusLine).statusCode() == 200)
    {
