@@ -1,6 +1,8 @@
-# $Id: Makefile,v 1.19 2002/11/12 05:15:47 jason Exp $
+# $Id: Makefile,v 1.20 2002/11/23 22:06:27 fluffy Exp $
 
 BUILD = ../../build
+
+USE_SSL = 1
 
 include $(BUILD)/Makefile.pre
 
@@ -36,7 +38,7 @@ SRC = \
 	Mutex.cxx \
 	RWMutex.cxx \
 	ParseBuffer.cxx \
-	RandomHex.cxx \
+	Random.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
 	ThreadIf.cxx \

@@ -5,7 +5,7 @@
 #include "sip2/sipstack/Uri.hxx"
 #include "sip2/sipstack/Preparse.hxx"
 
-#include "sip2/util/RandomHex.hxx"
+#include "sip2/util/Random.hxx"
 
 using namespace Vocal2;
 
@@ -258,7 +258,9 @@ Data
 Helper::computeUniqueBranch()
 {
    Data result("z9hG4bK"); // magic cookie per rfc2543bis-09    
-   result += RandomHex::get(8);
+   result += Random::getRandomHex(4);
+   result += "C1";
+   result += Random::getRandomHex(2);
    return result;
 }
 
@@ -267,14 +269,14 @@ Data
 Helper::computeCallId()
 {
    // !jf! need to include host as well (should cache it)
-   return RandomHex::get(8);
+   return Random::getRandomHex(8);
 }
 
 
 Data
 Helper::computeTag(int numBytes)
 {
-   return RandomHex::get(4);
+   return Random::getRandomHex(4);
 }
 
 

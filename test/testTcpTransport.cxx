@@ -82,8 +82,6 @@ int main()
          
          Preparse preparse;
          SipMessage msg;
-         int k;
-         
 
          size_t used = 0;
          size_t discard = 0;
