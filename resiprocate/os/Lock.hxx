@@ -2,7 +2,7 @@
 #define Vocal2_Lock_hxx
 
 static const char* const Vocal2Lock_hxx_Version =
-"$Id: Lock.hxx,v 1.6 2002/11/11 23:09:55 jason Exp $";
+"$Id: Lock.hxx,v 1.7 2002/11/12 05:15:37 jason Exp $";
 
 
 #include "sip2/util/Lockable.hxx"
@@ -25,6 +25,18 @@ class Lock
 
    private:
       Lockable&   myLockable;
+};
+
+class ReadLock : public Lock
+{
+   public:
+      ReadLock(Lockable &);
+};
+
+class WriteLock : public Lock
+{
+   public:
+      WriteLock(Lockable &);
 };
 
 } // namespace Vocal2

@@ -22,8 +22,8 @@ class Mutex : public Lockable
    public:
       Mutex();
       virtual ~Mutex();
-      virtual void    lock();
-      virtual void    unlock();
+      virtual void lock();
+      virtual void unlock();
 
    private:
 #ifdef WIN32   
