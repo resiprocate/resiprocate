@@ -3,11 +3,9 @@
 #endif
 
 #include "resiprocate/Via.hxx"
-#include "resiprocate/ParseUtil.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
-
 
 using namespace resip;
 using namespace std;
@@ -199,7 +197,7 @@ Via::encodeParsed(ostream& str) const
    str << mProtocolName << Symbols::SLASH << mProtocolVersion << Symbols::SLASH << mTransport 
        << Symbols::SPACE;
 
-   if (ParseUtil::isIpV6Address(mSentHost))
+   if (DnsUtil::isIpV6Address(mSentHost))
    {
       str << '[' << mSentHost << ']';
    }

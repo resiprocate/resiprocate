@@ -3,8 +3,8 @@
 #endif
 
 #include "resiprocate/Token.hxx"
-#include "resiprocate/ParseUtil.hxx"
 #include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 

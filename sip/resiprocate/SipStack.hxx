@@ -4,7 +4,7 @@
 #include <set>
 #include <iosfwd>
 
-#include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/TimeLimitFifo.hxx"
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/Executive.hxx"
@@ -162,7 +162,7 @@ class SipStack
       SipStack& operator=(const SipStack& rhs);
       
       // fifo used to communicate between the TU (Transaction User) and stack 
-      Fifo<Message> mTUFifo;
+      TimeLimitFifo<Message> mTUFifo;
 
       // Controls the processing of the various stack elements
       Executive mExecutive;

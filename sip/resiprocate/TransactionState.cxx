@@ -93,7 +93,7 @@ TransactionState::process(TransactionController& controller)
    {
       SipMessage* tryLater = Helper::makeResponse(*sip, 503);
       tryLater->header(h_RetryAfter).value() = 32 + (Random::getRandom() % 32);
-      tryLater->header(h_RetryAfter).comment() = "Server busy";
+      tryLater->header(h_RetryAfter).comment() = "Server busy TRANS";
       Tuple target(sip->getSource());
       delete sip;
       controller.mTransportSelector.transmit(tryLater, target);
@@ -1467,9 +1467,8 @@ void
 TransactionState::sendToTU(TransactionController& controller, TransactionMessage* msg) 
 {
    StackLog(<< "Send to TU: " << *msg);
-   controller.mTUFifo.add(msg);
+   controller.mTUFifo.add(msg, TimeLimitFifo<Message>::InternalElement);
 }
-
 
 SipMessage*
 TransactionState::make100(SipMessage* request) const
