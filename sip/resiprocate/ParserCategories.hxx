@@ -34,7 +34,6 @@ class Token : public ParserCategory
       virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
       virtual ParserCategory* clone() const;
       virtual std::ostream& encodeParsed(std::ostream& str) const;
-
    private:
       mutable Data mValue;
 };
