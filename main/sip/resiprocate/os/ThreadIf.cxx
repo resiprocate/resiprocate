@@ -1,7 +1,9 @@
 
+#include <util/Socket.hxx>
+
 
 #if defined(WIN32)
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+//#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 #include <stdio.h>
 #include <tchar.h>
 #endif
@@ -41,10 +43,10 @@ void
 ThreadIf::run()
 {
 #if defined(WIN32)
-	thread = CreateThread(
+	mThread = CreateThread(
 		NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
 		0, // DWORD dwStackSize,                         // initial thread stack size
-		threadWrapper, // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
+		(LPTHREAD_START_ROUTINE)threadWrapper, // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
 		this, //LPVOID lpParameter,                        // argument for new thread
 		0, //DWORD dwCreationFlags,                     // creation flags
 		&mId// LPDWORD lpThreadId                         // pointer to receive thread ID
@@ -68,9 +70,9 @@ ThreadIf::join()
 
 #if defined(WIN32)
 	DWORD exitCode;
-	while ( !GetExitCodeThread(mId,&exitCode) )
+	while ( !GetExitCodeThread(mThread,&exitCode) )
 	{
-		WaitForSingleObject(mId,INFINITE);
+		WaitForSingleObject(mThread,INFINITE);
 	}
 #else
 	void* stat;
@@ -99,11 +101,13 @@ ThreadIf::exit()
 	mId = 0;
 }
 
+#if 0
 pthread_t
 ThreadIf::selfId() const
 {
 	return pthread_self();
 }
+#endif
 
 void
 ThreadIf::shutdown()
