@@ -115,6 +115,7 @@ const char * const Symbols::mobility = "mobility";
 const char * const Symbols::comp = "comp";
 const char * const Symbols::rport = "rport";
 const char * const Symbols::MagicCookie = "z9hG4bK";
+const char * const Symbols::Vocal2Cookie= "-kcD23X";
 
 
 const int Symbols::DefaultSipPort = 5060;
