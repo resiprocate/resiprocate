@@ -1,6 +1,7 @@
 #ifndef SipMessage_hxx
 #define SipMessage_hxx
 
+#include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -36,7 +37,7 @@ class SipMessage : public Message
 
       void addBuffer(char* buf);
 
-      Data encode();
+      std::ostream& encode(std::ostream& str) const;
 
       // known header interface
       template <int T>
@@ -104,6 +105,7 @@ class SipMessage : public Message
       // clone method
       
       void setStartLine(char* start, int len); 
+      void setBody(char* start, int len); 
       
       // add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,
@@ -134,6 +136,7 @@ class SipMessage : public Message
       
       std::vector<char*> mBufferList;
       HeaderFieldValue* mStartLine;
+      HeaderFieldValue* mBody;
 };
 
 }

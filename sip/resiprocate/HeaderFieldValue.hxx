@@ -1,6 +1,7 @@
 #ifndef HeaderFieldValue_hxx
 #define HeaderFieldValue_hxx
 
+#include <iostream>
 #include <sipstack/SubComponentList.hxx>
 #include <sipstack/ParseException.hxx>
 
@@ -33,10 +34,12 @@ class HeaderFieldValue
       
       HeaderFieldValue* next;
 
-      ParserCategory& getParserCategory()
+      ParserCategory* getParserCategory()
       {
-         return *mParserCategory;
+         return mParserCategory;
       }
+
+      std::ostream& encode(std::ostream& str) const;
       
       friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
 
