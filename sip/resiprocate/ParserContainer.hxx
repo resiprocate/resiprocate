@@ -3,6 +3,7 @@
 
 #include <sipstack/HeaderFieldValueList.hxx>
 #include <sipstack/ParserContainerBase.hxx>
+#include <list>
 
 namespace Vocal2
 {
@@ -11,111 +12,90 @@ template<class T>
 class ParserContainer : public ParserContainerBase
 {
    public:
-      ParserContainer() : mList(new HeaderFieldValueList) 
-      {
-      }
+      ParserContainer() {}
       
-      ParserContainer(HeaderFieldValueList* list)
-         : mList(list)
+      // private to SipMessage
+      ParserContainer(HeaderFieldValueList* hfvs)
       {
-         HeaderFieldValue* it = mList->front();
-         while (it != 0)
+         for (HeaderFieldValueList::iterator i = hfvs->begin();
+              i != hfvs->end(); i++)
          {
-            it->setParserCategory(new T(it));
-            it = it->next;
+            mParsers.push_back(T(*i));
+         }
+      }
+
+      ParserContainer(const ParserContainer& other)
+      {
+         for (typename std::list<T>::const_iterator i = other.mParsers.begin(); 
+              i != other.mParsers.end(); i++)
+         {
+            mParsers.push_back(*i);
          }
       }
       
       ParserContainer& operator=(const ParserContainer& other)
       {
-         assert(0);
+         if (this != &other)
+         {
+            mParsers.clear();
+            for (typename std::list<T>::const_iterator i = other.mParsers.begin(); 
+                 i != other.mParsers.end(); i++)
+            {
+               push_back(*i);
+            }
+         }
+         return *this;
       }
       
+      bool empty() const { return mList->empty(); }
+      int size() const { return mParsers.size(); }
+      void clear() {mParsers.clear();}
       
-      bool empty() const { return (mList->first == 0); }
-      void clear() { assert(0); }
+      T& front() { return mParsers.front();}
+      T& back() { return mParsers.back();}
       
-      T& front() { return *dynamic_cast<T*>(mList->first->getParserCategory()); }
-      T& back() { return *dynamic_cast<T*>(mList->last->getParserCategory()); }
+      void push_front(const T & t) { mParsers.push_front(t); }
+      void push_back(const T & t) { mParsers.push_back(t); }
       
-      void push_front(const T & t) { mList->push_front(new HeaderFieldValue(t.clone())); }
-      void push_back(const T & t) { mList->push_front(new HeaderFieldValue(t.clone())); }
-      
-      void pop_front() { mList->pop_front(); }
-      void pop_back() { mList->pop_back(); }
+      void pop_front() { mParsers.pop_front(); }
+      void pop_back() { mParsers.pop_back(); }
       
       ParserContainer reverse()
       {
-         assert(0);
+         ParserContainer tmp(*this);
+         tmp.mParsers.reverse();
+         return tmp;
       }
       
-      int size() const { assert(0); return 0; }
-      
-      class Iterator
-      {
-         private:
-            Iterator(HeaderFieldValue* p);
-         public:
-            Iterator& operator++(int)
-            {
-               Iterator tmp(mPtr);
-               mPtr = mPtr->next;
-               return tmp;
-            }
-            
-            Iterator& operator++()
-            {
-               mPtr = mPtr->next;
-               return this;
-            }
-            
-            T& operator*()
-            {
-               return *dynamic_cast<T*>(mPtr->parserCategory);
-            }
-            
-            T& operator->()
-            {
-               return *dynamic_cast<T*>(mPtr->parserCategory);
-            }
-            
-            bool operator==(Iterator& i)
-            {
-               return mPtr == i.mPtr;
-            }
-         private:
-            HeaderFieldValue* mPtr;
-      };
-      
-      Iterator begin() { return Iterator(mList->first); }
-      Iterator end() { return Iterator(0); }
-      typedef Iterator iterator;
+      typedef typename std::list<T>::iterator iterator;
+      iterator begin() { return mParsers.begin(); }
+      iterator end() { return mParser.end(); }
 
-      virtual ParserContainerBase* clone(HeaderFieldValueList* hfvs) const
+      virtual ParserContainerBase* clone() const
       {
-         return new ParserContainer(hfvs);
+         return new ParserContainer(*this);
       }
 
       virtual std::ostream& encode(std::ostream& str) const
       {
-         if (mList->first)
+         for (typename std::list<T>::const_iterator i = mParsers.begin(); 
+              i != mParsers.end(); i++)
          {
-            HeaderFieldValue* hfv = mList->first;
-            do
+            if (i->isParsed())
             {
-               hfv->encode(str);
-               str << Symbols::CRLF;
-               hfv = hfv->next;
-            } while (hfv != 0);
+               i->encode(str);
+            }
+            else
+            {
+               i->encodeFromHeaderFieldValue(str);
+            }
+            str << Symbols::CRLF;
          }
          return str;
       }
-      
-   protected:
-      virtual void parser() {}
 
    private:
-      HeaderFieldValueList* mList;
+      std::list<T> mParsers;
 };
  
 }
