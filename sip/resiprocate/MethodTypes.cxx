@@ -23,6 +23,8 @@ Data resip::MethodNames[MAX_METHODS] =
    "MESSAGE",
    "INFO",
    "UNKNOWN",
+   "PRACK",
+   "PUBLISH"
 };
 
 // !dlb! should the hash/comparison be case insensitive?
