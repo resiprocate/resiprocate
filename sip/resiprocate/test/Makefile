@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.63 2003/12/03 23:10:18 davidb Exp $
+# $Id: Makefile,v 1.64 2003/12/09 00:51:53 jason Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -48,6 +48,7 @@ TESTPROGRAMS += testRlmi.cxx \
 		testThreadIf.cxx \
 		testTimer.cxx \
 		testTransactionFSM.cxx \
+		testTransportSelector.cxx \
 		testTypedef.cxx \
 		testUri.cxx \
 		testXMLCursor.cxx \
