@@ -2,56 +2,56 @@
 
 using namespace resip;
 
-const Data Symbols::DefaultSipVersion = "SIP/2.0";
-const Data Symbols::DefaultSipScheme = "sip";
+const char* Symbols::DefaultSipVersion = "SIP/2.0";
+const char* Symbols::DefaultSipScheme = "sip";
 
-const Data Symbols::CRLF = "\r\n";
-const Data Symbols::CRLFCRLF = "\r\n\r\n";
-const Data Symbols::CR = "\r";
-const Data Symbols::LF = "\n";
-const Data Symbols::TAB = "\t";
+const char* Symbols::CRLF = "\r\n";
+const char* Symbols::CRLFCRLF = "\r\n\r\n";
+const char* Symbols::CR = "\r";
+const char* Symbols::LF = "\n";
+const char* Symbols::TAB = "\t";
 
-const Data Symbols::AT_SIGN = "@";
-const Data Symbols::SPACE = " ";
-const Data Symbols::DASH = "-";
-const Data Symbols::DASHDASH = "--";
-const Data Symbols::DOT = ".";
-const Data Symbols::COLON = ":";
-const Data Symbols::EQUALS = "=";
-const Data Symbols::SEMI_OR_EQUAL = ";=";
-const Data Symbols::COMMA_OR_EQUAL = ",=";
-const Data Symbols::SEMI_COLON = ";";
-const Data Symbols::SLASH = "/";
-const Data Symbols::B_SLASH = "\\";
-const Data Symbols::DOUBLE_QUOTE = "\"";
-const Data Symbols::LA_QUOTE = "<";
-const Data Symbols::RA_QUOTE = ">";
-const Data Symbols::COMMA = ",";
-const Data Symbols::ZERO = "0";
-const Data Symbols::LPAREN = "(";
-const Data Symbols::RPAREN = ")";
-const Data Symbols::PERIOD = ".";
-const Data Symbols::QUESTION = "?";
-const Data Symbols::AMPERSAND = "&";
-const Data Symbols::PERCENT = "%";
-const Data Symbols::STAR ="*";
+const char* Symbols::AT_SIGN = "@";
+const char* Symbols::SPACE = " ";
+const char* Symbols::DASH = "-";
+const char* Symbols::DASHDASH = "--";
+const char* Symbols::DOT = ".";
+const char* Symbols::COLON = ":";
+const char* Symbols::EQUALS = "=";
+const char* Symbols::SEMI_OR_EQUAL = ";=";
+const char* Symbols::COMMA_OR_EQUAL = ",=";
+const char* Symbols::SEMI_COLON = ";";
+const char* Symbols::SLASH = "/";
+const char* Symbols::B_SLASH = "\\";
+const char* Symbols::DOUBLE_QUOTE = "\"";
+const char* Symbols::LA_QUOTE = "<";
+const char* Symbols::RA_QUOTE = ">";
+const char* Symbols::COMMA = ",";
+const char* Symbols::ZERO = "0";
+const char* Symbols::LPAREN = "(";
+const char* Symbols::RPAREN = ")";
+const char* Symbols::PERIOD = ".";
+const char* Symbols::QUESTION = "?";
+const char* Symbols::AMPERSAND = "&";
+const char* Symbols::PERCENT = "%";
+const char* Symbols::STAR ="*";
 
-const Data Symbols::ProtocolName = "SIP";
-const Data Symbols::ProtocolVersion = "2.0";
-const Data Symbols::UDP = "UDP";
-const Data Symbols::TCP = "TCP";
-const Data Symbols::TLS = "TLS";
-const Data Symbols::SCTP = "SCTP";
+const char* Symbols::ProtocolName = "SIP";
+const char* Symbols::ProtocolVersion = "2.0";
+const char* Symbols::UDP = "UDP";
+const char* Symbols::TCP = "TCP";
+const char* Symbols::TLS = "TLS";
+const char* Symbols::SCTP = "SCTP";
 
-const Data Symbols::Sip = "sip";
-const Data Symbols::Sips = "sips";
-const Data Symbols::Tel = "tel";
+const char* Symbols::Sip = "sip";
+const char* Symbols::Sips = "sips";
+const char* Symbols::Tel = "tel";
 
-const Data Symbols::Phone = "phone";
-const Data Symbols::Isub = "isub=";
-const Data Symbols::Postd = "postd=";
+const char* Symbols::Phone = "phone";
+const char* Symbols::Isub = "isub=";
+const char* Symbols::Postd = "postd=";
 
-const Data Symbols::auth = "auth";
+const char* Symbols::auth = "auth";
 
 const char * const Symbols::MagicCookie = "z9hG4bK";
 const char * const Symbols::resipCookie= "-c87542-";
@@ -60,17 +60,17 @@ const int Symbols::DefaultSipPort = 5060;
 const int Symbols::SipTlsPort = 5061;
 const int Symbols::DefaultSipsPort = 5061;
 
-const Data Symbols::SrvSip = "_sip";
-const Data Symbols::SrvSips = "_sips";
-const Data Symbols::SrvUdp = "_udp";
-const Data Symbols::SrvTcp = "_tcp";
-const Data Symbols::NaptrSip = "SIP";
-const Data Symbols::NaptrSips = "SIPS";
-const Data Symbols::NaptrUdp = "D2U";
-const Data Symbols::NaptrTcp = "D2T";
+const char* Symbols::SrvSip = "_sip";
+const char* Symbols::SrvSips = "_sips";
+const char* Symbols::SrvUdp = "_udp";
+const char* Symbols::SrvTcp = "_tcp";
+const char* Symbols::NaptrSip = "SIP";
+const char* Symbols::NaptrSips = "SIPS";
+const char* Symbols::NaptrUdp = "D2U";
+const char* Symbols::NaptrTcp = "D2T";
 
-const Data Symbols::audio = "audio";
-const Data Symbols::RTP_AVP = "RTP/AVP";
+const char* Symbols::audio = "audio";
+const char* Symbols::RTP_AVP = "RTP/AVP";
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
