@@ -1387,79 +1387,87 @@ NameAddr::parse(ParseBuffer& pb)
    const char* start;
    start = pb.skipWhitespace();
    bool laQuote = false;
-   if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
+
+   if (*pb.position() == Symbols::STAR[0])
    {
-      pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
-      pb.skipToEndQuote();
-      pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
-      pb.data(mDisplayName, start);
-      laQuote = true;
-      pb.skipToChar(Symbols::LA_QUOTE[0]);
-      if (pb.eof())
-      {
-         throw ParseException("Expected '<'", __FILE__, __LINE__);
-      }
-      else
-      {
-         pb.skipChar(Symbols::LA_QUOTE[0]);
-      }
-   }
-   else if (*pb.position() == Symbols::LA_QUOTE[0])
-   {
-      pb.skipChar(Symbols::LA_QUOTE[0]);
-      laQuote = true;
+      mAllContacts = true;
    }
    else
    {
-      start = pb.position();
-      pb.skipToChar(Symbols::LA_QUOTE[0]);
-      if (pb.eof())
+      if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
       {
-         pb.reset(start);
-      }
-      else
-      {
-         laQuote = true;
+         pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
+         pb.skipToEndQuote();
+         pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
          pb.data(mDisplayName, start);
-         pb.skipChar(Symbols::LA_QUOTE[0]);
-      }
-   }
-   pb.skipWhitespace();
-   mUri.parse(pb);
-   if (laQuote)
-   {
-      pb.skipChar('>');
-      pb.skipWhitespace();
-      parseParameters(pb);
-   }
-   else
-   {
-      swap(mParameters, mUri.mParameters);
-      swap(mUnknownParameters, mUri.mUnknownParameters);
-      for (ParameterList::iterator it = mParameters.begin(); 
-           it != mParameters.end();)
-      {
-         switch ((*it)->getType())
+         laQuote = true;
+         pb.skipToChar(Symbols::LA_QUOTE[0]);
+         if (pb.eof())
          {
-            case ParameterTypes::transport:
-            case ParameterTypes::ttl:
-            case ParameterTypes::maddr:
-            case ParameterTypes::lr:
-            case ParameterTypes::method: 
-            case ParameterTypes::comp:             
-            {
-               mUri.mParameters.push_back(*it);
-               it = mParameters.erase(it);
-               break;
-            }
-            default:
-            {
-               it++;
-            }
+            throw ParseException("Expected '<'", __FILE__, __LINE__);
+         }
+         else
+         {
+            pb.skipChar(Symbols::LA_QUOTE[0]);
          }
       }
-      // parse parameters following Uri's embedded headers
-      parseParameters(pb);
+      else if (*pb.position() == Symbols::LA_QUOTE[0])
+      {
+         pb.skipChar(Symbols::LA_QUOTE[0]);
+         laQuote = true;
+      }
+      else
+      {
+         start = pb.position();
+         pb.skipToChar(Symbols::LA_QUOTE[0]);
+         if (pb.eof())
+         {
+            pb.reset(start);
+         }
+         else
+         {
+            laQuote = true;
+            pb.data(mDisplayName, start);
+            pb.skipChar(Symbols::LA_QUOTE[0]);
+         }
+      }
+      pb.skipWhitespace();
+      mUri.parse(pb);
+      if (laQuote)
+      {
+         pb.skipChar('>');
+         pb.skipWhitespace();
+         parseParameters(pb);
+      }
+      else
+      {
+         swap(mParameters, mUri.mParameters);
+         swap(mUnknownParameters, mUri.mUnknownParameters);
+         for (ParameterList::iterator it = mParameters.begin(); 
+              it != mParameters.end();)
+         {
+            switch ((*it)->getType())
+            {
+               case ParameterTypes::transport:
+               case ParameterTypes::ttl:
+               case ParameterTypes::maddr:
+               case ParameterTypes::lr:
+               case ParameterTypes::method: 
+               case ParameterTypes::comp:             
+               {
+                  mUri.mParameters.push_back(*it);
+                  it = mParameters.erase(it);
+                  break;
+               }
+               default:
+               {
+                  it++;
+               }
+            }
+         }
+         // parse parameters following Uri's embedded headers
+         parseParameters(pb);
+      }
    }
 }
 
@@ -1467,12 +1475,18 @@ ostream&
 NameAddr::encodeParsed(ostream& str) const
 {
    //bool displayName = !mDisplayName.empty();
-   str << mDisplayName << Symbols::LA_QUOTE;
-   mUri.encodeParsed(str);
-   str << Symbols::RA_QUOTE;
-   
-   encodeParameters(str);
-   return str;
+  if (mAllContacts)
+  {
+     str << Symbols::STAR;
+  }
+  else
+  {
+     str << mDisplayName << Symbols::LA_QUOTE;
+     mUri.encodeParsed(str);
+     str << Symbols::RA_QUOTE;
+     encodeParameters(str);
+  }
+  return str;
 }
 
 //====================
