@@ -18,8 +18,6 @@ class FloatParameter : public Parameter
       FloatParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
       explicit FloatParameter(ParameterTypes::Type type);
 
-      float& value();
-
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
          return new FloatParameter(type, pb, terminators);
@@ -29,7 +27,10 @@ class FloatParameter : public Parameter
       virtual std::ostream& encode(std::ostream& stream) const;
 
    private:
-      float mValue;
+      friend class ParserCategory;
+      Type& value() {return mValue;}
+
+      Type mValue;
 };
 
 }

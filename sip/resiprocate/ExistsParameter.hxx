@@ -17,8 +17,6 @@ class ExistsParameter : public Parameter
       ExistsParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
       explicit ExistsParameter(ParameterTypes::Type type);
 
-      bool& value();
-
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
          return new ExistsParameter(type, pb, terminators);
@@ -28,7 +26,10 @@ class ExistsParameter : public Parameter
       virtual std::ostream& encode(std::ostream& stream) const;
 
    private:
-      bool mValue;
+      friend class ParserCategory;
+      Type& value() {return mValue;}
+
+      Type mValue;
 };
 
 }

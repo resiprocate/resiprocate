@@ -39,9 +39,6 @@ class BranchParameter : public Parameter
       Data& clientData();
       const Data& clientData() const;
 
-      Type& value() {return *this;}
-      const Type& value() const {return *this;}
-
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
          return new BranchParameter(type, pb, terminators);
@@ -55,6 +52,9 @@ class BranchParameter : public Parameter
       bool operator==(const BranchParameter& other);
 
    private:
+      friend class ParserCategory;
+      Type& value() {return *this;}
+
       bool mHasMagicCookie;
       bool mIsMyBranch;
       Data mTransactionId;
