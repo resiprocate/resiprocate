@@ -303,8 +303,10 @@ resip::operator<<(ostream& ostrm, const Transport::Tuple& tuple)
 	       << tuple.port
 	       << " , "
 	       << Transport::toData(tuple.transportType) 
-	       << " , "
+	       << " ,transport="
 	       << tuple.transport 
+           << " ,connection=" 
+           << tuple.connection
 	       << " ]";
 	
 	return ostrm;
