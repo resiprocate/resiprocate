@@ -104,8 +104,8 @@ extern Lr_Param p_lr;
 class Q_Param : public ParamBase
 {
    public:
-      typedef DataParameter Type;
-	  typedef DataParameter::Type DType;
+      typedef FloatParameter Type;
+	  typedef FloatParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::q;}
       Q_Param()
       {
@@ -118,8 +118,8 @@ extern Q_Param p_q;
 class Purpose_Param : public ParamBase
 {
    public:
-      typedef FloatParameter Type;
-	  typedef FloatParameter::Type DType;
+      typedef DataParameter Type;
+	  typedef DataParameter::Type DType;
       virtual ParameterTypes::Type getTypeNum() const {return ParameterTypes::purpose;}
       Purpose_Param()
       {
@@ -337,3 +337,7 @@ extern Rport_Param p_rport;
  * <http://www.vovida.org/>.
  *
  */
+
+/* Local Variables: */
+/* c-file-style: "ellemtel" */
+/* End: */
