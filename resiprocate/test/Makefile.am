@@ -62,6 +62,7 @@ check_PROGRAMS = \
 	testTransactionFSM \
 	testUri \
 	testXMLCursor \
+	testUdp
 	limpc
 
 
@@ -108,4 +109,6 @@ testTimer_SOURCES = testTimer.cxx
 testTransactionFSM_SOURCES = testTransactionFSM.cxx
 testUri_SOURCES = testUri.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
+testUdp_SOURCES = testUdp.cxx
 limpc_SOURCES = limpc.cxx
+
