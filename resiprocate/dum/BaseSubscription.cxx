@@ -8,7 +8,10 @@ using namespace resip;
 BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request) :
    BaseUsage(dum, dialog),
    mEventType(request.header(h_Event).value()),
-   mSubscriptionId(Data::Empty)
+   mSubscriptionId(Data::Empty),
+   mTimerSeq(0),
+   mSubscriptionState(Invalid)
+   
 {
    if (request.header(h_Event).exists(p_id))
    {
@@ -27,5 +30,11 @@ BaseSubscription::matches(const SipMessage& subOrNotify)
 
 BaseSubscription::~BaseSubscription()
 {
+}
+
+SubscriptionState 
+BaseSubscription::getSubscriptionState()
+{
+   return mSubscriptionState;
 }
 

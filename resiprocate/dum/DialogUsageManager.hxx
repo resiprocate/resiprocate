@@ -205,6 +205,8 @@ class DialogUsageManager : public HandleManager
 
       void removeDialogSet(const DialogSetId& );      
 
+      bool checkEventPackage(const SipMessage& request);
+
       typedef std::set<MergedRequestKey> MergedRequests;
       MergedRequests mMergedRequests;
             
