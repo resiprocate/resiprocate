@@ -1,5 +1,5 @@
 #include <sipstack/SipMessage.hxx>
-#include <sipstack/Preparse.hxx>
+#include <sipstack/Helper.hxx>
 #include <sipstack/Uri.hxx>
 #include <sipstack/Helper.hxx>
 
@@ -39,13 +39,8 @@ main()
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 7200\r\n"
                     "Content-Length: 0\r\n\r\n");
-      SipMessage message1;
-
-      Preparse parse1(message1, txt1, strlen(txt1));
-      while (parse1.process());
-
-
-      auto_ptr<SipMessage> r(Helper::makeResponse(message1, 100));
+      auto_ptr<SipMessage> message1(Helper::makeMessage(txt1));
+      auto_ptr<SipMessage> r(Helper::makeResponse(*message1, 100));
       r->encode(cerr);
 
       char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
@@ -62,38 +57,34 @@ main()
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 2700\r\n"
                     "Content-Length: 0\r\n\r\n");
-      SipMessage message2;
-      
-      Preparse parse2(message2, txt2, strlen(txt2));
-      while (parse2.process())
-         ;
+      auto_ptr<SipMessage> message2(Helper::makeMessage(txt2));
 
       // copy over everything
-      message1.header(h_RequestLine) = message2.header(h_RequestLine);
-      message1.header(h_Vias) = message2.header(h_Vias);
-      message1.header(h_MaxForwards) = message2.header(h_MaxForwards);
-      message1.header(h_To) = message2.header(h_To);
-      message1.header(h_From) = message2.header(h_From);
-      message1.header(h_CallId) = message2.header(h_CallId);
-      message1.header(h_CSeq) = message2.header(h_CSeq);
-      message1.header(h_Contacts) = message2.header(h_Contacts);
-      message1.header(h_Expires) = message2.header(h_Expires);
-      message1.header(h_ContentLength) = message2.header(h_ContentLength);
+      message1->header(h_RequestLine) = message2->header(h_RequestLine);
+      message1->header(h_Vias) = message2->header(h_Vias);
+      message1->header(h_MaxForwards) = message2->header(h_MaxForwards);
+      message1->header(h_To) = message2->header(h_To);
+      message1->header(h_From) = message2->header(h_From);
+      message1->header(h_CallId) = message2->header(h_CallId);
+      message1->header(h_CSeq) = message2->header(h_CSeq);
+      message1->header(h_Contacts) = message2->header(h_Contacts);
+      message1->header(h_Expires) = message2->header(h_Expires);
+      message1->header(h_ContentLength) = message2->header(h_ContentLength);
       
-      assert(message1.header(h_To).uri().user() == "speedy");
-      assert(message1.header(h_From).uri().user() == "speedy");
-      assert(message1.header(h_MaxForwards).value() == 7);
-      assert(message1.header(h_Contacts).empty() == false);
-      assert(message1.header(h_CallId).value() == "88888@8888");
-      assert(message1.header(h_CSeq).sequence() == 6281);
-      assert(message1.header(h_CSeq).method() == REGISTER);
-      assert(message1.header(h_Vias).empty() == false);
-      assert(message1.header(h_Vias).size() == 4);
-      assert(message1.header(h_Expires).value() == 2700);
-      assert(message1.header(h_ContentLength).value() == 0);
-      cerr << "Port: " << message1.header(h_RequestLine).uri().port() << endl;
-      cerr << "AOR: " << message1.header(h_RequestLine).uri().getAor() << endl;
-      assert(message1.header(h_RequestLine).uri().getAor() == "registrar.ixolib.com");
+      assert(message1->header(h_To).uri().user() == "speedy");
+      assert(message1->header(h_From).uri().user() == "speedy");
+      assert(message1->header(h_MaxForwards).value() == 7);
+      assert(message1->header(h_Contacts).empty() == false);
+      assert(message1->header(h_CallId).value() == "88888@8888");
+      assert(message1->header(h_CSeq).sequence() == 6281);
+      assert(message1->header(h_CSeq).method() == REGISTER);
+      assert(message1->header(h_Vias).empty() == false);
+      assert(message1->header(h_Vias).size() == 4);
+      assert(message1->header(h_Expires).value() == 2700);
+      assert(message1->header(h_ContentLength).value() == 0);
+      cerr << "Port: " << message1->header(h_RequestLine).uri().port() << endl;
+      cerr << "AOR: " << message1->header(h_RequestLine).uri().getAor() << endl;
+      assert(message1->header(h_RequestLine).uri().getAor() == "registrar.ixolib.com");
    }
 
    {
@@ -114,37 +105,33 @@ main()
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 7200\r\n"
                     "Content-Length: 0\r\n\r\n");
-      SipMessage message1;
-      
-      Preparse parse1(message1, txt1, strlen(txt1));
-      while (parse1.process())
-         ;
+      auto_ptr<SipMessage> message1(Helper::makeMessage(txt1));
 
       // parse it
-      message1.header(h_RequestLine).getMethod();
-      for (NameAddrs::iterator i = message1.header(h_Contacts).begin();
-           i != message1.header(h_Contacts).end(); i++)
+      message1->header(h_RequestLine).getMethod();
+      for (NameAddrs::iterator i = message1->header(h_Contacts).begin();
+           i != message1->header(h_Contacts).end(); i++)
       {
          i->uri();
       }
 
-      for (Vias::iterator i = message1.header(h_Vias).begin();
-           i != message1.header(h_Vias).end(); i++)
+      for (Vias::iterator i = message1->header(h_Vias).begin();
+           i != message1->header(h_Vias).end(); i++)
       {
          i->sentPort();
       }
 
-      message1.header(h_To).uri().user();
-      message1.header(h_From).uri().user();
-      message1.header(h_MaxForwards).value();
-      message1.header(h_Contacts).empty();
-      message1.header(h_CallId).value();
-      message1.header(h_CSeq).sequence();
-      message1.header(h_CSeq).method();
-      message1.header(h_Vias).empty();
-      message1.header(h_Vias).size();
-      message1.header(h_Expires).value();
-      message1.header(h_ContentLength).value();
+      message1->header(h_To).uri().user();
+      message1->header(h_From).uri().user();
+      message1->header(h_MaxForwards).value();
+      message1->header(h_Contacts).empty();
+      message1->header(h_CallId).value();
+      message1->header(h_CSeq).sequence();
+      message1->header(h_CSeq).method();
+      message1->header(h_Vias).empty();
+      message1->header(h_Vias).size();
+      message1->header(h_Expires).value();
+      message1->header(h_ContentLength).value();
 
       char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP speedyspc.biloxi.com:5061;branch=sfirst\r\n"
@@ -160,60 +147,55 @@ main()
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Expires: 2700\r\n"
                     "Content-Length: 0\r\n\r\n");
-      SipMessage message2;
-      
-      Preparse parse2(message2, txt2, strlen(txt2));
-      while (parse2.process())
-         ;
-      
+      auto_ptr<SipMessage> message2(Helper::makeMessage(txt2));
 
-      assert(message2.header(h_RequestLine).getMethod() == REGISTER);
-      assert(message2.header(h_To).uri().user() == "speedy");
-      assert(message2.header(h_From).uri().user() == "belle");
-      assert(message2.header(h_MaxForwards).value() == 7);
-      for (NameAddrs::iterator i = message2.header(h_Contacts).begin();
-           i != message2.header(h_Contacts).end(); i++)
+      assert(message2->header(h_RequestLine).getMethod() == REGISTER);
+      assert(message2->header(h_To).uri().user() == "speedy");
+      assert(message2->header(h_From).uri().user() == "belle");
+      assert(message2->header(h_MaxForwards).value() == 7);
+      for (NameAddrs::iterator i = message2->header(h_Contacts).begin();
+           i != message2->header(h_Contacts).end(); i++)
       {
          i->uri();
       }
 
-      for (Vias::iterator i = message2.header(h_Vias).begin();
-           i != message2.header(h_Vias).end(); i++)
+      for (Vias::iterator i = message2->header(h_Vias).begin();
+           i != message2->header(h_Vias).end(); i++)
       {
          assert(i->sentPort() == 5061);
       }
-      assert(message2.header(h_CallId).value() == "88888@8888");
-      assert(message2.header(h_CSeq).sequence() == 6281);
-      assert(message2.header(h_CSeq).method() == REGISTER);
-      assert(message2.header(h_Vias).empty() == false);
-      assert(message2.header(h_Vias).size() == 4);
-      assert(message2.header(h_Expires).value() == 2700);
-      assert(message2.header(h_ContentLength).value() == 0);
+      assert(message2->header(h_CallId).value() == "88888@8888");
+      assert(message2->header(h_CSeq).sequence() == 6281);
+      assert(message2->header(h_CSeq).method() == REGISTER);
+      assert(message2->header(h_Vias).empty() == false);
+      assert(message2->header(h_Vias).size() == 4);
+      assert(message2->header(h_Expires).value() == 2700);
+      assert(message2->header(h_ContentLength).value() == 0);
 
       // copy over everything
-      message1.header(h_RequestLine) = message2.header(h_RequestLine);
-      message1.header(h_Vias) = message2.header(h_Vias);
-      message1.header(h_MaxForwards) = message2.header(h_MaxForwards);
-      message1.header(h_To) = message2.header(h_To);
-      message1.header(h_From) = message2.header(h_From);
-      message1.header(h_CallId) = message2.header(h_CallId);
-      message1.header(h_CSeq) = message2.header(h_CSeq);
-      message1.header(h_Contacts) = message2.header(h_Contacts);
-      message1.header(h_Expires) = message2.header(h_Expires);
-      message1.header(h_ContentLength) = message2.header(h_ContentLength);
+      message1->header(h_RequestLine) = message2->header(h_RequestLine);
+      message1->header(h_Vias) = message2->header(h_Vias);
+      message1->header(h_MaxForwards) = message2->header(h_MaxForwards);
+      message1->header(h_To) = message2->header(h_To);
+      message1->header(h_From) = message2->header(h_From);
+      message1->header(h_CallId) = message2->header(h_CallId);
+      message1->header(h_CSeq) = message2->header(h_CSeq);
+      message1->header(h_Contacts) = message2->header(h_Contacts);
+      message1->header(h_Expires) = message2->header(h_Expires);
+      message1->header(h_ContentLength) = message2->header(h_ContentLength);
 
-      assert(message1.header(h_To).uri().user() == "speedy");
-      assert(message1.header(h_From).uri().user() == "belle");
-      assert(message1.header(h_MaxForwards).value() == 7);
-      assert(message1.header(h_Contacts).empty() == false);
-      assert(message1.header(h_CallId).value() == "88888@8888");
-      assert(message1.header(h_CSeq).sequence() == 6281);
-      assert(message1.header(h_CSeq).method() == REGISTER);
-      assert(message1.header(h_Vias).empty() == false);
-      assert(message1.header(h_Vias).size() == 4);
-      assert(message1.header(h_Expires).value() == 2700);
-      assert(message1.header(h_ContentLength).value() == 0);
-      assert(message1.header(h_RequestLine).uri().getAor() == "registrar.ixolib.com");
+      assert(message1->header(h_To).uri().user() == "speedy");
+      assert(message1->header(h_From).uri().user() == "belle");
+      assert(message1->header(h_MaxForwards).value() == 7);
+      assert(message1->header(h_Contacts).empty() == false);
+      assert(message1->header(h_CallId).value() == "88888@8888");
+      assert(message1->header(h_CSeq).sequence() == 6281);
+      assert(message1->header(h_CSeq).method() == REGISTER);
+      assert(message1->header(h_Vias).empty() == false);
+      assert(message1->header(h_Vias).size() == 4);
+      assert(message1->header(h_Expires).value() == 2700);
+      assert(message1->header(h_ContentLength).value() == 0);
+      assert(message1->header(h_RequestLine).uri().getAor() == "registrar.ixolib.com");
    }
 
    {
@@ -233,29 +215,24 @@ main()
                    "Contact: <sip:qoq@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      SipMessage message;
+      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
       
-      Preparse parse(message, txt, strlen(txt));
-      while (parse.process())
-         ;
-      
-      
-      SipMessage copy(message);
+      SipMessage copy(*message);
       copy.encode(cerr);
       cerr << endl;
    }
    
    {
       cerr << "test header creation" << endl;
-      SipMessage message;
+      auto_ptr<SipMessage> message;
 
-      message.header(h_CSeq).sequence() = 123456;
-      assert(message.header(h_CSeq).sequence() == 123456);
+      message->header(h_CSeq).sequence() = 123456;
+      assert(message->header(h_CSeq).sequence() == 123456);
 
-      message.header(h_To).uri().user() = "speedy";
-      assert(message.header(h_To).uri().user() == "speedy");
+      message->header(h_To).uri().user() = "speedy";
+      assert(message->header(h_To).uri().user() == "speedy");
       
-      message.encode(cerr);
+      message->encode(cerr);
 
    }
    
@@ -277,36 +254,33 @@ main()
                    "Contact: <sip:qoq@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      SipMessage message;
-      
-      Preparse parse(message, txt, strlen(txt));
-      while (parse.process());
-      
-      cerr << "Encode from unparsed: " << endl;
-      message.encode(cerr);
+      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
 
-      assert(message.header(h_To).uri().user() == "bob");
-      assert(message.header(h_From).uri().user() == "bob");
-      assert(message.header(h_MaxForwards).value() == 70);
-      assert(message.header(h_Contacts).empty() == false);
-      assert(message.header(h_CallId).value() == "843817637684230@998sdasdh09");
-      assert(message.header(h_CSeq).sequence() == 1826);
-      assert(message.header(h_CSeq).method() == REGISTER);
-      assert(message.header(h_Vias).empty() == false);
-      assert(message.header(h_Vias).size() == 5);
-      assert(message.header(h_Expires).value() == 7200);
-      assert(message.header(h_ContentLength).value() == 0);
-      assert(message.header(h_RequestLine).uri().getAor() == "registrar.biloxi.com");
+      cerr << "Encode from unparsed: " << endl;
+      message->encode(cerr);
+
+      assert(message->header(h_To).uri().user() == "bob");
+      assert(message->header(h_From).uri().user() == "bob");
+      assert(message->header(h_MaxForwards).value() == 70);
+      assert(message->header(h_Contacts).empty() == false);
+      assert(message->header(h_CallId).value() == "843817637684230@998sdasdh09");
+      assert(message->header(h_CSeq).sequence() == 1826);
+      assert(message->header(h_CSeq).method() == REGISTER);
+      assert(message->header(h_Vias).empty() == false);
+      assert(message->header(h_Vias).size() == 5);
+      assert(message->header(h_Expires).value() == 7200);
+      assert(message->header(h_ContentLength).value() == 0);
+      assert(message->header(h_RequestLine).uri().getAor() == "registrar.biloxi.com");
       
       cerr << "Encode from parsed: " << endl;
-      message.encode(cerr);
+      message->encode(cerr);
 
-      message.header(h_Contacts).front().uri().user() = "jason";
+      message->header(h_Contacts).front().uri().user() = "jason";
 
       cerr << "Encode after messing: " << endl;
-      message.encode(cerr);
+      message->encode(cerr);
 
-      SipMessage copy(message);
+      SipMessage copy(*message);
       assert(copy.header(h_To).uri().user() == "bob");
       assert(copy.header(h_From).uri().user() == "bob");
       assert(copy.header(h_MaxForwards).value() == 70);
@@ -339,19 +313,14 @@ main()
                    "Contact: <sip:bob@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      SipMessage message;
+      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
       
-      Preparse parse(message, txt, strlen(txt));
-      while (parse.process())
-         ;
+      message->encode(cerr);
       
-      
-      message.encode(cerr);
-      
-      //Data v = message.header(h_CallId).value();
-      assert(message.header(h_CallId).value() == "843817637684230@998sdasdh09");
-      //StatusLine& foo = message.header(h_StatusLine);
-      //RequestLine& bar = message.header(h_RequestLine);
+      //Data v = message->header(h_CallId).value();
+      assert(message->header(h_CallId).value() == "843817637684230@998sdasdh09");
+      //StatusLine& foo = message->header(h_StatusLine);
+      //RequestLine& bar = message->header(h_RequestLine);
       //cerr << bar.getMethod() << endl;
    }
    
@@ -366,21 +335,15 @@ main()
                    "Contact: <sip:bob@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      SipMessage message;
-      
-      Preparse parse(message, txt, strlen(txt));
-      while (parse.process())
-         ;
-      
-      
+      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
           
-      Data v = message.header(h_CallId).value();
+      Data v = message->header(h_CallId).value();
       cerr << "Call-ID is " << v << endl;
 
-      message.encode(cerr);
+      message->encode(cerr);
   
-      //StatusLine& foo = message.header(h_StatusLine);
-      //RequestLine& bar = message.header(h_RequestLine);
+      //StatusLine& foo = message->header(h_StatusLine);
+      //RequestLine& bar = message->header(h_RequestLine);
       //cerr << bar.getMethod() << endl;
    }
 
@@ -396,23 +359,19 @@ main()
                    "Contact: <sip:bob@192.0.2.4>\r\n"
                    "Expires: 7200\r\n"
                    "Content-Length: 0\r\n\r\n");
-      SipMessage message;
+      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
       
-      Preparse parse(message, txt, strlen(txt));
-      while (parse.process())
-         ;
-      
-      assert(message.getRawHeader(Headers::From));
-      assert(&message.header(h_From));
-      assert(message.header(h_From).exists(p_tag) == false);
-      assert(message.header(h_From).exists(p_mobility) == false);
-      assert(message.header(h_From).uri().param(p_tag) == "456248");
-      assert(message.header(h_From).uri().param(p_mobility) == "hobble");
+      assert(message->getRawHeader(Headers::From));
+      assert(&message->header(h_From));
+      assert(message->header(h_From).exists(p_tag) == false);
+      assert(message->header(h_From).exists(p_mobility) == false);
+      assert(message->header(h_From).uri().param(p_tag) == "456248");
+      assert(message->header(h_From).uri().param(p_mobility) == "hobble");
 
-      message.encode(cerr);
+      message->encode(cerr);
   
-      //StatusLine& foo = message.header(h_StatusLine);
-      //RequestLine& bar = message.header(h_RequestLine);
+      //StatusLine& foo = message->header(h_StatusLine);
+      //RequestLine& bar = message->header(h_RequestLine);
       //cerr << bar.getMethod() << endl;
    }
 
@@ -429,57 +388,52 @@ main()
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: 353245\r\n\r\n");
 
-      SipMessage message;
-      
-      Preparse parse(message, txt, strlen(txt));
-      while (parse.process())
-         ;
-      
+      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
 
-      assert(message.isRequest());
-      assert(message.isResponse() == false);
+      assert(message->isRequest());
+      assert(message->isResponse() == false);
 
-      assert(message.exists(h_To));
-      assert(message.header(h_To).uri().user() == "user");
-      assert(message.header(h_To).uri().host() == "company.com");
-      assert(message.header(h_To).uri().exists(p_tag) == false);
+      assert(message->exists(h_To));
+      assert(message->header(h_To).uri().user() == "user");
+      assert(message->header(h_To).uri().host() == "company.com");
+      assert(message->header(h_To).uri().exists(p_tag) == false);
 
-      assert(message.exists(h_From));
-      assert(message.header(h_From).uri().user() == "user");
-      assert(message.header(h_From).uri().host() == "company.com");
-      assert(message.header(h_From).uri().param(p_tag) == "3411345");
+      assert(message->exists(h_From));
+      assert(message->header(h_From).uri().user() == "user");
+      assert(message->header(h_From).uri().host() == "company.com");
+      assert(message->header(h_From).uri().param(p_tag) == "3411345");
 
-      assert(message.exists(h_MaxForwards));
-      assert(message.header(h_MaxForwards).value() == 8);
-      assert(message.header(h_MaxForwards).exists(p_tag) == false);
+      assert(message->exists(h_MaxForwards));
+      assert(message->header(h_MaxForwards).value() == 8);
+      assert(message->header(h_MaxForwards).exists(p_tag) == false);
 
-      assert(message.exists(h_Contacts));
-      assert(message.header(h_Contacts).empty() == false);
-      assert(message.header(h_Contacts).front().uri().user() == "user");
-      assert(message.header(h_Contacts).front().uri().host() == "host.company.com");
-      assert(message.header(h_Contacts).front().uri().port() == 0);
+      assert(message->exists(h_Contacts));
+      assert(message->header(h_Contacts).empty() == false);
+      assert(message->header(h_Contacts).front().uri().user() == "user");
+      assert(message->header(h_Contacts).front().uri().host() == "host.company.com");
+      assert(message->header(h_Contacts).front().uri().port() == 0);
 
-      assert(message.exists(h_CallId));
-      assert(message.header(h_CallId).value() == "0ha0isndaksdj@10.0.0.1");
+      assert(message->exists(h_CallId));
+      assert(message->header(h_CallId).value() == "0ha0isndaksdj@10.0.0.1");
 
-      assert(message.exists(h_CSeq));
-      assert(message.header(h_CSeq).sequence() == 8);
-      assert(message.header(h_CSeq).method() == REGISTER);
+      assert(message->exists(h_CSeq));
+      assert(message->header(h_CSeq).sequence() == 8);
+      assert(message->header(h_CSeq).method() == REGISTER);
 
-      assert(message.exists(h_Vias));
-      assert(message.header(h_Vias).empty() == false);
-      assert(message.header(h_Vias).front().protocolName() == "SIP");
-      assert(message.header(h_Vias).front().protocolVersion() == "2.0");
-      assert(message.header(h_Vias).front().transport() == "UDP");
-      assert(message.header(h_Vias).front().sentHost() == "135.180.130.133");
-      assert(message.header(h_Vias).front().sentPort() == 0);
+      assert(message->exists(h_Vias));
+      assert(message->header(h_Vias).empty() == false);
+      assert(message->header(h_Vias).front().protocolName() == "SIP");
+      assert(message->header(h_Vias).front().protocolVersion() == "2.0");
+      assert(message->header(h_Vias).front().transport() == "UDP");
+      assert(message->header(h_Vias).front().sentHost() == "135.180.130.133");
+      assert(message->header(h_Vias).front().sentPort() == 0);
 
-      assert(message.exists(h_Expires));
-      assert(message.header(h_Expires).value() = 353245);
+      assert(message->exists(h_Expires));
+      assert(message->header(h_Expires).value() = 353245);
 
       cerr << "Headers::Expires enum = " << h_Expires.getTypeNum() << endl;
       
-      message.encode(cerr);
+      message->encode(cerr);
    }
 
    {
@@ -495,14 +449,10 @@ main()
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: 353245\r\n\r\n");
 
-      SipMessage message;
-      
-      Preparse parse(message, txt, strlen(txt));
-      while (parse.process())
-         ;
+      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
 
-      assert(message.header(h_MaxForwards).value() == 8);
-      message.getRawHeader(Headers::Max_Forwards)->getParserContainer()->encode(cerr) << endl;
+      assert(message->header(h_MaxForwards).value() == 8);
+      message->getRawHeader(Headers::Max_Forwards)->getParserContainer()->encode(cerr) << endl;
    }
 
    {
@@ -516,12 +466,9 @@ main()
                    "Via: SIP/2.0/UDP squamish.gloo.net:5060;branch=z9hG4bKff5c491951e40f08\r\n"
                    "Content-Length: 0\r\n\r\n");
 
-      SipMessage message;
-      
-      Preparse parse(message, txt, strlen(txt));
-      while (parse.process()) ;
+      auto_ptr<SipMessage> message(Helper::makeMessage(txt));
 
-      assert(message.header(h_To).uri().host() == "localhost");
+      assert(message->header(h_To).uri().host() == "localhost");
    }
 
 }
