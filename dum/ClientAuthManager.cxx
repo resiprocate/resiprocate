@@ -10,6 +10,7 @@
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
+using namespace std;
 
 ClientAuthManager::ClientAuthManager(Profile& profile) :
    mProfile(profile)
@@ -20,19 +21,27 @@ ClientAuthManager::ClientAuthManager(Profile& profile) :
 bool 
 ClientAuthManager::handle(SipMessage& origRequest, const SipMessage& response)
 {
-
+   
    assert( response.isResponse() );
    assert( origRequest.isRequest() );
-   
+
+   DialogSetId id(origRequest);
+   AttemptedAuthSet::iterator it;   
+   if ( mAttemptedAuths.find(id) != mAttemptedAuths.end())
+   {
+      mAttemptedAuths.erase(id);
+      return false;
+   }
+      
    // is this a 401 or 407  
    const int& code = response.header(h_StatusLine).statusCode();
    if (! (  code == 401 || code == 407 ))
    {
       return false;
    }
+   mAttemptedAuths.insert(id);
 
    InfoLog (<< "Doing client auth");
-   
    // !ah! TODO : check ALL appropriate auth headers.
    if (response.exists(h_WWWAuthenticates))
    {      

@@ -1,6 +1,10 @@
 #if !defined(RESIP_CLIENTAUTHMANAGER_HXX)
 #define RESIP_CLIENTAUTHMANAGER_HXX
 
+#include "resiprocate/dum/DialogSetId.hxx"
+
+#include <set>
+
 namespace resip
 {
 
@@ -17,9 +21,10 @@ class ClientAuthManager
       bool handle(SipMessage& origRequest, const SipMessage& response);
       
    private:
-      bool handleAuthHeader(const Auth& auth, SipMessage& origRequest, const SipMessage& response);
-      
+      bool handleAuthHeader(const Auth& auth, SipMessage& origRequest, const SipMessage& response);      
       Profile& mProfile;
+      typedef std::set<DialogSetId> AttemptedAuthSet;
+      AttemptedAuthSet mAttemptedAuths;      
 };
  
 }
