@@ -21,6 +21,7 @@ main(int argc, char* argv[])
 {
    char* logType = 0;
    char* logLevel = 0;
+   char* proto = "tcp";
    int runs = 100;
    int window = 10;
    int seltime = 100;
@@ -31,6 +32,7 @@ main(int argc, char* argv[])
       {"num-runs",    'r', POPT_ARG_INT,    &runs,      0, "number of calls in test", 0},
       {"window-size", 'w', POPT_ARG_INT,    &window,    0, "number of registrations in test", 0},
       {"select-time", 's', POPT_ARG_INT,    &seltime,   0, "number of runs in test", 0},
+      {"protocol",    'p', POPT_ARG_STRING, &proto,   0, "number of runs in test", 0},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -53,7 +55,7 @@ main(int argc, char* argv[])
    target.uri().user() = "fluffy";
    target.uri().host() = DnsUtil::getLocalHostName();
    target.uri().port() = 5080;
-   target.uri().param(p_transport) = "tcp";
+   target.uri().param(p_transport) = proto;
    
    NameAddr from = target;
    from.uri().port() = 5070;
