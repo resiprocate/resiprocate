@@ -84,7 +84,8 @@ class TransportSelector
       
       // just resend to the same transport as last time
       void retransmit(SipMessage* msg, Tuple& target );
-      
+
+      unsigned int getTimeTillNextProcessMS();      
    private:
       // Just supports one transport per TransportType.  Silently overwrites if more than one
       // of a given type is added.  You have been warned.  

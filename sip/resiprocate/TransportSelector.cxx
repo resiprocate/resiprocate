@@ -137,6 +137,8 @@ TransportSelector::addExternalTransport(ExternalAsyncStreamTransport* externalTr
 void
 TransportSelector::addExternalTransport(Transport* transport, bool ownedByMe)
 {
+   mDns.addTransportType(transport->transport());
+   
 //   AsyncCLessTransport* transport = new AsyncCLessTransport(mStateMacFifo, externalTransport, ownedByMe);
    InfoLog (<< "Adding transport: " << transport->getTuple());
    mExternalSelector->externalTransportAdded(transport);
@@ -202,7 +204,7 @@ TransportSelector::addTransport(TransportType protocol,
    {
       //      transport->run();
    }
-   
+   mDns.addTransportType(transport->transport());
    Tuple key(ipInterface, port, version == V4, protocol);
    assert(mExactTransports.find(key) == mExactTransports.end() &&
           mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
@@ -419,6 +421,17 @@ TransportSelector::dnsResolve(DnsResult* result,
 Tuple
 TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target) const
 {
+   
+   Tuple extSource = mExternalSelector->determineSourceInterface(msg, target);
+   if (extSource.getType() != UNKNOWN_TRANSPORT)
+   {
+      return extSource;
+   }
+//    else
+//    {
+//       assert(0);
+//    }
+
    assert(msg->exists(h_Vias));
    assert(!msg->header(h_Vias).empty());
    const Via& via = msg->header(h_Vias).front();
@@ -543,19 +556,13 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
    
    try
    {
-     // !ah! You NEED to do this for responses too -- the transport doesn't
-     // !ah! know it's IP addres(es) in all cases, AND it's function of the dest.
-     // (imagine a synthetic message...)
-
-      
-      Tuple source = mExternalSelector->determineSourceInterface(msg, target);
-      if (source.getType() == UNKNOWN_TRANSPORT)
-      {
-         source = determineSourceInterface(msg, target);
-      }
+      Tuple source;
 
       if (msg->isRequest())
       {
+         // there must be a via, use the port in the via as a hint of what
+         // port to send on
+         source = determineSourceInterface(msg, target);
 
          // would already be specified for ACK or CANCEL
          if (target.transport == 0)
@@ -565,8 +572,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                target.transport = findTlsTransport(msg->getTlsDomain());
             }
             else
-            {
+            {               
                target.transport = findTransport(source);
+               DebugLog( << "TransportSelector::transmit[request], found transport " 
+                         << target.transport->getTuple());
+               
             }
          }
          
@@ -796,15 +806,33 @@ TransportSelector::DefaultExternalSelector::externalTransportAdded(Transport* ex
 Tuple 
 TransportSelector::DefaultExternalSelector::determineSourceInterface(SipMessage* msg, const Tuple& dest) const
 {
+   DebugLog( << "TransportSelector::DefaultExternalSelector::determineSourceInterface");
+   DebugLog( << "Looking for: " <<  Tuple::toData(dest.getType()) << " in: " << Inserter(mExternalTransports));
    static Tuple notFound;
    ExternalTransportMap::const_iterator i = mExternalTransports.find(dest.getType());
    if (i != mExternalTransports.end())
    {
+      DebugLog(<< "TransportSelector::DefaultExternalSelector::determineSourceInterface: " 
+               << i->second->getTuple());
       return i->second->getTuple();
    }
    else
    {
+      DebugLog(<< "TransportSelector::DefaultExternalSelector::determineSourceInterface: failed." );
       return notFound;
+   }
+}
+
+unsigned int 
+TransportSelector::getTimeTillNextProcessMS()
+{
+   if (mDns.requiresProcess())
+   {
+      return 50;      
+   }
+   else
+   {
+      return INT_MAX;
    }
 }
 
