@@ -12,6 +12,8 @@ namespace resip
     class UsageSet;
     class SipMessage;
 
+    typedef std::list<DialogId> DialogIdSet;
+
 class Dialog 
 {
    public:
