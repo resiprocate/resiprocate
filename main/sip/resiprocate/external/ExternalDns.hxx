@@ -39,6 +39,8 @@ class ExternalDns
 
       //caller must clean up memory
       virtual char* errorMessage(long errorCode) = 0;
+      
+      virtual ~ExternalDns()  {}
 };
  
 class ExternalDnsResult : public AsyncResult
