@@ -267,31 +267,49 @@ ClientInviteSession::targetRefresh (const NameAddr& localUri)
    throw UsageUseException("Can't send TARGETREFRESH before Connected", __FILE__, __LINE__);
 }
 
-/* !slg if these are here, then you cannot use refer at all in a ClientInviteSession
-
 void
 ClientInviteSession::refer(const NameAddr& referTo)
 {
-   WarningLog (<< "Can't refer before Connected");
-   assert(0);
-   throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
+   if (isConnected())
+   {
+      InviteSession::refer(referTo);
+   }
+   else
+   {
+      WarningLog (<< "Can't refer before Connected");
+      assert(0);
+      throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
+   }
 }
 
 void
 ClientInviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace)
 {
-   WarningLog (<< "Can't refer before Connected");
-   assert(0);
-   throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
+   if (isConnected())
+   {
+      InviteSession::refer(referTo, sessionToReplace);
+   }
+   else
+   {
+      WarningLog (<< "Can't refer before Connected");
+      assert(0);
+      throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
+   }
 }
-*/
 
 void
 ClientInviteSession::info(const Contents& contents)
 {
-   WarningLog (<< "Can't send INFO before Connected");
-   assert(0);
-   throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
+   if (isConnected())
+   {
+      InviteSession::info(contents);
+   }
+   else
+   {
+      WarningLog (<< "Can't send INFO before Connected");
+      assert(0);
+      throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
+   }
 }
 
 

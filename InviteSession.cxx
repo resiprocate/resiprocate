@@ -327,13 +327,7 @@ InviteSession::targetRefresh(const NameAddr& localUri)
 void
 InviteSession::refer(const NameAddr& referTo)
 {
-   if(!isConnected())  // !slg! should refer only be allowed if state is Connected
-   {
-      WarningLog (<< "Can't refer before Connected");
-      assert(0);
-      throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
-   }
-
+   assert(isConnected()); 
    SipMessage refer;
    mDialog.makeRequest(refer, REFER);
    refer.header(h_ReferTo) = referTo;
@@ -348,13 +342,7 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       throw UsageUseException("Attempted to make a refer w/ and invalid replacement target", __FILE__, __LINE__);
    }
 
-   if(!isConnected()) // !slg! should refer only be allowed if state is Connected
-   {
-      WarningLog (<< "Can't refer before Connected");
-      assert(0);
-      throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
-   }
-
+   assert(isConnected()); // !slg! should refer only be allowed if state is Connected
    SipMessage refer;
    mDialog.makeRequest(refer, REFER);
 
@@ -631,8 +619,8 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       
       case On1xx:
       case On1xxEarly:
-          // !slg! Some UA's send a 100 response to an ReInvite - just ignore it
-          break;
+         // !slg! Some UA's send a 100 response to an ReInvite - just ignore it
+         break;
 
       case On2xxAnswer:
       case On2xxOffer:
