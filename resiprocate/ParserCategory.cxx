@@ -103,8 +103,8 @@ ParserCategory::parseParameters(ParseBuffer& pb)
    }
 }      
 
-void 
-ParserCategory::encodeParameters(std::ostream& str) const
+ostream&
+ParserCategory::encodeParameters(ostream& str) const
 {
    for (ParameterList::iterator it = mParameters.begin();
         it != mParameters.end(); it++)
@@ -118,10 +118,11 @@ ParserCategory::encodeParameters(std::ostream& str) const
       str << Symbols::SEMI_COLON;
       (*it)->encode(str);
    }
+   return str;
 }
 
-std::ostream&
-Vocal2::operator<<(std::ostream& stream, const ParserCategory& category)
+ostream&
+Vocal2::operator<<(ostream& stream, const ParserCategory& category)
 {
    category.checkParsed();
    return category.encode(stream);
@@ -388,6 +389,19 @@ ParserCategory::param(const Received_Param& paramType) const
    if (!p)
    {
       p = new Received_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Mobility_Param::Type::Type& 
+ParserCategory::param(const Mobility_Param& paramType) const
+{
+   checkParsed();
+   Mobility_Param::Type* p = dynamic_cast<Mobility_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Mobility_Param::Type(paramType.getTypeNum());
       mParameters.push_back(p);
    }
    return p->value();
