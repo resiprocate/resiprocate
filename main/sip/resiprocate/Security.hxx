@@ -7,11 +7,19 @@
 
 #include <map>
 
-#ifdef USE_SSL
+#if defined(USE_SSL)
 #include <openssl/e_os2.h>
 #include <openssl/evp.h>
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
+#else
+// to ensure compilation and object size invariance.
+typedef void BIO;
+typedef void SSL;
+typedef void X509;
+typedef void X509_STORE;
+typedef void SSL_CTX;
+typedef void EVP_PKEY;
 #endif
 
 
@@ -37,10 +45,8 @@ class TlsConnection
       Data peerName();
       
    private:
-#ifdef USE_SSL  
       SSL* ssl;
       BIO* bio;
-#endif
 };
 
 
@@ -148,7 +154,7 @@ class Security
    private:
       Data getPath( const Data& dir, const Data& file );
 
-#ifdef USE_SSL   
+
       SSL_CTX* getTlsCtx(bool isServer);
       
       // map of name to certificates
@@ -171,7 +177,7 @@ class Security
 
       bool mTlsServer;
       bool mUseTls;
-#endif	
+
 };
  
 }
