@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.116 2003/04/30 20:10:23 rjsparks Exp $
+# $Id: Makefile,v 1.117 2003/05/01 02:04:52 ryker Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
@@ -97,8 +97,7 @@ SRC = \
 	Uri.cxx \
 	HeaderHash.cxx \
 	ParameterHash.cxx \
-	MethodHash.cxx \
-	OctetContents.cxx
+	MethodHash.cxx
 
 ifeq ($(HASHES),1)
 GPERFOPTS=-D --enum -E -L C++ -t -k '*' --compare-strncmp
