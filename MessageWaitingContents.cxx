@@ -13,8 +13,17 @@ const char* MessageHeaders[MW_MAX] = {"voice-message",
                                       "text-message",
                                       "none"};
 
-MessageWaitingContents::MessageWaitingContents(HeaderFieldValue* hfv)
-   : Contents(hfv)
+MessageWaitingContents::MessageWaitingContents()
+   : Contents()
+{
+   for(int i = 0; i < (int)MW_MAX; i++)
+   {
+      mHeaders[i] = 0;
+   }
+}
+
+MessageWaitingContents::MessageWaitingContents(HeaderFieldValue* hfv, const Mime& contentType)
+   : Contents(hfv, contentType)
 {
    for(int i = 0; i < (int)MW_MAX; i++)
    {

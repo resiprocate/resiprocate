@@ -18,7 +18,7 @@ class SipFrag : public Contents
 {
    public:
       SipFrag();
-      SipFrag(HeaderFieldValue* hfv);
+      SipFrag(HeaderFieldValue* hfv, const Mime& contentsType);
       SipFrag(const SipFrag& rhs);
       ~SipFrag();
       SipFrag& operator=(const SipFrag& rhs);

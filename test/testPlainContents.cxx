@@ -12,7 +12,8 @@ main()
       const Data txt("some plain text\r\n");
 
       HeaderFieldValue hfv(txt.data(), txt.size());
-      PlainContents pc(&hfv);
+      Mime type("text", "plain");
+      PlainContents pc(&hfv, type);
 
       assert(pc.text() == "some plain text");
    }

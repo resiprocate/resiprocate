@@ -17,15 +17,15 @@ PlainContents::PlainContents(const Data& txt)
    : mText(txt)
 {}
 
-PlainContents::PlainContents(HeaderFieldValue* hfv)
-   : Contents(hfv),
+PlainContents::PlainContents(HeaderFieldValue* hfv, const Mime& contentsType)
+   : Contents(hfv, contentsType),
      mText()
 {
 }
  
 PlainContents::PlainContents(const PlainContents& rhs)
    : Contents(rhs),
-     mText( rhs.mText )
+     mText(rhs.mText)
 {
 }
 
