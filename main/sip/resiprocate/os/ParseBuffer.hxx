@@ -53,7 +53,7 @@ class ParseBuffer
                return mPosition;
             }
 
-            char operator*() const
+            const char& operator*() const
             {
                if (mIsValid)
                {
