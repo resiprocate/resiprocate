@@ -10,6 +10,8 @@ namespace Vocal2
 class ExistsParameter : public Parameter
 {
    public:
+      typedef bool Type;
+      
       ExistsParameter(ParameterTypes::Type, const char* startData, unsigned int dataSize);
       ExistsParameter(ParameterTypes::Type type);
 
@@ -23,6 +25,5 @@ class ExistsParameter : public Parameter
 };
 
 }
-
 
 #endif

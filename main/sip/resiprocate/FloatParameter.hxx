@@ -10,6 +10,8 @@ namespace Vocal2
 class FloatParameter : public Parameter
 {
    public:
+      typedef float Type;
+      
       FloatParameter(ParameterTypes::Type, const char* startData, unsigned int dataSize);
       FloatParameter(ParameterTypes::Type type, float value);
 

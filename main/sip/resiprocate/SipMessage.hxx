@@ -86,7 +86,7 @@ class SipMessage : public Message
             }
          }
 
-         return *(typename Header<T>::Type*)mHeaders[T]->getParserCategory();
+         return *(typename Header<T>::Type*)mHeaders[T]->first->getParserCategory();
       }
 
       template <int T>
@@ -100,7 +100,7 @@ class SipMessage : public Message
             // create the list with a new component
             hfvs = new HeaderFieldValueList;
             // create an empty parser container
-            hfvs->setParserContainer(new ParserContainer<typename Header<T>::Type>(*hfvs));
+            hfvs->setParserContainer(new ParserContainer<typename MultiHeader<T>::Type>(hfvs));
             mHeaders[T] = hfvs;
          }
                   
@@ -108,10 +108,10 @@ class SipMessage : public Message
          if (!hfvs->front()->isParsed())
          {
             // create the child parsers
-            hfvs->setParserContainer(new ParserContainer<typename Header<T>::Type>(*hfvs));
+            hfvs->setParserContainer(new ParserContainer<typename MultiHeader<T>::Type>(hfvs));
          }
 
-         return *(ParserContainer<typename Header<T>::Type>*)mHeaders[T]->getParserCategory();
+         return *(ParserContainer<typename MultiHeader<T>::Type>*)mHeaders[T]->getParserCategory();
       }
 
       RequestLineComponent& 
