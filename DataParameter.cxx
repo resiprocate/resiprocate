@@ -17,7 +17,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
       throw ParseException("parameter constructor expected '='", __FILE__, __LINE__);
    }
    pb.skipChar();
-   pb.skipWhiteSpace(); // .dlb. space allowed only before "
+   pb.skipWhitespace(); // .dlb. space allowed only before "
    if (*pb.position() == '"')
    {
       setQuoted(true);
@@ -30,9 +30,11 @@ DataParameter::DataParameter(ParameterTypes::Type type,
    else
    {
       const char* pos = pb.position();
-      pb.skipToOneOf(";?");
+      static const char* WhitespaceOrParamTerm = " \t\r\n;?";
+      pb.skipToOneOf(WhitespaceOrParamTerm);
       mValue = Data(pos, pb.position() - pos);
    }
+   pb.skipToOneOf(";?");
 }
 
 DataParameter::DataParameter(ParameterTypes::Type type)
