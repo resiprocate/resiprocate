@@ -18,7 +18,7 @@
 
 #ifdef WIN32
 #include <errno.h>
-#include <winsock2.h>
+#include <WinSock2.h>
 #include <io.h>
 #include <string.h>
 #include <stdio.h>
