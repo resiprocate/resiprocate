@@ -68,7 +68,11 @@ class Timer
       static unsigned long T2;
       static unsigned long T4;
       static unsigned long T100;
-      static unsigned long TC;
+      
+      static unsigned long TB; // default 64*T1
+      static unsigned long TC; 
+      static unsigned long TF; // default 64*T1
+      
       static unsigned long TD;
       static unsigned long TS;
       
