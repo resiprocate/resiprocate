@@ -1,3 +1,7 @@
+.libs
+.deps
+*.lo
+*.la
 *-raw.cxx
 *.d
 *~
