@@ -15,7 +15,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          Dialog& dialog,
                                          const SipMessage& request, 
                                          const SdpContents* initialOffer)
-   : InviteSession(dum, dialog),
+   : InviteSession(dum, dialog, Initial),
      lastReceivedRSeq(0),
      lastExpectedRSeq(0),
      mStaleCallTimerSeq(1)
@@ -46,6 +46,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
    {
       case Initial:
       {
+         //!dcm! -- really can't do this assert, prob. kill dialog(erroneous
+         //request) and send a 4xx, but which 4xx?
          assert(msg.isResponse());
          int code = msg.header(h_StatusLine).statusCode();
          if (code == 100)
@@ -420,8 +422,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             }
             else if (mCurrentLocalSdp == 0 && mProposedRemoteSdp == 0)
             {        Transport::error( e );
-         InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
-         throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+               InfoLog(<< "Unable to route to " << target << " : [" << e << "] " << strerror(e) );
+               throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
                // Got a 2xx with no offer (sent an INVITE with no offer,
                // unreliable provisionals)
                end();

@@ -11,8 +11,9 @@
 
 using namespace resip;
 
-InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
+InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog, State initialState)
    : BaseUsage(dum, dialog),
+     mState(initialState),
      mOfferState(Nothing),
      mCurrentLocalSdp(0),
      mCurrentRemoteSdp(0),
@@ -80,8 +81,6 @@ InviteSession::dispatch(const SipMessage& msg)
    switch(mState)
    {
       case Terminated:
-         InviteSession::dispatch(msg);
-         break;
          //!dcm! -- 481 behaviour here
          if (msg.isResponse() && msg.header(h_StatusLine).statusCode() == 200 && msg.header(h_CSeq).method() == BYE)
          {
@@ -100,7 +99,7 @@ InviteSession::dispatch(const SipMessage& msg)
                   
                   if (offans.first != None)
                   {
-                     InviteSession::incomingSdp(msg, offans.second);
+                     incomingSdp(msg, offans.second);
                   }
                   break;
 
@@ -126,6 +125,22 @@ InviteSession::dispatch(const SipMessage& msg)
                   break;
             }
          }      
+      case Accepting:
+         if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
+         {
+            //cancel 200 retransmission timer
+            mState = Connected;
+            mDum.mInviteSessionHandler->onConnected(getSessionHandle(), msg);
+            if (offans.first != None)
+            {
+               InviteSession::incomingSdp(msg, offans.second);
+            }
+         }
+         else
+         {
+            assert(0); // !dcm! -- usual nonsence message behaviour question            
+         }
+         break;         
       default:
          assert(0);  //all other cases should be handled in base classes
    }
@@ -244,7 +259,7 @@ InviteSession::send(SipMessage& msg)
       }
       else if (code >= 200 && code < 300)
       {
-         assert(&msg == &mFinalResponse);
+         assert(&msg == &mLastResponse);
          //!dcm! -- start timer...this should be mFinalResponse...maybe assign here in
          //case the user wants to be very strange
          if (mNextOfferOrAnswerSdp)
@@ -312,7 +327,7 @@ InviteSession::getOfferOrAnswer(const SipMessage& msg) const
    if (contents)
    {
       static Token c100rel(Symbols::C100rel);
-      if (msg.isRequest() || 
+      if (msg.isRequest() || msg.header(h_StatusLine).responseCode() == 200 ||
           msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(c100rel))
       {
          switch (mOfferState)
@@ -359,10 +374,11 @@ InviteSession::copyAuthorizations(SipMessage& request)
 #endif
 }
 
-
 SipMessage& 
 InviteSession::rejectOffer(int statusCode)
 {
+   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
+   return mLastResponse;
 }
 
 SipMessage& 
