@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "resiprocate/MultipartMixedContents.hxx"
+#include "resiprocate/MultipartRelatedContents.hxx"
 #include "resiprocate/PlainContents.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/test/TestSupport.hxx"
