@@ -204,6 +204,9 @@
 				RelativePath=".\PublicationCreator.cxx">
 			</File>
 			<File
+				RelativePath=".\RedirectManager.cxx">
+			</File>
+			<File
 				RelativePath=".\RegistrationCreator.cxx">
 			</File>
 			<File
