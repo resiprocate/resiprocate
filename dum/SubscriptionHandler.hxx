@@ -20,6 +20,8 @@ class ClientSubscriptionHandler
       //unknown Subscription-State value
       virtual void onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify)=0;      
 
+      virtual int onRequestRetry(ClientSubscriptionHandle, int retrySeconds, const SipMessage& notify)=0;
+      
       //subscription can be ended through a notify or a failure response.
       virtual void onTerminated(ClientSubscriptionHandle, const SipMessage& msg)=0;   
       //not sure if this has any value.

@@ -26,6 +26,7 @@ class DumTimeout : public ApplicationMessage
          CanDiscardAck,
          StaleCall, // UAC gets no final response
          Subscription,
+         SubscriptionRetry,
          StaleReInvite,
          Glare,
          Cancelled,
