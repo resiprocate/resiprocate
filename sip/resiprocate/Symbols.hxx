@@ -118,6 +118,8 @@ class Symbols
       static const char * const rport;
 
       static const int DefaultSipPort;
+      static const int SipTlsPort;
+      static const int DefaultSipsPort;
 };
 
 }

@@ -267,7 +267,7 @@ class Comp_Param : public ParamBase
          ParameterTypes::ParameterNames[ParameterTypes::comp] = Symbols::comp;
       }
 };
-extern Comp_Param p_com;
+extern Comp_Param p_comp;
 
 class Rport_Param : public ParamBase
 {
