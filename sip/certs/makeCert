@@ -21,9 +21,9 @@ rm -f ${ADDR}_*.pem
 rm -f ${ADDR}.p12
 
 case ${ADDR} in
-*:*) TYPE="URI" ;;
-*@*) TYPE="email" ;;
-*)   TYPE="DNS" ;;
+*:*) ALTNAME="URI:${ADDR}" ;;
+*@*) ALTNAME="URI:sip:${ADDR},URI:im:${ADDR},URI:pres:${ADDR}" ;;
+*)   ALTNAME="URI:sip:${ADDR}" ;;
 esac
 
 rm -f demoCA/index.txt
@@ -33,7 +33,11 @@ rm -f demoCA/newcerts/*
 #setenv ALTNAME "URI:${ADDR}"
 #setenv ALTNAME "email:${ADDR}"
 #setenv ALTNAME "DNS:${ADDR}"
-ALTNAME="$TYPE:${ADDR}"
+#ALTNAME="$TYPE:${ADDR}"
+
+# altname could be URI:sip:fluffy@cisco.com,URI:im:fluffy@cisco.com,URI:pres:fluffy@cisco.com
+
+
 export ALTNAME
 
 openssl genrsa  -out ${ADDR}_key.pem 1024 
