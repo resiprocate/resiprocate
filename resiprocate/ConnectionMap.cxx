@@ -1,7 +1,7 @@
 #include <assert.h>
-#include "sipstack/ConnectionMap.hxx"
-#include "util/Socket.hxx"
-#include "sipstack/Preparse.hxx"
+#include "sip2/sipstack/ConnectionMap.hxx"
+#include "sip2/util/Socket.hxx"
+#include "sip2/sipstack/Preparse.hxx"
 
 #ifndef WIN32
 #include <errno.h>
@@ -318,7 +318,3 @@ ConnectionMap::Connection::readAnyBody(int bytesUsed, int bytesRead, Fifo<Messag
       
    }
 }
-
-
-                  
-

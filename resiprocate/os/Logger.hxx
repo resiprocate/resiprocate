@@ -1,10 +1,10 @@
 #ifndef Logger_hxx
 #define Logger_hxx
 
-#include "util/Socket.hxx"
-#include "util/Log.hxx"
-#include "util/SysLogStream.hxx"
-#include "util/Lock.hxx"
+#include "sip2/util/Socket.hxx"
+#include "sip2/util/Log.hxx"
+#include "sip2/util/SysLogStream.hxx"
+#include "sip2/util/Lock.hxx"
 
 #if ( defined(__SUNPRO_CC) || (__GNUC__ >= 3) )
 

@@ -1,8 +1,8 @@
 #include <cassert>
-#include "sipstack/DataParameter.hxx"
-#include "sipstack/Symbols.hxx"
-#include "util/ParseBuffer.hxx"
-#include "sipstack/ParseException.hxx"
+#include "sip2/sipstack/DataParameter.hxx"
+#include "sip2/sipstack/Symbols.hxx"
+#include "sip2/util/ParseBuffer.hxx"
+#include "sip2/sipstack/ParseException.hxx"
 
 using namespace Vocal2;
 using namespace std;

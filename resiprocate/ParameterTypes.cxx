@@ -1,5 +1,5 @@
-#include "sipstack/ParameterTypes.hxx"
-#include "util/compat.hxx"
+#include "sip2/sipstack/ParameterTypes.hxx"
+#include "sip2/util/compat.hxx"
 #include <iostream>
 
 int strncasecmp(char*,char*,int);

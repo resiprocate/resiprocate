@@ -1,11 +1,11 @@
-#include "sipstack/SipStack.hxx"
-#include "sipstack/Transport.hxx"
-#include "sipstack/Uri.hxx"
-#include "sipstack/Helper.hxx"
-#include "sipstack/TestTransport.hxx"
+#include "sip2/sipstack/SipStack.hxx"
+#include "sip2/sipstack/Transport.hxx"
+#include "sip2/sipstack/Uri.hxx"
+#include "sip2/sipstack/Helper.hxx"
+#include "sip2/sipstack/TestTransport.hxx"
 
-#include "util/Logger.hxx"
-#include "util/DataStream.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/util/DataStream.hxx"
 
 using namespace Vocal2;
 using namespace std;

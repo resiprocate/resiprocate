@@ -3,11 +3,11 @@
 #include <sstream>
 #include <string.h>
 
-#include "sipstack/HeaderFieldValue.hxx"
-#include "sipstack/HeaderTypes.hxx"
-#include "sipstack/ParserCategories.hxx"
-#include "sipstack/Uri.hxx"
-#include "util/ParseBuffer.hxx"
+#include "sip2/sipstack/HeaderFieldValue.hxx"
+#include "sip2/sipstack/HeaderTypes.hxx"
+#include "sip2/sipstack/ParserCategories.hxx"
+#include "sip2/sipstack/Uri.hxx"
+#include "sip2/util/ParseBuffer.hxx"
 
 using namespace std;
 using namespace Vocal2;

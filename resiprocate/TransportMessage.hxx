@@ -2,8 +2,8 @@
 #define TransportMessage_hxx
 
 #include <iostream>
-#include "sipstack/Message.hxx"
-#include "util/Data.hxx"
+#include "sip2/sipstack/Message.hxx"
+#include "sip2/util/Data.hxx"
 
 namespace Vocal2
 {

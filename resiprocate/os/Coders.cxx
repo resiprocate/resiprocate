@@ -1,7 +1,7 @@
 
 #include <assert.h>
 
-#include "util/Coders.hxx"
+#include "sip2/util/Coders.hxx"
 
 namespace Vocal2
 {

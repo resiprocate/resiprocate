@@ -6,8 +6,8 @@
 #include <limits.h>
 #include <signal.h>
 #include <sys/fcntl.h>
-#include "util/Logger.hxx"
-#include "sipstack/HeaderTypes.hxx"
+#include "sip2/util/Logger.hxx"
+#include "sip2/sipstack/HeaderTypes.hxx"
 
 using namespace Vocal2;
 using namespace std;

@@ -1,10 +1,10 @@
 
-#include "util/Socket.hxx"
+#include "sip2/util/Socket.hxx"
 
-#include "sipstack/TimerQueue.hxx"
-#include "sipstack/TimerMessage.hxx"
-#include "util/Logger.hxx"
-//#include "util/Inserter.hxx"
+#include "sip2/sipstack/TimerQueue.hxx"
+#include "sip2/sipstack/TimerMessage.hxx"
+#include "sip2/util/Logger.hxx"
+//#include "sip2/util/Inserter.hxx"
 
 using namespace Vocal2;
 using namespace std;

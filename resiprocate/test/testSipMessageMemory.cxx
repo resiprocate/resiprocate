@@ -1,6 +1,6 @@
-#include "sipstack/SipMessage.hxx"
-#include "sipstack/Preparse.hxx"
-#include "sipstack/Uri.hxx"
+#include "sip2/sipstack/SipMessage.hxx"
+#include "sip2/sipstack/Preparse.hxx"
+#include "sip2/sipstack/Uri.hxx"
 
 #include <iostream>
 
