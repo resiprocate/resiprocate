@@ -6,6 +6,7 @@ using namespace Vocal2;
 using namespace std;
 
 ContentsFactory<SdpContents> SdpContents::Factory;
+const SdpContents SdpContents::Empty;
 
 const char* NetworkType[] = {"???", "IP4", "IP6"};
 
