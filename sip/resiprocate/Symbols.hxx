@@ -84,6 +84,9 @@ class Symbols
       static const char * const Retry_After;
       static const char * const Require;
       static const char * const Route;
+      static const char * const Security_Client;
+      static const char * const Security_Server;
+      static const char * const Security_Verify;
       static const char * const Server;
       static const char * const Subject;
       static const char * const Subscription_State;
@@ -151,6 +154,10 @@ class Symbols
       static const char * const reason;
 
       static const char * const auth;
+
+      static const char * const dAlg;
+      static const char * const dQop;
+      static const char * const dVer;
 
       static const int DefaultSipPort;
       static const int SipTlsPort;

@@ -84,12 +84,15 @@ main(int arc, char** argv)
    }
 
    {
+
       // test parameter hash
       for (int i = ParameterTypes::transport; i < ParameterTypes::UNKNOWN; i++)
       {
          if (i != ParameterTypes::qopOptions &&
-             i != ParameterTypes::qop)
+             i != ParameterTypes::qop &&
+             i != ParameterTypes::qopFactory)
          {
+            cerr << "Checking hash for: " << ParameterTypes::ParameterNames[i] <<  endl;
             assert(ParameterTypes::getType(ParameterTypes::ParameterNames[i].c_str(), 
                                            ParameterTypes::ParameterNames[i].size()) == i);
          }
@@ -861,8 +864,38 @@ main(int arc, char** argv)
       assert (via.param(p_rport).hasValue());
       assert (via.param(p_rport).value() == 100);
    }
-   
-   
+
+   //3329 tests
+   {
+      cerr << "Token + parameters parse test" << endl;
+      char *org = "digest;d-alg=md5";
+      
+      HeaderFieldValue hfv(org, strlen(org));
+      Token tok(&hfv);
+      assert(tok.value() == "digest");
+      assert(tok.param(p_dAlg) == "md5");
+   }
+
+   {
+      cerr << "Token + parameters parse test" << endl;
+      char *org = "digest;d-qop=verify";
+      
+      HeaderFieldValue hfv(org, strlen(org));
+      Token tok(&hfv);
+      assert(tok.value() == "digest");
+      assert(tok.param(p_dQop) == "verify");
+   }
+
+   {
+      cerr << "Token + parameters parse test" << endl;
+      char *org = "digest;d-ver=\"0000000000000000000000000000abcd\"";
+      
+      HeaderFieldValue hfv(org, strlen(org));
+      Token tok(&hfv);
+      assert(tok.value() == "digest");
+      assert(tok.param(p_dVer) == "0000000000000000000000000000abcd");
+   }
+
    cerr << "\nTEST OK" << endl;
 }
 

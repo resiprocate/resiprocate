@@ -496,6 +496,46 @@ ParserCategory::param(const Rport_Param& paramType) const
    return *p; // since this is special
 }
 
+
+Digest_Algorithm_Param::DType& 
+ParserCategory::param(const Digest_Algorithm_Param& paramType) const
+{
+   checkParsed();
+   Digest_Algorithm_Param::Type* p = dynamic_cast<Digest_Algorithm_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Digest_Algorithm_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Digest_Qop_Param::DType& 
+ParserCategory::param(const Digest_Qop_Param& paramType) const
+{
+   checkParsed();
+   Digest_Qop_Param::Type* p = dynamic_cast<Digest_Qop_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Digest_Qop_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
+Digest_Verify_Param::DType& 
+ParserCategory::param(const Digest_Verify_Param& paramType) const
+{
+   checkParsed();
+   Digest_Verify_Param::Type* p = dynamic_cast<Digest_Verify_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new Digest_Verify_Param::Type(paramType.getTypeNum());
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+
 Data
 ParserCategory::commutativeParameterHash() const
 {

@@ -653,6 +653,99 @@ main()
       auto_ptr<SipMessage> copy(new SipMessage(*message));
       assert(message->header(h_RequestLine).getMethod() == copy->header(h_RequestLine).getMethod());
    }
+   {
+      char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+                   "To: sip:user@company.com\r\n"
+                   "From: sip:user@company.com;tag=3411345\r\n"
+                   "Max-Forwards: 8\r\n"
+                   "Contact: sip:user@host.company.com\r\n"
+                   "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
+                   "Security-Client: ipsec-ike;d-alg=md5;q=0.1\r\n"
+                   "Security-Server: tls;q=0.2;d-qop=verify\r\n"
+                   "Security-Verify: tls;q=0.2;d-ver=\"0000000000000000000000000000abcd\"\r\n"
+                   "CSeq: 8 REGISTER\r\n"
+                   "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
+                   "Expires: 353245\r\n\r\n");
+
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      assert(message->header(h_SecurityClients).front().value() == "ipsec-ike");
+      assert(message->header(h_SecurityClients).front().param(p_dAlg) == "md5");
+      assert(message->header(h_SecurityClients).front().param(p_q) == 0.1f);
+
+      assert(message->header(h_SecurityServers).front().value() == "tls");
+      assert(message->header(h_SecurityServers).front().param(p_dQop) == "verify");
+      assert(message->header(h_SecurityServers).front().param(p_q) == 0.2f);
+
+      assert(message->header(h_SecurityVerifies).front().value() == "tls");
+      assert(message->header(h_SecurityVerifies).front().param(p_dVer) == "0000000000000000000000000000abcd");
+      assert(message->header(h_SecurityVerifies).front().param(p_q) == 0.2f);
+   }
+
+   {
+      char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+                   "To: sip:user@company.com\r\n"
+                   "From: sip:user@company.com;tag=3411345\r\n"
+                   "Max-Forwards: 8\r\n"
+                   "Contact: sip:user@host.company.com\r\n"
+                   "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
+                   "CSeq: 8 REGISTER\r\n"
+                   "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
+                   "Expires: 353245\r\n\r\n");
+
+      char *txt2 = ("REGISTER sip:company.com SIP/2.0\r\n"
+                   "To: sip:user@company.com\r\n"
+                   "From: sip:user@company.com;tag=3411345\r\n"
+                   "Max-Forwards: 8\r\n"
+                   "Contact: sip:user@host.company.com\r\n"
+                   "Call-ID: 0ha0isndaksdj@10.0.0.1\r\n"
+                   "Security-Client: ipsec-ike;d-alg=md5;q=0.1\r\n"
+                   "Security-Server: tls;q=0.2;d-qop=verify\r\n"
+                   "Security-Verify: tls;q=0.2;d-ver=\"0000000000000000000000000000abcd\"\r\n"
+                   "CSeq: 8 REGISTER\r\n"
+                   "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
+                   "Expires: 353245\r\n\r\n");
+
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      
+      {
+         Token sec;
+         sec.value() = "ipsec-ike";
+         sec.param(p_dAlg) = "md5";
+         sec.param(p_q) = 0.1f;
+         message->header(h_SecurityClients).push_back(sec);
+      }
+      {
+         Token sec;
+         sec.value() = "tls";
+         sec.param(p_q) = 0.2f;
+         sec.param(p_dQop) = "verify";
+         message->header(h_SecurityServers).push_back(sec);
+      }
+      {
+         Token sec;
+         sec.value() = "tls";
+         sec.param(p_q) = 0.2f;
+         sec.param(p_dVer) = "0000000000000000000000000000abcd";
+         message->header(h_SecurityVerifies).push_back(sec);
+      }
+
+      auto_ptr<SipMessage> message2(TestSupport::makeMessage(txt2));
+
+      Data msgEncoded;
+      {
+         DataStream s(msgEncoded);
+         s << *message;
+      }
+      
+      Data msg2Encoded;
+      {
+         DataStream s(msg2Encoded);
+         s << *message2;
+      }
+      
+      assert(msgEncoded == msg2Encoded);
+   }
+
 
    cerr << "\nTEST OK" << endl;
 }
