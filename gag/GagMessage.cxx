@@ -303,7 +303,7 @@ GagAddBuddyMessage::parse(istream &is)
 ostream &
 GagAddBuddyMessage::serialize(ostream &os) const
 {
-  DebugLog ( << "Sendinng addbuddy to Gaim [them = '" << them 
+  DebugLog ( << "Sending addbuddy to Gaim [them = '" << them 
              << "' us = '" << us << "']");
   GagMessage::serialize(os);
   GagMessage::serialize(os, us);
