@@ -5,8 +5,9 @@
 #include <sipstack/ParserContainer.hxx>
 #include <sipstack/HeaderFieldValue.hxx>
 #include <sipstack/MethodTypes.hxx>
-#include <sipstack/Data.hxx>
 #include <sipstack/Symbols.hxx>
+
+#include <util/Data.hxx>
 
 // !dlb! copy constructur, assignment operator
 // firgure out the clone mess -- these clones should be blissfully ignorant
