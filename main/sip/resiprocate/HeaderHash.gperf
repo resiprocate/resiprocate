@@ -19,6 +19,8 @@ s, Headers::Subject
 k, Headers::Supported
 t, Headers::To
 v, Headers::Via
+r, Headers::ReferTo
+b, Headers::ReferredBy
 x, Headers::SessionExpires
 y, Headers::Identity
 cseq, Headers::CSeq
