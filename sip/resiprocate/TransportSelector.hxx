@@ -88,7 +88,9 @@ class TransportSelector
       
       // An AF_UNSPEC addr_in for rapid unconnect
       struct sockaddr_in mUnspecified;
-      struct sockaddr_in6 mUnspecified6;
+#ifdef USE_IPV6
+	  struct sockaddr_in6 mUnspecified6;
+#endif
 
       friend class TestTransportSelector;
 };
