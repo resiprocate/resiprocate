@@ -37,13 +37,13 @@ class TransportSelector
       void addTransport( TransportType,
                          int port,
                          IpVersion version,
-                         const Data& ipInterface);
+                         const Data& ipInterface=Data::Empty);
       void addTlsTransport(const Data& domainName, 
                            const Data& keyDir,
                            const Data& privateKeyPassPhrase,
                            int port, 
                            IpVersion version,
-                           const Data& ipInterface);
+                           const Data& ipInterface=Data::Empty);
 
       DnsResult* dnsResolve(SipMessage* msg, DnsHandler* handler);
 
@@ -58,7 +58,7 @@ class TransportSelector
    private:
       Transport* findTransport(const Tuple& src);
       Transport* findTlsTransport(const Data& domain);
-      void srcAddrForDest(const Tuple& dest, Tuple& source) const;
+      Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
 
       bool mMultiThreaded;
       DnsInterface mDns;
