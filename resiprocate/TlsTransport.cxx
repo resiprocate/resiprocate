@@ -104,6 +104,7 @@ TlsTransport::~TlsTransport()
 void 
 TlsTransport::buildFdSet( FdSet& fdset)
 {
+#ifdef USE_SSL
    fdset.setRead(mFd);
 
    for (ConnectionMap::Map::iterator it = mConnectionMap.mConnections.begin();
@@ -114,13 +115,15 @@ TlsTransport::buildFdSet( FdSet& fdset)
       // !xx! TODO only should add this if there is data to write
       //fdset.setWrite(it->second->getSocket());
    }
+#endif
 }
 
 
 void 
 TlsTransport::processListen(FdSet& fdset)
 {
-   if (fdset.readyToRead(mFd))
+#ifdef USE_SSL
+	if (fdset.readyToRead(mFd))
    {
       struct sockaddr_in peer;
 		
@@ -150,13 +153,15 @@ TlsTransport::processListen(FdSet& fdset)
 
       DebugLog( << "Added server connection " << int(con) );
    }
+#endif
 }
 
 
 bool
 TlsTransport::processRead(Connection* c)
 {
-   std::pair<char* const, size_t> writePair = c->getWriteBuffer();
+ #ifdef USE_SSL
+	std::pair<char* const, size_t> writePair = c->getWriteBuffer();
    size_t bytesToRead = writePair.second;
    if ( bytesToRead > TlsTransport::MaxReadSize)
    {
@@ -183,13 +188,17 @@ TlsTransport::processRead(Connection* c)
       InfoLog (<< "TlsTransport::processRead failed due to bad message " << *c );
       return false;
    }
+#else
+	return false;
+#endif
 }
 
 
 void
 TlsTransport::processAllReads(FdSet& fdset)
 {
-   if (!mConnectionMap.mConnections.empty())
+#ifdef USE_SSL
+	if (!mConnectionMap.mConnections.empty())
    {
       for (Connection* c = mConnectionMap.mPostOldest.mYounger;
            c != &mConnectionMap.mPreYoungest; c = c->mYounger)
@@ -213,12 +222,14 @@ TlsTransport::processAllReads(FdSet& fdset)
          }
       }
    }
+#endif
 }
 
 
 void
 TlsTransport::processAllWrites( FdSet& fdset )
 {
+	#ifdef USE_SSL	
    if (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
@@ -293,12 +304,14 @@ TlsTransport::processAllWrites( FdSet& fdset )
    }
 
    sendFromRoundRobin(fdset);
+#endif
 }         
 
 
 void
 TlsTransport::sendFromRoundRobin(FdSet& fdset)
 {
+	#ifdef USE_SSL
    if (!mSendRoundRobin.empty())
    {
       ConnectionList::iterator rrPos = mSendPos;
@@ -338,12 +351,14 @@ TlsTransport::sendFromRoundRobin(FdSet& fdset)
          }
       } while(mSendPos != rrPos && !mSendRoundRobin.empty());
    }
+#endif
 }
 
 
 bool
 TlsTransport::processWrite(Connection* c)
 {
+	#ifdef USE_SSL
    assert(c);
    
    assert(!c->mOutstandingSends.empty());
@@ -383,6 +398,7 @@ TlsTransport::processWrite(Connection* c)
       delete data;
    }
    mConnectionMap.touch(c);
+#endif
    return true;
 }
 
@@ -390,7 +406,8 @@ TlsTransport::processWrite(Connection* c)
 void 
 TlsTransport::process(FdSet& fdSet)
 {
-   if ( mTxFifo.messageAvailable() ) 
+ #ifdef USE_SSL
+	if ( mTxFifo.messageAvailable() ) 
    {
       DebugLog(<<"TLSTransport mTxFifo:size: " << mTxFifo.size());
    }
@@ -398,6 +415,7 @@ TlsTransport::process(FdSet& fdSet)
    processListen(fdSet);
    processAllReads(fdSet);
    //DebugLog(<< "Finished TlsTransport::process");
+#endif
 }
 
 
