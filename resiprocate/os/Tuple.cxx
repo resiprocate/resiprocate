@@ -182,10 +182,12 @@ Tuple::isAnyInterface() const
    {
       return m_anonv4.sin_addr.s_addr == htonl(INADDR_ANY); 
    }
+#if defined (USE_IPV6)
    else
    {
       return memcmp(&m_anonv6.sin6_addr, &in6addr_any, sizeof(in6_addr)) == 0;
    }
+#endif
 }
 
 bool 
