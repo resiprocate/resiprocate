@@ -119,7 +119,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
    if (timeout.type() == DumTimeout::Retransmit200 && (mState == Accepting || mState == AcceptingReInvite ))
    {
       mDum.send(mFinalResponse);      
-      mDum.addTimer(DumTimeout::Retransmit200, resipMin(T2, mCurrentRetransmit200*2), getBaseHandle(),  0);
+      mDum.addTimerMs(DumTimeout::Retransmit200, resipMin(T2, mCurrentRetransmit200*2), getBaseHandle(),  0);
    }
    else if (timeout.type() == DumTimeout::WaitForAck && mState != Connected)
    {
@@ -281,7 +281,7 @@ InviteSession::end()
          mDialog.makeRequest(mLastRequest, BYE);
          //new transaction
          assert(mLastRequest.header(h_Vias).size() == 1);
-         mLastRequest.header(h_Vias).front().param(p_branch).reset();
+//         mLastRequest.header(h_Vias).front().param(p_branch).reset();
          mState = Terminated;
          return mLastRequest;
          break;
@@ -383,8 +383,8 @@ InviteSession::send(SipMessage& msg)
       {
          assert(&msg == &mFinalResponse);
          mCurrentRetransmit200 = T1;         
-         mDum.addTimer(DumTimeout::Retransmit200, mCurrentRetransmit200, getBaseHandle(),  0);
-         mDum.addTimer(DumTimeout::WaitForAck, TimerH, getBaseHandle(),  0);
+         mDum.addTimerMs(DumTimeout::Retransmit200, mCurrentRetransmit200, getBaseHandle(),  0);
+         mDum.addTimerMs(DumTimeout::WaitForAck, TimerH, getBaseHandle(),  0);
             
          //!dcm! -- this should be mFinalResponse...maybe assign here in
          //case the user wants to be very strange
@@ -527,7 +527,7 @@ InviteSession::ackConnection()
    makeAck();
    //new transaction
    assert(mAck.header(h_Vias).size() == 1);
-   mAck.header(h_Vias).front().param(p_branch).reset();
+//   mAck.header(h_Vias).front().param(p_branch).reset();
    return mAck;
 }
 
