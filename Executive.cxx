@@ -5,6 +5,7 @@
 #include "resiprocate/Executive.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/TransactionState.hxx"
+#include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
