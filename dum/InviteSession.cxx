@@ -319,6 +319,14 @@ InviteSession::dispatch(const SipMessage& msg)
                   //handled in Dialog
                   assert(0);                  
                   break;
+
+			   case CANCEL:
+				  // A Cancel can get received in an established dialog if it crosses with our 200 response 
+				  // on the wire - it should be responsed to, but should not effect the dialog state (InviteSession).  
+				  // RFC3261 Section 9.2
+                  mDialog.makeResponse(mLastResponse, msg, 200);
+                  send(mLastResponse);
+				  break;
                   
                default:
                   InfoLog (<< "Ignoring request in an INVITE dialog: " << msg.brief());
