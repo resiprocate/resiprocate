@@ -20,7 +20,7 @@
 
 // unconditionally output to cerr -- easily change back and forth
 #define CerrLog(args_)                                                          \
-  resip::Log::tags(resip::Log::OUT, RESIPROCATE_SUBSYSTEM, std::cerr)           \
+  resip::Log::tags(resip::Log::STDERR, RESIPROCATE_SUBSYSTEM, std::cerr)           \
           << __FILE__ << ':' << __LINE__ << DELIM                               \
           args_ << std::endl;
 
