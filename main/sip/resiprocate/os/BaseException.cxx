@@ -1,6 +1,5 @@
 static const char* const BaseException_cxx_Version =
-    "$Id: BaseException.cxx,v 1.2 2003/01/20 02:40:31 fluffy Exp $";
-
+    "$Id: BaseException.cxx,v 1.3 2003/03/17 17:49:51 davidb Exp $";
 
 #include "sip2/util/BaseException.hxx"
 #include "sip2/util/Logger.hxx"
@@ -9,7 +8,6 @@ using namespace Vocal2;
 using namespace std;
 
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::NONE
-
 
 BaseException::BaseException( const Data& msg,
                         const Data& file,
@@ -21,27 +19,14 @@ BaseException::BaseException( const Data& msg,
    DebugLog(<< "BaseException at " << file << ":" << line << " " << message);
 }
 
-
-BaseException::~BaseException()
-    throw()
-{
-}
-
+BaseException::~BaseException() throw()
+{}
 
 ostream& Vocal2::operator<<(ostream& strm, const BaseException& e)
 {
    strm << e.name() << " " << e.message << " @ " << e.fileName << ":" << e.lineNumber;
    return strm;
 }
-
-
-const char* 
-BaseException::name() const
-{
-	assert(0);
-	return "Unkown BaseException";
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
