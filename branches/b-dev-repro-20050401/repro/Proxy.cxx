@@ -29,12 +29,6 @@ Proxy::~Proxy()
    join();
 }
 
-bool 
-Proxy::isForMe(const SipMessage& msg) const
-{
-   return true;
-}
-
 bool
 Proxy::isShutDown() const
 {
