@@ -51,6 +51,13 @@ InviteSession::~InviteSession()
    mDialog.mInviteSession = 0;
 }
 
+void 
+InviteSession::dialogDestroyed(const SipMessage& msg)
+{
+   // !jf! Is this correct? Merged from main...
+   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);   
+   delete this;   
+}
 
 const SdpContents&
 InviteSession::getLocalSdp() const
