@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <util/RandomHex.hxx>
+#include <cstdlib>
 
 
 #ifndef USE_OPENSSL
@@ -29,7 +30,12 @@ RandomHex::initialize()
 #if ( USE_OPENSSL == 0 )
    // TODO FIX 
    unsigned int seed = 1;
+#ifdef WIN32
+   srand(seed);
+#else
    srandom(seed);
+#endif
+
 #else
     assert(RAND_status() == 1);
 #endif
@@ -41,7 +47,11 @@ RandomHex::get(unsigned int len)
 #if ( USE_OPENSSL == 0 )
    assert( len <= 16 );
    unsigned char buffer[16];
+#ifdef WIN32
+   int ret = rand();
+#else
    int ret = random();
+#endif
    assert( sizeof(buffer) >= sizeof(ret) );
    memcpy(buffer,&ret,sizeof(ret) );
    return convertToHex(buffer, len);
