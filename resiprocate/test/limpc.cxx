@@ -489,6 +489,9 @@ myMain(int argc, char* argv[])
    bool useTls = true;
    bool noTls = false;
    bool noTcp = false;
+   bool prefUdp = false;
+   bool prefTls = false;
+   bool prefTcp = false;
    bool noUdp = false;
    bool noV6 = false;
    bool noV4 = false;
@@ -534,6 +537,18 @@ myMain(int argc, char* argv[])
       else if (!strcmp(argv[i],"-noUdp"))
       {
          noUdp = true;
+      }
+      else if (!strcmp(argv[i],"-prefTcp"))
+      {
+         prefTcp = true;
+      }
+      else if (!strcmp(argv[i],"-prefTls"))
+      {
+         prefTls = true;
+      }
+      else if (!strcmp(argv[i],"-prefUdp"))
+      {
+         prefUdp = true;
       }
       else if (!strcmp(argv[i],"-noV6"))
       {
@@ -624,9 +639,12 @@ myMain(int argc, char* argv[])
               << " -vv is very verbose" << endl
               << " -noV6 don't use IPv6" << endl
               << " -noV4 don't use IPv4" << endl
-              << " -noUdp don't use TCP" << endl
+              << " -noUdp don't use UDP" << endl
               << " -noTcp don't use TCP" << endl
               << " -noTls don't use TLS" << endl
+              << " -prefUdp prefer UDP" << endl
+              << " -prefTcp prefer TCP" << endl
+              << " -prefTls prefer TLS" << endl
               << " -port sets the UDP and TCP port to listen on" << endl
               << " -tlsPort sets the port to listen for TLS on" << endl
               << " -tlsServer - sets to act as tls server instead of  client" << endl
@@ -746,14 +764,28 @@ myMain(int argc, char* argv[])
    TestCallback callback;
    tuIM = new TuIM(&sipStack,aor,contact,&callback);
 
-   Data name("SIPimp.org/0.2.2 (curses)");
+   Data name("SIPimp.org/0.2.3 (curses)");
    tuIM->setUAName( name );
       
    if ( !outbound.host().empty() )
    {
       tuIM->setOutboundProxy( outbound );
    }
-   
+
+   // setup prefered outbound transport 
+   if ( prefUdp )
+   {
+      tuIM->setDefaultProtocol( UDP );
+   }
+   if ( prefTcp )
+   {
+      tuIM->setDefaultProtocol( TCP );
+   }
+   if ( prefTls )
+   {
+      tuIM->setDefaultProtocol( TLS );
+   }
+
    if ( haveAor )
    {
       if ( !noRegister )
