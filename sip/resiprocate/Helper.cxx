@@ -70,7 +70,7 @@ Helper::makeMessage(const Data& data, bool isExternal )
    {
        assert(used == discard);
        // no pp error
-       if (status & stHeadersComplete) &&
+       if (status & stHeadersComplete &&
            used < size)
       {
          // body is present .. add it up.
@@ -80,7 +80,7 @@ Helper::makeMessage(const Data& data, bool isExternal )
          // it doesn't need a new buffer in UDP b/c there
          // will only be one datagram per buffer. (1:1 strict)
          DebugLog(<< "setting body");
-         msg->setContents(buffer+used,size-used);
+         msg->setBody(buffer+used,size-used);
       }
    }
    return msg;
