@@ -2,85 +2,114 @@
 using namespace resip;
 
 
-class InvHandlerA : public InvSessionHandler
+class HandlerA : public InvSessionHandler, public RegistrationHandler
 {
 
-  public:
-    bool* pDone;
+   public:
+      bool* pDone;
 
-  InvHandlerA(bool* pDone) { this.pDone = pDone; }
+      InvHandlerA(bool* pDone) { this.pDone = pDone; }
 
-  // Put some onNewInvSessionStuff here
-  void 
-  onNewInvSession(ClientInviteSession::Handle cis, const SipMessage& msg)
-  {
-    cout << "A thinks there's a new INVITE session now" << endl;
-  }
+      // Put some onNewInvSessionStuff here
+      void 
+      onNewInvSession(ClientInviteSession::Handle cis, const SipMessage& msg)
+      {
+         cout << "A thinks there's a new INVITE session now" << endl;
+      }
 
-  void
-  onAnswer(ClientInviteSession::Handle cis, const SipMessage& msg)
-  {
-    cout << "A has an answer from B" << endl;
-  }
+      void
+      onAnswer(ClientInviteSession::Handle cis, const SipMessage& msg)
+      {
+         cout << "A has an answer from B" << endl;
+      }
 
-  void
-  onConnected(ClientInviteSession::Handle cis, const SipMessage& msg)
-  {
-    cout << "A thinks it's got a connected session" << endl;
-  }
+      void
+      onConnected(ClientInviteSession::Handle cis, const SipMessage& msg)
+      {
+         cout << "A thinks it's got a connected session" << endl;
+      }
 
-  onTerminated(InviteSession::Handle is, const SipMessage& msg)
-  {
-    cout << "A thinks a session has been terminated" << endl;
-  }
+      void
+      onTerminated(InviteSession::Handle is, const SipMessage& msg)
+      {
+         cout << "A thinks a session has been terminated" << endl;
+      }
+
+      void onSuccess(ClientRegistration::Handle, const SipMessage& response)
+      {
+      }
+      
+      void onFailure(ClientRegistration::Handle, const SipMessage& response)
+      {
+      }
 
 
 };
 
-class InvHandlerB : public InvSessionHandler
+class HandlerB : public InvSessionHandler, public RegistrationHandler
 {
 
-  public:
-    bool* pDone;
-    time_t* pHangupAt;
+   public:
+      bool* pDone;
+      time_t* pHangupAt;
 
-  InvHandlerB(bool* pDone, time_t* pHangupAt) 
-    { this.pDone = pDone; this.pHangupAt = pHangupAt;}
+      InvHandlerB(bool* pDone, time_t* pHangupAt) 
+      { this.pDone = pDone; this.pHangupAt = pHangupAt;}
 
-  void
-  onNewInvSession(ServerInviteSession::Handle sis, const SipMessage& msg)
-  {
-    cout << "B thinks there's a new INVITE session now" << endl;
-    mSis = sis;
-  }
+      void
+      onNewInvSession(ServerInviteSession::Handle sis, const SipMessage& msg)
+      {
+         cout << "B thinks there's a new INVITE session now" << endl;
+         mSis = sis;
+      }
 
-  void
-  onOffer(ServerInviteSession::Handle sis, const SipMessage& msg )
-  {
-    cout <<  "B got an offer from A and is trying to accept it" << endl;
-    sis->setAnswer(new SdpContents());
-    sis->accept();
-    pHangupAt = time(NULL)+5;
-  }
+      void
+      onOffer(ServerInviteSession::Handle sis, const SipMessage& msg )
+      {
+         cout <<  "B got an offer from A and is trying to accept it" << endl;
+         sis->setAnswer(new SdpContents());
+         sis->accept();
+         pHangupAt = time(NULL)+5;
+      }
 
-  onTerminated(InviteSession::Handle is, const SipMessage& msg)
-  {
-    cout << "B thinks a session has been terminated" << endl;
-  }
+      onTerminated(InviteSession::Handle is, const SipMessage& msg)
+      {
+         cout << "B thinks a session has been terminated" << endl;
+      }
 
-  // Normal people wouldn't put this functionality in the handler
-  // it's a kludge for this test for right now
-  void hangup()
-  {
-    if (mSis)
-    {
-      cout << "B is hanging up" << endl;
-      mSiS->end();
-    }
-  }
+      // Normal people wouldn't put this functionality in the handler
+      // it's a kludge for this test for right now
+      void hangup()
+      {
+         if (mSis)
+         {
+            cout << "B is hanging up" << endl;
+            mSiS->end();
+         }
+      }
 
-  private:
-   ServerInviteSession::Handle mSis = NULL;
+      void onRefresh(ServerRegistration::Handle, const SipMessage& reg)
+      {
+      }
+
+      void onRemoveOne(ServerRegistration::Handle, const SipMessage& reg)
+      {
+      }
+      
+      void onRemoveAll(ServerRegistration::Handle, const SipMessage& reg)
+      {
+      }
+      
+      void onAdd(ServerRegistration::Handle, const SipMessage& reg)
+      {
+      }
+      
+      void onExpired(ServerRegistration::Handle, const NameAddr& contact)
+      {
+      }
+
+   private:
+      ServerInviteSession::Handle mSis = NULL;
 
 };
 
@@ -92,8 +121,9 @@ main (int argc, char** argv)
    stackA.addTransport(UDP, 5060);
    DialogUsageManager dumA(stackA);
    bool aIsDone = false;
-   InvHandlerA handlerA(&aIsDone);
-   dumA.setHandler(handlerA);
+   HandlerA handlerA(&aIsDone);
+   dumA.setClientRegistrationHandler(handlerA);
+   dumA.setInviteSessionHandler(handlerA);
 
 
    SipStack stackB;
@@ -101,8 +131,9 @@ main (int argc, char** argv)
    DialogUsageManager dumB(stackB);
    bool bIsDone= false;
    time_t bHangupAt = 0;
-   InvHandlerB handlerB(&bIsDone, &bHangupAt);
-   dumB.setHandler(handlerB);
+   HandlerB handlerB(&bIsDone, &bHangupAt);
+   dumB.setClientRegistrationHandler(handlerB);
+   dumB.setInviteSessionHandler(handlerB);
 
    cout << " Trying to send an INVITE from A to B" << endl;
 
