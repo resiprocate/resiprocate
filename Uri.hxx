@@ -31,6 +31,8 @@ class Uri : public ParserCategory
 
       Uri& operator=(const Uri& rhs);
       bool operator==(const Uri& other) const;
+      bool Uri::operator!=(const Uri& other) const;
+
       bool operator<(const Uri& other) const;
       
    protected:

@@ -62,10 +62,11 @@ main(int arc, char** argv)
 
    {
       cerr << "URI parse" << endl;
-      char *uriString = "sip:bob@foo.com";
-      ParseBuffer pb(uriString, strlen(uriString));
-      Uri uri;
-      uri.parse(pb);
+      Data uriString = "sip:bob@foo.com";
+      ParseBuffer pb(uriString.data(), uriString.size());
+      NameAddr to;
+      to.parse(pb);
+      Uri& uri = to.uri();
       assert(uri.scheme() == "sip");
       assert(uri.user() == "bob");
       assert(uri.host() == "foo.com");
@@ -74,10 +75,11 @@ main(int arc, char** argv)
 
    {
       cerr << "URI parse, no displayName" << endl;
-      char *uriString = "sips:foo.com";
-      ParseBuffer pb(uriString, strlen(uriString));
-      Uri uri;
-      uri.parse(pb);
+      Data uriString = "sips:foo.com";
+      ParseBuffer pb(uriString.data(), uriString.size());
+      NameAddr to;
+      to.parse(pb);
+      Uri& uri = to.uri();
       assert(uri.scheme() == "sips");
       assert(uri.user() == "");
       assert(uri.host() == "foo.com");
@@ -86,10 +88,12 @@ main(int arc, char** argv)
 
    {
       cerr << "URI parse, parameters" << endl;
-      char *uriString = "sips:bob;param=gargle:password@foo.com";
-      ParseBuffer pb(uriString, strlen(uriString));
-      Uri uri;
-      uri.parse(pb);
+      Data uriString = "sips:bob;param=gargle:password@foo.com";
+      ParseBuffer pb(uriString.data(), uriString.size());
+      NameAddr to;
+      to.parse(pb);
+      Uri& uri = to.uri();
+
       assert(uri.scheme() == "sips");
       assert(uri.user() == "bob;param=gargle");
       assert(uri.password() == "password");
@@ -98,10 +102,13 @@ main(int arc, char** argv)
 
    {
       cerr << "URI parse, parameters, port" << endl;
-      char *uriString = "sips:bob;param=gargle:password@foo.com:6000";
-      ParseBuffer pb(uriString, strlen(uriString));
-      Uri uri;
-      uri.parse(pb);
+      Data uriString = "sips:bob;param=gargle:password@foo.com:6000";
+      ParseBuffer pb(uriString.data(), uriString.size());
+
+      NameAddr to;
+      to.parse(pb);
+      Uri& uri = to.uri();
+
       assert(uri.scheme() == "sips");
       assert(uri.user() == "bob;param=gargle");
       assert(uri.password() == "password");
@@ -111,10 +118,13 @@ main(int arc, char** argv)
 
    {
       cerr << "URI parse, parameters, correct termination check" << endl;
-      char *uriString = "sips:bob;param=gargle:password@foo.com notHost";
-      ParseBuffer pb(uriString, strlen(uriString));
-      Uri uri;
-      uri.parse(pb);
+      Data uriString = "sips:bob;param=gargle:password@foo.com notHost";
+      ParseBuffer pb(uriString.data(), uriString.size());
+
+      NameAddr to;
+      to.parse(pb);
+      Uri& uri = to.uri();
+
       assert(uri.scheme() == "sips");
       assert(uri.user() == "bob;param=gargle");
       assert(uri.password() == "password");
@@ -123,9 +133,144 @@ main(int arc, char** argv)
    }
 
    {
+      cerr << "URI parse, transport parameter" << endl;
+      Data uriString = "sip:bob@biloxi.com;transport=udp";
+      ParseBuffer pb(uriString.data(), uriString.size());
+
+      NameAddr to;
+      to.parse(pb);
+      Uri& uri = to.uri();
+
+      assert(uri.param(p_transport) == "udp");
+   }
+   
+   cerr << "URI comparison tests" << endl;
+   {
+      Data uriStringA("sip:carol@chicago.com");
+      Data uriStringB("sip:carol@chicago.com;newparam=5");
+      Data uriStringC("sip:carol@chicago.com;security=on");
+      ParseBuffer pa(uriStringA.data(), uriStringA.size());
+      ParseBuffer pb(uriStringB.data(), uriStringB.size());
+      ParseBuffer pc(uriStringC.data(), uriStringC.size());
+      NameAddr nA, nB, nC;
+
+      nA.parse(pa);
+      nB.parse(pb);
+      nC.parse(pc);
+      
+      Uri& uA = nA.uri();
+      Uri& uB = nB.uri();
+      Uri& uC = nC.uri();
+      
+      assert(uA == uB);
+      assert(uB == uC);
+      assert(uA == uC);
+   }
+   {
+      Data uriStringA = "sip:biloxi.com;transport=tcp;method=REGISTER";
+      Data uriStringB = "sip:biloxi.com;method=REGISTER;transport=tcp";
+
+      ParseBuffer pa(uriStringA.data(), uriStringA.size());
+      ParseBuffer pb(uriStringB.data(), uriStringB.size());
+
+      NameAddr nA, nB;
+      nA.parse(pa);
+      nB.parse(pb);
+      
+      Uri& uA = nA.uri();
+      Uri& uB = nB.uri();
+
+      assert(uA == uB);
+   }
+   {
+      Data uriStringA = "sip:alice@atlanta.com";
+      Data uriStringB = "sip:alice@atlanta.com";
+
+      ParseBuffer pa(uriStringA.data(), uriStringA.size());
+      ParseBuffer pb(uriStringB.data(), uriStringB.size());
+
+      NameAddr nA, nB;
+      nA.parse(pa);
+      nB.parse(pb);
+      Uri& uA = nA.uri();
+      Uri& uB = nB.uri();
+
+      assert(uA == uB);
+   }
+   {
+      Data uriStringA = "sip:alice@AtLanTa.CoM;Transport=UDP";
+      Data uriStringB = "SIP:ALICE@AtLanTa.CoM;Transport=udp";
+
+      ParseBuffer pa(uriStringA.data(), uriStringA.size());
+      ParseBuffer pb(uriStringB.data(), uriStringB.size());
+
+      NameAddr nA, nB;
+      nA.parse(pa);
+      nB.parse(pb);
+      Uri& uA = nA.uri();
+      Uri& uB = nB.uri();      
+
+      assert(uA != uB);
+   }
+   {
+      Data uriStringA = "sip:bob@192.0.2.4";
+      Data uriStringB = "sip:bob@phone21.boxesbybob.com";
+
+      ParseBuffer pa(uriStringA.data(), uriStringA.size());
+      ParseBuffer pb(uriStringB.data(), uriStringB.size());
+      NameAddr nA, nB;
+      nA.parse(pa);
+      nB.parse(pb);
+      Uri& uA = nA.uri();
+      Uri& uB = nB.uri();
+      assert(uA != uB);
+   }
+   {
+      Data uriStringA = "sip:bob@biloxi.com:6000;transport=tcp";
+      Data uriStringB = "sip:bob@biloxi.com";
+
+      ParseBuffer pa(uriStringA.data(), uriStringA.size());
+      ParseBuffer pb(uriStringB.data(), uriStringB.size());
+      NameAddr nA, nB;
+      nA.parse(pa);
+      nB.parse(pb);
+      Uri& uA = nA.uri();
+      Uri& uB = nB.uri();
+      assert(uA != uB);
+   }
+   {
+      Data uriStringA = "sip:bob@biloxi.com;transport=udp";
+      Data uriStringB = "sip:bob@biloxi.com";
+
+      ParseBuffer pa(uriStringA.data(), uriStringA.size());
+      ParseBuffer pb(uriStringB.data(), uriStringB.size());
+      NameAddr nA, nB;
+      nA.parse(pa);
+      nB.parse(pb);
+      Uri& uA = nA.uri();
+      Uri& uB = nB.uri();
+      cerr << "A: " << uA << endl;
+      cerr << "B: " << uB << endl;
+      cerr << "A:exists(transport) " << uA.exists(p_transport) << endl;
+      assert(uA != uB);
+   }
+
+   { //embedded header comparison, not supported yet
+//      char *uriStringA = "sip:carol@chicago.com?Subject=next%20meeting";
+//      char *uriStringB = "sip:carol@chicago.com";
+
+//      ParseBuffer pa(uriStringA, strlen(uriStringA));
+//      ParseBuffer pb(uriStringB, strlen(uriStringB));
+//      Uri uA, uB;
+//      uA.parse(uriStringA);
+//      uB.parse(uriStringB);
+//      assert(uA != uB);
+   }
+
+   {
       cerr << "Request Line parse" << endl;
-      char *requestLineString = "INVITE sips:bob@foo.com SIP/2.0";
-      HeaderFieldValue hfv(requestLineString, strlen(requestLineString));
+      Data requestLineString("INVITE sips:bob@foo.com SIP/2.0");
+      HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
 
       RequestLine requestLine(&hfv);
       assert(requestLine.uri().scheme() == "sips");
@@ -137,8 +282,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "Request Line parse, parameters" << endl;
-      char *requestLineString = "INVITE sips:bob@foo.com;maddr=1.2.3.4 SIP/2.0";
-      HeaderFieldValue hfv(requestLineString, strlen(requestLineString));
+      Data requestLineString("INVITE sips:bob@foo.com;maddr=1.2.3.4 SIP/2.0");
+      HeaderFieldValue hfv(requestLineString.data(), requestLineString.size());
 
       RequestLine requestLine(&hfv);
       assert(requestLine.uri().scheme() == "sips");
@@ -152,8 +297,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "NameAddr parse" << endl;
-      char *nameAddrString = "sips:bob@foo.com";
-      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+      Data nameAddrString("sips:bob@foo.com");
+      HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv);
       assert(nameAddr.uri().scheme() == "sips");
@@ -162,8 +307,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "NameAddr parse, displayName" << endl;
-      char *nameAddrString = "Bob<sips:bob@foo.com>";
-      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+      Data nameAddrString("Bob<sips:bob@foo.com>");
+      HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv);
       assert(nameAddr.displayName() == "Bob");
@@ -173,8 +318,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "NameAddr parse, quoted displayname" << endl;
-      char *nameAddrString = "\"Bob\"<sips:bob@foo.com>";
-      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+      Data nameAddrString = "\"Bob\"<sips:bob@foo.com>";
+      HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv);
       assert(nameAddr.displayName() == "\"Bob\"");
@@ -184,8 +329,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "NameAddr parse, quoted displayname, embedded quotes" << endl;
-      char *nameAddrString = "\"Bob   \\\" asd   \"<sips:bob@foo.com>";
-      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+      Data nameAddrString("\"Bob   \\\" asd   \"<sips:bob@foo.com>");
+      HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv);
       assert(nameAddr.displayName() == "\"Bob   \\\" asd   \"");
@@ -195,8 +340,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "NameAddr parse, unquoted displayname, paramterMove" << endl;
-      char *nameAddrString = "Bob<sips:bob@foo.com>;tag=456248;mobility=hobble";
-      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+      Data nameAddrString("Bob<sips:bob@foo.com>;tag=456248;mobility=hobble");
+      HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv);
       assert(nameAddr.displayName() == "Bob");
@@ -217,8 +362,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "NameAddr parse, quoted displayname, parameterMove" << endl;
-      char *nameAddrString = "\"Bob\"<sips:bob@foo.com>;tag=456248;mobility=hobble";
-      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+      Data nameAddrString("\"Bob\"<sips:bob@foo.com>;tag=456248;mobility=hobble");
+      HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv);
       assert(nameAddr.displayName() == "\"Bob\"");
@@ -240,8 +385,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "NameAddr parse, unquoted displayname, paramterMove" << endl;
-      char *nameAddrString = "Bob<sips:bob@foo.com;tag=456248;mobility=hobble>";
-      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+      Data nameAddrString("Bob<sips:bob@foo.com;tag=456248;mobility=hobble>");
+      HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv);
       assert(nameAddr.displayName() == "Bob");
@@ -262,8 +407,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "NameAddr parse, unquoted displayname, paramterMove" << endl;
-      char *nameAddrString = "Bob<sips:bob@foo.com;mobility=\"hobb;le\";tag=\"true;false\">";
-      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+      Data nameAddrString("Bob<sips:bob@foo.com;mobility=\"hobb;le\";tag=\"true;false\">");
+      HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
 
       NameAddr nameAddr(&hfv);
       assert(nameAddr.displayName() == "Bob");
@@ -284,8 +429,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "NameAddr parse" << endl;
-      char *nameAddrString = "sip:101@localhost:5080;transport=UDP";
-      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+      Data nameAddrString("sip:101@localhost:5080;transport=UDP");
+      HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
       
       NameAddr nameAddr(&hfv);
       assert(nameAddr.displayName() == "");
@@ -294,8 +439,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "NameAddr parse, no user in uri" << endl;
-      char *nameAddrString = "sip:localhost:5070";
-      HeaderFieldValue hfv(nameAddrString, strlen(nameAddrString));
+      Data nameAddrString("sip:localhost:5070");
+      HeaderFieldValue hfv(nameAddrString.data(), nameAddrString.size());
       
       NameAddr nameAddr(&hfv);
       assert(nameAddr.displayName() == "");
@@ -306,8 +451,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "StatusLine, no reason code" << endl;
-      char *statusLineString = "SIP/2.0 100 ";
-      HeaderFieldValue hfv(statusLineString, strlen(statusLineString));
+      Data statusLineString("SIP/2.0 100 ");
+      HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
       
       StatusLine statusLine(&hfv);
       assert(statusLine.responseCode() == 100);
@@ -316,8 +461,8 @@ main(int arc, char** argv)
    }
    {
       cerr << "StatusLine, no reason code" << endl;
-      char *statusLineString = "SIP/2.0 100";
-      HeaderFieldValue hfv(statusLineString, strlen(statusLineString));
+      Data statusLineString("SIP/2.0 100");
+      HeaderFieldValue hfv(statusLineString.data(), statusLineString.size());
       
       StatusLine statusLine(&hfv);
       assert(statusLine.responseCode() == 100);
