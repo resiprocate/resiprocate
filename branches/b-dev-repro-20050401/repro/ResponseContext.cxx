@@ -23,7 +23,7 @@ ResponseContext::ResponseContext(RequestContext& context) :
    mRequestContext(context),
    mForwardedFinalResponse(false),
    mBestPriority(50),
-   mSecure(context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
+   mSecure(false) //context.getOriginalRequest().header(h_RequestLine).uri().scheme() == Symbols::Sips)
 {
 }
 
@@ -32,6 +32,8 @@ ResponseContext::sendRequest(const resip::SipMessage& request)
 {
    assert (request.isRequest());
    mRequestContext.mProxy.send(request);
+   mRequestContext.getProxy().addClientTransaction(request.getTransactionId(), &mRequestContext);
+   mRequestContext.mTransactionCount++;
 }
 
 void
@@ -55,7 +57,6 @@ ResponseContext::processCandidates()
             pending.param(p_q) = candidate.param(p_q);
          
             mPendingTargetSet.insert(pending);
-            mRequestContext.getCandidates().pop_back();
          }
       }
       mRequestContext.getCandidates().pop_back();
@@ -486,7 +487,7 @@ repro::operator<<(std::ostream& strm, const ResponseContext& rc)
         << " best=" << rc.mBestPriority << " " << rc.mBestResponse.brief()
         << " forwarded=" << rc.mForwardedFinalResponse
         << " pending=" << Inserter(rc.mPendingTargetSet);
-      //<< " targets=" << Inserter(rc.mTargetSet);
+   //<< " targets=" << Inserter(rc.mTargetSet);
    //<< " clients=" << Inserter(rc.mClientTransactions);
 
    return strm;
