@@ -4,6 +4,8 @@
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/dum/InMemoryRegistrationDatabase.hxx"
+#include "resiprocate/dum/MasterProfile.hxx"
 
 namespace repro
 {
@@ -11,7 +13,8 @@ namespace repro
 class Registrar: public resip::ServerRegistrationHandler, public resip::ThreadIf
 {
    public:
-      Registrar(const SipStack& stack, InMemoryRegistrationDatabase& db);
+      Registrar(const resip::SipStack& stack, 
+                resip::InMemoryRegistrationDatabase& db);
       virtual ~Registrar();
       virtual void thread();
       
@@ -31,9 +34,9 @@ class Registrar: public resip::ServerRegistrationHandler, public resip::ThreadIf
                            const resip::SipMessage& reg);
 
    private:
-      DialogUsageManager mDum;
-      MasterProfile mProfile;
-      InMemoryRegistrationDatabase& mDb;
+      resip::DialogUsageManager mDum;
+      resip::MasterProfile mProfile;
+      resip::InMemoryRegistrationDatabase& mDb;
 };
 }
 #endif

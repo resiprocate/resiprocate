@@ -10,6 +10,8 @@
 #include "repro/monkeys/RouteProcessor.hxx"
 #include "repro/monkeys/DigestAuthenticator.hxx"
 #include "repro/monkeys/LocationServer.hxx"
+#include "repro/UserDb.hxx"
+#include "repro/Registrar.hxx"
 
 
 
@@ -37,27 +39,28 @@ main(int argc, char** argv)
    /* Initialize a proxy */
    RequestProcessorChain requestProcessors;
 
-   RouteProcessor rp;
-   requestProcessors.addProcessor(rp);
+   RouteProcessor* rp = new RouteProcessor();
+   requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(rp));
 
-   DigestAuthenticator da;
-   requestProcessors.addProcessor(rp); 
+   DigestAuthenticator* da = new DigestAuthenticator();
+   requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(da)); 
    
-   LocationServer ls(regData);
-   requestProcessors.addProcessor(rp);
+   LocationServer* ls = new LocationServer(regData);
+   requestProcessors.addProcessor(std::auto_ptr<RequestProcessor>(ls));
 
-   Proxy proxy(stack, requestProcessors);
+   UserDB userDB;
+   Proxy proxy(stack, requestProcessors, userDB);
 
    /* Initialize a registrar */
    Registrar registrar(stack, regData);
 
    /* Make it all go */
-   stack.run();
+   stackThread.run();
    proxy.run();
    registrar.run();
    registrar.join();
    proxy.join();
-   stack.join();
+   stackThread.join();
    
    // shutdown the stack now...
 }
