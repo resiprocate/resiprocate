@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include <vector>
+#include <set>
 #include "resiprocate/HeaderTypes.hxx"
 #include "resiprocate/LazyParser.hxx"
 #include "resiprocate/ParameterTypes.hxx"
@@ -50,6 +51,13 @@ class ParserCategory : public LazyParser
 
       void remove(const UnknownParameterType& param); 
       bool exists(const UnknownParameterType& param) const;
+
+      typedef std::set<ParameterTypes::Type> ParameterTypeSet;      
+      
+      static const ParameterTypeSet EmptyParameterTypeSet;      
+
+      //doesn't remove unknown parameters
+      void removeParametersExcept(const ParameterTypeSet& set = EmptyParameterTypeSet);
 
       class Exception : public BaseException
       {

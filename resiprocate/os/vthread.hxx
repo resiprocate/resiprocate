@@ -5,10 +5,6 @@
 #error this should not be used in win32 
 #endif
 
-static const char* const resip_vthread_h_Version =
-   "$Id: vthread.hxx,v 1.5 2003/06/02 20:52:32 ryker Exp $";
-
-
 #include <pthread.h>
 
 

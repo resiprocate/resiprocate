@@ -1,10 +1,6 @@
 #if !defined(RESIP_LOCK_HXX)
 #define RESIP_LOCK_HXX  
 
-static const char* const resipLock_hxx_Version =
-   "$Id: Lock.hxx,v 1.11 2003/06/02 20:52:32 ryker Exp $";
-
-
 #include "resiprocate/os/Lockable.hxx"
 
 namespace resip
