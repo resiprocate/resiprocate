@@ -1,75 +1,42 @@
-#include "resiprocate/dum/BaseSubscription.hxx"
-#include "resiprocate/dum/DialogUsageManager.hxx"
-#include "resiprocate/dum/Dialog.hxx"
-#include "resiprocate/SipMessage.hxx"
+#if !defined(RESIP_DESTORYUSAGE_HXX)
+#define RESIP_DESTORYUSAGE_HXX 
 
-using namespace resip;
+#include <iosfwd>
+#include "resiprocate/ApplicationMessage.hxx"
+#include "resiprocate/dum/Handles.hxx"
 
-BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request) :
-   DialogUsage(dum, dialog),
-   mState(Initial),
-   mLastRequest(request),
-   mDocumentKey(request.header(h_RequestLine).uri().getAor()),
-   mSubscriptionId(Data::Empty),
-   mTimerSeq(0),
-   mSubscriptionState(Invalid)
-   
+namespace resip
 {
-   if (request.header(h_RequestLine).method() == REFER) 
-   {
-      mEventType = "refer";
-   }
-   else if (request.header(h_RequestLine).method() == NOTIFY)  // ClientSubscriptions for Refer are created with the first Notify
-   {
-      mEventType = "refer";
-	  mLastRequest.releaseContents();  // Remove the SipFrag - so that reSubscribes do not contain SipFrag
-   }
-   else
-   {
-      mEventType = request.header(h_Event).value();
-   }
-   
-   if (request.exists(h_Event) && request.header(h_Event).exists(p_id))
-   {
-      mSubscriptionId = request.header(h_Event).param(p_id);
-   }
+
+class Dialog;
+class DialogSet;
+
+class DestroyUsage : public ApplicationMessage
+{
+   public:
+      DestroyUsage(BaseUsageHandle target);
+      DestroyUsage(Dialog* dialog);
+      DestroyUsage(DialogSet* dialogSet);
+      
+      ~DestroyUsage();
+
+      Message* clone() const;
+      void destroy();
+      
+      virtual Data brief() const;
+      virtual std::ostream& encode(std::ostream& strm) const;
+      
+   private:
+      DestroyUsage(const DestroyUsage& other);
+      
+      BaseUsageHandle mHandle;
+      DialogSet* mDialogSet;
+      Dialog* mDialog;
+};
 
 }
 
-bool
-BaseSubscription::matches(const SipMessage& msg)
-{
-   if (msg.isResponse() && msg.header(h_CSeq) == mLastRequest.header(h_CSeq))
-   {
-      return true;
-   }
-   else
-   {
-      if (msg.exists(h_Event))
-      {
-         return msg.header(h_Event).value() == mEventType 
-            && ( !msg.header(h_Event).exists(p_id) || 
-                 msg.header(h_Event).param(p_id) == mSubscriptionId);
-         
-      }
-      else
-      {
-         return mEventType == "refer";
-      }
-   }
-}
-
-
-BaseSubscription::~BaseSubscription()
-{
-}
-
-SubscriptionState 
-BaseSubscription::getSubscriptionState()
-{
-   return mSubscriptionState;
-}
-
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
