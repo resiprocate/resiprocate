@@ -1350,6 +1350,8 @@ NameAddr::operator=(const NameAddr& rhs)
 {
    if (this != &rhs)
    {
+      assert( &rhs != 0 );
+      
       ParserCategory::operator=(rhs);
       mAllContacts = rhs.mAllContacts;
       mDisplayName = rhs.mDisplayName;
