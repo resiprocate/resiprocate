@@ -1,10 +1,9 @@
-#if !defined(DIALOG2_HXX)
-#define DIALOG2_HXX
+#if !defined(RESIP_DIALOG2_HXX)
+#define RESIP_DIALOG2_HXX
 
 #include <list>
 
 #include "resiprocate/os/Data.hxx"
-
 #include "resiprocate/ParserCategories.hxx"
 
 
@@ -62,9 +61,7 @@ class Dialog2
  
 }
 
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -115,5 +112,3 @@ class Dialog2
  * <http://www.vovida.org/>.
  *
  */
-
-
