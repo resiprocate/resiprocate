@@ -22,9 +22,9 @@ DialogUsageManager::~DialogUsageManager()
    DebugLog ( << "~DialogUsageManager" );
    DebugLog ( << "UsageMap size: " << mUsageMap.size());
    DebugLog ( << Inserter(mUsageMap) );
-   for(UsageHandleMap::iterator it = mUsageMap.begin(); it != mUsageMap.end(); it++)
+   while (!mUsageMap.empty())
    {
-      delete it->second;
+      delete mUsageMap.begin()->second;
    }
 }
 
@@ -564,8 +564,11 @@ DialogUsageManager::isValid(const BaseUsage::Handle& handle)
 void
 DialogUsageManager::addUsage(BaseUsage* usage)
 {
+   DebugLog (<< "DialogUsageManager::addUsage " <<  usage->getBaseHandle().mId << " -> " << usage);
+   
    assert(mUsageMap.find(usage->getBaseHandle().mId) == mUsageMap.end());
    mUsageMap[usage->getBaseHandle().mId] = usage;
+   assert(mUsageMap.find(usage->getBaseHandle().mId) != mUsageMap.end());
 }
 
 BaseUsage* 
