@@ -1,5 +1,11 @@
 2003-08-08  Wensong Zhang  <wensong@purplecomm.com>
 
+	* Makefile.am (libresiprocate_la_SOURCES): added the
+	StatelessHandler.cxx.
+
+	* Makefile.am (resiprocate_include_HEADERS): added the
+	StatelessHandler.hxx.
+
 	* Makefile.am (resiprocate_includedir): added so that all the
 	header files can be installed into right places, such as
 	/usr/local/include/resiprocate/* or /usr/include/resiprocate/*.
