@@ -106,22 +106,6 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
    Contents* body = new PlainContents(text);
    
 #if USE_SSL
-   if ( sign )
-   {
-      Security* sec = mStack->security;
-      assert(sec);
-    
-      Contents* old = body;
-      body = sec->sign( body );
-      delete old;
-
-      if ( !body )
-      {
-          mCallback->sendPageFailed( dest, -1 );
-         return;
-      }
-   }
-   
    if ( !encryptFor.empty() )
    {
       Security* sec = mStack->security;
@@ -137,13 +121,32 @@ void TuIM::sendPage(const Data& text, const Uri& dest, bool sign, const Data& en
          return;
       }
    }
+
+   if ( sign )
+   {
+      Security* sec = mStack->security;
+      assert(sec);
+    
+      Contents* old = body;
+      body = sec->sign( body );
+      delete old;
+
+      if ( !body )
+      {
+          mCallback->sendPageFailed( dest, -1 );
+         return;
+      }
+   }
 #endif
 
    msg->setContents(body);
 
    setOutbound( *msg );
 
-   DebugLog( << "About to send " << *msg );
+#if 1
+   ErrLog( "About to send " << *msg );
+#endif
+
    mStack->send( *msg );
 
    delete body;
@@ -355,7 +358,8 @@ TuIM::processMessageRequest(SipMessage* msg)
       else
       {
          InfoLog ( << "Can not handle type " << contents->getType() );
-         assert(0);
+         Uri from = msg->header(h_From).uri();
+         mCallback->receivePageFailed( from );
       }
    }
 }
