@@ -35,6 +35,7 @@
 #include <netdb.h>
 #else
 #include <Winsock2.h>
+#include <iphlpapi.h>
 #include <io.h>
 #include <Windns.h>
 #endif
@@ -315,39 +316,65 @@ static int init_by_defaults(ares_channel channel)
   if (channel->nservers == -1)
     {
 #ifdef WIN32
-		int buf[1024];
-		DWORD size;
-		PWSTR adapter;
-		int i;
+   /*
+    * Way of getting nameservers that should work on all Windows from 98 on.
+    * To use, include IPHlpAPI.lib as a linker dependency.
+    */
+   FIXED_INFO * FixedInfo;
+   ULONG    ulOutBufLen;
+   DWORD    dwRetVal;
+   IP_ADDR_STRING * pIPAddr;
 		int num;
 
-		size = sizeof(buf);
-		adapter = 0;
+   //printf("ARES: figuring out DNS servers\n");
 
-		// The return values from DnsQueryConfig don't seem to be documented.
-		// For DnsConfigDnsServerList, it returns (in buf) an array of 4 byte integers
-		// The first one says how many ip addresses follow and can be ignored
-		// (Using the 'size' parameter to determine number of results seems safer.)
-		DnsQueryConfig(DnsConfigDnsServerList,FALSE,adapter,NULL,buf,&size);
+   FixedInfo = (FIXED_INFO *) GlobalAlloc( GPTR, sizeof( FIXED_INFO ) );
+   ulOutBufLen = sizeof( FIXED_INFO );
 
-		// assume only IPv4 address 
-		assert( size%4 == 0 );
-		num = size/4;
-		assert( num > 1 ); // (num - 1) is how many DNS servers are configured
+   if( ERROR_BUFFER_OVERFLOW == GetNetworkParams( FixedInfo, &ulOutBufLen ) ) {
+      GlobalFree( FixedInfo );
+      FixedInfo = (FIXED_INFO *)GlobalAlloc( GPTR, ulOutBufLen );
+   }
 
-		channel->servers = malloc( (num-1) * sizeof(struct server_state));
+   if ( dwRetVal = GetNetworkParams( FixedInfo, &ulOutBufLen ) )
+   {
+        //printf("ARES: couldn't get network params\n");
+        return ARES_ENODATA;
+   }
+   else
+   {
+       /**
+      printf( "Host Name: %s\n", FixedInfo -> HostName );
+      printf( "Domain Name: %s\n", FixedInfo -> DomainName );
+      
+      printf( "DNS Servers:\n" );
+      printf( "\t%s\n", FixedInfo -> DnsServerList.IpAddress.String );
+      **/
+
+      // Count how many nameserver entries we have and allocate memory for them.
+      num = 0;
+      pIPAddr = &FixedInfo->DnsServerList;     
+      while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
+      {
+          num++;
+          pIPAddr = pIPAddr ->Next;
+      }
+      channel->servers = malloc( (num) * sizeof(struct server_state));
 		if (!channel->servers)
 		{
 			return ARES_ENOMEM;
 		}
 
 		channel->nservers = 0;
-		for ( i=1; i< num ; i++ )
+      pIPAddr = &FixedInfo->DnsServerList;   
+      while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
 		{
-			channel->servers[ channel->nservers++ ].addr.s_addr = ( buf[i] ); 
+          // printf( "ARES: %s\n", pIPAddr ->IpAddress.String );
+	  channel->servers[ channel->nservers++ ].addr.s_addr = inet_addr(pIPAddr ->IpAddress.String);
+          pIPAddr = pIPAddr ->Next;
+      }
+      //printf("ARES: got all %d nameservers\n",num);
 		}
-
-		// channel->servers[0].addr.s_addr =  inet_addr("10.0.1.1");
 #else
 
 		/* If nobody specified servers, try a local named. */
