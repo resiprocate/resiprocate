@@ -1547,7 +1547,7 @@ SdpContents::Session::Medium::codecs()
          for (vector<Data>::const_iterator i = getValues(rtpmap).begin();
               i != getValues(rtpmap).end(); ++i)
          {
-            DebugLog(<< "SdpContents::Session::Medium::getCodec(" << *i << ")");
+            //DebugLog(<< "SdpContents::Session::Medium::getCodec(" << *i << ")");
             ParseBuffer pb(i->data(), i->size());
             int format = pb.integer();
             // pass to codec constructor for parsing
@@ -1569,7 +1569,7 @@ SdpContents::Session::Medium::codecs()
             RtpMap::const_iterator ri = mRtpMap.find(mapKey);
             if (ri != mRtpMap.end())
             {
-               DebugLog(<< "SdpContents::Session::Medium::getCodec[](" << ri->second << ")");
+               //DebugLog(<< "SdpContents::Session::Medium::getCodec[](" << ri->second << ")");
                mCodecs.push_back(ri->second);
             }
             else
@@ -1579,8 +1579,8 @@ SdpContents::Session::Medium::codecs()
                 Codec::CodecMap::const_iterator ri = staticCodecs.find(mapKey);
                 if (ri != staticCodecs.end())
                 {
-                    DebugLog(<< "Found static codec for format: " << mapKey);
-                    mCodecs.push_back(ri->second);
+                   //DebugLog(<< "Found static codec for format: " << mapKey);
+                   mCodecs.push_back(ri->second);
                 }
 
             }
