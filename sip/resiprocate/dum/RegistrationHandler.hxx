@@ -4,7 +4,14 @@
 namespace resip
 {
 
-class RegistrationHandler
+class ClientRegistrationHandler
+{
+   public:
+      virtual void onSuccess(ClientRegistration::Handle, const SipMessage& response)=0;
+      virtual void onFailure(ClientRegistration::Handle, const SipMessage& response)=0;
+};
+
+class ServerRegistrationHandler
 {
    public:
       virtual void onRefresh(ServerRegistration::Handle, const SipMessage& reg)=0;

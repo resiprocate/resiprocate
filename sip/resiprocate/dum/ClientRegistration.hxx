@@ -25,7 +25,7 @@ class ClientRegistration: public BaseUsage
       
       const NameAddrs& myContacts();
       const NameAddrs& allContacts();
-
+      
    private:
       NameAddrs mMyContacts;
       NameAddrs mAllContacts;
