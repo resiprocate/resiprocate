@@ -41,8 +41,9 @@ class UserProfile : public Profile
             bool operator<(const DigestCredential& rhs) const;
       };
       
-      /// The following functions deal with getting digest credentals 
-      virtual void setDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password);
+      /// The following functions deal with clearing, setting and getting of digest credentals 
+      virtual void  clearDigestCredentials();
+      virtual void  setDigestCredential( const Data& aor, const Data& realm, const Data& user, const Data& password);
       virtual const DigestCredential& getDigestCredential( const Data& realm );
       virtual const DigestCredential& getDigestCredential( const SipMessage& challenge );      
 
