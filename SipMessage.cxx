@@ -72,6 +72,8 @@ SipMessage::SipMessage(const SipMessage& from)
 
 SipMessage::~SipMessage()
 {
+   DebugLog (<< "Deleting SipMessage: " << brief());
+   
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
       delete mHeaders[i];
