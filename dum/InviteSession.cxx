@@ -47,6 +47,33 @@ InviteSession::~InviteSession()
    mDialog.mInviteSession = 0;
 }
 
+SipMessage& 
+InviteSession::modifySession()
+{
+   if (mNextOfferOrAnswerSdp == 0 || mState != Connected)
+   {
+      throw new UsageUseException("Must be in the connected state and have propsed an offer to call modifySession", 
+                                  __FILE__, __LINE__);
+   }
+   mState = ReInviting;
+   mDialog.makeRequest(mLastRequest, INVITE);
+   return mLastRequest;
+}
+
+
+SipMessage& 
+InviteSession::acceptOffer(int statusCode)
+{
+   if (mNextOfferOrAnswerSdp == 0 || mState != ReInviting)
+   {
+      throw new UsageUseException("Must be in the ReInviting state and have propsed an answer to call answerModifySession", 
+                                  __FILE__, __LINE__);
+   }
+   mState = AcceptingReInvite;
+   mDialog.makeResponse(mLastResponse, mLastRequest, statusCode);
+   return mLastResponse;
+} 
+
 void
 InviteSession::setOffer(const SdpContents* sdp)
 {
@@ -89,7 +116,7 @@ InviteSession::getSessionHandle()
 void
 InviteSession::dispatch(const DumTimeout& timeout)
 {
-   if (timeout.type() == DumTimeout::Retransmit200 && mState == Accepting)
+   if (timeout.type() == DumTimeout::Retransmit200 && (mState == Accepting || mState == AcceptingReInvite ))
    {
       mDum.send(mFinalResponse);      
       mDum.addTimer(DumTimeout::Retransmit200, resipMin(T2, mCurrentRetransmit200*2), getBaseHandle(),  0);
@@ -131,9 +158,9 @@ InviteSession::dispatch(const SipMessage& msg)
             switch(msg.header(h_RequestLine).method())
             {
                case INVITE:
+                  mState = AcceptingReInvite;
                   mDialog.update(msg);
                   mDum.mInviteSessionHandler->onDialogModified(getSessionHandle(), msg);
-                  
                   if (offans.first != None)
                   {
                      incomingSdp(msg, offans.second);
@@ -174,6 +201,19 @@ InviteSession::dispatch(const SipMessage& msg)
                mDum.send(mAck);
             }
          }
+         break;
+      case ReInviting:
+         if (msg.isResponse() && msg.header(h_StatusLine).statusCode() == 200)
+         {
+            mState = AcceptingReInvite;
+            send(ackConnection());
+         }
+         else
+         {
+            ErrLog ( << "Spurious message sent to UAS " << msg );            
+            return;            
+         }
+         break;
       case Accepting:
          if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
          {
@@ -190,6 +230,25 @@ InviteSession::dispatch(const SipMessage& msg)
             return;            
          }
          break;         
+      case AcceptingReInvite:
+         if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
+         {
+            mState = Connected;            
+            //this shouldn't happen, but it may be allowed(DUM API doesn't
+            //support this for re-invite)
+            if (offans.first != None)
+            {
+               InviteSession::incomingSdp(msg, offans.second);
+            }
+         }
+         else
+         {
+            ErrLog ( << "Spurious message sent to UAS " << msg );            
+            return;            
+         }
+         break;         
+
+                  
       default:
          DebugLog ( << "Throwing away strange message: " << msg );
          //throw message away
@@ -376,6 +435,8 @@ InviteSession::sendSdp(SdpContents* sdp)
          assert(mCurrentRemoteSdp);
          if (sdp)
          {
+            delete mCurrentLocalSdp;
+            delete mCurrentRemoteSdp;
             mCurrentLocalSdp = static_cast<SdpContents*>(sdp->clone());
             mCurrentRemoteSdp = mProposedRemoteSdp;
          }
