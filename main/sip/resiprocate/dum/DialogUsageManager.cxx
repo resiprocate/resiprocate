@@ -116,6 +116,8 @@ DialogUsageManager::makeNewSession(BaseCreator* creator)
    prepareInitialRequest(creator->getLastRequest());
    DialogSet* ds = new DialogSet(creator, *this);
    mDialogSetMap[ds->getId()] = ds;
+
+   DebugLog (<< "RegistrationCreator: " << creator->getLastRequest());
    return creator->getLastRequest();
 }
 
@@ -137,72 +139,10 @@ DialogUsageManager::makeRegistration(const NameAddr& aor)
    return makeNewSession(new RegistrationCreator(*this, aor)); 
 }
 
-#if 0
-SipMessage&
-DialogUsageManager::makeRefer(const Uri& aor, const H_ReferTo::Type& referTo)
-{
-   //return makeNewSession(new SubscriptionCreator(???));
-}
-
-SipMessage& 
-DialogUsageManager::makePublication(const Uri& aor, const Data& eventType)
-{
-   return makeNewSession(new PublicationCreator()); // !jf!
-}
-
-
-SipMessage& 
-DialogUsageManager::makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth)
-{
-   //return makeNewSession(new OutOfDialogReqCreator(???)); // !jf!
-}
-
-SipMessage&
-DialogUsageManager::makeInviteSession(DialogId id, const Uri& target)
-{
-   Dialog& dialog = findDialog(id); // could throw
-   return dialog.makeInviteSession(target);
-}
-
-SipMessage* 
-DialogUsageManager::makeSubscription(const Uri& aor, const Data& eventType)
-{
-   Dialog& dialog = findDialog(id); // could throw
-   return dialog.makeSubscription(aor, eventType);
-}
-
-SipMessage* 
-DialogUsageManager::makeRefer(const Uri& aor, const H_ReferTo::Type& referTo)
-{
-   Dialog& dialog = findDialog(id); // could throw
-   return dialog.makeRefer(aor, referTo);
-}
-
-SipMessage* 
-DialogUsageManager::makePublication(const Uri& aor, const Data& eventType)
-{
-   Dialog& dialog = findDialog(id); // could throw
-   return dialog.makePublication(aor, eventType);
-}
-
-SipMessage* 
-DialogUsageManager::makeRegistration(const Uri& aor)
-{
-   Dialog& dialog = findDialog(id); // could throw
-   return dialog.makeRegistration(aor);
-}
-
-SipMessage* 
-DialogUsageManager::makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth)
-{
-   Dialog& dialog = findDialog(id); // could throw
-   return dialog.makeOutOfDialogRequest(aor, meth);
-}
-#endif
-
 void
 DialogUsageManager::send(const SipMessage& request)
 {
+   InfoLog (<< "SEND: " << request);
    mStack.send(request);
 }
 
@@ -480,29 +420,6 @@ DialogUsageManager::processResponse(const SipMessage& response)
       DebugLog (<< "Throwing away stray response: " << response);
    }
 }
-
-//!dcm! -- kill
-#if 0
-Dialog&  
-DialogUsageManager::findDialog(const DialogId& id)
-{
-
-    DialogSetId setId = id.getDialogSetId();
-    DialogSetMap::const_iterator it = mDialogSetMap.find(setId);
-    
-    if (it == mDialogSetMap.end())
-    {
-        /**  @todo: return empty object (?) */
-    }
-    DialogSet* dialogSet = it->second;
-    Dialog* dialog = dialogSet->findDialog(id);
-    if (!dialog)
-    {
-        /**  @todo: return empty object (?) */
-    }
-    return *dialog;
-}
-#endif
  
 DialogSet&
 DialogUsageManager::findDialogSet(const DialogSetId& id)
