@@ -171,12 +171,17 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          InfoLog(  << "TestInviteSessionHandler::onOffer " << msg.brief());
       }
       
+      virtual void onOfferRequired(InviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onOfferRequired " << msg.brief());
+      }
+
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage& msg)
       {
          InfoLog(  << "TestInviteSessionHandler::onOfferRejected " << msg.brief());
       }
 
-      virtual void onDialogModified(InviteSessionHandle, const SipMessage& msg)
+      virtual void onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
          InfoLog(  << "TestInviteSessionHandler::onDialogModified " << msg.brief());
       }
@@ -201,6 +206,17 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
       {
          InfoLog(  << "TestInviteSessionHandler::onReferRejected " << msg.brief());
       }
+
+      virtual void onInfoSuccess(InviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onInfoSuccess " << msg.brief());
+      }
+
+      virtual void onInfoFailure(InviteSessionHandle, const SipMessage& msg)
+      {
+         InfoLog(  << "TestInviteSessionHandler::onInfoFailure " << msg.brief());
+      }
+
 };
 
 class TestUac : public TestInviteSessionHandler
@@ -254,7 +270,6 @@ class TestUac : public TestInviteSessionHandler
       virtual void onConnected(ClientInviteSessionHandle cis, const SipMessage& msg)
       {
          InfoLog ( << "###TestUac::onConnected###" << msg.brief());
-         cis->send(cis->ackConnection());
       }
 
       virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents*)
