@@ -95,6 +95,7 @@ class Dialog
 
       //matches using tid of response
       bool matches(const SipMessage& msg);      
+      void handleTargetRefresh(const SipMessage& msg);
 
       DialogUsageManager& mDum;
       DialogSet& mDialogSet;
@@ -188,3 +189,4 @@ std::ostream& operator<<(std::ostream& strm, const Dialog& dialog);
  * <http://www.vovida.org/>.
  *
  */
+
