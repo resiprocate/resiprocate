@@ -67,13 +67,13 @@ SipStack::shutdown()
 }
 
 void 
-SipStack::addTransport( Transport::Type protocol, 
+SipStack::addTransport( TransportType protocol, 
                         int port,
                         const Data& hostName,
                         const Data& nic) 
 {
    assert(!mShuttingDown);
-   assert(protocol != Transport::TLS);
+   assert(protocol != TLS);
 
    mTransactionController.addTransport(protocol, port, hostName, nic);
    if (!hostName.empty()) 
@@ -197,7 +197,7 @@ SipStack::sendTo(const SipMessage& msg, const Uri& uri)
 // this is only if you want to send to a destination not in the route. You
 // probably don't want to use it. 
 void 
-SipStack::sendTo(const SipMessage& msg, const Transport::Tuple& destination)
+SipStack::sendTo(const SipMessage& msg, const Tuple& destination)
 {
    assert(!mShuttingDown);
    assert(destination.transport);

@@ -15,19 +15,19 @@ class Security;
 class TlsTransport : public Transport
 {
    public:
-      TlsTransport(const Data& domain, 
-                   const Data& sendhost, 
+      TlsTransport(Fifo<Message>& fifo, 
+                   const Data& sipDomain, 
+                   const Data& interface, 
                    int portNum, 
                    const Data& keyDir, 
-                   const Data& privateKeyPassPhrase,
-                   const Data& nic, 
-                   Fifo<Message>& fifo);
+                   const Data& privateKeyPassPhrase, 
+                   bool ipv4);
       virtual  ~TlsTransport();
 
       void process(FdSet& fdset);
       void buildFdSet( FdSet& fdset);
       bool isReliable() const { return true; }
-      Transport::Type transport() const { return TLS; }
+      TransportType transport() const { return TLS; }
       const Data& tlsDomain() const { return mDomain; }
 
       static const size_t MaxWriteSize;

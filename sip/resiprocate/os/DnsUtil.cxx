@@ -1,166 +1,21 @@
-
 #ifndef WIN32
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <unistd.h>
-#else
-#include <winsock2.h>
-#include <stdlib.h>
-#include <io.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <netinet/in.h>
 #endif
-#include <stdio.h>
 
-#include "DnsUtil.hxx"
-#include "Logger.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::UTIL
 
 using namespace resip;
 using namespace std;
-
-list<Data> 
-DnsUtil::lookupARecords(const Data& host)
-{
-   list<Data> names;
-
-   if (DnsUtil::isIpV4Address(host))
-   {
-      names.push_back(host);
-      return names;
-   }
-
-   struct hostent* result=0;
-   int ret=0;
-   int herrno=0;
-
-#if defined(__linux__)
-   struct hostent hostbuf; 
-   char buffer[8192];
-   ret = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
-   assert (ret != ERANGE);
-#elif defined(__QNX__) || defined(__SUNPRO_CC)
-   struct hostent hostbuf; 
-   char buffer[8192];
-   result = gethostbyname_r( host.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno );
-#elif defined( __MACH__ ) || defined (__FreeBSD__) || defined( WIN32 )
-   result = gethostbyname( host.c_str() );
-   herrno = h_errno;
-#else
-#error "need to define some version of gethostbyname for your arch"
-#endif
-   
-   if (ret != 0 || result == 0)
-   {
-      string msg;
-      switch (herrno)
-      {
-         case HOST_NOT_FOUND:
-            msg = "host not found: ";
-            break;
-         case NO_DATA:
-            msg = "no data found for: ";
-            break;
-         case NO_RECOVERY:
-            msg = "no recovery lookup up: ";
-            break;
-         case TRY_AGAIN:
-            msg = "try again: ";
-            break;
-      }
-      msg += host.c_str();
-      throw Exception("no dns resolution", __FILE__, __LINE__);
-   }
-   else
-   {
-      assert(result);
-      assert(result->h_length == 4);
-      DebugLog (<< "DNS lookup of " << host << ": canonical name: " << result->h_name);
-      char str[256];
-      for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
-      {
-#if WIN32
- // !cj! TODO 
-		  assert(0);
-#else
-		  inet_ntop(result->h_addrtype, (u_int32_t*)(*pptr), str, sizeof(str));
-#endif        
-		  names.push_back(str);
-      }
-      return names;
-   }
-}
-      
-std::list<DnsUtil::Srv> 
-DnsUtil::lookupSRVRecords(const Data& host)
-{
-   list<DnsUtil::Srv> records;
-   assert(0);
-   return records;
-}
-
-Data 
-DnsUtil::getHostByAddr(const Data& ipAddress)
-{
-   if (!DnsUtil::isIpV4Address(ipAddress))
-   {
-      return ipAddress;
-   }
-       
-   struct in_addr addrStruct;
-   int ret=0;
-#ifdef WIN32
-	assert(0);
-#else
-    ret = inet_aton(ipAddress.c_str(), &addrStruct);
-#endif
-
-   if (ret == 0)
-   {
-      throw Exception("Not a valid ip address.", __FILE__, __LINE__);
-   }
-
-   struct hostent h;
-   struct hostent* hp;
-   int localErrno;
-   hp = &h;
-   
-#if defined(__GLIBC__)
-   char buf[8192];
-   hostent* pres;
-   ret = gethostbyaddr_r (&addrStruct,
-                          sizeof(addrStruct),
-                          AF_INET,
-                          &h,
-                          buf,
-                          8192,
-                          &pres,
-                          &localErrno);
-#elif defined(__linux__) || defined(__QNX__)  || defined(__SUNPRO_CC)
-   char buf[8192];
-   ret = gethostbyaddr_r ((char *)(&addrStruct),
-                          sizeof(addrStruct),
-                          AF_INET,
-                          &h,
-                          buf,
-                          8192,
-                          &localErrno);
-#elif defined(__MACH__) || defined(__FreeBSD__) || defined( WIN32 )
-   hp = gethostbyaddr( (char *)(&addrStruct),
-                       sizeof(addrStruct),
-                       AF_INET);
-   localErrno = h_errno;
-#else
-#error no implementation for critical function
-#endif
-   if (ret != 0)
-   {
-      throw Exception("getHostByAddr failed to lookup PTR", __FILE__, __LINE__);
-   }
-   return Data(hp->h_name);
-}
-
 
 Data 
 DnsUtil::getLocalHostName()
@@ -209,12 +64,56 @@ DnsUtil::getLocalDomainName()
 #endif
 }
 
+Data
+DnsUtil::inet_ntop(const struct in_addr& addr)
+{
+#if !defined(WIN32)
+   char str[256];
+   ::inet_ntop(AF_INET, (u_int32_t*)(&addr), str, sizeof(str));
+   return Data(str);
+#else
+   // !cj! TODO 
+   assert(0);
+#endif
+}
 
 Data
-DnsUtil::getLocalIpAddress() 
+DnsUtil::inet_ntop(const struct in6_addr& addr)
 {
-   return lookupARecords(getLocalHostName()).front();
+#if !defined(WIN32)
+   char str[256];
+   ::inet_ntop(AF_INET6, (u_int32_t*)(&addr), str, sizeof(str));
+   return Data(str);
+#else
+   // !cj! TODO 
+   assert(0);
+#endif
 }
+
+int
+DnsUtil::inet_pton(const Data& printableIp, struct in_addr& dst)
+{
+#if !defined(WIN32)
+   return ::inet_pton(AF_INET, printableIp.c_str(), &dst);
+#else
+   // !cj! TODO
+   assert(0);
+   return -1;
+#endif   
+}
+
+int
+DnsUtil::inet_pton(const Data& printableIp, struct in6_addr& dst)
+{
+#if !defined(WIN32)
+   return ::inet_pton(AF_INET6, printableIp.c_str(), &dst);
+#else
+   // !cj! TODO
+   assert(0);
+   return -1;
+#endif   
+}
+
 
 bool 
 DnsUtil::isIpV4Address(const Data& ipAddress)
@@ -288,15 +187,55 @@ DnsUtil::isIpAddress(const Data& ipAddress)
 }
 
 
-Data
-DnsUtil::getIpAddress(const struct in_addr& addr)
+std::list<std::pair<Data,Data> > 
+DnsUtil::getInterfaces()
 {
-   char str[256];
-#ifdef WIN32
-// !cj! TODO 
+   std::list<std::pair<Data,Data> > results;
+   
+#if !defined(WIN32)
+   struct ifconf ifc;
+   
+   int s = socket( AF_INET, SOCK_DGRAM, 0 );
+   const int len = 100 * sizeof(struct ifreq);
+   
+   char buf[ len ];
+   
+   ifc.ifc_len = len;
+   ifc.ifc_buf = buf;
+   
+   int e = ioctl(s,SIOCGIFCONF,&ifc);
+   char *ptr = buf;
+   int tl = ifc.ifc_len;
+   int count=0;
+  
+   int maxRet = 10;
+   while ( (tl > 0) && ( count < maxRet) )
+   {
+      struct ifreq* ifr = (struct ifreq *)ptr;
+      
+      int si = sizeof(ifr->ifr_name) + sizeof(struct sockaddr);
+      tl -= si;
+      ptr += si;
+      //char* name = ifr->ifr_ifrn.ifrn_name;
+      char* name = ifr->ifr_name;
+ 
+      struct ifreq ifr2;
+      ifr2 = *ifr;
+      
+      e = ioctl(s,SIOCGIFADDR,&ifr2);
+
+      struct sockaddr a = ifr2.ifr_addr;
+      struct sockaddr_in* addr = (struct sockaddr_in*) &a;
+      
+      char str[256];
+      ::inet_ntop(AF_INET, (u_int32_t*)(&addr->sin_addr.s_addr), str, sizeof(str));
+      DebugLog (<< "Considering: " << name << " -> " << str);
+      
+      results.push_back(std::make_pair(name, str));
+   }
+#else // !WIN32
    assert(0);
-#else
-   inet_ntop(AF_INET, (u_int32_t*)(&addr), str, sizeof(str));
 #endif
-   return Data(str);
+
+   return results;
 }

@@ -18,10 +18,10 @@ const size_t TcpTransport::MaxWriteSize = 4096;
 const size_t TcpTransport::MaxReadSize = 4096;
 
 
-TcpTransport::TcpTransport(const Data& sendhost, int portNum, const Data& nic, Fifo<Message>& fifo) :
-   Transport(sendhost, portNum, nic , fifo)
+TcpTransport::TcpTransport(Fifo<Message>& fifo, int portNum, const Data& sendhost, bool ipv4)
+   : Transport(fifo, portNum, sendhost, ipv4)
 {
-   DebugLog (<< "Creating TCP transport on " << sendhost << ":" << portNum << " " << nic);
+   DebugLog (<< "Creating TCP transport on " << sendhost << ":" << portNum);
 
    mSendPos = mSendRoundRobin.end();
    mFd = socket(PF_INET, SOCK_STREAM, 0);
@@ -122,10 +122,10 @@ TcpTransport::processListen(FdSet& fdset)
 
       makeSocketNonBlocking(sock);
 
-      Transport::Tuple who;
+      Tuple who;
       who.ipv4 = peer.sin_addr;
       who.port = ntohs(peer.sin_port);
-      who.transportType = Transport::TCP;
+      who.transportType = TCP;
       who.transport = this;
       mConnectionMap.add(who, sock);
 
