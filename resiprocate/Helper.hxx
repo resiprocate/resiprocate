@@ -51,14 +51,27 @@ class Helper
       static void makeResponse(SipMessage& response, 
                                const SipMessage& request, 
                                int responseCode, 
-                               const Data& reason = Data::Empty);
+                               const Data& reason = Data::Empty,
+                               const Data& hostname = Data::Empty,
+                               const Data& warning=Data::Empty);
       static void makeResponse(SipMessage& response, 
                                const SipMessage& request, 
                                int responseCode, 
                                const NameAddr& myContact, 
-                               const Data& reason = Data::Empty);
-      static SipMessage* makeResponse(const SipMessage& request,int responseCode,const Data& reason = Data::Empty);
-      static SipMessage* makeResponse(const SipMessage& request, int responseCode, const NameAddr& myContact, const Data& reason = Data::Empty);
+                               const Data& reason = Data::Empty,
+                               const Data& hostname = Data::Empty,
+                               const Data& warning=Data::Empty);
+      static SipMessage* makeResponse(const SipMessage& request,
+                                      int responseCode,
+                                      const Data& reason = Data::Empty, 
+                                      const Data& hostname = Data::Empty,
+                                      const Data& warning=Data::Empty);
+      static SipMessage* makeResponse(const SipMessage& request, 
+                                      int responseCode, 
+                                      const NameAddr& myContact, 
+                                      const Data& reason = Data::Empty,
+                                      const Data& hostname = Data::Empty,
+                                      const Data& warning=Data::Empty);
 
       //to, maxforwards=70, requestLine& cseq method set, cseq sequence is 1
       //static SipMessage* makeRequest(const NameAddr& target, MethodTypes method); // deprecated
