@@ -31,6 +31,8 @@ main (int argc, char **argv)
   int tlsTcpPort = 5061;
   bool tlsServer = false;
 
+  Log::initialize(Log::CERR, Log::CRIT, argv[0]);
+
   // Get the SIP stack up and running
   Security security (tlsServer, true);
   SipStack sipStack (false, &security);
