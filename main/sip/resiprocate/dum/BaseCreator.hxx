@@ -9,12 +9,15 @@ class BaseCreator
    public:
       BaseCreator(DialogUsageManager& dum);
       SipMessage& getLastRequest();
+      void dispatch(SipMessage& msg)=0;
       
-   private:
+   protected:
+      void makeInitialRequest(const NameAddr& target, MethodTypes method);
+      
       // this will get updated when an initial request is challenged. where we
       // store the credentials and last cseq
       SipMessage mLastRequest;
-      DialogUsageManager& mDUM;
+      DialogUsageManager& mDum;
 };
 
 }
