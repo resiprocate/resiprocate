@@ -1,18 +1,30 @@
 #include <cassert>
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/dum/HandleManager.hxx"
 #include "resiprocate/dum/HandleException.hxx"
 
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-HandleManager::HandleManager() : mLastId(0)
+HandleManager::HandleManager() : 
+   mLastId(0)
 {
 }
 
 HandleManager::~HandleManager()
 {
    // !jf! do nothing?
+   // !dcm! -- this is the best we can do w/out a back-ptr to each handle
+   // DUM currently cleans up properly, so not an issue unless users make their
+   // own handled objects, could clean up memeory, but the app will crash first
+   // handle deference regardless.
+   if (!mHandleMap.empty())
+   {
+      StackLog ( << "&&&&&& HandleManager::~HandleManager " );
+      StackLog ( << Inserter(mHandleMap) );   
+      throw HandleException("Deleting handlemanager that still has Handled objects", __FILE__, __LINE__);
+   }
 }
 
 Handled::Id
@@ -25,17 +37,18 @@ HandleManager::create(Handled* handled)
 void
 HandleManager::remove(Handled::Id id)
 {
+   StackLog ( << "&&&&&& HandleManager::remove" << id << " " << this );
+   StackLog ( << "&&& Before: " << Inserter(mHandleMap));   
    HandleMap::iterator i = mHandleMap.find(id);
    assert (i != mHandleMap.end());
-
-//!dcm! -- looks completely wrong   delete i->second;
    mHandleMap.erase(i);
+   StackLog ( << "&&& After: " << Inserter(mHandleMap));   
 }
-
 
 bool
 HandleManager::isValidHandle(Handled::Id id) const
 {
+   //!dcm! -- fix; use find
    return mHandleMap.count(id);
 }
 
@@ -45,7 +58,7 @@ HandleManager::getHandled(Handled::Id id) const
    HandleMap::const_iterator i = mHandleMap.find(id);
    if (i == mHandleMap.end())
    {
-      InfoLog (<< "Reference to stale handle: " << id);
+      StackLog (<< "Reference to stale handle: " << id);
       throw HandleException("Stale handle", __FILE__, __LINE__);
    }
    else
