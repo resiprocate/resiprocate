@@ -16,6 +16,7 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/TransportMessage.hxx"
+#include "resiprocate/Helper.hxx"
 
 using namespace resip;
 using namespace std;
@@ -216,7 +217,8 @@ Transport::thread()
 void
 Transport::fail(const Data& tid)
 {
-   mStateMachineFifo.add(new TransportMessage(tid, true));
+  if (!tid.empty())
+    mStateMachineFifo.add(new TransportMessage(tid, true));
 }
 
 bool 
@@ -235,6 +237,49 @@ Transport::send( const Tuple& dest, const Data& d, const Data& tid)
    mTxFifo.add(data); // !jf!
 }
 
+static SendData*
+makeFailedBasicCheckResponse(
+  const SipMessage& msg,
+  int responseCode = 400,
+  const char * warning = 0)
+{
+
+  if (msg.isRequest()) return 0;
+
+  const Tuple& dest = msg.getSource();
+  SipMessage * errMsg = Helper::makeResponse(msg, responseCode);
+
+  Via v;
+  v.sentPort() = dest.getPort();
+  v.sentHost() = DnsUtil::inet_ntop(dest);
+  errMsg->header(h_Vias).push_front(v);
+  errMsg->header(h_Warning).text() = warning ?
+    warning :
+    "Original request had no Vias.";
+
+  // make send data here w/ blank tid and blast it out.
+  // encode message
+  Data encoded;
+  encoded.clear();
+  DataStream encodeStream(encoded);
+  errMsg->encode(encodeStream);
+  encodeStream.flush();
+
+  if (encoded.empty()) 
+  {
+    ErrLog(<<"Unable to encode failed response." << errMsg->brief());
+    return 0;
+  }
+
+  // !ah! YUCK! SendData ctor copies the data! Ugh.
+  SendData * sd = new SendData( dest, encoded, Data::Empty );
+  
+  delete errMsg;
+
+  return sd;
+}
+
+
 void
 Transport::stampReceived(SipMessage* message)
 {
@@ -249,6 +294,27 @@ Transport::stampReceived(SipMessage* message)
          message->header(h_Vias).front().param(p_rport).port() = tuple.getPort();
       }
    }
+}
+
+
+bool
+Transport::basicCheck(const SipMessage& msg)
+{
+  if (msg.isExternal())
+  {
+    if (!msg.exists(h_Vias))
+    {
+      if (msg.isRequest())
+      {
+        // this is VERY low-level b/c we don't have a transaction...
+        // here we make a response to warn the offending party.
+        mTxFifo.add(makeFailedBasicCheckResponseSendData(msg));
+     }
+
+      return false;
+    }
+  }
+  return true;
 }
 
 bool 
