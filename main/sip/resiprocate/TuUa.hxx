@@ -1,5 +1,5 @@
-#if !defined(TUUA_HXX)
-#define TUUA_HXX
+#if !defined(RESIP_TUUA_HXX)
+#define RESIP_TUUA_HXX
 
 #include <map>
 #include "resiprocate/os/Data.hxx"
@@ -100,9 +100,7 @@ class TuUA
  
 }
 
-
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -153,6 +151,3 @@ class TuUA
  * <http://www.vovida.org/>.
  *
  */
-
-
-

@@ -1,5 +1,5 @@
-#if !defined(TRANSPORT_HXX)
-#define TRANSPORT_HXX
+#if !defined(RESIP_TRANSPORT_HXX)
+#define RESIP_TRANSPORT_HXX
 
 #include <exception>
 
@@ -144,7 +144,6 @@ struct hash<resip::Transport::Tuple>
 #endif // hash stuff
 
 #endif
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

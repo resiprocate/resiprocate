@@ -1,5 +1,6 @@
-#if !defined(TransactionTerminated_hxx)
-#define TransactionTerminated_hxx
+#if !defined(RESIP_TRANSACTIONTERMINATED_HXX)
+#define RESIP_TRANSACTIONTERMINATED_HXX 
+
 // Copyright 2002 Cathay Networks, Inc. 
 
 #include "Message.hxx"

@@ -1,5 +1,5 @@
-#ifndef XMLCursor_hxx
-#define XMLCursor_hxx
+#if !defined(RESIP_XMLCURSOR_HXX)
+#define RESIP_XMLCURSOR_HXX 
 
 #include "resiprocate/os/ParseBuffer.hxx"
 #include <list>
@@ -134,6 +134,8 @@ class XMLCursor
 
 }
 
+#endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -183,5 +185,3 @@ class XMLCursor
  * <http://www.vovida.org/>.
  *
  */
-
-#endif
