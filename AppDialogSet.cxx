@@ -2,6 +2,7 @@
 #include "resiprocate/dum/AppDialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 
