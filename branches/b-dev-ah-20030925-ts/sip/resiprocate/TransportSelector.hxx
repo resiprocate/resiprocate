@@ -55,9 +55,10 @@ class TransportSelector
       void retransmit(SipMessage* msg, Tuple& destination );
       
    private:
-      Transport* findTransport(const TransportType type) const;
-      Transport* findTransport(const Tuple& tuple) const;
+      Transport* findTransport(const Tuple& dest,
+                               const Tuple& src) const;
       Transport* findTlsTransport(const Data& domain);
+
       Tuple srcAddrForDest(const Tuple& dest, bool& ok) const;
       bool mMultiThreaded;
       DnsInterface mDns;
