@@ -1,13 +1,15 @@
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
-
-using namespace resip;
+#include "resiprocate/dum/DumProcessHandler.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+namespace resip {
 
 DumProcessHandler::DumProcessHandler(ExternalTimer* et) :
    mDum(0),
    mExternalTimer(et),
+   mCurrentlyProcessing(false),
    mStopped(false)
 {
 }
@@ -32,18 +34,18 @@ DumProcessHandler::handleProcessNotification()
       //very temporary
       //FD_ISSET     ??
       FdSet fds;
-      mDum.buildFdSet(fds);
+      mDum->buildFdSet(fds);
       if (fds.size > 0)
       {         
          fds.selectMilliSeconds((long)0);
       }
-      mDum.process(fds);      
+      mDum->process(fds);      
    }
    mCurrentlyProcessing = false;
 }
 
 void 
-DumProcessHandler::handleTimeout(AsyncID timerID)
+DumProcessHandler::handleTimeout(AsyncID /*timerID*/)
 {
    handleProcessNotification();   
 }
@@ -55,3 +57,4 @@ DumProcessHandler::stop()
    mExternalTimer->deleteTimer(mTimerID);   
 }
 
+} // namespace resip
