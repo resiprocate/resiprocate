@@ -41,7 +41,7 @@ AbstractFifo ::getNext(int ms)
 
    // Wait while there are messages available.
    //
-   if (mFifo.empty())
+   while (mFifo.empty())
    {
       bool signaled = mCondition.wait(mMutex, ms);
       if (!signaled)
