@@ -20,7 +20,12 @@ main(int argc, char* argv[])
 {
    Log::Level l = Log::DEBUG;
    Log::initialize(Log::CERR, l, argv[0]);
-
+   
+   {
+      Uri uri("sip:speedy_AT_home.com@whistler.gloo.net:5062");
+      uri.scheme() = Symbols::Pres;
+      assert(Data::from(uri) == "pres:speedy_AT_home.com@whistler.gloo.net:5062");
+   }
    {
        const char * a = "alice";
        const char * e = "example.com";
@@ -43,8 +48,6 @@ main(int argc, char* argv[])
 
        cout << *msg << endl;
 
-       UnknownParameterType up_gruu("gruu");
-
        // Make the data
        NameAddr original(aliceContact);
        original.uri().param(UnknownParameterType("x")) = Data("\"1\"");
@@ -65,24 +68,16 @@ main(int argc, char* argv[])
        modified.uri().port() = 65530;
        modified.uri().user() = "alphabet-soup";
 
-       Data q(Symbols::DOUBLE_QUOTE);
-       Data gruuData ( q + Data::from(modified.uri()) + q ) ;
-
-
-       msg->header(h_Contacts).back().param(up_gruu) = gruuData;
-       //msg->header(h_Contacts).back().param(up_gruu).setQuoted(true);
-
-       //msg->header(h_Contacts).push_back(aliceContact);
-       //msg->header(h_Contacts).back().param(up_gruu) = gruu2Data;
-       
+       Data gruuData ( Data::from(modified.uri())) ;
+       msg->header(h_Contacts).back().param(p_gruu) = gruuData;
 
 
        cout << *msg << endl;
 
-       Uri s1("sip:alice@example.com;gruu=foo@example.com");
+       Uri s1("sip:alice@example.com;gruu=\"foo@example.com\"");
        Uri s2("sip:alice@example.com;gruu=\"foo@example.com\"");
-       assert(s1.param(UnknownParameterType("gruu")) == Data("foo@example.com"));
-       assert(s2.param(UnknownParameterType("gruu")) == Data("foo@example.com"));
+       assert(s1.param(p_gruu) == Data("foo@example.com"));
+       assert(s2.param(p_gruu) == Data("foo@example.com"));
        cout << s1 << endl;
        cout << s2 << endl;
        cout << endl;
@@ -107,13 +102,14 @@ main(int argc, char* argv[])
        na1.uri().user() = "alice";
        na1.uri().host() = "example.com";
 
+       Data q("\"");
        na1.param(UnknownParameterType("foo")) = Data(q + Data::from(s6) +q);
        NameAddr na2(na1);
        cout << "na1=" << na1 << endl;
        cout << "na2=" << na2 << endl;
        
    }
-   assert(0);
+   //assert(0);
    {
       // Test order irrelevance of known parameters
       Uri sip1("sip:user@domain;ttl=15;method=foo");
