@@ -1,14 +1,11 @@
 #ifndef WIN32
-#include <unistd.h>
-#include <sys/socket.h>
 #include <sys/ioctl.h>
-#include <arpa/inet.h>
 #include <net/if.h>
-#include <netinet/in.h>
 #endif
 
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 
@@ -62,6 +59,19 @@ DnsUtil::getLocalDomainName()
    }
    return buffer;
 #endif
+}
+
+Data
+DnsUtil::inet_ntop(const Tuple& tuple)
+{
+   if (tuple.v6)
+   {
+      return DnsUtil::inet_ntop(tuple.ipv6);
+   }
+   else
+   {
+      return DnsUtil::inet_ntop(tuple.ipv4);
+   }
 }
 
 Data
