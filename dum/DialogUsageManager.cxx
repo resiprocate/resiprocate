@@ -31,6 +31,7 @@
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/SipFrag.hxx"
+#include "resiprocate/StatisticsMessage.hxx"
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK)// Used for tracking down memory leaks in Visual Studio
 #define _CRTDBG_MAP_ALLOC
@@ -55,6 +56,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mRedirectHandler(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
+   mStackThread(stack),
    mDumShutdownHandler(0),
    mDestroying(false)
 {
@@ -551,11 +553,20 @@ DialogUsageManager::findInviteSession(CallId replaces)
 }
 
 void
-DialogUsageManager::process(FdSet& fdset)
+DialogUsageManager::process(bool separateThread)
 {
+   if (separateThread)
+   {
+      static bool started = false;
+      if (!started)
+      {
+         mStackThread.run();
+         started = true;
+      }
+   }
+
    try 
    {
-      mStack.process(fdset);
       std::auto_ptr<Message> msg( mStack.receiveAny() );
       SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
       if (!msg.get())  return;
@@ -612,9 +623,33 @@ DialogUsageManager::process(FdSet& fdset)
          return;
       }
 
+      StatisticsMessage* stats = dynamic_cast<StatisticsMessage*>(msg.get());
+      if (stats)
+      {
+         static StatisticsMessage::Payload payload;
+         stats->loadOut(payload);
+         stats->logStats(RESIPROCATE_SUBSYSTEM, payload);
+      }
+      
       // !jf! might want to do something with StatisticsMessage
       //ErrLog(<<"Unknown message received." << msg->brief());
       //assert(0);
+   }
+   catch(BaseException& e)
+   {
+      //unparseable, bad 403 w/ 2543 trans it from FWD, etc
+	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
+   }
+   
+}
+
+void
+DialogUsageManager::process(FdSet& fdset)
+{
+   try 
+   {
+      mStack.process(fdset);
+      process(false);
    }
    catch(BaseException& e)
    {
@@ -873,7 +908,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
                SipMessage failure;
                makeResponse(failure, request, 481);
                failure.header(h_AcceptLanguages) = mProfile->getSupportedLanguages();
-               InfoLog (<< "Rejected request (which was in a dialog)");
+               InfoLog (<< "Rejected request (which was in a dialog) " << request.brief());
                sendResponse(failure);
             }
             else
