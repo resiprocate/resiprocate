@@ -3,6 +3,8 @@
 #include "sip2/sipstack/UnknownParameter.hxx"
 #include "sip2/util/compat.hxx"
 #include "sip2/util/ParseBuffer.hxx"
+#include "sip2/util/DataStream.hxx"
+
 #include <iostream>
 #include <cassert>
 
@@ -492,6 +494,40 @@ ParserCategory::param(const Rport_Param& paramType) const
       mParameters.push_back(p);
    }
    return p->value();
+}
+
+Data
+ParserCategory::commutativeParameterHash() const
+{
+   Data buffer;
+   Data working;
+
+
+   cerr << endl;
+   
+   for (ParameterList::const_iterator i=mParameters.begin(); i!=mParameters.end(); i++)
+   {
+      if ((*i)->getType() != ParameterTypes::lr)
+      {
+         buffer.clear();
+         DataStream strm(buffer);
+
+         (*i)->encode(strm);
+         strm.flush();
+         working ^= buffer;
+      }
+   }
+
+   buffer.clear();
+   for (ParameterList::const_iterator i=mUnknownParameters.begin(); i!=mUnknownParameters.end(); i++)
+   {
+      UnknownParameter* p = static_cast<UnknownParameter*>(*i);
+      buffer = p->getName();
+      buffer += p->value();
+      working ^= buffer;
+   }
+   
+   return working;
 }
 
 
