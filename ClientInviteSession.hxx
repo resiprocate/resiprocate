@@ -46,12 +46,14 @@ class ClientInviteSession : public InviteSession
       void dispatchPrackAnswerWait (const SipMessage& msg);
       void dispatchCanceled (const SipMessage& msg);
 
+      void handleRedirect (const SipMessage& msg);
+      void handleOffer (const SipMessage& msg, const SdpContents* sdp);
       // Called by the DialogSet (friend) when the app has CANCELed the request
       void cancel();
 
    private:
       std::auto_ptr<SdpContents> mEarlyMedia;
-      
+
       int lastReceivedRSeq;
       int lastExpectedRSeq;
       int mStaleCallTimerSeq;
