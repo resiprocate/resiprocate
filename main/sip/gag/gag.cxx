@@ -117,7 +117,7 @@ main (int argc, char **argv)
 
   bool tlsServer = false;
 
-  Log::initialize(Log::FILE, Log::DEBUG, argv[0]);
+  Log::initialize(Log::File, Log::Debug, argv[0]);
 
   // Read commandline options
 
