@@ -2,6 +2,7 @@
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/Logger.hxx"
 
+#include "BaseCreator.hxx"
 #include "Dialog.hxx"
 #include "DialogUsageManager.hxx"
 
@@ -12,8 +13,7 @@ using namespace std;
 
 class ServerInviteSession;
 
-Dialog::Dialog(DialogUsageManager& dum, 
-               const SipMessage& msg) 
+Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg) 
    : mId(msg),
      mDum(dum),
      mClientSubscriptions(),
@@ -30,51 +30,61 @@ Dialog::Dialog(DialogUsageManager& dum,
      mRemoteTag(),
      mCallId(msg.header(h_CallID)),
      mRouteSet(),
-     mMe(),
+     mLocalContact(),
      mLocalCSeq(0),
      mRemoteCSeq(0),
      mRemoteTarget()
 {
    assert(msg.isExternal());
 
-   if (msg.header(h_CSeq).method() == INVITE)
-   {
-      mType = Invitation;
-   }
-   else if (msg.header(h_CSeq).method() == SUBSCRIBE)
-   {
-      mType = Subscription;
-   }
-
    if (msg.isRequest()) // UAS
    {
       const SipMessage& request = msg;
-      mRouteSet = request.header(h_RecordRoutes);
+
+      switch (request.header(h_CSeq).method())
+      {
+         case INVITE:
+            mType = Invitation;
+            break;
+            
+         case SUBSCRIBE:
+         case REFER:
+         case NOTIFY:
+            mType = Subscription;
+            break;
+
+         default:
+            mType = Fake;
+      }
+     
+      mRouteSet = request.header(h_RecordRoutes); // !jf! is this right order
 
       switch (request.header(h_CSeq).method())
       {
          case INVITE:
          case SUBSCRIBE:
+         case REFER:
             if (request.exists(h_Contacts) && request.header(h_Contacts).size() == 1)
             {
                const NameAddr& contact = request.header(h_Contacts).front();
                if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
                    isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
                {
+                  mLocalContact = NameAddr(request.header(h_RequestLine).uri()); // update later when send a request 
                   mRemoteTarget = contact;
                }
                else
                {
                   InfoLog(<< "Got an INVITE or SUBSCRIBE with invalid scheme");
                   DebugLog(<< request);
-                  throw Exception("Invalid dialog", __FILE__, __LINE__);
+                  throw Exception("Invalid scheme in request", __FILE__, __LINE__);
                }
             }
             else
             {
                InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
                DebugLog (<< request);
-               throw Exception("Invalid dialog", __FILE__, __LINE__);
+               throw Exception("Too many (or no contact) contacts in request", __FILE__, __LINE__);
             }
             break;
          default:
@@ -82,7 +92,7 @@ Dialog::Dialog(DialogUsageManager& dum,
       }
       
       mRemoteCSeq = request.header(h_CSeq).sequence();
-      mLocalCSeq = 0;
+      mLocalCSeq = 1;
       
       if (request.header(h_From).exists(p_tag) ) // 2543 compat
       {
@@ -92,15 +102,26 @@ Dialog::Dialog(DialogUsageManager& dum,
       {
          mLocalTag = request.header(h_To).param(p_tag); 
       }
-      mMe = request.header(h_To);
-
-      //mDialogId = mCallId;
-      //mDialogId.param(p_toTag) = mLocalTag;
-      //mDialogId.param(p_fromTag) = mRemoteTag;
    }
    else if (msg.isResponse())
    {
       const SipMessage& response = msg;
+
+      switch (msg.header(h_CSeq).method())
+      {
+         case INVITE:
+            mType = Invitation;
+            break;
+            
+         case SUBSCRIBE:
+         case REFER:
+            mType = Subscription;
+            break;
+
+         default:
+            mType = Fake;
+      }
+
       if (response.exists(h_RecordRoutes))
       {
          mRouteSet = response.header(h_RecordRoutes).reverse();
@@ -110,26 +131,29 @@ Dialog::Dialog(DialogUsageManager& dum,
       {
          case INVITE:
          case SUBSCRIBE:
+         case REFER:
             if (response.exists(h_Contacts) && response.header(h_Contacts).size() == 1)
             {
                const NameAddr& contact = response.header(h_Contacts).front();
                if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
                    isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
                {
+                  BaseCreator& creator = mDum.findCreator(mId);
+                  mLocalContact = creator.getLastRequest().header(h_Contacts).front();
                   mRemoteTarget = contact;
                }
                else
                {
                   InfoLog (<< "Got an INVITE or SUBSCRIBE with invalid scheme");
                   DebugLog (<< response);
-                  throw Exception("Invalid dialog", __FILE__, __LINE__);
+                  throw Exception("Bad scheme in contact in response", __FILE__, __LINE__);
                }
             }
             else
             {
                InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
                DebugLog (<< response);
-               throw Exception("Invalid dialog", __FILE__, __LINE__);
+               throw Exception("Too many contacts (or no contact) in response", __FILE__, __LINE__);
             }
             break;
          default:
@@ -137,7 +161,8 @@ Dialog::Dialog(DialogUsageManager& dum,
       }
 
       mLocalCSeq = response.header(h_CSeq).sequence();
-
+      mRemoteCSeq = 0;
+      
       if ( response.header(h_From).exists(p_tag) ) // 2543 compat
       {
          mLocalTag = response.header(h_From).param(p_tag);  
@@ -146,11 +171,6 @@ Dialog::Dialog(DialogUsageManager& dum,
       {
          mRemoteTag = response.header(h_To).param(p_tag); 
       }
-      mMe = response.header(h_From);
-
-      //mDialogId = mCallId;
-      //mDialogId.param(p_toTag) = mLocalTag;
-      //mDialogId.param(p_fromTag) = mRemoteTag;
    }
 }
 

@@ -35,9 +35,15 @@ BaseCreator::makeInitialRequest(const NameAddr& target, MethodTypes method)
    mLastRequest.header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
    mLastRequest.header(h_CallId).value() = Helper::computeCallId();
 
-   NameAddr contact;
+   NameAddr contact; // if no GRUU, let the stack fill in the contact 
+   if (mDum.getProfile()->hasGruu(target.uri().getAor()))
+   {
+      contact = mDum.getProfile()->getGruu(target.uri().getAor());
+   }
    mLastRequest.header(h_Contacts).push_front(contact);
    
    Via via;
    mLastRequest.header(h_Vias).push_front(via);
+
+   mLastRequest.header(h_Supporteds) = mDum.getProfile()->getSupportedOptionTags();
 }
