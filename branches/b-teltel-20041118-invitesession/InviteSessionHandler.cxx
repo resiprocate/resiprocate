@@ -18,3 +18,9 @@ InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle)
    handle->end();
 }
 
+void 
+InviteSessionHandler::onIllegalNegotiation(InviteSessionHandle handle, const SipMessage& msg)
+{
+   InfoLog(<< "InviteSessionHandler::onIllegalNegotiation");
+}
+

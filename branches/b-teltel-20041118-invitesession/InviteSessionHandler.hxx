@@ -97,6 +97,9 @@ class InviteSessionHandler
       //default behaviour is to send a BYE to end the dialog, msg is the 
       //2xx that was being retransmitted
       virtual void onAckNotReceived(InviteSessionHandle);
+
+      // will be called if reINVITE or UPDATE in dialog fails
+      virtual void onIllegalNegotiation(InviteSessionHandle, const SipMessage& msg);     
 };
 
 }
