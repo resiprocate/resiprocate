@@ -3,7 +3,7 @@
 
 using namespace resip;
 
-const unsigned long DumTimeout::StaleCallTimeout = 3600*2; //2 hrs
+//const unsigned long DumTimeout::StaleCallTimeout = 3600*2; //2 hrs - now in profile
 
 DumTimeout::DumTimeout(Type type, unsigned long duration, BaseUsageHandle targetBu, int seq, int altSeq)
     : mType(type),
