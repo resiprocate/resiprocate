@@ -79,9 +79,26 @@ DialogUsageManager::~DialogUsageManager()
       delete dialogSet->second;
    }
    #endif
+   if(!mDialogSetMap.empty())
+   {
+      InfoLog(<< "DialogUsageManager::mDialogSetMap has " << mDialogSetMap.size() << " DialogSets");
+      DialogSetMap::const_iterator ds = mDialogSetMap.begin();
+      for(; ds != mDialogSetMap.end(); ++ds)
+      {
+         InfoLog(<< "DialgSetId:" << ds->first);
+         DialogSet::DialogMap::const_iterator   d = ds->second->mDialogs.begin();
+         for(; d != ds->second->mDialogs.end(); ++d)
+         {
+            //const Dialog* p = &(d->second);
+            InfoLog(<<"DialogId:" << d->first << ", " << *d->second);
+         }
+      }
+   }
+
    while(!mDialogSetMap.empty())
    {
-      delete mDialogSetMap.begin()->second;
+      DialogSet*  ds = mDialogSetMap.begin()->second;
+      delete ds;
    }
    //InfoLog ( << "~DialogUsageManager done" );
 }
@@ -119,6 +136,7 @@ DialogUsageManager::shutdown()
       switch (mShutdownState)
       {
          case ShutdownRequested:
+            //assert(mHandleMap.empty());
             mShutdownState = ShuttingDownStack;
             InfoLog (<< "shutdown SipStack");
             mStack->shutdown();
@@ -639,22 +657,43 @@ DialogUsageManager::end(DialogSetId setid)
 void
 DialogUsageManager::destroy(const BaseUsage* usage)
 {
-   DestroyUsage destroy(usage->mHandle);
-   mStack->post(destroy);
+   if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
+   {
+      DestroyUsage destroy(usage->mHandle);
+      mStack->post(destroy);
+   }
+   else
+   {
+      InfoLog(<< "DialogUsageManager::destroy() not posting to stack");
+   }
 }
 
 void
 DialogUsageManager::destroy(DialogSet* dset)
 {
-   DestroyUsage destroy(dset);
-   mStack->post(destroy);
+   if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
+   {
+      DestroyUsage destroy(dset);
+      mStack->post(destroy);
+   }
+   else
+   {
+      InfoLog(<< "DialogUsageManager::destroy() not posting to stack");
+   }
 }
 
 void
 DialogUsageManager::destroy(Dialog* d)
 {
-   DestroyUsage destroy(d);
-   mStack->post(destroy);
+   if (mShutdownState != ShuttingDownStack && mShutdownState != Destroying)
+   {
+      DestroyUsage destroy(d);
+      mStack->post(destroy);
+   }
+   else
+   {
+      InfoLog(<< "DialogUsageManager::destroy() not posting to stack");
+   }
 }
 
 void
