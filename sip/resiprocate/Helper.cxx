@@ -1073,21 +1073,24 @@ extractFromPkcs7Recurse(Contents* tree,
                         SecurityAttributes* attributes,
                         Security& security)
 {
-#if defined(USE_SSL)
    Pkcs7Contents* pk;
    if ((pk = dynamic_cast<Pkcs7Contents*>(tree)))
    {
+#if defined(USE_SSL)
       Contents* contents = security.decrypt(receiverAor, pk);
       if (contents)
       {
          attributes->setEncrypted();
       }
       return contents;
+#else
+      return 0;
+#endif
    }
-
    MultipartSignedContents* mps;
    if ((mps = dynamic_cast<MultipartSignedContents*>(tree)))
    {
+#if defined(USE_SSL)
       Data signer;
       SignatureStatus sigStatus;
       Contents* b = extractFromPkcs7Recurse(security.checkSignature(mps, 
@@ -1097,17 +1100,18 @@ extractFromPkcs7Recurse(Contents* tree,
                                             receiverAor, attributes, security);
       attributes->setSigner(signer);
       attributes->setSignatureStatus(sigStatus);
-      return b;
+      return b->clone();
+#else
+      return multi->parts().front()->clone();
+#endif      
    }
-
    MultipartAlternativeContents* alt;
    if ((alt = dynamic_cast<MultipartAlternativeContents*>(tree)))
    {
       for (MultipartAlternativeContents::Parts::reverse_iterator i = alt->parts().rbegin();
            i != alt->parts().rend(); ++i)
       {
-         Contents* b = extractFromPkcs7Recurse(*i, signerAor, receiverAor,
-                                               attributes, security);
+         Contents* b = extractFromPkcs7Recurse(*i, signerAor, receiverAor, attributes, security);
          if (b)
          {
             return b;
@@ -1133,10 +1137,6 @@ extractFromPkcs7Recurse(Contents* tree,
    }
 
    return tree->clone();
-#else
-   return 0;
-#endif
-
 }
 
 Helper::ContentsSecAttrs
@@ -1154,6 +1154,82 @@ Helper::extractFromPkcs7(const SipMessage& message,
    std::auto_ptr<Contents> c(b);
    std::auto_ptr<SecurityAttributes> a(attr);
    return ContentsSecAttrs(c, a);
+}
+
+Helper::FailureMessageEffect 
+Helper::determineFailureMessageEffect(const SipMessage& response)
+{
+   assert(response.isResponse());
+   int code = response.header(h_StatusLine).statusCode();
+   assert(code >= 400);
+   
+   switch(code)
+   {
+      case 404:
+      case 410:
+      case 416:
+      case 480:  // but maybe not, still not quite decided:
+      case 481:
+      case 482: // but maybe not, still not quite decided:
+      case 484:
+      case 485:
+      case 502:
+      case 604:
+         return DialogTermination;
+      case 403:
+      case 405:
+      case 489: //only for only subscription
+         return UsageTermination;      
+      case 400:
+      case 401:
+      case 402:
+      case 406:
+      case 412:
+      case 413:
+      case 414:
+      case 415:
+      case 420:
+      case 421:
+      case 423:
+      case 429: // but if this the refer creating the Subscription, no sub will be created.
+      case 486:
+      case 487:
+      case 488:
+      case 491: 
+      case 493:
+      case 494:
+      case 505:
+      case 513:
+      case 603:
+      case 606:
+         return TransactionTermination;
+      case 483: // who knows, gravefully terminate or just destroy dialog
+      case 501:
+         return ApplicationDependant;
+      default:
+         if (code < 600)
+         {
+            if (response.exists(h_RetryAfter))
+            {
+               return RetryAfter;
+            }
+            else
+            {
+               return OptionalRetryAfter;
+            }
+         }
+         else
+         {
+            if (response.exists(h_RetryAfter))
+            {
+               return RetryAfter;
+            }
+            else
+            {
+               return ApplicationDependant;
+            }
+         }
+   }
 }
 
 /* ====================================================================

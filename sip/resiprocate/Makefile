@@ -113,6 +113,7 @@ SRC = \
 	RportParameter.cxx \
 	SdpContents.cxx \
 	Security.cxx \
+	SecurityAttributes.cxx \
 	SipFrag.cxx \
 	ApplicationSip.cxx \
 	SipMessage.cxx \
