@@ -1,4 +1,6 @@
+#if defined(HAVE_CONFIG_H)
 #include "resiprocate/config.hxx"
+#endif
 
 #include <list>
 #include <errno.h>
@@ -26,7 +28,6 @@
 #include "GagConduit.hxx"
 
 using namespace resip;
-
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::APP
@@ -98,7 +99,6 @@ void init_loopback()
 int
 main (int argc, char **argv)
 {
-  char ch;
   int c;
   bool useLoopback = false;
   bool getoptError = false;
