@@ -29,8 +29,8 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-   char* logType = 0;
-   char* logLevel = 0;
+   char* logType = "cout";
+   char* logLevel = "DEBUG";
    int optLoop = 0;
    int optPort = 0;
    int optTcp = 0;
