@@ -1,5 +1,5 @@
 static const char* const Data_cxx_Version =
-"$Id: Data.cxx,v 1.25 2002/11/06 02:59:29 davidb Exp $";
+"$Id: Data.cxx,v 1.26 2002/11/07 02:44:49 derekm Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -188,6 +188,12 @@ Data::operator<(const Data& rhs) const
    {
       return (mSize < rhs.mSize);
    }
+}
+
+bool
+Data::operator>(const Data& rhs) const
+{
+   return rhs < *this;
 }
 
 Data& 
