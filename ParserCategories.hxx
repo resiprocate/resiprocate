@@ -26,14 +26,14 @@ class Token : public ParserCategory
       Token(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       Token(const Token&);
 
-      Data& value() {checkParsed(); return mValue;}
+      Data& value() const {checkParsed(); return mValue;}
 
       virtual void parse(); // remember to call parseParameters()
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
    private:
-      Data mValue;
+      mutable Data mValue;
 };
 typedef ParserContainer<Token> Tokens;
 
@@ -49,15 +49,15 @@ class Mime : public ParserCategory
       Mime(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       Mime(const Mime&);
       
-      Data& type() { return mType; }
-      Data& subType() { return mSubType; }
+      Data& type() const { return mType; }
+      Data& subType() const { return mSubType; }
          
       virtual void parse();
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
    private:
-      Data mType;
-      Data mSubType;
+      mutable Data mType;
+      mutable Data mSubType;
 };
 typedef ParserContainer<Mime> Mimes;
 
@@ -94,12 +94,12 @@ class IntegerComponent : public ParserCategory
       virtual std::ostream& encode(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
-      int& value() {checkParsed(); return mValue;}
-      Data& comment() {checkParsed(); return mComment;}
+      int& value() const {checkParsed(); return mValue;}
+      Data& comment() const {checkParsed(); return mComment;}
 
    private:
-      int mValue;
-      Data mComment;
+      mutable int mValue;
+      mutable Data mComment;
 };
 
 //====================
@@ -118,10 +118,10 @@ class StringComponent : public ParserCategory
       virtual std::ostream& encode(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
-      Data& value() {checkParsed(); return mValue;}
+      Data& value() const {checkParsed(); return mValue;}
 
    private:
-      Data mValue;
+      mutable Data mValue;
 };
 typedef ParserContainer<StringComponent> StringComponents;
 
@@ -163,13 +163,13 @@ class Url : public ParserCategory
       {}
       Url(const Url&);
 
-      Data& host() {checkParsed(); return mHost;}
-      Data& user() {checkParsed(); return mUser;}
-      Data& displayName() {checkParsed(); return mDisplayName;}
-      const Data& getAor();
-      Data& scheme() {checkParsed(); return mScheme;}
-      int& port() {checkParsed(); return mPort;}
-      Data& password() {checkParsed(); return mPassword;}
+      Data& host() const {checkParsed(); return mHost;}
+      Data& user() const {checkParsed(); return mUser;}
+      Data& displayName() const {checkParsed(); return mDisplayName;}
+      const Data& getAor() const;
+      Data& scheme() const {checkParsed(); return mScheme;}
+      int& port() const {checkParsed(); return mPort;}
+      Data& password() const {checkParsed(); return mPassword;}
 
       void setAllContacts() { mAllContacts = true;}
       
@@ -181,13 +181,13 @@ class Url : public ParserCategory
       
    protected:
       bool mAllContacts;
-      Data mScheme;
-      Data mHost;
-      Data mUser;
+      mutable Data mScheme;
+      mutable Data mHost;
+      mutable Data mUser;
       Data aor;
-      int mPort;
-      Data mPassword;
-      Data mDisplayName;
+      mutable int mPort;
+      mutable Data mPassword;
+      mutable Data mDisplayName;
 };
 
 typedef ParserContainer<Url> Urls;
@@ -204,14 +204,14 @@ class CallId : public ParserCategory
       CallId(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       CallId(const CallId&);
       
-      Data& value() {checkParsed(); return mValue;}
+      Data& value() const {checkParsed(); return mValue;}
 
       virtual void parse();
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
    private:
-      Data mValue;
+      mutable Data mValue;
 };
 typedef ParserContainer<CallId> CallIds;
 
@@ -227,16 +227,16 @@ class CSeqComponent : public ParserCategory
       CSeqComponent(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       CSeqComponent(const CSeqComponent&);
 
-      MethodTypes& method() {checkParsed(); return mMethod;}
-      int& sequence() {checkParsed(); return mSequence;}
+      MethodTypes& method() const {checkParsed(); return mMethod;}
+      int& sequence() const {checkParsed(); return mSequence;}
 
       virtual void parse();
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
    private:
-      MethodTypes mMethod;
-      int mSequence;
+      mutable MethodTypes mMethod;
+      mutable int mSequence;
 };
 
 //====================
@@ -251,14 +251,14 @@ class DateComponent : public ParserCategory
       DateComponent(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       DateComponent(const DateComponent&);
 
-      Data& value() {checkParsed(); return mValue;}
+      Data& value() const {checkParsed(); return mValue;}
 
       virtual void parse();
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
    private:
-      Data mValue;
+      mutable Data mValue;
 };
 
 //====================
@@ -290,22 +290,22 @@ class Via : public ParserCategory
       Via(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       Via(const Via&);
 
-      Data& protocolName() {checkParsed(); return mProtocolName;}
-      Data& protocolVersion() {checkParsed(); return mProtocolVersion;}
-      Data& transport() {checkParsed(); return mTransport;}
-      Data& sentHost() {checkParsed(); return mSentHost;}
-      int& sentPort() {checkParsed(); return mSentPort;}
+      Data& protocolName() const {checkParsed(); return mProtocolName;}
+      Data& protocolVersion() const {checkParsed(); return mProtocolVersion;}
+      Data& transport() const {checkParsed(); return mTransport;}
+      Data& sentHost() const {checkParsed(); return mSentHost;}
+      int& sentPort() const {checkParsed(); return mSentPort;}
 
       virtual void parse();
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
    private:
-      Data mProtocolName;
-      Data mProtocolVersion;
-      Data mTransport;
-      Data mSentHost;
-      int mSentPort;
+      mutable Data mProtocolName;
+      mutable Data mProtocolVersion;
+      mutable Data mTransport;
+      mutable Data mSentHost;
+      mutable int mSentPort;
 };
 typedef ParserContainer<Via> Vias;
  
@@ -323,8 +323,8 @@ class RequestLine : public Url
       RequestLine(HeaderFieldValue* hfv) : Url(hfv) {}
       RequestLine(const RequestLine&);
 
-      MethodTypes getMethod() {checkParsed(); return mMethod;}
-      const Data& getSipVersion() {checkParsed(); return mSipVersion;}
+      MethodTypes getMethod() const {checkParsed(); return mMethod;}
+      const Data& getSipVersion() const {checkParsed(); return mSipVersion;}
 
       virtual void parse();
       virtual ParserCategory* clone() const;
@@ -345,18 +345,18 @@ class StatusLine : public ParserCategory
       StatusLine(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
       StatusLine(const StatusLine&);
 
-      int responseCode() {checkParsed(); return mResponseCode;}
-      const Data& getSipVersion() {checkParsed(); return mSipVersion;}
-      Data& reason() {checkParsed(); return mReason;}
+      int& responseCode() const {checkParsed(); return mResponseCode;}
+      const Data& getSipVersion() const {checkParsed(); return mSipVersion;}
+      Data& reason() const {checkParsed(); return mReason;}
 
       virtual void parse();
       virtual ParserCategory* clone() const;
       virtual std::ostream& encode(std::ostream& str) const;
 
    private:
-      int mResponseCode;
+      mutable int mResponseCode;
       Data mSipVersion;
-      Data mReason;
+      mutable Data mReason;
 };
 
 }
