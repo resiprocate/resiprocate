@@ -102,7 +102,8 @@ class ParseBuffer
 
       void assertEof() const;
       void assertNotEof() const;
-      void fail(const char* file, unsigned int line) const;
+      void fail(const char* file, unsigned int line,
+                const Data& errmsg = Data::Empty) const;
 
       // make the passed in data share memory with the buffer
       void data(Data& data, const char* start) const;
