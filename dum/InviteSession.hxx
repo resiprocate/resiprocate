@@ -53,6 +53,7 @@ class InviteSession : public DialogUsage
       virtual SipMessage& modifySession();
  
       virtual SipMessage& makeRefer(const NameAddr& referTo);
+      virtual SipMessage& makeRefer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
 
       const SdpContents* getLocalSdp();
       const SdpContents* getRemoteSdp();
@@ -61,7 +62,7 @@ class InviteSession : public DialogUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      typedef Handle<InviteSession> InviteSessionHandle;
+//      typedef Handle<InviteSession> InviteSessionHandle;
       InviteSessionHandle getSessionHandle();
 
       typedef enum

@@ -328,9 +328,20 @@ void
 DialogSet::cancel()
 {
    mCancelled = true;
-   for (DialogMap::iterator i = mDialogs.begin(); i != mDialogs.end(); ++i)
+   if (!mDialogs.empty())
    {
-      i->second->cancel();
+      //need to lag and do last element ouside of look as this DialogSet will be
+      //deleted if all dialogs are destroyed
+      DialogMap::iterator last = mDialogs.end();
+      last--;   
+      for (DialogMap::iterator it = mDialogs.begin(); it != last;)
+      {
+         //cancel could invalidate it
+         Dialog* d = it->second;
+         it++;
+         d->cancel();
+      }
+      last->second->cancel();      
    }
 }
 
@@ -482,7 +493,7 @@ DialogSet::getServerOutOfDialog()
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
  *    software without prior written permission. For written
- *    permission, please contact vocal@vovida.org.
+1 *    permission, please contact vocal@vovida.org.
  *
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
