@@ -41,7 +41,8 @@ main()
       SipMessage message1;
 
       Preparse parse1(message1, txt1, strlen(txt1));
-      parse1.process();
+      while (parse1.process())
+         ;
 
       char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfirst\r\n"
@@ -60,7 +61,8 @@ main()
       SipMessage message2;
       
       Preparse parse2(message2, txt2, strlen(txt2));
-      parse2.process();
+      while (parse2.process())
+         ;
 
       // copy over everything
       message1.header(h_RequestLine) = message2.header(h_RequestLine);
@@ -109,7 +111,8 @@ main()
       SipMessage message1;
       
       Preparse parse1(message1, txt1, strlen(txt1));
-      parse1.process();
+      while (parse1.process())
+         ;
 
       // parse it
       message1.header(h_RequestLine).getMethod();
@@ -154,7 +157,9 @@ main()
       SipMessage message2;
       
       Preparse parse2(message2, txt2, strlen(txt2));
-      parse2.process();
+      while (parse2.process())
+         ;
+      
 
       assert(message2.header(h_RequestLine).getMethod() == REGISTER);
       assert(message2.header(h_To).uri().user() == "speedy");
@@ -225,7 +230,9 @@ main()
       SipMessage message;
       
       Preparse parse(message, txt, strlen(txt));
-      parse.process();
+      while (parse.process())
+         ;
+      
       
       SipMessage copy(message);
       stringstream str;
@@ -268,7 +275,9 @@ main()
       SipMessage message;
       
       Preparse parse(message, txt, strlen(txt));
-      parse.process();
+      while (parse.process())
+         ;
+      
       
       cerr << "Encode from unparsed: " << endl;
       message.encode(cerr);
@@ -330,7 +339,9 @@ main()
       SipMessage message;
       
       Preparse parse(message, txt, strlen(txt));
-      parse.process();
+      while (parse.process())
+         ;
+      
       
       message.encode(cerr);
       
@@ -355,7 +366,9 @@ main()
       SipMessage message;
       
       Preparse parse(message, txt, strlen(txt));
-      parse.process();
+      while (parse.process())
+         ;
+      
       
           
       Data v = message.header(h_CallId).value();
@@ -383,7 +396,9 @@ main()
       SipMessage message;
       
       Preparse parse(message, txt, strlen(txt));
-      parse.process();
+      while (parse.process())
+         ;
+      
       assert(message.getRawHeader(Headers::From));
       assert(&message.header(h_From));
       assert(message.header(h_From).exists(p_tag) == false);
@@ -414,7 +429,9 @@ main()
       SipMessage message;
       
       Preparse parse(message, txt, strlen(txt));
-      parse.process();
+      while (parse.process())
+         ;
+      
 
       assert(message.isRequest());
       assert(message.isResponse() == false);
@@ -479,7 +496,8 @@ main()
       SipMessage message;
       
       Preparse parse(message, txt, strlen(txt));
-      parse.process();
+      while (parse.process())
+         ;
 
       assert(message.header(h_MaxForwards).value() == 8);
       message.getRawHeader(Headers::Max_Forwards)->getParserContainer()->encode(cerr) << endl;
