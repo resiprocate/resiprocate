@@ -1,4 +1,4 @@
-   #include "resiprocate/Helper.hxx"
+#include "resiprocate/Helper.hxx"
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/SipStack.hxx"
 #include "resiprocate/dum/AppDialog.hxx"
@@ -10,11 +10,13 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/DumException.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
+#include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/ClientInviteSession.hxx"
 #include "resiprocate/dum/ClientPublication.hxx"
 #include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/ClientOutOfDialogReq.hxx"
 #include "resiprocate/dum/ClientRegistration.hxx"
+#include "resiprocate/dum/DefaultServerReferHandler.hxx"
 #include "resiprocate/dum/DumShutdownHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
@@ -22,13 +24,16 @@
 #include "resiprocate/dum/PublicationCreator.hxx"
 #include "resiprocate/dum/RegistrationCreator.hxx"
 #include "resiprocate/dum/ServerAuthManager.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/SipFrag.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
+using namespace std;
 
 DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mProfile(0),
@@ -42,6 +47,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack) :
    mStack(stack),
    mDumShutdownHandler(0)
 {
+   addServerSubscriptionHandler("refer", DefaultServerReferHandler::Instance());   
 }
 
 DialogUsageManager::~DialogUsageManager()
@@ -313,8 +319,30 @@ SipMessage&
 DialogUsageManager::makeInviteSession(const Uri& target, const SdpContents* initialOffer, AppDialogSet* appDs)
 {
    SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, target, initialOffer), appDs);
-   return inv;   
+   return inv;
 }
+
+SipMessage&
+DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle serverSub, 
+                                               const SdpContents* initialOffer, AppDialogSet* appDs)
+{
+   //generate and send 100
+   SipFrag contents;
+   contents.message().header(h_StatusLine).statusCode() = 100;   
+   contents.message().header(h_StatusLine).reason() = "Trying";
+   //will be cloned...ServerSub may not have the most efficient API possible
+   SipMessage& notify = serverSub->update(&contents);
+   mInviteSessionHandler->onReadyToSend(InviteSessionHandle::NotValid(), notify);
+   serverSub->send(notify);
+
+   SipMessage& inv = makeNewSession(new InviteSessionCreator(*this, refer.header(h_ReferTo).uri(), 
+                                                             initialOffer, serverSub), appDs);
+   inv.header(h_ReferredBy) =  mProfile->getDefaultAor();
+   
+   return inv;
+}
+
+
 
 SipMessage&
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* appDs)
@@ -345,7 +373,9 @@ DialogUsageManager::send(SipMessage& msg)
    InfoLog (<< "SEND: " << msg.brief());
    if (msg.isRequest()) //!dcm! -- invariant?
    {
-      if (msg.header(h_RequestLine).method() != CANCEL && msg.exists(h_Vias))
+      if (msg.header(h_RequestLine).method() != CANCEL &&
+          msg.header(h_RequestLine).method() != ACK && 
+          msg.exists(h_Vias))
       {
          msg.header(h_Vias).front().param(p_branch).reset();
       }
@@ -404,6 +434,45 @@ int
 DialogUsageManager::getTimeTillNextProcessMS()
 {
    return mStack.getTimeTillNextProcessMS();   
+}
+
+Dialog* 
+DialogUsageManager::findDialog(const DialogId& id)
+{
+   DialogSet* ds = findDialogSet(id.getDialogSetId());
+   if (ds)
+   {
+      return ds->findDialog(id);
+   }
+   else
+   {
+      return 0;
+   }
+}
+
+
+InviteSessionHandle 
+DialogUsageManager::findInviteSession(DialogId id)
+{
+   Dialog* dialog = findDialog(id);
+   if (dialog && dialog->mInviteSession)
+   {
+      return dialog->mInviteSession->getSessionHandle();
+   }
+   else
+   {
+      return InviteSessionHandle::NotValid();
+   }
+}
+
+InviteSessionHandle 
+DialogUsageManager::findInviteSession(CallId replaces)
+{
+   //486/481 decision making logic where?  App may not wish to keep track of
+   //invitesession state
+   return findInviteSession(DialogId(replaces.value(), 
+                                     replaces.param(p_toTag), 
+                                     replaces.param(p_fromTag)));
 }
 
 void
@@ -896,7 +965,6 @@ DialogUsageManager::getServerPublicationHandler(const Data& eventType)
       return 0;
    }
 }
-
 
 
 
