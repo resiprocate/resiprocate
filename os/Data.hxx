@@ -1,11 +1,12 @@
 #ifndef STRINGDATA_H_
 #define STRINGDATA_H_
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.13 2002/10/15 15:53:53 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.14 2002/10/15 18:03:21 jason Exp $";
 
 #include <iostream>
 #include <string>
 
+class TestData;
 namespace Vocal2
 {
 
@@ -43,6 +44,7 @@ class Data
       const char* data() const;
 
    private:
+      friend class TestData;
       Data(const char* buffer, int length, bool);
       void resize(unsigned int newSize, bool copy);
       unsigned int mSize;
@@ -68,9 +70,16 @@ namespace __gnu_cxx
 {
 struct hash<Vocal2::Data>
 {
-      size_t operator()(const Vocal2::Data& __s) const
+      size_t operator()(const Vocal2::Data& data) const
       {
-         return __gnu_cxx::__stl_hash_string(__s.c_str());
+         unsigned long __h = 0; 
+         const char* start = data.data(); // non-copying
+         const char* end = start + data.size();
+         for ( ; start != end; ++start)
+         {
+            __h = 5*__h + *start; // .dlb. weird hash
+         }
+         return size_t(__h);
       }
 };
 
