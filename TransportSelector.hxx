@@ -27,9 +27,9 @@ class TransportSelector
       TransportSelector(SipStack& stack);
       ~TransportSelector();
       
-      void process(fd_set* fdSet);
-
-      
+      void process(FdSet& fdset);
+      void buildFdSet(FdSet& fdset);
+     
       void addTransport( Transport::Type, int port, const Data& hostName="", const Data& nic="");
       void dnsResolve(SipMessage* msg);
 
@@ -41,8 +41,6 @@ class TransportSelector
       // just resend to the same transport as last time
       void retransmit(SipMessage* msg, Transport::Tuple& destination );
       
-      void buildFdSet( fd_set* fdSet, int* fdSetSize );
-	
    private:
       Transport* findTransport(const Transport::Tuple& tuple);
 

@@ -43,28 +43,17 @@ Transport::run()
 {
    while(!mShutdown)
    {
-      fd_set fdSet; 
-      int fdSetSize;
-
-      FD_ZERO(&fdSet); 
-      fdSetSize=0;
-      FD_SET(mFd,&fdSet); 
-
-#ifdef WIN32
-      assert(0);
-#else
-      if ( mFd+1 > fdSetSize )
-      {	
-         fdSetSize =  mFd+1; 
-      }
-#endif
-
-      int  err = select(fdSetSize, &fdSet, 0, 0, 0);
+      FdSet fdset; 
+      fdset.reset();
+      fdset.setRead(mFd);
+      fdset.setWrite(mFd);
+      int  err = fdset.select(0);
       if (err == 0)
       {
          try
          {
-            process();
+            assert(0);
+            //process();
          }
          catch (VException& e)
          {
@@ -107,16 +96,10 @@ Transport::send( const Tuple& dest, const Data& d, const Data& tid)
 
 
 void 
-Transport::buildFdSet( fd_set* fdSet, int* fdSetSize )
+Transport::buildFdSet( FdSet& fdset )
 {
-   assert( fdSet );
-   assert( fdSetSize );
-	
-   FD_SET(mFd,fdSet);
-   if ( int(mFd+1) > (*fdSetSize) )
-   {
-      *fdSetSize = mFd+1;
-   }
+   fdset.setRead(mFd);
+   fdset.setWrite(mFd);
 }
 
 Data
