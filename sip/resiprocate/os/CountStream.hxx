@@ -8,7 +8,7 @@
 namespace resip
 {
 
-class CountBuffer : public std::streambuf 
+class CountBuffer : public std::streambuf
 {
    public:
       CountBuffer(size_t& count);
@@ -24,16 +24,16 @@ class CountBuffer : public std::streambuf
       size_t& mCount;
 };
 
-class CountStream : public std::ostream
+class CountStream : private CountBuffer, public std::ostream
 {
    public:
       CountStream(size_t& count);
       ~CountStream();
 
-      unsigned long size() const {return mStreamBuf.size();}
+      unsigned long size() const {return CountBuffer::size();}
 
    private:
-      CountBuffer mStreamBuf;
+      //CountBuffer mStreamBuf;
 };
 
 }
