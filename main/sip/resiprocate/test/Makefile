@@ -7,9 +7,11 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE ARES OPENSSL PTHREAD
 
-LDLIBS += -lncurses 
-CXXFLAGS += -I/sw/include
-LDFLAGS  += -L/sw/lib
+
+#LDLIBS += -lncurses 
+#CXXFLAGS += -I/sw/include
+#LDFLAGS  += -L/sw/lib
+
 
 # this is so that popt only works where there is popt
 # To enable popt, add USE_POPT=true to sip/build/Makefile.conf
