@@ -207,7 +207,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          
          DebugLog (<<"Opening new connection to " << data->destination);
          makeSocketNonBlocking(sock);         
-         int e = connect( sock, &servaddr, sizeof(servaddr) );
+         int e = connect( sock, &servaddr, data->destination.length() );
 
          // See Chapter 15.3 of Stevens, Unix Network Programming Vol. 1 2nd Edition
          if (e == INVALID_SOCKET)
