@@ -1,7 +1,7 @@
-#ifndef STRINGDATA_H_
-#define STRINGDATA_H_
+#ifndef Data_hxx
+#define Data_hxx
 
-static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.15 2002/10/21 22:50:17 jason Exp $";
+static const char* const DataHeaderVersion = "$Id: Data.hxx,v 1.16 2002/10/30 18:44:11 jason Exp $";
 
 #include <iostream>
 #include <string>
@@ -64,8 +64,10 @@ class Data
 bool operator==(const char* s, const Data& d);
 bool operator!=(const char* s, const Data& d);
 std::ostream& operator<<(std::ostream& strm, const Data& d);
-
+ 
 }
+ 
+
 
 #if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
 #include <ext/hash_map>
@@ -141,3 +143,4 @@ struct hash<Vocal2::Data>
  * <http://www.vovida.org/>.
  *
  */
+
