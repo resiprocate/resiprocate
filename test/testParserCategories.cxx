@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <iostream>
-#include <sstream>
+#include <strstream>
 #include <string.h>
 
 #include "sip2/sipstack/HeaderFieldValue.hxx"
@@ -487,7 +487,8 @@ main(int arc, char** argv)
       assert(auth.param("algorithm") == "MD5"); 
       assert(auth.param("response") == "8a5165b024fda362ed9c1e29a7af0ef2"); 
 
-      stringstream s;
+      char buffer[2048]; 
+      ostrstream s(buffer, sizeof(buffer));
       auth.encode(s);
 
       cerr << s.str() << endl;
@@ -511,7 +512,8 @@ main(int arc, char** argv)
       assert(auth.param("algorithm") == "MD5"); 
       assert(auth.param("response") == "8a5165b024fda362ed9c1e29a7af0ef2"); 
 
-      stringstream s;
+      char buffer[2048]; 
+      ostrstream s(buffer, sizeof(buffer));
       auth.encode(s);
 
       cerr << s.str() << endl;
@@ -530,7 +532,8 @@ main(int arc, char** argv)
       assert(generic.param(p_purpose) == "icon");
       assert(generic.param("fake") == "true");
 
-      stringstream s;
+      char buffer[2048]; 
+      ostrstream s(buffer, sizeof(buffer));
       generic.encode(s);
 
       cerr << s.str() << endl;
@@ -552,7 +555,8 @@ main(int arc, char** argv)
       assert(date.minute() == 34);
       assert(date.second() == 15);
 
-      stringstream s;
+      char buffer[2048]; 
+      ostrstream s(buffer, sizeof(buffer));
       date.encode(s);
 
       cerr << s.str() << endl;
@@ -574,7 +578,8 @@ main(int arc, char** argv)
       assert(date.minute() == 04);
       assert(date.second() == 05);
 
-      stringstream s;
+      char buffer[2048]; 
+      ostrstream s(buffer, sizeof(buffer));
       date.encode(s);
       assert(s.str() == "Sun, 14 Jan 2222 07:04:05 GMT");
    }
@@ -589,7 +594,8 @@ main(int arc, char** argv)
       assert(mime.type() == "application");
       assert(mime.subType() == "sdp");
 
-      stringstream s;
+      char buffer[2048]; 
+      ostrstream s(buffer, sizeof(buffer));
       mime.encode(s);
       assert(s.str() == mimeString);
    }
@@ -605,7 +611,8 @@ main(int arc, char** argv)
       assert(mime.subType() == "html");
       assert(mime.param("charset") == "ISO-8859-4");
 
-      stringstream s;
+      char buffer[2048]; 
+      ostrstream s(buffer, sizeof(buffer));
       mime.encode(s);
       assert(s.str() == "text/html;charset=ISO-8859-4");
    }
@@ -620,7 +627,8 @@ main(int arc, char** argv)
       assert(mime.subType() == "html");
       assert(mime.param("charset") == "ISO-8859-4");
 
-      stringstream s;
+      char buffer[2048]; 
+      ostrstream s(buffer, sizeof(buffer));
       mime.encode(s);
       assert(s.str() == "text/html;charset=ISO-8859-4");
    }
@@ -634,7 +642,8 @@ main(int arc, char** argv)
       assert (via.param(p_branch).transactionId() == "1");
       assert (via.param(p_branch).clientData().empty());
 
-      stringstream s;
+      char buffer[2048]; 
+      ostrstream s(buffer, sizeof(buffer));
       via.encode(s);
       assert(s.str() == "SIP/2.0/UDP ;branch=z9hG4bK-kcD23X-1-1");
 
@@ -646,7 +655,8 @@ main(int arc, char** argv)
       via.param(p_branch).incrementCounter();
 
 
-      stringstream s2;
+      char buffer2[2048];
+      ostrstream s2(buffer, sizeof(buffer2));
       via.encode(s2);
       via.encode(cerr);
       cerr << endl;
@@ -661,7 +671,8 @@ main(int arc, char** argv)
       
       assert (via.param(p_branch).hasMagicCookie());
 
-      stringstream s0;
+      char buffer0[2048];
+      ostrstream s0(buffer0, sizeof(buffer0));
       via.encode(s0);
       cerr << s0.str() << endl;
       assert(s0.str() == "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj");
@@ -669,12 +680,14 @@ main(int arc, char** argv)
       assert (via.param(p_branch).transactionId() == "wkl3lkjsdfjklsdjklfdsjlkdklj");
       assert (via.param(p_branch).clientData().empty());
       
-      stringstream s1;
+      char buffer1[2048];
+      ostrstream s1(buffer1, sizeof(buffer1));
       via.encode(s1);
       assert(s1.str() == "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj");
       
       via.param(p_branch).transactionId() = "jason";
-      stringstream s2;
+      char buffer2[2048];
+      ostrstream s2(buffer2, sizeof(buffer2));
       via.encode(s2);
       assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bKjason");
       assert(via.param(p_branch).transactionId() == "jason");
@@ -690,12 +703,14 @@ main(int arc, char** argv)
       assert (via.param(p_branch).transactionId() == "oldassbranch");
       assert (via.param(p_branch).clientData().empty());
       
-      stringstream s;
+      char buffer[2048]; 
+      ostrstream s(buffer, sizeof(buffer));
       via.encode(s);
       assert(s.str() == "SIP/2.0/UDP ;branch=oldassbranch");
       
       via.param(p_branch).transactionId() = "jason";
-      stringstream s2;
+      char buffer2[2048];
+      ostrstream s2(buffer2, sizeof(buffer2));
       via.encode(s2);
       assert(s2.str() == "SIP/2.0/UDP ;branch=jason");
       assert(via.param(p_branch).transactionId() == "jason");
