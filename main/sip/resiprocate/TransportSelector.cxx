@@ -15,6 +15,7 @@
 
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
 
@@ -43,13 +44,14 @@ TransportSelector::~TransportSelector()
 {
    while (!mTransports.empty())
    {
-      Transport* t = mTransports[0];
-      mTransports.erase(mTransports.begin());
+      Transport* t = mTransports.begin()->second;
+      mTransports.erase(mTransports.begin()->first);
       delete t;
    }
 }
 
 
+// !jf! Note that it uses ipv6 here but ipv4 in the Transport classes (ugggh!)
 void 
 TransportSelector::addTransport( TransportType protocol, 
                                  int port,
@@ -62,7 +64,7 @@ TransportSelector::addTransport( TransportType protocol,
    switch ( protocol )
    {
       case UDP:
-         transport = new UdpTransport(mStateMacFifo, port, ipInterface, true);
+         transport = new UdpTransport(mStateMacFifo, port, ipInterface, !ipv6);
          break;
       case TCP:
          transport = new TcpTransport(mStateMacFifo, port, ipInterface, !ipv6);
@@ -77,7 +79,10 @@ TransportSelector::addTransport( TransportType protocol,
       transport->run();
    }
    
-   mTransports.push_back(transport);
+   Tuple key(ipInterface, port, !ipv6, protocol);
+   assert(mTransports.count(key) == 0);
+   DebugLog (<< "Adding transport: " << key);
+   mTransports[key] = transport;
 }
 
 void 
@@ -118,13 +123,12 @@ TransportSelector::process(FdSet& fdset)
    
    if (!mMultiThreaded)
    {
-      for (std::vector<Transport*>::const_iterator i=mTransports.begin();
-           i != mTransports.end();
-           i++)
+      for (std::map<Tuple,Transport*>::const_iterator i=mTransports.begin();
+           i != mTransports.end(); i++)
       {
          try
          {
-            (*i)->process(fdset);
+            i->second->process(fdset);
          }
          catch (BaseException& e)
          {
@@ -153,9 +157,10 @@ TransportSelector::hasDataToSend() const
 {   
    if (!mMultiThreaded)
    {
-      for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
+      for (std::map<Tuple,Transport*>::const_iterator i=mTransports.begin();
+           i != mTransports.end(); i++)
       {
-         if (  (*i)->hasDataToSend() )
+         if (  i->second->hasDataToSend() )
          {
             return true;
          }
@@ -218,133 +223,30 @@ TransportSelector::dnsResolve( SipMessage* msg, DnsHandler* handler)
    return result;
 }
 
-
-
-Tuple
-TransportSelector::srcAddrForDest(const Tuple& dest, bool& ok) const
+void
+TransportSelector::srcAddrForDest(const Tuple& dest, Tuple& source) const
 {
-  ok = true;
-  socklen_t addrlen;
-  union {
-        sockaddr generic;
-        sockaddr_in v4;
-#if defined(USE_IPV6)
-        sockaddr_in6 v6;
-#endif
-  } sockaddrBuffer;
-
-  sockaddr * sockaddrPtr = &sockaddrBuffer.generic;
-
-//  DebugLog(<<"Seeking src address for destination: " 
-//           << DnsUtil::inet_ntop(dest));
-  
-  if ( !dest.isV4() )
-#if defined(USE_IPV6)
-  {
-    // Move pts to v6 structs change addrlen.
-     addrlen      = sizeof(sockaddrBuffer.v6);
-  }
-#else
-  {
-    assert(((void)"No IPv6 support compiled into stack.",0));
-  }
-#endif
-  else
-  {
-     addrlen = sizeof(sockaddrBuffer.v4);
-  }
-
-	if (  mSocket == INVALID_SOCKET  )
-	{
-		
-		Socket s = socket(AF_INET, SOCK_DGRAM, 0);
-		mSocket = s;
-		if (  mSocket == INVALID_SOCKET )
-		{
-				int err = getErrno();
-				switch (err)
-				{
-				case WSANOTINITIALISED:
-					ErrLog( << "Network code not intialized" );
-					break;
-				default:
-					ErrLog( << "Could not get a datagram socket to use for transport selector" );
-				}
-				
-		}
-		assert( mSocket != INVALID_SOCKET );
-	}
-
-  int count = 0;
-unreach:
-  assert( mSocket != SOCKET_ERROR );
-
-  int connectError = connect(mSocket,
-                             &dest.getSockaddr(),
-                             addrlen);
-
-  
-  if (connectError == SOCKET_ERROR )
-  {
- int connectErrno = getErrno();
-    switch (connectErrno)
-    {
-      case EAGAIN:
-        if (count++ < 10)
-        {
-          DebugLog(<<"EAGAIN -- trying.");
-          goto unreach;
-        }
-        ok = false;
-        break;
-      case ENETUNREACH:
-        // error condition -- handle this better !ah!
-        ErrLog(<< DnsUtil::inet_ntop(dest) << ": destination unreachable.");
-        ok = false;
-        break;
-      default:
-         ErrLog(<< DnsUtil::inet_ntop(dest) << ": unable to connect, errno=" 
-                << connectErrno);
-         assert(0);
-        break;
-    }
-  }
-
-  //  DebugLog(<< DnsUtil::inet_ntop(dest) 
-  //<< ": destination unreachable == " << !!!ok);
-
-  if (ok || 1) // !ah! might be ok all the time
-  {
-    getsockname(mSocket,sockaddrPtr, &addrlen);
-
-    //DebugLog(<<"Src address is : " 
-    //<< DnsUtil::inet_ntop(sockaddrBuffer.generic));
-    if (!ok)
-    {
-      ErrLog(<<"Unable to route to destination address : " 
-             << DnsUtil::inet_ntop(dest));
-    }
-  }
-  switch(sockaddrBuffer.generic.sa_family)
-  {
-     case AF_INET:
-        return Tuple(sockaddrBuffer.v4.sin_addr,
-                     sockaddrBuffer.v4.sin_port,
-                     dest.getType());
-        break;
-#ifdef USE_IPV6
-     case AF_INET6:
-        return Tuple(sockaddrBuffer.v6.sin6_addr,
-                     sockaddrBuffer.v6.sin6_port,
-                     dest.getType());
-        break;
-#endif
-     default:
-        assert(0);
-  }
-
-	assert(0);
-	return Tuple(0,0,UNKNOWN_TRANSPORT);
+   if (mSocket == INVALID_SOCKET)
+   {
+      mSocket = Transport::socket(UDP, dest.isV4()); // may throw
+   }
+   
+   int ret = connect(mSocket,&dest.getSockaddr(), dest.length());
+   if (ret < 0)
+   {
+      int err = getErrno();
+      ErrLog(<< "Unable to route to " << DnsUtil::inet_ntop(dest) << strerror(err));
+      throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+   }
+   
+   socklen_t len = source.length();  
+   ret = getsockname(mSocket,&source.getMutableSockaddr(), &len);
+   if (ret < 0)
+   {
+      int err = getErrno();
+      ErrLog(<< "Can't determine name of socket " << DnsUtil::inet_ntop(dest) << strerror(err));
+      throw Transport::Exception("Can't find source address for Via", __FILE__,__LINE__);
+   }
 }
 
 // !jf! there may be an extra copy of a tuple here. can probably get rid of it
@@ -354,83 +256,61 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
 {
    assert( &destination != 0 );
    DebugLog (<< "Transmitting " << *msg << " to " << destination);
-   bool srcRouteStatus = true;
-   Tuple srcTuple(srcAddrForDest(destination,srcRouteStatus));
-
-   if (destination.transport == 0)
+   try
    {
-      if (destination.getType() == TLS)
+      Tuple source(destination);
+      srcAddrForDest(destination,source);
+      if (destination.transport == 0)
       {
-         destination.transport = findTlsTransport(msg->getTlsDomain());
+         if (destination.getType() == TLS)
+         {
+            destination.transport = findTlsTransport(msg->getTlsDomain());
+         }
+         else
+         {
+            // there must be a via, use the port in the via as a hint of what
+            // port to send on
+            source.setPort(msg->header(h_Vias).front().sentPort());
+            destination.transport = findTransport(source);
+         }
+      }
+      
+      if (destination.transport)
+      {
+         // insert the via
+         if (msg->isRequest())
+         {
+            assert(!msg->header(h_Vias).empty());
+            msg->header(h_Vias).front().remove(p_maddr); // !jf! why do this? 
+            msg->header(h_Vias).front().transport() = Tuple::toData(destination.transport->transport());  //cache !jf! 
+            msg->header(h_Vias).front().sentHost() = DnsUtil::inet_ntop(source);
+            msg->header(h_Vias).front().sentPort() = destination.transport->port();
+         }
+
+         Data& encoded = msg->getEncoded();
+         encoded.clear();
+         DataStream encodeStream(encoded);
+         msg->encode(encodeStream);
+         encodeStream.flush();
+
+         assert(!msg->getEncoded().empty());
+         //DebugLog (<< "encoded=" << std::endl << encoded.escaped().c_str() << "EOM");
+   
+         // send it over the transport
+         destination.transport->send(destination, encoded, msg->getTransactionId());
       }
       else
       {
-         // take clue from message
-         if (!msg->header(h_Vias).empty())
-            srcTuple.setPort(msg->header(h_Vias).front().sentPort());
-         else
-            srcTuple.setPort(0);
-
-         destination.transport = findTransport(destination, srcTuple);
-      }
-   }
-
-   if (destination.transport)
-   {
-      // insert the via
-      if (msg->isRequest())
-      {
-         assert(!msg->header(h_Vias).empty());
-         msg->header(h_Vias).front().remove(p_maddr);
-         msg->header(h_Vias).front().transport() =
-           Tuple::toData(destination.transport->transport());  //cache !jf! 
-
-         // wing in the transport address based on where this is going.
-
-         //!ah! xyzzy
-         bool status = true;
-         msg->header(h_Vias).front().sentHost() = 
-           DnsUtil::inet_ntop(srcTuple);
-
-         if (!status)
-         {
-           InfoLog (<< "No route to destination " << msg->getTransactionId() << " to " << destination);
-           mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
-           return;
-         }
-            
-         const Via &v(msg->header(h_Vias).front());
-
-         if (!DnsUtil::isIpAddress(v.sentHost()) &&
-             destination.transport->port() == 5060)
-         {
-            DebugLog(<<"supressing port 5060 w/ symname");
-            // backward compat for 2543 and the symbolic host w/ 5060 ;
-            // being a clue for SRV (see RFC 3263 sec 4.2 par 5).
-         }
-         else
-         {
-            msg->header(h_Vias).front().sentPort() = 
-              destination.transport->port();
-         }
+         InfoLog (<< "Failed to find a transport for " << msg->getTransactionId() << " to " << destination);
+         mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
       }
 
-      Data& encoded = msg->getEncoded();
-      encoded.clear();
-      DataStream encodeStream(encoded);
-      msg->encode(encodeStream);
-      encodeStream.flush();
-
-      assert(!msg->getEncoded().empty());
-      //DebugLog (<< "encoded=" << std::endl << encoded.escaped().c_str() << "EOM");
-   
-      // send it over the transport
-      destination.transport->send(destination, encoded, msg->getTransactionId());
    }
-   else
+   catch (Transport::Exception& e)
    {
-      InfoLog (<< "Failed to find a transport for " << msg->getTransactionId() << " to " << destination);
+      InfoLog (<< "No route to destination " << msg->getTransactionId() << " to " << destination);
       mStateMacFifo.add(new TransportMessage(msg->getTransactionId(), true));
+      return;
    }
 }
 
@@ -439,9 +319,7 @@ TransportSelector::retransmit(SipMessage* msg, Tuple& destination)
 {
    assert(destination.transport);
    assert(!msg->getEncoded().empty());
-   destination.transport->send(destination,
-                               msg->getEncoded(), 
-                               msg->getTransactionId());
+   destination.transport->send(destination, msg->getEncoded(), msg->getTransactionId());
 }
 
 
@@ -452,11 +330,11 @@ TransportSelector::buildFdSet( FdSet& fdset )
    
    if (!mMultiThreaded)
    {
-      for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
+      for (std::map<Tuple,Transport*>::const_iterator i=mTransports.begin();
+           i != mTransports.end(); i++)
       {
-         (*i)->buildFdSet( fdset );
+         i->second->buildFdSet( fdset );
       }
-
    
       for (HashMap<Data, TlsTransport*>::const_iterator i=mTlsTransports.begin(); 
            i != mTlsTransports.end(); i++)
@@ -466,110 +344,29 @@ TransportSelector::buildFdSet( FdSet& fdset )
    }
 }
 
-bool isAny(const sockaddr& sa)
-{
-   if (sa.sa_family == AF_INET)
-   {
-      bool result = reinterpret_cast<const sockaddr_in&>(sa).sin_addr.s_addr ==
-         htonl(INADDR_ANY);
-      
-      //DebugLog(<<"isAny("<<DnsUtil::inet_ntop(sa)<<")="<<result);
-      return result;
-   }
-#if defined(USE_IPV6) && 0 // disabled for now
-   else if (sa.sa_family == AF_INET6)
-      return reinterpret_cast<const sockaddr_in6&>(sa).sin6_addr == sa6_any;
-   // !ah! hton concerns with sa6?
-#endif
-
-   assert(0);
-
-   return false;
-      
-}
-
 Transport*
-TransportSelector::findTransport(const Tuple& dest, const Tuple& src) const
+TransportSelector::findTransport(const Tuple& search) 
 {
-   typedef std::vector<Transport*>::const_iterator tci;
-
-   tci defaultTransport = mTransports.end();
-
-   for (tci i=mTransports.begin();
-        i != mTransports.end();
-        i++)
+   // first search for a s specific transport, then look for transport with any interface
+   std::map<Tuple, Transport*>::iterator i = mTransports.find(search);
+   if (i != mTransports.end())
    {
-      const sockaddr& theBoundInterface((*i)->boundInterface());
-      TransportType theTransport((*i)->transport());
+      return i->second;
+   }
+   else
+   {
+      Tuple tuple(search);
+      tuple.setAny();
 
-#if 0
-      int port = (*i)->port();
-      DebugLog( << "have transport type " 
-                <<  theTransport);
-      DebugLog( << "bound to " 
-                << DnsUtil::inet_ntop(theBoundInterface)
-                << ":" << port
-         );
-      if (theBoundInterface.sa_family == AF_INET)
-         DebugLog(<< "theBoundInterface port is " 
-                  << reinterpret_cast<const sockaddr_in&>(theBoundInterface).sin_port);
-      else
-         DebugLog(<<"theBoundInterface family unknown" << theBoundInterface.sa_family);
-#endif
-
-      Tuple transportAsTuple(theBoundInterface, theTransport);
-
-      // this can be done much more efficiently -- doesn't need to be
-      // done each time through this search
-
-      // find an appropriate fall-back transport
-      // specific port test will take place later.
-      
-      if (theTransport == dest.getType()) // right KIND of transport
+      std::map<Tuple, Transport*>::iterator i = mTransports.find(tuple);
+      if (i != mTransports.end())
       {
-         if (isAny(theBoundInterface))
-         {
-            if (defaultTransport == mTransports.end())
-            {
-               //DebugLog(<<"Found fallback transport " << (*i));
-               defaultTransport = i; // remember the default transport
-            }
-         }
-         else
-         {
-            // Compare addresses -- cheat for now with ephemeral Tuples
-            Tuple left(transportAsTuple);
-            Tuple right(src);
-            left.setPort(0);
-            right.setPort(0);
-            if ( left == right )
-            {
-               //DebugLog(<<"IP Specific fallback transport found : " 
-               //         << transportAsTuple);
-               defaultTransport = i;
-            }
-         }
-      }
-
-      if ( transportAsTuple == src )// check if the addr / ports work.
-      {
-         DebugLog(<<"Matching interface (specific) transport found ");
-         return (*i);
-      }
-      else
-      {
-         //DebugLog(<<"Transport " << transportAsTuple << " != " << src );
+         return i->second;
       }
    }
 
-   if (defaultTransport != mTransports.end())
-   {
-      DebugLog(<<"Using default Transport ");
-      return (*defaultTransport);
-   }
-
-   ErrLog( << "Couldn't find a transport for " << " dest=" <<  dest );
-   return 0;
+   ErrLog(<< "Can't find matching transport " << DnsUtil::inet_ntop(search));
+   throw Transport::Exception("No matching transport found",__FILE__,__LINE__);
 }
 
 Transport*
