@@ -1,16 +1,12 @@
+#include <sstream>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/HeaderFieldValueList.hxx>
-
-#if defined(DEBUG) && defined(DEBUG_MEMORY)
 #include <util/Logger.hxx>
-#define VOCAL_SUBSYSTEM Subsystem::SIP
-#endif
 
 using namespace Vocal2;
 using namespace std;
 
-int strcasecmp(const char*, const char*);
-int strncasecmp(const char*, const char*, int len);
+#define VOCAL_SUBSYSTEM Subsystem::SIP
 
 SipMessage::SipMessage(bool fromWire)
    : mIsExternal(fromWire),
@@ -85,13 +81,13 @@ SipMessage::~SipMessage()
    {
       delete i->second;
    }
-
+   
    for (vector<char*>::iterator i = mBufferList.begin();
         i != mBufferList.end(); i++)
    {
       delete [] *i;
    }
-
+   
    delete mStartLine;
    delete mBody;
 }
@@ -139,14 +135,23 @@ SipMessage::encode(std::ostream& str) const
          mHeaders[i]->encode((Headers::Type)i, str);
       }
    }
+   str << Symbols::CRLF;
    
    if (mBody != 0)
    {
       mBody->encode(Headers::NONE, str);
    }
-   str << endl;
    
    return str;
+}
+
+const Data& 
+SipMessage::encode() 
+{
+   stringstream strm;
+   encode(strm);
+   mEncoded = strm.str();
+   return mEncoded;
 }
 
 void
