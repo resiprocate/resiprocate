@@ -77,8 +77,8 @@ main(int argc, char* argv[])
    Log::setServiceLevel(1, Log::CRIT);
    sleep(2);
 
-   InfoLog(<<"Setting service 2 to DEBUG_STACK\n");
-   Log::setServiceLevel(2, Log::DEBUG_STACK);
+   InfoLog(<<"Setting service 2 to STACK\n");
+   Log::setServiceLevel(2, Log::STACK);
    sleep(2);
 
    InfoLog(<<"Setting service 1 to DEBUG\n");

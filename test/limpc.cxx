@@ -500,7 +500,7 @@ myMain(int argc, char* argv[])
    {
       if (!strcmp(argv[i],"-vv"))
       {
-         Log::setLevel(Log::DEBUG_STACK);
+         Log::setLevel(Log::STACK);
       }
       else if (!strcmp(argv[i],"-v"))
       {
