@@ -45,9 +45,9 @@ Uri::Uri(const Data& data)
       tmp.parse(pb);
       *this = tmp;
    }
-   catch(ParseBuffer::Exception& /*e*/ )
+   catch(ParseBuffer::Exception& e)
    {
-      DebugLog (<< "Failed trying to construct a Uri from " << data);
+      DebugLog(<< "Failed trying to construct a Uri from " << data << ": " << e);
       throw;
    }
 }
@@ -139,7 +139,7 @@ Uri::fromTel(const Uri& tel, const Data& host)
       }
       
       for(std::set<Data>::const_iterator i = userParameters.begin();
-          i != userParameters.end(); i++)
+          i != userParameters.end(); ++i)
       {
          DebugLog(<< "Adding param: " << *i);
          if (!u.userParameters().empty())
@@ -209,6 +209,7 @@ Uri::operator==(const Uri& other) const
    if (DnsUtil::isIpV6Address(mHost) &&
        DnsUtil::isIpV6Address(other.mHost))
    {
+
       // compare canonicalized IPV6 addresses
 
       // update canonicalized if host changed
@@ -244,9 +245,10 @@ Uri::operator==(const Uri& other) const
        mPassword == other.mPassword &&
        mPort == other.mPort)
    {
-      for (ParameterList::iterator it = mParameters.begin(); it != mParameters.end(); it++)
+      for (ParameterList::iterator it = mParameters.begin(); it != mParameters.end(); ++it)
       {
          Parameter* otherParam = other.getParameterByEnum((*it)->getType());
+
          switch ((*it)->getType())
          {
             case ParameterTypes::user:
@@ -262,24 +264,33 @@ Uri::operator==(const Uri& other) const
             case ParameterTypes::ttl:
             {
                if (!(otherParam &&
-                     dynamic_cast<IntegerParameter*>(*it)->value(),
-                     dynamic_cast<IntegerParameter*>(otherParam)->value()))
+                     (dynamic_cast<IntegerParameter*>(*it)->value() ==
+                      dynamic_cast<IntegerParameter*>(otherParam)->value())))
                {
                   return false;
                }
+               break;
             }
             case ParameterTypes::method:
             {
                // this should possilby be case sensitive, but is allowed to be
                // case insensitive for robustness.  
+               
+               if (otherParam)
+               {
+                  DataParameter* dp1 = dynamic_cast<DataParameter*>(*it);
+                  DataParameter* dp2 = dynamic_cast<DataParameter*>(otherParam);
+                  assert(dp1);
+                  assert(dp2);
+               }
                if (!(otherParam &&
                      isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
                                    dynamic_cast<DataParameter*>(otherParam)->value())))
                {
                   return false;
                }
+               break;
             }
-            break;
             case ParameterTypes::maddr:
             {               
                if (!(otherParam &&
@@ -309,6 +320,74 @@ Uri::operator==(const Uri& other) const
                //treat as unknown parameter?
          }
       }         
+
+      // now check the other way, sigh
+      for (ParameterList::iterator it = other.mParameters.begin(); it != other.mParameters.end(); ++it)
+      {
+         Parameter* param = getParameterByEnum((*it)->getType());
+         switch ((*it)->getType())
+         {
+            case ParameterTypes::user:
+            {
+               if (!(param &&
+                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                   dynamic_cast<DataParameter*>(param)->value())))
+               {
+                  return false;
+               }
+            }
+            break;
+            case ParameterTypes::ttl:
+            {
+               if (!(param &&
+                     (dynamic_cast<IntegerParameter*>(*it)->value() == 
+                      dynamic_cast<IntegerParameter*>(param)->value())))
+               {
+                  return false;
+               }
+               break;
+            }
+            case ParameterTypes::method:
+            {
+               // this should possilby be case sensitive, but is allowed to be
+               // case insensitive for robustness.  
+               if (!(param &&
+                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                   dynamic_cast<DataParameter*>(param)->value())))
+               {
+                  return false;
+               }
+            }
+            break;
+            case ParameterTypes::maddr:
+            {               
+               if (!(param &&
+                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                   dynamic_cast<DataParameter*>(param)->value())))
+               {
+                  return false;
+               }
+            }
+            break;
+            case ParameterTypes::transport:
+            {
+               if (!(param &&
+                     isEqualNoCase(dynamic_cast<DataParameter*>(*it)->value(),
+                                   dynamic_cast<DataParameter*>(param)->value())))
+               {
+                  return false;
+               }
+            }
+            break;
+            // the parameters that follow don't affect comparison if only present
+            // in one of the URI's
+            case ParameterTypes::lr:
+               break;
+            default:
+               break;
+               //treat as unknown parameter?
+         }
+      }
    }
    else
    {
@@ -327,12 +406,12 @@ Uri::operator==(const Uri& other) const
    ParameterSet unA, unB;
 
    for (ParameterList::iterator i = mUnknownParameters.begin();
-        i != mUnknownParameters.end(); i++)
+        i != mUnknownParameters.end(); ++i)
    {
       unA.insert(*i);
    }
    for (ParameterList::iterator i = other.mUnknownParameters.begin();
-        i != other.mUnknownParameters.end(); i++)
+        i != other.mUnknownParameters.end(); ++i)
    {
       unB.insert(*i);
    }
@@ -343,8 +422,8 @@ Uri::operator==(const Uri& other) const
    ParameterList unA = mUnknownParameters;
    ParameterList unB = other.mUnknownParameters;
 
-   unA.sort(orderUnknown);  
-   unB.sort(orderUnknown);
+   sort(unA.begin(), unA.end(), orderUnknown);
+   sort(unB.begin(), unB.end(), orderUnknown);
  
    ParameterList::iterator a = unA.begin();
    ParameterList::iterator b = unB.begin();
@@ -354,11 +433,11 @@ Uri::operator==(const Uri& other) const
    {
       if (orderUnknown(*a, *b))
       {
-         a++;
+         ++a;
       }
       else if (orderUnknown(*b, *a))
       {
-         b++;
+         ++b;
       }
       else
       {
@@ -367,8 +446,8 @@ Uri::operator==(const Uri& other) const
          {
             return false;
          }
-         a++;
-         b++;
+         ++a;
+         ++b;
       }
    }
    return true;
@@ -447,24 +526,17 @@ Uri::getAorNoPort() const
    Data aor(mUser.size() + mHost.size() + 1);
    if (mUser.empty())
    {
-      aor = mHost;
+      aor = mCanonicalHost;
    }
    else
    {
       aor += mUser;
       aor += Symbols::AT_SIGN;
-      aor += mHost;
+      aor += mCanonicalHost;
    }   
    return aor;
 }
 
-// .dlb. alternatively:
-// derive Aor from Data. No additional data members. Provide comparison and hash
-// function. cast return value to Aor. Note: don't make ~Data virtual.
-//
-// alternative another:
-// don't canonicalize; provide aorCompare(const Data&, const Data&) and 
-// unsigned aorHash(const Data&)
 const Data&
 Uri::getAor() const
 {
@@ -490,19 +562,19 @@ Uri::getAor() const
       mOldPort = mPort;
       mAor.clear();
 
-      //                                         @:10000
-      mAor.reserve(mUser.size() + mHost.size() + 10);
+      //                                                  @:10000
+      mAor.reserve(mUser.size() + mCanonicalHost.size() + 10);
       if (mOldUser.empty())
       {
-         mAor += mOldHost;
+         mAor += mCanonicalHost;
       }
       else
       {
          mAor += mOldUser;
-         if (!mOldHost.empty())
+         if (!mCanonicalHost.empty())
          {
             mAor += Symbols::AT_SIGN;
-            mAor += mOldHost;
+            mAor += mCanonicalHost;
          }
       }
 
@@ -520,7 +592,7 @@ Uri::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
    const char* start = pb.position();
-   pb.skipToOneOf(":@"); // make sure the colon precedes @
+   pb.skipToOneOf(":@"); // make sure the colon precedes
 
    pb.assertNotEof();
 
