@@ -18,10 +18,10 @@ class HeaderFieldValueList
       {}
 
       ~HeaderFieldValueList();
-      HeaderFieldValueList* clone() const;
+      HeaderFieldValueList(const HeaderFieldValueList& rhs);
 
       void setParserContainer(ParserContainerBase* parser) {mParserContainer = parser;}
-      ParserContainerBase* getParserContainer() {return mParserContainer;}
+      ParserContainerBase* getParserContainer() const {return mParserContainer;}
 
       bool empty() const {return mHeaders.empty();}
       size_t size() const {return mHeaders.size();}

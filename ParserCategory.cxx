@@ -9,7 +9,8 @@ using namespace std;
 
 ParserCategory::ParserCategory()
    : mHeaderField(0),
-     mIsParsed(true)
+     mIsParsed(true),
+     mMine(true)
 {}
 
 ParserCategory::ParserCategory(const ParserCategory& rhs)
@@ -17,8 +18,32 @@ ParserCategory::ParserCategory(const ParserCategory& rhs)
 {
    if (rhs.mHeaderField)
    {
-      mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
+      mHeaderField = new HeaderFieldValue(*rhs.mHeaderField, this);
+      mMine = true;
    }
+}
+
+ParserCategory&
+ParserCategory::operator=(const ParserCategory& rhs)
+{
+   if (this != &rhs)
+   {
+      mIsParsed = rhs.mIsParsed;
+      if (mMine)
+      {
+         delete mHeaderField;
+      }
+      if (!mIsParsed)
+      {
+         mHeaderField = new HeaderFieldValue(*rhs.mHeaderField, this);
+         mMine = true;
+      }
+      else
+      {
+         mHeaderField = 0;
+      }
+   }
+   return *this;
 }
 
 ParserCategory::~ParserCategory()
@@ -33,6 +58,29 @@ ParserCategory::~ParserCategory()
    {
       delete *it;
    }   
+   if (mMine)
+   {
+      delete mHeaderField;
+   }
+}
+
+void
+ParserCategory::checkParsed() const
+{
+   // !dlb! thread safety?
+   if (!mIsParsed)
+   {
+      ParserCategory* ncThis = const_cast<ParserCategory*>(this);
+      ncThis->mIsParsed = true;
+      ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength);
+      ncThis->parse(pb);
+
+      if (mMine)
+      {
+         delete mHeaderField;
+         ncThis->mHeaderField = 0;
+      }
+   }
 }
 
 ostream&
@@ -41,22 +89,6 @@ ParserCategory::encodeFromHeaderFieldValue(ostream& str) const
    assert(mHeaderField);
    str.write(mHeaderField->mField, mHeaderField->mFieldLength);
    return str;
-}
-
-ParserCategory*
-ParserCategory::clone(HeaderFieldValue* hfv) const
-{
-   ParserCategory* ncthis = const_cast<ParserCategory*>(this);
-   
-   HeaderFieldValue* old = ncthis->mHeaderField;
-   // suppress the HeaderFieldValue copy
-   ncthis->mHeaderField = 0;
-   ParserCategory* pc = clone();
-   ncthis->mHeaderField = old;
-   // give the clone the 
-   pc->mHeaderField = hfv;
-
-   return pc;
 }
 
 // !dlb! need to convert existing parameter by enum to UnknownParameter for backward compatibility

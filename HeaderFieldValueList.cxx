@@ -13,19 +13,17 @@ HeaderFieldValueList::~HeaderFieldValueList()
    delete mParserContainer;
 }
 
-HeaderFieldValueList* 
-HeaderFieldValueList::clone() const
+HeaderFieldValueList::HeaderFieldValueList(const HeaderFieldValueList& rhs)
 {
-   HeaderFieldValueList* nhfvs = new HeaderFieldValueList;
-   
-   for (const_iterator i = begin(); i != end(); i++)
-   {
-      nhfvs->push_back((*i)->clone());
-   }
-
    if (mParserContainer != 0)
    {
-      nhfvs->mParserContainer = mParserContainer->clone();
+      mParserContainer = rhs.mParserContainer->clone();
    }
-   return nhfvs;
+   else
+   {
+      for (const_iterator i = rhs.begin(); i != rhs.end(); i++)
+      {
+         push_back(new HeaderFieldValue(**i, 0));
+      }
+   }
 }
