@@ -43,8 +43,9 @@ class ServerInviteSession: public InviteSession
       virtual void targetRefresh(const NameAddr& localUri);
 
       // Following methods are for sending requests within a dialog
+      /* !slg if these are here, then you cannot use refer at all in a ServerInviteSession
       virtual void refer(const NameAddr& referTo);
-      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
+      virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace); */
       virtual void info(const Contents& contents);
       
    private:
