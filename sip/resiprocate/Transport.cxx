@@ -2,31 +2,14 @@
 #include "resiprocate/config.hxx"
 #endif
 
-
-#include "resiprocate/os/Socket.hxx"
-
-#include <sys/types.h>
-
-#ifndef WIN32
-#include <unistd.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <arpa/inet.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#else
-#include <winsock2.h>
-#include <stdlib.h>
-#include <io.h>
-#endif
+#include <iostream>
 
 #if defined(HAVE_SYS_SOCKIO_H)
 #include <sys/sockio.h>
 #endif
 
-#include <iostream>
-
 #include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Socket.hxx"
 
@@ -44,10 +27,10 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 {
 }
 
-Transport::Transport(Fifo<Message>& rxFifo, int portNum, const Data& sendhost, bool ipv4) : 
+Transport::Transport(Fifo<Message>& rxFifo, int portNum, const Data& intfc, bool ipv4) : 
    mFd(-1),
-   mHost(sendhost),
    mPort(portNum), 
+   mInterface(intfc),
    mStateMachineFifo(rxFifo)
 {
 }
@@ -111,16 +94,7 @@ Transport::stampReceived(SipMessage* message)
    if (message->isRequest() && message->exists(h_Vias) && !message->header(h_Vias).empty())
    {
       const Tuple& tuple = message->getSource();
-      
-#ifndef WIN32
-      char received[255];
-      inet_ntop(AF_INET, &tuple.ipv4.s_addr, received, sizeof(received));
-      message->header(h_Vias).front().param(p_received) = received;
-#else
-      char * buf = inet_ntoa(tuple.ipv4); // !jf! not threadsafe
-      message->header(h_Vias).front().param(p_received) = buf;
-#endif
-
+      message->header(h_Vias).front().param(p_received) = DnsUtil::inet_ntop(tuple);
       if (message->header(h_Vias).front().exists(p_rport))
       {
          message->header(h_Vias).front().param(p_rport).port() = tuple.port;
