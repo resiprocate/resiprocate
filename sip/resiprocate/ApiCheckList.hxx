@@ -32,10 +32,12 @@ static ::resip::ApiCheck::ApiEntry anonymous_resipApiSizeList[] =
     TENT(TlsConnection,"USE_SSL"),
     TENT(TransportSelector,"USE_IPV6"),
     TENT(Tuple,"USE_IPV6"),
-    TENT(UdpTransport,"NEW_MSG_HEADER_SCANNER"),
-    {0,0}
+    TENT(UdpTransport,"NEW_MSG_HEADER_SCANNER")
 };
 
-static resip::ApiCheck::ApiCheck anonymous_resipApiCheckObj(anonymous_resipApiSizeList);
+static resip::ApiCheck::ApiCheck
+ anonymous_resipApiCheckObj(anonymous_resipApiSizeList,
+                            sizeof(anonymous_resipApiSizeList)/sizeof(*anonymous_resipApiSizeList)
+     );
 
 #endif
