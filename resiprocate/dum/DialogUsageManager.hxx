@@ -124,9 +124,9 @@ class DialogUsageManager : public HandleManager
       
       SipMessage& makeSubscription(const NameAddr& target, const NameAddr& from, const Data& eventType, AppDialogSet* = 0);
       //unsolicited refer
-      SipMessage& makeRefer(const Uri& target, const NameAddr& from, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
+      SipMessage& makeRefer(const NameAddr& target, const NameAddr& from, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
 
-      SipMessage& makePublication(const Uri& target, 
+      SipMessage& makePublication(const NameAddr& target, 
                                   const NameAddr& from, 
                                   const Contents& body, 
                                   const Data& eventType, 
