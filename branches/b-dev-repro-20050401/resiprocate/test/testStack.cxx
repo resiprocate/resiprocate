@@ -157,6 +157,7 @@ main(int argc, char* argv[])
       {
          assert(response->isResponse());
          assert(response->header(h_CSeq).method() == REGISTER);
+         assert(response->header(h_StatusLine).statusCode() == 200);
          outstanding--;
          count++;
          delete response;
