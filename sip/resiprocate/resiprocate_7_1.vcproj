@@ -22,11 +22,11 @@
 				AdditionalOptions="/Zm300
 "
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/contrib/ares&quot;;&quot;$(SolutionDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)/../contrib/ares&quot;;&quot;$(ProjectDir)/../&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_ARES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				BufferSecurityCheck="TRUE"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
@@ -217,6 +217,9 @@
 			</File>
 			<File
 				RelativePath=".\ApiCheck.cxx">
+			</File>
+			<File
+				RelativePath=".\dum\AppDialogSet.cxx">
 			</File>
 			<File
 				RelativePath=".\AresDns.cxx">

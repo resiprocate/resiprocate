@@ -86,11 +86,11 @@ Tuple::Tuple(const Data& printableAddr, int port, bool ipv4, TransportType type)
       m_anonv6.sin6_port = htons(port);
       if (printableAddr.empty())
       {
-         DnsUtil::inet_pton( printableAddr, m_anonv6.sin6_addr);
+         m_anonv6.sin6_addr = in6addr_any;
       }
       else
       {
-         m_anonv6.sin6_addr = in6addr_any;
+         DnsUtil::inet_pton( printableAddr, m_anonv6.sin6_addr);
       }
 #else
 	  assert(0);
