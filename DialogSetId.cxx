@@ -69,6 +69,20 @@ DialogSetId::operator<(const DialogSetId& rhs) const
    return mTag < rhs.mTag;
 }
 
+bool 
+DialogSetId::operator>(const DialogSetId& rhs) const
+{
+   if (mCallId > rhs.mCallId)
+   {
+      return true;
+   }
+   if (mCallId < rhs.mCallId)
+   {
+      return false;
+   }
+   return mTag > rhs.mTag;
+}
+
 #if defined(HASH_MAP_NAMESPACE)
 size_t HASH_MAP_NAMESPACE::hash<resip::DialogSetId>::operator()(const resip::DialogSetId& id) const
 {

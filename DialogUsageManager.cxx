@@ -613,6 +613,37 @@ DialogUsageManager::destroyUsage(BaseUsage* usage)
    }
 }
 
+ServerSubscription* 
+DialogUsageManager::makeServerSubscription(Dialog& dialog,const SipMessage& msg)
+{
+   assert(0);
+   return 0;
+}
+
+ServerRegistration* 
+DialogUsageManager::makeServerRegistration(Dialog& dialog,const SipMessage& msg)
+{
+   assert(0);
+   return 0;
+}
+
+ServerPublication* 
+DialogUsageManager::makeServerPublication(Dialog& dialog,const SipMessage& msg)
+{
+   assert(0);
+   return 0;
+}
+
+ServerOutOfDialogReq* 
+DialogUsageManager::makeServerOutOfDialog(Dialog& dialog,const SipMessage& msg)
+{
+   assert(0);
+   return 0;
+}
+
+
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
