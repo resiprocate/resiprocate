@@ -480,6 +480,7 @@ Dialog::dispatch(const SipMessage& msg)
          case BYE:
          case ACK:
          case CANCEL:
+         case INFO:
             if (mInviteSession != 0)
             {
                mInviteSession->dispatch(response);
@@ -780,6 +781,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
              request.header(h_RequestLine).getMethod() == REFER ||
              request.header(h_RequestLine).getMethod() == MESSAGE ||
              request.header(h_RequestLine).getMethod() == NOTIFY ||
+             request.header(h_RequestLine).getMethod() == INFO ||
              request.header(h_RequestLine).getMethod() == OPTIONS 
              );
       
