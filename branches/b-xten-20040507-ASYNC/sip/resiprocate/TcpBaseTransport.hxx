@@ -1,7 +1,7 @@
 #if !defined(RESIP_TCPBASETRANSPORT_HXX)
 #define RESIP_TCPBASETRANSPORT_HXX
 
-#include "resiprocate/Transport.hxx"
+#include "resiprocate/InternalTransport.hxx"
 #include "resiprocate/ConnectionManager.hxx"
 
 namespace resip
@@ -9,10 +9,10 @@ namespace resip
 
 class SipMessage;
 
-class TcpBaseTransport : public Transport
+class TcpBaseTransport : public InternalTransport
 {
    public:
-      enum {MaxFileDescriptors = 100000};
+//      enum {MaxFileDescriptors = 100000};
 
       TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data& sendhost, bool ipv4);
       virtual  ~TcpBaseTransport();
@@ -20,7 +20,7 @@ class TcpBaseTransport : public Transport
       void process(FdSet& fdset);
       void buildFdSet( FdSet& fdset);
       bool isReliable() const { return true; }
-      int maxFileDescriptors() const { return MaxFileDescriptors; }
+//      int maxFileDescriptors() const { return MaxFileDescriptors; }
 
       ConnectionManager& getConnectionManager() {return mConnectionManager;}
 

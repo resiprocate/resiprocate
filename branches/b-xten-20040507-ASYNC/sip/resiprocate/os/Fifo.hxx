@@ -2,7 +2,7 @@
 #define RESIP_FIFO_HXX 
 
 static const char* const resipFifo_h_Version =
-   "$Id: Fifo.hxx,v 1.19 2003/10/01 15:33:50 fluffy Exp $";
+   "$Id: Fifo.hxx,v 1.19.14.1 2004/05/14 23:59:52 derekm Exp $";
 
 #include <list>
 //#include <errno.h>
@@ -29,8 +29,11 @@ class Fifo
       virtual ~Fifo();
       
       // Add a message to the fifo.
-      void add(Msg* msg);
 
+      //virual to allow the NotifierFifo subclass to cause execution to occur.
+      //Was considering optimizing this w/ an #ifdef but in the non-polling
+      //thread case there would be a context switch anyways.  Also, a 
+      virtual void add(Msg* msg);
       /** Returns the first message available. It will wait if no
        *  messages are available. If a signal interrupts the wait,
        *  it will retry the wait. Signals can therefore not be caught
@@ -73,7 +76,7 @@ Fifo<Msg>::~Fifo()
       delete mFifo.front();
       mFifo.pop_front();
    }
-   mSize = 0UL -1;
+   mSize = 0UL - 1;
 }
 
 template <class Msg>
@@ -89,7 +92,7 @@ Fifo<Msg>::add(Msg* msg)
 
 template <class Msg>
 Msg*
-Fifo<Msg> ::getNext()
+Fifo<Msg>::getNext()
 {
    Lock lock(mMutex); (void)lock;
 

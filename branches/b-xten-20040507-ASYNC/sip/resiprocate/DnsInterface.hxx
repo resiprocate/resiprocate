@@ -1,19 +1,13 @@
 #if !defined(RESIP_DNSINTERFACE_HXX)
 #define RESIP_DNSINTERFACE_HXX 
 
-#if defined(USE_ARES)
-extern "C"
-{
-struct ares_channeldata;
-}
-#endif
-
 #include <set>
 
 #include "resiprocate/os/TransportType.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/BaseException.hxx"
+#include "resiprocate/external/ExternalDns.hxx"
 
 namespace resip
 {
@@ -22,9 +16,9 @@ class DnsResult;
 class TransactionState;
 class Uri;
 class Via;
-   
+class ExternalDns;
 // 
-class DnsInterface
+class DnsInterface : public ExternalDnsHandler
 {
    public:
       class Exception : public BaseException
@@ -38,16 +32,27 @@ class DnsInterface
       // be queued for later processing. It is critical that the consumer of the
       // DnsResult be in the same thread that is processing the async results
       // since there is no locking on the DnsResult
-      // Will throw DnsInterface::Exception if ares fails to initialize
-      DnsInterface(bool synchronous=false);
+      // Will throw DnsInterface::Exception if the Dns provider fails to initialize
+      DnsInterface(ExternalDns* mDnsProvider);
+
       virtual ~DnsInterface();
+
+      void lookupARecords(const Data& target, DnsResult* dres);
+      void lookupAAAARecords(const Data& target, DnsResult* dres);
+      void lookupNAPTR(const Data& target, DnsResult* dres);
+      void lookupSRV(const Data& target, DnsResult* dres);
       
+      Data errorMessage(int status);
+
       // set the supported set of types that a UAC wishes to use
       void addTransportType(TransportType type);
       
       // return if the client supports the specified service (e.g. SIP+D2T)
       bool isSupported(const Data& service);
       
+      //only call buildFdSet and process if requiresProcess is true.  
+      bool requiresProcess();
+
       // adds the appropriate file descriptors to the fdset to allow a
       // select/poll call to be made 
       void buildFdSet(FdSet& fdset);
@@ -55,6 +60,7 @@ class DnsInterface
       // process any dns results back from the async dns library (e.g. ares). If
       // there are results to report, post an event to the fifo
       void process(FdSet& fdset);
+
       
       // For each of the following calls, immediately return a DnsResult to the
       // caller. If synchronous, the DnsResult is complete and may block for an
@@ -71,14 +77,19 @@ class DnsInterface
       // transport (if there is one)
       DnsResult* lookup(const Uri& url, DnsHandler* handler=0);
       DnsResult* lookup(const Via& via, DnsHandler* handler=0);
-      
+
+      //callbacks for mDnsProvider
+      virtual void handle_NAPTR(ExternalDnsRawResult res);
+      virtual void handle_SRV(ExternalDnsRawResult res);
+      virtual void handle_AAAA(ExternalDnsRawResult res);
+      virtual void handle_host(ExternalDnsHostResult res);
+
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
       DnsHandler* mHandler;
       std::set<Data> mSupportedTransports;
-	  struct ares_channeldata* mChannel;
-
+      ExternalDns* mDnsProvider;
       friend class DnsResult;
 };
 

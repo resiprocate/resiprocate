@@ -7,6 +7,7 @@
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TimerQueue.hxx"
+#include "resiprocate/ProcessNotifier.hxx"
 
 namespace resip
 {
@@ -14,7 +15,12 @@ namespace resip
 class TransactionController
 {
    public:
-      TransactionController(bool multithreaded, Fifo<Message>& tufifo, bool stateless=false);
+      TransactionController(bool multithreaded, Fifo<Message>& tufifo, 
+                            bool stateless=false, ProcessNotifier::Handler* asyncHandler=0);
+      
+      TransactionController(bool multithreaded, Fifo<Message>& tufifo, ExternalSelector* tSelector, 
+                            bool stateLess = false, ProcessNotifier::Handler* asyncHandler=0);
+
       ~TransactionController();
 
       void process(FdSet& fdset);
@@ -24,17 +30,23 @@ class TransactionController
       // graceful shutdown (eventually)
       void shutdown();
 
-      void addTransport( TransportType protocol, 
-                         int port,
-                         IpVersion version,
-                         const Data& ipInterface);
-      void addTlsTransport( int port, 
-                            const Data& keyDir,
-                            const Data& privateKeyPassPhrase,
-                            const Data& domainname,
-                            IpVersion version,
-                            const Data& ipInterface);
+      //!dcm! these passthroughs make extending TransportSelector a pain, don't seem to do much.
+      //just have passthrough in SipStack...maybe rework that so selector will to aliases for stack?
+      //Instead of the 3 levels of passthrough.
+//       void addTransport( TransportType protocol, 
+//                          int port,
+//                          IpVersion version,
+//                          const Data& ipInterface);
+//       void addTlsTransport( int port, 
+//                             const Data& keyDir,
+//                             const Data& privateKeyPassPhrase,
+//                             const Data& domainname,
+//                             IpVersion version,
+//                             const Data& ipInterface);
       
+      TransportSelector& transportSelector() { return mTransportSelector; }
+      const TransportSelector& transportSelector() const { return mTransportSelector; }
+
       void send(SipMessage* msg);
 
       // Inform the TU that whenever a transaction has been terminated. 
@@ -61,7 +73,7 @@ class TransactionController
       // For stateless stacks, this has a different behavior and does not create
       // a transaction for each request and does not do any special transaction
       // processing for requests or responses
-      Fifo<Message> mStateMacFifo;
+      Fifo<Message>* mStateMacFifo;
 
       // from the sipstack (for convenience)
       Fifo<Message>& mTUFifo;
