@@ -21,16 +21,18 @@ LDLIBS   += -ldb-4.2
 SRC =   \
         monkeys/DigestAuthenticator.cxx \
 	monkeys/RouteProcessor.cxx \
+	monkeys/AmIResponsible.cxx \
 	monkeys/LocationServer.cxx \
+	CommandLineParser.cxx \
 	Proxy.cxx \
-	UserDb.cxx \
-	UserAuthInfo.cxx \
-	WebAdmin.cxx \
-	WebAdminThread.cxx \
+	Registrar.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
+	UserAuthInfo.cxx \
+	UserDb.cxx \
+	WebAdmin.cxx \
+	WebAdminThread.cxx \
         RequestProcessor.cxx \
-	Registrar.cxx \
         RequestProcessorChain.cxx
 
 

@@ -33,7 +33,8 @@ class RequestContext
       const resip::SipMessage& getOriginalRequest() const;
       const resip::Data& getTransactionId() const;
       
-      /// Returns the event that we are currently working on
+      /** Returns the event that we are currently working on. Use a pointer
+          since users need to check for null */
       resip::Message* getCurrentEvent();
       const resip::Message* getCurrentEvent() const;
       

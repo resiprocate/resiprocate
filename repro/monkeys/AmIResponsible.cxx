@@ -3,8 +3,9 @@
 #endif
 
 #include "resiprocate/SipMessage.hxx"
-#include "AmIResponsible.hxx"
-#include "../RequestContext.hxx"
+#include "repro/monkeys/AmIResponsible.hxx"
+#include "repro/RequestContext.hxx"
+#include "repro/Proxy.hxx"
 
 using namespace resip;
 using namespace repro;
@@ -22,7 +23,10 @@ AmIResponsible::handleRequest(RequestContext& context)
 {
   resip::SipMessage& request = context.getOriginalRequest();
 
+  assert (!request.exists(h_Routes) || 
+          request.header(h_Routes).empty());
   
+  // this if is just to be safe
   if (!request.exists(h_Routes) || 
       request.header(h_Routes).empty())
   {
@@ -30,12 +34,12 @@ AmIResponsible::handleRequest(RequestContext& context)
     // !RjS! - Jason - check the RURI to see if the domain is
     // something this request is responsible for. If yes, then
     // just return Continue. If no make this call below.
-    context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
-    return RequestProcessor::SkipThisChain;
+    if (!context.getProxy().isMyDomain(request.header(h_RequestLine).uri()))
+    {
+       context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
+    }
   }
-  
   return RequestProcessor::Continue;
- 
 }
 
 
