@@ -237,7 +237,7 @@ Dialog::cancel()
 {
    if (mInviteSession)
    {
-      mInviteSession->send(mInviteSession->end());
+      mInviteSession->end();
    }
    else
    {

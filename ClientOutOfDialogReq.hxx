@@ -17,6 +17,7 @@ class ClientOutOfDialogReq : public NonDialogUsage
 
       bool matches(const SipMessage& msg) const;
 
+      virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 

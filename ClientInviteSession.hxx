@@ -20,7 +20,7 @@ class ClientInviteSession : public InviteSession
 
       ClientInviteSessionHandle getHandle();
 
-      virtual SipMessage& end();
+      virtual void end();
       virtual void send(SipMessage& msg);
 
    private:

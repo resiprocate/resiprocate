@@ -42,10 +42,17 @@ void HandleManager::shutdownWhenEmpty()
    {
       shutdown();      
    }
+   else
+   {
+      WarningLog (<< "Shutdown waiting for all usages to be deleted (" << mHandleMap.size() << ")");
+   }
 }
 
+// !jf! this will leak if there are active usages
 void HandleManager::shutdown()
 {
+   WarningLog (<< "Forcing shutdown " << mHandleMap.size() << " active usages");
+   mHandleMap.clear();
 }
 
 void
@@ -57,6 +64,10 @@ HandleManager::remove(Handled::Id id)
    if (mShuttingDown && mHandleMap.empty())
    {
       shutdown();      
+   }
+   else
+   {
+      InfoLog (<< "Waiting for usages to be deleted (" << mHandleMap.size() << ")");
    }
 }
 
