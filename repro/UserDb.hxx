@@ -1,7 +1,7 @@
 #if !defined(RESIP_USERDB_HXX)
 #define RESIP_USERDB_HXX 
 
-#include <db.h>
+#include <db4/db_185.h>
 
 #include "resiprocate/os/Data.hxx"
 
