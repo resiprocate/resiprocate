@@ -78,9 +78,6 @@ class SipStack
       // executive to give processing time to stack components. 
       void process(FdSet& fdset);
 
-      // build the FD set to use in a select to find out when process bust be called again
-      void buildFdSet(FdSet& fdset);
-	
       /// returns time in milliseconds when process next needs to be called 
       int getTimeTillNextProcessMS(); 
 
