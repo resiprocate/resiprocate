@@ -85,8 +85,8 @@ class SdpContents : public Contents
             {
                public:
                   Origin(const Data& user,
-                         const int& sessionId,
-                         const int& version,
+                         int sessionId,
+                         int version,
                          AddrType addr,
                          const Data& address);
                   Origin(const Origin& rhs);
