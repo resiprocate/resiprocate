@@ -129,20 +129,73 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg)
 void
 Dialog::dispatch(const SipMessage& msg)
 {
-   BaseUsage* usage = mCreator->makeUsage(response);
-   assert(usage);
-   mUsages.push_back(usage);
+   BaseUsage* usage = findUsage(msg);
+   if (usage)
+   {
+      usage->dispatch(msg);
+   }
+   else
+   {
+      if (msg.isRequest())
+      {
+         switch (msg.header(h_CSeq).method())
+         {
+            case INVITE:  // new INVITE
+               usage = mDum.createServerInviteSession(msg);
+               break;
+               
+            case ACK:
+            case CANCEL:
+               InfoLog (<< "Drop stray ACK or CANCEL in dialog on the floor");
+               DebugLog (<< msg);
+               break;
+
+            case SUBSCRIBE:
+               
+               
+         }
+      }
+      else if (msg.isResponse())
+      {
+      }
+      
+      BaseUsage* usage = mCreator->makeUsage(msg);
+      assert(usage);
+      mUsages.push_back(usage);
+   }
+}
+
+BaseUsage* 
+Dialog::findUsage(const SipMessage& msg)
+{
+   switch (msg.header(h_CSeq).method())
+   {
+      case INVITE:  // new INVITE
+         return mInviteSession;
+      case SUBSCRIBE:
+      case REFER: 
+      case NOTIFY: 
+         break;
+      case REGISTER:
+         assert(0);
+      case PUBLISH:
+         break;                       
+      case MESSAGE :
+      case OPTIONS :
+      case INFO :   
+         break;
+   }
 }
 
 DialogId Dialog::getId() const
 {
-    return mId;
+   return mId;
 }
 
 BaseUsage&
 Dialog::findInvSession()
 {
-    std::list<BaseUsage*>::iterator it = mUsages.begin();
+   std::list<BaseUsage*>::iterator it = mUsages.begin();
     BaseUsage *usage;
     while (it != mUsages.end())
     {

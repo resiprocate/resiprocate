@@ -104,16 +104,16 @@ class DialogUsageManager
       
    private:
       // !dlb! interfaces certainly incomplete...
-      ClientInviteSession::Handle createClientInviteSession();
-      ServerInviteSession::Handle createServerInviteSession(const SipMessage& msg);
-      ClientSubscription::Handle createClientSubscription();
-      ServerSubscription::Handle createServerSubscription(const SipMessage& msg);
-      ClientRegistration::Handle createClientRegistration();
-      ServerRegistration::Handle createServerRegistration();
-      ClientPublication::Handle createClientPublication();
-      ServerPublication::Handle createServerPublication();
-      ClientOutOfDialogReq::Handle createClientOutOfDialog();
-      ServerOutOfDialogReq::Handle createServerOutOfDialog();
+      ClientInviteSession* createClientInviteSession();
+      ServerInviteSession* createServerInviteSession(const SipMessage& msg);
+      ClientSubscription* createClientSubscription();
+      ServerSubscription* createServerSubscription(const SipMessage& msg);
+      ClientRegistration* createClientRegistration(const SipMessage& msg);
+      ServerRegistration* createServerRegistration(const SipMessage& msg);
+      ClientPublication* createClientPublication(const SipMessage& msg);
+      ServerPublication* createServerPublication(const SipMessage& msg);
+      ClientOutOfDialogReq* createClientOutOfDialog(const SipMessage& msg);
+      ServerOutOfDialogReq* createServerOutOfDialog(const SipMessage& msg);
 
       // delete the usage, remove from usage handle map
       void destroyUsage(BaseUsage* usage);
