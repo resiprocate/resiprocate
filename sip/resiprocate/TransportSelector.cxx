@@ -192,11 +192,14 @@ TransportSelector::send( SipMessage* msg, Transport::Tuple destination, const Da
          //msg->header(h_Vias).front().param(p_ttl) = 1;
          msg->header(h_Vias).front().transport() = Transport::toData(destination.transport->transport());  //cache !jf! 
 
-#if 1 // select if we use an IP address of FQDN in via 
-         msg->header(h_Vias).front().sentHost() = destination.transport->hostName(); // use hostname 
-#else
-         msg->header(h_Vias).front().sentHost() = destination.transport->interfaceName(); // use IP address 
-#endif
+         if (msg->header(h_Vias).front().sentHost().empty())
+         {
+#           if 1 // select if we use an IP address of FQDN in via 
+             msg->header(h_Vias).front().sentHost() = destination.transport->hostName(); // use hostname 
+#           else
+             msg->header(h_Vias).front().sentHost() = destination.transport->interfaceName(); // use IP address 
+#           endif
+         }
 
          const Via &v(msg->header(h_Vias).front());
 
@@ -252,21 +255,26 @@ TransportSelector::buildFdSet( FdSet& fdset )
 }
 
 Transport*
-TransportSelector::findTransport(const Transport::Tuple& tuple)
+TransportSelector::findTransport(const Transport::Tuple& tuple) const
+{
+    return findTransport(tuple.transportType);
+}
+
+Transport*
+TransportSelector::findTransport(const Transport::Type type) const
 {
    // !jf! not done yet
-   for (std::vector<Transport*>::iterator i=mTransports.begin(); i != mTransports.end(); i++)
+   for (std::vector<Transport*>::const_iterator i=mTransports.begin(); i != mTransports.end(); i++)
    {
       //ErrLog( << "have transport type" <<  (*i)->transport() );
-      if ( (*i)->transport() == tuple.transportType )
+      if ( (*i)->transport() == type )
       {
          return *i;
       }
    }
-   ErrLog( << "Couldn't find a transport for " << tuple << " type=" <<  tuple.transportType );
+   ErrLog( << "Couldn't find a transport for " << " type=" <<  type );
    return 0;
 }
-
 
 
 /* ====================================================================
