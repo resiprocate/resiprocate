@@ -13,6 +13,7 @@
 #include "resiprocate/Transport.hxx"
 #include "resiprocate/DnsInterface.hxx"
 
+#include "resiprocate/SecurityTypes.hxx"
 class TestTransportSelector;
 
 namespace resip
@@ -47,7 +48,9 @@ class TransportSelector
                            const Data& privateKeyPassPhrase,
                            int port, 
                            IpVersion version,
-                           const Data& ipInterface=Data::Empty);
+                           const Data& ipInterface=Data::Empty,
+                           SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
+                           );
 
       DnsResult* dnsResolve(SipMessage* msg, DnsHandler* handler);
 
