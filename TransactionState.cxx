@@ -95,7 +95,7 @@ TransactionState::process(TransactionController& controller)
 
    // !jf! this is a first cut at elementary back pressure. hope it works :)
    if (sip && sip->isExternal() && sip->isRequest() && 
-       sip->header(h_RequestLine).getMethod() != ACK && 
+       sip->header(h_RequestLine).getMethod() != RESIP_ACK &&
        controller.isTUOverloaded())
    {
       SipMessage* tryLater = Helper::makeResponse(*sip, 503);
@@ -117,7 +117,7 @@ TransactionState::process(TransactionController& controller)
    Data tid = message->getTransactionId();
 
    // This ensures that CANCEL requests form unique transactions
-   if (sip && sip->header(h_CSeq).method() == CANCEL) 
+   if (sip && sip->header(h_CSeq).method() == RESIP_CANCEL)
    {
       tid += "cancel";
    }
@@ -130,7 +130,7 @@ TransactionState::process(TransactionController& controller)
    // stateless transaction. In an ACK to a failure response, the mToTag will
    // have been set in the ServerTransaction as the 4xx passes through so it
    // will match. 
-   if (state && sip && sip->isRequest() && sip->header(h_RequestLine).getMethod() == ACK)
+   if (state && sip && sip->isRequest() && sip->header(h_RequestLine).getMethod() == RESIP_ACK)
    {
       if (sip->header(h_To).exists(p_tag) && sip->header(h_To).param(p_tag) != state->mToTag)
       {
@@ -153,7 +153,7 @@ TransactionState::process(TransactionController& controller)
             break;
          case ClientInvite:
             // ACK from TU will be Stateless
-            assert (!(state->isFromTU(sip) &&  sip->isRequest() && sip->header(h_RequestLine).getMethod() == ACK));
+            assert (!(state->isFromTU(sip) &&  sip->isRequest() && sip->header(h_RequestLine).getMethod() == RESIP_ACK));
             state->processClientInvite(message);
             break;
          case ServerNonInvite:
@@ -187,7 +187,7 @@ TransactionState::process(TransactionController& controller)
                
          if (sip->isExternal()) // new sip msg from transport
          {
-            if (sip->header(h_RequestLine).getMethod() == INVITE)
+            if (sip->header(h_RequestLine).getMethod() == RESIP_INVITE)
             {
                // !rk! This might be needlessly created.  Design issue.
                TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid);
@@ -209,7 +209,7 @@ TransactionState::process(TransactionController& controller)
                   controller.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
                }
             }
-            else if (sip->header(h_RequestLine).getMethod() == CANCEL)
+            else if (sip->header(h_RequestLine).getMethod() == RESIP_CANCEL)
             {
                TransactionState* matchingInvite = controller.mServerTransactionMap.find(sip->getTransactionId());
                if (matchingInvite == 0)
@@ -225,7 +225,7 @@ TransactionState::process(TransactionController& controller)
                   state = TransactionState::makeCancelTransaction(matchingInvite, ServerNonInvite, tid);
                }
             }
-            else if (sip->header(h_RequestLine).getMethod() != ACK)
+            else if (sip->header(h_RequestLine).getMethod() != RESIP_ACK)
             {
                TransactionState* state = new TransactionState(controller, ServerNonInvite,Trying, tid);
                state->mResponseTarget = sip->getSource();
@@ -242,13 +242,13 @@ TransactionState::process(TransactionController& controller)
          }
          else // new sip msg from the TU
          {
-            if (sip->header(h_RequestLine).getMethod() == INVITE)
+            if (sip->header(h_RequestLine).getMethod() == RESIP_INVITE)
             {
                TransactionState* state = new TransactionState(controller, ClientInvite, Calling, tid);
                state->add(state->mId);
                state->processClientInvite(sip);
             }
-            else if (sip->header(h_RequestLine).getMethod() == ACK)
+            else if (sip->header(h_RequestLine).getMethod() == RESIP_ACK)
             {
                //TransactionState* state = new TransactionState(controller, Stateless, Calling, Data(controller.StatelessIdCounter++));
                TransactionState* state = new TransactionState(controller, Stateless, Calling, tid);
@@ -256,7 +256,7 @@ TransactionState::process(TransactionController& controller)
                state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
                state->processStateless(sip);
             }
-            else if (sip->header(h_RequestLine).getMethod() == CANCEL)
+            else if (sip->header(h_RequestLine).getMethod() == RESIP_CANCEL)
             {
                TransactionState* matchingInvite = controller.mClientTransactionMap.find(sip->getTransactionId());
                if (matchingInvite == 0)
@@ -529,14 +529,14 @@ TransactionState::processClientInvite(TransactionMessage* msg)
       {
          // Received INVITE request from TU="Transaction User", Start Timer B which controls
          // transaction timeouts. 
-         case INVITE:
+         case RESIP_INVITE:
             delete mMsgToRetransmit; 
             mMsgToRetransmit = sip;
             mController.mTimers.add(Timer::TimerB, mId, Timer::TB );
             sendToWire(msg); // don't delete msg
             break;
             
-         case CANCEL:
+         case RESIP_CANCEL:
             assert(0);
             break;
 
@@ -551,7 +551,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
       int code = sip->header(h_StatusLine).responseCode();
       switch (sip->header(h_CSeq).method())
       {
-         case INVITE:
+         case RESIP_INVITE:
             /* If the client transaction receives a provisional response while in
                the "Calling" state, it transitions to the "Proceeding" state. In the
                "Proceeding" state, the client transaction SHOULD NOT retransmit the
@@ -632,7 +632,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      // are received while in the "Completed" state MUST
                      // cause the ACK to be re-passed to the transport
                      // layer for retransmission.
-                     assert (mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK);
+                     assert (mMsgToRetransmit->header(h_RequestLine).getMethod() == RESIP_ACK);
                      sendToWire(mMsgToRetransmit, true);
                   }
                   else
@@ -648,7 +648,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             }
             break;
             
-         case CANCEL:
+         case RESIP_CANCEL:
             assert(0);
             break;
 
@@ -701,7 +701,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             StackLog (<< "Timer::TimerCleanUp: " << *this << endl << *mMsgToRetransmit);
             if (mState == Proceeding)
             {
-               assert(mMsgToRetransmit && mMsgToRetransmit->header(h_RequestLine).getMethod() == INVITE);
+               assert(mMsgToRetransmit && mMsgToRetransmit->header(h_RequestLine).getMethod() == RESIP_INVITE);
                InfoLog(<<"Making 408 for canceled invite that received no response: "<< mMsgToRetransmit->brief());
                sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
                terminateClientTransaction(msg->getTransactionId());
@@ -845,7 +845,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       switch (sip->header(h_RequestLine).getMethod())
       {
-         case INVITE:
+         case RESIP_INVITE:
             if (mState == Proceeding || mState == Completed)
             {
                /*
@@ -869,7 +869,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             }
             break;
             
-         case ACK:
+         case RESIP_ACK:
             /*
               If an ACK is received while the server transaction is in the
               "Completed" state, the server transaction MUST transition to the
@@ -899,7 +899,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             }
             break;
 
-         case CANCEL:
+         case RESIP_CANCEL:
             assert(0);
             break;
 
@@ -915,7 +915,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
       int code = sip->header(h_StatusLine).responseCode();
       switch (sip->header(h_CSeq).method())
       {
-         case INVITE:
+         case RESIP_INVITE:
             if (code == 100)
             {
                if (mState == Trying || mState == Proceeding)
@@ -1011,7 +1011,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             }
             break;
             
-         case CANCEL:
+         case RESIP_CANCEL:
             assert(0);
             break;
             
@@ -1165,7 +1165,7 @@ TransactionState::processServerStale(TransactionMessage* msg)
       processTransportFailure();
       delete msg;
    }
-   else if (sip && isRequest(sip) && sip->header(h_RequestLine).getMethod() == ACK)
+   else if (sip && isRequest(sip) && sip->header(h_RequestLine).getMethod() == RESIP_ACK)
    {
       // this can happen when an upstream UAC sends an ACK with no to-tag when
       // it should
@@ -1173,7 +1173,7 @@ TransactionState::processServerStale(TransactionMessage* msg)
       InfoLog (<< "Passing ACK directly to TU: " << sip->brief());
       sendToTU(msg);
    }
-   else if (sip && isRequest(sip) && sip->header(h_RequestLine).getMethod() == INVITE)
+   else if (sip && isRequest(sip) && sip->header(h_RequestLine).getMethod() == RESIP_INVITE)
    {
       // this can happen when an upstream UAC never received the 200 and
       // retransmits the INVITE when using unreliable transport
@@ -1221,7 +1221,7 @@ TransactionState::processTransportFailure()
    InfoLog (<< "Try sending request to a different dns result");
    assert(mMsgToRetransmit);
 
-   if (mMsgToRetransmit->isRequest() && mMsgToRetransmit->header(h_RequestLine).getMethod() == CANCEL)
+   if (mMsgToRetransmit->isRequest() && mMsgToRetransmit->header(h_RequestLine).getMethod() == RESIP_CANCEL)
    {
       WarningLog (<< "Failed to deliver a CANCEL request");
       StackLog (<< *this);
@@ -1522,7 +1522,7 @@ TransactionState::isInvite(TransactionMessage* msg) const
    if (isRequest(msg))
    {
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      return (sip->header(h_RequestLine).getMethod()) == INVITE;
+      return (sip->header(h_RequestLine).getMethod()) == RESIP_INVITE;
    }
    return false;
 }

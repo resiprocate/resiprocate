@@ -204,7 +204,7 @@ ClientAuthManager::CompareAuth::operator()(const Auth& lhs, const Auth& rhs) con
 }
 
 ClientAuthManager::AuthState::AuthState() :
-   state(Invalid),
+   state(ClientAuthManager::Invalid),
    cnonceCount(0),
    cnonce(Random::getCryptoRandomHex(8)) //weak, should have ntp or something
 {}            
