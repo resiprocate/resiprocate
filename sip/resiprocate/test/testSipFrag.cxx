@@ -3,8 +3,8 @@
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/SipFrag.hxx"
+#include "TestSupport.hxx"
 
 #include <iostream>
 #include <memory>
@@ -29,7 +29,7 @@ main()
                "\r\n"
                "INVITE sip:bob@biloxi.com SIP/2.0\r\n");
       
-      auto_ptr<SipMessage> msg(Helper::makeMessage(txt.c_str()));
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       Contents* body = msg->getContents();
 
@@ -63,7 +63,7 @@ main()
                "Call-ID: a84b4c76e66710\r\n"
                "Cseq: 314159 INVITE\r\n\r\n");
 
-      auto_ptr<SipMessage> msg(Helper::makeMessage(txt.c_str()));
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
       
       Contents* body = msg->getContents();
 
