@@ -1,41 +1,36 @@
-#if !defined(RESIP_TU_HXX)
-#define RESIP_TU_HXX 
+#if !defined(RESIP_MESSAGE_FILTER_RULE_HXX)
+#define RESIP_MESSAGE_FILTER_RULE_HXX 
 
 #include <vector>
-#include "resiprocate/os/TimeLimitFifo.hxx"
-#include "resiprocate/os/Data.hxx"
-#include "resiprocate/Message.hxx"
-#include "resiprocate/MessageFilterRule.hxx"
-
+#include "resiprocate/SipMessage.hxx"
 
 namespace resip
 {
-class SipMessage;
-
-class TransactionUser
+class MessageFilterRule
 {
    public:
-      void post(Message *);
+      bool matches(const SipMessage &) const;
 
-   protected:
-      TransactionUser();
-      virtual ~TransactionUser()=0;
-      virtual bool isForMe(const SipMessage& msg) const;
-      
-      TimeLimitFifo<Message> mFifo;
+      enum HostpartTypes { Any, HostIsMe, DomainIsMe, List };
 
    private:
-      void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
-      unsigned int size() const;
-      bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
+      bool schemeIsInList(Data scheme);
+      bool hostpartIsInList(Data hostpart);
 
-      friend class TuSelector;      
-
-      MessageFilterRuleList mRuleList;
+      typedef std::vector<Data> SchemeList;
+      SchemeList mSchemeList;
+      HostpartTypes mHostpartMatches;
+      typedef std::vector<Data> HostpartList;
+      HostpartList mHostpartList;
+      typedef std::vector<Data> EventTypeList;
+      EventTypeList mEventTypeList;
+      bool mAnyEventType;
+      bool mAcceptWinfoTypes; // matches *.winfo  ?? do we nned this ??
 };
 
-}
+typedef std::vector<MessageFilterRule> MessageFilterRuleList;
 
+}
 #endif
 
 /* ====================================================================
