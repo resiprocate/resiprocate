@@ -1,30 +1,37 @@
 #include "BaseCreator.hxx"
 #include "DialogSet.hxx"
 #include "Dialog.hxx"
+#include "resiprocate/os/Logger.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 using namespace std;
 
-DialogSet::DialogSet(BaseCreator *creator) : 
+DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mDialogs(),
    mCreator(creator),
-   mId(creator->getLastRequest())
+   mId(creator->getLastRequest()),
+   mDum(dum)
 {
-   //Dialog* dialog = new Dialog(*this, request);
-   //addDialog(dialog);
-   //dialog->dispatch(request);
 }
 
-DialogSet::DialogSet(const SipMessage& request) : 
+DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) : 
    mDialogs(),
    mCreator(NULL),
-   mId(request)
+   mId(request),
+   mDum(dum)
 {
    assert(request.isRequest());
 }
 
 DialogSet::~DialogSet()
 {
+   delete mCreator;
+   for(list<Dialog*>::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+   {
+      delete (*it);
+   }   
 }
 
 DialogSetId
@@ -73,6 +80,7 @@ DialogSet::findDialog( const Data& otherTag )
    assert(0);
    //DialogId id(otherTag);
    //return findDialog(id);
+   return 0;
 }
 
 Dialog* 
@@ -106,7 +114,7 @@ DialogSet::mergeRequest(const SipMessage& request)
 {
    for (std::list<Dialog*>::iterator i = mDialogs.begin(); i != mDialogs.end(); ++i)
    {
-      if (i->shouldMerge(request))
+      if ((*i)->shouldMerge(request))
       {
          InfoLog (<< "Merging request for: " << request.brief());
          return true;
