@@ -1,7 +1,0 @@
-
-class Timer
-{
-public:
-private:
-
-};
