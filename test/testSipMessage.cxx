@@ -92,10 +92,33 @@ main(int argc, char** argv)
          );
       
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
-
+      assert( msg->header(h_ContentLength).value() == 1929 );
    }
 
+    {
+       Data txt( 
+          "MESSAGE sip:fluffy@h1.cisco1.sipit.net:5060;transport=UDP SIP/2.0"
+          "To: <sip:fluffy@h1.cisco1.sipit.net:5060>"
+          "From: <sip:user@localhost:5080>;tag=20f94fd6"
+          "Via: SIP/2.0/UDP 212.157.205.40:5080;branch=z9hG4bK-c87542-1005764096-2--c87542-;rport=5080;received=212.157.205.40"
+          "Call-ID: 16f7f8fd368d8bcd"
+          "CSeq: 1 MESSAGE"
+          "Contact: <sip:user@212.157.205.40:5080>"
+          "Max-Forwards: 70"
+          "Content-Disposition: attachment;handling=required;filename=smime.p7"
+          "Content-Type: application/pkcs7-mime;smime-type=enveloped-data;name=smime.p7m"
+          "User-Agent: SIPimp.org/0.2.3 (curses)"
+          "Content-Length: 4"
+          "\r\n"
+          "1234" );
 
+       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));  
+
+       assert( msg->exists(h_ContentDisposition)  );
+       msg->header(h_ContentDisposition);
+       assert( msg->header(h_ContentLength).value() == 4 );
+    }
+    
    {
       // exercise header remove
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
