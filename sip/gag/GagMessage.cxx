@@ -87,7 +87,7 @@ GagMessage::serialize(ostream &os, const Data& data)
 void
 GagMessage::serialize(ostream &os, const Uri& uri)
 {
-  serialize(os, uri.getAor());
+  serialize(os, Data::from(uri));
 }
 
 void
