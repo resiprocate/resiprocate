@@ -113,15 +113,15 @@ Mime::operator=(const Mime& rhs)
 bool
 Mime::operator<(const Mime& rhs) const
 {
-   if (mType < rhs.mType)
+   if (type() < rhs.type())
    {
       return true;
    }
-   else if (mType > rhs.mType)
+   else if (type() > rhs.type())
    {
       return false;
    }
-   return mSubType < rhs.mSubType;
+   return subType() < rhs.subType();
 }
 
 void
@@ -141,21 +141,6 @@ Mime::parse(ParseBuffer& pb)
 
    pb.skipWhitespace();
    parseParameters(pb);
-}
-
-
-Data& 
-Mime::type()
-{
-   checkParsed();
-   return mType;
-}
-
-Data&
-Mime::subType()
-{
-   checkParsed();
-   return mSubType;
 }
 
 ParserCategory* 
