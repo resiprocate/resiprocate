@@ -16,7 +16,7 @@ class BranchParameter : public Parameter
    public:
       typedef BranchParameter Type;
       
-      BranchParameter(ParameterTypes::Type, ParseBuffer& pb);
+      BranchParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
       BranchParameter(ParameterTypes::Type);
 
       bool hasMagicCookie();
@@ -24,9 +24,9 @@ class BranchParameter : public Parameter
       void incrementCounter();
       Data& clientData();
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb)
+      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
-         return new BranchParameter(type, pb);
+         return new BranchParameter(type, pb, terminators);
       }
       
       virtual Parameter* clone() const;

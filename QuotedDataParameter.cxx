@@ -12,7 +12,7 @@ QuotedDataParameter::QuotedDataParameter(ParameterTypes::Type type,
                                          const char* terminators)
    : DataParameter(type, pb, terminators)
 {
-   if(!mQuoted)
+   if (!mQuoted)
    {
       pb.fail();
    }

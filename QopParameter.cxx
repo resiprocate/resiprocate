@@ -12,22 +12,22 @@ using namespace std;
 
 
 Parameter* 
-QopParameter::decode(ParameterTypes::Type type, ParseBuffer& pb)
+QopParameter::decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
 {
-   const char* anchor=pb.position();
+   const char* anchor = pb.position();
    pb.skipWhitespace();
    pb.skipChar(Symbols::EQUALS[0]);
    pb.skipWhitespace();
-   //need two types here???
-   if (*pb.position() == '"')
+
+   if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
    {
       pb.reset(anchor);
-      return new QuotedDataParameter(ParameterTypes::qopOptions, pb);
+      return new QuotedDataParameter(ParameterTypes::qopOptions, pb, terminators);
    }
    else
    {
       pb.reset(anchor);
-      return new DataParameter(ParameterTypes::qop, pb);
+      return new DataParameter(ParameterTypes::qop, pb, terminators);
    }
 }
 

@@ -14,14 +14,14 @@ class ExistsParameter : public Parameter
    public:
       typedef bool Type;
       
-      ExistsParameter(ParameterTypes::Type, ParseBuffer& pb);
+      ExistsParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
       ExistsParameter(ParameterTypes::Type type);
 
       bool& value();
 
-      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb)
+      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
-         return new ExistsParameter(type, pb);
+         return new ExistsParameter(type, pb, terminators);
       }
 
       virtual Parameter* clone() const;

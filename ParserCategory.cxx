@@ -51,7 +51,7 @@ ParserCategory::operator=(const ParserCategory& rhs)
 void
 ParserCategory::clear()
 {
-   DebugLog(<<"ParserCategory::clear");
+   //DebugLog(<<"ParserCategory::clear");
    LazyParser::clear();
    for (ParameterList::iterator it = mParameters.begin();
         it != mParameters.end(); it++)
@@ -149,7 +149,7 @@ ParserCategory::parseParameters(ParseBuffer& pb)
       else
       {
          // invoke the particular factory
-         mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb));
+         mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n;?>"));
       }
       pb.skipWhitespace();
    }
