@@ -40,20 +40,26 @@ ClientOutOfDialogReq::dispatch(const SipMessage& msg)
 
 		if(msg.header(h_StatusLine).statusCode() >= 200 && msg.header(h_StatusLine).statusCode() < 300)
 		{
-			// Pass Response to Handler
-			InfoLog ( << "ClientOutOfDialogReq::dispatch - handler found for " << getMethodName(msg.header(h_CSeq).method()) << " method success response.");   
-			pHandler->onSuccess(getHandle(), msg);  
+           // Pass Response to Handler
+           DebugLog ( << "ClientOutOfDialogReq::dispatch - handler found for " 
+                      << getMethodName(msg.header(h_CSeq).method()) 
+                      << " method success response.");   
+           pHandler->onSuccess(getHandle(), msg);  
 		}
 		else
 		{
 			// Pass Response to Handler
-			InfoLog ( << "ClientOutOfDialogReq::dispatch - handler found for " << getMethodName(msg.header(h_CSeq).method()) << " method failure response.");   
+           DebugLog ( << "ClientOutOfDialogReq::dispatch - handler found for " 
+                      << getMethodName(msg.header(h_CSeq).method()) 
+                      << " method failure response.");   
 			pHandler->onFailure(getHandle(), msg);  
 		}
 	}
 	else
 	{
-	    InfoLog ( << "ClientOutOfDialogReq::dispatch - handler not found for " << getMethodName(msg.header(h_CSeq).method()) << " method response.");   
+       DebugLog ( << "ClientOutOfDialogReq::dispatch - handler not found for " 
+                  << getMethodName(msg.header(h_CSeq).method()) 
+                  << " method response.");   
 	}
 	delete this;
 }
