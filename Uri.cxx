@@ -272,13 +272,15 @@ Uri::parse(ParseBuffer& pb)
       }
       else
       {
-         mPort = 0;
+          mPort = 0;
       }
    }
    else
    {
       // generic URL
-      assert(0);
+         mPort = 0;
+         mUser = "UNKNOWN_SCHEME";
+         mHost = "UNKNOWN_SCHEME";
    }
 }
 
