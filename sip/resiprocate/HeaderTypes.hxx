@@ -67,7 +67,7 @@ class Headers
          single(UserAgent, StringCategory),
          single(Warning, WarningCategory),
          multi(WWWAuthenticate, Auth),
-         multi(SubscriptionState,Token),
+         multi(SubscriptionState, Token),
          single(ReferTo, NameAddr),
          single(ReferredBy, NameAddr),
          multi(Authorization, header),
