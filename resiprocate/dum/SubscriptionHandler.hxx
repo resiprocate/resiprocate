@@ -33,10 +33,10 @@ class ServerSubscriptionHandler
       //method that MUST be implemented by a handler
       virtual void onTerminated(ServerSubscriptionHandle)=0;
 
-      //will be called when a NOTIFY is not delivered
+      //will be called when a RESIP_NOTIFY is not delivered
       virtual void onError(ServerSubscriptionHandle, const SipMessage& msg);      
 
-      //app can synchronously decorate terminating NOTIFY messages. The only
+      //app can synchronously decorate terminating RESIP_NOTIFY messages. The only
       //graceful termination mechanism is expiration, but the client can
       //explicity end a subscription with an Expires header of 0.
       virtual void onExpiredByClient(ServerSubscriptionHandle, const SipMessage& sub, SipMessage& notify);
