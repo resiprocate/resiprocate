@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.59 2003/10/13 17:24:23 jason Exp $
+# $Id: Makefile,v 1.60 2003/10/14 21:28:50 fluffy Exp $
 
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
@@ -11,14 +11,15 @@ LDLIBS += -lncurses
 # This only applies to the non-autotools build system
 ifdef USE_POPT
 LDLIBS += -lpopt
+TESTPROGRAMS +=
+endif
+
 TESTPROGRAMS += testDns.cxx \
 		testTcp.cxx \
 		testUdp.cxx \
 		testStack.cxx \
-		testResponses.cxx 
-endif
-
-TESTPROGRAMS += limpc.cxx \
+		testResponses.cxx \
+		limpc.cxx \
 		testApplicationSip.cxx \
 		testClient.cxx \
 		testCountStream.cxx \
