@@ -11,6 +11,7 @@
 #include "resiprocate/PlainContents.hxx"
 #include "resiprocate/Security.hxx"
 #include "resiprocate/Transport.hxx"
+#include "resiprocate/SipMessage.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -18,6 +19,7 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/os/FileSystem.hxx"
 
 
 #if defined(USE_SSL)
@@ -639,27 +641,28 @@ BaseSecurity::initialize ()
    Random::initialize();
    Timer::getTimeMs(); // initalize time offsets
 }
-//virtual
 
+//virtual
+void
 Security::preload()
 {
-   preload(getPath());
+   preload(mPath);
 }
 
-static const Data pem(".pem");
-static const Data userCert("user_cert_");
-static const Data userKey("user_key_");
+static const Data rootCert("root_cert_");
 static const Data domainCert("domain_cert_");
 static const Data domainKey("domain_key_");
-static const Data rootCert("root_cert_");
+static const Data userCert("user_cert_");
+static const Data userKey("user_key_");
+static const Data pem(".pem");
 
-static const Data[] pemTypePrefixes =
+static const Data pemTypePrefixes[] =
 {
    rootCert,
    domainCert,
-   domainPrivateKey,
+   domainKey,
    userCert,
-   userPrivateKey
+   userKey
 };
 
 Data
@@ -674,7 +677,7 @@ readIntoData(const Data& filename)
   int length = is.tellg();
   is.seekg (0, ios::beg);
 
-  buffer = new char [length];
+  char* buffer = new char [length];
 
   // read data as a block:
   is.read (buffer,length);
@@ -696,10 +699,11 @@ getAor(const Data& filename,
 void
 Security::preload(const Data& directory)
 {
+#if 0
    FileSystem::Directory dir(directory);
-   char buffer(8192);
+   char buffer[8192];
    Data fileT(Data::Borrow, buffer, sizeof(buffer));
-   for (FileSystem::Directory::iterator it == dir.begin(); it != dir.end(); it++)
+   for (FileSystem::Directory::iterator it = dir.begin(); it != dir.end(); ++it)
    {
       if (it->suffix(pem))
       {         
@@ -725,29 +729,34 @@ Security::preload(const Data& directory)
          }
       }
    }
+#endif
 }
 
 void 
-Security::onReadPEM(const Data& name, 
-                    PEMType type, 
-                    Data& buffer)
+Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 {
-   Data filename = getPath() + pemTypePrefixes[type] + name + pem;
+   Data filename = mPath + pemTypePrefixes[type] + name + pem;
 
    // .dlb. extra copy
    buffer = readIntoData(filename);
 }
 
 void
-Security::onWritePEM(const Data& name, 
-                     PEMType type, 
-                     const Data& buffer)
+Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
 {
-   Data filename = getPath() + pemTypePrefixes[type] + name + pem;
-
-   ofstream str(filename, ofstream::binary);
-   str.write(buffer.data(), buffer.size();
+#if 0
+   Data filename = mPath + pemTypePrefixes[type] + name + pem;
+   
+   ofstream str(filename, ios::binary);
+   str.write(buffer.data(), buffer.size());
+#endif
 }
+      
+void 
+Security::onRemovePEM(const Data& name, PEMType type) const
+{
+}
+
 
 std::vector<BaseSecurity::CertificateInfo>
 BaseSecurity::getRootCertDescriptions() const
@@ -1288,28 +1297,30 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
 }
 
 void 
-Security::checkAndSetIdentity( const SipMessage& msg )
+BaseSecurity::checkAndSetIdentity( const SipMessage& msg )
 {
+#if 0
    try
    {
       if (checkIdentity(msg.header(h_From).uri().host(),
                         msg.getCanonicalIdentityString(),
                         msg.header(h_Identity).value()))
       {
-         sec->setIdentity(msg.header(h_From).uri().getAor());
-         sec->setIdentityStrength(SecurityAttributes::Identity);
+         msg.setIdentity(msg.header(h_From).uri().getAor());
+         msg.setIdentityStrength(SecurityAttributes::Identity);
       }
       else
       {
-         sec->setIdentity(msg.header(h_From).uri().getAor());
-         sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
+         msg.setIdentity(msg.header(h_From).uri().getAor());
+         msg.setIdentityStrength(SecurityAttributes::FailedIdentity);
       }
    }
    catch (BaseException&)
    {
-      sec->setIdentity(msg.header(h_From).uri().getAor());
-      sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
+      msg.setIdentity(msg.header(h_From).uri().getAor());
+      msg.setIdentityStrength(SecurityAttributes::FailedIdentity);
    }
+#endif
 }
 
 Contents*
