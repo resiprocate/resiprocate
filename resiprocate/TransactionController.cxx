@@ -12,6 +12,7 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
 
+#pragma warning( disable : 4355 ) // using this in base member initializer list 
 TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, bool stateless) : 
    mStateless(stateless),
    mRegisteredForTransactionTermination(false),
@@ -23,10 +24,13 @@ TransactionController::TransactionController(bool multi, Fifo<Message>& tufifo, 
    StatelessIdCounter(1)
 {
 }
+#pragma warning( default : 4355 )
+
 
 TransactionController::~TransactionController()
 {
 }
+
 
 void
 TransactionController::process(FdSet& fdset)
