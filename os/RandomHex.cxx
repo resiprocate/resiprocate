@@ -1,20 +1,19 @@
-
-//#include <stdio.h>
 #include <cassert>
 #include <cstdlib>
 
-//#include <openssl/rand.h>
 #include <stdio.h>
 #include <util/RandomHex.hxx>
 
-#include <stdlib.h>
+#if !defined(WIN32)
+#include <openssl/rand.h>
+#endif
 
 using namespace Vocal2;
 
 void
 RandomHex::initialize()
 {
-#if 1
+#if defined(WIN32)
    // TODO FIX 
    unsigned int seed = 1;
    srand(seed);
@@ -26,8 +25,8 @@ RandomHex::initialize()
 Data
 RandomHex::get(unsigned int len)
 {
-#if 1
-	assert( len <= 16 );
+#if defined(WIN32)
+   assert( len <= 16 );
    unsigned char buffer[16];
    int ret = rand();
    assert (ret == 1);
