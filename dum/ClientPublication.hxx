@@ -19,19 +19,27 @@ class ClientPublication : public BaseUsage
             // throws if no session 
             ClientPublication* operator->();
          private:
-            friend class DialogUsageManager;
+            friend class ClientPublication;
             Handle(DialogUsageManager& dum);
       };
-      
-      ClientPublication(DialogUsageManager& dum, const SipMessage& pub);
       
       void refresh(int expiration=0);
       void update(const Contents* body);
       void end();
 
+      virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
+
    private:
       friend class DialogUsageManager;
+      ClientPublication(DialogUsageManager& dum, 
+                        Dialog& dialog,
+                        const SipMessage& pub);
+      
       ClientPublication::Handle mHandle;
+
+      // disabled
+      ClientPublication(const ClientPublication&);
+      ClientPublication& operator=(const ClientPublication&);
 };
  
 }
