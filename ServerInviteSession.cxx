@@ -28,6 +28,63 @@ ServerInviteSession::getHandle()
 void 
 ServerInviteSession::dispatch(const SipMessage& msg)
 {
+   switch (mState)
+   {
+      case UAS_Early:
+         dispatchEarly(msg);
+         break;
+      case UAS_EarlyNoOffer:
+         dispatchEarlyNoOffer(msg);
+         break;
+      case UAS_EarlyReliable:
+         dispatchEarlyReliable(msg);
+         break;
+      case UAS_FirstEarlyReliable:
+         dispatchFirstEarlyReliable(msg);
+         break;
+      case UAS_FirstSentOfferReliable:
+         dispatchFirstSentOfferReliable(msg);
+         break;
+      case UAS_NoOffer:
+         dispatchNoOffer(msg);
+         break;
+      case UAS_NoOfferReliable:
+         dispatchNoOfferReliable(msg);
+         break;
+      case UAS_Offer:
+         dispatchOffer(msg);
+         break;
+      case UAS_OfferReliable:
+         dispatchOfferReliable(msg);
+         break;
+      case UAS_ReceivedUpdate:
+         dispatchReceivedUpdate(msg);
+         break;
+      case UAS_ReceivedUpdateWaitingAnswer:
+         dispatchReceivedUpdateWaitingAnswer(msg);
+         break;
+      case UAS_SentUpdate:
+         dispatchSentUpdate(msg);
+         break;
+      case UAS_Accepted:
+         dispatchAccepted(msg);
+         break;
+      case UAS_WaitingToHangup:
+         dispatchWaitingToHangup(msg);
+         break;
+      case UAS_WaitingToTerminate:
+         dispatchWaitingToTerminate(msg);
+         break;
+      case UAS_SentUpdateAccepted:
+         dispatchSentUpdateAccepted(msg);
+         break;
+      case UAS_Start:
+         dispatchStart(msg);
+         break;
+      default:
+         InviteSession::dispatch(msg);
+         break;
+   }
 }
 
 void 
@@ -35,22 +92,149 @@ ServerInviteSession::dispatch(const DumTimeout& msg)
 {
 }
 
+void
+ServerInviteSession::dispatchStart(const SipMessage& msg)
+{
+   assert(msg.isRequest());
+   assert(msg.header(h_CSeq).method() == INVITE);
+
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   const SdpContents* sdp = InviteSession::getSdp(msg);
+
+//   switch (toEvent(msg, sdp))
+   {
+   }
+}
+
+void
+ServerInviteSession::dispatchOffer(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchEarly(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchAccepted(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchNoOffer(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchEarlyNoOffer(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchOfferReliable(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchNoOfferReliable(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchFirstEarlyReliable(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
+{
+}
+
+void
+ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
+{
+}
+
+
 void 
 ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 {
-   Destroyer::Guard guard(mDestroyer);
+   switch (mState)
+   {
+      case UAS_Early:
+      case UAS_EarlyNoOffer:
+      case UAS_EarlyReliable:
+      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentOfferReliable:
+      case UAS_NoOffer:
+      case UAS_NoOfferReliable:
+      case UAS_Offer:
+      case UAS_OfferReliable: 
+      case UAS_ReceivedUpdate:
+      case UAS_ReceivedUpdateWaitingAnswer:
+      case UAS_SentUpdate:
+      {
+         // !jf! the cleanup for 3xx may be a bit strange if we are in the middle of
+         // an offer/answer exchange with PRACK. 
+         // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
+         // we should send 200PRACK
+         Destroyer::Guard guard(mDestroyer);
+         SipMessage response;
+         mDialog.makeResponse(mFirstRequest, response, code);
+         response.header(h_Contacts) = contacts;
+         mDum.send(response);
+         transition(Terminated);
 
-   // !jf! the cleanup for 3xx may be a bit strange if we are in the middle of
-   // an offer/answer exchange with PRACK. 
-   // e.g. we sent 183 reliably and then 302 before PRACK was received. Ideally,
-   // we should send 200PRACK
-   SipMessage response;
-   mDialog.makeResponse(mFirstRequest, response, code);
-   response.header(h_Contacts) = contacts;
-   mDum.send(response);
-   transition(Terminated);
+         guard.destroy();
+         break;
+      }
 
-   guard.destroy();
+      case UAS_Accepted:
+      case UAS_WaitingToHangup:
+      case UAS_WaitingToTerminate:
+      case UAS_SentUpdateAccepted:
+      case UAS_Start:
+      default:
+         assert(0);
+         throw UsageUseException("Can't redirect after accepted", __FILE__, __LINE__);
+         break;
+   }
 }
 
 void 
