@@ -93,7 +93,7 @@ ClientPublication::dispatch(const SipMessage& msg)
          {
             InfoLog(<< "SIPIfMatch failed -- republish");
             mPublish.remove(h_SIPIfMatch);
-            update(mDocument);
+            update(mDocument->clone());
             return;
          }         
          else if (code == 423) // interval too short
