@@ -15,6 +15,15 @@ class GagConduit: public TuIM::Callback
     void handleMessage(GagMessage *);
     void process();
 
+    // Methods to handle commands from GAIM
+    void gaimIm(GagImMessage *);
+    void gaimPresence(GagPresenceMessage *);
+    void gaimLogin(GagLoginMessage *);
+    void gaimLogout(GagLogoutMessage *);
+    void gaimAddBuddy(GagAddBuddyMessage *);
+    void gaimRemoveBuddy(GagRemoveBuddyMessage *);
+    void gaimError(GagErrorMessage *);
+
     // Callback Methods
     virtual void presenseUpdate(const Uri& dest, bool open, 
                                 const Data& status );
