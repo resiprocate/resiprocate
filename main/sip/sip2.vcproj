@@ -28,14 +28,16 @@
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="TRUE"
+				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="4"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="Ws2_32.lib"
 				OutputFile="$(OutDir)/sip2.exe"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/sip2.pdb"
 				SubSystem="1"
@@ -72,14 +74,16 @@
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="3"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="TRUE"
+				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="Ws2_32.lib"
 				OutputFile="$(OutDir)/sip2.exe"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="Ws2_32"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -120,12 +124,6 @@
 				</File>
 				<File
 					RelativePath="util\Data.cxx">
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories="C:\vocal\sip2"/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="util\Fifo.cxx">
@@ -171,6 +169,9 @@
 					RelativePath="sipstack\DataParameter.cxx">
 				</File>
 				<File
+					RelativePath="sipstack\Dialog.cxx">
+				</File>
+				<File
 					RelativePath="sipstack\Executive.cxx">
 				</File>
 				<File
@@ -186,7 +187,10 @@
 					RelativePath="sipstack\HeaderFieldValueList.cxx">
 				</File>
 				<File
-					RelativePath="sipstack\HeaderTypes.cxx">
+					RelativePath="sipstack\Headers.cxx">
+				</File>
+				<File
+					RelativePath="sipstack\Helper.cxx">
 				</File>
 				<File
 					RelativePath="sipstack\IntegerParameter.cxx">
@@ -199,9 +203,6 @@
 				</File>
 				<File
 					RelativePath="sipstack\Parameter.cxx">
-				</File>
-				<File
-					RelativePath="sipstack\ParameterList.cxx">
 				</File>
 				<File
 					RelativePath="sipstack\ParameterTypes.cxx">
@@ -234,6 +235,9 @@
 					RelativePath="sipstack\TransactionMap.cxx">
 				</File>
 				<File
+					RelativePath="sipstack\TransactionState.cxx">
+				</File>
+				<File
 					RelativePath="sipstack\Transport.cxx">
 				</File>
 				<File
@@ -249,9 +253,6 @@
 					RelativePath="sipstack\Uri.cxx">
 				</File>
 				<File
-					RelativePath="sipstack\convertStringToInt.cxx">
-				</File>
-				<File
 					RelativePath="sipstack\testSipStack1.cxx">
 				</File>
 			</Filter>
@@ -259,9 +260,6 @@
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
-			<File
-				RelativePath="resource.h">
-			</File>
 			<Filter
 				Name="Util"
 				Filter="">
@@ -293,6 +291,9 @@
 					RelativePath="util\Mutex.hxx">
 				</File>
 				<File
+					RelativePath="util\ParseBuffer.hxx">
+				</File>
+				<File
 					RelativePath="util\RandomHex.hxx">
 				</File>
 				<File
@@ -315,6 +316,9 @@
 				</File>
 				<File
 					RelativePath="util\VException.hxx">
+				</File>
+				<File
+					RelativePath="util\compat.hxx">
 				</File>
 				<File
 					RelativePath="util\vthread.hxx">
@@ -348,6 +352,9 @@
 					RelativePath="sipstack\HeaderTypes.hxx">
 				</File>
 				<File
+					RelativePath="sipstack\Headers.hxx">
+				</File>
+				<File
 					RelativePath="sipstack\Helper.hxx">
 				</File>
 				<File
@@ -364,9 +371,6 @@
 				</File>
 				<File
 					RelativePath="sipstack\Parameter.hxx">
-				</File>
-				<File
-					RelativePath="sipstack\ParameterList.hxx">
 				</File>
 				<File
 					RelativePath="sipstack\ParameterTypeEnums.hxx">
