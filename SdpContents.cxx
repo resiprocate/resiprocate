@@ -1473,7 +1473,10 @@ const vector<SdpContents::Session::Connection>
 SdpContents::Session::Medium::getConnections() const
 {
    vector<Connection> connections = const_cast<Medium*>(this)->getMediumConnections();
-   connections.push_back(mSession->connection());
+   if (mSession)
+   {
+      connections.push_back(mSession->connection());
+   }
 
    return connections;
 }
