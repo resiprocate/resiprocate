@@ -19,8 +19,8 @@ class RegistrationPersistenceManager
       CONTACT_UPDATED
     } update_status_t;
 
-    RegistrationPersistenceManager();
-    virtual ~RegistrationPersistenceManager();
+    RegistrationPersistenceManager() {}
+    virtual ~RegistrationPersistenceManager() {}
 
     virtual void addAor(Uri &aor, contact_list_t contacts = contact_list_t()) = 0;
     virtual void removeAor(Uri &aor) = 0;
