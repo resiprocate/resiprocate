@@ -92,6 +92,21 @@ class ParserContainer : public ParserContainerBase
       {
          return new ParserContainer(hfvs);
       }
+
+      virtual std::ostream& encode(std::ostream& str) const
+      {
+         if (mList->first)
+         {
+            HeaderFieldValue* hfv = mList->first;
+            do
+            {
+               hfv->encode(str);
+               str << Symbols::CRLF;
+               hfv = hfv->next;
+            } while (hfv != 0);
+         }
+         return str;
+      }
       
    protected:
       virtual void parser() {}

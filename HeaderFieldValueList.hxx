@@ -26,8 +26,8 @@ class HeaderFieldValueList
          mParserContainer = parser;
       }
       
-      ParserCategory*
-      getParserCategory();
+      ParserContainerBase*
+      getParserContainer();
       
       // insert at begining
       void push_front(HeaderFieldValue* header);
