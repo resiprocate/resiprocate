@@ -3,6 +3,7 @@
 
 #include <unistd.h>
 #include <iostream>
+#include <vector>
 
 using namespace Vocal2;
 
