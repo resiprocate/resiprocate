@@ -9,16 +9,8 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-Registrar::Registrar(SipStack& stack, InMemoryRegistrationDatabase& db) : 
-   mDum(stack),
-   mDb(db)
+Registrar::Registrar()
 {
-   mProfile.clearSupportedMethods();
-   mProfile.addSupportedMethod(resip::REGISTER);
-
-   mDum.setServerRegistrationHandler(this);
-   mDum.setRegistrationPersistenceManager(&mDb);
-   mDum.setMasterProfile(&mProfile);
 }
 
 Registrar::~Registrar()
