@@ -96,12 +96,13 @@ UdpTransport::process(FdSet& fdset)
 
    // !jf! how do we tell if it discarded bytes 
    // !ah! we use the len-1 trick :-(
-   socklen_t slen = mTuple.length();
+   Tuple tuple(mTuple);
+   socklen_t slen = tuple.length();
    int len = recvfrom( mFd,
                        buffer,
                        MaxBufferSize,
                        0 /*flags */,
-                       &mTuple.getMutableSockaddr(), 
+                       &tuple.getMutableSockaddr(), 
                        &slen);
    if ( len == SOCKET_ERROR )
    {
@@ -140,9 +141,9 @@ UdpTransport::process(FdSet& fdset)
 
 
    // Save all the info where this message came from
-   mTuple.transport = this;
-   message->setSource(mTuple);   
-   DebugLog (<< "Received from: " << mTuple);
+   tuple.transport = this;
+   message->setSource(tuple);   
+   DebugLog (<< "Received from: " << tuple);
    
    // Tell the SipMessage about this datagram buffer.
    message->addBuffer(buffer);
