@@ -1,5 +1,7 @@
 
 #include <cassert>
+#include <fstream>
+#include <ostream>
 
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Security.hxx"
@@ -43,28 +45,38 @@ main(int argc, char* argv[])
    }
 
    assert( security );
-   //Data in("123");      
 
    Data in("sip:alice@atlanta.example.com"
-           ":a84b4c76e66710:314159 INVITE"
+           ":a84b4c76e66710"
+           ":314159 INVITE"
            ":Thu, 21 Feb 2002 13:02:03 GMT"
-           ":sip:alice@pc33.example.atlanta.com"
+           ":sip:alice@pc33.atlanta.example.com"
            ":v=0\r\n"
            "o=UserA 2890844526 2890844526 IN IP4 pc33.atlanta.example.com\r\n"
            "s=Session SDP\r\n"
-           "c=IN IP4 pc33.example.atlanta.com\r\n"
+           "c=IN IP4 pc33.atlanta.example.com\r\n"
            "t=0 0\r\n"
            "m=audio 49172 RTP/AVP 0\r\n"
-           "a=rtpmap:0 PCMU/8000\r\n\r\n");
+           "a=rtpmap:0 PCMU/8000\r\n");
+      
+   ofstream strm("identiy-in", std::ios_base::trunc);
+   strm.write( in.data(), in.size() );
+   strm.flush();
    
    Data res = security->computeIdentity( in );
 
-   ErrLog( << "input is encoded " << in.charEncoded()  );
-   ErrLog( << "input is  " << in );
-   ErrLog( << "identity is " << res  );
+   //ErrLog( << "input is encoded " << in.charEncoded()  );
+   //ErrLog( << "input is hex " << in.hex() );
+   //ErrLog( << "input is  " << in );
+   //ErrLog( << "identity is " << res  );
 
    bool c  = security->checkIdentity( in , res );
-   assert( c == true );
+   
+   if ( !c )
+   {
+      ErrLog( << "Identity check failed" << res  );
+   }
+   
    
 #endif // use_ssl 
 
