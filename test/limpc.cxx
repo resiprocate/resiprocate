@@ -574,7 +574,7 @@ main(int argc, char* argv[])
               << " -v is verbose" << endl
               << " -vv is very verbose" << endl
               << " -tcp uses tcp instead of UDP" << endl
-              << " -tls uses tcp instead of UDP" << endl
+              << " -tls uses tls instead of UDP" << endl
               << " -port sets the UDP and TCP port to listen on" << endl
               << " -tlsPort sets the port to listen for TLS on" << endl
               << " -tlsServer - sets to act as tls server instead of  client" << endl
