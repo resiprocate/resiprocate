@@ -109,9 +109,15 @@ InviteSession::dispatch(const SipMessage& msg)
    {
       case Terminated:
          //!dcm! -- 481 behaviour here, should pretty much die on anything
-         if (msg.isResponse() && msg.header(h_StatusLine).statusCode() == 200 && msg.header(h_CSeq).method() == BYE)
+         //eventually 200 to BYE could be handled further out
+         if (msg.isResponse())
          {
-            delete this;
+            int code = msg.header(h_StatusLine).statusCode();
+            if ((code  == 200 && msg.header(h_CSeq).method() == BYE) || code > 399)
+            {
+               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);      
+               delete this;
+            }
          }
          break;
       case Connected:
@@ -168,7 +174,8 @@ InviteSession::dispatch(const SipMessage& msg)
          }
          else
          {
-            assert(0); // !dcm! -- usual nonsence message behaviour question            
+            ErrLog ( << "Spurious message sent to UAS " << msg );            
+            return;            
          }
          break;         
       default:
@@ -188,10 +195,13 @@ InviteSession::end()
 {
    switch (mState)
    {
+      InfoLog ( << "InviteSession::end, state: " << mState);  
+
       case Terminated: 
          throw UsageUseException("Cannot end a session that has already been cancelled.", __FILE__, __LINE__);
          break;
       case Connected:
+         InfoLog ( << "InviteSession::end, connected state" );  
          mDialog.makeRequest(mLastRequest, BYE);
          //new transaction
          assert(mLastRequest.header(h_Vias).size() == 1);
@@ -306,6 +316,7 @@ InviteSession::send(SipMessage& msg)
          {
             msg.setContents(static_cast<SdpContents*>(mNextOfferOrAnswerSdp->clone()));
             sendSdp(mNextOfferOrAnswerSdp);
+            mNextOfferOrAnswerSdp = 0;            
          } 
          mDum.send(msg);
       }
@@ -456,6 +467,7 @@ InviteSession::makeAck()
    {
       mAck.setContents(static_cast<SdpContents*>(mNextOfferOrAnswerSdp->clone()));
       sendSdp(mNextOfferOrAnswerSdp);
+      mNextOfferOrAnswerSdp = 0;
    }
 
    InfoLog ( << "InviteSession::makeAck:after: " << mAck );   
