@@ -20,6 +20,7 @@
 #include "sip2/sipstack/ParserContainer.hxx"
 #include "sip2/sipstack/Transport.hxx"
 #include "sip2/util/BaseException.hxx"
+#include "sip2/util/Timer.hxx"
 
 namespace Vocal2
 {
@@ -178,6 +179,9 @@ class SipMessage : public Message
       // returns the encoded buffer which was encoded by resolve()
       // should only be called by the TransportSelector
       Data& getEncoded();
+
+      UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
+      
       
    private:
       void copyFrom(const SipMessage& message);
@@ -207,6 +211,7 @@ class SipMessage : public Message
       mutable bool mResponse;
 
       Data mEncoded; // to be retransmitted
+      UInt64 mCreatedTime;
 
       friend class TransportSelector;
 };
