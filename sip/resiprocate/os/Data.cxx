@@ -1,4 +1,4 @@
-// "$Id: Data.cxx,v 1.46 2002/12/09 19:28:26 derekm Exp $";
+// "$Id: Data.cxx,v 1.47 2002/12/11 07:15:49 jason Exp $";
 
 #include <algorithm>
 #include <cassert>
@@ -464,6 +464,27 @@ Data&
 Data::operator+=(const char* str)
 {
    return append(str, strlen(str));
+}
+
+Data&
+Data::operator^=(const Data& rhs)
+{
+   if (mCapacity < rhs.mSize)
+   {
+      resize(rhs.mSize, true);
+      memset(mBuf+mSize, 0, mCapacity - mSize);
+   }
+
+   char* c1 = mBuf;
+   char* c2 = rhs.mBuf;
+   char* end = c2 + rhs.mSize;
+   while (c2 != end)
+   {
+      *c1++ ^= *c2++;
+   }
+   mSize = max(mSize, rhs.mSize);
+   
+   return *this;
 }
 
 Data&
