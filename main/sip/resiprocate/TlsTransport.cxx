@@ -11,6 +11,7 @@
 #include "resiprocate/TlsTransport.hxx"
 #include "resiprocate/TlsConnection.hxx"
 #include "resiprocate/Security.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 

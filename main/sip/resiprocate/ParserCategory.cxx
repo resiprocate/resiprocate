@@ -18,6 +18,7 @@
 
 #include "resiprocate/os/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;

@@ -4,6 +4,7 @@
 
 #include "resiprocate/ExternalBodyContents.hxx"
 #include "resiprocate/os/Logger.hxx"
+#include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 
