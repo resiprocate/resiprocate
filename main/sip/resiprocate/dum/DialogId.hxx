@@ -20,17 +20,30 @@ class DialogId
 
       const DialogSetId& getDialogSetId() const;
 
+      size_t hash() const;
+
 #if defined(HASH_MAP_NAMESPACE)
       friend struct HASH_MAP_NAMESPACE::hash<resip::DialogId>;
-#endif
-#if defined(__INTEL_COMPILER )
+#elif defined(__INTEL_COMPILER )
       friend size_t hash_value(const resip::DialogId& id);
 #endif
+
    private:
       DialogSetId mDialogSetId;
       Data mRemoteTag;
 };
-
 }
+#if defined(HASH_MAP_NAMESPACE)
+namespace HASH_MAP_NAMESPACE
+{
+struct hash<resip::DialogId>
+{
+      size_t operator()(const resip::DialogId& id) const;
+};
+}
+#elif defined(__INTEL_COMPILER)
+namespace std { size_t hash_value(const resip::DialogId& id); }
+#endif
+
   
 #endif
