@@ -8,6 +8,7 @@ LIBTOOL = @LIBTOOL@ --tag=CXX
 
 lib_LTLIBRARIES = libresiprocate.la
 libresiprocate_la_SOURCES = \
+	os/AbstractFifo.cxx \
 	os/BaseException.cxx \
 	os/Coders.cxx \
 	os/Condition.cxx \
