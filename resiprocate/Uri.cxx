@@ -419,12 +419,12 @@ Uri::parse(ParseBuffer& pb)
    if (isEqualNoCase(mScheme, Symbols::Tel))
    {
       const char* anchor = pb.position();
-      pb.skipToChar(Symbols::SEMI_COLON[0]);
+      pb.skipToOneOf(";>");
       pb.data(mUser, anchor);
-      if (!pb.eof())
+      if (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0])
       {
          anchor = pb.skipChar();
-         pb.skipToEnd();
+         pb.skipToChar(Symbols::RA_QUOTE[0]);
          pb.data(mUserParameters, anchor);
       }
       return;
