@@ -29,6 +29,7 @@ class Profile
 
       NameAddr& getDefaultAor();
       int getDefaultRegistrationTime();
+      int getDefaultSubscriptionTime();
 
       bool isSchemeSupported(const Data& scheme);
       bool isMethodSupported(MethodTypes method);

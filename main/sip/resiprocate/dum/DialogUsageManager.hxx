@@ -96,9 +96,9 @@ class DialogUsageManager
       // memory will exist at least up until the point where the application
       // calls DialogUsageManager::send(msg);
       SipMessage& makeInviteSession(const Uri& target, const SdpContents* initialOffer);
-      SipMessage& makeSubscription(const Uri& aor, const Data& eventType);
+      SipMessage& makeSubscription(const Uri& aor, const NameAddr& target, const Data& eventType);
       SipMessage& makeRefer(const Uri& aor, const H_ReferTo::Type& referTo);
-      SipMessage& makePublication(const Uri& aor, const Data& eventType);
+      SipMessage& makePublication(const Uri& aor, const NameAddr& target, const Data& eventType);
       SipMessage& makeRegistration(const NameAddr& aor);
       SipMessage& makeOutOfDialogRequest(const Uri& aor, const MethodTypes& meth);
 
