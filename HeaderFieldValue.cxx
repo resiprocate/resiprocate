@@ -64,6 +64,21 @@ HeaderFieldValue::clone() const
   return new HeaderFieldValue(*this);
 }
 
+Parameter& 
+HeaderFieldValue::getParameter(ParameterTypes::Type type)
+{
+   assert(0);
+}
+
+
+      
+void 
+HeaderFieldValue::parseParameters(const char* start)
+{
+   assert(0);
+}
+      
+
 ParameterList& 
 HeaderFieldValue::getParameters()
 {

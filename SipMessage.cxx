@@ -307,7 +307,7 @@ SipMessage::clearFixedDest()
 }
 
 
-RequestLineComponent& 
+RequestLine& 
 SipMessage::header(const RequestLineType& l)
 {
    //assert(0); // CJ TODO - Cullen wrote this and I have no clue if it is even
@@ -318,14 +318,14 @@ SipMessage::header(const RequestLineType& l)
       mStartLine = new HeaderFieldValue;
    }
    
-   RequestLineComponent* parser = new RequestLineComponent(mStartLine);
+   RequestLine* parser = new RequestLine(mStartLine);
    mStartLine->mParserCategory = parser;
    
    return *parser;
 }
 
 
-StatusLineComponent& 
+StatusLine& 
 SipMessage::header(const StatusLineType& l)
 {
    //assert(0); // CJ TODO - Cullen wrote this and I have no clue if it is even
@@ -336,7 +336,7 @@ SipMessage::header(const StatusLineType& l)
       mStartLine = new HeaderFieldValue;
    }
    
-   StatusLineComponent* parser = new StatusLineComponent(mStartLine);
+   StatusLine* parser = new StatusLine(mStartLine);
    mStartLine->mParserCategory = parser;
    
    return *parser;
