@@ -14,6 +14,7 @@
 
 // GAG headers
 #include "GagMessage.hxx"
+#include "GagConduit.hxx"
 
 using namespace resip;
 
@@ -38,8 +39,7 @@ main (int argc, char **argv)
   sipStack.addTransport(TCP, tcpPort);
   sipStack.addTlsTransport(tlsTcpPort);
 
-  // Here are all of our TUs
-  list<TuIM> tuIMList;
+  GagConduit conduit(sipStack);
 
   // Main processing loop
   int time;
@@ -69,18 +69,13 @@ main (int argc, char **argv)
     if (fdset.readyToRead(fileno(stdin)))
     {
       GagMessage *message = GagMessage::getMessage(cin);
+      conduit.handleMessage(message);
       delete message;
     }
     else
     {
       sipStack.process(fdset);
-      list<TuIM>::iterator tu;
-      tu = tuIMList.begin();
-      while (tu != tuIMList.end())
-      {
-        tu->process();
-        tu++;
-      }
+      conduit.process();
     }
     
   }
