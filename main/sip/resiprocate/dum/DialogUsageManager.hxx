@@ -70,11 +70,17 @@ class DialogUsageManager : public HandleManager
       void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
       void shutdownIfNoUsages(DumShutdownHandler*, unsigned long giveUpSeconds=0);
       void forceShutdown(DumShutdownHandler*);
-      
+
       bool addTransport( TransportType protocol,
-                         int port, 
+                         int port=0, 
                          IpVersion version=V4,
-                         const Data& ipInterface = Data::Empty);
+                         const Data& ipInterface = Data::Empty, 
+                         const Data& sipDomainname = Data::Empty, // only used
+                                                                  // for TLS
+                                                                  // based stuff 
+                         const Data& privateKeyPassPhrase = Data::Empty,
+                         SecurityTypes::SSLType sslType = SecurityTypes::TLSv1 );
+
       Security& getSecurity();
       
       Data getHostAddress();
