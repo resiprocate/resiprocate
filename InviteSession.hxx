@@ -74,6 +74,17 @@ class InviteSession : public DialogUsage
          WaitingToTerminate,
          Terminated, // Ended. waiting to delete
 
+         UAC_Start,
+         UAC_Early,
+         UAC_EarlyWithOffer,
+         UAC_EarlyWithAnswer,
+         UAC_WaitingForAnswerFromApp,
+         UAC_Terminated,
+         UAC_SentUpdateEarly,
+         UAC_ReceivedUpdateEarly,
+         UAC_PrackAnswerWait,
+         UAC_Canceled,
+
          UAS_Start,
          UAS_OfferReliable,
          UAS_NoOfferReliable,
@@ -121,8 +132,8 @@ class InviteSession : public DialogUsage
 
       static const SdpContents* getSdp(const SipMessage& msg);
       static void setSdp(SipMessage& msg, const SdpContents& sdp);
-      
-      State mState; 
+
+      State mState;
       NitState mNitState;
 
       SdpContents mCurrentLocalSdp;
