@@ -4,7 +4,7 @@
 static const char* const resipFifo_h_Version =
    "$Id: Fifo.hxx,v 1.19 2003/10/01 15:33:50 fluffy Exp $";
 
-#include <list>
+#include <deque>
 //#include <errno.h>
 #include <cassert>
 
@@ -50,7 +50,7 @@ class Fifo
       bool messageAvailable() const;
 
    protected:
-      typedef std::list < Msg* > MessageContainer;
+      typedef std::deque < Msg* > MessageContainer;
       MessageContainer mFifo;
       unsigned long mSize;
       
