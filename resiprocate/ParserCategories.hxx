@@ -529,9 +529,13 @@ class RequestLine : public ParserCategory
 
       virtual ~RequestLine();
 
-      Uri& uri() const;
-      
+      const Uri& uri() const;
+      Uri& uri();
+
       MethodTypes getMethod() const {checkParsed(); return mMethod;}
+      const MethodTypes& method() const {checkParsed(); return mMethod;}
+      MethodTypes& method() {checkParsed(); return mMethod;}
+
       Data& unknownMethodName() const {checkParsed(); return mUnknownMethodName;}
       const Data& getSipVersion() const {checkParsed(); return mSipVersion;}
 
