@@ -80,13 +80,14 @@ UserAgent::startup()
 {
    if (mRegisterDuration)
    {
-      mDum.send(mDum.makeRegistration(mAor));
+      mDum.send(mDum.makeRegistration(NameAddr(mAor)));
    }
 
-   for (std::vector<Uri> i = mBuddies.begin(); i != mBuddies.end(); ++i)
+   //for (std::vector<Uri> i = mBuddies.begin(); i != mBuddies.end(); ++i)
    {
    }
 
+#if 0
    mDum.send(mDum.makePublish);
 
    auto_ptr<SipMessage> msg( sa.dialog->makeInitialPublish(NameAddr(sa.uri),NameAddr(mAor)) );
@@ -95,9 +96,13 @@ UserAgent::startup()
    msg->setContents( pidf );
    setOutbound( *msg );
    mStack->send( *msg );
-
+#endif
 }
 
+void
+UserAgent::shutdown()
+{
+}
 
 void
 UserAgent::process()
