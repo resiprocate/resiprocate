@@ -79,6 +79,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
          case INVITE:
          case SUBSCRIBE:
          case REFER:
+         case NOTIFY:
             DebugLog ( << "UAS dialog ID creation, DS: " << ds.getId());            
             mId = DialogId(ds.getId(), request.header(h_From).param(p_tag));
             mRemoteNameAddr = request.header(h_From);
@@ -162,7 +163,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                   if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
                       isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
                   {
-                     BaseCreator* creator = mDum.findCreator(mId);
+                     BaseCreator* creator = mDialogSet.getCreator();
                      assert(creator);// !jf! throw or something here
                   
                      mLocalContact = creator->getLastRequest().header(h_Contacts).front();
@@ -371,9 +372,10 @@ Dialog::dispatch(const SipMessage& msg)
             }
             else
             {
-               BaseCreator* creator = mDum.findCreator(mId);
+               BaseCreator* creator = mDialogSet.getCreator();
                if (creator)
                {
+                  InfoLog (<< "Making subscription from NOTIFY: " << creator->getLastRequest());
                   ClientSubscription* sub = makeClientSubscription(request);
                   mClientSubscriptions.push_back(sub);
                   sub->dispatch(request);
@@ -382,6 +384,8 @@ Dialog::dispatch(const SipMessage& msg)
                {
                   SipMessage failure;
                   makeResponse(failure, request, 481);
+                  failure.header(h_To).remove(p_tag); // otherwise it will be INVALID
+                  InfoLog (<< "Sending 481 - no dialog created " << endl << failure);
                   mDum.sendResponse(failure);
                   return;
                }
