@@ -1074,10 +1074,9 @@ NameAddr::NameAddr(const Data& unparsed)
      mAllContacts(false),
      mDisplayName()
 {
-   HeaderFieldValue hfv(unparsed.data(), unparsed.size());
-   NameAddr tmp(&hfv);
-   // force a parse
-   tmp.checkParsed();
+   ParseBuffer pb(unparsed.data(), unparsed.size());
+   NameAddr tmp;
+   tmp.parse(pb);
    *this = tmp;
 }
 
