@@ -40,8 +40,8 @@ class BaseUsage
       BaseUsage(DialogUsageManager& dum, Dialog& dialog);
       virtual ~BaseUsage();
 
-      SipMessage* makeInviteSession();
-      SipMessage* makeSubscription();
+      SipMessage* makeInvite();
+      SipMessage* makeSubscribe();
       SipMessage* makeRefer();
       SipMessage* makePublication();
       SipMessage* makeRegistration();
