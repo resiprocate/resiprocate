@@ -145,7 +145,7 @@ class Security
       Data getPath( const Data& dir, const Data& file );
 
 #ifdef USE_SSL   
-      SSL_CTX* getTlsCtx();
+      SSL_CTX* getTlsCtx(bool isServer);
       
       // map of name to certificates
       typedef std::map<Data,X509*> Map;
