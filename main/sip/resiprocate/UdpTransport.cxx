@@ -155,6 +155,16 @@ void UdpTransport::process()
       CRLF
    ;
    int len = sizeof(buffer)/sizeof(*buffer);
+   static int fired = 0;
+   if (!fired)
+   {
+      fired++;
+   }
+   else
+   {
+      len = 0;
+   }
+     
 #endif
 
    if ( len <= 0 )
