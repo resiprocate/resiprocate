@@ -45,7 +45,7 @@ class Server : public ThreadIf
          
          contact.uri().host() = SipStack::getHostname();
          contact.uri().port() = 5070;
-         contact.uri().param(p_transport) = Transport::toData(mTransport);
+         contact.uri().param(p_transport) = Tuple::toData(mTransport);
          
          int calls = mNumCalls;
          while(calls > 0)
@@ -108,14 +108,14 @@ main(int argc, char* argv[])
    SipStack stack;
 
 
-   TransportType protocol = Transport::UDP;
+   TransportType protocol = UDP;
    if (strcasecmp(argv[3], "UDP") == 0)
    {
-      protocol = Transport::UDP;
+      protocol = UDP;
    }
    else if (strcasecmp(argv[3], "TCP") == 0)
    {
-      protocol = Transport::TCP;
+      protocol = TCP;
    }
    else
    {

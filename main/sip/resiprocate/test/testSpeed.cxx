@@ -29,8 +29,8 @@ main(int argc, char* argv[])
 
    SipStack stack1;
    SipStack stack2;
-   stack1.addTransport(Transport::UDP, 5070);
-   stack2.addTransport(Transport::UDP, 5080);
+   stack1.addTransport(UDP, 5070);
+   stack2.addTransport(UDP, 5080);
 
    NameAddr dest;
    dest.uri().scheme() = "sip";
