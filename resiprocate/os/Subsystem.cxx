@@ -13,6 +13,7 @@ const Subsystem Subsystem::TEST("RESIP:TEST");
 const Subsystem Subsystem::TRANSACTION("RESIP:TRANSACTION");
 const Subsystem Subsystem::TRANSPORT("RESIP:TRANSPORT");
 const Subsystem Subsystem::STATS("RESIP:STATS");
+const Subsystem Subsystem::REPRO("REPRO:APP");
 const Subsystem Subsystem::NONE("UNDEFINED");
 
 const Data& Subsystem::getSubsystem() const
