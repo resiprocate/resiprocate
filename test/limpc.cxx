@@ -7,7 +7,6 @@
 
 //#define USE_CURSES
 
-
 #ifdef USE_CURSES
 #include <ncurses.h>
 #else
