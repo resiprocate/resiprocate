@@ -19,10 +19,17 @@ class DialogSet
       DialogSet( Dialog* );
       ~DialogSet();
       
+      DialogSetId getId();
+      
       void addDialog( Dialog* );
       void removeDialog(const Dialog* );
       
       DialogIdSet getDialogs() const;
+
+      Dialog* findDialog( const DialogId id );
+      Dialog* findDialog( const Data& otherTag );
+      Dialog* findDialog( SipMessage& msg );
+      
       BaseCreator* getCreator();
       
    private:
