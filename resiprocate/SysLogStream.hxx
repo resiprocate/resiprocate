@@ -1,5 +1,3 @@
-// Copyright 2002 Cathay Networks, Inc. 
-
 #ifndef SysLogStream_hxx
 #define SysLogStream_hxx
 
