@@ -233,8 +233,8 @@ DialogSet::dispatch(const SipMessage& msg)
          {
             if (mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg))
             {
-               InfoLog( << "about to re-send request with digest credentials" );
-               DebugLog( << getCreator()->getLastRequest() );
+               DebugLog( << "about to re-send request with digest credentials" );
+               StackLog( << getCreator()->getLastRequest() );
                
                mDum.send(getCreator()->getLastRequest());
                return;                     
