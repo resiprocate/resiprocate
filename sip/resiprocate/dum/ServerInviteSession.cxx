@@ -71,6 +71,13 @@ ServerInviteSession::Handle::operator->()
    return static_cast<ServerInviteSession*>get();
 }
 
+InviteSession::Handle 
+ServerInviteSession::getSessionHandle()
+{
+   // don't ask, don't tell
+   return (InviteSession::Handle)mHandle;
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

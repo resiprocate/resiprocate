@@ -1,5 +1,10 @@
 #include <ClientSubscription.hxx>
 
+ClientSubscription::ClientSubscription(DialogUsageManager& dum)
+   : mHandle(dum)
+{
+}
+
 bool
 ClientSubscription::matches(const SipMessage& subOrNotify)
 {

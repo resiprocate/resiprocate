@@ -28,6 +28,10 @@ class ClientPublication : public BaseUsage
       void refresh(int expiration=0);
       void update(const Contents* body);
       void end();
+
+   private:
+      friend class DialogUsageManager;
+      ClientPublication::Handle mHandle;
 };
  
 }

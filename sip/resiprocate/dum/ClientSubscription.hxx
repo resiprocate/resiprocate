@@ -29,11 +29,14 @@ class ClientSubscription: public BaseUsage
       void process(const SipMessage& subOrNotify);
       
    private:
+      friend class DialogUsageManager;
+      
       Data mEventType;
       Data mSubscriptionId;
       SubscriptionState mSubState;
       const Contents* mCurrentEventDocument;
       UInt64 mExpirationTime;
+      ClientSubscription::Handle mHandle;
 };
  
 }
