@@ -32,6 +32,17 @@ Uri::Uri(const Uri& rhs)
      mPassword(rhs.mPassword)
 {}
 
+
+Uri::Uri(const Data& unparsed)       
+   : ParserCategory(unparsed),
+     mScheme(Symbols::DefaultSipScheme),
+     mPort(0)
+{
+   // !jf! need to force it to parse
+   assert(0);
+}
+
+
 Uri&
 Uri::operator=(const Uri& rhs)
 {
