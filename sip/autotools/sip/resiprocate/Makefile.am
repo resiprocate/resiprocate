@@ -2,7 +2,7 @@ SUBDIRS = .  dum test
 CXX = ${DISTCC} @CXX@
 dnl INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I/usr/kerberos/include
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
-EXTRA_DIST = resip.spec.in
+# EXTRA_DIST = resip.spec.in
 
 LIBTOOL = @LIBTOOL@ --tag=CXX
 
@@ -265,10 +265,10 @@ resiprocate_os_include_HEADERS = \
 	os/vthread.hxx
 
 
-SUFFIXES = .gperf .cxx
-GPERFFLAGS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
-.gperf.cxx:
-	gperf $(GPERFFLAGS) -Z `echo $* | sed -e 's/.*\///'` $< | \
-	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
-	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' > $@
+#SUFFIXES = .gperf .cxx
+#GPERFFLAGS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
+#.gperf.cxx:
+#	gperf $(GPERFFLAGS) -Z `echo $* | sed -e 's/.*\///'` $< | \
+#	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
+#	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' > $@
 
