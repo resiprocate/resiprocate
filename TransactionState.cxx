@@ -33,7 +33,8 @@ TransactionState::~TransactionState()
 {
    
    Data tid = mMsgToRetransmit->getTransactionId();
-   if (mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK)
+   if (mMsgToRetransmit->isRequest() &&
+       mMsgToRetransmit->header(h_RequestLine).getMethod() == ACK)
    {
       // make ACK tid different from INVITE for cleanup too.
       // this design is pretty gross
