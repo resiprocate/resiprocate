@@ -41,14 +41,14 @@ In addition, you may wish to add:
 Using configure.ac and Automake
 ===============================
 
-   First, we need to build and install the ares library (asynchronous
+    First, you need to build and install the ares library (asynchronous
 DNS resolver).
 	cd contrib/ares
 	./configure
 	make
 	make install
 
-   Run the following commands to generate the configure scripts from
+    Run the following commands to generate the configure scripts from
 the configure.ac and automake files, build and install the resiprocate
 library.
 	aclocal && autoconf && automake
@@ -56,9 +56,25 @@ library.
 	make
 	make install
 
-   Then, all the library and header files are installed under the
+    Then, all the library and header files are installed under the
 /usr/local directory. If you want to install them to other directory,
 you just need add the --prefix option in running the configure scripts.
 
-   Optionally, type `make check' to run any self-tests that come with
+    Optionally, type `make check' to run any self-tests that come with
 the package.
+
+
+Build the resip RPM packages
+============================
+
+    You need to build the Makefile using configure.ac and automake
+files, then type "make rpms" to build the resip RPM packages.
+	aclocal && autoconf && automake
+	./configure
+	make rpms
+
+    Then, there will be four RPM packages, resiprocate source rpm,
+resiprocate rpm, resiprocate-devel rpm, and ares rpm.
+
+    If you want to develop applications based on the resip stack, you
+need to install the resiprocate-devel and are rpm packages.
