@@ -144,7 +144,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             break;
          }
       }
-      
+      //!dcm! -- cancel handling needs work
       case Cancelled:
       {
          if (msg.isResponse())
@@ -154,7 +154,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             {
                //!dcm! -- ack the crossover 200?
                mState = Connected;               
-               end();
+               send(end());
             }
             else if (code >= 300 && msg.header(h_CSeq).method() == INVITE)
             {
