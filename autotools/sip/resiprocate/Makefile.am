@@ -33,6 +33,7 @@ libresiprocate_la_SOURCES = \
 	os/Timer.cxx \
 	os/Tuple.cxx \
 	os/vmd5.cxx \
+	os/WinCompat.cxx \
 	ApiCheck.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
@@ -225,6 +226,7 @@ resiprocate_include_HEADERS = \
 	UnknownParameter.hxx \
 	UnknownParameterType.hxx \
 	Uri.hxx \
+	WinCompat.hxx \
 	XMLCursor.hxx \
 	X_msMsgsInvite.hxx \
 	config.hxx
