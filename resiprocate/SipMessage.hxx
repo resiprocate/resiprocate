@@ -23,10 +23,6 @@
 namespace Vocal2
 {
 
-// !dlb!
-typedef NameAddr Url;
-typedef ParserContainer<NameAddr> Urls;
-
 class HeaderFieldValue;
 
 class SipMessage : public Message
