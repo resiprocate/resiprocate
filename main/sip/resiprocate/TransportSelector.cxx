@@ -12,7 +12,7 @@ using namespace Vocal2;
 
 TransportSelector::TransportSelector(SipStack& stack) :
    mStack(stack),
-   mUdp(new UdpTransport(5060, stack.mStateMacFifo))
+   mUdp(new UdpTransport("localhost", 5060, stack.mStateMacFifo)) // !jf!
 {
 }
 
@@ -38,8 +38,18 @@ TransportSelector::send( SipMessage* msg )
    // encode the message
    // send it to the appropriate transport
 
+   assert(!msg->header(h_Vias).empty());
+   msg->header(h_Vias).front().param(p_maddr) = "";
+   //msg->header(h_Vias).front().param(p_ttl) = 1;
+   msg->header(h_Vias).front().transport() = mUdp->transport();
+   msg->header(h_Vias).front().sentHost() = mUdp->host();
+   msg->header(h_Vias).front().sentPort() = mUdp->port();
+   
    std::stringstream strm;
    msg->encode(strm);
+   
+   sockaddr_in dest;
+   mUdp->send(dest, strm.str().c_str(), strm.str().length());
    
    //mUdp->send(msg->str(), msg->size());
    //assert(0);

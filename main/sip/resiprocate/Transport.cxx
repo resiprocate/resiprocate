@@ -13,7 +13,8 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 {
 }
 
-Transport::Transport(int portNum, Fifo<Message>& rxFifo) :
+Transport::Transport(const Data& host, int portNum, Fifo<Message>& rxFifo) :
+   mHost(host),
    mPort(portNum), 
    mStateMachineFifo(rxFifo),
    mShutdown(false)

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.55 2002/10/06 18:33:38 jason Exp $
+# $Id: Makefile,v 1.56 2002/10/22 15:58:50 jason Exp $
 
 # must have ARCH set
 ARCH = i686
@@ -15,6 +15,7 @@ SRC =	\
 	HeaderFieldValueList.cxx \
 	Headers.cxx \
 	Helper.cxx \
+	HostSpecification.cxx \
 	IntegerParameter.cxx \
 	Message.cxx \
 	MethodTypes.cxx \
