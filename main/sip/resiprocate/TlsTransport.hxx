@@ -27,11 +27,11 @@ class TlsTransport : public TcpBaseTransport
                    SecurityTypes::SSLType sslType = SecurityTypes::TLSv1
                    );
 	TlsTransport(Fifo<TransactionMessage>& fifo, 
-		     const Data& sipDomain, 
-		     const Data& interfaceObj, 
-		     int portNum, 
-		     Security& security,
-		     bool ipv4);
+                 const Data& sipDomain, 
+                 const Data& interfaceObj, 
+                 int portNum, 
+                 Security& security,
+                 bool ipv4);
       virtual  ~TlsTransport();
 
       TransportType transport() const { return TLS; }
