@@ -35,6 +35,16 @@ class SendData
 class Transport
 {
    public:
+      typedef enum 
+      {
+         Unknown,
+         UDP,
+         TCP,
+         TLS,
+         SCTP,
+         DCCP
+      } TransportType;
+      
       class Exception : public VException
       {
          public:
@@ -44,30 +54,34 @@ class Transport
       
       // sendHost is localhost (may be a dns name referring to this sip element)
       // portNum is the port to receive and/or send on
-      Transport(const Data& sendHost, int portNum, Fifo<Message>& rxFifo);
+      Transport(const Data& sendHost, int portNum, const Data& interface, Fifo<Message>& rxFifo);
       // !ah! need to think about type for
       // interface specification here.
       
       virtual ~Transport();
       
       virtual void send( const sockaddr_in& address, const  char* buffer, size_t length)=0; //, TransactionId txId) = 0;
-
       virtual void process(fd_set* fdSet=NULL) = 0 ;
-	
       virtual void buildFdSet( fd_set* fdSet, int* fdSetSize );
 
-      void run();               // will not return.
-      
+      void run(); // will not return.
       void shutdown();
 
-      virtual const Data& host() const { return mHost; } 
+      // These methods are used by the TransportSelector
+      virtual const Data& hostname() const { return mHost; } 
       virtual int port() const { return mPort; } 
-      virtual const Data transport()=0;
+      virtual TransportType transport() const =0 ;
+      virtual bool isReliable() const =0;
       
+      static TransportType toTransport( const Data& );
+      static Data toData( TransportType );
+
+
    protected:
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Data mHost;
       int mPort;
+      Data mInterface;
       Fifo<SendData> mTxFifo; // owned by the transport
       Fifo<Message>& mStateMachineFifo; // passed in
 

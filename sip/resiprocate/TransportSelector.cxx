@@ -16,21 +16,73 @@ using namespace Vocal2;
 
 
 TransportSelector::TransportSelector(SipStack& stack) :
-   mStack(stack),
-   mUdp(new UdpTransport("localhost", 5060, stack.mStateMacFifo)) // !jf!
+   mStack(stack)
 {
+   addTransport(Transport::UDP, 5060);
 }
+
+TransportSelector::~TransportSelector()
+{
+   std::vector<Transport*>::iterator i;
+   while (!mTransports.empty())
+   {
+      delete *i;
+      mTransports.erase(i);
+   }
+}
+
+
+void 
+TransportSelector::addTransport( Transport::TransportType protocol, 
+                                 int port,
+                                 const Data& hostName,
+                                 const Data& interface) 
+{
+   assert( port >  0 );
+
+   Data hostname = hostName;
+   if ( hostname.empty() )
+   {
+      char buf[1024];
+      int e = gethostname(buf,sizeof(buf));
+      if ( e != 0 )
+      {
+         int err = errno;
+         InfoLog( << "cont not find local hostname:" << strerror(err) );
+         throw Transport::Exception("could not find local hostname",__FILE__,__LINE__);
+      }
+      hostname = Data(buf);
+   }
+   assert( !hostname.empty() );
+   
+   Transport* transport=0;
+   switch ( protocol )
+   {
+      case Transport::UDP:
+         transport = new UdpTransport(hostname, port, interface, mStack.mStateMacFifo);
+         break;
+      default:
+         assert(0);
+         break;
+   }
+
+   mTransports.push_back(transport);
+}
+
 
 void 
 TransportSelector::process(fd_set* fdSet)
 {
-   try
+   for (std::vector<Transport*>::const_iterator i; i != mTransports.end(); i++)
    {
-      mUdp->process(fdSet);
-   }
-   catch (VException& e)
-   {
-      InfoLog (<< "Uncaught exception: " << e);
+      try
+      {
+         (*i)->process(fdSet);
+      }
+      catch (VException& e)
+      {
+         InfoLog (<< "Uncaught exception: " << e);
+      }
    }
 }
 
@@ -43,6 +95,7 @@ TransportSelector::send( SipMessage* msg )
    // encode the message
    // send it to the appropriate transport
 
+   Transport* transport = *mTransports.begin();
    std::cerr << "Sending message to the wire." << std::endl;
    msg->encode(std::cerr);
    std::cerr.flush();
@@ -51,9 +104,9 @@ TransportSelector::send( SipMessage* msg )
    assert(!msg->header(h_Vias).empty());
    msg->header(h_Vias).front().param(p_maddr) = "";
    //msg->header(h_Vias).front().param(p_ttl) = 1;
-   msg->header(h_Vias).front().transport() = mUdp->transport();
-   msg->header(h_Vias).front().sentHost() = mUdp->host();
-   msg->header(h_Vias).front().sentPort() = mUdp->port();
+   msg->header(h_Vias).front().transport() = Transport::toData(transport->transport());  //cache !jf! 
+   msg->header(h_Vias).front().sentHost() = transport->hostname();
+   msg->header(h_Vias).front().sentPort() = transport->port();
    
    std::stringstream strm;
    msg->encode(strm);
@@ -63,7 +116,7 @@ TransportSelector::send( SipMessage* msg )
    dest.sin_addr.s_addr = inet_addr("127.0.0.1");
    dest.sin_port = htons(9999);
    // Figure out what the heck goes in dest here.
-   mUdp->send(dest, strm.str().c_str(), strm.str().length());
+   transport->send(dest, strm.str().c_str(), strm.str().length());
    
    //mUdp->send(msg->str(), msg->size());
    //assert(0);
@@ -73,7 +126,10 @@ TransportSelector::send( SipMessage* msg )
 void 
 TransportSelector::buildFdSet( fd_set* fdSet, int* fdSetSize )
 {
-   mUdp->buildFdSet( fdSet, fdSetSize );
+   for (std::vector<Transport*>::const_iterator i; i != mTransports.end(); i++)
+   {
+      (*i)->buildFdSet( fdSet, fdSetSize );
+   }
 }
 
 
