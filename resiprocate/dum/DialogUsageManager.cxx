@@ -793,7 +793,7 @@ DialogUsageManager::findInviteSession(CallId replaces)
 bool
 DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
 {
-   //!dcm! -- probably completely wrong
+   //!dcm! -- shutdown stuff probably completely wrong
    // After a Stack ShutdownMessage has been received, don't do anything else in dum
    if (mShutdownState == Shutdown)
    {
@@ -803,15 +803,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    try
    {
       InfoLog (<< "Got: " << msg->brief());
-      if (mServerAuthManager.get())
-      {
-         if ( !mServerAuthManager->handle(msg) )
-         {
-            InfoLog(<< "ServerAuth ate message " << msg->brief() );
-            return true;
-         }
-      }
-      
+
       InfoLog(<< "Test if sip message" );
 
       SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg.get());
@@ -856,6 +848,15 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
                }
             }
 
+            if (mServerAuthManager.get())
+            {
+               if ( mServerAuthManager->handle(msg) )
+               {
+                  InfoLog(<< "ServerAuth ate message " << msg->brief() );
+                  return true;
+               }
+            }
+      
             if (queueForIdentityCheck(sipMsg))
             {
                msg.release();
