@@ -1,18 +1,17 @@
 #if !defined(RESIP_TLSTRANSPORT_HXX)
 #define RESIP_TLSTRANSPORT_HXX
 
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/Message.hxx"
-#include "resiprocate/ConnectionMap.hxx"
+#include "resiprocate/TcpBaseTransport.hxx"
 
 namespace resip
 {
 
 class Connection;
-class SipMessage;
+class Data;
+class Message;
 class Security;
 
-class TlsTransport : public Transport
+class TlsTransport : public TcpBaseTransport
 {
    public:
       TlsTransport(Fifo<Message>& fifo, 
@@ -24,33 +23,13 @@ class TlsTransport : public Transport
                    bool ipv4);
       virtual  ~TlsTransport();
 
-      void process(FdSet& fdset);
-      void buildFdSet( FdSet& fdset);
-      bool isReliable() const { return true; }
       TransportType transport() const { return TLS; }
       const Data& tlsDomain() const { return mDomain; }
 
-      static const size_t MaxWriteSize;
-      static const size_t MaxReadSize;
+   protected:
+      Connection* createConnection(Tuple& who, Socket fd, bool server=false);
 
-   private:
-      void processAllWrites(FdSet& fdset);
-      void processAllReads(FdSet& fdset);
-
-      bool processWrite(Connection* c);
-      void sendFromRoundRobin(FdSet& fdset);
-
-      bool processRead(Connection* c);
-
-      void processListen(FdSet& fdSet);
-
-      static const int MaxBufferSize;
       Data mDomain;
-      ConnectionMap mConnectionMap;
-      typedef std::list<Connection*> ConnectionList;
-      ConnectionList mSendRoundRobin;
-      ConnectionList::iterator mSendPos;
-
       Security* mSecurity;
 };
 

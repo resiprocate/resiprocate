@@ -28,8 +28,8 @@ ConnectionMap::ConnectionMap()
 
 ConnectionMap::~ConnectionMap()
 {
-   for(Map::iterator it = mConnections.begin();
-       it != mConnections.end(); it++)
+   for (Map::iterator it = mConnections.begin();
+        it != mConnections.end(); it++)
    {
       delete it->second;
    }
@@ -98,20 +98,14 @@ ConnectionMap::gc(UInt64 relThreshhold)
 
    // start with the oldest
    Connection* i = mPostOldest.mYounger;
-   while (i != &mPreYoungest)
+   while ((i != &mPreYoungest) && (i->mLastUsed < threshhold))
    {
-      if (i->mLastUsed < threshhold)
-      {
-         DebugLog( << "ConnectionMap::gc: " << *i);
-         Connection* old = i;
-         i = i->remove();
-         mConnections.erase(old->mWho);
-         delete old;
-      }
-      else
-      {
-         break;
-      }
+      DebugLog( << "ConnectionMap::gc: " << *i);
+      Connection* old = i;
+      i->remove();
+      i = mPostOldest.mYounger;
+      mConnections.erase(old->mWho);
+      delete old;
    }
 }
 

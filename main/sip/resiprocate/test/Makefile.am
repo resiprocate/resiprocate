@@ -8,15 +8,13 @@ libtestsupport_la_SOURCES = \
 	Register.cxx \
 	Registrar.cxx \
 	Resolver.cxx \
-	TestSupport.cxx \
-	Transceiver.cxx
+	TestSupport.cxx 
 
 noinst_HEADERS = \
 	digcalc.hxx \
 	md5.hxx \
 	Resolver.hxx \
 	InviteClient.hxx \
-	Transceiver.hxx \
 	Register.hxx \
 	testIM.hxx \
 	InviteServer.hxx \
@@ -62,11 +60,11 @@ check_PROGRAMS = \
 	testTransactionFSM \
 	testUri \
 	testXMLCursor \
-	testUdp
+	testUdp testTcp \
 	limpc
 
 
-#bin_PROGRAMS = limpc
+bin_PROGRAMS = limpc testTcp
 
 TESTS = $(check_PROGRAMS)
 SipTortureTests_SOURCES = SipTortureTests.cxx
@@ -110,5 +108,7 @@ testTransactionFSM_SOURCES = testTransactionFSM.cxx
 testUri_SOURCES = testUri.cxx
 testXMLCursor_SOURCES = testXMLCursor.cxx
 testUdp_SOURCES = testUdp.cxx
+testTcp_SOURCES = testTcp.cxx
 limpc_SOURCES = limpc.cxx
+
 
