@@ -20,6 +20,7 @@
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/MD5Stream.hxx"
 #include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Random.hxx"
 
 using namespace resip;
 
@@ -84,6 +85,20 @@ TransactionState::process(TransactionController& controller)
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
 
    RESIP_STATISTICS(sip && sip->isExternal() && controller.getStatisticsManager().received(sip));
+
+   // !jf! this is a first cut at elementary back pressure. hope it works :)
+   if (sip && sip->isExternal() && sip->isRequest() && 
+       sip->header(h_RequestLine).getMethod() != ACK && 
+       controller.isTUOverloaded())
+   {
+      SipMessage* tryLater = Helper::makeResponse(*sip, 503);
+      tryLater->header(h_RetryAfter).value() = 32 + (Random::getRandom() % 32);
+      tryLater->header(h_RetryAfter).comment() = "Server busy";
+      Tuple target(sip->getSource());
+      delete sip;
+      controller.mTransportSelector.transmit(tryLater, target);
+      return;
+   }
 
    if (sip && sip->isExternal() && sip->header(h_Vias).empty())
    {
@@ -193,7 +208,7 @@ TransactionState::process(TransactionController& controller)
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
-		  controller.mTUFifo.add(Helper::makeResponse(*sip, 481));
+                  TransactionState::sendToTU(controller, Helper::makeResponse(*sip, 481));
                   delete sip;
                   return;
                }
@@ -216,7 +231,7 @@ TransactionState::process(TransactionController& controller)
 
             // Incoming ACK just gets passed to the TU
             //StackLog(<< "Adding incoming message to TU fifo " << tid);
-            controller.mTUFifo.add(sip);
+            TransactionState::sendToTU(controller, sip);
          }
          else // new sip msg from the TU
          {
@@ -240,7 +255,7 @@ TransactionState::process(TransactionController& controller)
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from TU) CANCEL to uac");
-                  controller.mTUFifo.add(Helper::makeResponse(*sip,481));
+                  TransactionState::sendToTU(controller, Helper::makeResponse(*sip,481));
                   delete sip;
                }
                else if (matchingInvite->mState == Calling) // CANCEL before 1xx received
@@ -255,7 +270,7 @@ TransactionState::process(TransactionController& controller)
                   // The CANCEL was received before the INVITE was sent
                   // This can happen in odd cases. Too common to assert.
                   // Be graceful.
-                  controller.mTUFifo.add(Helper::makeResponse(*sip, 200));
+                  TransactionState::sendToTU(controller, Helper::makeResponse(*sip, 200));
                   matchingInvite->sendToTU(Helper::makeResponse(*matchingInvite->mMsgToRetransmit, 487));
 
                   delete matchingInvite;
@@ -1445,11 +1460,16 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
 void
 TransactionState::sendToTU(TransactionMessage* msg) const
 {
-   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-   StackLog(<< "Send to TU: " << *msg);
-   assert(sip);
-   mController.mTUFifo.add(sip);
+   TransactionState::sendToTU(mController, msg);
 }
+
+void
+TransactionState::sendToTU(TransactionController& controller, TransactionMessage* msg) 
+{
+   StackLog(<< "Send to TU: " << *msg);
+   controller.mTUFifo.add(msg);
+}
+
 
 SipMessage*
 TransactionState::make100(SipMessage* request) const
@@ -1482,7 +1502,6 @@ TransactionState::erase(const Data& tid)
       mController.mServerTransactionMap.erase(tid);
    }
 }
-
 
 bool
 TransactionState::isRequest(TransactionMessage* msg) const
@@ -1557,7 +1576,7 @@ TransactionState::terminateClientTransaction(const Data& tid)
    if (mController.mRegisteredForTransactionTermination)
    {
       //StackLog (<< "Terminate client transaction " << tid);
-      mController.mTUFifo.add(new TransactionTerminated(tid, true));
+      sendToTU(new TransactionTerminated(tid, true));
    }
 }
 
@@ -1568,7 +1587,7 @@ TransactionState::terminateServerTransaction(const Data& tid)
    if (mController.mRegisteredForTransactionTermination)
    {
       //StackLog (<< "Terminate server transaction " << tid);
-      mController.mTUFifo.add(new TransactionTerminated(tid, false));
+      sendToTU(new TransactionTerminated(tid, false));
    }
 }
 
