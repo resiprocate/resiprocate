@@ -1,13 +1,10 @@
 #if !defined(RESIP_TUPLE_HXX)
 #define RESIP_TUPLE_HXX
 
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
-#endif
-
-#include "resiprocate/os/HashMap.hxx"
-
 #include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/HashMap.hxx"
+#include "resiprocate/os/TransportType.hxx"
+
 
 #ifdef WIN32
 
@@ -17,17 +14,6 @@
 
 namespace resip
 {
-
-typedef enum 
-{
-   UNKNOWN_TRANSPORT = 0,
-   UDP,
-   TCP,
-   TLS,
-   SCTP,
-   DCCP,
-   MAX_TRANSPORT
-} TransportType;
 
 class Data;
 class Transport;
