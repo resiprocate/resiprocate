@@ -597,7 +597,7 @@ TuIM::processMessageRequest(SipMessage* msg)
    Uri from = msg->header(h_From).uri();
    signedBy = from.getAorNoPort();
    
-   DebugLog ( << "assuming signedBy is " << signedBy );
+   InfoLog ( << "assuming signedBy is " << signedBy );
    
    MultipartSignedContents* mBody = dynamic_cast<MultipartSignedContents*>(contents);
    if ( mBody )
@@ -1156,7 +1156,7 @@ TuIM::process()
    SipMessage* msg( mStack->receive() );
    if ( msg )
    {
-      InfoLog ( << "got message: " << *msg);
+      DebugLog ( << "got message: " << *msg);
    
       if ( msg->isResponse() )
       { 
