@@ -104,7 +104,11 @@ void
 Condition::wait (Mutex* mutex)
 {
 #ifdef WIN32 
-   WaitForSingleObject(mId,INFINITE);
+    // FixMe: Race condition between time we get mId and when we
+    // re-acquire the mutex.
+    mutex->unlock();
+    WaitForSingleObject(mId,INFINITE);
+    mutex->lock();
 #else
    int ret = pthread_cond_wait(&mId, mutex->getId());
    assert( ret == 0 );
@@ -115,9 +119,12 @@ bool
 Condition::wait (Mutex* mutex, int ms)
 {
 #ifdef WIN32 
-   WaitForSingleObject(mId, ms);
-
-   return true;
+    // FixMe: Race condition between time we get mId and when we
+    // re-acquire the mutex.
+    mutex->unlock();
+    WaitForSingleObject(mId, ms);
+    mutex->lock();
+    return true;
 #else
    timeval waitTime;
    gettimeofday( &waitTime, NULL );
