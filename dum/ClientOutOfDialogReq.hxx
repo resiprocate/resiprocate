@@ -1,6 +1,8 @@
 #if !defined(RESIP_CLIENTOUTOFDIALOGREQ_HXX)
 #define RESIP_CLIENTOUTOFDIALOGREQ_HXX
 
+#include "BaseUsage.hxx"
+
 namespace resip
 {
 
@@ -11,7 +13,7 @@ namespace resip
 class ClientOutOfDialogReq : public BaseUsage
 {
   public:
-      class Handle : public DialogUsageManager::Handle
+      class Handle : public BaseUsage::Handle
       {
          public:
             // throws if no session 
@@ -20,7 +22,6 @@ class ClientOutOfDialogReq : public BaseUsage
             friend class DialogUsageManager;
             Handle(DialogUsageManager& dum);
       };
-
 };
  
 }

@@ -1,13 +1,24 @@
 #if !defined(RESIP_CLIENTDIALOG_HXX)
 #define RESIP_CLIENTDIALOG_HXX
 
-#include "resiprocate/sam/DialogId.hxx"
+#include <list>
+#include "DialogId.hxx"
+#include "InviteSession.hxx"
+#include "ClientSubscription.hxx"
+#include "ServerSubscription.hxx"
+#include "ClientRegistration.hxx"
+#include "ServerRegistration.hxx"
+#include "ServerPublication.hxx"
+#include "ClientPublication.hxx"
+#include "ServerOutOfDialogReq.hxx"
+#include "ClientOutOfDialogReq.hxx"
 
 namespace resip
 {
 class BaseUsage;
 class UsageSet;
 class SipMessage;
+class DialogUsageManager.hxx;
 
 typedef std::list<DialogId> DialogIdSet;
 

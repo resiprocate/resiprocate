@@ -2,15 +2,16 @@
 #define RESIP_SERVERSUBSCRIPTION_HXX
 
 #include "BaseUsage.hxx"
-#include "DialogUsageManager.hxx"
 
 namespace resip
 {
 
+class DialogUsageManager;
+
 class ServerSubscription : public BaseUsage 
 {
    public:
-      class Handle : public DialogUsageManager::Handle
+      class Handle : public BaseUsage::Handle
       {
          public:
             // throws if no session 
