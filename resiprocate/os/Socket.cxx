@@ -1,6 +1,4 @@
-
-#include <iostream>
-#include <cassert>
+//#include <cassert>
 #include <fcntl.h>
 
 #include "sip2/util/Socket.hxx"
@@ -54,7 +52,7 @@ Vocal2::initNetwork()
    if ( err != 0 ) 
    {
       // could not find a usable WinSock DLL
-      cerr << "Could not load winsock" << endl;
+      //cerr << "Could not load winsock" << endl;
       assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
       exit(1);
    }
@@ -71,7 +69,7 @@ Vocal2::initNetwork()
       /* Tell the user that we could not find a usable */
       /* WinSock DLL.                                  */
       WSACleanup( );
-      cerr << "Bad winsock verion" << endl;
+      //cerr << "Bad winsock verion" << endl;
       assert(0); // is this is failing, try a different version that 2.2, 1.0 or later will likely work 
       exit(1);
    }  
