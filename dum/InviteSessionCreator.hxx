@@ -6,10 +6,14 @@
 namespace resip
 {
 
+class DialogUsageManager;
+class Uri;
+class SdpContents;
+
 class InviteSessionCreator : public BaseCreator
 {
    public:
-      InviteSessionCreator(const Uri& aor, const SdpContents* initial);
+      InviteSessionCreator(DialogUsageManager& dum, const Uri& aor, const SdpContents* initial);
       void end();
 
       virtual void dispatch(SipMessage& msg);
