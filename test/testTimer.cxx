@@ -1,7 +1,7 @@
 #include <iostream>
-#include "resiprocate/sipstack/Message.hxx"
-#include "resiprocate/sipstack/TimerQueue.hxx"
-#include "resiprocate/util/Fifo.hxx"
+#include "resiprocate/Message.hxx"
+#include "resiprocate/TimerQueue.hxx"
+#include "resiprocate/os/Fifo.hxx"
 #include <unistd.h>
 
 using namespace Vocal2;

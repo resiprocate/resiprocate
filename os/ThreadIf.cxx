@@ -6,10 +6,10 @@
 
 #include <cassert>
 #include <iostream>
-#include "resiprocate/util/ThreadIf.hxx"
-#include "resiprocate/util/Mutex.hxx"
-#include "resiprocate/util/Lock.hxx"
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/os/Mutex.hxx"
+#include "resiprocate/os/Lock.hxx"
+#include "resiprocate/os/Socket.hxx"
 
 
 

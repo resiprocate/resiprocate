@@ -3,7 +3,7 @@
 
 #define DELIM ' ' << '|' << ' '
 
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 
 #ifndef WIN32
 #include <syslog.h>
@@ -14,8 +14,8 @@
 #include <map>
 #include <set>
 
-#include "resiprocate/util/Subsystem.hxx"
-#include "resiprocate/util/Mutex.hxx"
+#include "resiprocate/os/Subsystem.hxx"
+#include "resiprocate/os/Mutex.hxx"
 #include <iostream>
 
 namespace Vocal2

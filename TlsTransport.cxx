@@ -1,12 +1,12 @@
 #include <memory>
-#include "resiprocate/util/compat.hxx"
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/util/Socket.hxx"
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/sipstack/TlsTransport.hxx"
-#include "resiprocate/sipstack/SipMessage.hxx"
-#include "resiprocate/sipstack/Preparse.hxx"
-#include "resiprocate/sipstack/Security.hxx"
+#include "resiprocate/os/compat.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/TlsTransport.hxx"
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Preparse.hxx"
+#include "resiprocate/Security.hxx"
 
 #define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
 

@@ -54,12 +54,12 @@ void mvvline(...) {};
 #include <unistd.h>
 #endif
 
-#include "resiprocate/util/Socket.hxx"
-#include "resiprocate/util/Logger.hxx"
-#include "resiprocate/sipstack/SipStack.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/sipstack/TuIM.hxx"
-#include "resiprocate/sipstack/Security.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Logger.hxx"
+#include "resiprocate/SipStack.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/TuIM.hxx"
+#include "resiprocate/Security.hxx"
 
 
 using namespace Vocal2;

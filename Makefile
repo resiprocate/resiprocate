@@ -1,17 +1,34 @@
-# $Id: Makefile,v 1.112 2003/03/24 22:42:27 jason Exp $
+# $Id: Makefile,v 1.113 2003/03/24 23:25:35 jason Exp $
 
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIPROCATE  ARES OPENSSL PTHREAD 
 
-TARGET_LIBRARY = libsip2
+CODE_SUBDIRS = os
+TARGET_LIBRARY = libresiprocate
 TESTPROGRAMS =  
 
-parsetest: bin.debug.Linux.i686/testParserCategories
-	./bin.debug.Linux.i686/testParserCategories
-
 SRC = \
+	os/BaseException.cxx \
+	os/Coders.cxx \
+	os/Condition.cxx \
+	os/CountStream.cxx \
+	os/Data.cxx \
+	os/DataStream.cxx \
+	os/Lock.cxx \
+	os/Log.cxx \
+	os/Logger.cxx \
+	os/MD5Stream.cxx \
+	os/Mutex.cxx \
+	os/ParseBuffer.cxx \
+	os/RWMutex.cxx \
+	os/Random.cxx \
+	os/Socket.cxx \
+	os/Subsystem.cxx \
+	os/ThreadIf.cxx \
+	os/Timer.cxx \
+	os/vmd5.cxx \
 	SipSession.cxx	\
 	Registration.cxx \
 	Subscription.cxx \

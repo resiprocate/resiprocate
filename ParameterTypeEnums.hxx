@@ -1,7 +1,7 @@
 #ifndef ParameterTypeEnums_hxx
 #define ParameterTypeEnums_hxx
 
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 
 #undef UNUSED
 #define UNUSED(_enum, _type) _enum = UNKNOWN

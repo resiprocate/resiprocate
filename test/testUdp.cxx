@@ -1,9 +1,9 @@
 
-#include "resiprocate/util/Socket.hxx"
-#include "resiprocate/sipstack/UdpTransport.hxx"
-#include "resiprocate/sipstack/Message.hxx"
-#include "resiprocate/util/Fifo.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/UdpTransport.hxx"
+#include "resiprocate/Message.hxx"
+#include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 
 using namespace Vocal2;

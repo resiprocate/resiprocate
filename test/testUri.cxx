@@ -2,10 +2,10 @@
 #include <iostream>
 
 #include "TestSupport.hxx"
-#include "resiprocate/sipstack/UnknownParameterType.hxx"
-#include "resiprocate/sipstack/Uri.hxx"
-#include "resiprocate/util/DataStream.hxx"
-#include "resiprocate/util/Logger.hxx"
+#include "resiprocate/UnknownParameterType.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/os/DataStream.hxx"
+#include "resiprocate/os/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;

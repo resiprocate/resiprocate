@@ -1,7 +1,7 @@
 #ifndef XMLCursor_hxx
 #define XMLCursor_hxx
 
-#include "resiprocate/util/ParseBuffer.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
 #include <list>
 #include <map>
 

@@ -1,7 +1,7 @@
 #if !defined(EXECUTIVE_HXX)
 #define EXECUTIVE_HXX
 
-#include "resiprocate/util/Socket.hxx"
+#include "resiprocate/os/Socket.hxx"
 #include <sys/types.h>
 
 #ifndef WIN32

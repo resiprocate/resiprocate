@@ -1,5 +1,5 @@
-#include "resiprocate/util/ThreadIf.hxx"
-#include "resiprocate/util/Timer.hxx"
+#include "resiprocate/os/ThreadIf.hxx"
+#include "resiprocate/os/Timer.hxx"
 
 #include <unistd.h>
 #include <iostream>

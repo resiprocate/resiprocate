@@ -2,7 +2,7 @@
 #define Vocal2_Subsystem_hxx
 
 #include <iostream>
-#include "resiprocate/util/Data.hxx"
+#include "resiprocate/os/Data.hxx"
 
 namespace Vocal2
 {
@@ -35,8 +35,8 @@ class Subsystem
 
 // in order to have subsystems in your application, subclass from this class
 /*
-#include "resiprocate/util/Data.hxx"
-#include "resiprocate/util/Subsystem.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/os/Subsystem.hxx"
 
 namespace MyNamespace
 {

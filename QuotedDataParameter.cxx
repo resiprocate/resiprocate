@@ -1,8 +1,8 @@
 #include <cassert>
-#include "resiprocate/sipstack/QuotedDataParameter.hxx"
-#include "resiprocate/sipstack/Symbols.hxx"
-#include "resiprocate/util/ParseBuffer.hxx"
-#include "resiprocate/sipstack/ParseException.hxx"
+#include "resiprocate/QuotedDataParameter.hxx"
+#include "resiprocate/Symbols.hxx"
+#include "resiprocate/os/ParseBuffer.hxx"
+#include "resiprocate/ParseException.hxx"
 
 using namespace Vocal2;
 using namespace std;
