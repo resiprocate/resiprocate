@@ -189,16 +189,11 @@ TlsTransport::processRead(Connection* c)
 
    assert( c->mTlsConnection );
    int bytesRead = c->mTlsConnection->read( writePair.first, bytesToRead);
-   if (bytesRead < 0)
+   if (bytesRead <= 0)
    {
       DebugLog(<< "bytesRead: " << bytesRead);
       DebugLog(<< "TlsTransport::processRead failed for " << int(c) );
       return false;
-   }   
-   if (bytesRead == 0)
-   {
-      DebugLog(<< "bytesRead: " << bytesRead);
-      return true;
    }   
    if (c->process(bytesRead, mStateMachineFifo))
    {
