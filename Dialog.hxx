@@ -43,7 +43,7 @@ class Dialog
       ServerPublication::Handle& findServerPublication();
       ClientOutOfDialogReq::Handle& findClientOutOfDialog();
       ServerOutOfDialogReq::Handle& findServerOutOfDialog();
-      
+     
       void dispatch(const SipMessage& msg);
       bool shouldMerge(const SipMessage& request);
       void processNotify(const SipMessage& notify);
