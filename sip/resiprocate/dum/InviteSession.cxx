@@ -191,7 +191,10 @@ InviteSession::dispatch(const SipMessage& msg)
          }
          break;         
       default:
-         assert(0);  //all other cases should be handled in base classes
+         DebugLog ( << "Throwing away strange message: " << msg );
+         //throw message away
+//         assert(0);  //all other cases should be handled in base classes
+
    }
 }
 

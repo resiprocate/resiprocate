@@ -1,5 +1,6 @@
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/BaseCreator.hxx"
+#include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
@@ -110,6 +111,30 @@ DialogSet::dispatch(const SipMessage& msg)
    Dialog* dialog = findDialog(msg);
    if (dialog == 0)
    {
+      //!dcm! -- think this is correct
+
+      if (msg.isResponse() && msg.header(h_StatusLine).statusCode() >= 300)
+      {
+         int code = msg.header(h_StatusLine).statusCode();
+         if (code == 401 || code == 407)
+         {
+            if (mDum.mClientAuthManager && !mCancelled)
+            {
+               if (getCreator())
+               {
+                  if ( mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg))
+                  {
+                     InfoLog( << "about to retransmit request with digest credentials" );
+                     InfoLog( << getCreator()->getLastRequest() );
+               
+                     mDum.send(getCreator()->getLastRequest());
+                  }
+               }
+            }
+         }
+         return;         
+      }      
+
       InfoLog ( << "Creating a new Dialog from msg: " << msg);
       // !jf! This could throw due to bad header in msg, should we catch and rethrow
       // !jf! if this threw, should we check to delete the DialogSet? 
