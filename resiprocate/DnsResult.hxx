@@ -24,8 +24,6 @@ class DnsResult
          Destroyed  // the associated transaction has been deleted
       } Type;
 
-      void lookup(const Uri& uri, const Data& tid);
-
       // There are tuples available now
       bool available() const;
 
@@ -36,19 +34,14 @@ class DnsResult
       // return the next tuple available for this query. 
       Transport::Tuple next();
 
-      // Return the current tuple if available
-      Type current(Transport::Tuple& current);
-
       // Will delete this DnsResult if no pending queries are out there or wait
       // until the pending queries get responses and then delete
       void destroy();
       
-   private:
       class NAPTR
       {
          public:
             bool operator<(const NAPTR& rhs) const;
-            std::ostream& operator<<(std::ostream& strm) const;
             
             int order;
             int pref;
@@ -56,8 +49,6 @@ class DnsResult
             Data service;
             Data regex;
             Data replacement;
-
-            friend std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR& naptr);
       };
       
       class SRV
@@ -70,10 +61,10 @@ class DnsResult
             int weight;
             int port;
             Data target;
-
-            friend std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV& srv);
       };
 
+   private:
+      void lookup(const Uri& uri, const Data& tid);
       void lookupARecords(const Data& target);
       void lookupNAPTR();
       void lookupSRV(const Data& target);
@@ -114,6 +105,10 @@ class DnsResult
 
       friend class DnsInterface;
 };
+
+
+std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
+std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
 
 }
 
