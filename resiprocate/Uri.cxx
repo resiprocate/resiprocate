@@ -247,6 +247,7 @@ void
 Uri::removeEmbedded()
 {
    delete mEmbeddedHeaders;
+   mEmbeddedHeaders = 0;   
    mEmbeddedHeadersText = Data::Empty;   
 }
 
