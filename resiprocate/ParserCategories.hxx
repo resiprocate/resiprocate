@@ -136,14 +136,15 @@ class GenericURI : public ParserCategory
 };
 typedef ParserContainer<GenericURI> GenericURIs;
 
-class URI : public ParserCategory
+class Url : public ParserCategory
 {
    public:
-      URI() : ParserCategory() {}
-      URI(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
+      Url() : ParserCategory() {}
+      Url(HeaderFieldValue* hfv) : ParserCategory(hfv) {}
 
       Data& host() {checkParsed(); return mHost;}
       Data& user() {checkParsed(); return mUser;}
+      Data& displayName() {checkParsed(); return mDisplayName;}
       const Data& getAor();
       Data& scheme() {checkParsed(); return mScheme;}
       int& port() {checkParsed(); return mPort;}
@@ -158,65 +159,10 @@ class URI : public ParserCategory
       Data aor;
       int mPort;
       Data mPassword;
-};
-
-class NameAddrBase : public URI
-{
-   public:
-      NameAddrBase() : URI() {}
-      NameAddrBase(HeaderFieldValue* hfv) : URI(hfv) {}
-
-      Data& displayName() {checkParsed(); return mDisplayName;} 
-      
-      virtual void parse();
-      virtual std::ostream& encode(std::ostream& str) const;
-
-   protected:
       Data mDisplayName;
 };
 
-//====================
-// NameAddr:
-//====================
-class NameAddr : public NameAddrBase
-{
-   public:
-      enum {isCommaTokenizing = true};
-
-      NameAddr() : NameAddrBase() {}
-      NameAddr(HeaderFieldValue* hfv) : NameAddrBase(hfv) {}
-
-      virtual void parse();
-      virtual std::ostream& encode(std::ostream& str) const;
-};
-typedef ParserContainer<NameAddr> NameAddrs;
-
-//====================
-// NameAddrOrAddrSpec:
-//====================
-class NameAddrOrAddrSpec : public NameAddrBase
-{
-   public:
-      enum {isCommaTokenizing = false};
-
-      NameAddrOrAddrSpec() : NameAddrBase() {}
-      NameAddrOrAddrSpec(HeaderFieldValue* hfv) : NameAddrBase(hfv) {}
-
-      virtual void parse();
-      virtual std::ostream& encode(std::ostream& str) const;
-};
-
-//====================
-// Contact:
-//====================
-// ?dlb? until shown otherwise, looks the same?
-class Contact : public NameAddr
-{
-   public:
-      Contact() : NameAddr() {}
-      Contact(HeaderFieldValue* hfv) : NameAddr(hfv) {}
-};
-typedef ParserContainer<Contact> Contacts;
+typedef ParserContainer<Url> Urls;
 
 //====================
 // CallId:
@@ -335,15 +281,15 @@ typedef ParserContainer<Via> Vias;
 //====================
 static Data DefaultSipVersion;
 
-class RequestLineComponent : public URI
+class RequestLineComponent : public Url
 {
    public:
       RequestLineComponent(MethodTypes method, const Data& sipVersion = DefaultSipVersion) : 
-         URI(),
+         Url(),
          mMethod(method),
          mSipVersion(sipVersion)
       {}
-      RequestLineComponent(HeaderFieldValue* hfv) : URI(hfv) {}
+      RequestLineComponent(HeaderFieldValue* hfv) : Url(hfv) {}
 
       MethodTypes getMethod() {checkParsed(); return mMethod;}
       const Data& getSipVersion() {checkParsed(); return mSipVersion;}
