@@ -24,6 +24,7 @@ SRC = \
 	os/Data.cxx \
 	os/DataStream.cxx \
 	os/DnsUtil.cxx \
+	os/FileSystem.cxx \
 	os/Lock.cxx \
 	os/Log.cxx \
 	os/Logger.cxx \

@@ -1,8 +1,17 @@
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
+#include "resiprocate/Mime.hxx"
 
 using namespace resip;
+
+static Mimes empty;
+
+const Mimes& 
+ServerSubscriptionHandler::getSupportedMimeTypes() const
+{
+   return empty;   
+}
 
 void 
 ServerSubscriptionHandler::onError(ServerSubscriptionHandle, const SipMessage& msg)

@@ -105,7 +105,7 @@ defineHeader(SubscriptionState, "Subscription-State", Token);
 defineHeader(SIPETag, "SIP-ETag", Token);
 defineHeader(SIPIfMatch, "SIP-If-Match", Token);
 
-defineHeader(Identity, "Identity", Token);
+defineHeader(Identity, "Identity", StringCategory);
 
 defineMultiHeader(AllowEvents, "Allow-Events", Token);
 // explicitly declare to avoid h_AllowEventss, ugh
