@@ -32,8 +32,8 @@ endif
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
 
-ARES_INCLUDEDIRS := $(ROOT)/contrib/ares-1.1.1
-ARES_LIBDIRS := $(ROOT)/contrib/ares-1.1.1
+ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
+ARES_LIBDIRS := $(ROOT)/contrib/ares
 ARES_LIBNAME := ares
 
 RESIPROCATE_INCLUDEDIRS := $(ROOT)
