@@ -113,7 +113,8 @@ resip::closeSocket( Socket fd )
 int 
 resip::closeSocket( Socket fd )
 {
-   int ret = ::shutdown(fd, SHUT_RDWR);
+   //int ret = ::shutdown(fd, SHUT_RDWR); !jf!
+   int ret = ::close(fd);
    if (ret < 0)
    {
       InfoLog (<< "Failed to shutdown socket " << fd << " : " << strerror(errno));

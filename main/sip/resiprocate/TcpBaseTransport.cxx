@@ -56,11 +56,8 @@ TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data&
 
 TcpBaseTransport::~TcpBaseTransport()
 {
-   DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port()); 
+   InfoLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port()); 
    
-   //::shutdown(mFd, SHUT_RDWR);
-   closeSocket(mFd);
-
    // !jf! this is not right. should drain the sends before 
    while (mTxFifo.messageAvailable()) 
    {
@@ -72,6 +69,10 @@ TcpBaseTransport::~TcpBaseTransport()
    }
    
    //mSendRoundRobin.clear(); // clear before we delete the connections
+
+   InfoLog (<< "Shutting down " << mTuple);
+   shutdown();
+   join();
 }
 
 void
