@@ -31,7 +31,7 @@ class Mutex : public Lockable
 } // namespace resip
 
 
-#endif // !defined(VOCAL_MUTEX_HXX)
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
