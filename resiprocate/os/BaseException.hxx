@@ -2,7 +2,7 @@
 #define BaseException_hxx
 
 static const char* const Vocal2BaseExceptionHeaderVersion =
-    "$Id: BaseException.hxx,v 1.5 2003/01/24 02:47:16 jason Exp $";
+    "$Id: BaseException.hxx,v 1.6 2003/03/17 17:49:51 davidb Exp $";
 
 #include <exception>
 #include <iostream>
@@ -12,16 +12,20 @@ static const char* const Vocal2BaseExceptionHeaderVersion =
 namespace Vocal2
 {
 
+// treat as abstract
 class BaseException : public std::exception
 {
    public:
-      virtual const char* name() const;
+      virtual const char* name() const = 0;
+
+      const Data& getMessage() const {return message;}
       
    protected:
-      BaseException( const Vocal2::Data& msg,
-                     const Vocal2::Data& file,
-                     const int line);
-      // !jf! this should be pure virtual
+      BaseException(const Data& msg,
+                    const Data& file,
+                    int line);
+      // not pure virtual -- don't want to require every derived class to have
+      // to define
       ~BaseException() throw();
       
       Vocal2::Data message;
