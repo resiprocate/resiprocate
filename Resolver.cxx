@@ -1,16 +1,10 @@
-
-
-#include "util/Socket.hxx"
-
-#include <sys/types.h>
-
 #ifndef WIN32
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
 
-
+#include <sys/types.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -18,6 +12,7 @@
 #include "sipstack/Resolver.hxx"
 #include "sipstack/Uri.hxx"
 
+#include "util/Socket.hxx"
 #include "util/Data.hxx"
 #include "util/Logger.hxx"
 #include "util/ParseBuffer.hxx"
@@ -25,31 +20,6 @@
 #define VOCAL_SUBSYSTEM Vocal2::Subsystem::SIP
 
 using namespace Vocal2;
-
-
-Resolver::Resolver(const Data& hostport) 
-{
-   ParseBuffer buf(hostport.data(), hostport.size());
-   const char* start = buf.position();
-   buf.skipToChar(Symbols::COLON[0]);
-   mHost = buf.data(start);
-   if (buf.eof())
-   {
-      mPort = -1;
-   }
-   else
-   {
-      buf.skipChar(Symbols::COLON[0]);
-      mPort = buf.integer();
-   }
-}
-
-Resolver::Resolver(const Data& host, int port, Transport::Type transport) : 
-   mHost(host), 
-   mPort(port),
-   mTransport(transport)
-{
-}
 
 Resolver::Resolver(const Uri& uri) : 
    mHost(uri.host()),
@@ -62,11 +32,11 @@ Resolver::Resolver(const Uri& uri) :
       {
          if (uri.scheme() == Symbols::Sip)
          {
-            mTransport = Symbols::UDP;
+            mTransport = Transport::UDP;
          }
          else if (uri.scheme() == Symbols::Sips)
          {
-            mTransport = Symbols::TCP;
+            mTransport = Transport::TCP;
          }
       }
       else // not numeric
@@ -75,17 +45,17 @@ Resolver::Resolver(const Uri& uri) :
          {
             if (uri.scheme() == Symbols::Sip)
             {
-               mTransport = Symbols::UDP;
+               mTransport = Transport::UDP;
             }
             else if (uri.scheme() == Symbols::Sips)
             {
-               mTransport = Symbols::TCP;
+               mTransport = Transport::TCP;
             }
          }
          else // NAPTR query - yuck! 
          {
             // Rohan, step up to the plate buddy.
-            mTransport = Symbols::UDP; // !jf! not done yet
+            mTransport = Transport::UDP; // !jf! not done yet
          }
       }
    }
@@ -160,18 +130,14 @@ Resolver::lookupARecords()
       char str[256];
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
-         Resolver::Tuple tuple;
-         memset(&tuple.ipv4, 0, sizeof(tuple.ipv4));
-         tuple.ipv4.sin_family = AF_INET; //result->h_addrtype;
-         tuple.ipv4.sin_port = htons(mPort);
-         tuple.ipv4.sin_addr.s_addr = *((u_int32_t*)(*pptr));
+         Transport::Tuple tuple;
+         tuple.ipv4.s_addr = *((u_int32_t*)(*pptr));
          tuple.port = mPort;
-         tuple.transport = mTransport;
-         mNextHops.push_back(tuple);
+         tuple.transportType = mTransport;
 
-         assert(mNextHops.back().ipv4.sin_addr.s_addr == tuple.ipv4.sin_addr.s_addr);
+         mNextHops.push_back(tuple);
 #ifndef WIN32
-		 DebugLog (<< inet_ntop(result->h_addrtype, &tuple.ipv4.sin_addr.s_addr, str, sizeof(str)));
+         DebugLog (<< inet_ntop(AF_INET, &tuple.ipv4.s_addr, str, sizeof(str)));
 #endif
 
       }
