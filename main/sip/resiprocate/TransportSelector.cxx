@@ -1,3 +1,4 @@
+#include <sstream>
 #include <sipstack/TransportSelector.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/UdpTransport.hxx>
@@ -31,15 +32,24 @@ TransportSelector::process(fd_set* fdSet)
 void 
 TransportSelector::send( SipMessage* msg )
 {
-   //mUdp->send(msg);
-   assert(0);
+   // do loose routing, pick the target destination
+   // do a dns lookup
+   // insert the via
+   // encode the message
+   // send it to the appropriate transport
+
+   std::stringstream strm;
+   msg->encode(strm);
+   
+   //mUdp->send(msg->str(), msg->size());
+   //assert(0);
 }
 
 
 void 
 TransportSelector::buildFdSet( fd_set* fdSet, int* fdSetSize )
 {
-	mUdp->buildFdSet( fdSet, fdSetSize );
+   mUdp->buildFdSet( fdSet, fdSetSize );
 }
 
 
