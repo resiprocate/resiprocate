@@ -22,6 +22,7 @@
 #endif
 
 #if ( USE_OPENSSL == 1 )
+#  include <openssl/e_os2.h>
 #  include <openssl/rand.h>
 #  include <openssl/err.h>
 #endif
@@ -71,7 +72,7 @@ Random::initialize()
          // really bad sign - /dev/random does not exist so need to intialize
          // OpenSSL some other way
 
-         assert(0);
+// !cj! need to fix         assert(0);
       }
       else
       {
@@ -90,7 +91,7 @@ Random::initialize()
 
       if (fd != -1 )
       {
-         close(fd);
+         closesocket(fd);
       }
 
 #ifdef WIN32
