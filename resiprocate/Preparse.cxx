@@ -219,10 +219,9 @@ PreparseStateTable::InitStatePreparseStateTable()
    AE(InQ,X,LSLASH,InQEsc,actAdd);
    AE(InQEsc,X,XC,InQ,actAdd);
    
-
-   // add quotes within la/ra pairs
-   // add bare quotes from BuildData
    // add comma transition
+   AE(BuildData,dCommaSep,COMMA,EWSPostColon, actData|actReset);
+   
    initialised = true;
   
 }
