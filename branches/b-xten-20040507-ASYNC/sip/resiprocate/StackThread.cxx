@@ -20,7 +20,7 @@ StackThread::thread()
          resip::FdSet fdset;
          buildFdSet(fdset);
          mStack.buildFdSet(fdset);
-         int ret = fdset.selectMilliSeconds(std::min(mStack.getTimeTillNextProcessMS(),
+         int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(),
                                                      getTimeTillNextProcessMS()));
          if (ret >= 0)
          {
