@@ -812,7 +812,8 @@ DialogUsageManager::process()
 
    try
    {
-      std::auto_ptr<Message> msg( mStack.receiveAny() );
+      std::auto_ptr<Message> msg(mFifo.messageAvailable() ? mFifo.getNext() : 0);
+      
       if (msg.get())
       {
          InfoLog (<< "Got: " << msg->brief());
