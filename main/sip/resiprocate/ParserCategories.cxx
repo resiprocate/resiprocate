@@ -14,6 +14,33 @@ using namespace std;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
 
+Data Vocal2::DayOfWeekData[] =
+{
+   "Sun",
+   "Mon",
+   "Tue",
+   "Wed",
+   "Thu",
+   "Fri",
+   "Sat"
+};
+
+Data Vocal2::MonthData[] =
+{
+   "Jan",
+   "Feb",
+   "Mar",
+   "Apr",
+   "May",
+   "Jun",
+   "Jul",
+   "Aug",
+   "Sep",
+   "Oct",
+   "Nov",
+   "Dec"
+};
+
 //====================
 // Token
 //===================
@@ -269,7 +296,13 @@ CSeqCategory::encode(std::ostream& str) const
 //====================
 DateCategory::DateCategory(const DateCategory& rhs)
    : ParserCategory(rhs),
-     mValue(rhs.mValue)
+     mDayOfWeek(Sun),
+     mDayOfMonth(),
+     mMonth(Jan),
+     mYear(0),
+     mHour(0),
+     mMin(0),
+     mSec(0)
 {}
 
 DateCategory&
@@ -278,13 +311,266 @@ DateCategory::operator=(const DateCategory& rhs)
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
-      mValue = rhs.mValue;
+      mDayOfWeek = rhs.mDayOfWeek;
+      mDayOfMonth = rhs.mDayOfMonth;
+      mMonth = rhs.mMonth;
+      mYear = rhs.mYear;
+      mHour = rhs.mHour;
+      mMin = rhs.mMin;
+      mSec = rhs.mSec;
    }
    return *this;
 }
 
+/* ANSI-C code produced by gperf version 2.7.2 */
+/* Command-line: gperf -L ANSI-C -t -k '*' dayofweek.gperf  */
+struct days { char *name; DayOfWeek day; };
 
+#ifdef __GNUC__
+__inline
+#else
+#ifdef __cplusplus
+inline
+#endif
+#endif
+static unsigned int
+dayofweek_hash (register const char *str, register unsigned int len)
+{
+  static unsigned char asso_values[] =
+    {
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+       1, 13, 13, 13, 13, 13, 13,  5, 13, 13,
+      13, 13, 13,  2,  0, 13, 13,  7, 13, 13,
+      13, 13, 13, 13, 13, 13, 13,  7, 13, 13,
+       0,  0, 13, 13,  4,  0, 13, 13, 13, 13,
+       0,  0, 13, 13,  0, 13,  0,  0, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+      13, 13, 13, 13, 13, 13
+    };
+  register int hval = len;
 
+  switch (hval)
+    {
+      default:
+      case 3:
+        hval += asso_values[(unsigned char)str[2]];
+      case 2:
+        hval += asso_values[(unsigned char)str[1]];
+      case 1:
+        hval += asso_values[(unsigned char)str[0]];
+        break;
+    }
+  return hval;
+}
+
+#ifdef __GNUC__
+__inline
+#endif
+struct days *
+in_dayofweek_word_set (register const char *str, register unsigned int len)
+{
+   static const unsigned int MIN_WORD_LENGTH = 3;
+   static const unsigned int MAX_WORD_LENGTH = 3;
+   static const int MAX_HASH_VALUE = 12;
+   
+   static struct days wordlist[] =
+    {
+      {""}, {""}, {""},
+      {"Tue", Tue},
+      {"Fri", Fri},
+      {"Sun", Sun},
+      {""},
+      {"Thu", Thu},
+      {"Mon", Mon},
+      {""},
+      {"Wed", Wed},
+      {""},
+      {"Sat", Sat}
+    };
+
+  if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
+    {
+      register int key = dayofweek_hash (str, len);
+
+      if (key <= MAX_HASH_VALUE && key >= 0)
+        {
+          register const char *s = wordlist[key].name;
+
+          if (*str == *s && !strcmp (str + 1, s + 1))
+            return &wordlist[key];
+        }
+    }
+  return 0;
+}
+
+DayOfWeek
+DateCategory::DayOfWeekFromData(const Data& dow)
+{
+   static const unsigned int MIN_WORD_LENGTH = 3;
+   static const unsigned int MAX_WORD_LENGTH = 3;
+   static const int MAX_HASH_VALUE = 12;
+
+   register const char *str = dow.data();
+   register unsigned int len = dow.size();
+
+   static struct days wordlist[] =
+      {
+         {""}, {""}, {""},
+         {"Tue", Tue},
+         {"Fri", Fri},
+         {"Sun", Sun},
+         {""},
+         {"Thu", Thu},
+         {"Mon", Mon},
+         {""},
+         {"Wed", Wed},
+         {""},
+         {"Sat", Sat}
+      };
+
+   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
+   {
+      register int key = dayofweek_hash (str, len);
+      
+      if (key <= MAX_HASH_VALUE && key >= 0)
+      {
+         register const char *s = wordlist[key].name;
+         
+         if (*str == *s && !strncmp (str+1, s+1, len-1))
+         {
+            return wordlist[key].day;
+         }
+      }
+   }
+   return Sun;
+}
+
+/* ANSI-C code produced by gperf version 2.7.2 */
+/* Command-line: gperf -L ANSI-C -t -k '*' month.gperf  */
+struct months { char *name; Month type; };
+
+/* maximum key range = 31, duplicates = 0 */
+
+#ifdef __GNUC__
+__inline
+#else
+#ifdef __cplusplus
+inline
+#endif
+#endif
+static unsigned int
+month_hash (register const char *str, register unsigned int len)
+{
+   static unsigned char asso_values[] =
+      {
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 15, 34, 34,  8, 34,
+         5, 34, 34, 34,  0, 34, 34, 10,  3, 14,
+         34, 34, 34,  9, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 10,  0,  0,
+         34,  0, 34, 10, 34, 34, 34, 34,  4, 34,
+         0,  0,  0, 34,  0, 34,  0,  0,  0, 34,
+         34, 10, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+         34, 34, 34, 34, 34, 34
+      };
+   register int hval = len;
+
+   switch (hval)
+   {
+      default:
+      case 3:
+         hval += asso_values[(unsigned char)str[2]];
+      case 2:
+         hval += asso_values[(unsigned char)str[1]];
+      case 1:
+         hval += asso_values[(unsigned char)str[0]];
+         break;
+   }
+   return hval;
+}
+
+Month
+DateCategory::MonthFromData(const Data& mon)
+{
+   static const unsigned int MIN_WORD_LENGTH = 3;
+   static const unsigned int MAX_WORD_LENGTH = 3;
+   static const int MAX_HASH_VALUE = 33;
+
+   register const char *str = mon.data();
+   register unsigned int len = mon.size();
+
+   static struct months wordlist[] =
+      {
+         {""}, {""}, {""},
+         {"Jun", Jun},
+         {""}, {""},
+         {"Nov", Nov},
+         {"Jul", Jul},
+         {"Feb", Feb},
+         {""}, {""},
+         {"Dec", Dec},
+         {"Sep", Sep},
+         {"Jan", Jan},
+         {""}, {""}, {""},
+         {"Oct", Oct},
+         {"Apr", Apr},
+         {""}, {""}, {""}, {""},
+         {"Mar", Mar},
+         {""}, {""}, {""}, {""},
+         {"Aug", Aug},
+         {""}, {""}, {""}, {""},
+         {"May", May}
+      };
+
+   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
+   {
+      register int key = month_hash (str, len);
+
+      if (key <= MAX_HASH_VALUE && key >= 0)
+      {
+         register const char *s = wordlist[key].name;
+
+         if (*str == *s && !strncmp (str + 1, s + 1, mon.size()-1))
+            return wordlist[key].type;
+      }
+   }
+   return Jan;
+}
 
 void
 DateCategory::parse(ParseBuffer& pb)
@@ -293,39 +579,39 @@ DateCategory::parse(ParseBuffer& pb)
 
    const char* anchor = pb.skipWhitespace();
 
-   pb.skipToChar(",");
+   pb.skipToChar(Symbols::COMMA[0]);
    Data dayOfWeek;
    pb.data(dayOfWeek, anchor);
-   mDayOfWeek = DateCategory::DayOfWeek(dayOfWeek);
+   mDayOfWeek = DateCategory::DayOfWeekFromData(dayOfWeek);
 
-   pb.skipChar(",");
+   pb.skipChar(Symbols::COMMA[0]);
 
    pb.skipWhitespace();
 
-   mDayOfMonth = pb.int();
+   mDayOfMonth = pb.integer();
 
    anchor = pb.skipWhitespace();
    pb.skipNonWhitespace();
 
    Data month;
    pb.data(month, anchor);
-   mMonth = DateCategory::Month(month);
+   mMonth = DateCategory::MonthFromData(month);
 
    pb.skipWhitespace();
-   mYear = pb.int();
+   mYear = pb.integer();
 
    pb.skipWhitespace();
 
-   mHour = pb.int();
-   pb.skipChar(":");
-   mMin = pb.int();
-   pb.skipChar(":");
-   mSec = pb.int();
+   mHour = pb.integer();
+   pb.skipChar(Symbols::COLON[0]);
+   mMin = pb.integer();
+   pb.skipChar(Symbols::COLON[0]);
+   mSec = pb.integer();
 
    pb.skipWhitespace();
-   pb.skipChar("G");
-   pb.skipChar("M");
-   pb.skipChar("T");
+   pb.skipChar('G');
+   pb.skipChar('M');
+   pb.skipChar('T');
 
    pb.skipWhitespace();
    pb.assertEof();
@@ -339,21 +625,25 @@ DateCategory::clone() const
 
 static void pad2(const int x, std::ostream& str)
 {
-   str << ( (x < 10) ? Symbols::ZERO[0] : Symbols::Empty[0] );
+   if (x < 10)
+   {
+      str << Symbols::ZERO[0];
+   }
+   str << x;
 }
 
 std::ostream& 
 DateCategory::encode(std::ostream& str) const
 {
-   str << DateCategory::DayOfWeekData[mDayOfWeek] // Mon
+   str << DayOfWeekData[mDayOfWeek] // Mon
        << Symbols::COMMA[0] << Symbols::SPACE[0];
    
    pad2(mDayOfMonth, str);  //  04
 
    str << mDayOfMonth << Symbols::SPACE[0]
-       << DateCategory::MonthData[mMonth] << Symbols::SPACE[0] // Nov
-       << mYear << Symbols::SPACE[0] // 2002
-      ;
+       << MonthData[mMonth] << Symbols::SPACE[0] // Nov
+       << mYear << Symbols::SPACE[0]; // 2002
+
    pad2(mHour, str);
    str << Symbols::COLON[0];
    pad2(mMin, str);
