@@ -307,7 +307,7 @@ SipMessage::compute2543TransactionHash() const
          strm << header(h_To).param(p_tag);
       }
 
-      strm << header(h_CallId).value();
+      strm << header(h_CallID).value();
 
       if (header(h_RequestLine).getMethod() == ACK || 
           header(h_RequestLine).getMethod() == CANCEL)
@@ -992,55 +992,55 @@ SipMessage::remove(const HeaderBase& headerType)
 #ifndef PARTIAL_TEMPLATE_SPECIALIZATION
 
 #undef defineHeader
-#define defineHeader(_header)                                                                                   \
-const _header##_Header::Type&                                                                                   \
-SipMessage::header(const _header##_Header& headerType) const                                                    \
-{                                                                                                               \
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);                                   \
-   if (hfvs->getParserContainer() == 0)                                                                         \
-   {                                                                                                            \
-      hfvs->setParserContainer(new ParserContainer<_header##_Header::Type>(hfvs, headerType.getTypeNum()));     \
-   }                                                                                                            \
-   return dynamic_cast<ParserContainer<_header##_Header::Type>*>(hfvs->getParserContainer())->front();          \
-}                                                                                                               \
-                                                                                                                \
-_header##_Header::Type&                                                                                         \
-SipMessage::header(const _header##_Header& headerType)                                                          \
-{                                                                                                               \
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);                                   \
-   if (hfvs->getParserContainer() == 0)                                                                         \
-   {                                                                                                            \
-      hfvs->setParserContainer(new ParserContainer<_header##_Header::Type>(hfvs, headerType.getTypeNum()));     \
-   }                                                                                                            \
-   return dynamic_cast<ParserContainer<_header##_Header::Type>*>(hfvs->getParserContainer())->front();          \
+#define defineHeader(_header)                                                                           \
+const H_##_header::Type&                                                                                \
+SipMessage::header(const H_##_header& headerType) const                                                 \
+{                                                                                                       \
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);                           \
+   if (hfvs->getParserContainer() == 0)                                                                 \
+   {                                                                                                    \
+      hfvs->setParserContainer(new ParserContainer<H_##_header::Type>(hfvs, headerType.getTypeNum()));  \
+   }                                                                                                    \
+   return dynamic_cast<ParserContainer<H_##_header::Type>*>(hfvs->getParserContainer())->front();       \
+}                                                                                                       \
+                                                                                                        \
+H_##_header::Type&                                                                                      \
+SipMessage::header(const H_##_header& headerType)                                                       \
+{                                                                                                       \
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), true);                           \
+   if (hfvs->getParserContainer() == 0)                                                                 \
+   {                                                                                                    \
+      hfvs->setParserContainer(new ParserContainer<H_##_header::Type>(hfvs, headerType.getTypeNum()));  \
+   }                                                                                                    \
+   return dynamic_cast<ParserContainer<H_##_header::Type>*>(hfvs->getParserContainer())->front();       \
 }
 
 #undef defineMultiHeader
-#define defineMultiHeader(_header)                                                                                      \
-const ParserContainer<_header##_MultiHeader::Type>&                                                                     \
-SipMessage::header(const _header##_MultiHeader& headerType) const                                                       \
-{                                                                                                                       \
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);                                          \
-   if (hfvs->getParserContainer() == 0)                                                                                 \
-   {                                                                                                                    \
-      hfvs->setParserContainer(new ParserContainer<_header##_MultiHeader::Type>(hfvs, headerType.getTypeNum()));        \
-   }                                                                                                                    \
-   return *dynamic_cast<ParserContainer<_header##_MultiHeader::Type>*>(hfvs->getParserContainer());                     \
-}                                                                                                                       \
-                                                                                                                        \
-ParserContainer<_header##_MultiHeader::Type>&                                                                           \
-SipMessage::header(const _header##_MultiHeader& headerType)                                                             \
-{                                                                                                                       \
-   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);                                          \
-   if (hfvs->getParserContainer() == 0)                                                                                 \
-   {                                                                                                                    \
-      hfvs->setParserContainer(new ParserContainer<_header##_MultiHeader::Type>(hfvs, headerType.getTypeNum()));        \
-   }                                                                                                                    \
-   return *dynamic_cast<ParserContainer<_header##_MultiHeader::Type>*>(hfvs->getParserContainer());                     \
+#define defineMultiHeader(_header)                                                              \
+const H_##_header##s::Type&                                                                     \
+SipMessage::header(const H_##_header##s& headerType) const                                      \
+{                                                                                               \
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);                  \
+   if (hfvs->getParserContainer() == 0)                                                         \
+   {                                                                                            \
+      hfvs->setParserContainer(new H_##_header##s::Type(hfvs, headerType.getTypeNum()));        \
+   }                                                                                            \
+   return *dynamic_cast<H_##_header##s::Type*>(hfvs->getParserContainer());                     \
+}                                                                                               \
+                                                                                                \
+H_##_header##s::Type&                                                                           \
+SipMessage::header(const H_##_header##s& headerType)                                            \
+{                                                                                               \
+   HeaderFieldValueList* hfvs = ensureHeaders(headerType.getTypeNum(), false);                  \
+   if (hfvs->getParserContainer() == 0)                                                         \
+   {                                                                                            \
+      hfvs->setParserContainer(new H_##_header##s::Type(hfvs, headerType.getTypeNum()));        \
+   }                                                                                            \
+   return *dynamic_cast<H_##_header##s::Type*>(hfvs->getParserContainer());                     \
 }
 
 defineHeader(CSeq);
-defineHeader(CallId);
+defineHeader(CallID);
 defineHeader(AuthenticationInfo);
 defineHeader(ContentDisposition);
 defineHeader(ContentTransferEncoding);
