@@ -34,6 +34,31 @@ AbstractFifo ::getNext()
    return firstMessage;
 }
 
+void*
+AbstractFifo ::getNext(int ms)
+{
+   Lock lock(mMutex); (void)lock;
+
+   // Wait while there are messages available.
+   //
+   if (mFifo.empty())
+   {
+      bool signaled = mCondition.wait(mMutex, ms);
+      if (!signaled)
+      {
+        return 0;
+      }
+   }
+
+   // Return the first message on the fifo.
+   //
+   void* firstMessage = mFifo.front();
+   mFifo.pop_front();
+   assert(mSize != 0);
+   mSize--;
+   return firstMessage;
+}
+
 bool
 AbstractFifo::empty() const
 {
