@@ -1,5 +1,7 @@
-#include "sip2/util/DataStream.hxx"
+#include <iostream>
+#include <memory>
 
+#include "sip2/util/DataStream.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/Uri.hxx"
@@ -9,16 +11,73 @@
 #include "sip2/sipstack/PlainContents.hxx"
 #include "sip2/sipstack/UnknownHeaderType.hxx"
 #include "sip2/sipstack/UnknownParameterType.hxx"
-
-#include <iostream>
-#include <memory>
+#include "sip2/util/Logger.hxx"
 
 using namespace Vocal2;
 using namespace std;
 
+#define VOCAL_SUBSYSTEM Subsystem::TEST
+
 int
-main()
+main(int argc, char** argv)
 {
+   Log::initialize(Log::COUT, Log::DEBUG, argv[0]);
+
+   {
+      // Proxy-Authorization does not allow comma joied headers
+      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+                   "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
+                   "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1-c87542-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1-c87542-;received=192.168.2.220\r\n"
+                   "Call-ID: 643f2f06\r\n"
+                   "CSeq: 1 INVITE\r\n"
+                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\", Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+                   "Contact: <sip:ext103@192.168.2.220:5068;transport=UDP>\r\n"
+                   "Max-Forwards: 69\r\n"
+                   "Content-Length: 0\r\n"
+                   "\r\n");
+
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      cerr << *message << endl;
+
+      try
+      {
+         int s = message->header(h_ProxyAuthorizations).size();
+         cerr << "!! " << s << endl;
+         cerr << "!! " << message->header(h_ProxyAuthorizations).front().exists(p_realm) << endl;
+         cerr << *message << endl;
+         assert(false);
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         assert(e.getMessage() == "Proxy-Authorization");
+      }
+   }
+
+   {
+      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+                   "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
+                   "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-c87542-ec1e.0-1-c87542-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-c87542-489573115-1-c87542-;received=192.168.2.220\r\n"
+                   "Call-ID: 643f2f06\r\n"
+                   "CSeq: 1 INVITE\r\n"
+                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Proxy-Authorization: Digest username=\"Alice\", realm = \"atlanta.com\", nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\", reponse=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
+                   "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
+                   "Contact: <sip:ext103@192.168.2.220:5068;transport=UDP>\r\n"
+                   "Max-Forwards: 69\r\n"
+                   "Content-Length: 0\r\n"
+                   "\r\n");
+
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
+      cerr << *message << endl;
+
+      assert(message->header(h_ProxyAuthorizations).size() == 2);
+   }
+
    {
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
@@ -403,6 +462,35 @@ main()
       assert(!sdp->session().media().empty());
       assert(sdp->session().media().front().getValues("rtpmap").front() == "0 PCMU/8000");
 
+      msg->encode(cerr);
+   }
+
+   {
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+               "To: Bob <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: a84b4c76e66710\r\n"
+               "CSeq: 314159 INVITE\r\n"
+               "Max-Forwards: 70\r\n"
+               "Foobie-Blech: \r\n"
+               "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+               "Content-Type: application/sdp\r\n"
+               "Content-Length: 150\r\n"
+               "\r\n"
+               "v=0\r\n"
+               "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
+               "s=-\r\n"
+               "c=IN IP4 pc33.atlanta.com\r\n"
+               "t=0 0\r\n"
+               "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
+               "a=rtpmap:0 PCMU/8000\r\n");
+
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+
+      msg->header(UnknownHeaderType("Foobie-Blech")).empty();
+      //assert(!msg->header(UnknownHeaderType("Foobie-Blech")).empty());
+      //assert(msg->header(UnknownHeaderType("Foobie-Blech")).front().value() == "");
       msg->encode(cerr);
    }
 
@@ -1014,6 +1102,34 @@ main()
       }
       
       assert(msgEncoded == msg2Encoded);
+   }
+
+   {
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+               "To: Bob <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: a84b4c76e66710\r\n"
+               "CSeq: 314159 INVITE\r\n"
+               "Max-Forwards: 70\r\n"
+               "Foobie-Blech: \r\n"
+               "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+               "Content-Type: application/sdp\r\n"
+               "Content-Length: 150\r\n"
+               "\r\n"
+               "v=0\r\n"
+               "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
+               "s=-\r\n"
+               "c=IN IP4 pc33.atlanta.com\r\n"
+               "t=0 0\r\n"
+               "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
+               "a=rtpmap:0 PCMU/8000\r\n");
+
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+
+      assert(!msg->header(UnknownHeaderType("Foobie-Blech")).empty());
+      assert(msg->header(UnknownHeaderType("Foobie-Blech")).front().value() == "");
+      msg->encode(cerr);
    }
 
    cerr << "\nTEST OK" << endl;
