@@ -10,14 +10,8 @@ GagMessage *
 GagMessage::getMessage(istream &is)
 {
   int type;
-while (1)
-{
-  char x;
-  is.read(&x, 1);
-  DebugLog ( << "Reading character " << (int)x << "(" << x << ")");
-}
 
-  is.read((char *)type, sizeof(type));
+  is.read((char *)&type, sizeof(type));
 
   DebugLog ( << "Reading message of type " << type);
 
