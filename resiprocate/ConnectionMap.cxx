@@ -67,7 +67,7 @@ ConnectionMap::add(const Transport::Tuple& who, Socket socket)
    mConnections[who] = connection;
    touch(connection);
 
-//   DebugLog(<< "ConnectionMap::add: " << who << " fd: " << socket);
+   DebugLog(<< "ConnectionMap::add: " << who << " fd: " << socket);
       
    return connection;
 }
@@ -101,6 +101,16 @@ ConnectionMap::get(const Transport::Tuple& who, int attempt)
    servaddr.sin_family = AF_INET;
    servaddr.sin_port = htons(who.port);
    servaddr.sin_addr = who.ipv4;
+
+#if WIN32
+   unsigned long block = 0;
+   int errNoBlock = ioctlsocket( sock, FIONBIO , &block );
+   assert( errNoBlock == 0 );
+#else
+   int flags  = fcntl( sock, F_GETFL, 0);
+   int errNoBlock = fcntl(sock, F_SETFL, flags| O_NONBLOCK );
+   assert( errNoBlock == 0 );
+#endif
    
    int e = connect( sock, (struct sockaddr *)&servaddr, sizeof(servaddr) );
    if ( e == -1 ) 
