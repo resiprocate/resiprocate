@@ -2,10 +2,10 @@
 #pragma once
 
 
-#include "sip2/util/Socket.hxx"
-#include "sip2/util/Data.hxx"
-#include "sip2/sipstack/Uri.hxx"
-#include "sip2/sipstack/Security.hxx"
+#include "resiprocate/os/Socket.hxx"
+#include "resiprocate/os/Data.hxx"
+#include "resiprocate/Uri.hxx"
+#include "resiprocate/Security.hxx"
 
 
 // buddyDlg dialog
@@ -18,12 +18,12 @@ public:
 // Dialog Data
 	enum { IDD = IDD_SIPIMP_DIALOG };
 	
-	void receivedPage( const Vocal2::Data& msg, 
-		const Vocal2::Uri& from,
-		const Vocal2::Data& signedBy,  
-		const Vocal2::Security::SignatureStatus sigStatus,
+	void receivedPage( const resip::Data& msg, 
+		const resip::Uri& from,
+		const resip::Data& signedBy,  
+		const resip::Security::SignatureStatus sigStatus,
 		const bool wasEncryped  );
-	void presenseUpdate(const Vocal2::Uri& uri, bool open, const Vocal2::Data& status );
+	void presenseUpdate(const resip::Uri& uri, bool open, const resip::Data& status );
 
 	void message(const CString& msg);
 

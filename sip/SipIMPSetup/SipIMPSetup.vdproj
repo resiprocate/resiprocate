@@ -15,21 +15,21 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_645AFF466B0F483A9593FA11BAB30A59"
+        "MsmKey" = "8:_13FAB5A6C3434CA18EB03EDB86F12CB4"
         "OwnerKey" = "8:_F3A9FA7DC8C14BEB81D54872CE657F83"
-        "MsmSig" = "8:VC_User_MFC.BA9B6D6E_0DE0_11D5_A548_0090278A1BB8"
+        "MsmSig" = "8:VC_User_STL.BA9B76E9_0DE0_11D5_A548_0090278A1BB8"
         }
         "Entry"
         {
-        "MsmKey" = "8:_6FDA8CDCB1B94D8CACFC46016FC0AD31"
+        "MsmKey" = "8:_27591225EA6448F5A6F53C325B9B86F0"
         "OwnerKey" = "8:_F3A9FA7DC8C14BEB81D54872CE657F83"
         "MsmSig" = "8:VC_User_CRT.BA9B6D09_0DE0_11D5_A548_0090278A1BB8"
         }
         "Entry"
         {
-        "MsmKey" = "8:_C93ACD501B804DAC843C8EDCE895E026"
+        "MsmKey" = "8:_845B585EA7F040F6A7C33F79AE7D9FF0"
         "OwnerKey" = "8:_F3A9FA7DC8C14BEB81D54872CE657F83"
-        "MsmSig" = "8:VC_User_STL.BA9B76E9_0DE0_11D5_A548_0090278A1BB8"
+        "MsmSig" = "8:VC_User_MFC.BA9B6D6E_0DE0_11D5_A548_0090278A1BB8"
         }
         "Entry"
         {
@@ -313,13 +313,13 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:SipIMPSetup"
-        "ProductCode" = "8:{EF109231-8A9F-430E-8DD3-1305D3B03844}"
-        "PackageCode" = "8:{C69AE939-9E4E-4DAA-85E4-7521569D8388}"
+        "ProductCode" = "8:{8B984C1E-B71A-4E5C-8BB7-56D9E8409933}"
+        "PackageCode" = "8:{B50187D9-8EC1-4505-902E-6970BBEF3C8B}"
         "UpgradeCode" = "8:{319C6A01-A494-46F5-8336-61322E882FF9}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
-        "ProductVersion" = "8:0.2.2"
+        "ProductVersion" = "8:0.3.0"
         "Manufacturer" = "8:fluffy"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:www.sipimp.org"
@@ -340,12 +340,12 @@
         }
         "MergeModule"
         {
-            "{AC8774A4-3E09-11D3-8E14-00C04F6837D0}:_645AFF466B0F483A9593FA11BAB30A59"
+            "{AC8774A4-3E09-11D3-8E14-00C04F6837D0}:_13FAB5A6C3434CA18EB03EDB86F12CB4"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:vc_mfc.msm"
-            "ModuleSignature" = "8:VC_User_MFC.BA9B6D6E_0DE0_11D5_A548_0090278A1BB8"
+            "SourcePath" = "8:vc_stl.msm"
+            "ModuleSignature" = "8:VC_User_STL.BA9B76E9_0DE0_11D5_A548_0090278A1BB8"
                 "Properties"
                 {
                     "DIR_RETARGET_TARGETDIR"
@@ -366,7 +366,7 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{AC8774A4-3E09-11D3-8E14-00C04F6837D0}:_6FDA8CDCB1B94D8CACFC46016FC0AD31"
+            "{AC8774A4-3E09-11D3-8E14-00C04F6837D0}:_27591225EA6448F5A6F53C325B9B86F0"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
@@ -392,12 +392,12 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{AC8774A4-3E09-11D3-8E14-00C04F6837D0}:_C93ACD501B804DAC843C8EDCE895E026"
+            "{AC8774A4-3E09-11D3-8E14-00C04F6837D0}:_845B585EA7F040F6A7C33F79AE7D9FF0"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"
-            "SourcePath" = "8:vc_stl.msm"
-            "ModuleSignature" = "8:VC_User_STL.BA9B76E9_0DE0_11D5_A548_0090278A1BB8"
+            "SourcePath" = "8:vc_mfc.msm"
+            "ModuleSignature" = "8:VC_User_MFC.BA9B6D6E_0DE0_11D5_A548_0090278A1BB8"
                 "Properties"
                 {
                     "DIR_RETARGET_TARGETDIR"
