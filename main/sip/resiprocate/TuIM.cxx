@@ -155,7 +155,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
    mPages.push_back(page);
    
    Contents* body = ( new PlainContents(text) );
-#if 0
+#if 1
    msg->header(h_ContentTransferEncoding) = StringCategory(Data("binary"));
 #endif
 
@@ -594,6 +594,11 @@ TuIM::processMessageRequest(SipMessage* msg)
    bool encrypted=false;
 
 #if defined( USE_SSL )
+   Uri from = msg->header(h_From).uri();
+   signedBy = from.getAorNoPort();
+   
+   DebugLog ( << "assuming signedBy is " << signedBy );
+   
    MultipartSignedContents* mBody = dynamic_cast<MultipartSignedContents*>(contents);
    if ( mBody )
    {
