@@ -3,7 +3,7 @@
 #include "sip2/util/Socket.hxx"
 #include "sip2/sipstack/Preparse.hxx"
 
-#define VOCAL_SUBSYSTEM Subsystem::SIP
+#define VOCAL_SUBSYSTEM Subsystem::TRANSPORT
 
 #ifndef WIN32
 #include <errno.h>
