@@ -54,20 +54,23 @@ TlsConnection::TlsConnection( Security* security, Socket fd, bool server )
    if ( ok != 1 )
    {
       int err = SSL_get_error(ssl,ok);
-      ErrLog( << "ssl connection failed with err= " << err );
-      assert(0);
+      char buf[256];
+      ERR_error_string_n(err,buf,sizeof(buf));
+      
+      ErrLog( << "ssl connection failed with err= " << err << " " << buf );
+      assert(0); // !jf! - need to deal gracefull with error and shut down this connection
    }
 }
 
       
 int 
-TlsConnection::read( void* buf, int count )
+TlsConnection::read( const void* buf, const int count )
 {
    assert( ssl );
    assert( buf );
    int ret;
    
-   ret = SSL_read(ssl,buf,count);
+   ret = SSL_read(ssl,(void*)buf,count);
    if (ret < 0 )
    {
       int err = SSL_get_error(ssl,ret);
@@ -83,7 +86,9 @@ TlsConnection::read( void* buf, int count )
          break;
          default:
          {
-            ErrLog( << "Got TLS read error " << err  );
+            char buf[256];
+            ERR_error_string_n(err,buf,sizeof(buf));
+            ErrLog( << "Got TLS read error " << err  << " " << buf  );
             return 0;
          }
          break;
@@ -95,7 +100,7 @@ TlsConnection::read( void* buf, int count )
 
 
 int 
-TlsConnection::write( void* buf, int count )
+TlsConnection::write( const void* buf, const int count )
 {
    assert( ssl );
    assert( buf );
