@@ -26,6 +26,16 @@ class Fifo : public AbstractFifo
        */
       Msg* getNext();
 
+
+      /** Returns the next message available. Will wait up to
+       *  ms milliseconds if no information is available. If
+       *  the specified time passes or a signal interrupts the
+       *  wait, this method returns 0. This interface provides
+       *  no mechanism to distinguish between timeout and
+       *  interrupt.
+       */
+      Msg* getNext(int ms);
+
    private:
       Fifo(const Fifo& rhs);
       Fifo& operator=(const Fifo& rhs);
@@ -67,6 +77,13 @@ Msg*
 Fifo<Msg> ::getNext()
 {
    return static_cast<Msg*>(AbstractFifo::getNext());
+}
+
+template <class Msg>
+Msg*
+Fifo<Msg> ::getNext(int ms)
+{
+   return static_cast<Msg*>(AbstractFifo::getNext(ms));
 }
 
 } // namespace resip
