@@ -397,6 +397,8 @@ class SdpContents : public Contents
                         return findFirstMatchingCodecs(medium.codecs());
                   }
 
+                  int findTelephoneEventPayloadType() const;
+
 
                private:
                   void setSession(Session* session);
