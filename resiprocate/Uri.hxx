@@ -41,7 +41,6 @@ class Uri : public ParserCategory
       mutable Data mHost;
       mutable Data mUser;
       mutable int mPort;
-      mutable bool mPortSpecified;
       mutable Data mAor;
       mutable Data mPassword;
 
