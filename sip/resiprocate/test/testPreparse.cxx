@@ -2,7 +2,10 @@
 #include <iomanip>
 #include <stdio.h>
 
+#define DEBUG_HELPERS
 #include "sip2/sipstack/Preparse.hxx"
+#undef DEBUG_HELPERS
+
 #include "sip2/util/Logger.hxx"
 #include "sip2/sipstack/SipMessage.hxx"
 
@@ -14,6 +17,36 @@ using namespace  std;
 #define VOCAL_SUBSYSTEM Subsystem::APP
 
 #define CRLF "\r\n"
+
+const char reallyShortMessage[] =
+"INVITE sip:a@b.com SIP/2.0" CRLF
+"From: <sip:c@d.org:5060>;tag=t1" CRLF
+"To: <sip:a@b.com:5060>;tag=t2" CRLF
+"Call-ID: xx"CRLF
+"CSeq: 1 INVITE" CRLF
+CRLF
+"Sample Body" CRLF
+CRLF;
+
+const char shortMessage[] =
+    "INVITE sip:alice@atlanta.com:5060 SIP/2.0" CRLF
+    "From: \"Bob\" <sip:bob@baker.org:5060>;tag=first-tag" CRLF
+    "To: <sip:alice@atlanta.com:5060>;tag=1a1b1f1H33n" CRLF
+    "Call-ID: cid-deadbeef"CRLF
+    "CSeq: 1 INVITE" CRLF
+    "Contact: <sip:bob@myphone.baker.org:6666>" CRLF
+    "Content-Length: 152" CRLF
+    "NewFangledHeader: newfangled" CRLF
+    CRLF
+    "v=0" CRLF
+    "o=mhandley 29739 7272939 IN IP4 126.5.4.3" CRLF
+    "s=" CRLF
+    "c=IN IP4 135.180.130.88" CRLF
+    "m=audio 49210 RTP/AVP 0 12" CRLF
+    "m=video 3227 RTP/AVP 31" CRLF
+    "a=rtpmap:31 LPC/8000" CRLF
+    CRLF
+;
 
     const char testData[] =
     "INVITE sip:vivekg@chair.dnrc.bell-labs.com:5060 SIP/2.0" CRLF
@@ -65,14 +98,95 @@ using namespace  std;
         "Content-Length: 0" CRLF CRLF
         ;
 
-const char *crlftest = (
-    "REGISTER sip:register.com SIP/2.0" CRLF
-    "Call-ID: cid" CRLF CRLF 
-    );
-void od(const char * p, int len)
+extern Data statusName(PreparseState::BufferAction s);
+
+const int chPerRow = 20;
+
+void labels(int len, int row)
 {
-    cout << hex;
-    int i = 0;
+    int start = chPerRow*row;
+    cout << ' ';
+    for(int i = 0; i < chPerRow && start+i < len; i++)
+    {
+        cout << setw(3) << start+i << ' ';
+    }
+    cout << endl;
+}
+
+void banner(int len, int row)
+{
+    int chThisRow = 0;
+    
+    if (row >= len/chPerRow)
+        chThisRow = len%chPerRow;
+    else
+        chThisRow = chPerRow;
+
+    if (chThisRow < 1) return;
+    
+    cout << "+";
+    for(int i = 0 ; i < chThisRow; i++)
+    {
+        cout << "---+";
+    }
+    cout << endl;
+    return;
+}
+
+void data(const char * p , int len, int row)
+{
+    cout << "|";
+    for(int c = 0; c < chPerRow; c++)
+    {
+        int o = row*chPerRow + c;
+        if (o >= len) break;
+        char ch = p[o];
+        
+        if (isalnum(ch) || ispunct(ch) || ch == ' ' )
+        {
+            cout << ' ' << (char)ch << ' ';
+        }
+        else if ( ch == '\t' )
+        {
+            cout << " \\t";
+        }
+        else if ( ch >= '\t' || ch <= '\r')
+        {
+            cout << " \\" << "tnvfr"[ch-'\t'];
+        }
+        else
+        {
+            cout << 'x' << hex << ch << dec;
+        }
+        cout << '|';
+        
+        
+    }
+    cout << endl;
+    
+}
+
+void pp(const char * p, int len)
+{
+    int row = 0;
+    
+    for ( row = 0 ; row <= len/chPerRow ; row++)
+    {
+        // do this row's banner
+        banner(len,row);
+        // do this row's data
+        data(p,len,row);
+        // do this row's banner
+        banner(len,row);
+        // do this row's counts
+        labels(len,row);
+        
+    }
+}
+
+void od(const char * p , int len)
+{
+    int i;
     
     for (i = 0 ; i < len ; i++)
     {
@@ -97,16 +211,16 @@ void od(const char * p, int len)
     cout << dec;
 }
 
-const int nTests = 6;
+const int nTests = 1;
 
 int tests[nTests];
 
 void rantest(int n)
 {
-    assert(n>=0);
-    assert(n<nTests);
+    assert(n>0);
+    assert(n<=nTests);
     
-    tests[n]++;
+    tests[n-1]++;
 }
 
 void inittest()
@@ -121,131 +235,192 @@ checkalltests()
     for(int i = 0 ; i < nTests ; i++) assert(tests[i]);
 }
 
+static int readRemain = 0;
+static const char * readData = 0;
+
+
+void fakeResetRead(const char *data, int len)
+{
+    readRemain = len;
+    readData =  data;
+}
+
+int fakeRead(char *p, int n)
+{
+    int m = 0;
+    // read n bytes into buffer at p.
+    while(readRemain > 0 && m < n)
+    {
+        *p++ = *readData++;
+        --readRemain;
+        ++m;
+    }
+    return m;
+}
+
 
 void doTest1()
 {
-    CritLog(<<"doTest1");
+    InfoLog(<<"doTest1");
     
     SipMessage* msg = new SipMessage();
     Preparse pre;
 
-    int used = 0;
-    int len = 100; // (less than the location of the first CRLFCRLF) 
-    const char *buffer = strdup(testData);
+    size_t len = 1;
 
-    PreparseState::TransportAction status = PreparseState::NONE;
+    PreparseState::BufferAction status = PreparseState::NONE;
 
+    
+    // Create a SipMessage
+    // take the buffer from the ''transport'' layer and
+    // pass it into the preparser.
+    // use the same logic as the transports will need 
+    // while the status is fragment, re-enter with a new buffer
+    // containing the old stuff, as directed.
+
+    len = 1;
+
+    
+    size_t discard = 0;
+    size_t used = 0;
+    size_t start = 0;
+    bool chunkMine = true;
+
+    size_t readQuant = 30;
+    size_t chunkSize = readQuant;
+
+    // set the ''reader'' to use the test message
+
+//    fakeResetRead(reallyShortMessage,strlen(reallyShortMessage));
+    fakeResetRead(testData,strlen(testData));
+    
+    // get the first chunk
+
+    char * chunk = new char[chunkSize];
+    chunkSize = fakeRead(chunk, readQuant);
+    DebugLog(<<"initial chunk size is " << chunkSize);
+    do
+    {
+        
+        InfoLog(<<"Preparsing " << chunkSize << " bytes");
+        InfoLog(<<"len   : " << chunkSize);
+        InfoLog(<<"start : " << start);
+
+        pp(chunk,chunkSize);
+        
+        pre.process(*msg,chunk,chunkSize,start,used,discard,status);
+
+        DebugLog(<<"used   : " << used);
+        DebugLog(<<"discard: " << discard);
+        DebugLog(<<"status :" << statusName(status));
+
+        if (status & PreparseState::preparseError)
+        {
+            if (chunkMine)
+                free(chunk);
+            chunk = 0;
+            CritLog(<<"preparserError -- unexpected");
+            assert(~(status & PreparseState::preparseError));
+            assert(("whoops you goofed -- should never see this",0));
+            
+        }
+        
+        if (status & PreparseState::dataAssigned)
+        {
+            // something used ... need to add this to the message
+            if (!chunkMine)
+            {
+                DebugLog(<<"Duplicate dataAssigned --ignoring");
+            }
+            else
+            {
+                DebugLog(<<"addBuffer() : something used");
+                msg->addBuffer(chunk);
+                chunkMine = false;
+                // handed to SipMsg
+            }
+        }
+
+        if (status & PreparseState::fragmented)
+        {
+            // need to call again with more data,
+            // there is an optimization here ...
+            // we can reuse the chunk if
+            // the PP said it didn't assign any
+            // data to the last one..
+            DebugLog(<<"Fragmented");
+            if ( ~ (status & PreparseState::dataAssigned))
+            {
+                // can reuse....
+                DebugLog(<<"Could reuse... not going to.");
+            }
+            
+            char * newChunk = new char[chunkSize-discard + readQuant];
+            memcpy(newChunk, chunk+discard, chunkSize-discard);
+            free(chunk);
+            chunk = newChunk;
+            chunkMine = true;
+            int nBytes = fakeRead(newChunk + chunkSize - discard, readQuant);
+            chunkSize = chunkSize - discard + nBytes;
+
+            DebugLog(<<"read in " << readQuant << " more bytes, chunkSize: " << chunkSize);
+            start = used - discard;
+        }
+        else
+        {
+            // not fragmented just get another buffer
+            start = 0;
+            DebugLog(<<"NO FRAG -- reading next chunk.");
+            if (chunk)
+            {
+                if (!chunkMine)
+                {
+                    DebugLog(<<"getting new chunk; last one owned by SipMsg");
+                }
+                // could reuse it here ... we choose to dispose of it.
+                else
+                {
+                    DebugLog(<<"Freeing unused chunk size="<<chunkSize);
+                    free(chunk);
+                    chunk = 0;
+                    
+                }
+            }
+            chunk = new char[readQuant];
+            chunkMine = true;
+            chunkSize = readQuant;
+            chunkSize = fakeRead(chunk,chunkSize);
+            DebugLog(<<"Read fresh " << chunkSize << " bytes.");
+        }
+        
+        
+            
+        
+        
+    }
+    while (~ status & PreparseState::headersComplete);
+    
+    
+#if 0
     od(buffer,len);
     
     pre.process(*msg, buffer, len, used, status);
 
-    InfoLog(<<"used == 97");
+    InfoLog(<<"used == " << used);
     
-    assert(used == 97); // the position of the last header start 
+    assert(used == 1); // the position of the last header start 
     
     InfoLog(<<"status == fragment?");
     
     assert ( status == PreparseState::fragment);
 
     InfoLog(<<"TEST1 -- Passed");
+#endif
+    rantest(1);
+    
     return;
 }
     
-void
-doTest2()
-{
-    CritLog(<<"doTest2");
-    
-    SipMessage* msg = new SipMessage();
-    Preparse pre;
-    const int boundary = strlen(testData); // _index_ of LF
-    
-    int used = 0;
-    int len = boundary; // a point with CRLF @ end of header.
-    // there are len chars including the LF
-
-    const char *buffer = testData;
-   
-    PreparseState::TransportAction status = PreparseState::NONE;
-
-    od(buffer,len);
-    
-    pre.process(*msg, buffer, len, used, status);
-
-    InfoLog(<<"used ==" << boundary);
-    
-    assert(used == boundary); // the position of the last header start 
-    
-    InfoLog(<<"status == fragment?");
-    
-    assert ( status == PreparseState::fragment);
-
-    InfoLog(<<"TEST2 -- Passed");
-
-    return;
-
-    
-}
-
-void
-doTest3()
-{
-   // Build a SipMessage one char per PP call
-
-    assert(0);
-}
-
-void
-doTest4()
-{
-   // Split a request line.
-   const char *testData[2] = 
-      {
-         "INVITE sip:vivekg@cha",
-         "ir.dnrc.bell-labs.com:5060 SIP/2.0" CRLF
-         "Via: SIP/2.0/UDP 135.180.130.133:5060" CRLF
-         "Via: SIP/2.0/TCP 12.3.4.5:5060;branch=9ikj8" CRLF
-         "Via: SIP/2.0/UDP 1.2.3.4:5060;hidden" CRLF
-         "From: \"J Rosenberg \\\\\\\"\"<sip:jdrosen@lucent.com:5060>;tag=98asjd8" CRLF
-         "To: <sip:vivekg@chair.dnrc.bell-labs.com:5060>;tag=1a1b1f1H33n" CRLF
-         "Call-ID: 0ha0isndaksdj@10.1.1.1" CRLF
-         "CSeq: 8 INVITE" CRLF
-         "Contact: \"Quoted string \\\"\\\"\" <sip:jdrosen@bell-labs.com:5060>" CRLF
-         "Contact: tel:4443322" CRLF
-         "Content-Type: application/sdp" CRLF
-         "Content-Length: 152" CRLF
-         "NewFangledHeader: newfangled value more newfangled value" CRLF
-         CRLF
-      };
-
-
-    assert(0);
-}
-
-void
-doTest6()
-{
-    Preparse pre;
-    
-    SipMessage msg;
-    
-    int k;
-    int len = strlen(crlftest);
-    char *p = strdup(crlftest);
-    
-    msg.addBuffer(p);
-    
-    // From test case provided by DCM.
-
-    PreparseState::TransportAction status;
-    
-    pre.process(msg, p, len, k, status);
-    
-    assert(status == PreparseState::headersComplete);
-    assert( k == len);
-
-}
-
 
 
 
@@ -275,12 +450,7 @@ main(int argc, char *argv[])
    
     inittest();
 
-    //doTest1(); // frag'd header
-    //doTest2(); // no frag'd header, but NOT End of headers
-    //doTest3(); // end at end
-    //doTest4(); // pp error
-    //doTest5(); // build sipmessage one byte at a time.
-    doTest6(); // trailing CRLFCRLF eating test.
+    doTest1(); // fragging one char at a time
 
     checkalltests();
     
