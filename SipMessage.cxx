@@ -121,7 +121,8 @@ SipMessage::isResponse() const
 Data
 SipMessage::brief() const
 {
-   assert(0);
+	// TODO 
+	// assert(0);
    return Data();
 }
 
