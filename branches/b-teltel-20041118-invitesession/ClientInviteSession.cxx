@@ -258,6 +258,29 @@ ClientInviteSession::cancel()
 }
 
 void
+ClientInviteSession::onForkAccepted()
+{
+   switch(mState)
+   {
+      case UAC_Early:
+      case UAC_EarlyWithOffer:
+      case UAC_EarlyWithAnswer:
+      case UAC_SentUpdateEarly:
+      case UAC_ReceivedUpdateEarly:
+         InfoLog (<< toData(mState) << ": onForkAccepted");
+         // !jf! should we avoid creating another timer here? I don't think it
+         // matters. Default timer is for 32secs. This is here to handle the
+         // cleanup on forked INVITEs that have sent a provisional response but
+         // don't ever receive a final response. 
+         mDum.addTimerMs(DumTimeout::WaitingForForked2xx, Timer::TH, getBaseHandle(), 1); 
+         break;
+      default:
+         // If the dialog is already set up (or cancelled) we disregard. 
+         break;
+   }
+}
+
+void
 ClientInviteSession::startCancelTimer()
 {
    InfoLog (<< toData(mState) << ": startCancelTimer");
@@ -304,42 +327,42 @@ ClientInviteSession::dispatch(const SipMessage& msg)
      sendSipFrag(msg);
      switch(mState)
      {
-	case UAC_Start:
-	   dispatchStart(msg);
-	   break;
-	case UAC_Early:
-	   dispatchEarly(msg);
-	   break;
-	case UAC_EarlyWithOffer:
-	   dispatchEarlyWithOffer(msg);
-	   break;
-	case UAC_EarlyWithAnswer:
-	   dispatchEarlyWithAnswer(msg);
-	   break;
-	case UAC_Answered:
-	   dispatchAnswered(msg);
-	   break;
-	case UAC_SentUpdateEarly:
-	   dispatchSentUpdateEarly(msg);
-	   break;
-	case UAC_SentUpdateConnected:
-	   dispatchSentUpdateConnected(msg);
-	   break;
-	case UAC_ReceivedUpdateEarly:
-	   dispatchReceivedUpdateEarly(msg);
-	   break;
-	case UAC_SentAnswer:
-	   dispatchSentAnswer(msg);
-	   break;
-	case UAC_QueuedUpdate:
-	   dispatchQueuedUpdate(msg);
-	   break;
-	case UAC_Cancelled:
-	   dispatchCancelled(msg);
-	   break;
-	default:
-	   InviteSession::dispatch(msg);
-	   break;
+        case UAC_Start:
+           dispatchStart(msg);
+           break;
+        case UAC_Early:
+           dispatchEarly(msg);
+           break;
+        case UAC_EarlyWithOffer:
+           dispatchEarlyWithOffer(msg);
+           break;
+        case UAC_EarlyWithAnswer:
+           dispatchEarlyWithAnswer(msg);
+           break;
+        case UAC_Answered:
+           dispatchAnswered(msg);
+           break;
+        case UAC_SentUpdateEarly:
+           dispatchSentUpdateEarly(msg);
+           break;
+        case UAC_SentUpdateConnected:
+           dispatchSentUpdateConnected(msg);
+           break;
+        case UAC_ReceivedUpdateEarly:
+           dispatchReceivedUpdateEarly(msg);
+           break;
+        case UAC_SentAnswer:
+           dispatchSentAnswer(msg);
+           break;
+        case UAC_QueuedUpdate:
+           dispatchQueuedUpdate(msg);
+           break;
+        case UAC_Cancelled:
+           dispatchCancelled(msg);
+           break;
+        default:
+           InviteSession::dispatch(msg);
+           break;
      }
   }
   catch (BaseException& e)
@@ -348,7 +371,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
      end();
      InviteSessionHandler* handler = mDum.mInviteSessionHandler;
      handler->onTerminated(getSessionHandle(),
-			   InviteSessionHandler::GeneralFailure);
+                           InviteSessionHandler::GeneralFailure);
   }
 }
 
@@ -379,12 +402,16 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
          end();
       }
    }
+   else if (timer.type() == DumTimeout::WaitingForForked2xx)
+   {
+      InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+      handler->onForkDestroyed(getHandle());
+      mDum.destroy(this);
+   }
    else
    {
       InviteSession::dispatch(timer);
    }
-
-
 }
 
 void

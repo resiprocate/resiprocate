@@ -55,6 +55,8 @@ class ClientInviteSession : public InviteSession
       // Called by the DialogSet (friend) when the app has CANCELed the request
       void cancel();
 
+      void onForkAccepted();
+
    private:
       std::auto_ptr<SdpContents> mEarlyMedia;
       void startCancelTimer();

@@ -46,7 +46,10 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 {
    assert(msg.isExternal());
 
-   
+   assert(msg.header(h_CSeq).method() != MESSAGE);   
+   assert(msg.header(h_CSeq).method() != REGISTER);
+   assert(msg.header(h_CSeq).method() != PUBLISH);
+
    if (msg.isRequest()) // UAS
    {
       const SipMessage& request = msg;
@@ -95,14 +98,14 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                else
                {
                   InfoLog(<< "Got an INVITE or SUBSCRIBE with invalid scheme");
-                  DebugLog(<< request);
+                  InfoLog(<< request);
                   throw Exception("Invalid scheme in request", __FILE__, __LINE__);
                }
             }
             else
             {
                InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
-               DebugLog (<< request);
+               InfoLog (<< request);
                throw Exception("Too many (or no contact) contacts in request", __FILE__, __LINE__);
             }
             break;
@@ -163,7 +166,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                   {
                      BaseCreator* creator = mDialogSet.getCreator();
                      assert(creator);// !jf! throw or something here
-                  
+                     assert(creator->getLastRequest().exists(h_Contacts));
+                     assert(!creator->getLastRequest().header(h_Contacts).empty());
                      mLocalContact = creator->getLastRequest().header(h_Contacts).front();
                      mRemoteTarget = contact;
                   }
@@ -251,11 +255,37 @@ Dialog::end()
 }
 
 void
+Dialog::handleTargetRefresh(const SipMessage& msg)
+{
+   switch(msg.header(h_CSeq).method())
+   {
+      case INVITE:
+      case UPDATE:
+         if (msg.isRequest() || (msg.isResponse() && msg.header(h_StatusLine).statusCode()/100 == 2))
+         {
+            //?dcm? modify local target; 12.2.2 of 3261 implies that the remote
+            //target is immediately modified.  Should we wait until a 2xx class
+            //reponse is sent to a re-invite(easy when all send requests go
+            //through Dialog)
+            if (msg.exists(h_Contacts))
+            {
+               //.dcm. replace or check then replace
+               mRemoteTarget = msg.header(h_Contacts).front();
+            }
+         }
+         break;
+      default:
+         return;
+   }
+}
+
+void
 Dialog::dispatch(const SipMessage& msg)
 {
    // !jf! Should be checking for messages with out of order CSeq and rejecting
 
    DebugLog ( << "Dialog::dispatch: " << msg.brief());
+   handleTargetRefresh(msg);
    if (msg.isRequest())
    {
       const SipMessage& request = msg;
@@ -347,7 +377,7 @@ Dialog::dispatch(const SipMessage& msg)
             {
                InfoLog (<< "Received an in dialog refer in a non-invite dialog: " << request.brief());
                SipMessage failure;
-               makeResponse(failure, request, 405);
+               makeResponse(failure, request, 603);
                mDum.sendResponse(failure);
                return;
             }
@@ -362,14 +392,20 @@ Dialog::dispatch(const SipMessage& msg)
             else
             {
                ServerSubscription* server = findMatchingServerSub(request);
+               ServerSubscriptionHandle serverHandle;
                if (server)
                {
+                  serverHandle = server->getHandle();
                   server->dispatch(request);
                }
                else
                {
-                  mInviteSession->dispatch(request);
+                  server = makeServerSubscription(request);
+                  mServerSubscriptions.push_back(server);
+                  serverHandle = server->getHandle();
+                  server->dispatch(request);
                }
+               mDum.mInviteSessionHandler->onRefer(mInviteSession->getSessionHandle(), serverHandle, msg);    
             }
          }
          break;
@@ -383,17 +419,32 @@ Dialog::dispatch(const SipMessage& msg)
             else
             {
                BaseCreator* creator = mDialogSet.getCreator();
-               if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE))
-//!dcm! -- was there a reason for this? || creator->getLastRequest().header(h_RequestLine).method() == REFER))
+               ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
+               mClientSubscriptions.push_back(sub);
+               sub->dispatch(request);
+
+#if 0
+               if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
+                               creator->getLastRequest().header(h_RequestLine).method() == REFER))
                {
                   DebugLog (<< "Making subscription (from creator) request: " << creator->getLastRequest());
                   ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
                   mClientSubscriptions.push_back(sub);
                   sub->dispatch(request);
                }
-               else if (mInviteSession != 0)
+               else
                {
-                  mInviteSession->dispatch(request);
+                  DebugLog (<< "Making subscription from NOTIFY: " << mInviteSession->mLastRequest);
+                  ClientSubscription* sub = makeClientSubscription(mInviteSession->mLastRequest);
+                  mClientSubscriptions.push_back(sub);
+                  sub->dispatch(request);
+               }
+               else if (mInviteSession->mLastRequest.header(h_RequestLine).method() == REFER)
+               {
+                  DebugLog (<< "Making subscription from refer: " << mInviteSession->mLastRequest);
+                  ClientSubscription* sub = makeClientSubscription(mInviteSession->mLastRequest);
+                  mClientSubscriptions.push_back(sub);
+                  sub->dispatch(request);
                }
                else
                {
@@ -404,6 +455,7 @@ Dialog::dispatch(const SipMessage& msg)
                   mDum.sendResponse(failure);
                   return;
                }
+#endif
             }
          }
          break;
@@ -414,6 +466,8 @@ Dialog::dispatch(const SipMessage& msg)
    }
    else if (msg.isResponse())
    {
+      // !jf! There is a substantial change in how this works in teltel-branch
+      // from how it worked in main branch pre merge. 
       // If the response doesn't match a cseq for a request I've sent, ignore
       // the response
       RequestMap::iterator r = mRequests.find(msg.header(h_CSeq).sequence());
@@ -554,6 +608,38 @@ Dialog::dispatch(const SipMessage& msg)
             assert(0);
             return;
       }
+
+#if 0     // merged from head back to teltel-branch
+      if (msg.header(h_StatusLine).statusCode() >= 400 
+          && Helper::determineFailureMessageEffect(msg) == Helper::DialogTermination)
+      {
+         //kill all usages
+         mDestroying = true;               
+         
+         for (list<ServerSubscription*>::iterator it = mServerSubscriptions.begin();
+              it != mServerSubscriptions.end(); )
+         {
+            ServerSubscription* s = *it;
+            it++;
+            s->dialogDestroyed(msg);
+         } 
+
+         for (list<ClientSubscription*>::iterator it = mClientSubscriptions.begin();
+              it != mClientSubscriptions.end(); )
+         {
+            ClientSubscription* s = *it;
+            it++;
+            s->dialogDestroyed(msg);
+         }
+         if (mInviteSession)
+         {
+            mInviteSession->dialogDestroyed(msg);
+         }
+         mDestroying = false;
+         possiblyDie(); //should aways result in destruction of this
+         return;         
+      }      
+#endif
    }
 }
 
@@ -894,19 +980,15 @@ Dialog::send(SipMessage& msg)
    mDum.send(msg);
 }
 
-#if 0
 void 
-Dialog::setLocalContact(const NameAddr& localContact)
+Dialog::onForkAccepted()
 {
-   mLocalContact = localContact;
+   ClientInviteSession* uac = dynamic_cast<ClientInviteSession*>(mInviteSession);
+   if (uac)
+   {
+      uac->onForkAccepted();
+   }
 }
-
-void 
-Dialog::setRemoteTarget(const NameAddr& remoteTarget)
-{
-   mRemoteTarget = remoteTarget;
-}
-#endif
 
 void Dialog::possiblyDie()
 {
@@ -978,3 +1060,4 @@ resip::operator<<(ostream& strm, const Dialog& dialog)
  * <http://www.vovida.org/>.
  *
  */
+
