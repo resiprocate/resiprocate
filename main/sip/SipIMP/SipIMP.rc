@@ -78,8 +78,8 @@ CAPTION "About SipIMP"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "SipIMP Windows  Version 0.2",IDC_STATIC,40,10,119,8,
-                    SS_NOPREFIX
+    LTEXT           "SipIMP Windows  Version 0.3.0",IDC_STATIC,40,10,119,8,
+                    SS_NOPREFIX | SS_ENDELLIPSIS
     LTEXT           "Copyright (C) 2002",IDC_STATIC,40,25,119,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,16,WS_GROUP
 END
@@ -189,8 +189,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,2,0,3
- PRODUCTVERSION 0,2,0,3
+ FILEVERSION 0,3,0,0
+ PRODUCTVERSION 0,3,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -205,13 +205,15 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
+            VALUE "Comments", "SIMPLE IM and Presense client"
+            VALUE "CompanyName", "www.sipimp.org"
             VALUE "FileDescription", "SIP IM & P"
-            VALUE "FileVersion", "0.2.0.3"
+            VALUE "FileVersion", "0.3.0.0"
             VALUE "InternalName", "SipIMP.exe"
             VALUE "LegalCopyright", "(c) All rights reserved."
             VALUE "OriginalFilename", "SipIMP.exe"
             VALUE "ProductName", "SipIMP"
-            VALUE "ProductVersion", "0.2.0.3"
+            VALUE "ProductVersion", "0.3.0.0"
         END
     END
     BLOCK "VarFileInfo"
