@@ -17,10 +17,12 @@
 using namespace Vocal2;
 using namespace std;
 
-ParserCategory::ParserCategory(HeaderFieldValue* headerFieldValue)
+ParserCategory::ParserCategory(HeaderFieldValue* headerFieldValue,
+                               Headers::Type headerType)
     : LazyParser(headerFieldValue),
       mParameters(),
-      mUnknownParameters()
+      mUnknownParameters(),
+      mHeaderType(headerType)
 {
 }
 
@@ -384,6 +386,19 @@ ParserCategory::commutativeParameterHash() const
    return working;
 }
 
+const Data&
+ParserCategory::errorContext() const
+{
+   if (mHeaderType == Headers::NONE)
+   {
+      static const Data reqLine("Request/Status line");
+      return reqLine;
+   }
+   else
+   {
+      return Headers::getHeaderName(mHeaderType);
+   }
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
