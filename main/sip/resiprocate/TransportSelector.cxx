@@ -123,21 +123,20 @@ TransportSelector::addTransport( TransportType protocol,
       switch (protocol)
       {
          case UDP:
-            transport = new UdpTransport(mStateMacFifo, port, ipInterface, version == V4);
+            transport = new UdpTransport(mStateMacFifo, port, version, ipInterface);
             break;
          case TCP:
-            transport = new TcpTransport(mStateMacFifo, port, ipInterface, version == V4);
+            transport = new TcpTransport(mStateMacFifo, port, version, ipInterface);
             break;
          case TLS:
 #if defined( USE_SSL )  
             assert(mTlsTransports.count(sipDomainname) == 0);
             transport = new TlsTransport(mStateMacFifo, 
-                                         sipDomainname,
-                                         ipInterface,
                                          port, 
-                                         Data::Empty,
-                                         Data::Empty,
-                                         version == V4,
+                                         version, 
+                                         ipInterface,
+                                         *mSecurity, 
+                                         sipDomainname,
                                          sslType);
 #else
             CritLog (<< "TLS not supported in this stack. You don't have openssl");
