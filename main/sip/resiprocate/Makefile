@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.84 2002/11/25 19:26:41 davidb Exp $
+# $Id: Makefile,v 1.85 2002/11/25 20:14:02 davidb Exp $
 
 BUILD = ../../build
 
@@ -60,13 +60,14 @@ SRC = \
 	TransactionState.cxx \
 	Transport.cxx \
 	TransportSelector.cxx \
-	TuIM.cxx \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \
 	Contents.cxx \
 	SdpContents.cxx \
 	MessageWaitingContents.cxx \
+#	TuIM.cxx \
+
 
 
 include $(BUILD)/Makefile.post
