@@ -92,7 +92,10 @@ ClientInviteSession::dispatch(const SipMessage& msg)
             //!dcm! -- pretty sure the following timer was bogus
 //            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
             ++mStaleCallTimerSeq;  //unifies timer handling logic
-            
+
+            // Handle any Session Timer headers in response
+            handleSessionTimerResponse(msg);
+
             mState = Connected;
             mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
             mUserConnected = true;            
@@ -148,8 +151,10 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 //            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
                ++mStaleCallTimerSeq;  //unifies timer handling logic
                mState = Connected;
-//!dcm! --kill
-//mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
+
+               // Handle any Session Timer headers in response
+               handleSessionTimerResponse(msg);
+
                mUserConnected = true;            
                mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
             
