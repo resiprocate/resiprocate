@@ -143,7 +143,7 @@ DnsResult::lookup(const Uri& uri)
          DebugLog (<< "Found immediate result: " << tuple);
          mResults.push_back(tuple);
          mType = Available;
-         mHandler->handle(this);
+         mHandler->handle(this);         
       }
       else if (uri.port() != 0)
       {
@@ -152,9 +152,39 @@ DnsResult::lookup(const Uri& uri)
       }
       else 
       { 
-         mPort = getDefaultPort(mTransport, uri.port());
-         lookupAAAARecords(mTarget); // for current target and port                   
-      } 
+         //!dcm! -- SRV target will be affected by DTLS         
+         if (mSips)
+         {
+            if (mTransport = UDP)
+            {
+               mTransport = DTLS;
+               mSRVCount++;
+               lookupSRV("_sips._udp." + mTarget);
+            }
+            else
+            {
+               mSRVCount++;
+               lookupSRV("_sips._tcp." + mTarget);
+            }
+         }
+         else
+         {
+            switch(mTransport)
+            {
+               case TLS: //deprecated, mean TLS over TCP
+               case TCP:
+                  mSRVCount++;
+                  lookupSRV("_sip._tcp." + mTarget);
+                  break;
+               case SCTP:
+               case DCCP:
+               case UDP:
+               default: //fall through to UDP for unimplemented & unknown
+                  mSRVCount++;
+                  lookupSRV("_sip._udp." + mTarget);
+            }
+         }
+      }
    }
    else 
    {
@@ -488,15 +518,22 @@ DnsResult::processSRV(int status, const unsigned char* abuf, int alen)
    {
       if (mSRVResults.empty())
       {
-         if (mSips)
+         if (mTransport == UNKNOWN_TRANSPORT)
          {
-            mTransport = TLS;
-            mPort = 5061;
+            if (mSips)
+            {
+               mTransport = TLS;
+               mPort = 5061;
+            }
+            else
+            {
+               mTransport = UDP;
+               mPort = 5060;
+            }
          }
          else
          {
-            mTransport = UDP;
-            mPort = 5060;
+            mPort = getDefaultPort(mTransport, 0);
          }
          
          StackLog (<< "No SRV records for " << mTarget << ". Trying A records");
