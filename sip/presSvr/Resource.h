@@ -5,7 +5,7 @@
 #include "resiprocate/Contents.hxx"
 #include "SubDialog.h"
 
-typedef set<SubDialog *> PDocObserverSet_t;
+typedef std::set<SubDialog *> PDocObserverSet_t;
 
 using namespace resip;
 
