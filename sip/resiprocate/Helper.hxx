@@ -28,8 +28,10 @@ class Helper
       const static int tagSize;  //bytes in to-tag& from-tag, should prob. live
       //somewhere else
 
+      // used to make sure 
+      static int aBitSmallerThan(unsigned long value); 
+      
       //in general content length handled automatically by SipMessage?
-
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from);
       static SipMessage* makeInvite(const NameAddr& target, const NameAddr& from, const NameAddr& contact);
       static SipMessage* makeForwardedInvite(const SipMessage& invite);
