@@ -34,7 +34,6 @@ libresiprocate_la_SOURCES = \
 	os/Tuple.cxx \
 	os/vmd5.cxx \
 	ApiCheck.cxx \
-	ApplicationSip.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
 	ConnectionManager.cxx \
