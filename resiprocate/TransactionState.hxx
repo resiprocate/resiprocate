@@ -51,6 +51,7 @@ class TransactionState
       bool isTimer(Message* msg) const;
       bool isResponse(Message* msg, int lower=0, int upper=699) const;
       bool isFromTU(Message* msg) const;
+      bool isFromWire(Message* msg) const;
       bool isTranportError(Message* msg) const;
       bool isSentReliable(Message* msg) const;
       bool isSentUnreliable(Message* msg) const;
