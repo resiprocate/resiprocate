@@ -4,7 +4,6 @@
 #include "resiprocate/ParameterTypes.hxx"
 namespace resip {
 using namespace std;
-using namespace resip;
 %}
 struct params { char *name; ParameterTypes::Type type; };
 %%
@@ -88,5 +87,6 @@ effective-by, ParameterTypes::effectiveBy
 document, ParameterTypes::document
 app-id, ParameterTypes::appId
 network-user, ParameterTypes::networkUser
+url, ParameterTypes::url
 %%
 }

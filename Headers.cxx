@@ -104,6 +104,7 @@ defineHeader(SubscriptionState, "Subscription-State", Token);
 
 defineHeader(SIPETag, "SIP-ETag", Token);
 defineHeader(SIPIfMatch, "SIP-If-Match", Token);
+defineHeader(ContentId, "Content-ID", Token);
 
 defineHeader(Identity, "Identity", StringCategory);
 
