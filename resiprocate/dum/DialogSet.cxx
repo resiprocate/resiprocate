@@ -170,7 +170,7 @@ DialogSet::dispatch(const SipMessage& msg)
          case INVITE:
          case BYE:
          case ACK:
-         case CANCEL:
+         case CANCEL:  //cancel needs work
          case SUBSCRIBE:
          case REFER: //need to add out-of-dialog refer logic
             break; //dialog creating/handled by dialog
@@ -215,10 +215,19 @@ DialogSet::dispatch(const SipMessage& msg)
       switch (response.header(h_CSeq).method())
       {
          case INVITE:
+         case SUBSCRIBE:
          case BYE:
          case ACK:
+            if(response.header(h_To).exists(p_tag))
+            {
+               break;  //dialog creating/handled by dialog
+            }
+            else
+            {
+               //throw away, informational status message eventually
+               return;               
+            }
          case CANCEL:
-         case SUBSCRIBE:
          case REFER:  //need to add out-of-dialog refer logic
             break; //dialog creating/handled by dialog
          case PUBLISH:
