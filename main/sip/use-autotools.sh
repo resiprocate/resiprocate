@@ -125,7 +125,10 @@ for F in ${ATCF} ${AUTOTOOLS_ARTIFACTS}; do
 done
 
 for D in $( find . -name ${ATCF} -print ) ;do
-    ( cd $(dirname $D) ; pwd ; svn propset svn:ignore -F ${ATCF} -F .cvsignore . )
+    ( cd $(dirname $D) ; pwd ; \
+        cat .cvsignore ${ATCF} > /tmp/$$.atcf ;\
+        svn propset svn:ignore -F /tmp/$$.atcf . ;\
+        rm /tmp/$$.atcf)
 done
 
 
