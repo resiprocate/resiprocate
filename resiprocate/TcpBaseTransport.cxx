@@ -19,7 +19,8 @@ const size_t TcpBaseTransport::MaxWriteSize = 4096;
 const size_t TcpBaseTransport::MaxReadSize = 4096;
 
 
-TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, const Data& pinterface, bool ipv4)
+TcpBaseTransport::TcpBaseTransport(Fifo<Message>& fifo, int portNum, 
+                                   const Data& pinterface, bool ipv4)
    : Transport(fifo, portNum, pinterface, ipv4)
 {
    mFd = Transport::socket(TCP, ipv4);
@@ -128,19 +129,21 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
    Connection* currConnection = mConnectionManager.getNextRead(); 
    if (currConnection)
    {
-      if (fdset.readyToRead(currConnection->getSocket()))
+      if ( fdset.readyToRead(currConnection->getSocket()) || currConnection->hasDataToRead() )
       {
          //DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection);
          //fdset.clear(currConnection->getSocket());
-         
          std::pair<char*, size_t> writePair = currConnection->getWriteBuffer();
          size_t bytesToRead = resipMin(writePair.second, 
                                        static_cast<size_t>(Connection::ChunkSize));
-
+         
          assert(bytesToRead > 0);
          int bytesRead = currConnection->read(writePair.first, bytesToRead);
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
-         if (bytesRead < 0)
+
+         DebugLog (<< "TcpBaseTransport::processSomeReads() " 
+                   << *currConnection 
+                   << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
+         if (bytesRead == -1)
          {
             InfoLog (<< "Closing connection bytesRead=" << bytesRead);
             delete currConnection;
@@ -149,7 +152,7 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
          {
             currConnection->performRead(bytesRead, mStateMachineFifo);
          }
-         else
+         else if ( bytesRead != 0 )
          {
             assert(0);
          }
