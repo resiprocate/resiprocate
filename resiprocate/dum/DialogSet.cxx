@@ -1,6 +1,5 @@
 #include "resiprocate/dum/AppDialogSet.hxx"
 #include "resiprocate/dum/BaseCreator.hxx"
-#include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogSet.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
@@ -117,32 +116,6 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       InfoLog (<< "Created a new dialog: " << *dialog);
    }     
-
-   if (mDum.mClientAuthManager && !mCancelled)
-   {
-      if (getCreator())
-      {
-         if ( mDum.mClientAuthManager->handle( getCreator()->getLastRequest(), msg ) )
-         {
-            InfoLog( << "about to retransmit request with digest credentials" );
-            InfoLog( << getCreator()->getLastRequest() );
-            
-            mDum.send(getCreator()->getLastRequest());
-            
-            return;
-         }
-         else
-         {
-            //!dcm! -- need some sort of authorization failed thing
-         }
-      }
-      else
-      {
-         assert(0);
-         //need to get the last message from the usage some how
-         // !dcm! --  based on method type in cseq?  
-      }
-   }
 
    dialog->dispatch(msg);
 }
