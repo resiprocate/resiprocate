@@ -32,12 +32,7 @@ ConnectionManager::ConnectionManager() :
 
 ConnectionManager::~ConnectionManager()
 {
-   for (Connection::readList::iterator i = mReadHead->begin();
-        i != mReadHead->end(); ++i)
-   {
-      delete *i;
-   }
-
+   while (!mReadHead->empty()) delete *(mReadHead->begin());
    assert(mReadHead->empty());
    assert(mWriteHead->empty());
    assert(mLRUHead->empty());
@@ -75,13 +70,12 @@ ConnectionManager::getNextRead()
    }
    else 
    {
-      if (mReadIter == mReadHead->end())
+      if (++mReadIter == mReadHead->end())
       {
          mReadIter = mReadHead->begin();
       }
 
       Connection* ret = *mReadIter;
-      ++mReadIter;
       return ret;
    }
 }
@@ -95,13 +89,12 @@ ConnectionManager::getNextWrite()
    }
    else 
    {
-      if (mWriteIter == mWriteHead->end())
+      if (++mWriteIter == mWriteHead->end())
       {
          mWriteIter = mWriteHead->begin();
       }
 
       Connection* ret = *mWriteIter;
-      ++mWriteIter;
       return ret;
    }
 }
@@ -134,7 +127,6 @@ ConnectionManager::removeFromWritable()
    assert(!mWriteHead->empty());
    Connection* current = *mWriteIter;
    ++mWriteIter;
-
    current->writeList::remove();
 
    if (mWriteIter == mWriteHead->end())
@@ -147,7 +139,10 @@ void
 ConnectionManager::addConnection(Connection* connection)
 {
    connection->mWho.connectionId = ++mConnectionIdGenerator;
-   DebugLog (<< "ConnectionManager::addConnection() " << connection->mWho.connectionId);
+   DebugLog (<< "ConnectionManager::addConnection() " 
+             << connection->mWho.connectionId 
+             << ":" 
+             << connection->mSocket);
    
    mAddrMap[connection->mWho] = connection;
    mIdMap[connection->mWho.connectionId] = connection;
@@ -163,21 +158,13 @@ ConnectionManager::removeConnection(Connection* connection)
 
    assert(!mReadHead->empty());
 
-   // keep the iterators valid
-   if (*mReadIter == connection)
-   {
-      ++mReadIter;
-   }
-
-   if (*mWriteIter == connection)
-   {
-      ++mWriteIter;
-   }
-
    connection->readList::remove();
    connection->writeList::remove();
    connection->lruList::remove();
 
+   // keep the iterators valid
+   mReadIter = mReadHead->begin();
+   mWriteIter = mWriteHead->begin();
 }
 
 // release excessively old connections (free up file descriptors)
