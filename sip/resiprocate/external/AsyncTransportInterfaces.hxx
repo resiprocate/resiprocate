@@ -3,7 +3,7 @@
 
 #include "resiprocate/external/AsyncID.hxx"
 #include "resiprocate/GenericIPAddress.hxx"
-#include "resiprocate/os/transporttype.hxx"
+#include "resiprocate/os/TransportType.hxx"
 
 namespace resip
 {
@@ -23,7 +23,7 @@ class AsyncCLessReceiveResult : public AsyncResult
 {
    public:
       AsyncCLessReceiveResult(const GenericIPAddress& source, 
-                              char* bytesRead, int count) : 
+                              void* bytesRead, int count) : 
          mSource(source),
          bytes(bytesRead), 
          length(count) 
@@ -32,7 +32,7 @@ class AsyncCLessReceiveResult : public AsyncResult
          
       GenericIPAddress remoteAddress() { return mSource; }
          
-      char* bytes;
+      void* bytes;
       int length;
          
    private:
@@ -49,7 +49,7 @@ class ExternalAsyncCLessTransport : public ExternalAsyncTransport
 {
    public:
       virtual void setHandler(ExternalAsyncCLessTransportHandler* handler)=0;  
-      virtual void send(GenericIPAddress dest, char* byte, int count)=0;
+      virtual void send(GenericIPAddress dest, void* byte, int count)=0;
 };
 
 //stream transport
@@ -71,12 +71,12 @@ class AsyncStreamResult : public AsyncResult
 class AsyncStreamReadResult : public AsyncStreamResult
 {
    public:
-      AsyncStreamReadResult(AsyncID id, char* bytes, int count) : AsyncStreamResult(id), bytes(bytes), 
+      AsyncStreamReadResult(AsyncID id, void* bytes, int count) : AsyncStreamResult(id), bytes(bytes), 
                                                                   length(count) {}
 
       AsyncStreamReadResult(AsyncID id, long errorCode) : AsyncStreamResult(id, errorCode), bytes(0), length(0) {}
 
-      char* bytes;
+      void* bytes;
       int length;
 };
 
@@ -100,7 +100,7 @@ class ExternalAsyncStreamTransport : public ExternalAsyncTransport
       virtual AsyncID generateAsyncID()=0;
       virtual void setHandler(ExternalAsyncStreamTransportHandler* handler)=0;
       virtual void connect(GenericIPAddress host, AsyncID stream)=0;
-      virtual void write(AsyncID stream, char* bytes, int count)=0;
+      virtual void write(AsyncID stream, void* bytes, int count)=0;
       virtual void close(AsyncID stream)=0;
 };
 }
