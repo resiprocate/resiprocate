@@ -37,6 +37,7 @@ class ParseBuffer
 
       const char* skipChar() { return ++mTraversalPtr; }
       const char* skipChar(char c);
+      const char* skipChars(const char* cs);
       const char* skipNonWhitespace();
       const char* skipWhitespace();
       const char* skipToChar(char c);
@@ -45,8 +46,10 @@ class ParseBuffer
       const char* skipToEndQuote(char quote = '"');
       const char* skipN(int count);
       const char* skipToEnd();
+
       void assertEof();
       void assertNotEof();
+      void fail(const Data& msg = Data::Empty);
 
       // make the passed in data share memory with the buffer
       void data(Data& data, const char* start) const;
