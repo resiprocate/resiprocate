@@ -116,9 +116,20 @@ SipMessage::isResponse() const
 Data
 SipMessage::brief() const
 {
-	// TODO 
-	// assert(0);
-   return Data();
+   Data result;
+   
+   if (isRequest()) 
+   {
+      result += "Request: ";
+      result += header(h_RequestLine).uri().getAor();
+   }
+   else if (isResponse())
+   {
+      result += "Response: ";
+      result += header(h_StatusLine).responseCode();
+   }
+
+   return result;
 }
 
 std::ostream& 
