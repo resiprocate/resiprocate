@@ -1246,10 +1246,18 @@ NameAddr::NameAddr(const Data& unparsed)
      mAllContacts(false),
      mDisplayName()
 {
-   ParseBuffer pb(unparsed.data(), unparsed.size());
-   NameAddr tmp;
-   tmp.parse(pb);
-   *this = tmp;
+   try
+   {
+      ParseBuffer pb(unparsed.data(), unparsed.size());
+      NameAddr tmp;
+      tmp.parse(pb);
+      *this = tmp;
+   }
+   catch(ParseBuffer::Exception& e)
+   {
+      DebugLog (<< "Failed trying to construct a NameAddr from " << unparsed);
+      throw;
+   }
 }
 
 NameAddr::NameAddr(const Uri& uri)

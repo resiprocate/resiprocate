@@ -30,12 +30,20 @@ Uri::Uri(const Data& data)
      mOldPort(0),
      mEmbeddedHeaders(0)
 {
-   ParseBuffer pb(data.data(), data.size());
-   Uri tmp;
+   try
+   {
+      ParseBuffer pb(data.data(), data.size());
+      Uri tmp;
 
-   // avoid the destructor/constructor issue
-   tmp.parse(pb);
-   *this = tmp;
+      // avoid the destructor/constructor issue
+      tmp.parse(pb);
+      *this = tmp;
+   }
+   catch(ParseBuffer::Exception& e)
+   {
+      DebugLog (<< "Failed trying to construct a Uri from " << data);
+      throw;
+   }
 }
 
 Uri::Uri(const Uri& rhs)
