@@ -1,4 +1,4 @@
-# $Id: Makefile.tools,v 1.6 2003/10/01 18:36:44 jason Exp $
+# $Id: Makefile.tools,v 1.7 2003/10/01 19:47:16 jason Exp $
 
 ######################################################################
 #                     Default tool names/locations
@@ -168,10 +168,12 @@ endif
 
 ifeq ($(VOCAL_TOOLCHAIN_TYPE),sunpro)
 
-AR		= CC -xar -o
+#MKSHLIB		= CC -xarch=v9 -G
+MKSHLIB		= CC -G
+AR		= CC -o
 ARFLAGS		=
 CC		= cc
-CXX		= CC
+CXX		= CC 
 DEP		= CC -xM
 DMANGLE		= | perl $(TOOLS)/hacksol | grep -v /opt/SUNWspro
 DFLAGS		= 
