@@ -1,6 +1,10 @@
 #if !defined(TRANSACTIONSTATE_HXX)
 #define TRANSACTIONSTATE_HXX
 
+
+#include <sipstack/Message.hxx>
+
+
 namespace Vocal2
 {
 
@@ -17,27 +21,29 @@ class TransactionState
       
    private:
 
-      enum Machine 
+      typedef enum 
       {
          ClientNonInvite,
          ClientInvite,
          ServerNonInvite,
          ServerInvite,
          Stale
-      }
+      } Machine;
+      
       Machine mMachine;
       
-      enum State
+      typedef enum 
       {
          Calling,
          Trying,
          Proceeding,
          Completed,
          Terminated
-      }
+      } State;
+      
       State mState;
             
-      TransactionState cancelStateMachine;
+      TransactionState* cancelStateMachine;
       SipMessage* msgToRetransmit;
       
 };
