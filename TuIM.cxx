@@ -1,3 +1,8 @@
+
+#ifdef WIN32
+#include "sip2/util/Socket.hxx"
+#endif
+
 #include "sip2/sipstack/SipStack.hxx"
 #include "sip2/util/Data.hxx"
 #include "sip2/util/Logger.hxx"
