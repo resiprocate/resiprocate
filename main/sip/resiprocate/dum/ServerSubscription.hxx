@@ -47,6 +47,8 @@ class ServerSubscription : public BaseUsage
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
 
+   protected:
+      virtual ~ServerSubscription();
    private:
       friend class DialogUsageManager;
       ServerSubscription(DialogUsageManager& dum, Dialog& dialog, SipMessage& req);

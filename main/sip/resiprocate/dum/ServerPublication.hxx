@@ -29,8 +29,8 @@ class ServerPublication : public BaseUsage
 
       virtual BaseUsage::Handle getBaseHandle() {return mHandle;}
       ServerPublication::Handle getHandle() {return mHandle;}
-
-
+   protected:
+      virtual ~ServerPublication();
    private:
       friend class DialogUsageManager;
       ServerPublication(DialogUsageManager& dum,
