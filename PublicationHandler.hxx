@@ -24,6 +24,10 @@ class ClientPublicationHandler
       //necessarily be 4xx...a malformed 200, etc. could also reach here.
       virtual void onFailure(ClientPublicationHandle, const SipMessage& status)=0;
 
+      /// call on Retry-After failure.
+      /// return values: -1 = fail, 0 = retry immediately, N = retry in N seconds
+      virtual int onRequestRetry(ClientPublicationHandle, int retrySeconds, const SipMessage& status)=0;
+
       // ?dcm? -- when should this be called
       virtual void onStaleUpdate(ClientPublicationHandle, const SipMessage& /*status*/)
       {}
