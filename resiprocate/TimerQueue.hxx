@@ -4,8 +4,9 @@
 #include <vector>
 #include <set>
 #include <iosfwd>
-#include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Fifo.hxx"
+#include "resiprocate/os/TimeLimitFifo.hxx"
+#include "resiprocate/os/Timer.hxx"
 
 // .dlb. 
 // to do: timer wheel for transaction-bound timers and a heap for
@@ -21,7 +22,7 @@ class TimerQueue
 {
    public:
       TimerQueue(Fifo<TransactionMessage>& stateMachineFifo,
-                 Fifo<Message>& tuFifo);
+                 TimeLimitFifo<Message>& tuFifo);
 
       Timer::Id add(Timer::Type type, const Data& transactionId, unsigned long msOffset);
       Timer::Id add(const Timer& timer);
@@ -38,7 +39,7 @@ class TimerQueue
    private:
       friend std::ostream& operator<<(std::ostream&, const TimerQueue&);
       Fifo<TransactionMessage>& mStateMachineFifo;
-      Fifo<Message>& mTuFifo;
+      TimeLimitFifo<Message>& mTuFifo;
 
       std::multiset<Timer> mTimers;
 };
