@@ -73,7 +73,7 @@ TransactionController::process(FdSet& fdset)
    }
 }
 
-int 
+unsigned int 
 TransactionController::getTimeTillNextProcessMS()
 {
    if ( mStateMacFifo.messageAvailable() ) 
@@ -127,14 +127,6 @@ void
 TransactionController::send(SipMessage* msg)
 {
    mStateMacFifo.add(msg);
-}
-
-void
-TransactionController::post(Message* msg, 
-                            unsigned int msecondsLater)
-{
-   Timer t(msecondsLater, msg);
-   mTimers.add(t);
 }
 
 void
