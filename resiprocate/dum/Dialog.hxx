@@ -52,12 +52,6 @@ class Dialog
 
       //returns an invalid handle if there is no session
       InviteSessionHandle getInviteSession();
-      ClientRegistrationHandle getClientRegistration();
-      ServerRegistrationHandle getServerRegistration();
-      ClientPublicationHandle getClientPublication();
-      ServerPublicationHandle getServerPublication();
-      ClientOutOfDialogReqHandle getClientOutOfDialog();
-      ServerOutOfDialogReqHandle getServerOutOfDialog();
       
       void cancel();
       void dispatch(const SipMessage& msg);
@@ -65,7 +59,7 @@ class Dialog
 
    private:
       virtual ~Dialog();
-      friend class BaseUsage;
+      friend class DialogUsage;
       friend class DialogSet;
 
       friend class ClientSubscription;
@@ -80,37 +74,24 @@ class Dialog
 
       void possiblyDie();
 
-      ClientOutOfDialogReq* findMatchingClientOutOfDialogReq(const SipMessage& msg);
       ClientSubscription* findMatchingClientSub(const SipMessage& msg);
       ServerSubscription* findMatchingServerSub(const SipMessage& msg);
 
       void addUsage(BaseUsage* usage);
       ClientInviteSession* makeClientInviteSession(const SipMessage& msg);
       ClientSubscription* makeClientSubscription(const SipMessage& msg);
-      ClientRegistration* makeClientRegistration(const SipMessage& msg);
-      ClientPublication* makeClientPublication( const SipMessage& msg);
-      ClientOutOfDialogReq* makeClientOutOfDialogReq(const SipMessage& msg);
       
       ServerInviteSession*  makeServerInviteSession(const SipMessage& msg);
       ServerSubscription* makeServerSubscription(const SipMessage& msg);
-      ServerRegistration* makeServerRegistration(const SipMessage& msg);
-      ServerPublication* makeServerPublication(const SipMessage& msg);
-      ServerOutOfDialogReq* makeServerOutOfDialog(const SipMessage& msg);
 
 
-      DialogId mId;  
       DialogUsageManager& mDum;
       DialogSet& mDialogSet;
+      DialogId mId;  
 
       std::list<ClientSubscription*> mClientSubscriptions;
       std::list<ServerSubscription*> mServerSubscriptions;
       InviteSession* mInviteSession;
-      ClientRegistration* mClientRegistration;
-      ServerRegistration* mServerRegistration;
-      ClientPublication* mClientPublication;
-      ServerPublication* mServerPublication;
-      std::list<ClientOutOfDialogReq*> mClientOutOfDialogRequests;
-      ServerOutOfDialogReq* mServerOutOfDialogRequest;
 
       //invariants
       typedef enum // need to add

@@ -5,20 +5,14 @@
 #include "resiprocate/dum/BaseCreator.hxx"
 #include "resiprocate/dum/ClientAuthManager.hxx"
 #include "resiprocate/dum/ClientInviteSession.hxx"
-#include "resiprocate/dum/ClientOutOfDialogReq.hxx"
-#include "resiprocate/dum/ClientRegistration.hxx"
 #include "resiprocate/dum/ClientSubscription.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/ServerInviteSession.hxx"
-#include "resiprocate/dum/ServerOutOfDialogReq.hxx"
-#include "resiprocate/dum/ServerRegistration.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
-#include "resiprocate/dum/ClientPublication.hxx"
-#include "resiprocate/dum/ServerPublication.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -29,21 +23,15 @@ using namespace std;
 Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds) 
    : mDum(dum),
      mDialogSet(ds),
+     mId("INVALID", "INVALID", "INVALID"),
      mClientSubscriptions(),
      mServerSubscriptions(),
      mInviteSession(0),
-     mClientRegistration(0),
-     mServerRegistration(0),
-     mClientPublication(0),
-     mServerPublication(0),
-     mClientOutOfDialogRequests(),
-     mServerOutOfDialogRequest(0),
      mType(Fake),
      mRouteSet(),
      mLocalContact(),
      mLocalCSeq(0),
      mRemoteCSeq(0),
-     mId("INVALID", "INVALID", "INVALID"),
      mRemoteTarget(),
      mLocalNameAddr(),
      mRemoteNameAddr(),
@@ -210,28 +198,18 @@ Dialog::~Dialog()
    DebugLog ( <<"Dialog::~Dialog() ");
    
    mDestroying = true;
-   //does removing an elemnt from a list invalidate iterators?
-   for(std::list<ClientSubscription*>::iterator it = mClientSubscriptions.begin(); 
-       it != mClientSubscriptions.end(); it++)
+
+   while (!mClientSubscriptions.empty())
    {
-      delete *it;
+      delete *mClientSubscriptions.begin();
    }
-   for(std::list<ServerSubscription*>::iterator it = mServerSubscriptions.begin(); 
-       it != mServerSubscriptions.end(); it++)
+
+   while (!mServerSubscriptions.empty())
    {
-      delete *it;
+      delete *mServerSubscriptions.begin();
    }
-   for(std::list<ClientOutOfDialogReq*>::iterator it = mClientOutOfDialogRequests.begin(); 
-       it != mClientOutOfDialogRequests.end(); it++)
-   {
-      delete *it;
-   }
+
    delete mInviteSession;
-   delete mClientRegistration;
-   delete mServerRegistration;
-   delete mClientPublication;
-   delete mServerPublication;
-   delete mServerOutOfDialogRequest;
 
    mDialogSet.mDialogs.erase(this->getId());
    delete mAppDialog;
@@ -253,12 +231,9 @@ Dialog::cancel()
    }
    else
    {
-      if (mDialogSet.getCreator())
-      {
-         makeRequest(mDialogSet.getCreator()->getLastRequest(), CANCEL);
-         mDum.send(mDialogSet.getCreator()->getLastRequest());
-         delete this;
-      }
+      makeRequest(mDialogSet.getCreator()->getLastRequest(), CANCEL);
+      mDum.send(mDialogSet.getCreator()->getLastRequest());
+      delete this;
    }
 }
 
@@ -270,7 +245,7 @@ Dialog::dispatch(const SipMessage& msg)
    {
       const SipMessage& request = msg;
       switch (request.header(h_CSeq).method())
-      {
+     {
          case INVITE:  // new INVITE
             if (mInviteSession == 0)
             {
@@ -302,7 +277,6 @@ Dialog::dispatch(const SipMessage& msg)
                mInviteSession->dispatch(request);
             }
             break;
-
          case SUBSCRIBE:
          case REFER: //!jf! does this create a server subs?
          {
@@ -320,122 +294,70 @@ Dialog::dispatch(const SipMessage& msg)
          }
          break;
          case NOTIFY:
-            if (request.header(h_To).exists(p_tag))
+         {
+            ClientSubscription* client = findMatchingClientSub(request);
+            if (client)
             {
-               ClientSubscription* client = findMatchingClientSub(request);
-               if (client)
+               client->dispatch(request);
+            }
+            else
+            {
+               BaseCreator* creator = mDum.findCreator(mId);
+               if (creator)
                {
-                  client->dispatch(request);
+                  ClientSubscription* sub = makeClientSubscription(request);
+                  mClientSubscriptions.push_back(sub);
+                  sub->dispatch(request);
                }
                else
                {
-                  BaseCreator* creator = mDum.findCreator(mId);
-                  if (creator)
-                  {
-                     ClientSubscription* sub = makeClientSubscription(request);
-                     mClientSubscriptions.push_back(sub);
-                     sub->dispatch(request);
-                  }
-                  else
-                  {
                      SipMessage failure;
                      makeResponse(failure, request, 481);
                      mDum.sendResponse(failure);
                      return;
-                  }
                }
             }
-            else // no to tag - unsolicited notify
-            {
-               assert(mServerOutOfDialogRequest == 0);
-               mServerOutOfDialogRequest = makeServerOutOfDialog(request);
-               mServerOutOfDialogRequest->dispatch(request);
-            }
-            break;
-               
-         case PUBLISH:
-            if (mServerPublication == 0)
-            {
-               mServerPublication = makeServerPublication(request);
-            }
-            mServerPublication->dispatch(request);
-            break;
-
-         case REGISTER:
-            if (mServerRegistration == 0)
-            {
-               mServerRegistration = makeServerRegistration(request);
-            }
-            mServerRegistration->dispatch(request);
-            break;
-               
-         default: 
-            InfoLog ( << "In Dialog::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );            
-            // only can be one ServerOutOfDialogReq at a time
-            assert(mServerOutOfDialogRequest == 0);
-            mServerOutOfDialogRequest = makeServerOutOfDialog(request);
-            mServerOutOfDialogRequest->dispatch(request);
-            break;
+         }
+         break;
+        default:
+           assert(0);
+           return;
       }
    }
    else if (msg.isResponse())
    {
-#if 0
-//       //Auth related
-//       if (mDum.mClientAuthManager && !mDialogSet.mCancelled)
-//       {
-//          if (mDialogSet.getCreator())
-//          {
-//             if ( mDum.mClientAuthManager->handle( mDialogSet.getCreator()->getLastRequest(), msg))
-//             {
-//                InfoLog( << "about to retransmit request with digest credentials" );
-//                InfoLog( << mDialogSet.getCreator()->getLastRequest() );
-               
-//                mDum.send(mDialogSet.getCreator()->getLastRequest());
-//                return;
-//             }
-//          }
-//          else
-//          {
-//             SipMessage* lastRequest = 0;            
-//             switch (msg.header(h_CSeq).method())
-//             {
-//                case INVITE:
-//                case CANCEL:
-//                case REFER: 
-//                   if (mInviteSession == 0)
-//                   {
-//                      return;
-//                   }
-//                   else
-//                   {
-//                      lastRequest = &mInviteSession->mLastRequest;
-//                   }
-//                   break;               
-//                case REGISTER:
-//                   if (mClientRegistration == 0)
-//                   {
-//                      return;
-//                   }
-//                   else
-//                   {
-//                      lastRequest = &mClientRegistration->mLastRequest;
-//                   }
-//                   break;               
-//                default:
-//                   break;
-//             }
-//             if ( lastRequest && mDum.mClientAuthManager->handle( *lastRequest, msg ) )
-//             {
-//                InfoLog( << "about to retransmit request with digest credentials" );
-//                InfoLog( << *lastRequest );
-               
-//                mDum.send(*lastRequest);
-//                return;
-//             }
-//          }
-//       }
-#endif
+      if (!mDialogSet.getCreator() ||
+          !(msg.header(h_CSeq).method() == mDialogSet.getCreator()->getLastRequest().header(h_RequestLine).method()))
+      {
+         SipMessage* lastRequest = 0;            
+         switch (msg.header(h_CSeq).method())
+         {
+            case INVITE:
+            case CANCEL:
+            case REFER: 
+               if (mInviteSession != 0)
+               {
+                  //spurious
+                  return;
+               }
+               else
+               {
+                  lastRequest = &mInviteSession->mLastRequest;
+               }
+               break;               
+            default:
+               break;
+         }
+         if ( lastRequest && mDum.mClientAuthManager->handle( *lastRequest, msg ) )
+         {
+            InfoLog( << "about to retransmit request with digest credentials" );
+            InfoLog( << *lastRequest );
+            
+            mDum.send(*lastRequest);
+            return;
+         }
+      }
+      
       const SipMessage& response = msg;
       // !jf! should this only be for 2xx responses? !jf! Propose no as an
       // answer !dcm! what is he on?
@@ -516,40 +438,9 @@ Dialog::dispatch(const SipMessage& msg)
             }
          }
          break;
-         case PUBLISH:
-            // !jf! could assert that no other usages exist
-            if (mClientPublication == 0)
-            {
-               mClientPublication = makeClientPublication(response);
-            }
-            mClientPublication->dispatch(response);
-            break;
-               
-         case REGISTER:
-            // !jf! could assert that no other usages exist
-            if (mClientRegistration == 0)
-            {
-               mClientRegistration = makeClientRegistration(response);
-            }
-            mClientRegistration->dispatch(response);
-            break;
-               
-            // unsolicited - not allowed but commonly implemented
-            // by large companies with a bridge as their logo
-         case NOTIFY: 
-         case INFO:   
-               
-         default:
-         {
-            ClientOutOfDialogReq* req = findMatchingClientOutOfDialogReq(response);
-            if (req == 0)
-            {
-               req = makeClientOutOfDialogReq(response);
-               mClientOutOfDialogRequests.push_back(req);
-            }
-            req->dispatch(response);
-            break;
-         }
+        default:
+           assert(0);
+           return;
       }
    }
 }
@@ -581,21 +472,6 @@ Dialog::findMatchingClientSub(const SipMessage& msg)
    }
    return 0;
 }
-
-ClientOutOfDialogReq*
-Dialog::findMatchingClientOutOfDialogReq(const SipMessage& msg)
-{
-   for (std::list<ClientOutOfDialogReq*>::iterator i=mClientOutOfDialogRequests.begin(); 
-        i != mClientOutOfDialogRequests.end(); ++i)
-   {
-      if ((*i)->matches(msg))
-      {
-         return *i;
-      }
-   }
-   return 0;
-}
-
 
 InviteSessionHandle
 Dialog::getInviteSession()
@@ -671,86 +547,6 @@ Dialog::getServerSubscriptions()
    return handles;
 }
 
-ClientRegistrationHandle 
-Dialog::getClientRegistration()
-{
-   if (mClientRegistration)
-   {
-      return mClientRegistration->getHandle();
-   }
-   else
-   {
-      return ClientRegistrationHandle::NotValid();
-   }
-}
-
-ServerRegistrationHandle 
-Dialog::getServerRegistration()
-{
-   if (mServerRegistration)
-   {
-      return mServerRegistration->getHandle();
-   }
-   else
-   {
-      return ServerRegistrationHandle::NotValid();
-   }
-}
-
-ClientPublicationHandle 
-Dialog::getClientPublication()
-{
-   if (mClientPublication)
-   {
-      return mClientPublication->getHandle();
-   }
-   else
-   {
-      return ClientPublicationHandle::NotValid();      
-   }
-}
-
-ServerPublicationHandle 
-Dialog::getServerPublication()
-{
-   if (mServerPublication)
-   {
-      return mServerPublication->getHandle();
-   }
-   else
-   {
-      return ServerPublicationHandle::NotValid();      
-   }
-}
-
-#if 0
-ClientOutOfDialogReqHandle 
-Dialog::findClientOutOfDialog()
-{
-   if (mClientOutOfDialogRequests)
-   {
-      return mClientOutOfDialogReq->getHandle();
-   }
-   else
-   {
-      throw BaseUsage::Exception("no such client out of dialog",
-                                 __FILE__, __LINE__);
-   }
-}
-#endif
-
-ServerOutOfDialogReqHandle
-Dialog::getServerOutOfDialog()
-{
-   if (mServerOutOfDialogRequest)
-   {
-      return mServerOutOfDialogRequest->getHandle();
-   }
-   else
-   {
-      return ServerOutOfDialogReqHandle::NotValid();
-   }
-}
 
 #if 0
 void
@@ -876,21 +672,7 @@ Dialog::makeClientInviteSession(const SipMessage& response)
    return new ClientInviteSession(mDum, *this, creator->getLastRequest(), creator->getInitialOffer());
 }
 
-ClientRegistration*
-Dialog::makeClientRegistration(const SipMessage& response)
-{
-   BaseCreator* creator = mDialogSet.getCreator();
-   assert(creator);
-   return new ClientRegistration(mDum, *this, creator->getLastRequest());
-}
 
-ClientPublication*
-Dialog::makeClientPublication(const SipMessage& response)
-{
-   BaseCreator* creator = mDialogSet.getCreator();
-   assert(creator);
-   return new ClientPublication(mDum, *this, creator->getLastRequest());
-}
 
 ClientSubscription*
 Dialog::makeClientSubscription(const SipMessage& request)
@@ -898,13 +680,6 @@ Dialog::makeClientSubscription(const SipMessage& request)
    return new ClientSubscription(mDum, *this, request);
 }
 
-ClientOutOfDialogReq*
-Dialog::makeClientOutOfDialogReq(const SipMessage& response)
-{
-   BaseCreator* creator = mDialogSet.getCreator();
-   assert(creator);
-   return new ClientOutOfDialogReq(mDum, *this, creator->getLastRequest());
-}
 
 ServerInviteSession*
 Dialog::makeServerInviteSession(const SipMessage& request)
@@ -916,24 +691,6 @@ ServerSubscription*
 Dialog::makeServerSubscription(const SipMessage& request)
 {
    return new ServerSubscription(mDum, *this, request);
-}
-
-ServerRegistration* 
-Dialog::makeServerRegistration(const SipMessage& request)
-{
-   return new ServerRegistration(mDum, *this, request);
-}
-
-ServerPublication* 
-Dialog::makeServerPublication(const SipMessage& request)
-{
-   return new ServerPublication(mDum, *this, request);
-}
-
-ServerOutOfDialogReq* 
-Dialog::makeServerOutOfDialog(const SipMessage& request)
-{
-   return new ServerOutOfDialogReq(mDum, *this, request);
 }
 
 Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
@@ -966,13 +723,7 @@ void Dialog::possiblyDie()
    {
       if (mClientSubscriptions.empty() &&
           mServerSubscriptions.empty() &&
-          mClientOutOfDialogRequests.empty() &&
-          !(mInviteSession ||
-            mClientRegistration ||
-            mServerRegistration ||
-            mClientPublication ||
-            mServerPublication ||
-            mServerOutOfDialogRequest))
+          !mInviteSession)
       {
          delete this;
       }

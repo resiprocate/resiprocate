@@ -156,6 +156,9 @@
 				RelativePath=".\DialogSetId.cxx">
 			</File>
 			<File
+				RelativePath=".\DialogUsage.cxx">
+			</File>
+			<File
 				RelativePath=".\DialogUsageManager.cxx">
 			</File>
 			<File
@@ -184,6 +187,9 @@
 			</File>
 			<File
 				RelativePath=".\MergedRequestKey.cxx">
+			</File>
+			<File
+				RelativePath=".\NonDialogUsage.cxx">
 			</File>
 			<File
 				RelativePath=".\OutOfDialogReqCreator.cxx">
@@ -278,6 +284,9 @@
 				RelativePath=".\DialogSetId.hxx">
 			</File>
 			<File
+				RelativePath=".\DialogUsage.hxx">
+			</File>
+			<File
 				RelativePath=".\DialogUsageManager.hxx">
 			</File>
 			<File
@@ -306,6 +315,9 @@
 			</File>
 			<File
 				RelativePath=".\MergedRequestKey.hxx">
+			</File>
+			<File
+				RelativePath=".\NonDialogUsage.hxx">
 			</File>
 			<File
 				RelativePath=".\OutOfDialogHandler.hxx">

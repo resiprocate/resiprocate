@@ -1,7 +1,7 @@
 #if !defined(RESIP_CLIENTREGISTRATION_HXX)
 #define RESIP_CLIENTREGISTRATION_HXX
 
-#include "resiprocate/dum/BaseUsage.hxx"
+#include "resiprocate/dum/NonDialogUsage.hxx"
 #include "resiprocate/NameAddr.hxx"
 
 namespace resip
@@ -11,10 +11,10 @@ class SipMessage;
 class BaseCreator;
 
 //!dcm! -- shutdown/deletion API -- end?
-class ClientRegistration: public BaseUsage
+class ClientRegistration: public NonDialogUsage
 {
    public:
-      ClientRegistration(DialogUsageManager& dum, Dialog& dialog, SipMessage& req);
+      ClientRegistration(DialogUsageManager& dum, DialogSet& dialog, SipMessage& req);
       ClientRegistrationHandle getHandle();
 
       void addBinding(const NameAddr& contact);
@@ -35,7 +35,7 @@ class ClientRegistration: public BaseUsage
    protected:
       virtual ~ClientRegistration();
    private:
-      friend class Dialog;
+      friend class DialogSet;
 
       void updateMyContacts(const NameAddrs& allContacts);
       
