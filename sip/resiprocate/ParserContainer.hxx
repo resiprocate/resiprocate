@@ -70,7 +70,7 @@ class ParserContainer : public ParserContainerBase
          return *this;
       }
       
-      bool empty() const { return mParsers.empty(); }
+      virtual bool empty() const { return mParsers.empty(); }
       size_type size() const { return mParsers.size(); }
       void clear()
       {
@@ -93,7 +93,7 @@ class ParserContainer : public ParserContainerBase
       void pop_front() { delete mParsers.front(); mParsers.pop_front(); }
       void pop_back() { delete mParsers.back(); mParsers.pop_back(); }
       
-      ParserContainer reverse()
+      ParserContainer reverse() const
       {
          ParserContainer tmp(*this);
          tmp.mParsers.reverse();
