@@ -206,7 +206,9 @@ class DnsResult
       friend std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
 };
 
-
+std::ostream& operator<<(std::ostream& strm, const DnsResult&);
+std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
+std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
 
 }
 
