@@ -42,7 +42,8 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalContact(),
      mLocalCSeq(0),
      mRemoteCSeq(0),
-     mRemoteTarget()
+     mRemoteTarget(),
+     mDestroying(false)
 {
    assert(msg.isExternal());
 
@@ -173,6 +174,26 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 
 Dialog::~Dialog()
 {
+   mDestroying = true;
+   //does removing an elemnt from a list invalidate iterators?
+   for(std::list<ClientSubscription*>::iterator it = mClientSubscriptions.begin(); 
+       it != mClientSubscriptions.end(); it++)
+   {
+      delete *it;
+   }
+   for(std::list<ClientOutOfDialogReq*>::iterator it = mClientOutOfDialogRequests.begin(); 
+       it != mClientOutOfDialogRequests.end(); it++)
+   {
+      delete *it;
+   }
+   delete mServerSubscription;
+   delete mInviteSession;
+   delete mClientRegistration;
+   delete mServerRegistration;
+   delete mClientPublication;
+   delete mServerPublication;
+   delete mServerOutOfDialogRequest;
+
    mDialogSet.mDialogs.erase(this->getId());
    delete mAppDialog;
    mDialogSet.possiblyDie();
@@ -727,18 +748,21 @@ Dialog::setRemoteTarget(const NameAddr& remoteTarget)
 
 void Dialog::possiblyDie()
 {
-   if (mClientSubscriptions.empty() &&
-       mClientOutOfDialogRequests.empty() &&
-       !(mServerSubscription ||
-         mInviteSession ||
-         mClientRegistration ||
-         mServerRegistration ||
-         mClientPublication ||
-         mServerPublication ||
-         mServerOutOfDialogRequest))
+   if (!mDestroying)
    {
-      delete this;
-   }
+      if (mClientSubscriptions.empty() &&
+          mClientOutOfDialogRequests.empty() &&
+          !(mServerSubscription ||
+            mInviteSession ||
+            mClientRegistration ||
+            mServerRegistration ||
+            mClientPublication ||
+            mServerPublication ||
+            mServerOutOfDialogRequest))
+      {
+         delete this;
+      }
+   }   
 }
 
 ostream& 

@@ -15,10 +15,10 @@ class ServerInviteSession: public InviteSession
       typedef Handle<ServerInviteSession> ServerInviteSessionHandle;
       ServerInviteSessionHandle getHandle();
 
-      /// Moves the state of the call to connected and sends a 200
+      /// Returns a 200 the user should end to accept the call
       SipMessage& accept();
       
-      /// Sends an provisional response (a 1xx but not 100). This may contain an
+      /// Returns provisional response (a 1xx but not 100). This may contain an
       /// offer or answer depending on if setOffer or setAnswer was called
       /// before this.
       SipMessage& provisional(int statusCode);
@@ -28,7 +28,7 @@ class ServerInviteSession: public InviteSession
 
       virtual void send(SipMessage& msg);
 
-      /// Makes the dialog end. Depending ont eh current state, this might
+      /// Makes the dialog end. Depending on the current state, this might
       /// results in BYE or CANCEL being sent.
       virtual SipMessage& end();
       
