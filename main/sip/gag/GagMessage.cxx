@@ -61,8 +61,9 @@ GagMessage::getMessage(istream &is)
 ostream &
 GagMessage::serialize(ostream &os) const
 {
-  os.write((char *)&(int)messageType, sizeof(int));
-  return os;
+    int t = static_cast<int>(messageType);
+    os.write(reinterpret_cast<char *>(&t), sizeof(t));
+    return os;
 }
 
 // Helper functions for I/O
@@ -71,7 +72,7 @@ void
 GagMessage::serialize(ostream &os, const Data& data)
 {
   int size = data.size();
-  os.write((char *)&size, sizeof(int));
+  os.write(reinterpret_cast<char *>(&size), sizeof(int));
   os.write(data.data(), data.size());
 }
 
@@ -85,7 +86,7 @@ void
 GagMessage::serialize(ostream &os, const bool& flag)
 {
   int size = 1;
-  os.write((char *)&size, sizeof(int));
+  os.write(reinterpret_cast<char *>(&size), sizeof(int));
   os.put(flag?1:0);
 }
 
