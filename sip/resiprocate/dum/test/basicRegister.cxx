@@ -61,7 +61,7 @@ main (int argc, char** argv)
     Log::initialize(Log::COUT, (resip::Log::Level)level, argv[0]);
 
    SipStack clientStack;
-   clientStack.addTransport(UDP, 5060);
+   clientStack.addTransport(UDP, 15060);
    NameAddr aor("sip:502@jasomi.com");
 
    Client client;
