@@ -7,7 +7,6 @@
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TimerQueue.hxx"
-#include "resiprocate/DnsResolver.hxx"
 
 namespace resip
 {
@@ -84,7 +83,6 @@ class TransactionController
 
       unsigned long StatelessIdCounter;
 
-      friend class DnsResolver;
       friend class StatelessHandler;
       friend class TransactionState;
       friend class TransportSelector;
