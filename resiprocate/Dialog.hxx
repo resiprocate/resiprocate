@@ -80,6 +80,12 @@ class Dialog
       // resets to an empty dialog with no state
       void clear();
       
+      // set how many seconds in the futre this dialog will expire
+      void setExpirySeconds( int secondsInFuture );
+      int  getExpirySeconds(); // get number Seconds till this expires, it can
+                               // be negative 
+      
+      
    private:
       SipMessage* makeRequestInternal(MethodTypes method);
       void incrementCSeq(SipMessage& request);
@@ -107,6 +113,8 @@ class Dialog
       NameAddr mLocalUri;
 
       bool secure; // indicates the messages in this Dialog must use TLS
+
+      UInt64 expireyTimeAbsoluteMs;
       
       friend std::ostream& operator<<(std::ostream& strm, Dialog& d);
 };
