@@ -12,6 +12,16 @@ int
 main()
 {
    {
+      cerr << "test header creation" << endl;
+      SipMessage message;
+
+      assert(message.header(h_CSeq).isParsed() == false);
+      message.header(h_CSeq).sequence() = 123456;
+      assert(message.header(h_CSeq).sequence() == 123456);
+
+   }
+   
+   {
       cerr << "test multiheaders access" << endl;
 
       char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
