@@ -13,16 +13,19 @@ ContentsFactory<Pkcs7SignedContents> Pkcs7SignedContents::Factory;
 Pkcs7Contents::Pkcs7Contents()
    : Contents(getStaticType()),
      mText()
-{}
+{
+}
 
 
 Pkcs7SignedContents::Pkcs7SignedContents()
-{}
+{
+}
 
 Pkcs7Contents::Pkcs7Contents(const Data& txt)
    : Contents(getStaticType()),
      mText(txt)
-{}
+{
+}
 
 Pkcs7Contents::Pkcs7Contents(const Data& txt, const Mime& contentsType)
    : Contents(contentsType),
