@@ -130,7 +130,7 @@ CSeqCategory::parse(ParseBuffer& pb)
 {
    const char* start;
    start = pb.skipWhitespace();
-   mSequence = atoi(start);
+   mSequence = pb.integer();
 
    pb.skipNonWhitespace();
    start = pb.skipWhitespace();
@@ -142,7 +142,7 @@ CSeqCategory::parse(ParseBuffer& pb)
 std::ostream& 
 CSeqCategory::encode(std::ostream& str) const
 {
-   str << MethodNames[mMethod] << Symbols::SPACE << mSequence;
+   str << mSequence << Symbols::SPACE << MethodNames[mMethod];
    return str;
 }
 
@@ -216,7 +216,7 @@ void
 IntegerCategory::parse(ParseBuffer& pb)
 {
    const char* start = pb.skipWhitespace();
-   mValue = atoi(start);
+   mValue = pb.integer();
    pb.skipToChar('(');
    if (!pb.eof())
    {
@@ -350,7 +350,7 @@ Via::parse(ParseBuffer& pb)
    {
       startMark = pb.skipChar();
       pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::SEMI_COLON);
-      mSentPort = atoi(startMark);
+      mSentPort = pb.integer();
    }
    else
    {
@@ -581,7 +581,7 @@ StatusLine::parse(ParseBuffer& pb)
    mSipVersion = pb.data(start);
 
    start = pb.skipWhitespace();
-   mResponseCode = atoi(start);
+   mResponseCode = pb.integer();
    start = pb.skipNonWhitespace();
 
    start = pb.skipChar(' ');

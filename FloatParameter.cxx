@@ -17,7 +17,7 @@ FloatParameter::FloatParameter(ParameterTypes::Type type,
    pb.skipChar();
 
    // .dlb. not zero terminated; no error detection
-   mValue = atof(pb.position());
+   mValue = pb.floatVal();
 }
 
 FloatParameter::FloatParameter(ParameterTypes::Type type)
