@@ -210,8 +210,9 @@ class NameAddr : public ParserCategory
       mutable Data mDisplayName;
 
    private:
+#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
       //disallow the following parameters from being accessed in NameAddr
-      //this works on gcc 3.2 so far
+      //this works on gcc 3.2 so far. definitely does not work on gcc 2.95 on qnx
       using ParserCategory::param;
       Transport_Param::DType& param(const Transport_Param& paramType) const;
       Method_Param::DType& param(const Method_Param& paramType) const;
@@ -219,6 +220,7 @@ class NameAddr : public ParserCategory
       Maddr_Param::DType& param(const Maddr_Param& paramType) const;
       Lr_Param::DType& param(const Lr_Param& paramType) const;
       Comp_Param::DType& param(const Comp_Param& paramType) const;
+#endif
 };
 typedef ParserContainer<NameAddr> NameAddrs;
 
