@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2002/11/13 17:07:39 jason Exp $
+# $Id: Makefile,v 1.8 2002/11/14 17:26:52 jason Exp $
 
 BUILD = ../../../build
 
@@ -12,6 +12,7 @@ PACKAGES += OPENSSL
 endif
 
 TESTPROGRAMS =	SipTortureTests.cxx \
+		test1.cxx \
 		test2.cxx \
 	        testSipStack1.cxx \
 	        testSipMessage.cxx \
