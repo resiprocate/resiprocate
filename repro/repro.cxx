@@ -55,7 +55,10 @@ main(int argc, char** argv)
    }
 
    StackThread stackThread(stack);
+
+   Registrar registrar;
    InMemoryRegistrationDatabase regData;
+   MasterProfile profile;
 
    /* Initialize a proxy */
    RequestProcessorChain requestProcessors;
@@ -95,8 +98,6 @@ main(int argc, char** argv)
    }
  
    UserDb userDb;
-   WebAdmin admin(userDb);
-   WebAdminThread adminThread(admin);
    
    Proxy proxy(stack, requestProcessors, userDb);
    for (std::vector<Uri>::const_iterator i=args.mDomains.begin(); 
@@ -105,9 +106,10 @@ main(int argc, char** argv)
       proxy.addDomain(i->host(), i->port());
    }
 
-   Registrar registrar;
-   MasterProfile profile;
-      
+   
+   WebAdmin admin(userDb,regData);
+   WebAdminThread adminThread(admin);
+
    profile.clearSupportedMethods();
    profile.addSupportedMethod(resip::REGISTER);
 
