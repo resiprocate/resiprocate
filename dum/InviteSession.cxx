@@ -134,13 +134,13 @@ InviteSession::setAnswer(const SdpContents* sdp)
 }
 
 const SdpContents* 
-InviteSession::getLocalSdp()
+InviteSession::getLocalSdp() const
 {
    return mCurrentLocalSdp;
 }
 
 const SdpContents* 
-InviteSession::getRemoteSdp()
+InviteSession::getRemoteSdp() const
 {
    return mCurrentRemoteSdp;
 }
@@ -215,6 +215,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
             if(mSessionInterval >= 90)
             {
                mLastRequest.header(h_SessionExpires).value() = mSessionInterval;
+
                mLastRequest.header(h_SessionExpires).param(p_refresher) = Data(mSessionRefresherUAS ? "uas" : "uac");
             }
             send(mLastRequest); 
@@ -630,11 +631,17 @@ InviteSession::dispatch(const SipMessage& msg)
          else if(msg.header(h_CSeq).method() == BYE && msg.isRequest())
          {
 	        // Inbound BYE crosses with outbound REINVITE
+
 	        mState = Terminated;
+
 	 
+
             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(),msg);
+
 	        mDialog.makeResponse(mLastResponse, msg, 200);
+
             send(mLastResponse);
+
          }
          else
          {
