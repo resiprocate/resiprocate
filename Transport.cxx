@@ -1,10 +1,14 @@
+
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/sockio.h>
+#include <sys/ioctl.h>
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <netinet/in.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
+
+
 
 #include <iostream>
 
@@ -68,7 +72,8 @@ Transport::Transport(const Data& sendhost, int portNum, const Data& nic, Fifo<Me
          int si = sizeof(ifr->ifr_name) + sizeof(struct sockaddr);
          tl -= si;
          ptr += si;
-         char* name = ifr->ifr_ifrn.ifrn_name;
+         //char* name = ifr->ifr_ifrn.ifrn_name;
+         char* name = ifr->ifr_name;
  
          struct ifreq ifr2;
          ifr2 = *ifr;
@@ -81,7 +86,7 @@ Transport::Transport(const Data& sendhost, int portNum, const Data& nic, Fifo<Me
          char str[256];
          inet_ntop(AF_INET, (u_int32_t*)(&addr->sin_addr.s_addr), str, sizeof(str));
          DebugLog (<< "Considering: " << name << " -> " << str);
-      
+
          if (nic == Data(name))
          {
             mIpAddress = str;
