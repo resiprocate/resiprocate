@@ -105,6 +105,8 @@ defineHeader(SubscriptionState, "Subscription-State", Token);
 defineHeader(SIPETag, "SIP-ETag", Token);
 defineHeader(SIPIfMatch, "SIP-If-Match", Token);
 
+defineHeader(Identity, "Identity", Token);
+
 defineMultiHeader(AllowEvents, "Allow-Events", Token);
 // explicitly declare to avoid h_AllowEventss, ugh
 H_AllowEventss resip::h_AllowEvents;
@@ -134,6 +136,8 @@ defineHeader(ContentType, "Content-Type", Mime);
 //====================
 // GenericURIs:
 //====================
+defineHeader(IdentityInfo, "Identity-Info", GenericURI);
+
 typedef ParserContainer<GenericURI> GenericURIs;
 defineMultiHeader(CallInfo, "Call-Info", GenericURI);
 defineMultiHeader(AlertInfo, "Alert-Info", GenericURI);

@@ -92,6 +92,10 @@ class Headers
          defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC ????"),
          defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3262"),
          defineHeader(RAck, "RAck", RAckCategory, "RFC 3262"),
+
+         defineHeader(Identity, "Identity", Token, "draft-sip-identity-03"),
+         defineHeader(IdentityInfo, "Identity-Info", GenericURI, "draft-sip-identity-03"),
+
          defineHeader(ContentLength, "Content-Length", Token, "RFC ????"),
 
          MAX_HEADERS,
