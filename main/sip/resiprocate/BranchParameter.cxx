@@ -109,13 +109,13 @@ BranchParameter::operator=(const BranchParameter& other)
 }
 
 bool
-BranchParameter::hasMagicCookie()
+BranchParameter::hasMagicCookie() const
 {
    return mHasMagicCookie;
 }
 
 const Data& 
-BranchParameter::getTransactionId()
+BranchParameter::getTransactionId() const
 {
    return mTransactionId;
 }
