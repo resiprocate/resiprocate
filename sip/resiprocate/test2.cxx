@@ -23,16 +23,17 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-   Log::initialize(Log::COUT, Log::INFO, argv[0]);
+   Log::initialize(Log::COUT, argc > 1 ? Log::toLevel(argv[1]) :  Log::INFO, argv[0]);
    
    SipStack stack;
+   stack.addTransport(Transport::UDP, 5070);
 
    NameAddr dest;
    dest.uri().scheme() = "sip";
    dest.uri().user() = "fluffy";
    dest.uri().host() = "localhost";
    dest.uri().port() = 5070;
-   dest.uri().param(p_transport) == "udp";
+   dest.uri().param(p_transport) = "udp";
    
    NameAddr from = dest;
    from.uri().port() = 5070;
@@ -40,7 +41,7 @@ main(int argc, char* argv[])
    
    struct timeval tv;
    
-   for (int i=0; i<100000; i++)
+   for (int i=0; i<1; i++)
    {
       auto_ptr<SipMessage> message = auto_ptr<SipMessage>(Helper::makeInvite( dest, from, from));
 
@@ -59,12 +60,13 @@ main(int argc, char* argv[])
          InfoLog(<< "Error " << e << " " << strerror(e) << " in select");
       }
 
+      stack.send(*message);
       stack.process(&fdSet);
-
+      
       SipMessage* received = (stack.receive());
       if (received)
       {
-         DebugLog (<< "got: " << received->brief());
+         InfoLog (<< "got: " << received->brief());
          assert (received->header(h_RequestLine).uri().host() == "localhost");
          assert (received->header(h_To).uri().host() == "localhost");
          assert (received->header(h_From).uri().host() == "localhost");

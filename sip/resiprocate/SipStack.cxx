@@ -11,6 +11,7 @@
 using namespace Vocal2;
 
 #define VOCAL_SUBSYSTEM Subsystem::SIP
+
 SipStack::SipStack(bool multiThreaded)
   : mExecutive(*this),
     mTransportSelector(*this),
