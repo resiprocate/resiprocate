@@ -16,6 +16,48 @@ class TestData
          Log::initialize(Log::COUT, Log::DEBUG, Data::Empty);
 
          {
+            Data needsEscape("Escape % me");
+            cerr << "original " << needsEscape << endl;
+            cerr << "escaped " << needsEscape.escaped() << endl;
+            cerr << "unescaped " << needsEscape.escaped().unescaped() << endl;
+
+            assert(needsEscape.escaped().unescaped() == needsEscape);
+         }
+
+         {
+            Data needsEscape("Escape % me");
+            needsEscape += " \";/?:@&=+%$,/t-_.!~*'()";
+            needsEscape += char(0);
+            needsEscape += char(254);
+            needsEscape += char(17);
+
+            cerr << needsEscape.escaped() << endl;
+
+            assert(needsEscape.escaped().unescaped() == needsEscape);
+         }
+
+         {
+            Data needsNoEscape("dontescapeme");
+
+            cerr << needsNoEscape.escaped() << endl;
+
+            assert(needsNoEscape.escaped().unescaped() == needsNoEscape);            
+         }
+
+         {
+            Data s1;
+            assert(s1.convertInt() == 0);
+            
+            Data s2("12foo");
+            assert(s2.convertInt() == 12);
+            
+            Data s3("12");
+            assert(s3.convertInt() == 12);
+            
+            Data s4("foo");
+            assert(s4.convertInt() == 0);
+         }
+         {
             Data s;
             s = "some text";
             s += Data::Empty;
