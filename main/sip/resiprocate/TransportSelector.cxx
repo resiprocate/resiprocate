@@ -126,8 +126,8 @@ TransportSelector::addTransport(TransportType protocol,
    {
       ErrLog(<< "Failed to create transport: " 
              << (version == V4 ? "V4" : "V6") << " "
-             << Tuple::toData(protocol) << " " << port << " on "  
-             << (ipInterface.empty() ? "ANY" : ipInterface));
+             << Tuple::toData(protocol) << " " << port << " on "
+             << (ipInterface.empty() ? "ANY" : ipInterface.c_str()));
       return false;
    }
 
