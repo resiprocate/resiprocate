@@ -73,7 +73,7 @@ main(int argc, char* argv[])
    cerr << "*!Connection::Connection & preparser tests!*" << endl;
    
    cerr << "Message in two chunks" << endl;   
-#if 0
+#if 1
    {
       int chunk = strlen(onemsg) * 2 / 3;
          
@@ -122,10 +122,11 @@ main(int argc, char* argv[])
 
       cerr << msg << endl;
    }
+
    {
       Data msgData(smallMessage);
       Fifo<Message> fifo;
-      ConnectionMap::Connection conn;
+      Connection conn;
       
       std::pair<char* const, size_t> writePair = conn.getWriteBuffer();
 
@@ -143,10 +144,11 @@ main(int argc, char* argv[])
       }
       assert(buf == msgData);
    }
+
    {
       Data msgData(smallMessageWithBody);
       Fifo<Message> fifo;
-      ConnectionMap::Connection conn;
+      Connection conn;
       
       std::pair<char* const, size_t> writePair = conn.getWriteBuffer();
 
@@ -165,10 +167,11 @@ main(int argc, char* argv[])
       }
       assert(buf == msgData);
    }
+
    {
       Data msgData(smallMessageWithLargeBody);
       Fifo<Message> fifo;
-      ConnectionMap::Connection conn;
+      Connection conn;
       
       size_t pos = 0;
       while (pos < msgData.size())
@@ -193,10 +196,11 @@ main(int argc, char* argv[])
       }
       assert(buf == msgData);
    }
+
    {
       Data msgData(onemsg);
       Fifo<Message> fifo;
-      ConnectionMap::Connection conn;
+      Connection conn;
       
       size_t pos = 0;
       while (pos < msgData.size())
@@ -212,8 +216,12 @@ main(int argc, char* argv[])
       }
       assert(fifo.messageAvailable());
       SipMessage* msg = dynamic_cast<SipMessage*>(fifo.getNext());
-      cerr << *msg << endl;
+
       assert(msg);
+      cerr << *msg << endl;
+
+      // remove the received parameter to allow strict matching
+      msg->header(h_Vias).front().remove(p_received);
 
       auto_ptr<SipMessage> shouldMatch(TestSupport::makeMessage(msgData));
       Data buf;
@@ -227,12 +235,15 @@ main(int argc, char* argv[])
          s << *shouldMatch;
       }
 
+      cerr << "!! " << buf << endl;
+      cerr << "!! " << otherBuf << endl;
       assert(buf == otherBuf);
    }
+
    {
       Data msgData(longWithBody);
       Fifo<Message> fifo;
-      ConnectionMap::Connection conn;
+      Connection conn;
       
       size_t pos = 0;
       while (pos < msgData.size())
@@ -440,4 +451,6 @@ main(int argc, char* argv[])
       }
 
    }
+
+   cerr << endl << "All OK" << endl;
 }
