@@ -576,6 +576,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          mDialog.send(bye);
 
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          break;
       }
 
@@ -583,6 +584,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case OnGeneralFailure:
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          mDum.destroy(this);
          break;
 
@@ -661,6 +663,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          mDialog.send(bye);
 
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          break;
       }
 
@@ -671,6 +674,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          mDum.destroy(this);
          break;
 
@@ -711,6 +715,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          mDialog.send(bye);
 
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          mDum.destroy(this);
          break;
       }
@@ -739,6 +744,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       case On2xxAnswer:
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          {
             SipMessage ack;
             mDialog.makeRequest(ack, ACK);
@@ -757,6 +763,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          mDum.destroy(this);
          break;
 
@@ -795,6 +802,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case On1xxOffer:
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          {
             SipMessage ack;
             mDialog.makeRequest(ack, ACK);
@@ -818,6 +826,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          mDum.destroy(this);
          break;
 
@@ -871,6 +880,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On1xxOffer:
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          {
             SipMessage ack;
             mDialog.makeRequest(ack, ACK);
@@ -894,6 +904,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          mDum.destroy(this);
          break;
 
@@ -933,6 +944,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       case On2xxOffer:
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          {
             SipMessage ack;
             mDialog.makeRequest(ack, ACK);
@@ -956,6 +968,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       case OnInviteFailure:
       case OnGeneralFailure:
          handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure);
          mDum.destroy(this);
          break;
 
