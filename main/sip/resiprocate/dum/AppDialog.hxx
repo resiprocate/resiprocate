@@ -16,6 +16,10 @@ class AppDialog : public Handled
       virtual ~AppDialog();
 
       AppDialogHandle getHandle();
+      
+      //for ease of dealing with refer
+      ServerSubscriptionHandle getServerSubsription();
+      InviteSessionHandle getInviteSession();
 };
 
 }
