@@ -73,6 +73,7 @@ LazyParser::checkParsed() const
    {
       LazyParser* ncThis = const_cast<LazyParser*>(this);
       ncThis->mIsParsed = true;
+      assert(mHeaderField);
       ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength, errorContext());
       ncThis->parse(pb);
    }
