@@ -14,7 +14,9 @@ class Data;
 // good defaults for the Profile
 class Profile
 {
-   public:
+   public:  
+      struct DigestCredential;
+      
       Profile();
       
       void setDefaultAor(const NameAddr& from);
@@ -79,7 +81,7 @@ class Profile
       //@}
       
       DigestCredentialHandler* getDigestHandler();
-      const Data& getDigestPassword( const Data& realm, const Data& user );
+      const DigestCredential& getDigestCredential( const Data& realm );
       
    private:
       NameAddr mAor;
