@@ -71,7 +71,7 @@ DataParameter::encode(ostream& stream) const
       // calling exists(p_foo) before calling param(p_foo)
       if (mValue.empty())
       {
-         InfoLog (<< "Warning: bad: mValue " << getName() << " is empty");
+         ErrLog(<< "Accessing defaulted DataParameter: '" << getName() << "'");
       }
       assert(!mValue.empty()); // !jf!  probably should throw here
       return stream << getName() << Symbols::EQUALS << mValue;
