@@ -48,6 +48,25 @@
 using namespace resip;
 using namespace std;
 
+DialogUsageManager::DialogUsageManager(Security* security, AsyncProcessHandler* handler) : 
+   mMasterProfile(0),
+   mRedirectManager(new RedirectManager()),
+   mInviteSessionHandler(0),
+   mClientRegistrationHandler(0),
+   mServerRegistrationHandler(0),
+   mRedirectHandler(0),
+   mDialogSetHandler(0),
+   mRegistrationPersistenceManager(0),
+   mClientPagerMessageHandler(0),
+   mServerPagerMessageHandler(0),
+   mAppDialogSetFactory(new AppDialogSetFactory()),
+   mStack(new SipStack(security, handler, false)),
+   mStackThread(*mStack),
+   mDumShutdownHandler(0),
+   mShutdownState(Running)
+{
+}
+
 DialogUsageManager::DialogUsageManager(std::auto_ptr<SipStack> stack) :
    mMasterProfile(0),
    mRedirectManager(new RedirectManager()),
@@ -116,6 +135,12 @@ DialogUsageManager::addTransport( TransportType protocol,
 {
    mStack->addTransport(protocol, port, version, ipInterface,
                         sipDomainname, privateKeyPassPhrase, sslType);
+}
+
+SipStack& 
+DialogUsageManager::getSipStack()
+{
+   return *mStack;
 }
 
 Security&
