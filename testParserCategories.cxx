@@ -374,9 +374,24 @@ main(int arc, char** argv)
    }
 
    {
+     char* genericString = "<http://www.google.com>;purpose=icon;fake=true";
+      HeaderFieldValue hfv(genericString, strlen(genericString));
 
+      GenericURI generic(&hfv);
 
+      assert(generic.uri() == "http://www.google.com");
+      cerr << generic.param(p_purpose) << endl;
+      assert(generic.param(p_purpose) == "icon");
+      assert(generic.param("fake") == "true");
+
+      stringstream s;
+      generic.encode(s);
+
+      cerr << s.str() << endl;
+      
+      assert(s.str() == "<http://www.google.com>;purpose=icon;fake=true");
    }
+
 
    cerr << "\nTEST OK" << endl;
 }
@@ -433,3 +448,7 @@ main(int arc, char** argv)
  * <http://www.vovida.org/>.
  *
  */
+
+/* Local Variables: */
+/* c-file-style: "ellemtel" */
+/* End: */
