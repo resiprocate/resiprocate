@@ -43,7 +43,7 @@ GenericLog(VOCAL_SUBSYSTEM, Vocal2::Log::INFO, args_)
 do                                                                              \
 {                                                                               \
    const Vocal2::Log::ThreadSetting* setting = Vocal2::Log::getThreadSetting(); \
-   if (setting > 0)                                                             \
+   if (setting)                                                                 \
    {                                                                            \
       if (level_ <= setting->level)                                             \
       {                                                                         \
