@@ -1,108 +1,74 @@
-#if !defined(RESIP_TUPLE_HXX)
-#define RESIP_TUPLE_HXX
+#if !defined(RESIP_ConnectionMgr_hxx)
+#define RESIP_ConnectionMgr_hxx 
 
-#if defined(HAVE_CONFIG_H)
-#include "resiprocate/config.hxx"
-#endif
+#include <memory>
+#include <list>
 
 #include "resiprocate/os/HashMap.hxx"
-
-#include "resiprocate/os/compat.hxx"
-
-#ifdef WIN32
-
-#else
-#include <netinet/in.h>
-#endif
+#include "resiprocate/SipMessage.hxx"
+#include "resiprocate/Connection.hxx"
 
 namespace resip
 {
 
-typedef enum 
+class ConnectionManager
 {
-   UNKNOWN_TRANSPORT = 0,
-   UDP,
-   TCP,
-   TLS,
-   SCTP,
-   DCCP,
-   MAX_TRANSPORT
-} TransportType;
-
-class Data;
-class Transport;
-
-// WARNING!!
-// When you change this structure, make sure to update the hash function,
-// operator== and operator< to be consistent with the new structure. For
-// instance, the Connection* and Transport* change value in the Tuple over
-// its lifetime so they must not be included in the hash or comparisons. 
-
-typedef unsigned long ConnectionId;
-
-class Tuple
-{
+      friend class Connection;
    public:
-      Tuple();
-#ifdef USE_IPV6
-      Tuple(const in6_addr& pipv6,
-            int pport,
-            TransportType ptype);
-#endif
-      Tuple(const in_addr& pipv4,
-            int pport,
-            TransportType ptype);
-      Tuple(const sockaddr& addr, 
-            TransportType ptype);
-      
-      // convert from a tuple to a sockaddr structure
-      void toSockaddr(struct sockaddr& addrOut) const;
-
-      bool operator<(const Tuple& rhs) const;
-      bool operator==(const Tuple& rhs) const;
-      
-      bool v6;
-      struct in_addr ipv4;
-#ifdef USE_IPV6
-      struct in6_addr ipv6;
-#endif
-
-      int port;
-      TransportType transportType;
-      Transport* transport;
-      ConnectionId connectionId;
-      
-      static TransportType toTransport( const Data& );
-      static const Data& toData( TransportType );
-};
-
-std::ostream& operator<<(std::ostream& strm, const Tuple& tuple);
-
-}
-
-#if  defined(__INTEL_COMPILER )
-
-namespace std
-{
-size_t hash_value(const resip::Tuple& tuple);
-}
-
-#elif defined(HASH_MAP_NAMESPACE)
-
-namespace __gnu_cxx
-{
-
-struct hash<resip::Tuple>
-{
-      size_t operator()(const resip::Tuple& addrPort) const;
-};
+      // smallest time to reuse
+      static const UInt64 MinLastUsed;
+      // largest unused time to reclaim
+      static const UInt64 MaxLastUsed;
  
+      ConnectionManager();
+      ~ConnectionManager();
+
+      // !jf! May want to add an interface that returns a Connection* given a Tuple
+      Connection* findConnection(const Tuple& tuple);
+
+      // Return 0 if nothing to do
+      Connection* getNextRead();
+      Connection* getNextWrite();
+      void buildFdSet(FdSet& fdset);
+      
+   private:
+      void addToWritable(Connection* conn); // add the specified conn to end
+      void removeFromWritable(); // remove the current mWriteMark
+
+      // release excessively old connections (free up file descriptors)
+      void gc(UInt64 threshhold = ConnectionManager::MaxLastUsed);
+
+      typedef HashMap<Tuple, Connection*> AddrMap;
+      typedef HashMap<ConnectionId, Connection*> IdMap;
+
+      void addConnection(Connection* connection);
+      void removeConnection(Connection* connection);
+
+      // move to youngest 
+      // !jf! I think it would be reasonable to look for oldest when time comes
+      // to delete rather than touch each time
+      void touch(Connection* connection);
+      
+      AddrMap mAddrMap;
+      IdMap mIdMap;
+      std::list<Connection*> mWriteSet;
+      std::list<Connection*>::iterator mWriteMark;
+
+      std::list<Connection*> mReadSet;
+      std::list<Connection*>::iterator mReadMark;
+
+      // least recently used
+      Connection mPreYoungest;
+      Connection mPostOldest;
+      ConnectionId mConnectionIdGenerator;
+
+      friend class TcpBaseTransport;
+};
+
 }
 
-#endif // hash stuff
-
-
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

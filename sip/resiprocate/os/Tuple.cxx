@@ -1,10 +1,14 @@
+#if defined(HAVE_CONFIG_H)
+#include "resiprocate/config.hxx"
+#endif
+
 #include <iostream>
 #include <string.h>
 #include <sys/types.h>
+#include <netinet/in.h>
 #include <cassert>
 
-#ifndef WIN32
-#include <sys/socket.h>
+#if !defined (WIN32)
 #include <arpa/inet.h>
 #endif
 
@@ -19,7 +23,7 @@ Tuple::Tuple() :
    port(0), 
    transportType(UNKNOWN_TRANSPORT), 
    transport(0),
-   connection(0)
+   connectionId(0)
 {
    memset(&ipv4, 0, sizeof(ipv4));
 #ifdef USE_IPV6
@@ -35,7 +39,7 @@ Tuple::Tuple(const in_addr& pipv4,
      port(pport),
      transportType(ptype),
      transport(0),
-     connection(0)
+     connectionId(0)
 {
 }
 
@@ -48,11 +52,52 @@ Tuple::Tuple(const in6_addr& pipv6,
      port(pport),
      transportType(ptype),
      transport(0),
-     connection(0)
+     connectionId(0)
 {
 }
 #endif
 
+Tuple::Tuple(const struct sockaddr& addr, TransportType ptype) : 
+   v6(addr.sa_family == AF_INET6),
+   transportType(ptype),
+   transport(0),
+   connectionId(0)
+{
+   if (v6)
+   {
+      ::memset( &ipv6, 0, sizeof(ipv6) );      
+      sockaddr_in6* addr6 = (sockaddr_in6*)&addr;
+      ipv6 = addr6->sin6_addr;
+      port = ntohs(addr6->sin6_port);
+   }
+   else
+   {
+      ::memset( &ipv4, 0, sizeof(ipv4) );      
+      sockaddr_in* addr4 = (sockaddr_in*)&addr;
+      ipv4 = addr4->sin_addr;
+      port = ntohs(addr4->sin_port);
+   }
+}
+
+void 
+Tuple::toSockaddr(sockaddr& addrOut) const
+{
+   ::memset( &addrOut, 0, sizeof(addrOut) );
+   if (v6)
+   {
+      sockaddr_in6* addr = reinterpret_cast<sockaddr_in6*>(&addrOut);
+      addr->sin6_family = AF_INET6;
+      addr->sin6_port = htons(port);
+      addr->sin6_addr = ipv6;
+   }
+   else
+   {
+      sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(&addrOut);
+      addr->sin_family = AF_INET;
+      addr->sin_port = htons(port);
+      addr->sin_addr = ipv4;
+   }
+}
 
 bool Tuple::operator==(const Tuple& rhs) const
 {
@@ -87,7 +132,7 @@ bool Tuple::operator<(const Tuple& rhs) const
    
    if (v6 && rhs.v6)
    {
-      c = memcmp(&ipv4, &rhs.ipv4, sizeof(ipv4));
+      c = memcmp(&ipv6, &rhs.ipv6, sizeof(ipv6));
    }
    else if (!v6 && !rhs.v6)
    {
@@ -154,8 +199,8 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 	       << Tuple::toData(tuple.transportType) 
 	       << " ,transport="
 	       << tuple.transport 
-           << " ,connection=" 
-           << tuple.connection
+           << " ,connectionId=" 
+           << tuple.connectionId
 	       << " ]";
 	
 	return ostrm;

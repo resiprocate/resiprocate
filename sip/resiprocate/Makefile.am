@@ -31,7 +31,7 @@ libresiprocate_la_SOURCES = \
 	ApplicationSip.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
-	ConnectionMap.cxx \
+	ConnectionManager.cxx \
 	Contents.cxx \
 	DataParameter.cxx \
 	Dialog.cxx \
@@ -83,9 +83,12 @@ libresiprocate_la_SOURCES = \
 	StatelessHandler.cxx \
 	Subscription.cxx \
 	Symbols.cxx \
+	TcpBaseTransport.cxx \
+	TcpConnection.cxx \
 	TcpTransport.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
+	TlsConnection.cxx \
 	TlsTransport.cxx \
 	TransactionController.cxx \
 	TransactionMap.cxx \
@@ -106,7 +109,7 @@ resiprocate_include_HEADERS = \
 	ApplicationSip.hxx \
 	BranchParameter.hxx \
 	Connection.hxx \
-	ConnectionMap.hxx \
+	ConnectionManager.hxx \
 	Contents.hxx \
 	DataParameter.hxx \
 	Dialog.hxx \
@@ -168,8 +171,11 @@ resiprocate_include_HEADERS = \
 	Subscription.hxx \
 	Symbols.hxx \
 	TcpTransport.hxx \
+	TcpBaseTransport.hxx \
+	TcpConnection.hxx \
 	TimerMessage.hxx \
 	TimerQueue.hxx \
+	TlsConnection.hxx \
 	TlsTransport.hxx \
 	TransactionController.hxx \
 	TransactionMap.hxx \
@@ -214,7 +220,6 @@ resiprocate_os_include_HEADERS = \
 	os/ParseBuffer.hxx \
 	os/RWMutex.hxx \
 	os/Random.hxx \
-	os/RandomHex.hxx \
 	os/RecursiveMutex.hxx \
 	os/Socket.hxx \
 	os/Subsystem.hxx \

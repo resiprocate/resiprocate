@@ -52,25 +52,19 @@ TransportSelector::~TransportSelector()
 void 
 TransportSelector::addTransport( TransportType protocol, 
                                  int port,
-                                 const Data& hostName,
-                                 const Data& nic) 
+                                 bool ipv6,
+                                 const Data& ipInterface)
 {
    assert( port >  0 );
 
-   Data hostname = hostName;
-   if ( hostname.empty() )
-   {
-	   hostname = DnsUtil::getLocalHostName();
-   }
-   
    Transport* transport=0;
    switch ( protocol )
    {
       case UDP:
-         transport = new UdpTransport(mStateMacFifo, port, hostname, true);
+         transport = new UdpTransport(mStateMacFifo, port, ipInterface, true);
          break;
       case TCP:
-         transport = new TcpTransport(mStateMacFifo, port, hostname, true);
+         transport = new TcpTransport(mStateMacFifo, port, ipInterface, !ipv6);
          break;
       default:
          assert(0);
@@ -89,25 +83,20 @@ void
 TransportSelector::addTlsTransport(const Data& domainName, 
                                    const Data& keyDir, const Data& privateKeyPassPhrase,
                                    int port,
-                                   const Data& hostName,
-                                   const Data& nic) 
+                                   bool ipv6,
+                                   const Data& ipInterface)
 {
 #if defined( USE_SSL )
    assert( port >  0 );
    assert(mTlsTransports.count(domainName) == 0);
 
-   Data hostname = hostName;
-   if ( hostname.empty() )
-   {
-	   hostname = DnsUtil::getLocalHostName();
-   }
    assert (port != 0);
    // if port == 0, do an SRV lookup and use the ports from there
    TlsTransport* transport = new TlsTransport(mStateMacFifo, 
                                               domainName, 
-                                              hostname, port, 
+                                              ipInterface, port, 
                                               keyDir, privateKeyPassPhrase,
-                                              true); // ipv4
+                                              !ipv6); 
    if (mMultiThreaded)
    {
       transport->run();
@@ -264,68 +253,21 @@ TransportSelector::transmit( SipMessage* msg, Tuple& destination)
          //msg->header(h_Vias).front().param(p_ttl) = 1;
          msg->header(h_Vias).front().transport() = Tuple::toData(destination.transport->transport());  //cache !jf! 
 
-//         if (msg->header(h_Vias).front().sentHost().empty())
-//         {
-            // wing in the transport address based on where this is going.
-            Data interfaceHost;
-
-            if (!destination.v6)
-            {
-               
-               sockaddr_in servaddr,cliaddr;
-               memset(&servaddr,0,sizeof(servaddr));
-               servaddr.sin_addr = destination.ipv4;
-               servaddr.sin_port = htons(destination.port);
-               servaddr.sin_family = AF_INET;
-               
-               connect(mSocket, 
-                       (const sockaddr *)&servaddr,
-                       sizeof(servaddr));
-               socklen_t len = sizeof(cliaddr);
-               getsockname(mSocket,(sockaddr*)&cliaddr, &len);
-               
-                     
-               interfaceHost = DnsUtil::inet_ntop(cliaddr.sin_addr);
-
-            }
-
-#if USE_IPV6
-            else
-            {
-               sockaddr_in6 servaddr, cliaddr;
-               memset(&servaddr, 0, sizeof(servaddr));
-               servaddr.sin6_addr = destination.ipv6;
-               servaddr.sin6_port = htons(destination.port);
-               servaddr.sin6_family = AF_INET;
-
-               connect(mSocket,
-                       (const sockaddr *)&servaddr,
-                       sizeof(servaddr));
-
-               socklen_t len = sizeof(cliaddr);
-               getsockname(mSocket, (sockaddr*)&cliaddr, &len);
-               interfaceHost = DnsUtil::inet_ntop(cliaddr.sin6_addr);
-
-            }
-#endif
-            msg->header(h_Vias).front().sentHost() = 
-               interfaceHost;
-            
-            DebugLog(<<"Route table selection chooses: " << interfaceHost);
-//         }
-
-         const Via &v(msg->header(h_Vias).front());
-
-         if (!DnsUtil::isIpAddress(v.sentHost()) &&  destination.transport->port() == 5060)
-         {
-            DebugLog(<<"supressing port 5060 w/ symname");
-            // backward compat for 2543 and the symbolic host w/ 5060 ;
-            // being a clue for SRV (see RFC 3263 sec 4.2 par 5).
-         }
-         else
-         {
-            msg->header(h_Vias).front().sentPort() = destination.transport->port();
-         }
+         // wing in the transport address based on where this is going.
+         Data interfaceHost;
+         
+         sockaddr server;
+         sockaddr client;
+         destination.toSockaddr(server);
+         
+         connect(mSocket, &server, sizeof(server));
+         socklen_t len = sizeof(client);
+         getsockname(mSocket, &client, &len);
+         interfaceHost = DnsUtil::inet_ntop(client);
+         DebugLog(<<"Route table selection chooses: " << interfaceHost);
+         
+         msg->header(h_Vias).front().sentHost() = interfaceHost;
+         msg->header(h_Vias).front().sentPort() = destination.transport->port();
       }
 
       Data& encoded = msg->getEncoded();

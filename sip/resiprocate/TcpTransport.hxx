@@ -1,44 +1,23 @@
 #if !defined(RESIP_TCPTRANSPORT_HXX)
 #define RESIP_TCPTRANSPORT_HXX
 
-#include "resiprocate/Transport.hxx"
-#include "resiprocate/Message.hxx"
-#include "resiprocate/ConnectionMap.hxx"
+#include "resiprocate/TcpBaseTransport.hxx"
 
 namespace resip
 {
 
 class SipMessage;
 
-class TcpTransport : public Transport
+class TcpTransport : public TcpBaseTransport
 {
    public:
-      TcpTransport(Fifo<Message>& fifo, int portNum, const Data& sendhost, bool ipv4);
+      TcpTransport(Fifo<Message>& fifo, int portNum, const Data& interfaceObj=Data::Empty, bool ipv4=true);
       virtual  ~TcpTransport();
-
-      void process(FdSet& fdset);
-      void buildFdSet( FdSet& fdset);
-      bool isReliable() const { return true; }
-      TransportType transport() const { return TCP; }
       
-      static const size_t MaxWriteSize;
-      static const size_t MaxReadSize;
-   private:
-      void processAllWrites(FdSet& fdset);
-      void processAllReads(FdSet& fdset);
+      TransportType transport() const { return TCP; }
 
-      bool processWrite(Connection* c);
-      void sendFromRoundRobin(FdSet& fdset);
-
-      bool processRead(Connection* c);
-
-      void processListen(FdSet& fdSet);
-
-      static const int MaxBufferSize;
-      ConnectionMap mConnectionMap;
-      typedef std::list<Connection*> ConnectionList;
-      ConnectionList mSendRoundRobin;
-      ConnectionList::iterator mSendPos;
+   protected:
+      Connection* createConnection(Tuple& who, Socket fd, bool server=false);
 };
 
 }
