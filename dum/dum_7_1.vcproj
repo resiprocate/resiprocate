@@ -144,6 +144,9 @@
 				RelativePath=".\ClientSubscription.cxx">
 			</File>
 			<File
+				RelativePath=".\DefaultServerReferHandler.cxx">
+			</File>
+			<File
 				RelativePath=".\Dialog.cxx">
 			</File>
 			<File
@@ -223,6 +226,9 @@
 			</File>
 			<File
 				RelativePath=".\SubscriptionCreator.cxx">
+			</File>
+			<File
+				RelativePath=".\SubscriptionHandler.cxx">
 			</File>
 			<File
 				RelativePath=".\SubscriptionState.cxx">

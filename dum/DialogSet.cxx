@@ -238,6 +238,7 @@ DialogSet::dispatch(const SipMessage& msg)
             // unsolicited - not allowed but commonly implemented
             // by large companies with a bridge as their logo
          case NOTIFY: 
+            break;            
          case INFO:   
          default:
          {
@@ -273,7 +274,7 @@ DialogSet::dispatch(const SipMessage& msg)
       if (mCancelled)
       {
          dialog->cancel();
-         dialog = findDialog(msg);
+         return;         
       }
       else
       {

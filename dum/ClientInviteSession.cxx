@@ -4,21 +4,26 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/DumTimeout.hxx"
+#include "resiprocate/dum/ServerInviteSession.hxx"
+#include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/os/Logger.hxx"
-
-using namespace resip;
+#include "resiprocate/SipFrag.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+
+using namespace resip;
 
 ClientInviteSession::ClientInviteSession(DialogUsageManager& dum, 
                                          Dialog& dialog,
                                          const SipMessage& request, 
-                                         const SdpContents* initialOffer)
-   : InviteSession(dum, dialog, Initial),
-     lastReceivedRSeq(0),
-     lastExpectedRSeq(0),
-     mStaleCallTimerSeq(1)
+                                         const SdpContents* initialOffer,
+                                         ServerSubscriptionHandle serverSub) :
+   InviteSession(dum, dialog, Initial),
+   lastReceivedRSeq(0),
+   lastExpectedRSeq(0),
+   mStaleCallTimerSeq(1),
+   mServerSub(serverSub)
 {
    assert(request.isRequest());
    if (initialOffer)
@@ -50,7 +55,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          //!dcm! -- really can't do this assert, prob. kill dialog(erroneous
          //request) and send a 4xx, but which 4xx?
          assert(msg.isResponse());
-         int code = msg.header(h_StatusLine).statusCode();
+         int code = msg.header(h_StatusLine).statusCode();         
          if (code == 100)
          {
             mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
@@ -75,6 +80,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          }
          else if (code < 300)
          {
+            sendSipFrag(msg);            
             //!dcm! -- pretty sure the following timer was bogus
 //            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(),  ++mStaleCallTimerSeq);
             ++mStaleCallTimerSeq;  //unifies timer handling logic
@@ -91,6 +97,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
          }
          else if (code >= 300)
          {
+            sendSipFrag(msg);            
             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
             delete this;
          }
@@ -180,6 +187,20 @@ ClientInviteSession::dispatch(const DumTimeout& timeout)
    {
       InviteSession::dispatch(timeout);      
    }
+}
+
+void 
+ClientInviteSession::sendSipFrag(const SipMessage& response)
+{
+   if (mServerSub.isValid())
+   {
+      SipFrag contents;
+      contents.message().header(h_StatusLine) = response.header(h_StatusLine);
+      //will be cloned...ServerSub may not have the most efficient API possible
+      SipMessage& notify = mServerSub->update(&contents);
+      mDum.mInviteSessionHandler->onReadyToSend(getSessionHandle(), notify);
+      mServerSub->send(notify);
+   }   
 }
 
 void
@@ -280,8 +301,6 @@ ClientInviteSession::sendPrack(const SipMessage& response)
    // much later!!! the deep rathole ....
    // if there is a pending offer or answer, will include it in the PRACK body
    assert(0);
-
-   
 }
 
 void
