@@ -4,6 +4,7 @@
 
 #include "resiprocate/SipMessage.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/Proxy.hxx"
 
 using namespace resip;
 using namespace repro;
@@ -99,14 +100,14 @@ RequestContext::getCandidates()
 void
 RequestContext::fixStrictRouterDamage()
 {
-   if (mOriginalRequest.header(h_RequestLine).getAor().exists(p_lr))
+   if (mOriginalRequest->header(h_RequestLine).uri().exists(p_lr))
    {
-     if (    mOriginalRequest.exists(h_Routes)
-         && !mOriginalRequest.header(h_Routes).empty())
+     if (    mOriginalRequest->exists(h_Routes)
+         && !mOriginalRequest->header(h_Routes).empty())
      {
-        mOriginalRequest.header(h_RequestLine).setAor(
-           mOriginalRequest.header(h_Routes).back().uri());
-        mOriginalRequest.header(h_Routes).pop_back();
+        mOriginalRequest->header(h_RequestLine).uri()=
+           mOriginalRequest->header(h_Routes).back().uri();
+        mOriginalRequest->header(h_Routes).pop_back();
      }
      else
      {
@@ -120,11 +121,12 @@ RequestContext::fixStrictRouterDamage()
 void
 RequestContext::checkTopRouteForSelf()
 {
-  if (    mOriginalRequest.exists(h_Routes)
-      && !mOriginalRequest.header(h_Routes).empty()
-      &&  mProxy.isMyDomain(mOriginalRequest.header(h_Routes).front().uri() )
+  if (    mOriginalRequest->exists(h_Routes)
+      && !mOriginalRequest->header(h_Routes).empty()
+      &&  mProxy.isMyDomain(mOriginalRequest->header(h_Routes).front().uri()) 
+     )
   {
-     mOriginalRequest.header(h_Routes).pop_front();
+     mOriginalRequest->header(h_Routes).pop_front();
   }
 
 }
