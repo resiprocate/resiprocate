@@ -6,11 +6,13 @@ namespace resip
 {
 
 class AppDialogSet;
+class DialogUsageManager;
+class SipMessage;
 
 class AppDialogSetFactory
 {
    public:
-      virtual AppDialogSet* createAppDialogSet(const DialogUsageManager&, const SipMessage&);      
+      virtual AppDialogSet* createAppDialogSet(DialogUsageManager&, const SipMessage&);      
 };
 
 }
