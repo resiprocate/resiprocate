@@ -10,6 +10,9 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Define to 1 if you have the sys/sockio.h header file. */
+#undef HAVE_SYS_SOCKIO_H
+
 /* Name of package */
 #undef PACKAGE
 
