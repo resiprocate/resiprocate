@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 PN=$(basename $0 )
 TMPFILES=""
 cleanup()
@@ -10,7 +10,7 @@ cleanup()
 
 mkTemp()
 {
-        FN=$( mktemp -t fgp.XXXXXX )
+        FN=$( mktemp fgp.XXXXXX )
         TMPFILES="${TMPFILES} ${FN}"
         printf "%s\n" "${FN}"
 }
@@ -40,9 +40,6 @@ shift
 shift
 [ -r "${IF}" ] || usage unable to open file.
 
-#	sed 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g'  $< | \
-#	sed 's/strncmp/strncasecmp/g' > $@
-
 T1=$(mkTemp)
 touch ${T1}
 
@@ -69,16 +66,16 @@ while [ "$#" -ge 1 ]; do
 done
 
 T2=$(mkTemp)
+
 if [ "${IC}" -eq 1 ]; then
     sed 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' ${IF} >> ${T1} || die
     sed  's/^\([ 	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *&& *!strncmp (\([^)]*\)).*$/\1 if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' ${T1} > ${T2}
 
 else
     cat ${IF} >> ${T1}
-//    sed  's/^\([ 	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *&& *!strncmp (\([^)]*\)).*$/\1 if ((*\2) == *\3 \&\& !strncmp( \4 ))/g' ${T1} > ${T2}
     cat ${T1} > ${T2}
-    
 fi
+
 # Close namespaces
 while [ ${NS} -gt 0 ]; do printf "}\n" >> ${T2}; NS=$(( $NS - 1 )); done
 
