@@ -37,6 +37,7 @@ check_PROGRAMS = \
 	testDns \
 	testEmbedded \
 	testEmptyHeader \
+	testForce \
 	testIM \
 	testLogger \
 	testMessageWaiting \
@@ -89,6 +90,7 @@ testDigestAuthentication_SOURCES = testDigestAuthentication.cxx
 testDns_SOURCES = testDns.cxx
 testEmbedded_SOURCES = testEmbedded.cxx
 testEmptyHeader_SOURCES = testEmptyHeader.cxx
+testForce_SOURCES = 	testForce.cxx
 testIM_SOURCES = testIM.cxx
 testLogger_SOURCES = testLogger.cxx
 testMessageWaiting_SOURCES = testMessageWaiting.cxx
