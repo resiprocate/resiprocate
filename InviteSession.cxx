@@ -209,6 +209,7 @@ InviteSession::provideOffer(const SdpContents& offer)
    {
       case Connected:
       case WaitingToOffer:
+      case UAS_WaitingToOffer:
          if (updateMethodSupported())
          {
             transition(SentUpdate);
@@ -232,8 +233,8 @@ InviteSession::provideOffer(const SdpContents& offer)
          }
 
          InfoLog (<< "Sending " << mLastSessionModification.brief());
-         mProposedLocalSdp = InviteSession::makeSdp(offer);
          InviteSession::setSdp(mLastSessionModification, offer);
+         mProposedLocalSdp = InviteSession::makeSdp(offer);
          mDialog.send(mLastSessionModification);
          break;
 
@@ -257,11 +258,11 @@ InviteSession::provideAnswer(const SdpContents& answer)
    {
       case ReceivedReinvite:
          transition(Connected);
-         mCurrentLocalSdp = InviteSession::makeSdp(answer);
-         mCurrentRemoteSdp = mProposedRemoteSdp;
          mDialog.makeResponse(mInvite200, mLastSessionModification, 200);
          handleSessionTimerRequest(mInvite200, mLastSessionModification);
          InviteSession::setSdp(mInvite200, answer);
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         mCurrentRemoteSdp = mProposedRemoteSdp;
          InfoLog (<< "Sending " << mInvite200.brief());
          mDialog.send(mInvite200);
          startRetransmit200Timer();
@@ -274,9 +275,9 @@ InviteSession::provideAnswer(const SdpContents& answer)
          SipMessage response;
          mDialog.makeResponse(response, mLastSessionModification, 200);
          handleSessionTimerRequest(response, mLastSessionModification);
+         InviteSession::setSdp(response, answer);
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          mCurrentRemoteSdp = mProposedRemoteSdp;
-         InviteSession::setSdp(response, answer);
          InfoLog (<< "Sending " << response.brief());
          mDialog.send(response);
          break;
@@ -873,8 +874,7 @@ InviteSession::dispatchWaitingToOffer(const SipMessage& msg)
    if (msg.isRequest() && msg.header(h_RequestLine).method() == ACK)
    {
       mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-      std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
-      provideOffer(*sdp);
+      provideOffer(*mProposedLocalSdp);
    }
    else
    {
@@ -943,14 +943,12 @@ InviteSession::dispatchOthers(const SipMessage& msg)
       case INFO:
          dispatchInfo(msg);
          break;
-#if 0  // !slg! Notify handled by Dialog
-      case NOTIFY:
-         dispatchNotify(msg);
-         break;
-#endif
       case REFER:
          dispatchRefer(msg);
          break;
+	  case ACK:
+		  // Ignore duplicate ACKs from 2xx reTransmissions
+		  break;
       default:
          // handled in Dialog
          WarningLog (<< "DUM delivered a "
@@ -963,38 +961,6 @@ InviteSession::dispatchOthers(const SipMessage& msg)
    }
 }
 
-#if 0  // !slg! Notify handled by Dialog
-void
-InviteSession::dispatchNotify(const SipMessage& msg)
-{
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   if (msg.isRequest())
-   {
-      if (!msg.exists(h_Event) || msg.header(h_Event).value() == "refer")
-      {
-         DebugLog (<< "Making subscription from refer: " << msg);
-         ClientSubscription* sub = mDialog.makeClientSubscription(msg);
-         mDialog.mClientSubscriptions.push_back(sub);
-         ClientSubscriptionHandle client = sub->getHandle();
-         sub->dispatch(msg);
-         if (client.isValid())
-         {
-            handler->onReferAccepted(getSessionHandle(), client, msg);
-         }
-         else
-         {
-            handler->onReferRejected(getSessionHandle(), msg);
-         }
-      }
-      else
-      {
-         SipMessage response;
-         mDialog.makeResponse(response, msg, 406);
-         mDialog.send(response);
-      }
-   }
-}
-#endif
 
 void
 InviteSession::dispatchRefer(const SipMessage& msg)
@@ -1382,6 +1348,8 @@ InviteSession::toData(State state)
          return "UAS_EarlyProvidedOffer";
       case UAS_Accepted:
          return "UAS_Accepted";
+      case UAS_WaitingToOffer:
+         return "UAS_WaitingToOffer";
       case UAS_AcceptedWaitingAnswer:
          return "UAS_AcceptedWaitingAnswer";
       case UAC_Early:
@@ -1651,10 +1619,21 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    {
       return OnUpdateRejected;
    }
+   else if (method == REFER && code == 0)
+   {
+      return OnRefer;
+   }
+   else if (method == REFER && code / 200 == 1)
+   {
+      return On200Refer;
+   }
+   else if (method == REFER && code >= 400)
+   {
+      return OnReferRejected;
+   }
    else
    {
-      //assert(0); !slg! need to remove to allow Refer to be handled by dispatchOthers
-      // !slg! should there be OnRefer events returned here???
+      assert(0); 
       return Unknown;
    }
 }

@@ -453,40 +453,6 @@ Dialog::dispatch(const SipMessage& msg)
                       send(response);
 				   }
 			   }
-
-#if 0
-               if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
-                               creator->getLastRequest().header(h_RequestLine).method() == REFER))
-               {
-                  DebugLog (<< "Making subscription (from creator) request: " << creator->getLastRequest());
-                  ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
-                  mClientSubscriptions.push_back(sub);
-                  sub->dispatch(request);
-               }
-               else
-               {
-                  DebugLog (<< "Making subscription from NOTIFY: " << mInviteSession->mLastRequest);
-                  ClientSubscription* sub = makeClientSubscription(mInviteSession->mLastRequest);
-                  mClientSubscriptions.push_back(sub);
-                  sub->dispatch(request);
-               }
-               else if (mInviteSession->mLastRequest.header(h_RequestLine).method() == REFER)
-               {
-                  DebugLog (<< "Making subscription from refer: " << mInviteSession->mLastRequest);
-                  ClientSubscription* sub = makeClientSubscription(mInviteSession->mLastRequest);
-                  mClientSubscriptions.push_back(sub);
-                  sub->dispatch(request);
-               }
-               else
-               {
-                  SipMessage failure;
-                  makeResponse(failure, request, 481);
-                  failure.header(h_To).remove(p_tag); // otherwise it will be INVALID
-                  InfoLog (<< "Sending 481 - no dialog created " << endl << failure);
-                  mDum.sendResponse(failure);
-                  return;
-               }
-#endif
             }
          }
          break;
@@ -502,9 +468,9 @@ Dialog::dispatch(const SipMessage& msg)
       // If the response doesn't match a cseq for a request I've sent, ignore
       // the response
       RequestMap::iterator r = mRequests.find(msg.header(h_CSeq).sequence());
-      if (r != mRequests.end() && mDum.mClientAuthManager.get())
+      if (r != mRequests.end())
       {
-         if (mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), r->second, msg))
+         if (mDum.mClientAuthManager.get() && mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), r->second, msg))
          {
             InfoLog( << "about to re-send request with digest credentials" );
             InfoLog( << r->second );
@@ -559,15 +525,16 @@ Dialog::dispatch(const SipMessage& msg)
          case BYE:
          case ACK:
          case CANCEL:
+		 case REFER:
          case INFO:
-         case REFER:
          case UPDATE:
             if (mInviteSession)
             {
                mInviteSession->dispatch(response);
             }
             // else drop on the floor
-            break;
+            break;       
+
          case SUBSCRIBE:
          {
             int code = response.header(h_StatusLine).statusCode();
@@ -747,7 +714,6 @@ Dialog::findServerSubscriptions(const Data& event)
    return handles;
 }
 
-
 std::vector<ClientSubscriptionHandle>
 Dialog::getClientSubscriptions()
 {
@@ -793,38 +759,6 @@ Dialog::redirected(const SipMessage& msg)
       }
    }
 }
-
-
-#if 0
-void
-Dialog::processNotify(const SipMessage& notify)
-{
-   if (notify.isRequest())
-   {
-      if (findSubscriptions().empty())
-      {
-         SubscriptionCreator* creator = dynamic_cast<SubscriptionCreator*>(DialogSetId(notify).getCreator());
-         if (creator)
-         {
-            creator->makeNewSubscription(notify);
-         }
-      }
-      else
-      {
-         for (std::list<BaseUsage*>::iterator i=mUsages.begin(); i!=mUsages.end(); i++)
-         {
-            ClientSubscription* sub = dynamic_cast<ClientSubscription*>(*i);
-            if (sub && sub->matches(notify))
-            {
-               sub->process(notify);
-               break;
-            }
-         }
-      }
-   }
-}
-#endif
-
 
 void
 Dialog::makeRequest(SipMessage& request, MethodTypes method)
