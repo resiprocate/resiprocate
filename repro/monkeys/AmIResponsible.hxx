@@ -2,6 +2,8 @@
 #define RESIP_AMIRESPONSIBLE_REQUEST_PROCESSOR_HXX 
 #include "repro/RequestProcessor.hxx"
 
+#include <iosfwd>
+
 namespace repro
 {
 
@@ -12,6 +14,7 @@ namespace repro
       virtual ~AmIResponsible();
 
       virtual processor_action_t handleRequest(RequestContext &);
+      virtual void dump(std::ostream &os) const;
   };
 }
 #endif

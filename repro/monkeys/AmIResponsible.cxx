@@ -6,11 +6,14 @@
 #include "repro/monkeys/AmIResponsible.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/Proxy.hxx"
+#include <ostream>
+
+#include "resiprocate/os/Logger.hxx"
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;
 using namespace std;
-
 
 AmIResponsible::AmIResponsible()
 {}
@@ -21,6 +24,8 @@ AmIResponsible::~AmIResponsible()
 RequestProcessor::processor_action_t
 AmIResponsible::handleRequest(RequestContext& context)
 {
+//  DebugLog(<< "Monkey handling request: " << this);// << "; reqcontext = " << context);
+
   resip::SipMessage& request = context.getOriginalRequest();
 
   assert (!request.exists(h_Routes) || 
@@ -40,6 +45,12 @@ AmIResponsible::handleRequest(RequestContext& context)
     }
   }
   return RequestProcessor::Continue;
+}
+
+void
+AmIResponsible::dump(std::ostream &os) const
+{
+  os << "AmIResponsible monkey" << std::endl;
 }
 
 
