@@ -132,7 +132,7 @@ class ParserCategory : public LazyParser
       mutable ParameterList mParameters;
       mutable ParameterList mUnknownParameters;
    private:
-      virtual void clear();
+      void clear();
       void copyParametersFrom(const ParserCategory& other);
       friend std::ostream& operator<<(std::ostream&, const ParserCategory&);
       friend class NameAddr;

@@ -51,6 +51,7 @@ Contents::Contents(const Contents& rhs)
 
 Contents::~Contents()
 {
+   clear();
 }
 
 void

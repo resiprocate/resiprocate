@@ -31,8 +31,8 @@ class LazyParser
       // call before every access 
       void checkParsed() const;
 
-      // called in destructor and on assignment -- call parent when overridden
-      virtual void clear();
+      // called in destructor and on assignment 
+      void clear();
       
    private:
       // !dlb! bit of a hack until the dust settles
