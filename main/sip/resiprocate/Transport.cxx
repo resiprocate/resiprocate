@@ -199,6 +199,64 @@ void
 Transport::thread()
 {
    InfoLog (<< "Starting transport thread for " << mTuple);
+#if defined(USE_EPOLL)
+   int epollfd = ::open("/dev/epoll", O_RDWR);
+   if (epollfd < 0)
+   {
+      Transport::error(errno);
+      ErrLog (<< "Can't find epoll on this system");
+      assert(0);
+   }
+   
+   int ret = ::ioctl(epollfd, EP_ALLOC, maxFileDescriptors());
+   if (ret != 0)
+   {
+      Transport::error(errno);
+      ErrLog (<< "Failed to define for " << maxFileDescriptors() << " descriptors");
+      assert(0);
+   }
+
+   char *map = (char *)mmap(NULL, EP_MAP_SIZE(maxFileDescriptors(), 
+                                              PROT_READ | PROT_WRITE, MAP_PRIVATE, n
+                                              epollfd, 0));
+   if (map <= 0)
+   {
+      ErrLog (<< "Failed to allocate space for epoll in kernel for " << maxFileDescriptors() << " descriptors");
+      assert(0);
+   }
+   
+   while (!mShutdown)
+   {
+      struct pollfd pfd;
+      pfd.fd = fd;
+      pfd.events = POLLIN | POLLOUT | POLLERR | POLLHUP;
+      pfd.revents = 0;
+      
+      if (write(kdpfd, &pfd, sizeof(pfd)) != sizeof(pfd)) 
+      {
+         
+         /* report error */
+      }
+      
+
+
+
+      FdSet fdset; 
+      buildFdSet(fdset);
+      int  err = fdset.selectMilliSeconds(100);
+      if (err >= 0)
+      {
+         try
+         {
+            process(fdset);
+         }
+         catch (BaseException& e)
+         {
+            InfoLog (<< "Uncaught exception: " << e);
+         }
+      }
+   }
+#else // !USE_EPOLL
    while (!mShutdown)
    {
       FdSet fdset; 
@@ -216,6 +274,8 @@ Transport::thread()
          }
       }
    }
+#endif
+
 }
 
 void
@@ -315,30 +375,30 @@ Transport::stampReceived(SipMessage* message)
 bool
 Transport::basicCheck(const SipMessage& msg)
 {
-  if (msg.isExternal())
-  {
-    if (!msg.exists(h_Vias))
-    {
-      InfoLog(<<"Message Failed basicCheck :" << msg.brief());
-      if (msg.isRequest())
+   if (msg.isExternal())
+   {
+      if (!Helper::validateMessage(msg))
       {
-        // this is VERY low-level b/c we don't have a transaction...
-        // here we make a response to warn the offending party.
-        SendData * sd = makeFailedBasicCheckResponse(msg);
-
-        if (sd)
-        {
-          mTxFifo.add(sd);
-        }
-        else
-        {
-          ErrLog(<<"Unable to make SendData for bad message response.");
-        }
+         InfoLog(<<"Message Failed basicCheck :" << msg.brief());
+         if (msg.isRequest())
+         {
+            // this is VERY low-level b/c we don't have a transaction...
+            // here we make a response to warn the offending party.
+            SendData * sd = makeFailedBasicCheckResponse(msg);
+            
+            if (sd)
+            {
+               mTxFifo.add(sd);
+            }
+            else
+            {
+               ErrLog(<<"Unable to make SendData for bad message response.");
+            }
+         }
+         return false;
       }
-      return false;
-    }
-  }
-  return true;
+   }
+   return true;
 }
 
 bool 
