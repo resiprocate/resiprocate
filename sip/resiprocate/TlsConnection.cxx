@@ -47,14 +47,14 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    SSL_CTX* ctx=NULL;
    if ( mSslType ==  SecurityTypes::SSLv23 )
    {
-      assert(0); // TODO uncoment next line 
+       // TODO uncoment next line 
       //      ctx = mSecurity->getSslCtx();
+      ctx = mSecurity->getTlsCtx(mServer);
    }
    else
    {
-
       ctx = mSecurity->getTlsCtx(mServer);
-      assert(0); // TODO switch to next line from previos 
+       // TODO switch to next line from previos 
       //      ctx = mSecurity->getTlsCtx();
    }   
    assert(ctx);
