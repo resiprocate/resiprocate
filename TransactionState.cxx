@@ -29,6 +29,10 @@ TransactionState::TransactionState(SipStack& stack, Machine m, State s) :
    mDnsState(DnsResolver::NotStarted),
    mRFC2543ResponseUpdated(true)
 {
+   if (m == ServerNonInvite || m == ServerInvite)
+   {
+      mDnsState = DnsResolver::NoLookupRequired;
+   }
 }
 
 TransactionState::~TransactionState()
@@ -119,7 +123,8 @@ TransactionState::process(SipStack& stack)
                TransactionState* state = new TransactionState(stack, ServerInvite, Trying);
                // !rk! This might be needlessly created.  Design issue.
                state->mMsgToRetransmit = state->make100(sip);
-
+               state->mSource = sip->getSource();
+               
                if( sip->header(h_Vias).front().exists(p_branch) && 
                    sip->header(h_Vias).front().param(p_branch).hasMagicCookie() )
                {
@@ -133,6 +138,7 @@ TransactionState::process(SipStack& stack)
             {
                DebugLog(<<"Adding non-INVITE transaction state " << tid);
                TransactionState* state = new TransactionState(stack, ServerNonInvite,Trying);
+               state->mSource = sip->getSource();
                stack.mTransactionMap.add(tid,state);
             }
             // Incoming ACK just gets passed to the TU
@@ -484,7 +490,7 @@ TransactionState::processClientInvite(  Message* msg )
             break;
       }
    }
-   else if (isReliabilityIndication(msg))
+   else if (isSentUnreliable(msg))
    {
       switch (mMsgToRetransmit->header(h_RequestLine).getMethod())
       {
@@ -790,7 +796,6 @@ TransactionState::processServerInvite(  Message* msg )
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       switch (sip->header(h_RequestLine).getMethod())
       {
-	
          case INVITE:
             if (mState == Proceeding || mState == Completed)
             {
@@ -1213,9 +1218,16 @@ TransactionState::sendToWire(Message* msg)
       mDnsState = DnsResolver::Waiting;
       mStack.mTransportSelector.dnsResolve(sip);
    }
-   else
+   else if (mDnsState == DnsResolver::NoLookupRequired)
    {
-		   mStack.mTransportSelector.send(sip, *mDnsListCurrent);	  
+      assert(sip->isResponse());
+      mStack.mTransportSelector.send(sip, mSource);
+   }
+   else if (mDnsState != DnsResolver::Waiting)
+   {
+      assert (mDnsState != DnsResolver::Waiting); // !jf! - is this bogus?
+      assert (mDnsListCurrent != mDnsListEnd);
+      mStack.mTransportSelector.send(sip, *mDnsListCurrent);	  
    }
 }
 
@@ -1226,18 +1238,17 @@ TransactionState::resendToWire(Message* msg) const
    assert(sip);
 
    assert (mDnsState != DnsResolver::NotStarted);
-
-#if 1 // !cj! no idea why but I am crashing on the next assert so I am putting
-      // this in  
-   if (mDnsState == DnsResolver::Waiting)
-   {
-      return;
-   }
-#endif
-
    assert (mDnsState != DnsResolver::Waiting); // !jf! - is this bogus?
-
-   mStack.mTransportSelector.send(sip, *mDnsListCurrent, true);
+   assert (mDnsListCurrent != mDnsListEnd);
+   if (mDnsState == DnsResolver::NoLookupRequired)
+   {
+      assert(sip->isResponse());
+      mStack.mTransportSelector.send(sip, mSource);
+   }
+   else
+   {
+      mStack.mTransportSelector.send(sip, *mDnsListCurrent, true);
+   }
 }
 
 void
