@@ -113,7 +113,7 @@ SubComponent* SubComponentList::find(const string& type) const
 }
 
 
-SubComponent* SubComponentList::find(const string& type) const
+SubComponent* SubComponentList::get(const string& type)
 {
    if (first)
    {
