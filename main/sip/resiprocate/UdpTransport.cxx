@@ -193,17 +193,7 @@ UdpTransport::process(FdSet& fdset)
       // This is UDP, so, initialise the preparser with this
       // buffer.
 
-      
-      size_t used = 0;
-      size_t discard = 0;
-      
-
-      Preparse::Action status = PreparseConst::stNone;
-      
-      mPreparse.process(*message,buffer, len, 0, used, discard, status);
-      
-
-      if (!(status & PreparseConst::stHeadersComplete))
+      if (mPreparse.process(*message,buffer, len) || !mPreparse.isHeadersComplete())
       {
          InfoLog(<<"Rejecting datagram as unparsable / fragmented.");
          delete message; 
@@ -211,6 +201,8 @@ UdpTransport::process(FdSet& fdset)
       else
       {
           // no pp error
+          size_t used = mPreparse.nBytesUsed();
+
           if (used < ulen)
           {
               // body is present .. add it up.

@@ -80,36 +80,35 @@ SipFrag::parse(ParseBuffer& pb)
     
    mMessage = new SipMessage();
 
-   Preparse::Status status = stNone;
-   
    Preparse pre;
 
    char* buffer = const_cast<char*>(pb.position());
    size_t size = pb.end() - pb.position();
 
-   size_t used = 0;
-   size_t discard = 0;
-   
    // !dlb! fragment not required to CRLF terminate
    // need another interface to preparse?
-   pre.process(*mMessage, buffer, size, 0, used, discard, status);
-   DebugLog("SipFrag::parse status: " << status);
-   if (status & stPreparseError ||
-       used > size)
+   // !ah! removed size check .. process() cannot process more
+   // than size bytes of the message.
+   if ( pre.process(*mMessage, buffer, size))
    {
-      DebugLog("SipFrag::parse status: " << status);
-      pb.fail("SipFrag parse failure");
+     DebugLog("SipFrag::parse failure.");
+     pb.fail("SipFrag parse failure");
    }
    else 
    {
-      if (status & stHeadersComplete &&
+     size_t used = pre.nBytesUsed();
+
+     // !ah! I think this is broken .. if we are UDP then the 
+     // remainder is the SigFrag, not the Content-Length... ??
+     if (pre.isHeadersComplete() && 
           mMessage->exists(h_ContentLength))
       {
-         assert(used == discard);
+         assert(used == pre.nDiscardOffset());
          mMessage->setBody(buffer+used,size-used);
       }
       else
       {
+        // !ah! So the headers weren't complete. Why are we here?
          if (mMessage->exists(h_ContentLength))
          {
             pb.reset(buffer + used);
