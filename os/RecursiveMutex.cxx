@@ -13,14 +13,14 @@
 #if defined(__INTEL_COMPILER)
 // !rk! hack, I'm not sure off hand why the Intel compiler can't find this
 extern int pthread_mutexattr_settype (pthread_mutexattr_t *__attr, int __kind)
-     __THROW;
+   __THROW;
 #endif
 
 using resip::RecursiveMutex;
 
 #if defined( WIN32 ) || defined( __APPLE__ ) 
-// !cj! need to write windows mutec stuff 
-	namespace resip
+// !cj! need to write windows mutex stuff 
+namespace resip
 {
 
 RecursiveMutex::RecursiveMutex()
@@ -38,7 +38,7 @@ RecursiveMutex::~RecursiveMutex ()
 void
 RecursiveMutex::lock()
 {
-  //assert(0); 
+   //assert(0); 
 }
 
 void
