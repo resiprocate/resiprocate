@@ -33,7 +33,7 @@ AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 AC_DISABLE_STATIC
 
-AC_REVISION($Id: configure.ac,v 1.10 2003/09/14 08:04:42 alan Exp $)
+AC_REVISION($Id: configure.ac,v 1.11 2003/09/14 08:43:57 alan Exp $)
 
 
 AM_MAINTAINER_MODE
@@ -63,8 +63,18 @@ AC_DEFINE_UNQUOTED([RESIP_MAJOR_VERSION], [$RESIP_MAJOR_VERSION], [The major ver
 AC_DEFINE_UNQUOTED([RESIP_MINOR_VERSION], [$RESIP_MINOR_VERSION], [The minor version number of resip])
 AC_DEFINE_UNQUOTED([RESIP_MICRO_VERSION], [$RESIP_MICRO_VERSION], [The micro version number of resip])
 
-dnl Temporary hack until proper, portable pthreads detection is added.
-LIBS="$LIBS -lpthread"
+
+dnl Test for pthreads.
+
+ACX_PTHREAD
+
+LIBS="$PTHREAD_LIBS $LIBS"
+CFLAGS="-Wall -Wnodeprecated $CFLAGS $PTHREAD_CFLAGS"
+CXXFLAGS="-Wall -Wno-deprecated $CXXFLAGS"
+CC="$PTHREAD_CC"
+
+#dnl Temporary hack until proper, portable pthreads detection is added.
+#LIBS="$LIBS -lpthread"
 
 AC_CONFIG_FILES([Makefile resiprocate/Makefile resiprocate/test/Makefile])
 
