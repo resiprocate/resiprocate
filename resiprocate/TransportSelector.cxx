@@ -40,8 +40,10 @@ TransportSelector::TransportSelector(bool multithreaded, Fifo<Message>& fifo) :
    memset(&mUnspecified, 0, sizeof(sockaddr_in));
    mUnspecified.sin_family = AF_UNSPEC;
 
+#ifdef USE_IPV6
    memset(&mUnspecified6, 0, sizeof(sockaddr_in6));
    mUnspecified6.sin6_family = AF_UNSPEC;
+#endif
 }
 
 TransportSelector::~TransportSelector()
@@ -89,7 +91,7 @@ TransportSelector::addTransport(TransportType protocol,
             break;
       }
    }
-   catch (Transport::Exception& e)
+   catch (Transport::Exception& )
    {
       ErrLog(<< "Failed to create transport: " 
              << (version == V4 ? "V4" : "V6") << " "
@@ -332,10 +334,17 @@ TransportSelector::srcAddrForDest(const Tuple& dest,
    {
       ret = connect(mSocket,(struct sockaddr*)&mUnspecified,sizeof(mUnspecified));
    }
+#if USE_IPV6
    else
    {
       ret = connect(mSocket6,(struct sockaddr*)&mUnspecified6,sizeof(mUnspecified6));
    }
+#else
+   else
+   {
+	   assert(0);
+   }
+#endif
    
    if ( ret<0 )
    {
