@@ -9,7 +9,8 @@ int strncasecmp(const char*, const char*, int len);
 
 SipMessage::SipMessage()
    : mIsExternal(true),
-     mFixedDest(false),
+     mHaveFixedDest(false),
+     mFixedDest(),
      mStartLine(0),
      mBody(0),
      mRequest(false),
