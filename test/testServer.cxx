@@ -95,7 +95,6 @@ class Server : public ThreadIf
       TransportType mTransport;
 };
 
-
 int
 main(int argc, char* argv[])
 {
@@ -133,7 +132,7 @@ main(int argc, char* argv[])
       exit(-1);
    } 
 
-   Server server(stack, numCalls, protocol);
+   ::Server server(stack, numCalls, protocol);
    
    server.run();
    server.join();
