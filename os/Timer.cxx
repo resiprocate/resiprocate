@@ -245,13 +245,26 @@ resip::operator<(const Timer& t1, const Timer& t2)
     return t1.mWhen < t2.mWhen;
 }
 
+bool 
+resip::operator>(const Timer& t1, const Timer& t2)
+{
+    return t1.mWhen > t2.mWhen;
+}
 
 std::ostream& 
 resip::operator<<(std::ostream& str, const Timer& t)
 {
+   UInt64 now = Timer::getTimeMs();
+
    str << "Timer[id=" << t.mId << " when=" << t.mWhen << " rel=";
-   if (t.mWhen < Timer::getTimeMs()) str << "past";
-   else str << (t.mWhen - Timer::getTimeMs());
+   if (t.mWhen < now)
+   {
+      str << "past";
+   }
+   else
+   {
+      str << (t.mWhen - now);
+   }
    str << "]";
    return str;
 }
