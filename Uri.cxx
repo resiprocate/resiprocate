@@ -32,20 +32,8 @@ Uri::Uri(const Data& data)
    ParseBuffer pb(data.data(), data.size());
    Uri tmp;
 
-   try
-   {
-      tmp.parse(pb);
-   }
-   catch ( std::exception* e )
-   {
-      mScheme = Symbols::DefaultSipScheme;
-      mHost = Data::Empty;
-      mUser = Data::Empty;
-      mPort = -1;
-
-      throw e;
-   }
-
+   // avoid the destructor/constructor issue
+   tmp.parse(pb);
    *this = tmp;
 }
 
@@ -335,7 +323,7 @@ Uri::parse(ParseBuffer& pb)
       start = pb.position();
       pb.skipToEnd();
       assert( start <= pb.position() );
-      pb.data(mHost, start);
+      pb.data(mUser, start);
       return;
    }
    
