@@ -56,7 +56,7 @@ class Log
 //          ERR = LOG_ERR,
 // #endif
          Err,
-         Warning, = LOG_WARNING,
+         Warning = LOG_WARNING,
          Info = LOG_INFO,
          Debug = LOG_DEBUG,
          Stack = 8,
