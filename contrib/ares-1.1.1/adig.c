@@ -13,7 +13,7 @@
  * without express or implied warranty.
  */
 
-static const char rcsid[] = "$Id: adig.c,v 1.2 2003/02/05 00:48:32 ryker Exp $";
+static const char rcsid[] = "$Id: adig.c,v 1.3 2003/04/30 15:28:16 alan Exp $";
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -33,6 +33,14 @@ static const char rcsid[] = "$Id: adig.c,v 1.2 2003/02/05 00:48:32 ryker Exp $";
 
 #ifndef INADDR_NONE
 #define	INADDR_NONE 0xffffffff
+#endif
+
+
+#ifndef T_SRV
+#define T_SRV 33
+#endif
+#ifndef T_NAPTR
+#define T_NAPTR 35
 #endif
 
 extern int optind;
