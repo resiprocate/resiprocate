@@ -45,6 +45,7 @@ check_PROGRAMS = \
 	testMultipartMixedContents \
 	testMultipartRelated \
 	testHack \
+	testHash \
 	testMsgHeaderDiagram \
 	testParseBuffer \
 	testParserCategories \
@@ -100,6 +101,7 @@ testMessageWaiting_SOURCES = testMessageWaiting.cxx
 testMultipartMixedContents_SOURCES = testMultipartMixedContents.cxx
 testMultipartRelated_SOURCES = testMultipartRelated.cxx
 testHack_SOURCES = testHack.cxx
+testHash_SOURCES = testHash.cxx
 testParseBuffer_SOURCES = testParseBuffer.cxx
 testParseNameAddr_SOURCES = testParseNameAddr.cxx
 testParserCategories_SOURCES = testParserCategories.cxx
