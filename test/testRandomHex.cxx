@@ -35,7 +35,7 @@ int main(int argc, char** argv)
    
    for (int i = 0; i < runs; i++)
    {
-      Data foo = Random::getRandomHex(length);
+      Data foo = Random::getRandomHex(length/2);
       cerr << foo << endl;
       if (randomDatas.insert(foo).second == false)
       {
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
    
    for (int i = 0; i < runs; i++)
    {
-      Data foo = Random::getCryptoRandomHex(length);
+      Data foo = Random::getCryptoRandomHex(length/2);
       cerr << foo << endl;
       if (randomDatas.insert(foo).second == false)
       {
