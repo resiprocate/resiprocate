@@ -132,16 +132,16 @@ class SipMessage : public Message
 
 #else
 
-#define defineHeader(_header)                                                           \
-      const _header##_Header::Type& header(const _header##_Header& headerType) const;   \
-      _header##_Header::Type& header(const _header##_Header& headerType)
+#define defineHeader(_header)                                                   \
+      const H_##_header::Type& header(const H_##_header& headerType) const;     \
+      H_##_header::Type& header(const H_##_header& headerType)
 
-#define defineMultiHeader(_header)                                                                                      \
-      const ParserContainer<_header##_MultiHeader::Type>& header(const _header##_MultiHeader& headerType) const;        \
-      ParserContainer<_header##_MultiHeader::Type>& header(const _header##_MultiHeader& headerType)
+#define defineMultiHeader(_header)                                                      \
+      const H_##_header##s::Type& header(const H_##_header##s& headerType) const;       \
+      H_##_header##s::Type& header(const H_##_header##s& headerType)
 
       defineHeader(CSeq);
-      defineHeader(CallId);
+      defineHeader(CallID);
       defineHeader(AuthenticationInfo);
       defineHeader(ContentDisposition);
       defineHeader(ContentTransferEncoding);
