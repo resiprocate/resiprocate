@@ -6,6 +6,7 @@
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Subsystem.hxx"
+#include "resiprocate/dum/ClientAuthManager.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
@@ -18,15 +19,20 @@ class Client : public ClientRegistrationHandler
 
       virtual void onSuccess(ClientRegistration::Handle h, const SipMessage& response)
       {
+#ifdef WIN32
+         Sleep(2000);
+#else
+         sleep(5);
+#endif
           InfoLog( << "Client::Success: " << endl << response );
-          sleep(5);
-         h->removeAll();
-         done = true;
+          h->removeAll();
+          done = true;
       }
 
       virtual void onFailure(ClientRegistration::Handle, const SipMessage& response)
       {
           InfoLog ( << "Client::Failure: " << response );
+          done = true;
       }
 
       bool done;
@@ -70,16 +76,18 @@ main (int argc, char** argv)
    NameAddr aor("sip:502@jasomi.com");
 
    Client client;
-   Profile* p = new Profile;
+   Profile profile;   
+   ClientAuthManager clientAuth(profile);   
+
    DialogUsageManager clientDum(clientStack);
-   clientDum.setProfile(p);
+   clientDum.setProfile(&profile);
 
    clientDum.setClientRegistrationHandler(&client);
+   clientDum.setClientAuthManager(&clientAuth);
    clientDum.getProfile()->setDefaultRegistrationTime(70);
    clientDum.getProfile()->setDefaultAor(aor);
 
-   p->addDigestCredential( "sip.jasomi.com", "502", "resiprocate" );
-
+   profile.addDigestCredential( "sip.jasomi.com", "502", "resiprocate" );
 
    SipMessage & regMessage = clientDum.makeRegistration(aor);
 
