@@ -14,16 +14,138 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
    : InviteSession(dum, dialog),
      mHandle(dum),
      lastReceivedRSeq(0),
-     lastExpectedRSeq(0)
+     lastExpectedRSeq(0),
+     mStaleCallTimerSeq(1)
 {
-   mProposedLocalSdp = static_cast<SdpContents*>(initialOffer->clone());
+   assert(request.isRequest());
+   if (initialOffer)
+   {
+      sendSdp(initialOffer);
+   }
    mLastRequest = request;
 }
 
-SipMessage&
-ClientInviteSession::getOfferOrAnswer()
+void
+ClientInviteSession::setOffer(const SdpContents* sdp)
 {
-   return mLastRequest;
+}
+
+void
+ClientInviteSession::setAnswer(const SdpContents* sdp)
+{
+}
+
+
+void
+ClientInviteSession::dispatch(const SipMessage& msg)
+{
+   std::pair<OfferAnswerType, const SdpContents*> offans;
+   offans = InviteSession::getOfferOrAnswer(msg);
+   
+   switch(mState)
+   {
+      case Initial:
+      {
+         assert(msg.isResponse());
+         int code = msg.header(h_StatusLine).statusCode();
+         if (code == 100)
+         {
+            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), mStaleCallTimerSeq);
+            mState = Proceeding;
+            mDum.mInviteSessionHandler->onNewSession(getHandle(), None, msg);
+         }
+         else if (code < 200)
+         {
+            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), mStaleCallTimerSeq);
+            mState = Early;
+            mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
+            mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
+            
+            if (offans.first != None)
+            {
+               InviteSession::incomingSdp(msg, offans.second);
+            }
+            else if (offans.second)
+            {
+               mDum.mInviteSessionHandler->onEarlyMedia(getHandle(), msg, offans.second);
+            }
+         }
+         else if (code < 300)
+         {
+            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), mStaleCallTimerSeq);
+            mState = Connected;
+            mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
+            mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
+            
+            if (offans.first != None)
+            {
+               InviteSession::incomingSdp(msg, offans.second);
+            }
+            sendAck(msg);
+         }
+         else if (code >= 300)
+         {
+            mState = Terminated;
+            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
+            delete this;
+         }
+         break;
+      }
+      
+      case Proceeding:
+      case Early:
+      {
+         assert(msg.isResponse());
+         int code = msg.header(h_StatusLine).statusCode();
+         if (code == 100)
+         {
+         }
+         else if (code < 200)
+         {
+            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), ++mStaleCallTimerSeq);
+            mState = Early;
+            mDum.mInviteSessionHandler->onProvisional(getHandle(), msg);
+            
+            if (offans.first != None)
+            {
+               InviteSession::incomingSdp(msg, offans.second);
+            }
+            else if (offans.second)
+            {
+               mDum.mInviteSessionHandler->onEarlyMedia(getHandle(), msg, offans.second);
+            }
+         }
+         else if (code < 300)
+         {
+            mDum.addTimer(DumTimeout::StaleCall, DumTimeout::StaleCallTimeout, getBaseHandle(), mStaleCallTimerSeq);
+            mState = Connected;
+            mDum.mInviteSessionHandler->onNewSession(getHandle(), offans.first, msg);
+            mDum.mInviteSessionHandler->onConnected(getHandle(), msg);
+            
+            if (offans.first != None)
+            {
+               InviteSession::incomingSdp(msg, offans.second);
+            }
+            sendAck(msg);
+         }
+         else if (code >= 300)
+         {
+            mState = Terminated;
+            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), msg);
+            delete this;
+         }
+         break;
+      }
+      
+      case Cancelled:
+         break;
+         
+      case Connected:
+         break;
+         
+      case Terminated:
+         break;
+   }
 }
 
 SipMessage&
@@ -66,6 +188,7 @@ ClientInviteSession::rejectOffer(int statusCode)
    return mLastRequest;
 }
 
+#if 0
 void
 ClientInviteSession::dispatch(const SipMessage& msg)
 {
@@ -229,6 +352,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
       assert(0);
    }
 }
+#endif
 
 void
 ClientInviteSession::sendPrack(const SipMessage& response)
@@ -299,16 +423,6 @@ ClientInviteSession::getSessionHandle()
 {
    // don't ask, don't tell
    return (InviteSession::Handle&)mHandle;
-}
-
-void 
-ClientInviteSession::setOffer(const SdpContents* offer)
-{
-}
-
-void 
-ClientInviteSession::setAnswer(const SdpContents* answer)
-{  
 }
 
 void 
