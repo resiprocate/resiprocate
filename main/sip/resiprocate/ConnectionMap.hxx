@@ -2,13 +2,17 @@
 #define ConnectionMap_hxx
 
 #include <map>
+#include <list>
 
 #include <util/Socket.hxx>
 #include <util/Timer.hxx>
 #include <sipstack/Transport.hxx>
+#include <sipstack/SipMessage.hxx>
 
 namespace Vocal2
 {
+
+class Preparse;
 
 class ConnectionMap
 {
@@ -19,25 +23,53 @@ class ConnectionMap
       static const UInt64 MaxLastUsed;
       enum {MaxAttempts = 7};
 
+
       ConnectionMap();
       
       class Connection
       {
          public:
+            enum State
+            {
+               NewMessage,
+               PartialHeaderRead,
+               PartialBodyRead
+            };
+            
+         
             Connection(Transport::Tuple who, Socket socket);
             Socket getSocket() {return mSocket;}
-
-         private:
+            
+            void allocateBuffer(int maxBufferSize);
+            bool process(int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
+            bool prepNextMessage(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
+            bool readAnyBody(int bytesUsed, int bytesRead, Fifo<Message>& fifo, Preparse& preparse, int maxBufferSize);
+            
+            
+            Data::size_type mSendPos;     //position in current message being sent
+            std::list<SendData*> mOutstandingSends;
+            SendData* mCurrent;
+            
+            SipMessage* mMessage;
+            char* mBuffer;
+            int mBytesRead;
+            int mBufferSize;
+            
             Connection();
             Connection* remove(); // return next youngest
             ~Connection();
 
-            Transport::Tuple mWho;
-            Socket mSocket;
-            UInt64 mLastUsed;
-
             Connection* mYounger;
             Connection* mOlder;
+
+            Transport::Tuple mWho;
+
+
+         private:
+            Socket mSocket;
+            UInt64 mLastUsed;
+            
+            State mState;
 
             friend class ConnectionMap;
       };
@@ -48,13 +80,13 @@ class ConnectionMap
 
       // release excessively old connections
       void gc(UInt64 threshhold = ConnectionMap::MaxLastUsed);
+
+      typedef std::map<Transport::Tuple, Connection*> Map;
+      Map mConnections;
       
-   private:
       // move to youngest
       void touch(Connection* connection);
       
-      typedef std::map<Transport::Tuple, Connection*> Map;
-      Map mConnections;
       Connection mPreYoungest;
       Connection mPostOldest;
 };
