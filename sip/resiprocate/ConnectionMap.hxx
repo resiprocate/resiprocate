@@ -5,7 +5,7 @@
 
 #include <util/Socket.hxx>
 #include <util/Timer.hxx>
-#include <util/Transport.hxx>
+#include <sipstack/Transport.hxx>
 
 namespace Vocal2
 {
@@ -17,11 +17,9 @@ class ConnectionMap
       static const UInt64 MinLastUsed;
       // largest unused time to reclaim
       static const UInt64 MaxLastUsed;
+      enum {MaxAttempts = 7};
 
       ConnectionMap();
-      
-      Connection& get(Transport::Tuple who, int attempt = 1);
-      void close(Transport::Tuple who);
       
       class Connection
       {
@@ -34,23 +32,28 @@ class ConnectionMap
             Connection* remove(); // return next youngest
             ~Connection();
 
-            Connection* mYounger;
-            Connection* mOlder;
-
+            Transport::Tuple mWho;
             Socket mSocket;
             UInt64 mLastUsed;
 
+            Connection* mYounger;
+            Connection* mOlder;
+
             friend class ConnectionMap;
       };
+
+      Connection* add(Transport::Tuple who, Socket s);
+      Connection* get(Transport::Tuple who, int attempt = 1);
+      void close(Transport::Tuple who);
 
       // release excessively old connections
       void gc(UInt64 threshhold = ConnectionMap::MaxLastUsed);
       
    private:
       // move to youngest
-      touch(Connection* connection);
+      void touch(Connection* connection);
       
-      typedef Map std::map<Transport::Tuple, Connection*>;
+      typedef std::map<Transport::Tuple, Connection*> Map;
       Map mConnections;
       Connection mPreYoungest;
       Connection mPostOldest;

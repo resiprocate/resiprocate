@@ -15,7 +15,6 @@
 #include <util/Data.hxx>
 #include <util/Socket.hxx>
 #include <util/Logger.hxx>
-#include <util/Socket.hxx>
 #include <sipstack/UdpTransport.hxx>
 #include <sipstack/SipMessage.hxx>
 #include <sipstack/Preparse.hxx>

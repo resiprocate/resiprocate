@@ -44,8 +44,17 @@ class Transport
          DCCP
       } Type;
 
-      struct Tuple
+      class Tuple
       {
+         public:
+            Tuple();
+            Tuple(sockaddr_in _ipv4,
+                  int _port,
+                  Transport::Type _transport);
+            
+            bool operator<(const Tuple& rhs) const;
+            bool operator==(const Tuple& rhs) const;
+            
             struct sockaddr_in ipv4;
             int port;
             Transport::Type transport;
@@ -97,6 +106,21 @@ class Transport
 };
 
 }
+
+#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+#include <ext/hash_map>
+
+namespace __gnu_cxx
+{
+
+struct hash<Vocal2::Transport::Tuple>
+{
+      size_t operator()(const Vocal2::Transport::Tuple& addrPort) const;
+};
+ 
+}
+
+#endif // __GNUC__
 #endif
 
 

@@ -150,8 +150,68 @@ Transport::toTransport(const Data& type)
    {
       assert(0);
    }
+};
+
+Transport::Tuple::Tuple()
+{
 }
 
+Transport::Tuple::Tuple(sockaddr_in _ipv4,
+                        int _port,
+                        Transport::Type _transport)
+   : ipv4(_ipv4),
+     port(_port),
+     transport(_transport)
+{
+}
+
+bool Transport::Tuple::operator==(const Transport::Tuple& rhs) const
+{
+   return (memcmp(&ipv4, &rhs.ipv4, sizeof(ipv4)) == 0 &&
+           port == rhs.port &&
+           transport == rhs.transport);
+}
+
+bool Transport::Tuple::operator<(const Transport::Tuple& rhs) const
+{
+   int c = memcmp(&ipv4, &rhs.ipv4, sizeof(ipv4));
+   if (c < 0)
+   {
+      return true;
+   }
+   
+   if (c > 0)
+   {
+      return false;
+   }
+   
+   if (port < rhs.port)
+   {
+      return true;
+   }
+   
+   if (port < rhs.port)
+   {
+      return false;
+   }
+   
+   return transport < rhs.transport;
+}
+
+size_t 
+__gnu_cxx::hash<Vocal2::Transport::Tuple>::operator()(const Vocal2::Transport::Tuple& tuple) const
+{
+   // assumes POD
+   unsigned long __h = 0; 
+   const char* start = (const char*)&tuple;
+   const char* end = start + sizeof(tuple);
+   for ( ; start != end; ++start)
+   {
+      __h = 5*__h + *start; // .dlb. weird hash
+   }
+   return size_t(__h);
+
+}
 
 
 /* ====================================================================
