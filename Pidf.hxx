@@ -49,6 +49,8 @@ class Pidf : public Contents
 
       int getNumTuples() const;
 
+      void merge(const Pidf& other);
+
       static bool init();   
    
    private:
