@@ -9,8 +9,6 @@
 #include "resiprocate/os/TimeLimitFifo.hxx"
 #include "resiprocate/os/Timer.hxx"
 
-#include <openssl/ssl.h>
-
 // .dlb. 
 // to do: timer wheel for transaction-bound timers and a heap for
 // everything longer.
@@ -62,6 +60,8 @@ class TimerQueue : public BaseTimerQueue
 };
 
 #ifdef USE_DTLS
+
+#include <openssl/ssl.h>
 
 class DtlsTimerQueue : public BaseTimerQueue
 {
