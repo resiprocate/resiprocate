@@ -17,6 +17,7 @@
 #include "sip2/sipstack/SipMessage.hxx"
 #include "sip2/sipstack/TransactionTerminated.hxx"
 #include "sip2/sipstack/SipFrag.hxx"
+#include "sip2/sipstack/ApplicationSip.hxx"
 #include "sip2/sipstack/Helper.hxx"
 #include "sip2/sipstack/UnknownParameterType.hxx"
 
