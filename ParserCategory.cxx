@@ -502,9 +502,6 @@ ParserCategory::commutativeParameterHash() const
    Data buffer;
    Data working;
 
-
-   cerr << endl;
-   
    for (ParameterList::const_iterator i=mParameters.begin(); i!=mParameters.end(); i++)
    {
       if ((*i)->getType() != ParameterTypes::lr)
