@@ -5,7 +5,7 @@
 /* TODO list for this file ....
    handle 302 in message
    handle 302 in subscribe
-   subscribe to other buddy when they subscribe to you
+
    sort out how contact is formed 
    keep track of ourstanding message dialogs 
    add a publish sending dialogs 
@@ -53,7 +53,9 @@ TuIM::Callback::~Callback()
 TuIM::TuIM(SipStack* stack, 
            const Uri& aor, 
            const Uri& contact,
-           Callback* callback)
+           Callback* callback,
+           const int registrationTimeSeconds,
+           const int subscriptionTimeSeconds)
    : mCallback(callback),
      mStack(stack),
      mAor(aor),
@@ -63,6 +65,8 @@ TuIM::TuIM(SipStack* stack,
      mNextTimeToRegister(0),
      mRegistrationPassword( Data::Empty ),
      mLastAuthCSeq(-1),
+     mRegistrationTimeSeconds(registrationTimeSeconds),
+     mSubscriptionTimeSeconds(subscriptionTimeSeconds),
      mDefaultProtocol( UNKNOWN_TRANSPORT )
 {
    assert( mStack );
@@ -213,15 +217,14 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    assert( msg->header(h_RequestLine).getMethod() == SUBSCRIBE );
    CallId id = msg->header(h_CallId);
    
-   const int maxExpires = 3600;
-   int expires=maxExpires;
+   int expires=mSubscriptionTimeSeconds;
    if ( msg->exists(h_Expires) )
    {
       expires = msg->header(h_Expires).value();
    }
-   if (expires > maxExpires )
+   if (expires > mSubscriptionTimeSeconds )
    {
-      expires = maxExpires;
+      expires = mSubscriptionTimeSeconds;
    }
    
    Dialog* dialog = NULL;
@@ -258,6 +261,26 @@ TuIM::processSubscribeRequest(SipMessage* msg)
    mStack->send( *response );
 
    sendNotify( dialog );
+
+#if 1 // do symetric subscriptions 
+   // See if this person is our buddy list and if we are not subscribed to them
+
+    UInt64 now = Timer::getTimeMs();
+    Uri from = msg->header(h_From).uri();
+
+    for ( int i=0; i<getNumBuddies(); i++)
+    {
+       Data buddyAor = mBuddy[i].uri.getAor();
+       
+       if ( ! (mBuddy[i].presDialog->isCreated()) )
+       {
+          if (  from.getAor() == mBuddy[i].uri.getAor() )
+          {
+             mBuddy[i].mNextTimeToSubscribe = now;
+          }
+       }
+    }
+#endif
 }
 
 
@@ -272,7 +295,6 @@ TuIM::processRegisterRequest(SipMessage* msg)
    mStack->send( *response );
 
    delete response;
-   
 }
 
 
@@ -460,12 +482,12 @@ TuIM::processResponse(SipMessage* msg)
    // see if it is a subscribe response 
    for ( int i=0; i<getNumBuddies(); i++)
    {
-      Buddy& b = mBuddy[i];
-      assert(  b.presDialog );
-      if ( b.presDialog->getCallId() == id  )
+      Buddy& buddy = mBuddy[i];
+      assert(  buddy.presDialog );
+      if ( buddy.presDialog->getCallId() == id  )
       {
          DebugLog ( << "matched the sub dialog" );
-         processSubscribeResponse( msg, b );
+         processSubscribeResponse( msg, buddy );
          return;
       }
    }
@@ -537,7 +559,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
    
    if ( (number>=200) && (number<300) )
    {
-      int expires = 3600;
+      int expires = mRegistrationTimeSeconds;
 
       if ( msg->exists(h_Expires) )
       {
@@ -568,10 +590,10 @@ TuIM::processRegisterResponse(SipMessage* msg)
          i++;
       }
 
-      if ( expires < 5 )
+      if ( expires < 15 )
       {
          InfoLog(<< "Got very small expiers of " << expires );
-         expires = 5;
+         expires = 15;
       }
 
       mNextTimeToRegister = Timer::getRandomFutureTimeMs( expires*1000 );
@@ -592,15 +614,15 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
 
    if ( (number>=200) && (number<300) )
    {
-      int expires = 3600;
+      int expires = mSubscriptionTimeSeconds;
       if ( msg->exists(h_Expires) )
       {
          expires = msg->header(h_Expires).value();
       }
-      if ( expires < 5 )
+      if ( expires < 15 )
       {
          InfoLog( << "Got very small expiers of " << expires );
-         expires = 5;
+         expires = 15;
       } 
       
       assert( buddy.presDialog );
@@ -644,8 +666,8 @@ TuIM::processSubscribeResponse(SipMessage* msg, Buddy& buddy)
          mCallback->presenceUpdate( to, false, Data::Empty );
       }
       
-      // try to contact this buddy again in 10 minutes 
-      buddy.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 10*60*1000 );
+      // try to contact this buddy again later
+      buddy.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( mSubscriptionTimeSeconds*1000 );
    }
 }
 
@@ -663,12 +685,11 @@ TuIM::process()
       if ( mRegistrationDialog.isCreated() )
       {
          auto_ptr<SipMessage> msg( mRegistrationDialog.makeRegister() );
-         int expires = 11*60; // time in seconds 
-         msg->header(h_Expires).value() = expires;
+         msg->header(h_Expires).value() = mRegistrationTimeSeconds;
          setOutbound( *msg );
          mStack->send( *msg );
       }
-      mNextTimeToRegister = Timer::getRandomFutureTimeMs( 10*60*1000 /*10 minutes*/ );
+      mNextTimeToRegister = Timer::getRandomFutureTimeMs( mRegistrationTimeSeconds*1000 );
    }
    
    // check if any subscribes need refresh
@@ -676,22 +697,26 @@ TuIM::process()
    {
       if (  now > mBuddy[i].mNextTimeToSubscribe )
       {
-         Buddy& b = mBuddy[i];
-         mBuddy[i].mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( 5*60*1000 /*5 minutes*/ );
+         Buddy& buddy = mBuddy[i];
+         mBuddy[i].mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( mSubscriptionTimeSeconds*1000 );
          
-         assert(  b.presDialog );
-         if ( b.presDialog->isCreated() )
+         assert(  buddy.presDialog );
+         if ( buddy.presDialog->isCreated() )
          {
-            auto_ptr<SipMessage> msg( b.presDialog->makeSubscribe() );
-            int expires = 7*60; // time in seconds 
-            
+            auto_ptr<SipMessage> msg( buddy.presDialog->makeSubscribe() );
+                        
             msg->header(h_Event).value() = Data("presence");;
             msg->header(h_Accepts).push_back( Mime( "application","cpim-pidf+xml") );
-            msg->header(h_Expires).value() = expires;
-
+            msg->header(h_Expires).value() = mRegistrationTimeSeconds;
+            
             setOutbound( *msg );
 
             mStack->send( *msg );
+         }
+         else
+         {
+            // person was not available last time - try to subscribe now
+            subscribeBuddy( mBuddy[i] );
          }
       }
    }
@@ -718,10 +743,9 @@ TuIM::process()
 
 
 void 
-TuIM::registerAor( const Uri& uri, const Data& password, int registrationTimeSeconds )
+TuIM::registerAor( const Uri& uri, const Data& password  )
 {  
    mRegistrationPassword = password;
-   mRegistrationTimeSeconds = registrationTimeSeconds;
    
    //const NameAddr aorName;
    //const NameAddr contactName;
@@ -787,32 +811,36 @@ TuIM::getBuddyStatus(const int index, Data* status)
 
 
 void 
-TuIM::addBuddy( const Uri& uri, const Data& group )
+TuIM::subscribeBuddy( Buddy& buddy )
 {
-   Buddy b;
-   b.uri = uri;
-   b.online = false;
-   b.status = Data::Empty;
-   b.group = group;
-   b.presDialog = new Dialog( NameAddr(mContact) );
-   assert( b.presDialog );
-   
-   mBuddy.push_back( b );
-
    // subscribe to this budy 
-   auto_ptr<SipMessage> msg( b.presDialog->makeInitialSubscribe(NameAddr(b.uri),NameAddr(mAor)) );
+   auto_ptr<SipMessage> msg( buddy.presDialog->makeInitialSubscribe(NameAddr(buddy.uri),NameAddr(mAor)) );
 
-   int expires = 7*60; // time in seconds 
-   
    msg->header(h_Event).value() = Data("presence");;
    msg->header(h_Accepts).push_back( Mime( "application","cpim-pidf+xml") );
-   msg->header(h_Expires).value() = expires;
+   msg->header(h_Expires).value() = mSubscriptionTimeSeconds;
    
-   b.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( expires*1000 /*5 minutes*/ );
+   buddy.mNextTimeToSubscribe = Timer::getRandomFutureTimeMs( mSubscriptionTimeSeconds*1000 );
    
    setOutbound( *msg );
 
    mStack->send( *msg );
+}
+
+void 
+TuIM::addBuddy( const Uri& uri, const Data& group )
+{
+   Buddy buddy;
+   buddy.uri = uri;
+   buddy.online = false;
+   buddy.status = Data::Empty;
+   buddy.group = group;
+   buddy.presDialog = new Dialog( NameAddr(mContact) );
+   assert( buddy.presDialog );
+   
+   subscribeBuddy( buddy );
+
+   mBuddy.push_back( buddy );
 }
 
 
@@ -853,7 +881,7 @@ TuIM::sendNotify(Dialog* dialog)
 
    Token state;
    state.value() = Data("active");
-   state.param(p_expires) = 666; // !cj! - weird this is not showing up in the message
+   state.param(p_expires) = 666; // TODO !cj! - weird this is not showing up in the message
    notify->header(h_SubscriptionStates).push_front(state);
 
    notify->setContents( pidf );
