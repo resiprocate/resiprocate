@@ -19,7 +19,13 @@ class ServerRegistration: public BaseUsage
             Handle(DialogUsageManager& dum);
       };
 
+      /// helper function to creat the 
+      SipMessage* makeRegistrationResponse(SipMessage& msg);
+      
+      /// accept a SIP registration 
       void accept(const SipMessage& ok);
+
+      /// reject a SIP registration 
       void reject(int statusCode);
 };
  

@@ -116,38 +116,93 @@ aproperate message to be sent to send a new offer or answer. This might be a
 PRACK, an UPDATE, a reINVITE depending on the currenst state of the dialog.
 </para> 
 
-
 </sect1>
 <sect1> <title>Handling Invite Sessions - Server</title>
-
+<para>
+When the sserver first recives an INVITE, it will call the onNewInvSession
+handler and pass a handle to a ServerInviteSession. It the UA is busy this
+could be rejected with the reject mehtod. If the INVITE contaned an offer, the
+onOffer callback gets called. When this happens, the server needs to call the
+setAnser function to set the new offer. This will not send the offer. The
+server must then call the sendAnserInAnyMessage to actually send the
+offer. This sequence of two calls seem a little weired but is required to make
+the all the cases work when doing PRACK stuff. 
+</para>
+<para>
+From this pont on thir can be several rounds of sending and receivng offers and
+aswers. When the UA which to sendd a 200 and "answer" the call, it calls the
+accept method. Finially when it wishes to end the call it calls the end
+method. If the other side ends the call, the onTerminated callback will get
+called. 
+</para>
+INFO messages can be received in the dialog with the onInfo callback. Refer is
+a topic all on it's own and covered later in this document. 
+<para>
+</para>
 
 </sect1>
 <sect1> <title>Handling Registration - Client</title>
-
+<para>
+The client froms a new registration message by calling makeResitration in the
+DUM. This returns a SIP messages which is sent by calling send on the DUM. This
+will initate the registrtionprocess. 
+</para>
+<para>
+If it succeedes or failes, the aproperate onSuccess or onFailure will be
+called. The DUM will contintue to run the times and keep this registration
+alive. This may result in an onFailure callback at any time. 
+</para>
+<para>
+The callback passes back a handle to a ClientRegistration which provies
+serveral methods for the client to discover and manipulate the contacts for the
+registration. myContacts refers to contatst this UA has registered while
+allContacts referes to any contact that has been registered for this AOR. The
+add and remove binding calls allow for manipulation of contacts this UA
+registered and for cotacts that other UA registered. 
+</para>
 
 </sect1>
 <sect1> <title>Handling Registrations - Server</title>
-
+<para>
+When a new registgration is received the onAdd will be called. The server needs
+to either accept this on rejct it using the coresponding function isn the
+ServerRegistration class. If the registration is refreshed byt the client
+onRefresh will be called and if it expereis before it is refreshed, onExpired
+will be called. If the client removes on of the the contacts, onRremoveOne will
+be called and if the client removes all the contacts, onRemoveAll be be called.
+</para>
 
 </sect1>
 <sect1> <title>Handling Subscriptions - Client</title>
-
+<para>
+</para>
 
 </sect1>
 <sect1> <title>Handling Subscritpions - Server </title>
-
+<para>
+Gets a onNewSubecritpion callabck when it is created and onRefresh or
+OnTerminated as the clients updates it. 
+</para>
 
 </sect1>
 <sect1> <title>Handling Publictionas - client </title>
-
+<para>
+</para>
 
 </sect1>
 <sect1> <title>Handling Publications - Server </title>
-
+<para>
+</para>
 
 </sect1>
 <sect1> <title>Dealing with Refer </title>
+<para>
+</para>
 
+</sect1>
+<sect1> <title>Dealing with Digest authentication </title>
+<para>
+</para>
 
 </sect1>
 <sect1> <title>Dealing with complex offer/answer </title>
