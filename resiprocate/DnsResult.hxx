@@ -171,6 +171,7 @@ class DnsResult
       int mSRVCount;
       bool mSips;
       Data mTarget;
+      Data mSrvKey;
       TransportType mTransport; // current
       int mPort; // current
       Type mType;
