@@ -83,7 +83,7 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
          ParseBuffer alt(lPb);
          alt.skipToChars(Symbols::CRLF);
          lPb.skipToChars(COMMENT_START);
-         if (&*lPb.position() < &*alt.position())
+         if (!lPb.eof() && (&*lPb.position() < &*alt.position()))
          {
             lPb.data(temp, anchor);
             mData += temp;
