@@ -171,20 +171,36 @@ Log::toType(const Data& arg)
 
 
 ostream&
-Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm) 
+Log::tags(Log::Level level, 
+          const Subsystem& subsystem, 
+          const char* pfile,
+          int line,
+          ostream& strm) 
 {
 #if defined( __APPLE__ )
    strm << _descriptions[level+1] << DELIM 
         << time(0) << DELIM 
         << _appName << DELIM
-        << subsystem << DELIM;
+        << subsystem << DELIM
+        << pfile << ":" << line;
 #else   
 #if defined( WIN32 )
-     strm << _descriptions[level+1] << DELIM
+   const char* file = pfile + strlen(pfile);
+   while (file != pfile &&
+          *file != '\\')
+   {
+      --file;
+   }
+   if (file != pfile)
+   {
+      ++file;
+   }
+   strm << _descriptions[level+1] << DELIM
         << timestamp() << DELIM  
         << _appName << DELIM
         << subsystem << DELIM 
-        << GetCurrentThreadId() << DELIM;
+        << GetCurrentThreadId() << DELIM
+        << file << ":" << line;
 #else
    strm << _descriptions[level+1] << DELIM
         << timestamp() << DELIM  
@@ -192,7 +208,8 @@ Log::tags(Log::Level level, const Subsystem& subsystem, ostream& strm)
         << _appName << DELIM
         << subsystem << DELIM 
         << _pid << DELIM
-        << pthread_self() << DELIM;
+        << pthread_self() << DELIM
+        << pfile << ":" << line;
 #endif // #if defined( WIN32 ) 
 #endif // #if defined( __APPLE__ )
   return strm;
