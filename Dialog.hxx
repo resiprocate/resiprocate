@@ -39,12 +39,15 @@ class Dialog
       
       DialogId getId() const;
       
-      SipMessage* makeInviteSession(const Uri& target);
-      SipMessage* makeSubscription();
-      SipMessage* makeRefer();
-      SipMessage* makePublication();
-      SipMessage* makeRegistration();
-      SipMessage* makeOutOfDialogRequest();
+      void makeBye(SipMessage& proto);
+      void makeInvite(SipMessage& proto);
+      void makeAck(SipMessage& proto);
+      
+      //SipMessage* makeSubscription();
+      //SipMessage* makeRefer();
+      //SipMessage* makePublication();
+      //SipMessage* makeRegistration();
+      //SipMessage* makeOutOfDialogRequest();
 
       std::vector<ClientSubscription::Handle> findClientSubscriptions();
       ServerSubscription::Handle findServerSubscription();

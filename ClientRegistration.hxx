@@ -22,8 +22,6 @@ class ClientRegistration: public BaseUsage
             Handle(DialogUsageManager& dum);
       };
 
-      ClientRegistration(DialogUsageManager& dum, BaseCreator* creator, Dialog& dialog, const SipMessage& req);
-      
       void addBinding(const NameAddr& contact);
       void removeBinding(const NameAddr& contact);
       void removeAll();
@@ -44,6 +42,8 @@ class ClientRegistration: public BaseUsage
       ClientRegistration(DialogUsageManager& dum,
                          Dialog& dialog,
                          const SipMessage& req);
+
+      void updateMyContacts(const NameAddrs& allContacts);
       
       ClientRegistration::Handle mHandle;
       SipMessage& mLastRequest;

@@ -482,6 +482,72 @@ DialogUsageManager::getUsage(const BaseUsage::Handle& handle)
    }
 }
 
+ClientInviteSession*
+DialogUsageManager::makeClientInviteSession(Dialog& dialog, const SipMessage& response)
+{
+   InviteSessionCreator* creator = dynamic_cast<InviteSessionCreator*>(findCreator(dialog.getId()));
+   assert(creator);
+   ClientInviteSession* usage = new ClientInviteSession(*this, dialog, creator->getLastRequest(), creator->getInitialOffer());
+   
+   assert(mUsageMap.find(usage->getBaseHandle().mId) == mUsageMap.end());
+   mUsageMap[usage->getBaseHandle().mId] = usage;
+   
+   return usage;
+}
+
+ClientRegistration*
+DialogUsageManager::makeClientRegistration(Dialog& dialog, const SipMessage& response)
+{
+   BaseCreator* creator = findCreator(dialog.getId());
+   assert(creator);
+   ClientRegistration* usage = new ClientRegistration(*this, dialog, creator->getLastRequest());
+   
+   assert(mUsageMap.find(usage->getBaseHandle().mId) == mUsageMap.end());
+   mUsageMap[usage->getBaseHandle().mId] = usage;
+   
+   return usage;
+}
+
+ClientPublication*
+DialogUsageManager::makeClientPublication(Dialog& dialog, const SipMessage& response)
+{
+   BaseCreator* creator = findCreator(dialog.getId());
+   assert(creator);
+   ClientPublication* usage = new ClientPublication(*this, dialog, creator->getLastRequest());
+   
+   assert(mUsageMap.find(usage->getBaseHandle().mId) == mUsageMap.end());
+   mUsageMap[usage->getBaseHandle().mId] = usage;
+   
+   return usage;
+}
+
+ClientSubscription*
+DialogUsageManager::makeClientSubscription(Dialog& dialog, const SipMessage& response)
+{
+   BaseCreator* creator = findCreator(dialog.getId());
+   assert(creator);
+   ClientSubscription* usage = new ClientSubscription(*this, dialog, creator->getLastRequest());
+   
+   assert(mUsageMap.find(usage->getBaseHandle().mId) == mUsageMap.end());
+   mUsageMap[usage->getBaseHandle().mId] = usage;
+   
+   return usage;
+}
+
+
+ClientOutOfDialogReq*
+DialogUsageManager::makeClientOutOfDialogReq(Dialog& dialog, const SipMessage& response)
+{
+   BaseCreator* creator = findCreator(dialog.getId());
+   assert(creator);
+   ClientOutOfDialogReq* usage = new ClientOutOfDialogReq(*this, dialog, creator->getLastRequest());
+   
+   assert(mUsageMap.find(usage->getBaseHandle().mId) == mUsageMap.end());
+   mUsageMap[usage->getBaseHandle().mId] = usage;
+   
+   return usage;
+}
+
 ServerInviteSession*
 DialogUsageManager::makeServerInviteSession(Dialog& dialog,const SipMessage& request)
 {
