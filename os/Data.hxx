@@ -1,7 +1,7 @@
 #ifndef Vocal2_Data_hxx
 #define Vocal2_Data_hxx
 
-static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.32 2002/11/12 05:16:39 jason Exp $";
+static const char* const Vocal2DataHeaderVersion = "$Id: Data.hxx,v 1.33 2002/11/13 20:42:24 davidb Exp $";
 
 #include <iostream>
 #include <string>
@@ -55,20 +55,25 @@ class Data
 
       bool empty() const { return mSize == 0; }
       size_type size() const { return mSize; }
-      const char* c_str() const;
-      // not necessarily NULL terminated
+
+      // preferred -- not necessarily NULL terminated
       const char* data() const;
+
+      // necessarily NULL terminated -- often copies
+      const char* c_str() const;
 
       // compute an md5 hash (return in asciihex)
       Data md5() const;
       
-      //covert this data(in place) to lower/upper case
+      // convert this data in place to lower/upper case
       Data& lowercase();
       Data& uppercase();
-      
+
+      // resize to zero without changing capacity
+      void clear();
       int convertInt() const;
       double convertDouble() const;
-      
+
    private:
       friend class TestData;
       Data(const char* buffer, int length, bool);
