@@ -160,6 +160,7 @@ UdpTransport::process(FdSet& fdset)
 			break;
 		}
 		delete[] buffer; buffer=0;
+		return;
 	}
 
 	if (len == 0 )
