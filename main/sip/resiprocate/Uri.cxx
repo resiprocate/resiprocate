@@ -348,7 +348,7 @@ Uri::parse(ParseBuffer& pb)
       start = pb.position();
       pb.skipToOneOf(":@");
       pb.data(mUser, start);
-      if (!pb.eof() && *pb.position() == Symbols::COLON[0])
+      if (*pb.position() == Symbols::COLON[0])
       {
          start = pb.skipChar();
          pb.skipToChar(Symbols::AT_SIGN[0]);
@@ -385,7 +385,7 @@ Uri::parse(ParseBuffer& pb)
    
    parseParameters(pb);
 
-   if (!pb.eof() && *pb.position() == Symbols::QUESTION[0])
+   if (*pb.position() == Symbols::QUESTION[0])
    {
       const char* anchor = pb.position();
       pb.skipToOneOf(Symbols::RA_QUOTE, Symbols::SEMI_COLON);
@@ -445,7 +445,7 @@ void
 Uri::parseEmbeddedHeaders(ParseBuffer& pb)
 {
    DebugLog(<< "Uri::parseEmbeddedHeaders");
-   if (!pb.eof() && *pb.position() == Symbols::QUESTION[0])
+   if (*pb.position() == Symbols::QUESTION[0])
    {
       pb.skipChar();
    }
