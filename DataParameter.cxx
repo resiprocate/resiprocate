@@ -63,6 +63,9 @@ DataParameter::encode(ostream& stream) const
    }
    else
    {
+      // this will assert if you've accessed a parameter that doesn't exist and
+      // then the stack has created an empty parameter with no value. Try
+      // calling exists(p_foo) before calling param(p_foo)
       assert(!mValue.empty()); // !jf!  probably should throw here
       return stream << getName() << Symbols::EQUALS << mValue;
    }
